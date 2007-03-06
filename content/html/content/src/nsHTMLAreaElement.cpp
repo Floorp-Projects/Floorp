@@ -196,21 +196,10 @@ nsHTMLAreaElement::SetFocus(nsPresContext* aPresContext)
                                                           NS_EVENT_STATE_FOCUS)) {
     return;
   }
-    
-  // Make sure the presentation is up-to-date
-  nsIDocument* doc = GetCurrentDoc();
-  if (doc) {
-    doc->FlushPendingNotifications(Flush_Layout);
-  }
-
-  nsIPresShell *presShell = aPresContext->GetPresShell();
-
+  nsCOMPtr<nsIPresShell> presShell = aPresContext->GetPresShell();
   if (presShell) {
-    nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
-    if (frame) {
-      presShell->ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_ANYWHERE,
+    presShell->ScrollContentIntoView(this, NS_PRESSHELL_SCROLL_ANYWHERE,
                                      NS_PRESSHELL_SCROLL_ANYWHERE);
-    }
   }
 }
 

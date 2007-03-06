@@ -98,12 +98,12 @@ class nsIScrollableFrame;
 
 typedef short SelectionType;
 
-// 7C398278-8523-4E5C-8268-4E4BC8B0C5CA
+//12f7a744-26d8-493e-8072-90123a35f69f
 #define NS_IPRESSHELL_IID \
-{ 0x7C398278, 0x8523, 0x4E5C, \
-  { 0x82, 0x68, 0x4E, 0x4B, 0xC8, 0xB0, 0xC5, 0xCA } }
+{ 0x12f7a744, 0x26d8, 0x493e, \
+  { 0x80, 0x72, 0x90, 0x12, 0x3a, 0x35, 0xf6, 0x9f } }
 
-// Constants uses for ScrollFrameIntoView() function
+// Constants for ScrollFrameIntoView() and ScrollContentIntoView() functions.
 #define NS_PRESSHELL_SCROLL_TOP      0
 #define NS_PRESSHELL_SCROLL_BOTTOM   100
 #define NS_PRESSHELL_SCROLL_LEFT     0
@@ -440,6 +440,17 @@ public:
   NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame,
                                  PRIntn   aVPercent, 
                                  PRIntn   aHPercent) const = 0;
+
+  /**
+   * Otherwise same as the above, but takes an aContent as the first parameter
+   * and after flushing pending notifications tries to find primary frame
+   * for that and then call ScrollFrameIntoView.
+   * @param aContent The content object of which primary frame should be
+   *                 scrolled into view.
+   */
+  NS_IMETHOD ScrollContentIntoView(nsIContent* aContent,
+                                   PRIntn      aVPercent,
+                                   PRIntn      aHPercent) const = 0;
 
   /**
    * Suppress notification of the frame manager that frames are

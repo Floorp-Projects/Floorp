@@ -1172,28 +1172,17 @@ nsGenericHTMLElement::ScrollIntoView(PRBool aTop)
     return NS_OK;
   }
 
-  // Flush all pending notifications so that our frames are up to date.  Make
-  // sure to do this first thing, since it may end up destroying our document's
-  // presshell.
-  document->FlushPendingNotifications(Flush_Layout);
-  
   // Get the presentation shell
-  nsIPresShell *presShell = document->GetShellAt(0);
+  nsCOMPtr<nsIPresShell> presShell = document->GetShellAt(0);
   if (!presShell) {
-    return NS_OK;
-  }
-
-  // Get the primary frame for this element
-  nsIFrame *frame = presShell->GetPrimaryFrameFor(this);
-  if (!frame) {
     return NS_OK;
   }
 
   PRIntn vpercent = aTop ? NS_PRESSHELL_SCROLL_TOP :
     NS_PRESSHELL_SCROLL_ANYWHERE;
 
-  presShell->ScrollFrameIntoView(frame, vpercent,
-                                 NS_PRESSHELL_SCROLL_ANYWHERE);
+  presShell->ScrollContentIntoView(this, vpercent,
+                                   NS_PRESSHELL_SCROLL_ANYWHERE);
 
   return NS_OK;
 }

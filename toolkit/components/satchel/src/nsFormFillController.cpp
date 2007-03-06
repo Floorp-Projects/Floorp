@@ -224,9 +224,7 @@ nsFormFillController::SetPopupOpen(PRBool aPopupOpen)
       nsCOMPtr<nsIPresShell> presShell;
       docShell->GetPresShell(getter_AddRefs(presShell));
       NS_ENSURE_STATE(presShell);
-      nsIFrame *frame = presShell->GetPrimaryFrameFor(content.get());
-      if (frame)
-        presShell->ScrollFrameIntoView(frame,
+      presShell->ScrollContentIntoView(content,
                                        NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,
                                        NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
 

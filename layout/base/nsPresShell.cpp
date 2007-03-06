@@ -859,6 +859,10 @@ public:
                                  PRIntn   aVPercent, 
                                  PRIntn   aHPercent) const;
 
+  NS_IMETHOD ScrollContentIntoView(nsIContent* aContent,
+                                   PRIntn      aVPercent,
+                                   PRIntn      aHPercent) const;
+
   NS_IMETHOD SetIgnoreFrameDestruction(PRBool aIgnore);
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame);
   
@@ -3731,12 +3735,8 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
   if (content) {
     // Flush notifications so we scroll to the right place
     if (aScroll) {
-      mDocument->FlushPendingNotifications(Flush_Layout);   
-      // Get the primary frame
-      nsIFrame* frame = GetPrimaryFrameFor(content);
-      NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-      rv = ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_TOP,
-                               NS_PRESSHELL_SCROLL_ANYWHERE);
+      rv = ScrollContentIntoView(content, NS_PRESSHELL_SCROLL_TOP,
+                                 NS_PRESSHELL_SCROLL_ANYWHERE);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -4045,6 +4045,19 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::ScrollContentIntoView(nsIContent* aContent,
+                                 PRIntn      aVPercent,
+                                 PRIntn      aHPercent) const
+{
+  nsCOMPtr<nsIContent> content = aContent; // Keep content alive while flushing.
+  NS_ENSURE_TRUE(content, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsIDocument> currentDoc = content->GetCurrentDoc();
+  NS_ENSURE_STATE(currentDoc);
+  currentDoc->FlushPendingNotifications(Flush_Layout);
+  return ScrollFrameIntoView(GetPrimaryFrameFor(content), aVPercent, aHPercent);
 }
 
 // GetLinkLocation: copy link location to clipboard
