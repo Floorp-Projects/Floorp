@@ -235,12 +235,6 @@ nsXBLResourceLoader::NotifyBoundElements()
         // Flush first to make sure we can get the frame for content
         doc->FlushPendingNotifications(Flush_Frames);
 
-        // Notify
-        nsIContent* parent = content->GetParent();
-        PRInt32 index = 0;
-        if (parent)
-          index = parent->IndexOf(content);
-        
         // If |content| is (in addition to having binding |mBinding|)
         // also a descendant of another element with binding |mBinding|,
         // then we might have just constructed it due to the
@@ -259,8 +253,7 @@ nsXBLResourceLoader::NotifyBoundElements()
               shell->FrameManager()->GetUndisplayedContent(content);
 
             if (!sc) {
-              nsCOMPtr<nsIDocumentObserver> obs(do_QueryInterface(shell));
-              obs->ContentInserted(doc, parent, content, index);
+              shell->RecreateFramesFor(content);
             }
           }
         }

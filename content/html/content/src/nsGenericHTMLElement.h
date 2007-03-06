@@ -727,12 +727,6 @@ protected:
   NS_HIDDEN_(nsresult) GetURIListAttr(nsIAtom* aAttr, nsAString& aResult);
 
   /**
-   * Helper method to recreate all frames for this content, if there
-   * are any.
-   */
-  void RecreateFrames();
-
-  /**
    * Locate an nsIEditor rooted at this content node, if there is one.
    */
   NS_HIDDEN_(nsresult) GetEditor(nsIEditor** aEditor);
