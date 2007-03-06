@@ -272,7 +272,7 @@ var PlacesOrganizer = {
     fp.appendFilters(Ci.nsIFilePicker.filterHTML);
     fp.defaultString = "bookmarks.html";
     if (fp.show() != Ci.nsIFilePicker.returnCancel)
-      PlacesUtils.exportBookmarksHTML(fp.file);
+      PlacesUtils.bookmarks.exportBookmarksHTML(fp.file);
   },
 
   updateStatusBarForView: function PO_updateStatusBarForView(aView) {
