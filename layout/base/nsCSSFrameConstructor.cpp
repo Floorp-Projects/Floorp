@@ -8515,6 +8515,11 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     }
   }
 
+  // We built some new frames.  Initialize any newly-constructed bindings.
+  LAYOUT_PHASE_TEMP_EXIT();
+  mDocument->BindingManager()->ProcessAttachedQueue();
+  LAYOUT_PHASE_TEMP_REENTER();
+
   // process the current pseudo frame state
   if (!state.mPseudoFrames.IsEmpty()) {
     ProcessPseudoFrames(state, frameItems);
@@ -8847,6 +8852,10 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 #endif
     }
 
+    LAYOUT_PHASE_TEMP_EXIT();
+    mDocument->BindingManager()->ProcessAttachedQueue();
+    LAYOUT_PHASE_TEMP_REENTER();
+
     // otherwise this is not a child of the root element, and we
     // won't let it have a frame.
     return NS_OK;
@@ -9071,6 +9080,12 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
       frameItems = nsFrameItems();
     }
   }
+
+  // Now that we've created frames, run the attach queue.
+  //XXXwaterson should we do this after we've processed pseudos, too?
+  LAYOUT_PHASE_TEMP_EXIT();
+  mDocument->BindingManager()->ProcessAttachedQueue();
+  LAYOUT_PHASE_TEMP_REENTER();
 
   // process the current pseudo frame state
   if (!state.mPseudoFrames.IsEmpty())
@@ -12221,6 +12236,8 @@ nsCSSFrameConstructor::CreateListBoxContent(nsPresContext* aPresContext,
     *aNewFrame = newFrame;
 
     if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
+      mDocument->BindingManager()->ProcessAttachedQueue();
+
       // Notify the parent frame
       if (aIsAppend)
         rv = ((nsListBoxBodyFrame*)aParentFrame)->ListBoxAppendFrames(newFrame);
@@ -12924,11 +12941,6 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   }
 
   delete [] restylesToProcess;
-
-  // Run the XBL binding constructors for any new frames we've constructed.
-  // Note that the restyle event is holding a strong ref to us, so we're ok
-  // here.
-  mDocument->BindingManager()->ProcessAttachedQueue();
 
   EndUpdate();
 

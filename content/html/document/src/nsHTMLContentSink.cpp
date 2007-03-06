@@ -1345,12 +1345,9 @@ SinkContext::AddText(const nsAString& aText)
 nsresult
 SinkContext::FlushTags()
 {
-  PRBool oldBeganUpdate = mSink->mBeganUpdate;
-
   ++(mSink->mInNotification);
   mozAutoDocUpdate updateBatch(mSink->mDocument, UPDATE_CONTENT_MODEL,
                                PR_TRUE);
-  mSink->mBeganUpdate = PR_TRUE;
 
   // Don't release last text node in case we need to add to it again
   FlushText();
@@ -1402,8 +1399,6 @@ SinkContext::FlushTags()
   }
   mNotifyLevel = mStackPos - 1;
   --(mSink->mInNotification);
-
-  mSink->mBeganUpdate = oldBeganUpdate;
 
   return NS_OK;
 }
@@ -3031,13 +3026,9 @@ HTMLContentSink::NotifyInsert(nsIContent* aContent,
   MOZ_TIMER_SAVE(mWatch)
   MOZ_TIMER_STOP(mWatch);
 
-  {
-    // Scope so we call EndUpdate before we decrease mInNotification
-    MOZ_AUTO_DOC_UPDATE(mDocument, UPDATE_CONTENT_MODEL, !mBeganUpdate);
-    nsNodeUtils::ContentInserted(NODE_FROM(aContent, mDocument),
-                                 aChildContent, aIndexInContainer);
-    mLastNotificationTime = PR_Now();
-  }
+  nsNodeUtils::ContentInserted(NODE_FROM(aContent, mDocument),
+                               aChildContent, aIndexInContainer);
+  mLastNotificationTime = PR_Now();
 
   MOZ_TIMER_DEBUGLOG(("Restore: nsHTMLContentSink::NotifyInsert()\n"));
   MOZ_TIMER_RESTORE(mWatch);

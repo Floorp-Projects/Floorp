@@ -2004,8 +2004,6 @@ nsXULContentBuilder::OpenContainer(nsIContent* aElement)
     if (container && IsLazyWidgetItem(aElement)) {
         // The tree widget is special, and has to be spanked every
         // time we add content to a container.
-        MOZ_AUTO_DOC_UPDATE(container->GetCurrentDoc(), UPDATE_CONTENT_MODEL,
-                            PR_TRUE);
         nsNodeUtils::ContentAppended(container, newIndex);
     }
 
@@ -2072,8 +2070,6 @@ nsXULContentBuilder::RebuildAll()
     CreateTemplateAndContainerContents(mRoot, getter_AddRefs(container), &newIndex);
 
     if (container) {
-        MOZ_AUTO_DOC_UPDATE(container->GetCurrentDoc(), UPDATE_CONTENT_MODEL,
-                            PR_TRUE);
         nsNodeUtils::ContentAppended(container, newIndex);
     }
 

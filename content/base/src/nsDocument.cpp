@@ -2535,7 +2535,6 @@ nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
 void
 nsDocument::BeginUpdate(nsUpdateType aUpdateType)
 {
-  ++mUpdateNestLevel;
   if (mScriptLoader) {
     mScriptLoader->AddExecuteBlocker();
   }
@@ -2546,14 +2545,6 @@ void
 nsDocument::EndUpdate(nsUpdateType aUpdateType)
 {
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndUpdate, (this, aUpdateType));
-
-  --mUpdateNestLevel;
-  if (mUpdateNestLevel == 0) {
-    // This set of updates may have created XBL bindings.  Run the
-    // constructors.
-    mBindingManager->ProcessAttachedQueue();
-  }
-
   if (mScriptLoader) {
     mScriptLoader->RemoveExecuteBlocker();
   }
@@ -4703,8 +4694,6 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
       sink->FlushPendingNotifications(aType);
     }
   }
-
-  // Should we be flushing pending binding constructors in here?
 
   nsPIDOMWindow *window = GetWindow();
 
