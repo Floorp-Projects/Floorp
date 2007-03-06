@@ -98,10 +98,10 @@ class nsIScrollableFrame;
 
 typedef short SelectionType;
 
-//12f7a744-26d8-493e-8072-90123a35f69f
+// 2fc67850-eb32-404a-8f84-52e2fe8f6356
 #define NS_IPRESSHELL_IID \
-{ 0x12f7a744, 0x26d8, 0x493e, \
-  { 0x80, 0x72, 0x90, 0x12, 0x3a, 0x35, 0xf6, 0x9f } }
+{ 0x2fc67850, 0xeb32, 0x404a, \
+  { 0x8f, 0x84, 0x52, 0xe2, 0xfe, 0x8f, 0x63, 0x56 } }
 
 // Constants for ScrollFrameIntoView() and ScrollContentIntoView() functions.
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -161,11 +161,6 @@ public:
    */
   NS_IMETHOD Destroy() = 0;
 
-  /**
-   * @return PR_TRUE if this pres shell is currently being destroyed.
-   */
-  PRBool IsDestroying() const { return mIsDestroying; }
-  
   // All frames owned by the shell are allocated from an arena.  They are also recycled
   // using free lists (separate free lists being maintained for each size_t).
   // Methods for recycling frames.
