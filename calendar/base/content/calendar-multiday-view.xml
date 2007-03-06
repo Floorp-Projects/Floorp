@@ -1786,7 +1786,7 @@
                     }
                 }
                 if (isToDo(aNewItem) &&
-                    (!aNewItem.entryDate || !aNewItem.dueDate || !this.mTasksInView)) {
+                    (!aNewItem.entryDate || !aNewItem.dueDate || !this.calView.mTasksInView)) {
                     return;
                 }
                 occs = aOldItem.getOccurrencesBetween(this.calView.startDate,

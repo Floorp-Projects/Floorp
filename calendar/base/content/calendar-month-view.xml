@@ -1491,7 +1491,7 @@
             for each (var occ in occs)
               this.calView.doDeleteItem(occ);
 
-            if (isToDo(aNewItem) && !this.mTasksInView) {
+            if (isToDo(aNewItem) && !this.calView.mTasksInView) {
                 return;
             }
             occs = aNewItem.getOccurrencesBetween(this.calView.startDate,
