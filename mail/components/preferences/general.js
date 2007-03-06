@@ -99,7 +99,8 @@ var gGeneralPane = {
   {
     var startPage = document.getElementById("mailnews.start_page.url");
     startPage.value = startPage.defaultValue;
-    startPage.setElementValue(document.getElementById("mailnewsStartPageUrl"));
+    if (startPage.hasUserValue)
+      startPage.reset();
   },
   
   /**
@@ -112,7 +113,7 @@ var gGeneralPane = {
     this.mStartPageUrl = pref.value;
     var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"].
                                getService(Components.interfaces.nsIURLFormatter);
-    return formatter.formatURL(this.mStartPageUrl); 
+    return formatter.formatURL(this.mStartPageUrl);
   },
   
   /**
