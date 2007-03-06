@@ -209,7 +209,7 @@ function guessSystemTimezone() {
     }
 
     try {
-        var stringBundleTZ = gCalendarBundle.getString("likelyTimezone");
+        var stringBundleTZ = calGetString("calendar", "likelyTimezone");
 
         if (stringBundleTZ.indexOf("/mozilla.org/") == -1) {
             // This happens if the l10n team didn't know how to get a time from
