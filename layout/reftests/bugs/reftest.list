@@ -89,6 +89,7 @@ random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 332557-1.html 332557-1-ref.html
 == 335628-1.html 335628-1-ref.html
 != 335628-2.xul 335628-2-ref.xul
+== 336147-1.html 336147-1-ref.html
 == 339289-1.html 339289-1-ref.html
 == 346774-1a.html 346774-1-ref.html
 == 346774-1b.html 346774-1-ref.html
