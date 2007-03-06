@@ -402,25 +402,44 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     }
   }
   else if (eCSSUnit_Color == unit) {
-    nsAutoString tmpStr;
     nscolor color = aValue.GetColorValue();
+    if (color == NS_RGBA(0, 0, 0, 0)) {
+      // Use the strictest match for 'transparent' so we do correct
+      // round-tripping of all other rgba() values.
+      aResult.AssignLiteral("transparent");
+    } else {
+      nsAutoString tmpStr;
+      PRUint8 a = NS_GET_A(color);
+      if (a < 255) {
+        tmpStr.AppendLiteral("rgba(");
+      } else {
+        tmpStr.AppendLiteral("rgb(");
+      }
 
-    aResult.AppendLiteral("rgb(");
+      NS_NAMED_LITERAL_STRING(comma, ", ");
 
-    NS_NAMED_LITERAL_STRING(comma, ", ");
+      tmpStr.AppendInt(NS_GET_R(color), 10);
+      tmpStr.Append(comma);
+      tmpStr.AppendInt(NS_GET_G(color), 10);
+      tmpStr.Append(comma);
+      tmpStr.AppendInt(NS_GET_B(color), 10);
+      if (a < 255) {
+        tmpStr.Append(comma);
+        // Alpha values are expressed as decimals, so we should convert
+        // back, using as few decimal places as possible for
+        // round-tripping.
+        // First try two decimal places:
+        float rounded = NS_roundf(float(a) * 100.0f / 255.0f) / 100.0f;
+        if (NSToIntRound(rounded * 255.0f) != a) {
+          // Use three decimal places.
+          rounded = NS_roundf(float(a) * 1000.0f / 255.0f) / 1000.0f;
+        }
+        tmpStr.AppendFloat(rounded);
+      }
+      tmpStr.Append(PRUnichar(')'));
 
-    tmpStr.AppendInt(NS_GET_R(color), 10);
-    aResult.Append(tmpStr + comma);
-
-    tmpStr.Truncate();
-    tmpStr.AppendInt(NS_GET_G(color), 10);
-    aResult.Append(tmpStr + comma);
-
-    tmpStr.Truncate();
-    tmpStr.AppendInt(NS_GET_B(color), 10);
-    aResult.Append(tmpStr);
-
-    aResult.Append(PRUnichar(')'));
+      aResult.Append(tmpStr);
+    }
   }
   else if (eCSSUnit_URL == unit || eCSSUnit_Image == unit) {
     aResult.Append(NS_LITERAL_STRING("url(") +
