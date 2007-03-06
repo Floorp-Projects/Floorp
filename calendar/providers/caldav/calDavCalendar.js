@@ -1052,7 +1052,7 @@ WebDavResource.prototype = {
             return this;
         }
        
-        throw Components.interfaces.NS_NO_INTERFACE;
+        throw Components.interfaces.NS_ERROR_NO_INTERFACE;
     }
 };
 
