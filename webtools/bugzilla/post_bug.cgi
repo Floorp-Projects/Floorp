@@ -90,7 +90,7 @@ if ($token) {
 });
 
 if (defined $cgi->param('maketemplate')) {
-    $vars->{'url'} = $cgi->query_string();
+    $vars->{'url'} = $cgi->canonicalise_query('token');
     $vars->{'short_desc'} = $cgi->param('short_desc');
     
     print $cgi->header();
