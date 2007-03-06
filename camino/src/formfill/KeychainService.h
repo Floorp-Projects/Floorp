@@ -81,6 +81,7 @@ enum KeychainPromptResult { kSave, kDontRemember, kNeverRemember } ;
 - (KeychainItem*)findKeychainEntryForHost:(NSString*)host
                                      port:(PRInt32)port
                                    scheme:(NSString*)scheme
+                           securityDomain:(NSString*)securityDomain
                                    isForm:(BOOL)isForm;
 - (void)storeUsername:(NSString*)username
              password:(NSString*)password
@@ -89,11 +90,11 @@ enum KeychainPromptResult { kSave, kDontRemember, kNeverRemember } ;
                  port:(PRInt32)port
                scheme:(NSString*)scheme
                isForm:(BOOL)isForm;
-- (void)updateKeychainEntry:(KeychainItem*)keychainItem
-               withUsername:(NSString*)username
-                   password:(NSString*)password
-                     scheme:(NSString*)scheme
-                     isForm:(BOOL)isForm;
+- (KeychainItem*)updateKeychainEntry:(KeychainItem*)keychainItem
+                        withUsername:(NSString*)username
+                            password:(NSString*)password
+                              scheme:(NSString*)scheme
+                              isForm:(BOOL)isForm;
 - (void)removeAllUsernamesAndPasswords;
 
 - (void)addListenerToView:(CHBrowserView*)view;
@@ -145,7 +146,7 @@ protected:
   
   void PreFill(const PRUnichar *, PRUnichar **, PRUnichar **);
   void ProcessPrompt(const PRUnichar *, bool, PRUnichar *, PRUnichar *);
-  static void ExtractHostAndPort(const PRUnichar* inRealm, NSString** outHost, PRInt32* outPort);
+  static void ExtractRealmComponents(const PRUnichar* inRealmBlob, NSString** outHost, NSString** outRealm, PRInt32* outPort);
 
   nsCOMPtr<nsIPrompt>   mPrompt;
 };

@@ -199,6 +199,7 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 - (KeychainItem*)findKeychainEntryForHost:(NSString*)host
                                      port:(PRInt32)port
                                    scheme:(NSString*)scheme
+                           securityDomain:(NSString*)securityDomain
                                    isForm:(BOOL)isForm;
 {
   if (port == -1)
@@ -211,6 +212,27 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
                                                            protocol:protocol
                                                  authenticationType:authType
                                                             creator:0];
+
+  // If we have a security domain, discard mismatched domains and re-sort the array
+  // to prefer matching realms over generic items.
+  // This is here rather than in allKeychainItemsForHost:... only to allow preferring
+  // new-stlye Camino entries with no security domain over Safari entries. These were
+  // only created in pre-1.1 nightlies, and are fixed at first use, so at some
+  // point this can handled like ports in allKeychainItemsForHost:...
+  if (securityDomain) {
+    NSMutableArray* matchingItems = [NSMutableArray array];
+    NSMutableArray* genericItems = [NSMutableArray array];
+    KeychainItem* item;
+    NSEnumerator* keychainEnumerator = [newKeychainItems objectEnumerator];
+    while ((item = [keychainEnumerator nextObject])) {
+      NSArray* domains = [item securityDomains];
+      if ([domains count] == 0)
+        [genericItems addObject:item];
+      else if ([domains containsObject:securityDomain])
+        [matchingItems addObject:item];
+    }
+    newKeychainItems = [matchingItems arrayByAddingObjectsFromArray:genericItems];
+  }
 
   // First, check for a new-style Camino keychain entry
   KeychainItem* item;
@@ -287,15 +309,16 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
     [newItem setSecurityDomains:[NSArray arrayWithObject:securityDomain]];
 }
 
-// Stores changes to a site's stored account. Because we don't handle multiple accounts, we want to
-// allow users to store an acccount in Camino that isn't the one we pick up from Safari, so for
-// password updates we update the existing item, but for username updates we make a new item if
-// the one we were using wasn't Camino-created.
-- (void)updateKeychainEntry:(KeychainItem*)keychainItem
-               withUsername:(NSString*)username
-                   password:(NSString*)password
-                     scheme:(NSString*)scheme
-                     isForm:(BOOL)isForm
+// Stores changes to a site's stored account. Note that this may return a different item than
+// the one passed in: because we don't handle multiple accounts, we want to allow users to
+// store an acccount in Camino that isn't the one we pick up from Safari. For password updates
+// we update the existing item, but for username updates we make a new item if the one we were
+// using wasn't Camino-created.
+- (KeychainItem*)updateKeychainEntry:(KeychainItem*)keychainItem
+                        withUsername:(NSString*)username
+                            password:(NSString*)password
+                              scheme:(NSString*)scheme
+                              isForm:(BOOL)isForm
 {
   // If this is one of our old items, upgrade it to the new format. We do this here instead of when
   // we first find the item so that users trying out 1.1 previews won't be missing the passwords of
@@ -309,14 +332,15 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
     [keychainItem setUsername:username password:password];
   }
   else {
-    KeychainItem* newItem = [KeychainItem addKeychainItemForHost:[keychainItem host]
-                                                            port:[keychainItem port]
-                                                        protocol:[keychainItem protocol]
-                                              authenticationType:[keychainItem authenticationType]
-                                                    withUsername:username
-                                                        password:password];
-    [newItem setCreator:kCaminoKeychainCreatorCode];
+    keychainItem = [KeychainItem addKeychainItemForHost:[keychainItem host]
+                                                   port:[keychainItem port]
+                                               protocol:[keychainItem protocol]
+                                     authenticationType:[keychainItem authenticationType]
+                                           withUsername:username
+                                               password:password];
+    [keychainItem setCreator:kCaminoKeychainCreatorCode];
   }
+  return keychainItem;
 }
 
 - (void)upgradeLegacyKeychainEntry:(KeychainItem*)keychainItem
@@ -569,14 +593,15 @@ KeychainPrompt::~KeychainPrompt()
 // netwerk/protocol/ftp/src/nsFtpConnectionThread.cpp).
 //
 void
-KeychainPrompt::ExtractHostAndPort(const PRUnichar* inRealm, NSString** outHost, PRInt32* outPort)
+KeychainPrompt::ExtractRealmComponents(const PRUnichar* inRealmBlob, NSString** outHost, NSString** outRealm, PRInt32* outPort)
 {
   if (!outHost || !outPort)
     return;
-  *outHost = @"";
+  *outHost = nil;
+  *outRealm = nil;
   *outPort = -1;
   
-  NSString* realmStr = [NSString stringWithPRUnichars:inRealm];
+  NSString* realmStr = [NSString stringWithPRUnichars:inRealmBlob];
 
   // first check for an ftp url and pull out the server from the realm
   if ([realmStr rangeOfString:@"ftp://"].location != NSNotFound) {
@@ -586,21 +611,26 @@ KeychainPrompt::ExtractHostAndPort(const PRUnichar* inRealm, NSString** outHost,
     // cut out any of the path
     NSRange pathDelimeter = [realmStr rangeOfString:@"/"];
     if (pathDelimeter.location != NSNotFound)
-      realmStr = [realmStr substringToIndex:pathDelimeter.location-1];
+      realmStr = [realmStr substringToIndex:(pathDelimeter.location - 1)];
     
     // now we're left with "username@server" with username being optional
     NSRange usernameMarker = [realmStr rangeOfString:@"@"];
     if (usernameMarker.location != NSNotFound)
-      *outHost = [realmStr substringFromIndex:usernameMarker.location+1];
+      *outHost = [realmStr substringFromIndex:(usernameMarker.location + 1)];
     else
       *outHost = realmStr;
   }
-  else {
-    // we're an http url, strip off the "(realm)" part
-    NSRange firstParen = [realmStr rangeOfString:@"("];
-    if (firstParen.location == NSNotFound)
-      firstParen.location = [realmStr length];
-    realmStr = [realmStr substringToIndex:firstParen.location-1];
+  else { // it's an http realm
+    // pull off the " (realm)" part
+    NSRange openParen = [realmStr rangeOfString:@"("];
+    if (openParen.location != NSNotFound) {
+      NSRange closeParen = [realmStr rangeOfString:@")"];
+      if (closeParen.location != NSNotFound) {
+        NSRange realmRange = NSMakeRange(openParen.location + 1, closeParen.location - openParen.location - 1);
+        *outRealm = [realmStr substringWithRange:realmRange];
+      }
+      realmStr = [realmStr substringToIndex:openParen.location - 1];
+    }
     
     // separate the host and the port
     NSRange endOfHost = [realmStr rangeOfString:@":"];
@@ -608,24 +638,25 @@ KeychainPrompt::ExtractHostAndPort(const PRUnichar* inRealm, NSString** outHost,
       *outHost = realmStr;
     else {
       *outHost = [realmStr substringToIndex:endOfHost.location];
-      *outPort = [[realmStr substringFromIndex:endOfHost.location+1] intValue];
+      *outPort = [[realmStr substringFromIndex:(endOfHost.location + 1)] intValue];
     }
   }
 }
 
 void
-KeychainPrompt::PreFill(const PRUnichar *realm, PRUnichar **user, PRUnichar **pwd)
+KeychainPrompt::PreFill(const PRUnichar *realmBlob, PRUnichar **user, PRUnichar **pwd)
 {
   NSString* host = nil;
+  NSString* realm = nil;
   PRInt32 port = -1;
-  ExtractHostAndPort(realm, &host, &port);
+  ExtractRealmComponents(realmBlob, &host, &realm, &port);
 
   // Pre-fill user/password if found in the keychain.
   // We don't get scheme information from gecko, so guess based on the port
   NSString* scheme = (port == kDefaultHTTPSPort) ? @"https" : @"http";
 
   KeychainService* keychain = [KeychainService instance];
-  KeychainItem* entry = [keychain findKeychainEntryForHost:host port:port scheme:scheme isForm:NO];
+  KeychainItem* entry = [keychain findKeychainEntryForHost:host port:port scheme:scheme securityDomain:realm isForm:NO];
   if (entry) {
     if (user)
       *user = [[entry username] createNewUnicodeBuffer];
@@ -635,11 +666,12 @@ KeychainPrompt::PreFill(const PRUnichar *realm, PRUnichar **user, PRUnichar **pw
 }
 
 void
-KeychainPrompt::ProcessPrompt(const PRUnichar* realm, bool checked, PRUnichar* user, PRUnichar *pwd)
+KeychainPrompt::ProcessPrompt(const PRUnichar* realmBlob, bool checked, PRUnichar* user, PRUnichar *pwd)
 {
   NSString* host = nil;
+  NSString* realm = nil;
   PRInt32 port = -1;
-  ExtractHostAndPort(realm, &host, &port);
+  ExtractRealmComponents(realmBlob, &host, &realm, &port);
 
   NSString* username = [NSString stringWithPRUnichars:user];
   NSString* password = [NSString stringWithPRUnichars:pwd];
@@ -648,18 +680,26 @@ KeychainPrompt::ProcessPrompt(const PRUnichar* realm, bool checked, PRUnichar* u
   NSString* scheme = (port == kDefaultHTTPSPort) ? @"https" : @"http";
 
   KeychainService* keychain = [KeychainService instance];
-  KeychainItem* existingEntry = [keychain findKeychainEntryForHost:(NSString*)host port:port scheme:scheme isForm:NO];
+  KeychainItem* keychainEntry = [keychain findKeychainEntryForHost:host port:port scheme:scheme securityDomain:realm isForm:NO];
 
   // Update, store or remove the user/password depending on the user
   // choice and whether or not we found the username/password in the
   // keychain.
-  if (checked && !existingEntry)
-    [keychain storeUsername:username password:password forHost:(NSString*)host securityDomain:nil port:port scheme:scheme isForm:NO];
-  else if (checked && existingEntry && (![[existingEntry username] isEqualToString:username] ||
-                                        ![[existingEntry password] isEqualToString:password]))
-    [keychain updateKeychainEntry:existingEntry withUsername:username password:password scheme:scheme isForm:NO];
-  else if (!checked && existingEntry)
-    [existingEntry removeFromKeychain];
+  if (checked) {
+    if (!keychainEntry) {
+      [keychain storeUsername:username password:password forHost:host securityDomain:realm port:port scheme:scheme isForm:NO];
+    }
+    else {
+      if (![[keychainEntry username] isEqualToString:username] ||
+          ![[keychainEntry password] isEqualToString:password])
+        keychainEntry = [keychain updateKeychainEntry:keychainEntry withUsername:username password:password scheme:scheme isForm:NO];
+      if (realm && ([[keychainEntry securityDomains] count] == 0))
+        [keychainEntry setSecurityDomains:[NSArray arrayWithObject:realm]];
+    }
+  }
+  else if (keychainEntry) {
+    [keychainEntry removeFromKeychain];
+  }
 }
 
 //
@@ -685,13 +725,13 @@ KeychainPrompt::Prompt(const PRUnichar *dialogTitle,
 NS_IMETHODIMP
 KeychainPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
                                             const PRUnichar *text,
-                                            const PRUnichar *realm,
+                                            const PRUnichar *realmBlob,
                                             PRUint32 savePassword,
                                             PRUnichar **user,
                                             PRUnichar **pwd,
                                             PRBool *_retval)
 {
-  PreFill(realm, user, pwd);
+  PreFill(realmBlob, user, pwd);
 
   PRBool checked = (pwd != NULL && *pwd != NULL);
   PRUnichar* checkTitle = [NSLocalizedString(@"KeychainCheckTitle", @"") createNewUnicodeBuffer];
@@ -703,7 +743,7 @@ KeychainPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
     return rv;
   
   if(*_retval)
-    ProcessPrompt(realm, checked, *user, *pwd);
+    ProcessPrompt(realmBlob, checked, *user, *pwd);
 
   return NS_OK;
 }
@@ -711,12 +751,12 @@ KeychainPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
 NS_IMETHODIMP
 KeychainPrompt::PromptPassword(const PRUnichar *dialogTitle,
                                 const PRUnichar *text,
-                                const PRUnichar *realm,
+                                const PRUnichar *realmBlob,
                                 PRUint32 savePassword,
                                 PRUnichar **pwd,
                                 PRBool *_retval)
 {
-  PreFill(realm, nsnull, pwd);
+  PreFill(realmBlob, nsnull, pwd);
 
   PRBool checked = (pwd != NULL && *pwd != NULL);
   PRUnichar* checkTitle = [NSLocalizedString(@"KeychainCheckTitle", @"") createNewUnicodeBuffer];
@@ -728,7 +768,7 @@ KeychainPrompt::PromptPassword(const PRUnichar *dialogTitle,
     return rv;
   
   if(*_retval)
-    ProcessPrompt(realm, checked, nsnull, *pwd);
+    ProcessPrompt(realmBlob, checked, nsnull, *pwd);
 
   return NS_OK;
 }
@@ -828,16 +868,14 @@ KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* windo
     // it as necessary. If there's no entry, ask if they want to remember it
     // and then put it into the keychain
     //
-    KeychainItem* existingEntry = [keychain findKeychainEntryForHost:host port:port scheme:scheme isForm:YES];
-    if (existingEntry) {
-      if (!([[existingEntry username] isEqualToString:username] && [[existingEntry password] isEqualToString:password]))
-        if ([keychain confirmChangePassword:GetNSWindow(window)])
-          [keychain updateKeychainEntry:existingEntry withUsername:username password:password scheme:scheme isForm:YES];
-      // If the password doesn't have an action host associated with it,
-      // add the host for the first form it is submitted to.
-      if ([[existingEntry securityDomains] count] == 0) {
-        [existingEntry setSecurityDomains:[NSArray arrayWithObject:actionHost]];
-      }
+    KeychainItem* keychainEntry = [keychain findKeychainEntryForHost:host port:port scheme:scheme securityDomain:nil isForm:YES];
+    if (keychainEntry) {
+      if ((![[keychainEntry username] isEqualToString:username] ||
+           ![[keychainEntry password] isEqualToString:password]) &&
+          [keychain confirmChangePassword:GetNSWindow(window)])
+        keychainEntry = [keychain updateKeychainEntry:keychainEntry withUsername:username password:password scheme:scheme isForm:YES];
+      if ([[keychainEntry securityDomains] count] == 0)
+        [keychainEntry setSecurityDomains:[NSArray arrayWithObject:actionHost]];
     }
     else {
       switch ([keychain confirmStorePassword:GetNSWindow(window)]) {
@@ -950,7 +988,7 @@ KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* windo
       PRInt32 port = -1;
       docURL->GetPort(&port);
 
-      KeychainItem* keychainEntry = [keychain findKeychainEntryForHost:host port:port scheme:scheme isForm:YES];
+      KeychainItem* keychainEntry = [keychain findKeychainEntryForHost:host port:port scheme:scheme securityDomain:nil isForm:YES];
       if (keychainEntry) {
         // To help prevent password stealing on sites that allow user-created HTML (but not JS),
         // only fill if the form's action host is one that has been authorized by the user.
