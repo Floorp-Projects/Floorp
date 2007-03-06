@@ -20,12 +20,12 @@
 package org.mozilla.dom.util;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.DocumentType;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -221,6 +221,58 @@ public class DOMTreeDumper {
 	dbg("dumping to stream...");	
 	dumpDocument(doc);
 	dbg("finished dumping...");	
+    }
+    
+    public String dump(Document doc) {
+        ByteArrayOutputStream baos = null;
+        baos = new ByteArrayOutputStream(1024);
+        ps = new PrintStream(baos);
+
+        dbg("dumping to String");
+        dumpDocument(doc);
+        dbg("finished dumping...");
+        return baos.toString();
+    }
+
+    
+    private Element findElementWithName(Element start, String name) {
+        Element result = null;
+        Node child = null;
+        String elementName = start.getAttribute("name");
+        if (null != elementName && elementName.equals(name)) {
+            return start;
+        }
+        else {
+            NodeList children = start.getChildNodes();
+            int length = 0;
+            boolean hasChildren = ((children != null) && 
+                    ((length = children.getLength()) > 0));
+            if (!hasChildren) {
+                return result;
+            }
+            for (int i=0; i < length; i++) {
+                child = children.item(i);
+                result = null;
+                if (child instanceof Element) {
+                    result = findElementWithName((Element) child, name);
+                }
+                if (null != result) {
+                    break;
+                }
+            }
+	}
+
+        return result;
+    }
+    
+    public Element findFirstElementWithName(Document doc, String name) {
+        Element result = null;
+        result = doc.getDocumentElement();
+        if (null != result) {
+            result.normalize();
+            result = findElementWithName(result, name);
+        }
+        return result;
     }
 
     private void dbg(String str) {

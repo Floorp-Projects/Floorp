@@ -9,12 +9,16 @@
 
 package org.mozilla.mcp;
 
+import java.awt.AWTException;
 import java.awt.BorderLayout;
 import java.awt.Frame;
+import java.awt.Robot;
+import java.awt.event.InputEvent;
 import java.io.FileNotFoundException;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.mozilla.dom.util.DOMTreeDumper;
 import org.mozilla.webclient.BrowserControl;
 import org.mozilla.webclient.BrowserControlCanvas;
 import org.mozilla.webclient.BrowserControlFactory;
@@ -50,13 +54,14 @@ public class MCP {
     private Navigation2 navigation = null;
     private EventRegistration2 eventRegistration = null;
     private PageInfoListener pageInfoListener = null;
-    private CurrentPage2 currentPage = null;
     private Frame frame = null;
     private int x = 0;
     private int y = 0;
     private int width = 1280;
     private int height = 960;
     private boolean initialized = false;
+    private Robot robot;
+    private DOMTreeDumper treeDumper = null;
     
     public void setAppData(String absolutePathToNativeBrowserBinDir)
     throws FileNotFoundException,
@@ -65,7 +70,14 @@ public class MCP {
         initialized = true;
     }
     
-    void setBounds(int x, int y, int width, int height) {
+    private DOMTreeDumper getDOMTreeDumper() {
+        if (null == treeDumper) {
+            treeDumper = new DOMTreeDumper("MCP", false);
+        }
+        return treeDumper;
+    }
+    
+    public void setBounds(int x, int y, int width, int height) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -108,20 +120,20 @@ public class MCP {
     }
     
     private CurrentPage2 getCurrentPage() {
-        if (null == currentPage) {
-            try {
-                currentPage = (CurrentPage2)
-                getBrowserControl().queryInterface(BrowserControl.CURRENT_PAGE_NAME);
-            }
-            catch (Throwable th) {
-                if (LOGGER.isLoggable(Level.SEVERE)) {
-                    LOGGER.throwing(this.getClass().getName(), "getCurrentPage", 
-                            th);
-                    LOGGER.severe("Unable to obtain CurrentPage2 reference from BrowserControl");
-                }
-            }
-            
+        CurrentPage2 currentPage = null;
+
+        try {
+            currentPage = (CurrentPage2)
+            getBrowserControl().queryInterface(BrowserControl.CURRENT_PAGE_NAME);
         }
+        catch (Throwable th) {
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.throwing(this.getClass().getName(), "getCurrentPage",
+                        th);
+                LOGGER.severe("Unable to obtain CurrentPage2 reference from BrowserControl");
+            }
+        }
+
         return currentPage;
     }
     
@@ -184,12 +196,66 @@ public class MCP {
         return frame;
     }
     
-    public Element getElementInCurrentPageById(String id) {
+    public Element findElement(String id) {
         Element result = null;
         Document dom = getCurrentPage().getDOM();
-        result = dom.getElementById(id);
+        try {
+            result = dom.getElementById(id);
+        }
+        catch (Exception e) {
+            
+        }
+        if (null == result) {
+            result = getDOMTreeDumper().findFirstElementWithName(dom, id);
+        }
         
         return result;
+    }
+    
+    public void clickElement(String id) {
+        Element element = findElement(id);
+        String clientX = null, clientY = null;
+        if (null != element) {
+            clientX = element.getAttribute("clientX");
+            clientY = element.getAttribute("clientY");
+            int x,y;
+            if (null != clientX && null != clientY) {
+                try {
+                    x = Integer.valueOf(clientX).intValue();
+                    y = Integer.valueOf(clientY).intValue();
+                    Robot robot = getRobot();
+                    robot.mouseMove(x, y);
+                    robot.mousePress(InputEvent.BUTTON1_MASK);
+                    robot.mouseRelease(InputEvent.BUTTON1_MASK);
+
+                } catch (NumberFormatException ex) {
+                    LOGGER.throwing(this.getClass().getName(), "clickElementGivenId",
+                        ex);
+                    ex.printStackTrace();
+                    throw new IllegalStateException(ex);
+                }
+            }
+        }
+        if (null == element || null == clientX || null == clientY) {
+            throw new IllegalStateException("Unable to click element " + id);
+        }
+    }
+    
+    public void blockingClickElement(String idOrName) {
+        synchronized (this) {
+            try {
+                clickElement(idOrName);
+                this.wait();
+            }
+            catch (IllegalStateException ise) {
+                LOGGER.throwing(this.getClass().getName(), "blockingClickElementGivenId",
+                        ise);
+            }
+            catch (InterruptedException ie) {
+                LOGGER.throwing(this.getClass().getName(), "blockingClickElementGivenId",
+                        ie);
+            }
+        }
     }
     
     public void blockingLoad(String url) {
@@ -204,6 +270,19 @@ public class MCP {
                 ex.printStackTrace();
             }
         }
+    }
+    
+    private Robot getRobot() {
+        if (null == robot) {
+            try {
+                robot = new Robot();
+            } catch (AWTException ex) {
+                LOGGER.throwing(this.getClass().getName(), "getRobot",
+                        ex);
+                ex.printStackTrace();
+            }
+        }
+        return robot;
     }
     
     private class PageInfoListenerImpl implements PageInfoListener {

@@ -7,8 +7,6 @@
 
 package cardemo;
 
-import java.awt.Robot;
-import java.awt.event.InputEvent;
 import org.mozilla.mcp.MCP;
 import org.mozilla.webclient.WebclientTestCase;
 import org.w3c.dom.Element;
@@ -41,19 +39,9 @@ public class CarDemoTest extends WebclientTestCase  {
     public void testCardemo() throws Exception {
         mcp.getRealizedVisibleBrowserWindow();
         mcp.blockingLoad("http://webdev1.sun.com/jsf-ajax-cardemo/faces/chooseLocale.jsp");
-        Element germanButton = mcp.getElementInCurrentPageById("j_id_id73:Germany");
-        assertNotNull(germanButton);
-        String clientX = germanButton.getAttribute("clientX");
-        String clientY = germanButton.getAttribute("clientY");
-        assertNotNull(clientX);
-        assertNotNull(clientY);
-        int x = Integer.valueOf(clientX).intValue();
-        int y = Integer.valueOf(clientY).intValue();
-	Robot robot = new Robot();
-	
-	robot.mouseMove(x, y);
-	robot.mousePress(InputEvent.BUTTON1_MASK);
-	robot.mouseRelease(InputEvent.BUTTON1_MASK);
+        mcp.blockingClickElement("j_id_id73:Germany");
+        mcp.blockingClickElement("j_id_id18:j_id_id43");
+        
 
         Thread.currentThread().sleep(30000);
     }

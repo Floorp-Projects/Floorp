@@ -34,7 +34,6 @@ import org.mozilla.webclient.BrowserControl;
 import org.mozilla.webclient.CurrentPage2;
 import org.mozilla.webclient.Selection;
 import org.mozilla.webclient.impl.WrapperFactory;
-import org.mozilla.webclient.impl.DOMTreeDumper;
 
 import java.util.Properties;
 import java.util.logging.Level;
@@ -46,6 +45,7 @@ import org.w3c.dom.Node;
 import org.mozilla.webclient.UnimplementedException;
 
 import org.mozilla.dom.DOMAccessor;
+import org.mozilla.dom.util.DOMTreeDumper;
 import org.mozilla.util.Log;
 
 public class CurrentPageImpl extends ImplObjectNative implements CurrentPage2, 
@@ -297,6 +297,10 @@ public Document getDOM()
 {
     // PENDING(edburns): run this on the event thread.
     Document result = nativeGetDOM(getNativeBrowserControl());
+    if (LOGGER.isLoggable((Level.INFO))) {
+        LOGGER.info("CurrentPageImpl.getDOM(): getting DOM with URI: " + 
+                result.getDocumentURI());
+    }
     return result;
 }
 

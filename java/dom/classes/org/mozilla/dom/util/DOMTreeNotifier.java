@@ -16,11 +16,11 @@
  * Contributor(s): Igor Kushnirskiy <idk@eng.sun.com>
  */
 
-package org.mozilla.webclient.test;
+package org.mozilla.dom.util;
 
 import javax.swing.event.TreeModelEvent;
 
-interface DOMTreeNotifier {
+public interface DOMTreeNotifier {
     /*
      * Invoked after a node (or a set of siblings) has changed in some way.
      */

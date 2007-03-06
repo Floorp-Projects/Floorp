@@ -27,6 +27,7 @@
 
 package org.mozilla.webclient.test;
 
+import org.mozilla.dom.util.DOMTreeModel;
 import org.mozilla.util.Assert;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -57,7 +58,7 @@ import java.util.Stack;
  * A dom viewer Frame
 
  *
- * @version $Id: DOMViewerFrame.java,v 1.7 2001/04/03 01:37:28 edburns%acm.org Exp $
+ * @version $Id: DOMViewerFrame.java,v 1.8 2007/03/06 22:03:43 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 

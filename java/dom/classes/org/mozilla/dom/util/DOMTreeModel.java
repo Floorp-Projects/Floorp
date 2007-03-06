@@ -19,7 +19,7 @@
  *      Louis-Philippe Gagnon <louisphilippe@macadamian.com>
  */
 
-package org.mozilla.webclient.test;
+package org.mozilla.dom.util;
 
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeModel;
@@ -30,7 +30,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import java.util.Vector;
 
-class DOMTreeModel implements TreeModel, DOMTreeNotifier {
+public class DOMTreeModel implements TreeModel, DOMTreeNotifier {
     private Node rootNode;
     private Vector treeModelListeners = new Vector();
 

@@ -20,7 +20,9 @@
 */
 
 #include "prlog.h"
+#include "nsCOMPtr.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOM3Document.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMElement.h"
@@ -756,4 +758,41 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementById
   }
 
   return JavaDOMGlobals::CreateNodeSubtype(env, (nsIDOMNode*)element);
+}
+
+/*
+ * Class:     org_mozilla_dom_DocumentImpl
+ * Method:    getDocumentURI
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_DocumentImpl_getDocumentURI
+  (JNIEnv *env, jobject jthis)
+{
+  nsIDOMDocument* doc = (nsIDOMDocument*) 
+    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+  jstring result = nsnull;
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIDOM3Document> dom3 = do_QueryInterface(doc, &rv);
+  if (NS_FAILED(rv) || !dom3) {
+      JavaDOMGlobals::ThrowException(env,
+      "Document.getDocumentURI: failed", rv);
+      return result;
+  }
+  nsString ret;
+  rv = dom3->GetDocumentURI(ret);
+  if (NS_FAILED(rv)) {
+      JavaDOMGlobals::ThrowException(env,
+      "Document.getDocumentURI: failed", rv);
+      return result;
+  }
+  result = env->NewString((jchar*) ret.get(), ret.Length());
+  if (!result) {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
+	   ("Document.getDocumentURI: NewString failed\n"));
+  }
+
+  return result;
+  
+  
 }

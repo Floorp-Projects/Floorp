@@ -62,6 +62,7 @@ public class DocumentImpl extends NodeImpl implements Document, DocumentEvent {
     public native Event createEvent(String type);
     public native NodeList getElementsByTagNameNS(String namespaceURI, String localName);
     public native Element getElementById(String elementId);
+    public native String getDocumentURI();
 
     public Node importNode(Node importedNode, boolean deep) throws DOMException {
         throw new UnsupportedOperationException();
@@ -76,10 +77,6 @@ public class DocumentImpl extends NodeImpl implements Document, DocumentEvent {
                                               throws DOMException {
         throw new UnsupportedOperationException();
     } 
-
-    public String getDocumentURI() {
-        throw new UnsupportedOperationException();
-    }
 
     public DOMConfiguration getDomConfig() {
         throw new UnsupportedOperationException();

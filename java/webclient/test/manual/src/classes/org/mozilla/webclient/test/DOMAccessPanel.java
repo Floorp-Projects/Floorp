@@ -21,8 +21,9 @@ package org.mozilla.webclient.test;
 
 import java.awt.*;
 import java.awt.event.*;
+import org.mozilla.dom.util.DOMTreeNotifier;
+import org.mozilla.dom.util.DOMTreeDumper;
 import org.w3c.dom.*;
-import org.mozilla.dom.*;
 import javax.swing.*;
 import javax.swing.tree.*; //idk
 import javax.swing.border.*;
