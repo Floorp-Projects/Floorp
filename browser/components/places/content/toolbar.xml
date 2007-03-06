@@ -315,15 +315,20 @@
       <method name="updateChevron">
         <parameter name="event"/>
         <body><![CDATA[
-        
           // Ignore events that aren't on the document or the window
           // (html document, tooltips, etc)
-          if (event && event.target != document && event.target != window)
+          // Do not ignore content window resizes, because they may
+          // be the result of the toolbar being shown/hidden
+          if (event && event.target != document && event.target != window &&
+              event.target != content)
             return;
-        
-          this._chevron.collapsed = false;
-          var chevronWidth = this._chevron.boxObject.width;          
+
           var totalWidth = this.boxObject.width;
+          if(this.lastWidth == totalWidth)
+            return; // don't recalculate if the size hasn't changed 
+          this.lastWidth = totalWidth;
+          this._chevron.collapsed = false;
+          var chevronWidth = this._chevron.boxObject.width;
           var spaceLeft = totalWidth;
           var overflowed = false;
           for (var i = 0; i < this.childNodes.length; i++) {
@@ -339,6 +344,8 @@
           this._chevron.collapsed = !overflowed;
         ]]></body>
       </method>
+
+      <field name="lastWidth">0</field>
       
       <!-- nsIPlacesView -->
       <property name="place">
