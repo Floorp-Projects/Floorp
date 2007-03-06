@@ -67,8 +67,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  msgnews \
 		  txmgr \
-		  import \
-              addrbook \
+		  addrbook \
 		  docshell \
 		  $(NULL)
 

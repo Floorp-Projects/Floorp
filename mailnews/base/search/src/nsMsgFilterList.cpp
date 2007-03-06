@@ -50,12 +50,12 @@
 #include "nsMsgSearchTerm.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsIImportService.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgFilterService.h"
 #include "nsMsgSearchScopeTerm.h"
 #include "nsISupportsObsolete.h"
 #include "nsNetUtil.h"
+#include "nsMsgI18N.h"
 
 // unicode "%s" format string
 static const PRUnichar unicodeFormatter[] = {
@@ -563,7 +563,6 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
 {
   nsresult	err = NS_OK;
   nsMsgFilterFileAttribValue attrib;
-  nsCOMPtr<nsIImportService> impSvc;
   nsCOMPtr<nsIMsgRuleAction> currentFilterAction;
   // We'd really like to move lot's of these into the objects that they refer to.
   aStream->seek(PR_SEEK_SET, 0);
@@ -590,11 +589,6 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
       {
         attrib = nsIMsgFilterList::attribNone;
         NS_ASSERTION(PR_FALSE, "error parsing filter file version");
-      }
-      if (m_fileVersion == k45Version)
-      {
-        impSvc = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
-        NS_ASSERTION(impSvc, "cannot get importService");
       }
       break;
     case nsIMsgFilterList::attribLogging:
@@ -627,10 +621,14 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
           break;
         }
         filter->SetFilterList(NS_STATIC_CAST(nsIMsgFilterList*,this));
-        if (m_fileVersion == k45Version && impSvc)
+        if (m_fileVersion == k45Version)
         {
           nsAutoString unicodeStr;
-          impSvc->SystemStringToUnicode(value.get(), unicodeStr);
+          err = nsMsgI18NConvertToUnicode(nsMsgI18NFileSystemCharset(),
+                                          value, unicodeStr);
+          if (NS_FAILED(err))
+              break;
+
           filter->SetFilterName(unicodeStr.get());
         }
         else
@@ -722,10 +720,14 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
     case nsIMsgFilterList::attribCondition:
       if (m_curFilter)
       {
-        if ( m_fileVersion == k45Version && impSvc)
+        if (m_fileVersion == k45Version)
         {
           nsAutoString unicodeStr;
-          impSvc->SystemStringToUnicode(value.get(), unicodeStr);
+          err = nsMsgI18NConvertToUnicode(nsMsgI18NFileSystemCharset(),
+                                          value, unicodeStr);
+          if (NS_FAILED(err))
+              break;
+
           char *utf8 = ToNewUTF8String(unicodeStr);
           value.Assign(utf8);
           nsMemory::Free(utf8);

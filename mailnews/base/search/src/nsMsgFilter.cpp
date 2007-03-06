@@ -57,7 +57,6 @@
 #include "nsReadableUtils.h"
 #include "nsEscape.h"
 #include "nsMsgI18N.h"
-#include "nsIImportService.h"
 #include "nsISupportsObsolete.h"
 #include "nsIOutputStream.h"
 #include "nsIStringBundle.h"
@@ -625,8 +624,6 @@ nsresult nsMsgFilter::ConvertMoveOrCopyToFolderValue(nsIMsgRuleAction *filterAct
       m_filterList->GetVersion(&filterVersion);
   if (filterVersion <= k60Beta1Version)
   {
-    nsCOMPtr <nsIImportService> impSvc = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
-    NS_ASSERTION(impSvc, "cannot get importService");
     nsCOMPtr <nsIMsgFolder> rootFolder;
     nsXPIDLCString folderUri;
 
@@ -638,11 +635,15 @@ nsresult nsMsgFilter::ConvertMoveOrCopyToFolderValue(nsIMsgRuleAction *filterAct
       PRInt32 prefixLen = PL_strlen(kImapPrefix);
       nsCAutoString originalServerPath;
       moveValue.Mid(originalServerPath, prefixLen, moveValue.Length() - prefixLen);
-      if ( filterVersion == k45Version && impSvc)
+      if (filterVersion == k45Version)
       {
         nsAutoString unicodeStr;
-        impSvc->SystemStringToUnicode(originalServerPath.get(), unicodeStr);
-        nsresult rv = CopyUTF16toMUTF7(unicodeStr, originalServerPath);
+        nsresult rv = nsMsgI18NConvertToUnicode(nsMsgI18NFileSystemCharset(),
+                                                originalServerPath,
+                                                unicodeStr);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = CopyUTF16toMUTF7(unicodeStr, originalServerPath);
         NS_ENSURE_SUCCESS(rv, rv); 
       }
 
@@ -703,10 +704,13 @@ nsresult nsMsgFilter::ConvertMoveOrCopyToFolderValue(nsIMsgRuleAction *filterAct
         nsCRT::free(unescapedMoveValue);
 #endif
         destFolderUri.Append('/');
-        if ( filterVersion == k45Version && impSvc)
+        if (filterVersion == k45Version)
         {
           nsAutoString unicodeStr;
-          impSvc->SystemStringToUnicode(moveValue.get(), unicodeStr);
+          rv = nsMsgI18NConvertToUnicode(nsMsgI18NFileSystemCharset(),
+                                         moveValue, unicodeStr);
+          NS_ENSURE_SUCCESS(rv, rv);
+
           rv = NS_MsgEscapeEncodeURLPath(unicodeStr, moveValue);
         }
         destFolderUri.Append(moveValue);
