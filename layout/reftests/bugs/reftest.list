@@ -133,6 +133,7 @@ fails-if(MOZ_WIDGET_TOOLKIT!="windows") == 351641-2b.html 351641-2-ref.html # bu
 == 364861-1.html 364861-1-ref.html
 == 364862-1.html 364862-1-ref.html
 == 365173-1.html 365173-1-ref.html
+== 367220-1.html 367220-1-ref.html
 == 367247-s-visible.html 367247-s-hidden.html
 == 367247-s-hidden.html 367247-s-auto.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") != 367247-s-auto.html 367247-s-scroll.html # bug 369293
