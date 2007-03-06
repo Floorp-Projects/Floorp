@@ -24,9 +24,9 @@
 [% PROCESS testopia/messages.html.tmpl %]
 [% PROCESS testopia/blocks.html.tmpl %]
 
-[% IF viewall OR tags %]
+[% IF viewall OR tags.size > 0 %]
   [% PROCESS testopia/tag/list.html.tmpl %]
-[% ELSE %]
+[% END %]
 
 [% IF UserInGroup('admin') %]
 <a href="tr_tags.cgi?action=show_all">Show All Tags</a>
@@ -111,5 +111,5 @@
 
 </td></tr></table>
 
-[% END %]
+
 [% PROCESS global/footer.html.tmpl %]

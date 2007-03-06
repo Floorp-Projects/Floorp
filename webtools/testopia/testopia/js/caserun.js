@@ -202,6 +202,9 @@ function chOwn(idx, cid, owner){
 function chSortKey(idx, cid, svalue){
     displayMsg('pp'+idx, 3, MSG_WAIT.blink());
 	disableAllButtons(true);
+    document.getElementById('ra'+idx).style.display='block'; 
+    document.getElementById('id'+idx).src='testopia/img/td.gif';
+	
 	dojo.io.bind({
 		url:     "tr_show_caserun.cgi",
 		content: {  caserun_id: cid, index: idx, sortkey: svalue, action: 'update_sortkey'},

@@ -40,7 +40,7 @@
     <td align="center"><a href="tr_list_runs.cgi?tags_type=anyexact&tags=[% tag.name FILTER url_quote %]">[% tag.run_count FILTER html %]</a></td>
     <td>
   [% IF item AND item.type != 'product' %]
-      <a href="tr_tags.cgi?tagid=[% tag.id FILTER none %]&action=removetag&id=[% id FILTER none %]&type=[% item.type FILTER url_quote %]&method=html">Remove</a>
+      <a href="tr_tags.cgi?tagid=[% tag.id FILTER none %]&action=removetag&id=[% item.id FILTER none %]&type=[% item.type FILTER url_quote %]&method=html">Remove</a>
   [% END %]
   [% IF UserInGroup("admin") %]
       <a href="tr_tags.cgi?tagid=[% tag.id FILTER none %]&action=delete" title="Remove tag from all objects and delete from system">Delete</a>
@@ -60,7 +60,7 @@
   <input type="hidden" name="method" value="html">
 </form>
   [% IF UserInGroup('admin') %]
-<p><a href="tr_tags.cgi&action=show_all">Show All Tags</a></p>
+<p><a href="tr_tags.cgi?action=show_all">Show All Tags</a></p>
   [% END %]
 
 [% END %]

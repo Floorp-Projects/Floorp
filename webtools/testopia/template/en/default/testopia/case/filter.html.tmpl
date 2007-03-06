@@ -70,8 +70,9 @@
       </tr>
       <tr>
         <th align="right" class="bz_row_header">Tags:</th>
-        <td><input type="hidden" name="tags_type" value="anywords" />
+        <td><input type="hidden" name="tags_type" value="anyexact" />
             <input id="tags" name="tags"
+                   autocomplete="false"
                    dojoType="combobox" 
                    dataUrl="tr_quicksearch.cgi?action=gettag&product_id=[% plan.product_id FILTER none %]&search=%{searchString}" 
                    mode="remote"

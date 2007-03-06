@@ -51,6 +51,7 @@ use strict;
 
 use Bugzilla::Util;
 use Bugzilla::Config;
+use Bugzilla::Error;
 
 use base qw(Exporter);
 

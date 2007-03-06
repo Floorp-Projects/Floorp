@@ -50,6 +50,7 @@ unless (detaint_natural($plan_id)){
   exit;
 }
 
+validate_test_id($plan_id, 'plan');
 my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
 
 unless ($plan->canadmin){
@@ -62,8 +63,8 @@ if ($action eq 'Apply Changes'){
 }
 elsif ($action eq 'Add User'){
     do_update();
-
-    my $userid = Bugzilla->user->login_to_id(trim($cgi->param('adduser'))) || ThrowUserError("invalid_username", { name => $cgi->param('adduser')});
+    my $userid = login_to_id(trim($cgi->param('adduser')));
+    ThrowUserError("invalid_username", { name => $cgi->param('adduser')}) unless $userid;
     ThrowUserError('testopia-tester-already-on-list', {'login' => $cgi->param('adduser')}) 
         if ($plan->check_tester($userid));
         
