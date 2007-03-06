@@ -42,9 +42,6 @@
 #include "nsIAccessibleEvent.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeNode.h"
-#include "nsIDOMDocumentTraversal.h"
-#include "nsIDOMNodeFilter.h"
-#include "nsIDOMTreeWalker.h"
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPresShell.h"
@@ -287,43 +284,6 @@ PRInt32 nsDocAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
   return - NS_PTR_TO_INT32(uniqueID);
 }
 
-already_AddRefed<nsIAccessible>
-nsDocAccessibleWrap::GetFirstLeafAccessible(nsIDOMNode *aStartNode)
-{
-  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
-  nsCOMPtr<nsIAccessible> accessible;
-  nsCOMPtr<nsIDOMTreeWalker> walker; 
-  nsCOMPtr<nsIDOMNode> currentNode(aStartNode);
-
-  while (currentNode) {
-    accService->GetAccessibleInWeakShell(currentNode, mWeakShell, getter_AddRefs(accessible)); // AddRef'd
-    if (accessible) {
-      PRInt32 numChildren;
-      accessible->GetChildCount(&numChildren);
-      if (numChildren == 0) {
-        nsIAccessible *leafAccessible = accessible;
-        NS_ADDREF(leafAccessible);
-        return leafAccessible;  // It's a leaf accessible, return it
-      }
-    }
-    if (!walker) {
-      // Instantiate walker lazily since we won't need it in 90% of the cases
-      // where the first DOM node we're given provides an accessible
-      nsCOMPtr<nsIDOMDocumentTraversal> trav = do_QueryInterface(mDocument);
-      NS_ASSERTION(trav, "No DOM document traversal for document");
-      trav->CreateTreeWalker(mDOMNode, 
-                            nsIDOMNodeFilter::SHOW_ELEMENT | nsIDOMNodeFilter::SHOW_TEXT,
-                            nsnull, PR_FALSE, getter_AddRefs(walker));
-      NS_ENSURE_TRUE(walker, nsnull);
-      walker->SetCurrentNode(currentNode);
-    }
-
-    walker->NextNode(getter_AddRefs(currentNode));
-  }
-
-  return nsnull;
-}
-
 NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
 {
   // Staying on the same page, jumping to a named anchor
@@ -353,7 +313,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
     focusNode = mDOMNode; // Moved to top, so event is for 1st leaf after root
   }
 
-  nsCOMPtr<nsIAccessible> accessible = GetFirstLeafAccessible(focusNode);
+  nsCOMPtr<nsIAccessible> accessible = GetFirstAvailableAccessible(focusNode, PR_TRUE);
   nsCOMPtr<nsPIAccessible> privateAccessible = do_QueryInterface(accessible);
   if (privateAccessible) {
     privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_SCROLLINGSTART,

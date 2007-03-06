@@ -82,14 +82,60 @@ public:
 protected:
   PRBool IsHyperText();
 
+  /*
+   * This does the work for nsIAccessibleText::GetText[At|Before|After]Offset
+   * @param aType, eGetBefore, eGetAt, eGetAfter
+   * @param aBoundaryType, char/word-start/word-end/line-start/line-end/paragraph/attribute
+   * @param aOffset, offset into the hypertext to start from
+   * @param *aStartOffset, the resulting start offset for the returned substring
+   * @param *aEndOffset, the resulting end offset for the returned substring
+   * @param aText, the resulting substring
+   * @return success/failure code
+   */
   nsresult GetTextHelper(EGetTextType aType, nsAccessibleTextBoundary aBoundaryType,
                          PRInt32 aOffset, PRInt32 *aStartOffset, PRInt32 *aEndOffset,
                          nsAString & aText);
+
+  /**
+    * Used by GetPosAndText to move backward/forward from a given point by word/line/etc.
+    * @param aPresShell, the current presshell we're moving in
+    * @param aFromFrame, the starting frame we're moving from
+    * @param aFromOffset, the starting offset we're moving from
+    * @param aAmount, how much are we moving (word/line/etc.) ?
+    * @param aDirection, forward or backward?
+    * @param aNeedsStart, for word and line cases, are we basing this on the start or end?
+    * @return, the resulting offset into this hypertext
+    */
   PRInt32 GetRelativeOffset(nsIPresShell *aPresShell, nsIFrame *aFromFrame, PRInt32 aFromOffset,
-                            nsSelectionAmount amount, nsDirection direction, PRBool aNeedsStart);
+                            nsSelectionAmount aAmount, nsDirection aDirection, PRBool aNeedsStart);
+  /**
+    * Given a start offset and end offset, get substring information. Different info is returned depending
+    * on what optional paramters are provided.
+    * @param aStartOffset, the start offset into the hyper text. This is also an out parameter used to return
+    *                      the offset into the start frame's text content (start frame is the @return)
+    * @param aEndOffset, the endoffset into the hyper text. This is also an out parameter used to return
+    *                    the offset into the end frame's text content
+    * @param aText (optional), return the substring's text
+    * @param aEndFrame (optional), return the end frame for this substring
+    * @param aBoundsRect (optional), return the bounds rectangle for this substring
+    * @return the start frame for this substring
+    */
   nsIFrame* GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset, nsAString *aText = nsnull,
                           nsIFrame **aEndFrame = nsnull, nsIntRect *aBoundsRect = nsnull);
-  nsresult DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32 *aResult);
+  /**
+    * Turn a DOM Node and offset into a character offset into this hypertext. Will look for closest match
+    * when the DOM node does not have an accessible object associated with it.
+    * Will return an offset for the end of the string if the node is not found.
+    * @param aNode, the node to look for
+    * @param aNodeOffset, the offset to look for
+    * @param aResult, the character offset into the current nsHyperTextAccessible
+    * @param aFinalAccessible (optional), returns the accessible child which contained the offset,
+    *                                     if it is within the current nsHyperTextAccessible, otherwise
+    *                                     it is set to nsnull.
+    * @return failure/success code
+    */
+  nsresult DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32 *aResultOffset,
+                            nsIAccessible **aFinalAccessible = nsnull);
   nsIntRect GetBoundsForString(nsIFrame *aFrame, PRInt32 aStartOffset, PRInt32 aLength);
 
   // Editor helpers, subclasses of nsHyperTextAccessible may have editor
