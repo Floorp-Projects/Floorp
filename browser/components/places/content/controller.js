@@ -655,6 +655,7 @@ PlacesController.prototype = {
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_VISIT:
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_FULL_VISIT:
           nodeData["link"] = true;
+          uri = PlacesUtils._uri(node.uri);
           if (PlacesUtils.nodeIsBookmark(node))
             nodeData["bookmark"] = true;
           break;
@@ -673,9 +674,17 @@ PlacesController.prototype = {
 
       // annotations
       if (uri) {
-        var names = PlacesUtils.annotations.getPageAnnotationNames(uri, { });
+        var names = PlacesUtils.annotations.getPageAnnotationNames(uri, {});
         for (var j = 0; j < names.length; ++j)
           nodeData[names[i]] = true;
+
+        // For bookmark-items also include the bookmark-specific annotations
+        if ("bookmark" in nodeData) {
+          var placeURI = PlacesUtils.bookmarks.getItemURI(node.bookmarkId);
+          names = PlacesUtils.annotations.getPageAnnotationNames(placeURI, {});
+          for (j = 0; j < names.length; ++j)
+            nodeData[names[i]] = true;
+        }
       }
 #ifdef EXTENDED_LIVEBOOKMARKS_UI
       else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY) {

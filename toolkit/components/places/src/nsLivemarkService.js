@@ -195,8 +195,8 @@ LivemarkService.prototype = {
     for (var i=0; i < cc; ++i) {
       try {
         var node = root.getChild(i);
-        this._ans.removeAnnotation(gIoService.newURI(node.uri, null, null), 
-                                   LMANNO_BMANNO);
+        var placeURI = this._bms.getItemURI(node.bookmarkId);
+        this._ans.removeAnnotation(placeURI, LMANNO_BMANNO);
       }
       catch (ex) {
         // continue
@@ -561,7 +561,8 @@ LivemarkLoadListener.prototype = {
   function LS_insertLivemarkChild(folderId, uri, title) {
     var id = this._bms.insertItem(folderId, uri, this._bms.DEFAULT_INDEX);
     this._bms.setItemTitle(id, title);
-    this._ans.setAnnotationString(uri, LMANNO_BMANNO, uri.spec, 0,
+    var placeURI = this._bms.getItemURI(id);
+    this._ans.setAnnotationString(placeURI, LMANNO_BMANNO, uri.spec, 0,
                                   this._ans.EXPIRE_NEVER);
   },
 
