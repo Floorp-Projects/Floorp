@@ -222,10 +222,7 @@ NS_IMETHODIMP
 nsSVGTextPathFrame::DidModifySVGObservable(nsISVGValue* observable,
                                            nsISVGValue::modificationType aModType)
 {
-  nsSVGTextFrame* text_frame = GetTextFrame();
-  if (text_frame)
-    text_frame->NotifyGlyphMetricsChange();
-
+  UpdateGraphic();
   return NS_OK;
 }
 
@@ -239,9 +236,7 @@ nsSVGTextPathFrame::AttributeChanged(PRInt32         aNameSpaceID,
 {
   if (aNameSpaceID == kNameSpaceID_None &&
       aAttribute == nsGkAtoms::startOffset) {
-    nsSVGTextFrame* text_frame = GetTextFrame();
-    if (text_frame)
-      text_frame->NotifyGlyphMetricsChange();
+    UpdateGraphic();
   } else if (aNameSpaceID == kNameSpaceID_XLink &&
              aAttribute == nsGkAtoms::href) {
     NS_REMOVE_SVGVALUE_OBSERVER(mSegments);

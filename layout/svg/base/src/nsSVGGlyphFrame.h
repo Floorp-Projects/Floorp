@@ -203,7 +203,6 @@ protected:
 
   void UpdateGeometry(PRBool bRedraw, PRBool suppressInvalidation);
   void UpdateMetrics();
-  nsSVGTextFrame *GetTextFrame();
   PRBool ContainsPoint(float x, float y);
   nsresult GetGlobalTransform(gfxContext *aContext);
   nsresult GetHighlight(PRUint32 *charnum, PRUint32 *nchars,

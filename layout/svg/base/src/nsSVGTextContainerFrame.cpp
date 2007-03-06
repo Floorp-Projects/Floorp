@@ -51,15 +51,12 @@ NS_INTERFACE_MAP_BEGIN(nsSVGTextContainerFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGTextContentMetrics)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGDisplayContainerFrame)
 
-NS_IMETHODIMP_(nsSVGTextFrame *)
-nsSVGTextContainerFrame::GetTextFrame()
+void
+nsSVGTextContainerFrame::UpdateGraphic()
 {
-  for (nsIFrame *frame = this; frame != nsnull; frame = frame->GetParent()) {
-    if (frame->GetType() == nsGkAtoms::svgTextFrame) {
-      return NS_STATIC_CAST(nsSVGTextFrame*, frame);
-    }
-  }
-  return nsnull;
+  nsSVGTextFrame *textFrame = GetTextFrame();
+  if (textFrame)
+    textFrame->NotifyGlyphMetricsChange();
 }
 
 NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
@@ -455,5 +452,16 @@ nsSVGTextContainerFrame::GetGlyphFragmentAtCharNum(nsISVGGlyphFragmentNode* node
   }
 
   // not found
+  return nsnull;
+}
+
+nsSVGTextFrame *
+nsSVGTextContainerFrame::GetTextFrame()
+{
+  for (nsIFrame *frame = this; frame != nsnull; frame = frame->GetParent()) {
+    if (frame->GetType() == nsGkAtoms::svgTextFrame) {
+      return NS_STATIC_CAST(nsSVGTextFrame*, frame);
+    }
+  }
   return nsnull;
 }
