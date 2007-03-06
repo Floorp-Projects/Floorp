@@ -123,13 +123,13 @@
                 <radio wsm_persist="true" accesskey="&retentionKeepNew.accesskey;" 
                         value="3" label="&retentionKeepNew.label;" oncommand="onCheckKeepMsg();"/>
                 <textbox wsm_persist="true" id="retention.keepNewMsgMin" size="2" value="30"/>
-                <label value="&message.label;" control="retention.keepNewMsgMin"/>
+                <label value="&message.label;" control="retention.keepNewMsgMin" id="retention.keepNewMsgMinLabel"/>
               </hbox>
               <hbox flex="1" align="center">
                 <radio wsm_persist="true" accesskey="&retentionKeepMsg.accesskey;"
                         value="2" label="&retentionKeepMsg.label;" oncommand="onCheckKeepMsg();"/>
                 <textbox wsm_persist="true" id="retention.keepOldMsgMin" size="2" value="30"/>
-                <label value="&daysOld.label;" control="retention.keepOldMsgMin"/>
+                <label value="&daysOld.label;" control="retention.keepOldMsgMin" id="retention.keepOldMsgMinLabel"/>
               </hbox>
             </radiogroup>
           </hbox>
