@@ -2561,9 +2561,6 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     }
   }
 
-  // Run the XBL binding constructors for any new frames we've constructed
-  mDocument->BindingManager()->ProcessAttachedQueue();
-
   return NS_OK; //XXX this needs to be real. MMP
 }
 
@@ -4515,16 +4512,7 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
     mViewManager->BeginUpdateViewBatch();
 
     if (aType & Flush_StyleReresolves) {
-      // Processing pending restyles can kill us, and some callers only
-      // hold weak refs when calling FlushPendingNotifications().  :(
-      nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
       mFrameConstructor->ProcessPendingRestyles();
-      if (mIsDestroying) {
-        // We no longer have a view manager and all that.
-        // XXX FIXME: Except we're in the middle of a view update batch...  We
-        // need to address that somehow.  See bug 369165.
-        return NS_OK;
-      }
     }
 
     if (aType & Flush_OnlyReflow) {

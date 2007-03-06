@@ -826,9 +826,6 @@ private:
 
   // Member to store out last-selected stylesheet set.
   nsString mLastStyleSheetSet;
-
-  // Our update nesting level
-  PRUint32 mUpdateNestLevel;
 };
 
 

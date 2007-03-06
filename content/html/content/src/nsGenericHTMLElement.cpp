@@ -508,6 +508,27 @@ nsGenericHTMLElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
   return NS_OK;
 }
 
+void
+nsGenericHTMLElement::RecreateFrames()
+{
+  nsIDocument* document = GetCurrentDoc();
+  
+  if (!document) {
+    return;
+  }
+
+  PRInt32 numShells = document->GetNumberOfShells();
+  for (PRInt32 i = 0; i < numShells; ++i) {
+    nsIPresShell *shell = document->GetShellAt(i);
+    if (shell) {
+      nsIFrame* frame = shell->GetPrimaryFrameFor(this);
+      if (frame) {
+        shell->RecreateFramesFor(this);
+      }
+    }
+  }
+}
+
 static PRBool
 IsBody(nsIContent *aContent)
 {

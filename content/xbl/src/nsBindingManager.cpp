@@ -81,8 +81,6 @@
 #include "nsIScriptContext.h"
 #include "nsBindingManager.h"
 
-#include "nsThreadUtils.h"
-
 // ==================================================================
 // = nsAnonymousContentList 
 // ==================================================================
@@ -363,8 +361,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsBindingManager)
       tmp->mDocumentTable.EnumerateRead(&DocumentInfoHashtableTraverser, &cb);
   if (tmp->mLoadingDocTable.IsInitialized())
       tmp->mLoadingDocTable.EnumerateRead(&LoadingDocHashtableTraverser, &cb);
-  // No need to traverse mProcessAttachedQueueEvent, since it'll just
-  // fire at some point.
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsBindingManager)
@@ -820,33 +816,13 @@ nsBindingManager::AddToAttachedQueue(nsXBLBinding* aBinding)
   if (!mAttachedStack.AppendElement(aBinding))
     return NS_ERROR_OUT_OF_MEMORY;
 
-  // If we're in the middle of processing our queue already, don't
-  // bother posting the event.
-  if (!mProcessingAttachedStack && !mProcessAttachedQueueEvent) {
-    mProcessAttachedQueueEvent =
-      new nsRunnableMethod<nsBindingManager>(
-        this, &nsBindingManager::DoProcessAttachedQueue);
-    NS_DispatchToCurrentThread(mProcessAttachedQueueEvent);
-  }
-
   return NS_OK;
-}
-
-void
-nsBindingManager::DoProcessAttachedQueue()
-{
-  ProcessAttachedQueue();
-
-  NS_ASSERTION(mAttachedStack.Length() == 0,
-               "Shouldn't have pending bindings!");
-  
-  mProcessAttachedQueueEvent = nsnull;
 }
 
 void
 nsBindingManager::ProcessAttachedQueue()
 {
-  if (mProcessingAttachedStack || mAttachedStack.Length() == 0)
+  if (mProcessingAttachedStack)
     return;
 
   mProcessingAttachedStack = PR_TRUE;
@@ -861,10 +837,7 @@ nsBindingManager::ProcessAttachedQueue()
   }
 
   mProcessingAttachedStack = PR_FALSE;
-
-  NS_ASSERTION(mAttachedStack.Length() == 0, "How did we get here?");
-  
-  mAttachedStack.Compact();
+  mAttachedStack.Clear();
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)
@@ -1379,8 +1352,5 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
 void
 nsBindingManager::NodeWillBeDestroyed(const nsINode *aNode)
 {
-  // Make sure to not run any more XBL constructors
-  mProcessingAttachedStack = PR_TRUE;
-  
   NS_BINDINGMANAGER_NOTIFY_OBSERVERS(NodeWillBeDestroyed, (aNode));
 }
