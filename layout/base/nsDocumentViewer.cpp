@@ -2622,17 +2622,10 @@ NS_IMETHODIMP DocumentViewerImpl::ScrollToNode(nsIDOMNode* aNode)
    nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
    NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
-   // Get the primary frame
-   // Remember Frames aren't ref-counted.  They are in their own special little
-   // world.
-   nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
-
-   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-
-   // tell the pres shell to scroll to the frame
-   NS_ENSURE_SUCCESS(presShell->ScrollFrameIntoView(frame,
-                                                    NS_PRESSHELL_SCROLL_TOP,
-                                                    NS_PRESSHELL_SCROLL_ANYWHERE),
+   // Tell the PresShell to scroll to the primary frame of the content.
+   NS_ENSURE_SUCCESS(presShell->ScrollContentIntoView(content,
+                                                      NS_PRESSHELL_SCROLL_TOP,
+                                                      NS_PRESSHELL_SCROLL_ANYWHERE),
                      NS_ERROR_FAILURE);
    return NS_OK;
 }

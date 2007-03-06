@@ -192,14 +192,11 @@ inFlasher::ScrollElementIntoView(nsIDOMElement *aElement)
   if (!presShell) {
     return NS_OK;
   }
-  nsIFrame* frame = inLayoutUtils::GetFrameFor(aElement, presShell);
-  if (!frame) {
-    return NS_OK;
-  }
 
-  presShell->ScrollFrameIntoView(frame,
-                                 NS_PRESSHELL_SCROLL_ANYWHERE /* VPercent */,
-                                 NS_PRESSHELL_SCROLL_ANYWHERE /* HPercent */);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+  presShell->ScrollContentIntoView(content,
+                                   NS_PRESSHELL_SCROLL_ANYWHERE /* VPercent */,
+                                   NS_PRESSHELL_SCROLL_ANYWHERE /* HPercent */);
 
   return NS_OK;
 }
