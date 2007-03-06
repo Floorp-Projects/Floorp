@@ -946,7 +946,7 @@ nsCycleCollector::CollectWhite()
     if (ms2.lTotalCount < ms1.lTotalCount)
         mStats.mFreedBytes += (ms1.lTotalCount - ms2.lTotalCount);
 #endif // WIN32
-#endif __MINGW32__
+#endif // __MINGW32__
 }
 
 
@@ -1285,9 +1285,6 @@ InitMemHook(void)
     }
 }
 
-void (*__malloc_initialize_hook) (void) = InitMemHook;
-
-
 #elif defined(WIN32)
 #ifndef __MINGW32__
 
@@ -1597,6 +1594,11 @@ void
 nsCycleCollector::Freed(void *n)
 {
     mStats.mFreeCalls++;
+
+    if (!n) {
+        // Ignore null pointers coming through
+        return;
+    }
 
     if (mPurpleBuf.Exists(n)) {
         mStats.mForgetNode++;
