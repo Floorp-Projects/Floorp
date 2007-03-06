@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet
+  href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window title="Add Livemarks"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+   src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml" />
+
+<script type="application/javascript">
+<![CDATA[
+// Test the asynchronous downloading of a feed to the livemarks service
+SimpleTest.waitForExplicitFinish();
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+
+function uri(spec) {
+  return iosvc.newURI(spec, null, null);
+}
+
+var lmsvc = Cc["@mozilla.org/browser/livemark-service;2"].
+              getService(Ci.nsILivemarkService);
+var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+              getService(Ci.nsINavBookmarksService);
+var gLivemarkId;
+
+var navObserver =
+{
+  onBeginUpdateBatch: function(){},
+  onEndUpdateBatch: function(){},
+  onItemAdded: function(bookmarkId, bookmark, folder, index) {
+    if (bookmark.spec == "http://example.org/2003/12/13/atom03") {
+      is(folder, gLivemarkId, "Livemark added to correct folder");
+      bmsvc.removeObserver(navObserver);
+      SimpleTest.finish(); 
+    }
+  },
+  onItemRemoved: function(bookmarkId, bookmark, folder, index){},
+  onItemChanged: function(bookmarkId, bookmark, property, value){},
+  onItemVisited: function(bookmarkId, bookmark, aVisitID, time){},
+  onFolderAdded: function(folder, parent, index){},
+  onFolderRemoved: function(folder, parent, index){},
+  onFolderMoved: function(folder, oldParent, oldIndex, newParent, newIndex){},
+  onFolderChanged: function(folder, property){},
+  onSeparatorAdded: function(parent, index){},
+  onSeparatorRemoved: function(parent, index){}
+};
+
+var root = bmsvc.bookmarksRoot;
+const FEEDSPEC = "http://localhost:8888/tests/browser/components/places/tests/chrome/sample_feed.atom";
+
+gLivemarkId = lmsvc.createLivemarkFolderOnly(bmsvc, root, "foo",
+                                            uri("http:/localhost/"),
+                                            uri(FEEDSPEC), -1);
+bmsvc.addObserver(navObserver, false);
+lmsvc.reloadLivemarkFolder(gLivemarkId);
+
+
+]]>
+</script>
+
+</window>
