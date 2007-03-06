@@ -1292,15 +1292,20 @@ sub can_unlink_plan {
 sub get_user_rights {
     my $self = shift;
     my ($userid) = @_;
-    
     my $dbh = Bugzilla->dbh;
+    
+    my $plan_ids = $dbh->selectcol_arrayref(
+        "SELECT plan_id FROM test_case_plans WHERE case_id = ?",
+        undef, $self->id);
+    $plan_ids = join(',',@$plan_ids);
+     
     my ($perms) = $dbh->selectrow_array(
         "SELECT MAX(permissions) FROM test_plan_permissions
            LEFT JOIN test_case_plans ON test_plan_permissions.plan_id = test_case_plans.plan_id
           INNER JOIN test_cases ON test_case_plans.case_id = test_cases.case_id 
-          WHERE userid = ? AND test_plan_permissions.plan_id = ?", 
-          undef, ($userid, $self->id));
-    
+          WHERE userid = ? AND test_plan_permissions.plan_id IN ($plan_ids)", 
+          undef, $userid);
+    print STDERR $perms;
     return $perms;
 }
 ###############################
@@ -1615,7 +1620,7 @@ sub text {
     my $dbh = Bugzilla->dbh;
     return $self->{'text'} if exists $self->{'text'};
     my $text = $dbh->selectrow_hashref(
-        "SELECT action, effect, setup, breakdown, who author_id, case_text_version AS version
+        "SELECT action, effect, setup, breakdown, who AS author_id, case_text_version AS version
            FROM test_case_texts
           WHERE case_id=? AND case_text_version=?",
         undef, $self->{'case_id'}, 

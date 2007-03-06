@@ -25,14 +25,25 @@
   <div id="ra[% index %]" class="ae_dv">
 
   [%##### Action, Expected Results #####%]
-    <table class="ae_tb">
+    <table class="ae_tb" cellpadding="10">
+      <tr>
+        <td valign="top" width="50%" class="ae_s">
+        <div style="overflow:auto" >
+          <b>Setup:</b><br/>[% caserun.case.text.setup %]
+        </div>
+        </td>
+        <td valign="top" align="left" width="50%" class="ae_s">
+        <div style="overflow:auto">
+          <b>Break Down:</b><br/>[% caserun.case.text.breakdown %]
+        </div>
+        </td>
+      </tr>
       <tr>
         <td valign="top" width="50%" class="ae_s">
         <div style="overflow:auto" >
           <b>Action:</b><br/>[% caserun.case.text.action %]
         </div>
         </td>
-        <td style="width:10px;"/>
         <td valign="top" align="left" width="50%" class="ae_s">
         <div style="overflow:auto">
           <b>Expected Results:</b><br/>[% caserun.case.text.effect %]
@@ -90,20 +101,6 @@
     </tr>  
   </table>
 
-      <div style="float:left;margin-left:7px;">
-      [% IF caserun.runningby != '' || caserun.canedit == 0 %]
-        <a id="aw_[% index %]">
-          <img id="awi_[% index %]" src="testopia/img/awg.gif" width="25" height="23" 
-          [% IF caserun.canedit == 0 %]
-            alt="Can't run it" title="Can't run it" 
-          [% else %]
-            alt="Already running" title="Already running" 
-          [% END %]
-          border="0" /></a>
-      [% ELSE %]
-        
-      [% END %]
-      </div>
     </div>
 
   [%##### Bugs #####%]

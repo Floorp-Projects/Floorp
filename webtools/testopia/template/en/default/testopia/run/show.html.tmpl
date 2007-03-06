@@ -165,7 +165,9 @@
     </tr>
   </tbody>
 </table>
+[% IF run.canedit %]
 <a href="#attributes">Edit Run Attributes</a>
+[% END %]
 </div>
 
 <h3>Test Case Run Logs</h3><a name="table" />
@@ -176,6 +178,7 @@
 
 [% table.list_count FILTER none %] test cases found.
 <br/>
+[% IF run.canedit %]
 <form action="tr_list_cases.cgi" method="POST">
   <input type="hidden" name="exclude" value="[% run.case_id_list FILTER none %]" />
   <input type="hidden" name="current_tab" value="case" />
@@ -193,6 +196,8 @@
   <input type="hidden" name="run_id" value="[% run.id FILTER none %]" />
   <input type="submit" name="action" value="Clone Run With These Cases" />
 <a href="tr_list_caseruns.cgi?[% table.get_query_part FILTER none %]">Update Multiple</a>
+[% END %]
+
 <a href="tr_list_cases.cgi?run_id=[% run.id FILTER none %]">List Cases</a>
 [%##### Reports #####%]
 <br><br>
@@ -215,12 +220,14 @@
   <tr>
     <td valign="top">
     <table>
+    [% IF run.canedit %]
       <tr>
         <td>
           <input name="newcc" id="newcc">
           <input type="button" id="addCC" value="Add" onclick="updateCC(document.getElementById('newcc').value, 'addcc')">
         </td>
       </tr>
+    [% END %]
       <tr>
         <td>
           <select name="cc" id="cc" size="5" multiple="multiple">
@@ -229,7 +236,9 @@
           [% END %]
           </select>
           <br>
-          <input type="button" id="deleteCC" value="Remove" onclick="updateCC(getSelected(document.getElementById('cc')), 'removecc')">             
+        [% IF run.canedit %]
+          <input type="button" id="deleteCC" value="Remove" onclick="updateCC(getSelected(document.getElementById('cc')), 'removecc')">
+        [% END %]
         </td>
       </tr>
     </table>
@@ -288,7 +297,9 @@
           <!-- 
           <td><a href="tr_testrun_regression.cgi?run_id=[% run.id FILTER none %]">Create regression test cases</a></td> -->
           <td><input type="submit" name="action" value="History"></td>
+          [% IF run.canedit %]
           <td><input type="submit" name="action" value="Clone"></td>
+          [% END %]
           [% IF run.candelete %]
           <td><input type="submit" name="action" value="Delete"></td>
           [% END %]
@@ -297,8 +308,9 @@
       </table>
       </div>
 
+[% IF run.canedit %]
 <h3>Attributes</h3>
-
-[% PROCESS testopia/run/form.html.tmpl %]
+  [% PROCESS testopia/run/form.html.tmpl %]
+[% END %]
 </form>
 [% PROCESS global/footer.html.tmpl %]

@@ -101,17 +101,30 @@
 <div style="width:800">
 <table width="100%">
   <tr class="bz_row_header">
-    <th colspan="2" width=50%">Action</th>
-    <th colspan="2" width=50%">Expected Results</th>
+    <th colspan="2">Setup</th>
   </tr>
   <tr>
-    <td colspan="2" class="ae_s"><div style="overflow:auto" >[% caserun.case.text.action FILTER none %]</div></td>
-    <td colspan="2" class="ae_s"><div style="overflow:auto" >[% caserun.case.text.effect FILTER none %]</div></td>
+    <td colspan="2" class="ae_s"><div style="overflow:auto" >[% caserun.case.text.setup FILTER none %]</div></td>
   </tr>
+  <tr class="bz_row_header">
+    <th width=50%">Action</th>
+    <th width=50%">Expected Results</th>
+  </tr>
+  <tr>
+    <td class="ae_s"><div style="overflow:auto" >[% caserun.case.text.action FILTER none %]</div></td>
+    <td class="ae_s"><div style="overflow:auto" >[% caserun.case.text.effect FILTER none %]</div></td>
+  </tr>
+  <tr class="bz_row_header">
+    <th colspan="2">Breakdown</th>
+  </tr>
+  <tr>
+    <td colspan="2" class="ae_s"><div style="overflow:auto" >[% caserun.case.text.berakdown FILTER none %]</div></td>
+  </tr>
+
 [% IF caserun.case.script OR caserun.case.arguments %]
   <tr>
-    <td colspan="2"><b>Script:</b>[% caserun.case.script FILTER html %]</td>
-    <td colspan="2"><b>Arguments:</b>[% caserun.case.arguments FILTER html %]</td>
+    <td><b>Script:</b>[% caserun.case.script FILTER html %]</td>
+    <td><b>Arguments:</b>[% caserun.case.arguments FILTER html %]</td>
   </tr>
 [% END %]
 </table>
@@ -120,8 +133,28 @@
 [% PROCESS testopia/attachment/table.html.tmpl
    item = caserun.case
 %]
+<br><br>
+[% IF caserun.canedit %]
+  <h3>Attributes</h3>
+  [% PROCESS testopia/caserun/form.html.tmpl %]
+[% ELSE %]
+  [% IF caserun.case.bugs.size > 0 %]
+  <h3>Bugs</h3>
+  <div id="bugs">
+  [% PROCESS testopia/case/bugs.html.tmpl
+     item = caserun
+  %]
+  [% END %]
 <h3>Attributes</h3>
-[% PROCESS testopia/caserun/form.html.tmpl %]
+  <table>
+    <tr>
+      <th class="bz_row_header">Notes</th>
+    </tr>
+    <tr>
+      <td><div style="height:200px; width: 600px; border: 1px solid #000; overflow: auto; background-color: #f8f8f8"><pre>[% caserun.notes FILTER html %]</pre></div></td>
+    </tr>
+  </table>  
+[% END %]
 </form>
 [% PROCESS global/footer.html.tmpl %]
 

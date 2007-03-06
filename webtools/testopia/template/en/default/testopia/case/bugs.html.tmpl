@@ -23,16 +23,19 @@
     <th colspan="3" >[% terms.Bugs %]</th>
   </tr>
   <tr class="bz_row_header">
-    <th>ID</th><th>Summary</th><th>Remove</th>
+    <th>ID</th><th>Summary</th>[% IF item.canedit %]<th>Remove</th>[% END %]
   </tr>
-[% FOREACH bug = case.bugs %]
+[% FOREACH bug = item.bugs %]
   <tr>
     <td>[% bug.bug_id FILTER bug_link(bug.bug_id) %] </td>
     <td>[% bug.short_desc FILTER html %]</td>
-    <td><a href="tr_show_case.cgi?case_id=[% case.id FILTER none %]&bug_id=[% bug.bug_id FILTER none %]&action=detach_bug"><img src="testopia/img/del.gif" alt="detach bug" /></a>
+  [% IF item.canedit %]
+    <td><a href="tr_show_[% item.type %].cgi?case_id=[% case.id FILTER none %]&bug_id=[% bug.bug_id FILTER none %]&action=detach_bug"><img src="testopia/img/del.gif" alt="detach bug" /></a>
+  [% END %]
   </tr>
 [% END %]
 </table>
+[% IF item.canedit %]
 <table>
   <tr>
     <th align="right" valign="top" colspan="2">Attach [% terms.Bugs %]</th>
@@ -42,3 +45,4 @@
 <p align="right">
   <input type="SUBMIT" name="action" class="tr_button" value="[% action FILTER html %]">
 </p>
+[% END %]

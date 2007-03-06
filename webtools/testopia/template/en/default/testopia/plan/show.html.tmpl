@@ -135,14 +135,18 @@
     </tr>
     <tr class="bz_row_data">
       <td colspan="3"><div align="right">
+      [% IF plan.canedit %]
         <a href="#attributes">Edit Plan Attributes</a>
+      [% END %]
       [% IF plan.canadmin %]
         &nbsp;|&nbsp;<a href="tr_plan_access.cgi?plan_id=[% plan.id FILTER none %]">Edit Access Controls</a>
       [% END %]
         
         <input type="hidden" name="plan_id" value="[% plan.id FILTER none %]">
+      [% IF plan.canedit %]
         <input type="submit" name="action" value="Commit" style="visibility:hidden;">
         <input type="submit" name="action" value="[% plan.isactive ? "Archive" : "Unarchive" %]">
+      [% END %]
         <input type="submit" name="action" value="History">
       [% IF user.in_group('Testers'); %]
         <input type="submit" name="action" value="Clone">
@@ -192,10 +196,12 @@
     </td>
     
   </tr>
+[% IF user.in_group('Testers') %]
   <tr>
     <td align="left"><a href="tr_categories.cgi?product_id=[% plan.product.id FILTER none %]&plan_id=[% plan.id FILTER none %]&action=add">Add</a></p></td>
     <td align="right"><a href="tr_builds.cgi?product_id=[% plan.product.id FILTER none %]&plan_id=[% plan.id FILTER none %]&action=add">Add</a></p></td>
   </tr>
+[% END %]
 </table>
 </div>
 
@@ -203,26 +209,30 @@
 <br><br>
 <h3>Test Cases</h3>
 <div id="plan_cases">
-[% IF case_table.list_count >0 %]
+[% IF case_table.list_count > 0 AND plan.canedit %]
   <a href="tr_new_case.cgi?plan_id=[% plan.id FILTER none %]">Create a New Test Case</a> 
 [% END %]
 [% PROCESS testopia/case/table.html.tmpl
    table = case_table %]
-  <a href="tr_new_case.cgi?plan_id=[% plan.id FILTER none %]">Create a New Test Case</a>
-  &nbsp|&nbsp;<a href="tr_list_cases.cgi?plan_id=[% plan.id FILTER none %]">List Cases</a>
+[% IF plan.canedit %]
+  <a href="tr_new_case.cgi?plan_id=[% plan.id FILTER none %]">Create a New Test Case</a>&nbsp|&nbsp;
+[% END %]
+  <a href="tr_list_cases.cgi?plan_id=[% plan.id FILTER none %]">List Cases</a>
 </div>
 
 [%##### Test Runs #####%]
 <br><br>
 <h3>Test Runs</h3>
 <div id="plan_runs">
-[% IF run_table.list_count >0 %]
+[% IF run_table.list_count > 0 AND plan.canedit %]
 <a href="tr_new_run.cgi?plan_id=[% plan.id FILTER none %]&case_status=CONFIRMED">Create a New Test Run</a><br />
 [% END %]
 [% PROCESS testopia/run/table.html.tmpl
    table = run_table %]
-  <a href="tr_new_run.cgi?plan_id=[% plan.id FILTER none %]&case_status=CONFIRMED">Create a New Test Run</a>
-  &nbsp|&nbsp;<a href="tr_list_runs.cgi?plan_id=[% plan.id FILTER none %]">List Runs</a>
+[% IF plan.canedit %]
+  <a href="tr_new_run.cgi?plan_id=[% plan.id FILTER none %]&case_status=CONFIRMED">Create a New Test Run</a>&nbsp|&nbsp;
+[% END %]
+  <a href="tr_list_runs.cgi?plan_id=[% plan.id FILTER none %]">List Runs</a>
 </div>
 [%##### Attachments #####%]
 <br><br>
@@ -251,6 +261,7 @@
 </div>
 [% ELSE %]
 [%##### Plan Document #####%]
+<h3>Plan Document</h3>
 <div id="plan_doc">
     [% plan.text %]
 </div>

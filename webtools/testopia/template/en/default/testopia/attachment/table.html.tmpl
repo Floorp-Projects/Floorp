@@ -29,7 +29,9 @@
     <th>Type</th>
     <th>Created</th>
     <th>Size</th>
+  [% IF item.canedit %]
     <th>Actions</th>
+  [% END %]
   </tr>
 [% FOREACH a = item.attachments %]
   <tr>
@@ -38,11 +40,14 @@
     <td>[% a.mime_type FILTER html %]</td>
     <td>[% a.creation_ts FILTER time %]</td>
     <td>[% a.datasize FILTER unitconvert %]</td>
+  [% IF item.canedit %]
     <td><a href="tr_attachment.cgi?attach_id=[% a.id FILTER none %]&action=edit&[% item.type FILTER none %]_id=[% item.id FILTER none %]">Edit</a> 
          [% IF Param("allow-test-deletion") %]<a href="tr_attachment.cgi?attach_id=[% a.id FILTER none %]&action=remove&[% item.type FILTER none %]_id=[% item.id FILTER none %]">Remove</a>[% END %]</td>
+  [% END %]
   </tr>
 [% END %]
 
+[% IF item.canedit %]
 <input type="hidden" name="[% item.type FILTER none %]_id" value="[% item.id FILTER none %]">
 <table border="0" width="100%" style="border: 1px solid #000;">
   <tr>
@@ -53,4 +58,6 @@
     <td align="right">
     <input type="submit" name="action" value="Attach"></td>
   </tr>    
+</table>
+[% END %]
 </table>

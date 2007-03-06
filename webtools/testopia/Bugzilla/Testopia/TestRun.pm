@@ -741,6 +741,7 @@ Returns true if the logged in user has rights to view this test run.
 sub canview {
     my $self = shift;
     return 1 if Bugzilla->user->in_group('Testers');
+    print STDERR "PLAN ID ". $self->plan->id;
     return 1 if $self->plan->get_user_rights(Bugzilla->user->id) & TR_READ;
     return 0;
 

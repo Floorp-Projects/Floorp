@@ -41,7 +41,7 @@ my $cgi = Bugzilla->cgi;
 
 print $cgi->header;
 
-ThrowUserError('testopia-read-only', {'object' => 'Build'}) unless Bugzilla->user->in_group("Testers");
+ThrowUserError('testopia-read-only', {'object' => 'Category'}) unless Bugzilla->user->in_group("Testers");
 
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 

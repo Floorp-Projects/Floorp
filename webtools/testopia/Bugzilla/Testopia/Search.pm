@@ -311,10 +311,10 @@ sub init {
            push(@supptables, "INNER JOIN test_plans " .
                   "ON case_plans.plan_id = test_plans.plan_id");    }
         elsif ($obj eq 'case_run'){
-           push(@supptables, "INNER JOIN test_case_runs AS case_runs " .
-                  "ON test_runs.run_id = case_runs.run_id");
-           push(@supptables, "INNER JOIN test_cases " .
-                  "ON case_runs.case_id = test_cases.case_id");
+           push(@supptables, "INNER JOIN test_runs " .
+                  "ON test_case_runs.run_id = test_runs.run_id");
+           push(@supptables, "INNER JOIN test_plans " .
+                  "ON test_runs.plan_id = test_plans.plan_id");
         }
         elsif ($obj eq 'run'){
            push(@supptables,  "INNER JOIN test_plans " .

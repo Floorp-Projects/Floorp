@@ -31,6 +31,7 @@
 [% ELSIF item.type == 'run' %]
   [% product_id = run.plan.product_id %]
 [% END %]
+[% IF item.canedit %]
 <input id="newtag" name="newtag"
        dojoType="combobox" 
        dataUrl="tr_quicksearch.cgi?action=gettag&product_id=[% product_id %]&search=%{searchString}" 
@@ -38,6 +39,7 @@
        maxListLength="10">
 
 <input type="button" id="doAdd" onclick="addTag([% item.id FILTER none %],'[% type FILTER none %]')" value="Add"></a><br>
+[% END %]
 <div id="message" style="border:none"></div>
   
 <table border="0">
@@ -46,8 +48,11 @@
 [% FOREACH tag = item.tags %]
 
   <a href="tr_tags.cgi?tag=[% tag.name FILTER none %]"><span class="tag">[% tag.name FILTER html %]</span></a>
+[% IF item.canedit %]
   <a onclick="removeTag([% tag.id FILTER none %],[% item.id FILTER none %],'[% type FILTER none %]')" style="decoration:none; cursor:pointer;">
-      <img src="testopia/img/del.gif" alt="[x]" title="Remove tag [% tag.name %]"></a><br>
+      <img src="testopia/img/del.gif" alt="[x]" title="Remove tag [% tag.name %]"></a>
+[% END %]
+<br>
   [% IF loop.count % 8 == 0 %]
   </td>
   <td valign="top">

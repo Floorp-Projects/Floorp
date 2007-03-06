@@ -159,7 +159,7 @@ sub update
 
     if (defined($$new_values{case_run_status_id}))
     {
-        $test_case_run->set_status($$new_values{case_run_status_id});
+        $test_case_run->set_status($$new_values{case_run_status_id}, $new_values->{'update_bugs'});
     }
 
     if (defined($$new_values{notes}))

@@ -107,6 +107,11 @@
             [% END %]>
     </td>
   </tr>
+  [% ELSE %]
+  <tr>
+    <td><input type="hidden" name="caserun_build" value="-1"></td>
+    <td><input type="hidden" name="caserun_env" value=""></td>
+  </tr>
 [% END %]
   <tr>
     <th align="right">Assignee</th>

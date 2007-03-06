@@ -178,8 +178,10 @@
     </tr>
     <tr class="bz_row_data">
       <td colspan="3"><div align="right">
+      [% IF case.canedit %]
         <a href="#attributes">Edit Case Attributes</a>
-        <input type="submit" name="action" value="Commit">
+        <input type="submit" name="action" value="Commit" style="visibility:hidden;">
+      [% END %]
         <input type="submit" name="action" value="History">
         <input type="submit" name="action" value="Clone">
         <input type="submit" name="action" value="Print">
@@ -196,6 +198,7 @@
 <h3>Components and Tags</h3>
 <div id="case_components">
 <table width="100%" border="0">
+[% IF case.canedit %]
   <tr class="bz_row_header">
     <th>Components</th>
     <th><a href="tr_tags.cgi?case_id=[% case.id FILTER none %]">Tags</a></th>
@@ -221,6 +224,7 @@
       <input type="button" id="addComp" value="Add" onClick="updateComponent(document.getElementById('comp_pick').value, 'addcomponent')">
       </td>
     </tr>
+[% END %]
     <tr>
       <td>&nbsp;</td>
       <td>
@@ -231,8 +235,9 @@
                                 accesskey => 'c'
                                 elements  => 7 } %]
       <br>
+    [% IF case.canedit %]
       <input type="button" id="deleteComp" value="Remove" onClick="updateComponent(document.getElementById('components').value, 'removecomponent')">
-
+    [% END %]
       </td></tr>
     </table>
     </td>
@@ -295,7 +300,6 @@
 <div id="bugs">
 [% PROCESS testopia/case/bugs.html.tmpl
    item = case
-   type = "case"   
 %]
 </div>
 [%##### Edit Case #####%]
