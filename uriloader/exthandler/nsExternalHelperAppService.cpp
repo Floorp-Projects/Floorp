@@ -91,7 +91,7 @@
 #include "nsIObserverService.h" // so we can be a profile change observer
 #include "nsIPropertyBag2.h" // for the 64-bit content length
 
-#if defined(XP_MAC) || defined (XP_MACOSX)
+#ifdef XP_MACOSX
 #include "nsILocalFileMac.h"
 #include "nsIInternetConfigService.h"
 #include "nsIAppleFileDecoder.h"
@@ -420,7 +420,7 @@ struct nsExtraMimeTypeEntry {
   PRUint32 mMacCreator;
 };
 
-#if defined(XP_MACOSX) || defined(XP_MAC)
+#ifdef XP_MACOSX
 #define MAC_TYPE(x) x
 #else
 #define MAC_TYPE(x) 0
@@ -437,7 +437,7 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
 {
 #if defined(VMS)
   { APPLICATION_OCTET_STREAM, "exe,com,bin,sav,bck,pcsi,dcx_axpexe,dcx_vaxexe,sfx_axpexe,sfx_vaxexe", "Binary File", 0, 0 },
-#elif defined(XP_MAC) || defined (XP_MACOSX)// don't define .bin on the mac...use internet config to look that up...
+#elif defined(XP_MACOSX) // don't define .bin on the mac...use internet config to look that up...
   { APPLICATION_OCTET_STREAM, "exe,com", "Binary File", 0, 0 },
 #else
   { APPLICATION_OCTET_STREAM, "exe,com,bin", "Binary File", 0, 0 },
@@ -1569,7 +1569,7 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 {
   nsresult rv;
 
-#if defined(XP_MAC) || defined (XP_MACOSX)
+#ifdef XP_MACOSX
  // create a temp file for the data...and open it for writing.
  // use NS_MAC_DEFAULT_DOWNLOAD_DIR which gets download folder from InternetConfig
  // if it can't get download folder pref, then it uses desktop folder
@@ -1609,7 +1609,7 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   mTempFile->Append(saltedTempLeafName); // make this file unique!!!
   mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
 
-#if defined(XP_MAC) || defined (XP_MACOSX)
+#ifdef XP_MACOSX
  // Now that the file exists set Mac type and creator
   if (mMimeInfo)
   {
@@ -1632,7 +1632,7 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
     return rv;
   }
 
-#if defined(XP_MAC) || defined (XP_MACOSX)
+#ifdef XP_MACOSX
     nsCAutoString contentType;
     mMimeInfo->GetMIMEType(contentType);
     if (contentType.LowerCaseEqualsLiteral(APPLICATION_APPLEFILE) ||
@@ -2444,7 +2444,7 @@ nsresult nsExternalAppHandler::OpenWithApplication()
       }
       if (NS_FAILED(result)) {
         // No pref set; use default value
-#if !defined(XP_MAC) && !defined (XP_MACOSX)
+#if !defined(XP_MACOSX)
           // Mac users have been very verbal about temp files being deleted on
           // app exit - they don't like it - but we'll continue to do this on
           // other platforms for now.
@@ -2515,7 +2515,7 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
   // The directories specified here must match those specified in SetUpTempFile().  This avoids
   // having to do a copy of the file when it finishes downloading and the potential for errors
   // that would introduce
-#if defined(XP_MAC) || defined (XP_MACOSX)
+#ifdef XP_MACOSX
   NS_GetSpecialDirectory(NS_MAC_DEFAULT_DOWNLOAD_DIR, getter_AddRefs(fileToUse));
 #else
   NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(fileToUse));
@@ -2920,27 +2920,27 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile(nsIFile* aFile, nsACSt
     }
   }
   
-  // Handle the mac case
-#if defined(XP_MAC) || defined (XP_MACOSX)
+#ifdef XP_MACOSX
   nsCOMPtr<nsILocalFileMac> macFile;
   macFile = do_QueryInterface( aFile, &rv );
-  if ( NS_SUCCEEDED( rv ) && fileExt.IsEmpty())
+  if (NS_SUCCEEDED( rv ) && fileExt.IsEmpty())
   {
-	PRUint32 type, creator;
-	macFile->GetFileType( (OSType*)&type );
-	macFile->GetFileCreator( (OSType*)&creator );   
-  	nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
+    PRUint32 type, creator;
+    macFile->GetFileType( (OSType*)&type );
+    macFile->GetFileCreator( (OSType*)&creator );   
+    nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
     if (icService)
     {
-      rv = icService->GetMIMEInfoFromTypeCreator(type, creator, fileExt.get(), getter_AddRefs(info));		 							
+      rv = icService->GetMIMEInfoFromTypeCreator(type, creator, fileExt.get(), getter_AddRefs(info));
       if (NS_SUCCEEDED(rv))
-	    return info->GetMIMEType(aContentType);
-	}
+        return info->GetMIMEType(aContentType);
+    }
   }
 #endif
+
   // Windows, unix and mac when no type match occured.   
   if (fileExt.IsEmpty())
-	  return NS_ERROR_FAILURE;    
+    return NS_ERROR_FAILURE;    
   return GetTypeFromExtension(fileExt, aContentType);
 }
 
