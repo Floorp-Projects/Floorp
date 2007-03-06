@@ -454,7 +454,7 @@ function register($language){
                                    VALUES (
                                        '".$id."',
                                        now(),
-                                       '".$db->quote($_SERVER['REMOTE_ADDR'])."',
+                                       ".$db->quote($_SERVER['REMOTE_ADDR']).",
                                        ".$db->quote($language)."
                                    )");
     if (!$addSysIdQuery) {
