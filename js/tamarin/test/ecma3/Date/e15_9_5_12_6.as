@@ -60,8 +60,8 @@ function getTestCases() {
     }
     // get time for 29 feb 2000
 
-    var UTC_FEB_29_2000 = TIME_2000 + 31*msPerDay + 28*msPerHour;
-
+    var UTC_FEB_29_2000 = TIME_2000 + 31*msPerDay + 28*msPerDay;
+    
     // get time for 1 jan 2005
 
     var UTC_JAN_1_2005 = TIME_2000 + TimeInYear(2000)+TimeInYear(2001)+
@@ -83,10 +83,12 @@ function getTestCases() {
 */
 
 	function addTestCase( t ) {
-	    for ( var m = 0; m < 12; m++ ) {
-	        t += TimeInMonth(m);
+          var leap = InLeapYear(t);
+          
+	    for ( var m = 0; m < 11; m++ ) {
+	        t += TimeInMonth(m,leap);
 
-	        for ( d = 0; d < TimeInMonth(m); d+= msPerDay*6 ) {
+	        for ( d = 0; d < TimeInMonth(m,leap); d+= msPerDay*7 ) {
 	            t += d;
 
 	            array[item++] = new TestCase( SECTION,

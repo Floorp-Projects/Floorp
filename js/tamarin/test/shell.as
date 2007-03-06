@@ -536,49 +536,50 @@ function UTC( t	) {
 function DaylightSavingTA( t ) {
 	t =	t -	LocalTZA();
 
-	var	dst_start =	GetFirstSundayInApril(t) + 2*msPerHour;
-	var	dst_end	  =	GetLastSundayInOctober(t)+ 2*msPerHour;
-
+	var	dst_start =	GetSecondSundayInMarch(t) + 2*msPerHour;
+        var k = new Date(dst_start);
+	var	dst_end	  =	GetFirstSundayInNovember(t)+ 2*msPerHour;
 	if ( t >= dst_start	&& t < dst_end ) {
 		return msPerHour;
 	} else {
 		return 0;
+                
 	}
 
-	// Daylight	Savings	Time starts	on the first Sunday	in April at	2:00AM in
+	// Daylight	Savings	Time starts	on the second Sunday	in March at	2:00AM in
 	// PST.	 Other time	zones will need	to override	this function.
 	trace( new Date( UTC(dst_start + LocalTZA())) );
 
 	return UTC(dst_start  +	LocalTZA());
-}
-function GetFirstSundayInApril(	t )	{
+}function GetSecondSundayInMarch(t )	{
 	var	year = YearFromTime(t);
 	var	leap = InLeapYear(t);
-
-	var	april =	TimeFromYear(year) + TimeInMonth(0,	leap) +	TimeInMonth(1,leap)	+
-	TimeInMonth(2,leap);
-
-	for	( var first_sunday = april;	WeekDay(first_sunday) >	0;
-		first_sunday +=	msPerDay )
+	var	march =	TimeFromYear(year) + TimeInMonth(0,leap) +	TimeInMonth(1,leap);
+        
+	for	( var first_sunday = march;	WeekDay(first_sunday) >0;
+		first_sunday +=msPerDay )
 	{
 		;
 	}
+        second_sunday=first_sunday+7*msPerDay;
+	return second_sunday;
+}
 
+
+
+function GetFirstSundayInNovember( t ) {
+	var	year = YearFromTime(t);
+	var	leap = InLeapYear(t);
+
+	for	( var nov =	TimeFromYear(year),	m =	0; m < 10; m++ )	{
+		nov	+= TimeInMonth(m, leap);
+	}
+	for	( var first_sunday =	nov; WeekDay(first_sunday)	> 0;
+		first_sunday	+= msPerDay	)
+	{
+		;
+	}
 	return first_sunday;
-}
-function GetLastSundayInOctober( t ) {
-	var	year = YearFromTime(t);
-	var	leap = InLeapYear(t);
-
-	for	( var oct =	TimeFromYear(year),	m =	0; m < 9; m++ )	{
-		oct	+= TimeInMonth(m, leap);
-	}
-	for	( var last_sunday =	oct	+ 30*msPerDay; WeekDay(last_sunday)	> 0;
-		last_sunday	-= msPerDay	)
-	{
-		;
-	}
-	return last_sunday;
 }
 function LocalTime(	t )	{
 	return ( t + LocalTZA()	+ DaylightSavingTA(t) );
