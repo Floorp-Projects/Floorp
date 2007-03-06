@@ -1040,12 +1040,8 @@ function SwitchPaneFocus(event)
   var threadTree = GetThreadTree();
   var messagePane = GetMessagePane();
 
-  // Although internally this is actually a four-pane window, it is presented as
-  // a three-pane -- the search pane is more of a toolbar.  So, shift among the
-  // three main panes.
-
   var focusedElement = WhichPaneHasFocus();
-  if (focusedElement == null)       // focus not on one of the main three panes?
+  if (focusedElement == null)       // focus not on one of the main three panes (probably toolbar)
     focusedElement = threadTree;    // treat as if on thread tree
 
   if (event && event.shiftKey)
@@ -1084,10 +1080,8 @@ function SetFocusThreadPane()
 
 function SetFocusMessagePane()
 {
-  // XXX hack: to clear the focus on the previous element first focus
-  // on the message pane element then focus on the main content window
-  GetMessagePane().focus();
-  GetMessagePaneFrame().focus();
+  // messagePaneFrame.focus() fails to blur the currently focused element
+  document.commandDispatcher.advanceFocusIntoSubtree(GetMessagePane());
 }
 
 function is_collapsed(element) 

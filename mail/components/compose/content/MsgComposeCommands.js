@@ -3400,10 +3400,9 @@ function SetMsgAttachmentElementFocus()
 
 function SetMsgBodyFrameFocus()
 {
-  // bug 236219: never just set the focus to window.content, that fails to perform
-  // the 'unfocus' operation on the element that currently has focus.
-  document.getElementById("appcontent").focus();  // focus to editor's container
-  window.content.focus();                         // focus to editor
+  // window.content.focus() fails to blur the currently focused element
+  document.commandDispatcher
+          .advanceFocusIntoSubtree(document.getElementById("appcontent"));
 }
 
 function GetMsgAddressingWidgetTreeElement()
