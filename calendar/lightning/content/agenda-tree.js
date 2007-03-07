@@ -298,9 +298,24 @@ agendaTreeView.addItem =
 function addItem(item)
 {
     var when = this.findPeriodForItem(item);
-    if (!when)
+    if (!when) {
         return;
-    when.events.push(item);
+    }
+
+    // Prevent showing items with the same id but on multiple calendars from
+    // appearing multiple times in the agenda.
+    var dupe;
+    for (var i = 0; i < when.events.length; i++) {
+        if (item.id == when.events[i].id) {
+            when.events.splice(i, 1, item);
+            dupe = true;
+            return;
+        }
+        dupe = false;
+    }
+    if (!dupe) {
+        when.events.push(item);
+    }
     this.calendarUpdateComplete();
 };
 
