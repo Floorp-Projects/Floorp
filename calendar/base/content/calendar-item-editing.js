@@ -55,7 +55,12 @@ function createEventWithDialog(calendar, startDate, endDate, summary, event)
     event = createEvent();
 
     if (!startDate) {
-        startDate = currentView().selectedDay.clone();
+        // Have we shown the calendar view yet? (Lightning)
+        if (currentView().initialized) {
+            startDate = currentView().selectedDay.clone();
+        } else {
+            startDate = jsDateToDateTime(new Date()).getInTimezone(kDefaultTimezone);
+        }
         startDate.isDate = true;
     }
 
