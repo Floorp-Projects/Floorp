@@ -58,7 +58,7 @@
               accesskey="&reportPhishSiteMenu.accesskey;"
               insertbefore="aboutSeparator"
               observes="reportPhishingBroadcaster"
-              oncommand="openUILink(safebrowsing.getReportURL('Phish'));"
+              oncommand="openUILink(safebrowsing.getReportURL('Phish'), event);"
               onclick="checkForMiddleClick(this, event);"/>
     <menuitem id="menu_HelpPopup_reportPhishingErrortoolmenu"
               label="&safeb.palm.notforgery.label;..."
