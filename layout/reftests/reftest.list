@@ -92,6 +92,7 @@ include pixel-rounding/reftest.list
 == table-dom/insertCellsExpandZeroRowspan.html table-dom/insertCellsExpandZeroRowspan-ref.html
 == table-dom/insertCellsRebuild1.html table-dom/insertCellsRebuild1-ref.html
 == table-dom/insertCellsRebuild2.html table-dom/insertCellsRebuild2-ref.html
+== table-dom/insertCellsZeroColspan.html table-dom/insertCellsZeroColspan-ref.html
 == table-dom/insertColGroups1.html table-dom/insertColGroups1-ref.html
 == table-dom/insertColGroups2.html table-dom/insertColGroups2-ref.html
 == table-dom/insertCols1.html table-dom/insertCols1-ref.html
