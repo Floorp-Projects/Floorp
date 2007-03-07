@@ -5,32 +5,22 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id={BUGNUMBER}
 -->
 <window title="Mozilla Bug {BUGNUMBER}"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="/MochiKit/packed.js" />
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
 
-  <title>Test for Bug {BUGNUMBER}</title>
-  <script type="application/javascript" src="/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
+  <!-- test resuls are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id={BUGNUMBER}"
+     target="_blank">Mozilla Bug {BUGNUMBER}</a>
+  </body>
 
-<body  xmlns="http://www.w3.org/1999/xhtml">
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={BUGNUMBER}">Mozilla Bug {BUGNUMBER}</a>
-<p id="display"></p>
-<div id="content" style="display: none">
-  
-</div>
-<pre id="test">
-</pre>
-</body>
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
 
-<script class="testbody" type="application/javascript">
-<![CDATA[
-
-/** Test for Bug {BUGNUMBER} **/
+    /** Test for Bug {BUGNUMBER} **/
 
 
 
-
-]]>
-</script>
-
+  ]]></script>
 </window>
