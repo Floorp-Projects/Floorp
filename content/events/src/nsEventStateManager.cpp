@@ -3233,7 +3233,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
 
   // If in content, navigate from last cursor position rather than last focus
   // If we're in UI, selection location will return null
-  nsIPresShell *presShell = mPresContext->PresShell();
+  nsCOMPtr<nsIPresShell> presShell = mPresContext->PresShell();
 
   // We might use the selection position, rather than mCurrentFocus, as our position to shift focus from
   PRInt32 itemType;
@@ -3331,9 +3331,9 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
 
     if (sub_shell) {
       // Make sure to scroll before possibly dispatching focus/blur events.
-      presShell->ScrollFrameIntoView(nextFocusFrame,
-                                     NS_PRESSHELL_SCROLL_ANYWHERE,
-                                     NS_PRESSHELL_SCROLL_ANYWHERE);
+      presShell->ScrollContentIntoView(nextFocus,
+                                       NS_PRESSHELL_SCROLL_ANYWHERE,
+                                       NS_PRESSHELL_SCROLL_ANYWHERE);
 
       SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
 

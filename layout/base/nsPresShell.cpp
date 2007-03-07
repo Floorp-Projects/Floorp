@@ -121,7 +121,7 @@
 #include "nsILayoutHistoryState.h"
 #include "nsIScrollPositionListener.h"
 #include "nsICompositeListener.h"
-#include "nsILineIterator.h" // for ScrollFrameIntoView
+#include "nsILineIterator.h" // for ScrollContentIntoView
 #include "nsTimer.h"
 #include "nsWeakPtr.h"
 #include "plarena.h"
@@ -854,10 +854,6 @@ public:
   NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame,
                                     nsIRenderingContext** aContext);
   NS_IMETHOD GoToAnchor(const nsAString& aAnchorName, PRBool aScroll);
-
-  NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame,
-                                 PRIntn   aVPercent, 
-                                 PRIntn   aHPercent) const;
 
   NS_IMETHOD ScrollContentIntoView(nsIContent* aContent,
                                    PRIntn      aVPercent,
@@ -3926,11 +3922,17 @@ static void ScrollViewToShowRect(nsIScrollableView* aScrollingView,
 }
 
 NS_IMETHODIMP
-PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
-                               PRIntn   aVPercent, 
-                               PRIntn   aHPercent) const
+PresShell::ScrollContentIntoView(nsIContent* aContent,
+                                 PRIntn      aVPercent,
+                                 PRIntn      aHPercent) const
 {
-  if (!aFrame) {
+  nsCOMPtr<nsIContent> content = aContent; // Keep content alive while flushing.
+  NS_ENSURE_TRUE(content, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsIDocument> currentDoc = content->GetCurrentDoc();
+  NS_ENSURE_STATE(currentDoc);
+  currentDoc->FlushPendingNotifications(Flush_Layout);
+  nsIFrame* frame = GetPrimaryFrameFor(content);
+  if (!frame) {
     return NS_ERROR_NULL_POINTER;
   }
 
@@ -3942,27 +3944,18 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   // is not for the anchor link to scroll back into view. That is what
   // this check is preventing.
   // XXX: The dependency on the command dispatcher needs to be fixed.
-  nsIContent* content = aFrame->GetContent();
-  if (content) {
-    nsIDocument* document = content->GetDocument();
-    if (document){
-      nsPIDOMWindow *ourWindow = document->GetWindow();
-      if(ourWindow) {
-        nsIFocusController *focusController =
-          ourWindow->GetRootFocusController();
-        if (focusController) {
-          PRBool dontScroll;
-          focusController->GetSuppressFocusScroll(&dontScroll);
-          if(dontScroll)
-            return NS_OK;
-        }
+  nsPIDOMWindow* ourWindow = currentDoc->GetWindow();
+  if(ourWindow) {
+    nsIFocusController *focusController = ourWindow->GetRootFocusController();
+    if (focusController) {
+      PRBool dontScroll = PR_FALSE;
+      focusController->GetSuppressFocusScroll(&dontScroll);
+      if(dontScroll) {
+        return NS_OK;
       }
     }
   }
 
-  // Flush out pending reflows to make sure we scroll to the right place
-  mDocument->FlushPendingNotifications(Flush_OnlyReflow);
-  
   // This is a two-step process.
   // Step 1: Find the bounds of the rect we want to scroll into view.  For
   //         example, for an inline frame we may want to scroll in the whole
@@ -3970,10 +3963,10 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   // Step 2: Walk the views that are parents of the frame and scroll them
   //         appropriately.
   
-  nsRect  frameBounds = aFrame->GetRect();
+  nsRect  frameBounds = frame->GetRect();
   nsPoint offset;
   nsIView* closestView;
-  aFrame->GetOffsetFromView(offset, &closestView);
+  frame->GetOffsetFromView(offset, &closestView);
   frameBounds.MoveTo(offset);
 
   // If this is an inline frame and either the bounds height is 0 (quirks
@@ -3981,20 +3974,20 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   // change the top of the bounds to include the whole line.
   if (frameBounds.height == 0 || aVPercent != NS_PRESSHELL_SCROLL_ANYWHERE) {
     nsIAtom* frameType = NULL;
-    nsIFrame *prevFrame = aFrame;
-    nsIFrame *frame = aFrame;
+    nsIFrame *prevFrame = frame;
+    nsIFrame *f = frame;
 
-    while (frame &&
-           (frameType = frame->GetType()) == nsGkAtoms::inlineFrame) {
-      prevFrame = frame;
-      frame = prevFrame->GetParent();
+    while (f &&
+           (frameType = f->GetType()) == nsGkAtoms::inlineFrame) {
+      prevFrame = f;
+      f = prevFrame->GetParent();
     }
 
-    if (frame != aFrame &&
-        frame &&
+    if (f != frame &&
+        f &&
         frameType == nsGkAtoms::blockFrame) {
       // find the line containing aFrame and increase the top of |offset|.
-      nsCOMPtr<nsILineIterator> lines( do_QueryInterface(frame) );
+      nsCOMPtr<nsILineIterator> lines(do_QueryInterface(f));
 
       if (lines) {
         PRInt32 index = -1;
@@ -4009,7 +4002,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
                                           lineBounds, &trash3))) {
             nsPoint blockOffset;
             nsIView* blockView;
-            frame->GetOffsetFromView(blockOffset, &blockView);
+            f->GetOffsetFromView(blockOffset, &blockView);
 
             if (blockView == closestView) {
               // XXX If views not equal, this is hard.  Do we want to bother?
@@ -4045,19 +4038,6 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-PresShell::ScrollContentIntoView(nsIContent* aContent,
-                                 PRIntn      aVPercent,
-                                 PRIntn      aHPercent) const
-{
-  nsCOMPtr<nsIContent> content = aContent; // Keep content alive while flushing.
-  NS_ENSURE_TRUE(content, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIDocument> currentDoc = content->GetCurrentDoc();
-  NS_ENSURE_STATE(currentDoc);
-  currentDoc->FlushPendingNotifications(Flush_Layout);
-  return ScrollFrameIntoView(GetPrimaryFrameFor(content), aVPercent, aHPercent);
 }
 
 // GetLinkLocation: copy link location to clipboard

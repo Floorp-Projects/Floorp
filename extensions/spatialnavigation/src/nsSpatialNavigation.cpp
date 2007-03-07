@@ -811,19 +811,12 @@ nsSpatialNavigation::setFocusedContent(nsIContent* c)
 
   //#ifdef OLDER_LAYOUT  
   nsPresContext* presContext = getPresContext(c);
-  
-  nsIPresShell *presShell = presContext->PresShell();
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(c);
-  
-  if (frame) {
-    presContext->EventStateManager()->SetContentState(c, NS_EVENT_STATE_FOCUS);
-    
-    presShell->ScrollFrameIntoView(frame, 
+  nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
+  presContext->EventStateManager()->SetContentState(c, NS_EVENT_STATE_FOCUS);
+  presShell->ScrollContentIntoView(c, 
                                    NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,
                                    NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
-    
-    presContext->EventStateManager()->MoveCaretToFocus();
-  }
+  presContext->EventStateManager()->MoveCaretToFocus();
 
   //#else
   nsCOMPtr<nsIDOMNSHTMLElement> nsElement = do_QueryInterface(element);

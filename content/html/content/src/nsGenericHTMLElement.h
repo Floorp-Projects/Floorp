@@ -830,6 +830,8 @@ protected:
 
   virtual PRInt32 IntrinsicState() const;
 
+  void SetFocusAndScrollIntoView(nsPresContext* aPresContext);
+
   /** The form that contains this control */
   nsIForm* mForm;
 };

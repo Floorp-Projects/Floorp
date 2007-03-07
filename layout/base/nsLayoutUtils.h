@@ -450,12 +450,6 @@ public:
                           PRInt32&   aTextWidth);
 
   /**
-   * Scroll the given form control frame into view.
-   * @param aFormFrame Frame to scroll into view.
-   */
-  static void ScrollIntoView(nsIFormControlFrame* aFormFrame);
-
-  /**
    * Get the union of all rects in aFrame and its continuations, relative
    * to aFrame's origin. Scrolling is taken into account, but this shouldn't
    * matter because it should be impossible to have some continuations scrolled
