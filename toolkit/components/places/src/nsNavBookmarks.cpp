@@ -191,11 +191,6 @@ nsNavBookmarks::Init()
                                getter_AddRefs(mDBFolderCount));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // mDBIndexOfItem: find the position of an item within a folder
-  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT position FROM moz_bookmarks WHERE item_child = ?1 AND parent = ?2"),
-                               getter_AddRefs(mDBIndexOfItem));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT position FROM moz_bookmarks WHERE folder_child = ?1 AND parent = ?2"),
                                getter_AddRefs(mDBIndexOfFolder));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2021,34 +2016,6 @@ nsNavBookmarks::GetBookmarkIdsForURI(nsIURI *aURI, PRUint32 *aCount,
   }
   *aCount = bookmarks.Length();
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavBookmarks::IndexOfItem(PRInt64 aFolder, nsIURI *aItem, PRInt32 *aIndex)
-{
-  mozStorageTransaction transaction(DBConn(), PR_FALSE);
-
-  PRInt64 id;
-  nsresult rv = History()->GetUrlIdFor(aItem, &id, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (id == 0) {
-    *aIndex = -1;
-    return NS_OK;
-  }
-
-  mozStorageStatementScoper scope(mDBIndexOfItem);
-  mDBIndexOfItem->BindInt64Parameter(0, id);
-  mDBIndexOfItem->BindInt64Parameter(1, aFolder);
-  PRBool results;
-  rv = mDBIndexOfItem->ExecuteStep(&results);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!results) {
-    *aIndex = -1;
-    return NS_OK;
-  }
-
-  *aIndex = mDBIndexOfItem->AsInt32(0);
   return NS_OK;
 }
 
