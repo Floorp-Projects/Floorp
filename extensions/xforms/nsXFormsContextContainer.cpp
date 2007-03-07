@@ -137,6 +137,9 @@ public:
 
   nsresult HandleFocus(nsIDOMEvent *aEvent);
 
+  // Overriding to make sure only appropriate values can be set.
+  void SetRepeatState(nsRepeatState aState);
+
 #ifdef DEBUG_smaug
   virtual const char* Name() {
     if (mElement) {
@@ -360,6 +363,21 @@ nsXFormsContextContainer::GetContextPosition(PRInt32 *aContextPosition)
 {
   *aContextPosition = mContextPosition;
   return NS_OK;
+}
+
+void
+nsXFormsContextContainer::SetRepeatState(nsRepeatState aState)
+{
+  // A context container can have one of two states...eType_Unknown
+  // (uninitialized) and eType_GeneratedContent.  This assumes
+  // that one cannot be generated outside of the repeat or itemset code.
+
+  nsRepeatState state = aState;
+  if (state != eType_Unknown) {
+    state = eType_GeneratedContent;
+  }
+
+  return nsXFormsControlStub::SetRepeatState(state);
 }
 
 // Factory

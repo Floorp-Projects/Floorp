@@ -303,6 +303,12 @@ nsresult
 nsXFormsControlStub::MaybeAddToModel(nsIModelElementPrivate *aOldModel,
                                      nsIXFormsControl       *aParent)
 {
+  if (GetRepeatState() == eType_Template) {
+    // No sense going any further.  A template control has no need to bind,
+    // refresh, etc. so no reason to put it on the model's control list
+    return NS_OK;
+  }
+
   // XXX: just doing pointer comparison would be nice....
   PRBool sameModel = PR_FALSE;
   nsresult rv;
@@ -410,6 +416,12 @@ nsXFormsControlStub::ProcessNodeBinding(const nsString          &aBindingAttr,
 NS_IMETHODIMP
 nsXFormsControlStub::BindToModel(PRBool aSetBoundNode)
 {
+  if (GetRepeatState() == eType_Template) {
+    // No sense going any further.  A template control has no need to bind,
+    // refresh, etc. so no reason to put it on the model's control list
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIModelElementPrivate> oldModel(mModel);
 
   nsCOMPtr<nsIXFormsControl> parentControl;
@@ -654,6 +666,7 @@ nsXFormsControlStub::ForceModelDetach(PRBool aRebind)
 NS_IMETHODIMP
 nsXFormsControlStub::WillChangeDocument(nsIDOMDocument *aNewDocument)
 {
+  SetRepeatState(eType_Unknown);
   ResetHelpAndHint(PR_FALSE);
   return NS_OK;
 }
@@ -680,9 +693,20 @@ nsXFormsControlStub::DocumentChanged(nsIDOMDocument *aNewDocument)
 }
 
 NS_IMETHODIMP
+nsXFormsControlStub::WillChangeParent(nsIDOMElement *aNewParent)
+{
+  SetRepeatState(eType_Unknown);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsXFormsControlStub::ParentChanged(nsIDOMElement *aNewParent)
 {
   mHasParent = aNewParent != nsnull;
+
+  UpdateRepeatState(aNewParent);
+
   // We need to re-evaluate our instance data binding when our parent changes,
   // since xmlns declarations or our context could have changed.
   return ForceModelDetach(mHasParent);
@@ -864,6 +888,47 @@ nsXFormsControlStub::IsContentComplex()
     }
   }
   return isComplex;
+}
+
+nsRepeatState
+nsXFormsControlStub::GetRepeatState()
+{
+  return mRepeatState;
+}
+
+void
+nsXFormsControlStub::SetRepeatState(nsRepeatState aState)
+{
+  mRepeatState = aState;
+  return;
+}
+
+nsRepeatState
+nsXFormsControlStub::UpdateRepeatState(nsIDOMNode *aParent)
+{
+  nsRepeatState repeatState = eType_NotApplicable;
+
+  nsCOMPtr<nsIDOMNode> parent = aParent;
+  while (parent) {
+    if (nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("contextcontainer"))) {
+      repeatState = eType_GeneratedContent;
+      break;
+    }
+    if (nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("repeat"))) {
+      repeatState = eType_Template;
+      break;
+    }
+    if (nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("itemset"))) {
+      repeatState = eType_Template;
+      break;
+    }
+    nsCOMPtr<nsIDOMNode> tmp;
+    parent->GetParentNode(getter_AddRefs(tmp));
+    parent = tmp;
+  }
+
+  SetRepeatState(repeatState);
+  return repeatState;
 }
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsControlStub,

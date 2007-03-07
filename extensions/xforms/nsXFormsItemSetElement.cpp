@@ -99,6 +99,8 @@ nsXFormsItemSetElement::OnCreated(nsIXTFElementWrapper *aWrapper)
 NS_IMETHODIMP
 nsXFormsItemSetElement::ParentChanged(nsIDOMElement *aNewParent)
 {
+  UpdateRepeatState(aNewParent);
+
   if (aNewParent)
     Refresh();
 

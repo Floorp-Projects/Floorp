@@ -61,19 +61,6 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsDelegateStub,
                              nsIXFormsDelegate)
 
 
-NS_IMETHODIMP
-nsXFormsDelegateStub::WillChangeDocument(nsIDOMDocument *aNewDocument)
-{
-  mRepeatState = eType_Unknown;
-  return nsXFormsControlStub::WillChangeDocument(aNewDocument);
-}
-
-NS_IMETHODIMP
-nsXFormsDelegateStub::WillChangeParent(nsIDOMElement *aNewParent)
-{
-  mRepeatState = eType_Unknown;
-  return nsXFormsControlStub::WillChangeParent(aNewParent);
-}
 
 NS_IMETHODIMP
 nsXFormsDelegateStub::GetAccesskeyNode(nsIDOMAttr** aNode)
@@ -99,7 +86,6 @@ nsXFormsDelegateStub::OnCreated(nsIXTFElementWrapper *aWrapper)
   nsresult rv = nsXFormsControlStub::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);
   aWrapper->SetNotificationMask(kStandardNotificationMask |
-                                nsIXTFElement::NOTIFY_WILL_CHANGE_PARENT |
                                 nsIXTFElement::NOTIFY_PERFORM_ACCESSKEY);
   return rv;
 }
@@ -119,7 +105,7 @@ nsXFormsDelegateStub::OnDestroyed()
 NS_IMETHODIMP
 nsXFormsDelegateStub::Refresh()
 {
-  if (mRepeatState == eType_Template)
+  if (GetRepeatState() == eType_Template)
     return NS_OK_XFORMS_NOREFRESH;
 
   const nsVoidArray* list = nsPostRefresh::PostRefreshList();
@@ -205,7 +191,7 @@ nsXFormsDelegateStub::ReportErrorMessage(const nsAString& aErrorMsg)
 NS_IMETHODIMP
 nsXFormsDelegateStub::WidgetAttached()
 {
-  if (UpdateRepeatState() == eType_Template)
+  if (GetRepeatState() == eType_Template)
     return NS_OK;
 
   if (HasBindingAttribute()) {
@@ -233,32 +219,6 @@ nsXFormsDelegateStub::IsTypeAllowed(PRUint16 aType, PRBool *aIsAllowed,
   *aRestriction = eTypes_NoRestriction;
   aTypes.Truncate();
   return NS_OK;
-}
-
-nsRepeatState
-nsXFormsDelegateStub::UpdateRepeatState()
-{
-  mRepeatState = eType_NotApplicable;
-  nsCOMPtr<nsIDOMNode> parent;
-  mElement->GetParentNode(getter_AddRefs(parent));
-  while (parent) {
-    if (nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("contextcontainer"))) {
-      mRepeatState = eType_GeneratedContent;
-      break;
-    }
-    if (nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("repeat"))) {
-      mRepeatState = eType_Template;
-      break;
-    }
-    if (nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("itemset"))) {
-      mRepeatState = eType_Template;
-      break;
-    }
-    nsCOMPtr<nsIDOMNode> tmp;
-    parent->GetParentNode(getter_AddRefs(tmp));
-    parent = tmp;
-  }
-  return mRepeatState;
 }
 
 void

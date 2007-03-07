@@ -51,18 +51,6 @@
 
 class nsIAtom;
 
-/**
- * nsRepeatState is used to indicate whether the element
- * is inside \<repeat\>'s template. If it is, there is no need
- * to refresh the widget bound to the element.
- */
-enum nsRepeatState {
-  eType_Unknown,
-  eType_Template,
-  eType_GeneratedContent,
-  eType_NotApplicable
-};
-
 enum nsRestrictionFlag {
   eTypes_NoRestriction,
   eTypes_Inclusive,
@@ -82,8 +70,6 @@ public:
 
   NS_IMETHOD OnCreated(nsIXTFElementWrapper *aWrapper);
   NS_IMETHOD OnDestroyed();
-  NS_IMETHOD WillChangeParent(nsIDOMElement *aNewParent);
-  NS_IMETHOD WillChangeDocument(nsIDOMDocument *aNewDocument);
   NS_IMETHOD GetAccesskeyNode(nsIDOMAttr** aNode);
   NS_IMETHOD PerformAccesskey();
 
@@ -124,21 +110,14 @@ public:
 
 
   nsXFormsDelegateStub(const nsAString& aType = EmptyString())
-    : mControlType(aType), mRepeatState(eType_Unknown) {}
+    : mControlType(aType) {}
 
 protected:
-  // This is called when XBL widget is attached to the XForms control.
-  // It checks the ancestors of the element and returns an nsRepeatState
-  // depending on the elements place in the document.
-  nsRepeatState UpdateRepeatState();
-
   // Sets/removes the moz:type attribute. The attribute can be used to detect the
   // type of the node, which is bound the the control.
   void SetMozTypeAttribute();
 
   nsString      mControlType;
-  nsRepeatState mRepeatState;
-
   /** The accessors object for this delegate */
   nsRefPtr<nsXFormsAccessors> mAccessor;
 };
