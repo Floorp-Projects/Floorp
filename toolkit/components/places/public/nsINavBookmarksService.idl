@@ -181,7 +181,7 @@ interface nsINavBookmarkObserver : nsISupports
  * folders.  A URI in history can be contained in one or more such folders.
  */
 
-[scriptable, uuid(860d786d-9bba-4011-a396-486a87af8f07)]
+[scriptable, uuid(7a17cbcb-b4c8-4485-a254-9e8d58663fe7)]
 interface nsINavBookmarksService : nsISupports
 {
   /**
@@ -426,12 +426,6 @@ interface nsINavBookmarksService : nsISupports
    */
   [noscript] void getBookmarkIdsForURITArray(in nsIURI aURI,
                                            in PRInt64Array aResult);
-
-  /**
-   * Returns the index of the given item in the given folder.
-   * Returns -1 if the item is not present in the folder.
-   */
-  PRInt32 indexOfItem(in PRInt64 folder, in nsIURI uri);
 
   /**
    * Returns the index of the given subfolder in its parent.

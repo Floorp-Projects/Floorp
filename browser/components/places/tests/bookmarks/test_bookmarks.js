@@ -251,7 +251,6 @@ function run_test() {
     bmsvc.moveFolder(workFolder, workFolder, bmsvc.DEFAULT_INDEX);
     do_throw("moveFolder() allowed moving a folder to be it's own parent.");
   } catch (e) {}
-  do_check_eq(bmsvc.indexOfItem(root, uri("http://google.com/")), 3);
   do_check_eq(bmsvc.indexOfFolder(root, workFolder), 6);
 
   // test insertSeparator
@@ -263,11 +262,6 @@ function run_test() {
   } catch(ex) {
     do_throw("insertSeparator: " + ex);
   }
-
-  // test indexOfItem
-  var newId7 = bmsvc.insertItem(root, uri("http://blah.com"), 2);
-  do_check_eq(bmsvc.indexOfItem(root, uri("http://blah.com/")), 2);
-  bmsvc.removeItem(newId7);
 
   // test indexOfFolder
   var tmpFolder = bmsvc.createFolder(root, "tmp", 2);
@@ -396,6 +390,7 @@ function run_test() {
   var bmURI = bmsvc.getBookmarkURI(newId11);
   do_check_eq("http://foo11.com/", bmURI.spec);
 
+  // test getItemIndex
   var newId12 = bmsvc.insertItem(root, uri("http://foo11.com/"), 1);
   var bmIndex = bmsvc.getItemIndex(newId12);
   do_check_eq(1, bmIndex);

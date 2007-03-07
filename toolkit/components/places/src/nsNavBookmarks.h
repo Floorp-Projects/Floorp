@@ -177,7 +177,6 @@ private:
 
   nsCOMPtr<mozIStorageStatement> mDBFolderCount;
 
-  nsCOMPtr<mozIStorageStatement> mDBIndexOfItem;
   nsCOMPtr<mozIStorageStatement> mDBIndexOfFolder;
   nsCOMPtr<mozIStorageStatement> mDBGetChildAt;
 
