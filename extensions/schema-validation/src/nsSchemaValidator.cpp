@@ -3694,8 +3694,8 @@ nsSchemaValidator::ValidateComplextype(nsIDOMNode* aNode,
 
   switch(contentModel) {
     case nsISchemaComplexType::CONTENT_MODEL_EMPTY: {
-      // element has no children
-      rv = NS_ERROR_NOT_IMPLEMENTED;
+      LOG(("    complex type, empty content"));
+      rv = ValidateComplexModelEmpty(aNode, aSchemaComplexType, &isValid);
       break;
     }
 
@@ -3828,6 +3828,36 @@ nsSchemaValidator::ValidateComplexModelElement(nsIDOMNode* aNode,
 #endif
   }
 
+  *aResult = isValid;
+  return rv;
+}
+
+nsresult
+nsSchemaValidator::ValidateComplexModelEmpty(nsIDOMNode* aNode,
+                                    nsISchemaComplexType *aSchemaComplexType,
+                                    PRBool *aResult)
+{
+  PRBool isValid = PR_TRUE;
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIDOMNode> currentNode;
+  rv = aNode->GetFirstChild(getter_AddRefs(currentNode));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  while (isValid && currentNode) {
+    PRUint16 nodeType;
+    currentNode->GetNodeType(&nodeType);
+    if (nodeType == nsIDOMNode::ELEMENT_NODE ||
+        nodeType == nsIDOMNode::TEXT_NODE) {
+      LOG(("  --  Empty content model contains element or text!"));
+      isValid = PR_FALSE;
+      break;
+    }
+
+    nsCOMPtr<nsIDOMNode> node;
+    currentNode->GetNextSibling(getter_AddRefs(node));
+    currentNode.swap(node);
+  }
   *aResult = isValid;
   return rv;
 }

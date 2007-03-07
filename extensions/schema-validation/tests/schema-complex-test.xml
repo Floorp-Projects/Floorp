@@ -26,10 +26,11 @@
   <!ATTLIST deriv-res-2 id ID #IMPLIED>
   <!ATTLIST deriv-ext-complex-1 id ID #IMPLIED>
   <!ATTLIST deriv-ext-restriction-1 id ID #IMPLIED>
+  <!ATTLIST empty-complex-1 id ID #IMPLIED>
   ]>
 
 <samples xmlns:xsi1="http://www.w3.org/2001/XMLSchema-instance"
-  xsi1:schemaLocation="http://www.mozilla.org/schema/test file:/home/doron/mozbuilds/trunk/mozilla/extensions/schema-validation/tests/schema.xsd"
+  xsi1:schemaLocation="http://www.mozilla.org/schema/test schema.xsd"
   xmlns:xsi="http://www.w3.org/1999/XMLSchema"
   xmlns:test="http://www.mozilla.org/schema/test"
   xmlns="http://www.mozilla.org/schema/test">
@@ -1120,4 +1121,25 @@
     <surname>Bar</surname>
   </deriv-ext-restriction-1>
 
+  <deriv-ext-restriction-1 id="deriv-ext-restriction-1-3">
+    <forename>Foo</forename>
+    <surname>2006-01-01</surname>
+  </deriv-ext-restriction-1>
+
+  <!-- VALID -->
+  <empty-complex-1 id="empty-complex-1-1" test:att1="test1" />
+
+  <!-- VALID -->
+  <empty-complex-1 id="empty-complex-1-2" />
+
+  <!-- INvalid -->
+  <empty-complex-1 id="empty-complex-1-3" test:att1="test1">
+    Content is not allowed
+  </empty-complex-1>
+
+  <!-- INvalid -->
+  <empty-complex-1 id="empty-complex-1-4" test:att1="test1">
+    <bad>Not valid</bad>
+  </empty-complex-1>
+  
 </samples>

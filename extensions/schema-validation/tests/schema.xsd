@@ -1110,5 +1110,13 @@
 
   <element name="deriv-ext-restriction-1" type="test:simpleName"/>
 
+  <!-- EMPTY_CONTENT_COMPLEX -->
+  <complexType name="emptyContent">
+   <attributeGroup ref="test:attrgroup-1"/>
+   <attribute name="att1" type="string"/>
+  </complexType>
+
+  <element name="empty-complex-1" type="test:emptyContent" />
+
 </schema>
 

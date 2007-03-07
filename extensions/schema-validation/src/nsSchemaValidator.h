@@ -303,6 +303,10 @@ private:
                                        nsISchemaComplexType *aSchemaComplexType,
                                        PRBool *aResult);
 
+  nsresult ValidateComplexModelEmpty(nsIDOMNode    *aNode,
+                              nsISchemaComplexType *aSchemaComplexType,
+                              PRBool               *aResult);
+
   nsresult ValidateComplexModelSimple(nsIDOMNode *aNode,
                                       nsISchemaComplexType *aSchemaComplexType,
                                       PRBool *aResult);
