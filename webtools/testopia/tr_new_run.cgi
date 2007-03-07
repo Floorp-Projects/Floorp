@@ -92,7 +92,7 @@ if ($action eq 'Add'){
         print $cgi->multipart_end if $serverpush;
         ThrowUserError('testopia-missing-required-field', {'field' => 'summary'});
     }
-    if ($env  eq ''){
+    if ($env  eq '' && !$cgi->param('new_env')){
         print $cgi->multipart_end if $serverpush;
         ThrowUserError('testopia-missing-required-field', {'field' => 'environment'});
     }
@@ -100,8 +100,6 @@ if ($action eq 'Add'){
        print $cgi->multipart_end if $serverpush;
        ThrowUserError("invalid_username", { name => $cgi->param('assignee') });
     }
-    
-    validate_test_id($env, 'environment');
      
     detaint_natural($status);
     detaint_natural($build);
@@ -125,9 +123,31 @@ if ($action eq 'Add'){
                 'isactive'    => 1, 
         });
         my $bid = $b->check_name($new_build);
-        $bid ? $build = $bid : $build = $b->store; 
+        if($bid){
+            $build = $bid;
+        }
+        else{
+            $build = $b->store;
+        } 
     }
-    
+
+    if ($cgi->param('new_env')){
+        my $new_env   = $cgi->param('new_env');
+        trick_taint($new_env);
+        my $e = Bugzilla::Testopia::Environment->new({
+                'name'        => $new_env,
+                'product_id'  => $plan->product_id,
+                'isactive'    => 1,
+        });
+        my $eid = $e->check_environment($new_env, $plan->product_id);
+        if($eid){
+            $env = $eid;
+        }
+        else {
+            $env = $e->store;
+        } 
+    }
+    validate_test_id($env, 'environment');
     my $reg = qr/c_([\d]+)/;
     my @c;
     foreach my $p ($cgi->param()){

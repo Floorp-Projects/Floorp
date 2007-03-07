@@ -25,17 +25,23 @@
 [% link = "${table.get_order_url}&order=" %]
 
 [% DECORATIVE_BORDER_BEGIN %] 
-<table width="400">
+<table>
   <tr class="bz_row_header">
     <th><a href="[% link %]environment_id">ID</a></th>
     <th><a href="[% link %]name">Name</th>
     <th><a href="[% link %]product">Product</th>
+    <th>Actions</th>
   </tr>
   [% FOREACH env = table.list %]
   <tr class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]" onclick="sr([% loop.count %]);">
     <td align="center"><a href="tr_show_environment.cgi?env_id=[% env.id FILTER none %]">[% env.id FILTER none %]</a></td>
     <td>[% env.name FILTER none %]</td>
     <td>[% env.product.name FILTER none %]</td>
+    <td><a href="tr_show_environment.cgi?env_id=[% env.id FILTER none %]&action=[% env.isactive ? 'hide' : 'unhide' %]">[% env.isactive ? 'Archive' : 'Unarchive' %]</a>
+    [% IF env.candelete %]    
+      &nbsp;|&nbsp;
+      <a href="tr_show_environment.cgi?env_id=[% env.id FILTER none %]&action=delete">Delete</a>
+    [% END %]
   </tr>
   [% END %]
 </table>

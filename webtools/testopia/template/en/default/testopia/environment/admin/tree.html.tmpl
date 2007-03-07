@@ -53,7 +53,7 @@
           load:     function(type, data, evt){
                           hostDiv.innerHTML = data;
                       },
-          error:     function(type, error){ alert("ERROR");},
+          error:     function(type, error){ alert(error.message);},
           mimetype:    "text/html"
       });
     }
@@ -79,14 +79,16 @@
     
     function editClicked(selectedNode, controllerId, icon) {
         var hostDiv = document.getElementById("message");
-        
+        var treeSelector = dojo.widget.manager.getWidgetById('treeSelector');
+        treeSelector.deselect;
+        treeSelector.doSelect(selectedNode);
         dojo.io.bind({
           url:        "tr_admin_environment.cgi",
           content:    {  action: "edit", id: selectedNode['objectId'], type: selectedNode['widgetId'] },
           load:     function(type, data, evt){
                           hostDiv.innerHTML = data;
                       },
-          error:     function(type, error){ alert("ERROR");},
+          error:     function(type, error){ alert(error.message);},
           mimetype:    "text/html"
       });
     }
@@ -275,7 +277,7 @@
                           target.disabled = false;
                           dojo.byId('element_submit').disabled = false;
                       },
-          error:     function(type, error){ alert("ERROR");},
+          error:     function(type, error){ alert(error.message);},
           mimetype:    "text/plain"
       });
     }
@@ -301,7 +303,7 @@
                           elem.disabled = false;
                           target.disabled = false;                         
                       },
-          error:     function(type, error){ alert("ERROR");},
+          error:     function(type, error){ alert(error.message);},
           mimetype:    "text/html"
       });
     }
@@ -317,7 +319,7 @@
 </div>
 
 <script>
-/* setup menu actrions */
+/* setup menu actions */
 dojo.addOnLoad(function() {
 
     dojo.event.topic.subscribe('treeContextMenuCreate/engage',
@@ -363,7 +365,7 @@ function updateCategory(){
                         cat.edit({title: data.name});
                         tree.move(cat,newParent,0);
                       },
-          error:     function(type, error){ alert("ERROR");},
+          error:     function(type, error){ alert(error.message);},
           mimetype:    "text/json"
     });
 }
@@ -386,7 +388,7 @@ function updateElement(){
                         obj.edit({title: data.name});
                         tree.move(obj,newParent,0);
                       },
-          error:     function(type, error){ alert("ERROR");},
+          error:     function(type, error){ alert(error.message);},
           mimetype:    "text/json"
     });
 }
@@ -409,7 +411,7 @@ function updateProperty(){
                         obj.edit({title: data.name});
                         tree.move(obj,newParent,0);
                       },
-          error:     function(type, error){ alert("ERROR");},
+          error:     function(type, error){ alert(error.message);},
           mimetype:    "text/json"
     });
 }

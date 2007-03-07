@@ -54,11 +54,12 @@
     function update(){
         var product = document.getElementById('product_id').value;
         var name = document.getElementById('env_name').value;
+        var isactive = document.getElementById('isactive').checked ? 1 : 0;
         var hostDiv = document.getElementById("message");
         var env = dojo.widget.manager.getWidgetById("environment[% environment.id %]");
         dojo.io.bind({
           url:     "tr_show_environment.cgi",
-          content: {action:"edit", product_id: product, env_id: [% environment.id FILTER none %], name: name},
+          content: {action:"edit", product_id: product, env_id: [% environment.id FILTER none %], name: name, isactive: isactive},
           load:    function(type,data,evt){
                       if (data.error){
                         hostDiv.innerHTML = '<span style="font-color:#F00;">' + data.error + '</span>';

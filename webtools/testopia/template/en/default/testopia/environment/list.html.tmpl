@@ -40,6 +40,10 @@
 [% PROCESS testopia/blocks.html.tmpl %]
 [% PROCESS testopia/messages.html.tmpl %]
 
-[% PROCESS testopia/environment/table.html.tmpl %]
+[% IF table.list.size > 0 %]
+  [% PROCESS testopia/environment/table.html.tmpl %]
+[% ELSE %]
+  No environments found.
+[% END %]
 
 [% PROCESS global/footer.html.tmpl %]

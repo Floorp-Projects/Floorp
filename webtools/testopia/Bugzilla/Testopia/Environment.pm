@@ -49,6 +49,7 @@ use strict;
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::User;
+use Bugzilla::Config;
 
 ###############################
 ####    Initialization     ####
@@ -471,7 +472,7 @@ sub update {
         if ($self->{$field} ne $newvalues->{$field}){
             # If the new name is already in use, return.
             $product_id = $newvalues->{'product_id'} || $self->{'product_id'};
-            if ($product_id eq undef) {
+            unless ($product_id) {
                 $dbh->bz_unlock_tables;
                 return 0;
             }
@@ -552,6 +553,20 @@ sub update_property_value {
     return 1;
 }
 
+=head2 toggle_hidden
+
+Toggles the archive bit on the build.
+
+=cut
+
+sub toggle_archive {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+    $dbh->do("UPDATE test_environments SET isactive = ? 
+               WHERE environment_id = ?", undef, $self->isactive ? 0 : 1, $self->id);
+    
+}
+
 sub delete_element {
     my $self = shift;
     my ($element_id) = @_;
@@ -585,33 +600,6 @@ sub obliterate {
     $dbh->do("DELETE FROM test_environments WHERE environment_id = ?", undef, $self->id);
     return 1;
 }
-
-=head2 archive
-
-Archives this environment.
-
-=cut
-
-sub archive {
-    my $self = shift;
-    my $dbh = Bugzilla->dbh;
-
-    $dbh->bz_lock_tables('test_runs READ', 'test_environments WRITE','test_environment_map WRITE');
-    my $used = $dbh->selectrow_array("SELECT 1 FROM test_runs 
-                                       WHERE environment_id = ?",
-                                      undef, $self->{'environment_id'});
-    if ($used) {
-        $dbh->bz_unlock_tables;
-        ThrowUserError("testopia-non-zero-run-count", {'object' => 'Environment'});
-    }
-    $dbh->do("UPDATE test_environments SET isactive = 0 
-              WHERE environment_id = ?", undef, $self->{'environment_id'});
-    
-    $dbh->bz_unlock_tables;
-    
-    return 1;
-}
-
 
 =head2 get_run_list
 
@@ -651,8 +639,9 @@ Returns true if the logged in user has rights to edit this environment.
 
 sub canedit {
     my $self = shift;
-    return 1 if Bugzilla->user->in_group('Testers');
-    return 1 if Bugzilla->user->can_see_product($self->product->name);}
+    return 1 if Bugzilla->user->in_group('Testers') && Bugzilla->user->can_see_product($self->product->name);
+    return 0;
+}
 
 =head2 canview
 
@@ -662,8 +651,8 @@ Returns true if the logged in user has rights to view this environment.
 
 sub canview {
     my $self = shift;
-    return 1 if Bugzilla->user->in_group('Testers');
     return 1 if Bugzilla->user->can_see_product($self->product->name);
+    return 0;
 }
 
 =head2 candelete
@@ -674,8 +663,9 @@ Returns true if the logged in user has rights to delete this environment.
 
 sub candelete {
     my $self = shift;
-    return 0 unless $self->canedit && Param("allow-test-deletion");
     return 1 if Bugzilla->user->in_group("admin");
+    return 0 unless Param("allow-test-deletion");
+    return 1 if Bugzilla->user->in_group("Testers") && Param('testopia-allow-group-member-deletes'); 
     return 0;
 }
 

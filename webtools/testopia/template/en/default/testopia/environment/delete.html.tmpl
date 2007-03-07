@@ -27,12 +27,7 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
-[% IF attachment.case_id %]
-    [% SET item = "Test Case $attachment.case_id" %]
-[% ELSE %]
-    [% SET item = "Test Plan $attachment.plan_id" %]
-[% END %]
-[% title = "Delete Attachment $attachment.description for $item" %]
+[% title = "Delete Environment $environment.name" %]
 
 [%############################################################################%]
 [%# Page Header                                                              #%]
@@ -40,17 +35,26 @@
 
 [% PROCESS global/header.html.tmpl %]
 
-[% IF environment.get_run_count %]
-<b>This environment is being used by [% environment.get_run_count FILTER none %]
-test runs. Please reassign these runs to a different Environment before deleting.
-
+[% IF deleted %]
+Environment Deleted
 [% ELSE %]
-You are about to permanantly delete this environment.
+<p>You are about to permanantly delete this environment.</p>
+
+[% IF environment.get_run_count OR environment.case_run_count %]
+
+<b>This environment is being used by <a href="tr_list_runs.cgi?environment_id=[% environment.id FILTER none %]">[% environment.get_run_count FILTER none %]
+test runs</a> and <a href="tr_list_caseruns.cgi?environment_id=[% environment.id FILTER none %]">[% environment.case_run_count FILTER none %] case-runs</a>. 
+
+These will also be deleted.</b>
+[% END %]
+<p><span style="font-size:12pt; font-weight:bold; color:#cc0000;">Warning: This action cannot be undone</span></p>
+
 <br>
 <form method="POST" action="tr_show_environment.cgi">
   <input type="hidden" name="action" value="do_delete" />
   <input type="hidden" name="env_id" value="[% environment.id FILTER none %]" />
   <input type="submit" value="Continue" />
 </form>  
-[% END %]  
+<a href="tr_show_environment.cgi?env_id=[% environment.id FILTER none %]">Back to Envrionment - [% environment.name FILTER html %]</a>
+[% END %]
 [% PROCESS global/footer.html.tmpl %]

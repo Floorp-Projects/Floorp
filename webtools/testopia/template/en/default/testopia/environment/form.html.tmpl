@@ -72,6 +72,12 @@ values for each of the properties.
     <td><a href="tr_admin_environment.cgi">Edit Environment Variables</a></td>
   </tr>
   <tr>
+    <th>Archive</th><td><input type="checkbox" name="isactive" id="isactive" value="1" [% 'checked="checked"' IF NOT environment.isactive %]></td>
+[% IF environment.candelete %]    
+    <td><a href="tr_show_environment.cgi?env_id=[% environment.id FILTER none %]&action=delete">Delete his Environment</a></td>
+[% END %]
+  </tr>
+  <tr>
     <td colspan=2" align="right"><input type="button" onclick="update()" value="Commit"></td>
   </tr>
 </table>

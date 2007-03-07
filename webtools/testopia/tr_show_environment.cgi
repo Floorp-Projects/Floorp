@@ -63,8 +63,6 @@ unless ($env_id || $action){
   exit;
 }
 
-Bugzilla->batch(1);
-
 if ($action eq 'delete'){
     my $env = Bugzilla::Testopia::Environment->new($env_id);
     ThrowUserError('testopia-no-delete', {'object' => 'Environment'}) unless $env->candelete;
@@ -77,10 +75,19 @@ if ($action eq 'delete'){
 elsif ($action eq 'do_delete'){
     my $env = Bugzilla::Testopia::Environment->new($env_id);
     ThrowUserError('testopia-no-delete', {'object' => 'Environment'}) unless $env->candelete;
-    ThrowUserError("testopia-non-zero-run-count", {'object' => 'Environment'}) if $env->get_run_count;
     $env->obliterate;
     $vars->{'tr_message'} = "Environment Deleted";
-    display_list();
+    $vars->{'deleted'} = 1;
+    $template->process("testopia/environment/delete.html.tmpl", $vars)
+        || print $template->error();
+
+}
+
+elsif ($action eq 'hide' || $action eq 'unhide'){
+    my $env = Bugzilla::Testopia::Environment->new($env_id);
+    ThrowUserError('testopia-read-only', {'object' => 'Build'}) unless $env->canedit;
+    $env->toggle_archive;
+    display();
 }
 
 ####################
@@ -90,7 +97,7 @@ elsif ($action eq 'do_delete'){
 elsif ($action eq 'edit'){
     my $name = $cgi->param('name');
     my $product_id = $cgi->param('product_id');
-    
+    Bugzilla->batch(1);
     trick_taint($name);
     detaint_natural($product_id);
     eval{
@@ -102,7 +109,7 @@ elsif ($action eq 'edit'){
     }
         
     my $env = Bugzilla::Testopia::Environment->new($env_id);
-    unless ($env->update({'product_id' => $product_id})){
+    unless ($env->update({'product_id' => $product_id, 'isactive' => $cgi->param('isactive') ? 0 : 1})){
         print "{error: 'Error updating product'}";
         exit;
     }
@@ -232,8 +239,8 @@ else {
 
 sub display {
 	detaint_natural($env_id);
+    validate_test_id($env_id, 'environment');
     my $env = Bugzilla::Testopia::Environment->new($env_id);
-    ThrowUserError('testopia-permission-denied', {object => 'Environment'}) unless $env->canedit;
     
     if(!defined($env)){
     	my $env = Bugzilla::Testopia::Environment->new({'environment_id' => 0});
@@ -244,7 +251,7 @@ sub display {
 	        || print $template->error();
 	        exit;
     }
-    
+    ThrowUserError('testopia-permission-denied', {object => 'Environment'}) unless $env->canedit;
     my $category = Bugzilla::Testopia::Environment::Category->new({'id' => 0});
     if (Param('useclassification')){
         $vars->{'allhaschild'} = $category->get_all_child_count;

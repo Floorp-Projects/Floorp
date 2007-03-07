@@ -54,9 +54,9 @@
     <tr>
       <th align="right">Manager</th>
       <td><input name="manager" value="[% run.manager.login ? run.manager.login : user.login FILTER html %]"></td>
-      <th align="right"><a href="tr_builds.cgi?plan_id=[% run.plan.id FILTER none %]">Build</a></td>
+      <th align="right"><a href="tr_builds.cgi?product_id=[% run.plan.product_id FILTER none %]">Build</a></td>
       <td>
-        [% PROCESS select sel = { name => "build", 
+        [% PROCESS select sel = { name => "build",
                                   list => run.plan.product.builds(1),
                                   default => run.build.id }
          %]
@@ -77,7 +77,7 @@
         %]
 
       </td>
-      <th align="right" valign="top">Environment:</th>
+      <th align="right" valign="top"><a href="tr_list_environments.cgi?product_id=[% run.plan.product_id FILTER none %]">Environment</a></th>
       <td valign="top">
           <input dojoType="select" 
                  dataUrl="tr_quicksearch.cgi?action=getenv&product_id=[% run.plan.product_id FILTER none %]&search=%{searchString}" 
@@ -87,7 +87,12 @@
                  name="environment"
                  maxListLength="10" 
                  style="width:200px; height:15px"
-                 value="[% run.environment.id FILTER none %]" ></td>
+                 value="[% run.environment.id FILTER none %]" >
+       [% IF action == 'Add' %]
+         <b>or New:</b> <input name="new_env">
+       [% END %]
+      
+      </td>
     </tr>
     <tr>
       <th align="right">Summary</th>
