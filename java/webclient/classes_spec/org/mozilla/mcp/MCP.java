@@ -292,14 +292,38 @@ public class MCP {
         }
 
         public void eventDispatched(WebclientEvent webclientEvent) {
-            Map<String,Object> eventData = 
-                    (Map<String,Object>) webclientEvent.getEventData();
+            boolean logInfo = LOGGER.isLoggable(Level.INFO);
+            Map eventData = 
+                    (Map) webclientEvent.getEventData();
             long type = webclientEvent.getType();
             
             switch ((int)type) {
                 case ((int) DocumentLoadEvent.END_DOCUMENT_LOAD_EVENT_MASK):
                     synchronized (owner) {
                         owner.notifyAll();
+                    }
+                    break;
+                case ((int) DocumentLoadEvent.START_URL_LOAD_EVENT_MASK):
+                    String method = (String) eventData.get("method");
+                    method = (null != method) ? method : "no method given";
+                    String uri = (String) eventData.get("URI");
+                    uri = (null != uri) ? uri : "no URI given";
+                    Map<String,String> requestHeaders = (Map<String,String>)
+                        eventData.get("headers");
+                    StringBuffer headerValues = null;
+                    if (null != requestHeaders) {
+                        headerValues = new StringBuffer();
+                        for (String cur : requestHeaders.keySet()) {
+                            headerValues.append(cur + ": " + 
+                                    requestHeaders.get(cur) + "\n");
+                        }
+                    }
+                    headerValues = (null != headerValues) ? headerValues :
+                        new StringBuffer("no headers given: ");
+                    if (logInfo) {
+                        LOGGER.info("HTTP REQUEST:\n" + 
+                                method + " " + uri + "\n" + 
+                                headerValues);
                     }
                     break;
                 default:

@@ -61,6 +61,7 @@ REQUIRES	= xpcom \
 	find \
 	appcomps \
 	appshell \
+	xmlextras \
 	uconv \
 	unicharutil \
 	pref \
@@ -113,6 +114,7 @@ CPPSRCS = \
 	EmbedEventListener.cpp \
 	EventRegistrationImpl.cpp \
 	HttpHeaderVisitorImpl.cpp \
+	AjaxListener.cpp \
 	NativeEventThread.cpp \
 	NavigationImpl.cpp \
 	ns_util.cpp \

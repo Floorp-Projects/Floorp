@@ -38,12 +38,17 @@ public class CarDemoTest extends WebclientTestCase  {
     
     public void testCardemo() throws Exception {
         mcp.getRealizedVisibleBrowserWindow();
-        mcp.blockingLoad("http://webdev1.sun.com/jsf-ajax-cardemo/faces/chooseLocale.jsp");
-        mcp.blockingClickElement("j_id_id73:Germany");
-        mcp.blockingClickElement("j_id_id18:j_id_id43");
         
+        // Load the main page of the app
+        mcp.blockingLoad("http://webdev1.sun.com/jsf-ajax-cardemo/faces/chooseLocale.jsp");
+        // Choose the "German" language button
+        mcp.blockingClickElement("j_id_id73:Germany");
+        // Choose the roadster
+        mcp.blockingClickElement("j_id_id18:j_id_id43");
+        // Choose the "Tempomat" checkbox
+        mcp.clickElement("j_id_id21:j_id_id67j_id_1");
 
-        Thread.currentThread().sleep(30000);
+        Thread.currentThread().sleep(10000);
     }
     
 }
