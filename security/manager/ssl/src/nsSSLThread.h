@@ -85,6 +85,7 @@ private:
 
   // Called from SSL thread only
   static PRInt32 checkHandshake(PRInt32 bytesTransfered, 
+                                PRBool wasReading,
                                 PRFileDesc* fd, 
                                 nsNSSSocketInfo *socketInfo);
 

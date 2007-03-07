@@ -162,7 +162,13 @@ public:
   PRBool HandshakeTimeout();
 
   void SetAllowTLSIntoleranceTimeout(PRBool aAllow);
-  void SetBlockedOnBadCertUI(PRBool aCurrentlyBlockedOnUI);
+
+  enum BadCertUIStatusType {
+    bcuis_not_shown, bcuis_active, bcuis_was_shown
+  };
+
+  void SetBadCertUIStatus(BadCertUIStatusType aNewStatus);
+  BadCertUIStatusType GetBadCertUIStatus() { return mBadCertUIStatus; }
 
   nsresult GetExternalErrorReporting(PRBool* state);
   nsresult SetExternalErrorReporting(PRBool aState);
@@ -190,7 +196,7 @@ protected:
   PRPackedBool mHasCleartextPhase;
   PRPackedBool mHandshakeInProgress;
   PRPackedBool mAllowTLSIntoleranceTimeout;
-  PRPackedBool mBlockedOnBadCertUI;
+  BadCertUIStatusType mBadCertUIStatus;
   PRIntervalTime mHandshakeStartTime;
   PRInt32 mPort;
   nsXPIDLCString mHostName;
