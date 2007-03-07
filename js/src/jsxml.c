@@ -6438,10 +6438,7 @@ xml_namespace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSObject *nsobj;
 
     XML_METHOD_PROLOG;
-    if (argc == 0 &&
-        (xml->xml_class == JSXML_CLASS_TEXT ||
-         xml->xml_class == JSXML_CLASS_COMMENT ||
-         xml->xml_class == JSXML_CLASS_PROCESSING_INSTRUCTION)) {
+    if (argc == 0 && !JSXML_HAS_NAME(xml)) {
         *rval = JSVAL_NULL;
         return JS_TRUE;
     }
