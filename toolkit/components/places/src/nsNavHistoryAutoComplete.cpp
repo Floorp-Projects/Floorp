@@ -277,21 +277,21 @@ nsNavHistory::CreateAutoCompleteQuery()
   nsCString sql;
   if (mAutoCompleteOnlyTyped) {
     sql = NS_LITERAL_CSTRING(
-        "SELECT url, title, visit_count, typed, "
-         "(SELECT item_child FROM moz_bookmarks WHERE item_child = id) "
-        "FROM moz_places "
-        "WHERE url >= ?1 AND url < ?2 "
-        "AND typed = 1 "
-        "ORDER BY visit_count DESC "
+        "SELECT p.url, p.title, p.visit_count, p.typed, "
+         "(SELECT b.item_child FROM moz_bookmarks b WHERE b.item_child = p.id) "
+        "FROM moz_places p "
+        "WHERE p.url >= ?1 AND p.url < ?2 "
+        "AND p.typed = 1 "
+        "ORDER BY p.visit_count DESC "
         "LIMIT ");
   } else {
     sql = NS_LITERAL_CSTRING(
-        "SELECT url, title, visit_count, typed, "
-          "(SELECT item_child FROM moz_bookmarks WHERE item_child = id) "
-        "FROM moz_places "
-        "WHERE url >= ?1 AND url < ?2 "
-        "AND (hidden <> 1 OR typed = 1) "
-        "ORDER BY visit_count DESC "
+        "SELECT p.url, p.title, p.visit_count, p.typed, "
+          "(SELECT b.item_child FROM moz_bookmarks b WHERE b.item_child = p.id) "
+        "FROM moz_places p "
+        "WHERE p.url >= ?1 AND p.url < ?2 "
+        "AND (p.hidden <> 1 OR p.typed = 1) "
+        "ORDER BY p.visit_count DESC "
         "LIMIT ");
   }
   sql.AppendInt(AUTOCOMPLETE_MAX_PER_PREFIX);
