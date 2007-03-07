@@ -5060,9 +5060,9 @@ function WindowIsClosing()
 }
 
 var MailIntegration = {
-  sendLinkForContent: function () {
-    this.sendMessage(window.content.location.href,
-                     window.content.document.title);
+  sendLinkForWindow: function (aWindow) {
+    this.sendMessage(aWindow.location.href,
+                     aWindow.document.title);
   },
 
   sendMessage: function (aBody, aSubject) {
