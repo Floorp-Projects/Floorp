@@ -20,7 +20,8 @@
  *
  * Contributor(s):
  *   Mike Shaver <shaver@mozilla.org>
- *   Clint Talbert <cmtalbert@myfastmail.com>
+ *   Clint Talbert <ctalbert.moz@gmail.com>
+ *   Matthew Willis <lilmatt@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -45,8 +46,8 @@ function makeTableRow(val) {
 
 function getLightningStringBundle()
 {
-    var svc = Cc["@mozilla.org/intl/stringbundle;1"]
-              .getService(Ci.nsIStringBundleService);
+    var svc = Cc["@mozilla.org/intl/stringbundle;1"].
+              getService(Ci.nsIStringBundleService);
     return svc.createBundle("chrome://lightning/locale/lightning.properties");
 }
 
@@ -107,18 +108,23 @@ function createHtml(event)
         html.body.table.appendChild(createHtmlTableSection(labelText,
                                                            event.startDate.jsDate.toLocaleString()));
 
-        if (event.organizer && 
-           (event.organizer.commonName || event.organizer.id)) {
+        if (event.organizer &&
+            (event.organizer.commonName || event.organizer.id))
+        {
             labelText = stringBundle.GetStringFromName("imipHtml.organizer");
-            var orgname = event.organizer.commonName || event.organizer.id;
+            // Trim any instances of "mailto:" for better readibility.
+            var orgname = event.organizer.commonName ||
+                          event.organizer.id.replace(/mailto:/ig, "");
             html.body.table.appendChild(createHtmlTableSection(labelText, orgname));
         }
 
         var eventDescription = event.getProperty("DESCRIPTION");
         if (eventDescription) {
+            // Remove the useless "Outlookism" squiggle.
+            var desc = eventDescription.replace("*~*~*~*~*~*~*~*~*~*", "");
+
             labelText = stringBundle.GetStringFromName("imipHtml.description");
-            html.body.table.appendChild(createHtmlTableSection(labelText,
-                                                               eventDescription));
+            html.body.table.appendChild(createHtmlTableSection(labelText,desc));
         }
     }
 
@@ -128,32 +134,48 @@ function createHtml(event)
 function ltnMimeConverter() { }
 
 ltnMimeConverter.prototype = {
-    QueryInterface: function (aIID) {
+    QueryInterface: function QI(aIID) {
         if (!aIID.equals(Ci.nsISupports) &&
             !aIID.equals(Ci.nsISimpleMimeConverter))
-            throw Ci.NS_ERROR_NO_INTERFACE;
+        {
+            throw Components.results.NS_ERROR_NO_INTERFACE;
+        }
 
         return this;
     },
 
-    convertToHTML: function(contentType, data) {
-        var event = Cc["@mozilla.org/calendar/event;1"]
-                    .createInstance(Ci.calIEvent);
+    mUri: null,
+    get uri() {
+        return this.mUri;
+    },
+    set uri(aUri) {
+        return (this.mUri = aUri);
+    },
+
+    convertToHTML: function lmcCTH(contentType, data) {
+        var event = Cc["@mozilla.org/calendar/event;1"].
+                    createInstance(Ci.calIEvent);
         event.icalString = data;
         var html = createHtml(event);
 
         try {
-            // Bug 351610: This mechanism is a little flawed
-            var itipItem = Cc["@mozilla.org/calendar/itip-item;1"]
-                           .createInstance(Ci.calIItipItem);
+            var itipItem = Cc["@mozilla.org/calendar/itip-item;1"].
+                           createInstance(Ci.calIItipItem);
             itipItem.init(data);
-            var observer = Cc["@mozilla.org/observer-service;1"]
-                           .getService(Ci.nsIObserverService);
-            if (observer) {
-                observer.notifyObservers(itipItem, "onItipItemCreation", 0);
-            }
+
+            // this.mUri is the message URL that we are processing.
+            // We use it to get the nsMsgHeaderSink to store the calItipItem.
+            var msgUrl = this.mUri.QueryInterface(Ci.nsIMsgMailNewsUrl);
+            var sinkProps = msgUrl.msgWindow.msgHeaderSink.properties;
+            sinkProps.setPropertyAsInterface("itipItem", itipItem);
+
+            // Notify the observer that the itipItem is available
+            var observer = Cc["@mozilla.org/observer-service;1"].
+                           getService(Ci.nsIObserverService);
+            observer.notifyObservers(null, "onItipItemCreation", 0);
         } catch (e) {
-            Components.utils.reportError("Cannot Create iTIP Item: " + e);
+            Components.utils.reportError("convertToHTML: " +
+                                         "Cannot create itipItem: " + e);
         }
 
         return html;
@@ -161,30 +183,30 @@ ltnMimeConverter.prototype = {
 };
 
 var myModule = {
-    registerSelf: function (compMgr, fileSpec, location, type) {
+    registerSelf: function RS(aCompMgr, aFileSpec, aLocation, aType) {
         debug("*** Registering Lightning text/calendar handler\n");
-        compMgr = compMgr.QueryInterface(Ci.nsIComponentRegistrar);
+        var compMgr = aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
         compMgr.registerFactoryLocation(this.myCID,
                                         "Lightning text/calendar handler",
                                         this.myContractID,
-                                        fileSpec,
-                                        location,
-                                        type);
+                                        aFileSpec,
+                                        aLocation,
+                                        aType);
 
         var catman = Components.classes["@mozilla.org/categorymanager;1"]
-            .getService(Ci.nsICategoryManager);
+                               .getService(Ci.nsICategoryManager);
 
         catman.addCategoryEntry("simple-mime-converters", "text/calendar",
                                 this.myContractID, true, true);
     },
 
-    getClassObject: function (compMgr, cid, iid) {
-        if (!cid.equals(this.myCID))
+    getClassObject: function GCO(aCompMgr, aCid, aIid) {
+        if (!aCid.equals(this.myCID)) {
             throw Components.results.NS_ERROR_NO_INTERFACE;
-
-        if (!iid.equals(Components.interfaces.nsIFactory))
+        }
+        if (!aIid.equals(Components.interfaces.nsIFactory)) {
             throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-
+        }
         return this.myFactory;
     },
 
@@ -193,15 +215,15 @@ var myModule = {
     myContractID: "@mozilla.org/lightning/mime-converter;1",
 
     myFactory: {
-        createInstance: function (outer, iid) {
-            if (outer != null)
+        createInstance: function mfCI(aOuter, aIid) {
+            if (aOuter != null) {
                 throw Components.results.NS_ERROR_NO_AGGREGATION;
-
-            return (new ltnMimeConverter()).QueryInterface(iid);
+            }
+            return (new ltnMimeConverter()).QueryInterface(aIid);
         }
     },
 
-    canUnload: function(compMgr) {
+    canUnload: function CU(aCompMgr) {
         return true;
     }
 };
@@ -209,4 +231,3 @@ var myModule = {
 function NSGetModule(compMgr, fileSpec) {
     return myModule;
 }
-

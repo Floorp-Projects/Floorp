@@ -226,7 +226,8 @@
         &lightning.imipbar.description;
       </description>
       <spacer flex="1"/>
-      <button id="imip-btn1" align="right"/>
+      <button id="imip-button1" align="center" pack="end"/>
+      <button id="imip-button2" align="center" pack="end" hidden="true"/>
     </hbox>
   </hbox>
 </vbox>

@@ -83,10 +83,11 @@ EXTRA_SCRIPTS = \
     calCalendarManager.js \
     calDateTimeFormatter.js \
     calEvent.js \
-    calItemBase.js \
-    calItipItem.js \
     calIcsParser.js \
     calIcsSerializer.js \
+    calItemBase.js \
+    calItipItem.js \
+    calItipProcessor.js \
     calProtocolHandler.js \
     calRecurrenceInfo.js \
     calTodo.js \

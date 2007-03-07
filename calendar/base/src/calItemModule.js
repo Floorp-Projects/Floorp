@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
  *   Mike Shaver <shaver@off.net>
+ *   Matthew Willis <lilmatt@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -139,10 +140,15 @@ const componentData =
      script: "calWeekTitleService.js",
      constructor: "calWeekTitleService"},
 
-    {cid: Components.ID("{b84de879-4b85-4d68-8550-e0C527e46f98}"),
+    {cid: Components.ID("{f41392ab-dcad-4bad-818f-b3d1631c4d93}"),
      contractid: "@mozilla.org/calendar/itip-item;1",
      script: "calItipItem.js",
      constructor: "calItipItem"},
+
+    {cid: Components.ID("{9787876b-0780-4464-8282-b7f86fb221e8}"),
+     contractid: "@mozilla.org/calendar/itip-processor;1",
+     script: "calItipProcessor.js",
+     constructor: "calItipProcessor"},
 
     {cid: Components.ID("{1e2fc0e2-bf5f-4d60-9f1e-5e92cf517c0b}"),
      contractid: "@mozilla.org/network/protocol;1?name=webcal",

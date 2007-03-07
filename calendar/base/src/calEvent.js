@@ -162,6 +162,9 @@ calEvent.prototype = {
         var calcomp = icssvc.createIcalComponent("VCALENDAR");
         calcomp.prodid = "-//Mozilla Calendar//NONSGML Sunbird//EN";
         calcomp.version = "2.0";
+        if (this.hasProperty("METHOD")) {
+            calcomp.method = this.getProperty("METHOD");
+        }
         calcomp.addSubcomponent(this.icalComponent);
         return calcomp.serializeToICS();
     },

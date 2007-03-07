@@ -54,6 +54,7 @@ DIRS		= ../../db/sqlite3/src ../../storage \
                   ../libical ../base ../providers    \
                   ../import-export                   \
                   components                         \
+                  ../itip                            \
 		  $(NULL)
 
 # Select a theme from which to pull our skin goodness

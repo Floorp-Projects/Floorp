@@ -19,7 +19,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Clint Talbert <cmtalbert@myfastmail.com>
+ *   Clint Talbert <ctalbert.moz@gmail.com>
+ *   Matthew Willis <lilmatt@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,14 +47,20 @@ interface nsISimpleEnumerator;
  * parser, the imip-bar UI, and the iTIP processor. It encapsulates a list of
  * calIItemBase objects and provides specialized iTIP methods for those items.
  */
-[scriptable, uuid(B84DE879-4B85-4d68-8550-E0C527E46F98)]
+[scriptable, uuid(f41392ab-dcad-4bad-818f-b3d1631c4d93)]
 interface calIItipItem : nsISupports
 {
-   /**
+    /**
      * Initializes the item with an ics string
-     * @arg - in parameter - AString of ical Data
+     * @param - in parameter - AString of ical Data
      */
-    void init(in  AString icalData);
+    void init(in  AUTF8String icalData);
+
+    /**
+     * Creates a new calItipItem with the same attributes as the one that
+     * clone() is called upon.
+     */
+    calIItipItem clone();
 
     /**
      * Attribute: isSend - set to TRUE when sending this item to initiate an
@@ -68,14 +75,14 @@ interface calIItipItem : nsISupports
     /**
      * Attribute: receivedMethod - method the iTIP item had upon reciept
      */
-    attribute AString receivedMethod;
+    attribute AUTF8String receivedMethod;
 
     /**
      * Attribute: responseMethod - method that the protocol handler (or the
      * user) decides to use to respond to the iTIP item (could be COUNTER,
      * REPLY, DECLINECOUNTER, etc)
      */
-    attribute AString responseMethod;
+    attribute AUTF8String responseMethod;
 
     /**
      * Attribute: autoResponse Set to one of the three constants below
@@ -105,32 +112,46 @@ interface calIItipItem : nsISupports
     attribute calICalendar targetCalendar;
 
     /**
+     * localStatus: The response that the user has made to the invitation in
+     *              this ItipItem.
+     */
+    attribute AUTF8String localStatus;
+
+    /**
+     * Get the list of items that are encapsulated in this calIItipItem
+     * @returns An array of calIItemBase items that are inside this
+     *          calIItipItem
+     */
+    void getItemList(out unsigned long itemCount,
+                     [retval, array, size_is(itemCount)] out calIItemBase items);
+
+    /**
      * Get the first item from the iTIP message
      * Bug XXX 351761: Need to find a way to make this use an nsISimpleEnumerator
      * @return calIItemBase
-     */
+     
     calIItemBase getFirstItem();
-
+*/
     /**
      * Get next item from the iTIP message. If there is no next item then it
      * returns NULL
      * @return calIItemBase
-     */
+     
     calIItemBase getNextItem();
-
+*/
     /**
      * Modifies a calIItemBase that is in the component list. Internally, the
      * interface will update the proper component. It does this via the
      * UID of the component by calling hasSameIds().
-     * @arg in parameter - item to modify
+     * @param in parameter - item to modify
      * @return returns the new calIItemBase object for convienence
      */
     calIItemBase modifyItem(in calIItemBase item);
 
     /**
      * Modifies the state of the given attendee in the item's ics
-     * @arg in parameter - AString containing attendee address
-     * @arg in parameter - AString contianing the new attendee status
+     * @param in parameter - AString containing attendee address
+     * @param in parameter - AString contianing the new attendee status
      */
     void setAttendeeStatus(in AString attendeeId, in AString status);
 };

@@ -97,11 +97,6 @@
 #define CAL_RECURRENCEINFO_CONTRACTID \
     "@mozilla.org/calendar/recurrence-info;1"
 
-#define CAL_ITIPITEM_CID \
-    { 0xb84de879, 0x4b85, 0x4d68, { 0x85, 0x50, 0xe0, 0xc5, 0x27, 0xe4, 0x6f, 0x98 } }
-#define CAL_ITIPITEM_CONTRACTID \
-    "@mozilla.org/calendar/itip-item;1"
-
 #define NS_ERROR_CALENDAR_WRONG_COMPONENT_TYPE		NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_CALENDAR, 1)
 // Until extensible xpconnect error mapping works
 // #define NS_ERROR_CALENDAR_IMMUTABLE                 NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_CALENDAR, 2)

@@ -241,6 +241,12 @@ interface calIItemBase : nsISupports
   // removeAttendee/addAttendee that follow the call to getAttendees.
   void getAttendees(out PRUint32 count,
                     [array,size_is(count),retval] out calIAttendee attendees);
+
+  /**
+   * getAttendeeById's matching is done in a case-insensitive manner to handle
+   * places where "MAILTO:" or similar properties are capitalized arbitrarily
+   * by different calendar clients.
+   */
   calIAttendee getAttendeeById(in AUTF8String id);
   void removeAttendee(in calIAttendee attendee);
   void addAttendee(in calIAttendee attendee);

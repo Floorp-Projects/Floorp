@@ -19,7 +19,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Clint Talbert <cmtalbert@myfastmail.com>
+ *   Clint Talbert <ctalbert.moz@gmail.com>
+ *   Matthew Willis <lilmatt@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -44,37 +45,29 @@ function calItipItem() {
     this.mCurrentItemIndex = 0;
 }
 
-var calItipItemClassInfo = {
-    getInterfaces: function (count) {
+calItipItem.prototype = {
+    getInterfaces: function ciiGI(count) {
         var ifaces = [
-            Components.interfaces.nsISupports,
-            Components.interfaces.calIItipItem,
-            Components.interfaces.nsIClassInfo
+            Ci.nsIClassInfo,
+            Ci.nsISupports,
+            Ci.calIItipItem
         ];
         count.value = ifaces.length;
         return ifaces;
     },
 
-    getHelperForLanguage: function (language) {
+    getHelperForLanguage: function ciiGHFL(aLanguage) {
         return null;
     },
 
     contractID: "@mozilla.org/calendar/itip-item;1",
     classDescription: "Calendar iTIP item",
-    classID: Components.ID("{b84de879-4b85-4d68-8550-e0C527e46f98}"),
+    classID: Components.ID("{f41392ab-dcad-4bad-818f-b3d1631c4d93}"),
     implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
-    flags: 0
-};
+    flags: 0,
 
-calItipItem.prototype = {
-    QueryInterface: function (aIID) {
-        if (aIID.equals(Ci.nsIClassInfo)) {
-            return calItipItemClassInfo;
-        }
-
-        if (aIID.equals(Ci.nsISupports) || aIID.equals(Ci.calIItipItem)) {
-            return this;
-        } else {
+    QueryInterface: function ciiQI(aIid) {
+        if (!aIid.equals(Ci.nsISupports) && !aIid.equals(Ci.calIItipItem)) {
             throw Components.results.NS_ERROR_NO_INTERFACE;
         }
 
@@ -82,108 +75,156 @@ calItipItem.prototype = {
     },
 
     mIsSend: false,
-
     get isSend() {
         return this.mIsSend;
     },
-    set isSend(value) {
-        this.mIsSend = value;
+    set isSend(aValue) {
+        return (this.mIsSend = aValue);
     },
 
     mReceivedMethod: null,
-
     get receivedMethod() {
         return this.mReceivedMethod;
     },
-    set receivedMethod(value) {
-        this.mReceivedMethod = value;
+    set receivedMethod(aMethod) {
+        return (this.mReceivedMethod = aMethod.toUpperCase());
     },
 
     mResponseMethod: null,
-
     get responseMethod() {
-        return this.mResponseMethod;
+        if (this.mIsInitialized) {
+            var method = null;
+            for each (var prop in this.mPropertiesList) {
+                if (prop.propertyName == "METHOD") {
+                    method = prop.value;
+                    break;
+                }
+            }
+            return method;
+        } else {
+            throw Components.results.NS_ERROR_NOT_INITIALIZED;
+        }
     },
-    set responseMethod(value) {
-        this.mResponseMethod = value;
+    set responseMethod(aMethod) {
+        this.mResponseMethod = aMethod.toUpperCase();
+        // Setting this also sets the global method attribute inside the
+        // encapsulated VCALENDAR.
+        if (this.mIsInitialized) {
+            var methodExists = false;
+            for each (var prop in this.mPropertiesList) {
+                if (prop.propertyName == "METHOD") {
+                    methodExists = true;
+                    prop.value = this.mResponseMethod;
+                }
+            }
+
+            if (!methodExists) {
+                var newProp = { propertyName: "METHOD",
+                                value: this.mResponseMethod };
+                this.mPropertiesList.push(newProp);
+            }
+        } else {
+            throw Components.results.NS_ERROR_NOT_INITIALIZED;
+        }
+        return this.mResponseMethod;
     },
 
     mAutoResponse: null,
-
     get autoResponse() {
         return this.mAutoResponse;
     },
-    set autoResponse(value) {
-        this.mAutoResponse = value;
+    set autoResponse(aValue) {
+        return (this.mAutoResponse = aValue);
     },
 
     mTargetCalendar: null,
-
     get targetCalendar() {
         return this.mTargetCalendar;
     },
-    set targetCalendar(value) {
-        this.mTargetCalendar = value;
+    set targetCalendar(aValue) {
+        return (this.mTargetCalendar = aValue);
     },
 
-    modifyItem: function(item) {
-        // Bug 348666: This will be used when we support delegation and COUNTER
+    mLocalStatus: null,
+    get localStatus() {
+        return this.mLocalStatus;
+    },
+    set localStatus(aValue) {
+        return (this.mLocalStatus = aValue);
+     },
+
+    modifyItem: function ciiMI(item) {
+        // Bug 348666: This will be used when we support delegation and COUNTER.
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
 
     mItemList: null,
+    mPropertiesList: null,
 
-    init: function(icalData) {
-        this.mItemList = new Array();
-        var icsService = Cc["@mozilla.org/calendar/ics-service;1"]
-                         .getService(Components.interfaces.calIICSService);
-        var rootComp = icsService.parseICS(icalData);
-        var calComp;
-        // libical returns the vcalendar component if there is just
-        // one vcalendar. If there are multiple vcalendars, it returns
-        // an xroot component, with those vcalendar children. We need to
-        // handle both cases.
-        if (rootComp.componentType == 'VCALENDAR') {
-            calComp = rootComp;
-        } else {
-            calComp = rootComp.getFirstSubcomponent('VCALENDAR');
+    init: function ciiI(aIcalString) {
+        var parser = Cc["@mozilla.org/calendar/ics-parser;1"].
+                     createInstance(Ci.calIIcsParser);
+        parser.parseString(aIcalString);
+        this.mItemList = parser.getItems({});
+        this.mPropertiesList = parser.getProperties({});
+
+        // We set both methods now for safety's sake. It's the ItipProcessor's
+        // responsibility to properly ascertain what the correct response
+        // method is (using user feedback, prefs, etc.) for the given
+        // receivedMethod.  The RFC tells us to treat items without a METHOD
+        // as if they were METHOD:REQUEST.
+        var method;
+        for each (var prop in this.mPropertiesList) {
+            if (prop.propertyName == "METHOD") {
+                method = prop.value;
+            }
         }
-        // Get the method property out of the calendar to set our methods
-        var method = calComp.method;
-        // We set both methods now for safety's sake. It is the iTIP
-        // processor's responsibility to properly ascertain what the correct
-        // response method is (using user feedback, pref's etc) for this given
-        // ReceivedMethod
         this.mReceivedMethod = method;
         this.mResponseMethod = method;
 
-        while (calComp) {
-            var subComp = calComp.getFirstSubcomponent("ANY");
-            while (subComp) {
-                switch (subComp.componentType) {
-                case "VEVENT":
-                    var event = Cc["@mozilla.org/calendar/event;1"]
-                                .createInstance(Ci.calIEvent);
-                    event.icalComponent = subComp;
-                    this.mItemList.push(event);
-                    break;
-                case "VTODO":
-                    var todo = Cc["@mozilla.org/calendar/todo;1"]
-                               .createInstance(Ci.calITodo);
-                    todo.icalComponent = subComp;
-                    this.mItemList.push(todo);
-                    break;
-                default:
-                    // Nothing -- Bug 185537: Implement VFREEBUSY, VJOURNAL
-                }
-                subComp = calComp.getNextSubcomponent("ANY");
-            }
-            calComp = rootComp.getNextSubcomponent('VCALENDAR');
-        }
         this.mIsInitialized = true;
     },
 
-    getFirstItem: function() {
+    clone: function ciiC() {
+        // Iterate through all the calItems in the original calItipItem to
+        // concatenate all the calItems' icalStrings.
+        var icalString = "";
+
+        var itemList = this.getItemList({ });
+        for (var i = 0; i < itemList.length; i++) {
+            icalString += itemList[i].icalString;
+        }
+
+        // Create a new calItipItem and initialize it using the icalString
+        // from above.
+        var newItem = Cc["@mozilla.org/calendar/itip-item;1"].
+                      createInstance(Ci.calIItipItem);
+        newItem.init(icalString);
+
+        // Copy over the exposed attributes.
+        newItem.receivedMethod = this.receivedMethod;
+        newItem.responseMethod = this.responseMethod;
+        newItem.autoResponse = this.autoResponse;
+        newItem.targetCalendar = this.targetCalendar;
+        newItem.localStatus = this.localStatus;
+        newItem.isSend = this.isSend;
+
+        return newItem;
+    },
+
+    /**
+     * This returns both the array and the number of items. An easy way to
+     * call it is: var itemArray = itipItem.getItemList({ });
+     */
+    getItemList: function ciiGIL(itemCountRef) {
+        if (!this.mIsInitialized || (this.mItemList.length == 0)) {
+            throw Components.results.NS_ERROR_NOT_INITIALIZED;
+        }
+        itemCountRef.value = this.mItemList.length;
+        return this.mItemList;
+    },
+
+    /*getFirstItem: function ciiGFI() {
         if (!this.mIsInitialized || (this.mItemList.length == 0)) {
             throw Components.results.NS_ERROR_NOT_INITIALIZED;
         }
@@ -191,7 +232,7 @@ calItipItem.prototype = {
         return this.mItemList[0];
     },
 
-    getNextItem: function() {
+    getNextItem: function ciiGNI() {
         if (!this.mIsInitialized || (this.mItemList.length == 0)) {
             throw Components.results.NS_ERROR_NOT_INITIALIZED;
         }
@@ -201,22 +242,44 @@ calItipItem.prototype = {
         } else {
             return null;
         }
-    },
+    },*/
 
-    setAttendeeStatus: function (attendeeID, status) {
-        // Note that this code forces the user to respond to all items
-        // in the same way, which is a current limitation of the spec
-        if (attendeeID.match(/mailto:/i)) {
-            attendeeID = "mailto:" + attendeeID; // prepend mailto
+    /**
+     * Note that this code forces the user to respond to all items in the same
+     * way, which is a current limitation of the spec.
+     */
+    setAttendeeStatus: function ciiSAS(aAttendeeId, aStatus) {
+        // Append "mailto:" to the attendee if it is missing it.
+        var attId = aAttendeeId.toLowerCase();
+        if (!attId.match(/mailto:/i)) {
+            attId = "mailto:" + attId;
         }
-        for (var i=0; i < this.mItemList.length; ++i) {
-            var item = this.mItemList[i];
-            var attendee = item.getAttendeeById(attendeeID);
+
+        for each (var item in this.mItemList) {
+            var attendee = item.getAttendeeById(attId);
             if (attendee) {
                 // XXX BUG 351589: workaround for updating an attendee
                 item.removeAttendee(attendee);
-                attendee.participationStatus = status;
-                item.addAttendee(attendee);
+
+                // Replies should not have the RSVP property.
+                // Since attendee.deleteProperty("RSVP") doesn't work, we must
+                // create a new attendee from scratch WITHOUT the RSVP
+                // property and copy in the other relevant data.
+                // XXX use deleteProperty after bug 358498 is fixed.
+                newAttendee = Cc["@mozilla.org/calendar/attendee;1"].
+                              createInstance(Ci.calIAttendee);
+                if (attendee.commonName) {
+                    newAttendee.commonName = attendee.commonName;
+                }
+                if (attendee.role) {
+                    newAttendee.role = attendee.role;
+                }
+                if (attendee.userType) {
+                    newAttendee.userType = attendee.userType;
+                }
+                newAttendee.id = attendee.id;
+                newAttendee.participationStatus = aStatus;
+                item.addAttendee(newAttendee);
             }
         }
     }

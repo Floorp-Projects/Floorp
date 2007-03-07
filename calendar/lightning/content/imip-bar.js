@@ -19,7 +19,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Clint Talbert <cmtalbert@myfastmail.com>
+ *   Clint Talbert <ctalbert.moz@gmail.com>
+ *   Matthew Willis <lilmatt@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -34,62 +35,68 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
- * This bar lives inside the message window, its lifetime is the lifetime of
- * the main thunderbird message window.
+ * This bar lives inside the message window.
+ * Its lifetime is the lifetime of the main thunderbird message window.
  */
 
 var gItipItem;
 
-/**
- * Sets up iTIP creation event listener
- * When the mime parser discovers a text/calendar attachment to a message,
- * it creates a calIItipItem and calls an observer. We watch for that
- * observer. Bug 351610 is open so that we can find a way to make this 
- * communication mechanism more robust.
-*/
 const onItipItem = {
     observe: function observe(subject, topic, state) {
         if (topic == "onItipItemCreation") {
-            try {
-                var itipItem = 
-                    subject.QueryInterface(Components.interfaces.calIItipItem);
-                // We are only called upon receipt of an invite, so
-                // ensure that isSend is false.
-                itipItem.isSend = false;
-
-                // Until the iTIPResponder code lands, we do no response
-                // at all.
-                itipItem.autoResponse = Components.interfaces.calIItipItem.NONE;
-                itipItem.targetCalendar = getTargetCalendar();
-
-                var imipMethod = getMsgImipMethod();
-                if (imipMethod.length) {
-                    itipItem.receivedMethod = imipMethod;
-                } else {
-                    // Thunderbird 1.5 case, we cannot get the iMIPMethod
-                    imipMethod = itipItem.receivedMethod;
-                }
-
-                gItipItem = itipItem;
-
-                // XXX Bug 351742: no security yet
-                // handleImipSecurity(imipMethod);
-
-                setupBar(imipMethod);
-
-            } catch (e) {
-                Components.utils.reportError(e);
-            }
+            checkForItipItem();
         }
     }
 };
 
-addEventListener('messagepane-loaded', imipOnLoad, true);
-addEventListener('messagepane-unloaded', imipOnUnload, true);
+function checkForItipItem()
+{
+    var itipItem;
+    try {
+        var msgUri = GetLoadedMessage();
+        var sinkProps = msgWindow.msgHeaderSink.properties;
+        // This property was set by LightningTextCalendarConverter.js
+        itipItem = sinkProps.getPropertyAsInterface("itipItem",
+                                                    Components.interfaces.calIItipItem)
+    } catch (e) {
+        // This will throw on every message viewed that doesn't have the
+        // itipItem property set on it. So we eat the errors and move on.
+
+        // XXX TODO: Only swallow the errors we need to. Throw all others.
+        return;
+    }
+
+    // We are only called upon receipt of an invite, so ensure that isSend
+    // is false.
+    itipItem.isSend = false;
+
+    // XXX Get these from preferences
+    itipItem.autoResponse = Components.interfaces.calIItipItem.USER;
+    itipItem.targetCalendar = getTargetCalendar();
+
+    var imipMethod = getMsgImipMethod();
+    if (imipMethod.length) {
+        itipItem.receivedMethod = imipMethod;
+    } else {
+        // Thunderbird 1.5 case, we cannot get the imipMethod
+        imipMethod = itipItem.receivedMethod;
+    }
+
+    gItipItem = itipItem;
+
+    // XXX Bug 351742: no S/MIME or spoofing protection yet
+    // handleImipSecurity(imipMethod);
+
+    setupBar(imipMethod);
+}
+
+addEventListener("messagepane-loaded", imipOnLoad, true);
+addEventListener("messagepane-unloaded", imipOnUnload, true);
 
 /**
- * Attempt to add self to gMessageListeners defined in msgHdrViewOverlay.js
+ * Add self to gMessageListeners defined in msgHdrViewOverlay.js
  */
 function imipOnLoad()
 {
@@ -99,18 +106,20 @@ function imipOnLoad()
     gMessageListeners.push(listener);
 
     // Set up our observers
-    var observerService = Components.classes["@mozilla.org/observer-service;1"]
-                                    .getService(Components.interfaces.nsIObserverService);
-    observerService.addObserver(onItipItem, "onItipItemCreation", false);
+    var observerSvc = Cc["@mozilla.org/observer-service;1"].
+                      getService(Ci.nsIObserverService);
+    observerSvc.addObserver(onItipItem, "onItipItemCreation", false);
 }
 
 function imipOnUnload()
 {
-    removeEventListener('messagepane-loaded', imipOnLoad, true);
-    removeEventListener('messagepane-unloaded', imipOnUnload, true);
-    var observerService = Components.classes["@mozilla.org/observer-service;1"]
-                          .getService(Components.interfaces.nsIObserverService);
-    observerService.removeObserver(onItipItem, "onItipItemCreation");
+    removeEventListener("messagepane-loaded", imipOnLoad, true);
+    removeEventListener("messagepane-unloaded", imipOnUnload, true);
+
+    var observerSvc = Cc["@mozilla.org/observer-service;1"].
+                      getService(Ci.nsIObserverService);
+    observerSvc.removeObserver(onItipItem, "onItipItemCreation");
+
     gItipItem = null;
 }
 
@@ -119,25 +128,27 @@ function onImipStartHeaders()
     var imipBar = document.getElementById("imip-bar");
     imipBar.setAttribute("collapsed", "true");
 
-    // New Message is starting, clear our iMIP/iTIP stuff so that we don't set
-    // it by accident
+    // A new message is starting.
+    // Clear our iMIP/iTIP stuff so it doesn't contain stale information.
     imipMethod = "";
     gItipItem = null;
 }
 
-// We need an onEndHeader or else MessageListner will throw. However,
-// we do not need to actually do anything in this function.
+/**
+ * Required by MessageListener. no-op
+ */
 function onImipEndHeaders()
 {
+    // no-op
 }
 
 function setupBar(imipMethod)
 {
-    // XXX - Bug 348666 - Currently we only do PUBLISH requests
+    // XXX - Bug 348666 - Currently we only do REQUEST requests
     // In the future this function will set up the proper actions
     // and attributes for the buttons as based on the iMIP Method
     var imipBar = document.getElementById("imip-bar");
-    imipBar.setAttribute("collapsed","false");
+    imipBar.setAttribute("collapsed", "false");
     var description = document.getElementById("imip-description");
 
     // Bug 348666: here is where we would check if this event was already
@@ -146,13 +157,22 @@ function setupBar(imipMethod)
         description.firstChild.data = ltnGetString("lightning","imipBarText");
     }
 
-    // Since there is only a PUBLISH, this is easy
-    var button1 = document.getElementById("imip-btn1");
-    button1.removeAttribute("hidden");
-    button1.setAttribute("label", ltnGetString("lightning",
-                                               "imipAddToCalendar.label"));
-    button1.setAttribute("oncommand", 
-                         "setAttendeeResponse('PUBLISH', 'CONFIRMED');");
+    var button = document.getElementById("imip-button1");
+    button.removeAttribute("hidden");
+    button.setAttribute("label", ltnGetString("lightning",
+                                              "imipAcceptInvitation.label"));
+    button.setAttribute("oncommand",
+                        "setAttendeeResponse('ACCEPTED', 'CONFIRMED');");
+
+    if (imipMethod == "REQUEST") {
+        // Then create a DECLINE button
+        button = document.getElementById("imip-button2");
+        button.removeAttribute("hidden");
+        button.setAttribute("label", ltnGetString("lightning",
+                                                  "imipDeclineInvitation.label"));
+        button.setAttribute("oncommand",
+                            "setAttendeeResponse('DECLINED', 'CONFIRMED');");
+    }
 }
 
 function getMsgImipMethod()
@@ -171,10 +191,40 @@ function getMsgRecipient()
     var msgURI = GetLoadedMessage();
     var msgHdr = messenger.messageServiceFromURI(msgURI)
                           .messageURIToMsgHdr(msgURI);
-    // msgHdr.recipients is always the one recipient - the one looking at
-    // the email, which is who we are interested in.
+
+    // msgHdr recipients can be a comma separated list of recipients.
+    // We then compare against the defaultIdentity to find ourselves.
+    // XXX This won't always work:
+    //     Users with multiple accounts and invites going to the non-default
+    //     account, Users with email aliases where the defaultIdentity.email
+    //     doesn't match the recipient, etc.
     if (msgHdr) {
-        imipRecipient = msgHdr.recipients;
+        var recipientList = msgHdr.recipients;
+        // Remove any spaces
+        recipientList = recipientList.split(" ").join("");
+        recipientList = recipientList.split(",");
+
+        var emailSvc = Cc["@mozilla.org/calendar/itip-transport;1?type=email"].
+                       getService(Ci.calIItipTransport);
+        var me = emailSvc.defaultIdentity;
+
+        var lt;
+        var gt;
+        for each (var recipient in recipientList) {
+            // Deal with <foo@bar.com> style addresses
+            lt = recipient.indexOf("<");
+            gt = recipient.indexOf(">");
+
+            // I chose 6 since <a@b.c> is the shortest technically valid email
+            // address I could come up with.
+            if ((lt >= 0) && (gt >= 6)) {
+                recipient = recipient.substring(lt+1, gt);
+            }
+
+            if (recipient.toLowerCase() == me.toLowerCase()) {
+                imipRecipient = recipient;
+            }
+        }
     }
     return imipRecipient;
 }
@@ -184,8 +234,8 @@ function getMsgRecipient()
  */
 function getTargetCalendar()
 {
-    var calMgr = Components.classes["@mozilla.org/calendar/manager;1"]
-                           .getService(Components.interfaces.calICalendarManager);
+    var calMgr = Cc["@mozilla.org/calendar/manager;1"].
+                 getService(Ci.calICalendarManager);
     var cals = calMgr.getCalendars({});
     return cals[0];
 }
@@ -198,69 +248,97 @@ function setAttendeeResponse(type, eventStatus)
 {
     var myAddress = getMsgRecipient();
     if (type && gItipItem) {
-        switch (type) { // We set the attendee status appropriately
+        // We set the attendee status appropriately
+        switch (type) {
             case "ACCEPTED":
             case "TENTATIVE":
             case "DECLINED":
                 gItipItem.setAttendeeStatus(myAddress, type);
-                doResponse();
-                break;
+                // fall through
             case "REPLY":
             case "PUBLISH":
                 doResponse(eventStatus);
                 break;
             default:
-                // Nothing -- if given nothing then the attendee wishes to
-                // disregard the mail, so no further action required
+                // no-op. The attendee wishes to disregard the mail, so no
+                // further action is required.
                 break;
         }
     }
-
-    finishItipAction(type, eventStatus);
 }
 
 /**
- * doResponse performs the iTIP action for the current iTIPItem that we
+ * doResponse performs the iTIP action for the current ItipItem that we
  * parsed from the email.
- * Takes an optional parameter to set the event STATUS property
+ * @param  aLocalStatus  optional parameter to set the event STATUS property.
+ *         aLocalStatus can be empty, "TENTATIVE", "CONFIRMED", or "CANCELLED"
  */
-function doResponse(eventStatus)
+function doResponse(aLocalStatus)
 {
-    // XXX For now, just add the item to the calendar
+    // calIOperationListener so that we can properly return status to the
+    // imip-bar
+    var operationListener = {
+        onOperationComplete:
+        function ooc(aCalendar, aStatus, aOperationType, aId, aDetail) {
+            // Call finishItipAction to set the status of the operation
+            finishItipAction(aOperationType, aStatus, aDetail);
+        },
+
+        onGetResult:
+        function ogr(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
+            // no-op
+        }
+    };
+
     // The spec is unclear if we must add all the items or if the
     // user should get to pick which item gets added.
     var cal = getTargetCalendar();
 
-    var item = gItipItem.getFirstItem();
-    while (item != null) {
-        if (eventStatus.length)
-            item.status = eventStatus;
-        cal.addItem(item, null);
-        item = gItipItem.getNextItem();
+    if (aLocalStatus != null) {
+        gItipItem.localStatus = aLocalStatus;
     }
+
+    var itipProc = Cc["@mozilla.org/calendar/itip-processor;1"].
+                   createInstance(Ci.calIItipProcessor);
+
+    itipProc.processItipItem(gItipItem, operationListener);
 }
 
 /**
  * Bug 348666 (complete iTIP support) - This gives the user an indication
  * that the Action occurred.
- * In the future we want to store the status of invites that you have added
- * to your calendar and provide the ability to request updates from the
- * organizer. This function will be responsible for setting up and
- * maintaining the proper lists of events and informing the user as to the
- * state of the iTIP action
- * Additionally, this function should ONLY be called once we KNOW what the
- * status of the event addition was. It must wait for a clear signal from the
- * iTIP Processor as to whether or not the event added/failed to add or
- * what have you. It should alert the user to the true status of the operation
+ *
+ * In the future, this will store the status of the invitation in the
+ * invitation manager.  This will enable us to provide the ability to request
+ * updates from the organizer and to suggest changes to invitations.
+ *
+ * Currently, this is called from our calIOperationListener that is sent to
+ * the ItipProcessor. This conveys the status of the local iTIP processing
+ * on your calendar. It does not convey the success or failure of sending a
+ * response to the ItipItem.
  */
-function finishItipAction(type, eventStatus)
+function finishItipAction(aOperationType, aStatus, aDetail)
 {
-    // For now, we just do something very simple
-    var description = document.getElementById("imip-description");
-    if (description.firstChild.data) {
-        description.firstChild.data = ltnGetString("lightning",
-                                                   "imipAddedItemToCal");
+    // For now, we just state the status for the user something very simple
+    var desc = document.getElementById("imip-description");
+    if (desc.firstChild != null) {
+        if (Components.isSuccessCode(aStatus)) {
+            desc.firstChild.data = ltnGetString("lightning",
+                                                "imipAddedItemToCal");
+            document.getElementById("imip-button1").setAttribute("hidden",
+                                                                 true);
+            document.getElementById("imip-button2").setAttribute("hidden",
+                                                                 true);
+        } else {
+            // Bug 348666: When we handle more iTIP methods, we need to create
+            // more sophisticated error handling.
+            document.getElementById("imip-bar").setAttribute("collapsed", true);
+            var msg = "Invitation could not be processed. Status: " + aStatus;
+            if (aDetail) {
+                msg += "\nDetails: " + aDetail;
+            }
+            // Defined in import-export
+            showError(msg);
+        }
     }
-    document.getElementById("imip-btn1").setAttribute("hidden", true);
 }
-
