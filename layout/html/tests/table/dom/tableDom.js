@@ -50,7 +50,6 @@ function appendCell(aRow, aRowSpan, aColSpan) {
 }
 
 function appendCellAt(aRowIndex, aRowSpan, aColSpan) {
-dump(aRowIndex);
   var row = document.getElementsByTagName("TR")[aRowIndex];
   appendCell(row, aRowSpan, aColSpan);
 }
