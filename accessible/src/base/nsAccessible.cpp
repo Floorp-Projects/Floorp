@@ -2518,12 +2518,7 @@ NS_IMETHODIMP nsAccessible::GetExtState(PRUint32 *aExtState)
   PRUint32 state ;
   GetFinalState(&state);
   if (0 == (state & STATE_UNAVAILABLE)) {  // If not disabled
-    // And if has at least 1 action or it is focusable, it can be ENABLED and SENSITIVE
-    PRUint8 actions;
-    GetNumActions(&actions);
-    if (actions > 0 || (state & STATE_FOCUSABLE)) {
-      *aExtState |= EXT_STATE_ENABLED | EXT_STATE_SENSITIVE;
-    }
+    *aExtState |= EXT_STATE_ENABLED | EXT_STATE_SENSITIVE;
   }
 
   if (state & (STATE_COLLAPSED | STATE_EXPANDED)) {
