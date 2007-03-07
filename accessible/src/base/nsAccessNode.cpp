@@ -363,9 +363,12 @@ nsAccessNode::ScrollTo(PRBool aTopLeft)
   nsIFrame *frame = GetFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
+  nsCOMPtr<nsIContent> content = frame->GetContent();
+  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+
   PRInt32 percent = aTopLeft ? NS_PRESSHELL_SCROLL_TOP :
     NS_PRESSHELL_SCROLL_ANYWHERE;
-  return shell->ScrollFrameIntoView(frame, percent, percent);
+  return shell->ScrollContentIntoView(content, percent, percent);
 }
 
 nsresult

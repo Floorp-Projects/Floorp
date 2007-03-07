@@ -98,12 +98,12 @@ class nsIScrollableFrame;
 
 typedef short SelectionType;
 
-// 2fc67850-eb32-404a-8f84-52e2fe8f6356
+// c37fd598-ed7f-4f39-bdf9-96642c691c7b
 #define NS_IPRESSHELL_IID \
-{ 0x2fc67850, 0xeb32, 0x404a, \
-  { 0x8f, 0x84, 0x52, 0xe2, 0xfe, 0x8f, 0x63, 0x56 } }
+{ 0xc37fd598, 0xed7f, 0x4f39, \
+  { 0xbd, 0xf9, 0x96, 0x64, 0x2c, 0x69, 0x1c, 0x7b } }
 
-// Constants for ScrollFrameIntoView() and ScrollContentIntoView() functions.
+// Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
 #define NS_PRESSHELL_SCROLL_BOTTOM   100
 #define NS_PRESSHELL_SCROLL_LEFT     0
@@ -405,43 +405,33 @@ public:
   NS_IMETHOD GoToAnchor(const nsAString& aAnchorName, PRBool aScroll) = 0;
 
   /**
-   * Scrolls the view of the document so that the frame is displayed at the 
-   * top of the window.
+   * Scrolls the view of the document so that the primary frame of the content
+   * is displayed at the top of the window. Layout is flushed before scrolling.
    *
-   * @param aFrame    The frame to scroll into view
+   * @param aContent  The content object of which primary frame should be
+   *                  scrolled into view.
    * @param aVPercent How to align the frame vertically. A value of 0
-   *                    (NS_PRESSHELL_SCROLL_TOP) means the frame's upper edge is
-   *                    aligned with the top edge of the visible area. A value of
-   *                    100 (NS_PRESSHELL_SCROLL_BOTTOM) means the frame's bottom
-   *                    edge is aligned with the bottom edge of the visible area.
-   *                    For values in between, the point "aVPercent" down the frame
-   *                    is placed at the point "aVPercent" down the visible area. A
-   *                    value of 50 (NS_PRESSHELL_SCROLL_CENTER) centers the frame
-   *                    vertically. A value of NS_PRESSHELL_SCROLL_ANYWHERE means move
-   *                    the frame the minimum amount necessary in order for the entire
-   *                    frame to be visible vertically (if possible)
+   *                  (NS_PRESSHELL_SCROLL_TOP) means the frame's upper edge is
+   *                  aligned with the top edge of the visible area. A value of
+   *                  100 (NS_PRESSHELL_SCROLL_BOTTOM) means the frame's bottom
+   *                  edge is aligned with the bottom edge of the visible area.
+   *                  For values in between, the point "aVPercent" down the frame
+   *                  is placed at the point "aVPercent" down the visible area. A
+   *                  value of 50 (NS_PRESSHELL_SCROLL_CENTER) centers the frame
+   *                  vertically. A value of NS_PRESSHELL_SCROLL_ANYWHERE means move
+   *                  the frame the minimum amount necessary in order for the entire
+   *                  frame to be visible vertically (if possible)
    * @param aHPercent How to align the frame horizontally. A value of 0
-   *                    (NS_PRESSHELL_SCROLL_LEFT) means the frame's left edge is
-   *                    aligned with the left edge of the visible area. A value of
-   *                    100 (NS_PRESSHELL_SCROLL_RIGHT) means the frame's right
-   *                    edge is aligned with the right edge of the visible area.
-   *                    For values in between, the point "aVPercent" across the frame
-   *                    is placed at the point "aVPercent" across the visible area.
-   *                    A value of 50 (NS_PRESSHELL_SCROLL_CENTER) centers the frame
-   *                    horizontally . A value of NS_PRESSHELL_SCROLL_ANYWHERE means move
-   *                    the frame the minimum amount necessary in order for the entire
-   *                    frame to be visible horizontally (if possible)
-   */
-  NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame,
-                                 PRIntn   aVPercent, 
-                                 PRIntn   aHPercent) const = 0;
-
-  /**
-   * Otherwise same as the above, but takes an aContent as the first parameter
-   * and after flushing pending notifications tries to find primary frame
-   * for that and then call ScrollFrameIntoView.
-   * @param aContent The content object of which primary frame should be
-   *                 scrolled into view.
+   *                  (NS_PRESSHELL_SCROLL_LEFT) means the frame's left edge is
+   *                  aligned with the left edge of the visible area. A value of
+   *                  100 (NS_PRESSHELL_SCROLL_RIGHT) means the frame's right
+   *                  edge is aligned with the right edge of the visible area.
+   *                  For values in between, the point "aVPercent" across the frame
+   *                  is placed at the point "aVPercent" across the visible area.
+   *                  A value of 50 (NS_PRESSHELL_SCROLL_CENTER) centers the frame
+   *                  horizontally . A value of NS_PRESSHELL_SCROLL_ANYWHERE means move
+   *                  the frame the minimum amount necessary in order for the entire
+   *                  frame to be visible horizontally (if possible)
    */
   NS_IMETHOD ScrollContentIntoView(nsIContent* aContent,
                                    PRIntn      aVPercent,

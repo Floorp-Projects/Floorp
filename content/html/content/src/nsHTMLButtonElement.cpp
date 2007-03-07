@@ -263,14 +263,7 @@ nsHTMLButtonElement::SetFocus(nsPresContext* aPresContext)
     return;
   }
 
-  nsIEventStateManager *esm = aPresContext->EventStateManager();
-  if (esm->SetContentState(this, NS_EVENT_STATE_FOCUS)) {
-    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
-    if (formControlFrame) {
-      formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-      nsLayoutUtils::ScrollIntoView(formControlFrame);
-    }
-  }
+  SetFocusAndScrollIntoView(aPresContext);
 }
 
 static const nsAttrValue::EnumTable kButtonTypeTable[] = {

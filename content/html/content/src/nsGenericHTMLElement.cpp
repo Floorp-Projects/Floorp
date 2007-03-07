@@ -1771,7 +1771,7 @@ nsGenericHTMLElement::GetFormControlFrameFor(nsIContent* aContent,
   if (aFlushContent) {
     // Cause a flush of content, so we get up-to-date frame
     // information
-    aDocument->FlushPendingNotifications(Flush_Frames);
+    aDocument->FlushPendingNotifications(Flush_Layout);
   }
   nsIFrame* frame = GetPrimaryFrameFor(aContent, aDocument);
   if (frame) {
@@ -3037,6 +3037,23 @@ nsGenericHTMLFormElement::IntrinsicState() const
   }
 
   return state;
+}
+
+void
+nsGenericHTMLFormElement::SetFocusAndScrollIntoView(nsPresContext* aPresContext)
+{
+  nsIEventStateManager *esm = aPresContext->EventStateManager();
+  if (esm->SetContentState(this, NS_EVENT_STATE_FOCUS)) {
+    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
+    if (formControlFrame) {
+      formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+      nsCOMPtr<nsIPresShell> presShell = aPresContext->GetPresShell();
+      if (presShell) {
+        presShell->ScrollContentIntoView(this, NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,
+                                         NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
+      }
+    }
+  }
 }
 
 //----------------------------------------------------------------------
