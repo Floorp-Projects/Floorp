@@ -12,6 +12,24 @@ TestRunner._currentTest = 0;
 TestRunner._urls = [];
 
 /**
+ * Make sure the tests don't hang. Runs every 60 seconds, but it will
+ * take up to 120 seconds to detect a hang.
+**/
+TestRunner._testCheckPoint = -1;
+TestRunner._checkForHangs = function() {
+  if (TestRunner._currentTest < TestRunner._urls.length) {
+    if (TestRunner._testCheckPoint == TestRunner._currentTest) {
+      var frameWindow = $('testframe').contentWindow.wrappedJSObject ||
+                       	$('testframe').contentWindow;
+      frameWindow.SimpleTest.ok(false, "Test timed out.");
+      frameWindow.SimpleTest.finish();
+    }
+    TestRunner._testCheckPoint = TestRunner._currentTest;
+    TestRunner.deferred = callLater(60, TestRunner._checkForHangs); 
+  }
+}
+
+/**
  * This function is called after generating the summary.
 **/
 TestRunner.onComplete = null;
@@ -58,6 +76,7 @@ TestRunner.runTests = function (/*url...*/) {
   
     TestRunner._urls = flattenArguments(arguments);
     $('testframe').src="";
+    TestRunner._checkForHangs();
     TestRunner.runNextTest();
 };
 
