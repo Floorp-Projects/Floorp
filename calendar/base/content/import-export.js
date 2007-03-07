@@ -162,8 +162,11 @@ function putItemsIntoCal(destCal, aItems) {
             // See if it is time to end the calendar's batch.
             if (count == aItems.length) {
                 destCal.endBatch();
-                if (failedCount)
-                    showError(failedCount+" items failed to import. The last error was: "+lastError.toString());
+                if (failedCount) {
+                    var msg = calGetString("calendar", "importItemsFailed",
+                                           [failedCount, lastError.toString()]);
+                    showError(msg);
+                }
             }
         }
     }

@@ -482,13 +482,19 @@ function getLocalizedPref(aPrefName, aDefault) {
  *
  * @param aBundleName  the name of the properties file.  It is assumed that the
  *                     file lives in chrome://calendar/locale/
- * @param aStringName the name of the string within the properties file
+ * @param aStringName  the name of the string within the properties file
+ * @param aParams      optional array of parameters to format the string
  */
-function calGetString(aBundleName, aStringName) {
+function calGetString(aBundleName, aStringName, aParams) {
     var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
                         .getService(Components.interfaces.nsIStringBundleService);
     var props = sbs.createBundle("chrome://calendar/locale/"+aBundleName+".properties");
-    return props.GetStringFromName(aStringName);
+
+    if (aParams && aParams.length) {
+        return props.formatStringFromName(aStringName, aParams, aParams.length);
+    } else {
+        return props.GetStringFromName(aStringName);
+    }
 }
 
 /** Returns a best effort at making a UUID.  If we have the UUIDGenerator
