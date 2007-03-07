@@ -281,6 +281,7 @@ elsif ($action eq 'addcc'){
         $run->add_cc($ccid);
     }
     my $cc = get_cc_xml($run);
+    print $cgi->header;
     print $cc;
 }
 elsif ($action eq 'removecc'){
@@ -291,6 +292,7 @@ elsif ($action eq 'removecc'){
         $run->remove_cc($ccid);
     }
     my $cc = get_cc_xml($run);
+    print $cgi->header;
     print $cc;
 }
 elsif ($action eq 'Delete'){

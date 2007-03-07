@@ -20,7 +20,7 @@
 
 <div id="testopia_save_search">
   [% IF qname %]
-    <a href="tr_query.cgi?action=delete_query&query_name=[% qname %]">Delete saved query [% qname FILTER html %]</a>
+    <a href="tr_query.cgi?action=delete_query&query_name=[% qname FILTER url_quote %]">Delete saved query [% qname FILTER html %]</a>
   [% ELSE %]
   <form action="tr_query.cgi" method="POST">
     <input type="hidden" name="query_part" value="[% table.get_url %][% table.get_query_part %]">

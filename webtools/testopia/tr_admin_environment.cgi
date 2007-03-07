@@ -151,7 +151,7 @@ elsif($action eq 'removeNode'){
 elsif ($action eq 'getcategories'){
     my $product_id = $cgi->param('product_id');
     detaint_natural($product_id);
-    my $product = Bugzilla::Testtopia::Product->new($product_id);
+    my $product = Bugzilla::Testopia::Product->new($product_id);
     exit unless $product && Bugzilla->user->can_see_product($product->name);
     my $cat = Bugzilla::Testopia::Environment::Category({});
     my $categories = $cat->get_element_categories_by_product($product_id);

@@ -143,7 +143,9 @@ if ($action eq 'Commit'){
         
     }
     $vars->{'title'} = "Update Successful";
-    $vars->{'tr_message'} = $i - scalar @uneditable . " Test Case-Runs Updated";
+    my $updated = $i - scalar @uneditable;
+    $vars->{'tr_error'} = scalar @uneditable . " Not updated" if scalar @uneditable > 0;
+    $vars->{'tr_message'} = "$updated Test Case-Runs Updated";
     if ($serverpush && !$cgi->param('debug')) {
         print $cgi->multipart_end;
         print $cgi->multipart_start;

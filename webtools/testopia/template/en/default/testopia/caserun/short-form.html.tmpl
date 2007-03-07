@@ -22,7 +22,7 @@
 [%##### BEGIN Hidden Pane #####%]
 
   <td colspan="12" style="margin:0px;padding:0px; border-bottom: 1px solid #000;">
-  <div id="ra[% index %]" class="ae_dv">
+  <div id="ra[% index %]" style="margin-left:15px;border-width:0px;[% 'display:none;' UNLESS updating %]">
 
   [%##### Action, Expected Results #####%]
     <table class="ae_tb" cellpadding="10">
@@ -76,7 +76,7 @@
             <a id="st1_[% index %]">
               <img id="im[% loop.count %]_[% index %]" src="testopia/img/[% status.name FILTER none %]_gray.gif" width="23" height="23" alt="[% status.name FILTER none %] (disabled)" title="[% status.name FILTER none %](disabled)" border="0" /></a>
           [% ELSE %]
-            <a id="st1_[% index %]" href="javascript:chNote([% index %], [% caserun.id FILTER none %], document.getElementById('notes[% index %]').value); chStat([% index %], [% status.id FILTER none %], [% caserun.id FILTER none %], [% caserun.status_id FILTER none %]);">
+            <a id="st1_[% index %]" href="javascript: chStat([% index %], [% status.id FILTER none %], [% caserun.id FILTER none %], [% caserun.status_id FILTER none %]);">
               <img id="im1_[% index %]" src="testopia/img/[% status.name FILTER none %].gif" width="23" height="23" alt="[% status.name FILTER none %]" title="[% status.name FILTER none %]" border="0" /></a>
           [% END %]
           </div>

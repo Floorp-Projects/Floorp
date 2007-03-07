@@ -410,7 +410,7 @@ sub get_url {
         }
         my @vals = $cgi->param($key);
         foreach my $val (@vals){
-            $qstring .= $key ."=". $val ."&";
+            $qstring .= $key ."=". url_quote($val) ."&";
         }
     }
     chop $qstring;
@@ -427,7 +427,7 @@ sub get_query_part {
     foreach my $key (@keys){
         my @vals = $cgi->param($key);
         foreach my $val (@vals){
-            $qstring .= $key ."=". $val ."&";
+            $qstring .= $key ."=". url_quote($val) ."&";
         }
     }
     chop $qstring;

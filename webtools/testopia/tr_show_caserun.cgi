@@ -166,7 +166,7 @@ elsif ($action eq 'update_build'){
     
     $vars->{'caserun'} = $caserun;
     $vars->{'index'}   = $cgi->param('index');
-    
+    $vars->{'updating'} = 1;
     $template->process("testopia/caserun/short-form-header.html.tmpl", $vars, \$head_data) ||
         ThrowTemplateError($template->error());
     $template->process("testopia/caserun/short-form.html.tmpl", $vars, \$body_data) ||
@@ -190,6 +190,7 @@ elsif ($action eq 'update_environment'){
     my $head_data;
     $vars->{'caserun'} = $caserun;
     $vars->{'index'}   = $cgi->param('index');
+    $vars->{'updating'} = 1;
     $template->process("testopia/caserun/short-form-header.html.tmpl", $vars, \$head_data) ||
         ThrowTemplateError($template->error());
     $template->process("testopia/caserun/short-form.html.tmpl", $vars, \$body_data) ||
@@ -203,13 +204,30 @@ elsif ($action eq 'update_status'){
         exit;
     }
     my $status_id = $cgi->param('status_id');
+    my $note = $cgi->param('note');
+
     detaint_natural($status_id);
-    
+    trick_taint($note) if $note;
+
     $caserun->set_status($status_id, $cgi->param('update_bug'));
-    
-    print $caserun->status ."|". $caserun->close_date ."|". $caserun->testedby->login;
+    $caserun->append_note($note) if $note;
+
+    my $percent_data;
+    my $body_data;
+    my $head_data;
+    $vars->{'caserun'} = $caserun;
+    $vars->{'index'}   = $cgi->param('index');
+    $vars->{'run'} = $caserun->run;
+    $vars->{'updating'} = 1; 
+    $template->process("testopia/percent_bar.html.tmpl", $vars, \$percent_data) ||
+        ThrowTemplateError($template->error());
+    $template->process("testopia/caserun/short-form-header.html.tmpl", $vars, \$head_data) ||
+        ThrowTemplateError($template->error());
+    $template->process("testopia/caserun/short-form.html.tmpl", $vars, \$body_data) ||
+        ThrowTemplateError($template->error());
+    print $percent_data . "|~+" . $head_data . "|~+" . $body_data;
     if ($caserun->updated_deps) {
-        print "|". join(',', @{$caserun->updated_deps});
+        print "|~+". join(',', @{$caserun->updated_deps});
     }
 }
 elsif ($action eq 'update_note'){
@@ -220,7 +238,19 @@ elsif ($action eq 'update_note'){
     }
     my $note = $cgi->param('note');
     trick_taint($note);
-    $caserun->append_note($note);    
+    $caserun->append_note($note);
+    
+    my $body_data;
+    my $head_data;
+    $vars->{'caserun'} = $caserun;
+    $vars->{'index'}   = $cgi->param('index');
+    $vars->{'updating'} = 1;
+    $template->process("testopia/caserun/short-form-header.html.tmpl", $vars, \$head_data) ||
+        ThrowTemplateError($template->error());
+    $template->process("testopia/caserun/short-form.html.tmpl", $vars, \$body_data) ||
+        ThrowTemplateError($template->error());
+    print $head_data . "|~+" . $body_data;
+
 }
 elsif ($action eq 'update_assignee'){
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
@@ -264,6 +294,7 @@ elsif ($action eq 'attach_bug'){
     }
     my @buglist;
     foreach my $bug (split(/[\s,]+/, $cgi->param('bugs'))){
+        Bugzilla->batch(1);
         eval{
             ValidateBugID($bug);
         };

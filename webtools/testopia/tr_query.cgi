@@ -265,7 +265,8 @@ elsif ($action eq 'save_query'){
         $vars->{'tr_message'} = "Updated saved search '$qname'";
     }
     else{
-        $query .= "&qname=$qname";
+        my $quoted_qname = url_quote($qname);
+        $query .= "&qname=$quoted_qname";
         $dbh->do("INSERT INTO test_named_queries 
                   VALUES(?,?,?,?)",
                   undef, (Bugzilla->user->id, $qname, 1, $query)); 

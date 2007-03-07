@@ -122,16 +122,19 @@ function chStat(idx, sid, cid, osid){
     displayMsg('pp'+idx, 3, MSG_WAIT.blink());
 	disableAllButtons(true);
 	var upbug = dojo.byId('up_bugs' + idx).checked == true ? 1 : 0;
+	var stNotes = document.getElementById('notes'+idx).value;
 	dojo.io.bind({
 		url:     "tr_show_caserun.cgi",
-		content: {  caserun_id: cid, index: idx, status_id: sid, update_bug: upbug, action: 'update_status'},
-		load:    function(type, data, evt){ fillrow(data, idx);
-					var fields = data.split("|");
-					var status = fields[0];
-					var closed = fields[1];
-					var tested = fields[2];
+		content: {  caserun_id: cid, index: idx, status_id: sid, update_bug: upbug, note: stNotes, action: 'update_status'},
+		load:    function(type, data, evt){ 
+					fillrow(data, idx);
+					var fields = data.split("|~+");
+					dojo.widget.manager.getWidgetById('percent_bar').setContent(fields[0]);
+					dojo.widget.manager.getWidgetById('head_caserun_'+idx).setContent(fields[1]);
+					document.getElementById('body_caserun_'+idx).innerHTML = fields[2];
+
 					try{
-						var deps = fields[3];
+						var deps = fields[4];
 						ids = deps.split(",");
 						for (var i=0; i<ids.length; i++){
 							if (status == 'FAILED')
@@ -141,9 +144,6 @@ function chStat(idx, sid, cid, osid){
 						}
 					}
 					catch (e){}
-					document.getElementById('xs'+cid).src="testopia/img/"+status+"_small.gif";
-					document.getElementById('tdb'+idx).innerHTML = tested;
-					document.getElementById('cld'+idx).innerHTML = closed;
 		            displayMsg('pp'+ idx, 1, MSG_TESTLOG_UPDATED);
 		            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
 		            disableAllButtons(false);
@@ -162,12 +162,16 @@ function chNote(idx, cid, note){
 		url:     "tr_show_caserun.cgi",
 		content: {  caserun_id: cid, index: idx, note: note, action: 'update_note'},
 		load:    function(type, data, evt){ fillrow(data, idx);
-					document.getElementById('notes'+idx).value = '';
-					document.getElementById('old_notes'+idx).innerHTML = data;
-		            displayMsg('pp'+ idx, 1, MSG_TESTLOG_UPDATED);
+					fillrow(data, idx);
+					var fields = data.split("|~+");
+					dojo.widget.manager.getWidgetById('head_caserun_'+idx).setContent(fields[0]);
+					document.getElementById('body_caserun_'+idx).innerHTML = fields[1];
+					document.getElementById('ra'+idx).style.display='block'; 
+					document.getElementById('id'+idx).src='testopia/img/td.gif';
+					displayMsg('pp'+ idx, 1, MSG_TESTLOG_UPDATED);
 		            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
-		            disableAllButtons(false);
-                    getNote(idx,cid);
+					disableAllButtons(false);
+	                getNote(idx,cid);
 		         },
 		sync: true,
 		error:   function(type, error){ alert(error.message);},
@@ -231,7 +235,12 @@ function attch(idx, cid, bugs){
 		content: {  caserun_id: cid, index: idx, bugs: bugs, action: 'attach_bug'},
 		load:    function(type, data, evt){
 					document.getElementById('bgl'+idx).innerHTML = data;
-		            displayMsg('pp'+ idx, 1, MSG_BUG_ATTACHED);
+		            if (data.match("Invalid")){
+		            	displayMsg('pp'+ idx, 2, "Invalid Bug");
+		            }
+		            else{
+			            displayMsg('pp'+ idx, 1, MSG_BUG_ATTACHED);
+			        }
 		            setTimeout("clearMsg('pp"+ idx +"')",OK_TIMEOUT);
 		            disableAllButtons(false);
 		         },
