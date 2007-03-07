@@ -212,7 +212,8 @@ const PRUint32 kDefaultMaxFilenameLength = 64;
 #endif
 
 // Schemes that cannot be saved because they contain no useful content
-const char *kNonpersistableSchemes[] = {
+//                                         strlen("view-source:")==12
+static const char kNonpersistableSchemes[][13] = {
     "about:",
     "news:", 
     "snews:",
@@ -228,7 +229,6 @@ const char *kNonpersistableSchemes[] = {
     "mailbox:",
     "data:"
 };
-const PRUint32 kNonpersistableSchemesSize = sizeof(kNonpersistableSchemes) / sizeof(kNonpersistableSchemes[0]);
 
 // Default flags for persistence
 const PRUint32 kDefaultPersistFlags = 
@@ -3285,7 +3285,7 @@ nsWebBrowserPersist::StoreURI(
     
     // Test whether this URL should be persisted
     PRBool shouldPersistURI = PR_TRUE;
-    for (PRUint32 i = 0; i < kNonpersistableSchemesSize; i++)
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kNonpersistableSchemes); i++)
     {
         PRUint32 schemeLen = strlen(kNonpersistableSchemes[i]);
         if (nsCRT::strncasecmp(aURI, kNonpersistableSchemes[i], schemeLen) == 0)
@@ -3736,40 +3736,37 @@ nsWebBrowserPersist::MakeAndStoreLocalFilenameInURIMap(
 }
 
 // Ordered so that typical documents work fastest.
-//                                         strlen("blockquote")==10
-static const PRUnichar kSpecialXHTMLTags[][sizeof(PRUnichar)*11] = {
-    {'b','o','d','y',0},
-    {'h','e','a','d',0},
-    {'i','m','g',0},
-    {'s','c','r','i','p','t',0},
-    {'a',0},
-    {'a','r','e','a',0},
-    {'l','i','n','k',0},
-    {'i','n','p','u','t',0},
-    {'f','r','a','m','e',0},
-    {'i','f','r','a','m','e',0},
-    {'o','b','j','e','c','t',0},
-    {'a','p','p','l','e','t',0},
-    {'f','o','r','m',0},
-    {'b','l','o','c','k','q','u','o','t','e',0},
-    {'q',0},
-    {'d','e','l',0},
-    {'i','n','s',0},
-    {0}
+//                                    strlen("blockquote")==10
+static const char kSpecialXHTMLTags[][11] = {
+    "body",
+    "head",
+    "img",
+    "script",
+    "a",
+    "area",
+    "link",
+    "input",
+    "frame",
+    "iframe",
+    "object",
+    "applet",
+    "form",
+    "blockquote",
+    "q",
+    "del",
+    "ins"
 };
 
 static PRBool IsSpecialXHTMLTag(nsIDOMNode *aNode)
 {
-    nsAutoString ns;
-    aNode->GetNamespaceURI(ns);
-    if (!ns.EqualsLiteral("http://www.w3.org/1999/xhtml"))
+    nsAutoString tmp;
+    aNode->GetNamespaceURI(tmp);
+    if (!tmp.EqualsLiteral("http://www.w3.org/1999/xhtml"))
         return PR_FALSE;
 
-    nsAutoString localName;
-    aNode->GetLocalName(localName);
-    PRInt32 i;
-    for (i = 0; kSpecialXHTMLTags[i][0]; i++) {
-        if (localName.Equals(kSpecialXHTMLTags[i]))
+    aNode->GetLocalName(tmp);
+    for (PRInt32 i = 0; i < NS_ARRAY_LENGTH(kSpecialXHTMLTags); i++) {
+        if (tmp.EqualsASCII(kSpecialXHTMLTags[i]))
         {
             // XXX This element MAY have URI attributes, but
             //     we are not actually checking if they are present.
