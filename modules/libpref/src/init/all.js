@@ -567,7 +567,7 @@ pref("network.http.max-persistent-connections-per-proxy", 4);
 pref("network.http.request.max-start-delay", 10);
 
 // Headers
-pref("network.http.accept.default", "text/html,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7");
+pref("network.http.accept.default", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
 pref("network.http.sendRefererHeader",      2); // 0=don't send any, 1=send only on clicks, 2=send on image requests as well
 
 // Controls whether we send HTTPS referres to other HTTPS sites.
