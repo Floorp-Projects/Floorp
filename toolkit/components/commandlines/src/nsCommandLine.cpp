@@ -39,6 +39,7 @@
 
 #include "nsICategoryManager.h"
 #include "nsICommandLineHandler.h"
+#include "nsIClassInfoImpl.h"
 #include "nsIDOMWindow.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
@@ -107,9 +108,9 @@ nsCommandLine::nsCommandLine() :
 }
 
 
-NS_IMPL_ISUPPORTS2(nsCommandLine,
-                   nsICommandLine,
-                   nsICommandLineRunner)
+NS_IMPL_ISUPPORTS2_CI(nsCommandLine,
+                      nsICommandLine,
+                      nsICommandLineRunner)
 
 NS_IMETHODIMP
 nsCommandLine::GetLength(PRInt32 *aResult)
@@ -623,13 +624,21 @@ nsCommandLine::GetHelpText(nsACString& aResult)
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommandLine)
+NS_DECL_CLASSINFO(nsCommandLine)
 
 static const nsModuleComponentInfo components[] =
 {
   { "nsCommandLine",
     { 0x23bcc750, 0xdc20, 0x460b, { 0xb2, 0xd4, 0x74, 0xd8, 0xf5, 0x8d, 0x36, 0x15 } },
     "@mozilla.org/toolkit/command-line;1",
-    nsCommandLineConstructor
+    nsCommandLineConstructor,
+    nsnull,
+    nsnull,
+    nsnull,
+    NS_CI_INTERFACE_GETTER_NAME(nsCommandLine),
+    nsnull,
+    &NS_CLASSINFO_NAME(nsCommandLine),
+    0
   }
 };
 
