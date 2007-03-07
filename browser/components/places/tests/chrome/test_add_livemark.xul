@@ -19,6 +19,8 @@ SimpleTest.waitForExplicitFinish();
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cr = Components.results;
+
 var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
 function uri(spec) {
@@ -29,17 +31,29 @@ var lmsvc = Cc["@mozilla.org/browser/livemark-service;2"].
               getService(Ci.nsILivemarkService);
 var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
               getService(Ci.nsINavBookmarksService);
+var annosvc = Cc["@mozilla.org/browser/annotation-service;1"].
+                getService(Ci.nsIAnnotationService);
+
 var gLivemarkId;
 
-var navObserver =
+var observer =
 {
+  QueryInterface: function(iid) {
+    if (iid.equals(Ci.nsINavBookmarkObserver) ||
+        iid.equals(Ci.nsIAnnotationObserver) ||
+        iid.equals(Ci.nsISupports))
+      return this;
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  // nsINavBookmarkObserve
   onBeginUpdateBatch: function(){},
   onEndUpdateBatch: function(){},
   onItemAdded: function(bookmarkId, bookmark, folder, index) {
     if (bookmark.spec == "http://example.org/2003/12/13/atom03") {
       is(folder, gLivemarkId, "Livemark added to correct folder");
-      bmsvc.removeObserver(navObserver);
-      SimpleTest.finish(); 
+      this._lastBookmarkId = bookmarkId;
+      bmsvc.removeObserver(this);
     }
   },
   onItemRemoved: function(bookmarkId, bookmark, folder, index){},
@@ -50,7 +64,21 @@ var navObserver =
   onFolderMoved: function(folder, oldParent, oldIndex, newParent, newIndex){},
   onFolderChanged: function(folder, property){},
   onSeparatorAdded: function(parent, index){},
-  onSeparatorRemoved: function(parent, index){}
+  onSeparatorRemoved: function(parent, index){},
+
+  // nsIAnnotationObserver
+  onAnnotationSet: function(uri, name) {
+    if (name == "livemark/bookmarkFeedURI") {
+      ok("_lastBookmarkId" in this,
+         "Unexpected livemark/bookmarkFeedURI annotation set");
+      var placeURI = bmsvc.getItemURI(this._lastBookmarkId);
+      ok(placeURI.equals(uri),
+        "livemark/bookmarkFeedURI annotation set on the wrong URI");
+      annosvc.removeObserver(this);
+      SimpleTest.finish();
+    }
+  },
+  onAnnotationRemoved: function(uri, name) { }
 };
 
 var root = bmsvc.bookmarksRoot;
@@ -59,10 +87,9 @@ const FEEDSPEC = "http://localhost:8888/tests/browser/components/places/tests/ch
 gLivemarkId = lmsvc.createLivemarkFolderOnly(bmsvc, root, "foo",
                                             uri("http:/localhost/"),
                                             uri(FEEDSPEC), -1);
-bmsvc.addObserver(navObserver, false);
+bmsvc.addObserver(observer, false);
+annosvc.addObserver(observer, false);
 lmsvc.reloadLivemarkFolder(gLivemarkId);
-
-
 ]]>
 </script>
 
