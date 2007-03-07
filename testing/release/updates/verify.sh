@@ -10,6 +10,7 @@ ftp_server="http://stage.mozilla.org/pub/mozilla.org"
 aus_server="https://aus2-staging.mozilla.org"
 
 runmode=0
+config_file="updates.cfg"
 UPDATE_ONLY=1
 TEST_ONLY=2
 MARS_ONLY=3
@@ -17,7 +18,7 @@ COMPLETE=4
 
 usage()
 {
-  echo "Usage: verify.sh [OPTION]"
+  echo "Usage: verify.sh [OPTION] [CONFIG_FILE]"
   echo "    -u, --update-only      only download update.xml"
   echo "    -t, --test-only        only test that MARs exist"
   echo "    -m, --mars-only        only test MARs"
@@ -59,6 +60,14 @@ do
   esac
 done
 
+if [ -n "$arg" ]
+then
+  config_file=$arg
+  echo "Using config file $config_file"
+else
+  echo "Using default config file $config_file"
+fi
+
 if [ "$runmode" == "0" ]
 then
   usage
@@ -93,7 +102,7 @@ do
           err=$?
         fi
         if [ "$err" != "0" ]; then
-          echo "FAIL: download_mars returned non-zero exit code: $err" |tee /dev/stderr
+          echo "FAIL: download_mars returned non-zero exit code: $err"
           continue
         fi
       else
@@ -114,7 +123,7 @@ do
         download_builds "${ftp_server}/${from_path}" "${ftp_server}/${to_path}"
         err=$?
         if [ "$err" != "0" ]; then
-          echo "FAIL: download_builds returned non-zero exit code: $err" |tee /dev/stderr
+          echo "FAIL: download_builds returned non-zero exit code: $err"
           continue
         fi
         source_file=`basename "$from_path"`
@@ -122,11 +131,11 @@ do
         check_updates "$platform" "downloads/$source_file" "downloads/$target_file"
         err=$?
         if [ "$err" != "0" ]; then
-          echo "FAIL: check_update returned non-zero exit code for $platform downloads/$source_file vs. downloads/$target_file: $err" |tee /dev/stderr
+          echo "WARN: check_update returned non-zero exit code for $platform downloads/$source_file vs. downloads/$target_file: $err"
           continue
         fi
       fi
     done
   done
-done < updates.cfg
+done < $config_file
 
