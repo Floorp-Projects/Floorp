@@ -97,12 +97,12 @@ do
     then
         echo "Running tests for $i" >> ${LOGFILE}
         echo "TIMESTAMP $i BEGIN: `date`" >> ${LOGFILE}
-        (cd ${QADIR}/$i ; . ./$SCRIPTNAME all file) >> ${LOGFILE} 2>&1
+        (cd ${QADIR}/$i ; . ./$SCRIPTNAME all file >> ${LOGFILE} 2>&1)
         echo "TIMESTAMP $i END: `date`" >> ${LOGFILE}
     else
         echo "Running tests for $i" | tee -a ${LOGFILE}
         echo "TIMESTAMP $i BEGIN: `date`" | tee -a ${LOGFILE}
-        (cd ${QADIR}/$i ; . ./$SCRIPTNAME all file) 2>&1 | tee -a ${LOGFILE}
+        (cd ${QADIR}/$i ; . ./$SCRIPTNAME all file 2>&1 | tee -a ${LOGFILE})
         echo "TIMESTAMP $i END: `date`" | tee -a ${LOGFILE}
     fi
 done
