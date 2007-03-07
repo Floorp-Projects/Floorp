@@ -35,9 +35,9 @@
 ; 
 ; ***** END LICENSE BLOCK ***** 
 
-LIBRARY         NSLDIF32V6.0
+LIBRARY         NSLDIF32V60
 DESCRIPTION     'Lightweight Directory Access Protocol LDIF Client API for 32-bit Windows'
-VERSION		60
+VERSION		6.0
 HEAPSIZE        4096
 
 EXPORTS
