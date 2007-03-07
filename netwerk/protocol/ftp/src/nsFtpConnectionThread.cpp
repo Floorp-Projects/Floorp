@@ -1292,7 +1292,12 @@ nsFtpState::R_pasv() {
 
     char *ptr = response;
 
+    // Make sure to ignore the address in the PASV response (bug 370559)
     nsCAutoString host;
+    rv = mChannel->URI()->GetAsciiHost(host);
+    if (NS_FAILED(rv))
+        return FTP_ERROR;
+
     if (mIPv6ServerAddress) {
         // The returned string is of the form
         // text (|||ppp|)
@@ -1351,13 +1356,6 @@ nsFtpState::R_pasv() {
             return FTP_ERROR;
 
         port = ((PRInt32) (p0<<8)) + p1;
-        host.AppendInt(h0);
-        host.Append('.');
-        host.AppendInt(h1);
-        host.Append('.');
-        host.AppendInt(h2);
-        host.Append('.');
-        host.AppendInt(h3);
     }
 
     const char* hostStr =
