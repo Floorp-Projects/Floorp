@@ -191,7 +191,7 @@ nsNSSSocketInfo::nsNSSSocketInfo()
     mHasCleartextPhase(PR_FALSE),
     mHandshakeInProgress(PR_FALSE),
     mAllowTLSIntoleranceTimeout(PR_TRUE),
-    mBlockedOnBadCertUI(PR_FALSE),
+    mBadCertUIStatus(bcuis_not_shown),
     mHandshakeStartTime(0),
     mPort(0),
     mCAChain(nsnull)
@@ -532,9 +532,10 @@ void nsNSSSocketInfo::SetHandshakeInProgress(PRBool aIsIn)
   }
 }
 
-void nsNSSSocketInfo::SetBlockedOnBadCertUI(PRBool aCurrentlyBlockedOnUI)
+void nsNSSSocketInfo::SetBadCertUIStatus(nsNSSSocketInfo::BadCertUIStatusType aNewStatus)
 {
-  if (mBlockedOnBadCertUI && !aCurrentlyBlockedOnUI)
+  if (mBadCertUIStatus == bcuis_active && 
+      aNewStatus == bcuis_was_shown)
   {
     // we were blocked and going back to unblocked,
     // so let's reset the handshake start time, in order to ensure
@@ -542,7 +543,7 @@ void nsNSSSocketInfo::SetBlockedOnBadCertUI(PRBool aCurrentlyBlockedOnUI)
     mHandshakeStartTime = PR_IntervalNow();
   }
 
-  mBlockedOnBadCertUI = aCurrentlyBlockedOnUI;
+  mBadCertUIStatus = aNewStatus;
 }
 
 void nsNSSSocketInfo::SetAllowTLSIntoleranceTimeout(PRBool aAllow)
@@ -554,7 +555,8 @@ void nsNSSSocketInfo::SetAllowTLSIntoleranceTimeout(PRBool aAllow)
 
 PRBool nsNSSSocketInfo::HandshakeTimeout()
 {
-  if (!mHandshakeInProgress || !mAllowTLSIntoleranceTimeout || mBlockedOnBadCertUI)
+  if (!mHandshakeInProgress || !mAllowTLSIntoleranceTimeout || 
+      mBadCertUIStatus == bcuis_active)
     return PR_FALSE;
 
   return ((PRIntervalTime)(PR_IntervalNow() - mHandshakeStartTime)
@@ -858,7 +860,7 @@ nsDumpBuffer(unsigned char *buf, PRIntn len)
 #endif
 
 static PRBool
-isTLSIntoleranceError(PRInt32 err, PRBool withInitialCleartext)
+isNonSSLErrorThatWeAllowToRetry(PRInt32 err, PRBool withInitialCleartext)
 {
   switch (err)
   {
@@ -868,6 +870,29 @@ isTLSIntoleranceError(PRInt32 err, PRBool withInitialCleartext)
       break;
     
     case PR_END_OF_FILE_ERROR:
+      return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
+static PRBool
+isTLSIntoleranceError(PRInt32 err, PRBool withInitialCleartext)
+{
+  // This function is supposed to decide, which error codes should
+  // be used to conclude server is TLS intolerant.
+  // Note this only happens during the initial SSL handshake.
+  // 
+  // When not using a proxy we'll see a connection reset error.
+  // When using a proxy, we'll see an end of file error.
+  // In addition check for some error codes where it is reasonable
+  // to retry without TLS.
+
+  if (isNonSSLErrorThatWeAllowToRetry(err, withInitialCleartext))
+    return PR_TRUE;
+
+  switch (err)
+  {
     case SSL_ERROR_BAD_MAC_ALERT:
     case SSL_ERROR_BAD_MAC_READ:
     case SSL_ERROR_HANDSHAKE_FAILURE_ALERT:
@@ -889,8 +914,42 @@ isTLSIntoleranceError(PRInt32 err, PRBool withInitialCleartext)
   return PR_FALSE;
 }
 
+static PRBool
+isClosedConnectionAfterBadCertUIWasShown(PRInt32 bytesTransfered, 
+                                         PRBool wasReading, 
+                                         PRInt32 err, 
+                                         nsNSSSocketInfo::BadCertUIStatusType aBadCertUIStatus)
+{
+  if (aBadCertUIStatus != nsNSSSocketInfo::bcuis_not_shown)
+  {
+    // Bad cert UI was shown for this socket.
+    // Server timeout possible.
+    // Retry on a simple connection close.
+
+    if (wasReading && 0 == bytesTransfered)
+      return PR_TRUE;
+
+    if (0 > bytesTransfered)
+    {
+      switch (err)
+      {
+        case PR_CONNECT_RESET_ERROR:
+        case PR_END_OF_FILE_ERROR:
+          return PR_TRUE;
+        default:
+          break;
+      }
+    }
+  }
+
+  return PR_FALSE;
+}
+
 PRInt32
-nsSSLThread::checkHandshake(PRInt32 bytesTransfered, PRFileDesc* ssl_layer_fd, nsNSSSocketInfo *socketInfo)
+nsSSLThread::checkHandshake(PRInt32 bytesTransfered, 
+                            PRBool wasReading,
+                            PRFileDesc* ssl_layer_fd, 
+                            nsNSSSocketInfo *socketInfo)
 {
   // This is where we work around all of those SSL servers that don't 
   // conform to the SSL spec and shutdown a connection when we request
@@ -918,41 +977,68 @@ nsSSLThread::checkHandshake(PRInt32 bytesTransfered, PRFileDesc* ssl_layer_fd, n
   // We'll make a note of the current time,
   // and use this to measure the elapsed time since handshake begin.
 
+  // Do NOT assume TLS intolerance on a closed connection after bad cert ui was shown.
+  // Simply retry.
+  // This depends on the fact that Cert UI will not be shown again,
+  // should the user override the bad cert.
+
   PRBool handleHandshakeResultNow;
   socketInfo->GetHandshakePending(&handleHandshakeResultNow);
 
+  PRBool wantRetry = PR_FALSE;
+
   if (0 > bytesTransfered) {
     PRInt32 err = PR_GetError();
-    PRBool wantRetry = PR_FALSE;
-    
+
     if (handleHandshakeResultNow) {
-      // Let's see if there was an error set by the SSL libraries that we
-      // should tell the user about.
       if (PR_WOULD_BLOCK_ERROR == err) {
         socketInfo->SetHandshakeInProgress(PR_TRUE);
         return bytesTransfered;
       }
-      
-      PRBool withInitialCleartext = socketInfo->GetHasCleartextPhase();
 
-      // When not using a proxy we'll see a connection reset error.
-      // When using a proxy, we'll see an end of file error.
-      // In addition check for some error codes where it is reasonable
-      // to retry without TLS.
+      wantRetry = 
+        isClosedConnectionAfterBadCertUIWasShown(bytesTransfered, 
+                                                 wasReading, 
+                                                 err, 
+                                                 socketInfo->GetBadCertUIStatus());
 
-      if (isTLSIntoleranceError(err, withInitialCleartext)) {
+      if (!wantRetry // no decision yet
+          && isTLSIntoleranceError(err, socketInfo->GetHasCleartextPhase()))
+      {
         wantRetry = nsSSLIOLayerHelpers::rememberPossibleTLSProblemSite(ssl_layer_fd, socketInfo);
-
-        if (wantRetry) {
-          // We want to cause the network layer to retry the connection.
-          PR_SetError(PR_CONNECT_RESET_ERROR, 0);
-        }
       }
     }
     
+    // This is the common place where we trigger an error message on a SSL socket.
+    // This might be reached at any time of the connection.
     if (!wantRetry && (IS_SSL_ERROR(err) || IS_SEC_ERROR(err))) {
       nsHandleSSLError(socketInfo, err);
     }
+  }
+  else if (wasReading && 0 == bytesTransfered) // zero bytes on reading, socket closed
+  {
+    if (handleHandshakeResultNow)
+    {
+      wantRetry = 
+        isClosedConnectionAfterBadCertUIWasShown(bytesTransfered, 
+                                                 wasReading, 
+                                                 0, 
+                                                 socketInfo->GetBadCertUIStatus());
+
+      if (!wantRetry // no decision yet
+          && !socketInfo->GetHasCleartextPhase()) // mirror PR_CONNECT_RESET_ERROR treament
+      {
+        wantRetry = 
+          nsSSLIOLayerHelpers::rememberPossibleTLSProblemSite(ssl_layer_fd, socketInfo);
+      }
+    }
+  }
+
+  if (wantRetry) {
+    // We want to cause the network layer to retry the connection.
+    PR_SetError(PR_CONNECT_RESET_ERROR, 0);
+    if (wasReading)
+      bytesTransfered = -1;
   }
 
   // TLS intolerant servers only cause the first transfer to fail, so let's 
@@ -2290,7 +2376,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
     return SECFailure;
   } 
   NS_ADDREF(nssCert);
-  infoObject->SetBlockedOnBadCertUI(PR_TRUE);
+  infoObject->SetBadCertUIStatus(nsNSSSocketInfo::bcuis_active);
   while (rv != SECSuccess) {
      //Func nsContinueDespiteCertError does the same set of checks as func.
      //nsCertErrorNeedsDialog. So, removing call to nsCertErrorNeedsDialog
@@ -2301,7 +2387,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
     rv = verifyCertAgain(peerCert, sslSocket, infoObject);
 	error = PR_GetError();
   }
-  infoObject->SetBlockedOnBadCertUI(PR_FALSE);
+  infoObject->SetBadCertUIStatus(nsNSSSocketInfo::bcuis_was_shown);
   NS_RELEASE(nssCert);
   CERT_DestroyCertificate(peerCert); 
   if (rv != SECSuccess) {

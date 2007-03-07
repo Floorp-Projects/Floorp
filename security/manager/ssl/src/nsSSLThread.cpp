@@ -519,7 +519,7 @@ PRInt32 nsSSLThread::requestRead(nsNSSSocketInfo *si, void *buf, PRInt32 amount,
       {
         restoreOriginalSocket_locked(si);
         PR_SetError(PR_CONNECT_RESET_ERROR, 0);
-        checkHandshake(-1, si->mFd->lower, si);
+        checkHandshake(-1, PR_TRUE, si->mFd->lower, si);
         return -1;
       }
     }
@@ -746,7 +746,7 @@ PRInt32 nsSSLThread::requestWrite(nsNSSSocketInfo *si, const void *buf, PRInt32 
       {
         restoreOriginalSocket_locked(si);
         PR_SetError(PR_CONNECT_RESET_ERROR, 0);
-        checkHandshake(-1, si->mFd->lower, si);
+        checkHandshake(-1, PR_FALSE, si->mFd->lower, si);
         return -1;
       }
     }
@@ -978,7 +978,7 @@ void nsSSLThread::Run(void)
         PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] wrote %d bytes\n", (void*)fd, bytesWritten));
 #endif
         
-        bytesWritten = checkHandshake(bytesWritten, realFileDesc, mBusySocket);
+        bytesWritten = checkHandshake(bytesWritten, PR_FALSE, realFileDesc, mBusySocket);
         if (bytesWritten < 0) {
           // give the error back to caller
           mBusySocket->mThreadData->mPRErrorCode = PR_GetError();
@@ -998,7 +998,7 @@ void nsSSLThread::Run(void)
         PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] read %d bytes\n", (void*)fd, bytesRead));
         DEBUG_DUMP_BUFFER((unsigned char*)buf, bytesRead);
 #endif
-        bytesRead = checkHandshake(bytesRead, realFileDesc, mBusySocket);
+        bytesRead = checkHandshake(bytesRead, PR_TRUE, realFileDesc, mBusySocket);
         if (bytesRead < 0) {
           // give the error back to caller
           mBusySocket->mThreadData->mPRErrorCode = PR_GetError();
