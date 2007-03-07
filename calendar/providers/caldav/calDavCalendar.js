@@ -197,6 +197,10 @@ calDavCalendar.prototype = {
         return spec;
     },
 
+    get mLocationPath() {
+        return decodeURIComponent(this.mCalendarUri.path);
+    },
+
     refresh: function() {
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
@@ -679,7 +683,7 @@ calDavCalendar.prototype = {
                                 // need to build using thisCalendar since aResource.spec
                                 // won't contain any auth info embedded in the URI
                                 var locationPath = decodeURIComponent(aResource.path)
-                                                   .substr(thisCalendar.mCalendarUri.path.length);
+                                                   .substr(thisCalendar.mLocationPath.length);
                                 item.setProperty("X-MOZ-LOCATIONPATH", locationPath);
 
                                 var rid = item.recurrenceId;
