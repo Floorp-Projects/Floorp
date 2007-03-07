@@ -594,7 +594,7 @@ NS_IMETHODIMP nsAccessible::GetPreviousSibling(nsIAccessible * *aPreviousSibling
   }
 
   nsCOMPtr<nsIAccessible> parent;
-  if (NS_FAILED(GetParent(getter_AddRefs(parent)))) {
+  if (NS_FAILED(GetParent(getter_AddRefs(parent))) || !parent) {
     return NS_ERROR_FAILURE;
   }
 
