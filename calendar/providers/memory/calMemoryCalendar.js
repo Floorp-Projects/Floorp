@@ -194,6 +194,21 @@ calMemoryCalendar.prototype = {
         }
 
         aItem.calendar = this.calendarToReturn;
+        var rec = aItem.recurrenceInfo;
+        if (rec) {
+            var exceptions = rec.getExceptionIds({});
+            for each (var exid in exceptions) {
+                var exception = rec.getExceptionFor(exid, false);
+                if (exception) {
+                    if (!exception.isMutable) {
+                        exception = exception.clone();
+                    }
+                    exception.calendar = this.calendarToReturn;
+                    rec.modifyException(exception);
+                }
+            }
+        }
+        
         aItem.generation = 1;
         aItem.makeImmutable();
         this.mItems[aItem.id] = aItem;

@@ -130,7 +130,6 @@ function ip_parseString(aICSString) {
                         uid2parent[item.id] = item;
                     }
                 } else {
-                    item.calendar = this;
                     // force no recurrence info:
                     item.recurrenceInfo = null;
                     excItems.push(item);
