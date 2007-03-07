@@ -18,6 +18,8 @@
 # The following tools are prerequisites:
 #   A mingw build toolchain, and an MSYS shell to build it. Use --msys= to
 #   specify the installed location of MSYS (default c:\msys\1.0)
+#   An MSYS build toolchain. This is described in:
+#     http://www.mingw.org/MinGWiki/index.php/MSYSBuildEnvironment
 
 from subprocess import check_call
 from os import getcwd, remove, environ
@@ -79,3 +81,12 @@ check_call([join(sourcedir, "XEmacs Setup 21.4.19.exe"),
 
 check_call([join(msysdir, "bin", "sh.exe"), "--login",
             join(sourcedir, "packageit.sh")])
+
+environ["MSYSTEM"] = "MSYS"
+check_call([join(msysdir, "bin", "sh.exe"), "--login",
+            join(sourcedir, "packageit-msys.sh")])
+
+del environ["MSYSTEM"]
+
+# Make an installer
+check_call(["makensis", "/NOCD", "installit.nsi"])

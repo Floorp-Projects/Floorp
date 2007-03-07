@@ -34,8 +34,7 @@ if "%VC8DIR%"=="" (
     call "%VC8EXPRESSDIR%\Bin\vcvars32.bat"
 
     rem Don't set SDK paths in this block, because blocks are early-evaluated.
-)
-else (
+) else (
     rem Prepend MSVC paths
     call "%VC8DIR%\Bin\vcvars32.bat"
 )
