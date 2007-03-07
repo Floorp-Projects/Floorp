@@ -151,10 +151,8 @@ if (defined $cgi->param('id')) {
 # Make sure there are bugs to process.
 scalar(@idlist) || ThrowUserError("no_bugs_chosen");
 
-# Build a bug object using $cgi->param('id') as ID.
-# If there are more than one bug changed at once, the bug object will be
-# empty, which doesn't matter.
-my $bug = new Bugzilla::Bug(scalar $cgi->param('id'));
+# Build a bug object using the first bug id, for validations.
+my $bug = new Bugzilla::Bug($idlist[0]);
 
 # Make sure form param 'dontchange' is defined so it can be compared to easily.
 $cgi->param('dontchange','') unless defined $cgi->param('dontchange');
@@ -164,11 +162,10 @@ $cgi->param('knob', 'none') unless defined $cgi->param('knob');
 
 # Validate all timetracking fields
 foreach my $field ("estimated_time", "work_time", "remaining_time") {
-    if (defined $cgi->param($field)) {
-        my $er_time = trim($cgi->param($field));
-        if ($er_time ne $cgi->param('dontchange')) {
-            Bugzilla::Bug::ValidateTime($er_time, $field);
-        }
+    if (defined $cgi->param($field) 
+        && $cgi->param($field) ne $cgi->param('dontchange')) 
+    {
+        $cgi->param($field, $bug->_check_time($cgi->param($field), $field));
     }
 }
 
@@ -179,7 +176,7 @@ if (Bugzilla->user->in_group(Bugzilla->params->{'timetrackinggroup'})) {
     }
 }
 
-ValidateComment(scalar $cgi->param('comment'));
+$cgi->param('comment', $bug->_check_comment($cgi->param('comment')));
 
 # If the bug(s) being modified have dependencies, validate them
 # and rebuild the list with the validated values.  This is important
@@ -520,30 +517,33 @@ if (defined $cgi->param('id')) {
     # values that have been changed instead of submitting all the new values.
     # (XXX those error checks need to happen too, but implementing them 
     # is more work in the current architecture of this script...)
-    my $prod_obj = Bugzilla::Product::check_product($cgi->param('product'));
-    check_field('component', scalar $cgi->param('component'), 
-                [map($_->name, @{$prod_obj->components})]);
-    check_field('version', scalar $cgi->param('version'),
-                [map($_->name, @{$prod_obj->versions})]);
-    if ( Bugzilla->params->{"usetargetmilestone"} ) {
-        check_field('target_milestone', scalar $cgi->param('target_milestone'), 
-                    [map($_->name, @{$prod_obj->milestones})]);
-    }
-    check_field('rep_platform', scalar $cgi->param('rep_platform'));
-    check_field('op_sys',       scalar $cgi->param('op_sys'));
-    check_field('priority',     scalar $cgi->param('priority'));
-    check_field('bug_severity', scalar $cgi->param('bug_severity'));
 
-    # Those fields only have to exist. We don't validate their value here.
-    foreach my $field_name ('bug_file_loc', 'short_desc', 'longdesclength') {
-        defined($cgi->param($field_name))
-          || ThrowCodeError('undefined_field', { field => $field_name });
-    }
-    $cgi->param('short_desc', clean_text($cgi->param('short_desc')));
+    my $prod = $bug->_check_product($cgi->param('product'));
+    $cgi->param('product', $prod->name);
 
-    if (trim($cgi->param('short_desc')) eq "") {
-        ThrowUserError("require_summary");
-    }
+    my $comp = $bug->_check_component($prod, 
+                                      scalar $cgi->param('component'));
+    $cgi->param('component', $comp->name);
+
+    $cgi->param('version', $bug->_check_version($prod,
+                                                scalar $cgi->param('version')));
+    $cgi->param('target_milestone', $bug->_check_target_milestone($prod,
+        scalar $cgi->param('target_milestone')));
+    $cgi->param('rep_platform', 
+                $bug->_check_rep_platform($cgi->param('rep_platform')));
+    $cgi->param('op_sys',
+                $bug->_check_op_sys($cgi->param('op_sys')));
+    $cgi->param('priority',
+                $bug->_check_priority($cgi->param('priority')));
+    $cgi->param('bug_severity',
+                $bug->_check_bug_severity($cgi->param('bug_severity')));
+                
+    ThrowCodeError('undefined_field', { field => 'longdesclength' })
+        if !defined $cgi->param('longdesclength');
+    $cgi->param('bug_file_loc',
+                $bug->_check_bug_file_loc($cgi->param('bug_file_loc')));
+    $cgi->param('short_desc', 
+                $bug->_check_short_desc($cgi->param('short_desc')));
 }
 
 my $action = trim($cgi->param('action') || '');

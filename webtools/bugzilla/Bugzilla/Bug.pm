@@ -495,8 +495,13 @@ sub _check_assigned_to {
 
 sub _check_bug_file_loc {
     my ($invocant, $url) = @_;
-    # If bug_file_loc is "http://", the default, use an empty value instead.
-    $url = '' if (!defined($url) || $url eq 'http://');
+    $url = '' if !defined($url);
+    # On bug entry, if bug_file_loc is "http://", the default, use an 
+    # empty value instead. However, on bug editing people can set that
+    # back if they *really* want to.
+    if (!ref $invocant && $url eq 'http://') {
+        $url = '';
+    }
     return $url;
 }
 
@@ -564,13 +569,16 @@ sub _check_comment {
 
     ValidateComment($comment);
 
-    if (Bugzilla->params->{"commentoncreate"} && !$comment) {
-        ThrowUserError("description_required");
-    }
+    # Creation-only checks
+    if (!ref $invocant) {
+        if (Bugzilla->params->{"commentoncreate"} && !$comment) {
+            ThrowUserError("description_required");
+        }
 
-    # On creation only, there must be a single-space comment, or
-    # email will be supressed.
-    $comment = ' ' if $comment eq '' && !ref($invocant);
+        # On creation only, there must be a single-space comment, or
+        # email will be supressed.
+        $comment = ' ' if $comment eq '';
+    }
 
     return $comment;
 }
@@ -699,12 +707,19 @@ sub _check_keywords {
 
 sub _check_product {
     my ($invocant, $name) = @_;
-    # Check that the product exists and that the user
-    # is allowed to enter bugs into this product.
-    Bugzilla->user->can_enter_product($name, THROW_ERROR);
-    # can_enter_product already does everything that check_product
-    # would do for us, so we don't need to use it.
-    my $obj = new Bugzilla::Product({ name => $name });
+    my $obj;
+    if (ref $invocant) {
+         $obj = Bugzilla::Product::check_product($name);
+    }
+    else {
+        # Check that the product exists and that the user
+        # is allowed to enter bugs into this product.
+        Bugzilla->user->can_enter_product($name, THROW_ERROR);
+        # can_enter_product already does everything that check_product
+        # would do for us, so we don't need to use it.
+        $obj = new Bugzilla::Product({ name => $name });
+    }
+
     return $obj;
 }
 
@@ -717,7 +732,7 @@ sub _check_op_sys {
 
 sub _check_priority {
     my ($invocant, $priority) = @_;
-    if (!Bugzilla->params->{'letsubmitterchoosepriority'}) {
+    if (!ref $invocant && !Bugzilla->params->{'letsubmitterchoosepriority'}) {
         $priority = Bugzilla->params->{'defaultpriority'};
     }
     $priority = trim($priority);
@@ -784,6 +799,9 @@ sub _check_strict_isolation {
 sub _check_target_milestone {
     my ($invocant, $product, $target) = @_;
     $target = trim($target);
+    if (ref $invocant) {
+        return undef if !Bugzilla->params->{'usetargetmilestone'};
+    }
     $target = $product->default_milestone if !defined $target;
     check_field('target_milestone', $target,
             [map($_->name, @{$product->milestones})]);
