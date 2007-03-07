@@ -59,6 +59,7 @@ JAVA_SRCS = \
 JAVA_CLASSPATH = \
 	../interfaces/MozillaInterfaces.jar \
 	../interfaces/MozillaGlue.jar \
+	$(JAVA_LIBRARY) \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
@@ -69,14 +70,14 @@ else
 DIST_BIN = $(PWD)/$(DIST)/bin
 endif
 
+# XXX Bug 373047 - Can't embed XULRunner using JavaXPCOM when XR is built
+# using MSVC 2005.  So disable these tests on Windows platforms, for now.
 check::
-	$(CYGWIN_WRAPPER) $(JAVA) -classpath $(_JAVA_CLASSPATH)$(SEP)$(JAVA_LIBRARY) \
-			TestINIParser
-	$(CYGWIN_WRAPPER) $(JAVA) -classpath $(_JAVA_CLASSPATH)$(SEP)$(JAVA_LIBRARY) \
-			TestQI $(DIST_BIN)
-	$(CYGWIN_WRAPPER) $(JAVA) -classpath $(_JAVA_CLASSPATH)$(SEP)$(JAVA_LIBRARY) \
-			TestVersionComparator
-	$(CYGWIN_WRAPPER) $(JAVA) -classpath $(_JAVA_CLASSPATH)$(SEP)$(JAVA_LIBRARY) \
-			TestArray $(DIST_BIN)
-	$(CYGWIN_WRAPPER) $(JAVA) -classpath $(_JAVA_CLASSPATH)$(SEP)$(JAVA_LIBRARY) \
-			TestProps $(DIST_BIN)
+ifneq (,$(filter-out WINNT WINCE, $(HOST_OS_ARCH)))
+	$(CYGWIN_WRAPPER) $(JAVA) -classpath $(_JAVA_CLASSPATH) TestINIParser
+	$(CYGWIN_WRAPPER) $(JAVA) -classpath $(_JAVA_CLASSPATH) TestQI $(DIST_BIN)
+	$(CYGWIN_WRAPPER) $(JAVA) -classpath $(_JAVA_CLASSPATH) TestVersionComparator
+	$(CYGWIN_WRAPPER) $(JAVA) -classpath $(_JAVA_CLASSPATH) TestArray $(DIST_BIN)
+	$(CYGWIN_WRAPPER) $(JAVA) -classpath $(_JAVA_CLASSPATH) TestProps $(DIST_BIN)
+endif
+

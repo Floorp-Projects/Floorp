@@ -1289,11 +1289,26 @@ endif
 EMPTY :=
 SPACE := $(EMPTY) $(EMPTY)
 
-ifdef JAVA_SOURCEPATH
-SP = $(subst $(SPACE),$(SEP),$(strip $(JAVA_SOURCEPATH)))
-_JAVA_SOURCEPATH = ".$(SEP)$(srcdir)$(SEP)$(SP)"
+# Cygwin and MSYS have their own special path form, but javac expects the source
+# and class paths to be in the DOS form (i.e. e:/builds/...).  This function
+# does the appropriate conversion on Windows, but is a noop on other systems.
+ifeq (,$(filter-out WINNT WINCE, $(HOST_OS_ARCH)))
+ifdef CYGWIN_WRAPPER
+normalizepath = $(foreach p,$(1),$(shell cygpath -m $(p)))
 else
-_JAVA_SOURCEPATH = ".$(SEP)$(srcdir)"
+# assume MSYS
+normalizepath = $(foreach p,$(1),$(shell cd $(p) && pwd -W))
+endif
+else
+normalizepath = $(1)
+endif
+
+_srcdir = $(call normalizepath,$(srcdir))
+ifdef JAVA_SOURCEPATH
+SP = $(subst $(SPACE),$(SEP),$(call normalizepath,$(strip $(JAVA_SOURCEPATH))))
+_JAVA_SOURCEPATH = ".$(SEP)$(_srcdir)$(SEP)$(SP)"
+else
+_JAVA_SOURCEPATH = ".$(SEP)$(_srcdir)"
 endif
 
 ifdef JAVA_CLASSPATH
