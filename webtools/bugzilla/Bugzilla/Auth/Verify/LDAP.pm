@@ -37,6 +37,7 @@ use fields qw(
 
 use Bugzilla::Constants;
 use Bugzilla::Error;
+use Bugzilla::Util;
 
 use Net::LDAP;
 
@@ -134,11 +135,15 @@ sub ldap {
     my ($self) = @_;
     return $self->{ldap} if $self->{ldap};
 
-    my $server = Bugzilla->params->{"LDAPserver"};
-    ThrowCodeError("ldap_server_not_defined") unless $server;
+    my @servers = split(/[\s,]+]/, Bugzilla->params->{"LDAPserver"});
+    ThrowCodeError("ldap_server_not_defined") unless @servers;
 
-    $self->{ldap} = new Net::LDAP($server)
-        || ThrowCodeError("ldap_connect_failed", { server => $server });
+    foreach (@servers) {
+        $self->{ldap} = new Net::LDAP(trim($_));
+        last if $self->{ldap};
+    }
+    ThrowCodeError("ldap_connect_failed", { server => join(", ", @servers) }) 
+        unless $self->{ldap};
 
     # try to start TLS if needed
     if (Bugzilla->params->{"LDAPstarttls"}) {

@@ -30,7 +30,9 @@
                 "URI syntax can also be used, such as "_
                 "ldaps://ldap.company.com (for a secure connection) or " _
                 "ldapi://%2fvar%2flib%2fldap_sock (for a socket-based " _
-                "local connection.",
+                "local connection. Multiple hostnames or URIs can be comma " _
+                "separated; each will be tried in turn until a connection is " _
+                "established.",
 
   LDAPstartls => "Whether to require encrypted communication once normal " _
                  "LDAP connection achieved with the server.",

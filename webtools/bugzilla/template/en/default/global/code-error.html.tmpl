@@ -279,7 +279,7 @@
     The specified LDAP attribute [% attr FILTER html %] was not found.
 
   [% ELSIF error == "ldap_connect_failed" %]
-    Could not connect to the LDAP server <code>[% server FILTER html %]</code>.
+    Could not connect to the LDAP server(s) <code>[% server FILTER html %]</code>.
 
   [% ELSIF error == "ldap_start_tls_failed" %]
     Could not start TLS with LDAP server: <code>[% error FILTER html %]</code>.
