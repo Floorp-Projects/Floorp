@@ -1255,17 +1255,25 @@ NS_IMETHODIMP nsLocalFile::GetParent(nsIFile * *aParent)
   nsresult rv = NS_OK;
   CFURLRef parentURLRef = ::CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, mBaseRef);
   if (parentURLRef) {
-    rv = NS_ERROR_FAILURE;
-    newFile = new nsLocalFile;
-    if (newFile) {
-      rv = newFile->InitWithCFURL(parentURLRef);
-      if (NS_SUCCEEDED(rv)) {
-        NS_ADDREF(*aParent = newFile);
-        rv = NS_OK;
+    // If the parent path is longer than file's path then 
+    // CFURLCreateCopyDeletingLastPathComponent must have simply added
+    // two dots at the end - in this case indicate that there is no parent.
+    // See bug 332389.
+    CFStringRef path = ::CFURLGetString(mBaseRef);
+    CFStringRef newPath = ::CFURLGetString(parentURLRef);
+    if (::CFStringGetLength(newPath) < ::CFStringGetLength(path)) {
+      rv = NS_ERROR_FAILURE;
+      newFile = new nsLocalFile;
+      if (newFile) {
+        rv = newFile->InitWithCFURL(parentURLRef);
+        if (NS_SUCCEEDED(rv)) {
+          NS_ADDREF(*aParent = newFile);
+          rv = NS_OK;
+        }
       }
     }
     ::CFRelease(parentURLRef);
-  }  
+  }
   return rv;
 }
 
@@ -1573,14 +1581,14 @@ NS_IMETHODIMP nsLocalFile::SetPersistentDescriptor(const nsACString& aPersistent
   // Cast to an alias record and resolve.
   AliasRecord aliasHeader = *(AliasPtr)decodedData;
   PRInt32 aliasSize = GetAliasSizeFromRecord(aliasHeader);
-  if (aliasSize > (dataSize * 3) / 4) { // be paranoid about having too few data
+  if (aliasSize > ((PRInt32)dataSize * 3) / 4) { // be paranoid about having too few data
     PR_Free(decodedData);
     return NS_ERROR_FAILURE;
   }
   
   // Move the now-decoded data into the Handle.
   // The size of the decoded data is 3/4 the size of the encoded data. See plbase64.h
-  Handle	newHandle = nsnull;
+  Handle  newHandle = nsnull;
   if (::PtrToHand(decodedData, &newHandle, aliasSize) != noErr)
     rv = NS_ERROR_OUT_OF_MEMORY;
   PR_Free(decodedData);
