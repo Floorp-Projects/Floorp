@@ -74,7 +74,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsISupportsPrimitives.h"
-
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsNativeCharsetUtils.h"
 
 // XXX test for this as long as there are still non-xul-app suite builds
@@ -620,14 +620,29 @@ nsresult nsMessengerWinIntegration::AlertFinished()
 
 nsresult nsMessengerWinIntegration::AlertClicked()
 {
+#ifdef MOZ_THUNDERBIRD
+  nsresult rv;
+  nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMPtr<nsIMsgWindow> topMostMsgWindow;
+  rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(topMostMsgWindow));
+  if (topMostMsgWindow)
+  {
+    nsCOMPtr<nsIDOMWindowInternal> domWindow;
+    rv = topMostMsgWindow->GetDomWindow(getter_AddRefs(domWindow));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    activateWindow(domWindow);
+  }
+#else
   // make sure we don't insert the icon in the system tray since the user clicked on the alert.
   mSuppressBiffIcon = PR_TRUE;
-  
+
   nsXPIDLCString folderURI;
   GetFirstFolderWithNewMail(getter_Copies(folderURI));
 
   openMailWindow(NS_LITERAL_STRING("mail:3pane").get(), folderURI);
- 
+#endif
   return NS_OK;
 }
 

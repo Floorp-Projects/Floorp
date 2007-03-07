@@ -272,12 +272,12 @@ nsresult nsMessengerUnixIntegration::AlertFinished()
 
 nsresult nsMessengerUnixIntegration::AlertClicked()
 {
-  // make sure we don't insert the icon in the system tray since the user clicked on the alert.
+#ifndef MOZ_THUNDERBIRD
   nsXPIDLCString folderURI;
   GetFirstFolderWithNewMail(getter_Copies(folderURI));
 
   openMailWindow(NS_LITERAL_STRING("mail:3pane").get(), folderURI);
- 
+#endif
   return NS_OK;
 }
 

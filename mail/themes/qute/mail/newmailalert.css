@@ -81,16 +81,24 @@
      because it controls how large the preview, subject and sender text can be
      before cropping kicks in */
   max-width: 450px;
-  padding-right: 5px;
+  padding: 0px 5px 0px 5px; 
 }
 
 .folderSummary-subject {
-  padding-left: 5px;
+  font-weight: bold;
+}
+
+.folderSummary-sender, .folderSummary-subject {
+  cursor: inherit;
 }
 
 .folderSummary-previewText {
   color: grey; 
-  padding-left: 5px;
+}
+
+.folderSummaryMessage:hover > .folderSummary-message-row {
+  cursor: pointer;
+  color: blue;
 }
 
 #closeButton {
@@ -98,7 +106,7 @@
   -moz-image-region: rect(0px, 16px, 16px, 0px);
   -moz-appearance: none;
   border: none !important;
-  padding: 0px;
+  padding: 2px 0px 0px 0px;
 }
 
 #closeButton > .toolbarbutton-icon {

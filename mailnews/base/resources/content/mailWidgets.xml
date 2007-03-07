@@ -2129,7 +2129,10 @@
                 var names = {};
                 var emails = {};
                 var numAddresses = hdrParser.parseHeadersWithArray(msgHdr.mime2DecodedAuthor, emails, names, {});
-                msgPopup.setAttribute('sender', ' - ' + (names.value[0] ? names.value[0] : emails.value[0]));
+                msgPopup.setAttribute('sender', names.value[0] ? names.value[0] : emails.value[0]);
+                msgPopup.messageUri = aFolder.getUriForMsg(msgHdr);
+                msgPopup.folderUri = aFolder.URI;
+                msgPopup.msgKey = msgHdr.messageKey;
                 document.getAnonymousNodes(this)[0].appendChild(msgPopup);
               } 
               if (document.getAnonymousNodes(this)[0].childNodes.length >= this.mMaxMsgHdrsInPopup)
@@ -2154,7 +2157,7 @@
 
   <binding id="folderSummary-message">
     <content>
-      <xul:vbox>
+      <xul:vbox class="folderSummaryMessage">
         <xul:hbox class="folderSummary-message-row">
           <xul:label anonid="subject" flex="1" class="folderSummary-subject" xbl:inherits="value=subject" crop="right"/>
           <xul:label anonid="sender"  class="folderSummary-sender" xbl:inherits="value=sender" crop="right"/>
@@ -2180,5 +2183,36 @@
         ]]>
       </constructor>
     </implementation>
+    <handlers>
+      <handler event="click" button="0">
+        <![CDATA[
+          var mailSession = Components.classes["@mozilla.org/messenger/services/session;1"].
+                              getService(Components.interfaces.nsIMsgMailSession);
+          var topmostMsgWindow;
+          try {
+           topmostMsgWindow = mailSession.topmostMsgWindow;
+          } catch (ex) {}
+          
+          if (topmostMsgWindow)
+          {
+            try {
+              // SelectFolder throws an exception if the folder is not in the current folder view
+              mailSession.topmostMsgWindow.windowCommands.selectFolder(this.folderUri);
+              mailSession.topmostMsgWindow.windowCommands.selectMessage(this.messageUri);
+            } catch (ex) {}
+          }
+          else
+          {
+            // open a new window
+            var mailWindowService = Components.classes["@mozilla.org/messenger/windowservice;1"].
+                                      getService(Components.interfaces.nsIMessengerWindowService);
+            mailWindowService.openMessengerWindowWithUri("mail:3pane", this.folderUri, this.msgKey);
+          }
+
+          if (gAlertListener)
+            gAlertListener.observe(null, "alertclickcallback", "");
+        ]]>
+      </handler>
+    </handlers>    
   </binding>
 </bindings>
