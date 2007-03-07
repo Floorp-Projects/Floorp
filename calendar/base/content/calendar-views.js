@@ -222,7 +222,7 @@ function switchToView(aViewType) {
 }
 
 function moveView(aNumber) {
-    getViewDeck().selectedPanel.moveView(aNumber);
+    currentView().moveView(aNumber);
 }
 
 // Helper function to get the view deck in a neutral way, regardless of whether
@@ -233,6 +233,9 @@ function getViewDeck() {
     return sbDeck || ltnDeck;
 }
 
+/**
+ * Returns the currently visible calendar view.
+ */
 function currentView() {
     return getViewDeck().selectedPanel;
 }
@@ -242,10 +245,7 @@ function currentView() {
  * neutral way
  */
 function getSelectedDay() {
-    var sbView = document.getElementById("view-deck");
-    var ltnView = document.getElementById("calendar-view-box");
-    var viewDeck = sbView || ltnView;
-    return viewDeck.selectedPanel.selectedDay;
+    return currentView().selectedDay;
 }
 
 /** Creates a timer that will fire after midnight.  Pass in a function as 
