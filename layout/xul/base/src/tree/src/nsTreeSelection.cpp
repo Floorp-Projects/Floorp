@@ -445,7 +445,10 @@ NS_IMETHODIMP nsTreeSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEndInd
   if (aStartIndex == -1) {
     if (mShiftSelectPivot != -1)
       aStartIndex = mShiftSelectPivot;
-    else aStartIndex = mCurrentIndex;
+    else if (mCurrentIndex != -1)
+      aStartIndex = mCurrentIndex;
+    else
+      aStartIndex = aEndIndex;
   }
 
   mShiftSelectPivot = aStartIndex;
