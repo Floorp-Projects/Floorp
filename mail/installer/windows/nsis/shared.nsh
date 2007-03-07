@@ -143,7 +143,7 @@
 
   ; An empty string is used for the 5th param because ThunderbirdEML is not a
   ; protocol handler
-  ${AddHandlerValues} "$0\ThunderbirdEML"  "$2" "$8,1" "${AppRegNameMail} Document" "" ""
+  ${AddHandlerValues} "$0\ThunderbirdEML"  "$2" "$8,0" "${AppRegNameMail} Document" "" ""
 
   ${AddHandlerValues} "$0\Thunderbird.Url.mailto"  "$3" "$8,0" "${AppRegNameMail} URL" "true" ""
   ${AddHandlerValues} "$0\Thunderbird.Url.news" "$2" "$8,0" "${AppRegNameNews} URL" "true" ""
