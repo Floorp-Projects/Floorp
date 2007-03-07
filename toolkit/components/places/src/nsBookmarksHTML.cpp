@@ -275,11 +275,12 @@ protected:
   nsCOMPtr<nsIAnnotationService> mAnnotationService;
   nsCOMPtr<nsILivemarkService> mLivemarkService;
 
-  // if set, we will move root items to where we find them. This should be
-  // set when we are loading the default places html file, and should be
-  // unset when doing normal imports so that, for example, the toolbar folder
-  // will be a child of the menu in old bookmarks.html, and we don't want
-  // to reparent it on import.
+  // If set, we will move root items to from their existing position
+  // in the hierarchy, to where we find them in the bookmarks file
+  // being imported. This should be set when we are loading 
+  // the default places html file, and should be unset when doing
+  // normal imports so that root folders will not get moved  when
+  // importing bookmarks.html files.
   PRBool mAllowRootChanges;
 
   // if set, this is an import of initial bookmarks.html content,
@@ -835,12 +836,24 @@ BookmarkContentSink::NewFrame()
       }
       break;
     case BookmarkImportFrame::Container_Toolbar:
-      // toolbar root
-      rv = mBookmarksService->GetToolbarRoot(&ourID);
+      // get toolbar folder
+      PRInt64 btf;
+      rv = mBookmarksService->GetToolbarFolder(&btf);
       NS_ENSURE_SUCCESS(rv, rv);
-      if (mAllowRootChanges) {
-        updateFolder = PR_TRUE;
+      if (!btf) {
+        // create new folder
+        rv = mBookmarksService->CreateFolder(CurFrame().mContainerID,
+                                            containerName,
+                                            mBookmarksService->DEFAULT_INDEX, &ourID);
+        NS_ENSURE_SUCCESS(rv, rv);
+        // there's no toolbar folder, so make us the toolbar folder
+        rv = mBookmarksService->SetToolbarFolder(ourID);
+        NS_ENSURE_SUCCESS(rv, rv);
+        // set favicon
         SetFaviconForFolder(ourID, NS_LITERAL_CSTRING(BOOKMARKS_TOOLBAR_ICON_URI));
+      }
+      else {
+        ourID = btf;
       }
       break;
     default:
@@ -852,7 +865,7 @@ BookmarkContentSink::NewFrame()
 #endif
 
   if (updateFolder) {
-    // move the menu/toolbar folder to the current position
+    // move the menu folder to the current position
     mBookmarksService->MoveFolder(ourID, CurFrame().mContainerID, -1);
     mBookmarksService->SetFolderTitle(ourID, containerName);
 #ifdef DEBUG_IMPORT
@@ -1160,7 +1173,7 @@ static const char kIndent[] = "    ";
 
 static const char kPlacesRootAttribute[] = " PLACES_ROOT=\"true\"";
 static const char kBookmarksRootAttribute[] = " BOOKMARKS_MENU=\"true\"";
-static const char kToolbarRootAttribute[] = " PERSONAL_TOOLBAR_FOLDER=\"true\"";
+static const char kToolbarFolderAttribute[] = " PERSONAL_TOOLBAR_FOLDER=\"true\"";
 static const char kIconAttribute[] = " ICON=\"";
 static const char kIconURIAttribute[] = " ICON_URI=\"";
 static const char kHrefAttribute[] = " HREF=\"";
@@ -1345,8 +1358,8 @@ nsNavBookmarks::WriteContainerHeader(PRInt64 aFolder, const nsCString& aIndent,
   } else if (aFolder == mBookmarksRoot) {
     rv = aOutput->Write(kBookmarksRootAttribute, sizeof(kBookmarksRootAttribute)-1, &dummy);
     if (NS_FAILED(rv)) return rv;
-  } else if (aFolder == mToolbarRoot) {
-    rv = aOutput->Write(kToolbarRootAttribute, sizeof(kToolbarRootAttribute)-1, &dummy);
+  } else if (aFolder == mToolbarFolder) {
+    rv = aOutput->Write(kToolbarFolderAttribute, sizeof(kToolbarFolderAttribute)-1, &dummy);
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -1609,10 +1622,10 @@ nsNavBookmarks::WriteContainerContents(PRInt64 aFolder, const nsCString& aIndent
     if (items[i]->IsFolder()) {
       // bookmarks folder
       PRInt64 folderId = items[i]->GetAsFolder()->mFolderId;
-      if (aFolder == mRoot && (folderId == mToolbarRoot ||
+      if (aFolder == mRoot && (folderId == mToolbarFolder ||
                                folderId == mBookmarksRoot)) {
-        // don't write out the bookmarks menu or the toolbar folder from the
-        // places root. When writing to bookmarks.html, these are reparented
+        // don't write out the bookmarks menu folder from the
+        // places root. When writing to bookmarks.html, it is reparented
         // to the menu, which is the root of the namespace. This provides
         // better backwards compatability.
         continue;
@@ -1702,10 +1715,6 @@ nsNavBookmarks::ExportBookmarksHTML(nsIFile* aBookmarksFile)
 
   // places root
   rv = WriteContainer(mRoot, indent, strm);
-  if (NS_FAILED(rv)) return rv;
-
-  // toolbar
-  rv = WriteContainer(mToolbarRoot, indent, strm);
   if (NS_FAILED(rv)) return rv;
 
   // bookmarks menu contents

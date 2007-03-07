@@ -78,7 +78,7 @@ nsNavBookmarks* nsNavBookmarks::sInstance = nsnull;
 #define ANNO_FOLDER_READONLY BOOKMARKS_ANNO_PREFIX "readonly"
 
 nsNavBookmarks::nsNavBookmarks()
-  : mRoot(0), mBookmarksRoot(0), mToolbarRoot(0), mTagRoot(0), mBatchLevel(0),
+  : mRoot(0), mBookmarksRoot(0), mTagRoot(0), mToolbarFolder(0), mBatchLevel(0),
     mBatchHasTransaction(PR_FALSE)
 {
   NS_ASSERTION(!sInstance, "Multiple nsNavBookmarks instances!");
@@ -254,6 +254,9 @@ nsNavBookmarks::Init()
   rv = InitRoots();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = InitToolbarFolder();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -403,10 +406,6 @@ nsNavBookmarks::InitRoots()
   NS_ENSURE_SUCCESS(rv, rv);
 
   getRootStatement->Reset();
-  rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("toolbar"), &mToolbarRoot, nsnull);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  getRootStatement->Reset();
   rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("tags"), &mTagRoot, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -448,6 +447,28 @@ nsNavBookmarks::InitRoots()
   return NS_OK;
 }
 
+/**
+ * Initialize the toolbar folder
+ */
+nsresult
+nsNavBookmarks::InitToolbarFolder()
+{
+  mozIStorageConnection *dbConn = DBConn();
+
+  nsCOMPtr<mozIStorageStatement> statement;
+  nsresult rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT id from moz_bookmarks_folders WHERE type = 'toolbar'"),
+                                        getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasResult;
+  rv = statement->ExecuteStep(&hasResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (hasResult) {
+    rv = statement->GetInt64(0, &mToolbarFolder);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
 
 // nsNavBookmarks::CreateRoot
 //
@@ -802,9 +823,50 @@ nsNavBookmarks::GetBookmarksRoot(PRInt64 *aRoot)
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::GetToolbarRoot(PRInt64 *aRoot)
+nsNavBookmarks::GetToolbarFolder(PRInt64 *aFolderId)
 {
-  *aRoot = mToolbarRoot;
+  *aFolderId = mToolbarFolder;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::SetToolbarFolder(PRInt64 aFolderId)
+{
+  mozIStorageConnection *dbConn = DBConn();
+  mozStorageTransaction transaction(dbConn, PR_FALSE);
+
+  // XXX - validate that input is a valid folder id
+
+  // unset old toolbar folder
+  nsCAutoString buffer;
+  buffer.AssignLiteral("UPDATE moz_bookmarks_folders SET type = '' WHERE id = ");
+  buffer.AppendInt(mToolbarFolder);
+
+  nsresult rv = dbConn->ExecuteSimpleSQL(buffer);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // set new toolbar folder
+  buffer = "";
+  buffer.AssignLiteral("UPDATE moz_bookmarks_folders SET type = 'toolbar' ");
+  buffer.AppendLiteral("WHERE id = ");
+  buffer.AppendInt(aFolderId);
+
+  rv = dbConn->ExecuteSimpleSQL(buffer);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // commit
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // update local
+  mToolbarFolder = aFolderId;
+
+  // notify observers
+  nsCOMPtr<nsIURI> folderURI;
+  rv = GetFolderURI(aFolderId, getter_AddRefs(folderURI));
+  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                      OnItemChanged(mToolbarFolder, folderURI, NS_LITERAL_CSTRING("became_toolbar_folder"),
+                                    EmptyString()));
   return NS_OK;
 }
 
@@ -1694,7 +1756,7 @@ nsNavBookmarks::ResultNodeForFolder(PRInt64 aID,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(results, "ResultNodeForFolder expects a valid folder id");
 
-  // type (empty for normal ones, nonempty for container providers)
+  // type
   nsCAutoString folderType;
   rv = mDBGetFolderInfo->GetUTF8String(kGetFolderInfoIndex_Type, folderType);
   NS_ENSURE_SUCCESS(rv, rv);

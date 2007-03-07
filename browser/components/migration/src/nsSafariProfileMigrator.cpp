@@ -1021,7 +1021,7 @@ nsSafariProfileMigrator::ParseBookmarksFolder(CFArrayRef aChildren,
       if (title.EqualsLiteral("BookmarksBar") && aIsAtRootLevel) {
 #ifdef MOZ_PLACES_BOOKMARKS
         PRInt64 toolbarFolder;
-        aBookmarksService->GetToolbarRoot(&toolbarFolder);
+        aBookmarksService->GetToolbarFolder(&toolbarFolder);
 #else
         nsCOMPtr<nsIRDFResource> toolbarFolder;
         aBookmarksService->GetBookmarksToolbarFolder(getter_AddRefs(toolbarFolder));

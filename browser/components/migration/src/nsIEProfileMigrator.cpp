@@ -1478,7 +1478,7 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
 #endif
       if (bookmarkName.Equals(aPersonalToolbarFolderName)) {
 #ifdef MOZ_PLACES_BOOKMARKS
-        aBookmarksService->GetToolbarRoot(&folder);
+        aBookmarksService->GetToolbarFolder(&folder);
         // If we're here, it means the user's doing a _replace_ import which means
         // clear out the content of this folder, and replace it with the new content
         aBookmarksService->RemoveFolderChildren(folder);
