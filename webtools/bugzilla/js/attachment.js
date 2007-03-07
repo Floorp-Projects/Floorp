@@ -93,14 +93,14 @@ function clearAttachmentFields() {
 
     document.getElementById('data').value = '';
     DataFieldHandler();
-    if (element = document.getElementById('bigfile'))
+    if ((element = document.getElementById('bigfile')))
         element.checked = '';
-    if (element = document.getElementById('attachurl')) {
+    if ((element = document.getElementById('attachurl'))) {
         element.value = '';
         URLFieldHandler();
     }
     document.getElementById('description').value = '';
     document.getElementById('ispatch').checked = '';
-    if (element = document.getElementById('isprivate'))
+    if ((element = document.getElementById('isprivate')))
         element.checked = '';
 }
