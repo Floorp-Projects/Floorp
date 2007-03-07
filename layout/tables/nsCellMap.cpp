@@ -1802,6 +1802,10 @@ void nsCellMap::ExpandWithCells(nsTableCellMap& aMap,
     // set the starting and ending col index for the new cell
     PRBool zeroColSpan = PR_FALSE;
     PRInt32 colSpan = GetColSpanForNewCell(*cellFrame, zeroColSpan);
+    if (zeroColSpan) {
+      aMap.mTableFrame.SetHasZeroColSpans(PR_TRUE);
+      aMap.mTableFrame.SetNeedColSpanExpansion(PR_TRUE);
+    }
     totalColSpan += colSpan;
     if (cellX == 0) {
       endColIndex = aColIndex + colSpan - 1;
