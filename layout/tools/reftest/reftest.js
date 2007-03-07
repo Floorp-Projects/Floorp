@@ -203,16 +203,39 @@ function OnDocumentLoad(event)
         // Ignore load events for subframes.
         return;
 
-    clearTimeout(gFailureTimeout);
-    // Since we can't use a bubbling-phase load listener from chrome,
-    // this is a capturing phase listener.  So do setTimeout twice, the
-    // first to get us after the onload has fired in the content, and
-    // the second to get us after any setTimeout(foo, 0) in the content.
-    setTimeout(setTimeout, 0, DocumentLoaded, 0);
+    function shouldWait() {
+      return contentRootElement.className.split(/\s+/)
+                               .indexOf("reftest-wait") != -1;
+    }
+
+    var contentRootElement = gBrowser.contentDocument.documentElement;
+    if (shouldWait()) {
+        // The testcase will let us know when the test snapshot should be made.
+        // Register a mutation listener to know when the 'reftest-wait' class
+        // gets removed.
+        contentRootElement.addEventListener(
+            "DOMAttrModified",
+            function(event) {
+                if (!shouldWait()) {
+                    contentRootElement.removeEventListener(
+                        "DOMAttrModified",
+                        arguments.callee,
+                        false);
+                    setTimeout(DocumentLoaded, 0);
+                }
+            }, false);
+    } else {
+        // Since we can't use a bubbling-phase load listener from chrome,
+        // this is a capturing phase listener.  So do setTimeout twice, the
+        // first to get us after the onload has fired in the content, and
+        // the second to get us after any setTimeout(foo, 0) in the content.
+        setTimeout(setTimeout, 0, DocumentLoaded, 0);
+    }
 }
 
 function DocumentLoaded()
 {
+    clearTimeout(gFailureTimeout);
     var key = IFrameToKey();
     switch (gState) {
         case 1:

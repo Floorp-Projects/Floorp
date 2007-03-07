@@ -3,9 +3,7 @@
 # failing test.
 
 # verify the tests work
-== data:text/html,<body> about:blank
-== data:text/plain, about:blank
-!= data:text/plain,HELLO about:blank
+include reftest-sanity/reftest.list
 
 # bugs/
 include bugs/reftest.list
