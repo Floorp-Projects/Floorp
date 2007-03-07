@@ -63,6 +63,17 @@
     </label>
   </p>
 
+  [% IF saved_search %]
+    <p>
+      <input type="hidden" name="saved_search"
+             value="[% saved_search.id FILTER html%]" >
+      <input type="checkbox" id="save_columns_for_search" checked="checked" 
+             name="save_columns_for_search" value="1">
+      <label for="save_columns_for_search">Save this column list only 
+        for search '[% saved_search.name FILTER html %]'</label>
+    </p>
+  [% END %]
+
   <p>
     <input type="submit" id="change" value="Change Columns">
   </p>
