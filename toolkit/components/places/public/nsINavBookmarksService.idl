@@ -54,7 +54,7 @@ interface nsITransaction;
  * Observer for bookmark changes.
  */
 
-[scriptable, uuid(d0f520f0-b08b-11db-abbd-0800200c9a66)]
+[scriptable, uuid(860d786d-9bba-4011-a396-486a87af8f07)]
 interface nsINavBookmarkObserver : nsISupports
 {
   /**
@@ -195,17 +195,17 @@ interface nsINavBookmarksService : nsISupports
   readonly attribute PRInt64 bookmarksRoot;
 
   /**
-   * The folder ID of the personal toolbar root.
-   */
-  readonly attribute PRInt64 toolbarRoot;
-
-  /**
    * The folder ID of the top-level folders that contain the tag "folders".
    *
    * NOTE: This isn't wired up yet, so don't try to use it for anything until
    *       bug 329961 is marked resolved.
    */
   readonly attribute PRInt64 tagRoot;
+
+  /**
+   * The folder ID of the personal toolbar.
+   */
+  attribute PRInt64 toolbarFolder;
 
   /**
    * This value should be used for APIs that allow passing in an index

@@ -114,6 +114,7 @@ private:
   ~nsNavBookmarks();
 
   nsresult InitRoots();
+  nsresult InitToolbarFolder();
   nsresult CreateRoot(mozIStorageStatement* aGetRootStatement,
                       const nsCString& name, PRInt64* aID,
                       PRBool* aWasCreated);
@@ -135,8 +136,10 @@ private:
   nsMaybeWeakPtrArray<nsINavBookmarkObserver> mObservers;
   PRInt64 mRoot;
   PRInt64 mBookmarksRoot;
-  PRInt64 mToolbarRoot;
   PRInt64 mTagRoot;
+
+  // personal toolbar folder
+  PRInt64 mToolbarFolder;
 
   // the level of nesting of batches, 0 when no batches are open
   PRInt32 mBatchLevel;

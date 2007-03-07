@@ -1096,7 +1096,7 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
 
 #ifdef MOZ_PLACES_BOOKMARKS
   PRInt64 toolbar;
-  rv = bms->GetToolbarRoot(&toolbar);
+  rv = bms->GetToolbarFolder(&toolbar);
   NS_ENSURE_SUCCESS(rv, rv);
 #else
   nsCOMPtr<nsIRDFResource> toolbar;

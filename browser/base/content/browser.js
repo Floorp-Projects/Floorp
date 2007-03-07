@@ -308,6 +308,19 @@ function BookmarkThisTab()
 #endif
 }
 
+#ifdef MOZ_PLACES_BOOKMARKS
+/**
+ * Initialize the bookmarks toolbar
+ */
+function initBookmarksToolbar() {
+  var bt = document.getElementById("bookmarksBarContent");
+  if (!bt)
+    return;
+  bt.place =
+    PlacesUtils.getQueryStringForFolder(PlacesUtils.bookmarks.toolbarFolder);
+}
+#endif
+
 const gSessionHistoryObserver = {
   observe: function(subject, topic, data)
   {
@@ -1005,6 +1018,8 @@ function delayedStartup()
           .controllers.appendController(BookmarksMenuController);
 #else
   PlacesMenuDNDController.init();
+
+  initBookmarksToolbar();
 #endif
 
   // called when we go into full screen, even if it is

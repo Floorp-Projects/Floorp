@@ -213,6 +213,9 @@
           <menuitem command="placesCmd_moveBookmarks"
                     label="&cmd.moveBookmarks.menuLabel;"
                     accesskey="&cmd.moveBookmarks.menuAccesskey;"/>
+          <menuitem command="placesCmd_setAsBookmarksToolbarFolder"
+                    label="&cmd.personalToolbarFolder.menuLabel;"
+                    accesskey="&cmd.personalToolbarFolder.menuAccesskey;"/>
           <menuseparator/>
           <menuitem id="editReload"
                     command="placesCmd_reload"

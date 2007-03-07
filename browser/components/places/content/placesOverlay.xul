@@ -93,6 +93,8 @@
 
     <command id="placesCmd_moveBookmarks"
              oncommand="goDoCommand('placesCmd_moveBookmarks');"/>
+    <command id="placesCmd_setAsBookmarksToolbarFolder"
+             oncommand="goDoCommand('placesCmd_setAsBookmarksToolbarFolder');"/>
 #endif
   </commandset>
 

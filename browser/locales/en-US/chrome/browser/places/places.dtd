@@ -190,6 +190,10 @@
          "Move Bookmark(s)...">
 <!ENTITY cmd.moveBookmarks.menuAccesskey
          "M">
+<!ENTITY cmd.personalToolbarFolder.menuLabel
+         "Set as Bookmarks Toolbar Folder">
+<!ENTITY cmd.personalToolbarFolder.menuAccesskey
+         "b">
 
 <!ENTITY col.title.label
   "Title">

@@ -220,7 +220,7 @@ static const char* gXpcomShutdown = "xpcom-shutdown";
 const char nsNavHistory::kAnnotationPreviousEncoding[] = "history/encoding";
 
 nsIAtom* nsNavHistory::sMenuRootAtom = nsnull;
-nsIAtom* nsNavHistory::sToolbarRootAtom = nsnull;
+nsIAtom* nsNavHistory::sToolbarFolderAtom = nsnull;
 nsIAtom* nsNavHistory::sSessionStartAtom = nsnull;
 nsIAtom* nsNavHistory::sSessionContinueAtom = nsnull;
 nsIAtom* nsNavHistory::sContainerAtom = nsnull;
@@ -244,7 +244,7 @@ nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
   gHistoryService = this;
 
   sMenuRootAtom = NS_NewAtom("menu-root");
-  sToolbarRootAtom = NS_NewAtom("toolbar-root");
+  sToolbarFolderAtom = NS_NewAtom("toolbar-folder");
   sSessionStartAtom = NS_NewAtom("session-start");
   sSessionContinueAtom = NS_NewAtom("session-continue");
   sContainerAtom = NS_NewAtom("container");
@@ -261,7 +261,7 @@ nsNavHistory::~nsNavHistory()
   gHistoryService = nsnull;
 
   NS_IF_RELEASE(sMenuRootAtom);
-  NS_IF_RELEASE(sToolbarRootAtom);
+  NS_IF_RELEASE(sToolbarFolderAtom);
   NS_IF_RELEASE(sSessionStartAtom);
   NS_IF_RELEASE(sSessionContinueAtom);
   NS_IF_RELEASE(sContainerAtom);

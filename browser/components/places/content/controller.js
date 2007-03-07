@@ -278,6 +278,15 @@ PlacesController.prototype = {
 #endif
       }
       return false;
+    case "placesCmd_setAsBookmarksToolbarFolder":
+      if (this._view.hasSingleSelection) {
+        var selectedNode = this._view.selectedNode;
+        if (PlacesUtils.nodeIsFolder(selectedNode) &&
+            selectedNode.folderId != PlacesUtils.bookmarks.toolbarFolder) {
+          return true;
+        }
+      }
+      return false;
 #endif
     default:
       return false;
@@ -360,6 +369,9 @@ PlacesController.prototype = {
       break;
     case "placesCmd_reload":
       this.reloadSelectedLivemarks();
+      break;
+    case "placesCmd_setAsBookmarksToolbarFolder":
+      this.setBookmarksToolbarFolder();
       break;
 #endif
     }
@@ -1108,6 +1120,18 @@ PlacesController.prototype = {
                       "", "chrome, modal",
                       this._view.getSelectionNodes(), PlacesUtils.tm);
   },
+
+  /**
+   * Makes the selected node the bookmarks toolbar folder.
+   */
+  setBookmarksToolbarFolder: function PC_setBookmarksToolbarFolder() {
+    if (!this._view.hasSingleSelection)
+      return false;
+    var selectedNode = this._view.selectedNode;
+    var txn = new PlacesSetBookmarksToolbarTransaction(selectedNode.folderId);
+    PlacesUtils.tm.doTransaction(txn);
+  },
+
 
   /**
    * Creates a set of transactions for the removal of a range of items. A range is 
@@ -2169,6 +2193,26 @@ PlacesEditBookmarkMicrosummaryTransaction.prototype = {
   }
 };
 
+/**
+ * Set the bookmarks toolbar folder.
+ */
+function PlacesSetBookmarksToolbarTransaction(aFolderId) {
+  this._folderId = aFolderId;
+  this._oldFolderId = this.utils.toolbarFolder;
+  this.redoTransaction = this.doTransaction;
+}
+PlacesSetBookmarksToolbarTransaction.prototype = {
+  __proto__: PlacesBaseTransaction.prototype,
+  
+  doTransaction: function PSBTT_doTransaction() {
+    this.utils.bookmarks.toolbarFolder = this._folderId;
+  },
+
+  undoTransaction: function PSBTT_undoTransaction() {
+    this.utils.bookmarks.toolbarFolder = this._oldFolderId;
+  }
+};
+
 function goUpdatePlacesCommands() {
   goUpdateCommand("placesCmd_open");
   goUpdateCommand("placesCmd_open:window");
@@ -2181,6 +2225,7 @@ function goUpdatePlacesCommands() {
   goUpdateCommand("placesCmd_new:separator");
   goUpdateCommand("placesCmd_show:info");
   goUpdateCommand("placesCmd_moveBookmarks");
+  goUpdateCommand("placesCmd_setAsBookmarksToolbarFolder");
   goUpdateCommand("placesCmd_reload");
   // XXXmano todo: sort commands handling
 #endif

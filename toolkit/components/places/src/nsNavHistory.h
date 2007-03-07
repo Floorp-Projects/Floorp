@@ -243,7 +243,7 @@ public:
   static const PRInt32 kGetInfoIndex_SessionId;
 
   static nsIAtom* sMenuRootAtom;
-  static nsIAtom* sToolbarRootAtom;
+  static nsIAtom* sToolbarFolderAtom;
   static nsIAtom* sSessionStartAtom;
   static nsIAtom* sSessionContinueAtom;
   static nsIAtom* sContainerAtom;

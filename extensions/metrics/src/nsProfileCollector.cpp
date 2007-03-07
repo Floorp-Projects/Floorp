@@ -464,7 +464,7 @@ nsProfileCollector::LogBookmarks(nsIMetricsEventItem *profile)
   LogBookmarkLocation(bookmarksItem, NS_LITERAL_CSTRING("root"),
                       &counter, root, PR_FALSE);
 
-  rv = bmSvc->GetToolbarRoot(&root);
+  rv = bmSvc->GetToolbarFolder(&root);
   NS_ENSURE_SUCCESS(rv, rv);
 
   LogBookmarkLocation(bookmarksItem, NS_LITERAL_CSTRING("toolbar"),

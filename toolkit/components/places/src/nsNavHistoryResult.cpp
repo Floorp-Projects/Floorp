@@ -4751,17 +4751,17 @@ nsNavHistoryResultTreeViewer::GetCellProperties(PRInt32 row, nsITreeColumn *col,
     return NS_ERROR_INVALID_ARG;
 
   nsNavHistoryResultNode *node = mVisibleElements[row];
-  PRInt64 folderId, bookmarksRootId, toolbarRootId;
+  PRInt64 folderId, bookmarksRootId, toolbarFolderId;
   node->GetFolderId(&folderId);
 
   nsCOMPtr<nsINavBookmarksService> bms(do_GetService(
                                             NS_NAVBOOKMARKSSERVICE_CONTRACTID));
   bms->GetBookmarksRoot(&bookmarksRootId);
-  bms->GetToolbarRoot(&toolbarRootId);
+  bms->GetToolbarFolder(&toolbarFolderId);
   if (bookmarksRootId == folderId)
     properties->AppendElement(nsNavHistory::sMenuRootAtom);
-  else if (toolbarRootId == folderId)
-    properties->AppendElement(nsNavHistory::sToolbarRootAtom);
+  else if (toolbarFolderId == folderId)
+    properties->AppendElement(nsNavHistory::sToolbarFolderAtom);
   
   if (mShowSessions && node->mSessionID != 0) {
     if (row == 0 ||
