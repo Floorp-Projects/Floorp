@@ -75,7 +75,8 @@
     <command id="Browser:SavePage" oncommand="saveDocument(window.content.document);"/>
     <command id="Browser:SaveFrame" oncommand="saveFrameDocument();"/>
 
-    <command id="Browser:SendLink" oncommand="MailIntegration.sendLinkForContent();"/>
+    <command id="Browser:SendLink"
+             oncommand="MailIntegration.sendLinkForWindow(window.content);"/>
 
     <command id="cmd_pageSetup" oncommand="PrintUtils.showPageSetup();"/>
     <command id="cmd_print" oncommand="PrintUtils.print();"/>

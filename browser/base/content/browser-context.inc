@@ -133,7 +133,7 @@
       <menuitem id="context-sendpage"  
                 label="&sendPageCmd.label;" 
                 accesskey="&sendPageCmd.accesskey;" 
-                command="Browser:SendLink"/>
+                oncommand="gContextMenu.sendPage();"/>
       <menuseparator id="context-sep-viewbgimage"/>  
       <menuitem id="context-viewbgimage"
                 label="&viewBGImageCmd.label;"

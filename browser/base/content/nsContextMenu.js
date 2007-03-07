@@ -1126,11 +1126,15 @@ nsContextMenu.prototype = {
   },
 #endif
 
-  savePageAs: function() {
+  savePageAs: function CM_savePageAs() {
     saveDocument(this.browser.contentDocument);
   },
 
-  printFrame: function() {
+  sendPage: function CM_sendPage() {
+    MailIntegration.sendLinkForWindow(this.browser.contentWindow);  
+  },
+
+  printFrame: function CM_printFrame() {
     PrintUtils.print(this.target.ownerDocument.defaultView);
   }
 };
