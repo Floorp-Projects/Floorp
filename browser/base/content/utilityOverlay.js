@@ -113,10 +113,10 @@ function focusElement(aElement) {
 }
 
 // openUILink handles clicks on UI elements that cause URLs to load.
-function openUILink( url, e, ignoreButton, ignoreAlt, allowKeywordFixup, postData )
+function openUILink( url, e, ignoreButton, ignoreAlt, allowKeywordFixup, postData, referrerUrl )
 {
   var where = whereToOpenLink(e, ignoreButton, ignoreAlt);
-  openUILinkIn(url, where, allowKeywordFixup, postData);
+  openUILinkIn(url, where, allowKeywordFixup, postData, referrerUrl);
 }
 
 
@@ -194,13 +194,13 @@ function whereToOpenLink( e, ignoreButton, ignoreAlt )
  * I Feel Lucky are allowed to interpret this URL. This parameter may be
  * undefined, which is treated as false.
  */
-function openUILinkIn( url, where, allowThirdPartyFixup, postData )
+function openUILinkIn( url, where, allowThirdPartyFixup, postData, referrerUrl )
 {
   if (!where || !url)
     return;
 
   if (where == "save") {
-    saveURL(url, null, null, true);
+    saveURL(url, null, null, true, null, referrerUrl);
     return;
   }
 
@@ -208,7 +208,7 @@ function openUILinkIn( url, where, allowThirdPartyFixup, postData )
 
   if (!w || where == "window") {
     openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url,
-               null, null, postData, allowThirdPartyFixup);
+               null, referrerUrl, postData, allowThirdPartyFixup);
     return;
   }
 
@@ -216,14 +216,14 @@ function openUILinkIn( url, where, allowThirdPartyFixup, postData )
 
   switch (where) {
   case "current":
-    w.loadURI(url, null, postData, allowThirdPartyFixup);
+    w.loadURI(url, referrerUrl, postData, allowThirdPartyFixup);
     break;
   case "tabshifted":
     loadInBackground = !loadInBackground;
     // fall through
   case "tab":
     var browser = w.getBrowser();
-    browser.loadOneTab(url, null, null, postData, loadInBackground,
+    browser.loadOneTab(url, referrerUrl, null, postData, loadInBackground,
                        allowThirdPartyFixup || false);
     break;
   }
