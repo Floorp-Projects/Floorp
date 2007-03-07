@@ -688,7 +688,8 @@ nsContextMenu.prototype = {
     urlSecurityCheck(this.imageURL,
                      this.browser.contentPrincipal,
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-    openUILink( this.imageURL, e );
+    var doc = this.target.ownerDocument;
+    openUILink( this.imageURL, e, null, null, null, null, doc.documentURIObject );
   },
 
   // Change current window to the URL of the background image.
@@ -696,7 +697,8 @@ nsContextMenu.prototype = {
     urlSecurityCheck(this.bgImageURL,
                      this.browser.contentPrincipal,
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-    openUILink(this.bgImageURL, e );
+    var doc = this.target.ownerDocument;
+    openUILink(this.bgImageURL, e, null, null, null, null, doc.documentURIObject );
   },
 
   disableSetDesktopBackground: function() {
