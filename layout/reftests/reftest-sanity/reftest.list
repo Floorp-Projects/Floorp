@@ -1,0 +1,7 @@
+== data:text/html,<body> about:blank
+== data:text/plain, about:blank
+!= data:text/plain,HELLO about:blank
+
+# these tests make sure async reftests work:
+== test-async.xul test-async-ref.xul
+== test-async.html test-async-ref.html

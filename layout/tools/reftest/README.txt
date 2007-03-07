@@ -146,7 +146,7 @@ avoided.
 In general, the best way to achieve this is to make the test and the
 reference identical in as many aspects as possible.  For example:
 
-  Good test Markup:
+  Good test markup:
     <div style="color:green"><table><tr><td><span>green
     </span></td></tr></table></div>
 
@@ -163,3 +163,24 @@ reference identical in as many aspects as possible.  For example:
     <!-- span doesn't change the positioning, so skip it -->
     <div style="color:green"><table><tr><td>green
     </td></tr></table></div>
+
+Asynchronous Tests
+==================
+
+Normally reftest takes a snapshot of the given markup's rendering right
+after the load event fires for content. If your test needs to postpone
+the moment the snapshot is taken, it should make sure a class
+'reftest-wait' is on the root element by the moment the load event
+fires. The easiest way to do this is to put it in the markup, e.g.:
+    <html class="reftest-wait">
+
+When your test is ready, you should remove this class from the root
+element, for example using this code:
+    document.documentElement.className = "";
+
+
+Note that in layout tests it is often enough to trigger layout using 
+    document.body.offsetWidth  // HTML example
+
+When possible, you should use this technique instead of making your
+test async.
