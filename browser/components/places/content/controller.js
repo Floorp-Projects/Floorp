@@ -78,10 +78,6 @@ const NEWLINE= "\n";
 const NEWLINE = "\r\n";
 #endif
 
-// The minimum amount of transactions we should tell our observers to begin
-// batching (rather than letting them do incremental drawing).
-const MIN_TRANSACTIONS_FOR_BATCH = 5;
-
 /**
  * Represents an insertion point within a container where we can insert
  * items. 
@@ -1604,6 +1600,10 @@ PlacesBaseTransaction.prototype = {
     return this._livemarks;
   },
 
+  // The minimum amount of transactions we should tell our observers to begin
+  // batching (rather than letting them do incremental drawing).
+  MIN_TRANSACTIONS_FOR_BATCH: 5,
+
   LOG: LOG,
   redoTransaction: function PIT_redoTransaction() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
@@ -1632,7 +1632,7 @@ PlacesAggregateTransaction.prototype = {
   
   doTransaction: function() {
     this.LOG("== " + this._name + " (Aggregate) ==============");
-    if (this._transactions.length >= MIN_TRANSACTIONS_FOR_BATCH)
+    if (this._transactions.length >= this.MIN_TRANSACTIONS_FOR_BATCH)
       this.bookmarks.beginUpdateBatch();
     for (var i = 0; i < this._transactions.length; ++i) {
       var txn = this._transactions[i];
@@ -1640,14 +1640,14 @@ PlacesAggregateTransaction.prototype = {
         txn.container = this.container;
       txn.doTransaction();
     }
-    if (this._transactions.length >= MIN_TRANSACTIONS_FOR_BATCH)
+    if (this._transactions.length >= this.MIN_TRANSACTIONS_FOR_BATCH)
       this.bookmarks.endUpdateBatch();
     this.LOG("== " + this._name + " (Aggregate Ends) =========");
   },
   
   undoTransaction: function() {
     this.LOG("== UN" + this._name + " (UNAggregate) ============");
-    if (this._transactions.length >= MIN_TRANSACTIONS_FOR_BATCH)
+    if (this._transactions.length >= this.MIN_TRANSACTIONS_FOR_BATCH)
       this.bookmarks.beginUpdateBatch();
     for (var i = this._transactions.length - 1; i >= 0; --i) {
       var txn = this._transactions[i];
@@ -1655,7 +1655,7 @@ PlacesAggregateTransaction.prototype = {
         txn.container = this.container;
       txn.undoTransaction();
     }
-    if (this._transactions.length >= MIN_TRANSACTIONS_FOR_BATCH)
+    if (this._transactions.length >= this.MIN_TRANSACTIONS_FOR_BATCH)
       this.bookmarks.endUpdateBatch();
     this.LOG("== UN" + this._name + " (UNAggregate Ends) =======");
   }
