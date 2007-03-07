@@ -49,7 +49,7 @@ function URLFieldHandler() {
                                "list", "manual", "bigfile",
                                "contenttypeselection",
                                "contenttypeentry");
-    var i;
+    var i, thisfield;
     if (field_attachurl.value.match(/^\s*$/)) {
         for (i = 0; i < greyfields.length; i++) {
             thisfield = document.getElementById(greyfields[i]);
@@ -70,8 +70,8 @@ function URLFieldHandler() {
 function DataFieldHandler() {
     var field_data = document.getElementById("data");
     var greyfields = new Array("attachurl");
+    var i, thisfield;
     if (field_data.value.match(/^\s*$/)) {
-        var i;
         for (i = 0; i < greyfields.length; i++) {
             thisfield = document.getElementById(greyfields[i]);
             if (thisfield) {
