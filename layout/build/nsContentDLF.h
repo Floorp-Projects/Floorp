@@ -72,7 +72,7 @@ public:
                           nsIStreamListener** aDocListener,
                           nsIContentViewer** aDocViewer);
 
-  nsresult CreateRDFDocument(const char* aCommand,
+  nsresult CreateXULDocument(const char* aCommand,
                              nsIChannel* aChannel,
                              nsILoadGroup* aLoadGroup,
                              const char* aContentType,

@@ -104,6 +104,8 @@ static const char* const gHTMLTypes[] = {
 static const char* const gXMLTypes[] = {
   "text/xml",
   "application/xml",
+  "application/rdf+xml",
+  "text/rdf",
   0
 };
 
@@ -116,9 +118,7 @@ static const char* const gSVGTypes[] = {
 PRBool NS_SVGEnabled();
 #endif
 
-static const char* const gRDFTypes[] = {
-  "application/rdf+xml",
-  "text/rdf",
+static const char* const gXULTypes[] = {
   "application/vnd.mozilla.xul+xml",
   "mozilla.application/cached-xul",
   0
@@ -202,8 +202,8 @@ nsContentDLF::CreateInstance(const char* aCommand,
     }
 #endif // MOZ_SVG
 
-    for (typeIndex = 0; gRDFTypes[typeIndex] && !knownType; ++typeIndex) {
-      if (type.Equals(gRDFTypes[typeIndex])) {
+    for (typeIndex = 0; gXULTypes[typeIndex] && !knownType; ++typeIndex) {
+      if (type.Equals(gXULTypes[typeIndex])) {
         knownType = PR_TRUE;
       }
     }
@@ -255,11 +255,11 @@ nsContentDLF::CreateInstance(const char* aCommand,
   }
 #endif
 
-  // Try RDF
+  // Try XUL
   typeIndex = 0;
-  while (gRDFTypes[typeIndex]) {
-    if (0 == PL_strcmp(gRDFTypes[typeIndex++], aContentType)) {
-      return CreateRDFDocument(aCommand, 
+  while (gXULTypes[typeIndex]) {
+    if (0 == PL_strcmp(gXULTypes[typeIndex++], aContentType)) {
+      return CreateXULDocument(aCommand, 
                                aChannel, aLoadGroup,
                                aContentType, aContainer,
                                aExtraInfo, aDocListener, aDocViewer);
@@ -444,9 +444,8 @@ nsContentDLF::CreateDocument(const char* aCommand,
   return rv;
 }
 
-// ...note, this RDF document is a XUL document :-)
 nsresult
-nsContentDLF::CreateRDFDocument(const char* aCommand,
+nsContentDLF::CreateXULDocument(const char* aCommand,
                                 nsIChannel* aChannel,
                                 nsILoadGroup* aLoadGroup,
                                 const char* aContentType,
@@ -568,7 +567,7 @@ nsContentDLF::RegisterDocumentFactories(nsIComponentManager* aCompMgr,
     rv = RegisterTypes(catmgr, gXMLTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(catmgr, gRDFTypes);
+    rv = RegisterTypes(catmgr, gXULTypes);
     if (NS_FAILED(rv))
       break;
   } while (PR_FALSE);
@@ -597,7 +596,7 @@ nsContentDLF::UnregisterDocumentFactories(nsIComponentManager* aCompMgr,
     if (NS_FAILED(rv))
       break;
 #endif
-    rv = UnregisterTypes(catmgr, gRDFTypes);
+    rv = UnregisterTypes(catmgr, gXULTypes);
     if (NS_FAILED(rv))
       break;
   } while (PR_FALSE);
