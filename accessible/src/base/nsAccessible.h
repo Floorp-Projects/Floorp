@@ -115,11 +115,11 @@ struct nsRoleMapEntry
 };
 
 
-class nsDOMStringList : public nsIDOMDOMStringList
+class nsAccessibleDOMStringList : public nsIDOMDOMStringList
 {
 public:
-  nsDOMStringList();
-  virtual ~nsDOMStringList();
+  nsAccessibleDOMStringList();
+  virtual ~nsAccessibleDOMStringList();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMDOMSTRINGLIST

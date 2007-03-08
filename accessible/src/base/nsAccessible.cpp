@@ -102,20 +102,20 @@
 #endif
 
 /**
- * nsDOMStringList implementation
+ * nsAccessibleDOMStringList implementation
  */
-nsDOMStringList::nsDOMStringList()
+nsAccessibleDOMStringList::nsAccessibleDOMStringList()
 {
 }
 
-nsDOMStringList::~nsDOMStringList()
+nsAccessibleDOMStringList::~nsAccessibleDOMStringList()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsDOMStringList, nsIDOMDOMStringList)
+NS_IMPL_ISUPPORTS1(nsAccessibleDOMStringList, nsIDOMDOMStringList)
 
 NS_IMETHODIMP
-nsDOMStringList::Item(PRUint32 aIndex, nsAString& aResult)
+nsAccessibleDOMStringList::Item(PRUint32 aIndex, nsAString& aResult)
 {
   if (aIndex >= (PRUint32)mNames.Count()) {
     SetDOMStringToNull(aResult);
@@ -127,7 +127,7 @@ nsDOMStringList::Item(PRUint32 aIndex, nsAString& aResult)
 }
 
 NS_IMETHODIMP
-nsDOMStringList::GetLength(PRUint32 *aLength)
+nsAccessibleDOMStringList::GetLength(PRUint32 *aLength)
 {
   *aLength = (PRUint32)mNames.Count();
 
@@ -135,7 +135,7 @@ nsDOMStringList::GetLength(PRUint32 *aLength)
 }
 
 NS_IMETHODIMP
-nsDOMStringList::Contains(const nsAString& aString, PRBool *aResult)
+nsAccessibleDOMStringList::Contains(const nsAString& aString, PRBool *aResult)
 {
   *aResult = mNames.IndexOf(aString) > -1;
 
@@ -2256,7 +2256,7 @@ nsAccessible::GetDefaultKeyBinding(nsAString& aKeyBinding)
 NS_IMETHODIMP
 nsAccessible::GetKeyBindings(nsIDOMDOMStringList **aKeyBindings)
 {
-  nsDOMStringList *keyBindings = new nsDOMStringList();
+  nsAccessibleDOMStringList *keyBindings = new nsAccessibleDOMStringList();
   NS_ENSURE_TRUE(keyBindings, NS_ERROR_OUT_OF_MEMORY);
 
   // Currently we support only unique key binding on element.
