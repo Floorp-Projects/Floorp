@@ -83,7 +83,7 @@ PRMJ_LocalGMTDifference(void);
 
 /* Format a time value into a buffer. Same semantics as strftime() */
 extern size_t
-PRMJ_FormatTime(char *buf, int buflen, char *fmt, PRMJTime *tm);
+PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *tm);
 
 /* Get the DST offset for the local time passed in */
 extern JSInt64

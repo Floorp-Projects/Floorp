@@ -396,7 +396,7 @@ extern void
 js_MarkScopeProperty(JSContext *cx, JSScopeProperty *sprop);
 
 extern void
-js_SweepScopeProperties(JSRuntime *rt);
+js_SweepScopeProperties(JSContext *cx);
 
 extern JSBool
 js_InitPropertyTree(JSRuntime *rt);

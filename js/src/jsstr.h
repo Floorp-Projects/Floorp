@@ -147,8 +147,8 @@ js_MinimizeDependentStrings(JSString *str, int level, JSString **basep);
 extern jschar *
 js_GetDependentStringChars(JSString *str);
 
-extern jschar *
-js_GetStringChars(JSString *str);
+extern const jschar *
+js_GetStringChars(JSContext *cx, JSString *str);
 
 extern JSString *
 js_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
@@ -439,24 +439,27 @@ extern char *
 js_DeflateString(JSContext *cx, const jschar *chars, size_t length);
 
 /*
- * Inflate bytes to JS chars into a buffer.
- * 'chars' must be large enough for 'length' jschars.
- * The buffer is NOT null-terminated.
- * cx may be NULL, which means no errors are thrown.
- * The destination length needs to be initialized with the buffer size, takes
- * the number of chars moved.
+ * Inflate bytes to JS chars into a buffer. 'chars' must be large enough for
+ * 'length' jschars. The buffer is NOT null-terminated. The destination length
+ * must be be initialized with the buffer size and will contain on return the
+ * number of copied chars.
  */
 extern JSBool
 js_InflateStringToBuffer(JSContext* cx, const char *bytes, size_t length,
                          jschar *chars, size_t* charsLength);
 
 /*
- * Deflate JS chars to bytes into a buffer.
- * 'bytes' must be large enough for 'length chars.
- * The buffer is NOT null-terminated.
- * cx may be NULL, which means no errors are thrown.
- * The destination length needs to be initialized with the buffer size, takes
- * the number of bytes moved.
+ * Get number of bytes in the deflated sequence of characters.
+ */
+extern size_t
+js_GetDeflatedStringLength(JSContext *cx, const jschar *chars,
+                           size_t charsLength);
+
+/*
+ * Deflate JS chars to bytes into a buffer. 'bytes' must be large enough for
+ * 'length chars. The buffer is NOT null-terminated. The destination length
+ * must to be initialized with the buffer size and will contain on return the
+ * number of copied bytes.
  */
 extern JSBool
 js_DeflateStringToBuffer(JSContext* cx, const jschar *chars,
@@ -467,14 +470,14 @@ js_DeflateStringToBuffer(JSContext* cx, const jschar *chars,
  * successful association, false on out of memory.
  */
 extern JSBool
-js_SetStringBytes(JSRuntime *rt, JSString *str, char *bytes, size_t length);
+js_SetStringBytes(JSContext *cx, JSString *str, char *bytes, size_t length);
 
 /*
  * Find or create a deflated string cache entry for str that contains its
  * characters chopped from Unicode code points into bytes.
  */
-extern char *
-js_GetStringBytes(JSRuntime *rt, JSString *str);
+extern const char *
+js_GetStringBytes(JSContext *cx, JSString *str);
 
 /* Remove a deflated string cache entry associated with str if any. */
 extern void
@@ -490,6 +493,32 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
  */
 extern int
 js_OneUcs4ToUtf8Char(uint8 *utf8Buffer, uint32 ucs4Char);
+
+/*
+ * Write str into buffer escaping any non-printable or non-ASCII character.
+ * Guarantees that a NUL is at the end of the buffer. Returns the length of
+ * the written output, NOT including the NUL. If buffer is null, just returns
+ * the length of the output. If quote is not 0, it must be a single or double
+ * quote character that will quote the output.
+ *
+ * The function is only defined for debug builds.
+*/
+#define js_PutEscapedString(buffer, bufferSize, str, quote)                   \
+    js_PutEscapedStringImpl(buffer, bufferSize, NULL, str, quote)
+
+/*
+ * Write str into file escaping any non-printable or non-ASCII character.
+ * Returns the number of bytes written to file. If quote is not 0, it must
+ * be a single or double quote character that will quote the output.
+ *
+ * The function is only defined for debug builds.
+*/
+#define js_FileEscapedString(file, str, quote)                                \
+    (JS_ASSERT(file), js_PutEscapedStringImpl(NULL, 0, file, str, quote))
+
+extern size_t
+js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
+                        JSString *str, uint32 quote);
 
 JS_END_EXTERN_C
 

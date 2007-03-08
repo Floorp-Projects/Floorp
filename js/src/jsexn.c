@@ -722,7 +722,7 @@ FilenameToString(JSContext *cx, const char *filename)
 static const char *
 StringToFilename(JSContext *cx, JSString *str)
 {
-    return JS_GetStringBytes(str);
+    return js_GetStringBytes(cx, str);
 }
 
 static JSBool
@@ -1248,6 +1248,9 @@ js_ReportUncaughtException(JSContext *cx)
     if (!JS_GetPendingException(cx, &exn))
         return JS_FALSE;
 
+    memset(vp, 0, sizeof vp);
+    JS_PUSH_TEMP_ROOT(cx, JS_ARRAY_LENGTH(vp), vp, &tvr);
+
     /*
      * Because js_ValueToString below could error and an exception object
      * could become unrooted, we must root exnObject.  Later, if exnObject is
@@ -1259,8 +1262,6 @@ js_ReportUncaughtException(JSContext *cx)
     } else {
         exnObject = JSVAL_TO_OBJECT(exn);
         vp[0] = exn;
-        memset(vp + 1, 0, sizeof vp - sizeof vp[0]);
-        JS_PUSH_TEMP_ROOT(cx, JS_ARRAY_LENGTH(vp), vp, &tvr);
     }
 
     JS_ClearPendingException(cx);
@@ -1271,9 +1272,12 @@ js_ReportUncaughtException(JSContext *cx)
     if (!str) {
         bytes = "unknown (can't convert to string)";
     } else {
-        if (exnObject)
-            vp[1] = STRING_TO_JSVAL(str);
-        bytes = js_GetStringBytes(cx->runtime, str);
+        vp[1] = STRING_TO_JSVAL(str);
+        bytes = js_GetStringBytes(cx, str);
+        if (!bytes) {
+            ok = JS_FALSE;
+            goto out;
+        }
     }
     ok = JS_TRUE;
 
@@ -1286,8 +1290,13 @@ js_ReportUncaughtException(JSContext *cx)
         ok = JS_GetProperty(cx, exnObject, js_message_str, &vp[2]);
         if (!ok)
             goto out;
-        if (JSVAL_IS_STRING(vp[2]))
-            bytes = JS_GetStringBytes(JSVAL_TO_STRING(vp[2]));
+        if (JSVAL_IS_STRING(vp[2])) {
+            bytes = js_GetStringBytes(cx, JSVAL_TO_STRING(vp[2]));
+            if (!bytes) {
+                ok = JS_FALSE;
+                goto out;
+            }
+        }
 
         ok = JS_GetProperty(cx, exnObject, js_fileName_str, &vp[3]);
         if (!ok)
@@ -1298,6 +1307,10 @@ js_ReportUncaughtException(JSContext *cx)
             goto out;
         }
         filename = StringToFilename(cx, str);
+        if (!filename) {
+            ok = JS_FALSE;
+            goto out;
+        }
 
         ok = JS_GetProperty(cx, exnObject, js_lineNumber_str, &vp[4]);
         if (!ok)
@@ -1322,7 +1335,6 @@ js_ReportUncaughtException(JSContext *cx)
     }
 
 out:
-    if (exnObject)
-        JS_POP_TEMP_ROOT(cx, &tvr);
+    JS_POP_TEMP_ROOT(cx, &tvr);
     return ok;
 }

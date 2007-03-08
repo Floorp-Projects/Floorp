@@ -960,12 +960,15 @@ static void
 ReportReadOnlyScope(JSContext *cx, JSScope *scope)
 {
     JSString *str;
+    const char *bytes;
 
     str = js_ValueToString(cx, OBJECT_TO_JSVAL(scope->object));
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_READ_ONLY,
-                         str
-                         ? JS_GetStringBytes(str)
-                         : LOCKED_OBJ_GET_CLASS(scope->object)->name);
+    if (!str)
+        return;
+    bytes = js_GetStringBytes(cx, str);
+    if (!bytes)
+        return;
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_READ_ONLY, bytes);
 }
 
 JSScopeProperty *
@@ -1516,34 +1519,39 @@ js_MarkScopeProperty(JSContext *cx, JSScopeProperty *sprop)
     if (sprop->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
 #ifdef GC_MARK_DEBUG
         char buf[64];
-        char buf2[11];
-        const char *id;
+        size_t n;
 
         if (JSID_IS_ATOM(sprop->id)) {
             JSAtom *atom = JSID_TO_ATOM(sprop->id);
 
-            id = (atom && ATOM_IS_STRING(atom))
-                 ? JS_GetStringBytes(ATOM_TO_STRING(atom))
-                 : "unknown";
+            if (atom && ATOM_IS_STRING(atom)) {
+                n = js_PutEscapedString(buf, sizeof buf,
+                                        ATOM_TO_STRING(atom), 0);
+            } else {
+                static const char chars[] = "unknown";
+                JS_STATIC_ASSERT(sizeof(chars) <= sizeof buf);
+                memcpy(buf, chars, sizeof chars - 1);
+                n = sizeof chars - 1;
+            }
         } else if (JSID_IS_INT(sprop->id)) {
-            JS_snprintf(buf2, sizeof buf2, "%d", JSID_TO_INT(sprop->id));
-            id = buf2;
+            n = JS_snprintf(buf, sizeof buf, "%d", JSID_TO_INT(sprop->id));
         } else {
-            id = "<object>";
+            static const char chars[] = "<object>";
+            JS_STATIC_ASSERT(sizeof(chars) <= sizeof buf);
+            memcpy(buf, chars, sizeof chars - 1);
+            n = sizeof chars - 1;
         }
 #endif
 
         if (sprop->attrs & JSPROP_GETTER) {
 #ifdef GC_MARK_DEBUG
-            JS_snprintf(buf, sizeof buf, "%s %s",
-                        id, js_getter_str);
+            JS_snprintf(buf + n, sizeof buf - n, " %s", js_getter_str);
 #endif
             GC_MARK(cx, JSVAL_TO_GCTHING((jsval) sprop->getter), buf);
         }
         if (sprop->attrs & JSPROP_SETTER) {
 #ifdef GC_MARK_DEBUG
-            JS_snprintf(buf, sizeof buf, "%s %s",
-                        id, js_setter_str);
+            JS_snprintf(buf + n, sizeof buf - n, " %s", js_setter_str);
 #endif
             GC_MARK(cx, JSVAL_TO_GCTHING((jsval) sprop->setter), buf);
         }
@@ -1613,21 +1621,26 @@ js_MeterPropertyTree(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
 }
 
 static void
-DumpSubtree(JSScopeProperty *sprop, int level, FILE *fp)
+DumpSubtree(JSContext *cx, JSScopeProperty *sprop, int level, FILE *fp)
 {
-    char buf[10];
+    JSString *str;
     JSScopeProperty *kids, *kid;
     PropTreeKidsChunk *chunk;
     uintN i;
 
-    fprintf(fp, "%*sid %s g/s %p/%p slot %lu attrs %x flags %x shortid %d\n",
-            level, "",
-            JSID_IS_ATOM(sprop->id)
-            ? JS_GetStringBytes(ATOM_TO_STRING(JSID_TO_ATOM(sprop->id)))
-            : JSID_IS_OBJECT(sprop->id)
-            ? js_ValueToPrintableString(cx, OBJECT_JSID_TO_JSVAL(sprop->id))
-            : (JS_snprintf(buf, sizeof buf, "%ld", JSVAL_TO_INT(sprop->id)),
-               buf)
+    fprintf(fp, "%*sid ", level, "");
+    if (JSID_IS_ATOM(sprop->id)) {
+        str =  ATOM_TO_STRING(JSID_TO_ATOM(sprop->id));
+    } else if (JSID_IS_OBJECT(sprop->id)) {
+        str = js_ValueToString(cx, OBJECT_JSID_TO_JSVAL(sprop->id));
+    } else {
+        fprintf(fp, "%ld", JSVAL_TO_INT(sprop->id));
+        str = NULL;
+    }
+    if (str)
+        js_FileEscapedString(fp, str, 0);
+
+    fprintf(fp, " g/s %p/%p slot %lu attrs %x flags %x shortid %d\n",
             (void *) sprop->getter, (void *) sprop->setter,
             (unsigned long) sprop->slot, sprop->attrs, sprop->flags,
             sprop->shortid);
@@ -1642,12 +1655,12 @@ DumpSubtree(JSScopeProperty *sprop, int level, FILE *fp)
                     if (!kid)
                         break;
                     JS_ASSERT(kid->parent == sprop);
-                    DumpSubtree(kid, level, fp);
+                    DumpSubtree(cx, kid, level, fp);
                 }
             } while ((chunk = chunk->next) != NULL);
         } else {
             kid = kids;
-            DumpSubtree(kid, level, fp);
+            DumpSubtree(cx, kid, level, fp);
         }
     }
 }
@@ -1655,14 +1668,16 @@ DumpSubtree(JSScopeProperty *sprop, int level, FILE *fp)
 #endif /* DUMP_SCOPE_STATS */
 
 void
-js_SweepScopeProperties(JSRuntime *rt)
+js_SweepScopeProperties(JSContext *cx)
 {
+    JSRuntime *rt;
     JSArena **ap, *a;
     JSScopeProperty *limit, *sprop, *parent, *kids, *kid;
     uintN liveCount;
     PropTreeKidsChunk *chunk, *nextChunk, *freeChunk;
     uintN i;
 
+    rt = cx->runtime;
 #ifdef DUMP_SCOPE_STATS
     uint32 livePropCapacity = 0, totalLiveCount = 0;
     static FILE *logfp;
@@ -1845,7 +1860,7 @@ js_SweepScopeProperties(JSRuntime *rt)
             end = pte + JS_DHASH_TABLE_SIZE(&rt->propertyTreeHash);
             while (pte < end) {
                 if (pte->child)
-                    DumpSubtree(pte->child, 0, dumpfp);
+                    DumpSubtree(cx, pte->child, 0, dumpfp);
                 pte++;
             }
             fclose(dumpfp);

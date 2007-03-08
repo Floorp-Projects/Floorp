@@ -237,12 +237,19 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
             if (!str)
                 return JS_FALSE;
             *sp = STRING_TO_JSVAL(str);
-            if (c == 's')
-                *va_arg(ap, char **) = JS_GetStringBytes(str);
-            else if (c == 'W')
-                *va_arg(ap, jschar **) = JS_GetStringChars(str);
-            else
+            if (c == 's') {
+                const char *bytes = js_GetStringBytes(cx, str);
+                if (!bytes)
+                    return JS_FALSE;
+                *va_arg(ap, const char **) = bytes;
+            } else if (c == 'W') {
+                const jschar *chars = js_GetStringChars(cx, str);
+                if (!chars)
+                    return JS_FALSE;
+                *va_arg(ap, const jschar **) = chars;
+            } else {
                 *va_arg(ap, JSString **) = str;
+            }
             break;
           case 'o':
             if (!js_ValueToObject(cx, *sp, &obj))
@@ -4438,7 +4445,7 @@ JS_NewString(JSContext *cx, char *bytes, size_t nbytes)
     }
 
     /* Hand off bytes to the deflated string cache, if possible. */
-    if (!js_SetStringBytes(cx->runtime, str, bytes, nbytes))
+    if (!js_SetStringBytes(cx, str, bytes, nbytes))
         JS_free(cx, bytes);
     return str;
 }
@@ -4535,22 +4542,24 @@ JS_InternUCString(JSContext *cx, const jschar *s)
 JS_PUBLIC_API(char *)
 JS_GetStringBytes(JSString *str)
 {
-    JSRuntime *rt;
-    char *bytes;
+    const char *bytes;
 
-    rt = js_GetGCStringRuntime(str);
-    bytes = js_GetStringBytes(rt, str);
-    return bytes ? bytes : "";
+    bytes = js_GetStringBytes(NULL, str);
+    return (char *)(bytes ? bytes : "");
 }
 
 JS_PUBLIC_API(jschar *)
 JS_GetStringChars(JSString *str)
 {
+    size_t n, size;
+    jschar *s;
+
     /*
-     * API botch (again, shades of JS_GetStringBytes): we have no cx to pass
-     * to js_UndependString (called by js_GetStringChars) for out-of-memory
-     * error reports, so js_UndependString passes NULL and suppresses errors.
-     * If it fails to convert a dependent string into an independent one, our
+     * API botch (again, shades of JS_GetStringBytes): we have no cx to report
+     * out-of-memory when undepending strings, so we replace js_UndependString
+     * with explicit malloc call and ignore its errors.
+     *
+     * If we fail to convert a dependent string into an independent one, our
      * caller will not be guaranteed a \u0000 terminator as a backstop.  This
      * may break some clients who already misbehave on embedded NULs.
      *
@@ -4558,10 +4567,20 @@ JS_GetStringChars(JSString *str)
      * rate bugs in string concatenation, is worth this slight loss in API
      * compatibility.
      */
-    jschar *chars;
+    if (JSSTRING_IS_DEPENDENT(str)) {
+        n = JSSTRDEP_LENGTH(str);
+        size = (n + 1) * sizeof(jschar);
+        s = (jschar *) malloc(size);
+        if (s) {
+            js_strncpy(s, JSSTRDEP_CHARS(str), n);
+            s[n] = 0;
+            str->length = n;
+            str->chars = s;
+        }
+    }
 
-    chars = js_GetStringChars(str);
-    return chars ? chars : JSSTRING_CHARS(str);
+    *js_GetGCThingFlags(str) &= ~GCF_MUTABLE;
+    return JSSTRING_CHARS(str);
 }
 
 JS_PUBLIC_API(size_t)
@@ -4620,6 +4639,18 @@ JS_PUBLIC_API(JSBool)
 JS_EncodeCharacters(JSContext *cx, const jschar *src, size_t srclen, char *dst,
                     size_t *dstlenp)
 {
+    size_t n;
+
+    if (!dst) {
+        n = js_GetDeflatedStringLength(cx, src, srclen);
+        if (n == (size_t)-1) {
+            *dstlenp = 0;
+            return JS_FALSE;
+        }
+        *dstlenp = n;
+        return JS_TRUE;
+    }
+
     return js_DeflateStringToBuffer(cx, src, srclen, dst, dstlenp);
 }
 

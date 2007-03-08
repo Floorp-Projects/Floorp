@@ -240,7 +240,7 @@ struct JSCodeSpec {
 
 extern const JSCodeSpec js_CodeSpec[];
 extern uintN            js_NumCodeSpecs;
-extern const jschar     js_EscapeMap[];
+extern const char       js_EscapeMap[];
 
 /*
  * Return a GC'ed string containing the chars in str, with any non-printing

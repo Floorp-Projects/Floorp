@@ -1771,7 +1771,7 @@ date_format(JSContext *cx, jsdouble date, formatspec format, jsval *rval)
 
 static JSBool
 date_toLocaleHelper(JSContext *cx, JSObject *obj, uintN argc,
-                    jsval *argv, jsval *rval, char *format)
+                    jsval *argv, jsval *rval, const char *format)
 {
     char buf[100];
     JSString *str;
@@ -1866,16 +1866,20 @@ date_toLocaleFormat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                     jsval *rval)
 {
     JSString *fmt;
+    const char *fmtbytes;
 
     if (argc == 0)
         return date_toLocaleString(cx, obj, argc, argv, rval);
 
-    fmt = JS_ValueToString(cx, argv[0]);
+    fmt = js_ValueToString(cx, argv[0]);
     if (!fmt)
         return JS_FALSE;
+    argv[0] = STRING_TO_JSVAL(fmt);
+    fmtbytes = js_GetStringBytes(cx, fmt);
+    if (!fmtbytes)
+        return JS_FALSE;
 
-    return date_toLocaleHelper(cx, obj, argc, argv, rval,
-                               JS_GetStringBytes(fmt));
+    return date_toLocaleHelper(cx, obj, argc, argv, rval, fmtbytes);
 }
 
 static JSBool

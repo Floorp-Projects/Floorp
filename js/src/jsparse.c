@@ -5973,8 +5973,12 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             if ((tt == TOK_XMLSTAGO || tt == TOK_XMLPTAGC) &&
                 (i & 1) ^ (j & 1)) {
 #ifdef DEBUG_brendanXXX
-                printf("1: %d, %d => %s\n",
-                       i, j, accum ? JS_GetStringBytes(accum) : "NULL");
+                printf("1: %d, %d => ", i, j);
+                if (accum)
+                    js_FileEscapedString(stdout, accum, 0);
+                else
+                    fputs("NULL", stdout);
+                fputc('\n', stdout);
 #endif
             } else if (accum && pn1 != pn2) {
                 while (pn1->pn_next != pn2) {
@@ -6003,8 +6007,9 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             if (!str)
                 return JS_FALSE;
 #ifdef DEBUG_brendanXXX
-            printf("2: %d, %d => %s (%u)\n",
-                   i, j, JS_GetStringBytes(str), JSSTRING_LENGTH(str));
+            printf("2: %d, %d => ", i, j);
+            js_FileEscapedString(stdout, str, 0);
+            printf(" (%u)\n", JSSTRING_LENGTH(str));
 #endif
             ++j;
         }
