@@ -7,7 +7,7 @@ To install a fresh tinderbox:
 2) Change to the location that you wish to run the tinderbox from.
 	cd /builds/tinderbox
 
-3) Create links from the cvs directory to your build directory
+3) Create links from the cvs directory to your build directory.
 	ln -s /builds/cvs/mozilla/tools/tinderbox/*.pl .
 	
 4) Create your tinderbox config file
