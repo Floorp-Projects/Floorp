@@ -67,7 +67,7 @@ LOCAL_INCLUDES	= \
 
 LIBS		= \
 		../src/$(LIB_PREFIX)metrics_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)bz2.$(LIB_SUFFIX) \
+		$(DEPTH)/modules/libbz2/src/$(LIB_PREFIX)bz2.$(LIB_SUFFIX) \
 		$(XPCOM_GLUE_LDOPTS) \
 		$(NSPR_LIBS) \
 		$(NULL)

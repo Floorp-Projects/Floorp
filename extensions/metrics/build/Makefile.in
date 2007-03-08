@@ -61,7 +61,7 @@ CPPSRCS		= \
 
 SHARED_LIBRARY_LIBS = \
 		../src/$(LIB_PREFIX)metrics_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)bz2.$(LIB_SUFFIX) \
+		$(DEPTH)/modules/libbz2/src/$(LIB_PREFIX)bz2.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = $(XPCOM_GLUE_LDOPTS) \

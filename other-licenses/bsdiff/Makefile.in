@@ -47,7 +47,7 @@ include $(DEPTH)/config/autoconf.mk
 # build system and is not intended to be included in Mozilla distributions.
 HOST_PROGRAM = mbsdiff$(BIN_SUFFIX)
 HOST_CSRCS = bsdiff.c
-HOST_LIBS += $(DIST)/lib/$(LIB_PREFIX)bz2.$(LIB_SUFFIX)
+HOST_LIBS += $(DEPTH)/modules/libbz2/src/$(LIB_PREFIX)bz2.$(LIB_SUFFIX)
 
 ifeq (WINNT,$(OS_ARCH))
 HOST_EXTRA_LIBS += $(call EXPAND_LIBNAME,Ws2_32)
