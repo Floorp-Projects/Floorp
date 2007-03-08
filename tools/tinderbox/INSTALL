@@ -13,7 +13,7 @@ To install a fresh tinderbox:
 4) Create your tinderbox config file.
 	perl ./build-seamonkey.pl --example-config > tinder-config.pl
 
-5) Create your mozconfig build file in the current dir
+5) Create your mozconfig build file in the current dir.
 	mozilla -remote http://webtools.mozilla.org/build/config.cgi
 
 6) Customize your tinderbox configuration
