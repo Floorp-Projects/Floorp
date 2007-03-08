@@ -186,8 +186,8 @@ var gConnectionsDialog = {
 #else
     Components.classes["@mozilla.org/network/protocol-proxy-service;1"].
         getService().reloadPAC();
-  },
 #endif
+  },
   
   doAutoconfigURLFixup: function ()
   {
