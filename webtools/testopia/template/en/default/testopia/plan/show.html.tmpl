@@ -134,14 +134,16 @@
       <td>[% plan.plan_type FILTER html %]</td>
     </tr>
     <tr class="bz_row_data">
-      <td colspan="3"><div align="right">
+      <td colspan="3">
+      <span style="float:left">
       [% IF plan.canedit %]
         <a href="#attributes">Edit Plan Attributes</a>
       [% END %]
       [% IF plan.canadmin %]
         &nbsp;|&nbsp;<a href="tr_plan_access.cgi?plan_id=[% plan.id FILTER none %]">Edit Access Controls</a>
       [% END %]
-        
+      </span>
+      <div align="right">
         <input type="hidden" name="plan_id" value="[% plan.id FILTER none %]">
       [% IF plan.canedit %]
         <input type="submit" name="action" value="Commit" style="visibility:hidden;">

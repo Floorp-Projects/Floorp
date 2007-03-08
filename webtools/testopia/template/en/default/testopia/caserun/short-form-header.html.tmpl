@@ -56,7 +56,7 @@
       [% caserun.environment.name FILTER html %]
     [% IF caserun.canedit %]
           <input dojoType="combobox" 
-                 dataUrl="tr_quicksearch.cgi?action=getenv&product_id=[% caserun.run.plan.product_id FILTER none %]&search=%{searchString}" 
+                 dataUrl="tr_quicksearch.cgi?action=getenv&run_id=[% caserun.run.id FILTER none %]&search=%{searchString}" 
                  mode="remote"
                  autoComplete="false"
                  id="env_[% index %]"

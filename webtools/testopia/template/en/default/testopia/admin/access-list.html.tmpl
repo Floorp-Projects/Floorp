@@ -21,20 +21,33 @@
 <link href="testopia/css/default.css" rel="stylesheet" type="text/css" />
 [% PROCESS global/header.html.tmpl %]
 
+<script type="text/javascript">
+  djConfig = {
+    parseWidgets: false,
+    searchIds: ["adduser"]
+  };
+</script>
+<script src="testopia/dojo/dojo.js" type="text/javascript"></script>
+<script type="text/javascript">
+  dojo.require("dojo.widget.Select");
+</script>
+  
 <h1>Access Control for Plan [% plan.id FILTER none %] - [% plan.name FILTER html %]</h1>
 <p>
-This page allows plan managers to permit access to a test plan. By default, members of the
-<b>Testers</b> group in Bugzilla will have read and write access. Beyond this, users login names 
-(email addresses) that match a given regular expression will be granted the level of permissions
-specified. Lastly, individuals can be granted additional permissions by adding them
-explicitly. In other words, you cannot remove permissions from a user explicitily that has those rights 
-by virtue of membership in the Testers group or that matches the regular expression, although you can add
-additional rights.
+This page allows plan managers to permit access to a test plan. By
+default, members of the <b>Testers</b> group in Bugzilla have read
+and write access. Beyond this, login names (email addresses) that
+match a given regular expression are granted the level of permissions
+specified. Lastly, individuals can be granted additional permissions
+by adding them explicitly. (Note: you cannot remove permissions from a
+user that has those rights by virtue of membership in the Testers group
+or that matches the regular expression, although you can add additional
+rights to that user.)
 </p>
 <p>
-Delete and Admin rights are always handled by the access control list, unless the 
-<b>testopia-allow-group-member-deletes</b> parameter is set to <i>on</i>. Doing so will grant 
-delete rights to the <b>Testers</b> group.
+Delete and Admin rights are always handled by the access control list,
+unless the <b>testopia-allow-group-member-deletes</b> parameter is set to
+<i>on</i>. Doing so will grant delete rights to the <b>Testers</b> group.
 </p>
 
 [% PROCESS testopia/messages.html.tmpl %]
@@ -78,7 +91,16 @@ delete rights to the <b>Testers</b> group.
   </tr>
   [% END %]
   <tr style="background-color:#D8E5EE">
-    <td style="padding: 3px;"><input style="width:200px;" name="adduser"></td>
+    <td style="padding: 3px;">
+          <input dojoType="Select" 
+                 dataUrl="tr_quicksearch.cgi?action=getuser&search=%{searchString}" 
+                 mode="remote"
+                 autoComplete="true"
+                 id="adduser"
+                 name="adduser"
+                 maxListLength="10" 
+                 style="width:200px; height:15px">
+    </td>
     <td align="center"><input type="checkbox" name="nr" value="1"></td>
     <td align="center"><input type="checkbox" name="nw" value="1"></td>
     <td align="center"><input type="checkbox" name="nd" value="1"></td>

@@ -127,8 +127,6 @@
         <div class="cc_i"><input type="button" value="Attach Bug" id="sk[% index %]" [% 'disabled="true"' UNLESS caserun.canedit %] onclick="attch([% index %], [% caserun.id FILTER none %], document.getElementById('mbg[% index %]').value);"/></div>
   [%##### Assignee #####%]
         <div class="cc_i"><input value="[% user.login FILTER html %]" id="assignee_[% index %]" /><input type="button" value="Assign" [% 'disabled="true"' UNLESS caserun.canedit %] onclick="chNote([% index %], [% caserun.id FILTER none %], document.getElementById('notes[% index %]').value); chOwn([% index %], [% caserun.id FILTER none %], document.getElementById('assignee_[% index %]').value)">
-        <a href="javascript:userLookup('document.Create.assigned_to', document.Create.assigned_to.value);">
-        <img src="images/users.png" border="0" alt="Lookup User" title="Lookup User"></a>
       </div>
       <div style="float:right; margin-right:20px;">
         <a href="tr_show_caserun.cgi?caserun_id=[% caserun.id FILTER none %]">Classic interface...</a>

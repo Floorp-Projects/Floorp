@@ -38,7 +38,7 @@
 <script type="text/javascript">
   djConfig = {
     parseWidgets: false,
-    searchIds: ["tcaction", "tceffect", "tcsetup", "tcbreakdown"]
+    searchIds: ["tester","tcaction", "tceffect", "tcsetup", "tcbreakdown"]
   };
 </script>
 <script src="testopia/dojo/dojo.js" type="text/javascript"></script>
@@ -71,7 +71,15 @@
   
   function chgTester(obj) {
     [% IF Param("useqacontact") AND action == 'Add' %]
-      document.getElementById('tester').value = qaContacts[obj.selectedIndex];
+      try{
+        document.getElementById('tester').value = qaContacts[obj.selectedIndex];
+      }
+      catch(e){
+        dojo.widget.manager.getWidgetById('tester').setValue(qaContacts[obj.selectedIndex]);
+        dojo.widget.manager.getWidgetById('tester').setLabel(qaContacts[obj.selectedIndex]);
+      }
+      
+      
     [% ELSE %]
       return;
     [% END %]

@@ -30,6 +30,7 @@ use Bugzilla::Util;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::Search;
 use Bugzilla::Testopia::Table;
+use Bugzilla::Testopia::TestRun;
 
 use JSON;
 
@@ -181,11 +182,17 @@ else{
 
 # Environment Lookup
     if ($action eq 'getenv'){
+        Bugzilla->batch(1);
         my $search = $cgi->param('search');
-        my $product_id = $cgi->param('product_id');
+        my $run_id = $cgi->param('run_id');
+        eval {
+            detaint_natural($run_id);
+            trick_taint($search);
+            validate_test_id($run_id, 'run');
+        };
+        exit if $@;
         
-        detaint_natural($product_id);
-        trick_taint($search);
+        my $run = Bugzilla::Testopia::TestRun->new($run_id);
         $search = "%$search%";
         my $dbh = Bugzilla->dbh;
         
@@ -193,13 +200,19 @@ else{
         # JSON will convert this to an array of arrays which Dojo will interpret
         # as a select list in the ComboBox widget.
         my $ref;
-        if ($product_id){
+            
+        if ($run_id){
             $ref = $dbh->selectall_arrayref(
-                "SELECT name, environment_id 
+                "SELECT test_environments.name AS name, test_environments.environment_id 
                    FROM test_environments 
                   WHERE name like ? AND product_id = ?
+           UNION SELECT test_environments.name AS name, test_environments.environment_id
+                   FROM test_case_runs
+                  INNER JOIN test_environments ON test_case_runs.environment_id = test_environments.environment_id
+                  WHERE name like ? AND test_case_runs.run_id = ?
                   ORDER BY name",
-                  undef, ($search, $product_id));
+                  undef, ($search, $run->plan->product_id, 
+                          $search, $run_id));
         }
         else{
             $ref = $dbh->selectall_arrayref(
@@ -212,7 +225,44 @@ else{
         }
         print objToJson($ref);  
     }
+    elsif ($action eq 'getuser'){
+        my $search = $cgi->param('search');
+        $search = "%$search%";
+        trick_taint($search);
+        my $dbh = Bugzilla->dbh;
 
+        my $query  = "SELECT DISTINCT login_name, realname,";
+        if (&::Param('usevisibilitygroups')) {
+            $query .= " COUNT(group_id) ";
+        } else {
+            $query .= " 1 ";
+        }
+        $query     .= "FROM profiles ";
+        if (&::Param('usevisibilitygroups')) {
+            $query .= "LEFT JOIN user_group_map " .
+                      "ON user_group_map.user_id = userid AND isbless = 0 " .
+                      "AND group_id IN(" .
+                      join(', ', (-1, @{Bugzilla->user->visible_groups_inherited})) . ")";
+        }
+        $query    .= " WHERE disabledtext = '' AND (login_name LIKE ? OR realname LIKE ?) ";
+        $query    .= $dbh->sql_group_by('userid', 'login_name, realname');
+        $query    .= " ORDER BY login_name LIMIT 20";
+    
+        my $sth = $dbh->prepare($query);
+        $sth->execute($search,$search);
+
+        my @userlist;
+        while (my($login, $name, $visible) = $sth->fetchrow_array) {
+            if ($visible){
+                push @userlist, [
+                    $name ? "$name <$login>" : $login, $login
+                ];
+            }
+        }
+        
+        print objToJson(\@userlist);
+ 
+    }
 # Tag lookup
     elsif ($action eq 'gettag'){
         my $search = $cgi->param('search');

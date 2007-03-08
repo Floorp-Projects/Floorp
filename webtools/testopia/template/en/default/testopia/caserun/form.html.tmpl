@@ -23,17 +23,20 @@
   # ...
   #%]
   
-[% IF NOT dotweak %]
-  [% build_list = caserun.run.plan.product.builds(1) %]
-  [% default_build = caserun.build.name %]
   <script type="text/javascript">
+    dojo.require("dojo.widget.Select");
     dojo.addOnLoad(
       function() {
-        dojo.widget.manager.getWidgetById('caserun_env').setValue('[% caserun.environment.id FILTER none %]');
-        dojo.widget.manager.getWidgetById('caserun_env').setLabel('[% caserun.environment.name FILTER none %]');
+        dojo.widget.manager.getWidgetById('caserun_env').setValue('[% dotweak ? '' : caserun.environment.id FILTER none %]');
+        dojo.widget.manager.getWidgetById('caserun_env').setLabel('[% dotweak ? '' : caserun.environment.name FILTER none %]');
+        dojo.widget.manager.getWidgetById('assignee').setValue('[% dotweak ? '' : caserun.assignee.login FILTER none %]');
+        dojo.widget.manager.getWidgetById('assignee').setLabel('[% dotweak ? '' : caserun.assignee.login FILTER none %]');
       }
     );
   </script>
+[% IF NOT run %]
+  [% build_list = caserun.run.plan.product.builds(1) %]
+  [% default_build = caserun.build.name %]
 [% ELSE %]
   [% default_build = "--Do Not Change--" %]
 [% END %]
@@ -95,7 +98,7 @@
     </td>
     <th align="right">Environment</th>
     <td><input dojoType="select" 
-               dataUrl="tr_quicksearch.cgi?action=getenv&product_id=[% caserun.run.plan.product_id FILTER none %]&search=%{searchString}" 
+               dataUrl="tr_quicksearch.cgi?action=getenv&run_id=[% caserun.run.id FILTER none %]&search=%{searchString}" 
                mode="remote"
                autoComplete="false"
                id="caserun_env"
@@ -115,7 +118,16 @@
 [% END %]
   <tr>
     <th align="right">Assignee</th>
-    <td><input name="assignee" value="[% dotweak ? "--Do Not Change--" : caserun.assignee.login FILTER html %]"></td>
+    <td><input dojoType="Select" 
+                 dataUrl="tr_quicksearch.cgi?action=getuser&search=%{searchString}" 
+                 mode="remote"
+                 autoComplete="true"
+                 id="assignee"
+                 name="assignee"
+                 maxListLength="10" 
+                 style="width:200px; height:15px"
+                 value="[% dotweak ? '' : caserun.assignee.login FILTER html %]" >
+    </td>
     <th align="right">Attach [% terms.Bugs %]</th>
     <td><input name="bugs">&nbsp;<a href="enter_bug.cgi?product=[% caserun.run.plan.product.name FILTER url_quote %]&caserun_id=[% caserun.id FILTER none %]" target="_blank"><img src="testopia/img/snew.gif" alt="Log a New Bug" title="Log a New Bug" style="vertical-align:text-bottom;" /></a>
         <br><input type="checkbox" value="1" name="update_bug" id="update_bug">Update [% terms.bug %] status </td>

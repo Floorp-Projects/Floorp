@@ -22,11 +22,16 @@
   # ...
   #%]
   
+[% title = "Bug Impact Report for Plan $plan.id - $plan.name" %]
 [% PROCESS global/header.html.tmpl %]
 
+<p>This report details the bugs detected in this test plan and the number of test cases that each bug is attached to.
+Those bugs impacting the most test cases appear at the top. 
+Click the link under Test Cases to be taken to a list of those cases.
+</p>
 <table>
-  <tr>
-    <th>Test Cases</th>
+  <tr class="bz_row_header">
+    <th># of Test Cases</th>
     <th>Bug</th>
   </tr>
 [% FOREACH row = bug_table %]
@@ -36,5 +41,7 @@
   </tr>
 [% END %]
 </table>
-
+<p>
+<a href="tr_show_plan.cgi?plan_id=[% plan.id FILTER none %]">Back</a> to plan.
+</p>
 [% PROCESS global/footer.html.tmpl %]

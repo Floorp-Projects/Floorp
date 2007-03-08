@@ -125,7 +125,7 @@ if ($action eq 'Commit'){
         $caserun = $caserun->switch($build,$env);
         
         my $status   = $cgi->param('status') == -1 ? $caserun->status_id : $cgi->param('status');
-        my $assignee = $cgi->param('assignee') eq '--Do Not Change--' ? $caserun->assignee->id : login_to_id(trim($cgi->param('assignee')));       
+        my $assignee = $cgi->param('assignee') eq '' ? $caserun->assignee->id : login_to_id(trim($cgi->param('assignee')));       
         unless ($assignee){
            print $cgi->multipart_end if $serverpush;
            ThrowUserError("invalid_username", { name => $cgi->param('assignee') });

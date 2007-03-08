@@ -29,6 +29,7 @@
 <script type="text/javascript">
     dojo.require("dojo.widget.Editor2");  
     dojo.require("dojo.widget.Editor2Plugin.DialogCommands");  
+    dojo.require("dojo.widget.ComboBox");
     setupDM     = new DocumentManager("tcsetup",     "[% action FILTER html %]", ["tcsetupHeading"]);
     breakdownDM = new DocumentManager("tcbreakdown", "[% action FILTER html %]", ["tcbreakdownHeading"]);
     actionDM    = new DocumentManager("tcaction",    "[% action FILTER html %]", ["tcactionHeading"]);
@@ -42,6 +43,14 @@
         document.getElementById('addruns').disabled = true;
       }
     }
+    
+    
+    dojo.addOnLoad(
+      function() {
+       dojo.widget.manager.getWidgetById('tester').setValue('[% case.default_tester.login FILTER none %]');
+       dojo.widget.manager.getWidgetById('tester').setLabel('[% case.default_tester.login FILTER none %]');
+      }
+    );
 </script>
 [% END %]
 <a name="attributes"></a>
@@ -55,7 +64,17 @@
     </tr>
     <tr>
       <th align="right">Default Tester</td>
-      <td><input name="tester" id="tester" size="30" value="[% case.default_tester.login FILTER html %]" /></td>
+      <td><input dojoType="Select" 
+                 dataUrl="tr_quicksearch.cgi?action=getuser&search=%{searchString}" 
+                 mode="remote"
+                 autoComplete="true"
+                 id="tester"
+                 name="tester"
+                 maxListLength="10" 
+                 style="width:200px; height:15px"
+                 value="[% case.default_tester.login FILTER html %]" >
+      
+      </td>
       <th align="right">Add Tags</td>
       <td><input name="addtags" size="30" /></td>
     </tr>

@@ -25,6 +25,8 @@
       function() {
        dojo.widget.manager.getWidgetById('environment').setValue('[% run.environment.id FILTER none %]');
        dojo.widget.manager.getWidgetById('environment').setLabel('[% run.environment.name FILTER html %]');
+       dojo.widget.manager.getWidgetById('manager').setValue('[% run.manager.login ? run.manager.login : user.login FILTER html %]');
+       dojo.widget.manager.getWidgetById('manager').setLabel('[% run.manager.login ? run.manager.login : user.login FILTER html %]');
       }
     );
 </script>
@@ -53,7 +55,16 @@
 
     <tr>
       <th align="right">Manager</th>
-      <td><input name="manager" value="[% run.manager.login ? run.manager.login : user.login FILTER html %]"></td>
+      <td><input dojoType="select" 
+                 dataUrl="tr_quicksearch.cgi?action=getuser&search=%{searchString}" 
+                 mode="remote"
+                 autoComplete="false"
+                 id="manager"
+                 name="manager"
+                 maxListLength="10" 
+                 style="width:200px; height:15px"
+                 value="[% run.manager.login FILTER none %]" >
+                 <input name="manager" value="[% run.manager.login ? run.manager.login : user.login FILTER html %]"></td>
       <th align="right"><a href="tr_builds.cgi?product_id=[% run.plan.product_id FILTER none %]">Build</a></td>
       <td>
         [% PROCESS select sel = { name => "build",
@@ -80,7 +91,7 @@
       <th align="right" valign="top"><a href="tr_list_environments.cgi?product_id=[% run.plan.product_id FILTER none %]">Environment</a></th>
       <td valign="top">
           <input dojoType="select" 
-                 dataUrl="tr_quicksearch.cgi?action=getenv&product_id=[% run.plan.product_id FILTER none %]&search=%{searchString}" 
+                 dataUrl="tr_quicksearch.cgi?action=getenv&run_id=[% run.id FILTER none %]&search=%{searchString}" 
                  mode="remote"
                  autoComplete="false"
                  id="environment"

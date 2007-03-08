@@ -33,9 +33,12 @@
 [%# Page Header #%]
 [%############################################################################%]
 
-[% PROCESS global/header.html.tmpl 
-  title = "Delete Test Case: $case.id - $case.summary" 
-%] 
+[% IF deleted %]
+  [% title = "Case Deleted" %]
+[% ELSE %]
+  [% title = "Delete Test Case: $case.id - $case.summary" %]
+[% END %]
+[% PROCESS global/header.html.tmpl %] 
 
 [% IF NOT deleted %]
 You are about to permanently delete this test case with all its history. 

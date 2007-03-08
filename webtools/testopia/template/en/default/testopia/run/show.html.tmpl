@@ -45,7 +45,7 @@
 <script type="text/javascript">
   djConfig = {
     parseWidgets: false,
-    searchIds: ["percent_bar","environment","tags","newtag","tagTable","tip_[% run.id FILTER none %]","caseruns_table",[% FOREACH cr = table.list %]"env_[% loop.count %]","head_caserun_[% loop.count %]"[%',' UNLESS loop.last %][% END %]]
+    searchIds: ["manager","percent_bar","environment","tags","newtag","tagTable","tip_[% run.id FILTER none %]","caseruns_table",[% FOREACH cr = table.list %]"env_[% loop.count %]","head_caserun_[% loop.count %]"[%',' UNLESS loop.last %][% END %]]
   };
 </script>
 <script src="testopia/js/util.js" type="text/javascript"></script>

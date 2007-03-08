@@ -214,13 +214,11 @@ sub display {
         detaint_natural($id);
         push @tags, Bugzilla::Testopia::TestTag->new($id);
     }
-    my @tagnames = split(/[\s,]/, $cgi->param('tag'));
-    foreach my $name (@tagnames){
-        $name = trim($name);
-        trick_taint($name);
-        push @tags, Bugzilla::Testopia::TestTag->new($name);
-    }
 
+    my $name = trim($cgi->param('tag'));
+    trick_taint($name);
+    push @tags, Bugzilla::Testopia::TestTag->new($name);
+    
     $vars->{'tags'} = \@tags;
     $template->process("testopia/tag/show.html.tmpl", $vars)
         || print $template->error();

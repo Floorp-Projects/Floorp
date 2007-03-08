@@ -46,7 +46,6 @@
   <tr>
   <td valign="top">
 [% FOREACH tag = item.tags %]
-
   <a href="tr_tags.cgi?tag=[% tag.name FILTER none %]"><span class="tag">[% tag.name FILTER html %]</span></a>
 [% IF item.canedit %]
   <a onclick="removeTag([% tag.id FILTER none %],[% item.id FILTER none %],'[% type FILTER none %]')" style="decoration:none; cursor:pointer;">
