@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Stefan Sitter <ssitter@googlemail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -36,7 +37,13 @@
 
 // This file contains all of the default preference values for Lightning
 
+// general settings
+pref("calendar.date.format", 0);
+pref("calendar.event.defaultlength", 60);
+
 // alarm settings
+pref("calendar.alarms.show", true);
+pref("calendar.alarms.showmissed", true);
 pref("calendar.alarms.playsound", false);
 pref("calendar.alarms.soundURL", "");
 pref("calendar.alarms.defaultsnoozelength", 5);
@@ -59,6 +66,8 @@ pref("calendar.autorefresh.timeout", 30);
 // 0=Sunday, 1=Monday, 2=Tuesday, etc.  One day we might want to move this to
 // a locale specific file.
 pref("calendar.week.start", 0);
+pref("calendar.weeks.inview", 4);
+pref("calendar.previousweeks.inview", 0);
 
 // Default days off
 pref("calendar.week.d0sundaysoff", true);
@@ -71,3 +80,8 @@ pref("calendar.week.d6saturdaysoff", true);
 
 // Do not set this!  If it's not there, then we guess the system timezone
 //pref("calendar.timezone.local", "");
+
+// categories settings
+// XXX One day we might want to move this to a locale specific file
+//     and include a list of locale specific default categories
+pref("calendar.categories.names", "");

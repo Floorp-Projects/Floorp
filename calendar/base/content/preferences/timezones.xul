@@ -22,6 +22,7 @@
    - Contributor(s):
    -   Stuart Parmenter <stuart.parmenter@oracle.com>
    -   Matthew Willis <lilmatt@mozilla.com>
+   -   Stefan Sitter <ssitter@googlemail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,7 +52,7 @@
 <overlay id="TimezonesPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-    <prefpane id="paneTimezones" onpaneload="gTimezonesPane.init();">
+    <vbox id="calPreferencesBoxTimezones">
         <script type="application/x-javascript"
                 src="chrome://calendar/content/preferences/timezones.js"/>
 
@@ -833,5 +834,5 @@
 
         <separator/>
 
-    </prefpane>
+    </vbox>
 </overlay>

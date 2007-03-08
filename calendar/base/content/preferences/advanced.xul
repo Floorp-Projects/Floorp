@@ -22,6 +22,7 @@
    - Contributor(s):
    -   Matthew Willis <lilmatt@mozilla.com>
    -   Jeff Walden <jwalden+code@mit.edu>
+   -   Stefan Sitter <ssitter@googlemail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -53,7 +54,7 @@
 <overlay id="AdvancedPaneOverlay"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-    <prefpane id="paneAdvanced" onpaneload="gAdvancedPane.init();">
+    <vbox id="calPreferencesBoxAdvanced">
         <script type="application/x-javascript"
                 src="chrome://calendar/content/preferences/advanced.js"/>
 
@@ -214,5 +215,5 @@
 
         <separator/>
 
-    </prefpane>
+    </vbox>
 </overlay>

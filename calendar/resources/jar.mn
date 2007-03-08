@@ -38,18 +38,9 @@ calendar.jar:
     content/calendar/datetimepickers/minimonth.xml (content/datetimepickers/minimonth.xml)
     content/calendar/preferences/advanced.js      (/calendar/base/content/preferences/advanced.js)
     content/calendar/preferences/advanced.xul     (/calendar/base/content/preferences/advanced.xul)
-    content/calendar/preferences/alarms.xul       (/calendar/base/content/preferences/alarms.xul)
-    content/calendar/preferences/alarms.js        (/calendar/base/content/preferences/alarms.js)
-    content/calendar/preferences/categories.xul   (/calendar/base/content/preferences/categories.xul)
-    content/calendar/preferences/categories.js    (/calendar/base/content/preferences/categories.js)
 *   content/calendar/preferences/connection.xul   (/calendar/base/content/preferences/connection.xul)
 *   content/calendar/preferences/connection.js    (/calendar/base/content/preferences/connection.js)
-    content/calendar/preferences/general.js       (/calendar/base/content/preferences/general.js)
-    content/calendar/preferences/general.xul      (/calendar/base/content/preferences/general.xul)
 *   content/calendar/preferences/preferences.xul  (/calendar/base/content/preferences/preferences.xul)
-    content/calendar/preferences/timezones.js     (/calendar/base/content/preferences/timezones.js)
-    content/calendar/preferences/timezones.xul    (/calendar/base/content/preferences/timezones.xul)
-    content/calendar/preferences/views.xul        (/calendar/base/content/preferences/views.xul)
 % skin calendar classic/1.0 %skin/classic/calendar/
 #ifdef XP_MACOSX
     skin/classic/calendar/preferences/Options.png  (/calendar/base/themes/pinstripe/preferences/Options.png)

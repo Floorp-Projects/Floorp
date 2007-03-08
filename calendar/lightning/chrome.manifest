@@ -3,6 +3,11 @@ locale  lightning en-US jar:chrome/lightning-en-US.jar!/locale/en-US/lightning/
 overlay chrome://messenger/content/messenger.xul chrome://lightning/content/lightning-migration.xul
 overlay chrome://messenger/content/messenger.xul chrome://lightning/content/messenger-overlay-sidebar.xul
 overlay chrome://messenger/content/preferences/preferences.xul chrome://lightning/content/messenger-overlay-preferences.xul
+overlay chrome://messenger/content/preferences/preferences.xul chrome://calendar/content/preferences/alarms.xul
+overlay chrome://messenger/content/preferences/preferences.xul chrome://calendar/content/preferences/categories.xul
+overlay chrome://messenger/content/preferences/preferences.xul chrome://calendar/content/preferences/general.xul
+overlay chrome://messenger/content/preferences/preferences.xul chrome://calendar/content/preferences/timezones.xul
+overlay chrome://messenger/content/preferences/preferences.xul chrome://calendar/content/preferences/views.xul
 overlay chrome://messenger/content/messenger.xul chrome://lightning/content/messenger-overlay-toolbar.xul
 overlay chrome://lightning/content/messenger-overlay-sidebar.xul chrome://lightning/content/agenda-tree-overlay.xul
 overlay chrome://lightning/content/messenger-overlay-sidebar.xul chrome://lightning/content/todo-list-overlay.xul

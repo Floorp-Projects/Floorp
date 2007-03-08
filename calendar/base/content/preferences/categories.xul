@@ -22,6 +22,7 @@
    - Contributor(s):
    -   Matthew Willis <mattwillis@gmail.com>
    -   Cédric Corazza <cedric.corazza@wanadoo.fr>
+   -   Stefan Sitter <ssitter@googlemail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,8 +48,7 @@
 <overlay id="CategoriesPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-    <prefpane id="paneCategories"
-              onpaneload="gCategoriesPane.init();">
+    <vbox id="calPreferencesBoxCategories">
         <script type="application/x-javascript"
                 src="chrome://calendar/content/preferences/categories.js"/>
 
@@ -98,5 +98,5 @@
 
         <separator/>
 
-    </prefpane>
+    </vbox>
 </overlay>

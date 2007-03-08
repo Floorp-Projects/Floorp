@@ -22,6 +22,7 @@
    - Contributor(s):
    -  Stuart Parmenter   <stuart.parmenter@oracle.com>
    -  Simon Paquet       <bugzilla@babylonsounds.com>
+   -  Stefan Sitter <ssitter@googlemail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,15 +38,57 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE overlay SYSTEM "chrome://lightning/locale/lightning.dtd" >
+<!DOCTYPE overlay [
+    <!ENTITY % lightningDTD SYSTEM "chrome://lightning/locale/lightning.dtd">
+    <!ENTITY % preferencesDTD SYSTEM "chrome://calendar/locale/preferences/preferences.dtd">
+    %lightningDTD;
+    %preferencesDTD;
+]>
 
 <?xml-stylesheet href="chrome://lightning/skin/lightning.css"?>
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<prefwindow id="MailPreferences">
-  <prefpane id="paneLightning" label="&lightning.taskLabel;"
-            src="chrome://lightning/content/lightning-preferences.xul"/>
-</prefwindow>
+    <prefwindow id="MailPreferences">
+        <prefpane id="paneLightning" 
+                  label="&lightning.taskLabel;"
+                  onpaneload="gGeneralPane.init(); gAlarmsPane.init(); gCategoriesPane.init(); gTimezonesPane.init();">
+            <tabbox id="calPreferencesTabbox" flex="1" onselect="">
+                <tabs>
+                    <tab id="calPreferencesTabGeneral"
+                         label="&paneGeneral.title;"/>
+                    <tab id="calPreferencesTabAlarms"
+                         label="&paneAlarms.title;"/>
+                    <tab id="calPreferencesTabCategories"
+                         label="&paneCategories.title;"/>
+                    <tab id="calPreferencesTabViews"
+                         label="&paneViews.title;"/>
+                    <tab id="calPreferencesTabTimezones"
+                         label="&paneTimezones.title;"/>
+                </tabs>
+                <tabpanels flex="1">
+                    <tabpanel orient="vertical">
+                        <vbox id="calPreferencesBoxGeneral"/>
+                    </tabpanel>
+                    <tabpanel orient="vertical">
+                        <vbox id="calPreferencesBoxAlarms"/>
+                    </tabpanel>
+                    <tabpanel orient="vertical">
+                        <vbox id="calPreferencesBoxCategories"/>
+                    </tabpanel>
+                    <tabpanel orient="vertical">
+                        <vbox id="calPreferencesBoxViews"/>
+                    </tabpanel>
+                    <tabpanel orient="vertical">
+                        <vbox id="calPreferencesBoxTimezones"/>
+                    </tabpanel>
+                </tabpanels>
+            </tabbox>
+        </prefpane>
+
+        <script type="application/x-javascript"
+                src="chrome://calendar/content/calUtils.js"/>
+
+    </prefwindow>
 
 </overlay>

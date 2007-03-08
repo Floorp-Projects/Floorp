@@ -23,6 +23,7 @@
    -   Mike Potter <mikep@oeone.com>
    -   Matthew Willis <mattwillis@gmail.com>
    -   Cédric Corazza <cedric.corazza@wanadoo.fr>
+   -   Stefan Sitter <ssitter@googlemail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -52,7 +53,9 @@
 <overlay id="AlarmsPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-    <prefpane id="paneAlarms" onpaneload="gAlarmsPane.init();">
+    <vbox id="calPreferencesBoxAlarms">
+        <stringbundle id="bundlePreferences"
+                      src="chrome://calendar/locale/calendar.properties"/>
         <script type="application/x-javascript"
                 src="chrome://calendar/content/preferences/alarms.js"/>
         <script type="application/x-javascript"
@@ -285,5 +288,5 @@
 
         <separator/>
 
-    </prefpane>
+    </vbox>
 </overlay>

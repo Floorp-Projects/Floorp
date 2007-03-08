@@ -21,6 +21,7 @@
    -
    - Contributor(s):
    -   Matthew Willis <mattwillis@gmail.com>
+   -   Stefan Sitter <ssitter@googlemail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -72,27 +73,46 @@
 #endif
 #endif
 
-    <stringbundle id="bundlePreferences"
-                  src="chrome://calendar/locale/calendar.properties"/>
-
     <prefpane id="paneGeneral"
               label="&paneGeneral.title;"
-              src="chrome://calendar/content/preferences/general.xul"/>
+              onpaneload="gGeneralPane.init();"
+              src="chrome://calendar/content/preferences/general.xul">
+        <vbox id="calPreferencesBoxGeneral"/>
+    </prefpane>
+
     <prefpane id="paneAlarms"
               label="&paneAlarms.title;"
-              src="chrome://calendar/content/preferences/alarms.xul"/>
+              onpaneload="gAlarmsPane.init();"
+              src="chrome://calendar/content/preferences/alarms.xul">
+        <vbox id="calPreferencesBoxAlarms"/>
+    </prefpane>
+
     <prefpane id="paneCategories"
               label="&paneCategories.title;"
-              src="chrome://calendar/content/preferences/categories.xul"/>
+              onpaneload="gCategoriesPane.init();"
+              src="chrome://calendar/content/preferences/categories.xul">
+        <vbox id="calPreferencesBoxCategories"/>
+    </prefpane>
+
     <prefpane id="paneViews"
               label="&paneViews.title;"
-              src="chrome://calendar/content/preferences/views.xul"/>
+              src="chrome://calendar/content/preferences/views.xul">
+        <vbox id="calPreferencesBoxViews"/>
+    </prefpane>
+
     <prefpane id="paneTimezones"
               label="&paneTimezones.title;"
-              src="chrome://calendar/content/preferences/timezones.xul"/>
+              onpaneload="gTimezonesPane.init();"
+              src="chrome://calendar/content/preferences/timezones.xul">
+        <vbox id="calPreferencesBoxTimezones"/>
+    </prefpane>
+
     <prefpane id="paneAdvanced"
               label="&paneAdvanced.title;"
-              src="chrome://calendar/content/preferences/advanced.xul"/>
+              onpaneload="gAdvancedPane.init();"
+              src="chrome://calendar/content/preferences/advanced.xul">
+        <vbox id="calPreferencesBoxAdvanced"/>
+    </prefpane>
 
     <script type="application/x-javascript"
             src="chrome://calendar/content/calUtils.js"/>
