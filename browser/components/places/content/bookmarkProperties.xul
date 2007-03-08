@@ -120,6 +120,8 @@
                 </tree>
               </vbox>
             </row>
+            <checkbox id="loadInSidebarCheckbox"
+                      label="&bookmark.loadInSidebar.title;"/>
           </rows>
         </grid>
       </vbox>

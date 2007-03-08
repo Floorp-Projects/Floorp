@@ -26,5 +26,5 @@
   "Save Changes">
 <!ENTITY cmd.accept.add
   "Add Bookmark">
-
-
+<!ENTITY bookmark.loadInSidebar.title
+  "Load this bookmark in the sidebar">

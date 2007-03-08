@@ -836,26 +836,40 @@ PlacesController.prototype = {
   },
 
   /**
-   * Loads the selected node's URL in the appropriate tab or window, given the user's
-   * preference specified by modifier keys tracked by a DOM mouse event
+   * Loads the selected node's URL in the appropriate tab or window or as a web
+   * panel given the user's preference specified by modifier keys tracked by a
+   * DOM mouse/key event.
    * @param   aEvent
-   *          The DOM Mouse event with modifier keys set that track the user's
-   *          preferred destination window or tab.
+   *          The DOM mouse/key event with modifier keys set that track the
+   *          user's preferred destination window or tab.
    */
   openSelectedNodeWithEvent: function PC_openSelectedNodeWithEvent(aEvent) {
-    var node = this._view.selectedURINode;
-    if (node && PlacesUtils.checkURLSecurity(node))
-      openUILink(node.uri, aEvent);
+    this.openSelectedNodeIn(whereToOpenLink(aEvent));
   },
 
   /**
-   * Loads the selected node's URL in the appropriate tab or window.
-   * @see openUILinkIn
+   * Loads the selected node's URL in the appropriate tab or window or as a
+   * web panel.
+   * see also openUILinkIn
    */
   openSelectedNodeIn: function PC_openSelectedNodeIn(aWhere) {
     var node = this._view.selectedURINode;
-    if (node && PlacesUtils.checkURLSecurity(node))
+    if (node && PlacesUtils.checkURLSecurity(node)) {
+       // Check whether the node is a bookmark which should be opened as
+       // a web panel
+      if (aWhere == "current" && PlacesUtils.nodeIsBookmark(node)) {
+        var placeURI = PlacesUtils.bookmarks.getItemURI(node.bookmarkId);
+        if (PlacesUtils.annotations
+                       .hasAnnotation(placeURI, LOAD_IN_SIDEBAR_ANNO)) {
+          var w = getTopWin();
+          if (w) {
+            w.openWebPanel(node.title, node.uri);
+            return;
+          }
+        }
+      }
       openUILinkIn(node.uri, aWhere);
+    }
   },
 
   /**
@@ -2066,6 +2080,48 @@ PlacesEditBookmarkURITransaction.prototype = {
 
   undoTransaction: function PEBUT_undoTransaction() {
     this.bookmarks.changeBookmarkURI(this.id, this._oldURI);
+  }
+};
+
+/**
+ * Set/Unset Load-in-sidebar annotation
+ */
+function PlacesSetLoadInSidebarTransaction(aBookmarkId, aLoadInSidebar) {
+  this.id = aBookmarkId;
+  this._loadInSidebar = aLoadInSidebar;
+  this.redoTransaction = this.doTransaction;
+}
+PlacesSetLoadInSidebarTransaction.prototype = {
+  __proto__: PlacesBaseTransaction.prototype,
+  _anno: {
+    name: LOAD_IN_SIDEBAR_ANNO,
+    type: Ci.mozIStorageValueArray.VALUE_TYPE_INTEGER,
+    value: 1,
+    flags: 0,
+    expires: Ci.nsIAnnotationService.EXPIRE_NEVER
+  },
+
+  doTransaction: function PSLIST_doTransaction() {
+    this._placeURI = this.utils.bookmarks.getItemURI(this.id);
+    this._wasSet = this.utils.annotations
+                       .hasAnnotation(this._placeURI, this._anno.name);
+    if (this._loadInSidebar) {
+      this.utils.setAnnotationsForURI(this._placeURI,
+                                      [this._anno]);
+    }
+    else {
+      try {
+        this.utils.annotations.removeAnnotation(this._placeURI,
+                                                this._anno.name);
+      } catch(ex) { }
+    }
+  },
+
+  undoTransaction: function PSLIST_undoTransaction() {
+    if (this._wasSet != this._loadInSidebar) {
+      this._loadInSidebar = !this._loadInSidebar;
+      this.doTransaction();
+    }
   }
 };
 

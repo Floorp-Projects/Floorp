@@ -4467,7 +4467,10 @@ function asyncOpenWebPanel(event)
                     BROWSER_ADD_BM_FEATURES, dialogArgs);
          event.preventDefault();
 #else
-         dump("*** IMPLEMENT ME: Bug 329964\n");
+         PlacesUtils.showAddBookmarkUI(makeURI(wrapper.href),
+                                       wrapper.getAttribute("title"),
+                                       null, true, true);
+         event.preventDefault();
 #endif
          return false;
        }
