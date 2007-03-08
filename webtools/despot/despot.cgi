@@ -743,7 +743,7 @@ sub ViewAccount {
                             "WHERE members.userid = ? " .
                               "AND partitions.id = members.partitionid " .
                               "AND repositories.id = partitions.repositoryid " .
-                            "ORDER BY class");
+                            "ORDER BY class DESC");
     $query->execute($::loginid);
     while (@row = $query->fetchrow_array()) {
         my ($partid, $repname,$partname,$class) = (@row);
