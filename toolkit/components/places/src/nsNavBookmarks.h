@@ -257,6 +257,8 @@ private:
                                        PRBool aAllowRootChanges,
                                        PRInt64 aFolder,
                                        PRBool aIsImportDefaults);
+  nsresult WriteItem(nsNavHistoryResultNode* aItem, const nsCString& aIndent,
+                     nsIOutputStream* aOutput);
   nsresult WriteContainer(PRInt64 aFolder, const nsCString& aIndent,
                           nsIOutputStream* aOutput);
   nsresult WriteContainerHeader(PRInt64 aFolder, const nsCString& aIndent,

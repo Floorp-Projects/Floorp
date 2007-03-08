@@ -44,6 +44,8 @@
  *     - "add" - for adding a new item.
  *       @ type (String). Possible values:
  *         - "bookmark"
+ *           @ loadBookmarkInSidebar - optional, the default state for the
+ *             "Load this bookmark in the sidebar" field.
  *         - "folder"
  *         - "folder with items"
  *           @ URIList (Array of nsIURI objects)- list of uris to be bookmarked
@@ -75,7 +77,7 @@
  *     - "description" (XXXmano: not yet implemented)
  *     - "keyword"
  *     - "microsummary"
- *     - "show in sidebar" (XXXmano: not yet implemented)
+ *     - "load in sidebar"
  *     - "feedURI"
  *     - "siteURI"
  *     - "folder picker" - hides both the tree and the menu.
@@ -95,8 +97,8 @@ const ACTION_ADD_WITH_ITEMS = 2;
 /**
  * Supported options:
  * BOOKMARK_ITEM : ACTION_EDIT, ACTION_ADD
- * BOOKMARK_FOLDER : ACTION_EDIT, ADD_WITH_ITEMS
- * LIVEMARK_CONTAINER : ACTION_EDIT
+ * BOOKMARK_FOLDER : ACTION_ADD, ACTION_EDIT, ADD_WITH_ITEMS
+ * LIVEMARK_CONTAINER : ACTION_ADD, ACTION_EDIT
  */
 
 var BookmarkPropertiesPanel = {
@@ -126,6 +128,7 @@ var BookmarkPropertiesPanel = {
   _folderId: null,
   _bookmarkId: null,
   _bookmarkURI: null,
+  _loadBookmarkInSidebar: false,
   _itemTitle: "",
   _microsummaries: null,
 
@@ -200,6 +203,9 @@ var BookmarkPropertiesPanel = {
             else
               this._itemTitle = this._strings.getString("newBookmarkDefault");
           }
+
+          if ("loadBookmarkInSidebar" in dialogInfo)
+            this._loadBookmarkInSidebar = dialogInfo.loadBookmarkInSidebar;
           break;
         case "folder":
           this._action = ACTION_ADD;
@@ -251,6 +257,10 @@ var BookmarkPropertiesPanel = {
                                            .getItemTitle(this._bookmarkId);
           this._bookmarkKeyword =
             PlacesUtils.bookmarks.getKeywordForBookmark(this._bookmarkId);
+          var placeURI = PlacesUtils.bookmarks.getItemURI(this._bookmarkId);
+          this._loadBookmarkInSidebar =
+            PlacesUtils.annotations.hasAnnotation(placeURI,
+                                                  LOAD_IN_SIDEBAR_ANNO);
           break;
         case "folder":
           NS_ASSERT("folderId" in dialogInfo);
@@ -367,6 +377,8 @@ var BookmarkPropertiesPanel = {
       this._element("livemarkSiteLocationRow").hidden = true;
     if (hiddenRows.indexOf("microsummary") != -1)
       this._element("microsummaryRow").hidden = true;
+    if (hiddenRows.indexOf("load in sidebar") != -1)
+      this._element("loadInSidebarCheckbox").hidden = true;
   },
 
   /**
@@ -384,10 +396,14 @@ var BookmarkPropertiesPanel = {
 
       if (this._bookmarkKeyword)
         this._element("keywordTextfield").value = this._bookmarkKeyword;
+
+      if (this._loadBookmarkInSidebar)
+        this._element("loadInSidebarCheckbox").checked = true;
     }
     else {
       this._element("locationRow").hidden = true;
       this._element("shortcutRow").hidden = true;
+      this._element("loadInSidebarCheckbox").hidden = true;
     }
 
     if (this._itemType == LIVEMARK_CONTAINER) {
@@ -702,6 +718,16 @@ var BookmarkPropertiesPanel = {
         transactions.push(
           new PlacesEditBookmarkMicrosummaryTransaction(itemId,
                                                         newMicrosummary));
+      }
+    }
+
+    // load in sidebar
+    if (this._itemType == BOOKMARK_ITEM) {
+      var checked = this._element("loadInSidebarCheckbox").checked;
+      if (this._action == ACTION_ADD ||
+          checked != this._loadBookmarkInSidebar) {
+        transactions.push(
+          new PlacesSetLoadInSidebarTransaction(itemId, checked));
       }
     }
 

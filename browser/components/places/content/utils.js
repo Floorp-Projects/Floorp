@@ -45,6 +45,8 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
 
+const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
+
 function QI_node(aNode, aIID) {
   var result = null;
   try {
@@ -664,17 +666,21 @@ var PlacesUtils = {
    *        point as the initially selected item in the folder picker.
    * @param [optional] aShowPicker
    *        see above
+   * @param [optional] aLoadInSidebar
+   *        If true, the dialog will default to load the new item in the
+   *        sidebar (as a web panel).
    * @return true if any transaction has been performed.
    *
    * Notes:
-   *  - the location, description, keyword and Show In Sidebar fields are
+   *  - the location, description, keyword and "load in sidebar" fields are
    *    visible only if there is no initial URI (aURI is null).
    *  - When aDefaultInsertionPoint is not set, the dialog defaults to the
    *    bookmarks root folder.
    */
   showAddBookmarkUI: function PU_showAddBookmarkUI(aURI, aTitle,
                                                    aDefaultInsertionPoint,
-                                                   aShowPicker) {
+                                                   aShowPicker,
+                                                   aLoadInSidebar) {
     var info = {
       action: "add",
       type: "bookmark",
@@ -684,7 +690,7 @@ var PlacesUtils = {
     if (aURI) {
       info.uri = aURI;
       info.hiddenRows = ["location", "keyword", "description",
-                         "show in sidebar"];
+                         "load in sidebar"];
     }
 
     // allow default empty title
@@ -696,6 +702,10 @@ var PlacesUtils = {
       if (!aShowPicker)
         info.hiddenRows.push("folder picker");
     }
+
+    if (aLoadInSidebar)
+      info.loadBookmarkInSidebar = true;
+
     return this._showBookmarkDialog(info);
   },
 
@@ -902,7 +912,8 @@ var PlacesUtils = {
   /**
    * Fetch all annotations for a URI, including all properties of each
    * annotation which would be required to recreate it.
-   * @param aURI  The URI for which annotations are to be retrieved.
+   * @param aURI
+   *        The URI for which annotations are to be retrieved.
    * @return Array of objects, each containing the following properties:
    *         name, flags, expires, mimeType, type, value
    */
@@ -940,10 +951,12 @@ var PlacesUtils = {
 
   /**
    * Annotate a URI with a batch of annotations.
-   * @param aURI  The URI for which annotations are to be retrieved.
-   * @param aAnnotations Array of objects, each containing the following properties:
-   *         name, flags, expires, mimeType, type, value
-   * @return void
+   * @param aURI
+   *        The URI for which annotations are to be retrieved.
+   * @param aAnnotations
+   *        Array of objects, each containing the following properties:
+   *        name, flags, expires, type, mimeType (only used for binary
+   *        annotations) value.
    */
   setAnnotationsForURI: function PU_setAnnotationsForURI(aURI, aAnnos) {
     var annosvc = this.annotations;
