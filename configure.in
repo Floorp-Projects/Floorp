@@ -634,8 +634,9 @@ fi
 
 AC_PATH_PROGS(PYTHON, $PYTHON python)
 if test -z "$PYTHON"; then
-    AC_MSG_WARN([TinderboxPrint: python not found in \$PATH .])
+    AC_MSG_ERROR([python was not found in \$PATH])
 fi
+echo PYTHON="$PYTHON"
 
 AC_PATH_PROG(DOXYGEN, doxygen, :)
 AC_PATH_PROG(WHOAMI, whoami, :)
@@ -1404,6 +1405,7 @@ case "$host" in
             AS_PERL=1
             PERL="${CYGWIN_WRAPPER} $PERL"
         fi
+        PYTHON="${CYGWIN_WRAPPER} $PYTHON"
         ;;
     esac
     ;;
@@ -7398,16 +7400,6 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c python` -ne 0; then
     dnl (note that it must be the python executable - which we
     dnl run to locate the relevant paths etc)
     dnl If not set, we use whatever Python we can find.
-    if test -z "$PYTHON"; then
-        AC_PATH_PROG(PYTHON, python, :)
-    fi
-    if test "$OS_ARCH" = "WINNT"; then
-        dnl Convert to cygwin style "mixed" (ie, "c:/path/file.exe")
-        PYTHON=`$CYGPATH_W $PYTHON | $CYGPATH_S`
-    fi
-    if test ! -x "$PYTHON"; then
-        AC_MSG_ERROR([Could not find Python - please adjust your PATH, or set PYTHON.])
-    fi
     MOZ_PYTHON=$PYTHON
     dnl Ask Python what its version number is
     changequote(,)
@@ -7837,6 +7829,7 @@ AC_SUBST(MOZ_TOOLS_DIR)
 AC_SUBST(CYGWIN_WRAPPER)
 AC_SUBST(AS_PERL)
 AC_SUBST(WIN32_REDIST_DIR)
+AC_SUBST(PYTHON)
 
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
