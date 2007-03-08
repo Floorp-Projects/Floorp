@@ -46,6 +46,7 @@
     <em:updateURL>http://www.mozilla.org/projects/calendar/lightning/@TARGET_PLATFORM@/update.rdf</em:updateURL>
     <em:homepageURL>http://www.mozilla.org/projects/calendar/releases/lightning@LIGHTNING_VERSION@.html</em:homepageURL>
     <em:iconURL>chrome://calendar/skin/cal-icon32.png</em:iconURL>
+    <em:optionsURL>chrome://messenger/content/preferences/preferences.xul</em:optionsURL>
     <em:targetPlatform>@TARGET_PLATFORM@</em:targetPlatform>
   </Description>
 </RDF>
