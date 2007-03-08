@@ -1,7 +1,7 @@
 
 To install a fresh tinderbox:
 
-1) Checkout the latest copy of the tinderbox scripts
+1) Checkout the latest copy of the tinderbox scripts.
 	cd /builds/cvs; cvs -z3 co mozilla/tools/tinderbox
 
 2) Change to the location that you wish to run the tinderbox from.
