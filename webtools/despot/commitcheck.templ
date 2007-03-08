@@ -27,6 +27,7 @@
 #      ALL	$CVSROOT/CVSROOT/commitcheck.pl
 
 
+my $read_only_users = ' calbld caminobld ffxbld seabld tbirdbld xrbld ';
 
 $debug = 0;
 
@@ -120,6 +121,11 @@ foreach $f (@files) {
             }
         }
     }
+
+    if ($read_only_users =~ m/\s$username\s/o) {
+        $ok = 0;
+    }
+
     if (!$ok) {
         print STDERR "You may not check into partition $fullname{$t}\n";
 	print STDERR "the file $repository/$f on branch $b\n";
