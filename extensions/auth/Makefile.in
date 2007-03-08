@@ -77,6 +77,8 @@ CPPSRCS		+= \
 ifeq ($(OS_ARCH),WINNT)
 LOCAL_INCLUDES	+= -DUSE_SSPI
 CPPSRCS		+= nsAuthSSPI.cpp
+else
+CPPSRCS   += nsAuthSambaNTLM.cpp
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -127,6 +127,36 @@ nsKerbSSPIAuthConstructor(nsISupports *outer, REFNSIID iid, void **result)
   {0x8c, 0xd6, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66} \
 }
 
+#else
+
+#define NS_SAMBANTLMAUTH_CID                       \
+{ /* bc54f001-6eb0-4e32-9f49-7e064d8e70ef */       \
+  0xbc54f001,                                      \
+  0x6eb0,                                          \
+  0x4e32,                                          \
+  {0x9f, 0x49, 0x7e, 0x06, 0x4d, 0x8e, 0x70, 0xef} \
+}
+
+#include "nsAuthSambaNTLM.h"
+static NS_METHOD
+nsSambaNTLMAuthConstructor(nsISupports *outer, REFNSIID iid, void **result)
+{
+  if (outer)
+    return NS_ERROR_NO_AGGREGATION;
+
+  nsCOMPtr<nsAuthSambaNTLM> auth = new nsAuthSambaNTLM();
+  if (!auth)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv = auth->SpawnNTLMAuthHelper();
+  if (NS_FAILED(rv)) {
+    // Failure here probably means that cached credentials were not available
+    return rv;
+  }
+
+  return auth->QueryInterface(iid, result);
+}
+
 #endif
 
 static NS_METHOD
@@ -205,6 +235,12 @@ static nsModuleComponentInfo components[] = {
     NS_SYSNTLMAUTH_CID,
     NS_AUTH_MODULE_CONTRACTID_PREFIX "sys-ntlm",
     nsSysNTLMAuthConstructor
+  },
+#else
+  { "nsAuthSambaNTLM", 
+    NS_SAMBANTLMAUTH_CID,
+    NS_AUTH_MODULE_CONTRACTID_PREFIX "sys-ntlm",
+    nsSambaNTLMAuthConstructor
   },
 #endif
   { "nsHttpNegotiateAuth", 

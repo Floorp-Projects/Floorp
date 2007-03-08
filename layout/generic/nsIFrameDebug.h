@@ -64,6 +64,9 @@ public:
    * - calls root frame's List(...)
    */
   static void RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent);
+
+  static void DumpFrameTree(nsIFrame* aFrame);
+
   /**
    * Get a printable from of the name of the frame type.
    * XXX This should be eliminated and we use GetType() instead...

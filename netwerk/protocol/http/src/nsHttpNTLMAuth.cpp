@@ -46,8 +46,6 @@
 
 //-----------------------------------------------------------------------------
 
-#ifdef XP_WIN
-
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIServiceManager.h"
@@ -208,8 +206,6 @@ public:
 };
 NS_IMPL_ISUPPORTS0(nsNTLMSessionState)
 
-#endif
-
 //-----------------------------------------------------------------------------
 
 NS_IMPL_ISUPPORTS1(nsHttpNTLMAuth, nsIHttpAuthenticator)
@@ -231,7 +227,6 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpChannel *channel,
     // start new auth sequence if challenge is exactly "NTLM"
     if (PL_strcasecmp(challenge, "NTLM") == 0) {
         nsCOMPtr<nsISupports> module;
-#ifdef XP_WIN
         //
         // our session state is non-null to indicate that we've flagged
         // this auth domain as not accepting the system's default login.
@@ -239,7 +234,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpChannel *channel,
         PRBool trySysNTLM = (*sessionState == nsnull);
 
         //
-        // on windows, we may have access to the built-in SSPI library,
+        // we may have access to a built-in SSPI library,
         // which could be used to authenticate the user without prompting.
         // 
         // if the continuationState is null, then we may want to try using
@@ -266,9 +261,7 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpChannel *channel,
                     return NS_ERROR_OUT_OF_MEMORY;
                 NS_ADDREF(*sessionState);
             }
-#else
-        {
-#endif 
+
             module = do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "ntlm");
 
             // prompt user for domain, username, and password...
