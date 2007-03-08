@@ -24,7 +24,7 @@ Table of Contents
     Core unix tinderbox stuff.
 
 * post-mozilla-sample.pl
-    Example of post-build test script
+    Example of post-build test script.
 
 * tinder-defaults.pl
     Default script variables.
