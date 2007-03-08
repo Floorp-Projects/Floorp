@@ -39,6 +39,7 @@
 
 #include "nsAutoPtr.h"
 #include "nsISimpleEnumerator.h"
+#include "nsCycleCollectionParticipant.h"
 
 #define NS_ITEMPLATERDFQUERY_IID \
   {0x8929ff60, 0x1c9c, 0x4d87, \
@@ -79,7 +80,8 @@ public:
 
     ~nsRDFQuery() { Finish(); }
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS(nsRDFQuery)
 
     /**
      * Retrieve the root node in the rule network

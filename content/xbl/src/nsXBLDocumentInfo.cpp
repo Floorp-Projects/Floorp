@@ -66,7 +66,7 @@ public:
   nsXBLDocGlobalObject();
 
   // nsISupports interface
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   
   // nsIScriptGlobalObject methods
   virtual nsresult EnsureScriptEnvironment(PRUint32 aLangID);
@@ -85,6 +85,9 @@ public:
 
   static JSBool doCheckAccess(JSContext *cx, JSObject *obj, jsval id,
                               PRUint32 accessType);
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXBLDocGlobalObject,
+                                           nsIScriptGlobalObject)
 
 protected:
   virtual ~nsXBLDocGlobalObject();
@@ -203,7 +206,21 @@ nsXBLDocGlobalObject::~nsXBLDocGlobalObject()
 {}
 
 
-NS_IMPL_ISUPPORTS2(nsXBLDocGlobalObject, nsIScriptGlobalObject, nsIScriptObjectPrincipal)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLDocGlobalObject)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsXBLDocGlobalObject)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXBLDocGlobalObject)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptContext)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN(nsXBLDocGlobalObject)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObject)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsXBLDocGlobalObject)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXBLDocGlobalObject, nsIScriptGlobalObject)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXBLDocGlobalObject, nsIScriptGlobalObject)
 
 void JS_DLL_CALLBACK
 XBL_ProtoErrorReporter(JSContext *cx,
@@ -426,7 +443,28 @@ static PRBool IsChromeURI(nsIURI* aURI)
 
 /* Implementation file */
 
-NS_IMPL_CYCLE_COLLECTION_2(nsXBLDocumentInfo, mDocument, mGlobalObject)
+static PRIntn PR_CALLBACK
+TraverseProtos(nsHashKey *aKey, void *aData, void* aClosure)
+{
+  nsCycleCollectionTraversalCallback *cb = 
+    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aClosure);
+  nsXBLPrototypeBinding *proto = NS_STATIC_CAST(nsXBLPrototypeBinding*, aData);
+  proto->Traverse(*cb);
+  return kHashEnumerateNext;
+}
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLDocumentInfo)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLDocumentInfo)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mGlobalObject)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXBLDocumentInfo)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
+  if (tmp->mBindingTable) {
+    tmp->mBindingTable->Enumerate(TraverseProtos, &cb);
+  }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobalObject)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN(nsXBLDocumentInfo)
   NS_INTERFACE_MAP_ENTRY(nsIXBLDocumentInfo)

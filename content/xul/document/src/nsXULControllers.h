@@ -51,6 +51,7 @@
 #include "nsIControllers.h"
 #include "nsISupportsArray.h"
 #include "nsISecurityCheckedComponent.h"
+#include "nsCycleCollectionParticipant.h"
 
 /* non-XPCOM class for holding controllers and their IDs */
 class nsXULControllerData
@@ -72,8 +73,6 @@ public:
                               return NS_OK;
                             }
     
-protected:
-
     PRUint32                mControllerID;
     nsCOMPtr<nsIController> mController;
 };
@@ -88,7 +87,8 @@ public:
     friend NS_IMETHODIMP
     NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULControllers, nsIControllers)
     NS_DECL_NSICONTROLLERS
     NS_DECL_NSISECURITYCHECKEDCOMPONENT
   

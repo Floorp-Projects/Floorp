@@ -109,6 +109,9 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLObjectElement,
+                                                     nsGenericHTMLElement)
+
 private:
   /**
    * Calls LoadObject with the correct arguments to start the plugin load.
@@ -153,11 +156,17 @@ nsHTMLObjectElement::DoneAddingChildren(PRBool aHaveNotified)
   return NS_OK;
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLObjectElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLObjectElement,
+                                                  nsGenericHTMLFormElement)
+  tmp->Traverse(cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_ADDREF_INHERITED(nsHTMLObjectElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLObjectElement, nsGenericElement) 
 
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLObjectElement,
-                                    nsGenericHTMLFormElement)
+NS_HTML_CONTENT_CC_INTERFACE_MAP_BEGIN(nsHTMLObjectElement,
+                                       nsGenericHTMLFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLObjectElement)
   NS_INTERFACE_MAP_ENTRY(imgIDecoderObserver)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)

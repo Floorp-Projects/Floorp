@@ -3065,9 +3065,16 @@ nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement()
   }
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericHTMLFrameElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGenericHTMLFrameElement,
+                                                  nsGenericHTMLElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFrameLoader)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_INTERFACE_MAP_BEGIN(nsGenericHTMLFrameElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFrameElement)
   NS_INTERFACE_MAP_ENTRY(nsIFrameLoaderOwner)
+  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsGenericHTMLFrameElement)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 nsresult

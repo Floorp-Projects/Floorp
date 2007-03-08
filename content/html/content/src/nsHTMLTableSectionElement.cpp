@@ -79,6 +79,9 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLTableSectionElement,
+                                                     nsGenericHTMLElement)
+
 protected:
   nsRefPtr<nsContentList> mRows;
 };
@@ -92,13 +95,20 @@ nsHTMLTableSectionElement::nsHTMLTableSectionElement(nsINodeInfo *aNodeInfo)
 {
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLTableSectionElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLTableSectionElement,
+                                                  nsGenericHTMLElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mRows,
+                                                       nsBaseContentList)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_ADDREF_INHERITED(nsHTMLTableSectionElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLTableSectionElement, nsGenericElement) 
 
 
 // QueryInterface implementation for nsHTMLTableSectionElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTableSectionElement,
-                                    nsGenericHTMLElement)
+NS_HTML_CONTENT_CC_INTERFACE_MAP_BEGIN(nsHTMLTableSectionElement,
+                                       nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLTableSectionElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLTableSectionElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END

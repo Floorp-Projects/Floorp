@@ -82,9 +82,78 @@ nsIRDFContainerUtils*     nsXULTemplateQueryProcessorRDF::gRDFContainerUtils;
 nsIRDFResource*           nsXULTemplateQueryProcessorRDF::kNC_BookmarkSeparator;
 nsIRDFResource*           nsXULTemplateQueryProcessorRDF::kRDF_type;
 
-NS_IMPL_ISUPPORTS2(nsXULTemplateQueryProcessorRDF,
-                   nsIXULTemplateQueryProcessor,
-                   nsIRDFObserver)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULTemplateQueryProcessorRDF)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsXULTemplateQueryProcessorRDF)
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+BindingDependenciesTraverser(nsISupports* key,
+                             nsCOMArray<nsXULTemplateResultRDF>* array,
+                             void* userArg)
+{
+    nsCycleCollectionTraversalCallback *cb = 
+        NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, userArg);
+
+    PRInt32 i, count = array->Count();
+    for (i = 0; i < count; ++i) {
+        cb->NoteXPCOMChild(array->ObjectAt(i));
+    }
+
+    return PL_DHASH_NEXT;
+}
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+MemoryElementTraverser(const PRUint32& key,
+                       nsCOMArray<nsXULTemplateResultRDF>* array,
+                       void* userArg)
+{
+    nsCycleCollectionTraversalCallback *cb = 
+        NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, userArg);
+
+    PRInt32 i, count = array->Count();
+    for (i = 0; i < count; ++i) {
+        cb->NoteXPCOMChild(array->ObjectAt(i));
+    }
+
+    return PL_DHASH_NEXT;
+}
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+RuleToBindingTraverser(nsISupports* key, RDFBindingSet* binding, void* userArg)
+{
+    nsCycleCollectionTraversalCallback *cb = 
+        NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, userArg);
+
+    cb->NoteXPCOMChild(key);
+
+    return PL_DHASH_NEXT;
+}
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULTemplateQueryProcessorRDF)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLastRef)
+    if (tmp->mBindingDependencies.IsInitialized()) {
+        tmp->mBindingDependencies.EnumerateRead(BindingDependenciesTraverser,
+                                                &cb);
+    }
+    if (tmp->mMemoryElementToResultMap.IsInitialized()) {
+        tmp->mMemoryElementToResultMap.EnumerateRead(MemoryElementTraverser,
+                                                     &cb);
+    }
+    if (tmp->mRuleToBindingsMap.IsInitialized()) {
+        tmp->mRuleToBindingsMap.EnumerateRead(RuleToBindingTraverser, &cb);
+    }
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mQueries)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXULTemplateQueryProcessorRDF,
+                                          nsIXULTemplateQueryProcessor)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXULTemplateQueryProcessorRDF,
+                                           nsIXULTemplateQueryProcessor)
+NS_INTERFACE_MAP_BEGIN(nsXULTemplateQueryProcessorRDF)
+    NS_INTERFACE_MAP_ENTRY(nsIXULTemplateQueryProcessor)
+    NS_INTERFACE_MAP_ENTRY(nsIRDFObserver)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULTemplateQueryProcessor)
+    NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsXULTemplateQueryProcessorRDF)
+NS_INTERFACE_MAP_END
 
 nsXULTemplateQueryProcessorRDF::nsXULTemplateQueryProcessorRDF(void)
     : mDB(nsnull),

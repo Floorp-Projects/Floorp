@@ -333,30 +333,8 @@ LoadingDocHashtableTraverser(nsIURI* key,
   return PL_DHASH_NEXT;
 }
 
-static PLDHashOperator
-XBLBindingHashtableTraverser(nsISupports* key,
-                             nsXBLBinding* binding,
-                             void* userArg)
-{  
-  nsCycleCollectionTraversalCallback *cb = 
-    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, userArg);
- 
-  // XBLBindings aren't nsISupports, so we don't tell the cycle collector
-  // about them explicitly. Instead, we traverse their contents directly
-  // here.
- 
-  while (binding) {
-    nsISupports *c = binding->GetAnonymousContent();
-    if (c)
-      cb->NoteXPCOMChild(c);
-    binding = binding->GetBaseBinding();
-  }
-  return PL_DHASH_NEXT;
-}
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsBindingManager)
-  if (tmp->mBindingTable.IsInitialized())
-      tmp->mBindingTable.EnumerateRead(&XBLBindingHashtableTraverser, &cb);
+  // The hashes keyed on nsIContent are traversed from the nsIContent itself.
   if (tmp->mDocumentTable.IsInitialized())
       tmp->mDocumentTable.EnumerateRead(&DocumentInfoHashtableTraverser, &cb);
   if (tmp->mLoadingDocTable.IsInitialized())
@@ -1356,4 +1334,37 @@ void
 nsBindingManager::NodeWillBeDestroyed(const nsINode *aNode)
 {
   NS_BINDINGMANAGER_NOTIFY_OBSERVERS(NodeWillBeDestroyed, (aNode));
+}
+
+void
+nsBindingManager::Traverse(nsIContent *aContent,
+                           nsCycleCollectionTraversalCallback &cb)
+{
+  nsXBLBinding *binding = GetBinding(aContent);
+  if (binding) {
+    // XXX nsXBLBinding isn't nsISupports but it is refcounted, so we can't
+    //     traverse it.
+    cb.NoteXPCOMChild(aContent);
+  }
+  nsISupports *value;
+  if (mContentListTable.ops &&
+      (value = LookupObject(mContentListTable, aContent))) {
+    cb.NoteXPCOMChild(aContent);
+    cb.NoteXPCOMChild(value);
+  }
+  if (mAnonymousNodesTable.ops &&
+      (value = LookupObject(mAnonymousNodesTable, aContent))) {
+    cb.NoteXPCOMChild(aContent);
+    cb.NoteXPCOMChild(value);
+  }
+  if (mInsertionParentTable.ops &&
+      (value = LookupObject(mInsertionParentTable, aContent))) {
+    cb.NoteXPCOMChild(aContent);
+    cb.NoteXPCOMChild(value);
+  }
+  if (mWrapperTable.ops &&
+      (value = LookupObject(mWrapperTable, aContent))) {
+    cb.NoteXPCOMChild(aContent);
+    cb.NoteXPCOMChild(value);
+  }
 }

@@ -113,6 +113,7 @@
 #include "nsEventDispatcher.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsIFocusController.h"
+#include "nsIControllers.h"
 
 
 #include "nsCycleCollectionParticipant.h"
@@ -3003,8 +3004,27 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
+  nsIDocument* ownerDoc = tmp->GetOwnerDoc();
+  if (ownerDoc) {
+    ownerDoc->BindingManager()->Traverse(tmp, cb);
+  }
+
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_LISTENERMANAGER
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER
+
+  if (tmp->HasProperties() && tmp->IsNodeOfType(nsINode::eXUL)) {
+    nsISupports* property =
+      NS_STATIC_CAST(nsISupports*,
+                     tmp->GetProperty(nsGkAtoms::contextmenulistener));
+    if (property) {
+      cb.NoteXPCOMChild(property);
+    }
+    property = NS_STATIC_CAST(nsISupports*,
+                              tmp->GetProperty(nsGkAtoms::popuplistener));
+    if (property) {
+      cb.NoteXPCOMChild(property);
+    }
+  }
 
   // Traverse child content.
   {
@@ -3020,9 +3040,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
     if (slots) {
       if (slots->mAttributeMap.get())
         cb.NoteXPCOMChild(slots->mAttributeMap.get());
+      if (slots->mControllers)
+        cb.NoteXPCOMChild(slots->mControllers);
     }
   }
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END  
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
 NS_INTERFACE_MAP_BEGIN(nsGenericElement)

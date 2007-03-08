@@ -48,6 +48,7 @@
 #include "nsTArray.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsISerializable.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIAtom;
 class nsIPrincipal;
@@ -73,7 +74,7 @@ public:
     Create(nsIURI* aURI, nsXULPrototypeDocument** aResult);
 
     // nsISupports interface
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
     // nsISerializable interface
     NS_DECL_NSISERIALIZABLE
@@ -144,6 +145,9 @@ public:
 
     // nsIScriptGlobalObjectOwner methods
     virtual nsIScriptGlobalObject* GetScriptGlobalObject();
+
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULPrototypeDocument,
+                                             nsIScriptGlobalObjectOwner)
 
 protected:
     nsCOMPtr<nsIURI> mURI;

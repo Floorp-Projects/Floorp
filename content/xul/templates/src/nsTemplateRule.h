@@ -48,6 +48,7 @@
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsIXULTemplateRuleFilter.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIXULTemplateQueryProcessor;
 class nsTemplateQuerySet;
@@ -223,6 +224,16 @@ public:
      */
     nsresult
     AddBindingsToQueryProcessor(nsIXULTemplateQueryProcessor* aProcessor);
+
+    void Traverse(nsCycleCollectionTraversalCallback &cb) const
+    {
+        if (mRuleNode) {
+            cb.NoteXPCOMChild(mRuleNode);
+        }
+        if (mAction) {
+            cb.NoteXPCOMChild(mAction);
+        }
+    }
 
 protected:
 

@@ -296,6 +296,72 @@ NS_NewXULDocument(nsIXULDocument** result)
 // nsISupports interface
 //
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULDocument)
+
+static PRIntn
+TraverseElement(const PRUnichar* aID, nsIContent* aElement, void* aContext)
+{
+    nsCycleCollectionTraversalCallback *cb =
+        NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aContext);
+
+    cb->NoteXPCOMChild(aElement);
+
+    return HT_ENUMERATE_NEXT;
+}
+
+static PLDHashOperator PR_CALLBACK
+TraverseTemplateBuilders(nsISupports* aKey, nsIXULTemplateBuilder* aData,
+                         void* aContext)
+{
+    nsCycleCollectionTraversalCallback *cb =
+        NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aContext);
+
+    cb->NoteXPCOMChild(aKey);
+    cb->NoteXPCOMChild(aData);
+
+    return PL_DHASH_NEXT;
+}
+
+static PLDHashOperator PR_CALLBACK
+TraverseObservers(nsIURI* aKey, nsIObserver* aData, void* aContext)
+{
+    nsCycleCollectionTraversalCallback *cb =
+        NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aContext);
+
+    cb->NoteXPCOMChild(aData);
+
+    return PL_DHASH_NEXT;
+}
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
+    // XXX tmp->mForwardReferences?
+    // XXX tmp->mContextStack?
+
+    tmp->mElementMap.Enumerate(TraverseElement, &cb);
+
+    // An element will only have a template builder as long as it's in the
+    // document, so we'll traverse the table here instead of from the element.
+    if (tmp->mTemplateBuilderTable)
+        tmp->mTemplateBuilderTable->EnumerateRead(TraverseTemplateBuilders, &cb);
+        
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mCurrentPrototype,
+                                                     nsIScriptGlobalObjectOwner)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mMasterPrototype,
+                                                     nsIScriptGlobalObjectOwner)
+    PRUint32 i, count = tmp->mPrototypes.Length();
+    for (i = 0; i < count; ++i) {
+        cb.NoteXPCOMChild(NS_STATIC_CAST(nsIScriptGlobalObjectOwner*, 
+                                         tmp->mPrototypes[i]));
+    }
+    
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTooltipNode)
+
+    if (tmp->mOverlayLoadObservers.IsInitialized())
+        tmp->mOverlayLoadObservers.EnumerateRead(TraverseObservers, &cb);
+    if (tmp->mPendingOverlayLoadNotifications.IsInitialized())
+        tmp->mPendingOverlayLoadNotifications.EnumerateRead(TraverseObservers, &cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_ADDREF_INHERITED(nsXULDocument, nsXMLDocument)
 NS_IMPL_RELEASE_INHERITED(nsXULDocument, nsXMLDocument)
 
@@ -307,6 +373,7 @@ NS_INTERFACE_MAP_BEGIN(nsXULDocument)
     NS_INTERFACE_MAP_ENTRY(nsIStreamLoaderObserver)
     NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
     NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULDocument)
+    NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsXULDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsXMLDocument)
 
 
@@ -1754,18 +1821,18 @@ nsXULDocument::SetTemplateBuilderFor(nsIContent* aContent,
                                      nsIXULTemplateBuilder* aBuilder)
 {
     if (! mTemplateBuilderTable) {
-        mTemplateBuilderTable = new nsSupportsHashtable();
-        if (! mTemplateBuilderTable)
+        mTemplateBuilderTable = new BuilderTable;
+        if (! mTemplateBuilderTable || !mTemplateBuilderTable->Init()) {
+            mTemplateBuilderTable = nsnull;
             return NS_ERROR_OUT_OF_MEMORY;
+        }
     }
-
-    nsISupportsKey key(aContent);
 
     if (aBuilder) {
-        mTemplateBuilderTable->Put(&key, aBuilder);
+        mTemplateBuilderTable->Put(aContent, aBuilder);
     }
     else {
-        mTemplateBuilderTable->Remove(&key);
+        mTemplateBuilderTable->Remove(aContent);
     }
 
     return NS_OK;
@@ -1776,9 +1843,7 @@ nsXULDocument::GetTemplateBuilderFor(nsIContent* aContent,
                                      nsIXULTemplateBuilder** aResult)
 {
     if (mTemplateBuilderTable) {
-        nsISupportsKey key(aContent);
-        *aResult = NS_STATIC_CAST(nsIXULTemplateBuilder*,
-                                  mTemplateBuilderTable->Get(&key));
+        mTemplateBuilderTable->Get(aContent, aResult);
     }
     else
         *aResult = nsnull;

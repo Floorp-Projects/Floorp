@@ -76,7 +76,7 @@ public:
     nsXULPDGlobalObject(nsXULPrototypeDocument* owner);
 
     // nsISupports interface
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
     // nsIScriptGlobalObject methods
     virtual void SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
@@ -93,6 +93,9 @@ public:
 
     // nsIScriptObjectPrincipal methods
     virtual nsIPrincipal* GetPrincipal();
+
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULPDGlobalObject,
+                                             nsIScriptGlobalObject)
 
 protected:
     virtual ~nsXULPDGlobalObject();
@@ -190,9 +193,24 @@ nsXULPrototypeDocument::~nsXULPrototypeDocument()
     }
 }
 
-NS_IMPL_ISUPPORTS2(nsXULPrototypeDocument,
-                   nsIScriptGlobalObjectOwner,
-                   nsISerializable)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULPrototypeDocument)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsXULPrototypeDocument)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULPrototypeDocument)
+  // XXX Can't traverse tmp->mRoot, non-XPCOM refcounted object
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobalObject)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN(nsXULPrototypeDocument)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
+  NS_INTERFACE_MAP_ENTRY(nsISerializable)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObjectOwner)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsXULPrototypeDocument)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXULPrototypeDocument,
+                                          nsIScriptGlobalObjectOwner)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXULPrototypeDocument,
+                                           nsIScriptGlobalObjectOwner)
 
 NS_IMETHODIMP
 NS_NewXULPrototypeDocument(nsXULPrototypeDocument** aResult)
@@ -601,14 +619,31 @@ nsXULPDGlobalObject::~nsXULPDGlobalObject()
 {
 }
 
-NS_IMPL_ADDREF(nsXULPDGlobalObject)
-NS_IMPL_RELEASE(nsXULPDGlobalObject)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULPDGlobalObject)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsXULPDGlobalObject)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULPDGlobalObject)
+  {
+    PRUint32 lang_id;
+    NS_STID_FOR_ID(lang_id) {
+      nsISupports *context = tmp->mScriptContexts[NS_STID_INDEX(lang_id)];
+      if (context) {
+        cb.NoteXPCOMChild(context);
+      }
+    }
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN(nsXULPDGlobalObject)
-    NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
-    NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObject)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObject)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsXULPDGlobalObject)
 NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXULPDGlobalObject,
+                                          nsIScriptGlobalObject)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXULPDGlobalObject,
+                                           nsIScriptGlobalObject)
 
 //----------------------------------------------------------------------
 //

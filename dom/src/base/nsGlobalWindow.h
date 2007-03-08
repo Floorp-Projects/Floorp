@@ -713,6 +713,9 @@ public:
   {
   }
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsGlobalChromeWindow,
+                                                     nsGlobalWindow)
+
 protected:
   nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
 };

@@ -45,6 +45,7 @@
 #include "nsIXPCScriptNotify.h"
 #include "nsITimer.h"
 #include "prtime.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIXPConnectJSObjectHolder;
 
@@ -56,7 +57,8 @@ public:
   nsJSContext(JSRuntime *aRuntime);
   virtual ~nsJSContext();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsJSContext, nsIScriptContext)
 
   virtual PRUint32 GetScriptTypeID()
     { return nsIProgrammingLanguage::JAVASCRIPT; }

@@ -39,6 +39,7 @@
 #include "nsCOMPtr.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsISupportsArray.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIContent;
 class nsIAtom;
@@ -72,7 +73,8 @@ struct nsXBLResource {
 class nsXBLResourceLoader : public nsICSSLoaderObserver
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsXBLResourceLoader)
 
   // nsICSSLoaderObserver
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
