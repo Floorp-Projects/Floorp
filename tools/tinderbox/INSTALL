@@ -10,7 +10,7 @@ To install a fresh tinderbox:
 3) Create links from the cvs directory to your build directory.
 	ln -s /builds/cvs/mozilla/tools/tinderbox/*.pl .
 	
-4) Create your tinderbox config file
+4) Create your tinderbox config file.
 	perl ./build-seamonkey.pl --example-config > tinder-config.pl
 
 5) Create your mozconfig build file in the current dir
