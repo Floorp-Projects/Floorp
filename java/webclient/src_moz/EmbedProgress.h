@@ -47,12 +47,13 @@ class EmbedProgress : public nsIWebProgressListener,
 
   NS_DECL_NSIWEBPROGRESSLISTENER
 
+  NativeBrowserControl *GetOwner();
+  static void RequestToURIString (nsIRequest *aRequest, char **aString);
+
  private:
 
   NS_IMETHOD GetAjaxListener(AjaxListener** result);
   NS_IMETHOD RemoveAjaxListener(void);
-
-  static void RequestToURIString (nsIRequest *aRequest, char **aString);
 
   NativeBrowserControl *mOwner;
 

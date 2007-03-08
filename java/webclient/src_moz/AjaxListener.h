@@ -24,16 +24,27 @@
 
 
 #include "nsIObserver.h"
+#include "nsIDOMEventListener.h"
 
 #include "jni.h"
 
 class EmbedProgress;
+class nsIXMLHttpRequest;
+class nsIHttpChannel;
+class nsIRequest;
 
-class AjaxListener : public nsIObserver
+class AjaxListener : public nsIObserver, public nsIDOMEventListener
 {
 public:
    NS_DECL_ISUPPORTS
    NS_DECL_NSIOBSERVER
+   NS_DECL_NSIDOMEVENTLISTENER
+
+   enum AJAX_STATE {
+       AJAX_START,
+       AJAX_END,
+       AJAX_ERROR
+   };
  
    AjaxListener(EmbedProgress *owner, 
 		JNIEnv *env, jobject eventRegistration);
@@ -43,6 +54,12 @@ public:
     NS_IMETHOD StopObserving(void);
 
 private:
+
+    NS_IMETHOD ObserveAjax(nsIRequest *request,
+			   nsIHttpChannel *channel,
+			   nsIXMLHttpRequest *ajax,
+			   AJAX_STATE state);
+
     EmbedProgress* mOwner;
     JNIEnv *mJNIEnv;
     jobject mEventRegistration;

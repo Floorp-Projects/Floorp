@@ -241,6 +241,17 @@ public class TestBrowser extends JPanel {
 		    if (event instanceof DocumentLoadEvent) {
 			System.out.println("URI: " + map.get("URI"));
 			switch ((int) event.getType()) {
+			case ((int) DocumentLoadEvent.END_AJAX_EVENT_MASK):
+			    System.out.println("status: " + 
+					       map.get("status"));
+			    System.out.println("responseText: " + 
+					       map.get("responseText"));
+                            // INTENTIONAL FALL THROUGH
+			case ((int) DocumentLoadEvent.START_AJAX_EVENT_MASK):
+			    System.out.println("requestMethod: " + 
+					       map.get("method"));
+                            // INTENTIONAL FALL THROUGH
+
 			case ((int) DocumentLoadEvent.START_URL_LOAD_EVENT_MASK):
 			    System.out.println("requestMethod: " + 
 					       map.get("method"));

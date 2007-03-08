@@ -84,6 +84,27 @@ public class DocumentLoadEvent extends WebclientEvent {
     
     public static final long FETCH_INTERRUPT_EVENT_MASK = 1 << 8;
 
+    /**
+     * <p>This event indicates the current fetch is the start of an Ajax 
+     * transaction.</p>
+     */
+    
+    public static final long START_AJAX_EVENT_MASK = 1 << 9;
+
+    /**
+     * <p>This event indicates the current fetch is an Ajax 
+     * transaction in an error state.</p>
+     */
+    
+    public static final long ERROR_AJAX_EVENT_MASK = 1 << 10;
+    
+    /**
+     * <p>This event indicates the current fetch is an Ajax 
+     * transaction in that has completed.</p>
+     */
+    
+    public static final long END_AJAX_EVENT_MASK = 1 << 11;
+
 //
 // Constructors
 //

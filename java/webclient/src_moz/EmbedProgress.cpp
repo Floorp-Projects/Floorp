@@ -90,15 +90,6 @@ EmbedProgress::SetEventRegistration(jobject yourEventRegistration)
         ::util_ThrowExceptionToJava(env, "Exception: EmbedProgress->SetEventRegistration(): can't create NewGlobalRef\n\tfor eventRegistration");
 	rv = NS_ERROR_FAILURE;
     }
-
-    return rv;
-}
-
-nsresult 
-EmbedProgress::SetCapturePageInfo(jboolean newState)
-{
-    mCapturePageInfo = newState;
-    nsresult rv = NS_OK;
     AjaxListener *observer = nsnull;
     rv = GetAjaxListener(&observer);
     if (observer && NS_SUCCEEDED(rv)) {
@@ -109,6 +100,14 @@ EmbedProgress::SetCapturePageInfo(jboolean newState)
 	    observer->StopObserving();
 	}
     }
+
+    return rv;
+}
+
+nsresult 
+EmbedProgress::SetCapturePageInfo(jboolean newState)
+{
+    mCapturePageInfo = newState;
     return NS_OK;
 }
 
@@ -477,6 +476,11 @@ EmbedProgress::OnSecurityChange(nsIWebProgress *aWebProgress,
 		  aState);
     **********/
   return NS_OK;
+}
+
+NativeBrowserControl* EmbedProgress::GetOwner()
+{
+    return mOwner;
 }
 
 NS_IMETHODIMP

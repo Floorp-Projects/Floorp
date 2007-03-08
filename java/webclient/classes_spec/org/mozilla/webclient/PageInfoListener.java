@@ -59,6 +59,65 @@ package org.mozilla.webclient;
  * This entry will be a <code>java.util.Map</code> of all the response
  * headers.</p></dd>
  *
+ * <dt>For <code>START_AJAX_EVENT_MASK</code> type</dt>
+
+ * <dd><p>The map will contain the following keys and values:</p>
+
+ * <dl>
+
+ * <dt><code>headers</code></dt>
+
+ * <dd>a <code>java.util.Map</code> of all the request headers.</dd>
+
+ * <dt><code>method</code></dt>
+ 
+ * <dd>the request method for this event.</dd>
+
+ * <dt><code>readyState</code></dt>
+
+ * <dd>a String of the numerical value of the XMLHTTPRequest readyState</dd>
+
+ * </dl>
+
+ * </dd>
+
+ * <dt>For <code>END_AJAX_EVENT_MASK</code> type</dt>
+ *
+ * <dd><p>The map will contain the following keys and values:</p>
+
+ * <dl>
+
+ * <dt><code>method</code></dt>
+ 
+ * <dd>the request method for this event.</dd>
+
+ * <dt>responseXML</dt>
+
+ * <dd>a <code>org.w3c.dom.Document</code> instance of the response XML.</dd>
+
+ * <dt>responseText</dt>
+
+ * <dd>a String instance of the response Text.</dd>
+
+ * <dt><code>status</code></dt>
+
+ * <dd>the response status string from the server, such as "<code>200
+ * OK</code>".</dd>
+
+ * <dt><code>headers</code></dt>
+
+ * <dd>a <code>java.util.Map</code> of all the response headers.</dd>
+
+ * <dt><code>method</code></dt>
+ 
+ * <dd>the request method for this event.</dd>
+
+ * <dt><code>readyState</code></dt>
+
+ * <dd>a String of the numerical value of the XMLHTTPRequest readyState</dd>
+
+ * </dl>
+
  * </dl>
  *
  *

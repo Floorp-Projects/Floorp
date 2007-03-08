@@ -55,6 +55,9 @@ jobject SCREEN_X_KEY;
 jobject SCREEN_Y_KEY;
 jobject CLIENT_X_KEY;
 jobject CLIENT_Y_KEY;
+jobject READY_STATE_KEY;
+jobject RESPONSE_TEXT_KEY;
+jobject RESPONSE_XML_KEY;
 jobject CHAR_CODE;
 jobject KEY_CODE;
 jobject ALT_KEY;
@@ -104,6 +107,9 @@ char * DocumentLoader_maskNames[] = {
   STATUS_URL_LOAD_EVENT_MASK_VALUE,
   UNKNOWN_CONTENT_EVENT_MASK_VALUE,
   FETCH_INTERRUPT_EVENT_MASK_VALUE,
+  START_AJAX_EVENT_MASK_VALUE,
+  ERROR_AJAX_EVENT_MASK_VALUE,
+  END_AJAX_EVENT_MASK_VALUE,
   nsnull
 };
 
@@ -165,6 +171,21 @@ jboolean util_InitStringConstants()
     if (nsnull == (CLIENT_Y_KEY = 
                    ::util_NewGlobalRef(env, (jobject)
                                        ::util_NewStringUTF(env, "ClientY")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (READY_STATE_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                      ::util_NewStringUTF(env, "readyState")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (RESPONSE_TEXT_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                      ::util_NewStringUTF(env, "responseText")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (RESPONSE_XML_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                      ::util_NewStringUTF(env, "responseXML")))) {
         return JNI_FALSE;
     }
     if (nsnull == (CHAR_CODE = 
