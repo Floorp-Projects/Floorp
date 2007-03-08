@@ -8,3 +8,4 @@ Edit this file and include an explanation of why you're respinning. - #build
 2007-02-21 17:48 UTC - Respinning to go back to trunk
 2007-02-21 18:23 UTC - Forgot to comment out $BuildTag
 2007-03-02 16:56 UTC - Respin to pick up fix for bug 372366
+2007-03-08 16:10 UTC - Respinning to pick up fix for bad checkin
