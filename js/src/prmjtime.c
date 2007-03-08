@@ -264,7 +264,7 @@ PRMJ_DSTOffset(JSInt64 local_time)
 
 /* Format a time value into a buffer. Same semantics as strftime() */
 size_t
-PRMJ_FormatTime(char *buf, int buflen, char *fmt, PRMJTime *prtm)
+PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
 {
 #if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS)
     struct tm a;

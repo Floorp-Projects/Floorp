@@ -189,7 +189,7 @@ ToDisassemblySource(JSContext *cx, jsval v)
             str = JS_NewString(cx, source, strlen(source));
             if (!str)
                 return NULL;
-            return JS_GetStringBytes(str);
+            return js_GetStringBytes(cx, str);
         }
     }
     return js_ValueToPrintableSource(cx, v);
@@ -410,6 +410,31 @@ SprintCString(Sprinter *sp, const char *s)
 }
 
 static ptrdiff_t
+SprintString(Sprinter *sp, JSString *str)
+{
+    jschar *chars;
+    size_t length, size;
+    ptrdiff_t offset;
+
+    chars = JSSTRING_CHARS(str);
+    length = JSSTRING_LENGTH(str);
+    if (length == 0)
+        return sp->offset;
+
+    size = js_GetDeflatedStringLength(sp->context, chars, length);
+    if (size == (size_t)-1 || !SprintAlloc(sp, size + 1))
+        return -1;
+
+    offset = sp->offset;
+    sp->offset += size;
+    js_DeflateStringToBuffer(sp->context, chars, length, sp->base + offset,
+                             &size);
+    sp->base[sp->offset] = 0;
+    return offset;
+}
+
+
+static ptrdiff_t
 Sprint(Sprinter *sp, const char *format, ...)
 {
     va_list ap;
@@ -428,7 +453,7 @@ Sprint(Sprinter *sp, const char *format, ...)
     return offset;
 }
 
-const jschar js_EscapeMap[] = {
+const char js_EscapeMap[] = {
     '\b', 'b',
     '\f', 'f',
     '\n', 'n',
@@ -449,7 +474,8 @@ QuoteString(Sprinter *sp, JSString *str, uint32 quote)
     JSBool dontEscape, ok;
     jschar qc, c;
     ptrdiff_t off, len, nb;
-    const jschar *s, *t, *u, *z;
+    const jschar *s, *t, *z;
+    const char *e;
     char *bp;
 
     /* Sample off first for later return value pointer computation. */
@@ -488,10 +514,10 @@ QuoteString(Sprinter *sp, JSString *str, uint32 quote)
             break;
 
         /* Use js_EscapeMap, \u, or \x only if necessary. */
-        if ((u = js_strchr(js_EscapeMap, c)) != NULL) {
+        if (!(c >> 8) && (e = strchr(js_EscapeMap, (int)c)) != NULL) {
             ok = dontEscape
                  ? Sprint(sp, "%c", (char)c) >= 0
-                 : Sprint(sp, "\\%c", (char)u[1]) >= 0;
+                 : Sprint(sp, "\\%c", e[1]) >= 0;
         } else {
 #ifdef JS_C_STRINGS_ARE_UTF8
             /* If this is a surrogate pair, make sure to print the pair. */
@@ -1891,18 +1917,14 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     jp2->scope = jp->scope;
                     js_puts(jp2, "\n");
                     ok = js_DecompileFunction(jp2, fun);
-                    if (ok) {
-                        js_puts(jp2, "\n");
-                        str = js_GetPrinterOutput(jp2);
-                        if (str)
-                            js_printf(jp, "%s\n", JS_GetStringBytes(str));
-                        else
-                            ok = JS_FALSE;
+                    if (ok && jp2->sprinter.base) {
+                        js_puts(jp, jp2->sprinter.base);
+                        js_puts(jp, "\n");
                     }
                     js_DestroyPrinter(jp2);
                     if (!ok)
                         return NULL;
-
+                    js_puts(jp, "\n");
                     break;
 
                   case SRC_BRACE:
@@ -3504,8 +3526,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     }
                 }
                 str = JSVAL_TO_STRING(val);
-                todo = SprintPut(&ss->sprinter, JS_GetStringBytes(str),
-                                 JSSTRING_LENGTH(str));
+                todo = SprintString(&ss->sprinter, str);
                 break;
 
               case JSOP_TABLESWITCH:

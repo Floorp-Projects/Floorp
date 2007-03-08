@@ -1824,8 +1824,7 @@ GetObjSlotName(JSObject *obj, uint32 slot, char *buf, size_t bufsize)
         if (JSVAL_IS_INT(nval)) {
             JS_snprintf(buf, bufsize, "%ld", (long)JSVAL_TO_INT(nval));
         } else if (JSVAL_IS_STRING(nval)) {
-            JS_snprintf(buf, bufsize, "%s",
-                        JS_GetStringBytes(JSVAL_TO_STRING(nval)));
+            js_PutEscapedString(buf, bufsize, JSVAL_TO_STRING(nval), 0);
         } else {
             JS_snprintf(buf, bufsize, "**FINALIZED ATOM KEY**");
         }
@@ -1927,16 +1926,25 @@ gc_dump_thing(JSContext *cx, JSGCThing *thing, FILE *fp)
       case GCX_NAMESPACE:
       {
         JSXMLNamespace *ns = (JSXMLNamespace *)thing;
-        fprintf(fp, "namespace %s:%s",
-                JS_GetStringBytes(ns->prefix), JS_GetStringBytes(ns->uri));
+
+        fputs("namespace ", fp);
+        if (ns->prefix)
+            js_FileEscapedString(fp, ns->prefix, 0);
+        fputc(':', fp);
+        js_FileEscapedString(fp, ns->uri, 0);
         break;
       }
       case GCX_QNAME:
       {
         JSXMLQName *qn = (JSXMLQName *)thing;
-        fprintf(fp, "qname %s(%s):%s",
-                JS_GetStringBytes(qn->prefix), JS_GetStringBytes(qn->uri),
-                JS_GetStringBytes(qn->localName));
+
+        fputs("qname ", fp);
+        if (qn->prefix)
+            js_FileEscapedString(fp, qn->prefix, 0);
+        fputc('(', fp);
+        js_FileEscapedString(fp, qn->uri, 0);
+        fputs("):", fp);
+        js_FileEscapedString(fp, qn->localName, 0);
         break;
       }
       case GCX_XML:
@@ -1954,7 +1962,8 @@ gc_dump_thing(JSContext *cx, JSGCThing *thing, FILE *fp)
         fprintf(fp, "private %8p", (void *)thing);
         break;
       default:
-        fprintf(fp, "string %s", JS_GetStringBytes((JSString *)thing));
+        fputs("string ", fp);
+        js_FileEscapedString(fp, (JSString *)thing, 0);
         break;
     }
     fprintf(fp, " via %s\n", path);
@@ -2016,8 +2025,7 @@ js_MarkAtom(JSContext *cx, JSAtom *atom)
         char name[32];
 
         if (JSVAL_IS_STRING(key)) {
-            JS_snprintf(name, sizeof name, "'%s'",
-                        JS_GetStringBytes(JSVAL_TO_STRING(key)));
+            js_PutEscapedString(name, sizeof name, JSVAL_TO_STRING(key), '\'');
         } else {
             JS_snprintf(name, sizeof name, "<%x>", key);
         }
@@ -3092,7 +3100,7 @@ restart:
      * had watchpoints referencing tree nodes.  Then sweep atoms, which may be
      * referenced from dead property ids.
      */
-    js_SweepScopeProperties(rt);
+    js_SweepScopeProperties(cx);
     js_SweepAtomState(&rt->atomState);
 
     /*

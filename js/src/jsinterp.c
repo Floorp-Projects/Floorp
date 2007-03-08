@@ -1023,8 +1023,9 @@ LogCall(JSContext *cx, jsval callee, uintN argc, jsval *argv)
             break;
         }
         if (str)
-            cstr = JS_GetStringBytes(str);
-        strncpy(avc->strbuf, cstr, sizeof avc->strbuf);
+            js_PutEscapedString(avc->strbuf, sizeof avc->strbuf, str, 0);
+        else
+            strncpy(avc->strbuf, cstr, sizeof avc->strbuf);
     }
 }
 
@@ -6045,9 +6046,12 @@ interrupt:
             }
             fprintf(tracefp, "  stack: ");
             for (siter = fp->spbase; siter < sp; siter++) {
-                str = js_ValueToSource(cx, *siter);
-                fprintf(tracefp, "%s ",
-                        str ? JS_GetStringBytes(str) : "<null>");
+                str = js_ValueToString(cx, *siter);
+                if (!str)
+                    fputs("<null>", tracefp)
+                else
+                    js_FileEscapedString(tracefp, str, 0);
+                fputc(' ', tracefp);
             }
             fputc('\n', tracefp);
         }

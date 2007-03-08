@@ -3385,11 +3385,13 @@ js_FindIdentifierBase(JSContext *cx, jsid id)
      */
     if (JS_HAS_STRICT_OPTION(cx)) {
         JSString *str = JSVAL_TO_STRING(ID_TO_VALUE(id));
-        if (!JS_ReportErrorFlagsAndNumber(cx,
+        const char *bytes = js_GetStringBytes(cx, str);
+
+        if (!bytes ||
+            !JS_ReportErrorFlagsAndNumber(cx,
                                           JSREPORT_WARNING | JSREPORT_STRICT,
                                           js_GetErrorMessage, NULL,
-                                          JSMSG_UNDECLARED_VAR,
-                                          JS_GetStringBytes(str))) {
+                                          JSMSG_UNDECLARED_VAR, bytes)) {
             return NULL;
         }
     }

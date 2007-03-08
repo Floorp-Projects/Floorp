@@ -688,7 +688,9 @@ js_XDRStringAtom(JSXDRState *xdr, JSAtom **atomp)
 JSBool
 js_XDRCStringAtom(JSXDRState *xdr, JSAtom **atomp)
 {
+    JSString *str;
     char *bytes;
+    JSBool ok;
     uint32 nbytes;
     JSAtom *atom;
     JSContext *cx;
@@ -696,8 +698,15 @@ js_XDRCStringAtom(JSXDRState *xdr, JSAtom **atomp)
 
     if (xdr->mode == JSXDR_ENCODE) {
         JS_ASSERT(ATOM_IS_STRING(*atomp));
-        bytes = JS_GetStringBytes(ATOM_TO_STRING(*atomp));
-        return JS_XDRCString(xdr, &bytes);
+        str = ATOM_TO_STRING(*atomp);
+        bytes = js_DeflateString(xdr->cx,
+                                 JSSTRING_CHARS(str),
+                                 JSSTRING_LENGTH(str));
+        if (!bytes)
+            return JS_FALSE;
+        ok = JS_XDRCString(xdr, &bytes);
+        JS_free(xdr->cx, bytes);
+        return ok;
     }
 
     /*

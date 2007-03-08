@@ -201,10 +201,15 @@ namespace_mark_vector(JSContext *cx, JSXMLNamespace **vec, uint32 len)
         {
 #ifdef GC_MARK_DEBUG
             char buf[100];
+            size_t n;
 
-            JS_snprintf(buf, sizeof buf, "%s=%s",
-                        ns->prefix ? JS_GetStringBytes(ns->prefix) : "",
-                        JS_GetStringBytes(ns->uri));
+            n = ns->prefix
+                ? js_PutEscapedString(buf, sizeof buf, ns->prefix, 0)
+                : 0;
+            if (n < sizeof buf - 1) {
+                buf[n++] = '=';
+                js_PutEscapedString(buf + n, sizeof buf - n, ns->uri, 0);
+            }
 #endif
             GC_MARK(cx, ns, buf);
         }
@@ -5080,24 +5085,27 @@ xml_mark_vector(JSContext *cx, JSXML **vec, uint32 len)
         {
 #ifdef GC_MARK_DEBUG
             char buf[120];
+            size_t n;
 
             if (elt->xml_class == JSXML_CLASS_LIST) {
                 strcpy(buf, js_XMLList_str);
             } else if (JSXML_HAS_NAME(elt)) {
                 JSXMLQName *qn = elt->name;
 
-                JS_snprintf(buf, sizeof buf, "%s::%s",
-                            qn->uri ? JS_GetStringBytes(qn->uri) : "*",
-                            JS_GetStringBytes(qn->localName));
+                if (qn->uri) {
+                    n = js_PutEscapedString(buf, sizeof buf, qn->uri, 0);
+                } else {
+                    buf[0] = '*';
+                    n = 1;
+                }
+                if (n + 2 < sizeof buf) {
+                    buf[n++] = ':';
+                    buf[n++] = ':';
+                    js_PutEscapedString(buf + n, sizeof buf - n, qn->localName,
+                                        0);
+                }
             } else {
-                JSString *str = elt->xml_value;
-                size_t srclen = JSSTRING_LENGTH(str);
-                size_t dstlen = sizeof buf;
-
-                if (srclen >= sizeof buf / 6)
-                    srclen = sizeof buf / 6 - 1;
-                js_DeflateStringToBuffer(cx, JSSTRING_CHARS(str), srclen,
-                                         buf, &dstlen);
+                js_PutEscapedString(buf, sizeof buf, elt->xml_value, 0);
             }
 #endif
             GC_MARK(cx, elt, buf);

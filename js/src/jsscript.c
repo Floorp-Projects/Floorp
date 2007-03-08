@@ -761,23 +761,23 @@ script_freeze(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     JS_ASSERT((jsword)buf % sizeof(jschar) == 0);
     len /= sizeof(jschar);
-    str = JS_NewUCStringCopyN(cx, (jschar *)buf, len);
-    if (!str) {
-        ok = JS_FALSE;
-        goto out;
-    }
-
 #if IS_BIG_ENDIAN
   {
     jschar *chars;
     uint32 i;
 
     /* Swap bytes in Unichars to keep frozen strings machine-independent. */
-    chars = JS_GetStringChars(str);
+    chars = (jschar *)buf;
     for (i = 0; i < len; i++)
         chars[i] = JSXDR_SWAB16(chars[i]);
   }
 #endif
+    str = JS_NewUCStringCopyN(cx, (jschar *)buf, len);
+    if (!str) {
+        ok = JS_FALSE;
+        goto out;
+    }
+
     *rval = STRING_TO_JSVAL(str);
 
 out:
@@ -812,8 +812,8 @@ script_thaw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!xdr)
         return JS_FALSE;
 
-    buf = JS_GetStringChars(str);
-    len = JS_GetStringLength(str);
+    buf = JSSTRING_CHARS(str);
+    len = JSSTRING_LENGTH(str);
 #if IS_BIG_ENDIAN
   {
     jschar *from, *to;

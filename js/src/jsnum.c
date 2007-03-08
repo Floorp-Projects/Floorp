@@ -306,7 +306,8 @@ num_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
     const char *numGrouping, *tmpGroup;
     JSRuntime *rt;
     JSString *numStr, *str;
-    char *num, *buf, *dec, *end, *tmpSrc, *tmpDest;
+    const char *num, *end, *tmpSrc;
+    char *buf, *dec, *tmpDest;
     int digits, size, remainder, nrepeat;
 
     /*
@@ -317,7 +318,9 @@ num_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
         return JS_FALSE;
     JS_ASSERT(JSVAL_IS_STRING(*rval));
     numStr = JSVAL_TO_STRING(*rval);
-    num = js_GetStringBytes(cx->runtime, numStr);
+    num = js_GetStringBytes(cx, numStr);
+    if (!num)
+        return JS_FALSE;
 
     /* Find bit before the decimal. */
     dec = strchr(num, '.');

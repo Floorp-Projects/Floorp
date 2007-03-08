@@ -4042,12 +4042,16 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (argc == 0) {
         str = cx->regExpStatics.input;
         if (!str) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_NO_INPUT,
-                                 JS_GetStringBytes(re->source),
-                                 (re->flags & JSREG_GLOB) ? "g" : "",
-                                 (re->flags & JSREG_FOLD) ? "i" : "",
-                                 (re->flags & JSREG_MULTILINE) ? "m" : "");
+            const char *bytes = js_GetStringBytes(cx, re->source);
+
+            if (bytes) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_NO_INPUT,
+                                     bytes,
+                                     (re->flags & JSREG_GLOB) ? "g" : "",
+                                     (re->flags & JSREG_FOLD) ? "i" : "",
+                                     (re->flags & JSREG_MULTILINE) ? "m" : "");
+            }
             ok = JS_FALSE;
             goto out;
         }
