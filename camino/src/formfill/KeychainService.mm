@@ -249,15 +249,24 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
 
   // Finally, check for a new style entry created by something other than Camino.
   // Since we don't yet have any UI for multiple accounts, we use Safari's default
-  // if we can find it, otherwise we just arbitrarily pick the first one.
+  // if we can find it, otherwise we just arbitrarily pick the first one that
+  // looks plausible.
   keychainEnumerator = [newKeychainItems objectEnumerator];
   while ((item = [keychainEnumerator nextObject])) {
     NSString* comment = [item comment];
-    if (comment && ([comment rangeOfString:@"default"].location != NSNotFound))
+    if (comment && ([comment rangeOfString:@"default"].location != NSNotFound)) {
+      // Safari doesn't bother to set kSecNegativeItemAttr on "Passwords not saved"
+      // items; that's just the way they roll. This fragile method is the best we can do.
+      if ([[item password] isEqualToString:@" "])
+        continue;
       return item;
+    }
   }
-  if ([newKeychainItems count] > 0) {
-    return [newKeychainItems objectAtIndex:0];
+  keychainEnumerator = [newKeychainItems objectEnumerator];
+  while ((item = [keychainEnumerator nextObject])) {
+    if ([[item password] isEqualToString:@" "])
+      continue;
+    return item;
   }
 
   return nil;
