@@ -1296,6 +1296,49 @@ LOOP_INPUT
 fi # GNU_CC
 fi # COMPILE_ENVIRONMENT
 
+dnl =================================================================
+dnl Set up and test static assertion macros used to avoid AC_TRY_RUN,
+dnl which is bad when cross compiling.
+dnl =================================================================
+if test "$COMPILE_ENVIRONMENT"; then
+configure_static_assert_macros='
+#define CONFIGURE_STATIC_ASSERT(condition) CONFIGURE_STATIC_ASSERT_IMPL(condition, __LINE__)
+#define CONFIGURE_STATIC_ASSERT_IMPL(condition, line) CONFIGURE_STATIC_ASSERT_IMPL2(condition, line)
+#define CONFIGURE_STATIC_ASSERT_IMPL2(condition, line) typedef int static_assert_line_##line[(condition) ? 1 : -1]
+'
+
+dnl test that the macros actually work:
+AC_MSG_CHECKING(that static assertion macros used in autoconf tests work)
+AC_CACHE_VAL(ac_cv_static_assertion_macros_work,
+ [AC_LANG_SAVE
+  AC_LANG_C
+  ac_cv_static_assertion_macros_work="yes"
+  AC_TRY_COMPILE([$configure_static_assert_macros],
+                 [CONFIGURE_STATIC_ASSERT(1)],
+                 ,
+                 ac_cv_static_assertion_macros_work="no")
+  AC_TRY_COMPILE([$configure_static_assert_macros],
+                 [CONFIGURE_STATIC_ASSERT(0)],
+                 ac_cv_static_assertion_macros_work="no",
+                 )
+  AC_LANG_CPLUSPLUS
+  AC_TRY_COMPILE([$configure_static_assert_macros],
+                 [CONFIGURE_STATIC_ASSERT(1)],
+                 ,
+                 ac_cv_static_assertion_macros_work="no")
+  AC_TRY_COMPILE([$configure_static_assert_macros],
+                 [CONFIGURE_STATIC_ASSERT(0)],
+                 ac_cv_static_assertion_macros_work="no",
+                 )
+  AC_LANG_RESTORE
+ ])
+AC_MSG_RESULT("$ac_cv_static_assertion_macros_work")
+if test "$ac_cv_static_assertion_macros_work" = "no"; then
+    AC_MSG_ERROR([Compiler cannot compile macros used in autoconf tests.])
+fi
+
+fi # COMPILE_ENVIRONMENT
+
 dnl ========================================================
 dnl Checking for 64-bit OS
 dnl ========================================================
@@ -1303,9 +1346,9 @@ if test "$COMPILE_ENVIRONMENT"; then
 AC_LANG_SAVE
 AC_LANG_C
 AC_MSG_CHECKING(for 64-bit OS)
-AC_TRY_RUN([ int main () {
-    if (sizeof(long) == 8) { return 0; } return 1; } ],
-        result="yes", result="no", result="maybe" )
+AC_TRY_COMPILE([$configure_static_assert_macros],
+               [CONFIGURE_STATIC_ASSERT(sizeof(long) == 8)],
+               result="yes", result="no")
 AC_MSG_RESULT("$result")
 if test "$result" = "yes"; then
     AC_DEFINE(HAVE_64BIT_OS)
@@ -2557,15 +2600,14 @@ dnl (we really don't need the unsignedness check anymore)
 dnl ========================================================
 
 AC_CACHE_CHECK(for usable wchar_t (2 bytes, unsigned),
-    ac_cv_have_usable_wchar,
-    [AC_TRY_RUN([#include <stddef.h>
-                 int main () {
-                   return (sizeof(wchar_t) != 2) ||
-                          (wchar_t)-1 < (wchar_t) 0 ; } ],
-                ac_cv_have_usable_wchar="yes",
-                ac_cv_have_usable_wchar="no",
-                ac_cv_have_usable_wchar="maybe")])
-if test "$ac_cv_have_usable_wchar" = "yes"; then
+    ac_cv_have_usable_wchar_v2,
+    [AC_TRY_COMPILE([#include <stddef.h>
+                     $configure_static_assert_macros],
+                    [CONFIGURE_STATIC_ASSERT(sizeof(wchar_t) == 2);
+                     CONFIGURE_STATIC_ASSERT((wchar_t)-1 > (wchar_t) 0)],
+                    ac_cv_have_usable_wchar_v2="yes",
+                    ac_cv_have_usable_wchar_v2="no")])
+if test "$ac_cv_have_usable_wchar_v2" = "yes"; then
     AC_DEFINE(HAVE_CPP_2BYTE_WCHAR_T)
     HAVE_CPP_2BYTE_WCHAR_T=1
 else
@@ -2581,16 +2623,15 @@ dnl Note that we assume that mac & win32 have short wchar (see nscore.h)
     CXXFLAGS="$CXXFLAGS -fshort-wchar"
 
     AC_CACHE_CHECK(for compiler -fshort-wchar option, 
-        ac_cv_have_usable_wchar_option,
-        [AC_TRY_RUN([#include <stddef.h>
-                     int main () {
-                       return (sizeof(wchar_t) != 2) ||
-                              (wchar_t)-1 < (wchar_t) 0 ; } ],
-                    ac_cv_have_usable_wchar_option="yes",
-                    ac_cv_have_usable_wchar_option="no",
-                    ac_cv_have_usable_wchar_option="maybe")])
+        ac_cv_have_usable_wchar_option_v2,
+        [AC_TRY_COMPILE([#include <stddef.h>
+                         $configure_static_assert_macros],
+                        [CONFIGURE_STATIC_ASSERT(sizeof(wchar_t) == 2);
+                         CONFIGURE_STATIC_ASSERT((wchar_t)-1 > (wchar_t) 0)],
+                        ac_cv_have_usable_wchar_option_v2="yes",
+                        ac_cv_have_usable_wchar_option_v2="no")])
 
-    if test "$ac_cv_have_usable_wchar_option" = "yes"; then
+    if test "$ac_cv_have_usable_wchar_option_v2" = "yes"; then
         AC_DEFINE(HAVE_CPP_2BYTE_WCHAR_T)
         HAVE_CPP_2BYTE_WCHAR_T=1
     else    
@@ -6776,10 +6817,9 @@ if test "$_PEDANTIC"; then
     _SAVE_CXXFLAGS=$CXXFLAGS
     CXXFLAGS="$CXXFLAGS ${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic"
     AC_MSG_CHECKING([whether C++ compiler has -pedantic long long bug])
-    AC_TRY_RUN([ int main () {
-                if (sizeof(long long) != 8) { return 1; } 
-                    return 0; } ],
-        result="no", result="yes", result="maybe" )
+    AC_TRY_COMPILE([$configure_static_assert_macros],
+                   [CONFIGURE_STATIC_ASSERT(sizeof(long long) == 8)],
+                   result="no", result="yes" )
     AC_MSG_RESULT([$result])
     CXXFLAGS="$_SAVE_CXXFLAGS"
 
@@ -6790,9 +6830,6 @@ if test "$_PEDANTIC"; then
         ;;
     yes)
         AC_MSG_ERROR([Your compiler appears to have a known bug where long long is miscompiled when using -pedantic.  Reconfigure using --disable-pedantic. ])
-        ;;
-    maybe)
-        AC_MSG_WARN([Cannot test -pedantic long long bug when cross-compiling.])
         ;;
     esac
 fi
