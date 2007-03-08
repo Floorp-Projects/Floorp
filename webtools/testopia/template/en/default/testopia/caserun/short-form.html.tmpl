@@ -21,7 +21,7 @@
 
 [%##### BEGIN Hidden Pane #####%]
 
-  <td colspan="12" style="margin:0px;padding:0px; border-bottom: 1px solid #000;">
+  <td colspan="13" style="margin:0px;padding:0px; border-bottom: 1px solid #000;">
   <div id="ra[% index %]" style="margin-left:15px;border-width:0px;[% 'display:none;' UNLESS updating %]">
 
   [%##### Action, Expected Results #####%]
@@ -90,6 +90,11 @@
         <div style="height:150px; width:400px; border:1px solid #000; background-color: #f8f8f8; overflow:auto;" id="old_notes[% index %]" ><pre>[% caserun.notes FILTER html %]</pre></div>
       </div>
     </td>
+      <td rowspan="2" valign="top" style="padding-left:15px"><b><a href="[% link %]component">Components:</a></b><br>
+        [% FOREACH comp = caserun.case.components %]
+          [% comp.name FILTER html %]<br>
+        [% END %]
+      </td>
     </tr>
     <tr>
       <td>

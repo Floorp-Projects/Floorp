@@ -22,8 +22,8 @@
   # ...
   #%]
 
-<div style="vertical-align:middle;font-size:10px;width:102px;">
-<span style="width:82px;float:left;position:relative;left:+10px;" id="bar_[% run.id FILTER none %]">
+<div style="vertical-align:middle;font-size:10px;width:102px;position:relative">
+<span style="width:82px;float:left;" id="bar_[% run.id FILTER none %]">
   <span style="float:left;width:1px;height:13px;background-color:black;"></span>
   [%# IFs needed for Opera browser #%] 
   <span style="float:left;"><img src="testopia/img/green_bar.gif" style="width:[% run.percent_passed * 0.8 %]px;height:13px;padding:0px;margin:0px;border-width:0px;"/></span>
@@ -32,7 +32,7 @@
   <span style="float:left;"><img src="testopia/img/pg.gif" style="width:[% 80 - run.percent_complete * 0.8 %]px;height:13px;"/></span>
   <span style="float:left;width:1px;height:13px;background-color:black;"></span>
 </span>
-<span style="font-family:Arial;font-size:11px;float:left;"><div style="position:relative;left:-40px;text-align:center;width:20px;">[% run.percent_complete %]%</div></span>
+<div style="position:absolute;left:0;margin-left:35px;text-align:center;width:20px;font-family:Arial;font-size:11px;">[% run.percent_complete %]%</div>
 </div>
 <span dojoType="toolTip" connectId="bar_[% run.id FILTER none %]" id="tip_[% run.id FILTER none %]" style="display:none"> 
 <table>

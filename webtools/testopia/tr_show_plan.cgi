@@ -67,6 +67,7 @@ push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 my $serverpush = support_server_push($cgi);
 
 $vars->{'action'} = "Commit";
+$vars->{'fullwidth'} = 1;
 $vars->{'form_action'} = "tr_show_plan.cgi";
 
 ####################

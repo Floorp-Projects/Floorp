@@ -49,6 +49,7 @@
     <th><a href="[% link %]case_run_status">Status</a></th>
     <th><a href="[% link %]priority">Priority</a></th>
     <th><a href="[% link %]category">Category</a></th>
+    <th><a href="[% link %]component">Component</a></th>
     <th>Bugs</th>
   </tr>
 
@@ -58,7 +59,7 @@
   [% index = loop.count %]
   <!-- START HEADER FOR [% index %]: CASE [% caserun.case.id %] -->
   <tr class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]">
-    <td colspan="12"><div style="margin-left:13px;margin-right:29px;"><b><a href="[% link %]summary" style="text-decoration:none;">Summary</a>:</b>&nbsp;
+    <td colspan="13"><div style="margin-left:13px;margin-right:29px;"><b><a href="[% link %]summary" style="text-decoration:none;">Summary</a>:</b>&nbsp;
         [% caserun.case.summary FILTER html %]</div></td></tr>
   <tr id="head_caserun_[% index %]" class="[% loop.count % 2 == 0 ? "bz_row_odd" : "bz_row_even" %]" dojoType="ContentPane">
     [% PROCESS "testopia/caserun/short-form-header.html.tmpl" %]

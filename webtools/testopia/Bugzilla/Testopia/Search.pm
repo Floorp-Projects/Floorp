@@ -391,6 +391,14 @@ sub init {
         push @supptables, "INNER JOIN test_case_categories AS categories ON test_cases.category_id = categories.category_id";
         push @orderby, 'categories.name';
     }
+    elsif ($order eq 'component') {
+        if ($obj eq 'case_run'){
+            push @supptables, "INNER JOIN test_cases ON test_cases.case_id = test_case_runs.case_id";
+        }
+        push @supptables, "INNER JOIN test_case_components ON test_cases.case_id = test_case_components.case_id";
+        push @supptables, "INNER JOIN components ON components.id = test_case_components.component_id";
+        push @orderby, 'components.name';
+    }
     elsif ($order eq 'case_status') {
         push @supptables, "INNER JOIN test_case_status AS case_status ON test_cases.case_status_id = case_status.case_status_id";
         push @orderby, 'case_status.name';

@@ -33,6 +33,7 @@ Select:
 
 <tr class="bz_row_header">
   [% IF dotweak %]<th></th>[% END %]
+  <th><a href="[% link %]plan_id[% paren %]">ID[% table.arrow IF table.last_sort == 'alias' %]</a></th>
   <th><a href="[% link %]name[% paren %]">Name[% table.arrow IF table.last_sort == 'alias' %]</a></th>
   <th><a href="[% link %]author[% paren %]">Author[% table.arrow IF table.last_sort == 'alias' %]</a></th>
   <th><a href="[% link %]created[% paren %]">Created[% table.arrow IF table.last_sort == 'alias' %]</a></th>
@@ -48,7 +49,8 @@ Select:
   
 <tr class="[% loop.count % 2 == 1 ? "bz_row_odd" : "bz_row_even" %]">
     [% IF dotweak %]<td align="center"><input type="checkbox" id="p_[% plan.id FILTER none %]" name="p_[% plan.id FILTER none %]"</td> [% END %]
-  
+
+  <td><a href="tr_show_plan.cgi?plan_id=[% plan.plan_id FILTER none %]">[% plan.id FILTER html %]</a></td>
   <td><a href="tr_show_plan.cgi?plan_id=[% plan.plan_id FILTER none %]">[% plan.name FILTER html %]</a></td>
   <td>[% plan.author.login FILTER html %]</td>
   <td>[% plan.creation_date FILTER time %]</td>

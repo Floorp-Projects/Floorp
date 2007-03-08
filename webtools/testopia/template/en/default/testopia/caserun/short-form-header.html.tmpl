@@ -31,7 +31,7 @@
       [% END %]
 
           <td valign="bottom" style="padding:2;border-width:0; cursor:pointer;" onclick="sr([% index %]);">
-            <img id="id[% index %]" src="testopia/img/tr.gif" width="11" height="11" alt="click to expand" border="0"/>
+            <img id="id[% index %]" src="testopia/img/[% updating ? 'td.gif' : 'tr.gif' %]" width="11" height="11" alt="click to expand" border="0"/>
           </td>
         </tr>
       </table>
@@ -80,6 +80,7 @@
     </td>
     <td align="left" valign="top">[% caserun.case.priority FILTER html %]</td>
     <td align="left" valign="top">[% caserun.case.category.name FILTER html %]</td>
+    <td align="left" valign="top">[% caserun.case.components.0.name FILTER html %][% '...' IF caserun.case.components.size > 1 %]</td>
     <td align="center" valign="top"><span id="nbgs[% index %]">
     [% FOREACH bug = caserun.bugs %]
       [% bug.bug_id FILTER bug_link(bug.bug_id) %]
