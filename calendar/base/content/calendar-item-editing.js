@@ -332,6 +332,7 @@ calTransaction.prototype = {
     mOldItem: null,
     mOldCalendar: null,
     mListener: null,
+    mIsDoTransaction: false,
 
     QueryInterface: function (aIID) {
         if (!aIID.equals(Components.interfaces.nsISupports) &&
@@ -348,7 +349,11 @@ calTransaction.prototype = {
             if (aOperationType == Components.interfaces.calIOperationListener.ADD ||
                 aOperationType ==Components.interfaces.calIOperationListener.MODIFY) {
                 // Add/Delete return the original item as detail for success
-                this.mItem = aDetail;
+                if (this.mIsDoTransaction) {
+                  this.mItem = aDetail;
+                } else {
+                  this.mOldItem = aDetail;
+                }
             }
         } else {
             Components.utils.reportError("Severe error in internal transaction code!\n" +
@@ -366,6 +371,7 @@ calTransaction.prototype = {
     },
 
     doTransaction: function () {
+        this.mIsDoTransaction = true;
         switch (this.mAction) {
             case 'add':
                 this.mCalendar.addItem(this.mItem, this);
@@ -385,6 +391,7 @@ calTransaction.prototype = {
         }
     },
     undoTransaction: function () {
+        this.mIsDoTransaction = false;
         switch (this.mAction) {
             case 'add':
                 this.mCalendar.deleteItem(this.mItem, this);

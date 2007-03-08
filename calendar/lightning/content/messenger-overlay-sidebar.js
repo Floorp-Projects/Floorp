@@ -51,6 +51,8 @@ var CalendarController =
       case "cmd_cut":
       case "cmd_copy":
       case "cmd_paste":
+      case "cmd_undo":
+      case "cmd_redo":
       case "cmd_print":
       case "cmd_printpreview":
         return true;
@@ -68,6 +70,22 @@ var CalendarController =
         return currentView().getSelectedItems({}).length != 0;
       case "cmd_paste":
         return canPaste();
+      case "cmd_undo":
+        if (this.isCalendarInForeground()) {
+          goSetMenuValue(command, 'valueDefault');
+          if (canUndo()) {
+            return true;
+          }
+        }
+        break;
+      case "cmd_redo":
+        if (this.isCalendarInForeground()) {
+          goSetMenuValue(command, 'valueDefault');
+          if(canRedo()) {
+            return true;
+          }
+        }
+        break;
       case "cmd_print":
         if (this.isCalendarInForeground()) {
           return true;
@@ -103,6 +121,16 @@ var CalendarController =
         break;
       case "cmd_paste":
         pasteFromClipboard();
+        break;
+      case "cmd_undo":
+        if (this.isCalendarInForeground() && canUndo()) {
+          gTransactionMgr.undoTransaction();
+        }
+        break;
+      case "cmd_redo":
+        if (this.isCalendarInForeground() && canRedo()) {
+          gTransactionMgr.redoTransaction();
+        }
         break;
       case "cmd_print":
         if (this.isCalendarInForeground()) {
