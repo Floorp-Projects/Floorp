@@ -6048,7 +6048,7 @@ interrupt:
             for (siter = fp->spbase; siter < sp; siter++) {
                 str = js_ValueToString(cx, *siter);
                 if (!str)
-                    fputs("<null>", tracefp)
+                    fputs("<null>", tracefp);
                 else
                     js_FileEscapedString(tracefp, str, 0);
                 fputc(' ', tracefp);
