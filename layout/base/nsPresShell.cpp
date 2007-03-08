@@ -5911,11 +5911,11 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     }
 #endif
 
+    DidDoReflow();
+
     // If there are no more reflow commands in the queue, we'll want
     // to unblock onload.
     DoneRemovingDirtyRoots();
-
-    DidDoReflow();
   }
   
   MOZ_TIMER_DEBUGLOG(("Stop: Reflow: PresShell::ProcessReflowCommands(), this=%p\n", this));
