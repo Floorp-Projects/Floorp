@@ -101,6 +101,7 @@ sub RunShellCommand {
     my $output = '';
     my $childPid = 0;
     my $childStartedTime = 0;
+    local *LOGFILE;
 
     if (defined($changeToDir)) {
         chdir($changeToDir) or die("RunShellCommand(): failed to chdir() to "
@@ -133,7 +134,7 @@ sub RunShellCommand {
                      endTime => undef,
                      timedOut => $timedOut,
                      exitValue => $exitValue,
-                     sigName => $signalNum,
+                     sigNum => $signalNum,
                      output => undef,
                      dumpedCore => $dumpedCore,
                      pid => $childPid,
@@ -193,7 +194,7 @@ sub RunShellCommand {
                 $childEndedTime = localtime();
                 $exitValue = WEXITSTATUS($?);
                 $signalNum = WIFSIGNALED($?) && WTERMSIG($?);
-                $dumpedCore = WIFSIGNALED($?) && WCOREDUMP($?);
+                $dumpedCore = WIFSIGNALED($?) && ($? & 128);
                 $childReaped = 1;
             }
         }
@@ -225,7 +226,7 @@ sub RunShellCommand {
              endTime => $childEndedTime,
              timedOut => $timedOut,
              exitValue => $exitValue,
-             sigName => $sigName,
+             sigNum => $signalNum,
              output => $output,
              dumpedCore => $dumpedCore
            };
