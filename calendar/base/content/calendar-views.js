@@ -278,6 +278,8 @@ function getStyleSheet(aStyleSheetPath) {
             return sheet;
         }
     }
+    // Avoid the js strict "function does not always return a value" warning.
+    return null;
 }
 
 // Updates the style rules for a particular object.  If the object is a
