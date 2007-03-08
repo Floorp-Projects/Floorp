@@ -481,7 +481,6 @@ nsresult nsHyperTextAccessible::DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNod
   *aResult = 0;
   NS_ENSURE_ARG_POINTER(aNode);
   NS_ENSURE_TRUE(aNodeOffset >= 0, NS_ERROR_INVALID_ARG);
-  NS_ENSURE_ARG_POINTER(aFinalAccessible);
   if (aFinalAccessible) {
     *aFinalAccessible = nsnull;
   }
