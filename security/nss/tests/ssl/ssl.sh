@@ -22,6 +22,7 @@
 #
 # Contributor(s):
 #   Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
+#   Slavomir Katuscak <slavomir.katuscak@sun.com>, Sun Microsystems
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -77,11 +78,17 @@ ssl_init()
   SCRIPTNAME=ssl.sh
   echo "$SCRIPTNAME: SSL tests ==============================="
 
-  grep "SUCCESS: SSL passed" $CERT_LOG_FILE >/dev/null &&
-  grep "SUCCESS: SSL CRL prep passed" $CERT_LOG_FILE >/dev/null || {
+  grep "SUCCESS: SSL passed" $CERT_LOG_FILE >/dev/null || {
       html_head "SSL Test failure"
-      Exit 8 "Fatal - SSL of cert.sh needs to pass first"
+      Exit 8 "Fatal - cert.sh needs to pass first"
   }
+
+  if [ -z "$NSS_TEST_DISABLE_CRL" ] ; then
+      grep "SUCCESS: SSL CRL prep passed" $CERT_LOG_FILE >/dev/null || {
+          html_head "SSL Test failure"
+          Exit 8 "Fatal - SSL of cert.sh needs to pass first"
+      }
+  fi
 
   PORT=${PORT-8443}
 
@@ -787,18 +794,43 @@ if [ -z  "$DO_REM_ST" -a -z  "$DO_DIST_ST" ] ; then
     ORIG_P_R_SERVERDIR=$P_R_SERVERDIR
     ORIG_P_R_CLIENTDIR=$P_R_CLIENTDIR
 
-    ssl_crl_ssl
-    ssl_crl_cache
+    if [ -z "$NSS_TEST_DISABLE_CRL" ] ; then
+        ssl_crl_ssl
+        ssl_crl_cache
+    else
+        echo "$SCRIPTNAME: Skipping CRL Client Tests"
+    fi
 
-    # Test all combinations of server bypass and client bypass
-    CLIENT_OPTIONS="-B -s"
-    SERVER_OPTIONS=""
-    BYPASS_STRING="Client Bypass"
-    ssl_run
-    SERVER_OPTIONS="-B -s"
-    CLIENT_OPTIONS=""
-    BYPASS_STRING="Server Bypass"
-    ssl_run
+    # Test all combinations of client bypass and server bypass
+
+    if [ -z "$NSS_TEST_DISABLE_CIPHERS" ] ; then
+	if [ -n "$NSS_TEST_DISABLE_BYPASS" ] ; then
+            SERVER_OPTIONS=""
+            CLIENT_OPTIONS=""
+            BYPASS_STRING="No Bypass"
+            ssl_run
+	fi
+
+        if [ -z "$NSS_TEST_DISABLE_BYPASS" -a -z "$NSS_TEST_DISABLE_CLIENT_BYPASS" ] ; then
+            CLIENT_OPTIONS="-B -s"
+            SERVER_OPTIONS=""
+            BYPASS_STRING="Client Bypass"
+            ssl_run
+        else
+            echo "$SCRIPTNAME: Skipping Cipher Coverage - Client Bypass Tests"
+        fi
+
+        if [ -z "$NSS_TEST_DISABLE_BYPASS" -a -z "$NSS_TEST_DISABLE_SERVER_BYPASS" ] ; then
+            SERVER_OPTIONS="-B -s"
+            CLIENT_OPTIONS=""
+            BYPASS_STRING="Server Bypass"
+            ssl_run
+        else
+            echo "$SCRIPTNAME: Skipping Cipher Coverage - Server Bypass Tests"
+        fi
+    else
+        echo "$SCRIPTNAME: Skipping Cipher Coverage Tests"
+    fi
 
     ssl_iopr_run
     ssl_cleanup

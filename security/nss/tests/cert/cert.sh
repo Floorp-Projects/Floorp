@@ -22,6 +22,7 @@
 #
 # Contributor(s):
 #   Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
+#   Slavomir Katuscak <slavomir.katuscak@sun.com>, Sun Microsystems
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1319,13 +1320,17 @@ cert_smime_client
 cert_fips
 cert_eccurves
 cert_extensions
-cert_crl_ssl
+
+if [ -z "$NSS_TEST_DISABLE_CRL" ] ; then
+    cert_crl_ssl
+else
+    echo "$SCRIPTNAME: Skipping CRL Tests"
+fi
+
 cert_iopr_setup
+
 if [ -n "$DO_DIST_ST" -a "$DO_DIST_ST" = "TRUE" ] ; then
     cert_stresscerts 
-    #following lines to be used when databases are to be reused
-    #cp -r /u/sonmi/tmp/stress/kentuckyderby.13/* $HOSTDIR
-    #cp -r $HOSTDIR/../${HOST}.2/* $HOSTDIR
-
 fi
+
 cert_cleanup
