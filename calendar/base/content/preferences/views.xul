@@ -120,7 +120,7 @@
         <groupbox>
             <caption label="&pref.calendar.view.workweek.caption;"/>
             <hbox>
-                <caption label="&pref.daysoff.label;"/>
+                <label value="&pref.daysoff.label;"/>
                 <checkbox class="dayOffCheckbox"
                           label="&day.1.Ddd;"
                           accesskey="&day.1.Ddd.accesskey;"
