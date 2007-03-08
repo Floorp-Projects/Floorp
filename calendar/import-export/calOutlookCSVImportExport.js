@@ -54,11 +54,8 @@ function QueryInterface(aIID) {
 
 function getOutlookCsvFileTypes(aCount) {
     aCount.value = 1;
-    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                        .getService(Components.interfaces.nsIStringBundleService);
-    var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
     var wildmat = '*.csv';
-    var label = props.formatStringFromName('filterOutlookCsv', [wildmat], 1);
+    var label = calGetString("calendar", 'filterOutlookCsv', [wildmat]);
     return([{defaultExtension:'csv', 
              extensionFilter: wildmat, 
              description: label}]);

@@ -56,11 +56,8 @@ function QueryInterface(aIID) {
 calHtmlExporter.prototype.getFileTypes =
 function getFileTypes(aCount) {
     aCount.value = 1;
-    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                        .getService(Components.interfaces.nsIStringBundleService);
-    var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
     var wildmat = '*.html; *.htm';
-    var label = props.formatStringFromName('filterHtml', [wildmat], 1);
+    var label = calGetString("calendar", 'filterHtml', [wildmat]);
     return([{defaultExtension:'html', 
              extensionFilter: wildmat, 
              description: label}]);

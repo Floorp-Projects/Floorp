@@ -24,6 +24,7 @@
  *                 Eric Belhaire <belhaire@ief.u-psud.fr>
  *                 Jussi Kukkonen <jussi.kukkonen@welho.com>
  *                 Michiel van Leeuwen <mvl@exedo.nl>
+ *                 Stefan Sitter <ssitter@googlemail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -62,8 +63,7 @@ function loadEventsFromFile(aCalendar)
   
     var fp = Components.classes["@mozilla.org/filepicker;1"]
                        .createInstance(nsIFilePicker);
-    fp.init(window, getCalStringBundle().GetStringFromName("Open"),
-            nsIFilePicker.modeOpen);
+    fp.init(window, calGetString("calendar", "Open"), nsIFilePicker.modeOpen);
     fp.defaultExtension = "ics";
 
     // Get a list of exporters
@@ -107,7 +107,7 @@ function loadEventsFromFile(aCalendar)
         }
         catch(ex)
         {
-           showError(getCalStringBundle().GetStringFromName("unableToRead") + filePath + "\n"+ex );
+           showError(calGetString("calendar", "unableToRead") + filePath + "\n" + ex);
         }
 
         if (aCalendar) {
@@ -126,7 +126,7 @@ function loadEventsFromFile(aCalendar)
             // Ask what calendar to import into
             var args = new Object();
             args.onOk = function putItems(aCal) { putItemsIntoCal(aCal, items); };
-            args.promptText = getCalStringBundle().GetStringFromName("importPrompt");
+            args.promptText = calGetString("calendar", "importPrompt");
             openDialog("chrome://calendar/content/chooseCalendarDialog.xul", 
                        "_blank", "chrome,titlebar,modal,resizable", args);
         }
@@ -207,7 +207,7 @@ function saveEventsToFile(calendarEventArray, aDefaultFileName)
 
    if (!calendarEventArray.length)
    {
-      alert(getCalStringBundle().GetStringFromName("noEventsToSave"));
+      alert(calGetString("calendar", "noEventsToSave"));
       return;
    }
 
@@ -217,15 +217,14 @@ function saveEventsToFile(calendarEventArray, aDefaultFileName)
    var fp = Components.classes["@mozilla.org/filepicker;1"]
                       .createInstance(nsIFilePicker);
 
-   fp.init(window,  getCalStringBundle().GetStringFromName("SaveAs"),
-           nsIFilePicker.modeSave);
+   fp.init(window, calGetString("calendar", "SaveAs"), nsIFilePicker.modeSave);
 
    if (aDefaultFileName && aDefaultFileName.length && aDefaultFileName.length > 0) {
       fp.defaultString = aDefaultFileName;
    } else if (calendarEventArray.length == 1 && calendarEventArray[0].title) {
       fp.defaultString = calendarEventArray[0].title;
    } else {
-      fp.defaultString = getCalStringBundle().GetStringFromName("defaultFileName");
+      fp.defaultString = calGetString("calendar", "defaultFileName");
    }
 
    fp.defaultExtension = "ics";
@@ -290,7 +289,7 @@ function saveEventsToFile(calendarEventArray, aDefaultFileName)
       }
       catch(ex)
       {
-         showError(getCalStringBundle().GetStringFromName("unableToWrite") + filePath );
+         showError(calGetString("calendar", "unableToWrite") + filePath);
       }
    }
 }
@@ -330,7 +329,7 @@ function exportEntireCalendar(aCalendar) {
             // Ask what calendar to import into
             var args = new Object();
             args.onOk = getItemsFromCal;
-            args.promptText = getCalStringBundle().GetStringFromName("exportPrompt");
+            args.promptText = calGetString("calendar", "exportPrompt");
             openDialog("chrome://calendar/content/chooseCalendarDialog.xul", 
                        "_blank", "chrome,titlebar,modal,resizable", args);
         }
@@ -339,19 +338,11 @@ function exportEntireCalendar(aCalendar) {
     }
 }
 
-function getCalStringBundle()
-{
-    var strBundleService = 
-        Components.classes["@mozilla.org/intl/stringbundle;1"]
-                  .getService(Components.interfaces.nsIStringBundleService);
-    return strBundleService.createBundle("chrome://calendar/locale/calendar.properties");
-}
-
 function showError(aMsg)
 {
     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                   .getService(Components.interfaces.nsIPromptService);
     promptService.alert(null,
-                        getCalStringBundle().GetStringFromName('errorTitle'),
+                        calGetString("calendar", "errorTitle"),
                         aMsg);
 }
