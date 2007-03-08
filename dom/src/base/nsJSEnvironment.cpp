@@ -1025,7 +1025,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobalWrapperRef)
   JSObject *globalObject = ::JS_GetGlobalObject(tmp->mContext);
   if (globalObject) {
-    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, globalObject);
+    cb.NoteScriptChild(JAVASCRIPT, globalObject);
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -3641,8 +3641,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSArgArray)
       jsval *end;
       for (end = argv + tmp->mArgc; argv < end; ++argv) {
         if (JSVAL_IS_OBJECT(*argv))
-          cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                             JSVAL_TO_OBJECT(*argv));
+          cb.NoteScriptChild(JAVASCRIPT, JSVAL_TO_OBJECT(*argv));
       }
     }
   }
