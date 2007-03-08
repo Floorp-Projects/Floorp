@@ -160,14 +160,15 @@ void JavaDOMEventsGlobals::Destroy(JNIEnv *env)
 
 //returns true if specified event "type" exists in the given list of types
 // NOTE: it is assumed that "types" list is enden with NULL
-static jboolean isEventOfType(const char* const* types, const char* type) 
+static jboolean isEventOfType(const char* const* types, nsString &type) 
 {
     int i=0;
 
-    while (type && types && types[i]) {
-      if (!strcmp(type,types[i]))
-	return JNI_TRUE;
-      i++;
+    while (types && types[i]) {
+	if (type.EqualsIgnoreCase(types[i], strlen(types[i]))) {
+	    return JNI_TRUE;
+	}
+	i++;
     }
 
     return JNI_FALSE;
@@ -212,7 +213,7 @@ jobject JavaDOMEventsGlobals::CreateEventSubtype(JNIEnv *env,
       NULL
     };
   
-    nsString eventType;
+    nsAutoString eventType;
     rv = event->GetType(eventType);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
@@ -220,19 +221,16 @@ jobject JavaDOMEventsGlobals::CreateEventSubtype(JNIEnv *env,
         return NULL;
     }
 
-    char* buffer = (char *) eventType.get();
-
-    if (isEventOfType(mouseEventTypes, buffer) == JNI_TRUE) {
+    if (isEventOfType(mouseEventTypes, eventType) == JNI_TRUE) {
       clazz = mouseEventClass;
-    } else if (isEventOfType(uiEventTypes, buffer) == JNI_TRUE) {  
+    } else if (isEventOfType(uiEventTypes, eventType) == JNI_TRUE) {  
       clazz = uiEventClass;
     } else {
       PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING,
-	     ("Unknown type of UI event (%s)", buffer));
+	     ("Unknown type of UI event"));
 
       clazz = uiEventClass;
     }
-    nsMemory::Free(buffer);
 
     event->Release();
     event = (nsIDOMEvent *) target;

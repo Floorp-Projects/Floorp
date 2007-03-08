@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Iterator;
 
 import org.w3c.dom.DOMException;
+import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import org.mozilla.webclient.*;
@@ -74,6 +75,7 @@ public class TestBrowser extends JPanel {
     JButton jBackButton = new JButton("Back",
             new ImageIcon(getClass().getResource("images/Back.png")));
     JButton jCopyButton = new JButton("Copy");
+    JButton jDOMButton = new JButton("Show DOM");
 
     JPanel jAddressPanel = new JPanel();
     JLabel jAddressLabel = new JLabel();
@@ -163,6 +165,12 @@ public class TestBrowser extends JPanel {
         jCopyButton.setMaximumSize(new Dimension(75, 27));
         jCopyButton.setPreferredSize(new Dimension(75, 27));
         jCopyButton.addActionListener(new TestBrowser_jCopyButton_actionAdapter(this));
+        
+        jDOMButton.setToolTipText("Copy current selection");
+        jDOMButton.setHorizontalTextPosition(SwingConstants.TRAILING);
+        jDOMButton.setMaximumSize(new Dimension(75, 27));
+        jDOMButton.setPreferredSize(new Dimension(75, 27));
+        jDOMButton.addActionListener(new TestBrowser_jDOMButton_actionAdapter(this));
 
         jForwardButton.setToolTipText("Go forward one page");
         jForwardButton.setEnabled(false);
@@ -204,6 +212,8 @@ public class TestBrowser extends JPanel {
         jBrowserToolBar.add(jStopButton, null);
         jBrowserToolBar.add(jViewSourceButton, null);
 	jBrowserToolBar.add(jCopyButton, null);
+        jBrowserToolBar.add(jDOMButton, null);
+
         jBrowserToolBar.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createEtchedBorder(),
             BorderFactory.createEmptyBorder(2, 2, 2, 0)));
@@ -246,6 +256,11 @@ public class TestBrowser extends JPanel {
 					       map.get("status"));
 			    System.out.println("responseText: " + 
 					       map.get("responseText"));
+                            Document responseDOM = (Document) map.get("responseXML");
+                            if (null != responseDOM) {
+                                DOMViewerFrame domViewer = getDOMViewerFrame();
+                                domViewer.setDocument(responseDOM);
+                            }
                             // INTENTIONAL FALL THROUGH
 			case ((int) DocumentLoadEvent.START_AJAX_EVENT_MASK):
 			    System.out.println("requestMethod: " + 
@@ -468,6 +483,21 @@ public class TestBrowser extends JPanel {
 	currentPage.copyCurrentSelectionToSystemClipboard();
     }
 
+    void jDOMButton_actionPerformed(ActionEvent e) {
+        Document doc = currentPage.getDOM();
+        DOMViewerFrame viewer = getDOMViewerFrame();
+        viewer.setDocument(doc);
+        viewer.setVisible(true);
+    }
+    
+    private DOMViewerFrame getDOMViewerFrame() {
+        if (null == domViewer) {
+            domViewer = new DOMViewerFrame("DOM Viewer", this);
+            domViewer.setSize(new Dimension(300, 600));
+            domViewer.setLocation(645, 0);
+        }
+        return domViewer;
+    }
 
     void jForwardButton_actionPerformed(ActionEvent e) {
         history.forward();
@@ -487,18 +517,7 @@ public class TestBrowser extends JPanel {
 		System.out.println(source);
 		/*****
 	    if (null != doc) {
-		      Document doc = currentPage.getDOM();
-		currentPage.selectAll();
-		Selection selection = currentPage.getSelection();
-		System.out.println(selection.toString());
-		
-		if (null == domViewer) {
-		    domViewer = new DOMViewerFrame("DOM Viewer", this);
-		    domViewer.setSize(new Dimension(300, 600));
-		    domViewer.setLocation(645, 0);
-		}
-		domViewer.setDocument(doc);
-		domViewer.setVisible(true);
+		      
 	    }
 		******/
 	}
@@ -547,6 +566,17 @@ class TestBrowser_jCopyButton_actionAdapter implements java.awt.event.ActionList
     }
 }
 
+class TestBrowser_jDOMButton_actionAdapter implements java.awt.event.ActionListener {
+    TestBrowser adaptee;
+
+    TestBrowser_jDOMButton_actionAdapter(TestBrowser adaptee) {
+        this.adaptee = adaptee;
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        adaptee.jDOMButton_actionPerformed(e);
+    }
+}
 
 class TestBrowser_jForwardButton_actionAdapter implements java.awt.event.ActionListener {
     TestBrowser adaptee;

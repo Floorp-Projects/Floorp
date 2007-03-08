@@ -34,6 +34,7 @@
 #include "nsIXMLHTTPRequest.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIDOMEvent.h"
+#include "nsIDOMDocument.h"
 
 #include "NativeBrowserControl.h"
 #include "NativeWrapperFactory.h"
@@ -214,6 +215,11 @@ AjaxListener::ObserveAjax(nsIRequest *request,
     PRInt32 readyState  = 0;
     char buf[20];
     jstring jStr = nsnull;
+    nsCOMPtr<nsIDOMDocument> domDocument;
+    jlong documentLong = nsnull;
+    jclass clazz = nsnull;
+    jmethodID mid = nsnull;
+    jobject javaDOMDocument;
 
     browserControl->ContentStateChange();
 
@@ -300,6 +306,38 @@ AjaxListener::ObserveAjax(nsIRequest *request,
 						 (jobject) pShareContext);
 
 	}
+
+	// store the response xml
+	if (NS_SUCCEEDED(rv=ajax->GetResponseXML(getter_AddRefs(domDocument)))){
+	    documentLong = (jlong) domDocument.get();
+	    
+	    if (nsnull == (clazz = 
+			 ::util_FindClass(mJNIEnv,
+					  "org/mozilla/dom/DOMAccessor"))) {
+		::util_ThrowExceptionToJava(mJNIEnv, "Exception: Can't get DOMAccessor class");
+		return nsnull;
+	    }
+	    if (nsnull==(mid = 
+			 mJNIEnv->GetStaticMethodID(clazz, "getNodeByHandle",
+						    "(J)Lorg/w3c/dom/Node;"))){
+		::util_ThrowExceptionToJava(mJNIEnv, "Exception: Can't get DOM Node.");
+		return nsnull;
+	    }
+	    
+	    javaDOMDocument = (jobject) 
+		util_CallStaticObjectMethodlongArg(mJNIEnv, 
+						   clazz, mid, 
+						   documentLong);
+	    javaDOMDocument = ::util_NewGlobalRef(mJNIEnv, javaDOMDocument);
+	    if (nsnull != javaDOMDocument) {
+		::util_StoreIntoPropertiesObject(mJNIEnv, properties, 
+						 RESPONSE_XML_KEY, 
+						 javaDOMDocument,
+						 (jobject) pShareContext);
+	    }
+
+	}
+
     }
 
     DOCUMENT_LOADER_EVENT_MASK_NAMES maskValue = END_AJAX_EVENT_MASK;
