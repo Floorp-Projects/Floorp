@@ -97,9 +97,9 @@ public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_CYCLECOLLECTIONPARTICIPANT_IID)
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD Unlink(nsISupports *p) = 0;
+    NS_IMETHOD Unlink(nsISupports *p);
     NS_IMETHOD Traverse(nsISupports *p, 
-                        nsCycleCollectionTraversalCallback &cb) = 0;
+                        nsCycleCollectionTraversalCallback &cb);
 
 #ifdef DEBUG
     NS_EXTERNAL_VIS_(PRBool) CheckForRightISupports(nsISupports *s);

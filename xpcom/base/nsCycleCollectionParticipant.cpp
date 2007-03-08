@@ -54,6 +54,18 @@ NS_IMETHODIMP_(nsrefcnt) nsCycleCollectionParticipant::Release(void)
   return 1;
 }
 
+NS_IMETHODIMP nsCycleCollectionParticipant::Unlink(nsISupports *n)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsCycleCollectionParticipant::Traverse(nsISupports *n, 
+                                       nsCycleCollectionTraversalCallback &cb)
+{
+  return NS_OK;
+}
+
 #ifdef DEBUG
 PRBool
 nsCycleCollectionParticipant::CheckForRightISupports(nsISupports *s)
