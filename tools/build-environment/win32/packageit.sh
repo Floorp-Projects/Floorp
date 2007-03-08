@@ -18,6 +18,9 @@ tar -xjf "${MSYS_SRCDIR}/make-3.81-MSYS-1.0.11-snapshot.tar.bz2" -C "${MSYS_STAG
 # install the uber-new make.exe from Earnie Boyd
 cp "${MSYS_SRCDIR}/make.exe" "${MSYS_STAGEDIR}/mozilla-build/make-3.81/bin"
 
+# copy /bin/sh to /bin/bash
+cp "${MSYS_STAGEDIR}/mozilla-build/msys/bin/sh.exe" "${MSYS_STAGEDIR}/mozilla-build/msys/bin/bash.exe"
+
 # install UPX
 unzip -d "${MSYS_STAGEDIR}/mozilla-build" "${MSYS_SRCDIR}/upx203w.zip"
 
