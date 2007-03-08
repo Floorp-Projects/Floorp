@@ -263,6 +263,12 @@ nsIFrameDebug::GetLogModuleInfo()
 }
 
 void
+nsIFrameDebug::DumpFrameTree(nsIFrame* aFrame)
+{
+    RootFrameList(aFrame->GetPresContext(), stdout, 0);
+}
+
+void
 nsIFrameDebug::RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
   if((nsnull == aPresContext) || (nsnull == out))
