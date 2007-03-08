@@ -16,6 +16,7 @@ lightning.jar:
   content/lightning/calendar-todo-list.css		(content/calendar-todo-list.css)
   content/lightning/calendar-todo-list.xml		(content/calendar-todo-list.xml)
   content/lightning/toolkit-overlay-custombar.xul       (content/toolkit-overlay-custombar.xul)
+  content/lightning/imip-bar-overlay.xul                (content/imip-bar-overlay.xul)
   content/lightning/imip-bar.js                         (content/imip-bar.js)
   content/lightning/sun-messenger-overlay-sidebar.xul	(/calendar/prototypes/wcap/sun-messenger-overlay-sidebar.xul)
   content/lightning/sun-messenger-overlay-sidebar.js	(/calendar/prototypes/wcap/sun-messenger-overlay-sidebar.js)

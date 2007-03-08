@@ -48,11 +48,6 @@
   <!ENTITY % dtd3 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd3;
 ]>
 
-<!-- This is used so that we can reuse the Thunderbird Notification bar style
-   - for our iMIP warning -->
-<?xml-stylesheet href="chrome://messenger/skin/primaryToolbar.css" type="text/css"?>
-<?xml-stylesheet href="chrome://messenger/skin/messageHeader.css" type="text/css"?>
-
 <?xml-stylesheet href="chrome://lightning/skin/lightning.css" type="text/css"?>
 
 <?xml-stylesheet href="chrome://calendar/content/calendar-view-bindings.css" type="text/css"?>
@@ -74,7 +69,6 @@
 <script type="application/x-javascript" src="chrome://lightning/content/calendar-management.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/messenger-overlay-sidebar.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendar-views.js"/>
-<script type="application/x-javascript" src="chrome://lightning/content/imip-bar.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/clipboard.js"/>
 <window id="messengerWindow">
   <commandset id="calendar_commands">
@@ -213,24 +207,7 @@
   </deck>
 </deck>
 
-<vbox id="messagepanebox">
-  <hbox id="imip-bar" collapsed="true" insertbefore="msgHeaderView">
-    <hbox id="imipNotificationBar"
-          align="center"
-          flex="1">
-      <image id="imipNotificationImage"/>
-      <description id="imip-description"
-                   class="msgNotificationBarText"
-                   flex="1">
-        &lightning.imipbar.description;
-      </description>
-      <spacer flex="1"/>
-      <button id="imip-button1" align="center" pack="end"/>
-      <button id="imip-button2" align="center" pack="end" hidden="true"/>
-    </hbox>
-  </hbox>
-</vbox>
-
+<vbox id="messagepanebox"/>
 </overlay>
 
 <!-- -*- Mode: xml; sgml-ident-step: 2; indent-tabs-mode: nil; -*- -->

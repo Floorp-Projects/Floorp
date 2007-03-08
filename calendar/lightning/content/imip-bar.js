@@ -106,8 +106,8 @@ function imipOnLoad()
     gMessageListeners.push(listener);
 
     // Set up our observers
-    var observerSvc = Cc["@mozilla.org/observer-service;1"].
-                      getService(Ci.nsIObserverService);
+    var observerSvc = Components.classes["@mozilla.org/observer-service;1"]
+                                .getService(Components.interfaces.nsIObserverService);
     observerSvc.addObserver(onItipItem, "onItipItemCreation", false);
 }
 
@@ -116,8 +116,8 @@ function imipOnUnload()
     removeEventListener("messagepane-loaded", imipOnLoad, true);
     removeEventListener("messagepane-unloaded", imipOnUnload, true);
 
-    var observerSvc = Cc["@mozilla.org/observer-service;1"].
-                      getService(Ci.nsIObserverService);
+    var observerSvc = Components.classes["@mozilla.org/observer-service;1"]
+                                .getService(Components.interfaces.nsIObserverService);
     observerSvc.removeObserver(onItipItem, "onItipItemCreation");
 
     gItipItem = null;
@@ -204,8 +204,8 @@ function getMsgRecipient()
         recipientList = recipientList.split(" ").join("");
         recipientList = recipientList.split(",");
 
-        var emailSvc = Cc["@mozilla.org/calendar/itip-transport;1?type=email"].
-                       getService(Ci.calIItipTransport);
+        var emailSvc = Components.classes["@mozilla.org/calendar/itip-transport;1?type=email"]
+                                 .getService(Components.interfaces.calIItipTransport);
         var me = emailSvc.defaultIdentity;
 
         var lt;
@@ -234,8 +234,8 @@ function getMsgRecipient()
  */
 function getTargetCalendar()
 {
-    var calMgr = Cc["@mozilla.org/calendar/manager;1"].
-                 getService(Ci.calICalendarManager);
+    var calMgr = Components.classes["@mozilla.org/calendar/manager;1"]
+                           .getService(Components.interfaces.calICalendarManager);
     var cals = calMgr.getCalendars({});
     return cals[0];
 }
@@ -298,8 +298,8 @@ function doResponse(aLocalStatus)
         gItipItem.localStatus = aLocalStatus;
     }
 
-    var itipProc = Cc["@mozilla.org/calendar/itip-processor;1"].
-                   createInstance(Ci.calIItipProcessor);
+    var itipProc = Components.classes["@mozilla.org/calendar/itip-processor;1"]
+                             .createInstance(Components.interfaces.calIItipProcessor);
 
     itipProc.processItipItem(gItipItem, operationListener);
 }
