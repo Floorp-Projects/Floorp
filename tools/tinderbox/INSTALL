@@ -19,7 +19,7 @@ To install a fresh tinderbox:
 6) Customize your tinderbox configuration.
 	vi tinder-config.pl
 
-7) Test your tinderbox configuration on the test tree
+7) Test your tinderbox configuration on the test tree.
 	perl ./build-seamonkey.pl --depend -t MozillaTest
 
 8) Once you are satisfied with the results run your tinderbox
