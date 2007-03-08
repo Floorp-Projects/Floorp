@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.351 $ ';
+$::UtilsVersion = '$Revision: 1.352 $ ';
 
 package TinderUtils;
 
@@ -292,6 +292,9 @@ sub GetSystemInfo {
     # Redirecting stderr to stdout works on *nix, winnt, but not on win98.
     $Settings::TieStderr = '2>&1';
 
+    # Mingw uname -r returns 1.0.10(0.46/3/2) - remove the parens section
+    $os_ver =~ s/\(.*\)//;
+
     if ($Settings::OS eq 'AIX') {
         my $osAltVer = `uname -v`;
         chomp($osAltVer);
@@ -417,12 +420,6 @@ sub SetupEnv {
 
     my $topsrcdir = "$Settings::BaseDir/$Settings::DirName/mozilla";
     $objdir = "$topsrcdir/${Settings::ObjDir}";
-
-    if (not -e $objdir) {
-        # Not checking errors here, because it's too early to set $status and the 
-        # build will fail anyway; failing loudly is better than failing silently.
-        run_shell_command("mkdir -p $objdir");
-    }
 
     $Settings::TopsrcdirFull = $topsrcdir;
     $Settings::TopsrcdirLast = $topsrcdir . ".last";
