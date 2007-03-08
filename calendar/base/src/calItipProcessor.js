@@ -89,13 +89,6 @@ calItipProcessor.prototype = {
         return (this.mIsUserInvolved = aValue);
     },
 
-    mRecvMethod: null,
-    mRespMethod: null,
-    mAutoResponse: null,
-    mTargetCalendar: null,
-    mCalItem: null,
-    mCalItemType: null,
-
     /**
      * Processes the given calItipItem based on the settings inside it.
      * @param calIItipItem  A calItipItem to process.
@@ -114,12 +107,12 @@ calItipProcessor.prototype = {
         // Clone the passed in itipItem like a sheep.
         var respItipItem = aItipItem.clone();
 
-        this.mRecvMethod = respItipItem.receivedMethod;
-        respItipItem.responseMethod = this._suggestResponseMethod(respItipItem);
-        this.mRespMethod = respItipItem.responseMethod;
+        var recvMethod = respItipItem.receivedMethod;
+        respItipItem.responseMethod = this._suggestResponseMethod(recvMethod);
+        var respMethod = respItipItem.responseMethod;
 
-        this.mAutoResponse = respItipItem.autoResponse;
-        this.mTargetCalendar = respItipItem.targetCalendar;
+        var autoResponse = respItipItem.autoResponse;
+        var targetCalendar = respItipItem.targetCalendar;
 
         // XXX Support for transports other than email go here.
         //     For now we just assume it's email.
@@ -128,35 +121,36 @@ calItipProcessor.prototype = {
 
         // Sanity checks using the first item
         var itemList = respItipItem.getItemList({ });
-        this.mCalItem = itemList[0];
-        if (!this.mCalItem) {
+        var calItem = itemList[0];
+        if (!calItem) {
             throw new Error ("processItipItem: " +
                              "getFirstItem() found no items!");
         }
 
-        this.mCalItemType = this._getCalItemType(this.mCalItem);
-        if (!this.mCalItemType) {
+        var calItemType = this._getCalItemType(calItem);
+        if (!calItemType) {
             throw new Error ("processItipItem: " +
                              "_getCalItemType() found no item type!");
         }
 
         // Sanity check that mRespMethod is a valid response per the spec.
-        if (!this._isValidResponseMethod()) {
+        if (!this._isValidResponseMethod(recvMethod, respMethod, calItemType)) {
             throw new Error ("processItipItem: " +
                              "_isValidResponseMethod() found an invalid " +
-                             "response method: " + mRespMethod);
+                             "response method: " + respMethod);
         }
 
         var i = 0;
-        while (this.mCalItem) {
-            switch (this.mRecvMethod) {
+        while (calItem) {
+            switch (recvMethod) {
                 case "REQUEST":
                     // Only add to calendar if we accepted invite
-                    var replyStat = this._getReplyStatus(this.mCalItem,
+                    var replyStat = this._getReplyStatus(calItem,
                                                          transport.defaultIdentity);
                     if (replyStat != "DECLINED") {
-                        if (!this._processCalendarAction(this.mCalItem,
+                        if (!this._processCalendarAction(calItem,
                                                          CAL_ITIP_PROC_ADD_OP,
+                                                         targetCalendar,
                                                          aListener))
                         {
                             throw new Error ("processItipItem: " +
@@ -177,16 +171,16 @@ calItipProcessor.prototype = {
                 default:
                     throw new Error("processItipItem: " +
                                     "Received unknown method: " +
-                                    this.mRecvMethod);
+                                    recvMethod);
             }
             ++i;
-            this.mCalItem = itemList[i];
+            calItem = itemList[i];
         }
 
         // When replying, the reply must only contain the ORGANIZER and the
         // status of the ATTENDEE that represents ourselves. Therefore we must
         // remove all other ATTENDEEs from the itipItem we send back.
-        if (this.mRespMethod == "REPLY") {
+        if (respMethod == "REPLY") {
             // Get the id that represents me.
             // XXX Note that this doesn't take into consideration invitations
             //     sent to email aliases. (ex: lilmatt vs mwillis)
@@ -228,8 +222,8 @@ calItipProcessor.prototype = {
     /**
      * @return integer  The next recommended iTIP state.
      */
-    _suggestResponseMethod: function cipSRM() {
-        switch (this.mRecvMethod) {
+    _suggestResponseMethod: function cipSRM(aRecvMethod) {
+        switch (aRecvMethod) {
             case "REQUEST":
                 return "REPLY";
 
@@ -242,12 +236,12 @@ calItipProcessor.prototype = {
             case "ADD":
             case "CANCEL":
             case "DECLINECOUNTER":
-                return this.mRecvMethod;
+                return aRecvMethod;
 
             default:
                 throw new Error("_suggestResponseMethod: " +
                                 "Received unknown method: " +
-                                this.mRecvMethod);
+                                aRecvMethod);
         }
     },
 
@@ -257,17 +251,19 @@ calItipProcessor.prototype = {
      *
      * @return boolean  Whether or not mRespMethod is valid.
      */
-    _isValidResponseMethod: function cipIAR() {
-        switch (this.mRecvMethod) {
+    _isValidResponseMethod: function cipIAR(aRecvMethod,
+                                            aRespMethod,
+                                            aCalItemType) {
+        switch (aRecvMethod) {
             // We set response to ADD automatically, but if the GUI did not
             // find the event the user may set it to REFRESH as per the spec.
             // These are the only two valid responses.
             case "ADD":
-                if (!(this.mRespMethod == "ADD" ||
-                     (this.mRespMethod == "REFRESH" &&
+                if (!(aRespMethod == "ADD" ||
+                     (aRespMethod == "REFRESH" &&
                      // REFRESH is not a valid response to an ADD for VJOURNAL
-                     (this.mCalItemType == Ci.calIEvent ||
-                      this.mCalItemType == Ci.calITodo))))
+                     (aCalItemType == Ci.calIEvent ||
+                      aCalItemType == Ci.calITodo))))
                 {
                     return false;
                 }
@@ -275,8 +271,8 @@ calItipProcessor.prototype = {
 
             // Valid responses to COUNTER are REQUEST or DECLINECOUNTER.
             case "COUNTER":
-                if (!(this.mRespMethod == "REQUEST" ||
-                      this.mRespMethod == "DECLINECOUNTER"))
+                if (!(aRespMethod == "REQUEST" ||
+                      aRespMethod == "DECLINECOUNTER"))
                 {
                     return false;
                 }
@@ -287,9 +283,9 @@ calItipProcessor.prototype = {
             //     REQUEST (delegation, inviting someone else)
             //     COUNTER (propose a change)
             case "REQUEST":
-                if (!(this.mRespMethod == "REPLY" ||
-                      this.mRespMethod == "REQUEST" ||
-                      this.mRespMethod == "COUNTER"))
+                if (!(aRespMethod == "REPLY" ||
+                      aRespMethod == "REQUEST" ||
+                      aRespMethod == "COUNTER"))
                 {
                     return false;
                 }
@@ -297,19 +293,19 @@ calItipProcessor.prototype = {
 
             // REFRESH should respond with a request
             case "REFRESH":
-                if (this.mRespMethod == "REQUEST") {
+                if (aRespMethod == "REQUEST") {
                     return false;
                 }
                 break;
 
             // The rest are easiest represented as:
-            //     (mRecvMethod != mRespMethod) == return false
+            //     (aRecvMethod != aRespMethod) == return false
             case "PUBLISH":
             case "CANCEL":
             case "REPLY":
             case "PUBLISH":
             case "DECLINECOUNTER":
-                if (this.mRespMethod != this.mRecvMethod) {
+                if (aRespMethod != aRecvMethod) {
                     return false;
                 }
                 break;
@@ -317,7 +313,7 @@ calItipProcessor.prototype = {
             default:
                 throw new Error("_isValidResponseMethod: " +
                                 "Received unknown method: " +
-                                this.mRecvMethod);
+                                aRecvMethod);
         }
 
         // If we got to here, then the combination is valid.
@@ -327,8 +323,8 @@ calItipProcessor.prototype = {
     /**
      * Helper to return whether an item is an event, todo, etc.
      */
-    _getCalItemType: function cipGCIT() {
-        if (this.mCalItem instanceof Ci.calIEvent) {
+    _getCalItemType: function cipGCIT(aCalItem) {
+        if (aCalItem instanceof Ci.calIEvent) {
             return Ci.calIEvent;
         } else if (aCalItem instanceof Ci.calITodo) {
             return Ci.calITodo;
@@ -342,11 +338,13 @@ calItipProcessor.prototype = {
      * This performs the actual add/update/delete of an event on the user's
      * calendar.
      */
-    _processCalendarAction: function cipPCA(aCalItem, aOperation, aListener) {
+    _processCalendarAction: function cipPCA(aCalItem,
+                                            aOperation,
+                                            aTargetCalendar,
+                                            aListener) {
         switch (aOperation) {
             case CAL_ITIP_PROC_ADD_OP:
-                // We assume all adds take place on the target calendar
-                this.mTargetCalendar.addItem(aCalItem, aListener);
+                aTargetCalendar.addItem(aCalItem, aListener);
 
                 // XXX Change this to reflect the success or failure of adding
                 //     the item to the calendar.
