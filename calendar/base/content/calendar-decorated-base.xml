@@ -91,6 +91,7 @@
         <implementation>
             <method name="setNames">
                 <parameter name="aNameArray"/>
+                <parameter name="aDate"/>
                 <body><![CDATA[
                     for (var i = -2; i < 3; i++) {
                         document.getAnonymousElementByAttribute(this, "anonid", "title-"+i)
