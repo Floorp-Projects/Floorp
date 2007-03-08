@@ -179,7 +179,7 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
 
     // get the string bundle service
     //
-    nsXPIDLString errMsg, ldapErrMsg, errCode, alertMsg, ldapHint;
+    nsXPIDLString errMsg, ldapErrMsg, alertMsg, ldapHint;
     nsString errCodeNum;
 
     nsCOMPtr<nsIStringBundleService> stringBundleSvc(do_GetService(
@@ -222,17 +222,6 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
     if (NS_FAILED(rv)) {
         NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException():"
                  " error getting general error from bundle "
-                 LDAP_AUTOCOMPLETE_ERROR_BUNDLE);
-        return rv;
-    }
-
-    // get the phrase corresponding to "Error code"
-    //
-    rv = ldapACBundle->GetStringFromName(NS_LITERAL_STRING("errCode").get(), 
-                                         getter_Copies(errCode));
-    if (NS_FAILED(rv)) {
-        NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException"
-                 "(): error getting 'errCode' string from bundle "
                  LDAP_AUTOCOMPLETE_ERROR_BUNDLE);
         return rv;
     }
@@ -301,14 +290,14 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
         }
     }
         
-    const PRUnichar *stringParams[4] = { errCode.get(), errCodeNum.get(), 
+    const PRUnichar *stringParams[3] = { errCodeNum.get(),
                                          ldapErrMsg.get(), ldapHint.get() };
 
     rv = ldapACBundle->FormatStringFromName(
-        NS_LITERAL_STRING("alertFormat").get(), stringParams, 4, 
+        NS_LITERAL_STRING("errorAlertFormat").get(), stringParams, 3,
         getter_Copies(alertMsg));
     if (NS_FAILED(rv)) {
-        NS_WARNING("YYY");
+        NS_WARNING("Failed to format warning string\n");
     }
 
     // put the error message, between angle brackets, into the XPIDL |value|
