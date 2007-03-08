@@ -4969,7 +4969,9 @@ static PRBool CanBreakBetween(nsTextFrame* aBefore,
   
   if (beforeOffset <= 0 || afterLength <= 0) {
     // This shouldn't really happen, text frames shouldn't map no content
+#if 0
     NS_WARNING("Textframe maps no content");
+#endif
     return PR_FALSE;
   }
 
