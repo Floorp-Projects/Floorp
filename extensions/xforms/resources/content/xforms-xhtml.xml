@@ -571,7 +571,7 @@
 
   <!-- UPLOAD: DISABLED -->
   <binding id="xformswidget-upload-disabled"
-           extends="chrome://xforms/content/xforms.xml#xformswidget-upload-base">
+           extends="chrome://xforms/content/xforms.xml#xformswidget-upload-disabled-base">
     <content>
       <children includes="label"/>
       <html:input readonly="readonly" class="xf-value"/>
@@ -583,19 +583,6 @@
       </html:button>
       <children/>
     </content>
-
-    <implementation>
-      <method name="getControlElement">
-        <body>
-          return {
-            get value(){ return ""; },
-            set value(val){},
-            set readonly(val){},
-            focus: function(){}
-          };
-        </body>
-      </method>
-    </implementation>
   </binding>
 
 

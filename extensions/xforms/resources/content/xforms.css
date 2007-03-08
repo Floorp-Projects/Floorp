@@ -89,6 +89,7 @@ xul|*:root secret:not(:disabled),
 xul|*:root textarea:not(:disabled),
 xul|*:root trigger:not(:disabled),
 xul|*:root submit:not(:disabled),
+xul|*:root upload:not(:disabled),
 xul|*:root repeat:not(:disabled),
 xul|*:root repeatitem,
 xul|*:root contextcontainer,
@@ -750,11 +751,21 @@ html|*:root upload {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-upload-disabled');
 }
 
+xul|*:root upload {
+  -moz-binding: url('chrome://xforms/content/xforms-xul.xml#xformswidget-upload-disabled');
+}
+
 html|*:root upload[mozType|typelist~="http://www.w3.org/2001/XMLSchema#anyURI"],
 html|*:root upload[mozType|typelist~="http://www.w3.org/2001/XMLSchema#base64Binary"],
 html|*:root upload[mozType|typelist~="http://www.w3.org/2001/XMLSchema#hexBinary"] {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-upload');
   display: inline;
+}
+
+xul|*:root upload[mozType|typelist~="http://www.w3.org/2001/XMLSchema#anyURI"],
+xul|*:root upload[mozType|typelist~="http://www.w3.org/2001/XMLSchema#base64Binary"],
+xul|*:root upload[mozType|typelist~="http://www.w3.org/2001/XMLSchema#hexBinary"] {
+  -moz-binding: url('chrome://xforms/content/xforms-xul.xml#xformswidget-upload');
 }
 
 /* repeat widgets */

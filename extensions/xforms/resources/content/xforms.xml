@@ -581,6 +581,24 @@
   </binding>
 
 
+  <!-- UPLOAD: DISABLED -->
+  <binding id="xformswidget-upload-disabled-base"
+           extends="#xformswidget-upload-base">
+    <implementation>
+      <method name="getControlElement">
+        <body>
+          return {
+            get value(){ return ""; },
+            set value(val){},
+            set readonly(val){},
+            focus: function(){}
+          };
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+
   <!-- REPEAT -->
   <binding id="xformswidget-repeat-base" extends="#xformswidget-accessors">
 

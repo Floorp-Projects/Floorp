@@ -534,6 +534,97 @@
   </binding>
 
 
+  <!-- UPLOAD: <DEFAULT> -->
+  <binding id="xformswidget-upload"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-upload-base">
+    <content>
+      <children includes="label"/>
+      <xul:textbox anonid="text_control"
+                   class="xf-value"
+                   readonly="readonly"
+                   tabindex="-1"/>
+      <xul:button anonid="browse_button"
+                   xbl:inherits="tabindex"
+                   label="&xforms.upload.browsetext;"/>
+      <xul:button anonid="clear_button"
+                   xbl:inherits="tabindex"
+                   label="&xforms.upload.cleartext;"/>
+      <children/>
+    </content>
+
+    <implementation implements="nsIXFormsUIWidget, nsIXFormsUploadUIElement">
+      <method name="getControlElement">
+        <body>
+          return {
+            get value() {
+              return this._textControl.value;
+            },
+            set value(val) {
+              this._textControl.value = val;
+            },
+            set readonly(val) {
+              if (val) {
+                this._browseButton.setAttribute('disabled', 'disabled');
+                this._clearButton.setAttribute('disabled', 'disabled');
+              } else {
+                this._browseButton.removeAttribute('disabled');
+                this._clearButton.removeAttribute('disabled');
+              }
+            },
+            focus: function() {
+              this._browseButton.focus();
+            },
+
+            _browseButton: this.ownerDocument.
+              getAnonymousElementByAttribute(this, 'anonid', 'browse_button'),
+            _clearButton: this.ownerDocument.
+              getAnonymousElementByAttribute(this, 'anonid', 'clear_button'),
+            _textControl: this.ownerDocument.
+              getAnonymousElementByAttribute(this, 'anonid', 'text_control'),
+          };
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="command">
+        switch (event.originalTarget.getAttribute("anonid")) {
+          case "browse_button":
+            this.uploadElement.pickFile();
+            this.dispatchDOMUIEvent('DOMActivate');
+            break;
+          case "clear_button":
+            this.uploadElement.clearFile();
+            this.dispatchDOMUIEvent('DOMActivate');
+            break;
+        }
+      </handler>
+    </handlers>
+  </binding>
+
+
+  <!-- UPLOAD: DISABLED -->
+  <binding id="xformswidget-upload-disabled"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-upload-disabled-base">
+    <content>
+      <children includes="label"/>
+      <xul:textbox anonid="text_control"
+                   class="xf-value"
+                   readonly="readonly"
+                   tabindex="-1"/>
+      <xul:button anonid="browse_button"
+                   xbl:inherits="tabindex"
+                   label="&xforms.upload.browsetext;"
+                   disabled="true"/>
+      <xul:button anonid="clear_button"
+                   xbl:inherits="tabindex"
+                   label="&xforms.upload.cleartext;"
+                   disabled="true"/>
+      <children/>
+    </content>
+  </binding>
+
+
   <!-- REPEAT -->
   <binding id="xformswidget-repeat"
            extends="chrome://xforms/content/xforms.xml#xformswidget-repeat-base">
