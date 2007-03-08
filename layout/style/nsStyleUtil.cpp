@@ -554,3 +554,18 @@ void nsStyleUtil::EscapeCSSString(const nsString& aString, nsAString& aReturn)
     }
   }
 }
+
+/* static */ float
+nsStyleUtil::ColorComponentToFloat(PRUint8 aAlpha)
+{
+  // Alpha values are expressed as decimals, so we should convert
+  // back, using as few decimal places as possible for
+  // round-tripping.
+  // First try two decimal places:
+  float rounded = NS_roundf(float(aAlpha) * 100.0f / 255.0f) / 100.0f;
+  if (FloatToColorComponent(rounded) != aAlpha) {
+    // Use three decimal places.
+    rounded = NS_roundf(float(aAlpha) * 1000.0f / 255.0f) / 1000.0f;
+  }
+  return rounded;
+}

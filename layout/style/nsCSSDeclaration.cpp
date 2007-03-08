@@ -53,6 +53,7 @@
 #include "nsUnitConversion.h"
 #include "nsFont.h"
 #include "nsReadableUtils.h"
+#include "nsStyleUtil.h"
 
 #include "nsStyleConsts.h"
 
@@ -425,16 +426,7 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
       tmpStr.AppendInt(NS_GET_B(color), 10);
       if (a < 255) {
         tmpStr.Append(comma);
-        // Alpha values are expressed as decimals, so we should convert
-        // back, using as few decimal places as possible for
-        // round-tripping.
-        // First try two decimal places:
-        float rounded = NS_roundf(float(a) * 100.0f / 255.0f) / 100.0f;
-        if (NSToIntRound(rounded * 255.0f) != a) {
-          // Use three decimal places.
-          rounded = NS_roundf(float(a) * 1000.0f / 255.0f) / 1000.0f;
-        }
-        tmpStr.AppendFloat(rounded);
+        tmpStr.AppendFloat(nsStyleUtil::ColorComponentToFloat(a));
       }
       tmpStr.Append(PRUnichar(')'));
 

@@ -59,6 +59,7 @@
 #include "nsGkAtoms.h"
 #include "nsHTMLReflowState.h"
 #include "nsThemeConstants.h"
+#include "nsStyleUtil.h"
 
 #include "nsPresContext.h"
 #include "nsIDocument.h"
@@ -479,14 +480,15 @@ nsComputedDOMStyle::SetToRGBAColor(nsROCSSPrimitiveValue* aValue,
   nsROCSSPrimitiveValue *alpha  = GetROCSSPrimitiveValue();
 
   if (red && green && blue && alpha) {
+    PRUint8 a = NS_GET_A(aColor);
     nsDOMCSSRGBColor *rgbColor =
-      new nsDOMCSSRGBColor(red, green, blue, alpha, NS_GET_A(aColor) < 255);
+      new nsDOMCSSRGBColor(red, green, blue, alpha, a < 255);
 
     if (rgbColor) {
       red->SetNumber(NS_GET_R(aColor));
       green->SetNumber(NS_GET_G(aColor));
       blue->SetNumber(NS_GET_B(aColor));
-      alpha->SetNumber(float(NS_GET_A(aColor)) / 255.0f);
+      alpha->SetNumber(nsStyleUtil::ColorComponentToFloat(a));
 
       aValue->SetColor(rgbColor);
       return NS_OK;
