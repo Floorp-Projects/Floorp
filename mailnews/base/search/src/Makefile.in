@@ -103,4 +103,4 @@ libs:: $(EXPORT_RESOURCE_FILES)
 	 $(INSTALL) $^ $(EXPORT_DIR)
 
 install:: $(EXPORT_RESOURCE_FILES)
-	    $(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/messenger
+	    $(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/isp

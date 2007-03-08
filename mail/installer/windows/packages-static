@@ -11,6 +11,7 @@ bin\chrome\mail-locales.manifest
 bin\dictionaries\*
 bin\uninstall\helper.exe
 bin\updater.ini
+bin\isp\@AB_CD@\*
 
 [xpcom]
 bin\xpcom.dll
@@ -45,7 +46,6 @@ bin\chrome\offline.manifest
 [newsblog]
 bin\chrome\newsblog.jar
 bin\chrome\newsblog.manifest
-bin\isp\rss.rdf
 bin\components\newsblog.js
 
 ; Optional Talkback
@@ -78,9 +78,7 @@ bin\defaults\profile\localstore.rdf
 bin\defaults\profile\prefs.js
 bin\defaults\profile\mimeTypes.rdf
 
-bin\isp\gmail.rdf
-bin\isp\SpamAssassin.sfd
-bin\isp\SpamPal.sfd
+bin\isp\*
 
 bin\components\addrbook.xpt
 bin\components\mime.xpt

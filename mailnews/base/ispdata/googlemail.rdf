@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<!DOCTYPE RDF>
+<RDF:RDF
+    xmlns:NC="http://home.netscape.com/NC-rdf#"
+    xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+
+  <RDF:Description about="NC:ispinfo">
+    <NC:providers>
+      <NC:nsIMsgAccount about="domain:googlemail.com">
+        <!-- pop3 server info -->
+        <NC:incomingServer>
+          <NC:nsIMsgIncomingServer>
+            <NC:prettyName>Google Mail</NC:prettyName>
+            <NC:hostName>pop.googlemail.com</NC:hostName>
+            <NC:type>pop3</NC:type>
+            <NC:ServerType-pop3>
+              <NC:nsIPopIncomingServer>
+                <NC:leaveMessagesOnServer>true</NC:leaveMessagesOnServer>
+                <NC:deleteMailLeftOnServer>false</NC:deleteMailLeftOnServer>
+              </NC:nsIPopIncomingServer>
+            </NC:ServerType-pop3>
+            <NC:loginAtStartUp>true</NC:loginAtStartUp>
+            <NC:downloadOnBiff>true</NC:downloadOnBiff>
+            <NC:rememberPassword>true</NC:rememberPassword>
+            <NC:port>995</NC:port>
+            <NC:socketType>3</NC:socketType>
+          </NC:nsIMsgIncomingServer>
+        </NC:incomingServer>
+
+        <!-- smtp server info -->
+        <NC:smtp>
+          <NC:nsISmtpServer>
+            <NC:hostname>smtp.googlemail.com</NC:hostname>
+            <NC:port>587</NC:port>
+            <NC:trySSL>2</NC:trySSL>
+            <NC:description>Google Mail</NC:description>
+          </NC:nsISmtpServer>
+        </NC:smtp>
+        <NC:smtpRequiresUsername>true</NC:smtpRequiresUsername>
+        <NC:smtpCreateNewServer>true</NC:smtpCreateNewServer>
+        <NC:smtpUsePreferredServer>true</NC:smtpUsePreferredServer>
+
+        <!-- identity defaults -->
+        <NC:identity>
+          <NC:nsIMsgIdentity>
+          </NC:nsIMsgIdentity>
+        </NC:identity>
+
+        <!-- other options -->
+        <NC:wizardSkipPanels>true</NC:wizardSkipPanels>
+        <NC:wizardShortName>Google Mail</NC:wizardShortName>
+        <NC:wizardLongName>Google Mail</NC:wizardLongName>
+        <NC:wizardShow>true</NC:wizardShow>
+        <NC:wizardPromote>true</NC:wizardPromote>
+        <NC:emailProviderName>Google Mail</NC:emailProviderName>
+        <NC:sampleEmail>example@googlemail.com</NC:sampleEmail>
+        <NC:sampleUserName>example</NC:sampleUserName>
+        <NC:emailIDDescription>Google Mail Username:</NC:emailIDDescription>
+        <NC:showServerDetailsOnWizardSummary>true</NC:showServerDetailsOnWizardSummary>
+      </NC:nsIMsgAccount>
+    </NC:providers>
+  </RDF:Description>
+</RDF:RDF>

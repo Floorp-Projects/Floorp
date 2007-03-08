@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 EXPORT_DIR      = $(DIST)/bin/isp
 
-EXPORT_RESOURCE_FILES = gmail.rdf \
+EXPORT_RESOURCE_FILES =  \
 		$(NULL)
 
 ifdef MOZ_MOVEMAIL

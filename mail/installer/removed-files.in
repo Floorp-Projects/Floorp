@@ -190,6 +190,7 @@ defaults/isp/en-US/movemail.rdf
 defaults/isp/en-US/dotmac.rdf
 defaults/isp/en-US/
 defaults/isp/
+isp/gmail.rdf
 
 @DLL_PREFIX@zlib@DLL_SUFFIX@
 #Remove Talkback files from old location (in case user updates from 1.0.x)

@@ -90,6 +90,16 @@ endif
 libs:: $(addprefix $(LOCALE_SRCDIR)/,$(README_FILES))
 	$(INSTALL) $^ $(FINAL_TARGET)
 
+vpath %.rdf $(topsrcdir)/mailnews/base/ispdata
+
+ISP_FILES = $(shell cat $(LOCALE_SRCDIR)/isp/isps.txt)
+
+libs:: $(addsuffix .rdf,$(ISP_FILES)) 
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/isp/$(AB_CD)
+
+install:: $(addsuffix .rdf,$(ISP_FILES))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/isp/$(AB_CD)
+
 libs-%:
 	@$(MAKE) -C ../../toolkit/locales libs-$*
 	@$(MAKE) -C ../../editor/ui/locales AB_CD=$* XPI_NAME=locale-$*
@@ -163,6 +173,7 @@ repackage-zip: $(ZIP_IN)
 	  $(STAGEDIST)/defaults/pref/all-l10n.js
 	$(RM) -r $(STAGEDIST)/searchplugins \
 	  $(STAGEDIST)/dictionaries \
+	  $(STAGEDIST)/isp/en-US \
 	  $(STAGEDIST)/chrome/en-US
 	$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
 	$(MAKE) libs-$(AB_CD)
