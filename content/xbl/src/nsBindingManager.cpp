@@ -649,24 +649,27 @@ nsBindingManager::GetXBLChildNodesInternal(nsIContent* aContent,
   PRUint32 length;
 
   // Retrieve the anonymous content that we should build.
-  GetAnonymousNodesInternal(aContent, aResult, aIsAnonymousContentList);
-  if (*aResult) {
-    (*aResult)->GetLength(&length);
+  nsCOMPtr<nsIDOMNodeList> result;
+  GetAnonymousNodesInternal(aContent, getter_AddRefs(result),
+                            aIsAnonymousContentList);
+  if (result) {
+    result->GetLength(&length);
     if (length == 0)
-      *aResult = nsnull;
+      result = nsnull;
   }
     
   // We may have an altered list of children from XBL insertion points.
   // If we don't have any anonymous kids, we next check to see if we have 
   // insertion points.
-  if (! *aResult) {
+  if (!result) {
     if (mContentListTable.ops) {
-      *aResult = NS_STATIC_CAST(nsIDOMNodeList*,
-                                LookupObject(mContentListTable, aContent));
-      NS_IF_ADDREF(*aResult);
+      result = NS_STATIC_CAST(nsIDOMNodeList*,
+                              LookupObject(mContentListTable, aContent));
       *aIsAnonymousContentList = PR_TRUE;
     }
   }
+
+  result.swap(*aResult);
 
   return NS_OK;
 }
