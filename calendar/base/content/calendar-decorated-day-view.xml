@@ -144,7 +144,7 @@
                         var index = ((aDate.weekday + i + 7) % 7) + 1;
                         nameArray.push(calGetString("dateFormat", "day."+index+".name"));
                     }
-                    document.getAnonymousElementByAttribute(this, "anonid", "nav-control").setNames(nameArray);
+                    document.getAnonymousElementByAttribute(this, "anonid", "nav-control").setNames(nameArray, aDate);
                 ]]></body>
             </method>
         </implementation>

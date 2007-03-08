@@ -100,7 +100,15 @@
                                         .getService(Components.interfaces.nsIStringBundleService);
                     var brand = sbs.createBundle("chrome://branding/locale/brand.properties");
 
-                    document.title = aNameArray[2] + " - " + brand.GetStringFromName("brandShortName");
+                    var docTitle;
+                    if (!aDate) {
+                        docTitle = aNameArray[2];
+                    } else {
+                        var df = Cc["@mozilla.org/calendar/datetime-formatter;1"].
+                                 getService(Ci.calIDateTimeFormatter);
+                        docTitle = df.formatDate(aDate);
+                    }
+                    document.title = docTitle + " - " + brand.GetStringFromName("brandShortName");
                 ]]></body>
             </method>
             <method name="moveView">
