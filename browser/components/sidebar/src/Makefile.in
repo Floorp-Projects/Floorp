@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXTRA_COMPONENTS = nsSidebar.js
+EXTRA_PP_COMPONENTS = nsSidebar.js
 
 include $(topsrcdir)/config/rules.mk
 
