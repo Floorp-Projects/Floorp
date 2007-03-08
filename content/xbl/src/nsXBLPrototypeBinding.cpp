@@ -76,6 +76,7 @@
 
 #include "nsICSSLoader.h"
 #include "nsIStyleRuleProcessor.h"
+#include "nsXBLResourceLoader.h"
 
 // Helper Classes =====================================================================
 
@@ -276,6 +277,15 @@ nsXBLPrototypeBinding::Init(const nsACString& aID,
 
   SetBindingElement(aElement);
   return NS_OK;
+}
+
+void
+nsXBLPrototypeBinding::Traverse(nsCycleCollectionTraversalCallback &cb) const
+{
+  cb.NoteXPCOMChild(mBinding);
+  // XXX mInsertionPointTable!
+  if (mResources && mResources->mLoader)
+    cb.NoteXPCOMChild(mResources->mLoader);
 }
 
 void

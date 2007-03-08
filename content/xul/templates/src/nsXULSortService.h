@@ -63,6 +63,7 @@
 #include "nsIXULTemplateResult.h"
 #include "nsIXULTemplateQueryProcessor.h"
 #include "nsIXULSortService.h"
+#include "nsCycleCollectionParticipant.h"
 
 enum nsSortState_direction {
   nsSortState_descending,
@@ -90,6 +91,15 @@ struct nsSortState
   nsSortState()
     : initialized(PR_FALSE)
   {
+  }
+  void Traverse(nsCycleCollectionTraversalCallback &cb) const
+  {
+    if (processor) {
+      cb.NoteXPCOMChild(processor);
+    }
+    if (lastContainer) {
+      cb.NoteXPCOMChild(lastContainer);
+    }
   }
 };
 

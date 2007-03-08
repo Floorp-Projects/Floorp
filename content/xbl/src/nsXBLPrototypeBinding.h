@@ -172,7 +172,9 @@ public:
   nsresult Init(const nsACString& aRef,
                 nsIXBLDocumentInfo* aInfo,
                 nsIContent* aElement);
-  
+
+  void Traverse(nsCycleCollectionTraversalCallback &cb) const;
+
 // Static members
   static PRUint32 gRefCnt;
  

@@ -882,6 +882,9 @@ public:
   NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex);
   NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsGenericHTMLFrameElement,
+                                                     nsGenericHTMLElement)
+
 protected:
   // This doesn't really ensure a frame loade in all cases, only when
   // it makes sense.
@@ -1045,6 +1048,37 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
   NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(_class, _base,                 \
                                                nsIDOMHTMLElement)
 
+#define NS_HTML_CONTENT_CC_INTERFACE_MAP_AMBIGUOUS_BEGIN(_class, _base,       \
+                                                        _base_if)             \
+  NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)    \
+  {                                                                           \
+    NS_ENSURE_ARG_POINTER(aInstancePtr);                                      \
+                                                                              \
+    if ( aIID.Equals(NS_GET_IID(nsCycleCollectionParticipant)) ) {            \
+      *aInstancePtr = &NS_CYCLE_COLLECTION_NAME(_class);                      \
+      return NS_OK;                                                           \
+    }                                                                         \
+                                                                              \
+    *aInstancePtr = nsnull;                                                   \
+                                                                              \
+    nsresult rv;                                                              \
+                                                                              \
+    rv = _base::QueryInterface(aIID, aInstancePtr);                           \
+                                                                              \
+    if (NS_SUCCEEDED(rv))                                                     \
+      return rv;                                                              \
+                                                                              \
+    rv = DOMQueryInterface(NS_STATIC_CAST(_base_if *, this), aIID,            \
+                           aInstancePtr);                                     \
+                                                                              \
+    if (NS_SUCCEEDED(rv))                                                     \
+      return rv;                                                              \
+                                                                              \
+    nsISupports *foundInterface = nsnull;
+
+#define NS_HTML_CONTENT_CC_INTERFACE_MAP_BEGIN(_class, _base)                 \
+  NS_HTML_CONTENT_CC_INTERFACE_MAP_AMBIGUOUS_BEGIN(_class, _base,             \
+                                                   nsIDOMHTMLElement)
 
 #define NS_HTML_CONTENT_INTERFACE_MAP_END                                     \
     {                                                                         \

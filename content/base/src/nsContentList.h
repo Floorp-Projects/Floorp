@@ -52,6 +52,7 @@
 #include "nsStubMutationObserver.h"
 #include "nsIAtom.h"
 #include "nsINameSpaceManager.h"
+#include "nsCycleCollectionParticipant.h"
 
 // Magic namespace id that means "match all namespaces".  This is
 // negative so it won't collide with actual namespace constants.
@@ -78,10 +79,11 @@ public:
   nsBaseContentList();
   virtual ~nsBaseContentList();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   // nsIDOMNodeList
   NS_DECL_NSIDOMNODELIST
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsBaseContentList)
 
   virtual void AppendElement(nsIContent *aContent);
   virtual void RemoveElement(nsIContent *aContent);

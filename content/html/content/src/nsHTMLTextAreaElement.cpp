@@ -165,6 +165,9 @@ public:
                               nsIContent* aChild,
                               PRInt32 aIndexInContainer);
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLTextAreaElement,
+                                           nsGenericHTMLFormElement)
+
 protected:
   nsCOMPtr<nsIControllers> mControllers;
   /** The current value.  This is null if the frame owns the value. */
@@ -225,13 +228,23 @@ nsHTMLTextAreaElement::~nsHTMLTextAreaElement()
 }
 
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLTextAreaElement)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLTextAreaElement,
+                                                nsGenericHTMLFormElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mControllers)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLTextAreaElement,
+                                                  nsGenericHTMLFormElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mControllers)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_ADDREF_INHERITED(nsHTMLTextAreaElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLTextAreaElement, nsGenericElement) 
 
 
 // QueryInterface implementation for nsHTMLTextAreaElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTextAreaElement,
-                                    nsGenericHTMLFormElement)
+NS_HTML_CONTENT_CC_INTERFACE_MAP_BEGIN(nsHTMLTextAreaElement,
+                                       nsGenericHTMLFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLTextAreaElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLTextAreaElement)
   NS_INTERFACE_MAP_ENTRY(nsITextControlElement)

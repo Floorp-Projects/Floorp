@@ -58,7 +58,8 @@ class nsJSScriptTimeoutHandler: public nsIScriptTimeoutHandler
 {
 public:
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsJSScriptTimeoutHandler)
 
   nsJSScriptTimeoutHandler();
   ~nsJSScriptTimeoutHandler();
@@ -88,6 +89,9 @@ public:
 
   nsresult Init(nsIScriptContext *aContext, PRBool aIsInterval,
                 PRInt32 *aInterval);
+
+  void ReleaseJSObjects();
+
 private:
 
   nsCOMPtr<nsIScriptContext> mContext;
@@ -107,13 +111,25 @@ private:
 
 // nsJSScriptTimeoutHandler
 // QueryInterface implementation for nsJSScriptTimeoutHandler
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSScriptTimeoutHandler)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSScriptTimeoutHandler)
+  tmp->ReleaseJSObjects();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSScriptTimeoutHandler)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContext)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mArgv)
+  if (tmp->mFunObj)
+    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, tmp->mFunObj);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_INTERFACE_MAP_BEGIN(nsJSScriptTimeoutHandler)
   NS_INTERFACE_MAP_ENTRY(nsIScriptTimeoutHandler)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsJSScriptTimeoutHandler)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsJSScriptTimeoutHandler)
-NS_IMPL_RELEASE(nsJSScriptTimeoutHandler)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsJSScriptTimeoutHandler)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsJSScriptTimeoutHandler)
 
 nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler() :
   mLineNo(0),
@@ -125,14 +141,21 @@ nsJSScriptTimeoutHandler::nsJSScriptTimeoutHandler() :
 
 nsJSScriptTimeoutHandler::~nsJSScriptTimeoutHandler()
 {
+  ReleaseJSObjects();
+}
+
+void
+nsJSScriptTimeoutHandler::ReleaseJSObjects()
+{
   if (mExpr || mFunObj) {
-    nsIScriptContext *scx = mContext;
+    nsCOMPtr<nsIScriptContext> scx = mContext;
     JSRuntime *rt = nsnull;
 
     if (scx) {
       JSContext *cx;
       cx = (JSContext *)scx->GetNativeContext();
       rt = ::JS_GetRuntime(cx);
+      mContext = nsnull;
     } else {
       // XXX The timeout *must* be unrooted, even if !scx. This can be
       // done without a JS context using the JSRuntime. This is safe
@@ -152,7 +175,7 @@ nsJSScriptTimeoutHandler::~nsJSScriptTimeoutHandler()
 
       if (rtsvc) {
         rtsvc->GetRuntime(&rt);
-        }
+      }
     }
 
     if (!rt) {
@@ -165,8 +188,10 @@ nsJSScriptTimeoutHandler::~nsJSScriptTimeoutHandler()
 
     if (mExpr) {
       ::JS_RemoveRootRT(rt, &mExpr);
+      mExpr = nsnull;
     } else if (mFunObj) {
       ::JS_RemoveRootRT(rt, &mFunObj);
+      mFunObj = nsnull;
     } else {
       NS_WARNING("No func and no expr - roots may not have been removed");
     }

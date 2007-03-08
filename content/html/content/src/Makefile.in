@@ -80,7 +80,6 @@ EXPORTS		= \
 
 CPPSRCS		= \
 		nsGenericHTMLElement.cpp \
-		nsGenericDOMHTMLCollection.cpp \
 		nsFormSubmission.cpp \
 		nsImageMapUtils.cpp \
 		nsHTMLAnchorElement.cpp \

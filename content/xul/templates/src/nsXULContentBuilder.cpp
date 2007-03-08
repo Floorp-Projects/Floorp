@@ -152,6 +152,11 @@ protected:
 
     nsXULContentBuilder();
 
+    void Traverse(nsCycleCollectionTraversalCallback &cb) const
+    {
+        mSortState.Traverse(cb);
+    }
+
     virtual void Uninit(PRBool aIsFinal);
 
     // Implementation methods

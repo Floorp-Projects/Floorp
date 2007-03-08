@@ -59,7 +59,26 @@
 #include "nsCSSRuleProcessor.h"
 #include "nsContentUtils.h"
 
-NS_IMPL_ISUPPORTS1(nsXBLResourceLoader, nsICSSLoaderObserver)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLResourceLoader)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsXBLResourceLoader)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXBLResourceLoader)
+  if (tmp->mBoundElements) {
+    PRUint32 i, count;
+    tmp->mBoundElements->Count(&count);
+    for (i = 0; i < count; ++i) {
+      cb.NoteXPCOMChild(tmp->mBoundElements->ElementAt(i));
+    }
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN(nsXBLResourceLoader)
+  NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsXBLResourceLoader)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXBLResourceLoader)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXBLResourceLoader)
 
 nsXBLResourceLoader::nsXBLResourceLoader(nsXBLPrototypeBinding* aBinding,
                                          nsXBLPrototypeResources* aResources)

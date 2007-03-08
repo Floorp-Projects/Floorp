@@ -1018,16 +1018,28 @@ nsJSContext::~nsJSContext()
 }
 
 // QueryInterface implementation for nsJSContext
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSContext)
+// XXX Should we call ClearScope here?
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsJSContext)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSContext)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobalWrapperRef)
+  JSObject *globalObject = ::JS_GetGlobalObject(tmp->mContext);
+  if (globalObject) {
+    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, globalObject);
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_INTERFACE_MAP_BEGIN(nsJSContext)
   NS_INTERFACE_MAP_ENTRY(nsIScriptContext)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptNotify)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptContext)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsJSContext)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(nsJSContext)
-NS_IMPL_RELEASE(nsJSContext)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsJSContext, nsIScriptContext)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsJSContext, nsIScriptContext)
 
 nsresult
 nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
@@ -3556,13 +3568,17 @@ public:
   nsJSArgArray(JSContext *aContext, PRUint32 argc, jsval *argv, nsresult *prv);
   ~nsJSArgArray();
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsJSArgArray, nsIJSArgArray)
 
   // nsIArray
   NS_DECL_NSIARRAY
 
   // nsIJSArgArray
   nsresult GetArgs(PRUint32 *argc, void **argv);
+
+  void ReleaseJSObjects();
+
 protected:
   JSContext *mContext;
   jsval *mArgv;
@@ -3595,6 +3611,12 @@ nsJSArgArray::nsJSArgArray(JSContext *aContext, PRUint32 argc, jsval *argv,
 
 nsJSArgArray::~nsJSArgArray()
 {
+  ReleaseJSObjects();
+}
+
+void
+nsJSArgArray::ReleaseJSObjects()
+{
   if (mArgv) {
     NS_ASSERTION(nsJSRuntime::sRuntime, "Where's the runtime gone?");
     if (nsJSRuntime::sRuntime) {
@@ -3604,17 +3626,37 @@ nsJSArgArray::~nsJSArgArray()
     }
     PR_DELETE(mArgv);
   }
+  mArgc = 0;
 }
 
 // QueryInterface implementation for nsJSArgArray
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSArgArray)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSArgArray)
+  tmp->ReleaseJSObjects();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSArgArray)
+  {
+    jsval *argv = tmp->mArgv;
+    if (argv) {
+      jsval *end;
+      for (end = argv + tmp->mArgc; argv < end; ++argv) {
+        if (JSVAL_IS_OBJECT(*argv))
+          cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
+                             JSVAL_TO_OBJECT(*argv));
+      }
+    }
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_INTERFACE_MAP_BEGIN(nsJSArgArray)
   NS_INTERFACE_MAP_ENTRY(nsIArray)
   NS_INTERFACE_MAP_ENTRY(nsIJSArgArray)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIJSArgArray)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsJSArgArray)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsJSArgArray)
-NS_IMPL_RELEASE(nsJSArgArray)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsJSArgArray, nsIJSArgArray)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsJSArgArray, nsIJSArgArray)
 
 nsresult
 nsJSArgArray::GetArgs(PRUint32 *argc, void **argv)

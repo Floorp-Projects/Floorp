@@ -90,7 +90,16 @@
 // we'd need to re-institute a fixed version of bug 98158.
 #define MAX_DEPTH_CONTENT_FRAMES 10
 
-NS_IMPL_ISUPPORTS1(nsFrameLoader, nsIFrameLoader)
+NS_IMPL_CYCLE_COLLECTION_1(nsFrameLoader, mDocShell)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameLoader)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameLoader)
+
+NS_INTERFACE_MAP_BEGIN(nsFrameLoader)
+  NS_INTERFACE_MAP_ENTRY(nsIFrameLoader)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsFrameLoader)
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 nsFrameLoader::LoadFrame()

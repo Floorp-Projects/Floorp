@@ -940,6 +940,76 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS_WITH_DESTROY(nsDocument,
                                                         LastRelease())
 
 
+PR_STATIC_CALLBACK(PLDHashOperator)
+SubDocTraverser(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
+                void *arg)
+{
+  SubDocMapEntry *entry = NS_STATIC_CAST(SubDocMapEntry*, hdr);
+  nsCycleCollectionTraversalCallback *cb = 
+    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, arg);
+
+  cb->NoteXPCOMChild(entry->mKey);
+  nsISupports *doc = entry->mSubDocument;
+  if (doc) {
+    cb->NoteXPCOMChild(doc);
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+PR_STATIC_CALLBACK(PRIntn)
+RadioGroupsTraverser(nsHashKey *aKey, void *aData, void* aClosure)
+{
+  nsRadioGroupStruct *entry = NS_STATIC_CAST(nsRadioGroupStruct*, aData);
+  nsCycleCollectionTraversalCallback *cb = 
+    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aClosure);
+
+  nsISupports *radioButton = entry->mSelectedRadioButton;
+  if (radioButton) {
+    cb->NoteXPCOMChild(radioButton);
+  }
+
+  nsSmallVoidArray &radioButtons = entry->mRadioButtons;
+  PRUint32 i, count = radioButtons.Count();
+  for (i = 0; i < count; ++i) {
+    cb->NoteXPCOMChild(NS_STATIC_CAST(nsIFormControl*, radioButtons[i]));
+  }
+  
+
+  return kHashEnumerateNext;
+}
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+BoxObjectTraverser(nsISupports* key, nsPIBoxObject* boxObject, void* userArg)
+{
+  nsCycleCollectionTraversalCallback *cb = 
+    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, userArg);
+ 
+  cb->NoteXPCOMChild(key);
+  cb->NoteXPCOMChild(boxObject);
+
+  return PL_DHASH_NEXT;
+}
+
+class LinkMapTraversalVisitor : public nsUint32ToContentHashEntry::Visitor
+{
+public:
+  nsCycleCollectionTraversalCallback *mCb;
+  virtual void Visit(nsIContent* aContent)
+  {
+    mCb->NoteXPCOMChild(aContent);
+  }
+};
+
+PLDHashOperator PR_CALLBACK
+LinkMapTraverser(nsUint32ToContentHashEntry* aEntry, void* userArg)
+{
+  LinkMapTraversalVisitor visitor;
+  visitor.mCb = NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, userArg);
+  aEntry->VisitContent(&visitor);
+  return PL_DHASH_NEXT;
+}
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   // Traverse the mChildren nsAttrAndChildArray.
   for (PRInt32 indx = PRInt32(tmp->mChildren.ChildCount()); indx > 0; --indx) {
@@ -956,12 +1026,27 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mListenerManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDOMStyleSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptLoader)
+
+  tmp->mRadioGroups.Enumerate(RadioGroupsTraverser, &cb);
+
+  // The boxobject for an element will only exist as long as it's in the
+  // document, so we'll traverse the table here instead of from the element.
+  if (tmp->mBoxObjectTable) {
+    tmp->mBoxObjectTable->EnumerateRead(BoxObjectTraverser, &cb);
+  }
+
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChannel)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mStyleAttrStyleSheet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptEventManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mXPathEvaluatorTearoff)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLayoutHistoryState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnloadBlocker)
+
+  // An element will only be in the linkmap as long as it's in the
+  // document, so we'll traverse the table here instead of from the element.
+  if (tmp->mLinkMap.IsInitialized()) {
+    tmp->mLinkMap.EnumerateEntries(LinkMapTraverser, &cb);
+  }
 
   // Traverse all our nsCOMArrays.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mStyleSheets)
@@ -973,6 +1058,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
     nsISupports *preservedWrapper = tmp->GetReference(tmp);
     if (preservedWrapper)
       cb.NoteXPCOMChild(preservedWrapper);
+  }
+
+  if (tmp->mSubDocuments && tmp->mSubDocuments->ops) {
+    PL_DHashTableEnumerate(tmp->mSubDocuments, SubDocTraverser, &cb);
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -3580,8 +3669,8 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
 
   if (!mBoxObjectTable) {
     mBoxObjectTable = new nsInterfaceHashtable<nsISupportsHashKey, nsPIBoxObject>;
-    if (mBoxObjectTable) {
-      mBoxObjectTable->Init(12);
+    if (mBoxObjectTable && !mBoxObjectTable->Init(12)) {
+      mBoxObjectTable = nsnull;
     }
   } else {
     // Want to use Get(content, aResult); but it's the wrong type

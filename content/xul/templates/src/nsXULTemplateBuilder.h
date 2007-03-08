@@ -62,6 +62,7 @@
 #include "nsTemplateRule.h"
 #include "nsTemplateMatch.h"
 #include "nsIXULTemplateQueryProcessor.h"
+#include "nsCycleCollectionParticipant.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING
@@ -91,7 +92,9 @@ public:
     virtual void Uninit(PRBool aIsFinal);
 
     // nsISupports interface
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULTemplateBuilder,
+                                             nsIXULTemplateBuilder)
 
     // nsIXULTemplateBuilder interface
     NS_DECL_NSIXULTEMPLATEBUILDER
@@ -463,6 +466,10 @@ protected:
      */
     virtual nsresult
     SynchronizeResult(nsIXULTemplateResult* aResult) = 0;
+
+    virtual void Traverse(nsCycleCollectionTraversalCallback &cb) const
+    {
+    }
 };
 
 #endif // nsXULTemplateBuilder_h__

@@ -40,7 +40,16 @@
 // XXXndeakin for some reason, making this class have classinfo breaks trees.
 //#include "nsIDOMClassInfo.h"
 
-NS_IMPL_ISUPPORTS1(nsXULTemplateResultRDF, nsIXULTemplateResult)
+NS_IMPL_CYCLE_COLLECTION_1(nsXULTemplateResultRDF, mQuery)
+
+NS_INTERFACE_MAP_BEGIN(nsXULTemplateResultRDF)
+  NS_INTERFACE_MAP_ENTRY(nsIXULTemplateResult)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsXULTemplateResultRDF)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULTemplateResultRDF)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULTemplateResultRDF)
 
 nsXULTemplateResultRDF::nsXULTemplateResultRDF(nsIRDFResource* aNode)
     : mQuery(nsnull),

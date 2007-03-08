@@ -295,13 +295,12 @@ NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     return rv;
 }
 
-NS_IMPL_ADDREF(nsXULTreeBuilder)
-NS_IMPL_RELEASE(nsXULTreeBuilder)
+NS_IMPL_ADDREF_INHERITED(nsXULTreeBuilder, nsXULTemplateBuilder)
+NS_IMPL_RELEASE_INHERITED(nsXULTreeBuilder, nsXULTemplateBuilder)
 
 NS_INTERFACE_MAP_BEGIN(nsXULTreeBuilder)
   NS_INTERFACE_MAP_ENTRY(nsIXULTreeBuilder)
   NS_INTERFACE_MAP_ENTRY(nsITreeView)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULTreeBuilder)
   NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(XULTreeBuilder)
 NS_INTERFACE_MAP_END_INHERITING(nsXULTemplateBuilder)
 

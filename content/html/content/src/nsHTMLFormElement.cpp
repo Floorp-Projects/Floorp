@@ -236,6 +236,9 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLFormElement,
+                                                     nsGenericHTMLElement)
+
 protected:
   nsresult DoSubmitOrReset(nsEvent* aEvent,
                            PRInt32 aMessage);
@@ -389,7 +392,7 @@ public:
 
   void DropFormReference();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   // nsIDOMHTMLCollection interface
   NS_DECL_NSIDOMHTMLCOLLECTION
@@ -428,6 +431,9 @@ public:
   // (both weak and strong) between the form and its form controls.
 
   nsTArray<nsIFormControl*> mNotInElements; // Holds WEAK references
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFormControlList,
+                                           nsIDOMHTMLCollection)
 
 protected:
   // Drop all our references to the form elements
@@ -553,12 +559,31 @@ nsHTMLFormElement::Init()
 
 // nsISupports
 
+PR_STATIC_CALLBACK(PLDHashOperator)
+ElementTraverser(const nsAString& key, nsIDOMHTMLInputElement* element,
+                 void* userArg)
+{
+  nsCycleCollectionTraversalCallback *cb = 
+    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, userArg);
+ 
+  cb->NoteXPCOMChild(element);
+  return PL_DHASH_NEXT;
+}
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLFormElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLFormElement,
+                                                  nsGenericHTMLElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mControls,
+                                                       nsIDOMHTMLCollection)
+  tmp->mSelectedRadioButtons.EnumerateRead(ElementTraverser, &cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_ADDREF_INHERITED(nsHTMLFormElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLFormElement, nsGenericElement) 
 
 
 // QueryInterface implementation for nsHTMLFormElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFormElement, nsGenericHTMLElement)
+NS_HTML_CONTENT_CC_INTERFACE_MAP_BEGIN(nsHTMLFormElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFormElement)
@@ -1958,17 +1983,38 @@ nsFormControlList::FlushPendingNotifications()
   }
 }
 
+PR_STATIC_CALLBACK(PLDHashOperator)
+ControlTraverser(const nsAString& key, nsISupports* control, void* userArg)
+{
+  nsCycleCollectionTraversalCallback *cb = 
+    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, userArg);
+ 
+  cb->NoteXPCOMChild(control);
+  return PL_DHASH_NEXT;
+}
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsFormControlList)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFormControlList)
+  tmp->Clear();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFormControlList)
+  tmp->mNameLookupTable.EnumerateRead(ControlTraverser, &cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 // XPConnect interface list for nsFormControlList
 NS_INTERFACE_MAP_BEGIN(nsFormControlList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFormControlList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMHTMLCollection)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLFormControlCollection)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsFormControlList)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(nsFormControlList)
-NS_IMPL_RELEASE(nsFormControlList)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsFormControlList,
+                                          nsIDOMHTMLCollection)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsFormControlList,
+                                           nsIDOMHTMLCollection)
 
 
 // nsIDOMHTMLCollection interface

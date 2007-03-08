@@ -46,6 +46,7 @@
 
 #include "nsICommandManager.h"
 #include "nsPICommandUpdater.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIController;
 
@@ -62,7 +63,8 @@ public:
   virtual               ~nsCommandManager();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsCommandManager, nsICommandManager)
   
   // nsICommandManager
   NS_DECL_NSICOMMANDMANAGER

@@ -70,7 +70,42 @@ nsCommandManager::~nsCommandManager()
 }
 
 
-NS_IMPL_ISUPPORTS3(nsCommandManager, nsICommandManager, nsPICommandUpdater, nsISupportsWeakReference)
+PR_STATIC_CALLBACK(PRBool)
+TraverseCommandObservers(nsHashKey *aKey, void *aData, void* aClosure)
+{
+  nsISupportsArray *observers = NS_STATIC_CAST(nsISupportsArray*, aData);
+  nsCycleCollectionTraversalCallback *cb = 
+    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aClosure);
+
+  PRUint32 i, numItems;
+  nsresult rv = observers->Count(&numItems);
+  NS_ENSURE_SUCCESS(rv, kHashEnumerateStop);
+  
+  for (i = 0; i < numItems; ++i) {
+    cb->NoteXPCOMChild(observers->ElementAt(i));
+  }
+
+  return kHashEnumerateNext;
+}
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsCommandManager)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCommandManager)
+  tmp->mCommandObserversTable.Reset();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCommandManager)
+  tmp->mCommandObserversTable.Enumerate(TraverseCommandObservers, &cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsCommandManager, nsICommandManager)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsCommandManager, nsICommandManager)
+
+NS_INTERFACE_MAP_BEGIN(nsCommandManager)
+   NS_INTERFACE_MAP_ENTRY(nsICommandManager)
+   NS_INTERFACE_MAP_ENTRY(nsPICommandUpdater)
+   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICommandManager)
+   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsCommandManager)
+NS_INTERFACE_MAP_END
 
 #if 0
 #pragma mark -

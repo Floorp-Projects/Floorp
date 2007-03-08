@@ -215,6 +215,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      */
     void RemovedFromDocument();
 
+    void Traverse(nsCycleCollectionTraversalCallback &cb);
+
   private:
     /**
      * Check whether the given request represents a successful load.

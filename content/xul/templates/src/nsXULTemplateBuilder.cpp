@@ -230,9 +230,57 @@ nsXULTemplateBuilder::Uninit(PRBool aIsFinal)
     mQueriesCompiled = PR_FALSE;
 }
 
+static PLDHashOperator
+TraverseMatchList(nsISupports* aKey, nsTemplateMatch* aMatch, void* aContext)
+{
+    nsCycleCollectionTraversalCallback *cb =
+        NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aContext);
 
-NS_IMPL_ADDREF(nsXULTemplateBuilder)
-NS_IMPL_RELEASE(nsXULTemplateBuilder)
+    cb->NoteXPCOMChild(aKey);
+    nsTemplateMatch* match = aMatch;
+    while (match) {
+        nsISupports *container = match->GetContainer();
+        if (container)
+            cb->NoteXPCOMChild(container);
+        nsISupports *result = match->mResult;
+        if (result)
+            cb->NoteXPCOMChild(result);
+        match = match->mNext;
+    }
+
+    return PL_DHASH_NEXT;
+}
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULTemplateBuilder)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsXULTemplateBuilder)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULTemplateBuilder)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRoot)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRootResult)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mListeners)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mQueryProcessor)
+    if (tmp->mMatchMap.IsInitialized())
+        tmp->mMatchMap.EnumerateRead(TraverseMatchList, &cb);
+    {
+      PRUint32 i, count = tmp->mQuerySets.Length();
+      for (i = 0; i < count; ++i) {
+        nsTemplateQuerySet *set = tmp->mQuerySets[i];
+        cb.NoteXPCOMChild(set->mQueryNode);
+        if (set->mCompiledQuery) {
+          cb.NoteXPCOMChild(set->mCompiledQuery);
+        }
+        PRUint16 j, rulesCount = set->RuleCount();
+        for (j = 0; j < rulesCount; ++j) {
+          set->GetRuleAt(j)->Traverse(cb);
+        }
+      }
+    }
+    tmp->Traverse(cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXULTemplateBuilder,
+                                          nsIXULTemplateBuilder)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXULTemplateBuilder,
+                                           nsIXULTemplateBuilder)
 
 NS_INTERFACE_MAP_BEGIN(nsXULTemplateBuilder)
   NS_INTERFACE_MAP_ENTRY(nsIXULTemplateBuilder)
@@ -240,6 +288,7 @@ NS_INTERFACE_MAP_BEGIN(nsXULTemplateBuilder)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULTemplateBuilder)
   NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(XULTemplateBuilder)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsXULTemplateBuilder)
 NS_INTERFACE_MAP_END
 
 //----------------------------------------------------------------------

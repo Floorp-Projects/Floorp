@@ -703,12 +703,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsGlobalWindow,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContext)
 
-  // Strange bug: If you uncomment this line you will find that
-  // the cycle collector crashes when working with multiple open
-  // top-level windows. It is as though the windows somehow
-  // race with one another. How can this be? Curious.
-  //
-  // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOpener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOpener)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mControllers)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mArguments)
@@ -740,20 +735,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
     }
   }
 
-  // Traverse our possibly-inner window.
-  if (tmp->IsOuterWindow()
-      && tmp->GetCurrentInnerWindowInternal()) {    
-    cb.NoteXPCOMChild(NS_STATIC_CAST(nsIScriptGlobalObject*, 
-                                     tmp->GetCurrentInnerWindowInternal()));
-  }
-
-  // FIXME: somewhere in these commented lines lies a bug that causes
-  // a segfault. So we have disabled them, even though it seems wrong
-  // to do so. Other matters are more pressing at the moment.
-
   // Traverse stuff from nsPIDOMWindow
-  // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChromeEventHandler)
-  // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChromeEventHandler)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
@@ -7564,10 +7548,17 @@ nsGlobalWindow::SetScriptTypeID(PRUint32 aScriptType)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalChromeWindow)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalChromeWindow,
+                                                  nsGlobalWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mBrowserDOMWindow)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 // QueryInterface implementation for nsGlobalChromeWindow
 NS_INTERFACE_MAP_BEGIN(nsGlobalChromeWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMChromeWindow)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ChromeWindow)
+  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsGlobalChromeWindow)
 NS_INTERFACE_MAP_END_INHERITING(nsGlobalWindow)
 
 NS_IMPL_ADDREF_INHERITED(nsGlobalChromeWindow, nsGlobalWindow)

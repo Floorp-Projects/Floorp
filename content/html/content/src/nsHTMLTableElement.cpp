@@ -41,7 +41,6 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsDOMError.h"
 #include "nsContentList.h"
-#include "nsGenericDOMHTMLCollection.h"
 #include "nsMappedAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
@@ -90,6 +89,9 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLTableElement,
+                                                     nsGenericHTMLElement)
+
 protected:
   already_AddRefed<nsIDOMHTMLTableSectionElement> GetSection(nsIAtom *aTag);
 
@@ -103,7 +105,7 @@ protected:
  * This class provides a late-bound collection of rows in a table.
  * mParent is NOT ref-counted to avoid circular references
  */
-class TableRowsCollection : public nsGenericDOMHTMLCollection 
+class TableRowsCollection : public nsIDOMHTMLCollection 
 {
 public:
   TableRowsCollection(nsHTMLTableElement *aParent);
@@ -111,12 +113,12 @@ public:
 
   nsresult Init();
 
-  NS_IMETHOD    GetLength(PRUint32* aLength);
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-  NS_IMETHOD    NamedItem(const nsAString& aName,
-                          nsIDOMNode** aReturn);
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_NSIDOMHTMLCOLLECTION
 
   NS_IMETHOD    ParentDestroyed();
+
+  NS_DECL_CYCLE_COLLECTION_CLASS(TableRowsCollection)
 
 protected:
   // Those rows that are not in table sections
@@ -126,9 +128,8 @@ protected:
 
 
 TableRowsCollection::TableRowsCollection(nsHTMLTableElement *aParent)
-  : nsGenericDOMHTMLCollection()
+  : mParent(aParent)
 {
-  mParent = aParent;
 }
 
 TableRowsCollection::~TableRowsCollection()
@@ -138,6 +139,23 @@ TableRowsCollection::~TableRowsCollection()
   // instantiator who provided mParent is responsible for managing our
   // reference for us.
 }
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(TableRowsCollection)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(TableRowsCollection)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TableRowsCollection)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mOrphanRows,
+                                                       nsBaseContentList)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(TableRowsCollection)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(TableRowsCollection)
+
+NS_INTERFACE_MAP_BEGIN(TableRowsCollection)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLGenericCollection)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(TableRowsCollection)
+NS_INTERFACE_MAP_END
 
 nsresult
 TableRowsCollection::Init()
@@ -333,12 +351,20 @@ nsHTMLTableElement::~nsHTMLTableElement()
 }
 
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLTableElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLTableElement,
+                                                  nsGenericHTMLElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mTBodies,
+                                                       nsBaseContentList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRows)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_ADDREF_INHERITED(nsHTMLTableElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLTableElement, nsGenericElement) 
 
 
 // QueryInterface implementation for nsHTMLTableElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTableElement, nsGenericHTMLElement)
+NS_HTML_CONTENT_CC_INTERFACE_MAP_BEGIN(nsHTMLTableElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLTableElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLTableElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END

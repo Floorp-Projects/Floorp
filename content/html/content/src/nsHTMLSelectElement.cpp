@@ -57,7 +57,6 @@
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIOptionElement.h"
 #include "nsIEventStateManager.h"
-#include "nsGenericDOMHTMLCollection.h"
 #include "nsISelectElement.h"
 #include "nsISelectControlFrame.h"
 #include "nsIDOMHTMLOptionsCollection.h"
@@ -95,13 +94,13 @@ class nsHTMLSelectElement;
  */
 class nsHTMLOptionCollection: public nsIDOMHTMLOptionsCollection,
                               public nsIDOMNSHTMLOptionCollection,
-                              public nsGenericDOMHTMLCollection
+                              public nsIDOMHTMLCollection
 {
 public:
   nsHTMLOptionCollection(nsHTMLSelectElement* aSelect);
   virtual ~nsHTMLOptionCollection();
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   // nsIDOMHTMLOptionsCollection interface
   NS_DECL_NSIDOMHTMLOPTIONSCOLLECTION
@@ -111,6 +110,9 @@ public:
 
   // nsIDOMHTMLCollection interface, all its methods are defined in
   // nsIDOMHTMLOptionsCollection
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHTMLOptionCollection,
+                                           nsIDOMNSHTMLOptionCollection)
 
   // Helpers for nsHTMLSelectElement
   /**
@@ -290,6 +292,9 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLSelectElement,
+                                                     nsGenericHTMLFormElement)
 
 protected:
   // Helper Methods
@@ -517,13 +522,20 @@ nsHTMLSelectElement::~nsHTMLSelectElement()
 
 // ISupports
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLSelectElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLSelectElement,
+                                                  nsGenericHTMLFormElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mOptions,
+                                                       nsIDOMHTMLCollection)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_ADDREF_INHERITED(nsHTMLSelectElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLSelectElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLSelectElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLSelectElement,
-                                    nsGenericHTMLFormElement)
+NS_HTML_CONTENT_CC_INTERFACE_MAP_BEGIN(nsHTMLSelectElement,
+                                       nsGenericHTMLFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLSelectElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLSelectElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSXBLFormControl)
@@ -2224,6 +2236,14 @@ nsHTMLOptionCollection::GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
 }
 
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLOptionCollection)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsHTMLOptionCollection)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mElements)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHTMLOptionCollection)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mElements)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 // nsISupports
 
 // QueryInterface implementation for nsHTMLOptionCollection
@@ -2233,11 +2253,14 @@ NS_INTERFACE_MAP_BEGIN(nsHTMLOptionCollection)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNSHTMLOptionCollection)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLOptionsCollection)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsHTMLOptionCollection)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLOptionCollection, nsGenericDOMHTMLCollection)
-NS_IMPL_RELEASE_INHERITED(nsHTMLOptionCollection, nsGenericDOMHTMLCollection)
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsHTMLOptionCollection,
+                                          nsIDOMNSHTMLOptionCollection)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsHTMLOptionCollection,
+                                           nsIDOMNSHTMLOptionCollection)
 
 
 // nsIDOMNSHTMLOptionCollection interface

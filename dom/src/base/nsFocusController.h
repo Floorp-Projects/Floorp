@@ -47,6 +47,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
 #include "nsWeakReference.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIDOMElement;
 class nsIDOMWindow;
@@ -66,7 +67,7 @@ protected:
   virtual ~nsFocusController(void);
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   NS_IMETHOD GetFocusedElement(nsIDOMElement** aResult);
   NS_IMETHOD SetFocusedElement(nsIDOMElement* aElement);
@@ -102,6 +103,9 @@ public:
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* anEvent) { return NS_OK; };
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFocusController,
+                                           nsIFocusController)
 
 protected:
   void UpdateCommands();

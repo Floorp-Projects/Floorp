@@ -74,6 +74,9 @@ public:
                               PRBool aNullParent = PR_TRUE);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLMapElement,
+                                                     nsGenericHTMLElement)
+
 protected:
   nsRefPtr<nsContentList> mAreas;
 };
@@ -87,12 +90,19 @@ nsHTMLMapElement::nsHTMLMapElement(nsINodeInfo *aNodeInfo)
 {
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLMapElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLMapElement,
+                                                  nsGenericHTMLElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mAreas,
+                                                       nsBaseContentList)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_ADDREF_INHERITED(nsHTMLMapElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLMapElement, nsGenericElement) 
 
 
 // QueryInterface implementation for nsHTMLMapElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLMapElement, nsGenericHTMLElement)
+NS_HTML_CONTENT_CC_INTERFACE_MAP_BEGIN(nsHTMLMapElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLMapElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLMapElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END

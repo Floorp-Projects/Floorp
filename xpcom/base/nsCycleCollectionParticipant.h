@@ -97,9 +97,9 @@ public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_CYCLECOLLECTIONPARTICIPANT_IID)
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD Unlink(nsISupports *p);
+    NS_IMETHOD Unlink(nsISupports *p) = 0;
     NS_IMETHOD Traverse(nsISupports *p, 
-                        nsCycleCollectionTraversalCallback &cb);
+                        nsCycleCollectionTraversalCallback &cb) = 0;
 
 #ifdef DEBUG
     NS_EXTERNAL_VIS_(PRBool) CheckForRightISupports(nsISupports *s);
@@ -159,6 +159,15 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
                  "not the nsISupports pointer we expect");                     \
     _class *tmp = Downcast(s);
 
+#define NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(_class, _base_class)   \
+  NS_IMETHODIMP                                                                \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Unlink(nsISupports *s)                \
+  {                                                                            \
+    NS_ASSERTION(CheckForRightISupports(s),                                    \
+                 "not the nsISupports pointer we expect");                     \
+    _class *tmp = NS_STATIC_CAST(_class*, Downcast(s));                        \
+    NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Unlink(s);
+
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(_field)                       \
     tmp->_field = NULL;    
 
@@ -197,11 +206,28 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
     _class *tmp = Downcast(s);                                                 \
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class)
 
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(_class, _base_class) \
+  NS_IMETHODIMP                                                                \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Traverse                              \
+                         (nsISupports *s,                                      \
+                          nsCycleCollectionTraversalCallback &cb)              \
+  {                                                                            \
+    NS_ASSERTION(CheckForRightISupports(s),                                    \
+                 "not the nsISupports pointer we expect");                     \
+    _class *tmp = NS_STATIC_CAST(_class*, Downcast(s));                        \
+    NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Traverse(s, cb);
+
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(_field)                       \
     if (tmp->_field) { cb.NoteXPCOMChild(tmp->_field); }
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(_field)                     \
     if (tmp->_field) { cb.NoteXPCOMChild(tmp->_field.get()); }
+
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(_field, _base)    \
+  {                                                                            \
+    nsISupports *f = NS_ISUPPORTS_CAST(_base*, tmp->_field);                   \
+    if (f) { cb.NoteXPCOMChild(f); }                                           \
+  }
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(_field)                   \
     {                                                                          \
@@ -240,13 +266,39 @@ public:                                                                        \
 #define NS_DECL_CYCLE_COLLECTION_CLASS(_class)                                 \
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(_class, _class)
 
+#define NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(_class, _base_class)          \
+class NS_CYCLE_COLLECTION_INNERCLASS                                           \
+ : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                           \
+{                                                                              \
+public:                                                                        \
+  NS_IMETHOD Unlink(nsISupports *n);                                           \
+  NS_IMETHOD Traverse(nsISupports *n,                                          \
+                      nsCycleCollectionTraversalCallback &cb);                 \
+  static _class* Downcast(nsISupports* s)                                      \
+  {                                                                            \
+    return NS_STATIC_CAST(_class*, NS_STATIC_CAST(_base_class*,                \
+      NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Downcast(s)));               \
+  }                                                                            \
+};
+
+#define NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(_class,             \
+                                                           _base_class)        \
+class NS_CYCLE_COLLECTION_INNERCLASS                                           \
+ : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                           \
+{                                                                              \
+public:                                                                        \
+  NS_IMETHOD Traverse(nsISupports *n,                                          \
+                      nsCycleCollectionTraversalCallback &cb);                 \
+  static _class* Downcast(nsISupports* s)                                      \
+  {                                                                            \
+    return NS_STATIC_CAST(_class*, NS_STATIC_CAST(_base_class*,                \
+      NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Downcast(s)));               \
+  }                                                                            \
+};
+
 #define NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                                 \
   static NS_CYCLE_COLLECTION_CLASSNAME(_class)                                 \
     NS_CYCLE_COLLECTION_NAME(_class);
-
-// The *_AMBIGUOUS macros are needed when a cast from _class* to
-// nsISupports* is ambiguous.  The _base parameter must match the base
-// class used to implement QueryInterface to nsISupports.
 
 #define NS_IMPL_CYCLE_COLLECTION_0(_class)                                     \
  NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                                        \

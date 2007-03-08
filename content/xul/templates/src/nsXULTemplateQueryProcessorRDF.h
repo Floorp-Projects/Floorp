@@ -67,6 +67,7 @@
 #include "nsString.h"
 #include "nsClassHashtable.h"
 #include "nsRefPtrHashtable.h"
+#include "nsCycleCollectionParticipant.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING
@@ -91,7 +92,9 @@ public:
     nsresult InitGlobals();
 
     // nsISupports interface
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULTemplateQueryProcessorRDF,
+                                             nsIXULTemplateQueryProcessor)
 
     // nsIXULTemplateQueryProcessor interface
     NS_DECL_NSIXULTEMPLATEQUERYPROCESSOR

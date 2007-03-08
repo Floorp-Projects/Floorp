@@ -97,18 +97,33 @@ NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   return rv;
 }
 
-// QueryInterface implementation for nsXULControllers
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULControllers)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULControllers)
+  tmp->DeleteControllers();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULControllers)
+  {
+    PRUint32 i, count = tmp->mControllers.Count();
+    for (i = 0; i < count; ++i) {
+      nsXULControllerData*  controllerData =
+        NS_STATIC_CAST(nsXULControllerData*, tmp->mControllers[i]);
+      if (controllerData) {
+        cb.NoteXPCOMChild(controllerData->mController);
+      }
+    }
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_INTERFACE_MAP_BEGIN(nsXULControllers)
   NS_INTERFACE_MAP_ENTRY(nsIControllers)
   NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIControllers)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULControllers)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsXULControllers)
 NS_INTERFACE_MAP_END
 
-
-NS_IMPL_ADDREF(nsXULControllers)
-NS_IMPL_RELEASE(nsXULControllers)
-
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXULControllers, nsIControllers)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXULControllers, nsIControllers)
 
 NS_IMETHODIMP
 nsXULControllers::GetControllerForCommand(const char *aCommand, nsIController** _retval)

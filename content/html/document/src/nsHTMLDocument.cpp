@@ -343,6 +343,40 @@ nsHTMLDocument::~nsHTMLDocument()
   }
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLDocument)
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+IdAndNameMapEntryTraverse(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                          PRUint32 number, void *arg)
+{
+  nsCycleCollectionTraversalCallback *cb =
+    NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, arg);
+  IdAndNameMapEntry *entry = NS_STATIC_CAST(IdAndNameMapEntry*, hdr);
+
+  if (entry->mNameContentList && entry->mNameContentList != NAME_NOT_VALID)
+    cb->NoteXPCOMChild(entry->mNameContentList);
+
+  return PL_DHASH_NEXT;
+}
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLDocument, nsDocument)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mBodyContent)
+  if (tmp->mIdAndNameHashTable.ops) {
+    PL_DHashTableEnumerate(&tmp->mIdAndNameHashTable,
+                           IdAndNameMapEntryTraverse,
+                           &cb);
+  }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mImageMaps)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mImages)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mApplets)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mEmbeds)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLinks)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mAnchors)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mForms, nsIDOMNodeList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mFormControls,
+                                                       nsIDOMNodeList)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_ADDREF_INHERITED(nsHTMLDocument, nsDocument)
 NS_IMPL_RELEASE_INHERITED(nsHTMLDocument, nsDocument)
 
@@ -353,6 +387,7 @@ NS_INTERFACE_MAP_BEGIN(nsHTMLDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLDocument)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLDocument)
+  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsHTMLDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsDocument)
 
 
