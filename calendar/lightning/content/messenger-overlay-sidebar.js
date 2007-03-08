@@ -44,12 +44,19 @@
 
 var CalendarController =
 {
+  defaultController: null,
+
   supportsCommand: function ccSC(command) {
     switch (command) {
       case "cmd_cut":
       case "cmd_copy":
       case "cmd_paste":
+      case "cmd_print":
+      case "cmd_printpreview":
         return true;
+    }
+    if (this.defaultController) {
+      return this.defaultController.supportsCommand(command);
     }
     return false;
   },
@@ -61,6 +68,19 @@ var CalendarController =
         return currentView().getSelectedItems({}).length != 0;
       case "cmd_paste":
         return canPaste();
+      case "cmd_print":
+        if (this.isCalendarInForeground()) {
+          return true;
+        }
+        break;
+      case "cmd_printpreview":
+        if (this.isCalendarInForeground()) {
+          return false;
+        }
+        break;
+    }
+    if (this.defaultController) {
+      return this.defaultController.isCommandEnabled(command);
     }
     return false;
   },
@@ -84,11 +104,29 @@ var CalendarController =
       case "cmd_paste":
         pasteFromClipboard();
         break;
+      case "cmd_print":
+        if (this.isCalendarInForeground()) {
+          calPrint();
+          return;
+        }
+        break;
+      case "cmd_printpreview":
+        if (this.isCalendarInForeground()) {
+          return;
+        }
+        break;
+    }
+    if (this.defaultController) {
+      this.defaultController.doCommand(command);
     }
   },
 
   onEvent: function ccOE(event) {
     // do nothing here...
+  },
+  
+  isCalendarInForeground: function ccIC() {
+    return document.getElementById("displayDeck").selectedPanel.id == "calendar-view-box";
   }
 };
 
@@ -246,9 +284,22 @@ function ltnOnLoad(event)
             null);
     }
 
-    top.controllers.insertControllerAt(0, CalendarController);
-
-    return;
+    // we need to put our new command controller *before* the one that
+    // gets installed by thunderbird. since we get called pretty early
+    // during startup we need to install the function below as a callback
+    // that periodically checks when the original thunderbird controller
+    // gets alive. please note that setTimeout with a value of 0 means that
+    // we leave the current thread in order to re-enter the message loop.
+    var injectCommandController = function inject() {
+      var controller = top.controllers.getControllerForCommand("cmd_undo");
+      if (!controller) {
+        setTimeout(injectCommandController, 0);
+      } else {
+        CalendarController.defaultController = controller;
+        top.controllers.insertControllerAt(0, CalendarController);
+      }
+    }
+    injectCommandController();
 }
 
 /* Called at midnight to tell us to redraw date-specific widgets.  Do NOT call

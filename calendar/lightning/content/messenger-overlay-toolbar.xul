@@ -124,10 +124,6 @@
                   label="&calendar.export.calendar;"
                   accesskey="&calendar.export.calendar.accesskey;"
                   observes="export_command"/>
-        <menuitem id="calendar-print-menu"
-                  label="&lightning.toolbar.print.label;"
-                  accesskey="&lightning.toolbar.print.accesskey;"
-                  observes="print_command"/>
       </menupopup>
     </menu>
   </menubar>

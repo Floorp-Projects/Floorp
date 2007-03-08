@@ -81,7 +81,6 @@
     <command id="publish_calendar" oncommand="ltnPublishCalendar()"/>
     <command id="import_command" oncommand="loadEventsFromFile()"/>
     <command id="export_command" oncommand="exportEntireCalendar()"/>
-    <command id="print_command" oncommand="calPrint()"/>
     <command id="reload_remote_calendars" oncommand="getCompositeCalendar().refresh();"/>
   </commandset>
 
