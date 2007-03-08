@@ -78,6 +78,7 @@
 #include "nsPrintfCString.h"
 #include "nsIMediaList.h"
 #include "nsILookAndFeel.h"
+#include "nsStyleUtil.h"
 
 #include "prprf.h"
 #include "math.h"
@@ -3151,7 +3152,7 @@ PRBool CSSParserImpl::ParseColorOpacity(nsresult& aErrorCode, PRUint8& aOpacity)
     return PR_FALSE;
   }
 
-  PRInt32 value = NSToIntRound(mToken.mNumber*255);
+  PRInt32 value = nsStyleUtil::FloatToColorComponent(mToken.mNumber);
 
   if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
     REPORT_UNEXPECTED_TOKEN(PEExpectedCloseParen);
