@@ -384,6 +384,18 @@ DeletingFrameSubtree(nsFrameManager* aFrameManager,
 
 #ifdef  MOZ_SVG
 
+static nsIFrame *
+SVG_GetFirstNonAAncestorFrame(nsIFrame *aParentFrame)
+{
+  for (nsIFrame *ancestorFrame = aParentFrame; ancestorFrame != nsnull;
+       ancestorFrame = ancestorFrame->GetParent()) {
+    if (ancestorFrame->GetType() != nsGkAtoms::svgAFrame) {
+      return ancestorFrame;
+    }
+  }
+  return nsnull;
+}
+
 // Test to see if this language is supported
 static PRBool
 SVG_TestLanguage(const nsSubstring& lstr, const nsSubstring& prefs) 
@@ -5208,12 +5220,16 @@ nsCSSFrameConstructor::ConstructTextFrame(nsFrameConstructorState& aState,
 
 #ifdef MOZ_SVG
   if (aParentFrame->IsFrameOfType(nsIFrame::eSVG)) {
-    nsISVGTextContentMetrics* metrics;
-    CallQueryInterface(aParentFrame, &metrics);
-    if (!metrics) {
-      return NS_OK;
+    nsIFrame *ancestorFrame = SVG_GetFirstNonAAncestorFrame(aParentFrame);
+    if (ancestorFrame) {
+      nsISVGTextContentMetrics* metrics;
+      CallQueryInterface(ancestorFrame, &metrics);
+      if (!metrics) {
+        return NS_OK;
+      }
+      newFrame = NS_NewSVGGlyphFrame(mPresShell, aContent,
+                                     ancestorFrame, aStyleContext);
     }
-    newFrame = NS_NewSVGGlyphFrame(mPresShell, aContent, aParentFrame, aStyleContext);
   }
   else {
     newFrame = NS_NewTextFrame(mPresShell, aStyleContext);
@@ -7170,10 +7186,13 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     newFrame = NS_NewSVGTextFrame(mPresShell, aContent, aStyleContext);
   }
   else if (aTag == nsGkAtoms::tspan) {
-    nsISVGTextContentMetrics* metrics;
-    CallQueryInterface(aParentFrame, &metrics);
-    if (metrics) {
-      newFrame = NS_NewSVGTSpanFrame(mPresShell, aContent, aParentFrame, aStyleContext);
+    nsIFrame *ancestorFrame = SVG_GetFirstNonAAncestorFrame(aParentFrame);
+    if (ancestorFrame) {
+      nsISVGTextContentMetrics* metrics;
+      CallQueryInterface(ancestorFrame, &metrics);
+      if (metrics)
+        newFrame = NS_NewSVGTSpanFrame(mPresShell, aContent,
+                                       ancestorFrame, aStyleContext);
     }
   }
   else if (aTag == nsGkAtoms::linearGradient) {
@@ -7198,9 +7217,11 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     newFrame = NS_NewSVGClipPathFrame(mPresShell, aContent, aStyleContext);
   }
   else if (aTag == nsGkAtoms::textPath) {
-    if (aParentFrame &&
-        aParentFrame->GetType() == nsGkAtoms::svgTextFrame) {
-      newFrame = NS_NewSVGTextPathFrame(mPresShell, aContent, aParentFrame, aStyleContext);
+    nsIFrame *ancestorFrame = SVG_GetFirstNonAAncestorFrame(aParentFrame);
+    if (ancestorFrame &&
+        ancestorFrame->GetType() == nsGkAtoms::svgTextFrame) {
+      newFrame = NS_NewSVGTextPathFrame(mPresShell, aContent,
+                                        ancestorFrame, aStyleContext);
     }
   }
   else if (aTag == nsGkAtoms::filter) {
