@@ -6172,7 +6172,8 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
              // is distanced from the associated principal box's border edge.
              // |rs.availableWidth| reflects exactly a border edge: it includes
              // border, padding, and content area, without margins.
-             ? rs.availableWidth + reflowState.mComputedMargin.left :
+             ? rs.ComputedWidth() + rs.mComputedBorderPadding.LeftRight() +
+               reflowState.mComputedMargin.left :
 #endif
              - reflowState.mComputedMargin.right - aMetrics.width;
 
