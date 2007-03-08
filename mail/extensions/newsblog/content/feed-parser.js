@@ -497,9 +497,9 @@ FeedParser.prototype =
     return null;
   },
   
-  stripTags: function(someHTML) 
+  stripTags: function(someHTML)
   {
-    return someHTML.replace(/<[^>]+>/g,"");
+    return someHTML ? someHTML.replace(/<[^>]+>/g,"") : someHTML;
   },
 
   xmlUnescape: function(s)

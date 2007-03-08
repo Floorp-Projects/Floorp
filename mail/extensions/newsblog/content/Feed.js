@@ -251,8 +251,11 @@ Feed.prototype =
     return title;
   },
 
-  set title (aNewTitle) 
+  set title (aNewTitle)
   {
+    if (!aNewTitle)
+      return;
+
     var ds = getSubscriptionsDS(this.server);
     aNewTitle = rdf.GetLiteral(aNewTitle);
     var old_title = ds.GetTarget(this.resource, DC_TITLE, true);
