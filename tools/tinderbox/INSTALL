@@ -16,7 +16,7 @@ To install a fresh tinderbox:
 5) Create your mozconfig build file in the current dir.
 	mozilla -remote http://webtools.mozilla.org/build/config.cgi
 
-6) Customize your tinderbox configuration
+6) Customize your tinderbox configuration.
 	vi tinder-config.pl
 
 7) Test your tinderbox configuration on the test tree
