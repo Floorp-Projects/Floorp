@@ -101,6 +101,47 @@
 #include "nsIDOMCharacterData.h"
 #endif
 
+/**
+ * nsDOMStringList implementation
+ */
+nsDOMStringList::nsDOMStringList()
+{
+}
+
+nsDOMStringList::~nsDOMStringList()
+{
+}
+
+NS_IMPL_ISUPPORTS1(nsDOMStringList, nsIDOMDOMStringList)
+
+NS_IMETHODIMP
+nsDOMStringList::Item(PRUint32 aIndex, nsAString& aResult)
+{
+  if (aIndex >= (PRUint32)mNames.Count()) {
+    SetDOMStringToNull(aResult);
+  } else {
+    mNames.StringAt(aIndex, aResult);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMStringList::GetLength(PRUint32 *aLength)
+{
+  *aLength = (PRUint32)mNames.Count();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMStringList::Contains(const nsAString& aString, PRBool *aResult)
+{
+  *aResult = mNames.IndexOf(aString) > -1;
+
+  return NS_OK;
+}
+
 /*
  * Class nsAccessible
  */
@@ -2205,10 +2246,29 @@ NS_IMETHODIMP nsAccessible::SetName(const nsAString& name)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* DOMString getKeyBinding (); */
-NS_IMETHODIMP nsAccessible::GetKeyBinding(nsAString& _retval)
+NS_IMETHODIMP
+nsAccessible::GetDefaultKeyBinding(nsAString& aKeyBinding)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aKeyBinding.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessible::GetKeyBindings(nsIDOMDOMStringList **aKeyBindings)
+{
+  nsDOMStringList *keyBindings = new nsDOMStringList();
+  NS_ENSURE_TRUE(keyBindings, NS_ERROR_OUT_OF_MEMORY);
+
+  // Currently we support only unique key binding on element.
+  nsAutoString defaultKey;
+  nsresult rv = GetDefaultKeyBinding(defaultKey);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!defaultKey.IsEmpty())
+    keyBindings->Add(defaultKey);
+
+  NS_ADDREF(*aKeyBindings = keyBindings);
+  return NS_OK;
 }
 
 /* unsigned long getRole (); */

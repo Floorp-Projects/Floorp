@@ -50,6 +50,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsWeakReference.h"
 #include "nsString.h"
+#include "nsIDOMDOMStringList.h"
 
 struct nsRect;
 class nsIContent;
@@ -112,6 +113,25 @@ struct nsRoleMapEntry
   nsStateMapEntry attributeMap6;
   nsStateMapEntry attributeMap7;
 };
+
+
+class nsDOMStringList : public nsIDOMDOMStringList
+{
+public:
+  nsDOMStringList();
+  virtual ~nsDOMStringList();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMDOMSTRINGLIST
+
+  PRBool Add(const nsAString& aName) {
+    return mNames.AppendString(aName);
+  }
+
+private:
+  nsStringArray mNames;
+};
+
 
 class nsAccessible : public nsAccessNodeWrap, 
                      public nsIAccessible, 

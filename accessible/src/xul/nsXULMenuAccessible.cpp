@@ -388,19 +388,22 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetKeyboardShortcut(nsAString& _retval)
 }
 
 //return menu shortcut: Ctrl+F or Ctrl+Shift+L
-NS_IMETHODIMP nsXULMenuitemAccessible::GetKeyBinding(nsAString& _retval)
+NS_IMETHODIMP
+nsXULMenuitemAccessible::GetDefaultKeyBinding(nsAString& aKeyBinding)
 {
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
-  if (elt) {
-    nsAutoString accelText;
-    elt->GetAttribute(NS_LITERAL_STRING("acceltext"), accelText);
-    if (accelText.IsEmpty())
-      return NS_OK;
+  aKeyBinding.Truncate();
 
-    _retval = accelText;
+  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
+  NS_ENSURE_TRUE(elt, NS_ERROR_FAILURE);
+
+  nsAutoString accelText;
+  elt->GetAttribute(NS_LITERAL_STRING("acceltext"), accelText);
+  if (accelText.IsEmpty())
     return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+
+  aKeyBinding = accelText;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULMenuitemAccessible::GetRole(PRUint32 *aRole)

@@ -162,30 +162,37 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
         allKeyBinding.AssignLiteral(";");
 
     //get shortcut
-    nsAutoString keyBinding, subShortcut;
-    rv = accWrap->GetKeyBinding(keyBinding);
+    nsAutoString subShortcut;
+    nsCOMPtr<nsIDOMDOMStringList> keyBindings;
+    rv = accWrap->GetKeyBindings(getter_AddRefs(keyBindings));
 
-    if (NS_SUCCEEDED(rv) && !keyBinding.IsEmpty()) {
-        //change the shortcut from "Ctrl+Shift+L" to "<Control><Shift>L"
-        PRInt32 oldPos, curPos=0;
-        while ((curPos != -1) && (curPos < (PRInt32)keyBinding.Length())) {
-            oldPos = curPos;
-            nsAutoString subString;
-            curPos = keyBinding.FindChar('+', oldPos);
-            if (curPos == -1) {
-                keyBinding.Mid(subString, oldPos, keyBinding.Length() - oldPos);
-                subShortcut += subString;
-            }
-            else {
-                keyBinding.Mid(subString, oldPos, curPos - oldPos);
-      
-                //change "Ctrl" to "Control"
-                if (subString.LowerCaseEqualsLiteral("ctrl"))
-                    subString.AssignLiteral("Control");
-      
-                subShortcut += NS_LITERAL_STRING("<") + subString +
-                               NS_LITERAL_STRING(">");
-                curPos++;
+    if (NS_SUCCEEDED(rv) && keyBindings) {
+        PRUint32 length = 0;
+        keyBindings->GetLength(&length);
+        for (PRUint32 i = 0; i < length; i++) {
+            nsAutoString keyBinding;
+            keyBindings->Item(i, keyBinding);
+
+            //change the shortcut from "Ctrl+Shift+L" to "<Control><Shift>L"
+            PRInt32 oldPos, curPos=0;
+            while ((curPos != -1) && (curPos < (PRInt32)keyBinding.Length())) {
+                oldPos = curPos;
+                nsAutoString subString;
+                curPos = keyBinding.FindChar('+', oldPos);
+                if (curPos == -1) {
+                    keyBinding.Mid(subString, oldPos, keyBinding.Length() - oldPos);
+                    subShortcut += subString;
+                } else {
+                    keyBinding.Mid(subString, oldPos, curPos - oldPos);
+
+                    //change "Ctrl" to "Control"
+                    if (subString.LowerCaseEqualsLiteral("ctrl"))
+                        subString.AssignLiteral("Control");
+
+                    subShortcut += NS_LITERAL_STRING("<") + subString +
+                                   NS_LITERAL_STRING(">");
+                    curPos++;
+                }
             }
         }
     }

@@ -43,6 +43,7 @@
 #include "nsIArray.idl"
 
 interface nsIPersistentProperties;
+interface nsIDOMDOMStringList;
 
 /**
  * A cross-platform interface that supports platform-specific 
@@ -56,7 +57,7 @@ interface nsIPersistentProperties;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(813fbabc-5307-4b76-9ac9-3036df0cf58e)]
+[scriptable, uuid(58305abc-1b04-4e1e-a7f2-4c52ffa8936b)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -124,10 +125,16 @@ interface nsIAccessible : nsISupports
   readonly attribute AString keyboardShortcut;
 
   /**
-   * Provides localized string of global keyboard accelerator, such
-   * as Ctrl+O for Open file
+   * Provides localized string of global keyboard accelerator for default
+   * action, such as Ctrl+O for Open file
    */
-  readonly attribute AString keyBinding;
+  readonly attribute AString defaultKeyBinding;
+
+  /**
+   * Provides array of localized string of global keyboard accelerator for
+   * all actions supported by accessible.
+   */
+  readonly attribute nsIDOMDOMStringList keyBindings;
 
   /**
    * Natural enumerated accessible role for the associated element.
