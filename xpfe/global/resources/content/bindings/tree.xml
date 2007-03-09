@@ -224,7 +224,7 @@
           return false;
         ]]></body>
       </method>
-      
+
       <method name="keyNavigate">
         <parameter name="event"/>
         <body><![CDATA[
@@ -389,7 +389,7 @@
       <handler event="blur" action="this.treeBoxObject.focused = false;"/>
       <handler event="blur" phase="capturing"
                action="if (event.originalTarget == this.inputField.inputField) this.stopEditing(true);"/>
-      <handler event="keypress" keycode="vk_enter">
+      <handler event="keypress" keycode="VK_ENTER">
         <![CDATA[
           if (this._editingColumn) {
             this.stopEditing(true);
@@ -401,7 +401,7 @@
           }
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_return">
+      <handler event="keypress" keycode="VK_RETURN">
         <![CDATA[
           if (this._editingColumn) {
             this.stopEditing(true);
@@ -413,7 +413,7 @@
           }
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_escape">
+      <handler event="keypress" keycode="VK_ESCAPE">
         <![CDATA[
           if (this._editingColumn) {
             this.stopEditing(false);
@@ -422,7 +422,7 @@
           }
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_left">
+      <handler event="keypress" keycode="VK_LEFT">
         <![CDATA[
          if (this._editingColumn)
            return;
@@ -466,7 +466,7 @@
          }
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_right">
+      <handler event="keypress" keycode="VK_RIGHT">
         <![CDATA[
          if (this._editingColumn)
            return;
@@ -518,7 +518,7 @@
           }
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_up"
+      <handler event="keypress" keycode="VK_UP"
                modifiers="control any">
         <![CDATA[
          if (this._editingColumn)
@@ -552,7 +552,7 @@
          this.treeBoxObject.ensureRowIsVisible(c);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_down"
+      <handler event="keypress" keycode="VK_DOWN"
                modifiers="control any">
         <![CDATA[
          if (this._editingColumn)
@@ -586,7 +586,7 @@
          this.treeBoxObject.ensureRowIsVisible(c);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_up"
+      <handler event="keypress" keycode="VK_UP"
                modifiers="control any, shift">
         <![CDATA[
          if (this._editingColumn || this.view.selection.single)
@@ -599,7 +599,7 @@
          this.treeBoxObject.ensureRowIsVisible(c - 1);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_down"
+      <handler event="keypress" keycode="VK_DOWN"
                modifiers="control any, shift">
         <![CDATA[
          if (this._editingColumn || this.view.selection.single)
@@ -612,7 +612,7 @@
          this.treeBoxObject.ensureRowIsVisible(c + 1);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_up"
+      <handler event="keypress" keycode="VK_PAGE_UP"
                modifiers="control any">
         <![CDATA[
          if (this._editingColumn)
@@ -638,7 +638,7 @@
          this.view.selection.timedSelect(i, this._selectDelay);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_down"
+      <handler event="keypress" keycode="VK_PAGE_DOWN"
                modifiers="control any">
         <![CDATA[
          if (this._editingColumn)
@@ -665,7 +665,7 @@
          this.view.selection.timedSelect(i > l ? l : i, this._selectDelay);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_up"
+      <handler event="keypress" keycode="VK_PAGE_UP"
                modifiers="control any, shift">
         <![CDATA[
          if (this._editingColumn || this.view.selection.single)
@@ -687,7 +687,7 @@
          this.view.selection.rangedSelect(-1, i, event.ctrlKey);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_down"
+      <handler event="keypress" keycode="VK_PAGE_DOWN"
                modifiers="control any, shift">
         <![CDATA[
          if (this._editingColumn || this.view.selection.single)
@@ -710,7 +710,7 @@
          this.view.selection.rangedSelect(-1, i > l ? l : i, event.ctrlKey);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_home"
+      <handler event="keypress" keycode="VK_HOME"
                modifiers="control any">
         <![CDATA[
          if (this._editingColumn || this.view.rowCount == 0)
@@ -724,7 +724,7 @@
          this.treeBoxObject.ensureRowIsVisible(0);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_end"
+      <handler event="keypress" keycode="VK_END"
                modifiers="control any">
         <![CDATA[
          if (this._editingColumn)
@@ -742,7 +742,7 @@
          this.treeBoxObject.ensureRowIsVisible(l);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_home"
+      <handler event="keypress" keycode="VK_HOME"
                modifiers="control any, shift">
         <![CDATA[
          if (this._editingColumn || this.view.selection.single)
@@ -752,7 +752,7 @@
          this.treeBoxObject.ensureRowIsVisible(0);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_end"
+      <handler event="keypress" keycode="VK_END"
                modifiers="control any, shift">
         <![CDATA[
          if (this._editingColumn || this.view.selection.single)
@@ -791,7 +791,7 @@
       <xul:hbox class="tree-scrollable-columns" flex="1">
         <children includes="treecol|splitter"/>
       </xul:hbox>
-      <xul:treecolpicker class="treecol-image" fixed="true"   xbl:inherits="tooltiptext=pickertooltiptext"/>
+      <xul:treecolpicker class="treecol-image" fixed="true" xbl:inherits="tooltiptext=pickertooltiptext"/>
     </content>
     <implementation implements="nsIAccessibleProvider">
       <property name="accessibleType" readonly="true">
@@ -869,9 +869,9 @@
            // save off the last selected row
            this._lastSelectedRow = row.value;
 
-            if (row.value == -1)
-              return;
- 
+           if (row.value == -1)
+             return;
+
            if (obj.value == "twisty")
              return;
 

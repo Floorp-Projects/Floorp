@@ -585,27 +585,27 @@
       ]]>
       </handler>
 
-      <handler event="keypress" keycode="vk_left">
+      <handler event="keypress" keycode="VK_LEFT">
       <![CDATA[
         var direction = window.getComputedStyle(this.parentNode, null).direction;
         this.parentNode.advanceSelectedTab(direction == 'ltr' ? -1 : 1);
       ]]>
       </handler>
 
-      <handler event="keypress" keycode="vk_right">
+      <handler event="keypress" keycode="VK_RIGHT">
       <![CDATA[
         var direction = window.getComputedStyle(this.parentNode, null).direction;
         this.parentNode.advanceSelectedTab(direction == 'ltr' ? 1 : -1);
       ]]>
       </handler>
 
-      <handler event="keypress" keycode="vk_up">
+      <handler event="keypress" keycode="VK_UP">
       <![CDATA[
         this.parentNode.advanceSelectedTab(-1);
       ]]>
       </handler>
 
-      <handler event="keypress" keycode="vk_down">
+      <handler event="keypress" keycode="VK_DOWN">
       <![CDATA[
         this.parentNode.advanceSelectedTab(1);
       ]]>

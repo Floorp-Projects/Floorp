@@ -4,13 +4,13 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
-  
+
   <binding id="listbox-base" extends="chrome://global/content/bindings/general.xml#basecontrol">
     <resources>
       <stylesheet src="chrome://global/skin/listbox.css"/>
     </resources>
   </binding>
-  
+
   <binding id="listbox"
            extends="chrome://global/content/bindings/listbox.xml#listbox-base">
     <content>
@@ -26,7 +26,7 @@
         </xul:listboxbody> 
       </xul:listrows>
     </content>
-    
+
     <implementation implements="nsIDOMXULMultiSelectControlElement, nsIAccessibleProvider">
       <field name="_suppressOnSelect">false</field>
       <field name="_selectionStart">null</field>
@@ -52,7 +52,7 @@
           ]]>
         </getter>
       </property>
-      
+
       <!-- ///////////////// public listbox members ///////////////// -->
 
       <property name="listBoxObject"
@@ -176,7 +176,7 @@
         ]]>
         </body>
       </method>
-      
+
       <method name="insertItemAt">
         <parameter name="index"/>
         <parameter name="label"/>
@@ -252,7 +252,7 @@
         ]]>
         </body>
       </method>      
-      
+
       <method name="addItemToSelection">
         <parameter name="item"/>
         <body>
@@ -262,22 +262,22 @@
 
           if (item.selected)
             return;
-            
+
           this.selectedItems.push(item);
           item.selected = true;
-          
+
           this._fireOnSelect();
         ]]>
         </body>
-      </method>      
-      
+      </method>
+
       <method name="removeItemFromSelection">
         <parameter name="item"/>
         <body>
         <![CDATA[
           if (!item.selected)
             return;
-            
+
           for (var i = 0; i < this.selectedItems.length; ++i) {
             if (this.selectedItems[i] == item) {
               this.selectedItems.splice(i, 1);
@@ -285,12 +285,12 @@
               break;
             }
           }
-              
+
           this._fireOnSelect();
         ]]>
         </body>
-      </method>      
-      
+      </method>
+
       <method name="toggleItemSelection">
         <parameter name="item"/>
         <body>
@@ -301,33 +301,33 @@
             this.addItemToSelection(item);
         ]]>
         </body>
-      </method>      
-      
+      </method>
+
       <method name="selectItem">
         <parameter name="item"/>
         <body>
         <![CDATA[
           if (!item)
             return;
-            
+
           if (this.selectedItems.length == 1 && this.selectedItems[0] == item)
             return;
-          
+
           this._selectionStart = null;
-          
+
           var suppress = this._suppressOnSelect;
           this._suppressOnSelect = true;
 
           this.clearSelection();
           this.addItemToSelection(item);
           this.currentItem = item;
-          
+
           this._suppressOnSelect = suppress;
           this._fireOnSelect();
         ]]>
         </body>
-      </method>      
-      
+      </method>
+
       <method name="selectItemRange">
         <parameter name="startItem"/>
         <parameter name="endItem"/>
@@ -340,12 +340,12 @@
             startItem = this._selectionStart ? this._selectionStart : this.currentItem;
           if (!startItem)
             startItem = endItem;
-                      
+
           var suppressSelect = this._suppressOnSelect;
           this._suppressOnSelect = true;
 
           this._selectionStart = startItem;
-          
+
           var currentItem;
           var startIndex = this.getIndexOfItem(startItem);
           var endIndex = this.getIndexOfItem(endItem);
@@ -382,47 +382,47 @@
           this._fireOnSelect();
         ]]>
         </body>
-      </method>      
-      
+      </method>
+
       <method name="selectAll">
         <body>
         <![CDATA[
           var suppress = this._suppressOnSelect;
           this._suppressOnSelect = true;
-          
+
           var item = this.getItemAtIndex(0);
           while (item) {
             this.addItemToSelection(item);
-            item = this.getNextItem(item, 1);  
+            item = this.getNextItem(item, 1);
           }
-          
+
           this._suppressOnSelect = suppress;
           this._fireOnSelect();
         ]]>
         </body>
-      </method>      
-      
+      </method>
+
       <method name="invertSelection">
         <body>
         <![CDATA[
           var suppress = this._suppressOnSelect;
           this._suppressOnSelect = true;
-          
+
           var item = this.getItemAtIndex(0);
           while (item) {
             if (item.selected)
               this.removeItemFromSelection(item);
             else
               this.addItemToSelection(item);
-            item = this.getNextItem(item, 1);  
+            item = this.getNextItem(item, 1);
           }
-          
+
           this._suppressOnSelect = suppress;
           this._fireOnSelect();
         ]]>
         </body>
-      </method>      
-      
+      </method>
+
       <method name="clearSelection">
         <body>
         <![CDATA[
@@ -430,15 +430,15 @@
           {
             for (var i = this.selectedItems.length-1; i >= 0; --i)
               this.selectedItems[i].selected = false;
-          
+
             this.selectedItems.splice(0, this.selectedItems.length);
           }
           this._selectionStart = null;
           this._fireOnSelect();
         ]]>
         </body>
-      </method>      
-      
+      </method>
+
       <!-- ///////////////// nsIListBoxObject ///////////////// -->
       
       <method name="getNextItem">
@@ -566,17 +566,17 @@
     </implementation>
     
     <handlers>
-      <handler event="keypress" keycode="vk_up" modifiers="control shift any"
+      <handler event="keypress" keycode="VK_UP" modifiers="control shift any"
                phase="target" action="moveByOffset(-1, !event.ctrlKey, event.shiftKey);"/>
-      <handler event="keypress" keycode="vk_down" modifiers="control shift any"
+      <handler event="keypress" keycode="VK_DOWN" modifiers="control shift any"
                phase="target" action="moveByOffset(1, !event.ctrlKey, event.shiftKey);"/>
-      <handler event="keypress" keycode="vk_home" modifiers="control shift any"
+      <handler event="keypress" keycode="VK_HOME" modifiers="control shift any"
                phase="target" action="moveByOffset(-this.currentIndex, !event.ctrlKey, event.shiftKey);"/>
-      <handler event="keypress" keycode="vk_end" modifiers="control shift any"
+      <handler event="keypress" keycode="VK_END" modifiers="control shift any"
                phase="target" action="moveByOffset(this.getRowCount() - this.currentIndex - 1, !event.ctrlKey, event.shiftKey);"/>
-      <handler event="keypress" keycode="vk_page_up" modifiers="control shift any"
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="control shift any"
                phase="target" action="moveByOffset(this.scrollOnePage(-1), !event.ctrlKey, event.shiftKey);"/>
-      <handler event="keypress" keycode="vk_page_down" modifiers="control shift any"
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="control shift any"
                phase="target" action="moveByOffset(this.scrollOnePage(1), !event.ctrlKey, event.shiftKey);"/>
       <handler event="keypress" key=" " phase="target">
         <![CDATA[
