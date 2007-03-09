@@ -21,6 +21,14 @@ make test
 make install PREFIX="${MSYS_STAGEDIR}/mozilla-build/msys"
 popd
 
+tar -xzf "${MSYS_SRCDIR}/Time-HiRes-1.9707.tar.gz" -C "${MSYS_STAGEDIR}"
+pushd "${MSYS_STAGEDIR}/Time-HiRes-1.9707"
+perl Makefile.pl
+make LD="gcc -shared"
+# make test fails because of misconfigured virtual internal timers :-(
+make install PREFIX="${MSYS_STAGEDIR}/mozilla-build/msys"
+popd
+
 # In order for this to actually work, we now need to rebase
 # the DLL. Since I can't figure out how to rebase just one
 # DLL to avoid conflicts with a set of others, we just
