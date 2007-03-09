@@ -107,6 +107,7 @@ OS_LIBS = \
   rpcndr.lib \
   rpcns4.lib \
   rpcrt4.lib \
+  ole32.lib \
   oleaut32.lib \
   $(NULL)
 

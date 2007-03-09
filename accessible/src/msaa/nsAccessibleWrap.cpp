@@ -1199,11 +1199,11 @@ nsAccessibleWrap::get_uniqueID(long *uniqueID)
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_windowHandle(OLE_HANDLE *windowHandle)
+nsAccessibleWrap::get_windowHandle(HWND *windowHandle)
 {
   void **handle = nsnull;
   if (NS_SUCCEEDED(GetOwnerWindow(handle))) {
-    *windowHandle = NS_REINTERPRET_POINTER_CAST(OLE_HANDLE, *handle);
+    *windowHandle = NS_REINTERPRET_POINTER_CAST(HWND, *handle);
     return S_OK;
   }
   return E_FAIL;

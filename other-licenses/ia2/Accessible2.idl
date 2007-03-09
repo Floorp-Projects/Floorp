@@ -324,7 +324,7 @@ interface IAccessible2 : IAccessible
   */
   [propget] HRESULT windowHandle
     (
-     [out, retval] OLE_HANDLE *windowHandle
+     [out, retval] HWND *windowHandle
     );
  
   /** @brief Returns the index of this object in its parent object.

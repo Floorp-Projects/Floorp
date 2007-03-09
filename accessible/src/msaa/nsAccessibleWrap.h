@@ -211,7 +211,7 @@ class nsAccessibleWrap : public nsAccessible,
         /* [retval][out] */ long *uniqueID);
 
     virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_windowHandle(
-        /* [retval][out] */ OLE_HANDLE *windowHandle);
+        /* [retval][out] */ HWND *windowHandle);
 
     virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_indexInParent(
         /* [retval][out] */ long *indexInParent);
