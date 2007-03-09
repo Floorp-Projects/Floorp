@@ -318,10 +318,11 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
 
     for (PRUint32 yy=0; yy<filterResY; yy++)
       for (PRUint32 xx=0; xx<filterResX; xx++) {
-        alphaData[stride*yy + 4*xx]     = 0;
-        alphaData[stride*yy + 4*xx + 1] = 0;
-        alphaData[stride*yy + 4*xx + 2] = 0;
-        alphaData[stride*yy + 4*xx + 3] = data[stride*yy + 4*xx + 3];
+        alphaData[stride*yy + 4*xx + GFX_ARGB32_OFFSET_B] = 0;
+        alphaData[stride*yy + 4*xx + GFX_ARGB32_OFFSET_G] = 0;
+        alphaData[stride*yy + 4*xx + GFX_ARGB32_OFFSET_R] = 0;
+        alphaData[stride*yy + 4*xx + GFX_ARGB32_OFFSET_A] =
+          data[stride*yy + 4*xx + 3];
     }
 
     instance.DefineImage(NS_LITERAL_STRING("SourceAlpha"), alpha,
