@@ -81,7 +81,7 @@ interface nsISearchEngine : nsISupports
 
   /**
    * Adds a parameter to the search engine's submission data. This should only
-   * be called on engine's created via addEngineWithDetails.
+   * be called on engines created via addEngineWithDetails.
    *
    * @param name
    *        The parameter's name. Must not be null.
