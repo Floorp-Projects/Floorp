@@ -80,7 +80,11 @@ class FileCollector:
       self.__base = path
     def __iter__(self):
       self.__w = os.walk(self.__base)
-      self.__nextDir()
+      try:
+        self.__nextDir()
+      except StopIteration:
+        # empty dir, bad, but happens
+        self.__i = [].__iter__()
       return self
     def __nextDir(self):
       self.__t = self.__w.next()
