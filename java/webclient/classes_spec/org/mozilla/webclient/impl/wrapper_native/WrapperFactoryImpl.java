@@ -277,22 +277,24 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 	return profileName;
     }
     
+    public int loadNativeLibraryIfNecessary() {
+        System.loadLibrary("webclient");
+  
+        nativeWrapperFactory = nativeCreateNativeWrapperFactory();
+	Assert.assert_it(-1 != nativeWrapperFactory);
+        return nativeWrapperFactory;
+    }
+    
     public void initialize(String verifiedBinDirAbsolutePath) throws SecurityException, UnsatisfiedLinkError {
 	if (initialized) {
 	    return;
 	}
 	
-	System.loadLibrary("webclient");
-
 	// 
 	// Do the first initialization call
 	//
 
-	nativeWrapperFactory = nativeCreateNativeWrapperFactory();
-	Assert.assert_it(-1 != nativeWrapperFactory);
-
-	eventThread = new NativeEventThread("WebclientEventThread", this,
-					    nativeWrapperFactory);
+	eventThread = new NativeEventThread("WebclientEventThread", this);
 	
 	final String finalStr = new String(verifiedBinDirAbsolutePath);
 	

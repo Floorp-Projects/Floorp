@@ -87,7 +87,15 @@ public CurrentPageImpl(WrapperFactory yourFactory,
     super(yourFactory, yourBrowserControl);
     // force the class to be loaded, thus loading the JNI library
     if (!domInitialized) {
-        DOMAccessor.initialize();
+        NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+            public Object run() {
+                DOMAccessor.initialize();
+                return null;
+            }
+            public String toString() {
+                return "WCRunnable.CurrentPageImpl ctor";
+            }
+        });
     }
     domDumper = new DOMTreeDumper();
 }
@@ -295,13 +303,24 @@ public String getCurrentURL()
 
 public Document getDOM()
 {
-    // PENDING(edburns): run this on the event thread.
-    Document result = nativeGetDOM(getNativeBrowserControl());
-    if (LOGGER.isLoggable((Level.INFO))) {
-        LOGGER.info("CurrentPageImpl.getDOM(): getting DOM with URI: " + 
-                result.getDocumentURI());
-    }
-    return result;
+    final Document[] resultHolder = new Document[1];
+    resultHolder[0] = null;
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+        public Object run() {
+            Document result = nativeGetDOM(getNativeBrowserControl());
+            if (LOGGER.isLoggable((Level.INFO))) {
+                LOGGER.info("CurrentPageImpl.getDOM(): getting DOM with URI: " +
+                        result.getDocumentURI());
+            }
+            resultHolder[0] = result;
+            return null;
+        }
+        public String toString() {
+            return "WCRunnable.CurrentPageImpl.getDOM";
+            }
+    });
+    
+    return resultHolder[0];
 }
 
 public Properties getPageInfo()

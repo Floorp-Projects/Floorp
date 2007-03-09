@@ -76,8 +76,7 @@ public class NativeEventThread extends Thread {
     //
     
     public NativeEventThread(String threadName, 
-			     WrapperFactory yourFactory,
-			     int yourNativeWrapperFactory) {
+			     WrapperFactory yourFactory) {
 	super(threadName);
 	// Don't do this check for subclasses
 	if (this.getClass() == NativeEventThread.class) {
@@ -86,8 +85,6 @@ public class NativeEventThread extends Thread {
 	ParameterCheck.nonNull(yourFactory);
 	
 	wrapperFactory = yourFactory;
-	nativeWrapperFactory = yourNativeWrapperFactory;
-	
 	blockingRunnables = new ConcurrentLinkedQueue<WCRunnable>();
 	runnables = new ConcurrentLinkedQueue<Runnable>();
     }
@@ -142,6 +139,8 @@ public class NativeEventThread extends Thread {
 
 public void run()
 {
+    nativeWrapperFactory = wrapperFactory.loadNativeLibraryIfNecessary();
+    
     // our owner must have put an event in the queue 
     Assert.assert_it(!runnables.isEmpty());
     ((Runnable)runnables.poll()).run();

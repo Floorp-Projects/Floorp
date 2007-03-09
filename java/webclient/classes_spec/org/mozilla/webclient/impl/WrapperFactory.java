@@ -53,6 +53,20 @@ public interface WrapperFactory {
 
     /**
      *
+     * <p>This method must not be called by the developer.  
+     *
+     * <p>Cause the native library to be loaded, if necessary.  This method
+     * must be called from the native event thread.</p>
+     *
+     * <p>POSTCONDITION: Native library for webclient has been loaded.</p>
+     *
+     * @return implmentation specific native int.
+     *
+     */
+    public int loadNativeLibraryIfNecessary();
+
+    /**
+     *
      * <p>Cause the native library to be loaded, if necessary.</p>
      *
      * <p>Cause the underlying browser embedding API to be ready to

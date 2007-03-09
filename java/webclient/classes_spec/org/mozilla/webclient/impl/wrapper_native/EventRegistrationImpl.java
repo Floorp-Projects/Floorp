@@ -263,28 +263,26 @@ public void setNewWindowListener(NewWindowListener listener)
 {
     getWrapperFactory().verifyInitialized();
 
-    synchronized(this) {
-	final boolean doClear = null == listener;
-	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
-		public Object run() {
-		    if (doClear) {
-			nativeSetNewWindowListenerAttached(getNativeBrowserControl(),
-							   false);
-		    }
-		    else {
-			nativeSetNewWindowListenerAttached(getNativeBrowserControl(),
-							   true);
-		    }
-		    return null;
-		}
-                public String toString() {
-                    return "WCRunnable.nativeSetNewWindowListenerAttached";
-                }
+    final boolean doClear = null == listener;
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
+        public Object run() {
+            if (doClear) {
+                nativeSetNewWindowListenerAttached(getNativeBrowserControl(),
+                        false);
+            }
+            else {
+                nativeSetNewWindowListenerAttached(getNativeBrowserControl(),
+                        true);
+            }
+            return null;
+        }
+        public String toString() {
+            return "WCRunnable.nativeSetNewWindowListenerAttached";
+        }
 
-	    });
-	
-	newWindowListener = listener;
-    }
+    });
+
+    newWindowListener = listener;
 }
 
 /**
