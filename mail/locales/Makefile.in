@@ -234,9 +234,9 @@ ifeq ($(OS_ARCH),WINNT)
 	iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) $< > $(FINAL_TARGET)/updater.ini
 else
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-	$(INSTALL) $^ $(FINAL_TARGET)/updater.app/Contents/MacOS
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/updater.app/Contents/MacOS
 else
-	$(INSTALL) $^ $(FINAL_TARGET)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
 endif
 endif
 endif
