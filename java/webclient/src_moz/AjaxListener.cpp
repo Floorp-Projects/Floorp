@@ -50,11 +50,9 @@ NS_IMPL_ISUPPORTS2(AjaxListener,
 		   nsIDOMEventListener)
 
 AjaxListener::AjaxListener(EmbedProgress *owner, 
-			   JNIEnv *env,
-			   jobject eventRegistration) : 
+			   JNIEnv *env) : 
     mOwner(owner),
     mJNIEnv(env),
-    mEventRegistration(eventRegistration),
     mIsObserving(PR_FALSE)
 {
 }
@@ -62,7 +60,6 @@ AjaxListener::AjaxListener(EmbedProgress *owner,
 AjaxListener::~AjaxListener()
 {
     mOwner->RemoveAjaxListener();
-    mEventRegistration = nsnull;
     mJNIEnv = nsnull;
     mOwner = nsnull;
     mIsObserving = PR_FALSE;
@@ -372,13 +369,17 @@ AjaxListener::ObserveAjax(nsIRequest *request,
 	break;
     }
 
-    ::util_SendEventToJava(nsnull, 
-			   mEventRegistration, 
-			   DOCUMENT_LOAD_LISTENER_CLASSNAME,
-			   DocumentLoader_maskValues[maskValue], 
-			   properties);
+    jobject eventRegistration = nsnull;
+    if (NS_SUCCEEDED(rv = mOwner->GetEventRegistration(&eventRegistration)) &&
+	eventRegistration) {
+	::util_SendEventToJava(nsnull, 
+			       eventRegistration, 
+			       DOCUMENT_LOAD_LISTENER_CLASSNAME,
+			       DocumentLoader_maskValues[maskValue], 
+			       properties);
+    }
     
-    return NS_OK;
+    return rv;
 }
 
 

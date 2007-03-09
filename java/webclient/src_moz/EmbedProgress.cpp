@@ -507,7 +507,7 @@ EmbedProgress::GetAjaxListener(AjaxListener* *result)
 
     if (nsnull == mAjaxListener) {
 	JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
-	mAjaxListener = new AjaxListener(this, env, mEventRegistration);
+	mAjaxListener = new AjaxListener(this, env);
     }
     *result = mAjaxListener;
     rv = NS_OK;
@@ -528,6 +528,17 @@ EmbedProgress::RemoveAjaxListener(void)
 
     return rv;
 }
+
+NS_IMETHODIMP
+EmbedProgress::GetEventRegistration(jobject *result)
+{
+    if (nsnull == result) {
+	return NS_ERROR_NULL_POINTER;
+    }
+    *result = mEventRegistration;
+    return NS_OK;
+}
+
 
 /* static */
 void

@@ -114,7 +114,8 @@ public class TestBrowser extends JPanel {
         Container contentPane = frame.getContentPane();
 
         contentPane.setLayout(new GridLayout(1, 1));
-        contentPane.add(new TestBrowser());
+        TestBrowser testBrowser = null;
+        contentPane.add(testBrowser = new TestBrowser());
 
         frame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
@@ -124,6 +125,9 @@ public class TestBrowser extends JPanel {
 
         frame.pack();
         frame.setVisible(true);
+        if (1 == args.length) {
+            testBrowser.loadURL(args[0]);
+        }
     }
 
     private void jbInit() throws Exception {
@@ -410,13 +414,7 @@ public class TestBrowser extends JPanel {
         statusBar.lblStatus.setText(statusMessage);
     }
 
-    /**
-     * Check the current input URL string in the address text field, load it,
-     * and update the status info and toolbar info.
-     */
-    void loadURL() {
-        String inputValue = jAddressTextField.getText();
-
+    void loadURL(String inputValue) {
         if (inputValue == null) {
             JOptionPane.showMessageDialog(this, "The given URL is NULL:",
                     "Warning", JOptionPane.WARNING_MESSAGE);
@@ -465,6 +463,14 @@ public class TestBrowser extends JPanel {
                         JOptionPane.WARNING_MESSAGE);
             }
         }
+    }
+    /**
+     * Check the current input URL string in the address text field, load it,
+     * and update the status info and toolbar info.
+     */
+    void loadURL() {
+        String inputValue = jAddressTextField.getText();
+        loadURL(inputValue);
     }
 
     void jGoButton_actionPerformed(ActionEvent e) {

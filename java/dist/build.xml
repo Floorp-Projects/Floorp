@@ -32,8 +32,8 @@
   <property name="name" value="webclient"/>
   <property name="major.version" value="2" />
   <property name="minor.version" value="0" />
-  <property name="release.version" value="a5" />
-  <property name="release.version.full" value="alpha_5" />
+  <property name="release.version" value="a6" />
+  <property name="release.version.full" value="alpha_6" />
   <property name="version" 
             value="${major.version}_${minor.version}_${release.version}"/>
   <property name="full.version" value="${major.version}_${minor.version}_${release.version.full}"/>
@@ -266,7 +266,7 @@
              protected="${javadoc.protected}"
              windowtitle="${Name} (${version})"
              doctitle="${Name} (${version})"
-             bottom="Copyright &#169; 2002-2005 Mozilla.org All Rights Reserved.">
+             bottom="Copyright &#169; 2002-2007 Mozilla.org All Rights Reserved.">
        <fileset dir="${source.home}">
          <include name="**/*.java"/>
          <exclude name="**/impl/**/*.java" />

@@ -47,7 +47,7 @@ public:
    };
  
    AjaxListener(EmbedProgress *owner, 
-		JNIEnv *env, jobject eventRegistration);
+		JNIEnv *env);
    virtual ~AjaxListener();
 
     NS_IMETHOD StartObserving(void);
@@ -62,7 +62,6 @@ private:
 
     EmbedProgress* mOwner;
     JNIEnv *mJNIEnv;
-    jobject mEventRegistration;
     PRBool mIsObserving;
  };
 

@@ -337,7 +337,7 @@ ${so.prefix}xul.${so.extension}.
       <echo file="${build.classes.dir}/META-INF/services/org.mozilla.webclient.WebclientFactory">org.mozilla.webclient.impl.WebclientFactoryImpl</echo>
       <echo file="${build.classes.dir}/META-INF/services/org.mozilla.webclient.impl.WrapperFactory">org.mozilla.webclient.impl.wrapper_native.WrapperFactoryImpl</echo>
 
-      <move failonerror="false" file="${file.reference.webclient-2_0_a5.jar}"
+      <move failonerror="false" file="${file.reference.webclient-2_0_a6.jar}"
             tofile="${basedir}/../lib/outofdate-webclient_jar" />
 
     </target>
