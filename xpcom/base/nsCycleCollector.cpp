@@ -636,7 +636,7 @@ void
 GraphWalker::NoteXPCOMChild(nsISupports *child) 
 {
     if (!child)
-        Fault("null XPCOM pointer returned"); 
+        return; 
    
     child = canonicalize(child);
 
@@ -655,7 +655,7 @@ void
 GraphWalker::NoteScriptChild(PRUint32 langID, void *child) 
 {
     if (!child)
-        Fault("null script language pointer returned");
+        return;
 
     if (!mRuntimes[langID])
         Fault("traversing pointer for unregistered language", child);
@@ -1532,7 +1532,7 @@ nsCycleCollector::Suspect(nsISupports *n)
     if (!NS_IsMainThread())
         Fault("trying to suspect from non-main thread");
 
-    if (!nsCycleCollector_isScanSafe(n))
+    if (!n || !nsCycleCollector_isScanSafe(n))
         Fault("suspected a non-scansafe pointer", n);    
 
     if (nsCycleCollector_shouldSuppress(n))
@@ -1763,9 +1763,6 @@ PRBool
 nsCycleCollector_isScanSafe(nsISupports *s)
 {
     nsresult rv;
-
-    if (!s)
-        return PR_FALSE;
 
     nsCOMPtr<nsCycleCollectionParticipant> cp = do_QueryInterface(s, &rv);
     if (NS_FAILED(rv)) {

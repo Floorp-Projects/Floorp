@@ -140,7 +140,7 @@ SafeFinalize(JSContext* cx, JSObject* obj)
 static JSClass global_class = {
     "global_for_XPCJSContextStack_SafeJSContext",
 #ifndef XPCONNECT_STANDALONE
-    JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
+    JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_GLOBAL_FLAGS,
 #else
     0,
 #endif

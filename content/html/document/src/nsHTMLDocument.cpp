@@ -353,7 +353,7 @@ IdAndNameMapEntryTraverse(PLDHashTable *table, PLDHashEntryHdr *hdr,
     NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, arg);
   IdAndNameMapEntry *entry = NS_STATIC_CAST(IdAndNameMapEntry*, hdr);
 
-  if (entry->mNameContentList && entry->mNameContentList != NAME_NOT_VALID)
+  if (entry->mNameContentList != NAME_NOT_VALID)
     cb->NoteXPCOMChild(entry->mNameContentList);
 
   return PL_DHASH_NEXT;

@@ -1023,10 +1023,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsJSContext)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobalWrapperRef)
-  JSObject *globalObject = ::JS_GetGlobalObject(tmp->mContext);
-  if (globalObject) {
-    cb.NoteScriptChild(JAVASCRIPT, globalObject);
-  }
+  cb.NoteScriptChild(JAVASCRIPT, ::JS_GetGlobalObject(tmp->mContext));
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN(nsJSContext)

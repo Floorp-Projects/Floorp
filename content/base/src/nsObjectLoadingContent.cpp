@@ -1031,9 +1031,7 @@ nsObjectLoadingContent::RemovedFromDocument()
 void
 nsObjectLoadingContent::Traverse(nsCycleCollectionTraversalCallback &cb)
 {
-  if (mFrameLoader) {
-    cb.NoteXPCOMChild(mFrameLoader);
-  }
+  cb.NoteXPCOMChild(mFrameLoader);
 }
 
 // <private>

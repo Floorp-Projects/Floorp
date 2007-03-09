@@ -1666,9 +1666,7 @@ nsVariant::Traverse(const nsDiscriminatedUnion& data,
     {
         case nsIDataType::VTYPE_INTERFACE:
         case nsIDataType::VTYPE_INTERFACE_IS:
-            if (data.u.iface.mInterfaceValue) {
-                cb.NoteXPCOMChild(data.u.iface.mInterfaceValue);
-            }
+            cb.NoteXPCOMChild(data.u.iface.mInterfaceValue);
             break;
         case nsIDataType::VTYPE_ARRAY:
             switch(data.u.array.mArrayType) {
@@ -1677,8 +1675,7 @@ nsVariant::Traverse(const nsDiscriminatedUnion& data,
                 {
                     nsISupports** p = (nsISupports**) data.u.array.mArrayValue;
                     for(PRUint32 i = data.u.array.mArrayCount; i > 0; p++, i--)
-                        if(*p)
-                            cb.NoteXPCOMChild(*p);
+                        cb.NoteXPCOMChild(*p);
                 }
                 default:
                     break;
