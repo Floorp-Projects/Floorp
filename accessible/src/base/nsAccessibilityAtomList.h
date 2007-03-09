@@ -163,13 +163,13 @@ ACCESSIBILITY_ATOM(tooltiptext, "tooltiptext")
 ACCESSIBILITY_ATOM(type, "type")
 ACCESSIBILITY_ATOM(value, "value")
 
-  // DHTML accessibility attributes
+  // ARIA (DHTML accessibility) attributes
 ACCESSIBILITY_ATOM(checked, "checked")
 ACCESSIBILITY_ATOM(droppable, "droppable")
 ACCESSIBILITY_ATOM(expanded, "expanded")
 ACCESSIBILITY_ATOM(invalid, "invalid")
 ACCESSIBILITY_ATOM(level, "level")
-ACCESSIBILITY_ATOM(multiselect, "multiselect")
+ACCESSIBILITY_ATOM(multiselectable, "multiselectable")
 ACCESSIBILITY_ATOM(posinset, "posinset")
 ACCESSIBILITY_ATOM(required, "required")
 ACCESSIBILITY_ATOM(role, "role")
