@@ -61,8 +61,9 @@ sub Execute {
     $ENV{'CVSROOT'} = $mozillaCvsroot;
     $this->Shell(
       cmd => './patcher2.pl',
-      cmdArgs => ['--build-tools', '--app=' . $product,
-                    '--config=../config/' . $patcherConfig],
+      cmdArgs => ['--build-tools', '--tools-revision=' . $patcherToolsRev,
+                  '--app=' . $product, 
+                  '--config=../config/' . $patcherConfig],
       logFile => catfile($logDir, 'updates_patcher-build-tools.log'),
       dir => catfile($versionedUpdateDir, 'patcher'),
     );
@@ -107,6 +108,7 @@ sub Verify {
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $verifyDir = $config->Get(var => 'verifyDir');
     my $product = $config->Get(var => 'product');
+    my $verifyConfig = $config->Get(var => 'verifyConfig');
 
     # Create verification area.
     my $verifyDirVersion = catfile($verifyDir, $product . '-' . $version);
@@ -126,11 +128,19 @@ sub Verify {
     
     # Customize updates.cfg to contain the channels you are interested in 
     # testing.
+    
+    my $verifyLog = catfile($logDir, 'updates_verify.log');
     $this->Shell(
       cmd => './verify.sh', 
-      cmdArgs => ['-c'],
-      logFile => catfile($logDir, 'updates_verify.log'),
+      cmdArgs => ['-c', $verifyConfig],
+      logFile => $verifyLog,
       dir => catfile($verifyDirVersion, 'updates'),
+      timeout => 36000,
+    );
+
+    $this->CheckLog(
+        log => $verifyLog,
+        notAllowed => '^FAIL',
     );
 }
 
