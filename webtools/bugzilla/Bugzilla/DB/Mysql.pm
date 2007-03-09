@@ -46,6 +46,7 @@ use strict;
 use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::Error;
+use Bugzilla::DB::Schema::Mysql;
 
 # This module extends the DB interface via inheritance
 use base qw(Bugzilla::DB);
@@ -260,10 +261,10 @@ sub bz_setup_database {
     # to type MyISAM if so.  ISAM tables are deprecated in MySQL 3.23,
     # which Bugzilla now requires, and they don't support more than 16
     # indexes per table, which Bugzilla needs.
-    my $sth = $self->prepare("SHOW TABLE STATUS");
-    $sth->execute;
-    my @isam_tables = ();
-    while (my ($name, $type) = $sth->fetchrow_array) {
+    my $table_status = $self->selectall_arrayref("SHOW TABLE STATUS");
+    my @isam_tables;
+    foreach my $row (@$table_status) {
+        my ($name, $type) = @$row;
         push(@isam_tables, $name) if $type eq "ISAM";
     }
 
@@ -280,6 +281,27 @@ sub bz_setup_database {
         }
         print "\nISAM->MyISAM table conversion done.\n\n";
     }
+
+    # Upgrade tables from MyISAM to InnoDB
+    my @myisam_tables;
+    foreach my $row (@$table_status) {
+        my ($name, $type) = @$row;
+        if ($type =~ /^MYISAM$/i 
+            && !grep($_ eq $name, Bugzilla::DB::Schema::Mysql::MYISAM_TABLES))
+        {
+            push(@myisam_tables, $name) ;
+        }
+    }
+    if (scalar @myisam_tables) {
+        print "Bugzilla now uses the InnoDB storage engine in MySQL for",
+              " most tables.\nConverting tables to InnoDB:\n";
+        foreach my $table (@myisam_tables) {
+            print "Converting table $table... ";
+            $self->do("ALTER TABLE $table TYPE = InnoDB");
+            print "done.\n";
+        }
+    }
+    
 
     # There is a bug in MySQL 4.1.0 - 4.1.15 that makes certain SELECT
     # statements fail after a SHOW TABLE STATUS: 
