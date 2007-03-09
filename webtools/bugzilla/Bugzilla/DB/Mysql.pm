@@ -282,6 +282,21 @@ sub bz_setup_database {
         print "\nISAM->MyISAM table conversion done.\n\n";
     }
 
+    my $sd_index_deleted = 0;
+    my @tables = $self->bz_table_list_real();
+    # We want to convert the bugs table to MyISAM, but it's possible that
+    # it has a fulltext index on it and this will fail unless we remove
+    # the index.
+    if (grep($_ eq 'bugs', @tables)) {
+        if ($self->bz_index_info_real('bugs', 'short_desc')) {
+            $self->bz_drop_index_raw('bugs', 'short_desc');
+        }
+        if ($self->bz_index_info_real('bugs', 'bugs_short_desc_idx')) {
+            $self->bz_drop_index_raw('bugs', 'bugs_short_desc_idx');
+            $sd_index_deleted = 1; # Used for later schema cleanup.
+        }
+    }
+
     # Upgrade tables from MyISAM to InnoDB
     my @myisam_tables;
     foreach my $row (@$table_status) {
@@ -307,7 +322,6 @@ sub bz_setup_database {
     # statements fail after a SHOW TABLE STATUS: 
     # http://bugs.mysql.com/bug.php?id=13535
     # This is a workaround, a dummy SELECT to reset the LAST_INSERT_ID.
-    my @tables = $self->bz_table_list_real();
     if (grep($_ eq 'bugs', @tables)
         && $self->bz_column_info_real("bugs", "bug_id"))
     {
@@ -487,6 +501,10 @@ sub bz_setup_database {
     # And now we create the tables and the Schema object.
     $self->SUPER::bz_setup_database();
 
+    if ($sd_index_deleted) {
+        $self->_bz_real_schema->delete_index('bugs', 'bugs_short_desc_idx');
+        $self->_bz_store_real_schema;
+    }
 
     # The old timestamp fields need to be adjusted here instead of in
     # checksetup. Otherwise the UPDATE statements inside of bz_add_column
