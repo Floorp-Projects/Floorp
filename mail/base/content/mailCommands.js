@@ -545,44 +545,31 @@ var gJunkmailComponent;
 
 /**
  * Determines the actions that should be carried out on the messages
- * that are being marked as junk.
+ * that are being marked as junk
  *
- * @param aView
- *        the current message view
- * @param aIndices
- *        the indices of the messages being marked as junk.
+ * @param aFolder
+ *        the folder with messages being marked as junk
  *
  * @return an object with two properties: 'markRead' (boolean) indicating
  *         whether the messages should be marked as read, and 'junkTargetFolder'
  *         (nsIMsgFolder) specifying where the messages should be moved, or
  *         null if they should not be moved.
  */
-function determineActionsForJunkMsgs(aView, aIndices)
+function determineActionsForJunkMsgs(aFolder)
 {
   var actions = { markRead: false, junkTargetFolder: null };
-
-  // we use some arbitrary message to determine the
-  // message server
-  var msgURI = aView.getURIForViewIndex(aIndices[0]);
-  var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
-  var server = msgHdr.folder.server;
-
-  var spamSettings = server.spamSettings;
+  var spamSettings = aFolder.server.spamSettings;
 
   // note we will do moves/marking as read even if the spam
   // feature is disabled, since the user has asked to use it
   // despite the disabling
-
-  // note also that we will only act on messages which
-  // _the_current_run_ of the classifier has classified as
-  // junk, rather than on all junk messages in the folder
 
   actions.markRead = spamSettings.markAsReadOnSpam;
   actions.junkTargetFolder = null;
 
   // move only when the corresponding setting is activated
   // and the currently viewed folder is not the junk folder.
-  if (spamSettings.moveOnSpam && !(msgHdr.folder.flags & MSG_FOLDER_FLAG_JUNK))
+  if (spamSettings.moveOnSpam && !(aFolder.flags & MSG_FOLDER_FLAG_JUNK))
   {
     var spamFolderURI = spamSettings.spamFolderURI;
     if (!spamFolderURI)
@@ -593,64 +580,53 @@ function determineActionsForJunkMsgs(aView, aIndices)
       dump('determineActionsForJunkMsgs: no spam folder found, not moving.');
     }
     else
-    {
       actions.junkTargetFolder = GetMsgFolderFromUri(spamFolderURI);
-    }
   }
 
   return actions;
 }
 
-function performActionsOnJunkMsgs(aIndices)
+function performActionsOnJunkMsgs(aFolder, aMsgHdrs)
 {
-  if (!aIndices.length)
+  if (!aMsgHdrs.Count())
     return;
 
-  var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
-
-  var treeSelection = treeView.selection;
-  treeSelection.clearSelection();
-
-  // select the messages
-  for (i=0;i<aIndices.length;i++)
-    treeSelection.rangedSelect(aIndices[i], aIndices[i], true /* augment */);
-
-  var actionParams = determineActionsForJunkMsgs(treeView, aIndices);
+  var actionParams = determineActionsForJunkMsgs(aFolder);
   if (actionParams.markRead)
-    MarkSelectedMessagesRead(true);
+    aFolder.markMessagesRead(aMsgHdrs, true);
+
   if (actionParams.junkTargetFolder)
   {
-    SetNextMessageAfterDelete();
-    gDBView.doCommandWithFolder(nsMsgViewCommandType.moveMessages, actionParams.junkTargetFolder);
+    var copyService = Components.classes["@mozilla.org/messenger/messagecopyservice;1"].
+                        getService(Components.interfaces.nsIMsgCopyService);
+    copyService.CopyMessages(aFolder, aMsgHdrs, actionParams.junkTargetFolder, true /* isMove */, null,
+                             msgWindow, true /* allow undo */);
   }
-
-  treeSelection.clearSelection();
 }
 
 function getJunkmailComponent()
 {
-  if (!gJunkmailComponent) {
+  if (!gJunkmailComponent)
     gJunkmailComponent = Components.classes[NS_BAYESIANFILTER_CONTRACTID].getService(nsIJunkMailPlugin);
-  }
 }
+
 
 /**
  * Helper object for filterFolderForJunk() storing the list of pending messages
  * to process and the indices of messages classified as junk.
  */
-var gMessageClassificator =
+ 
+function messageClassifier(aFolder)
 {
-  junkMsgIndices: null,
-  messages: null,
-  pendingMessageCount: 0,
+  this.mFolder = aFolder;
+  this.mJunkMsgHdrs = Components.classes["@mozilla.org/supports-array;1"].
+                        createInstance(Components.interfaces.nsISupportsArray);
+  this.mMessages = new Array();
+  this.mPendingMessageCount = 0;
+}
 
-  init: function()
-  {
-    this.junkMsgIndices = new Array();
-    this.messages = new Object();
-    this.pendingMessageCount = 0;
-  },
-
+messageClassifier.prototype =
+{
   /**
    * Starts the message classification process for a message. If the message
    * sender's address is in the address book specified by aWhiteListDirectory,
@@ -658,18 +634,17 @@ var gMessageClassificator =
    *
    * @param aMsgHdr
    *        The header of the message to classify.
-   * @param aMsgIndex
-   *        The message's index inside the folder.
    * @param aWhiteListDirectory
    *        The addressbook (nsIAbMDBDirectory) to use as a whitelist, or null
    *        if no whitelisting should be done.
    */
-  analyzeMessage: function(aMsgHdr, aMsgIndex, aWhiteListDirectory)
+  analyzeMessage: function(aMsgHdr, aWhiteListDirectory)
   {
     // if a whitelist addressbook was specified, check if the email address is in it
     if (aWhiteListDirectory)
     {
-      var headerParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
+      var headerParser = Components.classes["@mozilla.org/messenger/headerparser;1"].
+                         getService(Components.interfaces.nsIMsgHeaderParser);
       var authorEmailAddress = headerParser.extractHeaderAddressMailboxes(null, aMsgHdr.author);
       if (aWhiteListDirectory.hasCardForEmailAddress(authorEmailAddress))
         // skip over this message, like we do on incoming mail
@@ -678,10 +653,9 @@ var gMessageClassificator =
         return;
     }
 
-    var messageURI = aMsgHdr.folder.generateMessageURI(aMsgHdr.messageKey)
-        + "?fetchCompleteMessage=true";
-    this.messages[messageURI] = {hdr: aMsgHdr, index: aMsgIndex};
-    this.pendingMessageCount++;
+    var messageURI = aMsgHdr.folder.generateMessageURI(aMsgHdr.messageKey) + "?fetchCompleteMessage=true";
+    this.mMessages[messageURI] = aMsgHdr;
+    this.mPendingMessageCount++;
 
     gJunkmailComponent.classifyMessage(messageURI, msgWindow, this);
   },
@@ -696,25 +670,22 @@ var gMessageClassificator =
     // XXX TODO
     // make the cut off 50, like in nsMsgSearchTerm.cpp
 
-    var score =
-      aClassification == nsIJunkMailPlugin.JUNK ? "100" : "0";
+    var score = aClassification == nsIJunkMailPlugin.JUNK ? "100" : "0";
 
     // set these props via the db (instead of the message header
     // directly) so that the nsMsgDBView knows to update the UI
     //
-    var msgHdr = this.messages[aClassifiedMsgURI].hdr;
+    var msgHdr = this.mMessages[aClassifiedMsgURI];
     var db = msgHdr.folder.getMsgDatabase(msgWindow);
     db.setStringProperty(msgHdr.messageKey, "junkscore", score);
     db.setStringProperty(msgHdr.messageKey, "junkscoreorigin", "plugin");
 
     if (aClassification == nsIJunkMailPlugin.JUNK)
-      this.junkMsgIndices.push(this.messages[aClassifiedMsgURI].index);
+      this.mJunkMsgHdrs.AppendElement(msgHdr);
 
-    this.pendingMessageCount--;
-    if (this.pendingMessageCount == 0)
-    {
-      performActionsOnJunkMsgs(this.junkMsgIndices);
-    }
+    this.mPendingMessageCount--;
+    if (this.mPendingMessageCount == 0)
+      performActionsOnJunkMsgs(this.mFolder, this.mJunkMsgHdrs);
   }
 }
 
@@ -743,7 +714,8 @@ function filterFolderForJunk()
   if (spamSettings.useWhiteList && spamSettings.whiteListAbURI)
     whiteListDirectory = RDF.GetResource(spamSettings.whiteListAbURI).QueryInterface(Components.interfaces.nsIAbMDBDirectory);
 
-  gMessageClassificator.init();
+  // create a classifier instance to classify messages in the folder.
+  var msgClassifier = new messageClassifier(tmpMsgHdr.folder);
 
   for (var i = 0; i < count; i++) {
     try
@@ -758,7 +730,7 @@ function filterFolderForJunk()
     if (msgURI)
     {
       var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
-      gMessageClassificator.analyzeMessage(msgHdr, i, whiteListDirectory);
+      msgClassifier.analyzeMessage(msgHdr, whiteListDirectory);
     }
   }
 }
