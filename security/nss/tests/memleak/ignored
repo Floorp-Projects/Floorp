@@ -22,8 +22,9 @@
 /main/_strdup
 /main/strdup/**
 
-#367133
+#367037
 /main/NSS_Initialize/*/STAN_LoadDefaultNSS3TrustDomain/**
+/main/NSS_Initialize/nss_Init/secoid_Init/**
 
 #367374
 /main/PR_Init/_PR_ImplicitInitialization/_PR_InitStuff/**
