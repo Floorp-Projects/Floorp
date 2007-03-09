@@ -43,7 +43,7 @@
 #include "nsSVGAnimatedLengthList.h"
 #include "nsSVGLengthList.h"
 #include "nsISVGSVGElement.h"
-#include "nsSVGCoordCtxProvider.h"
+#include "nsSVGSVGElement.h"
 #include "nsISVGTextContentMetrics.h"
 #include "nsIFrame.h"
 #include "nsDOMError.h"
@@ -76,9 +76,6 @@ public:
 
   // nsIContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-
-  // nsSVGElement specializations:
-  virtual void ParentChainChanged();
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
@@ -136,8 +133,8 @@ nsSVGTSpanElement::Init()
 
   // DOM property: nsIDOMSVGTextPositioningElement::x, #IMPLIED attrib: x
   {
-    nsCOMPtr<nsISVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList));
+    nsCOMPtr<nsIDOMSVGLengthList> lengthList;
+    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mX),
                                      lengthList);
@@ -148,8 +145,8 @@ nsSVGTSpanElement::Init()
   
   // DOM property: nsIDOMSVGTextPositioningElement::y, #IMPLIED attrib: y
   {
-    nsCOMPtr<nsISVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList));
+    nsCOMPtr<nsIDOMSVGLengthList> lengthList;
+    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mY),
                                      lengthList);
@@ -160,8 +157,8 @@ nsSVGTSpanElement::Init()
 
   // DOM property: nsIDOMSVGTextPositioningElement::dx, #IMPLIED attrib: dx
   {
-    nsCOMPtr<nsISVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList));
+    nsCOMPtr<nsIDOMSVGLengthList> lengthList;
+    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mdX),
                                      lengthList);
@@ -172,8 +169,8 @@ nsSVGTSpanElement::Init()
   
   // DOM property: nsIDOMSVGTextPositioningElement::dy, #IMPLIED attrib: dy
   {
-    nsCOMPtr<nsISVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList));
+    nsCOMPtr<nsIDOMSVGLengthList> lengthList;
+    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mdY),
                                      lengthList);
@@ -378,64 +375,6 @@ nsSVGTSpanElement::IsAttributeMapped(const nsIAtom* name) const
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGTSpanElementBase::IsAttributeMapped(name);
 }
-
-//----------------------------------------------------------------------
-// nsSVGElement methods
-
-void nsSVGTSpanElement::ParentChainChanged()
-{
-  // set new context information on our length-properties:
-  
-  nsCOMPtr<nsIDOMSVGSVGElement> dom_elem;
-  GetOwnerSVGElement(getter_AddRefs(dom_elem));
-  if (!dom_elem) return;
-
-  nsCOMPtr<nsSVGCoordCtxProvider> ctx = do_QueryInterface(dom_elem);
-  NS_ASSERTION(ctx, "<svg> element missing interface");
-
-  // x:
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> dom_lengthlist;
-    mX->GetAnimVal(getter_AddRefs(dom_lengthlist));
-    nsCOMPtr<nsISVGLengthList> lengthlist = do_QueryInterface(dom_lengthlist);
-    NS_ASSERTION(lengthlist, "svg lengthlist missing interface");
-
-    lengthlist->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextX()));
-  }
-
-  // y:
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> dom_lengthlist;
-    mY->GetAnimVal(getter_AddRefs(dom_lengthlist));
-    nsCOMPtr<nsISVGLengthList> lengthlist = do_QueryInterface(dom_lengthlist);
-    NS_ASSERTION(lengthlist, "svg lengthlist missing interface");
-    
-    lengthlist->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextY()));
-  }
-
-  // dx:
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> dom_lengthlist;
-    mdX->GetAnimVal(getter_AddRefs(dom_lengthlist));
-    nsCOMPtr<nsISVGLengthList> lengthlist = do_QueryInterface(dom_lengthlist);
-    NS_ASSERTION(lengthlist, "svg lengthlist missing interface");
-    
-    lengthlist->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextX()));
-  }
-
-  // dy:
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> dom_lengthlist;
-    mdY->GetAnimVal(getter_AddRefs(dom_lengthlist));
-    nsCOMPtr<nsISVGLengthList> lengthlist = do_QueryInterface(dom_lengthlist);
-    NS_ASSERTION(lengthlist, "svg lengthlist missing interface");
-    
-    lengthlist->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextY()));
-  }
-
-  // recurse into child content:
-  nsSVGTSpanElementBase::ParentChainChanged();
-}  
 
 //----------------------------------------------------------------------
 // nsSVGElement overrides

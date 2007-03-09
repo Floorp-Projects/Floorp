@@ -91,7 +91,7 @@ public:
 
 protected:
 
-  void SetParentCoordCtxProvider(nsSVGCoordCtxProvider *aContext);
+  void SetParentCoordCtxProvider(nsSVGSVGElement *aContext);
 
   virtual LengthAttributesInfo GetLengthInfo();
  
@@ -99,7 +99,7 @@ protected:
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
-  nsSVGCoordCtxProvider                 *mCoordCtx;
+  nsSVGSVGElement                       *mCoordCtx;
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mMarkerUnits;
   nsCOMPtr<nsIDOMSVGAnimatedAngle>       mOrient;
 

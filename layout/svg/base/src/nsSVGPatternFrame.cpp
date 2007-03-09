@@ -627,7 +627,7 @@ nsSVGPatternFrame::GetPatternRect(nsIDOMSVGRect **patternRect,
 static float
 GetLengthValue(nsSVGLength2 *aLength)
 {
-  return aLength->GetAnimValue(NS_STATIC_CAST(nsSVGCoordCtxProvider*, nsnull));
+  return aLength->GetAnimValue(NS_STATIC_CAST(nsSVGSVGElement*, nsnull));
 }
 
 nsresult

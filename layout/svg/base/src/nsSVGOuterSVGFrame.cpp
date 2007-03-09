@@ -159,16 +159,8 @@ nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
 NS_IMETHODIMP
 nsSVGOuterSVGFrame::InitSVG()
 {
-  nsresult rv;
-
-  // we are an *outer* svg element, so this frame will become the
-  // coordinate context for our content element:
-  float mmPerPx = 25.4f / GetPresContext()->AppUnitsToDevPixels(GetPresContext()->AppUnitsPerInch());
-  SetCoordCtxMMPerPx(mmPerPx, mmPerPx);
-  
   nsCOMPtr<nsISVGSVGElement> SVGElement = do_QueryInterface(mContent);
   NS_ASSERTION(SVGElement, "wrong content element");
-  SVGElement->SetParentCoordCtxProvider(this);
 
   nsIDocument* doc = mContent->GetCurrentDoc();
   if (doc) {
@@ -196,7 +188,6 @@ nsSVGOuterSVGFrame::InitSVG()
 
 NS_INTERFACE_MAP_BEGIN(nsSVGOuterSVGFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGSVGFrame)
-  NS_INTERFACE_MAP_ENTRY(nsSVGCoordCtxProvider)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGOuterSVGFrameBase)
 
 //----------------------------------------------------------------------
@@ -253,7 +244,10 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
 
   nsCOMPtr<nsIDOMSVGRect> r;
   NS_NewSVGRect(getter_AddRefs(r), 0, 0, preferredWidth, preferredHeight);
-  SetCoordCtxRect(r);
+
+  nsSVGSVGElement *svgElem = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
+  NS_ENSURE_TRUE(svgElem, NS_ERROR_FAILURE);
+  svgElem->SetCoordCtxRect(r);
 
 #ifdef DEBUG
   // some debug stuff:
@@ -287,14 +281,11 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
   // Let's work out our desired dimensions.
 
   nsSVGSVGElement *svg = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
-  svg->SetParentCoordCtxProvider(this);
-  float width =
-    svg->mLengthAttributes[nsSVGSVGElement::WIDTH].GetAnimValue(this);
-  float height =
-    svg->mLengthAttributes[nsSVGSVGElement::HEIGHT].GetAnimValue(this);
 
-  aDesiredSize.width = nsPresContext::CSSPixelsToAppUnits(width);
-  aDesiredSize.height = nsPresContext::CSSPixelsToAppUnits(height);
+  aDesiredSize.width =
+    nsPresContext::CSSPixelsToAppUnits(svg->mViewportWidth);
+  aDesiredSize.height =
+    nsPresContext::CSSPixelsToAppUnits(svg->mViewportHeight);
 
   // XXX add in CSS borders ??
 
@@ -303,7 +294,6 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
 
   // tell our element that the viewbox to viewport transform needs refreshing,
   // and set us up to draw
-  svg->InvalidateViewBoxToViewport();
   NotifyViewportChange();
 
   UnsuspendRedraw();
@@ -384,6 +374,22 @@ nsDisplaySVG::Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
 {
   NS_STATIC_CAST(nsSVGOuterSVGFrame*, mFrame)->
     Paint(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
+}
+
+NS_IMETHODIMP
+nsSVGOuterSVGFrame::AttributeChanged(PRInt32         aNameSpaceID,
+                                     nsIAtom*        aAttribute,
+                                     PRInt32         aModType)
+{
+  if (aNameSpaceID == kNameSpaceID_None &&
+      !(GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
+      (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height)) {
+    AddStateBits(NS_FRAME_IS_DIRTY);
+    GetPresContext()->PresShell()->
+      FrameNeedsReflow(this, nsIPresShell::eStyleChange);
+  }
+
+  return NS_OK;
 }
 
 nsIFrame*
@@ -626,18 +632,6 @@ nsSVGOuterSVGFrame::GetCanvasTM()
   nsIDOMSVGMatrix* retval = mCanvasTM.get();
   NS_IF_ADDREF(retval);
   return retval;
-}
-
-already_AddRefed<nsSVGCoordCtxProvider>
-nsSVGOuterSVGFrame::GetCoordContextProvider()
-{
-  NS_ASSERTION(mContent, "null parent");
-
-  // Our <svg> content element is the CoordContextProvider for our children:
-  nsSVGCoordCtxProvider *provider;
-  CallQueryInterface(mContent, &provider);
-
-  return provider;  
 }
 
 //----------------------------------------------------------------------

@@ -89,7 +89,6 @@ NS_INTERFACE_MAP_BEGIN(nsSVGSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGLocatable)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGZoomAndPan)
   NS_INTERFACE_MAP_ENTRY(nsISVGSVGElement)
-  NS_INTERFACE_MAP_ENTRY(nsSVGCoordCtxProvider)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGSVGElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGSVGElementBase)
 
@@ -97,7 +96,10 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGSVGElementBase)
 // Implementation
 
 nsSVGSVGElement::nsSVGSVGElement(nsINodeInfo* aNodeInfo)
-  : nsSVGSVGElementBase(aNodeInfo), mCoordCtx(nsnull), mRedrawSuspendCount(0)
+  : nsSVGSVGElementBase(aNodeInfo),
+    mCoordCtx(nsnull),
+    mCoordCtxMmPerPx(0),
+    mRedrawSuspendCount(0)
 {
 }
 
@@ -129,8 +131,6 @@ nsSVGSVGElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = AddMappedSVGValue(nsGkAtoms::viewBox, mViewBox);
     NS_ENSURE_SUCCESS(rv,rv);
-    // initialize coordinate context with viewbox:
-    SetCoordCtxRect(viewbox);
   }
 
   // DOM property: preserveAspectRatio , #IMPLIED attrib: preserveAspectRatio
@@ -788,9 +788,12 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
     float x=0, y=0;
     nsCOMPtr<nsIDOMSVGMatrix> tmp;
     if (ancestorCount == 0) {
-      // our immediate parent is an SVG element. get our 'x' and 'y' attribs
-      x = mLengthAttributes[X].GetAnimValue(mCoordCtx);
-      y = mLengthAttributes[Y].GetAnimValue(mCoordCtx);
+      // our immediate parent is an SVG element. get our 'x' and 'y' attribs.
+      // cast to nsSVGElement so we get our ancestor coord context.
+      x = mLengthAttributes[X].GetAnimValue(NS_STATIC_CAST(nsSVGElement*,
+                                                           this));
+      y = mLengthAttributes[Y].GetAnimValue(NS_STATIC_CAST(nsSVGElement*,
+                                                           this));
     }
     else {
       // We have an SVG ancestor, but with non-SVG content between us
@@ -896,8 +899,11 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
     nsCOMPtr<nsIDOMSVGMatrix> tmp;
     if (ancestorCount == 0) {
       // our immediate parent is an SVG element. get our 'x' and 'y' attribs
-      x = mLengthAttributes[X].GetAnimValue(mCoordCtx);
-      y = mLengthAttributes[Y].GetAnimValue(mCoordCtx);
+      // cast to nsSVGElement so we get our ancestor coord context.
+      x = mLengthAttributes[X].GetAnimValue(NS_STATIC_CAST(nsSVGElement*,
+                                                           this));
+      y = mLengthAttributes[Y].GetAnimValue(NS_STATIC_CAST(nsSVGElement*,
+                                                           this));
     }
     else {
       // We have an SVG ancestor, but with non-SVG content between us
@@ -975,31 +981,6 @@ nsSVGSVGElement::SetZoomAndPan(PRUint16 aZoomAndPan)
 
 //----------------------------------------------------------------------
 // nsISVGSVGElement methods:
-
-NS_IMETHODIMP
-nsSVGSVGElement::SetParentCoordCtxProvider(nsSVGCoordCtxProvider *parentCtx)
-{
-  if (!parentCtx) {
-    NS_ERROR("null parent context");
-    return NS_ERROR_FAILURE;
-  }
-
-  mCoordCtx = parentCtx;
-  
-  // set parent's mmPerPx on our coord contexts:
-  float mmPerPxX = nsRefPtr<nsSVGCoordCtx>(parentCtx->GetContextX())->GetMillimeterPerPixel();
-  float mmPerPxY = nsRefPtr<nsSVGCoordCtx>(parentCtx->GetContextY())->GetMillimeterPerPixel();
-  SetCoordCtxMMPerPx(mmPerPxX, mmPerPxY);
-  
-  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
-    nsCOMPtr<nsIDOMSVGRect> vb;
-    mViewBox->GetAnimVal(getter_AddRefs(vb));
-    vb->SetWidth(mLengthAttributes[WIDTH].GetAnimValue(mCoordCtx));
-    vb->SetHeight(mLengthAttributes[HEIGHT].GetAnimValue(mCoordCtx));
-  }
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsSVGSVGElement::GetCurrentScaleNumber(nsIDOMSVGNumber **aResult)
@@ -1129,17 +1110,13 @@ nsresult
 nsSVGSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                            PRBool aNotify)
 {
-  if (aNamespaceID == kNameSpaceID_None &&
-      aName == nsGkAtoms::viewBox && mCoordCtx) {
-    nsCOMPtr<nsIDOMSVGRect> vb;
-    mViewBox->GetAnimVal(getter_AddRefs(vb));
-    vb->SetX(0);
-    vb->SetY(0);
-    vb->SetWidth(mLengthAttributes[WIDTH].GetAnimValue(mCoordCtx));
-    vb->SetHeight(mLengthAttributes[HEIGHT].GetAnimValue(mCoordCtx));
+  nsSVGSVGElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
+
+  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::viewBox) {
+    InvalidateTransformNotifyFrame();
   }
 
-  return nsSVGSVGElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -1241,37 +1218,45 @@ nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
 {
   nsresult rv = NS_OK;
 
-  if (!mViewBoxToViewportTransform) {
-    float viewportWidth =
-      mLengthAttributes[WIDTH].GetAnimValue(mCoordCtx);
-    float viewportHeight = 
-      mLengthAttributes[HEIGHT].GetAnimValue(mCoordCtx);
-    
-    float viewboxX, viewboxY, viewboxWidth, viewboxHeight;
-    {
-      nsCOMPtr<nsIDOMSVGRect> vb;
-      mViewBox->GetAnimVal(getter_AddRefs(vb));
-      NS_ASSERTION(vb, "could not get viewbox");
-      vb->GetX(&viewboxX);
-      vb->GetY(&viewboxY);
-      vb->GetWidth(&viewboxWidth);
-      vb->GetHeight(&viewboxHeight);
-    }
-    if (viewboxWidth==0.0f || viewboxHeight==0.0f) {
-      NS_ERROR("XXX. We shouldn't get here. Viewbox width/height is set to 0. Need to disable display of element as per specs.");
-      viewboxWidth = 1.0f;
-      viewboxHeight = 1.0f;
-    }
-
-    mViewBoxToViewportTransform =
-      nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
-                                      viewboxX, viewboxY,
-                                      viewboxWidth, viewboxHeight,
-                                      mPreserveAspectRatio);
+  float viewportWidth, viewportHeight;
+  nsSVGSVGElement *ctx = GetCtx();
+  if (!ctx) {
+    // outer svg
+    viewportWidth = mViewportWidth;
+    viewportHeight = mViewportHeight;
+  } else {
+    viewportWidth = mLengthAttributes[WIDTH].GetAnimValue(ctx);
+    viewportHeight = mLengthAttributes[HEIGHT].GetAnimValue(ctx);
   }
 
-  *_retval = mViewBoxToViewportTransform;
-  NS_IF_ADDREF(*_retval);
+  float viewboxX, viewboxY, viewboxWidth, viewboxHeight;
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
+    nsCOMPtr<nsIDOMSVGRect> vb;
+    mViewBox->GetAnimVal(getter_AddRefs(vb));
+    NS_ASSERTION(vb, "could not get viewbox");
+    vb->GetX(&viewboxX);
+    vb->GetY(&viewboxY);
+    vb->GetWidth(&viewboxWidth);
+    vb->GetHeight(&viewboxHeight);
+  } else {
+    viewboxX = viewboxY = 0.0f;
+    viewboxWidth = viewportWidth;
+    viewboxHeight = viewportHeight;
+  }
+
+  if (viewboxWidth==0.0f || viewboxHeight==0.0f) {
+    NS_ERROR("XXX. We shouldn't get here. Viewbox width/height is set to 0. Need to disable display of element as per specs.");
+    viewboxWidth = 1.0f;
+    viewboxHeight = 1.0f;
+  }
+
+  nsCOMPtr<nsIDOMSVGMatrix> xform =
+    nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
+                                    viewboxX, viewboxY,
+                                    viewboxWidth, viewboxHeight,
+                                    mPreserveAspectRatio);
+  xform.swap(*_retval);
+
   return rv;
 }
 
@@ -1323,8 +1308,6 @@ nsSVGSVGElement::InvalidateTransformNotifyFrame()
   nsIPresShell* presShell = doc->GetShellAt(0);
   if (!presShell) return;
 
-  mViewBoxToViewportTransform = nsnull;
-
   nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
   if (frame) {
     nsISVGSVGFrame* svgframe;
@@ -1344,6 +1327,94 @@ nsSVGSVGElement::InvalidateTransformNotifyFrame()
 }
 
 //----------------------------------------------------------------------
+// nsSVGSVGElement
+
+void
+nsSVGSVGElement::SetCoordCtxRect(nsIDOMSVGRect* aCtxRect)
+{
+  if (mLengthAttributes[WIDTH].GetSpecifiedUnitType() ==
+      nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+    aCtxRect->GetWidth(&mViewportWidth);
+    mViewportWidth *=
+      mLengthAttributes[WIDTH].GetAnimValInSpecifiedUnits() / 100.0f;
+  } else {
+    mViewportWidth = mLengthAttributes[WIDTH].GetAnimValue(this);
+  }
+
+  if (mLengthAttributes[HEIGHT].GetSpecifiedUnitType() ==
+      nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+    aCtxRect->GetHeight(&mViewportHeight);
+    mViewportHeight *=
+      mLengthAttributes[HEIGHT].GetAnimValInSpecifiedUnits() / 100.0f;
+  } else {
+    mViewportHeight = mLengthAttributes[HEIGHT].GetAnimValue(this);
+  }
+}
+
+already_AddRefed<nsIDOMSVGRect>
+nsSVGSVGElement::GetCtxRect() {
+  nsCOMPtr<nsIDOMSVGRect> vb;
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
+    mViewBox->GetAnimVal(getter_AddRefs(vb));
+  } else {
+    nsSVGSVGElement *ctx = GetCtx();
+    float w, h;
+    if (ctx) {
+      w = mLengthAttributes[WIDTH].GetAnimValue(ctx);
+      h = mLengthAttributes[HEIGHT].GetAnimValue(ctx);
+    } else {
+      w = mViewportWidth;
+      h = mViewportHeight;
+    }
+    NS_NewSVGRect(getter_AddRefs(vb), 0, 0, w, h);
+  }
+
+  nsIDOMSVGRect *retval = nsnull;
+  vb.swap(retval);
+  return retval;
+}
+
+float
+nsSVGSVGElement::GetLength(PRUint8 aCtxType) {
+  float h, w;
+
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
+    nsCOMPtr<nsIDOMSVGRect> vb;
+    mViewBox->GetAnimVal(getter_AddRefs(vb));
+    vb->GetHeight(&h);
+    vb->GetWidth(&w);
+  } else {
+    nsSVGSVGElement *ctx = GetCtx();
+    if (ctx) {
+      w = mLengthAttributes[WIDTH].GetAnimValue(ctx);
+      h = mLengthAttributes[HEIGHT].GetAnimValue(ctx);
+    } else {
+      w = mViewportWidth;
+      h = mViewportHeight;
+    }
+  }
+
+  switch (aCtxType) {
+  case nsSVGUtils::X:
+    return w;
+  case nsSVGUtils::Y:
+    return h;
+  case nsSVGUtils::XY:
+    return (float)sqrt((w*w+h*h)/2.0);
+  }
+  return 0;
+}
+
+float
+nsSVGSVGElement::GetMMPerPx(PRUint8 aCtxType)
+{
+  if (mCoordCtxMmPerPx == 0.0f) {
+    GetScreenPixelToMillimeterX(&mCoordCtxMmPerPx);
+  }
+  return mCoordCtxMmPerPx;
+}
+
+//----------------------------------------------------------------------
 // nsSVGElement methods
 
 void
@@ -1351,15 +1422,7 @@ nsSVGSVGElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 {
   nsSVGSVGElementBase::DidChangeLength(aAttrEnum, aDoSetAttr);
 
-  if (mCoordCtx && !HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox) &&
-      (aAttrEnum == WIDTH || aAttrEnum == HEIGHT)) {
-    nsCOMPtr<nsIDOMSVGRect> vb;
-    mViewBox->GetAnimVal(getter_AddRefs(vb));
-    vb->SetWidth(mLengthAttributes[WIDTH].GetAnimValue(mCoordCtx));
-    vb->SetHeight(mLengthAttributes[HEIGHT].GetAnimValue(mCoordCtx));
-  } else {
-    InvalidateTransformNotifyFrame();
-  }
+  InvalidateTransformNotifyFrame();
 }
 
 nsSVGElement::LengthAttributesInfo

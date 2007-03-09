@@ -166,6 +166,7 @@ LOCAL_INCLUDES += \
 		-I$(srcdir)/../../content/xbl/src \
 		-I$(srcdir)/../../view/src \
 		-I$(srcdir)/../../dom/src/base \
+		-I$(srcdir)/../../content/svg/content/src \
 		$(NULL)
 
 ifdef MOZ_MATHML

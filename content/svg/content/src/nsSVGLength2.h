@@ -42,7 +42,6 @@
 #include "nsSVGUtils.h"
 #include "nsSVGElement.h"
 #include "nsDOMError.h"
-#include "nsSVGCoordCtxProvider.h"
 
 class nsSVGLength2
 {
@@ -81,9 +80,9 @@ public:
   float GetAnimValInSpecifiedUnits() { return mAnimVal; }
   float GetBaseValInSpecifiedUnits() { return mBaseVal; }
 
-  float GetBaseValue(nsSVGCoordCtxProvider* aProvider)
+  float GetBaseValue(nsSVGSVGElement* aProvider)
     { return ConvertToUserUnits(mBaseVal, aProvider); }
-  float GetAnimValue(nsSVGCoordCtxProvider* aProvider)
+  float GetAnimValue(nsSVGSVGElement* aProvider)
     { return ConvertToUserUnits(mAnimVal, aProvider); }
   
   nsresult ToDOMBaseVal(nsIDOMSVGLength **aResult, nsSVGElement* aSVGElement);
@@ -100,9 +99,10 @@ private:
   PRUint8 mCtxType; // X, Y or Unspecified
   PRPackedBool mIsAnimated;
   
-  float ConvertToUserUnits(float aValue, nsSVGCoordCtx *aCtx);
+  float GetMMPerPixel(nsSVGSVGElement *aCtx);
+  float GetAxisLength(nsSVGSVGElement *aCtx);
   float ConvertToUserUnits(float aValue, nsSVGElement *aSVGElement);
-  float ConvertToUserUnits(float aValue, nsSVGCoordCtxProvider *aProvider);
+  float ConvertToUserUnits(float aValue, nsSVGSVGElement *aProvider);
   void SetBaseValue(float aValue, nsSVGElement *aSVGElement);
   void SetBaseValueInSpecifiedUnits(float aValue, nsSVGElement *aSVGElement);
   void NewValueSpecifiedUnits(PRUint16 aUnitType, float aValue,

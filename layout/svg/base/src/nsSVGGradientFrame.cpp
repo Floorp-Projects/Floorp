@@ -47,6 +47,7 @@
 #include "nsSVGGeometryFrame.h"
 #include "nsSVGGradientFrame.h"
 #include "gfxContext.h"
+#include "nsIDOMSVGRect.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -611,7 +612,7 @@ nsSVGLinearGradientFrame::GradientLookupAttribute(nsIAtom *aAtomName,
                "Unknown gradientUnits type");
 
   return element->mLengthAttributes[aEnumName].
-    GetAnimValue(NS_STATIC_CAST(nsSVGCoordCtxProvider*, nsnull));
+    GetAnimValue(NS_STATIC_CAST(nsSVGSVGElement*, nsnull));
 }
 
 cairo_pattern_t *
@@ -691,7 +692,7 @@ nsSVGRadialGradientFrame::GradientLookupAttribute(nsIAtom *aAtomName,
                "Unknown gradientUnits type");
 
   return element->mLengthAttributes[aEnumName].
-    GetAnimValue(NS_STATIC_CAST(nsSVGCoordCtxProvider*, nsnull));
+    GetAnimValue(NS_STATIC_CAST(nsSVGSVGElement*, nsnull));
 }
 
 cairo_pattern_t *

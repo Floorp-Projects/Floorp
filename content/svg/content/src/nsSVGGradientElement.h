@@ -66,9 +66,6 @@ public:
   // URI Reference
   NS_DECL_NSIDOMSVGURIREFERENCE
 
-  // nsSVGElement specializations:
-  virtual void ParentChainChanged();
-
   // nsIContent
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 

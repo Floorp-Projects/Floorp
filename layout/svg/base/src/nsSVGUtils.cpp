@@ -40,7 +40,7 @@
 #include "nsIDOMSVGSVGElement.h"
 #include "nsStyleCoord.h"
 #include "nsPresContext.h"
-#include "nsSVGCoordCtxProvider.h"
+#include "nsSVGSVGElement.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
@@ -403,8 +403,9 @@ nsSVGUtils::ReportToConsole(nsIDocument* doc,
 }
 
 float
-nsSVGUtils::CoordToFloat(nsPresContext *aPresContext, nsIContent *aContent,
-			 const nsStyleCoord &aCoord)
+nsSVGUtils::CoordToFloat(nsPresContext *aPresContext,
+                         nsSVGElement *aContent,
+                         const nsStyleCoord &aCoord)
 {
   float val = 0.0f;
 
@@ -419,19 +420,19 @@ nsSVGUtils::CoordToFloat(nsPresContext *aPresContext, nsIContent *aContent,
     break;
 
   case eStyleUnit_Percent: {
-      nsCOMPtr<nsIDOMSVGElement> element = do_QueryInterface(aContent);
-      nsCOMPtr<nsIDOMSVGSVGElement> owner;
-      element->GetOwnerSVGElement(getter_AddRefs(owner));
-      nsCOMPtr<nsSVGCoordCtxProvider> ctx = do_QueryInterface(owner);
-    
+      nsSVGSVGElement *ctx = aContent->GetCtx();
+
       nsCOMPtr<nsISVGLength> length;
-      NS_NewSVGLength(getter_AddRefs(length), aCoord.GetPercentValue() * 100.0f,
+      NS_NewSVGLength(getter_AddRefs(length),
+                      aCoord.GetPercentValue() * 100.0f,
                       nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    
+
       if (!ctx || !length)
         break;
 
-      length->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextUnspecified()));
+      nsWeakPtr weakCtx =
+        do_GetWeakReference(NS_STATIC_CAST(nsGenericElement*, ctx));
+      length->SetContext(weakCtx, nsSVGUtils::XY);
       length->GetValue(&val);
       break;
     }
@@ -559,7 +560,7 @@ nsSVGUtils::ObjectSpace(nsIDOMSVGRect *aRect, nsSVGLength2 *aLength)
       nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
     fraction = aLength->GetAnimValInSpecifiedUnits() / 100;
   } else
-    fraction = aLength->GetAnimValue(NS_STATIC_CAST(nsSVGCoordCtxProvider*,
+    fraction = aLength->GetAnimValue(NS_STATIC_CAST(nsSVGSVGElement*,
                                                     nsnull));
 
   return fraction * axis;
@@ -1082,22 +1083,6 @@ nsSVGUtils::HitTestChildren(nsIFrame *aFrame, float x, float y,
 
   if (*aResult && !HitTestClip(aFrame, x, y))
     *aResult = nsnull;
-}
-
-already_AddRefed<nsSVGCoordCtxProvider>
-nsSVGUtils::GetCoordContextProvider(nsSVGElement *aElement)
-{
-  nsCOMPtr<nsIDOMSVGSVGElement> owner;
-  nsresult rv = aElement->GetOwnerSVGElement(getter_AddRefs(owner));
-
-  // GetOwnerSVGElement can fail during teardown
-  if (NS_FAILED(rv) || !owner)
-    return nsnull;
-
-  nsSVGCoordCtxProvider *ctx;
-  CallQueryInterface(owner, &ctx);
-
-  return ctx;
 }
 
 nsRect

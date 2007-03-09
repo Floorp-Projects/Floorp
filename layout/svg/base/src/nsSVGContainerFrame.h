@@ -40,7 +40,7 @@
 #include "nsContainerFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsIDOMSVGMatrix.h"
-#include "nsSVGCoordCtxProvider.h"
+#include "nsSVGSVGElement.h"
 
 typedef nsContainerFrame nsSVGContainerFrameBase;
 
@@ -79,7 +79,6 @@ public:
                   nsIFrame*        aPrevInFlow);
 
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM() { return nsnull; }
-  virtual already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
 };
 
 class nsSVGDisplayContainerFrame : public nsSVGContainerFrame,

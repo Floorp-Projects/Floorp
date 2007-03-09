@@ -65,7 +65,7 @@ class nsISVGValueObserver;
 class nsIAtom;
 class nsSVGLength2;
 class nsSVGElement;
-class nsSVGCoordCtxProvider;
+class nsSVGSVGElement;
 class nsAttrValue;
 class gfxContext;
 class gfxASurface;
@@ -182,7 +182,8 @@ public:
    * Factor (straight userspace), Coord (dimensioned), and Percent (of
    * the current SVG viewport)
    */
-  static float CoordToFloat(nsPresContext *aPresContext, nsIContent *aContent,
+  static float CoordToFloat(nsPresContext *aPresContext,
+                            nsSVGElement *aContent,
                             const nsStyleCoord &aCoord);
   /*
    * Gets an internal frame for an element referenced by a URI.  Note that this
@@ -276,12 +277,6 @@ public:
    * child or container SVG frame.
    */
   static already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM(nsIFrame *aFrame);
-
-  /*
-   * Get element's coordinate context provider.
-   */
-  static already_AddRefed<nsSVGCoordCtxProvider>
-  GetCoordContextProvider(nsSVGElement *aElement);
 
   /*
    * Get frame's covered region by walking the children and doing union.

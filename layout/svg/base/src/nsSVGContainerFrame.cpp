@@ -100,15 +100,6 @@ nsSVGContainerFrame::Init(nsIContent* aContent,
   return rv;
 }
 
-already_AddRefed<nsSVGCoordCtxProvider>
-nsSVGContainerFrame::GetCoordContextProvider()
-{
-  NS_ASSERTION(mParent, "null parent");
-  nsSVGContainerFrame *containerFrame = NS_STATIC_CAST(nsSVGContainerFrame*,
-                                                       mParent);
-  return containerFrame->GetCoordContextProvider();  
-}
-
 NS_IMETHODIMP
 nsSVGDisplayContainerFrame::InitSVG()
 {

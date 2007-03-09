@@ -43,7 +43,7 @@
 #include "nsVoidArray.h"
 #include "nsDOMError.h"
 #include "nsReadableUtils.h"
-#include "nsSVGCoordCtx.h"
+#include "nsSVGSVGElement.h"
 #include "nsCRT.h"
 #include "nsISVGValueUtils.h"
 #include "nsContentUtils.h"
@@ -51,14 +51,15 @@
 ////////////////////////////////////////////////////////////////////////
 // nsSVGLengthList
 
-class nsSVGLengthList : public nsISVGLengthList,
+class nsSVGLengthList : public nsIDOMSVGLengthList,
                         public nsSVGValue,
                         public nsISVGValueObserver
 {  
 protected:
-  friend nsresult NS_NewSVGLengthList(nsISVGLengthList** result);
+  friend nsresult NS_NewSVGLengthList(nsIDOMSVGLengthList** result,
+                                      nsSVGElement *aContext);
 
-  nsSVGLengthList();
+  nsSVGLengthList(nsSVGElement *aContext);
   ~nsSVGLengthList();
 //  void Init();
   
@@ -69,9 +70,6 @@ public:
   // nsIDOMSVGLengthList interface:
   NS_DECL_NSIDOMSVGLENGTHLIST
 
-  // nsISVGLengthList interface:
-  NS_IMETHOD SetContext(nsSVGCoordCtx* context);
-  
   // remainder of nsISVGValue interface:
   NS_IMETHOD SetValueString(const nsAString& aValue);
   NS_IMETHOD GetValueString(nsAString& aValue);
@@ -95,15 +93,18 @@ protected:
   void ReleaseLengths();
   
   nsAutoVoidArray mLengths;
-  nsRefPtr<nsSVGCoordCtx> mContext;
+  nsWeakPtr mContext;  // needs to be weak to avoid reference loop
+  PRUint8 mCtxType;
 };
 
 
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGLengthList::nsSVGLengthList()
+nsSVGLengthList::nsSVGLengthList(nsSVGElement *aContext)
+  : mCtxType(0)
 {
+  mContext = do_GetWeakReference(NS_STATIC_CAST(nsGenericElement*, aContext));
 }
 
 nsSVGLengthList::~nsSVGLengthList()
@@ -120,7 +121,6 @@ NS_IMPL_RELEASE(nsSVGLengthList)
 NS_INTERFACE_MAP_BEGIN(nsSVGLengthList)
   NS_INTERFACE_MAP_ENTRY(nsISVGValue)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGLengthList)
-  NS_INTERFACE_MAP_ENTRY(nsISVGLengthList)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGLengthList)
@@ -295,22 +295,6 @@ nsSVGLengthList::AppendItem(nsIDOMSVGLength *newItem, nsIDOMSVGLength **_retval)
 }
 
 //----------------------------------------------------------------------
-// nsISVGLengthList methods:
-
-NS_IMETHODIMP
-nsSVGLengthList::SetContext(nsSVGCoordCtx *context)
-{
-  mContext = context;
-
-  PRInt32 count = mLengths.Count();
-  for (PRInt32 i = 0; i < count; ++i) {
-    nsISVGLength* length = ElementAt(i);
-    length->SetContext(mContext);
-  }
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
 // nsISVGValueObserver methods
 
 NS_IMETHODIMP
@@ -339,7 +323,7 @@ nsSVGLengthList::ReleaseLengths()
   PRInt32 count = mLengths.Count();
   for (PRInt32 i = 0; i < count; ++i) {
     nsISVGLength* length = ElementAt(i);
-    length->SetContext(nsnull);
+    length->SetContext(nsnull, 0);
     NS_REMOVE_SVGVALUE_OBSERVER(length);
     NS_RELEASE(length);
   }
@@ -364,7 +348,7 @@ nsSVGLengthList::AppendElement(nsISVGLength* aElement)
   // list':
   //  aElement->SetListOwner(this);
   
-  aElement->SetContext(mContext);
+  aElement->SetContext(mContext, mCtxType);
   mLengths.AppendElement((void*)aElement);
   NS_ADD_SVGVALUE_OBSERVER(aElement);
   DidModify();
@@ -393,7 +377,7 @@ nsSVGLengthList::InsertElementAt(nsISVGLength* aElement, PRInt32 index)
   // list':
   //  aElement->SetListOwner(this);
   
-  aElement->SetContext(mContext);
+  aElement->SetContext(mContext, mCtxType);
   
   mLengths.InsertElementAt((void*)aElement, index);
   NS_ADD_SVGVALUE_OBSERVER(aElement);
@@ -405,11 +389,11 @@ nsSVGLengthList::InsertElementAt(nsISVGLength* aElement, PRInt32 index)
 // Exported creation functions:
 
 nsresult
-NS_NewSVGLengthList(nsISVGLengthList** result)
+NS_NewSVGLengthList(nsIDOMSVGLengthList** result, nsSVGElement *aContext)
 {
   *result = nsnull;
   
-  nsSVGLengthList* lengthList = new nsSVGLengthList();
+  nsSVGLengthList* lengthList = new nsSVGLengthList(aContext);
   if (!lengthList) return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(lengthList);
 

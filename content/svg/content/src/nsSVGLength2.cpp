@@ -42,7 +42,8 @@
 #include "prdtoa.h"
 #include "nsCRT.h"
 #include "nsTextFormatter.h"
-#include "nsSVGCoordCtx.h"
+#include "nsIDOMSVGNumber.h"
+#include "nsSVGSVGElement.h"
 
 NS_IMPL_ADDREF(nsSVGLength2::DOMBaseVal)
 NS_IMPL_RELEASE(nsSVGLength2::DOMBaseVal)
@@ -135,32 +136,29 @@ GetValueString(nsAString &aValueAsString, float aValue, PRUint16 aUnitType)
   aValueAsString.Append(unitString);
 }
 
-static float
-GetMMPerPixel(nsSVGCoordCtx *aCtx)
+float
+nsSVGLength2::GetMMPerPixel(nsSVGSVGElement *aCtx)
 {
   if (!aCtx)
     return 1;
 
-  float mmPerPx = aCtx->GetMillimeterPerPixel();
+  float mmPerPx = aCtx->GetMMPerPx(mCtxType);
 
   if (mmPerPx == 0.0f) {
     NS_ASSERTION(mmPerPx != 0.0f, "invalid mm/pixels");
     mmPerPx = 1e-4f; // some small value
   }
-  
+
   return mmPerPx;
 }
 
-static float
-GetAxisLength(nsSVGCoordCtx *aCtx)
+float
+nsSVGLength2::GetAxisLength(nsSVGSVGElement *aCtx)
 {
   if (!aCtx)
     return 1;
 
-  nsCOMPtr<nsIDOMSVGNumber> num = aCtx->GetLength();
-  NS_ASSERTION(num != nsnull, "null interface");
-  float d;
-  num->GetValue(&d);
+  float d = aCtx->GetLength(mCtxType);
 
   if (d == 0.0f) {
     NS_WARNING("zero axis length");
@@ -254,30 +252,15 @@ nsSVGLength2::GetAnimValueString(nsAString & aValueAsString)
 float
 nsSVGLength2::ConvertToUserUnits(float aVal, nsSVGElement *aSVGElement)
 {
-  nsSVGCoordCtx *ctx = nsnull;
+  if (mSpecifiedUnitType == nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER ||
+      mSpecifiedUnitType == nsIDOMSVGLength::SVG_LENGTHTYPE_PX)
+    return aVal;
 
-  if (mSpecifiedUnitType != nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER &&
-      mSpecifiedUnitType != nsIDOMSVGLength::SVG_LENGTHTYPE_PX)
-    ctx = aSVGElement->GetCtxByType(mCtxType);
-
-  return ConvertToUserUnits(aVal, ctx);
+  return ConvertToUserUnits(aVal, aSVGElement->GetCtx());
 }
 
 float
-nsSVGLength2::ConvertToUserUnits(float aVal, nsSVGCoordCtxProvider *aProvider)
-{
-  nsSVGCoordCtx *ctx = nsnull;
-
-  if (aProvider &&
-      mSpecifiedUnitType != nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER &&
-      mSpecifiedUnitType != nsIDOMSVGLength::SVG_LENGTHTYPE_PX)
-    ctx = aProvider->GetCtxByType(mCtxType).get();
-
-  return ConvertToUserUnits(aVal, ctx);
-}
-
-float
-nsSVGLength2::ConvertToUserUnits(float aVal, nsSVGCoordCtx *aCtx)
+nsSVGLength2::ConvertToUserUnits(float aVal, nsSVGSVGElement *aCtx)
 {
   switch (mSpecifiedUnitType) {
     case nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER:
@@ -308,11 +291,11 @@ nsSVGLength2::ConvertToUserUnits(float aVal, nsSVGCoordCtx *aCtx)
 void
 nsSVGLength2::SetBaseValue(float aValue, nsSVGElement *aSVGElement)
 {
-  nsSVGCoordCtx *ctx = nsnull;
+  nsSVGSVGElement *ctx = nsnull;
 
   if (mSpecifiedUnitType != nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER &&
       mSpecifiedUnitType != nsIDOMSVGLength::SVG_LENGTHTYPE_PX)
-    ctx = aSVGElement->GetCtxByType(mCtxType);
+    ctx = aSVGElement->GetCtx();
 
   switch (mSpecifiedUnitType) {
     case nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER:
