@@ -19,9 +19,10 @@
   #
   #%]
 
-[% PROCESS global/header.html.tmpl 
-  title = 'New Product Created'
-%]
+[% title = BLOCK %]New Product '[% product.name FILTER html %]' Created[% END %]
+
+[% PROCESS global/header.html.tmpl title = title %]
+
 <br>
 <div style='border: 1px red solid; padding: 1ex;'>
   <b>You will need to   

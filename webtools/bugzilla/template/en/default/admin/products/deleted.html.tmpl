@@ -20,9 +20,9 @@
   #
   #%]
 
-[% PROCESS global/header.html.tmpl
-  title = 'Deleting product'
-%]
+[% title = BLOCK %]Product '[% product.name FILTER html %]' Deleted[% END %]
+
+[% PROCESS global/header.html.tmpl title = title %]
 
 [% IF product.bug_count %]
   All references to deleted [% terms.bugs %] removed.

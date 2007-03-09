@@ -27,7 +27,7 @@
   # groups_controls: a hash of group controls related to the product.
   #%]
 
-[% title = BLOCK %]Edit Product[% END %]
+[% title = BLOCK %]Edit Product '[% product.name FILTER html %]'[% END %]
 
 [% PROCESS global/header.html.tmpl
   title = title
