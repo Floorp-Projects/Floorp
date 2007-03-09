@@ -182,7 +182,15 @@ nsStorageStream::Write(const char *aBuffer, PRUint32 aCount, PRUint32 *aNumWritt
 
     remaining = aCount;
     readCursor = aBuffer;
-    while (remaining) {
+    // If no segments have been created yet, create one even if we don't have
+    // to write any data; this enables creating an input stream which reads from
+    // the very end of the data for any amount of data in the stream (i.e.
+    // this stream contains N bytes of data and newInputStream(N) is called),
+    // even for N=0 (with the caveat that we require .write("", 0) be called to
+    // initialize internal buffers).
+    PRBool firstTime = mSegmentedBuffer->GetSegmentCount() == 0;
+    while (remaining || NS_UNLIKELY(firstTime)) {
+        firstTime = PR_FALSE;
         availableInSegment = mSegmentEnd - mWriteCursor;
         if (!availableInSegment) {
             mWriteCursor = mSegmentedBuffer->AppendNewSegment();
@@ -376,7 +384,8 @@ NS_IMETHODIMP
 nsStorageStream::NewInputStream(PRInt32 aStartingOffset, nsIInputStream* *aInputStream)
 {
     NS_ENSURE_TRUE(mSegmentedBuffer, NS_ERROR_NOT_INITIALIZED);
-    
+    NS_ENSURE_TRUE(mSegmentedBuffer->GetSegmentCount(), NS_ERROR_NOT_INITIALIZED);
+
     nsStorageInputStream *inputStream = new nsStorageInputStream(this, mSegmentSize);
     if (!inputStream)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -419,10 +428,9 @@ nsStorageInputStream::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead)
 NS_IMETHODIMP 
 nsStorageInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 aCount, PRUint32 *aNumRead)
 {
-    if (mStatus == NS_BASE_STREAM_CLOSED) {
-        *aNumRead = 0;
+    *aNumRead = 0;
+    if (mStatus == NS_BASE_STREAM_CLOSED)
         return NS_OK;
-    }
     if (NS_FAILED(mStatus))
         return mStatus;
 
@@ -523,7 +531,7 @@ NS_METHOD
 nsStorageInputStream::Seek(PRUint32 aPosition)
 {
     PRUint32 length = mStorageStream->mLogicalLength;
-    if (aPosition >= length)
+    if (aPosition > length)
         return NS_ERROR_INVALID_ARG;
 
     mSegmentNum = SegNum(aPosition);
