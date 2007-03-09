@@ -1,6 +1,6 @@
 #
-## hostname: bm-xserve10
-## uname: Darwin bm-xserve10.build.mozilla.org 8.8.4 Darwin Kernel Version 8.8.4: Sun Oct 29 15:26:54 PST 2006; root:xnu-792.16.4.obj~1/RELEASE_I386 i386 i386
+## hostname: cg-xserve03
+## uname: Darwin cg-xserve03.mozilla.com 8.8.1 Darwin Kernel Version 8.8.1: Mon Sep 25 19:45:30 PDT 2006; root:xnu-792.13.8.obj~1/RELEASE_PPC Power Macintosh powerpc
 #
 
 #- tinder-config.pl - Tinderbox configuration file.
@@ -26,7 +26,7 @@
 
 #- PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
 #$BuildAdministrator = "$ENV{USER}\@$ENV{HOST}";
-#$BuildAdministrator = ($ENV{USER} || "cltbld") . "\@" . ($ENV{HOST} || "dhcp");
+#$BuildAdministrator = ($ENV{USER} || "calbld") . "\@" . ($ENV{HOST} || "dhcp");
 
 #- You'll need to change these to suit your machine's needs
 #$DisplayServer = ':0.0';
@@ -132,7 +132,7 @@ $ProductName              = "Thunderbird";
 # :pserver:$ENV{USER}%netscape.com@cvs.mozilla.org:/cvsroot
 
 #$moz_cvsroot   = $ENV{CVSROOT};
-$moz_cvsroot   = ':ext:cltbld@cvs.mozilla.org:/cvsroot';
+$moz_cvsroot   = ':ext:calbld@cvs.mozilla.org:/cvsroot';
 
 #- Set these proper values for your tinderbox server
 #$Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';
@@ -193,7 +193,7 @@ $build_hour    = "3";
 # needs setting for mac + talkback: $mac_bundle_path = "/browser/app";
 $mac_bundle_path = "/mail/app";
 $ssh_version   = "2";
-#$ssh_user      = "cltbld";
+$ssh_user      = "calbld";
 #$ssh_server    = "stage.mozilla.org";
 $ftp_path      = "/home/ftp/pub/calendar/lightning/nightly";
 $url_path      = "http://ftp.mozilla.org/pub/mozilla.org/calendar/lightning/nightly";
