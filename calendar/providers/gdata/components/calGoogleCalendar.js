@@ -177,6 +177,17 @@ calGoogleCalendar.prototype = {
     /*
      * implement calICalendar
      */
+    // attribute AUTF8String id;
+    mID: null,
+    get id() {
+        return this.mID;
+    },
+    set id(id) {
+        if (this.mID)
+            throw Components.results.NS_ERROR_ALREADY_INITIALIZED;
+        return (this.mID = id);
+    },
+
     get readOnly() {
         return this.mReadOnly;
     },

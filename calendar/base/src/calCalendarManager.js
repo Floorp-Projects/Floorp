@@ -347,10 +347,6 @@ calCalendarManager.prototype = {
             this.mDB,
             "SELECT oid,* FROM cal_calendars");
 
-        this.mFindCalendar = createStatement (
-            this.mDB,
-            "SELECT id FROM cal_calendars WHERE type = :type AND uri = :uri");
-
         this.mRegisterCalendar = createStatement (
             this.mDB,
             "INSERT INTO cal_calendars (type, uri) " +
@@ -378,7 +374,6 @@ calCalendarManager.prototype = {
         this.mDeletePrefs = createStatement (
             this.mDB,
             "DELETE FROM cal_calendars_prefs WHERE calendar = :calendar");
-
     },
 
     /** 
@@ -416,21 +411,6 @@ calCalendarManager.prototype = {
         throw "cal_calendar_schema_version SELECT returned no results";
     },
 
-    findCalendarID: function(calendar) {
-        var stmt = this.mFindCalendar;
-        stmt.reset();
-        var pp = stmt.params;
-        pp.type = calendar.type;
-        pp.uri = calendar.uri.spec;
-
-        var id = -1;
-        if (stmt.step()) {
-            id = stmt.row.id;
-        }
-        stmt.reset();
-        return id;
-    },
-    
     notifyObservers: function(functionName, args) {
         function notify(obs) {
             try { obs[functionName].apply(obs, args);  }
@@ -450,7 +430,7 @@ calCalendarManager.prototype = {
 
     registerCalendar: function(calendar) {
         // bail if this calendar (or one that looks identical to it) is already registered
-        if (this.findCalendarID(calendar) > 0) {
+        if (calendar.id > 0) {
             dump ("registerCalendar: calendar already registered\n");
             throw Components.results.NS_ERROR_FAILURE;
         }
@@ -465,9 +445,12 @@ calCalendarManager.prototype = {
 
         this.mRegisterCalendar.step();
         this.mRegisterCalendar.reset();
+        
+        calendar.id = this.mDB.lastInsertRowID;
+        
         //dump("adding [" + this.mDB.lastInsertRowID + "]\n");
         //this.mCache[this.mDB.lastInsertRowID] = calendar;
-        this.mCache[this.findCalendarID(calendar)] = calendar;
+        this.mCache[calendar.id] = calendar;
 
         this.notifyObservers("onCalendarRegistered", [calendar]);
     },
@@ -475,7 +458,7 @@ calCalendarManager.prototype = {
     unregisterCalendar: function(calendar) {
         this.notifyObservers("onCalendarUnregistering", [calendar]);
 
-        var calendarID = this.findCalendarID(calendar);
+        var calendarID = calendar.id;
 
         var pp = this.mUnregisterCalendar.params;
         pp.id = calendarID;
@@ -494,7 +477,7 @@ calCalendarManager.prototype = {
     deleteCalendar: function(calendar) {
         /* check to see if calendar is unregistered first... */
         /* delete the calendar for good */
-        if (this.findCalendarID(calendar) in this.mCache) {
+        if (calendar.id in this.mCache) {
             throw "Can't delete a registered calendar";
         }
         this.notifyObservers("onCalendarDeleting", [calendar]);
@@ -534,7 +517,9 @@ calCalendarManager.prototype = {
 
         for each (var caldata in newCalendarData) {
             try {
-                this.mCache[caldata.id] = this.createCalendar(caldata.type, makeURI(caldata.uri));
+                var cal = this.createCalendar(caldata.type, makeURI(caldata.uri));
+                cal.id = caldata.id;
+                this.mCache[caldata.id] = cal;
             } catch (e) {
                 dump("Can't create calendar for " + caldata.id + " (" + caldata.type + ", " + 
                      caldata.uri + "): " + e + "\n");
@@ -556,7 +541,7 @@ calCalendarManager.prototype = {
         var stmt = this.mGetPref;
         stmt.reset();
         var pp = stmt.params;
-        pp.calendar = this.findCalendarID(calendar);
+        pp.calendar = calendar.id;
         pp.name = name;
 
         var value = null;
@@ -571,7 +556,7 @@ calCalendarManager.prototype = {
         // pref names must be lower case
         name = name.toLowerCase();
 
-        var calendarID = this.findCalendarID(calendar);
+        var calendarID = calendar.id;
 
         this.mDB.beginTransaction();
 
@@ -599,7 +584,7 @@ calCalendarManager.prototype = {
 
         this.notifyObservers("onCalendarPrefDeleting", [calendar, name]);
 
-        var calendarID = this.findCalendarID(calendar);
+        var calendarID = calendar.id;
 
         var pp = this.mDeletePref.params;
         pp.calendar = calendarID;
@@ -607,7 +592,7 @@ calCalendarManager.prototype = {
         this.mDeletePref.step();
         this.mDeletePref.reset();
     },
-
+    
     mObservers: Array(),
     addObserver: function(aObserver) {
         if (this.mObservers.indexOf(aObserver) != -1)

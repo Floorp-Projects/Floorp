@@ -141,6 +141,17 @@ calDavCalendar.prototype = {
     // calICalendar interface
     //
 
+    // attribute AUTF8String id;
+    mID: null,
+    get id() {
+        return this.mID;
+    },
+    set id(id) {
+        if (this.mID)
+            throw Components.results.NS_ERROR_ALREADY_INITIALIZED;
+        return (this.mID = id);
+    },
+
     // attribute AUTF8String name;
     get name() {
         return getCalendarManager().getCalendarPref(this, "NAME");

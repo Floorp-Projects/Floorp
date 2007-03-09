@@ -58,6 +58,14 @@ interface calIDateTime;
 interface calICalendar : nsISupports
 {
   /**
+   * Unique ID of this calendar. Only the calendar manager is allowed to set
+   * this attribute. For everybody else, it should be considered to be
+   * read-only.
+   * The id is null for unregistered calendars.
+   */
+  attribute AUTF8String id;
+
+  /**
    * Name of the calendar
    * Notes: Can only be set after the calendar is registered with the calendar manager.
    */
@@ -71,6 +79,8 @@ interface calICalendar : nsISupports
 
   /**
    * Setting this URI causes the calendar to be (re)loaded.
+   * This is not an unique indentifier! It is also not unchangeable. Don't
+   * use it to indentify a calandar, use the id attribute for that purpose.
    */
   attribute nsIURI uri;
 

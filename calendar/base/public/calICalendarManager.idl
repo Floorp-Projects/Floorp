@@ -69,7 +69,7 @@ interface calICalendarManager : nsISupports
   AUTF8String getCalendarPref(in calICalendar aCalendar, in AUTF8String aName);
   void setCalendarPref(in calICalendar aCalendar, in AUTF8String aName, in AUTF8String aValue);
   void deleteCalendarPref(in calICalendar aCalendar, in AUTF8String aName);
-
+  
   void addObserver(in calICalendarManagerObserver aObserver);
   void removeObserver(in calICalendarManagerObserver aObserver);
 };

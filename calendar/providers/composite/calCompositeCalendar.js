@@ -275,6 +275,13 @@ calCompositeCalendar.prototype = {
     // Get operations are sent to each calendar.
     //
 
+    get id() {
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    },
+    set id(id) {
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    },
+
     // this could, at some point, return some kind of URI identifying
     // all the child calendars, thus letting us create nifty calendar
     // trees.
