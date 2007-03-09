@@ -407,7 +407,7 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
     if (color == NS_RGBA(0, 0, 0, 0)) {
       // Use the strictest match for 'transparent' so we do correct
       // round-tripping of all other rgba() values.
-      aResult.AssignLiteral("transparent");
+      aResult.AppendLiteral("transparent");
     } else {
       nsAutoString tmpStr;
       PRUint8 a = NS_GET_A(color);
