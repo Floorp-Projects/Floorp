@@ -115,6 +115,10 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual already_AddRefed<nsIEditor> GetAssociatedEditor();
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+private:
+  nsresult GetColorHelper(nsIAtom* aAtom,
+                          const nscolor& defaultAttrColor,
+                          nsAString& aColor) const;
 
 protected:
   BodyRule* mContentStyleRule;
@@ -309,40 +313,81 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLBodyElement)
 
 NS_IMPL_URI_ATTR(nsHTMLBodyElement, Background, background)
 
-#define NS_IMPL_HTMLBODY_COLOR_ATTR(attr_, func_, default_)         \
-NS_IMETHODIMP                                                       \
-nsHTMLBodyElement::Get##func_(nsAString& aColor)                    \
-{                                                                   \
-  aColor.Truncate();                                                \
-  nsAutoString color;                                               \
-  nscolor attrColor;                                                \
-  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::attr_, color)) {     \
-                                                                    \
-    nsPresContext *presContext = GetPresContext();                  \
-    if (presContext) {                                              \
-      attrColor = presContext->Default##default_();                 \
-      NS_RGBToHex(attrColor, aColor);                               \
-    }                                                               \
-  } else if (NS_ColorNameToRGB(color, &attrColor)) {                \
-    NS_RGBToHex(attrColor, aColor);                                 \
-  } else {                                                          \
-    aColor.Assign(color);                                           \
-  }                                                                 \
-  return NS_OK;                                                     \
-}                                                                   \
-NS_IMETHODIMP                                                       \
-nsHTMLBodyElement::Set##func_(const nsAString& aColor)              \
-{                                                                   \
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::attr_, aColor,     \
-                 PR_TRUE);                                          \
+nsresult
+nsHTMLBodyElement::GetColorHelper(nsIAtom* aAtom,
+                                  const nscolor& defaultAttrColor,
+                                  nsAString& aColor) const
+{
+  aColor.Truncate();
+  nsAutoString color;
+  nscolor attrColor; 
+  if (!GetAttr(kNameSpaceID_None, aAtom, color)) {
+    NS_RGBToHex(defaultAttrColor, aColor);
+  } else if (NS_ColorNameToRGB(color, &attrColor)) {
+    NS_RGBToHex(attrColor, aColor);
+  } else {
+    aColor.Assign(color);
+  }
+  return NS_OK;
 }
 
-NS_IMPL_HTMLBODY_COLOR_ATTR(vlink, VLink, VisitedLinkColor)
-NS_IMPL_HTMLBODY_COLOR_ATTR(alink, ALink, ActiveLinkColor)
-NS_IMPL_HTMLBODY_COLOR_ATTR(link, Link, LinkColor)
+NS_IMETHODIMP
+nsHTMLBodyElement::GetVLink(nsAString& aColor)
+{
+  return GetColorHelper(nsGkAtoms::vlink,
+                        GetPresContext()->DefaultVisitedLinkColor(), aColor);
+}
+
+NS_IMETHODIMP
+nsHTMLBodyElement::SetVLink(const nsAString& aColor)
+{
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::vlink, aColor,
+                 PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsHTMLBodyElement::GetALink(nsAString& aColor)
+{
+  return GetColorHelper(nsGkAtoms::alink,
+                        GetPresContext()->DefaultActiveLinkColor(), aColor);
+}
+
+NS_IMETHODIMP
+nsHTMLBodyElement::SetALink(const nsAString& aColor)
+{
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::alink, aColor,
+                 PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsHTMLBodyElement::GetLink(nsAString& aColor)
+{
+  return GetColorHelper(nsGkAtoms::link,
+                        GetPresContext()->DefaultLinkColor(), aColor);
+}
+
+NS_IMETHODIMP
+nsHTMLBodyElement::SetLink(const nsAString& aColor)
+{
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::link, aColor,
+                 PR_TRUE);
+}
+
 // XXX Should text check the body frame's style struct for color,
 // like we do for bgColor?
-NS_IMPL_HTMLBODY_COLOR_ATTR(text, Text, Color)
+NS_IMETHODIMP
+nsHTMLBodyElement::GetText(nsAString& aColor)
+{
+  return GetColorHelper(nsGkAtoms::text,
+                        GetPresContext()->DefaultColor(), aColor);
+}
+
+NS_IMETHODIMP
+nsHTMLBodyElement::SetText(const nsAString& aColor)
+{
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::text, aColor,
+                 PR_TRUE);
+}
 
 NS_IMETHODIMP 
 nsHTMLBodyElement::GetBgColor(nsAString& aBgColor)
