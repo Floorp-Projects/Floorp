@@ -40,8 +40,8 @@
 #include "nsISupports.idl"
 
 /**
- * The nsIWebBrowserSetup interface allows certain properties of a new browser
- * object to set before the browser window is opened.
+ * The nsIWebBrowserSetup interface lets you set properties on a browser
+ * object; you can do so at any time during the life cycle of the browser.
  *
  * @note Unless stated otherwise, settings are presumed to be enabled by
  *       default.
