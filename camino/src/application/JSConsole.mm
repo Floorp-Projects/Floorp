@@ -77,7 +77,7 @@ NS_IMETHODIMP nsConsoleListener::Observe(nsIConsoleMessage* aMessage)
   if (aMessage) {
     nsXPIDLString msgString;
     aMessage->GetMessage(getter_Copies(msgString));
-    NSLog(@"JS error: %@", [NSString stringWith_nsAString:msgString]);
+    [[JSConsole sharedJSConsole] logMessage:[NSString stringWith_nsAString:msgString]];
   }
   
   return NS_OK;
@@ -127,6 +127,11 @@ static JSConsole* gJSConsole;
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   NS_IF_RELEASE(mConsoleListener);
   [super dealloc];
+}
+
+- (void)logMessage:(NSString*)message
+{
+  NSLog(@"JS error: %@", message);
 }
 
 // gets called before XPCOM shutdown

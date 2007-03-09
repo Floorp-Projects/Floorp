@@ -47,7 +47,7 @@ class nsConsoleListener;
 }
 
 + (JSConsole*)sharedJSConsole;
-
+- (void)logMessage:(NSString*)message;
 
 
 @end
