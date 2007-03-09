@@ -59,7 +59,7 @@ function checkForItipItem()
         var sinkProps = msgWindow.msgHeaderSink.properties;
         // This property was set by LightningTextCalendarConverter.js
         itipItem = sinkProps.getPropertyAsInterface("itipItem",
-                                                    Components.interfaces.calIItipItem)
+                                                    Components.interfaces.calIItipItem);
     } catch (e) {
         // This will throw on every message viewed that doesn't have the
         // itipItem property set on it. So we eat the errors and move on.
@@ -77,10 +77,14 @@ function checkForItipItem()
     itipItem.targetCalendar = getTargetCalendar();
 
     var imipMethod = getMsgImipMethod();
-    if (imipMethod.length) {
+    if (imipMethod &&
+        imipMethod.length != 0 &&
+        imipMethod.toLowerCase() != "nomethod")
+    {
         itipItem.receivedMethod = imipMethod;
     } else {
-        // Thunderbird 1.5 case, we cannot get the imipMethod
+        // There is no METHOD in the content-type header (spec violation).
+        // Fall back to using the one from the itipItem's ICS.
         imipMethod = itipItem.receivedMethod;
     }
 
@@ -127,6 +131,8 @@ function onImipStartHeaders()
 {
     var imipBar = document.getElementById("imip-bar");
     imipBar.setAttribute("collapsed", "true");
+    document.getElementById("imip-button1").setAttribute("hidden", "true");
+    document.getElementById("imip-button2").setAttribute("hidden", "true");
 
     // A new message is starting.
     // Clear our iMIP/iTIP stuff so it doesn't contain stale information.
@@ -152,26 +158,44 @@ function setupBar(imipMethod)
     var description = document.getElementById("imip-description");
 
     // Bug 348666: here is where we would check if this event was already
-    // added to calendar or not and display correct information here
-    if (description.firstChild.data) {
-        description.firstChild.data = ltnGetString("lightning","imipBarText");
-    }
-
-    var button = document.getElementById("imip-button1");
-    button.removeAttribute("hidden");
-    button.setAttribute("label", ltnGetString("lightning",
-                                              "imipAcceptInvitation.label"));
-    button.setAttribute("oncommand",
-                        "setAttendeeResponse('ACCEPTED', 'CONFIRMED');");
+    // added to calendar or not and display correct information
 
     if (imipMethod == "REQUEST") {
-        // Then create a DECLINE button
+        if (description.firstChild.data) {
+            description.firstChild.data = ltnGetString("lightning",
+                                                       "imipBarRequestText");
+        }
+
+        var button = document.getElementById("imip-button1");
+        button.removeAttribute("hidden");
+        button.setAttribute("label", ltnGetString("lightning",
+                                                  "imipAcceptInvitation.label"));
+        button.setAttribute("oncommand",
+                            "setAttendeeResponse('ACCEPTED', 'CONFIRMED');");
+
+        // Create a DECLINE button
         button = document.getElementById("imip-button2");
         button.removeAttribute("hidden");
         button.setAttribute("label", ltnGetString("lightning",
                                                   "imipDeclineInvitation.label"));
         button.setAttribute("oncommand",
                             "setAttendeeResponse('DECLINED', 'CONFIRMED');");
+    } else if (imipMethod == "REPLY") {
+        // Bug xxxx we currently cannot process REPLY messages so just let
+        // the user know what this is, and don't give them any options.
+        if (description.firstChild.data) {
+            description.firstChild.data = ltnGetString("lightning",
+                                                       "imipBarReplyText");
+        }
+    } else {
+        // Bug xxxx TBD: Something went wrong or we found a message we don't
+        // support yet. We can show a "This method is not supported in this
+        // version" or simply hide the iMIP bar at this point
+        if (description.firstChild.data) {
+            description.firstChild.data = ltnGetString("lightning",
+                                                       "imipBarUnsupportedText");
+        }
+        Components.utils.reportError("Unknown imipMethod: " + imipMethod);
     }
 }
 
