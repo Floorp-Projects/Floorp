@@ -59,6 +59,7 @@
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "nsSVGAnimatedInteger.h"
+#include "gfxColor.h"
 
 nsSVGElement::LengthInfo nsSVGFE::sLengthInfo[4] =
 {
@@ -938,9 +939,10 @@ nsSVGFEBlendElement::Filter(nsSVGFilterInstance *instance)
   for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
     for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
       PRUint32 targIndex = y * stride + 4 * x;
-      PRUint32 qa = targetData[targIndex + 3];
-      PRUint32 qb = sourceData[targIndex + 3];
-      for (PRInt32 i = 0; i < 3; i++) {
+      PRUint32 qa = targetData[targIndex + GFX_ARGB32_OFFSET_A];
+      PRUint32 qb = sourceData[targIndex + GFX_ARGB32_OFFSET_A];
+      for (PRInt32 i = PR_MIN(GFX_ARGB32_OFFSET_B, GFX_ARGB32_OFFSET_R);
+           i <= PR_MAX(GFX_ARGB32_OFFSET_B, GFX_ARGB32_OFFSET_R); i++) {
         PRUint32 ca = targetData[targIndex + i];
         PRUint32 cb = sourceData[targIndex + i];
         PRUint32 val;
@@ -970,7 +972,7 @@ nsSVGFEBlendElement::Filter(nsSVGFilterInstance *instance)
         targetData[targIndex + i] =  NS_STATIC_CAST(PRUint8, val);
       }
       PRUint32 alpha = 255 * 255 - (255 - qa) * (255 - qb);
-      FAST_DIVIDE_BY_255(targetData[targIndex + 3], alpha);
+      FAST_DIVIDE_BY_255(targetData[targIndex + GFX_ARGB32_OFFSET_A], alpha);
     }
   }
   return NS_OK;
@@ -1285,17 +1287,22 @@ nsSVGFEColorMatrixElement::Filter(nsSVGFilterInstance *instance)
 
       float col[4];
       for (int i = 0, row = 0; i < 4; i++, row += 5) {
-        col[i] = sourceData[targIndex + 2] * colorMatrix[row + 0] +
-                 sourceData[targIndex + 1] * colorMatrix[row + 1] +
-                 sourceData[targIndex + 0] * colorMatrix[row + 2] +
-                 sourceData[targIndex + 3] * colorMatrix[row + 3] +
-                 255 *                       colorMatrix[row + 4];
+        col[i] =
+          sourceData[targIndex + GFX_ARGB32_OFFSET_R] * colorMatrix[row + 0] +
+          sourceData[targIndex + GFX_ARGB32_OFFSET_G] * colorMatrix[row + 1] +
+          sourceData[targIndex + GFX_ARGB32_OFFSET_B] * colorMatrix[row + 2] +
+          sourceData[targIndex + GFX_ARGB32_OFFSET_A] * colorMatrix[row + 3] +
+          255 *                                         colorMatrix[row + 4];
         col[i] = PR_MIN(PR_MAX(0, col[i]), 255);
       }
-      targetData[targIndex + 2] = NS_STATIC_CAST(PRUint8, col[0]);
-      targetData[targIndex + 1] = NS_STATIC_CAST(PRUint8, col[1]);
-      targetData[targIndex + 0] = NS_STATIC_CAST(PRUint8, col[2]);
-      targetData[targIndex + 3] = NS_STATIC_CAST(PRUint8, col[3]);
+      targetData[targIndex + GFX_ARGB32_OFFSET_R] =
+        NS_STATIC_CAST(PRUint8, col[0]);
+      targetData[targIndex + GFX_ARGB32_OFFSET_G] =
+        NS_STATIC_CAST(PRUint8, col[1]);
+      targetData[targIndex + GFX_ARGB32_OFFSET_B] =
+        NS_STATIC_CAST(PRUint8, col[2]);
+      targetData[targIndex + GFX_ARGB32_OFFSET_A] =
+        NS_STATIC_CAST(PRUint8, col[3]);
     }
   }
   return NS_OK;
@@ -1748,10 +1755,14 @@ nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance)
   for (PRInt32 y = rect.y; y < rect.YMost(); y++)
     for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
       PRInt32 targIndex = y * stride + x * 4;
-      targetData[targIndex] = tableB[sourceData[targIndex]];
-      targetData[targIndex + 1] = tableG[sourceData[targIndex + 1]];
-      targetData[targIndex + 2] = tableR[sourceData[targIndex + 2]];
-      targetData[targIndex + 3] = tableA[sourceData[targIndex + 3]];
+      targetData[targIndex + GFX_ARGB32_OFFSET_B] =
+        tableB[sourceData[targIndex + GFX_ARGB32_OFFSET_B]];
+      targetData[targIndex + GFX_ARGB32_OFFSET_G] =
+        tableG[sourceData[targIndex + GFX_ARGB32_OFFSET_G]];
+      targetData[targIndex + GFX_ARGB32_OFFSET_R] =
+        tableR[sourceData[targIndex + GFX_ARGB32_OFFSET_R]];
+      targetData[targIndex + GFX_ARGB32_OFFSET_A] =
+        tableA[sourceData[targIndex + GFX_ARGB32_OFFSET_A]];
     }
   return NS_OK;
 }
@@ -3108,10 +3119,10 @@ nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance)
       FAST_DIVIDE_BY_255(g, unsigned(col[1]) * a);
       FAST_DIVIDE_BY_255(b, unsigned(col[2]) * a);
 
-      targetData[targIndex    ] = b;
-      targetData[targIndex + 1] = g;
-      targetData[targIndex + 2] = r;
-      targetData[targIndex + 3] = a;
+      targetData[targIndex + GFX_ARGB32_OFFSET_B] = b;
+      targetData[targIndex + GFX_ARGB32_OFFSET_G] = g;
+      targetData[targIndex + GFX_ARGB32_OFFSET_R] = r;
+      targetData[targIndex + GFX_ARGB32_OFFSET_A] = a;
     }
   }
 

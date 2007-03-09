@@ -98,6 +98,21 @@ struct gfxMatrix;
 /* are we the child of a non-display container? */
 #define NS_STATE_SVG_NONDISPLAY_CHILD 0x20000000
 
+/**
+ * Byte offsets of channels in a native packed gfxColor or cairo image surface.
+ */
+#ifdef IS_BIG_ENDIAN
+#define GFX_ARGB32_OFFSET_A 0
+#define GFX_ARGB32_OFFSET_R 1
+#define GFX_ARGB32_OFFSET_G 2
+#define GFX_ARGB32_OFFSET_B 3
+#else
+#define GFX_ARGB32_OFFSET_A 3
+#define GFX_ARGB32_OFFSET_R 2
+#define GFX_ARGB32_OFFSET_G 1
+#define GFX_ARGB32_OFFSET_B 0
+#endif
+
 /*
  * Checks the svg enable preference and if a renderer could
  * successfully be created.  Declared as a function instead of a

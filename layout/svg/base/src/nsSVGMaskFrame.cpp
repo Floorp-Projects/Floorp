@@ -229,13 +229,14 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
       PRUint8 *pixel = data + stride * y + 4 * x;
 
       /* linearRGB -> intensity */
-      pixel[3] = (PRUint8)((pixel[2] * 0.2125 +
-                            pixel[1] * 0.7154 +
-                            pixel[0] * 0.0721) *
-                            (pixel[3] / 255.0) * aOpacity);
-      pixel[0] = 255;
-      pixel[1] = 255;
-      pixel[2] = 255;
+      PRUint8 alpha =
+        NS_STATIC_CAST(PRUint8,
+                       (pixel[GFX_ARGB32_OFFSET_R] * 0.2125 +
+                        pixel[GFX_ARGB32_OFFSET_G] * 0.7154 +
+                        pixel[GFX_ARGB32_OFFSET_B] * 0.0721) *
+                       (pixel[GFX_ARGB32_OFFSET_A] / 255.0) * aOpacity);
+
+      memset(pixel, alpha, 4);
     }
 
   cairo_pattern_t *retval = cairo_pattern_create_for_surface(image);

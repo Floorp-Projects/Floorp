@@ -318,18 +318,18 @@ nsSVGUtils::UnPremultiplyImageDataAlpha(PRUint8 *data,
     for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
       PRUint8 *pixel = data + stride * y + 4 * x;
 
-      PRUint8 a = pixel[3];
+      PRUint8 a = pixel[GFX_ARGB32_OFFSET_A];
       if (a == 255)
         continue;
 
       if (a) {
-        pixel[0] = (255 * pixel[0]) / a;
-        pixel[1] = (255 * pixel[1]) / a;
-        pixel[2] = (255 * pixel[2]) / a;
+        pixel[GFX_ARGB32_OFFSET_B] = (255 * pixel[GFX_ARGB32_OFFSET_B]) / a;
+        pixel[GFX_ARGB32_OFFSET_G] = (255 * pixel[GFX_ARGB32_OFFSET_G]) / a;
+        pixel[GFX_ARGB32_OFFSET_R] = (255 * pixel[GFX_ARGB32_OFFSET_R]) / a;
       } else {
-        pixel[0] = 0;
-        pixel[1] = 0;
-        pixel[2] = 0;
+        pixel[GFX_ARGB32_OFFSET_B] = 0;
+        pixel[GFX_ARGB32_OFFSET_G] = 0;
+        pixel[GFX_ARGB32_OFFSET_R] = 0;
       }
     }
   }
@@ -344,13 +344,16 @@ nsSVGUtils::PremultiplyImageDataAlpha(PRUint8 *data,
     for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
       PRUint8 *pixel = data + stride * y + 4 * x;
 
-      PRUint8 a = pixel[3];
+      PRUint8 a = pixel[GFX_ARGB32_OFFSET_A];
       if (a == 255)
         continue;
 
-      FAST_DIVIDE_BY_255(pixel[0], pixel[0] * a);
-      FAST_DIVIDE_BY_255(pixel[1], pixel[1] * a);
-      FAST_DIVIDE_BY_255(pixel[2], pixel[2] * a);
+      FAST_DIVIDE_BY_255(pixel[GFX_ARGB32_OFFSET_B],
+                         pixel[GFX_ARGB32_OFFSET_B] * a);
+      FAST_DIVIDE_BY_255(pixel[GFX_ARGB32_OFFSET_G],
+                         pixel[GFX_ARGB32_OFFSET_G] * a);
+      FAST_DIVIDE_BY_255(pixel[GFX_ARGB32_OFFSET_R],
+                         pixel[GFX_ARGB32_OFFSET_R] * a);
     }
   }
 }
@@ -364,9 +367,12 @@ nsSVGUtils::ConvertImageDataToLinearRGB(PRUint8 *data,
     for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
       PRUint8 *pixel = data + stride * y + 4 * x;
 
-      pixel[0] = gsRGBToLinearRGBMap[pixel[0]];
-      pixel[1] = gsRGBToLinearRGBMap[pixel[1]];
-      pixel[2] = gsRGBToLinearRGBMap[pixel[2]];
+      pixel[GFX_ARGB32_OFFSET_B] =
+        gsRGBToLinearRGBMap[pixel[GFX_ARGB32_OFFSET_B]];
+      pixel[GFX_ARGB32_OFFSET_G] =
+        gsRGBToLinearRGBMap[pixel[GFX_ARGB32_OFFSET_G]];
+      pixel[GFX_ARGB32_OFFSET_R] =
+        gsRGBToLinearRGBMap[pixel[GFX_ARGB32_OFFSET_R]];
     }
   }
 }
@@ -380,9 +386,12 @@ nsSVGUtils::ConvertImageDataFromLinearRGB(PRUint8 *data,
     for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
       PRUint8 *pixel = data + stride * y + 4 * x;
 
-      pixel[0] = glinearRGBTosRGBMap[pixel[0]];
-      pixel[1] = glinearRGBTosRGBMap[pixel[1]];
-      pixel[2] = glinearRGBTosRGBMap[pixel[2]];
+      pixel[GFX_ARGB32_OFFSET_B] =
+        glinearRGBTosRGBMap[pixel[GFX_ARGB32_OFFSET_B]];
+      pixel[GFX_ARGB32_OFFSET_G] =
+        glinearRGBTosRGBMap[pixel[GFX_ARGB32_OFFSET_G]];
+      pixel[GFX_ARGB32_OFFSET_R] =
+        glinearRGBTosRGBMap[pixel[GFX_ARGB32_OFFSET_R]];
     }
   }
 }
