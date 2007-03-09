@@ -289,7 +289,11 @@ struct PtrInfo
 };
 
 
-typedef nsBaseHashtable<nsClearingVoidPtrHashKey, PRUint32, PRUint32> PointerSet;
+// XXX Would be nice to have an nsHashSet<KeyType> API that has
+// Add/Remove/Has rather than PutEntry/RemoveEntry/GetEntry.
+typedef nsTHashtable<nsClearingVoidPtrHashKey> PointerSet;
+typedef nsBaseHashtable<nsClearingVoidPtrHashKey, PRUint32, PRUint32>
+    PointerSetWithGeneration;
 typedef nsBaseHashtable<nsClearingVoidPtrHashKey, PtrInfo, PtrInfo> GCTable;
 
 static void
@@ -323,7 +327,7 @@ struct nsPurpleBuffer
     nsCycleCollectorStats &mStats;
     void* mCache[N_POINTERS];
     PRUint32 mCurrGen;    
-    PointerSet mBackingStore;
+    PointerSetWithGeneration mBackingStore;
     nsDeque *mTransferBuffer;
     
     nsPurpleBuffer(nsCycleCollectorParams &params,
@@ -480,7 +484,7 @@ struct nsCycleCollector
                          nsCycleCollectionLanguageRuntime *rt);
     void ForgetRuntime(PRUint32 langID);
 
-    void CollectPurple();
+    void CollectPurple(); // XXXldb Should this be called SelectPurple?
     void MarkRoots();
     void ScanRoots();
     void CollectWhite();
@@ -495,6 +499,13 @@ struct nsCycleCollector
     void Freed(void *n);
     void Collect();
     void Shutdown();
+
+#ifdef DEBUG
+    void ExplainLiveExpectedGarbage();
+    void ShouldBeFreed(nsISupports *n);
+    void WasFreed(nsISupports *n);
+    PointerSet mExpectedGarbage;
+#endif
 };
 
 
@@ -1125,14 +1136,12 @@ struct graphVizWalker : public GraphWalker
 
     PRBool ShouldVisitNode(void *p, PtrInfo const & pi)  
     { 
-        PRUint32 dummy;
-        return ! mVisited.Get(p, &dummy);
+        return ! mVisited.GetEntry(p);
     }
 
     void VisitNode(void *p, PtrInfo & pi, size_t refcount) 
     {
-        PRUint32 dummy = 0;
-        mVisited.Put(p, dummy);
+        mVisited.PutEntry(p);
         mParent = p;
         fprintf(mStream, 
                 "n%p [label=\"%s\\n%p\\n%u/%u refs found\", "
@@ -1357,6 +1366,9 @@ nsCycleCollector::nsCycleCollector() :
     mPtrLog(nsnull)
 {
     mGraph.Init();
+#ifdef DEBUG
+    mExpectedGarbage.Init();
+#endif
 
     for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
         mRuntimes[i] = nsnull;
@@ -1690,9 +1702,123 @@ nsCycleCollector::Shutdown()
     mPurpleBuf.BumpGeneration();
     mParams.mScanDelay = 0;
     Collect();
+#ifdef DEBUG
+    ExplainLiveExpectedGarbage();
+#endif
     mParams.mDoNothing = PR_TRUE;
 }
 
+#ifdef DEBUG
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+AddExpectedGarbage(nsClearingVoidPtrHashKey *p, void *arg)
+{
+    nsCycleCollector *c = NS_STATIC_CAST(nsCycleCollector*, arg);
+    c->mBufs[0]->Push(NS_CONST_CAST(void*, p->GetKey()));
+    return PL_DHASH_NEXT;
+}
+
+struct explainWalker : public GraphWalker
+{
+    explainWalker(GCTable &tab,
+                  nsCycleCollectionLanguageRuntime **runtimes)
+        : GraphWalker(tab, runtimes) 
+    {}
+
+    PRBool ShouldVisitNode(void *p, PtrInfo const & pi) 
+    { 
+        // We set them back to gray as we explain problems.
+        return pi.mColor != grey; 
+    }
+
+    void VisitNode(void *p, PtrInfo & pi, size_t refcount) 
+    {
+        if (pi.mColor == grey)
+            Fault("scanning grey node", p);
+
+        if (pi.mColor == white) {
+            printf("nsCycleCollector: %s %p was not collected due to\n"
+                   "  missing call to suspect or failure to unlink\n",
+                   pi.mName, p);
+        }
+
+        if (pi.mInternalRefs != refcount) {
+            // Note that the external references may have been external
+            // to a different node in the cycle collection that just
+            // happened, if that different node was purple and then
+            // black.
+            printf("nsCycleCollector: %s %p was not collected due to %d\n"
+                   "  external references\n",
+                   pi.mName, p, refcount - pi.mInternalRefs);
+        }
+
+        pi.mColor = grey;
+
+        mGraph.Put(p, pi);
+    }
+    void NoteChild(void *c, PtrInfo & childpi) {}
+};
+
+void
+nsCycleCollector::ExplainLiveExpectedGarbage()
+{
+    if (mScanInProgress || mCollectionInProgress)
+        Fault("can't explain expected garbage during collection itself");
+
+    if (mParams.mDoNothing) {
+        printf("nsCycleCollector: not explaining expected garbage since\n"
+               "  cycle collection disabled\n");
+        return;
+    }
+
+    for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
+        if (mRuntimes[i])
+            mRuntimes[i]->BeginCycleCollection();
+    }
+
+    mCollectionInProgress = PR_TRUE;
+    mScanInProgress = PR_TRUE;
+
+    mGraph.Clear();
+    mBufs[0]->Empty();
+
+    // Instead of filling mBufs[0] from the purple buffer, we fill it
+    // from the list of nodes we were expected to collect.
+    mExpectedGarbage.EnumerateEntries(&AddExpectedGarbage, this);
+
+    MarkRoots();
+    ScanRoots();
+
+    mScanInProgress = PR_FALSE;
+
+    for (int i = 0; i < mBufs[0]->GetSize(); ++i) {
+        nsISupports *s = NS_STATIC_CAST(nsISupports *, mBufs[0]->ObjectAt(i));
+        s = canonicalize(s);
+        explainWalker(mGraph, mRuntimes).Walk(s); 
+    }
+
+    mGraph.Clear();
+
+    mCollectionInProgress = PR_FALSE;
+
+    for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
+        if (mRuntimes[i])
+            mRuntimes[i]->FinishCycleCollection();
+    }    
+}
+
+void
+nsCycleCollector::ShouldBeFreed(nsISupports *n)
+{
+    mExpectedGarbage.PutEntry(n);
+}
+
+void
+nsCycleCollector::WasFreed(nsISupports *n)
+{
+    mExpectedGarbage.RemoveEntry(n);
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // Module public API (exported in nsCycleCollector.h)
@@ -1758,6 +1884,25 @@ nsCycleCollector_shutdown()
     sCollector.Shutdown();
 }
 
+#ifdef DEBUG
+void
+nsCycleCollector_DEBUG_shouldBeFreed(nsISupports *n)
+{
+    if (sCollectorConstructed == 0)
+        return;
+    
+    sCollector.ShouldBeFreed(n);
+}
+
+void
+nsCycleCollector_DEBUG_wasFreed(nsISupports *n)
+{
+    if (sCollectorConstructed == 0)
+        return;
+    
+    sCollector.WasFreed(n);
+}
+#endif
 
 PRBool
 nsCycleCollector_isScanSafe(nsISupports *s)

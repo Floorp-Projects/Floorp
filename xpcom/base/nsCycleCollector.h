@@ -65,6 +65,11 @@ NS_COM void nsCycleCollector_forget(nsISupports *n);
 NS_COM void nsCycleCollector_collect();
 NS_COM void nsCycleCollector_shutdown();
 
+#ifdef DEBUG
+NS_COM void nsCycleCollector_DEBUG_shouldBeFreed(nsISupports *n);
+NS_COM void nsCycleCollector_DEBUG_wasFreed(nsISupports *n);
+#endif
+
 // Helpers for interacting with language-identified scripts
 
 NS_COM void nsCycleCollector_registerRuntime(PRUint32 langID, nsCycleCollectionLanguageRuntime *rt);

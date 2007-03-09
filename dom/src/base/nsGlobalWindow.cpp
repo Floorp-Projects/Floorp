@@ -74,6 +74,7 @@
 #endif
 #include "nsContentCID.h"
 #include "nsLayoutStatics.h"
+#include "nsCycleCollector.h"
 
 // Interfaces Needed
 #include "nsIWidget.h"
@@ -552,6 +553,10 @@ nsGlobalWindow::~nsGlobalWindow()
 
   CleanUp();
 
+#ifdef DEBUG
+  nsCycleCollector_DEBUG_wasFreed(NS_STATIC_CAST(nsIScriptGlobalObject*, this));
+#endif
+
   delete mPendingStorageEvents;
 
   nsLayoutStatics::Release();
@@ -604,6 +609,10 @@ nsGlobalWindow::CleanUp()
   }
   mArguments = nsnull;
   mArgumentsLast = nsnull;
+
+#ifdef DEBUG
+  nsCycleCollector_DEBUG_shouldBeFreed(NS_STATIC_CAST(nsIScriptGlobalObject*, this));
+#endif
 }
 
 void
@@ -647,6 +656,11 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
     mDocumentPrincipal = mDoc->NodePrincipal();
   }
 
+#ifdef DEBUG
+  if (mDocument)
+    nsCycleCollector_DEBUG_shouldBeFreed(nsCOMPtr<nsISupports>(do_QueryInterface(mDocument)));
+#endif
+
   // Remove our reference to the document and the document principal.
   mDocument = nsnull;
   mDoc = nsnull;
@@ -661,6 +675,10 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
         scx->ClearScope(mScriptGlobals[NS_STID_INDEX(lang_id)], PR_TRUE);
     }
   }
+
+#ifdef DEBUG
+  nsCycleCollector_DEBUG_shouldBeFreed(NS_STATIC_CAST(nsIScriptGlobalObject*, this));
+#endif
 }
 
 //*****************************************************************************

@@ -781,6 +781,10 @@ nsDocument::~nsDocument()
            ("DOCUMENT %p destroyed", this));
 #endif
 
+#ifdef DEBUG
+  nsCycleCollector_DEBUG_wasFreed(NS_STATIC_CAST(nsIDocument*, this));
+#endif
+
   mInDestructor = PR_TRUE;
 
   // Clear mObservers to keep it in sync with the mutationobserver list
