@@ -148,7 +148,7 @@ sub Verify {
 
     my $moduleVer = catfile($appName, 'app', 'module.ver');
     my $versionTxt = catfile($appName, 'config', 'version.txt');
-    my $milestoneTxt = catfile($appName, 'config', 'milestone.txt');
+    my $milestoneTxt = catfile('config', 'milestone.txt');
     my @bumpFiles = ('client.mk', $moduleVer, $versionTxt, $milestoneTxt);
 
     foreach my $file (@bumpFiles) {
