@@ -44,6 +44,7 @@ use Bugzilla::Component;
 use Bugzilla::Group;
 
 use List::Util qw(min);
+use Storable qw(dclone);
 
 use base qw(Bugzilla::Object Exporter);
 @Bugzilla::Bug::EXPORT = qw(
@@ -138,6 +139,18 @@ sub VALIDATORS {
     }
     return $validators;
 };
+
+use constant UPDATE_COLUMNS => qw();
+
+# This is used by add_comment to know what we validate before putting in
+# the DB.
+use constant UPDATE_COMMENT_COLUMNS => qw(
+    thetext
+    work_time
+    type
+    extra_data
+    isprivate
+);
 
 # Used in LogActivityEntry(). Gives the max length of lines in the
 # activity table.
@@ -397,6 +410,27 @@ sub run_create_validators {
     return $params;
 }
 
+sub update {
+    my $self = shift;
+    my $changes = $self->SUPER::update(@_);
+
+    # XXX This is just a temporary hack until all updating happens
+    # inside this function.
+    my $delta_ts = shift;
+
+    my $dbh = Bugzilla->dbh;
+    foreach my $comment (@{$self->{added_comments} || []}) {
+        my $columns = join(',', keys %$comment);
+        my @values  = values %$comment;
+        my $qmarks  = join(',', ('?') x @values);
+        $dbh->do("INSERT INTO longdescs (bug_id, who, bug_when, $columns)
+                       VALUES (?,?,?,$qmarks)", undef,
+                 $self->bug_id, Bugzilla->user->id, $delta_ts, @values);
+    }
+
+    return $changes;
+}
+
 # This is the correct way to delete bugs from the DB.
 # No bug should be deleted from anywhere else except from here.
 #
@@ -588,6 +622,14 @@ sub _check_commentprivacy {
     my $insider_group = Bugzilla->params->{"insidergroup"};
     return ($insider_group && Bugzilla->user->in_group($insider_group) 
             && $comment_privacy) ? 1 : 0;
+}
+
+sub _check_comment_type {
+    my ($invocant, $type) = @_;
+    detaint_natural($type)
+      || ThrowCodeError('bad_arg', { argument => 'type', 
+                                     function => caller });
+    return $type;
 }
 
 sub _check_component {
@@ -843,6 +885,10 @@ sub _check_version {
     return $version;
 }
 
+sub _check_work_time {
+    return $_[0]->_check_time($_[1], 'work_time');
+}
+
 sub _check_select_field {
     my ($invocant, $value, $field) = @_;
     $value = trim($value);
@@ -880,6 +926,51 @@ sub fields {
     );
 }
 
+#####################################################################
+# Mutators 
+#####################################################################
+
+# $bug->add_comment("comment", {isprivate => 1, work_time => 10.5,
+#                               type => CMT_NORMAL, extra_data => $data});
+sub add_comment {
+    my ($self, $comment, $params) = @_;
+
+    $comment = $self->_check_comment($comment);
+    # XXX At some point we need to refactor check_can_change_field
+    # so that custom installs can use PrivilegesRequired here.
+    $self->check_can_change_field('longdesc')
+        || ThrowUserError('illegal_change', { field => 'longdesc' });
+
+    $params ||= {};
+    if (exists $params->{work_time}) {
+        $params->{work_time} = $self->_check_work_time($params->{work_time});
+    }
+    if (exists $params->{type}) {
+        $params->{type} = $self->_check_comment_type($params->{type});
+    }
+    if (exists $params->{isprivate}) {
+        $params->{isprivate} = 
+            $self->_check_commentprivacy($params->{isprivate});
+    }
+    # XXX We really should check extra_data, too.
+
+    if ($comment eq '' && !($params->{type} || $params->{work_time})) {
+        return;
+    }
+
+    $self->{added_comments} ||= [];
+    my $add_comment = dclone($params);
+    $add_comment->{thetext} = $comment;
+
+    # We only want to trick_taint fields that we know about--we don't
+    # want to accidentally let somebody set some field that's not OK
+    # to set!
+    foreach my $field (UPDATE_COMMENT_COLUMNS) {
+        trick_taint($add_comment->{$field}) if defined $add_comment->{$field};
+    }
+
+    push(@{$self->{added_comments}}, $add_comment);
+}
 
 #####################################################################
 # Instance Accessors

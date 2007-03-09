@@ -581,11 +581,15 @@ if ($action eq Bugzilla->params->{'move-button-text'}) {
     foreach my $id (@idlist) {
         my $bug = new Bugzilla::Bug($id);
         push(@bugs, $bug);
+        $bug->add_comment($comment, { type       => CMT_MOVED_TO, 
+                                      extra_data => $user->login });
+    }
+    foreach my $bug (@bugs) {
+        $bug->update($timestamp);
+        my $id = $bug->bug_id;
 
         $sth->execute($timestamp, $id);
         $sth2->execute($id);
-
-        AppendComment($id, $whoid, $comment, 0, $timestamp, 0, CMT_MOVED_TO, $user->login);
 
         if ($bug->bug_status ne 'RESOLVED') {
             LogActivityEntry($id, 'bug_status', $bug->bug_status,
@@ -1611,7 +1615,7 @@ foreach my $id (@idlist) {
     if (Bugzilla->user->in_group(Bugzilla->params->{'timetrackinggroup'})) {
         $work_time = $cgi->param('work_time');
         if ($work_time) {
-            # AppendComment (called below) can in theory raise an error,
+            # add_comment (called below) can in theory raise an error,
             # but because we've already validated work_time here it's
             # safe to log the entry before adding the comment.
             LogActivityEntry($id, "work_time", "", $work_time,
@@ -1622,9 +1626,13 @@ foreach my $id (@idlist) {
     if ($cgi->param('comment') || $work_time || $duplicate) {
         my $type = $duplicate ? CMT_DUPE_OF : CMT_NORMAL;
 
-        AppendComment($id, $whoid, scalar($cgi->param('comment')),
-                      scalar($cgi->param('commentprivacy')), $timestamp,
-                      $work_time, $type, $duplicate);
+        $old_bug_obj->add_comment(scalar($cgi->param('comment')),
+            { isprivate => scalar($cgi->param('commentprivacy')),
+              work_time => $work_time, type => $type, 
+              extra_data => $duplicate});
+        # XXX When update() is used for other things than comments,
+        # this should probably be moved.
+        $old_bug_obj->update($timestamp);
         $bug_changed = 1;
     }
 
@@ -2100,8 +2108,10 @@ foreach my $id (@idlist) {
                      undef, $reporter, $duplicate);
         }
         # Bug 171639 - Duplicate notifications do not need to be private.
-        AppendComment($duplicate, $whoid, "", 0, $timestamp, 0,
-                      CMT_HAS_DUPE, scalar $cgi->param('id'));
+        my $dup = new Bugzilla::Bug($duplicate);
+        $dup->add_comment("", { type => CMT_HAS_DUPE, 
+                                extra_data => $new_bug_obj->bug_id });
+        $dup->update($timestamp);
 
         $dbh->do(q{INSERT INTO duplicates VALUES (?, ?)}, undef,
                  $duplicate, $cgi->param('id'));
