@@ -113,7 +113,8 @@ nsSVGTextPathFrame::Init(nsIContent*      aContent,
     if (!mStartOffset)
       return NS_ERROR_FAILURE;
 
-    NS_NewSVGLengthList(getter_AddRefs(mX));
+    NS_NewSVGLengthList(getter_AddRefs(mX),
+                        NS_STATIC_CAST(nsSVGElement*, mContent));
     if (mX) {
       nsCOMPtr<nsIDOMSVGLength> length;
       mX->AppendItem(mStartOffset, getter_AddRefs(length));
@@ -141,7 +142,7 @@ nsSVGTextPathFrame::GetType() const
 NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGTextPathFrame::GetX()
 {
-  nsISVGLengthList *retval = mX;
+  nsIDOMSVGLengthList *retval = mX;
   NS_IF_ADDREF(retval);
   return retval;
 }

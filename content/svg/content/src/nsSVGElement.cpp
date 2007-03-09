@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGElement.h"
+#include "nsSVGSVGElement.h"
 #include "nsIDocument.h"
 #include "nsRange.h"
 #include "nsIDOMAttr.h"
@@ -65,8 +66,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIEventListenerManager.h"
 #include "nsSVGUtils.h"
-#include "nsSVGCoordCtxProvider.h"
-#include "nsSVGCoordCtx.h"
 #include "nsSVGLength2.h"
 #include "nsSVGNumber2.h"
 #include <stdarg.h>
@@ -127,28 +126,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericElement)
   
 //----------------------------------------------------------------------
 // nsIContent methods
-
-nsresult
-nsSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                         nsIContent* aBindingParent,
-                         PRBool aCompileEventHandlers)
-{
-  nsresult rv = nsGenericElement::BindToTree(aDocument, aParent,
-                                             aBindingParent,
-                                             aCompileEventHandlers);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  ParentChainChanged();
-
-  return rv;
-}
-
-void
-nsSVGElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
-{
-  nsGenericElement::UnbindFromTree(aDeep, aNullParent);
-  ParentChainChanged();
-}
 
 nsIAtom *
 nsSVGElement::GetIDAttributeName() const
@@ -679,33 +656,6 @@ nsSVGElement::DidModifySVGObservable(nsISVGValue* aObservable,
 }
 
 //----------------------------------------------------------------------
-
-// recursive helper to call ParentChainChanged across non-SVG elements
-static void CallParentChainChanged(nsIContent*elem)
-{
-  NS_ASSERTION(elem, "null element");
-  
-  PRUint32 count = elem->GetChildCount();
-  for (PRUint32 i=0; i<count; ++i) {
-    nsIContent* child = elem->GetChildAt(i);
-    if (child && child->IsNodeOfType(nsINode::eSVG)) {
-      NS_STATIC_CAST(nsSVGElement*, child)->ParentChainChanged();
-    }
-    else {
-      // non-svg element might have an svg child, so recurse
-      CallParentChainChanged(child);
-    }
-  }
-}
-
-void
-nsSVGElement::ParentChainChanged()
-{
-  CallParentChainChanged(this);
-}
-
-
-//----------------------------------------------------------------------
 // Implementation Helpers:
 
 PRBool
@@ -877,22 +827,12 @@ nsIAtom* nsSVGElement::GetEventNameForAttr(nsIAtom* aAttr)
   return aAttr;
 }
 
-nsSVGCoordCtx *
-nsSVGElement::GetCtxByType(PRUint16 aCtxType)
+nsSVGSVGElement *
+nsSVGElement::GetCtx()
 {
   nsCOMPtr<nsIDOMSVGSVGElement> svg;
   GetOwnerSVGElement(getter_AddRefs(svg));
-
-  // outermost svg?
-  if (!svg)
-    return nsnull;
-
-  nsCOMPtr<nsSVGCoordCtxProvider> ctx = do_QueryInterface(svg);
-
-  nsRefPtr<nsSVGCoordCtx> rv = ctx->GetCtxByType(aCtxType);
-
-  // ugh...
-  return rv.get();
+  return NS_STATIC_CAST(nsSVGSVGElement*, svg.get());
 }
 
 nsSVGElement::LengthAttributesInfo
@@ -929,7 +869,7 @@ nsSVGElement::GetAnimatedLengthValues(float *aFirst, ...)
   NS_ASSERTION(info.mLengthCount > 0,
                "GetAnimatedLengthValues on element with no length attribs");
 
-  nsCOMPtr<nsSVGCoordCtxProvider> ctx;
+  nsSVGSVGElement *ctx = nsnull;
 
   float *f = aFirst;
   PRUint32 i = 0;
@@ -942,7 +882,7 @@ nsSVGElement::GetAnimatedLengthValues(float *aFirst, ...)
       PRUint8 type = info.mLengths[i].GetSpecifiedUnitType();
       if (type != nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER &&
           type != nsIDOMSVGLength::SVG_LENGTHTYPE_PX)
-        ctx = nsSVGUtils::GetCoordContextProvider(this);
+        ctx = GetCtx();
     }
     *f = info.mLengths[i++].GetAnimValue(ctx);
     f = va_arg(args, float*);

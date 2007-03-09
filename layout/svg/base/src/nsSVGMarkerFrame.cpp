@@ -307,7 +307,7 @@ nsSVGMarkerFrame::GetType() const
 }
 
 void
-nsSVGMarkerFrame::SetParentCoordCtxProvider(nsSVGCoordCtxProvider *aContext)
+nsSVGMarkerFrame::SetParentCoordCtxProvider(nsSVGSVGElement *aContext)
 {
   nsSVGMarkerElement *marker = NS_STATIC_CAST(nsSVGMarkerElement*, mContent);
   marker->SetParentCoordCtxProvider(aContext);
@@ -324,9 +324,8 @@ nsSVGMarkerFrame::AutoMarkerReferencer::AutoMarkerReferencer(
   mFrame->mInUse = PR_TRUE;
   mFrame->mMarkedFrame = aMarkedFrame;
 
-  nsRefPtr<nsSVGCoordCtxProvider> ctx =
-    nsSVGUtils::GetCoordContextProvider(NS_STATIC_CAST(nsSVGElement*,
-                                                       aMarkedFrame->GetContent()));
+  nsSVGSVGElement *ctx =
+    NS_STATIC_CAST(nsSVGElement*, aMarkedFrame->GetContent())->GetCtx();
   mFrame->SetParentCoordCtxProvider(ctx);
 }
 

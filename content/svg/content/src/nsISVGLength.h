@@ -40,22 +40,21 @@
 #define __NS_ISVGLENGTH_H__
 
 #include "nsIDOMSVGLength.h"
-
-class nsSVGCoordCtx;
+#include "nsWeakPtr.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsISVGLength: private interface for svg lengths
 
-// {ADFA6DD4-7E59-4FA2-BF55-BCE7D40C9F88}
+// {DB02FD38-3C77-4c52-8DBD-C0A47F9DEDAD}
 #define NS_ISVGLENGTH_IID \
-{ 0xadfa6dd4, 0x7e59, 0x4fa2, { 0xbf, 0x55, 0xbc, 0xe7, 0xd4, 0x0c, 0x9f, 0x88 } }
+{ 0xdb02fd38, 0x3c77, 0x4c52, { 0x8d, 0xbd, 0xc0, 0xa4, 0x7f, 0x9d, 0xed, 0xad } }
 
 class nsISVGLength : public nsIDOMSVGLength
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGLENGTH_IID)
 
-  NS_IMETHOD SetContext(nsSVGCoordCtx* ctx)=0;
+  NS_IMETHOD SetContext(nsIWeakReference *aContext, PRUint8 aCtxType)=0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGLength, NS_ISVGLENGTH_IID)

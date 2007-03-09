@@ -342,7 +342,7 @@ nsSVGMarkerElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 }
 
 void 
-nsSVGMarkerElement::SetParentCoordCtxProvider(nsSVGCoordCtxProvider *aContext)
+nsSVGMarkerElement::SetParentCoordCtxProvider(nsSVGSVGElement *aContext)
 {
   mCoordCtx = aContext;
   mViewBoxToViewportTransform = nsnull;

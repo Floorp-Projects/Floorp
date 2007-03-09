@@ -137,7 +137,7 @@ private:
   };
 
   // nsSVGMarkerFrame methods:
-  void SetParentCoordCtxProvider(nsSVGCoordCtxProvider *aContext);
+  void SetParentCoordCtxProvider(nsSVGSVGElement *aContext);
 
   // recursion prevention flag
   PRPackedBool mInUse;

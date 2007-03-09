@@ -83,7 +83,6 @@ CPPSRCS		= \
 		nsSVGCircleElement.cpp \
 		nsSVGClassValue.cpp \
 		nsSVGClipPathElement.cpp \
-		nsSVGCoordCtxProvider.cpp \
 		nsSVGDataParser.cpp \
 		nsSVGDefsElement.cpp \
 		nsSVGDescElement.cpp \
@@ -159,8 +158,6 @@ EXPORTS =  			\
 	nsISVGValue.h              \
 	nsISVGValueObserver.h      \
 	nsISVGValueUtils.h         \
-	nsSVGCoordCtxProvider.h    \
-	nsSVGCoordCtx.h            \
 	nsSVGNumber.h              \
 	nsSVGRect.h                \
 	nsSVGPoint.h               \

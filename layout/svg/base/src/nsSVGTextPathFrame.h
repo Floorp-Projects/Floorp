@@ -107,7 +107,7 @@ private:
   nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
   nsCOMPtr<nsIDOMSVGPathSegList> mSegments;
 
-  nsCOMPtr<nsISVGLengthList> mX;
+  nsCOMPtr<nsIDOMSVGLengthList> mX;
 };
 
 #endif

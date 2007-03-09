@@ -39,9 +39,11 @@
 #ifndef __NS_SVGLENGTHLIST_H__
 #define __NS_SVGLENGTHLIST_H__
 
-#include "nsISVGLengthList.h"
+#include "nsIDOMSVGLengthList.h"
+
+class nsSVGElement;
 
 nsresult
-NS_NewSVGLengthList(nsISVGLengthList** result);
+NS_NewSVGLengthList(nsIDOMSVGLengthList** result, nsSVGElement *aContext);
 
 #endif //__NS_SVGLENGTHLIST_H__

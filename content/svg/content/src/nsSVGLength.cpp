@@ -39,16 +39,18 @@
 
 #include "nsSVGLength.h"
 #include "nsIDOMSVGMatrix.h"
+#include "nsIDOMSVGRect.h"
 #include "nsGkAtoms.h"
 #include "nsSVGValue.h"
 #include "nsTextFormatter.h"
 #include "prdtoa.h"
 #include "nsCRT.h"
-#include "nsSVGCoordCtx.h"
+#include "nsSVGSVGElement.h"
 #include "nsIDOMSVGNumber.h"
 #include "nsISVGValueUtils.h"
 #include "nsWeakReference.h"
 #include "nsContentUtils.h"
+#include "nsIDOMSVGAnimatedRect.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGLength class
@@ -77,8 +79,8 @@ public:
   NS_DECL_NSIDOMSVGLENGTH
 
   // nsISVGLength interface:
-  NS_IMETHOD SetContext(nsSVGCoordCtx* context);
-  
+  NS_IMETHOD SetContext(nsIWeakReference *aContext, PRUint8 aCtxType);
+
   // nsISVGValue interface:
   NS_IMETHOD SetValueString(const nsAString& aValue);
   NS_IMETHOD GetValueString(nsAString& aValue);
@@ -99,10 +101,14 @@ protected:
   PRBool IsValidUnitType(PRUint16 unit);
   void MaybeAddAsObserver();
   void MaybeRemoveAsObserver();
-  
+
+  // helper - returns a rect if we need to observe it (percentage length)
+  already_AddRefed<nsIDOMSVGRect> MaybeGetCtxRect();
+
+  nsWeakPtr mElement;  // owning element - weakptr to avoid reference loop
   float mValueInSpecifiedUnits;
   PRUint16 mSpecifiedUnitType;
-  nsRefPtr<nsSVGCoordCtx> mContext;
+  PRUint8 mCtxType;
 };
 
 
@@ -143,7 +149,8 @@ NS_NewSVGLength(nsISVGLength** result,
 nsSVGLength::nsSVGLength(float value,
                          PRUint16 unit)
     : mValueInSpecifiedUnits(value),
-      mSpecifiedUnitType(unit)
+      mSpecifiedUnitType(unit),
+      mCtxType(0)
 {
   // we don't have a context yet, so we don't call MaybeAddAsObserver()
 }
@@ -486,7 +493,7 @@ nsSVGLength::ConvertToSpecifiedUnits(PRUint16 unitType)
 //----------------------------------------------------------------------
 // nsISVGLength methods:
 NS_IMETHODIMP
-nsSVGLength::SetContext(nsSVGCoordCtx* context)
+nsSVGLength::SetContext(nsIWeakReference *aContext, PRUint8 aCtxType)
 {
   /* Unless our unit type is SVG_LENGTHTYPE_NUMBER or SVG_LENGTHTYPE_PX, our
      user unit value is determined by our context and we must notify our
@@ -498,7 +505,8 @@ nsSVGLength::SetContext(nsSVGCoordCtx* context)
     MaybeRemoveAsObserver();
   }
 
-  mContext = context;
+  mElement = aContext;
+  mCtxType = aCtxType;
 
   if (mSpecifiedUnitType != SVG_LENGTHTYPE_NUMBER &&
       mSpecifiedUnitType != SVG_LENGTHTYPE_PX) {
@@ -514,32 +522,35 @@ nsSVGLength::SetContext(nsSVGCoordCtx* context)
 
 float nsSVGLength::mmPerPixel()
 {
-  if (!mContext) {
+  nsCOMPtr<nsIContent> element = do_QueryReferent(mElement);
+  if (!element) {
     NS_WARNING("no context in mmPerPixel()");
     return 1.0f;
   }
-  
-  float mmPerPx = mContext->GetMillimeterPerPixel();
+
+  nsSVGSVGElement *ctx =
+    NS_STATIC_CAST(nsSVGElement*, element.get())->GetCtx();
+  float mmPerPx = ctx->GetMMPerPx(mCtxType);
 
   if (mmPerPx == 0.0f) {
     NS_ASSERTION(mmPerPx != 0.0f, "invalid mm/pixels");
     mmPerPx = 1e-4f; // some small value
   }
-  
+
   return mmPerPx;
 }
 
 float nsSVGLength::AxisLength()
 {
-  if (!mContext) {
+  nsCOMPtr<nsIContent> element = do_QueryReferent(mElement);
+  if (!element) {
     NS_WARNING("no context in AxisLength()");
     return 1.0f;
   }
 
-  nsCOMPtr<nsIDOMSVGNumber> num = mContext->GetLength();
-  NS_ASSERTION(num != nsnull, "null interface");
-  float d;
-  num->GetValue(&d);
+  nsSVGSVGElement *ctx =
+    NS_STATIC_CAST(nsSVGElement*, element.get())->GetCtx();
+  float d = ctx->GetLength(mCtxType);
 
   if (d == 0.0f) {
     NS_WARNING("zero axis length");
@@ -557,21 +568,32 @@ PRBool nsSVGLength::IsValidUnitType(PRUint16 unit)
   return PR_FALSE;
 }
 
+already_AddRefed<nsIDOMSVGRect> nsSVGLength::MaybeGetCtxRect()
+{
+  if ((mSpecifiedUnitType == SVG_LENGTHTYPE_PERCENTAGE) && mElement) {
+    nsCOMPtr<nsIContent> element = do_QueryReferent(mElement);
+    if (element) {
+      nsSVGSVGElement *ctx =
+        NS_STATIC_CAST(nsSVGElement*, element.get())->GetCtx();
+      if (ctx)
+        return ctx->GetCtxRect();
+    }
+  }
+
+  return nsnull;
+}
+
 void nsSVGLength::MaybeAddAsObserver()
 {
-  if ((mSpecifiedUnitType==SVG_LENGTHTYPE_PERCENTAGE) &&
-      mContext) {
-    nsCOMPtr<nsIDOMSVGNumber> num = mContext->GetLength();
-    NS_ADD_SVGVALUE_OBSERVER(num);
-  }
+  nsCOMPtr<nsIDOMSVGRect> rect = MaybeGetCtxRect();
+  if (rect)
+    NS_ADD_SVGVALUE_OBSERVER(rect);
 }
 
 void nsSVGLength::MaybeRemoveAsObserver()
 {
-  if ((mSpecifiedUnitType==SVG_LENGTHTYPE_PERCENTAGE) &&
-      mContext) {
-    nsCOMPtr<nsIDOMSVGNumber> num = mContext->GetLength();
-    NS_REMOVE_SVGVALUE_OBSERVER(num);
-  }
+  nsCOMPtr<nsIDOMSVGRect> rect = MaybeGetCtxRect();
+  if (rect)
+    NS_REMOVE_SVGVALUE_OBSERVER(rect);
 }
 

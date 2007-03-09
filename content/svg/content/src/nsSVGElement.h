@@ -53,7 +53,7 @@
 #include "nsWeakReference.h"
 #include "nsICSSStyleRule.h"
 
-class nsSVGCoordCtx;
+class nsSVGSVGElement;
 class nsSVGLength2;
 class nsSVGNumber2;
 
@@ -71,11 +71,6 @@ public:
 
   // nsIContent interface methods
 
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              PRBool aCompileEventHandlers);
-  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
-                              PRBool aNullParent = PR_TRUE);
   virtual nsIAtom *GetIDAttributeName() const;
   virtual nsIAtom *GetClassAttributeName() const;
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
@@ -116,9 +111,8 @@ public:
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference
 
-  nsSVGCoordCtx *GetCtxByType(PRUint16 aCtxType);
+  nsSVGSVGElement* GetCtx();
 
-  virtual void ParentChainChanged(); 
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr);
 

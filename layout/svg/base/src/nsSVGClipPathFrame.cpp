@@ -43,6 +43,7 @@
 #include "nsSVGUtils.h"
 #include "nsSVGGraphicElement.h"
 #include "gfxContext.h"
+#include "nsIDOMSVGRect.h"
 
 //----------------------------------------------------------------------
 // Implementation

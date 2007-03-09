@@ -181,18 +181,6 @@ nsSVGGradientElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 }
 
 //----------------------------------------------------------------------
-// nsSVGElement methods
-
-void nsSVGGradientElement::ParentChainChanged()
-{
-  // Gradient length properties are relative to the target element
-  // (the one calling the gradient), so we don't set their
-  // contexts here.
-  // Also, gradient child elements (stops) don't have any length
-  // properties, so no need to recurse into children here.
-}  
-
-//----------------------------------------------------------------------
 // nsIContent methods
 
 NS_IMETHODIMP_(PRBool)

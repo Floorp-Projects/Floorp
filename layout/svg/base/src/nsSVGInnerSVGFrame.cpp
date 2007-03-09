@@ -87,14 +87,12 @@ public:
 
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect);
-  NS_IMETHOD InitialUpdate();
   NS_IMETHOD NotifyCanvasTMChanged(PRBool suppressInvalidation);
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
 
   // nsSVGContainerFrame methods:
-  virtual already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 
   // nsISVGValueObserver
@@ -112,8 +110,6 @@ public:
   NS_IMETHOD NotifyViewportChange();
 
 protected:
-
-  void UpdateCoordCtx();
 
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
@@ -136,16 +132,6 @@ nsSVGInnerSVGFrame::nsSVGInnerSVGFrame(nsStyleContext* aContext) :
 #ifdef DEBUG
 //  printf("nsSVGInnerSVGFrame CTOR\n");
 #endif
-}
-
-void
-nsSVGInnerSVGFrame::UpdateCoordCtx()
-{
-  nsSVGContainerFrame *containerFrame = NS_STATIC_CAST(nsSVGContainerFrame*,
-                                                       mParent);
-  nsSVGSVGElement *svgElement = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
-
-  svgElement->SetParentCoordCtxProvider(nsRefPtr<nsSVGCoordCtxProvider>(containerFrame->GetCoordContextProvider()));
 }
 
 //----------------------------------------------------------------------
@@ -210,18 +196,8 @@ nsSVGInnerSVGFrame::NotifyCanvasTMChanged(PRBool suppressInvalidation)
 {
   // make sure our cached transform matrix gets (lazily) updated
   mCanvasTM = nsnull;
-  nsSVGSVGElement *svg = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
-  svg->InvalidateViewBoxToViewport();
 
   return nsSVGInnerSVGFrameBase::NotifyCanvasTMChanged(suppressInvalidation);
-}
-
-NS_IMETHODIMP
-nsSVGInnerSVGFrame::InitialUpdate()
-{
-  UpdateCoordCtx();
-
-  return nsSVGInnerSVGFrameBase::InitialUpdate();
 }
 
 NS_IMETHODIMP
@@ -310,18 +286,6 @@ nsSVGInnerSVGFrame::NotifyViewportChange()
 
 //----------------------------------------------------------------------
 // nsSVGContainerFrame methods:
-
-already_AddRefed<nsSVGCoordCtxProvider>
-nsSVGInnerSVGFrame::GetCoordContextProvider()
-{
-  NS_ASSERTION(mContent, "null parent");
-
-  // Our <svg> content element is the CoordContextProvider for our children:
-  nsSVGCoordCtxProvider *provider;
-  CallQueryInterface(mContent, &provider);
-
-  return provider;
-}
 
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGInnerSVGFrame::GetCanvasTM()

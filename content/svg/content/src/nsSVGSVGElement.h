@@ -45,7 +45,7 @@
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsIDOMSVGLocatable.h"
 #include "nsIDOMSVGZoomAndPan.h"
-#include "nsSVGCoordCtxProvider.h"
+#include "nsIDOMSVGMatrix.h"
 #include "nsSVGLength2.h"
 
 #define QI_TO_NSSVGSVGELEMENT(base)                                           \
@@ -59,8 +59,7 @@ class nsSVGSVGElement : public nsSVGSVGElementBase,
                         public nsISVGSVGElement, // : nsIDOMSVGSVGElement
                         public nsIDOMSVGFitToViewBox,
                         public nsIDOMSVGLocatable,
-                        public nsIDOMSVGZoomAndPan,
-                        public nsSVGCoordCtxProvider
+                        public nsIDOMSVGZoomAndPan
 {
   friend class nsSVGOuterSVGFrame;
   friend class nsSVGInnerSVGFrame;
@@ -72,7 +71,12 @@ protected:
   virtual ~nsSVGSVGElement();
   nsresult Init();
   
+  // nsSVGSVGElement methods:
+  void SetCoordCtxRect(nsIDOMSVGRect* aCtxRect);
+
 public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGSVGELEMENT_IID)
+
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGSVGELEMENT
@@ -86,7 +90,6 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGSVGElementBase::)
 
   // nsISVGSVGElement interface:
-  NS_IMETHOD SetParentCoordCtxProvider(nsSVGCoordCtxProvider *parentCtx);
   NS_IMETHOD GetCurrentScaleNumber(nsIDOMSVGNumber **aResult);
   NS_IMETHOD GetZoomAndPanEnum(nsISVGEnum **aResult);
   NS_IMETHOD SetCurrentScaleTranslate(float s, float x, float y);
@@ -95,7 +98,6 @@ public:
   NS_IMETHOD_(float) GetPreviousTranslate_x();
   NS_IMETHOD_(float) GetPreviousTranslate_y();
   NS_IMETHOD_(float) GetPreviousScale();
-  NS_IMETHOD_(void) InvalidateViewBoxToViewport() { mViewBoxToViewportTransform = nsnull; }
 
   // nsIContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -111,6 +113,11 @@ public:
 
   // nsSVGElement specializations:
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+
+  // nsSVGSVGElement methods:
+  float GetLength(PRUint8 mCtxType);
+  float GetMMPerPx(PRUint8 mCtxType = 0);
+  already_AddRefed<nsIDOMSVGRect> GetCtxRect();
 
   // public helpers:
   nsresult GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval);
@@ -133,10 +140,12 @@ protected:
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
-  nsSVGCoordCtxProvider            *mCoordCtx;
+  nsSVGSVGElement                  *mCoordCtx;
   nsCOMPtr<nsIDOMSVGAnimatedRect>   mViewBox;
-  nsCOMPtr<nsIDOMSVGMatrix>         mViewBoxToViewportTransform;
   nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> mPreserveAspectRatio;
+
+  float mViewportWidth, mViewportHeight;  // valid only for outersvg
+  float mCoordCtxMmPerPx;
 
   // zoom and pan
   // IMPORTANT: only RecordCurrentScaleTranslate should change the "mPreviousX"

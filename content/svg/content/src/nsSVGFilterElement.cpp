@@ -38,7 +38,6 @@
 #include "nsSVGLength.h"
 #include "nsCOMPtr.h"
 #include "nsISVGSVGElement.h"
-#include "nsSVGCoordCtxProvider.h"
 #include "nsSVGAnimatedEnumeration.h"
 #include "nsSVGAnimatedInteger.h"
 #include "nsSVGAnimatedString.h"
