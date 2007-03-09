@@ -1537,11 +1537,14 @@ nsXMLContentSink::FlushPendingNotifications(mozFlushType aType)
 nsresult
 nsXMLContentSink::FlushTags()
 {
-  // Don't release last text node in case we need to add to it again
-  FlushText();
+  PRBool oldBeganUpdate = mBeganUpdate;
 
   ++mInNotification;
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, PR_TRUE);
+  mBeganUpdate = PR_TRUE;
+
+  // Don't release last text node in case we need to add to it again
+  FlushText();
 
   // Start from the base of the stack (growing downward) and do
   // a notification from the node that is closest to the root of
@@ -1568,6 +1571,8 @@ nsXMLContentSink::FlushTags()
 
   --mInNotification;
 
+  mBeganUpdate = oldBeganUpdate;
+  
   return NS_OK;
 }
 
