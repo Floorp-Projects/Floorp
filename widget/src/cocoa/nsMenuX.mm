@@ -473,8 +473,10 @@ nsEventStatus nsMenuX::MenuConstruct(
   // Retrieve our menupopup.
   nsCOMPtr<nsIContent> menuPopup;
   GetMenuPopupContent(getter_AddRefs(menuPopup));
-  if (!menuPopup)
+  if (!menuPopup) {
+    gConstructingMenu = PR_FALSE;
     return nsEventStatus_eIgnore;
+  }
 
   // bug 365405: Manually wrap the menupopup node to make sure it's bounded
   if (!mXBLAttached) {
