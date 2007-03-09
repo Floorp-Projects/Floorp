@@ -272,7 +272,21 @@ nsresult nsMessengerUnixIntegration::AlertFinished()
 
 nsresult nsMessengerUnixIntegration::AlertClicked()
 {
-#ifndef MOZ_THUNDERBIRD
+#ifdef MOZ_THUNDERBIRD
+  nsresult rv;
+  nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMPtr<nsIMsgWindow> topMostMsgWindow;
+  rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(topMostMsgWindow));
+  if (topMostMsgWindow)
+  {
+    nsCOMPtr<nsIDOMWindowInternal> domWindow;
+    rv = topMostMsgWindow->GetDomWindow(getter_AddRefs(domWindow));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    domWindow->Focus();
+  }
+#else
   nsXPIDLCString folderURI;
   GetFirstFolderWithNewMail(getter_Copies(folderURI));
 
