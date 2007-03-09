@@ -176,9 +176,17 @@ sub get_alter_column_ddl {
         # keys are not allowed.
         delete $new_def_copy{PRIMARYKEY};
     }
+    # CHANGE COLUMN doesn't support REFERENCES
+    delete $new_def_copy{REFERENCES};
 
     my $new_ddl = $self->get_type_ddl(\%new_def_copy);
     my @statements;
+
+    # Drop the FK if the new definition doesn't have one.
+    if ($old_def->{REFERENCES} && !$new_def->{REFERENCES}) {
+        push(@statements, $self->_get_drop_fk_sql($table, $column, $old_def));
+    }
+
     push(@statements, "UPDATE $table SET $column = $set_nulls_to
                         WHERE $column IS NULL") if defined $set_nulls_to;
     push(@statements, "ALTER TABLE $table CHANGE COLUMN 
@@ -187,7 +195,28 @@ sub get_alter_column_ddl {
         # Dropping a PRIMARY KEY needs an explicit DROP PRIMARY KEY
         push(@statements, "ALTER TABLE $table DROP PRIMARY KEY");
     }
+
+    # Add the FK if the new definition has one and the old definition doesn't.
+    if ($new_def->{REFERENCES} && !$old_def->{REFERENCES}) {
+        push(@statements, $self->_get_add_fk_sql($table, $column, $new_def));
+    }
     return @statements;
+}
+
+sub _get_drop_fk_sql {
+    my ($self, $table, $column, $old_def) = @_;
+    my $fk_name = $self->_get_fk_name($table, $column, $old_def->{REFERENCES});
+    my @sql = ("ALTER TABLE $table DROP FOREIGN KEY $fk_name");
+    my $dbh = Bugzilla->dbh;
+
+    # MySQL requires, and will create, an index on any column with
+    # an FK. It will name it after the fk, which we never do.
+    # So if there's an index named after the fk, we also have to delete it. 
+    if ($dbh->bz_index_info_real($table, $fk_name)) {
+        push(@sql, $self->get_drop_index_ddl($table, $fk_name));
+    }
+
+    return @sql;
 }
 
 sub get_drop_index_ddl {

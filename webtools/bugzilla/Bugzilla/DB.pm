@@ -515,10 +515,11 @@ sub bz_alter_column_raw {
     my @statements = $self->_bz_real_schema->get_alter_column_ddl(
         $table, $name, $new_def,
         defined $set_nulls_to ? $self->quote($set_nulls_to) : undef);
-    my $new_ddl = $self->_bz_schema->get_type_ddl($new_def);
+    my $new_ddl = $self->_bz_schema->get_display_ddl($table, $name, $new_def);
     print "Updating column $name in table $table ...\n";
     if (defined $current_def) {
-        my $old_ddl = $self->_bz_schema->get_type_ddl($current_def);
+        my $old_ddl = $self->_bz_schema->get_display_ddl($table, $name, 
+                                                         $current_def);
         print "Old: $old_ddl\n";
     }
     print "New: $new_ddl\n";
