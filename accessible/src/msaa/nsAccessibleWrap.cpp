@@ -1087,6 +1087,152 @@ nsAccessibleWrap::Reset(void)
   return NOERROR;
 }
 
+
+// IAccessible2
+
+STDMETHODIMP
+nsAccessibleWrap::get_nRelations(long *nRelations)
+{
+  return E_NOTIMPL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_relation(long relationIndex,
+                               IAccessibleRelation **relation)
+{
+  return E_NOTIMPL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_relations(long maxRelations,
+                                IAccessibleRelation **relation,
+                                long *nRelations)
+{
+  return E_NOTIMPL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::role(long *role)
+{
+  return E_NOTIMPL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::scrollTo(boolean topLeft)
+{
+  if (NS_SUCCEEDED(ScrollTo(topLeft)))
+    return S_OK;
+  return E_FAIL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_groupPosition(long *groupLevel,
+                                    long *similarItemsInGroup,
+                                    long *positionInGroup)
+{
+  return E_NOTIMPL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_localizedRoleName(BSTR *localizedRoleName)
+{
+  return E_NOTIMPL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_states(AccessibleStates *states)
+{
+  return E_NOTIMPL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_localizedStateNames(long maxLocalizedStateNames,
+                                          BSTR **localizedStateNames,
+                                          long *nLocalizedStateNames)
+{
+  return E_NOTIMPL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_extendedRole(BSTR *extendedRole)
+{
+  return E_NOTIMPL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_localizedExtendedRole(BSTR *localizedExtendedRole)
+{
+  return E_NOTIMPL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_nExtendedStates(long *nExtendedStates)
+{
+  return E_NOTIMPL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_extendedStates(long maxExtendedStates,
+                                     BSTR **extendedStates,
+                                     long *nExtendedStates)
+{
+  return E_NOTIMPL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_localizedExtendedStates(long maxLocalizedExtendedStates,
+                                              BSTR **localizedExtendedStates,
+                                              long *nLocalizedExtendedStates)
+{
+  return E_NOTIMPL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_uniqueID(long *uniqueID)
+{
+  void **id = nsnull;
+  if (NS_SUCCEEDED(GetUniqueID(id))) {
+    *uniqueID = NS_REINTERPRET_POINTER_CAST(long, *id);
+    return S_OK;
+  }
+  return E_FAIL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_windowHandle(OLE_HANDLE *windowHandle)
+{
+  void **handle = nsnull;
+  if (NS_SUCCEEDED(GetOwnerWindow(handle))) {
+    *windowHandle = NS_REINTERPRET_POINTER_CAST(OLE_HANDLE, *handle);
+    return S_OK;
+  }
+  return E_FAIL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_indexInParent(long *indexInParent)
+{
+  PRInt32 index;
+  if (NS_SUCCEEDED(GetIndexInParent(&index))) {
+    *indexInParent = index;
+    return S_OK;
+  }
+  return E_FAIL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_locale(IA2Locale *locale)
+{
+  return E_NOTIMPL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_attributes(BSTR *attributes)
+{
+  return E_NOTIMPL;
+}
+
+
 STDMETHODIMP
 nsAccessibleWrap::Clone(IEnumVARIANT FAR* FAR* ppenum)
 {
