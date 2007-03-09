@@ -245,7 +245,9 @@ protected:
   // Do we notify based on time?
   PRPackedBool mNotifyOnTimer;
 
-  PRPackedBool mLayoutStarted;
+  // Have we already called BeginUpdate for this set of content changes?
+  PRUint8 mBeganUpdate : 1;
+  PRUint8 mLayoutStarted : 1;
   PRUint8 mScrolledToRefAlready : 1;
   PRUint8 mCanInterruptParser : 1;
   PRUint8 mDynamicLowerValue : 1;

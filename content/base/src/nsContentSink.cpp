@@ -968,8 +968,12 @@ nsContentSink::NotifyAppend(nsIContent* aContainer, PRUint32 aStartIndex)
   MOZ_TIMER_SAVE(mWatch)
   MOZ_TIMER_STOP(mWatch);
 
-  nsNodeUtils::ContentAppended(aContainer, aStartIndex);
-  mLastNotificationTime = PR_Now();
+  {
+    // Scope so we call EndUpdate before we decrease mInNotification
+    MOZ_AUTO_DOC_UPDATE(mDocument, UPDATE_CONTENT_MODEL, !mBeganUpdate);
+    nsNodeUtils::ContentAppended(aContainer, aStartIndex);
+    mLastNotificationTime = PR_Now();
+  }
 
   MOZ_TIMER_DEBUGLOG(("Restore: nsHTMLContentSink::NotifyAppend()\n"));
   MOZ_TIMER_RESTORE(mWatch);

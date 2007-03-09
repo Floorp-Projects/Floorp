@@ -61,6 +61,7 @@ class nsStyleSet;
 class nsXBLBinding;
 template<class E> class nsRefPtr;
 typedef nsTArray<nsRefPtr<nsXBLBinding> > nsBindingList;
+template<class T> class nsRunnableMethod;
 
 class nsBindingManager : public nsIMutationObserver
 {
@@ -221,6 +222,10 @@ protected:
   NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(mObservers, nsIMutationObserver, \
                                      func_, params_);
 
+  // Same as ProcessAttachedQueue, but also nulls out
+  // mProcessAttachedQueueEvent
+  void DoProcessAttachedQueue();
+
 // MEMBER VARIABLES
 protected: 
   // A mapping from nsIContent* to the nsXBLBinding* that is
@@ -274,6 +279,10 @@ protected:
   // A queue of binding attached event handlers that are awaiting execution.
   nsBindingList mAttachedStack;
   PRBool mProcessingAttachedStack;
+
+  // Our posted event to process the attached queue, if any
+  friend class nsRunnableMethod<nsBindingManager>;
+  nsCOMPtr<nsIRunnable> mProcessAttachedQueueEvent;
 };
 
 #endif
