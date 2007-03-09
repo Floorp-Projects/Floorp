@@ -244,9 +244,6 @@ NativeBrowserControl::Destroy(void)
     if (mEventReceiver)
         mEventReceiver = nsnull;
     
-    // destroy our child window
-    mWindow->ReleaseChildren();
-    
     // release navigation
     mNavigation = nsnull;
 
@@ -259,12 +256,15 @@ NativeBrowserControl::Destroy(void)
                                          nsIWebProgressListener::GetIID());
     weakRef = nsnull;
     supportsWeak = nsnull;
-    
+
     // Now that we have removed the listener, release our progress
     // object
     mProgressGuard = nsnull;
     mProgress = nsnull;
     fflush(stdout);
+
+    // destroy our child window
+    mWindow->ReleaseChildren();
     
     parentHWnd = nsnull;
 }

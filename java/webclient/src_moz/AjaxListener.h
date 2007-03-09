@@ -63,6 +63,7 @@ private:
     EmbedProgress* mOwner;
     JNIEnv *mJNIEnv;
     jobject mEventRegistration;
+    PRBool mIsObserving;
  };
 
 #endif

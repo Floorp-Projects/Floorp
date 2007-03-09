@@ -137,6 +137,7 @@ public class NodeImpl implements Node, EventTarget {
     public native Node removeChild(Node oldChild) throws DOMException;
     public native Node replaceChild(Node newChild, Node oldChild) throws DOMException;
     public native void setNodeValue(String nodeValue);
+    public native String getTextContent() throws DOMException;
 
     protected native void finalize();
 
@@ -254,9 +255,7 @@ public void setTextContent(String textContent)  {
 public Object setUserData(String key, Object data, UserDataHandler handler)  {
   throw new UnsupportedOperationException();
 }
-public String getTextContent() throws DOMException {
-    throw new UnsupportedOperationException();
-}
+
 
 }
 

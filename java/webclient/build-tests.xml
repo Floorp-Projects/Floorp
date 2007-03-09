@@ -188,6 +188,7 @@ PENDING(edburns): 20070130 XULRunner has no bookmarks
             <test name="org.mozilla.webclient.WindowCreatorTest"/>
             <test name="org.mozilla.webclient.DOMTest"/>
             <test name="org.mozilla.webclient.CurrentPageTest"/>
+            <test name="cardemo.CarDemoTest"/>
 <!-- non running
             <test name="org.mozilla.webclient.wrapper_native.gtk.TestGtkBrowserControlCanvas"/>
 -->

@@ -57,6 +57,7 @@ class EmbedProgress : public nsIWebProgressListener,
 
   NativeBrowserControl *mOwner;
 
+  friend class AjaxListener;
   AjaxListener *mAjaxListener;
     
   jobject mEventRegistration;

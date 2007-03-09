@@ -22,6 +22,7 @@
 #include "prlog.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
+#include "nsIDOM3Node.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMDocument.h"
@@ -707,6 +708,48 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNodeValue
   if (!OMDNI_didCall) {
     rv = node->GetNodeValue(ret);
   }
+  if (NS_FAILED(rv)) {
+    JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
+    if (rv == NS_ERROR_DOM_DOMSTRING_SIZE_ERR) {
+      exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
+    }
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getNodeValue: failed", rv, exceptionType);
+    return NULL;
+  }
+
+  jstring jret = env->NewString((jchar*) ret.get(), ret.Length());
+  if (!jret) {
+    JavaDOMGlobals::ThrowException(env,
+      "Node.getNodeValue: NewString failed");
+    return NULL;
+  }
+
+  return jret;
+}
+
+/*
+ * Class:     org_mozilla_dom_NodeImpl
+ * Method:    getTextContent
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getTextContent
+  (JNIEnv *env, jobject jthis)
+{
+  nsCOMPtr<nsIDOMNode> node = (nsIDOMNode*) 
+    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
+  nsCOMPtr<nsIDOM3Node> dom3Node = nsnull;;
+  if (!node)
+    return NULL;
+
+  nsString ret;
+  nsresult rv;
+
+  dom3Node = do_QueryInterface(node, &rv);
+  if (NS_SUCCEEDED(rv) && dom3Node) {
+      rv = dom3Node->GetTextContent(ret);
+  }
+
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (rv == NS_ERROR_DOM_DOMSTRING_SIZE_ERR) {

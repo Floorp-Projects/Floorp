@@ -1,12 +1,28 @@
 /*
- * MCP.java
- *
- * Created on February 27, 2007, 10:24 PM
- *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
+ * $Id: MCP.java,v 1.6 2007/03/09 04:34:24 edburns%acm.org Exp $
  */
 
+/* 
+ * 
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Sun
+ * Microsystems, Inc. Portions created by Sun are
+ * Copyright (C) 1999 Sun Microsystems, Inc. All
+ * Rights Reserved.
+ *
+ * Contributor(s): Ed Burns &lt;edburns@acm.org&gt;
+ */
 package org.mozilla.mcp;
 
 import java.awt.AWTException;
@@ -14,6 +30,8 @@ import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.Robot;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseListener;
 import java.io.FileNotFoundException;
 import java.util.Map;
 import java.util.logging.Level;
@@ -46,13 +64,14 @@ public class MCP {
 
     public static final Logger LOGGER = getLogger(MCP_LOG);
     
-    public static Logger getLogger( String loggerName ) {
+    static Logger getLogger( String loggerName ) {
         return Logger.getLogger(loggerName, MCP_LOG_STRINGS );
     }
     
     private BrowserControl browserControl = null;
     private Navigation2 navigation = null;
     private EventRegistration2 eventRegistration = null;
+    private BrowserControlCanvas canvas = null;
     private PageInfoListener pageInfoListener = null;
     private Frame frame = null;
     private int x = 0;
@@ -118,6 +137,24 @@ public class MCP {
         }
         return eventRegistration;
     }
+
+    private BrowserControlCanvas getBrowserControlCanvas() {
+        if (null == canvas) {
+            try {
+                canvas = (BrowserControlCanvas)
+                getBrowserControl().queryInterface(BrowserControl.BROWSER_CONTROL_CANVAS_NAME);
+            }
+            catch (Throwable th) {
+                if (LOGGER.isLoggable(Level.SEVERE)) {
+                    LOGGER.throwing(this.getClass().getName(), "getBrowserControlCanvas", 
+                            th);
+                    LOGGER.severe("Unable to obtain BrowserControlCanvas reference from BrowserControl");
+                }
+            }
+            
+        }
+        return canvas;
+    }
     
     private CurrentPage2 getCurrentPage() {
         CurrentPage2 currentPage = null;
@@ -144,6 +181,30 @@ public class MCP {
         return pageInfoListener;
     }
     
+    public void addAjaxListener(AjaxListener listener) {
+        getEventRegistration().addDocumentLoadListener(listener);
+    }
+    
+    public void removeAjaxListener(AjaxListener listener) {
+        getEventRegistration().removeDocumentLoadListener(listener);
+    }
+
+    public void addMouseListener(MouseListener listener) {
+        getBrowserControlCanvas().addMouseListener(listener);
+    }
+    
+    public void removeMouseListener(MouseListener listener) {
+        getBrowserControlCanvas().removeMouseListener(listener);
+    }
+
+    public void addKeyListener(KeyListener listener) {
+        getBrowserControlCanvas().addKeyListener(listener);
+    }
+    
+    public void removeKeyListener(KeyListener listener) {
+        getBrowserControlCanvas().removeKeyListener(listener);
+    }
+
     public BrowserControl getBrowserControl() {
         if (!initialized) {
             IllegalStateException ise = new IllegalStateException("Not initialized.  Call setAppData()");
@@ -196,6 +257,11 @@ public class MCP {
         return frame;
     }
     
+    public void deleteBrowserControl() {
+        getRealizedVisibleBrowserWindow().setVisible(false);
+        BrowserControlFactory.deleteBrowserControl(getBrowserControl());
+    }
+    
     public Element findElement(String id) {
         Element result = null;
         Document dom = getCurrentPage().getDOM();
@@ -210,6 +276,12 @@ public class MCP {
         }
         
         return result;
+    }
+    
+    public boolean findInPage(String toFind) {
+        boolean found = false;
+        found = getCurrentPage().find(toFind, true, true);
+        return found;
     }
     
     public void clickElement(String id) {
@@ -298,6 +370,7 @@ public class MCP {
             long type = webclientEvent.getType();
             
             switch ((int)type) {
+                case ((int) DocumentLoadEvent.END_AJAX_EVENT_MASK):
                 case ((int) DocumentLoadEvent.END_DOCUMENT_LOAD_EVENT_MASK):
                     synchronized (owner) {
                         owner.notifyAll();
