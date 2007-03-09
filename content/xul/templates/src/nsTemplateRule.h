@@ -227,12 +227,8 @@ public:
 
     void Traverse(nsCycleCollectionTraversalCallback &cb) const
     {
-        if (mRuleNode) {
-            cb.NoteXPCOMChild(mRuleNode);
-        }
-        if (mAction) {
-            cb.NoteXPCOMChild(mAction);
-        }
+        cb.NoteXPCOMChild(mRuleNode);
+        cb.NoteXPCOMChild(mAction);
     }
 
 protected:

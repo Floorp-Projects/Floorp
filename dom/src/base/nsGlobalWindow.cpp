@@ -727,11 +727,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
 
   // Traverse any associated preserved wrappers.
   {
-    nsISupports *preservedWrapper = nsnull;
     if (tmp->mDoc) {
-      preservedWrapper = tmp->mDoc->GetReference(tmp);
-      if (preservedWrapper)
-        cb.NoteXPCOMChild(preservedWrapper);
+      cb.NoteXPCOMChild(tmp->mDoc->GetReference(tmp));
     }
   }
 

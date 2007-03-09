@@ -102,17 +102,11 @@ NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
 
     nsXPCWrappedJS* root = tmp->GetRootWrapper();
     if(root == tmp)
-    {
         // The root wrapper keeps the aggregated native object alive.
-        nsISupports* outer = tmp->GetAggregatedNativeObject();
-        if (outer)
-            cb.NoteXPCOMChild(outer);
-    }
+        cb.NoteXPCOMChild(tmp->GetAggregatedNativeObject());
     else
-    {
         // Non-root wrappers keep their root alive.
         cb.NoteXPCOMChild(NS_STATIC_CAST(nsIXPConnectWrappedJS*, root));
-    }
 
     return NS_OK;
 }

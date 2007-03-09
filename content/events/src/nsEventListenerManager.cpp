@@ -400,7 +400,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventListenerManager)
   nsListenerStruct *ls;
   for (i = 0; i < count; i++) {
     ls = NS_STATIC_CAST(nsListenerStruct*, tmp->mListeners.ElementAt(i));
-    if (ls && ls->mListener.get()) {
+    if (ls) {
       cb.NoteXPCOMChild(ls->mListener.get());
     }
   }  

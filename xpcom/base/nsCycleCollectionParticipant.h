@@ -218,23 +218,19 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
     NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Traverse(s, cb);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(_field)                       \
-    if (tmp->_field) { cb.NoteXPCOMChild(tmp->_field); }
+    cb.NoteXPCOMChild(tmp->_field);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(_field)                     \
-    if (tmp->_field) { cb.NoteXPCOMChild(tmp->_field.get()); }
+    cb.NoteXPCOMChild(tmp->_field.get());
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(_field, _base)    \
-  {                                                                            \
-    nsISupports *f = NS_ISUPPORTS_CAST(_base*, tmp->_field);                   \
-    if (f) { cb.NoteXPCOMChild(f); }                                           \
-  }
+    cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(_base*, tmp->_field));
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(_field)                   \
     {                                                                          \
-     PRInt32 i;                                                                \
-     for (i = 0; i < tmp->_field.Count(); ++i)                                 \
-       if (tmp->_field[i])                                                     \
-         cb.NoteXPCOMChild(tmp->_field[i]);                                    \
+      PRInt32 i;                                                               \
+      for (i = 0; i < tmp->_field.Count(); ++i)                                \
+        cb.NoteXPCOMChild(tmp->_field[i]);                                     \
     }
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                                  \

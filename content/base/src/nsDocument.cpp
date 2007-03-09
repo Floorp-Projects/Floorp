@@ -949,10 +949,7 @@ SubDocTraverser(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
     NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, arg);
 
   cb->NoteXPCOMChild(entry->mKey);
-  nsISupports *doc = entry->mSubDocument;
-  if (doc) {
-    cb->NoteXPCOMChild(doc);
-  }
+  cb->NoteXPCOMChild(entry->mSubDocument);
 
   return PL_DHASH_NEXT;
 }
@@ -964,10 +961,7 @@ RadioGroupsTraverser(nsHashKey *aKey, void *aData, void* aClosure)
   nsCycleCollectionTraversalCallback *cb = 
     NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aClosure);
 
-  nsISupports *radioButton = entry->mSelectedRadioButton;
-  if (radioButton) {
-    cb->NoteXPCOMChild(radioButton);
-  }
+  cb->NoteXPCOMChild(entry->mSelectedRadioButton);
 
   nsSmallVoidArray &radioButtons = entry->mRadioButtons;
   PRUint32 i, count = radioButtons.Count();
@@ -1054,11 +1048,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mVisitednessChangedURIs)
 
   // Traverse any associated preserved wrapper.
-  {
-    nsISupports *preservedWrapper = tmp->GetReference(tmp);
-    if (preservedWrapper)
-      cb.NoteXPCOMChild(preservedWrapper);
-  }
+  cb.NoteXPCOMChild(tmp->GetReference(tmp));
 
   if (tmp->mSubDocuments && tmp->mSubDocuments->ops) {
     PL_DHashTableEnumerate(tmp->mSubDocuments, SubDocTraverser, &cb);

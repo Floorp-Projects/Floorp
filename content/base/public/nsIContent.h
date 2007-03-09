@@ -831,8 +831,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIContent, NS_ICONTENT_IID)
     nsISupports *preservedWrapper = nsnull;                      \
     if (tmp->GetOwnerDoc())                                      \
       preservedWrapper = tmp->GetOwnerDoc()->GetReference(tmp);  \
-    if (preservedWrapper)                                        \
-      cb.NoteXPCOMChild(preservedWrapper);                       \
+    cb.NoteXPCOMChild(preservedWrapper);                         \
   }
 
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_LISTENERMANAGER \

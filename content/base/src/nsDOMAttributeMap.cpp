@@ -103,8 +103,7 @@ TraverseMapEntry(nsAttrHashKey::KeyType aKey, nsCOMPtr<nsIDOMNode>& aData, void*
   nsCycleCollectionTraversalCallback *cb = 
     NS_STATIC_CAST(nsCycleCollectionTraversalCallback*, aUserArg);
 
-  if (aData.get())
-    cb->NoteXPCOMChild(aData.get());
+  cb->NoteXPCOMChild(aData.get());
 
   return PL_DHASH_NEXT;
 }

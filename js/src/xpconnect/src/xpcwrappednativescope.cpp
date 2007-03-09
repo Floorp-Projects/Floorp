@@ -798,12 +798,9 @@ XPCWrappedNativeScope::Traverse(nsCycleCollectionTraversalCallback &cb)
 {
     // See MarkScopeJSObjects.
     cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, mGlobalJSObject);
-    JSObject *obj = mPrototypeJSObject;
-    if(obj)
-        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, obj);
-    obj = mPrototypeJSFunction;
-    if(obj)
-        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, obj);
+    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, mPrototypeJSObject);
+    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
+                       mPrototypeJSFunction);
 }
 
 #ifndef XPCONNECT_STANDALONE

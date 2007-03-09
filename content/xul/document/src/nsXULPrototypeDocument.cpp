@@ -623,12 +623,9 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULPDGlobalObject)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsXULPDGlobalObject)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULPDGlobalObject)
   {
-    PRUint32 lang_id;
-    NS_STID_FOR_ID(lang_id) {
-      nsISupports *context = tmp->mScriptContexts[NS_STID_INDEX(lang_id)];
-      if (context) {
-        cb.NoteXPCOMChild(context);
-      }
+    PRUint32 lang_index;
+    NS_STID_FOR_INDEX(lang_index) {
+      cb.NoteXPCOMChild(tmp->mScriptContexts[lang_index]);
     }
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END

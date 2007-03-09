@@ -656,29 +656,20 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     else if(clazz->flags & JSCLASS_HAS_PRIVATE &&
             clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS)
     {
-        void *v = JS_GetPrivate(cx, obj);
-        if (v)
-            cb.NoteXPCOMChild(NS_STATIC_CAST(nsISupports*, v));
+        cb.NoteXPCOMChild(NS_STATIC_CAST(nsISupports*, JS_GetPrivate(cx, obj)));
     }
 
-    JSObject *parent = OBJ_GET_PARENT(cx, obj);
-    if(parent)
-        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, parent);
-    
-    JSObject *proto = OBJ_GET_PROTO(cx, obj);
-    if(proto)
-        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, proto);
+    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
+                       OBJ_GET_PARENT(cx, obj));
+    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
+                       OBJ_GET_PROTO(cx, obj));
 
     for(uint32 i = JSSLOT_START(clazz); i < STOBJ_NSLOTS(obj); ++i) 
     {
         jsval val = STOBJ_GET_SLOT(obj, i);
-        if (!JSVAL_IS_NULL(val) 
-            && JSVAL_IS_OBJECT(val)) 
-        {
-            JSObject *child = JSVAL_TO_OBJECT(val);
-            if (child) 
-                cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, child);
-        }
+        if (JSVAL_IS_OBJECT(val)) 
+            cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
+                               JSVAL_TO_OBJECT(val));
     }
 
 #ifndef XPCONNECT_STANDALONE
@@ -686,8 +677,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     {
         nsISupports *principal = nsnull;
         mObjRefcounts->mScopes.Get(obj, &principal);
-        if(principal)
-            cb.NoteXPCOMChild(principal);
+        cb.NoteXPCOMChild(principal);
     }
 #endif
 

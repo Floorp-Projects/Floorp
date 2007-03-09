@@ -85,9 +85,8 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(nsISupports *s,
 
         JSObject *obj = nsnull;
         nsresult rv = tmp->GetJSObject(&obj);
-        if (NS_SUCCEEDED(rv) && obj) {
+        if (NS_SUCCEEDED(rv))
             cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, obj);
-        }
     }
 
     // XXX If there is a scriptable helper we will not be able to find out what
@@ -103,17 +102,14 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(nsISupports *s,
                            tmp->GetProto()->GetJSProtoObject());
 
     // XPCWrappedNative marks its mNativeWrapper (see MarkBeforeJSFinalize).
-    if(tmp->mNativeWrapper)
-        cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                           tmp->mNativeWrapper);
+    cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, tmp->mNativeWrapper);
 
     // XPCWrappedNative marks its scope.
     tmp->GetScope()->Traverse(cb);
 
     // XPCWrappedNative keeps its native object alive.
-    if (tmp->GetIdentityObject()) {
-        cb.NoteXPCOMChild(tmp->GetIdentityObject());
-    }
+    cb.NoteXPCOMChild(tmp->GetIdentityObject());
+
     return NS_OK;
 }
 

@@ -94,12 +94,8 @@ struct nsSortState
   }
   void Traverse(nsCycleCollectionTraversalCallback &cb) const
   {
-    if (processor) {
-      cb.NoteXPCOMChild(processor);
-    }
-    if (lastContainer) {
-      cb.NoteXPCOMChild(lastContainer);
-    }
+    cb.NoteXPCOMChild(processor);
+    cb.NoteXPCOMChild(lastContainer);
   }
 };
 

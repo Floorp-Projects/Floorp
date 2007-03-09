@@ -3016,14 +3016,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
     nsISupports* property =
       NS_STATIC_CAST(nsISupports*,
                      tmp->GetProperty(nsGkAtoms::contextmenulistener));
-    if (property) {
-      cb.NoteXPCOMChild(property);
-    }
+    cb.NoteXPCOMChild(property);
     property = NS_STATIC_CAST(nsISupports*,
                               tmp->GetProperty(nsGkAtoms::popuplistener));
-    if (property) {
-      cb.NoteXPCOMChild(property);
-    }
+    cb.NoteXPCOMChild(property);
   }
 
   // Traverse child content.
@@ -3038,10 +3034,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
   {
     nsDOMSlots *slots = tmp->GetExistingDOMSlots();
     if (slots) {
-      if (slots->mAttributeMap.get())
-        cb.NoteXPCOMChild(slots->mAttributeMap.get());
-      if (slots->mControllers)
-        cb.NoteXPCOMChild(slots->mControllers);
+      cb.NoteXPCOMChild(slots->mAttributeMap.get());
+      cb.NoteXPCOMChild(slots->mControllers);
     }
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END

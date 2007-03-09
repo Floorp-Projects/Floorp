@@ -239,12 +239,8 @@ TraverseMatchList(nsISupports* aKey, nsTemplateMatch* aMatch, void* aContext)
     cb->NoteXPCOMChild(aKey);
     nsTemplateMatch* match = aMatch;
     while (match) {
-        nsISupports *container = match->GetContainer();
-        if (container)
-            cb->NoteXPCOMChild(container);
-        nsISupports *result = match->mResult;
-        if (result)
-            cb->NoteXPCOMChild(result);
+        cb->NoteXPCOMChild(match->GetContainer());
+        cb->NoteXPCOMChild(match->mResult);
         match = match->mNext;
     }
 
@@ -265,9 +261,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULTemplateBuilder)
       for (i = 0; i < count; ++i) {
         nsTemplateQuerySet *set = tmp->mQuerySets[i];
         cb.NoteXPCOMChild(set->mQueryNode);
-        if (set->mCompiledQuery) {
-          cb.NoteXPCOMChild(set->mCompiledQuery);
-        }
+        cb.NoteXPCOMChild(set->mCompiledQuery);
         PRUint16 j, rulesCount = set->RuleCount();
         for (j = 0; j < rulesCount; ++j) {
           set->GetRuleAt(j)->Traverse(cb);

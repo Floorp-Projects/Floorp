@@ -284,7 +284,7 @@ nsXBLPrototypeBinding::Traverse(nsCycleCollectionTraversalCallback &cb) const
 {
   cb.NoteXPCOMChild(mBinding);
   // XXX mInsertionPointTable!
-  if (mResources && mResources->mLoader)
+  if (mResources)
     cb.NoteXPCOMChild(mResources->mLoader);
 }
 
