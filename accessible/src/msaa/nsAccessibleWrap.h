@@ -45,9 +45,10 @@
 
 #include "nsCOMPtr.h"
 #include "nsAccessible.h"
+#include "Accessible2.h"
 
-class nsAccessibleWrap : public nsAccessible, 
-                         public IAccessible,
+class nsAccessibleWrap : public nsAccessible,
+                         public IAccessible2,
                          public IEnumVARIANT,
                          public IServiceProvider
 {
@@ -151,6 +152,75 @@ class nsAccessibleWrap : public nsAccessible,
     virtual /* [id][propput] */ HRESULT STDMETHODCALLTYPE put_accValue( 
         /* [optional][in] */ VARIANT varChild,
         /* [in] */ BSTR szValue);
+
+  public: // IAccessible2
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_nRelations(
+        /* [retval][out] */ long *nRelations);
+
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_relation(
+        /* [in] */ long relationIndex,
+        /* [retval][out] */ IAccessibleRelation **relation);
+
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_relations(
+        /* [in] */ long maxRelations,
+        /* [length_is][size_is][out] */ IAccessibleRelation **relation,
+        /* [retval][out] */ long *nRelations);
+
+    virtual HRESULT STDMETHODCALLTYPE role(
+            /* [retval][out] */ long *role);
+
+    virtual HRESULT STDMETHODCALLTYPE scrollTo(
+        /* [in] */ boolean topLeft);
+
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_groupPosition(
+        /* [out] */ long *groupLevel,
+        /* [out] */ long *similarItemsInGroup,
+        /* [retval][out] */ long *positionInGroup);
+
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_localizedRoleName(
+        /* [retval][out] */ BSTR *localizedRoleName);
+
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_states(
+        /* [retval][out] */ AccessibleStates *states);
+
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_localizedStateNames(
+        /* [in] */ long maxLocalizedStateNames,
+        /* [length_is][length_is][size_is][size_is][out] */ BSTR **localizedStateNames,
+        /* [retval][out] */ long *nLocalizedStateNames);
+
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_extendedRole(
+        /* [retval][out] */ BSTR *extendedRole);
+
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_localizedExtendedRole(
+        /* [retval][out] */ BSTR *localizedExtendedRole);
+
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_nExtendedStates(
+        /* [retval][out] */ long *nExtendedStates);
+
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_extendedStates(
+        /* [in] */ long maxExtendedStates,
+        /* [length_is][length_is][size_is][size_is][out] */ BSTR **extendedStates,
+        /* [retval][out] */ long *nExtendedStates);
+
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_localizedExtendedStates(
+        /* [in] */ long maxLocalizedExtendedStates,
+        /* [length_is][length_is][size_is][size_is][out] */ BSTR **localizedExtendedStates,
+        /* [retval][out] */ long *nLocalizedExtendedStates);
+
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_uniqueID(
+        /* [retval][out] */ long *uniqueID);
+
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_windowHandle(
+        /* [retval][out] */ OLE_HANDLE *windowHandle);
+
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_indexInParent(
+        /* [retval][out] */ long *indexInParent);
+
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_locale(
+        /* [retval][out] */ IA2Locale *locale);
+
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_attributes(
+        /* [retval][out] */ BSTR *attributes);
 
   public:   // IEnumVariantMethods
     virtual /* [local] */ HRESULT STDMETHODCALLTYPE Next( 
