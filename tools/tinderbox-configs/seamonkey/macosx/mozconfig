@@ -1,6 +1,6 @@
 #
-## hostname: bm-xserve01
-## uname: Darwin bm-xserve01.mozilla.org 8.5.0 Darwin Kernel Version 8.5.0: Sun Jan 22 10:38:46 PST 2006; root:xnu-792.6.61.obj~1/RELEASE_PPC Power Macintosh powerpc
+## hostname: cg-xserve02
+## uname: Darwin cg-xserve02.mozilla.com 8.8.1 Darwin Kernel Version 8.8.1: Mon Sep 25 19:45:30 PDT 2006; root:xnu-792.13.8.obj~1/RELEASE_PPC Power Macintosh powerpc
 #
 
 . $topsrcdir/build/macosx/universal/mozconfig

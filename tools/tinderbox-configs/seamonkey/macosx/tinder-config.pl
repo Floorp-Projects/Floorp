@@ -1,6 +1,6 @@
 #
-## hostname: bm-xserve01
-## uname: Darwin bm-xserve01.mozilla.org 8.5.0 Darwin Kernel Version 8.5.0: Sun Jan 22 10:38:46 PST 2006; root:xnu-792.6.61.obj~1/RELEASE_PPC Power Macintosh powerpc
+## hostname: cg-xserve02
+## uname: Darwin cg-xserve02.mozilla.com 8.8.1 Darwin Kernel Version 8.8.1: Mon Sep 25 19:45:30 PDT 2006; root:xnu-792.13.8.obj~1/RELEASE_PPC Power Macintosh powerpc
 #
 
 #- tinder-config.pl - Tinderbox configuration file.
@@ -26,7 +26,7 @@ $ENV{MOZ_SYMBOLS_TRANSFER_TYPE} = "rsync";
 
 #- PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
 #$BuildAdministrator = "$ENV{USER}\@$ENV{HOST}";
-#$BuildAdministrator = ($ENV{USER} || "cltbld") . "\@" . ($ENV{HOST} || "dhcp");
+#$BuildAdministrator = ($ENV{USER} || "seabld") . "\@" . ($ENV{HOST} || "dhcp");
 
 #- You'll need to change these to suit your machine's needs
 #$DisplayServer = ':0.0';
@@ -130,7 +130,7 @@ $ProductName              = "SeaMonkey";
 # :pserver:$ENV{USER}%netscape.com@cvs.mozilla.org:/cvsroot
 
 #$moz_cvsroot   = $ENV{CVSROOT};
-$moz_cvsroot   = ":ext:cltbld\@cvs.mozilla.org:/cvsroot";
+$moz_cvsroot   = ":ext:seabld\@cvs.mozilla.org:/cvsroot";
 
 #- Set these proper values for your tinderbox server
 #$Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';
@@ -189,7 +189,7 @@ $build_hour    = "4";
 # needs setting for mac + talkback: $mac_bundle_path = "/browser/app";
 $mac_bundle_path = "xpfe/bootstrap";
 $ssh_version   = "2";
-#$ssh_user      = "cltbld";
+$ssh_user      = "seabld";
 #$ssh_server    = "stage.mozilla.org";
 $ftp_path      = "/home/ftp/pub/seamonkey/nightly";
 $url_path      = "http://ftp.mozilla.org/pub/mozilla.org/seamonkey/nightly";
