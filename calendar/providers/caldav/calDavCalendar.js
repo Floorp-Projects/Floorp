@@ -98,6 +98,11 @@ const kCaldavFirstRequestSent = 1;      // Queueing subsequent requests
 const kCaldavFreshlyAuthenticated = 2;  // Need to process queue
 const kCaldavAuthenticated = 3;         // Queue being processed or empty
 
+// used in checking calendar URI for (Cal)DAV-ness
+const kDavResourceTypeNone = 0;
+const kDavResourceTypeCollection = 1;
+const kDavResourceTypeCalendar = 2;
+
 calDavCalendar.prototype = {
     //
     // nsISupports interface
@@ -782,8 +787,7 @@ calDavCalendar.prototype = {
             if (thisCalendar.mAuthenticationStatus == kCaldavFreshlyAuthenticated) {
                 thisCalendar.mAuthenticationStatus = kCaldavAuthenticated;
                 while (thisCalendar.mPendingStartupRequests.length > 0) {
-                    var req = thisCalendar.mPendingStartupRequests.pop();
-                    thisCalendar.getItems(req[0], req[1], req[2], req[3], req[4]);
+                    thisCalendar.popStartupRequest();
                 }
             }
             return;
@@ -846,16 +850,19 @@ calDavCalendar.prototype = {
     //                in calIOperationListener aListener );
     getItems: function (aItemFilter, aCount, aRangeStart, aRangeEnd, aListener)
     {
-        if (!aListener)
+        if (!aListener) {
             return;
+        }
+
+        if (this.mAuthenticationStatus == kCaldavNoAuthentication) {
+           this.mAuthenticationStatus = kCaldavFirstRequestSent;
+           this.checkDavResourceType();
+        }
 
         if (this.mAuthenticationStatus == kCaldavFirstRequestSent) {
             var req = new Array(aItemFilter, aCount, aRangeStart, aRangeEnd, aListener);
             this.mPendingStartupRequests.push(req);
             return;
-        }
-        if (this.mAuthenticationStatus == kCaldavNoAuthentication) {
-            this.mAuthenticationStatus = kCaldavFirstRequestSent;
         }
 
         // this is our basic report xml
@@ -1029,6 +1036,81 @@ calDavCalendar.prototype = {
             }
             return;
         },
+
+    popStartupRequest: function popStartupRequest() {
+        var req = this.mPendingStartupRequests.pop();
+        this.getItems(req[0], req[1], req[2], req[3], req[4]);
+    },
+
+    /**
+     * Checks that the calendar URI exists and is a CalDAV calendar
+     *
+     */
+    checkDavResourceType: function checkDavResourceType() {
+        var listener = new WebDavListener();
+        var resourceTypeXml = null;
+        var resourceType = kDavResourceTypeNone;
+        var thisCalendar = this;
+        listener.onOperationComplete =
+            function checkDavResourceType_oOC(aStatusCode, aResource,
+                                              aOperation, aClosure) {
+
+            if (resourceType == null || resourceType == kDavResourceTypeNone) {
+                thisCalendar.mReadOnly = true;
+                throw("The resource at " + thisCalendar.mUri.spec +
+                      " is either not DAV or not available\n");
+            }
+
+            if (resourceType == kDavResourceTypeCollection) {
+                thisCalendar.mReadOnly = true;
+                throw("The resource at " + thisCalendar.mUri.spec +
+                      " is a DAV collection but not a CalDAV calendar\n");
+            }
+
+            // we've authenticated in the process of PROPFINDing and can flush
+            // the getItems request queue
+            thisCalendar.mAuthenticationStatus = kCaldavFreshlyAuthenticated;
+            if (thisCalendar.mPendingStartupRequests.length > 0) {
+                thisCalendar.popStartupRequest();
+            }
+        }
+
+        listener.onOperationDetail =
+            function checkDavResourceType_oOD(aStatusCode, aResource,
+                                              aOperation, aDetail, aClosure) {
+
+            var prop = aDetail.QueryInterface(Ci.nsIProperties);
+
+            try {
+                resourceTypeXml = prop.get("DAV: resourcetype",
+                                           Ci.nsISupportsString).toString();
+            } catch (ex) {
+                LOG("error " + e + " fetching resource type");
+            }
+
+            if (resourceTypeXml.length == 0) {
+                resourceType = kDavResourceTypeNone;
+            } else if (resourceTypeXml.indexOf("calendar") != -1) {
+                resourceType = kDavResourceTypeCalendar;
+            } else if (resourceTypeXml.indexOf("collection") != -1) {
+                resourceType = kDavResourceTypeCollection;
+            }
+        }
+
+        var res = new WebDavResource(this.mUri);
+        var webSvc = Cc['@mozilla.org/webdav/service;1'].
+                     getService(Ci.nsIWebDAVService);
+        try {
+            webSvc.getResourceProperties(res, 1, ["DAV: resourcetype"], false,
+                                          listener, this, null);
+        } catch (ex) {
+            thisCalendar.mReadOnly = true;
+            Components.utils.reportError(
+                "Unable to get properties of resource " + thisCalendar.mUri.spec
+                + " (not a network resource?); setting read-only");
+        }
+    },
+
     refresh: function calDAV_refresh() {
         // XXX-fill this in, get a report for modifications+onModifyItem
     },
