@@ -189,7 +189,7 @@ PRBool nsAccessible::IsTextInterfaceSupportCorrect(nsIAccessible *aAccessible)
 nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   // Custom-built QueryInterface() knows when we support nsIAccessibleSelectable
-  // based on role attribute and waistate:multiselect
+  // based on role attribute and waistate:multiselectable
   *aInstancePtr = nsnull;
   
   if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
@@ -211,14 +211,14 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     }
     if (HasRoleAttribute(content)) {
       // If we have an XHTML role attribute present and the
-      // waistate multiselect attribute not empty or false, then we need
+      // waistate multiselectable attribute not empty or false, then we need
       // to support nsIAccessibleSelectable
-      // If either attribute (role or multiselect) change, then we'll
+      // If either attribute (role or multiselectable) change, then we'll
       // destroy this accessible so that we can follow COM identity rules.
       static nsIContent::AttrValuesArray strings[] =
         {&nsAccessibilityAtoms::_empty, &nsAccessibilityAtoms::_false, nsnull};
-      if (content->FindAttrValueIn(kNameSpaceID_None,
-                                   nsAccessibilityAtoms::multiselect,
+      if (content->FindAttrValueIn(kNameSpaceID_WAIProperties ,
+                                   nsAccessibilityAtoms::multiselectable,
                                    strings, eCaseMatters) ==
           nsIContent::ATTR_VALUE_NO_MATCH) {
         *aInstancePtr = NS_STATIC_CAST(nsIAccessibleSelectable*, this);
@@ -1882,17 +1882,17 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"combobox", ROLE_COMBOBOX, eNameLabelOrTitle, eHasValueMinMax, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
             {"expanded", BOOL_STATE, STATE_EXPANDED},
-            {"multiselect", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
+            {"multiselectable", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
   {"description", ROLE_TEXT_CONTAINER, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
   {"dialog", ROLE_DIALOG, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"document", ROLE_DOCUMENT, eNameLabelOrTitle, eNoValue, eNoReqStates, END_ENTRY},
   {"label", ROLE_LABEL, eNameOkFromChildren, eNoValue, eNoReqStates, END_ENTRY},
   {"list", ROLE_LIST, eNameLabelOrTitle, eNoValue, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
-            {"multiselect", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
+            {"multiselectable", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
   {"listbox", ROLE_LIST, eNameLabelOrTitle, eNoValue, eNoReqStates,
             {"readonly", BOOL_STATE, STATE_READONLY},
-            {"multiselect", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
+            {"multiselectable", BOOL_STATE, STATE_MULTISELECTABLE | STATE_EXTSELECTABLE}, END_ENTRY},
   {"listitem", ROLE_LISTITEM, eNameOkFromChildren, eNoValue, eNoReqStates,
             {"selected", BOOL_STATE, STATE_SELECTED | STATE_SELECTABLE},
             {"selected", "false", STATE_SELECTABLE},
