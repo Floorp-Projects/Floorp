@@ -130,12 +130,9 @@ nsLDAPBERValue::SetFromUTF8(const nsACString & aValue)
 
     // copy the data and return
     //
-    // XXXdmose should really be ToNewUTF8String, once the appropriate 
-    // signature for that exists
-    //
     mSize = aValue.Length();
     if (mSize) {
-        mValue = NS_REINTERPRET_CAST(PRUint8 *, ToNewCString(aValue)); 
+        mValue = NS_REINTERPRET_CAST(PRUint8 *, ToNewCString(aValue));
     } else {
         mValue = 0;
     }

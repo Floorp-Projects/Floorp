@@ -58,6 +58,7 @@ XPIDLSRCS	= 	\
 			nsILDAPBERValue.idl \
 			nsILDAPControl.idl \
 			nsILDAPBERElement.idl \
+			nsILDAPModification.idl \
 			$(NULL)
 
 ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL

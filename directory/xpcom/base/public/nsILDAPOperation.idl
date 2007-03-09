@@ -42,7 +42,9 @@
 
 interface nsILDAPMessage;
 interface nsILDAPMessageListener;
+interface nsILDAPModification;
 interface nsIMutableArray;
+interface nsIArray;
 
 %{C++
 #define NS_LDAPOPERATION_CONTRACTID "@mozilla.org/network/ldap-operation;1" 
@@ -52,7 +54,7 @@ interface nsIMutableArray;
 
 typedef PRUint32 PRIntervalTime;
 
-[scriptable, uuid(51f3b2f3-1f22-4fa8-9836-2e30e1471bff)]
+[scriptable, uuid(b9a7ed9d-adf9-4612-8cb7-cdb5c4ef16fd)]
 interface nsILDAPOperation : nsISupports
 {
     /**
@@ -128,6 +130,113 @@ interface nsILDAPOperation : nsISupports
     void simpleBind(in AUTF8String passwd);
 
     /**
+     * Kicks off an asynchronous add request.  The "ext" stands for 
+     * "extensions", and is intended to convey that this method will
+     * eventually support the extensions described in the
+     * draft-ietf-ldapext-ldap-c-api-04.txt Internet Draft.
+     *
+     * @param aBaseDn           Base DN to add
+     * @param aModCount         Number of modifications
+     * @param aMods             Array of modifications
+     *
+     * @exception NS_ERROR_NOT_INITIALIZED      operation not initialized
+     * @exception NS_ERROR_INVALID_ARG          invalid argument
+     * @exception NS_ERROR_LDAP_ENCODING_ERROR  error during BER-encoding
+     * @exception NS_ERROR_LDAP_SERVER_DOWN     the LDAP server did not
+     *                                          receive the request or the
+     *                                          connection was lost
+     * @exception NS_ERROR_OUT_OF_MEMORY        ran out of memory
+     * @exception NS_ERROR_LDAP_NOT_SUPPORTED   not supported in the version
+     *                                          of the LDAP protocol that the
+     *                                          client is using
+     * @exception NS_ERROR_UNEXPECTED           an unexpected error has
+     *                                          occurred
+     *
+     * XXX doesn't currently handle LDAPControl params
+     */
+    void addExt(in AUTF8String aBaseDn, in nsIArray aMods);
+
+    /**
+     * Kicks off an asynchronous delete request.  The "ext" stands for 
+     * "extensions", and is intended to convey that this method will
+     * eventually support the extensions described in the
+     * draft-ietf-ldapext-ldap-c-api-04.txt Internet Draft.
+     *
+     * @param aBaseDn           Base DN to delete
+     *
+     * @exception NS_ERROR_NOT_INITIALIZED      operation not initialized
+     * @exception NS_ERROR_INVALID_ARG          invalid argument
+     * @exception NS_ERROR_LDAP_ENCODING_ERROR  error during BER-encoding
+     * @exception NS_ERROR_LDAP_SERVER_DOWN     the LDAP server did not
+     *                                          receive the request or the
+     *                                          connection was lost
+     * @exception NS_ERROR_OUT_OF_MEMORY        ran out of memory
+     * @exception NS_ERROR_LDAP_NOT_SUPPORTED   not supported in the version
+     *                                          of the LDAP protocol that the
+     *                                          client is using
+     * @exception NS_ERROR_UNEXPECTED           an unexpected error has
+     *                                          occurred
+     *
+     * XXX doesn't currently handle LDAPControl params
+     */
+    void deleteExt(in AUTF8String aBaseDn);
+
+    /**
+     * Kicks off an asynchronous modify request.  The "ext" stands for 
+     * "extensions", and is intended to convey that this method will
+     * eventually support the extensions described in the
+     * draft-ietf-ldapext-ldap-c-api-04.txt Internet Draft.
+     *
+     * @param aBaseDn           Base DN to modify
+     * @param aModCount         Number of modifications
+     * @param aMods             Array of modifications
+     *
+     * @exception NS_ERROR_NOT_INITIALIZED      operation not initialized
+     * @exception NS_ERROR_INVALID_ARG          invalid argument
+     * @exception NS_ERROR_LDAP_ENCODING_ERROR  error during BER-encoding
+     * @exception NS_ERROR_LDAP_SERVER_DOWN     the LDAP server did not
+     *                                          receive the request or the
+     *                                          connection was lost
+     * @exception NS_ERROR_OUT_OF_MEMORY        ran out of memory
+     * @exception NS_ERROR_LDAP_NOT_SUPPORTED   not supported in the version
+     *                                          of the LDAP protocol that the
+     *                                          client is using
+     * @exception NS_ERROR_UNEXPECTED           an unexpected error has
+     *                                          occurred
+     *
+     * XXX doesn't currently handle LDAPControl params
+     */
+    void modifyExt(in AUTF8String aBaseDn, in nsIArray aMods);
+
+    /**
+     * Kicks off an asynchronous rename request.
+     *
+     * @param aBaseDn           Base DN to rename
+     * @param aNewRDn           New relative DN
+     * @param aNewParent        DN of the new parent under which to move the
+     *                          entry
+     * @param aDeleteOldRDn     Indicates whether to remove the old relative
+     *                          DN as a value in the entry or not
+     *
+     * @exception NS_ERROR_NOT_INITIALIZED      operation not initialized
+     * @exception NS_ERROR_INVALID_ARG          invalid argument
+     * @exception NS_ERROR_LDAP_ENCODING_ERROR  error during BER-encoding
+     * @exception NS_ERROR_LDAP_SERVER_DOWN     the LDAP server did not
+     *                                          receive the request or the
+     *                                          connection was lost
+     * @exception NS_ERROR_OUT_OF_MEMORY        ran out of memory
+     * @exception NS_ERROR_LDAP_NOT_SUPPORTED   not supported in the version
+     *                                          of the LDAP protocol that the
+     *                                          client is using
+     * @exception NS_ERROR_UNEXPECTED           an unexpected error has
+     *                                          occurred
+     *
+     * XXX doesn't currently handle LDAPControl params
+     */
+    void rename(in AUTF8String aBaseDn, in AUTF8String aNewRDn,
+                in AUTF8String aNewParent, in boolean aDeleteOldRDn);
+
+    /**
      * Kicks off an asynchronous search request.  The "ext" stands for 
      * "extensions", and is intended to convey that this method will
      * eventually support the extensions described in the
@@ -141,12 +250,16 @@ interface nsILDAPOperation : nsISupports
      * @param aTimeOut          How long to wait
      * @param aSizeLimit        Maximum number of entries to return.
      *
-     * @exception NS_ERROR_NOT_INITIALIZED
-     * @exception NS_ERROR_LDAP_ENCODING_ERROR
-     * @exception NS_ERROR_LDAP_SERVER_DOWN
-     * @exception NS_ERROR_OUT_OF_MEMORY
-     * @exception NS_ERROR_INVALID_ARG
-     * @exception NS_ERROR_LDAP_NOT_SUPPORTED
+     * @exception NS_ERROR_NOT_INITIALIZED      operation not initialized
+     * @exception NS_ERROR_LDAP_ENCODING_ERROR  error during BER-encoding
+     * @exception NS_ERROR_LDAP_SERVER_DOWN     the LDAP server did not
+     *                                          receive the request or the
+     *                                          connection was lost
+     * @exception NS_ERROR_OUT_OF_MEMORY        ran out of memory
+     * @exception NS_ERROR_INVALID_ARG          invalid argument
+     * @exception NS_ERROR_LDAP_NOT_SUPPORTED   not supported in the version
+     *                                          of the LDAP protocol that the
+     *                                          client is using
      * @exception NS_ERROR_LDAP_FILTER_ERROR
      * @exception NS_ERROR_UNEXPECTED
      */

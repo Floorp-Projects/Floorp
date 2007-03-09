@@ -69,7 +69,54 @@ class nsLDAPOperation : public nsILDAPOperation
      * used to break cycles
      */
     void Clear();
-  protected:
+
+  private:
+    /**
+     * wrapper for ldap_add_ext()
+     *
+     * XXX should move to idl, once LDAPControls have an IDL representation
+     */
+    nsresult AddExt(const char *base, // base DN to add
+                    nsIArray *mods, // Array of modifications
+                    LDAPControl **serverctrls,
+                    LDAPControl **clientctrls);
+
+    /**
+     * wrapper for ldap_delete_ext()
+     *
+     * XXX should move to idl, once LDAPControls have an IDL representation
+     */
+    nsresult DeleteExt(const char *base, // base DN to delete
+                       LDAPControl **serverctrls,
+                       LDAPControl **clientctrls);
+
+    /**
+     * wrapper for ldap_modify_ext()
+     *
+     * XXX should move to idl, once LDAPControls have an IDL representation
+     */
+    nsresult ModifyExt(const char *base, // base DN to modify
+                       nsIArray *mods, // array of modifications
+                       LDAPControl **serverctrls,
+                       LDAPControl **clientctrls);
+
+    /**
+     * wrapper for ldap_rename()
+     *
+     * XXX should move to idl, once LDAPControls have an IDL representation
+     */
+    nsresult Rename(const char *base, // base DN to rename
+                    const char *newRDn, // new RDN
+                    const char *newParent, // DN of the new parent
+                    PRBool deleteOldRDn, // remove old RDN in the entry?
+                    LDAPControl **serverctrls,
+                    LDAPControl **clientctrls);
+
+    /**
+     * Helper function to copy the values of an nsILDAPModification into an
+     * array of berval's.
+     */
+    static nsresult CopyValues(nsILDAPModification* aMod, berval*** aBValues);
 
     nsCOMPtr<nsILDAPMessageListener> mMessageListener; // results go here
     nsCOMPtr<nsISupports> mClosure;  // private parameter (anything caller desires)

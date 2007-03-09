@@ -46,6 +46,7 @@
 #include "nsLDAPConnection.h"
 #include "nsLDAPOperation.h"
 #include "nsLDAPMessage.h"
+#include "nsLDAPModification.h"
 #include "nsLDAPServer.h"
 #include "nsLDAPService.h"
 #include "nsLDAPBERValue.h"
@@ -64,6 +65,7 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPConnection)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPOperation)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPMessage)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLDAPModification, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPServer)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLDAPURL, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLDAPService, Init)
@@ -110,6 +112,8 @@ static const nsModuleComponentInfo components[] =
       nsnull, // no language helper
       &NS_CLASSINFO_NAME(nsLDAPMessage),
       nsIClassInfo::THREADSAFE },
+    { "LDAP Modification", NS_LDAPMODIFICATION_CID,
+          "@mozilla.org/network/ldap-modification;1", nsLDAPModificationConstructor },
     { "LDAP Server", NS_LDAPSERVER_CID,
           "@mozilla.org/network/ldap-server;1", nsLDAPServerConstructor },
     { "LDAP Service", NS_LDAPSERVICE_CID,
