@@ -75,7 +75,7 @@
 
     <prefpane id="paneGeneral"
               label="&paneGeneral.title;"
-              onpaneload="gGeneralPane.init();"
+              onpaneload="gCalendarGeneralPane.init();"
               src="chrome://calendar/content/preferences/general.xul">
         <vbox id="calPreferencesBoxGeneral"/>
     </prefpane>

@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-var gGeneralPane = {
+var gCalendarGeneralPane = {
 
     init: function () {
         var df = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]

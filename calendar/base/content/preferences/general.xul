@@ -48,7 +48,7 @@
     %preferencesDTD;
 ]>
 
-<overlay id="GeneralPaneOverlay"
+<overlay id="CalendarGeneralPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
     <vbox id="calPreferencesBoxGeneral">
@@ -76,7 +76,7 @@
             <preference id="calendar.autorefresh.enabled"
                         name="calendar.autorefresh.enabled"
                         type="bool"
-                        onchange="gGeneralPane.autoRefreshPrefChanged();"/>
+                        onchange="gCalendarGeneralPane.autoRefreshPrefChanged();"/>
             <preference id="calendar.autorefresh.timeout"
                         name="calendar.autorefresh.timeout"
                         type="int"/>

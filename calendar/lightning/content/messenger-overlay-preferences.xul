@@ -52,7 +52,8 @@
     <prefwindow id="MailPreferences">
         <prefpane id="paneLightning" 
                   label="&lightning.taskLabel;"
-                  onpaneload="gGeneralPane.init(); gAlarmsPane.init(); gCategoriesPane.init(); gTimezonesPane.init();">
+                  onpaneload="gCalendarGeneralPane.init(); gAlarmsPane.init(); 
+                              gCategoriesPane.init(); gTimezonesPane.init();">
             <tabbox id="calPreferencesTabbox" flex="1" onselect="">
                 <tabs>
                     <tab id="calPreferencesTabGeneral"
