@@ -11,6 +11,7 @@
 <!ENTITY debugStrictJavascript.label     "Show strict JavaScript warnings">
 <!ENTITY debugConsoleJavascript.label    "Show chrome JavaScript errors and warnings">
 <!ENTITY debugUseXBLForms.label          "Use XBL-based form controls (takes effect after restart). These are still under construction.">
+<!ENTITY dynamicSkinSwitching.label      "Enable Dynamic Skin Switching.">
 
 <!-- Debug: Turn on gfx-rendered widgets -->
 <!ENTITY widgetRendering.label "Rendering">

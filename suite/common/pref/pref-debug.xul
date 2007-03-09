@@ -48,7 +48,7 @@
     var _elementIDs = ["nglayoutUseNativePrintDialog", "printUseGlobalPrintSettings",
                        "debugXULBoxes", "browserDOMWindowDumpEnabled", 
                        "javascriptOptionsStrict", "javascriptOptionsShowInConsole", 
-                       "nglayoutDebugUseXBLForms",
+                       "nglayoutDebugUseXBLForms", "dynamicSkinSwitching",
                        "acceleratorKeyValue", "menuAccessKeyValue"];
   ]]>
   </script>
@@ -86,6 +86,8 @@
               prefstring="print.use_native_print_dialog"/>
     <checkbox id="printUseGlobalPrintSettings" label="&printUseGlobalPrintSettings.label;"
               prefstring="print.use_global_printsettings"/>
+    <checkbox id="dynamicSkinSwitching" label="&dynamicSkinSwitching.label;"
+              prefstring="extensions.dss.enabled"/>
   </groupbox>              
 
 
