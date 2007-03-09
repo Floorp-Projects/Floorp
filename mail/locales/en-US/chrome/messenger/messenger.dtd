@@ -429,12 +429,12 @@
 <!ENTITY helpMenuWin.accesskey    "H">
 <!ENTITY releaseCmd.label "Release Notes">
 <!ENTITY releaseCmd.accesskey "R"> 
-<!ENTITY hintsAndTips1.label "&brandShortName; Help">
+<!ENTITY hintsAndTips.label "&brandFullName; Help">
 <!ENTITY hintsAndTipsMac.commandkey "?">
 <!ENTITY hintsAndTips.accesskey "h">
 <!ENTITY updateCmd.label      "Check for Updates...">
 <!ENTITY updateCmd.accesskey  "o">
-<!ENTITY aboutCmd1.label "About &brandShortName;">
+<!ENTITY aboutCmd.label "About &brandFullName;">
 <!ENTITY aboutCmd.accesskey "A">
 
 <!-- Mail Toolbar -->
