@@ -88,7 +88,7 @@ README_FILES = \
 endif
 
 libs:: $(addprefix $(LOCALE_SRCDIR)/,$(README_FILES))
-	$(INSTALL) $^ $(FINAL_TARGET)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
 
 vpath %.rdf $(topsrcdir)/mailnews/base/ispdata
 
