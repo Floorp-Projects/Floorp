@@ -557,16 +557,13 @@ int main(int argc, char **argv)
 
           case 'S': skipProtoHeader = PR_TRUE;                 break;
 
-          case 'c': cipherString = strdup(optstate->value); break;
+          case 'c': cipherString = PORT_Strdup(optstate->value); break;
 
-          case 'h': host = strdup(optstate->value);	break;
+          case 'h': host = PORT_Strdup(optstate->value);	break;
 
           case 'f':  clientSpeaksFirst = PR_TRUE;       break;
 
-	  case 'd':
-	    certDir = strdup(optstate->value);
-	    certDir = SECU_ConfigDirectory(certDir);
-	    break;
+          case 'd': certDir = PORT_Strdup(optstate->value);   break;
 
 	  case 'm':
 	    multiplier = atoi(optstate->value);
@@ -574,11 +571,11 @@ int main(int argc, char **argv)
 	    	multiplier = 0;
 	    break;
 
-	  case 'n': nickname = strdup(optstate->value);	break;
+	  case 'n': nickname = PORT_Strdup(optstate->value);	break;
 
 	  case 'o': override = 1; 			break;
 
-	  case 'p': port = strdup(optstate->value);	break;
+	  case 'p': port = PORT_Strdup(optstate->value);	break;
 
 	  case 'q': pingServerFirst = PR_TRUE;          break;
 
@@ -594,16 +591,14 @@ int main(int argc, char **argv)
 	  case 'x': useExportPolicy = 1; 		break;
 	}
     }
+
+    PL_DestroyOptState(optstate);
+
     if (optstatus == PL_OPT_BAD)
 	Usage(progName);
 
     if (!host || !port) Usage(progName);
     portno = (PRUint16)atoi(port);
-
-    if (!certDir) {
-	certDir = SECU_DefaultSSLDir();	/* Look in $SSL_DIR */
-	certDir = SECU_ConfigDirectory(certDir); /* call even if it's NULL */
-    }
 
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
 
@@ -615,6 +610,14 @@ int main(int argc, char **argv)
     }
 
     /* open the cert DB, the key DB, and the secmod DB. */
+    if (!certDir) {
+	certDir = SECU_DefaultSSLDir();	/* Look in $SSL_DIR */
+	certDir = SECU_ConfigDirectory(certDir);
+    } else {
+	char *certDirTmp = certDir;
+	certDir = SECU_ConfigDirectory(certDirTmp);
+	PORT_Free(certDirTmp);
+    }
     rv = NSS_Init(certDir);
     if (rv != SECSuccess) {
 	SECU_PrintError(progName, "unable to open cert database");
@@ -740,6 +743,7 @@ int main(int argc, char **argv)
 
     /* all the SSL2 and SSL3 cipher suites are enabled by default. */
     if (cipherString) {
+    	char *cstringSaved = cipherString;
     	int ndx;
 
 	while (0 != (ndx = *cipherString++)) {
@@ -779,6 +783,7 @@ int main(int argc, char **argv)
 		Usage(progName);
 	    }
 	}
+	PORT_Free(cstringSaved);
     }
 
     rv = SSL_OptionSet(s, SSL_ENABLE_SSL2, !disableSSL2);
@@ -1039,6 +1044,15 @@ int main(int argc, char **argv)
     }
 
   done:
+    if (nickname) {
+        PORT_Free(nickname);
+    }
+    if (password) {
+        PORT_Free(password);
+    }
+    PORT_Free(host);
+    PORT_Free(port);
+
     PR_Close(s);
     SSL_ClearSessionCache();
     if (NSS_Shutdown() != SECSuccess) {
