@@ -1364,10 +1364,12 @@ C<PRIMARYKEY> (optional), C<REFERENCES> (optional)
 
 =back
 
--item B<Returns>
+=item B<Returns>
 
 A DDL string suitable for describing a field in a C<CREATE TABLE> or 
 C<ALTER TABLE> SQL statement
+
+=back
 
 =cut
 
@@ -1425,8 +1427,12 @@ Protected method. Translates the C<REFERENCES> item of a column into SQL.
 
 =back
 
-Returns:     SQL for to define the foreign key, or an empty string
-             if C<$references> is undefined.
+=item B<Returns>
+
+SQL for to define the foreign key, or an empty string if C<$references> 
+is undefined.
+
+=back
 
 =cut
 
