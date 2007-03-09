@@ -50,7 +50,10 @@ sub Get {
     my %args = @_;
     my $var = $args{'var'};
 
-    if ($config{$var}) {
+    die "ASSERT: Bootstep::Config::Get(): null var requested" if (not 
+     defined($args{'var'}));
+
+    if ($this->Exists(var => $var)) {
         return $config{$var};
     } else {
         die("No such config variable: $var\n");
@@ -60,6 +63,9 @@ sub Get {
 sub Exists {
     my $this = shift;
     my %args = @_;
+
+   die "ASSERT: Bootstep::Config::Exists(): null var requested" if (not 
+     defined($args{'var'}));
 
     my $var = $args{'var'};
     return exists($config{$var});

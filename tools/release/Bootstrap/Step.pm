@@ -3,12 +3,16 @@
 #
 
 package Bootstrap::Step;
+
 use IO::Handle;
 use File::Spec::Functions;
+use POSIX qw(strftime);
+
 use Bootstrap::Config;
 use MozBuild::Util qw(RunShellCommand Email);
-use POSIX qw(strftime);
+
 use base 'Exporter';
+
 our @EXPORT = qw(catfile);
 
 my $DEFAULT_TIMEOUT = 3600;
@@ -31,17 +35,29 @@ sub Shell {
     my $logFile = $args{'logFile'};
     my $ignoreExitValue = $args{'ignoreExitValue'};
     my $rv = '';
+    my $config = new Bootstrap::Config();
 
     if (ref($cmdArgs) ne 'ARRAY') {
-        die("ASSERT: Bootstrap::Step(): cmdArgs is not an array ref\n");
+        die("ASSERT: Bootstrap::Step::Shell(): cmdArgs is not an array ref\n");
+    }
+
+    my %runShellCommandArgs = (command => $cmd,
+                               args => $cmdArgs,
+                               timeout => $timeout,
+                               logfile => $logFile);
+
+    if ($config->Exists(var => 'dumpLogs')) {
+        if ($config->Get(var => 'dumpLogs')) {
+            $runShellCommandArgs{'output'} = 1;
+        }
     }
 
     if ($dir) {
-        $this->Log(msg => 'Changing directory to ' . $dir);
-        chdir($dir) or die("Cannot chdir to $dir: $!");
+        $runShellCommandArgs{'dir'} = $dir;
     }
 
-    $this->Log(msg => 'Running shell command:');
+    $this->Log(msg => 'Running shell command' .
+     (defined($dir) ? " in $dir" : '') . ':');
     $this->Log(msg => '  arg0: ' . $cmd); 
     my $argNum = 1;
     foreach my $arg (@{$cmdArgs}) {
@@ -53,25 +69,18 @@ sub Shell {
 
     $this->Log(msg => 'Timeout: ' . $timeout);
 
-    if ($timeout) {
-        $rv = RunShellCommand(
-           command => $cmd,
-           args => $cmdArgs,
-           timeout => $timeout,
-           logfile => $logFile,
-        );
-    }
+    $rv = RunShellCommand(%runShellCommandArgs);
 
     my $exitValue = $rv->{'exitValue'};
     my $timedOut  = $rv->{'timedOut'};
-    my $signalName  = $rv->{'signalName'};
+    my $signalNum  = $rv->{'signalNum'};
     my $dumpedCore = $rv->{'dumpedCore'};
     if ($timedOut) {
         $this->Log(msg => "output: $rv->{'output'}") if $rv->{'output'};
-        die('FAIL shell call timed out after' . $timeout . 'seconds');
+        die('FAIL shell call timed out after ' . $timeout . ' seconds');
     }
-    if ($signalName) {
-        $this->Log(msg => 'WARNING shell recieved signal' . $signalName);
+    if ($signalNum) {
+        $this->Log(msg => 'WARNING shell recieved signal ' . $signalNum);
     }
     if ($dumpedCore) {
         $this->Log(msg => "output: $rv->{'output'}") if $rv->{'output'};
@@ -79,7 +88,7 @@ sub Shell {
     }
     if ($ignoreExitValue) {
         $this->Log(msg => "Exit value $rv->{'output'}, but ignoring as told");
-    }elsif ($exitValue) {
+    } elsif ($exitValue) {
         if ($exitValue != 0) {
             $this->Log(msg => "output: $rv->{'output'}") if $rv->{'output'};
             die("shell call returned bad exit code: $exitValue");
