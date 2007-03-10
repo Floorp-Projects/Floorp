@@ -164,6 +164,7 @@ ACCESSIBILITY_ATOM(type, "type")
 ACCESSIBILITY_ATOM(value, "value")
 
   // ARIA (DHTML accessibility) attributes
+ACCESSIBILITY_ATOM(activedescendant, "activedescendant")
 ACCESSIBILITY_ATOM(checked, "checked")
 ACCESSIBILITY_ATOM(droppable, "droppable")
 ACCESSIBILITY_ATOM(expanded, "expanded")

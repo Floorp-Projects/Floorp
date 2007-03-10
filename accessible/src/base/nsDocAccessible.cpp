@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsDocAccessible.h"
+#include "nsRootAccessible.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibleEventData.h"
 #include "nsIAccessibilityService.h"
@@ -945,20 +945,35 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
     }
   }
   else if (aNameSpaceID == kNameSpaceID_WAIProperties) {
-    // DHTML accessibility attributes
-    if (!HasRoleAttribute(aContent)) {
-      // We don't care about DHTML state changes unless there is
-      // a DHTML role set for the element
+    // ARIA attributes
+    if (aAttribute == nsAccessibilityAtoms::disabled ||
+        aAttribute == nsAccessibilityAtoms::required ||
+        aAttribute == nsAccessibilityAtoms::invalid) {
+      // Universal boolean properties that don't require a role
+      eventType = nsIAccessibleEvent::EVENT_STATE_CHANGE;
+    }
+    else if (aAttribute == nsAccessibilityAtoms::activedescendant) {
+      // The activedescendant universal property redirects accessible focus events
+      // to the element with the id that activedescendant points to
+      nsCOMPtr<nsIDOMNode> currentFocus = GetCurrentFocus();
+      if (SameCOMIdentity(currentFocus, aContent)) {
+        nsRefPtr<nsRootAccessible> rootAcc = GetRootAccessible();
+        if (rootAcc) {
+          rootAcc->FireAccessibleFocusEvent(nsnull, currentFocus, nsnull, PR_TRUE);
+        }
+      }
+      return;
+    }
+    else if (!HasRoleAttribute(aContent)) {
+      // We don't care about these other ARIA attribute changes unless there is
+      // an ARIA role set for the element
+      // XXX we should check the role map to see if the changed
+      // property is relevant for that particular role
       return;
     }
     if (aAttribute == nsAccessibilityAtoms::checked ||
-        aAttribute == nsAccessibilityAtoms::expanded) {
-      eventType = nsIAccessibleEvent::EVENT_STATE_CHANGE;
-    }
-    else if (aAttribute == nsAccessibilityAtoms::readonly ||
-             aAttribute == nsAccessibilityAtoms::disabled ||
-             aAttribute == nsAccessibilityAtoms::required ||
-             aAttribute == nsAccessibilityAtoms::invalid) {
+        aAttribute == nsAccessibilityAtoms::expanded || 
+        aAttribute == nsAccessibilityAtoms::readonly) {
       eventType = nsIAccessibleEvent::EVENT_STATE_CHANGE;
     }
     else if (aAttribute == nsAccessibilityAtoms::valuenow) {

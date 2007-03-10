@@ -91,6 +91,11 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_ROOTACCESSIBLE_IMPL_CID)
 
+    void FireAccessibleFocusEvent(nsIAccessible *focusAccessible,
+                                  nsIDOMNode *focusNode,
+                                  nsIDOMEvent *aFocusEvent,
+                                  PRBool aForceEvent = PR_FALSE);
+
   private:
     nsCOMPtr<nsITimer> mFireFocusTimer;
     static void FireFocusCallback(nsITimer *aTimer, void *aClosure);
@@ -102,10 +107,6 @@ class nsRootAccessible : public nsDocAccessibleWrap,
                                            nsIDOMNode* aTargetNode);
     static void GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNode);
     void TryFireEarlyLoadEvent(nsIDOMNode *aDocNode);
-    void FireAccessibleFocusEvent(nsIAccessible *focusAccessible,
-                                  nsIDOMNode *focusNode,
-                                  nsIDOMEvent *aFocusEvent,
-                                  PRBool aForceEvent = PR_FALSE);
     void FireCurrentFocusEvent();
     void GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget);
 #ifdef MOZ_XUL
