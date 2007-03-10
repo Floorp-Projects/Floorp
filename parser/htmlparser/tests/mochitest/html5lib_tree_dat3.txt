@@ -1,0 +1,132 @@
+#data
+<head></head><style></style>
+#errors
+No DOCTYPE
+<style> in after-head mode
+#document
+| <html>
+|   <head>
+|     <style>
+|   <body>
+
+#data
+<head></head><script></script>
+#errors
+No DOCTYPE
+<script> in after-head mode
+#document
+| <html>
+|   <head>
+|     <script>
+|   <body>
+
+#data
+<head></head><!-- --><style></style><!-- --><script></script>
+#errors
+No DOCTYPE
+<style> in after-head mode
+#document
+| <html>
+|   <head>
+|     <style>
+|     <script>
+|   <!--   -->
+|   <!--   -->
+|   <body>
+
+#data
+<head></head><!-- -->x<style></style><!-- --><script></script>
+#errors
+No DOCTYPE
+#document
+| <html>
+|   <head>
+|   <!--   -->
+|   <body>
+|     "x"
+|     <style>
+|     <!--   -->
+|     <script>
+
+#data
+<!DOCTYPE html><html><head></head><body><pre>
+</pre></body></html>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <pre>
+
+#data
+<!DOCTYPE html><html><head></head><body><pre>
+
+foo</pre></body></html>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <pre>
+|       "foo"
+
+
+#data
+<!DOCTYPE html><html><head></head><body><pre>
+
+foo
+</pre></body></html>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <pre>
+|       "foo
+"
+
+#data
+<!DOCTYPE html><html><head></head><body><pre>x</pre><span>
+</span></body></html>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <pre>
+|       "x"
+|     <span>
+|       "
+"
+
+#data
+<!DOCTYPE html><html><head></head><body><pre>x
+y</pre></body></html>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <pre>
+|       "x
+y"
+
+#data
+<!DOCTYPE html><html><head></head><body><pre>x<div>
+y</pre></body></html>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <pre>
+|       "x"
+|       <div>
+|         "
+| y"
