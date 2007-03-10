@@ -71,7 +71,18 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 163504-2b.html 163504-2-ref.html
 == 169749-1.html 169749-1-ref.html
 == 172073-1.html 172073-1-ref.html
+== 185388-1.html 185388-1-ref.html
+== 201215-1.html 201215-1-ref.html
+== 206516-1.html 206516-1-ref.html
+== 210876-1.html 210876-1-ref.html
+== 235593-1.html 235593-1-ref.html
 == 243266-1.html 243266-1-ref.html
+== 243302-1.html 243302-1-ref.html
+== 244932-1.html 244932-1-ref.html
+== 249982-1.html 249982-1-ref.html
+== 253701-1.html 253701-1-ref.html
+== 262151-1.html 262151-1-ref.html
+== 267353-1.html 267353-1-ref.html
 == 273681-1.html 273681-1-ref.html
 == 300691-1a.html 300691-1-ref.html
 == 300691-1b.html 300691-1-ref.html
@@ -166,6 +177,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 3
 fails == 368020-3.html 368020-3-ref.html # bug 368085
 fails == 368020-4.html 368020-4-ref.html # bug 368085
 == 368020-5.html 368020-5-ref.html
+fails == 368504-1.html 368504-1-ref.html # bug 368504
 == 368622-1.html 368622-1-ref.html
 == 368622-1.html 368622-1-ref.html
 == 370422-1.html 370422-1-ref.html
