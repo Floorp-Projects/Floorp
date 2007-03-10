@@ -372,7 +372,7 @@
         <para>
           You can also restrict your search to users being in some specific group.
           By default, the restriction is turned off. Then you get a list of
-          users matching your critera, and clicking their login name lets you
+          users matching your criteria, and clicking their login name lets you
           edit their properties.
         </para>
       </section>
