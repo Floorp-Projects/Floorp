@@ -591,31 +591,6 @@ nsBindingManager::SetAnonymousNodesFor(nsIContent* aContent,
       delete aList;
       return NS_ERROR_OUT_OF_MEMORY;
     }
-  
-    // If there are any items in aList that are already in aContent's
-    // AnonymousNodesList, we need to make sure they don't get deleted as
-    // the lists are swapped.  So, get the current list and check.
-    // FIXME: This is O(n*m) where n and m are the insertion point list
-    //        lengths.  But, there usually aren't many insertion points.
-
-    if (mAnonymousNodesTable.ops) {
-      nsAnonymousContentList *oldList =
-        NS_STATIC_CAST(nsAnonymousContentList*,
-                       LookupObject(mAnonymousNodesTable, aContent));
-      if (oldList) {
-        PRInt32 i = 0;
-        while (i < oldList->GetInsertionPointCount()) {
-          nsXBLInsertionPoint *point = oldList->GetInsertionPointAt(i);
-          if (aList->IndexOf(point) != -1) {
-            // We don't want this point to be deleted, so remove it
-            // from the old list.
-            oldList->RemoveInsertionPointAt(i);
-          } else {
-            ++i;
-          }
-        }
-      }
-    }
   }
 
   return SetOrRemoveObject(mAnonymousNodesTable, aContent, contentList);

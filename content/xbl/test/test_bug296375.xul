@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=296375
+-->
+<window title="Mozilla Bug 296375"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <title>Test for Bug 296375</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
+
+<body  xmlns="http://www.w3.org/1999/xhtml">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=296375">Mozilla Bug 296375</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<button id="b" label="crash"/>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 296375 **/
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function () {
+  document.addBinding(document.getElementById("b"),
+                      "chrome://global/content/bindings/checkbox.xml#checkbox");
+  ok(true, "addBinding didn't cause a crash");
+});
+addLoadEvent(SimpleTest.finish);
+]]>
+</script>
+
+</window>

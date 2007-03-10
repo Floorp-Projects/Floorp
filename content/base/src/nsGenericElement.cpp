@@ -3035,7 +3035,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
     nsDOMSlots *slots = tmp->GetExistingDOMSlots();
     if (slots) {
       cb.NoteXPCOMChild(slots->mAttributeMap.get());
-      cb.NoteXPCOMChild(slots->mControllers);
+      if (tmp->IsNodeOfType(nsINode::eXUL))
+        cb.NoteXPCOMChild(slots->mControllers);
     }
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
