@@ -269,8 +269,8 @@ sub quoteUrls {
     my $urlbase_re = '(' . join('|',
         map { qr/$_/ } grep($_, Bugzilla->params->{'urlbase'}, 
                             Bugzilla->params->{'sslbase'})) . ')';
-    $text =~ s~\b(${urlbase_re}\Qshow_bug.cgi?id=\E([0-9]+))\b
-              ~($things[$count++] = get_bug_link($3, $1)) &&
+    $text =~ s~\b(${urlbase_re}\Qshow_bug.cgi?id=\E([0-9]+)(\#c([0-9]+))?)\b
+              ~($things[$count++] = get_bug_link($3, $1, $5)) &&
                ("\0\0" . ($count-1) . "\0\0")
               ~egox;
 
