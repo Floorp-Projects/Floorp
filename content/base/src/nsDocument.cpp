@@ -151,6 +151,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsLayoutStatics.h"
 #include "nsIJSContextStack.h"
 #include "nsIXPConnect.h"
+#include "nsCycleCollector.h"
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
