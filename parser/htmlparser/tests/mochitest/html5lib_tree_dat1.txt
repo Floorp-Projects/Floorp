@@ -1,0 +1,1929 @@
+#data
+Test
+#errors
+5: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+|     "Test"
+
+#data
+<p>One<p>Two
+#errors
+3: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+|     <p>
+|       "One"
+|     <p>
+|       "Two"
+
+#data
+Line1<br>Line2<br>Line3<br>Line4
+#errors
+7: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+|     "Line1"
+|     <br>
+|     "Line2"
+|     <br>
+|     "Line3"
+|     <br>
+|     "Line4"
+
+#data
+<html>
+#errors
+6: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+<head>
+#errors
+6: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+<body>
+#errors
+6: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+<html><head>
+#errors
+6: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+<html><head></head>
+#errors
+6: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+<html><head></head><body>
+#errors
+6: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+<html><head></head><body></body>
+#errors
+6: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+<html><head><body></body></html>
+#errors
+6: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+<html><head></body></html>
+#errors
+6: missing document type declaration
+19: unexpected body element end tag in head
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+<html><head><body></html>
+#errors
+6: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+<html><body></html>
+#errors
+6: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+<body></html>
+#errors
+6: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+<head></html>
+#errors
+6: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+</head>
+#errors
+7: missing document type declaration
+7: unexpected head element end tag
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+</body>
+#errors
+7: missing document type declaration
+7: unexpected body element end tag
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+</html>
+#errors
+7: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+<b><table><td><i></table>
+#errors
+3: missing document type declaration
+14: required tr element start tag implied by unexpected td element start tag
+25: unexpected td element end tag implied other end tags
+26: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <b>
+|       <table>
+|         <tbody>
+|           <tr>
+|             <td>
+|               <i>
+
+#data
+<b><table><td></b><i></table>X
+#errors
+3: missing document type declaration
+14: required tr element start tag implied by unexpected td element start tag
+18: mismatched b element end tag (no matching start tag)
+29: unexpected td element end tag implied other end tags
+31: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <b>
+|       <table>
+|         <tbody>
+|           <tr>
+|             <td>
+|               <i>
+|       "X"
+
+#data
+<h1>Hello<h2>World
+#errors
+4: missing document type declaration
+13: h2 element start tag implying h1 element end tag
+19: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <h1>
+|       "Hello"
+|     <h2>
+|       "World"
+
+#data
+<a><p>X<a>Y</a>Z</p></a>
+#errors
+3: missing document type declaration
+10: a element start tag implying a element end tag
+10: mismatched a element end tag (misnested tags)
+24: mismatched a element end tag (no matching start tag)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <a>
+|     <p>
+|       <a>
+|         "X"
+|       <a>
+|         "Y"
+|       "Z"
+
+#data
+<b><button></b></button></b>
+#errors
+3: missing document type declaration
+15: mismatched b element end tag (no matching start tag)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <b>
+|       <button>
+
+#data
+<p><b><div><marquee></p></b></div>X
+#errors
+3: missing document type declaration
+11: mismatched p element end tag
+24: mismatched p element end tag
+28: mismatched b element end tag (no matching start tag)
+34: mismatched div element end tag
+36: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <p>
+|       <b>
+|     <div>
+|       <b>
+|         <marquee>
+|           "X"
+
+#data
+<script><div></script></div><title><p></title><p><p>
+#errors
+8: missing document type declaration
+28: unexpected div element end tag in head
+#document
+| <html>
+|   <head>
+|     <script>
+|       "<div>"
+|     <title>
+|       "<p>"
+|   <body>
+|     <p>
+|     <p>
+
+#data
+<!--><div>--<!-->
+#errors
+13: unexpected character after two '-' characters while parsing comment
+18: missing document type declaration
+#document
+| <!-- ><div>--<! -->
+| <html>
+|   <head>
+|   <body>
+
+#data
+<p><hr></p>
+#errors
+3: missing document type declaration
+11: mismatched p element end tag
+#document
+| <html>
+|   <head>
+|   <body>
+|     <p>
+|     <hr>
+
+#data
+<select><b><option><select><option></b></select>X
+#errors
+8: missing document type declaration
+11: unexpected node in select element context
+27: select element start tag used as end tag
+35: unexpected option element start tag in body
+39: mismatched b element end tag (no matching start tag)
+48: mismatched special end tag select
+#document
+| <html>
+|   <head>
+|   <body>
+|     <select>
+|       <option>
+|     "X"
+
+#data
+<a><table><td><a><table></table><a></tr><a></table><b>X</b>C<a>Y
+#errors
+3: missing document type declaration
+14: required tr element start tag implied by unexpected td element start tag
+35: a element start tag implying a element end tag
+40: unexpected td element end tag implied other end tags
+43: unexpected node in table context
+43: a element start tag implying a element end tag
+43: unexpected node in table context
+43: mismatched a element end tag (misnested tags across <table> tag)
+63: a element start tag implying a element end tag
+65: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <a>
+|       <a>
+|       <table>
+|         <tbody>
+|           <tr>
+|             <td>
+|               <a>
+|                 <table>
+|               <a>
+|     <a>
+|       <b>
+|         "X"
+|       "C"
+|     <a>
+|       "Y"
+
+#data
+<a X>0<b>1<a Y>2
+#errors
+5: missing document type declaration
+15: a element start tag implying a element end tag
+15: mismatched a element end tag (misnested tags)
+17: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <a>
+|       x=""
+|       "0"
+|       <b>
+|         "1"
+|     <b>
+|       <a>
+|         y=""
+|         "2"
+
+#data
+<!-----><font><div>hello<table>excite!<b>me!<th><i>please!</tr><!--X-->
+#errors
+7: unexpected '-' character after two '-' characters while parsing comment
+14: missing document type declaration
+40: unexpected node in table context
+41: unexpected node in table context
+46: unexpected node in table context
+48: required tr element start tag implied by unexpected th element start tag
+63: unexpected th element end tag implied other end tags
+72: unexpected end of file implied table element end tag
+72: mismatched body element end tag (premature end of file?)
+#document
+| <!-- - -->
+| <html>
+|   <head>
+|   <body>
+|     <font>
+|       <div>
+|         "helloexcite!"
+|         <b>
+|           "me!"
+|         <table>
+|           <tbody>
+|             <tr>
+|               <th>
+|                 <i>
+|                   "please!"
+|             <!-- X -->
+
+#data
+<!DOCTYPE HTML><li>hello<li>world<ul>how<li>do</ul>you</body><!--do-->
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <li>
+|       "hello"
+|     <li>
+|       "world"
+|       <ul>
+|         "how"
+|         <li>
+|           "do"
+|       "you"
+|   <!-- do -->
+
+#data
+<!DOCTYPE HTML>A<option>B<optgroup>C<select>D</option>E
+#errors
+24: unexpected option element start tag in body
+35: unexpected optgroup element start tag in body
+54: unexpected option element end tag
+56: required select element end tag implied by unexpected end of file
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     "ABC"
+|     <select>
+|       "DE"
+
+#data
+<
+#errors
+2: unescaped '<' character
+2: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+|     "<"
+
+#data
+<#
+#errors
+2: unescaped '<' character
+3: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+|     "<#"
+
+#data
+</
+#errors
+3: unescaped '<' character followed by '/' at EOF
+3: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+|     "</"
+
+#data
+</#
+#errors
+3: unescaped '<' character followed by '/'
+4: missing document type declaration
+#document
+| <!-- # -->
+| <html>
+|   <head>
+|   <body>
+
+#data
+<?
+#errors
+2: PIs are not supported in HTML5
+3: missing document type declaration
+#document
+| <!-- ? -->
+| <html>
+|   <head>
+|   <body>
+
+#data
+<?#
+#errors
+2: PIs are not supported in HTML5
+4: missing document type declaration
+#document
+| <!-- ?# -->
+| <html>
+|   <head>
+|   <body>
+
+#data
+<!
+#errors
+3: markup declarations are not supported in HTML5
+3: missing document type declaration
+#document
+| <!--  -->
+| <html>
+|   <head>
+|   <body>
+
+#data
+<!#
+#errors
+3: markup declarations are not supported in HTML5
+4: missing document type declaration
+#document
+| <!-- # -->
+| <html>
+|   <head>
+|   <body>
+
+#data
+<?COMMENT?>
+#errors
+2: PIs are not supported in HTML5
+12: missing document type declaration
+#document
+| <!-- ?COMMENT? -->
+| <html>
+|   <head>
+|   <body>
+
+#data
+<!COMMENT>
+#errors
+3: markup declarations are not supported in HTML5
+11: missing document type declaration
+#document
+| <!-- COMMENT -->
+| <html>
+|   <head>
+|   <body>
+
+#data
+</ COMMENT >
+#errors
+3: unescaped '<' character followed by '/'
+13: missing document type declaration
+#document
+| <!--  COMMENT  -->
+| <html>
+|   <head>
+|   <body>
+
+#data
+<?COM--MENT?>
+#errors
+2: PIs are not supported in HTML5
+14: missing document type declaration
+#document
+| <!-- ?COM--MENT? -->
+| <html>
+|   <head>
+|   <body>
+
+#data
+<!COM--MENT>
+#errors
+3: markup declarations are not supported in HTML5
+13: missing document type declaration
+#document
+| <!-- COM--MENT -->
+| <html>
+|   <head>
+|   <body>
+
+#data
+</ COM--MENT >
+#errors
+3: unescaped '<' character followed by '/'
+15: missing document type declaration
+#document
+| <!--  COM--MENT  -->
+| <html>
+|   <head>
+|   <body>
+
+#data
+<!DOCTYPE HTML><style> EOF
+#errors
+27: unexpected end of file while parsing CDATA section for element style
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|     <style>
+|       " EOF"
+|   <body>
+
+#data
+<!DOCTYPE HTML><script> <!-- </script> --> </script> EOF
+#errors
+52: unexpected script element end tag
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|     <script>
+|       " <!-- "
+|     " "
+|   <body>
+|     "-->  EOF"
+
+#data
+<b><p></b>TEST
+#errors
+3: missing document type declaration
+10: mismatched b element end tag (misnested tags)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <b>
+|     <p>
+|       <b>
+|       "TEST"
+
+#data
+<p id=a><b><p id=b></b>TEST
+#errors
+8: missing document type declaration
+19: mismatched p element end tag
+23: mismatched b element end tag (out-of-order end tags)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <p>
+|       id="a"
+|       <b>
+|     <p>
+|       id="b"
+|       "TEST"
+
+#data
+<b id=a><p><b id=b></p></b>TEST
+#errors
+8: missing document type declaration
+23: mismatched p element end tag
+27: mismatched b element end tag (out-of-order end tags)
+32: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <b>
+|       id="a"
+|       <p>
+|         <b>
+|           id="b"
+|       "TEST"
+
+#data
+<!DOCTYPE HTML><title>U-test</title><body><div><p>Test<u></p></div></body>
+#errors
+61: mismatched p element end tag
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|     <title>
+|       "U-test"
+|   <body>
+|     <div>
+|       <p>
+|         "Test"
+|         <u>
+
+#data
+<!DOCTYPE HTML><font><table></font></table></font>
+#errors
+35: unexpected node in table context
+35: mismatched font element end tag (misnested tags across <table> tag)
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <font>
+|       <table>
+
+#data
+<font><p>hello<b>cruel</font>world
+#errors
+6: missing document type declaration
+29: mismatched font element end tag (misnested tags)
+35: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <font>
+|     <p>
+|       <font>
+|         "hello"
+|         <b>
+|           "cruel"
+|       <b>
+|         "world"
+
+#data
+<b>Test</i>Test
+#errors
+3: missing document type declaration
+11: mismatched i element end tag (no matching start tag)
+16: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <b>
+|       "TestTest"
+
+#data
+<b>A<cite>B<div>C
+#errors
+3: missing document type declaration
+18: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <b>
+|       "A"
+|       <cite>
+|         "B"
+|         <div>
+|           "C"
+
+#data
+<b>A<cite>B<div>C</cite>D
+#errors
+3: missing document type declaration
+24: unexpected cite element end tag
+26: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <b>
+|       "A"
+|       <cite>
+|         "B"
+|         <div>
+|           "CD"
+
+#data
+<b>A<cite>B<div>C</b>D
+#errors
+3: missing document type declaration
+21: mismatched b element end tag (misnested tags)
+23: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <b>
+|       "A"
+|       <cite>
+|         "B"
+|     <div>
+|       <b>
+|         "C"
+|       "D"
+
+#data
+<cite><b><cite><i><cite><i><cite><i><div>X</b>TEST
+#errors
+6: missing document type declaration
+46: mismatched b element end tag (misnested tags)
+51: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <cite>
+|       <b>
+|         <cite>
+|           <i>
+|             <cite>
+|               <i>
+|                 <cite>
+|       <i>
+|         <i>
+|           <i>
+|             <div>
+|               <b>
+|                 "X"
+|               "TEST"
+
+#data
+
+#errors
+1: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+<DIV>
+#errors
+5: missing document type declaration
+6: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <div>
+
+#data
+<DIV> abc
+#errors
+5: missing document type declaration
+10: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <div>
+|       " abc"
+
+#data
+<DIV> abc <B>
+#errors
+5: missing document type declaration
+14: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <div>
+|       " abc "
+|       <b>
+
+#data
+<DIV> abc <B> def
+#errors
+5: missing document type declaration
+18: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <div>
+|       " abc "
+|       <b>
+|         " def"
+
+#data
+<DIV> abc <B> def <I>
+#errors
+5: missing document type declaration
+22: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <div>
+|       " abc "
+|       <b>
+|         " def "
+|         <i>
+
+#data
+<DIV> abc <B> def <I> ghi
+#errors
+5: missing document type declaration
+26: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <div>
+|       " abc "
+|       <b>
+|         " def "
+|         <i>
+|           " ghi"
+
+#data
+<DIV> abc <B> def <I> ghi <P>
+#errors
+5: missing document type declaration
+30: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <div>
+|       " abc "
+|       <b>
+|         " def "
+|         <i>
+|           " ghi "
+|           <p>
+
+#data
+<DIV> abc <B> def <I> ghi <P> jkl
+#errors
+5: missing document type declaration
+34: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <div>
+|       " abc "
+|       <b>
+|         " def "
+|         <i>
+|           " ghi "
+|           <p>
+|             " jkl"
+
+#data
+<DIV> abc <B> def <I> ghi <P> jkl </B>
+#errors
+5: missing document type declaration
+38: mismatched b element end tag (misnested tags)
+39: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <div>
+|       " abc "
+|       <b>
+|         " def "
+|         <i>
+|           " ghi "
+|       <i>
+|         <p>
+|           <b>
+|             " jkl "
+
+#data
+<DIV> abc <B> def <I> ghi <P> jkl </B> mno
+#errors
+5: missing document type declaration
+38: mismatched b element end tag (misnested tags)
+43: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <div>
+|       " abc "
+|       <b>
+|         " def "
+|         <i>
+|           " ghi "
+|       <i>
+|         <p>
+|           <b>
+|             " jkl "
+|           " mno"
+
+#data
+<DIV> abc <B> def <I> ghi <P> jkl </B> mno </I>
+#errors
+5: missing document type declaration
+38: mismatched b element end tag (misnested tags)
+47: mismatched i element end tag (misnested tags)
+48: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <div>
+|       " abc "
+|       <b>
+|         " def "
+|         <i>
+|           " ghi "
+|       <i>
+|       <p>
+|         <i>
+|           <b>
+|             " jkl "
+|           " mno "
+
+#data
+<DIV> abc <B> def <I> ghi <P> jkl </B> mno </I> pqr
+#errors
+5: missing document type declaration
+38: mismatched b element end tag (misnested tags)
+47: mismatched i element end tag (misnested tags)
+52: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <div>
+|       " abc "
+|       <b>
+|         " def "
+|         <i>
+|           " ghi "
+|       <i>
+|       <p>
+|         <i>
+|           <b>
+|             " jkl "
+|           " mno "
+|         " pqr"
+
+#data
+<DIV> abc <B> def <I> ghi <P> jkl </B> mno </I> pqr </P>
+#errors
+5: missing document type declaration
+38: mismatched b element end tag (misnested tags)
+47: mismatched i element end tag (misnested tags)
+57: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <div>
+|       " abc "
+|       <b>
+|         " def "
+|         <i>
+|           " ghi "
+|       <i>
+|       <p>
+|         <i>
+|           <b>
+|             " jkl "
+|           " mno "
+|         " pqr "
+
+#data
+<DIV> abc <B> def <I> ghi <P> jkl </B> mno </I> pqr </P> stu
+#errors
+5: missing document type declaration
+38: mismatched b element end tag (misnested tags)
+47: mismatched i element end tag (misnested tags)
+61: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <div>
+|       " abc "
+|       <b>
+|         " def "
+|         <i>
+|           " ghi "
+|       <i>
+|       <p>
+|         <i>
+|           <b>
+|             " jkl "
+|           " mno "
+|         " pqr "
+|       " stu"
+
+#data
+<test attribute---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
+#errors
+1040: missing document type declaration
+1041: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <test>
+|       attribute----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------=""
+
+#data
+<a href="blah">aba<table><a href="foo">br<tr><td></td></tr>x</table>aoe
+#errors
+15: missing document type declaration
+39: unexpected node in table context
+39: a element start tag implying a element end tag
+39: unexpected node in table context
+39: mismatched a element end tag (misnested tags across <table> tag)
+43: unexpected node in table context
+63: unexpected node in table context
+72: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <a>
+|       href="blah"
+|       "aba"
+|       <a>
+|         href="foo"
+|         "br"
+|       <a>
+|         href="foo"
+|         "x"
+|       <table>
+|         <tbody>
+|           <tr>
+|             <td>
+|     <a>
+|       href="foo"
+|       "aoe"
+
+#data
+<a href="blah">aba<table><tr><td><a href="foo">br</td></tr>x</table>aoe
+#errors
+15: missing document type declaration
+54: unexpected td element end tag implied other end tags
+63: unexpected node in table context
+72: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <a>
+|       href="blah"
+|       "abax"
+|       <table>
+|         <tbody>
+|           <tr>
+|             <td>
+|               <a>
+|                 href="foo"
+|                 "br"
+|       "aoe"
+
+#data
+<table><a href="blah">aba<tr><td><a href="foo">br</td></tr>x</table>aoe
+#errors
+7: missing document type declaration
+22: unexpected node in table context
+27: unexpected node in table context
+54: unexpected td element end tag implied other end tags
+63: unexpected node in table context
+72: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <a>
+|       href="blah"
+|       "aba"
+|     <a>
+|       href="blah"
+|       "x"
+|     <table>
+|       <tbody>
+|         <tr>
+|           <td>
+|             <a>
+|               href="foo"
+|               "br"
+|     <a>
+|       href="blah"
+|       "aoe"
+
+#data
+<a href=a>aa<marquee>aa<a href=b>bb</marquee>aa
+#errors
+10: missing document type declaration
+45: mismatched marquee element end tag
+48: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <a>
+|       href="a"
+|       "aa"
+|       <marquee>
+|         "aa"
+|         <a>
+|           href="b"
+|           "bb"
+|       "aa"
+
+#data
+<wbr><strike><code></strike><code><strike></code>
+#errors
+5: missing document type declaration
+28: mismatched strike element end tag (misnested tags)
+49: mismatched code element end tag
+#document
+| <html>
+|   <head>
+|   <body>
+|     <wbr>
+|     <strike>
+|       <code>
+|     <code>
+|       <strike>
+
+#data
+<title><meta></title><link><title><meta></title>
+#errors
+7: missing document type declaration
+#document
+| <html>
+|   <head>
+|     <title>
+|       "<meta>"
+|     <link>
+|     <title>
+|       "<meta>"
+|   <body>
+
+#data
+<style><!--</style><meta><script>--><link></script>
+#errors
+7: missing document type declaration
+#document
+| <html>
+|   <head>
+|     <style>
+|       "<!--"
+|     <meta>
+|     <script>
+|       "--><link>"
+|   <body>
+
+#data
+<head><meta></head><link>
+#errors
+6: missing document type declaration
+25: unexpected link element start tag
+#document
+| <html>
+|   <head>
+|     <meta>
+|     <link>
+|   <body>
+
+#data
+<table><tr><tr><td><td><span><th><span>X</table>
+#errors
+7: missing document type declaration
+33: unexpected td element end tag implied other end tags
+48: unexpected th element end tag implied other end tags
+#document
+| <html>
+|   <head>
+|   <body>
+|     <table>
+|       <tbody>
+|         <tr>
+|         <tr>
+|           <td>
+|           <td>
+|             <span>
+|           <th>
+|             <span>
+|               "X"
+
+#data
+<body><body><base><link><meta><title><p></title><body><p></body>
+#errors
+6: missing document type declaration
+12: unexpected body element start tag
+18: base element start tag out of place
+24: link element start tag out of place
+30: meta element start tag out of place
+37: title element start tag out of place
+54: unexpected body element start tag
+#document
+| <html>
+|   <head>
+|     <base>
+|     <link>
+|     <meta>
+|     <title>
+|       "<p>"
+|   <body>
+|     <p>
+
+#data
+<textarea><p></textarea>
+#errors
+10: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+|     <textarea>
+|       "<p>"
+
+#data
+<p><image></p>
+#errors
+3: missing document type declaration
+10: 'image' is not a valid element name, it should be 'img'
+#document
+| <html>
+|   <head>
+|   <body>
+|     <p>
+|       <img>
+
+#data
+<a><table><a></table><p><a><div><a>
+#errors
+3: missing document type declaration
+13: unexpected node in table context
+13: a element start tag implying a element end tag
+13: unexpected node in table context
+13: mismatched a element end tag (misnested tags across <table> tag)
+21: mismatched table element end tag
+27: a element start tag implying a element end tag
+27: mismatched a element end tag (out-of-order end tags)
+32: mismatched p element end tag
+35: a element start tag implying a element end tag
+35: mismatched a element end tag (out-of-order end tags)
+36: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <a>
+|       <a>
+|       <table>
+|     <p>
+|       <a>
+|     <div>
+|       <a>
+
+#data
+<head></p><meta><p>
+#errors
+6: missing document type declaration
+10: unexpected p element end tag in head
+#document
+| <html>
+|   <head>
+|     <meta>
+|   <body>
+|     <p>
+
+#data
+<head></html><meta><p>
+#errors
+6: missing document type declaration
+19: unexpected node at end of document
+19: unexpected node after body element end tag
+19: meta element start tag out of place
+#document
+| <html>
+|   <head>
+|     <meta>
+|   <body>
+|     <p>
+
+#data
+<b><table><td><i></table>
+#errors
+3: missing document type declaration
+14: required tr element start tag implied by unexpected td element start tag
+25: unexpected td element end tag implied other end tags
+26: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <b>
+|       <table>
+|         <tbody>
+|           <tr>
+|             <td>
+|               <i>
+
+#data
+<b><table><td></b><i></table>
+#errors
+3: missing document type declaration
+14: required tr element start tag implied by unexpected td element start tag
+18: mismatched b element end tag (no matching start tag)
+29: unexpected td element end tag implied other end tags
+30: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <b>
+|       <table>
+|         <tbody>
+|           <tr>
+|             <td>
+|               <i>
+
+#data
+<h1><h2>
+#errors
+4: missing document type declaration
+8: h2 element start tag implying h1 element end tag
+9: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <h1>
+|     <h2>
+
+#data
+<a><p><a></a></p></a>
+#errors
+3: missing document type declaration
+9: a element start tag implying a element end tag
+9: mismatched a element end tag (misnested tags)
+21: mismatched a element end tag (no matching start tag)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <a>
+|     <p>
+|       <a>
+|       <a>
+
+#data
+<b><button></b></button></b>
+#errors
+3: missing document type declaration
+15: mismatched b element end tag (no matching start tag)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <b>
+|       <button>
+
+#data
+<p><b><div><marquee></p></b></div>
+#errors
+3: missing document type declaration
+11: mismatched p element end tag
+24: mismatched p element end tag
+28: mismatched b element end tag (no matching start tag)
+34: mismatched div element end tag
+35: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <p>
+|       <b>
+|     <div>
+|       <b>
+|         <marquee>
+
+#data
+<script></script></div><title></title><p><p>
+#errors
+8: missing document type declaration
+23: unexpected div element end tag in head
+#document
+| <html>
+|   <head>
+|     <script>
+|     <title>
+|   <body>
+|     <p>
+|     <p>
+
+#data
+<p><hr></p>
+#errors
+3: missing document type declaration
+11: mismatched p element end tag
+#document
+| <html>
+|   <head>
+|   <body>
+|     <p>
+|     <hr>
+
+#data
+<select><b><option><select><option></b></select>
+#errors
+8: missing document type declaration
+11: unexpected node in select element context
+27: select element start tag used as end tag
+35: unexpected option element start tag in body
+39: mismatched b element end tag (no matching start tag)
+48: mismatched special end tag select
+#document
+| <html>
+|   <head>
+|   <body>
+|     <select>
+|       <option>
+
+#data
+<html><head><title></title><body></body></html>
+#errors
+6: missing document type declaration
+#document
+| <html>
+|   <head>
+|     <title>
+|   <body>
+
+#data
+<a><table><td><a><table></table><a></tr><a></table><a>
+#errors
+3: missing document type declaration
+14: required tr element start tag implied by unexpected td element start tag
+35: a element start tag implying a element end tag
+40: unexpected td element end tag implied other end tags
+43: unexpected node in table context
+43: a element start tag implying a element end tag
+43: unexpected node in table context
+43: mismatched a element end tag (misnested tags across <table> tag)
+54: a element start tag implying a element end tag
+54: mismatched a element end tag (out-of-order end tags)
+55: mismatched body element end tag (premature end of file?)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <a>
+|       <a>
+|       <table>
+|         <tbody>
+|           <tr>
+|             <td>
+|               <a>
+|                 <table>
+|               <a>
+|     <a>
+
+#data
+<ul><li></li><div><li></div><li><li><div><li><address><li><b><em></b><li></ul>
+#errors
+4: missing document type declaration
+69: mismatched b element end tag (misnested tags)
+#document
+| <html>
+|   <head>
+|   <body>
+|     <ul>
+|       <li>
+|       <div>
+|         <li>
+|       <li>
+|       <li>
+|         <div>
+|       <li>
+|         <address>
+|       <li>
+|         <b>
+|           <em>
+|       <li>
+
+#data
+<frameset><frame><frameset><frame></frameset><noframes></noframes></frameset>
+#errors
+10: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <frameset>
+|     <frame>
+|     <frameset>
+|       <frame>
+|     <noframes>
+
+#data
+<body><frame></frame></frame><frameset><frame><frameset><frame></frameset><noframes></frameset><noframes>
+#errors
+6: missing document type declaration
+13: unexpected frame element start tag in body
+21: unexpected frame element end tag
+29: unexpected frame element end tag
+39: unexpected frameset element start tag in body
+46: unexpected frame element start tag in body
+56: unexpected frameset element start tag in body
+63: unexpected frame element start tag in body
+74: unexpected frameset element end tag
+87: unescaped '</' in CDATA or RCDATA block
+106: unexpected end of file while parsing CDATA section for element noframes
+#document
+| <html>
+|   <head>
+|   <body>
+|     <noframes>
+|       "</frameset><noframes>"
+
+#data
+<h1><table><td><h3></table><h3></h1>
+#errors
+4: missing document type declaration
+15: required tr element start tag implied by unexpected td element start tag
+27: unexpected td element end tag implied other end tags
+31: h3 element start tag implying h1 element end tag
+36: mismatched h1 element end tag
+#document
+| <html>
+|   <head>
+|   <body>
+|     <h1>
+|       <table>
+|         <tbody>
+|           <tr>
+|             <td>
+|               <h3>
+|     <h3>
+
+#data
+<table><colgroup><col><colgroup><col><col><col><colgroup><col><col><thead><tr><td></table>
+#errors
+7: missing document type declaration
+#document
+| <html>
+|   <head>
+|   <body>
+|     <table>
+|       <colgroup>
+|         <col>
+|       <colgroup>
+|         <col>
+|         <col>
+|         <col>
+|       <colgroup>
+|         <col>
+|         <col>
+|       <thead>
+|         <tr>
+|           <td>
+
+#data
+<table><col><tbody><col><tr><col><td><col></table><col>
+#errors
+7: missing document type declaration
+37: required tr element start tag implied by unexpected td element start tag
+55: unexpected col element start tag in body
+#document
+| <html>
+|   <head>
+|   <body>
+|     <table>
+|       <colgroup>
+|         <col>
+|       <tbody>
+|       <colgroup>
+|         <col>
+|       <tbody>
+|         <tr>
+|       <colgroup>
+|         <col>
+|       <tbody>
+|         <tr>
+|           <td>
+|       <colgroup>
+|         <col>
+
+#data
+<table><colgroup><tbody><colgroup><tr><colgroup><td><colgroup></table><colgroup>
+#errors
+7: missing document type declaration
+52: required tr element start tag implied by unexpected td element start tag
+80: unexpected colgroup element start tag in body
+#document
+| <html>
+|   <head>
+|   <body>
+|     <table>
+|       <colgroup>
+|       <tbody>
+|       <colgroup>
+|       <tbody>
+|         <tr>
+|       <colgroup>
+|       <tbody>
+|         <tr>
+|           <td>
+|       <colgroup>
+
+#data
+</strong></b></em></i></u></strike></s></blink></tt></pre></big></small></font></select></h1></h2></h3></h4></h5></h6></body></br></a></img></title></span></style></script></table></th></td></tr></frame></area></link></param></hr></input></col></base></meta></basefont></bgsound></embed></spacer></p></dd></dt></caption></colgroup></tbody></tfoot></thead></address></blockquote></center></dir></div></dl></fieldset></listing></menu></ol></ul></li></nobr></wbr></form></button></marquee></object></html></frameset></head></iframe></image></isindex></noembed></noframes></noscript></optgroup></option></plaintext></textarea>
+#errors
+9: missing document type declaration
+9: unexpected strong element end tag
+13: unexpected b element end tag
+18: unexpected em element end tag
+22: unexpected i element end tag
+26: unexpected u element end tag
+35: unexpected strike element end tag
+39: unexpected s element end tag
+47: unexpected blink element end tag
+52: unexpected tt element end tag
+58: unexpected pre element end tag
+64: unexpected big element end tag
+72: unexpected small element end tag
+79: unexpected font element end tag
+88: unexpected select element end tag
+93: unexpected h1 element end tag
+98: unexpected h2 element end tag
+103: unexpected h3 element end tag
+108: unexpected h4 element end tag
+113: unexpected h5 element end tag
+118: unexpected h6 element end tag
+125: unexpected body element end tag
+130: unexpected br element end tag
+134: unexpected a element end tag
+140: unexpected img element end tag
+148: unexpected title element end tag
+155: unexpected span element end tag
+163: unexpected style element end tag
+172: unexpected script element end tag
+180: unexpected table element end tag
+185: unexpected th element end tag
+190: unexpected td element end tag
+195: unexpected tr element end tag
+203: unexpected frame element end tag
+210: unexpected area element end tag
+217: unexpected link element end tag
+225: unexpected param element end tag
+230: unexpected hr element end tag
+238: unexpected input element end tag
+244: unexpected col element end tag
+251: unexpected base element end tag
+258: unexpected meta element end tag
+269: unexpected basefont element end tag
+279: unexpected bgsound element end tag
+287: unexpected embed element end tag
+296: unexpected spacer element end tag
+300: unexpected p element end tag
+305: unexpected dd element end tag
+310: unexpected dt element end tag
+320: unexpected caption element end tag
+331: unexpected colgroup element end tag
+339: unexpected tbody element end tag
+347: unexpected tfoot element end tag
+355: unexpected thead element end tag
+365: unexpected address element end tag
+378: unexpected blockquote element end tag
+387: unexpected center element end tag
+393: unexpected dir element end tag
+399: unexpected div element end tag
+404: unexpected dl element end tag
+415: unexpected fieldset element end tag
+425: unexpected listing element end tag
+432: unexpected menu element end tag
+437: unexpected ol element end tag
+442: unexpected ul element end tag
+447: unexpected li element end tag
+454: unexpected nobr element end tag
+460: unexpected wbr element end tag
+467: unexpected form element end tag
+476: unexpected button element end tag
+486: unexpected marquee element end tag
+495: unexpected object element end tag
+513: unexpected node at end of document
+513: unexpected node after body element end tag
+513: unexpected frameset element end tag
+520: unexpected head element end tag
+529: mismatched special end tag iframe
+537: unexpected image end tag (that element has no end tag, ever)
+547: unexpected isindex end tag (that element has no end tag, ever)
+557: mismatched special end tag noembed
+568: mismatched special end tag noframes
+579: mismatched special end tag noscript
+590: unexpected optgroup element end tag
+599: unexpected option element end tag
+611: unexpected plaintext element end tag
+622: mismatched special end tag textarea
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+<table><tr></strong></b></em></i></u></strike></s></blink></tt></pre></big></small></font></select></h1></h2></h3></h4></h5></h6></body></br></a></img></title></span></style></script></table></th></td></tr></frame></area></link></param></hr></input></col></base></meta></basefont></bgsound></embed></spacer></p></dd></dt></caption></colgroup></tbody></tfoot></thead></address></blockquote></center></dir></div></dl></fieldset></listing></menu></ol></ul></li></nobr></wbr></form></button></marquee></object></html></frameset></head></iframe></image></isindex></noembed></noframes></noscript></optgroup></option></plaintext></textarea>
+#errors
+7: missing document type declaration
+20: unexpected node in table context
+20: mismatched strong element end tag (no matching start tag)
+24: unexpected node in table context
+24: mismatched b element end tag (no matching start tag)
+29: unexpected node in table context
+29: mismatched em element end tag (no matching start tag)
+33: unexpected node in table context
+33: mismatched i element end tag (no matching start tag)
+37: unexpected node in table context
+37: mismatched u element end tag (no matching start tag)
+46: unexpected node in table context
+46: mismatched strike element end tag (no matching start tag)
+50: unexpected node in table context
+50: mismatched s element end tag (no matching start tag)
+58: unexpected node in table context
+58: unexpected blink element end tag
+63: unexpected node in table context
+63: mismatched tt element end tag (no matching start tag)
+69: unexpected node in table context
+69: mismatched pre element end tag
+75: unexpected node in table context
+75: mismatched big element end tag (no matching start tag)
+83: unexpected node in table context
+83: mismatched small element end tag (no matching start tag)
+90: unexpected node in table context
+90: mismatched font element end tag (no matching start tag)
+99: unexpected node in table context
+99: mismatched special end tag select
+104: unexpected node in table context
+104: mismatched h1 element end tag
+109: unexpected node in table context
+109: mismatched h2 element end tag
+114: unexpected node in table context
+114: mismatched h3 element end tag
+119: unexpected node in table context
+119: mismatched h4 element end tag
+124: unexpected node in table context
+124: mismatched h5 element end tag
+129: unexpected node in table context
+129: mismatched h6 element end tag
+136: unexpected body element end tag
+141: unexpected node in table context
+141: unexpected br end tag (that element has no end tag, ever)
+145: unexpected node in table context
+145: mismatched a element end tag (no matching start tag)
+151: unexpected node in table context
+151: unexpected img end tag (that element has no end tag, ever)
+159: unexpected node in table context
+159: unexpected title element end tag
+166: unexpected node in table context
+166: unexpected span element end tag
+174: unexpected node in table context
+174: unexpected style element end tag
+183: unexpected node in table context
+183: unexpected script element end tag
+196: unexpected th element end tag
+201: unexpected td element end tag
+206: unexpected tr element end tag
+214: unexpected frame element end tag
+221: unexpected area end tag (that element has no end tag, ever)
+228: unexpected link element end tag
+236: unexpected param end tag (that element has no end tag, ever)
+241: unexpected hr end tag (that element has no end tag, ever)
+249: unexpected input end tag (that element has no end tag, ever)
+255: unexpected col element end tag
+262: unexpected base element end tag
+269: unexpected meta element end tag
+280: unexpected basefont end tag (that element has no end tag, ever)
+290: unexpected bgsound end tag (that element has no end tag, ever)
+298: unexpected embed end tag (that element has no end tag, ever)
+307: unexpected spacer end tag (that element has no end tag, ever)
+311: mismatched p element end tag
+316: mismatched dd element end tag
+321: mismatched dt element end tag
+331: unexpected caption element end tag
+342: unexpected colgroup element end tag
+350: unexpected tbody element end tag
+358: unexpected tfoot element end tag
+366: unexpected thead element end tag
+376: mismatched address element end tag
+389: mismatched blockquote element end tag
+398: mismatched center element end tag
+404: mismatched dir element end tag
+410: mismatched div element end tag
+415: mismatched dl element end tag
+426: mismatched fieldset element end tag
+436: mismatched listing element end tag
+443: mismatched menu element end tag
+448: mismatched ol element end tag
+453: mismatched ul element end tag
+458: mismatched li element end tag
+465: mismatched nobr element end tag (no matching start tag)
+471: unexpected wbr end tag (that element has no end tag, ever)
+478: mismatched form element end tag
+524: unexpected node at end of document
+524: unexpected node after body element end tag
+524: unexpected frameset element end tag
+531: unexpected head element end tag
+540: mismatched special end tag iframe
+548: unexpected image end tag (that element has no end tag, ever)
+558: unexpected isindex end tag (that element has no end tag, ever)
+568: mismatched special end tag noembed
+579: mismatched special end tag noframes
+590: mismatched special end tag noscript
+601: unexpected optgroup element end tag
+610: unexpected option element end tag
+622: unexpected plaintext element end tag
+633: mismatched special end tag textarea
+#document
+| <html>
+|   <head>
+|   <body>
+|     <table>
+|       <tbody>
+|         <tr>

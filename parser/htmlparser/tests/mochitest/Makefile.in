@@ -44,7 +44,14 @@ relativesrcdir  = parser/htmlparser/tests/mochitest
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_bug339350.xhtml \
+_TEST_FILES =	parser_datreader.js \
+		parser_web_testrunner.js \
+		html5lib_tree_dat1.txt \
+		html5lib_tree_dat2.txt \
+		html5lib_tree_dat3.txt \
+		html5_tree_construction_exceptions.js \
+		test_html5_tree_construction.html \
+	 	test_bug339350.xhtml \
 		test_bug358797.html \
 		$(NULL)
 
