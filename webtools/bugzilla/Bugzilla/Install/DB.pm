@@ -49,39 +49,6 @@ sub indicate_progress {
     }
 }
 
-# This is used before adding a foreign key to a column, to make sure
-# that the database won't fail adding the key.
-sub check_references {
-    my ($table, $column, $foreign_table, $foreign_column) = @_;
-    my $dbh = Bugzilla->dbh;
-
-    my $bad_values = $dbh->selectcol_arrayref(
-        "SELECT DISTINCT $table.$column 
-           FROM $table LEFT JOIN $foreign_table
-                ON $table.$column = $foreign_table.$foreign_column
-          WHERE $foreign_table.$foreign_column IS NULL");
-
-    if (@$bad_values) {
-        my $values = join(', ', @$bad_values);
-        print <<EOT;
-
-ERROR: There are invalid values for the $column column in the $table 
-table. (These values do not exist in the $foreign_table table, in the 
-$foreign_column column.)
-
-Before continuing with checksetup, you will need to fix these values,
-either by deleting these rows from the database, or changing the values
-of $column in $table to point to valid values in $foreign_table.$foreign_column.
-
-The bad values from the $table.$column column are:
-$values
-
-EOT
-        # I just picked a number above 2, to be considered "abnormal exit."
-        exit 3;
-    }
-}
-
 # NOTE: This is NOT the function for general table updates. See
 # update_table_definitions for that. This is only for the fielddefs table.
 sub update_fielddefs_definition {
@@ -413,9 +380,9 @@ sub update_table_definitions {
     if ($dbh->bz_column_info('components', 'initialqacontact')->{NOTNULL}) {
         $dbh->bz_alter_column('components', 'initialqacontact', 
                               {TYPE => 'INT3'});
-        $dbh->do("UPDATE components SET initialqacontact = NULL " .
-                  "WHERE initialqacontact = 0");
     }
+    $dbh->do("UPDATE components SET initialqacontact = NULL " .
+              "WHERE initialqacontact = 0");
 
     _migrate_email_prefs_to_new_table();
     _initialize_dependency_tree_changes_email_pref();
@@ -552,25 +519,13 @@ sub update_table_definitions {
     $dbh->bz_add_column('milestones', 'id',
         {TYPE => 'MEDIUMSERIAL', NOTNULL => 1, PRIMARYKEY => 1});
 
-    # Referential Integrity begins here
-    check_references('profiles_activity', 'userid', 'profiles', 'userid');
-    $dbh->bz_alter_column('profiles_activity', 'userid',
-        {TYPE => 'INT3', NOTNULL => 1,  REFERENCES =>
-        {TABLE  => 'profiles', COLUMN => 'userid', DELETE => 'CASCADE'}});
-    check_references('profiles_activity', 'who', 'profiles', 'userid');
-    $dbh->bz_alter_column('profiles_activity', 'who',
-        {TYPE => 'INT3', NOTNULL => 1, REFERENCES =>
-        {TABLE  => 'profiles', COLUMN => 'userid'}});
-    check_references('profiles_activity', 'fieldid', 'fielddefs', 'id');
-    $dbh->bz_alter_column('profiles_activity', 'fieldid',
-        {TYPE => 'INT3', NOTNULL => 1, REFERENCES =>
-        {TABLE  => 'fielddefs', COLUMN => 'id'}});
-
     ################################################################
     # New --TABLE-- changes should go *** A B O V E *** this point #
     ################################################################
 
     Bugzilla::Hook::process('install-update_db');
+
+    $dbh->bz_setup_foreign_keys();
 }
 
 # Subroutines should be ordered in the order that they are called.

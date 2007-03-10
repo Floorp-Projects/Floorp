@@ -40,6 +40,7 @@ use Bugzilla::Hook;
 use Bugzilla::Util;
 use Bugzilla::Constants;
 
+use Carp qw(confess);
 use Hash::Util qw(lock_value unlock_hash lock_keys unlock_keys);
 use Safe;
 # Historical, needed for SCHEMA_VERSION = '1.00'
@@ -97,20 +98,6 @@ more about how this integrates into the rest of Bugzilla.
 =head1 CONSTANTS
 
 =over
-
-=item C<TABLES_FIRST>
-
-Because of L</"Referential Integrity">, certain tables must be created
-before other tables. L</ABSTRACT_SCHEMA> can't specify this, because
-it's a hash. So we specify it here. When calling C<get_table_list()>,
-these tables will be returned before the other tables.
-
-=cut
-
-use constant TABLES_FIRST => qw(
-    fielddefs
-    profiles
-);
 
 =item C<SCHEMA_VERSION>
 
@@ -194,7 +181,7 @@ The column pointed at in that table.
 =item C<DELETE>
 
 What to do if the row in the parent table is deleted. Choices are
-C<RESTRICT> or C<CASCADE>. 
+C<RESTRICT>, C<CASCADE>, or C<SET NULL>. 
 
 C<RESTRICT> means the deletion of the row in the parent table will 
 be forbidden by the database if there is a row in I<this> table that 
@@ -203,16 +190,18 @@ C<DELETE>.
 
 C<CASCADE> means that this row will be deleted along with that row.
 
+C<SET NULL> means that the column will be set to C<NULL> when the parent
+row is deleted. Note that this is only valid if the column can actually
+be set to C<NULL>. (That is, the column isn't C<NOT NULL>.)
+
 =item C<UPDATE>
 
-What to do if the value in the parent table is updated. It has the
-same choices as L</DELETE>, except it defaults to C<CASCADE>, which means
-"also update this column in this table."
+What to do if the value in the parent table is updated. You can set this
+to C<CASCADE> or C<RESTRICT>, which mean the same thing as they do for
+L</DELETE>. This variable defaults to C<CASCADE>, which means "also 
+update this column in this table."
 
 =back
-
-Note that not all our supported databases actually enforce C<RESTRICT>
-and C<CASCADE>, so don't depend on them.
 
 =cut
 
@@ -293,7 +282,9 @@ use constant ABSTRACT_SCHEMA => {
         FIELDS => [
             bug_id    => {TYPE => 'INT3', NOTNULL => 1},
             attach_id => {TYPE => 'INT3'},
-            who       => {TYPE => 'INT3', NOTNULL => 1},
+            who       => {TYPE => 'INT3', NOTNULL => 1,
+                          REFERENCES => {TABLE  => 'profiles',
+                                         COLUMN => 'userid'}},
             bug_when  => {TYPE => 'DATETIME', NOTNULL => 1},
             fieldid   => {TYPE => 'INT3', NOTNULL => 1},
             added     => {TYPE => 'TINYTEXT'},
@@ -310,7 +301,10 @@ use constant ABSTRACT_SCHEMA => {
     cc => {
         FIELDS => [
             bug_id => {TYPE => 'INT3', NOTNULL => 1},
-            who    => {TYPE => 'INT3', NOTNULL => 1},
+            who    => {TYPE => 'INT3', NOTNULL => 1,
+                       REFERENCES => {TABLE  => 'profiles',
+                                      COLUMN => 'userid',
+                                      DELETE => 'CASCADE'}},
         ],
         INDEXES => [
             cc_bug_id_idx => {FIELDS => [qw(bug_id who)],
@@ -359,7 +353,10 @@ use constant ABSTRACT_SCHEMA => {
 
     votes => {
         FIELDS => [
-            who        => {TYPE => 'INT3', NOTNULL => 1},
+            who        => {TYPE => 'INT3', NOTNULL => 1,
+                           REFERENCES => {TABLE  => 'profiles',
+                                          COLUMN => 'userid',
+                                          DELETE => 'CASCADE'}},
             bug_id     => {TYPE => 'INT3', NOTNULL => 1},
             vote_count => {TYPE => 'INT2', NOTNULL => 1},
         ],
@@ -379,7 +376,9 @@ use constant ABSTRACT_SCHEMA => {
             mimetype     => {TYPE => 'MEDIUMTEXT', NOTNULL => 1},
             ispatch      => {TYPE => 'BOOLEAN'},
             filename     => {TYPE => 'varchar(100)', NOTNULL => 1},
-            submitter_id => {TYPE => 'INT3', NOTNULL => 1},
+            submitter_id => {TYPE => 'INT3', NOTNULL => 1,
+                             REFERENCES => {TABLE => 'profiles',
+                                            COLUMN => 'userid'}},
             isobsolete   => {TYPE => 'BOOLEAN', NOTNULL => 1,
                              DEFAULT => 'FALSE'},
             isprivate    => {TYPE => 'BOOLEAN', NOTNULL => 1,
@@ -725,7 +724,10 @@ use constant ABSTRACT_SCHEMA => {
 
     email_setting => {
         FIELDS => [
-            user_id      => {TYPE => 'INT3', NOTNULL => 1},
+            user_id      => {TYPE => 'INT3', NOTNULL => 1,
+                             REFERENCES => {TABLE  => 'profiles',
+                                            COLUMN => 'userid',
+                                            DELETE => 'CASCADE'}},
             relationship => {TYPE => 'INT1', NOTNULL => 1},
             event        => {TYPE => 'INT1', NOTNULL => 1},
         ],
@@ -738,8 +740,14 @@ use constant ABSTRACT_SCHEMA => {
 
     watch => {
         FIELDS => [
-            watcher => {TYPE => 'INT3', NOTNULL => 1},
-            watched => {TYPE => 'INT3', NOTNULL => 1},
+            watcher => {TYPE => 'INT3', NOTNULL => 1,
+                        REFERENCES => {TABLE  => 'profiles',
+                                       COLUMN => 'userid',
+                                       DELETE => 'CASCADE'}},
+            watched => {TYPE => 'INT3', NOTNULL => 1,
+                        REFERENCES => {TABLE  => 'profiles',
+                                       COLUMN => 'userid',
+                                       DELETE => 'CASCADE'}},
         ],
         INDEXES => [
             watch_watcher_idx => {FIELDS => [qw(watcher watched)],
@@ -752,7 +760,10 @@ use constant ABSTRACT_SCHEMA => {
         FIELDS => [
             id           => {TYPE => 'MEDIUMSERIAL', NOTNULL => 1,
                              PRIMARYKEY => 1},
-            userid       => {TYPE => 'INT3', NOTNULL => 1},
+            userid       => {TYPE => 'INT3', NOTNULL => 1,
+                             REFERENCES => {TABLE  => 'profiles',
+                                            COLUMN => 'userid',
+                                            DELETE => 'CASCADE'}},
             name         => {TYPE => 'varchar(64)', NOTNULL => 1},
             query        => {TYPE => 'MEDIUMTEXT', NOTNULL => 1},
             query_type   => {TYPE => 'BOOLEAN', NOTNULL => 1},
@@ -765,8 +776,14 @@ use constant ABSTRACT_SCHEMA => {
 
     namedqueries_link_in_footer => {
         FIELDS => [
-            namedquery_id => {TYPE => 'INT3', NOTNULL => 1},
-            user_id       => {TYPE => 'INT3', NOTNULL => 1},
+            namedquery_id => {TYPE => 'INT3', NOTNULL => 1,
+                              REFERENCES => {TABLE  => 'namedqueries',
+                                             COLUMN => 'id',
+                                             DELETE => 'CASCADE'}},
+            user_id       => {TYPE => 'INT3', NOTNULL => 1,
+                              REFERENCES => {TABLE  => 'profiles',
+                                             COLUMN => 'userid',
+                                             DELETE => 'CASCADE'}},
         ],
         INDEXES => [
             namedqueries_link_in_footer_id_idx => {FIELDS => [qw(namedquery_id user_id)],
@@ -778,7 +795,10 @@ use constant ABSTRACT_SCHEMA => {
     component_cc => {
 
         FIELDS => [
-            user_id      => {TYPE => 'INT3', NOTNULL => 1},
+            user_id      => {TYPE => 'INT3', NOTNULL => 1,
+                             REFERENCES => {TABLE  => 'profiles',
+                                            COLUMN => 'userid',
+                                            DELETE => 'CASCADE'}},
             component_id => {TYPE => 'INT2', NOTNULL => 1},
         ],
         INDEXES => [
@@ -794,7 +814,10 @@ use constant ABSTRACT_SCHEMA => {
         FIELDS => [
             cookie   => {TYPE => 'varchar(16)', NOTNULL => 1,
                          PRIMARYKEY => 1},
-            userid   => {TYPE => 'INT3', NOTNULL => 1},
+            userid   => {TYPE => 'INT3', NOTNULL => 1,
+                         REFERENCES => {TABLE  => 'profiles',
+                                        COLUMN => 'userid',
+                                        DELETE => 'CASCADE'}},
             ipaddr   => {TYPE => 'varchar(40)', NOTNULL => 1},
             lastused => {TYPE => 'DATETIME', NOTNULL => 1},
         ],
@@ -808,7 +831,9 @@ use constant ABSTRACT_SCHEMA => {
     #     for these changes.
     tokens => {
         FIELDS => [
-            userid    => {TYPE => 'INT3'},
+            userid    => {TYPE => 'INT3', REFERENCES => {TABLE  => 'profiles',
+                                                         COLUMN => 'userid',
+                                                         DELETE => 'CASCADE'}},
             issuedate => {TYPE => 'DATETIME', NOTNULL => 1} ,
             token     => {TYPE => 'varchar(16)', NOTNULL => 1,
                           PRIMARYKEY => 1},
@@ -996,8 +1021,13 @@ use constant ABSTRACT_SCHEMA => {
                                  PRIMARYKEY => 1},
             name             => {TYPE => 'varchar(64)', NOTNULL => 1},
             product_id       => {TYPE => 'INT2', NOTNULL => 1},
-            initialowner     => {TYPE => 'INT3', NOTNULL => 1},
-            initialqacontact => {TYPE => 'INT3'},
+            initialowner     => {TYPE => 'INT3', NOTNULL => 1,
+                                 REFERENCES => {TABLE  => 'profiles',
+                                                COLUMN => 'userid'}},
+            initialqacontact => {TYPE => 'INT3',
+                                 REFERENCES => {TABLE  => 'profiles',
+                                                COLUMN => 'userid',
+                                                DELETE => 'SET NULL'}},
             description      => {TYPE => 'MEDIUMTEXT', NOTNULL => 1},
         ],
         INDEXES => [
@@ -1063,7 +1093,10 @@ use constant ABSTRACT_SCHEMA => {
         FIELDS => [
             id            => {TYPE => 'MEDIUMSERIAL', PRIMARYKEY => 1,
                               NOTNULL => 1},
-            eventid       => {TYPE => 'INT3', NOTNULL => 1},
+            eventid       => {TYPE => 'INT3', NOTNULL => 1,
+                              REFERENCES => {TABLE => 'whine_events',
+                                             COLUMN => 'id',
+                                             DELETE => 'CASCADE'}},
             query_name    => {TYPE => 'varchar(64)', NOTNULL => 1,
                               DEFAULT => "''"},
             sortkey       => {TYPE => 'INT2', NOTNULL => 1,
@@ -1082,7 +1115,10 @@ use constant ABSTRACT_SCHEMA => {
         FIELDS => [
             id          => {TYPE => 'MEDIUMSERIAL', PRIMARYKEY => 1,
                             NOTNULL => 1},
-            eventid     => {TYPE => 'INT3', NOTNULL => 1},
+            eventid     => {TYPE => 'INT3', NOTNULL => 1,
+                            REFERENCES => {TABLE  => 'whine_events',
+                                           COLUMN => 'id',
+                                           DELETE => 'CASCADE'}},
             run_day     => {TYPE => 'varchar(32)'},
             run_time    => {TYPE => 'varchar(32)'},
             run_next    => {TYPE => 'DATETIME'},
@@ -1099,7 +1135,10 @@ use constant ABSTRACT_SCHEMA => {
         FIELDS => [
             id           => {TYPE => 'MEDIUMSERIAL', PRIMARYKEY => 1,
                              NOTNULL => 1},
-            owner_userid => {TYPE => 'INT3', NOTNULL => 1},
+            owner_userid => {TYPE => 'INT3', NOTNULL => 1,
+                             REFERENCES => {TABLE  => 'profiles', 
+                                            COLUMN => 'userid',
+                                            DELETE => 'CASCADE'}},
             subject      => {TYPE => 'varchar(128)'},
             body         => {TYPE => 'MEDIUMTEXT'},
         ],
@@ -1159,7 +1198,10 @@ use constant ABSTRACT_SCHEMA => {
 
     profile_setting => {
         FIELDS => [
-            user_id       => {TYPE => 'INT3', NOTNULL => 1},
+            user_id       => {TYPE => 'INT3', NOTNULL => 1,
+                              REFERENCES => {TABLE  => 'profiles',
+                                             COLUMN => 'userid',
+                                             DELETE => 'CASCADE'}},
             setting_name  => {TYPE => 'varchar(32)', NOTNULL => 1},
             setting_value => {TYPE => 'varchar(32)', NOTNULL => 1},
         ],
@@ -1376,7 +1418,8 @@ C<ALTER TABLE> SQL statement
     my $self = shift;
     my $finfo = (@_ == 1 && ref($_[0]) eq 'HASH') ? $_[0] : { @_ };
     my $type = $finfo->{TYPE};
-    die "A valid TYPE was not specified for this column." unless ($type);
+    confess "A valid TYPE was not specified for this column (got " 
+            . Dumper($finfo) . ")" unless ($type);
 
     my $default = $finfo->{DEFAULT};
     # Replace any abstract default value (such as 'TRUE' or 'FALSE')
@@ -1396,17 +1439,6 @@ C<ALTER TABLE> SQL statement
 
 } #eosub--get_type_ddl
 
-
-# Used if you want to display the DDL to the user, as opposed to actually
-# use it in the database.
-sub get_display_ddl {
-    my ($self, $table, $column, $def) = @_;
-    my $ddl = $self->get_type_ddl($def);
-    if ($def->{REFERENCES}) {
-        $ddl .= $self->get_fk_ddl($table, $column, $def->{REFERENCES});
-    }
-    return $ddl;
-}
 
 sub get_fk_ddl {
 =item C<_get_fk_ddl>
@@ -1441,8 +1473,8 @@ is undefined.
 
     my $update    = $references->{UPDATE} || 'CASCADE';
     my $delete    = $references->{DELETE} || 'RESTRICT';
-    my $to_table  = $references->{TABLE}  || die "No table in reference";
-    my $to_column = $references->{COLUMN} || die "No column in reference";
+    my $to_table  = $references->{TABLE}  || confess "No table in reference";
+    my $to_column = $references->{COLUMN} || confess "No column in reference";
     my $fk_name   = $self->_get_fk_name($table, $column, $references);
 
     return "\n     CONSTRAINT $fk_name FOREIGN KEY ($column)\n"
@@ -1460,10 +1492,10 @@ sub _get_fk_name {
     return "fk_${table}_${column}_${to_table}_${to_column}";
 }
 
-sub _get_add_fk_sql {
-    my ($self, $table, $column, $new_def) = @_;
+sub get_add_fk_sql {
+    my ($self, $table, $column, $def) = @_;
 
-    my $fk_string = $self->get_fk_ddl($table, $column, $new_def->{REFERENCES});
+    my $fk_string = $self->get_fk_ddl($table, $column, $def);
     return ("ALTER TABLE $table ADD $fk_string");
 }
 
@@ -1519,22 +1551,12 @@ sub get_table_list {
 
  Parameters:  none
 
- Returns:     An array of table names. The tables specified 
-              in L</TABLES_FIRST> will come first, in order. The
-              rest of the tables will be in random order.
+ Returns:     An array of table names, in alphabetical order.
 
 =cut
 
     my $self = shift;
-
-    my %schema = %{$self->{schema}};
-    my @tables;
-    foreach my $table (TABLES_FIRST) {
-        push(@tables, $table);
-        delete $schema{$table};
-    }
-    push(@tables, keys %schema);
-    return @tables;   
+    return sort keys %{$self->{schema}};   
 }
 
 sub get_table_columns {
@@ -1601,14 +1623,6 @@ sub get_table_ddl {
         my $index_sql  = $self->get_add_index_ddl($table, $index_name, 
                                                   $index_info);
         push(@ddl, $index_sql) if $index_sql;
-    }
-
-    my %fields = @{$self->{schema}{$table}{FIELDS}};
-    foreach my $col (keys %fields) {
-        my $def = $fields{$col};
-        if ($def->{REFERENCES}) {
-            push(@ddl, $self->_get_add_fk_sql($table, $col, $def));
-        }
     }
 
     push(@ddl, @{ $self->{schema}{$table}{DB_EXTRAS} })
@@ -1703,6 +1717,11 @@ sub get_add_column_ddl {
     # before this point, if we haven't set a default.
     (push(@statements, "UPDATE $table SET $column = $init_value"))
         if defined $init_value;
+
+    if (defined $definition->{REFERENCES}) {
+        push(@statements, $self->get_add_fk_sql($table, $column,
+                                                $definition->{REFERENCES}));
+    }
 
     return (@statements);
 }
@@ -1822,15 +1841,6 @@ sub get_alter_column_ddl {
     # If we went from being a PK to not being a PK
     elsif ( $old_def->{PRIMARYKEY} && !$new_def->{PRIMARYKEY} ) {
         push(@statements, "ALTER TABLE $table DROP PRIMARY KEY");
-    }
-
-    # If we went from not having an FK to having an FK
-    # XXX For right now, you can't change an FK's actual definition.
-    if (!$old_def->{REFERENCES} && $new_def->{REFERENCES}) {
-        push(@statements, $self->_get_add_fk_sql($table, $column, $new_def));
-    }
-    elsif ($old_def->{REFERENCES} && !$new_def->{REFERENCES}) {
-        push(@statements, $self->_get_drop_fk_sql($table, $column, $old_def));
     }
 
     return @statements;
@@ -2220,31 +2230,17 @@ sub columns_equal {
     $col_one->{TYPE} = uc($col_one->{TYPE});
     $col_two->{TYPE} = uc($col_two->{TYPE});
 
-    # It doesn't work to compare the two REFERENCES items, because
-    # they look like 'HASH(0xaf3c434)' to diff_arrays--they'll never
-    # be equal.
-    my %col_one_def = %$col_one;
-    delete $col_one_def{REFERENCES};
-    my %col_two_def = %$col_two;
-    delete $col_two_def{REFERENCES};
+    # We don't care about foreign keys when comparing column definitions.
+    delete $col_one->{REFERENCES};
+    delete $col_two->{REFERENCES};
 
-    my @col_one_array = %col_one_def;
-    my @col_two_array = %col_two_def;
+    my @col_one_array = %$col_one;
+    my @col_two_array = %$col_two;
 
     my ($removed, $added) = diff_arrays(\@col_one_array, \@col_two_array);
 
     # If there are no differences between the arrays, then they are equal.
-    my $defs_identical = !scalar(@$removed) && !scalar(@$added);
-
-    # If the basic definitions are identical, we still want to check
-    # if the two foreign key definitions are different.
-    my @fk_array_one = %{$col_one->{REFERENCES} || {}};
-    my @fk_array_two = %{$col_two->{REFERENCES} || {}};
-    my ($fk_removed, $fk_added) = 
-        diff_arrays(\@fk_array_one, \@fk_array_two);
-    my $fk_identical = !scalar(@$fk_removed) && !scalar(@$fk_added);
-
-    return $defs_identical && $fk_identical ? 1 : 0;
+    return !scalar(@$removed) && !scalar(@$added) ? 1 : 0;
 }
 
 

@@ -43,6 +43,7 @@ use Bugzilla::Error;
 use Bugzilla::DB::Schema;
 
 use List::Util qw(max);
+use Storable qw(dclone);
 
 #####################################################################
 # Constants
@@ -428,6 +429,23 @@ sub bz_populate_enum_tables {
     }
 }
 
+sub bz_setup_foreign_keys {
+    my ($self) = @_;
+
+    # We use _bz_schema because bz_add_table has removed all REFERENCES
+    # items from _bz_real_schema.
+    my @tables = $self->_bz_schema->get_table_list();
+    foreach my $table (@tables) {
+        my @columns = $self->_bz_schema->get_table_columns($table);
+        foreach my $column (@columns) {
+            my $def = $self->_bz_schema->get_column_abstract($table, $column);
+            if ($def->{REFERENCES}) {
+                $self->bz_add_fk($table, $column, $def->{REFERENCES});
+            }
+        }
+    }
+}
+
 #####################################################################
 # Schema Modification Methods
 #####################################################################
@@ -459,6 +477,24 @@ sub bz_add_column {
             $self->do($sql);
         }
         $self->_bz_real_schema->set_column($table, $name, $new_def);
+        $self->_bz_store_real_schema;
+    }
+}
+
+sub bz_add_fk {
+    my ($self, $table, $column, $def) = @_;
+
+    my $col_def = $self->bz_column_info($table, $column);
+    if (!$col_def->{REFERENCES}) {
+        $self->_check_references($table, $column, $def->{TABLE},
+                                 $def->{COLUMN});
+        print get_text('install_fk_add',
+                       { table => $table, column => $column, fk => $def }) 
+            . "\n" if Bugzilla->usage_mode == USAGE_MODE_CMDLINE;
+        my @sql = $self->_bz_real_schema->get_add_fk_sql($table, $column, $def);
+        $self->do($_) foreach @sql;
+        $col_def->{REFERENCES} = $def;
+        $self->_bz_real_schema->set_column($table, $column, $col_def);
         $self->_bz_store_real_schema;
     }
 }
@@ -515,11 +551,10 @@ sub bz_alter_column_raw {
     my @statements = $self->_bz_real_schema->get_alter_column_ddl(
         $table, $name, $new_def,
         defined $set_nulls_to ? $self->quote($set_nulls_to) : undef);
-    my $new_ddl = $self->_bz_schema->get_display_ddl($table, $name, $new_def);
+    my $new_ddl = $self->_bz_schema->get_type_ddl($new_def);
     print "Updating column $name in table $table ...\n";
     if (defined $current_def) {
-        my $old_ddl = $self->_bz_schema->get_display_ddl($table, $name, 
-                                                         $current_def);
+        my $old_ddl = $self->_bz_schema->get_type_ddl($current_def);
         print "Old: $old_ddl\n";
     }
     print "New: $new_ddl\n";
@@ -569,8 +604,17 @@ sub bz_add_table {
 
     if (!$table_exists) {
         $self->_bz_add_table_raw($name);
-        $self->_bz_real_schema->add_table($name,
-            $self->_bz_schema->get_table_abstract($name));
+        my $table_def = dclone($self->_bz_schema->get_table_abstract($name));
+
+        my %fields = @{$table_def->{FIELDS}};
+        foreach my $col (keys %fields) {
+            # Foreign Key references have to be added by Install::DB after
+            # initial table creation, because column names have changed
+            # over history and it's impossible to keep track of that info
+            # in ABSTRACT_SCHEMA.
+            delete $fields{$col}->{REFERENCES};
+        }
+        $self->_bz_real_schema->add_table($name, $table_def);
         $self->_bz_store_real_schema;
     }
 }
@@ -751,7 +795,10 @@ sub _bz_get_initial_schema {
 
 sub bz_column_info {
     my ($self, $table, $column) = @_;
-    return $self->_bz_real_schema->get_column_abstract($table, $column);
+    my $def = $self->_bz_real_schema->get_column_abstract($table, $column);
+    # We dclone it so callers can't modify the Schema.
+    $def = dclone($def) if defined $def;
+    return $def;
 }
 
 sub bz_index_info {
@@ -1047,6 +1094,39 @@ sub _bz_populate_enum_table {
             printf "%-${maxlen}s sortkey: $sortorder\n", "'$value'";
             $insert->execute($value, $sortorder);
         }
+    }
+}
+
+# This is used before adding a foreign key to a column, to make sure
+# that the database won't fail adding the key.
+sub _check_references {
+    my ($self, $table, $column, $foreign_table, $foreign_column) = @_;
+
+    my $bad_values = $self->selectcol_arrayref(
+        "SELECT DISTINCT $table.$column 
+           FROM $table LEFT JOIN $foreign_table
+                ON $table.$column = $foreign_table.$foreign_column
+          WHERE $foreign_table.$foreign_column IS NULL
+                AND $table.$column IS NOT NULL");
+
+    if (@$bad_values) {
+        my $values = join(', ', @$bad_values);
+        print <<EOT;
+
+ERROR: There are invalid values for the $column column in the $table 
+table. (These values do not exist in the $foreign_table table, in the 
+$foreign_column column.)
+
+Before continuing with checksetup, you will need to fix these values,
+either by deleting these rows from the database, or changing the values
+of $column in $table to point to valid values in $foreign_table.$foreign_column.
+
+The bad values from the $table.$column column are:
+$values
+
+EOT
+        # I just picked a number above 2, to be considered "abnormal exit."
+        exit 3;
     }
 }
 

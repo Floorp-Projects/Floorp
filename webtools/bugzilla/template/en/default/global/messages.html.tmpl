@@ -382,6 +382,9 @@
   [% ELSIF message_tag == "install_file_perms_fix" %]
     Fixing file permissions...
 
+  [% ELSIF message_tag == "install_fk_add" %]
+    Adding foreign key: [% table FILTER html %].[% column FILTER html %] -&gt; [% fk.TABLE FILTER html %].[% fk.COLUMN FILTER html %]...
+
   [% ELSIF message_tag == "install_group_create" %]
     Creating group [% name FILTER html %]...
 

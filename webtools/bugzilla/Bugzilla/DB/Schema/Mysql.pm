@@ -176,16 +176,9 @@ sub get_alter_column_ddl {
         # keys are not allowed.
         delete $new_def_copy{PRIMARYKEY};
     }
-    # CHANGE COLUMN doesn't support REFERENCES
-    delete $new_def_copy{REFERENCES};
 
     my $new_ddl = $self->get_type_ddl(\%new_def_copy);
     my @statements;
-
-    # Drop the FK if the new definition doesn't have one.
-    if ($old_def->{REFERENCES} && !$new_def->{REFERENCES}) {
-        push(@statements, $self->_get_drop_fk_sql($table, $column, $old_def));
-    }
 
     push(@statements, "UPDATE $table SET $column = $set_nulls_to
                         WHERE $column IS NULL") if defined $set_nulls_to;
@@ -196,10 +189,6 @@ sub get_alter_column_ddl {
         push(@statements, "ALTER TABLE $table DROP PRIMARY KEY");
     }
 
-    # Add the FK if the new definition has one and the old definition doesn't.
-    if ($new_def->{REFERENCES} && !$old_def->{REFERENCES}) {
-        push(@statements, $self->_get_add_fk_sql($table, $column, $new_def));
-    }
     return @statements;
 }
 
