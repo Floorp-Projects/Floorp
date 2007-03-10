@@ -139,10 +139,12 @@ if ! [ -d xpi-tree ]; then mkdir xpi-tree; fi
 echo -n .
 if ! [ -d xpi-tree/chrome ]; then mkdir xpi-tree/chrome; fi
 echo -n .
-if ! [ -d xpi-tree/components ]; then mkdir xpi-tree/components; fi
+if ! [ -d xpi-tree/chrome/icons ]; then mkdir xpi-tree/chrome/icons; fi
 echo -n .
-if ! [ -d xpi-tree/defaults ]; then mkdir xpi-tree/defaults; fi
-echo   ".            done"
+if ! [ -d xpi-tree/chrome/icons/default ]; then mkdir xpi-tree/chrome/icons/default; fi
+echo -n .
+if ! [ -d xpi-tree/components ]; then mkdir xpi-tree/components; fi
+echo   ".           done"
 
 echo -n "  Checking JAR structure"
 echo -n .
@@ -155,11 +157,11 @@ echo -n "  Updating Firefox Extension files"
 echo -n .
 safeCommand sed "s|@REVISION@|$VERSION|g" '<' "$XPIFILES/install.rdf" '>' "$XPIROOT/install.rdf"
 echo -n .
-safeCommand cp "$XPIFILES/chatzilla-window.ico" "$XPIROOT/defaults/chatzilla-window.ico"
+safeCommand cp "$XPIFILES/chatzilla-window.ico" "$XPIROOT/chrome/icons/default/chatzilla-window.ico"
 echo -n .
-safeCommand cp "$XPIFILES/chatzilla-window.xpm" "$XPIROOT/defaults/chatzilla-window.xpm"
+safeCommand cp "$XPIFILES/chatzilla-window.xpm" "$XPIROOT/chrome/icons/default/chatzilla-window.xpm"
 echo -n .
-safeCommand cp "$XPIFILES/chatzilla-window16.xpm" "$XPIROOT/defaults/chatzilla-window16.xpm"
+safeCommand cp "$XPIFILES/chatzilla-window16.xpm" "$XPIROOT/chrome/icons/default/chatzilla-window16.xpm"
 echo   ".  done"
 
 
@@ -213,4 +215,4 @@ cd "$OLDPWD"
 echo   ".         done"
 
 
-echo "Build of ChatZilla $VERSION...        ALL DONE"
+echo "Build of ChatZilla $VERSION...         ALL DONE"

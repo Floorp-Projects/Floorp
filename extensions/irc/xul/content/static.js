@@ -402,7 +402,12 @@ function initApplicationCompatibility()
 
     // Set up simple host and platform information.
     client.host = "Unknown";
+    // Do we need to copy the icons? (not necessary on Gecko 1.8 and onwards,
+    // and install.js does it for us on SeaMonkey)
+    client.hostCompat.needToCopyIcons = false;
+
     var app = getService("@mozilla.org/xre/app-info;1", "nsIXULAppInfo");
+    // nsIXULAppInfo wasn't implemented before 1.8...
     if (app)
     {
         // Use the XULAppInfo.ID to find out what host we run on.
@@ -435,6 +440,7 @@ function initApplicationCompatibility()
         }
         else if (url == "chrome://browser/content/browser.xul")
         {
+            client.hostCompat.needToCopyIcons = true;
             client.host = "Firefox";
         }
         else
@@ -474,27 +480,17 @@ function initIcons()
     const suffixes = [".ico", ".xpm", "16.xpm"];
 
     /* when installing on Mozilla, the XPI has the power to put the icons where
-     * they are needed - in Firefox, it doesn't. So we move them here, instead.
-     * In XULRunner, things are more fun, as we're not an extension.
+     * they are needed - in older versions of Firefox, it doesn't.
      */
-    var sourceDir;
-    if ((client.host == "Firefox") || (client.host == "Flock"))
-    {
-        sourceDir = getSpecialDirectory("ProfD");
-        sourceDir.append("extensions");
-        sourceDir.append("{" + __cz_guid + "}");
-        sourceDir.append("defaults");
-    }
-    else if (client.host == "XULrunner")
-    {
-        sourceDir = getSpecialDirectory("resource:app");
-        sourceDir.append("chrome");
-        sourceDir.append("icons");
-    }
-    else
-    {
+    if (!client.hostCompat.needToCopyIcons)
         return;
-    }
+
+    var sourceDir = getSpecialDirectory("ProfD");
+    sourceDir.append("extensions");
+    sourceDir.append("{" + __cz_guid + "}");
+    sourceDir.append("chrome");
+    sourceDir.append("icons");
+    sourceDir.append("default");
 
     var destDir = getSpecialDirectory("AChrom");
     destDir.append("icons");
