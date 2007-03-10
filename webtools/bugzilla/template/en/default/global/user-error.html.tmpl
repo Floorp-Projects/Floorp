@@ -1286,6 +1286,10 @@
     [% title = "Summary Needed" %]
     You must enter a summary for this [% terms.bug %].
 
+  [% ELSIF error == "resolution_not_allowed" %]
+    [% title = "Resolution Not Allowed" %]
+    You cannot set a resolution for open [% terms.bugs %].
+
   [% ELSIF error == "saved_search_used_by_whines" %]
     [% title = "Saved Search In Use" %]
     [% docslinks = {'whining.html' => 'About Whining'} %]

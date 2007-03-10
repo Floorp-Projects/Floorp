@@ -1110,6 +1110,17 @@ SWITCH: for ($cgi->param('knob')) {
 
             ChangeStatus('RESOLVED');
         }
+        else {
+            # You cannot use change_resolution if there is at least
+            # one open bug.
+            my $open_states = join(',', map {$dbh->quote($_)} BUG_STATE_OPEN);
+            my $idlist = join(',', @idlist);
+            my $is_open =
+              $dbh->selectrow_array("SELECT 1 FROM bugs WHERE bug_id IN ($idlist)
+                                     AND bug_status IN ($open_states)");
+
+            ThrowUserError('resolution_not_allowed') if $is_open;
+        }
 
         ChangeResolution($bug, $cgi->param('resolution'));
         last SWITCH;
