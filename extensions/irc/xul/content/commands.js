@@ -167,7 +167,7 @@ function initCommands()
                                    CMD_NEED_SRV |  CMD_NEED_CHAN | CMD_CONSOLE],
          ["reload-ui",         cmdReloadUI,                                  0],
          ["save",              cmdSave,                            CMD_CONSOLE],
-         ["say",               cmdSay,              CMD_NEED_SRV | CMD_CONSOLE],
+         ["say",               cmdSay,                             CMD_CONSOLE],
          ["server",            cmdServer,                          CMD_CONSOLE],
          ["set-current-view",  cmdSetCurrentView,                            0],
          ["stats",             cmdSimpleCommand,    CMD_NEED_SRV | CMD_CONSOLE],
