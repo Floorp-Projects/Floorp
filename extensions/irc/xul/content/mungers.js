@@ -96,7 +96,7 @@ function initMunger()
     // This has a higher starting priority so as to get it to match before the
     // normal link, which won't know about mailto and then fail.
     munger.addRule(".mailto",
-       /(?:\s|\W|^)((mailto:)?[^<>\[\]()\'\"\s\u201d]+@[^.<>\[\]()\'\"\s\u201d]+\.[^<>\[\]()\'\"\s\u201d]+)/i,
+       /(?:\s|\W|^)((mailto:)?[^:;\\<>\[\]()\'\"\s\u201d]+@[^.<>\[\]()\'\"\s\u201d]+\.[^<>\[\]()\'\"\s\u201d]+)/i,
                    insertMailToLink, NORMAL_PRIORITY, HIGHER_PRIORITY, false);
     munger.addRule("bugzilla-link",
                    /(?:\s|\W|^)(bug\s+(?:#?\d+|#[^\s,]{1,20}))/i,
