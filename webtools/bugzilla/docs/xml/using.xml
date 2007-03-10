@@ -734,7 +734,7 @@
             You now see a form where you can specify the component (part of
             the product which is affected by the bug you discovered; if you have
             no idea, just select <quote>General</quote> if such a component exists),
-            the version of the program you were using, the Operarting System and
+            the version of the program you were using, the Operating System and
             platform your program is running on and the severity of the bug (if the
             bug you found crashes the program, it's probably a major or a critical
             bug; if it's a typo somewhere, that's something pretty minor; if it's
