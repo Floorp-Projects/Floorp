@@ -2102,7 +2102,9 @@ PlacesSetLoadInSidebarTransaction.prototype = {
   },
 
   doTransaction: function PSLIST_doTransaction() {
-    this._placeURI = this.utils.bookmarks.getItemURI(this.id);
+    if (!("_placeURI" in this))
+      this._placeURI = this.utils.bookmarks.getItemURI(this.id);
+
     this._wasSet = this.utils.annotations
                        .hasAnnotation(this._placeURI, this._anno.name);
     if (this._loadInSidebar) {
@@ -2122,6 +2124,60 @@ PlacesSetLoadInSidebarTransaction.prototype = {
       this._loadInSidebar = !this._loadInSidebar;
       this.doTransaction();
     }
+  }
+};
+
+/**
+ * Edit a the description of a bookmark or a folder
+ *
+ * XXXmano: aIsFolder is a temporary workaround for bug 372508
+ */
+function PlacesEditItemDescriptionTransaction(aBookmarkId, aDescription, aIsFolder) {
+  this.id = aBookmarkId;
+  this._newDescription = aDescription;
+  this._isFolder = aIsFolder;
+  this.redoTransaction = this.doTransaction;
+}
+PlacesEditItemDescriptionTransaction.prototype = {
+  __proto__: PlacesBaseTransaction.prototype,
+  _oldDescription: "",
+  DESCRIPTION_ANNO: DESCRIPTION_ANNO,
+  nsIAnnotationService: Components.interfaces.nsIAnnotationService,
+
+  doTransaction: function PSLIST_doTransaction() {
+    const annos = this.utils.annotations;
+
+    if (!("_placeURI" in this)) {
+      if (this._isFolder)
+        this._placeURI = this.utils.bookmarks.getFolderURI(this.id);
+      else
+        this._placeURI = this.utils.bookmarks.getItemURI(this.id);
+    }
+
+    if (annos.hasAnnotation(this._placeURI, this.DESCRIPTION_ANNO)) {
+      this._oldDescription =
+        annos.getAnnotationString(this._placeURI, this.DESCRIPTION_ANNO);
+    }
+
+    if (this._newDescription) {
+      annos.setAnnotationString(this._placeURI, this.DESCRIPTION_ANNO,
+                                this._newDescription, 0,
+                                this.nsIAnnotationService.EXPIRE_NEVER);
+    }
+    else if (this._oldDescription)
+      annos.removeAnnotation(this._placeURI, this.DESCRIPTION_ANNO);
+  },
+
+  undoTransaction: function PSLIST_undoTransaction() {
+    const annos = this.utils.annotations;
+
+    if (this._oldDescription) {
+      annos.setAnnotationString(this._placeURI, this.DESCRIPTION_ANNO,
+                                this._oldDescription, 0,
+                                this.nsIAnnotationService.EXPIRE_NEVER);
+    }
+    else if (this.utils.hasAnnotation(this._placeURI, this.DESCRIPTION_ANNO))
+      annos.removeAnnotation(this._placeURI, this.DESCRIPTION_ANNO);
   }
 };
 

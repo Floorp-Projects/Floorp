@@ -32,62 +32,42 @@
       <vbox id="placesInfoOptions" flex="1">
         <grid id="placesInfoGrid" flex="1">
           <columns>
-            <column flex="1" align="start"/>
-            <column flex="100" align="start"/>
+            <column/>
+            <column flex="1"/>
           </columns>
           <rows id="placesInfoRows">
-            <row id="titleRow">
-              <vbox align="end">
-                <hbox align="center" flex="1">
-                  <label value="&bookmark.property.title;" align="middle"/>
-                </hbox>
-              </vbox>
+            <row id="titleRow" align="center">
+              <label value="&bookmark.property.title;" control="titleTextfield"/>
               <textbox id="titleTextfield"/>
             </row>
-            <row id="locationRow">
-              <vbox align="end">
-                <hbox align="center" flex="1">
-                  <label value="&bookmark.property.location;" align="middle"/>
-                </hbox>
-              </vbox>
+            <row id="locationRow" align="center">
+              <label value="&bookmark.property.location;" control="editURLBar"/>
               <textbox id="editURLBar" size="10"
                        onchange="BookmarkPropertiesPanel.validateChanges();"
                        oninput="BookmarkPropertiesPanel.validateChanges();"/>
             </row>
-            <row id="livemarkFeedLocationRow">
-              <vbox align="end">
-                <hbox align="center" flex="1">
-                  <label value="&livemark.property.feed_uri;" align="middle"/>
-                </hbox>
-              </vbox>
+            <row id="livemarkFeedLocationRow" align="center">
+              <label value="&livemark.property.feed_uri;" control="feedLocationTextfield"/>
               <textbox id="feedLocationTextfield"
                        onchange="BookmarkPropertiesPanel.validateChanges();"
                        oninput="BookmarkPropertiesPanel.validateChanges();"/>
             </row>
-            <row id="livemarkSiteLocationRow">
-              <vbox align="end">
-                <hbox align="center" flex="1">
-                  <label value="&livemark.property.site_uri;" align="middle"/>
-                </hbox>
-              </vbox>
+            <row id="livemarkSiteLocationRow" align="center">
+              <label value="&livemark.property.site_uri;" control="feedSiteLocationTextfield"/>
               <textbox id="feedSiteLocationTextfield"
                        onchange="BookmarkPropertiesPanel.validateChanges();"
                        oninput="BookmarkPropertiesPanel.validateChanges();"/>
             </row>
-            <row id="shortcutRow">
-              <vbox align="end">
-                <hbox align="center" flex="1">
-                  <label value="&bookmark.property.shortcut;" align="middle"/>
-                </hbox>
-              </vbox>
+            <row id="shortcutRow" align="center">
+              <label value="&bookmark.property.shortcut;" control="keywordTextfield"/>
               <textbox id="keywordTextfield"/>
             </row>
-            <row id="microsummaryRow">
-              <vbox align="end">
-                <hbox align="center" flex="1">
-                  <label value="&bookmark.property.microsummary;" align="middle"/>
-                </hbox>
-              </vbox>
+            <row id="descriptionRow">
+              <label value="&bookmark.property.description;" control="descriptionTextfield"/>
+              <textbox id="descriptionTextfield" multiline="true"/>
+            </row>
+            <row id="microsummaryRow" align="center">
+              <label value="&bookmark.property.microsummary;" control="microsummaryMenuList"/>
               <menulist id="microsummaryMenuList">
                 <menupopup id="microsummaryMenuPopup">
                   <menuitem label="&bookmark.property.microsummary.none;"

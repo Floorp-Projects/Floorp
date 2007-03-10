@@ -6,6 +6,8 @@
   "Name">
 <!ENTITY bookmark.property.shortcut
   "Shortcut">
+<!ENTITY bookmark.property.description
+  "Description">
 <!ENTITY bookmark.property.microsummary
   "Summary">
 <!ENTITY bookmark.property.microsummary.none

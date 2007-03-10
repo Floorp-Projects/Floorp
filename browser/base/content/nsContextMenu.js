@@ -1103,8 +1103,10 @@ nsContextMenu.prototype = {
   },
 
   addBookmarkForFrame: function CM_addBookmarkForFrame() {
+    var doc = this.target.ownerDocument;
     var uri = this.target.ownerDocument.documentURIObject;
-    PlacesUtils.showAddBookmarkUI(uri);
+    var description = PlacesUtils.getDescriptionFromDocument(doc);
+    PlacesUtils.showAddBookmarkUI(uri, doc.title, description);
   },
 #else
   bookmarkThisPage: function CM_bookmarkThisPage() {

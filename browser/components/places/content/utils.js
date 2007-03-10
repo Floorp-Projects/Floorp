@@ -46,6 +46,7 @@ const Cc = Components.classes;
 const Cr = Components.results;
 
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
+const DESCRIPTION_ANNO = "bookmarkProperties/description";
 
 function QI_node(aNode, aIID) {
   var result = null;
@@ -659,6 +660,8 @@ var PlacesUtils = {
    *        to be shown.
    * @param [optional] aTitle
    *        The default title for the new bookmark.
+   * @param [optional] aDescription
+            The default description for the new bookmark
    * @param [optional] aDefaultInsertionPoint
    *        The default insertion point for the new item. If set, the folder
    *        picker would be hidden unless aShowPicker is set to true, in which
@@ -677,7 +680,9 @@ var PlacesUtils = {
    *  - When aDefaultInsertionPoint is not set, the dialog defaults to the
    *    bookmarks root folder.
    */
-  showAddBookmarkUI: function PU_showAddBookmarkUI(aURI, aTitle,
+  showAddBookmarkUI: function PU_showAddBookmarkUI(aURI,
+                                                   aTitle,
+                                                   aDescription,
                                                    aDefaultInsertionPoint,
                                                    aShowPicker,
                                                    aLoadInSidebar) {
@@ -696,6 +701,9 @@ var PlacesUtils = {
     // allow default empty title
     if (typeof(aTitle) == "string")
       info.title = aTitle;
+
+    if (aDescription)
+      info.description = aDescription;
 
     if (aDefaultInsertionPoint) {
       info.defaultInsertionPoint = aDefaultInsertionPoint;
@@ -731,8 +739,10 @@ var PlacesUtils = {
    *  - When aDefaultInsertionPoint is not set, the dialog defaults to the
    *    bookmarks root folder.
    */
-  showAddLivemarkUI: function PU_showAddLivemarkURI(aFeedURI, aSiteURI,
+  showAddLivemarkUI: function PU_showAddLivemarkURI(aFeedURI,
+                                                    aSiteURI,
                                                     aTitle,
+                                                    aDescription,
                                                     aDefaultInsertionPoint,
                                                     aShowPicker) {
     var info = {
@@ -751,6 +761,9 @@ var PlacesUtils = {
     // allow default empty title
     if (typeof(aTitle) == "string")
       info.title = aTitle;
+
+    if (aDescription)
+      info.description = aDescription;
 
     if (aDefaultInsertionPoint) {
       info.defaultInsertionPoint = aDefaultInsertionPoint;
@@ -995,5 +1008,24 @@ var PlacesUtils = {
     var query = this.history.getNewQuery();
     query.setFolders([aFolderId], 1);
     return this.history.queriesToQueryString([query], 1, options);
+  },
+
+  /**
+   * Get the description associated with a document, as specified in a <META> 
+   * element.
+   * @param   doc
+   *          A DOM Document to get a description for
+   * @returns A description string if a META element was discovered with a 
+   *          "description" or "httpequiv" attribute, empty string otherwise.
+   */
+  getDescriptionFromDocument: function PU_getDescriptionFromDocument(doc) {
+    var metaElements = doc.getElementsByTagName("META");
+    for (var i = 0; i < metaElements.length; ++i) {
+      if (metaElements[i].localName.toLowerCase() == "description" || 
+          metaElements[i].httpEquiv.toLowerCase() == "description") {
+        return metaElements[i].content;
+      }
+    }
+    return "";
   }
 };

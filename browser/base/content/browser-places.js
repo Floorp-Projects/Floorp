@@ -59,8 +59,23 @@ var PlacesCommandHook = {
    * @param aBrowser
    *        a <browser> element
    */
-  bookmarkPage: function PCH_bookmarkCurrentPage(aBrowser) {
-    PlacesUtils.showAddBookmarkUI(aBrowser.currentURI);
+  bookmarkPage: function PCH_bookmarkPage(aBrowser) {
+    // Copied over from addBookmarkForBrowser:
+    // Bug 52536: We obtain the URL and title from the nsIWebNavigation
+    // associated with a <browser/> rather than from a DOMWindow.
+    // This is because when a full page plugin is loaded, there is
+    // no DOMWindow (?) but information about the loaded document
+    // may still be obtained from the webNavigation.
+    var webNav = aBrowser.webNavigation;
+    var url = webNav.currentURI;
+    var title;
+    var description;
+    try {
+      title = webNav.document.title;
+      description = PlacesUtils.getDescriptionFromDocument(webNav.document);
+    }
+    catch (e) { }
+    PlacesUtils.showAddBookmarkUI(url, title, description);
   },
 
   /**
@@ -108,25 +123,6 @@ var PlacesCommandHook = {
     PlacesUtils.showAddMultiBookmarkUI(tabURIs);
   },
 
-  /**
-   * Get the description associated with a document, as specified in a <META> 
-   * element.
-   * @param   doc
-   *          A DOM Document to get a description for
-   * @returns A description string if a META element was discovered with a 
-   *          "description" or "httpequiv" attribute, empty string otherwise.
-   */
-  _getDescriptionFromDocument: function PCH_getDescriptionFromDocument(doc) {
-    var metaElements = doc.getElementsByTagName("META");
-    for (var i = 0; i < metaElements.length; ++i) {
-      if (metaElements[i].localName.toLowerCase() == "description" || 
-          metaElements[i].httpEquiv.toLowerCase() == "description") {
-        return metaElements[i].content;
-        break;
-      }
-    }
-    return "";
-  },
   
   /**
    * Adds a Live Bookmark to a feed associated with the current page. 
@@ -135,8 +131,7 @@ var PlacesCommandHook = {
    * @title     title
    *            The title of the feed. Optional.
    * @subtitle  subtitle
-   *            A short description of the feed. Optional. 
-   *            Not yet used. TODO: implement description annotation
+   *            A short description of the feed. Optional.
    */
   addLiveBookmark: function PCH_addLiveBookmark(url, feedTitle, feedSubtitle) {
     var ios = 
@@ -144,24 +139,19 @@ var PlacesCommandHook = {
         getService(Ci.nsIIOService);
     var feedURI = ios.newURI(url, null, null);
     
-    var browser = gBrowser.selectedBrowser;
-   
-    var title = (arguments.length > 1) ? feedTitle :
-                                         browser.contentDocument.title;
+    var doc = gBrowser.contentDocument;
+    var title = (arguments.length > 1) ? feedTitle : doc.title;
  
-    // TODO: implement description annotation
-#if 0
     var description;
     if (arguments.length > 2)
       description = feedSubtitle;
     else
-      description = BookmarksUtils.getDescriptionFromDocument(doc);
-#endif
+      description = PlacesUtils.getDescriptionFromDocument(doc);
 
-    var toolbarRootIP =
-      new InsertionPoint(PlacesUtils.bookmarks.toolbarRoot, -1);
-    PlacesUtils.showAddLivemarkUI(feedURI, browser.currentURI,
-                                  title, toolbarRootIP, true);
+    var toolbarIP =
+      new InsertionPoint(PlacesUtils.bookmarks.toolbarFolder, -1);
+    PlacesUtils.showAddLivemarkUI(feedURI, gBrowser.currentURI,
+                                  title, description, toolbarIP, true);
   },
 
   /**
@@ -187,14 +177,6 @@ var PlacesCommandHook = {
 
       organizer.focus();
     }
-  },
-
-  /**
-   * This method should be called when the bookmark button is clicked.
-   */
-  onBookmarkButtonClick: function PCH_onBookmarkButtonClick() {
-    var currentURI = getBrowser().selectedBrowser.webNavigation.currentURI;
-    PlacesUtils.showAddBookmarkUI(currentURI);
   }
 };
 
