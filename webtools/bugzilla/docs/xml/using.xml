@@ -361,7 +361,7 @@
     <para>
       The life cycle, also known as work flow, of a bug is currently hardcoded
       into Bugzilla. <xref linkend="lifecycle-image"/> contains a graphical
-      repsentation of this life cycle. If you wish to customize this image for
+      representation of this life cycle. If you wish to customize this image for
       your site, the <ulink url="../images/bzLifecycle.xml">diagram file</ulink>
       is available in <ulink url="http://www.gnome.org/projects/dia">Dia's</ulink>
       native XML format.
