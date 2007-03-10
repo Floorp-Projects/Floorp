@@ -458,7 +458,7 @@
           to whom each bug is assigned). When the operator is either 
           "equals" or "notequals", the value can be "%reporter%", 
           "%assignee%", "%qacontact%", or "%user%."  The user pronoun
-          referes to the user who is executing the query or, in the case
+          refers to the user who is executing the query or, in the case
           of whining reports, the user who will be the recipient
           of the report. The reporter, assignee, and qacontact
           pronouns refer to the corresponding fields in the bug.
