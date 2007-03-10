@@ -428,6 +428,14 @@
   ${Unless} ${Errors}
     DeleteRegKey HKLM "$0\.eml\DefaultIcon"
   ${EndUnless}
+  
+  ; The Vista shim for 1.5.0.10 writes out a set of bogus keys which we need to
+  ; cleanup. Intentionally hard coding Mozilla Thunderbird here
+  ; as this is the string used by the vista shim.
+  DeleteRegKey HKLM "$0\Mozilla Thunderbird.Url.mailto"
+  DeleteRegValue HKLM "Software\RegisteredApplications" "Mozilla Thunderbird"
+  ; More bogus keys are written to Clients\Mail\Mozilla Thunderbird, but
+  ; those are fixed in SetClientsMail
 
 !macroend
 !define FixClassKeys "!insertmacro FixClassKeys"
