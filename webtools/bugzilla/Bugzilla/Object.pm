@@ -30,6 +30,8 @@ use constant NAME_FIELD => 'name';
 use constant ID_FIELD   => 'id';
 use constant LIST_ORDER => NAME_FIELD;
 
+use constant UPDATE_VALIDATORS => {};
+
 ###############################
 ####    Initialization     ####
 ###############################
@@ -136,8 +138,8 @@ sub new_from_list {
 ####      Accessors      ######
 ###############################
 
-sub id                { return $_[0]->{'id'};          }
-sub name              { return $_[0]->{'name'};        }
+sub id   { return $_[0]->{$_[0]->ID_FIELD};   }
+sub name { return $_[0]->{$_[0]->NAME_FIELD}; }
 
 ###############################
 ####        Methods        ####
@@ -153,9 +155,9 @@ sub set {
                             superclass => __PACKAGE__,
                             function   => 'Bugzilla::Object->set' });
 
-    my $validators = $self->VALIDATORS;
-    if (exists $validators->{$field}) {
-        my $validator = $validators->{$field};
+    my %validators = (%{$self->VALIDATORS}, %{$self->UPDATE_VALIDATORS});
+    if (exists $validators{$field}) {
+        my $validator = $validators{$field};
         $value = $self->$validator($value, $field);
     }
 
@@ -373,6 +375,14 @@ This may be required by validators which validate several distinct fields.
 These functions should call L<Bugzilla::Error/ThrowUserError> if they fail.
 
 The validator must return the validated value.
+
+=item C<UPDATE_VALIDATORS>
+
+This is just like L</VALIDATORS>, but these validators are called only
+when updating an object, not when creating it. Any validator that appears
+here must not appear in L</VALIDATORS>.
+
+L<Bugzilla::Bug> has good examples in its code of when to use this.
 
 =item C<UPDATE_COLUMNS>
 

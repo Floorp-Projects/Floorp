@@ -82,7 +82,7 @@ use constant DB_TABLE => 'profiles';
 # Bugzilla::User used "name" for the realname field. This should be
 # fixed one day.
 use constant DB_COLUMNS => (
-    'profiles.userid     AS id',
+    'profiles.userid',
     'profiles.login_name',
     'profiles.realname',
     'profiles.mybugslink AS showmybugslink',
@@ -368,7 +368,7 @@ sub groups {
                                                AND user_id=?
                                                AND isbless=0},
                                           { Columns=>[1,2] },
-                                          $self->{id});
+                                          $self->id);
 
     # The above gives us an arrayref [name, id, name, id, ...]
     # Convert that into a hashref
@@ -563,7 +563,7 @@ sub can_edit_product {
     my ($self, $prod_id) = @_;
     my $dbh = Bugzilla->dbh;
     my $sth = $self->{sthCanEditProductId};
-    my $userid = $self->{id};
+    my $userid = $self->id;
     my $query = q{SELECT group_id FROM group_control_map 
                    WHERE product_id =? 
                      AND canedit != 0 };
@@ -583,7 +583,7 @@ sub can_see_bug {
     my ($self, $bugid) = @_;
     my $dbh = Bugzilla->dbh;
     my $sth  = $self->{sthCanSeeBug};
-    my $userid  = $self->{id};
+    my $userid  = $self->id;
     # Get fields from bug, presence of user on cclist, and determine if
     # the user is missing any groups required by the bug. The prepared query
     # is cached because this may be called for every row in buglists or

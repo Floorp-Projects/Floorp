@@ -140,7 +140,16 @@ sub VALIDATORS {
     return $validators;
 };
 
-use constant UPDATE_COLUMNS => qw();
+use constant UPDATE_VALIDATORS => {
+    bug_status => \&_check_bug_status,
+    resolution => \&_check_resolution,
+};
+
+use constant UPDATE_COLUMNS => qw(
+    everconfirmed
+    bug_status
+    resolution
+);
 
 # This is used by add_comment to know what we validate before putting in
 # the DB.
@@ -363,7 +372,7 @@ sub run_create_validators {
     delete $params->{product};
 
     ($params->{bug_status}, $params->{everconfirmed})
-        = $class->_check_bug_status($product, $params->{bug_status});
+        = $class->_check_bug_status($params->{bug_status}, $product);
 
     $params->{target_milestone} = $class->_check_target_milestone($product,
         $params->{target_milestone});
@@ -412,13 +421,15 @@ sub run_create_validators {
 
 sub update {
     my $self = shift;
-    my $changes = $self->SUPER::update(@_);
-
-    # XXX This is just a temporary hack until all updating happens
-    # inside this function.
-    my $delta_ts = shift;
 
     my $dbh = Bugzilla->dbh;
+    # XXX This is just a temporary hack until all updating happens
+    # inside this function.
+    my $delta_ts = shift || $dbh->selectrow_array("SELECT NOW()");
+    $self->{delta_ts} = $delta_ts;
+
+    my $changes = $self->SUPER::update(@_);
+
     foreach my $comment (@{$self->{added_comments} || []}) {
         my $columns = join(',', keys %$comment);
         my @values  = values %$comment;
@@ -426,6 +437,25 @@ sub update {
         $dbh->do("INSERT INTO longdescs (bug_id, who, bug_when, $columns)
                        VALUES (?,?,?,$qmarks)", undef,
                  $self->bug_id, Bugzilla->user->id, $delta_ts, @values);
+    }
+
+    # Log bugs_activity items
+    # XXX Eventually, when bugs_activity is able to track the dupe_id,
+    # this code should go below the duplicates-table-updating code below.
+    foreach my $field (keys %$changes) {
+        my $change = $changes->{$field};
+        LogActivityEntry($self->id, $field, $change->[0], $change->[1], 
+                         Bugzilla->user->id, $delta_ts);
+    }
+
+    # If this bug is no longer a duplicate, it no longer belongs in the
+    # dup table.
+    if (exists $changes->{'resolution'} 
+        && $changes->{'resolution'}->[0] eq 'DUPLICATE') 
+    {
+        my $dup_id = $self->dup_id;
+        $dbh->do("DELETE FROM duplicates WHERE dupe = ?", undef, $self->id);
+        $changes->{'dupe_of'} = [$dup_id, undef];
     }
 
     return $changes;
@@ -547,30 +577,43 @@ sub _check_bug_severity {
 }
 
 sub _check_bug_status {
-    my ($invocant, $product, $status) = @_;
+    my ($invocant, $status, $product) = @_;
     my $user = Bugzilla->user;
 
-    my @valid_statuses = VALID_ENTRY_STATUS;
-
-    if ($user->in_group('editbugs', $product->id)
-        || $user->in_group('canconfirm', $product->id)) {
-       # Default to NEW if the user with privs hasn't selected another status.
-       $status ||= 'NEW';
-    }
-    elsif (!$product->votes_to_confirm) {
-        # Without privs, products that don't support UNCONFIRMED default to
-        # NEW.
-        $status = 'NEW';
+    my %valid_statuses;
+    if (ref $invocant) {
+        $invocant->{'prod_obj'} ||= 
+            new Bugzilla::Product({name => $invocant->product});
+        $product = $invocant->{'prod_obj'};
+        my $field = new Bugzilla::Field({ name => 'bug_status' });
+        %valid_statuses = map { $_ => 1 } @{$field->legal_values};
     }
     else {
-        $status = 'UNCONFIRMED';
+        %valid_statuses = map { $_ => 1 } VALID_ENTRY_STATUS;
+
+        if ($user->in_group('editbugs', $product->id)
+            || $user->in_group('canconfirm', $product->id)) {
+           # Default to NEW if the user with privs hasn't selected another
+           # status.
+           $status ||= 'NEW';
+        }
+        elsif (!$product->votes_to_confirm) {
+            # Without privs, products that don't support UNCONFIRMED default 
+            # to NEW.
+            $status = 'NEW';
+        }
+        else {
+            $status = 'UNCONFIRMED';
+        }
     }
 
     # UNCONFIRMED becomes an invalid status if votes_to_confirm is 0,
     # even if you are in editbugs.
-    shift @valid_statuses if !$product->votes_to_confirm;
+    delete $valid_statuses{'UNCONFIRMED'} if !$product->votes_to_confirm;
 
-    check_field('bug_status', $status, \@valid_statuses);
+    check_field('bug_status', $status, [keys %valid_statuses]);
+
+    return $status if ref $invocant;
     return ($status, $status eq 'UNCONFIRMED' ? 0 : 1);
 }
 
@@ -794,6 +837,13 @@ sub _check_rep_platform {
     return $platform;
 }
 
+sub _check_resolution {
+    my ($invocant, $resolution) = @_;
+    $resolution = trim($resolution);
+    check_field('resolution', $resolution);
+    return $resolution;
+}
+
 sub _check_short_desc {
     my ($invocant, $short_desc) = @_;
     # Set the parameter to itself, but cleaned up
@@ -929,6 +979,24 @@ sub fields {
 #####################################################################
 # Mutators 
 #####################################################################
+
+#################
+# "Set" Methods #
+#################
+
+sub _set_everconfirmed { $_[0]->set('everconfirmed', $_[1]); }
+sub set_resolution     { $_[0]->set('resolution',    $_[1]); }
+sub set_status { 
+    my ($self, $status) = @_;
+    $self->set('bug_status', $status); 
+    # Check for the everconfirmed transition
+    $self->_set_everconfirmed(1) if ($status eq 'NEW'
+                                     || $status eq 'ASSIGNED');
+}
+
+########################
+# "Add/Remove" Methods #
+########################
 
 # $bug->add_comment("comment", {isprivate => 1, work_time => 10.5,
 #                               type => CMT_NORMAL, extra_data => $data});

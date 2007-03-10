@@ -554,52 +554,26 @@ if ($action eq Bugzilla->params->{'move-button-text'}) {
     $user->is_mover || ThrowUserError("auth_failure", {action => 'move',
                                                        object => 'bugs'});
 
-    # Moved bugs are marked as RESOLVED MOVED.
-    my $sth = $dbh->prepare("UPDATE bugs
-                                SET bug_status = 'RESOLVED',
-                                    resolution = 'MOVED',
-                                    delta_ts = ?
-                              WHERE bug_id = ?");
-    # Bugs cannot be a dupe and moved at the same time.
-    my $sth2 = $dbh->prepare("DELETE FROM duplicates WHERE dupe = ?");
-
-    my $comment = "";
-    if (defined $cgi->param('comment') && $cgi->param('comment') !~ /^\s*$/) {
-        $comment = $cgi->param('comment');
-    }
-
     $dbh->bz_lock_tables('bugs WRITE', 'bugs_activity WRITE', 'duplicates WRITE',
                          'longdescs WRITE', 'profiles READ', 'groups READ',
                          'bug_group_map READ', 'group_group_map READ',
                          'user_group_map READ', 'classifications READ',
                          'products READ', 'components READ', 'votes READ',
-                         'cc READ', 'fielddefs READ');
+                         'cc READ', 'fielddefs READ', 'bug_status READ',
+                         'resolution READ');
 
-    my $timestamp = $dbh->selectrow_array("SELECT NOW()");
     my @bugs;
     # First update all moved bugs.
     foreach my $id (@idlist) {
         my $bug = new Bugzilla::Bug($id);
         push(@bugs, $bug);
-        $bug->add_comment($comment, { type       => CMT_MOVED_TO, 
-                                      extra_data => $user->login });
+        $bug->add_comment(scalar $cgi->param('comment'), 
+                          { type => CMT_MOVED_TO, extra_data => $user->login });
+        $bug->set_status('RESOLVED');
+        $bug->set_resolution('MOVED');
     }
-    foreach my $bug (@bugs) {
-        $bug->update($timestamp);
-        my $id = $bug->bug_id;
 
-        $sth->execute($timestamp, $id);
-        $sth2->execute($id);
-
-        if ($bug->bug_status ne 'RESOLVED') {
-            LogActivityEntry($id, 'bug_status', $bug->bug_status,
-                             'RESOLVED', $whoid, $timestamp);
-        }
-        if ($bug->resolution ne 'MOVED') {
-            LogActivityEntry($id, 'resolution', $bug->resolution,
-                             'MOVED', $whoid, $timestamp);
-        }
-    }
+    $_->update() foreach @bugs;
     $dbh->bz_unlock_tables();
 
     # Now send emails.
