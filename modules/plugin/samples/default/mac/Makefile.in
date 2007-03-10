@@ -48,27 +48,12 @@ MODULE      = plugin
 ifdef MOZ_DEBUG
 BUILDSTYLE	= Development
 else
-ifdef CHIMERA_OPT_SYMBOLS
-BUILDSTYLE	= DeploymentSymbols
-else
 BUILDSTYLE	= Deployment
 endif
-endif
 
-ifeq (,$(findstring pbxbuild,$(PBBUILD)))
-    # pbbuild or xcodebuild indicates Xcode; the Xcode project contains
-    # native targets needed for proper SDK builds.
-    PROJECT=DefaultPlugin.xcode
-    PROJECT_ARG=-project $(PROJECT)
-    PBBUILD_ARG=$(PBBUILD_SETTINGS)
-else
-    # pbxbuild indicates Project Builder; this will only be used where Xcode
-    # is unavailable (pre-10.3).  SDK build unsupported, but with such an
-    # early build host, that should be OK.
-    PROJECT=DefaultPlugin.pbproj
-    PROJECT_ARG=
-    PBBUILD_ARG=
-endif
+PROJECT=DefaultPlugin.xcode
+PROJECT_ARG=-project $(PROJECT)
+PBBUILD_ARG=$(PBBUILD_SETTINGS)
 
 TARGET		= "Default Plugin"
 
