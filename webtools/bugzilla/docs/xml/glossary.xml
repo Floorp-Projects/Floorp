@@ -416,7 +416,7 @@
       
       <glossdef>
         <para>In Windows NT environment, a boot-time background application
-        is refered to as a service. These are generally managed through the
+        is referred to as a service. These are generally managed through the
         control panel while logged in as an account with
         <quote>Administrator</quote> level capabilities. For more
         information, consult your Windows manual or the MSKB.
