@@ -5450,7 +5450,7 @@ var FeedHandler = {
     if (!href)
       href = event.target.getAttribute("feed");
     urlSecurityCheck(href, gBrowser.contentPrincipal,
-                     Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT_OR_DATA);
+                     Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
     var feedURI = makeURI(href, document.characterSet);
     // Use the feed scheme so X-Moz-Is-Feed will be set
     // The value doesn't matter
@@ -5616,7 +5616,7 @@ var FeedHandler = {
       try { 
         urlSecurityCheck(wrapper.href,
                          gBrowser.contentPrincipal,
-                         Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT_OR_DATA);
+                         Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
       }
       catch (ex) {
         dump(ex.message);
