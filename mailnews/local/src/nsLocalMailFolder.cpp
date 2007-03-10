@@ -433,10 +433,6 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
       if (NS_FAILED(rv)) return rv;
 
       // must happen after CreateSubFolders, or the folders won't exist.
-      // don't call this more than necessary, it's expensive
-      SetPrefFlag();
-
-      // must happen after CreateSubFolders, or the folders won't exist.
       if (createdDefaultMailboxes && isServer) 
       {
         rv = localMailServer->SetFlagsOnDefaultMailboxes();
@@ -3535,7 +3531,15 @@ nsMsgLocalMailFolder::setSubfolderFlag(const PRUnichar *aFolderName,
     return rv;
   if (!msgFolder) 
     return NS_ERROR_FAILURE;
-  
+
+  // we only want to do this if the folder *really* exists, 
+  // so check if it has a parent. Otherwise, we'll create the
+  // .msf file when we don't want to.
+  nsCOMPtr <nsIMsgFolder> parent;
+  msgFolder->GetParent(getter_AddRefs(parent));
+  if (!parent)
+    return NS_ERROR_FAILURE;
+
   rv = msgFolder->SetFlag(flags);
   if (NS_FAILED(rv)) 
     return rv;
