@@ -3473,16 +3473,10 @@ out:
 }
 
 /* ECMA-357 9.1.1.4 XML [[DeleteByIndex]]. */
-static JSBool
-DeleteByIndex(JSContext *cx, JSXML *xml, jsval id, jsval *vp)
+static void
+DeleteByIndex(JSContext *cx, JSXML *xml, uint32 index)
 {
-    uint32 index;
     JSXML *kid;
-
-    if (!js_IdIsIndex(id, &index)) {
-        ReportBadXMLName(cx, id);
-        return JS_FALSE;
-    }
 
     if (JSXML_HAS_KIDS(xml) && index < xml->xml_kids.length) {
         kid = XMLARRAY_MEMBER(&xml->xml_kids, index, JSXML);
@@ -3490,9 +3484,6 @@ DeleteByIndex(JSContext *cx, JSXML *xml, jsval id, jsval *vp)
             kid->parent = NULL;
         XMLArrayDelete(cx, &xml->xml_kids, index, JS_TRUE);
     }
-
-    *vp = JSVAL_TRUE;
-    return JS_TRUE;
 }
 
 typedef JSBool (*JSXMLNameMatcher)(JSXMLQName *nameqn, JSXML *xml);
@@ -3834,21 +3825,15 @@ IndexToIdVal(JSContext *cx, uint32 index, jsval *idvp)
 
 /* ECMA-357 9.1.1.12 XML [[Replace]]. */
 static JSBool
-Replace(JSContext *cx, JSXML *xml, jsval id, jsval v)
+Replace(JSContext *cx, JSXML *xml, uint32 i, jsval v)
 {
-    uint32 i, n;
+    uint32 n;
     JSXML *vxml, *kid;
     JSObject *vobj;
-    jsval junk;
     JSString *str;
 
     if (!JSXML_HAS_KIDS(xml))
         return JS_TRUE;
-
-    if (!js_IdIsIndex(id, &i)) {
-        ReportBadXMLName(cx, id);
-        return JS_FALSE;
-    }
 
     /*
      * 9.1.1.12
@@ -3856,11 +3841,8 @@ Replace(JSContext *cx, JSXML *xml, jsval id, jsval v)
      * It should therefore constrain callers to pass in _i <= x.[[Length]]_.
      */
     n = xml->xml_kids.length;
-    if (i >= n) {
-        if (!IndexToIdVal(cx, n, &id))
-            return JS_FALSE;
+    if (i > n)
         i = n;
-    }
 
     vxml = NULL;
     if (!JSVAL_IS_PRIMITIVE(v)) {
@@ -3880,8 +3862,8 @@ Replace(JSContext *cx, JSXML *xml, jsval id, jsval v)
         goto do_replace;
 
       case JSXML_CLASS_LIST:
-        if (i < n && !DeleteByIndex(cx, xml, id, &junk))
-            return JS_FALSE;
+        if (i < n)
+            DeleteByIndex(cx, xml, i);
         if (!Insert(cx, xml, i, v))
             return JS_FALSE;
         break;
@@ -3911,120 +3893,77 @@ Replace(JSContext *cx, JSXML *xml, jsval id, jsval v)
     return JS_TRUE;
 }
 
-/* Forward declared -- its implementation uses other statics that call it. */
-static JSBool
-ResolveValue(JSContext *cx, JSXML *list, JSXML **result);
-
-/* ECMA-357 9.1.1.3 XML [[Delete]], 9.2.1.3 XML [[Delete]]. */
-static JSBool
-DeleteProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+/* ECMA-357 9.1.1.3 XML [[Delete]], 9.2.1.3 XML [[Delete]] qname cases. */
+static void
+DeleteNamedProperty(JSContext *cx, JSXML *xml, JSXMLQName *nameqn,
+                    JSBool attributes)
 {
-    JSXML *xml, *kid, *parent;
-    JSBool isIndex;
     JSXMLArray *array;
-    uint32 length, index, kidIndex, deleteCount;
-    JSXMLQName *nameqn;
-    jsid funid;
-    JSObject *nameobj, *kidobj;
+    uint32 index, deleteCount;
+    JSXML *kid;
     JSXMLNameMatcher matcher;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
-    isIndex = js_IdIsIndex(id, &index);
-    if (JSXML_HAS_KIDS(xml)) {
-        array = &xml->xml_kids;
-        length = array->length;
-    } else {
-        array = NULL;
-        length = 0;
-    }
-
     if (xml->xml_class == JSXML_CLASS_LIST) {
-        /* ECMA-357 9.2.1.3. */
-        if (isIndex && index < length) {
+        array = &xml->xml_kids;
+        for (index = 0; index < array->length; index++) {
             kid = XMLARRAY_MEMBER(array, index, JSXML);
-            if (!kid)
-                goto out;
+            if (kid && kid->xml_class == JSXML_CLASS_ELEMENT)
+                DeleteNamedProperty(cx, kid, nameqn, attributes);
+        }
+    } else if (xml->xml_class == JSXML_CLASS_ELEMENT) {
+        if (attributes) {
+            array = &xml->xml_attrs;
+            matcher = MatchAttrName;
+        } else {
+            array = &xml->xml_kids;
+            matcher = MatchElemName;
+        }
+        deleteCount = 0;
+        for (index = 0; index < array->length; index++) {
+            kid = XMLARRAY_MEMBER(array, index, JSXML);
+            if (kid && matcher(nameqn, kid)) {
+                kid->parent = NULL;
+                XMLArrayDelete(cx, array, index, JS_FALSE);
+                ++deleteCount;
+            } else if (deleteCount != 0) {
+                XMLARRAY_SET_MEMBER(array,
+                                    index - deleteCount,
+                                    array->vector[index]);
+            }
+        }
+        array->length -= deleteCount;
+    }
+}
+
+/* ECMA-357 9.2.1.3 index case. */
+static void
+DeleteListElement(JSContext *cx, JSXML *xml, uint32 index)
+{
+    JSXML *kid, *parent;
+    uint32 kidIndex;
+
+    JS_ASSERT(xml->xml_class == JSXML_CLASS_LIST);
+
+    if (index < xml->xml_kids.length) {
+        kid = XMLARRAY_MEMBER(&xml->xml_kids, index, JSXML);
+        if (kid) {
             parent = kid->parent;
             if (parent) {
                 JS_ASSERT(parent != xml);
                 JS_ASSERT(JSXML_HAS_KIDS(parent));
 
                 if (kid->xml_class == JSXML_CLASS_ATTRIBUTE) {
-                    nameqn = kid->name;
-                    nameobj = js_GetAttributeNameObject(cx, nameqn);
-                    if (!nameobj || !js_GetXMLObject(cx, parent))
-                        return JS_FALSE;
-
-                    id = OBJECT_TO_JSVAL(nameobj);
-                    if (!DeleteProperty(cx, parent->object, id, vp))
-                        return JS_FALSE;
+                    DeleteNamedProperty(cx, parent, kid->name, JS_TRUE);
                 } else {
                     kidIndex = XMLARRAY_FIND_MEMBER(&parent->xml_kids, kid,
                                                     NULL);
                     JS_ASSERT(kidIndex != XML_NOT_FOUND);
-                    if (!IndexToIdVal(cx, kidIndex, &id))
-                        return JS_FALSE;
-                    if (!DeleteByIndex(cx, parent, id, vp))
-                        return JS_FALSE;
+                    DeleteByIndex(cx, parent, kidIndex);
                 }
             }
-
-            XMLArrayDelete(cx, array, index, JS_TRUE);
-        } else {
-            for (index = 0; index < length; index++) {
-                kid = XMLARRAY_MEMBER(array, index, JSXML);
-                if (kid && kid->xml_class == JSXML_CLASS_ELEMENT) {
-                    kidobj = js_GetXMLObject(cx, kid);
-                    if (!kidobj || !DeleteProperty(cx, kidobj, id, vp))
-                        return JS_FALSE;
-                }
-            }
-        }
-    } else {
-        /* ECMA-357 9.1.1.3. */
-        if (isIndex) {
-            /* See NOTE in spec: this variation is reserved for future use. */
-            ReportBadXMLName(cx, id);
-            return JS_FALSE;
-        }
-
-        nameqn = ToXMLName(cx, id, &funid);
-        if (!nameqn)
-            return JS_FALSE;
-        if (funid)
-            goto out;
-        nameobj = nameqn->object;
-
-        if (OBJ_GET_CLASS(cx, nameobj) == &js_AttributeNameClass) {
-            if (xml->xml_class != JSXML_CLASS_ELEMENT)
-                goto out;
-            array = &xml->xml_attrs;
-            length = array->length;
-            matcher = MatchAttrName;
-        } else {
-            matcher = MatchElemName;
-        }
-        if (length != 0) {
-            deleteCount = 0;
-            for (index = 0; index < length; index++) {
-                kid = XMLARRAY_MEMBER(array, index, JSXML);
-                if (kid && matcher(nameqn, kid)) {
-                    kid->parent = NULL;
-                    XMLArrayDelete(cx, array, index, JS_FALSE);
-                    ++deleteCount;
-                } else if (deleteCount != 0) {
-                    XMLARRAY_SET_MEMBER(array,
-                                        index - deleteCount,
-                                        array->vector[index]);
-                }
-            }
-            array->length -= deleteCount;
+            XMLArrayDelete(cx, &xml->xml_kids, index, JS_TRUE);
         }
     }
-
-out:
-    *vp = JSVAL_TRUE;
-    return JS_TRUE;
 }
 
 /*
@@ -4245,6 +4184,10 @@ KidToString(JSContext *cx, JSXML *xml, uint32 index)
     return js_ValueToString(cx, OBJECT_TO_JSVAL(kidobj));
 }
 
+/* Forward declared -- its implementation uses other statics that call it. */
+static JSBool
+ResolveValue(JSContext *cx, JSXML *list, JSXML **result);
+
 /* ECMA-357 9.1.1.2 XML [[Put]] and 9.2.1.2 XMLList [[Put]]. */
 static JSBool
 PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
@@ -4256,8 +4199,8 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSXML *xml, *vxml, *rxml, *kid, *attr, *parent, *copy, *kid2, *match;
     JSObject *vobj, *nameobj, *attrobj, *parentobj, *kidobj, *copyobj;
     JSXMLQName *targetprop, *nameqn, *attrqn;
-    uint32 index, i, j, k, n, q;
-    jsval attrval, nsval, junk;
+    uint32 index, i, j, k, n, q, matchIndex;
+    jsval attrval, nsval;
     jsid funid;
     JSString *left, *right, *space;
     JSXMLNamespace *ns;
@@ -4492,11 +4435,7 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             if (parent) {
                 q = XMLARRAY_FIND_MEMBER(&parent->xml_kids, kid, NULL);
                 JS_ASSERT(q != XML_NOT_FOUND);
-
-                ok = IndexToIdVal(cx, q, &id);
-                if (!ok)
-                    goto out;
-                ok = Replace(cx, parent, id, OBJECT_TO_JSVAL(copyobj));
+                ok = Replace(cx, parent, q, OBJECT_TO_JSVAL(copyobj));
                 if (!ok)
                     goto out;
 
@@ -4532,11 +4471,7 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             if (parent) {
                 q = XMLARRAY_FIND_MEMBER(&parent->xml_kids, kid, NULL);
                 JS_ASSERT(q != XML_NOT_FOUND);
-
-                ok = IndexToIdVal(cx, q, &id);
-                if (!ok)
-                    goto out;
-                ok = Replace(cx, parent, id, *vp);
+                ok = Replace(cx, parent, q, *vp);
                 if (!ok)
                     goto out;
 
@@ -4705,14 +4640,7 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     if (!match) {
                         match = attr;
                     } else {
-                        nameobj = js_GetAttributeNameObject(cx, attrqn);
-                        if (!nameobj)
-                            goto bad;
-
-                        id = OBJECT_TO_JSVAL(nameobj);
-                        ok = DeleteProperty(cx, obj, id, &junk);
-                        if (!ok)
-                            goto out;
+                        DeleteNamedProperty(cx, xml, attrqn, JS_TRUE);
                         --i;
                     }
                 }
@@ -4770,19 +4698,15 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
         /* 12. */
         k = n = xml->xml_kids.length;
+        matchIndex = XML_NOT_FOUND;
         kid2 = NULL;
         while (k != 0) {
             --k;
             kid = XMLARRAY_MEMBER(&xml->xml_kids, k, JSXML);
             if (kid && MatchElemName(nameqn, kid)) {
-                if (!JSVAL_IS_VOID(id)) {
-                    ok = DeleteByIndex(cx, xml, id, &junk);
-                    if (!ok)
-                        goto out;
-                }
-                ok = IndexToIdVal(cx, k, &id);
-                if (!ok)
-                    goto out;
+                if (matchIndex != XML_NOT_FOUND)
+                    DeleteByIndex(cx, xml, matchIndex);
+                matchIndex = k;
                 kid2 = kid;
             }
         }
@@ -4810,11 +4734,9 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
 
         /* 13. */
-        if (JSVAL_IS_VOID(id)) {
+        if (matchIndex == XML_NOT_FOUND) {
             /* 13(a). */
-            ok = IndexToIdVal(cx, n, &id);
-            if (!ok)
-                goto out;
+            matchIndex = n;
 
             /* 13(b). */
             if (primitiveAssign) {
@@ -4843,7 +4765,7 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 ns = GetNamespace(cx, nameqn, NULL);
                 if (!ns)
                     goto bad;
-                ok = Replace(cx, xml, id, OBJECT_TO_JSVAL(vobj));
+                ok = Replace(cx, xml, matchIndex, OBJECT_TO_JSVAL(vobj));
                 if (!ok)
                     goto out;
                 ok = AddInScopeNamespace(cx, vxml, ns);
@@ -4856,9 +4778,8 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (primitiveAssign) {
             JSXMLArrayCursor cursor;
 
-            js_IdIsIndex(id, &index);
             XMLArrayCursorInit(&cursor, &xml->xml_kids);
-            cursor.index = index;
+            cursor.index = matchIndex;
             kid = (JSXML *) XMLArrayCursorItem(&cursor);
             if (JSXML_HAS_KIDS(kid)) {
                 XMLArrayFinish(cx, &kid->xml_kids);
@@ -4872,13 +4793,13 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 if (ok && !IS_EMPTY(JSVAL_TO_STRING(*vp))) {
                     roots[VAL_ROOT] = *vp;
                     if ((JSXML *) XMLArrayCursorItem(&cursor) == kid)
-                        ok = Replace(cx, kid, JSVAL_ZERO, *vp);
+                        ok = Replace(cx, kid, 0, *vp);
                 }
             }
             XMLArrayCursorFinish(&cursor);
         } else {
             /* 15(a). */
-            ok = Replace(cx, xml, id, *vp);
+            ok = Replace(cx, xml, matchIndex, *vp);
         }
     }
 
@@ -5248,6 +5169,12 @@ xml_setAttributes(JSContext *cx, JSObject *obj, jsid id, JSProperty *prop,
 static JSBool
 xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 {
+    JSXML *xml;
+    jsval idval;
+    uint32 index;
+    JSXMLQName *nameqn;
+    jsid funid;
+
     /*
      * If this object has its own (mutable) scope, and if id isn't an index,
      * then we may have added a property to the scope in xml_lookupProperty
@@ -5264,7 +5191,31 @@ xml_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
             return JS_FALSE;
     }
 
-    return DeleteProperty(cx, obj, ID_TO_VALUE(id), rval);
+    idval = ID_TO_VALUE(id);
+    xml = (JSXML *) JS_GetPrivate(cx, obj);
+    if (js_IdIsIndex(idval, &index)) {
+        if (xml->xml_class != JSXML_CLASS_LIST) {
+            /* See NOTE in spec: this variation is reserved for future use. */
+            ReportBadXMLName(cx, id);
+            return JS_FALSE;
+        }
+
+        /* ECMA-357 9.2.1.3. */
+        DeleteListElement(cx, xml, index);
+    } else {
+        nameqn = ToXMLName(cx, idval, &funid);
+        if (!nameqn)
+            return JS_FALSE;
+        if (funid)
+            return js_DeleteProperty(cx, obj, funid, rval);
+
+        DeleteNamedProperty(cx, xml, nameqn,
+                            OBJ_GET_CLASS(cx, nameqn->object) ==
+                            &js_AttributeNameClass);
+    }
+
+    *rval = JSVAL_TRUE;
+    return JS_TRUE;
 }
 
 static JSBool
@@ -6581,14 +6532,13 @@ xml_nodeKind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_TRUE;
 }
 
-static JSBool
-NormalizingDelete(JSContext *cx, JSObject *obj, JSXML *xml, jsval id)
+static void
+NormalizingDelete(JSContext *cx, JSXML *xml, uint32 index)
 {
-    jsval junk;
-
     if (xml->xml_class == JSXML_CLASS_LIST)
-        return DeleteProperty(cx, obj, id, &junk);
-    return DeleteByIndex(cx, xml, id, &junk);
+        DeleteListElement(cx, xml, index);
+    else
+        DeleteByIndex(cx, xml, index);
 }
 
 /* XML and XMLList */
@@ -6626,14 +6576,12 @@ xml_normalize(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 str = js_ConcatStrings(cx, kid->xml_value, kid2->xml_value);
                 if (!str)
                     return JS_FALSE;
-                if (!NormalizingDelete(cx, obj, xml, INT_TO_JSVAL(i + 1)))
-                    return JS_FALSE;
+                NormalizingDelete(cx, xml, i + 1);
                 n = xml->xml_kids.length;
                 kid->xml_value = str;
             }
             if (IS_EMPTY(kid->xml_value)) {
-                if (!NormalizingDelete(cx, obj, xml, INT_TO_JSVAL(i)))
-                    return JS_FALSE;
+                NormalizingDelete(cx, xml, i);
                 n = xml->xml_kids.length;
                 --i;
             }
@@ -6873,8 +6821,8 @@ static JSBool
 xml_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSXML *xml, *vxml, *kid;
-    jsval name, value, id, junk;
-    uint32 index;
+    jsval name, value;
+    uint32 index, matchIndex;
     JSObject *nameobj;
     JSXMLQName *nameqn;
 
@@ -6904,7 +6852,7 @@ xml_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     name = argv[0];
     if (js_IdIsIndex(name, &index))
-        return Replace(cx, xml, name, value);
+        return Replace(cx, xml, index, value);
 
     /* Call function QName per spec, not ToXMLName, to avoid attribute names. */
     nameobj = CallConstructorFunction(cx, obj, &js_QNameClass.base, 1, &name);
@@ -6913,21 +6861,19 @@ xml_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     argv[0] = OBJECT_TO_JSVAL(nameobj);
     nameqn = (JSXMLQName *) JS_GetPrivate(cx, nameobj);
 
-    id = JSVAL_VOID;
     index = xml->xml_kids.length;
+    matchIndex = XML_NOT_FOUND;
     while (index != 0) {
         --index;
         kid = XMLARRAY_MEMBER(&xml->xml_kids, index, JSXML);
         if (kid && MatchElemName(nameqn, kid)) {
-            if (!JSVAL_IS_VOID(id) && !DeleteByIndex(cx, xml, id, &junk))
-                return JS_FALSE;
-            if (!IndexToIdVal(cx, index, &id))
-                return JS_FALSE;
+            if (matchIndex != XML_NOT_FOUND)
+                DeleteByIndex(cx, xml, matchIndex);
+            matchIndex = index;
         }
     }
-    if (JSVAL_IS_VOID(id))
-        return JS_TRUE;
-    return Replace(cx, xml, id, value);
+
+    return matchIndex == XML_NOT_FOUND || Replace(cx, xml, matchIndex, value);
 }
 
 static JSBool
@@ -8208,13 +8154,11 @@ js_DeleteXMLListElements(JSContext *cx, JSObject *listobj)
 {
     JSXML *list;
     uint32 n;
-    jsval junk;
 
     list = (JSXML *) JS_GetPrivate(cx, listobj);
-    for (n = list->xml_kids.length; n != 0; --n) {
-        if (!DeleteProperty(cx, listobj, INT_TO_JSID(0), &junk))
-            return JS_FALSE;
-    }
+    for (n = list->xml_kids.length; n != 0; --n)
+        DeleteListElement(cx, list, 0);
+
     return JS_TRUE;
 }
 
