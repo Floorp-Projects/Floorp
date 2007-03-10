@@ -30,7 +30,6 @@
   #%]
 
 [% IF Param('useclassification') && classification %]
-<p>
   [% classification_url_part = BLOCK %]&amp;classification=
      [%- classification.name FILTER url_quote %]
   [% END %]
@@ -40,7 +39,6 @@
   [% classification_text = BLOCK %] 
     of classification '[% classification.name FILTER html %]'
   [% END %]
-</p>
 [% END %]
 
 <hr>
