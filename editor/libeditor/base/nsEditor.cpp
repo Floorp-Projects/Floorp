@@ -730,7 +730,7 @@ nsEditor::DoTransaction(nsITransaction *aTxn)
     selPrivate->EndBatchChanges(); // no need to check result here, don't lose result of operation
   }
  
-  NS_POSTCONDITION((NS_SUCCEEDED(result)), "transaction did not execute properly\n");
+  NS_POSTCONDITION((NS_SUCCEEDED(result)), "transaction did not execute properly");
 
   return result;
 }
