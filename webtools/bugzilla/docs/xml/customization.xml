@@ -494,7 +494,7 @@
     <para>
       To use hooks to extend Bugzilla, first make sure there is
       a hook at the appropriate place within the source file or template you 
-      want to extend. The exact appearence of a hook depends on if the hook 
+      want to extend. The exact appearance of a hook depends on if the hook 
       is a code hook or a template hook. 
     </para>
     
