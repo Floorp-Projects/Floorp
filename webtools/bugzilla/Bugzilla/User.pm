@@ -67,7 +67,7 @@ use constant USER_MATCH_SUCCESS  => 1;
 use constant MATCH_SKIP_CONFIRM  => 1;
 
 use constant DEFAULT_USER => {
-    'id'             => 0,
+    'userid'         => 0,
     'realname'       => '',
     'login_name'     => '',
     'showmybugslink' => 0,
