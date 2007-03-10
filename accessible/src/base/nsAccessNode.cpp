@@ -64,6 +64,7 @@
 #include "nsIStringBundle.h"
 #include "nsITimer.h"
 #include "nsRootAccessible.h"
+#include "nsIFocusController.h"
 
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
@@ -664,4 +665,37 @@ void nsAccessNode::ClearCache(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode>
   aCache.Enumerate(ClearCacheEntry, nsnull);
 }
 
+already_AddRefed<nsIDOMNode> nsAccessNode::GetCurrentFocus()
+{
+  nsCOMPtr<nsIPresShell> shell = GetPresShellFor(mDOMNode);
+  NS_ENSURE_TRUE(shell, nsnull);
+  nsCOMPtr<nsIDocument> doc = shell->GetDocument();
+  NS_ENSURE_TRUE(doc, nsnull);
 
+  nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(doc->GetWindow()));
+  if (!privateDOMWindow) {
+    return nsnull;
+  }
+  nsIFocusController *focusController = privateDOMWindow->GetRootFocusController();
+  if (!focusController) {
+    return nsnull;
+  }
+  nsCOMPtr<nsIDOMElement> focusedElement;
+  focusController->GetFocusedElement(getter_AddRefs(focusedElement));
+  if (!focusedElement) {
+    return nsnull;
+  }
+  nsIDOMNode *focusedNode;
+  focusedElement->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&focusedNode);
+  if (!focusedNode) {
+    // Document itself may have focus
+    nsCOMPtr<nsIDOMWindowInternal> focusedWinInternal;
+    focusController->GetFocusedWindow(getter_AddRefs(focusedWinInternal));
+    if (focusedWinInternal) {
+      nsCOMPtr<nsIDOMDocument> focusedDOMDocument;
+      focusedWinInternal->GetDocument(getter_AddRefs(focusedDOMDocument));
+      focusedDOMDocument->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&focusedNode);
+    }
+  }
+  return focusedNode;
+}

@@ -443,8 +443,6 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
                                                 nsIDOMEvent *aFocusEvent,
                                                 PRBool aForceEvent)
 {
-  NS_ASSERTION(aAccessible, "Attempted to fire focus event for no accessible");
-
   if (mCaretAccessible) {
     nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aFocusEvent));
     if (nsevent) {
@@ -465,23 +463,51 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
     }
   }
 
+  // Check for aaa:activedescendant, which changes which element has focus
+  nsCOMPtr<nsIDOMNode> finalFocusNode = aNode;
+  nsCOMPtr<nsIAccessible> finalFocusAccessible = aAccessible;
+  nsCOMPtr<nsIContent> finalFocusContent  = do_QueryInterface(aNode);
+  if (finalFocusContent) {
+    nsAutoString id;
+    if (finalFocusContent->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::activedescendant, id)) {
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      aNode->GetOwnerDocument(getter_AddRefs(domDoc));
+      if (!domDoc) {
+        return;
+      }
+      nsCOMPtr<nsIDOMElement> relatedEl;
+      domDoc->GetElementById(id, getter_AddRefs(relatedEl));
+      finalFocusContent = do_QueryInterface(relatedEl);
+      if (!finalFocusContent) {
+        return;
+      }
+      GetAccService()->GetAccessibleFor(finalFocusNode, getter_AddRefs(finalFocusAccessible));      
+      // XXX Deal with case where finalFocusNode is not in parent chain of original true focus (aNode).
+      // We need direction from ARIA spec -- should we just return because it's not valid?
+      // Or should we put focus on the original container node?
+    }
+  }
+
   // Fire focus only if it changes, but always fire focus events when aForceEvent == PR_TRUE
-  if (gLastFocusedNode == aNode && !aForceEvent) {
+  if (gLastFocusedNode == finalFocusNode && !aForceEvent) {
     return;
   }
 
   nsCOMPtr<nsPIAccessible> privateAccessible =
-    do_QueryInterface(aAccessible);
+    do_QueryInterface(finalFocusAccessible);
   NS_ASSERTION(privateAccessible , "No nsPIAccessible for nsIAccessible");
+  if (!privateAccessible) {
+    return;
+  }
 
   // Use focus events on DHTML menuitems to indicate when to fire menustart and menuend
   // Special dynamic content handling
   PRUint32 role = ROLE_NOTHING;
-  aAccessible->GetFinalRole(&role);
+  finalFocusAccessible->GetFinalRole(&role);
   if (role == ROLE_MENUITEM) {
     if (!mIsInDHTMLMenu) {  // Entering menus
       PRUint32 naturalRole; // The natural role is the role that this type of element normally has
-      aAccessible->GetRole(&naturalRole);
+      finalFocusAccessible->GetRole(&naturalRole);
       if (role != naturalRole) { // Must be a DHTML menuitem
          FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUSTART, this, nsnull);
          mIsInDHTMLMenu = ROLE_MENUITEM;
@@ -494,41 +520,16 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
   }
 
   NS_IF_RELEASE(gLastFocusedNode);
-  gLastFocusedNode = aNode;
+  gLastFocusedNode = finalFocusNode;
   NS_IF_ADDREF(gLastFocusedNode);
 
   privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS,
-                                      aAccessible, nsnull);
+                                      finalFocusAccessible, nsnull);
 }
 
 void nsRootAccessible::FireCurrentFocusEvent()
 {
-  nsCOMPtr<nsIDOMWindow> domWin;
-  GetWindow(getter_AddRefs(domWin));
-  nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(domWin));
-  if (!privateDOMWindow) {
-    return;
-  }
-  nsIFocusController *focusController = privateDOMWindow->GetRootFocusController();
-  if (!focusController) {
-    return;
-  }
-  nsCOMPtr<nsIDOMElement> focusedElement;
-  focusController->GetFocusedElement(getter_AddRefs(focusedElement));
-  nsCOMPtr<nsIDOMNode> focusedNode(do_QueryInterface(focusedElement));
-  if (!focusedNode) {
-    // Document itself may have focus
-    nsCOMPtr<nsIDOMWindowInternal> focusedWinInternal;
-    focusController->GetFocusedWindow(getter_AddRefs(focusedWinInternal));
-    if (focusedWinInternal) {
-      nsCOMPtr<nsIDOMDocument> focusedDOMDocument;
-      focusedWinInternal->GetDocument(getter_AddRefs(focusedDOMDocument));
-      focusedNode = do_QueryInterface(focusedDOMDocument);
-    }
-    if (!focusedNode) {
-      return;  // Could not get a focused document either
-    }
-  }
+  nsCOMPtr<nsIDOMNode> focusedNode = GetCurrentFocus();
 
   // Simulate a focus event so that we can reuse code that fires focus for container children like treeitems
   nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(mDocument);

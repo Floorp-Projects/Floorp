@@ -149,6 +149,7 @@ class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
 
     static nsIDOMNode *gLastFocusedNode;
     static nsIAccessibilityService* GetAccService();
+    already_AddRefed<nsIDOMNode> GetCurrentFocus();
 
 protected:
     nsresult MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode);
