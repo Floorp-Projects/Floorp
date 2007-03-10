@@ -363,8 +363,3 @@ nsSVGPatternElement::ContentRemoved(nsIDocument *aDocument,
 {
   PushUpdate();
 }
-
-void
-nsSVGPatternElement::NodeWillBeDestroyed(const nsINode *aNode)
-{
-}

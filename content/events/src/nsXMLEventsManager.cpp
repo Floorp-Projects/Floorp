@@ -438,5 +438,10 @@ nsXMLEventsManager::ContentRemoved(nsIDocument* aDocument,
   }
 }
 
+void
+nsXMLEventsManager::ParentChainChanged(nsIContent *aContent)
+{
+}
+
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsXMLEventsManager)
 

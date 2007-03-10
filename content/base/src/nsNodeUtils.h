@@ -40,13 +40,13 @@
 
 #include "nsDOMAttributeMap.h"
 #include "nsIDOMNode.h"
+#include "nsIMutationObserver.h"
 
 struct JSContext;
 struct JSObject;
 class nsINode;
 class nsNodeInfoManager;
 template<class E> class nsCOMArray;
-struct CharacterDataChangeInfo;
 
 class nsNodeUtils
 {
@@ -102,6 +102,12 @@ public:
   static void ContentRemoved(nsINode* aContainer,
                              nsIContent* aChild,
                              PRInt32 aIndexInContainer);
+  /**
+   * Send ParentChainChanged notifications to nsIMutationObservers
+   * @param aContent  The piece of content that had its parent changed.
+   * @see nsIMutationObserver::ParentChainChanged
+   */
+  static void ParentChainChanged(nsIContent *aContent);
 
   /**
    * To be called when reference count of aNode drops to zero.

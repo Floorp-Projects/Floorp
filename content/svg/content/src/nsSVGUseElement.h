@@ -40,7 +40,7 @@
 #include "nsIDOMSVGAnimatedString.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsIDOMSVGUseElement.h"
-#include "nsIMutationObserver.h"
+#include "nsStubMutationObserver.h"
 #include "nsISVGValue.h"
 #include "nsSVGGraphicElement.h"
 #include "nsSVGLength2.h"
@@ -60,7 +60,7 @@ typedef nsSVGGraphicElement nsSVGUseElementBase;
 class nsSVGUseElement : public nsSVGUseElementBase,
                         public nsIDOMSVGURIReference,
                         public nsIDOMSVGUseElement,
-                        public nsIMutationObserver
+                        public nsStubMutationObserver
 {
   friend class nsSVGUseFrame;
 protected:
@@ -78,7 +78,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGUSEELEMENT
   NS_DECL_NSIDOMSVGURIREFERENCE
-  NS_DECL_NSIMUTATIONOBSERVER
+
+  NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
+  NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
   // xxx I wish we could use virtual inheritance
   NS_FORWARD_NSIDOMNODE(nsSVGUseElementBase::)

@@ -692,6 +692,11 @@ nsSHEntry::ContentRemoved(nsIDocument* aDocument,
   DocumentMutated();
 }
 
+void
+nsSHEntry::ParentChainChanged(nsIContent *aContent)
+{
+}
+
 class DestroyViewerEvent : public nsRunnable
 {
 public:
