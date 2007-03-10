@@ -918,6 +918,10 @@ nsMenuBarX::ContentInserted(nsIDocument * aDocument, nsIContent * aContainer,
   }
 }
 
+void
+nsMenuBarX::ParentChainChanged(nsIContent *aContent)
+{
+}
 
 //
 // nsIChangeManager
