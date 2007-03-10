@@ -117,6 +117,13 @@ function applySkin()
 
   parent.hPrefWindow.setPref("string", "general.skins.selectedSkin", data.name);
 
+  if (parent.hPrefWindow.getPref("bool", "extensions.dss.enabled")) {
+    parent.hPrefWindow.pref.clearUserPref("general.skins.selectedSkin");
+    reg.selectSkin(data.name, true);
+    reg.refreshSkins();
+    return;
+  }
+
   // shut down quicklaunch so the next launch will have the new skin
   var appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"]
                      .getService(Components.interfaces.nsIAppStartup);

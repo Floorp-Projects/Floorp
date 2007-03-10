@@ -195,6 +195,7 @@ pref("app.releaseNotesURL", "chrome://branding/locale/brand.properties");
 pref("app.vendorURL", "chrome://branding/locale/brand.properties");
 
 pref("extensions.getMoreLocalesURL", "chrome://branding/locale/brand.properties");
+pref("extensions.dss.enabled", false);          // Dynamic Skin Switching
 
 pref("xpinstall.dialog.confirm",        "chrome://communicator/content/xpinstall/institems.xul");
 pref("xpinstall.dialog.progress.chrome","chrome://communicator/content/xpinstall/xpistatus.xul");

@@ -2113,12 +2113,15 @@ function applyTheme(themeName)
     return;
   }
 
- // XXX XXX BAD BAD BAD BAD !! XXX XXX                                         
- // we STILL haven't fixed editor skin switch problems                         
- // hacking around it yet again                                                
-
  str.data = name;
  pref.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsString, str);
+
+ if (pref.getBoolPref("extensions.dss.enabled")) {
+   pref.clearUserPref("general.skins.selectedSkin");
+   chromeRegistry.selectSkin(name, true);
+   chromeRegistry.refreshSkins();
+   return;
+ }
  
  // shut down quicklaunch so the next launch will have the new skin
  var appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"]
