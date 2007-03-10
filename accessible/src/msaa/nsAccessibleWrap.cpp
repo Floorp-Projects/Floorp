@@ -465,8 +465,9 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
   PRUint32 xpRole = 0, msaaRole = 0;
   if (NS_FAILED(xpAccessible->GetFinalRole(&xpRole)))
     return E_FAIL;
-  msaaRole = msaaRoleMap[xpRole];
-  NS_ASSERTION(msaaRoleMap[nsIAccessible::ROLE_LAST_ENTRY] == ROLE_MSAA_LAST_ENTRY,
+
+  msaaRole = gWindowsRoleMap[xpRole].msaaRole;
+  NS_ASSERTION(gWindowsRoleMap[nsIAccessible::ROLE_LAST_ENTRY].msaaRole == ROLE_WINDOWS_LAST_ENTRY,
                "MSAA role map skewed");
 
   // Special case, not a great place for this, but it's better than adding extra role buttonmenu role to ARIA
@@ -487,11 +488,15 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
   // Use BSTR role to expose role attribute or tag name + namespace
   nsCOMPtr<nsIDOMNode> domNode;
   nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(xpAccessible));
-  NS_ASSERTION(accessNode, "No accessnode for accessible");
+  if (!accessNode)
+    return E_FAIL;
+
   accessNode->GetDOMNode(getter_AddRefs(domNode));
   nsIContent *content = GetRoleContent(domNode);
-  NS_ASSERTION(content, "No content for accessible");
-  if (content && content->IsNodeOfType(nsINode::eELEMENT)) {
+  if (!content)
+    return E_FAIL;
+
+  if (content->IsNodeOfType(nsINode::eELEMENT)) {
     nsAutoString roleString;
     if (msaaRole != ROLE_SYSTEM_CLIENT && !GetRoleAttribute(content, roleString)) {
       nsINodeInfo *nodeInfo = content->NodeInfo();
@@ -1114,7 +1119,16 @@ nsAccessibleWrap::get_relations(long maxRelations,
 STDMETHODIMP
 nsAccessibleWrap::role(long *role)
 {
-  return E_NOTIMPL;
+  PRUint32 xpRole = 0;
+  if (NS_FAILED(GetFinalRole(&xpRole)))
+    return E_FAIL;
+
+  NS_ASSERTION(gWindowsRoleMap[nsIAccessible::ROLE_LAST_ENTRY].ia2Role == ROLE_WINDOWS_LAST_ENTRY,
+               "MSAA role map skewed");
+
+  *role = gWindowsRoleMap[xpRole].ia2Role;
+
+  return S_OK;
 }
 
 STDMETHODIMP
