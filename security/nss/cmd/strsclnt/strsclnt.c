@@ -1093,16 +1093,18 @@ StressClient_GetClientAuthData(void * arg,
     }
 }
 
-#define HEXCHAR_TO_INT(c, i) \
-    if (((c) >= '0') && ((c) <= '9')) { \
-	i = (c) - '0'; \
-    } else if (((c) >= 'a') && ((c) <= 'f')) { \
-	i = (c) - 'a' + 10; \
-    } else if (((c) >= 'A') && ((c) <= 'F')) { \
-	i = (c) - 'A' + 10; \
-    } else { \
-	Usage("strsclnt"); \
-    }
+int 
+hexchar_to_int(int c) 
+{
+    if (((c) >= '0') && ((c) <= '9'))
+	return (c) - '0'; 
+    if (((c) >= 'a') && ((c) <= 'f'))
+	return (c) - 'a' + 10;
+    if (((c) >= 'A') && ((c) <= 'F'))
+	return (c) - 'A' + 10; 
+    failed_already = 1;
+    return -1;
+}
 
 void
 client_main(
@@ -1134,46 +1136,48 @@ client_main(
         /* disable all the ciphers, then enable the ones we want. */
         disableAllSSLCiphers();
 
-        while (0 != (ndx = *cipherString++)) {
-            int  cipher;
+        while (0 != (ndx = *cipherString)) {
+	    const char * startCipher = cipherString++;
+            int  cipher = 0;
+	    SECStatus rv;
 
 	    if (ndx == ':') {
-		int ctmp;
-
-		cipher = 0;
-		HEXCHAR_TO_INT(*cipherString, ctmp)
-		cipher |= (ctmp << 12);
-		cipherString++;
-		HEXCHAR_TO_INT(*cipherString, ctmp)
-		cipher |= (ctmp << 8);
-		cipherString++;
-		HEXCHAR_TO_INT(*cipherString, ctmp)
-		cipher |= (ctmp << 4);
-		cipherString++;
-		HEXCHAR_TO_INT(*cipherString, ctmp)
-		cipher |= ctmp;
-		cipherString++;
-	    } else {
-		const int *cptr;
-
-		if (! isalpha(ndx))
-		    Usage("strsclnt");
-		cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
-		for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; ) 
-		    /* do nothing */;
-	    }
-            if (cipher > 0) {
-		SECStatus rv;
-                rv = SSL_CipherPrefSetDefault(cipher, PR_TRUE);
-		if (rv != SECSuccess) {
-		    fprintf(stderr, 
-		"strsclnt: SSL_CipherPrefSetDefault failed with value 0x%04x\n",
-			    cipher);
-		    exit(1);
+		cipher  = hexchar_to_int(*cipherString++);
+		cipher <<= 4;
+		cipher |= hexchar_to_int(*cipherString++);
+		cipher <<= 4;
+		cipher |= hexchar_to_int(*cipherString++);
+		cipher <<= 4;
+		cipher |= hexchar_to_int(*cipherString++);
+		if (cipher <= 0) {
+		    fprintf(stderr, "strsclnt: Invalid cipher value: %-5.5s\n",
+		                    startCipher);
+		    failed_already = 1;
+		    return;
 		}
-            } else {
-		Usage("strsclnt");
-            }
+	    } else {
+		if (isalpha(ndx)) {
+		    const int *cptr;
+
+		    cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
+		    for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; ) 
+			/* do nothing */;
+		}
+	    	if (cipher <= 0) {
+		    fprintf(stderr, "strsclnt: Invalid cipher letter: %c\n", 
+		                    *startCipher);
+		    failed_already = 1;
+		    return;
+		}
+	    }
+	    rv = SSL_CipherPrefSetDefault(cipher, PR_TRUE);
+	    if (rv != SECSuccess) {
+		fprintf(stderr, 
+			"strsclnt: SSL_CipherPrefSetDefault(0x%04x) failed\n",
+			cipher);
+		failed_already = 1;
+		return;
+	    }
         }
     }
 
