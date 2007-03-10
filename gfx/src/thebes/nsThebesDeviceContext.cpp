@@ -187,6 +187,25 @@ nsThebesDeviceContext::SetDPI()
         if (OSVal != 0)
             dpi = OSVal;
 
+#elif defined(XP_OS2)
+        // get a printer DC if available, otherwise create a new (memory) DC
+        HDC dc = GetPrintDC();
+        PRBool doCloseDC = PR_FALSE;
+        if (dc <= 0) { // test for NULLHANDLE/DEV_ERROR or HDC_ERROR
+            // create DC compatible with the screen
+            dc = DevOpenDC((HAB)1, OD_MEMORY,"*",0L, NULL, NULLHANDLE);
+            doCloseDC = PR_TRUE;
+        }
+        if (dc > 0) {
+            // we do have a DC and we can query the DPI setting from it
+            LONG lDPI;
+            if (DevQueryCaps(dc, CAPS_VERTICAL_FONT_RES, 1, &lDPI))
+                dpi = lDPI;
+            if (doCloseDC)
+                DevCloseDC(dc);
+        }
+        if (dpi < 0) // something didn't work before, fall back to hardcoded DPI value
+            dpi = 96;
 #elif defined(XP_MACOSX)
 
         // we probably want to actually get a real DPI here?
