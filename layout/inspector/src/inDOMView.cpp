@@ -830,13 +830,6 @@ inDOMView::ContentAppended(nsIDocument *aDocument,
 }
 
 void
-inDOMView::CharacterDataChanged(nsIDocument *aDocument,
-                                nsIContent* aContent,
-                                CharacterDataChangeInfo* aInfo)
-{
-}
-
-void
 inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
                            nsIContent* aChild, PRInt32 aIndexInContainer)
 {

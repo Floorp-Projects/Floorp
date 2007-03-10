@@ -45,8 +45,8 @@ class nsIDocument;
 class nsINode;
 
 #define NS_IMUTATION_OBSERVER_IID \
-{ 0x0864a23d, 0x824b, 0x48be, \
- { 0x9d, 0x50, 0xff, 0x30, 0x2f, 0xf2, 0x79, 0xfe } }
+{ 0x93542eb8, 0x98e1, 0x46f6, \
+ { 0xbb, 0xa2, 0x90, 0x54, 0x05, 0xfe, 0xbe, 0xf9 } }
 
 /**
  * Information details about a characterdata change
@@ -59,7 +59,17 @@ struct CharacterDataChangeInfo
   PRUint32 mReplaceLength;
 };
 
-// Mutation observer interface
+/**
+ * Mutation observer interface
+ *
+ * WARNING: During these notifications, you are not allowed to perform
+ * any mutations to the current or any other document, or start a
+ * network load.  If you need to perform such operations do that
+ * during the _last_ nsIDocumentObserver::EndUpdate notification.  The
+ * expection for this is ParentChainChanged, where mutations should be
+ * done from an async event, as the notification might not be
+ * surrounded by BeginUpdate/EndUpdate calls.
+ */
 class nsIMutationObserver : public nsISupports
 {
 public:
@@ -163,32 +173,67 @@ public:
    * @param aNode The node being destroyed.
    */
   virtual void NodeWillBeDestroyed(const nsINode *aNode) = 0;
+
+  /**
+   * Notification that the node's parent chain has changed. This
+   * happens when either the node or one of its ancestors is inserted
+   * or removed as a child of another node.
+   *
+   * Note that when a node is inserted this notification is sent to
+   * all descendants of that node, since all such nodes have their
+   * parent chain changed.
+   *
+   * @param aContent  The piece of content that had its parent changed.
+   */
+
+  virtual void ParentChainChanged(nsIContent *aContent) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIMutationObserver, NS_IMUTATION_OBSERVER_IID)
 
-#define NS_DECL_NSIMUTATIONOBSERVER                                          \
+#define NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED                     \
     virtual void CharacterDataChanged(nsIDocument* aDocument,                \
                                       nsIContent* aContent,                  \
-                                      CharacterDataChangeInfo* aInfo);       \
+                                      CharacterDataChangeInfo* aInfo);
+
+#define NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED                         \
     virtual void AttributeChanged(nsIDocument* aDocument,                    \
                                   nsIContent* aContent,                      \
                                   PRInt32 aNameSpaceID,                      \
                                   nsIAtom* aAttribute,                       \
-                                  PRInt32 aModType);                         \
+                                  PRInt32 aModType);
+
+#define NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED                          \
     virtual void ContentAppended(nsIDocument* aDocument,                     \
                                  nsIContent* aContainer,                     \
-                                 PRInt32 aNewIndexInContainer);              \
+                                 PRInt32 aNewIndexInContainer);
+
+#define NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED                          \
     virtual void ContentInserted(nsIDocument* aDocument,                     \
                                  nsIContent* aContainer,                     \
                                  nsIContent* aChild,                         \
-                                 PRInt32 aIndexInContainer);                 \
+                                 PRInt32 aIndexInContainer);
+
+#define NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED                           \
     virtual void ContentRemoved(nsIDocument* aDocument,                      \
                                 nsIContent* aContainer,                      \
                                 nsIContent* aChild,                          \
-                                PRInt32 aIndexInContainer);                  \
+                                PRInt32 aIndexInContainer);
+
+#define NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED                      \
     virtual void NodeWillBeDestroyed(const nsINode* aNode);
 
+#define NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED                       \
+    virtual void ParentChainChanged(nsIContent *aContent);
+
+#define NS_DECL_NSIMUTATIONOBSERVER                                          \
+    NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED                         \
+    NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED                             \
+    NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED                              \
+    NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED                              \
+    NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED                               \
+    NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED                          \
+    NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED
 
 #define NS_IMPL_NSIMUTATIONOBSERVER_CORE_STUB(_class)                     \
 void                                                                      \
@@ -230,6 +275,11 @@ _class::ContentRemoved(nsIDocument* aDocument,                            \
                        nsIContent* aChild,                                \
                        PRInt32 aIndexInContainer)                         \
 {                                                                         \
+}                                                                         \
+void                                                                      \
+_class::ParentChainChanged(nsIContent *aContent)                          \
+{                                                                         \
 }
+
 
 #endif /* nsIMutationObserver_h___ */

@@ -1039,6 +1039,11 @@ nsDocAccessible::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
   InvalidateCacheSubtree(aChild, nsIAccessibleEvent::EVENT_HIDE);
 }
 
+void
+nsDocAccessible::ParentChainChanged(nsIContent *aContent)
+{
+}
+
 nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
                                                   nsIDOMNode *aDOMNode,
                                                   void *aData,

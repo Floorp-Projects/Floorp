@@ -157,6 +157,23 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
                              (document, container, aChild, aIndexInContainer));
 }
 
+void
+nsNodeUtils::ParentChainChanged(nsIContent *aContent)
+{
+  // No need to notify observers on the parents since their parent
+  // chain must have been changed too and so their observers were
+  // notified at that time.
+
+  nsINode::nsSlots* slots = aContent->GetExistingSlots();
+  if (slots && !slots->mMutationObservers.IsEmpty()) {
+    NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(
+        slots->mMutationObservers,
+        nsIMutationObserver,
+        ParentChainChanged,
+        (aContent));
+  }
+}
+
 struct nsHandlerData
 {
   PRUint16 mOperation;

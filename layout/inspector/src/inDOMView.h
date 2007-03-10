@@ -43,7 +43,7 @@
 
 #include "nsITreeView.h"
 #include "nsITreeSelection.h"
-#include "nsIMutationObserver.h"
+#include "nsStubMutationObserver.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
 #include "nsVoidArray.h"
@@ -54,7 +54,7 @@ class inDOMViewNode;
 
 class inDOMView : public inIDOMView,
                   public nsITreeView,
-                  public nsIMutationObserver
+                  public nsStubMutationObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -65,7 +65,11 @@ public:
   virtual ~inDOMView();
 
   // nsIMutationObserver
-  NS_DECL_NSIMUTATIONOBSERVER
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
+  NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
   static void InitAtoms();
 

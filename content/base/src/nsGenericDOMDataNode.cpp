@@ -600,6 +600,8 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     }
   }
 
+  nsNodeUtils::ParentChainChanged(this);
+
   NS_POSTCONDITION(aDocument == GetCurrentDoc(), "Bound to wrong document");
   NS_POSTCONDITION(aParent == GetParent(), "Bound to wrong parent");
   NS_POSTCONDITION(aBindingParent == GetBindingParent(),
@@ -625,6 +627,8 @@ nsGenericDOMDataNode::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   if (slots) {
     slots->mBindingParent = nsnull;
   }
+
+  nsNodeUtils::ParentChainChanged(this);
 }
 
 nsIAtom *

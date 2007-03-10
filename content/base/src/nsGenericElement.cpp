@@ -1815,6 +1815,8 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  nsNodeUtils::ParentChainChanged(this);
+
   // XXXbz script execution during binding can trigger some of these
   // postcondition asserts....  But we do want that, since things will
   // generally be quite broken when that happens.
@@ -1822,7 +1824,7 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_POSTCONDITION(aParent == GetParent(), "Bound to wrong parent");
   NS_POSTCONDITION(aBindingParent == GetBindingParent(),
                    "Bound to wrong binding parent");
-  
+
   return NS_OK;
 }
 
@@ -1865,6 +1867,8 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
       mAttrsAndChildren.ChildAt(i)->UnbindFromTree(PR_TRUE, PR_FALSE);
     }
   }
+
+  nsNodeUtils::ParentChainChanged(this);
 }
 
 nsresult

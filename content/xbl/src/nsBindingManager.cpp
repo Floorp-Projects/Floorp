@@ -1342,6 +1342,12 @@ nsBindingManager::NodeWillBeDestroyed(const nsINode *aNode)
 }
 
 void
+nsBindingManager::ParentChainChanged(nsIContent *aContent)
+{
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(ParentChainChanged, (aContent));
+}
+
+void
 nsBindingManager::Traverse(nsIContent *aContent,
                            nsCycleCollectionTraversalCallback &cb)
 {
