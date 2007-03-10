@@ -75,10 +75,33 @@ static JSObject *
 define_JavaPackage(JSContext *cx, JSObject *parent_obj,
                    const char *obj_name, const char *path, int flags, int access)
 {
-    JSObject *package_obj;
+    JSObject *package_obj, *obj;
     JavaPackage_Private *package;
+    jsval v;
 
-    package_obj = JS_DefineObject(cx, parent_obj, obj_name, &JavaPackage_class, 0, JSPROP_PERMANENT | access);
+    /*
+     * Expose the same JSObject for Packages.java and java.
+     * "java" will be defined during the java package initialization stage.
+     * "Packages.java" will be lazily resolved by JavaPackage_resolve.
+     * Ditto for sun and netscape.
+     * See bugzilla bug: https://bugzilla.mozilla.org/show_bug.cgi?id=248409.
+     */
+    if (!strcmp(obj_name, path) &&
+        (obj = JS_GetParent(cx, parent_obj)) &&
+        JS_LookupProperty(cx, obj, obj_name, &v) &&
+        !JSVAL_IS_PRIMITIVE(v))
+    {
+        if (!JS_DefineProperty(cx, parent_obj, obj_name, v, NULL, NULL,
+                               JSPROP_PERMANENT | access)) {
+            return NULL;
+        }
+
+        package_obj = JSVAL_TO_OBJECT(v);
+        return package_obj;
+    }
+
+    package_obj = JS_DefineObject(cx, parent_obj, obj_name, &JavaPackage_class,
+                                  0, JSPROP_PERMANENT | access);
     
     if (!package_obj)
         return NULL;
