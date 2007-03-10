@@ -620,7 +620,9 @@ nsXIEngine::LoadXPIStub(xpistub_t *aStub, char *aDestination)
     
     /* open the library */
     getcwd(libpath, MAXPATHLEN);
-    sprintf(libpath, "%s/%s", libpath, XPISTUB);
+    if (strlen(libpath)+strlen(XPISTUB) + 2 > MAXPATHLEN) return E_MEM;
+    strcat(libpath, "/");
+    strcat(libpath, XPISTUB);
 
 #ifdef DEBUG
 printf("DEBUG: libpath = >>%s<<\n", libpath);
