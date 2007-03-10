@@ -4872,7 +4872,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             ActivateKeyboardLayout(mLastKeyboardLayout, 0);
         }
 
-        result = PR_TRUE;
+        // XXX We want DefWindowProc processing when switching between Mozilla
+        // windows. Otherwise, we might receive a WM_ACTIVATE without a 
+        // following WM_SETFOCUS. Leverage on an undocumented finding where
+        // lParam is always NULL when switching between windows of different
+        // processes.
+        result = (HWND)lParam == NULL;
       }
       break;
 
