@@ -367,11 +367,7 @@ typedef PRUint32 nsReflowStatus;
 #define NS_FRAME_IS_TRUNCATED(status) \
   (0 != ((status) & NS_FRAME_TRUNCATED))
 #define NS_FRAME_SET_TRUNCATION(status, aReflowState, aMetrics) \
-  if (!aReflowState.mFlags.mIsTopOfPage &&                      \
-      aReflowState.availableHeight < aMetrics.height)           \
-    status |= NS_FRAME_TRUNCATED;                               \
-  else                                                          \
-    status &= ~NS_FRAME_TRUNCATED;
+  aReflowState.SetTruncated(aMetrics, &status);
 
 //----------------------------------------------------------------------
 

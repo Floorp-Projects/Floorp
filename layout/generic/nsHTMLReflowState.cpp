@@ -2106,3 +2106,16 @@ nsHTMLReflowState::ComputeMinMaxValues(nscoord aContainingBlockWidth,
     mComputedMaxHeight = mComputedMinHeight;
   }
 }
+
+void
+nsHTMLReflowState::SetTruncated(const nsHTMLReflowMetrics& aMetrics,
+                                nsReflowStatus* aStatus) const
+{
+  if (availableHeight != NS_UNCONSTRAINEDSIZE &&
+      availableHeight < aMetrics.height &&
+      !mFlags.mIsTopOfPage) {
+    *aStatus |= NS_FRAME_TRUNCATED;
+  } else {
+    *aStatus &= ~NS_FRAME_TRUNCATED;
+  }
+}
