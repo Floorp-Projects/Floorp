@@ -16,3 +16,9 @@ RewriteRule ^app index.php [QSA,L]
 #Static Content
 RewriteRule ^(scripts|styles)$/(.*)$ $1/$2 [QSA,L]
 </IfModule>
+
+#Error Pages
+ErrorDocument 500 /error.php?error=500
+ErrorDocument 404 /error.php?error=404
+ErrorDocument 403 /error.php?error=403
+ErrorDocument 401 /error.php?error=401
