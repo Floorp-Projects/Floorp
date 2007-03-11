@@ -886,7 +886,7 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
           
           SmilyHit(aInString, aInLength, bArg,
                    ">:-o",
-                   "moz-smiley-yell", // yell
+                   "moz-smiley-s10", // yell
                    outputHTML, glyphTextLen) ||
         
           SmilyHit(aInString, aInLength, bArg,
