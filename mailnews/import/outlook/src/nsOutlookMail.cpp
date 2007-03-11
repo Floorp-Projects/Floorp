@@ -60,6 +60,7 @@
 #include "nsUnicharUtils.h"
 #include "nsMsgUtils.h"
 #include "nsIOutputStream.h"
+#include "nsMsgI18N.h"
 
 static NS_DEFINE_CID(kImportMimeEncodeCID,	NS_IMPORTMIMEENCODE_CID);
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
@@ -476,17 +477,15 @@ nsresult nsOutlookMail::ImportMailbox( PRUint32 *pDoneSoFar, PRBool *pAbort, PRI
       // Need to convert all headers to unicode (for i18n).
       // Init header here since 'composes' is used for all msgs.
       compose.SetHeaders("");
-      nsCOMPtr<nsIImportService>	impSvc = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get import service");
+
+      nsAutoString newheader;
+      nsCAutoString tempCStr(msg.GetHeaders(), msg.GetHeaderLen());
+
+      rv = nsMsgI18NConvertToUnicode(nsMsgI18NFileSystemCharset(),
+                                     tempCStr, newheader);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to convert headers to utf8");
       if (NS_SUCCEEDED(rv))
-      {
-        nsAutoString newheader;
-        nsCAutoString tempCStr(msg.GetHeaders(), msg.GetHeaderLen());
-        rv = impSvc->SystemStringToUnicode(tempCStr.get(), newheader);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to convert headers to utf8");
-        if (NS_SUCCEEDED(rv))
-          compose.SetHeaders(NS_ConvertUTF16toUTF8(newheader).get());
-      }
+        compose.SetHeaders(NS_ConvertUTF16toUTF8(newheader).get());
 
 			compose.SetAttachments( &m_attachments);
 
@@ -848,15 +847,12 @@ void nsOutlookMail::BuildAttachments( CMapiMessage& msg, int count)
             const char *fileName = msg.GetFileName();
             if (fileName && fileName[0]) {
               // Convert description to unicode.
-              nsCOMPtr<nsIImportService>	impSvc = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
-              NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get import service");
-              if (NS_SUCCEEDED(rv)) {
-                nsAutoString description;
-                rv = impSvc->SystemStringToUnicode(msg.GetFileName(), description);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "failed to convert system string to unicode");
-                if (NS_SUCCEEDED(rv))
-                  a->description = ToNewUTF8String(description);
-              }
+              nsAutoString description;
+              rv = nsMsgI18NConvertToUnicode(nsMsgI18NFileSystemCharset(),
+                                             nsDependentCString(fileName), description);
+              NS_ASSERTION(NS_SUCCEEDED(rv), "failed to convert system string to unicode");
+              if (NS_SUCCEEDED(rv))
+                a->description = ToNewUTF8String(description);
             }
 
             // If no description use "Attachment i" format.

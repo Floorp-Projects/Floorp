@@ -88,11 +88,6 @@ nsImportService::nsImportService() : m_pModules( nsnull)
 	m_pDecoder = nsnull;
 	m_pEncoder = nsnull;
 
-	// Go ahead an initialize the charset converter to avoid any 
-	// thread issues later.
-	nsString	str;
-	SystemStringToUnicode( "Dummy", str);
-
   nsresult rv = nsImportStringBundle::GetStringBundle(IMPORT_MSGS_URL, getter_AddRefs(m_stringBundle));
   if (NS_FAILED(rv))
     IMPORT_LOG0("Failed to get string bundle for Importing Mail");
@@ -136,72 +131,6 @@ NS_IMETHODIMP nsImportService::CreateNewMailboxDescriptor( nsIImportMailboxDescr
 NS_IMETHODIMP nsImportService::CreateNewABDescriptor(nsIImportABDescriptor **_retval)
 {
   return nsImportABDescriptor::Create(nsnull, NS_GET_IID(nsIImportABDescriptor), (void**)_retval);
-}
-
-NS_IMETHODIMP nsImportService::SystemStringToUnicode(const char *sysStr, nsString & uniStr)
-{
-  
-	nsresult	rv;
-	if (m_sysCharset.IsEmpty()) {
-		nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
-		if (NS_SUCCEEDED(rv)) 
-			rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, m_sysCharset);
-
-		if (NS_FAILED(rv)) 
-			m_sysCharset.AssignLiteral("ISO-8859-1");
-	}
-
-	if (!sysStr) {
-		uniStr.Truncate();
-		return( NS_OK);
-	}
-  
-	if (*sysStr == '\0') {
-		uniStr.Truncate();
-		return( NS_OK);
-	}
-	
-
-	if (m_sysCharset.IsEmpty() ||
-		m_sysCharset.LowerCaseEqualsLiteral("us-ascii") ||
-		m_sysCharset.LowerCaseEqualsLiteral("iso-8859-1")) {
-		uniStr.AssignWithConversion( sysStr);
-		return( NS_OK);
-	}
-	
-
-
-	
-	if (!m_pDecoder) {
-		nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-
-		if (NS_SUCCEEDED( rv) && (nsnull != ccm)) {
-			// get an unicode converter
-			rv = ccm->GetUnicodeDecoder(m_sysCharset.get(), &m_pDecoder);
-		}	    
-	}
-
-	if (m_pDecoder) {
-		PRInt32		srcLen = PL_strlen( sysStr);
-		PRUnichar *	unichars;
-		PRInt32 unicharLength = 0;
-		rv = m_pDecoder->GetMaxLength( sysStr, srcLen, &unicharLength);
-		// allocale an output buffer
-		unichars = (PRUnichar *) PR_Malloc(unicharLength * sizeof(PRUnichar));
-		if (unichars != nsnull) {
-			// convert to unicode
-			rv = m_pDecoder->Convert( sysStr, &srcLen, unichars, &unicharLength);
-			uniStr.Assign(unichars, unicharLength);
-			PR_Free(unichars);
-		}
-		else
-			rv = NS_ERROR_OUT_OF_MEMORY;
-	}
-	
-	if (NS_FAILED( rv))
-		uniStr.AssignWithConversion( sysStr);
-
-	return( rv);
 }
 
 extern nsresult NS_NewGenericMail(nsIImportGeneric** aImportGeneric);

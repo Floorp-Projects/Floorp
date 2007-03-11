@@ -43,18 +43,11 @@
 
 #include "nsISupports.idl"
 
-%{C++
-#include "nsString.h"
-%}
-
-
 interface nsIImportModule;
 interface nsIImportMailboxDescriptor;
 interface nsIImportABDescriptor;
 interface nsIImportGeneric;
 interface nsIImportFieldMap;
-
-[ref] native nsStringRef(nsString);
 
 [scriptable, uuid(c035e4a5-6dcc-4c70-8ff7-5b740bd2ed2b)]
 interface nsIImportService : nsISupports
@@ -73,8 +66,6 @@ interface nsIImportService : nsISupports
 	nsIImportABDescriptor		CreateNewABDescriptor();	
 	nsIImportGeneric			CreateNewGenericMail();
 	nsIImportGeneric			CreateNewGenericAddressBooks();
-
-	[noscript] void SystemStringToUnicode( in string sysStr, in nsStringRef uniStr);
 };
 
 %{ C++

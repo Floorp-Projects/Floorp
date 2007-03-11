@@ -55,6 +55,7 @@
 #include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIImportService.h"
+#include "nsMsgI18N.h"
 #include "nsIComponentManager.h"
 #include "nsTextImport.h"
 #include "nsIMemory.h"
@@ -358,12 +359,6 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *pLoc, nsISupports
 		return( rv);
 	}
 		
-	nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
-	if (NS_FAILED( rv)) {
-		IMPORT_LOG0( "*** Failed to obtain the import service\n");
-		return( rv);
-	}
-	
 	nsXPIDLCString pName;
 	rv = pLoc->GetLeafName(getter_Copies(pName));
 	if (NS_FAILED( rv)) {
@@ -374,9 +369,10 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *pLoc, nsISupports
 	// for get unicode leafname.  If it uses nsILocalFile interface,
 	// these codes do not need due to nsILocalFile->GetUnicodeLeafName()
 	nsString	name;
-	rv = impSvc->SystemStringToUnicode((const char*) pName, name);
+	rv = nsMsgI18NConvertToUnicode(nsMsgI18NFileSystemCharset(), pName, name);
 	if (NS_FAILED(rv))
 		name.AssignWithConversion((const char*) pName);
+
 
 	PRInt32		idx = name.RFindChar( '.');
 	if ((idx != -1) && (idx > 0) && ((name.Length() - idx - 1) < 5)) {
@@ -388,6 +384,12 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *pLoc, nsISupports
 	nsCOMPtr<nsIImportABDescriptor>	desc;
 	nsISupports *					pInterface;
 
+	nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
+	if (NS_FAILED( rv)) {
+		IMPORT_LOG0( "*** Failed to obtain the import service\n");
+		return( rv);
+	}
+	
 	rv = impSvc->CreateNewABDescriptor( getter_AddRefs( desc));
 	if (NS_SUCCEEDED( rv)) {
 		PRUint32 sz = 0;
@@ -631,8 +633,6 @@ NS_IMETHODIMP ImportAddressImpl::GetSampleData( PRInt32 index, PRBool *pFound, P
 	
   nsXPIDLCString line;
 	
-	nsCOMPtr<nsIImportService> impSvc(do_GetService(NS_IMPORTSERVICE_CONTRACTID, &rv));
-
 	rv = nsTextAddress::ReadRecordNumber(m_fileLoc, line, m_delim, index);
 	if (NS_SUCCEEDED( rv)) {
 		nsString	str;
@@ -643,10 +643,8 @@ NS_IMETHODIMP ImportAddressImpl::GetSampleData( PRInt32 index, PRBool *pFound, P
 			if (fNum)
 				str.AppendLiteral("\n");
 			SanitizeSampleData( field);
-			if (impSvc)
-				impSvc->SystemStringToUnicode( field.get(), uField);
-			else
-				uField.AssignWithConversion( field.get());
+      rv = nsMsgI18NConvertToUnicode(nsMsgI18NFileSystemCharset(),
+                                     field, uField);
 
 			str.Append( uField);
 			fNum++;

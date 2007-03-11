@@ -48,7 +48,6 @@
 #include "nsOEImport.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsIImportService.h"
 #include "nsOERegUtil.h"
 #include "nsIMsgAccountManager.h"
 #include "nsIMsgAccount.h"
@@ -56,6 +55,7 @@
 #include "nsOESettings.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgCompCID.h"
+#include "nsMsgI18N.h"
 #include "nsISmtpService.h"
 #include "nsISmtpServer.h"
 #include "nsOEStringBundle.h"
@@ -322,9 +322,8 @@ nsresult OESettings::GetAccountName(HKEY hKey, char *defaultName, nsString &acct
   BYTE *pAccName = nsOERegUtil::GetValueBytes( hKey, "Account Name");
   nsresult rv = NS_OK;
   if (pAccName) {
-    nsCOMPtr<nsIImportService> impSvc = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
-    if (impSvc)
-      rv = impSvc->SystemStringToUnicode((const char *)pAccName, acctName);
+    rv = nsMsgI18NConvertToUnicode(nsMsgI18NFileSystemCharset(),
+                                   nsDependentCString((const char *)pAccName), acctName);
     nsOERegUtil::FreeValueBytes( pAccName);
   }
   else
@@ -546,64 +545,64 @@ PRBool OESettings::IdentityMatches( nsIMsgIdentity *pIdent, const char *pName, c
 
 void OESettings::SetIdentities( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc, HKEY hKey)
 {
-	// Get the relevant information for an identity
-	char *pName = (char *)nsOERegUtil::GetValueBytes( hKey, "SMTP Display Name");
-	char *pServer = (char *)nsOERegUtil::GetValueBytes( hKey, "SMTP Server");
-	char *pEmail = (char *)nsOERegUtil::GetValueBytes( hKey, "SMTP Email Address");
-	char *pReply = (char *)nsOERegUtil::GetValueBytes( hKey, "SMTP Reply To Email Address");
-	char *pUserName = (char *)nsOERegUtil::GetValueBytes( hKey, "SMTP User Name");
+  // Get the relevant information for an identity
+  char *pName = (char *)nsOERegUtil::GetValueBytes( hKey, "SMTP Display Name");
+  char *pServer = (char *)nsOERegUtil::GetValueBytes( hKey, "SMTP Server");
+  char *pEmail = (char *)nsOERegUtil::GetValueBytes( hKey, "SMTP Email Address");
+  char *pReply = (char *)nsOERegUtil::GetValueBytes( hKey, "SMTP Reply To Email Address");
+  char *pUserName = (char *)nsOERegUtil::GetValueBytes( hKey, "SMTP User Name");
   char *pOrgName = (char *)nsOERegUtil::GetValueBytes( hKey, "SMTP Organization Name");
 
-	nsresult	rv;
+  nsresult	rv;
 
-	if (pEmail && pName && pServer) {
-		// The default identity, nor any other identities matched,
-		// create a new one and add it to the account.
-		nsCOMPtr<nsIMsgIdentity>	id;
-		rv = pMgr->CreateIdentity( getter_AddRefs( id));
-		if (id) {
+  if (pEmail && pName && pServer) {
+    // The default identity, nor any other identities matched,
+    // create a new one and add it to the account.
+    nsCOMPtr<nsIMsgIdentity> id;
+    rv = pMgr->CreateIdentity(getter_AddRefs(id));
+    if (id) {
       nsAutoString fullName, organization;
-      nsCOMPtr<nsIImportService> impSvc = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
-      if (impSvc)
-      {
-        rv = impSvc->SystemStringToUnicode((const char *)pName, fullName);
-        if (NS_SUCCEEDED(rv))
-        {
-			id->SetFullName( fullName.get());
-			id->SetIdentityName( fullName.get());
-        }
-        rv = impSvc->SystemStringToUnicode((const char *)pOrgName, organization);
-        if (NS_SUCCEEDED(rv))
-          id->SetOrganization( organization.get());
+      rv = nsMsgI18NConvertToUnicode(nsMsgI18NFileSystemCharset(),
+                                     nsDependentCString(pName), fullName);
+      if (NS_SUCCEEDED(rv)) {
+        id->SetFullName( fullName.get());
+        id->SetIdentityName( fullName.get());
       }
-			id->SetEmail( pEmail);
-			if (pReply)
-				id->SetReplyTo( pReply);
+
+      rv = nsMsgI18NConvertToUnicode(nsMsgI18NFileSystemCharset(),
+                                     nsDependentCString(pOrgName), organization);
+      if (NS_SUCCEEDED(rv))
+        id->SetOrganization( organization.get());
+
+      id->SetEmail(pEmail);
+      if (pReply)
+        id->SetReplyTo(pReply);
 
       // Outlook Express users are used to top style quoting.
       id->SetReplyOnTop(1); 
-			pAcc->AddIdentity( id);
+      pAcc->AddIdentity(id);
 
-			IMPORT_LOG0( "Created identity and added to the account\n");
-			IMPORT_LOG1( "\tname: %s\n", pName);
-			IMPORT_LOG1( "\temail: %s\n", pEmail);
-		}
-	}
+      IMPORT_LOG0("Created identity and added to the account\n");
+      IMPORT_LOG1("\tname: %s\n", pName);
+      IMPORT_LOG1("\temail: %s\n", pEmail);
+    }
+  }
+
   if (!pUserName) {
-    nsCOMPtr <nsIMsgIncomingServer>	incomingServer;
-    rv = pAcc->GetIncomingServer(getter_AddRefs( incomingServer));
+    nsCOMPtr <nsIMsgIncomingServer> incomingServer;
+    rv = pAcc->GetIncomingServer(getter_AddRefs(incomingServer));
     if (NS_SUCCEEDED(rv) && incomingServer) 
       rv = incomingServer->GetUsername(&pUserName);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to get UserName from incomingServer");
   }
 
-	SetSmtpServer( pMgr, pAcc, pServer, pUserName);
+  SetSmtpServer( pMgr, pAcc, pServer, pUserName);
 
-	nsOERegUtil::FreeValueBytes( (BYTE *)pName);
-	nsOERegUtil::FreeValueBytes( (BYTE *)pServer);
-	nsOERegUtil::FreeValueBytes( (BYTE *)pEmail);
-	nsOERegUtil::FreeValueBytes( (BYTE *)pReply);
-	nsOERegUtil::FreeValueBytes( (BYTE *)pUserName);
+  nsOERegUtil::FreeValueBytes((BYTE *)pName);
+  nsOERegUtil::FreeValueBytes((BYTE *)pServer);
+  nsOERegUtil::FreeValueBytes((BYTE *)pEmail);
+  nsOERegUtil::FreeValueBytes((BYTE *)pReply);
+  nsOERegUtil::FreeValueBytes((BYTE *)pUserName);
 }
 
 void OESettings::SetSmtpServer( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc, char *pServer, char *pUser)

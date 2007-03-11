@@ -59,6 +59,8 @@ REQUIRES =	xpcom \
 		addrbook \
 		pref \
 		mork \
+		msgbase \
+		msgbaseutil \
 		$(NULL)
 
 CPPSRCS		= \

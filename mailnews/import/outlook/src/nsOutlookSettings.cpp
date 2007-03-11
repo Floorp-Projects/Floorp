@@ -62,6 +62,7 @@
 #include "OutlookDebugLog.h"
 #include "nsIPop3IncomingServer.h"
 #include "nsIMessengerMigrator.h"
+#include "nsMsgI18N.h"
 
 class OutlookSettings {
 public:
@@ -279,9 +280,8 @@ nsresult OutlookSettings::GetAccountName(HKEY hKey, char *defaultName, nsString 
   BYTE *pAccName = nsOutlookRegUtil::GetValueBytes( hKey, "Account Name");
   nsresult rv = NS_OK;
   if (pAccName) {
-    nsCOMPtr<nsIImportService> impSvc = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
-    if (impSvc)
-      rv = impSvc->SystemStringToUnicode((const char *)pAccName, acctName);
+     rv = nsMsgI18NConvertToUnicode(nsMsgI18NFileSystemCharset(),
+                                    nsDependentCString(defaultName), acctName);
     nsOutlookRegUtil::FreeValueBytes( pAccName);
   }
   else
@@ -502,47 +502,45 @@ PRBool OutlookSettings::IdentityMatches( nsIMsgIdentity *pIdent, const char *pNa
 
 void OutlookSettings::SetIdentities( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc, HKEY hKey)
 {
-	// Get the relevant information for an identity
-	char *pName = (char *)nsOutlookRegUtil::GetValueBytes( hKey, "SMTP Display Name");
-	char *pServer = (char *)nsOutlookRegUtil::GetValueBytes( hKey, "SMTP Server");
-	char *pEmail = (char *)nsOutlookRegUtil::GetValueBytes( hKey, "SMTP Email Address");
-	char *pReply = (char *)nsOutlookRegUtil::GetValueBytes( hKey, "SMTP Reply To Email Address");
-	char *pUserName = (char *)nsOutlookRegUtil::GetValueBytes( hKey, "SMTP User Name");
+  // Get the relevant information for an identity
+  char *pName = (char *)nsOutlookRegUtil::GetValueBytes( hKey, "SMTP Display Name");
+  char *pServer = (char *)nsOutlookRegUtil::GetValueBytes( hKey, "SMTP Server");
+  char *pEmail = (char *)nsOutlookRegUtil::GetValueBytes( hKey, "SMTP Email Address");
+  char *pReply = (char *)nsOutlookRegUtil::GetValueBytes( hKey, "SMTP Reply To Email Address");
+  char *pUserName = (char *)nsOutlookRegUtil::GetValueBytes( hKey, "SMTP User Name");
   char *pOrgName = (char *)nsOutlookRegUtil::GetValueBytes( hKey, "SMTP Organization Name");
 
-	nsresult	rv;
+  nsresult	rv;
 
-	if (pEmail && pName && pServer) {
-		// The default identity, nor any other identities matched,
-		// create a new one and add it to the account.
-		nsCOMPtr<nsIMsgIdentity>	id;
-		rv = pMgr->CreateIdentity( getter_AddRefs( id));
-		if (id) {
+  if (pEmail && pName && pServer) {
+    // The default identity, nor any other identities matched,
+    // create a new one and add it to the account.
+    nsCOMPtr<nsIMsgIdentity>	id;
+    rv = pMgr->CreateIdentity( getter_AddRefs( id));
+    if (id) {
       nsAutoString name, organization;
-      nsCOMPtr<nsIImportService> impSvc = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
-      if (impSvc)
+      rv = nsMsgI18NConvertToUnicode(nsMsgI18NFileSystemCharset(),
+        nsDependentCString(pName), name);
+      if (NS_SUCCEEDED(rv))
       {
-        rv = impSvc->SystemStringToUnicode((const char *)pName, name);
-        if (NS_SUCCEEDED(rv))
-        {
-			id->SetFullName( name.get());
-			id->SetIdentityName( name.get());
-        }
-        rv = impSvc->SystemStringToUnicode((const char *)pOrgName, organization);
-        if (NS_SUCCEEDED(rv))
-          id->SetOrganization( organization.get());
+        id->SetFullName( name.get());
+        id->SetIdentityName( name.get());
       }
-			id->SetEmail( pEmail);
-			if (pReply)
-				id->SetReplyTo( pReply);
-			pAcc->AddIdentity( id);
+      rv = nsMsgI18NConvertToUnicode(nsMsgI18NFileSystemCharset(),
+        nsDependentCString(pOrgName), organization);
+      if (NS_SUCCEEDED(rv))
+        id->SetOrganization( organization.get());
+      id->SetEmail( pEmail);
+      if (pReply)
+        id->SetReplyTo( pReply);
+      pAcc->AddIdentity( id);
 
-			IMPORT_LOG0( "Created identity and added to the account\n");
-			IMPORT_LOG1( "\tname: %s\n", pName);
-			IMPORT_LOG1( "\temail: %s\n", pEmail);
-		}
-	}
-	
+      IMPORT_LOG0( "Created identity and added to the account\n");
+      IMPORT_LOG1( "\tname: %s\n", pName);
+      IMPORT_LOG1( "\temail: %s\n", pEmail);
+    }
+  }
+
   if (!pUserName) {
     nsCOMPtr <nsIMsgIncomingServer>	incomingServer;
     rv = pAcc->GetIncomingServer(getter_AddRefs( incomingServer));
@@ -551,13 +549,13 @@ void OutlookSettings::SetIdentities( nsIMsgAccountManager *pMgr, nsIMsgAccount *
     NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to get UserName from incomingServer");
   }
 
-	SetSmtpServer( pMgr, pAcc, pServer, pUserName);
+  SetSmtpServer( pMgr, pAcc, pServer, pUserName);
 
-	nsOutlookRegUtil::FreeValueBytes( (BYTE *)pName);
-	nsOutlookRegUtil::FreeValueBytes( (BYTE *)pServer);
-	nsOutlookRegUtil::FreeValueBytes( (BYTE *)pEmail);
-	nsOutlookRegUtil::FreeValueBytes( (BYTE *)pReply);
-	nsOutlookRegUtil::FreeValueBytes( (BYTE *)pUserName);
+  nsOutlookRegUtil::FreeValueBytes( (BYTE *)pName);
+  nsOutlookRegUtil::FreeValueBytes( (BYTE *)pServer);
+  nsOutlookRegUtil::FreeValueBytes( (BYTE *)pEmail);
+  nsOutlookRegUtil::FreeValueBytes( (BYTE *)pReply);
+  nsOutlookRegUtil::FreeValueBytes( (BYTE *)pUserName);
 }
 
 void OutlookSettings::SetSmtpServer( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc, char *pServer, char *pUser)
