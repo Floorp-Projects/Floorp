@@ -62,13 +62,7 @@
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLResourceLoader)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsXBLResourceLoader)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXBLResourceLoader)
-  if (tmp->mBoundElements) {
-    PRUint32 i, count;
-    tmp->mBoundElements->Count(&count);
-    for (i = 0; i < count; ++i) {
-      cb.NoteXPCOMChild(tmp->mBoundElements->ElementAt(i));
-    }
-  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mBoundElements)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN(nsXBLResourceLoader)
@@ -222,13 +216,9 @@ nsXBLResourceLoader::AddResource(nsIAtom* aResourceType, const nsAString& aSrc)
 void
 nsXBLResourceLoader::AddResourceListener(nsIContent* aBoundElement) 
 {
-  if (!mBoundElements) {
-    NS_NewISupportsArray(getter_AddRefs(mBoundElements));
-    if (!mBoundElements)
-      return;
+  if (aBoundElement) {
+    mBoundElements.AppendObject(aBoundElement);
   }
-
-  mBoundElements->AppendElement(aBoundElement);
 }
 
 void
@@ -237,10 +227,9 @@ nsXBLResourceLoader::NotifyBoundElements()
   nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
   nsIURI* bindingURI = mBinding->BindingURI();
 
-  PRUint32 eltCount;
-  mBoundElements->Count(&eltCount);
+  PRUint32 eltCount = mBoundElements.Count();
   for (PRUint32 j = 0; j < eltCount; j++) {
-    nsCOMPtr<nsIContent> content(do_QueryElementAt(mBoundElements, j));
+    nsCOMPtr<nsIContent> content = mBoundElements.ObjectAt(j);
     
     PRBool ready = PR_FALSE;
     xblService->BindingReady(content, bindingURI, &ready);
@@ -285,7 +274,7 @@ nsXBLResourceLoader::NotifyBoundElements()
   }
 
   // Clear out the whole array.
-  mBoundElements = nsnull;
+  mBoundElements.Clear();
 
   // Delete ourselves.
   NS_RELEASE(mResources->mLoader);
