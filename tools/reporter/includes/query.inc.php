@@ -372,11 +372,16 @@ class query
              // If we had results, wrap it in ()
              if($prodFamCount > 0){
                  $sql_product_family = " AND ( $sql_product_family )";
+
+             // For when something silly is found ("like Firefox 2000")
+             } else {
+                 trigger_error("No products were found that matched: ".htmlentities($this->product_family), E_USER_ERROR);
+                 return false;
              }
              $sql_where .= $sql_product_family;
          }
 
-        
+
         /*******************
          * ORDER BY
          *******************/
