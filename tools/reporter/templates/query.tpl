@@ -59,7 +59,7 @@
 		{section name=pageLoop start=$start loop=$start+$amt step=$step}
 			{strip}&nbsp; <a href="{$base_url}/app/query/?{$continuity_params}&amp;page={$smarty.section.pageLoop.index}"
 			{if $smarty.section.pageLoop.index == $page}class="currentPage"{/if}
-			> {$smarty.section.pageLoop.index}</a>                                                          .
+			> {$smarty.section.pageLoop.index}</a> 
 			{/strip}
 		{/section}
 		&nbsp;
