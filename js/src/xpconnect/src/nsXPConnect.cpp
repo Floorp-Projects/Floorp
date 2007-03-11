@@ -46,10 +46,7 @@
 #include "XPCNativeWrapper.h"
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
-#include "jsatom.h"
-#include "jsfun.h"
 #include "jsobj.h"
-#include "jsscript.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPConnect,nsIXPConnect,nsISupportsWeakReference)
 
@@ -580,22 +577,6 @@ nsXPConnect::Unroot(const nsDeque &nodes)
     return NS_OK;
 }
 
-static void
-TraverseJSScript(JSScript* script, nsCycleCollectionTraversalCallback& cb)
-{
-    JSAtomMap* map = &script->atomMap;
-    uintN i, length = map->length;
-    JSAtom** vector = map->vector;
-
-    for(i = 0; i < length; i++)
-    {
-        JSAtom* atom = vector[i];
-        if(ATOM_IS_OBJECT(atom))
-            cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                               ATOM_TO_OBJECT(atom));
-    }
-}
-
 nsresult 
 nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 {
@@ -613,46 +594,14 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
     {
         XPCWrappedNative* wn = XPCNativeWrapper::GetWrappedNative(cx, obj);
-        if(wn)
-        {
-            XPCNativeScriptableInfo* si = wn->GetScriptableInfo();
-            if(si)
-            {
-                JS_snprintf(name, sizeof(name), "XPCNativeWrapper (%s)",
-                            si->GetJSClass()->name);
-            }
-            else
-            {
-                nsIClassInfo* ci = wn->GetClassInfo();
-                char* className = nsnull;
-                if(ci)
-                    ci->GetClassDescription(&className);
-                if(className)
-                {
-                    JS_snprintf(name, sizeof(name), "XPCNativeWrapper (%s)",
-                                className);
-                    PR_Free(className);
-                }
-                else
-                {
-                    XPCNativeSet* set = wn->GetSet();
-                    XPCNativeInterface** array = set->GetInterfaceArray();
-                    PRUint16 count = set->GetInterfaceCount();
-
-                    if(count > 0)
-                        JS_snprintf(name, sizeof(name), "XPCNativeWrapper (%s)",
-                                    array[0]->GetNameString());
-                    else
-                        JS_snprintf(name, sizeof(name), "XPCNativeWrapper");
-                }
-            }
-        }
+        XPCNativeScriptableInfo* si = wn ? wn->GetScriptableInfo() : nsnull;
+        if(si)
+            JS_snprintf(name, sizeof(name), "XPCNativeWrapper (%s)",
+                        si->GetJSClass()->name);
         else
-        {
             JS_snprintf(name, sizeof(name), "XPCNativeWrapper");
-        }
     }
-    else
+    else if(obj)
     {
         XPCNativeScriptableInfo* si = nsnull;
         if(IS_PROTO_CLASS(clazz))
@@ -662,42 +611,15 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
             si = p->GetScriptableInfo();
         }
         if(si)
-        {
             JS_snprintf(name, sizeof(name), "JS Object (%s - %s)", clazz->name,
                         si->GetJSClass()->name);
-        }
-        else if(clazz == &js_ScriptClass)
-        {
-            JSScript* script = (JSScript*) JS_GetPrivate(cx, obj);
-            if(script->filename)
-            {
-                JS_snprintf(name, sizeof(name), "JS Object (Script - %s)",
-                            script->filename);
-            }
-            else
-            {
-                JS_snprintf(name, sizeof(name), "JS Object (Script)");
-            }
-        }
-        else if(clazz == &js_FunctionClass)
-        {
-            JSFunction* fun = (JSFunction*) JS_GetPrivate(cx, obj);
-            if(fun->atom)
-            {
-                JS_snprintf(name, sizeof(name), "JS Object (Function - %s)",
-                            js_AtomToPrintableString(cx, fun->atom));
-            }
-            else
-            {
-                JS_snprintf(name, sizeof(name), "JS Object (Function)");
-            }
-        }
         else
-        {
             JS_snprintf(name, sizeof(name), "JS Object (%s)", clazz->name);
-        }
     }
-
+    else
+    {
+        JS_snprintf(name, sizeof(name), "JS Object");
+    }
     cb.DescribeNode(refcount, sizeof(JSObject), name);
 #else
     cb.DescribeNode(refcount, sizeof(JSObject), "JS Object");
@@ -736,24 +658,6 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     {
         cb.NoteXPCOMChild(NS_STATIC_CAST(nsISupports*, JS_GetPrivate(cx, obj)));
     }
-    else if(clazz == &js_ScriptClass)
-    {
-        JSScript* script = (JSScript*) JS_GetPrivate(cx, obj);
-        TraverseJSScript(script, cb);
-    }
-    else if(clazz == &js_FunctionClass)
-    {
-        JSFunction* fun = (JSFunction*) JS_GetPrivate(cx, obj);
-        if (fun) {
-            JSAtom* atom = fun->atom;
-            if(atom && ATOM_IS_OBJECT(atom))
-                cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                                   ATOM_TO_OBJECT(atom));
-            JSScript* script = FUN_SCRIPT(fun);
-            if (script)
-                TraverseJSScript(script, cb);
-        }
-    }
 
     cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
                        OBJ_GET_PARENT(cx, obj));
@@ -766,28 +670,6 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         if (JSVAL_IS_OBJECT(val)) 
             cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
                                JSVAL_TO_OBJECT(val));
-    }
-
-    JSScope* scope;
-    if(OBJ_IS_NATIVE(obj) && (scope = OBJ_SCOPE(obj)))
-    {
-        JSScopeProperty* sprop;
-        for(sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent)
-        {
-            if(SCOPE_HAD_MIDDLE_DELETE(scope) &&
-               !SCOPE_HAS_PROPERTY(scope, sprop))
-                continue;
-            jsid id = sprop->id;
-            if(JSID_IS_OBJECT(id))
-                cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                                   JSID_TO_OBJECT(id));
-            if(sprop->attrs & JSPROP_GETTER)
-                cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                                   JSVAL_TO_GCTHING((jsval)sprop->getter));
-            if(sprop->attrs & JSPROP_SETTER)
-                cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
-                                   JSVAL_TO_GCTHING((jsval)sprop->setter));
-        }
     }
 
 #ifndef XPCONNECT_STANDALONE
