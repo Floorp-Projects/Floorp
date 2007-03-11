@@ -71,6 +71,12 @@ interface calIErrors : nsISupports
    * Error while decoding an (ics) file from utf8
    */
   const unsigned long CAL_UTF8_DECODING_FAILED = ERROR_BASE + 3;
+  
+  /**
+   * Tried to add an item to a calendar in which an item with the
+   * same ID already existed
+   */
+  const unsigned long DUPLICATE_ID = ERROR_BASE + 4;
 
 
   /* ICS specific errors */

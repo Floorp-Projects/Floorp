@@ -107,7 +107,14 @@ function loadEventsFromFile(aCalendar)
         }
         catch(ex)
         {
-           showError(calGetString("calendar", "unableToRead") + filePath + "\n" + ex);
+            var strbundle = getCalStringBundle();
+            switch (ex.result) {
+                case Components.interfaces.calIErrors.INVALID_TIMEZONE:
+                    showError(calGetString("calendar", "timezoneError", [filePath] , 1));
+                    break;
+                default:
+                    showError(calGetString("calendar", "unableToRead") + filePath + "\n"+ ex);
+            }
         }
 
         if (aCalendar) {
@@ -121,11 +128,11 @@ function loadEventsFromFile(aCalendar)
         if (count.value == 1) {
             // There's only one calendar, so it's silly to ask what calendar
             // the user wants to import into.
-            putItemsIntoCal(calendars[0], items);
+            putItemsIntoCal(calendars[0], items, filePath);
         } else {
             // Ask what calendar to import into
             var args = new Object();
-            args.onOk = function putItems(aCal) { putItemsIntoCal(aCal, items); };
+            args.onOk = function putItems(aCal) { putItemsIntoCal(aCal, items, filePath); };
             args.promptText = calGetString("calendar", "importPrompt");
             openDialog("chrome://calendar/content/chooseCalendarDialog.xul", 
                        "_blank", "chrome,titlebar,modal,resizable", args);
@@ -133,7 +140,7 @@ function loadEventsFromFile(aCalendar)
     }
 }
 
-function putItemsIntoCal(destCal, aItems) {
+function putItemsIntoCal(destCal, aItems, aFilePath) {
     // Set batch for the undo/redo transaction manager
     startBatchTransaction();
 
@@ -146,6 +153,7 @@ function putItemsIntoCal(destCal, aItems) {
     // be the last item added)
     var count = 0;
     var failedCount = 0;
+    var duplicateCount = 0;
     // Used to store the last error. Only the last error, because we don't
     // wan't to bomb the user with thousands of error messages in case
     // something went really wrong.
@@ -156,16 +164,20 @@ function putItemsIntoCal(destCal, aItems) {
         onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
             count++;
             if (!Components.isSuccessCode(aStatus)) {
-                failedCount++;
-                lastError = aStatus;
+                if (aStatus == Components.interfaces.calIErrors.DUPLICATE_ID) {
+                    duplicateCount++;
+                } else {
+                    failedCount++;
+                    lastError = aStatus;
+                }
             }
             // See if it is time to end the calendar's batch.
             if (count == aItems.length) {
                 destCal.endBatch();
-                if (failedCount) {
-                    var msg = calGetString("calendar", "importItemsFailed",
-                                           [failedCount, lastError.toString()]);
-                    showError(msg);
+                if (!failedCount && duplicateCount) {
+                    showError(calGetString("calendar", "duplicateError", [duplicateCount, aFilePath] , 2));
+                } else if (failedCount) {
+                    showError(calGetString("calendar", "importItemsFailed", [failedCount, lastError.toString()] , 2));
                 }
             }
         }

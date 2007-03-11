@@ -402,7 +402,7 @@ calStorageCalendar.prototype = {
             if (olditem) {
                 if (aListener)
                     aListener.onOperationComplete (this,
-                                                   Components.results.NS_ERROR_FAILURE,
+                                                   Components.interfaces.calIErrors.DUPLICATE_ID,
                                                    aListener.ADD,
                                                    aItem.id,
                                                    "ID already exists for addItem");

@@ -197,7 +197,7 @@ calMemoryCalendar.prototype = {
             // is this an error?
             if (aListener)
                 aListener.onOperationComplete (this.calendarToReturn,
-                                               Components.results.NS_ERROR_FAILURE,
+                                               Components.interfaces.calIErrors.DUPLICATE_ID,
                                                aListener.ADD,
                                                aItem.id,
                                                "ID already exists for addItem");
