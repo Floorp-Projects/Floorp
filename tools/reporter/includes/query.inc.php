@@ -19,9 +19,7 @@ class query
                                   'report_buildconfig',
                                   'report_description',
                                   'report_charset',
-/*                                'report_email',
-                                  'report_ip',
-*/                                'report_host_id',
+                                  'report_host_id',
                                   'host_id',
     );
     var $approved_wheres = array('count',
@@ -82,7 +80,8 @@ class query
         /*******************
          * SHOW (really "Limit")
          *******************/
-        if (!isset($_GET['show']) ||
+        if (!isset($_GET['show']) || 
+             !is_numeric($_GET['show']) ||
              $_GET['show'] == null ||
              $_GET['show'] > $config['max_show'])
         {
@@ -96,6 +95,7 @@ class query
          * PAGE (really other part of "Limit"
          *******************/
         if (!isset($_GET['page']) ||
+            !is_numeric($_GET['page']) ||
             $_GET['page'] == null)
         {
             $this->page = 1;
@@ -474,7 +474,7 @@ class query
                 if(!($item[0] == 'report_id' && $this->artificialReportID)){
                     if(!in_array($item[0], $omit)){
                         if(is_numeric($item[2])){
-                            $standard .= $item[0].'='.$item[2].'&amp;';;
+                            $standard .= $item[0].'='.urlencode($item[2]).'&amp;';;
                         } else {
                             $standard .= $item[0].'='.urlencode($item[2]).'&amp;';;
                         }
@@ -488,7 +488,7 @@ class query
             foreach($this->selected as $selectedNode){
                 if(!($selectedNode['field'] == 'report_id' && $this->artificialReportID)){
                     if($selectedNode['field'] != 'count' && !in_array($selectedNode['field'], $omit)){
-                        $standard .= 'selected%5B%5D='.$selectedNode['field'].'&amp;';
+                        $standard .= 'selected%5B%5D='.urlencode($selectedNode['field']).'&amp;';
                     }
                 }
             }
@@ -497,12 +497,12 @@ class query
         // Ascdesc
         if((isset($_GET['ascdesc']) && !in_array('ascdesc', $omit)) &&
            ($_GET['ascdesc'] == 'asc' || $_GET['ascdesc'] == 'desc')){
-             $standard .= 'ascdesc='.$_GET['ascdesc'].'&amp;';
+             $standard .= 'ascdesc='.urlencode($_GET['ascdesc']).'&amp;';
         }
 
         // Orderby
         if(isset($_GET['orderby']) && !in_array('orderby', $omit) && $this->orderbyChecked){
-             $standard .= 'orderby='.$_GET['orderby'].'&amp;';
+             $standard .= 'orderby='.urlencode($_GET['orderby']).'&amp;';
         }
 
         // Count
@@ -512,17 +512,17 @@ class query
 
         // Show
         if(isset($this->show) && !in_array('show', $omit)){
-             $standard .= 'show='.$this->show.'&amp;';
+             $standard .= 'show='.urlencode($this->show).'&amp;';
         }
 
         // ProductFam
         if(isset($this->product_family) && !in_array('product_family', $omit)){
-             $standard .= 'product_family='.$this->product_family.'&amp;';
+             $standard .= 'product_family='.urlencode($this->product_family).'&amp;';
         }
 
         // Page
         if(isset($this->page) && !in_array('page', $omit)){
-             $standard .= 'page='.$this->page.'&amp;';
+             $standard .= 'page='.urlencode($this->page).'&amp;';
         }
 
         // strip off any remaining &amp; that may be on the end
@@ -543,7 +543,7 @@ class query
         $contParams = $this->continuityParams(array('ascdesc'));
         foreach($this->selected as $selectedChild){
             if(!($selectedChild['field'] == 'report_id' && $this->artificialReportID)){
-                $column[$columnCount]['text'] = $selectedChild['title'];
+                $column[$columnCount]['text'] = htmlentities($selectedChild['title']);
 
                 $o_orderby = $selectedChild['field'];
                 // Figure out if it should be an asc or desc link
@@ -554,7 +554,8 @@ class query
                 }
 
                 if((isset($this->count)) || !isset($this->count)){
-                    $column[$columnCount]['url'] = '?'.$contParams.'&amp;orderby='.$o_orderby.'&amp;ascdesc='.$o_ascdesc;
+                    $column[$columnCount]['url'] = '?'.$contParams.'&amp;orderby='.urlencode($o_orderby).
+                                                   '&amp;ascdesc='.urlencode($o_ascdesc);
                 }
                 $columnCount++;
             }
@@ -603,6 +604,7 @@ class query
         return $output;
     }
 
+    // Unimplemented INterfaces
     function outputXML(){}
     function outputCSV(){}
     function outputXLS(){}

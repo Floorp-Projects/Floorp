@@ -120,15 +120,6 @@
 	</table>
 	</form>
 </fieldset>
-{*
-<div id="login">
-	<?php if ($userlib->isLoggedIn()){ ?>
-	Welcome <?php print $_SESSION['user_realname']; ?> | <a href="logout">Logout</a>
-	<?php } else { ?>
-	You are not <a href="login">logged in</a>
-	<?php } ?>
-</div>
-*}
 <br /><br />
 <div id="reporter_note">
 	<h3>Wildcards</h3>

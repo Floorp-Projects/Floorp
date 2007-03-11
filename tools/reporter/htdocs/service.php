@@ -177,7 +177,7 @@ function processReport($rmoVers, $url, $problem_type, $description, $behind_logi
     global $config;
 
     if ($config['service_active'] == false){
-            return new soap_fault('SERVER', '', 'The service is currently unavailable.  Please try again in a few minutes.');
+        return new soap_fault('SERVER', '', 'The service is currently unavailable.  Please try again in a few minutes.');
     }
 
     /**********
@@ -205,7 +205,7 @@ function processReport($rmoVers, $url, $problem_type, $description, $behind_logi
 
     // check verison
     if ($rmoVers < $config['min_vers']){
-        return new soap_fault('Client', '', 'Your product is out of date, please upgrade.  See http://reporter.mozilla.org/install for details.', $rmoVers);
+        return new soap_fault('Client', '', 'Your product is out of date, please upgrade.  Visit http://www.getfirefox.com for a newer version', $rmoVers);
     }
 
     $parsedUrl = parse_url($url);
@@ -226,6 +226,7 @@ function processReport($rmoVers, $url, $problem_type, $description, $behind_logi
     if (!$language) {
         return new soap_fault('Client', '', 'Invalid Localization', $language);
     }
+
     /*  We don't explicity require this since some older clients may not return this.
    if (!$gecko) {
         return new soap_fault('Client', '', 'Invalid Gecko ID', $gecko);
@@ -246,10 +247,12 @@ function processReport($rmoVers, $url, $problem_type, $description, $behind_logi
 
     // Image Validation
     if($screenshot != null) {
+
         // If no format specified, it's invalid
         if($screenshot_format == null) {
             return new soap_fault('Client', '', 'Invalid Screenshot', $screenshot_format);
         }
+
         // Must be in our list of approved formats.
         if(!in_array($screenshot_format, $config['screenshot_imageTypes'])){
             return new soap_fault('Client', '', 'Invalid Screenshot Format', $screenshot_format);
@@ -276,9 +279,7 @@ function processReport($rmoVers, $url, $problem_type, $description, $behind_logi
     /**********
      * Open DB
      **********/
-    $db = NewDBConnection($config['db_dsn']);
-    $db->SetFetchMode(ADODB_FETCH_ASSOC);
-    $db->debug = false;  // no good reason to ever let this be true, since it breaks things
+     $db = openDB();
 
     /**********
      * Check for valid sysid
@@ -308,8 +309,10 @@ function processReport($rmoVers, $url, $problem_type, $description, $behind_logi
      * Add Host
      **********/
     if ($hostnameQuery->RecordCount() <= 0) {
+
         // generate hash
         $host_id = md5($parsedUrl['host'].microtime());
+
         // We add the URL
         $addUrlQuery = $db->Execute("INSERT INTO host (host.host_id, host.host_hostname, host.host_date_added)
                                          VALUES (
@@ -322,6 +325,7 @@ function processReport($rmoVers, $url, $problem_type, $description, $behind_logi
         }
     }
     else if ($hostnameQuery->RecordCount() == 1) {
+
         // pull the hash from DB
         $host_id = $hostnameQuery->fields['host_id'];
     } else{
@@ -414,9 +418,7 @@ function register($language){
     /**********
      * Open DB
      **********/
-    $db = NewDBConnection($config['db_dsn']);
-    $db->SetFetchMode(ADODB_FETCH_ASSOC);
-    $db->debug = false;  // no good reason to ever let this be true, since it breaks things
+    $db = openDB();
 
     /**********
      * Generate an ID
@@ -429,8 +431,8 @@ function register($language){
         $id = date("ymd").rand(1000,9999);
 
         $uniqueQuery =& $db->Execute("SELECT sysid.sysid_id
-                                FROM sysid
-                                WHERE sysid.sysid_id = '$id'
+                                      FROM sysid
+                                      WHERE sysid.sysid_id = '$id'
                                ");
         if(!$uniqueQuery){
             return new soap_fault('SERVER', '', 'Database Error R1');
@@ -467,6 +469,15 @@ function register($language){
     $db->disconnect();
 
     return $id;
+}
+
+function openDB(){
+    global $config;
+
+    $db = NewDBConnection($config['db_dsn']);
+    $db->SetFetchMode(ADODB_FETCH_ASSOC);
+    $db->debug = false;  // no good reason to ever let this be true, since it breaks things
+    return $db;
 }
 
 // Use the request to (try to) invoke the service

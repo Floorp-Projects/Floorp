@@ -54,7 +54,7 @@ $reportQuery =& $db->Execute("SELECT *
                               WHERE report.report_id = ".$db->quote($_GET['report_id'])."
                               AND host.host_id = report_host_id");
 if(!$reportQuery){
-    die("DB Error");
+    trigger_error("DB Error");
 }
 
 // Init to false
@@ -67,7 +67,7 @@ if($reportQuery->RecordCount() == 1 && $securitylib->isLoggedIn()){
                                       WHERE screenshot.screenshot_report_id = ".$db->quote($_GET['report_id'])
                                      );
     if(!$screenshotQuery){
-        die("DB Error");
+        trigger_error("DB Error");
     }
     if($screenshotQuery->RecordCount() == 1){
         $screenshot = true;
@@ -116,7 +116,7 @@ $content->assign('report_ip',              $reportQuery->fields['report_ip']);
 $content->assign('report_description',     $reportQuery->fields['report_description']);
 
 if($screenshot){
-    $content->assign('screenshot',              $screenshot);
+    $content->assign('screenshot',         $screenshot);
 }
 
 // Navigation Functionality
@@ -125,9 +125,9 @@ $content->assign('nav_continuity_params',             $nav_continuity_params);
 
 if(isset($_SESSION['reportList'])){
     $reportIndex = array_search($_GET['report_id'],   $_SESSION['reportList']);
-    
+
     $content->assign('index',                         $reportIndex);
-    $content->assign('total',                         sizeof($_SESSION['reportList']));
+    $content->assign('total',                         sizeOf($_SESSION['reportList']));
 
     $content->assign('showReportNavigation',          true);
 
@@ -151,4 +151,3 @@ if(isset($_SESSION['reportList'])){
 
 displayPage($content, 'report', 'report.tpl', $title);
 ?>
-

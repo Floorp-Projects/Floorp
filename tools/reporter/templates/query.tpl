@@ -1,16 +1,16 @@
 {if $error != ''}
-<div class="error">
+<div id="error" class="error">
 	<h3>Error</h3>
 	<p>{$error}.  <a href="javascript:history.go(-1);">Back</a></p>
 </div>
 {elseif $alert != ''}
-<div class="alert">
+<div  id="error" class="alert">
 	<h3>Sorry</h3>
 	<p>{$alert}.  <a href="javascript:history.go(-1);">Back</a></p>
 </div>
 {else}
 {if $notice != ''}
-<div class="notice">
+<div  id="error" class="notice">
 	<h3>Notice:</h3>
 	<p>{$notice}</p>
 </div>
@@ -59,7 +59,7 @@
 		{section name=pageLoop start=$start loop=$start+$amt step=$step}
 			{strip}&nbsp; <a href="{$base_url}/app/query/?{$continuity_params}&amp;page={$smarty.section.pageLoop.index}"
 			{if $smarty.section.pageLoop.index == $page}class="currentPage"{/if}
-			> {$smarty.section.pageLoop.index}</a>
+			> {$smarty.section.pageLoop.index}</a>                                                          .
 			{/strip}
 		{/section}
 		&nbsp;
