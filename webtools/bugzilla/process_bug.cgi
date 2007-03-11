@@ -257,6 +257,8 @@ if (defined $cgi->param('id')) {
     if (defined $cgi->param('delta_ts') && $cgi->param('delta_ts') ne $delta_ts)
     {
         $vars->{'title_tag'} = "mid_air";
+        ThrowCodeError('undefined_field', {field => 'longdesclength'})
+          if !defined $cgi->param('longdesclength');
     }
 }
 
@@ -537,9 +539,6 @@ if (defined $cgi->param('id')) {
                 $bug->_check_priority($cgi->param('priority')));
     $cgi->param('bug_severity',
                 $bug->_check_bug_severity($cgi->param('bug_severity')));
-                
-    ThrowCodeError('undefined_field', { field => 'longdesclength' })
-        if !defined $cgi->param('longdesclength');
     $cgi->param('bug_file_loc',
                 $bug->_check_bug_file_loc($cgi->param('bug_file_loc')));
     $cgi->param('short_desc', 
