@@ -2588,12 +2588,6 @@ NS_IMETHODIMP nsAccessible::GetExtState(PRUint32 *aExtState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAccessible::GetIsEditable(PRBool *aIsEditable)
-{
-  *aIsEditable = PR_FALSE;
-  return NS_OK;
-}
-
 /* [noscript] void getNativeInterface(out voidPtr aOutAccessible); */
 NS_IMETHODIMP nsAccessible::GetNativeInterface(void **aOutAccessible)
 {

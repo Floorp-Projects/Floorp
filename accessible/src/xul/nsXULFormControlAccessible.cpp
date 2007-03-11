@@ -635,7 +635,8 @@ nsXULTextFieldAccessible::nsXULTextFieldAccessible(nsIDOMNode* aNode, nsIWeakRef
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsXULTextFieldAccessible, nsAccessible, nsIAccessibleText, nsIAccessibleEditableText)
+NS_IMPL_ISUPPORTS_INHERITED1(nsXULTextFieldAccessible, nsHyperTextAccessible,
+                             nsIAccessibleText)
 
 NS_IMETHODIMP nsXULTextFieldAccessible::Init()
 {
@@ -681,13 +682,6 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetExtState(PRUint32 *aExtState)
 
   PRBool isMultiLine = content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::multiline);
   *aExtState |= (isMultiLine ? EXT_STATE_MULTI_LINE : EXT_STATE_SINGLE_LINE);
-
-  PRUint32 state;
-  GetState(&state);
-  const PRUint32 kNonEditableStates = STATE_READONLY | STATE_UNAVAILABLE;
-  if (0 == (state & kNonEditableStates)) {
-    *aExtState |= EXT_STATE_EDITABLE;
-  }
 
   return NS_OK;
 }
