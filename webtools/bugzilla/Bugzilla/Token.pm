@@ -216,7 +216,7 @@ sub Cancel {
     my $template = Bugzilla->template;
     $vars ||= {};
 
-    # Get information about the token being cancelled.
+    # Get information about the token being canceled.
     trick_taint($token);
     my ($issuedate, $tokentype, $eventdata, $loginname) =
         $dbh->selectrow_array('SELECT ' . $dbh->sql_date_format('issuedate') . ',
@@ -489,8 +489,8 @@ Bugzilla::Token - Provides different routines to manage tokens.
               to the user to inform him about this action.
 
  Params:      $user_id: The user ID of the user account whose password tokens
-                        are cancelled.
-              $reason:  The reason why these tokens are cancelled.
+                        are canceled.
+              $reason:  The reason why these tokens are canceled.
 
  Returns:     Nothing.
 

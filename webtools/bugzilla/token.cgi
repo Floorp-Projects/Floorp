@@ -194,7 +194,7 @@ sub confirmChangePassword {
 }
 
 sub cancelChangePassword {    
-    $vars->{'message'} = "password_change_cancelled";
+    $vars->{'message'} = "password_change_canceled";
     Bugzilla::Token::Cancel($::token, $vars->{'message'});
 
     print $cgi->header();
@@ -300,7 +300,7 @@ sub cancelChangeEmail {
     my ($old_email, $new_email) = split(/:/,$eventdata);
 
     if($tokentype eq "emailold") {
-        $vars->{'message'} = "emailold_change_cancelled";
+        $vars->{'message'} = "emailold_change_canceled";
 
         my $actualemail = $dbh->selectrow_array(
                             q{SELECT login_name FROM profiles
@@ -324,11 +324,11 @@ sub cancelChangeEmail {
             my $user = new Bugzilla::User($userid);
             $user->derive_regexp_groups;
 
-            $vars->{'message'} = "email_change_cancelled_reinstated";
+            $vars->{'message'} = "email_change_canceled_reinstated";
         } 
     } 
     else {
-        $vars->{'message'} = 'email_change_cancelled'
+        $vars->{'message'} = 'email_change_canceled'
      }
 
     $vars->{'old_email'} = $old_email;
@@ -394,7 +394,7 @@ sub confirm_create_account {
 sub cancel_create_account {
     my (undef, undef, $login_name) = Bugzilla::Token::GetTokenData($::token);
 
-    $vars->{'message'} = 'account_creation_cancelled';
+    $vars->{'message'} = 'account_creation_canceled';
     $vars->{'account'} = $login_name;
     Bugzilla::Token::Cancel($::token, $vars->{'message'});
 

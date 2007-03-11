@@ -72,7 +72,7 @@
         <para>
           By default, you have 3 days to confirm your registration. Past this
           timeframe, the token is invalidated and the registration is
-          automatically cancelled. You can also cancel this registration sooner
+          automatically canceled. You can also cancel this registration sooner
           by using the appropriate URL in the email you got.
         </para>
       </listitem>

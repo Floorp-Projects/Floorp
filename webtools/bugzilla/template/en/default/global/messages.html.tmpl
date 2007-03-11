@@ -43,10 +43,10 @@
       this [% terms.Bugzilla %] installation.
     [% END %]
 
-  [% ELSIF message_tag == "account_creation_cancelled" %]
+  [% ELSIF message_tag == "account_creation_canceled" %]
     [% title = "User Account Creation Cancelled" %]
     The creation of the user account [% account FILTER html %] has been
-    cancelled.
+    canceled.
 
   [% ELSIF message_tag == "account_updated" %]
     [% IF changed_fields.size
@@ -186,22 +186,22 @@
     Properties of the '[% field.name FILTER html %]' field have been
     successfully updated.
 
-  [% ELSIF message_tag == "emailold_change_cancelled" %]
+  [% ELSIF message_tag == "emailold_change_canceled" %]
     [% title = "Cancel Request to Change Email Address" %]
     The request to change the email address for your account to
-    [%+ new_email FILTER html %] has been cancelled.
+    [%+ new_email FILTER html %] has been canceled.
 
-  [% ELSIF message_tag == "email_change_cancelled" %]
+  [% ELSIF message_tag == "email_change_canceled" %]
     [% title = "Cancel Request to Change Email Address" %]
     The request to change the email address for the
     account [%+ old_email FILTER html %] to
-    [%+ new_email FILTER html %] has been cancelled.
+    [%+ new_email FILTER html %] has been canceled.
 
-  [% ELSIF message_tag == "email_change_cancelled_reinstated" %]
+  [% ELSIF message_tag == "email_change_canceled_reinstated" %]
     [% title = "Cancel Request to Change Email Address" %]
     The request to change the email address for the
     account [%+ old_email FILTER html %] to 
-    [%+ new_email FILTER html %] has been cancelled.
+    [%+ new_email FILTER html %] has been canceled.
    Your old account settings have been reinstated.
 
   [% ELSIF message_tag == "flag_creation_failed" %]
@@ -303,9 +303,9 @@
       clear the <em>shutdownhtml</em> field.
     [% END%]
 
-  [% ELSIF message_tag == "password_change_cancelled" %]
+  [% ELSIF message_tag == "password_change_canceled" %]
     [% title = "Cancel Request to Change Password" %]
-    Your request has been cancelled.
+    Your request has been canceled.
 
   [% ELSIF message_tag == "password_change_request" %]
     [% title = "Request to Change Password" %]

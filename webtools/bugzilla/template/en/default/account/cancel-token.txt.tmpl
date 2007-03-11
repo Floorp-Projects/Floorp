@@ -27,7 +27,7 @@ To: [% emailaddress %]
 Subject: [% PROCESS subject %]
 X-Bugzilla-Type: admin
 
-A request was cancelled from [% remoteaddress %].
+A request was canceled from [% remoteaddress %].
 
 If you did not request this, it could be either an honest
 mistake or someone attempting to break into your [% terms.Bugzilla %] account.
@@ -44,13 +44,13 @@ Cancelled Because: [% PROCESS cancelactionmessage %]
 
 [% BLOCK subject %]
   [% IF tokentype == 'new_account' %]
-    User account creation request cancelled
+    User account creation request canceled
   [% ELSIF tokentype == 'password' %]
-    Password change request cancelled
+    Password change request canceled
   [% ELSIF tokentype == 'emailnew' OR tokentype == 'emailold' %]
-    Email change request cancelled
+    Email change request canceled
   [% ELSE %]
-    [% tokentype %] token cancelled
+    [% tokentype %] token canceled
   [% END %]
 [% END %]
 
@@ -58,26 +58,26 @@ Cancelled Because: [% PROCESS cancelactionmessage %]
   [% IF    cancelaction == 'account_exists' %]
     Account [% email %] already exists.
 
-  [% ELSIF cancelaction == 'email_change_cancelled' %]
+  [% ELSIF cancelaction == 'email_change_canceled' %]
     The request to change the email address for
     the [% old_email %] account to [% new_email %] has
-    been cancelled.
+    been canceled.
 
-  [% ELSIF cancelaction == 'email_change_cancelled_reinstated' %]
+  [% ELSIF cancelaction == 'email_change_canceled_reinstated' %]
     The request to change the email address for your account
-    to [% new_email %] has been cancelled. Your old account
+    to [% new_email %] has been canceled. Your old account
     settings have been reinstated.
 
-  [% ELSIF cancelaction == 'emailold_change_cancelled' %]
+  [% ELSIF cancelaction == 'emailold_change_canceled' %]
     The request to change the email address for your account
-    to [% new_email %] has been cancelled.
+    to [% new_email %] has been canceled.
 
-  [% ELSIF cancelaction == 'password_change_cancelled' %]
+  [% ELSIF cancelaction == 'password_change_canceled' %]
     You have requested cancellation.
 
-  [% ELSIF cancelaction == 'account_creation_cancelled' %]
+  [% ELSIF cancelaction == 'account_creation_canceled' %]
     The creation of the user account [% emailaddress %]
-    has been cancelled.
+    has been canceled.
 
   [% ELSIF cancelaction == 'user_logged_in' %]
     You have logged in.
