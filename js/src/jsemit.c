@@ -4361,10 +4361,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             cg->treeContext.flags &= ~TCF_IN_FOR_INIT;
 
-            /* Emit a push to allocate the iterator. */
-            if (js_Emit1(cx, cg, JSOP_STARTITER) < 0)
-                return JS_FALSE;
-
             /* Compile the object expression to the right of 'in'. */
             if (!js_EmitTree(cx, cg, pn2->pn_right))
                 return JS_FALSE;
@@ -4463,7 +4459,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (pn3->pn_slot >= 0) {
                     if (pn3->pn_attrs & JSPROP_READONLY) {
                         JS_ASSERT(op == JSOP_FORVAR);
-                        op = JSOP_GETVAR;
+                        op = JSOP_FORCONST;
                     }
                     atomIndex = (jsatomid) pn3->pn_slot;
                     EMIT_UINT16_IMM_OP(op, atomIndex);
