@@ -4611,6 +4611,8 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     switch (cs->format & JOF_MODEMASK) {
       case JOF_PROP:
       case JOF_ELEM:
+      case JOF_XMLNAME:
+      case 0:
         sn = js_GetSrcNote(script, pc);
         if (!sn)
             goto do_fallback;
