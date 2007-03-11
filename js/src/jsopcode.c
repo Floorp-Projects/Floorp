@@ -4046,13 +4046,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_TOXML:
-                inXML = JS_FALSE;
-                /* FALL THROUGH */
-
               case JSOP_CALLXMLNAME:
               case JSOP_XMLNAME:
               case JSOP_FILTER:
-                /* Conversion and prefix ops do nothing in the decompiler. */
+                /* These ops indicate the end of XML expressions. */
+                inXML = JS_FALSE;
                 todo = -2;
                 break;
 
