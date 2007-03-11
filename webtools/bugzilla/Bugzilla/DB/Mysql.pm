@@ -257,6 +257,24 @@ sub _bz_get_initial_schema {
 sub bz_setup_database {
     my ($self) = @_;
 
+    # Make sure the installation has InnoDB turned on, or we're going to be
+    # doing silly things like making foreign keys on MyISAM tables, which is
+    # hard to fix later. We do this up here because none of the code below
+    # works if InnoDB is off. (Particularly if we've already converted the
+    # tables to InnoDB.)
+    my ($innodb_on) = @{$self->selectcol_arrayref(
+        q{SHOW VARIABLES LIKE '%have_innodb%'}, {Columns=>[2]})};
+    if ($innodb_on ne 'YES') {
+        print <<EOT;
+InnoDB is disabled in your MySQL installation. 
+Bugzilla requires InnoDB to be enabled. 
+Please enable it and then re-run checksetup.pl.
+
+EOT
+        exit 3;
+    }
+
+
     # Figure out if any existing tables are of type ISAM and convert them
     # to type MyISAM if so.  ISAM tables are deprecated in MySQL 3.23,
     # which Bugzilla now requires, and they don't support more than 16
