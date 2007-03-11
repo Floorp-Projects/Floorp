@@ -2789,6 +2789,7 @@ interrupt:
 
           BEGIN_CASE(JSOP_FORARG)
           BEGIN_CASE(JSOP_FORVAR)
+          BEGIN_CASE(JSOP_FORCONST)
           BEGIN_CASE(JSOP_FORLOCAL)
             /*
              * JSOP_FORARG and JSOP_FORVAR don't require any lval computation
@@ -2835,6 +2836,10 @@ interrupt:
                 slot = GET_VARNO(pc);
                 JS_ASSERT(slot < fp->fun->u.i.nvars);
                 fp->vars[slot] = rval;
+                break;
+
+              case JSOP_FORCONST:
+                /* Don't update the const slot. */
                 break;
 
               case JSOP_FORLOCAL:
@@ -5917,8 +5922,6 @@ interrupt:
           END_CASE(JSOP_LOCALDEC)
 
 #undef FAST_LOCAL_INCREMENT_OP
-
-          EMPTY_CASE(JSOP_STARTITER)
 
           BEGIN_CASE(JSOP_ENDITER)
             JS_ASSERT(!JSVAL_IS_PRIMITIVE(sp[-1]));

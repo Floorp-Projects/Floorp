@@ -464,7 +464,7 @@ OPDEF(JSOP_FORLOCAL,      207,"forlocal",    NULL,    3,  0,  1, 19,  JOF_LOCAL|
 /*
  * Iterator, generator, and array comprehension support.
  */
-OPDEF(JSOP_STARTITER,     208,"startiter",   NULL,    1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_FORCONST,      208,"forconst",    NULL,    3,  0,  1, 19,  JOF_QVAR|JOF_NAME|JOF_FOR)
 OPDEF(JSOP_ENDITER,       209,"enditer",     NULL,    1,  1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_GENERATOR,     210,"generator",   NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_YIELD,         211,"yield",       NULL,    1,  1,  1,  1,  JOF_BYTE)
