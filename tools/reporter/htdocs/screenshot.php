@@ -56,6 +56,8 @@ if($securitylib->isLoggedIn() === true){
                            FROM screenshot
                            WHERE screenshot_report_id = ".$db->quote($_GET['report_id']));
     if(!$query){
+        image_error("Could not retrieve the requested screenshot.",
+                    "HTTP/1.1 500 Internal Server Error");
         exit;
     }
 
@@ -64,9 +66,8 @@ if($securitylib->isLoggedIn() === true){
 
     // This should never happen, but we test for it regardless
     if($imageExtension === false){
-        // XXX -> we should redirect to an error image or someting to that effect as
-        //        in most cases, nobody would even see this error.
-        print "Invalid Image";
+        image_error("Invalid Image",
+                    "HTTP/1.1 404 OK");
     }
 
     // Headers
@@ -76,8 +77,33 @@ if($securitylib->isLoggedIn() === true){
     // Output the image
     echo $query->fields['screenshot_data'];
 } else {
-    // XXX -> we should redirect to an error image or someting to that effect as
-    //        in most cases, nobody would even see this error.
-    print "You are not authorized to view this";
+    image_error("You are not authorized to view this resource.",
+                "HTTP/1.1 401 Authorization Required");
+}
+
+function image_error($str, $header){
+    // If a header is set, make sure to show it
+    if($header != null){
+        header($header);
+    }
+
+    if(!function_exists('imagecreate') || !function_exists('imagestring')){
+        print $str;
+        exit;
+    }
+
+    $height = 200;
+    $width = 700;
+
+    $im = imagecreate($width, $height);
+
+    $bg = imagecolorallocate($im, 255, 255, 255);
+    $textcolor = imagecolorallocate($im, 0, 0, 0);
+
+    imagestring($im, 5, 10, 80, $str, $textcolor);
+
+    header("Content-type: image/png");
+    imagepng($im);
+    exit;
 }
 ?>
