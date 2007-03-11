@@ -2015,9 +2015,20 @@ void
 js_MarkAtom(JSContext *cx, JSAtom *atom)
 {
     jsval key;
+    void *thing;
+    uint8 *flagp;
 
-    if (atom->flags & ATOM_MARK)
+    if (atom->flags & ATOM_MARK) {
+        if (ATOM_IS_OBJECT(atom) && cx->runtime->gcThingCallback) {
+            thing = ATOM_TO_OBJECT(atom);
+            flagp = js_GetGCThingFlags(thing);
+            cx->runtime->gcThingCallback(thing, *flagp,
+                                         cx->runtime->gcThingCallbackClosure);
+        }
+
         return;
+    }
+
     atom->flags |= ATOM_MARK;
     key = ATOM_KEY(atom);
     if (JSVAL_IS_GCTHING(key)) {

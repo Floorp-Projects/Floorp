@@ -204,11 +204,9 @@ js_IsAboutToBeFinalized(JSContext *cx, void *thing);
 extern void
 js_MarkAtom(JSContext *cx, JSAtom *atom);
 
-/* We avoid a large number of unnecessary calls by doing the flag check first */
 #define GC_MARK_ATOM(cx, atom)                                                \
     JS_BEGIN_MACRO                                                            \
-        if (!((atom)->flags & ATOM_MARK))                                     \
-            js_MarkAtom(cx, atom);                                            \
+        js_MarkAtom(cx, atom);                                                \
     JS_END_MACRO
 
 /*
