@@ -23,6 +23,7 @@
  *   Ben Goodger <ben@netscape.com>
  *   Josh Soref  <timeless@mac.com>
  *   Dan Cannon  <dc2@myrealbox.com>
+ *   Manuel Reimer <Manuel.Reimer@gmx.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -50,17 +51,17 @@ treechildren::-moz-tree-image(Name) {
 
 .bookmark-item,
 treechildren::-moz-tree-image(Name) {
-  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.png");
 }
 
 .bookmark-item[container="true"],
 treechildren::-moz-tree-image(Name, container) {
-  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.png");
 }
 
 .bookmark-item[open="true"],
 treechildren::-moz-tree-image(Name, open) {
-  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open.png");
 }
 
 .bookmark-item[container="true"][open="true"][loading="true"] {
@@ -69,7 +70,7 @@ treechildren::-moz-tree-image(Name, open) {
 
 .bookmark-item[status="new"],
 treechildren::-moz-tree-image(Name, new) {
-  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item-updated.gif");
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item-updated.png");
 }
 
 .bookmark-item > .toolbarbutton-box > .toolbarbutton-icon {

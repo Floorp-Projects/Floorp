@@ -28,7 +28,7 @@
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
-0 * use your version of this file under the terms of the MPL, indicate your
+ * use your version of this file under the terms of the MPL, indicate your
  * decision by deleting the provisions above and replace them with the notice
  * and other provisions required by the GPL or the LGPL. If you do not delete
  * the provisions above, a recipient may use your version of this file under
@@ -308,17 +308,17 @@
 }
 
 #security-button {
-  list-style-image: url("chrome://communicator/skin/icons/lock-insecure.gif");
+  list-style-image: url("chrome://communicator/skin/icons/lock-insecure.png");
 }
 
 /* |high| and |low| styles could be different, to better reflect the secure level... */
 #security-button[level="high"],
 #security-button[level="low"] {
-  list-style-image: url("chrome://communicator/skin/icons/lock-secure.gif");
+  list-style-image: url("chrome://communicator/skin/icons/lock-secure.png");
 }
 
 #security-button[level="broken"] {
-  list-style-image: url("chrome://communicator/skin/icons/lock-broken.gif");
+  list-style-image: url("chrome://communicator/skin/icons/lock-broken.png");
 }
 
 #privacy-button {
@@ -336,21 +336,29 @@
 
 /* ::::: personal toolbar ::::: */
 
-#bookmarks-button,
+#bookmarks-button {
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.png");
+}
+
 #bookmarks-button[open="true"] {
-  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-button.gif");
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open.png");
 }
 
 #home-button {
-  list-style-image: url("chrome://communicator/skin/bookmarks/home.gif");
+  list-style-image: url("chrome://communicator/skin/bookmarks/home.png");
+  -moz-image-region: rect(0 19px 19px 0);
 }
-  
+
 #home-button:hover {
-  list-style-image: url("chrome://communicator/skin/bookmarks/home-hover.gif");
+  -moz-image-region: rect(0 39px 19px 20px);
 }
-  
+
 #home-button:hover:active {
-  list-style-image: url("chrome://communicator/skin/bookmarks/home-active.gif");
+  -moz-image-region: rect(0 59px 19px 40px);
+}
+
+#home-button[disabled="true"] {
+  -moz-image-region: rect(0 79px 19px 60px) !important;
 }
 
 #PersonalToolbar > .toolbar-prefix {
