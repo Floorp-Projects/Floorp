@@ -9,7 +9,7 @@ function NewDBConnection(){
         $db->debug = true;
     }
     if (!$db) {
-        trigger_error("Database server unavailable.", E_USER_ERROR);
+        trigger_error("Sorry, we are unable to process your request right now.  The database is either busy or unavailable.", E_USER_ERROR);
     }
     return $db;
 }
