@@ -1,57 +1,59 @@
-
 /**************** Mozilla.org */
 body {
-    margin: 0 30px 2em 30px;
+	margin: 0 30px 2em 30px;
 }
+
 #mozilla-org {
-    position: relative;
-    height: 25px;
-    margin-bottom: 20px;
+	position: relative;
+	height: 25px;
+	margin-bottom: 20px;
 }
+
 #mozilla-org a {
-    position: absolute;
-    right: 0;
-    top: 0;
-    display: block;
-    width: 110px;
-    height: 25px;
-    background: url("../../../../img/theme/mozilla/mozilla-org.gif") no-repeat;
-    text-decoration: none;
-    text-indent: -5000em;
+	position: absolute;
+	right: 0;
+	top: 0;
+	display: block;
+	width: 110px;
+	height: 25px;
+	background: url("../../../../img/theme/mozilla/mozilla-org.gif") no-repeat;
+	text-decoration: none;
+	text-indent: -5000em;
 }
 
 
 /**************** Pagination Navigation */
 #reporter-content .navigation {
-    text-align: center;
-    margin-top: 4em;
+	text-align: center;
+	margin-top: 4em;
 }
 
 #reporter-content .navigation .currentPage {
-    font-weight: bold;
+	font-weight: bold;
 }
+
 
 /**************** Notices */
 #reporter-content .notice {
-    border: 1px solid #FFFF00;
-    background-color: #FFFFE8;
-    padding: 6px;
-    margin: 12px;
+	border: 1px solid #FFFF00;
+	background-color: #FFFFE8;
+	padding: 6px;
+	margin: 12px;
 }
 
 #reporter-content .notice h3 {
-    border-bottom: 0;
-    margin: 0;
-    font-size: 1em;
+	border-bottom: 0;
+	margin: 0;
+	font-size: 1em;
 }
 
 #reporter-content .notice p {
-    margin: 0;
+	margin: 0;
 }
 
 
 /**************** Help */
-#reporter-content #reporterSearch .label, 
+#reporter-content #reporterSearch .label,
 #reporter-content #reporterSearch legend,
 #reporter-content #reporterSearch label {
 	font-weight: bold;
@@ -60,26 +62,26 @@ body {
 }
 
 #reporter-content #reporter_note {
-    border: 1px solid #2E2ED5;
-    background-color: #E8E8FA;
-    padding: 7px;
+	border: 1px solid #2E2ED5;
+	background-color: #E8E8FA;
+	padding: 7px;
 }
 
 #reporter-content #reporter_note h3 {
-    margin: 0;
+	margin: 0;
 }
 
 
 /**************** Table */
 #reporter-content #reporterQuery tr:hover {
-    background-color: #FFFFEC;
+	background-color: #FFFFEC;
 }
 #reporter-content #reporterQuery .header:hover {
-    background-color: #fff;
+	background-color: #fff;
 }
 
 #reporter-content #reporterQuery .header {
-    text-align: left;
+	text-align: left;
 }
 
 #reporter-content #reporterQuery .header a {
@@ -104,6 +106,7 @@ body {
 #reporter-content #reporterReport div {
 	margin-bottom: 8px;
 }
+
 #reporter-content #reporterReport .title {
 	float: left;
 	width: 9em;
@@ -115,7 +118,6 @@ body {
 #reporter-content #reporterReport .data {
 	overflow: auto;
 }
-
 
 #reporter-content #login_form label{
 	float: left;
@@ -138,25 +140,42 @@ body {
 	padding: 2px 9px 5px 9px;
 }
 
-
 #report_tabs li {
-   list-style-type: none;
-   border: 1px solid red;
+	list-style-type: none;
+	border: 1px solid red;
 }
 
 #report_data, #report_screenshot{
-/*   float: right; */
-   margin-left: 110px;
+/*	float: right; */
+	margin-left: 110px;
 }
 
 #form {
 	float: left;
 /*	width: 9em; */
-	padding: 0 .5em;
+	padding: 0.5em;
 	text-align: right;
 	font-weight: bold;
 }
 
 #form div {
       margin-bottom: 1em;
+}
+
+
+#error {
+	border: 3px solid #ffff00;
+	background-color: #ffffe8;
+	padding: 1.2em 2em;
+	width: 700px;
+	margin: 1em auto 0 auto;
+}
+
+#error h3 {
+	border: 0;
+	margin: 0;
+}
+
+#error a {
+	color: #000;
 }
