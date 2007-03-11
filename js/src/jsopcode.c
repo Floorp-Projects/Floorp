@@ -4118,12 +4118,14 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
         } else {
             if (!PushOff(ss, todo, saveop))
                 return NULL;
-            if (cs->format & JOF_CALLOP) {
-                todo = Sprint(&ss->sprinter, "");
-                if (todo < 0 || !PushOff(ss, todo, saveop))
-                    return NULL;
-            }
         }
+
+        if (cs->format & JOF_CALLOP) {
+            todo = Sprint(&ss->sprinter, "");
+            if (todo < 0 || !PushOff(ss, todo, saveop))
+                return NULL;
+        }
+
         pc += len;
     }
 
