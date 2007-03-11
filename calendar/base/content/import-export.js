@@ -107,7 +107,6 @@ function loadEventsFromFile(aCalendar)
         }
         catch(ex)
         {
-            var strbundle = getCalStringBundle();
             switch (ex.result) {
                 case Components.interfaces.calIErrors.INVALID_TIMEZONE:
                     showError(calGetString("calendar", "timezoneError", [filePath] , 1));
