@@ -127,6 +127,14 @@ body {
 	font-weight: bold;
 }
 
+#reporter-content #login_form legend{
+	font-weight: bold;
+}
+
+#reporter-content #login_form div{
+	padding-bottom: 0.5em;
+}
+
 #reporter-content #login_leftcol{
 	float: left;
 	width: 45%;
