@@ -89,6 +89,10 @@ function show(aItem){
 			<div class="title">Build Config:</div>
 			<div class="data">{$report_buildconfig}</div>
 		</div>
+		<div>
+			<div class="title">Date Reported:</div>
+			<div class="data">{$report_file_date}</div>
+		</div>
 		{if $is_admin == true}
 		<div>
 			<div class="title">Email:</div>
