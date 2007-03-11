@@ -235,7 +235,10 @@ if ($action eq 'search') {
                          'groups READ',
                          'user_group_map WRITE',
                          'group_group_map READ',
-                         'group_group_map AS ggm READ');
+                         'group_group_map AS ggm READ',
+                         'user_group_map AS directmember READ',
+                         'user_group_map AS regexpmember READ',
+                         'user_group_map AS directbless READ');
  
     $editusers || $user->can_see_user($otherUser)
         || ThrowUserError('auth_failure', {reason => "not_visible",
@@ -282,15 +285,16 @@ if ($action eq 'search') {
     # silently.
     # XXX: checking for existence of each user_group_map entry
     #      would allow to display a friendlier error message on page reloads.
+    userDataToVars($otherUserID);
+    my $permissions = $vars->{'permissions'};
     foreach (@{$user->bless_groups()}) {
         my $id = $$_{'id'};
         my $name = $$_{'name'};
 
         # Change memberships.
-        my $oldgroupid = $cgi->param("oldgroup_$id") || '0';
-        my $groupid    = $cgi->param("group_$id")    || '0';
-        if ($groupid ne $oldgroupid) {
-            if ($groupid eq '0') {
+        my $groupid = $cgi->param("group_$id") || 0;
+        if ($groupid != $permissions->{$id}->{'directmember'}) {
+            if (!$groupid) {
                 $sth_remove_mapping->execute(
                     $otherUserID, $id, 0, GRANT_DIRECT);
                 push(@groupsRemovedFrom, $name);
@@ -304,10 +308,9 @@ if ($action eq 'search') {
         # Only members of the editusers group may change bless grants.
         # Skip silently if this is not the case.
         if ($editusers) {
-            my $oldgroupid = $cgi->param("oldbless_$id") || '0';
-            my $groupid    = $cgi->param("bless_$id")    || '0';
-            if ($groupid ne $oldgroupid) {
-                if ($groupid eq '0') {
+            my $groupid = $cgi->param("bless_$id") || 0;
+            if ($groupid != $permissions->{$id}->{'directbless'}) {
+                if (!$groupid) {
                     $sth_remove_mapping->execute(
                         $otherUserID, $id, 1, GRANT_DIRECT);
                     push(@groupsDeniedRightsToBless, $name);

@@ -72,9 +72,7 @@
                               name="bless_[% group.id %]"
                               value="1"
                               [% ' checked="checked"' IF perms.directbless %] />
-                  [% ']' IF perms.indirectbless %]
-                [% %]<input type="hidden" name="oldbless_[% group.id %]"
-                            value="[% perms.directbless %]" /></td>
+                  [% ']' IF perms.indirectbless %]</td>
               [% END %]
               <td class="checkbox">
                 [% '[' IF perms.derivedmember %]
@@ -85,9 +83,7 @@
                            value="1"
                            [% ' checked="checked"' IF perms.directmember %] />
                 [% '*' IF perms.regexpmember %]
-                [% ']' IF perms.derivedmember %]
-              [% %]<input type="hidden" name="oldgroup_[% group.id %]"
-                          value="[% perms.directmember %]" /></td>
+                [% ']' IF perms.derivedmember %]</td>
               <td class="groupname">
                 <label for="group_[% group.id %]">
                   <strong>[% group.name FILTER html %]:</strong>

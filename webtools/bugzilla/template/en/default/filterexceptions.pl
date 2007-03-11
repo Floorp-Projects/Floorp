@@ -542,8 +542,6 @@
 'admin/users/edit.html.tmpl' => [
   'otheruser.id',
   'group.id',
-  'perms.directbless',
-  'perms.directmember',
 ],
 
 'admin/components/edit.html.tmpl' => [
