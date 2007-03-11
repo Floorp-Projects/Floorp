@@ -1908,14 +1908,18 @@ skipline:
                 ADD_TO_TOKENBUF(c);
             }
             for (flags = 0; ; ) {
-                if (MatchChar(ts, 'g'))
+                c = PeekChar(ts);
+                if (c == 'g')
                     flags |= JSREG_GLOB;
-                else if (MatchChar(ts, 'i'))
+                else if (c == 'i')
                     flags |= JSREG_FOLD;
-                else if (MatchChar(ts, 'm'))
+                else if (c == 'm')
                     flags |= JSREG_MULTILINE;
+                else if (c == 'y')
+                    flags |= JSREG_STICKY;
                 else
                     break;
+                GetChar(ts);
             }
             c = PeekChar(ts);
             if (JS7_ISLET(c)) {
