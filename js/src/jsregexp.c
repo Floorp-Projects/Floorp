@@ -2031,6 +2031,9 @@ js_NewRegExpOpt(JSContext *cx, JSTokenStream *ts,
               case 'm':
                 flags |= JSREG_MULTILINE;
                 break;
+              case 'y':
+                flags |= JSREG_STICKY;
+                break;
               default:
                 charBuf[0] = (char)s[i];
                 charBuf[1] = '\0';
@@ -2709,7 +2712,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
      * If the first node is a simple match, step the index into the string
      * until that match is made, or fail if it can't be found at all.
      */
-    if (REOP_IS_SIMPLE(op)) {
+    if (REOP_IS_SIMPLE(op) && !(gData->regexp->flags & JSREG_STICKY)) {
         anchor = JS_FALSE;
         while (x->cp <= gData->cpend) {
             nextpc = pc;    /* reset back to start each time */
@@ -3222,7 +3225,7 @@ MatchRegExp(REGlobalData *gData, REMatchState *x)
         for (j = 0; j < gData->regexp->parenCount; j++)
             x->parens[j].index = -1;
         result = ExecuteREBytecode(gData, x);
-        if (!gData->ok || result)
+        if (!gData->ok || result || (gData->regexp->flags & JSREG_STICKY))
             return result;
         gData->backTrackSP = gData->backTrackStack;
         gData->cursz = 0;
@@ -3511,7 +3514,8 @@ enum regexp_tinyid {
     REGEXP_GLOBAL       = -2,
     REGEXP_IGNORE_CASE  = -3,
     REGEXP_LAST_INDEX   = -4,
-    REGEXP_MULTILINE    = -5
+    REGEXP_MULTILINE    = -5,
+    REGEXP_STICKY       = -6
 };
 
 #define REGEXP_PROP_ATTRS (JSPROP_PERMANENT|JSPROP_SHARED)
@@ -3522,6 +3526,7 @@ static JSPropertySpec regexp_props[] = {
     {"ignoreCase", REGEXP_IGNORE_CASE, REGEXP_PROP_ATTRS | JSPROP_READONLY,0,0},
     {"lastIndex",  REGEXP_LAST_INDEX,  REGEXP_PROP_ATTRS,0,0},
     {"multiline",  REGEXP_MULTILINE,   REGEXP_PROP_ATTRS | JSPROP_READONLY,0,0},
+    {"sticky",     REGEXP_STICKY,      REGEXP_PROP_ATTRS | JSPROP_READONLY,0,0},
     {0,0,0,0,0}
 };
 
@@ -3552,6 +3557,9 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             break;
           case REGEXP_MULTILINE:
             *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_MULTILINE) != 0);
+            break;
+          case REGEXP_STICKY:
+            *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_STICKY) != 0);
             break;
         }
     }
@@ -3874,6 +3882,8 @@ js_regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             chars[length++] = 'i';
         if (re->flags & JSREG_MULTILINE)
             chars[length++] = 'm';
+        if (re->flags & JSREG_STICKY)
+            chars[length++] = 'y';
     }
     JS_UNLOCK_OBJ(cx, obj);
     chars[length] = 0;
@@ -4011,7 +4021,7 @@ static JSBool
 regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 JSBool test, jsval *rval)
 {
-    JSBool ok;
+    JSBool ok, sticky;
     JSRegExp *re;
     jsdouble lastIndex;
     JSString *str;
@@ -4029,7 +4039,8 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     /* NB: we must reach out: after this paragraph, in order to drop re. */
     HOLD_REGEXP(cx, re);
-    if (re->flags & JSREG_GLOB) {
+    sticky = (re->flags & JSREG_STICKY) != 0;
+    if (re->flags & (JSREG_GLOB | JSREG_STICKY)) {
         ok = js_GetLastIndex(cx, obj, &lastIndex);
     } else {
         lastIndex = 0;
@@ -4050,7 +4061,8 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                                      bytes,
                                      (re->flags & JSREG_GLOB) ? "g" : "",
                                      (re->flags & JSREG_FOLD) ? "i" : "",
-                                     (re->flags & JSREG_MULTILINE) ? "m" : "");
+                                     (re->flags & JSREG_MULTILINE) ? "m" : "",
+                                     (re->flags & JSREG_STICKY) ? "y" : "");
             }
             ok = JS_FALSE;
             goto out;
@@ -4070,8 +4082,10 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     } else {
         i = (size_t) lastIndex;
         ok = js_ExecuteRegExp(cx, re, str, &i, test, rval);
-        if (ok && (re->flags & JSREG_GLOB))
+        if (ok &&
+            ((re->flags & JSREG_GLOB) || (*rval != JSVAL_NULL && sticky))) {
             ok = js_SetLastIndex(cx, obj, (*rval == JSVAL_NULL) ? 0 : i);
+        }
     }
 
 out:

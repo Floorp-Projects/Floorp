@@ -138,7 +138,7 @@ MSG_DEF(JSMSG_UNTERM_CLASS,            55, 1, JSEXN_SYNTAXERR, "unterminated cha
 MSG_DEF(JSMSG_TRAILING_SLASH,          56, 0, JSEXN_SYNTAXERR, "trailing \\ in regular expression")
 MSG_DEF(JSMSG_BAD_CLASS_RANGE,         57, 0, JSEXN_SYNTAXERR, "invalid range in character class")
 MSG_DEF(JSMSG_BAD_FLAG,                58, 1, JSEXN_SYNTAXERR, "invalid regular expression flag {0}")
-MSG_DEF(JSMSG_NO_INPUT,                59, 3, JSEXN_SYNTAXERR, "no input for /{0}/{1}{2}")
+MSG_DEF(JSMSG_NO_INPUT,                59, 5, JSEXN_SYNTAXERR, "no input for /{0}/{1}{2}{3}{4}")
 MSG_DEF(JSMSG_CANT_OPEN,               60, 2, JSEXN_ERR, "can't open {0}: {1}")
 MSG_DEF(JSMSG_BAD_STRING_MASK,         61, 1, JSEXN_ERR, "invalid string escape mask {0}")
 MSG_DEF(JSMSG_UNMATCHED_RIGHT_PAREN,   62, 0, JSEXN_SYNTAXERR, "unmatched ) in regular expression")
