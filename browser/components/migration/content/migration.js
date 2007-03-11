@@ -204,14 +204,18 @@ var MigrationWizard = {
     while (profiles.hasChildNodes()) 
       profiles.removeChild(profiles.firstChild);
     
-    var sourceProfiles = this._migrator.sourceProfiles;
-    var count = sourceProfiles.Count();
-    for (var i = 0; i < count; ++i) {
-      var item = document.createElement("radio");
-      var str = sourceProfiles.QueryElementAt(i, Components.interfaces.nsISupportsString);
-      item.id = str.data;
-      item.setAttribute("label", str.data);
-      profiles.appendChild(item);
+    // Note that this block is still reached even if the user chose 'From File'
+    // and we canceled the dialog.  When that happens, _migrator will be null.
+    if (this._migrator) {
+      var sourceProfiles = this._migrator.sourceProfiles;
+      var count = sourceProfiles.Count();
+      for (var i = 0; i < count; ++i) {
+        var item = document.createElement("radio");
+        var str = sourceProfiles.QueryElementAt(i, Components.interfaces.nsISupportsString);
+        item.id = str.data;
+        item.setAttribute("label", str.data);
+        profiles.appendChild(item);
+      }
     }
     
     profiles.selectedItem = this._selectedProfile ? document.getElementById(this._selectedProfile) : profiles.firstChild;

@@ -257,9 +257,33 @@ var PlacesOrganizer = {
    * Show the migration wizard for importing from a file.
    */
   importBookmarks: function PO_import() {
+    // XXX: ifdef it to be non-modal (non-"sheet") on mac (see bug 259039)
     var features = "modal,centerscreen,chrome,resizable=no";
+
+    // The migrator window will set this to true when it closes, if the user
+    // chose to migrate from a specific file.
+    window.fromFile = false;
     openDialog("chrome://browser/content/migration/migration.xul",
-               "", features, "bookmarks");
+               "migration", features, "bookmarks");
+    if (window.fromFile)
+    this.importFromFile();
+  },
+  
+  /**
+   * Open a file-picker and import the selected file into the bookmarks store
+   */
+  importFromFile: function PO_importFromFile() {
+    var fp = Cc["@mozilla.org/filepicker;1"].
+             createInstance(Ci.nsIFilePicker);
+    fp.init(window, PlacesUtils.getString("SelectImport"),
+            Ci.nsIFilePicker.modeOpen);
+    fp.appendFilters(Ci.nsIFilePicker.filterHTML | Ci.nsIFilePicker.filterAll);
+    if (fp.show() != Ci.nsIFilePicker.returnCancel) {
+      var ioService = Cc["@mozilla.org/network/io-service;1"].
+                      getService(Ci.nsIIOService);
+      if (fp.file)
+        PlacesUtils.bookmarks.importBookmarksHTML(ioService.newFileURI(fp.file));
+    }
   },
 
   /**
@@ -268,7 +292,8 @@ var PlacesOrganizer = {
   exportBookmarks: function PO_exportBookmarks() {
     var fp = Cc["@mozilla.org/filepicker;1"].
              createInstance(Ci.nsIFilePicker);
-    fp.init(window, "", Ci.nsIFilePicker.modeSave);
+    fp.init(window, PlacesUtils.getString("EnterExport"),
+            Ci.nsIFilePicker.modeSave);
     fp.appendFilters(Ci.nsIFilePicker.filterHTML);
     fp.defaultString = "bookmarks.html";
     if (fp.show() != Ci.nsIFilePicker.returnCancel)
