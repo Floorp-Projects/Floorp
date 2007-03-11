@@ -968,7 +968,8 @@ public:
     }
     ~ScriptObjectHolder()
     {
-      DropScriptObject(mLangID, mObject);
+      if (mObject)
+        DropScriptObject(mLangID, mObject);
     }
     nsresult set(void *aObject)
     {
