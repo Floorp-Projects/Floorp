@@ -128,8 +128,10 @@
         <groupbox>
             <caption label="&pref.refreshbox.label;"/>
             <hbox align="center">
-                <checkbox label="&pref.autorefresh.label;"
-                          preference="calendar.autorefresh.enabled"/>
+                <checkbox id="autorefreshenabled"
+                          label="&pref.autorefresh.label;"
+                          preference="calendar.autorefresh.enabled"
+                          accesskey="&pref.autorefresh.accesskey;"/>
                 <textbox id="refreshtimeout"
                          preference="calendar.autorefresh.timeout"
                          maxlength="3"

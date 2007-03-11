@@ -51,3 +51,4 @@
 <!ENTITY pref.defaultsnoozelength.accesskey "S">
 <!ENTITY pref.refreshbox.label "Refresh Settings" >
 <!ENTITY pref.autorefresh.label "Refresh calendars every" >
+<!ENTITY pref.autorefresh.accesskey "R" >
