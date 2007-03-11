@@ -419,6 +419,8 @@ public:
   nscoord ComputedWidth() const { return mComputedWidth; }
   void SetComputedWidth(nscoord aComputedWidth);
 
+  void SetTruncated(const nsHTMLReflowMetrics& aMetrics, nsReflowStatus* aStatus) const;
+
 protected:
 
   void InitCBReflowState();
