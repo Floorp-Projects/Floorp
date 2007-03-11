@@ -2135,7 +2135,7 @@
       <toolbaritem id="mailviews-container" title="&mailViewsToolbarItem.title;" align="center" class="chromeclass-toolbar-additional">
         <label value="&viewPicker.label;" control="viewPicker" accesskey="&viewPicker.accesskey;"/>
         <menulist id="viewPicker" oncommand="ViewChangeByMenuitem(event.target);">
-          <menupopup id="viewPickerPopup" onpopupshowing="RefreshViewPopup(this, false);">
+          <menupopup id="viewPickerPopup">
             <menuitem id="viewPickerAll"    value="0" label="&viewAll.label;"/>
             <menuitem id="viewPickerUnread" value="1" label="&viewUnread.label;"/>
             <menuseparator/>
