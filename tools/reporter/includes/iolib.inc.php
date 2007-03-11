@@ -85,46 +85,6 @@ function displayPage($object, $path, $objectTemplate, $title = 'Mozilla Reporter
     $page->display('layout.tpl');
     return;
 }
-function strMiddleReduceWordSensitive($string, $max = 50, $rep = '[...]') {
-   $strlen = strlen($string);
-
-   if ($strlen <= $max)
-       return $string;
-
-   $lengthtokeep = $max - strlen($rep);
-   $start = 0;
-   $end = 0;
-
-   if (($lengthtokeep % 2) == 0) {
-       $start = $lengthtokeep / 2;
-       $end = $start;
-   } else {
-       $start = intval($lengthtokeep / 2);
-       $end = $start + 1;
-   }
-
-   $i = $start;
-   $tmp_string = $string;
-   while ($i < $strlen) {
-       if ($tmp_string[$i] == ' ') {
-           $tmp_string = substr($tmp_string, 0, $i) . $rep;
-           $return = $tmp_string;
-       }
-       $i++;
-   }
-
-   $i = $end;
-   $tmp_string = strrev ($string);
-   while ($i < $strlen) {
-       if ($tmp_string[$i] == ' ') {
-           $tmp_string = substr($tmp_string, 0, $i);
-           $return .= strrev ($tmp_string);
-       }
-       $i++;
-   }
-   return $return;
-   return substr($string, 0, $start) . $rep . substr($string, - $end);
-}
 
 function resolveProblemTypes($q){
   global $problemTypes;
