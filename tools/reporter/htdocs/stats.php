@@ -51,15 +51,15 @@ $db->SetFetchMode(ADODB_FETCH_ASSOC);
 $content = initializeTemplate();
 
 // Total Reports
-$reports_q =& $db->Execute("SELECT COUNT(*)
+$reports_q =& $db->Execute("SELECT COUNT(report_id) as total
                             FROM report");
-$reports = $reports_q->fields['COUNT(*)'];
+$reports = $reports_q->fields['total'];
 $content->assign('reports_quant', $reports);
 
 // Total Unique Users
-$uniqueusers_q =& $db->Execute("SELECT COUNT(*)
+$uniqueusers_q =& $db->Execute("SELECT COUNT(sysid_id) as total
                                 FROM sysid");
-$uniqueusers = $uniqueusers_q->fields['COUNT(*)'];
+$uniqueusers = $uniqueusers_q->fields['total'];
 $content->assign('users_quant', $uniqueusers);
 
 // Average # of reports per user
@@ -94,25 +94,25 @@ $content->assign('platform', $platform);
 
 
 // Total Hosts
-$uniquehosts_q =& $db->Execute("SELECT COUNT(*)
+$uniquehosts_q =& $db->Execute("SELECT COUNT(host_hostname) as total
                                 FROM host");
-$uniquehosts = $uniquehosts_q->fields['COUNT(*)'];
+$uniquehosts = $uniquehosts_q->fields['total'];
 $content->assign('hosts_quant', $uniquehosts);
 
 // Reports in last 24 hours
 $yesterday  = mktime(date("H"), date("i"), date("s"), date("m")  , date("d")-1, date("Y"));
-$reports24_q =& $db->Execute("SELECT COUNT(*)
+$reports24_q =& $db->Execute("SELECT COUNT(report_id) as total
                             FROM report
                             WHERE  report_file_date > "."'".date('Y-m-d H:i:s', $yesterday)."'");
-$reports24 = $reports24_q->fields['COUNT(*)'];
+$reports24 = $reports24_q->fields['total'];
 $content->assign('reports24', $reports24);
 
 // Reports in last week
 $last7days  = mktime(date("H"), date("i"), date("s"), date("m")  , date("d")-7, date("Y"));
-$last7days_q =& $db->Execute("SELECT COUNT(*)
+$last7days_q =& $db->Execute("SELECT COUNT(report_id) as total
                             FROM report
                             WHERE  report_file_date > "."'".date('Y-m-d H:i:s', $last7days)."'");
-$last7days = $last7days_q->fields['COUNT(*)'];
+$last7days = $last7days_q->fields['total'];
 $content->assign('last7days', $last7days);
 
 // disconnect database
