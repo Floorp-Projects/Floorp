@@ -42,8 +42,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/build/unix/modules.mk
-
 include $(topsrcdir)/config/config.mk
 
 default alldep all::
