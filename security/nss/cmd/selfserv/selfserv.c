@@ -1728,15 +1728,15 @@ main(int argc, char **argv)
 
 	case 'b': bindOnly = PR_TRUE; break;
 
-	case 'c': cipherString = strdup(optstate->value); break;
+	case 'c': cipherString = PORT_Strdup(optstate->value); break;
 
 	case 'd': dir = optstate->value; break;
 
 #ifdef NSS_ENABLE_ECC
-	case 'e': ecNickName = strdup(optstate->value); break;
+	case 'e': ecNickName = PORT_Strdup(optstate->value); break;
 #endif /* NSS_ENABLE_ECC */
 
-	case 'f': fNickName = strdup(optstate->value); break;
+	case 'f': fNickName = PORT_Strdup(optstate->value); break;
 
 	case 'h': Usage(progName); exit(0); break;
 
@@ -1746,9 +1746,9 @@ main(int argc, char **argv)
 
 	case 'm': useModelSocket = PR_TRUE; break;
 
-        case 'n': nickName = strdup(optstate->value); break;
+	case 'n': nickName = PORT_Strdup(optstate->value); break;
 
-        case 'P': certPrefix = strdup(optstate->value); break;
+	case 'P': certPrefix = PORT_Strdup(optstate->value); break;
 
 	case 'o': MakeCertOK = 1; break;
 
@@ -1766,7 +1766,7 @@ main(int argc, char **argv)
 
 	case 'v': verbose++; break;
 
-	case 'w': passwd = strdup(optstate->value); break;
+	case 'w': passwd = PORT_Strdup(optstate->value); break;
 
 	case 'x': useExportPolicy = PR_TRUE; break;
 
@@ -1926,6 +1926,7 @@ main(int argc, char **argv)
 
     /* all the SSL2 and SSL3 cipher suites are enabled by default. */
     if (cipherString) {
+    	char *cstringSaved = cipherString;
     	int ndx;
 
 	/* disable all the ciphers, then enable the ones we want. */
@@ -1973,6 +1974,7 @@ main(int argc, char **argv)
 		exit(9);
 	    }
 	}
+	PORT_Free(cstringSaved);
     }
 
     if (nickName) {
@@ -2044,8 +2046,23 @@ main(int argc, char **argv)
 	nss_DumpCertificateCacheInfo();
     }
 
-    free(nickName);
-    free(passwd);
+    if (nickName) {
+        PORT_Free(nickName);
+    }
+    if (passwd) {
+        PORT_Free(passwd);
+    }
+    if (certPrefix) {
+        PORT_Free(certPrefix);
+    }
+    if (fNickName) {
+        PORT_Free(fNickName);
+    }
+ #ifdef NSS_ENABLE_ECC
+    if (ecNickName) {
+        PORT_Free(ecNickName);
+    }
+ #endif
 
     if (hasSidCache) {
 	SSL_ShutdownServerSessionIDCache();
