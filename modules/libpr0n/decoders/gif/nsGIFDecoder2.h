@@ -113,11 +113,9 @@ private:
   PRInt32 mLastFlushedRow;
 
   gif_struct *mGIFStruct;
-  
-  PRUint8 *mAlphaLine;
+
   PRUint8 *mRGBLine;
   PRUint32 mRGBLineMaxSize;
-  PRUint32 mAlphaLineMaxSize;
   PRUint8 mBackgroundRGBIndex;
   PRUint8 mCurrentPass;
   PRUint8 mLastFlushedPass;

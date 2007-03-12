@@ -78,9 +78,7 @@ nsGIFDecoder2::nsGIFDecoder2()
   : mCurrentRow(-1)
   , mLastFlushedRow(-1)
   , mGIFStruct(nsnull)
-  , mAlphaLine(nsnull)
   , mRGBLine(nsnull)
-  , mAlphaLineMaxSize(0)
   , mRGBLineMaxSize(0)
   , mBackgroundRGBIndex(0)
   , mCurrentPass(0)
@@ -146,7 +144,6 @@ NS_IMETHODIMP nsGIFDecoder2::Close()
       gGifAllocator->Free(mGIFStruct);
     mGIFStruct = nsnull;
   }
-  PR_FREEIF(mAlphaLine);
   PR_FREEIF(mRGBLine);
 
   return NS_OK;
@@ -412,7 +409,7 @@ int nsGIFDecoder2::HaveDecodedRow(
   int aInterlacePass)    // interlace pass (1-4)
 {
   nsGIFDecoder2* decoder = NS_STATIC_CAST(nsGIFDecoder2*, aClientData);
-  PRUint32 bpr, abpr;
+  PRUint32 bpr;
   // We have to delay allocation of the image frame until now because
   // we won't have control block info (transparency) until now. The conrol
   // block of a GIF stream shows up after the image header since transparency
@@ -421,13 +418,8 @@ int nsGIFDecoder2::HaveDecodedRow(
   if(! decoder->mImageFrame) {
     gfx_format format = gfxIFormats::RGB;
     if (decoder->mGIFStruct->is_transparent) {
-      format = gfxIFormats::RGB_A1;
+      format = gfxIFormats::RGB_A1;  // XXX not really
     }
-
-#if !defined(MOZ_ENABLE_CAIRO) || (defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON))
-    // XXX this works...
-    format += 1; // RGB to BGR
-#endif
 
     // initialize the frame and append it to the container
     decoder->mImageFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
@@ -445,22 +437,13 @@ int nsGIFDecoder2::HaveDecodedRow(
       decoder->mObserver->OnStartFrame(nsnull, decoder->mImageFrame);
 
     decoder->mImageFrame->GetImageBytesPerRow(&bpr);
-    decoder->mImageFrame->GetAlphaBytesPerRow(&abpr);
 
     if (bpr > decoder->mRGBLineMaxSize) {
       decoder->mRGBLine = (PRUint8 *)PR_REALLOC(decoder->mRGBLine, bpr);
       decoder->mRGBLineMaxSize = bpr;
     }
-
-    if (format == gfxIFormats::RGB_A1 || format == gfxIFormats::BGR_A1) {
-      if (abpr > decoder->mAlphaLineMaxSize) {
-        decoder->mAlphaLine = (PRUint8 *)PR_REALLOC(decoder->mAlphaLine, abpr);
-        decoder->mAlphaLineMaxSize = abpr;
-      }
-    }
   } else {
     decoder->mImageFrame->GetImageBytesPerRow(&bpr);
-    decoder->mImageFrame->GetAlphaBytesPerRow(&abpr);
   }
   
   if (aRowBufPtr) {
@@ -496,12 +479,13 @@ int nsGIFDecoder2::HaveDecodedRow(
       }
     } else {
       PRUint8* rowBufIndex = aRowBufPtr;
-
       PRUint32 *rgbRowIndex = (PRUint32*)decoder->mRGBLine;
+
+      PRInt32 tpixel =
+        decoder->mGIFStruct->is_transparent ? decoder->mGIFStruct->tpixel : -1;
+
       while (rowBufIndex != decoder->mGIFStruct->rowend) {
-        if (*rowBufIndex >= cmapsize ||
-            ((format == gfxIFormats::RGB_A1 || format == gfxIFormats::BGR_A1) &&
-             (*rowBufIndex == decoder->mGIFStruct->tpixel))) {
+        if (*rowBufIndex >= cmapsize || *rowBufIndex == tpixel) {
           *rgbRowIndex++ = 0x00000000;
           ++rowBufIndex;
           continue;
