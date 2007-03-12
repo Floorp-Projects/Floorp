@@ -2355,6 +2355,9 @@ function canonizeUrl(aTriggeringEvent, aPostDataRef) {
   }
 
   gURLBar.value = getShortcutOrURI(url, aPostDataRef);
+
+  // Also update this so the browser display keeps the new value (bug 310651)
+  gBrowser.userTypedValue = gURLBar.value;
 }
 
 function UpdatePageProxyState()
