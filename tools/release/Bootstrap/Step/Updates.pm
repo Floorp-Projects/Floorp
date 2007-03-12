@@ -20,6 +20,7 @@ sub Execute {
     my $mofoCvsroot = $config->Get(var => 'mofoCvsroot');
     my $updateDir = $config->Get(var => 'updateDir');
     my $patcherConfig = $config->Get(var => 'patcherConfig');
+    my $patcherToolsRev = $config->Get(var => 'patcherToolsRev');
 
     my $versionedUpdateDir = catfile($updateDir, $product . '-' . $version);
 
