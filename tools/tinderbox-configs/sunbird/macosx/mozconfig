@@ -9,7 +9,7 @@ mk_add_options MOZ_CO_PROJECT="calendar"
 mk_add_options MOZ_MAKE_FLAGS="-j6"
 mk_add_options MOZ_CO_MODULE="mozilla/tools/update-packaging"
 mk_add_options JS_READLINE=1
-mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build/universal
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/../build/unisunbird
 
 ac_add_options --enable-application="calendar"
 ac_add_options --enable-update-channel="nightly"
