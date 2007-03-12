@@ -12,13 +12,7 @@ function run_test() {
       terminated = true;
       break;
     }
-    try {
-      f = f.parent
-    }
-    catch (e) {
-      // Exception means we reached the top of a volume, terminate
-      f = null;
-    }
+    f = f.parent;
   }
 
   do_check_true(terminated);
