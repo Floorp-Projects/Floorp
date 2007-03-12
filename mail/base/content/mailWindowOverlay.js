@@ -918,6 +918,7 @@ function GetMessagesForInboxOnServer(server)
 
 function MsgGetMessage()
 {
+  gNewAccountToLoad = null;
   // if offline, prompt for getting messages
   if (MailOfflineMgr.isOnline() || MailOfflineMgr.getNewMail())
     GetFolderMessages();

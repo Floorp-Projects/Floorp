@@ -300,7 +300,8 @@ function loadInboxForNewAccount()
     SelectFolder(inboxFolder.URI);
     window.focus();
     setTimeout(MsgGetMessage, 0);
-    gNewAccountToLoad = null;
+    // we clear gNewAccountToLoad in MsgGetMessage so that the biff startup
+    // code which runs before can check if we're loading a new account.
   }
 }
 
