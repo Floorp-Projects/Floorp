@@ -507,7 +507,7 @@ LOCALES_CVSROOT ?= :pserver:anonymous:anonymous@cvs-mirror.mozilla.org:/l10n
 
 MOZCONFIG_LOADER := mozilla/build/autoconf/mozconfig2client-mk
 MOZCONFIG_FINDER := mozilla/build/autoconf/mozconfig-find 
-MOZCONFIG_MODULES := mozilla/build/unix/modules.mk mozilla/build/unix/uniq.pl
+MOZCONFIG_MODULES := mozilla/build/unix/uniq.pl
 run_for_side_effects := \
   $(shell cd $(ROOTDIR); \
      if test "$(_IS_FIRST_CHECKOUT)"; then \
@@ -516,7 +516,6 @@ run_for_side_effects := \
      fi; \
      $(MOZCONFIG_LOADER) $(TOPSRCDIR) mozilla/.mozconfig.mk > mozilla/.mozconfig.out)
 include $(TOPSRCDIR)/.mozconfig.mk
-include $(TOPSRCDIR)/build/unix/modules.mk
 
 ####################################
 # Options that may come from mozconfig
