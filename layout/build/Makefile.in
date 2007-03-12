@@ -275,6 +275,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/content/xslt/src/xpath \
 		   -I$(topsrcdir)/content/xslt/src/xslt \
 		   -I$(topsrcdir)/content/xul/content/src \
+		   -I$(topsrcdir)/content/xul/document/src \
 		   -I$(topsrcdir)/content/xul/templates/src \
 		   -I$(topsrcdir)/content/events/src \
 		   -I$(topsrcdir)/content/xbl/src \

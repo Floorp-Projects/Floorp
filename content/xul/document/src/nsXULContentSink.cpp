@@ -138,9 +138,6 @@ public:
 
 protected:
     // pseudo-constants
-    static nsrefcnt               gRefCnt;
-    static nsIXULPrototypeCache*  gXULCache;
-
     PRUnichar* mText;
     PRInt32 mTextLength;
     PRInt32 mTextSize;
@@ -228,9 +225,6 @@ protected:
     nsCOMPtr<nsICSSParser> mCSSParser;            // [OWNER]
     nsCOMPtr<nsIScriptSecurityManager> mSecMan;
 };
-
-nsrefcnt XULContentSinkImpl::gRefCnt;
-nsIXULPrototypeCache* XULContentSinkImpl::gXULCache;
 
 //----------------------------------------------------------------------
 
@@ -347,10 +341,6 @@ XULContentSinkImpl::XULContentSinkImpl(nsresult& rv)
       mParser(nsnull)
 {
 
-    if (gRefCnt++ == 0) {
-        rv = CallGetService(kXULPrototypeCacheCID, &gXULCache);
-    }
-
 #ifdef PR_LOGGING
     if (! gLog)
         gLog = PR_NewLogModule("nsXULContentSink");
@@ -390,10 +380,6 @@ XULContentSinkImpl::~XULContentSinkImpl()
     }
 
     PR_FREEIF(mText);
-
-    if (--gRefCnt == 0) {
-        NS_IF_RELEASE(gXULCache);
-    }
 }
 
 //----------------------------------------------------------------------

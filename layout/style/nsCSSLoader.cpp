@@ -82,7 +82,7 @@
 #include "nsGkAtoms.h"
 
 #ifdef MOZ_XUL
-#include "nsIXULPrototypeCache.h"
+#include "nsXULPrototypeCache.h"
 #endif
 
 #include "nsIMediaList.h"
@@ -972,12 +972,10 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
     // First, the XUL cache
 #ifdef MOZ_XUL
     if (IsChromeURI(aURI)) {
-      nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("@mozilla.org/xul/xul-prototype-cache;1"));
+      nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
       if (cache) {
-        PRBool enabled;
-        cache->GetEnabled(&enabled);
-        if (enabled) {
-          cache->GetStyleSheet(aURI, getter_AddRefs(sheet));
+        if (cache->IsEnabled()) {
+          sheet = cache->GetStyleSheet(aURI);
           LOG(("  From XUL cache: %p", sheet.get()));
         }
       }
@@ -1546,17 +1544,11 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, nsresult aStatus)
   if (NS_SUCCEEDED(aStatus) && aLoadData->mURI) {
 #ifdef MOZ_XUL
     if (IsChromeURI(aLoadData->mURI)) {
-      nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("@mozilla.org/xul/xul-prototype-cache;1"));
-      if (cache) {
-        PRBool enabled;
-        cache->GetEnabled(&enabled);
-        if (enabled) {
-          nsCOMPtr<nsICSSStyleSheet> sheet;
-          cache->GetStyleSheet(aLoadData->mURI, getter_AddRefs(sheet));
-          if (!sheet) {
-            LOG(("  Putting sheet in XUL prototype cache"));
-            cache->PutStyleSheet(aLoadData->mSheet);
-          }
+      nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
+      if (cache && cache->IsEnabled()) {
+        if (!cache->GetStyleSheet(aLoadData->mURI)) {
+          LOG(("  Putting sheet in XUL prototype cache"));
+          cache->PutStyleSheet(aLoadData->mSheet);
         }
       }
     }

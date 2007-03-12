@@ -167,6 +167,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../content/base/src \
 		-I$(srcdir)/../../content/html/content/src \
 		-I$(srcdir)/../../content/xbl/src \
+		-I$(srcdir)/../../content/xul/document/src \
 		$(NULL)
 
 _FILES	= \

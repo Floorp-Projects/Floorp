@@ -417,7 +417,7 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
     if (mRoot)
         rv |= GetNodeInfos(mRoot, nodeInfos);
 
-    PRInt32 nodeInfoCount = nodeInfos.Count();
+    PRUint32 nodeInfoCount = nodeInfos.Count();
     rv |= aStream->Write32(nodeInfoCount);
     for (i = 0; i < nodeInfoCount; ++i) {
         nsINodeInfo *nodeInfo = nodeInfos[i];

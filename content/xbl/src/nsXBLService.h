@@ -57,7 +57,6 @@ class nsString;
 class nsIURI;
 class nsSupportsHashtable;
 class nsHashtable;
-class nsIXULPrototypeCache;
 
 class nsXBLService : public nsIXBLService,
                      public nsIObserver,
@@ -102,7 +101,8 @@ protected:
                                 nsIURI* aDocumentURI, nsIURI* aBindingURI, 
                                 PRBool aForceSyncLoad, nsIDocument** aResult);
 
-  nsresult GetXBLDocumentInfo(nsIURI* aURI, nsIContent* aBoundElement, nsIXBLDocumentInfo** aResult);
+  nsIXBLDocumentInfo* GetXBLDocumentInfo(nsIURI* aURI,
+                                         nsIContent* aBoundElement);
 
   /**
    * This method calls the one below with an empty |aDontExtendURIs| array.
@@ -132,10 +132,6 @@ protected:
 
 // MEMBER VARIABLES
 public:
-#ifdef MOZ_XUL
-  static nsIXULPrototypeCache* gXULCache;
-#endif
-    
   static PRUint32 gRefCnt;                   // A count of XBLservice instances.
 
   static PRBool gDisableChromeCache;
