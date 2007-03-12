@@ -210,7 +210,7 @@ function runFilter()
                 // real channel over it.
                 if (channelTreeView.rowCount >= 2)
                     channelTreeView.selectedIndex = 1;
-                else if (channelTreeView.rowCount >= 1)
+                else if (channelTreeView.rowCount == 1)
                     channelTreeView.selectedIndex = 0;
             }
         }
@@ -316,9 +316,24 @@ function setState(newState)
 {
     state.state = newState;
     if (newState == STATE_IDLE)
+    {
         state.substate = 0;
+        // We finished doing something. Fix selection.
+        if (channelTreeView.rowCount > 0)
+        {
+            // Skip the creation row if it's there:
+            if (channelTreeView.rowCount >= 2)
+                channelTreeView.selectedIndex = 1;
+            else
+                channelTreeView.selectedIndex = 0;
+            var tbo = document.getElementById("channelList").treeBoxObject;
+            tbo.scrollToRow(0);
+        }
+    }
     else
+    {
         state.substate = SUBSTATE_START;
+    }
     // Force an update when the state changes.
     doCurrentStatus();
 }
@@ -488,15 +503,12 @@ function doCurrentStatusEnd()
             // Bail out if there was an error!
             return;
         }
-        else
-        {
-            // Replace files.
-            updateProgress();
-        }
+        // Replace files.
+        updateProgress();
+        setState(STATE_LOAD);
     }
-
     // Finish file handling work.
-    if ((state.state == STATE_LOAD) || (state.state == STATE_LIST_AND_LOAD))
+    else if ((state.state == STATE_LOAD) || (state.state == STATE_LIST_AND_LOAD))
     {
         if (channels.length > 0)
             channelTreeView.childData.appendChildren(channels);
@@ -507,13 +519,9 @@ function doCurrentStatusEnd()
         delete state.loadedSoFar;
         delete state.loadNeverComplete;
         updateProgress();
+        setState(STATE_IDLE);
         runFilter();
     }
-
-    if (state.state == STATE_LIST_THEN_LOAD)
-        setState(STATE_LOAD);
-    else
-        setState(STATE_IDLE);
 }
 
 function getListFile(temp)
