@@ -150,6 +150,7 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
   nsCOMPtr<nsIMenu> menu = do_QueryInterface(aParent);
   NS_ASSERTION(menubar || menu, "Menu parent not a menu bar or menu!");
 
+  // SetLabel will create the native menu if it has not been created yet
   SetLabel(aLabel);
 
   if (mMenuContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::hidden,
@@ -238,6 +239,8 @@ NS_IMETHODIMP nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
   // add the menu item to this menu
   NSMenuItem* newNativeMenuItem;
   aMenuItem->GetNativeData((void*&)newNativeMenuItem);
+  if (!newNativeMenuItem)
+    return NS_ERROR_FAILURE;
   [mMacMenu addItem:newNativeMenuItem];
 
   // set up target/action
@@ -283,9 +286,9 @@ NS_IMETHODIMP nsMenuX::AddMenu(nsIMenu * aMenu)
   [newNativeMenuItem release];
   
   NSMenu* childMenu;
-  if (aMenu->GetNativeData((void**)&childMenu) == NS_OK) {
+  if (aMenu->GetNativeData((void**)&childMenu) == NS_OK)
     [[mMacMenu itemAtIndex:currItemIndex] setSubmenu:childMenu];
-  }
+
   return NS_OK;
 }
 
@@ -950,7 +953,7 @@ void nsMenuX::GetMenuPopupContent(nsIContent** aResult)
 //
 nsresult nsMenuX::CountVisibleBefore(PRUint32* outVisibleBefore)
 {
-  NS_ASSERTION(outVisibleBefore, "bad index param");
+  NS_ASSERTION(outVisibleBefore, "bad index param in nsMenuX::CountVisibleBefore");
   
   nsCOMPtr<nsIMenuBar> menubarParent = do_QueryInterface(mParent);
   if (!menubarParent)
@@ -971,7 +974,7 @@ nsresult nsMenuX::CountVisibleBefore(PRUint32* outVisibleBefore)
       gotThisMenu = PR_TRUE;
       break;
     }
-      
+
     // check the current menu to see if it is visible (not hidden, not collapsed). If
     // it is, count it.
     if (currMenu) {
