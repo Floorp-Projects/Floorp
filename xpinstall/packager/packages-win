@@ -66,6 +66,10 @@ bin\Microsoft.VC80.CRT.manifest
 bin\msvcm80.dll
 bin\msvcp80.dll
 bin\msvcr80.dll
+bin\Microsoft.VC90.CRT.manifest
+bin\msvcm90.dll
+bin\msvcp90.dll
+bin\msvcr90.dll
 bin\components\AcctIdl.dll
 bin\components\AcctIdl.xpt
 bin\components\appcomps.dll
