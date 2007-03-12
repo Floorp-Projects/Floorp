@@ -1,4 +1,5 @@
 set -e
+set -v
 
 # This script expects these to be absolute paths in win32 format
 if test -z "$MOZ_SRCDIR"; then
@@ -13,10 +14,12 @@ fi
 MSYS_SRCDIR=$(cd "$MOZ_SRCDIR" && pwd)
 MSYS_STAGEDIR=$(cd "$MOZ_STAGEDIR" && pwd)
 
-# install make-3.81
-tar -xjf "${MSYS_SRCDIR}/make-3.81-MSYS-1.0.11-snapshot.tar.bz2" -C "${MSYS_STAGEDIR}/mozilla-build"
-# install the uber-new make.exe from Earnie Boyd
-cp "${MSYS_SRCDIR}/make.exe" "${MSYS_STAGEDIR}/mozilla-build/make-3.81/bin"
+# "rm.exe" from the msysCORE package is broken pretty badly. Use the "old" one
+cp "${MSYS_STAGEDIR}/mozilla-build/msys/bin/rm.exe" "${MSYS_STAGEDIR}"
+
+# Install msysCORE update
+tar -xjf "${MSYS_SRCDIR}/msysCORE-1.0.11-2007.01.19-1.tar.bz2" -C "${MSYS_STAGEDIR}/mozilla-build/msys"
+cp "${MSYS_STAGEDIR}/rm.exe" "${MSYS_STAGEDIR}/mozilla-build/msys/bin"
 
 # copy /bin/sh to /bin/bash
 cp "${MSYS_STAGEDIR}/mozilla-build/msys/bin/sh.exe" "${MSYS_STAGEDIR}/mozilla-build/msys/bin/bash.exe"
@@ -43,9 +46,10 @@ rm -rf "${MSYS_STAGEDIR}/libiconv-1.11"
 tar -xzf "${MSYS_SRCDIR}/libiconv-1.11.tar.gz" -C "${MSYS_STAGEDIR}"
 
 pushd "${MSYS_STAGEDIR}/libiconv-1.11"
-./configure --prefix=/local
+patch -p0 < "${MSYS_SRCDIR}/libiconv-build.patch"
+./configure --prefix=/local --enable-static --disable-shared
 make
-make install DESTDIR="${MSYS_STAGEDIR}/mozilla-build/msys"
+make install DESTDIR="${MSYS_STAGEDIR}/mozilla-build/msys" LIBTOOL_INSTALL=
 popd
 
 # build and install atlthunk_compat

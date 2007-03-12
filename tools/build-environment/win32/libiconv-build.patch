@@ -1,0 +1,16 @@
+--- src/Makefile.in	Fri Jul 14 09:19:07 2006
++++ ../_obj/libiconv-1.11/src/Makefile.in	Fri Mar  9 16:16:21 2007
+@@ -95,11 +95,11 @@
+ 	if [ ! -d $(DESTDIR)$(exec_prefix) ] ; then $(mkinstalldirs) $(DESTDIR)$(exec_prefix) ; fi
+ 	if [ ! -d $(DESTDIR)$(bindir) ] ; then $(mkinstalldirs) $(DESTDIR)$(bindir) ; fi
+ 	case "@host_os@" in \
+ 	  hpux*) $(CC) $(LDFLAGS) $(iconv_LDFLAGS) iconv.@OBJEXT@ ../srclib/libicrt.a -L$(DESTDIR)$(libdir) -liconv @LIBINTL@ `if test -n '$(DESTDIR)'; then echo " -Wl,+b -Wl,$(libdir)"; fi` -o iconv;; \
+-	  *) $(LIBTOOL_LINK) $(CC) $(LDFLAGS) $(iconv_LDFLAGS) iconv.@OBJEXT@ ../srclib/libicrt.a $(DESTDIR)$(libdir)/libiconv.la @LTLIBINTL@ -o iconv;; \
++	  *) $(LIBTOOL_LINK) $(CC) $(LDFLAGS) $(iconv_LDFLAGS) iconv.@OBJEXT@ ../srclib/libicrt.a ../lib/libiconv.la @LTLIBINTL@ -o iconv;; \
+ 	esac
+-	$(INSTALL_PROGRAM_ENV) $(LIBTOOL_INSTALL) $(INSTALL_PROGRAM) iconv $(DESTDIR)$(bindir)/iconv
++	$(INSTALL_PROGRAM_ENV) $(LIBTOOL_INSTALL) $(INSTALL_PROGRAM) iconv$(EXEEXT) $(DESTDIR)$(bindir)/iconv$(EXEEXT)
+ 
+ installdirs : force
+ 	if [ ! -d $(DESTDIR)$(prefix) ] ; then $(mkinstalldirs) $(DESTDIR)$(prefix) ; fi
+ 	if [ ! -d $(DESTDIR)$(exec_prefix) ] ; then $(mkinstalldirs) $(DESTDIR)$(exec_prefix) ; fi

@@ -20,6 +20,7 @@
 #   specify the installed location of MSYS (default c:\msys\1.0)
 #   An MSYS build toolchain. This is described in:
 #     http://www.mingw.org/MinGWiki/index.php/MSYSBuildEnvironment
+#   The msysCORE package must match that provided here.
 
 from subprocess import check_call
 from os import getcwd, remove, environ
