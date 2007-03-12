@@ -595,6 +595,9 @@ nsAccessNode::GetPresShellFor(nsIDOMNode *aNode)
 already_AddRefed<nsIDocShellTreeItem>
 nsAccessNode::GetDocShellTreeItemFor(nsIDOMNode *aStartNode)
 {
+  if (!aStartNode) {
+    return nsnull;
+  }
   nsCOMPtr<nsIDOMDocument> domDoc;
   aStartNode->GetOwnerDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
