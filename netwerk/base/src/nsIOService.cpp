@@ -68,10 +68,13 @@
 #include "nsCRT.h"
 #include "nsINestedURI.h"
 #include "nsNetUtil.h"
+#include "nsThreadUtils.h"
 
 #define PORT_PREF_PREFIX     "network.security.ports."
 #define PORT_PREF(x)         PORT_PREF_PREFIX x
 #define AUTODIAL_PREF        "network.autodial-helper.enabled"
+
+#define MAX_RECURSION_COUNT 50
 
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
@@ -460,13 +463,33 @@ nsIOService::GetProtocolFlags(const char* scheme, PRUint32 *flags)
     return rv;
 }
 
+class AutoIncrement
+{
+    public:
+        AutoIncrement(PRUint32 *var) : mVar(var)
+        {
+            ++*var;
+        }
+        ~AutoIncrement()
+        {
+            --*mVar;
+        }
+    private:
+        PRUint32 *mVar;
+};
+
 nsresult
 nsIOService::NewURI(const nsACString &aSpec, const char *aCharset, nsIURI *aBaseURI, nsIURI **result)
 {
-    nsresult rv;
-    nsCAutoString scheme;
+    NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
-    rv = ExtractScheme(aSpec, scheme);
+    static PRUint32 recursionCount = 0;
+    if (recursionCount >= MAX_RECURSION_COUNT)
+        return NS_ERROR_MALFORMED_URI;
+    AutoIncrement inc(&recursionCount);
+
+    nsCAutoString scheme;
+    nsresult rv = ExtractScheme(aSpec, scheme);
     if (NS_FAILED(rv)) {
         // then aSpec is relative
         if (!aBaseURI)

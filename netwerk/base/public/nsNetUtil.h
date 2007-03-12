@@ -1175,14 +1175,19 @@ NS_DoImplGetInnermostURI(nsINestedURI* nestedURI, nsIURI** result)
     nsresult rv = nestedURI->GetInnerURI(getter_AddRefs(inner));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // We may need to loop here until we reach the innermost
+    // URI.
     nsCOMPtr<nsINestedURI> nestedInner(do_QueryInterface(inner));
-    if (!nestedInner) {
-        // Found the innermost one
-        inner.swap(*result);
-        return NS_OK;
+    while (nestedInner) {
+        rv = nestedInner->GetInnerURI(getter_AddRefs(inner));
+        NS_ENSURE_SUCCESS(rv, rv);
+        nestedInner = do_QueryInterface(inner);
     }
 
-    return NS_DoImplGetInnermostURI(nestedInner, result);
+    // Found the innermost one if we reach here.
+    inner.swap(*result);
+
+    return rv;
 }
 
 inline nsresult
