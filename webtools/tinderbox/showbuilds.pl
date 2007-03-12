@@ -56,6 +56,12 @@ my %images = (
 my @who_check_list;
 
 
+# $rel_path is the relative path to webtools/tinderbox used for links.
+# It changes to "../" if the page is generated statically, because then
+# it is placed in tinderbox/$tree.
+my $rel_path = '';
+
+
 sub tb_build_static($) {
     my ($form_ref) = (@_);
     $form_ref->{static} = 1;
@@ -78,9 +84,9 @@ sub do_static($) {
                   ['status.vxml', 'do_vxml'] );
 
     my ($key, $value);
-    $::rel_path = '../';
+    $rel_path = '../';
     while (($key, $value) = each %images) {
-        $images{$key} = "$::rel_path$value";
+        $images{$key} = "$rel_path$value";
     }
 
     my $oldfh = select;
@@ -108,7 +114,7 @@ sub do_tinderbox($) {
     &print_page_head($form_ref, $tinderbox_data);
     &print_table_header($form_ref, $tinderbox_data);
     &print_table_body($tinderbox_data);
-    &print_table_footer($form_ref);
+    &print_table_footer($form_ref, $tinderbox_data);
 }
 
 sub print_page_head($$) {
@@ -126,7 +132,7 @@ sub print_page_head($$) {
     &print_javascript($td);
 
     # Print rules, sheriff, and status.  Only on the first pageful.
-    if ($::nowdate eq $::maxdate) {
+    if ($::nowdate eq $td->{maxdate}) {
         unless ($form_ref->{norules}) {
             print "<a NAME=\"rules\"></a>" . &tb_load_rules($tree);
         }
@@ -154,7 +160,7 @@ sub print_page_head($$) {
             <table width="100%" cellpadding=0 cellspacing=0>
                 <tr>
                 <td valign=bottom>
-                <p><center><a href=addimage.cgi><img src="$::rel_path$imageurl"
+                <p><center><a href=addimage.cgi><img src="$rel_path$imageurl"
                 width=$imagewidth height=$imageheight><br>
                 $quote</a><br>
                 </center>
@@ -218,7 +224,7 @@ sub print_table_body($) {
     # Reset globals
     undef @who_check_list;
     for (my $tt=0; $tt < $td->{time_count}; $tt++) {
-        last if $td->{build_time_times}->[$tt] < $::mindate;
+        last if $td->{build_time_times}->[$tt] < $td->{mindate};
         &print_table_row($td, $tt);
     }
 }
@@ -310,7 +316,7 @@ BEGIN {
             
             # Build Note
             # 
-            my $logurl = "${main::rel_path}showlog.cgi?log=$buildtree/$logfile";
+            my $logurl = "${rel_path}showlog.cgi?log=$buildtree/$logfile";
             
             if ($br->{hasnote}) {
                 print qq|
@@ -416,14 +422,14 @@ BEGIN {
                 my ($warning_count) = $td->{warnings}{$logfile};
                 my $warn_file = "$tree/warn$logfile";
                 $warn_file =~ s/\.gz$/.html/;
-                print "<br><br><a href='${main::rel_path}$warn_file'>Warn:$warning_count</a>";
+                print "<br><br><a href='${rel_path}$warn_file'>Warn:$warning_count</a>";
             }
 
             print "</tt>\n</td>";
         }
         print "</tr>\n";
     }
-}
+} # END
 
 sub print_table_header($) {
     my ($form_ref, $td) = (@_);
@@ -464,74 +470,70 @@ sub print_table_header($) {
     print "</tr>\n";
 }
 
-BEGIN {
-    # Make $open_showbuilds_form persistent across  open_showbuilds_* calls
-    my %open_showbuilds_form = {};
+sub print_table_footer($$) {
+    my ($form_ref, $td) = (@_);
+    my $tree = $form_ref->{tree};
+    print "</table>\n";
 
-    sub print_table_footer($) {
-        my ($form_ref) = (@_);
-        my $tree = $form_ref->{tree};
-        print "</table>\n";
+    # Do not show 'previous hours' links for static pages
+    if (not defined($form_ref->{static})) {
+        # Copy form data into separate hash so that we can modify it
+        # but retain the original url values
+        my %footer_form = %{$form_ref};
+        $footer_form{norules} = 1;
+        $footer_form{legend} = 0;
 
-        # Reset form info
-        %open_showbuilds_form = %{$form_ref};
+        my $hours = $footer_form{hours} || $::default_hours;
 
-        my $nextdate = $::maxdate - $::hours*60*60;
-        print &open_showbuilds_href(maxdate=>"$nextdate", legend=>'0')
-            ."Show previous $::hours hours</a><br>";
-        if ($::hours != 24) {
-            my $save_hours = $::hours;
-            $::hours = 24;
-            print &open_showbuilds_href(maxdate=>"$nextdate", legend=>'0')
-                ."Show previous 24 hours</a><br>";
-            $::hours = $save_hours;
+        $footer_form{maxdate} = $td->{maxdate} - $hours*60*60;
+        print open_showbuilds_href(%footer_form) .
+            "Show previous $hours hours</a><br>";
+
+        if ($hours != 24) {
+            my $save_hours = $footer_form{hours};
+            $footer_form{hours} = 24;
+            print open_showbuilds_href(%footer_form) .
+                "Show previous 24 hours</a><br>";
+            $footer_form{hours} = $save_hours;
         }
 
-        print "Show $::hours hours from the previous ";
-        $nextdate = $::maxdate - 24*60*60*7;
-        print &open_showbuilds_href(maxdate=>"$nextdate", legend=>'0')
-            ."1</a>, ";
+        print "Show $hours hours from the previous ";
+        $footer_form{maxdate} = $td->{maxdate} - 24*60*60*7;
+        print open_showbuilds_href(%footer_form) . "1</a>, ";
+ 
+        $footer_form{maxdate} = $td->{maxdate} - 24*60*60*7*4;
+        print open_showbuilds_href(%footer_form) . "4</a>, ";
 
-        $nextdate = $::maxdate - 24*60*60*7*4;
-        print &open_showbuilds_href(maxdate=>"$nextdate", legend=>'0')
-            ."4</a>, ";
+        $footer_form{maxdate} = $td->{maxdate} - 24*60*60*7*12;
+        print open_showbuilds_href(%footer_form) . "12</a>, or ";
 
-        $nextdate = $::maxdate - 24*60*60*7*12;
-        print &open_showbuilds_href(maxdate=>"$nextdate", legend=>'0')
-            ."12</a>, or ";
+        $footer_form{maxdate} = $td->{maxdate} - 24*60*60*7*52;
+        print open_showbuilds_href(%footer_form) . "52</a> weeks.<br>";
 
-        $nextdate = $::maxdate - 24*60*60*7*52;
-        print &open_showbuilds_href(maxdate=>"$nextdate", legend=>'0')
-            ."52</a> weeks.<br>";
-
-        print "<p><a href='${main::rel_path}admintree.cgi?tree=$tree'>",
-        "Administrate Tinderbox Trees</a><br>\n";
     }
+       
+    print "<p><a href='${rel_path}admintree.cgi?tree=$tree'>" . 
+        "Administrate Tinderbox Trees</a><br>\n";
+}
 
-                           sub open_showbuilds_url {
-                               my %args = (
-                                           legend => "$open_showbuilds_form{legend}",
-                                           norules => "$open_showbuilds_form{norules}",
-                                           @_
-                                           );
-                               my $url = "${main::rel_path}showbuilds.cgi?tree=$open_showbuilds_form{tree}";
-                               $url .= "&hours=$::hours" if $::hours ne $::default_hours;
-                               while (my ($key, $value) = each %args) {
-                                   $url .= "&$key=$value" if $value ne '';
-                               }
-                               return $url;
-                           }
-
-                           sub open_showbuilds_href {
-                               return "<a href=".open_showbuilds_url(@_).">";
-                           }
-
-                           # Same as open_showbuilds_href, but adding parent target
-                           # so that URL's in iframes take over the parent window.
-                           sub open_showbuilds_href_target {
-                               return "<a href=".open_showbuilds_url(@_)." target=\"_parent\">";
-                           }
-                       } # END
+sub open_showbuilds_url {
+    my %args = (@_);
+    my $url = "${rel_path}showbuilds.cgi?tree=$args{tree}";
+    while (my ($key, $value) = each %args) {
+        $url .= "&$key=$value" if ($value ne '' && $key ne 'tree');
+    }
+    return $url;
+}
+    
+sub open_showbuilds_href {
+    return "<a href=\"".open_showbuilds_url(@_)."\">";
+}
+    
+# Same as open_showbuilds_href, but adding parent target
+# so that URL's in iframes take over the parent window.
+sub open_showbuilds_href_target {
+    return "<a href=\"".open_showbuilds_url(@_)."\" target=\"_parent\">";
+}
 
     sub query_ref {
         my ($td, $mindate, $maxdate, $who) = @_;
@@ -782,7 +784,7 @@ return hours + ":" + mins;
 }
 
 function log_url(logfile) {
-    return "${main::rel_path}showlog.cgi?log=" + buildtree + "/" + logfile;
+    return "${rel_path}showlog.cgi?log=" + buildtree + "/" + logfile;
 }
 function note(d,noteid,logfile) {
     if (noDHTML) {
@@ -819,7 +821,7 @@ return false;
 }
 function log(e,buildindex,logfile,time_info,elapsed) {
     var logurl = log_url(logfile);
-var commenturl = "${main::rel_path}addnote.cgi?log=" + buildtree + "/" + logfile;
+var commenturl = "${rel_path}addnote.cgi?log=" + buildtree + "/" + logfile;
 if (noDHTML) {
     document.location = logurl;
     return false;
@@ -898,7 +900,7 @@ print "builds[$ii]='$bn';\n";
 print "var buildtree = '$tree';\n";
 
 # Use JavaScript to refresh the page every 15 minutes
-print "setTimeout('location.reload()',900000);\n" if $::nowdate eq $::maxdate;
+print "setTimeout('location.reload()',900000);\n" if $::nowdate eq $td->{maxdate};
 
 ($script = <<'__ENDJS') =~ s/^    //gm;
 </script>
@@ -917,18 +919,20 @@ __ENDJS
 sub do_express($) {
     my ($form_ref) = (@_);
     my $tree = &require_only_one_tree($form_ref->{tree});
+    my %express_form = %{$form_ref};
+    undef $express_form{express};
 
     print "Content-type: text/html\nRefresh: 900\n\n<HTML>\n";
 
     my (%quickdata);
-    tb_loadquickparseinfo($tree, \%quickdata);
+    tb_loadquickparseinfo($tree, $form_ref->{maxdate}, \%quickdata);
 
     my @keys = sort keys %quickdata;
     my $keycount = @keys;
     my $tm = &print_time(time);
     print "<table border=1 cellpadding=1 cellspacing=1><tr>";
     print "<th align=left colspan=$keycount>";
-    print &open_showbuilds_href_target."$tree";
+    print open_showbuilds_href_target(%express_form)."$tree";
     if (&is_tree_state_available($tree)) {
         print (&is_tree_open($tree) ? ' is open' : ' is closed');
     }
@@ -943,11 +947,13 @@ sub do_express($) {
 sub do_panel($) {
     my ($form_ref) = (@_);
     my $tree = &require_only_one_tree($form_ref->{tree});
+    my %panel_form = %{$form_ref};
+    undef $panel_form{panel};
 
     print "Content-type: text/html\n\n<HTML>\n" unless $form_ref->{static};
 
     my (%quickdata);
-    tb_loadquickparseinfo($tree, \%quickdata);
+    tb_loadquickparseinfo($tree, $form_ref->{maxdate}, \%quickdata);
 
     print q(
             <head>
@@ -962,14 +968,15 @@ sub do_panel($) {
             <body BGCOLOR="#FFFFFF" TEXT="#000000" 
             LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
             );
-    # Hack the panel link for now.
-    print "<a target='_content' href='";
+    # Make the static version of panel reference the static index file
+    # Make sure the cgi panel output is reloaded in the same content window
     if ($form_ref->{static}) {
-        print "./";
+        print "<a target='_content' href='./'>";
     } else {
-        print "showbuilds.cgi?tree=$tree";
+        print "<a href=\"" . open_showbuilds_url(%panel_form) .
+            "\" target=\"_content\">";
     }
-    print "'>$tree";
+    print "$tree";
     
     if (&is_tree_state_available($tree)) {
         print " is ", &is_tree_open($tree) ? 'open' : 'closed';
@@ -993,7 +1000,7 @@ sub do_flash($) {
     print "Content-type: text/rdf\n\n" unless $form_ref->{static};
 
     my (%quickdata);
-    tb_loadquickparseinfo($tree, \%quickdata);
+    tb_loadquickparseinfo($tree, $form_ref->{maxdate}, \%quickdata);
 
     my ($mac,$unix,$win) = (0,0,0);
 
@@ -1070,7 +1077,7 @@ sub do_quickparse($) {
                 "|$state\n";
         }
         my (%quickdata);
-        tb_loadquickparseinfo($tt, \%quickdata);
+        tb_loadquickparseinfo($tt, $form_ref->{maxdate}, \%quickdata);
         
         # URL encode binaryurl so that urls with | will not
         # break the quickparse format
@@ -1095,7 +1102,7 @@ sub do_rdf($) {
     $dirurl =~ s@/[^/]*$@@;
 
     my (%quickdata);
-    tb_loadquickparseinfo($tree, \%quickdata);
+    tb_loadquickparseinfo($tree, $form_ref->{maxdate}, \%quickdata);
 
     my $image = "channelok.gif";
     my $imagetitle = "OK";
@@ -1154,7 +1161,7 @@ sub do_hdml($) {
         print "<LINE>$tree is " . (&is_tree_open($tree) ? 'open' : 'closed');
     }
     my (%quickdata);
-    tb_loadquickparseinfo($tree, \%quickdata);
+    tb_loadquickparseinfo($tree, $form_ref->{maxdate}, \%quickdata);
     
     foreach my $buildname (sort keys %quickdata) {
         print "<LINE>$state_symbols{$quickdata{$buildname}->{buildstatus}} $buildname\n";
@@ -1193,7 +1200,7 @@ sub do_vxml($) {
         print "<audio>$tree is " .  (&is_tree_open($tree) ? 'open.' : 'closed.') . "</audio>";
     }
     my (%quickdata);
-    tb_loadquickparseinfo($tree, \%quickdata);
+    tb_loadquickparseinfo($tree, $form_ref->{maxdate}, \%quickdata);
 
     my $testFailed = 0;
     my $flames = 0;
@@ -1259,7 +1266,7 @@ sub do_wml($) {
         print "<p align='left'>$tree is " .  (&is_tree_open($tree) ? 'open.' : 'closed.') . "</p>";
     }
     my (%quickdata);
-    tb_loadquickparseinfo($tree, \%quickdata);
+    tb_loadquickparseinfo($tree, $form_ref->{maxdate}, \%quickdata);
 
     my $testFailed = 0;
     my $flames = 0;

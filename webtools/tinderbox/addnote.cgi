@@ -91,7 +91,7 @@ if ($form{note}) {
 
   # Find the latest times for the "other" trees
   my (%quickdata);
-  tb_loadquickparseinfo($tree, \%quickdata, 1);
+  tb_loadquickparseinfo($tree, $form{maxdate}, \%quickdata, 1);
 
   foreach my $element (keys %form) {
     # The checkboxes for the builds have "NAME" set to the build name
@@ -108,8 +108,8 @@ if ($form{note}) {
 
   my $enc_buildname = url_encode($buildname);
   print "<p><a href='showlog.cgi?tree=$tree&buildname=$enc_buildname"
-    ."e&buildtime=$buildtime&logfile=$logfile&errorparser=$errorparser'>"
-    ."Go back to the Error Log</a><a href='showbuilds.cgi?tree=$tree'><br>"
+    ."&buildtime=$buildtime&logfile=$logfile&errorparser=$errorparser'>"
+    ."Go back to the Error Log</a><br><a href='showbuilds.cgi?tree=$tree'>"
     ."Go back to the build Page</a>";
 
   # Rebuild the static tinderbox pages
@@ -173,7 +173,7 @@ __END_FORM
 
   # Find the names of the "other" trees
   my (%quickdata);
-  tb_loadquickparseinfo($tree, \%quickdata);
+  tb_loadquickparseinfo($tree, $form{maxdate}, \%quickdata);
   my $ignore_builds = &tb_load_ignorebuilds($tree);
 
   # Add a checkbox for the each of the other builds

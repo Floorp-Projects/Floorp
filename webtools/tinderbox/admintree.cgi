@@ -33,8 +33,7 @@ print "Content-type: text/html\n\n";
 
 $form{noignore} = 1;            # Force us to load all build info, not
                                 # paying any attention to ignore_builds stuff.
-$::maxdate = time();
-$::mindate = $::maxdate - 24*60*60;
+$form{hours} = 24;              # Force us to check the past 24 hrs of builds
 $form{tree} = &validate_tree($form{tree});
 my $treedata = &tb_load_data(\%form);
 
@@ -202,7 +201,7 @@ Tinderbox is configured to show up to $::global_treedata->{$tree}->{who_days} da
 </FORM>
 <hr>
 ";
-
+    print "<B><A HREF=\"showbuilds.cgi?tree=$tree\">Return to tree</A></B>\n";
 
 } else {
 #

@@ -321,9 +321,6 @@ sub find_build_record {
   my @build_records = ();
   my $br;
 
-  $::maxdate = time;
-  $::mindate = $::maxdate - 5*60*60; # Go back 5 hours
-
   print STDERR "Loading build data..." if ($debug);
   my $td = &tb_load_data(\%form);
   print STDERR "done\n" if ($debug);

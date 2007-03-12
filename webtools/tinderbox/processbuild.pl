@@ -69,10 +69,7 @@ for my $file (@datafiles) {
 unlink($lockfile);
 
 require 'showbuilds.pl';
-# Hardcode static pages to only showing 12 hrs of data
-$::nowdate = $::maxdate = time;
-$::hours = 12;
-$::mindate = $::maxdate - ($::hours*60*60);
+
 print "Changed trees:\n\t@changed_trees\n" if ($debug && $#changed_trees > 0);
 for my $t (@changed_trees) {
     # Override globals used in static page creation
@@ -80,7 +77,6 @@ for my $t (@changed_trees) {
     $form{tree} = $t;
     print "Tree: $t\n" if ($debug);
     # Static pages - For Sidebar flash and tinderbox panels.
-    $::rel_path = ''; 
     &tb_build_static(\%form);
     # Who data
     $err = system("./buildwho.pl", "$t");

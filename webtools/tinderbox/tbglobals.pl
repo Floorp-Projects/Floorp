@@ -65,17 +65,24 @@ undef @::global_tree_list;
 
 %::global_treedata = undef;
 
-# Other globals that are set elsewhere
-# $::nowdate
-# $::mindate
-# $::maxdate
-# $::hours
-# $::default_hours
-# $::rel_path
+# Always set nowdate to the current time.
+$::nowdate = time();
+# Show 12 hours by default
+$::default_hours = 12;
+
+# Globals used by bonsai
 # $::CVS_ROOT
 # $::CVS_REPOS_SUFFIX
 # $::CHECKIN_DATA_FILE
 # $::CHECKIN_INDEX_FILE
+# $::have_mod_map
+# $::begin_tag
+# $::end_tag
+# $::lines_added
+# $::lines_removed
+# $::versioninfo
+
+# Globals used by bonsai & viewvc
 # $::query_module
 # $::query_branch
 # $::query_branchtype
@@ -83,12 +90,6 @@ undef @::global_tree_list;
 # $::query_date_min
 # $::query_date_max
 # $::query_logexpr
-# $::have_mod_map
-# $::begin_tag
-# $::end_tag
-# $::lines_added
-# $::lines_removed
-# $::versioninfo
 
 # Set this to show real end times for builds instead of just using
 # the start of the next build as the end time.
@@ -551,6 +552,9 @@ sub tb_load_data($) {
     $td->{scrape_builds} = &tb_load_scrapebuilds($tree);
     $td->{warning_builds} = &tb_load_warningbuilds($tree);
     $td->{cvs_root} = $::global_treedata->{$tree}->{cvs_root};
+    $td->{maxdate} = $form_ref->{maxdate} || $::nowdate;
+    my $hours = $form_ref->{hours} || $::default_hours;
+    $td->{mindate} = $form_ref->{mindate} || $td->{maxdate} - $hours*60*60;
 
     my $build_list = &load_buildlog($td, $form_ref);
   
@@ -568,11 +572,12 @@ sub tb_load_data($) {
 }
 
 sub tb_loadquickparseinfo {
-  my ($tree, $qdref, $includeStatusOfBuilding) = (@_);
+  my ($tree, $maxdate, $qdref, $includeStatusOfBuilding) = (@_);
   local $_;
+  my $maxdate = $::nowdate if !defined($maxdate);
 
   return if (! -d "$tree" || ! -r "$tree/build.dat");
-  $::maxdate = time if !defined($::maxdate);
+
   my $ignore_builds = &tb_load_ignorebuilds($tree);
     
   my $bw = Backwards->new("$tree/build.dat") or die;
@@ -587,7 +592,7 @@ sub tb_loadquickparseinfo {
         $buildstatus =~ /^success|busted|testfailed$/) {
 
       # Ignore stuff in the future.
-      next if $buildtime > $::maxdate;
+      next if $buildtime > $maxdate;
 
       $latest_time = $buildtime if $buildtime > $latest_time;
 
@@ -637,7 +642,7 @@ sub tb_check_password($$) {
         $form{password} = $cookie_jar{tinderbox_password};
     }
     my $correct = '';
-    if (open(REAL, "<", "data/passwd")) {
+    if (open(REAL, "<", "$::data_dir/passwd")) {
         $correct = <REAL>;
         close REAL;
         $correct =~ s/\s+$//;   # Strip trailing whitespace.
@@ -747,14 +752,6 @@ sub load_buildlog($$) {
   local $_;
   my $build_list = [];
 
-
-  if (not defined $::maxdate) {
-    $::maxdate = time();
-  }
-  if (not defined $::mindate) {
-    $::mindate = $::maxdate - 24*60*60;
-  }
-  
   my ($bw) = Backwards->new("$treedata->{name}/build.dat") or die;
 
   my $tooearly = 0;
@@ -765,10 +762,10 @@ sub load_buildlog($$) {
      $errorparser, $buildstatus, $logfile, $binaryurl) = split /\|/;
     
     # Ignore stuff in the future.
-    next if $buildtime > $::maxdate;
+    next if $buildtime > $treedata->{maxdate};
     
     # Ignore stuff in the past (but get a 2 hours of extra data)
-    if ($buildtime < $::mindate - 2*60*60) {
+    if ($buildtime < $treedata->{mindate} - 2*60*60) {
       # Occasionally, a build might show up with a bogus time.  So,
       # we won't judge ourselves as having hit the end until we
       # hit a full 20 lines in a row that are too early.
@@ -932,7 +929,7 @@ sub get_build_time_index {
   foreach my $time (sort {$b <=> $a} keys %{$build_time_index}) {
     $build_time_times->[$ii] = $time;
     $build_time_index->{$time} = $ii;
-    $mindate_time_count = $ii if $time >= $::mindate;
+    $mindate_time_count = $ii if $time >= ${$td_ref}->{mindate};
     $ii++;
   }
   $time_count = $#{$build_time_times} + 1;

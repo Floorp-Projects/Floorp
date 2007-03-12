@@ -31,27 +31,20 @@ umask 002;
 # Process the form arguments
 my %form = &split_cgi_args();
 
-# Show 12 hours by default
-#
-$::nowdate = time; 
-if (not defined($::maxdate = $form{maxdate})) {
-    $::maxdate = $::nowdate;
-}
-if ($form{showall}) {
-    $::mindate = 0;
-} else {
-    $::default_hours = 12;
-    $::hours = $::default_hours;
-    $::hours = $form{hours} if $form{hours};
-    $::mindate = $::maxdate - ($::hours*60*60);
-}
-
-# $rel_path is the relative path to webtools/tinderbox used for links.
-# It changes to "../" if the page is generated statically, because then
-# it is placed in tinderbox/$tree.
-$::rel_path = ''; 
-
 &show_tree_selector(\%form),  exit if $form{tree} eq '';
+
+my $mode_count=0;
+foreach my $mode ('quickparse', 'express', 'rdf', 'flash',
+                  'static', 'panel', 'hdml', 'vxml', 'wml') {
+    $mode_count++ if defined($form{$mode});
+}
+
+if ($mode_count > 1) {
+    print "Content-type: text/plain\n\n";
+    print "Error: Only one mode type can be specified at a time.\n";
+    exit(0);
+}
+
 &do_quickparse(\%form),       exit if $form{quickparse};
 &do_express(\%form),          exit if $form{express};
 &do_rdf(\%form),              exit if $form{rdf};

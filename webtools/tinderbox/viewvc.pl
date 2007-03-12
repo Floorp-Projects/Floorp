@@ -157,27 +157,6 @@ sub query_checkins($) {
 
         next if ($key =~ m@^CVSROOT/@);
 
-        if( $::have_mod_map &&
-            !&in_module(\%mod_map, $ci->[$::CI_DIR], $ci->[$::CI_FILE] ) ){
-            next;
-        }
-
-        if( $::begin_tag) {
-            $rev = $::begin_tag->{$key};
-            print "<BR>$key begintag is $rev<BR>\n";
-            if ($rev == "" || rev_is_after($ci->[$::CI_REV], $rev)) {
-                next;
-            }
-        }
-
-        if( $::end_tag) {
-            $rev = $::end_tag->{$key};
-            print "<BR>$key endtag is $rev<BR>\n";
-            if ($rev == "" || rev_is_after($rev, $ci->[$::CI_REV])) {
-                next;
-            }
-        }
-
         if (defined($::query_logexpr) && 
             $::query_logexpr ne '' &&
             !($ci->[$::CI_LOG] =~ /$::query_logexpr/i) ){
@@ -189,11 +168,6 @@ sub query_checkins($) {
 
     &DisconnectFromDatabase();
 
-    for $ci (@{$result}) {
-        $::lines_added += $ci->[$::CI_LINES_ADDED];
-        $::lines_removed += $ci->[$::CI_LINES_REMOVED];
-        $::versioninfo .= "$ci->[$::CI_WHO]|$ci->[$::CI_DIR]|$ci->[$::CI_FILE]|$ci->[$::CI_REV],";
-    }
     return $result;
 }
 
