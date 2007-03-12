@@ -153,9 +153,7 @@ public:
    * SetOutputByteOrder() so that the reverse order can be used, too. That 
    * method would have as default the assumed network order.
    *
-   * Unless there is not enough output space, this method must consume all the
-   * available input data! We don't have partial input for the Unicode charset.
-   * And for the last converted char, even if there is not enought output 
+   * For the last converted char, even if there is not enough output 
    * space, a partial ouput must be done until all available space will be 
    * used. The rest of the output should be buffered until more space becomes
    * available. But this is not also true about the error handling method!!!
@@ -171,6 +169,10 @@ public:
    *                    written
    * @return            NS_OK_UENC_MOREOUTPUT if only  a partial conversion
    *                    was done; more output space is needed to continue
+   *                    NS_OK_UENC_MOREINPUT if only a partial conversion
+   *                    was done; more input is needed to continue. This can
+   *                    occur when the last UTF-16 code point in the input is
+   *                    the first of a surrogate pair.
    *                    NS_ERROR_UENC_NOMAPPING if character without mapping
    *                    was encountered and the behavior was set to "signal".
    */
