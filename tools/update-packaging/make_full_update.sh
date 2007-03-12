@@ -42,8 +42,7 @@ if test $? -ne 0 ; then
   exit 1
 fi
 
-list=$(list_files)
-eval "files=($list)"
+files=($(list_files))
 
 popd
 
@@ -53,7 +52,7 @@ mkdir -p "$workdir"
 num_files=${#files[*]}
 
 for ((i=0; $i<$num_files; i=$i+1)); do
-  f=${files[$i]}
+  eval "f=${files[$i]}"
 
   notice "processing $f"
 
