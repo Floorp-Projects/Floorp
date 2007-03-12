@@ -63,7 +63,7 @@
 #include "nsDOMException.h"
 #include "nsCRT.h"
 #ifdef MOZ_XUL
-#include "nsIXULPrototypeCache.h"
+#include "nsXULPrototypeCache.h"
 #endif
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -263,8 +263,7 @@ nsDOMScriptObjectFactory::Observe(nsISupports *aSubject,
 #ifdef MOZ_XUL
     // Flush the XUL cache since it holds JS roots, and we're about to
     // start the final GC.
-    nsCOMPtr<nsIXULPrototypeCache> cache =
-      do_GetService("@mozilla.org/xul/xul-prototype-cache;1");
+    nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
 
     if (cache)
       cache->Flush();

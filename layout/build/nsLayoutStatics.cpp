@@ -81,6 +81,7 @@
 #ifdef MOZ_XUL
 #include "nsXULContentUtils.h"
 #include "nsXULElement.h"
+#include "nsXULPrototypeCache.h"
 #endif
 
 #ifdef MOZ_MATHML
@@ -246,8 +247,8 @@ nsLayoutStatics::Shutdown()
 #ifdef MOZ_XUL
   nsXULContentUtils::Finish();
   nsXULElement::ReleaseGlobals();
+  nsXULPrototypeCache::ReleaseGlobals();
   nsXULPrototypeElement::ReleaseGlobals();
-  nsXULPrototypeScript::ReleaseGlobals();
   nsSprocketLayout::Shutdown();
 #endif
 

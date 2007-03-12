@@ -175,8 +175,6 @@ nsIRDFResource* nsXULDocument::kNC_persist;
 nsIRDFResource* nsXULDocument::kNC_attribute;
 nsIRDFResource* nsXULDocument::kNC_value;
 
-nsXULPrototypeCache* nsXULDocument::gXULCache;
-
 PRLogModuleInfo* nsXULDocument::gXULLog;
 
 //----------------------------------------------------------------------
@@ -244,16 +242,12 @@ nsXULDocument::~nsXULDocument()
         NS_IF_RELEASE(kNC_attribute);
         NS_IF_RELEASE(kNC_value);
 
-        if (gXULCache) {
-            // Remove the current document here from the FastLoad table in
-            // case the document did not make it past StartLayout in
-            // ResumeWalk. The FastLoad table must be clear of entries so
-            // that the FastLoad file footer can be properly written.
-            if (mDocumentURI)
-                gXULCache->RemoveFromFastLoadSet(mDocumentURI);
-
-            NS_RELEASE(gXULCache);
-        }
+        // Remove the current document here from the FastLoad table in
+        // case the document did not make it past StartLayout in
+        // ResumeWalk. The FastLoad table must be clear of entries so
+        // that the FastLoad file footer can be properly written.
+        if (mDocumentURI)
+            nsXULPrototypeCache::GetInstance()->RemoveFromFastLoadSet(mDocumentURI);
     }
 
     // The destructor of nsDocument will delete references to style
@@ -454,9 +448,9 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 
     // Look in the chrome cache: we've got this puppy loaded
     // already.
-    nsRefPtr<nsXULPrototypeDocument> proto;
-    if (IsChromeURI(mDocumentURI))
-        proto = gXULCache->GetPrototype(mDocumentURI);
+    nsXULPrototypeDocument* proto = IsChromeURI(mDocumentURI) ?
+            nsXULPrototypeCache::GetInstance()->GetPrototype(mDocumentURI) :
+            nsnull;
 
     // Same comment as nsChromeProtocolHandler::NewChannel and
     // nsXULDocument::ResumeWalk
@@ -498,8 +492,7 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
             return NS_ERROR_OUT_OF_MEMORY;
     }
     else {
-        PRBool useXULCache;
-        gXULCache->GetEnabled(&useXULCache);
+        PRBool useXULCache = nsXULPrototypeCache::GetInstance()->IsEnabled();
         PRBool fillXULCache = (useXULCache && IsChromeURI(mDocumentURI));
 
 
@@ -529,7 +522,7 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
         // overlay loading will break; search for PutPrototype in ResumeWalk
         // and see the comment there.
         if (fillXULCache) {
-            gXULCache->PutPrototype(mCurrentPrototype);
+            nsXULPrototypeCache::GetInstance()->PutPrototype(mCurrentPrototype);
         }
     }
 
@@ -555,8 +548,7 @@ nsXULDocument::EndLoad()
     PRBool isChrome = IsChromeURI(uri);
 
     // Remember if the XUL cache is on
-    PRBool useXULCache;
-    gXULCache->GetEnabled(&useXULCache);
+    PRBool useXULCache = nsXULPrototypeCache::GetInstance()->IsEnabled();
 
     // If the current prototype is an overlay document (non-master prototype)
     // and we're filling the FastLoad disk cache, tell the cache we're done
@@ -564,7 +556,7 @@ nsXULDocument::EndLoad()
     // the cache earlier in nsXULDocument::StartDocumentLoad.
     if (useXULCache && mIsWritingFastLoad && isChrome &&
         mMasterPrototype != mCurrentPrototype) {
-        gXULCache->WritePrototype(mCurrentPrototype);
+        nsXULPrototypeCache::GetInstance()->WritePrototype(mCurrentPrototype);
     }
 
     if (isChrome) {
@@ -1960,12 +1952,14 @@ nsXULDocument::Init()
         gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "value"),
                                  &kNC_value);
 
-        nsIXULPrototypeCache* cache;
-
-        rv = CallGetService(kXULPrototypeCacheCID, &cache);
-        if (NS_FAILED(rv)) return rv;
-
-        gXULCache = NS_STATIC_CAST(nsXULPrototypeCache*, cache);
+        // ensure that the XUL prototype cache is instantiated successfully,
+        // so that we can use nsXULPrototypeCache::GetInstance() without
+        // null-checks in the rest of the class.
+        nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
+        if (!cache) {
+          NS_ERROR("Could not instantiate nsXULPrototypeCache");
+          return NS_ERROR_FAILURE;
+        }
     }
 
 #ifdef PR_LOGGING
@@ -2711,7 +2705,8 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
 
     // Look in the prototype cache for the prototype document with
     // the specified overlay URI.
-    mCurrentPrototype = overlayIsChrome ? gXULCache->GetPrototype(aURI) : nsnull;
+    mCurrentPrototype = overlayIsChrome ?
+        nsXULPrototypeCache::GetInstance()->GetPrototype(aURI) : nsnull;
 
     // Same comment as nsChromeProtocolHandler::NewChannel and
     // nsXULDocument::StartDocumentLoad
@@ -2729,8 +2724,7 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
     //        (e.g. loading chrome for the profile manager itself).
     //        The .xul file must be parsed from disk.
 
-    PRBool useXULCache;
-    gXULCache->GetEnabled(&useXULCache);
+    PRBool useXULCache = nsXULPrototypeCache::GetInstance()->IsEnabled();
     if (aIsDynamic)
         mIsWritingFastLoad = useXULCache;
 
@@ -2813,7 +2807,7 @@ nsXULDocument::LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic,
         // or chrome code will wrongly create a cached chrome channel
         // instead of a real one.
         if (useXULCache && overlayIsChrome) {
-            gXULCache->PutPrototype(mCurrentPrototype);
+            nsXULPrototypeCache::GetInstance()->PutPrototype(mCurrentPrototype);
         }
 
         // Return to the main event loop and eagerly await the
@@ -3152,7 +3146,7 @@ nsXULDocument::DoneWalking()
         StartLayout();
 
         if (mIsWritingFastLoad && IsChromeURI(mDocumentURI))
-            gXULCache->WritePrototype(mMasterPrototype);
+            nsXULPrototypeCache::GetInstance()->WritePrototype(mMasterPrototype);
 
         NS_DOCUMENT_NOTIFY_OBSERVERS(EndLoad, (this));
 
@@ -3274,15 +3268,14 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, PRBool* aBlock)
     // Try the XUL script cache, in case two XUL documents source the same
     // .js file (e.g., strres.js from navigator.xul and utilityOverlay.xul).
     // XXXbe the cache relies on aScriptProto's GC root!
-    PRBool useXULCache;
-    gXULCache->GetEnabled(&useXULCache);
+    PRBool useXULCache = nsXULPrototypeCache::GetInstance()->IsEnabled();
 
     if (useXULCache) {
-        void *newScriptObject = nsnull;
         PRUint32 fetchedLang = nsIProgrammingLanguage::UNKNOWN;
-        gXULCache->GetScript(aScriptProto->mSrcURI,
-                             &fetchedLang,
-                             &newScriptObject);
+        void *newScriptObject =
+            nsXULPrototypeCache::GetInstance()->GetScript(
+                                   aScriptProto->mSrcURI,
+                                   &fetchedLang);
         if (newScriptObject) {
             // The script language for a proto must remain constant - we
             // can't just change it for this unexpected language.
@@ -3426,13 +3419,13 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
             //
             // (See http://bugzilla.mozilla.org/show_bug.cgi?id=98207 for
             // the true crime story.)
-            PRBool useXULCache;
-            gXULCache->GetEnabled(&useXULCache);
-
+            PRBool useXULCache = nsXULPrototypeCache::GetInstance()->IsEnabled();
+  
             if (useXULCache && IsChromeURI(mDocumentURI)) {
-                gXULCache->PutScript(scriptProto->mSrcURI,
-                                     scriptProto->mScriptObject.mLangID,
-                                     scriptProto->mScriptObject.mObject);
+                nsXULPrototypeCache::GetInstance()->PutScript(
+                                   scriptProto->mSrcURI,
+                                   scriptProto->mScriptObject.mLangID,
+                                   scriptProto->mScriptObject.mObject);
             }
 
             if (mIsWritingFastLoad && mCurrentPrototype != mMasterPrototype) {

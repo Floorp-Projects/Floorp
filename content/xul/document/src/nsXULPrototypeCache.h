@@ -44,13 +44,17 @@
 #define nsXULPrototypeCache_h__
 
 #include "nsCOMPtr.h"
-#include "nsIXULPrototypeCache.h"
-#include "nsXULPrototypeDocument.h"
+#include "nsICSSStyleSheet.h"
 #include "nsIObserver.h"
-#include "nsRefPtrHashtable.h"
+#include "nsIXBLDocumentInfo.h"
+#include "nsIXULPrototypeCache.h"
 #include "nsDataHashtable.h"
 #include "nsInterfaceHashtable.h"
+#include "nsRefPtrHashtable.h"
 #include "nsURIHashKey.h"
+#include "nsXULPrototypeDocument.h"
+
+class nsIFastLoadService;
 
 struct CacheScriptEntry
 {
@@ -58,6 +62,14 @@ struct CacheScriptEntry
     void*       mScriptObject; // the script object.
 };
 
+/**
+ * The XUL prototype cache can be used to store and retrieve shared data for
+ * XUL documents, style sheets, XBL, and scripts.
+ *
+ * The cache has two levels:
+ *  1. In-memory hashtables
+ *  2. The on-disk fastload file.
+ */
 class nsXULPrototypeCache : public nsIXULPrototypeCache,
                                    nsIObserver
 {
@@ -67,33 +79,70 @@ public:
     NS_DECL_NSIOBSERVER
 
     // nsIXULPrototypeCache
-    virtual PRBool IsCached(nsIURI* aURI);
+    virtual PRBool IsCached(nsIURI* aURI) {
+        return GetPrototype(aURI) != nsnull;
+    }
+    virtual void AbortFastLoads();
 
-    NS_IMETHOD FlushPrototypes();
 
-    NS_IMETHOD GetStyleSheet(nsIURI* aURI, nsICSSStyleSheet** _result);
-    NS_IMETHOD PutStyleSheet(nsICSSStyleSheet* aStyleSheet);
-    NS_IMETHOD FlushStyleSheets();
+    /**
+     * Whether the prototype cache is enabled.
+     */
+    PRBool IsEnabled();
 
-    NS_IMETHOD GetScript(nsIURI* aURI, PRUint32 *langID, void** aScriptObject);
-    NS_IMETHOD PutScript(nsIURI* aURI, PRUint32 langID, void* aScriptObject);
-    NS_IMETHOD FlushScripts();
+    /**
+     * Flush the cache; remove all XUL prototype documents, style
+     * sheets, and scripts.
+     */
+    void Flush();
 
-    NS_IMETHOD GetXBLDocumentInfo(nsIURI* aURL, nsIXBLDocumentInfo** _result);
-    NS_IMETHOD PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
-    NS_IMETHOD FlushXBLInformation();
+    /**
+     * Remove a XUL document from the set of loading documents.
+     */
+    void RemoveFromFastLoadSet(nsIURI* aDocumentURI);
 
-    NS_IMETHOD Flush();
+    /**
+     * Write the XUL prototype document to fastload file. The proto must be
+     * fully loaded.
+     */
+    nsresult WritePrototype(nsXULPrototypeDocument* aPrototypeDocument);
 
-    NS_IMETHOD GetEnabled(PRBool* aIsEnabled);
+    // The following methods are used to put and retrive various items into and
+    // from the cache.
 
-    NS_IMETHOD AbortFastLoads();
-    NS_IMETHOD GetFastLoadService(nsIFastLoadService** aResult);
-    NS_IMETHOD RemoveFromFastLoadSet(nsIURI* aDocumentURI);
+    nsXULPrototypeDocument* GetPrototype(nsIURI* aURI);
+    nsresult PutPrototype(nsXULPrototypeDocument* aDocument);
 
-    already_AddRefed<nsXULPrototypeDocument> GetPrototype(nsIURI* aURI);
-    void PutPrototype(nsXULPrototypeDocument* aDocument);
-    void WritePrototype(nsXULPrototypeDocument* aPrototypeDocument);
+    void* GetScript(nsIURI* aURI, PRUint32* langID);
+    nsresult PutScript(nsIURI* aURI, PRUint32 langID, void* aScriptObject);
+
+    nsIXBLDocumentInfo* GetXBLDocumentInfo(nsIURI* aURL) {
+        return mXBLDocTable.GetWeak(aURL);
+    }
+    nsresult PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
+
+    /**
+     * Get a style sheet by URI. If the style sheet is not in the cache,
+     * returns nsnull.
+     */
+    nsICSSStyleSheet* GetStyleSheet(nsIURI* aURI) {
+        return mStyleSheetTable.GetWeak(aURI);
+    }
+
+    /**
+     * Store a style sheet in the cache. The key, style sheet's URI is obtained
+     * from the style sheet itself.
+     */
+    nsresult PutStyleSheet(nsICSSStyleSheet* aStyleSheet);
+
+
+    static nsXULPrototypeCache* GetInstance();
+    static nsIFastLoadService* GetFastLoadService();
+
+    static void ReleaseGlobals()
+    {
+        NS_IF_RELEASE(sInstance);
+    }
 
 protected:
     friend NS_IMETHODIMP
@@ -102,6 +151,9 @@ protected:
     nsXULPrototypeCache();
     virtual ~nsXULPrototypeCache();
 
+    static nsXULPrototypeCache* sInstance;
+
+    void FlushScripts();
     void FlushSkinFiles();
 
     nsRefPtrHashtable<nsURIHashKey,nsXULPrototypeDocument>  mPrototypeTable; // owns the prototypes

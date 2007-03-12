@@ -36,83 +36,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
-
-
-
- */
-
 #ifndef nsIXULPrototypeCache_h__
 #define nsIXULPrototypeCache_h__
 
 #include "nsISupports.h"
-class nsICSSStyleSheet;
 class nsIURI;
-class nsIXULDocument;
-class nsCString;
-class nsIDocument;
-class nsIXBLDocumentInfo;
-class nsIFastLoadService;
 
 // {3A0A0FC1-8349-11d3-BE47-00104BDE6048}
 #define NS_XULPROTOTYPECACHE_CID \
 { 0x3a0a0fc1, 0x8349, 0x11d3, { 0xbe, 0x47, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }
 
-// {f023a1fd-9869-4e91-8e6d-3255b75aec70}
+// {f8bee3d7-4be8-46ae-92c2-60c25d5cd647}
 #define NS_IXULPROTOTYPECACHE_IID \
-{ 0xf023a1fd, 0x9869, 0x4e91, { 0x8e, 0x6d, 0x32, 0x55, 0xb7, 0x5a, 0xec, 0x70 } }
+{ 0xf8bee3d7, 0x4be8, 0x46ae, \
+  { 0x92, 0xc2, 0x60, 0xc2, 0x5d, 0x5c, 0xd6, 0x47 } }
 
-// Need to deCOMtaminate this - bug 364329
-
+/**
+ * This interface lets code from outside gklayout access the prototype cache.
+ */
 class nsIXULPrototypeCache : public nsISupports
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXULPROTOTYPECACHE_IID)
 
     /**
-     * Whether the document at the specified URI is in the cache.
+     * Whether the XUL document at the specified URI is in the cache.
      */
     virtual PRBool IsCached(nsIURI* aURI) = 0;
-    NS_IMETHOD FlushPrototypes() = 0;
-
-    NS_IMETHOD GetStyleSheet(nsIURI* aURI, nsICSSStyleSheet** _result) = 0;
-    NS_IMETHOD PutStyleSheet(nsICSSStyleSheet* aStyleSheet) = 0;
-    NS_IMETHOD FlushStyleSheets() = 0;
-
-    NS_IMETHOD GetScript(nsIURI* aURI, PRUint32 *aLangID, void** aScriptObject) = 0;
-    NS_IMETHOD PutScript(nsIURI* aURI, PRUint32 aLangID, void* aScriptObject) = 0;
-    NS_IMETHOD FlushScripts() = 0;
-
-    NS_IMETHOD GetXBLDocumentInfo(nsIURI* aURL, nsIXBLDocumentInfo** aResult) = 0;
-    NS_IMETHOD PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocument) = 0;
-
-    NS_IMETHOD FlushXBLInformation() = 0;
-
-    /**
-     * Flush the cache; remove all XUL prototype documents, style
-     * sheets, and scripts.
-     */
-    NS_IMETHOD Flush() = 0;
-
-    /**
-     * Determine if the prototype cache is enabled
-     */
-    NS_IMETHOD GetEnabled(PRBool* aIsEnabled) = 0;
 
     /**
      * Stop the FastLoad process abruptly, removing the FastLoad file.
      */
-    NS_IMETHOD AbortFastLoads() = 0;
-
-    /** 
-     * Retrieve the FastLoad service
-     */
-    NS_IMETHOD GetFastLoadService(nsIFastLoadService** aResult) = 0;
-
-    /** 
-     * Remove a XULDocument from the set of loading documents
-     */
-    NS_IMETHOD RemoveFromFastLoadSet(nsIURI* aDocumentURI) = 0;
+    virtual void AbortFastLoads() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIXULPrototypeCache, NS_IXULPROTOTYPECACHE_IID)

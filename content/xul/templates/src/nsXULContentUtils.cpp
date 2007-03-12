@@ -194,7 +194,6 @@ nsXULContentUtils::GetCollation()
 }
 
 //------------------------------------------------------------------------
-// nsIXULContentUtils methods
 
 nsresult
 nsXULContentUtils::FindChildByTag(nsIContent* aElement,

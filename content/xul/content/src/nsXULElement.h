@@ -67,7 +67,6 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsBindingManager.h"
 #include "nsIURI.h"
-#include "nsIXULPrototypeCache.h"
 #include "nsIXULTemplateBuilder.h"
 #include "nsIBoxObject.h"
 #include "nsIXBLService.h"
@@ -80,13 +79,8 @@
 #include "nsDOMScriptObjectHolder.h"
 
 class nsIDocument;
-class nsIRDFService;
-class nsISupportsArray;
-class nsIXULContentUtils;
 class nsString;
-class nsVoidArray;
 class nsIDocShell;
-class nsDOMAttributeMap;
 class nsICSSStyleRule;
 
 class nsIObjectInputStream;
@@ -353,21 +347,6 @@ public:
     nsXULDocument*           mSrcLoadWaiters;   // [OWNER] but not COMPtr
     PRUint32                 mLangVersion;
     nsContentUtils::ScriptObjectHolder mScriptObject;
-
-    static void ReleaseGlobals()
-    {
-        NS_IF_RELEASE(sXULPrototypeCache);
-    }
-
-protected:
-    static nsIXULPrototypeCache* GetXULCache()
-    {
-        if (!sXULPrototypeCache)
-            CallGetService("@mozilla.org/xul/xul-prototype-cache;1", &sXULPrototypeCache);
-
-        return sXULPrototypeCache;
-    }
-    static nsIXULPrototypeCache* sXULPrototypeCache;
 };
 
 class nsXULPrototypeText : public nsXULPrototypeNode

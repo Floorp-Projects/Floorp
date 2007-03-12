@@ -167,7 +167,6 @@ class nsIDocShell;
 
 // Global object maintenance
 nsICSSParser* nsXULPrototypeElement::sCSSParser = nsnull;
-nsIXULPrototypeCache* nsXULPrototypeScript::sXULPrototypeCache = nsnull;
 nsIXBLService * nsXULElement::gXBLService = nsnull;
 nsICSSOMFactory* nsXULElement::gCSSOMFactory = nsnull;
 
@@ -407,8 +406,6 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
     if (!element) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    element->mPrototype = aPrototype;
 
     NS_ADDREF(*aResult = element.get());
 
@@ -2813,23 +2810,19 @@ nsresult
 nsXULPrototypeScript::SerializeOutOfLine(nsIObjectOutputStream* aStream,
                                          nsIScriptGlobalObject* aGlobal)
 {
-    nsIXULPrototypeCache* cache = GetXULCache();
-#ifdef NS_DEBUG
-    PRBool useXULCache = PR_TRUE;
-    cache->GetEnabled(&useXULCache);
-    NS_ASSERTION(useXULCache,
+    nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
+    if (!cache)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ASSERTION(cache->IsEnabled(),
                  "writing to the FastLoad file, but the XUL cache is off?");
-#endif
 
-    nsCOMPtr<nsIFastLoadService> fastLoadService;
-    cache->GetFastLoadService(getter_AddRefs(fastLoadService));
-
-    nsresult rv = NS_OK;
+    nsIFastLoadService* fastLoadService = cache->GetFastLoadService();
     if (!fastLoadService)
         return NS_ERROR_NOT_AVAILABLE;
 
     nsCAutoString urispec;
-    rv = mSrcURI->GetAsciiSpec(urispec);
+    nsresult rv = mSrcURI->GetAsciiSpec(urispec);
     if (NS_FAILED(rv))
         return rv;
 
@@ -2915,9 +2908,8 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
     // AbortFastLoads if things look bad.
     nsresult rv = NS_OK;
 
-    nsIXULPrototypeCache* cache = GetXULCache();
-    nsCOMPtr<nsIFastLoadService> fastLoadService;
-    cache->GetFastLoadService(getter_AddRefs(fastLoadService));
+    nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
+    nsIFastLoadService* fastLoadService = cache->GetFastLoadService();
 
     // Allow callers to pass null for aInput, meaning
     // "use the FastLoad service's default input stream."
@@ -2939,12 +2931,11 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
             // We need do this only for <script src='strres.js'> and the
             // like, i.e., out-of-line scripts that are included by several
             // different XUL documents multiplexed in the FastLoad file.
-            cache->GetEnabled(&useXULCache);
+            useXULCache = cache->IsEnabled();
 
             if (useXULCache) {
-                void *newScriptObject = nsnull;
                 PRUint32 newLangID = nsIProgrammingLanguage::UNKNOWN;
-                cache->GetScript(mSrcURI, &newLangID, &newScriptObject);
+                void *newScriptObject = cache->GetScript(mSrcURI, &newLangID);
                 if (newScriptObject) {
                     // Things may blow here if we simply change the script
                     // language - other code may already have pre-fetched the

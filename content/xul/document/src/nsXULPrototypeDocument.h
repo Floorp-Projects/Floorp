@@ -122,7 +122,7 @@ public:
     NS_IMETHOD GetHeaderData(nsIAtom* aField, nsAString& aData) const;
     NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsAString& aData);
 
-    virtual nsIPrincipal *DocumentPrincipal();
+    nsIPrincipal *DocumentPrincipal();
     void SetDocumentPrincipal(nsIPrincipal *aPrincipal);
 
     /**

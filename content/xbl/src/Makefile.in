@@ -107,6 +107,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../html/document/src \
 		-I$(srcdir)/../../xml/document/src \
 		-I$(srcdir)/../../xul/content/src \
+		-I$(srcdir)/../../xul/document/src \
 		-I$(srcdir)/../../events/src \
 		-I$(srcdir)/../../../layout/style \
 		$(NULL)
