@@ -51,7 +51,7 @@ static NS_DEFINE_IID(kIDOMDocumentEventIID, NS_IDOMDOCUMENTEVENT_IID);
  * Method:    createAttribute
  * Signature: (Ljava/lang/String;)Lorg/w3c/dom/Attr;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createAttribute
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_nativeCreateAttribute
   (JNIEnv *env, jobject jthis, jstring jname)
 {
   nsIDOMDocument* doc = (nsIDOMDocument*) 
@@ -104,7 +104,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createAttribute
  * Method:    createCDATASection
  * Signature: (Ljava/lang/String;)Lorg/w3c/dom/CDATASection;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createCDATASection
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_nativeCreateCDATASection
   (JNIEnv *env, jobject jthis, jstring jdata)
 {
   nsIDOMDocument* doc = (nsIDOMDocument*) 
@@ -156,7 +156,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createCDATASection
  * Method:    createComment
  * Signature: (Ljava/lang/String;)Lorg/w3c/dom/Comment;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createComment
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_nativeCreateComment
   (JNIEnv *env, jobject jthis, jstring jdata)
 {
   nsIDOMDocument* doc = (nsIDOMDocument*) 
@@ -204,7 +204,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createComment
  * Method:    createDocumentFragment
  * Signature: ()Lorg/w3c/dom/DocumentFragment;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createDocumentFragment
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_nativeCreateDocumentFragment
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMDocument* doc = (nsIDOMDocument*) 
@@ -246,7 +246,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createDocumentFragme
  * Method:    createElement
  * Signature: (Ljava/lang/String;)Lorg/w3c/dom/Element;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createElement
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_nativeCreateElement
   (JNIEnv *env, jobject jthis, jstring jtagName)
 {
   nsIDOMDocument* doc = (nsIDOMDocument*) 
@@ -298,7 +298,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createElement
  * Method:    createEntityReference
  * Signature: (Ljava/lang/String;)Lorg/w3c/dom/EntityReference;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createEntityReference
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_nativeCreateEntityReference
   (JNIEnv *env, jobject jthis, jstring jname)
 {
   nsIDOMDocument* doc = (nsIDOMDocument*) 
@@ -352,7 +352,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createEntityReferenc
  * Method:    createProcessingInstruction
  * Signature: (Ljava/lang/String;Ljava/lang/String;)Lorg/w3c/dom/ProcessingInstruction;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createProcessingInstruction
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_nativeCreateProcessingInstruction
   (JNIEnv *env, jobject jthis, jstring jtarget, jstring jdata)
 {
   nsIDOMDocument* doc = (nsIDOMDocument*) 
@@ -414,7 +414,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createProcessingInst
  * Method:    createTextNode
  * Signature: (Ljava/lang/String;)Lorg/w3c/dom/Text;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createTextNode
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_nativeCreateTextNode
   (JNIEnv *env, jobject jthis, jstring jdata)
 {
   nsIDOMDocument* doc = (nsIDOMDocument*) 
@@ -462,7 +462,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createTextNode
  * Method:    getDoctype
  * Signature: ()Lorg/w3c/dom/DocumentType;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getDoctype
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_nativeGetDoctype
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMDocument* doc = (nsIDOMDocument*) 
@@ -503,7 +503,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getDoctype
  * Method:    getDocumentElement
  * Signature: ()Lorg/w3c/dom/Element;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getDocumentElement
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_nativeGetDocumentElement
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMDocument* doc = (nsIDOMDocument*) 
@@ -545,7 +545,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getDocumentElement
  * Method:    getElementsByTagName
  * Signature: (Ljava/lang/String;)Lorg/w3c/dom/NodeList;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementsByTagName
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_nativeGetElementsByTagName
   (JNIEnv *env, jobject jthis, jstring jtagName)
 {
   nsIDOMDocument* doc = (nsIDOMDocument*) 
@@ -593,7 +593,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementsByTagName
  * Method:    getImplementation
  * Signature: ()Lorg/w3c/dom/DOMImplementation;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getImplementation
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_nativeGetImplementation
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMDocument* doc = (nsIDOMDocument*) 
@@ -635,7 +635,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getImplementation
  * Method:    createEvent
  * Signature: (Ljava/lang/String;)Lorg/w3c/dom/events/Event;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createEvent
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_nativeCreateEvent
   (JNIEnv *env, jobject jthis, jstring jtype)
 {
   nsISupports *doc = (nsISupports*) 
@@ -676,7 +676,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createEvent
  * Method:    getElementsByTagNameNS
  * Signature: (Ljava/lang/String;Ljava/lang/String;)Lorg/w3c/dom/NodeList;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementsByTagNameNS
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_nativeGetElementsByTagNameNS
   (JNIEnv *env, jobject jthis, jstring jnamespaceURI, jstring jlocalName)
 {
   nsIDOMDocument* doc = (nsIDOMDocument*) 
@@ -732,7 +732,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementsByTagName
  * Method:    getElementById
  * Signature: (Ljava/lang/String;)Lorg/w3c/dom/Element;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementById
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_nativeGetElementById
   (JNIEnv *env, jobject jthis, jstring jelementId)
 {
   nsIDOMDocument* doc = (nsIDOMDocument*) 
@@ -765,7 +765,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementById
  * Method:    getDocumentURI
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_DocumentImpl_getDocumentURI
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_DocumentImpl_nativeGetDocumentURI
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMDocument* doc = (nsIDOMDocument*) 

@@ -42,7 +42,7 @@ static jstring handleInterceptableAttr(nsIDOMElement *element,
  * Method:    getAttribute
  * Signature: (Ljava/lang/String;)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getAttribute
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_nativeGetAttribute
   (JNIEnv *env, jobject jthis, jstring jname)
 {
   jstring jattr = nsnull;
@@ -90,7 +90,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getAttribute
  * Method:    getAttributeNode
  * Signature: (Ljava/lang/String;)Lorg/w3c/dom/Attr;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getAttributeNode
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_nativeGetAttributeNode
   (JNIEnv *env, jobject jthis, jstring jname)
 {
   nsIDOMElement* element = (nsIDOMElement*) 
@@ -140,7 +140,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getAttributeNode
  * Method:    getElementsByTagName
  * Signature: (Ljava/lang/String;)Lorg/w3c/dom/NodeList;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getElementsByTagName
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_nativeGetElementsByTagName
   (JNIEnv *env, jobject jthis, jstring jname)
 {
   nsIDOMElement* element = (nsIDOMElement*) 
@@ -188,7 +188,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getElementsByTagName
  * Method:    getTagName
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getTagName
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_nativeGetTagName
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMElement* element = (nsIDOMElement*) 
@@ -222,7 +222,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getTagName
  * Method:    normalize
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_normalize
+JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_nativeNormalize
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMElement* element = (nsIDOMElement*) 
@@ -246,7 +246,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_normalize
  * Method:    removeAttribute
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_removeAttribute
+JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_nativeRemoveAttribute
   (JNIEnv *env, jobject jthis, jstring jname)
 {
   nsIDOMElement* element = (nsIDOMElement*) 
@@ -280,7 +280,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_removeAttribute
  * Method:    removeAttributeNode
  * Signature: (Lorg/w3c/dom/Attr;)Lorg/w3c/dom/Attr;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_removeAttributeNode
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_nativeRemoveAttributeNode
   (JNIEnv *env, jobject jthis, jobject joldAttr)
 {
   nsIDOMElement* element = (nsIDOMElement*) 
@@ -336,7 +336,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_removeAttributeNode
  * Method:    setAttribute
  * Signature: (Ljava/lang/String;Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_setAttribute
+JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_nativeSetAttribute
   (JNIEnv *env, jobject jthis, jstring jname, jstring jvalue)
 {
   nsIDOMElement* element = (nsIDOMElement*) 
@@ -379,7 +379,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_setAttribute
  * Method:    setAttributeNode
  * Signature: (Lorg/w3c/dom/Attr;)Lorg/w3c/dom/Attr;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_setAttributeNode
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_nativeSetAttributeNode
   (JNIEnv *env, jobject jthis, jobject jnewAttr)
 {
   nsIDOMElement* element = (nsIDOMElement*) 
@@ -438,7 +438,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_setAttributeNode
  * Method:    getAttributeNS
  * Signature: (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getAttributeNS
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_nativeGetAttributeNS
   (JNIEnv *env, jobject jthis, jstring jnamespaceURI, jstring jlocalName)
 {
   nsIDOMElement* element = (nsIDOMElement*) 
@@ -484,7 +484,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getAttributeNS
  * Method:    setAttributeNS
  * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_setAttributeNS
+JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_nativeSetAttributeNS
   (JNIEnv *env, jobject jthis, jstring jnamespaceURI, jstring jqualifiedName, jstring jvalue)
 {
   nsIDOMElement* element = (nsIDOMElement*) 
@@ -535,7 +535,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_setAttributeNS
  * Method:    removeAttributeNS
  * Signature: (Ljava/lang/String;Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_removeAttributeNS
+JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_nativeRemoveAttributeNS
   (JNIEnv *env, jobject jthis, jstring jnamespaceURI, jstring jlocalName)
 {
   nsIDOMElement* element = (nsIDOMElement*) 
@@ -575,10 +575,10 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_removeAttributeNS
  * Method:    getAttributeNodeNS
  * Signature: (Ljava/lang/String;Ljava/lang/String;)Lorg/w3c/dom/Attr;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getAttributeNodeNS
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_nativeGetAttributeNodeNS
   (JNIEnv *env, jobject jthis, jstring jnamespaceURI, jstring jlocalName)
 {
-  nsIDOMElement* element = (nsIDOMElement*) 
+    nsIDOMElement* element = (nsIDOMElement*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
   if (!element || !jnamespaceURI || !jlocalName) {
     JavaDOMGlobals::ThrowException(env,
@@ -618,7 +618,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getAttributeNodeNS
  * Method:    setAttributeNodeNS
  * Signature: (Lorg/w3c/dom/Attr;)Lorg/w3c/dom/Attr;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_setAttributeNodeNS
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_nativeSetAttributeNodeNS
   (JNIEnv *env, jobject jthis, jobject jnewAttr)
 {
   nsIDOMElement* element = (nsIDOMElement*) 
@@ -662,7 +662,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_setAttributeNodeNS
  * Method:    getElementsByTagNameNS
  * Signature: (Ljava/lang/String;Ljava/lang/String;)Lorg/w3c/dom/NodeList;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getElementsByTagNameNS
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_nativeGetElementsByTagNameNS
   (JNIEnv *env, jobject jthis, jstring jnamespaceURI, jstring jlocalName)
 {
   nsIDOMElement* element = (nsIDOMElement*) 
@@ -717,7 +717,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getElementsByTagNameN
  * Method:    hasAttribute
  * Signature: (Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_ElementImpl_hasAttribute
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_ElementImpl_nativeHasAttribute
   (JNIEnv *env, jobject jthis, jstring jname)
 {
   nsIDOMElement* element = (nsIDOMElement*) 
@@ -751,7 +751,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_ElementImpl_hasAttribute
  * Method:    hasAttributeNS
  * Signature: (Ljava/lang/String;Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_ElementImpl_hasAttributeNS
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_ElementImpl_nativeHasAttributeNS
   (JNIEnv *env, jobject jthis, jstring jnamespaceURI, jstring jlocalName)
 {
   nsIDOMElement* element = (nsIDOMElement*) 

@@ -97,12 +97,30 @@ public final class DOMAccessor {
 
     private void DOMAccessorImpl() {}
 
-    private static native void register();
-    private static native void unregister();
-    public static native Node getNodeByHandle(long p);
-    private static native void doGC();
+    private static void register() {
+	nativeRegister();
+    }
+    private static native void nativeRegister();
 
-    public static native void initialize();
+    private static void unregister() {
+	nativeUnregister();
+    }
+    private static native void nativeUnregister();
+    
+    public static Node getNodeByHandle(long p) {
+	return nativeGetNodeByHandle(p);
+    }
+    static native Node nativeGetNodeByHandle(long p);
+
+    private static void doGC() {
+	nativeDoGC();
+    }
+    private static native void nativeDoGC();
+
+    public static void initialize() {
+	nativeInitialize();
+    }
+    public static native void nativeInitialize();
 
     public static synchronized void 
 	addDocumentLoadListener(DocumentLoadListener listener) {

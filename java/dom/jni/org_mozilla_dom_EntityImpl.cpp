@@ -30,7 +30,7 @@
  * Method:    getNotationName
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_EntityImpl_getNotationName
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_EntityImpl_nativeGetNotationName
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMEntity* entity = (nsIDOMEntity*) 
@@ -64,7 +64,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_EntityImpl_getNotationName
  * Method:    getPublicId
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_EntityImpl_getPublicId
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_EntityImpl_nativeGetPublicId
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMEntity* entity = (nsIDOMEntity*) 
@@ -98,7 +98,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_EntityImpl_getPublicId
  * Method:    getSystemId
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_EntityImpl_getSystemId
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_EntityImpl_nativeGetSystemId
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMEntity* entity = (nsIDOMEntity*) 

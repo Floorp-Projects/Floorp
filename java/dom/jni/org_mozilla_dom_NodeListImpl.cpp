@@ -32,7 +32,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
  * Method:    XPCOM_equals
  * Signature: (Ljava/lang/Object;)Z
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeListImpl_XPCOM_1equals
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeListImpl_nativeXPCOM_1equals
   (JNIEnv *env, jobject jthis, jobject jarg)
 {
   jboolean b_retFlag = JNI_FALSE;
@@ -87,7 +87,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeListImpl_XPCOM_1equals
  * Method:    XPCOM_hashCode
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeListImpl_XPCOM_1hashCode
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeListImpl_nativeXPCOM_1hashCode
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNodeList* p_this = 
@@ -116,7 +116,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeListImpl_XPCOM_1hashCode
  * Method:    finalize
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeListImpl_finalize
+JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeListImpl_nativeFinalize
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNodeList* nodes = (nsIDOMNodeList*) 
@@ -135,7 +135,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeListImpl_finalize
  * Method:    getLength
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeListImpl_getLength
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeListImpl_nativeGetLength
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNodeList* nodes = (nsIDOMNodeList*) 
@@ -162,7 +162,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeListImpl_getLength
  * Method:    item
  * Signature: (I)Lorg/w3c/dom/Node;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeListImpl_item
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeListImpl_nativeItem
   (JNIEnv *env, jobject jthis, jint jindex)
 {
   if (jindex < 0 || jindex > JavaDOMGlobals::javaMaxInt) {

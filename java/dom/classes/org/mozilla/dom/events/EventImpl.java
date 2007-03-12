@@ -54,40 +54,64 @@ public class EventImpl implements Event {
      * The <code>type</code> property represents the event name as a string 
      * property. 
      */
-    public native String getType();
+    public String getType() {
+	return nativeGetType();
+    }
+    native String nativeGetType();
+
     
     /**
      * The <code>target</code> property indicates the <code>EventTarget</code> 
      * to which the event  was originally dispatched. 
      */
-    public native EventTarget getTarget();
+    public EventTarget getTarget() {
+	return nativeGetTarget();
+    }
+    native EventTarget nativeGetTarget();
+
 
     /**
      * The <code>currentNode</code> property indicates the <code>Node</code> 
      * whose <code>EventListener</code>s are currently being processed.  This 
      * is particularly  useful during capturing and bubbling. 
      */
-    public native EventTarget getCurrentTarget();
+    public EventTarget getCurrentTarget() {
+	return nativeGetCurrentTarget();
+    }
+    native EventTarget nativeGetCurrentTarget();
+
 
     /**
      * The <code>eventPhase</code> property indicates which phase of event flow 
      * is currently  being evaluated. 
      */
-    public native short getEventPhase();
+    public short getEventPhase() {
+	return nativeGetEventPhase();
+    }
+    native short nativeGetEventPhase();
+
     
     /**
      * The <code>bubbles</code> property indicates whether or not an event is a 
      * bubbling event.  If the event can bubble the value is true, else the 
      * value is false. 
      */
-    public native boolean getBubbles();
+    public boolean getBubbles() {
+	return nativeGetBubbles();
+    }
+    native boolean nativeGetBubbles();
+
 
     /**
      * The <code>cancelable</code> property indicates whether or not an event 
      * can have its default action prevented.  If the default action can be 
      * prevented the value is true, else the value is false. 
      */
-    public native boolean getCancelable();
+    public boolean getCancelable() {
+	return nativeGetCancelable();
+    }
+    native boolean nativeGetCancelable();
+
 
     /**
      * The <code>preventBubble</code> method is used to end the bubbling phase 
@@ -97,7 +121,11 @@ public class EventImpl implements Event {
      * at that level and the event will not be propagated upward within the 
      * tree. 
      */
-    public native void preventBubble();
+    public void preventBubble() {
+	nativePreventBubble();
+    }
+    native void nativePreventBubble();
+
     
     /**
      * The <code>preventCapture</code> method is used to end the capturing phase 
@@ -107,7 +135,11 @@ public class EventImpl implements Event {
      * cease at that level and the event will not be propagated any further 
      * down. 
      */
-    public native void preventCapture();
+    public void preventCapture() {
+	nativePreventCapture();
+    }
+    native void nativePreventCapture();
+
 
     /**
      * If an event is cancelable, the <code>preventCapture</code> method is used 
@@ -120,7 +152,11 @@ public class EventImpl implements Event {
      * <code>preventDefault</code> has been called it will remain in effect 
      * throughout the remainder of the event's propagation. 
      */
-    public native void preventDefault();
+    public void preventDefault() {
+	nativePreventDefault();
+    }
+    native void nativePreventDefault();
+
     
     /**
      * The <code>stopPropagation</code> method is used prevent further 
@@ -130,7 +166,11 @@ public class EventImpl implements Event {
      * on the current <code>EventTarget</code> before event flow stops.  This 
      * method may be used during any stage of event flow.
      */
-    public native void stopPropagation();
+    public void stopPropagation() {
+	nativeStopPropagation();
+    }
+    native void nativeStopPropagation();
+
     
     /**
      * 
@@ -143,9 +183,14 @@ public class EventImpl implements Event {
      * @param cancelableArg Specifies whether or not the event's default  action 
      *   can be prevented.
      */
-    public native void initEvent(String eventTypeArg, 
-				 boolean canBubbleArg, 
-				 boolean cancelableArg);
+    public void initEvent(String eventTypeArg, boolean canBubbleArg, boolean cancelableArg) {
+	nativeInitEvent(eventTypeArg, canBubbleArg, cancelableArg);
+    }
+    native void nativeInitEvent(String eventTypeArg, boolean canBubbleArg, boolean cancelableArg);
     
-    public native long getTimeStamp();
+    public long getTimeStamp() {
+	return nativeGetTimeStamp();
+    }
+    native long nativeGetTimeStamp();
+
 }

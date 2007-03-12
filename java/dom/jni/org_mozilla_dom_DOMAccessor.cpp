@@ -17,7 +17,7 @@ static NS_DEFINE_IID(kJavaDOMCID, NS_JAVADOM_CID);
  * Method:    register
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_register
+JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_nativeRegister
   (JNIEnv *env, jclass jthis)
 {
   if (!JavaDOMGlobals::log) {
@@ -62,7 +62,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_register
  * Method:    unregister
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_unregister
+JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_nativeUnregister
   (JNIEnv *, jclass jthis)
 {
   PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
@@ -107,7 +107,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_unregister
  * Method:    createElement
  * Signature: (J)Lorg/w3c/dom/Element;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMAccessor_getNodeByHandle
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMAccessor_nativeGetNodeByHandle
   (JNIEnv *env, jclass jthis, jlong p)
 { 
   if (!JavaDOMGlobals::log) {
@@ -122,13 +122,13 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMAccessor_getNodeByHandle
  * Method:    doGC
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_doGC
+JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_nativeDoGC
   (JNIEnv *, jclass)
 {
   JavaDOMGlobals::TakeOutGarbage();
 }
 
-JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_initialize
+JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_nativeInitialize
 (JNIEnv *env, jclass)
 {
   if (!JavaDOMGlobals::log) {

@@ -44,21 +44,37 @@ public class DOMImplementationImpl implements DOMImplementation {
 	return XPCOM_hashCode();
     }
 
-    public native boolean hasFeature(String feature, String version);
+    public boolean hasFeature(String feature, String version) {
+	return nativeHasFeature(feature, version);
+    }
+    native boolean nativeHasFeature(String feature, String version);
 
-    protected native void finalize();
+    protected void finalize() {
+	nativeFinalize();
+    }
 
-    private native boolean XPCOM_equals(Object o);
-    private native int XPCOM_hashCode();
+    protected native void nativeFinalize();
+
+    private boolean XPCOM_equals(Object o) {
+	return nativeXPCOM_equals(o);
+    }
+    native boolean nativeXPCOM_equals(Object o);
+
+    private int XPCOM_hashCode() {
+	return nativeXPCOM_hashCode();
+    }
+    private native int nativeXPCOM_hashCode();
 
     //since DOM2
-    public native DocumentType createDocumentType(String qualifiedName, 
-						  String publicID, 
-						  String systemID);
+    public DocumentType createDocumentType(String qualifiedName, String publicID, String systemID) {
+	return nativeCreateDocumentType(qualifiedName, publicID, systemID);
+    }
+    native DocumentType nativeCreateDocumentType(String qualifiedName, String publicID, String systemID);
 
-    public native Document createDocument(String namespaceURI,
-					  String qualifiedName,
-					  DocumentType doctype);
+    public Document createDocument(String namespaceURI,  String qualifiedName, DocumentType doctype) {
+	return nativeCreateDocument(namespaceURI, qualifiedName, doctype);
+    }
+    native Document nativeCreateDocument(String namespaceURI,  String qualifiedName, DocumentType doctype);
 
     public Object getFeature(String feature, String version) {
         throw new UnsupportedOperationException();

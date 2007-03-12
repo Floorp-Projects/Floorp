@@ -30,7 +30,7 @@
  * Method:    getView
  * Signature: ()Lorg/w3c/dom/views/AbstractView;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_UIEventImpl_getView
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_UIEventImpl_nativeGetView
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMUIEvent* event = (nsIDOMUIEvent*)
@@ -58,7 +58,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_UIEventImpl_getView
  * Method:    getDetail
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_UIEventImpl_getDetail
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_UIEventImpl_nativeGetDetail
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMUIEvent* event = (nsIDOMUIEvent*)
@@ -85,7 +85,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_UIEventImpl_getDetail
  * Method:    initUIEvent
  * Signature: (Ljava/lang/String;ZZLorg/w3c/dom/views/AbstractView;I)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_events_UIEventImpl_initUIEvent
+JNIEXPORT void JNICALL Java_org_mozilla_dom_events_UIEventImpl_nativeInitUIEvent
   (JNIEnv *env, jobject jthis, 
    jstring jtypeArg, 
    jboolean jcanBubbleArg, 

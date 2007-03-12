@@ -29,12 +29,36 @@ public class DocumentTypeImpl  extends NodeImpl implements DocumentType {
     // instantiated from JNI only
     private DocumentTypeImpl() {}
 
-    public native String getName();
-    public native NamedNodeMap getEntities();
-    public native NamedNodeMap getNotations();
+    public String getName() {
+	return nativeGetName();
+    }
+    native String nativeGetName();
+
+    public NamedNodeMap getEntities() {
+	return nativeGetEntities();
+    }
+    native NamedNodeMap nativeGetEntities();
+
+    public NamedNodeMap getNotations() {
+	return nativeGetNotations();
+    }
+    native NamedNodeMap nativeGetNotations();
+
     
     //since DOM level 2
-    public native String getPublicId();
-    public native String getSystemId();
-    public native String getInternalSubset();
+    public String getPublicId() {
+	return nativeGetPublicId();
+    }
+    native String nativeGetPublicId();
+
+    public String getSystemId() {
+	return nativeGetSystemId();
+    }
+    native String nativeGetSystemId();
+
+    public String getInternalSubset() {
+	return nativeGetInternalSubset();
+    }
+    native String nativeGetInternalSubset();
+
 }

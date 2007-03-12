@@ -42,11 +42,28 @@ public class NodeListImpl implements NodeList {
 	return XPCOM_hashCode();
     }
 
-    public native int getLength();
-    public native Node item(int index);
+    public int getLength() {
+	return nativeGetLength();
+    }
+    native int nativeGetLength();
 
-    protected native void finalize();
+    public Node item(int index) {
+	return nativeItem(index);
+    }
+    native Node nativeItem(int index);
 
-    private native boolean XPCOM_equals(Object o);
-    private native int XPCOM_hashCode();
+    protected void finalize() {
+	nativeFinalize();
+    }
+    protected native void nativeFinalize();
+
+    private boolean XPCOM_equals(Object o) {
+	return nativeXPCOM_equals(o);
+    }
+    native boolean nativeXPCOM_equals(Object o);
+
+    private int XPCOM_hashCode() {
+	return nativeXPCOM_hashCode();
+    }
+    private native int nativeXPCOM_hashCode();
 }

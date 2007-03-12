@@ -44,25 +44,84 @@ public class DocumentImpl extends NodeImpl implements Document, DocumentEvent {
     // instantiated from JNI only
     private DocumentImpl() {}
 
-    public native Attr createAttribute(String name);
-    public native CDATASection createCDATASection(String data);
-    public native Comment createComment(String data);
-    public native DocumentFragment createDocumentFragment();
-    public native Element createElement(String tagName);
-    public native EntityReference createEntityReference(String name);
-    public native ProcessingInstruction 
-	createProcessingInstruction(String target, 
-				    String data);
-    public native Text createTextNode(String data);
+    public Attr createAttribute(String name) {
+	return nativeCreateAttribute(name);
+    }
+    native Attr nativeCreateAttribute(String name);
 
-    public native DocumentType getDoctype();
-    public native Element getDocumentElement();
-    public native NodeList getElementsByTagName(String tagName);
-    public native DOMImplementation getImplementation();
-    public native Event createEvent(String type);
-    public native NodeList getElementsByTagNameNS(String namespaceURI, String localName);
-    public native Element getElementById(String elementId);
-    public native String getDocumentURI();
+    public CDATASection createCDATASection(String data) {
+	return nativeCreateCDATASection(data);
+    }
+    native CDATASection nativeCreateCDATASection(String data);
+
+    public Comment createComment(String data) {
+	return nativeCreateComment(data);
+    }
+    native Comment nativeCreateComment(String data);
+
+    public DocumentFragment createDocumentFragment() {
+	return nativeCreateDocumentFragment();
+    }
+    native DocumentFragment nativeCreateDocumentFragment();
+
+    public Element createElement(String tagName) {
+	return nativeCreateElement(tagName);
+    }
+    native Element nativeCreateElement(String tagName);
+
+    public EntityReference createEntityReference(String name) {
+	return nativeCreateEntityReference(name);
+    }
+    native EntityReference nativeCreateEntityReference(String name);
+
+    public ProcessingInstruction createProcessingInstruction(String target, String data) {
+	return nativeCreateProcessingInstruction(target, data);
+    }
+    native ProcessingInstruction nativeCreateProcessingInstruction(String target, String data);
+    public Text createTextNode(String data) {
+	return nativeCreateTextNode(data);
+    }
+    native Text nativeCreateTextNode(String data);
+
+    public DocumentType getDoctype() {
+	return nativeGetDoctype();
+    }
+    native DocumentType nativeGetDoctype();
+
+    public Element getDocumentElement() {
+	return nativeGetDocumentElement();
+    }
+    native Element nativeGetDocumentElement();
+
+    public NodeList getElementsByTagName(String tagName) {
+	return nativeGetElementsByTagName(tagName);
+    }
+    native NodeList nativeGetElementsByTagName(String tagName);
+
+    public DOMImplementation getImplementation() {
+	return nativeGetImplementation();
+    }
+    native DOMImplementation nativeGetImplementation();
+
+    public Event createEvent(String type) {
+	return nativeCreateEvent(type);
+    }
+    native Event nativeCreateEvent(String type);
+
+    public NodeList getElementsByTagNameNS(String namespaceURI, String localName) {
+	return nativeGetElementsByTagNameNS(namespaceURI, localName);
+    }
+    native NodeList nativeGetElementsByTagNameNS(String namespaceURI, String localName);
+    public Element getElementById(String elementId) {
+	return nativeGetElementById(elementId);
+    }
+    native Element nativeGetElementById(String elementId);
+
+    public String getDocumentURI() {
+	return nativeGetDocumentURI();
+    }
+    native String nativeGetDocumentURI();
+
 
     public Node importNode(Node importedNode, boolean deep) throws DOMException {
         throw new UnsupportedOperationException();

@@ -31,17 +31,36 @@ public class AttrImpl extends NodeImpl implements Attr {
     // instantiated from JNI or Document.createAttribute()
     private AttrImpl() {}
 
-    public native String getName();
-    public native boolean getSpecified();
-    public native String getValue();
-    public native void setValue(String value);
+    public String getName() {
+	return nativeGetName();
+    }
+    native String nativeGetName();
+
+    public boolean getSpecified() {
+	return nativeGetSpecified();
+    }
+    native boolean nativeGetSpecified();
+
+    public String getValue() {
+	return nativeGetValue();
+    }
+    native String nativeGetValue();
+
+    public void setValue(String value) {
+	nativeSetValue(value);
+    }
+    native void nativeSetValue(String value);
 
     /**
      * The <code>Element</code> node this attribute is attached to or
      * <code>null</code> if this attribute is not in use.
      * @since DOM Level 2
      */
-    public native Element getOwnerElement();
+    public Element getOwnerElement() {
+	return nativeGetOwnerElement();
+    }
+    native Element nativeGetOwnerElement();
+
 
     public boolean isId() {
         throw new UnsupportedOperationException();

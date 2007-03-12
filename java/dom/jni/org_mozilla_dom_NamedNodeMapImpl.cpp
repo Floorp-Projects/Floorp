@@ -32,7 +32,7 @@
  * Method:    getLength
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_getLength
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_nativeGetLength
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNamedNodeMap* map = (nsIDOMNamedNodeMap*) 
@@ -59,7 +59,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_getLength
  * Method:    getNamedItem
  * Signature: (Ljava/lang/String;)Lorg/w3c/dom/Node;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_getNamedItem
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_nativeGetNamedItem
   (JNIEnv *env, jobject jthis, jstring jname)
 {
   nsIDOMNamedNodeMap* map = (nsIDOMNamedNodeMap*) 
@@ -94,7 +94,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_getNamedItem
  * Method:    item
  * Signature: (I)Lorg/w3c/dom/Node;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_item
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_nativeItem
   (JNIEnv *env, jobject jthis, jint jindex)
 {
   if (jindex < 0 || jindex > JavaDOMGlobals::javaMaxInt) {
@@ -129,7 +129,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_item
  * Method:    removeNamedItem
  * Signature: (Ljava/lang/String;)Lorg/w3c/dom/Node;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_removeNamedItem
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_nativeRemoveNamedItem
   (JNIEnv *env, jobject jthis, jstring jname)
 {
   nsIDOMNamedNodeMap* map = (nsIDOMNamedNodeMap*) 
@@ -166,7 +166,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_removeNamedItem
  * Method:    setNamedItem
  * Signature: (Lorg/w3c/dom/Node;)Lorg/w3c/dom/Node;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_setNamedItem
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_nativeSetNamedItem
   (JNIEnv *env, jobject jthis, jobject jarg)
 {
   nsIDOMNamedNodeMap* map = (nsIDOMNamedNodeMap*) 

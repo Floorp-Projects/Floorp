@@ -31,7 +31,7 @@
  * Method:    getData
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_getData
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_nativeGetData
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMProcessingInstruction* pi = (nsIDOMProcessingInstruction*) 
@@ -65,7 +65,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_getData
  * Method:    getTarget
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_getTarget
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_nativeGetTarget
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMProcessingInstruction* pi = (nsIDOMProcessingInstruction*) 
@@ -99,7 +99,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_getTarg
  * Method:    setData
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_setData
+JNIEXPORT void JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_nativeSetData
   (JNIEnv *env, jobject jthis, jstring jdata)
 {
   nsIDOMProcessingInstruction* pi = (nsIDOMProcessingInstruction*) 

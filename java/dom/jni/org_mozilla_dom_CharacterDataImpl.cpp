@@ -30,7 +30,7 @@
  * Method:    appendData
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_appendData
+JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_nativeAppendData
   (JNIEnv *env, jobject jthis, jstring jvalue)
 {
   nsIDOMCharacterData* data = (nsIDOMCharacterData*) 
@@ -64,7 +64,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_appendData
  * Method:    deleteData
  * Signature: (II)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_deleteData
+JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_nativeDeleteData
   (JNIEnv *env, jobject jthis, jint offset, jint count)
 {
   if (offset < 0 || offset > JavaDOMGlobals::javaMaxInt || 
@@ -102,7 +102,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_deleteData
  * Method:    getData
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_CharacterDataImpl_getData
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_CharacterDataImpl_nativeGetData
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMCharacterData* data = (nsIDOMCharacterData*) 
@@ -139,7 +139,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_CharacterDataImpl_getData
  * Method:    getLength
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_dom_CharacterDataImpl_getLength
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_CharacterDataImpl_nativeGetLength
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMCharacterData* data = (nsIDOMCharacterData*) 
@@ -166,7 +166,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_CharacterDataImpl_getLength
  * Method:    insertData
  * Signature: (ILjava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_insertData
+JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_nativeInsertData
   (JNIEnv *env, jobject jthis, jint offset, jstring jvalue)
 {
   nsIDOMCharacterData* data = (nsIDOMCharacterData*) 
@@ -202,7 +202,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_insertData
  * Method:    replaceData
  * Signature: (IILjava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_replaceData
+JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_nativeReplaceData
   (JNIEnv *env, jobject jthis, jint offset, jint count, jstring jvalue)
 {
   if (offset < 0 || offset > JavaDOMGlobals::javaMaxInt || 
@@ -246,7 +246,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_replaceData
  * Method:    setData
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_setData
+JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_nativeSetData
   (JNIEnv *env, jobject jthis, jstring jvalue)
 {
   nsIDOMCharacterData* data = (nsIDOMCharacterData*) 
@@ -280,7 +280,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_setData
  * Method:    substringData
  * Signature: (II)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_CharacterDataImpl_substringData
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_CharacterDataImpl_nativeSubstringData
   (JNIEnv *env, jobject jthis, jint offset, jint count)
 {
   if (offset < 0 || offset > JavaDOMGlobals::javaMaxInt || 

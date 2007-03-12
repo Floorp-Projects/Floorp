@@ -28,6 +28,14 @@ public class NotationImpl extends NodeImpl implements Notation {
     // instantiated from JNI only
     private NotationImpl() {}
     
-    public native String getPublicId();
-    public native String getSystemId();
+    public String getPublicId() {
+	return nativeGetPublicId();
+    }
+    native String nativeGetPublicId();
+
+    public String getSystemId() {
+	return nativeGetSystemId();
+    }
+    native String nativeGetSystemId();
+
 }

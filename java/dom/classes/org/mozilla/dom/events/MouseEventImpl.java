@@ -58,64 +58,104 @@ public class MouseEventImpl extends UIEventImpl implements MouseEvent {
      * <code>screenX</code> indicates the horizontal coordinate at which the 
      * event occurred in relative to the origin of the screen coordinate system.
      */
-    public native int getScreenX();
+    public int getScreenX() {
+	return nativeGetScreenX();
+    }
+    native int nativeGetScreenX();
+
     
     /**
      * <code>screenY</code> indicates the vertical coordinate at which the event 
      * occurred relative to the origin of the screen coordinate system.
      */
-    public native int getScreenY();
+    public int getScreenY() {
+	return nativeGetScreenY();
+    }
+    native int nativeGetScreenY();
+
     
     /**
      * <code>clientX</code> indicates the horizontal coordinate at which the 
      * event occurred relative to the DOM implementation's client area.
      */
-    public native int getClientX();
+    public int getClientX() {
+	return nativeGetClientX();
+    }
+    native int nativeGetClientX();
+
     
     /**
      * <code>clientY</code> indicates the vertical coordinate at which the event 
      * occurred relative to the DOM implementation's client area.
      */
-    public native int getClientY();
+    public int getClientY() {
+	return nativeGetClientY();
+    }
+    native int nativeGetClientY();
+
     
     /**
      * <code>ctrlKey</code> indicates whether the 'ctrl' key was depressed 
      * during the firing of the event.
      */
-    public native boolean getCtrlKey();
+    public boolean getCtrlKey() {
+	return nativeGetCtrlKey();
+    }
+    native boolean nativeGetCtrlKey();
+
     
     /**
      * <code>shiftKey</code> indicates whether the 'shift' key was depressed 
      * during the firing of the event.
      */
-    public native boolean getShiftKey();
+    public boolean getShiftKey() {
+	return nativeGetShiftKey();
+    }
+    native boolean nativeGetShiftKey();
+
     
     /**
      * <code>altKey</code> indicates whether the 'alt' key was depressed during 
      * the firing of the event.  On some platforms this key may map to an 
      * alternative key name.
      */
-    public native boolean getAltKey();
+    public boolean getAltKey() {
+	return nativeGetAltKey();
+    }
+    native boolean nativeGetAltKey();
+
     
     /**
      * <code>metaKey</code> indicates whether the 'meta' key was depressed 
      * during the firing of the event.  On some platforms this key may map to 
      * an alternative key name.
      */
-    public native boolean getMetaKey();
+    public boolean getMetaKey() {
+	return nativeGetMetaKey();
+    }
+    native boolean nativeGetMetaKey();
+
     
     /**
      * During mouse events caused by the depression or release of a mouse 
      * button, <code>button</code> is used to indicate which mouse button 
      * changed state.
      */
-    public native short getButton();
+    public short getButton() {
+	return nativeGetButton();
+    }
+    native short nativeGetButton();
+
     
     /**
      * <code>relatedNode</code> is used to identify a secondary node related to 
      * a UI event.
      */
-    public native EventTarget getRelatedTarget();
+    public EventTarget getRelatedTarget() {
+	return nativeGetRelatedTarget();
+    }
+    native EventTarget nativeGetRelatedTarget();
+
     
     /**
      * 
@@ -141,20 +181,40 @@ public class MouseEventImpl extends UIEventImpl implements MouseEvent {
      * @param buttonArg Specifies the <code>Event</code>'s mouse button.
      * @param relatedTargetArg Specifies the <code>Event</code>'s related Node.
      */
-    public native void initMouseEvent(String typeArg, 
-				      boolean canBubbleArg, 
-				      boolean cancelableArg, 
-				      AbstractView viewArg, 
-				      int detailArg, 
-				      int screenXArg, 
-				      int screenYArg, 
-				      int clientXArg, 
-				      int clientYArg, 
-				      boolean ctrlKeyArg, 
-				      boolean altKeyArg, 
-				      boolean shiftKeyArg, 
-				      boolean metaKeyArg, 
-				      short buttonArg, 
-				      EventTarget relatedTargetArg);
+    public void initMouseEvent(String typeArg, 
+			       boolean canBubbleArg, 
+			       boolean cancelableArg, 
+			       AbstractView viewArg, 
+			       int detailArg, 
+			       int screenXArg, 
+			       int screenYArg, 
+			       int clientXArg, 
+			       int clientYArg, 
+			       boolean ctrlKeyArg, 
+			       boolean altKeyArg, 
+			       boolean shiftKeyArg, 
+			       boolean metaKeyArg, 
+			       short buttonArg, 
+			       EventTarget relatedTargetArg) {
+	nativeInitMouseEvent(typeArg, canBubbleArg, cancelableArg, viewArg,
+			     detailArg, screenXArg, screenYArg, clientXArg,
+			     clientYArg, ctrlKeyArg, altKeyArg, shiftKeyArg,
+			     metaKeyArg, buttonArg, relatedTargetArg);
+    }
+    native void nativeInitMouseEvent(String typeArg, 
+				     boolean canBubbleArg, 
+				     boolean cancelableArg, 
+				     AbstractView viewArg, 
+				     int detailArg, 
+				     int screenXArg, 
+				     int screenYArg, 
+				     int clientXArg, 
+				     int clientYArg, 
+				     boolean ctrlKeyArg, 
+				     boolean altKeyArg, 
+				     boolean shiftKeyArg, 
+				     boolean metaKeyArg, 
+				     short buttonArg, 
+				     EventTarget relatedTargetArg);
 }
 

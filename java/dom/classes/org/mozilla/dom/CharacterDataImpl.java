@@ -28,12 +28,44 @@ public class CharacterDataImpl extends NodeImpl implements CharacterData {
     // instantiated from JNI only
     protected CharacterDataImpl() {}
 
-    public native void appendData(String arg);
-    public native void deleteData(int offset, int count);
-    public native String getData();
-    public native int getLength();
-    public native void insertData(int offset, String arg);
-    public native void replaceData(int offset, int count, String arg);
-    public native void setData(String data);
-    public native String substringData(int offset, int count);
+    public void appendData(String arg) {
+	nativeAppendData(arg);
+    }
+    native void nativeAppendData(String arg);
+
+    public void deleteData(int offset, int count) {
+	nativeDeleteData(offset, count);
+    }
+    native void nativeDeleteData(int offset, int count);
+
+
+    public String getData() {
+	return nativeGetData();
+    }
+    native String nativeGetData();
+
+    public int getLength() {
+	return nativeGetLength();
+    }
+    native int nativeGetLength();
+
+    public void insertData(int offset, String arg) {
+	nativeInsertData(offset, arg);
+    }
+    native void nativeInsertData(int offset, String arg);
+
+    public void replaceData(int offset, int count, String arg) {
+	nativeReplaceData(offset, count, arg);
+    }
+    native void nativeReplaceData(int offset, int count, String arg);
+
+    public void setData(String data) {
+	nativeSetData(data);
+    }
+    native void nativeSetData(String data);
+
+    public String substringData(int offset, int count) {
+	return nativeSubstringData(offset, count);
+    }
+    native String nativeSubstringData(int offset, int count);
 }

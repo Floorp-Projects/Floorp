@@ -31,11 +31,31 @@ public class NamedNodeMapImpl implements NamedNodeMap {
     // instantiated from JNI only
     private NamedNodeMapImpl() {}
 
-    public native int getLength();
-    public native Node getNamedItem(String name);
-    public native Node item(int index);
-    public native Node removeNamedItem(String name);
-    public native Node setNamedItem(Node arg);
+    public int getLength() {
+	return nativeGetLength();
+    }
+    native int nativeGetLength();
+
+    public Node getNamedItem(String name) {
+	return nativeGetNamedItem(name);
+    }
+    native Node nativeGetNamedItem(String name);
+
+    public Node item(int index) {
+	return nativeItem(index);
+    }
+    native Node nativeItem(int index);
+
+    public Node removeNamedItem(String name) {
+	return nativeRemoveNamedItem(name);
+    }
+    native Node nativeRemoveNamedItem(String name);
+
+    public Node setNamedItem(Node arg) {
+	return nativeSetNamedItem(arg);
+    }
+    native Node nativeSetNamedItem(Node arg);
+
 
     
     public Node getNamedItemNS(String namespaceURI, String localName) {

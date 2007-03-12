@@ -32,7 +32,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
  * Method:    XPCOM_equals
  * Signature: (Ljava/lang/Object;)Z
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_DOMImplementationImpl_XPCOM_1equals
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_DOMImplementationImpl_nativeXPCOM_1equals
   (JNIEnv *env, jobject jthis, jobject jarg)
 {
   jboolean b_retFlag = JNI_FALSE;
@@ -89,7 +89,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_DOMImplementationImpl_XPCOM_1equ
  * Method:    XPCOM_hashCode
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_dom_DOMImplementationImpl_XPCOM_1hashCode
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_DOMImplementationImpl_nativeXPCOM_1hashCode
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMDOMImplementation* p_this = (nsIDOMDOMImplementation*) 
@@ -119,7 +119,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_DOMImplementationImpl_XPCOM_1hashCod
  * Method:    finalize
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMImplementationImpl_finalize
+JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMImplementationImpl_nativeFinalize
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMDOMImplementation* dom = (nsIDOMDOMImplementation*) 
@@ -138,7 +138,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMImplementationImpl_finalize
  * Method:    hasFeature
  * Signature: (Ljava/lang/String;Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_DOMImplementationImpl_hasFeature
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_DOMImplementationImpl_nativeHasFeature
   (JNIEnv *env, jobject jthis, jstring jfeature, jstring jversion)
 {
   nsIDOMDOMImplementation* dom = (nsIDOMDOMImplementation*) 
@@ -182,7 +182,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_DOMImplementationImpl_hasFeature
  * Method:    createDocumentType
  * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/w3c/dom/DocumentType;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMImplementationImpl_createDocumentType
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMImplementationImpl_nativeCreateDocumentType
   (JNIEnv *env, jobject jthis, jstring jqualifiedName, jstring jpublicID, jstring jsystemID)
 {
   nsIDOMDOMImplementation* dom = (nsIDOMDOMImplementation*) 
@@ -236,7 +236,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMImplementationImpl_createDocum
  * Method:    createDocument
  * Signature: (Ljava/lang/String;Ljava/lang/String;Lorg/w3c/dom/DocumentType;)Lorg/w3c/dom/Document;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMImplementationImpl_createDocument
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMImplementationImpl_nativeCreateDocument
   (JNIEnv *env, jobject jthis, jstring jnamespaceURI, jstring jqualifiedName, jobject jdoctype)
 {
   nsIDOMDOMImplementation* dom = (nsIDOMDOMImplementation*) 

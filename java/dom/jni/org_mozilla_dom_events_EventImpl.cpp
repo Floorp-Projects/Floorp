@@ -35,7 +35,7 @@
  * Method:    getCurrentTarget
  * Signature: ()Lorg/w3c/dom/events/EventTarget;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_EventImpl_getCurrentTarget
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_EventImpl_nativeGetCurrentTarget
   (JNIEnv *env, jobject jthis)
 {
     nsIDOMEvent* event = (nsIDOMEvent*)
@@ -66,7 +66,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_EventImpl_getCurrentTarget
  * Method:    getEventPhase
  * Signature: ()S
  */
-JNIEXPORT jshort JNICALL Java_org_mozilla_dom_events_EventImpl_getEventPhase
+JNIEXPORT jshort JNICALL Java_org_mozilla_dom_events_EventImpl_nativeGetEventPhase
   (JNIEnv *env, jobject jthis)
 {
     nsIDOMEvent* event = (nsIDOMEvent*)
@@ -120,7 +120,7 @@ JNIEXPORT jshort JNICALL Java_org_mozilla_dom_events_EventImpl_getEventPhase
  * Method:    getBubbles
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_EventImpl_getBubbles
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_EventImpl_nativeGetBubbles
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMEvent* event = (nsIDOMEvent*)
@@ -147,7 +147,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_EventImpl_getBubbles
  * Method:    getCancelable
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_EventImpl_getCancelable
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_EventImpl_nativeGetCancelable
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMEvent* event = (nsIDOMEvent*)
@@ -174,7 +174,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_EventImpl_getCancelable
  * Method:    getTarget
  * Signature: ()Lorg/w3c/dom/events/EventTarget;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_EventImpl_getTarget
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_EventImpl_nativeGetTarget
   (JNIEnv *env, jobject jthis)
 {
     nsIDOMEvent* event = (nsIDOMEvent*)
@@ -204,7 +204,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_EventImpl_getTarget
  * Method:    getType
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_events_EventImpl_getType
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_events_EventImpl_nativeGetType
   (JNIEnv *env, jobject jthis)
 {
     nsIDOMEvent* event = (nsIDOMEvent*)
@@ -238,7 +238,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_events_EventImpl_getType
  * Method:    preventBubble
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_preventBubble
+JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_nativePreventBubble
   (JNIEnv *env, jobject jthis)
 {
     nsIDOMEvent* domEvent = (nsIDOMEvent*)
@@ -267,7 +267,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_preventBubble
  * Method:    preventCapture
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_preventCapture
+JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_nativePreventCapture
   (JNIEnv *env, jobject jthis)
 {
     nsIDOMEvent* domEvent = (nsIDOMEvent*)
@@ -296,7 +296,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_preventCapture
  * Method:    preventDefault
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_preventDefault
+JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_nativePreventDefault
   (JNIEnv *env, jobject jthis)
 {
     nsIDOMEvent* event = (nsIDOMEvent*)
@@ -319,7 +319,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_preventDefault
  * Method:    initEvent
  * Signature: (Ljava/lang/String;ZZ)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_initEvent
+JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_nativeInitEvent
   (JNIEnv *env, jobject jthis, jstring jeventTypeArg, jboolean jcanBubbleArg, jboolean jcancelableArg)
 {
   nsIDOMEvent* event = (nsIDOMEvent*)
@@ -351,7 +351,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_initEvent
  * Method:    stopPropagation
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_stopPropagation
+JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_nativeStopPropagation
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMEvent* event = (nsIDOMEvent*)
@@ -374,7 +374,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_stopPropagation
  * Method:    getTimeStamp
  * Signature: ()J
  */
-JNIEXPORT jlong JNICALL Java_org_mozilla_dom_events_EventImpl_getTimeStamp
+JNIEXPORT jlong JNICALL Java_org_mozilla_dom_events_EventImpl_nativeGetTimeStamp
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMEvent* event = (nsIDOMEvent*)

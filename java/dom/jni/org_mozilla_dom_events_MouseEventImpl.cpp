@@ -31,7 +31,7 @@
  * Method:    getAltKey
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getAltKey
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetAltKey
   (JNIEnv *env, jobject jthis)
 {
     nsIDOMMouseEvent* event = (nsIDOMMouseEvent*) 
@@ -60,7 +60,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getAltKey
  * Method:    getButton
  * Signature: ()S
  */
-JNIEXPORT jshort JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getButton
+JNIEXPORT jshort JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetButton
   (JNIEnv *env, jobject jthis)
 {
     nsIDOMMouseEvent* event = (nsIDOMMouseEvent*)
@@ -87,7 +87,7 @@ JNIEXPORT jshort JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getButton
  * Method:    getClientX
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getClientX
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetClientX
   (JNIEnv *env, jobject jthis)
 {
     nsIDOMMouseEvent* event = (nsIDOMMouseEvent*)
@@ -114,7 +114,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getClientX
  * Method:    getClientY
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getClientY
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetClientY
   (JNIEnv *env, jobject jthis)
 {
     nsIDOMMouseEvent* event = (nsIDOMMouseEvent*)
@@ -142,7 +142,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getClientY
  * Method:    getCtrlKey
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getCtrlKey
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetCtrlKey
   (JNIEnv *env, jobject jthis)
 {
     nsIDOMMouseEvent* event = (nsIDOMMouseEvent*) 
@@ -170,7 +170,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getCtrlKey
  * Method:    getMetaKey
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getMetaKey
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetMetaKey
   (JNIEnv *env, jobject jthis)
 {
     nsIDOMMouseEvent* event = (nsIDOMMouseEvent*) 
@@ -198,7 +198,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getMetaKey
  * Method:    getScreenX
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getScreenX
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetScreenX
   (JNIEnv *env, jobject jthis)
 {
     nsIDOMMouseEvent* event = (nsIDOMMouseEvent*)
@@ -225,7 +225,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getScreenX
  * Method:    getScreenY
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getScreenY
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetScreenY
   (JNIEnv *env, jobject jthis)
 {
     nsIDOMMouseEvent* event = (nsIDOMMouseEvent*)
@@ -253,7 +253,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getScreenY
  * Method:    getShiftKey
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getShiftKey
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetShiftKey
   (JNIEnv *env, jobject jthis)
 {
     nsIDOMMouseEvent* event = (nsIDOMMouseEvent*) 
@@ -280,7 +280,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getShiftKe
  * Method:    getRelatedTarget
  * Signature: ()Lorg/w3c/dom/events/EventTarget;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getRelatedTarget
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetRelatedTarget
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMMouseEvent* event = (nsIDOMMouseEvent*) 
@@ -313,7 +313,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getRelatedT
  * Method:    initMouseEvent
  * Signature: (Ljava/lang/String;ZZLorg/w3c/dom/views/AbstractView;IIIIIZZZZSLorg/w3c/dom/Node;)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_events_MouseEventImpl_initMouseEvent
+JNIEXPORT void JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeInitMouseEvent
   (JNIEnv *env, jobject jthis, 
    jstring jtypeArg, 
    jboolean jcanBubbleArg, 

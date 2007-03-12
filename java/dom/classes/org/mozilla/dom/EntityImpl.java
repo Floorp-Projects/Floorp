@@ -28,9 +28,21 @@ public class EntityImpl extends NodeImpl implements Entity {
     // instantiated from JNI only
     private EntityImpl() {}
     
-    public native String getPublicId();
-    public native String getSystemId();
-    public native String getNotationName();
+    public String getPublicId() {
+	return nativeGetPublicId();
+    }
+    native String nativeGetPublicId();
+
+    public String getSystemId() {
+	return nativeGetSystemId();
+    }
+    native String nativeGetSystemId();
+
+    public String getNotationName() {
+	return nativeGetNotationName();
+    }
+    native String nativeGetNotationName();
+
 
     public String getXmlVersion() {
         throw new UnsupportedOperationException();

@@ -28,7 +28,19 @@ public class ProcessingInstructionImpl extends NodeImpl implements ProcessingIns
     // instantiated from JNI or Document.createProcessingInstruction()
     private ProcessingInstructionImpl() {}
 
-    public native String getData();
-    public native String getTarget();
-    public native void setData(String data);
+    public String getData() {
+	return nativeGetData();
+    }
+    native String nativeGetData();
+
+    public String getTarget() {
+	return nativeGetTarget();
+    }
+    native String nativeGetTarget();
+
+    public void setData(String data) {
+	nativeSetData(data);
+    }
+    native void nativeSetData(String data);
+
 }

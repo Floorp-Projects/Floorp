@@ -117,39 +117,148 @@ public class NodeImpl implements Node, EventTarget {
 	return "ERROR";
     }
 
-    public native boolean isSupported(String feature, String version);
-    public native boolean hasAttributes();
-    public native Node appendChild(Node newChild) throws DOMException;
-    public native Node cloneNode(boolean deep);
-    public native NamedNodeMap getAttributes();
-    public native NodeList getChildNodes();
-    public native Node getFirstChild();
-    public native Node getLastChild();
-    public native Node getNextSibling();
-    public native String getNodeName();
-    public native short getNodeType();
-    public native String getNodeValue();
-    public native Document getOwnerDocument();
-    public native Node getParentNode();
-    public native Node getPreviousSibling();
-    public native boolean hasChildNodes();
-    public native Node insertBefore(Node newChild, Node refChild) throws DOMException;
-    public native Node removeChild(Node oldChild) throws DOMException;
-    public native Node replaceChild(Node newChild, Node oldChild) throws DOMException;
-    public native void setNodeValue(String nodeValue);
-    public native String getTextContent() throws DOMException;
+    public boolean isSupported(String feature, String version) {
+	return nativeIsSupported(feature, version);
+    }
+    native boolean nativeIsSupported(String feature, String version);
+    public boolean hasAttributes() {
+	return nativeHasAttributes();
+    }
+    native boolean nativeHasAttributes();
 
-    protected native void finalize();
+    public Node appendChild(Node newChild) throws DOMException {
+	return nativeAppendChild(newChild);
+    }
+    native Node nativeAppendChild(Node newChild) throws DOMException;
 
-    private native boolean XPCOM_equals(Object o);
-    private native int XPCOM_hashCode();
+    public Node cloneNode(boolean deep) {
+	return nativeCloneNode(deep);
+    }
+    native Node nativeCloneNode(boolean deep);
+
+    public NamedNodeMap getAttributes() {
+	return nativeGetAttributes();
+    }
+    native NamedNodeMap nativeGetAttributes();
+
+    public NodeList getChildNodes() {
+	return nativeGetChildNodes();
+    }
+    native NodeList nativeGetChildNodes();
+
+    public Node getFirstChild() {
+	return nativeGetFirstChild();
+    }
+    native Node nativeGetFirstChild();
+
+    public Node getLastChild() {
+	return nativeGetLastChild();
+    }
+    native Node nativeGetLastChild();
+
+    public Node getNextSibling() {
+	return nativeGetNextSibling();
+    }
+    native Node nativeGetNextSibling();
+
+    public String getNodeName() {
+	return nativeGetNodeName();
+    }
+    native String nativeGetNodeName();
+
+    public short getNodeType() {
+	return nativeGetNodeType();
+    }
+    native short nativeGetNodeType();
+
+    public String getNodeValue() {
+	return nativeGetNodeValue();
+    }
+    native String nativeGetNodeValue();
+
+    public Document getOwnerDocument() {
+	return nativeGetOwnerDocument();
+    }
+    native Document nativeGetOwnerDocument();
+
+    public Node getParentNode() {
+	return nativeGetParentNode();
+    }
+    native Node nativeGetParentNode();
+
+    public Node getPreviousSibling() {
+	return nativeGetPreviousSibling();
+    }
+    native Node nativeGetPreviousSibling();
+
+    public boolean hasChildNodes() {
+	return nativeHasChildNodes();
+    }
+    native boolean nativeHasChildNodes();
+
+    public Node insertBefore(Node newChild, Node refChild) throws DOMException {
+	return nativeInsertBefore(newChild, refChild);
+    }
+    native Node nativeInsertBefore(Node newChild, Node refChild) throws DOMException;
+    public Node removeChild(Node oldChild) throws DOMException {
+	return nativeRemoveChild(oldChild);
+    }
+    native Node nativeRemoveChild(Node oldChild) throws DOMException;
+
+    public Node replaceChild(Node newChild, Node oldChild) throws DOMException {
+	return nativeReplaceChild(newChild, oldChild);
+    }
+    native Node nativeReplaceChild(Node newChild, Node oldChild) throws DOMException;
+    public void setNodeValue(String nodeValue) {
+	nativeSetNodeValue(nodeValue);
+    }
+    native void nativeSetNodeValue(String nodeValue);
+
+    public String getTextContent() throws DOMException {
+	return nativeGetTextContent();
+    }
+    native String nativeGetTextContent() throws DOMException;
+
+    protected void finalize() {
+	nativeFinalize();
+    }
+    protected native void nativeFinalize();
+
+    private boolean XPCOM_equals(Object o) {
+	return nativeXPCOM_equals(o);
+    }
+    native boolean nativeXPCOM_equals(Object o);
+
+    private int XPCOM_hashCode() {
+	return nativeXPCOM_hashCode();
+    }
+    private native int nativeXPCOM_hashCode();
 
     //since DOM level 2
-    public native boolean supports(String feature, String version);
-    public native String getNamespaceURI();
-    public native String getPrefix();
-    public native void setPrefix(String prefix);
-    public native String getLocalName();
+    public boolean supports(String feature, String version) {
+	return nativeSupports(feature, version);
+    }
+    native boolean nativeSupports(String feature, String version);
+    public String getNamespaceURI() {
+	return nativeGetNamespaceURI();
+    }
+    native String nativeGetNamespaceURI();
+
+    public String getPrefix() {
+	return nativeGetPrefix();
+    }
+    native String nativeGetPrefix();
+
+    public void setPrefix(String prefix) {
+	nativeSetPrefix(prefix);
+    }
+    native void nativeSetPrefix(String prefix);
+
+    public String getLocalName() {
+	return nativeGetLocalName();
+    }
+    native String nativeGetLocalName();
+
     
     public void addEventListener(String type, 
                                  EventListener listener, 
@@ -209,13 +318,15 @@ public class NodeImpl implements Node, EventTarget {
         throw new UnsupportedOperationException();
     }
     
-    private native long  addNativeEventListener(String type,
-                                             EventListener listener,
-                                             boolean useCapture);
+    private long  addNativeEventListener(String type, EventListener listener, boolean useCapture) {
+	return nativeAddNativeEventListener(type, listener, useCapture);
+    }
+    private native long nativeAddNativeEventListener(String type, EventListener listener, boolean useCapture);
 
-    private native void  removeNativeEventListener(String type,
-                                                long nativeListener,
-                                                boolean useCapture);
+    private void  removeNativeEventListener(String type, long nativeListener, boolean useCapture) {
+	nativeRemoveNativeEventListener(type, nativeListener, useCapture);
+    }
+    private native void  nativeRemoveNativeEventListener(String type, long nativeListener, boolean useCapture);
 
     public void         normalize() {
         throw new UnsupportedOperationException();

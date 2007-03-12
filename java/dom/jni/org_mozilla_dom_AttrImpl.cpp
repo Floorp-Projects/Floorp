@@ -29,7 +29,7 @@
  * Method:    getName
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_AttrImpl_getName
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_AttrImpl_nativeGetName
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMAttr* attr = (nsIDOMAttr*) 
@@ -62,7 +62,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_AttrImpl_getName
  * Method:    getSpecified
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_AttrImpl_getSpecified
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_AttrImpl_nativeGetSpecified
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMAttr* attr = (nsIDOMAttr*) 
@@ -89,7 +89,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_AttrImpl_getSpecified
  * Method:    getValue
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_AttrImpl_getValue
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_AttrImpl_nativeGetValue
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMAttr* attr = (nsIDOMAttr*) 
@@ -122,7 +122,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_AttrImpl_getValue
  * Method:    setValue
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_AttrImpl_setValue
+JNIEXPORT void JNICALL Java_org_mozilla_dom_AttrImpl_nativeSetValue
   (JNIEnv *env, jobject jthis, jstring jval)
 {
   nsIDOMAttr* attr = (nsIDOMAttr*) 
@@ -153,7 +153,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_AttrImpl_setValue
  * Method:    getOwnerElement
  * Signature: ()Lorg/w3c/dom/Element;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_AttrImpl_getOwnerElement
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_AttrImpl_nativeGetOwnerElement
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMAttr* attr = (nsIDOMAttr*) 

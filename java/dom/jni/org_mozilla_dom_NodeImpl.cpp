@@ -129,7 +129,7 @@ static NS_DEFINE_IID(kIDOMEventTargetIID, NS_IDOMEVENTTARGET_IID);
     OMDNI_didCall = PR_FALSE; \
   } 
 
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_1equals
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_nativeXPCOM_1equals
   (JNIEnv *env, jobject jthis, jobject nodeArg)
 {
   jboolean b_retFlag = JNI_FALSE;
@@ -182,7 +182,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_1equals
   return b_retFlag;
 }
 
-JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_1hashCode
+JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeImpl_nativeXPCOM_1hashCode
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* p_thisNode = 
@@ -211,7 +211,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_1hashCode
  * Method:    isSupported
  * Signature: (Ljava/lang/String;Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_isSupported
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_nativeIsSupported
   (JNIEnv *env, jobject jthis, jstring jfeature, jstring jversion)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -256,7 +256,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_isSupported
  * Method:    hasAttributes
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_hasAttributes
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_nativeHasAttributes
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -284,7 +284,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_hasAttributes
  * Method:    finalize
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_finalize
+JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_nativeFinalize
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -303,7 +303,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_finalize
  * Method:    appendChild
  * Signature: (Lorg/w3c/dom/Node;)Lorg/w3c/dom/Node;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_appendChild
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_nativeAppendChild
   (JNIEnv *env, jobject jthis, jobject jchild)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -345,7 +345,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_appendChild
  * Method:    cloneNode
  * Signature: (Z)Lorg/w3c/dom/Node;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_cloneNode
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_nativeCloneNode
   (JNIEnv *env, jobject jthis, jboolean jdeep)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -373,7 +373,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_cloneNode
  * Method:    getAttributes
  * Signature: ()Lorg/w3c/dom/NamedNodeMap;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getAttributes
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_nativeGetAttributes
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -417,7 +417,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getAttributes
  * Method:    getChildNodes
  * Signature: ()Lorg/w3c/dom/NodeList;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getChildNodes
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_nativeGetChildNodes
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -459,7 +459,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getChildNodes
  * Method:    getFirstChild
  * Signature: ()Lorg/w3c/dom/Node;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getFirstChild
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_nativeGetFirstChild
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -488,7 +488,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getFirstChild
  * Method:    getLastChild
  * Signature: ()Lorg/w3c/dom/Node;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getLastChild
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_nativeGetLastChild
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -517,7 +517,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getLastChild
  * Method:    getNextSibling
  * Signature: ()Lorg/w3c/dom/Node;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getNextSibling
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_nativeGetNextSibling
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -543,7 +543,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getNextSibling
  * Method:    getNodeName
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNodeName
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_nativeGetNodeName
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -577,7 +577,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNodeName
  * Method:    getNodeType
  * Signature: ()S
  */
-JNIEXPORT jshort JNICALL Java_org_mozilla_dom_NodeImpl_getNodeType
+JNIEXPORT jshort JNICALL Java_org_mozilla_dom_NodeImpl_nativeGetNodeType
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -675,7 +675,7 @@ JNIEXPORT jshort JNICALL Java_org_mozilla_dom_NodeImpl_getNodeType
  * Method:    getNodeValue
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNodeValue
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_nativeGetNodeValue
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -733,7 +733,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNodeValue
  * Method:    getTextContent
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getTextContent
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_nativeGetTextContent
   (JNIEnv *env, jobject jthis)
 {
   nsCOMPtr<nsIDOMNode> node = (nsIDOMNode*) 
@@ -775,7 +775,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getTextContent
  * Method:    getOwnerDocument
  * Signature: ()Lorg/w3c/dom/Document;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getOwnerDocument
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_nativeGetOwnerDocument
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -816,7 +816,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getOwnerDocument
  * Method:    getParentNode
  * Signature: ()Lorg/w3c/dom/Node;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getParentNode
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_nativeGetParentNode
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -842,7 +842,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getParentNode
  * Method:    getPreviousSibling
  * Signature: ()Lorg/w3c/dom/Node;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getPreviousSibling
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_nativeGetPreviousSibling
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -871,7 +871,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getPreviousSibling
  * Method:    hasChildNodes
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_hasChildNodes
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_nativeHasChildNodes
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -898,7 +898,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_hasChildNodes
  * Method:    insertBefore
  * Signature: (Lorg/w3c/dom/Node;Lorg/w3c/dom/Node;)Lorg/w3c/dom/Node;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_insertBefore
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_nativeInsertBefore
   (JNIEnv *env, jobject jthis, jobject jnewChild, jobject jrefChild)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -952,7 +952,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_insertBefore
  * Method:    removeChild
  * Signature: (Lorg/w3c/dom/Node;)Lorg/w3c/dom/Node;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_removeChild
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_nativeRemoveChild
   (JNIEnv *env, jobject jthis, jobject joldChild)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -993,7 +993,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_removeChild
  * Method:    replaceChild
  * Signature: (Lorg/w3c/dom/Node;Lorg/w3c/dom/Node;)Lorg/w3c/dom/Node;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_replaceChild
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_nativeReplaceChild
   (JNIEnv *env, jobject jthis, jobject jnewChild, jobject joldChild)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -1044,7 +1044,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_replaceChild
  * Method:    setNodeValue
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setNodeValue
+JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_nativeSetNodeValue
   (JNIEnv *env, jobject jthis, jstring jvalue)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -1100,7 +1100,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setNodeValue
  * Method:    addNativeEventListener
  * Signature: (Ljava/lang/String;Lorg/w3c/dom/events/EventListener;Z)J
  */
-JNIEXPORT jlong JNICALL Java_org_mozilla_dom_NodeImpl_addNativeEventListener
+JNIEXPORT jlong JNICALL Java_org_mozilla_dom_NodeImpl_nativeAddNativeEventListener
 (JNIEnv *env, jobject jthis, jstring jtype, jobject jlistener, jboolean juseCapture)
 {
     nsIDOMEventListener *listener = NULL;
@@ -1148,7 +1148,7 @@ JNIEXPORT jlong JNICALL Java_org_mozilla_dom_NodeImpl_addNativeEventListener
  * Method:    removeNativeEventListener
  * Signature: (Ljava/lang/String;JZ)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_removeNativeEventListener
+JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_nativeRemoveNativeEventListener
  (JNIEnv *env, jobject jthis, jstring jtype, jlong jlistener, jboolean juseCapture)
 {
     PRBool useCapture;
@@ -1193,7 +1193,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_removeNativeEventListener
  * Method:    supports
  * Signature: (Ljava/lang/String;Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_supports
+JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_nativeSupports
   (JNIEnv *env, jobject jthis, jstring jfeature, jstring jversion)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -1237,7 +1237,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_supports
  * Method:    getNamespaceURI
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNamespaceURI
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_nativeGetNamespaceURI
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -1271,7 +1271,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNamespaceURI
  * Method:    getPrefix
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getPrefix
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_nativeGetPrefix
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -1305,7 +1305,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getPrefix
  * Method:    setPrefix
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setPrefix
+JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_nativeSetPrefix
   (JNIEnv *env, jobject jthis, jstring jprefix)
 {
   nsIDOMNode* node = (nsIDOMNode*) 
@@ -1341,7 +1341,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setPrefix
  * Method:    getLocalName
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getLocalName
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_nativeGetLocalName
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNode* node = (nsIDOMNode*) 

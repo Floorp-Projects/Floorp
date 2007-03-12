@@ -30,7 +30,7 @@
  * Method:    getPublicId
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NotationImpl_getPublicId
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NotationImpl_nativeGetPublicId
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNotation* notation = (nsIDOMNotation*) 
@@ -64,7 +64,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NotationImpl_getPublicId
  * Method:    getSystemId
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NotationImpl_getSystemId
+JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NotationImpl_nativeGetSystemId
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMNotation* notation = (nsIDOMNotation*) 
