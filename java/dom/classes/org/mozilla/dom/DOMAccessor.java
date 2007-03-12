@@ -80,22 +80,72 @@ package org.mozilla.dom;
 
 import java.util.Vector;
 import java.util.Enumeration;
+import org.mozilla.util.ReturnRunnable;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import java.security.AccessController;
+import org.mozilla.util.RunnableRunner;
 
 public final class DOMAccessor {
+
+    private static final String JAVADOM_LOADED_PROPERTY_NAME = 
+	"org.mozilla.webclient.impl.wrapper_native.javadomjni.loaded";
+    
+    private static RunnableRunner runnableRunner = null;
 
     private static Vector documentLoadListeners = new Vector();
     private static JavaDOMPermission permission = new JavaDOMPermission("JavaDOM");
 
-    static {
-	System.loadLibrary("javadomjni");
+    private static boolean isNativeLibraryLoaded = false;
+    private static boolean isNativeLibraryLoadedPropertySet = false;
+    public static boolean isNativeLibraryLoaded() {
+	if (isNativeLibraryLoadedPropertySet) {
+	    return isNativeLibraryLoaded;
+	}
+	
+	boolean result = false;
+	String propValue  = System.getProperty(JAVADOM_LOADED_PROPERTY_NAME);
+	if (null != propValue) {
+	    try {
+		result = Boolean.valueOf(propValue).booleanValue();
+	    }
+	    catch (Exception e) {
+		result = isNativeLibraryLoaded;
+	    }
+	}
+	else {
+	    result = isNativeLibraryLoaded;
+	}
+	
+	return result;
+    }
+    public static void setNativeLibraryLoaded(boolean newState) {
+	isNativeLibraryLoaded = newState;
+	isNativeLibraryLoadedPropertySet = true;
     }
 
-    private void DOMAccessorImpl() {}
+    static {
+	if (!isNativeLibraryLoaded()) {
+	    System.loadLibrary("javadomjni");
+	    setNativeLibraryLoaded(true);
+	}
+    }
+
+    private void DOMAccessorImpl() {
+        if (null == runnableRunner) {
+            runnableRunner = new SameThreadRunnableRunner();
+        }
+    }
+    
+    public static void setRunner(RunnableRunner runner) {
+        runnableRunner = runner;
+    }
+    
+    public static RunnableRunner getRunner() {
+        return runnableRunner;
+    }
 
     private static void register() {
 	nativeRegister();
@@ -218,4 +268,20 @@ public final class DOMAccessor {
 	}
 	doGC();
     }
+    
+}
+
+class SameThreadRunnableRunner implements RunnableRunner {
+    
+    SameThreadRunnableRunner() {}
+    
+    public void pushRunnable(Runnable toInvoke) {
+        toInvoke.run();
+    }
+
+    public Object pushBlockingReturnRunnable(ReturnRunnable toInvoke) throws RuntimeException {
+        toInvoke.run();
+        return toInvoke.getResult();
+    }
+    
 }

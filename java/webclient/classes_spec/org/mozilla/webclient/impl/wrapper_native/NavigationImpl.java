@@ -27,6 +27,7 @@ import org.mozilla.util.Assert;
 import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
 import org.mozilla.util.RangeException;
+import org.mozilla.util.ReturnRunnable;
 
 import org.mozilla.webclient.BrowserControl;
 import org.mozilla.webclient.Navigation;
@@ -136,7 +137,7 @@ public void refresh(long loadFlags)
     final long finalLoadFlags = loadFlags;
     Assert.assert_it(-1 != getNativeBrowserControl());
     
-    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 	    public Object run() {
 		nativeRefresh(NavigationImpl.this.getNativeBrowserControl(), 
 			      finalLoadFlags);
@@ -154,7 +155,7 @@ public void stop()
     getWrapperFactory().verifyInitialized();
     Assert.assert_it(-1 != getNativeBrowserControl());
     
-    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 	    public Object run() {
 		nativeStop(getNativeBrowserControl());
 		return null;
@@ -275,7 +276,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("NavigationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.12 2007/01/17 11:43:43 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.13 2007/03/12 20:39:22 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

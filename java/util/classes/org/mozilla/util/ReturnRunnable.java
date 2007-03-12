@@ -22,7 +22,7 @@
  *      Louis-Philippe Gagnon <louisphilippe@macadamian.com>
  */
 
-package org.mozilla.webclient.impl.wrapper_native;
+package org.mozilla.util;
 
 /**
  * <p>Extend the concept of <code>java.lang.Runnable</code> to allow for
@@ -30,7 +30,7 @@ package org.mozilla.webclient.impl.wrapper_native;
  *
  */ 
 
-public abstract class WCRunnable {
+public abstract class ReturnRunnable {
 
     public abstract Object run();
     

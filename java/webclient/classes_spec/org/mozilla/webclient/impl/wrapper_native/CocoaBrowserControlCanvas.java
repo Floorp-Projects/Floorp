@@ -28,7 +28,7 @@ package org.mozilla.webclient.impl.wrapper_native;
 
 import org.mozilla.webclient.BrowserControlCanvas;
 
-import org.mozilla.webclient.impl.wrapper_native.WCRunnable;
+import org.mozilla.util.ReturnRunnable;
 import org.mozilla.webclient.impl.wrapper_native.NativeEventThread;
 
 import java.awt.*;
@@ -55,7 +55,7 @@ public class CocoaBrowserControlCanvas extends BrowserControlCanvas {
 	 */
     protected int getWindow() {
 	Integer result = (Integer)
-	    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
+	    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable(){
 		    public Object run() {
 			Integer result = 
 			    new Integer(CocoaBrowserControlCanvas.this.getHandleToPeer());

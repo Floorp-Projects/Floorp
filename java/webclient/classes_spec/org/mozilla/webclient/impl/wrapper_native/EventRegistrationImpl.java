@@ -39,6 +39,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.Component;
 import org.mozilla.dom.DOMAccessor;
+import org.mozilla.util.ReturnRunnable;
 
 import org.mozilla.webclient.BrowserControl;
 import org.mozilla.webclient.BrowserControlCanvas;
@@ -154,7 +155,7 @@ public void addDocumentLoadListener(DocumentLoadListener listener)
     
     synchronized(documentLoadListeners) {
 	if (listener instanceof PageInfoListener) {
-	    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
+	    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable(){
 		    public Object run() {
 			nativeSetCapturePageInfo(getNativeBrowserControl(),
 						 true);
@@ -186,7 +187,7 @@ public void removeDocumentLoadListener(DocumentLoadListener listener)
 	documentLoadListeners.remove(listener);
 	
 	if (0 == documentLoadListeners.size()) {
-	    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
+	    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable(){
 		    public Object run() {
 			nativeSetCapturePageInfo(getNativeBrowserControl(),
 						 false);
@@ -264,7 +265,7 @@ public void setNewWindowListener(NewWindowListener listener)
     getWrapperFactory().verifyInitialized();
 
     final boolean doClear = null == listener;
-    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
+    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable(){
         public Object run() {
             if (doClear) {
                 nativeSetNewWindowListenerAttached(getNativeBrowserControl(),

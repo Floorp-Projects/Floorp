@@ -25,6 +25,7 @@ package org.mozilla.webclient.impl.wrapper_native;
 import org.mozilla.util.Assert;
 import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
+import org.mozilla.util.ReturnRunnable;
 
 import org.mozilla.webclient.BrowserControlCanvas;
 
@@ -41,7 +42,7 @@ import java.awt.Dimension;
 
  * There is one instance of GtkBrowserControlCanvas per top level awt Frame.
 
- * @version $Id: GtkBrowserControlCanvas.java,v 1.2 2005/11/25 08:16:32 timeless%mozdev.org Exp $
+ * @version $Id: GtkBrowserControlCanvas.java,v 1.3 2007/03/12 20:39:22 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlCanvasFactory
  * 
@@ -87,7 +88,7 @@ public class GtkBrowserControlCanvas extends BrowserControlCanvas /* implements 
                 //Use the AWT Native Peer interface to get the handle
                 //of this Canvas's native peer
                 Integer canvasWin = (Integer)
-		    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 			    public Object run() {
 				Integer result = 
 				    new Integer(GtkBrowserControlCanvas.this.getHandleToPeer());
@@ -97,7 +98,7 @@ public class GtkBrowserControlCanvas extends BrowserControlCanvas /* implements 
                 canvasWinID = canvasWin.intValue();
                 //Set our canvas as a parent of the top-level gtk widget
                 //which contains Mozilla.
-		NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 			public Object run() {
 			    GtkBrowserControlCanvas.this.reparentWindow(GtkBrowserControlCanvas.this.gtkWinID, GtkBrowserControlCanvas.this.canvasWinID);
 			    return null;
@@ -114,7 +115,7 @@ public class GtkBrowserControlCanvas extends BrowserControlCanvas /* implements 
 	final int finalHeight = height;
 
         synchronized(getTreeLock()) {
-	    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 		    public Object run() {
 			GtkBrowserControlCanvas.this.setGTKWindowSize(GtkBrowserControlCanvas.this.gtkTopWindow, 
 					      finalWidth, finalHeight);
@@ -141,7 +142,7 @@ public class GtkBrowserControlCanvas extends BrowserControlCanvas /* implements 
     protected int getWindow() {
         synchronized(getTreeLock()) {
 	    Integer topWindow = (Integer)
-		NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 			public Object run() {
 			    Integer result = 
 				new Integer(GtkBrowserControlCanvas.this.createTopLevelWindow());
@@ -152,7 +153,7 @@ public class GtkBrowserControlCanvas extends BrowserControlCanvas /* implements 
 	    
             final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 	    Integer winPtr = (Integer)
-		NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 			public Object run() {
 			    Integer result = 
 				new Integer(GtkBrowserControlCanvas.this.createContainerWindow(GtkBrowserControlCanvas.this.gtkTopWindow, screenSize.width, screenSize.height));
@@ -162,7 +163,7 @@ public class GtkBrowserControlCanvas extends BrowserControlCanvas /* implements 
             this.gtkWinPtr = winPtr.intValue();
 	    
 	    Integer winId = (Integer)
-		NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 			public Object run() {
 			    Integer result = new Integer(GtkBrowserControlCanvas.this.getGTKWinID(GtkBrowserControlCanvas.this.gtkWinPtr));
 			    return result;

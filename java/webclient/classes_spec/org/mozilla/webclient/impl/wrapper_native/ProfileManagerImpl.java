@@ -26,6 +26,7 @@ package org.mozilla.webclient.impl.wrapper_native;
 import org.mozilla.util.Assert;
 import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
+import org.mozilla.util.ReturnRunnable;
 
 import org.mozilla.webclient.ProfileManager;
 import org.mozilla.webclient.impl.WrapperFactory;
@@ -59,7 +60,7 @@ public void shutdown() {
 public int getProfileCount()
 {
     Integer result = (Integer)
-	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 		public Object run() {
 		    Integer count = new Integer(nativeGetProfileCount(getWrapperFactory().getNativeWrapperFactory()));
 		    return count;
@@ -71,7 +72,7 @@ public int getProfileCount()
 public String [] getProfileList()
 {
     String [] list = 
-	(String []) NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	(String []) NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 		public Object run() {
 		    Object result = nativeGetProfileList(getWrapperFactory().getNativeWrapperFactory());
 		    return result;
@@ -84,7 +85,7 @@ public boolean profileExists(String profileName)
 {
     ParameterCheck.nonNull(profileName);
     final String finalStr = new String(profileName);
-    Boolean exists = (Boolean) NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+    Boolean exists = (Boolean) NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 	    public Object run() {
 		Boolean result = new Boolean(nativeProfileExists(getWrapperFactory().getNativeWrapperFactory(),
 								 finalStr));
@@ -97,7 +98,7 @@ public boolean profileExists(String profileName)
 public String getCurrentProfile()
 {
     String currProfile = (String)
-	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 	    public Object run() {
 		Object result = nativeGetCurrentProfile(getWrapperFactory().getNativeWrapperFactory());
 		return result;
@@ -110,7 +111,7 @@ public void setCurrentProfile(String profileName)
 {
     ParameterCheck.nonNull(profileName);
     final String finalStr = new String(profileName);
-    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 	    public Object run() {
 		nativeSetCurrentProfile(getWrapperFactory().getNativeWrapperFactory(),
 					finalStr);
@@ -131,7 +132,7 @@ public void createNewProfile(String profileName,
     final String finalLangcode = (null != langcode) ? 
 	new String(langcode) : null;
     final boolean finalExistingDir = useExistingDir;
-    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 	    public Object run() {
 		nativeCreateNewProfile(getWrapperFactory().getNativeWrapperFactory(),
 				       finalProfileName, finalProfileDir, 
@@ -147,7 +148,7 @@ public void renameProfile(String currName, String newName)
     ParameterCheck.nonNull(newName);
     final String finalCurrName = new String(currName);
     final String finalNewName = new String(newName);
-    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 	    public Object run() {
 		nativeRenameProfile(getWrapperFactory().getNativeWrapperFactory(),
 				    finalCurrName, finalNewName);
@@ -161,7 +162,7 @@ public void deleteProfile(String profileName, boolean canDeleteFiles)
     ParameterCheck.nonNull(profileName);
     final String finalProfileName = new String(profileName);
     final boolean finalCanDeleteFiles = canDeleteFiles;
-    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 	    public Object run() {
 		nativeDeleteProfile(getWrapperFactory().getNativeWrapperFactory(),
 				    finalProfileName, finalCanDeleteFiles);

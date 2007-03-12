@@ -24,6 +24,7 @@ package org.mozilla.webclient.impl.wrapper_native;
 import org.mozilla.util.Assert;
 import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
+import org.mozilla.util.ReturnRunnable;
 
 import org.mozilla.webclient.impl.WrapperFactory;
 import org.mozilla.webclient.impl.Service;
@@ -109,7 +110,7 @@ public void setPref(String prefName, String prefValue)
     // determine the type of pref value: String, boolean, integer
     try {
         final Integer intVal = Integer.valueOf(prefValue);
-        NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+        NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 		public Object run() {
 		    nativeSetIntPref(getWrapperFactory().getNativeWrapperFactory(), finalName, intVal.intValue());
 		    return null;
@@ -124,7 +125,7 @@ public void setPref(String prefName, String prefValue)
         if (null != prefValue &&
             (prefValue.equals("true") || prefValue.equals("false"))) {
             final Boolean boolVal = Boolean.valueOf(prefValue);
-	    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
+	    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable(){
 		    public Object run() {
 			nativeSetBoolPref(getWrapperFactory().getNativeWrapperFactory(), 
 					  finalName, boolVal.booleanValue());
@@ -140,7 +141,7 @@ public void setPref(String prefName, String prefValue)
             // it must be a string
 	    final String finalValue = (null != prefValue) ? 
 		new String(prefValue) : null;
-	    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
+	    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable(){
 		    public Object run() {
 			nativeSetUnicharPref(getWrapperFactory().getNativeWrapperFactory(), finalName, finalValue);
 			return null;
@@ -157,7 +158,7 @@ public void setPref(String prefName, String prefValue)
 public Properties getPrefs()
 {
     props = (Properties)
-	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 		public Object run() {
 		    Properties result = 
 			nativeGetPrefs(getWrapperFactory().getNativeWrapperFactory(), 

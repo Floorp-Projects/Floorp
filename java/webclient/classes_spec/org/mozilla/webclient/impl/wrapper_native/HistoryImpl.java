@@ -25,6 +25,7 @@ package org.mozilla.webclient.impl.wrapper_native;
 import org.mozilla.util.Assert;
 import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
+import org.mozilla.util.ReturnRunnable;
 
 import org.mozilla.webclient.BrowserControl;
 import org.mozilla.webclient.History;
@@ -79,7 +80,7 @@ public void back()
     getWrapperFactory().verifyInitialized();
     Assert.assert_it(-1 != getNativeBrowserControl());
 
-    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 	    public Object run() {
 		nativeBack(getNativeBrowserControl());
 		return null;
@@ -97,7 +98,7 @@ public boolean canBack()
     Assert.assert_it(-1 != getNativeBrowserControl());
 
     Boolean result = (Boolean)
-	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 		public Object run() {
 		    boolean canBack = nativeCanBack(getNativeBrowserControl());
 		    return new Boolean(canBack);
@@ -144,7 +145,7 @@ public void forward()
     getWrapperFactory().verifyInitialized();
     Assert.assert_it(-1 != getNativeBrowserControl());
 
-    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 	    public Object run() {
 		nativeForward(getNativeBrowserControl());
 		return null;
@@ -162,7 +163,7 @@ public boolean canForward()
     Assert.assert_it(-1 != getNativeBrowserControl());
 
     Boolean result = (Boolean)
-	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 		public Object run() {
 		    boolean canForward = nativeCanForward(getNativeBrowserControl());
 		    return new Boolean(canForward);

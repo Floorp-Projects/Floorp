@@ -26,6 +26,7 @@ import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
 
 import java.util.Enumeration;
+import org.mozilla.util.ReturnRunnable;
 
 public class RDFEnumeration extends Object implements Enumeration
 {
@@ -102,7 +103,7 @@ public RDFEnumeration(int yourNativeContext,
 
 protected void finalize() throws Throwable
 {
-    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 	    public Object run() {
 		nativeFinalize(RDFEnumeration.this.nativeContext);
 		return null;
@@ -123,7 +124,7 @@ public boolean hasMoreElements()
 {
     Assert.assert_it(-1 != nativeRDFNode);
     Boolean result = (Boolean)
-	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 		public Object run() {
 		    Boolean result = 
 			new Boolean(nativeHasMoreElements(RDFEnumeration.this.nativeContext, 
@@ -143,7 +144,7 @@ public Object nextElement()
     Assert.assert_it(null != parent);
     Object result = null;
     Integer nextNativeRDFNode = (Integer)
-	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 		public Object run() {
 		    Integer result = 
 			new Integer(nativeNextElement(RDFEnumeration.this.nativeContext,

@@ -24,6 +24,7 @@ package org.mozilla.webclient.impl.wrapper_native;
 import org.mozilla.util.Assert;
 import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
+import org.mozilla.util.ReturnRunnable;
 
 import org.mozilla.webclient.BrowserControl;
 import org.mozilla.webclient.BrowserControlCanvas;
@@ -35,6 +36,8 @@ import org.mozilla.webclient.ImplObject;
 
 import org.mozilla.webclient.impl.WrapperFactory;
 import org.mozilla.webclient.impl.Service;
+
+import org.mozilla.dom.DOMAccessor;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -71,8 +74,11 @@ import java.util.HashMap;
 
 public class WrapperFactoryImpl extends Object implements WrapperFactory {
     //
-    // Protected Constants
+    // Constants
     //
+
+    public static final String JAVADOM_LOADED_PROPERTY_NAME = 
+	"org.mozilla.webclient.impl.wrapper_native.javadomjni.loaded";
     
     //
     // Class Variables
@@ -145,7 +151,7 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 	
 	BrowserControl result = new BrowserControlImpl(this);
 	final int nativeBrowserControl = nativeCreateBrowserControl();
-	eventThread.pushBlockingWCRunnable(new WCRunnable() {
+	eventThread.pushBlockingReturnRunnable(new ReturnRunnable() {
 		public Object run() {
 		    WrapperFactoryImpl.this.nativeInitBrowserControl(nativeWrapperFactory, nativeBrowserControl);
 		    return null;
@@ -166,7 +172,7 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 
 	if (null != (nativeBc = (Integer) browserControls.get(toDelete))) {
 	    final int nativeBrowserControl = nativeBc.intValue();
-	    eventThread.pushBlockingWCRunnable(new WCRunnable() {
+	    eventThread.pushBlockingReturnRunnable(new ReturnRunnable() {
 		    public Object run() {
 			WrapperFactoryImpl.this.nativeDestroyBrowserControl(nativeBrowserControl);
 			return null;
@@ -279,6 +285,14 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
     
     public int loadNativeLibraryIfNecessary() {
         System.loadLibrary("webclient");
+	System.setProperty(JAVADOM_LOADED_PROPERTY_NAME,  "true");
+	try {
+	    System.loadLibrary("javadomjni");
+	    DOMAccessor.setNativeLibraryLoaded(true);
+	}
+	catch (Exception ex) {
+	    System.setProperty(JAVADOM_LOADED_PROPERTY_NAME,  "false");
+	}
   
         nativeWrapperFactory = nativeCreateNativeWrapperFactory();
 	Assert.assert_it(-1 != nativeWrapperFactory);
@@ -335,7 +349,7 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 
 	initialized = true;
 	try {
-	    eventThread.pushBlockingWCRunnable(new WCRunnable() {
+	    eventThread.pushBlockingReturnRunnable(new ReturnRunnable() {
 		    public Object run() {
 			
 			((Service)WrapperFactoryImpl.this.profileManager).startup();
@@ -372,7 +386,7 @@ public void terminate() throws Exception
 	throw new IllegalStateException("Already terminated");
     }
 
-    eventThread.pushBlockingWCRunnable(new WCRunnable() {
+    eventThread.pushBlockingReturnRunnable(new ReturnRunnable() {
 	    public Object run() {
 		Assert.assert_it(null != bookmarks);
 // PENDING(edburns): 20070130 XULRunner has no bookmarks		((Service)bookmarks).shutdown();

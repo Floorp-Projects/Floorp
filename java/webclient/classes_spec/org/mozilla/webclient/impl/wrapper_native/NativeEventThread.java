@@ -31,6 +31,8 @@ import java.util.logging.Logger;
 import org.mozilla.util.Assert;
 import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
+import org.mozilla.util.ReturnRunnable;
+import org.mozilla.util.RunnableRunner;
 
 import org.mozilla.webclient.impl.WrapperFactory;
 
@@ -40,7 +42,7 @@ import org.mozilla.webclient.impl.WrapperFactory;
  * methods.</p>
  */
 
-public class NativeEventThread extends Thread {
+public class NativeEventThread extends Thread implements RunnableRunner {
 
     //
     // Class variables
@@ -63,7 +65,7 @@ public class NativeEventThread extends Thread {
     private WrapperFactory wrapperFactory;
     private int nativeWrapperFactory;
     
-    private Queue<WCRunnable> blockingRunnables;
+    private Queue<ReturnRunnable> blockingRunnables;
     private Queue<Runnable> runnables;
     
     
@@ -85,7 +87,7 @@ public class NativeEventThread extends Thread {
 	ParameterCheck.nonNull(yourFactory);
 	
 	wrapperFactory = yourFactory;
-	blockingRunnables = new ConcurrentLinkedQueue<WCRunnable>();
+	blockingRunnables = new ConcurrentLinkedQueue<ReturnRunnable>();
 	runnables = new ConcurrentLinkedQueue<Runnable>();
     }
     
@@ -162,7 +164,7 @@ public void run()
 }
 
 public void runUntilEventOfType(Class wcRunnableClass) {
-    WCRunnable result = null;
+    ReturnRunnable result = null;
     while (doEventLoopOnce(wcRunnableClass)) {
     }
 }
@@ -173,7 +175,7 @@ public void runUntilEventOfType(Class wcRunnableClass) {
 
     private boolean doEventLoopOnce(Class... wcRunnableClass) {
         Runnable runnable;
-        WCRunnable wcRunnable;
+        ReturnRunnable wcRunnable;
         boolean result = true;
         try {
             Thread.sleep(1);
@@ -252,13 +254,13 @@ public void runUntilEventOfType(Class wcRunnableClass) {
 // Package methods
 //
 
-    void pushRunnable(Runnable toInvoke) {
+    public void pushRunnable(Runnable toInvoke) {
 	synchronized (this) {
 	    runnables.add(toInvoke);
 	}
     }
     
-    Object pushBlockingWCRunnable(WCRunnable toInvoke) throws RuntimeException {
+    public Object pushBlockingReturnRunnable(ReturnRunnable toInvoke) throws RuntimeException {
 	Object result = null;
 
 	if (Thread.currentThread().getName().equals(instance.getName())){

@@ -29,6 +29,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import org.mozilla.util.Assert;
 import org.mozilla.util.ParameterCheck;
+import org.mozilla.util.ReturnRunnable;
 
 import org.mozilla.webclient.BrowserControl;
 import org.mozilla.webclient.CurrentPage2;
@@ -87,7 +88,7 @@ public CurrentPageImpl(WrapperFactory yourFactory,
     super(yourFactory, yourBrowserControl);
     // force the class to be loaded, thus loading the JNI library
     if (!domInitialized) {
-        NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+        NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
             public Object run() {
                 DOMAccessor.initialize();
                 return null;
@@ -118,7 +119,7 @@ public void copyCurrentSelectionToSystemClipboard()
     Assert.assert_it(-1 != getNativeBrowserControl());
 
     plainTextSelection = null;
-    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
         public Object run() {
             nativeCopyCurrentSelectionToSystemClipboard(CurrentPageImpl.this.getNativeBrowserControl());
             return null;
@@ -155,7 +156,7 @@ public void copyCurrentSelectionHtmlToSystemClipboard()
     Assert.assert_it(-1 != getNativeBrowserControl());
 
     htmlSelection = null;
-    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
         public Object run() {
             nativeCopyCurrentSelectionToSystemClipboard(CurrentPageImpl.this.getNativeBrowserControl());
             return null;
@@ -190,7 +191,7 @@ public Selection getSelection() {
     getWrapperFactory().verifyInitialized();
     final Selection selection = new SelectionImpl();
 
-    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 	    public Object run() {
 	     nativeGetSelection(CurrentPageImpl.this.getNativeBrowserControl(),
 				selection);
@@ -212,7 +213,7 @@ public void highlightSelection(Selection selection) {
         final int startOffset = selection.getStartOffset();
         final int endOffset = selection.getEndOffset();
 
-	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 		public Object run() {
 		    nativeHighlightSelection(CurrentPageImpl.this.getNativeBrowserControl(), 
 					     startContainer, endContainer, 
@@ -228,7 +229,7 @@ public void highlightSelection(Selection selection) {
     }
 
 public void clearAllSelections() {
-    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 	    public Object run() {
 		nativeClearAllSelections(CurrentPageImpl.this.getNativeBrowserControl());
 		return null;
@@ -253,7 +254,7 @@ public boolean find(String toFind, boolean dir, boolean doCase)
     Boolean result = Boolean.FALSE;
 
     result = (Boolean)
-	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
+	NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable(){
 	    public Object run() {
 		boolean rc = nativeFind(CurrentPageImpl.this.getNativeBrowserControl(), 
 					stringToFind, forward, matchCase);
@@ -277,7 +278,7 @@ public boolean findNext()
     Boolean result = Boolean.FALSE;
     
     result = (Boolean) 
-	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
+	NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable(){
 	    public Object run() {
 		boolean rc = nativeFindNext(CurrentPageImpl.this.getNativeBrowserControl());
 		return rc ? Boolean.TRUE : Boolean.FALSE;
@@ -305,7 +306,7 @@ public Document getDOM()
 {
     final Document[] resultHolder = new Document[1];
     resultHolder[0] = null;
-    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
         public Object run() {
             Document result = nativeGetDOM(getNativeBrowserControl());
             if (LOGGER.isLoggable((Level.INFO))) {
@@ -345,7 +346,7 @@ public String getSource()
     String HTMLContent = null;
     final Selection selection = new SelectionImpl();
 
-    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 	    public Object run() {
 		nativeGetSource(CurrentPageImpl.this.getNativeBrowserControl(),
 				selection);
@@ -385,7 +386,7 @@ public void resetFind()
 public void selectAll() {
     getWrapperFactory().verifyInitialized();
     
-    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 	    public Object run() {
 		nativeSelectAll(CurrentPageImpl.this.getNativeBrowserControl());
 		return null;

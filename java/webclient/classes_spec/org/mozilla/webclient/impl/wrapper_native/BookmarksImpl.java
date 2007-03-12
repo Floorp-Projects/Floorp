@@ -26,6 +26,7 @@ package org.mozilla.webclient.impl.wrapper_native;
 import org.mozilla.util.Assert;
 import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
+import org.mozilla.util.ReturnRunnable;
 
 import org.mozilla.webclient.Bookmarks;
 import org.mozilla.webclient.BookmarkEntry;
@@ -155,7 +156,7 @@ public TreeModel getBookmarks() throws IllegalStateException
     if (null == bookmarksTree) {
         TreeNode root;
         Integer nativeBookmarks = (Integer)
-            NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+            NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 		    public Object run() {
 			Integer result = 
 			    new Integer(nativeGetBookmarks(getWrapperFactory().
@@ -199,7 +200,7 @@ public BookmarkEntry newBookmarkEntry(String url)
     final String finalUrl = new String(url);
     getBookmarks();
     Integer newNode = (Integer)
-	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable() {
 		public Object run() {
 		    Integer result = 
 			new Integer(nativeNewRDFNode(getNativeBrowserControl(),

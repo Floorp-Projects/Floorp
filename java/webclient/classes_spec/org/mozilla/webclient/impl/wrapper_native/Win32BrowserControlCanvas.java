@@ -27,7 +27,7 @@ import org.mozilla.util.Assert;
 import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
 
-import org.mozilla.webclient.impl.wrapper_native.WCRunnable;
+import org.mozilla.util.ReturnRunnable;
 import org.mozilla.webclient.impl.wrapper_native.NativeEventThread;
 
 /**
@@ -39,7 +39,7 @@ import org.mozilla.webclient.impl.wrapper_native.NativeEventThread;
 
  * There is one instance of the BrowserControlCanvas per top level awt Frame.
 
- * @version $Id: Win32BrowserControlCanvas.java,v 1.2 2007/01/17 11:43:43 edburns%acm.org Exp $
+ * @version $Id: Win32BrowserControlCanvas.java,v 1.3 2007/03/12 20:39:22 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlCanvasFactory
  * 
@@ -68,7 +68,7 @@ public class Win32BrowserControlCanvas extends BrowserControlCanvas {
 	 */
     protected int getWindow() {
 	Integer result = (Integer)
-	    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
+	    NativeEventThread.instance.pushBlockingReturnRunnable(new ReturnRunnable(){
 		    public Object run() {
 			Integer result = 
 			    new Integer(Win32BrowserControlCanvas.this.getHandleToPeer());
