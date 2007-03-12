@@ -76,8 +76,7 @@ if test $? -ne 0 ; then
   exit 1
 fi
 
-list=$(list_files)
-eval "oldfiles=($list)"
+oldfiles=($(list_files))
 
 popd
 
@@ -87,7 +86,7 @@ if test $? -ne 0 ; then
 fi
 
 list=$(list_files)
-eval "newfiles=($list)"
+newfiles=($(list_files))
 
 popd
 
@@ -97,7 +96,7 @@ mkdir -p "$workdir"
 num_oldfiles=${#oldfiles[*]}
 
 for ((i=0; $i<$num_oldfiles; i=$i+1)); do
-  f=${oldfiles[$i]}
+  eval "f=${oldfiles[$i]}"
 
   # This file is created by Talkback, so we can ignore it
   if [ "$f" = "readme.txt" ]; then
@@ -147,11 +146,11 @@ done
 num_newfiles=${#newfiles[*]}
 
 for ((i=0; $i<$num_newfiles; i=$i+1)); do
-  f="${newfiles[$i]}"
+  eval "f=${newfiles[$i]}"
 
   # If we've already tested this file, then skip it
   for ((j=0; $j<$num_oldfiles; j=$j+1)); do
-    if [ "$f" = "${oldfiles[j]}" ]; then
+    if [ "\"$f\"" = "${oldfiles[j]}" ]; then
       continue 2
     fi
   done

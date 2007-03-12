@@ -36,8 +36,7 @@ fi
 archive="$1"
 
 # Generate a list of all files in the archive.
-list=$($MAR -t "$archive" | cut -d'	' -f3)
-eval "files=($list)"
+files=($($MAR -t "$archive" | cut -d'	' -f3))
 
 # Extract the files, creating subdirectories.  The resulting files are bzip2
 # compressed, so we need to walk the list of files, and decompress them.
@@ -48,7 +47,7 @@ num_files=${#files[*]}
 # Skip first "file" since it is actually the column header string "NAME" that
 # does not correspond to an actual file in the archive.
 for ((i=1; $i<$num_files; i=$i+1)); do
-  f=${files[$i]}
+  eval "f=${files[$i]}"
 
   echo "  decompressing $f"
 
