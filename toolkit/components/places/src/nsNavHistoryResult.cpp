@@ -2875,27 +2875,23 @@ nsNavHistoryFolderResultNode::OnItemChanged(PRInt64 aBookmarkId, nsIURI* aBookma
 {
   if (mOptions->ExcludeItems())
     return NS_OK; // don't update items when we aren't displaying them
-  if (! StartIncrementalUpdate())
+  if (!StartIncrementalUpdate())
     return NS_OK;
 
-  // The changetitles function will handle all the updating and redrawing for
-  // us. We know there is only one match and that we don't need recursion since
-  // children with this item in it will be notified separately.
+  PRUint32 nodeIndex;
+  nsNavHistoryResultNode* node = FindChildURIById(aBookmarkId, &nodeIndex);
+  if (!node)
+    return NS_ERROR_FAILURE;
+
   if (aProperty.EqualsLiteral("title")) {
-    return ChangeTitles(aBookmark, NS_ConvertUTF16toUTF8(aValue),
-                        PR_FALSE, PR_TRUE);
+    node->mTitle = NS_ConvertUTF16toUTF8(aValue);
+    return NS_OK;
   }
 
   nsCAutoString spec;
   nsresult rv = aBookmark->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 nodeIndex;
-  nsNavHistoryResultNode* node = FindChildURIById(aBookmarkId, &nodeIndex);
-  if (! node)
-    return NS_ERROR_FAILURE;
-
-  // XXXDietrich - do we need redraw and recursive update here?
   if (aProperty.EqualsLiteral("uri")) {
     node->mURI = spec;
     return NS_OK;
