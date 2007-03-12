@@ -88,6 +88,13 @@ static void blinkRgn(RgnHandle rgn);
 nsIRollupListener * gRollupListener = nsnull;
 nsIWidget         * gRollupWidget   = nsnull;
 
+// This mask is only defined on 10.4 and up.
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_4
+enum {
+  NSDeviceIndependentModifierFlagsMask	= 0xffff0000U
+};
+#endif
+
 
 @interface ChildView(Private)
 
@@ -1911,24 +1918,48 @@ NSEvent* globalDragEvent = nil;
 }
 
 
+// Return true if the correct modifiers are pressed to perform hand scrolling.
++ (BOOL) areHandScrollModifiers:(unsigned int)modifiers
+{
+  // The command and option key should be held down.  Ignore capsLock by
+  // setting it explicitly to match.
+  modifiers |= NSAlphaShiftKeyMask;
+  return (modifiers & NSDeviceIndependentModifierFlagsMask) ==
+      (NSAlphaShiftKeyMask | NSCommandKeyMask | NSAlternateKeyMask);
+}
+
+
+// If the user is pressing the hand scroll modifiers, then set
+// the hand scroll cursor.
+- (void) setHandScrollCursor:(NSEvent*)theEvent
+{
+  BOOL inMouseView = NO;
+
+  // check to see if the user has hand scroll modifiers held down; if so, 
+  // find out if the cursor is in an ChildView
+  if ([ChildView areHandScrollModifiers:[theEvent modifierFlags]]) {
+    NSPoint pointInWindow = [[self window] mouseLocationOutsideOfEventStream];
+
+    NSView* mouseView = [[[self window] contentView] hitTest:pointInWindow];
+    inMouseView = (mouseView != nil && [mouseView isMemberOfClass:[ChildView class]]);   
+  }
+  if (inMouseView) {
+      mGeckoChild->SetCursor(eCursor_grab);
+  } else {
+    nsCursor cursor = mGeckoChild->GetCursor();
+    if (!mInHandScroll) {
+      if (cursor == eCursor_grab || cursor == eCursor_grabbing)
+        mGeckoChild->SetCursor(eCursor_standard);
+    }
+  }
+}
+
+
 // reset the scroll flag and cursor
 - (void) stopHandScroll:(NSEvent*)theEvent
 {
   mInHandScroll = FALSE;
-
-  // calling flagsChanged will set the cursor appropriately
-  [self flagsChanged:theEvent];
-}
-
-
-// Return true if the correct modifiers are pressed to perform hand scrolling.
-+ (BOOL) areHandScrollModifiers:(unsigned int)modifiers
-{
-  // The command and option key should be held down; ignore caps lock. We only
-  // check the low word because Apple started using it in panther for other purposes
-  // (no idea what).
-  modifiers |= NSAlphaShiftKeyMask; // ignore capsLock by setting it explicitly to match
-  return modifiers >> 16 == (NSAlphaShiftKeyMask | NSCommandKeyMask | NSAlternateKeyMask) >> 16;
+  [self setHandScrollCursor:theEvent];
 }
 
 
@@ -2471,7 +2502,7 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
   }
   
   // checks to see if we should change to the hand cursor
-  [self flagsChanged:theEvent];
+  [self setHandScrollCursor:theEvent];
 }
 
 
@@ -2789,14 +2820,19 @@ static PRBool ConvertUnicodeToCharCode(PRUnichar inUniChar, unsigned char* outCh
 }
 
 
-static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& macEvent)
+static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& macEvent, PRUint32 keyType = 0)
 {
-    if ([cocoaEvent type] == NSKeyDown)
-      macEvent.what = [cocoaEvent isARepeat] ? autoKey : keyDown;
-    else
-      macEvent.what = keyUp;
+    UInt32 charCode = 0;
+    if ([cocoaEvent type] == NSFlagsChanged) {
+      macEvent.what = keyType == NS_KEY_DOWN ? keyDown : keyUp;
+    } else {
+      charCode = [[cocoaEvent characters] characterAtIndex:0];
+      if ([cocoaEvent type] == NSKeyDown)
+        macEvent.what = [cocoaEvent isARepeat] ? autoKey : keyDown;
+      else
+        macEvent.what = keyUp;
+    }
 
-    UInt32 charCode = [[cocoaEvent characters] characterAtIndex: 0];
     if (charCode >= 0x0080) {
         switch (charCode) {
         case NSUpArrowFunctionKey:
@@ -3239,30 +3275,46 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 }
 
 
-// look for the user's pressing of command and alt so that we can display
-// the hand scroll cursor
 - (void)flagsChanged:(NSEvent*)theEvent
 {
-  BOOL inMouseView = NO;
-  // check to see if the user has hand scroll modifiers held down; if so, 
-  // find out if the cursor is in an ChildView
-  if ([ChildView areHandScrollModifiers:[theEvent modifierFlags]]) {
-    NSPoint pointInWindow = [[self window] mouseLocationOutsideOfEventStream];
+  // Fire key up/down events for the modifier keys (shift, alt, ctrl, command).
+  
+  if ([theEvent type] == NSFlagsChanged) {
+    unsigned int modifiers =
+      [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
+    const PRUint32 kModifierMaskTable[] =
+      { NSShiftKeyMask, NSControlKeyMask, NSAlternateKeyMask, NSCommandKeyMask };
+    const PRUint32 kModifierCount = sizeof(kModifierMaskTable) /
+                                    sizeof(kModifierMaskTable[0]);
 
-    NSView* mouseView = [[[self window] contentView] hitTest:pointInWindow];
-    inMouseView = (mouseView != nil && [mouseView isMemberOfClass:[ChildView class]]);   
-  }
-  if (inMouseView) {
-      mGeckoChild->SetCursor(eCursor_grab);
-  } else {
-    nsCursor cursor = mGeckoChild->GetCursor();
-    if (!mInHandScroll) {
-      if (cursor == eCursor_grab || cursor == eCursor_grabbing)
-        mGeckoChild->SetCursor(eCursor_standard);
-      // pass on the event since we are not using it
-      [super flagsChanged:theEvent];
+    for(PRUint32 i = 0 ; i < kModifierCount ; i++) {
+      PRUint32 modifierBit = kModifierMaskTable[i];
+      if ((modifiers & modifierBit) != (mLastModifierState & modifierBit)) {
+        PRUint32 message = ((modifiers & modifierBit) != 0 ? NS_KEY_DOWN :
+                                                             NS_KEY_UP);
+
+        // Fire a key event.
+        nsKeyEvent geckoEvent(PR_TRUE, message, nsnull);
+        [self convertKeyEvent:theEvent toGeckoEvent:&geckoEvent];
+
+        EventRecord macEvent;
+        ConvertCocoaKeyEventToMacEvent(theEvent, macEvent, message);
+        geckoEvent.nativeMsg = &macEvent;
+        mGeckoChild->DispatchWindowEvent(geckoEvent);
+
+        // Stop if focus has changed.
+        // Check to see if we are still the first responder.
+        NSResponder* resp = [[self window] firstResponder];
+        if (resp != (NSResponder*)self)
+          break;
+      }
     }
+
+    mLastModifierState = modifiers;
   }
+
+  // check if the hand scroll cursor needs to be set/unset
+  [self setHandScrollCursor:theEvent];
 }
 
 
@@ -3413,6 +3465,7 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
   {
     // modifiers. We don't get separate events for these
     case kEscapeKeyCode:        geckoKeyCode = NS_VK_ESCAPE;         break;
+    case kCommandKeyCode:       geckoKeyCode = NS_VK_META;           break;
     case kShiftKeyCode:         geckoKeyCode = NS_VK_SHIFT;          break;
     case kCapsLockKeyCode:      geckoKeyCode = NS_VK_CAPS_LOCK;      break;
     case kControlKeyCode:       geckoKeyCode = NS_VK_CONTROL;        break;
@@ -3607,7 +3660,11 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
       outGeckoEvent->charCode -= 32;    // convert to uppercase
   }
   else {
-    outGeckoEvent->keyCode = ConvertMacToGeckoKeyCode([aKeyEvent keyCode], outGeckoEvent, [aKeyEvent characters]);
+    NSString* characters = nil;
+    if ([aKeyEvent type] != NSFlagsChanged)
+      characters = [aKeyEvent characters];
+  
+    outGeckoEvent->keyCode = ConvertMacToGeckoKeyCode([aKeyEvent keyCode], outGeckoEvent, characters);
     outGeckoEvent->charCode = 0;
   } 
   

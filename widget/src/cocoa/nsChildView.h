@@ -124,6 +124,8 @@ class nsChildView;
   // re-establish the connection to the service manager many times per second
   // when handling |draggingUpdated:| messages.
   nsIDragService* mDragService;
+  
+  PRUint32 mLastModifierState;
 }
 
 // these are sent to the first responder when the window key status changes
