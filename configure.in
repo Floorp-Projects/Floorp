@@ -4069,7 +4069,6 @@ dnl ========================================================
 
 MOZ_ARG_HEADER(Application)
 
-BUILD_MODULES=all
 BUILD_STATIC_LIBS=
 ENABLE_TESTS=1
 MOZ_ACTIVEX_SCRIPTING_SUPPORT=
@@ -7060,22 +7059,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Standalone module options (Not for building Mozilla))
 
-dnl ========================================================
-dnl = Only selectively build modules
-dnl ========================================================
-MOZ_ARG_ENABLE_STRING(standalone-modules,
-[  --enable-standalone-modules=mod1[,mod2]
-                          Enable standalone build of specific modules],
-[ BUILD_MODULES=`echo $enableval | sed 's/,/ /g'` ] )
-
-dnl Disable ldap if LDAP is not building all of Mozilla
-dnl and ldap isn't in the standalone list
-if test "$BUILD_MODULES" != "all" &&
-    test `echo "$BUILD_MODULES" | grep -c ldap` = 0 &&
-    test "$enable_ldap" != "yes"; then
-    MOZ_LDAP_XPCOM=
-fi
-
 dnl Check for GLib and libIDL.
 dnl ========================================================
 case "$target_os" in
@@ -7700,7 +7683,6 @@ AC_SUBST(MOZ_SVG_FOREIGNOBJECT)
 AC_SUBST(MOZ_XSLT_STANDALONE)
 AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_PSM)
-AC_SUBST(BUILD_MODULES)
 AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_MODULES)
 AC_SUBST(MOZ_PROFILE_MODULES)
