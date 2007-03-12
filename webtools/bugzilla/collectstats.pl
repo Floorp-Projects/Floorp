@@ -264,8 +264,11 @@ sub get_old_data {
             $recreate = 1;
             my @new_cols = ($columns[0], @statuses, @resolutions);
             if (scalar(@columns) == scalar(@new_cols)) {
-                my ($removed, $added) = diff_arrays(\@columns, \@new_cols);
-                last if (!scalar(@$removed) && !scalar(@$added));
+                my $identical = 1;
+                for (0 .. $#columns) {
+                    $identical = 0 if ($columns[$_] ne $new_cols[$_]);
+                }
+                last if $identical;
             }
         }
         next unless $recreate;
