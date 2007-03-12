@@ -45,12 +45,21 @@
   -->
 
 <!ENTITY pref.calendar.view.allview.caption "General">
+<!ENTITY pref.calendar.view.dayandweekviews.caption "Day and Week Views">
 <!ENTITY pref.calendar.view.multiweekview.caption "Multiweek View">
 <!ENTITY pref.calendar.view.workweek.caption "Workweek">
 
 <!ENTITY pref.weekstarts.label "Start the week on:">
 <!ENTITY pref.weekstarts.accesskey "r">
 <!ENTITY pref.daysoff.label "Include these days in the workweek:">
+
+<!ENTITY pref.calendar.view.daystart.label "Day starts at:">
+<!ENTITY pref.calendar.view.daystart.accesskey "D">
+<!ENTITY pref.calendar.view.dayend.label "Day ends at:">
+<!ENTITY pref.calendar.view.dayend.accesskey "y">
+<!ENTITY pref.calendar.view.visiblehours.label "Show:">
+<!ENTITY pref.calendar.view.visiblehours.accesskey "o">
+<!ENTITY pref.calendar.view.visiblehoursend.label "hours at a time">
 
 <!ENTITY pref.numberofweeks.label "Default weeks to show (including previous weeks):">
 <!ENTITY pref.numberofweeks.accesskey "e">
