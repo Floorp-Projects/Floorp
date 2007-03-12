@@ -41,8 +41,6 @@ my $cgi = Bugzilla->cgi;
 
 print $cgi->header;
 
-ThrowUserError('testopia-read-only', {'object' => 'Build'}) unless Bugzilla->user->in_group("Testers");
-
 push @{$::vars->{'style_urls'}}, 'testopia/css/default.css';
 
 my $action =  $cgi->param('action') || '';
@@ -50,6 +48,7 @@ my $product_id = $cgi->param('product_id');
 
 ThrowUserError("testopia-missing-parameter", {param => "product_id"}) unless $product_id;
 my $product = Bugzilla::Testopia::Product->new($product_id);
+ThrowUserError('testopia-read-only', {'object' => 'Build'}) unless $product->canedit;
 
 $vars->{'plan_id'} = $cgi->param('plan_id');
 $vars->{'product'} = $product;   

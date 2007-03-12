@@ -25,8 +25,8 @@
       function() {
        dojo.widget.manager.getWidgetById('environment').setValue('[% run.environment.id FILTER none %]');
        dojo.widget.manager.getWidgetById('environment').setLabel('[% run.environment.name FILTER html %]');
-       dojo.widget.manager.getWidgetById('manager').setValue('[% run.manager.login ? run.manager.login : user.login FILTER html %]');
-       dojo.widget.manager.getWidgetById('manager').setLabel('[% run.manager.login ? run.manager.login : user.login FILTER html %]');
+       dojo.widget.manager.getWidgetById('manager').setValue('[% run.manager.login ? run.manager.login : user.login FILTER none %]');
+       dojo.widget.manager.getWidgetById('manager').setLabel('[% run.manager.login ? run.manager.login : user.login FILTER none %]');
       }
     );
 </script>
@@ -64,7 +64,7 @@
                  maxListLength="10" 
                  style="width:200px; height:15px"
                  value="[% run.manager.login FILTER none %]" >
-                 <input name="manager" value="[% run.manager.login ? run.manager.login : user.login FILTER html %]"></td>
+                 </td>
       <th align="right"><a href="tr_builds.cgi?product_id=[% run.plan.product_id FILTER none %]">Build</a></td>
       <td>
         [% PROCESS select sel = { name => "build",

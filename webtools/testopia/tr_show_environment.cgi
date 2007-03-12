@@ -95,6 +95,12 @@ elsif ($action eq 'hide' || $action eq 'unhide'){
 ####################
 
 elsif ($action eq 'edit'){
+    my $env = Bugzilla::Testopia::Environment->new($env_id);
+    unless ($env->canedit){
+        print "{error: 'You don't have rights to edit this environment'}";
+        exit;
+    }
+
     my $name = $cgi->param('name');
     my $product_id = $cgi->param('product_id');
     Bugzilla->batch(1);
@@ -107,8 +113,6 @@ elsif ($action eq 'edit'){
         print "{error: 'Invalid product'}";
         exit;
     }
-        
-    my $env = Bugzilla::Testopia::Environment->new($env_id);
     unless ($env->update({'product_id' => $product_id, 'isactive' => $cgi->param('isactive') ? 0 : 1})){
         print "{error: 'Error updating product'}";
         exit;
@@ -117,10 +121,7 @@ elsif ($action eq 'edit'){
         print "{error: 'Name already in use in this product, please choose another'}";
         exit;
     }
-    unless ($env->canedit){
-        print "{error: 'You don't have rights to edit this environment'}";
-        exit;
-    }
+
     print "{message: 'Environment updated'}";
     
 }

@@ -68,7 +68,7 @@ foreach my $entry (@plan_id){
 }
 foreach my $id (keys %seen){
     my $plan = Bugzilla::Testopia::TestPlan->new($id);
-    ThrowUserError("testopia-create-denied", {'object' => 'Test Case'}) unless $plan->canedit;
+    ThrowUserError("testopia-create-denied", {'object' => 'Test Case', 'plan' => $plan->id}) unless $plan->canedit;
     push @plan_ids, $id;
     push @plans, $plan;
     push @categories, @{$plan->product->categories};

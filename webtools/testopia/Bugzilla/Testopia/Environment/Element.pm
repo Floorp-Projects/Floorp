@@ -420,23 +420,19 @@ sub obliterate {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
 	
-    $dbh->bz_lock_tables('test_environment_map READ', 'test_environment_element WRITE');
-    if (!$self->candelete) {
-        $dbh->bz_unlock_tables;
-        return 0;
-    }
+	$p->obliterate foreach my $p (@{$self->get_properties});
+	
+	$dbh->do("DELETE FROM test_environment_map
+               WHERE element_id = ?", undef, $self->id);
     $dbh->do("DELETE FROM test_environment_element 
               WHERE element_id = ?", undef, $self->{'element_id'});
-    $dbh->bz_unlock_tables;
     
     return 1;
 }
 
 sub canedit {
     my $self = shift;
-    return 1 if Bugzilla->user->in_group('Testers');
-    my $product = Bugzilla::Testopia::Product->new($self->product_id);
-    return 1 if Bugzilla->user->can_see_product($product->name);
+    return 1 if $self->product->canedit;
     return 0;
 }
 
@@ -484,5 +480,12 @@ sub env_category_id { return $_[0]->{'env_category_id'}; }
 sub parent_id       { return $_[0]->{'parent_id'}; }
 sub isprivate       { return $_[0]->{'isprivate'}; }
 sub get_parent      { return $_[0]->new($_[0]->{'parent_id'}); }
+
+sub product {
+    my $self = shift;
+    return $self->{'product'} if exists $self->{'product'}; 
+    $self->{'product'} = Bugzilla::Testopia::Product->new($self->product_id);
+    return $self->{'product'};
+}
 
 1;

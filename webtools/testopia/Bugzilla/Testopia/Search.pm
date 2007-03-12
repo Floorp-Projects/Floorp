@@ -320,13 +320,21 @@ sub init {
            push(@supptables,  "INNER JOIN test_plans " .
                   "ON test_runs.plan_id = test_plans.plan_id");
         }
-    
-        push @supptables, "INNER JOIN test_plan_permissions ON test_plans.plan_id = test_plan_permissions.plan_id";
-        push @supptables, "INNER JOIN user_group_map AS map_testers ON map_testers.user_id = test_plan_permissions.userid";
-        push @supptables, "INNER JOIN groups on map_testers.group_id = groups.id";
-        push @wherepart, "((test_plan_permissions.permissions > 0 AND test_plan_permissions.userid = ". Bugzilla->user->id 
-                          .") OR (map_testers.user_id = ". Bugzilla->user->id ." AND groups.name = 'Testers'))";
-    }    
+        unless ($obj eq 'environment'){
+            push @supptables, "INNER JOIN test_plan_permissions ON test_plans.plan_id = test_plan_permissions.plan_id";
+            push @wherepart, "test_plan_permissions.permissions > 0 AND test_plan_permissions.userid = ". Bugzilla->user->id;
+        } 
+    }
+    # Only display environments attached to products I can see.
+    # TODO: is there a better way to do this? 
+    if ($obj eq 'environment'){
+        my @prod_ids;
+        foreach my $p (Bugzilla->user->get_selectable_products){
+            push @prod_ids, $p->id;
+        }
+        my $prod_ids = join(',',@prod_ids);
+        push @wherepart, "test_environments.product_id IN ($prod_ids)" if $prod_ids;
+    }
     # Set up tables for field sort order
     my $order = $cgi->param('order') || '';
     if ($order eq 'author') {        

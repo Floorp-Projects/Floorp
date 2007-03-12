@@ -205,11 +205,12 @@ else{
             $ref = $dbh->selectall_arrayref(
                 "SELECT test_environments.name AS name, test_environments.environment_id 
                    FROM test_environments 
-                  WHERE name like ? AND product_id = ?
+                  WHERE name like ? AND product_id = ? AND isactive = 1
            UNION SELECT test_environments.name AS name, test_environments.environment_id
                    FROM test_case_runs
                   INNER JOIN test_environments ON test_case_runs.environment_id = test_environments.environment_id
                   WHERE name like ? AND test_case_runs.run_id = ?
+                    AND isactive = 1
                   ORDER BY name",
                   undef, ($search, $run->plan->product_id, 
                           $search, $run_id));
@@ -218,7 +219,7 @@ else{
             $ref = $dbh->selectall_arrayref(
                 "SELECT name, environment_id 
                    FROM test_environments 
-                  WHERE name like ?
+                  WHERE name like ? AND isactive = 1
                   ORDER BY name
                   LIMIT 20",
                   undef, ($search));

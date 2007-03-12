@@ -144,7 +144,7 @@ if ($action eq 'Commit'){
     }
     $vars->{'title'} = "Update Successful";
     my $updated = $i - scalar @uneditable;
-    $vars->{'tr_error'} = scalar @uneditable . " Not updated" if scalar @uneditable > 0;
+    $vars->{'tr_error'} = "You did not have sufficient permission to update " . scalar @uneditable . " case-runs" if scalar @uneditable > 0;
     $vars->{'tr_message'} = "$updated Test Case-Runs Updated";
     if ($serverpush && !$cgi->param('debug')) {
         print $cgi->multipart_end;
@@ -220,12 +220,14 @@ elsif ($action eq 'Delete Selected'){
 }
 elsif ($action eq 'do_delete'){
     my @caseruns;
+    my @undeleteable;
     foreach my $id ($cgi->param('caserun_id')){
         my $caserun = Bugzilla::Testopia::TestCaseRun->new($id);
-        push @caseruns, $caserun;
-        unless ($caserun->candelete){
-            print $cgi->multipart_end if $serverpush;
-            ThrowUserError("testopia-read-only", {'object' => 'case run'});
+        if ($caserun->candelete){
+            push @caseruns, $caserun;
+        }
+        else {
+            push @undeleteable, $caserun;
         }
     }
     my $progress_interval = 250;

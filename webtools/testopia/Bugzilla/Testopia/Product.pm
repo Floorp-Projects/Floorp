@@ -201,4 +201,18 @@ sub type {
     return $self->{'type'};
 }
 
+=head2 type
+
+Returns true if logged in user has rights to edit Testopia objects
+associated with this product.
+
+=cut
+
+sub canedit {
+    my $self = shift;
+    return 1 if Bugzilla->user->in_group('Testers') && Bugzilla->user->can_see_product($self->name);
+    return 0;
+}
+
+
 1;

@@ -473,26 +473,22 @@ Completely removes the element category entry from the database.
 sub obliterate {
     my $self = shift;
 	my $dbh = Bugzilla->dbh;
-	
-    $dbh->bz_lock_tables('test_environment_element AS tee READ', 'test_environment_map AS tem READ', 'test_environment_category WRITE');
-
-    if (!$self->candelete) {
-        $dbh->bz_unlock_tables;
-        return 0;
-    }
-    $dbh->do("DELETE FROM test_environment_category 
-              WHERE env_category_id = ?", undef, $self->id);
-    $dbh->bz_unlock_tables;
-    
+	my $children = $dbh->selectcol_arrayref(
+	   "SELECT element_id FROM test_environment_elements 
+	     WHERE env_category_id = ?", undef, $self->id);
+	     
+    foreach my $id (@$children){
+        my $element = Bugzilla::Testopia::Envrionment::Element->new($id);
+        $element->obliterate;
+    } 
+    $dbh->do("DELETE FROM test_environment_category WHERE env_category_id = ?", undef, $self->id);
     return 1;
     
 }
 
 sub canedit {
     my $self = shift;
-    return 1 if Bugzilla->user->in_group('Testers');
-    my $product = Bugzilla::Testopia::Product->new($self->product_id);
-    return 1 if $product && Bugzilla->user->can_see_product($product->name);
+    return 1 if $self->product->canedit;
     return 0;
 }
 
@@ -530,24 +526,11 @@ sub id              { return $_[0]->{'env_category_id'}; }
 sub name            { return $_[0]->{'name'}; }
 sub product_id      { return $_[0]->{'product_id'}; }
 
-
-=head2 product_name
-
-Returns the name of the product this plan is associated with
-
-=cut
-
-sub product_name {
-    my ($self) = @_;
-    my $dbh = Bugzilla->dbh;
-    return $self->{'product_name'} if exists $self->{'product_name'};
-
-    my ($name) = $dbh->selectrow_array(
-            "SELECT name FROM products
-              WHERE id = ?", 
-             undef, $self->id);
-    $self->{'product_name'} = $name;
-    return $self->{'product_name'};
+sub product {
+    my $self = shift;
+    return $self->{'product'} if exists $self->{'product'}; 
+    $self->{'product'} = Bugzilla::Testopia::Product->new($self->product_id);
+    return $self->{'product'};
 }
 
 1;

@@ -48,13 +48,14 @@ my $action = $cgi->param('action') || '';
 
 if ($action eq 'Add'){
     my $product_id = $cgi->param('product_id');
+    #TODO can see product;
     my $product = Bugzilla::Testopia::Product->new($product_id);
     
     ThrowUserError("testopia-create-denied", {'object' => 'Test Plan'}) unless Bugzilla->user->in_group('Testers');
     my $name = $cgi->param('plan_name');
     my $prodver = $cgi->param('prod_version');
     my $type = $cgi->param('type');
-    my $text = $cgi->param("plandoc");
+    my $text = $cgi->param("plandoc") || '';
     ThrowUserError('testopia-missing-required-field', {'field' => 'name'}) if $name  eq '';
 
     # All inserts are done with placeholders so this is OK
@@ -136,20 +137,7 @@ elsif ($action eq 'getcomps'){
     print $json->objToJson(\@comps);
     exit;
 }
-elsif ($action eq 'getenvs'){
-    my $product_id = $cgi->param('product_id');
 
-    detaint_natural($product_id);
-    my $product = Bugzilla::Testopia::Product->new($product_id);
-    exit unless Bugzilla->user->can_see_product($product->name);
-    my @envs;
-    foreach my $e (@{$product->environments}){
-        push @envs, {'id' => $e->id, 'name' => $e->name};
-    }
-    my $json = new JSON;
-    print $json->objToJson(\@envs);
-    exit;
-}
 ####################
 ### Display Form ###
 ####################

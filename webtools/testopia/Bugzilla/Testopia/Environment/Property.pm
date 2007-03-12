@@ -321,14 +321,10 @@ sub obliterate {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
 	
-    $dbh->bz_lock_tables('test_environment_map READ', 'test_environment_property WRITE');
-    if (!$self->candelete) {
-        $dbh->bz_unlock_tables;
-        return 0;
-    }
+    $dbh->do("DELETE FROM test_environment_map
+               WHERE property_id = ?", undef, $self->id);
     $dbh->do("DELETE FROM test_environment_property 
               WHERE property_id = ?", undef, $self->id);
-    $dbh->bz_unlock_tables;
     
     return 1;
     
@@ -336,7 +332,6 @@ sub obliterate {
 
 sub canedit {
     my $self = shift;
-    return 1 if Bugzilla->user->in_group('Testers');
     my $element = Bugzilla::Testopia::Environment::Element->new($self->element_id);
     return 1 if $element->canedit;
     return 0;

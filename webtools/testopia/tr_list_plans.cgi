@@ -118,8 +118,11 @@ if ($action eq 'Commit'){
         print $cgi->multipart_start;
     }
     my $plan = Bugzilla::Testopia::TestPlan->new({ 'plan_id' => 0 });
+    my $updated = $i - scalar @uneditable;
+    
     $vars->{'plan'} = $plan;
     $vars->{'title'} = "Update Successful";
+    $vars->{'tr_error'} = "You did not have rights to edit ". scalar @uneditable . "plans" if scalar @uneditable > 0;
     $vars->{'tr_message'} = "$i Test Plan(s) Updated";
     $vars->{'current_tab'} = 'plan';
     $template->process("testopia/search/advanced.html.tmpl", $vars)

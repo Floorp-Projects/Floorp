@@ -250,6 +250,7 @@ sub get_element_children {
 sub get_validexp_json {
     my ($id) = (@_);
     my $property = Bugzilla::Testopia::Environment::Property->new($id);
+    return unless $property->canedit;
     print $property->valid_exp_to_json;
 }
 
@@ -260,9 +261,9 @@ sub get_validexp_json {
 sub edit_category{
     my ($id) = (@_);
     my $category = Bugzilla::Testopia::Environment::Category->new($id);
-    my $product = Bugzilla::Testopia::Product->new($category->product_id());
-    
     return unless $category->canedit;
+    
+    my $product = Bugzilla::Testopia::Product->new($category->product_id());
     
     $category->{'name'} =~ s/<span style='color:blue'>|<\/span>//g;
 
@@ -276,10 +277,10 @@ sub edit_category{
 sub edit_element{
     my ($id) = (@_);
     my $element = Bugzilla::Testopia::Environment::Element->new($id);
+    return unless $element->canedit;
+    
     my $category = Bugzilla::Testopia::Environment::Category->new($element->env_category_id());
     my $product = Bugzilla::Testopia::Product->new($category->product_id());
-    
-    return unless $category->canedit;
     
     $element->{'name'} =~ s/<span style='color:blue'>|<\/span>//g;
     
@@ -301,13 +302,14 @@ sub edit_element{
 sub edit_property{
     my ($id) = (@_);
     my $property = Bugzilla::Testopia::Environment::Property->new($id);
+    return unless $property->canedit;
+    
     my $element = Bugzilla::Testopia::Environment::Element->new($property->element_id());
-    return unless $element->canedit;
     my $cat_id = $element->env_category_id();
     my $elmnts = Bugzilla::Testopia::Environment::Category->new($cat_id)->get_elements_by_category();
     
     $vars->{'property'} = $property;
-    $vars->{'elements'} = \@$elmnts;
+    $vars->{'elements'} = $elmnts;
     $vars->{'currentelement'} = $element;
     $template->process("testopia/environment/admin/property.html.tmpl", $vars);
 }
@@ -439,11 +441,8 @@ sub do_edit_validexp{
     return unless $property->canedit;
     my @expressions =  $cgi->param('valid_exp');
     
-    my $exp;
-    foreach my $e (@expressions){
-        trick_taint($e);
-        $exp .= $e.'|';
-    }
+    my $exp = join('|', @expressions);
+    trick_taint($exp);
     
     $property->update_property_validexp($exp);
     display;
@@ -456,11 +455,10 @@ sub do_edit_validexp{
 ###################################
 sub add_category{
     my ($id) = (@_);
-    
     my $category = Bugzilla::Testopia::Environment::Category->new({});
     if ($id){
         my $product = Bugzilla::Testopia::Product->new($id);
-        return unless Bugzilla->user->can_see_product($product->name);
+        return unless $product->canedit;
     }
     $category->{'product_id'} = $id;
     $category->{'name'} = 'New category ' . $category->new_category_count;
@@ -478,15 +476,17 @@ sub add_category{
 
 sub add_element{
     my ($id, $ischild) = (@_);
-    
     my $element = Bugzilla::Testopia::Environment::Element->new({});
     # If we are adding this element as a child, $id is the parent element's id
     if ($ischild) {
         my $parent = Bugzilla::Testopia::Environment::Element->new($id);
+        return unless $parent->canedit;
         $element->{'env_category_id'} = $parent->env_category_id;
     }
     # Otherwise $id is the catagory id
     else {
+        my $parent = Bugzilla::Testopia::Environment::Category->new($id);
+        return unless $parent->canedit;
         $element->{'env_category_id'} = $id;
     }
     $element->{'name'} = "New element " . $element->new_element_count;
@@ -508,6 +508,10 @@ sub add_property{
     my ($id) = (@_);
     #add new property to element with id=$id
     my $property = Bugzilla::Testopia::Environment::Property->new({});
+
+    my $parent = Bugzilla::Testopia::Environment::Element->new($id);
+    return unless $parent->canedit;
+
     $property->{'element_id'} = $id;
     $property->{'name'} = "New property " . $property->new_property_count;
     $property->{'validexp'} = "";
@@ -526,6 +530,7 @@ sub add_property{
 sub add_validexp{
     my ($id) = (@_);
     my $property = Bugzilla::Testopia::Environment::Property->new($id);
+    return unless $property->canedit;
     
     my $exp = $property->validexp;
     $exp ? $property->update_property_validexp($exp . "|New value") : $property->update_property_validexp("New value");
@@ -544,6 +549,7 @@ sub add_validexp{
 sub delete_category{
     my ($id) = (@_);
     my $category = Bugzilla::Testopia::Environment::Category->new($id);
+    return unless $category->candelete;
     my $success = $category->obliterate;
     print $success == 1 ? "true" : "false";
 }
@@ -551,6 +557,7 @@ sub delete_category{
 sub delete_element{
     my ($id) = (@_);
     my $element = Bugzilla::Testopia::Environment::Element->new($id);
+    return unless $element->candelete;
     my $success = $element->obliterate;
     print $success == 1 ? "true" : "false";
 }
@@ -558,6 +565,7 @@ sub delete_element{
 sub delete_property{
     my ($id) = (@_);
     my $property = Bugzilla::Testopia::Environment::Property->new($id);
+    return unless $property->candelete;
     my $success = $property->obliterate;
     print $success == 1 ? "true" : "false";
 }
@@ -567,6 +575,7 @@ sub delete_validexp{
     my ($id) = (@_);
     $id =~ /^(\d+)~/;
     my $property = Bugzilla::Testopia::Environment::Property->new($1);
+    return unless $property->candelete;
     my %values;
     foreach my $v (split /\|/, $property->validexp){
         $values{$v} = 1;

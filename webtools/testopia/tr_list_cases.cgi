@@ -172,13 +172,14 @@ if ($action eq 'Commit'){
             push @runs, Bugzilla::Testopia::TestRun->new($runid);
         }
         foreach my $run (@runs){
-            $run->add_case_run($case->id);
+            $run->add_case_run($case->id) if $run->canedit;
         }
-        
         # Clone
         my %planseen;
         foreach my $planid (split(",", $cgi->param('linkplans'))){
             validate_test_id($planid, 'plan');
+            my $plan = Bugzilla::Testopia::TestPlan->new($planid);
+            next unless $plan->canedit;
             $planseen{$planid} = 1;
         }
         if ($cgi->param('copymethod') eq 'copy'){
@@ -234,9 +235,11 @@ if ($action eq 'Commit'){
         exit;
     } 
     my $case = Bugzilla::Testopia::TestCase->new({});
+    my $updated = $i - scalar @uneditable;
     $vars->{'case'} = $case;
     $vars->{'title'} = "Update Successful";
-    $vars->{'tr_message'} = "$i Test Cases Updated";
+    $vars->{'tr_error'} = "You did not have rights to edit ". scalar @uneditable . "cases" if scalar @uneditable > 0;
+    $vars->{'tr_message'} = "$updated Test Cases Updated";
     $vars->{'current_tab'} = 'case';
     
     $template->process("testopia/search/advanced.html.tmpl", $vars)

@@ -56,7 +56,6 @@ use Bugzilla::Testopia::TestTag;
 use Bugzilla::Testopia::Product;
 use Bugzilla::Bug;
 
-#TODO: Add this to checksetup
 use Text::Diff;
 
 use base qw(Exporter);
@@ -738,7 +737,6 @@ sub set_tester_regexp {
     $self->derive_regexp_testers($regexp);
     
 }
-#TODO: Check on what I was thinking here
 
 sub derive_regexp_testers {
     my $self = shift;
