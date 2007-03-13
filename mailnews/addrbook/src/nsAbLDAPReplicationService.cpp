@@ -41,7 +41,8 @@
 #include "nsAbBaseCID.h"
 #include "nsIWebProgressListener.h"
 
-#include "nsAbLDAPChangeLogQuery.h"
+// XXX Change log replication doesn't work. Bug 311632 should fix it.
+//#include "nsAbLDAPChangeLogQuery.h"
 #include "nsIAbLDAPReplicationData.h"
 
 /*** implementation of the service ******/
@@ -80,9 +81,10 @@ NS_IMETHODIMP nsAbLDAPReplicationService::StartReplication(const nsACString & aP
         case nsIAbLDAPProcessReplicationData::kDefaultDownloadAll :
             mQuery = do_CreateInstance(NS_ABLDAP_REPLICATIONQUERY_CONTRACTID, &rv);
             break ;
-        case nsIAbLDAPProcessReplicationData::kChangeLogProtocol :
-            mQuery = do_CreateInstance (NS_ABLDAP_CHANGELOGQUERY_CONTRACTID, &rv);
-            break ;
+// XXX Change log replication doesn't work. Bug 311632 should fix it.
+//        case nsIAbLDAPProcessReplicationData::kChangeLogProtocol :
+//            mQuery = do_CreateInstance (NS_ABLDAP_CHANGELOGQUERY_CONTRACTID, &rv);
+//            break ;
         default :
             break;
     }

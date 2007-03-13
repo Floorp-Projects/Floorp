@@ -79,8 +79,10 @@
 #include "nsAbLDAPReplicationService.h"
 #include "nsAbLDAPReplicationQuery.h"
 #include "nsAbLDAPReplicationData.h"
-#include "nsAbLDAPChangeLogQuery.h"
-#include "nsAbLDAPChangeLogData.h"
+// XXX These files are not being built as they don't work. Bug 311632 should
+// fix them.
+//#include "nsAbLDAPChangeLogQuery.h"
+//#include "nsAbLDAPChangeLogData.h"
 #include "nsLDAPAutoCompleteSession.h"
 #endif
 
@@ -128,8 +130,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPAutoCompFormatter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPReplicationService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPReplicationQuery)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPProcessReplicationData)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPChangeLogQuery)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPProcessChangeLogData)
+// XXX These files are not being built as they don't work. Bug 311632 should
+// fix them.
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPChangeLogQuery)
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPProcessChangeLogData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPAutoCompleteSession)
 #endif
 
@@ -295,15 +299,17 @@ static const nsModuleComponentInfo components[] =
    NS_ABLDAP_PROCESSREPLICATIONDATA_CONTRACTID,
    nsAbLDAPProcessReplicationDataConstructor },
 
- {"Address LDAP ChangeLog Query Interface",
-   NS_ABLDAP_CHANGELOGQUERY_CID,
-   NS_ABLDAP_CHANGELOGQUERY_CONTRACTID,
-   nsAbLDAPChangeLogQueryConstructor },
+// XXX These files are not being built as they don't work. Bug 311632 should
+// fix them.
+// {"Address LDAP ChangeLog Query Interface",
+//   NS_ABLDAP_CHANGELOGQUERY_CID,
+//   NS_ABLDAP_CHANGELOGQUERY_CONTRACTID,
+//   nsAbLDAPChangeLogQueryConstructor },
 
- {"Address LDAP ChangeLog Processor Interface",
-   NS_ABLDAP_PROCESSCHANGELOGDATA_CID,
-   NS_ABLDAP_PROCESSCHANGELOGDATA_CONTRACTID,
-   nsAbLDAPProcessChangeLogDataConstructor },
+// {"Address LDAP ChangeLog Processor Interface",
+//   NS_ABLDAP_PROCESSCHANGELOGDATA_CID,
+//   NS_ABLDAP_PROCESSCHANGELOGDATA_CONTRACTID,
+//   nsAbLDAPProcessChangeLogDataConstructor },
 
   { "Address LDAP autocomplete factory Interface", 
     NS_ABLDAPDIRFACTORY_CID,

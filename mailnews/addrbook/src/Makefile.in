@@ -143,11 +143,16 @@ CPPSRCS		+= \
 		nsAbLDAPReplicationService.cpp \
 		nsAbLDAPReplicationQuery.cpp \
 		nsAbLDAPReplicationData.cpp \
-		nsAbLDAPChangeLogQuery.cpp \
-		nsAbLDAPChangeLogData.cpp \
 		nsLDAPAutoCompleteSession.cpp \
 		$(NULL)
+
+# XXX These files are not being built as they don't work. Bug 311632 should
+# fix them.
+# nsAbLDAPChangeLogQuery.cpp
+# nsAbLDAPChangeLogData.cpp
 endif
+
+
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
