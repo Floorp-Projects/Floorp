@@ -378,7 +378,11 @@ calItemBase.prototype = {
     },
 
     setProperty: function (aName, aValue) {
-        this.modify();
+        if (aName == "LAST-MODIFIED") {
+            this.mDirty = false;
+        } else {
+            this.modify();
+        }
         this.mProperties.setProperty(aName.toUpperCase(), aValue);
     },
 

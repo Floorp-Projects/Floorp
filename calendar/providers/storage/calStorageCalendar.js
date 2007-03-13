@@ -1484,10 +1484,6 @@ calStorageCalendar.prototype = {
     // read in the common ItemBase attributes from aDBRow, and stick
     // them on item
     getItemBaseFromRow: function (row, flags, item) {
-        if (row.time_created)
-            item.creationDate = newDateTime(row.time_created, "UTC");
-        if (row.last_modified)
-            item.lastModifiedTime = newDateTime(row.last_modified, "UTC");
         item.calendar = this;
         item.id = row.id;
         if (row.title)
@@ -1548,31 +1544,40 @@ calStorageCalendar.prototype = {
 
         if (flags)
             flags.value = row.flags;
+
+        if (row.time_created) {
+            item.setProperty("CREATED", newDateTime(row.time_created, "UTC"));
+        }
+
+        // This must be done last because the setting of any other property
+        // after this would overwrite it again.
+        if (row.last_modified) {
+            item.setProperty("LAST-MODIFIED", newDateTime(row.last_modified, "UTC"));
+        }
     },
 
     getEventFromRow: function (row, flags) {
         var item = createEvent();
-
-        this.getItemBaseFromRow (row, flags, item);
 
         if (row.event_start)
             item.startDate = newDateTime(row.event_start, row.event_start_tz);
         if (row.event_end)
             item.endDate = newDateTime(row.event_end, row.event_end_tz);
         if (row.event_stamp)
-            item.stampTime = newDateTime(row.event_stamp, "UTC");
+            item.setProperty("DTSTAMP", newDateTime(row.event_stamp, "UTC"));
         if ((row.flags & CAL_ITEM_FLAG_EVENT_ALLDAY) != 0) {
             item.startDate.isDate = true;
             item.endDate.isDate = true;
         }
+
+        // This must be done last to keep the modification time intact.
+        this.getItemBaseFromRow (row, flags, item);
 
         return item;
     },
 
     getTodoFromRow: function (row, flags) {
         var item = createTodo();
-
-        this.getItemBaseFromRow (row, flags, item);
 
         if (row.todo_entry)
             item.entryDate = newDateTime(row.todo_entry, row.todo_entry_tz);
@@ -1582,6 +1587,9 @@ calStorageCalendar.prototype = {
             item.completedDate = newDateTime(row.todo_completed, row.todo_completed_tz);
         if (row.todo_complete)
             item.percentComplete = row.todo_complete;
+
+        // This must be done last to keep the modification time intact.
+        this.getItemBaseFromRow (row, flags, item);
 
         return item;
     },
@@ -1594,6 +1602,9 @@ calStorageCalendar.prototype = {
     // against mDBTwo in here!
     
     getAdditionalDataForItem: function (item, flags) {
+        // This is needed to keep the modification time intact.
+        var savedLastModifiedTime = item.lastModifiedTime;
+
         if (flags & CAL_ITEM_FLAG_HAS_ATTENDEES) {
             var selectItem = null;
             if (item.recurrenceId == null)
@@ -1750,6 +1761,9 @@ calStorageCalendar.prototype = {
                 rec.modifyException(exc.item);
             }
         }
+
+        // Restore the saved modification time
+        item.setProperty("LAST-MODIFIED", savedLastModifiedTime);
     },
 
     getAttendeeFromRow: function (row) {
