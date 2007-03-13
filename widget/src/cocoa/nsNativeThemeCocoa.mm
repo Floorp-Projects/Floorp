@@ -67,16 +67,10 @@ extern "C" {
 
 NS_IMPL_ISUPPORTS1(nsNativeThemeCocoa, nsITheme)
 
-static PRBool sInitializedBorders = PR_FALSE;
 
 nsNativeThemeCocoa::nsNativeThemeCocoa()
 {
-  if (!sInitializedBorders) {
-    sInitializedBorders = PR_TRUE;
-    sTextfieldBGTransparent = PR_FALSE;
-    sListboxBGTransparent = PR_TRUE;
-    sTextfieldDisabledBGColorID = nsILookAndFeel::eColor__moz_field;
-  }
+  sListboxBGTransparent = PR_TRUE;
 }
 
 nsNativeThemeCocoa::~nsNativeThemeCocoa()
@@ -454,10 +448,6 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       DrawCheckboxRadio(cgContext, kThemeCheckBox, macRect, IsChecked(aFrame), IsDisabled(aFrame), eventState);
       break;
 
-    case NS_THEME_RADIO:
-      DrawCheckboxRadio(cgContext, kThemeRadioButton, macRect, IsSelected(aFrame), IsDisabled(aFrame), eventState);
-      break;
-
     case NS_THEME_CHECKBOX_SMALL:
       if (aRect.height == 15) {
       	// draw at 14x16, see comment in GetMinimumWidgetSize
@@ -465,6 +455,10 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
         macRect.size.height += 1.0;
       }
       DrawCheckboxRadio(cgContext, kThemeSmallCheckBox, macRect, IsChecked(aFrame), IsDisabled(aFrame), eventState);
+      break;
+
+    case NS_THEME_RADIO:
+      DrawCheckboxRadio(cgContext, kThemeRadioButton, macRect, IsSelected(aFrame), IsDisabled(aFrame), eventState);
       break;
 
     case NS_THEME_RADIO_SMALL:
@@ -826,16 +820,6 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       *aIsOverridable = PR_FALSE;
       break;
     }
-    
-    case NS_THEME_RADIO:
-    {
-      SInt32 radioHeight = 0, radioWidth = 0;
-      ::GetThemeMetric(kThemeMetricRadioButtonWidth, &radioWidth);
-      ::GetThemeMetric(kThemeMetricRadioButtonHeight, &radioHeight);
-      aResult->SizeTo(radioWidth, radioHeight);
-      *aIsOverridable = PR_FALSE;
-      break;
-    }
 
     case NS_THEME_CHECKBOX_SMALL:
     {
@@ -848,6 +832,16 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       // checkbox.
 
       aResult->SizeTo(14, 15);
+      *aIsOverridable = PR_FALSE;
+      break;
+    }
+
+    case NS_THEME_RADIO:
+    {
+      SInt32 radioHeight = 0, radioWidth = 0;
+      ::GetThemeMetric(kThemeMetricRadioButtonWidth, &radioWidth);
+      ::GetThemeMetric(kThemeMetricRadioButtonHeight, &radioHeight);
+      aResult->SizeTo(radioWidth, radioHeight);
       *aIsOverridable = PR_FALSE;
       break;
     }
