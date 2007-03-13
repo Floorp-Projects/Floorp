@@ -83,7 +83,7 @@
                             accesskey="&cmd_engineManager.accesskey;"/>
             </xul:menupopup>
           </xul:button>
-  
+
           <xul:textbox class="searchbar-textbox"
                        anonid="searchbar-textbox"
                        type="autocomplete"
@@ -157,11 +157,11 @@
         this._textbox.mController.input = null;
       ]]></destructor>
 
-      <field name="_stringBundle">document.getAnonymousElementByAttribute(this, 
+      <field name="_stringBundle">document.getAnonymousElementByAttribute(this,
           "anonid", "searchbar-stringbundle");</field>
-      <field name="_textbox">document.getAnonymousElementByAttribute(this, 
+      <field name="_textbox">document.getAnonymousElementByAttribute(this,
           "anonid", "searchbar-textbox");</field>
-      <field name="_popup">document.getAnonymousElementByAttribute(this, 
+      <field name="_popup">document.getAnonymousElementByAttribute(this,
           "anonid", "searchbar-popup");</field>
       <field name="_ss">null</field>
       <field name="_engines">null</field>
@@ -174,9 +174,9 @@
           return currentEngine || {name:"", uri:null};
         ]]></getter>
       </property>
-      
-      <!-- textbox is used by sanitize.js to clear the undo history when 
-      clearing form information. -->      
+
+      <!-- textbox is used by sanitize.js to clear the undo history when
+           clearing form information. -->
       <property name="textbox" readonly="true"
                 onget="return this._textbox;"/>
 
@@ -343,7 +343,7 @@
             this.setAttribute("src", "");
 
           // Update current engine display
-          if (this.hasAttribute("empty")) 
+          if (this.hasAttribute("empty"))
             this._textbox._displayCurrentEngine();
 
           var name = this.currentEngine.name;
@@ -497,7 +497,7 @@
                                           textValue);
           }
 
-          var where = "current";      
+          var where = "current";
           if (aEvent && aEvent.originalTarget.getAttribute("anonid") == "search-go-button")
             where = whereToOpenLink(aEvent, false, true);
           else {
@@ -768,24 +768,24 @@
     </implementation>
 
     <handlers>
-      <handler event="keypress" keycode="vk_up" modifiers="accel"
+      <handler event="keypress" keycode="VK_UP" modifiers="accel"
                phase="capturing"
                action="this._getParentSearchbar().selectEngine(event, false);"/>
 
-      <handler event="keypress" keycode="vk_down" modifiers="accel"
+      <handler event="keypress" keycode="VK_DOWN" modifiers="accel"
                phase="capturing"
                action="this._getParentSearchbar().selectEngine(event, true);"/>
 
-      <handler event="keypress" keycode="vk_down" modifiers="alt"
+      <handler event="keypress" keycode="VK_DOWN" modifiers="alt"
                phase="capturing"
                action="return this.openSearch();"/>
 
-      <handler event="keypress" keycode="vk_up" modifiers="alt"
+      <handler event="keypress" keycode="VK_UP" modifiers="alt"
                phase="capturing"
                action="return this.openSearch();"/>
 
 #ifndef XP_MACOSX
-      <handler event="keypress" keycode="vk_f4"
+      <handler event="keypress" keycode="VK_F4"
                phase="capturing"
                action="return this.openSearch();"/>
 #endif
