@@ -756,30 +756,21 @@ jsj_ConvertJavaObjectToJSBoolean(JSContext *cx, JNIEnv *jEnv,
 }
 
 /*
- * Reflect a Java object into a JS value.  The source object, java_obj, must
- * be of type java.lang.Object or a subclass and may, therefore, be an array.
+ * Convert a Java object to a JSObject.
  */
-JSBool
-jsj_ConvertJavaObjectToJSValue(JSContext *cx, JNIEnv *jEnv,
+static JSBool
+convert_javaobject_to_jsobject(JSContext *cx, JNIEnv *jEnv,
+                               JavaClassDescriptor *class_descriptor,
                                jobject java_obj, jsval *vp)
 {
-    jclass java_class;
     JSObject *js_obj;
-
-    /* A null in Java-land is also null in JS */
-    if (!java_obj) {
-        *vp = JSVAL_NULL;
-        return JS_TRUE;
-    }
-
-    java_class = (*jEnv)->GetObjectClass(jEnv, java_obj);
 
     /*
      * If it's an instance of netscape.javascript.JSObject, i.e. a wrapper
      * around a JS object that has been passed into the Java world, unwrap
      * it to obtain the original JS object.
      */
-     if (njJSObject && (*jEnv)->IsInstanceOf(jEnv, java_obj, njJSObject)) {
+    if (njJSObject && (*jEnv)->IsInstanceOf(jEnv, java_obj, njJSObject)) {
 #ifdef PRESERVE_JSOBJECT_IDENTITY
 #if JS_BYTES_PER_LONG == 8
         js_obj = (JSObject *)((*jEnv)->GetLongField(jEnv, java_obj, njJSObject_long_internal));
@@ -789,30 +780,59 @@ jsj_ConvertJavaObjectToJSValue(JSContext *cx, JNIEnv *jEnv,
 #else
         js_obj = jsj_UnwrapJSObjectWrapper(jEnv, java_obj);
 #endif
-		/* NULL is actually a valid value. It means 'null'.
-
-        JS_ASSERT(js_obj);
+    } else {
+        /* otherwise, wrap it inside a JavaObject */
+        js_obj = jsj_WrapJavaObject(cx, jEnv, java_obj, class_descriptor->java_class);
         if (!js_obj)
-            goto error;
-		*/
+            return JS_FALSE;
+    }
 
-        *vp = OBJECT_TO_JSVAL(js_obj);
-        goto done;
-     }
-
-    /* otherwise, wrap it inside a JavaObject */
-    js_obj = jsj_WrapJavaObject(cx, jEnv, java_obj, java_class);
-    if (!js_obj)
-        goto error;
     *vp = OBJECT_TO_JSVAL(js_obj);
-
-done:
-    (*jEnv)->DeleteLocalRef(jEnv, java_class);
     return JS_TRUE;
+}
 
-error:
+/*
+ * Reflect a Java object into a JS value.  The source object, java_obj, must
+ * be of type java.lang.Object or a subclass and may, therefore, be an array.
+ */
+JSBool
+jsj_ConvertJavaObjectToJSValue(JSContext *cx, JNIEnv *jEnv,
+                               jobject java_obj, jsval *vp)
+{
+    JavaClassDescriptor *class_descriptor;
+    jclass java_class;
+    JSBool ret;
+
+    /* A null in Java-land is also null in JS */
+    if (!java_obj) {
+        *vp = JSVAL_NULL;
+        return JS_TRUE;
+    }
+
+    java_class = (*jEnv)->GetObjectClass(jEnv, java_obj);
+
+    class_descriptor = jsj_GetJavaClassDescriptor(cx, jEnv, java_class);
+    if (!class_descriptor)
+        return JS_FALSE;
+
+    switch (class_descriptor->type) {
+    case JAVA_SIGNATURE_JAVA_LANG_BOOLEAN:
+        ret = jsj_ConvertJavaObjectToJSBoolean(cx, jEnv, class_descriptor, java_obj, vp);
+        break;
+    case JAVA_SIGNATURE_JAVA_LANG_DOUBLE:
+        ret = jsj_ConvertJavaObjectToJSNumber(cx, jEnv, class_descriptor, java_obj, vp);
+        break;
+    case JAVA_SIGNATURE_JAVA_LANG_STRING:
+        ret = jsj_ConvertJavaObjectToJSString(cx, jEnv, class_descriptor, java_obj, vp);
+        break;
+    default:
+        ret = convert_javaobject_to_jsobject(cx, jEnv, class_descriptor, java_obj, vp);
+        break;
+    }
+
     (*jEnv)->DeleteLocalRef(jEnv, java_class);
-    return JS_FALSE;
+    jsj_ReleaseJavaClassDescriptor(cx, jEnv, class_descriptor);
+    return ret;
 }
 
 /*
