@@ -316,7 +316,7 @@
       <textbox id="searchFilter" style="width: 23em;" timeout="500"
                oncommand="PlacesSearchBox.search(this.value);" 
                onreset="PlacesOrganizer.onPlaceSelected(false); return true;" 
-               collection="all">
+               collection="bookmarks">
         <button type="menu" class="filterList" id="filterList_history">
           <menupopup>
             <menuitem label="&search.all.label;" accesskey="&search.all.accesskey;"
