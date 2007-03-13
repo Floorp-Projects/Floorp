@@ -87,6 +87,15 @@ enum {
 };
 
 
+PRBool NodeIsHiddenOrCollapsed(nsIContent* inContent)
+{
+  return (inContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::hidden,
+                                 nsWidgetAtoms::_true, eCaseMatters) ||
+          inContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::collapsed,
+                                 nsWidgetAtoms::_true, eCaseMatters));
+}
+
+
 nsMenuBarX::nsMenuBarX()
 : mParent(nsnull), mIsMenuBarAdded(PR_FALSE), mCurrentCommandID(eCommand_ID_Last), mDocument(nsnull)
 {
@@ -502,9 +511,8 @@ NS_IMETHODIMP nsMenuBarX::AddMenu(nsIMenu * aMenu)
   
   nsCOMPtr<nsIContent> menu;
   aMenu->GetMenuContent(getter_AddRefs(menu));
-  if (!menu->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::hidden,
-                         nsWidgetAtoms::_true, eCaseMatters) &&
-      menu->GetChildCount() > 0) {
+  if (menu->GetChildCount() > 0 &&
+      !NodeIsHiddenOrCollapsed(menu)) {
     NSMenuItem* newMenuItem = [[[NSMenuItem alloc] initWithTitle:@"SomeMenuItem" action:NULL keyEquivalent:@""] autorelease];
     [mRootMenu addItem:newMenuItem];
     [newMenuItem setSubmenu:menuRef];

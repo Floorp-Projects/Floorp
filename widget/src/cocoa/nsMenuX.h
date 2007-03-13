@@ -135,9 +135,9 @@ protected:
     PRBool OnDestroyed();
     PRBool OnCreated();
 
-    void LoadMenuItem(nsIMenu* pParentMenu, nsIContent* menuitemContent);  
-    void LoadSubMenu(nsIMenu * pParentMenu, nsIContent* menuitemContent);
-    void LoadSeparator(nsIContent* menuitemContent);
+    void LoadMenuItem(nsIMenu* pParentMenu, nsIContent* inMenuItemContent);  
+    void LoadSubMenu(nsIMenu * pParentMenu, nsIContent* inMenuContent);
+    void LoadSeparator(nsIContent* inSeparatorContent);
 
     NSMenu* CreateMenuWithGeckoString(nsString& menuTitle);
 
