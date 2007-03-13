@@ -171,9 +171,7 @@
 <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_branding" src="chrome://branding/locale/brand.properties"/>
   <stringbundle id="bundle_calendar" src="chrome://calendar/locale/calendar.properties"/>
-  <stringbundle id="bundle_calendar_email" src="chrome://calendar/locale/email.properties"/>
 </stringbundleset>
 <script type="application/x-javascript">
   var gCalendarBundle = document.getElementById("bundle_calendar");
-  var gCalendarEmailBundle = document.getElementById("bundle_calendar_email");
 </script>
