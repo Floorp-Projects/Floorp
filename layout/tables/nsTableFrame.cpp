@@ -900,7 +900,7 @@ nsTableFrame::DidResizeColumns()
     return; // already marked
 
   for (nsTableFrame *f = this; f;
-       f = NS_STATIC_CAST(nsTableFrame*, GetNextInFlow()))
+       f = NS_STATIC_CAST(nsTableFrame*, f->GetNextInFlow()))
     f->mBits.mResizedColumns = PR_TRUE;
 }
 
