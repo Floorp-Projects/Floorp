@@ -143,7 +143,7 @@ $XULWindowOpenTestTimeout	      = 30;   # seconds
 # Note that win32 may not need \@, depends on ' or ".
 # :pserver:$ENV{USER}%netscape.com@cvs.mozilla.org:/cvsroot
 
-$moz_cvsroot = ':ext:cltbld@cvs.mozilla.org:/cvsroot';
+$moz_cvsroot = ':ext:caminobld@cvs.mozilla.org:/cvsroot';
 
 #- Set these proper values for your tinderbox server
 #$Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';
@@ -207,7 +207,7 @@ $package_creation_path = "/camino/installer";
 # path to make in to recreate mac bundle, needed for mac + talkback:
 $mac_bundle_path = "/camino";
 #$ssh_version   = "2";
-#$ssh_user      = "cltbld";
+$ssh_user      = "caminobld";
 #$ssh_server    = "stage.mozilla.org";
 $ftp_path      = "/home/ftp/pub/camino/nightly";
 $url_path      = "http://ftp.mozilla.org/pub/mozilla.org/camino/nightly";
