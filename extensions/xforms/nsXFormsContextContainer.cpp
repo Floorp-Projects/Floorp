@@ -377,7 +377,8 @@ nsXFormsContextContainer::SetRepeatState(nsRepeatState aState)
     state = eType_GeneratedContent;
   }
 
-  return nsXFormsControlStub::SetRepeatState(state);
+  nsXFormsControlStub::SetRepeatState(state);
+  return;
 }
 
 // Factory
