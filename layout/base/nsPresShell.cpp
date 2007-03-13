@@ -5765,11 +5765,11 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
 
   if (0 != mDirtyRoots.Count()) {
     nsHTMLReflowMetrics   desiredSize;
-    nsIRenderingContext*  rcx;
+    nsCOMPtr<nsIRenderingContext> rcx;
     nsIFrame*             rootFrame = FrameManager()->GetRootFrame();
     nsSize          maxSize = rootFrame->GetSize();
 
-    nsresult rv=CreateRenderingContext(rootFrame, &rcx);
+    nsresult rv=CreateRenderingContext(rootFrame, getter_AddRefs(rcx));
     if (NS_FAILED(rv)) return rv;
 
 #ifdef DEBUG
@@ -5791,8 +5791,11 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     mDocument->BeginUpdate(UPDATE_ALL);
     mDocument->EndUpdate(UPDATE_ALL);
 
-    // Scope for the reflow entry point
-    {
+    // That might have executed (via XBL binding constructors).  So we may no
+    // longer have reflow commands.  In fact, we may have had Destroy() called.
+
+    // Scope for the reflow entry point, in addition to the |if| condition.
+    if (!mIsDestroying && mDirtyRoots.Count() != 0) {
       AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
       mIsReflowing = PR_TRUE;
 
@@ -5881,8 +5884,6 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
 
       mIsReflowing = PR_FALSE;
     }
-
-    NS_IF_RELEASE(rcx);
 
     // If any new reflow commands were enqueued during the reflow,
     // schedule another reflow event to process them.
