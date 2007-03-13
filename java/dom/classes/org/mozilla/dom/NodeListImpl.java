@@ -24,6 +24,9 @@ package org.mozilla.dom;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import org.mozilla.util.ReturnRunnable;
+
+
 public class NodeListImpl implements NodeList {
 
     private long p_nsIDOMNodeList = 0;
@@ -43,27 +46,73 @@ public class NodeListImpl implements NodeList {
     }
 
     public int getLength() {
-	return nativeGetLength();
+	Integer result = (Integer)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			int intResult = nativeGetLength();
+			return Integer.valueOf(intResult);
+		    }
+		    public String toString() {
+			return "NodeList.getLength";
+		    }
+		});
+	return result;
+
     }
     native int nativeGetLength();
 
     public Node item(int index) {
-	return nativeItem(index);
+	final int finalIndex = index;
+	Node result = (Node)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeItem(finalIndex);
+		    }
+		    public String toString() {
+			return "NodeList.item";
+		    }
+		});
+	return result;
+
     }
     native Node nativeItem(int index);
 
-    protected void finalize() {
-	nativeFinalize();
-    }
     protected native void nativeFinalize();
 
     private boolean XPCOM_equals(Object o) {
-	return nativeXPCOM_equals(o);
+	final Object finalO = o;
+	Boolean bool = (Boolean)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			boolean booleanResult = nativeXPCOM_equals(finalO);
+			return booleanResult ? Boolean.TRUE : Boolean.FALSE;
+		    }
+		    public String toString() {
+			return "NodeList.XPCOM_equals";
+		    }
+		});
+	return bool.booleanValue();
+
     }
     native boolean nativeXPCOM_equals(Object o);
 
     private int XPCOM_hashCode() {
-	return nativeXPCOM_hashCode();
+	Integer result = (Integer)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			int intResult = nativeXPCOM_hashCode();
+			return Integer.valueOf(intResult);
+		    }
+		    public String toString() {
+			return "NodeList.XPCOM_hashCode";
+		    }
+		});
+	return result.intValue();
+
     }
     private native int nativeXPCOM_hashCode();
 }

@@ -25,6 +25,10 @@ import org.w3c.dom.events.UIEvent;
 import org.w3c.dom.views.AbstractView;
 import org.mozilla.dom.events.EventImpl;
 
+import org.mozilla.util.ReturnRunnable;
+import org.mozilla.dom.DOMAccessor;
+
+
 /**
  * The <code>UIEvent</code> interface provides specific contextual  
  * information associated with User Interface events.
@@ -48,7 +52,18 @@ public class UIEventImpl extends EventImpl implements UIEvent {
    * from which the event was generated.
    */
     public AbstractView getView() {
-	return nativeGetView();
+	AbstractView result = (AbstractView)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetView();
+		    }
+		    public String toString() {
+			return "UIEvent.getView";
+		    }
+		});
+	return result;
+
     }
   public native AbstractView nativeGetView();
 
@@ -58,7 +73,19 @@ public class UIEventImpl extends EventImpl implements UIEvent {
    * on the type of event.
    */
     public int getDetail() {
-	return nativeGetDetail();
+	Integer result = (Integer)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			int intResult = nativeGetDetail();
+			return Integer.valueOf(intResult);
+		    }
+		    public String toString() {
+			return "UIEvent.getDetail";
+		    }
+		});
+	return result.intValue();
+
     }
   public native int nativeGetDetail();
 
@@ -78,8 +105,26 @@ public class UIEventImpl extends EventImpl implements UIEvent {
 			  boolean cancelableArg, 
 			  AbstractView viewArg, 
 			  int detailArg) {
-      nativeInitUIEvent(typeArg, canBubbleArg, cancelableArg, viewArg, 
-			detailArg);
+      final String finalTypeArg = typeArg; 
+      final boolean finalCanBubbleArg = canBubbleArg; 
+      final boolean finalCancelableArg = cancelableArg; 
+      final AbstractView finalViewArg = viewArg; 
+      final int finalDetailArg = detailArg;
+      DOMAccessor.getRunner().
+	  pushBlockingReturnRunnable(new ReturnRunnable() {
+		  public Object run() {
+		      nativeInitUIEvent(finalTypeArg, 
+					finalCanBubbleArg, 
+					finalCancelableArg, 
+					finalViewArg, 
+					finalDetailArg);
+		      return null;
+		  }
+		  public String toString() {
+		      return "UIEvent.initUIEvent";
+		  }
+	      });
+      
   }
   native void nativeInitUIEvent(String typeArg, 
 			  boolean canBubbleArg, 

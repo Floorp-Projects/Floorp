@@ -26,6 +26,9 @@ import org.w3c.dom.views.AbstractView;
 import org.w3c.dom.events.MouseEvent;
 import org.w3c.dom.events.EventTarget;
 
+import org.mozilla.util.ReturnRunnable;
+import org.mozilla.dom.DOMAccessor;
+
 /**
  * The <code>MouseEvent</code> interface provides specific contextual  
  * information associated with Mouse events.
@@ -59,7 +62,19 @@ public class MouseEventImpl extends UIEventImpl implements MouseEvent {
      * event occurred in relative to the origin of the screen coordinate system.
      */
     public int getScreenX() {
-	return nativeGetScreenX();
+	Integer result = (Integer)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			int intResult = nativeGetScreenX();
+			return Integer.valueOf(intResult);
+		    }
+		    public String toString() {
+			return "MouseEvent.getScreenX";
+		    }
+		});
+	return result.intValue();
+
     }
     native int nativeGetScreenX();
 
@@ -69,7 +84,19 @@ public class MouseEventImpl extends UIEventImpl implements MouseEvent {
      * occurred relative to the origin of the screen coordinate system.
      */
     public int getScreenY() {
-	return nativeGetScreenY();
+	Integer result = (Integer)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			int intResult = nativeGetScreenY();
+			return Integer.valueOf(intResult);
+		    }
+		    public String toString() {
+			return "MouseEvent.getScreenY";
+		    }
+		});
+	return result.intValue();
+
     }
     native int nativeGetScreenY();
 
@@ -79,7 +106,19 @@ public class MouseEventImpl extends UIEventImpl implements MouseEvent {
      * event occurred relative to the DOM implementation's client area.
      */
     public int getClientX() {
-	return nativeGetClientX();
+	Integer result = (Integer)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			int intResult = nativeGetClientX();
+			return Integer.valueOf(intResult);
+		    }
+		    public String toString() {
+			return "MouseEvent.getClientX";
+		    }
+		});
+	return result.intValue();
+
     }
     native int nativeGetClientX();
 
@@ -89,7 +128,19 @@ public class MouseEventImpl extends UIEventImpl implements MouseEvent {
      * occurred relative to the DOM implementation's client area.
      */
     public int getClientY() {
-	return nativeGetClientY();
+	Integer result = (Integer)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			int intResult = nativeGetClientY();
+			return Integer.valueOf(intResult);
+		    }
+		    public String toString() {
+			return "MouseEvent.getClientY";
+		    }
+		});
+	return result.intValue();
+
     }
     native int nativeGetClientY();
 
@@ -99,7 +150,19 @@ public class MouseEventImpl extends UIEventImpl implements MouseEvent {
      * during the firing of the event.
      */
     public boolean getCtrlKey() {
-	return nativeGetCtrlKey();
+	Boolean result = (Boolean)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			boolean booleanResult = nativeGetCtrlKey();
+			return booleanResult ? Boolean.TRUE : Boolean.FALSE;
+		    }
+		    public String toString() {
+			return "MouseEvent.getCtrlKey";
+		    }
+		});
+	return result.booleanValue();
+
     }
     native boolean nativeGetCtrlKey();
 
@@ -109,7 +172,19 @@ public class MouseEventImpl extends UIEventImpl implements MouseEvent {
      * during the firing of the event.
      */
     public boolean getShiftKey() {
-	return nativeGetShiftKey();
+	Boolean result = (Boolean)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			boolean booleanResult = nativeGetShiftKey();
+			return booleanResult ? Boolean.TRUE : Boolean.FALSE;
+		    }
+		    public String toString() {
+			return "MouseEvent.getShiftKey";
+		    }
+		});
+	return result.booleanValue();
+
     }
     native boolean nativeGetShiftKey();
 
@@ -120,7 +195,19 @@ public class MouseEventImpl extends UIEventImpl implements MouseEvent {
      * alternative key name.
      */
     public boolean getAltKey() {
-	return nativeGetAltKey();
+	Boolean result = (Boolean)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			boolean booleanResult = nativeGetAltKey();
+			return booleanResult ? Boolean.TRUE : Boolean.FALSE;
+		    }
+		    public String toString() {
+			return "MouseEvent.getAltKey";
+		    }
+		});
+	return result.booleanValue();
+
     }
     native boolean nativeGetAltKey();
 
@@ -131,7 +218,19 @@ public class MouseEventImpl extends UIEventImpl implements MouseEvent {
      * an alternative key name.
      */
     public boolean getMetaKey() {
-	return nativeGetMetaKey();
+	Boolean result = (Boolean)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			boolean booleanResult = nativeGetMetaKey();
+			return booleanResult ? Boolean.TRUE : Boolean.FALSE;
+		    }
+		    public String toString() {
+			return "MouseEvent.getMetaKey";
+		    }
+		});
+	return result.booleanValue();
+
     }
     native boolean nativeGetMetaKey();
 
@@ -142,7 +241,19 @@ public class MouseEventImpl extends UIEventImpl implements MouseEvent {
      * changed state.
      */
     public short getButton() {
-	return nativeGetButton();
+	Short result = (Short)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			short shortResult = nativeGetButton();
+			return Short.valueOf(shortResult);
+		    }
+		    public String toString() {
+			return "MouseEvent.getButton";
+		    }
+		});
+	return result.shortValue();
+
     }
     native short nativeGetButton();
 
@@ -152,7 +263,18 @@ public class MouseEventImpl extends UIEventImpl implements MouseEvent {
      * a UI event.
      */
     public EventTarget getRelatedTarget() {
-	return nativeGetRelatedTarget();
+	EventTarget result = (EventTarget)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetRelatedTarget();
+		    }
+		    public String toString() {
+			return "MouseEvent.getRelatedTarget";
+		    }
+		});
+	return result;
+
     }
     native EventTarget nativeGetRelatedTarget();
 
@@ -196,10 +318,46 @@ public class MouseEventImpl extends UIEventImpl implements MouseEvent {
 			       boolean metaKeyArg, 
 			       short buttonArg, 
 			       EventTarget relatedTargetArg) {
-	nativeInitMouseEvent(typeArg, canBubbleArg, cancelableArg, viewArg,
-			     detailArg, screenXArg, screenYArg, clientXArg,
-			     clientYArg, ctrlKeyArg, altKeyArg, shiftKeyArg,
-			     metaKeyArg, buttonArg, relatedTargetArg);
+	final String finalTypeArg = typeArg; 
+	final boolean finalCanBubbleArg = canBubbleArg; 
+	final boolean finalCancelableArg = cancelableArg; 
+	final AbstractView finalViewArg = viewArg; 
+	final int finalDetailArg = detailArg; 
+	final int finalScreenXArg = screenXArg; 
+	final int finalScreenYArg = screenYArg; 
+	final int finalClientXArg = clientXArg; 
+	final int finalClientYArg = clientYArg; 
+	final boolean finalCtrlKeyArg = ctrlKeyArg; 
+	final boolean finalAltKeyArg = altKeyArg; 
+	final boolean finalShiftKeyArg = shiftKeyArg; 
+	final boolean finalMetaKeyArg = metaKeyArg; 
+	final short finalButtonArg = buttonArg; 
+	final EventTarget finalRelatedTargetArg = relatedTargetArg;
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			nativeInitMouseEvent(finalTypeArg, 
+					     finalCanBubbleArg, 
+					     finalCancelableArg, 
+					     finalViewArg,
+					     finalDetailArg, 
+					     finalScreenXArg, 
+					     finalScreenYArg, 
+					     finalClientXArg,
+					     finalClientYArg, 
+					     finalCtrlKeyArg, 
+					     finalAltKeyArg, 
+					     finalShiftKeyArg,
+					     finalMetaKeyArg, 
+					     finalButtonArg, 
+					     finalRelatedTargetArg);
+			return null;
+		    }
+		    public String toString() {
+			return "MouseEvent.initMouseEvent";
+		    }
+		});
+
     }
     native void nativeInitMouseEvent(String typeArg, 
 				     boolean canBubbleArg, 

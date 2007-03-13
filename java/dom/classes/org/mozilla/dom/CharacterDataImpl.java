@@ -23,49 +23,147 @@ package org.mozilla.dom;
 
 import org.w3c.dom.CharacterData;
 
+import org.mozilla.util.ReturnRunnable;
+
 public class CharacterDataImpl extends NodeImpl implements CharacterData {
 
     // instantiated from JNI only
     protected CharacterDataImpl() {}
 
     public void appendData(String arg) {
-	nativeAppendData(arg);
+	final String finalArg = arg;
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			nativeAppendData(finalArg);
+			return null;
+		    }
+		    public String toString() {
+			return "CharacterData.appendData";
+		    }
+		});
+
+
     }
     native void nativeAppendData(String arg);
 
     public void deleteData(int offset, int count) {
-	nativeDeleteData(offset, count);
+	final int finalOffset = offset;
+	final int finalCount = count;
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			nativeDeleteData(finalOffset, finalCount);
+			return null;
+		    }
+		    public String toString() {
+			return "CharacterData.deleteData";
+		    }
+		});
+
     }
     native void nativeDeleteData(int offset, int count);
 
 
     public String getData() {
-	return nativeGetData();
+	String result = (String)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetData();
+		    }
+		    public String toString() {
+			return "CharacterData.getData";
+		    }
+		});
+	return result;
     }
     native String nativeGetData();
 
     public int getLength() {
-	return nativeGetLength();
+	int result;
+	Integer integerResult = (Integer)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetLength();
+		    }
+		    public String toString() {
+			return "CharacterData.getLength";
+		    }
+		});
+	result = integerResult.intValue();
+	return result;
     }
     native int nativeGetLength();
 
     public void insertData(int offset, String arg) {
-	nativeInsertData(offset, arg);
+	final int finalOffset = offset;
+	final String finalArg = arg;
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			nativeInsertData(finalOffset, finalArg);
+			return null;
+		    }
+		    public String toString() {
+			return "CharacterData.insertData";
+		    }
+		});
+
     }
     native void nativeInsertData(int offset, String arg);
 
     public void replaceData(int offset, int count, String arg) {
-	nativeReplaceData(offset, count, arg);
+	final int finalOffset = offset;
+	final  int finalCount = count;
+	final String finalArg = arg;
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			nativeReplaceData(finalOffset, finalCount, finalArg);
+			return null;
+		    }
+		    public String toString() {
+			return "CharacterData.replaceData";
+		    }
+		});
+
     }
     native void nativeReplaceData(int offset, int count, String arg);
 
     public void setData(String data) {
-	nativeSetData(data);
+	final String finalData = data;
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			nativeSetData(finalData);
+			return null;
+		    }
+		    public String toString() {
+			return "CharacterData.setData";
+		    }
+		});
+
+
     }
     native void nativeSetData(String data);
 
     public String substringData(int offset, int count) {
-	return nativeSubstringData(offset, count);
+	final int finalOffset = offset;
+	final  int finalCount = count;
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeSubstringData(finalOffset, finalCount);
+		    }
+		    public String toString() {
+			return "CharacterData.substringData";
+		    }
+		});
+	return result;
+
     }
     native String nativeSubstringData(int offset, int count);
 }

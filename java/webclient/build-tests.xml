@@ -82,6 +82,9 @@
       <pathelement location="${out.test.dir}/classes"/>
     </path>
 
+    <property name="test.browser.url" 
+              value="http://developers.sun.com/ajax/" />
+
 
 <!-- ========== Executable Targets ======================================== -->
 
@@ -230,6 +233,7 @@ PENDING(edburns): 20070130 XULRunner has no bookmarks
             <jvmarg line="-Djava.util.logging.config.file=${basedir}${FILE_PATH_SEP}..${FILE_PATH_SEP}logging.properties"/>
 
             <classpath refid="test.classpath"/>
+            <arg value="${test.browser.url}" />
         </java>
 
     </target>

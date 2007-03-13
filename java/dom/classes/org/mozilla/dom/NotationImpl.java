@@ -23,18 +23,43 @@ package org.mozilla.dom;
 
 import org.w3c.dom.Notation;
 
+import org.mozilla.util.ReturnRunnable;
+
+
 public class NotationImpl extends NodeImpl implements Notation {
 
     // instantiated from JNI only
     private NotationImpl() {}
     
     public String getPublicId() {
-	return nativeGetPublicId();
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetPublicId();
+		    }
+		    public String toString() {
+			return "Notation.getPublicId";
+		    }
+		});
+	return result;
+
     }
     native String nativeGetPublicId();
 
     public String getSystemId() {
-	return nativeGetSystemId();
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetSystemId();
+		    }
+		    public String toString() {
+			return "Notation.getSystemId";
+		    }
+		});
+	return result;
+
     }
     native String nativeGetSystemId();
 

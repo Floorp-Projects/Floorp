@@ -26,28 +26,72 @@ import org.w3c.dom.DOMException;
 import org.w3c.dom.Element;
 import org.w3c.dom.TypeInfo;
 
+import org.mozilla.util.ReturnRunnable;
+
 public class AttrImpl extends NodeImpl implements Attr {
 
     // instantiated from JNI or Document.createAttribute()
     private AttrImpl() {}
 
     public String getName() {
-	return nativeGetName();
+	String result = (String)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			
+			return nativeGetName();
+		    }
+		    public String toString() {
+			return "DOMAccessor.register";
+		    }
+		});
+	return result;
     }
     native String nativeGetName();
 
     public boolean getSpecified() {
-	return nativeGetSpecified();
+	Boolean boolResult = (Boolean)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return new Boolean(nativeGetSpecified());
+		    }
+		    public String toString() {
+			return "DOMAccessor.register";
+		    }
+		});
+	return boolResult.booleanValue();
     }
     native boolean nativeGetSpecified();
 
     public String getValue() {
-	return nativeGetValue();
+	String result = (String)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetValue();
+		    }
+		    public String toString() {
+			return "DOMAccessor.register";
+		    }
+		});
+	return result;
     }
     native String nativeGetValue();
 
     public void setValue(String value) {
-	nativeSetValue(value);
+	final String finalValue = value;
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			nativeSetValue(finalValue);
+			return null;
+		    }
+		    public String toString() {
+			return "Attr.setValue";
+		    }
+		});
+
     }
     native void nativeSetValue(String value);
 
@@ -57,7 +101,17 @@ public class AttrImpl extends NodeImpl implements Attr {
      * @since DOM Level 2
      */
     public Element getOwnerElement() {
-	return nativeGetOwnerElement();
+	Element result = (Element)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetOwnerElement();
+		    }
+		    public String toString() {
+			return "DOMAccessor.register";
+		    }
+		});
+	return result;
     }
     native Element nativeGetOwnerElement();
 

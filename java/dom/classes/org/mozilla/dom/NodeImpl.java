@@ -33,6 +33,8 @@ import org.w3c.dom.events.EventListener;
 import java.util.Vector;
 import java.util.Hashtable;
 
+import org.mozilla.util.ReturnRunnable;
+
 class NodeEventListener {
 	EventListener listener = null;
 	String type = null;
@@ -118,200 +120,566 @@ public class NodeImpl implements Node, EventTarget {
     }
 
     public boolean isSupported(String feature, String version) {
-	return nativeIsSupported(feature, version);
+	final String finalFeature = feature;
+	final  String finalVersion = version;
+	Boolean result = (Boolean)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			boolean booleanResult = nativeIsSupported(finalFeature, finalVersion);
+			return booleanResult ? Boolean.TRUE : Boolean.FALSE;
+		    }
+		    public String toString() {
+			return "Node.isSupported";
+		    }
+		});
+	return result.booleanValue(); 
+
     }
     native boolean nativeIsSupported(String feature, String version);
+
     public boolean hasAttributes() {
-	return nativeHasAttributes();
+	Boolean result = (Boolean)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			boolean booleanResult = nativeHasAttributes();
+			return booleanResult ? Boolean.TRUE : Boolean.FALSE;
+		    }
+		    public String toString() {
+			return "Node.hasAttributes";
+		    }
+		});
+	return result.booleanValue();
+
     }
     native boolean nativeHasAttributes();
 
     public Node appendChild(Node newChild) throws DOMException {
-	return nativeAppendChild(newChild);
+	final Node finalNewChild = newChild;
+	Node result = (Node)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeAppendChild(finalNewChild);
+		    }
+		    public String toString() {
+			return "Node.appendChild";
+		    }
+		});
+	return result;
+
     }
     native Node nativeAppendChild(Node newChild) throws DOMException;
 
     public Node cloneNode(boolean deep) {
-	return nativeCloneNode(deep);
+	final boolean finalDeep = deep;
+	Node result = (Node)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeCloneNode(finalDeep);
+		    }
+		    public String toString() {
+			return "Node.cloneNode";
+		    }
+		});
+	return result;
+
     }
     native Node nativeCloneNode(boolean deep);
 
     public NamedNodeMap getAttributes() {
-	return nativeGetAttributes();
+	NamedNodeMap result = (NamedNodeMap)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetAttributes();
+		    }
+		    public String toString() {
+			return "Node.getAttributes";
+		    }
+		});
+	return result;
+
     }
     native NamedNodeMap nativeGetAttributes();
 
     public NodeList getChildNodes() {
-	return nativeGetChildNodes();
+	NodeList result = (NodeList)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetChildNodes();
+		    }
+		    public String toString() {
+			return "Node.getChildNodes";
+		    }
+		});
+	return result;
+
     }
     native NodeList nativeGetChildNodes();
 
     public Node getFirstChild() {
-	return nativeGetFirstChild();
+	Node result = (Node)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetFirstChild();
+		    }
+		    public String toString() {
+			return "Node.getFirstChild";
+		    }
+		});
+	return result;
+
     }
     native Node nativeGetFirstChild();
 
     public Node getLastChild() {
-	return nativeGetLastChild();
+	Node result = (Node)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetLastChild();
+		    }
+		    public String toString() {
+			return "Node.getLastChild";
+		    }
+		});
+	return result;
+
     }
     native Node nativeGetLastChild();
 
     public Node getNextSibling() {
-	return nativeGetNextSibling();
+	Node result = (Node)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetNextSibling();
+		    }
+		    public String toString() {
+			return "Node.getNextSibling";
+		    }
+		});
+	return result;
+
     }
     native Node nativeGetNextSibling();
 
     public String getNodeName() {
-	return nativeGetNodeName();
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetNodeName();
+		    }
+		    public String toString() {
+			return "Node.getNodeName";
+		    }
+		});
+	return result;
+
     }
     native String nativeGetNodeName();
 
     public short getNodeType() {
-	return nativeGetNodeType();
+	Short result = (Short)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			short shortResult = nativeGetNodeType();
+			return Short.valueOf(shortResult);
+		    }
+		    public String toString() {
+			return "Node.getNodeType";
+		    }
+		});
+	return result.shortValue();
+
     }
     native short nativeGetNodeType();
 
     public String getNodeValue() {
-	return nativeGetNodeValue();
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetNodeValue();
+		    }
+		    public String toString() {
+			return "Node.getNodeValue";
+		    }
+		});
+	return result;
+
     }
     native String nativeGetNodeValue();
 
     public Document getOwnerDocument() {
-	return nativeGetOwnerDocument();
+	Document result = (Document)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetOwnerDocument();
+		    }
+		    public String toString() {
+			return "Node.getOwnerDocument";
+		    }
+		});
+	return result;
+
     }
     native Document nativeGetOwnerDocument();
 
     public Node getParentNode() {
-	return nativeGetParentNode();
+	Node result = (Node)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetParentNode();
+		    }
+		    public String toString() {
+			return "Node.getParentNode";
+		    }
+		});
+	return result;
+
     }
     native Node nativeGetParentNode();
 
     public Node getPreviousSibling() {
-	return nativeGetPreviousSibling();
+	Node result = (Node)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetPreviousSibling();
+		    }
+		    public String toString() {
+			return "Node.getPreviousSibling";
+		    }
+		});
+	return result;
+
     }
     native Node nativeGetPreviousSibling();
 
     public boolean hasChildNodes() {
-	return nativeHasChildNodes();
+	Boolean result = (Boolean)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			boolean booleanResult = nativeHasChildNodes();
+			return booleanResult ? Boolean.TRUE : Boolean.FALSE;
+		    }
+		    public String toString() {
+			return "Node.hasChildNodes";
+		    }
+		});
+	return result.booleanValue();
+
     }
     native boolean nativeHasChildNodes();
 
     public Node insertBefore(Node newChild, Node refChild) throws DOMException {
-	return nativeInsertBefore(newChild, refChild);
+	final Node finalNewChild = newChild;
+	final  Node finalRefChild = refChild;
+	Node result = (Node)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeInsertBefore(finalNewChild, finalRefChild);
+		    }
+		    public String toString() {
+			return "Node.insertBefore";
+		    }
+		});
+	return result; 
+
     }
     native Node nativeInsertBefore(Node newChild, Node refChild) throws DOMException;
+
     public Node removeChild(Node oldChild) throws DOMException {
-	return nativeRemoveChild(oldChild);
+	final Node finalOldChild = oldChild;
+	Node result = (Node)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeRemoveChild(finalOldChild);
+		    }
+		    public String toString() {
+			return "Node.removeChild";
+		    }
+		});
+	return result;
+
     }
     native Node nativeRemoveChild(Node oldChild) throws DOMException;
 
     public Node replaceChild(Node newChild, Node oldChild) throws DOMException {
-	return nativeReplaceChild(newChild, oldChild);
+	final Node finalNewChild = newChild;
+	final  Node finalOldChild = oldChild;
+	Node result = (Node)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeReplaceChild(finalNewChild, finalOldChild);
+		    }
+		    public String toString() {
+			return "Node.replaceChild";
+		    }
+		});
+	return result; 
+
     }
     native Node nativeReplaceChild(Node newChild, Node oldChild) throws DOMException;
+
     public void setNodeValue(String nodeValue) {
-	nativeSetNodeValue(nodeValue);
+	final String finalNodeValue = nodeValue;
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			nativeSetNodeValue(finalNodeValue);
+			return null;
+		    }
+		    public String toString() {
+			return "Node.setNodeValue";
+		    }
+		});
+
+
     }
     native void nativeSetNodeValue(String nodeValue);
 
     public String getTextContent() throws DOMException {
-	return nativeGetTextContent();
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetTextContent();
+		    }
+		    public String toString() {
+			return "Node.getTextContent";
+		    }
+		});
+	return result;
+
     }
     native String nativeGetTextContent() throws DOMException;
 
     protected void finalize() {
-	nativeFinalize();
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			nativeFinalize();
+			return null;
+		    }
+		    public String toString() {
+			return "Node.finalize";
+		    }
+		});
+
     }
     protected native void nativeFinalize();
 
     private boolean XPCOM_equals(Object o) {
-	return nativeXPCOM_equals(o);
+	final Object finalO = o;
+	Boolean bool = (Boolean)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			boolean booleanResult = nativeXPCOM_equals(finalO);
+			return booleanResult ? Boolean.TRUE : Boolean.FALSE;
+		    }
+		    public String toString() {
+			return "Node.XPCOM_equals";
+		    }
+		});
+	return bool.booleanValue();
+
     }
     native boolean nativeXPCOM_equals(Object o);
 
     private int XPCOM_hashCode() {
-	return nativeXPCOM_hashCode();
+	Integer result = (Integer)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			int intResult = nativeXPCOM_hashCode();
+			return Integer.valueOf(intResult);
+		    }
+		    public String toString() {
+			return "Node.XPCOM_hashCode";
+		    }
+		});
+	return result.intValue();
+
     }
     private native int nativeXPCOM_hashCode();
 
     //since DOM level 2
     public boolean supports(String feature, String version) {
-	return nativeSupports(feature, version);
+	final String finalFeature = feature;
+	final  String finalVersion = version;
+	Boolean result = (Boolean)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			boolean booleanResult = 
+			    nativeSupports(finalFeature, finalVersion);
+			return booleanResult ? Boolean.TRUE : Boolean.FALSE;
+		    }
+		    public String toString() {
+			return "Node.supports";
+		    }
+		});
+	return result.booleanValue(); 
+
     }
     native boolean nativeSupports(String feature, String version);
+
     public String getNamespaceURI() {
-	return nativeGetNamespaceURI();
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetNamespaceURI();
+		    }
+		    public String toString() {
+			return "Node.getNamespaceURI";
+		    }
+		});
+	return result;
+
     }
     native String nativeGetNamespaceURI();
 
     public String getPrefix() {
-	return nativeGetPrefix();
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetPrefix();
+		    }
+		    public String toString() {
+			return "Node.getPrefix";
+		    }
+		});
+	return result;
+
     }
     native String nativeGetPrefix();
 
     public void setPrefix(String prefix) {
-	nativeSetPrefix(prefix);
+	final String finalPrefix = prefix;
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			nativeSetPrefix(finalPrefix);
+			return null;
+		    }
+		    public String toString() {
+			return "Node.setPrefix";
+		    }
+		});
     }
     native void nativeSetPrefix(String prefix);
 
     public String getLocalName() {
-	return nativeGetLocalName();
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetLocalName();
+		    }
+		    public String toString() {
+			return "Node.getLocalName";
+		    }
+		});
+	return result;
+
     }
     native String nativeGetLocalName();
 
     
-    public void addEventListener(String type, 
-                                 EventListener listener, 
-                                 boolean useCapture) {
+    public void addEventListener(String type, EventListener listener, boolean useCapture) {
+	final String finalType = type;
+	final  EventListener finalListener = listener;
+	final boolean finalUseCapture = useCapture;
 
-        long nativeListener = addNativeEventListener(type, listener, useCapture);
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			long nativeListener = 
+			    addNativeEventListener(finalType, finalListener, 
+						   finalUseCapture);
+			Long lnode = new Long(p_nsIDOMNode);
+			
+			Vector listeners;
+			
+			//in conjunction with internal synchronization of Hashtable and Vector
+			// this should be enough for safe concurrent access
+			synchronized (javaDOMlisteners) {
+			    listeners = (Vector) javaDOMlisteners.get(lnode);
+			    
+			    if (listeners == null) {
+				listeners = new Vector();
+				javaDOMlisteners.put(lnode, listeners);
+			    }
+			}
+			
+			if (nativeListener != 0) {
+			    
+			    NodeEventListener l = new NodeEventListener(finalType, 
+									finalListener, 
+									finalUseCapture, 
+									nativeListener);
+			    listeners.add(l);
+			} 
+			return null;
+		    }
+		    public String toString() {
+			return "Node.addEventListener";
+		    }
+		});
 
-	Long lnode = new Long(p_nsIDOMNode);
-
-        Vector listeners;
-        
-        //in conjunction with internal synchronization of Hashtable and Vector
-        // this should be enough for safe concurrent access
-        synchronized (javaDOMlisteners) {
-            listeners = (Vector) javaDOMlisteners.get(lnode);
-        
-            if (listeners == null) {
-              listeners = new Vector();
-                javaDOMlisteners.put(lnode, listeners);
-            }
-        }
-        
-        if (nativeListener != 0) {
-
-            NodeEventListener l = new NodeEventListener(type, 
-                                                        listener, 
-                                                        useCapture, 
-                                                        nativeListener);
-            listeners.add(l);
-	} 
     }
 
-    public void removeEventListener(String type, 
-                                    EventListener listener, 
-                                    boolean useCapture) {
+    public void removeEventListener(String type, EventListener listener, boolean useCapture) {
+	final String finalType = type;
+	final  EventListener finalListener = listener;
+	final boolean finalUseCapture = useCapture;
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			Vector listeners = (Vector) javaDOMlisteners.get(new Long(p_nsIDOMNode));
+			
+			if (listeners == null) 
+			    return null;
+			
+			NodeEventListener l = new NodeEventListener(finalType, 
+								    finalListener, 
+								    finalUseCapture, 0);
 
-        Vector listeners = (Vector) javaDOMlisteners.get(new Long(p_nsIDOMNode));
+			int idx = listeners.indexOf(l);
+			
+			//if trying to remove non-existing listener then return 
+			if (idx == -1) 
+			    return null;
 
-        if (listeners == null) 
-            return;
+			l = (NodeEventListener) listeners.remove(idx);
+			
+			removeNativeEventListener(finalType, l.nativeListener, 
+						  finalUseCapture);
+			return null;
+		    }
+		    public String toString() {
+			return "Node.removeEventListener";
+		    }
+		});
 
-        NodeEventListener l = new NodeEventListener(type, 
-                                                    listener, useCapture, 0);
-
-        int idx = listeners.indexOf(l);
-
-	//if trying to remove non-existing listener then return 
-        if (idx == -1) 
-            return;
-
-    	l = (NodeEventListener) listeners.remove(idx);
-	
-	    removeNativeEventListener(type, l.nativeListener, useCapture);
     }
 
     public boolean dispatchEvent(Event evt) throws DOMException {
@@ -319,12 +687,45 @@ public class NodeImpl implements Node, EventTarget {
     }
     
     private long  addNativeEventListener(String type, EventListener listener, boolean useCapture) {
-	return nativeAddNativeEventListener(type, listener, useCapture);
+	final String finalType = type;
+	final  EventListener finalListener = listener;
+	final boolean finalUseCapture = useCapture;
+	Long result = (Long)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			long longResult =
+			    nativeAddNativeEventListener(finalType, 
+							 finalListener, 
+							 finalUseCapture);
+			return Long.valueOf(longResult);
+		    }
+		    public String toString() {
+			return "Node.addNativeEventListener";
+		    }
+		});
+	return result.longValue();
+
     }
     private native long nativeAddNativeEventListener(String type, EventListener listener, boolean useCapture);
 
     private void  removeNativeEventListener(String type, long nativeListener, boolean useCapture) {
-	nativeRemoveNativeEventListener(type, nativeListener, useCapture);
+	final String finalType = type;
+	final  long finalNativeListener = nativeListener;
+	final boolean finalUseCapture = useCapture;
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			nativeRemoveNativeEventListener(finalType, 
+							finalNativeListener, 
+							finalUseCapture);
+			return null;
+		    }
+		    public String toString() {
+			return "Node.removeNativeEventListener";
+		    }
+		});
+
     }
     private native void  nativeRemoveNativeEventListener(String type, long nativeListener, boolean useCapture);
 

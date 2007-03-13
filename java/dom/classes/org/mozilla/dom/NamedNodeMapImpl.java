@@ -25,6 +25,8 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.DOMException;
 
+import org.mozilla.util.ReturnRunnable;
+
 public class NamedNodeMapImpl implements NamedNodeMap {
 
     private long p_nsIDOMNamedNodeMap = 0;
@@ -32,32 +34,90 @@ public class NamedNodeMapImpl implements NamedNodeMap {
     private NamedNodeMapImpl() {}
 
     public int getLength() {
-	return nativeGetLength();
+	Integer result = (Integer)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			int intResult = nativeGetLength();
+			return Integer.valueOf(intResult);
+		    }
+		    public String toString() {
+			return "NamedNodeMap.getLength";
+		    }
+		});
+	return result.intValue();
+
     }
     native int nativeGetLength();
 
     public Node getNamedItem(String name) {
-	return nativeGetNamedItem(name);
+	final String finalName = name;
+	Node result = (Node)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetNamedItem(finalName);
+		    }
+		    public String toString() {
+			return "NamedNodeMap.getNamedItem";
+		    }
+		});
+	return result;
+
     }
     native Node nativeGetNamedItem(String name);
 
     public Node item(int index) {
-	return nativeItem(index);
+	final int finalIndex = index;
+	Node result = (Node)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeItem(finalIndex);
+		    }
+		    public String toString() {
+			return "NamedNodeMap.item";
+		    }
+		});
+	return result;
+
     }
     native Node nativeItem(int index);
 
     public Node removeNamedItem(String name) {
-	return nativeRemoveNamedItem(name);
+	final String finalName = name;
+	Node result = (Node)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeRemoveNamedItem(finalName);
+		    }
+		    public String toString() {
+			return "NamedNodeMap.removeNamedItem";
+		    }
+		});
+	return result;
+
     }
     native Node nativeRemoveNamedItem(String name);
 
     public Node setNamedItem(Node arg) {
-	return nativeSetNamedItem(arg);
+	final Node finalArg = arg;
+	Node result = (Node)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeSetNamedItem(finalArg);
+		    }
+		    public String toString() {
+			return "NamedNodeMap.setNamedItem";
+		    }
+		});
+	return result;
+
     }
     native Node nativeSetNamedItem(Node arg);
 
-
-    
     public Node getNamedItemNS(String namespaceURI, String localName) {
         throw new UnsupportedOperationException();
     }

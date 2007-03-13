@@ -24,6 +24,9 @@ package org.mozilla.dom.events;
 import org.w3c.dom.Node;
 import org.w3c.dom.events.Event;
 import org.w3c.dom.events.EventTarget;
+import org.mozilla.util.ReturnRunnable;
+import org.mozilla.dom.DOMAccessor;
+
 
 /**
  * The <code>Event</code> interface is used to provide contextual information 
@@ -55,7 +58,18 @@ public class EventImpl implements Event {
      * property. 
      */
     public String getType() {
-	return nativeGetType();
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetType();
+		    }
+		    public String toString() {
+			return "Event.getType";
+		    }
+		});
+	return result;
+
     }
     native String nativeGetType();
 
@@ -65,7 +79,18 @@ public class EventImpl implements Event {
      * to which the event  was originally dispatched. 
      */
     public EventTarget getTarget() {
-	return nativeGetTarget();
+	EventTarget result = (EventTarget)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetTarget();
+		    }
+		    public String toString() {
+			return "Event.getTarget";
+		    }
+		});
+	return result;
+
     }
     native EventTarget nativeGetTarget();
 
@@ -76,7 +101,18 @@ public class EventImpl implements Event {
      * is particularly  useful during capturing and bubbling. 
      */
     public EventTarget getCurrentTarget() {
-	return nativeGetCurrentTarget();
+	EventTarget result = (EventTarget)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetCurrentTarget();
+		    }
+		    public String toString() {
+			return "Event.getCurrentTarget";
+		    }
+		});
+	return result;
+
     }
     native EventTarget nativeGetCurrentTarget();
 
@@ -86,7 +122,19 @@ public class EventImpl implements Event {
      * is currently  being evaluated. 
      */
     public short getEventPhase() {
-	return nativeGetEventPhase();
+	Short result = (Short)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			short shortValue = nativeGetEventPhase();
+			return Short.valueOf(shortValue);
+		    }
+		    public String toString() {
+			return "Event.getEventPhase";
+		    }
+		});
+	return result.shortValue();
+
     }
     native short nativeGetEventPhase();
 

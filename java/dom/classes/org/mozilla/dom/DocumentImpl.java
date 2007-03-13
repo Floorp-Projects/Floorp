@@ -39,89 +39,276 @@ import org.w3c.dom.events.DocumentEvent;
 import org.w3c.dom.events.Event;
 import org.w3c.dom.DOMException;
 
+import org.mozilla.util.ReturnRunnable;
+
 public class DocumentImpl extends NodeImpl implements Document, DocumentEvent {
 
     // instantiated from JNI only
     private DocumentImpl() {}
 
     public Attr createAttribute(String name) {
-	return nativeCreateAttribute(name);
+	final String finalName = name;
+	Attr result = (Attr)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeCreateAttribute(finalName);
+		    }
+		    public String toString() {
+			return "Document.createAttribute";
+		    }
+		});
+	return result;
+
     }
     native Attr nativeCreateAttribute(String name);
 
     public CDATASection createCDATASection(String data) {
-	return nativeCreateCDATASection(data);
+	final String finalData = data;
+	CDATASection result = (CDATASection)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeCreateCDATASection(finalData);
+		    }
+		    public String toString() {
+			return "Document.createCDATASection";
+		    }
+		});
+	return result;
+
     }
     native CDATASection nativeCreateCDATASection(String data);
 
     public Comment createComment(String data) {
-	return nativeCreateComment(data);
+	final String finalData = data;
+	Comment result = (Comment)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeCreateComment(finalData);
+		    }
+		    public String toString() {
+			return "Document.createComment";
+		    }
+		});
+	return result;
+
     }
     native Comment nativeCreateComment(String data);
 
     public DocumentFragment createDocumentFragment() {
-	return nativeCreateDocumentFragment();
+	DocumentFragment result = (DocumentFragment)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeCreateDocumentFragment();
+		    }
+		    public String toString() {
+			return "Document.createDocumentFragment";
+		    }
+		});
+	return result;
     }
     native DocumentFragment nativeCreateDocumentFragment();
 
     public Element createElement(String tagName) {
-	return nativeCreateElement(tagName);
+	final String finalTagName = tagName;
+	Element result = (Element)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeCreateElement(finalTagName);
+		    }
+		    public String toString() {
+			return "Document.createElement";
+		    }
+		});
+	return result;
+
     }
     native Element nativeCreateElement(String tagName);
 
     public EntityReference createEntityReference(String name) {
-	return nativeCreateEntityReference(name);
+	final String finalName = name;
+	EntityReference result = (EntityReference)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeCreateEntityReference(finalName);
+		    }
+		    public String toString() {
+			return "Document.createEntityReference";
+		    }
+		});
+	return result;
+
     }
     native EntityReference nativeCreateEntityReference(String name);
 
     public ProcessingInstruction createProcessingInstruction(String target, String data) {
-	return nativeCreateProcessingInstruction(target, data);
+	final String finalTarget = target;
+	final  String finalData = data;
+	ProcessingInstruction result = (ProcessingInstruction)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeCreateProcessingInstruction(finalTarget, finalData);
+		    }
+		    public String toString() {
+			return "Document.createProcessingInstruction";
+		    }
+		});
+	return result;
+
     }
     native ProcessingInstruction nativeCreateProcessingInstruction(String target, String data);
+
     public Text createTextNode(String data) {
-	return nativeCreateTextNode(data);
+	final String finalData = data;
+	Text result = (Text)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeCreateTextNode(finalData);
+		    }
+		    public String toString() {
+			return "Document.createTextNode";
+		    }
+		});
+	return result;
+
     }
     native Text nativeCreateTextNode(String data);
 
     public DocumentType getDoctype() {
-	return nativeGetDoctype();
+	DocumentType result = (DocumentType)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetDoctype();
+		    }
+		    public String toString() {
+			return "Document";
+		    }
+		});
+	return result;
     }
     native DocumentType nativeGetDoctype();
 
     public Element getDocumentElement() {
-	return nativeGetDocumentElement();
+	Element result = (Element)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetDocumentElement();
+		    }
+		    public String toString() {
+			return "Document";
+		    }
+		});
+	return result;
     }
     native Element nativeGetDocumentElement();
 
     public NodeList getElementsByTagName(String tagName) {
-	return nativeGetElementsByTagName(tagName);
+	final String finalTagName = tagName;
+	NodeList result = (NodeList)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetElementsByTagName(finalTagName);
+		    }
+		    public String toString() {
+			return "Document.getElementsByTagName";
+		    }
+		});
+	return result;
+
     }
     native NodeList nativeGetElementsByTagName(String tagName);
 
     public DOMImplementation getImplementation() {
-	return nativeGetImplementation();
+	DOMImplementation result = (DOMImplementation)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetImplementation();
+		    }
+		    public String toString() {
+			return "Document";
+		    }
+		});
+	return result;
     }
     native DOMImplementation nativeGetImplementation();
 
     public Event createEvent(String type) {
-	return nativeCreateEvent(type);
+	final String finalType = type;
+	Event result = (Event)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeCreateEvent(finalType);
+		    }
+		    public String toString() {
+			return "Document.createEvent";
+		    }
+		});
+	return result;
+
     }
     native Event nativeCreateEvent(String type);
 
     public NodeList getElementsByTagNameNS(String namespaceURI, String localName) {
-	return nativeGetElementsByTagNameNS(namespaceURI, localName);
+	final String finalNamespaceURI = namespaceURI;
+	final  String finalLocalName = localName;
+	NodeList result = (NodeList)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetElementsByTagNameNS(finalNamespaceURI, finalLocalName);
+		    }
+		    public String toString() {
+			return "Document.getElementsByTagNameNS";
+		    }
+		});
+	return result;
+
     }
     native NodeList nativeGetElementsByTagNameNS(String namespaceURI, String localName);
+
     public Element getElementById(String elementId) {
-	return nativeGetElementById(elementId);
+	final String finalElementId = elementId;
+	Element result = (Element)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetElementById(finalElementId);
+		    }
+		    public String toString() {
+			return "Document.getElementById";
+		    }
+		});
+	return result;
+
     }
     native Element nativeGetElementById(String elementId);
 
     public String getDocumentURI() {
-	return nativeGetDocumentURI();
+	String result = (String)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetDocumentURI();
+		    }
+		    public String toString() {
+			return "Document.getDocumentURI";
+		    }
+		});
+	return result;
     }
     native String nativeGetDocumentURI();
-
 
     public Node importNode(Node importedNode, boolean deep) throws DOMException {
         throw new UnsupportedOperationException();

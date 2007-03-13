@@ -134,9 +134,6 @@ public final class DOMAccessor {
     }
 
     private void DOMAccessorImpl() {
-        if (null == runnableRunner) {
-            runnableRunner = new SameThreadRunnableRunner();
-        }
     }
     
     public static void setRunner(RunnableRunner runner) {
@@ -144,31 +141,84 @@ public final class DOMAccessor {
     }
     
     public static RunnableRunner getRunner() {
+        if (null == runnableRunner) {
+            runnableRunner = new SameThreadRunnableRunner();
+        }
         return runnableRunner;
     }
 
     private static void register() {
-	nativeRegister();
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			nativeRegister();
+			return null;
+		    }
+		    public String toString() {
+			return "DOMAccessor.register";
+		    }
+		});
     }
     private static native void nativeRegister();
 
     private static void unregister() {
-	nativeUnregister();
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			nativeUnregister();
+			return null;
+		    }
+		    public String toString() {
+			return "DOMAccessor.register";
+		    }
+		});
+
     }
     private static native void nativeUnregister();
     
     public static Node getNodeByHandle(long p) {
-	return nativeGetNodeByHandle(p);
+	final long finalP = p;
+	Node result = (Node)   DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetNodeByHandle(finalP);
+		    }
+		    public String toString() {
+			return "DOMAccessor.register";
+		    }
+		});
+	return result;
+
     }
     static native Node nativeGetNodeByHandle(long p);
 
     private static void doGC() {
-	nativeDoGC();
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			nativeDoGC();
+			return null;
+		    }
+		    public String toString() {
+			return "DOMAccessor.register";
+		    }
+		});
+
     }
     private static native void nativeDoGC();
 
     public static void initialize() {
-	nativeInitialize();
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			nativeInitialize();
+			return null;
+		    }
+		    public String toString() {
+			return "DOMAccessor.register";
+		    }
+		});
+
     }
     public static native void nativeInitialize();
 
@@ -280,7 +330,7 @@ class SameThreadRunnableRunner implements RunnableRunner {
     }
 
     public Object pushBlockingReturnRunnable(ReturnRunnable toInvoke) throws RuntimeException {
-        toInvoke.run();
+        toInvoke.setResult(toInvoke.run());
         return toInvoke.getResult();
     }
     

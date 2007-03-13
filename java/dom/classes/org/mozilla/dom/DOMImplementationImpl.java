@@ -26,6 +26,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.DocumentType;
 import org.w3c.dom.DOMException;
 
+import org.mozilla.util.ReturnRunnable;
+
 public class DOMImplementationImpl implements DOMImplementation {
 
     private long p_nsIDOMDOMImplementation = 0;
@@ -45,34 +47,112 @@ public class DOMImplementationImpl implements DOMImplementation {
     }
 
     public boolean hasFeature(String feature, String version) {
-	return nativeHasFeature(feature, version);
+	final String finalFeature = feature;
+	final  String finalVersion = version;
+	Boolean bool = (Boolean)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			boolean booleanResult = 
+			    nativeHasFeature(finalFeature, finalVersion);
+			return booleanResult ? Boolean.TRUE : Boolean.FALSE;
+		    }
+		    public String toString() {
+			return "DOMImplementation.hasFeature";
+		    }
+		});
+	return bool.booleanValue(); 
+
     }
     native boolean nativeHasFeature(String feature, String version);
 
     protected void finalize() {
-	nativeFinalize();
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			nativeFinalize();
+			return null;
+		    }
+		    public String toString() {
+			return "DOMImplementation.finalize";
+		    }
+		});
     }
 
     protected native void nativeFinalize();
 
     private boolean XPCOM_equals(Object o) {
-	return nativeXPCOM_equals(o);
+	final Object finalO = o;
+	Boolean bool = (Boolean)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			boolean booleanResult = nativeXPCOM_equals(finalO);
+			return booleanResult ? Boolean.TRUE : Boolean.FALSE;
+		    }
+		    public String toString() {
+			return "DOMImplementation.XPCOM_equals";
+		    }
+		});
+	return bool.booleanValue();
+
     }
     native boolean nativeXPCOM_equals(Object o);
 
     private int XPCOM_hashCode() {
-	return nativeXPCOM_hashCode();
+	Integer result = (Integer)
+	    DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			int intResult = nativeXPCOM_hashCode();
+			return Integer.valueOf(intResult);
+		    }
+		    public String toString() {
+			return "DOMImplementation.XPCOM_hashCode";
+		    }
+		});
+	return result.intValue();
+
     }
     private native int nativeXPCOM_hashCode();
 
     //since DOM2
     public DocumentType createDocumentType(String qualifiedName, String publicID, String systemID) {
-	return nativeCreateDocumentType(qualifiedName, publicID, systemID);
+	final String finalQualifiedName = qualifiedName;
+	final  String finalPublicID = publicID;
+	final String finalSystemID = systemID;
+	DocumentType result = (DocumentType)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			
+	return nativeCreateDocumentType(finalQualifiedName, finalPublicID, finalSystemID);
+		    }
+		    public String toString() {
+			return "DOMImplementation.createDocumentType";
+		    }
+		});
+	return result; 
+
     }
     native DocumentType nativeCreateDocumentType(String qualifiedName, String publicID, String systemID);
 
     public Document createDocument(String namespaceURI,  String qualifiedName, DocumentType doctype) {
-	return nativeCreateDocument(namespaceURI, qualifiedName, doctype);
+	final String finalNamespaceURI = namespaceURI;
+	final   String finalQualifiedName = qualifiedName;
+	final DocumentType finalDoctype = doctype;
+	Document result = (Document)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeCreateDocument(finalNamespaceURI, finalQualifiedName, finalDoctype);
+		    }
+		    public String toString() {
+			return "DOMImplementation.createDocument";
+		    }
+		});
+	return result;
+
     }
     native Document nativeCreateDocument(String namespaceURI,  String qualifiedName, DocumentType doctype);
 

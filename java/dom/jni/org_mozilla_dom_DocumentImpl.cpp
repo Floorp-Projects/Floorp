@@ -753,7 +753,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_nativeGetElementById
 
   if (NS_FAILED(rv) || !element) {
     JavaDOMGlobals::ThrowException(env,
-      "Document.getElementById: failed", rv);
+				   "Document.getElementById: failed", rv, 
+				   JavaDOMGlobals::EXCEPTION_DOM);
     return NULL;
   }
 

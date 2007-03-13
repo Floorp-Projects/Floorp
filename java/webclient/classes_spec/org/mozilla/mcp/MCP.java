@@ -1,5 +1,5 @@
 /*
- * $Id: MCP.java,v 1.6 2007/03/09 04:34:24 edburns%acm.org Exp $
+ * $Id: MCP.java,v 1.7 2007/03/13 06:21:44 edburns%acm.org Exp $
  */
 
 /* 
@@ -34,6 +34,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
 import java.io.FileNotFoundException;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.mozilla.dom.util.DOMTreeDumper;
@@ -81,6 +82,37 @@ public class MCP {
     private boolean initialized = false;
     private Robot robot;
     private DOMTreeDumper treeDumper = null;
+    private CountDownLatch latch = null;
+    
+    private void createLatch() {
+        if (null != latch) {
+            IllegalStateException ise = new IllegalStateException("Trying to set latch when latch is already set!");
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.throwing("org.mozilla.mcp.MCP", "createLatch", ise);
+            }
+            throw ise;
+        }
+        latch = new CountDownLatch(1);
+    }
+    
+    private void lockLatch() throws InterruptedException {
+        if (null == latch) {
+            IllegalStateException ise = new IllegalStateException("Trying to lock latch before it has been created!");
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.throwing("org.mozilla.mcp.MCP", "lockLatch", ise);
+            }
+            throw ise;
+        }
+        latch.await();
+    }
+
+    private void openLatch() {
+        if (null != latch || 1 != latch.getCount()) {
+            latch.countDown();
+            latch = null;
+        }
+    }    
+
     
     public void setAppData(String absolutePathToNativeBrowserBinDir)
     throws FileNotFoundException,
@@ -296,6 +328,7 @@ public class MCP {
                     x = Integer.valueOf(clientX).intValue();
                     y = Integer.valueOf(clientY).intValue();
                     Robot robot = getRobot();
+                    createLatch();
                     robot.mouseMove(x, y);
                     robot.mousePress(InputEvent.BUTTON1_MASK);
                     robot.mouseRelease(InputEvent.BUTTON1_MASK);
@@ -317,15 +350,12 @@ public class MCP {
         synchronized (this) {
             try {
                 clickElement(idOrName);
-                this.wait();
-            }
-            catch (IllegalStateException ise) {
-                LOGGER.throwing(this.getClass().getName(), "blockingClickElementGivenId",
-                        ise);
+                lockLatch();
             }
             catch (InterruptedException ie) {
-                LOGGER.throwing(this.getClass().getName(), "blockingClickElementGivenId",
-                        ie);
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.log(Level.WARNING, "blockingClickElementGivenId", ie);
+                }
             }
         }
     }
@@ -334,12 +364,13 @@ public class MCP {
         Navigation2 nav = getNavigation();
         synchronized (this) {
             nav.loadURL(url);
+            createLatch();
             try {
-                this.wait();
+                lockLatch();
             } catch (InterruptedException ex) {
-                LOGGER.throwing(this.getClass().getName(), "blockingLoad",
-                        ex);
-                ex.printStackTrace();
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.log(Level.WARNING, "blockingLoad", ex);
+                }
             }
         }
     }
@@ -372,9 +403,7 @@ public class MCP {
             switch ((int)type) {
                 case ((int) DocumentLoadEvent.END_AJAX_EVENT_MASK):
                 case ((int) DocumentLoadEvent.END_DOCUMENT_LOAD_EVENT_MASK):
-                    synchronized (owner) {
-                        owner.notifyAll();
-                    }
+                    openLatch();
                     break;
                 case ((int) DocumentLoadEvent.START_URL_LOAD_EVENT_MASK):
                     String method = (String) eventData.get("method");

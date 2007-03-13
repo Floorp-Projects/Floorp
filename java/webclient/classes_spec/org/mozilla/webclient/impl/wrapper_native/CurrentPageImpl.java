@@ -60,7 +60,7 @@ public class CurrentPageImpl extends ImplObjectNative implements CurrentPage2,
 // Class Variables
 //
     
-    public static final String LOG = "org.mozilla.impl.wrapper_native.CurrentPageImpl";
+    public static final String LOG = "org.mozilla.webclient.impl.wrapper_native.CurrentPageImpl";
 
     public static final Logger LOGGER = Log.getLogger(LOG);
     
@@ -310,7 +310,7 @@ public Document getDOM()
         public Object run() {
             Document result = nativeGetDOM(getNativeBrowserControl());
             if (LOGGER.isLoggable((Level.INFO))) {
-                LOGGER.info("CurrentPageImpl.getDOM(): getting DOM with URI: " +
+                LOGGER.info("Getting DOM with URI: " +
                         result.getDocumentURI());
             }
             resultHolder[0] = result;

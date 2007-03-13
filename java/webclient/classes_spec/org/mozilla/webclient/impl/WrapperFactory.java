@@ -63,7 +63,7 @@ public interface WrapperFactory {
      * @return implmentation specific native int.
      *
      */
-    public int loadNativeLibraryIfNecessary();
+    public int loadNativeLibrariesIfNecessary();
 
     /**
      *

@@ -23,6 +23,8 @@ package org.mozilla.dom;
 
 import org.w3c.dom.DocumentType;
 import org.w3c.dom.NamedNodeMap;
+import org.mozilla.util.ReturnRunnable;
+
 
 public class DocumentTypeImpl  extends NodeImpl implements DocumentType {
 
@@ -30,34 +32,100 @@ public class DocumentTypeImpl  extends NodeImpl implements DocumentType {
     private DocumentTypeImpl() {}
 
     public String getName() {
-	return nativeGetName();
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetName();
+		    }
+		    public String toString() {
+			return "DocumentType.getName";
+		    }
+		});
+	return result;
+
     }
     native String nativeGetName();
 
     public NamedNodeMap getEntities() {
-	return nativeGetEntities();
+	NamedNodeMap result = (NamedNodeMap)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetEntities();
+		    }
+		    public String toString() {
+			return "DocumentType.getEntities";
+		    }
+		});
+	return result;
+
     }
     native NamedNodeMap nativeGetEntities();
 
     public NamedNodeMap getNotations() {
-	return nativeGetNotations();
+	NamedNodeMap result = (NamedNodeMap)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetNotations();
+		    }
+		    public String toString() {
+			return "DocumentType.getNotations";
+		    }
+		});
+	return result;
+
     }
     native NamedNodeMap nativeGetNotations();
 
     
     //since DOM level 2
     public String getPublicId() {
-	return nativeGetPublicId();
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetPublicId();
+		    }
+		    public String toString() {
+			return "DocumentType.getPublicId";
+		    }
+		});
+	return result;
+
     }
     native String nativeGetPublicId();
 
     public String getSystemId() {
-	return nativeGetSystemId();
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetSystemId();
+		    }
+		    public String toString() {
+			return "DocumentType.getSystemId";
+		    }
+		});
+	return result;
+
     }
     native String nativeGetSystemId();
 
     public String getInternalSubset() {
-	return nativeGetInternalSubset();
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetInternalSubset();
+		    }
+		    public String toString() {
+			return "DocumentType.getInternalSubset";
+		    }
+		});
+	return result;
+
     }
     native String nativeGetInternalSubset();
 

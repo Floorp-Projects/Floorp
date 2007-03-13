@@ -23,23 +23,58 @@ package org.mozilla.dom;
 
 import org.w3c.dom.ProcessingInstruction;
 
+import org.mozilla.util.ReturnRunnable;
+
 public class ProcessingInstructionImpl extends NodeImpl implements ProcessingInstruction {
 
     // instantiated from JNI or Document.createProcessingInstruction()
     private ProcessingInstructionImpl() {}
 
     public String getData() {
-	return nativeGetData();
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetData();
+		    }
+		    public String toString() {
+			return "ProcessingInstruction.getData";
+		    }
+		});
+	return result;
+
     }
     native String nativeGetData();
 
     public String getTarget() {
-	return nativeGetTarget();
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetTarget();
+		    }
+		    public String toString() {
+			return "ProcessingInstruction.getTarget";
+		    }
+		});
+	return result;
+
     }
     native String nativeGetTarget();
 
     public void setData(String data) {
-	nativeSetData(data);
+	final String finalData = data;
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			nativeSetData(finalData);
+			return null;
+		    }
+		    public String toString() {
+			return "ProcessingInstruction.setData";
+		    }
+		});
+
     }
     native void nativeSetData(String data);
 

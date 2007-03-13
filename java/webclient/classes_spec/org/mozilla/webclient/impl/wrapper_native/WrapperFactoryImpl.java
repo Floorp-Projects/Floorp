@@ -283,11 +283,12 @@ public class WrapperFactoryImpl extends Object implements WrapperFactory {
 	return profileName;
     }
     
-    public int loadNativeLibraryIfNecessary() {
+    public int loadNativeLibrariesIfNecessary() {
         System.loadLibrary("webclient");
 	System.setProperty(JAVADOM_LOADED_PROPERTY_NAME,  "true");
 	try {
 	    System.loadLibrary("javadomjni");
+            DOMAccessor.setRunner(NativeEventThread.instance);
 	    DOMAccessor.setNativeLibraryLoaded(true);
 	}
 	catch (Exception ex) {

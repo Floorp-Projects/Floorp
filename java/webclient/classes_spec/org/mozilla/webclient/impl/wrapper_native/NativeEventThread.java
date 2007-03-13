@@ -26,6 +26,7 @@ package org.mozilla.webclient.impl.wrapper_native;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.mozilla.util.Assert;
@@ -35,10 +36,11 @@ import org.mozilla.util.ReturnRunnable;
 import org.mozilla.util.RunnableRunner;
 
 import org.mozilla.webclient.impl.WrapperFactory;
+import org.w3c.dom.DOMException;
 
 /**
  * <p>This is a singleton class.  All native events pass thru this class
- * by virtue of the {@link #pushRunnable} or {@link pushBlockingWCRunnable}
+ * by virtue of the {@link #pushRunnable} or {@link pushBlockingreturnRunnable}
  * methods.</p>
  */
 
@@ -65,7 +67,7 @@ public class NativeEventThread extends Thread implements RunnableRunner {
     private WrapperFactory wrapperFactory;
     private int nativeWrapperFactory;
     
-    private Queue<ReturnRunnable> blockingRunnables;
+    private Queue<ReturnRunnableCountDownLatch> blockingRunnables;
     private Queue<Runnable> runnables;
     
     
@@ -87,7 +89,7 @@ public class NativeEventThread extends Thread implements RunnableRunner {
 	ParameterCheck.nonNull(yourFactory);
 	
 	wrapperFactory = yourFactory;
-	blockingRunnables = new ConcurrentLinkedQueue<ReturnRunnable>();
+	blockingRunnables = new ConcurrentLinkedQueue<ReturnRunnableCountDownLatch>();
 	runnables = new ConcurrentLinkedQueue<Runnable>();
     }
     
@@ -107,16 +109,19 @@ public class NativeEventThread extends Thread implements RunnableRunner {
 	    wrapperFactory = null;
 	    try {
                 if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.finest("NativeEventThread.delete: About to wait during delete()");
+                    LOGGER.finest("About to wait during delete()");
                 }
 		wait();
                 if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.finest("NativeEventThread.delete: Returned from wait during delete()");
+                    LOGGER.finest("Returned from wait during delete()");
                 }
 	    }
 	    catch (Exception e) {
-		System.out.println("NativeEventThread.delete: interrupted while waiting\n\t for NativeEventThread to notifyAll() after destruction of initContext: " + e +
-				   " " + e.getMessage());
+                if (LOGGER.isLoggable(Level.SEVERE)) {
+                    LOGGER.log(Level.SEVERE, 
+                            "Interrupted while waiting for NativeEventThread " +
+                            "to notifyAll() after destruction of initContext",e);
+                }
 	    }
 	}
 	wrapperFactory = null;
@@ -141,7 +146,7 @@ public class NativeEventThread extends Thread implements RunnableRunner {
 
 public void run()
 {
-    nativeWrapperFactory = wrapperFactory.loadNativeLibraryIfNecessary();
+    nativeWrapperFactory = wrapperFactory.loadNativeLibrariesIfNecessary();
     
     // our owner must have put an event in the queue 
     Assert.assert_it(!runnables.isEmpty());
@@ -151,7 +156,10 @@ public void run()
 	    wrapperFactory.notifyAll();
 	}
 	catch (Exception e) {
-	    System.out.println("NativeEventThread.run: exception trying to send notifyAll() to WrapperFactoryImpl on startup:" + e + " " + e.getMessage());
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, 
+                        "Exception trying to send notifyAll() to WrapperFactoryImpl on startup", e);
+            }
 	}
     }
 
@@ -163,9 +171,9 @@ public void run()
     }
 }
 
-public void runUntilEventOfType(Class wcRunnableClass) {
+public void runUntilEventOfType(Class returnRunnableClass) {
     ReturnRunnable result = null;
-    while (doEventLoopOnce(wcRunnableClass)) {
+    while (doEventLoopOnce(returnRunnableClass)) {
     }
 }
 
@@ -173,9 +181,10 @@ public void runUntilEventOfType(Class wcRunnableClass) {
  * @return true if the event loop should continue to be executed, false otherwise
  */
 
-    private boolean doEventLoopOnce(Class... wcRunnableClass) {
+    private boolean doEventLoopOnce(Class... returnRunnableClass) {
         Runnable runnable;
-        ReturnRunnable wcRunnable;
+        ReturnRunnableCountDownLatch latch;
+        ReturnRunnable returnRunnable;
         boolean result = true;
         try {
             Thread.sleep(1);
@@ -185,7 +194,7 @@ public void runUntilEventOfType(Class wcRunnableClass) {
                                " while sleeping: " + e.getMessage());
         }
         runnable = runnables.poll();
-        wcRunnable = blockingRunnables.poll();
+        latch = blockingRunnables.poll();
         synchronized (this) {
 	    // if we are have been told to delete ourselves
             if (null == this.wrapperFactory) {
@@ -200,44 +209,39 @@ public void runUntilEventOfType(Class wcRunnableClass) {
 	    
 	    if (null!= runnable) {
                 if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.finest("NativeEventThread.run: About to run " + 
-                            runnable.toString());
+                    LOGGER.finest("About to run " + runnable.toString());
                 }
 		runnable.run();
                 if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.finest("NativeEventThread.run: Return from run " + 
-                            runnable.toString());
+                    LOGGER.finest("Return from run " + runnable.toString());
                 }
 	    }
-	    if (null != wcRunnable) {
+	    if (null != latch && null != latch.runnable) {
+                returnRunnable = latch.runnable;
                 if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.finest("NativeEventThread.run: About to run " +
-                            wcRunnable.toString());
+                    LOGGER.finest("About to run " + returnRunnable.toString());
                 }
-                wcRunnable.setResult(wcRunnable.run());
-                if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.finest("NativeEventThread.run: Return from run " +
-                            wcRunnable.toString());
+                try {
+                    returnRunnable.setResult(returnRunnable.run());
                 }
-		// notify the pushBlockingWCRunnable() method.
-                if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.finest("NativeEventThread.run: About to enter synchronized block for " +
-                            wcRunnable.toString());
-                }
-                synchronized (wcRunnable) {
-                    try {
-                        wcRunnable.notifyAll();
-                    }
-                    catch (Exception e) {
-                        System.out.println("NativeEventThread.run: Exception: trying to notify for blocking result:" + e + " " + e.getMessage());
-                    }
+                catch (Throwable e) {
+                    returnRunnable.setResult(e);
                 }
                 if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.finest("NativeEventThread.run: Exited synchronized block for " +
-                            wcRunnable.toString());
+                    LOGGER.finest("Return from run " + returnRunnable.toString());
                 }
-                if (0 < wcRunnableClass.length &&
-                    wcRunnable.getClass() == wcRunnableClass[0]) {
+		// notify the pushBlockingReturnRunnable() method.
+                if (LOGGER.isLoggable(Level.FINEST)) {
+                    LOGGER.finest("About to notify User thread that " +
+                            returnRunnable.toString() + " has returned.");
+                }
+                latch.latch.countDown();
+                if (LOGGER.isLoggable(Level.FINEST)) {
+                    LOGGER.finest("Successfully notified User thread that " +
+                            returnRunnable.toString() + " has returned.");
+                }
+                if (0 < returnRunnableClass.length &&
+                    returnRunnable.getClass() == returnRunnableClass[0]) {
                     result = false;
                 }
 	    }
@@ -272,34 +276,22 @@ public void runUntilEventOfType(Class wcRunnableClass) {
 	    return result;
 	}
 
-        blockingRunnables.add(toInvoke);
+        ReturnRunnableCountDownLatch latch = new ReturnRunnableCountDownLatch(toInvoke);
+        blockingRunnables.add(latch);
         if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("NativeEventThread.pushBlockingWCRunnable:" +
-                    " About to enter synchronized block for " +
-                    toInvoke.toString());
+            LOGGER.finest("User thread: About to wait for " + 
+                    toInvoke.toString() + " to complete.");
         }
-        synchronized (toInvoke) {
-	    try {
-                if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.finest("NativeEventThread.pushBlockingWCRunnable:" +
-                            " About to wait for NativeEventThread to run " +
-                            toInvoke.toString());
-                }
-		toInvoke.wait();
-                if (LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.finest("NativeEventThread.pushBlockingWCRunnable:" +
-                            " Return from wait for NativeEventThread to run " +
-                            toInvoke.toString());
-                }
-	    }
-	    catch (Exception se) {
-		System.out.println("NativeEventThread.pushBlockingWCRunnable: Exception: while waiting for blocking result: " + se + "  " + se.getMessage());
-	    }
+        try {
+            latch.latch.await();
+        } catch (InterruptedException ex) {
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, "User thread: Interrupted while waiting for " + 
+                        latch.runnable.toString() + " to complete.", ex);
+            }
         }
         if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("NativeEventThread.pushBlockingWCRunnable:" +
-                    " Exited synchronized block for " +
-                    toInvoke.toString());
+            LOGGER.finest("User thread: " + toInvoke.toString() + " returned.");
         }
         result = toInvoke.getResult();
         if (result instanceof RuntimeException) {
@@ -307,6 +299,15 @@ public void runUntilEventOfType(Class wcRunnableClass) {
         }
 
 	return result;
+    }
+    
+    private class ReturnRunnableCountDownLatch {
+        ReturnRunnable runnable = null;
+        CountDownLatch latch = null;
+        ReturnRunnableCountDownLatch(ReturnRunnable runnable) {
+            this.runnable = runnable;
+            this.latch = new CountDownLatch(1);
+        }
     }
 
 //

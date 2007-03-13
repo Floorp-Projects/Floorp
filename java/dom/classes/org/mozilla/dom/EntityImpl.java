@@ -23,23 +23,58 @@ package org.mozilla.dom;
 
 import org.w3c.dom.Entity;
 
+import org.mozilla.util.ReturnRunnable;
+
 public class EntityImpl extends NodeImpl implements Entity {
 
     // instantiated from JNI only
     private EntityImpl() {}
     
     public String getPublicId() {
-	return nativeGetPublicId();
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetPublicId();
+		    }
+		    public String toString() {
+			return "Entity.getPublicId";
+		    }
+		});
+	return result;
+
     }
     native String nativeGetPublicId();
 
     public String getSystemId() {
-	return nativeGetSystemId();
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetSystemId();
+		    }
+		    public String toString() {
+			return "Entity.getSystemId";
+		    }
+		});
+	return result;
+
     }
     native String nativeGetSystemId();
 
     public String getNotationName() {
-	return nativeGetNotationName();
+	String result = (String)
+	DOMAccessor.getRunner().
+	    pushBlockingReturnRunnable(new ReturnRunnable() {
+		    public Object run() {
+			return nativeGetNotationName();
+		    }
+		    public String toString() {
+			return "Entity.getNotationName";
+		    }
+		});
+	return result;
+
     }
     native String nativeGetNotationName();
 
