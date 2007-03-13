@@ -2274,7 +2274,6 @@ PlacesEditLivemarkFeedURITransaction.prototype = {
 /**
  * Edit a bookmark's microsummary.
  */
-// XXXDietrich - bug 370215 - update to use bookmark id once 360133 is fixed.
 function PlacesEditBookmarkMicrosummaryTransaction(aID, newMicrosummary) {
   this.id = aID;
   this._newMicrosummary = newMicrosummary;
@@ -2288,20 +2287,20 @@ PlacesEditBookmarkMicrosummaryTransaction.prototype = {
        getService(Ci.nsIMicrosummaryService),
 
   doTransaction: function PEBMT_doTransaction() {
-    var uri = this.bookmarks.getBookmarkURI(this.id);
-    this._oldMicrosummary = this.mss.getMicrosummary(uri);
+    var placeURI = this.bookmarks.getItemURI(this.id);
+    this._oldMicrosummary = this.mss.getMicrosummary(placeURI);
     if (this._newMicrosummary)
-      this.mss.setMicrosummary(uri, this._newMicrosummary);
+      this.mss.setMicrosummary(placeURI, this._newMicrosummary);
     else
-      this.mss.removeMicrosummary(uri);
+      this.mss.removeMicrosummary(placeURI);
   },
 
   undoTransaction: function PEBMT_undoTransaction() {
-    var uri = this.bookmarks.getBookmarkURI(this.id);
+    var placeURI = this.bookmarks.getItemURI(this.id);
     if (this._oldMicrosummary)
-      this.mss.setMicrosummary(uri, this._oldMicrosummary);
+      this.mss.setMicrosummary(placeURI, this._oldMicrosummary);
     else
-      this.mss.removeMicrosummary(uri);
+      this.mss.removeMicrosummary(placeURI);
   }
 };
 
