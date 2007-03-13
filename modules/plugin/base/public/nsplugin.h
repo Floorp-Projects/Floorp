@@ -39,9 +39,7 @@
  *
  * This interface was an attempt to supersede npapi.h, npupp.h but it failed. It
  * would have eliminated the need for glue files: npunix.c, npwin.cpp and
- * npmac.cpp that get linked with the plugin. You would however have needed to
- * link with the "backward adapter" (badapter.cpp) in order to allow your
- * plugin to run in pre-5.0 browsers.
+ * npmac.cpp that get linked with the plugin.
  *
  * This is the master header file that includes most of the other headers
  * you'd have needed to write a plugin.
