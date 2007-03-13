@@ -1490,6 +1490,8 @@ main(int argc, char **argv)
         PL_strfree(Cert_And_Key.nickname);
     }
 
+    PL_strfree(hostName);
+
     /* some final stats. */
     if (ssl3stats->hsh_sid_cache_hits + ssl3stats->hsh_sid_cache_misses +
         ssl3stats->hsh_sid_cache_not_ok == 0) {
