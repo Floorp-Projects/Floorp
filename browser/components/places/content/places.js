@@ -332,16 +332,18 @@ var PlacesSearchBox = {
 
   /**
    * Run a search for the specified text, over the collection specified by
-   * the dropdown arrow. The default is all bookmarks and history, but can be
+   * the dropdown arrow. The default is all bookmarks, but can be
    * localized to the active collection. 
    * @param   filterString
    *          The text to search for. 
    */
   search: function PSB_search(filterString) {
-    // Do not search for "" since it will match all history. Assume if the user
+    // for non-"bookmarks" collections, 
+    // do not search for "" since it will match all history. Assume if the user
     // deleted everything that they want to type something else and don't 
     // update the view.
-    if (filterString == "" || this.searchFilter.hasAttribute("empty")) 
+    if (PlacesSearchBox.filterCollection != "bookmarks" &&
+        (filterString == "" || this.searchFilter.hasAttribute("empty")))
       return;
 
     var content = PlacesOrganizer._content;
@@ -353,6 +355,12 @@ var PlacesSearchBox = {
       content.applyFilter(filterString, true, folderId, OptionsFilter);
       PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
       break;
+    case "bookmarks":
+      if (filterString != "")
+        content.applyFilter(filterString, true);
+      else
+        PlacesOrganizer.onPlaceSelected();
+      break;
     case "all":
       content.applyFilter(filterString, false, 0, OptionsFilter);
       PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
@@ -363,7 +371,7 @@ var PlacesSearchBox = {
   },
 
   /**
-   * Finds across all bookmarks and history.
+   * Finds across all bookmarks
    */
   findAll: function PSB_findAll() {
     this.filterCollection = "all";

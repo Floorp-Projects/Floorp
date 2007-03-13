@@ -1,5 +1,5 @@
 <!ENTITY places.title
-  "Places">
+  "Bookmarks Manager">
 <!ENTITY file.label
   "File">
 <!ENTITY file.accesskey
@@ -52,7 +52,7 @@
   "T">
 
 <!ENTITY cmd.find.label 
-  "Find in Bookmarks &amp; History...">
+  "Find in Bookmarks...">
 <!ENTITY cmd.find.accesskey
   "F">
 <!ENTITY cmd.findCurrent.label
@@ -212,7 +212,7 @@
 <!ENTITY search.collection.accesskey
   "C">
 <!ENTITY search.all.label
-  "All Bookmarks and History">
+  "All Bookmarks">
 <!ENTITY search.all.accesskey
   "A">
 <!ENTITY saveSearch.label
