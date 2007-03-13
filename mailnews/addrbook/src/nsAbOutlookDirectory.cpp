@@ -108,10 +108,6 @@ nsAbOutlookDirectory::~nsAbOutlookDirectory(void)
 NS_IMPL_ISUPPORTS_INHERITED3(nsAbOutlookDirectory, nsAbDirectoryRDFResource, 
                              nsIAbDirectory, nsIAbDirectoryQuery, nsIAbDirectorySearch)
 
-// XXX Bustage fix from bug 361326 this should be defined in a central
-// location which I'll follow up with.
-const int kOutlookDirSchemeLength = 21;
-
 // nsIRDFResource method
 NS_IMETHODIMP nsAbOutlookDirectory::Init(const char *aUri)
 {

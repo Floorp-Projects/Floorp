@@ -173,6 +173,7 @@ private:
 } ;
 
 extern const char *kOutlookDirectoryScheme ;
+extern const int  kOutlookDirSchemeLength ;
 extern const char *kOutlookStub ;
 extern const char *kOutlookExpStub ;
 extern const char *kOutlookCardScheme ;
