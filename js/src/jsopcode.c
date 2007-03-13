@@ -3957,7 +3957,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               BEGIN_LITOPX_CASE(JSOP_QNAMEPART, 0)
-                inXML = JS_TRUE;
                 if (pc[JSOP_QNAMEPART_LENGTH] == JSOP_TOATTRNAME) {
                     saveop = JSOP_TOATTRNAME;
                     len += JSOP_TOATTRNAME_LENGTH;
