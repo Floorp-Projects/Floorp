@@ -111,44 +111,107 @@ NS_IMPL_ISUPPORTS_INHERITED3(nsAbOutlookDirectory, nsAbDirectoryRDFResource,
 // nsIRDFResource method
 NS_IMETHODIMP nsAbOutlookDirectory::Init(const char *aUri)
 {
-    nsresult retCode = nsAbDirectoryRDFResource::Init(aUri) ;
-    
-    NS_ENSURE_SUCCESS(retCode, retCode) ;
-    nsCAutoString entry ;
-    nsCAutoString stub ;
+  nsresult retCode = nsAbDirectoryRDFResource::Init(aUri);
 
-    mAbWinType = getAbWinType(kOutlookDirectoryScheme, mURINoQuery.get(), stub, entry) ;
-    if (mAbWinType == nsAbWinType_Unknown) {
-        PRINTF(("Huge problem URI=%s.\n", mURINoQuery)) ;
-        return NS_ERROR_INVALID_ARG ;
-    }
-    nsAbWinHelperGuard mapiAddBook (mAbWinType) ;
-    nsString prefix ;
-    nsAutoString unichars ;
-    ULONG objectType = 0 ;
+  NS_ENSURE_SUCCESS(retCode, retCode);
 
-    if (!mapiAddBook->IsOK()) { return NS_ERROR_FAILURE ; }
-    mMapiData->Assign(entry) ;
-    if (!mapiAddBook->GetPropertyLong(*mMapiData, PR_OBJECT_TYPE, objectType)) {
-        PRINTF(("Cannot get type.\n")) ;
-        return NS_ERROR_FAILURE ;
+  // We need to ensure  that the m_DirPrefId is initialized properly
+  nsCAutoString uri(aUri);
+
+  // Mailing lists don't have their own prefs.
+  if (m_DirPrefId.IsEmpty() && (uri.Find("MailList") == kNotFound))
+  {
+    // Find the first ? (of the search params) if there is one.
+    // We know we can start at the end of the moz-aboutlookdirectory:// because
+    // that's the URI we should have been passed.
+    PRInt32 searchCharLocation = uri.FindChar('?', kOutlookDirSchemeLength);
+
+    // Get just the basic uri without the search params.
+    if (searchCharLocation != kNotFound)
+      uri.Left(uri, searchCharLocation);
+
+    // Get the pref servers and the address book directory branch
+    nsresult rv;
+    nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    rv = prefService->GetBranch(NS_LITERAL_CSTRING(PREF_LDAP_SERVER_TREE_NAME ".").get(),
+                                getter_AddRefs(prefBranch));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    char** childArray;
+    PRUint32 childCount, i;
+    PRInt32 dotOffset;
+    nsXPIDLCString childValue;
+    nsDependentCString child;
+
+    rv = prefBranch->GetChildList("", &childCount, &childArray);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    for (i = 0; i < childCount; ++i)
+    {
+      child.Assign(childArray[i]);
+
+      if (StringEndsWith(child, NS_LITERAL_CSTRING(".uri")) &&
+          NS_SUCCEEDED(prefBranch->GetCharPref(child.get(),
+                                               getter_Copies(childValue))) &&
+          childValue == uri)
+      {
+        dotOffset = child.RFindChar('.');
+        if (dotOffset != -1)
+        {
+          nsCAutoString prefName;
+          child.Left(prefName, dotOffset);
+          m_DirPrefId.AssignLiteral(PREF_LDAP_SERVER_TREE_NAME ".");
+          m_DirPrefId.Append(prefName);
+        }
+      }
     }
-    if (!mapiAddBook->GetPropertyUString(*mMapiData, PR_DISPLAY_NAME_W, unichars)) {
-        PRINTF(("Cannot get name.\n")) ;
-        return NS_ERROR_FAILURE ;
-    }
-    if (mAbWinType == nsAbWinType_Outlook) { prefix.AssignLiteral("OP ") ; }
-    else { prefix.AssignLiteral("OE ") ; }
-    prefix.Append(unichars) ;
-    SetDirName(prefix.get()) ; 
-    if (objectType == MAPI_DISTLIST) {
-        SetDirName(unichars.get()) ; 
-        SetIsMailList(PR_TRUE) ;
-    }
-    else { 
-        SetIsMailList(PR_FALSE) ;
-    }
-    return UpdateAddressList() ;
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(childCount, childArray);
+
+    NS_ASSERTION(!m_DirPrefId.IsEmpty(),
+                 "Error, Could not set m_DirPrefId in nsAbOutlookDirectory::Init");
+  }
+
+  nsCAutoString entry;
+  nsCAutoString stub;
+
+  mAbWinType = getAbWinType(kOutlookDirectoryScheme, mURINoQuery.get(), stub, entry);
+  if (mAbWinType == nsAbWinType_Unknown) {
+    PRINTF(("Huge problem URI=%s.\n", mURINoQuery));
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsAbWinHelperGuard mapiAddBook (mAbWinType);
+  nsString prefix;
+  nsAutoString unichars;
+  ULONG objectType = 0;
+
+  if (!mapiAddBook->IsOK())
+    return NS_ERROR_FAILURE;
+
+  mMapiData->Assign(entry);
+  if (!mapiAddBook->GetPropertyLong(*mMapiData, PR_OBJECT_TYPE, objectType)) {
+    PRINTF(("Cannot get type.\n"));
+    return NS_ERROR_FAILURE;
+  }
+  if (!mapiAddBook->GetPropertyUString(*mMapiData, PR_DISPLAY_NAME_W, unichars)) {
+    PRINTF(("Cannot get name.\n"));
+    return NS_ERROR_FAILURE;
+  }
+
+  prefix.AssignLiteral(mAbWinType == nsAbWinType_Outlook ? "OP ", "OE ");
+  prefix.Append(unichars);
+  SetDirName(prefix.get());
+
+  if (objectType == MAPI_DISTLIST) {
+    SetDirName(unichars.get());
+    SetIsMailList(PR_TRUE);
+  }
+  else
+    SetIsMailList(PR_FALSE);
+
+  return UpdateAddressList();
 }
 
 // nsIAbDirectory methods
