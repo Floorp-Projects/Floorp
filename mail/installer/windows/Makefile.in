@@ -120,8 +120,6 @@ include $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/makensis.mk
 export::
 ifndef MOZ_BRANDING_DIRECTORY
 	$(NSINSTALL) -D $(DIST)/branding
-	cp $(srcdir)/Header.bmp    $(DIST)/branding/Header.bmp
-	cp $(srcdir)/Watermrk.bmp  $(DIST)/branding/Watermrk.bmp
 	cp $(srcdir)/nsis/branding.nsi $(DIST)/branding/branding.nsi
 	cp $(srcdir)/wizHeader.bmp     $(DIST)/branding/wizHeader.bmp
 	cp $(srcdir)/wizHeaderRTL.bmp  $(DIST)/branding/wizHeaderRTL.bmp

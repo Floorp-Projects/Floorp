@@ -53,8 +53,6 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/license.r $(DIST)/branding/license.r
 endif
 	cp $(srcdir)/thunderbird.ico  $(DIST)/branding/app.ico
-	cp $(srcdir)/Header.bmp   $(DIST)/branding/Header.bmp
-	cp $(srcdir)/Watermrk.bmp $(DIST)/branding/Watermrk.bmp
 	cp $(srcdir)/branding.nsi     $(DIST)/branding/branding.nsi
 	cp $(srcdir)/wizHeader.bmp    $(DIST)/branding/wizHeader.bmp
 	cp $(srcdir)/wizHeaderRTL.bmp $(DIST)/branding/wizHeaderRTL.bmp
