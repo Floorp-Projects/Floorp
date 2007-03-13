@@ -561,7 +561,20 @@ PRInt32 nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell, nsIFr
               kIsScrollViewAStop, kIsKeyboardSelect, kIsVisualBidi,
               wordMovementType);
   nsresult rv = aFromFrame->PeekOffset(&pos);
-  NS_ENSURE_SUCCESS(rv, -1);
+  if (NS_FAILED(rv)) {
+    if (aDirection == eDirPrevious) {
+      // Use passed-in frame as starting point in failure case for now,
+      // this is a hack to deal with starting on a list bullet frame,
+      // which fails in PeekOffset() because the line iterator doesn't see it.
+      // XXX Need to look at our overall handling of list bullets, which are an odd case
+      pos.mResultContent = aFromFrame->GetContent();
+      PRInt32 endOffsetUnused;
+      aFromFrame->GetOffsets(pos.mContentOffset, endOffsetUnused);
+    }
+    else {
+      return rv;
+    }
+  }
 
   // Turn the resulting node and offset into a hyperTextOffset
   PRInt32 hyperTextOffset;
