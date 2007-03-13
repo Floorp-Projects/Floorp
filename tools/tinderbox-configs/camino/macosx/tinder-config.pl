@@ -155,7 +155,7 @@ $moz_cvsroot = ':ext:caminobld@cvs.mozilla.org:/cvsroot';
 $ObjDir = '../build';
 
 # Extra build name, if needed.
-$BuildNameExtra = 'CmTrunk';
+$BuildNameExtra = 'Camino Trunk';
 
 # User comment, eg. ip address for dhcp builds.
 # ex: $UserComment = "ip = 208.12.36.108";
