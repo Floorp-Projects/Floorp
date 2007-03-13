@@ -3921,6 +3921,7 @@ nsSchemaValidator::ValidateComplexModelGroup(nsIDOMNode* aNode,
   rv = aSchemaModelGroup->GetCompositor(&compositor);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  PRUint32 validatedNodes = 0;
   PRUint32 minOccurs;
   aSchemaModelGroup->GetMinOccurs(&minOccurs);
 
@@ -3973,15 +3974,18 @@ nsSchemaValidator::ValidateComplexModelGroup(nsIDOMNode* aNode,
       while (currentNode && isValid && (iterations < maxOccurs) && !notFound) {
         rv = ValidateComplexSequence(currentNode, aSchemaModelGroup,
                                      getter_AddRefs(leftOvers), &notFound,
-                                     &isValid);
+                                     &isValid, &validatedNodes);
         if (isValid && !notFound) {
           iterations++;
         }
         currentNode = leftOvers;
       }
 
-      // if we didn't hit minOccurs, invalid
-      if (isValid && (iterations < minOccurs)) {
+      // Special case of found nothing and expected nothing, so it's easy
+      if (validatedNodes == 0 && iterations == 0 && minOccurs == 0) {
+        isValid = PR_TRUE;
+      } else if (isValid && (iterations < minOccurs) && (validatedNodes > 0)) {
+        // if we didn't hit minOccurs and not empty sequence, invalid
         isValid = PR_FALSE;
 #ifdef PR_LOGGING
         nsCOMPtr<nsISchemaParticle> particle;
@@ -4044,7 +4048,8 @@ nsresult
 nsSchemaValidator::ValidateComplexSequence(nsIDOMNode* aStartNode,
                                            nsISchemaModelGroup *aSchemaModelGroup,
                                            nsIDOMNode **aLeftOvers,
-                                           PRBool *aNotFound, PRBool *aResult)
+                                           PRBool *aNotFound, PRBool *aResult,
+                                           PRUint32 *aValidatedNodes)
 {
   if (!aStartNode || !aSchemaModelGroup)
     return NS_ERROR_UNEXPECTED;
@@ -4122,37 +4127,39 @@ nsSchemaValidator::ValidateComplexSequence(nsIDOMNode* aStartNode,
     currentNode = leftOvers;
   }
 
+  *aValidatedNodes = validatedNodes;
+
   if (validatedNodes == 0) {
     // we didn't walk through any nodes, thus empty sequence.  The caller
-    // will check if enough occurances (minOccurs) happened.  We don't want to
-    // check remaining particles, since we could have met minOccurs already,
-    // and the sequence is now over.
+    // will check if enough occurances (minOccurs) on the sequence happened.
+    // We need to continue to make sure we don't have all element
+    // declarations with each having minOccurs=0, thus empty content is allowed.
     isValid = PR_TRUE;
     notFound = PR_TRUE;
-  } else if (isValid && (particleCounter < particleCount)) {
-    // check if any of the remaining particles are required
-    while (isValid && (particleCounter < particleCount)) {
-      nsCOMPtr<nsISchemaParticle> tmpParticle;
-      rv = aSchemaModelGroup->GetParticle(particleCounter,
-                                          getter_AddRefs(tmpParticle));
-      NS_ENSURE_SUCCESS(rv, rv);
+  }
 
-      PRUint32 tmpMinOccurs;
-      rv = tmpParticle->GetMinOccurs(&tmpMinOccurs);
-      NS_ENSURE_SUCCESS(rv, rv);
+  // check if any of the remaining particles are required
+  while (isValid && (particleCounter < particleCount)) {
+    nsCOMPtr<nsISchemaParticle> tmpParticle;
+    rv = aSchemaModelGroup->GetParticle(particleCounter,
+                                        getter_AddRefs(tmpParticle));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      if (tmpMinOccurs == 0) {
-        // this particle isn't required
-        particleCounter++;
-      } else {
-        isValid = PR_FALSE;
+    PRUint32 tmpMinOccurs;
+    rv = tmpParticle->GetMinOccurs(&tmpMinOccurs);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (tmpMinOccurs == 0) {
+      // this particle isn't required
+      particleCounter++;
+    } else {
+      isValid = PR_FALSE;
 #ifdef PR_LOGGING
-        nsAutoString particleName;
-        tmpParticle->GetName(particleName);
-        LOG(("        - Nodelist missing required element (%s)",
-             NS_ConvertUTF16toUTF8(particleName).get()));
+      nsAutoString particleName;
+      tmpParticle->GetName(particleName);
+      LOG(("        - Nodelist missing required element (%s)",
+           NS_ConvertUTF16toUTF8(particleName).get()));
 #endif
-      }
     }
   }
 

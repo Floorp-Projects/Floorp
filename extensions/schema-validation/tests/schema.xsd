@@ -1118,5 +1118,15 @@
 
   <element name="empty-complex-1" type="test:emptyContent" />
 
+  <complexType name="emptyContent2">
+   <sequence>
+     <element name="e1" type="string" minOccurs="0" />
+   </sequence>
+   <attributeGroup ref="test:attrgroup-1"/>
+   <attribute name="att1" type="string"/>
+  </complexType>
+
+  <element name="empty-complex-2" type="test:emptyContent2" />
+
 </schema>
 

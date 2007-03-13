@@ -27,6 +27,7 @@
   <!ATTLIST deriv-ext-complex-1 id ID #IMPLIED>
   <!ATTLIST deriv-ext-restriction-1 id ID #IMPLIED>
   <!ATTLIST empty-complex-1 id ID #IMPLIED>
+  <!ATTLIST empty-complex-2 id ID #IMPLIED>
   ]>
 
 <samples xmlns:xsi1="http://www.w3.org/2001/XMLSchema-instance"
@@ -1142,4 +1143,12 @@
     <bad>Not valid</bad>
   </empty-complex-1>
   
+  <!-- VALID -->
+  <empty-complex-2 id="empty-complex-2-1" />
+
+  <!-- VALID -->
+  <empty-complex-2 id="empty-complex-2-2" >
+    <e1>Stuff</e1>
+  </empty-complex-2>
+
 </samples>
