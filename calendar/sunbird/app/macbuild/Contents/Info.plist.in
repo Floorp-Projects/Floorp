@@ -6,6 +6,26 @@
 	<string>English</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>ics</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>sb_ICS.icns</string>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>text/calendar</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>iCalendar file</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>iCal</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>sunbird-bin</string>
@@ -27,6 +47,22 @@
 	<string>@MAC_CREATOR_CODE@</string>
 	<key>CFBundleURLTypes</key>
 	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Remote Calendar URL</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>webcal</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Secure Remote Calendar URL</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>webcals</string>
+			</array>
+		</dict>	
 	</array>
 	<key>CFBundleVersion</key>
 	<string>@APP_VERSION@</string>

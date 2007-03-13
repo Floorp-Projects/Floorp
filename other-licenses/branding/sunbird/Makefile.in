@@ -35,6 +35,7 @@ ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
 endif
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/sunbird.icns  $(DIST)/branding/sunbird.icns
+	cp $(srcdir)/sb_ICS.icns  $(DIST)/branding/sb_ICS.icns
 	cp $(srcdir)/document.icns $(DIST)/branding/document.icns
 	cp $(srcdir)/dsstore $(DIST)/branding/dsstore
 	cp $(srcdir)/background.png $(DIST)/branding/background.png

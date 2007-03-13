@@ -141,35 +141,50 @@ function calendarInit()
 }
 
 function handleCommandLine(aComLine) {
-    var calurl;
-    try {
-        calurl = aComLine.handleFlagWithParam("subscribe", false);
-    } catch(ex) {}
-    if (calurl) {
-        var uri = aComLine.resolveURI(calurl);
-        var cal = getCalendarManager().createCalendar('ics', uri);
-        getCalendarManager().registerCalendar(cal);
+    var comLine = aComLine;
 
-        // Strip ".ics" from filename for use as calendar name, taken from 
-        // calendarCreation.js
-        var fullPathRegex = new RegExp("([^/:]+)[.]ics$");
-        var prettyName = calurl.match(fullPathRegex);
-        var name;
+    var validFlags = ["showdate", "subscribe", "url"];
+    var flagsToProcess = [];
 
-        if (prettyName && prettyName.length >= 1) {
-            name = decodeURIComponent(prettyName[1]);
-        } else {
-            name = calGetString("calendar", "untitledCalendarName");
+    for each (var flag in validFlags) {
+        if (comLine.findFlag(flag, false) >= 0) {
+            flagsToProcess.push(flag);
         }
-        cal.name = name;
     }
 
-    var date;
-    try {
-        date = aComLine.handleFlagWithParam("showdate", false);
-    } catch(ex) {}
-    if (date) {
-        currentView().goToDay(jsDateToDateTime(new Date(date)));
+    for each (var flag in flagsToProcess) {
+        var param = comLine.handleFlagWithParam(flag, false);
+
+        switch (flag) {
+            case "showdate":
+                currentView().goToDay(jsDateToDateTime(new Date(param)));
+                break;
+            case "subscribe":
+            case "url":
+                // Double-clicking an .ics file on the Mac causes
+                // LaunchServices to launch Sunbird with the -url command line
+                // switch like so:
+                // sunbird-bin -url file://localhost/Users/foo/mycal.ics -foreground
+                var uri = comLine.resolveURI(param);
+                var cal = getCalendarManager().createCalendar("ics", uri);
+                getCalendarManager().registerCalendar(cal);
+
+                // Strip ".ics" from filename for use as calendar name
+                var fullPathRegEx = new RegExp("([^/:]+)[.]ics$");
+                var prettyName = param.match(fullPathRegEx);
+
+                var name;
+                if (prettyName && prettyName.length >= 1) {
+                    name = decodeURIComponent(prettyName[1]);
+                } else {
+                    name = calGetString("calendar", "untitledCalendarName");
+                }
+                cal.name = name;
+                break;
+           default:
+                // no-op
+                break;
+        }
     }
 }
 

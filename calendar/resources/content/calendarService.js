@@ -129,7 +129,7 @@ CLineService.prototype = {
         cmdLine.preventDefault = true;
     },
 
-    helpInfo : "  -subscribe           Pass in a path pointing to a calendar\n" +
+    helpInfo : "  -subscribe or -url   Pass in a path pointing to a calendar\n" +
                "                       to subscribe to.\n" +
                "  -showdate            Pass in a value for a javascript date\n" +
                "                       to show this date on startup.\n"

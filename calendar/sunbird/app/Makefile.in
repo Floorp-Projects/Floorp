@@ -312,6 +312,7 @@ ifeq ($(OS_ARCH),WINNT)
 endif
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/macbuild/sunbird.icns  $(DIST)/branding/sunbird.icns
+	cp $(srcdir)/macbuild/sb_ICS.icns  $(DIST)/branding/sb_ICS.icns
 	cp $(srcdir)/macbuild/dsstore  $(DIST)/branding/dsstore
 	cp $(srcdir)/macbuild/background.png  $(DIST)/branding/background.png
 	cp $(srcdir)/macbuild/disk.icns  $(DIST)/branding/disk.icns
