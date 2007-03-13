@@ -125,8 +125,13 @@ public:
     nsGfxScrollFrameInner *mInner;
   };
 
-  void SetScrollbarEnabled(nsIBox* aBox, nscoord aMaxPos);
-  void SetCoordAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize);
+  static void FinishReflowForScrollbar(nsIContent* aContent, nscoord aMinXY,
+                                       nscoord aMaxXY, nscoord aCurPosXY,
+                                       nscoord aPageIncrement,
+                                       nscoord aIncrement);
+  static void SetScrollbarEnabled(nsIContent* aContent, nscoord aMaxPos);
+  static void SetCoordAttribute(nsIContent* aContent, nsIAtom* aAtom,
+                                nscoord aSize);
   nscoord GetCoordAttribute(nsIBox* aFrame, nsIAtom* atom, nscoord defaultValue);
 
   // Like ScrollPositionDidChange, but initiated by this frame rather than from the
