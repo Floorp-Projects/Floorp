@@ -7,7 +7,7 @@
 
 %define major           6
 %define minor           0
-%define submin          2
+%define submin          3
 %define libsuffix       %{major}0
 
 Summary:          Mozilla LDAP C SDK
@@ -186,6 +186,10 @@ cp -r mozilla/directory/c-sdk/ldap/examples $RPM_BUILD_ROOT%{_datadir}/%{name}
 %{_datadir}/%{name}
 
 %changelog
+* Tue Mar 13 2007 Rich Megginson <richm@stanfordalumni.org> - 6.0.3-1
+- bumped version to 6.0.3
+- minor build fixes for some platforms
+
 * Mon Jan 15 2007 Rich Megginson <richm@stanfordalumni.org> - 6.0.2-1
 - Fixed exports file generation for Solaris and Windows - no effect on linux
 - bumped version to 6.0.2
