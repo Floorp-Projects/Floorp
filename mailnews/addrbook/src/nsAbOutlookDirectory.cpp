@@ -200,7 +200,10 @@ NS_IMETHODIMP nsAbOutlookDirectory::Init(const char *aUri)
     return NS_ERROR_FAILURE;
   }
 
-  prefix.AssignLiteral(mAbWinType == nsAbWinType_Outlook ? "OP " : "OE ");
+  if (mAbWinType == nsAbWinType_Outlook)
+    prefix.AssignLiteral("OP ");
+  else
+    prefix.AssignLiteral("OE ");
   prefix.Append(unichars);
   SetDirName(prefix.get());
 
