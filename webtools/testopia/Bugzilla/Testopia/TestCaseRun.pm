@@ -695,11 +695,11 @@ Removes this caserun, its history, and all things that reference it.
 sub obliterate {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
-    
-    $dbh->do("DELETE FROM test_case_bugs WHERE case_run_id IN (" . 
-              join(",", @{$self->get_case_run_list}) . ")", undef, $self->id)
-                  if $self->get_case_run_list;
-                  
+    my $sth = $dbh->prepare_cached("DELETE FROM test_case_bugs WHERE case_run_id = ?");
+    foreach my $id (@{$self->get_case_run_list}){
+        $sth->execute($id);
+    }
+        
     $dbh->do("DELETE FROM test_case_runs WHERE case_id = ? AND run_id = ?", 
               undef, ($self->case_id, $self->run_id));
     return 1;

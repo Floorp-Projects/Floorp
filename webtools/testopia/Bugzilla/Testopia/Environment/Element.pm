@@ -420,7 +420,9 @@ sub obliterate {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
 	
-	$p->obliterate foreach my $p (@{$self->get_properties});
+	foreach my $p (@{$self->get_properties}){
+	   $p->obliterate;
+	}
 	
 	$dbh->do("DELETE FROM test_environment_map
                WHERE element_id = ?", undef, $self->id);

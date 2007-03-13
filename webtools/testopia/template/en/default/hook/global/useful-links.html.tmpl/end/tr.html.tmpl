@@ -38,11 +38,15 @@
   <div class="links">
     <a href="tr_query.cgi">Search</a>&nbsp;|&nbsp;
     <a href="tr_query.cgi?report=1">Reports</a>&nbsp;|&nbsp;
+    [% IF UserInGroup('Testers') %]
     <a href="tr_new_plan.cgi">New Plan</a>&nbsp;|&nbsp;
+    [% END %]
     <a href="tr_new_case.cgi?plan_id=[% plan_id FILTER none %]">New Case</a>&nbsp;|&nbsp;
     <a href="tr_new_run.cgi?plan_id=[% plan_id FILTER none %]&case_status_id=2">New Run</a>&nbsp;|&nbsp;
+    [% IF UserInGroup('Testers') %]
     <a href="tr_new_environment.cgi">New Environment</a>&nbsp;|&nbsp;
     <a href="tr_admin_environment.cgi">Environment Variables</a>&nbsp;|&nbsp;
+    [% END %]
     [% IF UserInGroup('admin') %]
     <a href="tr_admin.cgi">Admin</a>&nbsp;|&nbsp;
     [% END %]

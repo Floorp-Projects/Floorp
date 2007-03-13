@@ -304,7 +304,8 @@ if ($vars->{'run'}) {
 }
 else {
     $vars->{'dotweak'} = Bugzilla->user->in_group('Testers');
-    $vars->{'candelete'} = Param('testopia-allow-group-member-deletes');
+    $vars->{'candelete'} = Bugzilla->user->in_group('admin') 
+        || (Bugzilla->user->in_group('Testers') && Param('testopia-allow-group-member-deletes'));
 }
 if ($serverpush && !$cgi->param('debug')) {
     print $cgi->multipart_end;

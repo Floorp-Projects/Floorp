@@ -24,7 +24,6 @@
   # ...
   #%]
 
-[% IF case.canedit %]
 <script src="testopia/js/DocumentManager.js" type="text/javascript"></script>
 <script type="text/javascript">
     dojo.require("dojo.widget.Editor2");  
@@ -52,7 +51,7 @@
       }
     );
 </script>
-[% END %]
+
 <a name="attributes"></a>
   <input type="hidden" name="case_id" value="[% case.id FILTER none %]"/>
 <table>

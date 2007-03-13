@@ -1297,6 +1297,8 @@ sub get_user_rights {
     my $plan_ids = $dbh->selectcol_arrayref(
         "SELECT plan_id FROM test_case_plans WHERE case_id = ?",
         undef, $self->id);
+    
+    return 0 unless $plan_ids;
     $plan_ids = join(',',@$plan_ids);
      
     my ($perms) = $dbh->selectrow_array(
@@ -1305,7 +1307,7 @@ sub get_user_rights {
           INNER JOIN test_cases ON test_case_plans.case_id = test_cases.case_id 
           WHERE userid = ? AND test_plan_permissions.plan_id IN ($plan_ids)", 
           undef, $userid);
-    print STDERR $perms;
+
     return $perms;
 }
 ###############################

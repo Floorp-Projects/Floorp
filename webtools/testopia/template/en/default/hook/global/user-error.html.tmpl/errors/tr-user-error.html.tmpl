@@ -32,7 +32,8 @@
     <a href="editparams.cgi">paramaters </a>.
   [% ELSIF error == "testopia-create-denied" %]
     [% title = "Cannot Create Object" %]
-    You do not have sufficient rights to create new [% object FILTER html %]s.
+    You do not have sufficient rights to create new [% object FILTER html %]s 
+      [% IF plan %] for plan [% plan.id %][% END %].
   [% ELSIF error == "testopia-missing-parameter" %]
     [% title = "Missing Parameter" %]
     Missing required parameter [% param FILTER html %]

@@ -387,10 +387,19 @@ $vars->{'fullwidth'} = 1; #novellonly
 $vars->{'case'} = $c;
 $vars->{'status_list'} = $status_list;
 $vars->{'priority_list'} = $priority_list;
-$vars->{'dotweak'} = Bugzilla->user->in_group('Testers');
 $vars->{'table'} = $table;
 $vars->{'urlquerypart'} = $cgi->canonicalise_query('cmdtype');
-
+if ($cgi->param('plan_id')){
+    my $plan_id = $cgi->param('plan_id');
+    my $plan = Bugzilla::Testopia::TestRun->new($plan_id);
+    $vars->{'dotweak'} = $plan->canedit;
+    $vars->{'candelete'} = $plan->candelete;
+}
+else{
+    $vars->{'dotweak'} = Bugzilla->user->in_group('Testers');
+    $vars->{'candelete'} = Bugzilla->user->in_group('admin') 
+        || (Bugzilla->user->in_group('Testers') && Param('testopia-allow-group-member-deletes'));
+}
 my $contenttype;
 
 if ($format->{'extension'} eq "html") {

@@ -32,7 +32,7 @@
     </tr>
     <tr>
       <td>
-      [% PROCESS select sel = { name  => 'category',
+      [% PROCESS select sel = { name  => 'category_id',
                     accesskey => 't', 
                     list      => plan.product.categories,
                     elements  => 5,
@@ -46,7 +46,7 @@
                     mult      => 1 } %]
       </td>
       <td style="padding-right: 30px;">
-      [% PROCESS select sel = { name  => 'component',
+      [% PROCESS select sel = { name  => 'component_id',
                     accesskey => 'm', 
                     list      => plan.product.components
                     elements  => 5,

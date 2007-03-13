@@ -62,7 +62,7 @@ my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
 
 unless ($plan->canedit){
     print $cgi->header;
-    ThrowUserError("testopia-create-denied", {'object' => 'Test Run'});
+    ThrowUserError("testopia-create-denied", {'object' => 'Test Run', 'plan' => $plan});
 }
 
 unless (scalar @{$plan->product->builds(1)} > 0){

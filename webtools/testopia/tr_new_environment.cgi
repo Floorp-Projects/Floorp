@@ -27,6 +27,7 @@ use lib ".";
 use Bugzilla;
 use Bugzilla::Util;
 use Bugzilla::Config;
+use Bugzilla::Error;
 use Bugzilla::Constants;
 use Bugzilla::Testopia::Util;
 use Bugzilla::Testopia::Environment;
@@ -42,6 +43,8 @@ use vars qw($vars);
 my $template = Bugzilla->template;
 
 print $cgi->header;
+
+ThrowUserError("testopia-create-denied", {'object' => 'Test Environment'}) unless Bugzilla->user->in_group('Testers');
 
 my $action = $cgi->param('action') || '';
 
