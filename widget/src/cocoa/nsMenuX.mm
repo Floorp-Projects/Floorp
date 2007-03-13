@@ -153,10 +153,7 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
   // SetLabel will create the native menu if it has not been created yet
   SetLabel(aLabel);
 
-  if (mMenuContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::hidden,
-                                nsWidgetAtoms::_true, eCaseMatters) ||
-      mMenuContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::collapsed,
-                                nsWidgetAtoms::_true, eCaseMatters))
+  if (NodeIsHiddenOrCollapsed(mMenuContent))
     mVisible = PR_FALSE;
 
   if (menubar && mMenuContent->GetChildCount() == 0)
@@ -614,9 +611,7 @@ void nsMenuX::LoadMenuItem(nsIMenu* inParentMenu, nsIContent* inMenuItemContent)
   if (!inMenuItemContent)
     return;
 
-  // if menu should be hidden, bail
-  if (inMenuItemContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::hidden,
-                                     nsWidgetAtoms::_true, eCaseMatters))
+  if (NodeIsHiddenOrCollapsed(inMenuItemContent))
     return;
 
   // create nsMenuItem
@@ -687,15 +682,13 @@ void nsMenuX::LoadMenuItem(nsIMenu* inParentMenu, nsIContent* inMenuItemContent)
 }
 
 
-void nsMenuX::LoadSubMenu(nsIMenu * pParentMenu, nsIContent* inMenuItemContent)
+void nsMenuX::LoadSubMenu(nsIMenu * pParentMenu, nsIContent* inMenuContent)
 {
-  // if menu should be hidden, bail
-  if (inMenuItemContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::hidden,
-                                     nsWidgetAtoms::_true, eCaseMatters))
+  if (NodeIsHiddenOrCollapsed(inMenuContent))
     return;
   
   nsAutoString menuName; 
-  inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuName);
+  inMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuName);
   //printf("Creating Menu [%s] \n", NS_LossyConvertUTF16toASCII(menuName).get());
 
   // Create nsMenu
@@ -706,11 +699,11 @@ void nsMenuX::LoadSubMenu(nsIMenu * pParentMenu, nsIContent* inMenuItemContent)
     if (!docShell)
         return;
     nsCOMPtr<nsISupports> supports(do_QueryInterface(pParentMenu));
-    pnsMenu->Create(supports, menuName, EmptyString(), mManager, docShell, inMenuItemContent);
+    pnsMenu->Create(supports, menuName, EmptyString(), mManager, docShell, inMenuContent);
 
     // set if it's enabled or disabled
-    if (inMenuItemContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
-                                       nsWidgetAtoms::_true, eCaseMatters))
+    if (inMenuContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
+                                   nsWidgetAtoms::_true, eCaseMatters))
       pnsMenu->SetEnabled(PR_FALSE);
     else
       pnsMenu->SetEnabled(PR_TRUE);
@@ -722,11 +715,9 @@ void nsMenuX::LoadSubMenu(nsIMenu * pParentMenu, nsIContent* inMenuItemContent)
 }
 
 
-void nsMenuX::LoadSeparator(nsIContent* inMenuItemContent) 
+void nsMenuX::LoadSeparator(nsIContent* inSeparatorContent) 
 {
-  // if item should be hidden, bail
-  if (inMenuItemContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::hidden,
-                                     nsWidgetAtoms::_true, eCaseMatters))
+  if (NodeIsHiddenOrCollapsed(inSeparatorContent))
     return;
 
   AddSeparator();
@@ -968,30 +959,22 @@ nsresult nsMenuX::CountVisibleBefore(PRUint32* outVisibleBefore)
   for (PRUint32 i = 0; i < numMenus; i++) {
     nsCOMPtr<nsIMenu> currMenu;
     menubarParent->GetMenuAt(i, *getter_AddRefs(currMenu));
-    
-    // we found ourselves, break out
     if (currMenu == NS_STATIC_CAST(nsIMenu*, this)) {
+      // we found ourselves, break out
       gotThisMenu = PR_TRUE;
       break;
     }
 
-    // check the current menu to see if it is visible (not hidden, not collapsed). If
-    // it is, count it.
     if (currMenu) {
       nsCOMPtr<nsIContent> menuContent;
       currMenu->GetMenuContent(getter_AddRefs(menuContent));
-      if (menuContent) {
-        if (menuContent->GetChildCount() > 0 ||
-            !menuContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::hidden,
-                                      nsWidgetAtoms::_true, eCaseMatters) &&
-            !menuContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::collapsed,
-                                      nsWidgetAtoms::_true, eCaseMatters)) {
-          ++(*outVisibleBefore);
-        }
+      if (menuContent &&
+          menuContent->GetChildCount() > 0 &&
+          !NodeIsHiddenOrCollapsed(menuContent)) {
+        ++(*outVisibleBefore);
       }
     }
-    
-  } // for each menu
+  }
 
   return gotThisMenu ? NS_OK : NS_ERROR_FAILURE;
 } // CountVisibleBefore
@@ -1061,10 +1044,7 @@ NS_IMETHODIMP nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpa
   else if (aAttribute == nsWidgetAtoms::hidden || aAttribute == nsWidgetAtoms::collapsed) {
     SetRebuild(PR_TRUE);
 
-    if (mMenuContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::hidden,
-                                  nsWidgetAtoms::_true, eCaseMatters) ||
-        mMenuContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::collapsed,
-                                  nsWidgetAtoms::_true, eCaseMatters)) {
+    if (NodeIsHiddenOrCollapsed(mMenuContent)) {
       if (mVisible) {
         if (menubarParent) {
           PRUint32 indexToRemove = 0;

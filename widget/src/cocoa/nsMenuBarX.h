@@ -58,6 +58,8 @@ class nsIDOMNode;
 
 extern "C" MenuRef _NSGetCarbonMenu(NSMenu* aMenu);
 
+PRBool NodeIsHiddenOrCollapsed(nsIContent* inContent);
+
 namespace MenuHelpersX
 {
   nsEventStatus DispatchCommandTo(nsIWeakReference* aDocShellWeakRef,
