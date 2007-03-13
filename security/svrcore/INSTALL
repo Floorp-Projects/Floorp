@@ -1,7 +1,7 @@
 Installation Instructions
 *************************
 
-Copyright (C) 1994, 1995, 1996, 1999, 2000, 2001, 2002, 2004 Free
+Copyright (C) 1994, 1995, 1996, 1999, 2000, 2001, 2002, 2004, 2005 Free
 Software Foundation, Inc.
 
 This file is free documentation; the Free Software Foundation gives
@@ -102,16 +102,16 @@ for another architecture.
 Installation Names
 ==================
 
-By default, `make install' will install the package's files in
-`/usr/local/bin', `/usr/local/man', etc.  You can specify an
-installation prefix other than `/usr/local' by giving `configure' the
-option `--prefix=PREFIX'.
+By default, `make install' installs the package's commands under
+`/usr/local/bin', include files under `/usr/local/include', etc.  You
+can specify an installation prefix other than `/usr/local' by giving
+`configure' the option `--prefix=PREFIX'.
 
    You can specify separate installation prefixes for
 architecture-specific files and architecture-independent files.  If you
-give `configure' the option `--exec-prefix=PREFIX', the package will
-use PREFIX as the prefix for installing programs and libraries.
-Documentation and other data files will still use the regular prefix.
+pass the option `--exec-prefix=PREFIX' to `configure', the package uses
+PREFIX as the prefix for installing programs and libraries.
+Documentation and other data files still use the regular prefix.
 
    In addition, if you use an unusual directory layout you can give
 options like `--bindir=DIR' to specify different values for particular
@@ -159,7 +159,7 @@ where SYSTEM can have one of these forms:
 need to know the machine type.
 
    If you are _building_ compiler tools for cross-compiling, you should
-use the `--target=TYPE' option to select the type of system they will
+use the option `--target=TYPE' to select the type of system they will
 produce code for.
 
    If you want to _use_ a cross compiler, that generates code for a
@@ -189,8 +189,13 @@ them in the `configure' command line, using `VAR=value'.  For example:
 
      ./configure CC=/usr/local2/bin/gcc
 
-will cause the specified gcc to be used as the C compiler (unless it is
-overridden in the site shell script).
+causes the specified `gcc' to be used as the C compiler (unless it is
+overridden in the site shell script).  Here is a another example:
+
+     /bin/bash ./configure CONFIG_SHELL=/bin/bash
+
+Here the `CONFIG_SHELL=/bin/bash' operand causes subsequent
+configuration-related scripts to be executed by `/bin/bash'.
 
 `configure' Invocation
 ======================

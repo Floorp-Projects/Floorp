@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(svrcore, 4.0.3.01, rmeggins@redhat.com, svrcore)
+AC_INIT(svrcore, 4.0.4, rmeggins@redhat.com, svrcore)
 AM_INIT_AUTOMAKE([gnu check-news dist-bzip2])
 AM_MAINTAINER_MODE
 AC_CONFIG_SRCDIR([src/svrcore.h])
