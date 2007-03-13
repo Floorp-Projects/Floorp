@@ -75,15 +75,21 @@ NSWindow* nsMenuBarX::sEventTargetWindow = nil;
 NSMenu* sApplicationMenu = nil;
 BOOL gSomeMenuBarPainted = NO;
 
+// We keep references to the first quit and pref item content nodes we find, which
+// will be from the hidden window. We use these when the document for the current
+// window does not have a quit or pref item. We don't need strong refs here because
+// these items are always strong ref'd by their owning menu bar (instance variable).
+static nsIContent* sQuitItemContent = nsnull;
+static nsIContent* sPrefItemContent = nsnull;
 
 // Special command IDs that we know Mac OS X does not use for anything else. We use
 // these in place of carbon's IDs for these commands in order to stop Carbon from
 // messing with our event handlers. See bug 346883.
 enum {
   eCommand_ID_About = 1,
-  eCommand_ID_Prefs,
-  eCommand_ID_Quit,
-  eCommand_ID_Last
+  eCommand_ID_Prefs = 2,
+  eCommand_ID_Quit  = 3,
+  eCommand_ID_Last  = 4
 };
 
 
@@ -110,11 +116,17 @@ nsMenuBarX::nsMenuBarX()
 nsMenuBarX::~nsMenuBarX()
 {
   mMenusArray.Clear(); // release all menus
-  
+
+  // the quit/pref items of a random window might have been used if there was no
+  // hidden window, thus we need to invalidate the weak references.
+  if (sQuitItemContent == mQuitItemContent)
+    sQuitItemContent = nsnull;
+  if (sPrefItemContent == mPrefItemContent)
+    sPrefItemContent = nsnull;
+
   // make sure we unregister ourselves as a document observer
-  if (mDocument) {
+  if (mDocument)
     mDocument->RemoveMutationObserver(this);
-  }
   
   [mRootMenu release];
 }
@@ -241,11 +253,15 @@ nsMenuBarX::AquifyMenuBar()
     // remove quit item and its separator
     HideItem(domDoc, NS_LITERAL_STRING("menu_FileQuitSeparator"), nsnull);
     HideItem(domDoc, NS_LITERAL_STRING("menu_FileQuitItem"), getter_AddRefs(mQuitItemContent));
+    if (!sQuitItemContent)
+      sQuitItemContent = mQuitItemContent;
     
     // remove prefs item and its separator, but save off the pref content node
     // so we can invoke its command later.
     HideItem(domDoc, NS_LITERAL_STRING("menu_PrefsSeparator"), nsnull);
     HideItem(domDoc, NS_LITERAL_STRING("menu_preferences"), getter_AddRefs(mPrefItemContent));
+    if (!sPrefItemContent)
+      sPrefItemContent = mPrefItemContent;
     
     // hide items that we use for the Application menu
     HideItem(domDoc, NS_LITERAL_STRING("menu_mac_services"), nsnull);
@@ -300,7 +316,11 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
   switch (command.commandID) {
     case eCommand_ID_Prefs:
     {
-      nsEventStatus status = self->ExecuteCommand(self->mPrefItemContent);
+      nsIContent* mostSpecificContent = sPrefItemContent;
+      if (self->mPrefItemContent)
+        mostSpecificContent = self->mPrefItemContent;
+      
+      nsEventStatus status = self->ExecuteCommand(mostSpecificContent);
       if (status == nsEventStatus_eConsumeNoDefault) // event handled, no other processing
         handled = noErr;
       break;
@@ -308,9 +328,23 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
 
     case eCommand_ID_Quit:
     {
-      nsEventStatus status = self->ExecuteCommand(self->mQuitItemContent);
-      if (status == nsEventStatus_eConsumeNoDefault) // event handled, no other processing
+      nsIContent* mostSpecificContent = sQuitItemContent;
+      if (self->mQuitItemContent)
+        mostSpecificContent = self->mQuitItemContent;
+
+      // If we have some content for quit we execute it. Otherwise we send a native app terminate
+      // message. If you want to stop a quit from happening, provide quit content and return
+      // the event as unhandled.
+      if (mostSpecificContent) {
+        nsEventStatus status = self->ExecuteCommand(mostSpecificContent);
+        if (status == nsEventStatus_eConsumeNoDefault) // event handled, no other processing
+          handled = noErr;
+      }
+      else {
+        [NSApp terminate:nil];
         handled = noErr;
+      }
+
       break;
     }
 
@@ -1124,7 +1158,7 @@ unsigned int MenuHelpersX::MacModifiersForGeckoModifiers(PRUint8 geckoModifiers)
     err = ::SetEventParameter(newEvent, kEventParamDirectObject, typeHICommand, sizeof(HICommand), &menuHICommand);
     if (err == noErr) {
       err = ::SendEventToEventTarget(newEvent, GetWindowEventTarget((WindowRef)[nsMenuBarX::sEventTargetWindow windowRef]));
-      NS_ASSERTION(err == noErr, "Carbon event for menu hit not sent!");
+      NS_ASSERTION(err == noErr, "Carbon event for menu hit either not sent or not handled!");
     }
     ReleaseEvent(newEvent);
   }
