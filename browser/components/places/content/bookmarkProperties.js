@@ -354,9 +354,14 @@ var BookmarkPropertiesPanel = {
   },
 
   _initMicrosummaryPicker: function BPP__initMicrosummaryPicker() {
+    var placeURI = null;
+    if (this._action == ACTION_EDIT) {
+      NS_ASSERT(this._bookmarkId, "No bookmark identifier");
+      placeURI = PlacesUtils.bookmarks.getItemURI(this._bookmarkId);
+    }
     try {
       this._microsummaries = this._mss.getMicrosummaries(this._bookmarkURI,
-                                                         this._bookmarkURI);
+                                                         placeURI);
     }
     catch(ex) {
       // There was a problem retrieving microsummaries; disable the picker.
@@ -496,9 +501,13 @@ var BookmarkPropertiesPanel = {
 
       microsummaryMenuPopup.appendChild(menuItem);
 
-      // Select the item if this is the current microsummary for the bookmark.
-      if (this._mss.isMicrosummary(this._bookmarkURI, microsummary))
-        microsummaryMenuList.selectedItem = menuItem;
+      if (this._action == ACTION_EDIT) {
+        NS_ASSERT(this._bookmarkId, "No bookmark identifier");
+        var placeURI = PlacesUtils.bookmarks.getItemURI(this._bookmarkId);
+        // Select the item if this is the current microsummary for the bookmark.
+        if (this._mss.isMicrosummary(placeURI, microsummary))
+          microsummaryMenuList.selectedItem = menuItem;
+      }
     }
   },
 
@@ -734,17 +743,27 @@ var BookmarkPropertiesPanel = {
       // the "don't display a microsummary" item.
       var newMicrosummary = menuList.selectedItem.microsummary;
 
-      // Only add a microsummary update to the transaction if the microsummary
-      // has actually changed, i.e. the user selected no microsummary,
-      // but the bookmark previously had one, or the user selected a microsummary
-      // which is not the one the bookmark previously had.
-      if ((newMicrosummary == null &&
-           this._mss.hasMicrosummary(this._bookmarkURI)) ||
-          (newMicrosummary != null &&
-           !this._mss.isMicrosummary(this._bookmarkURI, newMicrosummary))) {
+      if (this._action == ACTION_ADD && newMicrosummary) {
         transactions.push(
           new PlacesEditBookmarkMicrosummaryTransaction(itemId,
                                                         newMicrosummary));
+      }
+      else {
+        NS_ASSERT(itemId != -1, "should have had a real bookmark id");
+
+        // Only add a microsummary update to the transaction if the
+        // microsummary has actually changed, i.e. the user selected no
+        // microsummary, but the bookmark previously had one, or the user
+        // selected a microsummary which is not the one the bookmark previously
+        // had.
+        var placeURI = PlacesUtils.bookmarks.getItemURI(itemId);
+        if ((newMicrosummary == null && this._mss.hasMicrosummary(placeURI)) ||
+            (newMicrosummary != null &&
+             !this._mss.isMicrosummary(placeURI, newMicrosummary))) {
+          transactions.push(
+            new PlacesEditBookmarkMicrosummaryTransaction(itemId,
+                                                          newMicrosummary));
+        }
       }
     }
 

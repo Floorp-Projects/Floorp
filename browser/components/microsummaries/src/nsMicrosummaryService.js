@@ -632,7 +632,7 @@ MicrosummaryService.prototype = {
    * via XPCOM but is more performant; inside this component, use this version.
    * Outside the component, use getBookmarks (no underscore prefix) instead.
    *
-   * @returns an array of bookmark IDs
+   * @returns an array of place: uris representing bookmarks items
    *
    */
   _getBookmarks: function MSS__getBookmarks() {
@@ -649,33 +649,33 @@ MicrosummaryService.prototype = {
     return bookmarks;
   },
 
-  _getField: function MSS__getField(bookmarkID, fieldName) {
-    var pageURI = bookmarkID.QueryInterface(Ci.nsIURI);
+  _getField: function MSS__getField(aPlaceURI, aFieldName) {
+    aPlaceURI.QueryInterface(Ci.nsIURI);
     var fieldValue;
 
-    switch(fieldName) {
+    switch(aFieldName) {
     case FIELD_MICSUM_EXPIRATION:
-      fieldValue = this._ans.getAnnotationInt64(pageURI, fieldName);
+      fieldValue = this._ans.getAnnotationInt64(aPlaceURI, aFieldName);
       break;
     case FIELD_MICSUM_GEN_URI:
     case FIELD_GENERATED_TITLE:
     case FIELD_CONTENT_TYPE:
     default:
-      fieldValue = this._ans.getAnnotationString(pageURI, fieldName);
+      fieldValue = this._ans.getAnnotationString(aPlaceURI, aFieldName);
       break;
     }
     
     return fieldValue;
   },
 
-  _setField: function MSS__setField(bookmarkID, fieldName, fieldValue) {
-    var pageURI = bookmarkID.QueryInterface(Ci.nsIURI);
+  _setField: function MSS__setField(aPlaceURI, aFieldName, aFieldValue) {
+    aPlaceURI.QueryInterface(Ci.nsIURI);
 
-    switch(fieldName) {
+    switch(aFieldName) {
     case FIELD_MICSUM_EXPIRATION:
-      this._ans.setAnnotationInt64(pageURI,
-                                   fieldName,
-                                   fieldValue,
+      this._ans.setAnnotationInt64(aPlaceURI,
+                                   aFieldName,
+                                   aFieldValue,
                                    0,
                                    this._ans.EXPIRE_NEVER);
       break;
@@ -683,30 +683,37 @@ MicrosummaryService.prototype = {
     case FIELD_GENERATED_TITLE:
     case FIELD_CONTENT_TYPE:
     default:
-      this._ans.setAnnotationString(pageURI,
-                                    fieldName,
-                                    fieldValue,
+      this._ans.setAnnotationString(aPlaceURI,
+                                    aFieldName,
+                                    aFieldValue,
                                     0,
                                     this._ans.EXPIRE_NEVER);
       break;
     }
   },
 
-  _clearField: function MSS__clearField(bookmarkID, fieldName) {
-    var pageURI = bookmarkID.QueryInterface(Ci.nsIURI);
-
-    this._ans.removeAnnotation(pageURI, fieldName);
+  _clearField: function MSS__clearField(aPlaceURI, aFieldName) {
+    aPlaceURI.QueryInterface(Ci.nsIURI);
+    this._ans.removeAnnotation(aPlaceURI, aFieldName);
   },
 
-  _hasField: function MSS__hasField(bookmarkID, fieldName) {
-    var pageURI = bookmarkID.QueryInterface(Ci.nsIURI);
-    return this._ans.hasAnnotation(pageURI, fieldName);
+  _hasField: function MSS__hasField(aPlaceURI, fieldName) {
+    aPlaceURI.QueryInterface(Ci.nsIURI);
+    return this._ans.hasAnnotation(aPlaceURI, fieldName);
   },
 
-  _getPageForBookmark: function MSS__getPageForBookmark(bookmarkID) {
-    var pageURI = bookmarkID.QueryInterface(Ci.nsIURI);
+  _getPageForBookmark: function MSS__getPageForBookmark(aPlaceURI) {
+    aPlaceURI.QueryInterface(Ci.nsIURI);
 
-    return pageURI;
+    // Manually get the bookmark identifier out of the place uri until
+    // the query system supports parsing this sort of place: uris
+    var matches = /moz_bookmarks.id=([0-9]+)/.exec(aPlaceURI.spec);
+    if (matches) {
+      var bookmarkId = parseInt(matches[1]);
+      return this._bms.getBookmarkURI(bookmarkId);
+    }
+
+    return null;
   },
 
 #else
@@ -914,7 +921,7 @@ MicrosummaryService.prototype = {
     }
     else {
       // Display a static title initially (unless there's already one set)
-      if (!this._getField(bookmarkID, FIELD_GENERATED_TITLE))
+      if (!this._hasField(bookmarkID, FIELD_GENERATED_TITLE))
         this._setField(bookmarkID, FIELD_GENERATED_TITLE,
                        microsummary.generator.name || microsummary.generator.uri.spec);
 

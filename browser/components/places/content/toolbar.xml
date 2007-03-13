@@ -163,20 +163,20 @@
 
             var annotations = PlacesUtils.annotations;
             // This try/catch block is a temporary workaround for bug 336194.
-            var pages;
+            var placeURIs;
             try {
-              pages = annotations.getPagesWithAnnotation("bookmarks/generatedTitle", {});
+              placeURIs = annotations.getPagesWithAnnotation("bookmarks/generatedTitle", {});
             }
             catch(e) {
-              pages = [];
+              placeURIs = [];
             }
 
             // XXX It'd be faster to grab the annotations in a single query
             // instead of querying separately for each one, but the annotation
             // service provides no mechanism for doing so.
-            for ( var i = 0; i < pages.length; i++)
-              this.__generatedTitles[pages[i].spec] =
-                annotations.getAnnotationString(pages[i], "bookmarks/generatedTitle");
+            for ( var i = 0; i < placeURIs.length; i++)
+              this.__generatedTitles[placeURIs[i].spec] =
+                annotations.getAnnotationString(placeURIs[i], "bookmarks/generatedTitle");
           }
           
           return this.__generatedTitles;
@@ -221,10 +221,12 @@
               // Add the URI to the list of URIs currently in the view.
               this._currentURIs[child.uri] = true;
 
-              // If the URI has a generated title, use that instead.
-              if (this._generatedTitles[child.uri])
-                title = this._generatedTitles[child.uri];
-
+              if (PlacesUtils.nodeIsBookmark(child)) {
+                // If the item has a generated title, use that instead.
+                var placeURI = PlacesUtils.bookmarks.getItemURI(child.bookmarkId);
+                if (this._generatedTitles[placeURI.spec])
+                  title = this._generatedTitles[placeURI.spec];
+              }
             } else if (PlacesUtils.nodeIsSeparator(child)) {
               button = document.createElementNS(XULNS, "toolbarseparator");
             } else if (PlacesUtils.nodeIsContainer(child)) {
