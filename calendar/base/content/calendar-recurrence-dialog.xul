@@ -130,6 +130,7 @@
               </hbox>
             </vbox>
 
+            <!-- Monthly -->
             <vbox>
               <hbox align="center">
                 <label value="&newevent.recurrence.every.label;"/>
@@ -145,12 +146,17 @@
               </radiogroup>
             </vbox>
 
-            <hbox align="top">
-              <label value="&newevent.recurrence.every.label;"/>
-              <textbox id="yearly-years" value="1" size="3" oninput="validateIntegers(event); updateAccept()"/>
-              <label value="&repeat.units.years;"/>
+            <!-- Yearly -->
+            <vbox>
+              <hbox align="center">
+                <label value="&newevent.recurrence.every.label;"/>
+                <textbox id="yearly-years" value="1" size="3" 
+                         oninput="validateIntegers(event); updateAccept();"/>
+                <label value="&repeat.units.years;"/>
+                <spacer flex="1"/>
+              </hbox>
               <spacer flex="1"/>
-            </hbox>
+            </vbox>
 
           </deck>
         </row>
