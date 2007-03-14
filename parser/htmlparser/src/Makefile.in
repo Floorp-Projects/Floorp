@@ -74,7 +74,7 @@ SHARED_LIBRARY_LIBS = \
 		$(NULL)
 
 ifdef MOZ_PERF_METRICS
-EXTRA_DSO_LIBS	+= mozutil_s
+SHARED_LIBRARY_LIBS +=	$(DEPTH)/modules/libutil/src/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX)
 endif
 
 CPPSRCS = \

@@ -67,9 +67,6 @@ PACKAGE_VARS += MOZ_XUL
 ifndef MOZ_ENABLE_LIBXUL
 EXTRA_DSO_LIBS	= gkgfx
 endif
-ifdef MOZ_PERF_METRICS
-EXTRA_DSO_LIBS	+= mozutil_s
-endif
 ifdef MOZ_ENABLE_CAIRO_GFX
 EXTRA_DSO_LIBS	+= thebes
 endif
@@ -204,6 +201,10 @@ SHARED_LIBRARY_LIBS += \
 	$(DEPTH)/editor/libeditor/html/$(LIB_PREFIX)htmleditor_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/txtsvc/src/$(LIB_PREFIX)txtsvc_s.$(LIB_SUFFIX) \
 	$(NULL)
+endif
+
+ifdef MOZ_PERF_METRICS
+SHARED_LIBRARY_LIBS += $(DEPTH)/modules/libutil/src/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX)
 endif
 
 ifdef ENABLE_EDITOR_API_LOG
