@@ -85,7 +85,7 @@ static PRBool gConstructingMenu = PR_FALSE;
 static NS_DEFINE_CID(kMenuCID,     NS_MENU_CID);
 static NS_DEFINE_CID(kMenuItemCID, NS_MENUITEM_CID);
 
-// Refcounted class for dummy menu items, like separators and help menu items.
+// Refcounted class for dummy menu items like separators
 class nsDummyMenuItemX : public nsISupports {
 public:
     NS_DECL_ISUPPORTS
@@ -226,7 +226,7 @@ NS_IMETHODIMP nsMenuX::AddItem(nsISupports* aItem)
 }
 
 
-NS_IMETHODIMP nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
+nsresult nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
 {
   if (!aMenuItem)
     return NS_ERROR_INVALID_ARG;
@@ -257,7 +257,7 @@ NS_IMETHODIMP nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
 }
 
 
-NS_IMETHODIMP nsMenuX::AddMenu(nsIMenu * aMenu)
+nsresult nsMenuX::AddMenu(nsIMenu * aMenu)
 {
   // Add a submenu
   if (!aMenu)
@@ -292,8 +292,8 @@ NS_IMETHODIMP nsMenuX::AddMenu(nsIMenu * aMenu)
 
 NS_IMETHODIMP nsMenuX::AddSeparator()
 {
-  // We're not really appending an nsMenuItem but it needs to be here to make
-  // sure that event dispatching isn't off by one.
+  // We're not really appending an nsMenuItem but a placeholder needs to be
+  // here to make sure that event dispatching isn't off by one.
   mMenuItemsArray.AppendObject(&gDummyMenuItemX); // owning ref
   [mMacMenu addItem:[NSMenuItem separatorItem]];
   return NS_OK;
@@ -616,69 +616,69 @@ void nsMenuX::LoadMenuItem(nsIMenu* inParentMenu, nsIContent* inMenuItemContent)
 
   // create nsMenuItem
   nsCOMPtr<nsIMenuItem> pnsMenuItem = do_CreateInstance(kMenuItemCID);
-  if (pnsMenuItem) {
-    nsAutoString menuitemName;
-    
-    inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuitemName);
+  if (!pnsMenuItem)
+    return;
 
-    // printf("menuitem %s \n", NS_LossyConvertUTF16toASCII(menuitemName).get());
-    
-    static nsIContent::AttrValuesArray strings[] =
-      {&nsWidgetAtoms::checkbox, &nsWidgetAtoms::radio, nsnull};
-    nsIMenuItem::EMenuItemType itemType = nsIMenuItem::eRegular;
-    switch (inMenuItemContent->FindAttrValueIn(kNameSpaceID_None, nsWidgetAtoms::type,
-                                               strings, eCaseMatters)) {
-      case 0: itemType = nsIMenuItem::eCheckbox; break;
-      case 1: itemType = nsIMenuItem::eRadio; break;
-    }
-      
-    nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
-    if (!docShell)
-      return;
+  nsAutoString menuitemName;
+  inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuitemName);
 
-    // Create the item.
-    pnsMenuItem->Create(inParentMenu, menuitemName, PR_FALSE, itemType, mManager,
-                        docShell, inMenuItemContent);
+  // printf("menuitem %s \n", NS_LossyConvertUTF16toASCII(menuitemName).get());
 
-    // Set key shortcut and modifiers
-    
-    nsAutoString keyValue;
-    inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyValue);
-
-    // Try to find the key node. Get the document so we can do |GetElementByID|
-    nsCOMPtr<nsIDOMDocument> domDocument =
-      do_QueryInterface(inMenuItemContent->GetDocument());
-    if (!domDocument)
-      return;
-
-    nsCOMPtr<nsIDOMElement> keyElement;
-    if (!keyValue.IsEmpty())
-      domDocument->GetElementById(keyValue, getter_AddRefs(keyElement));
-    if (keyElement) {
-      nsCOMPtr<nsIContent> keyContent (do_QueryInterface(keyElement));
-      nsAutoString keyChar(NS_LITERAL_STRING(" "));
-      keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
-      if (!keyChar.EqualsLiteral(" ")) 
-        pnsMenuItem->SetShortcutChar(keyChar);
-      
-      nsAutoString modifiersStr;
-      keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::modifiers, modifiersStr);
-      char* str = ToNewCString(modifiersStr);
-      PRUint8 modifiers = MenuHelpersX::GeckoModifiersForNodeAttribute(str);
-      nsMemory::Free(str);
-      
-      pnsMenuItem->SetModifiers(modifiers);
-    }
-
-    if (inMenuItemContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::checked,
-                                       nsWidgetAtoms::_true, eCaseMatters))
-      pnsMenuItem->SetChecked(PR_TRUE);
-    else
-      pnsMenuItem->SetChecked(PR_FALSE);
-      
-    nsCOMPtr<nsISupports> supports(do_QueryInterface(pnsMenuItem));
-    inParentMenu->AddItem(supports); // Parent now owns menu item
+  static nsIContent::AttrValuesArray strings[] =
+  {&nsWidgetAtoms::checkbox, &nsWidgetAtoms::radio, nsnull};
+  nsIMenuItem::EMenuItemType itemType = nsIMenuItem::eRegular;
+  switch (inMenuItemContent->FindAttrValueIn(kNameSpaceID_None, nsWidgetAtoms::type,
+                                             strings, eCaseMatters)) {
+    case 0: itemType = nsIMenuItem::eCheckbox; break;
+    case 1: itemType = nsIMenuItem::eRadio; break;
   }
+
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
+  if (!docShell)
+    return;
+
+  // Create the item.
+  pnsMenuItem->Create(inParentMenu, menuitemName, PR_FALSE, itemType, mManager,
+                      docShell, inMenuItemContent);
+
+  // Set key shortcut and modifiers
+
+  nsAutoString keyValue;
+  inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyValue);
+
+  // Try to find the key node. Get the document so we can do |GetElementByID|
+  nsCOMPtr<nsIDOMDocument> domDocument =
+    do_QueryInterface(inMenuItemContent->GetDocument());
+  if (!domDocument)
+    return;
+
+  nsCOMPtr<nsIDOMElement> keyElement;
+  if (!keyValue.IsEmpty())
+    domDocument->GetElementById(keyValue, getter_AddRefs(keyElement));
+  if (keyElement) {
+    nsCOMPtr<nsIContent> keyContent (do_QueryInterface(keyElement));
+    nsAutoString keyChar(NS_LITERAL_STRING(" "));
+    keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
+    if (!keyChar.EqualsLiteral(" ")) 
+      pnsMenuItem->SetShortcutChar(keyChar);
+    
+    nsAutoString modifiersStr;
+    keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::modifiers, modifiersStr);
+    char* str = ToNewCString(modifiersStr);
+    PRUint8 modifiers = MenuHelpersX::GeckoModifiersForNodeAttribute(str);
+    nsMemory::Free(str);
+    
+    pnsMenuItem->SetModifiers(modifiers);
+  }
+
+  if (inMenuItemContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::checked,
+                                     nsWidgetAtoms::_true, eCaseMatters))
+    pnsMenuItem->SetChecked(PR_TRUE);
+  else
+    pnsMenuItem->SetChecked(PR_FALSE);
+
+  nsCOMPtr<nsISupports> supports(do_QueryInterface(pnsMenuItem));
+  inParentMenu->AddItem(supports); // Parent now owns menu item
 }
 
 
@@ -693,25 +693,26 @@ void nsMenuX::LoadSubMenu(nsIMenu * pParentMenu, nsIContent* inMenuContent)
 
   // Create nsMenu
   nsCOMPtr<nsIMenu> pnsMenu(do_CreateInstance(kMenuCID));
-  if (pnsMenu) {
-    // Call Create
-    nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
-    if (!docShell)
-        return;
-    nsCOMPtr<nsISupports> supports(do_QueryInterface(pParentMenu));
-    pnsMenu->Create(supports, menuName, EmptyString(), mManager, docShell, inMenuContent);
+  if (!pnsMenu)
+    return;
 
-    // set if it's enabled or disabled
-    if (inMenuContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
-                                   nsWidgetAtoms::_true, eCaseMatters))
-      pnsMenu->SetEnabled(PR_FALSE);
-    else
-      pnsMenu->SetEnabled(PR_TRUE);
+  // Call Create
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
+  if (!docShell)
+    return;
+  nsCOMPtr<nsISupports> supports(do_QueryInterface(pParentMenu));
+  pnsMenu->Create(supports, menuName, EmptyString(), mManager, docShell, inMenuContent);
 
-    // Make nsMenu a child of parent nsMenu. The parent takes ownership
-    nsCOMPtr<nsISupports> supports2(do_QueryInterface(pnsMenu));
-    pParentMenu->AddItem(supports2);
-  }     
+  // set if it's enabled or disabled
+  if (inMenuContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
+                                 nsWidgetAtoms::_true, eCaseMatters))
+    pnsMenu->SetEnabled(PR_FALSE);
+  else
+    pnsMenu->SetEnabled(PR_TRUE);
+
+  // Make nsMenu a child of parent nsMenu. The parent takes ownership
+  nsCOMPtr<nsISupports> supports2(do_QueryInterface(pnsMenu));
+  pParentMenu->AddItem(supports2);
 }
 
 

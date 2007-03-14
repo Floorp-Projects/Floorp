@@ -113,8 +113,6 @@ public:
     NS_IMETHOD SetEnabled(PRBool aIsEnabled);
     NS_IMETHOD GetEnabled(PRBool* aIsEnabled);
 
-    NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem);
-    NS_IMETHOD AddMenu(nsIMenu * aMenu);
     NS_IMETHOD ChangeNativeEnabledStatusForMenuItem(nsIMenuItem* aMenuItem, PRBool aEnabled);
     NS_IMETHOD GetMenuRefAndItemIndexForMenuItem(nsISupports* aMenuItem,
                                                  void**       aMenuRef,
@@ -134,6 +132,9 @@ protected:
     PRBool OnCreate();
     PRBool OnDestroyed();
     PRBool OnCreated();
+
+    nsresult AddMenuItem(nsIMenuItem * aMenuItem);
+    nsresult AddMenu(nsIMenu * aMenu);
 
     void LoadMenuItem(nsIMenu* pParentMenu, nsIContent* inMenuItemContent);  
     void LoadSubMenu(nsIMenu * pParentMenu, nsIContent* inMenuContent);
