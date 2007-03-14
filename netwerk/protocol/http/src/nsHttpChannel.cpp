@@ -118,6 +118,7 @@ nsHttpChannel::nsHttpChannel()
     , mSuppressDefensiveAuth(PR_FALSE)
     , mResuming(PR_FALSE)
     , mInitedCacheEntry(PR_FALSE)
+    , mCacheForOfflineUse(PR_FALSE)
 {
     LOG(("Creating nsHttpChannel @%x\n", this));
 
@@ -267,14 +268,9 @@ nsHttpChannel::Connect(PRBool firstTime)
     // true when called from AsyncOpen
     if (firstTime) {
         PRBool delayed = PR_FALSE;
-        PRBool offline = PR_FALSE;
-    
-        // are we offline?
-        nsCOMPtr<nsIIOService> ioService;
-        rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
-        if (NS_FAILED(rv)) return rv;
 
-        ioService->GetOffline(&offline);
+        // are we offline?
+        PRBool offline = gIOService->IsOffline();
         if (offline)
             mLoadFlags |= LOAD_ONLY_FROM_CACHE;
         else if (PL_strcmp(mConnectionInfo->ProxyType(), "unknown") == 0)
@@ -297,7 +293,14 @@ nsHttpChannel::Connect(PRBool firstTime)
                 return NS_ERROR_DOCUMENT_NOT_CACHED;
             // otherwise, let's just proceed without using the cache.
         }
- 
+
+        // if cacheForOfflineUse has been set, open up an offline cache
+        // entry to update
+        if (mCacheForOfflineUse) {
+            rv = OpenOfflineCacheEntryForWriting();
+            if (NS_FAILED(rv)) return rv;
+        }
+
         if (NS_SUCCEEDED(rv) && delayed)
             return NS_OK;
     }
@@ -785,6 +788,12 @@ nsHttpChannel::ProcessResponse()
         if (NS_SUCCEEDED(rv)) {
             InitCacheEntry();
             CloseCacheEntry();
+
+            if (mCacheForOfflineUse) {
+                // Store response in the offline cache
+                InitOfflineCacheEntry();
+                CloseOfflineCacheEntry();
+            }
         }    
         else {
             LOG(("ProcessRedirection failed [rv=%x]\n", rv));
@@ -884,8 +893,30 @@ nsHttpChannel::ProcessNormal()
     if (NS_FAILED(rv)) return rv;
 
     // install cache listener if we still have a cache entry open
-    if (mCacheEntry && (mCacheAccess & nsICache::ACCESS_WRITE))
+    if (mCacheEntry && (mCacheAccess & nsICache::ACCESS_WRITE)) {
         rv = InstallCacheListener();
+        if (NS_FAILED(rv)) return rv;
+    }
+    // create offline cache entry if offline caching was requested
+    if (mCacheForOfflineUse) {
+        PRBool shouldCacheForOfflineUse;
+        rv = ShouldUpdateOfflineCacheEntry(&shouldCacheForOfflineUse);
+        if (NS_FAILED(rv)) return rv;
+
+        if (shouldCacheForOfflineUse) {
+            LOG(("writing to the offline cache"));
+            rv = InitOfflineCacheEntry();
+            if (NS_FAILED(rv)) return rv;
+
+            if (mOfflineCacheEntry) {
+                rv = InstallOfflineCacheListener();
+                if (NS_FAILED(rv)) return rv;
+            }
+        } else {
+            LOG(("offline cache is up to date, not updating"));
+            CloseOfflineCacheEntry();
+        }
+    }
 
     return rv;
 }
@@ -1262,10 +1293,6 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
         storagePolicy = nsICache::STORE_IN_MEMORY;
     else
         storagePolicy = nsICache::STORE_ANYWHERE; // allow on disk
-    nsCOMPtr<nsICacheSession> session;
-    rv = gHttpHandler->GetCacheSession(storagePolicy,
-                                       getter_AddRefs(session));
-    if (NS_FAILED(rv)) return rv;
 
     // Set the desired cache access mode accordingly...
     nsCacheAccessMode accessRequested;
@@ -1281,11 +1308,30 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
     else
         accessRequested = nsICache::ACCESS_READ_WRITE; // normal browsing
 
+    nsCOMPtr<nsICacheSession> session;
+    rv = gHttpHandler->GetCacheSession(storagePolicy,
+                                       getter_AddRefs(session));
+    if (NS_FAILED(rv)) return rv;
+
     // we'll try to synchronously open the cache entry... however, it may be
     // in use and not yet validated, in which case we'll try asynchronously
     // opening the cache entry.
     rv = session->OpenCacheEntry(cacheKey, accessRequested, PR_FALSE,
                                  getter_AddRefs(mCacheEntry));
+
+    if (offline &&
+        !(NS_SUCCEEDED(rv) || rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION)) {
+        // couldn't find it in the main cache, check the offline cache
+
+        storagePolicy = nsICache::STORE_OFFLINE;
+        rv = gHttpHandler->GetCacheSession(storagePolicy,
+                                           getter_AddRefs(session));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = session->OpenCacheEntry(cacheKey, accessRequested, PR_FALSE,
+                                     getter_AddRefs(mCacheEntry));
+    }
+
     if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
         // access to the cache entry has been denied (because the cache entry
         // is probably in use by another channel).
@@ -1302,6 +1348,66 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
         mCacheEntry->GetAccessGranted(&mCacheAccess);
         LOG(("got cache entry [access=%x]\n", mCacheAccess));
     }
+    return rv;
+}
+
+
+nsresult
+nsHttpChannel::OpenOfflineCacheEntryForWriting()
+{
+    nsresult rv;
+
+    LOG(("nsHttpChannel::OpenOfflineCacheEntryForWriting [this=%x]", this));
+
+    // make sure we're not abusing this function
+    NS_PRECONDITION(!mOfflineCacheEntry, "cache entry already open");
+
+    PRBool offline = gIOService->IsOffline();
+    if (offline) {
+        // only put things in the offline cache while online
+        return NS_OK;
+    }
+
+    if (mRequestHead.Method() != nsHttp::Get) {
+        // only cache complete documents offline
+        return NS_OK;
+    }
+
+    if (mRequestHead.PeekHeader(nsHttp::Range)) {
+        // we don't support caching for byte range requests initiated
+        // by our clients or via nsIResumableChannel.
+        return NS_OK;
+    }
+
+    if (RequestIsConditional()) {
+        // don't use the cache if our consumer is making a conditional request
+        // (see bug 331825).
+        return NS_OK;
+    }
+
+    nsCAutoString cacheKey;
+    GenerateCacheKey(cacheKey);
+
+    nsCOMPtr<nsICacheSession> session;
+    rv = gHttpHandler->GetCacheSession(nsICache::STORE_OFFLINE,
+                                       getter_AddRefs(session));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = session->OpenCacheEntry(cacheKey, nsICache::ACCESS_READ_WRITE,
+                                 PR_FALSE, getter_AddRefs(mOfflineCacheEntry));
+
+    if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
+        // access to the cache entry has been denied (because the cache entry
+        // is probably in use by another channel).  Either the cache is being
+        // read from (we're offline) or it's being updated elsewhere.
+        return NS_OK;
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+        mOfflineCacheEntry->GetAccessGranted(&mOfflineCacheAccess);
+        LOG(("got offline cache entry [access=%x]\n", mOfflineCacheAccess));
+    }
+
     return rv;
 }
 
@@ -1597,6 +1703,48 @@ nsHttpChannel::CheckCache()
     return NS_OK;
 }
 
+
+nsresult
+nsHttpChannel::ShouldUpdateOfflineCacheEntry(PRBool *shouldCacheForOfflineUse)
+{
+    *shouldCacheForOfflineUse = PR_FALSE;
+
+    if (!mOfflineCacheEntry) {
+        return NS_OK;
+    }
+
+    // if we're updating the cache entry, update the offline cache entry too
+    if (mCacheEntry && (mCacheAccess & nsICache::ACCESS_WRITE)) {
+        *shouldCacheForOfflineUse = PR_TRUE;
+        return NS_OK;
+    }
+
+    // if there's nothing in the offline cache, add it
+    if (mOfflineCacheEntry && (mOfflineCacheAccess == nsICache::ACCESS_WRITE)) {
+        *shouldCacheForOfflineUse = PR_TRUE;
+        return NS_OK;
+    }
+
+    // if the document is newer than the offline entry, update it
+    PRUint32 docLastModifiedTime;
+    nsresult rv = mResponseHead->GetLastModifiedValue(&docLastModifiedTime);
+    if (NS_FAILED(rv)) {
+        *shouldCacheForOfflineUse = PR_TRUE;
+        return NS_OK;
+    }
+
+    PRUint32 offlineLastModifiedTime;
+    rv = mOfflineCacheEntry->GetLastModified(&offlineLastModifiedTime);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (docLastModifiedTime > offlineLastModifiedTime) {
+        *shouldCacheForOfflineUse = PR_TRUE;
+        return NS_OK;
+    }
+
+    return NS_OK;
+}
+
 // If the data in the cache hasn't expired, then there's no need to
 // talk with the server, not even to do an if-modified-since.  This
 // method creates a stream from the cache, synthesizing all the various
@@ -1641,8 +1789,18 @@ nsHttpChannel::ReadFromCache()
 
     // have we been configured to skip reading from the cache?
     if ((mLoadFlags & LOAD_ONLY_IF_MODIFIED) && !mCachedContentIsPartial) {
-        LOG(("skipping read from cache based on LOAD_ONLY_IF_MODIFIED load flag\n"));
-        return AsyncCall(&nsHttpChannel::HandleAsyncNotModified);
+        // if offline caching has been requested and the offline cache needs
+        // updating, complete the call even if the main cache entry is
+        // up-to-date
+        PRBool shouldUpdateOffline;
+        if (!mCacheForOfflineUse ||
+            NS_FAILED(ShouldUpdateOfflineCacheEntry(&shouldUpdateOffline)) ||
+            !shouldUpdateOffline) {
+
+            LOG(("skipping read from cache based on LOAD_ONLY_IF_MODIFIED "
+                 "load flag\n"));
+            return AsyncCall(&nsHttpChannel::HandleAsyncNotModified);
+        }
     }
 
     // open input stream for reading...
@@ -1697,6 +1855,24 @@ nsHttpChannel::CloseCacheEntry()
     mInitedCacheEntry = PR_FALSE;
 }
 
+
+void
+nsHttpChannel::CloseOfflineCacheEntry()
+{
+    if (!mOfflineCacheEntry)
+        return;
+
+    LOG(("nsHttpChannel::CloseOfflineCacheEntry [this=%x]", this));
+
+    if (NS_FAILED(mStatus)) {
+        mOfflineCacheEntry->Doom();
+    }
+
+    mOfflineCacheEntry = 0;
+    mOfflineCacheAccess = 0;
+}
+
+
 // Initialize the cache entry for writing.
 //  - finalize storage policy
 //  - store security info
@@ -1731,21 +1907,52 @@ nsHttpChannel::InitCacheEntry()
         if (NS_FAILED(rv)) return rv;
     }
 
-    // Store secure data in memory only
-    if (mSecurityInfo)
-        mCacheEntry->SetSecurityInfo(mSecurityInfo);
-
     // Set the expiration time for this cache entry
     rv = UpdateExpirationTime();
     if (NS_FAILED(rv)) return rv;
 
+    rv = AddCacheEntryHeaders(mCacheEntry);
+    if (NS_FAILED(rv)) return rv;
+
+    mInitedCacheEntry = PR_TRUE;
+    return NS_OK;
+}
+
+
+nsresult
+nsHttpChannel::InitOfflineCacheEntry()
+{
+    if (!mOfflineCacheEntry) {
+        return NS_OK;
+    }
+
+    if (mResponseHead->NoStore()) {
+        CloseOfflineCacheEntry();
+
+        return NS_OK;
+    }
+
+    return AddCacheEntryHeaders(mOfflineCacheEntry);
+}
+
+
+nsresult
+nsHttpChannel::AddCacheEntryHeaders(nsICacheEntryDescriptor *entry)
+{
+    nsresult rv;
+
+    // Store secure data in memory only
+    if (mSecurityInfo)
+        entry->SetSecurityInfo(mSecurityInfo);
+
     // Store the HTTP request method with the cache entry so we can distinguish
     // for example GET and HEAD responses.
-    rv = mCacheEntry->SetMetaDataElement("request-method", mRequestHead.Method().get());
+    rv = entry->SetMetaDataElement("request-method",
+                                   mRequestHead.Method().get());
     if (NS_FAILED(rv)) return rv;
 
     // Store the HTTP authorization scheme used if any...
-    rv = StoreAuthorizationMetaData();
+    rv = StoreAuthorizationMetaData(entry);
     if (NS_FAILED(rv)) return rv;
 
     // Iterate over the headers listed in the Vary response header, and
@@ -1773,7 +1980,7 @@ nsHttpChannel::InitCacheEntry()
                     if (requestVal) {
                         // build cache meta data key and set meta data element...
                         metaKey = prefix + nsDependentCString(token);
-                        mCacheEntry->SetMetaDataElement(metaKey.get(), requestVal);
+                        entry->SetMetaDataElement(metaKey.get(), requestVal);
                     }
                 }
                 token = nsCRT::strtok(val, NS_HTTP_HEADER_SEPS, &val);
@@ -1786,22 +1993,20 @@ nsHttpChannel::InitCacheEntry()
     // the meta data.
     nsCAutoString head;
     mResponseHead->Flatten(head, PR_TRUE);
-    rv = mCacheEntry->SetMetaDataElement("response-head", head.get());
-    if (NS_FAILED(rv)) return rv;
+    rv = entry->SetMetaDataElement("response-head", head.get());
 
-    mInitedCacheEntry = PR_TRUE;
-    return NS_OK;
+    return rv;
 }
 
 nsresult
-nsHttpChannel::StoreAuthorizationMetaData()
+nsHttpChannel::StoreAuthorizationMetaData(nsICacheEntryDescriptor *entry)
 {
     // Not applicable to proxy authorization...
     const char *val = mRequestHead.PeekHeader(nsHttp::Authorization);
     if (val) {
         // eg. [Basic realm="wally world"]
         nsCAutoString buf(Substring(val, strchr(val, ' ')));
-        return mCacheEntry->SetMetaDataElement("auth", buf.get());
+        return entry->SetMetaDataElement("auth", buf.get());
     }
     return NS_OK;
 }
@@ -1854,6 +2059,33 @@ nsHttpChannel::InstallCacheListener(PRUint32 offset)
     if (NS_FAILED(rv)) return rv;
 
     mListener = tee;
+    return NS_OK;
+}
+
+nsresult
+nsHttpChannel::InstallOfflineCacheListener()
+{
+    nsresult rv;
+
+    LOG(("Preparing to write data into the offline cache [uri=%s]\n",
+         mSpec.get()));
+
+    NS_ASSERTION(mOfflineCacheEntry, "no offline cache entry");
+    NS_ASSERTION(mListener, "no listener");
+
+    nsCOMPtr<nsIOutputStream> out;
+    rv = mOfflineCacheEntry->OpenOutputStream(0, getter_AddRefs(out));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIStreamListenerTee> tee =
+        do_CreateInstance(kStreamListenerTeeCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = tee->Init(mListener, out);
+    if (NS_FAILED(rv)) return rv;
+
+    mListener = tee;
+
     return NS_OK;
 }
 
@@ -4059,6 +4291,9 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     if (mCacheEntry)
         CloseCacheEntry();
 
+    if (mOfflineCacheEntry)
+        CloseOfflineCacheEntry();
+
     if (mLoadGroup)
         mLoadGroup->RemoveRequest(this, nsnull, status);
 
@@ -4255,6 +4490,23 @@ nsHttpChannel::SetCacheAsFile(PRBool value)
     else
         policy = nsICache::STORE_ANYWHERE;
     return mCacheEntry->SetStoragePolicy(policy);
+}
+
+
+NS_IMETHODIMP
+nsHttpChannel::GetCacheForOfflineUse(PRBool *value)
+{
+    *value = mCacheForOfflineUse;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetCacheForOfflineUse(PRBool value)
+{
+    mCacheForOfflineUse = value;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP

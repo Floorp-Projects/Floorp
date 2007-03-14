@@ -165,7 +165,7 @@ protected:
                                     const nsSubstring& aType,
                                     const nsSubstring& aMedia);
 
-  void PrefetchHref(const nsAString &aHref, PRBool aExplicit);
+  void PrefetchHref(const nsAString &aHref, PRBool aExplicit, PRBool aOffline);
 
   void ScrollToRef();
   nsresult RefreshIfEnabled(nsIViewManager* vm);

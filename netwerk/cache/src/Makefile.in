@@ -88,6 +88,8 @@ CPPSRCS += \
 endif
 endif
 
+LOCAL_INCLUDES=-I$(srcdir)/../../base/src
+
 include $(topsrcdir)/config/config.mk
 
 

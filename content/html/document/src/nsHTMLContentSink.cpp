@@ -2996,7 +2996,14 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
           nsAutoString hrefVal;
           element->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
           if (!hrefVal.IsEmpty()) {
-            PrefetchHref(hrefVal, hasPrefetch);
+            PrefetchHref(hrefVal, hasPrefetch, PR_FALSE);
+          }
+        }
+        if (linkTypes.IndexOf(NS_LITERAL_STRING("offline-resource")) != -1) {
+          nsAutoString hrefVal;
+          element->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
+          if (!hrefVal.IsEmpty()) {
+            PrefetchHref(hrefVal, PR_TRUE, PR_TRUE);
           }
         }
       }

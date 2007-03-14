@@ -428,10 +428,21 @@ nsHttpHandler::GetCacheSession(nsCacheStoragePolicy storagePolicy,
 
         rv = mCacheSession_MEM->SetDoomEntriesIfExpired(PR_FALSE);
         if (NS_FAILED(rv)) return rv;
+
+        rv = serv->CreateSession("HTTP-offline",
+                                 nsICache::STORE_OFFLINE,
+                                 nsICache::STREAM_BASED,
+                                 getter_AddRefs(mCacheSession_OFFLINE));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = mCacheSession_OFFLINE->SetDoomEntriesIfExpired(PR_FALSE);
+        if (NS_FAILED(rv)) return rv;
     }
 
     if (storagePolicy == nsICache::STORE_IN_MEMORY)
         NS_ADDREF(*result = mCacheSession_MEM);
+    else if (storagePolicy == nsICache::STORE_OFFLINE)
+        NS_ADDREF(*result = mCacheSession_OFFLINE);
     else
         NS_ADDREF(*result = mCacheSession_ANY);
 

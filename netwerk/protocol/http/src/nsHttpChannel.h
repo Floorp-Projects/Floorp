@@ -173,15 +173,21 @@ private:
 
     // cache specific methods
     nsresult OpenCacheEntry(PRBool offline, PRBool *delayed);
+    nsresult OpenOfflineCacheEntryForWriting();
     nsresult GenerateCacheKey(nsACString &key);
     nsresult UpdateExpirationTime();
     nsresult CheckCache();
+    nsresult ShouldUpdateOfflineCacheEntry(PRBool *shouldCacheForOfflineUse);
     nsresult ReadFromCache();
     void     CloseCacheEntry();
+    void     CloseOfflineCacheEntry();
     nsresult InitCacheEntry();
-    nsresult StoreAuthorizationMetaData();
+    nsresult InitOfflineCacheEntry();
+    nsresult AddCacheEntryHeaders(nsICacheEntryDescriptor *entry);
+    nsresult StoreAuthorizationMetaData(nsICacheEntryDescriptor *entry);
     nsresult FinalizeCacheEntry();
     nsresult InstallCacheListener(PRUint32 offset = 0);
+    nsresult InstallOfflineCacheListener();
 
     // byte range request specific methods
     nsresult SetupByteRangeRequest(PRUint32 partialLen);
@@ -247,6 +253,9 @@ private:
     PRUint32                          mPostID;
     PRUint32                          mRequestTime;
 
+    nsCOMPtr<nsICacheEntryDescriptor> mOfflineCacheEntry;
+    nsCacheAccessMode                 mOfflineCacheAccess;
+
     // auth specific data
     nsISupports                      *mProxyAuthContinuationState;
     nsCString                         mProxyAuthType;
@@ -276,6 +285,7 @@ private:
     PRUint32                          mSuppressDefensiveAuth    : 1;
     PRUint32                          mResuming                 : 1;
     PRUint32                          mInitedCacheEntry         : 1;
+    PRUint32                          mCacheForOfflineUse       : 1;
 
     class nsContentEncodings : public nsIUTF8StringEnumerator
     {

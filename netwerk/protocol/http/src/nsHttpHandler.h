@@ -269,6 +269,7 @@ private:
     // cache support
     nsCOMPtr<nsICacheSession> mCacheSession_ANY;
     nsCOMPtr<nsICacheSession> mCacheSession_MEM;
+    nsCOMPtr<nsICacheSession> mCacheSession_OFFLINE;
     PRUint32                  mLastUniqueID;
     PRUint32                  mSessionStartTime;
 

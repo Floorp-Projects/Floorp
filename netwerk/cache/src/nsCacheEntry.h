@@ -192,6 +192,11 @@ public:
             (StoragePolicy() == nsICache::STORE_ON_DISK_AS_FILE);
     }
 
+    PRBool IsAllowedOffline()
+    {
+        return (StoragePolicy() == nsICache::STORE_OFFLINE);
+    }
+
     nsCacheStoragePolicy  StoragePolicy()
     {
         return (nsCacheStoragePolicy)(mFlags & eStoragePolicyMask);
