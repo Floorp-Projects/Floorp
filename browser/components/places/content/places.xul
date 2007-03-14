@@ -67,6 +67,8 @@
   <script type="application/x-javascript"
           src="chrome://browser/content/places/places.js"/>
   
+  <stringbundleset id="stringbundleset"/>
+
   <commandset id="editMenuCommands"/>
   <commandset id="baseMenuCommandSet"/>
   <commandset id="placesCommands"/>
