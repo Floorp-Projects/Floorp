@@ -290,6 +290,10 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
   
   PRBool hdrMoved = PR_FALSE;
   nsCOMPtr <nsIMsgDBHdr> curHdr;
+  PRUint32 moveIndex = 0;
+
+  PRTime newHdrDate;
+  child->GetDate(&newHdrDate);
 
   // This is an ugly but simple fix for a difficult problem. Basically, when we add
   // a message to a thread, we have to run through the thread to see if the new
@@ -352,6 +356,15 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
             printf("adding second level child\n");
   #endif
         }
+        // Calculate a position for this child in date order
+        else if (!hdrMoved && childIndex > 0 && moveIndex == 0)
+        {
+          PRTime curHdrDate;
+          
+          curHdr->GetDate(&curHdrDate);
+          if (LL_CMP(newHdrDate, <, curHdrDate))
+            moveIndex = childIndex;
+        }
       }
     }
   }
@@ -361,20 +374,19 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
   // If it's date is less (or it's ID?), then yes.
   if (numChildren > 0 && !(newHdrFlags & MSG_FLAG_HAS_RE) && !inReplyTo)
   {
-    PRTime newHdrDate;
     PRTime topLevelHdrDate;
     
     nsCOMPtr <nsIMsgDBHdr> topLevelHdr;
     ret = GetRootHdr(nsnull, getter_AddRefs(topLevelHdr));
     if (NS_SUCCEEDED(ret) && topLevelHdr)
     {
-      child->GetDate(&newHdrDate);
       topLevelHdr->GetDate(&topLevelHdrDate);
       if (LL_CMP(newHdrDate, <, topLevelHdrDate))
       {
         RerootThread(child, topLevelHdr, announcer);
         mdb_pos outPos;
         m_mdbTable->MoveRow(m_mdbDB->GetEnv(), hdrRow, -1, 0, &outPos);
+        hdrMoved = PR_TRUE;
         topLevelHdr->SetThreadParent(newHdrKey);
         parentKeyNeedsSetting = PR_FALSE;
         // ### need to get ancestor of new hdr here too.
@@ -393,6 +405,13 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
   if (numChildren > 0 && parentKeyNeedsSetting)
     child->SetThreadParent(m_threadRootKey);
   
+  // Move child to keep thread sorted in ascending date order
+  if (!hdrMoved && moveIndex > 0)
+  {
+    mdb_pos outPos;
+    m_mdbTable->MoveRow(m_mdbDB->GetEnv(), hdrRow, -1, moveIndex, &outPos);
+  }
+
   // do this after we've put the new hdr in the thread
   if (m_flags & MSG_FLAG_IGNORED && m_mdbDB)
     m_mdbDB->MarkHdrRead(child, PR_TRUE, nsnull);
