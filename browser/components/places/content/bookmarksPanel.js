@@ -36,12 +36,6 @@
 # ***** END LICENSE BLOCK *****
 
 function init() {
-  // XXX workaround for bug #373719 caused by the fix for bug #267833
-  // move setting the "place" attribute from the tree in bookmarksPanel.xul
-  // to here, onload.  we plan on reverting this, see bug #373944
-  var tree = document.getElementById('bookmarks-view');
-  tree.place = "place:&folder=1&group=3&excludeQueries=1";
-
   document.getElementById('search-box').focus();
 }
 

@@ -53,7 +53,11 @@
         this.controllers.appendController(this._controller);
 
         // Force an initial build. 
-        this.place = this.place;
+        // but do it on setTimeout() for bugs #373719 and bug #373721
+        // caused by a change for bug #267833
+        // note the corresponding setTimeout() in PO_init()
+        var self = this;
+        setTimeout(function() { self.place = self.place; }, 0);
       ]]></constructor>
 
       <destructor><![CDATA[ 

@@ -54,14 +54,14 @@ var PlacesOrganizer = {
   _content: null,
 
   init: function PO_init() {
+    var self = this;
+    // on timteout because of the corresponding setTimeout()
+    // in the places tree binding's constructor
+    setTimeout(function() { self._init(); }, 0);
+  },
+  
+  _init: function PO__init() {
     this._places = document.getElementById("placesList");
-
-    // XXX workaround for bug #373721 caused by the fix for bug #267833
-    // move setting the "place" attribute from the tree in places.xul
-    // to here, onload.  we plan on reverting this, see bug #373944
-    this._places.place = 
-      "place:&folder=1&group=3&excludeItems=1&excludeQueries=1";
-
     this._content = document.getElementById("placeContent");
 
     OptionsFilter.init(Groupers);
@@ -71,6 +71,7 @@ var PlacesOrganizer = {
     var placeURI = "place:";
     if ("arguments" in window)
       placeURI = window.arguments[0];
+
     selectPlaceURI(placeURI);
 
     var view = this._content.treeBoxObject.view;
