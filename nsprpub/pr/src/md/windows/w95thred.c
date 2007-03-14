@@ -73,6 +73,8 @@ void _PR_MD_CLEANUP_BEFORE_EXIT(void)
 {
     _PR_NT_FreeSids();
 
+    _PR_MD_CleanupSockets();
+
     WSACleanup();
 
 #ifndef _PR_USE_STATIC_TLS
