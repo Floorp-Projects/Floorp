@@ -53,6 +53,100 @@ static PRInt32 socket_io_wait(
 
 /* --- SOCKET IO --------------------------------------------------------- */
 
+/*
+ * we only want to call WSAIoctl() on Vista and later
+ * so don't pay for it at build time (and avoid including winsock2.h)
+ */
+
+/* from ws2def.h */
+#define IOC_IN                      0x80000000      /* copy in parameters */
+#define IOC_VENDOR                  0x18000000
+#define _WSAIOW(x,y)                (IOC_IN|(x)|(y))
+/* from MSWSockDef.h */
+#define SIO_SET_COMPATIBILITY_MODE  _WSAIOW(IOC_VENDOR,300)
+
+typedef enum _WSA_COMPATIBILITY_BEHAVIOR_ID {
+    WsaBehaviorAll = 0,
+    WsaBehaviorReceiveBuffering,
+    WsaBehaviorAutoTuning
+} WSA_COMPATIBILITY_BEHAVIOR_ID, *PWSA_COMPATIBILITY_BEHAVIOR_ID;
+
+/* from sdkddkver.h */
+#define NTDDI_LONGHORN                      0x06000000
+
+/* from winsock2.h */
+#define WSAEVENT                HANDLE
+
+typedef struct _WSAOVERLAPPED {
+    DWORD    Internal;
+    DWORD    InternalHigh;
+    DWORD    Offset;
+    DWORD    OffsetHigh;
+    WSAEVENT hEvent;
+} WSAOVERLAPPED, FAR * LPWSAOVERLAPPED;
+
+typedef void (CALLBACK * LPWSAOVERLAPPED_COMPLETION_ROUTINE)(
+    IN DWORD dwError,
+    IN DWORD cbTransferred,
+    IN LPWSAOVERLAPPED lpOverlapped,
+    IN DWORD dwFlags
+);
+
+typedef int (__stdcall * WSAIOCTLPROC) (
+    SOCKET s,
+    DWORD dwIoControlCode,
+    LPVOID lpvInBuffer,
+    DWORD cbInBuffer,
+    LPVOID lpvOutBuffer,
+    DWORD cbOutBuffer,
+    LPDWORD lpcbBytesReturned,
+    LPWSAOVERLAPPED lpOverlapped,
+    LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
+);
+
+typedef struct _WSA_COMPATIBILITY_MODE {
+    WSA_COMPATIBILITY_BEHAVIOR_ID BehaviorId;
+    ULONG TargetOsVersion;
+} WSA_COMPATIBILITY_MODE, *PWSA_COMPATIBILITY_MODE;
+
+static HMODULE libWinsock2 = NULL;
+static WSAIOCTLPROC wsaioctlProc = NULL;
+static PRBool socketSetCompatMode = PR_FALSE;
+
+void _PR_MD_InitSockets(void)
+{
+    OSVERSIONINFO osvi;
+
+    memset(&osvi, 0, sizeof(osvi));
+    osvi.dwOSVersionInfoSize = sizeof(osvi);
+    GetVersionEx(&osvi);
+
+    /* if Vista or later... */
+    if (osvi.dwMajorVersion >= 6)
+    {
+        libWinsock2 = LoadLibrary("Ws2_32.dll");
+        if (libWinsock2)
+        {
+            wsaioctlProc = (WSAIOCTLPROC)GetProcAddress(libWinsock2, 
+                                                        "WSAIoctl");
+            if (wsaioctlProc)
+            {
+                socketSetCompatMode = PR_TRUE;
+            }
+        }
+    }
+}
+
+void _PR_MD_CleanupSockets(void)
+{
+    socketSetCompatMode = PR_FALSE;
+    wsaioctlProc = NULL;
+    if (libWinsock2)
+    {
+        FreeLibrary(libWinsock2);
+        libWinsock2 = NULL;
+    }
+}
 
 PROsfd
 _PR_MD_SOCKET(int af, int type, int flags)
@@ -76,6 +170,24 @@ _PR_MD_SOCKET(int af, int type, int flags)
         PR_SetError(PR_UNKNOWN_ERROR, WSAGetLastError());
         closesocket(sock);
         return -1;
+    }
+
+    if (socketSetCompatMode)
+    {
+        WSA_COMPATIBILITY_MODE mode;
+        char dummy[4];
+        int ret_dummy;
+
+        mode.BehaviorId = WsaBehaviorAutoTuning;
+        mode.TargetOsVersion = NTDDI_LONGHORN;
+        if (wsaioctlProc(sock, SIO_SET_COMPATIBILITY_MODE,  
+                         (char *)&mode, sizeof(mode),
+                         dummy, 4, &ret_dummy, 0, NULL) == SOCKET_ERROR)
+        {
+            PR_SetError(PR_UNKNOWN_ERROR, WSAGetLastError());
+            closesocket(sock);
+            return -1;
+        }
     }
 
     return (PROsfd)sock;
