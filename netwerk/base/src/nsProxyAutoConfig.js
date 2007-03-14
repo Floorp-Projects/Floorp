@@ -63,9 +63,11 @@ function myToString(thisp) {
 // This is like safeToString, except that it calls a given function with a
 // given this and arguments.
 var callFunction = null;
-function myCall(fun, thisp) {
-    var args = Array.prototype.slice.call(arguments, 2);
-    return fun.apply(thisp, args);
+function myCall(fun) {
+    var args = [];
+    for (var i = 1; i < arguments.length; i++)
+        args.push(arguments[i]);
+    return fun.apply(this, args);
 }
 
 // Like the above, except that this gets a property off of an untrusted
@@ -110,6 +112,11 @@ nsProxyAutoConfig.prototype = {
         callFunction =
             Components.utils.evalInSandbox("(" + myCall.toSource() + ")",
                                            this._sandBox);
+
+        // Clone callFunction.call onto our callFunction so that the PAC
+        // script can't monkey with Function.prototype.call and confuse us.
+        callFunction.call = Function.prototype.call;
+
         safeGetProperty =
             Components.utils.evalInSandbox("(" + myGet.toSource() + ")",
                                            this._sandBox);
@@ -130,8 +137,8 @@ nsProxyAutoConfig.prototype = {
             return null;
 
         // Call the original function
-        return callFunction(this._findProxyForURL, this._sandBox,
-                            testURI, testHost);
+        return callFunction.call(this._sandBox, this._findProxyForURL,
+                                 testURI, testHost);
     }
 }
 
