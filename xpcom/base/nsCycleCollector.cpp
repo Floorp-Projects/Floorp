@@ -552,13 +552,23 @@ public:
 ////////////////////////////////////////////////////////////////////////
 
 
-static int sCollectorConstructed = 0;
-static nsCycleCollector sCollector;
+static nsCycleCollector *sCollector = nsnull;
 
 
 ////////////////////////////////////////////////////////////////////////
 // Utility functions
 ////////////////////////////////////////////////////////////////////////
+
+
+static inline nsCycleCollector*
+getCollector()
+{
+    if (!sCollector)
+        sCollector = new nsCycleCollector;
+
+    return sCollector;
+}
+
 
 struct safetyCallback :     
     public nsCycleCollectionTraversalCallback
@@ -588,11 +598,9 @@ EnsurePtrInfo(GCTable & tab, void *n, PtrInfo & pi)
 static void
 Fault(const char *msg, const void *ptr=nsnull)
 {
-    // This should be nearly impossible, but just in case.
-    if (!sCollectorConstructed)
-        return;
+    nsCycleCollector* cc = getCollector();
 
-    if (sCollector.mParams.mFaultIsFatal) {
+    if (cc->mParams.mFaultIsFatal) {
 
         if (ptr)
             printf("Fatal fault in cycle collector: %s (ptr: %p)\n", msg, ptr);
@@ -614,22 +622,24 @@ Fault(const char *msg, const void *ptr=nsnull)
     // probably a better user experience than crashing. Besides, we
     // *should* never hit a fault.
 
-    sCollector.mParams.mDoNothing = PR_TRUE;
+    cc->mParams.mDoNothing = PR_TRUE;
 }
 
 
 void 
 GraphWalker::DescribeNode(size_t refCount, size_t objSz, const char *objName)
 {
+    nsCycleCollector* cc = getCollector();
+
     if (refCount == 0)
         Fault("zero refcount", mCurrPtr);
 
     mCurrPi.mBytes = objSz;
     mCurrPi.mName = objName;
     this->VisitNode(mCurrPtr, mCurrPi, refCount);
-    sCollector.mStats.mVisitedNode++;
+    cc->mStats.mVisitedNode++;
     if (mCurrPi.mLang == nsIProgrammingLanguage::JAVASCRIPT)
-        sCollector.mStats.mVisitedJSNode++;
+        cc->mStats.mVisitedJSNode++;
 }
 
 
@@ -714,7 +724,7 @@ GraphWalker::Walk(void *s0)
             }
         }
     }
-    sCollector.mStats.mWalkedGraph++;
+    getCollector()->mStats.mWalkedGraph++;
 }
 
 
@@ -739,7 +749,7 @@ struct MarkGreyWalker : public GraphWalker
     { 
         pi.mColor = grey; 
         pi.mRefCount = refcount;
-        sCollector.mStats.mSetColorGrey++;
+        getCollector()->mStats.mSetColorGrey++;
         mGraph.Put(p, pi);
     }
 
@@ -791,7 +801,7 @@ struct ScanBlackWalker : public GraphWalker
     void VisitNode(void *p, PtrInfo & pi, size_t refcount) 
     { 
         pi.mColor = black; 
-        sCollector.mStats.mSetColorBlack++;
+        getCollector()->mStats.mSetColorBlack++;
         mGraph.Put(p, pi);
     }
 
@@ -813,6 +823,8 @@ struct scanWalker : public GraphWalker
 
     void VisitNode(void *p, PtrInfo & pi, size_t refcount) 
     {
+        nsCycleCollector* cc = getCollector();
+
         if (pi.mColor != grey)
             Fault("scanning non-grey node", p);
 
@@ -821,11 +833,11 @@ struct scanWalker : public GraphWalker
 
         if (pi.mInternalRefs == refcount) {
             pi.mColor = white;
-            sCollector.mStats.mSetColorWhite++;
+            cc->mStats.mSetColorWhite++;
         } else {
             ScanBlackWalker(mGraph, mRuntimes).Walk(p);
             pi.mColor = black;
-            sCollector.mStats.mSetColorBlack++;
+            cc->mStats.mSetColorBlack++;
         }
         mGraph.Put(p, pi);
     }
@@ -990,7 +1002,7 @@ struct nsCycleCollectionXPCOMRuntime :
             return NS_ERROR_FAILURE;
         }
 
-        sCollector.mStats.mSuccessfulQI++;
+        getCollector()->mStats.mSuccessfulQI++;
 
         rv = cp->Traverse(s, cb);
         if (NS_FAILED(rv)) {
@@ -1026,7 +1038,7 @@ struct nsCycleCollectionXPCOMRuntime :
                 return NS_ERROR_FAILURE;
             }
 
-            sCollector.mStats.mSuccessfulQI++;
+            getCollector()->mStats.mSuccessfulQI++;
             rv = cp->Unlink(s);
 
             if (NS_FAILED(rv)) {
@@ -1216,17 +1228,16 @@ install_new_hooks()
 static void*
 my_realloc_hook(void *ptr, size_t size, const void *caller)
 {
-    void *result;    
+    void *result;
+    nsCycleCollector* cc = getCollector();
 
     install_old_hooks();
     result = realloc(ptr, size);
     save_old_hooks();
 
-    if (sCollectorConstructed)
-        sCollector.Freed(ptr);
+    cc->Freed(ptr);
 
-    if (sCollectorConstructed)
-        sCollector.Allocated(result, size);
+    cc->Allocated(result, size);
 
     install_new_hooks();
 
@@ -1243,8 +1254,7 @@ my_memalign_hook(size_t size, size_t alignment, const void *caller)
     result = memalign(size, alignment);
     save_old_hooks();
 
-    if (sCollectorConstructed)
-        sCollector.Allocated(result, size);
+    getCollector()->Allocated(result, size);
 
     install_new_hooks();
 
@@ -1259,8 +1269,7 @@ my_free_hook (void *ptr, const void *caller)
     free(ptr);
     save_old_hooks();
 
-    if (sCollectorConstructed)
-        sCollector.Freed(ptr);
+    getCollector()->Freed(ptr);
 
     install_new_hooks();
 }      
@@ -1275,8 +1284,7 @@ my_malloc_hook (size_t size, const void *caller)
     result = malloc (size);
     save_old_hooks();
 
-    if (sCollectorConstructed)
-        sCollector.Allocated(result, size);
+    getCollector()->Allocated(result, size);
 
     install_new_hooks();
 
@@ -1303,7 +1311,7 @@ AllocHook(int allocType, void *userData, size_t size, int
           lineNumber)
 {
     if (allocType == _HOOK_FREE)
-        sCollector.Freed(userData);
+        getCollector()->Freed(userData);
     return 1;
 }
 
@@ -1326,7 +1334,7 @@ static void (*old_free)(struct _malloc_zone_t *zone, void *ptr);
 static void
 freehook(struct _malloc_zone_t *zone, void *ptr)
 {
-    sCollector.Freed(ptr);
+    getCollector()->Freed(ptr);
     old_free(zone, ptr);
 }
 
@@ -1377,14 +1385,13 @@ nsCycleCollector::nsCycleCollector() :
 
     mRuntimes[nsIProgrammingLanguage::CPLUSPLUS] 
         = new nsCycleCollectionXPCOMRuntime();
-
-    sCollectorConstructed = 1;
 }
 
 
 nsCycleCollector::~nsCycleCollector()
 {
-    sCollectorConstructed = 0;
+    if (this == sCollector)
+        sCollector = nsnull;
 
     mGraph.Clear();    
 
@@ -1829,78 +1836,54 @@ void
 nsCycleCollector_registerRuntime(PRUint32 langID, 
                                  nsCycleCollectionLanguageRuntime *rt)
 {
-    if (sCollectorConstructed == 0)
-        return;
-
-    sCollector.RegisterRuntime(langID, rt);
+    getCollector()->RegisterRuntime(langID, rt);
 }
 
 
 void 
 nsCycleCollector_forgetRuntime(PRUint32 langID)
 {
-    if (sCollectorConstructed == 0)
-        return;
-
-    sCollector.ForgetRuntime(langID);
+    getCollector()->ForgetRuntime(langID);
 }
 
 
 void 
 nsCycleCollector_suspect(nsISupports *n)
 {
-    if (sCollectorConstructed == 0)
-        return;
-    
-    sCollector.Suspect(n);
+    getCollector()->Suspect(n);
 }
 
 
 void 
 nsCycleCollector_forget(nsISupports *n)
 {
-    if (sCollectorConstructed == 0)
-        return;
-
-    sCollector.Forget(n);
+    getCollector()->Forget(n);
 }
 
 
 void 
 nsCycleCollector_collect()
 {
-    if (sCollectorConstructed == 0)
-        return;
-
-    sCollector.Collect();
+    getCollector()->Collect();
 }
 
 void 
 nsCycleCollector_shutdown()
 {
-    if (sCollectorConstructed == 0)
-        return;
-
-    sCollector.Shutdown();
+    getCollector()->Shutdown();
 }
 
 #ifdef DEBUG
 void
 nsCycleCollector_DEBUG_shouldBeFreed(nsISupports *n)
 {
-    if (sCollectorConstructed == 0)
-        return;
-    
-    sCollector.ShouldBeFreed(n);
+    getCollector()->ShouldBeFreed(n);
 }
 
 void
 nsCycleCollector_DEBUG_wasFreed(nsISupports *n)
 {
-    if (sCollectorConstructed == 0)
-        return;
-    
-    sCollector.WasFreed(n);
+    getCollector()->WasFreed(n);
 }
 #endif
 
@@ -1914,7 +1897,7 @@ nsCycleCollector_isScanSafe(nsISupports *s)
 
     nsCOMPtr<nsCycleCollectionParticipant> cp = do_QueryInterface(s, &rv);
     if (NS_FAILED(rv)) {
-        sCollector.mStats.mFailedQI++;
+        getCollector()->mStats.mFailedQI++;
         return PR_FALSE;
     }
 
