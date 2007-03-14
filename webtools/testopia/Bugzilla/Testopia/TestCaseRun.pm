@@ -658,23 +658,31 @@ passed it will mark RESOLVED bugs VERIFIED.
 sub update_bugs {
     my $self = shift;
     my ($status) = @_;
+    my $resolution;
     my $dbh = Bugzilla->dbh;
     my $timestamp = Bugzilla::Testopia::Util::get_time_stamp();
     foreach my $bug (@{$self->bugs}){
         my $oldstatus = $bug->bug_status;
+        my $oldresolution = $bug->resolution;
         
-        return if ($status eq 'VERIFIED' && $oldstatus ne 'RESOLVED');
-        return if ($status eq 'REOPENED' && $oldstatus !~ /(RESOLVED|VERIFIED|CLOSED)/);
-        
+        next if ($status eq 'VERIFIED' && $oldstatus ne 'RESOLVED');
+        next if ($status eq 'REOPENED' && $oldstatus !~ /(RESOLVED|VERIFIED|CLOSED)/);
+        if ($status eq 'REOPENED'){
+            $resolution = '';
+        }
+        else{
+            $resolution = $oldresolution;
+        }
         my $comment  = "Status updated by Testopia:  ". Param('urlbase');
            $comment .= "tr_show_caserun.cgi?caserun_id=" . $self->id;
-            
+          
         $dbh->bz_lock_tables("bugs WRITE, fielddefs READ, longdescs WRITE, bugs_activity WRITE");
         $dbh->do("UPDATE bugs 
                      SET bug_status = ?,
+                        resolution = ?,
                          delta_ts = ?
                      WHERE bug_id = ?", 
-                     undef,($status, $timestamp, $bug->bug_id));
+                     undef,($status, $resolution, $timestamp, $bug->bug_id));
         LogActivityEntry($bug->bug_id, 'bug_status', $oldstatus, 
                          $status, Bugzilla->user->id, $timestamp);
         LogActivityEntry($bug->bug_id, 'resolution', $bug->resolution, '', 

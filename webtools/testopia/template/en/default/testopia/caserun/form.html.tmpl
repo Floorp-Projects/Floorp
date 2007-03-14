@@ -34,9 +34,9 @@
       }
     );
   </script>
-[% IF NOT run %]
+[% IF single %]
   [% build_list = caserun.run.plan.product.builds(1) %]
-  [% default_build = caserun.build.name %]
+  [% default_build = caserun.build.id %]
 [% ELSE %]
   [% default_build = "--Do Not Change--" %]
 [% END %]
@@ -156,14 +156,16 @@
     [% END %]
   </table>
   </td>
-    <td colspan="2" align="center">
+    <td colspan="2" align="center" valign="top">
     <table>
+    [% IF single %]
       <tr>
         <th class="bz_row_header">Notes</th>
       </tr>
       <tr>
         <td><div style="height:200px; width: 600px; border: 1px solid #000; overflow: auto; background-color: #f8f8f8"><pre>[% caserun.notes FILTER html %]</pre></div></td>
       </tr>
+    [% END %]
       <tr>
         <th class="bz_row_header">Append a New Note</th>
       </tr>

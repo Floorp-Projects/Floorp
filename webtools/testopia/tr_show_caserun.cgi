@@ -385,6 +385,7 @@ sub display {
     $vars->{'caserun'} = $caserun;
     $vars->{'action'} = 'tr_show_caserun.cgi';
     $vars->{'run'} = $caserun->run;
+    $vars->{'single'} = 1;
     $template->process("testopia/caserun/show.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
 }
