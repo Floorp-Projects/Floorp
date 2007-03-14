@@ -99,7 +99,7 @@ elsif ($action eq 'Attach'){
 
 elsif ($action eq 'delete'){
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
-    ThrowUserError("testopia-read-only", {'object' => 'case run'}) if !$caserun->candelete;
+    ThrowUserError("testopia-no-delete", {'object' => $caserun}) if !$caserun->candelete;
     $vars->{'title'} = 'Remove Test Case '. $caserun->case->id .' from Run: ' . $caserun->run->summary;
     $vars->{'bugcount'} = scalar @{$caserun->bugs};
     $vars->{'form_action'} = 'tr_show_caserun.cgi';
@@ -109,7 +109,7 @@ elsif ($action eq 'delete'){
 }
 elsif ($action eq 'do_delete'){
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
-    ThrowUserError("testopia-read-only", {'object' => 'case run'}) if !$caserun->candelete;
+    ThrowUserError("testopia-no-delete", {'object' => $caserun}) if !$caserun->candelete;
     $caserun->obliterate;
 
     # See if there is a saved filter

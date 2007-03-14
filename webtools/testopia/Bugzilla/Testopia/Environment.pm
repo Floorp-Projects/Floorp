@@ -768,6 +768,13 @@ sub case_run_count {
           
     return $count;
 }
+
+sub type {
+    my $self = shift;
+    $self->{'type'} = 'environment';
+    return $self->{'type'};
+}
+
 =head1 TODO
 
 

@@ -153,7 +153,7 @@ sub parse() {
     my $product_name = $root->{'att'}->{'product'};
     my $product_id;
     if (lc($product_name) eq "--all--") {
-        $self->{'message'} .= "..Using the <U>--ALL--</U> <STRONG>PRODUCT</STRONG>.<BR />";
+        $self->{'message'} .= "..Using the <U>--ANY PRODUCT--</U> <STRONG>PRODUCT</STRONG>.<BR />";
         $product_id = 0;
     }
     else {
@@ -535,7 +535,7 @@ sub get_root_parent {
     my $self = shift;
     my ($element) = @_;
     my $parent = $element->get_parent(); 
-    if (!$parent) {
+    if ($parent->type eq 'env_category') {
         return $element;
     }
     else {

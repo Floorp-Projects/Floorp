@@ -67,6 +67,8 @@ elsif ($action eq 'do_add'){
     my $desc  = $cgi->param('desc');
     my $tm    = $cgi->param('milestone');
     
+    ThrowUserError('testopia-missing-required-field', {'field' => 'build name'}) unless $cname;
+    
     trick_taint($cname);
     trick_taint($desc);
     trick_taint($tm);
@@ -104,6 +106,8 @@ elsif ($action eq 'do_edit'){
     my $desc  = $cgi->param('desc');
     my $milestone  = $cgi->param('milestone');
     my $bid   = $cgi->param('build_id');
+    
+    ThrowUserError('testopia-missing-required-field', {'field' => 'build name'}) unless $cname;
     
     my $build = Bugzilla::Testopia::Build->new($bid);
     

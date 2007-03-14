@@ -32,11 +32,10 @@
     <td valign="top">[% cat.name FILTER html %]</td>
     <td valign="top">[% cat.description FILTER html %]</td>
     <td valign="top">
-    <a href="tr_categories.cgi?action=edit&amp;category_id=[% cat.id FILTER none %]&amp;plan_id=[% plan_id FILTER none %]&amp;product_id=[% product.id FILTER none %]">Edit</a>  
-      [% IF cat.candelete %]
-      &nbsp;|&nbsp;
-      <a href="tr_categories.cgi?action=delete&amp;category_id=[% cat.id FILTER none %]&amp;plan_id=[% plan_id FILTER none %]&amp;product_id=[% product.id FILTER none %]">Delete</a>
-      [% END %]
+    <a href="tr_categories.cgi?action=edit&amp;category_id=[% cat.id FILTER none %]&amp;plan_id=[% plan_id FILTER none %]&amp;product_id=[% product.id FILTER none %]">Edit</a>
+[%- IF cat.candelete -%]
+&nbsp;|&nbsp;<a href="tr_categories.cgi?action=delete&amp;category_id=[% cat.id FILTER none %]&amp;plan_id=[% plan_id FILTER none %]&amp;product_id=[% product.id FILTER none %]">Delete</a>
+[%- END %]
     </td>
   </tr>
 [% END %]

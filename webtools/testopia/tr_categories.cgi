@@ -66,6 +66,8 @@ elsif ($action eq 'do_add'){
     my $cname = $cgi->param('name');
     my $desc  = $cgi->param('desc');
     
+    ThrowUserError('testopia-missing-required-field', {'field' => 'category name'}) unless $cname;
+    
     trick_taint($cname);
     trick_taint($desc);
 
@@ -99,6 +101,8 @@ elsif ($action eq 'do_edit'){
     my $desc  = $cgi->param('desc');
     my $cid   = $cgi->param('category_id');
     my $category = Bugzilla::Testopia::Category->new($cid);
+    
+    ThrowUserError('testopia-missing-required-field', {'field' => 'category name'}) unless $cname;
     
     trick_taint($cname);
     trick_taint($desc);

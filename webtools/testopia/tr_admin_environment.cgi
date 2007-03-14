@@ -228,8 +228,11 @@ sub get_products{
 
 sub get_categories{
     my ($product_id) = (@_);
+    if ($product_id){
+        my $product = Bugzilla::Testopia::Product->new($product_id);
+        return unless $product->canedit;
+    }
     my $category = Bugzilla::Testopia::Environment::Category->new({});
-    return unless $category->canedit;
     print $category->product_categories_to_json($product_id);
 }
 
@@ -269,7 +272,7 @@ sub edit_category{
 
     $vars->{'category'} = $category;
     $vars->{'products'} = $category->get_env_product_list;
-    $vars->{'currentproduct'} = $product ? $product : {'id' => 0, 'name' => '--ALL--'};
+    $vars->{'currentproduct'} = $product ? $product : {'id' => 0, 'name' => '--ANY PRODUCT--'};
     $template->process("testopia/environment/admin/category.html.tmpl", $vars)
         || print $template->error();
 }
@@ -286,7 +289,7 @@ sub edit_element{
     
     $vars->{'element'} = $element;
     $vars->{'products'} = $category->get_env_product_list;
-    $vars->{'currentproduct'} = $product ? $product : {'id' => 0, 'name' => '--ALL--'};
+    $vars->{'currentproduct'} = $product ? $product : {'id' => 0, 'name' => '--ANY PRODUCT--'};
     $vars->{'currentcategory'} = $category;
     $vars->{'categories'} = $category->get_element_categories_by_product($product->{'id'});
     unless($element->parent_id() == 0){
@@ -538,7 +541,7 @@ sub add_validexp{
     my $json .= '{title: "<span style=\'color:blue\'>New value</span>",';
     $json    .=  'objectId:"' . $id . '~New Value",';
     $json    .=  'widgetId:"validexp' . $id . '~New Value",';
-    $json    .=  'actionsDisabled:["addCategory","addElement","addProperty","addValue"]}';
+    $json    .=  'actionsDisabled:["addCategory","addElement","addProperty","addValue","remove"]}';
 
     print $json;
 }

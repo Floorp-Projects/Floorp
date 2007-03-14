@@ -757,16 +757,24 @@ sub derive_regexp_testers {
     my $plan_add = $dbh->prepare("INSERT INTO test_plan_permissions
                                  (userid, plan_id, permissions, grant_type)
                                  VALUES (?,?,?,?)");
+    my $plan_update = $dbh->prepare("UPDATE test_plan_permissions
+                                 SET permissions = ? 
+                                 WHERE userid = ? AND plan_id = ? AND grant_type = ?");
     my $plan_del = $dbh->prepare("DELETE FROM test_plan_permissions
-                                 WHERE user_id = ? AND plan_id = ?
+                                 WHERE userid = ? AND plan_id = ?
                                  AND grant_type = ?");
     $sth->execute($self->id, GRANT_REGEXP);
     while (my ($userid, $login, $present) = $sth->fetchrow_array()) {
         if (($regexp =~ /\S+/) && ($login =~ m/$regexp/i)){
-            $plan_add->execute($userid, $self->id, $permissions, GRANT_REGEXP) unless $present;
+            if ($present){
+                $plan_update->execute($permissions, $userid, $self->id, GRANT_REGEXP)
+            }
+            else {
+                $plan_add->execute($userid, $self->id, $permissions, GRANT_REGEXP)
+            } 
         }
         else {
-            $plan_del->execute($userid, $self->id, $permissions, GRANT_REGEXP) if $present;
+            $plan_del->execute($userid, $self->id, GRANT_REGEXP) if $present;
         }
     }
 

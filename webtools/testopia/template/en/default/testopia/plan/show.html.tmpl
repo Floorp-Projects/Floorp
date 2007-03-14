@@ -174,8 +174,7 @@
   </tr>
   <tr>
     <td align="left">
-    [% PROCESS select sel = { name      => 'category',
-                              list      => plan.product.categories
+    [% PROCESS select sel = { list      => plan.product.categories
                               accesskey => 'c'
                               elements  => 7 } %]
     <br>
@@ -190,8 +189,7 @@
     </div>
     </td>
     <td align="right">
-    [% PROCESS select sel = { name      => 'build',
-                              list      => plan.product.builds
+    [% PROCESS select sel = { list      => plan.product.builds
                               accesskey => 'b'
                               elements  => 7 } %]
     <br>

@@ -295,7 +295,7 @@ elsif ($action eq 'Attach'){
 elsif ($action eq 'Delete'){
     print $cgi->header;
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-    ThrowUserError("testopia-no-delete", {'object' => 'plan'}) unless $plan->candelete;
+    ThrowUserError("testopia-no-delete", {'object' => $plan}) unless $plan->candelete;
     $vars->{'plan'} = $plan;
     $template->process("testopia/plan/delete.html.tmpl", $vars) ||
         ThrowTemplateError($template->error());
@@ -305,7 +305,7 @@ elsif ($action eq 'do_delete'){
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     unless ($plan->candelete){
         print $cgi->header;
-        ThrowUserError("testopia-no-delete", {'object' => 'plan'});
+        ThrowUserError("testopia-no-delete", {'object' => $plan});
     }
     if ($serverpush) {
         print $cgi->multipart_init();

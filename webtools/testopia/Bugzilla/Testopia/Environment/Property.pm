@@ -375,4 +375,17 @@ sub name            { return $_[0]->{'name'}; }
 sub validexp        { return $_[0]->{'validexp'}; }
 sub element_id      { return $_[0]->{'element_id'}; }
 
+
+=head2 type
+
+Returns 'property'
+
+=cut
+
+sub type {
+    my $self = shift;
+    $self->{'type'} = 'property';
+    return $self->{'type'};
+}
+
 1;

@@ -46,7 +46,7 @@
 </table>
 <br>
   [% IF user.in_group('Testers') %]
-  <a href="tr_builds.cgi?action=add&amp;product_id=[% product_id FILTER html %]&plan_id=[% plan_id FILTER url_quote %]">Add new</a>
+  <a href="tr_builds.cgi?action=add&amp;product_id=[% product.id FILTER html %]&plan_id=[% plan_id FILTER url_quote %]">Add new</a>
   [% END %]
 [% IF plan_id %]
 <p>  

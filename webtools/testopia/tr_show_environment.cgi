@@ -65,7 +65,7 @@ unless ($env_id || $action){
 
 if ($action eq 'delete'){
     my $env = Bugzilla::Testopia::Environment->new($env_id);
-    ThrowUserError('testopia-no-delete', {'object' => 'Environment'}) unless $env->candelete;
+    ThrowUserError('testopia-no-delete', {'object' => $env}) unless $env->candelete;
     $vars->{'environment'} = $env;
     $template->process("testopia/environment/delete.html.tmpl", $vars)
         || print $template->error();
@@ -74,7 +74,7 @@ if ($action eq 'delete'){
 
 elsif ($action eq 'do_delete'){
     my $env = Bugzilla::Testopia::Environment->new($env_id);
-    ThrowUserError('testopia-no-delete', {'object' => 'Environment'}) unless $env->candelete;
+    ThrowUserError('testopia-no-delete', {'object' => $env}) unless $env->candelete;
     $env->obliterate;
     $vars->{'tr_message'} = "Environment Deleted";
     $vars->{'deleted'} = 1;
@@ -85,7 +85,7 @@ elsif ($action eq 'do_delete'){
 
 elsif ($action eq 'hide' || $action eq 'unhide'){
     my $env = Bugzilla::Testopia::Environment->new($env_id);
-    ThrowUserError('testopia-read-only', {'object' => 'Build'}) unless $env->canedit;
+    ThrowUserError('testopia-read-only', {'object' => $env}) unless $env->canedit;
     $env->toggle_archive;
     display();
 }

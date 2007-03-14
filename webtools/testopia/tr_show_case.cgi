@@ -278,7 +278,7 @@ elsif ($action eq 'detach_bug'){
 }
 elsif ($action eq 'Delete'){
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
-    ThrowUserError("testopia-read-only", {'object' => 'case'}) unless $case->candelete;
+    ThrowUserError("testopia-no-delete", {'object' => $case}) unless $case->candelete;
     $vars->{'case'} = $case;
     $vars->{'runcount'} = scalar @{$case->runs};
     $vars->{'plancount'} = scalar @{$case->plans};
@@ -289,7 +289,7 @@ elsif ($action eq 'Delete'){
 }
 elsif ($action eq 'do_delete'){
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
-    ThrowUserError("testopia-read-only", {'object' => 'case'}) unless $case->candelete;
+    ThrowUserError("testopia-no-delete", {'object' => $case}) unless $case->candelete;
     $case->obliterate;
     $vars->{'deleted'} = 1;
     $template->process("testopia/case/delete.html.tmpl", $vars) ||

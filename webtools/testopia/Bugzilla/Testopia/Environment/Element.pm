@@ -434,7 +434,7 @@ sub obliterate {
 
 sub canedit {
     my $self = shift;
-    return 1 if $self->product->canedit;
+    return 1 if $self->get_parent->canedit;
     return 0;
 }
 
@@ -481,7 +481,16 @@ sub product_id      { return $_[0]->{'product_id'}; }
 sub env_category_id { return $_[0]->{'env_category_id'}; }
 sub parent_id       { return $_[0]->{'parent_id'}; }
 sub isprivate       { return $_[0]->{'isprivate'}; }
-sub get_parent      { return $_[0]->new($_[0]->{'parent_id'}); }
+
+sub get_parent {
+    my $self = shift;
+    if ($self->{'parent_id'}){
+        return $self->new($self->{'parent_id'});
+    }
+    else {
+        return Bugzilla::Testopia::Environment::Category->new($self->{'env_category_id'});
+    }
+}
 
 sub product {
     my $self = shift;
@@ -490,4 +499,16 @@ sub product {
     return $self->{'product'};
 }
 
+
+=head2 type
+
+Returns 'element'
+
+=cut
+
+sub type {
+    my $self = shift;
+    $self->{'type'} = 'element';
+    return $self->{'type'};
+}
 1;

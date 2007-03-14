@@ -53,7 +53,7 @@
           load:     function(type, data, evt){
                           hostDiv.innerHTML = data;
                       },
-          error:     function(type, error){ alert(error.message);},
+          error:     function(type, error){ dojo.debug(error.message);},
           mimetype:    "text/html"
       });
     }
@@ -88,7 +88,7 @@
           load:     function(type, data, evt){
                           hostDiv.innerHTML = data;
                       },
-          error:     function(type, error){ alert(error.message);},
+          error:     function(type, error){ dojo.debug(error.message);},
           mimetype:    "text/html"
       });
     }
@@ -232,6 +232,8 @@
    {
        var exp_list = document.getElementById("valid_exp");
        lastIndex = exp_list.selectedIndex;
+       document.getElementById('text_exp_value').value = exp_list.value;
+       
    }
    
    function submit_valid_exp()
@@ -277,7 +279,7 @@
                           target.disabled = false;
                           dojo.byId('element_submit').disabled = false;
                       },
-          error:     function(type, error){ alert(error.message);},
+          error:     function(type, error){ dojo.debug(error.message);},
           mimetype:    "text/plain"
       });
     }
@@ -303,7 +305,7 @@
                           elem.disabled = false;
                           target.disabled = false;                         
                       },
-          error:     function(type, error){ alert(error.message);},
+          error:     function(type, error){ dojo.debug(error.message);},
           mimetype:    "text/html"
       });
     }
@@ -365,7 +367,7 @@ function updateCategory(){
                         cat.edit({title: data.name});
                         tree.move(cat,newParent,0);
                       },
-          error:     function(type, error){ alert(error.message);},
+          error:     function(type, error){ dojo.debug(error.message);},
           mimetype:    "text/json"
     });
 }
@@ -388,7 +390,7 @@ function updateElement(){
                         obj.edit({title: data.name});
                         tree.move(obj,newParent,0);
                       },
-          error:     function(type, error){ alert(error.message);},
+          error:     function(type, error){ dojo.debug(error.message);},
           mimetype:    "text/json"
     });
 }
@@ -411,7 +413,7 @@ function updateProperty(){
                         obj.edit({title: data.name});
                         tree.move(obj,newParent,0);
                       },
-          error:     function(type, error){ alert(error.message);},
+          error:     function(type, error){ dojo.debug(error.message);},
           mimetype:    "text/json"
     });
 }
@@ -437,7 +439,7 @@ function updateProperty(){
                  controller="treeController">
                  [% IF type == 'classification' %]
                     <div dojoType="TreeNode" 
-                         title="--ALL--" 
+                         title="--ANY PRODUCT--" 
                          widgetId="product0" 
                          objectId="0" 
                          actionsDisabled="remove;edit;addElement;addProperty;addValue" 

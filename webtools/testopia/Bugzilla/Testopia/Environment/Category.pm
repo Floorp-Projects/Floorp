@@ -44,6 +44,7 @@ use Bugzilla::Error;
 use Bugzilla::Config;
 use Bugzilla::User;
 use Bugzilla::Constants;
+use Bugzilla::Testopia::Environment::Element;
 use Bugzilla::Testopia::Product;
 
 ###############################
@@ -254,7 +255,7 @@ sub get_env_product_list{
     else{
         $ref = $dbh->selectall_arrayref($query, {'Slice' => {}});
     }
-    unshift @$ref, {'id' => 0, 'name' => '--ALL--', 'cat_count' => $self->get_all_child_count };
+    unshift @$ref, {'id' => 0, 'name' => '--ANY PRODUCT--', 'cat_count' => $self->get_all_child_count };
     return $ref;
                 
 }
@@ -474,11 +475,11 @@ sub obliterate {
     my $self = shift;
 	my $dbh = Bugzilla->dbh;
 	my $children = $dbh->selectcol_arrayref(
-	   "SELECT element_id FROM test_environment_elements 
+	   "SELECT element_id FROM test_environment_element 
 	     WHERE env_category_id = ?", undef, $self->id);
 	     
     foreach my $id (@$children){
-        my $element = Bugzilla::Testopia::Envrionment::Element->new($id);
+        my $element = Bugzilla::Testopia::Environment::Element->new($id);
         $element->obliterate;
     } 
     $dbh->do("DELETE FROM test_environment_category WHERE env_category_id = ?", undef, $self->id);
@@ -488,6 +489,10 @@ sub obliterate {
 
 sub canedit {
     my $self = shift;
+    if ($self->product_id == 0){
+        return 1 if Bugzilla->user->in_group('Testers');
+        return 0;
+    }
     return 1 if $self->product->canedit;
     return 0;
 }
@@ -528,9 +533,20 @@ sub product_id      { return $_[0]->{'product_id'}; }
 
 sub product {
     my $self = shift;
-    return $self->{'product'} if exists $self->{'product'}; 
+    
     $self->{'product'} = Bugzilla::Testopia::Product->new($self->product_id);
     return $self->{'product'};
 }
 
+=head2 type
+
+Returns 'env_category'
+
+=cut
+
+sub type {
+    my $self = shift;
+    $self->{'type'} = 'env_category';
+    return $self->{'type'};
+}
 1;

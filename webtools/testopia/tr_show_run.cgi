@@ -298,7 +298,7 @@ elsif ($action eq 'removecc'){
 elsif ($action eq 'Delete'){
     print $cgi->header;
     my $run = Bugzilla::Testopia::TestRun->new($run_id);
-    ThrowUserError("testopia-read-only", {'object' => 'run'}) unless $run->candelete;
+    ThrowUserError("testopia-no-delete", {'object' => 'run'}) unless $run->candelete;
     $vars->{'run'} = $run;
     
     $template->process("testopia/run/delete.html.tmpl", $vars) ||
@@ -309,7 +309,7 @@ elsif ($action eq 'do_delete'){
     my $run = Bugzilla::Testopia::TestRun->new($run_id);
     unless ($run->candelete){
         print $cgi->header;
-        ThrowUserError("testopia-read-only", {'object' => 'run'});
+        ThrowUserError("testopia-no-delete", {'object' => 'run'});
     }
     if ($serverpush) {
         print $cgi->multipart_init();

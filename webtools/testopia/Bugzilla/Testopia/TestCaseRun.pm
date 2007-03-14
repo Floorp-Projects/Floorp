@@ -302,18 +302,18 @@ sub switch {
        $self = Bugzilla::Testopia::TestCaseRun->new($self->clone($build_id,$env_id));
        
        if ($oldbuild != $build_id){
-           my $build = Bugzilla::Testopia::Build->new($build_id);
+           my $build = Bugzilla::Testopia::Build->new($oldbuild);
            my $note  = "Build Changed by ". Bugzilla->user->login; 
-              $note .= ". Old build: '". $self->build->name;
-              $note .= "' New build: '". $build->name;
+              $note .= ". Old build: '". $build->name;
+              $note .= "' New build: '". $self->build->name;
               $note .= "'. Resetting to IDLE.";
            $self->append_note($note);
        }
        if ($oldenv != $env_id){
-           my $environment = Bugzilla::Testopia::Environment->new($env_id);
+           my $environment = Bugzilla::Testopia::Environment->new($oldenv);
            my $note  = "Environment Changed by ". Bugzilla->user->login;
-              $note .= ". Old environment: '". $self->environment->name;
-              $note .= "' New environment: '". $environment->name;
+              $note .= ". Old environment: '". $environment->name;
+              $note .= "' New environment: '". $self->environment->name;
               $note .= "'. Resetting to IDLE.";
            $self->append_note($note);
        }

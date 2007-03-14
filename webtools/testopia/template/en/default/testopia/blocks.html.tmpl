@@ -31,7 +31,7 @@
       [%- sel.events IF sel.events %] 
       [%- sel.style IF sel.style %]>
       [% FOREACH item = sel.list %]
-        <option value="[% sel.byname ? item.name : item.id FILTER html %]" [% 'selected="selected"' IF (sel.default == item.name) || (sel.default == item.id || sel.default == 'all') %][% 'selected="selected"' IF (sel.deflist == 1 AND lsearch(sel.default, item.id)> -1) %]>
+        <option value="[% sel.byname ? item.name : item.id FILTER html %]" [% 'selected="selected"' IF (sel.default == item.name && item.name != '') || (sel.default == item.id || sel.default == 'all') %][% 'selected="selected"' IF (sel.deflist == 1 AND lsearch(sel.default, item.id)> -1) %]>
           [% item.name FILTER html %]</option>
       [% END %]
       </select>

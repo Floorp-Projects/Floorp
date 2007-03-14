@@ -26,10 +26,12 @@
     You are not authorized to edit [% object FILTER html %]&nbsp;[% id FILTER html %]
   [% ELSIF error == "testopia-no-delete" %]
     [% title = "Insufficient Permissions" %]
-    You are not authorized to delete this [% object FILTER html %]
+    You are not authorized to delete [% object.type FILTER html %] [% object.id FILTER html %]
+    [% IF UserInGroup('admin') %]
     If you are the administrator, you can check that your installation
     allows deletion of Testopia objects in the 
     <a href="editparams.cgi">paramaters </a>.
+    [% END %]
   [% ELSIF error == "testopia-create-denied" %]
     [% title = "Cannot Create Object" %]
     You do not have sufficient rights to create new [% object FILTER html %]s 
