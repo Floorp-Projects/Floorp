@@ -279,6 +279,8 @@ protected:
   static jsval sOnmousemove_id;
   static jsval sOnfocus_id;
   static jsval sOnblur_id;
+  static jsval sOnonline_id;
+  static jsval sOnoffline_id;
   static jsval sOnsubmit_id;
   static jsval sOnreset_id;
   static jsval sOnchange_id;
