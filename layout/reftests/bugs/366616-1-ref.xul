@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window id="test-canvas" title="Canvas in XUL test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml" onload="workWithCanvas();">
+  <box style="width: 100px; height: 100px; max-width: 100px; max-height: 100px; background: red"/>
+</window>
