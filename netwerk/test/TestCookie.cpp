@@ -80,6 +80,25 @@ SetACookie(nsICookieService *aCookieService, const char *aSpec1, const char *aSp
     return rv;
 }
 
+nsresult
+SetACookieNoHttp(nsICookieService *aCookieService, const char *aSpec, const char* aCookieString)
+{
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), aSpec);
+
+    printf("    for host \"%s\": SET ", aSpec);
+    nsresult rv = aCookieService->SetCookieString(uri, nsnull, (char *)aCookieString, nsnull);
+    // the following code is useless. the cookieservice blindly returns NS_OK
+    // from SetCookieString. we have to call GetCookie to see if the cookie was
+    // set correctly...
+    if (NS_FAILED(rv)) {
+        printf("nothing\n");
+    } else {
+        printf("\"%s\"\n", aCookieString);
+    }
+    return rv;
+}
+
 // returns PR_TRUE if cookie(s) for the given host were found; else PR_FALSE.
 // the cookie string is returned via aCookie.
 PRBool
@@ -101,11 +120,31 @@ GetACookie(nsICookieService *aCookieService, const char *aSpec1, const char *aSp
     return *aCookie != nsnull;
 }
 
+// returns PR_TRUE if cookie(s) for the given host were found; else PR_FALSE.
+// the cookie string is returned via aCookie.
+PRBool
+GetACookieNoHttp(nsICookieService *aCookieService, const char *aSpec, char **aCookie)
+{
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), aSpec);
+
+    printf("             \"%s\": GOT ", aSpec);
+    nsresult rv = aCookieService->GetCookieString(uri, nsnull, aCookie);
+    if (NS_FAILED(rv)) printf("XXX GetCookieString() failed!\n");
+    if (!*aCookie) {
+        printf("nothing\n");
+    } else {
+        printf("\"%s\"\n", *aCookie);
+    }
+    return *aCookie != nsnull;
+}
+
 // some #defines for comparison rules
 #define MUST_BE_NULL     0
 #define MUST_EQUAL       1
 #define MUST_CONTAIN     2
 #define MUST_NOT_CONTAIN 3
+#define MUST_NOT_EQUAL   4
 
 // a simple helper function to improve readability:
 // takes one of the #defined rules above, and performs the appropriate test.
@@ -119,6 +158,9 @@ CheckResult(const char *aLhs, PRUint32 aRule, const char *aRhs = nsnull)
 
         case MUST_EQUAL:
             return !PL_strcmp(aLhs, aRhs);
+
+        case MUST_NOT_EQUAL:
+            return PL_strcmp(aLhs, aRhs);
 
         case MUST_CONTAIN:
             return PL_strstr(aLhs, aRhs) != nsnull;
@@ -571,7 +613,18 @@ main(PRInt32 argc, char *argv[])
       GetACookie(cookieService, "http://multi.path.tests/one/two/three/four/five/six/", nsnull, getter_Copies(cookie));
       rv[0] = CheckResult(cookie.get(), MUST_EQUAL, "test7=path; test6=path; test3=path; test1=path; test5=path; test4=path; test2=path; test8=path");
 
-      allTestsPassed = PrintResult(rv, 1) && allTestsPassed;
+      // *** httponly tests 
+      printf("*** Beginning httponly tests...\n");
+      // Since this cookie is set via http, it can be retrieved
+      SetACookie(cookieService, "http://httponly.test/", nsnull, "test=httponly; httponly", nsnull);
+      GetACookie(cookieService, "http://httponly.test/", nsnull, getter_Copies(cookie));
+      rv[0] = CheckResult(cookie.get(), MUST_EQUAL, "test=httponly");
+      // Since this cookie is NOT set via http, it can NOT be retrieved
+      SetACookieNoHttp(cookieService, "http://httponly.test/", "test=httponly; httponly");
+      GetACookieNoHttp(cookieService, "http://httponly.test/", getter_Copies(cookie));
+      rv[1] = CheckResult(cookie.get(), MUST_NOT_EQUAL, "test=httponly");
+
+      allTestsPassed = PrintResult(rv, 2) && allTestsPassed;
 
       // XXX the following are placeholders: add these tests please!
       // *** "noncompliant cookie" tests
