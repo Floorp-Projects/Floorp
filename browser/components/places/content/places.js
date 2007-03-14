@@ -55,7 +55,7 @@ var PlacesOrganizer = {
 
   init: function PO_init() {
     var self = this;
-    // on timteout because of the corresponding setTimeout()
+    // on timeout because of the corresponding setTimeout()
     // in the places tree binding's constructor
     setTimeout(function() { self._init(); }, 0);
   },
