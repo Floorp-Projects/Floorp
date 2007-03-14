@@ -652,7 +652,7 @@ ReadLine(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* Treat the empty string specially. */
     if (buflength == 0) {
-        *rval = JS_GetEmptyStringValue(cx);
+        *rval = feof(from) ? JSVAL_NULL : JS_GetEmptyStringValue(cx);
         JS_free(cx, buf);
         return JS_TRUE;
     }
