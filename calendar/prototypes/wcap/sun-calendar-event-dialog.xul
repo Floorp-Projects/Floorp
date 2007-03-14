@@ -50,7 +50,7 @@
     <!ENTITY % calendarDTD SYSTEM "chrome://calendar/locale/calendar.dtd">
     <!ENTITY % sunDialogDTD SYSTEM "chrome://calendar/locale/sun-calendar-event-dialog.dtd">
     <!ENTITY % eventDialogDTD SYSTEM "chrome://calendar/locale/calendar-event-dialog.dtd">
-    %brandDTD
+    %brandDTD;
     %globalDTD;
     %calendarDTD;
     %sunDialogDTD;
@@ -190,12 +190,10 @@
                  oncommand="editShowTimeAs(event.target)"
                  value="TRANSPARENT"/>
         <command id="cmd_url"
-                 disable-on-readonly="true"disable-on-readonly="true"
+                 disable-on-readonly="true"
                  oncommand="editURL()"/>
-
         <command id="cmd_timezone"
                  oncommand="updateDateTime()"/>
-
     </commandset>
 
     <keyset>
