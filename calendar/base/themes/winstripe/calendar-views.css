@@ -55,19 +55,32 @@ calendar-header-container {
   border-top: 1px solid #3F7D91;
 }
 
-calendar-event-column[weekend="true"],
-calendar-header-container[weekend="true"] {
-  background: #FFF9E7;
+calendar-header-container[weekend="true"],
+.calendar-event-column-linebox[weekend="true"],
+.calendar-event-column-linebox[off-time="true"] {
+  background: #f4f4f4;
 }
 
-calendar-event-column[today="true"],
-calendar-header-container[today="true"] {
+calendar-header-container[today="true"],
+.calendar-event-column-linebox[today="true"] {
   background: #dfeaf4;
 }
 
-calendar-event-column[selected="true"],
-calendar-header-container[selected="true"] { 
+calendar-header-container[selected="true"],
+.calendar-event-column-linebox[selected="true"] {
   background: #ffe79c;
+}
+
+calendar-header-container[weekend="true"][today="true"],
+.calendar-event-column-linebox[weekend="true"][today="true"],
+.calendar-event-column-linebox[off-time="true"][today="true"] {
+  background: #d6dfe9;
+}
+
+calendar-header-container[weekend="true"][selected="true"],
+.calendar-event-column-linebox[weekend="true"][selected="true"],
+.calendar-event-column-linebox[off-time="true"][selected="true"] {
+  background: #f5dd92;
 }
 
 .calendar-event-column-linebox[orient="horizontal"] {

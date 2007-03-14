@@ -78,6 +78,13 @@ pref("calendar.week.d4thursdaysoff", false);
 pref("calendar.week.d5fridaysoff", false);
 pref("calendar.week.d6saturdaysoff", true);
 
+// start and end work hour for day and week views
+pref("calendar.view.daystarthour", 8);
+pref("calendar.view.dayendhour", 17);
+
+// number of visible hours for day and week views
+pref("calendar.view.visiblehours", 9);
+
 // Do not set this!  If it's not there, then we guess the system timezone
 //pref("calendar.timezone.local", "");
 

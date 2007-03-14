@@ -269,6 +269,8 @@
       <field name="mPixPerMin">0.6</field>
       <field name="mStartMin">0*60</field>
       <field name="mEndMin">24*60</field>
+      <field name="mDayStartMin">8*60</field>
+      <field name="mDayEndMin">17*60</field>
       <field name="mEvents">new Array()</field>
       <field name="mEventMap">null</field>
       <field name="mCalendarView">null</field>
@@ -303,17 +305,22 @@
         ]]></setter>
       </property>
 
+      <field name="mSelected">false</field>
       <property name="selected">
         <getter><![CDATA[
-          if (this.getAttribute("selected") == "true")
-            return true;
-          return false;
+          return this.mSelected;
         ]]></getter>
         <setter><![CDATA[
-          if (val)
-            this.setAttribute("selected", "true");
-          else
-            this.removeAttribute("selected");
+          this.mSelected = val;
+          var child = this.bgbox.firstChild;
+          while (child) {
+            if (val) {
+              child.setAttribute("selected", "true");
+            } else {
+              child.removeAttribute("selected");
+            }
+            child = child.nextSibling;
+          }
           return val;
         ]]></setter>
       </property>
@@ -379,6 +386,28 @@
         name="events"
         readonly="true"
         onget="return this.methods"/>
+
+      <field name="mToday">false</field>
+      <property name="today">
+        <getter><![CDATA[
+          return this.mToday;
+        ]]></getter>
+        <setter><![CDATA[
+          this.mToday = val;
+          return val;
+        ]]></setter>
+      </property>
+        
+      <field name="mDayOff">false</field>
+      <property name="dayOff">
+        <getter><![CDATA[
+          return this.mDayOff;
+        ]]></getter>
+        <setter><![CDATA[
+          this.mDayOff = val;
+          return val;
+        ]]></setter>
+      </property>
 
       <!-- mEvents -->
       <field name="mSelectedChunks">[]</field>
@@ -616,6 +645,19 @@
               // we key off this in a CSS selector
               box.setAttribute("orient", orient);
               box.setAttribute("class", "calendar-event-column-linebox");
+
+              if (this.mSelected) {
+                  box.setAttribute("selected", "true");
+              }
+              if (this.mToday) {
+                  box.setAttribute("today", "true");
+              }
+              if (this.mDayOff) {
+                  box.setAttribute("weekend", "true");
+              }
+              if (theMin < this.mDayStartMin || theMin >= this.mDayEndMin) {
+                  box.setAttribute("off-time", "true");
+              }
 
               // calculate duration pixel as the difference between
               // start pixel and end pixel to avoid rounding errors.
@@ -1271,6 +1313,21 @@
    
         ]]></body>
       </method>
+      <method name="setDayStartEndMinutes">
+        <parameter name="aDayStartMin"/>
+        <parameter name="aDayEndMin"/>
+        <body><![CDATA[
+          if (aDayStartMin < this.mStartMin || aDayStartMin > aDayEndMin ||
+            aDayEndMin > this.mEndMin) {
+            throw Components.results.NS_ERROR_INVALID_ARG;
+          }
+          if (this.mDayStartMin != aDayStartMin ||
+            this.mDayEndMin != aDayEndMin) {
+            this.mDayStartMin = aDayStartMin;
+            this.mDayEndMin = aDayEndMin;
+          }
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
@@ -1648,6 +1705,8 @@
         var self = this;
         this.mResizeHandler = function resizeHandler() { self.onResize(); };
         window.addEventListener("resize", this.mResizeHandler, true);
+        this.mScrollHandler = function scrollHandler() { self.onScroll(); };
+        window.addEventListener("scroll", this.mScrollHandler, true);
         var rButton = document.getAnonymousElementByAttribute(this, "anonid", "rotate-button");
         rButton.label = calGetString("calendar", "rotate");
 
@@ -1675,21 +1734,33 @@
           }
           var childbox = document.getAnonymousElementByAttribute(self, "anonid", "childbox");
           var size;
-          var minPixelsPerMinute;
           if (self.orient == "horizontal") {
             size = childbox.boxObject.width;
-            minPixelsPerMinute = self.mMinHorizontalPixelsPerMinute;
           } else {
             size = childbox.boxObject.height;
-            minPixelsPerMinute = self.mMinVerticalPixelsPerMinute;
           }
-          var minutes = self.mEndMin - self.mStartMin;
-          var ppm = size / minutes;
+          var ppm = size / self.mVisibleMinutes;
           ppm = Math.floor(ppm * 10) / 10;
-          if (ppm < minPixelsPerMinute) {
-            ppm = minPixelsPerMinute;
+          if (ppm < self.mMinPixelsPerMinute) {
+            ppm = self.mMinPixelsPerMinute;
           }
           self.pixelsPerMinute = ppm;
+          setTimeout(function(){self.scrollToMinute(self.mFirstVisibleMinute)}, 1);
+        ]]></body>
+      </method>
+
+      <field name="mScrollHandler">null</field>
+      <method name="onScroll">
+        <body><![CDATA[
+          var panel = this.parentNode.parentNode.parentNode;
+          var deck = panel.parentNode;
+          if (panel.id != deck.selectedPanel.id) {
+            return;
+          }
+          if (deck.style.visibility == "collapse") {
+            return;
+          }
+          this.mFirstVisibleMinute = this.getFirstVisibleMinute();
         ]]></body>
       </method>
 
@@ -1703,13 +1774,15 @@
       <field name="mDateColumns">null</field>
       <field name="mBatchCount">0</field>
       <field name="mPixPerMin">0.6</field>
-      <field name="mMinHorizontalPixelsPerMinute">1.2</field>
-      <field name="mMinVerticalPixelsPerMinute">0.5</field>
+      <field name="mMinPixelsPerMinute">0.1</field>
       <field name="mSelectedItems">[]</field>
       <field name="mSelectedDayCol">null</field>
 
       <field name="mStartMin">0*60</field>
       <field name="mEndMin">24*60</field>
+      <field name="mDayStartMin">8*60</field>
+      <field name="mDayEndMin">17*60</field>
+      <field name="mVisibleMinutes">9*60</field>
       <field name="mTasksInView">false</field>
       <field name="mDisplayDaysOff">true</field>
       <field name="mDaysOffArray">[0,6]</field>
@@ -2253,7 +2326,6 @@
 
       <method name="reorient">
         <body><![CDATA[
-          var firstMinute = this.getFirstVisibleMinute();
           var orient = this.getAttribute("orient");
           var otherorient = "vertical";
           if (!orient) orient = "horizontal";
@@ -2308,7 +2380,6 @@
               }
           }
           this.refresh();
-          this.scrollToMinute(firstMinute);          
         ]]></body>
       </method>
 
@@ -2368,7 +2439,6 @@
         ]]></body>
       </method>
 
-      <field name="mRelayOutCalled">false</field>
       <method name="relayout">
         <body><![CDATA[
           function createXULElement(el) {
@@ -2402,6 +2472,8 @@
               return;
 
           var calView = this;
+          var dayStartMin = this.mDayStartMin;
+          var dayEndMin = this.mDayEndMin;
           function setUpDayEventsBox(aDayBox) {
               aDayBox.setAttribute("class", "calendar-event-column-" + (counter % 2 == 0 ? "even" : "odd"));
               aDayBox.setAttribute("context", calView.getAttribute("context"));
@@ -2410,6 +2482,7 @@
               aDayBox.date = d;
               aDayBox.setAttribute("orient", orient);
               aDayBox.calendarView = calView;
+              aDayBox.setDayStartEndMinutes(dayStartMin, dayEndMin);
           }
 
           function setUpDayHeaderBox(aDayBox) {
@@ -2431,7 +2504,7 @@
               var dayEventsBox;
               if (counter < dayboxkids.length) {
                   dayEventsBox = dayboxkids[counter];
-                  dayEventsBox.removeAttribute("today");
+                  dayEventsBox.today = false;
                   dayEventsBox.mEvents = new Array();
               } else {
                   dayEventsBox = createXULElement("calendar-event-column");
@@ -2456,16 +2529,16 @@
               setUpDayHeaderBox(dayHeaderBox);
 
               if (0 <= this.mDaysOffArray.indexOf(d.weekday)) {
-                dayEventsBox.setAttribute("weekend", "true");
-                dayHeaderBox.setAttribute("weekend", "true");
+                  dayEventsBox.dayOff = true;
+                  dayHeaderBox.setAttribute("weekend", "true");
               } else {
-                dayEventsBox.removeAttribute("weekend");
-                dayHeaderBox.removeAttribute("weekend");
+                  dayEventsBox.dayOff = false;
+                  dayHeaderBox.removeAttribute("weekend");
               }
 
               // highlight today
               if (this.numVisibleDates > 1 && d.compare(today) == 0) {
-                  dayEventsBox.setAttribute("today", "true");
+                  dayEventsBox.today = true;
                   dayHeaderBox.setAttribute("today", "true");
               }
 
@@ -2526,14 +2599,6 @@
           // XXX constructor and the reorient method as soon as the views
           // XXX are constructed statically (24 hrs).
           this.adjustScrollBarSpacers();
-
-          // scroll to 8 a.m. the first time relayout is called
-          // XXX As soon as working hours are available, 8 a.m. will change to
-          // XXX the first working hour.
-          if (!this.mRelayOutCalled) {
-              this.mRelayOutCalled = true;
-              this.scrollToMinute(8 * 60);
-          }
         ]]></body>
       </method>
 
@@ -2718,6 +2783,7 @@
         ]]></body>
       </method>
 
+      <field name="mFirstVisibleMinute">0</field>
       <method name="getFirstVisibleMinute">
         <body><![CDATA[
           var minute = 0;
@@ -2737,6 +2803,14 @@
         ]]></body>
       </method>
 
+      <method name="setFirstVisibleMinute">
+        <parameter name="aMinute"/>
+        <body><![CDATA[
+          this.mFirstVisibleMinute = aMinute;
+          return this.mFirstVisibleMinute;
+        ]]></body>
+      </method>
+
       <method name="scrollToMinute">
         <parameter name="aMinute"/>
         <body><![CDATA[
@@ -2746,13 +2820,43 @@
             var x = {};
             var y = {};
             scrollBoxObject.getPosition(x, y);
-            var pos = aMinute * this.mPixPerMin;
+            var pos = Math.round(aMinute * this.mPixPerMin);
             if (childbox.getAttribute("orient") == "horizontal") {
               scrollBoxObject.scrollTo(x.value, pos);
             } else {
               scrollBoxObject.scrollTo(pos, y.value);
             }
           }
+        ]]></body>
+      </method>
+
+      <method name="setDayStartEndMinutes">
+        <parameter name="aDayStartMin"/>
+        <parameter name="aDayEndMin"/>
+        <body><![CDATA[
+          if (aDayStartMin < this.mStartMin || aDayStartMin > aDayEndMin ||
+            aDayEndMin > this.mEndMin) {
+            throw Components.results.NS_ERROR_INVALID_ARG;
+          }
+          if (this.mDayStartMin != aDayStartMin ||
+            this.mDayEndMin != aDayEndMin) {
+            this.mDayStartMin = aDayStartMin;
+            this.mDayEndMin = aDayEndMin;
+          }
+        ]]></body>
+      </method>
+
+      <method name="setVisibleMinutes">
+        <parameter name="aVisibleMinutes"/>
+        <body><![CDATA[
+          if (aVisibleMinutes <= 0 ||
+            aVisibleMinutes > (this.mEndMin - this.mStartMin)) {
+            throw Components.results.NS_ERROR_INVALID_ARG;
+          }
+          if (this.mVisibleMinutes != aVisibleMinutes) {
+            this.mVisibleMinutes = aVisibleMinutes;
+          }
+          return this.mVisibleMinutes;
         ]]></body>
       </method>
     </implementation>

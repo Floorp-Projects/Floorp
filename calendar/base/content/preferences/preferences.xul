@@ -96,6 +96,7 @@
 
     <prefpane id="paneViews"
               label="&paneViews.title;"
+              onpaneload="gViewsPane.init();"
               src="chrome://calendar/content/preferences/views.xul">
         <vbox id="calPreferencesBoxViews"/>
     </prefpane>

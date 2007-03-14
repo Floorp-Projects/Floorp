@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Calendar view code.
+   -
+   - The Initial Developer of the Original Code is
+   -   Joey Minta <jminta@gmail.com>
+   - Portions created by the Initial Developer are Copyright (C) 2007
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Dan Mosedale <dan.mosedale@oracle.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<bindings id="calendar-specific-view-bindings"
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:xbl="http://www.mozilla.org/xbl">
+
+    <binding id="calendar-decorated-multiday-base-view"
+             extends="chrome://calendar/content/calendar-decorated-base.xml#calendar-decorated-base-view">
+        <implementation implements="calIDecoratedView">
+            <constructor><![CDATA[
+                // get day start/end hour from prefs and set on the view
+                this.mDayStartMin = getPrefSafe(
+                                    "calendar.view.daystarthour", 8) * 60;
+                this.mDayEndMin = getPrefSafe(
+                                  "calendar.view.dayendhour", 17) * 60;
+                var viewElement = this.viewElem;
+                viewElement.setDayStartEndMinutes(this.mDayStartMin,
+                                                  this.mDayEndMin);
+
+                // initially scroll to the day start hour in the view
+                viewElement.setFirstVisibleMinute(this.mDayStartMin);
+
+                // get visible hours from prefs and set on the view
+                var visibleMinutes = getPrefSafe(
+                                     "calendar.view.visiblehours", 9) * 60;
+                viewElement.setVisibleMinutes(visibleMinutes);
+
+                // add a preference observer to monitor changes
+                var pb2 = Cc["@mozilla.org/preferences-service;1"].
+                          getService(Ci.nsIPrefBranch2);
+                pb2.addObserver("calendar.", this.mPrefObserver, false);
+
+                this.updateDaysOffPrefs();
+
+                return;
+            ]]></constructor>
+
+            <destructor><![CDATA[
+                var pb2 = Cc["@mozilla.org/preferences-service;1"].
+                          getService(Ci.nsIPrefBranch2);
+                pb2.removeObserver("calendar.", this.mPrefObserver);
+                return;
+            ]]></destructor>
+
+            <field name="mDayStartMin">8*60</field>
+            <field name="mDayEndMin">17*60</field>
+
+            <field name="mPrefObserver"><![CDATA[
+            ({ calView: this,
+               observe: function calDecMultidayViewPrefChange(subj, topic, pref) {
+                   this.calView.handlePreference(subj, topic, pref);
+                   return;
+               }
+            })
+            ]]></field>
+
+            <!-- A preference handler which is called by the preference observer.
+                 Can be overriden in derived bindings. -->
+            <method name="handlePreference">
+                <parameter name="aSubject"/>
+                <parameter name="aTopic"/>
+                <parameter name="aPreference"/>
+                <body><![CDATA[
+                    this.handleCommonPreference(aSubject, aTopic, aPreference);
+                ]]></body>
+            </method>
+
+            <!-- A base implementation for the handling of common preferences.
+                 Can be called in handlePreference from derived bindings. -->
+            <method name="handleCommonPreference">
+                <parameter name="aSubject"/>
+                <parameter name="aTopic"/>
+                <parameter name="aPreference"/>
+                <body><![CDATA[
+                    aSubject.QueryInterface(Components.interfaces.nsIPrefBranch2);
+
+                    switch (aPreference) {
+
+                        case "calendar.week.d0sundaysoff":
+                        case "calendar.week.d1mondaysoff":
+                        case "calendar.week.d2tuesdaysoff":
+                        case "calendar.week.d3wednesdaysoff":
+                        case "calendar.week.d4thursdaysoff":
+                        case "calendar.week.d5fridaysoff":
+                        case "calendar.week.d6saturdaysoff":
+                            this.updateDaysOffPrefs();
+                            if (!this.startDay || !this.endDay) {
+                                // don't refresh if we're not initialized
+                                return;
+                            }
+                            this.goToDay(this.selectedDay);
+                            break;
+
+                        case "calendar.view.daystarthour":
+                            this.mDayStartMin = aSubject.getIntPref(aPreference) * 60;
+                            this.viewElem.setDayStartEndMinutes(this.mDayStartMin,
+                                                                this.mDayEndMin);
+                            if (!this.startDay || !this.endDay) {
+                                // don't refresh if we're not initialized
+                                return;
+                            }
+                            this.goToDay(this.selectedDay);
+                            break;
+
+                        case "calendar.view.dayendhour":
+                            this.mDayEndMin = aSubject.getIntPref(aPreference) * 60;
+                            this.viewElem.setDayStartEndMinutes(this.mDayStartMin,
+                                                                this.mDayEndMin);
+                            if (!this.startDay || !this.endDay) {
+                                // don't refresh if we're not initialized
+                                return;
+                            }
+                            this.goToDay(this.selectedDay);
+                            break;
+
+                        case "calendar.view.visiblehours":
+                            var visibleMinutes = aSubject.getIntPref(aPreference) * 60;
+                            this.viewElem.setVisibleMinutes(visibleMinutes);
+                            if (!this.startDay || !this.endDay) {
+                                // don't refresh if we're not initialized
+                                return;
+                            }
+                            this.goToDay(this.selectedDay);
+                            break;
+
+                        case "calendar.timezone.local":
+                            this.viewElem.timezone = aSubject.getCharPref(aPreference);
+                            if (!this.startDay || !this.endDay) {
+                                // don't refresh if we're not initialized
+                                return;
+                            }
+                            this.goToDay(this.selectedDay);
+                            break;
+
+                        default:
+                            break;
+                    }
+                    return;
+                ]]></body>
+            </method>
+
+            <method name="updateDaysOffPrefs">
+                <body><![CDATA[
+                    var prefNames = ["d0sundaysoff", "d1mondaysoff", "d2tuesdaysoff",
+                                     "d3wednesdaysoff", "d4thursdaysoff",
+                                     "d5fridaysoff", "d6saturdaysoff"];
+                    var defaults = [true, false, false, false, false, false, true];
+                    var daysOff = new Array();
+                    const weekPrefix = "calendar.week.";
+                    for (var i in prefNames) {
+                         if (getPrefSafe(weekPrefix+prefNames[i], defaults[i])) {
+                                daysOff.push(Number(i));
+                         }
+                    }
+                    this.viewElem.daysOffArray = daysOff;
+                ]]></body>
+            </method>
+        </implementation>
+    </binding>
+</bindings>

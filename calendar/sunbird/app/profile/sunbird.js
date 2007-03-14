@@ -57,6 +57,9 @@ pref("calendar.date.format", 0);
 pref("calendar.event.defaultlength", 60);
 // Do NOT set this.  If it is unset, we guess the timezone from the system
 //pref("calendar.timezone.local", "America/New_York);
+pref("calendar.view.daystarthour", 8);
+pref("calendar.view.dayendhour", 17);
+pref("calendar.view.visiblehours", 9);
 pref("calendar.weeks.inview", 4);
 pref("calendar.previousweeks.inview", 0);
 

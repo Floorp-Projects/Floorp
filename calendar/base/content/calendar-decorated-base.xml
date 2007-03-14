@@ -164,6 +164,13 @@
                 ]]></getter>
             </property>
 
+            <property name="viewElem">
+                <getter><![CDATA[
+                    return document.getAnonymousElementByAttribute(
+                           this, "anonid", "view-element");
+                ]]></getter>
+            </property>
+
             <method name="getSelectedItems">
                 <parameter name="aCount"/>
                 <body><![CDATA[

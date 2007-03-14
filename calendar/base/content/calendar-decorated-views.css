@@ -40,6 +40,10 @@ calendar-decorated-base-view {
   -moz-binding: url(chrome://calendar/content/calendar-decorated-base.xml#calendar-decorated-base-view);
 }
 
+calendar-decorated-multiday-base-view {
+  -moz-binding: url(chrome://calendar/content/calendar-decorated-multiday-base-view.xml#calendar-decorated-multiday-base-view);
+}
+
 calendar-navigation-buttons { 
   -moz-binding: url(chrome://calendar/content/calendar-decorated-base.xml#calendar-navigation-buttons);
 }

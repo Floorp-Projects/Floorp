@@ -46,7 +46,8 @@
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:xbl="http://www.mozilla.org/xbl">
 
-    <binding id="calendar-decorated-day-view" extends="chrome://calendar/content/calendar-decorated-base.xml#calendar-decorated-base-view">
+    <binding id="calendar-decorated-day-view"
+             extends="chrome://calendar/content/calendar-decorated-multiday-base-view.xml#calendar-decorated-multiday-base-view">
         <content>
              <xul:vbox anonid="main-box" flex="1">
                 <xul:calendar-navigation-buttons anonid="nav-control"/>
@@ -57,56 +58,6 @@
         </content>
 
         <implementation implements="calIDecoratedView">
-	    <constructor><![CDATA[
-                // We don't care about weekends in the day view
-                var viewElement = document.getAnonymousElementByAttribute(
-                                  this, "anonid", "view-element");
-                viewElement.daysOffArray = [];
-
-                // add a preference observer to monitor changes
-                var pb2 = Cc["@mozilla.org/preferences-service;1"].
-                          getService(Ci.nsIPrefBranch2);
-                pb2.addObserver("calendar.", this.mPrefObserver, false);
-
-                viewElement.mMinVerticalPixelsPerMinute = 0.7;
-                viewElement.mMinHorizontalPixelsPerMinute = 1.5;
-                return;
-            ]]></constructor>
-
-            <destructor><![CDATA[
-                var pb2 = Cc["@mozilla.org/preferences-service;1"].
-                          getService(Ci.nsIPrefBranch2);
-                pb2.removeObserver("calendar.", this.mPrefObserver);
-                return;
-            ]]></destructor>
-
-            <field name="mPrefObserver"><![CDATA[
-            ({ calView: this,
-               observe: function calDecWeekViewPrefChange(subj, topic, pref) {
-
-                   subj.QueryInterface(Components.interfaces.nsIPrefBranch2);
-
-                   switch (pref) {
-
-                   case "calendar.timezone.local":
-                       var viewElem = document.getAnonymousElementByAttribute(
-                                      this.calView, "anonid", "view-element");
-                       viewElem.timezone = subj.getCharPref(pref);
-                       if (!this.calView.startDay || !this.calView.endDay) {
-                           // Don't refresh if we're not initialized
-                           return;
-                       }
-                       this.calView.goToDay(this.calView.selectedDay);
-                       break;
-
-                   default:
-                       break;
-                   }
-                   return;
-               }
-            })
-	    ]]></field>
-
             <property name="observerID">
                 <getter><![CDATA[
                     return "day-view-observer";

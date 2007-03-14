@@ -8,6 +8,7 @@ calendar.jar:
     content/calendar/calendar-alarm-widget.xml   (content/calendar-alarm-widget.xml)
     content/calendar/calendar-attendee-list.xml  (content/calendar-attendee-list.xml)
     content/calendar/calendar-decorated-base.xml  (content/calendar-decorated-base.xml)
+    content/calendar/calendar-decorated-multiday-base-view.xml  (content/calendar-decorated-multiday-base-view.xml)
     content/calendar/calendar-decorated-day-view.xml  (content/calendar-decorated-day-view.xml)
     content/calendar/calendar-decorated-week-view.xml  (content/calendar-decorated-week-view.xml)
     content/calendar/calendar-decorated-multiweek-view.xml  (content/calendar-decorated-multiweek-view.xml)
@@ -41,6 +42,7 @@ calendar.jar:
     content/calendar/preferences/general.xul     (content/preferences/general.xul)
     content/calendar/preferences/timezones.js    (content/preferences/timezones.js)
     content/calendar/preferences/timezones.xul   (content/preferences/timezones.xul)
+    content/calendar/preferences/views.js        (content/preferences/views.js)
     content/calendar/preferences/views.xul       (content/preferences/views.xul)
 % skin calendar classic/1.0 %skin/classic/calendar/
 #expand    skin/classic/calendar/cal-icon32.png         (themes/__THEME__/cal-icon32.png)

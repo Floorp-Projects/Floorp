@@ -53,7 +53,8 @@
         <prefpane id="paneLightning" 
                   label="&lightning.taskLabel;"
                   onpaneload="gCalendarGeneralPane.init(); gAlarmsPane.init(); 
-                              gCategoriesPane.init(); gTimezonesPane.init();">
+                              gCategoriesPane.init(); gViewsPane.init();
+                              gTimezonesPane.init();">
             <tabbox id="calPreferencesTabbox" flex="1" onselect="">
                 <tabs>
                     <tab id="calPreferencesTabGeneral"
@@ -78,7 +79,9 @@
                         <vbox id="calPreferencesBoxCategories"/>
                     </tabpanel>
                     <tabpanel orient="vertical">
-                        <vbox id="calPreferencesBoxViews"/>
+                        <vbox id="calPreferencesBoxViews">
+                            <groupbox id="viewsMultiweekGroupbox" hidden="true"/>
+                        </vbox>
                     </tabpanel>
                     <tabpanel orient="vertical">
                         <vbox id="calPreferencesBoxTimezones"/>
