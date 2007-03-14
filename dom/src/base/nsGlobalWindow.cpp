@@ -5970,7 +5970,7 @@ nsGlobalWindow::FireOfflineStatusEvent()
   }
   // The event is fired at the body element, or if there is no body element,
   // at the document.
-  nsCOMPtr<nsISupports> eventTarget = mDoc;
+  nsCOMPtr<nsISupports> eventTarget = mDoc.get();
   nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(mDoc);
   if (htmlDoc) {
     nsCOMPtr<nsIDOMHTMLElement> body;
