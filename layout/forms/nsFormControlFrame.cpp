@@ -80,15 +80,19 @@ nsFormControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 nscoord
 nsFormControlFrame::GetIntrinsicWidth()
 {
-  // Actual width is set in forms.css
-  return 0;
+  // Provide a reasonable default for sites that use an "auto" height.
+  // Note that if you change this, you should change the values in forms.css
+  // as well.  This is the 13px default width minus the 2px default border.
+  return nsPresContext::CSSPixelsToAppUnits(13 - 2 * 2);
 }
 
 nscoord
 nsFormControlFrame::GetIntrinsicHeight()
 {
-  // Actual width is set in forms.css
-  return 0;
+  // Provide a reasonable default for sites that use an "auto" height.
+  // Note that if you change this, you should change the values in forms.css
+  // as well. This is the 13px default width minus the 2px default border.
+  return nsPresContext::CSSPixelsToAppUnits(13 - 2 * 2);
 }
 
 NS_METHOD
