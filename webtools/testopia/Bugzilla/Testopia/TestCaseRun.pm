@@ -667,6 +667,7 @@ sub update_bugs {
         
         next if ($status eq 'VERIFIED' && $oldstatus ne 'RESOLVED');
         next if ($status eq 'REOPENED' && $oldstatus !~ /(RESOLVED|VERIFIED|CLOSED)/);
+        next if $oldresolution eq 'DUPLICATE';
         if ($status eq 'REOPENED'){
             $resolution = '';
         }
