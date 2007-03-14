@@ -1673,8 +1673,8 @@ main(int argc, char **argv)
     PLOptStatus          status;
     PRThread             *loggerThread;
     PRBool               debugCache = PR_FALSE; /* bug 90518 */
-    char*                certPrefix = "";
-
+    char                 emptyString[] = { "" };
+    char*                certPrefix = emptyString;
 
     tmp = strrchr(argv[0], '/');
     tmp = tmp ? tmp + 1 : argv[0];
@@ -2052,7 +2052,7 @@ main(int argc, char **argv)
     if (passwd) {
         PORT_Free(passwd);
     }
-    if (certPrefix) {
+    if (certPrefix && certPrefix != emptyString) {                            
         PORT_Free(certPrefix);
     }
     if (fNickName) {
