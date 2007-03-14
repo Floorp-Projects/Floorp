@@ -5960,9 +5960,8 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
 void
 nsGlobalWindow::FireOfflineStatusEvent()
 {
-  if (!mDocument)
+  if (!mDoc)
     return;
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
   nsAutoString name;
   if (NS_IsOffline()) {
     name.AssignLiteral("offline");
@@ -5971,8 +5970,8 @@ nsGlobalWindow::FireOfflineStatusEvent()
   }
   // The event is fired at the body element, or if there is no body element,
   // at the document.
-  nsCOMPtr<nsISupports> eventTarget = doc.get();
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(doc);
+  nsCOMPtr<nsISupports> eventTarget = mDoc;
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(mDoc);
   if (htmlDoc) {
     nsCOMPtr<nsIDOMHTMLElement> body;
     htmlDoc->GetBody(getter_AddRefs(body));
@@ -5980,7 +5979,14 @@ nsGlobalWindow::FireOfflineStatusEvent()
       eventTarget = body;
     }
   }
-  nsContentUtils::DispatchTrustedEvent(doc, eventTarget, name, PR_TRUE, PR_FALSE);
+  else {
+    nsCOMPtr<nsIDOMElement> documentElement;
+    mDocument->GetDocumentElement(getter_AddRefs(documentElement));
+    if(documentElement) {        
+      eventTarget = documentElement;
+    }
+  }
+  nsContentUtils::DispatchTrustedEvent(mDoc, eventTarget, name, PR_TRUE, PR_FALSE);
 }
 
 nsresult

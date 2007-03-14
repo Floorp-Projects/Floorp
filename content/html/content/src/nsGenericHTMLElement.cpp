@@ -1442,6 +1442,8 @@ PRBool nsGenericHTMLElement::IsEventName(nsIAtom* aName)
           aName == nsGkAtoms::onerror                       ||
           aName == nsGkAtoms::onfocus                       ||
           aName == nsGkAtoms::onblur                        ||
+          aName == nsGkAtoms::onoffline                     ||
+          aName == nsGkAtoms::ononline                      ||
           aName == nsGkAtoms::onsubmit                      ||
           aName == nsGkAtoms::onreset                       ||
           aName == nsGkAtoms::onchange                      ||
