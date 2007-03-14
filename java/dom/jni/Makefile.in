@@ -77,7 +77,7 @@ EXTRA_LIBS		+= \
 
 include $(topsrcdir)/config/config.mk
 
-DEFINES += -DMOZILLA_INTERNAL_API
+DEFINES += -DMOZILLA_INTERNAL_API -DFORCE_PR_LOG
 
 ifeq ($(OS_ARCH),Darwin)
  INCLUDES += -I$(MOZ_JDKHOME)/include

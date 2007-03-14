@@ -1,0 +1,200 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<!--
+
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+
+ * Ed Burns &gt;edburns@acm.org&lt;
+
+-->
+
+
+<html>
+  <head>
+    <title>org.mozilla.mcp</title>
+<style type="text/css">/* GeSHi (c) Nigel McNie 2004 (http://qbnz.com/highlighter) */
+.java .de1, .java .de2 {font-family: 'Courier New', Courier, monospace; font-weight: normal;}
+.java  {font-family: monospace;}
+.java .imp {font-weight: bold; color: red;}
+.java li {background: #ffffff;}
+.java li.li2 {background: #f4f4f4;}
+.java .kw1 {color: #b1b100;}
+.java .kw2 {color: #000000; font-weight: bold;}
+.java .kw3 {color: #aaaadd; font-weight: bold;}
+.java .kw4 {color: #993333;}
+.java .co1 {color: #808080; font-style: italic;}
+.java .co2 {color: #a1a100;}
+.java .coMULTI {color: #808080; font-style: italic;}
+.java .es0 {color: #000099; font-weight: bold;}
+.java .br0 {color: #66cc66;}
+.java .st0 {color: #ff0000;}
+.java .nu0 {color: #cc66cc;}
+.java .me1 {color: #006600;}
+.java .me2 {color: #006600;}
+</style>
+  </head>
+
+  <body>
+
+<p>Mozilla Control Program</p>
+
+    <img width="120" height="86" src="mcp.jpg" style="float:left; padding:1%;" alt="Master Control Program, from TRON" />
+
+<p>This package is a simple layer on top of the <a
+href="../webclient/package.html">Webclient API</a> to enable automated
+testing of web applications using software such as <a target="_"
+href="http://www.junit.org/">JUnit</a> or <a
+href="http://testng.org/">TestNG</a>.  It fulfills a similar role as
+HtmlUnit or HttpUnit, but unlike those two, MCP has a real browser
+behind it.  MCP also fulfills a similar role as Selenium.  However,
+unlike Selenium, MCP allows you to make assertions about the response
+content of actual XMLHttpRequest responses, including getting an actual
+DOM instance of the response XML.</p>
+
+<p>The main class in the package is <a href="MCP.html">MCP</a>.  An
+instance of <code>MCP</code> corresponds to one browser window.  Methods
+doing the following obvious tasks are provided:</p>
+
+<br />
+
+   <ul>
+
+     <li><p><a href="MCP.html#getRealizedVisibleBrowserWindow()">create
+     and show the actual browser window</a> as a
+     <code>java.awt.Frame</code>.  </p></li>
+
+     <li><p><a href="MCP.html#findInPage(java.lang.String)">find some text within the current page</a>.
+          </p></li>
+
+     <li><p><a href="MCP.html#findElement(java.lang.String)">get a DOM <code>Element</code> given an id or name</a>.
+          </p></li>
+
+     <li><p><a href="MCP.html#blockingClickElement(java.lang.String)">click on an element (given its id or name) and wait for the page to load before returning</a>.
+          </p></li>
+
+     <li><p><a href="MCP.html#blockingLoad(java.lang.String)">load a URL and wait for it to finish loading before returning</a>.
+          </p></li>
+
+     <li><p><a href="MCP.html#addAjaxListener(org.mozilla.mcp.AjaxListener)">add an AjaxListener that enables making assertions about the response of XMLHTTPRequest transactions made by the browser</a>.
+          </p></li>
+
+     <li><p>add AWT <a
+     href="MCP.html#addMouseListener(java.awt.event.MouseListener)">mouse</a>
+     and <a
+     href="MCP.html#addKeyListener(java.awt.event.KeyListener)">key</a>
+     listeners.  These can be used in conjunction with the
+     <code>java.awt.Robot</code> class to drive the browser.</p></li>
+
+        </ul>
+
+<p>Here is a code excerpt that illustrates the use of MCP and JUnit to
+test a JSF application that uses <a
+href="http://developers.sun.com/web/swdp/index.jsp">Project Dynamic
+Faces</a> for Ajax.</p>
+
+
+<div class="syntax"><div class="java" style="font-family: monospace;"><ol><li class="li1"><div class="de1"><span class="kw2">enum</span> TestFeature <span class="br0">&#123;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; RECEIVED_END_AJAX_EVENT,</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; HAS_MAP,</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; HAS_VALID_PARTIAL_RESPONSE,</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; HAS_VALID_READYSTATE,</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; STOP_WAITING</div></li>
+<li class="li1"><div class="de1"><span class="br0">&#125;</span></div></li>
+<li class="li2"><div class="de2">&nbsp;</div></li>
+<li class="li1"><div class="de1"><span class="kw2">public</span> <span class="kw4">void</span> testCardemo<span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="kw2">throws</span> <span class="kw3">Exception</span> <span class="br0">&#123;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; MCP mcp = <span class="kw2">new</span> MCP<span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="kw2">try</span> <span class="br0">&#123;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; mcp.<span class="me1">setAppData</span><span class="br0">&#40;</span>getBrowserBinDir<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="br0">&#125;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw2">catch</span> <span class="br0">&#40;</span><span class="kw3">Exception</span> e<span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; fail<span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="br0">&#125;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; mcp.<span class="me1">getRealizedVisibleBrowserWindow</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="kw2">final</span> <span class="kw3">BitSet</span> bitSet = <span class="kw2">new</span> <span class="kw3">BitSet</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; AjaxListener listener = <span class="kw2">new</span> AjaxListener<span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; <span class="kw2">public</span> <span class="kw4">void</span> endAjax<span class="br0">&#40;</span><span class="kw3">Map</span> eventMap<span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;bitSet.<span class="me1">flip</span><span class="br0">&#40;</span>TestFeature.<span class="me1">RECEIVED_END_AJAX_EVENT</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="kw1">if</span> <span class="br0">&#40;</span><span class="kw2">null</span> != eventMap<span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;bitSet.<span class="me1">flip</span><span class="br0">&#40;</span>TestFeature.<span class="me1">HAS_MAP</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="br0">&#125;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="kw3">String</span> responseText = <span class="br0">&#40;</span><span class="kw3">String</span><span class="br0">&#41;</span> eventMap.<span class="me1">get</span><span class="br0">&#40;</span><span class="st0">&quot;responseText&quot;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="kw1">if</span> <span class="br0">&#40;</span><span class="kw2">null</span> != responseText<span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;<span class="kw1">if</span> <span class="br0">&#40;</span><span class="nu0">-1</span> != responseText.<span class="me1">indexOf</span><span class="br0">&#40;</span><span class="st0">&quot;&lt;partial-response&gt;&quot;</span><span class="br0">&#41;</span> &amp;&amp;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="nu0">-1</span> != responseText.<span class="me1">indexOf</span><span class="br0">&#40;</span><span class="st0">&quot;&lt;/partial-response&gt;&quot;</span><span class="br0">&#41;</span><span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;bitSet.<span class="me1">flip</span><span class="br0">&#40;</span>TestFeature.</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="me1">HAS_VALID_PARTIAL_RESPONSE</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;<span class="br0">&#125;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="br0">&#125;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="kw3">String</span> readyState = <span class="br0">&#40;</span><span class="kw3">String</span><span class="br0">&#41;</span> eventMap.<span class="me1">get</span><span class="br0">&#40;</span><span class="st0">&quot;readyState&quot;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;bitSet.<span class="me1">set</span><span class="br0">&#40;</span>TestFeature.<span class="me1">HAS_VALID_READYSTATE</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span>, </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; <span class="kw2">null</span> != readyState &amp;&amp; readyState.<span class="me1">equals</span><span class="br0">&#40;</span><span class="st0">&quot;4&quot;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;bitSet.<span class="me1">flip</span><span class="br0">&#40;</span>TestFeature.<span class="me1">STOP_WAITING</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; <span class="br0">&#125;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="br0">&#125;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; mcp.<span class="me1">addAjaxListener</span><span class="br0">&#40;</span>listener<span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; </div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="co1">// Load the main page of the app</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; mcp.<span class="me1">blockingLoad</span><span class="br0">&#40;</span><span class="st0">&quot;http://javaserver.org/jsf-ajax-cardemo/faces/chooseLocale.jsp&quot;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="co1">// Choose the &quot;German&quot; language button</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; mcp.<span class="me1">blockingClickElement</span><span class="br0">&#40;</span><span class="st0">&quot;j_id_id73:Germany&quot;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="co1">// Choose the roadster</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; mcp.<span class="me1">blockingClickElement</span><span class="br0">&#40;</span><span class="st0">&quot;j_id_id18:j_id_id43&quot;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="co1">// Sample the Basis-Preis and Ihr Preis before the ajax transaction</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw3">Element</span> pricePanel = mcp.<span class="me1">findElement</span><span class="br0">&#40;</span><span class="st0">&quot;j_id_id10:zone1&quot;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; assertNotNull<span class="br0">&#40;</span>pricePanel<span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw3">String</span> pricePanelText = pricePanel.<span class="me1">getTextContent</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; assertNotNull<span class="br0">&#40;</span>pricePanelText<span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>pricePanelText.<span class="me1">matches</span><span class="br0">&#40;</span><span class="st0">&quot;(?s).*Basis-Preis<span class="es0">\\</span>s*15700.*&quot;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>pricePanelText.<span class="me1">matches</span><span class="br0">&#40;</span><span class="st0">&quot;(?s).*Ihr Preis<span class="es0">\\</span>s*15700.*&quot;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="co1">// Choose the &quot;Tempomat&quot; checkbox</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; bitSet.<span class="me1">clear</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; mcp.<span class="me1">clickElement</span><span class="br0">&#40;</span><span class="st0">&quot;j_id_id10:j_id_id63j_id_1&quot;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">while</span> <span class="br0">&#40;</span>!bitSet.<span class="me1">get</span><span class="br0">&#40;</span>TestFeature.<span class="me1">STOP_WAITING</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span><span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw3">Thread</span>.<span class="me1">currentThread</span><span class="br0">&#40;</span><span class="br0">&#41;</span>.<span class="me1">sleep</span><span class="br0">&#40;</span><span class="nu0">5000</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="br0">&#125;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="co1">// assert that the ajax transaction succeeded</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>bitSet.<span class="me1">get</span><span class="br0">&#40;</span>TestFeature.<span class="me1">RECEIVED_END_AJAX_EVENT</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>bitSet.<span class="me1">get</span><span class="br0">&#40;</span>TestFeature.<span class="me1">HAS_MAP</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>bitSet.<span class="me1">get</span><span class="br0">&#40;</span>TestFeature.<span class="me1">HAS_VALID_PARTIAL_RESPONSE</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>bitSet.<span class="me1">get</span><span class="br0">&#40;</span>TestFeature.<span class="me1">HAS_VALID_READYSTATE</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; bitSet.<span class="me1">clear</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; </div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="co1">// Sample the Basis-Preis and Ihr-Preis after the ajax transaction</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; pricePanel = mcp.<span class="me1">findElement</span><span class="br0">&#40;</span><span class="st0">&quot;j_id_id10:zone1&quot;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; assertNotNull<span class="br0">&#40;</span>pricePanel<span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; pricePanelText = pricePanel.<span class="me1">getTextContent</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; assertNotNull<span class="br0">&#40;</span>pricePanelText<span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>pricePanelText.<span class="me1">matches</span><span class="br0">&#40;</span><span class="st0">&quot;(?s).*Basis-Preis<span class="es0">\\</span>s*15700.*&quot;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>pricePanelText.<span class="me1">matches</span><span class="br0">&#40;</span><span class="st0">&quot;(?s).*Ihr Preis<span class="es0">\\</span>s*16600.*&quot;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; mcp.<span class="me1">deleteBrowserControl</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2"><span class="br0">&#125;</span> </div></li></ol></div></div>
+
+
+  </body>
+</html>

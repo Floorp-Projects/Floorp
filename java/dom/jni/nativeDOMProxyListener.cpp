@@ -27,6 +27,8 @@
 #include"nsIDOMEventListener.h"
 #include"javaDOMEventsGlobals.h"
 
+#include "nsCOMPtr.h"
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDOMEventListener, NS_IDOMEVENTLISTENER_IID);
 
@@ -59,10 +61,11 @@ NativeDOMProxyListener::~NativeDOMProxyListener()
     }
 }
 
-NS_IMETHODIMP NativeDOMProxyListener::HandleEvent(nsIDOMEvent* aEvent) 
+NS_IMETHODIMP NativeDOMProxyListener::HandleEvent(nsIDOMEvent* aEventIn) 
 {
     jobject jevent;
     JNIEnv *env;
+    nsCOMPtr<nsIDOMEvent> aEvent = aEventIn;
 
     if (vm->AttachCurrentThread(&env, NULL) != 0) {
         PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
@@ -78,9 +81,16 @@ NS_IMETHODIMP NativeDOMProxyListener::HandleEvent(nsIDOMEvent* aEvent)
         return NS_ERROR_FAILURE;
     }
 
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING,
+	   ("NativeDOMProxyListener::HandleEvent About to call into java.\n listener: %p\n eventListenerHandleEventMID: %p\n jevent: %p\n", listener, JavaDOMEventsGlobals::eventListenerHandleEventMID, jevent));
+    
     env->CallVoidMethod(listener,
                         JavaDOMEventsGlobals::eventListenerHandleEventMID,
                         jevent);    
+
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING,
+	   ("NativeDOMProxyListener::HandleEvent returned from java"));
+
 
     if (env->ExceptionOccurred()) {
         PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 

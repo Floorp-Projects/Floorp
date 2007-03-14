@@ -209,6 +209,8 @@ ${so.prefix}xul.${so.extension}.
     <target name="run" depends="-init-check">
 
         <property name="debug.jvm.args" value="" />
+        <property name="test.browser.url" 
+                  value="${basedir}/../2_0_alpha_6.html" />
         
         <java classname="org.mozilla.webclient.test.TestBrowser" fork="true">
             <jvmarg value="-DNSPR_LOG_MODULES=webclient:4,webclientstub:4,pluglets:4"/>
@@ -218,6 +220,7 @@ ${so.prefix}xul.${so.extension}.
             <jvmarg line="${debug.jvm.args}"/>
             <jvmarg line="-Djava.util.logging.config.file=${basedir}${FILE_PATH_SEP}logging.properties"/>
             <jvmarg line="-Djava.library.path=${browser.bin.dir}" />
+            <arg value="${test.browser.url}" />
 
             
                     <classpath>

@@ -259,9 +259,18 @@
   <target name="build.javadocs" depends="prepare,uptodate"
           unless="javadocs.uptodate"
           description="Create the JavaDoc API documentation">
+    <copy todir="${dist.javadocs}">
+      <fileset dir="${source.home}/webclient/classes_spec">
+        <include name="**/*.jpg" />
+        <include name="**/*.jpeg" />
+        <include name="**/*.gif" />
+        <include name="**/*.html" />
+      </fileset>
+    </copy>
     <javadoc packagenames="org.mozilla.*"
              destdir="${dist.javadocs}"
              Overview="${source.home}/webclient/classes_spec/org/mozilla/webclient/overview.html"
+             stylesheetfile="javadoc.css"
              private="${javadoc.private}"
              protected="${javadoc.protected}"
              windowtitle="${Name} (${version})"
@@ -270,6 +279,8 @@
        <fileset dir="${source.home}">
          <include name="**/*.java"/>
          <exclude name="**/impl/**/*.java" />
+         <exclude name="**/*ICE*.java" />
+         <exclude name="**/cardemo/**/*.java" />
          <exclude name="**/wrapper_nonnative/**/*.java" />
          <exclude name="**/*Impl.java" />
          <exclude name="**/test*/**/*.java" />
@@ -279,7 +290,14 @@
          <exclude name="pluggable-jvm/**/*.*" />
          <exclude name="**/*Bookmark*.java" />
          <exclude name="**/*Preferences*.java" />
+         <exclude name="**/PrefChangedCallback.java" />
          <exclude name="**/*Profile*.java" />
+         <exclude name="**/WebclientFactory.java" />
+         <exclude name="**/ImplObject.java" />
+         <exclude name="**/WCKeyEvent.java" />
+         <exclude name="**/WCMouseEvent.java" />
+         <exclude name="util/**/*.java" />
+         <exclude name="dom/**/*.java" />
        </fileset>
       <classpath location="${dist.jar}"/>
     </javadoc>

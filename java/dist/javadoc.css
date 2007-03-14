@@ -1,0 +1,19 @@
+/* GeSHi (c) Nigel McNie 2004 (http://qbnz.com/highlighter) */
+.java .de1, .java .de2 {font-family: 'Courier New', Courier, monospace; font-weight: normal;}
+.java  {font-family: monospace;}
+.java .imp {font-weight: bold; color: red;}
+.java li {background: #ffffff;}
+.java li.li2 {background: #f4f4f4;}
+.java .kw1 {color: #b1b100;}
+.java .kw2 {color: #000000; font-weight: bold;}
+.java .kw3 {color: #aaaadd; font-weight: bold;}
+.java .kw4 {color: #993333;}
+.java .co1 {color: #808080; font-style: italic;}
+.java .co2 {color: #a1a100;}
+.java .coMULTI {color: #808080; font-style: italic;}
+.java .es0 {color: #000099; font-weight: bold;}
+.java .br0 {color: #66cc66;}
+.java .st0 {color: #ff0000;}
+.java .nu0 {color: #cc66cc;}
+.java .me1 {color: #006600;}
+.java .me2 {color: #006600;}

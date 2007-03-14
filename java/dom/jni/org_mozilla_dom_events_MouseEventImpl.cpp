@@ -21,10 +21,14 @@
 
 #include "prlog.h"
 #include "nsIDOMNode.h"
+#include "nsIDOMEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "javaDOMEventsGlobals.h"
 #include "org_mozilla_dom_events_MouseEventImpl.h"
+
+#include "nsCOMPtr.h"
+
 
 /*
  * Class:     org_mozilla_dom_events_MouseEventImpl
@@ -34,21 +38,28 @@
 JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetAltKey
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMMouseEvent* event = (nsIDOMMouseEvent*) 
-        env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID); 
-    if (!event) {
+    nsresult rv = NS_OK;
+    nsIDOMEvent *eventPtr = (nsIDOMEvent*)
+	env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
+    nsCOMPtr<nsIDOMMouseEvent> event =  do_QueryInterface(eventPtr, &rv); 
+
+    if (!event || NS_FAILED(rv)) {
+	PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	       ("MouseEventImpl::nativeGetAltKey: cannot QI to nsIDOMMouseEvent from nsIDOMEvent"));
         JavaDOMGlobals::ThrowException(env,
-            "MouseEvent.getAltKey: NULL pointer");
+				       "MouseEvent.getAltKey: NULL pointer");
         return JNI_FALSE;
     }
 
     PRBool altKey = PR_FALSE;
-    nsresult rv = event->GetAltKey(&altKey);
+    rv = event->GetAltKey(&altKey);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
             "MouseEvent.getAltKey: failed", rv);
         return JNI_FALSE;
     }
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	   ("MouseEventImpl::nativeGetAltKey: result: %d", altKey));
 
     return (altKey == PR_TRUE) ? JNI_TRUE : JNI_FALSE;
 
@@ -63,21 +74,28 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetA
 JNIEXPORT jshort JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetButton
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMMouseEvent* event = (nsIDOMMouseEvent*)
-        env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
-    if (!event) {
+    nsresult rv = NS_OK;
+    nsIDOMEvent *eventPtr = (nsIDOMEvent*)
+	env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
+    nsCOMPtr<nsIDOMMouseEvent> event =  do_QueryInterface(eventPtr, &rv); 
+
+    if (!event || NS_FAILED(rv)) {
+	PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	       ("MouseEventImpl::nativeGetButton: cannot QI to nsIDOMMouseEvent from nsIDOMEvent"));
         JavaDOMGlobals::ThrowException(env,
             "MouseEvent.getButton: NULL pointer");
         return 0;
     }
 
     PRUint16 code = 0;
-    nsresult rv = event->GetButton(&code);
+    rv = event->GetButton(&code);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
             "MouseEvent.getButton: failed", rv);
         return 0;
     }
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	   ("MouseEventImpl::nativeGetButton: result: %d", code));
 
     return (jshort) code;
 }
@@ -90,21 +108,28 @@ JNIEXPORT jshort JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetBut
 JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetClientX
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMMouseEvent* event = (nsIDOMMouseEvent*)
-        env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
-    if (!event) {
+    nsresult rv = NS_OK;
+    nsIDOMEvent *eventPtr = (nsIDOMEvent*)
+	env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
+    nsCOMPtr<nsIDOMMouseEvent> event =  do_QueryInterface(eventPtr, &rv); 
+
+    if (!event || NS_FAILED(rv)) {
+	PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	       ("MouseEventImpl::nativeGetClientX: cannot QI to nsIDOMMouseEvent from nsIDOMEvent"));
         JavaDOMGlobals::ThrowException(env,
             "MouseEvent.getClientX: NULL pointer");
-        return 0;
+        return JNI_FALSE;
     }
 
     PRInt32 clientX = 0;
-    nsresult rv = event->GetClientX(&clientX);
+    rv = event->GetClientX(&clientX);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
             "MouseEvent.getClientX: failed", rv);
         return 0;
     }
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	   ("MouseEventImpl::nativeGetClientX: result: %d", clientX));
 
     return (jint) clientX;
 }
@@ -117,21 +142,28 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetClien
 JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetClientY
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMMouseEvent* event = (nsIDOMMouseEvent*)
-        env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
-    if (!event) {
+    nsresult rv = NS_OK;
+    nsIDOMEvent *eventPtr = (nsIDOMEvent*)
+	env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
+    nsCOMPtr<nsIDOMMouseEvent> event =  do_QueryInterface(eventPtr, &rv); 
+
+    if (!event || NS_FAILED(rv)) {
+	PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	       ("MouseEventImpl::nativeGetClientY: cannot QI to nsIDOMMouseEvent from nsIDOMEvent"));
         JavaDOMGlobals::ThrowException(env,
             "MouseEvent.getClientY: NULL pointer");
-        return 0;
+        return JNI_FALSE;
     }
 
     PRInt32 clientY = 0;
-    nsresult rv = event->GetClientY(&clientY);
+    rv = event->GetClientY(&clientY);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
             "MouseEvent.getClientY: failed", rv);
         return 0;
     }
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	   ("MouseEventImpl::nativeGetClientY: result: %d", clientY));
 
     return (jint) clientY;
 }
@@ -145,21 +177,28 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetClien
 JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetCtrlKey
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMMouseEvent* event = (nsIDOMMouseEvent*) 
-        env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID); 
-    if (!event) {
+    nsresult rv = NS_OK;
+    nsIDOMEvent *eventPtr = (nsIDOMEvent*)
+	env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
+    nsCOMPtr<nsIDOMMouseEvent> event =  do_QueryInterface(eventPtr, &rv); 
+
+    if (!event || NS_FAILED(rv)) {
+	PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	       ("MouseEventImpl::nativeGetCtrlKey: cannot QI to nsIDOMMouseEvent from nsIDOMEvent"));
         JavaDOMGlobals::ThrowException(env,
             "MouseEvent.getCtrlKey: NULL pointer");
         return JNI_FALSE;
     }
 
     PRBool ctrlKey = PR_FALSE;
-    nsresult rv = event->GetCtrlKey(&ctrlKey);
+    rv = event->GetCtrlKey(&ctrlKey);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
             "MouseEvent.getCtrlKey: failed", rv);
         return JNI_FALSE;
     }
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	   ("MouseEventImpl::nativeGetCtrlKey: result: %d", ctrlKey));
 
     return (ctrlKey == PR_TRUE) ? JNI_TRUE : JNI_FALSE;
 }
@@ -173,21 +212,28 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetC
 JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetMetaKey
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMMouseEvent* event = (nsIDOMMouseEvent*) 
-        env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID); 
-    if (!event) {
+    nsresult rv = NS_OK;
+    nsIDOMEvent *eventPtr = (nsIDOMEvent*)
+	env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
+    nsCOMPtr<nsIDOMMouseEvent> event =  do_QueryInterface(eventPtr, &rv); 
+
+    if (!event || NS_FAILED(rv)) {
+	PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	       ("MouseEventImpl::nativeGetMetaKey: cannot QI to nsIDOMMouseEvent from nsIDOMEvent"));
         JavaDOMGlobals::ThrowException(env,
             "MouseEvent.getMetaKey: NULL pointer");
         return JNI_FALSE;
     }
 
     PRBool metaKey = PR_FALSE;
-    nsresult rv = event->GetMetaKey(&metaKey);
+    rv = event->GetMetaKey(&metaKey);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
             "MouseEvent.getMetaKey: failed", rv);
         return JNI_FALSE;
     }
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	   ("MouseEventImpl::nativeGetMetaKey: result: %d", metaKey));
 
     return (metaKey == PR_TRUE) ? JNI_TRUE : JNI_FALSE;
 }
@@ -201,21 +247,28 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetM
 JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetScreenX
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMMouseEvent* event = (nsIDOMMouseEvent*)
-        env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
-    if (!event) {
+    nsresult rv = NS_OK;
+    nsIDOMEvent *eventPtr = (nsIDOMEvent*)
+	env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
+    nsCOMPtr<nsIDOMMouseEvent> event =  do_QueryInterface(eventPtr, &rv); 
+
+    if (!event || NS_FAILED(rv)) {
+	PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	       ("MouseEventImpl::nativeGetScreenX: cannot QI to nsIDOMMouseEvent from nsIDOMEvent"));
         JavaDOMGlobals::ThrowException(env,
-            "MouseEvent.getScreenX: NULL pointer\n");
-        return 0;
+            "MouseEvent.getScreenX: NULL pointer");
+        return JNI_FALSE;
     }
 
     PRInt32 screenX = 0;
-    nsresult rv = event->GetScreenX(&screenX);
+    rv = event->GetScreenX(&screenX);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
             "MouseEvent.getScreenX: failed", rv);
         return 0;
     }
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	   ("MouseEventImpl::nativeGetScreenX: result: %d", screenX));
 
     return (jint) screenX;
 }
@@ -228,21 +281,28 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetScree
 JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetScreenY
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMMouseEvent* event = (nsIDOMMouseEvent*)
-        env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
-    if (!event) {
+    nsresult rv = NS_OK;
+    nsIDOMEvent *eventPtr = (nsIDOMEvent*)
+	env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
+    nsCOMPtr<nsIDOMMouseEvent> event =  do_QueryInterface(eventPtr, &rv); 
+
+    if (!event || NS_FAILED(rv)) {
+	PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	       ("MouseEventImpl::nativeGetScreenY: cannot QI to nsIDOMMouseEvent from nsIDOMEvent"));
         JavaDOMGlobals::ThrowException(env,
             "MouseEvent.getScreenY: NULL pointer");
-        return 0;
+        return JNI_FALSE;
     }
 
     PRInt32 screenY = 0;
-    nsresult rv = event->GetScreenY(&screenY);
+    rv = event->GetScreenY(&screenY);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
             "MouseEvent.getScreenY: failed", rv);
         return 0;
     }
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	   ("MouseEventImpl::nativeGetScreenY: result: %d", screenY));
 
     return (jint) screenY;
 }
@@ -256,8 +316,15 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetScree
 JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetShiftKey
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMMouseEvent* event = (nsIDOMMouseEvent*) 
-        env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID); 
+    nsresult rv = NS_OK;
+    nsIDOMEvent *eventPtr = (nsIDOMEvent*)
+	env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	   ("MouseEventImpl::nativeGetShiftKey: eventPtr: %p", eventPtr));
+    nsCOMPtr<nsIDOMMouseEvent> event =  do_QueryInterface(eventPtr, &rv); 
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	   ("MouseEventImpl::nativeGetShiftKey: QI nsCOMPtr<nsIDOMMouseEvent> from: %p, rv: %d", eventPtr, rv));
+
     if (!event) {
         JavaDOMGlobals::ThrowException(env,
             "MouseEvent.getShiftKey: NULL pointer");
@@ -265,12 +332,16 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetS
     }
 
     PRBool shiftKey = PR_FALSE;
-    nsresult rv = event->GetShiftKey(&shiftKey);
+    rv = event->GetShiftKey(&shiftKey);
     if (NS_FAILED(rv)) {
+	PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	       ("MouseEventImpl::nativeGetShiftKey: rv: %d", rv));
         JavaDOMGlobals::ThrowException(env,
             "MouseEvent.getShiftKey: failed", rv);
         return JNI_FALSE;
     }
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	   ("MouseEventImpl::nativeGetShiftKey: result: %d", shiftKey));
 
     return (shiftKey == PR_TRUE) ? JNI_TRUE : JNI_FALSE;
 }
@@ -283,29 +354,51 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetS
 JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_MouseEventImpl_nativeGetRelatedTarget
   (JNIEnv *env, jobject jthis)
 {
-  nsIDOMMouseEvent* event = (nsIDOMMouseEvent*) 
-    env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID); 
-  if (!event) {
-    JavaDOMGlobals::ThrowException(env,
-        "MouseEvent.getRelatedNode: NULL pointer");
-    return NULL;
-  }
+    nsresult rv = NS_OK;
+    nsIDOMEvent *eventPtr = (nsIDOMEvent*)
+	env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
+    nsCOMPtr<nsIDOMMouseEvent> event =  do_QueryInterface(eventPtr, &rv); 
 
-  nsIDOMEventTarget* ret = nsnull;
-  nsresult rv = event->GetRelatedTarget(&ret);
-  if (NS_FAILED(rv)) {
-    JavaDOMGlobals::ThrowException(env,
-        "MouseEvent.getRelatedNode: failed", rv);
-    return NULL;
-  }
-  if (!ret)
-    return NULL;
+    if (!event || NS_FAILED(rv)) {
+	PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	       ("MouseEventImpl::getRelatedTarget: cannot QI nsIDOMMouseEvent from nsIDOMEvent"));
+	JavaDOMGlobals::ThrowException(env,
+				       "MouseEvent.getRelatedNode: NULL pointer");
+	return NULL;
+    }
+    
+    nsCOMPtr<nsIDOMEventTarget> ret = nsnull;
+    rv = event->GetRelatedTarget(getter_AddRefs(ret));
+    if (NS_FAILED(rv)) {
+	PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	       ("MouseEventImpl::getRelatedTarget: cannot get related target"));
 
-  nsIDOMNode* node = nsnull;
-  rv = ret->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&node);
-  printf("========== rv:%x  node:%x", rv, node);
-//      return JavaDOMGlobals::CreateNodeSubtype(env, ret);
-  return JavaDOMGlobals::CreateNodeSubtype(env, node);
+	JavaDOMGlobals::ThrowException(env,
+				       "MouseEvent.getRelatedNode: failed", rv);
+	return NULL;
+    }
+    if (!ret) {
+	PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	       ("MouseEventImpl::getRelatedTarget: related target is null"));
+	
+	return NULL;
+    }
+    
+    nsCOMPtr<nsIDOMNode> node = nsnull;
+    node = do_QueryInterface(ret, &rv);
+    jobject result = nsnull;
+    if (NS_SUCCEEDED(rv) && node) {
+	result = JavaDOMGlobals::CreateNodeSubtype(env, node);
+    }
+    else {
+	PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	       ("MouseEventImpl::getRelatedTarget: can't QI nsIDOMNode from nsIDOMEventTarget"));
+	
+    }
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	   ("MouseEventImpl::getRelatedTarget: returning %p", result));
+    
+    return result;
 }
 
 /*

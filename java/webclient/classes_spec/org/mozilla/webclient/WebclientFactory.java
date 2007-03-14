@@ -30,9 +30,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 /**
- * <p>Do per-app one-time initialization and shutdown, as well as being
- * the factory for per-window {@link BrowserControl} instances.  This
- * interface allows a pluggable webclient API implementation.  The
+ *
+ * <p>An implementation for this interface must be provided by the
+ * Webclient implementation.  This interface is not to be called by the
+ * end user.  Do per-app one-time initialization and shutdown, as well
+ * as being the factory for per-window {@link BrowserControl} instances.
+ * This interface allows a pluggable webclient API implementation.  The
  * static methods in {@link BrowserControlFactory} call through to
  * methods on this interface.  The implementation of this interface must
  * be a singleton and its the lifetime must be the same as the

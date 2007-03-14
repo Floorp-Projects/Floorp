@@ -178,7 +178,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DMOZILLA_INTERNAL_API
+DEFINES += -DMOZILLA_INTERNAL_API -DFORCE_PR_LOG
 
 ifdef MOZ_ENABLE_GTK
 ifndef MOZ_MONOLITHIC_TOOLKIT

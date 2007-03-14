@@ -26,6 +26,8 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMUIEvent.h"
 
+#include "nsCOMPtr.h"
+
 jclass JavaDOMEventsGlobals::eventClass = NULL;
 jclass JavaDOMEventsGlobals::uiEventClass = NULL;
 jclass JavaDOMEventsGlobals::eventListenerClass = NULL;
@@ -47,6 +49,9 @@ static NS_DEFINE_IID(kIDOMUIEventIID, NS_IDOMUIEVENT_IID);
 
 void JavaDOMEventsGlobals::Initialize(JNIEnv *env) 
 {
+    PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	   ("JavaDOMEventsGlobals::Initialize: Beginning initialization"));
+
   eventClass = env->FindClass("org/mozilla/dom/events/EventImpl");
   if (!eventClass) {
       JavaDOMGlobals::ThrowException(env, "Class org.mozilla.dom.events.EventImpl not found");
@@ -116,6 +121,10 @@ void JavaDOMEventsGlobals::Initialize(JNIEnv *env)
   mouseEventClass = (jclass) env->NewGlobalRef(mouseEventClass);
   if (!mouseEventClass) 
       return;
+
+  PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+	 ("JavaDOMEventsGlobals::Initialize: Completed Successfully"));
+
 }
 
 void JavaDOMEventsGlobals::Destroy(JNIEnv *env) 
@@ -175,19 +184,18 @@ static jboolean isEventOfType(const char* const* types, nsString &type)
 }
 
 jobject JavaDOMEventsGlobals::CreateEventSubtype(JNIEnv *env, 
-                      nsIDOMEvent *event) 
+                      nsIDOMEvent *eventIn) 
 {
   jobject jevent;
   jclass clazz = eventClass;
-  nsISupports *isupports;
-  void *target;
+  nsCOMPtr<nsIDOMEvent> event = eventIn;
+  nsCOMPtr<nsIDOMUIEvent> uiEvent;
   nsresult rv;
-  
-  isupports = (nsISupports *) event;
 
+  uiEvent = do_QueryInterface(event, &rv);
+  
   //check whenever our Event is UIEvent
-  rv = isupports->QueryInterface(kIDOMUIEventIID, (void **) &target);
-  if (!NS_FAILED(rv) && target) {
+  if (NS_SUCCEEDED(rv) && uiEvent) {
     // At the moment DOM2 draft specifies set of UIEvent subclasses 
     // However Mozilla still presents these events as nsUIEvent
     // So we need a cludge to determine proper java class to be created
@@ -232,8 +240,6 @@ jobject JavaDOMEventsGlobals::CreateEventSubtype(JNIEnv *env,
       clazz = uiEventClass;
     }
 
-    event->Release();
-    event = (nsIDOMEvent *) target;
   }
 
   PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
@@ -247,14 +253,13 @@ jobject JavaDOMEventsGlobals::CreateEventSubtype(JNIEnv *env,
       return NULL;
   }
 
-  env->SetLongField(jevent, eventPtrFID, (jlong) event);
+  env->SetLongField(jevent, eventPtrFID, (jlong) event.get());
   if (env->ExceptionOccurred()) {
       PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	      ("JavaDOMEventGlobals::CreateEventSubtype: failed to set native ptr %x\n", 
-	      (jlong) event));
+	       (jlong) event.get()));
       return NULL;
   }
-  event->AddRef();
 
   return jevent;
 }
