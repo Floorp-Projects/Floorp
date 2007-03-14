@@ -198,13 +198,31 @@ protected:
   }
 };
 
-static InlineBackgroundData gInlineBGData;
+static InlineBackgroundData* gInlineBGData = nsnull;
 
 static void GetPath(nsFloatPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,PRInt32 &aC1Index,float aFrac=0);
 
 // FillRect or InvertRect depending on the renderingaInvert parameter
 static void FillOrInvertRect(nsIRenderingContext& aRC,nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, PRBool aInvert);
 static void FillOrInvertRect(nsIRenderingContext& aRC,const nsRect& aRect, PRBool aInvert);
+
+// Initialize any static variables used by nsCSSRendering.
+nsresult nsCSSRendering::Init()
+{  
+  NS_ASSERTION(!gInlineBGData, "Init called twice");
+  gInlineBGData = new InlineBackgroundData();
+  if (!gInlineBGData)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return NS_OK;
+}
+
+// Clean up any global variables used by nsCSSRendering.
+void nsCSSRendering::Shutdown()
+{
+  delete gInlineBGData;
+  gInlineBGData = nsnull;
+}
 
 // Draw a line, skipping that portion which crosses aGap. aGap defines a rectangle gap
 // This services fieldset legends and only works for coords defining horizontal lines.
@@ -2621,7 +2639,7 @@ nsCSSRendering::FindBackground(nsPresContext* aPresContext,
 void
 nsCSSRendering::DidPaint()
 {
-  gInlineBGData.Reset();
+  gInlineBGData->Reset();
 }
 
 void
@@ -2851,14 +2869,14 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
       bgOriginArea = aBorderArea;
       break;
     case NS_STYLE_BG_INLINE_POLICY_BOUNDING_BOX:
-      bgOriginArea = gInlineBGData.GetBoundingRect(aForFrame) +
+      bgOriginArea = gInlineBGData->GetBoundingRect(aForFrame) +
                      aBorderArea.TopLeft();
       break;
     default:
       NS_ERROR("Unknown background-inline-policy value!  "
                "Please, teach me what to do.");
     case NS_STYLE_BG_INLINE_POLICY_CONTINUOUS:
-      bgOriginArea = gInlineBGData.GetContinuousRect(aForFrame) +
+      bgOriginArea = gInlineBGData->GetContinuousRect(aForFrame) +
                      aBorderArea.TopLeft();
       break;
     }
