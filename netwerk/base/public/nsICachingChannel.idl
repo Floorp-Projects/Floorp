@@ -50,7 +50,7 @@ interface nsIFile;
  *   3) Support for uniquely identifying cached data in cases when the URL
  *      is insufficient (e.g., HTTP form submission).
  */
-[scriptable, uuid(b1f95f5e-ee05-4434-9d34-89a935d7feef)]
+[scriptable, uuid(855bcc4d-0987-45b6-b138-3bf0bf407703)]
 interface nsICachingChannel : nsISupports
 {
     /**
@@ -96,6 +96,14 @@ interface nsICachingChannel : nsISupports
      * particular implementation of nsICachingChannel.
      */
     attribute boolean cacheAsFile;
+
+    /**
+     * Specifies whether or not the data should be placed in the offline cache,
+     * in addition to normal memory/disk caching.  This may fail if the offline
+     * cache is not present.  The value of this attribute should be set before
+     * opening the channel.
+     */
+    attribute boolean cacheForOfflineUse;
 
     /**
      * Get the "file" where the cached data can be found.  This is valid for

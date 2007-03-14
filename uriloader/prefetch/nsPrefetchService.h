@@ -78,11 +78,16 @@ public:
 private:
     ~nsPrefetchService();
 
+    nsresult Prefetch(nsIURI *aURI,
+                      nsIURI *aReferrerURI,
+                      PRBool aExplicit,
+                      PRBool aOffline);
+
     void     AddProgressListener();
     void     RemoveProgressListener();
-    nsresult EnqueueURI(nsIURI *aURI, nsIURI *aReferrerURI);
-    nsresult DequeueURI(nsIURI **aURI, nsIURI **aReferrerURI);
-    void     EmptyQueue();
+    nsresult EnqueueURI(nsIURI *aURI, nsIURI *aReferrerURI, PRBool aOffline);
+    nsresult DequeueURI(nsIURI **aURI, nsIURI **aReferrerURI, PRBool *aOffline);
+    void     EmptyQueue(PRBool includeOffline);
     void     StartPrefetching();
     void     StopPrefetching();
 
@@ -127,15 +132,18 @@ class nsPrefetchNode
 {
 public:
     nsPrefetchNode(nsIURI *aURI,
-                   nsIURI *aReferrerURI)
+                   nsIURI *aReferrerURI,
+                   PRBool aOffline)
         : mNext(nsnull)
         , mURI(aURI)
         , mReferrerURI(aReferrerURI)
+        , mOffline(aOffline)
         { }
 
     nsPrefetchNode  *mNext;
     nsCOMPtr<nsIURI> mURI;
     nsCOMPtr<nsIURI> mReferrerURI;
+    PRBool           mOffline;
 };
 
 #endif // !nsPrefetchService_h__

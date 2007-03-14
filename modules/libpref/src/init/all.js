@@ -67,6 +67,11 @@ pref("browser.cache.memory.enable",         true);
 pref("browser.cache.disk_cache_ssl",        false);
 // 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically
 pref("browser.cache.check_doc_frequency",   3);
+
+pref("browser.cache.offline.enable",           true);
+// offline cache capacity in kilobytes
+pref("browser.cache.offline.capacity",         51200);
+
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);

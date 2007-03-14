@@ -39,7 +39,7 @@
 
 interface nsIURI;
 
-[scriptable, uuid(933cb52a-2864-4a40-8678-a2d0851b0ef4)]
+[scriptable, uuid(ae241be6-3cb6-47ec-9e38-2d89bc22042a)]
 interface nsIPrefetchService : nsISupports
 {
     /**
@@ -50,6 +50,18 @@ interface nsIPrefetchService : nsISupports
      * @param aExplicit the link element has an explicit prefetch link type
      */
     void prefetchURI(in nsIURI aURI, in nsIURI aReferrerURI, in boolean aExplicit);
+
+    /**
+     * Enqueue a request to prefetch the specified URI, making sure it's in the
+     * offline cache.
+     *
+     * @param aURI the URI of the document to prefetch
+     * @param aReferrerURI the URI of the referring page
+     * @param aExplicit the link element has an explicit offline link type
+     */
+    void prefetchURIForOfflineUse(in nsIURI aURI,
+                                  in nsIURI aReferrerURI,
+                                  in boolean aExplicit);
 
     // XXX do we need a way to cancel prefetch requests?
 };

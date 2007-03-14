@@ -661,7 +661,12 @@ nsContentSink::ProcessLink(nsIContent* aElement,
   PRBool hasPrefetch = (linkTypes.IndexOf(NS_LITERAL_STRING("prefetch")) != -1);
   // prefetch href if relation is "next" or "prefetch"
   if (hasPrefetch || linkTypes.IndexOf(NS_LITERAL_STRING("next")) != -1) {
-    PrefetchHref(aHref, hasPrefetch);
+    PrefetchHref(aHref, hasPrefetch, PR_FALSE);
+  }
+
+  // fetch href into the offline cache if relation is "offline-resource"
+  if (linkTypes.IndexOf(NS_LITERAL_STRING("offline-resource")) != -1) {
+    PrefetchHref(aHref, PR_TRUE, PR_TRUE);
   }
 
   // is it a stylesheet link?
@@ -746,7 +751,9 @@ nsContentSink::ProcessMETATag(nsIContent* aContent)
 
 
 void
-nsContentSink::PrefetchHref(const nsAString &aHref, PRBool aExplicit)
+nsContentSink::PrefetchHref(const nsAString &aHref,
+                            PRBool aExplicit,
+                            PRBool aOffline)
 {
   //
   // SECURITY CHECK: disable prefetching from mailnews!
@@ -789,11 +796,13 @@ nsContentSink::PrefetchHref(const nsAString &aHref, PRBool aExplicit)
               charset.IsEmpty() ? nsnull : PromiseFlatCString(charset).get(),
               mDocumentBaseURI);
     if (uri) {
-      prefetchService->PrefetchURI(uri, mDocumentURI, aExplicit);
+      if (aOffline)
+        prefetchService->PrefetchURIForOfflineUse(uri, mDocumentURI, aExplicit);
+      else
+        prefetchService->PrefetchURI(uri, mDocumentURI, aExplicit);
     }
   }
 }
-
 
 void
 nsContentSink::ScrollToRef()

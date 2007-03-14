@@ -93,6 +93,10 @@ public:
     void                    SetCacheParentDirectory(nsILocalFile * parentDir);
     void                    SetCapacity(PRUint32  capacity);
 
+    // XXX: This is here to support the offline cache, and can be removed
+    // XXX: once it has its own cache implementation
+    void                    SetCacheParentDirectoryAndName(nsILocalFile * parentDir,
+                                                           const nsACString & str);
 
 /* private: */
 

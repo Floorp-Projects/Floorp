@@ -143,11 +143,14 @@ interface nsICache
      *                         storage (ie. typically on a system's hard disk).
      * STORE_ON_DISK_AS_FILE - Requires the cache entry to reside in persistent
      *                         storage, and in a separate file.
+     * STORE_OFFLINE         - Requires the cache entry to reside in persistent,
+     *                         reliable storage for offline use.
      */
     const nsCacheStoragePolicy STORE_ANYWHERE        = 0;
     const nsCacheStoragePolicy STORE_IN_MEMORY       = 1;
     const nsCacheStoragePolicy STORE_ON_DISK         = 2;
     const nsCacheStoragePolicy STORE_ON_DISK_AS_FILE = 3;
+    const nsCacheStoragePolicy STORE_OFFLINE         = 4;
 
     /**
      * All entries for a cache session are stored as streams of data or

@@ -929,6 +929,43 @@ nsDiskCacheDevice::SetCacheParentDirectory(nsILocalFile * parentDir)
     mCacheDirectory = do_QueryInterface(directory);
 }
 
+// XXX: This is here to support the offline cache, and can be removed
+// XXX: once it has its own cache implementation
+void
+nsDiskCacheDevice::SetCacheParentDirectoryAndName(nsILocalFile * parentDir,
+                                                  const nsACString & str)
+{
+    nsresult rv;
+    PRBool  exists;
+
+    if (Initialized()) {
+        NS_ASSERTION(PR_FALSE, "Cannot switch cache directory when initialized");
+        return;
+    }
+
+    if (!parentDir) {
+        mCacheDirectory = nsnull;
+        return;
+    }
+
+    // ensure parent directory exists
+    rv = parentDir->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && !exists)
+        rv = parentDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+    if (NS_FAILED(rv))  return;
+
+    // ensure cache directory exists
+    nsCOMPtr<nsIFile> directory;
+
+    rv = parentDir->Clone(getter_AddRefs(directory));
+    if (NS_FAILED(rv))  return;
+    rv = directory->AppendNative(str);
+    if (NS_FAILED(rv))  return;
+
+    mCacheDirectory = do_QueryInterface(directory);
+}
+
+
 
 void
 nsDiskCacheDevice::getCacheDirectory(nsILocalFile ** result)

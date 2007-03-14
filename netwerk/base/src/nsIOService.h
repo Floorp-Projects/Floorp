@@ -106,6 +106,8 @@ public:
       return mContentSniffers.GetEntries();
     }
 
+    PRBool IsOffline() { return mOffline; }
+
 private:
     // These shouldn't be called directly:
     // - construct using GetInstance

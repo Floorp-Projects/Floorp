@@ -150,6 +150,9 @@ public:
     static void      SetDiskCacheEnabled(PRBool  enabled);
     static void      SetDiskCacheCapacity(PRInt32  capacity);
 
+    static void      SetOfflineCacheEnabled(PRBool  enabled);
+    static void      SetOfflineCacheCapacity(PRInt32  capacity);
+
     static void      SetMemoryCache();
 
     nsresult         Init();
@@ -165,6 +168,7 @@ private:
     static void      Unlock();
 
     nsresult         CreateDiskDevice();
+    nsresult         CreateOfflineDevice();
     nsresult         CreateMemoryDevice();
 
     nsresult         CreateRequest(nsCacheSession *   session,
@@ -240,9 +244,11 @@ private:
     
     PRBool                          mEnableMemoryDevice;
     PRBool                          mEnableDiskDevice;
+    PRBool                          mEnableOfflineDevice;
 
     nsMemoryCacheDevice *           mMemoryDevice;
     nsDiskCacheDevice *             mDiskDevice;
+    nsDiskCacheDevice *             mOfflineDevice;
 
     nsCacheEntryHashTable           mActiveEntries;
     PRCList                         mDoomedEntries;
