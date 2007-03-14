@@ -644,7 +644,7 @@ static inline PRBool
 IsMissingGlyphsGDI(HDC aDC, const char *aString, PRUint32 aLength, WCHAR *glyphBuffer)
 {
     DWORD ret;
-    ret = GetGlyphIndicesA(aDC, aString, aLength, glyphBuffer, GGI_MARK_NONEXISTING_GLYPHS);
+    ret = GetGlyphIndicesA(aDC, aString, aLength, (WORD*) glyphBuffer, GGI_MARK_NONEXISTING_GLYPHS);
     if (ret == GDI_ERROR) {
         NS_WARNING("GetGlyphIndicies failed\n");
         return PR_TRUE;
@@ -661,7 +661,7 @@ static inline PRBool
 IsMissingGlyphsGDI(HDC aDC, const PRUnichar *aString, PRUint32 aLength, WCHAR *glyphBuffer)
 {
     DWORD ret;
-    ret = GetGlyphIndicesW(aDC, aString, aLength, glyphBuffer, GGI_MARK_NONEXISTING_GLYPHS);
+    ret = GetGlyphIndicesW(aDC, aString, aLength, (WORD*) glyphBuffer, GGI_MARK_NONEXISTING_GLYPHS);
     if (ret == GDI_ERROR) {
         NS_WARNING("GetGlyphIndicies failed\n");
         return PR_TRUE;
