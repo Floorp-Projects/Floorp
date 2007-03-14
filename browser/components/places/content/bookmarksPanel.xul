@@ -70,6 +70,7 @@
   <tree id="bookmarks-view" class="placesTree" type="places"
         flex="1"
         hidecolumnpicker="true"
+        place="place:&amp;folder=1&amp;group=3&amp;excludeQueries=1"
         context="placesContext"
         onkeypress="if (event.keyCode == 13) this.controller.openSelectedNodeWithEvent(event);"
         onclick="SidebarUtils.handleClick(this, event);">

@@ -338,6 +338,7 @@
     <tree id="placesList"
           class="placesTree"
           type="places"
+          place="place:&amp;folder=1&amp;group=3&amp;excludeItems=1&amp;excludeQueries=1"
           hidecolumnpicker="true" context="placesContext"
           onselect="PlacesOrganizer.onPlaceSelected(true);
                     PlacesOrganizer.updateStatusBarForView(this);"
