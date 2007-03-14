@@ -89,6 +89,7 @@ nsCookie::Create(const nsACString &aName,
                  nsInt64          aLastAccessed,
                  PRBool           aIsSession,
                  PRBool           aIsSecure,
+                 PRBool           aIsHttpOnly,
                  nsCookieStatus   aStatus,
                  nsCookiePolicy   aPolicy)
 {
@@ -111,7 +112,8 @@ nsCookie::Create(const nsACString &aName,
   // construct the cookie. placement new, oh yeah!
   return new (place) nsCookie(name, value, host, path, end,
                               aExpiry, aLastAccessed, ++gLastCreationTime,
-                              aIsSession, aIsSecure, aStatus, aPolicy);
+                              aIsSession, aIsSecure, aIsHttpOnly,
+                              aStatus, aPolicy);
 }
 
 /******************************************************************************
@@ -131,6 +133,7 @@ NS_IMETHODIMP nsCookie::GetIsDomain(PRBool *aIsDomain)     { *aIsDomain = IsDoma
 NS_IMETHODIMP nsCookie::GetIsSecure(PRBool *aIsSecure)     { *aIsSecure = IsSecure();   return NS_OK; }
 NS_IMETHODIMP nsCookie::GetStatus(nsCookieStatus *aStatus) { *aStatus = Status();       return NS_OK; }
 NS_IMETHODIMP nsCookie::GetPolicy(nsCookiePolicy *aPolicy) { *aPolicy = Policy();       return NS_OK; }
+NS_IMETHODIMP nsCookie::GetHttpOnly(PRBool *aHttpOnly)     { *aHttpOnly = IsHttpOnly(); return NS_OK; }
 
 // compatibility method, for use with the legacy nsICookie interface.
 // here, expires == 0 denotes a session cookie.

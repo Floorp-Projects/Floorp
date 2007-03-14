@@ -44,7 +44,7 @@
  * access of cookie objects
  */
 
-[scriptable, uuid(d3493503-7854-46ed-8284-8af54a847efb)]
+[scriptable, uuid(1f5b06e1-8d52-46a0-a26d-762bd6a1Cf75)]
 
 interface nsICookie2 : nsICookie
 {
@@ -70,5 +70,11 @@ interface nsICookie2 : nsICookie
      * attribute on nsICookie.
      */
     readonly attribute PRInt64 expiry;
+
+    /**
+     * true if the cookie is an http only cookie
+     */
+    readonly attribute boolean httpOnly;
+
 
 };

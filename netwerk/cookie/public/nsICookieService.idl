@@ -94,10 +94,8 @@ interface nsICookieService : nsISupports
   /*
    * Get the complete cookie string associated with the URI.
    *
-   * XXX this function is redundant and will most likely be removed in a future
-   * revision of this interface.  GetCookieString will query the documentURI
-   * property off of nsIHttpChannelInternal if supported, so GetCookieString
-   * can be used in place of this method.
+   * This function is NOT redundant with getCookieString, as the result
+   * will be different based on httponly (see bug 178993)
    *
    * @param aURI
    *        the URI of the document for which cookies are being queried.
@@ -135,11 +133,8 @@ interface nsICookieService : nsISupports
   /*
    * Set the cookie string and expires associated with the URI.
    *
-   * XXX this function is redundant and will most likely be removed in a future
-   * revision of this interface.  SetCookieString will query the documentURI
-   * property off of nsIHttpChannelInternal if supported, and SetCookieString
-   * could also query the Date header from the channel if aChannel supports
-   * nsIHttpChannel.
+   * This function is NOT redundant with setCookieString, as the result
+   * will be different based on httponly (see bug 178993)
    *
    * @param aURI
    *        the URI of the document for which cookies are being set.
