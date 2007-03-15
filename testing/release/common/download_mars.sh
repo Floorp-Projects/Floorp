@@ -4,7 +4,7 @@ download_mars () {
     test_only="$3"
 
     echo "Using  $update_url"
-    curl -sk $update_url > update.xml
+    wget -q -O update.xml $update_url
 
     mkdir -p update/
     if [ -z $only ]; then
