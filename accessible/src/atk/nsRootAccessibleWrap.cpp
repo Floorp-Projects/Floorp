@@ -155,6 +155,7 @@ nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
             privAcc = do_QueryInterface(treeItemAccessible);
             privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
                                       treeItemAccessible, nsnull);
+            accessible = treeItemAccessible;
         }
         else
 #endif 
@@ -173,12 +174,21 @@ nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
                     }
                 }
             }
+            accessible = radioAcc;
             if (radioAcc) {
                 privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, radioAcc, nsnull);
             }
         }
-        else
+        else {
             FireAccessibleFocusEvent(accessible, aTargetNode, aEvent);
+        }
+        if (accessible) {
+            // Fire state change event for focus
+            stateData.enable = PR_TRUE;
+            stateData.state = nsIAccessibleStates::STATE_FOCUSED;
+            privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, accessible,
+                                      &stateData);
+        }
     }
     else if (eventType.LowerCaseEqualsLiteral("select")) {
 #ifdef MOZ_XUL
