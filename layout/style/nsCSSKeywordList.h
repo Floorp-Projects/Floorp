@@ -292,7 +292,9 @@ CSS_KEY(inline-block, inline_block)
 CSS_KEY(inline-table, inline_table)
 CSS_KEY(inset, inset)
 CSS_KEY(inside, inside)
+#ifdef GFX_HAS_INVERT
 CSS_KEY(invert, invert)
+#endif
 CSS_KEY(italic, italic)
 CSS_KEY(justify, justify)
 CSS_KEY(katakana, katakana)

@@ -944,14 +944,16 @@ PRBool  skippedSide = PR_FALSE;
       // (because invert is not supported on cur platform)
       nscolor sideColor(aColorStyle->mColor);
 
-      PRBool  isInvert=PR_FALSE;
+      PRBool  isInvert = PR_FALSE;
       if (aDoOutline) {
-        // see if the outline color is 'invert'
-        if (aOutlineStyle->GetOutlineInvert()) { 
-          isInvert = PR_TRUE;
-        } else {
+        if (!aOutlineStyle->GetOutlineInitialColor()) {
           aOutlineStyle->GetOutlineColor(sideColor);
         }
+#ifdef GFX_HAS_INVERT
+        else {
+          isInvert = PR_TRUE;
+        }
+#endif
       } else {
         PRBool transparent; 
         PRBool foreground;
@@ -2097,14 +2099,18 @@ nscoord width, offset;
   // and the platform does not support that
   nscolor outlineColor(ourColor->mColor);
   PRBool  canDraw = PR_FALSE;
+#ifdef GFX_HAS_INVERT
   PRBool  modeChanged=PR_FALSE;
+#endif
 
-  // see if the outline color is 'invert' or can invert.
-  if (aOutlineStyle.GetOutlineInvert()) {
+  // see if the outline color is special color.
+  if (aOutlineStyle.GetOutlineInitialColor()) {
     canDraw = PR_TRUE;
+#ifdef GFX_HAS_INVERT
     if( NS_SUCCEEDED(aRenderingContext.SetPenMode(nsPenMode_kInvert)) ) {
       modeChanged=PR_TRUE;
     }
+#endif
   } else {
     canDraw = aOutlineStyle.GetOutlineColor(outlineColor);
   }
@@ -2133,10 +2139,11 @@ nscoord width, offset;
              outlineColor,
              bgColor->mBackgroundColor,outside, inside,aSkipSides,
              appUnitsPerPixel, aGap);
-
+#ifdef GFX_HAS_INVERT
     if(modeChanged ) {
       aRenderingContext.SetPenMode(nsPenMode_kNone);
-    }  
+    }
+#endif
   }
 }
 
@@ -4026,26 +4033,26 @@ QBCurve::MidPointDivide(QBCurve *A,QBCurve *B)
 
 void FillOrInvertRect(nsIRenderingContext& aRC, nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, PRBool aInvert)
 {
-#ifndef MOZ_CAIRO_GFX
+#ifdef GFX_HAS_INVERT
   if (aInvert) {
     aRC.InvertRect(aX, aY, aWidth, aHeight);
   } else {
 #endif
     aRC.FillRect(aX, aY, aWidth, aHeight);
-#ifndef MOZ_CAIRO_GFX
+#ifdef GFX_HAS_INVERT
   }
 #endif
 }
 
 void FillOrInvertRect(nsIRenderingContext& aRC, const nsRect& aRect, PRBool aInvert)
 {
-#ifndef MOZ_CAIRO_GFX
+#ifdef GFX_HAS_INVERT
   if (aInvert) {
     aRC.InvertRect(aRect);
   } else {
 #endif
     aRC.FillRect(aRect);
-#ifndef MOZ_CAIRO_GFX
+#ifdef GFX_HAS_INVERT
   }
 #endif
 }

@@ -723,7 +723,8 @@ xul|*:root select[appearance="full"] item {
 /* XXX: selectors are wrong, styles don't work (bug 351797). */
 xul|*:root select1[appearance="full"] xul|box xul|radiogroup:focus xul|radio[selected] + label,
 xul|*:root select[appearance="full"] xul|box xul|checkbox:focus + label {
-  outline: 1px dotted invert;
+  /* Don't specify the outline-color, we should always use initial value. */
+  outline: 1px dotted;
 }
 
 xul|*:root select[appearance="full"] xul|*.checkbox-label-box,

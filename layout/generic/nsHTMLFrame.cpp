@@ -493,7 +493,7 @@ CanvasFrame::PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt)
 
   nsStyleOutline outlineStyle(GetPresContext());
   outlineStyle.SetOutlineStyle(NS_STYLE_BORDER_STYLE_DOTTED);
-  outlineStyle.SetOutlineInvert();
+  outlineStyle.SetOutlineInitialColor();
 
  // XXX use the root frame foreground color, but should we find BODY frame
  // for HTML documents?

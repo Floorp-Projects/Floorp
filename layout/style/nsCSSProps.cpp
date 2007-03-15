@@ -728,7 +728,11 @@ const PRInt32 nsCSSProps::kOutlineStyleKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kOutlineColorKTable[] = {
+#ifdef GFX_HAS_INVERT
   eCSSKeyword_invert, NS_STYLE_COLOR_INVERT,
+#else
+  eCSSKeyword__moz_use_text_color, NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR,
+#endif
   eCSSKeyword_UNKNOWN,-1
 };
 

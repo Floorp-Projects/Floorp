@@ -852,7 +852,8 @@
             // XXX Should we change the following style for FAYT pseudo focus?
             // XXX Shouldn't we change default design if outline is visible
             //     already?
-            aFoundLink.style.outline = "1px dotted invert";
+            // Don't set the outline-color, we should always use initial value.
+            aFoundLink.style.outline = "1px dotted";
             aFoundLink.style.outlineOffset = "0";
           }
 

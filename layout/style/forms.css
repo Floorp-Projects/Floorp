@@ -334,7 +334,8 @@ input[type="image"][disabled] {
 }
 
 input[type="image"]:focus {
-  outline: 1px dotted invert;
+  /* Don't specify the outline-color, we should always use initial value. */
+  outline: 1px dotted;
 }
 
 /* file selector */

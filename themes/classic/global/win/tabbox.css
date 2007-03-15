@@ -98,7 +98,8 @@ tab[selected="true"] {
 }
 
 tab:focus > .tab-middle {
-  outline: 1px dotted invert;
+  /* Don't specify the outline-color, we should always use initial value. */
+  outline: 1px dotted;
 }
 
 tab[beforeselected="true"] {

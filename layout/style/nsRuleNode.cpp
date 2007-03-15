@@ -3406,16 +3406,30 @@ nsRuleNode::ComputeOutlineData(nsStyleStruct* aStartStruct,
   nscolor outlineColor;
   nscolor unused = NS_RGB(0,0,0);
   if (eCSSUnit_Inherit == marginData.mOutlineColor.GetUnit()) {
-    inherited = PR_TRUE;
-    if (parentOutline->GetOutlineColor(outlineColor))
-      outline->SetOutlineColor(outlineColor);
-    else
-      outline->SetOutlineInvert();
+    if (parentContext) {
+      inherited = PR_TRUE;
+      if (parentOutline->GetOutlineColor(outlineColor))
+        outline->SetOutlineColor(outlineColor);
+      else {
+#ifdef GFX_HAS_INVERT
+        outline->SetOutlineInitialColor();
+#else
+        // We want to inherit the color from the parent, not use the
+        // color on the element where this chunk of style data will be
+        // used.  We can ensure that the data for the parent are fully
+        // computed (unlike for the element where this will be used, for
+        // which the color could be specified on a more specific rule).
+        outline->SetOutlineColor(parentContext->GetStyleColor()->mColor);
+#endif
+      }
+    } else {
+      outline->SetOutlineInitialColor();
+    }
   }
   else if (SetColor(marginData.mOutlineColor, unused, mPresContext, aContext, outlineColor, inherited))
     outline->SetOutlineColor(outlineColor);
   else if (eCSSUnit_Enumerated == marginData.mOutlineColor.GetUnit())
-    outline->SetOutlineInvert();
+    outline->SetOutlineInitialColor();
 
 // -moz-outline-radius: length, percent, inherit
   nsStyleCoord  coord;

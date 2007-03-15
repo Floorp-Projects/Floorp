@@ -478,7 +478,8 @@ object:focus, ol:focus, p:focus, pre:focus, q:focus, s:focus, samp:focus,
 small:focus, span:focus, strike:focus, strong:focus, sub:focus, sup:focus, 
 table:focus, tbody:focus, td:focus, tfoot:focus, th:focus, thead:focus, 
 tr:focus, tt:focus, u:focus, ul:focus, var:focus {
-   outline: 1px dotted invert;
+  /* Don't specify the outline-color, we should always use initial value. */
+   outline: 1px dotted;
 }
 
 /* hidden elements */
