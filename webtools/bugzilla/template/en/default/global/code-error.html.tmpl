@@ -406,9 +406,6 @@
     [% title = "Attachment Must Be Patch" %]
     Attachment #[% attach_id FILTER html %] must be a patch.
 
-  [% ELSIF error == "nested_transaction" %]
-    Attempted to start a new transaction without finishing previous one first.
-
   [% ELSIF error == "not_in_transaction" %]
     Attempted to end transaction without starting one first.
 
