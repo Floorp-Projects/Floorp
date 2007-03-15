@@ -99,6 +99,8 @@ chatzilla.jar:
 	skin/modern/chatzilla/images/input-send.png         (xul/skin/images/input-send.png)
 	skin/modern/chatzilla/images/secure.png             (xul/skin/images/secure.png)
 	skin/modern/chatzilla/images/secure-broken.png      (xul/skin/images/secure-broken.png)
+	skin/modern/chatzilla/images/online.png             (xul/skin/images/online.png)
+	skin/modern/chatzilla/images/offline.png            (xul/skin/images/offline.png)
 	locale/en-US/chatzilla/chatzillaOverlay.dtd  (xul/locale/en-US/chatzillaOverlay.dtd) 
 	locale/en-US/chatzilla/browserOverlay.dtd    (xul/locale/en-US/browserOverlay.dtd) 
 	locale/en-US/chatzilla/pref-irc.dtd          (xul/locale/en-US/pref-irc.dtd)

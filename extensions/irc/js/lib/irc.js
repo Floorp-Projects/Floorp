@@ -734,6 +734,9 @@ function serv_sockdiscon(status)
     var ev = new CEvent ("server", "disconnect", this, "onDisconnect");
     ev.server = this;
     ev.disconnectStatus = status;
+    if (ev.disconnectStatus == NS_ERROR_BINDING_ABORTED)
+        ev.disconnectStatus = NS_ERROR_ABORT;
+
     this.parent.eventPump.addEvent (ev);
 }
 
@@ -1025,10 +1028,12 @@ function serv_disconnect(e)
         network.delayedConnect();
     };
 
-    if ((this.parent.state == NET_CONNECTING) ||
+    // Don't reconnect if our connection was aborted.
+    var wasAborted = (e.disconnectStatus == NS_ERROR_ABORT);
+    if (((this.parent.state == NET_CONNECTING) && !wasAborted) ||
         /* fell off while connecting, try again */
         (this.parent.primServ == this) && (this.parent.state == NET_ONLINE) &&
-        (!("quitting" in this) && this.parent.stayingPower))
+        (!("quitting" in this) && this.parent.stayingPower && !wasAborted))
     { /* fell off primary server, reconnect to any host in the serverList */
         setTimeout(delayedConnectFn, 0, this.parent);
     }
@@ -1097,6 +1102,7 @@ function serv_onsenddata (e)
                 ev.server = this;
                 ev.reason = "error";
                 ev.exception = ex;
+                ev.disconnectStatus = NS_ERROR_ABORT;
                 this.parent.eventPump.addEvent(ev);
 
                 return false;
@@ -1144,6 +1150,7 @@ function serv_poll(e)
             ev.server = this;
             ev.reason = "error";
             ev.exception = ex;
+            ev.disconnectStatus = NS_ERROR_ABORT;
             this.parent.eventPump.addEvent (ev);
             return false;
         }

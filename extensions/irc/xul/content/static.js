@@ -208,6 +208,7 @@ function init()
 
     client.busy = false;
     updateProgress();
+    initOfflineIcon();
 
     client.initialized = true;
 
@@ -2015,6 +2016,182 @@ function updateSecurityIcon()
         case STATE_IS_INSECURE:
         default:
             securityButton.setAttribute("tooltiptext", MSG_SECURITY_INFO);
+    }
+}
+
+function initOfflineIcon()
+{
+    const IOSVC2_CID = "@mozilla.org/network/io-service;1";
+    const PRBool_CID = "@mozilla.org/supports-PRBool;1";
+    const OS_CID = "@mozilla.org/observer-service;1";
+    const nsISupportsPRBool = Components.interfaces.nsISupportsPRBool;
+
+    client.offlineObserver = {
+        _element: document.getElementById("offline-status"),
+        _getNewIOSvc: function offline_getNewIOSvc()
+        {
+            try
+            {
+                return getService(IOSVC2_CID, "nsIIOService2");
+            }
+            catch (ex) {}
+
+            // If it failed, it's probably just not there. We don't care.
+            return null;
+        },
+        state: function offline_state()
+        {
+            return (client.iosvc.offline ? "offline" : "online");
+        },
+        observe: function offline_observe(subject, topic, state)
+        {
+            if ((topic == "offline-requested") &&
+                (client.getConnectionCount() > 0))
+            {
+                var buttonAry = [MSG_REALLY_GO_OFFLINE, MSG_DONT_GO_OFFLINE];
+                var rv = confirmEx(MSG_GOING_OFFLINE, buttonAry);
+                if (rv == 1) // Don't go offline, please!
+                {
+                    subject.QueryInterface(nsISupportsPRBool);
+                    subject.data = true;
+                }
+            }
+            else if (topic == "network:offline-status-changed")
+            {
+                this.updateOfflineUI();
+            }
+        },
+        updateOfflineUI: function offline_uiUpdate()
+        {
+            this._element.setAttribute("offlinestate", this.state());
+            var tooltipMsgId = "MSG_OFFLINESTATE_" + this.state().toUpperCase();
+            this._element.setAttribute("tooltiptext", window[tooltipMsgId]);
+        },
+        toggleOffline: function offline_toggle()
+        {
+            // Check whether people are OK with us going offline:
+            if (!client.iosvc.offline && !this.canGoOffline())
+                return;
+
+            // Stop automatic management of the offline status, if existing.
+            try
+            {
+                var ioSvc2 = this._getNewIOSvc();
+                if (ioSvc2 && ("manageOfflineStatus" in ioSvc2))
+                    ioSvc2.manageOfflineStatus = false;
+            }
+            catch (ex)
+            {
+                dd("Turning off managed offline status failed!\n" + ex);
+            }
+
+            // Actually change the offline state.
+            client.iosvc.offline = !client.iosvc.offline;
+            // Update the pref:
+            this.updatePrefFromOffline();
+        },
+        canGoOffline: function offline_check()
+        {
+            try
+            {
+                var os = getService(OS_CID, "nsIObserverService");
+                var canGoOffline = newObject(PRBool_CID, "nsISupportsPRBool");
+                os.notifyObservers(canGoOffline, "offline-requested", null);
+                // Someone called for a halt
+                if (canGoOffline.data)
+                    return false;
+            }
+            catch (ex)
+            {
+                dd("Exception when trying to ask if we could go offline:" + ex);
+            }
+            return true;
+        },
+        updateOfflineFromPref: function offline_syncFromPref()
+        {
+            // On toolkit, we might have smart management of offline mode.
+            // Don't interfere.
+            var ioSvc2 = this._getNewIOSvc();
+            if (ioSvc2 && ioSvc2.manageOfflineStatus)
+                return;
+
+            // This is app-managed, or should be, on startup:
+            if (client.host == "Mozilla")
+                return;
+
+            var isOffline = false;
+            var prefSvc = getService("@mozilla.org/preferences-service;1",
+                                     "nsIPrefBranch");
+            // Let the app-specific hacks begin:
+            try {
+                if ((client.host == "Firefox") || (client.host == "Flock"))
+                    isOffline = prefSvc.getBoolPref("browser.offline");
+                else if (client.host == "XULrunner")
+                    isOffline = !prefSvc.getBoolPref("network.online");
+            }
+            catch (ex) { /* Whatever. */ }
+
+            // Actually do it:
+            client.iosvc.offline = isOffline;
+        },
+        updatePrefFromOffline: function offline_syncToPref()
+        {
+            // This is app-managed, or should be.
+            if (client.host == "Mozilla")
+                return;
+
+            var isOffline = client.iosvc.offline;
+            var prefSvc = getService("@mozilla.org/preferences-service;1",
+                                     "nsIPrefBranch");
+            // Let the app-specific hacks begin:
+            try {
+                if ((client.host == "Firefox") || (client.host == "Flock"))
+                    prefSvc.setBoolPref("browser.offline", isOffline);
+                else if (client.host == "XULrunner")
+                    prefSvc.setBoolPref("network.online", !isOffline);
+            }
+            catch (ex)
+            {
+                dd("Couldn't set offline pref! Error:" + ex);
+            }
+        }
+    };
+
+    try
+    {
+        var os = getService(OS_CID, "nsIObserverService");
+        os.addObserver(client.offlineObserver, "offline-requested", false);
+        os.addObserver(client.offlineObserver,
+                       "network:offline-status-changed", false);
+    }
+    catch (ex)
+    {
+        dd("Exception when trying to register offline observers: " + ex);
+    }
+
+    var elem = client.offlineObserver._element;
+    elem.setAttribute("onclick", "client.offlineObserver.toggleOffline()");
+    client.offlineObserver.updateOfflineFromPref();
+    client.offlineObserver.updateOfflineUI();
+
+    // Don't leak:
+    delete os;
+    delete elem;
+}
+
+function uninitOfflineIcon()
+{
+    const OS_CID = "@mozilla.org/observer-service;1";
+    try
+    {
+        var os = getService(OS_CID, "nsIObserverService");
+        os.removeObserver(client.offlineObserver, "offline-requested", false);
+        os.removeObserver(client.offlineObserver,
+                          "network:offline-status-changed", false);
+    }
+    catch (ex)
+    {
+        dd("Exception when trying to unregister offline observers: " + ex);
     }
 }
 

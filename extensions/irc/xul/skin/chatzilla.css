@@ -315,3 +315,10 @@ progressmeter[mode="undetermined"] {
     display: none;
 }
 
+#offline-status[offlinestate="offline"] {
+    list-style-image: url("chrome://chatzilla/skin/images/offline.png");
+}
+
+#offline-status[offlinestate="online"] {
+    list-style-image: url("chrome://chatzilla/skin/images/online.png");
+}

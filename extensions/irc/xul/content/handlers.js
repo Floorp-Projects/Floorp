@@ -142,6 +142,7 @@ function onClose()
 function onUnload()
 {
     dd("Shutting down ChatZilla.");
+    uninitOfflineIcon();
     destroy();
 }
 
@@ -1944,6 +1945,20 @@ function my_netdisconnect (e)
                 msg = MSG_PROXY_CONNECTION_REFUSED;
                 break;
 
+            case NS_ERROR_ABORT:
+                if (client.iosvc.offline)
+                {
+                    msg = getMsg(MSG_CONNECTION_ABORT_OFFLINE,
+                                 [this.getURL(), e.server.getURL()]);
+                }
+                else
+                {
+                    msg = getMsg(MSG_CONNECTION_ABORT_UNKNOWN,
+                                 [this.getURL(), e.server.getURL(),
+                                  formatException(e.exception)]);
+                }
+                break;
+
             default:
                 msg = getMsg(MSG_CLOSE_STATUS,
                              [this.getURL(), e.server.getURL(),
@@ -1962,6 +1977,12 @@ function my_netdisconnect (e)
     {
         msgType = "DISCONNECT";
         msg = getMsg(MSG_CONNECTION_QUIT, [this.getURL(), e.server.getURL()]);
+        msgNetwork = msg;
+    }
+    // We won't reconnect if the error was really bad.
+    else if ((typeof e.disconnectStatus != "undefined") &&
+             (e.disconnectStatus == NS_ERROR_ABORT))
+    {
         msgNetwork = msg;
     }
     else
