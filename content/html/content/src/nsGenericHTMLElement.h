@@ -166,11 +166,19 @@ public:
 
   /**
    * Get the frame's offset information for offsetTop/Left/Width/Height.
+   * @note This method flushes pending notifications (Flush_Layout).
    * @param aRect the offset information [OUT]
    * @param aOffsetParent the parent the offset is relative to (offsetParent)
    *        [OUT]
    */
   void GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent);
+  /**
+   * Get the element's styled frame (the primary frame or, for tables, the inner
+   * table frame) and closest scrollable view.
+   * @note This method flushes pending notifications (Flush_Layout).
+   * @param aScrollableView the scrollable view [OUT]
+   * @param aFrame (optional) the frame [OUT]
+   */
   void GetScrollInfo(nsIScrollableView **aScrollableView,
                      nsIFrame **aFrame = nsnull);
 

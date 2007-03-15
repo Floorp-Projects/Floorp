@@ -116,6 +116,15 @@ class nsINodeInfo;
 class nsIDOMNodeList;
 class nsRuleWalker;
 
+static nsIFrame*
+GetStyledFrameFor(nsGenericHTMLElement* aElement)
+{
+  nsIFrame *frame = aElement->GetPrimaryFrame(Flush_Layout);
+
+  return (frame && frame->GetType() == nsGkAtoms::tableOuterFrame) ?
+    frame->GetFirstChild(nsnull) : frame;
+}
+
 // XXX todo: add in missing out-of-memory checks
 
 //----------------------------------------------------------------------
@@ -530,109 +539,54 @@ void
 nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
 {
   *aOffsetParent = nsnull;
-
   aRect.x = aRect.y = 0;
   aRect.Empty();
 
-  nsIDocument *document = GetCurrentDoc();
-  if (!document) {
-    return;
-  }
-
-  // Flush all pending notifications so that our frames are up to date.  Make
-  // sure to do this first thing, since it may end up destroying our document's
-  // presshell.
-  document->FlushPendingNotifications(Flush_Layout);
-
-  // Get Presentation shell 0
-  nsIPresShell *presShell = document->GetShellAt(0);
-
-  if (!presShell) {
-    return;
-  }
-
-  // Get the Presentation Context from the Shell
-  nsPresContext *context = presShell->GetPresContext();
-  if (!context) {
-    return;
-  }
-
-  // Get the Frame for our content
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
-
+  nsIFrame* frame = ::GetStyledFrameFor(this);
   if (!frame) {
     return;
   }
 
-  // Get the union of all rectangles in this and continuation frames
-  nsRect rcFrame = nsLayoutUtils::GetAllInFlowBoundingRect(frame);
-
-  nsIContent *docElement = document->GetRootContent();
-
-  // Find the frame parent whose content's tagName either matches
-  // the tagName passed in or is the document element.
-  nsIFrame* parent = nsnull;
-  PRBool done = PR_FALSE;
-
-  nsIContent* content = frame->GetContent();
-
-  if (content) {
-    if (IsBody(content) || content == docElement) {
-      done = PR_TRUE;
-
-      parent = frame;
-    }
-  }
-
+  nsIFrame* parent = frame->GetParent();
   nsPoint origin(0, 0);
 
-  if (!done) {
-    PRBool is_absolutely_positioned = PR_FALSE;
-    PRBool is_positioned = PR_FALSE;
+  if (parent && parent->GetType() == nsGkAtoms::tableOuterFrame) {
+    origin = parent->GetPositionIgnoringScrolling();
+    parent = parent->GetParent();
+  }
 
-    origin = frame->GetPositionIgnoringScrolling();
+  // Get the union of all rectangles in this and continuation frames.
+  nsRect rcFrame = nsLayoutUtils::GetAllInFlowBoundingRect(frame);
+  nsIContent* docElement = GetCurrentDoc()->GetRootContent();
+  nsIContent* content = frame->GetContent();
 
-    const nsStyleDisplay* display = frame->GetStyleDisplay();
+  if (content && (IsBody(content) || content == docElement)) {
+    parent = frame;
+  }
+  else {
+    const PRBool isPositioned = frame->GetStyleDisplay()->IsPositioned();
+    const PRBool isAbsolutelyPositioned =
+      frame->GetStyleDisplay()->IsAbsolutelyPositioned();
+    origin += frame->GetPositionIgnoringScrolling();
 
-    if (display->IsPositioned()) {
-      if (display->IsAbsolutelyPositioned()) {
-        // If the primary frame or a parent is absolutely positioned
-        // (fixed or absolute) we stop walking up the frame parent
-        // chain
+    for ( ; parent ; parent = parent->GetParent()) {
+      content = parent->GetContent();
 
-        is_absolutely_positioned = PR_TRUE;
-      }
-
-      // We need to know if the primary frame is positioned later on.
-      is_positioned = PR_TRUE;
-    }
-
-    parent = frame->GetParent();
-
-    while (parent) {
-      display = parent->GetStyleDisplay();
-
-      if (display->IsPositioned()) {
-        // Stop at the first *parent* that is positioned (fixed,
-        // absolute, or relatiive)
-
-        *aOffsetParent = parent->GetContent();
+      // Stop at the first ancestor that is positioned.
+      if (parent->GetStyleDisplay()->IsPositioned()) {
+        *aOffsetParent = content;
         NS_IF_ADDREF(*aOffsetParent);
-
         break;
       }
 
       // Add the parent's origin to our own to get to the
-      // right coordinate system
-
-      if (!is_absolutely_positioned) {
+      // right coordinate system.
+      if (!isAbsolutelyPositioned) {
         origin += parent->GetPositionIgnoringScrolling();
       }
 
-      content = parent->GetContent();
-
       if (content) {
-        // If we've hit the document element, break here
+        // If we've hit the document element, break here.
         if (content == docElement) {
           break;
         }
@@ -640,18 +594,15 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
         // If the tag of this frame is a offset parent tag and this
         // element is *not* positioned, break here. Also break if we
         // hit the body element.
-        if ((!is_positioned && IsOffsetParent(content)) || IsBody(content)) {
+        if ((!isPositioned && IsOffsetParent(content)) || IsBody(content)) {
           *aOffsetParent = content;
           NS_ADDREF(*aOffsetParent);
-
           break;
         }
       }
-
-      parent = parent->GetParent();
     }
 
-    if (is_absolutely_positioned && !*aOffsetParent) {
+    if (isAbsolutelyPositioned && !*aOffsetParent) {
       // If this element is absolutely positioned, but we don't have
       // an offset parent it means this element is an absolutely
       // positioned child that's not nested inside another positioned
@@ -660,13 +611,11 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
       // parent chain. We want the offset parent in this case to be
       // the body, so we just get the body element from the document.
 
-      nsCOMPtr<nsIDOMHTMLDocument> html_doc(do_QueryInterface(document));
+      nsCOMPtr<nsIDOMHTMLDocument> html_doc(do_QueryInterface(GetCurrentDoc()));
 
       if (html_doc) {
         nsCOMPtr<nsIDOMHTMLElement> html_element;
-
         html_doc->GetBody(getter_AddRefs(html_element));
-
         if (html_element) {
           CallQueryInterface(html_element, aOffsetParent);
         }
@@ -674,37 +623,18 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
     }
   }
 
-  // For the origin, add in the border for the frame
-
-#if 0
-  // We used to do this to include the border of the frame in the
-  // calculations, but I think that's wrong. My tests show that we
-  // work more like IE if we don't do this, so lets try this and see
-  // if people agree.
-  const nsStyleBorder* border = frame->GetStyleBorder();
-  origin.x += border->GetBorderWidth(NS_SIDE_LEFT);
-  origin.y += border->GetBorderWidth(NS_SIDE_TOP);
-#endif
-
-  // And subtract out the border for the parent
-  if (parent) {
-    PRBool includeBorder = PR_TRUE;  // set to false if border-box sizing is used
-    const nsStylePosition* position = parent->GetStylePosition();
-    if (position->mBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
-      includeBorder = PR_FALSE;
-    }
-    
-    if (includeBorder) {
-      const nsStyleBorder* border = parent->GetStyleBorder();
-      origin.x -= border->GetBorderWidth(NS_SIDE_LEFT);
-      origin.y -= border->GetBorderWidth(NS_SIDE_TOP);
-    }
+  // Subtract the parent border unless it uses border-box sizing.
+  if (parent &&
+      parent->GetStylePosition()->mBoxSizing != NS_STYLE_BOX_SIZING_BORDER) {
+    const nsStyleBorder* border = parent->GetStyleBorder();
+    origin.x -= border->GetBorderWidth(NS_SIDE_LEFT);
+    origin.y -= border->GetBorderWidth(NS_SIDE_TOP);
   }
 
   // XXX We should really consider subtracting out padding for
   // content-box sizing, but we should see what IE does....
 
-  // Convert to pixels using that scale
+  // Convert to pixels.
   aRect.x = nsPresContext::AppUnitsToIntCSSPixels(origin.x);
   aRect.y = nsPresContext::AppUnitsToIntCSSPixels(origin.y);
   aRect.width = nsPresContext::AppUnitsToIntCSSPixels(rcFrame.width);
@@ -876,30 +806,12 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
 {
   *aScrollableView = nsnull;
 
-  nsIDocument *document = GetCurrentDoc();
-  if (!document) {
-    return;
-  }
-
-  // Flush all pending notifications so that our frames are up to date.  Make
-  // sure to do this first thing, since it may end up destroying our document's
-  // presshell.
-  document->FlushPendingNotifications(Flush_Layout);
-
-  // Get the presentation shell
-  nsIPresShell *presShell = document->GetShellAt(0);
-  if (!presShell) {
-    return;
-  }
-
-  // Get the primary frame for this element
-  nsIFrame *frame = presShell->GetPrimaryFrameFor(this);
-  if (!frame) {
-    return;
-  }
-
+  nsIFrame *frame = ::GetStyledFrameFor(this);
   if (aFrame) {
     *aFrame = frame;
+  }
+  if (!frame) {
+    return;
   }
 
   // Get the scrollable frame
@@ -916,7 +828,7 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
       }
     }
 
-    PRBool quirksMode = InNavQuirksMode(document);
+    PRBool quirksMode = InNavQuirksMode(GetCurrentDoc());
     if ((quirksMode && mNodeInfo->Equals(nsGkAtoms::body)) ||
         (!quirksMode && mNodeInfo->Equals(nsGkAtoms::html))) {
       // In quirks mode, the scroll info for the body element should map to the
@@ -955,7 +867,7 @@ nsGenericHTMLElement::GetScrollTop(PRInt32* aScrollTop)
   NS_ENSURE_ARG_POINTER(aScrollTop);
   *aScrollTop = 0;
 
-  nsIScrollableView *view = nsnull;
+  nsIScrollableView *view;
   nsresult rv = NS_OK;
 
   GetScrollInfo(&view);
@@ -973,7 +885,7 @@ nsGenericHTMLElement::GetScrollTop(PRInt32* aScrollTop)
 nsresult
 nsGenericHTMLElement::SetScrollTop(PRInt32 aScrollTop)
 {
-  nsIScrollableView *view = nsnull;
+  nsIScrollableView *view;
   nsresult rv = NS_OK;
 
   GetScrollInfo(&view);
@@ -998,7 +910,7 @@ nsGenericHTMLElement::GetScrollLeft(PRInt32* aScrollLeft)
   NS_ENSURE_ARG_POINTER(aScrollLeft);
   *aScrollLeft = 0;
 
-  nsIScrollableView *view = nsnull;
+  nsIScrollableView *view;
   nsresult rv = NS_OK;
 
   GetScrollInfo(&view);
@@ -1016,7 +928,7 @@ nsGenericHTMLElement::GetScrollLeft(PRInt32* aScrollLeft)
 nsresult
 nsGenericHTMLElement::SetScrollLeft(PRInt32 aScrollLeft)
 {
-  nsIScrollableView *view = nsnull;
+  nsIScrollableView *view;
   nsresult rv = NS_OK;
 
   GetScrollInfo(&view);
@@ -1040,7 +952,7 @@ nsGenericHTMLElement::GetScrollHeight(PRInt32* aScrollHeight)
   NS_ENSURE_ARG_POINTER(aScrollHeight);
   *aScrollHeight = 0;
 
-  nsIScrollableView *scrollView = nsnull;
+  nsIScrollableView *scrollView;
   nsresult rv = NS_OK;
 
   GetScrollInfo(&scrollView);
@@ -1064,7 +976,7 @@ nsGenericHTMLElement::GetScrollWidth(PRInt32* aScrollWidth)
   NS_ENSURE_ARG_POINTER(aScrollWidth);
   *aScrollWidth = 0;
 
-  nsIScrollableView *scrollView = nsnull;
+  nsIScrollableView *scrollView;
   nsresult rv = NS_OK;
 
   GetScrollInfo(&scrollView);
@@ -1094,8 +1006,8 @@ nsGenericHTMLElement::GetClientHeight(PRInt32* aClientHeight)
   NS_ENSURE_ARG_POINTER(aClientHeight);
   *aClientHeight = 0;
 
-  nsIScrollableView *scrollView = nsnull;
-  nsIFrame *frame = nsnull;
+  nsIScrollableView *scrollView;
+  nsIFrame *frame;
 
   GetScrollInfo(&scrollView, &frame);
 
@@ -1121,8 +1033,8 @@ nsGenericHTMLElement::GetClientWidth(PRInt32* aClientWidth)
   NS_ENSURE_ARG_POINTER(aClientWidth);
   *aClientWidth = 0;
 
-  nsIScrollableView *scrollView = nsnull;
-  nsIFrame *frame = nsnull;
+  nsIScrollableView *scrollView;
+  nsIFrame *frame;
 
   GetScrollInfo(&scrollView, &frame);
 
