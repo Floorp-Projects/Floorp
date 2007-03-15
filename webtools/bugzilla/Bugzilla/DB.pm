@@ -50,6 +50,7 @@ use Storable qw(dclone);
 #####################################################################
 
 use constant BLOB_TYPE => DBI::SQL_BLOB;
+use constant ISOLATION_LEVEL => 'REPEATABLE READ';
 
 # Set default values for what used to be the enum types.  These values
 # are no longer stored in localconfig.  If we are upgrading from a
@@ -876,7 +877,7 @@ sub bz_start_transaction {
         # what we need in Bugzilla to be safe, for what we do.
         # Different DBs have different defaults for their isolation
         # level, so we just set it here manually.
-        $self->do('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+        $self->do('SET TRANSACTION ISOLATION LEVEL ' . $self->ISOLATION_LEVEL);
         $self->{private_bz_transaction_count} = 1;
     }
 }
@@ -1198,12 +1199,20 @@ should be always preffered over hard-coding SQL commands.
 Subclasses of Bugzilla::DB are required to define certain constants. These
 constants are required to be subroutines or "use constant" variables.
 
-=over 4
+=over
 
 =item C<BLOB_TYPE>
 
 The C<\%attr> argument that must be passed to bind_param in order to 
 correctly escape a C<LONGBLOB> type.
+
+=item C<ISOLATION_LEVEL>
+
+The argument that this database should send to 
+C<SET TRANSACTION ISOLATION LEVEL> when starting a transaction. If you
+override this in a subclass, the isolation level you choose should
+be as strict as or more strict than the default isolation level defined in
+L<Bugzilla::DB>.
 
 =back
 
