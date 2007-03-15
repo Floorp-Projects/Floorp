@@ -42,7 +42,6 @@ our $localconfig;
 if ($ENV{'PROJECT'} && $ENV{'PROJECT'} =~ /^(\w+)$/) {
     $project = $1;
     $localconfig = "localconfig.$project";
-    
 } else {
     $localconfig = "localconfig";
 }
@@ -320,9 +319,7 @@ sub UpdateDB {
     
     $dbh->bz_alter_column('test_attachment_data', 'attachment_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_attachments', 'attachment_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
-    $dbh->bz_alter_column('test_attachments', 'case_id', {TYPE => 'INT4', UNSIGNED => 1});
     $dbh->bz_alter_column('test_attachments', 'creation_ts', {TYPE => 'DATETIME', NOTNULL => 1});
-    $dbh->bz_alter_column('test_attachments', 'plan_id', {TYPE => 'INT4', UNSIGNED => 1});
     $dbh->bz_alter_column('test_builds', 'build_id', {TYPE => 'INTSERIAL', PRIMARYKEY => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_case_activity', 'case_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
     $dbh->bz_alter_column('test_case_bugs', 'case_id', {TYPE => 'INT4', UNSIGNED => 1, NOTNULL => 1});
@@ -401,6 +398,10 @@ sub UpdateDB {
     $dbh->bz_drop_index('test_case_tags', 'case_tags_user_idx');
     $dbh->bz_drop_index('test_email_settings', 'test_event_user_event_dx');
     $dbh->bz_drop_index('test_email_settings', 'test_event_user_event_idx');
+    $dbh->bz_drop_index('test_email_settings', 'test_event_user_relationship_idx');
+    $dbh->bz_drop_index('test_environment_category', 'env_category_idx');
+    $dbh->bz_drop_index('test_environment_element', 'env_element_category_idx');
+    $dbh->bz_drop_index('test_environment_property', 'env_element_property_idx');
     $dbh->bz_drop_index('test_environments', 'environment_id');
     $dbh->bz_drop_index('test_environments', 'environment_name_idx');
     $dbh->bz_drop_index('test_fielddefs', 'AI_fieldid');
@@ -425,10 +426,13 @@ sub UpdateDB {
     $dbh->bz_drop_index('test_tags', 'test_tag_name_idx');
     $dbh->bz_drop_index('test_tags', 'test_tag_name_indx');
 
+    $dbh->bz_add_index('test_attachment_data', 'test_attachment_data_primary_idx', ['attachment_id']);
+    $dbh->bz_add_index('test_attachments', 'test_attachments_submitter_idx', ['submitter_id']);
     $dbh->bz_add_index('test_builds', 'build_milestone_idx', ['milestone']);
     $dbh->bz_add_index('test_builds', 'build_name_idx', ['name']);
     $dbh->bz_add_index('test_builds', 'build_prod_idx', {FIELDS => [qw(build_id product_id)], TYPE => 'UNIQUE'});
     $dbh->bz_add_index('test_builds', 'build_product_id_name_idx', {FIELDS => [qw(product_id name)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_case_attachments', 'test_case_attachments_primary_idx', ['attachment_id']);
     $dbh->bz_add_index('test_case_bugs', 'case_bugs_bug_id_idx', ['bug_id']);
     $dbh->bz_add_index('test_case_bugs', 'case_bugs_case_id_idx', ['case_id']);
     $dbh->bz_add_index('test_case_bugs', 'case_bugs_case_run_id_idx', ['case_run_id']);
@@ -442,20 +446,47 @@ sub UpdateDB {
     $dbh->bz_add_index('test_case_plans', 'test_case_plans_case_idx', [qw(case_id)]);
     $dbh->bz_add_index('test_case_plans', 'test_case_plans_primary_idx', {FIELDS => [qw(plan_id case_id)], TYPE => 'UNIQUE'});
     $dbh->bz_add_index('test_case_runs', 'case_run_build_env_idx', {FIELDS => [qw(run_id case_id build_id environment_id)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_case_runs', 'case_run_build_idx_v2', ['build_id']);
+    $dbh->bz_add_index('test_case_runs', 'case_run_env_idx_v2', ['environment_id']);
+    $dbh->bz_add_index('test_case_runs', 'case_run_status_idx', ['case_run_status_id']);
+    $dbh->bz_add_index('test_case_runs', 'case_run_text_ver_idx', ['case_text_version']);
     $dbh->bz_add_index('test_cases', 'test_case_requirement_idx', ['requirement']);
+    $dbh->bz_add_index('test_cases', 'test_case_status_idx', ['case_status_id']);
+    $dbh->bz_add_index('test_cases', 'test_case_tester_idx', ['default_tester_id']);
     $dbh->bz_add_index('test_case_tags', 'case_tags_case_id_idx_v3', [qw(case_id)]);
     $dbh->bz_add_index('test_case_tags', 'case_tags_primary_idx', {FIELDS => [qw(tag_id case_id userid)], TYPE => 'UNIQUE'});
     $dbh->bz_add_index('test_case_tags', 'case_tags_secondary_idx', {FIELDS => [qw(tag_id case_id)], TYPE => 'UNIQUE'});
     $dbh->bz_add_index('test_case_tags', 'case_tags_userid_idx', [qw(userid)]);
+    $dbh->bz_add_index('test_email_settings', 'test_email_setting_user_id_idx', {FIELDS => [qw(userid relationship_id eventid)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_environment_category', 'test_environment_category_key1', {FIELDS => [qw(env_category_id product_id)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_environment_category', 'test_environment_category_key2', {FIELDS => [qw(product_id name)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_environment_element', 'test_environment_element_key1', {FIELDS => [qw(element_id env_category_id)], TYPE => 'UNIQUE'},);
+    $dbh->bz_add_index('test_environment_element', 'test_environment_element_key2', {FIELDS => [qw(env_category_id name)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_environment_map', 'test_environment_map_key3', {FIELDS => [qw(environment_id element_id property_id)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_environment_property', 'test_environment_property_key1', {FIELDS => [qw(property_id element_id)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_environment_property', 'test_environment_property_key2', {FIELDS => [qw(element_id name)], TYPE => 'UNIQUE'});
     $dbh->bz_add_index('test_environments', 'environment_name_idx_v2', ['name']);
+    $dbh->bz_add_index('test_environments', 'test_environments_key1', {FIELDS => [qw(environment_id product_id)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_environments', 'test_environments_key2', {FIELDS => [qw(product_id name)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_named_queries', 'test_namedquery_primary_idx', {FIELDS => [qw(userid name)], TYPE => 'UNIQUE'});
+    $dbh->bz_add_index('test_plan_activity', 'plan_activity_changed_idx', ['changed']);
+    $dbh->bz_add_index('test_plan_activity', 'plan_activity_field_idx', ['fieldid']);
+    $dbh->bz_add_index('test_plan_activity', 'plan_activity_primary_idx', ['plan_id']);
+    $dbh->bz_add_index('test_plan_attachments', 'test_plan_attachments_primary_idx', ['attachment_id']);
+    $dbh->bz_add_index('test_plan_permissions', 'testers_plan_grant_idx', ['grant_type']);
     $dbh->bz_add_index('test_plan_tags', 'plan_tags_plan_id_idx', [qw(plan_id)]);
     $dbh->bz_add_index('test_plan_tags', 'plan_tags_primary_idx', {FIELDS => [qw(tag_id plan_id userid)], TYPE => 'UNIQUE'});
     $dbh->bz_add_index('test_plan_tags', 'plan_tags_secondary_idx', {FIELDS => [qw(tag_id plan_id)], TYPE => 'UNIQUE'});
     $dbh->bz_add_index('test_plan_tags', 'plan_tags_userid_idx', [qw(userid)]);
+    $dbh->bz_add_index('test_run_activity', 'run_activity_field_idx', ['fieldid']);
     $dbh->bz_add_index('test_run_cc', 'test_run_cc_primary_idx', {FIELDS => [qw(run_id who)], TYPE => 'UNIQUE'});
     $dbh->bz_add_index('test_run_cc', 'test_run_cc_who_idx', [qw(who)]);
+    $dbh->bz_add_index('test_runs', 'test_run_build_idx', ['build_id']);
+    $dbh->bz_add_index('test_runs', 'test_run_env_idx', ['environment_id']);
     $dbh->bz_add_index('test_runs', 'test_run_plan_id_run_id_idx', [qw(plan_id run_id)]);
+    $dbh->bz_add_index('test_runs', 'test_run_plan_ver_idx', ['plan_text_version']);
     $dbh->bz_add_index('test_runs', 'test_runs_summary_idx', {FIELDS => ['summary'], TYPE => 'FULLTEXT'});
+    $dbh->bz_add_index('test_runs', 'test_run_tester_idx', ['default_tester_id']);
     $dbh->bz_add_index('test_run_tags', 'run_tags_primary_idx', {FIELDS => [qw(tag_id run_id userid)], TYPE => 'UNIQUE'});
     $dbh->bz_add_index('test_run_tags', 'run_tags_run_id_idx', [qw(run_id)]);
     $dbh->bz_add_index('test_run_tags', 'run_tags_secondary_idx', {FIELDS => [qw(tag_id run_id)], TYPE => 'UNIQUE'});
@@ -487,7 +518,7 @@ sub updateACLs {
 
 sub migrateAttachments {
     my $dbh = shift;
-    return unless grep /case_id/, @{$dbh->selectcol_arrayref("DESCRIBE test_attachments")};
+    return unless $dbh->bz_column_info('test_attachments', 'case_id');
     print "Migrating attachments...\n";
     
     my $rows = $dbh->selectall_arrayref(

@@ -141,6 +141,11 @@ sub update
         die "User Not Authorized";
 	}
 
+	if (defined $$new_values{author_id})
+	{
+	    die "Update of TestCase's author_id is not allowed";
+	}
+
     my $result = $test_case->update($new_values);
 
 	$test_case = new Bugzilla::Testopia::TestCase($test_case_id);
