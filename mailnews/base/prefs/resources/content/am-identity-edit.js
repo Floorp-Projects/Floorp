@@ -230,7 +230,7 @@ function saveAddressingAndCompositionSettings(identity)
   identity.composeHtml = document.getElementById('identity.composeHtml').checked;
   identity.autoQuote = document.getElementById('identity.autoQuote').checked;
   identity.replyOnTop = document.getElementById('identity.replyOnTop').value;
-  identity.sigBottom = document.getElementById('identity.sig_bottom').value;
+  identity.sigBottom = document.getElementById('identity.sig_bottom').value == 'true';  
 }
 
 function selectFile()
