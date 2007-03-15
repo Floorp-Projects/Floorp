@@ -993,64 +993,58 @@ nsGenericHTMLElement::GetScrollWidth(PRInt32* aScrollWidth)
   return rv;
 }
 
-// static
-const nsSize
-nsGenericHTMLElement::GetClientAreaSize(nsIFrame *aFrame)
+nsRect
+nsGenericHTMLElement::GetClientAreaRect()
 {
-  return aFrame->GetPaddingRect().Size();
-}
-
-nsresult
-nsGenericHTMLElement::GetClientHeight(PRInt32* aClientHeight)
-{
-  NS_ENSURE_ARG_POINTER(aClientHeight);
-  *aClientHeight = 0;
-
   nsIScrollableView *scrollView;
   nsIFrame *frame;
 
   GetScrollInfo(&scrollView, &frame);
 
   if (scrollView) {
-    nsRect r = scrollView->View()->GetBounds();
-
-    *aClientHeight = nsPresContext::AppUnitsToIntCSSPixels(r.height);
-  } else if (frame &&
-             (frame->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_INLINE ||
-              (frame->IsFrameOfType(nsIFrame::eReplaced)))) {
-    // Special case code to make clientHeight work even when there isn't
-    // a scroll view, see bug 180552 and bug 227567.
-
-    *aClientHeight = nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaSize(frame).height);
+    return scrollView->View()->GetBounds();
   }
 
+  if (frame &&
+      (frame->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_INLINE ||
+       frame->IsFrameOfType(nsIFrame::eReplaced))) {
+    // Special case code to make client area work even when there isn't
+    // a scroll view, see bug 180552, bug 227567.
+    return frame->GetPaddingRect();
+  }
+
+  return nsRect(0, 0, 0, 0);
+}
+
+nsresult
+nsGenericHTMLElement::GetClientTop(PRInt32* aLength)
+{
+  NS_ENSURE_ARG_POINTER(aLength);
+  *aLength = nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().y);
   return NS_OK;
 }
 
 nsresult
-nsGenericHTMLElement::GetClientWidth(PRInt32* aClientWidth)
+nsGenericHTMLElement::GetClientLeft(PRInt32* aLength)
 {
-  NS_ENSURE_ARG_POINTER(aClientWidth);
-  *aClientWidth = 0;
+  NS_ENSURE_ARG_POINTER(aLength);
+  *aLength = nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().x);
+  return NS_OK;
+}
 
-  nsIScrollableView *scrollView;
-  nsIFrame *frame;
+nsresult
+nsGenericHTMLElement::GetClientHeight(PRInt32* aLength)
+{
+  NS_ENSURE_ARG_POINTER(aLength);
+  *aLength = nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().height);
+  return NS_OK;
+}
 
-  GetScrollInfo(&scrollView, &frame);
-
-  if (scrollView) {
-    nsRect r = scrollView->View()->GetBounds();
-
-    *aClientWidth = nsPresContext::AppUnitsToIntCSSPixels(r.width);
-  } else if (frame &&
-             (frame->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_INLINE ||
-              (frame->IsFrameOfType(nsIFrame::eReplaced)))) {
-    // Special case code to make clientWidth work even when there isn't
-    // a scroll view, see bug 180552 and bug 227567.
-
-    *aClientWidth = nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaSize(frame).width);
-  }
-
+nsresult
+nsGenericHTMLElement::GetClientWidth(PRInt32* aLength)
+{
+  NS_ENSURE_ARG_POINTER(aLength);
+  *aLength = nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().width);
   return NS_OK;
 }
 
