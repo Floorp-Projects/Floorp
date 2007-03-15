@@ -56,7 +56,7 @@
 <!ENTITY settingsOfflineCmd.label "Offline Settings...">
 <!ENTITY settingsOfflineCmd.accesskey "e">
 <!ENTITY downloadSelectedCmd.label "Get Selected Messages">
-<!ENTITY downloadSelectedCmd.accesskey "M">
+<!ENTITY downloadSelectedCmd.accesskey "l">
 <!ENTITY downloadStarredCmd.label "Get Starred Messages">
 <!ENTITY downloadStarredCmd.accesskey "a">
 <!ENTITY printCmd.label "Print...">
