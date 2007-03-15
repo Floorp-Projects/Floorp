@@ -1,5 +1,5 @@
 /*
- * $Id: CarDemoTest.java,v 1.6 2007/03/09 04:34:23 edburns%acm.org Exp $
+ * $Id: CarDemoTest.java,v 1.7 2007/03/15 00:33:10 edburns%acm.org Exp $
  */
 
 /* 
@@ -32,6 +32,8 @@ import org.mozilla.mcp.AjaxListener;
 import org.mozilla.mcp.MCP;
 import org.mozilla.webclient.WebclientTestCase;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.Document;
 
 /**
  *
@@ -61,7 +63,8 @@ public class CarDemoTest extends WebclientTestCase  {
     enum TestFeature {
         RECEIVED_END_AJAX_EVENT,
         HAS_MAP,
-        HAS_VALID_PARTIAL_RESPONSE,
+        HAS_VALID_RESPONSE_TEXT,
+        HAS_VALID_RESPONSE_XML,
         HAS_VALID_READYSTATE,
         STOP_WAITING
     }
@@ -75,13 +78,39 @@ public class CarDemoTest extends WebclientTestCase  {
                 if (null != eventMap) {
                     bitSet.flip(TestFeature.HAS_MAP.ordinal());
                 }
+		// Make some assertions about the response text
                 String responseText = (String) eventMap.get("responseText");
                 if (null != responseText) {
                     if (-1 != responseText.indexOf("<partial-response>") &&
                         -1 != responseText.indexOf("</partial-response>")) {
-                        bitSet.flip(TestFeature.HAS_VALID_PARTIAL_RESPONSE.ordinal());
+                        bitSet.flip(TestFeature.HAS_VALID_RESPONSE_TEXT.ordinal());
                     }
                 }
+		Document responseXML = (Document) 
+		    eventMap.get("responseXML");
+                Element rootElement = null, element = null;
+                Node node = null;
+                String tagName = null;
+                try {
+                    rootElement = responseXML.getDocumentElement();
+                    tagName = rootElement.getTagName();
+                    if (tagName.equals("partial-response")) {
+                        element = (Element) rootElement.getFirstChild();
+                        tagName = element.getTagName();
+                        if (tagName.equals("components")) {
+                            element = (Element) rootElement.getLastChild();
+                            tagName = element.getTagName();
+                            if (tagName.equals("state")) {
+                                bitSet.flip(TestFeature.
+                                        HAS_VALID_RESPONSE_XML.ordinal());
+                            }
+                        }
+                    }
+                }
+                catch (Throwable t) {
+                    
+                }
+		
                 String readyState = (String) eventMap.get("readyState");
                 bitSet.set(TestFeature.HAS_VALID_READYSTATE.ordinal(), 
                         null != readyState && readyState.equals("4"));
@@ -117,7 +146,8 @@ public class CarDemoTest extends WebclientTestCase  {
         // assert that the ajax transaction succeeded
         assertTrue(bitSet.get(TestFeature.RECEIVED_END_AJAX_EVENT.ordinal()));
         assertTrue(bitSet.get(TestFeature.HAS_MAP.ordinal()));
-        assertTrue(bitSet.get(TestFeature.HAS_VALID_PARTIAL_RESPONSE.ordinal()));
+        assertTrue(bitSet.get(TestFeature.HAS_VALID_RESPONSE_TEXT.ordinal()));
+        assertTrue(bitSet.get(TestFeature.HAS_VALID_RESPONSE_XML.ordinal()));
         assertTrue(bitSet.get(TestFeature.HAS_VALID_READYSTATE.ordinal()));
         bitSet.clear();
         

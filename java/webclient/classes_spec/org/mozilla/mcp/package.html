@@ -110,40 +110,48 @@ href="http://developers.sun.com/web/swdp/index.jsp">Project Dynamic
 Faces</a> for Ajax.</p>
 
 
-<div class="syntax"><div class="java" style="font-family: monospace;"><ol><li class="li1"><div class="de1"><span class="kw2">enum</span> TestFeature <span class="br0">&#123;</span></div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; RECEIVED_END_AJAX_EVENT,</div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; HAS_MAP,</div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; HAS_VALID_PARTIAL_RESPONSE,</div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; HAS_VALID_READYSTATE,</div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; STOP_WAITING</div></li>
-<li class="li1"><div class="de1"><span class="br0">&#125;</span></div></li>
-<li class="li2"><div class="de2">&nbsp;</div></li>
-<li class="li1"><div class="de1"><span class="kw2">public</span> <span class="kw4">void</span> testCardemo<span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="kw2">throws</span> <span class="kw3">Exception</span> <span class="br0">&#123;</span></div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; MCP mcp = <span class="kw2">new</span> MCP<span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="kw2">try</span> <span class="br0">&#123;</span></div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; mcp.<span class="me1">setAppData</span><span class="br0">&#40;</span>getBrowserBinDir<span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="br0">&#125;</span></div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw2">catch</span> <span class="br0">&#40;</span><span class="kw3">Exception</span> e<span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; fail<span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="br0">&#125;</span></div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; mcp.<span class="me1">getRealizedVisibleBrowserWindow</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="kw2">final</span> <span class="kw3">BitSet</span> bitSet = <span class="kw2">new</span> <span class="kw3">BitSet</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; AjaxListener listener = <span class="kw2">new</span> AjaxListener<span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; <span class="kw2">public</span> <span class="kw4">void</span> endAjax<span class="br0">&#40;</span><span class="kw3">Map</span> eventMap<span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;bitSet.<span class="me1">flip</span><span class="br0">&#40;</span>TestFeature.<span class="me1">RECEIVED_END_AJAX_EVENT</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="kw1">if</span> <span class="br0">&#40;</span><span class="kw2">null</span> != eventMap<span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;bitSet.<span class="me1">flip</span><span class="br0">&#40;</span>TestFeature.<span class="me1">HAS_MAP</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="br0">&#125;</span></div></li>
+<div class="java" style="font-family: monospace;"><ol><li class="li1"><div class="de1"><span class="kw2">public</span> <span class="kw4">void</span> testCardemo<span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="kw2">throws</span> <span class="kw3">Exception</span> <span class="br0">&#123;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; mcp.<span class="me1">getRealizedVisibleBrowserWindow</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw2">final</span> <span class="kw3">BitSet</span> bitSet = <span class="kw2">new</span> <span class="kw3">BitSet</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; AjaxListener listener = <span class="kw2">new</span> AjaxListener<span class="br0">&#40;</span><span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; <span class="kw2">public</span> <span class="kw4">void</span> endAjax<span class="br0">&#40;</span><span class="kw3">Map</span> eventMap<span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;bitSet.<span class="me1">flip</span><span class="br0">&#40;</span>TestFeature.<span class="me1">RECEIVED_END_AJAX_EVENT</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="kw1">if</span> <span class="br0">&#40;</span><span class="kw2">null</span> != eventMap<span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;bitSet.<span class="me1">flip</span><span class="br0">&#40;</span>TestFeature.<span class="me1">HAS_MAP</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="br0">&#125;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="co1">// Make some assertions about the response text</span></div></li>
 <li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="kw3">String</span> responseText = <span class="br0">&#40;</span><span class="kw3">String</span><span class="br0">&#41;</span> eventMap.<span class="me1">get</span><span class="br0">&#40;</span><span class="st0">&quot;responseText&quot;</span><span class="br0">&#41;</span>;</div></li>
 <li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="kw1">if</span> <span class="br0">&#40;</span><span class="kw2">null</span> != responseText<span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
 <li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;<span class="kw1">if</span> <span class="br0">&#40;</span><span class="nu0">-1</span> != responseText.<span class="me1">indexOf</span><span class="br0">&#40;</span><span class="st0">&quot;&lt;partial-response&gt;&quot;</span><span class="br0">&#41;</span> &amp;&amp;</div></li>
 <li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="nu0">-1</span> != responseText.<span class="me1">indexOf</span><span class="br0">&#40;</span><span class="st0">&quot;&lt;/partial-response&gt;&quot;</span><span class="br0">&#41;</span><span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;bitSet.<span class="me1">flip</span><span class="br0">&#40;</span>TestFeature.</div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span class="me1">HAS_VALID_PARTIAL_RESPONSE</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; bitSet.<span class="me1">flip</span><span class="br0">&#40;</span>TestFeature.<span class="me1">HAS_VALID_RESPONSE_TEXT</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;<span class="br0">&#125;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="br0">&#125;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="kw3">Document</span> responseXML = <span class="br0">&#40;</span><span class="kw3">Document</span><span class="br0">&#41;</span> </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;eventMap.<span class="me1">get</span><span class="br0">&#40;</span><span class="st0">&quot;responseXML&quot;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="kw3">Element</span> rootElement = <span class="kw2">null</span>, element = <span class="kw2">null</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;Node node = <span class="kw2">null</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="kw3">String</span> tagName = <span class="kw2">null</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="kw2">try</span> <span class="br0">&#123;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;rootElement = responseXML.<span class="me1">getDocumentElement</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;tagName = rootElement.<span class="me1">getTagName</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;<span class="kw1">if</span> <span class="br0">&#40;</span>tagName.<span class="me1">equals</span><span class="br0">&#40;</span><span class="st0">&quot;partial-response&quot;</span><span class="br0">&#41;</span><span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;element = <span class="br0">&#40;</span><span class="kw3">Element</span><span class="br0">&#41;</span> rootElement.<span class="me1">getFirstChild</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;tagName = element.<span class="me1">getTagName</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="kw1">if</span> <span class="br0">&#40;</span>tagName.<span class="me1">equals</span><span class="br0">&#40;</span><span class="st0">&quot;components&quot;</span><span class="br0">&#41;</span><span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;element = <span class="br0">&#40;</span><span class="kw3">Element</span><span class="br0">&#41;</span> rootElement.<span class="me1">getLastChild</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;tagName = element.<span class="me1">getTagName</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;<span class="kw1">if</span> <span class="br0">&#40;</span>tagName.<span class="me1">equals</span><span class="br0">&#40;</span><span class="st0">&quot;state&quot;</span><span class="br0">&#41;</span><span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;bitSet.<span class="me1">flip</span><span class="br0">&#40;</span>TestFeature.</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;<span class="me1">HAS_VALID_RESPONSE_XML</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;<span class="br0">&#125;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="br0">&#125;</span></div></li>
 <li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;<span class="br0">&#125;</span></div></li>
 <li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="br0">&#125;</span></div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="kw2">catch</span> <span class="br0">&#40;</span><span class="kw3">Throwable</span> t<span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="br0">&#125;</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;</div></li>
 <li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;<span class="kw3">String</span> readyState = <span class="br0">&#40;</span><span class="kw3">String</span><span class="br0">&#41;</span> eventMap.<span class="me1">get</span><span class="br0">&#40;</span><span class="st0">&quot;readyState&quot;</span><span class="br0">&#41;</span>;</div></li>
 <li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;bitSet.<span class="me1">set</span><span class="br0">&#40;</span>TestFeature.<span class="me1">HAS_VALID_READYSTATE</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span>, </div></li>
 <li class="li1"><div class="de1">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; <span class="kw2">null</span> != readyState &amp;&amp; readyState.<span class="me1">equals</span><span class="br0">&#40;</span><span class="st0">&quot;4&quot;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
@@ -179,21 +187,22 @@ Faces</a> for Ajax.</p>
 <li class="li1"><div class="de1">&nbsp; &nbsp; <span class="co1">// assert that the ajax transaction succeeded</span></div></li>
 <li class="li2"><div class="de2">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>bitSet.<span class="me1">get</span><span class="br0">&#40;</span>TestFeature.<span class="me1">RECEIVED_END_AJAX_EVENT</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
 <li class="li1"><div class="de1">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>bitSet.<span class="me1">get</span><span class="br0">&#40;</span>TestFeature.<span class="me1">HAS_MAP</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>bitSet.<span class="me1">get</span><span class="br0">&#40;</span>TestFeature.<span class="me1">HAS_VALID_PARTIAL_RESPONSE</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>bitSet.<span class="me1">get</span><span class="br0">&#40;</span>TestFeature.<span class="me1">HAS_VALID_READYSTATE</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; bitSet.<span class="me1">clear</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>bitSet.<span class="me1">get</span><span class="br0">&#40;</span>TestFeature.<span class="me1">HAS_VALID_RESPONSE_TEXT</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>bitSet.<span class="me1">get</span><span class="br0">&#40;</span>TestFeature.<span class="me1">HAS_VALID_RESPONSE_XML</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>bitSet.<span class="me1">get</span><span class="br0">&#40;</span>TestFeature.<span class="me1">HAS_VALID_READYSTATE</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; bitSet.<span class="me1">clear</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="co1">// Sample the Basis-Preis and Ihr-Preis after the ajax transaction</span></div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; pricePanel = mcp.<span class="me1">findElement</span><span class="br0">&#40;</span><span class="st0">&quot;j_id_id10:zone1&quot;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; assertNotNull<span class="br0">&#40;</span>pricePanel<span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; pricePanelText = pricePanel.<span class="me1">getTextContent</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
 <li class="li1"><div class="de1">&nbsp; &nbsp; </div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; <span class="co1">// Sample the Basis-Preis and Ihr-Preis after the ajax transaction</span></div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; pricePanel = mcp.<span class="me1">findElement</span><span class="br0">&#40;</span><span class="st0">&quot;j_id_id10:zone1&quot;</span><span class="br0">&#41;</span>;</div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; assertNotNull<span class="br0">&#40;</span>pricePanel<span class="br0">&#41;</span>;</div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; pricePanelText = pricePanel.<span class="me1">getTextContent</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; assertNotNull<span class="br0">&#40;</span>pricePanelText<span class="br0">&#41;</span>;</div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>pricePanelText.<span class="me1">matches</span><span class="br0">&#40;</span><span class="st0">&quot;(?s).*Basis-Preis<span class="es0">\\</span>s*15700.*&quot;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>pricePanelText.<span class="me1">matches</span><span class="br0">&#40;</span><span class="st0">&quot;(?s).*Ihr Preis<span class="es0">\\</span>s*16600.*&quot;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; mcp.<span class="me1">deleteBrowserControl</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
-<li class="li2"><div class="de2"><span class="br0">&#125;</span> </div></li></ol></div></div>
+<li class="li2"><div class="de2">&nbsp; &nbsp; assertNotNull<span class="br0">&#40;</span>pricePanelText<span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>pricePanelText.<span class="me1">matches</span><span class="br0">&#40;</span><span class="st0">&quot;(?s).*Basis-Preis<span class="es0">\\</span>s*15700.*&quot;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; assertTrue<span class="br0">&#40;</span>pricePanelText.<span class="me1">matches</span><span class="br0">&#40;</span><span class="st0">&quot;(?s).*Ihr Preis<span class="es0">\\</span>s*16600.*&quot;</span><span class="br0">&#41;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; </div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; mcp.<span class="me1">deleteBrowserControl</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1"><span class="br0">&#125;</span> </div></li></ol></div></div>
 
 
   </body>
