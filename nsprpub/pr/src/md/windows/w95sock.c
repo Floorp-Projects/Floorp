@@ -77,13 +77,8 @@ typedef enum _WSA_COMPATIBILITY_BEHAVIOR_ID {
 /* from winsock2.h */
 #define WSAEVENT                HANDLE
 
-typedef struct _WSAOVERLAPPED {
-    DWORD    Internal;
-    DWORD    InternalHigh;
-    DWORD    Offset;
-    DWORD    OffsetHigh;
-    WSAEVENT hEvent;
-} WSAOVERLAPPED, FAR * LPWSAOVERLAPPED;
+#define WSAOVERLAPPED           OVERLAPPED
+typedef struct _OVERLAPPED *    LPWSAOVERLAPPED;
 
 typedef void (CALLBACK * LPWSAOVERLAPPED_COMPLETION_ROUTINE)(
     IN DWORD dwError,
