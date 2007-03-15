@@ -204,7 +204,9 @@ struct nsStyleBackground : public nsStyleStruct {
 
 #define BORDER_COLOR_TRANSPARENT  0x40
 #define BORDER_COLOR_FOREGROUND   0x20
-#define BORDER_COLOR_SPECIAL      0x60 // TRANSPARENT | FOREGROUND 
+#define OUTLINE_COLOR_INITIAL     0x80
+// TRANSPARENT | FOREGROUND | INITIAL(OUTLINE)
+#define BORDER_COLOR_SPECIAL      0xE0
 #define BORDER_STYLE_MASK         0x1F
 
 #define NS_SPACING_MARGIN   0
@@ -565,7 +567,7 @@ struct nsStyleOutline: public nsStyleStruct {
     mOutlineStyle |= (aStyle & BORDER_STYLE_MASK);
   }
 
-  // PR_FALSE means INVERT 
+  // PR_FALSE means initial value
   PRBool GetOutlineColor(nscolor& aColor) const
   {
     if ((mOutlineStyle & BORDER_COLOR_SPECIAL) == 0) {
@@ -581,14 +583,14 @@ struct nsStyleOutline: public nsStyleStruct {
     mOutlineStyle &= ~BORDER_COLOR_SPECIAL;
   }
 
-  void SetOutlineInvert(void)
+  void SetOutlineInitialColor()
   {
-    mOutlineStyle |= BORDER_COLOR_SPECIAL;
+    mOutlineStyle |= OUTLINE_COLOR_INITIAL;
   }
 
-  PRBool  GetOutlineInvert(void) const
+  PRBool GetOutlineInitialColor() const
   {
-    return(mOutlineStyle & BORDER_COLOR_SPECIAL);
+    return (mOutlineStyle & OUTLINE_COLOR_INITIAL);
   }
 
 protected:

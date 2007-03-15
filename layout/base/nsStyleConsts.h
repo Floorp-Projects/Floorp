@@ -43,6 +43,10 @@
 
 #include "nsFont.h"
 
+#ifndef MOZ_CAIRO_GFX
+#define GFX_HAS_INVERT
+#endif
+
 // XXX fold this into nsStyleContext and group by nsStyleXXX struct
 
 // Indices into border/padding/margin arrays
@@ -189,7 +193,9 @@
 
 // See nsStyleColor
 #define NS_STYLE_COLOR_TRANSPARENT        0
+#ifdef GFX_HAS_INVERT
 #define NS_STYLE_COLOR_INVERT             1
+#endif
 #define NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR      2
 
 // See nsStyleColor

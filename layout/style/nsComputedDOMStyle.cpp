@@ -1323,7 +1323,12 @@ nsComputedDOMStyle::GetOutlineColor(nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   nscolor color;
+#ifdef GFX_HAS_INVERT
   GetStyleOutline()->GetOutlineColor(color);
+#else
+  if (!GetStyleOutline()->GetOutlineColor(color))
+    color = GetStyleColor()->mColor;
+#endif
 
   nsresult rv = SetToRGBAColor(val, color);
   if (NS_FAILED(rv)) {
