@@ -259,6 +259,13 @@ unins000.dat
 unins000.exe
 #ifndef MOZILLA_1_8_BRANCH
 xpcom_compat.dll
+#else
+components/nsInterfaceInfoToIDL.js
+components/pluginGlue.js
+Microsoft.VC80.CRT.manifest
+msvcm80.dll
+msvcp80.dll
+msvcr80.dll
 #endif
 xpcshell.exe
 xpidl.exe
