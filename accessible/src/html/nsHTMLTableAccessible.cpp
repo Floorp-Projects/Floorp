@@ -66,7 +66,7 @@ nsHyperTextAccessible(aDomNode, aShell)
 /* unsigned long getRole (); */
 NS_IMETHODIMP nsHTMLTableCellAccessible::GetRole(PRUint32 *aResult)
 {
-  *aResult = ROLE_CELL;
+  *aResult = nsIAccessibleRole::ROLE_CELL;
   return NS_OK;
 }
 
@@ -87,7 +87,7 @@ nsAccessibleWrap(aDomNode, aShell)
 /* unsigned long getRole (); */
 NS_IMETHODIMP nsHTMLTableAccessible::GetRole(PRUint32 *aResult)
 {
-  *aResult = ROLE_TABLE;
+  *aResult = nsIAccessibleRole::ROLE_TABLE;
   return NS_OK;
 }
 
@@ -688,7 +688,7 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
   }
 
   // Check role and role attribute
-  PRBool hasNonTableRole = (Role(this) != ROLE_TABLE);
+  PRBool hasNonTableRole = (Role(this) != nsIAccessibleRole::ROLE_TABLE);
   if (hasNonTableRole) {
     RETURN_LAYOUT_ANSWER(PR_FALSE, "Has role attribute");
   }
@@ -820,7 +820,7 @@ nsHTMLTableAccessible(aDomNode, aShell)
 NS_IMETHODIMP
 nsHTMLTableHeadAccessible::GetRole(PRUint32 *aResult)
 {
-  *aResult = ROLE_COLUMNHEADER;
+  *aResult = nsIAccessibleRole::ROLE_COLUMNHEADER;
   return NS_OK;
 }
 

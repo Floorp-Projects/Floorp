@@ -360,7 +360,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetKeyboardShortcut(nsAString& _retval)
     if (parentAccessible) {
       PRUint32 role;
       parentAccessible->GetRole(&role);
-      if (role == ROLE_MENUBAR) {
+      if (role == nsIAccessibleRole::ROLE_MENUBAR) {
         // If top level menu item, add Alt+ or whatever modifier text to string
         // No need to cache pref service, this happens rarely
         if (gMenuAccesskeyModifier == -1) {
@@ -408,9 +408,9 @@ nsXULMenuitemAccessible::GetDefaultKeyBinding(nsAString& aKeyBinding)
 
 NS_IMETHODIMP nsXULMenuitemAccessible::GetRole(PRUint32 *aRole)
 {
-  *aRole = ROLE_MENUITEM;
-  if (mParent && Role(mParent) == ROLE_COMBOBOX_LIST) {
-    *aRole = ROLE_COMBOBOX_LISTITEM;
+  *aRole = nsIAccessibleRole::ROLE_MENUITEM;
+  if (mParent && Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
+    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LISTITEM;
     return NS_OK;
   }
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
@@ -419,14 +419,14 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetRole(PRUint32 *aRole)
   nsAutoString menuItemType;
   element->GetAttribute(NS_LITERAL_STRING("type"), menuItemType);
   if (menuItemType.EqualsIgnoreCase("radio"))
-    *aRole = ROLE_RADIO_MENU_ITEM;
+    *aRole = nsIAccessibleRole::ROLE_RADIO_MENU_ITEM;
   else if (menuItemType.EqualsIgnoreCase("checkbox"))
-    *aRole = ROLE_CHECK_MENU_ITEM;
+    *aRole = nsIAccessibleRole::ROLE_CHECK_MENU_ITEM;
   else { // Fortunately, radio/checkbox menuitems don't typically have children
     PRInt32 childCount;
     GetChildCount(&childCount);
     if (childCount > 0) {
-      *aRole = ROLE_PARENT_MENUITEM;
+      *aRole = nsIAccessibleRole::ROLE_PARENT_MENUITEM;
     }
   }
 
@@ -492,7 +492,7 @@ NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetName(nsAString& _retval)
 
 NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_SEPARATOR;
+  *_retval = nsIAccessibleRole::ROLE_SEPARATOR;
   return NS_OK;
 }
 
@@ -607,11 +607,11 @@ NS_IMETHODIMP nsXULMenupopupAccessible::GetName(nsAString& _retval)
 
 NS_IMETHODIMP nsXULMenupopupAccessible::GetRole(PRUint32 *aRole)
 {
-  if (mParent && Role(mParent) == ROLE_COMBOBOX) {
-    *aRole = ROLE_COMBOBOX_LIST;
+  if (mParent && Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX) {
+    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
   }
   else {
-    *aRole = ROLE_MENUPOPUP;
+    *aRole = nsIAccessibleRole::ROLE_MENUPOPUP;
   }
   return NS_OK;
 }
@@ -640,7 +640,7 @@ NS_IMETHODIMP nsXULMenubarAccessible::GetName(nsAString& _retval)
 
 NS_IMETHODIMP nsXULMenubarAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_MENUBAR;
+  *_retval = nsIAccessibleRole::ROLE_MENUBAR;
   return NS_OK;
 }
 

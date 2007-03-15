@@ -81,11 +81,11 @@ class nsAccessibleWrap : public nsAccessible
     // child, that is their title. Works in conjunction with IsPruned() below.
     PRBool IsFlat() {
       PRUint32 role = Role(this);
-      return (role == ROLE_CHECKBUTTON    ||
-              role == ROLE_PUSHBUTTON     ||
-              role == ROLE_TOGGLE_BUTTON  ||
-              role == ROLE_SPLITBUTTON    ||
-              role == ROLE_ENTRY);
+      return (role == nsIAccessibleRole::ROLE_CHECKBUTTON ||
+              role == nsIAccessibleRole::ROLE_PUSHBUTTON ||
+              role == nsIAccessibleRole::ROLE_TOGGLE_BUTTON ||
+              role == nsIAccessibleRole::ROLE_SPLITBUTTON ||
+              role == nsIAccessibleRole::ROLE_ENTRY);
     }
     
     // ignored means that the accessible might still have children, but is not displayed

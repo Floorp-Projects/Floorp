@@ -142,14 +142,14 @@ NS_IMETHODIMP nsHyperTextAccessible::GetRole(PRUint32 *aRole)
   nsIAtom *tag = content->Tag();
 
   if (tag == nsAccessibilityAtoms::caption) {
-    *aRole = ROLE_CAPTION;
+    *aRole = nsIAccessibleRole::ROLE_CAPTION;
   }
   else if (tag == nsAccessibilityAtoms::form) {
-    *aRole = ROLE_FORM;
+    *aRole = nsIAccessibleRole::ROLE_FORM;
   }
   else if (tag == nsAccessibilityAtoms::div ||
            tag == nsAccessibilityAtoms::blockquote) {
-    *aRole = ROLE_SECTION;
+    *aRole = nsIAccessibleRole::ROLE_SECTION;
   }
   else if (tag == nsAccessibilityAtoms::h1 ||
            tag == nsAccessibilityAtoms::h2 ||
@@ -157,15 +157,15 @@ NS_IMETHODIMP nsHyperTextAccessible::GetRole(PRUint32 *aRole)
            tag == nsAccessibilityAtoms::h4 ||
            tag == nsAccessibilityAtoms::h5 ||
            tag == nsAccessibilityAtoms::h6) {
-    *aRole = ROLE_HEADING;
+    *aRole = nsIAccessibleRole::ROLE_HEADING;
   }
   else {
     nsIFrame *frame = GetFrame();
     if (frame && frame->GetType() == nsAccessibilityAtoms::blockFrame) {
-      *aRole = ROLE_PARAGRAPH;
+      *aRole = nsIAccessibleRole::ROLE_PARAGRAPH;
     }
     else {
-      *aRole = ROLE_TEXT_CONTAINER; // In ATK this works
+      *aRole = nsIAccessibleRole::ROLE_TEXT_CONTAINER; // In ATK this works
     }
   }
   return NS_OK;
@@ -601,7 +601,7 @@ PRInt32 nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell, nsIFr
   else if (aAmount == eSelectEndLine && finalAccessible) { 
     // If not at very end of hypertext, we may need change the end of line offset by 1, 
     // to make sure we are in the right place relative to the line ending
-    if (Role(finalAccessible) == ROLE_WHITESPACE) {  // Landed on <br> hard line break
+    if (Role(finalAccessible) == nsIAccessibleRole::ROLE_WHITESPACE) {  // Landed on <br> hard line break
       // if aNeedsStart, set end of line exactly 1 character past line break
       // XXX It would be cleaner if we did not have to have the hard line break check,
       // and just got the correct results from PeekOffset() for the <br> case -- the returned offset should
@@ -1029,7 +1029,8 @@ NS_IMETHODIMP nsHyperTextAccessible::GetLinkIndex(PRInt32 aCharIndex, PRInt32 *a
 
   while (NextChild(accessible) && characterCount <= aCharIndex) {
     PRUint32 role = Role(accessible);
-    if (role == ROLE_TEXT_LEAF || role == ROLE_STATICTEXT) {
+    if (role == nsIAccessibleRole::ROLE_TEXT_LEAF ||
+        role == nsIAccessibleRole::ROLE_STATICTEXT) {
       characterCount += TextLength(accessible);
     }
     else {
@@ -1037,7 +1038,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetLinkIndex(PRInt32 aCharIndex, PRInt32 *a
         *aLinkIndex = linkIndex;
         break;
       }
-      if (role != ROLE_WHITESPACE) {
+      if (role != nsIAccessibleRole::ROLE_WHITESPACE) {
         ++ linkIndex;
       }
     }

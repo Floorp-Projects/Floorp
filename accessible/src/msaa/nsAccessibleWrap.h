@@ -266,7 +266,7 @@ protected:
 
   // Should this accessible be allowed to have any MSAA children
   static PRBool MustPrune(nsIAccessible *accessible)
-    { PRUint32 role; return NS_SUCCEEDED(accessible->GetRole(&role)) && (role == ROLE_ENTRY || role == ROLE_PASSWORD_TEXT || role == ROLE_PUSHBUTTON); }
+    { PRUint32 role; return NS_SUCCEEDED(accessible->GetRole(&role)) && (role == nsIAccessibleRole::ROLE_ENTRY || role == nsIAccessibleRole::ROLE_PASSWORD_TEXT || role == nsIAccessibleRole::ROLE_PUSHBUTTON); }
 };
 
 // Define unsupported wrap classes here

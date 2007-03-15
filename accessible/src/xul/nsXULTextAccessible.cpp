@@ -102,7 +102,7 @@ NS_IMETHODIMP nsXULTooltipAccessible::GetState(PRUint32 *_retval)
 
 NS_IMETHODIMP nsXULTooltipAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_TOOLTIP;
+  *_retval = nsIAccessibleRole::ROLE_TOOLTIP;
   return NS_OK;
 }
 
@@ -141,10 +141,10 @@ NS_IMETHODIMP nsXULLinkAccessible::GetName(nsAString& aName)
 NS_IMETHODIMP nsXULLinkAccessible::GetRole(PRUint32 *aRole)
 {
   if (mIsLink) {
-    *aRole = ROLE_LINK;
+    *aRole = nsIAccessibleRole::ROLE_LINK;
   } else {
     // default to calling the link a button; might have javascript
-    *aRole = ROLE_PUSHBUTTON;
+    *aRole = nsIAccessibleRole::ROLE_PUSHBUTTON;
   }
   // should there be a third case where it becomes just text?
   return NS_OK;

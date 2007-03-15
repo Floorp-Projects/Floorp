@@ -281,7 +281,7 @@ nsXFormsContainerAccessible::GetRole(PRUint32 *aRole)
 {
   NS_ENSURE_ARG_POINTER(aRole);
 
-  *aRole = ROLE_GROUPING;
+  *aRole = nsIAccessibleRole::ROLE_GROUPING;
   return NS_OK;
 }
 

@@ -51,7 +51,7 @@ nsXFormsLabelAccessible::GetRole(PRUint32 *aRole)
 {
   NS_ENSURE_ARG_POINTER(aRole);
 
-  *aRole = ROLE_STATICTEXT;
+  *aRole = nsIAccessibleRole::ROLE_STATICTEXT;
   return NS_OK;
 }
 
@@ -87,7 +87,7 @@ nsXFormsOutputAccessible::GetRole(PRUint32 *aRole)
 {
   NS_ENSURE_ARG_POINTER(aRole);
 
-  *aRole = ROLE_STATICTEXT;
+  *aRole = nsIAccessibleRole::ROLE_STATICTEXT;
   return NS_OK;
 }
 
@@ -104,7 +104,7 @@ nsXFormsTriggerAccessible::GetRole(PRUint32 *aRole)
 {
   NS_ENSURE_ARG_POINTER(aRole);
 
-  *aRole = ROLE_PUSHBUTTON;
+  *aRole = nsIAccessibleRole::ROLE_PUSHBUTTON;
   return NS_OK;
 }
 
@@ -156,7 +156,7 @@ nsXFormsInputAccessible::GetRole(PRUint32 *aRole)
 {
   NS_ENSURE_ARG_POINTER(aRole);
 
-  *aRole = ROLE_ENTRY;
+  *aRole = nsIAccessibleRole::ROLE_ENTRY;
   return NS_OK;
 }
 
@@ -201,7 +201,7 @@ nsXFormsInputBooleanAccessible::GetRole(PRUint32 *aRole)
 {
   NS_ENSURE_ARG_POINTER(aRole);
 
-  *aRole = ROLE_CHECKBUTTON;
+  *aRole = nsIAccessibleRole::ROLE_CHECKBUTTON;
   return NS_OK;
 }
 
@@ -270,7 +270,7 @@ nsXFormsInputDateAccessible::GetRole(PRUint32 *aRole)
 {
   NS_ENSURE_ARG_POINTER(aRole);
 
-  *aRole = ROLE_DROPLIST;
+  *aRole = nsIAccessibleRole::ROLE_DROPLIST;
   return NS_OK;
 }
 
@@ -287,7 +287,7 @@ nsXFormsSecretAccessible::GetRole(PRUint32 *aRole)
 {
   NS_ENSURE_ARG_POINTER(aRole);
 
-  *aRole = ROLE_PASSWORD_TEXT;
+  *aRole = nsIAccessibleRole::ROLE_PASSWORD_TEXT;
   return NS_OK;
 }
 
@@ -321,7 +321,7 @@ nsXFormsRangeAccessible::GetRole(PRUint32 *aRole)
 {
   NS_ENSURE_ARG_POINTER(aRole);
 
-  *aRole = ROLE_SLIDER;
+  *aRole = nsIAccessibleRole::ROLE_SLIDER;
   return NS_OK;
 }
 
@@ -437,7 +437,7 @@ nsXFormsChoicesAccessible::GetRole(PRUint32 *aRole)
 {
   NS_ENSURE_ARG_POINTER(aRole);
 
-  *aRole = ROLE_GROUPING;
+  *aRole = nsIAccessibleRole::ROLE_GROUPING;
   return NS_OK;
 }
 
@@ -468,7 +468,7 @@ nsXFormsSelectFullAccessible::GetRole(PRUint32 *aRole)
 {
   NS_ENSURE_ARG_POINTER(aRole);
 
-  *aRole = ROLE_GROUPING;
+  *aRole = nsIAccessibleRole::ROLE_GROUPING;
   return NS_OK;
 }
 
@@ -492,7 +492,7 @@ nsXFormsItemCheckgroupAccessible::GetRole(PRUint32 *aRole)
 {
   NS_ENSURE_ARG_POINTER(aRole);
 
-  *aRole = ROLE_CHECKBUTTON;
+  *aRole = nsIAccessibleRole::ROLE_CHECKBUTTON;
   return NS_OK;
 }
 
@@ -536,7 +536,7 @@ nsXFormsItemRadiogroupAccessible::GetRole(PRUint32 *aRole)
 {
   NS_ENSURE_ARG_POINTER(aRole);
 
-  *aRole = ROLE_RADIOBUTTON;
+  *aRole = nsIAccessibleRole::ROLE_RADIOBUTTON;
   return NS_OK;
 }
 
@@ -576,7 +576,7 @@ nsXFormsSelectComboboxAccessible::GetRole(PRUint32 *aRole)
 {
   NS_ENSURE_ARG_POINTER(aRole);
 
-  *aRole = ROLE_COMBOBOX;
+  *aRole = nsIAccessibleRole::ROLE_COMBOBOX;
   return NS_OK;
 }
 
@@ -622,7 +622,7 @@ nsXFormsItemComboboxAccessible::GetRole(PRUint32 *aRole)
 {
   NS_ENSURE_ARG_POINTER(aRole);
 
-  *aRole = ROLE_LISTITEM;
+  *aRole = nsIAccessibleRole::ROLE_LISTITEM;
   return NS_OK;
 }
 

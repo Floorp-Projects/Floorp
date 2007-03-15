@@ -341,11 +341,11 @@ NS_IMETHODIMP nsHTMLSelectListAccessible::GetState(PRUint32 *_retval)
 
 NS_IMETHODIMP nsHTMLSelectListAccessible::GetRole(PRUint32 *aRole)
 {
-  if (mParent && Role(mParent) == ROLE_COMBOBOX) {
-    *aRole = ROLE_COMBOBOX_LIST;
+  if (mParent && Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX) {
+    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
   }
   else {
-    *aRole = ROLE_LIST;
+    *aRole = nsIAccessibleRole::ROLE_LIST;
   }
   return NS_OK;
 }
@@ -462,7 +462,7 @@ nsHyperTextAccessible(aDOMNode, aShell)
     if (parentAccessible) {
       PRUint32 role;
       parentAccessible->GetRole(&role);
-      if (role == ROLE_COMBOBOX) {
+      if (role == nsIAccessibleRole::ROLE_COMBOBOX) {
         nsCOMPtr<nsIAccessible> comboAccessible(parentAccessible);
         comboAccessible->GetLastChild(getter_AddRefs(parentAccessible));
       }
@@ -474,11 +474,11 @@ nsHyperTextAccessible(aDOMNode, aShell)
 /** We are a ListItem */
 NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetRole(PRUint32 *aRole)
 {
-  if (mParent && Role(mParent) == ROLE_COMBOBOX_LIST) {
-    *aRole = ROLE_COMBOBOX_LISTITEM;
+  if (mParent && Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
+    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LISTITEM;
   }
   else {
-    *aRole = ROLE_COMBOBOX_LISTITEM;
+    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LISTITEM;
   }
   return NS_OK;
 }
@@ -808,7 +808,7 @@ nsAccessibleWrap(aDOMNode, aShell)
 /** We are a combobox */
 NS_IMETHODIMP nsHTMLComboboxAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_COMBOBOX;
+  *_retval = nsIAccessibleRole::ROLE_COMBOBOX;
   return NS_OK;
 }
 
@@ -1172,7 +1172,7 @@ void nsHTMLComboboxButtonAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** a
 /** We are a button. */
 NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_PUSHBUTTON;
+  *_retval = nsIAccessibleRole::ROLE_PUSHBUTTON;
   return NS_OK;
 }
 

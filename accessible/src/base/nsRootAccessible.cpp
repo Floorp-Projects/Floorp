@@ -158,7 +158,7 @@ NS_IMETHODIMP nsRootAccessible::GetRole(PRUint32 *aRole)
     return NS_ERROR_FAILURE;
   }
 
-  // If it's a <dialog> or <wizard>, use ROLE_DIALOG instead
+  // If it's a <dialog> or <wizard>, use nsIAccessibleRole::ROLE_DIALOG instead
   nsIContent *rootContent = mDocument->GetRootContent();
   if (rootContent) {
     nsCOMPtr<nsIDOMElement> rootElement(do_QueryInterface(rootContent));
@@ -166,7 +166,7 @@ NS_IMETHODIMP nsRootAccessible::GetRole(PRUint32 *aRole)
       nsAutoString name;
       rootElement->GetLocalName(name);
       if (name.EqualsLiteral("dialog") || name.EqualsLiteral("wizard")) {
-        *aRole = ROLE_DIALOG; // Always at the root
+        *aRole = nsIAccessibleRole::ROLE_DIALOG; // Always at the root
         return NS_OK;
       }
     }
@@ -502,15 +502,15 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
 
   // Use focus events on DHTML menuitems to indicate when to fire menustart and menuend
   // Special dynamic content handling
-  PRUint32 role = ROLE_NOTHING;
+  PRUint32 role = nsIAccessibleRole::ROLE_NOTHING;
   finalFocusAccessible->GetFinalRole(&role);
-  if (role == ROLE_MENUITEM) {
+  if (role == nsIAccessibleRole::ROLE_MENUITEM) {
     if (!mIsInDHTMLMenu) {  // Entering menus
       PRUint32 naturalRole; // The natural role is the role that this type of element normally has
       finalFocusAccessible->GetRole(&naturalRole);
       if (role != naturalRole) { // Must be a DHTML menuitem
          FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUSTART, this, nsnull);
-         mIsInDHTMLMenu = ROLE_MENUITEM;
+         mIsInDHTMLMenu = nsIAccessibleRole::ROLE_MENUITEM;
       }
     }
   }
@@ -768,7 +768,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   else if (eventType.EqualsLiteral("ValueChange")) {
     PRUint32 role;
     accessible->GetFinalRole(&role);
-    if (role == ROLE_PROGRESSBAR) {
+    if (role == nsIAccessibleRole::ROLE_PROGRESSBAR) {
       // For progressmeter, fire EVENT_SHOW on 1st value change
       nsAutoString value;
       accessible->GetValue(value);
@@ -822,7 +822,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     nsCOMPtr<nsIAccessible> containerAccessible;
     accessible->GetParent(getter_AddRefs(containerAccessible));
     NS_ENSURE_TRUE(containerAccessible, NS_OK);
-    if (Role(containerAccessible) == ROLE_MENUBAR) {
+    if (Role(containerAccessible) == nsIAccessibleRole::ROLE_MENUBAR) {
       // It is top level menuitem
       // Only fire focus event if it is not collapsed
       if (State(accessible) & STATE_COLLAPSED)

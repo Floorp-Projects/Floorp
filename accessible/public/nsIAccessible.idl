@@ -57,7 +57,7 @@ interface nsIDOMDOMStringList;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(58305abc-1b04-4e1e-a7f2-4c52ffa8936b)]
+[scriptable, uuid(79fa0a81-5acb-4549-94bd-5ad179616a59)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -139,14 +139,14 @@ interface nsIAccessible : nsISupports
   /**
    * Natural enumerated accessible role for the associated element.
    * The values depend on platform because of variations.
-   * See the ROLE_* constants defined later in this file.
+   * See the ROLE_* constants defined in nsIAccessibleRole.
    * This does not take into account role attribute as the finalRole does.
    */
   readonly attribute unsigned long role;
 
   /**
    * Enumerated accessible role. The values depend on platform because of variations.
-   * See the ROLE_* constants defined later in this file.
+   * See the ROLE_* constants defined in nsIAccessibleRole.
    * Widgets can use role attribute to force the final role
    */
   readonly attribute unsigned long finalRole;
@@ -399,126 +399,6 @@ interface nsIAccessible : nsISupports
   const unsigned long RELATION_DESCRIBED_BY = 0x0e;      // ATK_RELATION_DESCRIBED_BY
   const unsigned long RELATION_DESCRIPTION_FOR = 0x0f;   // ATK_RELATION_DESCRIPTION_FOR
   const unsigned long RELATION_DEFAULT_BUTTON = 0x4000;  // MSAA only, no ATK relation
-
-  // Cross Platform Roles
-  // When adding a new role, be sure to also add it to nsRoleMap.h for each platform
-  const unsigned long ROLE_NOTHING = 0;
-  const unsigned long ROLE_TITLEBAR = 1;
-  const unsigned long ROLE_MENUBAR = 2;
-  const unsigned long ROLE_SCROLLBAR = 3;
-  const unsigned long ROLE_GRIP = 4;
-  const unsigned long ROLE_SOUND = 5;
-  const unsigned long ROLE_CURSOR = 6;
-  const unsigned long ROLE_CARET = 7;
-  const unsigned long ROLE_ALERT = 8;
-  const unsigned long ROLE_WINDOW = 9;
-  const unsigned long ROLE_CLIENT = 10;
-  const unsigned long ROLE_MENUPOPUP = 11;
-  const unsigned long ROLE_MENUITEM = 12;
-  const unsigned long ROLE_TOOLTIP = 13;
-  const unsigned long ROLE_APPLICATION = 14; // See also ROLE_APP_ROOT
-  const unsigned long ROLE_DOCUMENT = 15;
-  const unsigned long ROLE_PANE = 16;
-  const unsigned long ROLE_CHART = 17;
-  const unsigned long ROLE_DIALOG = 18;
-  const unsigned long ROLE_BORDER = 19;
-  const unsigned long ROLE_GROUPING = 20;
-  const unsigned long ROLE_SEPARATOR = 21;
-  const unsigned long ROLE_TOOLBAR = 22;
-  const unsigned long ROLE_STATUSBAR = 23;
-  const unsigned long ROLE_TABLE = 24;
-  const unsigned long ROLE_COLUMNHEADER = 25;
-  const unsigned long ROLE_ROWHEADER = 26;
-  const unsigned long ROLE_COLUMN = 27;
-  const unsigned long ROLE_ROW = 28;
-  const unsigned long ROLE_CELL = 29;
-  const unsigned long ROLE_LINK = 30;
-  const unsigned long ROLE_HELPBALLOON = 31;
-  const unsigned long ROLE_CHARACTER = 32;
-  const unsigned long ROLE_LIST = 33;
-  const unsigned long ROLE_LISTITEM = 34;
-  const unsigned long ROLE_OUTLINE = 35;
-  const unsigned long ROLE_OUTLINEITEM = 36;
-  const unsigned long ROLE_PAGETAB = 37;
-  const unsigned long ROLE_PROPERTYPAGE = 38;
-  const unsigned long ROLE_INDICATOR = 39;
-  const unsigned long ROLE_GRAPHIC = 40;
-  const unsigned long ROLE_STATICTEXT = 41;
-  const unsigned long ROLE_TEXT_LEAF = 42;
-  const unsigned long ROLE_PUSHBUTTON = 43;
-  const unsigned long ROLE_CHECKBUTTON = 44;
-  const unsigned long ROLE_RADIOBUTTON = 45;
-  const unsigned long ROLE_COMBOBOX = 46;
-  const unsigned long ROLE_DROPLIST = 47;
-  const unsigned long ROLE_PROGRESSBAR = 48;
-  const unsigned long ROLE_DIAL = 49;
-  const unsigned long ROLE_HOTKEYFIELD = 50;
-  const unsigned long ROLE_SLIDER = 51;
-  const unsigned long ROLE_SPINBUTTON = 52;
-  const unsigned long ROLE_DIAGRAM = 53;
-  const unsigned long ROLE_ANIMATION = 54;
-  const unsigned long ROLE_EQUATION = 55;
-  const unsigned long ROLE_BUTTONDROPDOWN = 56;
-  const unsigned long ROLE_BUTTONMENU = 57;
-  const unsigned long ROLE_BUTTONDROPDOWNGRID = 58;
-  const unsigned long ROLE_WHITESPACE = 59;
-  const unsigned long ROLE_PAGETABLIST = 60;
-  const unsigned long ROLE_CLOCK = 61;
-  const unsigned long ROLE_SPLITBUTTON = 62;
-  const unsigned long ROLE_IPADDRESS = 63;
-  const unsigned long ROLE_ACCEL_LABEL = 64;
-  const unsigned long ROLE_ARROW  = 65;
-  const unsigned long ROLE_CANVAS = 66;
-  const unsigned long ROLE_CHECK_MENU_ITEM = 67;
-  const unsigned long ROLE_COLOR_CHOOSER  = 68;
-  const unsigned long ROLE_DATE_EDITOR = 69;
-  const unsigned long ROLE_DESKTOP_ICON = 70;
-  const unsigned long ROLE_DESKTOP_FRAME = 71;
-  const unsigned long ROLE_DIRECTORY_PANE = 72;
-  const unsigned long ROLE_FILE_CHOOSER = 73;
-  const unsigned long ROLE_FONT_CHOOSER = 74;
-  const unsigned long ROLE_CHROME_WINDOW = 75;
-  const unsigned long ROLE_GLASS_PANE = 76;
-  const unsigned long ROLE_HTML_CONTAINER = 77;
-  const unsigned long ROLE_ICON = 78;
-  const unsigned long ROLE_LABEL = 79;
-  const unsigned long ROLE_LAYERED_PANE = 80;
-  const unsigned long ROLE_OPTION_PANE = 81;
-  const unsigned long ROLE_PASSWORD_TEXT = 82;
-  const unsigned long ROLE_POPUP_MENU = 83;
-  const unsigned long ROLE_RADIO_MENU_ITEM = 84;
-  const unsigned long ROLE_ROOT_PANE = 85;
-  const unsigned long ROLE_SCROLL_PANE = 86;
-  const unsigned long ROLE_SPLIT_PANE = 87;
-  const unsigned long ROLE_TABLE_COLUMN_HEADER = 88;
-  const unsigned long ROLE_TABLE_ROW_HEADER = 89;
-  const unsigned long ROLE_TEAR_OFF_MENU_ITEM = 90;
-  const unsigned long ROLE_TERMINAL = 91;
-  const unsigned long ROLE_TEXT_CONTAINER = 92;
-  const unsigned long ROLE_TOGGLE_BUTTON = 93;
-  const unsigned long ROLE_TREE_TABLE = 94;
-  const unsigned long ROLE_VIEWPORT = 95;
-  const unsigned long ROLE_HEADER = 96;
-  const unsigned long ROLE_FOOTER = 97;
-  const unsigned long ROLE_PARAGRAPH = 98;
-  const unsigned long ROLE_RULER = 99;
-  const unsigned long ROLE_AUTOCOMPLETE = 100;
-  const unsigned long ROLE_EDITBAR = 101;
-  const unsigned long ROLE_ENTRY = 102;
-  const unsigned long ROLE_CAPTION = 103;
-  const unsigned long ROLE_DOCUMENT_FRAME = 104;
-  const unsigned long ROLE_HEADING = 105;
-  const unsigned long ROLE_PAGE = 106;
-  const unsigned long ROLE_SECTION = 107;
-  const unsigned long ROLE_REDUNDANT_OBJECT = 108;
-  const unsigned long ROLE_FORM = 109;
-  const unsigned long ROLE_IME = 110;
-  const unsigned long ROLE_APP_ROOT = 111;
-  const unsigned long ROLE_PARENT_MENUITEM = 112;
-  const unsigned long ROLE_CALENDAR = 113;
-  const unsigned long ROLE_COMBOBOX_LIST = 114;
-  const unsigned long ROLE_COMBOBOX_LISTITEM = 115;
-  const unsigned long ROLE_LAST_ENTRY = 116; // Important -- helps ensure nsRoleMap's are synchronized
 
 // MSAA relationship extensions to accNavigate
   const unsigned long NAVRELATION_CONTROLLED_BY = 0x1000;

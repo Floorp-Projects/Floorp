@@ -114,7 +114,7 @@ NS_IMETHODIMP nsXULListboxAccessible::GetValue(nsAString& _retval)
 
 NS_IMETHODIMP nsXULListboxAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_LIST;
+  *_retval = nsIAccessibleRole::ROLE_LIST;
   return NS_OK;
 }
 
@@ -164,9 +164,9 @@ NS_IMETHODIMP nsXULListitemAccessible::GetName(nsAString& _retval)
 NS_IMETHODIMP nsXULListitemAccessible::GetRole(PRUint32 *aRole)
 {
   if (mIsCheckbox)
-    *aRole = ROLE_CHECKBUTTON;
+    *aRole = nsIAccessibleRole::ROLE_CHECKBUTTON;
   else
-    *aRole = ROLE_LISTITEM;
+    *aRole = nsIAccessibleRole::ROLE_LISTITEM;
   return NS_OK;
 }
 
@@ -241,7 +241,8 @@ NS_IMETHODIMP nsXULComboboxAccessible::GetRole(PRUint32 *aRole)
   }
   *aRole = content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
                                 NS_LITERAL_STRING("autocomplete"), eIgnoreCase) ?
-                                ROLE_AUTOCOMPLETE : ROLE_COMBOBOX;
+                                nsIAccessibleRole::ROLE_AUTOCOMPLETE :
+                                nsIAccessibleRole::ROLE_COMBOBOX;
   return NS_OK;
 }
 

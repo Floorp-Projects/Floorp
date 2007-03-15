@@ -81,7 +81,7 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetName(nsAString & aName)
 /* unsigned long getRole (); */
 NS_IMETHODIMP nsHTMLAreaAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_LINK;
+  *_retval = nsIAccessibleRole::ROLE_LINK;
   return NS_OK;
 }
 

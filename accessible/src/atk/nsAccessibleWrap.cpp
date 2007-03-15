@@ -704,7 +704,7 @@ getRoleCB(AtkObject *aAtkObj)
         NS_ENSURE_SUCCESS(rv, ATK_ROLE_INVALID);
 
         atkRole = atkRoleMap[accRole]; // map to the actual value
-        NS_ASSERTION(atkRoleMap[nsIAccessible::ROLE_LAST_ENTRY] ==
+        NS_ASSERTION(atkRoleMap[nsIAccessibleRole::ROLE_LAST_ENTRY] ==
                      kROLE_ATK_LAST_ENTRY, "ATK role map skewed");
         aAtkObj->role = NS_STATIC_CAST(AtkRole, atkRole);
     }

@@ -57,7 +57,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsTextAccessible, nsLinkableAccessible)
   */
 NS_IMETHODIMP nsTextAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_TEXT_LEAF;
+  *_retval = nsIAccessibleRole::ROLE_TEXT_LEAF;
   return NS_OK;
 }
 

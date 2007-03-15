@@ -106,7 +106,7 @@ NS_IMETHODIMP nsXULButtonAccessible::DoAction(PRUint8 index)
   */
 NS_IMETHODIMP nsXULButtonAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_PUSHBUTTON;
+  *_retval = nsIAccessibleRole::ROLE_PUSHBUTTON;
   return NS_OK;
 }
 
@@ -185,7 +185,8 @@ void nsXULButtonAccessible::CacheChildren()
 
     if (dropMarkerAccessible) {    
       PRUint32 role;
-      if (NS_SUCCEEDED(dropMarkerAccessible->GetRole(&role)) && role == ROLE_PUSHBUTTON) {
+      if (NS_SUCCEEDED(dropMarkerAccessible->GetRole(&role)) &&
+          role == nsIAccessibleRole::ROLE_PUSHBUTTON) {
         SetFirstChild(dropMarkerAccessible);
         nsCOMPtr<nsPIAccessible> privChildAcc = do_QueryInterface(dropMarkerAccessible);
         privChildAcc->SetNextSibling(nsnull);
@@ -275,7 +276,7 @@ NS_IMETHODIMP nsXULDropmarkerAccessible::DoAction(PRUint8 index)
   */
 NS_IMETHODIMP nsXULDropmarkerAccessible::GetRole(PRUint32 *aResult)
 {
-  *aResult = ROLE_PUSHBUTTON;
+  *aResult = nsIAccessibleRole::ROLE_PUSHBUTTON;
   return NS_OK;
 }
 
@@ -306,7 +307,7 @@ nsFormControlAccessible(aNode, aShell)
   */
 NS_IMETHODIMP nsXULCheckboxAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_CHECKBUTTON;
+  *_retval = nsIAccessibleRole::ROLE_CHECKBUTTON;
   return NS_OK;
 }
 
@@ -386,7 +387,7 @@ nsAccessibleWrap(aNode, aShell)
 
 NS_IMETHODIMP nsXULGroupboxAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_GROUPING;
+  *_retval = nsIAccessibleRole::ROLE_GROUPING;
   return NS_OK;
 }
 
@@ -441,7 +442,7 @@ nsFormControlAccessible(aNode, aShell)
 
 NS_IMETHODIMP nsXULProgressMeterAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_PROGRESSBAR;
+  *_retval = nsIAccessibleRole::ROLE_PROGRESSBAR;
   return NS_OK;
 }
 
@@ -544,7 +545,7 @@ nsXULSelectableAccessible(aNode, aShell)
 
 NS_IMETHODIMP nsXULRadioGroupAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_GROUPING;
+  *_retval = nsIAccessibleRole::ROLE_GROUPING;
   return NS_OK;
 }
 
@@ -574,7 +575,7 @@ nsAccessibleWrap(aNode, aShell)
   */
 NS_IMETHODIMP nsXULStatusBarAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_STATUSBAR;
+  *_retval = nsIAccessibleRole::ROLE_STATUSBAR;
   return NS_OK;
 }
 
@@ -594,7 +595,7 @@ nsAccessibleWrap(aNode, aShell)
 
 NS_IMETHODIMP nsXULToolbarAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_TOOLBAR;
+  *_retval = nsIAccessibleRole::ROLE_TOOLBAR;
   return NS_OK;
 }
 
@@ -616,7 +617,7 @@ nsLeafAccessible(aNode, aShell)
 
 NS_IMETHODIMP nsXULToolbarSeparatorAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_SEPARATOR;
+  *_retval = nsIAccessibleRole::ROLE_SEPARATOR;
   return NS_OK;
 }
 
@@ -756,12 +757,12 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetState(PRUint32 *aState)
 
 NS_IMETHODIMP nsXULTextFieldAccessible::GetRole(PRUint32 *aRole)
 {
-  *aRole = ROLE_ENTRY;
+  *aRole = nsIAccessibleRole::ROLE_ENTRY;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (content &&
       content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
                            nsAccessibilityAtoms::password, eIgnoreCase)) {
-    *aRole = ROLE_PASSWORD_TEXT;
+    *aRole = nsIAccessibleRole::ROLE_PASSWORD_TEXT;
   }
   return NS_OK;
 }

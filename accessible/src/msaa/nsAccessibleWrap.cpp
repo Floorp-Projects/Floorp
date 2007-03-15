@@ -338,9 +338,11 @@ NS_IMETHODIMP nsAccessibleWrap::GetDescription(nsAString& aDescription)
   PRUint32 currentRole;
   nsresult rv = GetFinalRole(&currentRole);
   if (NS_FAILED(rv) ||
-      (currentRole != ROLE_LISTITEM && currentRole != ROLE_MENUITEM &&
-       currentRole != ROLE_RADIOBUTTON && currentRole != ROLE_PAGETAB &&
-       currentRole != ROLE_OUTLINEITEM)) {
+      (currentRole != nsIAccessibleRole::ROLE_LISTITEM &&
+       currentRole != nsIAccessibleRole::ROLE_MENUITEM &&
+       currentRole != nsIAccessibleRole::ROLE_RADIOBUTTON &&
+       currentRole != nsIAccessibleRole::ROLE_PAGETAB &&
+       currentRole != nsIAccessibleRole::ROLE_OUTLINEITEM)) {
     nsAutoString description;
     nsAccessible::GetDescription(description);
     if (!description.IsEmpty()) {
@@ -383,12 +385,12 @@ NS_IMETHODIMP nsAccessibleWrap::GetDescription(nsAString& aDescription)
 
   // Don't localize the string "of" -- that's just the format of this string.
   // The AT will parse the relevant numbers out and add its own localization.
-  if (currentRole == ROLE_OUTLINEITEM) {
+  if (currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM) {
     PRUint32 level = 1;
     nsCOMPtr<nsIAccessible> nextParent;
     while (parent) {
       parent->GetFinalRole(&currentRole);
-      if (currentRole != ROLE_GROUPING) {
+      if (currentRole != nsIAccessibleRole::ROLE_GROUPING) {
         break;
       }
       ++level;
@@ -402,13 +404,13 @@ NS_IMETHODIMP nsAccessibleWrap::GetDescription(nsAString& aDescription)
     GetNextSibling(getter_AddRefs(groupSibling));
     if (groupSibling) {
       groupSibling->GetFinalRole(&currentRole);
-      if (currentRole == ROLE_GROUPING) {
+      if (currentRole == nsIAccessibleRole::ROLE_GROUPING) {
         // Accessible that groups child tree items
         nsCOMPtr<nsIAccessible> child;
         groupSibling->GetFirstChild(getter_AddRefs(child));
         while (child) {
           child->GetFinalRole(&currentRole);
-          numChildren += (currentRole == ROLE_OUTLINEITEM);
+          numChildren += (currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM);
           nsCOMPtr<nsIAccessible> nextChild;
           child->GetNextSibling(getter_AddRefs(nextChild));
           child.swap(nextChild);
@@ -467,7 +469,7 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
     return E_FAIL;
 
   msaaRole = gWindowsRoleMap[xpRole].msaaRole;
-  NS_ASSERTION(gWindowsRoleMap[nsIAccessible::ROLE_LAST_ENTRY].msaaRole == ROLE_WINDOWS_LAST_ENTRY,
+  NS_ASSERTION(gWindowsRoleMap[nsIAccessibleRole::ROLE_LAST_ENTRY].msaaRole == ROLE_WINDOWS_LAST_ENTRY,
                "MSAA role map skewed");
 
   // Special case, not a great place for this, but it's better than adding extra role buttonmenu role to ARIA
@@ -1123,7 +1125,7 @@ nsAccessibleWrap::role(long *role)
   if (NS_FAILED(GetFinalRole(&xpRole)))
     return E_FAIL;
 
-  NS_ASSERTION(gWindowsRoleMap[nsIAccessible::ROLE_LAST_ENTRY].ia2Role == ROLE_WINDOWS_LAST_ENTRY,
+  NS_ASSERTION(gWindowsRoleMap[nsIAccessibleRole::ROLE_LAST_ENTRY].ia2Role == ROLE_WINDOWS_LAST_ENTRY,
                "MSAA role map skewed");
 
   *role = gWindowsRoleMap[xpRole].ia2Role;

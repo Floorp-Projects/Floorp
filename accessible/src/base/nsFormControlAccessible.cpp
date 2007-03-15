@@ -88,7 +88,7 @@ NS_IMETHODIMP nsRadioButtonAccessible::DoAction(PRUint8 aIndex)
   */
 NS_IMETHODIMP nsRadioButtonAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_RADIOBUTTON;
+  *_retval = nsIAccessibleRole::ROLE_RADIOBUTTON;
 
   return NS_OK;
 }

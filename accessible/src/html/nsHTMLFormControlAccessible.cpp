@@ -60,7 +60,7 @@ nsFormControlAccessible(aNode, aShell)
 
 NS_IMETHODIMP nsHTMLCheckboxAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_CHECKBUTTON;
+  *_retval = nsIAccessibleRole::ROLE_CHECKBUTTON;
   return NS_OK;
 }
 
@@ -179,7 +179,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetState(PRUint32 *_retval)
 
 NS_IMETHODIMP nsHTMLButtonAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_PUSHBUTTON;
+  *_retval = nsIAccessibleRole::ROLE_PUSHBUTTON;
   return NS_OK;
 }
 
@@ -258,7 +258,7 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::DoAction(PRUint8 index)
 
 NS_IMETHODIMP nsHTML4ButtonAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_PUSHBUTTON;
+  *_retval = nsIAccessibleRole::ROLE_PUSHBUTTON;
   return NS_OK;
 }
 
@@ -305,12 +305,12 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::Shutdown()
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetRole(PRUint32 *aRole)
 {
-  *aRole = ROLE_ENTRY;
+  *aRole = nsIAccessibleRole::ROLE_ENTRY;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (content &&
       content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
                            nsAccessibilityAtoms::password, eIgnoreCase)) {
-    *aRole = ROLE_PASSWORD_TEXT;
+    *aRole = nsIAccessibleRole::ROLE_PASSWORD_TEXT;
   }
   return NS_OK;
 }
@@ -353,7 +353,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetState(PRUint32 *aState)
   else {
     nsCOMPtr<nsIAccessible> parent;
     GetParent(getter_AddRefs(parent));
-    if (parent && Role(parent) == ROLE_AUTOCOMPLETE) {
+    if (parent && Role(parent) == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
       *aState |= STATE_HASPOPUP;
     }
   }
@@ -476,7 +476,7 @@ nsAccessibleWrap(aNode, aShell)
 
 NS_IMETHODIMP nsHTMLGroupboxAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_GROUPING;
+  *_retval = nsIAccessibleRole::ROLE_GROUPING;
   return NS_OK;
 }
 

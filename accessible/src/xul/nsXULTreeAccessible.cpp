@@ -237,9 +237,9 @@ NS_IMETHODIMP nsXULTreeAccessible::GetRole(PRUint32 *aRole)
   NS_ASSERTION(mTree, "No tree view");
   PRInt32 colCount = 0;
   if (NS_SUCCEEDED(GetColumnCount(mTree, &colCount)) && (colCount > 1))
-    *aRole = ROLE_TREE_TABLE;
+    *aRole = nsIAccessibleRole::ROLE_TREE_TABLE;
   else
-    *aRole = ROLE_OUTLINE;
+    *aRole = nsIAccessibleRole::ROLE_OUTLINE;
   return NS_OK;
 }
 
@@ -568,9 +568,9 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetRole(PRUint32 *aRole)
 {
   PRInt32 colCount = 0;
   if (NS_SUCCEEDED(nsXULTreeAccessible::GetColumnCount(mTree, &colCount)) && colCount > 1)
-    *aRole = ROLE_CELL;
+    *aRole = nsIAccessibleRole::ROLE_CELL;
   else
-    *aRole = ROLE_OUTLINEITEM;
+    *aRole = nsIAccessibleRole::ROLE_OUTLINEITEM;
   return NS_OK;
 }
 
@@ -924,7 +924,7 @@ NS_IMETHODIMP nsXULTreeColumnsAccessible::GetState(PRUint32 *_retval)
 
 NS_IMETHODIMP nsXULTreeColumnsAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_LIST;
+  *_retval = nsIAccessibleRole::ROLE_LIST;
   return NS_OK;
 }
 
@@ -1006,7 +1006,7 @@ NS_IMETHODIMP nsXULTreeColumnitemAccessible::GetName(nsAString& _retval)
 
 NS_IMETHODIMP nsXULTreeColumnitemAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_COLUMNHEADER;
+  *_retval = nsIAccessibleRole::ROLE_COLUMNHEADER;
   return NS_OK;
 }
 

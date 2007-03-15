@@ -39,6 +39,7 @@
 #ifndef _nsAccessible_H_
 #define _nsAccessible_H_
 
+#include "nsIAccessibleRole.h"
 #include "nsAccessNodeWrap.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsIAccessible.h"
@@ -169,8 +170,8 @@ public:
   static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
   static PRUint32 State(nsIAccessible *aAcc) { PRUint32 state; aAcc->GetFinalState(&state); return state; }
   static PRUint32 Role(nsIAccessible *aAcc) { PRUint32 role; aAcc->GetFinalRole(&role); return role; }
-  static PRBool IsText(nsIAccessible *aAcc) { PRUint32 role = Role(aAcc); return role == ROLE_TEXT_LEAF || role == ROLE_STATICTEXT; }
-  static PRBool IsEmbeddedObject(nsIAccessible *aAcc) { PRUint32 role = Role(aAcc); return role != ROLE_TEXT_LEAF && role != ROLE_WHITESPACE && role != ROLE_STATICTEXT; }
+  static PRBool IsText(nsIAccessible *aAcc) { PRUint32 role = Role(aAcc); return role == nsIAccessibleRole::ROLE_TEXT_LEAF || role == nsIAccessibleRole::ROLE_STATICTEXT; }
+  static PRBool IsEmbeddedObject(nsIAccessible *aAcc) { PRUint32 role = Role(aAcc); return role != nsIAccessibleRole::ROLE_TEXT_LEAF && role != nsIAccessibleRole::ROLE_WHITESPACE && role != nsIAccessibleRole::ROLE_STATICTEXT; }
   static PRInt32 TextLength(nsIAccessible *aAccessible);
   static PRBool IsLeaf(nsIAccessible *aAcc) { PRInt32 numChildren; aAcc->GetChildCount(&numChildren); return numChildren > 0; }
   

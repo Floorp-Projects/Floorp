@@ -58,7 +58,7 @@ nsFormControlAccessible(aNode, aShell)
   */
 NS_IMETHODIMP nsXULColorPickerTileAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_PUSHBUTTON;
+  *_retval = nsIAccessibleRole::ROLE_PUSHBUTTON;
   return NS_OK;
 }
 
@@ -125,7 +125,7 @@ NS_IMETHODIMP nsXULColorPickerAccessible::GetState(PRUint32 *_retval)
 
 NS_IMETHODIMP nsXULColorPickerAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_BUTTONDROPDOWNGRID;
+  *_retval = nsIAccessibleRole::ROLE_BUTTONDROPDOWNGRID;
   return NS_OK;
 }
 
