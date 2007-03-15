@@ -68,7 +68,7 @@ NS_IMETHODIMP nsHTMLLinkAccessible::GetRole(PRUint32 *_retval)
 NS_IMETHODIMP nsHTMLLinkAccessible::GetState(PRUint32 *aState)
 {
   nsLinkableAccessible::GetState(aState);
-  *aState  &= ~STATE_READONLY;
+  *aState  &= ~nsIAccessibleStates::STATE_READONLY;
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (content && content->HasAttr(kNameSpaceID_None,
@@ -76,7 +76,7 @@ NS_IMETHODIMP nsHTMLLinkAccessible::GetState(PRUint32 *aState)
     // This is how we indicate it is a named anchor
     // In other words, this anchor can be selected as a location :)
     // There is no other better state to use to indicate this.
-    *aState |= STATE_SELECTABLE;
+    *aState |= nsIAccessibleStates::STATE_SELECTABLE;
   }
 
   return NS_OK;

@@ -75,7 +75,7 @@ NS_IMETHODIMP nsXULTextAccessible::GetState(PRUint32 *aState)
 
   // Labels and description have read only state
   // They are not focusable or selectable
-  *aState |= STATE_READONLY;
+  *aState |= nsIAccessibleStates::STATE_READONLY;
   return NS_OK;
 }
 
@@ -95,8 +95,8 @@ NS_IMETHODIMP nsXULTooltipAccessible::GetName(nsAString& aName)
 NS_IMETHODIMP nsXULTooltipAccessible::GetState(PRUint32 *_retval)
 {
   nsLeafAccessible::GetState(_retval);
-  *_retval &= ~STATE_FOCUSABLE;
-  *_retval |= STATE_READONLY;
+  *_retval &= ~nsIAccessibleStates::STATE_FOCUSABLE;
+  *_retval |= nsIAccessibleStates::STATE_READONLY;
   return NS_OK;
 }
 

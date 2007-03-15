@@ -119,13 +119,13 @@ NS_IMETHODIMP nsLinkableAccessible::GetState(PRUint32 *aState)
 {
   nsHyperTextAccessible::GetState(aState);
   if (mIsLink) {
-    *aState |= STATE_LINKED;
+    *aState |= nsIAccessibleStates::STATE_LINKED;
     nsCOMPtr<nsILink> link = do_QueryInterface(mActionContent);
     if (link) {
       nsLinkState linkState;
       link->GetLinkState(linkState);
       if (linkState == eLinkState_Visited) {
-        *aState |= STATE_TRAVERSED;
+        *aState |= nsIAccessibleStates::STATE_TRAVERSED;
       }
     }
     // Make sure we also include all the states of the parent link, such as focusable, focused, etc.
@@ -141,7 +141,8 @@ NS_IMETHODIMP nsLinkableAccessible::GetState(PRUint32 *aState)
     }
   }
   if (mActionContent && !mActionContent->IsFocusable()) {
-    *aState &= ~STATE_FOCUSABLE; // Links must have href or tabindex
+    // Links must have href or tabindex
+    *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
   }
 
   // XXX What if we're in a contenteditable container?
@@ -152,7 +153,9 @@ NS_IMETHODIMP nsLinkableAccessible::GetState(PRUint32 *aState)
     PRBool isEditable;
     docAccessible->GetIsEditable(&isEditable);
     if (isEditable) {
-      *aState &= ~(STATE_FOCUSED | STATE_FOCUSABLE); // Links not focusable in editor
+      // Links not focusable in editor
+      *aState &= ~(nsIAccessibleStates::STATE_FOCUSED |
+                   nsIAccessibleStates::STATE_FOCUSABLE);
     }
   }
   return NS_OK;

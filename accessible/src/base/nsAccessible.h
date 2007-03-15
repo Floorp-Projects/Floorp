@@ -40,6 +40,7 @@
 #define _nsAccessible_H_
 
 #include "nsIAccessibleRole.h"
+#include "nsIAccessibleStates.h"
 #include "nsAccessNodeWrap.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsIAccessible.h"

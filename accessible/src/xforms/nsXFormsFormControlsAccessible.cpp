@@ -216,7 +216,7 @@ nsXFormsInputBooleanAccessible::GetState(PRUint32 *aState)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (value.EqualsLiteral("true"))
-    *aState |= STATE_CHECKED;
+    *aState |= nsIAccessibleStates::STATE_CHECKED;
 
   return NS_OK;
 }
@@ -297,7 +297,7 @@ nsXFormsSecretAccessible::GetState(PRUint32 *aState)
   nsresult rv = nsXFormsInputAccessible::GetState(aState);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aState |= STATE_PROTECTED;
+  *aState |= nsIAccessibleStates::STATE_PROTECTED;
   return NS_OK;
 }
 
@@ -336,7 +336,7 @@ nsXFormsRangeAccessible::GetState(PRUint32 *aState)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (isInRange == nsIXFormsUtilityService::STATE_OUT_OF_RANGE)
-    *aState |= STATE_INVALID;
+    *aState |= nsIAccessibleStates::STATE_INVALID;
 
   return NS_OK;
 }
@@ -417,7 +417,7 @@ nsXFormsSelectAccessible::GetState(PRUint32 *aState)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (isInRange == nsIXFormsUtilityService::STATE_OUT_OF_RANGE)
-    *aState |= STATE_INVALID;
+    *aState |= nsIAccessibleStates::STATE_INVALID;
 
   return NS_OK;
 }
@@ -503,7 +503,7 @@ nsXFormsItemCheckgroupAccessible::GetState(PRUint32 *aState)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (IsItemSelected())
-    *aState |= STATE_CHECKED;
+    *aState |= nsIAccessibleStates::STATE_CHECKED;
 
   return NS_OK;
 }
@@ -547,7 +547,7 @@ nsXFormsItemRadiogroupAccessible::GetState(PRUint32 *aState)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (IsItemSelected())
-    *aState |= STATE_CHECKED;
+    *aState |= nsIAccessibleStates::STATE_CHECKED;
 
   return NS_OK;
 }
@@ -591,11 +591,12 @@ nsXFormsSelectComboboxAccessible::GetState(PRUint32 *aState)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (isOpen)
-    *aState = STATE_EXPANDED;
+    *aState = nsIAccessibleStates::STATE_EXPANDED;
   else
-    *aState = STATE_COLLAPSED;
+    *aState = nsIAccessibleStates::STATE_COLLAPSED;
 
-  *aState |= STATE_HASPOPUP | STATE_FOCUSABLE;
+  *aState |= nsIAccessibleStates::STATE_HASPOPUP |
+             nsIAccessibleStates::STATE_FOCUSABLE;
   return NS_OK;
 }
 
@@ -632,12 +633,12 @@ nsXFormsItemComboboxAccessible::GetState(PRUint32 *aState)
   nsresult rv = nsXFormsSelectableItemAccessible::GetState(aState);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (*aState & STATE_UNAVAILABLE)
+  if (*aState & nsIAccessibleStates::STATE_UNAVAILABLE)
     return NS_OK;
 
-  *aState |= STATE_SELECTABLE;
+  *aState |= nsIAccessibleStates::STATE_SELECTABLE;
   if (IsItemSelected())
-    *aState |= STATE_SELECTED;
+    *aState |= nsIAccessibleStates::STATE_SELECTED;
 
   return NS_OK;
 }

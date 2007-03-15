@@ -198,16 +198,16 @@ nsXFormsAccessible::GetState(PRUint32 *aState)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!isRelevant)
-    *aState |= STATE_UNAVAILABLE;
+    *aState |= nsIAccessibleStates::STATE_UNAVAILABLE;
 
   if (isReadonly)
-    *aState |= STATE_READONLY;
+    *aState |= nsIAccessibleStates::STATE_READONLY;
 
   if (isRequired)
-    *aState |= STATE_REQUIRED;
+    *aState |= nsIAccessibleStates::STATE_REQUIRED;
 
   if (!isValid)
-    *aState |= STATE_INVALID;
+    *aState |= nsIAccessibleStates::STATE_INVALID;
 
   return NS_OK;
 }
@@ -324,16 +324,17 @@ nsXFormsEditableAccessible::GetExtState(PRUint32 *aExtState)
     rv = sXFormsService->IsRelevant(mDOMNode, &isRelevant);
     NS_ENSURE_SUCCESS(rv, rv);
     if (isRelevant) {
-      *aExtState |= EXT_STATE_EDITABLE | EXT_STATE_SELECTABLE_TEXT;
+      *aExtState |= nsIAccessibleStates::EXT_STATE_EDITABLE |
+                    nsIAccessibleStates::EXT_STATE_SELECTABLE_TEXT;
     }
   }
 
   PRUint32 flags;
   mEditor->GetFlags(&flags);
   if (flags & nsIPlaintextEditor::eEditorSingleLineMask)
-    *aExtState |= EXT_STATE_SINGLE_LINE;
+    *aExtState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
   else
-    *aExtState |= EXT_STATE_MULTI_LINE;
+    *aExtState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
 
   return NS_OK;
 }

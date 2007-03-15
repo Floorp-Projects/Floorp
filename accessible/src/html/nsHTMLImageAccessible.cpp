@@ -79,8 +79,8 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLImageAccessible, nsLinkableAccessible, nsIAcc
 
 NS_IMETHODIMP nsHTMLImageAccessible::GetState(PRUint32 *_retval)
 {
-  // The state is a bitfield, get our inherited state, then logically OR it with STATE_ANIMATED if this
-  // is an animated image.
+  // The state is a bitfield, get our inherited state, then logically OR it with
+  // STATE_ANIMATED if this is an animated image.
 
   nsLinkableAccessible::GetState(_retval);
 
@@ -99,7 +99,7 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetState(PRUint32 *_retval)
     PRUint32 numFrames;
     imgContainer->GetNumFrames(&numFrames);
     if (numFrames > 1)
-      *_retval |= STATE_ANIMATED;
+      *_retval |= nsIAccessibleStates::STATE_ANIMATED;
   }
 
   return NS_OK;

@@ -104,7 +104,7 @@ NS_IMETHODIMP nsXULTabAccessible::GetState(PRUint32 *_retval)
   // In the past, tabs have been focusable in classic theme
   // They may be again in the future
   // Check style for -moz-user-focus: normal to see if it's focusable
-  *_retval &= ~STATE_FOCUSABLE;
+  *_retval &= ~nsIAccessibleStates::STATE_FOCUSABLE;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
   if (presShell && content) {
@@ -112,17 +112,17 @@ NS_IMETHODIMP nsXULTabAccessible::GetState(PRUint32 *_retval)
     if (frame) {
       const nsStyleUserInterface* ui = frame->GetStyleUserInterface();
       if (ui->mUserFocus == NS_STYLE_USER_FOCUS_NORMAL)
-        *_retval |= STATE_FOCUSABLE;
+        *_retval |= nsIAccessibleStates::STATE_FOCUSABLE;
     }
   }
   // Check whether the tab is selected
-  *_retval |= STATE_SELECTABLE;
-  *_retval &= ~STATE_SELECTED;
+  *_retval |= nsIAccessibleStates::STATE_SELECTABLE;
+  *_retval &= ~nsIAccessibleStates::STATE_SELECTED;
   nsCOMPtr<nsIDOMXULSelectControlItemElement> tab(do_QueryInterface(mDOMNode));
   if (tab) {
     PRBool selected = PR_FALSE;
     if (NS_SUCCEEDED(tab->GetSelected(&selected)) && selected)
-      *_retval |= STATE_SELECTED;
+      *_retval |= nsIAccessibleStates::STATE_SELECTED;
   }
   return NS_OK;
 }
@@ -150,7 +150,7 @@ NS_IMETHODIMP nsXULTabBoxAccessible::GetRole(PRUint32 *_retval)
 NS_IMETHODIMP nsXULTabBoxAccessible::GetState(PRUint32 *_retval)
 {
   nsAccessible::GetState(_retval);
-  *_retval &= ~STATE_FOCUSABLE;
+  *_retval &= ~nsIAccessibleStates::STATE_FOCUSABLE;
   return NS_OK;
 }
 

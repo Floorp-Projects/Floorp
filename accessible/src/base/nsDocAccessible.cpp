@@ -202,10 +202,10 @@ NS_IMETHODIMP nsDocAccessible::GetState(PRUint32 *aState)
     return NS_ERROR_FAILURE;
   }
   nsAccessible::GetState(aState);
-  *aState |= STATE_FOCUSABLE;
+  *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
 
   if (!mIsContentLoaded) {
-    *aState |= STATE_BUSY;
+    *aState |= nsIAccessibleStates::STATE_BUSY;
   }
 
   // Is it visible?
@@ -223,12 +223,12 @@ NS_IMETHODIMP nsDocAccessible::GetState(PRUint32 *aState)
     widget = widget->GetParent();
   }
   if (!isVisible) {
-    *aState |= STATE_INVISIBLE;
+    *aState |= nsIAccessibleStates::STATE_INVISIBLE;
   }
 
   nsCOMPtr<nsIEditor> editor = GetEditor();
   if (!editor) {
-    *aState |= STATE_READONLY;
+    *aState |= nsIAccessibleStates::STATE_READONLY;
   }
 
   return NS_OK;
@@ -405,7 +405,7 @@ void nsDocAccessible::CheckForEditor()
     StateChange stateData;
     stateData.enable = PR_TRUE;
     stateData.isExtendedState = PR_TRUE;
-    stateData.state = EXT_STATE_EDITABLE;
+    stateData.state = nsIAccessibleStates::EXT_STATE_EDITABLE;
     FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, &stateData);
   }
 }
@@ -746,7 +746,7 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
     }
     // Finished loading: fire EVENT_STATE_CHANGE to clear STATE_BUSY
     StateChange stateData;
-    stateData.state = STATE_BUSY;
+    stateData.state = nsIAccessibleStates::STATE_BUSY;
     stateData.enable = PR_FALSE;
     FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, &stateData);
   } else {
@@ -763,7 +763,7 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
 
     // Loading document: fire EVENT_STATE_CHANGE to set STATE_BUSY
     StateChange stateData;
-    stateData.state = STATE_BUSY;
+    stateData.state = nsIAccessibleStates::STATE_BUSY;
     stateData.enable = PR_TRUE;
     FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, &stateData);
   }
@@ -1352,7 +1352,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     // Fire after a short timer, because we want to make sure the view has been
     // updated to make this accessible content visible. If we don't wait,
     // the assistive technology may receive the event and then retrieve
-    // STATE_INVISIBLE for the event's accessible object.
+    // nsIAccessibleStates::STATE_INVISIBLE for the event's accessible object.
     FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_SHOW, childNode, nsnull);
     nsAutoString role;
     if (GetRoleAttribute(aChild, role) &&
