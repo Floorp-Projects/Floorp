@@ -103,7 +103,7 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
       // If this contains editable text
       PRUint32 extState;
       GetExtState(&extState);
-      if (extState & EXT_STATE_EDITABLE) {
+      if (extState & nsIAccessibleStates::EXT_STATE_EDITABLE) {
         *aInstancePtr = NS_STATIC_CAST(nsIAccessibleEditableText*, this);
         NS_ADDREF_THIS();
         return NS_OK;
@@ -184,14 +184,14 @@ NS_IMETHODIMP nsHyperTextAccessible::GetExtState(PRUint32 *aExtState)
     PRUint32 flags;
     editor->GetFlags(&flags);
     if (0 == (flags & nsIPlaintextEditor::eEditorReadonlyMask)) {
-      *aExtState |= EXT_STATE_EDITABLE;
+      *aExtState |= nsIAccessibleStates::EXT_STATE_EDITABLE;
     }
   }
 
   PRInt32 childCount;
   GetChildCount(&childCount);
   if (childCount > 0) {
-    *aExtState |= EXT_STATE_SELECTABLE_TEXT;
+    *aExtState |= nsIAccessibleStates::EXT_STATE_SELECTABLE_TEXT;
   }
   return rv;
 }

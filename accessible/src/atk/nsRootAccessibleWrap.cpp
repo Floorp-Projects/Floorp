@@ -167,7 +167,8 @@ nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
                 accessible->GetChildAt(index, getter_AddRefs(radioAcc));
                 if (radioAcc) {
                     radioAcc->GetFinalState(&stateData.state);
-                    if (stateData.state & (STATE_CHECKED | STATE_SELECTED)) {
+                    if (stateData.state & (nsIAccessibleStates::STATE_CHECKED |
+                        nsIAccessibleStates::STATE_SELECTED)) {
                         break;
                     }
                 }
@@ -208,9 +209,12 @@ nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
     else if (eventType.LowerCaseEqualsLiteral("checkboxstatechange") || // it's a XUL <checkbox>
              eventType.LowerCaseEqualsLiteral("radiostatechange")) { // it's a XUL <radio>
         accessible->GetFinalState(&stateData.state);
-        // prefPane tab is implemented as list items in A11y, so we need to check STATE_SELECTED also
-        stateData.enable = (stateData.state & (STATE_CHECKED | STATE_SELECTED)) != 0;
-        stateData.state = STATE_CHECKED;
+        // prefPane tab is implemented as list items in A11y, so we need to
+        // check nsIAccessibleStates::STATE_SELECTED also
+        stateData.enable = (stateData.state &
+          (nsIAccessibleStates::STATE_CHECKED |
+           nsIAccessibleStates::STATE_SELECTED)) != 0;
+        stateData.state = nsIAccessibleStates::STATE_CHECKED;
         privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, accessible, &stateData);
         // only fire focus event for checked radio
         if (eventType.LowerCaseEqualsLiteral("radiostatechange") &&
@@ -220,8 +224,8 @@ nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
     }
     else if (eventType.LowerCaseEqualsLiteral("openstatechange")) { // collapsed/expanded changed
         accessible->GetFinalState(&stateData.state);
-        stateData.enable = (stateData.state & STATE_EXPANDED) != 0;
-        stateData.state = STATE_EXPANDED;
+        stateData.enable = (stateData.state & nsIAccessibleStates::STATE_EXPANDED) != 0;
+        stateData.state = nsIAccessibleStates::STATE_EXPANDED;
         privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, accessible, &stateData);
     }
     else if (eventType.LowerCaseEqualsLiteral("popuphiding")) {

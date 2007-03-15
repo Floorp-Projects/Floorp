@@ -281,16 +281,17 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetState(PRUint32 *_retval)
   PRBool isFocused = PR_FALSE;
   element->HasAttribute(NS_LITERAL_STRING("_moz-menuactive"), &isFocused); 
   if (isFocused)
-    *_retval |= STATE_FOCUSED;
+    *_retval |= nsIAccessibleStates::STATE_FOCUSED;
 
   // Has Popup?
   nsAutoString tagName;
   element->GetLocalName(tagName);
   if (tagName.EqualsLiteral("menu")) {
-    *_retval |= STATE_HASPOPUP;
+    *_retval |= nsIAccessibleStates::STATE_HASPOPUP;
     PRBool isOpen;
     element->HasAttribute(NS_LITERAL_STRING("open"), &isOpen);
-    *_retval |= isOpen ? STATE_EXPANDED : STATE_COLLAPSED;
+    *_retval |= isOpen ? nsIAccessibleStates::STATE_EXPANDED :
+                         nsIAccessibleStates::STATE_COLLAPSED;
   }
 
   nsAutoString menuItemType;
@@ -300,13 +301,13 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetState(PRUint32 *_retval)
     // Checkable?
     if (menuItemType.EqualsIgnoreCase("radio") ||
         menuItemType.EqualsIgnoreCase("checkbox"))
-      *_retval |= STATE_CHECKABLE;
+      *_retval |= nsIAccessibleStates::STATE_CHECKABLE;
 
     // Checked?
     nsAutoString checkValue;
     element->GetAttribute(NS_LITERAL_STRING("checked"), checkValue);
     if (checkValue.EqualsLiteral("true")) {
-      *_retval |= STATE_CHECKED;
+      *_retval |= nsIAccessibleStates::STATE_CHECKED;
     }
   }
 
@@ -315,8 +316,8 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetState(PRUint32 *_retval)
   // We get it by replacing the current offscreen bit with the parent's
   nsCOMPtr<nsIAccessible> parentAccessible(GetParent());
   if (parentAccessible) {
-    *_retval &= ~STATE_OFFSCREEN;  // clear the old OFFSCREEN bit
-    *_retval |= (State(parentAccessible) & STATE_OFFSCREEN);  // or it with the parent's offscreen bit
+    *_retval &= ~nsIAccessibleStates::STATE_OFFSCREEN;  // clear the old OFFSCREEN bit
+    *_retval |= (State(parentAccessible) & nsIAccessibleStates::STATE_OFFSCREEN);  // or it with the parent's offscreen bit
   }
 
   return NS_OK;
@@ -479,7 +480,7 @@ NS_IMETHODIMP nsXULMenuSeparatorAccessible::GetState(PRUint32 *_retval)
 {
   // Isn't focusable, but can be offscreen
   nsXULMenuitemAccessible::GetState(_retval);
-  *_retval &= STATE_OFFSCREEN;
+  *_retval &= nsIAccessibleStates::STATE_OFFSCREEN;
 
   return NS_OK;
 }
@@ -541,7 +542,7 @@ NS_IMETHODIMP nsXULMenupopupAccessible::GetState(PRUint32 *_retval)
   }
 
   if (!isActive)
-    *_retval |= STATE_OFFSCREEN;
+    *_retval |= nsIAccessibleStates::STATE_OFFSCREEN;
 
   return NS_OK;
 }
@@ -626,7 +627,7 @@ nsXULMenubarAccessible::nsXULMenubarAccessible(nsIDOMNode* aDOMNode, nsIWeakRefe
 NS_IMETHODIMP nsXULMenubarAccessible::GetState(PRUint32 *_retval)
 {
   nsresult rv = nsAccessible::GetState(_retval);
-  *_retval &= ~STATE_FOCUSABLE; // Menu bar iteself is not actually focusable
+  *_retval &= ~nsIAccessibleStates::STATE_FOCUSABLE; // Menu bar iteself is not actually focusable
   return rv;
 }
 

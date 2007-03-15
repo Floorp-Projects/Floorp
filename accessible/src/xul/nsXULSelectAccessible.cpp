@@ -75,9 +75,9 @@ nsXULSelectableAccessible(aDOMNode, aShell)
 
 /**
   * As a nsXULListboxAccessible we can have the following states:
-  *     STATE_FOCUSED
-  *     STATE_READONLY
-  *     STATE_FOCUSABLE
+  *     nsIAccessibleStates::STATE_FOCUSED
+  *     nsIAccessibleStates::STATE_READONLY
+  *     nsIAccessibleStates::STATE_FOCUSABLE
   */
 NS_IMETHODIMP nsXULListboxAccessible::GetState(PRUint32 *aState)
 {
@@ -90,7 +90,8 @@ NS_IMETHODIMP nsXULListboxAccessible::GetState(PRUint32 *aState)
     nsAutoString selType;
     element->GetAttribute(NS_LITERAL_STRING("seltype"), selType);
     if (!selType.IsEmpty() && selType.EqualsLiteral("multiple"))
-      *aState |= STATE_MULTISELECTABLE | STATE_EXTSELECTABLE;
+      *aState |= nsIAccessibleStates::STATE_MULTISELECTABLE |
+                 nsIAccessibleStates::STATE_EXTSELECTABLE;
   }
 
   return NS_OK;
@@ -180,16 +181,17 @@ NS_IMETHODIMP nsXULListitemAccessible::GetState(PRUint32 *aState)
     return NS_OK;
   }
 
-  *aState = STATE_FOCUSABLE | STATE_SELECTABLE;
+  *aState = nsIAccessibleStates::STATE_FOCUSABLE |
+            nsIAccessibleStates::STATE_SELECTABLE;
   nsCOMPtr<nsIDOMXULSelectControlItemElement> listItem (do_QueryInterface(mDOMNode));
   if (listItem) {
     PRBool isSelected;
     listItem->GetSelected(&isSelected);
     if (isSelected)
-      *aState |= STATE_SELECTED;
+      *aState |= nsIAccessibleStates::STATE_SELECTED;
 
     if (gLastFocusedNode == mDOMNode) {
-      *aState |= STATE_FOCUSED;
+      *aState |= nsIAccessibleStates::STATE_FOCUSED;
     }
   }
 
@@ -203,7 +205,7 @@ NS_IMETHODIMP nsXULListitemAccessible::GetActionName(PRUint8 aIndex, nsAString& 
     PRUint32 state;
     GetState(&state);
 
-    if (state & STATE_CHECKED)
+    if (state & nsIAccessibleStates::STATE_CHECKED)
       aName.AssignLiteral("uncheck");
     else
       aName.AssignLiteral("check");
@@ -265,19 +267,20 @@ NS_IMETHODIMP nsXULComboboxAccessible::GetState(PRUint32 *_retval)
     PRBool isOpen;
     menuList->GetOpen(&isOpen);
     if (isOpen) {
-      *_retval |= STATE_EXPANDED;
+      *_retval |= nsIAccessibleStates::STATE_EXPANDED;
     }
     else {
-      *_retval |= STATE_COLLAPSED;
+      *_retval |= nsIAccessibleStates::STATE_COLLAPSED;
     }
     PRBool isEditable;
     menuList->GetEditable(&isEditable);
     if (!isEditable) {
-      *_retval |= STATE_READONLY;
+      *_retval |= nsIAccessibleStates::STATE_READONLY;
     }
   }
 
-  *_retval |= STATE_HASPOPUP | STATE_FOCUSABLE;
+  *_retval |= nsIAccessibleStates::STATE_HASPOPUP |
+              nsIAccessibleStates::STATE_FOCUSABLE;
 
   return NS_OK;
 }

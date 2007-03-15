@@ -183,10 +183,11 @@ NS_IMETHODIMP nsXULTreeAccessible::GetState(PRUint32 *_retval)
     nsAutoString selType;
     element->GetAttribute(NS_LITERAL_STRING("seltype"), selType);
     if (selType.IsEmpty() || !selType.EqualsLiteral("single"))
-      *_retval |= STATE_MULTISELECTABLE;
+      *_retval |= nsIAccessibleStates::STATE_MULTISELECTABLE;
   }
 
-  *_retval |= STATE_READONLY | STATE_FOCUSABLE;
+  *_retval |= nsIAccessibleStates::STATE_READONLY |
+              nsIAccessibleStates::STATE_FOCUSABLE;
 
   return NS_OK;
 }
@@ -579,7 +580,8 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetState(PRUint32 *_retval)
 {
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
-  *_retval = STATE_FOCUSABLE | STATE_SELECTABLE;
+  *_retval = nsIAccessibleStates::STATE_FOCUSABLE |
+             nsIAccessibleStates::STATE_SELECTABLE;
 
   // get expanded/collapsed state
   PRBool isContainer, isContainerOpen, isContainerEmpty;
@@ -588,7 +590,8 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetState(PRUint32 *_retval)
     mTreeView->IsContainerEmpty(mRow, &isContainerEmpty);
     if (!isContainerEmpty) {
       mTreeView->IsContainerOpen(mRow, &isContainerOpen);
-      *_retval |= isContainerOpen? STATE_EXPANDED: STATE_COLLAPSED;
+      *_retval |= isContainerOpen? nsIAccessibleStates::STATE_EXPANDED:
+                                   nsIAccessibleStates::STATE_COLLAPSED;
     }
   }
 
@@ -599,7 +602,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetState(PRUint32 *_retval)
     PRBool isSelected;
     selection->IsSelected(mRow, &isSelected);
     if (isSelected)
-      *_retval |= STATE_SELECTED;
+      *_retval |= nsIAccessibleStates::STATE_SELECTED;
   }
 
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
@@ -608,7 +611,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetState(PRUint32 *_retval)
     PRInt32 currentIndex;
     multiSelect->GetCurrentIndex(&currentIndex);
     if (currentIndex == mRow) {
-      *_retval |= STATE_FOCUSED;
+      *_retval |= nsIAccessibleStates::STATE_FOCUSED;
     }
   }
 
@@ -616,7 +619,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetState(PRUint32 *_retval)
   mTree->GetFirstVisibleRow(&firstVisibleRow);
   mTree->GetLastVisibleRow(&lastVisibleRow);
   if (mRow < firstVisibleRow || mRow > lastVisibleRow)
-    *_retval |= STATE_INVISIBLE;
+    *_retval |= nsIAccessibleStates::STATE_INVISIBLE;
 
   return NS_OK;
 }
@@ -918,7 +921,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsXULTreeColumnsAccessible, nsAccessible)
 
 NS_IMETHODIMP nsXULTreeColumnsAccessible::GetState(PRUint32 *_retval)
 {
-  *_retval = STATE_READONLY;
+  *_retval = nsIAccessibleStates::STATE_READONLY;
   return NS_OK;
 }
 
@@ -995,7 +998,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsXULTreeColumnitemAccessible, nsLeafAccessible)
 
 NS_IMETHODIMP nsXULTreeColumnitemAccessible::GetState(PRUint32 *_retval)
 {
-  *_retval = STATE_READONLY;
+  *_retval = nsIAccessibleStates::STATE_READONLY;
   return NS_OK;
 }
 

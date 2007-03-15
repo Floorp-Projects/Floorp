@@ -235,7 +235,7 @@ NS_IMETHODIMP nsAccessibilityService::OnLocationChange(nsIWebProgress *aWebProgr
   // if an anchor jump event needs to be fired.
   // If there is no accessible for the document, we will ignore
   // this and the anchor jump event will be fired via OnStateChange
-  // and STATE_STOP
+  // and nsIAccessibleStates::STATE_STOP
   nsCOMPtr<nsIDOMWindow> domWindow;
   aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
   NS_ASSERTION(domWindow, "DOM Window for state change is null");

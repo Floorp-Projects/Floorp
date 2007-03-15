@@ -56,8 +56,8 @@ NS_IMETHODIMP nsXULAlertAccessible::GetRole(PRUint32 *aRole)
 NS_IMETHODIMP nsXULAlertAccessible::GetState(PRUint32 *aState)
 {
   nsAccessible::GetState(aState);
-  *aState &= ~STATE_FOCUSABLE;
-  *aState |= STATE_ALERT_MEDIUM; // XUL has no markup for low, medium or high
+  *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
+  *aState |= nsIAccessibleStates::STATE_ALERT_MEDIUM; // XUL has no markup for low, medium or high
   return NS_OK;
 }
 

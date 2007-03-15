@@ -121,8 +121,8 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetState(PRUint32 *aState)
   if (docAccessible) {
      PRUint32 extState;
      docAccessible->GetExtState(&extState);
-     if (0 == (extState & EXT_STATE_EDITABLE)) {
-       *aState |= STATE_READONLY; // Links not focusable in editor
+     if (0 == (extState & nsIAccessibleStates::EXT_STATE_EDITABLE)) {
+       *aState |= nsIAccessibleStates::STATE_READONLY; // Links not focusable in editor
      }
   }
 
@@ -166,7 +166,7 @@ NS_IMETHODIMP nsHTMLHRAccessible::GetRole(PRUint32 *aRole)
 NS_IMETHODIMP nsHTMLHRAccessible::GetState(PRUint32 *aState)
 {
   nsLeafAccessible::GetState(aState);
-  *aState &= ~STATE_FOCUSABLE;
+  *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
   return NS_OK;
 }
 
@@ -183,7 +183,7 @@ NS_IMETHODIMP nsHTMLBRAccessible::GetRole(PRUint32 *aRole)
 
 NS_IMETHODIMP nsHTMLBRAccessible::GetState(PRUint32 *aState)
 {
-  *aState = STATE_READONLY;
+  *aState = nsIAccessibleStates::STATE_READONLY;
   return NS_OK;
 }
 
@@ -225,7 +225,8 @@ NS_IMETHODIMP nsHTMLLabelAccessible::GetRole(PRUint32 *aRole)
 NS_IMETHODIMP nsHTMLLabelAccessible::GetState(PRUint32 *aState)
 {
   nsTextAccessible::GetState(aState);
-  *aState &= (STATE_LINKED|STATE_TRAVERSED);  // Only use link states
+  *aState &= (nsIAccessibleStates::STATE_LINKED |
+              nsIAccessibleStates::STATE_TRAVERSED);  // Only use link states
   return NS_OK;
 }
 
