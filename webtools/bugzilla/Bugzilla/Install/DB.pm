@@ -2205,6 +2205,9 @@ sub _migrate_email_prefs_to_new_table {
         my %requestprefs = ("FlagRequestee" => EVT_FLAG_REQUESTED,
                             "FlagRequester" => EVT_REQUESTED_FLAG);
 
+        # We run the below code in a transaction to speed things up.
+        $dbh->bz_start_transaction();
+
         # Select all emailflags flag strings
         my $sth = $dbh->prepare("SELECT userid, emailflags FROM profiles");
         $sth->execute();
@@ -2271,6 +2274,7 @@ sub _migrate_email_prefs_to_new_table {
         # EVT_ATTACHMENT.
         _clone_email_event(EVT_ATTACHMENT, EVT_ATTACHMENT_DATA);
 
+        $dbh->bz_commit_transaction();
         $dbh->bz_drop_column("profiles", "emailflags");
     }
 }

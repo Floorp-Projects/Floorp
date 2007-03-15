@@ -859,39 +859,51 @@ sub bz_table_list_real {
 # Transaction Methods
 #####################################################################
 
+sub bz_in_transaction {
+    return $_[0]->{private_bz_transaction_count} ? 1 : 0;
+}
+
 sub bz_start_transaction {
     my ($self) = @_;
 
-    if ($self->{private_bz_in_transaction}) {
-        ThrowCodeError("nested_transaction");
+    if ($self->bz_in_transaction) {
+        $self->{private_bz_transaction_count}++;
     } else {
         # Turn AutoCommit off and start a new transaction
         $self->begin_work();
-        $self->{private_bz_in_transaction} = 1;
+        # REPEATABLE READ means "We work on a snapshot of the DB that
+        # is created when we execute our first SQL statement." It's
+        # what we need in Bugzilla to be safe, for what we do.
+        # Different DBs have different defaults for their isolation
+        # level, so we just set it here manually.
+        $self->do('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+        $self->{private_bz_transaction_count} = 1;
     }
 }
 
 sub bz_commit_transaction {
     my ($self) = @_;
-
-    if (!$self->{private_bz_in_transaction}) {
-        ThrowCodeError("not_in_transaction");
-    } else {
+    
+    if ($self->{private_bz_transaction_count} > 1) {
+        $self->{private_bz_transaction_count}--;
+    } elsif ($self->bz_in_transaction) {
         $self->commit();
-
-        $self->{private_bz_in_transaction} = 0;
+        $self->{private_bz_transaction_count} = 0;
+    } else {
+       ThrowCodeError('not_in_transaction');
     }
 }
 
 sub bz_rollback_transaction {
     my ($self) = @_;
 
-    if (!$self->{private_bz_in_transaction}) {
+    # Unlike start and commit, if we rollback at any point it happens
+    # instantly, even if we're in a nested transaction.
+    if (!$self->bz_in_transaction) {
         ThrowCodeError("not_in_transaction");
     } else {
         $self->rollback();
-
-        $self->{private_bz_in_transaction} = 0;
+        $self->{private_bz_transaction_count} = 0;
     }
 }
 
@@ -927,9 +939,6 @@ sub db_new {
     # RaiseError was only set to 0 so that we could catch the 
     # above "die" condition.
     $self->{RaiseError} = 1;
-
-    # class variables
-    $self->{private_bz_in_transaction} = 0;
 
     bless ($self, $class);
 
@@ -2212,20 +2221,33 @@ in the database.
 
 =over
 
+=item C<bz_in_transaction>
+
+Returns C<1> if we are currently in the middle of an uncommitted transaction,
+C<0> otherwise.
+
 =item C<bz_start_transaction>
 
-Starts a transaction if supported by the database being used. Returns nothing
-and takes no parameters.
+Starts a transaction.
+
+It is OK to call C<bz_start_transaction> when you are already inside of
+a transaction. However, you must call L</bz_commit_transaction> as many
+times as you called C<bz_start_transaction>, in order for your transaction
+to actually commit.
+
+Bugzilla uses C<REPEATABLE READ> transactions.
+
+Returns nothing and takes no parameters.
 
 =item C<bz_commit_transaction>
 
-Ends a transaction, commiting all changes, if supported by the database 
-being used. Returns nothing and takes no parameters.
+Ends a transaction, commiting all changes. Returns nothing and takes
+no parameters.
 
 =item C<bz_rollback_transaction>
 
-Ends a transaction, rolling back all changes, if supported by the database 
-being used. Returns nothing and takes no parameters.
+Ends a transaction, rolling back all changes. Returns nothing and takes 
+no parameters.
 
 =back
 

@@ -412,14 +412,15 @@ sub request_cache {
 
 # Private methods
 
-# Per process cleanup
+# Per-process cleanup
 sub _cleanup {
-
-    # When we support transactions, need to ->rollback here
     my $main   = request_cache()->{dbh_main};
     my $shadow = request_cache()->{dbh_shadow};
-    $main->disconnect if $main;
-    $shadow->disconnect if $shadow && Bugzilla->params->{"shadowdb"};
+    foreach my $dbh ($main, $shadow) {
+        next if !$dbh;
+        $dbh->bz_rollback_transaction() if $dbh->bz_in_transaction;
+        $dbh->disconnect;
+    }
     undef $_request_cache;
 }
 

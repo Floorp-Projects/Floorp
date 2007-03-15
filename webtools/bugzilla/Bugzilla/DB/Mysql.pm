@@ -207,14 +207,23 @@ sub bz_lock_tables {
         ThrowCodeError("already_locked", { current => $self->{private_bz_tables_locked},
                                            new => $list });
     } else {
+        $self->bz_start_transaction();
         $self->do('LOCK TABLE ' . $list); 
-    
         $self->{private_bz_tables_locked} = $list;
     }
 }
 
 sub bz_unlock_tables {
     my ($self, $abort) = @_;
+
+    if ($self->bz_in_transaction) {
+        if ($abort) {
+            $self->bz_rollback_transaction();
+        }
+        else {
+            $self->bz_commit_transaction();
+        }
+    }
     
     # Check first if there was previous matching lock
     if (!$self->{private_bz_tables_locked}) {
@@ -223,27 +232,9 @@ sub bz_unlock_tables {
         ThrowCodeError("no_matching_lock");
     } else {
         $self->do("UNLOCK TABLES");
-    
         $self->{private_bz_tables_locked} = "";
     }
 }
-
-# As Bugzilla currently runs on MyISAM storage, which does not support
-# transactions, these functions die when called.
-# Maybe we should just ignore these calls for now, but as we are not
-# using transactions in MySQL yet, this just hints the developers.
-sub bz_start_transaction {
-    die("Attempt to start transaction on DB without transaction support");
-}
-
-sub bz_commit_transaction {
-    die("Attempt to commit transaction on DB without transaction support");
-}
-
-sub bz_rollback_transaction {
-    die("Attempt to rollback transaction on DB without transaction support");
-}
-
 
 sub _bz_get_initial_schema {
     my ($self) = @_;

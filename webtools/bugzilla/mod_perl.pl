@@ -102,6 +102,7 @@ use Apache2::Const -compile => qw(OK);
 sub handler {
     my $r = shift;
 
+    Bugzilla::_cleanup();
     # Sometimes mod_perl doesn't properly call DESTROY on all
     # the objects in pnotes()
     foreach my $key (keys %{$r->pnotes}) {
