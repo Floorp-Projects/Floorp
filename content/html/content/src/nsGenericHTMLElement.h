@@ -151,6 +151,8 @@ public:
   nsresult SetScrollLeft(PRInt32 aScrollLeft);
   nsresult GetScrollHeight(PRInt32* aScrollHeight);
   nsresult GetScrollWidth(PRInt32* aScrollWidth);
+  nsresult GetClientTop(PRInt32* aLength);
+  nsresult GetClientLeft(PRInt32* aLength);
   nsresult GetClientHeight(PRInt32* aClientHeight);
   nsresult GetClientWidth(PRInt32* aClientWidth);
   nsresult ScrollIntoView(PRBool aTop);
@@ -183,12 +185,10 @@ public:
                      nsIFrame **aFrame = nsnull);
 
   /**
-   * Get an element's client info if the element doesn't have a
-   * scrollable view.
-   * @param aFrame the frame for which to get the client area size
-   * @return the size of the frame's client area
+   * Get this element's client area rect in app units.
+   * @return the frame's client area
    */
-  static const nsSize GetClientAreaSize(nsIFrame *aFrame);
+  nsRect GetClientAreaRect();
 
   // Implementation for nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,

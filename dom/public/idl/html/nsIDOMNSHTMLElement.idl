@@ -38,7 +38,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(f58dd59c-a4b3-418e-9d10-f5ba0316da22)]
+[scriptable, uuid(b0a29b0a-ce2b-4cdf-b98a-4c7ed994d6e2)]
 interface nsIDOMNSHTMLElement : nsISupports
 {
   readonly attribute long             offsetTop;
@@ -53,6 +53,8 @@ interface nsIDOMNSHTMLElement : nsISupports
   readonly attribute long             scrollHeight;
   readonly attribute long             scrollWidth;
 
+  readonly attribute long             clientTop;
+  readonly attribute long             clientLeft;
   readonly attribute long             clientHeight;
   readonly attribute long             clientWidth;
 
