@@ -66,6 +66,7 @@
 #include "nsFileStream.h"
 #include "nsMimeStringResources.h"
 #include "nsIIOService.h"
+#include "nsNetUtil.h"
 #include "comi18n.h"
 #include "nsIMsgCompFields.h"
 #include "nsMsgCompCID.h"
@@ -1937,10 +1938,19 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
   // if ( (tmpSpec) && (!bodyPart) )
   if (tmpSpec)
   {
-      nsFileURL fileURL(*tmpSpec);
-      const char * tempSpecStr = fileURL.GetURLString();
-
-      nsMimeNewURI(getter_AddRefs(newAttachment->orig_url), tempSpecStr, nsnull);
+    nsCOMPtr<nsILocalFile> lf = do_CreateInstance("@mozilla.org/file/local;1");
+    if (!lf)
+      return MIME_OUT_OF_MEMORY;
+    nsresult rv =
+      lf->InitWithNativePath(nsDependentCString(tmpSpec->GetCString()));
+    if (NS_SUCCEEDED(rv))
+    {
+      nsCAutoString fileURL;
+      rv = NS_GetURLSpecFromFile(lf, fileURL);
+      if (NS_SUCCEEDED(rv))
+        nsMimeNewURI(getter_AddRefs(newAttachment->orig_url),
+                     fileURL.get(), nsnull);
+    }
   }
 
   PR_FREEIF(workURLSpec);
