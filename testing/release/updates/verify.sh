@@ -109,7 +109,7 @@ do
         update_path="$product/$release/$build_id/$platform/$locale/$channel"
         mkdir -p updates/$update_path/complete
         mkdir -p updates/$update_path/partial
-        wget -q -O $patch_type updates/$update_path/$patch_type/update.xml "${aus_server}/update/1/$update_path/update.xml"
+        wget --no-check-certificate -q -O $patch_type updates/$update_path/$patch_type/update.xml "${aus_server}/update/1/$update_path/update.xml"
 
       fi
       if [ "$runmode" == "$COMPLETE" ]

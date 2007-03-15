@@ -4,7 +4,7 @@ download_mars () {
     test_only="$3"
 
     echo "Using  $update_url"
-    wget -q -O update.xml $update_url
+    wget --no-check-certificate -q -O update.xml $update_url
 
     mkdir -p update/
     if [ -z $only ]; then
@@ -26,10 +26,10 @@ download_mars () {
       if [ "$test_only" == "1" ]
       then
         echo "Testing $URL"
-        curl -sIL $URL
+        curl -k -s -I -L $URL
         return
       else
-        wget -nv -O update/$patch_type.mar $URL 2>&1 
+        wget --no-check-certificate -nv -O update/$patch_type.mar $URL 2>&1 
       fi
       if [ "$?" != 0 ]; then
         echo "Could not download $patch_type!"
