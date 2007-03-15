@@ -171,7 +171,7 @@ elsif ($action eq 'do_clone'){
 
 elsif ($action eq 'Attach'){
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
-    ThrowUserError("testopia-read-only", {'object' => 'case'}) unless $case->canedit;
+    ThrowUserError("testopia-read-only", {'object' => $case}) unless $case->canedit;
 
     defined $cgi->upload('data')
         || ThrowUserError("file_not_specified");
@@ -206,7 +206,7 @@ elsif ($action eq 'Attach'){
 
 elsif ($action eq 'Commit'){
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
-    ThrowUserError("testopia-read-only", {'object' => 'case'}) unless $case->canedit;
+    ThrowUserError("testopia-read-only", {'object' => $case}) unless $case->canedit;
     do_update($case);
     $vars->{'tr_message'} = "Test case updated";
     $vars->{'backlink'} = $case;
@@ -215,7 +215,7 @@ elsif ($action eq 'Commit'){
 
 elsif ($action eq 'History'){
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
-    ThrowUserError("testopia-permission-denied", {'object' => 'case'}) unless $case->canview;
+    ThrowUserError("testopia-permission-denied", {'object' => $case}) unless $case->canview;
     $vars->{'case'} = $case; 
     $vars->{'diff'} = $case->compare_doc_versions($cgi->param('new'),$cgi->param('old'));
     $vars->{'new'} = $cgi->param('new');
@@ -229,7 +229,7 @@ elsif ($action eq 'unlink'){
     my $plan_id = $cgi->param('plan_id');
     validate_test_id($plan_id, 'plan');
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
-    ThrowUserError("testopia-read-only", {'object' => 'case'}) 
+    ThrowUserError("testopia-read-only", {'object' => $case}) 
         unless ($case->can_unlink_plan($plan_id));
     
     if (scalar @{$case->plans} == 1){
@@ -265,7 +265,7 @@ elsif ($action eq 'do_unlink'){
 
 elsif ($action eq 'detach_bug'){
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
-    ThrowUserError("testopia-read-only", {'object' => 'case'}) unless $case->canedit;
+    ThrowUserError("testopia-read-only", {'object' => $case}) unless $case->canedit;
     my @buglist;
     foreach my $bug (split(/[\s,]+/, $cgi->param('bug_id'))){
         ValidateBugID($bug);
@@ -300,7 +300,7 @@ elsif ($action eq 'do_delete'){
 ####################
 elsif ($action eq 'addcomponent' || $action eq 'removecomponent'){
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
-    ThrowUserError("testopia-read-only", {'object' => 'case'}) unless $case->canedit;
+    ThrowUserError("testopia-read-only", {'object' => $case}) unless $case->canedit;
     my $comp = $cgi->param('component_id');
     detaint_natural($comp);
     validate_selection($comp, 'id', 'components');
@@ -328,7 +328,7 @@ elsif ($action eq 'addcomponent' || $action eq 'removecomponent'){
 #TODO: Clean up styles and put them in skins
 else{
     my $case = Bugzilla::Testopia::TestCase->new($case_id);
-    ThrowUserError("testopia-permission-denied", {'object' => 'case'}) unless $case->canview;
+    ThrowUserError("testopia-permission-denied", {'object' => $case}) unless $case->canview;
     display($case);
 }
 

@@ -38,7 +38,7 @@ use vars qw($vars);
 Bugzilla->login(LOGIN_REQUIRED);
 
 print $cgi->header;
-ThrowUserError("testopia-read-only", {'object' => 'admin pages'}) unless Bugzilla->user->in_group('admin');   
+ThrowUserError("testopia-read-only") unless Bugzilla->user->in_group('admin');   
 
 my $plan = Bugzilla::Testopia::TestPlan->new({});
 my $action = $cgi->param('action') || '';

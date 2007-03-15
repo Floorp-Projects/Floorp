@@ -432,6 +432,12 @@ sub obliterate {
     return 1;
 }
 
+sub canview {
+    my $self = shift;
+    return 1 if $self->get_parent->canview;
+    return 0;
+}
+
 sub canedit {
     my $self = shift;
     return 1 if $self->get_parent->canedit;

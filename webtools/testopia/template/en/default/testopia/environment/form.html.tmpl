@@ -59,25 +59,38 @@ values for each of the properties.
   <tr>
     <th>Name</th>
     <td><input name="env_name" id="env_name" value="[% environment.name FILTER html %]" size="40"></td>
-    <td><a href="tr_new_environment.cgi">Create a New Environment</a></td>
+    <td>
+  [% IF user.in_group('Testers') %]
+    <a href="tr_new_environment.cgi">Create a New Environment</a></td>
+  [% END %]
   </tr>
   <tr>
     <th>Product</th>
-    <td>[% PROCESS select sel = { 
+    <td>
+    [% IF environment.canedit %]   
+         [% PROCESS select sel = { 
                 name      => 'product_id',
                 list      =>  user.get_selectable_products,
                 default   =>  environment.product_id,
                 accesskey => 'p'} %]
+    [% ELSE %]
+      [% environment.product.name FILTER html %]
+    [% END %]
     </td>
-    <td><a href="tr_admin_environment.cgi">Edit Environment Variables</a></td>
+    <td>
+  [% IF user.in_group('Testers') %]
+    <a href="tr_admin_environment.cgi">Edit Environment Variables</a></td>
+  [% END %]
   </tr>
   <tr>
     <th>Archive</th><td><input type="checkbox" name="isactive" id="isactive" value="1" [% 'checked="checked"' IF NOT environment.isactive %]></td>
 [% IF environment.candelete %]    
-    <td><a href="tr_show_environment.cgi?env_id=[% environment.id FILTER none %]&action=delete">Delete his Environment</a></td>
+    <td><a href="tr_show_environment.cgi?env_id=[% environment.id FILTER none %]&action=delete">Delete this Environment</a></td>
 [% END %]
   </tr>
+[% IF environment.canedit %]   
   <tr>
     <td colspan=2" align="right"><input type="button" onclick="update()" value="Commit"></td>
   </tr>
+[% END %]
 </table>

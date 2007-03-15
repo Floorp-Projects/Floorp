@@ -77,7 +77,7 @@ elsif ($caserun_id){
 ##################
 if ($action eq 'edit'){
     print $cgi->header;
-    ThrowUserError('testopia-permission-denied', {'object' => 'Attachment'}) unless $attachment->canedit;
+    ThrowUserError('testopia-permission-denied', {'object' => $attachment}) unless $attachment->canedit;
     
     $vars->{'attachment'} = $attachment;
     $vars->{'isviewable'} = $attachment->isViewable($cgi);
@@ -87,7 +87,7 @@ if ($action eq 'edit'){
 }
 elsif ($action eq 'do_edit') {
     print $cgi->header;
-    ThrowUserError('testopia-permission-denied', {'object' => 'Attachment'}) unless $attachment->canedit;
+    ThrowUserError('testopia-permission-denied', {'object' => $attachment}) unless $attachment->canedit;
 
     my %newvalues = ( 
         'description' => $cgi->param('description') || '',
@@ -113,7 +113,7 @@ elsif ($action eq 'do_edit') {
 elsif ($action eq 'remove') {
     print $cgi->header;
     ThrowUserError('testopia-missing-parameter', {'param' => 'case_id or plan_id'}) unless $obj;
-    ThrowUserError('testopia-no-delete', {'object' => 'Attachment'}) unless $obj->canedit;
+    ThrowUserError('testopia-no-delete', {'object' => $attachment}) unless $obj->canedit;
     $vars->{'attachment'} = $attachment;
     $vars->{'action'} = 'do_remove';
     $vars->{'obj'} = $obj;
@@ -126,7 +126,7 @@ elsif ($action eq 'do_remove') {
     print $cgi->header;
     $vars->{'tr_message'} = "Attachment ". $attachment->description ." deleted";
     ThrowUserError('testopia-missing-parameter', {'param' => 'case_id or plan_id'}) unless $obj;
-    ThrowUserError('testopia-no-delete', {'object' => 'Attachment'}) unless $obj->canedit;
+    ThrowUserError('testopia-no-delete', {'object' => $attachment}) unless $obj->canedit;
     if ($plan_id){
         $attachment->unlink_plan($plan_id);
     }
@@ -148,7 +148,7 @@ elsif ($action eq 'do_remove') {
 
 elsif ($action eq 'delete') {
     print $cgi->header;
-    ThrowUserError('testopia-no-delete', {'object' => 'Attachment'}) unless $attachment->candelete;
+    ThrowUserError('testopia-no-delete', {'object' => $attachment}) unless $attachment->candelete;
     $vars->{'attachment'} = $attachment;
     $vars->{'action'} = 'do_delete';
     
@@ -159,7 +159,7 @@ elsif ($action eq 'delete') {
 elsif ($action eq 'do_delete') {
     print $cgi->header;
     $vars->{'tr_message'} = "Attachment ". $attachment->description ." deleted";
-    ThrowUserError('testopia-no-delete', {'object' => 'Attachment'}) unless $attachment->candelete;
+    ThrowUserError('testopia-no-delete', {'object' => $attachment}) unless $attachment->candelete;
     
     $attachment->obliterate;
     $vars->{'tr_message'} = "Attachment deleted";

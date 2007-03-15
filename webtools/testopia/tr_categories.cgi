@@ -48,7 +48,7 @@ my $product_id = $cgi->param('product_id');
 
 ThrowUserError("testopia-missing-parameter", {param => "product_id"}) unless $product_id;
 my $product = Bugzilla::Testopia::Product->new($product_id);
-ThrowUserError('testopia-read-only', {'object' => 'Category'}) unless $product->canedit;
+ThrowUserError('testopia-read-only', {'object' => $product}) unless $product->canedit;
 
 $vars->{'plan_id'} = $cgi->param('plan_id');
 $vars->{'product'} = $product;  

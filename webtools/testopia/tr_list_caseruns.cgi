@@ -196,7 +196,7 @@ elsif ($action eq 'Delete Selected'){
         my $caserun = Bugzilla::Testopia::TestCaseRun->new($1) if $p =~ $reg;
         if (($caserun && !$caserun->candelete)){
             print $cgi->multipart_end if $serverpush;
-            ThrowUserError("testopia-read-only", {'object' => 'case run'});
+            ThrowUserError("testopia-no-delete", {'object' => $caserun});
         }
         push @caseruns, $caserun if $caserun;
     }

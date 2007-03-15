@@ -570,6 +570,18 @@ sub plans {
     return $self->{'plans'};
 }
 
+=head2 type
+
+Returns 'attachment'
+
+=cut
+
+sub type {
+    my $self = shift;
+    $self->{'type'} = 'attachment';
+    return $self->{'type'};
+}
+
 =head1 SEE ALSO
 
 Bugzilla::Attachment

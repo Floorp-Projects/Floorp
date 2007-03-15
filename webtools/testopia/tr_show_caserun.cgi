@@ -59,7 +59,6 @@ my $action = $cgi->param('action') || '';
 # For use on the classic form
 
 if ($action eq 'Commit'){
-    ;
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
     display(do_update($caserun));
 }
@@ -99,7 +98,7 @@ elsif ($action eq 'Attach'){
 
 elsif ($action eq 'delete'){
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
-    ThrowUserError("testopia-no-delete", {'object' => $caserun}) if !$caserun->candelete;
+    ThrowUserError("testopia-no-delete", {'object' => $caserun}) unless $caserun->candelete;
     $vars->{'title'} = 'Remove Test Case '. $caserun->case->id .' from Run: ' . $caserun->run->summary;
     $vars->{'bugcount'} = scalar @{$caserun->bugs};
     $vars->{'form_action'} = 'tr_show_caserun.cgi';
@@ -109,7 +108,7 @@ elsif ($action eq 'delete'){
 }
 elsif ($action eq 'do_delete'){
     my $caserun = Bugzilla::Testopia::TestCaseRun->new($caserun_id);
-    ThrowUserError("testopia-no-delete", {'object' => $caserun}) if !$caserun->candelete;
+    ThrowUserError("testopia-no-delete", {'object' => $caserun}) unless $caserun->candelete;
     $caserun->obliterate;
 
     # See if there is a saved filter
@@ -334,7 +333,7 @@ else {
 sub do_update {
     my $caserun = shift;
     
-    ThrowUserError("testopia-read-only", {'object' => 'case run'}) unless $caserun->canedit;
+    ThrowUserError("testopia-read-only", {'object' => $caserun}) unless $caserun->canedit;
     
     my $status   = $cgi->param('status');
     my $notes    = $cgi->param('notes');

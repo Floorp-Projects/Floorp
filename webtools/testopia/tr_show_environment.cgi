@@ -139,7 +139,7 @@ elsif ($action eq 'getChildren'){
 
     detaint_natural($id);
     trick_taint($type);
-    
+    print STDERR $type;
     for ($type){
         /classification/ && do { get_products($id);               };
         /product/        && do { get_categories($id);             };
@@ -166,6 +166,10 @@ elsif($action eq 'removeNode'){
     trick_taint($type);
     
     my $env = Bugzilla::Testopia::Environment->new($env_id);
+    unless ($env->canedit){
+        print 'false';
+        exit;
+    }
     $env->delete_element($id);
     
     print "true";
@@ -188,6 +192,7 @@ elsif($action eq 'set_selected'){
         trick_taint($value);
         
         my $env = Bugzilla::Testopia::Environment->new($env_id);
+        exit unless $env->canedit;
         
         my $property = Bugzilla::Testopia::Environment::Property->new($prop_id);
         my $elmnt_id = $property->element_id();
@@ -216,6 +221,10 @@ elsif($action eq 'move'){
     trick_taint($environment_id);
     
     my $env = Bugzilla::Testopia::Environment->new($environment_id);
+    unless ($env->canedit){
+        print "false";
+        exit;
+    }
     $element = Bugzilla::Testopia::Environment::Element->new($element_id);
     my $properties = $element->get_properties;
     if (scalar @$properties == 0){
@@ -226,11 +235,9 @@ elsif($action eq 'move'){
         if ($success == 0){print "{error:\"error\"";exit;}
     }
     
-    print "true";exit;
+    print "true";
+    exit;
     
-    print "{error:\"";
-    print "element_id: ".$element_id."<br>";
-    print "environment_id: ".$environment_id."\"}";
 }
 
 else { 
@@ -245,14 +252,13 @@ sub display {
     
     if(!defined($env)){
     	my $env = Bugzilla::Testopia::Environment->new({'environment_id' => 0});
-	    ThrowUserError("testopia-read-only", {'object' => 'Environment'}) unless $env->canedit;
 	    $vars->{'environment'} = $env;
 	    $vars->{'action'} = 'do_add';
 	    $template->process("testopia/environment/add.html.tmpl", $vars)
 	        || print $template->error();
 	        exit;
     }
-    ThrowUserError('testopia-permission-denied', {object => 'Environment'}) unless $env->canedit;
+    ThrowUserError("testopia-read-only", {'object' => $env}) unless $env->canview;
     my $category = Bugzilla::Testopia::Environment::Category->new({'id' => 0});
     if (Param('useclassification')){
         $vars->{'allhaschild'} = $category->get_all_child_count;
@@ -294,7 +300,7 @@ sub get_categories{
 sub get_category_element_json {
     my ($id) = (@_);
     my $category = Bugzilla::Testopia::Environment::Category->new($id);
-    return unless $category->canedit;
+    return unless $category->canview;
     my $fish = $category->elements_to_json("TRUE");
     print $fish;
 } 
@@ -302,20 +308,21 @@ sub get_category_element_json {
 sub get_element_children {
     my ($id) = (@_);
     my $element = Bugzilla::Testopia::Environment::Element->new($id);
-    return unless $element->canedit;
+    print STDERR $element->canview;
+    return unless $element->canview;
     print $element->children_to_json(1);
 }
 
 sub get_env_elements {
     my ($id) = (@_);
     my $env = Bugzilla::Testopia::Environment->new($id);
-    return unless $env->canedit;
+    return unless $env->canview;
     print $env->elements_to_json(1);
 }
 
 sub get_validexp_json {
     my ($id,$env_id) = (@_);
     my $property = Bugzilla::Testopia::Environment::Property->new($id);
-    return unless $property->canedit;
+    return unless $property->canview;
     print $property->valid_exp_to_json(1,$env_id);
 }

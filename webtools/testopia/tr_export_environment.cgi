@@ -58,7 +58,8 @@ my $env_id = $cgi->param('env_id');
 
 #*********************************************   UI Logic    ************************************************#
 print $cgi->header;
-
+my $env = Bugzilla::Testopia::Environment->new($env_id);
+ThrowUserError("testopia-read-only", {'object' => $env}) unless $env->canview;
 my $xml = Bugzilla::Testopia::Environment::Xml->export($env_id);
 if (!defined($xml)) {
     $vars->{'tr_error'} .= "Exporting XML Environment Failed.  Please try again.<BR/>";

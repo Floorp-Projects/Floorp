@@ -189,13 +189,13 @@ dojo.addOnLoad(function() {
                              widgetId="environment[% environment.id %]" 
                              objectId="[% environment.id %]" 
                              isFolder="[% environment.element_count ? 'true' : 'false' %]" 
-                             actionsDisabled="edit;move"></div>
+                             actionsDisabled="[% 'remove;' UNLESS environment.canedit %]edit;move"></div>
                     </div>
                 </td>
                 </tr>
             </table>
         </td>
-        
+[% IF environment.canedit %]        
         <td valign="top">
             <table>
                 <tr>
@@ -236,6 +236,7 @@ dojo.addOnLoad(function() {
                 </tr>
             </table>
         </td>
+[% END %]
     </tr>
 </table>
 

@@ -55,7 +55,7 @@ if ($type eq 'build_coverage'){
     
     my $action = $cgi->param('action') || '';
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-    ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
+    ThrowUserError("testopia-permission-denied", {'object' => $plan}) unless $plan->canview;
     my $report = {};
     my %buildseen;
     foreach my $case (@{$plan->test_cases}){
@@ -104,7 +104,7 @@ elsif ($type eq 'bugcounts'){
     }
     validate_test_id($plan_id, 'plan');
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-    ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
+    ThrowUserError("testopia-permission-denied", {'object' => $plan}) unless $plan->canview;
     
     my $dbh = Bugzilla->dbh;
     my $ref = $dbh->selectall_arrayref(

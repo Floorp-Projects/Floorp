@@ -78,7 +78,7 @@ $vars->{'form_action'} = "tr_show_plan.cgi";
 if ($action eq 'Archive' || $action eq 'Unarchive'){
     print $cgi->header;
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-    ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->canedit;
+    ThrowUserError("testopia-read-only", {'object' => $plan}) unless $plan->canedit;
     do_update($plan);
     $vars->{'plan'} = $plan;
     $plan->toggle_archive(Bugzilla->user->id);
@@ -93,7 +93,7 @@ if ($action eq 'Archive' || $action eq 'Unarchive'){
 #############
 elsif ($action eq 'Clone'){
     print $cgi->header;
-    ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless Bugzilla->user->in_group('Testers');
+    ThrowUserError("testopia-create-denied", {'object' => 'plans'}) unless Bugzilla->user->in_group('Testers');
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
     do_update($plan);
     $vars->{'plan'} = $plan;
@@ -104,7 +104,7 @@ elsif ($action eq 'Clone'){
 elsif ($action eq 'do_clone'){
     unless (Bugzilla->user->in_group('Testers')){
         print $cgi->header;
-        ThrowUserError("testopia-permission-denied", {'object' => 'plan'});
+        ThrowUserError("testopia-create-denied", {'object' => 'plans'});
     }
 
     if ($serverpush) {
@@ -224,7 +224,7 @@ elsif ($action eq 'do_clone'){
 elsif ($action eq 'Commit'){
     print $cgi->header;
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-    ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->canedit;
+    ThrowUserError("testopia-read-only", {'object' => $plan}) unless $plan->canedit;
     do_update($plan);
     $vars->{'tr_message'} = "Test plan updated";
     $vars->{'backlink'} = $plan;
@@ -245,7 +245,7 @@ elsif ($action eq 'Print'){
 elsif ($action eq 'History'){
     print $cgi->header;
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-    ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
+    ThrowUserError("testopia-permission-denied", {'object' => $plan}) unless $plan->canview;
     $vars->{'plan'} = $plan; 
     $vars->{'diff'} = $plan->diff_plan_doc($cgi->param('new'),$cgi->param('old'));
     $vars->{'new'} = $cgi->param('new');
@@ -260,7 +260,7 @@ elsif ($action eq 'History'){
 elsif ($action eq 'Attach'){
     print $cgi->header;
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-    ThrowUserError("testopia-read-only", {'object' => 'plan'}) unless $plan->canedit;
+    ThrowUserError("testopia-read-only", {'object' => $plan}) unless $plan->canedit;
     defined $cgi->upload('data')
         || ThrowUserError("file_not_specified");
     my $filename = $cgi->upload('data');       
@@ -338,7 +338,7 @@ elsif ($action eq 'do_delete'){
 ####################
 else{
     my $plan = Bugzilla::Testopia::TestPlan->new($plan_id);
-    ThrowUserError("testopia-permission-denied", {'object' => 'plan'}) unless $plan->canview;
+    ThrowUserError("testopia-permission-denied", {'object' => $plan}) unless $plan->canview;
     display($plan);
 }
 ###################

@@ -52,7 +52,7 @@ use vars qw($vars);
 
 print $cgi->header;
 
-ThrowUserError('testopia-permission-denied', {'object' => 'environments'}) unless Bugzilla->user->in_group('Testers');
+ThrowUserError('testopia-permission-denied') unless Bugzilla->user->in_group('Testers');
 
 my $action = $cgi->param('action') || '';
 my $env_id = $cgi->param('env_id') || 0;

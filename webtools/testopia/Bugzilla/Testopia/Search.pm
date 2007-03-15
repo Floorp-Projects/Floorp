@@ -329,7 +329,7 @@ sub init {
     # TODO: is there a better way to do this? 
     if ($obj eq 'environment'){
         my @prod_ids;
-        foreach my $p (Bugzilla->user->get_selectable_products){
+        foreach my $p (@{Bugzilla->user->get_selectable_products}){
             push @prod_ids, $p->id;
         }
         my $prod_ids = join(',',@prod_ids);

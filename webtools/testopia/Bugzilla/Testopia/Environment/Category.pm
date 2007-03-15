@@ -487,6 +487,13 @@ sub obliterate {
     
 }
 
+sub canview {
+    my $self = shift;
+    return 1 if ($self->product_id == 0);
+    return 1 if Bugzilla->user->can_see_product($self->product->name);
+    return 0;
+}
+
 sub canedit {
     my $self = shift;
     if ($self->product_id == 0){

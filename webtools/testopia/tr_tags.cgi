@@ -55,7 +55,7 @@ if ($action eq 'delete'){
     my $tag_id   = $cgi->param('tagid');
     validate_test_id($tag_id, 'tag');
     my $tag = Bugzilla::Testopia::TestTag->new($tag_id);
-    ThrowUserError("testopia-no-delete", {'object' => 'Tag'}) unless $tag->candelete;
+    ThrowUserError("testopia-no-delete", {'object' => $tag}) unless $tag->candelete;
     $tag->obliterate;
     $vars->{'tr_message'} = "Tag " . $tag->name . " deleted";
     display();
@@ -126,7 +126,7 @@ elsif ($action eq 'removetag'){
         $obj = Bugzilla::Testopia::TestRun->new($id);
     }
     ThrowUserError('testopia-unkown-object') unless $obj;
-    ThrowUserError("testopia-read-only", {'object' => $type}) unless $obj->canedit;
+    ThrowUserError("testopia-read-only", {'object' => $obj}) unless $obj->canedit;
     $obj->remove_tag($tag_id);
     if ($cgi->param('method')){
         $vars->{'tr_message'} = "Removed tag From $type " . $obj->id;
@@ -204,7 +204,8 @@ sub display {
     
     my @products;
     foreach my $id (split(",", $cgi->param('product'))){
-        push @products, Bugzilla::Testopia::Product->new($id) if detaint_natural($id);;
+        my $product = Bugzilla::Testopia::Product->new($id);
+        push @products, $product if  Bugzilla->user->can_see_product($product->name);
     }
     $vars->{'products'} = \@products;
     
@@ -214,10 +215,12 @@ sub display {
         detaint_natural($id);
         push @tags, Bugzilla::Testopia::TestTag->new($id);
     }
-
-    my $name = trim($cgi->param('tag'));
-    trick_taint($name);
-    push @tags, Bugzilla::Testopia::TestTag->new($name);
+    
+    if ($cgi->param('tag')){
+        my $name = trim($cgi->param('tag'));
+        trick_taint($name);
+        push @tags, Bugzilla::Testopia::TestTag->new($name);
+    }
     
     $vars->{'tags'} = \@tags;
     $template->process("testopia/tag/show.html.tmpl", $vars)

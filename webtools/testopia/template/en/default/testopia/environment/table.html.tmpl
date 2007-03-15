@@ -37,7 +37,10 @@
     <td align="center"><a href="tr_show_environment.cgi?env_id=[% env.id FILTER none %]">[% env.id FILTER none %]</a></td>
     <td>[% env.name FILTER none %]</td>
     <td>[% env.product.name FILTER none %]</td>
-    <td><a href="tr_show_environment.cgi?env_id=[% env.id FILTER none %]&action=[% env.isactive ? 'hide' : 'unhide' %]">[% env.isactive ? 'Archive' : 'Unarchive' %]</a>
+    <td>
+    [% IF env.edit %]
+    <a href="tr_show_environment.cgi?env_id=[% env.id FILTER none %]&action=[% env.isactive ? 'hide' : 'unhide' %]">[% env.isactive ? 'Archive' : 'Unarchive' %]</a>
+    [% END %]
     [% IF env.candelete %]    
       &nbsp;|&nbsp;
       <a href="tr_show_environment.cgi?env_id=[% env.id FILTER none %]&action=delete">Delete</a>
