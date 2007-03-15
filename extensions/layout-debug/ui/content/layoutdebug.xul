@@ -205,7 +205,7 @@
                        label="&ldb.StopButton.label;"
                        oncommand="gBrowser.stop();" />
 
-        <textbox id="urlbar" class="chromeclass-location" flex="1"
+        <textbox id="urlbar" flex="1"
                  onkeypress="if (event.keyCode == 13)
                                gBrowser.loadURI(this.value);" />
       </toolbar>
