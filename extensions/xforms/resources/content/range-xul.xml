@@ -48,9 +48,12 @@
        binding declared in 'range.xml' file.
   -->
 
-  <!-- RANGE: <DATETIME>
+  <!-- RANGE: <DATESANDTIMES>
+       The datesandtimes binding is used for all range types related to
+       dates and times: dateTime, date, time, gDay, gMonth, gMonthDay, gYear,
+       gYearMonth, dayTimeDuration, and yearMonthDuration.
   -->
-  <binding id="xformswidget-range-datetime"
+  <binding id="xformswidget-range-datesandtimes"
            extends="chrome://xforms/content/range.xml#xformswidget-range-base">
 
     <content>
@@ -72,13 +75,7 @@
       <method name="isInRange">
         <parameter name="aValue"/>
         <body>
-        <![CDATA[
-          var control = this.control;
-          var startDate = control.getDateTime(this.start);
-          var endDate = control.getDateTime(this.end);
-          var currentDate = control.getDateTime(aValue);
-          return startDate <= currentDate && currentDate <= endDate;
-        ]]>
+          return this.control.isInRange(aValue);
         </body>
       </method>
 

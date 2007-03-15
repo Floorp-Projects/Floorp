@@ -37,6 +37,10 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
+<!DOCTYPE bindings [
+<!ENTITY % xformsDTD SYSTEM "chrome://xforms/locale/xforms.dtd">
+  %xformsDTD;
+]>
 
 <bindings id="widgetsBindings"
           xmlns="http://www.mozilla.org/xbl"
@@ -515,10 +519,17 @@
                         This method is called when a new value is set.
        setSpinButtonMinMax() - Set the min and max attributes of the
                                spinbuttons.
+       isInRange(aValue) - Is aValue between the start and end values?
   -->
   <binding id="range">
     <implementation>
-    <!-- interface -->
+      <!-- Start label separator -->
+      <field name="_startSeparator">&xforms.range.start.separator;</field>
+
+      <!-- End label separator -->
+      <field name="_endSeparator">&xforms.range.end.separator;</field>
+
+      <!-- interface -->
       <!-- Get/set lower bound of values. -->
       <property name="start"
                 onget="return this.getAttribute('start');"
@@ -552,6 +563,7 @@
         ]]>
         </setter>
       </property>
+
 
       <!-- Set start/end/step/value -->
       <method name="set">
@@ -632,6 +644,14 @@
         </body>
       </method>
 
+      <!-- Is aValue between the start and end values? -->
+      <method name="isInRange">
+        <parameter name="aValue"/>
+        <body>
+          return true;
+        </body>
+      </method>
+
       <!-- Increment value -->
       <method name="increment">
         <body>
@@ -707,11 +727,11 @@
     </implementation>
   </binding>
 
-  <!-- DATE -->
-  <binding id="date" extends="#range">
+  <!-- DATETIME -->
+  <binding id="datetime" extends="#range">
     <implementation>
     <!-- interface -->
-      <!-- date format: yyyy-mm-dd -->
+      <!-- dateTime format: yyyy-mm-ddThh:mm:ss[.s+] -->
 
       <!-- Extract the year from a date or dateTime -->
       <method name="getYear">
@@ -734,6 +754,30 @@
         <parameter name="aDate"/>
         <body>
           return parseFloat(aDate.substr(8,2));
+        </body>
+      </method>
+
+      <!-- Extract the hours from a dateTime -->
+      <method name="getHours">
+        <parameter name="aDateTime"/>
+        <body>
+          return parseFloat(aDateTime.substr(11,2));
+        </body>
+      </method>
+
+      <!-- Extract the minutes from a dateTime -->
+      <method name="getMinutes">
+        <parameter name="aDateTime"/>
+        <body>
+          return parseFloat(aDateTime.substr(14,2));
+        </body>
+      </method>
+
+      <!-- Extract the seconds from a dateTime -->
+      <method name="getSeconds">
+        <parameter name="aDateTime"/>
+        <body>
+          return parseFloat(aDateTime.substr(17,2));
         </body>
       </method>
 
@@ -909,74 +953,6 @@
         </body>
       </method>
 
-      <!-- Get the number of days in the month for a given year. -->
-      <method name="getDaysCount">
-        <parameter name="aMonth"/>
-        <parameter name="aYear"/>
-        <body>
-        <![CDATA[
-          switch (aMonth) {
-            case 1: case 3: case 5: case 7: case 8: case 10: case 12:
-              return 31;
-
-            case 2:
-              if (aYear % 4 == 0 && aYear % 100 != 0 || aYear % 400 == 0)
-                return 29; // leap-year
-              return 28;
-
-            case 4: case 6: case 9: case 11:
-              return 30;
-          }
-          return 0;
-        ]]>
-        </body>
-      </method>
-
-      <!-- Get a Javacript Date object initialized to the value of aDate.
-      -->
-      <method name="getDate">
-        <parameter name="aDate"/>
-        <body>
-          var date = new Date();
-          date.setFullYear(this.getYear(aDate));
-          date.setMonth(this.getMonth(aDate));
-          date.setDate(this.getDay(aDate));
-          return date;
-        </body>
-      </method>
-    </implementation>
-  </binding>
-
-  <!-- DATETIME -->
-  <binding id="datetime" extends="#date">
-    <implementation>
-    <!-- interface -->
-      <!-- dateTime format: yyyy-mm-ddThh:mm:ss[.s+] -->
-
-      <!-- Extract the hours from a dateTime -->
-      <method name="getHours">
-        <parameter name="aDateTime"/>
-        <body>
-          return parseFloat(aDateTime.substr(11,2));
-        </body>
-      </method>
-
-      <!-- Extract the minutes from a dateTime -->
-      <method name="getMinutes">
-        <parameter name="aDateTime"/>
-        <body>
-          return parseFloat(aDateTime.substr(14,2));
-        </body>
-      </method>
-
-      <!-- Extract the seconds from a dateTime -->
-      <method name="getSeconds">
-        <parameter name="aDateTime"/>
-        <body>
-          return parseFloat(aDateTime.substr(17,2));
-        </body>
-      </method>
-
       <!-- Get the minimum Hours value. -->
       <method name="getHoursMin">
         <body>
@@ -1103,15 +1079,109 @@
         </body>
       </method>
 
+      <!-- Get the number of days in the month for a given year. -->
+      <method name="getDaysCount">
+        <parameter name="aMonth"/>
+        <parameter name="aYear"/>
+        <body>
+        <![CDATA[
+          switch (aMonth) {
+            case 1: case 3: case 5: case 7: case 8: case 10: case 12:
+              return 31;
+
+            case 2:
+              if (aYear % 4 == 0 && aYear % 100 != 0 || aYear % 400 == 0)
+                return 29; // leap-year
+              return 28;
+
+            case 4: case 6: case 9: case 11:
+              return 30;
+          }
+          return 0;
+        ]]>
+        </body>
+      </method>
+
       <!-- Get a Javacript Date object initialized to the value of aDateTime.
        -->
-      <method name="getDateTime">
+      <method name="getDate">
         <parameter name="aDateTime"/>
         <body>
-          var date = this.getDate(aDateTime);
+          var date = new Date();
+          date.setFullYear(this.getYear(aDateTime));
+          date.setMonth(this.getMonth(aDateTime));
+          date.setDate(this.getDay(aDateTime));
           date.setHours(this.getHours(aDateTime));
           date.setMinutes(this.getMinutes(aDateTime));
           date.setSeconds(this.getSeconds(aDateTime));
+          return date;
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <!-- DATE -->
+  <binding id="date" extends="#datetime">
+    <implementation>
+    <!-- interface -->
+      <!-- date format: yyyy-mm-dd -->
+
+      <!-- Get a Javacript Date object initialized to the value of aDate.
+      -->
+      <method name="getDate">
+        <parameter name="aDate"/>
+        <body>
+          var date = new Date();
+          date.setFullYear(this.getYear(aDate));
+          date.setMonth(this.getMonth(aDate));
+          date.setDate(this.getDay(aDate));
+          return date;
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <!-- TIME -->
+  <binding id="time" extends="#datetime">
+    <implementation>
+    <!-- interface -->
+      <!-- Time format: hh:mm:ss[.s+] -->
+
+      <!-- Extract the hours from a time -->
+      <method name="getHours">
+        <parameter name="aTime"/>
+        <body>
+          return parseFloat(aTime.substr(0,2));
+        </body>
+      </method>
+
+      <!-- Extract the minutes from a time -->
+      <method name="getMinutes">
+        <parameter name="aTime"/>
+        <body>
+          return parseFloat(aTime.substr(3,2));
+        </body>
+      </method>
+
+      <!-- Extract the seconds from a time -->
+      <method name="getSeconds">
+        <parameter name="aTime"/>
+        <body>
+          return parseFloat(aTime.substr(6,2));
+        </body>
+      </method>
+
+      <!-- Get a Javacript Date object initialized to the value of aTime.
+           A JS Date object also accepts a time and we can use a Date
+           initialized with a Time to compare times.
+       -->
+      <method name="getDate">
+        <parameter name="aTime"/>
+        <body>
+          var date = new Date();
+          date.setHours(this.getHours(aTime));
+          date.setMinutes(this.getMinutes(aTime));
+          date.setSeconds(this.getSeconds(aTime));
           return date;
         </body>
       </method>

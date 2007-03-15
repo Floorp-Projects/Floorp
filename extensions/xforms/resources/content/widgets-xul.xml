@@ -920,7 +920,7 @@
 
     <content>
       <xul:label value="" anonid="minLabel"/>
-      <xul:box class="xf-value range-box">
+      <xul:box class="range-box">
         <xul:label control="yearSpin" value="&xforms.date.year.label;"/>
         <xul:textbox type="number" size="3" anonid="yearSpin"
                      xbl:inherits="tabindex=mozType:tabindex"/>
@@ -957,8 +957,8 @@
       <method name="updateLabels">
         <body>
         <![CDATA[
-          this.minLabel.value = this.start + " >> ";
-          this.maxLabel.value = " << " + this.end;
+          this.minLabel.value = this.start + this._startSeparator;
+          this.maxLabel.value = this._endSeparator + this.end;
         ]]>
         </body>
       </method>
@@ -1034,6 +1034,18 @@
           // Seconds
           this.secondsSpin.min = this.getSecondsMin();
           this.secondsSpin.max = this.getSecondsMax();
+        ]]>
+        </body>
+      </method>
+
+      <method name="isInRange">
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          var startDate = this.getDate(this.start);
+          var endDate = this.getDate(this.end);
+          var currentDate = this.getDate(aValue);
+          return startDate <= currentDate && currentDate <= endDate;
         ]]>
         </body>
       </method>
@@ -1129,5 +1141,313 @@
     </implementation>
   </binding>
 
+  <!-- DATE RANGE-->
+  <binding id="range-date"
+           extends="chrome://xforms/content/widgets.xml#date">
+
+    <resources>
+      <stylesheet src="chrome://xforms/skin/widgets-xul.css"/>
+    </resources>
+
+    <content>
+      <xul:label value="" anonid="minLabel"/>
+      <xul:box class="range-box">
+        <xul:label control="yearSpin" value="&xforms.date.year.label;"/>
+        <xul:textbox type="number" size="3" anonid="yearSpin"
+                     xbl:inherits="tabindex=mozType:tabindex"/>
+      </xul:box>
+      <xul:box class="range-box">
+        <xul:label control="monthSpin" value="&xforms.date.month.label;"/>
+        <xul:textbox type="number" size="1" anonid="monthSpin"
+                     xbl:inherits="tabindex=mozType:tabindex"/>
+      </xul:box>
+      <xul:box class="range-box">
+        <xul:label control="daySpin" value="&xforms.date.day.label;"/>
+        <xul:textbox type="number" size="1" anonid="daySpin"
+                     xbl:inherits="tabindex=mozType:tabindex"/>
+      </xul:box>
+      <xul:label value="" anonid="maxLabel"/>
+    </content>
+
+    <implementation>
+      <method name="updateLabels">
+        <body>
+        <![CDATA[
+          this.minLabel.value = this.start + this._startSeparator;
+          this.maxLabel.value = this._endSeparator + this.end;
+        ]]>
+        </body>
+      </method>
+
+      <method name="updateValue">
+        <body>
+        <![CDATA[
+          var year = this.yearSpin.value.toString();
+          year = this.formatValue(year, 4);
+
+          var month = this.monthSpin.value.toString();
+          month = this.formatValue(month, 2);
+
+          var day = this.daySpin.value.toString();
+          day = this.formatValue(day, 2);
+
+          var value = year + "-" + month + "-" + day;
+          this.setAttribute("value", value);
+        ]]>
+        </body>
+      </method>
+
+      <method name="updateFields">
+        <body>
+        <![CDATA[
+          var value = this.value;
+          
+          this.yearSpin.value = this.getYear(value);
+          this.monthSpin.value = this.getMonth(value);
+          this.daySpin.value = this.getDay(value);
+        ]]>
+        </body>
+      </method>
+
+      <method name="setSpinbuttonMinMax">
+        <body>
+        <![CDATA[
+          // Year
+          this.yearSpin.min = this.getYearMin();
+          this.yearSpin.max = this.getYearMax();
+          // Month
+          this.monthSpin.min = this.getMonthMin();
+          this.monthSpin.max = this.getMonthMax();
+          // Day
+          this.daySpin.min = this.getDayMin();
+          this.daySpin.max = this.getDayMax();
+        ]]>
+        </body>
+      </method>
+
+      <method name="isInRange">
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          var startDate = this.getDate(this.start);
+          var endDate = this.getDate(this.end);
+          var currentDate = this.getDate(aValue);
+          return startDate <= currentDate && currentDate <= endDate;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Private -->
+      <property name="minLabel" readonly="true">
+        <getter>
+          if (!this._minLabel) {
+            this._minLabel = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "minLabel");
+          }
+          return this._minLabel;
+        </getter>
+      </property>
+      <field name="_minLabel">null</field>
+
+      <property name="yearSpin" readonly="true">
+        <getter>
+          if (!this._yearSpin) {
+            this._yearSpin = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "yearSpin");
+          }
+          return this._yearSpin;
+        </getter>
+      </property>
+      <field name="_yearSpin">null</field>
+
+      <property name="monthSpin" readonly="true">
+        <getter>
+          if (!this._monthSpin) {
+            this._monthSpin = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "monthSpin");
+          }
+          return this._monthSpin;
+        </getter>
+      </property>
+      <field name="_monthSpin">null</field>
+
+      <property name="daySpin" readonly="true">
+        <getter>
+          if (!this._daySpin) {
+            this._daySpin = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "daySpin");
+          }
+          return this._daySpin;
+        </getter>
+      </property>
+      <field name="_daySpin">null</field>
+
+      <property name="maxLabel" readonly="true">
+        <getter>
+          if (!this._maxLabel) {
+            this._maxLabel = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "maxLabel");
+          }
+          return this._maxLabel;
+        </getter>
+      </property>
+      <field name="_maxLabel">null</field>
+    </implementation>
+  </binding>
+
+  <!-- TIME RANGE-->
+  <binding id="range-time"
+           extends="chrome://xforms/content/widgets.xml#time">
+
+    <resources>
+      <stylesheet src="chrome://xforms/skin/widgets-xul.css"/>
+    </resources>
+
+    <content>
+      <xul:label value="" anonid="minLabel"/>
+      <xul:box class="range-box">
+        <xul:label control="hoursSpin" value="&xforms.datetime.hours.label;"/>
+        <xul:textbox type="number" size="1" anonid="hoursSpin"
+                     xbl:inherits="tabindex=mozType:tabindex"/>
+      </xul:box>
+      <xul:box class="range-box">
+        <xul:label control="minutesSpin" value="&xforms.datetime.minutes.label;"/>
+        <xul:textbox type="number" size="1" anonid="minutesSpin"
+                     xbl:inherits="tabindex=mozType:tabindex"/>
+      </xul:box>
+      <xul:box class="range-box">
+        <xul:label control="secondsSpin" value="&xforms.datetime.seconds.label;"/>
+        <xul:textbox type="number" size="1" anonid="secondsSpin"
+                     xbl:inherits="tabindex=mozType:tabindex"/>
+      </xul:box>
+      <xul:label value="" anonid="maxLabel"/>
+    </content>
+
+    <implementation>
+      <method name="updateLabels">
+        <body>
+        <![CDATA[
+          this.minLabel.value = this.start + this._startSeparator;
+          this.maxLabel.value = this._endSeparator + this.end;
+        ]]>
+        </body>
+      </method>
+
+      <method name="updateValue">
+        <body>
+        <![CDATA[
+          var hours = this.hoursSpin.value.toString();
+          hours = this.formatValue(hours, 2);
+
+          var minutes = this.minutesSpin.value.toString();
+          minutes = this.formatValue(minutes, 2);
+
+          var seconds = this.secondsSpin.value.toString();
+          seconds = this.formatValue(seconds, 2);
+
+          var value = hours + ":" + minutes + ":" + seconds;
+
+          this.setAttribute("value", value);
+        ]]>
+        </body>
+      </method>
+
+      <method name="updateFields">
+        <body>
+        <![CDATA[
+          var value = this.value;
+          
+          this.hoursSpin.value = this.getHours(value);
+          this.minutesSpin.value = this.getMinutes(value);
+          this.secondsSpin.value = this.getSeconds(value);
+        ]]>
+        </body>
+      </method>
+
+      <method name="setSpinbuttonMinMax">
+        <body>
+        <![CDATA[
+          // Hours
+          this.hoursSpin.min = this.getHoursMin();
+          this.hoursSpin.max = this.getHoursMax();
+          // Minutes
+          this.minutesSpin.min = this.getMinutesMin();
+          this.minutesSpin.max = this.getMinutesMax();
+          // Seconds
+          this.secondsSpin.min = this.getSecondsMin();
+          this.secondsSpin.max = this.getSecondsMax();
+        ]]>
+        </body>
+      </method>
+
+      <method name="isInRange">
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          var startTime = this.getDate(this.start);
+          var endTime = this.getDate(this.end);
+          var currentTime = this.getDate(aValue);
+          return startTime <= currentTime && currentTime <= endTime;
+        ]]>
+        </body>
+      </method>
+
+      <!-- Private -->
+      <property name="minLabel" readonly="true">
+        <getter>
+          if (!this._minLabel) {
+            this._minLabel = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "minLabel");
+          }
+          return this._minLabel;
+        </getter>
+      </property>
+      <field name="_minLabel">null</field>
+
+      <property name="hoursSpin" readonly="true">
+        <getter>
+          if (!this._hoursSpin) {
+            this._hoursSpin = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "hoursSpin");
+          }
+          return this._hoursSpin;
+        </getter>
+      </property>
+      <field name="_hoursSpin">null</field>
+
+      <property name="minutesSpin" readonly="true">
+        <getter>
+          if (!this._minutesSpin) {
+            this._minutesSpin = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "minutesSpin");
+          }
+          return this._minutesSpin;
+        </getter>
+      </property>
+      <field name="_minutesSpin">null</field>
+
+      <property name="secondsSpin" readonly="true">
+        <getter>
+          if (!this._secondsSpin) {
+            this._secondsSpin = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "secondsSpin");
+          }
+          return this._secondsSpin;
+        </getter>
+      </property>
+      <field name="_secondsSpin">null</field>
+
+      <property name="maxLabel" readonly="true">
+        <getter>
+          if (!this._maxLabel) {
+            this._maxLabel = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "maxLabel");
+          }
+          return this._maxLabel;
+        </getter>
+      </property>
+      <field name="_maxLabel">null</field>
+    </implementation>
+  </binding>
 </bindings>
 

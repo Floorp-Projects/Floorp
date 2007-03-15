@@ -74,3 +74,11 @@
 <!ENTITY xforms.datetime.hours.label   "Hours">
 <!ENTITY xforms.datetime.minutes.label "Minutes">
 <!ENTITY xforms.datetime.seconds.label "Seconds">
+
+<!-- &#34; evaluates to a single quote
+    (http://www.w3.org/TR/html401/sgml/entities.html)
+    Since we are using these to initialize xbl fields, we need to quote them
+    or we'll get an assortment of errors.
+-->
+<!ENTITY xforms.range.start.separator "<![CDATA[&#34; >> &#34;]]>">
+<!ENTITY xforms.range.end.separator   "<![CDATA[&#34; << &#34;]]>">

@@ -245,15 +245,32 @@ html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#double"] h
   -moz-binding: url('chrome://xforms/content/widgets-xhtml.xml#slider');
 }
 
-  /* range type="xsd:dateTime" */
+  /* range widgets (Dates and Times) */
 xul|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#dateTime"],
-html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#dateTime"] {
-  -moz-binding: url('chrome://xforms/content/range-xul.xml#xformswidget-range-datetime');
+html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#dateTime"],
+xul|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#date"],
+html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#date"],
+xul|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#time"],
+html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#time"] {
+  -moz-binding: url('chrome://xforms/content/range-xul.xml#xformswidget-range-datesandtimes');
 }
 
+  /* range type="xsd:dateTime" */
 xul|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#dateTime"] > xul|box,
 html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#dateTime"] > xul|box {
   -moz-binding: url('chrome://xforms/content/widgets-xul.xml#range-datetime');
+}
+
+  /* range type="xsd:date" */
+xul|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#date"] > xul|box,
+html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#date"] > xul|box {
+  -moz-binding: url('chrome://xforms/content/widgets-xul.xml#range-date');
+}
+
+  /* range type="xsd:time" */
+xul|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#time"] > xul|box,
+html|*:root range[mozType|typelist~="http://www.w3.org/2001/XMLSchema#time"] > xul|box {
+  -moz-binding: url('chrome://xforms/content/widgets-xul.xml#range-time');
 }
 
 xul|box.xf-value {
