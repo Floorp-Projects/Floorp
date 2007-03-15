@@ -164,11 +164,11 @@ Faces</a> for Ajax.</p>
 <li class="li2"><div class="de2">&nbsp; &nbsp; <span class="co1">// Load the main page of the app</span></div></li>
 <li class="li1"><div class="de1">&nbsp; &nbsp; mcp.<span class="me1">blockingLoad</span><span class="br0">&#40;</span><span class="st0">&quot;http://javaserver.org/jsf-ajax-cardemo/faces/chooseLocale.jsp&quot;</span><span class="br0">&#41;</span>;</div></li>
 <li class="li2"><div class="de2">&nbsp; &nbsp; <span class="co1">// Choose the &quot;German&quot; language button</span></div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; mcp.<span class="me1">blockingClickElement</span><span class="br0">&#40;</span><span class="st0">&quot;j_id_id73:Germany&quot;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; mcp.<span class="me1">blockingClickElement</span><span class="br0">&#40;</span><span class="st0">&quot;Germany&quot;</span><span class="br0">&#41;</span>;</div></li>
 <li class="li2"><div class="de2">&nbsp; &nbsp; <span class="co1">// Choose the roadster</span></div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; mcp.<span class="me1">blockingClickElement</span><span class="br0">&#40;</span><span class="st0">&quot;j_id_id18:j_id_id43&quot;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; mcp.<span class="me1">blockingClickElement</span><span class="br0">&#40;</span><span class="st0">&quot;roadsterButton&quot;</span><span class="br0">&#41;</span>;</div></li>
 <li class="li2"><div class="de2">&nbsp; &nbsp; <span class="co1">// Sample the Basis-Preis and Ihr Preis before the ajax transaction</span></div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw3">Element</span> pricePanel = mcp.<span class="me1">findElement</span><span class="br0">&#40;</span><span class="st0">&quot;j_id_id10:zone1&quot;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw3">Element</span> pricePanel = mcp.<span class="me1">findElement</span><span class="br0">&#40;</span><span class="st0">&quot;zone1&quot;</span><span class="br0">&#41;</span>;</div></li>
 <li class="li2"><div class="de2">&nbsp; &nbsp; assertNotNull<span class="br0">&#40;</span>pricePanel<span class="br0">&#41;</span>;</div></li>
 <li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw3">String</span> pricePanelText = pricePanel.<span class="me1">getTextContent</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
 <li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
@@ -178,7 +178,7 @@ Faces</a> for Ajax.</p>
 <li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
 <li class="li1"><div class="de1">&nbsp; &nbsp; <span class="co1">// Choose the &quot;Tempomat&quot; checkbox</span></div></li>
 <li class="li2"><div class="de2">&nbsp; &nbsp; bitSet.<span class="me1">clear</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
-<li class="li1"><div class="de1">&nbsp; &nbsp; mcp.<span class="me1">clickElement</span><span class="br0">&#40;</span><span class="st0">&quot;j_id_id10:j_id_id63j_id_1&quot;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li1"><div class="de1">&nbsp; &nbsp; mcp.<span class="me1">clickElement</span><span class="br0">&#40;</span><span class="st0">&quot;cruiseControlCheckbox&quot;</span><span class="br0">&#41;</span>;</div></li>
 <li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
 <li class="li1"><div class="de1">&nbsp; &nbsp; <span class="kw1">while</span> <span class="br0">&#40;</span>!bitSet.<span class="me1">get</span><span class="br0">&#40;</span>TestFeature.<span class="me1">STOP_WAITING</span>.<span class="me1">ordinal</span><span class="br0">&#40;</span><span class="br0">&#41;</span><span class="br0">&#41;</span><span class="br0">&#41;</span> <span class="br0">&#123;</span></div></li>
 <li class="li2"><div class="de2">&nbsp; &nbsp; &nbsp; &nbsp; <span class="kw3">Thread</span>.<span class="me1">currentThread</span><span class="br0">&#40;</span><span class="br0">&#41;</span>.<span class="me1">sleep</span><span class="br0">&#40;</span><span class="nu0">5000</span><span class="br0">&#41;</span>;</div></li>
@@ -193,7 +193,7 @@ Faces</a> for Ajax.</p>
 <li class="li1"><div class="de1">&nbsp; &nbsp; bitSet.<span class="me1">clear</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
 <li class="li2"><div class="de2">&nbsp; &nbsp; </div></li>
 <li class="li1"><div class="de1">&nbsp; &nbsp; <span class="co1">// Sample the Basis-Preis and Ihr-Preis after the ajax transaction</span></div></li>
-<li class="li2"><div class="de2">&nbsp; &nbsp; pricePanel = mcp.<span class="me1">findElement</span><span class="br0">&#40;</span><span class="st0">&quot;j_id_id10:zone1&quot;</span><span class="br0">&#41;</span>;</div></li>
+<li class="li2"><div class="de2">&nbsp; &nbsp; pricePanel = mcp.<span class="me1">findElement</span><span class="br0">&#40;</span><span class="st0">&quot;zone1&quot;</span><span class="br0">&#41;</span>;</div></li>
 <li class="li1"><div class="de1">&nbsp; &nbsp; assertNotNull<span class="br0">&#40;</span>pricePanel<span class="br0">&#41;</span>;</div></li>
 <li class="li2"><div class="de2">&nbsp; &nbsp; pricePanelText = pricePanel.<span class="me1">getTextContent</span><span class="br0">&#40;</span><span class="br0">&#41;</span>;</div></li>
 <li class="li1"><div class="de1">&nbsp; &nbsp; </div></li>
