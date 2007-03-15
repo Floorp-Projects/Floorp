@@ -109,10 +109,10 @@ var gDisplayPane = {
       var tagElToEdit = this.mTagListBox.getItemAtIndex(index);
       var args = {result: "", keyToEdit: tagElToEdit.getAttribute("value"), okCallback: editTagCallback};
       var dialog = window.openDialog(
-			      "chrome://messenger/content/newTagDialog.xul",
-			      "",
-			      "chrome,titlebar,modal",
-			      args);        
+                  "chrome://messenger/content/newTagDialog.xul",
+                  "",
+                  "chrome,titlebar,modal",
+                  args);
     }  
   },
 
@@ -120,11 +120,11 @@ var gDisplayPane = {
   {  
     var args = {result: "", okCallback: addTagCallback};
     var dialog = window.openDialog(
-			    "chrome://messenger/content/newTagDialog.xul",
-			    "",
-			    "chrome,titlebar,modal",
-			    args);
-  },
+                 "chrome://messenger/content/newTagDialog.xul",
+                 "",
+                 "chrome,titlebar,modal",
+                 args);
+  }
 };
 
 function addTagCallback(aName, aColor)

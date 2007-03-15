@@ -431,5 +431,5 @@ var gComposePane = {
      try {
        document.getElementById('msgcompose.background_color').reset();
      } catch (ex) {}
-   },  
+   }
 };

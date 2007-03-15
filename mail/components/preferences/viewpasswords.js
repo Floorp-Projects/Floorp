@@ -475,7 +475,7 @@ function DeleteAllFromTree
 }
 
 function DeleteSelectedItemFromTree
-    (tree, view, table, deletedTable, removeButton, removeAllButton) {
+    (tree, view, table, deletedTable, removeButtonId, removeAllButtonId) {
 
   var box = tree.treeBoxObject;
 
@@ -521,8 +521,8 @@ function DeleteSelectedItemFromTree
   box.endUpdateBatch();
 
   // update selection and/or buttons
-  var removeButton = document.getElementById(removeButton);
-  var removeAllButton = document.getElementById(removeAllButton);
+  var removeButton = document.getElementById(removeButtonId);
+  var removeAllButton = document.getElementById(removeAllButtonId);
 
   if (table.length) {
     removeButton.removeAttribute("disabled");

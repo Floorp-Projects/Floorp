@@ -149,7 +149,7 @@ pref("mail.pop3.deleteFromServerOnMove",    false);
 pref("mail.remember_password",              false);
 pref("mail.pop_password",                   "");
 pref("mail.fixed_width_messages",           true);
-pref("mail.citation_color",                 ""); // quoted color
+pref("mail.citation_color",                 "#000000"); // quoted color
 pref("mail.quoted_style",                   0); // 0=plain, 1=bold, 2=italic, 3=bolditalic
 pref("mail.quoted_size",                    0); // 0=normal, 1=big, 2=small
 pref("mail.quoted_graphical",               true); // use HTML-style quoting for displaying plain text

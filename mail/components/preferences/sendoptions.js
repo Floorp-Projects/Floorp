@@ -149,5 +149,5 @@ var gSendOptionsDialog = {
     var item = document.createElement('listitem');
     item.setAttribute('label', aDomainTitle);
     aListBox.appendChild(item);
-  },
+  }
 };

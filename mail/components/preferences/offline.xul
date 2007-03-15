@@ -51,8 +51,7 @@
             dlgbuttons="accept,cancel"
             title="&offlineDialog.title;">
 
-  <prefpane id="OfflineSettingsDialogPane" onpaneload="gOfflineDialog.init();">
-
+  <prefpane id="OfflineSettingsDialogPane">
     <preferences>
       <preference id="offline.startup_state"                 name="offline.startup_state"     type="int"/>
       <preference id="offline.send.unsent_messages"          name="offline.send.unsent_messages" type="int"/>

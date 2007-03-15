@@ -143,10 +143,7 @@ var gFeedSubscriptionsWindow = {
     getCellText: function (aIndex, aColumn)
     {
       var item = this.getItemAtIndex(aIndex);
-      if (!item) 
-        return "";
-      else if (aColumn.id == "folderNameCol")
-        return item.name;
+      return (item && aColumn.id == "folderNameCol") ? item.name : "";
     },
 
     _selection: null, 
@@ -473,7 +470,7 @@ var gFeedSubscriptionsWindow = {
       document.getElementById('locationValue').value = "";
     }
 
-    for (i = 0; i < ids.length; ++i)
+    for (var i = 0; i < ids.length; ++i)
       document.getElementById(ids[i]).disabled = !aItem || aItem.container;
   },
   
@@ -814,7 +811,7 @@ var gFeedSubscriptionsWindow = {
     onProgress: function(feed, aProgress, aProgressMax)
     {
       updateStatusItem('progressMeter', (aProgress * 100) / aProgressMax);
-    },
+    }
   },
 
   exportOPML: function()
@@ -948,14 +945,18 @@ var gFeedSubscriptionsWindow = {
       var parser = new DOMParser();
       opmlDom = parser.parseFromStream(stream, null, stream.available(), 'application/xml');
     }catch(e){
-      return promptService.alert(window, null, this.mBundle.getString("subscribe-errorOpeningFile"));
+      promptService.alert(window, null, this.mBundle.getString("subscribe-errorOpeningFile"));
+      return;
     }finally{
       stream.close();
     }
 
     // return if the user didn't give us an OPML file
     if(!opmlDom || !(opmlDom.documentElement.tagName == "opml"))
-      return promptService.alert(window, null, this.mBundle.getFormattedString("subscribe-errorInvalidOPMLFile", [rv.file.leafName]));
+    {
+      promptService.alert(window, null, this.mBundle.getFormattedString("subscribe-errorInvalidOPMLFile", [rv.file.leafName]));
+      return;
+    }
 
     var outlines = opmlDom.getElementsByTagName("body")[0].getElementsByTagName("outline");
     var feedsAdded = false;
@@ -1004,7 +1005,10 @@ var gFeedSubscriptionsWindow = {
     }
 
     if (!outlines.length || !feedsAdded)
-      return promptService.alert(window, null, this.mBundle.getFormattedString("subscribe-errorInvalidOPMLFile", [rv.file.leafName]));
+    {
+      promptService.alert(window, null, this.mBundle.getFormattedString("subscribe-errorInvalidOPMLFile", [rv.file.leafName]));
+      return;
+    }
 
     //add the new feeds to our view
     refreshSubscriptionView();
@@ -1022,9 +1026,7 @@ var gFeedSubscriptionsWindow = {
       outlineTitle = anOutline.getAttribute("xmlUrl");
 
     return outlineTitle;
-
-  },
-
+  }
 };
 
 // opens the feed properties dialog

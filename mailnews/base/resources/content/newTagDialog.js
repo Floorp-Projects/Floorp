@@ -108,7 +108,7 @@ function onOKEditTag()
   }
     
   tagService.setColorForKey(dialog.editTagKey, document.getElementById("tagColorPicker").color);
-  dialog.okCallback();
+  return dialog.okCallback();
 }
 
 /**
@@ -127,7 +127,7 @@ function onOKNewTag()
     return false;
   } 
   else
-    dialog.okCallback(name, document.getElementById("tagColorPicker").color);
+    return dialog.okCallback(name, document.getElementById("tagColorPicker").color);
 }
 
 /**

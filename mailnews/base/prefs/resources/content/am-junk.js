@@ -126,7 +126,7 @@ function buildServerFilterMenuList()
   var ispDirectories = fileLocator.get(KEY_ISP_DIRECTORY_LIST, Components.interfaces.nsISimpleEnumerator);
   while (ispDirectories.hasMoreElements()) 
   {
-    ispDirectory = ispDirectories.getNext().QueryInterface(Components.interfaces.nsIFile);
+    var ispDirectory = ispDirectories.getNext().QueryInterface(Components.interfaces.nsIFile);
     if (ispDirectory)
       buildServerFilterListFromDir(ispDirectory);
   }

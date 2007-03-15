@@ -76,9 +76,9 @@ function BrowseForLocalFolders()
         return;
       }
     }
+    // convert the nsILocalFile into a nsIFileSpec 
+    currentFolderTextBox.value = fp.file.path;
   }
-  // convert the nsILocalFile into a nsIFileSpec 
-  currentFolderTextBox.value = fp.file.path;
 }
 
 function hostnameIsIllegal(hostname)

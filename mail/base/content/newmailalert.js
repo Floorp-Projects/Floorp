@@ -113,7 +113,7 @@ urlListener.prototype = {
     // start the alert.
     if (!gPendingPreviewFetchRequests)
       showAlert();
-  },
+  }
 }
 
 function onAlertLoad()

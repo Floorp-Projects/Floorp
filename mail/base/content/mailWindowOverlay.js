@@ -210,7 +210,7 @@ function view_init()
   }
 
   // hide the views menu item if the user doesn't have the views toolbar button visible
-  viewsToolbarButton = document.getElementById("mailviews-container");
+  var viewsToolbarButton = document.getElementById("mailviews-container");
   document.getElementById('viewMessageViewMenu').hidden = !viewsToolbarButton;
 
   // Initialize the View Attachment Inline menu

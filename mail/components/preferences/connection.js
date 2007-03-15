@@ -199,5 +199,5 @@ var gConnectionsDialog = {
     if (shareProxiesPref.value)
       this.updateProtocolPrefs();
     return undefined;
-  },
+  }
 };

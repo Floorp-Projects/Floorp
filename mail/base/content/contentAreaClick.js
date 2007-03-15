@@ -75,7 +75,7 @@
     else 
     {
       // we may be nested inside of a link node
-      linkNode = event.originalTarget;
+      var linkNode = event.originalTarget;
       while (linkNode && !(linkNode instanceof HTMLAnchorElement))
         linkNode = linkNode.parentNode;
       

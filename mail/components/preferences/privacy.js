@@ -166,5 +166,5 @@ var gPrivacyPane = {
   updateDownloadedPhishingListState: function()
   {
     document.getElementById('useDownloadedList').disabled = !document.getElementById('enablePhishingDetector').checked;
-  },
+  }
 };
