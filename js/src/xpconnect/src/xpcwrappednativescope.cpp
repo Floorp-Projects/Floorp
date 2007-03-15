@@ -270,6 +270,7 @@ WrappedNativeJSGCThingMarker(JSDHashTable *table, JSDHashEntryHdr *hdr,
     {
         JS_MarkGCThing((JSContext*)arg, wrapper->GetFlatJSObject(), 
                        "XPCWrappedNative::mFlatJSObject", nsnull);
+        nsCycleCollector_suspectCurrent(wrapper);
     }
     return JS_DHASH_NEXT;
 }

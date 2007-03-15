@@ -493,7 +493,7 @@ struct nsCycleCollector
     nsCycleCollector();
     ~nsCycleCollector();
 
-    void Suspect(nsISupports *n);
+    void Suspect(nsISupports *n, bool current=false);
     void Forget(nsISupports *n);
     void Allocated(void *n, size_t sz);
     void Freed(void *n);
@@ -763,7 +763,6 @@ struct MarkGreyWalker : public GraphWalker
 void 
 nsCycleCollector::CollectPurple()
 {
-    mBufs[0]->Empty();
     mPurpleBuf.SelectAgedPointers(mBufs[0]);
 }
 
@@ -1534,7 +1533,7 @@ nsCycleCollector_shouldSuppress(nsISupports *s)
 }
 
 void 
-nsCycleCollector::Suspect(nsISupports *n)
+nsCycleCollector::Suspect(nsISupports *n, bool current)
 {
     // Re-entering ::Suspect during collection used to be a fault, but
     // we are canonicalizing nsISupports pointers using QI, so we will
@@ -1557,12 +1556,15 @@ nsCycleCollector::Suspect(nsISupports *n)
     if (nsCycleCollector_shouldSuppress(n))
         return;
 
-#ifndef __MINGW32__
+#if defined(DEBUG) && !defined(__MINGW32__)
     if (mParams.mHookMalloc)
         InitMemHook();
 #endif
 
-    mPurpleBuf.Put(n);
+    if (current)
+        mBufs[0]->Push(n);
+    else
+        mPurpleBuf.Put(n);
 
     if (mParams.mLogPointers) {
         if (!mPtrLog)
@@ -1641,7 +1643,12 @@ nsCycleCollector::Collect()
     // least one JS GC -- they rely on this fact to avoid redundant JS
     // GC calls -- so it's essential that we actually execute this
     // step!
-    
+    // 
+    // It is also essential to empty mBufs->[0] here because starting up
+    // collection in language runtimes may force some "current" suspects
+    // into mBufs[0].
+    mBufs[0]->Empty();
+
     for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
         if (mRuntimes[i])
             mRuntimes[i]->BeginCycleCollection();
@@ -1851,6 +1858,13 @@ void
 nsCycleCollector_suspect(nsISupports *n)
 {
     getCollector()->Suspect(n);
+}
+
+
+void 
+nsCycleCollector_suspectCurrent(nsISupports *n)
+{
+    getCollector()->Suspect(n, true);
 }
 
 
