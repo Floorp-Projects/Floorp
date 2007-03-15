@@ -2052,19 +2052,19 @@ function updateRepeat()
     switch (repeatValue)
     {
       case 'daily':
-        var recRule = new calRecurrenceRule();
+        var recRule = createRecurrenceRule();
         recRule.type = 'DAILY';
         recRule.interval = 1;
         recRule.count = -1;
         break;
       case 'weekly':
-        var recRule = new calRecurrenceRule();
+        var recRule = createRecurrenceRule();
         recRule.type = 'WEEKLY';
         recRule.interval = 1;
         recRule.count = -1;
         break;
       case 'every.weekday':
-        var recRule = new calRecurrenceRule();
+        var recRule = createRecurrenceRule();
         recRule.type = 'DAILY';
         recRule.interval = 1;
         recRule.count = -1;
@@ -2072,19 +2072,19 @@ function updateRepeat()
         recRule.setComponent("BYDAY", onDays.length, onDays);
         break;
       case 'bi.weekly':
-        var recRule = new calRecurrenceRule();
+        var recRule = createRecurrenceRule();
         recRule.type = 'WEEKLY';
         recRule.interval = 2;
         recRule.count = -1;
         break;
       case 'monthly':
-        var recRule = new calRecurrenceRule();
+        var recRule = createRecurrenceRule();
         recRule.type = 'MONTHLY';
         recRule.interval = 1;
         recRule.count = -1;
         break;
       case 'yearly':
-        var recRule = new calRecurrenceRule();
+        var recRule = createRecurrenceRule();
         recRule.type = 'YEARLY';
         recRule.interval = 1;
         recRule.count = -1;
