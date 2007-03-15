@@ -704,15 +704,17 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     return NS_ERROR_INVALID_ARG;
   }
 
+  PRInt32 finalStartOffset, finalEndOffset;
+
   // If aType == eGetAt we'll change both the start and end offset from
   // the original offset
   if (aType == eGetAfter) {
-    startOffset = aOffset;
+    finalStartOffset = aOffset;
   }
   else {
-    startOffset = GetRelativeOffset(presShell, startFrame,  startOffset,
-                                    amount, eDirPrevious, needsStart);
-    NS_ENSURE_TRUE(startOffset >= 0, NS_ERROR_FAILURE);
+    finalStartOffset = GetRelativeOffset(presShell, startFrame,  startOffset,
+                                         amount, eDirPrevious, needsStart);
+    NS_ENSURE_TRUE(finalStartOffset >= 0, NS_ERROR_FAILURE);
   }
 
   if (aType == eGetBefore) {
@@ -720,14 +722,15 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
   }
   else {
     // Start moving forward from the start so that we don't get 
-    // 2 words/lines if the offset occured on whitespace boundary    
-    endOffset = startOffset; // Passed by reference to GetPosAndText()
+    // 2 words/lines if the offset occured on whitespace boundary
+    // Careful, startOffset and endOffset are passed by reference to GetPosAndText() and changed
+    startOffset = endOffset = finalStartOffset;
     nsIFrame *endFrame = GetPosAndText(startOffset, endOffset);
     if (!endFrame) {
       return NS_ERROR_FAILURE;
     }
-    endOffset = GetRelativeOffset(presShell, endFrame, endOffset, amount,
-                                  eDirNext, needsStart);
+    finalEndOffset = GetRelativeOffset(presShell, endFrame, endOffset, amount,
+                                       eDirNext, needsStart);
     NS_ENSURE_TRUE(endOffset >= 0, NS_ERROR_FAILURE);
   }
 
@@ -738,13 +741,13 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     return GetTextHelper(eGetAfter, aBoundaryType, aOffset, aStartOffset, aEndOffset, aText);
   }
 
-  *aStartOffset = startOffset;
-  *aEndOffset = endOffset;
+  *aStartOffset = finalStartOffset;
+  *aEndOffset = finalEndOffset;
 
-  NS_ASSERTION((startOffset < aOffset && endOffset >= aOffset) || aType != eGetBefore, "Incorrect results for GetTextHelper");
-  NS_ASSERTION((startOffset <= aOffset && endOffset > aOffset) || aType == eGetBefore, "Incorrect results for GetTextHelper");
+  NS_ASSERTION((finalStartOffset < aOffset && finalEndOffset >= aOffset) || aType != eGetBefore, "Incorrect results for GetTextHelper");
+  NS_ASSERTION((finalStartOffset <= aOffset && finalEndOffset > aOffset) || aType == eGetBefore, "Incorrect results for GetTextHelper");
 
-  return GetPosAndText(startOffset, endOffset, &aText) ? NS_OK : NS_ERROR_FAILURE;
+  return GetPosAndText(finalStartOffset, finalEndOffset, &aText) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 /**
