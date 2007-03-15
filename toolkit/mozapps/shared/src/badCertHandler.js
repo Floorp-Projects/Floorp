@@ -97,12 +97,7 @@ BadCertHandler.prototype = {
 
   // nsIInterfaceRequestor
   getInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsIBadCertListener) ||
-        iid.equals(Components.interfaces.nsIChannelEventSink))
-      return this;
-
-    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
-    return null;
+    return this.QueryInterface(iid);
   },
 
   // nsISupports
