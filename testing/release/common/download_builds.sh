@@ -20,7 +20,7 @@ download_builds() {
     #PARAMS="--user=user --password=pass"
     cd downloads 
     if [ -f "$source_file" ]; then rm "$source_file"; fi
-    wget -nv $PARAMS "$url" 2>&1
+    wget --no-check-certificate -nv $PARAMS "$url" 2>&1
     if [ $? != 0 ]; then
       echo "FAIL: Could not download source $source_file from $url"
       echo "skipping.."
