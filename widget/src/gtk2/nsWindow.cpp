@@ -4928,7 +4928,7 @@ nsWindow::GetRootAccessible(nsIAccessible** aAccessible)
             break;
         }
         parentAccessible->GetRole(&role);
-        if (role == nsIAccessible::ROLE_APP_ROOT) {
+        if (role == nsIAccessibleRole::ROLE_APP_ROOT) {
             NS_ADDREF(*aAccessible = accessible);
             break;
         }
