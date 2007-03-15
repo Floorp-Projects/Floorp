@@ -1386,6 +1386,9 @@ nsMathMLContainerFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
 {
   nscoord gap = 0;
   nsIContent* parentContent = mParent->GetContent();
+  if (NS_UNLIKELY(!parentContent)) {
+    return 0;
+  }
   // XXXldb This should check namespaces too.
   nsIAtom *parentTag = parentContent->Tag();
   if (parentTag == nsGkAtoms::math ||
