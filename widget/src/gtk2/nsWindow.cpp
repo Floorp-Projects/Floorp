@@ -74,6 +74,7 @@
 #include "nsGfxCIID.h"
 
 #ifdef ACCESSIBILITY
+#include "nsIAccessibleRole.h"
 #include "nsPIAccessNode.h"
 #include "nsPIAccessible.h"
 #include "nsIAccessibleEvent.h"
