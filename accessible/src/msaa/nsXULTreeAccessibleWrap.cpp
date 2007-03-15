@@ -61,7 +61,8 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetRole(PRUint32 *aRole)
   }
   // No primary column means we're in a list
   // In fact, history and mail turn off the primary flag when switching to a flat view
-  *aRole = primaryCol ? ROLE_OUTLINE : ROLE_LIST;
+  *aRole = primaryCol ? nsIAccessibleRole::ROLE_OUTLINE :
+                        nsIAccessibleRole::ROLE_LIST;
 
   return NS_OK;
 }
@@ -86,7 +87,8 @@ NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetRole(PRUint32 *aRole)
   NS_ASSERTION(mColumn, "mColumn is null");
   PRBool isPrimary = PR_FALSE;
   mColumn->GetPrimary(&isPrimary);
-  *aRole = isPrimary ? ROLE_OUTLINEITEM : ROLE_LISTITEM;
+  *aRole = isPrimary ? nsIAccessibleRole::ROLE_OUTLINEITEM :
+                       nsIAccessibleRole::ROLE_LISTITEM;
   return NS_OK;
 }
 
@@ -136,7 +138,7 @@ NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetDescription(nsAString& aDescriptio
 
   PRUint32 itemRole;
   GetRole(&itemRole);
-  if (itemRole == ROLE_LISTITEM) {
+  if (itemRole == nsIAccessibleRole::ROLE_LISTITEM) {
     return nsAccessibleWrap::GetDescription(aDescription);
   }
 

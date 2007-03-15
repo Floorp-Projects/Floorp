@@ -1194,11 +1194,13 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   if (!newAcc && !content->IsNodeOfType(nsINode::eHTML)) {
     if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
              content->Tag() == nsAccessibilityAtoms::svg) {
-      newAcc = new nsEnumRoleAccessible(aNode, aWeakShell, nsIAccessible::ROLE_DIAGRAM);
+      newAcc = new nsEnumRoleAccessible(aNode, aWeakShell,
+                                        nsIAccessibleRole::ROLE_DIAGRAM);
     }
     else if (content->GetNameSpaceID() == kNameSpaceID_MathML &&
              content->Tag() == nsAccessibilityAtoms::math) {
-      newAcc = new nsEnumRoleAccessible(aNode, aWeakShell, nsIAccessible::ROLE_EQUATION);
+      newAcc = new nsEnumRoleAccessible(aNode, aWeakShell,
+                                        nsIAccessibleRole::ROLE_EQUATION);
     }
   } else if (!newAcc) {  // HTML accessibles
     // Prefer to use markup (mostly tag name, perhaps attributes) to

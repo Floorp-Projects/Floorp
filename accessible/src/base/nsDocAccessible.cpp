@@ -162,7 +162,7 @@ NS_IMETHODIMP nsDocAccessible::GetName(nsAString& aName)
 
 NS_IMETHODIMP nsDocAccessible::GetRole(PRUint32 *aRole)
 {
-  *aRole = ROLE_PANE; // Fall back
+  *aRole = nsIAccessibleRole::ROLE_PANE; // Fall back
 
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
     GetDocShellTreeItemFor(mDOMNode);
@@ -174,14 +174,15 @@ NS_IMETHODIMP nsDocAccessible::GetRole(PRUint32 *aRole)
       PRInt32 itemType;
       docShellTreeItem->GetItemType(&itemType);
       if (itemType == nsIDocShellTreeItem::typeChrome) {
-        *aRole = ROLE_CHROME_WINDOW;
+        *aRole = nsIAccessibleRole::ROLE_CHROME_WINDOW;
       }
       else if (itemType == nsIDocShellTreeItem::typeContent) {
 #ifdef MOZ_XUL
         nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
-        *aRole = xulDoc ? ROLE_APPLICATION : ROLE_DOCUMENT;
+        *aRole = xulDoc ? nsIAccessibleRole::ROLE_APPLICATION :
+                          nsIAccessibleRole::ROLE_DOCUMENT;
 #else
-        *aRole = ROLE_DOCUMENT;
+        *aRole = nsIAccessibleRole::ROLE_DOCUMENT;
 #endif
       }
     }
@@ -470,10 +471,10 @@ NS_IMETHODIMP nsDocAccessible::Init()
 
   nsresult rv = nsHyperTextAccessible::Init();
 
-  if (mRoleMapEntry && mRoleMapEntry->role != ROLE_DIALOG &&
-      mRoleMapEntry->role != ROLE_APPLICATION &&
-      mRoleMapEntry->role != ROLE_ALERT &&
-      mRoleMapEntry->role != ROLE_DOCUMENT) {
+  if (mRoleMapEntry && mRoleMapEntry->role != nsIAccessibleRole::ROLE_DIALOG &&
+      mRoleMapEntry->role != nsIAccessibleRole::ROLE_APPLICATION &&
+      mRoleMapEntry->role != nsIAccessibleRole::ROLE_ALERT &&
+      mRoleMapEntry->role != nsIAccessibleRole::ROLE_DOCUMENT) {
     // Document accessible can only have certain roles
     // This was set in nsAccessible::Init() based on dynamic role attribute
     mRoleMapEntry = nsnull; // role attribute is not valid for a document
@@ -1184,7 +1185,7 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode, PRUint32 aChangeEvent
             // Fire menupopupend events for menu popups that go away
             PRUint32 role, event = 0;
             accessible->GetFinalRole(&role);
-            if (role == ROLE_MENUPOPUP) {
+            if (role == nsIAccessibleRole::ROLE_MENUPOPUP) {
               nsCOMPtr<nsIDOMNode> domNode;
               accessNode->GetDOMNode(getter_AddRefs(domNode));
               nsCOMPtr<nsIDOMXULPopupElement> popup(do_QueryInterface(domNode));
@@ -1194,7 +1195,8 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode, PRUint32 aChangeEvent
                 event = nsIAccessibleEvent::EVENT_MENUPOPUPEND;
               }
             }
-            else if (role == ROLE_PROGRESSBAR && iterNode != aStartNode) {
+            else if (role == nsIAccessibleRole::ROLE_PROGRESSBAR &&
+                     iterNode != aStartNode) {
               // Make sure EVENT_HIDE gets fired for progress meters
               event = nsIAccessibleEvent::EVENT_HIDE;
             }

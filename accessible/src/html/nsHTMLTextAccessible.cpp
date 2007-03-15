@@ -105,7 +105,7 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetRole(PRUint32 *aRole)
   NS_ENSURE_TRUE(frame, NS_ERROR_NULL_POINTER);
 
   if (frame->IsGeneratedContentFrame()) {
-    *aRole = ROLE_STATICTEXT;
+    *aRole = nsIAccessibleRole::ROLE_STATICTEXT;
     return NS_OK;
   }
 
@@ -139,7 +139,7 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetAttributes(nsIPersistentProperties **aAtt
 
   PRUint32 role;
   GetRole(&role);
-  if (role == ROLE_STATICTEXT) {
+  if (role == nsIAccessibleRole::ROLE_STATICTEXT) {
     nsCOMPtr<nsIPersistentProperties> attributes =
         do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
     NS_ENSURE_TRUE(attributes, NS_ERROR_OUT_OF_MEMORY);
@@ -159,7 +159,7 @@ nsLeafAccessible(aDomNode, aShell)
 
 NS_IMETHODIMP nsHTMLHRAccessible::GetRole(PRUint32 *aRole)
 {
-  *aRole = ROLE_SEPARATOR;
+  *aRole = nsIAccessibleRole::ROLE_SEPARATOR;
   return NS_OK;
 }
 
@@ -177,7 +177,7 @@ nsLeafAccessible(aDomNode, aShell)
 
 NS_IMETHODIMP nsHTMLBRAccessible::GetRole(PRUint32 *aRole)
 {
-  *aRole = ROLE_WHITESPACE;
+  *aRole = nsIAccessibleRole::ROLE_WHITESPACE;
   return NS_OK;
 }
 
@@ -218,7 +218,7 @@ NS_IMETHODIMP nsHTMLLabelAccessible::GetName(nsAString& aReturn)
 
 NS_IMETHODIMP nsHTMLLabelAccessible::GetRole(PRUint32 *aRole)
 {
-  *aRole = ROLE_LABEL;
+  *aRole = nsIAccessibleRole::ROLE_LABEL;
   return NS_OK;
 }
 

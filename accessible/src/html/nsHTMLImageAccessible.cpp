@@ -133,7 +133,7 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetName(nsAString& aName)
 /* wstring getRole (); */
 NS_IMETHODIMP nsHTMLImageAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_GRAPHIC;
+  *_retval = nsIAccessibleRole::ROLE_GRAPHIC;
   return NS_OK;
 }
 

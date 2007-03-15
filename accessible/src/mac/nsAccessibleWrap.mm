@@ -102,9 +102,9 @@ nsAccessibleWrap::GetNativeType ()
 {
   PRUint32 role = Role(this);
   switch (role) {
-    case ROLE_PUSHBUTTON:
-    case ROLE_SPLITBUTTON:
-    case ROLE_TOGGLE_BUTTON:
+    case nsIAccessibleRole::ROLE_PUSHBUTTON:
+    case nsIAccessibleRole::ROLE_SPLITBUTTON:
+    case nsIAccessibleRole::ROLE_TOGGLE_BUTTON:
     {
       // if this button may show a popup, let's make it of the popupbutton type.
       if (HasPopup())
@@ -114,23 +114,23 @@ nsAccessibleWrap::GetNativeType ()
       return [mozButtonAccessible class];
     }
     
-    case ROLE_CHECKBUTTON:
+    case nsIAccessibleRole::ROLE_CHECKBUTTON:
       return [mozCheckboxAccessible class];
       
-    case ROLE_AUTOCOMPLETE:
+    case nsIAccessibleRole::ROLE_AUTOCOMPLETE:
       return [mozComboboxAccessible class];
       
-    case ROLE_ENTRY:
-    case ROLE_STATICTEXT:
-    case ROLE_HEADING:
-    case ROLE_LABEL:
-    case ROLE_CAPTION:
-    case ROLE_ACCEL_LABEL:
-    case ROLE_TEXT_LEAF:
+    case nsIAccessibleRole::ROLE_ENTRY:
+    case nsIAccessibleRole::ROLE_STATICTEXT:
+    case nsIAccessibleRole::ROLE_HEADING:
+    case nsIAccessibleRole::ROLE_LABEL:
+    case nsIAccessibleRole::ROLE_CAPTION:
+    case nsIAccessibleRole::ROLE_ACCEL_LABEL:
+    case nsIAccessibleRole::ROLE_TEXT_LEAF:
       // normal textfield (static or editable)
       return [mozTextAccessible class]; 
       
-    case ROLE_COMBOBOX:
+    case nsIAccessibleRole::ROLE_COMBOBOX:
       return [mozPopupButtonAccessible class];
       
     default:

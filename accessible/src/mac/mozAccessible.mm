@@ -124,7 +124,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
     
     // Check for OS X "role skew"; the role constants in nsIAccessible.idl need to match the ones
     // in nsRoleMap.h.
-    NS_ASSERTION([AXRoles[nsIAccessible::ROLE_LAST_ENTRY] isEqualToString:@"ROLE_LAST_ENTRY"], "Role skew in the role map!");
+    NS_ASSERTION([AXRoles[nsIAccessibleRole::ROLE_LAST_ENTRY] isEqualToString:@"ROLE_LAST_ENTRY"], "Role skew in the role map!");
   }
    
   return self;

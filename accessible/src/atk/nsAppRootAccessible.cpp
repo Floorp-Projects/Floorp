@@ -616,7 +616,7 @@ NS_IMETHODIMP nsAppRootAccessible::GetDescription(nsAString& aDescription)
 
 NS_IMETHODIMP nsAppRootAccessible::GetRole(PRUint32 *aRole)
 {
-    *aRole = ROLE_APP_ROOT;
+    *aRole = nsIAccessibleRole::ROLE_APP_ROOT;
     return NS_OK;
 }
 

@@ -131,7 +131,7 @@ NS_IMETHODIMP nsLinkableAccessible::GetState(PRUint32 *aState)
     // Make sure we also include all the states of the parent link, such as focusable, focused, etc.
     PRUint32 role;
     GetRole(&role);
-    if (role != ROLE_LINK) {
+    if (role != nsIAccessibleRole::ROLE_LINK) {
       nsCOMPtr<nsIAccessible> parentAccessible(GetParent());
       if (parentAccessible) {
         PRUint32 orState = 0;
