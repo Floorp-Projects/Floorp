@@ -74,7 +74,7 @@ function CalendarWindow( )
        changeNumberOfWeeks: function(menuitem) {
            var mwView = document.getElementById("view-deck").selectedPanel;
            mwView.weeksInView = menuitem.value;
-       },
+       }
    };
 
    // Get the last view that was shown before shutdown, and switch to it

@@ -803,5 +803,7 @@ calGoogleCalendar.prototype = {
                                           null,
                                           e.message);
         }
+        // Returning null to avoid js strict warning.
+        return null;
     }
 };

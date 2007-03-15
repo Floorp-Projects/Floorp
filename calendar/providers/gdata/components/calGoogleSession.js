@@ -383,7 +383,8 @@ calGoogleSession.prototype = {
 
                 // Process Items that were requested while logging in
                 var request;
-                while (request = this.mItemQueue.shift()) {
+                // Extra parentheses to avoid js strict warning.
+                while ((request = this.mItemQueue.shift())) {
                     LOG("Processing Queue Item: " + request.uri);
                     request.commit(this);
                 }

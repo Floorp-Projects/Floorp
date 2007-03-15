@@ -120,7 +120,6 @@
                     (aInFlavor == "application/vnd.x-moz-cal-task")) {
                     aOutData.value = this.item;
                     aOutDataLen.value = 1;
-                    return Cr.NS_OK;
                 } else {
                     alert("error:"+aInFlavor);
                 }
