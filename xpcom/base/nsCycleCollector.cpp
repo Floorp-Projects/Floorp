@@ -493,7 +493,7 @@ struct nsCycleCollector
     nsCycleCollector();
     ~nsCycleCollector();
 
-    void Suspect(nsISupports *n, bool current=false);
+    void Suspect(nsISupports *n, PRBool current=PR_FALSE);
     void Forget(nsISupports *n);
     void Allocated(void *n, size_t sz);
     void Freed(void *n);
@@ -1533,7 +1533,7 @@ nsCycleCollector_shouldSuppress(nsISupports *s)
 }
 
 void 
-nsCycleCollector::Suspect(nsISupports *n, bool current)
+nsCycleCollector::Suspect(nsISupports *n, PRBool current)
 {
     // Re-entering ::Suspect during collection used to be a fault, but
     // we are canonicalizing nsISupports pointers using QI, so we will
