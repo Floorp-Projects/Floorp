@@ -4308,6 +4308,8 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     ok = GetProperty(cx, rxml->object, id, &attrval);
                     if (!ok)
                         goto out;
+                    if (JSVAL_IS_PRIMITIVE(attrval))    /* no such attribute */
+                        goto out;
                     attrobj = JSVAL_TO_OBJECT(attrval);
                     attr = (JSXML *) JS_GetPrivate(cx, attrobj);
                     if (JSXML_LENGTH(attr) != 0)
