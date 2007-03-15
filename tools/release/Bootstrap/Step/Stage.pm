@@ -36,6 +36,8 @@ my %XPIDIR_TO_PLATFORM = ('windows-xpi' => 'win32',
                           'mac-xpi' => 'osx',
                           'linux-xpi' => 'linux');
 
+my @NON_LOCALE_XPIS = qw(adt.xpi browser.xpi talkback.xpi xpcom.xpi);
+
 # Loads and parses the shipped-locales manifest file, so get hash of
 # locale -> [bouncer] platform mappings; returns success/failure in 
 # reading/parsing the locales file.
@@ -443,8 +445,26 @@ sub TrimCallback {
         # all other deliverables need to be checked to make sure they should
         # be in prestage-trimmed, i.e. if their locale shipped.
         if ($dirent !~ /\-source\.tar\.bz2$/) {
-            my $validDeliverable = $this->IsValidLocaleDeliverable();
-
+            my $validDeliverable = 0;
+           
+            # This logic is kinda weird, and I'd do it differently if I had
+            # more time; basically, for 1.5.0.x branch, there are a set of
+            # non-locale xpis that get shipped in the windows-xpi dir; so,
+            # if the entry is an xpi, check it against the list of non-locale
+            # xpis that we should ship. If it's one of those, let it through.
+            # If not, it could still be a (shipable) locale-xpi, so give
+            # IsValidLocaleDeliverable() a crack at it.
+            #
+            # If it's neither of those, then delete it.
+            if ($dirent =~ /\.xpi$/) {
+                my $xpiBasename = basename($dirent);
+                $validDeliverable = grep(/^$xpiBasename$/, @NON_LOCALE_XPIS);
+            }
+           
+            if (!$validDeliverable) {
+                $validDeliverable = $this->IsValidLocaleDeliverable();
+            }
+            
             if (not $validDeliverable) {
                 $this->Log(msg => "Deleting unwanted locale deliverable: " . 
                  $dirent);
