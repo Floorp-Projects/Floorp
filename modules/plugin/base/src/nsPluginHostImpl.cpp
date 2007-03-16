@@ -61,6 +61,7 @@
 #include "nsIObserverService.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIUploadChannel.h"
 #include "nsIByteRangeRequest.h"
 #include "nsIStreamListener.h"
@@ -89,6 +90,7 @@
 #include "nsPluginLogging.h"
 #include "nsIPrefBranch2.h"
 #include "nsIScriptChannel.h"
+#include "nsPrintfCString.h"
 
 // Friggin' X11 has to "#define None". Lame!
 #ifdef None
@@ -2350,6 +2352,42 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
    * called, all the headers have been read.
    */
   if (httpChannel) {
+    // Reassemble the HTTP response status line and provide it to our
+    // listener.  Would be nice if we could get the raw status line,
+    // but nsIHttpChannel doesn't currently provide that.
+    nsCOMPtr<nsIHTTPHeaderListener> listener =
+      do_QueryInterface(mPStreamListener);
+    if (listener) {
+      // Status code: required; the status line isn't useful without it.
+      PRUint32 statusNum;
+      if (NS_SUCCEEDED(httpChannel->GetResponseStatus(&statusNum)) &&
+          statusNum < 1000) {
+        // HTTP version: provide if available.  Defaults to empty string.
+        nsCString ver;
+        nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
+          do_QueryInterface(channel);
+        if (httpChannelInternal) {
+          PRUint32 major, minor;
+          if (NS_SUCCEEDED(httpChannelInternal->GetResponseVersion(&major,
+                                                                   &minor))) {
+            ver = nsPrintfCString("/%lu.%lu", major, minor);
+          }
+        }
+
+        // Status text: provide if available.  Defaults to "OK".
+        nsCString statusText;
+        if (!NS_SUCCEEDED(httpChannel->GetResponseStatusText(statusText))) {
+          statusText = "OK";
+        }
+
+        // Assemble everything and pass to listener.
+        nsPrintfCString status(100, "HTTP%s %lu %s", ver.get(), statusNum,
+                               statusText.get());
+        listener->StatusLine(status.get());
+      }
+    }
+
+    // Also provide all HTTP response headers to our listener.
     httpChannel->VisitResponseHeaders(this);
 
     PRBool bSeekable = PR_FALSE;

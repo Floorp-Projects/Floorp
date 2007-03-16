@@ -40,6 +40,7 @@
 
 #include "nsIPluginStreamListener.h"
 #include "nsIPluginStreamInfo.h"
+#include "nsIHTTPHeaderListener.h"
 #include "nsIRequest.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
@@ -50,12 +51,14 @@ class ns4xPluginInstance;
 class nsI4xPluginStreamInfo;
 
 class ns4xPluginStreamListener : public nsIPluginStreamListener,
-                                 public nsITimerCallback
+                                 public nsITimerCallback,
+                                 public nsIHTTPHeaderListener
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPLUGINSTREAMLISTENER
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSIHTTPHEADERLISTENER
 
   // ns4xPluginStreamListener specific methods:
   ns4xPluginStreamListener(nsIPluginInstance* inst, void* notifyData,
@@ -86,6 +89,8 @@ protected:
   PRPackedBool mStreamCleanedUp;
   PRPackedBool mCallNotify;
   PRPackedBool mIsSuspended;
+  nsCString mResponseHeaders;
+  char* mResponseHeaderBuf;
 
   nsCOMPtr<nsITimer> mDataPumpTimer;
 

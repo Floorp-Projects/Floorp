@@ -51,7 +51,7 @@
  * nsIHTTPHeaderListener.
  */
 
-[scriptable, uuid(8b246748-1dd2-11b2-9512-9dc84a95fc2f)]
+[scriptable, uuid(ea51e0b8-871c-4b85-92da-6f400394c5ec)]
 interface nsIHTTPHeaderListener : nsISupports
 {
   /**
@@ -59,4 +59,11 @@ interface nsIHTTPHeaderListener : nsISupports
    * NOTE: You must copy the values of the params.  
    */
   void newResponseHeader(in string headerName, in string headerValue);
+
+  /**
+   * Called once for the HTTP Response status line.
+   * Value does NOT include a terminating newline.
+   * NOTE: You must copy this value.
+   */
+  void statusLine(in string line);
 };
