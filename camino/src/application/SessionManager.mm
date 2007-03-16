@@ -57,7 +57,7 @@ static NSString* const kToolbarIsVisibleKey = @"ToolbarVisible";
 static NSString* const kBookmarkBarIsVisibleKey = @"BookmarkBarVisible";
 
 // Number of seconds to coalesce changes before saving them
-const NSTimeInterval kPersistDelay = 60.0;
+const NSTimeInterval kPersistDelay = 10.0;
 
 @interface SessionManager(Private)
 
