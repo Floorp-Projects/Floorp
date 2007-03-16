@@ -2266,6 +2266,7 @@ public:
     NS_DECL_NSIPROPERTYBAG
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXPCWrappedJS,
                                              nsIXPConnectWrappedJS)
+    NS_DECL_CYCLE_COLLECTION_UNMARK_PURPLE_STUB(nsXPCWrappedJS)
 
     NS_IMETHOD CallMethod(PRUint16 methodIndex,
                           const XPTMethodDescriptor *info,

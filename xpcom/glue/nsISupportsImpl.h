@@ -171,6 +171,12 @@ public:
     return get();
   }
 
+  void unmarkPurple()
+  {
+    if (NS_LIKELY(mValue != NS_PURPLE_BIT))
+      NS_CLEAR_PURPLE_BIT(mValue);
+  }
+
   nsrefcnt get() const
   {
     if (NS_UNLIKELY(mValue == NS_PURPLE_BIT))
@@ -232,6 +238,10 @@ public:                                                                       \
                             void** aInstancePtr);                             \
   NS_IMETHOD_(nsrefcnt) AddRef(void);                                         \
   NS_IMETHOD_(nsrefcnt) Release(void);                                        \
+  void UnmarkPurple()                                                         \
+  {                                                                           \
+    mRefCnt.unmarkPurple();                                                   \
+  }                                                                           \
 protected:                                                                    \
   nsCycleCollectingAutoRefCnt mRefCnt;                                        \
   NS_DECL_OWNINGTHREAD                                                        \
@@ -345,7 +355,8 @@ NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                 \
 {                                                                             \
   NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");                   \
   NS_ASSERT_OWNINGTHREAD(_class);                                             \
-  nsrefcnt count = mRefCnt.incr(NS_STATIC_CAST(_basetype *, this));           \
+  nsrefcnt count =                                                            \
+    mRefCnt.incr(NS_CYCLE_COLLECTION_CLASSNAME(_class)::Upcast(this));        \
   NS_LOG_ADDREF(this, count, #_class, sizeof(*this));                         \
   return count;                                                               \
 }
@@ -358,10 +369,11 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
 {                                                                             \
   NS_PRECONDITION(0 != mRefCnt, "dup release");                               \
   NS_ASSERT_OWNINGTHREAD(_class);                                             \
-  nsrefcnt count = mRefCnt.decr(NS_STATIC_CAST(_basetype *, this));           \
+  nsISupports *base = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Upcast(this);    \
+  nsrefcnt count = mRefCnt.decr(base);                                        \
   NS_LOG_RELEASE(this, count, #_class);                                       \
   if (count == 0) {                                                           \
-    mRefCnt.stabilizeForDeletion(NS_STATIC_CAST(_basetype *, this));          \
+    mRefCnt.stabilizeForDeletion(base);                                       \
     _destroy;                                                                 \
     return 0;                                                                 \
   }                                                                           \

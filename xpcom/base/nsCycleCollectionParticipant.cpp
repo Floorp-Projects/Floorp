@@ -66,6 +66,10 @@ nsCycleCollectionParticipant::Traverse(nsISupports *n,
   return NS_OK;
 }
 
+NS_IMETHODIMP_(void) nsCycleCollectionParticipant::UnmarkPurple(nsISupports *n)
+{
+}
+
 #ifdef DEBUG
 PRBool
 nsCycleCollectionParticipant::CheckForRightISupports(nsISupports *s)
