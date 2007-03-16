@@ -2361,9 +2361,9 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "DELETE FROM moz_places WHERE id IN "
       "(SELECT id from moz_places h "
-      " LEFT OUTER JOIN moz_bookmarks b ON h.id = b.item_child ")
+      " LEFT OUTER JOIN moz_bookmarks b ON h.id = b.fk WHERE b.type = ?3")
       + conditionString +
-      NS_LITERAL_CSTRING("AND b.item_child IS NULL)"),
+      NS_LITERAL_CSTRING("AND b.fk IS NULL)"),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->BindStringParameter(0, revHostDot);
@@ -2372,6 +2372,8 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
     rv = statement->BindStringParameter(1, revHostSlash);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+  rv = statement->BindInt32Parameter(2, nsNavBookmarks::TYPE_BOOKMARK);
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3104,7 +3106,9 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
     if (! aClause->IsEmpty())
       *aClause += NS_LITERAL_CSTRING(" AND ");
 
-    *aClause += NS_LITERAL_CSTRING("EXISTS (SELECT b.item_child FROM moz_bookmarks b WHERE b.item_child = h.id)");
+    *aClause += NS_LITERAL_CSTRING("EXISTS (SELECT b.fk FROM moz_bookmarks b WHERE b.type = ") +
+                nsPrintfCString("%d", nsNavBookmarks::TYPE_BOOKMARK) +
+                NS_LITERAL_CSTRING(" AND b.fk = h.id)");
   }
 
   // domain

@@ -165,15 +165,15 @@ private:
 
   nsCOMPtr<mozIStorageStatement> mDBGetChildren;       // kGetInfoIndex_* results + kGetChildrenIndex_* results
   static const PRInt32 kGetChildrenIndex_Position;
-  static const PRInt32 kGetChildrenIndex_ItemChild;
-  static const PRInt32 kGetChildrenIndex_FolderChild;
+  static const PRInt32 kGetChildrenIndex_Type;
+  static const PRInt32 kGetChildrenIndex_Fk;
   static const PRInt32 kGetChildrenIndex_FolderTitle;
   static const PRInt32 kGetChildrenIndex_ID;
 
   nsCOMPtr<mozIStorageStatement> mDBFindURIBookmarks;  // kFindBookmarksIndex_* results
   static const PRInt32 kFindBookmarksIndex_ID;
-  static const PRInt32 kFindBookmarksIndex_ItemChild;
-  static const PRInt32 kFindBookmarksIndex_FolderChild;
+  static const PRInt32 kFindBookmarksIndex_Type;
+  static const PRInt32 kFindBookmarksIndex_Fk;
   static const PRInt32 kFindBookmarksIndex_Parent;
   static const PRInt32 kFindBookmarksIndex_Position;
   static const PRInt32 kFindBookmarksIndex_Title;
