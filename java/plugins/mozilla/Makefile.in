@@ -42,7 +42,9 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PLUGIN_SDK=$(DEPTH)/modules/plugin/tools/sdk
+PLUGIN_SDK_PATH=modules/plugin/tools/sdk
+PLUGIN_SDK_SRC=$(DEPTH)/../modules/plugin/tools/sdk
+PLUGIN_SDK_OBJDIR=$(DEPTH)/modules/plugin/tools/sdk
 
 XPIDL_MODULE = nppluglet
 LIBRARY_NAME = nppluglet
@@ -60,7 +62,7 @@ CPPSRCS = nsScriptablePeer.cpp \
 
 XPIDLSRCS = nsISimplePlugin.idl
 
-SHARED_LIBRARY_LIBS = $(PLUGIN_SDK)/samples/common/$(LIB_PREFIX)plugingate_s.$(LIB_SUFFIX) ../src/$(LIB_PREFIX)pluglet.$(LIB_SUFFIX) $(XPCOM_LIBS) $(NSPR_LIBS)
+SHARED_LIBRARY_LIBS = $(PLUGIN_SDK_OBJDIR)/samples/common/$(LIB_PREFIX)plugingate_s.$(LIB_SUFFIX) ../src/$(LIB_PREFIX)pluglet.$(LIB_SUFFIX) $(XPCOM_LIBS) $(NSPR_LIBS)
 
 ifeq ($(OS_ARCH),WINNT)
 DEFFILE = $(win_srcdir)/nppluglet.def
@@ -73,12 +75,11 @@ ifeq ($(OS_ARCH),WINNT)
 INCLUDES += \
 	-I$(MSVCDIR)/Include \
 	-I$(MSVCDIR)/ATL/SRC \
-	-I../src \
+	-I$(DEPTH)/../java/plugins/src \
 	-I../src/_xpidlgen \
 	-I$(MOZILLA_FIVE_HOME)/../include/string \
 	-I$(MOZILLA_FIVE_HOME)/../include/xpcom_obsolete \
 	$(NULL)
-CXXFLAGS += /Zi /Yd
 endif
 
 CXXFLAGS += -DFORCE_PR_LOG
@@ -90,8 +91,8 @@ EXTRA_DSO_LDOPTS +=  $(XLDFLAGS) -rdynamic  -lXi -lXext -lX11 -lm -lXt
 endif
 
 LOCAL_INCLUDES = -I./$(XPIDL_GEN_DIR) \
-                 -I$(PLUGIN_SDK)/samples/include \
-		 -I$(PLUGIN_SDK)/../../base/src \
+                 -I$(PLUGIN_SDK_SRC)/samples/include \
+		 -I$(PLUGIN_SDK_SRC)/../../base/src \
                  $(NULL)
 install::
 	$(INSTALL) $(IFLAGS1) $(SHARED_LIBRARY) $(DIST)/bin/plugins

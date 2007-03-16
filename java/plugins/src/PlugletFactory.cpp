@@ -155,8 +155,6 @@ nsresult PlugletFactory::Shutdown(void) {
 }
 
 nsresult PlugletFactory::GetMIMEDescription(const char* *result) {
-    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
-	    ("PlugletFactory::GetMimeDescription\n"));
     if(!result) {
 	return NS_ERROR_FAILURE;
     }
@@ -166,6 +164,10 @@ nsresult PlugletFactory::GetMIMEDescription(const char* *result) {
 
 PlugletFactory::PlugletFactory(const char *inMimeDescription, const char *inPath) : jthis(nsnull), path(PL_strdup(inPath)), mimeDescription(PL_strdup(inMimeDescription))
 {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	   ("PlugletFactory::PlugletFactory: mimeDescription: %s, path: %s\n", 
+	    mimeDescription, path));
+
 }
  
 PlugletFactory::~PlugletFactory(void) {
@@ -203,7 +205,12 @@ PlugletFactory * PlugletFactory::Load(const char * path) {
     char * mime = PlugletLoader::GetMIMEDescription(path);
     PlugletFactory * result = nsnull;
     if (mime) {
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("PlugletFactory::Load: About to create PlugletFactory instance\n"));
 	result = new PlugletFactory(mime,path);
+	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	       ("PlugletFactory::Load: successfully created PlugletFactory instance\n"));
+
 	//delete[] mime;  //nb we have a strange exception here 
     }
     return result;

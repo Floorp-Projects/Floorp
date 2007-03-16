@@ -94,7 +94,6 @@ nsresult PlugletsDir::LoadPluglets() {
 	for (nsDirectoryIterator iter(dir,PR_TRUE); iter.Exists(); iter++) {
 	    const nsFileSpec& file = iter;
 	    const char* name = file.GetCString();
-		printf("debug: edburns: PlugletsDir::LoadPluglets: name: %s\n", name);
 	    int length;
 	    if((length = strlen(name)) <= 4  // if it's shorter than ".jar"
 	       || strcmp(name+length - 4,".jar") ) {
@@ -104,14 +103,17 @@ nsresult PlugletsDir::LoadPluglets() {
 		mimeType = nsnull;
 		rv = plugletFactory->GetMIMEDescription(&mimeType);
 		if (NS_SUCCEEDED(rv)) {
+		    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+			   ("PlugletsDir::LoadPluglets: got mime description: %s\n", mimeType));
+		    
 		    const char *key = PL_strdup(mimeType);
-		    printf("debug: edburns: key: %s address: %p\n",
-			   key, key);
 		    PLHashEntry *entry = 
 			PL_HashTableAdd(mMimeTypeToPlugletFacoryHash,
 					(const void *) key, 
 					plugletFactory);
 		    rv = (nsnull != entry) ? NS_OK : NS_ERROR_FAILURE;
+		    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+			   ("PlugletsDir::LoadPluglets: adding to mimeTypeToPlugletFactoryHash. rv: %d\n", rv));
 		}
 	    }
 	}

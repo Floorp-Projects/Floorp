@@ -1,17 +1,22 @@
-import javax.media.*;
-import javax.media.util.*;
-import javax.media.format.*;
-import javax.media.bean.playerbean.*;
-import javax.media.control.*;
-
-
-import org.mozilla.pluglet.*;
-import org.mozilla.pluglet.mozilla.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.print.*;
-import java.io.*;
-import java.util.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Frame;
+import java.awt.Panel;
+import java.awt.print.PrinterJob;
+import java.io.InputStream;
+import javax.media.ControllerEvent;
+import javax.media.ControllerListener;
+import javax.media.MediaLocator;
+import javax.media.PrefetchCompleteEvent;
+import javax.media.RealizeCompleteEvent;
+import javax.media.bean.playerbean.MediaPlayer;
+import org.mozilla.pluglet.Pluglet;
+import org.mozilla.pluglet.PlugletFactory;
+import org.mozilla.pluglet.PlugletStreamListener;
+import org.mozilla.pluglet.mozilla.PlugletManager;
+import org.mozilla.pluglet.mozilla.PlugletPeer;
+import org.mozilla.pluglet.mozilla.PlugletStreamInfo;
+import org.mozilla.pluglet.mozilla.PlugletTagInfo2;
 
 
 public class JMPlayer implements PlugletFactory {

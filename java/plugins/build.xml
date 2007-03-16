@@ -39,6 +39,8 @@
   <property file="../build.properties"/>         <!-- java-supplement local -->
   <property environment="myenv" />
 
+  <property name="objdir.native.path" value="${objdir}/java/plugins" />
+
 <!-- ************ Compiler Defaults *************************************** -->
 
   <!-- Should Java compilations set the 'debug' compiler option? -->
@@ -95,51 +97,69 @@
   </target>
 
   <target name="compile.src">
+    <copy todir="${objdir.native.path}/src">
+      <fileset dir="${basedir}/src">
+        <include name="module.res" />
+      </fileset>
+    </copy>
 
-    <exec os="SunOS" dir="${basedir}/src" failonerror="yes" 
+    <exec os="SunOS" dir="${objdir.native.path}/src" failonerror="yes" 
                      executable="gmake"/>
-    <exec os="Linux" dir="${basedir}/src" failonerror="yes" 
+    <exec os="Linux" dir="${objdir.native.path}/src" failonerror="yes" 
                      executable="make"/>
-    <exec os="Windows 2000" dir="${basedir}/src" executable="make" 
+    <exec os="Windows 2000" dir="${objdir.native.path}/src" executable="make" 
                      failonerror="yes"/>
 
   </target>
 
   <target name="compile.jni">
 
-    <exec os="SunOS" dir="${basedir}/jni" executable="gmake" 
+    <copy todir="${objdir.native.path}/jni">
+      <fileset dir="${basedir}/jni">
+        <include name="module.res" />
+      </fileset>
+    </copy>
+
+
+    <exec os="SunOS" dir="${objdir.native.path}/jni" executable="gmake" 
                      failonerror="yes">
     </exec>
-    <exec os="Linux" dir="${basedir}/jni" executable="make" 
+    <exec os="Linux" dir="${objdir.native.path}/jni" executable="make" 
                      failonerror="yes">
     </exec>
-    <exec os="Mac OS X" dir="${basedir}/jni" executable="make" 
+    <exec os="Mac OS X" dir="${objdir.native.path}/jni" executable="make" 
                      failonerror="yes">
     </exec>
-    <exec os="Windows 2000" dir="${basedir}/jni" executable="make" 
+    <exec os="Windows 2000" dir="${objdir.native.path}/jni" executable="make" 
                      failonerror="yes"/>
 
   </target>
 
   <target name="compile.mozilla">
 
-    <exec os="SunOS" dir="${basedir}/mozilla" failonerror="yes" 
+    <copy todir="${objdir.native.path}/mozilla">
+      <fileset dir="${basedir}/mozilla">
+        <include name="nppluglet.res" />
+      </fileset>
+    </copy>
+
+    <exec os="SunOS" dir="${objdir.native.path}/mozilla" failonerror="yes" 
                      executable="gmake"/>
-    <exec os="Linux" dir="${basedir}/mozilla" failonerror="yes" 
+    <exec os="Linux" dir="${objdir.native.path}/mozilla" failonerror="yes" 
                      executable="make"/>
-    <exec os="Windows 2000" dir="${basedir}/mozilla" executable="make" 
+    <exec os="Windows 2000" dir="${objdir.native.path}/mozilla" executable="make" 
                      failonerror="yes"/>
 
-    <exec os="SunOS" dir="${basedir}/mozilla" failonerror="yes" 
+    <exec os="SunOS" dir="${objdir.native.path}/mozilla" failonerror="yes" 
                      executable="gmake">
       <arg line="install" />
     </exec>
-    <exec os="Linux" dir="${basedir}/mozilla" failonerror="yes" 
+    <exec os="Linux" dir="${objdir.native.path}/mozilla" failonerror="yes" 
                      executable="make">
       <arg line="install" />
     </exec>
 
-    <exec os="Windows 2000" dir="${basedir}/mozilla" executable="make" 
+    <exec os="Windows 2000" dir="${objdir.native.path}/mozilla" executable="make" 
                      failonerror="yes">
       <arg line="install" />
     </exec>
@@ -153,61 +173,63 @@
   <target name="clean" depends="clean.classes">
 
     <delete >
-      <fileset dir="${basedir}/src">
+      <fileset dir="${objdir.native.path}/src">
         <include name="*.ilk"/>
       </fileset>
     </delete>
 
     <delete >
-      <fileset dir="${basedir}/jni">
+      <fileset dir="${objdir.native.path}/jni">
         <include name="*.ilk"/>
       </fileset>
     </delete>
 
     <delete >
-      <fileset dir="${basedir}/mozilla">
+      <fileset dir="${objdir.native.path}/mozilla">
         <include name="*.ilk"/>
       </fileset>
     </delete>
 
-    <exec os="SunOS" dir="${basedir}/src" executable="gmake" 
+    <exec os="SunOS" dir="${objdir.native.path}/src" executable="gmake" 
           failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
-    <exec os="Linux" dir="${basedir}/src" executable="make" 
+    <exec os="Linux" dir="${objdir.native.path}/src" executable="make" 
           failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
-    <exec os="Windows 2000" dir="${basedir}/src" executable="make" 
+    <exec os="Windows 2000" dir="${objdir.native.path}/src" executable="make" 
                      failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
 
-    <exec os="Windows 2000" dir="${basedir}/jni" executable="make" 
+    <exec os="Windows 2000" dir="${objdir.native.path}/jni" executable="make" 
                      failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
-    <exec os="SunOS" dir="${basedir}/jni" executable="gmake"
+    <exec os="SunOS" dir="${objdir.native.path}/jni" executable="gmake"
           failonerror="yes">
 
       <arg line="clobber_all"/>
 
     </exec>
-    <exec os="Linux" dir="${basedir}/jni" executable="make"
+    <exec os="Linux" dir="${objdir.native.path}/jni" executable="make"
           failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
 
-    <exec os="SunOS" dir="${basedir}/mozilla" executable="gmake" 
-          failonerror="yes">
-      <arg line="clobber_all"/>
-    </exec>
-    <exec os="Linux" dir="${basedir}/mozilla" executable="make" 
-          failonerror="yes">
-      <arg line="clobber_all"/>
-    </exec>
-    <exec os="Windows 2000" dir="${basedir}/mozilla" executable="make" 
+    <exec os="Windows 2000" dir="${objdir.native.path}/mozilla" executable="make" 
                      failonerror="yes">
+      <arg line="clobber_all"/>
+    </exec>
+    <exec os="SunOS" dir="${objdir.native.path}/mozilla" executable="gmake"
+          failonerror="yes">
+
+      <arg line="clobber_all"/>
+
+    </exec>
+    <exec os="Linux" dir="${objdir.native.path}/mozilla" executable="make"
+          failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
 

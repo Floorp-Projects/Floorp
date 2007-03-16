@@ -108,7 +108,7 @@
       </fileset>
     </jar>
 
-    <copy todir="${myenv.MOZ_SRC}/mozilla/dist/bin/plugins" 
+    <copy todir="${objdir}/dist/bin/plugins" 
           file="${basedir}/build/mediaplayer.jar" />
 
   </target>

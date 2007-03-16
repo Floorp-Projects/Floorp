@@ -205,8 +205,11 @@ void PlugletEngine::StartJVM() {
     vm_args.nOptions = 1; // EDBURNS: Change to 3 for debugging
     vm_args.ignoreUnrecognized = JNI_FALSE;
     /* Create the Java VM */
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+           ("PlugletEngine::StartJVM about to start JVM with options %s %s %s\n",
+            options[0].optionString, options[1].optionString, 
+            options[2].optionString));
     res = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
-    printf("--bcJavaGlobal::StartJVM jvm started res %d\n",res);
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
            ("PlugletEngine::StartJVM after CreateJavaVM res = %d\n",res));
 }
