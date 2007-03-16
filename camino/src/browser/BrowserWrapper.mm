@@ -1130,6 +1130,8 @@ enum {
     nsCOMPtr<nsIArray> blockedSites = do_QueryInterface(mBlockedPopups);
     [mDelegate showBlockedPopups:blockedSites whitelistingSource:shouldWhitelist];
     [self removeBlockedPopupViewAndDisplay];
+    mBlockedPopups->Clear();
+    [mDelegate showPopupBlocked:NO];
   }
 }
 
