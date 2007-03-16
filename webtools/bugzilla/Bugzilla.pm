@@ -208,7 +208,7 @@ sub sudo_request {
 sub login {
     my ($class, $type) = @_;
 
-    return Bugzilla->user if Bugzilla->usage_mode == USAGE_MODE_EMAIL;
+    return Bugzilla->user if Bugzilla->user->id;
 
     my $authorizer = new Bugzilla::Auth();
     $type = LOGIN_REQUIRED if Bugzilla->cgi->param('GoAheadAndLogIn');
