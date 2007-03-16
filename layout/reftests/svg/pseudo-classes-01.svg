@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Testcase for the :first-child, :link, :visited and :lang pseudo-classes</title>
+  <style type="text/css">
+  <![CDATA[
+
+rect:first-child        { fill: lime; }
+a:link > rect           { fill: lime; }
+a:visited > rect        { fill: lime; }
+rect:lang(it)           { fill: lime; }
+
+  ]]>
+  </style>
+
+  <!-- test :first-child -->
+  <g>
+    <rect x="0" width="25%" height="100%" fill="red"/>
+  </g>
+
+  <!-- test :link -->
+  <a xlink:href="do-not-visit-me.xxx" onclick="evt.preventDefault()">
+    <first-child xmlns=""/>
+    <rect x="25%" width="25%" height="100%" fill="red"/>
+  </a>
+
+  <!-- test :visited -->
+  <a xlink:href="">
+    <first-child xmlns=""/>
+    <rect x="50%" width="25%" height="100%" fill="red"/>
+  </a>
+
+  <!-- test :lang -->
+  <rect xml:lang="it" x="75%" width="25%" height="100%" fill="red"/>
+
+</svg>
