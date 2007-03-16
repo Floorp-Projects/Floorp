@@ -753,7 +753,7 @@ var BookmarkPropertiesPanel = {
           new PlacesEditBookmarkMicrosummaryTransaction(itemId,
                                                         newMicrosummary));
       }
-      else {
+      else if (this._action == ACTION_EDIT) {
         NS_ASSERT(itemId != -1, "should have had a real bookmark id");
 
         // Only add a microsummary update to the transaction if the
