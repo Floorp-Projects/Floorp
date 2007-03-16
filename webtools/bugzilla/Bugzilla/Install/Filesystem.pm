@@ -110,6 +110,7 @@ sub FILESYSTEM {
         'whine.pl'        => { perms => $ws_executable },
         'customfield.pl'  => { perms => $owner_executable },
         'email_in.pl'     => { perms => $ws_executable },
+        'sanitycheck.pl'  => { perms => $ws_executable },
 
         'docs/makedocs.pl'   => { perms => $owner_executable },
         'docs/rel_notes.txt' => { perms => $ws_readable },

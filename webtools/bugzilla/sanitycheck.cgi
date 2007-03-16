@@ -45,8 +45,19 @@ sub get_string {
 
 sub Status {
     my ($san_tag, $vars, $alert) = @_;
-    my $start_tag = $alert ? '<p class="alert">' : '<p>';
-    print $start_tag . get_string($san_tag, $vars) . "</p>\n";
+    my $cgi = Bugzilla->cgi;
+    return if (!$alert && Bugzilla->usage_mode == USAGE_MODE_CMDLINE && !$cgi->param('verbose'));
+
+    if (Bugzilla->usage_mode == USAGE_MODE_CMDLINE) {
+        my $output = $cgi->param('output') || '';
+        my $linebreak = $alert ? "\nALERT: " : "\n";
+        $cgi->param('error_found', 1) if $alert;
+        $cgi->param('output', $output . $linebreak . get_string($san_tag, $vars));
+    }
+    else {
+        my $start_tag = $alert ? '<p class="alert">' : '<p>';
+        print $start_tag . get_string($san_tag, $vars) . "</p>\n";
+    }
 }
 
 ###########################################################################
@@ -60,7 +71,7 @@ my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
 my $vars = {};
 
-print $cgi->header();
+print $cgi->header() unless Bugzilla->usage_mode == USAGE_MODE_CMDLINE;
 
 # Make sure the user is authorized to access sanitycheck.cgi.
 # As this script can now alter the group_control_map table, we no longer
@@ -71,8 +82,10 @@ $user->in_group("editcomponents")
                                      action => "run",
                                      object => "sanity_check"});
 
-$template->process('admin/sanitycheck/list.html.tmpl', $vars)
-  || ThrowTemplateError($template->error());
+unless (Bugzilla->usage_mode == USAGE_MODE_CMDLINE) {
+    $template->process('admin/sanitycheck/list.html.tmpl', $vars)
+      || ThrowTemplateError($template->error());
+}
 
 ###########################################################################
 # Users with 'editkeywords' privs only can only check keywords.
@@ -234,8 +247,10 @@ if ($cgi->param('rescanallBugMail')) {
 
     Status('send_bugmail_end') if scalar(@$list);
 
-    $template->process('global/footer.html.tmpl', $vars)
-        || ThrowTemplateError($template->error());
+    unless (Bugzilla->usage_mode == USAGE_MODE_CMDLINE) {
+        $template->process('global/footer.html.tmpl', $vars)
+          || ThrowTemplateError($template->error());
+    }
     exit;
 }
 
@@ -937,5 +952,7 @@ if (scalar(@$badbugs > 0)) {
 
 Status('checks_completed');
 
-$template->process('global/footer.html.tmpl', $vars)
-  || ThrowTemplateError($template->error());
+unless (Bugzilla->usage_mode == USAGE_MODE_CMDLINE) {
+    $template->process('global/footer.html.tmpl', $vars)
+      || ThrowTemplateError($template->error());
+}
