@@ -138,6 +138,7 @@ ACCESSIBILITY_ATOM(controls, "controls")
 ACCESSIBILITY_ATOM(describedby, "describedby")
 ACCESSIBILITY_ATOM(flowto, "flowto")
 ACCESSIBILITY_ATOM(labelledby, "labelledby")
+ACCESSIBILITY_ATOM(owns, "owns")
 
   // Alphabetical list of attributes
 ACCESSIBILITY_ATOM(acceltext, "acceltext")

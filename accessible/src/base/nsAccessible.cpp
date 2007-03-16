@@ -1677,9 +1677,20 @@ nsIContent *nsAccessible::GetContentPointingTo(const nsAString *aId,
 {
   if (!aTagType || aLookContent->Tag() == aTagType) {
     if (aForAttrib) {
-      if (aLookContent->AttrValueIs(aForAttribNameSpace, aForAttrib,
-                                    *aId, eCaseMatters)) {
-        return aLookContent;
+      // Check for ID in the attribute aForAttrib, which can be a list
+      nsAutoString idList;
+      if (aLookContent->GetAttr(aForAttribNameSpace, aForAttrib, idList)) {
+        idList.Insert(' ', 0);  // Surround idlist with spaces for search
+        idList.Append(' ');
+        nsAutoString id(*aId);
+        id.Insert(' ', 0); // Surround id with spaces for search
+        id.Append(' ');
+        // idList is now a set of id's with spaces around each,
+        // and id also has spaces around it.
+        // If id is a substring of idList then we have a match
+        if (idList.Find(id) != -1) {
+          return aLookContent;
+        }
       }
     }
     if (aTagType) {
@@ -2445,6 +2456,11 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
         content->GetAttr(kNameSpaceID_None,
                          nsAccessibilityAtoms::control, relatedID);
       }
+      break;
+    }
+  case RELATION_NODE_CHILD_OF: 
+    {
+      relatedNode = GetInverseRelatedNode(nsAccessibilityAtoms::owns);
       break;
     }
   case RELATION_CONTROLLED_BY: 
