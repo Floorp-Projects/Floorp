@@ -78,6 +78,7 @@ use constant MAPPINGS => {
                 "sw" => "status_whiteboard",
                 "keywords" => "keywords",    # no change
                 "kw" => "keywords",
+                "group" => "bug_group",
                 # Attachments
                 "attachment" => "attachments.description",
                 "attachmentdesc" => "attachments.description",
