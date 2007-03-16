@@ -1914,6 +1914,11 @@ enum BWCOpenDest {
 //
 - (void)showBlockedPopups:(nsIArray*)blockedSites whitelistingSource:(BOOL)shouldWhitelist
 {
+  // Because of the way our UI is set up, we white/blacklist based on the top-level window URI,
+  // rather than the requesting URI (which can be different on framed sites).
+  if (shouldWhitelist)
+    [self whitelistPopupsFromURL:[mBrowserView currentURI]];
+
   nsCOMPtr<nsISimpleEnumerator> enumerator;
   blockedSites->Enumerate(getter_AddRefs(enumerator));
   PRBool hasMore = PR_FALSE;
@@ -1931,10 +1936,6 @@ enum BWCOpenDest {
     if (evt)
       [self showPopup:evt];
   }
-  // Because of the way our UI is set up, we white/blacklist based on the top-level window URI,
-  // rather than the requesting URI (which can be different on framed sites).
-  if (shouldWhitelist)
-    [self whitelistPopupsFromURL:[mBrowserView currentURI]];
 }
 
 - (void)showPopup:(nsIDOMPopupBlockedEvent*)aPopupBlockedEvent
