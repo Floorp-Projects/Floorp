@@ -7,23 +7,45 @@ var start_time;
 var end_time;
 var cycle;
 var report;
+var running = false;
 
 function plInit() {
+  if (running) {
+    return;
+  }
+  running = true;
   try { 
     pageIndex = 0;
     cycle = 0;
     results = new Object();
     if (! pages) {
-      pages = plLoadURLsFromFile();
+      var file;
+      try {
+        file = plDefaultFile();
+      } catch(e) {
+        dumpLine(e);
+      }
+      if (! file.exists()) {
+        try {
+          file = plFilePicker();
+        } catch(e) {
+          dumpLine(e);
+        }
+      }
+      pages = plLoadURLsFromFile(file);
+    }
+    if (! pages ) {
+      alert('could not load URLs, quitting');
+      plStop(true);
     }
     if (pages.length == 0) {
-      alert('no pages to test');
+      alert('no pages to test, quitting');
       plStop(true);
     }
     report = new Report(pages);
     plLoadPage();
   } catch(e) {
-    alert(e);
+    dumpLine(e);
     plStop(true);
   }
 }
@@ -32,13 +54,11 @@ function plLoadPage() {
   try {
     start_time = new Date();
     p = pages[pageIndex];
-    var startButton = document.getElementById('plStartButton');
-    startButton.setAttribute('disabled', 'true');
     this.content = document.getElementById('contentPageloader');
     this.content.addEventListener('load', plLoadHandler, true);
     this.content.loadURI(p);
   } catch (e) {
-    alert(e);
+    dumpLine(e);
     plStop(true);
   }
 }
@@ -47,7 +67,7 @@ function plLoadHandler(evt) {
   if (evt.type == 'load') {
     window.setTimeout('reallyHandle()', 500);
   } else {
-    alert('Unknown event type: '+evt.type);
+    dumpLine('Unknown event type: '+evt.type);
     plStop(true);
   }
 }
@@ -59,12 +79,12 @@ function reallyHandle() {
         var pageName = pages[pageIndex];
         results[pageName] = (end_time - start_time);
         start_time = new Date();
-        dump(pageName+" took "+results[pageName]+"\n");
+        dumpLine(pageName+" took "+results[pageName]);
         plReport();
         pageIndex++;
         plLoadPage();
       } catch(e) {
-        alert(e);
+        dumpLine(e);
         plStop(true);
       }
     } else {
@@ -79,35 +99,55 @@ function plReport() {
       var time = results[pageName];
       report.recordTime(pageIndex, time);
     } catch(e) {
-      alert(e);
+      dumpLine(e);
       plStop(false);
     }
 }
 
 function plStop(force) {
   try {
-    pageIndex = 0;
-    results = new Object;
     if (force == false) {
+      pageIndex = 0;
+      results = new Object;
       if (cycle < NUM_CYCLES) {
         cycle++;
         plLoadPage();
         return;
       } else {
-        dump(report.getReport()+"\n");
+        dumpLine(report.getReport());
       }
     }
-    var startButton = document.getElementById('plStartButton');
-    startButton.setAttribute('disabled', 'false');
     this.content.removeEventListener('load', plLoadHandler, true);
-    //goQuitApplication();
   } catch(e) {
-    alert(e);
+    dumpLine(e);
+  }
+  goQuitApplication();
+}
+
+/* Returns nsilocalfile */
+function plDefaultFile() {
+  try {
+    const nsIIOService = Components.interfaces.nsIIOService;
+    var dirService = 
+      Components.classes["@mozilla.org/file/directory_service;1"].
+      getService(Components.interfaces.nsIProperties);
+    var profileDir = dirService.get("ProfD", 
+                     Components.interfaces.nsILocalFile);
+    var file = Components.classes["@mozilla.org/file/local;1"].
+               createInstance(Components.interfaces.nsILocalFile);
+    var path = profileDir.path;
+    file.initWithPath(path);
+    file.append("urls.txt");
+    dumpLine('will attempt to load default file '+file.path);
+    return file;
+  } catch (e) {
+    dumpLine(e);
   }
 }
 
-/* Returns array */
-function plLoadURLsFromFile() {
+
+/* Returns nsifile */
+function plFilePicker() {
   try {
     const nsIFilePicker = Components.interfaces.nsIFilePicker;
     
@@ -115,34 +155,45 @@ function plLoadURLsFromFile() {
                  .createInstance(nsIFilePicker);
     fp.init(window, "Dialog Title", nsIFilePicker.modeOpen);
     fp.appendFilters(nsIFilePicker.filterAll | nsIFilePicker.filterText);
-    
     var rv = fp.show();
-    if (rv == nsIFilePicker.returnOK)
-    {
-      var file = fp.file;
-      var data = "";
-      var fstream = 
-                  Components.classes["@mozilla.org/network/file-input-stream;1"]
-                  .createInstance(Components.interfaces.nsIFileInputStream);
-      var sstream = Components.classes["@mozilla.org/scriptableinputstream;1"]
-                .createInstance(Components.interfaces.nsIScriptableInputStream);
-      fstream.init(file, -1, 0, 0);
-      sstream.init(fstream); 
-      
-      var str = sstream.read(4096);
-      while (str.length > 0) {
-        data += str;
-        str = sstream.read(4096);
-      }
-      
-      sstream.close();
-      fstream.close();
-      var p = data.split("\n");
-      // discard result of final split (EOF)
-      p.pop()
-      return p;
+    if (rv == nsIFilePicker.returnOK) {
+      return fp.file;
     }
   } catch (e) {
-    alert(e);
+    dumpLine(e);
   }
+}
+    
+/* Returns array */
+function plLoadURLsFromFile(file) {
+  try {
+    var data = "";
+    var fstream = 
+                Components.classes["@mozilla.org/network/file-input-stream;1"]
+                .createInstance(Components.interfaces.nsIFileInputStream);
+    var sstream = Components.classes["@mozilla.org/scriptableinputstream;1"]
+              .createInstance(Components.interfaces.nsIScriptableInputStream);
+    fstream.init(file, -1, 0, 0);
+    sstream.init(fstream); 
+    
+    var str = sstream.read(4096);
+    while (str.length > 0) {
+      data += str;
+      str = sstream.read(4096);
+    }
+    
+    sstream.close();
+    fstream.close();
+    var p = data.split("\n");
+    // discard result of final split (EOF)
+    p.pop()
+    return p;
+  } catch (e) {
+    dumpLine(e);
+  }
+}
+
+function dumpLine(str) {
+  dump(str);
+  dump("\n");
 }
