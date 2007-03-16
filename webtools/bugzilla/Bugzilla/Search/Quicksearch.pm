@@ -410,28 +410,22 @@ sub splitString {
     my @parts;
     my $i = 0;
 
-    # Escape backslashes
-    $string =~ s/\\/\\\//g;
-
     # Now split on quote sign; be tolerant about unclosed quotes
     @quoteparts = split(/"/, $string);
-    foreach (@quoteparts) {
-        # After every odd quote, escape whitespace
-        s/(\s)/\\$1/g if $i++ % 2;
+    foreach my $part (@quoteparts) {
+        # After every odd quote, quote special chars
+        $part = url_quote($part) if $i++ % 2;
     }
     # Join again
     $string = join('"', @quoteparts);
 
     # Now split on unescaped whitespace
-    @parts = split(/(?<!\\)\s+/, $string);
+    @parts = split(/\s+/, $string);
     foreach (@parts) {
-        # Restore whitespace
-        s/\\(\s)/$1/g;
-        # Restore backslashes
-        s/\\\//\\/g;
         # Remove quotes
         s/"//g;
     }
+                        
     return @parts;
 }
 
@@ -502,7 +496,7 @@ sub makeChart {
     my $cgi = Bugzilla->cgi;
     $cgi->param("field$expr", $field);
     $cgi->param("type$expr",  $type);
-    $cgi->param("value$expr", $value);
+    $cgi->param("value$expr", url_decode($value));
 }
 
 1;

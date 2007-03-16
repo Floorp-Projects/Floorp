@@ -34,7 +34,7 @@ use base qw(Exporter);
 @Bugzilla::Util::EXPORT = qw(is_tainted trick_taint detaint_natural
                              detaint_signed
                              html_quote url_quote value_quote xml_quote
-                             css_class_quote html_light_quote
+                             css_class_quote html_light_quote url_decode
                              i_am_cgi get_netaddr correct_urlbase
                              lsearch
                              diff_arrays diff_strings
