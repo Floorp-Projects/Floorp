@@ -68,7 +68,9 @@ function HistorySidebarInit()
   // If it's empty, this will do the right thing and 
   // just group by the old grouping.
   // bug #359073 tracks this RFE
-  searchHistory(gSearchBox.value);
+  // on timeout because of the corresponding setTimeout()
+  // in the places tree binding's constructor
+  setTimeout(function() { searchHistory(gSearchBox.value); }, 0); 
   gSearchBox.focus();
 }
 
