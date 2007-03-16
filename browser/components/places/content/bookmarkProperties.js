@@ -331,13 +331,18 @@ var BookmarkPropertiesPanel = {
     this._tm = window.opener.PlacesUtils.tm;
 
     this._determineItemInfo();
-    this._initFolderTree();
+    
+    // on timeout because of the corresponding setTimeout()
+    // in the places tree binding's constructor
+    var self = this;
+    setTimeout(function() { self._initFolderTree(); }, 0);
+    
     this._populateProperties();
     this._forceHideRows();
     this.validateChanges();
     this._updateSize();
   },
-
+  
   /**
    * This method initializes the folder tree.
    */
