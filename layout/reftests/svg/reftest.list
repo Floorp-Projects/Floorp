@@ -1,6 +1,7 @@
 
 == foreignObject-display-01.svg pass.svg
 == getElementById-a-element-01.svg pass.svg
+== opacity-and-gradient-01.svg pass.svg
 == pseudo-classes-01.svg pass.svg
 == pseudo-classes-02.svg pseudo-classes-02-ref.svg
 == text-in-link-01.svg text-in-link-01-ref.svg
