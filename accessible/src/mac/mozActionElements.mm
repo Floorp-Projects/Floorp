@@ -135,8 +135,8 @@ enum CheckboxValue {
   mGeckoAccessible->GetState(&state);
   
   // check if we're checked or in a mixed state
-  if (state & nsIAccessible::STATE_CHECKED) {
-    return (state & nsIAccessible::STATE_MIXED) ? kMixed : kChecked;
+  if (state & nsIAccessibleStates::STATE_CHECKED) {
+    return (state & nsIAccessibleStates::STATE_MIXED) ? kMixed : kChecked;
   }
   
   return kUnchecked;

@@ -112,7 +112,7 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
   if (mGeckoEditableTextAccessible) {
     PRUint32 state = 0;
     mGeckoAccessible->GetFinalState(&state);
-    return (state & nsIAccessible::STATE_READONLY) == 0;
+    return (state & nsIAccessibleStates::STATE_READONLY) == 0;
   }
 
   return NO;
