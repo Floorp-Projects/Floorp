@@ -37,7 +37,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.43 $
+ *  npapi.h $Revision: 3.44 $
  *  Netscape client plug-in API spec
  */
 
@@ -118,7 +118,7 @@
 /*----------------------------------------------------------------------*/
 
 #define NP_VERSION_MAJOR 0
-#define NP_VERSION_MINOR 17
+#define NP_VERSION_MINOR 18
 
 
 /* The OS/2 version of Netscape uses RC_DATA to define the
@@ -244,6 +244,16 @@ typedef struct _NPStream
   uint32 end;
   uint32 lastmodified;
   void*  notifyData;
+  const  char* headers; /* Response headers from host.
+                         * Exists only for >= NPVERS_HAS_RESPONSE_HEADERS.
+                         * Used for HTTP only; NULL for non-HTTP.
+                         * Available from NPP_NewStream onwards.
+                         * Plugin should copy this data before storing it.
+                         * Includes HTTP status line and all headers,
+                         * preferably verbatim as received from server,
+                         * headers formatted as in HTTP ("Header: Value"),
+                         * and newlines (\n, NOT \r\n) separating lines.
+                         * Terminated by \n\0 (NOT \n\n\0). */
 } NPStream;
 
 
@@ -599,13 +609,18 @@ enum NPEventType {
 /*
  * Version feature information
  */
-#define NPVERS_HAS_STREAMOUTPUT      8
-#define NPVERS_HAS_NOTIFICATION      9
-#define NPVERS_HAS_LIVECONNECT       9
-#define NPVERS_WIN16_HAS_LIVECONNECT 9
-#define NPVERS_68K_HAS_LIVECONNECT   11
-#define NPVERS_HAS_WINDOWLESS        11
-#define NPVERS_HAS_XPCONNECT_SCRIPTING 13
+#define NPVERS_HAS_STREAMOUTPUT           8
+#define NPVERS_HAS_NOTIFICATION           9
+#define NPVERS_HAS_LIVECONNECT            9
+#define NPVERS_WIN16_HAS_LIVECONNECT      9
+#define NPVERS_68K_HAS_LIVECONNECT        11
+#define NPVERS_HAS_WINDOWLESS             11
+#define NPVERS_HAS_XPCONNECT_SCRIPTING    13
+#define NPVERS_HAS_NPRUNTIME_SCRIPTING    14
+#define NPVERS_HAS_FORM_VALUES            15
+#define NPVERS_HAS_POPUPS_ENABLED_STATE   16
+#define NPVERS_HAS_RESPONSE_HEADERS       17
+#define NPVERS_HAS_NPOBJECT_ENUM          18
 
 /*----------------------------------------------------------------------*/
 /*                        Function Prototypes                           */
