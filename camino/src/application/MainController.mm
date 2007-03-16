@@ -378,10 +378,14 @@ NSString* const kPreviousSessionTerminatedNormallyKey = @"PreviousSessionTermina
 #if DEBUG
   NSLog(@"App will terminate notification");
 #endif
-  if ([[PreferenceManager sharedInstanceDontCreate] getBooleanPref:"camino.remember_window_state" withSuccess:NULL])
-    [[SessionManager sharedInstance] saveWindowState];
-  else
-    [[SessionManager sharedInstance] clearSavedState];
+  // If there's no pref manager then we didn't really start up, so we do nothing.
+  PreferenceManager* prefManager = [PreferenceManager sharedInstanceDontCreate];
+  if (prefManager) {
+    if ([prefManager getBooleanPref:"camino.remember_window_state" withSuccess:NULL])
+      [[SessionManager sharedInstance] saveWindowState];
+    else
+      [[SessionManager sharedInstance] clearSavedState];
+  }
 
   [NetworkServices shutdownNetworkServices];
 
