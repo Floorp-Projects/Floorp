@@ -2938,12 +2938,6 @@ nsFrame::MarkIntrinsicWidthsDirty()
 /* virtual */ nscoord
 nsFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 {
-#ifdef DEBUG
-  nsAutoString frameName;
-  GetFrameName(frameName);
-  NS_WARNING(nsCAutoString(NS_ConvertUTF16toUTF8(frameName) +
-    nsDependentCString(" frame didn't implement GetMinWidth")).get());
-#endif
   nscoord result = 0;
   DISPLAY_MIN_WIDTH(this, result);
   return result;
@@ -2952,12 +2946,6 @@ nsFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 /* virtual */ nscoord
 nsFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 {
-#ifdef DEBUG
-  nsAutoString frameName;
-  GetFrameName(frameName);
-  NS_WARNING(nsCAutoString(NS_ConvertUTF16toUTF8(frameName) +
-    nsDependentCString(" frame didn't implement GetPrefWidth")).get());
-#endif
   nscoord result = 0;
   DISPLAY_PREF_WIDTH(this, result);
   return result;
