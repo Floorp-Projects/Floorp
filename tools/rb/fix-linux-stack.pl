@@ -51,6 +51,10 @@
 
 use strict;
 use IPC::Open2;
+use File::Basename;
+
+# XXX Hard-coded to gdb defaults (works on Fedora).
+my $global_debug_dir = '/usr/lib/debug';
 
 # addr2line wants offsets relative to the base address for shared
 # libraries, but it wants addresses including the base address offset
@@ -92,13 +96,126 @@ sub address_adjustment($) {
     return $address_adjustments{$file};
 }
 
-# The behavior of this should probably be configurable.  It's correct
-# for Fedora Core 5's *-debuginfo packages (glibc-debuginfo, etc.).
-# See http://sources.redhat.com/gdb/current/onlinedocs/gdb_16.html#SEC152
-# for how it ought to work.
+# Files sometimes contain a link to a separate object file that contains
+# the debug sections of the binary.
+# See http://sources.redhat.com/gdb/current/onlinedocs/gdb_16.html#SEC154
+# for documentation of external debuginfo.
+# On Fedora distributions, these files can be obtained by installing
+# *-debuginfo RPM packages.
 sub debuginfo_file_for($) {
     my ($file) = @_;
-    return '/usr/lib/debug/' . $file . '.debug';
+    # We can read the .gnu_debuglink section using either of:
+    #   objdump -s --section=.gnu_debuglink $file
+    #   readelf -x .gnu_debuglink $file
+    # Since we already depend on readelf in |address_adjustment|, use it
+    # again here.
+
+    # See if there's a .gnu_debuglink section
+    my $have_debuglink = 0;
+    open(ELFSECS, '-|', 'readelf', '-S', $file);
+    while (<ELFSECS>) {
+        if (/^\s*\[\s*\d+\]\s+\.gnu_debuglink\s+\w+\s+(\w+)\s+(\w+)\s+/) {
+            $have_debuglink = 1;
+            last;
+        }
+    }
+    close(ELFSECS);
+    return '' unless ($have_debuglink);
+
+    # Determine the endianness of the shared library.
+    my $endian = '';
+    open(ELFHDR, '-|', 'readelf', '-h', $file);
+    while (<ELFHDR>) {
+        if (/^\s*Data:\s+.*(little|big) endian.*$/) {
+            $endian = $1;
+            last;
+        }
+    }
+    close(ELFHDR);
+    if ($endian ne 'little' && $endian ne 'big') {
+        print STDERR "Warning: could not determine endianness of $file.\n";
+        return '';
+    }
+
+    # Read the debuglink section as an array of words, in hexidecimal,
+    # library endianness.  (I'm guessing that readelf's big-endian
+    # output is sensible; I've only tested little-endian, where it's a
+    # bit odd.)
+    open(DEBUGLINK, '-|', 'readelf', '-x', '.gnu_debuglink', $file);
+    my @words;
+    while (<DEBUGLINK>) {
+        if ($_ =~ /^  0x[0-9a-f]{8} ([0-9a-f ]{8}) ([0-9a-f ]{8}) ([0-9a-f ]{8}) ([0-9a-f ]{8}).*/) {
+            if ($endian eq 'little') {
+                push @words, $4, $3, $2, $1;
+            } else {
+                push @words, $1, $2, $3, $4;
+            }
+        }
+    }
+    close(DEBUGLINK);
+
+    while (@words[$#words] eq '        ') {
+        pop @words;
+    }
+
+    if ($#words < 1) {
+        print STDERR "Warning: .gnu_debuglink section in $file too short.\n";
+        return '';
+    }
+
+    my @chars;
+    while ($#words >= 0) {
+        my $w = shift @words;
+        if ($w =~ /^([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/) {
+            if ($endian eq 'little') {
+                push @chars, $4, $3, $2, $1;
+            } else {
+                push @chars, $1, $2, $3, $4;
+            }
+        } else {
+            print STDERR "Warning: malformed readelf output for $file.\n";
+            return '';
+        }
+    }
+
+    my @hash_bytes = map(hex, @chars[$#chars - 3 .. $#chars]);
+    $#chars -= 4;
+
+    my $hash;
+    if ($endian eq 'little') {
+        $hash = ($hash_bytes[3] << 24) | ($hash_bytes[2] << 16) | ($hash_bytes[1] << 8) | $hash_bytes[0];
+    } else {
+        $hash = ($hash_bytes[0] << 24) | ($hash_bytes[1] << 16) | ($hash_bytes[2] << 8) | $hash_bytes[3];
+    }
+
+    my $old_num = $#chars;
+    while ($chars[$#chars] eq '00') {
+        pop @chars;
+    }
+    if ($old_num == $#chars || $old_num - 4 > $#chars) {
+        print STDERR "Warning: malformed .gnu_debuglink section in $file.\n";
+        return '';
+    }
+
+    my $basename = join('', map { chr(hex($_)) } @chars);
+
+    # Now $basename and $hash represent the information in the
+    # .gnu_debuglink section.
+    #printf STDERR "%x: %s\n", $hash, $basename;
+
+    my @possible_results = (
+        dirname($file) . $basename,
+        dirname($file) . '.debug/' . $basename,
+        $global_debug_dir . dirname($file) . '/' . $basename
+    );
+    foreach my $result (@possible_results) {
+        if (-f $result) {
+            # XXX We should check the hash.
+            return $result;
+        }
+    }
+
+    return '';
 }
 
 # Return a reference to a hash whose {read} and {write} entries are a
@@ -112,7 +229,7 @@ sub addr2line_pipe($) {
         # If it's a system library, see if we have separate debuginfo.
         if ($file =~ /^\//) {
             my $debuginfo_file = debuginfo_file_for($file);
-            $file = $debuginfo_file if (-f $debuginfo_file);
+            $file = $debuginfo_file if ($debuginfo_file ne '');
         }
 
         my $pid = open2($pipe->{read}, $pipe->{write},
