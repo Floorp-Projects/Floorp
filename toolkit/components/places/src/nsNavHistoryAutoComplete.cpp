@@ -40,7 +40,7 @@
 
 
 /**
- * Autocomplete algorithm:
+ * Autocomplte algorithm:
  *
  * Scoring
  * -------
@@ -278,7 +278,7 @@ nsNavHistory::CreateAutoCompleteQuery()
   if (mAutoCompleteOnlyTyped) {
     sql = NS_LITERAL_CSTRING(
         "SELECT p.url, p.title, p.visit_count, p.typed, "
-          "(SELECT b.fk FROM moz_bookmarks b WHERE b.fk = p.id AND b.type = ?3) "
+         "(SELECT b.item_child FROM moz_bookmarks b WHERE b.item_child = p.id) "
         "FROM moz_places p "
         "WHERE p.url >= ?1 AND p.url < ?2 "
         "AND p.typed = 1 "
@@ -287,7 +287,7 @@ nsNavHistory::CreateAutoCompleteQuery()
   } else {
     sql = NS_LITERAL_CSTRING(
         "SELECT p.url, p.title, p.visit_count, p.typed, "
-          "(SELECT b.fk FROM moz_bookmarks b WHERE b.fk = p.id AND b.type = ?3) "
+          "(SELECT b.item_child FROM moz_bookmarks b WHERE b.item_child = p.id) "
         "FROM moz_places p "
         "WHERE p.url >= ?1 AND p.url < ?2 "
         "AND (p.hidden <> 1 OR p.typed = 1) "
@@ -297,8 +297,6 @@ nsNavHistory::CreateAutoCompleteQuery()
   sql.AppendInt(AUTOCOMPLETE_MAX_PER_PREFIX);
   nsresult rv = mDBConn->CreateStatement(sql,
       getter_AddRefs(mDBAutoCompleteQuery));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBAutoCompleteQuery->BindInt32Parameter(2, nsINavBookmarksService::TYPE_BOOKMARK);
   return rv;
 }
 
