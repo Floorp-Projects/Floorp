@@ -97,7 +97,7 @@ class nsAccessibleWrap : public nsAccessible
     PRBool HasPopup () {
       PRUint32 state = 0;
       GetState(&state);
-      return (state & nsIAccessible::STATE_HASPOPUP);
+      return (state & nsIAccessibleStates::STATE_HASPOPUP);
     }
     
     // return this accessible's all children, adhering to "flat" accessibles by not returning their children.
