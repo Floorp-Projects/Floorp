@@ -106,13 +106,12 @@ var framesLoaded = [];
 function frameLoaded(e) {
   framesLoaded.push(e.target);
   if (framesLoaded.length == parserDatFiles.length) {
-    /*
     var tests = [scrapeText(ifr.contentDocument)
-		 for each (ifr in framesLoaded)];
+                 for each (ifr in framesLoaded)];
     testcases = test_parser(tests);    
     nextTest($("testframe"));
-    */
-    SimpleTest.finish();
+
+    //SimpleTest.finish();
   }
 }
 
