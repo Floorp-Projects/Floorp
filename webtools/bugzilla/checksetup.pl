@@ -54,6 +54,7 @@ BEGIN { chdir dirname($0); }
 use lib ".";
 use Bugzilla::Constants;
 use Bugzilla::Install::Requirements;
+use Bugzilla::Install::Util qw(display_version_and_os);
 
 require 5.008001 if ON_WINDOWS; # for CGI 2.93 or higher
 

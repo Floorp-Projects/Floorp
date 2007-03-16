@@ -37,6 +37,7 @@ use base qw(DBI::db);
 
 use Bugzilla::Constants;
 use Bugzilla::Install::Requirements;
+use Bugzilla::Install::Util qw(vers_cmp);
 use Bugzilla::Install::Localconfig;
 use Bugzilla::Util;
 use Bugzilla::Error;

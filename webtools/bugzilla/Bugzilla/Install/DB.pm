@@ -25,29 +25,13 @@ use strict;
 use Bugzilla::Bug qw(is_open_state);
 use Bugzilla::Constants;
 use Bugzilla::Hook;
+use Bugzilla::Install::Util qw(indicate_progress);
 use Bugzilla::Util;
 use Bugzilla::Series;
 
 use Date::Parse;
 use Date::Format;
 use IO::File;
-
-use base qw(Exporter);
-our @EXPORT_OK = qw(
-    indicate_progress
-);
-
-sub indicate_progress {
-    my ($params) = @_;
-    my $current = $params->{current};
-    my $total   = $params->{total};
-    my $every   = $params->{every} || 1;
-
-    print "." if !($current % $every);
-    if ($current % ($every * 60) == 0) {
-        print "$current/$total (" . int($current * 100 / $total) . "%)\n";
-    }
-}
 
 # NOTE: This is NOT the function for general table updates. See
 # update_table_definitions for that. This is only for the fielddefs table.
@@ -2791,20 +2775,6 @@ Description: L<checksetup.pl> depends on the fielddefs table having
              L</update_table_definitions()>.
 
 Params:      none
-
-Returns:     nothing
-
-=item C<indicate_progress({ total => $total, current => $count, every => 1 })>
-
-Description: This prints out lines of dots as a long update is going on,
-             to let the user know where we are and that we're not frozen.
-             A new line of dots will start every 60 dots.
-
-Params:      C<total> - The total number of items we're processing.
-             C<current> - The number of the current item we're processing.
-             C<every> - How often the function should print out a dot.
-               For example, if this is 10, the function will print out
-               a dot every ten items.
 
 Returns:     nothing
 

@@ -25,8 +25,8 @@ package Bugzilla::Install::Requirements;
 
 use strict;
 
+use Bugzilla::Install::Util qw(vers_cmp);
 use List::Util qw(max);
-use POSIX ();
 use Safe;
 
 use base qw(Exporter);
@@ -36,9 +36,7 @@ our @EXPORT = qw(
 
     check_requirements
     check_graphviz
-    display_version_and_os
     have_vers
-    vers_cmp
     install_command
 );
 
@@ -466,21 +464,6 @@ sub check_graphviz {
     return $return;
 }
 
-sub display_version_and_os {
-    # Display version information
-    printf "\n* This is Bugzilla " . BUGZILLA_VERSION . " on perl %vd\n",
-           $^V;
-    my @os_details = POSIX::uname;
-    # 0 is the name of the OS, 2 is the major version,
-    my $os_name = $os_details[0] . ' ' . $os_details[2];
-    if (ON_WINDOWS) {
-        require Win32;
-        $os_name = Win32::GetOSName();
-    }
-    # 3 is the minor version.
-    print "* Running on $os_name $os_details[3]\n"
-}
-
 # This was originally clipped from the libnet Makefile.PL, adapted here to
 # use the below vers_cmp routine for accurate version checking.
 sub have_vers {
@@ -531,49 +514,6 @@ sub have_vers {
     my $black_string = $blacklisted ? "(blacklisted)" : "";
     print "$ok $vstr $black_string\n" if $output;
     return $vok ? 1 : 0;
-}
-
-# This is taken straight from Sort::Versions 1.5, which is not included
-# with perl by default.
-sub vers_cmp {
-    my ($a, $b) = @_;
-
-    # Remove leading zeroes - Bug 344661
-    $a =~ s/^0*(\d.+)/$1/;
-    $b =~ s/^0*(\d.+)/$1/;
-
-    my @A = ($a =~ /([-.]|\d+|[^-.\d]+)/g);
-    my @B = ($b =~ /([-.]|\d+|[^-.\d]+)/g);
-
-    my ($A, $B);
-    while (@A and @B) {
-        $A = shift @A;
-        $B = shift @B;
-        if ($A eq '-' and $B eq '-') {
-            next;
-        } elsif ( $A eq '-' ) {
-            return -1;
-        } elsif ( $B eq '-') {
-            return 1;
-        } elsif ($A eq '.' and $B eq '.') {
-            next;
-        } elsif ( $A eq '.' ) {
-            return -1;
-        } elsif ( $B eq '.' ) {
-            return 1;
-        } elsif ($A =~ /^\d+$/ and $B =~ /^\d+$/) {
-            if ($A =~ /^0/ || $B =~ /^0/) {
-                return $A cmp $B if $A cmp $B;
-            } else {
-                return $A <=> $B if $A <=> $B;
-            }
-        } else {
-            $A = uc $A;
-            $B = uc $B;
-            return $A cmp $B if $A cmp $B;
-        }
-    }
-    @A <=> @B;
 }
 
 sub install_command {
@@ -655,18 +595,6 @@ Params:      C<$output> - C<$true> if you want the function to
                  print out information about what it's doing.
 
 Returns:     C<1> if the check was successful, C<0> otherwise.
-
-=item C<vers_cmp($a, $b)>
-
- Description: This is a comparison function, like you would use in
-              C<sort>, except that it compares two version numbers.
-              It's actually identical to versioncmp from 
-              L<Sort::Versions>.
-
- Params:      c<$a> and C<$b> are versions you want to compare.
-
- Returns:     -1 if $a is less than $b, 0 if they are equal, and
-              1 if $a is greater than $b.
 
 =item C<have_vers($module, $output)>
 

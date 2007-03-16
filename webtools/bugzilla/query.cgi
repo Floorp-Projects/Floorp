@@ -38,7 +38,7 @@ use Bugzilla::Error;
 use Bugzilla::Product;
 use Bugzilla::Keyword;
 use Bugzilla::Field;
-use Bugzilla::Install::Requirements;
+use Bugzilla::Install::Util qw(vers_cmp);
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;

@@ -21,7 +21,7 @@ package Bugzilla::Version;
 
 use base qw(Bugzilla::Object);
 
-use Bugzilla::Install::Requirements qw(vers_cmp);
+use Bugzilla::Install::Util qw(vers_cmp);
 use Bugzilla::Util;
 use Bugzilla::Error;
 
