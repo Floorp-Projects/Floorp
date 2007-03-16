@@ -156,6 +156,7 @@ struct nsCycleCollectorParams
     PRBool mLogPointers;
     
     PRUint32 mScanDelay;
+    PRUint32 mShutdownCollections;
     
     nsCycleCollectorParams() :
         mDoNothing     (PR_GetEnv("XPCOM_CC_DO_NOTHING") != NULL),
@@ -174,11 +175,15 @@ struct nsCycleCollectorParams
         //   - More time to be spent in the collector (bad)
         //   - Less delay between forming garbage and collecting it (good)
 
-        mScanDelay(10)
+        mScanDelay(10),
+        mShutdownCollections(5)
     {
         char *s = PR_GetEnv("XPCOM_CC_SCAN_DELAY");
         if (s)
             PR_sscanf(s, "%d", &mScanDelay);
+        s = PR_GetEnv("XPCOM_CC_SHUTDOWN_COLLECTIONS");
+        if (s)
+            PR_sscanf(s, "%d", &mShutdownCollections);
     }
 };
 
@@ -488,7 +493,6 @@ struct nsCycleCollector
     void MarkRoots();
     void ScanRoots();
     void CollectWhite();
-    void ForgetAll();
 
     nsCycleCollector();
     ~nsCycleCollector();
@@ -497,7 +501,7 @@ struct nsCycleCollector
     void Forget(nsISupports *n);
     void Allocated(void *n, size_t sz);
     void Freed(void *n);
-    void Collect();
+    void Collect(PRUint32 aTryCollections = 1);
     void Shutdown();
 
 #ifdef DEBUG
@@ -884,13 +888,28 @@ FindWhiteCallback(const void*  ptr,
 {
     nsCycleCollector *collector = NS_STATIC_CAST(nsCycleCollector*, 
                                                  userArg);
+    void* p = NS_CONST_CAST(void*, ptr);
+    NS_ASSERTION(pinfo.mLang == nsIProgrammingLanguage::CPLUSPLUS ||
+                 !collector->mPurpleBuf.Exists(p),
+                 "Need to remove non-CPLUSPLUS objects from purple buffer!");
     if (pinfo.mColor == white) {
-        nsISupports *s = NS_STATIC_CAST(nsISupports *, 
-                                        NS_CONST_CAST(void*, ptr));
         if (pinfo.mLang  > nsIProgrammingLanguage::MAX)
-            Fault("White node has bad language ID", s);
+            Fault("White node has bad language ID", p);
         else
-            collector->mBufs[pinfo.mLang]->Push(s);
+            collector->mBufs[pinfo.mLang]->Push(p);
+
+        if (pinfo.mLang == nsIProgrammingLanguage::CPLUSPLUS) {
+            nsISupports* s = NS_STATIC_CAST(nsISupports*, p);
+            collector->Forget(s);
+        }
+    }
+    else if (pinfo.mLang == nsIProgrammingLanguage::CPLUSPLUS) {
+        nsISupports* s = NS_STATIC_CAST(nsISupports*, p);
+        nsCycleCollectionParticipant* cp;
+        CallQueryInterface(s, &cp);
+        if (cp)
+            cp->UnmarkPurple(s);
+        collector->Forget(s);
     }
     return PL_DHASH_NEXT;
 }
@@ -1068,34 +1087,6 @@ struct nsCycleCollectionXPCOMRuntime :
 ////////////////////////////////////////////////////////////////////////
 // Extra book-keeping functions.
 ////////////////////////////////////////////////////////////////////////
-
-static PR_CALLBACK PLDHashOperator
-ForgetAllCallback(const void*  ptr,
-                  PtrInfo&     pinfo,
-                  void*        userArg)
-{
-    nsCycleCollector *collector = NS_STATIC_CAST(nsCycleCollector*, 
-                                                 userArg);
-    
-    nsISupports *root = NS_STATIC_CAST(nsISupports *, 
-                                       NS_CONST_CAST(void*, ptr));
-    collector->mBufs[0]->Push(root);
-    return PL_DHASH_NEXT;
-}
-
-
-void
-nsCycleCollector::ForgetAll()
-{  
-    mBufs[0]->Empty();
-    mGraph.Enumerate(ForgetAllCallback, this);
-    while (mBufs[0]->GetSize() > 0) {
-        nsISupports *s = NS_STATIC_CAST(nsISupports *, mBufs[0]->Pop());
-        Forget(s);
-    }
-    mBufs[0]->Empty();
-}
-
 
 struct graphVizWalker : public GraphWalker
 {
@@ -1637,73 +1628,76 @@ nsCycleCollector::Freed(void *n)
 
 
 void
-nsCycleCollector::Collect()
+nsCycleCollector::Collect(PRUint32 aTryCollections)
 {
-    // This triggers a JS GC. Our caller assumes we always trigger at
-    // least one JS GC -- they rely on this fact to avoid redundant JS
-    // GC calls -- so it's essential that we actually execute this
-    // step!
-    // 
-    // It is also essential to empty mBufs->[0] here because starting up
-    // collection in language runtimes may force some "current" suspects
-    // into mBufs[0].
-    mBufs[0]->Empty();
-
-    for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
-        if (mRuntimes[i])
-            mRuntimes[i]->BeginCycleCollection();
-    }
-
-    if (! mParams.mDoNothing) {
-
 #ifndef __MINGW32__
-        if (mParams.mHookMalloc)
-            InitMemHook();
+    if (!mParams.mDoNothing && mParams.mHookMalloc)
+        InitMemHook();
 #endif
-        
-        CollectPurple();
 
-        if (mBufs[0]->GetSize() == 0) {
-            mPurpleBuf.BumpGeneration();
-            mStats.mCollection++;
-            if (mParams.mReportStats)
-                mStats.Dump();
+    while (aTryCollections > 0) {
+        // This triggers a JS GC. Our caller assumes we always trigger at
+        // least one JS GC -- they rely on this fact to avoid redundant JS
+        // GC calls -- so it's essential that we actually execute this
+        // step!
+        //
+        // It is also essential to empty mBufs->[0] here because starting up
+        // collection in language runtimes may force some "current" suspects
+        // into mBufs[0].
+        mBufs[0]->Empty();
 
+        for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
+            if (mRuntimes[i])
+                mRuntimes[i]->BeginCycleCollection();
+        }
+
+        if (mParams.mDoNothing) {
+            aTryCollections = 0;
         } else {
-            
-            if (mCollectionInProgress)
-                Fault("re-entered collection");
-            
-            mCollectionInProgress = PR_TRUE;
-            mScanInProgress = PR_TRUE;
-            
-            mGraph.Clear();
-            
-            // The main Bacon & Rajan collection algorithm.
-            
-            MarkRoots();  
-            ScanRoots();
-            
-            mScanInProgress = PR_FALSE;
-            MaybeDrawGraphs();
-            CollectWhite();
-            ForgetAll();
-            
-            // Some additional book-keeping.
-            
-            mGraph.Clear();
+            CollectPurple();
+
+            if (mBufs[0]->GetSize() == 0) {
+                aTryCollections = 0;
+            } else {
+                if (mCollectionInProgress)
+                    Fault("re-entered collection");
+
+                mCollectionInProgress = PR_TRUE;
+
+                mScanInProgress = PR_TRUE;
+
+                mGraph.Clear();
+
+                // The main Bacon & Rajan collection algorithm.
+
+                MarkRoots();
+                ScanRoots();
+
+                MaybeDrawGraphs();
+
+                mScanInProgress = PR_FALSE;
+
+                CollectWhite();
+
+                // Some additional book-keeping.
+
+                mGraph.Clear();
+
+                --aTryCollections;
+            }
+
             mPurpleBuf.BumpGeneration();
             mStats.mCollection++;
             if (mParams.mReportStats)
                 mStats.Dump();
             mCollectionInProgress = PR_FALSE;
         }
-    }
 
-    for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
-        if (mRuntimes[i])
+        for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
+            if (mRuntimes[i])
             mRuntimes[i]->FinishCycleCollection();
-    }    
+        }
+    }
 }
 
 void
@@ -1715,8 +1709,15 @@ nsCycleCollector::Shutdown()
 
     mPurpleBuf.BumpGeneration();
     mParams.mScanDelay = 0;
-    Collect();
+    Collect(mParams.mShutdownCollections);
+
 #ifdef DEBUG
+    CollectPurple();
+    if (mBufs[0]->GetSize() != 0) {
+        printf("Might have been able to release more cycles if the cycle collector would "
+               "run once more at shutdown.\n");
+    }
+
     ExplainLiveExpectedGarbage();
 #endif
     mParams.mDoNothing = PR_TRUE;

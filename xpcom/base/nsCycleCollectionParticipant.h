@@ -41,11 +41,11 @@
 #include "nsISupports.h"
 
 #define NS_CYCLECOLLECTIONPARTICIPANT_IID                                      \
-{ /* 407bbd61-13b2-4f85-bdc6-23a59d881f80 */                                   \
-    0x407bbd61,                                                                \
-    0x13b2,                                                                    \
-    0x4f85,                                                                    \
-    { 0xbd, 0xc6, 0x23, 0xa5, 0x9d, 0x88, 0x1f, 0x80 }                         \
+{                                                                              \
+    0x8057ad9e,                                                                \
+    0x3ecc,                                                                    \
+    0x4e89,                                                                    \
+    { 0x89, 0xac, 0x0a, 0x71, 0xf3, 0x8b, 0x14, 0xc2 }                         \
 }
 
 /**
@@ -100,6 +100,7 @@ public:
     NS_IMETHOD Unlink(nsISupports *p);
     NS_IMETHOD Traverse(nsISupports *p, 
                         nsCycleCollectionTraversalCallback &cb);
+    NS_IMETHOD_(void) UnmarkPurple(nsISupports *p);
 
 #ifdef DEBUG
     NS_EXTERNAL_VIS_(PRBool) CheckForRightISupports(nsISupports *s);
@@ -249,6 +250,10 @@ public:                                                                        \
   NS_IMETHOD Unlink(nsISupports *n);                                           \
   NS_IMETHOD Traverse(nsISupports *n,                                          \
                       nsCycleCollectionTraversalCallback &cb);                 \
+  NS_IMETHOD_(void) UnmarkPurple(nsISupports *n)                               \
+  {                                                                            \
+    Downcast(n)->UnmarkPurple();                                               \
+  }                                                                            \
   static _class* Downcast(nsISupports* s)                                      \
   {                                                                            \
     return NS_STATIC_CAST(_class*, NS_STATIC_CAST(_base*, s));                 \
@@ -291,6 +296,17 @@ public:                                                                        \
       NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Downcast(s)));               \
   }                                                                            \
 };
+
+/**
+ * This implements a stub UnmarkPurple function for classes that want to be
+ * traversed but whose AddRef/Release functions don't add/remove them to/from
+ * the purple buffer. If you're just using NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+ * then you don't need this.
+ */
+#define NS_DECL_CYCLE_COLLECTION_UNMARK_PURPLE_STUB(_class)                    \
+  void UnmarkPurple()                                                          \
+  {                                                                            \
+  }                                                                            \
 
 #define NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                                 \
   static NS_CYCLE_COLLECTION_CLASSNAME(_class)                                 \
