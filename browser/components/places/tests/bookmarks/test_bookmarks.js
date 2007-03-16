@@ -265,7 +265,7 @@ function run_test() {
   } catch (e) {}
   do_check_eq(bmsvc.indexOfFolder(homeFolder, workFolder), 1);
 
-  // test insertSeparator
+  // test insertSeparator and removeChildAt
   // XXX - this should also query bookmarks for the folder children
   // and then test the node type at our index
   try {
@@ -274,6 +274,14 @@ function run_test() {
   } catch(ex) {
     do_throw("insertSeparator: " + ex);
   }
+
+  // removeChildAt w/ folder
+  bmsvc.createFolder(testRoot, "tmp", 1);
+  bmsvc.removeChildAt(testRoot, 1);
+
+  // removeChildAt w/ bookmark
+  bmsvc.insertItem(root, uri("http://blah.com"), 1);
+  bmsvc.removeChildAt(root, 1);
 
   // test indexOfFolder
   var tmpFolder = bmsvc.createFolder(testRoot, "tmp", 2);
@@ -320,9 +328,9 @@ function run_test() {
     var result = histsvc.executeQuery(query, options);
     var rootNode = result.root;
     rootNode.containerOpen = true;
-    do_check_eq(rootNode.childCount, 3);
-    rootNode.containerOpen = false;
-  } catch(ex) { do_throw("removeFolderChildren(): " + ex); }
+  } catch(ex) { do_throw("test removeFolderChildren() - querying for children failed: " + ex); }
+  do_check_eq(rootNode.childCount, 3);
+  rootNode.containerOpen = false;
   // 3) remove all children
   bmsvc.removeFolderChildren(tmpFolder);
   // 4) confirm that folder has 0 children
