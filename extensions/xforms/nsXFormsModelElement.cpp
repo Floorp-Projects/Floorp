@@ -1226,10 +1226,24 @@ nsXFormsModelElement::RefreshSubTree(nsXFormsControlListItem *aCurrent,
       nsCOMArray<nsIDOMNode> *deps = nsnull;
       if (usesModelBinding) {
         if (!boundNode) {
-          // If a control uses a model binding, but has no bound node a
-          // rebuild is the only thing that'll (eventually) change it
-          current = current->NextSibling();
-          continue;
+          PRBool usesSNB = PR_TRUE;
+          control->GetUsesSingleNodeBinding(&usesSNB);
+      
+          // If the control doesn't use single node binding (and can thus be
+          // bound to many nodes), the above test for boundNode means nothing.
+          // We'll need to continue on with the work this function does so that
+          // any controls that this control contains can be tested for whether
+          // they may need to refresh.
+          if (usesSNB) {
+            // If a control uses a model binding, but has no bound node a
+            // rebuild is the only thing that'll (eventually) change it.  We
+            // don't need to worry about contained controls (like a label)
+            // since the fact that there is no bound node means that this
+            // control (and contained controls) need to behave as if
+            // irrelevant per spec.
+            current = current->NextSibling();
+            continue;
+          }
         }
       } else {
         // Get dependencies

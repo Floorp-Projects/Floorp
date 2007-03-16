@@ -49,7 +49,7 @@ interface nsIDOMElement;
 /**
  * Interface implemented by all XForms form control classes.
  */
-[uuid(8c84afe1-e071-4d45-b3da-c5aa93154343)]
+[uuid(eb02b76b-6df8-4633-8c53-e86101273339)]
 interface nsIXFormsControl : nsIXFormsContextControl
 {
   /**
@@ -103,6 +103,12 @@ interface nsIXFormsControl : nsIXFormsContextControl
    * model bind element, ie. it has a |bind| attribute.
    */
   readonly attribute boolean usesModelBinding;
+
+  /**
+   * Is true when the control uses single node binding.  Will return false
+   * when the control uses node-set binding (i.e. repeat and itemset).
+   */
+  readonly attribute boolean usesSingleNodeBinding;
 
   /**
    * These represent the default intrinsic states for controls when they are

@@ -107,6 +107,7 @@ public:
   NS_IMETHOD TryFocus(PRBool* aOK);
   NS_IMETHOD IsEventTarget(PRBool *aOK);
   NS_IMETHOD GetUsesModelBinding(PRBool *aRes);
+  NS_IMETHOD GetUsesSingleNodeBinding(PRBool *aRes);
   NS_IMETHOD GetDefaultIntrinsicState(PRInt32 *aRes);
   NS_IMETHOD GetDisabledIntrinsicState(PRInt32 *aRes);
 

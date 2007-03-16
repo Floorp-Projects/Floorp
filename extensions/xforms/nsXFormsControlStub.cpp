@@ -269,6 +269,13 @@ nsXFormsControlStub::GetUsesModelBinding(PRBool *aRes)
 }
 
 NS_IMETHODIMP
+nsXFormsControlStub::GetUsesSingleNodeBinding(PRBool *aRes)
+{
+  *aRes = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsControlStub::GetOnDeferredBindList(PRBool *aOnList)
 {
   NS_ENSURE_ARG_POINTER(aOnList);

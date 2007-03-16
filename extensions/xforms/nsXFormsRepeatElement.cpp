@@ -347,6 +347,7 @@ public:
   NS_IMETHOD Refresh();
   NS_IMETHOD TryFocus(PRBool* aOK);
   NS_IMETHOD IsEventTarget(PRBool *aOK);
+  NS_IMETHOD GetUsesSingleNodeBinding(PRBool *aUsesSNB);
 
   // nsIXFormsRepeatElement
   NS_DECL_NSIXFORMSREPEATELEMENT
@@ -1258,6 +1259,14 @@ NS_IMETHODIMP
 nsXFormsRepeatElement::IsEventTarget(PRBool *aOK)
 {
   *aOK = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsRepeatElement::GetUsesSingleNodeBinding(PRBool *aUsesSNB)
+{
+  NS_ENSURE_ARG_POINTER(aUsesSNB);
+  *aUsesSNB = PR_FALSE;
   return NS_OK;
 }
 

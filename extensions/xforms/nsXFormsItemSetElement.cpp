@@ -72,6 +72,7 @@ public:
   // nsIXFormsControlBase overrides
   NS_IMETHOD Bind(PRBool *aContextChanged);
   NS_IMETHOD Refresh();
+  NS_IMETHOD GetUsesSingleNodeBinding(PRBool *aUsesSNB);
 
   // nsIXFormsSelectChild
   NS_DECL_NSIXFORMSSELECTCHILD
@@ -341,6 +342,15 @@ nsXFormsItemSetElement::Refresh()
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsXFormsItemSetElement::GetUsesSingleNodeBinding(PRBool *aUsesSNB)
+{
+  NS_ENSURE_ARG_POINTER(aUsesSNB);
+  *aUsesSNB = PR_FALSE;
+  return NS_OK;
+}
+
 
 NS_HIDDEN_(nsresult)
 NS_NewXFormsItemSetElement(nsIXTFElement **aResult)
