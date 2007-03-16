@@ -270,6 +270,7 @@ function ltnOnLoad(event)
     var nextmo = nextMonth(today);
 
     document.getElementById("ltnMinimonth").value = today;
+    document.getElementById("ltnDateTextPicker").value = today;
 
     gMiniMonthLoading = false;
 

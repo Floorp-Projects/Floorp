@@ -149,8 +149,8 @@
     </hbox>
     <hbox id="ltnDateTextPickerBox">
       <spacer flex="1"/>
-      <datepicker id="ltnDateTextPicker" oncommand="ltnGoToDate()"/>
-      <spacer flex="1"/> 
+      <datepicker id="ltnDateTextPicker" onchange="ltnMinimonthPick(this)"/>
+      <spacer flex="1"/>
     </hbox>
 
     <tabbox id="ltnTabpanelBox" flex="1">
