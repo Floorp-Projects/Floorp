@@ -2654,6 +2654,7 @@ function browseDocument()
 
 function updateAttendees()
 {
+  var regexp = new RegExp("^mailto:(.*)", "i");   
   var attendeeRow = document.getElementById("attendee-row");
   if(!window.attendees || !window.attendees.length) {
     attendeeRow.setAttribute('collapsed','true');
@@ -2667,9 +2668,11 @@ function updateAttendees()
         attendeeNames += attendee.commonName;
       } else if(attendee.id && attendee.id.length) {
         var email = attendee.id;
-        if (email.indexOf("mailto:") == 0)
-          email = email.split("mailto:")[1]
-        attendeeNames += email;
+        if (regexp.test(email)) {
+          attendeeNames += RegExp.$1;
+        } else {
+          attendeeNames += email;
+        }
       } else {
         continue;
       }

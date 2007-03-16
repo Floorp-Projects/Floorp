@@ -326,7 +326,7 @@
           if (aDisableIfOrganizer) {
             if (aAttendee) {
               if (this.mOrganizerID && this.mOrganizerID != "") {
-                if (aAttendee.id == this.mOrganizerID) {
+                if (aAttendee.id.toLowerCase() == this.mOrganizerID.toLowerCase()) {
                   input.setAttribute("disabled","true");
                 }
               }
@@ -347,19 +347,24 @@
 
           // construct the display string from common name and/or email address.
           var inputValue = aAttendee.commonName;
+          var regexp = new RegExp("^mailto:(.*)", "i");   
           if(inputValue) {
             var email = aAttendee.id;
             if(email && email.length) {
-                if (email.indexOf("mailto:") == 0)
-                    email = email.split("mailto:")[1]
-                inputValue += ' <'+email+'>';
+              if (regexp.test(email)) {
+                inputValue += ' <' + RegExp.$1 + '>';
+              } else {
+                inputValue += ' <' + email + '>';
+              }
             }
           } else {
             var email = aAttendee.id;
             if(email && email.length) {
-                if (email.indexOf("mailto:") == 0)
-                    email = email.split("mailto:")[1]
+              if (regexp.test(email)) {
+                inputValue = RegExp.$1;
+              } else {
                 inputValue = email;
+              }
             }
           }
 
@@ -374,7 +379,7 @@
 
           if (aAttendee) {
             if (this.mOrganizerID && this.mOrganizerID != "") {
-              if (aAttendee.id == this.mOrganizerID) {
+              if (aAttendee.id.toLowerCase() == this.mOrganizerID.toLowerCase()) {
               
                 icon.setAttribute("class","status-icon");
                 icon.setAttribute("status",aAttendee.participationStatus);
@@ -501,9 +506,9 @@
                     // to look like an email-address, we prepend the prefix.
                     // this also allows for non-email-addresses.
                     var email = emailAddresses.value[0];
-                    if (email.indexOf("mailto:") != 0)
+                    if (email.toLowerCase().indexOf("mailto:") != 0)
                         if (email.indexOf("@") >= 0)
-                            email = "mailto:" + email;
+                            email = "MAILTO:" + email;
                     attendee.id = email;
                 }
                 if(names.value.length > 0) {
@@ -512,7 +517,7 @@
 
                 var addAttendee = true;
                 if (this.mOrganizerID && this.mOrganizerID != "") {
-                  if (attendee.id == this.mOrganizerID) {
+                  if (attendee.id.toLowerCase() == this.mOrganizerID.toLowerCase()) {
                     if (i == 1) {
                       addAttendee = false;
                     }
@@ -563,9 +568,9 @@
                     // to look like an email-address, we prepend the prefix.
                     // this also allows for non-email-addresses.
                     var email = emailAddresses.value[0];
-                    if (email.indexOf("mailto:") != 0)
+                    if (email.toLowerCase().indexOf("mailto:") != 0)
                         if (email.indexOf("@") >= 0)
-                            email = "mailto:" + email;
+                            email = "MAILTO:" + email;
                     attendee.id = email;
                 }
                 if(names.value.length > 0) {
@@ -573,7 +578,7 @@
                 }
 
                 if (this.mOrganizerID && this.mOrganizerID != "") {
-                  if (attendee.id == this.mOrganizerID) {
+                  if (attendee.id.toLowerCase() == this.mOrganizerID.toLowerCase()) {
                     return attendee;
                   }
                 }
@@ -610,9 +615,9 @@
                 // to look like an email-address, we prepend the prefix.
                 // this also allows for non-email-addresses.
                 email = emailAddresses.value[0];
-                if (email.indexOf("mailto:") != 0)
+                if (email.toLowerCase().indexOf("mailto:") != 0)
                   if (email.indexOf("@") >= 0)
-                    email = "mailto:" + email;
+                    email = "MAILTO:" + email;
               }
 
               var isdirty = false;
