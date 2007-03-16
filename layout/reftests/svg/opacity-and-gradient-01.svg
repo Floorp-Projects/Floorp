@@ -15,10 +15,10 @@
 
   <!-- test gradient -->
   <rect         width="25%" height="100%" fill="url(#g)" opacity="0"/>
-  <rect x="25%" width="25%" height="100%" fill="url(#g)" opacity="0"/>
+  <rect x="25%" width="25%" height="100%" fill="url(#g)" fill-opacity="0"/>
 
   <!-- test pattern as a bonus -->
   <rect x="50%" width="25%" height="100%" fill="url(#p)" opacity="0"/>
-  <rect x="75%" width="25%" height="100%" fill="url(#p)" opacity="0"/>
+  <rect x="75%" width="25%" height="100%" fill="url(#p)" fill-opacity="0"/>
 
 </svg>
