@@ -301,7 +301,29 @@ nsNavBookmarks::InitTables(mozIStorageConnection* aDBConn)
         "parent INTEGER, "
         "position INTEGER, "
         "title LONGVARCHAR, "
-        "keyword_id INTEGER)"));
+        "keyword_id INTEGER, "
+        "dateAdded DATE, "
+        "lastModified DATE)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Add a trigger for populating the dateAdded and lastModified
+    // fields after a bookmark is added.
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "CREATE TRIGGER insert_moz_bookmarks_dateAdded "
+      "AFTER INSERT ON moz_bookmarks BEGIN "
+      "UPDATE moz_bookmarks SET "
+      "dateAdded = DATETIME('NOW'), lastModified = DATETIME('NOW') "
+      "WHERE rowid = NEW.rowid; "
+      "END "));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Add a trigger for update the lastModified field after a bookmark is updated.
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "CREATE TRIGGER update_moz_bookmarks_lastModified "
+      "AFTER UPDATE ON moz_bookmarks BEGIN "
+      "UPDATE moz_bookmarks SET lastModified = DATETIME('NOW') "
+      "WHERE rowid = OLD.rowid; "
+      "END "));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // this index will make it faster to determine if a given item is
