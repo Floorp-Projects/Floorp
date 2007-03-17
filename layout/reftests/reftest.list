@@ -64,44 +64,7 @@ fails == object/svg-with-type.html object/svg-with-type-ref.html
 include pixel-rounding/reftest.list
 
 # table-dom/
-== table-dom/appendCells1.html table-dom/appendCells1-ref.html
-== table-dom/appendCellsRebuild1.html table-dom/appendCellsRebuild1-ref.html
-== table-dom/appendCellsZeroColspan.html table-dom/appendCellsZeroColspan-ref.html
-== table-dom/appendCol1.html table-dom/appendCol1-ref.html
-== table-dom/appendCol2.html table-dom/appendCol2-ref.html
-== table-dom/appendColGroup1.html table-dom/appendColGroup1-ref.html
-== table-dom/appendRowsExpand1.html table-dom/appendRowsExpand1-ref.html
-== table-dom/appendTbodyExpand1.html table-dom/appendTbodyExpand1-ref.html
-== table-dom/deleteCellsRebuild1.html table-dom/deleteCellsRebuild1-ref.html
-== table-dom/deleteCellsShrink1.html table-dom/deleteCellsShrink1-ref.html
-== table-dom/deleteCellsShrink2.html table-dom/deleteCellsShrink2-ref.html
-== table-dom/deleteCol1.html table-dom/deleteCol1-ref.html
-== table-dom/deleteCol2.html table-dom/deleteCol2-ref.html
-== table-dom/deleteCol3.html table-dom/deleteCol3-ref.html
-== table-dom/deleteColGroup1.html table-dom/deleteColGroup1-ref.html
-== table-dom/deleteColGroup2.html table-dom/deleteColGroup2-ref.html
-== table-dom/deleteRowsRebuild1.html table-dom/deleteRowsRebuild1-ref.html
-== table-dom/deleteRowsRebuild1a.html table-dom/deleteRowsRebuild1a-ref.html
-== table-dom/deleteRowsShrink1.html table-dom/deleteRowsShrink1-ref.html
-== table-dom/deleteTbodyExpand1.html table-dom/deleteTbodyExpand1-ref.html
-== table-dom/deleteTbodyRebuild1.html table-dom/deleteTbodyRebuild1-ref.html
-== table-dom/insertCellsExpand1.html table-dom/insertCellsExpand1-ref.html
-== table-dom/insertCellsExpand2.html table-dom/insertCellsExpand2-ref.html
-== table-dom/insertCellsExpandZeroRowspan.html table-dom/insertCellsExpandZeroRowspan-ref.html
-== table-dom/insertCellsRebuild1.html table-dom/insertCellsRebuild1-ref.html
-== table-dom/insertCellsRebuild2.html table-dom/insertCellsRebuild2-ref.html
-== table-dom/insertCellsZeroColspan.html table-dom/insertCellsZeroColspan-ref.html
-== table-dom/insertColGroups1.html table-dom/insertColGroups1-ref.html
-== table-dom/insertColGroups2.html table-dom/insertColGroups2-ref.html
-== table-dom/insertCols1.html table-dom/insertCols1-ref.html
-== table-dom/insertCols2.html table-dom/insertCols2-ref.html
-== table-dom/insertCols3.html table-dom/insertCols3-ref.html
-== table-dom/insertCols4.html table-dom/insertCols4-ref.html
-== table-dom/insertCols5.html table-dom/insertCols5-ref.html
-== table-dom/insertRowsExpand1.html table-dom/insertRowsExpand1-ref.html
-== table-dom/insertRowsRebuild1.html table-dom/insertRowsRebuild1-ref.html
-== table-dom/insertTbodyExpand1.html table-dom/insertTbodyExpand1-ref.html
-== table-dom/insertTbodyRebuild1.html table-dom/insertTbodyRebuild1-ref.html
+include table-dom/reftest.list
 
 # table-width/
 include table-width/reftest.list
