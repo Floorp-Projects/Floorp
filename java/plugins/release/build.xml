@@ -1,0 +1,310 @@
+<?xml version="1.0"?>
+
+<!--
+
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+
+ * Ed Burns &gt;edburns@acm.org&lt;
+
+
+-->
+
+<project name="pluglet" default="release" basedir=".">
+
+  <property name="Name" value="pluglet"/>
+  <property name="name" value="pluglet"/>
+  <property name="major.version" value="1" />
+  <property name="minor.version" value="1" />
+  <property name="release.version" value="a1" />
+  <property name="release.version.full" value="alpha_1" />
+  <property name="version" 
+            value="${major.version}_${minor.version}_${release.version}"/>
+  <property name="full.version" value="${major.version}_${minor.version}_${release.version.full}"/>
+
+<!-- ************ Per user local properties ******************************* -->
+
+  <property file="${user.home}/build.properties"/>   <!-- User local        -->
+  <property file="build.properties"/>                <!-- Component local   -->
+  <property file="../build.properties"/>         <!-- java-supplement local -->
+  <property file="../../build.properties"/>      <!-- java-supplement local -->
+  <property environment="myenv" />
+
+  <property name="dist.home" value="${objdir}/${name}" />
+  <property name="dist.javadocs" value="${dist.home}/javadocs" />
+  <property name="source.home" value="${basedir}/.." />
+  <property name="moz.dist" value="${objdir}/dist" />
+  <property name="dist.classes" value="${moz.dist}/classes" />
+  <property name="javadoc.private"  value="false"/>
+  <property name="javadoc.protected"  value="true"/>
+  <property name="dist.jar"  value="${dist.home}/lib/${name}-${version}.jar"/>
+
+  <target name="release">
+
+    <antcall target="prepare" />
+    <antcall target="uptodate" />
+    <antcall target="compile.all" />
+    <antcall target="build.dist.jar" />
+    <antcall target="copy.binaries" />
+    <antcall target="copy.test.src" />
+    <antcall target="copy.core.src" />
+    <antcall target="copy.build.support" />
+    <antcall target="build.javadocs" />
+    <antcall target="build.zip" />
+  </target>
+
+  <target name="build.zip">
+    <condition property="platform" value="win32">
+      <and>
+        <os family="windows" />
+      </and>
+    </condition>
+
+    <condition property="platform" value="linux">
+      <and>
+        <os family="unix" />
+      </and>
+    </condition>
+
+    <zip destfile="${objdir}/${name}_${version}_${platform}.zip" 
+         basedir="${dist.home}" />
+  </target>
+
+  <target name="clean">
+    <delete file="${objdir}/${name}_${version}_${platform}.zip"  />
+    <delete dir="${dist.home}" />
+  </target>
+
+  <target name="prepare">
+    <mkdir dir="${dist.home}" />
+    <mkdir dir="${dist.home}/lib" />
+    <mkdir dir="${dist.home}/bin" />
+    <mkdir dir="${dist.home}/javadocs" />
+    <mkdir dir="${dist.home}/test" />
+    <mkdir dir="${dist.home}/src" />
+
+    <condition property="so.prefix" value="">
+      <and>
+        <os family="windows" />
+      </and>
+    </condition>
+
+    <condition property="so.prefix" value="lib">
+      <and>
+        <os family="unix" />
+      </and>
+    </condition>
+
+    <condition property="so.extension" value="dll">
+      <and>
+        <os family="windows" />
+      </and>
+    </condition>
+
+    <condition property="so.extension" value="so">
+      <and>
+        <os family="unix" />
+      </and>
+    </condition>
+
+    <condition property="platform" value="win32">
+      <and>
+        <os family="windows" />
+      </and>
+    </condition>
+
+    <condition property="platform" value="linux">
+      <and>
+        <os family="unix" />
+      </and>
+    </condition>
+
+  </target>
+
+
+  <target name="uptodate">
+    <uptodate property="core.java.classes.uptodate" 
+              targetfile="${dist.jar}">
+      <srcfiles dir="${dist.classes}" />
+    </uptodate>
+    <echo message="java classes up to date: ${core.java.classes.uptodate}" />
+
+    <uptodate property="javadocs.uptodate" 
+              targetfile="${dist.javadocs}/index.html" >
+        <srcfiles dir= "${source.home}">
+          <include name="**/plugins/classes/**/*.java" />
+        </srcfiles>
+    </uptodate>
+    <echo message="javadoc up to date: ${javadocs.uptodate}" />
+
+  </target>
+
+  <target name="build.dist.jar">
+    <jar jarfile="${dist.jar}" >
+       <manifest>
+        <attribute name="Specification-Title" value="${Name}"/>
+        <attribute name="Specification-Version" value="1.1"/>
+        <attribute name="Implementation-Title" value="'${name}': ${Name}"/>
+        <attribute name="Implementation-Version" value="${version}"/>
+        <attribute name="Implementation-Vendor" value="mozilla.org"/>
+        <attribute name="Implementation-Vendor-Id" value="org.mozilla"/>
+        <attribute name="Extension-Name" value="org.mozilla.pluglet"/>
+       </manifest>
+
+       <fileset dir="${dist.classes}" 
+                excludes="**/test/**" />
+    </jar>
+  </target>
+
+  <target name="compile.all" unless="core.java.classes.uptodate" 
+          depends="uptodate">
+    <ant inheritAll="false" dir="${source.home}" />
+  </target>
+
+  <target name="copy.binaries" depends="prepare">
+    <copy todir="${dist.home}/bin" 
+         file="${objdir}/java/plugins/jni/${so.prefix}${name}jni.${so.extension}" />
+
+    <copy todir="${dist.home}/bin/components" 
+          file="${objdir}/java/plugins/src/${so.prefix}${name}.${so.extension}" />
+    <copy todir="${dist.home}/bin/components" 
+          file="${objdir}/java/plugins/src/_xpidlgen/pluglet.xpt" />
+
+    <copy todir="${dist.home}/bin/plugins" 
+          file="${objdir}/java/plugins/mozilla/${so.prefix}np${name}.${so.extension}" />
+
+  </target>
+
+  <target name="copy.test.src" depends="prepare">
+
+    <!-- Populate the netbeans Test Packages -->
+
+    <copy todir="${dist.home}/test/automated/src/main/java">
+      <fileset dir="${source.home}/webclient/test/automated/src/classes">
+        <exclude name="**/*Bookmark*.java" />
+        <exclude name="**/*Preferences*.java" />
+        <exclude name="**/*Profile*.java" />
+      </fileset>
+      <fileset dir="${basedir}/mcp-test/src/test/java">
+        <include name="**/*.java" />
+      </fileset>
+    </copy>
+    <copy todir="${dist.home}/test/automated/src/main/resources">
+      <fileset dir="${source.home}/webclient/test/automated/src/test">
+         <exclude name="*basic*/" />
+      </fileset>
+    </copy>
+
+    <!-- Populate the netbeans Source Packages -->
+
+    <copy todir="${dist.home}/test/manual/src/main/java">
+      <fileset dir="${source.home}/webclient/test/manual/src/classes" />
+      <fileset dir="${basedir}/mcp-test/src/main/java">
+        <include name="**/*.java" />
+      </fileset>
+    </copy>
+
+
+  </target>
+
+  <target name="copy.core.src" depends="prepare">
+
+    <!-- Populate the netbeans Source Package with the core 
+         webclient sources -->
+
+    <copy todir="${dist.home}/src/main/java" includeEmptyDirs="false">
+      <fileset dir="${source.home}/webclient/classes_spec">
+        <exclude name="**/test/*" />
+        <exclude name="**/test_nonnative/*" />
+        <exclude name="**/wrapper_nonnative/*" />
+        <exclude name="**/*.html" />
+        <exclude name="**/*ICE*.*" />
+      </fileset>
+      <fileset dir="${source.home}/util/classes">
+        <exclude name="**/*.html" />
+      </fileset>
+      <fileset dir="${source.home}/dom/classes">
+        <exclude name="**/*.html" />
+      </fileset>
+
+    </copy>
+
+  </target>
+
+
+  <target name="copy.build.support" depends="prepare">
+    <copy todir="${dist.home}/netbeans">
+      <fileset dir="${basedir}/netbeans" />
+    </copy>
+    <copy todir="${dist.home}/non-ide">
+      <fileset dir="${basedir}/non-ide" />
+    </copy>
+    <copy file="${mozdocdir}/webclient/release-notes/${full.version}.html" todir="${dist.home}" />
+    <copy file="${mozdocdir}/webclient/release-notes/${full.version}-detail.html" todir="${dist.home}" />
+  </target>
+
+  <target name="build.javadocs" depends="prepare,uptodate"
+          unless="javadocs.uptodate"
+          description="Create the JavaDoc API documentation">
+    <copy todir="${dist.javadocs}">
+      <fileset dir="${source.home}/webclient/classes_spec">
+        <include name="**/*.jpg" />
+        <include name="**/*.jpeg" />
+        <include name="**/*.gif" />
+        <include name="**/*.html" />
+      </fileset>
+    </copy>
+    <javadoc packagenames="org.mozilla.*"
+             destdir="${dist.javadocs}"
+             Overview="${source.home}/webclient/classes_spec/org/mozilla/webclient/overview.html"
+             stylesheetfile="javadoc.css"
+             private="${javadoc.private}"
+             protected="${javadoc.protected}"
+             windowtitle="${Name} (${version})"
+             doctitle="${Name} (${version})"
+             bottom="Copyright &#169; 2002-2007 Mozilla.org All Rights Reserved.">
+       <fileset dir="${source.home}">
+         <include name="**/*.java"/>
+         <exclude name="**/impl/**/*.java" />
+         <exclude name="**/*ICE*.java" />
+         <exclude name="**/cardemo/**/*.java" />
+         <exclude name="**/wrapper_nonnative/**/*.java" />
+         <exclude name="**/*Impl.java" />
+         <exclude name="**/test*/**/*.java" />
+         <exclude name="plugins/**/*.*" />
+         <exclude name="xpcom/**/*.*" />
+         <exclude name="dom/blackconnect/**/*.*" />
+         <exclude name="pluggable-jvm/**/*.*" />
+         <exclude name="**/*Bookmark*.java" />
+         <exclude name="**/*Preferences*.java" />
+         <exclude name="**/PrefChangedCallback.java" />
+         <exclude name="**/*Profile*.java" />
+         <exclude name="**/WebclientFactory.java" />
+         <exclude name="**/ImplObject.java" />
+         <exclude name="**/WCKeyEvent.java" />
+         <exclude name="**/WCMouseEvent.java" />
+         <exclude name="util/**/*.java" />
+         <exclude name="dom/**/*.java" />
+       </fileset>
+      <classpath location="${dist.jar}"/>
+    </javadoc>
+  </target>
+  
+
+</project>

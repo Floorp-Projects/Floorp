@@ -64,6 +64,8 @@
 
   <target name="prepare">
 
+    <mkdir dir="${build.home}"/>
+
     <condition property="PATH_SEP" value=";">
       <and>
         <os family="windows" />

@@ -53,6 +53,10 @@
 
 #include "npAPInsIInputStreamShim.h"
 
+#include "prlog.h"
+
+static PRLogModuleInfo* log = NULL;
+
 // service manager which will give the access to all public browser services
 // we will use memory service as an illustration
 nsIServiceManager * gServiceManager = NULL;
@@ -97,6 +101,11 @@ NPError NS_PluginInitialize()
   // this is probably a good place to get the service manager
   // note that Mozilla will add reference, so do not forget to release
   nsISupports * sm = NULL;
+
+  log = PR_NewLogModule("nppluglet");
+
+  PR_LOG(log, PR_LOG_DEBUG,
+         ("nppluglet NS_PluginInitialize\n"));
   
   NPN_GetValue(NULL, NPNVserviceManager, &sm);
 
