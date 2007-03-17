@@ -141,7 +141,7 @@
                        items_current = bless_to_current %]
       </td>
     </tr>
-  <table>
+  </table>
 
   [% IF Param('usevisibilitygroups') %]
     <table class="grant_table">
@@ -166,7 +166,7 @@
                          items_current = visible_to_me_current %]
         </td>
       </tr>
-    <table>
+    </table>
   [% END %]
 
   <input type="submit" value="Update Group">
@@ -179,7 +179,7 @@
   This is often very useful if you upgraded from [% terms.Bugzilla %] 
   2.16.</p>
 
-<table<tr><td>
+<table><tr><td>
 <form method="post" action="editgroups.cgi">
   <fieldset>
     <legend>Remove all explict memberships from users whose login names
