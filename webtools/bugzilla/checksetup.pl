@@ -62,6 +62,10 @@ require 5.008001 if ON_WINDOWS; # for CGI 2.93 or higher
 # Live Code
 ######################################################################
 
+# When we're running at the command line, we need to pick the right
+# language before ever displaying any string.
+$ENV{'HTTP_ACCEPT_LANGUAGE'} ||= setlocale(LC_CTYPE);
+
 my %switch;
 GetOptions(\%switch, 'help|h|?', 'check-modules', 'no-templates|t',
                      'verbose|v|no-silent', 'make-admin=s');
@@ -115,10 +119,6 @@ require Bugzilla::Install;
 Bugzilla->usage_mode(USAGE_MODE_CMDLINE);
 Bugzilla->installation_mode(INSTALLATION_MODE_NON_INTERACTIVE) if $answers_file;
 Bugzilla->installation_answers($answers_file);
-
-# When we're running at the command line, we need to pick the right
-# language before ever creating a template object.
-$ENV{'HTTP_ACCEPT_LANGUAGE'} ||= setlocale(LC_CTYPE);
 
 ###########################################################################
 # Check and update --LOCAL-- configuration
