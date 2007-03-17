@@ -2092,6 +2092,10 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
 
   SetDamageArea(aColIndex, aRowIndex, 1 + endColIndex - aColIndex, 1 + endRowIndex - aRowIndex, aDamageArea); 
 
+  if (aMap.mTableFrame.HasZeroColSpans()) {
+    aMap.mTableFrame.SetNeedColSpanExpansion(PR_TRUE);
+  }
+
   // adjust the col counts due to the deleted cell before removing it
   for (colX = aColIndex; colX <= endColIndex; colX++) {
     nsColInfo* colInfo = aMap.GetColInfoAt(colX);
