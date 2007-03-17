@@ -6,7 +6,7 @@ comm.jar:
     content/communicator/alerts/alert.js                        (alerts/resources/content/alert.js)  
 *   content/cookie/contents.rdf                                 (/toolkit/components/cookie/content/contents.rdf)
     content/cookie/cookieAcceptDialog.xul                       (/toolkit/components/cookie/content/cookieAcceptDialog.xul)
-    content/cookie/cookieAcceptDialog.js                        (/toolkit/components/cookie/content/cookieAcceptDialog.js)
+*   content/cookie/cookieAcceptDialog.js                        (/toolkit/components/cookie/content/cookieAcceptDialog.js)
 #endif
 
 en-US.jar:
