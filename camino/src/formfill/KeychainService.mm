@@ -1034,7 +1034,7 @@ KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* windo
         // imagine the server ever prefilling a password
         nsAutoString userValue;
         usernameElement->GetAttribute(NS_LITERAL_STRING("value"), userValue);
-        if (!userValue.Length() || userValue.Equals(user)) {
+        if (!userValue.Length() || userValue.Equals(user, nsCaseInsensitiveStringComparator())) {
           rv = usernameElement->SetValue(user);
           rv = passwordElement->SetValue(pwd);
         }
