@@ -54,8 +54,15 @@
                   label="&lightning.taskLabel;"
                   onpaneload="gCalendarGeneralPane.init(); gAlarmsPane.init(); 
                               gCategoriesPane.init(); gViewsPane.init();
-                              gTimezonesPane.init();">
-            <tabbox id="calPreferencesTabbox" flex="1" onselect="">
+                              gTimezonesPane.init(); gLightningPane.init();">
+            <preferences>
+                <preference id="calendar.preferences.lightning.selectedTabIndex"
+                            name="calendar.preferences.lightning.selectedTabIndex"
+                            type="int"/>
+            </preferences>
+            <tabbox id="calPreferencesTabbox" 
+                    flex="1" 
+                    onselect="gLightningPane.tabSelectionChanged();">
                 <tabs>
                     <tab id="calPreferencesTabGeneral"
                          label="&paneGeneral.title;"/>
@@ -92,6 +99,8 @@
 
         <script type="application/x-javascript"
                 src="chrome://calendar/content/calUtils.js"/>
+        <script type="application/x-javascript"
+                src="chrome://lightning/content/messenger-overlay-preferences.js"/>
 
     </prefwindow>
 
