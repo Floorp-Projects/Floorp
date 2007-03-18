@@ -187,20 +187,54 @@ protected:
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
   PRBool IsVisible(PRBool *aIsOffscreen); 
-  nsresult GetTextFromRelationID(nsIAtom *aIDAttrib, nsString &aName);
 
-  static nsIContent *GetContentPointingTo(const nsAString *aId,
-                                          nsIContent *aLookContent,
-                                          nsIAtom *forAttrib,
-                                          nsIContent *aExcludeContent = nsnull,
-                                          PRUint32 aForAttribNamespace = kNameSpaceID_None,
-                                          nsIAtom *aTagType = nsAccessibilityAtoms::label);
-  static nsIContent *GetXULLabelContent(nsIContent *aForNode,
-                                        nsIAtom *aLabelType = nsAccessibilityAtoms::label);
+  // Relation helpers
+  nsresult GetTextFromRelationID(nsIAtom *aIDAttrib, nsString &aName);
+  already_AddRefed<nsIDOMNode> FindNeighbourPointingToThis(nsIAtom *aRelationAttr,
+                                                           PRUint32 aAncestorLevelsToSearch = 0);
+
+  /**
+   * Search element in neighborhood of the given element by tag name and
+   * attribute value that equals to ID attribute of the given element.
+   * ID attribute can be either 'id' attribute or 'anonid' if the element is
+   * anonymous.
+   *
+   * @param aForNode - the given element the search is performed for
+   * @param aTagName - tag name of searched element
+   * @param aAttr - attribute name of searched element
+   * @param aAncestorLevelsToSearch - points how is the neighborhood of the
+   *                                  given element big.
+   */
+  static nsIContent *FindNeighbourPointingToNode(nsIContent *aForNode,
+                                                 nsIAtom *aTagName,
+                                                 nsIAtom *aAttr,
+                                                 PRUint32 aAncestorLevelsToSearch = 5);
+
+  /**
+   * Search for element that satisfies the requirements in subtree of the given
+   * element. The requirements are tag name, attribute name and value of
+   * attribute.
+   *
+   * @param aId - value of searched attribute
+   * @param aLookContent - element that search is performed inside
+   * @param aForAttrib - searched attribute
+   * @param aExcludeContent - element that is skiped for search
+   * @param aForAttribNamespace - namespace id of searched attribute, by default
+   *                              empty namespace
+   * @param aTagType - tag name of searched element, by default it is 'label'
+   */
+  static nsIContent *FindDescendantPointingToID(const nsAString *aId,
+                                                nsIContent *aLookContent,
+                                                nsIAtom *forAttrib,
+                                                nsIContent *aExcludeContent = nsnull,
+                                                PRUint32 aForAttribNamespace = kNameSpaceID_None,
+                                                nsIAtom *aTagType = nsAccessibilityAtoms::label);
+
   static nsIContent *GetHTMLLabelContent(nsIContent *aForNode);
   static nsIContent *GetLabelContent(nsIContent *aForNode);
   static nsIContent *GetRoleContent(nsIDOMNode *aDOMNode);
 
+  // Name helpers
   nsresult GetHTMLName(nsAString& _retval, PRBool aCanAggregateSubtree = PR_TRUE);
   nsresult GetXULName(nsAString& aName, PRBool aCanAggregateSubtree = PR_TRUE);
   // For accessibles that are not lists of choices, the name of the subtree should be the 
@@ -243,10 +277,6 @@ protected:
   // For accessibles that have actions
   static void DoCommandCallback(nsITimer *aTimer, void *aClosure);
   nsresult DoCommand(nsIContent *aContent = nsnull);
-
-  // Relation helpers
-  already_AddRefed<nsIDOMNode> GetInverseRelatedNode(nsIAtom *aRelationAttr,
-                                                     PRUint32 aAncestorLevelsToSearch = 0);
 
   // Data Members
   nsCOMPtr<nsIAccessible> mParent;
