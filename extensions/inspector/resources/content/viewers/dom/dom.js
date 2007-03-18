@@ -52,6 +52,7 @@ const kDOMViewCID          = "@mozilla.org/inspector/dom-view;1";
 const kClipboardHelperCID  = "@mozilla.org/widget/clipboardhelper;1";
 const kPromptServiceCID    = "@mozilla.org/embedcomp/prompt-service;1";
 const nsIDOMNode           = Components.interfaces.nsIDOMNode;
+const nsIDOMElement        = Components.interfaces.nsIDOMElement;
 
 //////////////////////////////////////////////////
 
@@ -162,6 +163,8 @@ DOMViewer.prototype =
       if (this.mPanel.panelset.clipboardFlavor != "inspector/dom-node")
         return false;
       clipboardNode = this.mPanel.panelset.getClipboardData();
+    }
+    if (/^cmdEdit(Paste|Insert)/.test(aCommand)) {
       selectedNode = new XPCNativeWrapper(viewer.selectedNode, "nodeType",
                                           "parentNode", "childNodes");
       if (selectedNode.parentNode)
@@ -179,8 +182,14 @@ DOMViewer.prototype =
       case "cmdEditPasteAsParent":
         return this.isValidChild(clipboardNode, selectedNode) &&
                this.isValidChild(parentNode, clipboardNode, selectedNode);
-      case "cmdEditInsert":
-        return false;
+      case "cmdEditInsertAfter":
+      	return parentNode instanceof nsIDOMElement;
+      case "cmdEditInsertBefore":
+      	return parentNode instanceof nsIDOMElement;
+      case "cmdEditInsertFirstChild":
+      	return selectedNode instanceof nsIDOMElement;
+      case "cmdEditInsertLastChild":
+      	return selectedNode instanceof nsIDOMElement;
       case "cmdEditCut":
       case "cmdEditCopy":
       case "cmdEditDelete":
@@ -237,27 +246,9 @@ DOMViewer.prototype =
   
   getCommand: function(aCommand)
   {
-    switch (aCommand) {
-      case "cmdEditCut":
-        return new cmdEditCut();
-      case "cmdEditCopy":
-        return new cmdEditCopy();
-      case "cmdEditPaste":
-        return new cmdEditPaste();
-      case "cmdEditPasteBefore":
-        return new cmdEditPasteBefore();
-      case "cmdEditPasteReplace":
-        return new cmdEditPasteReplace();
-      case "cmdEditPasteFirstChild":
-        return new cmdEditPasteFirstChild();
-      case "cmdEditPasteLastChild":
-        return new cmdEditPasteLastChild();
-      case "cmdEditPasteAsParent":
-        return new cmdEditPasteAsParent();
-      case "cmdEditDelete":
-        return new cmdEditDelete();
-    }
-    return null;
+  	if (aCommand in window)
+	    return new window[aCommand]();
+	  return null;
   },
   
   ////////////////////////////////////////////////////////////////////////////
@@ -454,9 +445,9 @@ DOMViewer.prototype =
     }
   },
 
-  onPastePopupShowing: function onPastePopupShowing(menupopup) {
-    for (var i = 0; i < menupopup.childNodes.length; i++) {
-      var commandId = menupopup.childNodes[i].getAttribute("command");
+  onCommandPopupShowing: function onCommandPopupShowing(aMenuPopup) {
+    for (var i = 0; i < aMenuPopup.childNodes.length; i++) {
+      var commandId = aMenuPopup.childNodes[i].getAttribute("command");
       if (viewer.isCommandEnabled(commandId))
         document.getElementById(commandId).setAttribute("disabled", "false");
       else
@@ -1342,6 +1333,110 @@ cmdEditPasteAsParent.prototype =
     if (this.pastedNode)
       this.originalParentNode.replaceChild(this.originalNode, this.pastedNode);
   }
+};
+
+/**
+ * Generic prototype for inserting a new node somewhere
+ */
+function InsertNode() {}
+InsertNode.prototype = 
+{
+  insertedNode: null,
+  originalNode: null,
+  attr: null,
+
+  // remove this line for bug 179621, Phase Three
+  txnType: "standard",
+
+  // required for nsITransaction
+  QueryInterface: txnQueryInterface,
+  merge: txnMerge,
+  isTransient: false,
+  redoTransaction: txnRedoTransaction,
+
+  insertNode: function insertNode()
+  {
+  },
+
+  createNode: function createNode()
+  {
+    var doc = this.originalNode.ownerDocument;
+    if (!this.attr) {
+      this.attr = { type: null, value: null, namespaceURI: null, accepted: false };
+
+      window.openDialog("chrome://inspector/content/viewers/dom/insertDialog.xul",
+                        "insert", "chrome,modal,centerscreen", doc, this.attr);
+	
+    }
+
+    if (this.attr.accepted) {
+     	switch (this.attr.type) {
+        case nsIDOMNode.ELEMENT_NODE:
+     	    this.insertedNode = doc.createElementNS(this.attr.namespaceURI, this.attr.value);
+     	    break;
+     	  case nsIDOMNode.TEXT_NODE:
+     	    this.insertedNode = doc.createTextNode(this.attr.value);
+     	    break;
+     	}
+     	return true;
+    }
+    return false;
+  },
+
+  doTransaction: function doTransaction()
+  {
+    var selected = this.originalNode ? this.originalNode : viewer.selectedNode;
+    if (selected) {
+      this.originalNode = selected;
+      if (this.createNode()) {
+        this.insertNode();
+        return false;
+      }
+    }
+    return true;
+  },
+
+  undoTransaction: function undoTransaction()
+  {
+    if (this.insertedNode)
+      this.insertedNode.parentNode.removeChild(this.insertedNode);
+  }
+};
+
+/**
+ * Inserts a node after the selected node.
+ */
+function cmdEditInsertAfter() {}
+cmdEditInsertAfter.prototype = new InsertNode();
+cmdEditInsertAfter.prototype.insertNode = function insertNode() {
+  this.originalNode.parentNode.insertBefore(this.insertedNode, this.originalNode.nextSibling);
+};
+
+/**
+ * Inserts a node before the selected node.
+ */
+function cmdEditInsertBefore() {}
+cmdEditInsertBefore.prototype = new InsertNode();
+cmdEditInsertBefore.prototype.insertNode = function insertNode() {
+  this.originalNode.parentNode.insertBefore(this.insertedNode, this.originalNode);
+};
+
+/**
+ * Inserts a node as the first child of the selected node.
+ */
+function cmdEditInsertFirstChild() {}
+cmdEditInsertFirstChild.prototype = new InsertNode();
+cmdEditInsertFirstChild.prototype.insertNode = function insertNode() {
+  this.originalNode.insertBefore(this.insertedNode, this.originalNode.firstChild);
+};
+
+/**
+ * Inserts a node as the last child of the selected node.
+ */
+function cmdEditInsertLastChild() {}
+cmdEditInsertLastChild.prototype = new InsertNode();
+cmdEditInsertLastChild.prototype.insertNode = function insertNode() {
+  this.originalNode.appendChild(this.insertedNode);
 };
 
 

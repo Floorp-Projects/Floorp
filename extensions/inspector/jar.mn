@@ -87,6 +87,8 @@ inspector.jar:
   content/inspector/viewers/dom/columnsDialog.js                      (resources/content/viewers/dom/columnsDialog.js)
   content/inspector/viewers/dom/columnsDialog.xul                     (resources/content/viewers/dom/columnsDialog.xul)
   content/inspector/viewers/dom/commandOverlay.xul                    (resources/content/viewers/dom/commandOverlay.xul)
+  content/inspector/viewers/dom/insertDialog.js                       (resources/content/viewers/dom/insertDialog.js)
+  content/inspector/viewers/dom/insertDialog.xul                      (resources/content/viewers/dom/insertDialog.xul)
   content/inspector/viewers/dom/findDialog.xul                        (resources/content/viewers/dom/findDialog.xul)
   content/inspector/viewers/dom/keysetOverlay.xul                     (resources/content/viewers/dom/keysetOverlay.xul)
   content/inspector/viewers/dom/popupOverlay.xul                      (resources/content/viewers/dom/popupOverlay.xul)

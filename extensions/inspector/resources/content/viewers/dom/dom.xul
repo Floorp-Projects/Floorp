@@ -52,6 +52,11 @@
     <command id="cmdEditPasteLastChild" oncommand="viewer.pane.panelset.execCommand('cmdEditPasteLastChild');"/>
     <command id="cmdEditPasteAsParent" oncommand="viewer.pane.panelset.execCommand('cmdEditPasteAsParent');"/>
 
+    <command id="cmdEditInsertAfter" oncommand="viewer.pane.panelset.execCommand('cmdEditInsertAfter');"/>
+    <command id="cmdEditInsertBefore" oncommand="viewer.pane.panelset.execCommand('cmdEditInsertBefore');"/>
+    <command id="cmdEditInsertFirstChild" oncommand="viewer.pane.panelset.execCommand('cmdEditInsertFirstChild');"/>
+    <command id="cmdEditInsertLastChild" oncommand="viewer.pane.panelset.execCommand('cmdEditInsertLastChild');"/>
+
   </commandset>
   
   <!--============================= POPUPS ============================== -->
@@ -64,7 +69,7 @@
       <menuitem id="mnEditCut"/>
       <menuitem id="mnEditCopy"/>
       <menu id="mnEditPasteMenu" label="&mnEditPasteMenu.label;">
-        <menupopup onpopupshowing="viewer.onPastePopupShowing(this)">
+        <menupopup onpopupshowing="viewer.onCommandPopupShowing(this)">
           <!-- keep older functionality of paste command for paste menu in DOM Nodes viewer -->
           <menuitem id="mnEditPasteAfter" label="&mnEditPasteAfter.label;" command="cmdEditPaste"
                     accesskey="&mnEditPaste.accesskey;" key="keyEditPaste"/>
@@ -77,7 +82,14 @@
         </menupopup>
       </menu>
       <menuseparator/>
-      <!--<menuitem id="mnEditInsert"/>-->
+      <menu id="mnEditInsertMenu" label="&mnEditInsertMenu.label;">
+        <menupopup onpopupshowing="viewer.onCommandPopupShowing(this)">
+          <menuitem id="mnEditInsertAfter" label="&mnEditInsertAfter.label;" command="cmdEditInsertAfter"/>
+          <menuitem id="mnEditInsertBefore" label="&mnEditInsertBefore.label;" command="cmdEditInsertBefore"/>
+          <menuitem id="mnEditInsertFirstChild" label="&mnEditInsertFirstChild.label;" command="cmdEditInsertFirstChild"/>
+          <menuitem id="mnEditInsertLastChild" label="&mnEditInsertLastChild.label;" command="cmdEditInsertLastChild"/>
+        </menupopup>
+      </menu>
       <menuitem id="mnEditDelete"/>
       <menuseparator/>
       <menuitem label="&cmdCopyXML.label;" observes="cmdCopyXML"/>

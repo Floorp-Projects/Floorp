@@ -100,3 +100,38 @@
   <!ENTITY mnEditPasteFirstChild.label "As first child">
   <!ENTITY mnEditPasteLastChild.label "As last child">
   <!ENTITY mnEditPasteAsParent.label "As parent">
+
+  <!ENTITY mnEditInsertMenu.label "Insert">
+  <!ENTITY mnEditInsertAfter.label "After">
+  <!ENTITY mnEditInsertBefore.label "Before">
+  <!ENTITY mnEditInsertFirstChild.label "As first child">
+  <!ENTITY mnEditInsertLastChild.label "As last child">
+
+  <!ENTITY insertNode.title "Insert Node">
+  <!ENTITY nodeType.label "Node Type:">
+  <!ENTITY nodeType.element.label "Element">
+  <!ENTITY nodeType.text.label "Text">
+  <!ENTITY namespaceURI.label "Namespace URI:">
+  <!ENTITY tagName.label "Tag Name:">
+  <!ENTITY nodeValue.label "Node Value:">
+
+  <!ENTITY namespaceTitle.null.label "null">
+  <!ENTITY namespaceTitle.default.label "Document Default">
+  <!ENTITY namespaceTitle.custom.label "Custom">
+
+<!-- LOCALIZATION NOTE: The following entities are names of W3C specifications.
+                        Please consult http://www.w3.org/Consortium/Translation/
+                        for appropriate translation or leave unchanged. -->
+  <!ENTITY namespaceTitle.XMLNS.label "XMLNS">
+  <!ENTITY namespaceTitle.XML.label "XML">
+  <!ENTITY namespaceTitle.XHTML.label "XHTML">
+  <!ENTITY namespaceTitle.XLink.label "XLink">
+  <!ENTITY namespaceTitle.XSLT.label "XSLT">
+  <!ENTITY namespaceTitle.XBL.label "XBL">
+  <!ENTITY namespaceTitle.MathML.label "MathML">
+  <!ENTITY namespaceTitle.RDF.label "RDF">
+  <!ENTITY namespaceTitle.XUL.label "XUL">
+  <!ENTITY namespaceTitle.SVG.label "SVG">
+  <!ENTITY namespaceTitle.XMLEvents.label "XML Events">
+  <!ENTITY namespaceTitle.WAIRoles.label "WAI Roles">
+  <!ENTITY namespaceTitle.WAIProperties.label "WAI Properties">
