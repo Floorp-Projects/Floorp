@@ -61,7 +61,7 @@
         <textbox id="tx_nodeValue"/>
       </row>
       <row align="center">
-        <label value="&namespaceURI.label;" control="ml_namespaceURI"/>
+        <label value="&namespaceURI.label;" control="ml_namespace"/>
         <menulist id="ml_namespace" oncommand="dialog.toggleNamespace();">
           <menupopup id="mp_namespaces">
             <!-- This must be first, and must have a the value attribute set to

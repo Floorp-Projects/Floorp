@@ -57,7 +57,10 @@
         persist="screenX screenY width height sizemode"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <stringbundleset id="stringbundleset"/>
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="inspector-bundle" 
+                  src="chrome://inspector/locale/inspector.properties"/>
+  </stringbundleset>
   <popupset id="aTooltipSet"/>
   
   <popupset id="ppsGlobalPopupset"/>
