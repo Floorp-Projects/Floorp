@@ -41,7 +41,7 @@
 
 
 #include "nsString.h"
-#include "nsHashtable.h"
+#include "nsClassHashtable.h"
 #include "nsWeakReference.h"
 
 #include "nsICommandManager.h"
@@ -49,7 +49,7 @@
 #include "nsCycleCollectionParticipant.h"
 
 class nsIController;
-
+template<class E> class nsCOMArray;
 
 
 class nsCommandManager :  public nsICommandManager,
@@ -84,7 +84,7 @@ protected:
 
 protected:
 
-  nsSupportsHashtable   mCommandObserversTable;   // hash table of nsIObservers, keyed by command name
+  nsClassHashtable<nsCharPtrHashKey, nsCOMArray<nsIObserver> > mObserversTable;
 
   nsIDOMWindow*         mWindow;      // weak ptr. The window should always outlive us
 };
