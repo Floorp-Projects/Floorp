@@ -57,7 +57,7 @@ interface nsIDOMDOMStringList;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(79fa0a81-5acb-4549-94bd-5ad179616a59)]
+[scriptable, uuid(6ff04a18-a66c-4e50-9099-8e46eca181f6)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -132,9 +132,11 @@ interface nsIAccessible : nsISupports
 
   /**
    * Provides array of localized string of global keyboard accelerator for
-   * all actions supported by accessible.
+   * the given action index supported by accessible.
+   *
+   * @param aActionIndex - index of the given action
    */
-  readonly attribute nsIDOMDOMStringList keyBindings;
+  nsIDOMDOMStringList getKeyBindings(in PRUint8 aActionIndex);
 
   /**
    * Natural enumerated accessible role for the associated element.

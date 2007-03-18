@@ -2271,12 +2271,15 @@ nsAccessible::GetDefaultKeyBinding(nsAString& aKeyBinding)
 }
 
 NS_IMETHODIMP
-nsAccessible::GetKeyBindings(nsIDOMDOMStringList **aKeyBindings)
+nsAccessible::GetKeyBindings(PRUint8 aActionIndex,
+                             nsIDOMDOMStringList **aKeyBindings)
 {
+  // Currently we support only unique key binding on element for default action.
+  NS_ENSURE_TRUE(aActionIndex == 0, NS_ERROR_INVALID_ARG);
+
   nsAccessibleDOMStringList *keyBindings = new nsAccessibleDOMStringList();
   NS_ENSURE_TRUE(keyBindings, NS_ERROR_OUT_OF_MEMORY);
 
-  // Currently we support only unique key binding on element.
   nsAutoString defaultKey;
   nsresult rv = GetDefaultKeyBinding(defaultKey);
   NS_ENSURE_SUCCESS(rv, rv);
