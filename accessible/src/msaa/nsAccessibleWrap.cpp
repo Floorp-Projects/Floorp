@@ -43,6 +43,7 @@
 
 #include "Accessible2_i.c"
 #include "AccessibleAction_i.c"
+#include "AccessibleStates.h"
 
 #include "nsIMutableArray.h"
 #include "nsIDOMDocument.h"
@@ -1162,9 +1163,61 @@ nsAccessibleWrap::get_localizedRoleName(BSTR *localizedRoleName)
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_states(AccessibleStates *states)
+nsAccessibleWrap::get_states(AccessibleStates *aStates)
 {
-  return E_NOTIMPL;
+  *aStates = 0;
+
+  // XXX: bug 344674 should come with better approach that we have here.
+
+  PRUint32 states = 0;
+  nsresult rv = GetState(&states);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  if (states & nsIAccessibleStates::STATE_INVALID)
+    *aStates |= IA2_STATE_INVALID_ENTRY;
+  else if (states & nsIAccessibleStates::STATE_REQUIRED)
+    *aStates |= IA2_STATE_REQUIRED;
+
+  states = 0;
+  rv = GetExtState(&states);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  // The following IA2 states are not supported by Gecko
+  // IA2_STATE_ARMED
+  // IA2_STATE_MANAGES_DESCENDAN
+  // IA2_STATE_ICONIFIED
+  // IA2_STATE_INVALID
+
+  if (states & nsIAccessibleStates::EXT_STATE_ACTIVE)
+    *aStates |= IA2_STATE_ACTIVE;
+  else if (states & nsIAccessibleStates::EXT_STATE_DEFUNCT)
+    *aStates |= IA2_STATE_DEFUNCT;
+  else if (states & nsIAccessibleStates::EXT_STATE_EDITABLE)
+    *aStates |= IA2_STATE_EDITABLE;
+  else if (states & nsIAccessibleStates::EXT_STATE_HORIZONTAL)
+    *aStates |= IA2_STATE_HORIZONTAL;
+  else if (states & nsIAccessibleStates::EXT_STATE_MODAL)
+    *aStates |= IA2_STATE_MODAL;
+  else if (states & nsIAccessibleStates::EXT_STATE_MULTI_LINE)
+    *aStates |= IA2_STATE_MULTI_LINE;
+  else if (states & nsIAccessibleStates::EXT_STATE_OPAQUE)
+    *aStates |= IA2_STATE_OPAQUE;
+  else if (states & nsIAccessibleStates::EXT_STATE_SELECTABLE_TEXT)
+    *aStates |= IA2_STATE_SELECTABLE_TEXT;
+  else if (states & nsIAccessibleStates::EXT_STATE_SINGLE_LINE)
+    *aStates |= IA2_STATE_SINGLE_LINE;
+  else if (states & nsIAccessibleStates::EXT_STATE_STALE)
+    *aStates |= IA2_STATE_STALE;
+  else if (states & nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION)
+    *aStates |= IA2_STATE_SUPPORTS_AUTOCOMPLETION;
+  else if (states & nsIAccessibleStates::EXT_STATE_TRANSIENT)
+    *aStates |= IA2_STATE_TRANSIENT;
+  else if (states & nsIAccessibleStates::EXT_STATE_VERTICAL)
+    *aStates |= IA2_STATE_VERTICAL;
+
+  return S_OK;
 }
 
 STDMETHODIMP
