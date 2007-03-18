@@ -44,8 +44,8 @@ relativesrcdir  = toolkit/themes/pinstripe/tests
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_bug371080.xul \
-		$(NULL)
+#_TEST_FILES = 	test_bug371080.xul \
+#		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+#libs:: $(_TEST_FILES)
+#	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
