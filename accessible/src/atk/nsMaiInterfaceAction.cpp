@@ -164,7 +164,7 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
     //get shortcut
     nsAutoString subShortcut;
     nsCOMPtr<nsIDOMDOMStringList> keyBindings;
-    rv = accWrap->GetKeyBindings(getter_AddRefs(keyBindings));
+    rv = accWrap->GetKeyBindings(aActionIndex, getter_AddRefs(keyBindings));
 
     if (NS_SUCCEEDED(rv) && keyBindings) {
         PRUint32 length = 0;

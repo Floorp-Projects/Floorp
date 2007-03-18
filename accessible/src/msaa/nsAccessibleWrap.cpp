@@ -40,6 +40,10 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsIAccessibleSelectable.h"
 #include "nsIAccessibleWin32Object.h"
+
+#include "Accessible2_i.c"
+#include "AccessibleAction_i.c"
+
 #include "nsIMutableArray.h"
 #include "nsIDOMDocument.h"
 #include "nsIFrame.h"
@@ -110,10 +114,12 @@ STDMETHODIMP nsAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
     get_accChildCount(&numChildren);
     if (numChildren > 0)  // Don't support this interface for leaf elements
       *ppv = NS_STATIC_CAST(IEnumVARIANT*, this);
-  }
-  else if (IID_IServiceProvider == iid) {
+  } else if (IID_IServiceProvider == iid)
     *ppv = NS_STATIC_CAST(IServiceProvider*, this);
-  }
+  else if (IID_IAccessible2 == iid)
+    *ppv = NS_STATIC_CAST(IAccessible2*, this);
+  else if (IID_IAccessibleAction == iid)
+    *ppv = NS_STATIC_CAST(IAccessibleAction*, this);
 
   if (NULL == *ppv)
     return nsAccessNodeWrap::QueryInterface(iid, ppv);
@@ -1244,6 +1250,102 @@ nsAccessibleWrap::get_locale(IA2Locale *locale)
 
 STDMETHODIMP
 nsAccessibleWrap::get_attributes(BSTR *attributes)
+{
+  return E_NOTIMPL;
+}
+
+
+// IAccessibleAction
+
+STDMETHODIMP
+nsAccessibleWrap::nActions(long *aNumActions)
+{
+  PRUint8 count = 0;
+  nsresult rv = GetNumActions(&count);
+  *aNumActions = count;
+
+  if (NS_SUCCEEDED(rv))
+    return NS_OK;
+  return E_FAIL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::doAction(long aActionIndex)
+{
+  PRUint8 index = NS_STATIC_CAST(PRUint8, aActionIndex);
+  if (NS_SUCCEEDED(DoAction(index)))
+    return S_OK;
+  return E_FAIL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_description(long aActionIndex, BSTR *aDescription)
+{
+  *aDescription = NULL;
+
+  nsAutoString description;
+  PRUint8 index = NS_STATIC_CAST(PRUint8, aActionIndex);
+  if (NS_FAILED(GetActionDescription(index, description)))
+    return E_FAIL;
+
+  if (!description.IsVoid())
+    *aDescription = ::SysAllocString(description.get());
+
+  return S_OK;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_keyBinding(long aActionIndex, long aNumMaxBinding,
+                                 BSTR **aKeyBinding,
+                                 long *aNumBinding)
+{
+  nsCOMPtr<nsIDOMDOMStringList> keys;
+  PRUint8 index = NS_STATIC_CAST(PRUint8, aActionIndex);
+  nsresult rv = GetKeyBindings(index, getter_AddRefs(keys));
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  PRUint32 length = 0;
+  keys->GetLength(&length);
+
+  PRBool aUseNumMaxBinding = length > NS_STATIC_CAST(PRUint32, aNumMaxBinding);
+
+  PRUint32 maxBinding = NS_STATIC_CAST(PRUint32, aNumMaxBinding);
+
+  PRUint32 numBinding = length > maxBinding ? maxBinding : length;
+  *aNumBinding = numBinding;
+
+  *aKeyBinding = new BSTR[numBinding];
+  if (!*aKeyBinding)
+    return E_OUTOFMEMORY;
+
+  for (PRUint32 i = 0; i < numBinding; i++) {
+    nsAutoString key;
+    keys->Item(i, key);
+    *aKeyBinding[i] = ::SysAllocString(key.get());
+  }
+
+  return S_OK;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_name(long aActionIndex, BSTR *aName)
+{
+  *aName = NULL;
+
+  nsAutoString name;
+  PRUint8 index = NS_STATIC_CAST(PRUint8, aActionIndex);
+  if (NS_FAILED(GetActionName(index, name)))
+    return E_FAIL;
+
+  if (!name.IsVoid())
+    *aName = ::SysAllocString(name.get());
+
+  return S_OK;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::get_localizedName(long aActionIndex, BSTR *aLocalizedName)
 {
   return E_NOTIMPL;
 }
