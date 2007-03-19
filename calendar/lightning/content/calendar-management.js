@@ -339,6 +339,9 @@ var ltnCalendarTreeView = {
 function ltnSetTreeView()
 {
     gCalendars = getCalendarManager().getCalendars({});
+    for each (var cal in gCalendars) {
+        updateLtnStyleSheet(cal);
+    }
     document.getElementById("calendarTree").view = ltnCalendarTreeView;
 
     // Ensure that a calendar is selected in calendar tree after startup.
