@@ -81,6 +81,9 @@ static nsresult TranslateLDAPErrorToNSError(const int ldapError)
     return NS_ERROR_LDAP_FILTER_ERROR;
 
   default:
+    PR_LOG(gLDAPLogModule, PR_LOG_ERROR,
+           ("TranslateLDAPErrorToNSError: "
+            "Do not know how to translate LDAP error: 0x%x", ldapError));
     return NS_ERROR_UNEXPECTED;
   }
 }
@@ -248,14 +251,14 @@ nsLDAPOperation::SimpleBind(const nsACString& passwd)
         // there's nothing useful to do with it
 
     case NS_ERROR_OUT_OF_MEMORY:
-        (void *)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
+        (void)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
         return NS_ERROR_OUT_OF_MEMORY;
         break;
 
     case NS_ERROR_UNEXPECTED:
     case NS_ERROR_ILLEGAL_VALUE:
     default:
-        (void *)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
+        (void)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
         return NS_ERROR_UNEXPECTED;
     }
 
@@ -428,11 +431,11 @@ nsLDAPOperation::SearchExt(const nsACString& aBaseDn, PRInt32 aScope,
     if (NS_FAILED(rv)) {
         switch (rv) {
         case NS_ERROR_OUT_OF_MEMORY: 
-            (void *)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
+            (void)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
             return NS_ERROR_OUT_OF_MEMORY;
 
         default: 
-            (void *)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
+            (void)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
             NS_ERROR("nsLDAPOperation::SearchExt(): unexpected error in "
                      "mConnection->AddPendingOperation");
             return NS_ERROR_UNEXPECTED;
@@ -640,7 +643,7 @@ nsLDAPOperation::AddExt(const nsACString& aBaseDn,
                       mConnection.get()))->AddPendingOperation(this);
 
   if (NS_FAILED(rv)) {
-    (void*)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
+    (void)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG,
            ("nsLDAPOperation::AddExt(): abandoned due to rv %x",
             rv));
@@ -692,7 +695,7 @@ nsLDAPOperation::DeleteExt(const nsACString& aBaseDn)
                                      mConnection.get()))->AddPendingOperation(this);
 
   if (NS_FAILED(rv)) {
-    (void*)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
+    (void)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG,
            ("nsLDAPOperation::AddExt(): abandoned due to rv %x",
             rv));
@@ -807,7 +810,7 @@ nsLDAPOperation::ModifyExt(const nsACString& aBaseDn,
                                      mConnection.get()))->AddPendingOperation(this);
 
   if (NS_FAILED(rv)) {
-    (void*)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
+    (void)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG,
            ("nsLDAPOperation::AddExt(): abandoned due to rv %x",
             rv));
@@ -872,7 +875,7 @@ nsLDAPOperation::Rename(const nsACString& aBaseDn,
                                      mConnection.get()))->AddPendingOperation(this);
 
   if (NS_FAILED(rv)) {
-    (void*)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
+    (void)ldap_abandon_ext(mConnectionHandle, mMsgID, 0, 0);
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG,
            ("nsLDAPOperation::AddExt(): abandoned due to rv %x",
             rv));
