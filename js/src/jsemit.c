@@ -805,7 +805,9 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
                       case JSOP_DEFAULT:      op = JSOP_DEFAULTX; break;
                       case JSOP_TABLESWITCH:  op = JSOP_TABLESWITCHX; break;
                       case JSOP_LOOKUPSWITCH: op = JSOP_LOOKUPSWITCHX; break;
-                      default:                JS_ASSERT(0);
+                      default:
+                        ReportStatementTooLarge(cx, cg);
+                        return JS_FALSE;
                     }
                     *pc = (jsbytecode) op;
 
