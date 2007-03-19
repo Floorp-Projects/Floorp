@@ -395,4 +395,20 @@ enum nsDOMClassInfoID {
   eDOMClassInfoIDCount
 };
 
+/**
+ * nsIClassInfo helper macros
+ */
+
+extern nsIClassInfo*
+NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID);
+
+#define NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(_class)                          \
+  if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                                \
+    foundInterface = NS_GetDOMClassInfoInstance(eDOMClassInfo_##_class##_id); \
+    if (!foundInterface) {                                                    \
+      *aInstancePtr = nsnull;                                                 \
+      return NS_ERROR_OUT_OF_MEMORY;                                          \
+    }                                                                         \
+  } else
+
 #endif // nsDOMClassInfoID_h__

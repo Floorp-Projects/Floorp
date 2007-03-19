@@ -1110,14 +1110,7 @@ private:
   (ptr, result)
 
 #define NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(_class)                      \
-  if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                                \
-    foundInterface =                                                          \
-      nsContentUtils::GetClassInfoInstance(eDOMClassInfo_##_class##_id);      \
-    if (!foundInterface) {                                                    \
-      *aInstancePtr = nsnull;                                                 \
-      return NS_ERROR_OUT_OF_MEMORY;                                          \
-    }                                                                         \
-  } else
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(_class)
 
 #define NS_INTERFACE_MAP_ENTRY_TEAROFF(_interface, _allocator)                \
   if (aIID.Equals(NS_GET_IID(_interface))) {                                  \

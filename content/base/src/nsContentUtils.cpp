@@ -588,15 +588,6 @@ nsContentUtils::Shutdown()
   }
 }
 
-// static
-nsISupports *
-nsContentUtils::GetClassInfoInstance(nsDOMClassInfoID aID)
-{
-  nsIDOMScriptObjectFactory *factory = GetDOMScriptObjectFactory();
-
-  return factory ? factory->GetClassInfoInstance(aID) : nsnull;
-}
-
 /**
  * Checks whether two nodes come from the same origin. aTrustedNode is
  * considered 'safe' in that a user can operate on it and that it isn't

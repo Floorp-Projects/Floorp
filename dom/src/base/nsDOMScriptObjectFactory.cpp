@@ -220,7 +220,7 @@ nsDOMScriptObjectFactory::NewScriptGlobalObject(PRBool aIsChrome,
 NS_IMETHODIMP_(nsISupports *)
 nsDOMScriptObjectFactory::GetClassInfoInstance(nsDOMClassInfoID aID)
 {
-  return nsDOMClassInfo::GetClassInfoInstance(aID);
+  return NS_GetDOMClassInfoInstance(aID);
 }
 
 NS_IMETHODIMP_(nsISupports *)

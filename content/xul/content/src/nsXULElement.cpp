@@ -462,7 +462,7 @@ nsXULElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
                               new nsXULElementTearoff(this));
         NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
     } else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
-        inst = nsContentUtils::GetClassInfoInstance(eDOMClassInfo_XULElement_id);
+        inst = NS_GetDOMClassInfoInstance(eDOMClassInfo_XULElement_id);
         NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
     } else {
         return PostQueryInterface(aIID, aInstancePtr);

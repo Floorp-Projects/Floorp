@@ -654,9 +654,8 @@ nsXTFElementWrapper::GetInterfaces(PRUint32* aCount, nsIID*** aArray)
   PRUint32 xtfCount = 0;
   nsIID** xtfArray = nsnull;
 
-  nsCOMPtr<nsISupports> ci =
-    nsContentUtils::GetClassInfoInstance(eDOMClassInfo_Element_id);
-  nsCOMPtr<nsIClassInfo> baseCi = do_QueryInterface(ci);
+  nsCOMPtr<nsIClassInfo> baseCi =
+    NS_GetDOMClassInfoInstance(eDOMClassInfo_Element_id);
   if (baseCi) {
     baseCi->GetInterfaces(&baseCount, &baseArray);
   }
@@ -715,7 +714,7 @@ nsXTFElementWrapper::GetHelperForLanguage(PRUint32 language,
 {
   *aHelper = nsnull;
   nsCOMPtr<nsIClassInfo> ci = 
-    do_QueryInterface(nsContentUtils::GetClassInfoInstance(eDOMClassInfo_Element_id));
+    NS_GetDOMClassInfoInstance(eDOMClassInfo_Element_id);
   return
     ci ? ci->GetHelperForLanguage(language, aHelper) : NS_ERROR_NOT_AVAILABLE;
 }
