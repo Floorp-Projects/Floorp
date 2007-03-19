@@ -60,6 +60,7 @@ class nsIFrame;
 class nsIPresShell;
 class nsIDOMNode;
 class nsIAtom;
+class nsIView;
 
 // When mNextSibling is set to this, it indicates there ar eno more siblings
 #define DEAD_END_ACCESSIBLE NS_STATIC_CAST(nsIAccessible*, (void*)1)
@@ -277,6 +278,9 @@ protected:
   // For accessibles that have actions
   static void DoCommandCallback(nsITimer *aTimer, void *aClosure);
   nsresult DoCommand(nsIContent *aContent = nsnull);
+
+  // Check the visibility across both parent content and chrome
+  PRBool CheckVisibilityInParentChain(nsIDocument* aDocument, nsIView* aView);
 
   // Data Members
   nsCOMPtr<nsIAccessible> mParent;

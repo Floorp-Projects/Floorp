@@ -947,14 +947,19 @@ PRBool nsAccessible::IsVisible(PRBool *aIsOffscreen)
     }
   }
 
-  if (rectVisibility == nsRectVisibility_kVisible) {
+  if (rectVisibility != nsRectVisibility_kZeroAreaRect) {
     // This view says it is visible, but we need to check the parent view chain :(
-    while ((containingView = containingView->GetParent()) != nsnull) {
-      if (containingView->GetVisibility() == nsViewVisibility_kHide) {
-        return PR_FALSE;
-      }
+    if (!mDOMNode) {
+      return PR_FALSE;
     }
-    return PR_TRUE;
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    mDOMNode->GetOwnerDocument(getter_AddRefs(domDoc));
+    NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+    return CheckVisibilityInParentChain(doc, containingView);
   }
 
   PRBool hasArea  = rectVisibility != nsRectVisibility_kZeroAreaRect;
@@ -3076,3 +3081,37 @@ nsAccessible::GetFirstAvailableAccessible(nsIDOMNode *aStartNode, PRBool aRequir
   return nsnull;
 }
 
+PRBool nsAccessible::CheckVisibilityInParentChain(nsIDocument* aDocument, nsIView* aView)
+{
+  nsIDocument* document = aDocument;
+  nsIView* view = aView;
+  // both view chain and widget chain are broken between chrome and content
+  while (document != nsnull) {
+    while (view != nsnull) {
+      if (view->GetVisibility() == nsViewVisibility_kHide) {
+        return PR_FALSE;
+      }
+      view = view->GetParent();
+    }
+
+    nsIDocument* parentDoc = document->GetParentDocument();
+    if (parentDoc != nsnull) {
+      nsIContent* content = parentDoc->FindContentForSubDocument(document);
+      if (content != nsnull) {
+        nsIPresShell* shell = parentDoc->GetShellAt(0);
+        nsIFrame* frame = shell->GetPrimaryFrameFor(content);
+        while (frame != nsnull && !frame->HasView()) {
+          frame = frame->GetParent();
+        }
+
+        if (frame != nsnull) {
+          view = frame->GetViewExternal();
+        }
+      }
+    }
+
+    document = parentDoc;
+  }
+
+  return PR_TRUE;
+}

@@ -207,23 +207,16 @@ NS_IMETHODIMP nsDocAccessible::GetState(PRUint32 *aState)
   if (!mIsContentLoaded) {
     *aState |= nsIAccessibleStates::STATE_BUSY;
   }
-
-  // Is it visible?
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
-  nsCOMPtr<nsIWidget> widget;
-  if (shell) {
-    nsIViewManager* vm = shell->GetViewManager();
-    if (vm) {
-      vm->GetWidget(getter_AddRefs(widget));
+ 
+  nsIFrame* frame = GetFrame();
+  while (frame != nsnull && !frame->HasView()) {
+    frame = frame->GetParent();
+  }
+ 
+  if (frame != nsnull) {
+    if (!CheckVisibilityInParentChain(mDocument, frame->GetViewExternal())) {
+      *aState |= nsIAccessibleStates::STATE_INVISIBLE;
     }
-  }
-  PRBool isVisible = (widget != nsnull);
-  while (widget && isVisible) {
-    widget->IsVisible(isVisible);
-    widget = widget->GetParent();
-  }
-  if (!isVisible) {
-    *aState |= nsIAccessibleStates::STATE_INVISIBLE;
   }
 
   nsCOMPtr<nsIEditor> editor = GetEditor();
