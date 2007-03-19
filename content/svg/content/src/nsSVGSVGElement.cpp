@@ -1107,6 +1107,23 @@ nsSVGSVGElement::IsAttributeMapped(const nsIAtom* name) const
 }
 
 nsresult
+nsSVGSVGElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                              const nsAString* aValue, PRBool aNotify)
+{
+  nsSVGSVGElementBase::AfterSetAttr(aNameSpaceID, aName, aValue, aNotify);
+
+  // We need to do this here because the calling
+  // InvalidateTransformNotifyFrame in DidModifySVGObservable would
+  // happen too early, before HasAttr(viewBox) returns true (important
+  // in the case of adding a viewBox)
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::viewBox) {
+    InvalidateTransformNotifyFrame();
+  }
+
+  return NS_OK;
+}
+
+nsresult
 nsSVGSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                            PRBool aNotify)
 {
@@ -1186,7 +1203,11 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
     }
   }
 
-  InvalidateTransformNotifyFrame();
+  // Deal with viewBox in AfterSetAttr (see comment there for reason)
+  nsCOMPtr<nsIDOMSVGAnimatedRect> r = do_QueryInterface(observable);
+  if (r != mViewBox) {
+    InvalidateTransformNotifyFrame();
+  }
 
   return NS_OK;
 }
