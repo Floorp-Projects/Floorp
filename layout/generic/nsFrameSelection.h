@@ -41,7 +41,7 @@
 #include "nsIFrame.h"
 #include "nsIContent.h"
 #include "nsISelectionController.h"
-
+#include "nsIScrollableViewProvider.h"
 #include "nsITableLayout.h"
 #include "nsITableCellLayout.h"
 #include "nsIDOMElement.h"
@@ -209,14 +209,24 @@ public:
    */
   void Init(nsIPresShell *aShell, nsIContent *aLimiter);
 
-  /* SetScrollableView sets the scroll view
-   *  @param aScrollView is the scroll view for this selection.
+  /**
+   * SetScrollableViewProvider sets the scroll view provider.
+   * @param aProvider The provider of the scroll view.
    */
-  void SetScrollableView(nsIScrollableView *aScrollView) { mScrollView = aScrollView; }
+  void SetScrollableViewProvider(nsIScrollableViewProvider* aProvider)
+  {
+    mScrollableViewProvider = aProvider;
+  }
 
-  /* GetScrollableView gets the current scroll view
+  /**
+   * GetScrollableView returns the current scroll view.
    */
-  nsIScrollableView* GetScrollableView() { return mScrollView; }
+  nsIScrollableView* GetScrollableView()
+  {
+    return mScrollableViewProvider
+      ? mScrollableViewProvider->GetScrollableView()
+      : nsnull;
+  }
 
   /** HandleClick will take the focus to the new frame at the new offset and 
    *  will either extend the selection from the old anchor, or replace the old anchor.
@@ -632,7 +642,7 @@ private:
 #endif
 
   PRInt32 mDesiredX;
-  nsIScrollableView *mScrollView;
+  nsIScrollableViewProvider* mScrollableViewProvider;
 
   nsMouseEvent mDelayedMouseEvent;
 

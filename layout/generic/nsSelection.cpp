@@ -1205,7 +1205,7 @@ nsFrameSelection::Init(nsIPresShell *aShell, nsIContent *aLimiter)
   mMouseDownState = PR_FALSE;
   mDesiredXSet = PR_FALSE;
   mLimiter = aLimiter;
-  mScrollView = nsnull;
+  mScrollableViewProvider = nsnull;
   mCaretMovementStyle = nsContentUtils::GetIntPref("bidi.edit.caret_movement_style", 2);
 }
 
