@@ -34,13 +34,13 @@ use Safe;
 
 use base qw(Exporter);
 our @EXPORT_OK = qw(
-    display_version_and_os
+    get_version_and_os
     indicate_progress
     install_string
     vers_cmp
 );
 
-sub display_version_and_os {
+sub get_version_and_os {
     # Display version information
     my @os_details = POSIX::uname;
     # 0 is the name of the OS, 2 is the major version,
@@ -50,11 +50,10 @@ sub display_version_and_os {
         $os_name = Win32::GetOSName();
     }
     # $os_details[3] is the minor version.
-    print install_string('version_and_os', { bz_ver   => BUGZILLA_VERSION,
-                                             perl_ver => sprintf('%vd', $^V),
-                                             os_name  => $os_name,
-                                             os_ver   => $os_details[3] })
-           . "\n";
+    return { bz_ver   => BUGZILLA_VERSION,
+             perl_ver => sprintf('%vd', $^V),
+             os_name  => $os_name,
+             os_ver   => $os_details[3] };
 }
 
 sub indicate_progress {
@@ -75,18 +74,18 @@ sub install_string {
     my $path = _cache()->{template_include_path};
     
     my $string_template;
-    # Find the first set of templates that defines this string.
+    # Find the first template that defines this string.
     foreach my $dir (@$path) {
-        my $file = "$dir/setup/strings.txt.pl";
-        next unless -e $file;
-        my $safe = new Safe;
-        $safe->rdo($file);
-        my %strings = %{$safe->varglob('strings')};
-        $string_template = $strings{$string_id};
-        last if $string_template;
+        my $base = "$dir/setup/strings";
+        $string_template = _get_string_from_file($string_id, "$base.html.pl")
+            if is_web();
+        $string_template = _get_string_from_file($string_id, "$base.txt.pl")
+            if !$string_template;
+        last if defined $string_template;
     }
     
-    die "No language defines the string '$string_id'" if !$string_template;
+    die "No language defines the string '$string_id'"
+        if !defined $string_template;
 
     $vars ||= {};
     my @replace_keys = keys %$vars;
@@ -236,6 +235,34 @@ sub vers_cmp {
 # Helper Subroutines #
 ######################
 
+# Tells us if we're running in a web interface (Usually, this means
+# we're running in setup.cgi as opposed to checksetup.pl, but sometimes
+# this function *might* get called from within normal Bugzilla code.)
+sub is_web {
+    # When this is called, we may or may not have all of our required
+    # perl modules installed.
+    #
+    # The way this is written works for all of these circumstances:
+    #   * We're in checksetup.pl, before and after requirements-checking
+    #   * We're in setup.cgi, before and after requirements-checking
+    #   * We're in email_in.pl, the WebService interface, or something else
+    #     (That's primarily what the "return 0" check below is for.)
+    my $usage_mode = eval { Bugzilla->usage_mode };
+    return 0 if (defined $usage_mode && $usage_mode != USAGE_MODE_BROWSER);
+    return i_am_cgi();
+}
+
+# Used by install_string
+sub _get_string_from_file {
+    my ($string_id, $file) = @_;
+    
+    return undef if !-e $file;
+    my $safe = new Safe;
+    $safe->rdo($file);
+    my %strings = %{$safe->varglob('strings')};
+    return $strings{$string_id};
+}
+
 # Used by template_include_path.
 sub _add_language_set {
     my ($array, $lang, $templatedir) = @_;
@@ -307,6 +334,12 @@ sub is_tainted {
     return not eval { my $foo = join('',@_), kill 0; 1; };
 }
 
+sub i_am_cgi {
+    # I use SERVER_SOFTWARE because it's required to be
+    # defined for all requests in the CGI spec.
+    return exists $ENV{'SERVER_SOFTWARE'} ? 1 : 0;
+}
+
 __END__
 
 =head1 NAME
@@ -331,10 +364,10 @@ export them.
 
 =over
 
-=item C<display_version_and_os>
+=item C<get_version_and_os>
 
-Prints out some text lines, saying what version of Bugzilla we're running,
-what perl version we're using, and what OS we're running on.
+Returns a hash containing information about what version of Bugzilla we're
+running, what perl version we're using, and what OS we're running on.
 
 =item C<indicate_progress>
 

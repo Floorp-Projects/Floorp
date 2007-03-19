@@ -10,7 +10,7 @@
 # rights and limitations under the License.
 #
 # The Initial Developer of the Original Code is Everything Solved.
-# Portions created by Everything Solved are Copyright (C) 2006
+# Portions created by Everything Solved are Copyright (C) 2007
 # Everything Solved. All Rights Reserved.
 #
 # The Original Code is the Bugzilla Bug Tracking System.
@@ -20,6 +20,9 @@
 use strict;
 use lib ".";
 
+#################
+# Initial Setup #
+#################
 
 # The order of these "use" statements is important--we have to have
 # CGI before we have CGI::Carp. Without CGI::Carp, "use 5.008" will just throw
@@ -37,14 +40,22 @@ use 5.008;
 use Bugzilla::Constants;
 require 5.008001 if ON_WINDOWS;
 use Bugzilla::Install::Requirements;
-use Bugzilla::Install::Util qw(display_version_and_os);
+use Bugzilla::Install::Util qw(install_string get_version_and_os);
 
 local $| = 1;
 
 my $cgi = new CGI;
 $cgi->charset('UTF-8');
-print $cgi->header(-type => 'text/plain');
+print $cgi->header();
+print install_string('header', get_version_and_os());
 
-display_version_and_os();
+######################
+# Check Requirements #
+######################
+
+print '<pre>';
 my $module_results = check_requirements(1);
 Bugzilla::Install::Requirements::print_module_instructions($module_results, 1);
+print '</pre>';
+
+print install_string('footer');

@@ -54,7 +54,7 @@ BEGIN { chdir dirname($0); }
 use lib ".";
 use Bugzilla::Constants;
 use Bugzilla::Install::Requirements;
-use Bugzilla::Install::Util qw(display_version_and_os);
+use Bugzilla::Install::Util qw(install_string get_version_and_os);
 
 require 5.008001 if ON_WINDOWS; # for CGI 2.93 or higher
 
@@ -78,7 +78,7 @@ pod2usage({-verbose => 1, -exitval => 1}) if $switch{'help'};
 my $answers_file = $ARGV[0];
 my $silent = $answers_file && !$switch{'verbose'};
 
-display_version_and_os() unless $silent;
+print(install_string('header', get_version_and_os()) . "\n") unless $silent;
 # Check required --MODULES--
 my $module_results = check_requirements(!$silent);
 Bugzilla::Install::Requirements::print_module_instructions(

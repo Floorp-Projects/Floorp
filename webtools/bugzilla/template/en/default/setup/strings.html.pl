@@ -16,19 +16,30 @@
 #
 # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
 
-# This file contains a single hash named %strings, which is used by the
-# installation code to display strings before Template-Toolkit can safely
-# be loaded.
-#
-# Each string supports a very simple substitution system, where you can
-# have variables named like ##this## and they'll be replaced by the string
-# variable with that name.
-#
-# Please keep the strings in alphabetical order by their name.
+# This is just like strings.txt.pl, but for HTML templates (used by
+# setup.cgi).
 
 %strings = (
-    header => "* This is Bugzilla ##bz_ver## on perl ##perl_ver##\n"
-            . "* Running on ##os_name## ##os_ver##",
+    footer => "</div></body></html>",
+
+    # This is very simple. It doesn't support the skinning system.
+    header => <<END_HTML
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+                      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Installation and Setup for Bugzilla ##bz_ver##</title>
+    <link href="skins/standard/global.css" rel="stylesheet" type="text/css" />
+</head>
+<body id="bugzilla-installation">
+    <h1>Installation and Setup for Bugzilla ##bz_ver##</h1>
+    <div id="bugzilla-body">
+    
+        <p><strong>Perl Version</strong>: ##perl_ver##</p>
+        <p><strong>OS</strong>: ##os_name## ##os_ver##</p>
+END_HTML
+,
 );
 
 1;
+
