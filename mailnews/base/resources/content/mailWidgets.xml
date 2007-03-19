@@ -30,12 +30,12 @@
             this.selectedItems.push(els[i]);
         ]]>
       </constructor>
-           
+
       <!-- ///////////////// public members ///////////////// -->
-      <property name="_selectDelay" 
+      <property name="_selectDelay"
                 onset="this.setAttribute('_selectDelay', val);"
                 onget="return this.getAttribute('_selectDelay') || 50;"/>
-      
+
       <method name="timedSelect">
         <parameter name="item"/>
         <parameter name="timeout"/>
@@ -44,20 +44,20 @@
           var suppress = this._suppressOnSelect;
           if (timeout != -1)
             this._suppressOnSelect = true;
-          
+
           this.selectItem(item);
-          
-          this._suppressOnSelect = suppress;         
-          
+
+          this._suppressOnSelect = suppress;
+
           if (timeout != -1) {
             if (this._selectTimeout)
               window.clearTimeout(this._selectTimeout);
-              
-            this._selectTimeout = window.setTimeout(this._selectTimeoutHandler, timeout, this); 
+
+            this._selectTimeout = window.setTimeout(this._selectTimeoutHandler, timeout, this);
           }
         ]]>
         </body>
-      </method>  
+      </method>
 
       <method name="appendItem">
         <parameter name="label"/>
@@ -71,7 +71,7 @@
         ]]>
         </body>
       </method>
-      
+
       <!-- ///////////////// private members ///////////////// -->
 
       <method name="_fireOnSelect">
@@ -132,14 +132,14 @@
             this._currentItem.removeAttribute("current");
           this._currentItem = val;
           if (val)
-            val.setAttribute("current", "true");          
+            val.setAttribute("current", "true");
           return val;
         ]]>
         </setter>
       </property>
-      
+
       <property name="selectedCount" onget="return this.selectedItems.length;"/>
-      
+
       <method name="getSelectedItem">
         <parameter name="index"/>
         <body>
@@ -147,8 +147,8 @@
           return index < this.selectedItems.length ? this.selectedItems[index] : null;
         ]]>
         </body>
-      </method>      
-      
+      </method>
+
       <method name="addItemToSelection">
         <parameter name="item"/>
         <body>
@@ -156,34 +156,34 @@
           if (this.selType != "multiple" && this.selectedCount)
             return;
           if (item.hasAttribute("selected"))
-            return;            
+            return;
           this.selectedItems.push(item);
-          item.setAttribute("selected", "true");       
+          item.setAttribute("selected", "true");
           this._fireOnSelect();
         ]]>
         </body>
-      </method>      
-      
+      </method>
+
       <method name="removeItemFromSelection">
         <parameter name="item"/>
         <body>
         <![CDATA[
           if (!item.hasAttribute("selected"))
             return;
-            
+
           for (var i = 0; i < this.selectedItems.length; ++i) {
             if (this.selectedItems[i] == item) {
               this.selectedItems.splice(i, 1);
-              item.removeAttribute("selected"); 
+              item.removeAttribute("selected");
               break;
             }
           }
-              
+
           this._fireOnSelect();
         ]]>
         </body>
-      </method>      
-      
+      </method>
+
       <method name="toggleItemSelection">
         <parameter name="item"/>
         <body>
@@ -194,33 +194,33 @@
             this.addItemToSelection(item);
         ]]>
         </body>
-      </method>      
-      
+      </method>
+
       <method name="selectItem">
         <parameter name="item"/>
         <body>
         <![CDATA[
           if (!item)
             return;
-            
+
           if (this.selectedItems.length == 1 && this.selectedItems[0] == item)
             return;
-          
+
           this._selectionStart = null;
-          
+
           var suppress = this._suppressOnSelect;
           this._suppressOnSelect = true;
 
           this.clearSelection();
           this.addItemToSelection(item);
           this.currentItem = item;
-          
+
           this._suppressOnSelect = suppress;
           this._fireOnSelect();
         ]]>
         </body>
-      </method>      
-      
+      </method>
+
       <method name="selectItemRange">
         <parameter name="startItem"/>
         <parameter name="endItem"/>
@@ -233,24 +233,24 @@
             startItem = this._selectionStart ? this._selectionStart : this.currentItem;
           if (!startItem)
             startItem = endItem;
-                      
+
           var suppressSelect = this._suppressOnSelect;
           this._suppressOnSelect = true;
           this.clearSelection();
 
           this._selectionStart = startItem;
-          
+
           var currentItem;
           var startIndex = this.getIndexOfItem(startItem);
           var endIndex = this.getIndexOfItem(endItem);
           if (endIndex < startIndex) {
             currentItem = endItem;
             endItem = startItem;
-            startItem = currentItem;            
+            startItem = currentItem;
           } else {
             currentItem = startItem;
           }
-            
+
           while (currentItem) {
             if (currentItem.localName == "descriptionitem")
               this.addItemToSelection(currentItem);
@@ -260,51 +260,51 @@
           }
 
           this._suppressOnSelect = suppressSelect;
-          
+
           this._fireOnSelect();
         ]]>
         </body>
-      </method>      
-      
+      </method>
+
       <method name="selectAll">
         <body>
         <![CDATA[
           var suppress = this._suppressOnSelect;
           this._suppressOnSelect = true;
-          
+
           var item = this.getItemAtIndex(0);
           while (item) {
             this.addItemToSelection(item);
-            item = this.getNextItem(item, 1);  
+            item = this.getNextItem(item, 1);
           }
-          
+
           this._suppressOnSelect = suppress;
           this._fireOnSelect();
         ]]>
         </body>
-      </method>      
-      
+      </method>
+
       <method name="invertSelection">
         <body>
         <![CDATA[
           var suppress = this._suppressOnSelect;
           this._suppressOnSelect = true;
-          
+
           var item = this.getItemAtIndex(0);
           while (item) {
             if (item.hasAttribute("selected"))
               this.removeItemFromSelection(item);
             else
               this.addItemToSelection(item);
-            item = this.getNextItem(item, 1);  
+            item = this.getNextItem(item, 1);
           }
-          
+
           this._suppressOnSelect = suppress;
           this._fireOnSelect();
         ]]>
         </body>
-      </method>      
-      
+      </method>
+
       <method name="clearSelection">
         <body>
         <![CDATA[
@@ -312,7 +312,7 @@
           {
             for (var i = this.selectedItems.length-1; i >= 0; --i)
               this.selectedItems[i].removeAttribute("selected");
-          
+
             this.selectedItems.splice(0, this.selectedItems.length);
           }
           this._selectionStart = null;
@@ -336,7 +336,7 @@
           return null;
         ]]></body>
       </method>
-      
+
       <method name="getPreviousItem">
         <parameter name="startItem"/>
         <parameter name="delta"/>
@@ -353,13 +353,13 @@
         ]]></body>
       </method>
 
-      <!-- selection navigation --> 
+      <!-- selection navigation -->
       <method name="navigateToPreviousItem">
         <parameter name="event"/>
         <body>
-        <![CDATA[  
+        <![CDATA[
            if (event.target != this)
-             return;                
+             return;
           this._isUpSelection=0;
           this._isDownSelection=0;
           var n = this.getPreviousItem(this.selectedItems[this.selectedItems.length-1], 1);
@@ -372,44 +372,44 @@
       <method name="navigateToNextItem">
         <parameter name="event"/>
         <body>
-          <![CDATA[  
+          <![CDATA[
            if (event.target != this)
-             return;                
+             return;
            var n;
            if (this.selectedItems.length == 0) {
              n = this.getItemAtIndex(0);
            }
-           else 
+           else
            {
              this._isUpSelection=0;
              this._isDownSelection=0;
              n = this.getNextItem(this.selectedItems[this.selectedItems.length-1], 1);
            }
 
-           if (n) 
+           if (n)
              this.timedSelect(n, this._selectDelay);
           ]]>
         </body>
       </method>
-      
+
       <method name="navigateAndSelectNextItem">
         <parameter name="event"/>
         <body>
-          <![CDATA[ 
+          <![CDATA[
             var l=this.selectedItems.length;
             if (event.target != this || l < 1 || this.selType != "multiple")
               return;
             var n = this.getNextItem(this.selectedItems[l-1], 1);
-            if (n) 
+            if (n)
             {
-              if ( this._isUpSelection) 
+              if (this._isUpSelection)
               {
                 if ( l > 1 )
                   this.removeItemFromSelection(this.selectedItems[l-1]);
                 if ( l <= 2 )
                   this._isUpSelection=0;
               }
-              else 
+              else
               {
                 this.addItemToSelection(n);
                 this._isDownSelection=1;
@@ -421,73 +421,74 @@
       <method name="navigateAndSelectPreviousItem">
         <parameter name="event"/>
         <body>
-          <![CDATA[ 
+          <![CDATA[
             var l = this.selectedItems.length;
             if (event.target != this || l < 1 || this.selType != "multiple")
               return;
             var n = this.getPreviousItem(this.selectedItems[l-1], 1);
-            if (n) 
+            if (n)
             {
-              if ( this._isDownSelection) 
+              if (this._isDownSelection)
               {
                 if ( l > 1 )
                   this.removeItemFromSelection(this.selectedItems[l-1]);
                 if ( l <= 2 )
                   this._isDownSelection=0;
-              } else 
+              }
+              else
               {
                 this.addItemToSelection(n);
                 this._isUpSelection=1;
               }
-            }          
+            }
           ]]>
         </body>
       </method>
     </implementation>
 
-    <handlers>     
-      
-      <handler event="keypress" modifiers="shift" keycode="vk_down">
+    <handlers>
+
+      <handler event="keypress" modifiers="shift" keycode="VK_DOWN">
         <![CDATA[
           this.navigateAndSelectNextItem(event);
         ]]>
       </handler>
 
-      <handler event="keypress" modifiers="shift" keycode="vk_right">
+      <handler event="keypress" modifiers="shift" keycode="VK_RIGHT">
         <![CDATA[
           this.navigateAndSelectNextItem(event);
         ]]>
       </handler>
-      <handler event="keypress" modifiers="shift" keycode="vk_up">
+      <handler event="keypress" modifiers="shift" keycode="VK_UP">
         <![CDATA[
           this.navigateAndSelectPreviousItem(event);
         ]]>
       </handler>
 
-      <handler event="keypress" modifiers="shift" keycode="vk_left">
+      <handler event="keypress" modifiers="shift" keycode="VK_LEFT">
         <![CDATA[
           this.navigateAndSelectPreviousItem(event);
         ]]>
       </handler>
-           
-      <handler event="keypress" keycode="vk_up">
+
+      <handler event="keypress" keycode="VK_UP">
         <![CDATA[
           this.navigateToPreviousItem(event);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_left">
+      <handler event="keypress" keycode="VK_LEFT">
         <![CDATA[
           if (event.target != this)
             return;
           this.navigateToPreviousItem(event);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_down">
+      <handler event="keypress" keycode="VK_DOWN">
         <![CDATA[
           this.navigateToNextItem(event);
         ]]>
       </handler>
-      <handler event="keypress" keycode="vk_right">
+      <handler event="keypress" keycode="VK_RIGHT">
         <![CDATA[
           this.navigateToNextItem(event);
         ]]>
@@ -495,13 +496,13 @@
       <handler event="mousedown">
       <![CDATA[
         var targetItem = event.target;
-        if (targetItem.localName == "descriptionitem" && !event.ctrlKey && !event.shiftKey && !event.metaKey) 
+        if (targetItem.localName == "descriptionitem" && !event.ctrlKey && !event.shiftKey && !event.metaKey)
         {
-          if (!targetItem.hasAttribute('selected')) 
+          if (!targetItem.hasAttribute("selected"))
             this.selectItem(targetItem);
           this.currentItem = targetItem;
         }
-        if (document.commandDispatcher.focusedElement != this) 
+        if (document.commandDispatcher.focusedElement != this)
           this.focus(); // make sure the description has focus...
       ]]>
       </handler>
@@ -510,7 +511,7 @@
         if (event.button != 0) return;
 
         var targetItem = event.target;
-        if (targetItem.localName == "descriptionitem") 
+        if (targetItem.localName == "descriptionitem")
         {
           if (this.selType != "multiple")
             this.selectItem(targetItem);
@@ -527,15 +528,15 @@
                clicked, UNLESS it was a right-click.  We have to do this
                in click rather than mousedown so that you can drag a
                selected group of items */
-            
+
             var selectedItems = this.selectedItems;
             var didSuppressSelect = false;
             var i = 0;
-            while (i < selectedItems.length) 
+            while (i < selectedItems.length)
             {
-              if (selectedItems[i] != targetItem) 
+              if (selectedItems[i] != targetItem)
               {
-                if (!didSuppressSelect) 
+                if (!didSuppressSelect)
                 {
                   this._suppressOnSelect = true;
                   didSuppressSelect = true;
@@ -549,7 +550,7 @@
               this._suppressOnSelect = false;
           }
         }
-        else 
+        else
         {
           if (this.selType != "multiple" || (!event.ctrlKey && !event.shiftKey && !event.metaKey))
             this.clearSelection();
@@ -575,10 +576,10 @@
       </xul:hbox>
     </content>
   </binding>
- 
+
   <!-- Message Pane Widgets -->
 
-  <!-- mail-toggle-headerfield: non email addrss headers which have a toggle associated with them (i.e. the subject). 
+  <!-- mail-toggle-headerfield: non email addrss headers which have a toggle associated with them (i.e. the subject).
        use label to set the header name.
        use headerValue to set the header value. -->
   <binding id="mail-toggle-headerfield">
@@ -586,17 +587,17 @@
       <xul:hbox class="headerNameBox" align="start">
         <xul:image class="expandHeaderViewButton" xbl:inherits="onclick=ontwistyclick"/>
         <xul:spacer flex="1"/>
-        <xul:label class="headerName" xbl:inherits="value=label"/>  
+        <xul:label class="headerName" xbl:inherits="value=label"/>
       </xul:hbox>
       <xul:textbox class="headerValue plain" anonid="headerValue" flex="1" readonly="true"/>
     </content>
 
-    <implementation>      
+    <implementation>
       <property name="headerValue" onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'headerValue').value = val;"/>
     </implementation>
   </binding>
 
-  <!-- mail-headerfield: presents standard text header name & value pairs. Don't use this for email addresses. 
+  <!-- mail-headerfield: presents standard text header name & value pairs. Don't use this for email addresses.
        use label to set the header name.
        use headerValue to set the header value. -->
   <binding id="mail-headerfield">
@@ -604,10 +605,10 @@
       <xul:hbox class="headerNameBox" align="start">
         <xul:label class="headerName" xbl:inherits="value=label" flex="1"/>
       </xul:hbox>
-      <xul:textbox class="headerValue plain" anonid="headerValue" flex="1" readonly="true"/> 
+      <xul:textbox class="headerValue plain" anonid="headerValue" flex="1" readonly="true"/>
     </content>
 
-    <implementation>      
+    <implementation>
       <property name="headerValue" onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'headerValue').value = val;"/>
     </implementation>
   </binding>
@@ -617,9 +618,9 @@
       <xul:hbox class="headerNameBox" align="start">
         <xul:label class="headerName" xbl:inherits="value=label" flex="1"/>
       </xul:hbox>
-      <xul:label onclick="if (!event.button) messenger.launchExternalURL(event.target.value);" 
-                 class="headerValue plain headerValueUrl" 
-                 anonid="headerValue" flex="1" readonly="true" context="copyUrlPopup"/> 
+      <xul:label onclick="if (!event.button) messenger.launchExternalURL(event.target.value);"
+                 class="headerValue plain headerValueUrl"
+                 anonid="headerValue" flex="1" readonly="true" context="copyUrlPopup"/>
     </content>
   </binding>
 
@@ -636,7 +637,7 @@
         readonly="true"/>
     </implementation>
   </binding>
-  
+
   <!-- multi-emailHeaderField: presents multiple emailheaderfields with a toggle -->
   <binding id="mail-multi-emailHeaderField">
     <content>
@@ -665,8 +666,8 @@
            created around for the lifetime of the widget. mSizeOfAddressCache controls how many of these
            elements we keep around -->
       <field name="mSizeOfAddressCache">3</field>
-      
-      <!-- addAddressView: a public method used to add an address to this widget. 
+
+      <!-- addAddressView: a public method used to add an address to this widget.
            aAddresses is an object with 3 properties: displayName, emailAddress and fullAddress
       -->
       <method name="addAddressView">
@@ -677,7 +678,7 @@
           ]]>
         </body>
       </method>
-      
+
       <!-- updateEmailAddressNode: private method used to set properties on an address node -->
       <method name="updateEmailAddressNode">
         <parameter name="aEmailNode"/>
@@ -721,12 +722,12 @@
         <body>
           <![CDATA[
             var numExistingCachedAddresses = aAddressesNode.childNodes.length;
-            if (!numExistingCachedAddresses) 
+            if (!numExistingCachedAddresses)
               return this.mAddresses.length; // we couldn't pre fill anything
             else if (numExistingCachedAddresses > 1)
               numExistingCachedAddresses = (numExistingCachedAddresses + 1)/ 2;
-            
-            var index = 0; 
+
+            var index = 0;
             var numAddressesAdded = 0;
             var emailAddressNode;
             var commaNode;
@@ -760,7 +761,7 @@
       </method>
 
       <!-- fillAddressesNode: private method used to create email address nodes for either our short
-           or long view. aAddressesNode: the div we want to add addresses too. 
+           or long view. aAddressesNode: the div we want to add addresses too.
           aNumAddressesToShow: number of addresses to put into the list -->
       <method name="fillAddressesNode">
         <parameter name="aAddressesNode"/>
@@ -773,7 +774,7 @@
 
             // before we try to create email address nodes, try to leverage any cached nodes...
             var remainder = this.fillCachedAddresses(aAddressesNode, aNumAddressesToShow);
-            var index = numAddresses - remainder; 
+            var index = numAddresses - remainder;
             while (index < numAddresses && index < aNumAddressesToShow)
             {
               var newAddressNode = document.createElement("mail-emailaddress");
@@ -783,8 +784,8 @@
                 textNode.setAttribute("value", ", ");
                 textNode.setAttribute("class", "emailSeparator");
                 aAddressesNode.appendChild(textNode);
-              }              
-              
+              }
+
               var itemInDocument = aAddressesNode.appendChild(newAddressNode);
               this.updateEmailAddressNode(itemInDocument, this.mAddresses[index]);
               index++;
@@ -796,7 +797,7 @@
       <property name="emailAddresses" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailAddresses');"
         readonly="true"/>
       <property name="longEmailAddresses" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'longEmailAddresses');"
-        readonly="true"/> 
+        readonly="true"/>
       <property name="toggleIcon" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'toggleIcon');"
         readonly="true"/>
 
@@ -806,7 +807,7 @@
         <body>
           <![CDATA[
             this.fillAddressesNode(this.emailAddresses, -1);
-          ]]> 
+          ]]>
         </body>
       </method>
 
@@ -823,7 +824,7 @@
           ]]>
         </body>
       </method>
-      
+
       <!-- internal method used to clear both our divs -->
       <method name="clearChildNodes">
         <parameter name="aParentNode"/>
@@ -836,11 +837,11 @@
             var numItemsInNode = aParentNode.childNodes.length;
 
             while (numItemsInNode && (numItemsInNode > numItemsToPreserve))
-            { 
+            {
               aParentNode.removeChild(aParentNode.childNodes[numItemsInNode-1]);
               numItemsInNode = numItemsInNode - 1;
             }
-          ]]>       
+          ]]>
         </body>
       </method>
 
@@ -848,7 +849,7 @@
         <body>
           <![CDATA[
             // clear out our local state
-            this.mAddresses = new Array; 
+            this.mAddresses = new Array;
             this.toggleIcon.removeAttribute("open");
             this.longEmailAddresses.setAttribute("singleline", "true");
 
@@ -856,19 +857,19 @@
             this.clearChildNodes(this.emailAddresses);
           ]]>
         </body>
-      </method>       
+      </method>
     </implementation>
   </binding>
 
   <binding id="mail-emailaddress">
     <content popup="emailAddressPopup" context="emailAddressPopup">
-      <xul:label anonid="emailValue" class="emailDisplayButton plain"                 
+      <xul:label anonid="emailValue" class="emailDisplayButton plain"
                  xbl:inherits="value=label,crop"/>
       <xul:image class="emailDisplayImage" anonid="emailImage"
                  xbl:inherits="src=image"/>
     </content>
-    
-    <implementation>  
+
+    <implementation>
       <property name="label"      onset="this.getPart('emailValue').setAttribute('label',val); return val;"
                                   onget="return this.getPart('emailValue').getAttribute('label');"/>
       <property name="crop"       onset="this.getPart('emailValue').setAttribute('crop',val); return val;"
@@ -906,15 +907,15 @@
           <![CDATA[
             // aTags contains a list of actual tag names (not the keys), delimited by spaces
             // each tag name is encoded.
-            
+
             // remove any existing tag items we've appended to the list
             var headerValueNode = document.getAnonymousElementByAttribute(this, 'anonid', 'headerValue');
             for (var i = headerValueNode.childNodes.length - 1; i >= 0; --i)
               headerValueNode.removeChild(headerValueNode.childNodes[i]);
-              
+
             var tagService = Components.classes["@mozilla.org/messenger/tagservice;1"]
                              .getService(Components.interfaces.nsIMsgTagService);
-            
+
             // tokenize the keywords based on ' '
             var tagsArray = aTags.split(' ');
             for (var index = 0; index < tagsArray.length; index++)
@@ -923,15 +924,15 @@
               // color of the tag and append it.
               var tagName;
               try {
-                // if we got a bad tag name, getTagForKey will throw an exception, skip it 
+                // if we got a bad tag name, getTagForKey will throw an exception, skip it
                 // and go to the next one.
                 tagName = tagService.getTagForKey(tagsArray[index]);
               } catch (ex) { continue; }
-              
+
               var color = tagService.getColorForKey(tagsArray[index]);
-              
+
               // now create a label for the tag name, and set the color
-              var label = document.createElement("label");              
+              var label = document.createElement("label");
               label.setAttribute('value', tagName);
               label.style.color = color;
               label.className = "tagvalue";
@@ -989,7 +990,7 @@
             try
             {
               var hdrs = pref.getCharPref("mailnews.customHeaders");
-              hdrs = hdrs.replace(/\s+/g,'');  //remove white spaces before splitting 
+              hdrs = hdrs.replace(/\s+/g, "");  //remove white spaces before splitting
               hdrsArray = hdrs.match(/[^:]+/g);
             }
             catch(ex)
@@ -1077,7 +1078,7 @@
       </property>
       <!-- label forwards to the internal menulist's "label" attribute -->
       <property name="label" onget="return document.getAnonymousNodes(this)[0].selectedItem.getAttribute('label');">
-      </property>        
+      </property>
       <method name="refreshList">
         <body>
           <![CDATA[
@@ -1096,7 +1097,7 @@
 
             var newSelection;
             var customizePos=-1;
-            for (var i=0; i<menuItemIds.length; i++) 
+            for (var i = 0; i < menuItemIds.length; ++i)
             {
               // create the menuitem
               if (Components.interfaces.nsMsgSearchAttrib.OtherHeader == menuItemIds[i].toString())
@@ -1123,7 +1124,7 @@
             }
             // now restore the selection
             menulist.selectedItem = newSelection;
-             
+
           ]]>
         </body>
       </method>
@@ -1142,7 +1143,7 @@
 
             var optargets = this.optargets;
             if (optargets) {
-              for (i=0; i < optargets.length; i++) { 
+              for (i = 0; i < optargets.length; ++i) {
                 optargets[i].opParentValue = menulist.value;
               }
             }
@@ -1220,7 +1221,7 @@
 
   <!-- searchvalue - a widget which dynamically changes its user interface
        depending on what type of data it's supposed to be showing
-       currently handles arbitrary text entry, and menulists for 
+       currently handles arbitrary text entry, and menulists for
        priority, status, junk status, tags, hasAttachment status,
        and addressbook
   -->
@@ -1247,7 +1248,7 @@
       </xul:menulist>
       <xul:textbox flex="1" class="search-value-textbox"/>
       <xul:menulist flex="1" class="search-value-menulist">
-        <xul:menupopup class="search-value-popup" ref="moz-abdirectory://" 
+        <xul:menupopup class="search-value-popup" ref="moz-abdirectory://"
                  datasources="rdf:addressdirectory"
                  sortActive="true"
                  sortDirection="ascending"
@@ -1281,13 +1282,13 @@
       <field name="internalOperator">null</field>
       <field name="internalAttribute">null</field>
       <field name="internalValue">null</field>
-      
+
       <property name="opParentValue" onget="return this.internalOperator;">
         <setter>
           <![CDATA[
             // noop if we're not changing it
             if (this.internalOperator == val) return val;
-            
+
             // if it's not sender, we don't care
             if (this.searchAttribute != Components.interfaces.nsMsgSearchAttrib.Sender) {
               this.internalOperator = val;
@@ -1297,7 +1298,7 @@
             var children = document.getAnonymousNodes(this);
             if (val == Components.interfaces.nsMsgSearchOp.IsntInAB ||
                 val == Components.interfaces.nsMsgSearchOp.IsInAB) {
-              // if the old internalOperator was 
+              // if the old internalOperator was
               // IsntInAB or IsInAB, and the new internalOperator is
               // IsntInAB or IsInAB, noop because the search value
               // was an ab type, and it still is.
@@ -1305,8 +1306,8 @@
               if (this.internalOperator != Components.interfaces.nsMsgSearchOp.IsntInAB &&
                   this.internalOperator != Components.interfaces.nsMsgSearchOp.IsInAB) {
                 var abs = children[4].getElementsByAttribute("value", "moz-abmdbdirectory://abook.mab");
-                if (abs.item(0)) 
-                  children[4].selectedItem = abs[0];   
+                if (abs.item(0))
+                  children[4].selectedItem = abs[0];
                 this.setAttribute("selectedIndex", "4");
               }
             }
@@ -1339,7 +1340,7 @@
             this.internalAttribute = val;
 
             // if the searchAttribute changing, null out the internalOperator
-            this.internalOperator = null; 
+            this.internalOperator = null;
 
             // we inherit from a deck, so just use it's index attribute
             // to hide/show widgets
@@ -1354,7 +1355,7 @@
               // this is the same as the initial state
               // the initial state for Sender isn't an ab type search
               // it's a text search, so show the textbox
-              this.setAttribute("selectedIndex", "0");             
+              this.setAttribute("selectedIndex", "0");
             }
             else if (val == Components.interfaces.nsMsgSearchAttrib.Keywords) {
               this.setAttribute("selectedIndex", "5");
@@ -1391,7 +1392,7 @@
           else if (attrib == nsMsgSearchAttrib.MsgStatus) {
             var matchingStatus =
               children[2].getElementsByAttribute("value", val.status);
-            if (matchingStatus.item(0)) 
+            if (matchingStatus.item(0))
               children[2].selectedItem = matchingStatus[0];
           }
           else if (attrib == nsMsgSearchAttrib.AgeInDays)
@@ -1399,12 +1400,12 @@
           else if (attrib == nsMsgSearchAttrib.Date)
             children[3].value = convertPRTimeToString(val.date);
           else if (attrib == nsMsgSearchAttrib.Sender)
-          { 
+          {
             if (this.internalOperator == Components.interfaces.nsMsgSearchOp.IsntInAB ||
                 this.internalOperator == Components.interfaces.nsMsgSearchOp.IsInAB) {
               var abs = children[4].getElementsByAttribute("value", val.str);
-              if (abs.item(0)) 
-                children[4].selectedItem = abs[0];    
+              if (abs.item(0))
+                children[4].selectedItem = abs[0];
             }
             else
               children[0].value = val.str;
@@ -1421,19 +1422,19 @@
           else if (attrib == nsMsgSearchAttrib.JunkStatus) {
             var junkStatus =
               children[6].getElementsByAttribute("value", val.junkStatus);
-            if (junkStatus.item(0)) 
+            if (junkStatus.item(0))
               children[6].selectedItem = junkStatus[0];
           }
           else if (attrib == nsMsgSearchAttrib.HasAttachmentStatus) {
             var hasAttachmentStatus =
               children[7].getElementsByAttribute("value", val.hasAttachmentStatus);
-            if (hasAttachmentStatus.item(0)) 
+            if (hasAttachmentStatus.item(0))
               children[7].selectedItem = hasAttachmentStatus[0];
           }
           else if (attrib == nsMsgSearchAttrib.Size) {
             children[0].value = val.size;
           }
-          else 
+          else
             children[0].value = val.str;
           return val;
           ]]>
@@ -1517,7 +1518,7 @@
             var children = parentNode.childNodes;
             var len=children.length;
             for (var i=0; i<len; i++) {
-              var node = children[i];              
+              var node = children[i];
               var stringTag = node.getAttribute("stringTag");
               if (stringTag) {
                 var attr = (node.tagName == "label") ? "value" : "label";
@@ -1543,7 +1544,7 @@
 
         // intialize the priority picker
         this.initialize(document.getAnonymousNodes(this)[1], bundle);
-       
+
         // initialize the status picker
         this.initialize(document.getAnonymousNodes(this)[2], bundle);
 
@@ -1572,7 +1573,7 @@
 
         // initialize the has attachment status picker
         this.initialize(document.getAnonymousNodes(this)[7], bundle);
-        
+
         // initialize the tag list
         fillInTags();
       ]]>
@@ -1607,7 +1608,7 @@
           ]]>
         </setter>
       </property>
- 
+
       <property name="searchScope">
         <getter>
           <![CDATA[
@@ -1627,15 +1628,15 @@
       <!-- the three tags that make up a term - to use, set the
            attribute in the XUL to the ID of the term.
         -->
-      <property name="searchattribute" 
+      <property name="searchattribute"
                 onget="return document.getElementById(this.getAttribute('searchattribute'));"
                 onset="this.setAttribute('searchattribute',val.id)"/>
 
-      <property name="searchoperator" 
+      <property name="searchoperator"
                 onget="return document.getElementById(this.getAttribute('searchoperator'));"
                 onset="this.setAttribute('searchoperator',val.id)"/>
 
-      <property name="searchvalue" 
+      <property name="searchvalue"
                 onget="return document.getElementById(this.getAttribute('searchvalue'));"
                 onset="this.setAttribute('searchvalue',val.id)"/>
       <field name="booleanNodes">
@@ -1663,7 +1664,7 @@
             var stringBundle = this.stringBundle;
             var andString = val ? "And" : "Or";
             for (var i=0; i<booleanNodes.length; i++) {
-              try {              
+              try {
                 var staticString =
                     stringBundle.GetStringFromName("search" + andString + i);
                 if (staticString && staticString.length>0)
@@ -1678,7 +1679,7 @@
           <![CDATA[
             var searchTerm = this.searchTerm;
             searchTerm.attrib = this.searchattribute.value;
-            if (this.searchAttribute > nsMsgSearchAttrib.OtherHeader && this.searchAttribute < nsMsgSearchAttrib.kNumMsgSearchAttributes) 
+            if (this.searchAttribute > nsMsgSearchAttrib.OtherHeader && this.searchAttribute < nsMsgSearchAttrib.kNumMsgSearchAttributes)
               searchTerm.arbitraryHeader = this.searchattribute.label;
             searchTerm.op = this.searchoperator.value;
             if (this.searchvalue.value)
@@ -2004,7 +2005,7 @@
             return false;
 
           var msgFolder = GetFolderResource(folderTree, row).QueryInterface(Components.interfaces.nsIMsgFolder);
-          if (!msgFolder || msgFolder.isServer) 
+          if (!msgFolder || msgFolder.isServer)
             return false;
           var asyncResults = {};
           return document.getAnonymousNodes(this)[0].parseFolder(msgFolder, null, asyncResults);
@@ -2021,7 +2022,7 @@
     <content>
       <xul:vbox/>
     </content>
-    
+
     <implementation>
       <field name="mMaxMsgHdrsInPopup">8</field>
       <property name="hasMessages" readonly="true" onget="return document.getAnonymousNodes(this)[0].hasChildNodes();"/>
@@ -2037,7 +2038,7 @@
             // skip servers, Trash and Junk folders
             if (!aFolder || aFolder.isServer || aFolder.getFlag(kMsgPopupFolderFlagJunk) || aFolder.getFlag(kMsgPopupFolderFlagTrash))
               return false;
-            var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);         
+            var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
             var showPreviewText = pref.getBoolPref("mail.biff.alert.show_preview");
             var folderArray = new Array;
             if (aFolder.flags  & MSG_FOLDER_FLAG_VIRTUAL)
@@ -2048,7 +2049,7 @@
               var srchFolderUriArray = srchFolderUri.split('|');
               var foldersAdded = 0;
               var RDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService().QueryInterface(Components.interfaces.nsIRDFService);
-              for (var i in srchFolderUriArray) 
+              for (var i in srchFolderUriArray)
               {
                 var realFolder = RDF.GetResource(srchFolderUriArray[i]).QueryInterface(Components.interfaces.nsIMsgFolder);
                 if (!realFolder.isServer)
@@ -2085,20 +2086,20 @@
                   // fetchMsgPreviewText throws an error when we call it on a news folder, we should just not show
                   // the tooltip if this method returns an error.
                   aFolder.setMsgDatabase(null);
-                  continue; 
+                  continue;
                 }
               }
               // if fetching the preview text is going to be an asynch operation and the caller
-              // is set up to handle that fact, then don't bother filling in any of the fields since 
+              // is set up to handle that fact, then don't bother filling in any of the fields since
               // we'll have to do this all over again when the fetch for the preview text completes.
               // We don't expect to get called with a urlListener if we're doing a virtual folder.
               if (aOutAsync.value && aUrlListener)
-                return false; 
+                return false;
               var unicodeConverter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
                                     .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
-              unicodeConverter.charset = "UTF-8";                                  
+              unicodeConverter.charset = "UTF-8";
               foundNewMsg = true;
-              
+
               var index = 0;
               var hdrParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
               while (document.getAnonymousNodes(this)[0].childNodes.length < this.mMaxMsgHdrsInPopup && index < numMsgKeys.value)
@@ -2134,10 +2135,10 @@
                 msgPopup.folderUri = aFolder.URI;
                 msgPopup.msgKey = msgHdr.messageKey;
                 document.getAnonymousNodes(this)[0].appendChild(msgPopup);
-              } 
+              }
               if (document.getAnonymousNodes(this)[0].childNodes.length >= this.mMaxMsgHdrsInPopup)
-                return true;    
-            }       
+                return true;
+            }
             return foundNewMsg;
           ]]>
         </body>
@@ -2147,8 +2148,8 @@
         <body>
           <![CDATA[
             var containingBox = document.getAnonymousNodes(this)[0];
-            while (containingBox.hasChildNodes()) 
-              containingBox.removeChild(containingBox.lastChild);      
+            while (containingBox.hasChildNodes())
+              containingBox.removeChild(containingBox.lastChild);
           ]]>
         </body>
       </method>
@@ -2169,7 +2170,8 @@
     <implementation>
       <constructor>
         <![CDATA[
-          var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);         
+          var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                               .getService(Components.interfaces.nsIPrefBranch);
           if (!pref.getBoolPref("mail.biff.alert.show_preview"))
             document.getAnonymousElementByAttribute(this, "anonid", "preview").hidden = true;
           var hideSubject = !pref.getBoolPref("mail.biff.alert.show_subject");
@@ -2192,7 +2194,7 @@
           try {
            topmostMsgWindow = mailSession.topmostMsgWindow;
           } catch (ex) {}
-          
+
           if (topmostMsgWindow)
           {
             try {
@@ -2213,6 +2215,6 @@
             gAlertListener.observe(null, "alertclickcallback", "");
         ]]>
       </handler>
-    </handlers>    
+    </handlers>
   </binding>
 </bindings>
