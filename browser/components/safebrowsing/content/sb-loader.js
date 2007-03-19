@@ -73,8 +73,9 @@ var safebrowsing = {
 
     var contentArea = document.getElementById("content");
 
+    safebrowsing.progressListener.QueryInterface(Ci.nsIWebProgressListener);
     var phishWarden = new appContext.PROT_PhishingWarden(
-          safebrowsing.progressListener);
+          safebrowsing.progressListener, document.getElementById("content"));
     safebrowsing.phishWarden = phishWarden;
 
     // Register tables
@@ -95,6 +96,10 @@ var safebrowsing = {
         window,
         tabWatcher,
         phishWarden);
+
+    // Remove the global progress listener.  The phishingWarden moves
+    // the progress listener to the tabbrowser so we don't need it anymore.
+    safebrowsing.progressListener.globalProgressListenerEnabled = false;
     
     // The initial pages may be a phishing site (e.g., user clicks on a link
     // in an email message and it opens a new window with a phishing site),
@@ -185,7 +190,7 @@ var safebrowsing = {
   }
 }
 
-// Set up our request listener immediately so we don't miss
+// Set up a global request listener immediately so we don't miss
 // any url loads.  We do the actually checking in the deferredStartup
 // method.
 safebrowsing.progressListener =
@@ -193,7 +198,7 @@ safebrowsing.progressListener =
             .createInstance(Components.interfaces.nsIDocNavStartProgressListener);
 safebrowsing.progressListener.callback =
   safebrowsing.progressListenerCallback;
-safebrowsing.progressListener.enabled = true;
+safebrowsing.progressListener.globalProgressListenerEnabled = true;
 safebrowsing.progressListener.delay = 0;
 
 window.addEventListener("load", safebrowsing.startup, false);

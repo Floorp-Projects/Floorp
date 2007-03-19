@@ -80,9 +80,10 @@ const kTestUrls = {
  * phishing. 
  *
  * @param progressListener nsIDocNavStartProgressListener
+ * @param tabbrowser XUL tabbrowser element
  * @constructor
  */
-function PROT_PhishingWarden(progressListener) {
+function PROT_PhishingWarden(progressListener, tabbrowser) {
   PROT_ListWarden.call(this);
 
   this.debugZone = "phishwarden";
@@ -127,10 +128,23 @@ function PROT_PhishingWarden(progressListener) {
     BindToObject(this.onDataProviderPrefChanged, this);
   this.prefs_.addObserver(kDataProviderIdPref, dataProviderPrefObserver);
 
-  // hook up our browser listener
+  // Hook up our tab open/close events which in turn add our web progress
+  // listener to each browser tab.
   this.progressListener_ = progressListener;
   this.progressListener_.callback = this;
-  this.progressListener_.enabled = this.phishWardenEnabled_;
+  this.tabbrowser_ = tabbrowser;
+  tabbrowser.mTabBox.addEventListener("TabOpen",
+                                      BindToObject(this.onTabOpen_, this),
+                                      false);
+  tabbrowser.mTabBox.addEventListener("TabClose",
+                                      BindToObject(this.onTabClose_, this),
+                                      false);
+  if (this.phishWardenEnabled_) {
+    // Since we already missed the TabOpen events for existing tabs, set those
+    // up now.
+    this.addWebProgressToAllTabs_();
+  }
+
   // ms to wait after a request has started before firing JS callback
   this.progressListener_.delay = 1500;
 
@@ -285,11 +299,24 @@ PROT_PhishingWarden.prototype.onCheckRemotePrefChanged = function(prefName) {
  */
 PROT_PhishingWarden.prototype.onPhishWardenEnabledPrefChanged = function(
                                                                     prefName) {
+  // Just to be safe, ignore changes to sub prefs.
+  if (prefName != "browser.safebrowsing.enabled")
+    return;
+
   this.phishWardenEnabled_ = 
     this.prefs_.getBoolPrefOrDefault(prefName, this.phishWardenEnabled_);
   this.requestBackoff_.reset();
   this.maybeToggleUpdateChecking();
-  this.progressListener_.enabled = this.phishWardenEnabled_;
+
+  // Update the progress listeners.
+  if (this.phishWardenEnabled_) {
+    this.addWebProgressToAllTabs_();
+  } else {
+    for (var i = 0, tab = null; tab = this.tabbrowser_.mTabs[i]; ++i) {
+      var browser = tab.linkedBrowser;
+      browser.webProgress.removeProgressListener(this.progressListener_);
+    }
+  }
 }
 
 /**
@@ -304,6 +331,40 @@ PROT_PhishingWarden.prototype.onDataProviderPrefChanged = function(prefName) {
   // tables are being downloaded.
   if (this.checkRemote_) {
     this.maybeToggleUpdateChecking();
+  }
+}
+
+/**
+ * Event handler for new tab creation.  Make the web progress listener aware
+ * of the new tab.
+ */
+PROT_PhishingWarden.prototype.onTabOpen_ = function(event) {
+  if (!this.phishWardenEnabled_)
+    return;
+  var browser = event.target.linkedBrowser;
+  browser.webProgress.addProgressListener(this.progressListener_,
+                                          Ci.nsIWebProgress.NOTIFY_LOCATION);
+}
+
+/**
+ * Event handler for tab closing.  Remove the web progress listener we
+ * added earlier.
+ */
+PROT_PhishingWarden.prototype.onTabClose_ = function(event) {
+  if (!this.phishWardenEnabled_)
+    return;
+  var browser = event.target.linkedBrowser;
+  browser.webProgress.removeProgressListener(this.progressListener_);
+}
+
+/**
+ * Add the web progress listener to all open tabs for this chrome window.
+ */
+PROT_PhishingWarden.prototype.addWebProgressToAllTabs_ = function() {
+  for (var i = 0, tab = null; tab = this.tabbrowser_.mTabs[i]; ++i) {
+    var browser = tab.linkedBrowser;
+    browser.webProgress.addProgressListener(this.progressListener_,
+                                         Ci.nsIWebProgress.NOTIFY_LOCATION);
   }
 }
 
