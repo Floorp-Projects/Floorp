@@ -433,18 +433,16 @@ nsSVGUtils::CoordToFloat(nsPresContext *aPresContext,
     break;
 
   case eStyleUnit_Percent: {
-      nsSVGSVGElement *ctx = aContent->GetCtx();
-
       nsCOMPtr<nsISVGLength> length;
       NS_NewSVGLength(getter_AddRefs(length),
                       aCoord.GetPercentValue() * 100.0f,
                       nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
 
-      if (!ctx || !length)
+      if (!length)
         break;
 
       nsWeakPtr weakCtx =
-        do_GetWeakReference(NS_STATIC_CAST(nsGenericElement*, ctx));
+        do_GetWeakReference(NS_STATIC_CAST(nsGenericElement*, aContent));
       length->SetContext(weakCtx, nsSVGUtils::XY);
       length->GetValue(&val);
       break;
