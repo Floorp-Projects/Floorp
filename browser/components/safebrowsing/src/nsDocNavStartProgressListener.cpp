@@ -46,6 +46,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringAPI.h"
+#include "prlog.h"
 
 NS_IMPL_ISUPPORTS4(nsDocNavStartProgressListener,
                    nsIDocNavStartProgressListener,
@@ -53,10 +54,22 @@ NS_IMPL_ISUPPORTS4(nsDocNavStartProgressListener,
                    nsIObserver,
                    nsISupportsWeakReference)
 
+// NSPR_LOG_MODULES=DocNavStart:5
+#if defined(PR_LOGGING)
+static const PRLogModuleInfo *gDocNavStartProgressListenerLog = nsnull;
+#define LOG(args) PR_LOG(gDocNavStartProgressListenerLog, PR_LOG_DEBUG, args)
+#else
+#define LOG(args)
+#endif
+
 nsDocNavStartProgressListener::nsDocNavStartProgressListener() :
   mEnabled(PR_FALSE), mDelay(0), mRequests(nsnull), mTimers(nsnull)
 {
-
+#if defined(PR_LOGGING)
+  if (!gDocNavStartProgressListenerLog)
+    gDocNavStartProgressListenerLog = PR_NewLogModule("DocNavStart");
+#endif
+        
 }
 
 
@@ -124,20 +137,20 @@ nsDocNavStartProgressListener::GetRequestUri(nsIRequest* aReq, nsIURI** uri)
 
 // nsIDocNavStartProgressCallback ***********************************************
 
-// nsDocNavStartProgressListener::GetEnabled
+// nsDocNavStartProgressListener::GetGlobalProgressListenerEnabled
 
 NS_IMETHODIMP
-nsDocNavStartProgressListener::GetEnabled(PRBool* aEnabled)
+nsDocNavStartProgressListener::GetGlobalProgressListenerEnabled(PRBool* aEnabled)
 {
   *aEnabled = mEnabled;
   return NS_OK;
 }
 
 
-// nsDocNavStartProgressListener::SetEnabled
+// nsDocNavStartProgressListener::SetGlobalProgressListenerEnabled
 
 NS_IMETHODIMP
-nsDocNavStartProgressListener::SetEnabled(PRBool aEnabled)
+nsDocNavStartProgressListener::SetGlobalProgressListenerEnabled(PRBool aEnabled)
 {
   if (aEnabled && ! mEnabled) {
     // enable component
@@ -261,6 +274,8 @@ nsDocNavStartProgressListener::OnLocationChange(nsIWebProgress *aWebProgress,
   if (NS_FAILED(rv))
     return NS_OK;
 
+  LOG(("Firing OnLocationChange for %s", uriString.get()));
+
   // We store the request and a timer in queue.  When the timer fires,
   // we use the request in the front of the queue.
   nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
@@ -336,6 +351,7 @@ nsDocNavStartProgressListener::Observe(nsISupports *subject, const char *topic,
           uriString.SetLength(pos);
         }
         
+        LOG(("Firing DocNavStart for %s", uriString.get()));
         mCallback->OnDocNavStart(request, uriString);
       }
     }
