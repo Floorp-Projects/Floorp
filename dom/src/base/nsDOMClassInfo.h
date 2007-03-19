@@ -119,7 +119,6 @@ public:
   // GetClassInfoA so I can't, those $%#@^! bastards!!! What gives
   // them the right to do that?
 
-  static nsIClassInfo* GetClassInfoInstance(nsDOMClassInfoID aID);
   static nsIClassInfo* GetClassInfoInstance(nsDOMClassInfoData* aData);
 
   static void ShutDown();
@@ -176,6 +175,8 @@ public:
   static nsresult PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper);
 
 protected:
+  friend nsIClassInfo* NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID);
+
   const nsDOMClassInfoData* mData;
 
   static nsresult Init();
@@ -1580,19 +1581,5 @@ public:
 
 void InvalidateContextAndWrapperCache();
 
-
-/**
- * nsIClassInfo helper macros
- */
-
-#define NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(_class)                          \
-  if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                                \
-    foundInterface =                                                          \
-      nsDOMClassInfo::GetClassInfoInstance(eDOMClassInfo_##_class##_id);      \
-    if (!foundInterface) {                                                    \
-      *aInstancePtr = nsnull;                                                 \
-      return NS_ERROR_OUT_OF_MEMORY;                                          \
-    }                                                                         \
-  } else
 
 #endif /* nsDOMClassInfo_h___ */

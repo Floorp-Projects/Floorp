@@ -3720,7 +3720,7 @@ nsDOMClassInfo::InnerObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
 
 // static
 nsIClassInfo *
-nsDOMClassInfo::GetClassInfoInstance(nsDOMClassInfoID aID)
+NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID)
 {
   if (aID >= eDOMClassInfoIDCount) {
     NS_ERROR("Bad ID!");
@@ -3728,8 +3728,8 @@ nsDOMClassInfo::GetClassInfoInstance(nsDOMClassInfoID aID)
     return nsnull;
   }
 
-  if (!sIsInitialized) {
-    nsresult rv = Init();
+  if (!nsDOMClassInfo::sIsInitialized) {
+    nsresult rv = nsDOMClassInfo::Init();
 
     NS_ENSURE_SUCCESS(rv, nsnull);
   }
@@ -5324,7 +5324,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
       nsDOMClassInfoID ci_id = (nsDOMClassInfoID)id;
 
-      nsCOMPtr<nsIClassInfo> ci(GetClassInfoInstance(ci_id));
+      nsCOMPtr<nsIClassInfo> ci(NS_GetDOMClassInfoInstance(ci_id));
       NS_ENSURE_TRUE(ci, NS_ERROR_UNEXPECTED);
 
       nsCOMPtr<nsIXPConnectJSObjectHolder> proto_holder;
