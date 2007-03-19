@@ -1635,6 +1635,11 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
         InitMemHook();
 #endif
 
+#ifdef COLLECT_TIME_DEBUG
+    printf("cc: Starting nsCycleCollector::Collect(%d)\n", aTryCollections);
+    PRTime start = PR_Now(), now;
+#endif
+
     while (aTryCollections > 0) {
         // This triggers a JS GC. Our caller assumes we always trigger at
         // least one JS GC -- they rely on this fact to avoid redundant JS
@@ -1646,15 +1651,32 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
         // into mBufs[0].
         mBufs[0]->Empty();
 
+#ifdef COLLECT_TIME_DEBUG
+        now = PR_Now();
+#endif
         for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
             if (mRuntimes[i])
                 mRuntimes[i]->BeginCycleCollection();
         }
 
+#ifdef COLLECT_TIME_DEBUG
+        printf("cc: mRuntimes[*]->BeginCycleCollection() took %lldms\n",
+               (PR_Now() - now) / PR_USEC_PER_MSEC);
+#endif
+
         if (mParams.mDoNothing) {
             aTryCollections = 0;
         } else {
+#ifdef COLLECT_TIME_DEBUG
+            now = PR_Now();
+#endif
+
             CollectPurple();
+
+#ifdef COLLECT_TIME_DEBUG
+            printf("cc: CollectPurple() took %lldms\n",
+                   (PR_Now() - now) / PR_USEC_PER_MSEC);
+#endif
 
             if (mBufs[0]->GetSize() == 0) {
                 aTryCollections = 0;
@@ -1670,14 +1692,41 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
 
                 // The main Bacon & Rajan collection algorithm.
 
+#ifdef COLLECT_TIME_DEBUG
+                now = PR_Now();
+#endif
                 MarkRoots();
+
+#ifdef COLLECT_TIME_DEBUG
+                {
+                    PRTime then = PR_Now();
+                    printf("cc: MarkRoots() took %lldms\n",
+                           (then - now) / PR_USEC_PER_MSEC);
+                    now = then;
+                }
+#endif
+
                 ScanRoots();
+
+#ifdef COLLECT_TIME_DEBUG
+                printf("cc: ScanRoots() took %lldms\n",
+                       (PR_Now() - now) / PR_USEC_PER_MSEC);
+#endif
 
                 MaybeDrawGraphs();
 
                 mScanInProgress = PR_FALSE;
 
+
+#ifdef COLLECT_TIME_DEBUG
+                now = PR_Now();
+#endif
                 CollectWhite();
+
+#ifdef COLLECT_TIME_DEBUG
+                printf("cc: CollectWhite() took %lldms\n",
+                       (PR_Now() - now) / PR_USEC_PER_MSEC);
+#endif
 
                 // Some additional book-keeping.
 
@@ -1698,6 +1747,11 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
             mRuntimes[i]->FinishCycleCollection();
         }
     }
+
+#ifdef COLLECT_TIME_DEBUG
+    printf("cc: Collect() took %lldms\n",
+           (PR_Now() - start) / PR_USEC_PER_MSEC);
+#endif
 }
 
 void
