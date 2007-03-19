@@ -246,6 +246,7 @@ nsXFormsUtilityService::ToggleDropmarkerState(nsIDOMNode *aElement)
 
   PRBool isOpen = PR_FALSE;
   nsresult rv = widget->GetOpen(&isOpen);
+  NS_ENSURE_SUCCESS(rv, rv);
   return widget->SetOpen(!isOpen);
 }
 

@@ -866,6 +866,10 @@ nsXFormsMDGEngine::SetNodeContent(nsIDOMNode       *aContextNode,
     resultNode.swap(childNode);
   }
 
+  // We already know that the contents have changed.  Mark the node so that
+  // a xforms-value-changed can be dispatched.
+  MarkNodeAsChanged(aContextNode);
+
   return NS_OK;
 }
 

@@ -3326,13 +3326,18 @@ nsXFormsModelElement::HandleLoad(nsIDOMEvent* aEvent)
 
   if (mPendingInlineSchemas.Count() > 0) {
     nsCOMPtr<nsIDOMElement> el;
-    nsresult rv;
+    nsresult rv = NS_OK;
     for (PRInt32 i=0; i<mPendingInlineSchemas.Count(); ++i) {
       GetSchemaElementById(mElement, *mPendingInlineSchemas[i],
                            getter_AddRefs(el));
       if (!el) {
         rv = NS_ERROR_UNEXPECTED;
       } else {
+        // According to section 3.3.1 of the spec, more than one schema per
+        // namespace isn't allowed, but it also doesn't spell out very well
+        // what this means a processor should do about it.  Since most
+        // processors ignore this rule and it isn't specifically a fatal error,
+        // we won't make this a failure here.
         if (!IsDuplicateSchema(el)) {
           nsCOMPtr<nsISchema> schema;
           // no need to observe errors via the callback.  instead, rely on
