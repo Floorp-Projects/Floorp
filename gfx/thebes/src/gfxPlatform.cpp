@@ -59,6 +59,8 @@
 #include <stdlib.h>
 #endif
 
+#include "cairo.h"
+
 gfxPlatform *gPlatform = nsnull;
 int gGlitzState = -1;
 
@@ -80,6 +82,22 @@ gfxPlatform::GetPlatform()
     }
 
     return gPlatform;
+}
+
+void
+gfxPlatform::Shutdown()
+{
+    delete gPlatform;
+    gPlatform = nsnull;
+}
+
+gfxPlatform::~gfxPlatform()
+{
+    // The cairo folks think we should only clean up in debug builds,
+    // but we're generally in the habit of trying to shut down as
+    // cleanly as possible even in production code, so call this
+    // cairo_debug_* function unconditionally.
+    cairo_debug_reset_static_data();
 }
 
 PRBool

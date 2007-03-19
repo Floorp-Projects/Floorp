@@ -48,6 +48,7 @@ class gfxFontconfigUtils;
 class THEBES_API gfxPlatformGtk : public gfxPlatform {
 public:
     gfxPlatformGtk();
+    virtual ~gfxPlatformGtk();
 
     static gfxPlatformGtk *GetPlatform() {
         return (gfxPlatformGtk*) gfxPlatform::GetPlatform();

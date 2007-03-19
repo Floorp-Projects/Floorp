@@ -57,6 +57,11 @@ public:
     static gfxPlatform *GetPlatform();
 
     /**
+     * Clean up static objects to shut down thebes.
+     */
+    static void Shutdown();
+
+    /**
      * Return PR_TRUE if we're to use Glitz for acceleration.
      */
     static PRBool UseGlitz();
@@ -119,7 +124,7 @@ public:
 
 protected:
     gfxPlatform() { }
-    virtual ~gfxPlatform() { }
+    virtual ~gfxPlatform();
 
 };
 

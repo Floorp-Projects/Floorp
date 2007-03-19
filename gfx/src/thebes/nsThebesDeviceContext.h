@@ -67,6 +67,8 @@ public:
     nsThebesDeviceContext();
     virtual ~nsThebesDeviceContext();
 
+    static void Shutdown();
+
     NS_DECL_ISUPPORTS_INHERITED
 
     NS_IMETHOD Init(nsNativeWidget aWidget);

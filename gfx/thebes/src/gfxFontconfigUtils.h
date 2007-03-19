@@ -55,10 +55,14 @@ public:
     gfxFontconfigUtils();
 
     static gfxFontconfigUtils* GetFontconfigUtils() {
-        static gfxFontconfigUtils* sUtils = nsnull;
         if (!sUtils)
             sUtils = new gfxFontconfigUtils();
         return sUtils;
+    }
+
+    static void Shutdown() {
+        delete sUtils;
+        sUtils = nsnull;
     }
 
     nsresult GetFontList(const nsACString& aLangGroup,
@@ -72,6 +76,8 @@ public:
                              void *aClosure, PRBool& aAborted);
 
 protected:
+    static gfxFontconfigUtils* sUtils;
+
     PRInt32 IsExistingFont(const nsACString& aFontName);
     nsresult GetResolvedFonts(const nsACString& aName,
                               gfxFontNameList* aResult);
