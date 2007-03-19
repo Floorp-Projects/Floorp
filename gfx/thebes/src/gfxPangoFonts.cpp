@@ -846,6 +846,7 @@ CreateScaledFont(cairo_t *aCR, cairo_matrix_t *aCTM, PangoFont *aPangoFont)
     cairo_scaled_font_t *scaledFont =
         cairo_scaled_font_create(face, &fontMatrix, aCTM, fontOptions);
     cairo_font_options_destroy(fontOptions);
+    cairo_font_face_destroy(face);
     return scaledFont;
 }
 
