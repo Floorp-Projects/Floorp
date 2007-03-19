@@ -86,6 +86,23 @@ gfxPlatformGtk::gfxPlatformGtk()
         sFontconfigUtils = gfxFontconfigUtils::GetFontconfigUtils();
 }
 
+gfxPlatformGtk::~gfxPlatformGtk()
+{
+    gfxFontconfigUtils::Shutdown();
+    sFontconfigUtils = nsnull;
+#ifndef THEBES_USE_PANGO_CAIRO
+    pango_xft_shutdown_display(GDK_DISPLAY(), 0);
+#endif
+
+#if 0
+    // It would be nice to do this (although it might need to be after
+    // the cairo shutdown that happens in ~gfxPlatform).  It even looks
+    // idempotent.  But it has fatal assertions that fire if stuff is
+    // leaked, and we hit them.
+    FcFini();
+#endif
+}
+
 already_AddRefed<gfxASurface>
 gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
                                        gfxASurface::gfxImageFormat imageFormat)

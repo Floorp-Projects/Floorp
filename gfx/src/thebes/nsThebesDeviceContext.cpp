@@ -133,6 +133,13 @@ nsThebesDeviceContext::~nsThebesDeviceContext()
 {
 }
 
+/* static */ void
+nsThebesDeviceContext::Shutdown()
+{
+    delete gSystemFonts;
+    gSystemFonts = nsnull;
+}
+
 nsresult
 nsThebesDeviceContext::SetDPI()
 {

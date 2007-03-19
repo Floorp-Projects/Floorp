@@ -47,6 +47,8 @@
 #include "nsIAtom.h"
 #include "nsCRT.h"
 
+/* static */ gfxFontconfigUtils* gfxFontconfigUtils::sUtils = nsnull;
+
 gfxFontconfigUtils::gfxFontconfigUtils()
 {
     mAliasTable.Init(50);

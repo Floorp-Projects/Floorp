@@ -47,6 +47,7 @@ class gfxFontconfigUtils;
 class NS_EXPORT gfxBeOSPlatform : public gfxPlatform {
 public:
     gfxBeOSPlatform();
+    virtual ~gfxBeOSPlatform();
 
     static gfxBeOSPlatform *GetPlatform() {
         return (gfxBeOSPlatform*) gfxPlatform::GetPlatform();

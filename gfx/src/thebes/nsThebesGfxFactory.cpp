@@ -51,6 +51,7 @@
 #include "nsThebesBlender.h"
 #include "nsThebesFontMetrics.h"
 #include "nsThebesFontEnumerator.h"
+#include "gfxPlatform.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesFontMetrics)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesBlender)
@@ -145,6 +146,8 @@ static const nsModuleComponentInfo components[] =
 PR_STATIC_CALLBACK(void)
 nsThebesGfxModuleDtor(nsIModule *self)
 {
+    nsThebesDeviceContext::Shutdown();
+    gfxPlatform::Shutdown();
 }
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsGfxModule, components, nsThebesGfxModuleDtor)
