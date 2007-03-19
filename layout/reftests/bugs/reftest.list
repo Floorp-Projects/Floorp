@@ -147,6 +147,8 @@ fails-if(MOZ_WIDGET_TOOLKIT!="windows") == 351641-2b.html 351641-2-ref.html # bu
 == 363329-1.html 363329-1-ref.html
 == 363329-2.html 363329-2-ref.html
 == 363637-1.html 363637-1-ref.html
+== 363874.html 363874-ref.html
+== 363874-max-width.html 363874-max-width-ref.html
 == 364079-1.html 364079-1-ref.html
 == 364861-1.html 364861-1-ref.html
 == 364862-1.html 364862-1-ref.html

@@ -55,12 +55,8 @@
 nsTableColFrame::nsTableColFrame(nsStyleContext* aContext) : nsFrame(aContext)
 {
   SetColType(eColContent);
-  ResetMinCoord();
-  ResetPrefCoord();
-  ResetPrefPercent();
-  ResetSpanMinCoord();
-  ResetSpanPrefCoord();
-  ResetSpanPrefPercent();
+  ResetIntrinsics();
+  ResetSpanIntrinsics();
   ResetFinalWidth();
 }
 
@@ -153,9 +149,10 @@ void nsTableColFrame::Dump(PRInt32 aIndent)
     printf(" anonymous-cell ");
     break;
   }
-  printf("\nm:%d c:%d p:%d sm:%d sc:%d sp:%d f:%d",
-         GetMinCoord(), GetPrefCoord(), GetPrefPercent(),
-         GetSpanMinCoord(), GetSpanPrefCoord(), GetSpanPrefPercent(),
+  printf("\nm:%d c:%d(%c) p:%f sm:%d sc:%d(%c) sp:%f f:%d",
+         mMinCoord, mPrefCoord, mHasSpecifiedCoord ? 's' : 'u', mPrefPercent,
+         mSpanMinCoord, mSpanPrefCoord, mSpanHasSpecifiedCoord ? 's' : 'u',
+         mSpanPrefPercent,
          GetFinalWidth());
   printf("\n%s**END COL DUMP** ", indent);
   delete [] indent;

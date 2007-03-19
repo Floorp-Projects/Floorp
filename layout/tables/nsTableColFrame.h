@@ -135,94 +135,149 @@ public:
   void Dump(PRInt32 aIndent);
 #endif
 
-  // The largest min-width of the cells.
-  void ResetMinCoord() {
+  /**
+   * Restore the default values of the intrinsic widths, so that we can
+   * re-accumulate intrinsic widths from the cells in the column.
+   */
+  void ResetIntrinsics() {
     mMinCoord = 0;
-  }
-  void AddMinCoord(nscoord aMinCoord) {
-    if (aMinCoord > mMinCoord)
-      mMinCoord = aMinCoord;
-    // Needed in case mHasSpecifiedCoord is true.
-    if (aMinCoord > mPrefCoord)
-      mPrefCoord = aMinCoord;
-  }
-  nscoord GetMinCoord() {
-    return mMinCoord;
-  }
-
-  // The largest pref-width of the cells
-  void ResetPrefCoord() {
     mPrefCoord = 0;
+    mPrefPercent = 0.0f;
     mHasSpecifiedCoord = PR_FALSE;
   }
-  void AddPrefCoord(nscoord aPrefCoord, PRBool aHasSpecifiedCoord) {
-    if (aHasSpecifiedCoord) {
-      if (!mHasSpecifiedCoord) {
-        mPrefCoord = mMinCoord;
-      }
-      mHasSpecifiedCoord = PR_TRUE;
-    }
-    if (aPrefCoord > mPrefCoord &&
-        (aHasSpecifiedCoord || !mHasSpecifiedCoord)) {
-      mPrefCoord = aPrefCoord;
-    }
-  }
-  nscoord GetPrefCoord() {
-    return mPrefCoord;
-  }
 
-  // Whether to expand greater than pref width more conservatively
-  // because the width was specified.
-  PRBool GetHasSpecifiedCoord() {
-    return mHasSpecifiedCoord;
-  }
-
-  // The largest specified percentage width of the cells.
+  /**
+   * Restore the default value of the preferred percentage width (the
+   * only intrinsic width used by FixedTableLayoutStrategy.
+   */
   void ResetPrefPercent() {
     mPrefPercent = 0.0f;
   }
+
+  /**
+   * Restore the default values of the temporary buffer for
+   * spanning-cell intrinsic widths (as we process spanning cells).
+   */
+  void ResetSpanIntrinsics() {
+    mSpanMinCoord = 0;
+    mSpanPrefCoord = 0;
+    mSpanPrefPercent = 0.0f;
+    mSpanHasSpecifiedCoord = PR_FALSE;
+  }
+
+  /**
+   * Add the widths for a cell or column element, or the contribution of
+   * the widths from a column-spanning cell:
+   * @param aMinCoord The minimum intrinsic width
+   * @param aPrefCoord The preferred intrinsic width or, if there is a
+   *   specified non-percentage width, max(specified width, minimum intrinsic
+   *   width).
+   * @param aHasSpecifiedCoord Whether there is a specified
+   *   non-percentage width.
+   *
+   * Note that the implementation of this functions is a bit tricky
+   * since mPrefCoord means different things depending on
+   * whether mHasSpecifiedCoord is true (and likewise for aPrefCoord and
+   * aHasSpecifiedCoord).  If mHasSpecifiedCoord is false, then
+   * all widths added had aHasSpecifiedCoord false and mPrefCoord is the
+   * largest of the pref widths.  But if mHasSpecifiedCoord is true,
+   * then mPrefCoord is the largest of (1) the pref widths for cells
+   * with aHasSpecifiedCoord true and (2) the min widths for cells with
+   * aHasSpecifiedCoord false.
+   */
+  void AddCoords(nscoord aMinCoord, nscoord aPrefCoord,
+                 PRBool aHasSpecifiedCoord) {
+    NS_ASSERTION(aMinCoord <= aPrefCoord, "intrinsic widths out of order");
+
+    if (aHasSpecifiedCoord && !mHasSpecifiedCoord) {
+      mPrefCoord = mMinCoord;
+      mHasSpecifiedCoord = PR_TRUE;
+    }
+    if (!aHasSpecifiedCoord && mHasSpecifiedCoord) {
+      aPrefCoord = aMinCoord; // NOTE: modifying argument
+    }
+
+    if (aMinCoord > mMinCoord)
+      mMinCoord = aMinCoord;
+    if (aPrefCoord > mPrefCoord)
+      mPrefCoord = aPrefCoord;
+
+    NS_ASSERTION(mMinCoord <= mPrefCoord, "min larger than pref");
+  }
+
+  /**
+   * Add a percentage width specified on a cell or column element or the
+   * contribution to this column of a percentage width specified on a
+   * column-spanning cell.
+   */
   void AddPrefPercent(float aPrefPercent) {
     if (aPrefPercent > mPrefPercent)
       mPrefPercent = aPrefPercent;
   }
-  float GetPrefPercent() {
-    return mPrefPercent;
-  }
 
-  // The largest min-width of the cells (for column-spanning cells).
-  void ResetSpanMinCoord() {
-    mSpanMinCoord = 0;
-  }
-  void AddSpanMinCoord(nscoord aSpanMinCoord) {
+  /**
+   * Get the largest minimum intrinsic width for this column.
+   */
+  nscoord GetMinCoord() const { return mMinCoord; }
+  /**
+   * Get the largest preferred width for this column, or, if there were
+   * any specified non-percentage widths (see GetHasSpecifiedCoord), the
+   * largest minimum intrinsic width or specified width.
+   */
+  nscoord GetPrefCoord() const { return mPrefCoord; }
+  /**
+   * Get whether there were any specified widths contributing to this
+   * column.
+   */
+  PRBool GetHasSpecifiedCoord() const { return mHasSpecifiedCoord; }
+
+  /**
+   * Get the largest specified percentage width contributing to this
+   * column (returns 0 if there were none).
+   */
+  float GetPrefPercent() const { return mPrefPercent; }
+
+  /**
+   * Like AddCoords, but into a temporary buffer used for groups of
+   * column-spanning cells.
+   */
+  void AddSpanCoords(nscoord aSpanMinCoord, nscoord aSpanPrefCoord,
+                     PRBool aSpanHasSpecifiedCoord) {
+    NS_ASSERTION(aSpanMinCoord <= aSpanPrefCoord,
+                 "intrinsic widths out of order");
+
+    if (aSpanHasSpecifiedCoord && !mSpanHasSpecifiedCoord) {
+      mSpanPrefCoord = mSpanMinCoord;
+      mSpanHasSpecifiedCoord = PR_TRUE;
+    }
+    if (!aSpanHasSpecifiedCoord && mSpanHasSpecifiedCoord) {
+      aSpanPrefCoord = aSpanMinCoord; // NOTE: modifying argument
+    }
+
     if (aSpanMinCoord > mSpanMinCoord)
       mSpanMinCoord = aSpanMinCoord;
-  }
-  nscoord GetSpanMinCoord() {
-    return mSpanMinCoord;
-  }
-
-  // The largest pref-width of the column-spanning cells.
-  void ResetSpanPrefCoord() {
-    mSpanPrefCoord = 0;
-  }
-  void AddSpanPrefCoord(nscoord aSpanPrefCoord) {
     if (aSpanPrefCoord > mSpanPrefCoord)
       mSpanPrefCoord = aSpanPrefCoord;
-  }
-  nscoord GetSpanPrefCoord() {
-    return mSpanPrefCoord;
+
+    NS_ASSERTION(mSpanMinCoord <= mSpanPrefCoord, "min larger than pref");
   }
 
-  // The largest specified percentage width of the column-spanning cells.
-  void ResetSpanPrefPercent() {
-    mSpanPrefPercent = 0.0f;
-  }
+  /*
+   * Accumulate percentage widths on column spanning cells into
+   * temporary variables.
+   */
   void AddSpanPrefPercent(float aSpanPrefPercent) {
     if (aSpanPrefPercent > mSpanPrefPercent)
       mSpanPrefPercent = aSpanPrefPercent;
   }
-  float GetSpanPrefPercent() {
-    return mSpanPrefPercent;
+
+  /*
+   * Accumulate the temporary variables for column spanning cells into
+   * the primary variables.
+   */
+  void AccumulateSpanIntrinsics() {
+    AddCoords(mSpanMinCoord, mSpanPrefCoord, mSpanHasSpecifiedCoord);
+    AddPrefPercent(mSpanPrefPercent);
   }
 
   // Used to adjust a column's pref percent so that the table's total
@@ -264,13 +319,14 @@ protected:
   BCPixelSize mBottomContBorderWidth;
 
   PRPackedBool mHasSpecifiedCoord;
+  PRPackedBool mSpanHasSpecifiedCoord; // XXX...
   nscoord mMinCoord;
   nscoord mPrefCoord;
   nscoord mSpanMinCoord; // XXX...
   nscoord mSpanPrefCoord; // XXX...
   float mPrefPercent;
   float mSpanPrefPercent; // XXX...
-  // ...XXX the three members marked above could be allocated as part of
+  // ...XXX the four members marked above could be allocated as part of
   // a separate array allocated only during
   // BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths (and only
   // when colspans were present).
