@@ -125,15 +125,15 @@
             in click rather than mousedown so that you can drag a
             selected group of items */
 
-           // if the last row has changed in between the time we 
+           // if the last row has changed in between the time we
            // mousedown and the time we click, don't fire the select handler.
            // see bug #92366
            if (this._lastSelectedRow == row.value) {
-             selection.select(row.value);  
+             selection.select(row.value);
              select.setOptionsSelectedByIndex(row.value, row.value,
                                               true, true, false, false);
              if ("onchange" in this)
-               this.onchange(); 
+               this.onchange();
            }
          }
       ]]>
@@ -180,7 +180,7 @@
                 onget="return this.getNextOptionIndex(-1);"/>
       <property name="lastSelectableOption" readonly="true"
                 onget="return this.getPrevOptionIndex(this.view.rowCount);"/>
-          
+
       <field name="selectionHead">
         -1
       </field>
@@ -260,7 +260,7 @@
       <handler event="focus" action="this.treeBoxObject.focused = true;"/>
       <handler event="blur" action="this.treeBoxObject.focused = false;"/>
 
-      <handler event="keypress" keycode="vk_up">
+      <handler event="keypress" keycode="VK_UP">
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
@@ -277,7 +277,7 @@
             this.onchange();
          ]]>
       </handler>
-      <handler event="keypress" keycode="vk_down">
+      <handler event="keypress" keycode="VK_DOWN">
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
@@ -295,7 +295,7 @@
             this.onchange();
          ]]>
       </handler>
-      <handler event="keypress" keycode="vk_up" modifiers="shift">
+      <handler event="keypress" keycode="VK_UP" modifiers="shift">
         <![CDATA[
           event.preventDefault();
           if (this.singleSelection)
@@ -312,7 +312,8 @@
           if (c == this.selectionTail) {
             if (this.selectionHead < this.selectionTail) {
               selection.toggleSelect(c);
-              select.setOptionsSelectedByIndex(selIndex, selIndex, selection.isSelected(c), 
+              select.setOptionsSelectedByIndex(selIndex, selIndex,
+                                               selection.isSelected(c),
                                                false, false, false);
               this.currentIndex = i;
             }
@@ -334,7 +335,7 @@
             this.onchange();
          ]]>
       </handler>
-      <handler event="keypress" keycode="vk_down" modifiers="shift">
+      <handler event="keypress" keycode="VK_DOWN" modifiers="shift">
         <![CDATA[
           event.preventDefault();
           if (this.singleSelection)
@@ -344,7 +345,7 @@
           try { if (i >= this.view.rowCount)
             return;
           } catch (e) {}
- 
+
           var selection = this.view.selection;
           var select = this.selectElement;
           var selIndex = this.adjustIndexForNesting(c);
@@ -373,7 +374,7 @@
             this.onchange();
          ]]>
       </handler>
-      <handler event="keypress" keycode="vk_up" modifiers="control">
+      <handler event="keypress" keycode="VK_UP" modifiers="control">
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
@@ -384,7 +385,7 @@
           this.treeBoxObject.ensureRowIsVisible(i);
          ]]>
       </handler>
-      <handler event="keypress" keycode="vk_down" modifiers="control">
+      <handler event="keypress" keycode="VK_DOWN" modifiers="control">
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
@@ -396,7 +397,7 @@
           this.treeBoxObject.ensureRowIsVisible(i);
          ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_up">
+      <handler event="keypress" keycode="VK_PAGE_UP">
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
@@ -414,7 +415,7 @@
             this.onchange();
          ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_down">
+      <handler event="keypress" keycode="VK_PAGE_DOWN">
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
@@ -432,7 +433,7 @@
             this.onchange();
          ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_up" modifiers="shift">
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="shift">
         <![CDATA[
           event.preventDefault();
           if (this.singleSelection)
@@ -489,7 +490,7 @@
             this.onchange();
          ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_down" modifiers="shift">
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="shift">
         <![CDATA[
           event.preventDefault();
           if (this.singleSelection)
@@ -544,7 +545,7 @@
             this.onchange();
          ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_up" modifiers="control">
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="control">
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
@@ -555,7 +556,7 @@
           this.currentIndex = this.computePageUpIndex(c);
          ]]>
       </handler>
-      <handler event="keypress" keycode="vk_page_down" modifiers="control">
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="control">
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
@@ -567,7 +568,7 @@
           this.currentIndex = this.computePageDownIndex(c);
          ]]>
       </handler>
-      <handler event="keypress" keycode="vk_home">
+      <handler event="keypress" keycode="VK_HOME">
         <![CDATA[
           event.preventDefault();
 
@@ -587,7 +588,7 @@
             this.onchange();
          ]]>
       </handler>
-      <handler event="keypress" keycode="vk_end">
+      <handler event="keypress" keycode="VK_END">
         <![CDATA[
           event.preventDefault();
           var box = this.treeBoxObject;
@@ -604,7 +605,7 @@
             this.onchange();
          ]]>
       </handler>
-      <handler event="keypress" keycode="vk_home" modifiers="shift">
+      <handler event="keypress" keycode="VK_HOME" modifiers="shift">
         <![CDATA[
           event.preventDefault();
           if (this.singleSelection)
@@ -631,7 +632,7 @@
             this.onchange();
          ]]>
       </handler>
-      <handler event="keypress" keycode="vk_end" modifiers="shift">
+      <handler event="keypress" keycode="VK_END" modifiers="shift">
         <![CDATA[
           event.preventDefault();
           if (this.singleSelection)
@@ -657,7 +658,7 @@
             this.onchange();
          ]]>
       </handler>
-      <handler event="keypress" keycode="vk_home" modifiers="control">
+      <handler event="keypress" keycode="VK_HOME" modifiers="control">
         <![CDATA[
           event.preventDefault();
           var firstOptionIndex = this.firstSelectableOption;
@@ -667,7 +668,7 @@
           this.treeBoxObject.ensureRowIsVisible(firstOptionIndex);
          ]]>
       </handler>
-      <handler event="keypress" keycode="vk_end" modifiers="control">
+      <handler event="keypress" keycode="VK_END" modifiers="control">
         <![CDATA[
           event.preventDefault();
           var lastOptionIndex = this.lastSelectableOption;
@@ -819,4 +820,4 @@
     </content>
   </binding>
 
-</bindings>          
+</bindings>
