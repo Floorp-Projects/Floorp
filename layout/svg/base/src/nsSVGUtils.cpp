@@ -103,7 +103,7 @@ public:
                                nsIContent* aChild, PRInt32 aIndexInContainer);
   virtual void ContentRemoved(nsIDocument* aDocument, nsIContent* aContainer,
                               nsIContent* aChild, PRInt32 aIndexInContainer);
-  virtual void NodeWillBeDestroyed(const nsINode *aNode);
+  virtual void ParentChainChanged(nsIContent *aContent);
 
 private:
   void DoUpdate();
@@ -187,12 +187,16 @@ nsSVGFilterProperty::ContentRemoved(nsIDocument *aDocument,
 }
 
 void
-nsSVGFilterProperty::NodeWillBeDestroyed(const nsINode *aNode)
+nsSVGFilterProperty::ParentChainChanged(nsIContent *aContent)
 {
+  if (aContent->IsInDoc())
+    return;
+
   nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
   if (outerSVGFrame)
     outerSVGFrame->InvalidateRect(mFilterRect);
 
+  RemoveMutationObserver();
   mFrame->RemoveStateBits(NS_STATE_SVG_FILTERED);
   mFrame->DeleteProperty(nsGkAtoms::filter);
 }
