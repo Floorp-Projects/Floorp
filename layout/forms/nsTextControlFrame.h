@@ -121,11 +121,7 @@ public:
   virtual void PostCreateFrames();
 
   // Utility methods to set current widget state
-
-  // Be careful when using this method.
-  // Calling it may cause |this| to be deleted.
-  // In that case the method returns an error value.
-  nsresult SetValue(const nsAString& aValue);
+  void SetValue(const nsAString& aValue);
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
@@ -296,6 +292,8 @@ private:
   nsCOMPtr<nsISelectionController> mSelCon;
   nsCOMPtr<nsFrameSelection> mFrameSel;
   nsTextInputListener* mTextListener;
+  // XXX This seems unsafe; what's keeping it around?
+  nsIScrollableView *mScrollableView;
   nsString mFocusedValue;
 
 #ifdef DEBUG
