@@ -146,7 +146,6 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
         // XXX To really implement 'max-width' well, we'd need to store
         // it separately on the columns.
         case eStyleUnit_Coord: {
-                hasSpecifiedWidth = PR_TRUE;
                 nscoord w = aStylePos->mMaxWidth.GetCoordValue();
                 if (w < minCoord)
                     minCoord = w;
@@ -236,17 +235,13 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
             NS_ERROR("column frames out of sync with cell map");
             continue;
         }
-        colFrame->ResetMinCoord();
-        colFrame->ResetPrefCoord();
-        colFrame->ResetPrefPercent();
-        colFrame->ResetSpanMinCoord();
-        colFrame->ResetSpanPrefCoord();
-        colFrame->ResetSpanPrefPercent();
+        colFrame->ResetIntrinsics();
+        colFrame->ResetSpanIntrinsics();
 
         // Consider the widths on the column.
         CellWidthInfo colInfo = GetColWidthInfo(aRenderingContext, colFrame);
-        colFrame->AddMinCoord(colInfo.minCoord);
-        colFrame->AddPrefCoord(colInfo.prefCoord, colInfo.hasSpecifiedWidth);
+        colFrame->AddCoords(colInfo.minCoord, colInfo.prefCoord,
+                            colInfo.hasSpecifiedWidth);
         colFrame->AddPrefPercent(colInfo.prefPercent);
 
         // Consider the widths on the column-group.  Note that we follow
@@ -257,8 +252,8 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                          nsGkAtoms::tableColGroupFrame,
                      "expected a column-group");
         colInfo = GetColWidthInfo(aRenderingContext, colFrame->GetParent());
-        colFrame->AddMinCoord(colInfo.minCoord);
-        colFrame->AddPrefCoord(colInfo.prefCoord, colInfo.hasSpecifiedWidth);
+        colFrame->AddCoords(colInfo.minCoord, colInfo.prefCoord,
+                            colInfo.hasSpecifiedWidth);
         colFrame->AddPrefPercent(colInfo.prefPercent);
 
         // Consider the contents of and the widths on the cells without
@@ -274,8 +269,8 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
 
             CellWidthInfo info = GetCellWidthInfo(aRenderingContext, cellFrame);
 
-            colFrame->AddMinCoord(info.minCoord);
-            colFrame->AddPrefCoord(info.prefCoord, info.hasSpecifiedWidth);
+            colFrame->AddCoords(info.minCoord, info.prefCoord,
+                                info.hasSpecifiedWidth);
             colFrame->AddPrefPercent(info.prefPercent);
         }
 #ifdef DEBUG_dbaron_off
@@ -295,9 +290,8 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
     // if they require adding to the widths resulting only from cells
     // with a smaller colspan, and therefore we must process them sorted
     // in increasing order by colspan.  For each colspan group, we
-    // accumulate the *additions* to the prior values in the column
-    // frame's Span* members, since this makes the distribution process
-    // simpler.
+    // accumulate new values to accumulate in the column frame's Span*
+    // members.
     //
     // Considering things only relative to the widths resulting from
     // cells with smaller colspans (rather than incrementally including
@@ -352,17 +346,25 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                     info.prefCoord -= spacing;
                 }
 
-                totalSPref += scolFrame->GetPrefCoord();
+                nscoord curPref;
+                if (info.hasSpecifiedWidth &&
+                    !scolFrame->GetHasSpecifiedCoord()) {
+                    curPref = scolFrame->GetMinCoord();
+                } else {
+                    curPref = scolFrame->GetPrefCoord();
+                }
+
+                totalSPref += curPref;
                 totalSMin += scolFrame->GetMinCoord();
                 float scolPct = scolFrame->GetPrefPercent();
                 if (scolPct == 0.0f) {
-                    totalSNonPctPref += scolFrame->GetPrefCoord();
+                    totalSNonPctPref += curPref;
                     ++nonPctCount;
                 } else {
                     info.prefPercent -= scolPct;
                 }
                 info.minCoord -= scolFrame->GetMinCoord();
-                info.prefCoord -= scolFrame->GetPrefCoord();
+                info.prefCoord -= curPref;
             }
 
             if (info.minCoord < 0)
@@ -447,17 +449,27 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                     coordRatio = 1.0f / float(scol_end - scol);
                 }
 
+                nscoord curPref;
+                if (info.hasSpecifiedWidth &&
+                    !scolFrame->GetHasSpecifiedCoord()) {
+                    curPref = scolFrame->GetMinCoord();
+                } else {
+                    curPref = scolFrame->GetPrefCoord();
+                }
+
                 // combine the two min-width distributions, and record
                 // min and pref
                 nscoord allocatedMinWithinPref =
                     NSToCoordRound(float(minWithinPref) * minRatio);
                 nscoord allocatedMinOutsidePref =
                     NSToCoordRound(float(minOutsidePref) * coordRatio);
-                scolFrame->AddSpanMinCoord(allocatedMinWithinPref +
-                                           allocatedMinOutsidePref);
                 nscoord allocatedPref =
                     NSToCoordRound(float(info.prefCoord) * coordRatio);
-                scolFrame->AddSpanPrefCoord(allocatedPref);
+                nscoord spanMin = scolFrame->GetMinCoord() +
+                        allocatedMinWithinPref + allocatedMinOutsidePref;
+                nscoord spanPref = curPref + allocatedPref;
+                scolFrame->AddSpanCoords(spanMin, spanPref,
+                                         info.hasSpecifiedWidth);
 
                 // To avoid accumulating rounding error from division,
                 // subtract everything to do with the column we've
@@ -466,10 +478,10 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                 minOutsidePref -= allocatedMinOutsidePref;
                 info.prefCoord -= allocatedPref;
                 info.prefPercent -= allocatedPct;
-                totalSPref -= scolFrame->GetPrefCoord();
+                totalSPref -= curPref;
                 totalSMin -= scolFrame->GetMinCoord();
                 if (scolFrame->GetPrefPercent() == 0.0f) {
-                    totalSNonPctPref -= scolFrame->GetPrefCoord();
+                    totalSNonPctPref -= curPref;
                     --nonPctCount;
                 }
             }
@@ -494,27 +506,8 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                 continue;
             }
 
-            // Since PrefCoord is really a shorthand for two values (XXX
-            // this isn't really a space savings since we have to store
-            // mHasSpecifiedCoord; we should probably just store the values
-            // since it's less confusing) and calling AddMinCoord can
-            // influence the result of GetPrefCoord, save the value as it
-            // was during the loop over spanning cells before messing with
-            // anything.
-            nscoord newPref =
-                colFrame->GetPrefCoord() + colFrame->GetSpanPrefCoord();
-            nscoord newMin =
-                colFrame->GetMinCoord() + colFrame->GetSpanMinCoord();
-            colFrame->AddMinCoord(newMin);
-            colFrame->AddPrefCoord(PR_MAX(newPref, newMin),
-                                   colFrame->GetHasSpecifiedCoord());
-            NS_ASSERTION(colFrame->GetMinCoord() <= colFrame->GetPrefCoord(),
-                         "min larger than pref");
-            colFrame->AddPrefPercent(colFrame->GetSpanPrefPercent());
-
-            colFrame->ResetSpanMinCoord();
-            colFrame->ResetSpanPrefCoord();
-            colFrame->ResetSpanPrefPercent();
+            colFrame->AccumulateSpanIntrinsics();
+            colFrame->ResetSpanIntrinsics();
 
 #ifdef DEBUG_dbaron_off
             printf("table %p col %d span %d: min=%d pref=%d spec=%d pct=%f\n",
