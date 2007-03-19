@@ -133,7 +133,7 @@ public:
   nsDisplayListBuilder(nsIFrame* aReferenceFrame, PRBool aIsForEvents,
                        PRBool aBuildCaret, nsIFrame* aMovingFrame = nsnull);
   ~nsDisplayListBuilder();
-  
+
   /**
    * @return PR_TRUE if the display is being built in order to determine which
    * frame is under the mouse position.
@@ -198,6 +198,12 @@ public:
    * Get the scrollframe to ignore, if any.
    */
   nsIFrame* GetIgnoreScrollFrame() { return mIgnoreScrollFrame; }
+  /**
+   * Calling this setter makes us ignore all dirty rects and include all
+   * descendant frames in the display list, wherever they may be positioned.
+   */
+  void SetPaintAllFrames() { mPaintAllFrames = PR_TRUE; }
+  PRBool GetPaintAllFrames() { return mPaintAllFrames; }
   /**
    * Display the caret if needed.
    */
@@ -289,6 +295,7 @@ private:
   PRPackedBool           mEventDelivery;
   PRPackedBool           mIsBackgroundOnly;
   PRPackedBool           mIsAtRootOfPseudoStackingContext;
+  PRPackedBool           mPaintAllFrames;
 };
 
 class nsDisplayItem;
