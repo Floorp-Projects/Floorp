@@ -1031,7 +1031,6 @@ nsTextControlFrame::nsTextControlFrame(nsIPresShell* aShell, nsStyleContext* aCo
   , mDidPreDestroy(PR_FALSE)
   , mFireChangeEventState(PR_FALSE)
   , mTextListener(nsnull)
-  , mScrollableView(nsnull)
 #ifdef DEBUG
   , mCreateFrameForCalled(PR_FALSE)
 #endif
@@ -1125,7 +1124,10 @@ nsTextControlFrame::PreDestroy()
 
   mEditor = nsnull;
   mSelCon = nsnull;
-  mFrameSel = nsnull;
+  if (mFrameSel) {
+    mFrameSel->SetScrollableViewProvider(nsnull);
+    mFrameSel = nsnull;
+  }
 
 //unregister self from content
   mTextListener->SetFrame(nsnull);
@@ -1163,6 +1165,9 @@ nsTextControlFrame::Destroy()
 {
   if (!mDidPreDestroy) {
     PreDestroy();
+  }
+  if (mFrameSel) {
+    mFrameSel->SetScrollableViewProvider(nsnull);
   }
   nsContentUtils::DestroyAnonymousContent(&mAnonymousDiv);
   nsBoxFrame::Destroy();
@@ -1382,6 +1387,7 @@ nsTextControlFrame::CreateFrameFor(nsIContent*      aContent)
   mFrameSel = do_CreateInstance(kFrameSelectionCID, &rv);
   if (NS_FAILED(rv))
     return nsnull;
+  mFrameSel->SetScrollableViewProvider(this);
 
   // Create a SelectionController
 
@@ -1864,7 +1870,8 @@ nsresult nsTextControlFrame::SetFormProperty(nsIAtom* aName, const nsAString& aV
         // has changed.
         SetValueChanged(PR_TRUE);
       }
-      SetValue(aValue);   // set new text value
+      nsresult rv = SetValue(aValue); // set new text value
+      NS_ENSURE_SUCCESS(rv, rv);
     }
     else if (nsGkAtoms::select == aName)
     {
@@ -2566,13 +2573,15 @@ nsTextControlFrame::GetValue(nsAString& aValue, PRBool aIgnoreWrap) const
 
 // END IMPLEMENTING NS_IFORMCONTROLFRAME
 
-void
+nsresult
 nsTextControlFrame::SetValue(const nsAString& aValue)
 {
   // XXX this method should actually propagate errors!  It'd make debugging it
   // so much easier...
   if (mEditor && mUseEditor) 
   {
+    nsCOMPtr<nsIEditor> editor = mEditor;
+    nsWeakFrame weakFrame(this);
     nsAutoString currentValue;
     GetValue(currentValue, PR_FALSE);
     if (IsSingleLineTextControl())
@@ -2590,9 +2599,9 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       ::PlatformToDOMLineBreaks(currentValue);
 
       nsCOMPtr<nsIDOMDocument>domDoc;
-      nsresult rv = mEditor->GetDocument(getter_AddRefs(domDoc));
-      if (NS_FAILED(rv)) return;
-      if (!domDoc) return;
+      nsresult rv = editor->GetDocument(getter_AddRefs(domDoc));
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_STATE(domDoc);
 
       // Time to mess with our security context... See comments in GetValue()
       // for why this is needed.  Note that we have to do this up here, because
@@ -2612,15 +2621,15 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       }
 
       mSelCon->SelectAll();
-      nsCOMPtr<nsIPlaintextEditor> htmlEditor = do_QueryInterface(mEditor);
-      if (!htmlEditor) {
+      nsCOMPtr<nsIPlaintextEditor> plaintextEditor = do_QueryInterface(editor);
+      if (!plaintextEditor) {
         NS_WARNING("Somehow not a plaintext editor?");
         if (pushed) {
           JSContext* cx;
           stack->Pop(&cx);
           NS_ASSERTION(!cx, "Unexpected JSContext popped!");
         }
-        return;
+        return NS_ERROR_FAILURE;
       }
 
       // Since this code does not handle user-generated changes to the text,
@@ -2637,21 +2646,21 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       // get the flags, remove readonly and disabled, set the value,
       // restore flags
       PRUint32 flags, savedFlags;
-      mEditor->GetFlags(&savedFlags);
+      editor->GetFlags(&savedFlags);
       flags = savedFlags;
       flags &= ~(nsIPlaintextEditor::eEditorDisabledMask);
       flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
-      mEditor->SetFlags(flags);
+      editor->SetFlags(flags);
 
       if (currentValue.Length() < 1)
-        mEditor->DeleteSelection(nsIEditor::eNone);
+        editor->DeleteSelection(nsIEditor::eNone);
       else {
-        nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(mEditor);
+        nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(editor);
         if (textEditor)
           textEditor->InsertText(currentValue);
       }
 
-      mEditor->SetFlags(savedFlags);
+      editor->SetFlags(savedFlags);
       if (selPriv)
         selPriv->EndBatchChanges();
 
@@ -2661,6 +2670,7 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
         NS_ASSERTION(!cx, "Unexpected JSContext popped!");
       }
 
+      NS_ENSURE_STATE(weakFrame.IsAlive());
       if (outerTransaction)
         mNotifyOnInput = PR_TRUE;
 
@@ -2673,12 +2683,14 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       }
     }
 
-    if (mScrollableView)
+    NS_ENSURE_STATE(weakFrame.IsAlive());
+    nsIScrollableView* scrollableView = GetScrollableView();
+    if (scrollableView)
     {
       // Scroll the upper left corner of the text control's
       // content area back into view.
 
-      mScrollableView->ScrollTo(0, 0, NS_VMREFRESH_NO_SYNC);
+      scrollableView->ScrollTo(0, 0, NS_VMREFRESH_NO_SYNC);
     }
   }
   else
@@ -2690,6 +2702,7 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       textControl->TakeTextFrameValue(aValue);
     }
   }
+  return NS_OK;
 }
 
 
@@ -2748,17 +2761,17 @@ nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
                                       listener, PR_FALSE, systemGroup);
   }
 
-  if (scrollableFrame) {
-    mScrollableView = scrollableFrame->GetScrollableView();
-    mFrameSel->SetScrollableView(mScrollableView);
-  }
-
   return rv;
 }
 
 nsIScrollableView* nsTextControlFrame::GetScrollableView()
 {
-  return mScrollableView;
+  nsIFrame* first = GetFirstChild(nsnull);
+  nsIScrollableFrame* scrollableFrame = nsnull;
+  if (first) {
+    CallQueryInterface(first, &scrollableFrame);
+  }
+  return scrollableFrame ? scrollableFrame->GetScrollableView() : nsnull;
 }
 
 PRBool
