@@ -931,6 +931,10 @@ gfxPangoFontGroup::SetGlyphs(gfxTextRun* aTextRun,
     nsAutoTArray<gfxTextRun::DetailedGlyph,1> detailedGlyphs;
 
     while (index < aUTF8Length) {
+        if (utf16Offset >= textRunLength) {
+          NS_ERROR("Someone has added too many glyphs!");
+          break;
+        }
         if (aUTF8[index] == 0) {
             // treat this null byte as a missing glyph
             aTextRun->SetCharacterGlyph(utf16Offset, g.SetMissing());
