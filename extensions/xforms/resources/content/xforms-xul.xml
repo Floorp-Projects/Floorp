@@ -43,6 +43,11 @@
   are inherited from interface bindings realized in xforms.xml.
 -->
 
+<!DOCTYPE bindings [
+<!ENTITY % xformsDTD SYSTEM "chrome://xforms/locale/xforms.dtd">
+  %xformsDTD;
+]>
+
 <bindings id="xformsBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xbl="http://www.mozilla.org/xbl"
