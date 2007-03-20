@@ -84,8 +84,8 @@ public:
   NS_IMETHOD NewScriptGlobalObject(PRBool aIsChrome,
                                    nsIScriptGlobalObject **aGlobal);
 
-  NS_IMETHOD_(nsISupports *)GetClassInfoInstance(nsDOMClassInfoID aID);
-  NS_IMETHOD_(nsISupports *)GetExternalClassInfoInstance(const nsAString& aName);
+  NS_IMETHOD_(nsISupports *) GetClassInfoInstance(nsDOMClassInfoID aID);
+  NS_IMETHOD_(nsISupports *) GetExternalClassInfoInstance(const nsAString& aName);
 
   NS_IMETHOD RegisterDOMClassInfo(const char *aName,
                                   nsDOMClassInfoExternalConstructorFnc aConstructorFptr,
