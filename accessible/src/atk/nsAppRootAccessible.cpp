@@ -52,7 +52,7 @@ typedef GType (* AtkGetTypeType) (void);
 GType g_atk_hyperlink_impl_type = G_TYPE_INVALID;
 static PRBool sATKChecked = PR_FALSE;
 static PRBool sInitialized = PR_FALSE;
-static const char sATKLibName[] = "libatk-1.0.so";
+static const char sATKLibName[] = "libatk-1.0.so.0";
 static const char sATKHyperlinkImplGetTypeSymbol[] = "atk_hyperlink_impl_get_type";
 
 /* app root accessible */
@@ -811,9 +811,11 @@ nsAppRootAccessible::Create()
 {
     if (!sATKChecked) {
         PRLibrary *atkLib = PR_LoadLibrary(sATKLibName);
-        AtkGetTypeType pfn_atk_hyperlink_impl_get_type = (AtkGetTypeType) PR_FindFunctionSymbol(atkLib, sATKHyperlinkImplGetTypeSymbol);
-        if (pfn_atk_hyperlink_impl_get_type) {
-            g_atk_hyperlink_impl_type = pfn_atk_hyperlink_impl_get_type();
+        if (atkLib) {
+            AtkGetTypeType pfn_atk_hyperlink_impl_get_type = (AtkGetTypeType) PR_FindFunctionSymbol(atkLib, sATKHyperlinkImplGetTypeSymbol);
+            if (pfn_atk_hyperlink_impl_get_type) {
+                g_atk_hyperlink_impl_type = pfn_atk_hyperlink_impl_get_type();
+            }
         }
         sATKChecked = PR_TRUE;
     }
