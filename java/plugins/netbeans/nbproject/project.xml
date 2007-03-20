@@ -8,6 +8,7 @@
             <source-roots>
                 <root id="src.EmptyMainClass.dir" name="EmptyMainClass"/>
                 <root id="src.java.dir" name="SimplePluglet"/>
+                <root id="src.java2.dir" name="jmfplayer"/>
             </source-roots>
             <test-roots/>
         </data>

@@ -1,3 +1,5 @@
+package jmfplayer;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Frame;
@@ -19,8 +21,8 @@ import org.mozilla.pluglet.mozilla.PlugletStreamInfo;
 import org.mozilla.pluglet.mozilla.PlugletTagInfo2;
 
 
-public class JMPlayer implements PlugletFactory {
-    public JMPlayer() {
+public class JMFPlayer implements PlugletFactory {
+    public JMFPlayer() {
     }
     public Pluglet createPluglet(String mimeType) {
         Pluglet player = null;
@@ -88,7 +90,7 @@ class Player implements Pluglet, ControllerListener {
     public void destroy() {
     }
     public PlugletStreamListener newStream() {
-	JMPlayerStreamListener listener = new JMPlayerStreamListener();
+	JMFPlayerStreamListener listener = new JMFPlayerStreamListener();
 	listener.setPlayer(this);
 	return listener;
     }
@@ -105,10 +107,10 @@ class Player implements Pluglet, ControllerListener {
     }
 }
 
-class JMPlayerStreamListener implements PlugletStreamListener {
+class JMFPlayerStreamListener implements PlugletStreamListener {
     Player jmp;
 
-    public JMPlayerStreamListener() {
+    public JMFPlayerStreamListener() {
     }
     public void onStartBinding(PlugletStreamInfo streamInfo) {
 	if(!jmp.playFile(streamInfo.getURL())) {

@@ -53,7 +53,6 @@
   <property name="dist.classes" value="${moz.dist}/classes" />
   <property name="javadoc.private"  value="false"/>
   <property name="javadoc.protected"  value="true"/>
-  <property name="dist.jar"  value="${dist.home}/lib/${name}-${version}.jar"/>
 
   <target name="release">
 
@@ -62,12 +61,33 @@
     <antcall target="compile.all" />
     <antcall target="build.dist.jar" />
     <antcall target="copy.binaries" />
+<!--
     <antcall target="copy.test.src" />
     <antcall target="copy.core.src" />
     <antcall target="copy.build.support" />
     <antcall target="build.javadocs" />
     <antcall target="build.zip" />
+-->
   </target>
+
+  <target name="workarea.release">
+
+    <antcall target="release">
+      <param name="dist.home" value="${basedir}/.." />
+    </antcall>
+
+  </target> 
+
+  <target name="workarea.clean">
+
+    <property name="workarea.dist" value="${basedir}/.." />
+    <delete dir="${workarea.dist}/lib" />
+    <delete dir="${workarea.dist}/bin" />
+    <delete dir="${workarea.dist}/javadocs" />
+
+
+  </target> 
+
 
   <target name="build.zip">
     <condition property="platform" value="win32">
@@ -139,6 +159,9 @@
 
 
   <target name="uptodate">
+    <property name="dist.jar"  
+              value="${dist.home}/lib/${name}-${version}.jar"/>
+
     <uptodate property="core.java.classes.uptodate" 
               targetfile="${dist.jar}">
       <srcfiles dir="${dist.classes}" />
@@ -156,6 +179,8 @@
   </target>
 
   <target name="build.dist.jar">
+    <property name="dist.jar"  
+              value="${dist.home}/lib/${name}-${version}.jar"/>
     <jar jarfile="${dist.jar}" >
        <manifest>
         <attribute name="Specification-Title" value="${Name}"/>

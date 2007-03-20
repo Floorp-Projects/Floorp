@@ -142,6 +142,7 @@
         <condition property="preconditions.met">
             <and>
                 <available file="${browser.bin.dir}/${so.prefix}xpcom.${so.extension}" />
+                <available file="${jdkhome.nospaces}/jre/bin/${so.prefix}java.${so.extension}" />
             </and>
         </condition>
         
@@ -153,17 +154,20 @@
                 <fail unless="preconditions.met">
                     
 Conditions for compilation have not been met.
+
 Have you verified that the property browser.bin.dir has been set
-to the binary directory of the host browser in the webclient.properties
+to the binary directory of the host browser in the pluglet.properties
 file?  The current value of this property is:
 ${browser.bin.dir} and this directory must contain the file
 ${so.prefix}xpcom.${so.extension}.
+
+Have you verified that the property jdkhome.nospaces has been set
+to the installation of the JDK, in the pluglet.properties file,
+and that the path to this directory
+has no spaces?  The current value of this property is:
+${jdkhome.nospaces}.
     </fail>
         
-    </target>
-
-    <target name="edburns">
-       <echo message="edburns path: ${myenv.Path}" />
     </target>
 
     <target name="-post-init">
@@ -183,7 +187,7 @@ ${so.prefix}xpcom.${so.extension}.
         </delete>
     </target>
 
-    <target name="run" depends="-init-check,-post-init">
+    <target name="run" depends="-init-check,-pre-init,-post-init">
 
       <exec os="SunOS" dir="${browser.bin.dir}" executable="firefox" 
 		       failonerror="yes">
@@ -197,23 +201,17 @@ ${so.prefix}xpcom.${so.extension}.
 		       failonerror="yes">
         <arg value="file://${basedir}/../examples/index.html" />
       </exec>
-      <!--
-      <exec os="Windows 2000" dir="${browser.bin.dir}" 
-                       executable="${browser.bin.dir}/firefox.exe" 
-                       newenvironment="true"
-		       failonerror="yes">
-                       -->
       <exec os="Windows 2000" dir="${browser.bin.dir}" 
                        executable="${browser.bin.dir}/firefox.exe" 
                        failonerror="yes">
         <env key="PATH" 
-             path="${myenv.Path}:${browser.bin.dir}:${browser.bin.dir}/components"
+             path="${jdkhome.nospaces}/jre/bin/client"
         />
         <env key="Path" 
-             path="${myenv.Path}:${browser.bin.dir}:${browser.bin.dir}/components"
+             path="${jdkhome.nospaces}/jre/bin/client"
         />
         <env key="path" 
-             path="${myenv.Path}:${browser.bin.dir}:${browser.bin.dir}/components"
+             path="${jdkhome.nospaces}/jre/bin/client"
         />
         <env key="CLASSPATH" 
              path="${run.classpath}" 
@@ -235,23 +233,42 @@ ${so.prefix}xpcom.${so.extension}.
     </target>
 
     <target name="-post-compile">
-        <echo message="${build.classes.dir}" />
-      <jar jarfile="${build.dir}/SimplePluglet.jar">
-	 <manifest>
-	  <attribute name="MIMEDescription" value="application/x-simple-pluglet"/>
-	  <attribute name="Pluglet-Class" value="simple.SimplePluglet"/>
-	 </manifest>
-	<fileset dir="${build.classes.dir}">
-	  <include name="simple/**/*.*" />
-	</fileset>
-      </jar>
-      <delete>
-	<fileset dir="${build.classes.dir}">
-	  <include name="simple/**/*.*" />
-	</fileset>
-      </delete>
+        <!-- SimplePluglet -->
+        <jar jarfile="${build.dir}/SimplePluglet.jar">
+            <manifest>
+                <attribute name="MIMEDescription" value="application/x-simple-pluglet"/>
+                <attribute name="Pluglet-Class" value="simple.SimplePluglet"/>
+            </manifest>
+            <fileset dir="${build.classes.dir}">
+                <include name="simple/**/*.*" />
+            </fileset>
+        </jar>
+        <delete>
+            <fileset dir="${build.classes.dir}">
+                    <include name="simple/**/*.*" />
+            </fileset>
+        </delete>
+        <copy todir="${browser.bin.dir}/plugins" 
+                        file="${build.dir}/SimplePluglet.jar" />
+                        
+        <!-- JMFPlayer -->
+        <jar jarfile="${build.dir}/jmfplayer.jar">
+            <manifest>
+                <attribute name="MIMEDescription" value="video/avi"/>
+                <attribute name="Pluglet-Class" value="jmfplayer.JMFPlayer"/>
+           </manifest>
+
+           <fileset dir="${build.classes.dir}">
+               <include name="jmfplayer/**/*.*" />
+           </fileset>
+       </jar>
+       <delete>
+           <fileset dir="${build.classes.dir}">
+               <include name="jmfplayer/**/*.*" />
+           </fileset>
+       </delete>
       <copy todir="${browser.bin.dir}/plugins" 
-            file="${build.dir}/SimplePluglet.jar" />
+            file="${build.dir}/jmfplayer.jar" />
     </target>
 
     <target name="-do-jar-with-manifest" />

@@ -67,6 +67,7 @@ is divided into following sections:
             <or>
                 <available file="${src.EmptyMainClass.dir}"/>
                 <available file="${src.java.dir}"/>
+                <available file="${src.java2.dir}"/>
             </or>
         </condition>
         <condition property="netbeans.home+have.tests">
@@ -96,6 +97,7 @@ is divided into following sections:
     <target name="-init-check" depends="-pre-init,-init-private,-init-user,-init-project,-do-init">
         <fail unless="src.EmptyMainClass.dir">Must set src.EmptyMainClass.dir</fail>
         <fail unless="src.java.dir">Must set src.java.dir</fail>
+        <fail unless="src.java2.dir">Must set src.java2.dir</fail>
         <fail unless="build.dir">Must set build.dir</fail>
         <fail unless="dist.dir">Must set dist.dir</fail>
         <fail unless="build.classes.dir">Must set build.classes.dir</fail>
@@ -116,7 +118,7 @@ is divided into following sections:
     </target>
     <target name="-init-macrodef-javac">
         <macrodef name="javac" uri="http://www.netbeans.org/ns/j2se-project/3">
-            <attribute name="srcdir" default="${src.EmptyMainClass.dir}:${src.java.dir}"/>
+            <attribute name="srcdir" default="${src.EmptyMainClass.dir}:${src.java.dir}:${src.java2.dir}"/>
             <attribute name="destdir" default="${build.classes.dir}"/>
             <attribute name="classpath" default="${javac.classpath}"/>
             <attribute name="debug" default="${javac.debug}"/>
@@ -243,6 +245,7 @@ is divided into following sections:
         <copy todir="${build.classes.dir}">
             <fileset dir="${src.EmptyMainClass.dir}" excludes="${build.classes.excludes}"/>
             <fileset dir="${src.java.dir}" excludes="${build.classes.excludes}"/>
+            <fileset dir="${src.java2.dir}" excludes="${build.classes.excludes}"/>
         </copy>
     </target>
     <target name="-post-compile">
@@ -394,11 +397,14 @@ is divided into following sections:
             <sourcepath>
                 <pathelement location="${src.EmptyMainClass.dir}"/>
                 <pathelement location="${src.java.dir}"/>
+                <pathelement location="${src.java2.dir}"/>
             </sourcepath>
             <packageset dir="${src.EmptyMainClass.dir}" includes="*/**"/>
             <packageset dir="${src.java.dir}" includes="*/**"/>
+            <packageset dir="${src.java2.dir}" includes="*/**"/>
             <fileset dir="${src.EmptyMainClass.dir}" includes="*.java"/>
             <fileset dir="${src.java.dir}" includes="*.java"/>
+            <fileset dir="${src.java2.dir}" includes="*.java"/>
         </javadoc>
     </target>
     <target name="-javadoc-browse" if="netbeans.home" unless="no.javadoc.preview" depends="init,-javadoc-build">
