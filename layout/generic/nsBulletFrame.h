@@ -99,7 +99,8 @@ public:
   PRBool GetListItemText(const nsStyleList& aStyleList,
                          nsString& aResult);
                          
-  void PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt);
+  void PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt,
+                   const nsRect& aDirtyRect);
 
 protected:
   void GetDesiredSize(nsPresContext* aPresContext,

@@ -73,12 +73,8 @@ public:
     virtual nsColorMap *GetColorMap();
 
     NS_IMETHOD Draw(nsIRenderingContext &aContext,
-                    nsIDrawingSurface *aSurface,
-                    PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-    NS_IMETHOD Draw(nsIRenderingContext &aContext,
-                    nsIDrawingSurface *aSurface,
-                    PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
-                    PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
+                    const gfxRect &aSourceRect,
+                    const gfxRect &aDestRect);
     NS_IMETHOD DrawTile(nsIRenderingContext &aContext,
                         nsIDrawingSurface *aSurface,
                         PRInt32 aSXOffset, PRInt32 aSYOffset,

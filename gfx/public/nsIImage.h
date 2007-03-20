@@ -41,6 +41,7 @@
 #include "nsISupports.h"
 #include "nsIRenderingContext.h"
 #include "nsRect.h"
+#include "gfxRect.h"
 
 #ifdef MOZ_CAIRO_GFX
 class gfxASurface;
@@ -79,9 +80,10 @@ typedef enum {
 #endif
 
 // IID for the nsIImage interface
-#define NS_IIMAGE_IID          \
-  { 0xce91c93f, 0x532d, 0x470d, \
-      { 0xbf, 0xa3, 0xc9, 0x6e, 0x56, 0x01, 0x52, 0xa4 } }
+// ab6af421-9552-4d18-a3f4-a2bf9d2e44f7
+#define NS_IIMAGE_IID \
+{ 0xab6af421, 0x9552, 0x4d18, \
+  { 0xa3, 0xf4, 0xa2, 0xbf, 0x9d, 0x2e, 0x44, 0xf7 } }
 
 // Interface to Images
 class nsIImage : public nsISupports
@@ -194,35 +196,13 @@ public:
   virtual nsColorMap * GetColorMap() = 0;
 
   /**
-   * BitBlit the nsIImage to a device, the source can be scaled to the dest
-   * @update - dwc 2/1/99
-   * @param aSurface  the surface to blit to
-   * @param aX The destination horizontal location
-   * @param aY The destination vertical location
-   * @param aWidth The destination width of the pixelmap
-   * @param aHeight The destination height of the pixelmap
-   * @return if TRUE, no errors
-   */
-  NS_IMETHOD Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) = 0;
-
-  /**
    * BitBlit the nsIImage to a device, the source and dest can be scaled
-   * @update - dwc 2/1/99
-   * @param aSurface  the surface to blit to
-   * @param aSX The source width of the pixelmap
-   * @param aSY The source vertical location
-   * @param aSWidth The source width of the pixelmap
-   * @param aSHeight The source height of the pixelmap
-   * @param aDX The destination horizontal location
-   * @param aDY The destination vertical location
-   * @param aDWidth The destination width of the pixelmap
-   * @param aDHeight The destination height of the pixelmap
-   * @return if TRUE, no errors
+   * @param aSourceRect  source rectangle, in image pixels
+   * @param aDestRect  destination rectangle, in device pixels
    */
-  NS_IMETHOD Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
-                  PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
-                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight) = 0;
-
+  NS_IMETHOD Draw(nsIRenderingContext &aContext,
+                  const gfxRect &aSourceRect,
+                  const gfxRect &aDestRect) = 0;
 
   NS_IMETHOD DrawTile(nsIRenderingContext &aContext,
                       nsIDrawingSurface* aSurface,

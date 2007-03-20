@@ -116,7 +116,9 @@ public:
   NS_IMETHOD SetRightToLeftText(PRBool aIsRTL);
   NS_IMETHOD GetRightToLeftText(PRBool* aIsRTL);
 
+#ifndef MOZ_CAIRO_GFX
   NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect);
+#endif
   NS_IMETHOD DrawTile(imgIContainer *aImage, nscoord aXOffset, nscoord aYOffset, const nsRect * aTargetRect);
 
   NS_IMETHOD GetClusterInfo(const PRUnichar *aText,
