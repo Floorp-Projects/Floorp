@@ -2001,7 +2001,7 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
 
     // we should keep backward compatibility with 4x where the
     // actual pointer value is checked rather than its content
-    // wnen passing booleans
+    // when passing booleans
     case NPPVpluginWindowBool: {
       NPBool bWindowless = (result == nsnull);
       return inst->SetWindowless(bWindowless);
