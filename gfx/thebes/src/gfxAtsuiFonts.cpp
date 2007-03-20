@@ -619,9 +619,7 @@ PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aRun,
     if (numGlyphs == 0)
         return;
 
-    PRUint32 appUnitsPerDevUnit = PRUint32(aRun->GetAppUnitsPerDevUnit());
-    NS_ASSERTION(appUnitsPerDevUnit == aRun->GetAppUnitsPerDevUnit(),
-                 "Textrun's appunits per devunit is weird...");
+    PRUint32 appUnitsPerDevUnit = aRun->GetAppUnitsPerDevUnit();
 
     // ATSUI seems to have a bug where trailing whitespace in a run,
     // even after we've forced the direction with LRO/RLO/PDF, does not
