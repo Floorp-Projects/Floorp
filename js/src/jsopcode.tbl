@@ -359,8 +359,8 @@ OPDEF(JSOP_LOOKUPSWITCHX, 148,"lookupswitchx",NULL,  -1,  1,  0,  0,  JOF_LOOKUP
 OPDEF(JSOP_BACKPATCH,     149,"backpatch",NULL,       3,  0,  0,  0,  JOF_JUMP|JOF_BACKPATCH)
 OPDEF(JSOP_BACKPATCH_POP, 150,"backpatch_pop",NULL,   3,  1,  0,  0,  JOF_JUMP|JOF_BACKPATCH)
 
-/* Set cx->throwing where cx->exception was already set, to trigger rethrow. */
-OPDEF(JSOP_THROWING,      151,"throwing", NULL,       1,  0,  0,  0,  JOF_BYTE)
+/* Set pending exception from the stack, to trigger rethrow. */
+OPDEF(JSOP_THROWING,      151,"throwing", NULL,       1,  1,  0,  0,  JOF_BYTE)
 
 /* Set and get return value pseudo-register in stack frame. */
 OPDEF(JSOP_SETRVAL,       152,"setrval",  NULL,       1,  1,  0,  0,  JOF_BYTE)

@@ -2964,8 +2964,13 @@ restart:
         /* Mark other roots-by-definition in acx. */
         GC_MARK(cx, acx->globalObject, "global object");
         MarkWeakRoots(cx, &acx->weakRoots);
-        if (acx->throwing && JSVAL_IS_GCTHING(acx->exception))
-            GC_MARK(cx, JSVAL_TO_GCTHING(acx->exception), "exception");
+        if (acx->throwing) {
+            if (JSVAL_IS_GCTHING(acx->exception))
+                GC_MARK(cx, JSVAL_TO_GCTHING(acx->exception), "exception");
+        } else {
+            /* Avoid keeping GC-ed junk stored in JSContext.exception. */
+            acx->exception = JSVAL_NULL;
+        }
 #if JS_HAS_LVALUE_RETURN
         if (acx->rval2set && JSVAL_IS_GCTHING(acx->rval2))
             GC_MARK(cx, JSVAL_TO_GCTHING(acx->rval2), "rval2");

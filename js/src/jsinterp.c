@@ -5364,7 +5364,12 @@ interrupt:
 
           BEGIN_CASE(JSOP_GOSUBX)
             JS_ASSERT(cx->exception != JSVAL_HOLE);
-            lval = cx->throwing ? cx->exception : JSVAL_HOLE;
+            if (!cx->throwing) {
+                lval = JSVAL_HOLE;
+            } else {
+                lval = cx->exception;
+                cx->throwing = JS_FALSE;
+            }
             PUSH(lval);
             i = PTRDIFF(pc, script->main, jsbytecode) + JSOP_GOSUBX_LENGTH;
             len = GET_JUMPX_OFFSET(pc);
@@ -5392,6 +5397,7 @@ interrupt:
           END_VARLEN_CASE
 
           BEGIN_CASE(JSOP_EXCEPTION)
+            JS_ASSERT(cx->throwing);
             PUSH(cx->exception);
             cx->throwing = JS_FALSE;
           END_CASE(JSOP_EXCEPTION)
@@ -5399,9 +5405,11 @@ interrupt:
           BEGIN_CASE(JSOP_THROWING)
             JS_ASSERT(!cx->throwing);
             cx->throwing = JS_TRUE;
+            cx->exception = POP_OPND();
           END_CASE(JSOP_THROWING)
 
           BEGIN_CASE(JSOP_THROW)
+            JS_ASSERT(!cx->throwing);
             cx->throwing = JS_TRUE;
             cx->exception = POP_OPND();
             ok = JS_FALSE;
