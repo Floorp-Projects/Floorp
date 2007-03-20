@@ -693,7 +693,7 @@ public:
     void *GetUserData() const { return mUserData; }
     PRUint32 GetFlags() const { return mFlags; }
     const gfxSkipChars& GetSkipChars() const { return mSkipChars; }
-    float GetAppUnitsPerDevUnit() { return mAppUnitsPerDevUnit; }
+    PRUint32 GetAppUnitsPerDevUnit() const { return mAppUnitsPerDevUnit; }
 
     // The caller is responsible for initializing our glyphs after construction.
     // Initially all glyphs are such that GetCharacterGlyphs()[i].IsMissing() is true.
@@ -963,9 +963,7 @@ private:
 
     void        *mUserData;
     gfxSkipChars mSkipChars;
-    // This is actually an integer, but we keep it in float form to reduce
-    // the conversions required
-    float        mAppUnitsPerDevUnit;
+    PRUint32     mAppUnitsPerDevUnit;
     PRUint32     mFlags;
     PRUint32     mCharacterCount;
 };

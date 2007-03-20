@@ -739,13 +739,13 @@ gfxPangoFontGroup::InitTextRun(gfxTextRun *aTextRun, const gchar *aUTF8Text,
 
 static gfxTextRun::Metrics
 GetPangoMetrics(PangoGlyphString *aGlyphs, PangoFont *aPangoFont,
-                gfxFloat aPixelsToUnits, PRUint32 aClusterCount)
+                PRUint32 aPixelsToUnits, PRUint32 aClusterCount)
 {
     PangoRectangle inkRect;
     PangoRectangle logicalRect;
     pango_glyph_string_extents(aGlyphs, aPangoFont, &inkRect, &logicalRect);
 
-    gfxFloat scale = aPixelsToUnits/PANGO_SCALE;
+    gfxFloat scale = aPixelsToUnits/gfxFloat(PANGO_SCALE);
 
     gfxTextRun::Metrics metrics;
     NS_ASSERTION(logicalRect.x == 0, "Weird logical rect...");
@@ -771,7 +771,7 @@ gfxPangoFont::Measure(gfxTextRun *aTextRun,
 
     const gfxTextRun::CompressedGlyph *charGlyphs = aTextRun->GetCharacterGlyphs();
     nsAutoTArray<PangoGlyphInfo,200> glyphBuffer;
-    gfxFloat appUnitsToPango = gfxFloat(PANGO_SCALE)/aTextRun->GetAppUnitsPerDevUnit();
+    const gfxFloat appUnitsToPango = gfxFloat(PANGO_SCALE)/aTextRun->GetAppUnitsPerDevUnit();
 
     // We start by assuming every character is a cluster and subtract off
     // characters where that's not true
@@ -844,7 +844,8 @@ gfxPangoFont::Measure(gfxTextRun *aTextRun,
     glyphs.glyphs = glyphBuffer.Elements();
     glyphs.log_clusters = nsnull;
     glyphs.space = glyphBuffer.Length();
-    return GetPangoMetrics(&glyphs, GetPangoFont(), aTextRun->GetAppUnitsPerDevUnit(), clusterCount);
+    return GetPangoMetrics(&glyphs, GetPangoFont(),
+                           aTextRun->GetAppUnitsPerDevUnit(), clusterCount);
 }
 
 #define IS_MISSING_GLYPH(g) (((g) & 0x10000000) || (g) == 0x0FFFFFFF)
@@ -959,7 +960,7 @@ gfxPangoFontGroup::SetGlyphs(gfxTextRun* aTextRun,
     PRInt32 direction = aTextRun->IsRightToLeft() ? -1 : 1;
     gfxTextRun::CompressedGlyph g;
     nsAutoTArray<gfxTextRun::DetailedGlyph,1> detailedGlyphs;
-    PRUint32 appUnitsPerDevUnit = PRUint32(aTextRun->GetAppUnitsPerDevUnit());
+    const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
 
     while (index < aUTF8Length) {
         if (utf16Offset >= textRunLength) {
@@ -1069,7 +1070,7 @@ gfxPangoFontGroup::CreateGlyphRunsXft(gfxTextRun *aTextRun,
     XftFont *xfont = font->GetXftFont();
     PRUint32 utf16Offset = 0;
     gfxTextRun::CompressedGlyph g;
-    PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
+    const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
 
     while (p < aUTF8 + aUTF8Length) {
         gunichar ch = g_utf8_get_char(p);
