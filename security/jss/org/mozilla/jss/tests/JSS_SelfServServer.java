@@ -167,7 +167,7 @@ public class JSS_SelfServServer  {
         
         // Only used to reproduce CLOSE_WAIT error.
         //serverSock.setSoTimeout(5000);  // Set timeout for 5 sec
-        serverSock.requireClientAuth (true, true);
+        serverSock.requireClientAuth(SSLSocket.SSL_REQUIRE_NO_ERROR);
         serverSock.setServerCertNickname (fServerCertNick);
         if ( Constants.debug_level >= 3 )
             System.out.println ("Server specified cert by nickname");

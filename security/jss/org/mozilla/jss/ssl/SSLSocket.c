@@ -55,6 +55,7 @@
 #include <winsock.h>
 #endif
 
+
 JNIEXPORT void JNICALL
 Java_org_mozilla_jss_ssl_SSLSocket_setSSLDefaultOption(JNIEnv *env,
     jclass clazz, jint joption, jint on)
@@ -72,6 +73,23 @@ finish:
     return;
 }
 
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SSLSocket_setSSLDefaultOptionMode(JNIEnv *env,
+    jclass clazz, jint joption, jint mode)
+{
+    SECStatus status;
+
+    /* set the option */
+    status = SSL_OptionSetDefault(JSSL_enums[joption], 
+                                  JSSL_enums[mode]);
+    if( status != SECSuccess ) {
+        JSSL_throwSSLSocketException(env, "SSL_OptionSet failed");
+        goto finish;
+    }
+
+finish:
+    return;
+}
 
 JNIEXPORT jint JNICALL
 Java_org_mozilla_jss_ssl_SSLSocket_getSSLDefaultOption(JNIEnv *env,

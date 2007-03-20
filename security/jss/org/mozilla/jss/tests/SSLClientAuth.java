@@ -289,7 +289,7 @@ public class SSLClientAuth implements Runnable {
         SSLServerSocket serverSock = new SSLServerSocket(port, 5, null, null,
             true);
         System.out.println("Server created socket");
-        serverSock.requireClientAuth(true, true);
+        serverSock.requireClientAuth(SSLSocket.SSL_REQUIRE_NO_ERROR);
         if( useNickname ) {
             serverSock.setServerCertNickname(serverCertNick);
             System.out.println("Server specified cert by nickname");

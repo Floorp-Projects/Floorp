@@ -172,7 +172,7 @@ public class JSS_FileUploadServer  {
             System.out.println("Server created socket");
         
         //serverSock.setSoTimeout(120 * 1000);
-        serverSock.requireClientAuth(true, true);
+        serverSock.requireClientAuth(SSLSocket.SSL_REQUIRE_NO_ERROR);
         serverSock.setServerCertNickname(fServerCertNick);
         if ( Constants.debug_level >= 3 )
             System.out.println("Server specified cert by nickname");

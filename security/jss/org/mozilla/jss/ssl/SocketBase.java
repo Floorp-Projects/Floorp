@@ -110,6 +110,10 @@ class SocketBase {
     static final int SSL_NO_STEP_DOWN = 15;
     static final int SSL_ENABLE_FDX = 16;
     static final int SSL_V2_COMPATIBLE_HELLO = 17;
+    static final int SSL_REQUIRE_NEVER = 18;
+    static final int SSL_REQUIRE_ALWAYS = 19;
+    static final int SSL_REQUIRE_FIRST_HANDSHAKE = 20;
+    static final int SSL_REQUIRE_NO_ERROR = 21;
 
     void close() throws IOException {
         socketClose();
@@ -175,9 +179,21 @@ class SocketBase {
         setSSLOption(option, on ? 1 : 0);
     }
 
+    /** 
+     * Sets SSL options for this socket that have simple 
+     * enable/disable values.
+     */
     native void setSSLOption(int option, int on)
         throws SocketException;
 
+    /** 
+     * Sets the SSL option setting mode value use for options
+     * that have more values than just enable/diasable.
+     */
+    native void setSSLOptionMode(int option, int option2)
+        throws SocketException; 
+
+    
     /* return 0 for option disabled 1 for option enabled. */
     native int getSSLOption(int option)
         throws SocketException;
@@ -307,6 +323,15 @@ class SocketBase {
             requestClientAuth(true);
         }
         setSSLOption(SSL_REQUIRE_CERTIFICATE, require ? (onRedo ? 1 : 2) : 0);
+    }
+
+    void requireClientAuth(int mode)
+            throws SocketException
+    {
+        if(mode > 0 && !requestingClientAuth ) {
+            requestClientAuth(true);
+        }
+        setSSLOptionMode(SocketBase.SSL_REQUIRE_CERTIFICATE, mode);
     }
 
     /**

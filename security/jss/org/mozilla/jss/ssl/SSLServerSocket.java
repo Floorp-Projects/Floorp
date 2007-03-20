@@ -461,12 +461,36 @@ public class SSLServerSocket extends java.net.ServerSocket {
      *  peer. If requestClientAuth() has not already been called, this
      *  method will tell the socket to request client auth as well as requiring
      *  it.
+     * @deprecated use requireClientAuth(int)
      */
     public void requireClientAuth(boolean require, boolean onRedo)
             throws SocketException
     {
         base.requireClientAuth(require, onRedo);
     }
+
+    /**
+     * Sets whether the socket requires client authentication from the remote
+     *  peer. If requestClientAuth() has not already been called, this
+     *  method will tell the socket to request client auth as well as requiring
+     *  it.
+     *  @param mode One of:  SSLSocket.SSL_REQUIRE_NEVER, 
+     *                       SSLSocket.SSL_REQUIRE_ALWAYS, 
+     *                       SSLSocket.SSL_REQUIRE_FIRST_HANDSHAKE, 
+     *                       SSLSocket.SSL_REQUIRE_NO_ERROR 
+     */
+
+    public void requireClientAuth(int mode)
+            throws SocketException
+    {
+        if (mode >= SocketBase.SSL_REQUIRE_NEVER && 
+            mode <= SocketBase.SSL_REQUIRE_NO_ERROR) {
+            base.requireClientAuth(mode);
+        } else {
+            throw new SocketException("Incorrect input value.");
+        }
+     }
+
 
     /**
      * Sets the nickname of the certificate to use for client authentication.

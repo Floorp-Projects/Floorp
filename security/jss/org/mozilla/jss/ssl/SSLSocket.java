@@ -42,8 +42,6 @@ import java.net.SocketTimeoutException;
 import java.io.*;
 import java.io.IOException;
 import java.util.Vector;
-import java.net.SocketPermission;
-import java.security.AccessController;
 
 /**
  * SSL client socket.
@@ -74,6 +72,14 @@ public class SSLSocket extends java.net.Socket {
     private boolean open = false;
     private boolean handshakeAsClient = true;
     private SocketBase base = new SocketBase();
+    static final public int SSL_REQUIRE_NEVER =  
+           org.mozilla.jss.ssl.SocketBase.SSL_REQUIRE_NEVER;
+    static final public int SSL_REQUIRE_ALWAYS = 
+           org.mozilla.jss.ssl.SocketBase.SSL_REQUIRE_ALWAYS;
+    static final public int SSL_REQUIRE_FIRST_HANDSHAKE = 
+           org.mozilla.jss.ssl.SocketBase.SSL_REQUIRE_FIRST_HANDSHAKE;
+    static final public int SSL_REQUIRE_NO_ERROR = 
+           org.mozilla.jss.ssl.SocketBase.SSL_REQUIRE_NO_ERROR;
 
     /**
      * For sockets that get created by accept().
@@ -746,10 +752,11 @@ public class SSLSocket extends java.net.Socket {
     }
     
     /**
-     * Sets whether the socket requires client authentication from the remote
+     *  Sets whether the socket requires client authentication from the remote
      *  peer. If requestClientAuth() has not already been called, this
      *  method will tell the socket to request client auth as well as requiring
      *  it.
+     * @deprecated use requireClientAuth(int)
      */
     public void requireClientAuth(boolean require, boolean onRedo)
             throws SocketException
@@ -758,14 +765,62 @@ public class SSLSocket extends java.net.Socket {
     }
 
     /**
-     * Sets the default setting for requiring client authorization.
+     *  Sets whether the socket requires client authentication from the remote
+     *  peer. If requestClientAuth() has not already been called, this method
+     *  will tell the socket to request client auth as well as requiring it.
+     *  This is only meaningful for the server end of the SSL connection. 
+     *  During the next handshake, the remote peer will be asked to 
+     *  authenticate itself with the requirement that was set.
+     *
+     *  @param mode One of:  SSLSocket.SSL_REQUIRE_NEVER, 
+     *                       SSLSocket.SSL_REQUIRE_ALWAYS, 
+     *                       SSLSocket.SSL_REQUIRE_FIRST_HANDSHAKE, 
+     *                       SSLSocket.SSL_REQUIRE_NO_ERROR
+     */
+    public void requireClientAuth(int mode)
+            throws SocketException
+    {
+        if (mode >= SocketBase.SSL_REQUIRE_NEVER && 
+            mode <= SocketBase.SSL_REQUIRE_NO_ERROR) {
+            base.requireClientAuth(mode);
+        } else {
+            throw new SocketException("Incorrect input value.");
+        }
+    }
+
+    /**
+     *  Sets the default setting for requiring client authorization.
      *  All subsequently created sockets will use this default setting.
+     * @deprecated use requireClientAuthDefault(int)
      */
     public void requireClientAuthDefault(boolean require, boolean onRedo)
             throws SocketException
     {
         setSSLDefaultOption(SocketBase.SSL_REQUIRE_CERTIFICATE,
                             require ? (onRedo ? 1 : 2) : 0);
+    }
+
+    /**
+     *  Sets the default setting for requiring client authorization.
+     *  All subsequently created sockets will use this default setting
+     *  This is only meaningful for the server end of the SSL connection.
+     *
+     *  @param mode One of:  SSLSocket.SSL_REQUIRE_NEVER, 
+     *                       SSLSocket.SSL_REQUIRE_ALWAYS, 
+     *                       SSLSocket.SSL_REQUIRE_FIRST_HANDSHAKE, 
+     *                       SSLSocket.SSL_REQUIRE_NO_ERROR
+     */
+    static public void requireClientAuthDefault(int mode)
+            throws SocketException
+    {
+        if (mode >= SocketBase.SSL_REQUIRE_NEVER && 
+            mode <= SocketBase.SSL_REQUIRE_NO_ERROR) {
+            setSSLDefaultOption(SocketBase.SSL_REQUEST_CERTIFICATE, true);
+            setSSLDefaultOptionMode(SocketBase.SSL_REQUIRE_CERTIFICATE,mode);
+        } else {
+
+            throw new SocketException("Incorrect input value.");
+        }
     }
 
     /**
@@ -894,7 +949,17 @@ public class SSLSocket extends java.net.Socket {
     {
         setSSLDefaultOption(option, on ? 1 : 0);
     }
+
+    /** 
+     * Sets SSL Default options that have simple enable/disable values.
+     */
     private static native void setSSLDefaultOption(int option, int on)
+        throws SocketException;
+
+    /** 
+     * Set SSL default options that have more modes than enable/disable.
+     */
+    private static native void setSSLDefaultOptionMode(int option, int mode)
         throws SocketException;
 
     /**

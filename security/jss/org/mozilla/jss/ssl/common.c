@@ -390,6 +390,10 @@ PRInt32 JSSL_enums[] = {
     SSL_NO_STEP_DOWN,           /* 15 */        /* ssl.h */
     SSL_ENABLE_FDX,             /* 16 */        /* ssl.h */
     SSL_V2_COMPATIBLE_HELLO,    /* 17 */        /* ssl.h */
+    SSL_REQUIRE_NEVER,          /* 18 */        /* ssl.h */
+    SSL_REQUIRE_ALWAYS,         /* 19 */        /* ssl.h */
+    SSL_REQUIRE_FIRST_HANDSHAKE,/* 20 */        /* ssl.h */
+    SSL_REQUIRE_NO_ERROR,       /* 21 */        /* ssl.h */
 
     0
 };
@@ -518,6 +522,31 @@ finish:
     EXCEPTION_CHECK(env, sock)
     return;
 }
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SocketBase_setSSLOptionMode
+    (JNIEnv *env, jobject self, jint option, jint mode)
+{
+    SECStatus status;
+    JSSL_SocketData *sock = NULL;
+
+    /* get my fd */
+    if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS ) {
+        goto finish;
+    }
+
+    /* set the option */
+    status = SSL_OptionSet(sock->fd, JSSL_enums[option], JSSL_enums[mode]);
+    if( status != SECSuccess ) {
+        JSSL_throwSSLSocketException(env, "SSL_OptionSet failed");
+        goto finish;
+    }
+
+finish:
+    EXCEPTION_CHECK(env, sock)
+    return;
+}
+
 
 JNIEXPORT jint JNICALL
 Java_org_mozilla_jss_ssl_SocketBase_getSSLOption(JNIEnv *env,
