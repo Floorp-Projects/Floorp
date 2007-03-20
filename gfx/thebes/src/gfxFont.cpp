@@ -76,8 +76,8 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
         return;
 
     const gfxTextRun::CompressedGlyph *charGlyphs = aTextRun->GetCharacterGlyphs();
-    double appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
-    double devUnitsPerAppUnit = 1/appUnitsPerDevUnit;
+    const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
+    const double devUnitsPerAppUnit = 1.0/double(appUnitsPerDevUnit);
     PRBool isRTL = aTextRun->IsRightToLeft();
     double direction = aTextRun->GetDirection();
     nsAutoTArray<cairo_glyph_t,200> glyphBuffer;
@@ -195,7 +195,7 @@ gfxFont::Measure(gfxTextRun *aTextRun,
     RunMetrics metrics;
     const gfxFont::Metrics& fontMetrics = GetMetrics();
     metrics.mAdvanceWidth = floatAdvance;
-    gfxFloat appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
+    const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
     metrics.mAscent = fontMetrics.maxAscent*appUnitsPerDevUnit;
     metrics.mDescent = fontMetrics.maxDescent*appUnitsPerDevUnit;
     metrics.mBoundingBox =
@@ -426,7 +426,7 @@ gfxFontGroup::GetSpecialStringTextRun(SpecialString aString,
 
     gfxTextRunFactory::Parameters params = {
         nsnull, nsnull, nsnull, nsnull, nsnull, 0,
-        PRUint32(aTemplate->GetAppUnitsPerDevUnit()), TEXT_IS_PERSISTENT
+        aTemplate->GetAppUnitsPerDevUnit(), TEXT_IS_PERSISTENT
     };
     gfxTextRun* textRun;
 

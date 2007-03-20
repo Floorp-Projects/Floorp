@@ -739,13 +739,13 @@ gfxPangoFontGroup::InitTextRun(gfxTextRun *aTextRun, const gchar *aUTF8Text,
 
 static gfxTextRun::Metrics
 GetPangoMetrics(PangoGlyphString *aGlyphs, PangoFont *aPangoFont,
-                gfxFloat aPixelsToUnits, PRUint32 aClusterCount)
+                PRUint32 aPixelsToUnits, PRUint32 aClusterCount)
 {
     PangoRectangle inkRect;
     PangoRectangle logicalRect;
     pango_glyph_string_extents(aGlyphs, aPangoFont, &inkRect, &logicalRect);
 
-    gfxFloat scale = aPixelsToUnits/PANGO_SCALE;
+    gfxFloat scale = gfxFloat(aPixelsToUnits)/PANGO_SCALE;
 
     gfxTextRun::Metrics metrics;
     NS_ASSERTION(logicalRect.x == 0, "Weird logical rect...");
@@ -959,7 +959,7 @@ gfxPangoFontGroup::SetGlyphs(gfxTextRun* aTextRun,
     PRInt32 direction = aTextRun->IsRightToLeft() ? -1 : 1;
     gfxTextRun::CompressedGlyph g;
     nsAutoTArray<gfxTextRun::DetailedGlyph,1> detailedGlyphs;
-    PRUint32 appUnitsPerDevUnit = PRUint32(aTextRun->GetAppUnitsPerDevUnit());
+    const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
 
     while (index < aUTF8Length) {
         if (utf16Offset >= textRunLength) {
@@ -1069,7 +1069,7 @@ gfxPangoFontGroup::CreateGlyphRunsXft(gfxTextRun *aTextRun,
     XftFont *xfont = font->GetXftFont();
     PRUint32 utf16Offset = 0;
     gfxTextRun::CompressedGlyph g;
-    PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
+    const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
 
     while (p < aUTF8 + aUTF8Length) {
         gunichar ch = g_utf8_get_char(p);

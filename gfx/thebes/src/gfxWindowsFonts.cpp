@@ -1150,7 +1150,7 @@ public:
         PRUint32 offset = 0;
         nsAutoTArray<gfxTextRun::DetailedGlyph,1> detailedGlyphs;
         gfxTextRun::CompressedGlyph g;
-        PRUint32 appUnitsPerDevUnit = PRUint32(aRun->GetAppUnitsPerDevUnit());
+        const PRUint32 appUnitsPerDevUnit = aRun->GetAppUnitsPerDevUnit();
         while (offset < mLength) {
             PRUint32 runOffset = offsetInRun + offset;
             if (offset > 0 && mClusters[offset] == mClusters[offset - 1]) {
