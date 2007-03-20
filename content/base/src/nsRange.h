@@ -127,6 +127,9 @@ public:
   static nsresult CompareNodeToRange(nsIContent* aNode, nsIDOMRange* aRange,
                                      PRBool *outNodeBefore,
                                      PRBool *outNodeAfter);
+  static nsresult CompareNodeToRange(nsIContent* aNode, nsIRange* aRange,
+                                     PRBool *outNodeBefore,
+                                     PRBool *outNodeAfter);
 
 protected:
   void DoSetRange(nsINode* aStartN, PRInt32 aStartOffset,

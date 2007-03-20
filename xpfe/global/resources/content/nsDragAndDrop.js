@@ -429,7 +429,9 @@ var nsDragAndDrop = {
              count < transferData.dataList.length);
       
       try {
-        this.mDragService.invokeDragSession(aEvent.target, transArray, region, dragAction.action);
+        this.mDragService.invokeDragSessionWithImage(aEvent.target, transArray,
+                                                     region, dragAction.action,
+                                                     null, 0, 0, aEvent);
       }
       catch(ex) {
         // this could be because the user pressed escape to

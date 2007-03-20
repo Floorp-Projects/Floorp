@@ -88,6 +88,7 @@ class nsILayoutHistoryState;
 class nsIReflowCallback;
 class nsISupportsArray;
 class nsIDOMNode;
+class nsIRegion;
 class nsIStyleFrameConstruction;
 class nsIStyleSheet;
 class nsCSSFrameConstructor;
@@ -95,13 +96,14 @@ class nsISelection;
 template<class E> class nsCOMArray;
 class nsWeakFrame;
 class nsIScrollableFrame;
+class gfxASurface;
 
 typedef short SelectionType;
 
-// c37fd598-ed7f-4f39-bdf9-96642c691c7b
+// A68CFCE1-2A15-47F0-B61B-F2C34079A909
 #define NS_IPRESSHELL_IID \
-{ 0xc37fd598, 0xed7f, 0x4f39, \
-  { 0xbd, 0xf9, 0x96, 0x64, 0x2c, 0x69, 0x1c, 0x7b } }
+{ 0xa78cfce1, 0x2a15, 0x47f0, \
+  { 0xb6, 0x1b, 0xf2, 0xc3, 0x40, 0x79, 0xa9, 0x09 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -680,6 +682,36 @@ public:
                              PRBool aIgnoreViewportScrolling,
                              nscolor aBackgroundColor,
                              nsIRenderingContext** aRenderedContext) = 0;
+
+  /**
+   * Renders a node aNode to a surface and returns it. The aRegion may be used
+   * to clip the rendering. This region is measured in device pixels from the
+   * edge of the presshell area. The aPoint, aScreenRect and aSurface
+   * arguments function in a similar manner as RenderSelection.
+   */
+  virtual already_AddRefed<gfxASurface> RenderNode(nsIDOMNode* aNode,
+                                                   nsIRegion* aRegion,
+                                                   nsPoint& aPoint,
+                                                   nsRect* aScreenRect) = 0;
+
+  /*
+   * Renders a selection to a surface and returns it. This method is primarily
+   * intended to create the drag feedback when dragging a selection.
+   *
+   * aScreenRect will be filled in with the bounding rectangle of the
+   * selection area on screen.
+   *
+   * If the area of the selection is large, the image will be scaled down.
+   * The argument aPoint is used in this case as a reference point when
+   * determining the new screen rectangle after scaling. Typically, this
+   * will be the mouse position, so that the screen rectangle is positioned
+   * such that the mouse is over the same point in the scaled image as in
+   * the original. When scaling does not occur, the mouse point isn't used
+   * as the position can be determined from the displayed frames.
+   */
+  virtual already_AddRefed<gfxASurface> RenderSelection(nsISelection* aSelection,
+                                                        nsPoint& aPoint,
+                                                        nsRect* aScreenRect) = 0;
 
   void AddWeakFrame(nsWeakFrame* aWeakFrame);
   void RemoveWeakFrame(nsWeakFrame* aWeakFrame);

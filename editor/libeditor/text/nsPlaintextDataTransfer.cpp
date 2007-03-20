@@ -64,6 +64,8 @@
 // Misc
 #include "nsEditorUtils.h"
 #include "nsContentCID.h"
+#include "nsISelectionPrivate.h"
+#include "nsFrameSelection.h"
 
 NS_IMETHODIMP nsPlaintextEditor::PrepareTransferable(nsITransferable **transferable)
 {
@@ -401,11 +403,18 @@ NS_IMETHODIMP nsPlaintextEditor::DoDrag(nsIDOMEvent *aDragEvent)
   if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsIDOMNode> domnode = do_QueryInterface(eventTarget);
 
+  nsCOMPtr<nsIScriptableRegion> selRegion;
+  nsCOMPtr<nsISelection> selection;
+  rv = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
+
   unsigned int flags;
   // in some cases we'll want to cut rather than copy... hmmmmm...
   flags = nsIDragService::DRAGDROP_ACTION_COPY + nsIDragService::DRAGDROP_ACTION_MOVE;
 
-  rv = dragService->InvokeDragSession(domnode, transferableArray, nsnull, flags);
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aDragEvent));
+  rv = dragService->InvokeDragSessionWithSelection(selection, transferableArray,
+                                                   flags, mouseEvent);
   if (NS_FAILED(rv)) return rv;
 
   aDragEvent->StopPropagation();

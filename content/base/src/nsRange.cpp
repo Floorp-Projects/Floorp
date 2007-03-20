@@ -91,6 +91,18 @@ nsresult
 nsRange::CompareNodeToRange(nsIContent* aNode, nsIDOMRange* aRange,
                             PRBool *outNodeBefore, PRBool *outNodeAfter)
 {
+  nsresult rv;
+  nsCOMPtr<nsIRange> range = do_QueryInterface(aRange, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CompareNodeToRange(aNode, range, outNodeBefore, outNodeAfter);
+}
+
+// static
+nsresult
+nsRange::CompareNodeToRange(nsIContent* aNode, nsIRange* aRange,
+                            PRBool *outNodeBefore, PRBool *outNodeAfter)
+{
   // create a pair of dom points that expresses location of node:
   //     NODE(start), NODE(end)
   // Let incoming range be:

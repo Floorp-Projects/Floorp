@@ -294,15 +294,21 @@ nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * aTran
   theEvent.when = TickCount();
   theEvent.modifiers = 0L;
 
-  // since we don't have the original mouseDown location, just assume the drag
+  // if we don't have the original mouseDown location, just assume the drag
   // started in the middle of the frame. This prevents us from having the mouse
   // and the region we're dragging separated by a big gap (which could happen if
   // we used the current mouse position). I know this isn't exactly right, and you can
   // see it if you're paying attention, but who pays such close attention?
-  Rect dragRect;
-  ::GetRegionBounds(theDragRgn, &dragRect);
-  theEvent.where.v = dragRect.top + ((dragRect.bottom - dragRect.top) / 2);
-  theEvent.where.h = dragRect.left + ((dragRect.right - dragRect.left) / 2);
+  if (mScreenX == -1 || mScreenY == -1) {
+    Rect dragRect;
+    ::GetRegionBounds(theDragRgn, &dragRect);
+    theEvent.where.v = dragRect.top + ((dragRect.bottom - dragRect.top) / 2);
+    theEvent.where.h = dragRect.left + ((dragRect.right - dragRect.left) / 2);
+  }
+  else {
+    theEvent.where.v = mScreenY;
+    theEvent.where.h = mScreenX;
+  }
 
   // register drag send proc which will call us back when asked for the actual
   // flavor data (instead of placing it all into the drag manager)

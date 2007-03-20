@@ -455,8 +455,10 @@ function BeginDragTree(event, tree, selArray, flavor)
         transArray.AppendElement(genTrans);
     }
 
-    dragService.invokeDragSession ( event.target, transArray, region, nsIDragService.DRAGDROP_ACTION_COPY +
-    nsIDragService.DRAGDROP_ACTION_MOVE );
+    dragService.invokeDragSessionWithImage(event.target, transArray, region,
+                                           nsIDragService.DRAGDROP_ACTION_COPY +
+                                           nsIDragService.DRAGDROP_ACTION_MOVE,
+                                           null, 0, 0, event);
 
     dragStarted = true;
 

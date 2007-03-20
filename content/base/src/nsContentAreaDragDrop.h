@@ -109,9 +109,7 @@ private:
 
   static nsresult SaveURIToFile(nsAString& inSourceURIString,
                                 nsIFile* inDestFile);
-  
-  nsresult CreateTransferable(nsIDOMEvent* inMouseEvent,
-                              nsITransferable** outTrans);
+
   void ExtractURLFromData(const nsACString & inFlavor,
                           nsISupports* inDataWrapper, PRUint32 inDataLen,
                           nsAString & outURL);

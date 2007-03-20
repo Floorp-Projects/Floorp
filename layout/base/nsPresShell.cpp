@@ -89,6 +89,7 @@
 #include "nsContentUtils.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
+#include "nsISelectionPrivate.h"
 #include "nsLayoutCID.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMRange.h"
@@ -97,6 +98,7 @@
 #include "nsIDOM3Node.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"
+#include "nsRange.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -142,6 +144,7 @@
 #include "nsIAttribute.h"
 #include "nsIGlobalHistory2.h"
 #include "nsDisplayList.h"
+#include "nsIRegion.h"
 #include "nsRegion.h"
 
 #ifdef MOZ_REFLOW_PERF_DSP
@@ -160,6 +163,8 @@
 #include "nsEventDispatcher.h"
 #include "nsThreadUtils.h"
 #include "nsStyleSheetService.h"
+#include "gfxImageSurface.h"
+#include "gfxContext.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -204,6 +209,26 @@ static void ColorToString(nscolor aColor, nsAutoString &aString);
 
 // Class ID's
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
+
+// RangePaintInfo is used to paint ranges to offscreen buffers
+struct RangePaintInfo {
+  nsCOMPtr<nsIRange> mRange;
+  nsDisplayListBuilder mBuilder;
+  nsDisplayList mList;
+
+  // offset of builder's reference frame to the root frame
+  nsPoint mRootOffset;
+
+  RangePaintInfo(nsIRange* aRange, nsIFrame* aFrame)
+    : mRange(aRange), mBuilder(aFrame, PR_FALSE, PR_FALSE)
+  {
+  }
+
+  ~RangePaintInfo()
+  {
+    mList.DeleteAll();
+  }
+};
 
 #undef NOISY
 
@@ -899,6 +924,15 @@ public:
                              nscolor aBackgroundColor,
                              nsIRenderingContext** aRenderedContext);
 
+  virtual already_AddRefed<gfxASurface> RenderNode(nsIDOMNode* aNode,
+                                                   nsIRegion* aRegion,
+                                                   nsPoint& aPoint,
+                                                   nsRect* aScreenRect);
+
+  virtual already_AddRefed<gfxASurface> RenderSelection(nsISelection* aSelection,
+                                                        nsPoint& aPoint,
+                                                        nsRect* aScreenRect);
+
   //nsIViewObserver interface
 
   NS_IMETHOD Paint(nsIView *aView,
@@ -1074,6 +1108,39 @@ protected:
   nsresult SetPrefFocusRules(void);
   nsresult SetPrefNoScriptRule();
   nsresult SetPrefNoFramesRule(void);
+
+  // methods for painting a range to an offscreen buffer
+
+  // given a display list, clip the items within the list to
+  // the range
+  nsRect ClipListToRange(nsDisplayListBuilder *aBuilder,
+                         nsDisplayList* aList,
+                         nsIRange* aRange,
+                         nsIRenderingContext* aRenderingContext);
+
+  // create a RangePaintInfo for the range aRange containing the
+  // display list needed to paint the range to a surface
+  RangePaintInfo* CreateRangePaintInfo(nsIDOMRange* aRange,
+                                       nsIRenderingContext* aRenderingContext,
+                                       nsRect& aSurfaceRect);
+
+  /*
+   * Paint the items to a new surface and return it.
+   *
+   * aSelection - selection being painted, if any
+   * aRegion - clip region, if any
+   * aArea - area that the surface occupies, relative to the root frame
+   * aPoint - reference point, typically the mouse position
+   * aScreenRect - [out] set to the area of the screen the painted area should
+   *               be displayed at
+   */
+  already_AddRefed<gfxASurface>
+  PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
+                      nsISelection* aSelection,
+                      nsIRegion* aRegion,
+                      nsRect aArea,
+                      nsPoint& aPoint,
+                      nsRect* aScreenRect);
 
   /**
    * Methods to handle changes to user and UA sheet lists that we get
@@ -4904,6 +4971,363 @@ PresShell::RenderOffscreen(nsRect aRect, PRBool aUntrusted,
 
   localcx.swap(*aRenderedContext);
   return NS_OK;
+}
+
+/*
+ * Clip the display list aList to a range. Returns the clipped
+ * rectangle surrounding the range.
+ */
+nsRect
+PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
+                           nsDisplayList* aList,
+                           nsIRange* aRange,
+                           nsIRenderingContext* aRenderingContext)
+{
+  // iterate though the display items and add up the bounding boxes of each.
+  // This will allow the total area of the frames within the range to be
+  // determined. To do this, remove an item from the bottom of the list, check
+  // whether it should be part of the range, and if so, append it to the top
+  // of the temporary list tmpList. If the item is a text frame at the end of
+  // the selection range, wrap it in an nsDisplayClip to clip the display to
+  // the portion of the text frame that is part of the selection. Then, append
+  // the wrapper to the top of the list. Otherwise, just delete the item and
+  // don't append it.
+  nsRect surfaceRect;
+  nsDisplayList tmpList;
+
+  nsDisplayItem* i;
+  while ((i = aList->RemoveBottom())) {
+    // itemToInsert indiciates the item that should be inserted into the
+    // temporary list. If null, no item should be inserted.
+    nsDisplayItem* itemToInsert = nsnull;
+    nsIFrame* frame = i->GetUnderlyingFrame();
+    if (frame) {
+      nsIContent* content = frame->GetContent();
+      if (content) {
+        PRBool atStart = (content == aRange->GetStartParent());
+        PRBool atEnd = (content == aRange->GetEndParent());
+        if ((atStart || atEnd) && frame->GetType() == nsGkAtoms::textFrame) {
+          PRInt32 frameStartOffset, frameEndOffset;
+          frame->GetOffsets(frameStartOffset, frameEndOffset);
+
+          PRInt32 hilightStart =
+            atStart ? PR_MAX(aRange->StartOffset(), frameStartOffset) : frameStartOffset;
+          PRInt32 hilightEnd =
+            atEnd ? PR_MIN(aRange->EndOffset(), frameEndOffset) : frameEndOffset;
+          if (hilightStart < hilightEnd) {
+            // determine the location of the start and end edges of the range.
+            nsPoint startPoint, endPoint;
+            nsPresContext* presContext = GetPresContext();
+            frame->GetPointFromOffset(presContext, aRenderingContext,
+                                      hilightStart, &startPoint);
+            frame->GetPointFromOffset(presContext, aRenderingContext,
+                                      hilightEnd, &endPoint);
+
+            // the clip rectangle is determined by taking the the start and
+            // end points of the range, offset from the reference frame.
+            // Because of rtl, the end point may be to the left of the
+            // start point, so x is set to the lowest value
+            nsRect textRect(aBuilder->ToReferenceFrame(frame), frame->GetSize());
+            nscoord x = PR_MIN(startPoint.x, endPoint.x);
+            textRect.x += x;
+            textRect.width = PR_MAX(startPoint.x, endPoint.x) - x;
+            surfaceRect.UnionRect(surfaceRect, textRect);
+
+            // wrap the item in an nsDisplayClip so that it can be clipped to
+            // the selection. If the allocation fails, fall through and delete
+            // the item below.
+            itemToInsert = new (aBuilder)nsDisplayClip(frame, i, textRect);
+          }
+        }
+        else {
+          // if the node is within the range, append it to the temporary list
+          PRBool before, after;
+          nsRange::CompareNodeToRange(content, aRange, &before, &after);
+          if (!before && !after) {
+            itemToInsert = i;
+            surfaceRect.UnionRect(surfaceRect, i->GetBounds(aBuilder));
+          }
+        }
+      }
+    }
+
+    // insert the item into the list if necessary. If the item has a child
+    // list, insert that as well
+    nsDisplayList* sublist = i->GetList();
+    if (itemToInsert || sublist) {
+      tmpList.AppendToTop(itemToInsert ? itemToInsert : i);
+      // if the item is a list, iterate over it as well
+      if (sublist)
+        surfaceRect.UnionRect(surfaceRect,
+          ClipListToRange(aBuilder, sublist, aRange, aRenderingContext));
+    }
+    else {
+      // otherwise, just delete the item and don't readd it to the list
+      i->~nsDisplayItem();
+    }
+  }
+
+  // now add all the items back onto the original list again
+  aList->AppendToTop(&tmpList);
+
+  return surfaceRect;
+}
+
+RangePaintInfo*
+PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
+                                nsIRenderingContext* aRenderingContext,
+                                nsRect& aSurfaceRect)
+{
+  RangePaintInfo* info = nsnull;
+
+  nsCOMPtr<nsIRange> range = do_QueryInterface(aRange);
+  if (!range)
+    return nsnull;
+
+  // get the common ancestor of the two endpoints of the range
+  nsINode* ancestor = nsContentUtils::GetCommonAncestor(range->GetStartParent(),
+                                                        range->GetEndParent());
+  NS_ASSERTION(!ancestor || ancestor->IsNodeOfType(nsINode::eCONTENT),
+               "common ancestor is not content");
+  if (!ancestor || !ancestor->IsNodeOfType(nsINode::eCONTENT))
+    return nsnull;
+
+  nsIContent* ancestorContent = NS_STATIC_CAST(nsIContent*, ancestor);
+
+  nsIFrame* ancestorFrame = GetPrimaryFrameFor(ancestorContent);
+
+  // use the nearest ancestor frame that includes all continuations as the
+  // root for building the display list
+  while (ancestorFrame && ancestorFrame->GetNextInFlow())
+    ancestorFrame = ancestorFrame->GetParent();
+
+  if (!ancestorFrame)
+    return nsnull;
+
+  info = new RangePaintInfo(range, ancestorFrame);
+  if (!info)
+    return nsnull;
+
+  nsRect ancestorRect = ancestorFrame->GetOverflowRect();
+
+  // get a display list containing the range
+  info->mBuilder.SetPaintAllFrames();
+  info->mBuilder.EnterPresShell(ancestorFrame, ancestorRect);
+  ancestorFrame->BuildDisplayListForStackingContext(&info->mBuilder,
+                                                    ancestorRect, &info->mList);
+  info->mBuilder.LeavePresShell(ancestorFrame, ancestorRect);
+
+  nsRect rangeRect = ClipListToRange(&info->mBuilder, &info->mList,
+                                     range, aRenderingContext);
+
+  // determine the offset of the reference frame for the display list
+  // to the root frame. This will allow the coordinates used when painting
+  // to all be offset from the same point
+  info->mRootOffset = ancestorFrame->GetOffsetTo(GetRootFrame());
+  rangeRect.MoveBy(info->mRootOffset);
+  aSurfaceRect.UnionRect(aSurfaceRect, rangeRect);
+
+  return info;
+}
+
+already_AddRefed<gfxASurface>
+PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
+                               nsISelection* aSelection,
+                               nsIRegion* aRegion,
+                               nsRect aArea,
+                               nsPoint& aPoint,
+                               nsRect* aScreenRect)
+{
+  nsPresContext* pc = GetPresContext();
+  if (!pc)
+    return nsnull;
+
+  nsIDeviceContext* deviceContext = pc->DeviceContext();
+
+  // use the rectangle to create the surface
+  nsRect pixelArea = aArea;
+  pixelArea.ScaleRoundOut(1.0 / pc->AppUnitsPerDevPixel());
+
+  // if the area of the image is larger than the maximum area, scale it down
+  float scale = 0.0;
+  nsIntRect rootScreenRect = GetRootFrame()->GetScreenRect();
+
+  // if the image is larger in one or both directions than half the size of
+  // the available screen area, scale the image down to that size.
+  nsRect maxSize;
+  deviceContext->GetClientRect(maxSize);
+  nscoord maxWidth = pc->AppUnitsToDevPixels(maxSize.width >> 1);
+  nscoord maxHeight = pc->AppUnitsToDevPixels(maxSize.height >> 1);
+  PRBool resize = (pixelArea.width > maxWidth || pixelArea.height > maxHeight);
+  if (resize) {
+    scale = 1.0;
+    // divide the maximum size by the image size in both directions. Whichever
+    // direction produces the smallest result determines how much should be
+    // scaled.
+    if (pixelArea.width > maxWidth)
+      scale = PR_MIN(scale, float(maxWidth) / pixelArea.width);
+    if (pixelArea.height > maxHeight)
+      scale = PR_MIN(scale, float(maxHeight) / pixelArea.height);
+
+    pixelArea.width = NSToIntFloor(float(pixelArea.width) * scale);
+    pixelArea.height = NSToIntFloor(float(pixelArea.height) * scale);
+
+    // adjust the screen position based on the rescaled size
+    nscoord left = rootScreenRect.x + pixelArea.x;
+    nscoord top = rootScreenRect.y + pixelArea.y;
+    aScreenRect->x = NSToIntFloor(aPoint.x - float(aPoint.x - left) * scale);
+    aScreenRect->y = NSToIntFloor(aPoint.y - float(aPoint.y - top) * scale);
+  }
+  else {
+    // move aScreenRect to the position of the surface in screen coordinates
+    aScreenRect->MoveTo(rootScreenRect.x + pixelArea.x, rootScreenRect.y + pixelArea.y);
+  }
+  aScreenRect->width = pixelArea.width;
+  aScreenRect->height = pixelArea.height;
+
+  gfxImageSurface* surface =
+    new gfxImageSurface(gfxIntSize(pixelArea.width, pixelArea.height),
+                        gfxImageSurface::ImageFormatARGB32);
+  if (!surface)
+    return nsnull;
+
+  // clear the image
+  gfxContext context(surface);
+  context.SetOperator(gfxContext::OPERATOR_CLEAR);
+  context.Rectangle(gfxRect(0, 0, pixelArea.width, pixelArea.height));
+  context.Fill();
+
+  nsCOMPtr<nsIRenderingContext> rc;
+  deviceContext->CreateRenderingContextInstance(*getter_AddRefs(rc));
+  rc->Init(deviceContext, surface);
+
+  if (aRegion)
+    rc->SetClipRegion(*aRegion, nsClipCombine_kReplace);
+
+  if (resize)
+    rc->Scale(scale, scale);
+
+  // translate so that points are relative to the surface area
+  rc->Translate(-aArea.x, -aArea.y);
+
+  // temporarily hide the selection so that text is drawn normally. If a
+  // selection is being rendered, use that, otherwise use the presshell's
+  // selection.
+  nsCOMPtr<nsFrameSelection> frameSelection;
+  if (aSelection) {
+    nsCOMPtr<nsISelectionPrivate> selpriv = do_QueryInterface(aSelection);
+    selpriv->GetFrameSelection(getter_AddRefs(frameSelection));
+  }
+  else {
+    frameSelection = FrameSelection();
+  }
+  PRInt16 oldDisplaySelection = frameSelection->GetDisplaySelection();
+  frameSelection->SetDisplaySelection(nsISelectionController::SELECTION_HIDDEN);
+
+  // next, paint each range in the selection
+  PRInt32 count = aItems->Length();
+  for (PRInt32 i = 0; i < count; i++) {
+    RangePaintInfo* rangeInfo = (*aItems)[i];
+    // the display lists paint relative to the offset from the reference
+    // frame, so translate the rendering context
+    nsIRenderingContext::AutoPushTranslation
+      translate(rc, rangeInfo->mRootOffset.x, rangeInfo->mRootOffset.y);
+
+    aArea.MoveBy(-rangeInfo->mRootOffset.x, -rangeInfo->mRootOffset.y);
+    rangeInfo->mList.Paint(&rangeInfo->mBuilder, rc, aArea);
+    aArea.MoveBy(rangeInfo->mRootOffset.x, rangeInfo->mRootOffset.y);
+  }
+
+  // restore the old selection display state
+  frameSelection->SetDisplaySelection(oldDisplaySelection);
+
+  NS_ADDREF(surface);
+  return surface;
+}
+
+already_AddRefed<gfxASurface>
+PresShell::RenderNode(nsIDOMNode* aNode,
+                      nsIRegion* aRegion,
+                      nsPoint& aPoint,
+                      nsRect* aScreenRect)
+{
+  // create a temporary rendering context for text measuring
+  nsCOMPtr<nsIRenderingContext> tmprc;
+  nsresult rv = CreateRenderingContext(GetRootFrame(), getter_AddRefs(tmprc));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  // area will hold the size of the surface needed to draw the node, measured
+  // from the root frame.
+  nsRect area;
+  nsTArray<nsAutoPtr<RangePaintInfo> > rangeItems;
+
+  nsCOMPtr<nsIDOMRange> range;
+  NS_NewRange(getter_AddRefs(range));
+  range->SelectNode(aNode);
+
+  RangePaintInfo* info = CreateRangePaintInfo(range, tmprc, area);
+  if (info && !rangeItems.AppendElement(info)) {
+    delete info;
+    return nsnull;
+  }
+
+  if (aRegion) {
+    // combine the area with the supplied region
+    nsRect rrectPixels;
+    aRegion->GetBoundingBox(&rrectPixels.x, &rrectPixels.y,
+                            &rrectPixels.width, &rrectPixels.height);
+
+    nsRect rrect = rrectPixels;
+    rrect.ScaleRoundOut(nsPresContext::AppUnitsPerCSSPixel());
+    area.IntersectRect(area, rrect);
+    
+    nsPresContext* pc = GetPresContext();
+    if (!pc)
+      return nsnull;
+
+    // move the region so that it is offset from the topleft corner of the surface
+    aRegion->Offset(-rrectPixels.x + (rrectPixels.x - pc->AppUnitsToDevPixels(area.x)),
+                    -rrectPixels.y + (rrectPixels.y - pc->AppUnitsToDevPixels(area.y)));
+  }
+
+  return PaintRangePaintInfo(&rangeItems, nsnull, aRegion, area, aPoint,
+                             aScreenRect);
+}
+
+already_AddRefed<gfxASurface>
+PresShell::RenderSelection(nsISelection* aSelection,
+                           nsPoint& aPoint,
+                           nsRect* aScreenRect)
+{
+  // create a temporary rendering context for text measuring
+  nsCOMPtr<nsIRenderingContext> tmprc;
+  nsresult rv = CreateRenderingContext(GetRootFrame(), getter_AddRefs(tmprc));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  // area will hold the size of the surface needed to draw the selection,
+  // measured from the root frame.
+  nsRect area;
+  nsTArray<nsAutoPtr<RangePaintInfo> > rangeItems;
+
+  // iterate over each range and collect them into the rangeItems array.
+  // This is done so that the size of selection can be determined so as
+  // to allocate a surface area
+  PRInt32 numRanges;
+  aSelection->GetRangeCount(&numRanges);
+  for (PRInt32 r = 0; r < numRanges; r++)
+  {
+    nsCOMPtr<nsIDOMRange> range;
+    aSelection->GetRangeAt(r, getter_AddRefs(range));
+
+    RangePaintInfo* info = CreateRangePaintInfo(range, tmprc, area);
+    if (info && !rangeItems.AppendElement(info)) {
+      delete info;
+      return nsnull;
+    }
+  }
+
+  return PaintRangePaintInfo(&rangeItems, aSelection, nsnull, area, aPoint,
+                             aScreenRect);
 }
 
 NS_IMETHODIMP

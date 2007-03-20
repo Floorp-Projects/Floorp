@@ -77,12 +77,25 @@ nsImageToPixbuf::ImageToPixbuf(nsIImage* aImage)
     nsRefPtr<gfxASurface> surface;
     aImage->GetSurface(getter_AddRefs(surface));
 
+    return SurfaceToPixbuf(surface, width, height);
+#else
+    nsCOMPtr<nsIGdkPixbufImage> img(do_QueryInterface(aImage));
+    if (img)
+        return img->GetGdkPixbuf();
+    return NULL;
+#endif
+}
+
+#ifdef MOZ_CAIRO_GFX
+GdkPixbuf*
+nsImageToPixbuf::SurfaceToPixbuf(gfxASurface* aSurface, PRInt32 aWidth, PRInt32 aHeight)
+{
     nsRefPtr<gfxImageSurface> imgSurface;
-    if (surface->GetType() == gfxASurface::SurfaceTypeImage) {
+    if (aSurface->GetType() == gfxASurface::SurfaceTypeImage) {
         imgSurface = NS_STATIC_CAST(gfxImageSurface*,
-                                    NS_STATIC_CAST(gfxASurface*, surface.get()));
+                                    NS_STATIC_CAST(gfxASurface*, aSurface));
     } else {
-        imgSurface = new gfxImageSurface(gfxIntSize(width, height),
+        imgSurface = new gfxImageSurface(gfxIntSize(aWidth, aHeight),
 					 gfxImageSurface::ImageFormatARGB32);
                                        
         if (!imgSurface)
@@ -93,12 +106,12 @@ nsImageToPixbuf::ImageToPixbuf(nsIImage* aImage)
             return nsnull;
 
         context->SetOperator(gfxContext::OPERATOR_SOURCE);
-        context->SetSource(surface);
+        context->SetSource(aSurface);
         context->Paint();
     }
 
     GdkPixbuf* pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, PR_TRUE, 8,
-                                       width, height);
+                                       aWidth, aHeight);
     if (!pixbuf)
         return nsnull;
 
@@ -110,8 +123,8 @@ nsImageToPixbuf::ImageToPixbuf(nsIImage* aImage)
 
     gfxASurface::gfxImageFormat format = imgSurface->Format();
 
-    for (PRInt32 row = 0; row < height; ++row) {
-        for (PRInt32 col = 0; col < width; ++col) {
+    for (PRInt32 row = 0; row < aHeight; ++row) {
+        for (PRInt32 col = 0; col < aWidth; ++col) {
             guchar* pixel = pixels + row * rowstride + 4 * col;
 
             PRUint32* cairoPixel = NS_REINTERPRET_CAST(PRUint32*,
@@ -143,11 +156,5 @@ nsImageToPixbuf::ImageToPixbuf(nsIImage* aImage)
     }
 
     return pixbuf;
-#else
-    nsCOMPtr<nsIGdkPixbufImage> img(do_QueryInterface(aImage));
-    if (img)
-        return img->GetGdkPixbuf();
-    return NULL;
-#endif
 }
-
+#endif
