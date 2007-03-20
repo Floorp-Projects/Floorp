@@ -65,12 +65,12 @@
 #include "jsexn.h"
 #include "jsnum.h"
 #include "jsopcode.h"
+#include "jsparse.h"
 #include "jsregexp.h"
 #include "jsscan.h"
 #include "jsscript.h"
 
 #if JS_HAS_XML_SUPPORT
-#include "jsparse.h"
 #include "jsxml.h"
 #endif
 
