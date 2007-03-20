@@ -634,11 +634,11 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
         gs->is_transparent = PR_FALSE;
         // ignoring gfx control extension
       }
-      gs->disposal_method = (gdispose)(((*q) >> 2) & 0x7);
+      gs->disposal_method = ((*q) >> 2) & 0x7;
       // Some specs say 3rd bit (value 4), other specs say value 3
       // Let's choose 3 (the more popular)
       if (gs->disposal_method == 4)
-        gs->disposal_method = (gdispose)3;
+        gs->disposal_method = 3;
       gs->delay_time = GETINT16(q + 1) * 10;
       GETN(1, gif_consume_block);
     }

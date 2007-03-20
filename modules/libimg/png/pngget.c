@@ -794,6 +794,157 @@ png_get_tRNS(png_structp png_ptr, png_infop info_ptr,
 }
 #endif
 
+#if defined(PNG_APNG_SUPPORTED)
+png_uint_32 PNGAPI
+png_get_acTl(png_structp png_ptr, png_infop info_ptr,
+             png_uint_32 *num_frames, png_uint_32 *num_iterations)
+{
+    png_debug1(1, "in %s retrieval function\n", "acTl");
+    
+    if (png_ptr != NULL && info_ptr != NULL &&
+        (info_ptr->valid & PNG_INFO_acTl) &&
+        num_frames != NULL && num_iterations != NULL)
+    {
+        *num_frames = info_ptr->num_frames;
+        *num_iterations = info_ptr->num_iterations;
+        return (1);
+    }
+    
+    return (0);
+}
+
+png_uint_32 PNGAPI
+png_get_num_frames(png_structp png_ptr, png_infop info_ptr)
+{
+    png_debug(1, "in png_get_num_frames()\n");
+    
+    if (png_ptr != NULL && info_ptr != NULL)
+        return (info_ptr->num_frames);
+    return (0);
+}
+
+png_uint_32 PNGAPI
+png_get_num_iterations(png_structp png_ptr, png_infop info_ptr)
+{
+    png_debug(1, "in png_get_num_iterations()\n");
+    
+    if (png_ptr != NULL && info_ptr != NULL)
+        return (info_ptr->num_iterations);
+    return (0);
+}
+
+png_uint_32 PNGAPI
+png_get_next_frame_fcTl(png_structp png_ptr, png_infop info_ptr,
+             png_uint_32 *width, png_uint_32 *height,
+             png_uint_32 *x_offset, png_uint_32 *y_offset,
+             png_uint_16 *delay_num, png_uint_16 *delay_den,
+             png_byte *render_op)
+{
+    png_debug1(1, "in %s retrieval function\n", "fcTl");
+    
+    if (png_ptr != NULL && info_ptr != NULL &&
+        (info_ptr->valid & PNG_INFO_fcTl) &&
+        width != NULL && height != NULL && 
+        x_offset != NULL && x_offset != NULL && 
+        delay_num != NULL && delay_den != NULL && render_op != NULL)
+    {
+        *width = info_ptr->next_frame_width;
+        *height = info_ptr->next_frame_height;
+        *x_offset = info_ptr->next_frame_x_offset;
+        *y_offset = info_ptr->next_frame_y_offset;
+        *delay_num = info_ptr->next_frame_delay_num;
+        *delay_den = info_ptr->next_frame_delay_den;
+        *render_op = info_ptr->next_frame_render_op;
+        return (1);
+    }
+    
+    return (0);
+}
+
+png_uint_32 PNGAPI
+png_get_next_frame_width(png_structp png_ptr, png_infop info_ptr)
+{
+    png_debug(1, "in png_get_next_frame_width()\n");
+    
+    if (png_ptr != NULL && info_ptr != NULL)
+        return (info_ptr->next_frame_width);
+    return (0);
+}
+
+png_uint_32 PNGAPI
+png_get_next_frame_height(png_structp png_ptr, png_infop info_ptr)
+{
+    png_debug(1, "in png_get_next_frame_height()\n");
+    
+    if (png_ptr != NULL && info_ptr != NULL)
+        return (info_ptr->next_frame_height);
+    return (0);
+}
+
+png_uint_32 PNGAPI
+png_get_next_frame_x_offset(png_structp png_ptr, png_infop info_ptr)
+{
+    png_debug(1, "in png_get_next_frame_x_offset()\n");
+    
+    if (png_ptr != NULL && info_ptr != NULL)
+        return (info_ptr->next_frame_x_offset);
+    return (0);
+}
+
+png_uint_32 PNGAPI
+png_get_next_frame_y_offset(png_structp png_ptr, png_infop info_ptr)
+{
+    png_debug(1, "in png_get_next_frame_y_offset()\n");
+    
+    if (png_ptr != NULL && info_ptr != NULL)
+        return (info_ptr->next_frame_y_offset);
+    return (0);
+}
+
+png_uint_16 PNGAPI
+png_get_next_frame_delay_num(png_structp png_ptr, png_infop info_ptr)
+{
+    png_debug(1, "in png_get_next_frame_delay_num()\n");
+    
+    if (png_ptr != NULL && info_ptr != NULL)
+        return (info_ptr->next_frame_delay_num);
+    return (0);
+}
+
+png_uint_16 PNGAPI
+png_get_next_frame_delay_den(png_structp png_ptr, png_infop info_ptr)
+{
+    png_debug(1, "in png_get_next_frame_delay_den()\n");
+    
+    if (png_ptr != NULL && info_ptr != NULL)
+        return (info_ptr->next_frame_delay_den);
+    return (0);
+}
+
+png_byte PNGAPI
+png_get_next_frame_render_op(png_structp png_ptr, png_infop info_ptr)
+{
+    png_debug(1, "in png_get_next_frame_render_op()\n");
+    
+    if (png_ptr != NULL && info_ptr != NULL)
+        return (info_ptr->next_frame_render_op);
+    return (0);
+}
+
+png_byte PNGAPI
+png_first_frame_is_hidden(png_structp png_ptr, png_infop info_ptr)
+{
+    png_debug(1, "in png_first_frame_is_hidden()\n");
+    
+    if (png_ptr != NULL && info_ptr != NULL && 
+        info_ptr->valid & PNG_INFO_acTl &&
+        !(info_ptr->valid & PNG_INFO_fcTl))
+        return 1;
+    
+    return 0;
+}
+#endif /* PNG_APNG_SUPPORTED */
+
 #if defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
 png_uint_32 PNGAPI
 png_get_unknown_chunks(png_structp png_ptr, png_infop info_ptr,

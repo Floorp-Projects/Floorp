@@ -261,6 +261,10 @@ png_write_info(png_structp png_ptr, png_infop info_ptr)
       }
    }
 #endif
+#if defined(PNG_WRITE_APNG_SUPPORTED)
+   if (info_ptr->valid & PNG_INFO_acTl)
+      png_write_acTl(png_ptr, info_ptr->num_frames, info_ptr->num_iterations);
+#endif
 #if defined(PNG_WRITE_UNKNOWN_CHUNKS_SUPPORTED)
    if (info_ptr->unknown_chunks_num)
    {
@@ -299,6 +303,10 @@ png_write_end(png_structp png_ptr, png_infop info_ptr)
       return;
    if (!(png_ptr->mode & PNG_HAVE_IDAT))
       png_error(png_ptr, "No IDATs written into file");
+#if defined(PNG_WRITE_APNG_SUPPORTED)
+   if (png_ptr->num_frames_written != png_ptr->num_frames_to_write)
+      png_error(png_ptr, "Not enough frames written");
+#endif
 
    /* see if user wants us to write information chunks */
    if (info_ptr != NULL)
@@ -1510,4 +1518,38 @@ png_write_png(png_structp png_ptr, png_infop info_ptr,
       /* quiet compiler warnings */ return;
 }
 #endif
+
+#if defined(PNG_WRITE_APNG_SUPPORTED)
+void PNGAPI
+png_write_frame_head(png_structp png_ptr, png_infop info_ptr,
+    png_bytepp row_pointers, png_uint_32 width, png_uint_32 height, 
+    png_uint_32 x_offset, png_uint_32 y_offset, 
+    png_uint_16 delay_num, png_uint_16 delay_den, png_byte render_op,
+    png_byte first_frame_hidden)
+{
+    png_debug(1, "in png_write_frame_head\n");
+    
+    /* there is a chance this has been set after png_write_info was called,
+    * so it would be set but not written. is there a way to be sure? */
+    if (!(info_ptr->valid & PNG_INFO_acTl))
+        png_error(png_ptr, "png_write_frame_head(): acTl not set");
+    
+    png_write_reset(png_ptr);
+    
+    png_write_reinit(png_ptr, info_ptr, width, height);
+    
+    if ( !(png_ptr->num_frames_written == 0 && first_frame_hidden) )
+        png_write_fcTl(png_ptr, width, height, x_offset, y_offset, 
+                       delay_num, delay_den, render_op);
+}
+
+void PNGAPI
+png_write_frame_tail(png_structp png_ptr, png_infop png_info)
+{
+    png_debug(1, "in png_write_frame_tail\n");
+    
+    png_ptr->num_frames_written++;
+}
+#endif /* PNG_WRITE_APNG_SUPPORTED */
+
 #endif /* PNG_WRITE_SUPPORTED */

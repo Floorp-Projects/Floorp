@@ -47,7 +47,7 @@ interface nsIURI;
 /**
  * imgIRequest interface
  *
- * @author Stuart Parmenter <pavlov@netscape.com>
+ * @author Stuart Parmenter <stuart@mozilla.com>
  * @version 0.1
  * @see imagelib2
  */

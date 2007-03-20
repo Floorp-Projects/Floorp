@@ -362,6 +362,11 @@ png_set_IHDR(png_structp png_ptr, png_infop info_ptr,
       info_ptr->rowbytes = (png_size_t)0;
    else
       info_ptr->rowbytes = PNG_ROWBYTES(info_ptr->pixel_depth,width);
+   
+#if defined(PNG_APNG_SUPPORTED)
+   /* for non-animated png. this may be overritten from an acTl chunk later */
+   info_ptr->num_frames = 1;
+#endif
 }
 
 #if defined(PNG_oFFs_SUPPORTED)
@@ -992,6 +997,121 @@ png_set_sPLT(png_structp png_ptr,
 #endif
 }
 #endif /* PNG_sPLT_SUPPORTED */
+
+#if defined(PNG_APNG_SUPPORTED)
+png_uint_32 PNGAPI
+png_set_acTl(png_structp png_ptr, png_infop info_ptr, 
+    png_uint_32 num_frames, png_uint_32 num_iterations)
+{
+    png_debug1(1, "in %s storage function\n", "acTl");
+
+    if (png_ptr == NULL || info_ptr == NULL)
+    {
+        png_warning(png_ptr, 
+                    "Call to png_set_acTl() with NULL png_ptr "
+                    "or info_ptr ignored");
+        return (0);
+    }
+    if(num_frames == 0)
+    {
+        png_warning(png_ptr, 
+                    "Ignoring attempt to set acTl with num_frames zero");
+        return (0);
+    }
+    if(num_frames > PNG_UINT_31_MAX)
+    {
+        png_warning(png_ptr, 
+                    "Ignoring attempt to set acTl with num_frames > 2^31-1");
+        return (0);
+    }
+    if(num_iterations > PNG_UINT_31_MAX)
+    {
+        png_warning(png_ptr, 
+                    "Ignoring attempt to set acTl with num_iterations "
+                    "> 2^31-1");
+        return (0);
+    }
+    
+    info_ptr->num_frames = num_frames;
+    info_ptr->num_iterations = num_iterations;
+    
+    info_ptr->valid |= PNG_INFO_acTl;
+    
+    return (1);
+}
+
+/* delay_num and delay_den can hold any values including zero */
+png_uint_32 PNGAPI
+png_set_next_frame_fcTl(png_structp png_ptr, png_infop info_ptr, 
+    png_uint_32 width, png_uint_32 height,
+    png_uint_32 x_offset, png_uint_32 y_offset,
+    png_uint_16 delay_num, png_uint_16 delay_den,
+    png_byte render_op)
+{
+    png_debug1(1, "in %s storage function\n", "fcTl");
+
+    if (png_ptr == NULL || info_ptr == NULL)
+    {
+        png_warning(png_ptr, 
+                    "Call to png_set_fcTl() with NULL png_ptr or info_ptr "
+                    "ignored");
+        return (0);
+    }
+    
+    png_ensure_fcTl_is_valid(png_ptr, width, height, x_offset, y_offset, 
+                             delay_num, delay_den, render_op);
+    
+    info_ptr->next_frame_width = width;
+    info_ptr->next_frame_height = height;
+    info_ptr->next_frame_x_offset = x_offset;
+    info_ptr->next_frame_y_offset = y_offset;
+    info_ptr->next_frame_delay_num = delay_num;
+    info_ptr->next_frame_delay_den = delay_den;
+    info_ptr->next_frame_render_op = render_op;
+    
+    info_ptr->valid |= PNG_INFO_fcTl;
+    
+    return (1);
+}
+
+void /* PRIVATE */
+png_ensure_fcTl_is_valid(png_structp png_ptr, 
+    png_uint_32 width, png_uint_32 height,
+    png_uint_32 x_offset, png_uint_32 y_offset,
+    png_uint_16 delay_num, png_uint_16 delay_den,
+    png_byte render_op)
+{
+    if (width > png_ptr->first_frame_width || 
+        height > png_ptr->first_frame_height)
+        png_error(png_ptr, "width and/or height for a frame greater than"
+                           "the ones in IHDR");
+    if (width > PNG_UINT_31_MAX)
+        png_error(png_ptr, "invalid width in fcTl (> 2^31-1)");
+    if (height > PNG_UINT_31_MAX)
+        png_error(png_ptr, "invalid height in fcTl (> 2^31-1)");
+    if (x_offset > PNG_UINT_31_MAX)
+        png_error(png_ptr, "invalid x_offset in fcTl (> 2^31-1)");
+    if (y_offset > PNG_UINT_31_MAX)
+        png_error(png_ptr, "invalid y_offset in fcTl (> 2^31-1)");
+    if (render_op & 0xF0)
+        /* Bits 4 through 7 are reserved and must be set to zero (APNG spec) */
+        png_error(png_ptr, "invalid render_op in fcTl");
+    if (render_op & 0x08 && png_ptr->color_type == PNG_COLOR_TYPE_GRAY)
+        png_error(png_ptr, "APNG_RENDER_OP_BLEND_FLAG is not valid for "
+                           "color type 'greyscale without alpha'");
+    if ((render_op & 0x08) && 
+        (png_ptr->color_type & PNG_COLOR_MASK_COLOR) &&
+        !(png_ptr->color_type & PNG_COLOR_MASK_ALPHA))
+        png_error(png_ptr, "APNG_RENDER_OP_BLEND_FLAG is not valid for "
+                           "color type 'truecolor without alpha'");
+    if (!(render_op & PNG_RENDER_OP_DISPOSE_MASK))
+        png_error(png_ptr, "no DISPOSE_ flag found in fcTl");
+    if ( (render_op & PNG_RENDER_OP_DISPOSE_MASK) != PNG_RENDER_OP_DISPOSE_NONE && 
+         (render_op & PNG_RENDER_OP_DISPOSE_MASK) != PNG_RENDER_OP_DISPOSE_BACKGROUND && 
+         (render_op & PNG_RENDER_OP_DISPOSE_MASK) != PNG_RENDER_OP_DISPOSE_PREVIOUS)
+        png_error(png_ptr, "multiple DISPOSE_ flags set in fcTl");
+}
+#endif /* PNG_APNG_SUPPORTED */
 
 #if defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
 void PNGAPI
