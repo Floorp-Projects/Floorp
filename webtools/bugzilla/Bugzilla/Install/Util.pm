@@ -37,6 +37,7 @@ our @EXPORT_OK = qw(
     get_version_and_os
     indicate_progress
     install_string
+    is_web
     vers_cmp
 );
 
@@ -80,7 +81,7 @@ sub install_string {
         $string_template = _get_string_from_file($string_id, "$base.html.pl")
             if is_web();
         $string_template = _get_string_from_file($string_id, "$base.txt.pl")
-            if !$string_template;
+            if !defined $string_template;
         last if defined $string_template;
     }
     

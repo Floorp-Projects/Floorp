@@ -27,8 +27,18 @@
 # Please keep the strings in alphabetical order by their name.
 
 %strings = (
+    any  => 'any',
+    blacklisted => '(blacklisted)',
+    checking_for => 'Checking for',
+    checking_dbd      => 'Checking available perl DBD modules...',
+    checking_optional => 'The following Perl modules are optional:',
+    checking_modules  => 'Checking perl modules...',
     header => "* This is Bugzilla ##bz_ver## on perl ##perl_ver##\n"
             . "* Running on ##os_name## ##os_ver##",
+    module_found => "found v##ver##",
+    module_not_found => "not found",
+    module_ok => 'ok',
+    module_unknown_version => "found unknown version",
 );
 
 1;

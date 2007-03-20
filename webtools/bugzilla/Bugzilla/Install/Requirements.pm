@@ -25,7 +25,7 @@ package Bugzilla::Install::Requirements;
 
 use strict;
 
-use Bugzilla::Install::Util qw(vers_cmp);
+use Bugzilla::Install::Util qw(vers_cmp install_string is_web);
 use List::Util qw(max);
 use Safe;
 
@@ -262,11 +262,11 @@ sub _get_extension_requirements {
 sub check_requirements {
     my ($output) = @_;
 
-    print "\nChecking perl modules...\n" if $output;
+    print "\n", install_string('checking_modules'), "\n" if $output;
     my $root = ROOT_USER;
     my %missing = _check_missing(REQUIRED_MODULES, $output);
 
-    print "\nChecking available perl DBD modules...\n" if $output;
+    print "\n", install_string('checking_dbd'), "\n" if $output;
     my $have_one_dbd = 0;
     my $db_modules = DB_MODULE;
     foreach my $db (keys %$db_modules) {
@@ -274,7 +274,7 @@ sub check_requirements {
         $have_one_dbd = 1 if have_vers($dbd, $output);
     }
 
-    print "\nThe following Perl modules are optional:\n" if $output;
+    print "\n", install_string('checking_optional'), "\n" if $output;
     my %missing_optional = _check_missing(OPTIONAL_MODULES, $output);
 
     # If we're running on Windows, reset the input line terminator so that
@@ -476,15 +476,10 @@ sub have_vers {
     }
     my $wanted  = $params->{version};
 
-    my ($msg, $vnum, $vstr);
-    no strict 'refs';
-    printf("Checking for %15s %-9s ", $package, !$wanted?'(any)':"(v$wanted)") 
-        if $output;
-
     eval "require $module;";
 
     # VERSION is provided by UNIVERSAL::
-    $vnum = eval { $module->VERSION } || -1;
+    my $vnum = eval { $module->VERSION } || -1;
 
     # CGI's versioning scheme went 2.75, 2.751, 2.752, 2.753, 2.76
     # That breaks the standard version tests, so we need to manually correct
@@ -493,14 +488,15 @@ sub have_vers {
         $vnum = $1 . "." . $2;
     }
 
+    my $vstr;
     if ($vnum eq "-1") { # string compare just in case it's non-numeric
-        $vstr = "not found";
+        $vstr = install_string('module_not_found');
     }
     elsif (vers_cmp($vnum,"0") > -1) {
-        $vstr = "found v$vnum";
+        $vstr = install_string('module_found', { ver => $vnum });
     }
     else {
-        $vstr = "found unknown version";
+        $vstr = install_string('module_unknown_version');
     }
 
     my $vok = (vers_cmp($vnum,$wanted) > -1);
@@ -510,9 +506,29 @@ sub have_vers {
         $vok = 0 if $blacklisted;
     }
 
-    my $ok = $vok ? "ok:" : "";
-    my $black_string = $blacklisted ? "(blacklisted)" : "";
-    print "$ok $vstr $black_string\n" if $output;
+    if ($output) {
+        my $ok           = $vok ? install_string('module_ok') : '';
+        my $black_string = $blacklisted ? install_string('blacklisted') : '';
+        my $want_string  = $wanted ? "v$wanted" : install_string('any');
+
+        # It's impossible to do the printf formatting in the install_string
+        # system, so we do it manually below.
+        if (is_web()) {
+            print install_string('module_details',
+                { package => $package,
+                  wanted  => $want_string,
+                  found   => $vstr,
+                  ok      => $ok,
+                  blacklisted => $black_string,
+                  row_class => $vok ? 'mod_ok' : 'mod_not_ok' });
+        }
+        else {
+            $ok = "$ok:" if $ok;
+            printf "%s %19s %-9s $ok $vstr $black_string\n",
+                install_string('checking_for'), $package, "($want_string)";
+        }
+    }
+    
     return $vok ? 1 : 0;
 }
 

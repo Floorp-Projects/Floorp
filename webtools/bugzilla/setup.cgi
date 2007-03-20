@@ -53,8 +53,10 @@ print install_string('header', get_version_and_os());
 # Check Requirements #
 ######################
 
-print '<pre>';
 my $module_results = check_requirements(1);
+print '</table>';
+
+print '<pre>';
 Bugzilla::Install::Requirements::print_module_instructions($module_results, 1);
 print '</pre>';
 
