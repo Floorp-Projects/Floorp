@@ -601,9 +601,20 @@
              newEnd.normalize();
            } else if (item.entryDate) {
              newStart = adjustDate(item.entryDate);
+             // zero offset so we don't double-count
+             offset = 0;
            } else { // only due date
              newEnd = adjustDate(item.dueDate);
+             offset = 0;
            }
+         }
+         if (newStart && offset) {
+           newStart.day -= offset;
+           newStart.normalize();
+         }
+         if (newEnd && offset) {
+           newEnd.day -= offset;
+           newEnd.normalize();
          }
 
          this.removeDropShadows();
