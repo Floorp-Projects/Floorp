@@ -57,6 +57,16 @@ gfxFont::gfxFont(const nsAString &aName, const gfxFontStyle *aFontStyle) :
 {
 }
 
+/**
+ * A helper function in case we need to do any rounding or other
+ * processing here.
+ */
+static double
+ToDeviceUnits(double aAppUnits, double aDevUnitsPerAppUnit)
+{
+    return aAppUnits*aDevUnitsPerAppUnit;
+}
+
 void
 gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
               gfxContext *aContext, PRBool aDrawToPath, gfxPoint *aPt,
@@ -65,19 +75,19 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
     if (aStart >= aEnd)
         return;
 
-    double appUnitsToPixels = 1.0/aTextRun->GetAppUnitsPerDevUnit();
     const gfxTextRun::CompressedGlyph *charGlyphs = aTextRun->GetCharacterGlyphs();
+    const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
+    const double devUnitsPerAppUnit = 1/gfxFloat(appUnitsPerDevUnit);
+    PRBool isRTL = aTextRun->IsRightToLeft();
     double direction = aTextRun->GetDirection();
-
     nsAutoTArray<cairo_glyph_t,200> glyphBuffer;
     PRUint32 i;
+    // Current position in appunits
     double x = aPt->x;
     double y = aPt->y;
 
-    PRBool isRTL = aTextRun->IsRightToLeft();
-
     if (aSpacing) {
-        x += direction*aSpacing[0].mBefore*appUnitsToPixels;
+        x += direction*aSpacing[0].mBefore;
     }
     for (i = aStart; i < aEnd; ++i) {
         const gfxTextRun::CompressedGlyph *glyphData = &charGlyphs[i];
@@ -87,10 +97,15 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
                 return;
             glyph->index = glyphData->GetSimpleGlyph();
             double advance = glyphData->GetSimpleAdvance();
-            glyph->x = x;
-            glyph->y = y;
+            // Perhaps we should put a scale in the cairo context instead of
+            // doing this scaling here...
+            // Multiplying by the reciprocal may introduce tiny error here,
+            // but we assume cairo is going to round coordinates at some stage
+            // and this is faster
+            glyph->x = ToDeviceUnits(x, devUnitsPerAppUnit);
+            glyph->y = ToDeviceUnits(y, devUnitsPerAppUnit);
             if (isRTL) {
-                glyph->x -= advance;
+                glyph->x -= ToDeviceUnits(advance, devUnitsPerAppUnit);
                 x -= advance;
             } else {
                 x += advance;
@@ -102,11 +117,11 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
                 if (!glyph)
                     return;
                 glyph->index = details->mGlyphID;
-                glyph->x = x + details->mXOffset;
-                glyph->y = y + details->mYOffset;
+                glyph->x = ToDeviceUnits(x + details->mXOffset, devUnitsPerAppUnit);
+                glyph->y = ToDeviceUnits(y + details->mYOffset, devUnitsPerAppUnit);
                 double advance = details->mAdvance;
                 if (isRTL) {
-                    glyph->x -= advance;
+                    glyph->x -= ToDeviceUnits(advance, devUnitsPerAppUnit);
                 }
                 x += direction*advance;
                 if (details->mIsLastGlyph)
@@ -120,15 +135,11 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
             if (i + 1 < aEnd) {
                 space += aSpacing[i + 1 - aStart].mBefore;
             }
-            x += direction*space*appUnitsToPixels;
+            x += direction*space;
         }
     }
 
     *aPt = gfxPoint(x, y);
-
-    // XXX is this needed? what does it do? Mac code was doing it.
-    // gfxFloat offsetX, offsetY;
-    // nsRefPtr<gfxASurface> surf = aContext->CurrentSurface (&offsetX, &offsetY);
 
     cairo_t *cr = aContext->GetCairo();
     SetupCairoFont(cr);
@@ -153,7 +164,7 @@ gfxFont::Measure(gfxTextRun *aTextRun,
     // XXX temporary code, does not handle glyphs outside the font-box
     NS_ASSERTION(!(aTextRun->GetFlags() & gfxTextRunFactory::TEXT_NEED_BOUNDING_BOX),
                  "Glyph extents not yet supported");
-    gfxFloat advancePixels = 0;
+    PRInt32 advance = 0;
     PRUint32 i;
     const gfxTextRun::CompressedGlyph *charGlyphs = aTextRun->GetCharacterGlyphs();
     PRUint32 clusterCount = 0;
@@ -162,11 +173,11 @@ gfxFont::Measure(gfxTextRun *aTextRun,
         if (g.IsClusterStart()) {
             ++clusterCount;
             if (g.IsSimpleGlyph()) {
-                advancePixels += charGlyphs[i].GetSimpleAdvance();
+                advance += charGlyphs[i].GetSimpleAdvance();
             } else if (g.IsComplexCluster()) {
                 const gfxTextRun::DetailedGlyph *details = aTextRun->GetDetailedGlyphs(i);
                 for (;;) {
-                    advancePixels += details->mAdvance;
+                    advance += details->mAdvance;
                     if (details->mIsLastGlyph)
                         break;
                     ++details;
@@ -174,20 +185,21 @@ gfxFont::Measure(gfxTextRun *aTextRun,
             }
         }
     }
-    gfxFloat dev2app = aTextRun->GetAppUnitsPerDevUnit();
-    gfxFloat advance = advancePixels*dev2app;
+
+    gfxFloat floatAdvance = advance;
     if (aSpacing) {
         for (i = 0; i < aEnd - aStart; ++i) {
-            advance += aSpacing[i].mBefore + aSpacing[i].mAfter;
+            floatAdvance += aSpacing[i].mBefore + aSpacing[i].mAfter;
         }
     }
     RunMetrics metrics;
     const gfxFont::Metrics& fontMetrics = GetMetrics();
-    metrics.mAdvanceWidth = advance;
-    metrics.mAscent = fontMetrics.maxAscent*dev2app;
-    metrics.mDescent = fontMetrics.maxDescent*dev2app;
+    metrics.mAdvanceWidth = floatAdvance;
+    const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
+    metrics.mAscent = fontMetrics.maxAscent*appUnitsPerDevUnit;
+    metrics.mDescent = fontMetrics.maxDescent*appUnitsPerDevUnit;
     metrics.mBoundingBox =
-        gfxRect(0, -metrics.mAscent, advance, metrics.mAscent + metrics.mDescent);
+        gfxRect(0, -metrics.mAscent, floatAdvance, metrics.mAscent + metrics.mDescent);
     metrics.mClusterCount = clusterCount;
     return metrics;
 }
@@ -414,7 +426,7 @@ gfxFontGroup::GetSpecialStringTextRun(SpecialString aString,
 
     gfxTextRunFactory::Parameters params = {
         nsnull, nsnull, nsnull, nsnull, nsnull, 0,
-        PRUint32(aTemplate->GetAppUnitsPerDevUnit()), TEXT_IS_PERSISTENT
+        aTemplate->GetAppUnitsPerDevUnit(), TEXT_IS_PERSISTENT
     };
     gfxTextRun* textRun;
 
@@ -543,7 +555,7 @@ gfxTextRun::SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
     return changed != 0;
 }
 
-gfxFloat
+PRInt32
 gfxTextRun::ComputeClusterAdvance(PRUint32 aClusterOffset)
 {
     CompressedGlyph *glyphData = &mCharacterGlyphs[aClusterOffset];
@@ -551,7 +563,7 @@ gfxTextRun::ComputeClusterAdvance(PRUint32 aClusterOffset)
         return glyphData->GetSimpleAdvance();
     NS_ASSERTION(glyphData->IsComplexCluster(), "Unknown character type!");
     NS_ASSERTION(mDetailedGlyphs, "Complex cluster but no details array!");
-    gfxFloat advance = 0;
+    PRInt32 advance = 0;
     DetailedGlyph *details = mDetailedGlyphs[aClusterOffset];
     NS_ASSERTION(details, "Complex cluster but no details!");
     for (;;) {
@@ -576,7 +588,7 @@ gfxTextRun::ComputeLigatureData(PRUint32 aPartOffset, PropertyProvider *aProvide
         } while (!charGlyphs[ligStart].IsClusterStart());
     }
     result.mStartOffset = ligStart;
-    result.mLigatureWidth = ComputeClusterAdvance(ligStart)*mAppUnitsPerDevUnit;
+    result.mLigatureWidth = ComputeClusterAdvance(ligStart);
     result.mPartClusterIndex = PR_UINT32_MAX;
 
     PRUint32 charIndex = ligStart;
@@ -621,22 +633,9 @@ gfxTextRun::GetAdjustedSpacing(PRUint32 aStart, PRUint32 aEnd,
 
     aProvider->GetSpacing(aStart, aEnd - aStart, aSpacing);
 
-    // XXX the following loop could be avoided if we add some kind of
-    // TEXT_HAS_LIGATURES flag
     CompressedGlyph *charGlyphs = mCharacterGlyphs;
     PRUint32 i;
-    PRUint32 end = PR_MIN(aEnd, mCharacterCount - 1);
-    for (i = aStart; i <= end; ++i) {
-        if (charGlyphs[i].IsLigatureContinuation()) {
-            if (i < aEnd) {
-                aSpacing[i - aStart].mBefore = 0;
-            }
-            if (i > aStart) {
-                aSpacing[i - 1 - aStart].mAfter = 0;
-            }
-        }
-    }
-    
+
     if (mFlags & gfxTextRunFactory::TEXT_ABSOLUTE_SPACING) {
         // Subtract character widths from mAfter at the end of clusters/ligatures to
         // relativize spacing. This is a bit sad since we're going to add
@@ -644,7 +643,7 @@ gfxTextRun::GetAdjustedSpacing(PRUint32 aStart, PRUint32 aEnd,
         // produces simpler code and absolute spacing is rarely required.
         
         // The width of the last nonligature cluster, in appunits
-        gfxFloat clusterWidth = 0.0;
+        PRInt32 clusterWidth = 0;
         for (i = aStart; i < aEnd; ++i) {
             CompressedGlyph *glyphData = &charGlyphs[i];
             
@@ -652,24 +651,45 @@ gfxTextRun::GetAdjustedSpacing(PRUint32 aStart, PRUint32 aEnd,
                 if (i > aStart) {
                     aSpacing[i - 1 - aStart].mAfter -= clusterWidth;
                 }
-                clusterWidth = glyphData->GetSimpleAdvance()*mAppUnitsPerDevUnit;
+                clusterWidth = glyphData->GetSimpleAdvance();
             } else if (glyphData->IsComplexCluster()) {
                 NS_ASSERTION(mDetailedGlyphs, "No details but we have a complex cluster...");
                 if (i > aStart) {
                     aSpacing[i - 1 - aStart].mAfter -= clusterWidth;
                 }
                 DetailedGlyph *details = mDetailedGlyphs[i];
-                clusterWidth = 0.0;
+                clusterWidth = 0;
                 for (;;) {
                     clusterWidth += details->mAdvance;
                     if (details->mIsLastGlyph)
                         break;
                     ++details;
                 }
-                clusterWidth *= mAppUnitsPerDevUnit;
             }
         }
         aSpacing[aEnd - 1 - aStart].mAfter -= clusterWidth;
+    }
+
+    // Move spacing inside a ligature to after the ligature.
+    // Do this after adjusting for ABSOLUTE_SPACING above.
+    // XXX we shouldn't really have to do this, textframe users should
+    // not put spacing inside ligatures.
+    // XXX the following loop could be avoided if we add some kind of
+    // TEXT_HAS_LIGATURES flag
+    gfxFloat accumulatedSpace = 0;
+    for (i = aStart; i <= aEnd; ++i) {
+        if (i < aEnd && charGlyphs[i].IsLigatureContinuation()) {
+            accumulatedSpace += aSpacing[i - aStart].mBefore;
+            aSpacing[i - aStart].mBefore = 0;
+            NS_ASSERTION(i > aStart, "Ligature continuation at start of spacing run?");
+            accumulatedSpace += aSpacing[i - 1 - aStart].mAfter;
+            aSpacing[i - 1 - aStart].mAfter = 0;
+        } else {
+            if (i > aStart) {
+                aSpacing[i - 1 - aStart].mAfter += accumulatedSpace;
+                accumulatedSpace = 0;
+            }
+        }
     }
 }
 
@@ -740,7 +760,7 @@ gfxTextRun::GetPartialLigatureWidth(PRUint32 aStart, PRUint32 aEnd,
         }
     }
 
-    gfxFloat result = data.mLigatureWidth*clusterCount/data.mClusterCount;
+    gfxFloat result = gfxFloat(data.mLigatureWidth)*clusterCount/data.mClusterCount;
     if (aStart == data.mStartOffset) {
         result += data.mBeforeSpacing;
     }
@@ -760,19 +780,17 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aOffs
     if (!mCharacterGlyphs[aOffset].IsClusterStart() || !aDirtyRect)
         return;
 
-    gfxFloat appUnitsToPixels = 1.0/mAppUnitsPerDevUnit;
-
     // Draw partial ligature. We hack this by clipping the ligature.
     LigatureData data = ComputeLigatureData(aOffset, aProvider);
-    // Width of a cluster in the ligature, in device pixels
-    gfxFloat clusterWidth = data.mLigatureWidth*appUnitsToPixels/data.mClusterCount;
+    // Width of a cluster in the ligature, in appunits
+    gfxFloat clusterWidth = data.mLigatureWidth/data.mClusterCount;
 
     gfxFloat direction = GetDirection();
-    gfxFloat left = aDirtyRect->X()*appUnitsToPixels;
-    gfxFloat right = aDirtyRect->XMost()*appUnitsToPixels;
-    // The advance to the start of this cluster in the drawn ligature, in device pixels
+    gfxFloat left = aDirtyRect->X();
+    gfxFloat right = aDirtyRect->XMost();
+    // The advance to the start of this cluster in the drawn ligature, in appunits
     gfxFloat widthBeforeCluster;
-    // Any spacing that should be included after the cluster, in device pixels
+    // Any spacing that should be included after the cluster, in appunits
     gfxFloat afterSpace;
     if (data.mStartOffset < aOffset) {
         // Not the start of the ligature; need to clip the ligature before the current cluster
@@ -782,7 +800,7 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aOffs
             left = PR_MAX(left, aPt->x);
         }
         widthBeforeCluster = clusterWidth*data.mPartClusterIndex +
-            data.mBeforeSpacing*appUnitsToPixels;
+            data.mBeforeSpacing;
     } else {
         // We're drawing the start of the ligature, so our cluster includes any
         // before-spacing.
@@ -798,12 +816,16 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aOffs
         }
         afterSpace = 0;
     } else {
-        afterSpace = data.mAfterSpacing*appUnitsToPixels;
+        afterSpace = data.mAfterSpacing;
     }
 
     aCtx->Save();
-    aCtx->Clip(gfxRect(left, aDirtyRect->Y()*appUnitsToPixels, right - left,
-               aDirtyRect->Height()*appUnitsToPixels));
+    // use division here to ensure that when the rect is aligned on multiples
+    // of mAppUnitsPerDevUnit, we clip to true device unit boundaries
+    aCtx->Clip(gfxRect(left/mAppUnitsPerDevUnit,
+                       aDirtyRect->Y()/mAppUnitsPerDevUnit,
+                       (right - left)/mAppUnitsPerDevUnit,
+                       aDirtyRect->Height()/mAppUnitsPerDevUnit));
     gfxPoint pt(aPt->x - direction*widthBeforeCluster, aPt->y);
     DrawGlyphs(aFont, aCtx, PR_FALSE, &pt, data.mStartOffset,
                data.mEndOffset, aProvider);
@@ -819,12 +841,9 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt,
 {
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Substring out of range");
 
-    gfxFloat appUnitsToPixels = 1/mAppUnitsPerDevUnit;
     CompressedGlyph *charGlyphs = mCharacterGlyphs;
     gfxFloat direction = GetDirection();
-
-    gfxPoint pt(aPt.x*appUnitsToPixels, aPt.y*appUnitsToPixels);
-    gfxFloat startX = pt.x;
+    gfxPoint pt = aPt;
 
     GlyphRunIterator iter(this, aStart, aLength);
     while (iter.NextRun()) {
@@ -854,7 +873,7 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt,
     }
 
     if (aAdvanceWidth) {
-        *aAdvanceWidth = (pt.x - startX)*direction*mAppUnitsPerDevUnit;
+        *aAdvanceWidth = (pt.x - aPt.x)*direction;
     }
 }
 
@@ -865,12 +884,9 @@ gfxTextRun::DrawToPath(gfxContext *aContext, gfxPoint aPt,
 {
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Substring out of range");
 
-    gfxFloat appUnitsToPixels = 1/mAppUnitsPerDevUnit;
     CompressedGlyph *charGlyphs = mCharacterGlyphs;
     gfxFloat direction = GetDirection();
-
-    gfxPoint pt(aPt.x*appUnitsToPixels, aPt.y*appUnitsToPixels);
-    gfxFloat startX = pt.x;
+    gfxPoint pt = aPt;
 
     GlyphRunIterator iter(this, aStart, aLength);
     while (iter.NextRun()) {
@@ -890,7 +906,7 @@ gfxTextRun::DrawToPath(gfxContext *aContext, gfxPoint aPt,
     }
 
     if (aAdvanceWidth) {
-        *aAdvanceWidth = (pt.x - startX)*direction*mAppUnitsPerDevUnit;
+        *aAdvanceWidth = (pt.x - aPt.x)*direction;
     }
 }
 
@@ -1064,8 +1080,7 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
     }
 
     gfxFloat width = 0;
-    PRUint32 pixelAdvance = 0;
-    gfxFloat floatAdvanceUnits = 0;
+    gfxFloat advance = 0;
     PRInt32 lastBreak = -1;
     PRBool aborted = PR_FALSE;
     PRUint32 end = aStart + aMaxLength;
@@ -1094,14 +1109,11 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
         PRBool lineBreakHere = mCharacterGlyphs[i].CanBreakBefore() &&
             (!aSuppressInitialBreak || i > aStart);
         if (lineBreakHere || (haveHyphenation && hyphenBuffer[i - bufferStart])) {
-            gfxFloat advance = gfxFloat(pixelAdvance)*mAppUnitsPerDevUnit + floatAdvanceUnits;
             gfxFloat hyphenatedAdvance = advance;
             PRBool hyphenation = !lineBreakHere;
             if (hyphenation) {
                 hyphenatedAdvance += aProvider->GetHyphenWidth();
             }
-            pixelAdvance = 0;
-            floatAdvanceUnits = 0;
 
             if (lastBreak < 0 || width + hyphenatedAdvance <= aWidth) {
                 // We can break here.
@@ -1110,6 +1122,7 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
             }
 
             width += advance;
+            advance = 0;
             if (width > aWidth) {
                 // No more text fits. Abort
                 aborted = PR_TRUE;
@@ -1120,12 +1133,12 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
         if (i >= ligatureRunStart && i < ligatureRunEnd) {
             CompressedGlyph *glyphData = &charGlyphs[i];
             if (glyphData->IsSimpleGlyph()) {
-                pixelAdvance += glyphData->GetSimpleAdvance();
+                advance += glyphData->GetSimpleAdvance();
             } else if (glyphData->IsComplexCluster()) {
                 NS_ASSERTION(mDetailedGlyphs, "No details but we have a complex cluster...");
                 DetailedGlyph *details = mDetailedGlyphs[i];
                 for (;;) {
-                    floatAdvanceUnits += details->mAdvance*mAppUnitsPerDevUnit;
+                    advance += details->mAdvance;
                     if (details->mIsLastGlyph)
                         break;
                     ++details;
@@ -1133,15 +1146,14 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
             }
             if (haveSpacing) {
                 PropertyProvider::Spacing *space = &spacingBuffer[i - bufferStart];
-                floatAdvanceUnits += space->mBefore + space->mAfter;
+                advance += space->mBefore + space->mAfter;
             }
         } else {
-            floatAdvanceUnits += GetPartialLigatureWidth(i, i + 1, aProvider);
+            advance += GetPartialLigatureWidth(i, i + 1, aProvider);
         }
     }
 
     if (!aborted) {
-        gfxFloat advance = gfxFloat(pixelAdvance)*mAppUnitsPerDevUnit + floatAdvanceUnits;
         width += advance;
     }
 
@@ -1205,7 +1217,6 @@ gfxTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
         }
     }
 
-    PRUint32 pixelAdvance = 0;
     PRUint32 ligatureRunStart = aStart;
     PRUint32 ligatureRunEnd = aStart + aLength;
     ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
@@ -1217,12 +1228,12 @@ gfxTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
     for (i = ligatureRunStart; i < ligatureRunEnd; ++i) {
         CompressedGlyph *glyphData = &charGlyphs[i];
         if (glyphData->IsSimpleGlyph()) {
-            pixelAdvance += glyphData->GetSimpleAdvance();
+            result += glyphData->GetSimpleAdvance();
         } else if (glyphData->IsComplexCluster()) {
             NS_ASSERTION(mDetailedGlyphs, "No details but we have a complex cluster...");
             DetailedGlyph *details = mDetailedGlyphs[i];
             for (;;) {
-                result += details->mAdvance*mAppUnitsPerDevUnit;
+                result += details->mAdvance;
                 if (details->mIsLastGlyph)
                     break;
                 ++details;
@@ -1230,7 +1241,7 @@ gfxTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
         }
     }
 
-    return result + gfxFloat(pixelAdvance)*mAppUnitsPerDevUnit;
+    return result;
 }
 
 
@@ -1299,6 +1310,9 @@ void
 gfxTextRun::SetDetailedGlyphs(PRUint32 aIndex, DetailedGlyph *aGlyphs,
                               PRUint32 aCount)
 {
+    NS_ASSERTION(aCount > 0, "Can't set zero detailed glyphs");
+    NS_ASSERTION(aGlyphs[aCount - 1].mIsLastGlyph, "Failed to set last glyph flag");
+
     if (!mCharacterGlyphs)
         return;
 

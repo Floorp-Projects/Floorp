@@ -612,25 +612,25 @@ SetupContextFont(gfxContext *aContext, gfxWindowsFont *aFont,
 }
 
 static void
-SetupTextRunFromCharacterPlacement(gfxTextRun *aRun, double aCairoToPixels,
+SetupTextRunFromCharacterPlacement(gfxTextRun *aRun, double aCairoToAppUnits,
                                    int *aDXs, WCHAR *aGlyphs, gfxFont *aFont)
 {
     gfxTextRun::CompressedGlyph g;
     PRUint32 i;
     PRUint32 length = aRun->GetLength();
     for (i = 0; i < length; ++i) {
-        double advance = aDXs[i]*aCairoToPixels;
-        PRInt32 advancePixels = PRInt32(advance);
+        double advance = aDXs[i]*aCairoToAppUnits;
+        PRInt32 advanceAppUnits = PRInt32(advance);
         WCHAR glyph = aGlyphs[i];
-        if (advance >= 0 && advance == advancePixels &&
-            gfxTextRun::CompressedGlyph::IsSimpleAdvancePixels(advancePixels) &&
+        if (advanceAppUnits >= 0 &&
+            gfxTextRun::CompressedGlyph::IsSimpleAdvance(advanceAppUnits) &&
             gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph)) {
-            aRun->SetCharacterGlyph(i, g.SetSimpleGlyph(advancePixels, glyph));
+            aRun->SetCharacterGlyph(i, g.SetSimpleGlyph(advanceAppUnits, glyph));
         } else {
             gfxTextRun::DetailedGlyph details;
             details.mIsLastGlyph = PR_TRUE;
             details.mGlyphID = glyph;
-            details.mAdvance = float(advance);
+            details.mAdvance = advanceAppUnits;
             details.mXOffset = 0;
             details.mYOffset = 0;
             aRun->SetDetailedGlyphs(i, &details, 1);
@@ -708,7 +708,8 @@ gfxWindowsFontGroup::InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun,
     results.lpGlyphs = glyphArray.Elements();
     GetCharacterPlacementA(dc, aString, aLength, 0, &results, GCP_USEKERNING);
 
-    SetupTextRunFromCharacterPlacement(aRun, cairoToPixels, dxArray.Elements(),
+    SetupTextRunFromCharacterPlacement(aRun, cairoToPixels*aRun->GetAppUnitsPerDevUnit(),
+                                       dxArray.Elements(),
                                        glyphArray.Elements(), font);
 }
 
@@ -741,7 +742,8 @@ gfxWindowsFontGroup::InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun,
     results.lpGlyphs = glyphArray.Elements();
     GetCharacterPlacementW(dc, aString, aLength, 0, &results, GCP_USEKERNING);
 
-    SetupTextRunFromCharacterPlacement(aRun, cairoToPixels, dxArray.Elements(),
+    SetupTextRunFromCharacterPlacement(aRun, cairoToPixels*aRun->GetAppUnitsPerDevUnit(),
+                                       dxArray.Elements(),
                                        glyphArray.Elements(), font);
 }
 
@@ -1148,6 +1150,7 @@ public:
         PRUint32 offset = 0;
         nsAutoTArray<gfxTextRun::DetailedGlyph,1> detailedGlyphs;
         gfxTextRun::CompressedGlyph g;
+        const PRUint32 appUnitsPerDevUnit = aRun->GetAppUnitsPerDevUnit();
         while (offset < mLength) {
             PRUint32 runOffset = offsetInRun + offset;
             if (offset > 0 && mClusters[offset] == mClusters[offset - 1]) {
@@ -1173,13 +1176,13 @@ public:
                         missing = PR_TRUE;
                     }
                 }
-                int advance = mAdvances[k];
+                PRInt32 advance = mAdvances[k]*appUnitsPerDevUnit;
                 WORD glyph = mGlyphs[k];
                 if (missing) {
                     aRun->SetCharacterGlyph(runOffset, g.SetMissing());
                 } else if (glyphCount == 1 && advance >= 0 &&
                     mOffsets[k].dv == 0 && mOffsets[k].du == 0 &&
-                    gfxTextRun::CompressedGlyph::IsSimpleAdvancePixels(advance) &&
+                    gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
                     gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph)) {
                     aRun->SetCharacterGlyph(runOffset, g.SetSimpleGlyph(advance, glyph));
                 } else {
@@ -1192,9 +1195,9 @@ public:
                         gfxTextRun::DetailedGlyph *details = &detailedGlyphs[i];
                         details->mIsLastGlyph = i == glyphCount - 1;
                         details->mGlyphID = mGlyphs[k + i];
-                        details->mAdvance = float(mAdvances[k + i]);
-                        details->mXOffset = float(mOffsets[k + i].du);
-                        details->mYOffset = float(mOffsets[k + i].dv);
+                        details->mAdvance = mAdvances[k + i]*appUnitsPerDevUnit;
+                        details->mXOffset = float(mOffsets[k + i].du)*appUnitsPerDevUnit;
+                        details->mYOffset = float(mOffsets[k + i].dv)*appUnitsPerDevUnit;
                     }
                     aRun->SetDetailedGlyphs(runOffset, detailedGlyphs.Elements(), glyphCount);
                 }
