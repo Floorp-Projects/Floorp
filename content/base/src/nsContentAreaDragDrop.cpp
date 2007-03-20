@@ -96,6 +96,8 @@
 #include "nsIMIMEService.h"
 #include "imgIRequest.h"
 #include "nsContentCID.h"
+#include "nsISelectionController.h"
+#include "nsFrameSelection.h"
 
 // private clipboard data flavors for html copy, used by editor when pasting
 #define kHTMLContext   "text/_moz_htmlcontext"
@@ -117,14 +119,9 @@ NS_INTERFACE_MAP_END
 class nsTransferableFactory
 {
 public:
-  static nsresult CreateFromEvent(nsIDOMEvent* inMouseEvent,
-                                  nsIFlavorDataProvider *inFlavorDataProvider,
-                                  nsITransferable** outTrans);
-
-protected:
   nsTransferableFactory(nsIDOMEvent* inMouseEvent,
                         nsIFlavorDataProvider *inFlavorDataProvider);
-  nsresult Produce(nsITransferable** outTrans);
+  nsresult Produce(PRBool *aDragSelection, nsITransferable** outTrans);
 
 private:
   nsresult ConvertStringsToTransferable(nsITransferable** outTrans);
@@ -653,15 +650,6 @@ nsContentAreaDragDrop::GetEventDocument(nsIDOMEvent* inEvent,
 }
 
 nsresult
-nsContentAreaDragDrop::CreateTransferable(nsIDOMEvent* inMouseEvent,
-                                          nsITransferable** outTrans)
-{
-  return nsTransferableFactory::CreateFromEvent(inMouseEvent,
-                                                NS_STATIC_CAST(nsIFlavorDataProvider*, this),
-                                                outTrans);
-}
-
-nsresult
 nsContentAreaDragDrop::GetHookEnumeratorFromEvent(nsIDOMEvent* inEvent,
                                                   nsISimpleEnumerator **outEnumerator)
 {
@@ -737,10 +725,10 @@ nsContentAreaDragDrop::DragGesture(nsIDOMEvent* inMouseEvent)
     }
   }
 
+  PRBool isSelection = PR_FALSE;
   nsCOMPtr<nsITransferable> trans;
-  nsresult rv = CreateTransferable(inMouseEvent, getter_AddRefs(trans));
-  if (NS_FAILED(rv))
-    return rv;
+  nsTransferableFactory factory(inMouseEvent, NS_STATIC_CAST(nsIFlavorDataProvider*, this));
+  factory.Produce(&isSelection, getter_AddRefs(trans));
 
   if (trans) {
     // if the client has provided an override callback, let them manipulate
@@ -784,7 +772,6 @@ nsContentAreaDragDrop::DragGesture(nsIDOMEvent* inMouseEvent)
     // kick off the drag
     nsCOMPtr<nsIDOMEventTarget> target;
     inMouseEvent->GetTarget(getter_AddRefs(target));
-    nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(target));
     nsCOMPtr<nsIDragService> dragService =
       do_GetService("@mozilla.org/widget/dragservice;1");
 
@@ -792,10 +779,31 @@ nsContentAreaDragDrop::DragGesture(nsIDOMEvent* inMouseEvent)
       return NS_ERROR_FAILURE;
     }
 
-    dragService->InvokeDragSession(targetNode, transArray, nsnull,
-                                   nsIDragService::DRAGDROP_ACTION_COPY +
-                                   nsIDragService::DRAGDROP_ACTION_MOVE +
-                                   nsIDragService::DRAGDROP_ACTION_LINK);
+    PRUint32 action = nsIDragService::DRAGDROP_ACTION_COPY +
+                      nsIDragService::DRAGDROP_ACTION_MOVE +
+                      nsIDragService::DRAGDROP_ACTION_LINK;
+
+    nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(inMouseEvent));
+
+    if (isSelection) {
+      nsCOMPtr<nsIContent> targetContent(do_QueryInterface(target));
+      nsIDocument* doc = targetContent->GetCurrentDoc();
+      if (doc) {
+        nsIPresShell* presShell = doc->GetShellAt(0);
+        if (presShell) {
+          nsISelection* selection =
+            presShell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL);
+          return dragService->InvokeDragSessionWithSelection(selection,
+                                                             transArray,
+                                                             action,
+                                                             mouseEvent);
+        }
+      }
+    }
+
+    nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(target));
+    dragService->InvokeDragSessionWithImage(targetNode, transArray, nsnull,
+                                            action, nsnull, 0, 0, mouseEvent);
   }
 
   return NS_OK;
@@ -926,16 +934,6 @@ nsContentAreaDragDrop::GetFlavorData(nsITransferable *aTransferable,
   return rv;
 }
 
-
-nsresult
-nsTransferableFactory::CreateFromEvent(nsIDOMEvent* inMouseEvent,
-                                       nsIFlavorDataProvider *dataProvider,
-                                       nsITransferable** outTrans)
-{
-  nsTransferableFactory factory(inMouseEvent, dataProvider);
-  return factory.Produce(outTrans);
-}
-
 nsTransferableFactory::nsTransferableFactory(nsIDOMEvent* inMouseEvent,
                                              nsIFlavorDataProvider *dataProvider)
   : mInstanceAlreadyUsed(PR_FALSE),
@@ -1044,7 +1042,8 @@ nsTransferableFactory::GetNodeString(nsIDOMNode* inNode,
 
 
 nsresult
-nsTransferableFactory::Produce(nsITransferable** outTrans)
+nsTransferableFactory::Produce(PRBool* aDragSelection,
+                               nsITransferable** outTrans)
 {
   if (mInstanceAlreadyUsed) {
     return NS_ERROR_FAILURE;
@@ -1093,6 +1092,7 @@ nsTransferableFactory::Produce(nsITransferable** outTrans)
   // if set, serialize the content under this node
   nsCOMPtr<nsIDOMNode> nodeToSerialize;
   PRBool useSelectedText = PR_FALSE;
+  *aDragSelection = PR_FALSE;
 
   {
     PRBool haveSelectedContent = PR_FALSE;
@@ -1149,6 +1149,7 @@ nsTransferableFactory::Produce(nsITransferable** outTrans)
           }
 
           useSelectedText = PR_TRUE;
+          *aDragSelection = PR_TRUE;
         } else if (selectedImageOrLinkNode) {
           // an image is selected
           image = do_QueryInterface(selectedImageOrLinkNode);

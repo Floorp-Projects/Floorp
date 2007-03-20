@@ -60,6 +60,8 @@
 #include "nsIFrame.h"
 #include "nsIView.h"
 #include "nsIRegion.h"
+#include "gfxASurface.h"
+#include "gfxContext.h"
 
 #import <Cocoa/Cocoa.h>
 
@@ -81,90 +83,6 @@ nsDragService::~nsDragService()
 {
 
 }
-
-
-// Returns the rect for the drag in native view coordinates.
-//
-// Note that for text drags, this returns an incorrect rect. This bug
-// exists in the old carbon implementation too.
-static NSRect GetDragRect(nsIDOMNode* node, nsIScriptableRegion* aDragRgn)
-{
-  // Set up a default rect in case something goes wrong.
-  // It'll at least indicate that *something* is getting dragged
-  NSRect outRect = NSMakeRect(0, 0, 50, 50);
-
-  // we're going to need an nsIFrame* no matter what, so get it now
-  if (!node)
-    return outRect;
-  nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-  if (!content)
-    return outRect;
-  nsIDocument* doc = content->GetCurrentDoc();
-  if (!doc)
-    return outRect;
-  nsIPresShell* presShell = doc->GetShellAt(0);
-  if (!presShell)
-    return outRect;
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
-  if (!frame)
-    return outRect;
-
-  if (aDragRgn) {
-    nsCOMPtr<nsIRegion> geckoRegion;
-    aDragRgn->GetRegion(getter_AddRefs(geckoRegion));
-    if (!geckoRegion)
-      return outRect;
-
-    // bounding box for the drag is in window coordinates
-    PRInt32 x, y, width, height;
-    geckoRegion->GetBoundingBox(&x, &y, &width, &height);
-    nsRect rect = nsRect(x, y, width, height);
-    // printf("drag region is x=%d, y=%d, width=%d, height=%d\n", x, y, width, height);
-
-    nsCOMPtr<nsIWidget> widget = frame->GetWindow();
-    if (!widget)
-      return outRect;
-
-    nsRect widgetScreenBounds;
-    widget->GetScreenBounds(widgetScreenBounds);
-
-    outRect.origin.x = (float)(rect.x - widgetScreenBounds.x);
-    outRect.origin.y = (float)(rect.y - widgetScreenBounds.y + rect.height);
-    outRect.size.width = (float)rect.width;
-    outRect.size.height = (float)rect.height;
-  }
-  else {
-    nsRect rect = frame->GetRect();
-
-    // find offset from our view
-    nsIView *containingView = nsnull;
-    nsPoint  viewOffset(0,0);
-    frame->GetOffsetFromView(viewOffset, &containingView);
-    if (!containingView)
-      return outRect;
-
-    // get the widget offset
-    nsPoint widgetOffset;
-    containingView->GetNearestWidget(&widgetOffset);
-
-    nsPresContext* presContext = frame->GetPresContext();
-
-    nsRect screenOffset;                                
-    screenOffset.MoveBy(presContext->AppUnitsToDevPixels(widgetOffset.x +
-                                                         viewOffset.x),
-                        presContext->AppUnitsToDevPixels(widgetOffset.y +
-                                                         viewOffset.y));
-
-    outRect.origin.x = (float)screenOffset.x;
-    outRect.origin.y = (float)screenOffset.y +
-                       (float)presContext->AppUnitsToDevPixels(rect.height);
-    outRect.size.width = (float)presContext->AppUnitsToDevPixels(rect.width);
-    outRect.size.height = (float)presContext->AppUnitsToDevPixels(rect.height);
-  }
-
-  return outRect;
-}
-
 
 static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
 {
@@ -315,6 +233,79 @@ static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
 }
 
 
+NSImage*
+nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
+                                  nsRect* aDragRect,
+                                  nsIScriptableRegion* aRegion)
+{
+  NSPoint screenPoint = [[globalDragView window] convertBaseToScreen:[globalDragEvent locationInWindow]];
+  // Y coordinates are bottom to top, so reverse this
+  if ([[NSScreen screens] count] > 0)
+    screenPoint.y = NSMaxY([[[NSScreen screens] objectAtIndex:0] frame]) - screenPoint.y;
+
+  nsRefPtr<gfxASurface> surface;
+  nsresult rv = DrawDrag(aDOMNode, aRegion,
+                         NSToIntRound(screenPoint.x), NSToIntRound(screenPoint.y),
+                         aDragRect, getter_AddRefs(surface));
+  if (NS_FAILED(rv) || !surface)
+    return nsnull;
+
+  PRUint32 width = aDragRect->width;
+  PRUint32 height = aDragRect->height;
+
+  nsRefPtr<gfxImageSurface> imgSurface = new gfxImageSurface(
+    gfxIntSize(width, height), gfxImageSurface::ImageFormatARGB32);
+  if (!imgSurface)
+    return nsnull;
+
+  nsRefPtr<gfxContext> context = new gfxContext(imgSurface);
+  if (!context)
+    return nsnull;
+
+  context->SetOperator(gfxContext::OPERATOR_SOURCE);
+  context->SetSource(surface);
+  context->Paint();
+
+  PRUint32* imageData = (PRUint32*)imgSurface->Data();
+  PRInt32 stride = imgSurface->Stride();
+
+  NSBitmapImageRep* imageRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
+                                                                       pixelsWide:width
+                                                                       pixelsHigh:height
+                                                                    bitsPerSample:8
+                                                                  samplesPerPixel:4
+                                                                         hasAlpha:YES
+                                                                         isPlanar:NO
+                                                                   colorSpaceName:NSDeviceRGBColorSpace
+                                                                      bytesPerRow:width * 4
+                                                                     bitsPerPixel:32];
+
+  PRUint8* dest = [imageRep bitmapData];
+  for (PRUint32 i = 0; i < height; ++i) {
+    PRUint8* src = (PRUint8 *)imageData + i * stride;
+    for (PRUint32 j = 0; j < width; ++j) {
+#ifdef IS_BIG_ENDIAN
+      dest[0] = src[1];
+      dest[1] = src[2];
+      dest[2] = src[3]
+      dest[3] = PRUint8(src[0] * 0.8); // reduce transparency overall
+#else
+      dest[0] = src[2];
+      dest[1] = src[1];
+      dest[2] = src[0];
+      dest[3] = PRUint8(src[3] * 0.8); // reduce transparency overall
+#endif
+      src += 4;
+      dest += 4;
+    }
+  }
+
+  NSImage* image = [NSImage alloc];
+  [image addRepresentation:imageRep];
+
+  return [image autorelease];
+}
+
 // We can only invoke NSView's 'dragImage:at:offset:event:pasteboard:source:slideBack:' from
 // within NSView's 'mouseDown:' or 'mouseDragged:'. Luckily 'mouseDragged' is always on the
 // stack when InvokeDragSession gets called.
@@ -328,48 +319,47 @@ nsDragService::InvokeDragSession(nsIDOMNode* aDOMNode, nsISupportsArray* aTransf
   if (NS_FAILED(SetUpDragClipboard(aTransferableArray)))
     return NS_ERROR_FAILURE;
 
-  // create the image for the drag, it isn't awesome but it'll do for now
-  NSRect dragRect = GetDragRect(aDOMNode, aDragRgn);
-  NSImage* image = [[[NSImage alloc] initWithSize:dragRect.size] autorelease];
-  [image lockFocus];
-  [[NSColor grayColor] set];
-  NSBezierPath* path = [NSBezierPath bezierPath];
-  [path setLineWidth:2.0];
-  [path moveToPoint:NSMakePoint(0, 0)];
-  [path lineToPoint:NSMakePoint(0, dragRect.size.height)];
-  [path lineToPoint:NSMakePoint(dragRect.size.width, dragRect.size.height)];
-  [path lineToPoint:NSMakePoint(dragRect.size.width, 0)];
-  [path lineToPoint:NSMakePoint(0, 0)];
-  [path stroke];
-  [image unlockFocus];
+  nsRect dragRect(0, 0, 20, 20);
+  NSImage* image = ConstructDragImage(aDOMNode, &dragRect, aDragRgn);
+  if (!image) {
+    // if no image was returned, just draw a rectangle
+    NSSize size;
+    size.width = dragRect.width;
+    size.height = dragRect.height;
+    image = [[NSImage alloc] initWithSize:size];
+    [image lockFocus];
+    [[NSColor grayColor] set];
+    NSBezierPath* path = [NSBezierPath bezierPath];
+    [path setLineWidth:2.0];
+    [path moveToPoint:NSMakePoint(0, 0)];
+    [path lineToPoint:NSMakePoint(0, size.height)];
+    [path lineToPoint:NSMakePoint(size.width, size.height)];
+    [path lineToPoint:NSMakePoint(size.width, 0)];
+    [path lineToPoint:NSMakePoint(0, 0)];
+    [path stroke];
+    [image unlockFocus];
+  }
 
-  // Make sure that the drag rect encompasses the current mouse location.
-  // This correction code has been very methodically tested, on every edge of
-  // a drag rect. Do not change this code unless you've done that.
-  //
-  // Get the mouse coordinates in local view coords
-  NSPoint localPoint = [globalDragView convertPoint:[globalDragEvent locationInWindow] fromView:nil];
-  // fix up the X coords
-  if (localPoint.x < dragRect.origin.x)
-    dragRect.origin.x = localPoint.x;
-  else if (localPoint.x > (dragRect.origin.x + dragRect.size.width))
-    dragRect.origin.x = localPoint.x - dragRect.size.width;
-  // now fix up the Y coords
-  if (localPoint.y < (dragRect.origin.y - dragRect.size.height))
-    dragRect.origin.y = localPoint.y + dragRect.size.height;
-  else if (localPoint.y > dragRect.origin.y)
-    dragRect.origin.y = localPoint.y;
+  NSPoint point;
+  point.x = dragRect.x;
+  if ([[NSScreen screens] count] > 0)
+    point.y = NSMaxY([[[NSScreen screens] objectAtIndex:0] frame]) - dragRect.YMost();
+  else
+    point.y = dragRect.y;
 
+  point = [[globalDragView window] convertScreenToBase: point];
+  NSPoint localPoint = [globalDragView convertPoint:point fromView:nil];
+ 
   nsBaseDragService::StartDragSession();
   [globalDragView dragImage:image
-                         at:dragRect.origin
+                         at:localPoint
                      offset:NSMakeSize(0,0)
                       event:globalDragEvent
                  pasteboard:[NSPasteboard pasteboardWithName:NSDragPboard]
                      source:globalDragView
                   slideBack:YES];
   nsBaseDragService::EndDragSession();
-  
+
   return NS_OK;
 }
 

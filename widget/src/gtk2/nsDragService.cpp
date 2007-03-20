@@ -58,6 +58,10 @@
 #include <gdk/gdkx.h>
 #include "nsCRT.h"
 
+#ifdef MOZ_CAIRO_GFX
+#include "gfxASurface.h"
+#include "nsImageToPixbuf.h"
+#endif
 
 static PRLogModuleInfo *sDragLm = NULL;
 
@@ -198,8 +202,30 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
                                                  action,
                                                  1,
                                                  &event);
-        // make sure to set our default icon
+
+#ifdef MOZ_CAIRO_GFX
+        GdkPixbuf* dragPixbuf = nsnull;
+        nsRect dragRect;
+        if (mHasImage || mSelection) {
+          nsRefPtr<gfxASurface> surface;
+          DrawDrag(aDOMNode, aRegion, mScreenX, mScreenY,
+                   &dragRect, getter_AddRefs(surface));
+          if (surface) {
+            dragPixbuf =
+              nsImageToPixbuf::SurfaceToPixbuf(surface, dragRect.width, dragRect.height);
+          }
+        }
+
+        if (dragPixbuf)
+          gtk_drag_set_icon_pixbuf(context, dragPixbuf,
+                                   mScreenX - NSToIntRound(dragRect.x),
+                                   mScreenY - NSToIntRound(dragRect.y));
+        else
+          gtk_drag_set_icon_default(context);
+#else
+        // use a default icon
         gtk_drag_set_icon_default(context);
+#endif
         gtk_target_list_unref(sourceList);
     }
 

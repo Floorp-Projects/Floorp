@@ -52,6 +52,7 @@ REQUIRES	= xpcom \
 		  layout \
 		  content \
 		  dom \
+		  imglib2 \
 		  pref \
 		  locale \
 		  necko \

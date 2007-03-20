@@ -44,11 +44,16 @@
 #include "nsISupportsArray.h"
 #include "nsIDOMDocument.h"
 #include "nsCOMPtr.h"
+#include "nsIRenderingContext.h"
+
+#ifdef MOZ_CAIRO_GFX
+#include "gfxImageSurface.h"
+#endif
 
 class nsIDOMNode;
 class nsIFrame;
 class nsPresContext;
-
+class nsIImageLoadingContent;
 
 /**
  * XP DragService wrapper base class
@@ -71,13 +76,66 @@ public:
 
 protected:
 
+#ifdef MOZ_CAIRO_GFX
+  /**
+   * Draw the drag image, if any, to a surface and return it. The drag image
+   * is constructed from mImage if specified, or aDOMNode if mImage is null.
+   *
+   * aRegion may be used to draw only a subset of the element. This region
+   * should be supplied using x and y coordinates measured in css pixels
+   * that are relative to the upper-left corner of the window.
+   *
+   * aScreenX and aScreenY should be the screen coordinates of the mouse click
+   * for the drag.
+   *
+   * On return, aScreenDragRect will contain the screen coordinates of the
+   * area being dragged. This is used by the platform-specific part of the
+   * drag service to determine the drag feedback.
+   *
+   * If there is no drag image, the returned surface will be null, but
+   * aScreenDragRect will still be set to the drag area.
+   */
+  nsresult DrawDrag(nsIDOMNode* aDOMNode,
+                    nsIScriptableRegion* aRegion,
+                    PRInt32 aScreenX, PRInt32 aScreenY,
+                    nsRect* aScreenDragRect,
+                    gfxASurface** aSurface);
+
+  /**
+   * Draw a drag image for an image node. This is called by DrawDrag.
+   */
+  nsresult DrawDragForImage(nsPresContext* aPresContext,
+                            nsIImageLoadingContent* aImageLoader,
+                            PRInt32 aScreenX, PRInt32 aScreenY,
+                            nsRect* aScreenDragRect,
+                            gfxASurface** aSurface);
+#endif
+
   PRPackedBool mCanDrop;
   PRPackedBool mDoingDrag;
+  // true if mImage should be used to set a drag image
+  PRPackedBool mHasImage;
+
   PRUint32 mDragAction;
   nsSize mTargetSize;
   nsCOMPtr<nsIDOMNode> mSourceNode;
   nsCOMPtr<nsIDOMDocument> mSourceDocument;       // the document at the drag source. will be null
                                                   //  if it came from outside the app.
+
+  // used to determine the image to appear on the cursor while dragging
+  nsCOMPtr<nsIDOMNode> mImage;
+  // offset of cursor within the image 
+  PRInt32 mImageX;
+  PRInt32 mImageY;
+
+  // set if a selection is being dragged
+  nsCOMPtr<nsISelection> mSelection;
+
+  // the screen position where drag gesture occured, used for positioning the
+  // drag image when no image is specified. If a value is -1, no event was
+  // supplied so the screen position is not known
+  PRInt32 mScreenX;
+  PRInt32 mScreenY;
 };
 
 #endif // nsBaseDragService_h__

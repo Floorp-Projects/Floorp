@@ -41,7 +41,10 @@
 
 #include "nsBaseDragService.h"
 
+#include <Cocoa/Cocoa.h>
+
 class nsILocalFile;
+class nsIDOMDragEvent;
 
 class nsDragService : public nsBaseDragService
 {
@@ -63,6 +66,9 @@ public:
 
 private:
 
+  NSImage* ConstructDragImage(nsIDOMNode* aDOMNode,
+                              nsRect* aDragRect,
+                              nsIScriptableRegion* aRegion);
 };
 
 #endif // nsDragService_h_

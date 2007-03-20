@@ -44,16 +44,17 @@
 
 
 interface nsIDOMNode;
+interface nsIDOMMouseEvent;
+interface nsISelection;
 
-
-[scriptable, uuid(8B5314BB-DB01-11d2-96CE-0060B0FB9956)]
+[scriptable, uuid(D2875740-95D3-4F12-8E97-9FAB76C87093)]
 interface nsIDragService : nsISupports
 {
   const long DRAGDROP_ACTION_NONE = 0;
   const long DRAGDROP_ACTION_COPY = 1;
   const long DRAGDROP_ACTION_MOVE = 2;
   const long DRAGDROP_ACTION_LINK = 4;
-  
+
   /**
     * Starts a modal drag session with an array of transaferables 
     *
@@ -64,6 +65,50 @@ interface nsIDragService : nsISupports
     */
   void invokeDragSession ( in nsIDOMNode aDOMNode, in nsISupportsArray aTransferables, 
                              in nsIScriptableRegion aRegion, in unsigned long aActionType );
+
+  /**
+   * Starts a modal drag session using an image. The first four arguments are
+   * the same as invokeDragSession.
+   *
+   * A custom image may be specified using the aImage argument. If this is
+   * supplied, the aImageX and aImageY arguments specify the offset within
+   * the image where the cursor would be positioned. That is, when the image
+   * is drawn, it is offset up and left the amount so that the cursor appears
+   * at that location within the image.
+   *
+   * If aImage is null, aImageX and aImageY are not used and the image is instead
+   * determined from the source node aDOMNode, and the offset calculated so that
+   * the initial location for the image appears in the same screen position as
+   * where the element is located. The node must be within a document.
+   *
+   * Currently, supported images are all DOM nodes. If this is an HTML <image> or
+   * <canvas>, the drag image is taken from the image data. If the element is in
+   * a document, it will be rendered at its displayed size, othewise, it will be
+   * rendered at its real size. For other types of elements, the element is
+   * rendered into an offscreen buffer in the same manner as it is currently
+   * displayed. The document selection is hidden while drawing.
+   *
+   * The aDragEvent must be supplied as the current screen coordinates of the
+   * event are needed to calculate the image location.
+   */
+  void invokeDragSessionWithImage(in nsIDOMNode aDOMNode,
+                                  in nsISupportsArray aTransferableArray,
+                                  in nsIScriptableRegion aRegion,
+                                  in unsigned long aActionType,
+                                  in nsIDOMNode aImage,
+                                  in long aImageX,
+                                  in long aImageY,
+                                  in nsIDOMMouseEvent aDragEvent);
+
+  /**
+   * Start a modal drag session using the selection as the drag image.
+   * The aDragEvent must be supplied as the current screen coordinates of the
+   * event are needed to calculate the image location.
+   */
+  void invokeDragSessionWithSelection(in nsISelection aSelection,
+                                      in nsISupportsArray aTransferableArray,
+                                      in unsigned long aActionType,
+                                      in nsIDOMMouseEvent aDragEvent);
 
   /**
     * Returns the current Drag Session  
