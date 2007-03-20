@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -228,8 +228,22 @@ function messagePaneOnClick(event)
   // try to determine the href for what you are clicking on.  
   // for example, it might be "" if you aren't left clicking on a link
   var ceParams = hrefAndLinkNodeForClickEvent(event);
-  if (!ceParams)
+  if (!ceParams && !event.button) {
+    var target = event.target;
+    // is this an image that we might want to scale?
+    if (target instanceof Components.interfaces.nsIImageLoadingContent) {
+      // make sure it loaded successfully
+      var req = target.getRequest(Components.interfaces.nsIImageLoadingContent.CURRENT_REQUEST);
+      if (!req || req.imageStatus & Components.interfaces.imgIRequest.STATUS_ERROR)
+        return true;
+      // is it an inline attachment?
+      if (target.className == "moz-attached-image-scaled")
+        target.className = "moz-attached-image-unscaled";
+      else if (target.className == "moz-attached-image-unscaled")
+        target.className = "moz-attached-image-scaled";
+    }
     return true;
+  }
   var href = ceParams.href;
 
   // we know that http://, https://, ftp://, file://, chrome://, 

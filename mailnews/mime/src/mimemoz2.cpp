@@ -1212,7 +1212,9 @@ mime_image_make_image_html(void *image_closure)
   mime_image_stream_data *mid =
     (mime_image_stream_data *) image_closure;
 
-  const char *prefix = "<P><CENTER><IMG SRC=\"";
+  const char *prefix;
+  const char *scaledPrefix = "<P><CENTER><IMG CLASS=\"moz-attached-image-scaled\" SRC=\"";
+  const char *unscaledPrefix = "<P><CENTER><IMG CLASS=\"moz-attached-image-unscaled\" SRC=\"";
   const char *suffix = "\"></CENTER><P>";
   const char *url;
   char *buf;
@@ -1223,6 +1225,16 @@ mime_image_make_image_html(void *image_closure)
   /* Internal-external-reconnect only works when going to the screen. */
   if (!mid->istream)
     return nsCRT::strdup("<P><CENTER><IMG SRC=\"resource://gre/res/network/gopher-image.gif\" ALT=\"[Image]\"></CENTER><P>");
+
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  nsCOMPtr<nsIPrefService> prefSvc(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  PRBool resize = PR_TRUE;
+
+  if (prefSvc)
+    prefSvc->GetBranch("", getter_AddRefs(prefBranch));
+  if (prefBranch)
+    prefBranch->GetBoolPref("mail.enable_automatic_image_resizing", &resize); // ignore return value
+  prefix = resize ? scaledPrefix : unscaledPrefix;
 
   if ( (!mid->url) || (!(*mid->url)) )
     url = "";

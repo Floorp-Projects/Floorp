@@ -722,6 +722,9 @@ pref("mail.standalone", false);
 // the users last used preference.
 pref("mailnews.import.text.skipfirstrecord", true);
 
+// automatically scale attached images that are displayed inline
+pref("mail.enable_automatic_image_resizing", true);
+
 #ifdef XP_MACOSX
 pref("mail.notification.sound",             "");
 pref("mail.close_message_window.on_delete", true);

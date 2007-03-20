@@ -121,3 +121,13 @@ span.moz-txt-formfeed {
 .moz-signature > a {
   color: #7777FF; /* light blue */
 }
+
+/* ::::: attached images ::::: */
+.moz-attached-image-unscaled { 
+  cursor: -moz-zoom-out;
+}
+
+.moz-attached-image-scaled { 
+  cursor: -moz-zoom-in;
+  max-width: 100%;
+}
