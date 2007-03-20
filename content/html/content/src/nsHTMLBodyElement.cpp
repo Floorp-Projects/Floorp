@@ -116,9 +116,7 @@ public:
   virtual already_AddRefed<nsIEditor> GetAssociatedEditor();
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 private:
-  nsresult GetColorHelper(nsIAtom* aAtom,
-                          const nscolor& defaultAttrColor,
-                          nsAString& aColor) const;
+  nsresult GetColorHelper(nsIAtom* aAtom, nsAString& aColor);
 
 protected:
   BodyRule* mContentStyleRule;
@@ -313,16 +311,33 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLBodyElement)
 
 NS_IMPL_URI_ATTR(nsHTMLBodyElement, Background, background)
 
+static nscolor
+GetDefaultColor(nsPresContext* aContext, nsIAtom* aAtom)
+{
+  if (aAtom == nsGkAtoms::vlink) {
+    return aContext->DefaultVisitedLinkColor();
+  } else if (aAtom == nsGkAtoms::alink) {
+    return aContext->DefaultActiveLinkColor();
+  } else if (aAtom == nsGkAtoms::link) {
+    return aContext->DefaultLinkColor();
+  } else if (aAtom == nsGkAtoms::text) {
+    return aContext->DefaultColor();
+  } 
+  NS_ERROR("Unhandled nsGkAtoms::attribute");
+  return NS_RGBA(0,0,0,0);
+}
+
 nsresult
-nsHTMLBodyElement::GetColorHelper(nsIAtom* aAtom,
-                                  const nscolor& defaultAttrColor,
-                                  nsAString& aColor) const
+nsHTMLBodyElement::GetColorHelper(nsIAtom* aAtom, nsAString& aColor)
 {
   aColor.Truncate();
   nsAutoString color;
   nscolor attrColor; 
   if (!GetAttr(kNameSpaceID_None, aAtom, color)) {
-    NS_RGBToHex(defaultAttrColor, aColor);
+    nsPresContext *presContext = GetPresContext();
+    if (presContext) {
+      NS_RGBToHex(GetDefaultColor(presContext, aAtom), aColor);
+    }
   } else if (NS_ColorNameToRGB(color, &attrColor)) {
     NS_RGBToHex(attrColor, aColor);
   } else {
@@ -334,8 +349,7 @@ nsHTMLBodyElement::GetColorHelper(nsIAtom* aAtom,
 NS_IMETHODIMP
 nsHTMLBodyElement::GetVLink(nsAString& aColor)
 {
-  return GetColorHelper(nsGkAtoms::vlink,
-                        GetPresContext()->DefaultVisitedLinkColor(), aColor);
+  return GetColorHelper(nsGkAtoms::vlink, aColor);
 }
 
 NS_IMETHODIMP
@@ -348,8 +362,7 @@ nsHTMLBodyElement::SetVLink(const nsAString& aColor)
 NS_IMETHODIMP
 nsHTMLBodyElement::GetALink(nsAString& aColor)
 {
-  return GetColorHelper(nsGkAtoms::alink,
-                        GetPresContext()->DefaultActiveLinkColor(), aColor);
+  return GetColorHelper(nsGkAtoms::alink, aColor);
 }
 
 NS_IMETHODIMP
@@ -362,8 +375,7 @@ nsHTMLBodyElement::SetALink(const nsAString& aColor)
 NS_IMETHODIMP
 nsHTMLBodyElement::GetLink(nsAString& aColor)
 {
-  return GetColorHelper(nsGkAtoms::link,
-                        GetPresContext()->DefaultLinkColor(), aColor);
+  return GetColorHelper(nsGkAtoms::link, aColor);
 }
 
 NS_IMETHODIMP
@@ -378,8 +390,7 @@ nsHTMLBodyElement::SetLink(const nsAString& aColor)
 NS_IMETHODIMP
 nsHTMLBodyElement::GetText(nsAString& aColor)
 {
-  return GetColorHelper(nsGkAtoms::text,
-                        GetPresContext()->DefaultColor(), aColor);
+  return GetColorHelper(nsGkAtoms::text, aColor);
 }
 
 NS_IMETHODIMP
