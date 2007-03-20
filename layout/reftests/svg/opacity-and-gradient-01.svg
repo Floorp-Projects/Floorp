@@ -5,15 +5,27 @@
   <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=357163 -->
 
   <defs>
-    <linearGradient id="g" gradientUnits="userSpaceOnUse">
+    <linearGradient id="lime" gradientUnits="userSpaceOnUse">
+      <stop stop-color="lime"/>
+    </linearGradient>
+    <linearGradient id="red" gradientUnits="userSpaceOnUse">
       <stop stop-color="red"/>
     </linearGradient>
   </defs>
 
-  <rect width="100%" height="100%" fill="lime"/>
+  <rect width="100%" height="100%" fill="red"/>
 
-  <rect width="25%" height="100%" fill="url(#g)" opacity="0"/>
-  <rect x="25%" width="25%" height="100%" fill="url(#g)" fill-opacity="0"/>
-  <line x1="75%" x2="75%" y2="100%" stroke="url(#g)" stroke-width="50%" stroke-opacity="0"/>
+  <!-- Create the "pass" rect using a gradient so the testcase doesn't seem to
+       pass if gradients are not supported -->
+  <rect width="100%" height="100%" fill="url(#lime)"/>
+
+  <!-- test 'opacity' -->
+  <rect width="25%" height="100%" fill="url(#red)" opacity="0"/>
+
+  <!-- test 'fill-opacity' -->
+  <rect x="25%" width="25%" height="100%" fill="url(#red)" fill-opacity="0"/>
+
+  <!-- test 'stroke-opacity' -->
+  <line x1="75%" x2="75%" y2="100%" stroke="url(#red)" stroke-width="50%" stroke-opacity="0"/>
 
 </svg>
