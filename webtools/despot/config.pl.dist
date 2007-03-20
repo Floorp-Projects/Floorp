@@ -15,5 +15,6 @@ $::db_name = 'mozusers';				# database name
 $::db_user = 'despot';					# database username
 $::db_pass = '';					# database password
 
-1;
+$::anonymous_sysuser = 'nobody';			# the system user the "anonymous" account will use for pserver
 
+1;
