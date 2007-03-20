@@ -497,7 +497,7 @@ public:
   virtual void FlushPendingNotifications(mozFlushType aType);
   virtual void AddReference(void *aKey, nsISupports *aReference);
   virtual nsISupports *GetReference(void *aKey);
-  virtual already_AddRefed<nsISupports> RemoveReference(void *aKey);
+  virtual void RemoveReference(void *aKey);
   virtual nsIScriptEventManager* GetScriptEventManager();
   virtual void SetXMLDeclaration(const PRUnichar *aVersion,
                                  const PRUnichar *aEncoding,

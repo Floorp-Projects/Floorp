@@ -613,7 +613,7 @@ public:
 
   virtual void AddReference(void *aKey, nsISupports *aReference) = 0;
   virtual nsISupports *GetReference(void *aKey) = 0;
-  virtual already_AddRefed<nsISupports> RemoveReference(void *aKey) = 0;
+  virtual void RemoveReference(void *aKey) = 0;
 
   /**
    * Set the container (docshell) for this document.

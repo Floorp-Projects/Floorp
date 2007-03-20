@@ -432,15 +432,30 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
     }
   }
   else if (nodeInfoManager) {
+    nsCOMPtr<nsISupports> oldRef;
+    nsIDocument* oldDoc = aNode->GetOwnerDoc();
+    if (oldDoc) {
+      oldRef = oldDoc->GetReference(aNode);
+      if (oldRef) {
+        oldDoc->RemoveReference(aNode);
+      }
+    }
+
     aNode->mNodeInfo.swap(newNodeInfo);
 
     nsIDocument* newDoc = aNode->GetOwnerDoc();
-    nsPIDOMWindow* window = newDoc ? newDoc->GetInnerWindow() : nsnull;
-    if (window) {
-      nsCOMPtr<nsIEventListenerManager> elm;
-      aNode->GetListenerManager(PR_FALSE, getter_AddRefs(elm));
-      if (elm) {
-        window->SetMutationListeners(elm->MutationListenerBits());
+    if (newDoc) {
+      if (oldRef) {
+        newDoc->AddReference(aNode, oldRef);
+      }
+
+      nsPIDOMWindow* window = newDoc->GetInnerWindow();
+      if (window) {
+        nsCOMPtr<nsIEventListenerManager> elm;
+        aNode->GetListenerManager(PR_FALSE, getter_AddRefs(elm));
+        if (elm) {
+          window->SetMutationListeners(elm->MutationListenerBits());
+        }
       }
     }
 
