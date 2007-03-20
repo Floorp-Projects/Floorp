@@ -4,7 +4,7 @@
 #
 
 mk_add_options MOZ_CO_PROJECT=mail,calendar
-mk_add_options MOZ_MAKE_FLAGS="-j6"
+mk_add_options MOZ_MAKE_FLAGS="-j4"
 mk_add_options JS_READLINE=1
 
 ac_add_options --enable-application=mail
