@@ -79,9 +79,11 @@ function makeTestChecker(input, expected, errors) {
         todo(reorderedDOM == expected, "HTML5 expected failure. " + new Date());
         writeErrorSummary(input, expected, reorderedDOM, true);
       } else {
-	      is(reorderedDOM, expected, "HTML5 unexpected failure. " + new Date());
 	      if (reorderedDOM != expected) {
+          is(reorderedDOM, expected, "HTML5 unexpected failure. " + input + " " + new Date());
 	        writeErrorSummary(input, expected, reorderedDOM, false);
+        } else {
+          is(reorderedDOM, expected, "HTML5 expected success. " + new Date());
         }
       }
     }
