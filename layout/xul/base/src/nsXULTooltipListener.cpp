@@ -79,7 +79,7 @@ nsXULTooltipListener::nsXULTooltipListener()
   if (sTooltipListenerCount++ == 0) {
     // register the callback so we get notified of updates
     nsContentUtils::RegisterPrefCallback("browser.chrome.toolbar_tips",
-                                         ToolbarTipsPrefChanged, this);
+                                         ToolbarTipsPrefChanged, nsnull);
 
     // Call the pref callback to initialize our state.
     ToolbarTipsPrefChanged("browser.chrome.toolbar_tips", nsnull);
@@ -93,7 +93,7 @@ nsXULTooltipListener::~nsXULTooltipListener()
   if (--sTooltipListenerCount == 0) {
     // Unregister our pref observer
     nsContentUtils::UnregisterPrefCallback("browser.chrome.toolbar_tips",
-                                           ToolbarTipsPrefChanged, this);
+                                           ToolbarTipsPrefChanged, nsnull);
   }
 }
 
