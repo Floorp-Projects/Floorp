@@ -72,5 +72,25 @@ function test()
   
   reportCompare(expect, actual, summary);
 
+  print('test crash from bug 371292');
+// strict
+  jsOptions.setOption('strict', true);
+  jsOptions.setOption('werror', true);
+  try
+  {
+    expect = 'TypeError: redeclaration of property 1';
+    var o1 = {1:1, 1:2};
+    // syntax warning, need to eval to catch
+    actual = 'No warning';
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+    print(ex);
+  }
+  jsOptions.reset();
+  
+  reportCompare(expect, actual, summary);
+
   exitFunc ('test');
 }
