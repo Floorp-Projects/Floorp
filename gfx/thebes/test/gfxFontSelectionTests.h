@@ -131,6 +131,7 @@ SetupTests()
 
     t->Expect ("win32", "Arial", GLYPHS(36, 37, 38, 39));
     t->Expect ("macosx", "Helvetica", GLYPHS(36, 37, 38, 39));
+    t->Expect ("gtk2-pango", "Albany AMT", GLYPHS(36, 37, 38, 39));
 
     /* Test 1 */
     t = AddTest ("verdana,sans-serif",
@@ -154,4 +155,61 @@ SetupTests()
 
     t->Expect ("win32", "Arial:700", GLYPHS(36, 37, 38, 39));
     t->Expect ("macosx", "Helvetica-Bold", GLYPHS(36, 37, 38, 39));
+    t->Expect ("gtk2-pango", "Albany AMT Bold", GLYPHS(36, 37, 38, 39));
+
+    /* Test 3: RTL Arabic with a ligature and leading and trailing whitespace */
+    t = AddTest ("sans-serif",
+                 style_western_normal_16,
+                 S_UTF8,
+                 " \xd8\xaa\xd9\x85 ");
+    t->SetRTL();
+    t->Expect ("macosx", "Helvetica", GLYPHS(3));
+    t->Expect ("macosx", "AlBayan", GLYPHS(47));
+    t->Expect ("macosx", "Helvetica", GLYPHS(3));
+
+    /* Test 4: LTR Arabic with leading and trailing whitespace */
+    t = AddTest ("sans-serif",
+                 style_western_normal_16,
+                 S_UTF8,
+                 " \xd9\x85\xd8\xaa ");
+    t->Expect ("macosx", "Helvetica", GLYPHS(3));
+    t->Expect ("macosx", "AlBayan", GLYPHS(2, 47));
+    t->Expect ("macosx", "Helvetica", GLYPHS(3));
+
+    /* Test 5: RTL ASCII with leading whitespace */
+    t = AddTest ("sans-serif",
+                 style_western_normal_16,
+                 S_ASCII,
+                 " ab");
+    t->SetRTL();
+    t->Expect ("macosx", "Helvetica", GLYPHS(3, 68, 69));
+    t->Expect ("win32", "Arial", GLYPHS(3, 68, 69));
+    t->Expect ("gtk2-pango", "Albany AMT", GLYPHS(3, 68, 69));
+
+    /* Test 6: RTL ASCII with trailing whitespace */
+    t = AddTest ("sans-serif",
+                 style_western_normal_16,
+                 S_ASCII,
+                 "ab ");
+    t->SetRTL();
+    t->Expect ("macosx", "Helvetica", GLYPHS(68, 69, 3));
+    t->Expect ("win32", "Arial", GLYPHS(68, 69, 3));
+    t->Expect ("gtk2-pango", "Albany AMT", GLYPHS(68, 69, 3));
+
+    /* Test 7: Simple ASCII ligature */
+    /* Do we have a Windows font with ligatures? Can we use DejaVu Sans? */
+    t = AddTest ("sans-serif",
+                 style_western_normal_16,
+                 S_ASCII,
+                 "fi");
+    t->Expect ("macosx", "Helvetica", GLYPHS(192));
+
+    /* Test 8: DEVANAGARI VOWEL I reordering */
+    /* The glyph for DEVANAGARI VOWEL I 2367 (101) is displayed before the glyph for 2361 (99) */
+    t = AddTest ("sans-serif",
+                 style_western_normal_16,
+                 S_UTF8,
+                 "\xe0\xa4\x9a\xe0\xa4\xbe\xe0\xa4\xb9\xe0\xa4\xbf\xe0\xa4\x8f"); // 2330 2366 2361 2367 2319
+    t->Expect ("macosx", "DevanagariMT", GLYPHS(71, 100, 101, 99, 60));
+    t->Expect ("win32", "Mangal", GLYPHS(133, 545, 465, 161, 102));
 }

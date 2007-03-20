@@ -142,7 +142,7 @@ public:
     const nsString& GetName() const { return mName; }
     const gfxFontStyle *GetStyle() const { return mStyle; }
 
-    virtual nsString GetUniqueName() { return GetName(); }
+    virtual nsString GetUniqueName() = 0;
 
     // Font metrics
     struct Metrics {
@@ -175,6 +175,9 @@ public:
      * We let layout specify spacing on either side of any
      * character. We need to specify both before and after
      * spacing so that substring measurement can do the right things.
+     * These values are in appunits. They're always an integral number of
+     * appunits, but we specify them in floats in case very large spacing
+     * values are required.
      */
     struct Spacing {
         gfxFloat mBefore;
@@ -229,7 +232,8 @@ public:
      * @param aEnd draw characters up to here
      * @param aBaselineOrigin the baseline origin; the left end of the baseline
      * for LTR textruns, the right end of the baseline for RTL textruns. On return,
-     * this should be updated to the other end of the baseline. In application units.
+     * this should be updated to the other end of the baseline. In application
+     * units, really!
      * @param aSpacing spacing to insert before and after characters (for RTL
      * glyphs, before-spacing is inserted to the right of characters). There
      * are aEnd - aStart elements in this array, unless it's null to indicate
@@ -419,7 +423,17 @@ public:
  * It is important that zero-length substrings are handled correctly. This will
  * be on the test!
  * 
- * This class should not be subclassed. 
+ * gfxTextRun stores a list of zero or more glyphs for each character. For each
+ * glyph we store the glyph ID, the advance, and possibly an xoffset and yoffset.
+ * The idea is that a string is rendered by a loop that draws each glyph
+ * at its designated offset from the current point, then advances the current
+ * point by the glyph's advance in the direction of the textrun (LTR or RTL).
+ * Each glyph advance is always rounded to the nearest appunit; this ensures
+ * consistent results when dividing the text in a textrun into multiple text
+ * frames (frame boundaries are always aligned to appunits). We optimize
+ * for the case where a character has a single glyph and zero xoffset and yoffset,
+ * and the glyph ID and advance are in a reasonable range so we can pack all
+ * necessary data into 32 bits.
  */
 class THEBES_API gfxTextRun {
 public:
@@ -705,6 +719,7 @@ public:
             // Indicates that a linebreak is allowed before this character
             FLAG_CAN_BREAK_BEFORE = 0x40000000U,
 
+            // The advance is stored in appunits
             ADVANCE_MASK  = 0x3FFF0000U,
             ADVANCE_SHIFT = 16,
 
@@ -750,7 +765,7 @@ public:
         }
         // Returns true if the advance aAdvance fits into the compressed representation.
         // aAdvance is in pixels.
-        static PRBool IsSimpleAdvancePixels(PRUint32 aAdvance) {
+        static PRBool IsSimpleAdvance(PRUint32 aAdvance) {
             return (aAdvance & (ADVANCE_MASK >> ADVANCE_SHIFT)) == aAdvance;
         }
 
@@ -778,7 +793,7 @@ public:
         }
 
         CompressedGlyph& SetSimpleGlyph(PRUint32 aAdvancePixels, PRUint32 aGlyph) {
-            NS_ASSERTION(IsSimpleAdvancePixels(aAdvancePixels), "Advance overflow");
+            NS_ASSERTION(IsSimpleAdvance(aAdvancePixels), "Advance overflow");
             NS_ASSERTION(IsSimpleGlyphID(aGlyph), "Glyph overflow");
             mValue = (mValue & FLAG_CAN_BREAK_BEFORE) | FLAG_IS_SIMPLE_GLYPH |
                 (aAdvancePixels << ADVANCE_SHIFT) | aGlyph;
@@ -806,8 +821,9 @@ public:
          * us track the length of the array. */
         PRUint32 mIsLastGlyph:1;
         PRUint32 mGlyphID:31;
-        // The advance, x-offset and y-offset of the glyph, in pixels
-        float    mAdvance, mXOffset, mYOffset;
+        // The advance, x-offset and y-offset of the glyph, in appunits
+        PRInt32  mAdvance;
+        float    mXOffset, mYOffset;
     };
 
     // The text is divided into GlyphRuns as necessary
@@ -893,8 +909,8 @@ private:
     // Returns mGlyphRuns.Length() when aOffset is mCharacterCount.
     PRUint32 FindFirstGlyphRunContaining(PRUint32 aOffset);
     // Computes the x-advance for a given cluster starting at aClusterOffset. Does
-    // not include any spacing. Result is in device pixels.
-    gfxFloat ComputeClusterAdvance(PRUint32 aClusterOffset);
+    // not include any spacing. Result is in appunits.
+    PRInt32 ComputeClusterAdvance(PRUint32 aClusterOffset);
 
     //  **** ligature helpers ****
     // (Platforms do the actual ligaturization, but we need to do a bunch of stuff
@@ -905,7 +921,7 @@ private:
         PRUint32 mEndOffset;
         PRUint32 mClusterCount;
         PRUint32 mPartClusterIndex;
-        gfxFloat mLigatureWidth;  // appunits
+        PRInt32  mLigatureWidth;  // appunits
         gfxFloat mBeforeSpacing;  // appunits
         gfxFloat mAfterSpacing;   // appunits
     };
@@ -919,8 +935,8 @@ private:
     void DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aOffset,
                              const gfxRect *aDirtyRect, gfxPoint *aPt,
                              PropertyProvider *aProvider);
-    // result in appunits
     void ShrinkToLigatureBoundaries(PRUint32 *aStart, PRUint32 *aEnd);
+    // result in appunits
     gfxFloat GetPartialLigatureWidth(PRUint32 aStart, PRUint32 aEnd, PropertyProvider *aProvider);
     void AccumulatePartialLigatureMetrics(gfxFont *aFont,
                                           PRUint32 aOffset, PRBool aTight,
