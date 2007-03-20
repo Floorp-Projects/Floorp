@@ -665,7 +665,7 @@ PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aRun,
 
     // Now process the rest of the glyphs, which should basically be in
     // the textrun's desired order, so process them in textrun order
-    PRInt32 direction = PRUint32(aRun->GetDirection());
+    PRInt32 direction = PRInt32(aRun->GetDirection());
     while (numGlyphs > 0) {
         PRUint32 glyphIndex = isRTL ? numGlyphs - 1 : 0;
         PRUint32 lastOffset = glyphRecords[glyphIndex].originalOffset;
