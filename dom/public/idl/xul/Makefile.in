@@ -55,6 +55,7 @@ XPIDLSRCS =					\
 	nsIDOMXULDescriptionElement.idl         \
 	nsIDOMXULDocument.idl			\
 	nsIDOMXULElement.idl			\
+	nsIDOMXULContainerElement.idl \
 	nsIDOMXULImageElement.idl               \
 	nsIDOMXULLabelElement.idl               \
 	nsIDOMXULLabeledControlEl.idl          \
