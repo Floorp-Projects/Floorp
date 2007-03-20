@@ -118,9 +118,9 @@ public:
      */
     nsresult GetCallbacks(const NPPluginFuncs ** aCallbacks);
 
-    nsresult SetWindowless(PRBool aWindowless);
+    NPError SetWindowless(PRBool aWindowless);
 
-    nsresult SetTransparent(PRBool aTransparent);
+    NPError SetTransparent(PRBool aTransparent);
 
     nsresult NewNotifyStream(nsIPluginStreamListener** listener, 
                              void* notifyData, 

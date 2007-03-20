@@ -1562,18 +1562,18 @@ nsresult ns4xPluginInstance::GetCallbacks(const NPPluginFuncs ** aCallbacks)
 
 
 ////////////////////////////////////////////////////////////////////////
-nsresult ns4xPluginInstance::SetWindowless(PRBool aWindowless)
+NPError ns4xPluginInstance::SetWindowless(PRBool aWindowless)
 {
   mWindowless = aWindowless;
-  return NS_OK;
+  return NPERR_NO_ERROR;
 }
 
 
 ////////////////////////////////////////////////////////////////////////
-nsresult ns4xPluginInstance::SetTransparent(PRBool aTransparent)
+NPError ns4xPluginInstance::SetTransparent(PRBool aTransparent)
 {
   mTransparent = aTransparent;
-  return NS_OK;
+  return NPERR_NO_ERROR;
 }
 
 ////////////////////////////////////////////////////////////////////////
