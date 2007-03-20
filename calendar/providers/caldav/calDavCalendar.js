@@ -1108,7 +1108,7 @@ calDavCalendar.prototype = {
             }
         }
 
-        var res = new WebDavResource(this.mUri);
+        var res = new WebDavResource(this.mCalendarUri);
         var webSvc = Cc['@mozilla.org/webdav/service;1'].
                      getService(Ci.nsIWebDAVService);
         try {
