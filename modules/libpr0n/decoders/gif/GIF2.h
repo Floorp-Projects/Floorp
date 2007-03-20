@@ -72,16 +72,6 @@ typedef enum {
     gif_consume_comment
 } gstate;
 
-/* "Disposal" method indicates how the image should be handled in the
-   framebuffer before the subsequent image is displayed. */
-typedef enum 
-{
-    DISPOSE_NOT_SPECIFIED      = 0,
-    DISPOSE_KEEP               = 1, /* Leave it in the framebuffer */
-    DISPOSE_OVERWRITE_BGCOLOR  = 2, /* Overwrite with background color */
-    DISPOSE_OVERWRITE_PREVIOUS = 3  /* Save-under */
-} gdispose;
-
 /* A GIF decoder's state */
 typedef struct gif_struct {
     void* clientptr;
@@ -115,7 +105,7 @@ typedef struct gif_struct {
     PRUintn x_offset, y_offset;    /* With respect to "screen" origin */
     PRUintn height, width;
     int tpixel;                 /* Index of transparent pixel */
-    gdispose disposal_method;   /* Restore to background, leave in place, etc.*/
+    PRInt32 disposal_method;    /* Restore to background, leave in place, etc.*/
     PRUint8 *local_colormap;    /* Per-image colormap */
     int local_colormap_size;    /* Size of local colormap array. */
     PRUint32 delay_time;        /* Display time, in milliseconds,

@@ -56,7 +56,10 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  $(NULL)
 
-CPPSRCS		= GIF2.cpp nsGIFDecoder2.cpp imgContainerGIF.cpp
+CPPSRCS		= GIF2.cpp nsGIFDecoder2.cpp
+
+# nsGIFDecoder2.cpp includes imgContainer.h
+LOCAL_INCLUDES += -I$(topsrcdir)/modules/libpr0n/src
 
 include $(topsrcdir)/config/rules.mk
 

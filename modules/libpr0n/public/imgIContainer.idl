@@ -54,6 +54,19 @@ interface imgIContainerObserver;
 [scriptable, uuid(1a6290e6-8285-4e10-963d-d001f8d327b8)]
 interface imgIContainer : nsISupports
 {
+  /** 
+   * "Disposal" method indicates how the image should be handled before the
+   *  subsequent image is displayed.
+   *  Don't change these without looking at the implementations using them,
+   *  struct gif_struct::disposal_method and gif_write() in particular.
+   */
+  const long kDisposeClearAll         = -1; // Clear the whole image, revealing
+                                            // what was there before the gif displayed
+  const long kDisposeNotSpecified     =  0; // Leave frame, let new frame draw on top
+  const long kDisposeKeep             =  1; // Leave frame, let new frame draw on top
+  const long kDisposeClear            =  2; // Clear the frame's area, revealing bg
+  const long kDisposeRestorePrevious  =  3; // Restore the previous (composited) frame
+  
   /**
    * Create a new \a aWidth x \a aHeight sized image container.
    *
@@ -125,8 +138,6 @@ interface imgIContainer : nsISupports
   void stopAnimation();
 
   void resetAnimation();
-
-  /* animation stuff */
 
   /**
    * number of times to loop the image.

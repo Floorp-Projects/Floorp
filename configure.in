@@ -4004,8 +4004,11 @@ fi
 if test -z "$PNG_DIR" -o "$PNG_DIR" = no; then
     SYSTEM_PNG=
 else
+    _SAVE_PNG_LIBS=$PNG_LIBS
     AC_CHECK_LIB(png, png_get_valid, [SYSTEM_PNG=1 PNG_LIBS="-lpng $PNG_LIBS"],
                  SYSTEM_PNG=, $PNG_LIBS)
+    AC_CHECK_LIB(png, png_get_acTl, ,
+                 [SYSTEM_PNG= PNG_LIBS=$_SAVE_PNG_LIBS], $_SAVE_PNG_LIBS)
 fi
 if test "$SYSTEM_PNG" = 1; then
     LIBS="$PNG_LIBS $LIBS"

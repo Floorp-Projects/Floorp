@@ -896,6 +896,10 @@
 #  define PNG_READ_zTXt_SUPPORTED
 #  define PNG_zTXt_SUPPORTED
 #endif
+#ifndef PNG_NO_READ_APNG
+#  define PNG_READ_APNG_SUPPORTED
+#  define PNG_APNG_SUPPORTED
+#endif
 #ifndef PNG_NO_READ_UNKNOWN_CHUNKS
 #  define PNG_READ_UNKNOWN_CHUNKS_SUPPORTED
 #  ifndef PNG_UNKNOWN_CHUNKS_SUPPORTED
@@ -1036,6 +1040,12 @@
 #  define PNG_WRITE_zTXt_SUPPORTED
 #  ifndef PNG_zTXt_SUPPORTED
 #    define PNG_zTXt_SUPPORTED
+#  endif
+#endif
+#ifndef PNG_NO_WRITE_APNG
+#  define PNG_WRITE_APNG_SUPPORTED
+#  ifndef PNG_APNG_SUPPORTED
+#    define PNG_APNG_SUPPORTED
 #  endif
 #endif
 #ifndef PNG_NO_WRITE_UNKNOWN_CHUNKS
