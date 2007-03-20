@@ -103,11 +103,11 @@ public:
                                     Parameters* aParams);
     virtual gfxTextRun *MakeTextRun(const PRUint8* aString, PRUint32 aLength,
                                     Parameters* aParams);
-    // Here, aString is actually aLength + aHeaderChars*2 chars long; the first char
-    // may be a LRO or RLO bidi control character to force setting the direction
-    // for all characters, and if so the last character will be a PDF
+    // Here, aString is actually aLength + 1 chars long; the first char
+    // is an LRO or RLO bidi control character to force setting the direction
+    // for all characters
     gfxTextRun *MakeTextRunInternal(const PRUnichar *aString, PRUint32 aLength,
-                                    Parameters *aParams, PRUint32 aheaderChars);
+                                    Parameters *aParams);
 
     ATSUFontFallbacks *GetATSUFontFallbacksPtr() { return &mFallbacks; }
     
@@ -122,8 +122,7 @@ protected:
                                const nsACString& aGenericName,
                                void *closure);
 
-    void InitTextRun(gfxTextRun *aRun, const PRUnichar *aString, PRUint32 aLength,
-                     PRUint32 aHeaderChars);
+    void InitTextRun(gfxTextRun *aRun, const PRUnichar *aString, PRUint32 aLength);
 
     ATSUFontFallbacks mFallbacks;
 };

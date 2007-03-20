@@ -592,28 +592,6 @@ gfxPangoFont::GetPangoFont()
     return pango_context_load_font(mPangoCtx, mPangoFontDesc);
 }
 
-nsString
-gfxPangoFont::GetUniqueName()
-{
-    PangoFont *font = GetPangoFont();
-    PangoFontDescription *desc = pango_font_describe(font);
-    char *str = pango_font_description_to_string(desc);
-
-    // chop off the trailing size, e.g. "Albany AMT 15.359375" -> "Albany AMT"
-    PRUint32 end = strlen(str);
-    while (end > 0) {
-        --end;
-        if (str[end] == ' ')
-            break;
-    }
-    str[end] = 0;
-
-    nsString result;
-    CopyUTF8toUTF16(str, result);
-    g_free(str);
-    return result;
-}
-
 static const char *sCJKLangGroup[] = {
     "ja",
     "ko",
@@ -739,13 +717,13 @@ gfxPangoFontGroup::InitTextRun(gfxTextRun *aTextRun, const gchar *aUTF8Text,
 
 static gfxTextRun::Metrics
 GetPangoMetrics(PangoGlyphString *aGlyphs, PangoFont *aPangoFont,
-                PRUint32 aPixelsToUnits, PRUint32 aClusterCount)
+                gfxFloat aPixelsToUnits, PRUint32 aClusterCount)
 {
     PangoRectangle inkRect;
     PangoRectangle logicalRect;
     pango_glyph_string_extents(aGlyphs, aPangoFont, &inkRect, &logicalRect);
 
-    gfxFloat scale = aPixelsToUnits/gfxFloat(PANGO_SCALE);
+    gfxFloat scale = aPixelsToUnits/PANGO_SCALE;
 
     gfxTextRun::Metrics metrics;
     NS_ASSERTION(logicalRect.x == 0, "Weird logical rect...");
@@ -771,7 +749,7 @@ gfxPangoFont::Measure(gfxTextRun *aTextRun,
 
     const gfxTextRun::CompressedGlyph *charGlyphs = aTextRun->GetCharacterGlyphs();
     nsAutoTArray<PangoGlyphInfo,200> glyphBuffer;
-    const gfxFloat appUnitsToPango = gfxFloat(PANGO_SCALE)/aTextRun->GetAppUnitsPerDevUnit();
+    gfxFloat appUnitsToPango = gfxFloat(PANGO_SCALE)/aTextRun->GetAppUnitsPerDevUnit();
 
     // We start by assuming every character is a cluster and subtract off
     // characters where that's not true
@@ -844,8 +822,7 @@ gfxPangoFont::Measure(gfxTextRun *aTextRun,
     glyphs.glyphs = glyphBuffer.Elements();
     glyphs.log_clusters = nsnull;
     glyphs.space = glyphBuffer.Length();
-    return GetPangoMetrics(&glyphs, GetPangoFont(),
-                           aTextRun->GetAppUnitsPerDevUnit(), clusterCount);
+    return GetPangoMetrics(&glyphs, GetPangoFont(), aTextRun->GetAppUnitsPerDevUnit(), clusterCount);
 }
 
 #define IS_MISSING_GLYPH(g) (((g) & 0x10000000) || (g) == 0x0FFFFFFF)
@@ -934,13 +911,6 @@ SetupClusterBoundaries(gfxTextRun* aTextRun, const gchar *aUTF8, PRUint32 aUTF8L
     }
 }
 
-static PRInt32
-ConvertPangoToAppUnits(PRInt32 aCoordinate, PRUint32 aAppUnitsPerDevUnit)
-{
-    PRInt64 v = (PRInt64(aCoordinate)*aAppUnitsPerDevUnit + PANGO_SCALE/2)/PANGO_SCALE;
-    return PRInt32(v);
-}
-
 nsresult
 gfxPangoFontGroup::SetGlyphs(gfxTextRun* aTextRun,
                              const gchar *aUTF8, PRUint32 aUTF8Length,
@@ -960,7 +930,6 @@ gfxPangoFontGroup::SetGlyphs(gfxTextRun* aTextRun,
     PRInt32 direction = aTextRun->IsRightToLeft() ? -1 : 1;
     gfxTextRun::CompressedGlyph g;
     nsAutoTArray<gfxTextRun::DetailedGlyph,1> detailedGlyphs;
-    const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
 
     while (index < aUTF8Length) {
         if (utf16Offset >= textRunLength) {
@@ -1009,13 +978,13 @@ gfxPangoFontGroup::SetGlyphs(gfxTextRun* aTextRun,
                 width = aOverrideSpaceWidth;
             }
 
-            PRInt32 advance = ConvertPangoToAppUnits(width, appUnitsPerDevUnit);
+            PRInt32 downscaledWidth = width/PANGO_SCALE;
             if (glyphClusterCount == 1 &&
                 glyph->geometry.x_offset == 0 && glyph->geometry.y_offset == 0 &&
-                advance >= 0 &&
-                gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
+                width >= 0 && downscaledWidth*PANGO_SCALE == width &&
+                gfxTextRun::CompressedGlyph::IsSimpleAdvancePixels(downscaledWidth) &&
                 gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph->glyph)) {
-                aTextRun->SetCharacterGlyph(utf16Offset, g.SetSimpleGlyph(advance, glyph->glyph));
+                aTextRun->SetCharacterGlyph(utf16Offset, g.SetSimpleGlyph(downscaledWidth, glyph->glyph));
             } else if (haveMissingGlyph) {
                 // Note that missing-glyph IDs are not simple glyph IDs, so we'll
                 // always get here when a glyph is missing
@@ -1032,13 +1001,9 @@ gfxPangoFontGroup::SetGlyphs(gfxTextRun* aTextRun,
                     details->mGlyphID = glyph->glyph;
                     NS_ASSERTION(details->mGlyphID == glyph->glyph,
                                  "Seriously weird glyph ID detected!");
-                    details->mAdvance =
-                      ConvertPangoToAppUnits(glyph->geometry.width,
-                                             appUnitsPerDevUnit);
-                    details->mXOffset =
-                      float(glyph->geometry.x_offset)*appUnitsPerDevUnit/PANGO_SCALE;
-                    details->mYOffset =
-                      float(glyph->geometry.y_offset)*appUnitsPerDevUnit/PANGO_SCALE;
+                    details->mAdvance = float(glyph->geometry.width)/PANGO_SCALE;
+                    details->mXOffset = float(glyph->geometry.x_offset)/PANGO_SCALE;
+                    details->mYOffset = float(glyph->geometry.y_offset)/PANGO_SCALE;
                     glyph += direction;
                 }
                 aTextRun->SetDetailedGlyphs(utf16Offset, detailedGlyphs.Elements(), glyphClusterCount);
@@ -1070,7 +1035,6 @@ gfxPangoFontGroup::CreateGlyphRunsXft(gfxTextRun *aTextRun,
     XftFont *xfont = font->GetXftFont();
     PRUint32 utf16Offset = 0;
     gfxTextRun::CompressedGlyph g;
-    const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
 
     while (p < aUTF8 + aUTF8Length) {
         gunichar ch = g_utf8_get_char(p);
@@ -1086,13 +1050,12 @@ gfxPangoFontGroup::CreateGlyphRunsXft(gfxTextRun *aTextRun,
             if (info.yOff > 0) {
                 NS_WARNING("vertical offsets not supported");
             }
-
-            PRInt32 advance = info.xOff*appUnitsPerDevUnit;
-            if (advance >= 0 &&
-                gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
+            
+            if (info.xOff >= 0 &&
+                gfxTextRun::CompressedGlyph::IsSimpleAdvancePixels(info.xOff) &&
                 gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph)) {
                 aTextRun->SetCharacterGlyph(utf16Offset,
-                                            g.SetSimpleGlyph(advance, glyph));
+                                            g.SetSimpleGlyph(info.xOff, glyph));
             } else if (IS_MISSING_GLYPH(glyph)) {
                 // Note that missing-glyph IDs are not simple glyph IDs, so we'll
                 // always get here when a glyph is missing
@@ -1103,12 +1066,12 @@ gfxPangoFontGroup::CreateGlyphRunsXft(gfxTextRun *aTextRun,
                 details.mGlyphID = glyph;
                 NS_ASSERTION(details.mGlyphID == glyph,
                              "Seriously weird glyph ID detected!");
-                details.mAdvance = advance;
+                details.mAdvance = float(info.xOff);
                 details.mXOffset = 0;
                 details.mYOffset = 0;
                 aTextRun->SetDetailedGlyphs(utf16Offset, &details, 1);
             }
-
+            
             NS_ASSERTION(!IS_SURROGATE(ch), "Surrogates shouldn't appear in UTF8");
             if (ch >= 0x10000) {
                 // This character is a surrogate pair in UTF16

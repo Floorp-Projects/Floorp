@@ -54,11 +54,17 @@ REQUIRES = \
 	thebes \
 	$(NULL)
 
+MAIN_CPPSRCS = $(NULL)
+
 # All platforms
-CPPSRCS = \
-	gfxSurfaceRefCountTest.cpp \
-	gfxFontSelectionTest.cpp \
-	$(NULL)
+MAIN_CPPSRCS += gfxSurfaceRefCountTest.cpp
+
+# mac and win32 for now
+ifneq (,$(filter windows cocoa,$(MOZ_WIDGET_TOOLKIT)))
+MAIN_CPPSRCS += gfxFontSelectionTest.cpp
+endif
+
+CPPSRCS = $(MAIN_CPPSRCS)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CMMSRCS = gfxTestCocoaHelper.mm
@@ -88,15 +94,4 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 OS_LIBS += -framework Cocoa
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-OS_LIBS += $(MOZ_PANGO_LIBS) $(MOZ_XFT_LIBS) $(XLIBS)
-endif
-
 include $(topsrcdir)/config/rules.mk
-
-CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
-CFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
-
-ifdef MOZ_ENABLE_PANGO
-CXXFLAGS += $(MOZ_PANGO_CFLAGS)
-endif
