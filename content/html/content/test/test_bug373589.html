@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=373589
+-->
+<head>
+  <title>Test for Bug 373589</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=373589">Mozilla Bug 373589</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 373589 **/
+  var docElem = document.documentElement;
+  var body = document.body;
+  var numChildren = docElem.childNodes.length;
+  docElem.removeChild(body);
+  ok(numChildren > docElem.childNodes.length, "body was removed");
+  body.link;
+  ok(true, "didn't crash");
+  docElem.appendChild(body);
+  is(numChildren, docElem.childNodes.length, "body re-added");
+</script>
+</pre>
+</body>
+</html>
