@@ -265,9 +265,9 @@ NS_IMETHODIMP_(PRBool)
 nsSVGGraphicElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
+    sColorMap,
     sFillStrokeMap,
-    sGraphicsMap,
-    sColorMap
+    sGraphicsMap
   };
   
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||

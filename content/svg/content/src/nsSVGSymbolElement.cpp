@@ -173,10 +173,13 @@ NS_IMETHODIMP_(PRBool)
 nsSVGSymbolElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
+    sColorMap,
     sFEFloodMap,
+    sFillStrokeMap,
     sFiltersMap,
     sFontSpecificationMap,
     sGradientStopMap,
+    sGraphicsMap,
     sMarkersMap,
     sTextContentElementsMap,
     sViewportsMap

@@ -365,11 +365,11 @@ NS_IMETHODIMP_(PRBool)
 nsSVGTSpanElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
+    sColorMap,
     sFillStrokeMap,
-    sGraphicsMap,
-    sTextContentElementsMap,
     sFontSpecificationMap,
-    sColorMap
+    sGraphicsMap,
+    sTextContentElementsMap
   };
   
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
