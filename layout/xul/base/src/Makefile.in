@@ -53,6 +53,7 @@ REQUIRES	= xpcom \
 		  content \
 		  xul \
 		  gfx \
+		  thebes \
 		  widget \
 		  view \
 		  docshell \

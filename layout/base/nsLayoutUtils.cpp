@@ -60,6 +60,11 @@
 #include "nsFrameManager.h"
 #include "nsBlockFrame.h"
 #include "nsBidiPresUtils.h"
+#include "gfxIImageFrame.h"
+#include "imgIContainer.h"
+#include "gfxRect.h"
+#include "nsIImage.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 #ifdef MOZ_SVG_FOREIGNOBJECT
 #include "nsSVGForeignObjectFrame.h"
@@ -1852,4 +1857,158 @@ nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
   if (layer)
     return layer;
   return aFrame->GetPresContext()->PresShell()->FrameManager()->GetRootFrame();
+}
+
+/* static */ nsresult
+nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
+                         imgIContainer* aImage,
+                         const nsRect& aDestRect,
+                         const nsRect& aDirtyRect,
+                         const nsRect* aSourceRect)
+{
+#ifdef MOZ_CAIRO_GFX
+  nsRect dirtyRect;
+  dirtyRect.IntersectRect(aDirtyRect, aDestRect);
+  if (dirtyRect.IsEmpty())
+    return NS_OK;
+
+  nsCOMPtr<gfxIImageFrame> imgFrame;
+  aImage->GetCurrentFrame(getter_AddRefs(imgFrame));
+  if (!imgFrame) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIImage> img(do_GetInterface(imgFrame));
+  if (!img) return NS_ERROR_FAILURE;
+
+  // twSrcRect is always in appunits (twips),
+  // and has nothing to do with the current transform (it's a region
+  // of the image)
+  gfxRect pxSrc;
+  if (aSourceRect) {
+    PRInt32 p2a = nsIDeviceContext::AppUnitsPerCSSPixel();
+    pxSrc.pos.x = NSAppUnitsToFloatPixels(aSourceRect->x, p2a);
+    pxSrc.pos.y = NSAppUnitsToFloatPixels(aSourceRect->y, p2a);
+    pxSrc.size.width = NSAppUnitsToFloatPixels(aSourceRect->width, p2a);
+    pxSrc.size.height = NSAppUnitsToFloatPixels(aSourceRect->height, p2a);
+  } else {
+    pxSrc.pos.x = pxSrc.pos.y = 0.0;
+    PRInt32 w = 0, h = 0;
+    aImage->GetWidth(&w);
+    aImage->GetHeight(&h);
+    pxSrc.size.width = gfxFloat(w);
+    pxSrc.size.height = gfxFloat(h);
+  }
+
+  nsCOMPtr<nsIDeviceContext> dc;
+  aRenderingContext->GetDeviceContext(*getter_AddRefs(dc));
+  PRInt32 d2a = dc->AppUnitsPerDevPixel();
+
+  // the dest rect is affected by the current transform; that'll be
+  // handled by Image::Draw(), when we actually set up the rectangle.
+  
+  // Snap the edges of where layout wants the image to the nearest
+  // pixel, but then convert back to gfxFloats for the rest of the math.
+  gfxRect pxDest;
+  {
+    nsIntRect r;
+    r.x = NSAppUnitsToIntPixels(aDestRect.x, d2a);
+    r.y = NSAppUnitsToIntPixels(aDestRect.y, d2a);
+    r.width = NSAppUnitsToIntPixels(aDestRect.XMost(), d2a) - r.x;
+    r.height = NSAppUnitsToIntPixels(aDestRect.YMost(), d2a) - r.y;
+    pxDest.pos.x = gfxFloat(r.x);
+    pxDest.pos.y = gfxFloat(r.y);
+    pxDest.size.width = gfxFloat(r.width);
+    pxDest.size.height = gfxFloat(r.height);
+  }
+
+  // And likewise for the dirty rect.  (Is should be OK to round to
+  // nearest rather than outwards, since any dirty rects coming from the
+  // OS should be on pixel boundaries; the rest is other things it's
+  // been intersected with, and we should be rounding those consistently.)
+  gfxRect pxDirty;
+  {
+    nsIntRect r;
+    r.x = NSAppUnitsToIntPixels(aDirtyRect.x, d2a);
+    r.y = NSAppUnitsToIntPixels(aDirtyRect.y, d2a);
+    r.width = NSAppUnitsToIntPixels(aDirtyRect.XMost(), d2a) - r.x;
+    r.height = NSAppUnitsToIntPixels(aDirtyRect.YMost(), d2a) - r.y;
+    pxDirty.pos.x = gfxFloat(r.x);
+    pxDirty.pos.y = gfxFloat(r.y);
+    pxDirty.size.width = gfxFloat(r.width);
+    pxDirty.size.height = gfxFloat(r.height);
+  }
+
+  // Reduce the src rect to what's needed for the dirty rect.
+  if (pxDirty.size.width != pxDest.size.width) {
+    const gfxFloat ratio = pxSrc.size.width / pxDest.size.width;
+    pxSrc.pos.x += (pxDirty.pos.x - pxDest.pos.x) * ratio;
+    pxSrc.size.width = pxDirty.size.width * ratio;
+  }
+  if (pxDirty.size.height != pxDest.size.height) {
+    const gfxFloat ratio = pxSrc.size.height / pxDest.size.height;
+    pxSrc.pos.y += (pxDirty.pos.y - pxDest.pos.y) * ratio;
+    pxSrc.size.height = pxDirty.size.height * ratio;
+  }
+
+  // If we were asked to draw a 0-width or 0-height image,
+  // as either the src or dst, just bail; we can't do anything
+  // useful with this.
+  if (pxSrc.IsEmpty() || pxDirty.IsEmpty())
+  {
+    return NS_OK;
+  }
+
+  // For Bug 87819
+  // imgFrame may want image to start at different position, so adjust
+  nsIntRect pxImgFrameRect;
+  imgFrame->GetRect(pxImgFrameRect);
+
+  if (pxImgFrameRect.x > 0) {
+    pxSrc.pos.x -= gfxFloat(pxImgFrameRect.x);
+
+    gfxFloat scaled_x = pxSrc.pos.x;
+    if (pxDirty.size.width != pxSrc.size.width) {
+      scaled_x = scaled_x * (pxDirty.size.width / pxSrc.size.width);
+    }
+
+    if (pxSrc.pos.x < 0.0) {
+      pxDirty.pos.x -= scaled_x;
+      pxSrc.size.width += pxSrc.pos.x;
+      pxDirty.size.width += scaled_x;
+      if (pxSrc.size.width <= 0.0 || pxDirty.size.width <= 0.0)
+        return NS_OK;
+      pxSrc.pos.x = 0.0;
+    }
+  }
+  if (pxSrc.pos.x > gfxFloat(pxImgFrameRect.width)) {
+    return NS_OK;
+  }
+
+  if (pxImgFrameRect.y > 0) {
+    pxSrc.pos.y -= gfxFloat(pxImgFrameRect.y);
+
+    gfxFloat scaled_y = pxSrc.pos.y;
+    if (pxDirty.size.height != pxSrc.size.height) {
+      scaled_y = scaled_y * (pxDirty.size.height / pxSrc.size.height);
+    }
+
+    if (pxSrc.pos.y < 0.0) {
+      pxDirty.pos.y -= scaled_y;
+      pxSrc.size.height += pxSrc.pos.y;
+      pxDirty.size.height += scaled_y;
+      if (pxSrc.size.height <= 0.0 || pxDirty.size.height <= 0.0)
+        return NS_OK;
+      pxSrc.pos.y = 0.0;
+    }
+  }
+  if (pxSrc.pos.y > gfxFloat(pxImgFrameRect.height)) {
+    return NS_OK;
+  }
+
+  return img->Draw(*aRenderingContext, pxSrc, pxDirty);
+#else
+  /*
+   * If somebody wants non-cairo GFX to work again, they could write
+   * appropriate code to call nsIRenderingContext::DrawImage here
+   */
+#endif
 }

@@ -50,6 +50,7 @@ REQUIRES	= xpcom \
 		  string \
 		  dom \
 		  gfx \
+		  thebes \
 		  layout \
 		  widget \
 		  view \

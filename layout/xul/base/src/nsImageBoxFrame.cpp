@@ -370,7 +370,8 @@ nsImageBoxFrame::PaintImage(nsIRenderingContext& aRenderingContext,
     return;
 
   // don't draw if the image is not dirty
-  if (!aDirtyRect.Intersects(rect))
+  nsRect dirty;
+  if (!dirty.IntersectRect(aDirtyRect, rect))
     return;
 
   nsCOMPtr<imgIContainer> imgCon;
@@ -378,30 +379,8 @@ nsImageBoxFrame::PaintImage(nsIRenderingContext& aRenderingContext,
 
   if (imgCon) {
     PRBool hasSubRect = !mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0);
-    PRBool sizeMatch = hasSubRect ? 
-                       mSubRect.width == rect.width && mSubRect.height == rect.height :
-                       mImageSize.width == rect.width && mImageSize.height == rect.height;
-
-    if (sizeMatch) {
-      nsRect dest(rect);
-        
-      if (hasSubRect)
-        rect = mSubRect;
-      else {
-        rect.x = 0;
-        rect.y = 0;
-      }
-
-      // XXXdwh do dirty rect intersection like the HTML image frame does,
-      // so that we don't always repaint the entire image!
-      aRenderingContext.DrawImage(imgCon, rect, dest);
-    }
-    else {
-      nsRect src(0, 0, mImageSize.width, mImageSize.height);
-      if (hasSubRect)
-        src = mSubRect;
-      aRenderingContext.DrawImage(imgCon, src, rect);
-    }
+    nsLayoutUtils::DrawImage(&aRenderingContext, imgCon,
+                             rect, dirty, hasSubRect ? &mSubRect : nsnull);
   }
 }
 

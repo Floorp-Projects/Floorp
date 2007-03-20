@@ -58,6 +58,7 @@ REQUIRES	= \
 		  imglib2 \
 		  browsercomps \
 		  gfx \
+		  thebes \
                   widget \
 		  pref \
 		  layout \
