@@ -419,7 +419,7 @@ NS_IMETHODIMP_(PRBool)
 nsSVGPathElement::IsAttributeMapped(const nsIAtom* name) const
 {
   static const MappedAttributeEntry* const map[] = {
-    sMarkersMap,
+    sMarkersMap
   };
 
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
