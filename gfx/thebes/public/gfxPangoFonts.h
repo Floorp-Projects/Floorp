@@ -82,6 +82,8 @@ public:
                                         PRBool aTightBoundingBox,
                                         Spacing *aSpacing);
 
+    virtual nsString GetUniqueName();
+
 protected:
     PangoFontDescription *mPangoFontDesc;
     PangoContext *mPangoCtx;
