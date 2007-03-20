@@ -70,6 +70,10 @@
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 
+#if defined(XP_WIN)
+#include "nsNativeConnectionHelper.h"
+#endif
+
 #define PORT_PREF_PREFIX     "network.security.ports."
 #define PORT_PREF(x)         PORT_PREF_PREFIX x
 #define AUTODIAL_PREF        "network.autodial-helper.enabled"
@@ -913,10 +917,21 @@ nsIOService::TrackNetworkLinkStatusForOffline()
     if (mSocketTransportService) {
         PRBool autodialEnabled = PR_FALSE;
         mSocketTransportService->GetAutodialEnabled(&autodialEnabled);
-        // If autodialing-on-link-down is enabled, then pretend the link is
+        // If autodialing-on-link-down is enabled, check if the OS auto dial 
+        // option is set to always autodial. If so, then we are 
         // always up for the purposes of offline management.
-        if (autodialEnabled)
+        if (autodialEnabled) {
+#if defined(XP_WIN)
+            // On Windows, need to do some registry checking to see if
+            // autodial is enabled at the OS level. Only if that is
+            // enabled are we always up for the purposes of offline
+            // management.
+            if(nsNativeConnectionHelper::IsAutodialEnabled()) 
+                return SetOffline(PR_FALSE);
+#else
             return SetOffline(PR_FALSE);
+#endif
+        }
     }
   
     PRBool isUp;
