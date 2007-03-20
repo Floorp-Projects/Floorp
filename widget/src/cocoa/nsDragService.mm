@@ -287,7 +287,7 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
 #ifdef IS_BIG_ENDIAN
       dest[0] = src[1];
       dest[1] = src[2];
-      dest[2] = src[3]
+      dest[2] = src[3];
       dest[3] = PRUint8(src[0] * 0.8); // reduce transparency overall
 #else
       dest[0] = src[2];
