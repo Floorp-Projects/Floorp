@@ -811,14 +811,33 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_SJOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval)
 {
-  obj = FindSafeObject(cx, obj);
-  if (!obj) {
-    return ThrowException(NS_ERROR_INVALID_ARG, cx);
-  }
+  JSObject *tmp = FindSafeObject(cx, obj);
+  JSObject *unsafeObj;
 
-  JSObject *unsafeObj = GetUnsafeObject(cx, obj);
-  if (!unsafeObj) {
-    return ThrowException(NS_ERROR_UNEXPECTED, cx);
+  if (tmp) {
+    // A function wrapped in an XPCSafeJSObjectWrapper is being called
+    // directly (i.e. safeObj.fun()), set obj to be the safe object
+    // wrapper, and get the unsafe object from it.
+    obj = tmp;
+
+    unsafeObj = GetUnsafeObject(cx, obj);
+
+    if (!unsafeObj) {
+      return ThrowException(NS_ERROR_UNEXPECTED, cx);
+    }
+  } else {
+    // A function wrapped in an XPCSafeJSObjectWrapper is being called
+    // indirectly off of an object that's not a safe wrapper
+    // (i.e. foo.bar = safeObj.fun; foo.bar()), set obj to be the safe
+    // wrapper for the function, and use the object passed in as the
+    // unsafe object.
+    unsafeObj = obj;
+
+    obj = FindSafeObject(cx, JSVAL_TO_OBJECT(argv[-2]));
+
+    if (!obj) {
+      return ThrowException(NS_ERROR_INVALID_ARG, cx);
+    }
   }
 
   JSObject *funToCall = GetUnsafeObject(cx, JSVAL_TO_OBJECT(argv[-2]));
