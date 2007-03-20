@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 3742116;
+var bug = 374116;
 var summary = 'Crash with <a/>.@b[1] = 2;';
 var actual = 'No Crash';
 var expect = 'No Crash';
