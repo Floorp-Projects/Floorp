@@ -53,3 +53,11 @@ nsNativeConnectionHelper::OnConnectionFailed(const char* hostName)
     else
         return PR_FALSE;
 }
+
+PRBool
+nsNativeConnectionHelper::IsAutodialEnabled()
+{
+    nsRASAutodial autodial;
+
+    return autodial.Init() == NS_OK && autodial.ShouldDialOnNetworkError();
+}
