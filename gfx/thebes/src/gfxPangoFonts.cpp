@@ -592,6 +592,28 @@ gfxPangoFont::GetPangoFont()
     return pango_context_load_font(mPangoCtx, mPangoFontDesc);
 }
 
+nsString
+gfxPangoFont::GetUniqueName()
+{
+    PangoFont *font = GetPangoFont();
+    PangoFontDescription *desc = pango_font_describe(font);
+    char *str = pango_font_description_to_string(desc);
+
+    // chop off the trailing size, e.g. "Albany AMT 15.359375" -> "Albany AMT"
+    PRUint32 end = strlen(str);
+    while (end > 0) {
+        --end;
+        if (str[end] == ' ')
+            break;
+    }
+    str[end] = 0;
+
+    nsString result;
+    CopyUTF8toUTF16(str, result);
+    g_free(str);
+    return result;
+}
+
 static const char *sCJKLangGroup[] = {
     "ja",
     "ko",

@@ -142,7 +142,7 @@ public:
     const nsString& GetName() const { return mName; }
     const gfxFontStyle *GetStyle() const { return mStyle; }
 
-    virtual nsString GetUniqueName() { return GetName(); }
+    virtual nsString GetUniqueName() = 0;
 
     // Font metrics
     struct Metrics {
