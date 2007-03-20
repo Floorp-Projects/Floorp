@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var bug = 3742106;
+var bug = 374106;
 var summary = 'e4x XMLList.contains execution halts with complex match';
 var actual = 'No Error';
 var expect = 'No Error';
