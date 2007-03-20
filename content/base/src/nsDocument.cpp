@@ -4866,17 +4866,12 @@ nsDocument::GetReference(void *aKey)
   return nsnull;
 }
 
-already_AddRefed<nsISupports>
+void
 nsDocument::RemoveReference(void *aKey)
 {
-  nsISupports* oldReference = nsnull;
-
   if (mContentWrapperHash) {
-    mContentWrapperHash->Get(aKey, &oldReference);    
     mContentWrapperHash->Remove(aKey);
   }
-
-  return oldReference;
 }
 
 nsIScriptEventManager*
