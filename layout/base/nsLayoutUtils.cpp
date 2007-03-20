@@ -1927,10 +1927,10 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   gfxRect pxDirty;
   {
     nsIntRect r;
-    r.x = NSAppUnitsToIntPixels(aDirtyRect.x, d2a);
-    r.y = NSAppUnitsToIntPixels(aDirtyRect.y, d2a);
-    r.width = NSAppUnitsToIntPixels(aDirtyRect.XMost(), d2a) - r.x;
-    r.height = NSAppUnitsToIntPixels(aDirtyRect.YMost(), d2a) - r.y;
+    r.x = NSAppUnitsToIntPixels(dirtyRect.x, d2a);
+    r.y = NSAppUnitsToIntPixels(dirtyRect.y, d2a);
+    r.width = NSAppUnitsToIntPixels(dirtyRect.XMost(), d2a) - r.x;
+    r.height = NSAppUnitsToIntPixels(dirtyRect.YMost(), d2a) - r.y;
     pxDirty.pos.x = gfxFloat(r.x);
     pxDirty.pos.y = gfxFloat(r.y);
     pxDirty.size.width = gfxFloat(r.width);
