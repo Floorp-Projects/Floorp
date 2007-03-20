@@ -59,10 +59,6 @@
 #include "gfxTestCocoaHelper.h"
 #endif
 
-#ifdef MOZ_WIDGET_GTK2
-#include "gtk/gtk.h"
-#endif
-
 enum {
     S_UTF8 = 0,
     S_ASCII = 1
@@ -111,8 +107,7 @@ struct TestEntry {
         : utf8FamilyString(aUTF8FamilyString),
           fontStyle(aFontStyle),
           stringType(S_ASCII),
-          string(aString),
-          isRTL(PR_FALSE)
+          string(aString)
     {
     }
 
@@ -123,8 +118,7 @@ struct TestEntry {
         : utf8FamilyString(aUTF8FamilyString),
           fontStyle(aFontStyle),
           stringType(stringType),
-          string(aString),
-          isRTL(PR_FALSE)
+          string(aString)
     {
     }
 
@@ -143,7 +137,7 @@ struct TestEntry {
             if (/*!fontName.IsEmpty() &&*/ !fontName.Equals(aFontName))
                 return PR_FALSE;
 
-            if (num_glyphs != int(glyphs.data.Length()))
+            if (num_glyphs != glyphs.data.Length())
                 return PR_FALSE;
 
             for (int j = 0; j < num_glyphs; j++) {
@@ -157,11 +151,6 @@ struct TestEntry {
         nsCString fontName;
         LiteralArray glyphs;
     };
-    
-    void SetRTL()
-    {
-        isRTL = PR_TRUE;
-    }
 
     // empty/NULL fontName means ignore font name
     void Expect (const char *platform,
@@ -183,9 +172,6 @@ struct TestEntry {
             return;
 #elif defined(XP_MACOSX)
         if (strcmp(platform, "macosx"))
-            return;
-#elif defined(MOZ_ENABLE_PANGO)
-        if (strcmp(platform, "gtk2-pango"))
             return;
 #else
         return;
@@ -216,7 +202,6 @@ struct TestEntry {
 
     int stringType;
     char *string;
-    PRPackedBool isRTL;
 
     nsTArray<ExpectItem> expectItems;
 };
@@ -230,7 +215,7 @@ MakeContext ()
 
     nsRefPtr<gfxASurface> surface;
 
-    surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(size, size), gfxASurface::ImageFormatRGB24);
+    surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, size, gfxASurface::ImageFormatRGB24);
     gfxContext *ctx = new gfxContext(surface);
     NS_IF_ADDREF(ctx);
     return ctx;
@@ -267,7 +252,7 @@ DumpStore (gfxFontTestStore *store) {
         printf ("Run[% 2d]: '%s' ", i, nsPromiseFlatCString(store->items[i].platformFont).get());
 
         for (int j = 0; j < store->items[i].num_glyphs; j++)
-            printf ("%d ", int(store->items[i].glyphs[j].index));
+            printf ("%d ", store->items[i].glyphs[j].index);
 
         printf ("\n");
     }
@@ -278,7 +263,7 @@ DumpTestExpect (TestEntry *test) {
     for (PRUint32 i = 0; i < test->expectItems.Length(); i++) {
         printf ("Run[% 2d]: '%s' ", i, nsPromiseFlatCString(test->expectItems[i].fontName).get());
         for (PRUint32 j = 0; j < test->expectItems[i].glyphs.data.Length(); j++)
-            printf ("%d ", int(test->expectItems[i].glyphs.data[j]));
+            printf ("%d ", test->expectItems[i].glyphs.data[j]);
 
         printf ("\n");
     }
@@ -299,28 +284,16 @@ RunTest (TestEntry *test, gfxContext *ctx) {
     return PR_FALSE;
 #endif
 
-    nsAutoPtr<gfxTextRun> textRun;
-    gfxTextRunFactory::Parameters params = {
-      ctx, nsnull, nsnull, nsnull, nsnull, 0, 60,
-      gfxTextRunFactory::TEXT_IS_ASCII
-    };
-    if (test->isRTL) {
-        params.mFlags |= gfxTextRunFactory::TEXT_IS_RTL;
-    }
-    PRUint32 length;
+    nsRefPtr<gfxTextRun> textRun;
     if (test->stringType == S_ASCII) {
-        params.mFlags |= gfxTextRunFactory::TEXT_IS_ASCII;
-        length = strlen(test->string);
-        textRun = fontGroup->MakeTextRun(NS_REINTERPRET_CAST(PRUint8*, test->string), length, &params);
+        textRun = fontGroup->MakeTextRun(nsDependentCString(test->string));
     } else {
-        params.mFlags |= gfxTextRunFactory::TEXT_HAS_SURROGATES; // just in case
-        NS_ConvertUTF8toUTF16 str(nsDependentCString(test->string));
-        length = str.Length();
-        textRun = fontGroup->MakeTextRun(str.get(), length, &params);
+        textRun = fontGroup->MakeTextRun(NS_ConvertUTF8toUTF16(nsDependentCString(test->string)));
     }
 
+
     gfxFontTestStore::NewStore();
-    textRun->Draw(ctx, gfxPoint(0,0), 0, length, nsnull, nsnull, nsnull);
+    textRun->Draw(ctx, gfxPoint(0,0));
     gfxFontTestStore *s = gfxFontTestStore::CurrentStore();
 
     if (!test->Check(s)) {
@@ -337,10 +310,6 @@ int
 main (int argc, char **argv) {
     int passed = 0;
     int failed = 0;
-
-#ifdef MOZ_WIDGET_GTK2
-    gtk_init(&argc, &argv); 
-#endif
 
     // Initialize XPCOM
     nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
