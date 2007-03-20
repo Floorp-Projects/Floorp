@@ -1,11 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1"
      onload="setTimeout(handleLoad, 0);">
+
   <title>Testcase for removing display:none from foreignObject child</title>
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=281260 -->
+
   <script type="application/ecmascript">
   <![CDATA[
 
-// This is from https://bugzilla.mozilla.org/show_bug.cgi?id=281260
-// The setTimeout is necessary since it was _after_ loading that we failed
+// This must be called using setTimeout since it was _after_ loading we failed
 
 function handleLoad(event)
 {
