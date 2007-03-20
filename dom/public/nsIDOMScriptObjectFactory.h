@@ -76,8 +76,8 @@ public:
   NS_IMETHOD NewScriptGlobalObject(PRBool aIsChrome,
                                    nsIScriptGlobalObject **aGlobal) = 0;
 
-  NS_IMETHOD_(nsISupports *)GetClassInfoInstance(nsDOMClassInfoID aID) = 0;
-  NS_IMETHOD_(nsISupports *)GetExternalClassInfoInstance(const nsAString& aName) = 0;
+  NS_IMETHOD_(nsISupports *) GetClassInfoInstance(nsDOMClassInfoID aID) = 0;
+  NS_IMETHOD_(nsISupports *) GetExternalClassInfoInstance(const nsAString& aName) = 0;
 
   // Register the info for an external class. aName must be static
   // data, it will not be deleted by the DOM code. aProtoChainInterface
