@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  David Bienvenu <bienvenu@nventure.com> 
+ *  David Bienvenu <bienvenu@nventure.com>
  *  Scott MacGregor <mscott@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -42,7 +42,7 @@ var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
 var gDialog;
 var gMailView = null;
 var searchSessionContractID = "@mozilla.org/messenger/searchSession;1";
-var msgWindow; // important, don't change the name of this variable. it's really a global used by commandglue.js 
+var msgWindow; // important, don't change the name of this variable. it's really a global used by commandglue.js
 var gSearchTermSession; // really an in memory temporary filter we use to read in and write out the search terms
 var gSearchFolderURIs = "";
 
@@ -59,13 +59,13 @@ function onLoad()
 
   // call this when OK is pressed
   msgWindow = arguments.msgWindow;
- 
+
   // pre select the folderPicker, based on what they selected in the folder pane
   gDialog.picker = document.getElementById("msgNewFolderPicker");
   MsgFolderPickerOnLoad("msgNewFolderPicker");
- 
+
   initializeSearchWidgets();
-  setSearchScope(nsMsgSearchScope.offlineMail);  
+  setSearchScope(nsMsgSearchScope.offlineMail);
 
   if (arguments.editExistingFolder)
     InitDialogWithVirtualFolder(arguments.preselectedURI);
@@ -89,7 +89,7 @@ function onLoad()
       if (!folderToSearch.isServer)
         gSearchFolderURIs = arguments.preselectedURI;
     }
-    if (arguments.newFolderName) 
+    if (arguments.newFolderName)
       document.getElementById("name").value = arguments.newFolderName;
     if (arguments.searchFolderURIs)
       gSearchFolderURIs = arguments.searchFolderURIs;
@@ -97,7 +97,7 @@ function onLoad()
     setupSearchRows(gSearchTermSession.searchTerms);
     doEnabling(); // we only need to disable/enable the OK button for new virtual folders
   }
-  
+
   updateOnlineSearchState();
   doSetOKCancel(onOK, onCancel);
 }
@@ -142,11 +142,11 @@ function InitDialogWithVirtualFolder(aVirtualFolderURI)
   var msgFolder = GetMsgFolderFromUri(aVirtualFolderURI);
   var msgDatabase = msgFolder.getMsgDatabase(msgWindow);
   var dbFolderInfo = msgDatabase.dBFolderInfo;
-  
+
   gSearchFolderURIs = dbFolderInfo.getCharPtrProperty("searchFolderUri");
   var searchTermString = dbFolderInfo.getCharPtrProperty("searchStr");
   document.getElementById('searchOnline').checked = dbFolderInfo.getBooleanProperty("searchOnline", false);
-  
+
   // work around to get our search term string converted into a real array of search terms
   var filterService = Components.classes["@mozilla.org/messenger/services/filters;1"].getService(Components.interfaces.nsIMsgFilterService);
   var filterList = filterService.getTempFilterList(msgFolder);
@@ -171,17 +171,17 @@ function onOK()
   var searchOnline = document.getElementById('searchOnline').checked;
 
   if (!gSearchFolderURIs)
-  {  
+  {
     window.alert(messengerBundle.getString('alertNoSearchFoldersSelected'));
     return false;
   }
 
   if (window.arguments[0].editExistingFolder)
   {
-    // update the search terms 
+    // update the search terms
     saveSearchTerms(gSearchTermSession.searchTerms, gSearchTermSession);
     var searchTermString = getSearchTermString(gSearchTermSession.searchTerms);
-     
+
     var msgFolder = GetMsgFolderFromUri(window.arguments[0].preselectedURI);
     var msgDatabase = msgFolder.getMsgDatabase(msgWindow);
     var dbFolderInfo = msgDatabase.dBFolderInfo;
@@ -190,7 +190,7 @@ function onOK()
     // set the original folder name as well.
     dbFolderInfo.setCharPtrProperty("searchStr", searchTermString);
     dbFolderInfo.setCharPtrProperty("searchFolderUri", gSearchFolderURIs);
-    dbFolderInfo.setBooleanProperty("searchOnline", searchOnline);    
+    dbFolderInfo.setBooleanProperty("searchOnline", searchOnline);
     msgDatabase.Close(true);
 
     var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
@@ -198,21 +198,26 @@ function onOK()
 
     if (window.arguments[0].onOKCallback)
       window.arguments[0].onOKCallback(msgFolder.URI);
-      
-  } 
+
+  }
   else if (name && uri) // create a new virtual folder
   {
-    
     // check to see if we already have a folder with the same name and alert the user if so...
     var parentFolder = GetMsgFolderFromUri(uri);
-    if (parentFolder.containsChildNamed(name))
+    
+    // sanity check the name based on the logic used by nsMsgBaseUtils.cpp. It can't start with a '.', it can't end with a '.', '~' or ' '.
+    // it can't contain a ';' or '#'.
+    if (/^\.|[\.\~ ]$|[\;\#]/.test(name))
+    {
+      window.alert(messengerBundle.getString('folderCreationFailed'));
+      return false;
+    }
+    else if (parentFolder.containsChildNamed(name))
     {
       window.alert(messengerBundle.getString('folderExists'));
-      return false;      
+      return false;
     }
-
-    // XXX: Add code to make sure a folder with this name does not already exist before creating the virtual folder...
-    // Alert the user here if that is the case.
+    
     saveSearchTerms(gSearchTermSession.searchTerms, gSearchTermSession);
     CreateVirtualFolder(name, parentFolder, gSearchFolderURIs, gSearchTermSession.searchTerms, searchOnline);
   }
@@ -228,11 +233,11 @@ function onCancel()
 
 function doEnabling()
 {
-  if (gDialog.nameField.value && gDialog.picker.getAttribute("uri")) 
+  if (gDialog.nameField.value && gDialog.picker.getAttribute("uri"))
   {
     if (gDialog.OKButton.disabled)
       gDialog.OKButton.disabled = false;
-  } 
+  }
   else
     gDialog.OKButton.disabled = true;
 }
@@ -242,11 +247,11 @@ function chooseFoldersToSearch()
   // if we have some search folders already, then root the folder picker dialog off the account
   // for those folders. Otherwise fall back to the preselectedfolderURI which is the parent folder
   // for this new virtual folder.
-  var srchFolderUriArray = gSearchFolderURIs.split('|');    
+  var srchFolderUriArray = gSearchFolderURIs.split('|');
   var dialog = window.openDialog("chrome://messenger/content/virtualFolderListDialog.xul", "",
                                  "chrome,titlebar,modal,centerscreen,resizable",
                                  {searchFolderURIs:gSearchFolderURIs,
-                                  okCallback:onFolderListDialogCallback}); 
+                                  okCallback:onFolderListDialogCallback});
 }
 
 // callback routine from chooseFoldersToSearch
