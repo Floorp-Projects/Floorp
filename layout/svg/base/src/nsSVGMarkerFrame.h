@@ -37,8 +37,6 @@
 #ifndef __NS_SVGMARKERFRAME_H__
 #define __NS_SVGMARKERFRAME_H__
 
-#include "nsISupports.h"
-#include "nsSVGValue.h"
 #include "nsSVGContainerFrame.h"
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsIDOMSVGAnimatedAngle.h"
@@ -53,32 +51,16 @@ struct nsSVGMark;
 
 typedef nsSVGContainerFrame nsSVGMarkerFrameBase;
 
-class nsSVGMarkerFrame : public nsSVGMarkerFrameBase,
-                         public nsSVGValue
+class nsSVGMarkerFrame : public nsSVGMarkerFrameBase
 {
 protected:
   friend nsIFrame*
   NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
-  virtual ~nsSVGMarkerFrame();
   NS_IMETHOD InitSVG();
 
 public:
   nsSVGMarkerFrame(nsStyleContext* aContext) : nsSVGMarkerFrameBase(aContext) {}
-
-  // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
-
-  // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAString &aValue) { return NS_OK; }
-  NS_IMETHOD GetValueString(nsAString& aValue) { return NS_ERROR_NOT_IMPLEMENTED; }
-
-  // nsIFrame interface:
-  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
-                               nsIAtom*        aAttribute,
-                               PRInt32         aModType);
 
   /**
    * Get the "type" of the frame
