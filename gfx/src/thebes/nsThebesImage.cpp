@@ -360,8 +360,8 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
     gfxRect destRect(aDestRect);
 
     if (!GetIsImageComplete()) {
-      srcRect.Intersect(gfxRect(mDecoded.x, mDecoded.y,
-                                mDecoded.width, mDecoded.height));
+      srcRect = srcRect.Intersect(gfxRect(mDecoded.x, mDecoded.y,
+                                          mDecoded.width, mDecoded.height));
 
       // This happens when mDecoded.width or height is zero. bug 368427.
       if (NS_UNLIKELY(srcRect.size.width == 0 || srcRect.size.height == 0))
