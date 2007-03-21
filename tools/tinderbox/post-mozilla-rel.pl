@@ -622,8 +622,15 @@ sub update_create_package {
           my $path = "/opt/aus2/build/0";
           $path = "$path/$update_product/$update_version/$update_platform/$buildid/$locale";
 
-          TinderUtils::run_shell_command("ssh -i $ENV{HOME}/.ssh/aus cltbld\@$update_aus_host mkdir -p $path");
-          TinderUtils::run_shell_command("scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.1 cltbld\@$update_aus_host:$path/complete.txt");
+          my $ssh_opts = "";
+          my $scp_opts = "";
+          if ($Settings::ssh_user eq 'cltbld') {
+	      $ssh_opts = "-i $ENV{HOME}/.ssh/aus";
+	      $scp_opts = $ssh_opts;
+          }
+
+          TinderUtils::run_shell_command("ssh $ssh_opts $Settings::ssh_user\@$update_aus_host mkdir -p $path");
+          TinderUtils::run_shell_command("scp $scp_opts $objdir/dist/update/update.snippet.1 $Settings::ssh_user\@$update_aus_host:$path/complete.txt");
           TinderUtils::print_log("\nCompleted pushing update info...\n");
       }
 
