@@ -496,7 +496,7 @@ mozilla_modify( PtWidget_t *widget, PtArg_t const *argt, PtResourceRec_t const *
 
 // get resources function
 static int 
-mozilla_get_info( PtWidget_t *widget, PtArg_t const *argt, PtResourceRec_t const *mod )
+mozilla_get_info( PtWidget_t *widget, PtArg_t *argt, PtResourceRec_t const *mod )
 {
 	PtMozillaWidget_t *moz = (PtMozillaWidget_t *) widget;
 	nsIPref *pref = moz->EmbedRef->GetPrefs();

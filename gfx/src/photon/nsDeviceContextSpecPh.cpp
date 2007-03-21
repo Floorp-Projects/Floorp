@@ -257,7 +257,7 @@ NS_IMETHODIMP nsPrinterEnumeratorPh::GetDefaultPrinterName(PRUnichar * *aDefault
 	if( pc ) {
 		PpLoadDefaultPrinter( pc );
 		PpGetPC( pc, Pp_PC_NAME, &printer );
-  	if( printer ) *aDefaultPrinterName = ToNewUnicode( NS_LITERAL_STRING( printer ) );
+  	if( printer ) *aDefaultPrinterName = ToNewUnicode( NS_STATIC_CAST(const nsAFlatString&, NS_MULTILINE_LITERAL_STRING(printer)) );
 		PpReleasePC( pc );
 		}
 

@@ -128,6 +128,11 @@ include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS        += $(MOZ_GTK_CFLAGS)
 
+ifneq ($(QCONF_OVERRIDE),)
+include $(QCONF_OVERRIDE)
+CXXFLAGS        += -I$(if $(USE_INSTALL_ROOT),$(INSTALL_ROOT_nto),$(USE_ROOT_nto))/usr/include
+endif
+
 ifdef BUILD_STATIC_LIBS
 
 # This is so sick! We'll work backwards from the embedding manifest to
