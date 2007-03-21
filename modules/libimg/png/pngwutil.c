@@ -492,7 +492,6 @@ png_write_IHDR(png_structp png_ptr, png_uint_32 width, png_uint_32 height,
    png_write_chunk(png_ptr, (png_bytep)png_IHDR, buf, (png_size_t)13);
 
 #if defined(PNG_WRITE_APNG_SUPPORTED)
-   png_ptr->IHDR_crc = png_ptr->crc;
    png_ptr->first_frame_width = width;
    png_ptr->first_frame_height = height;
 #endif
@@ -600,13 +599,6 @@ png_write_PLTE(png_structp png_ptr, png_colorp palette, png_uint_32 num_pal)
 #endif
    png_write_chunk_end(png_ptr);
    png_ptr->mode |= PNG_HAVE_PLTE;
-   
-#if defined(PNG_WRITE_APNG_SUPPORTED)
-   if (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE)
-   {
-      png_ptr->PLTE_crc = png_ptr->crc;
-   }
-#endif
 }
 
 /* write an IDAT chunk */
@@ -616,7 +608,7 @@ png_write_IDAT(png_structp png_ptr, png_bytep data, png_size_t length)
 #ifdef PNG_USE_LOCAL_ARRAYS
    PNG_IDAT;
 #if defined(PNG_WRITE_APNG_SUPPORTED)
-   PNG_fdAt;
+   PNG_fdAT;
 #endif
 #endif
    png_debug(1, "in png_write_IDAT\n");
@@ -669,7 +661,7 @@ png_write_IDAT(png_structp png_ptr, png_bytep data, png_size_t length)
    {
       png_byte buf[4];
       
-      png_write_chunk_start(png_ptr, (png_bytep)png_fdAt, 4 + length);
+      png_write_chunk_start(png_ptr, (png_bytep)png_fdAT, 4 + length);
       
       png_save_uint_32(buf, png_ptr->next_seq_num);
       png_write_chunk_data(png_ptr, buf, 4);
@@ -1732,57 +1724,55 @@ png_write_tIME(png_structp png_ptr, png_timep mod_time)
 
 #if defined(PNG_WRITE_APNG_SUPPORTED)
 void /* PRIVATE */
-png_write_acTl(png_structp png_ptr,
+png_write_acTL(png_structp png_ptr,
    png_uint_32 num_frames, png_uint_32 num_iterations)
 {
 #ifdef PNG_USE_LOCAL_ARRAYS
-    PNG_acTl;
+    PNG_acTL;
 #endif
     png_byte data[16];
     
-    png_debug(1, "in png_write_acTl\n");
+    png_debug(1, "in png_write_acTL\n");
     
     if (num_frames == 0)
-        png_error(png_ptr, "png_write_acTl: invalid number of frames (0)");
+        png_error(png_ptr, "png_write_acTL: invalid number of frames (0)");
     if (num_frames > PNG_UINT_31_MAX)
-        png_error(png_ptr, "png_write_acTl: invalid number of frames "
+        png_error(png_ptr, "png_write_acTL: invalid number of frames "
                            "(> 2^31-1)");
     if (num_iterations > PNG_UINT_31_MAX)
-        png_error(png_ptr, "png_write_acTl: invalid number of iterations "
+        png_error(png_ptr, "png_write_acTL: invalid number of iterations "
                            "(> 2^31-1)");
     
     png_ptr->num_frames_to_write = num_frames;
     
     png_save_uint_32(data, num_frames);
     png_save_uint_32(data + 4, num_iterations);
-    png_save_uint_32(data + 8, png_ptr->IHDR_crc);
-    png_save_uint_32(data + 12, png_ptr->PLTE_crc);
     
-    png_write_chunk(png_ptr, (png_bytep)png_acTl, data, (png_size_t)16);
+    png_write_chunk(png_ptr, (png_bytep)png_acTL, data, (png_size_t)8);
 }
 
 void /* PRIVATE */
-png_write_fcTl(png_structp png_ptr, png_uint_32 width, png_uint_32 height, 
+png_write_fcTL(png_structp png_ptr, png_uint_32 width, png_uint_32 height, 
     png_uint_32 x_offset, png_uint_32 y_offset,
     png_uint_16 delay_num, png_uint_16 delay_den, png_byte render_op)
 {
 #ifdef PNG_USE_LOCAL_ARRAYS
-    PNG_fcTl;
+    PNG_fcTL;
 #endif
     png_byte data[25];
     
-    png_debug(1, "in png_write_fcTl\n");
+    png_debug(1, "in png_write_fcTL\n");
     
     if (png_ptr->num_frames_written == 0 && (x_offset != 0 || y_offset != 0))
         png_error(png_ptr, "x and/or y offset for the first frame aren't 0\n");
     if (png_ptr->num_frames_written == 0 && 
         (width != png_ptr->first_frame_width || 
          height != png_ptr->first_frame_height))
-        png_error(png_ptr, "width and/or height in the first frame's fcTl "
+        png_error(png_ptr, "width and/or height in the first frame's fcTL "
                            "don't match the ones in IHDR\n");
     
     /* more error checking */
-    png_ensure_fcTl_is_valid(png_ptr, width, height, x_offset, y_offset, 
+    png_ensure_fcTL_is_valid(png_ptr, width, height, x_offset, y_offset, 
                              delay_num, delay_den, render_op);
     
     png_save_uint_32(data, png_ptr->next_seq_num);
@@ -1794,7 +1784,7 @@ png_write_fcTl(png_structp png_ptr, png_uint_32 width, png_uint_32 height,
     png_save_uint_16(data + 22, delay_den);
     data[24] = render_op;
     
-    png_write_chunk(png_ptr, (png_bytep)png_fcTl, data, (png_size_t)25);
+    png_write_chunk(png_ptr, (png_bytep)png_fcTL, data, (png_size_t)25);
     
     png_ptr->next_seq_num++;
 }
@@ -2877,7 +2867,7 @@ png_write_reinit(png_structp png_ptr, png_infop info_ptr,
     if (png_ptr->num_frames_written == 0 && 
         (width != png_ptr->first_frame_width || 
          height != png_ptr->first_frame_height))
-        png_error(png_ptr, "width and/or height in the first frame's fcTl "
+        png_error(png_ptr, "width and/or height in the first frame's fcTL "
                            "don't match the ones in IHDR\n");
     if (width > png_ptr->first_frame_width || 
         height > png_ptr->first_frame_height)

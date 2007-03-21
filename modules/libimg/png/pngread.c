@@ -398,9 +398,9 @@ png_read_info(png_structp png_ptr, png_infop info_ptr)
       PNG_zTXt;
 #endif
 #if defined(PNG_READ_APNG_SUPPORTED)
-      PNG_acTl;
-      PNG_fcTl;
-      PNG_fdAt;
+      PNG_acTL;
+      PNG_fcTL;
+      PNG_fdAT;
 #endif
 #endif /* PNG_USE_LOCAL_ARRAYS */
       png_byte chunk_length[4];
@@ -528,12 +528,12 @@ png_read_info(png_structp png_ptr, png_infop info_ptr)
          png_handle_iTXt(png_ptr, info_ptr, length);
 #endif
 #if defined(PNG_READ_APNG_SUPPORTED)
-      else if (!png_memcmp(png_ptr->chunk_name, png_acTl, 4))
-         png_handle_acTl(png_ptr, info_ptr, length);
-      else if (!png_memcmp(png_ptr->chunk_name, png_fcTl, 4))
-         png_handle_fcTl(png_ptr, info_ptr, length);
-      else if (!png_memcmp(png_ptr->chunk_name, png_fdAt, 4))
-         png_handle_fdAt(png_ptr, info_ptr, length);
+      else if (!png_memcmp(png_ptr->chunk_name, png_acTL, 4))
+         png_handle_acTL(png_ptr, info_ptr, length);
+      else if (!png_memcmp(png_ptr->chunk_name, png_fcTL, 4))
+         png_handle_fcTL(png_ptr, info_ptr, length);
+      else if (!png_memcmp(png_ptr->chunk_name, png_fdAT, 4))
+         png_handle_fdAT(png_ptr, info_ptr, length);
 #endif
       else
          png_handle_unknown(png_ptr, info_ptr, length);
@@ -545,30 +545,30 @@ png_read_info(png_structp png_ptr, png_infop info_ptr)
 void PNGAPI
 png_read_frame_head(png_structp png_ptr, png_infop info_ptr)
 {
-    png_byte have_chunk_after_DAT; /* after IDAT or after fdAt */
+    png_byte have_chunk_after_DAT; /* after IDAT or after fdAT */
     
     png_debug(0, "Reading frame head\n");
     
-    if (!(png_ptr->mode & PNG_HAVE_acTl))
+    if (!(png_ptr->mode & PNG_HAVE_acTL))
         png_error(png_ptr, "attempt to png_read_frame_head() but "
-                           "no acTl present");
+                           "no acTL present");
     
     /* do nothing for the main IDAT */
     if (png_ptr->num_frames_read == 0)
         return;
     
-    png_crc_finish(png_ptr, 0); /* CRC from last IDAT or fdAt chunk */
+    png_crc_finish(png_ptr, 0); /* CRC from last IDAT or fdAT chunk */
     
     png_read_reset(png_ptr);
-    png_ptr->mode &= ~PNG_HAVE_fcTl;
+    png_ptr->mode &= ~PNG_HAVE_fcTL;
     
     have_chunk_after_DAT = 0;
     for (;;)
     {
 #ifdef PNG_USE_LOCAL_ARRAYS
         PNG_IDAT;
-        PNG_fdAt;
-        PNG_fcTl;
+        PNG_fdAT;
+        PNG_fcTL;
 #endif
         png_byte chunk_length[4];
         png_uint_32 length;
@@ -586,19 +586,19 @@ png_read_frame_head(png_structp png_ptr, png_infop info_ptr)
                 png_error(png_ptr, "png_read_frame_head(): out of place IDAT");
             png_crc_finish(png_ptr, length);
         }
-        else if (!png_memcmp(png_ptr->chunk_name, png_fcTl, 4))
+        else if (!png_memcmp(png_ptr->chunk_name, png_fcTL, 4))
         {
-            png_handle_fcTl(png_ptr, info_ptr, length);
+            png_handle_fcTL(png_ptr, info_ptr, length);
             have_chunk_after_DAT = 1;
         }
-        else if (!png_memcmp(png_ptr->chunk_name, png_fdAt, 4))
+        else if (!png_memcmp(png_ptr->chunk_name, png_fdAT, 4))
         {
             png_ensure_sequence_number(png_ptr, length);
             
-            /* discard trailing fdAts for frames other than the first */
+            /* discard trailing fdATs for frames other than the first */
             if (!have_chunk_after_DAT && png_ptr->num_frames_read > 1)
                 png_crc_finish(png_ptr, length - 4);
-            else if(png_ptr->mode & PNG_HAVE_fcTl)
+            else if(png_ptr->mode & PNG_HAVE_fcTL)
             {
                 png_ptr->idat_size = length - 4;
                 png_ptr->mode |= PNG_HAVE_IDAT;
@@ -606,7 +606,7 @@ png_read_frame_head(png_structp png_ptr, png_infop info_ptr)
                 break;
             }
             else
-                png_error(png_ptr, "png_read_frame_head(): out of place fdAt");
+                png_error(png_ptr, "png_read_frame_head(): out of place fdAT");
         }
         else
         {
@@ -653,7 +653,7 @@ png_read_row(png_structp png_ptr, png_bytep row, png_bytep dsp_row)
 #ifdef PNG_USE_LOCAL_ARRAYS
    PNG_IDAT;
 #if defined(PNG_READ_APNG_SUPPORTED)
-   PNG_fdAt;
+   PNG_fdAT;
    PNG_IEND;
 #endif
    const int png_pass_dsp_mask[7] = {0xff, 0x0f, 0xff, 0x33, 0xff, 0x55, 0xff};
@@ -810,7 +810,7 @@ png_read_row(png_structp png_ptr, png_bytep row, png_bytep dsp_row)
             {
                if (!png_memcmp(png_ptr->chunk_name, png_IEND, 4))
                   png_error(png_ptr, "Not enough image data");
-               if (png_memcmp(png_ptr->chunk_name, png_fdAt, 4))
+               if (png_memcmp(png_ptr->chunk_name, png_fdAT, 4))
                {
                   png_warning(png_ptr, "Skipped (ignored) a chunk "
                                        "between APNG chunks");
@@ -1095,9 +1095,9 @@ png_read_end(png_structp png_ptr, png_infop info_ptr)
       PNG_zTXt;
 #endif
 #if defined(PNG_READ_APNG_SUPPORTED)
-      PNG_acTl;
-      PNG_fcTl;
-      PNG_fdAt;
+      PNG_acTL;
+      PNG_fcTL;
+      PNG_fdAT;
 #endif
 #endif /* PNG_USE_LOCAL_ARRAYS */
 
@@ -1206,12 +1206,12 @@ png_read_end(png_structp png_ptr, png_infop info_ptr)
          png_handle_iTXt(png_ptr, info_ptr, length);
 #endif
 #if defined(PNG_READ_APNG_SUPPORTED)
-      else if (!png_memcmp(png_ptr->chunk_name, png_acTl, 4))
-         png_handle_acTl(png_ptr, info_ptr, length);
-      else if (!png_memcmp(png_ptr->chunk_name, png_fcTl, 4))
-         png_handle_fcTl(png_ptr, info_ptr, length);
-      else if (!png_memcmp(png_ptr->chunk_name, png_fdAt, 4))
-         png_handle_fdAt(png_ptr, info_ptr, length);
+      else if (!png_memcmp(png_ptr->chunk_name, png_acTL, 4))
+         png_handle_acTL(png_ptr, info_ptr, length);
+      else if (!png_memcmp(png_ptr->chunk_name, png_fcTL, 4))
+         png_handle_fcTL(png_ptr, info_ptr, length);
+      else if (!png_memcmp(png_ptr->chunk_name, png_fdAT, 4))
+         png_handle_fdAT(png_ptr, info_ptr, length);
 #endif
       else
          png_handle_unknown(png_ptr, info_ptr, length);

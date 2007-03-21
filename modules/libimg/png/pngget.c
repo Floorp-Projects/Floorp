@@ -796,13 +796,13 @@ png_get_tRNS(png_structp png_ptr, png_infop info_ptr,
 
 #if defined(PNG_APNG_SUPPORTED)
 png_uint_32 PNGAPI
-png_get_acTl(png_structp png_ptr, png_infop info_ptr,
+png_get_acTL(png_structp png_ptr, png_infop info_ptr,
              png_uint_32 *num_frames, png_uint_32 *num_iterations)
 {
-    png_debug1(1, "in %s retrieval function\n", "acTl");
+    png_debug1(1, "in %s retrieval function\n", "acTL");
     
     if (png_ptr != NULL && info_ptr != NULL &&
-        (info_ptr->valid & PNG_INFO_acTl) &&
+        (info_ptr->valid & PNG_INFO_acTL) &&
         num_frames != NULL && num_iterations != NULL)
     {
         *num_frames = info_ptr->num_frames;
@@ -834,16 +834,16 @@ png_get_num_iterations(png_structp png_ptr, png_infop info_ptr)
 }
 
 png_uint_32 PNGAPI
-png_get_next_frame_fcTl(png_structp png_ptr, png_infop info_ptr,
+png_get_next_frame_fcTL(png_structp png_ptr, png_infop info_ptr,
              png_uint_32 *width, png_uint_32 *height,
              png_uint_32 *x_offset, png_uint_32 *y_offset,
              png_uint_16 *delay_num, png_uint_16 *delay_den,
              png_byte *render_op)
 {
-    png_debug1(1, "in %s retrieval function\n", "fcTl");
+    png_debug1(1, "in %s retrieval function\n", "fcTL");
     
     if (png_ptr != NULL && info_ptr != NULL &&
-        (info_ptr->valid & PNG_INFO_fcTl) &&
+        (info_ptr->valid & PNG_INFO_fcTL) &&
         width != NULL && height != NULL && 
         x_offset != NULL && x_offset != NULL && 
         delay_num != NULL && delay_den != NULL && render_op != NULL)
@@ -937,8 +937,8 @@ png_first_frame_is_hidden(png_structp png_ptr, png_infop info_ptr)
     png_debug(1, "in png_first_frame_is_hidden()\n");
     
     if (png_ptr != NULL && info_ptr != NULL && 
-        info_ptr->valid & PNG_INFO_acTl &&
-        !(info_ptr->valid & PNG_INFO_fcTl))
+        info_ptr->valid & PNG_INFO_acTL &&
+        !(info_ptr->valid & PNG_INFO_fcTL))
         return 1;
     
     return 0;
