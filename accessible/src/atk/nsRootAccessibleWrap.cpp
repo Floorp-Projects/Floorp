@@ -205,17 +205,6 @@ nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
             privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_REORDER, accessible, nsnull);
         }
     }
-    // Value change events for ATK are done with 
-    // AtkPropertyChange, PROP_VALUE. Need the old and new value.
-    // Don't bother sending old value, it's not used.
-    else if (eventType.LowerCaseEqualsLiteral("valuechange")) { 
-        AtkPropertyChange propChange;
-        propChange.type = PROP_VALUE;
-        propChange.oldvalue = 0; // Not used
-        propChange.newvalue = 0; // ATK code will get the value directly from accessible
-        privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_PROPERTY_CHANGE, 
-                                  accessible, &propChange);
-    }
     else if (eventType.LowerCaseEqualsLiteral("checkboxstatechange") || // it's a XUL <checkbox>
              eventType.LowerCaseEqualsLiteral("radiostatechange")) { // it's a XUL <radio>
         accessible->GetFinalState(&stateData.state);

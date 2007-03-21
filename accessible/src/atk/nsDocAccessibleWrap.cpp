@@ -63,7 +63,6 @@ static char * sAtkPropertyNameArray[PROP_LAST] = {
     "accessible-name",
     "accessible-description",
     "accessible-parent",
-    "accessible-value",
     "accessible-role",
     "accessible-layer",
     "accessible-mdi-zorder",
@@ -149,10 +148,15 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
       }
       break;
       
-        /*
-         * More complex than I ever thought.
-         * Need handle them separately.
-         */
+    case nsIAccessibleEvent::EVENT_VALUE_CHANGE :
+      {
+        g_object_notify( (GObject*)atkObj, "accessible-value" );
+      }
+      break;
+        
+    /*
+     * Need handle each type of property change separately.
+     */        
     case nsIAccessibleEvent::EVENT_ATK_PROPERTY_CHANGE :
       {
         AtkPropertyChange *pAtkPropChange;
@@ -201,22 +205,6 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
                             *NS_REINTERPRET_CAST(gint *,
                                                  pAtkPropChange->newvalue));
             rv = NS_OK;
-            break;
-        case PROP_VALUE:
-            {
-              // Old value not used for anything other than state change events
-              nsCOMPtr<nsIAccessibleValue> accValue(do_QueryInterface(aAccessible, &rv));
-              if (!NS_SUCCEEDED(rv)) {
-                break;
-              }
-              double newValue;
-              rv = accValue->GetCurrentValue(&newValue);
-              if (!NS_SUCCEEDED(rv)) {
-                break;
-              }
-              g_value_init(&values.new_value, G_TYPE_DOUBLE);
-              g_value_set_double(&values.new_value, newValue);
-            }
             break;
   
             //Perhaps need more cases in the future

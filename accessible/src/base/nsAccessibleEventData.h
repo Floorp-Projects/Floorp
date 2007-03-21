@@ -96,7 +96,6 @@ enum AtkProperty {
   PROP_NAME,
   PROP_DESCRIPTION,
   PROP_PARENT,      // ancestry has changed
-  PROP_VALUE,
   PROP_ROLE,
   PROP_LAYER,
   PROP_MDI_ZORDER,
