@@ -58,7 +58,6 @@ sub ProcessArgs {
 }
 
 sub DetermineSteps() {
-    my $currentStep;
     my $desiredStep;
 
     if (defined($config{'step'})) {
@@ -69,16 +68,18 @@ sub DetermineSteps() {
         $desiredStep = $config{'only'};
         print "Bootstrap only run step: $desiredStep\n";
     }
+
+    my $currentStep = -1;
     if (defined($desiredStep)) {
-        my $stepNumber = 0;
-        for my $stepName (@allSteps) {
-            if ($stepName eq "$desiredStep") {
-                $currentStep = $stepNumber;
-            } else {
-                $stepNumber += 1;
+        if (not grep(/^$desiredStep$/, @allSteps)) {
+            die("ASSERT: $desiredStep is not a valid step name.");
+        }
+        for (my $i=0; $i < scalar(@allSteps); $i++) {
+            if ($allSteps[$i] eq "$desiredStep") {
+                $currentStep = $i;
             }
         }
-        if (not defined($currentStep)) {
+        if ($currentStep == -1) {
             die("Step $desiredStep not found!\n");
         }
     } else {
