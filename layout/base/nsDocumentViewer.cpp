@@ -829,7 +829,11 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
 
 #ifdef NS_PRINT_PREVIEW
       if (mIsPageMode) {
-        ;
+        // I'm leaving this in a broken state for the moment; we should
+        // be measuring/scaling with the print device context, not the
+        // screen device context, but this is good enough to allow
+        // printing reftests to work.
+#if 0
         nsCOMPtr<nsIDeviceContextSpec> devspec =
           do_CreateInstance("@mozilla.org/gfx/devicecontextspec;1", &rv);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -839,16 +843,21 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
         nsCOMPtr<nsIDeviceContext> devctx =
           do_CreateInstance("@mozilla.org/gfx/devicecontext;1", &rv);
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = devctx->Init(devspec);
+        rv = devctx->InitForPrinting(devspec);
         NS_ENSURE_SUCCESS(rv, rv);
         // XXX I'm breaking this code; I'm not sure I really want to mess with
         // the document viewer at the moment to get the right device context
         // (this won't break anyone, since page layout mode was never really
         // usable)
-        PRInt32 pageWidth, pageHeight;
-        devctx->GetDeviceSurfaceDimensions(pageWidth, pageHeight);
-        mPresContext->SetPageSize(nsSize(pageWidth, pageHeight));
+#endif
+        PRInt32 pageWidth = 0, pageHeight = 0;
+        mPresContext->GetPrintSettings()->GetPageSizeInTwips(&pageWidth,
+                                                             &pageHeight);
+        mPresContext->SetPageSize(
+          nsSize(mPresContext->TwipsToAppUnits(pageWidth),
+                 mPresContext->TwipsToAppUnits(pageHeight)));
         mPresContext->SetIsRootPaginatedDocument(PR_TRUE);
+        mPresContext->SetPageScale(1.0f);
       }
 #endif
     }
@@ -4042,9 +4051,8 @@ DocumentViewerImpl::OnDonePrinting()
 
 NS_IMETHODIMP DocumentViewerImpl::SetPageMode(PRBool aPageMode, nsIPrintSettings* aPrintSettings)
 {
-  // XXX until the print code is in a more stable state, I don't
-  // want to worry about this code
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // XXX Page mode is only partially working; it's currently used for
+  // reftests that require a paginated context
   mIsPageMode = aPageMode;
   // Get the current size of what is being viewed
   nsRect bounds;

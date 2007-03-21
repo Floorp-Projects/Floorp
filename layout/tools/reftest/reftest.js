@@ -204,8 +204,13 @@ function OnDocumentLoad(event)
         return;
 
     function shouldWait() {
-      return contentRootElement.className.split(/\s+/)
-                               .indexOf("reftest-wait") != -1;
+        return contentRootElement.className.split(/\s+/)
+                                 .indexOf("reftest-wait") != -1;
+    }
+
+    function doPrintMode() {
+        return contentRootElement.className.split(/\s+/)
+                                 .indexOf("reftest-print") != -1;
     }
 
     var contentRootElement = gBrowser.contentDocument.documentElement;
@@ -225,6 +230,21 @@ function OnDocumentLoad(event)
                 }
             }, false);
     } else {
+        if (doPrintMode()) {
+            var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                    .getService(Components.interfaces.nsIPrintSettingsService);
+            var ps = PSSVC.newPrintSettings;
+            ps.paperWidth = 5;
+            ps.paperHeight = 3;
+            ps.headerStrLeft = "";
+            ps.headerStrCenter = "";
+            ps.headerStrRight = "";
+            ps.footerStrLeft = "";
+            ps.footerStrCenter = "";
+            ps.footerStrRight = "";
+            gBrowser.docShell.contentViewer.setPageMode(true, ps);
+        }
+
         // Since we can't use a bubbling-phase load listener from chrome,
         // this is a capturing phase listener.  So do setTimeout twice, the
         // first to get us after the onload has fired in the content, and
