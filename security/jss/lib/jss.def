@@ -308,3 +308,10 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateECKeyPair;
 ;+    local:
 ;+       *;
 ;+};
+;+JSS_4.2.5 {     # JSS 4.2.5 release
+;+    global:
+Java_org_mozilla_jss_ssl_SSLSocket_setSSLDefaultOptionMode;
+Java_org_mozilla_jss_ssl_SocketBase_setSSLOptionMode;
+;+    local:
+;+       *;
+;+};
