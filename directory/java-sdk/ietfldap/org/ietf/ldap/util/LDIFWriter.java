@@ -18,7 +18,6 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *     bugzilla 62700: Joe Rank (joer@trapdoor.net)
  */
 package org.ietf.ldap.util;
 
@@ -93,41 +92,40 @@ public class LDIFWriter extends LDAPWriter {
 		/* Loop on values for this attribute */
 		Enumeration enumVals = attr.getByteValues();
 
-		if ( enumVals == null ) {
-			printString( attrName + m_sep + ' ' );
-			return;
-		}
-        
-		while (enumVals.hasMoreElements()) {            
-			if ( m_toFiles ) {
-				try {
-					FileOutputStream f = getTempFile( attrName );
-					f.write( (byte[])enumVals.nextElement() );
-				} catch ( Exception e ) {
-					System.err.println( "Error writing values " +
+		if ( enumVals != null ) {
+			while (enumVals.hasMoreElements()) {            
+				if ( m_toFiles ) {
+					try {
+						FileOutputStream f = getTempFile( attrName );
+						f.write( (byte[])enumVals.nextElement() );
+					} catch ( Exception e ) {
+						System.err.println( "Error writing values " +
 										"of " + attrName + ", " +
 										e.toString() );
-					System.exit(1);
-				}
-			} else {
-				byte[] b = (byte[])enumVals.nextElement();
-				String s;
-				if ( LDIF.isPrintable(b) ) {
-					try {
-						s = new String( b, "UTF8" );
-					} catch ( UnsupportedEncodingException e ) {
-						s = "";
+						System.exit(1);
 					}
-					printString( attrName + m_sep + " " + s );
 				} else {
-					s = getPrintableValue( b );
-					if ( s.length() > 0 ) {
-						printString( attrName + ":: " + s );
+					byte[] b = (byte[])enumVals.nextElement();
+					String s;
+					if ( LDIF.isPrintable(b) ) {
+						try {
+							s = new String( b, "UTF8" );
+						} catch ( UnsupportedEncodingException e ) {
+							s = "";
+						}
+						printString( attrName + m_sep + " " + s );
 					} else {
-						printString( attrName + m_sep + ' ' );
+						s = getPrintableValue( b );
+						if ( s.length() > 0 ) {
+							printString( attrName + ":: " + s );
+						} else {
+							printString( attrName + m_sep + ' ' );
+						}
 					}
 				}
 			}
+		} else {
+			printString( attrName + m_sep + ' ' );
 		}
 	}
 
@@ -137,20 +135,22 @@ public class LDIFWriter extends LDAPWriter {
      * @param dn the DN of the entry
      */
     protected void printEntryStart( String dn ) {
-		if ( dn == null ) {
-			dn = "";
-		} else {
+        if ( dn == null ) {
+            printString( "dn" + m_sep + " ");
+        } else {
             byte[] b = null;
             try {
                 b = dn.getBytes( "UTF8" );
             } catch ( UnsupportedEncodingException ex ) {
             }
-            if ( !LDIF.isPrintable(b) ) {
+            if ( LDIF.isPrintable(b) ) {
+                printString( "dn" + m_sep + " " + dn );
+            } else {
                 dn = getPrintableValue( b );
+                printString( "dn" + m_sep + m_sep + " " + dn );
             }
         }
-		printString( "dn" + m_sep + " " + dn );
-	}
+    }
 
     /**
      * Print epilogue to entry
