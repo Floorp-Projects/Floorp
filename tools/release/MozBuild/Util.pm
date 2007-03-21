@@ -15,6 +15,7 @@ our @EXPORT_OK = qw(RunShellCommand MkdirWithPath HashFile DownloadFile Email);
 
 my $DEFAULT_EXEC_TIMEOUT = 600;
 my $EXEC_IO_READINCR = 1000;
+my $EXEC_REAP_TIMEOUT = 10;
 
 # RunShellCommand is a safe, performant way that handles all the gotchas of
 # spawning a simple shell command. It's meant to replace backticks and open()s,
@@ -101,7 +102,20 @@ sub RunShellCommand {
     my $output = '';
     my $childPid = 0;
     my $childStartedTime = 0;
+    my $childReaped = 0;
+    my $prevStdoutBufferingSetting = 0;
     local *LOGFILE;
+
+    if ($printOutputImmediately) {
+        # We Only end up doing this if it's requested that we're going to print
+        # output immediately. Additionally, we can't call autoflush() on STDOUT
+        # here, because doing so automatically sets it to on (gee, thanks); 
+        # $| is the only way to get the value.
+        my $prevFd = select(STDOUT);
+        $prevStdoutBufferingSetting = $|;
+        select($prevFd);
+        STDOUT->autoflush(1);
+    }
 
     if (defined($changeToDir)) {
         chdir($changeToDir) or die("RunShellCommand(): failed to chdir() to "
@@ -129,7 +143,14 @@ sub RunShellCommand {
         if ($args{'background'}) {
             alarm(0);
 
+            # Restore external state
             chdir($cwd) if (defined($changeToDir));
+            if ($printOutputImmediately) {
+                my $prevFd = select(STDOUT);
+                $| = $prevStdoutBufferingSetting;
+                select($prevFd);
+            }
+
             return { startTime => $childStartedTime,
                      endTime => undef,
                      timedOut => $timedOut,
@@ -158,7 +179,6 @@ sub RunShellCommand {
         # IF NOTHING ELSE, the alarm() we set will catch a program that
         # fails to finish executing within the timeout period.
 
-        my $childReaped = 0;
         while (my @ready = $childSelect->can_read()) {
             foreach my $fh (@ready) {
                 my $line = undef;
@@ -212,15 +232,41 @@ sub RunShellCommand {
     if ($@) {
         if ($@ eq "alarm\n") {
             $timedOut = 1;
-            kill(9, $childPid) or die("Could not kill timed-out $childPid: $!");
-            warn "Shell command $shellCommand timed out, PID $childPid killed: $@\n";
+            if ($childReaped) {
+                die('ASSERT: RunShellCommand(): timed out, but child already '.
+                 'reaped?'); 
+            }
+
+            if (kill('KILL', $childPid) != 1) {
+                warn("SIGKILL to timed-out child $childPid failed: $!\n");
+            }
+
+            # Processes get 10 seconds to obey.
+            eval {
+                local $SIG{'ALRM'} = sub { die("alarm\n") };
+                alarm($EXEC_REAP_TIMEOUT);
+                my $waitRv = waitpid($childPid, 0);
+                alarm(0);
+                # Don't fill in these values if they're bogus.
+                if ($waitRv > 0) {
+                    $exitValue = WEXITSTATUS($?);
+                    $signalNum = WIFSIGNALED($?) && WTERMSIG($?);
+                    $dumpedCore = WIFSIGNALED($?) && ($? & 128);
+                }
+            };
         } else {
             warn "Error running $shellCommand: $@\n";
             $output = $@;
         }
     }
 
+    # Restore external state
     chdir($cwd) if (defined($changeToDir));
+    if ($printOutputImmediately) {
+        my $prevFd = select(STDOUT);
+        $| = $prevStdoutBufferingSetting;
+        select($prevFd);
+    }
 
     return { startTime => $childStartedTime,
              endTime => $childEndedTime,
