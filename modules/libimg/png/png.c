@@ -51,9 +51,9 @@ PNG_tEXt;
 PNG_tIME;
 PNG_tRNS;
 PNG_zTXt;
-PNG_acTl;
-PNG_fcTl;
-PNG_fdAt;
+PNG_acTL;
+PNG_fcTL;
+PNG_fdAT;
 
 #ifdef PNG_READ_SUPPORTED
 /* arrays to facilitate easy interlacing - use pass (0 - 6) as index */

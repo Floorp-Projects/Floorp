@@ -262,8 +262,8 @@ png_write_info(png_structp png_ptr, png_infop info_ptr)
    }
 #endif
 #if defined(PNG_WRITE_APNG_SUPPORTED)
-   if (info_ptr->valid & PNG_INFO_acTl)
-      png_write_acTl(png_ptr, info_ptr->num_frames, info_ptr->num_iterations);
+   if (info_ptr->valid & PNG_INFO_acTL)
+      png_write_acTL(png_ptr, info_ptr->num_frames, info_ptr->num_iterations);
 #endif
 #if defined(PNG_WRITE_UNKNOWN_CHUNKS_SUPPORTED)
    if (info_ptr->unknown_chunks_num)
@@ -1531,15 +1531,15 @@ png_write_frame_head(png_structp png_ptr, png_infop info_ptr,
     
     /* there is a chance this has been set after png_write_info was called,
     * so it would be set but not written. is there a way to be sure? */
-    if (!(info_ptr->valid & PNG_INFO_acTl))
-        png_error(png_ptr, "png_write_frame_head(): acTl not set");
+    if (!(info_ptr->valid & PNG_INFO_acTL))
+        png_error(png_ptr, "png_write_frame_head(): acTL not set");
     
     png_write_reset(png_ptr);
     
     png_write_reinit(png_ptr, info_ptr, width, height);
     
     if ( !(png_ptr->num_frames_written == 0 && first_frame_hidden) )
-        png_write_fcTl(png_ptr, width, height, x_offset, y_offset, 
+        png_write_fcTL(png_ptr, width, height, x_offset, y_offset, 
                        delay_num, delay_den, render_op);
 }
 
