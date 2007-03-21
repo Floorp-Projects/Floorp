@@ -47,10 +47,17 @@ public class JSSESocketFactory
 
     static final long serialVersionUID = 6834205777733266609L;
 
+    protected SSLSocketFactory factory = null;
+
     // Optional explicit cipher suites to use
-    private String[] suites;
-    // The socket factory
-    private SSLSocketFactory factory;
+    protected String[] suites = null;
+
+    /**
+     * Default factory constructor
+     */
+    public JSSESocketFactory() {
+        this.factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+    }
 
     /**
      * Factory constructor that uses the default JSSE SSLSocketFactory
@@ -60,21 +67,29 @@ public class JSSESocketFactory
      * JSSE package
      */
     public JSSESocketFactory( String[] suites ) {
-        this(suites, null);
+        this.suites = suites;
+        this.factory = (SSLSocketFactory)SSLSocketFactory.getDefault();
+    }
+
+    /**
+    * Factory constructor
+    * @param sf the SSL socketfactory to use
+    */
+    public JSSESocketFactory( SSLSocketFactory factory) {
+        this.factory = factory;
     }
   
    /**
-    * Factory constructor that provides an explicit SSLSocketFactory.
+    * Factory constructor
     *
     * @param suites Cipher suites to attempt to use with the server;
     * if <code>null</code>, use any cipher suites available in the
     * JSSE package
-    * @param factory the specific SSL server socket factory to use
+    * @param sf the SSL socketfactory to use
     */
     public JSSESocketFactory( String[] suites, SSLSocketFactory factory ) {
         this.suites = suites;
-        this.factory = (factory != null) ? factory :
-                       (SSLSocketFactory)SSLSocketFactory.getDefault();
+        this.factory = factory;
     }
 
     /**
