@@ -57,13 +57,14 @@ gfxRect gfxRect::Intersect(const gfxRect& aRect) const
 
 gfxRect gfxRect::Union(const gfxRect& aRect) const
 {
-  gfxRect result(0,0,0,0);
-  if (!aRect.IsEmpty() && !IsEmpty()) {
-    gfxFloat x = PR_MIN(aRect.X(), X());
-    gfxFloat xmost = PR_MAX(aRect.XMost(), XMost());
-    gfxFloat y = PR_MIN(aRect.Y(), Y());
-    gfxFloat ymost = PR_MAX(aRect.YMost(), YMost());
-    result = gfxRect(x, y, xmost - x, ymost - y);
-  }
-  return result;
+  if (IsEmpty())
+    return aRect;
+  if (aRect.IsEmpty())
+    return *this;
+
+  gfxFloat x = PR_MIN(aRect.X(), X());
+  gfxFloat xmost = PR_MAX(aRect.XMost(), XMost());
+  gfxFloat y = PR_MIN(aRect.Y(), Y());
+  gfxFloat ymost = PR_MAX(aRect.YMost(), YMost());
+  return gfxRect(x, y, xmost - x, ymost - y);
 }
