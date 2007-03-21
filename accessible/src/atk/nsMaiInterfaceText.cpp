@@ -360,12 +360,17 @@ getOffsetAtPointCB(AtkText *aText,
 gint
 getTextSelectionCountCB(AtkText *aText)
 {
-    /* no implemetation in nsIAccessibleText??? */
+    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
+    NS_ENSURE_TRUE(accWrap, nsnull);
 
-    //new attribuate will be added in nsIAccessibleText.idl
-    //readonly attribute long selectionCount;
+    nsCOMPtr<nsIAccessibleText> accText;
+    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText),
+                            getter_AddRefs(accText));
 
-    return 0;
+    PRInt32 selectionCount;
+    nsresult rv = accText->GetSelectionCount(&selectionCount);
+ 
+    return NS_FAILED(rv) ? 0 : selectionCount;
 }
 
 gchar *
