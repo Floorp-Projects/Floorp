@@ -75,7 +75,7 @@ sub DetermineSteps() {
             die("ASSERT: $desiredStep is not a valid step name.");
         }
         for (my $i=0; $i < scalar(@allSteps); $i++) {
-            if ($allSteps[$i] eq "$desiredStep") {
+            if ($allSteps[$i] eq $desiredStep) {
                 $currentStep = $i;
             }
         }
