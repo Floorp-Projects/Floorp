@@ -5,6 +5,9 @@
 # verify the tests work
 include reftest-sanity/reftest.list
 
+# printing
+include printing/reftest.list
+
 # bugs/
 include bugs/reftest.list
 

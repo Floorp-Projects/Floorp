@@ -500,7 +500,8 @@ nsSimplePageSequenceFrame::StartPrint(nsPresContext*   aPresContext,
     // XXX because of the hack for making the selection all print on one page
     // we must make sure that the page is sized correctly before printing.
     PRInt32 width, height;
-    aPresContext->DeviceContext()->GetDeviceSurfaceDimensions(width, height);
+    width = aPresContext->GetPageSize().width;
+    height = aPresContext->GetPageSize().height;
 
     PRInt32 pageNum = 1;
     nscoord y = 0;//mMargin.top;
@@ -599,7 +600,8 @@ nsSimplePageSequenceFrame::PrintNextPage()
     // I will soon improve this to work with IFrames 
     PRBool  continuePrinting = PR_TRUE;
     PRInt32 width, height;
-    dc->GetDeviceSurfaceDimensions(width, height);
+    width = GetPresContext()->GetPageSize().width;
+    height = GetPresContext()->GetPageSize().height;
     height -= mMargin.top + mMargin.bottom;
     width  -= mMargin.left + mMargin.right;
     nscoord selectionY = height;
