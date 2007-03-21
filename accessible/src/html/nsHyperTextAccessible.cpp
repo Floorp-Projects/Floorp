@@ -506,22 +506,29 @@ nsresult nsHyperTextAccessible::DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNod
     findNode = do_QueryInterface(parentContent->GetChildAt(aNodeOffset));
   }
 
-#ifdef DEBUG
-    // aNode should be a descendant of mDOMNode (the DOM node for this accessible object)
-    // Corralary: the first accessible in the parent chain should be |this|
-    if (findNode) {
-      nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
-      nsCOMPtr<nsIAccessible> parentAccessible;
-      docAccessible->GetAccessibleInParentChain(findNode, getter_AddRefs(parentAccessible));
-      NS_ASSERTION(parentAccessible == this, "Accessible ancestor is not |this|");
-    }
-#endif
   // Get accessible for this findNode, or if that node isn't accessible, use the
   // accessible for the next DOM node which has one (based on forward depth first search)
-  nsCOMPtr<nsIAccessible> childAccessible;
+  nsCOMPtr<nsIAccessible> descendantAccessible;
   if (findNode) {
-    childAccessible = GetFirstAvailableAccessible(findNode);
+    descendantAccessible = GetFirstAvailableAccessible(findNode);
   }
+  // From the descendant, go up and get the immediate child of this hypertext
+  nsCOMPtr<nsIAccessible> childAccessible;
+  while (descendantAccessible) {
+    nsCOMPtr<nsIAccessible> parentAccessible;
+    descendantAccessible->GetParent(getter_AddRefs(parentAccessible));
+    if (this == parentAccessible) {
+      childAccessible = descendantAccessible;
+      break;
+    }
+    descendantAccessible = parentAccessible;
+    // This offset no longer applies because the passed-in text object is not a child
+    // of the hypertext. This happens when there are nested hypertexts, e.g.
+    // <div>abc<h1>def</h1>ghi</div>
+    // If the passed-in DOM point was not on a direct child of the hypertext, we will
+    // return the offset for that entire hypertext
+    addTextOffset = 0;
+  }  
 
   // Loop through, adding offsets until we reach childAccessible
   // If childAccessible is null we will end up adding up the entire length of
@@ -732,6 +739,12 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     finalEndOffset = GetRelativeOffset(presShell, endFrame, endOffset, amount,
                                        eDirNext, needsStart);
     NS_ENSURE_TRUE(endOffset >= 0, NS_ERROR_FAILURE);
+    if (finalEndOffset == aOffset) {
+      // This happens sometimes when current character at finalStartOffset 
+      // is an embedded object character representing another hypertext, that
+      // the AT really needs to dig into separately
+      ++ finalEndOffset;
+    }
   }
 
   // Fix word error for the first character in word: PeekOffset() will return the previous word when 
