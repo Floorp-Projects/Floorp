@@ -98,6 +98,24 @@
       if (!event.button)  // left click only
         return gPhishingDetector.warnOnSuspiciousLinkClick(href); // let the phishing detector check the link
     }
+    else if (!event.button)
+    {
+      var targ = event.target;
+      // is this an image that we might want to scale?
+      const Ci = Components.interfaces;
+      if (targ instanceof Ci.nsIImageLoadingContent) 
+      {
+        // make sure it loaded successfully
+        var req = targ.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+        if (!req || req.imageStatus & Ci.imgIRequest.STATUS_ERROR)
+          return true;
+        // is it an inline attachment?
+        if (targ.className == "moz-attached-image-scaled")
+          targ.className = "moz-attached-image-unscaled";
+        else if (targ.className == "moz-attached-image-unscaled")
+          targ.className = "moz-attached-image-scaled";
+      }
+    }
     
     return true;
   }

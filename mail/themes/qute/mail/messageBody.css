@@ -115,6 +115,17 @@ span.moz-txt-formfeed {
   height: 100%;
 }
 
+/* ::::: attached images ::::: */
+.moz-attached-image-unscaled { 
+  cursor: -moz-zoom-out;
+}
+
+.moz-attached-image-scaled { 
+  cursor: -moz-zoom-in;
+  max-width: 100%;
+}
+
+
 /* ::::: vcard ::::: */
 
 .moz-vcard-table {

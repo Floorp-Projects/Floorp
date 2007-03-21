@@ -119,6 +119,17 @@ span.moz-txt-underscore {
   color: #7777FF; /* light blue */
 }
 
+
+/* ::::: attached images ::::: */
+.moz-attached-image-unscaled { 
+  cursor: -moz-zoom-out;
+}
+
+.moz-attached-image-scaled { 
+  cursor: -moz-zoom-in;
+  max-width: 100%;
+}
+
 /* ::::: we also represent smilies inside of spans ::::: */
 
 span.moz-smiley-s1,
