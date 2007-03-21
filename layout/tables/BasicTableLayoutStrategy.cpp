@@ -399,6 +399,14 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                     continue;
                 }
 
+                nscoord curPref;
+                if (info.hasSpecifiedWidth &&
+                    !scolFrame->GetHasSpecifiedCoord()) {
+                    curPref = scolFrame->GetMinCoord();
+                } else {
+                    curPref = scolFrame->GetPrefCoord();
+                }
+
                 // the percentage width (only to columns that don't
                 // already have percentage widths, in proportion to
                 // the existing pref widths)
@@ -414,7 +422,7 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                         // Group so we're multiplying by 1.0f when we need
                         // to use up info.prefPercent.
                         allocatedPct = info.prefPercent *
-                                           (float(scolFrame->GetPrefCoord()) /
+                                           (float(curPref) /
                                             float(totalSNonPctPref));
                     } else {
                         // distribute equally when all pref widths are 0
@@ -427,8 +435,7 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                 // existing pref width
                 float minRatio = 0.0f;
                 if (minWithinPref > 0) {
-                    minRatio = float(scolFrame->GetPrefCoord() -
-                                     scolFrame->GetMinCoord()) /
+                    minRatio = float(curPref - scolFrame->GetMinCoord()) /
                                float(totalSPref - totalSMin);
                 }
 
@@ -436,25 +443,16 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                 // proportion to the existing pref widths)
                 float coordRatio; // for both min and pref
                 if (spanHasPref) {
-                    if (scolFrame->GetPrefCoord() == 0) {
+                    if (curPref == 0) {
                         // We might have already subtracted all of
                         // totalSPref.
                         coordRatio = 0.0f;
                     } else {
-                        coordRatio = float(scolFrame->GetPrefCoord()) /
-                                     float(totalSPref);
+                        coordRatio = float(curPref) / float(totalSPref);
                     }
                 } else {
                     // distribute equally when all pref widths are 0
                     coordRatio = 1.0f / float(scol_end - scol);
-                }
-
-                nscoord curPref;
-                if (info.hasSpecifiedWidth &&
-                    !scolFrame->GetHasSpecifiedCoord()) {
-                    curPref = scolFrame->GetMinCoord();
-                } else {
-                    curPref = scolFrame->GetPrefCoord();
                 }
 
                 // combine the two min-width distributions, and record
