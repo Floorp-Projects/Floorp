@@ -126,6 +126,19 @@ int call1(char c, int i, double d, ... )
 /***************************************************************************/
 // shows how to use the dhw stuff to hook imported functions
 
+#if _MSC_VER < 1300
+#define NS_DEBUG_CRT "MSVCRTD.dll"
+#elif _MSC_VER == 1300
+#define NS_DEBUG_CRT "msvcr70d.dll"
+#elif _MSC_VER == 1310
+#define NS_DEBUG_CRT "msvcr71d.dll"
+#elif _MSC_VER == 1400
+#define NS_DEBUG_CRT "msvcr80d.dll"
+#elif _MSC_VER == 1500
+#define NS_DEBUG_CRT "msvcr90d.dll"
+#else
+#error "Don't know filename of MSVC debug library."
+#endif
 
 static BOOL g_lockOut = FALSE; //stop reentrancy
 
@@ -133,7 +146,7 @@ DHW_DECLARE_FUN_TYPE_AND_PROTO(dhw_malloc, void*, __cdecl, MALLOC_, (size_t));
 
 DHWImportHooker &getMallocHooker()
 {
-  static DHWImportHooker gMallocHooker("MSVCRTD.dll", "malloc", (PROC) dhw_malloc);
+  static DHWImportHooker gMallocHooker(NS_DEBUG_CRT, "malloc", (PROC) dhw_malloc);
   return gMallocHooker;
 }
 
@@ -159,7 +172,7 @@ DHW_DECLARE_FUN_TYPE_AND_PROTO(dhw_calloc, void*, __cdecl, CALLOC_, (size_t,size
 
 DHWImportHooker &getCallocHooker()
 {
-  static DHWImportHooker gCallocHooker("MSVCRTD.dll", "calloc", (PROC) dhw_calloc);
+  static DHWImportHooker gCallocHooker(NS_DEBUG_CRT, "calloc", (PROC) dhw_calloc);
   return gCallocHooker;
 }
 
@@ -184,7 +197,7 @@ void * __cdecl dhw_calloc( size_t count, size_t size )
 DHW_DECLARE_FUN_TYPE_AND_PROTO(dhw_free, void, __cdecl, FREE_, (void*));
 DHWImportHooker &getFreeHooker()
 {
-  static DHWImportHooker gFreeHooker("MSVCRTD.dll", "free", (PROC) dhw_free);
+  static DHWImportHooker gFreeHooker(NS_DEBUG_CRT, "free", (PROC) dhw_free);
   return gFreeHooker;
 }
 
@@ -209,7 +222,7 @@ void __cdecl dhw_free( void* p )
 DHW_DECLARE_FUN_TYPE_AND_PROTO(dhw_realloc, void*, __cdecl, REALLOC_, (void*, size_t));
 DHWImportHooker &getReallocHooker()
 {
-  static DHWImportHooker gReallocHooker("MSVCRTD.dll", "realloc", (PROC) dhw_realloc);
+  static DHWImportHooker gReallocHooker(NS_DEBUG_CRT, "realloc", (PROC) dhw_realloc);
   return gReallocHooker;
 }
 
@@ -237,7 +250,7 @@ void * __cdecl dhw_realloc(void * pin, size_t size)
 DHW_DECLARE_FUN_TYPE_AND_PROTO(dhw_new, void*, __cdecl, NEW_, (size_t));
 DHWImportHooker &getNewHooker()
 {
-  static DHWImportHooker gNewHooker("MSVCRTD.dll", "??2@YAPAXI@Z", (PROC) dhw_new);
+  static DHWImportHooker gNewHooker(NS_DEBUG_CRT, "??2@YAPAXI@Z", (PROC) dhw_new);
   return gNewHooker;
 }
 
@@ -264,7 +277,7 @@ void * __cdecl dhw_new(size_t size)
 DHW_DECLARE_FUN_TYPE_AND_PROTO(dhw_delete, void, __cdecl, DELETE_, (void*));
 DHWImportHooker &getDeleteHooker()
 {
-  static DHWImportHooker gDeleteHooker("MSVCRTD.dll", "??3@YAXPAX@Z", (PROC) dhw_delete);
+  static DHWImportHooker gDeleteHooker(NS_DEBUG_CRT, "??3@YAXPAX@Z", (PROC) dhw_delete);
   return gDeleteHooker;
 }
 
@@ -411,7 +424,7 @@ int main()
     }
 
     // show that the ImportHooker is hooking sneaky calls made from this dll.
-    HMODULE module2 = ::LoadLibrary("MSVCRTD.dll");
+    HMODULE module2 = ::LoadLibrary(NS_DEBUG_CRT);
     if(module2) {
         MALLOC_ _sneakyMalloc = (MALLOC_) GetProcAddress(module2, "malloc");
         if(_sneakyMalloc)
