@@ -23,6 +23,7 @@
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
  *   Mike Shaver <shaver@off.net>
  *   Matthew Willis <lilmatt@mozilla.com>
+ *   Philipp Kewisch <mozilla@kewis.ch>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -163,7 +164,12 @@ const componentData =
     {cid: Components.ID("{207a6682-8ff1-4203-9160-729ec28c8766}"),
      contractid: "@mozilla.org/calendar/ics-serializer;1",
      script: "calIcsSerializer.js",
-     constructor: "calIcsSerializer"}
+     constructor: "calIcsSerializer"},
+
+    {cid: Components.ID("{40a1ccf4-5f54-4815-b842-abf06f84dbfd}"),
+     contractid: "@mozilla.org/calendar/transactionmanager;1",
+     script: "calTransactionManager.js",
+     constructor: "calTransactionManager"}
     ];
 
 var calItemModule = {

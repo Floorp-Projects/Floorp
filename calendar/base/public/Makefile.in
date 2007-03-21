@@ -21,6 +21,7 @@
 #   Dan Mosedale <dan.mosedale@oracle.com>
 #   Mike Shaver <shaver@off.net>
 #   Matthew Willis <lilmatt@mozilla.com>
+#   Philipp Kewisch <mozilla@kewis.ch>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -77,6 +78,7 @@ XPIDLSRCS	= calIAlarmService.idl \
 		  calIDateTimeFormatter.idl \
 		  calIWeekTitleService.idl \
 		  calIPrintFormatter.idl \
+		  calITransactionManager.idl \
 		  $(NULL)
 
 EXPORTS		= calBaseCID.h

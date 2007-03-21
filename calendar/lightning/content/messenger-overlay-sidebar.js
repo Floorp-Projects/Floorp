@@ -27,6 +27,7 @@
  *   Stefan Sitter <ssitter@googlemail.com>
  *   Thomas Benisch <thomas.benisch@sun.com>
  *   Michael Buettner <michael.buettner@sun.com>
+ *   Philipp Kewisch <mozilla@kewis.ch>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -124,12 +125,12 @@ var CalendarController =
         break;
       case "cmd_undo":
         if (this.isCalendarInForeground() && canUndo()) {
-          gTransactionMgr.undoTransaction();
+          getTransactionMgr().undo();
         }
         break;
       case "cmd_redo":
         if (this.isCalendarInForeground() && canRedo()) {
-          gTransactionMgr.redoTransaction();
+          getTransactionMgr().redo();
         }
         break;
       case "cmd_print":

@@ -29,6 +29,7 @@
  *                 Matthew Willis <lilmatt@mozilla.com>
  *                 Joey Minta <jminta@gmail.com>
  *                 Dan Mosedale <dan.mosedale@oracle.com>
+ *                 Philipp Kewisch <mozilla@kewis.ch>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -127,6 +128,9 @@ function calendarInit()
 
    getViewDeck().addEventListener("dayselect", observeViewDaySelect, false);
    getViewDeck().addEventListener("itemselect", onSelectionChanged, true);
+
+   // Setup undo/redo menu for additional main windows
+   updateUndoRedoMenu();
 
    // Handle commandline args
    for (var i=0; i < window.arguments.length; i++) {
@@ -476,15 +480,23 @@ function CalendarToolboxCustomizeDone(aToolboxChanged)
 }
 
 function updateUndoRedoMenu() {
-    if (gTransactionMgr.numberOfUndoItems)
-        document.getElementById('undo_command').removeAttribute('disabled');
-    else    
-        document.getElementById('undo_command').setAttribute('disabled', true);
+    // We need to make sure the menu is updated on all main windows
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
+    var enumerator = wm.getEnumerator('calendarMainWindow');
+    while (enumerator.hasMoreElements()) {
+        var doc = enumerator.getNext().document;
 
-    if (gTransactionMgr.numberOfRedoItems)
-        document.getElementById('redo_command').removeAttribute('disabled');
-    else    
-        document.getElementById('redo_command').setAttribute('disabled', true);
+        if (getTransactionMgr().canUndo())
+            doc.getElementById('undo_command').removeAttribute('disabled');
+        else
+            doc.getElementById('undo_command').setAttribute('disabled', true);
+
+        if (getTransactionMgr().canRedo())
+            doc.getElementById('redo_command').removeAttribute('disabled');
+        else
+            doc.getElementById('redo_command').setAttribute('disabled', true);
+    }
 }
 
 function openLocalCalendar() {
