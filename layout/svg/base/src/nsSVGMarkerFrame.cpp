@@ -43,10 +43,6 @@
 #include "nsSVGPathGeometryElement.h"
 #include "gfxContext.h"
 
-NS_INTERFACE_MAP_BEGIN(nsSVGMarkerFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValue)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGMarkerFrameBase)
-
 nsIFrame*
 NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
@@ -82,13 +78,6 @@ NS_GetSVGMarkerFrame(nsSVGMarkerFrame **aResult,
 
   *aResult = (nsSVGMarkerFrame *)marker;
   return NS_OK;
-}
-
-nsSVGMarkerFrame::~nsSVGMarkerFrame()
-{
-  WillModify();
-  // Notify the world that we're dying
-  DidModify(mod_die);
 }
 
 NS_IMETHODIMP
@@ -128,31 +117,6 @@ nsSVGMarkerFrame::InitSVG()
 
   return NS_OK;
 }
-
-//----------------------------------------------------------------------
-// nsIFrame methods:
-
-NS_IMETHODIMP
-nsSVGMarkerFrame::AttributeChanged(PRInt32         aNameSpaceID,
-                                   nsIAtom*        aAttribute,
-                                   PRInt32         aModType)
-{
-  if (aNameSpaceID == kNameSpaceID_None &&
-      (aAttribute == nsGkAtoms::refX ||
-       aAttribute == nsGkAtoms::refY ||
-       aAttribute == nsGkAtoms::markerWidth ||
-       aAttribute == nsGkAtoms::markerHeight ||
-       aAttribute == nsGkAtoms::orient ||
-       aAttribute == nsGkAtoms::viewBox)) {
-    WillModify();
-    DidModify();
-    return NS_OK;
-  }
-
-  return nsSVGMarkerFrameBase::AttributeChanged(aNameSpaceID,
-                                                aAttribute, aModType);
-}
-  
 
 //----------------------------------------------------------------------
 // nsSVGContainerFrame methods:
