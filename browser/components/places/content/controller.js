@@ -39,25 +39,14 @@
 
 const NHRVO = Ci.nsINavHistoryResultViewObserver;
 
+// XXXmano: we should move most/all of these constants to PlacesUtils
+
 // These need to be kept in sync with the meaning of these roots in 
 // default_places.html!
 const ORGANIZER_ROOT_HISTORY_UNSORTED = "place:&beginTime=-2592000000000&beginTimeRef=1&endTime=7200000000&endTimeRef=2&type=1"
 const ORGANIZER_ROOT_HISTORY = ORGANIZER_ROOT_HISTORY_UNSORTED + "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
 const ORGANIZER_ROOT_BOOKMARKS = "place:&folder=2&group=3&excludeItems=1";
 const ORGANIZER_SUBSCRIPTIONS_QUERY = "place:&annotation=livemark%2FfeedURI";
-
-// Place entries that are containers, e.g. bookmark folders or queries. 
-const TYPE_X_MOZ_PLACE_CONTAINER = "text/x-moz-place-container";
-// Place entries that are bookmark separators.
-const TYPE_X_MOZ_PLACE_SEPARATOR = "text/x-moz-place-separator";
-// Place entries that are not containers or separators
-const TYPE_X_MOZ_PLACE = "text/x-moz-place";
-// Place entries in shortcut url format (url\ntitle)
-const TYPE_X_MOZ_URL = "text/x-moz-url";
-// Place entries formatted as HTML anchors
-const TYPE_HTML = "text/html";
-// Place entries as raw URL text
-const TYPE_UNICODE = "text/unicode";
 
 // No change to the view, preserve current selection
 const RELOAD_ACTION_NOTHING = 0;
@@ -101,58 +90,6 @@ InsertionPoint.prototype.toString = function IP_toString() {
   return "[object InsertionPoint(folder:" + this.folderId + ",index:" + this.index + ",orientation:" + this.orientation + ")]";
 };
 
-/** 
- * A View Configuration
- */
-function ViewConfig(peerDropTypes, childDropTypes, peerDropIndex) {
-  this.peerDropTypes = peerDropTypes;
-  this.childDropTypes = childDropTypes;
-  this.peerDropIndex = peerDropIndex;
-}
-ViewConfig.GENERIC_DROP_TYPES = 
-  [TYPE_X_MOZ_PLACE_CONTAINER,
-   TYPE_X_MOZ_PLACE_SEPARATOR, 
-   TYPE_X_MOZ_PLACE,
-   TYPE_X_MOZ_URL];
-
-/**
- * Configures Views, applying some meta-model rules. These rules are model-like,
- * e.g. must apply everwhere a model is instantiated, but are not actually stored
- *      in the data model itself. For example, you can't drag leaf items onto the
- *      places root. This needs to be enforced automatically everywhere a view of
- *      that model is instantiated. 
- */
-var ViewConfigurator = {
-  rules: { 
-    "folder=1": new ViewConfig([TYPE_X_MOZ_PLACE_CONTAINER], 
-                               ViewConfig.GENERIC_DROP_TYPES, 4)
-  },
-
-  /**
-   * Applies rules to a specific view. 
-   */
-  configure: function PC_configure(view) {
-    // Determine what place the view is showing.
-    var place = view.place;
-
-    // Find a ruleset that matches the current place.
-    var rules = null;
-    for (var test in this.rules) {
-      if (place.indexOf(test) != -1) {
-        rules = this.rules[test];
-        break;
-      }
-    }
-
-    // If rules are found, apply them. 
-    if (rules) {
-      view.peerDropTypes = rules.peerDropTypes;
-      view.childDropTypes = rules.childDropTypes;
-      view.peerDropIndex = rules.peerDropIndex;
-    }
-  }
-};
-
 /**
  * Places Controller
  */
@@ -177,14 +114,11 @@ PlacesController.prototype = {
     case "cmd_delete":
     case "placesCmd_moveBookmarks":
       return !this.rootNodeIsSelected() && 
-             !this._selectionOverlapsSystemArea() &&
              this._hasRemovableSelection();
     case "cmd_copy":
-      return !this._selectionOverlapsSystemArea() &&
-             this._view.hasSelection;
+      return this._view.hasSelection;
     case "cmd_paste":
-      return !this._selectionOverlapsSystemArea() &&
-             this._canInsert() && 
+      return this._canInsert() && 
              this._hasClipboardData() && this._canPaste();
     case "cmd_selectAll":
       if (this._view.selType != "single") {
@@ -199,8 +133,7 @@ PlacesController.prototype = {
     case "placesCmd_open":
     case "placesCmd_open:window":
     case "placesCmd_open:tab":
-      return this._view.selectedURINode &&
-             !this._selectionOverlapsSystemArea();
+      return this._view.selectedURINode;
     case "placesCmd_open:tabs":
       // We can open multiple links if the current selection is either:
       //  a) a single folder which contains at least one link
@@ -233,27 +166,22 @@ PlacesController.prototype = {
 #ifdef MOZ_PLACES_BOOKMARKS
     case "placesCmd_new:folder":
     case "placesCmd_new:livemark":
-      // New Folder - don't check selectionOverlapsSystemArea since we should
-      // be able to create folders in the left list even when elements at the
-      // top are selected.
       return this._canInsert() &&
-             this._view.peerDropTypes.indexOf(TYPE_X_MOZ_PLACE_CONTAINER) != -1;
+             this._view.peerDropTypes
+                 .indexOf(PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER) != -1;
     case "placesCmd_new:bookmark":
-      return !this._selectionOverlapsSystemArea() &&
-             this._canInsert() &&
-             this._view.peerDropTypes.indexOf(TYPE_X_MOZ_URL) != -1;
+      return this._canInsert() &&
+             this._view.peerDropTypes.indexOf(PlacesUtils.TYPE_X_MOZ_URL) != -1;
     case "placesCmd_new:separator":
-      return !this._selectionOverlapsSystemArea() &&
-             this._canInsert() &&
-             this._view.peerDropTypes.indexOf(TYPE_X_MOZ_PLACE_SEPARATOR) != -1;
+      return this._canInsert() &&
+             this._view.peerDropTypes
+                 .indexOf(PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) != -1;
     case "placesCmd_show:info":
       if (this._view.hasSingleSelection) {
         var selectedNode = this._view.selectedNode;
-        if (PlacesUtils.nodeIsBookmark(selectedNode) &&
-            !PlacesUtils.nodeIsLivemarkItem(selectedNode))
-          return true;
-        else if (PlacesUtils.nodeIsFolder(selectedNode) &&
-                 !this._selectionOverlapsSystemArea())
+        if (PlacesUtils.nodeIsFolder(selectedNode) ||
+            (PlacesUtils.nodeIsBookmark(selectedNode) &&
+            !PlacesUtils.nodeIsLivemarkItem(selectedNode)))
           return true;
       }
       return false;
@@ -469,26 +397,6 @@ PlacesController.prototype = {
     return false;
   },
 
-  /**
-   * Determines whether or not the selection intersects the read only "system"
-   * portion of the display. 
-   * @returns true if the selection intersects, false otherwise. 
-   */
-  _selectionOverlapsSystemArea: function PC__selectionOverlapsSystemArea() {
-    var v = this._view;
-    if (!v.hasSelection)
-      return false;
-    var nodes = v.getSelectionNodes();
-    var root = v.getResult().root;
-    for (var i = 0; i < nodes.length; ++i) {
-      // We also don't care about nodes that aren't at the root level.
-      if (nodes[i].parent != root || 
-          PlacesUtils.getIndexOfNode(nodes[i]) >= v.peerDropIndex)
-        return false;
-    }
-    return true;
-  },
-
 #ifdef BROKEN_SORT_CODE
   /**
    * Updates commands for persistent sorting
@@ -567,10 +475,10 @@ PlacesController.prototype = {
     var xferable = 
         Cc["@mozilla.org/widget/transferable;1"].
         createInstance(Ci.nsITransferable);
-    xferable.addDataFlavor(TYPE_X_MOZ_PLACE_CONTAINER);
-    xferable.addDataFlavor(TYPE_X_MOZ_PLACE_SEPARATOR);
-    xferable.addDataFlavor(TYPE_X_MOZ_PLACE);
-    xferable.addDataFlavor(TYPE_X_MOZ_URL);
+    xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER);
+    xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR);
+    xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_PLACE);
+    xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_URL);
 
     var clipboard = Cc["@mozilla.org/widget/clipboard;1"].
                     getService(Ci.nsIClipboard);
@@ -1297,9 +1205,9 @@ PlacesController.prototype = {
       }
 
       function addURIData(overrideURI) {
-        addData(TYPE_X_MOZ_URL, overrideURI);
-        addData(TYPE_UNICODE, overrideURI);
-        addData(TYPE_HTML, overrideURI);
+        addData(PlacesUtils.TYPE_X_MOZ_URL, overrideURI);
+        addData(PlacesUtils.TYPE_UNICODE, overrideURI);
+        addData(PlacesUtils.TYPE_HTML, overrideURI);
       }
 
       if (PlacesUtils.nodeIsFolder(node) || PlacesUtils.nodeIsQuery(node)) {
@@ -1307,7 +1215,7 @@ PlacesController.prototype = {
         // it is a special, non-movable folder. 
         // XXXben: TODO
 
-        addData(TYPE_X_MOZ_PLACE_CONTAINER);
+        addData(PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER);
 
         // Allow dropping the feed uri of live-bookmark folders
         if (PlacesUtils.nodeIsLivemarkContainer(node)) {
@@ -1317,12 +1225,12 @@ PlacesController.prototype = {
 
       }
       else if (PlacesUtils.nodeIsSeparator(node)) {
-        addData(TYPE_X_MOZ_PLACE_SEPARATOR);
+        addData(PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR);
       }
       else {
         // This order is _important_! It controls how this and other 
         // applications select data to be inserted based on type. 
-        addData(TYPE_X_MOZ_PLACE);
+        addData(PlacesUtils.TYPE_X_MOZ_PLACE);
         addURIData();
       }
       dataSet.push(data);
@@ -1349,13 +1257,13 @@ PlacesController.prototype = {
       }
 
       function generateURIChunks(overrideURI) {
-        mozURLString += generateChunk(TYPE_X_MOZ_URL, overrideURI);
-        htmlString += generateChunk(TYPE_HTML, overrideURI);
-        unicodeString += generateChunk(TYPE_UNICODE, overrideURI);
+        mozURLString += generateChunk(PlacesUtils.TYPE_X_MOZ_URL, overrideURI);
+        htmlString += generateChunk(PlacesUtils.TYPE_HTML, overrideURI);
+        unicodeString += generateChunk(PlacesUtils.TYPE_UNICODE, overrideURI);
       }
 
       if (PlacesUtils.nodeIsFolder(node) || PlacesUtils.nodeIsQuery(node)) {
-        pcString += generateChunk(TYPE_X_MOZ_PLACE_CONTAINER);
+        pcString += generateChunk(PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER);
 
         // Also copy the feed URI for live-bookmark folders
         if (PlacesUtils.nodeIsLivemarkContainer(node)) {
@@ -1364,9 +1272,9 @@ PlacesController.prototype = {
         }
       }
       else if (PlacesUtils.nodeIsSeparator(node))
-        psString += generateChunk(TYPE_X_MOZ_PLACE_SEPARATOR);
+        psString += generateChunk(PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR);
       else {
-        placeString += generateChunk(TYPE_X_MOZ_PLACE);
+        placeString += generateChunk(PlacesUtils.TYPE_X_MOZ_PLACE);
         generateURIChunks();
       }
     }
@@ -1378,17 +1286,17 @@ PlacesController.prototype = {
     // This order is _important_! It controls how this and other applications 
     // select data to be inserted based on type. 
     if (pcString)
-      addData(TYPE_X_MOZ_PLACE_CONTAINER, pcString);
+      addData(PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER, pcString);
     if (psString)
-      addData(TYPE_X_MOZ_PLACE_SEPARATOR, psString);
+      addData(PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR, psString);
     if (placeString)
-      addData(TYPE_X_MOZ_PLACE, placeString);
+      addData(PlacesUtils.TYPE_X_MOZ_PLACE, placeString);
     if (mozURLString)
-      addData(TYPE_X_MOZ_URL, mozURLString);
+      addData(PlacesUtils.TYPE_X_MOZ_URL, mozURLString);
     if (unicodeString)
-      addData(TYPE_UNICODE, unicodeString);
+      addData(PlacesUtils.TYPE_UNICODE, unicodeString);
     if (htmlString)
-      addData(TYPE_HTML, htmlString);
+      addData(PlacesUtils.TYPE_HTML, htmlString);
 
     if (pcString || psString || placeString || unicodeString || htmlString || 
         mozURLString) {
@@ -1475,10 +1383,11 @@ PlacesController.prototype = {
     // Get transactions to paste any folders, separators or links that might
     // be on the clipboard, aggregate them and execute them. 
     var transactions = 
-        [].concat(getTransactions([TYPE_X_MOZ_PLACE_CONTAINER]),
-                  getTransactions([TYPE_X_MOZ_PLACE_SEPARATOR]),
-                  getTransactions([TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL, 
-                                  TYPE_UNICODE]));
+        [].concat(getTransactions([PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER]),
+                  getTransactions([PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR]),
+                  getTransactions([PlacesUtils.TYPE_X_MOZ_PLACE,
+                                   PlacesUtils.TYPE_X_MOZ_URL, 
+                                   PlacesUtils.TYPE_UNICODE]));
     var txn = new PlacesAggregateTransaction("Paste", transactions);
     PlacesUtils.tm.doTransaction(txn);
   }
