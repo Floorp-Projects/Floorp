@@ -417,7 +417,7 @@ public:
  * to handle some unusual situation. So gfxTextRuns have two modes: "not
  * remembering text" (initial state) and "remembering text". A call to
  * gfxTextRun::RememberText forces a transition from the former to latter state.
- * The text is never forgotten. A gfxTextRun call that receives a TextProvider
+ * The text is never forgotten. A gfxTextRun call that receives a PropertyProvider
  * object may call ForceRememberText to request a transition to "remembering text".
  * 
  * It is important that zero-length substrings are handled correctly. This will
@@ -466,7 +466,7 @@ public:
 
     /**
      * This can be called to force gfxTextRun to remember the text used
-     * to create it and *never* call TextProvider::GetText again.
+     * to create it and *never* call PropertyProvider::GetText again.
      * 
      * Right now we don't implement these.
      */
@@ -478,28 +478,15 @@ public:
      * the "allow break before" points. Initially, there are no potential
      * linebreaks.
      * 
+     * This can change glyphs and/or geometry! Some textruns' shapes
+     * depend on potential line breaks (e.g., title-case-converting textruns).
+     * This function is virtual so that those textruns can reshape themselves.
+     * 
      * @return true if this changed the linebreaks, false if the new line
      * breaks are the same as the old
      */
-    PRBool SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                                  PRPackedBool *aBreakBefore);
-
-    /**
-     * This is provided so a textrun can (re)obtain the original text used to
-     * construct it, if necessary.
-     */
-    class TextProvider {
-    public:
-        /**
-         * Recover the text originally used to build the textrun. This should
-         * only be requested infrequently as it may be slow. If you need to
-         * call it a lot you should probably be saving the text in the text run
-         * itself. It just forces the textrun user to call RememberText on the
-         * text run. If you call this and RememberText doesn't get called,
-         * then something has failed and you should handle it.
-         */
-        virtual void ForceRememberText() = 0;
-    };
+    virtual PRBool SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
+                                          PRPackedBool *aBreakBefore);
 
     /**
      * Layout provides PropertyProvider objects. These allow detection of
@@ -511,8 +498,18 @@ public:
      * is unable to apply it in some context. Exception: spacing around a
      * whitespace character MUST always be applied.
      */
-    class PropertyProvider : public TextProvider {
+    class PropertyProvider {
     public:
+        /**
+         * Recover the text originally used to build the textrun. This should
+         * only be requested infrequently as it may be slow. If you need to
+         * call it a lot you should probably be saving the text in the text run
+         * itself. It just forces the textrun user to call RememberText on the
+         * text run. If you call this and RememberText doesn't get called,
+         * then something has failed and you should handle it.
+         */
+        virtual void ForceRememberText() = 0;
+
         // Detect hyphenation break opportunities in the given range; breaks
         // not at cluster boundaries will be ignored.
         virtual void GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
@@ -620,13 +617,17 @@ public:
      * alter nsTextFrame::TrimTrailingWhitespace, perhaps drastically becase
      * it could affect the layout of frames before it...)
      * 
+     * We return true if glyphs or geometry changed, false otherwise. This
+     * function is virtual so that gfxTextRun subclasses can reshape
+     * properly.
+     * 
      * @param aAdvanceWidthDelta if non-null, returns the change in advance
      * width of the given range.
      */
-    void SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                       PRBool aLineBreakBefore, PRBool aLineBreakAfter,
-                       TextProvider *aProvider,
-                       gfxFloat *aAdvanceWidthDelta);
+    virtual PRBool SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
+                                 PRBool aLineBreakBefore, PRBool aLineBreakAfter,
+                                 PropertyProvider *aProvider,
+                                 gfxFloat *aAdvanceWidthDelta);
 
     /**
      * Finds the longest substring that will fit into the given width.
@@ -867,6 +868,7 @@ public:
      * only during initialization when font substitution has been computed.
      */
     nsresult AddGlyphRun(gfxFont *aFont, PRUint32 aStartCharIndex);
+    void ResetGlyphRuns() { mGlyphRuns.Clear(); }
     // Call the following glyph-setters during initialization or during reshaping
     // only. It is OK to overwrite existing data for a character.
     /**
@@ -888,7 +890,7 @@ public:
      * Set some detailed glyphs for a character. The data is copied from aGlyphs,
      * the caller retains ownership.
      */
-    void SetDetailedGlyphs(PRUint32 aCharIndex, DetailedGlyph *aGlyphs,
+    void SetDetailedGlyphs(PRUint32 aCharIndex, const DetailedGlyph *aGlyphs,
                            PRUint32 aNumGlyphs);
 
     // API for access to the raw glyph data, needed by gfxFont::Draw
@@ -901,6 +903,10 @@ public:
         return mDetailedGlyphs[aCharIndex];
     }
     PRUint32 CountMissingGlyphs();
+    const GlyphRun *GetGlyphRuns(PRUint32 *aNumGlyphRuns) {
+        *aNumGlyphRuns = mGlyphRuns.Length();
+        return mGlyphRuns.Elements();
+    }
 
 private:
     // **** general helpers **** 

@@ -783,7 +783,7 @@ gfxPangoFont::Measure(gfxTextRun *aTextRun,
         PRUint32 leftSpacePango = 0;
         PRUint32 rightSpacePango = 0;
         if (aSpacing) {
-            gfxTextRun::PropertyProvider::Spacing *space = &aSpacing[i];
+            gfxTextRun::PropertyProvider::Spacing *space = &aSpacing[i - aStart];
             leftSpacePango =
                 NS_lround((isRTL ? space->mAfter : space->mBefore)*appUnitsToPango);
             rightSpacePango =
