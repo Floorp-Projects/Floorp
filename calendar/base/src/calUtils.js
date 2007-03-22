@@ -564,6 +564,9 @@ function compareObjects(aObject, aOtherObject, aIID) {
  * @param aDate  the date or datetime to check
  */
 function ensureDateTime(aDate) {
+    if (!aDate) {
+        return null;
+    }
     if (!aDate.isDate) {
         return aDate;
     }
