@@ -1,5 +1,0 @@
-export PATH=/bin
-./mozbot.pl --chroot /config/default
-
-# NOTE. This file requires that you follow the steps described in the
-# included INSTALL file.

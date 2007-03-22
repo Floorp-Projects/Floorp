@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<METAPREFS clientversion="7.0b1" subversion="0">
-  <PREFSGROUP uiname="Netscape Preferences">
-    <PREF uiname="Open Browser on Startup" prefname="general.startup.browser" type="bool" default="true" lockable="true" description="When the application starts, open a browser window.">
-      <VALUE>true</VALUE>
-      <LOCKED>false</LOCKED>
-    </PREF>
-  </PREFSGROUP>
-</METAPREFS>

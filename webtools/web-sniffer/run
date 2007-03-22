@@ -1,4 +1,0 @@
-:
-dir=/some/directory
-./doRun http://www.somedomain.com/ $dir/somedomain.html
-./doRun http://www.somedomain.co.jp/ $dir/somedomain-jp.html -d .jp

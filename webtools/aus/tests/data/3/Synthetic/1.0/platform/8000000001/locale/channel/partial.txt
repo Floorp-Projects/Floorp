@@ -1,9 +1,0 @@
-version=1
-type=partial
-url=http://synthetic.1.0.platform.buildid.locale.channel/partial008
-hashFunction=SHA1
-hashValue=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-size=12345
-build=8000000002
-appv=1.0
-extv=1.0

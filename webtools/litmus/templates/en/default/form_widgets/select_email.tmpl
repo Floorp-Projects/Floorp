@@ -1,9 +1,0 @@
-<select name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF disabled %] disabled[% END %]>
-    [% IF placeholder %]<option value="">-Submitted By-</option>[% END %]
-[% IF users %]
-[% FOREACH user=users %]
-    <option[% IF defaults.email==user.email %] selected[% END %] 
-        value="[% user.email | html | uri | email %]">[% user.email | html | uri | email%]</option>
-[% END %]
-[% END %]
-</select>

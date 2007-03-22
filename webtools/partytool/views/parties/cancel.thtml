@@ -1,7 +1,0 @@
-<h1>Cancel Party</h1>
-<div class="error">Warning! Canceling your party will remove all guests and send them a cancellation notice.</div>
-<p>If you're sure you want to cancel your party simply hit the button below. Otherwise,
-  <a href="<?php echo $html->url('/parties/view/'.$pid); ?>">click here</a> to return to your party.</p>
-<form action="<?php echo $html->url('/parties/cancel/'.$pid); ?>" method="post">
-<?php echo $html->hidden('Party/confcancel', array('value' => 1)).$html->submit('Cancel Party'); ?>
-</form>

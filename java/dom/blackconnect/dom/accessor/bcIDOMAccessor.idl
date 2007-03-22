@@ -1,9 +1,0 @@
-#include "nsISupports.idl"
-#include "dom.idl"
-
-#pragma prefix 
-[scriptable, uuid(d0ee9960-9ecf-11d4-a983-00105ae3801e)]
-interface bcIDOMAccessor : nsISupports
-{
-  void endDocumentLoad(in string url, in Document doc);
-};

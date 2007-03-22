@@ -1,7 +1,0 @@
-RUN_STAGES=PLUGLET_INSTANCE_INITIALIZE
-TEST_CLASS=org.mozilla.pluglet.test.basic.api.PlugletPeer_getTagInfo_0
-ITERATOR_CLASS=org.mozilla.pluglet.test.basic.api.PlugletPeer_getTagInfo_Iterator
-TEST_HTML=api/PlugletPeer_getTagInfo/PlugletPeer_getTagInfo.html
-PLUGLET=<TEST_TOP_DIR><FSEP>build<FSEP>classes<FSEP>org<FSEP>mozilla<FSEP>pluglet<FSEP>test<FSEP>basic<FSEP>api<FSEP>TestAPIPluglet.jar
-TEST_ATTRIBUTE_NAME=type
-TEST_ATTRIBUTE_VALUE=application/x-api-pluglet

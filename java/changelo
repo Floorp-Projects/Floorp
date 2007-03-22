@@ -1,5 +1,0 @@
-Fri Jul 30 14:57:28 1999  Ed Burns  <Ed Burns <ed.burns@sun.com>>
-
-	* Made necessary changes to build files to build with jdk1.1.7 or
- 	jdk1.2.2.
-	

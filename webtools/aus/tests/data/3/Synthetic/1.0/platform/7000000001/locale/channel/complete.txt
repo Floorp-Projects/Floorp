@@ -1,9 +1,0 @@
-complete
-http://synthetic.1.0.platform.buildid.locale.channel/complete002
-SHA1
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-12345
-2006000000
-1.0
-1.0
-http://detail.url/content.html 

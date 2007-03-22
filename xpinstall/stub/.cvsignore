@@ -1,8 +1,0 @@
-module.rc
-module.res
-xpistub.dll
-xpistub.exp
-xpistub.ilk
-xpistub.lib
-xpistub.pdb
-Makefile

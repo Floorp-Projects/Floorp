@@ -1,6 +1,0 @@
-<?php echo $this->renderElement( 'header' ); ?>
-<div class="center">
-    <?php echo $html->image('firefox-survey-title2.gif', array('alt'=>'Firefox Survey')); ?>
-    <?php echo $content;?>
-</div>
-<?php echo $this->renderElement( 'footer' ); ?>

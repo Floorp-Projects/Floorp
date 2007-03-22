@@ -1,4 +1,0 @@
-messenger.jar:
-    content/messenger-smoketest/mailSmoketestOverlay.xul                        (resources/content/mailSmoketestOverlay.xul)
-    content/messenger-smoketest/mailSmoketestOverlay.js                         (resources/content/mailSmoketestOverlay.js)
-*   content/messenger-smoketest/contents.rdf                                    (resources/content/contents.rdf)

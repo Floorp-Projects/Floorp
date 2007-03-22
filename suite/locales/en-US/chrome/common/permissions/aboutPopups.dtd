@@ -1,9 +1,0 @@
-<!ENTITY windowtitle.label              "About Popups">
-
-<!ENTITY popupDesc.label                "This web site has opened an unrequested popup window. &brandShortName; can prevent popups from opening without your approval. When a popup is blocked, &brandShortName; can be set up to display an icon in the status bar.">
-<!ENTITY popupDescAlt.label             "&brandShortName; can prevent popups from opening without your approval. When a popup is blocked, &brandShortName; can be set up to display an icon in the status bar.">
-<!ENTITY popupNote1.label               "To set preferences for controlling popups, open the Edit menu and choose Preferences. Under the Privacy &amp; Security category, click Popup Windows.">
-<!ENTITY popupNote2.label               "Would you like to block popups and set preferences now?">
-
-<!ENTITY acceptButton.label             "Yes">
-<!ENTITY cancelButton.label             "No">

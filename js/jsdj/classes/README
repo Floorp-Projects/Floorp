@@ -1,7 +1,0 @@
-/* jband - 09/14/98 -  */
-
-The 'classes' directory is the root of the JavaScript debugging pacakage space.
-Older pacakages begin with 'netscape' (e.g. netscape.jsdebug which shipped - in
-eariler form - with Navigator 4.x). Newer packages all start with
-'com.netscape'.
-

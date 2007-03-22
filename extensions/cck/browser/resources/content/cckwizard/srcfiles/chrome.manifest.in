@@ -1,3 +1,0 @@
-overlay chrome://browser/content/browser.xul  chrome://cck/content/cck-browser-overlay.xul
-style   chrome://global/content/config.xul    chrome://cck/content/cck-config.css
-content	cck	jar:chrome/cck.jar!/content/cck/

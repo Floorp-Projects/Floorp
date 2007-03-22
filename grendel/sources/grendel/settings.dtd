@@ -1,8 +1,0 @@
-<!ELEMENT prefs (element+)>
-<!ELEMENT element (#PCDATA|element)*>
-<!ATTLIST element 
-	id CDATA #REQUIRED
-	guid CDATA #REQUIRED
-	type CDATA #IMPLIED
-	ref CDATA #IMPLIED
->

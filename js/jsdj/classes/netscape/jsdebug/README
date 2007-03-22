@@ -1,8 +1,0 @@
-/* jband - 09/14/98 -  */
-
-netscape.jsdebug reflects the js/jsd/jsdebug.h native debugging api into Java.
-This package shipped with Navigator 4.x. It is currently being updated for
-mozilla. This package can also be used with the standalone JS shell (or in
-non-Netscape embeddings of the C based Netscape JavaScript engine.
-
-The natives to complete these classes are in js/jsd[/java]

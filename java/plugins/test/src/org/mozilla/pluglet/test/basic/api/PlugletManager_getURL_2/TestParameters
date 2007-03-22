@@ -1,7 +1,0 @@
-EXISTING_TARGET_FOR_GET=exist_target_for_get
-FILE_WIN_URL_FOR_GET=file:///<html_root_dir>/api/PlugletManager_getURL_2/PlugletManager_getURL_default_getData.html
-MAILTO_URL_FOR_GET=mailto:avm@sparc.spb.su
-HTTP_URL_FOR_GET=http://<html_root>/api/PlugletManager_getURL_2/PlugletManager_getURL_default_getData.html
-FILE_URL_FOR_GET=file:///<html_root_dir>/api/PlugletManager_getURL_2/PlugletManager_getURL_default_getData.html
-FTP_URL_FOR_GET=ftp://anonymous@localhost/<ftp_root_dir>/api/PlugletManager_getURL_2/PlugletManager_getURL_default_getData.html
-JAVASCRIPT_URL_FOR_GET=javascript:Packages.org.mozilla.pluglet.test.basic.api.PlugletManaget_getURL_128.setResult(true,'JAVASCRIPT_URL_WORKS');

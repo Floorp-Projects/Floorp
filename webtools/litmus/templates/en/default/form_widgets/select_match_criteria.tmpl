@@ -1,8 +1,0 @@
-<select name="[% name | html %]">
-[% IF match_criteria %]
-[% FOREACH match_criterion=match_criteria %]
-    <option value="[% match_criterion.name | html %]">
-      [% match_criterion.display_string | html %]</option>
-[% END %]
-[% END %]
-</select>

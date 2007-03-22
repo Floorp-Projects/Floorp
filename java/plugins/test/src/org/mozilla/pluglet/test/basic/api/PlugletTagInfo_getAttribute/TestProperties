@@ -1,7 +1,0 @@
-RUN_STAGES=PLUGLET_INSTANCE_INITIALIZE
-ITERATOR_CLASS=org.mozilla.pluglet.test.basic.api.PlugletTagInfo_getAttribute_Iterator
-TEST_CLASS=org.mozilla.pluglet.test.basic.api.PlugletTagInfo_getAttribute_2
-TEST_HTML=api/PlugletTagInfo_getAttribute/PlugletTagInfo_getAttribute.html
-LST_FILE_NAME=PlugletTagInfo_getAttribute.lst.TEMP
-PLUGLET=<TEST_TOP_DIR><FSEP>build<FSEP>classes<FSEP>org<FSEP>mozilla<FSEP>pluglet<FSEP>test<FSEP>basic<FSEP>api<FSEP>TestAPIPluglet.jar
-ALL_ATTRIBUTES=type\=application/x-api-pluglet\nname\=test\nwidth\=100\nheight\=100

@@ -1,9 +1,0 @@
-<select class="testday" id="[% name %]" name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF onchange %] onchange="[% onchange %]"[% END %][% IF disabled %] disabled[% END %]>
-    [% IF placeholder %]<option value="">-Testday Description, Start - Finish-</option>[% END %]
-[% IF testdays %]
-[% FOREACH testday=testdays %]
-    <option[% IF defaults.testday_id==testday.testday_id %] selected[% END %] 
-        value="[% testday.testday_id | html %]">[% testday.description | html %], [% testday.start_timestamp | html %] - [% testday.finish_timestamp | html %]</option>
-[% END %]
-[% END %]
-</select>

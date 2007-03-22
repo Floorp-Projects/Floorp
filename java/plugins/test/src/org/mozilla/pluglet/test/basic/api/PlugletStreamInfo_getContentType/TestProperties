@@ -1,7 +1,0 @@
-RUN_STAGES=PLUGLET_STREAM_LISTENER_ON_START_BINDING
-#PLUGLET_INSTANCE_NEW_STREAM
-TEST_CLASS=org.mozilla.pluglet.test.basic.api.PlugletStreamInfo_getContentType_0
-ITERATOR_CLASS=org.mozilla.pluglet.test.basic.api.PlugletStreamInfo_getContentType_Iterator
-TEST_HTML=api/PlugletStreamInfo_getContentType/PlugletStreamInfo_getContentType.html
-EXPECTED_VALUE=image/gif
-PLUGLET=<TEST_TOP_DIR><FSEP>build<FSEP>classes<FSEP>org<FSEP>mozilla<FSEP>pluglet<FSEP>test<FSEP>basic<FSEP>api<FSEP>TestAPIPluglet.jar

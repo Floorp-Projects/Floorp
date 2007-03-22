@@ -1,6 +1,0 @@
-Name: netscape/ldap/beans/LDAPIsMember.class
-Java-Bean: True
-
-Name: netscape/ldap/beans/LDAPBasePropertySupport.class
-
-Name: netscape/ldap/beans/LDAPIsMemberBeanInfo.class

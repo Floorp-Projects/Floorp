@@ -1,5 +1,0 @@
-This directory contains the Macintosh Project Editor web .cgi. The purpose
-of this .cgi is to provide an XP, web interface to Macintosh CodeWarrior 
-project files, which are in a proprietary binary format.
-
-Someone else might find this useful.

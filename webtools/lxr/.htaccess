@@ -1,7 +1,0 @@
-<Files ~ (find|search|source|ident|diff)$>
-SetHandler cgi-script
-order allow,deny
-allow from all
-deny from agni.nut.roche.com
-deny from user198.anilam.com
-</Files>

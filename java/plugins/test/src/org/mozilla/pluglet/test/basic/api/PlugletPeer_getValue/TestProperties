@@ -1,7 +1,0 @@
-RUN_STAGES=PLUGLET_INSTANCE_INITIALIZE
-TEST_CLASS=org.mozilla.pluglet.test.basic.api.PlugletPeer_getValue_3
-ITERATOR_CLASS=org.mozilla.pluglet.test.basic.api.PlugletPeer_getValue_Iterator
-TEST_HTML=api/PlugletPeer_getValue/PlugletPeer_getValue.html
-LST_FILE_NAME=PlugletPeer_getValue.lst.TEMP
-PLUGLET=<TEST_TOP_DIR><FSEP>build<FSEP>classes<FSEP>org<FSEP>mozilla<FSEP>pluglet<FSEP>test<FSEP>basic<FSEP>api<FSEP>TestAPIPluglet.jar
-VARIABLES=3

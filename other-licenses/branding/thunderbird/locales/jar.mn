@@ -1,6 +1,0 @@
-#filter substitution
-
-@AB_CD@.jar:
-% locale branding @AB_CD@ %locale/@AB_CD@/branding/
-* locale/@AB_CD@/branding/brand.dtd        (%brand.dtd)
-  locale/@AB_CD@/branding/brand.properties (%brand.properties)

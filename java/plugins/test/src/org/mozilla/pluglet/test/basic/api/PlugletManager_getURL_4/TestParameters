@@ -1,6 +1,0 @@
-EXISTING_TARGET_FOR_GET=exist_target_for_get
-GOOD_HTTP_URL_FOR_GET=<cgi_root>/good_host.cgi
-BAD_HOST_HTTP_URL_FOR_GET=<cgi_root_bad_host>/bad_host.cgi
-BAD_ALT_HOST=111.111.222.222
-GOOD_ALT_HOST=192.168.205.165
-OTHER_GOOD_ALT_HOST=192.168.205.182

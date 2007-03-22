@@ -1,9 +1,0 @@
-<select name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF disabled %] disabled[% END %]>
-    [% IF placeholder %]<option value="">-Log Type-</option>[% END %]
-[% IF log_types %]
-[% FOREACH log_type=log_types %]
-    <option[% IF defaults.log_type==log_type.name %] selected[% END %] 
-        value="[% log_type.name | html %]">[% log_type.name | html %]</option>
-[% END %]
-[% END %]
-</select>

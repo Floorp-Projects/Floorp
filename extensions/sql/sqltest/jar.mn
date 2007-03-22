@@ -1,7 +1,0 @@
-sqltest.jar:
-    content/sqltest/contents.rdf			(contents.rdf)
-    content/sqltest/sqltest.xul				(sqltest.xul)
-    content/sqltest/sqltest.js				(sqltest.js)
-    content/sqltest/sqltest.css				(sqltest.css)
-    content/sqltest/sqltestDialog.xul			(sqltestDialog.xul)
-    content/sqltest/sqltestDialog.js			(sqltestDialog.js)

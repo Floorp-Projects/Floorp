@@ -1,7 +1,0 @@
-null_PlugletInstance'1, this_PlugletInstance'0, other_PlugletInstance'0
-null'1, HTTP_URL_FOR_GET'0, FTP_URL_FOR_GET'0, MAILTO_URL_FOR_GET'1, FILE_URL_FOR_GET'1, FILE_WIN_URL_FOR_GET'1
-null'0, _self'0, _parent'1, EXISTING_TARGET_FOR_GET'1, NONEXISTING_TARGET_FOR_GET'1
-null_streamListener'1, current_streamListener'0, new_streamListener'1 
-null'1, CURRENT_ALT_HOST'0, OTHER_ALT_HOST'1, INCORRECT_ALT_HOST'1
-null'0, CURRENT_REFERER_URL'0, HTTP_OTHER_REFERER_URL'1
-true'1, false'0

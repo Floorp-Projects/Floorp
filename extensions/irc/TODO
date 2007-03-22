@@ -1,8 +1,0 @@
-ChatZilla 0.8.1
-smarter [tab] code (tab on empty line responds to last /msg or yournick:)
-flubbed /msg detection.
-optional time stamps
-isnick irc:// urls
-
-ChatZilla 0.9
-Lots of prefs work, including a pref panel (finally!)

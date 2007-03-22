@@ -1,9 +1,0 @@
-${license_mak}
-
-DEPTH		= ${depth_0_win}
-
-include <$(DEPTH)\config\config.mak>
-
-DIRS            = resources
-
-include <$(DEPTH)\config\rules.mak>

@@ -1,5 +1,0 @@
-/* jband - 09/14/98 -  */
-
-com.netscape.jsdebugging.ifcui.palomar contains the minimal set of classes used
-by the IFC based graphical debugger. These classes were originally developed as
-a (very) small part of the Netscape Visual JavaScript system.

@@ -1,5 +1,0 @@
-<?php echo $this->renderElement( 'header' ); ?>
-<div class="center">
-<?php echo $this->controller->Session->flash(); ?>
-</div>
-<?php echo $this->renderElement( 'footer' ); ?>

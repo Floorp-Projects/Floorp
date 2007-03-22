@@ -1,3 +1,0 @@
-RUN_STAGES=PLUGLET_INITIALIZE
-TEST_CLASS=org.mozilla.pluglet.test.basic.api.PlugletManager_postURL_9216
-ITERATOR_CLASS=org.mozilla.pluglet.test.basic.api.PlugletManager_postURL_Iterator

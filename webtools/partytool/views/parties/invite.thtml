@@ -1,9 +1,0 @@
-<h1>Invite a guest</h1>
-<p>To invite a guest, simply enter their email address into the field below,
-  or hand them a link to
-  <strong><?php echo $inviteurl; ?></strong></p>
-<form action="<?php echo $html->url('/parties/invite/'.$partyid) ?>" method="post">
-<label for="PartyEinvite">Guest's email address:</label>
-<?php echo $html->input('Party/einvite')."\n".$html->submit('Submit')."\n"; ?>
-<?php echo $html->tagErrorMsg('Party/einvite', 'Invalid email address')?>
-</form>

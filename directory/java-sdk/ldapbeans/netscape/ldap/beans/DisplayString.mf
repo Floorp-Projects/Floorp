@@ -1,4 +1,0 @@
-Name: netscape/ldap/beans/DisplayString.class
-Java-Bean: True
-
-Name: netscape/ldap/beans/DisplayStringBeanInfo.class

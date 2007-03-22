@@ -1,8 +1,0 @@
-<!ENTITY  brandShortName        "Minimo">
-<!ENTITY  brandFullName         "Minimo">            
-<!ENTITY  vendorShortName       "Minimo">
- 
-<!ENTITY  releaseURL            "http://www.mozilla.org/projects/minimo">
-
-<!-- LOCALIZATION NOTE (releaseBaseURL): The about: page appends __MOZ_APP_VERSION__.html, e.g. 2.0.html -->
-<!ENTITY  releaseBaseURL        "http://www.mozilla.org/projects/minimo/release/">

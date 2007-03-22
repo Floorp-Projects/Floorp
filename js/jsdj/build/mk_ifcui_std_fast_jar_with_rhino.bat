@@ -1,1 +1,0 @@
-call mk_ifcui_std.bat ifcui_fast ifcui_jar INCLUDE_RHINO_ADAPTER=1 INCLUDE_RHINO_LAUNCHER=1

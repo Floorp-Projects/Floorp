@@ -1,8 +1,0 @@
-RUN_STAGES=PLUGLET_INSTANCE_START
-ITERATOR_CLASS=org.mozilla.pluglet.test.basic.api.PlugletTagInfo2_getUniqueID_Iterator
-TEST_CLASS=org.mozilla.pluglet.test.basic.api.PlugletTagInfo2_getUniqueID_0
-TEST_HTML=api/PlugletTagInfo2_getUniqueID/PlugletTagInfo2_getUniqueID.html
-PLUGLET_COUNT=3
-#PLUGLET=c:<FSEP>home<FSEP>avm<FSEP>pl_test<FSEP>build<FSEP>classes<FSEP>org<FSEP>mozilla<FSEP>pluglet<FSEP>test<FSEP>basic
-#;c:\home\avm\pl_test\build\test\basic\api\PlugletTagInfo2_getUniqueID
-PLUGLET=<TEST_TOP_DIR><FSEP>build<FSEP>classes<FSEP>org<FSEP>mozilla<FSEP>pluglet<FSEP>test<FSEP>basic<FSEP>api<FSEP>TestAPIPluglet.jar

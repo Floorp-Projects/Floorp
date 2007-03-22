@@ -1,9 +1,0 @@
-<select id="[% name %]" name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF disabled %] disabled[% END %][% IF onchange %] onchange="[% onchange %]"[% END %]>
-    [% IF placeholder %]<option value="">-Product-</option>[% END %]
-[% IF products %]
-[% FOREACH product=products %]
-    <option[% IF defaults.product==product.name %] selected[% END %] 
-        value="[% product.name | html %]">[% product.name | html %]</option>
-[% END %]
-[% END %]
-</select>

@@ -1,6 +1,0 @@
-This is Grendel -- a Java mail/news client.
-
-The grendel.renderer.html package contains classes that aid in converting a 
-Message object to HTML suitable for display.
-
-See http://www.mozilla.org/projects/grendel/ for more info.

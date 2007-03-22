@@ -1,8 +1,0 @@
-#
-# This file enables test coverage of the cryptographic hash performance tests
-#
-#
-# mode      bufsize   repetitions
-  md2        10240        5000
-  md5        10240        100000
-  sha1       10240        100000

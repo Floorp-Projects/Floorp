@@ -1,5 +1,0 @@
-<!-- keep in sync with mozilla\calendar\resources\locale\en-US\overlay.dtd
-     so that with Mozilla Calendar, or with out, we have the same UI -->
-<!ENTITY other-cal-cmd.label "Calendar">
-<!ENTITY other-cal-cmd.accesskey "r">
-<!ENTITY other-cal-cmd.commandkey "8">

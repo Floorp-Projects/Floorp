@@ -1,3 +1,0 @@
-<h1><?php echo $data['Mirror']['mirror_name']; ?></h1>
-<p><?php echo $data['Mirror']['mirror_baseurl']; ?></p>
-<p><?php echo $data['Mirror']['mirror_rating']; ?></p>

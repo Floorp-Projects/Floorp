@@ -1,6 +1,0 @@
-<!ENTITY enableMapiTitle.label        "When sending mail from other applications">
-<!ENTITY defaultMailSettings.label    "Make &vendorShortName; Mail &amp; Newsgroups the default application for:">
-<!ENTITY enableMapi.label             "Mail">
-<!ENTITY enableMapi.accesskey         "M">
-<!ENTITY enableNews.label             "News">
-<!ENTITY enableNews.accesskey         "N">

@@ -1,7 +1,0 @@
-/* jband - 09/14/98 -  */
-
-jsdj/stub_classes contains stubbed out versions of some Netscape classes which
-might be needed for compatability. For instance, the graphical debugger (in
-com.netscape.jsdebugging.ifcui) used the netscape.security calsses when running
-in Navigator, but needs stubbed out versions of a couple of those classes to
-function in a stand-alone environment.

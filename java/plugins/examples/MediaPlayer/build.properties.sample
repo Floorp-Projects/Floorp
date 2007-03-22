@@ -1,3 +1,0 @@
-jmf.home=D:\\Files_2k\\JMF2.1.1e
-jmf.jar=${jmf.home}/lib/jmf.jar
-sound.jar=${jmf.home}/lib/sound.jar

@@ -1,6 +1,0 @@
-1024[810e350]: GtkBrowserControlCanvasStub_loadMainDll: entering
-1024[810e350]: GtkBrowserControlCanvasStub_loadMainDll: dll loaded
-1024[810e350]: GtkBrowserControlCanvasStub_locateStubFunctions: entering
-1024[810e350]: GtkBrowserControlCanvasStub_locateStubFunctions: exiting
-1024[810e350]: GtkBrowserControlCanvasStub_loadMainDll: locateStubFunctions returns: 0
-1024[810e350]: GtkBrowserControlCanvasStub_loadMainDll: exiting

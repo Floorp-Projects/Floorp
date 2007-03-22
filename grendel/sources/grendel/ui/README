@@ -1,7 +1,0 @@
-This is Grendel -- a Java mail/news client.
-
-The grendel.ui package implements the grendel GUI.  Much of the work is
-to create the outline view of a set of messages, although much of that
-work is split off into the grendel.view package.
-
-See http://www.mozilla.org/projects/grendel/ for more info.

@@ -1,9 +1,0 @@
-( org.mozilla.camino.preference.navigation,
-  org.mozilla.camino.preference.appearance,
-  org.mozilla.camino.preference.privacy,
-  org.mozilla.camino.preference.security,
-  org.mozilla.camino.preference.history,
-  org.mozilla.camino.preference.tabs,
-  org.mozilla.camino.preference.downloads,
-  org.mozilla.camino.preference.webfeatures,
-)

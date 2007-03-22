@@ -1,6 +1,0 @@
-/* plif.css */
-
-h1 { font: 900 2em Verdana, sans-serif; border-bottom: solid; margin: 0; }
-div.footer { border-top: solid; }
-div.footer p { margin: 0.75em; font-size: 0.75em; }
-body { border-bottom: solid; }

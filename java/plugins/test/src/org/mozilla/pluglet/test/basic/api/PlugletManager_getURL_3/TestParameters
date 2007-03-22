@@ -1,4 +1,0 @@
-EXISTING_TARGET_FOR_GET=exist_target_for_get
-HTTP_OTHER_REFERER_URL=http://www.mozilla.org/index.html
-CURRENT_REFERER_URL=<html_root>/api/PlugletManager_getURL_3/PlugletManager_getURL.html
-HTTP_URL_FOR_GET=<cgi_root>/api/PlugletManager_getURL_3/verify_referer.cgi

@@ -1,5 +1,0 @@
-e15_8_2_13.Math.pow(Infinity, -1)=Bug 186086 - math.pow(Infinity,-1) and other negative exponents return NaN
-e15_8_2_13.Math.pow(-Infinity, -1)=Bug 186086 - math.pow(Infinity,-1) and other negative exponents return NaN
-e15_8_2_13.Infinity/Math.pow(-Infinity, -1)=Bug 186086 - math.pow(Infinity,-1) and other negative exponents return NaN
-e15_8_2_13.Math.pow(-Infinity, -3)=Bug 186086 - math.pow(Infinity,-1) and other negative exponents return NaN
-e15_8_2_13.Math.pow(-Infinity, -2)=Bug 186086 - math.pow(Infinity,-1) and other negative exponents return NaN

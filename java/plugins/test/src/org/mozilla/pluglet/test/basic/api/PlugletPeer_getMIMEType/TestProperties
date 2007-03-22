@@ -1,8 +1,0 @@
-#TestProperties file
-#At PLUGLET_INSTANCE_INITIALIZE good value isn't passed from JS, so should use START or later
-RUN_STAGES=PLUGLET_INSTANCE_START
-TEST_CLASS=org.mozilla.pluglet.test.basic.api.PlugletPeer_getMIMEType_0
-ITERATOR_CLASS=org.mozilla.pluglet.test.basic.api.PlugletPeer_getMIMEType_Iterator
-TEST_HTML=api/PlugletPeer_getMIMEType/PlugletPeer_getMIMEType.html
-EXPECTED_VALUE=application/x-api-pluglet
-PLUGLET=<TEST_TOP_DIR><FSEP>build<FSEP>classes<FSEP>org<FSEP>mozilla<FSEP>pluglet<FSEP>test<FSEP>basic<FSEP>api<FSEP>TestAPIPluglet.jar

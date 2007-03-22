@@ -1,9 +1,0 @@
-/* jband - 09/14/98 -  */
-
-com.netscape.jsdebugging.api is the package which defines the interface used by
-debugger(s) to access the debugging support in the JavaScript engine. It exists
-to allow the very same debugger to be used with either the C based engine, the
-Java based engine (Rhino), of with a remote engine accessed via Corba/iiop
-(additional 'adapter' implementations might be added in the future). This
-package presents the generic JS debug interface against which the debugger
-compiles and runs.

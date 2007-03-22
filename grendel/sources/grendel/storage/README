@@ -1,9 +1,0 @@
-This is Grendel -- a Java mail/news client.
-
-The grendel.storage package is is where we implement most (all?) of the
-javamail API.  Private to this package are any details about particular
-protocol implementations.  All the differences between NNTP, IMAP, POP,
-etc. are packaged away in here and hidden.  This also implements the RCFdata
-interfaces; that is, this is the stuff that supports RDF queries.
-
-See http://www.mozilla.org/projects/grendel/index.html for more info.

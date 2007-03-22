@@ -1,5 +1,0 @@
-/* jband - 09/14/98 -  */
-
-com.netscape.jsdebugging.engine.rhino implements the
-com.netscape.jsdebugging.engine interface. It supports running the JavaScript in
-Java (Rhino) engine for testing.

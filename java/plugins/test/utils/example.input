@@ -1,8 +1,0 @@
-#
-# example.input
-#
-# This file shows, how you can use the input key values
-#
-key1= somebody@mail.1
-key2= noone@mail.2
-key3= anonymous@mail.3 (# This does not seems to be a comment)

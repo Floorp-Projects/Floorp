@@ -1,7 +1,0 @@
-Create a chrome/test/content directory and place xml-rpc.xul in that dir. Then
-fire up Mozilla with -chrome chrome://test/content/xml-rpc.xul.
-
-Fill in a number between 1 and 50, and click the button. A XML-RPC server,
-courtesy of Userland software, will tell you what US state it thinks goes with
-that number.
-

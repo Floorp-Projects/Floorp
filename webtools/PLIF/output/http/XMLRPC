@@ -1,7 +1,0 @@
-TemplateToolkit
-1
-
-Status: 200 OK
-Content-Type: text/xml
-
-[% data.0 %]

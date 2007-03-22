@@ -1,6 +1,0 @@
-#expand <!ENTITY  lang.version          "__MOZILLA_LOCALE_VERSION__">
-<!ENTITY  brandFullName         "SeaMonkey">
-<!ENTITY  brandShortName        "SeaMonkey">
-<!ENTITY  vendorShortName       "SeaMonkey">
-<!ENTITY  sidebarName           "Sidebar">
-<!ENTITY  copyright.string      "Copyright &copy; 2003-2007 The Mozilla Foundation.">

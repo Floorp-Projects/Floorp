@@ -1,3 +1,0 @@
-This directory contains the redefined jni.h for using webclient without
-using java.  This directory should only be refferenced when building the
-code in ../src_moz with BAL_INTERFACE=1.

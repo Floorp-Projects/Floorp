@@ -1,5 +1,0 @@
-/* jband - 09/14/98 -  */
-
-com.netscape.jsdebugging.api.rhino implements the interfaces defined in
-com.netscape.jsdebugging.api. It supports adapting the debugger(s) to the
-debug api used in in the Netscape's JavaScript in Java (Rhino) engine.

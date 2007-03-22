@@ -1,3 +1,0 @@
-chatzilla.jar:
-	content/chatzilla/ff/contents.rdf            (../xul/content/ff/contents.rdf)
-	content/chatzilla/ff/overlay.xul             (../xul/content/ff/overlay.xul)

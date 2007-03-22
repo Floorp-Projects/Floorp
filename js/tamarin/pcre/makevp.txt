@@ -1,5 +1,0 @@
-FILE QUARANTINED
-----------------
-
-Antigen for Exchange removed avmplus-tar-gz->Unknown->avmplus/pcre/makevp.bat since it
-was found to match the FILE FILTER= unnamed: *.bat file filter.

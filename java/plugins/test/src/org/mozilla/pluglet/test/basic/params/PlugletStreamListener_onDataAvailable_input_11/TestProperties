@@ -1,6 +1,0 @@
-PLUGLET=<TEST_TOP_DIR><FSEP>build<FSEP>classes<FSEP>org<FSEP>mozilla<FSEP>pluglet<FSEP>test<FSEP>basic<FSEP>params<FSEP>PlugletStreamListener_onDataAvailable_input_11<FSEP>test.jar
-TEST_CLASS=org.mozilla.pluglet.test.basic.params.PlugletStreamListener_onDataAvailable_input_11
-TEST_HTML=basic/params/PlugletStreamListener_onDataAvailable_input_11/test.html
-RUN_STAGES= \
-	PLUGLET_STREAM_LISTENER_ON_DATA_AVAILABLE 
-

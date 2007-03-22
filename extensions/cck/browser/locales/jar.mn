@@ -1,6 +1,0 @@
-#filter substitution
-
-cckwizard.jar:
-% locale cckwizard @AB_CD@ %locale/@AB_CD@/cckwizard/
-  locale/@AB_CD@/cckwizard/cckWizard.dtd                    (@AB_CD@/chrome/cckWizard.dtd)
-  locale/@AB_CD@/cckwizard/cckwizard.properties             (@AB_CD@/chrome/cckwizard.properties)

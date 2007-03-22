@@ -1,5 +1,0 @@
-/* jband - 09/14/98 -  */
-
-jslogger is a simple IFC applet that uses the netscape.jsdebug API (as shipped
-in Navigator 4.x - and presumably to be in mozilla) to log JavaScript activity
-with runtime control over the level of detail desired.

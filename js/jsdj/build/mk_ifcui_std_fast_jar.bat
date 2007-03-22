@@ -1,1 +1,0 @@
-call mk_ifcui_std.bat ifcui_fast ifcui_jar

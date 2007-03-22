@@ -1,8 +1,0 @@
-/* jband - 09/14/98 -  */
-
-com.netscape.nativejsengine is a package which allows starting and running the
-native JavaScript engine from a Java application. It is very bare-bones --
-intended ony to support testing. It supports starting the engine (with optional
-debugger support), setting the version, sending rping output to the Java app,
-and loading/executing .js files. The native code to complete this package lives
-in js/jsd/javawrap.

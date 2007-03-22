@@ -1,7 +1,0 @@
-This is Grendel -- a Java mail/news client.
-
-Originally the calypso package was a general utility package for all of
-the Xena project; what is present here are just the parts of Calypso
-that are used by Grendel.
-
-See http://www.mozilla.org/projects/grendel/ for more info.

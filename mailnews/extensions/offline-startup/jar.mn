@@ -1,5 +1,0 @@
-#ifdef MOZ_SUITE
-en-US.jar:
-  locale/en-US/messenger/offlineStartup.properties      (resources/locale/en-US/offlineStartup.properties)
-#endif
-

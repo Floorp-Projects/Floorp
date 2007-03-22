@@ -1,6 +1,0 @@
-RUN_STAGES=PLUGLET_INSTANCE_INITIALIZE
-ITERATOR_CLASS=org.mozilla.pluglet.test.basic.api.PlugletTagInfo2_getHeight_Iterator
-TEST_CLASS=org.mozilla.pluglet.test.basic.api.PlugletTagInfo2_getHeight_0
-TEST_HTML=api/PlugletTagInfo2_getHeight_1/PlugletTagInfo2_getHeight.html
-PLUGLET=<TEST_TOP_DIR><FSEP>build<FSEP>classes<FSEP>org<FSEP>mozilla<FSEP>pluglet<FSEP>test<FSEP>basic<FSEP>api<FSEP>TestAPIPluglet.jar
-EXPECTED_VALUE=111

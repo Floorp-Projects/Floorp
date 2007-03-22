@@ -1,5 +1,0 @@
-/* jband - 09/14/98 -  */
-
-com.netscape.jsdebugging.apitests is a debugger api testing system which is
-based on the strategy of comparing the behavior of the C engine to that of the
-Java engine and detecting unexpected differences.

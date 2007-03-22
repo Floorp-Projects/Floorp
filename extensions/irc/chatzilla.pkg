@@ -1,6 +1,0 @@
-[chatzilla]
-dist/bin/chrome/chatzilla.jar
-dist/bin/components/chatzilla-service.js
-
-[chatzilla-xpi]
-!preprocess xpiroot/install.js -E -Fsubstitution @topsrcdir@/xpinstall/packager/common/share.t @topsrcdir@/extensions/irc/install.jst

@@ -1,3 +1,0 @@
-function incFunc1() {
-  return("incFunc1");
-}

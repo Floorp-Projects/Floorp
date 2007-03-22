@@ -1,7 +1,0 @@
-This is Grendel -- a Java mail/news client.
-
-The grendel.mime package implements a general MIME parser.
-Sub-packages build specific tools on top of that MIME parser,
-for example, converting a MIME object to an HTML representation.
-
-See http://www.mozilla.org/projects/grendel/ for more info.

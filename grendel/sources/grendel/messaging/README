@@ -1,7 +1,0 @@
-This is Grendel -- a Java mail/news client.
-
-The grendel.messaging package the internal messaging system.
-
-It has NOTHING to do with email!
-
-See http://www.mozilla.org/projects/grendel/ for more info.

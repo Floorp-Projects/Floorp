@@ -1,9 +1,0 @@
-# I don't think that this should be gecko, we should let apps ship
-# this if they want it --BDS
-[gecko]
-#if SHARED_LIBRARY
-dist/bin/components/@SHARED_LIBRARY@
-#else
-!staticcomp @LIBRARY@ @MODULE_NAME@
-#endif
-!xpt dist/bin/components/p3p.xpt

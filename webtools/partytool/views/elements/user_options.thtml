@@ -1,7 +1,0 @@
-<?php if(!isset($_SESSION['User'])): ?>
-<strong>Welcome, Guest!</strong>
-<a href="<?php echo $html->url('/users/login'); ?>">Login</a> | <a href="<?php echo $html->url('/users/register'); ?>">Register</a>
-<?php else: ?>
-<strong>Welcome, <?php echo $_SESSION['User']['name']; ?>!</strong>
-<a href="<?php echo $html->url('/users'); ?>">My Account</a> | <a href="<?php echo $html->url('/users/logout'); ?>">Logout</a>
-<?php endif; ?>

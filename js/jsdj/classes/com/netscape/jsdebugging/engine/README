@@ -1,6 +1,0 @@
-/* jband - 09/14/98 -  */
-
-com.netscape.jsdebugging.engine declares a simple generic interface for starting
-and running a JavaScript engine (with optional debug support). It exists to
-support testing. Test systems can be compiled and run against this
-interface package and choose *at runtime* which engine to load and run.

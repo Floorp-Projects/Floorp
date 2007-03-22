@@ -1,5 +1,0 @@
-box.ccklist {
-    -moz-binding: url('chrome://cckwizard/content/ccklist.xml#ccklist');
-}
-
-.listcell-icon { max-width: 16px; max-height: 16px; }

@@ -1,1 +1,0 @@
-java -cp "." GrendelLauncher

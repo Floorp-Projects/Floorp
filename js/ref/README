@@ -1,5 +1,0 @@
-This directory used to contain JSRef, the standalone version of the
-JavaScript engine.  The entire contents of the js/ref directory have
-been merged with the js/src directory, which now contains the source
-for the JavaScript engine, both standalone and embedded in the browser.
-

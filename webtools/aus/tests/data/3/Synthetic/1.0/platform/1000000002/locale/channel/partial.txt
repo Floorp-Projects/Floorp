@@ -1,8 +1,0 @@
-partial
-http://synthetic.1.0.platform.buildid.locale.channel/partial002
-SHA1
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-12345
-2006010102
-1.0
-1.0

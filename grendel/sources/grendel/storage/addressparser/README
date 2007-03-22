@@ -1,6 +1,0 @@
-This is Grendel -- a Java mail/news client.
-
-The grendel.storage.addressparser implements a lenient parser for
-RFC822 mailboxes.
-
-See http://www.mozilla.org/projects/grendel/ for more info.

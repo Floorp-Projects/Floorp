@@ -1,7 +1,0 @@
-1. cd in $(MOZILLA_FIVE_HOME)/java/xpcom/urp/src; run 'gmake'
-
-2. for server running : cd $(MOZILLA_FIVE_HOME)/dist/bin; 
-	run 'server socket,host=YourHost,port=YourPort'
-
-6. for client running: cd $(MOZILLA_FIVE_HOME)/dist/bin;
-	run 'client socket,host=YourHost,port=YourPort'

@@ -1,9 +1,0 @@
-[walletviewers]
-#if SHARED_LIBRARY
-dist/bin/components/@SHARED_LIBRARY@
-#else
-!staticcomp @LIBRARY@ @MODULE_NAME@
-#endif
-!xpt dist/bin/components/signonviewer.xpt
-!xpt dist/bin/components/walleteditor.xpt
-!xpt dist/bin/components/walletpreview.xpt

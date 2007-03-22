@@ -1,6 +1,0 @@
-<form action="<?php echo $html->url('/pages/edit'); ?>" method="post">
-<h1>Front Page Text</h1>
-<?php echo $html->textarea('Pages/text', array('rows' => 35, 'cols' => 80)); ?>
-<h1>Countdown Timer</h1>
-<?php echo $html->dateTimeOptionTag('Pages/date', 'YMD', 24, $selected).'<br/><br/>'.$html->submit('Submit'); ?>
-</form>

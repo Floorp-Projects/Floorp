@@ -1,5 +1,0 @@
-# Make flags
-mk_add_options MOZ_CO_PROJECT=browser
-
-# Configure flags
-ac_add_options --enable-application=browser
