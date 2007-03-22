@@ -1,3 +1,3 @@
-/pub/mozilla.org/xulrunner/nightly/latest-mozilla1.8.0/xulrunner-1.8.0.11pre.en-US.linux-i686.tar.gz
-/pub/mozilla.org/xulrunner/nightly/latest-mozilla1.8.0/xulrunner-1.8.0.11pre.en-US.mac-pkg.dmg
-/pub/mozilla.org/xulrunner/nightly/latest-mozilla1.8.0/xulrunner-1.8.0.11pre.en-US.win32.zip
+/pub/mozilla.org/xulrunner/nightly/latest-mozilla1.8.0/xulrunner-1.8.0.12pre.en-US.linux-i686.tar.gz
+/pub/mozilla.org/xulrunner/nightly/latest-mozilla1.8.0/xulrunner-1.8.0.12pre.en-US.mac-pkg.dmg
+/pub/mozilla.org/xulrunner/nightly/latest-mozilla1.8.0/xulrunner-1.8.0.12pre.en-US.win32.zip
