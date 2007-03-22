@@ -231,6 +231,7 @@ bin\js\calOutlookCSVImportExport.js
 bin\js\calProtocolHandler.js
 bin\js\calRecurrenceInfo.js
 bin\js\calTodo.js
+bin\js\calTransactionManager.js
 bin\js\calUtils.js
 bin\js\calWeekPrinter.js
 bin\js\calWeekTitleService.js
