@@ -49,7 +49,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsBaseAppShell, nsIAppShell, nsIThreadObserver,
                               nsIObserver)
 
 nsBaseAppShell::nsBaseAppShell()
-  : mFavorPerf(0)
+  : mSuspendNativeCount(0)
+  , mFavorPerf(0)
   , mNativeEventPending(PR_FALSE)
   , mStarvationDelay(0)
   , mSwitchTime(0)
@@ -174,6 +175,21 @@ nsBaseAppShell::FavorPerformanceHint(PRBool favorPerfOverStarvation,
     --mFavorPerf;
     mSwitchTime = PR_IntervalNow();
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseAppShell::SuspendNative(void)
+{
+  ++mSuspendNativeCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseAppShell::ResumeNative(void)
+{
+  --mSuspendNativeCount;
+  NS_ASSERTION(mSuspendNativeCount >= 0, "Unbalanced call to nsBaseAppShell::ResumeNative!");
   return NS_OK;
 }
 

@@ -58,6 +58,7 @@
 #include "nsReadableUtils.h"
 #include "prmem.h"
 #include "nsGkAtoms.h"
+#include "nsIAppShell.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
 #include "nsIURL.h"
@@ -719,6 +720,14 @@ nsObjectFrame::InstantiatePlugin(nsIPluginHost* aPluginHost,
                                  const char* aMimeType,
                                  nsIURI* aURI)
 {
+  // If you add early return(s), be sure to balance this call to
+  // appShell->SuspendNative() with additional call(s) to
+  // appShell->ReturnNative().
+  static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
+  if (appShell) {
+    appShell->SuspendNative();
+  }
 
 #ifdef DEBUG
   mInstantiating = PR_TRUE;
@@ -744,6 +753,10 @@ nsObjectFrame::InstantiatePlugin(nsIPluginHost* aPluginHost,
 #ifdef DEBUG
   mInstantiating = PR_FALSE;
 #endif
+
+  if (appShell) {
+    appShell->ResumeNative();
+  }
 
   // XXX having to do this sucks. it'd be better to move the code from DidReflow
   // to FixupWindow or something.

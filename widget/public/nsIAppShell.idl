@@ -43,7 +43,7 @@
  * Interface for the native event system layer.  This interface is designed
  * to be used on the main application thread only.
  */
-[uuid(3785230a-da91-4eaa-8a25-56acc7ff35d0)]
+[uuid(95f1f2b3-051b-4603-bb91-7058191dfc1e)]
 interface nsIAppShell : nsISupports
 {
   /**
@@ -73,4 +73,27 @@ interface nsIAppShell : nsISupports
    */
   void favorPerformanceHint(in boolean favorPerfOverStarvation,
                             in unsigned long starvationDelay);
+
+  /**
+   * Suspends the use of additional platform-specific methods (besides the
+   * nsIAppShell->run() event loop) to run Gecko events on the main
+   * application thread.  Under some circumstances these "additional methods"
+   * can cause Gecko event handlers to be re-entered, sometimes leading to
+   * hangs and crashes.  Calls to suspendNative() and resumeNative() may be
+   * nested.  On some platforms (those that don't use any "additional
+   * methods") this will be a no-op.  Does not (in itself) stop Gecko events
+   * from being processed on the main application thread.  But if the
+   * nsIAppShell->run() event loop is blocked when this call is made, Gecko
+   * events will stop being processed until resumeNative() is called (even
+   * if a plugin or library is temporarily processing events on a nested
+   * event loop).
+   */
+  void suspendNative();
+
+  /**
+   * Resumes the use of additional platform-specific methods to run Gecko
+   * events on the main application thread.  Calls to suspendNative() and
+   * resumeNative() may be nested.  On some platforms this will be a no-op.
+   */
+  void resumeNative();
 };

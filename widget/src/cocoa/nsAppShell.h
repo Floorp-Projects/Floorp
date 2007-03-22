@@ -50,6 +50,8 @@
 class nsAppShell : public nsBaseAppShell
 {
 public:
+  NS_IMETHODIMP ResumeNative(void);
+	
   nsAppShell();
 
   nsresult Init();

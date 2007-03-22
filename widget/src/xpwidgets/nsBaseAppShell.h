@@ -94,6 +94,8 @@ protected:
    */
   virtual PRBool ProcessNextNativeEvent(PRBool mayWait) = 0;
 
+  PRInt32 mSuspendNativeCount;
+
 private:
   PRBool DoProcessNextNativeEvent(PRBool mayWait);
 
