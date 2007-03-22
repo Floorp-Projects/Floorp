@@ -1,0 +1,15 @@
+<!ENTITY Inspector.label "Scrúdaitheoir DOM">
+<!ENTITY Sidebar.label "Barra Taoibh">
+<!ENTITY elementBlinking.label "Caochadh na hEiliminte">
+<!ENTITY blinkSelectedElement.label "Cuir Eilimint Roghnaithe ag Caochadh">
+<!ENTITY borderColor.label "Dath na hImlíne">
+<!ENTITY borderWidth.label "Leithead na hImlíne">
+<!ENTITY px.label "(pct)">
+<!ENTITY blinkDuration.label "Fad an Chaochta">
+<!ENTITY ms.label "(ms)">
+<!ENTITY blinkSpeed.label "Luas an Chaochta">
+<!ENTITY invertColors.label "Inbhéartaigh na Dathanna">
+<!ENTITY installHowTo.label "Níl Barra Taoibh an Scrúdaitheoir DOM suiteáilte faoi láthair.  Gliogáil an 
+cnaipe 'Suiteáil' chun é a chur le do Bharra Taoibh.">
+<!ENTITY install.label "Suiteáil">
+<!ENTITY addNavigatorHooks.label "Cuir roghchláir chomhthéacsacha le Navigator">

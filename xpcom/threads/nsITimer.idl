@@ -1,0 +1,196 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIObserver;
+
+%{C++
+/**
+ * The signature of the timer callback function passed to initWithFuncCallback.
+ * This is the function that will get called when the timer expires if the
+ * timer is initialized via initWithFuncCallback.
+ *
+ * @param aTimer the timer which has expired
+ * @param aClosure opaque parameter passed to initWithFuncCallback
+ *
+ * Implementers should return the following:
+ *
+ * @return NS_OK
+ *
+ */
+class nsITimer;
+typedef void (*nsTimerCallbackFunc) (nsITimer *aTimer, void *aClosure);
+%}
+
+native nsTimerCallbackFunc(nsTimerCallbackFunc);
+
+/**
+ * The callback interface for timers.
+ */
+interface nsITimer;
+
+[scriptable, uuid(a796816d-7d47-4348-9ab8-c7aeb3216a7d)]
+interface nsITimerCallback : nsISupports
+{
+  /**
+   * @param aTimer the timer which has expired
+   */
+  void notify(in nsITimer timer);
+};
+
+
+/**
+ * nsITimer instances must be initialized by calling one of the "init" methods
+ * documented below.  You may also re-initialize an existing instance with new
+ * delay to avoid the overhead of destroying and creating a timer.  It is not
+ * necessary to cancel the timer in that case.
+ */
+[scriptable, uuid(436a83fa-b396-11d9-bcfa-00112478d626)]
+interface nsITimer : nsISupports
+{
+  /* Timer types */
+
+  /**
+   * Type of a timer that fires once only.
+   */
+  const short TYPE_ONE_SHOT           = 0;
+
+  /**
+   * After firing, a TYPE_REPEATING_SLACK timer is stopped and not restarted
+   * until its callback completes.  Specified timer period will be at least
+   * the time between when processing for last firing the callback completes
+   * and when the next firing occurs.
+   *
+   * This is the preferable repeating type for most situations.
+   */
+  const short TYPE_REPEATING_SLACK    = 1;
+  
+  /**
+   * An TYPE_REPEATING_PRECISE repeating timer aims to have constant period
+   * between firings.  The processing time for each timer callback should not
+   * influence the timer period.  However, if the processing for the last
+   * timer firing could not be completed until just before the next firing
+   * occurs, then you could have two timer notification routines being
+   * executed in quick succession.
+   */
+  const short TYPE_REPEATING_PRECISE  = 2;
+
+  /**
+   * Initialize a timer that will fire after the said delay.
+   * A user must keep a reference to this timer till it is 
+   * is no longer needed or has been cancelled.
+   *
+   * @param aObserver   the callback object that observes the 
+   *                    ``timer-callback'' topic with the subject being
+   *                    the timer itself when the timer fires:
+   *
+   *                    observe(nsISupports aSubject, => nsITimer
+   *                            string aTopic,        => ``timer-callback''
+   *                            wstring data          =>  null
+   *
+   * @param aDelay      delay in milliseconds for timer to fire
+   * @param aType       timer type per TYPE* consts defined above
+   */
+  void init(in nsIObserver aObserver, in unsigned long aDelay, 
+            in unsigned long aType);
+
+
+  /**
+   * Initialize a timer to fire after the given millisecond interval.
+   * This version takes a function to call and a closure to pass to
+   * that function.
+   *
+   * @param aFunc      The function to invoke
+   * @param aClosure   An opaque pointer to pass to that function
+   * @param aDelay     The millisecond interval
+   * @param aType      Timer type per TYPE* consts defined above
+   */
+  [noscript] void initWithFuncCallback(in nsTimerCallbackFunc aCallback,
+                                       in voidPtr aClosure,
+                                       in unsigned long aDelay, 
+                                       in unsigned long aType);
+
+  /**
+   * Initialize a timer to fire after the given millisecond interval.
+   * This version takes a function to call and a closure to pass to
+   * that function.
+   *
+   * @param aFunc      nsITimerCallback interface to call when timer expires
+   * @param aDelay     The millisecond interval
+   * @param aType      Timer type per TYPE* consts defined above
+   */
+  void initWithCallback(in nsITimerCallback aCallback,
+                        in unsigned long aDelay, 
+                        in unsigned long aType);
+
+  /**
+   * Cancel the timer.  This method works on all types, not just on repeating
+   * timers -- you might want to cancel a TYPE_ONE_SHOT timer, and even reuse
+   * it by re-initializing it (to avoid object destruction and creation costs
+   * by conserving one timer instance).
+   */
+  void cancel();
+  
+  /**
+   * The millisecond delay of the timeout
+   */
+  attribute unsigned long delay;
+  
+  /**
+   * The timer type : one shot or repeating
+   */  
+  attribute unsigned long type;
+
+  /**
+   * The opaque pointer pass to initWithFuncCallback.
+   */  
+  [noscript] readonly attribute voidPtr closure;
+
+  /**
+   * The nsITimerCallback object passed to initWithCallback.
+   */
+  readonly attribute nsITimerCallback callback;
+};
+
+%{C++
+#define NS_TIMER_CONTRACTID "@mozilla.org/timer;1"
+#define NS_TIMER_CALLBACK_TOPIC "timer-callback"
+%}
+

@@ -1,0 +1,4 @@
+help-helper.jar:
+% content help-helper %content
+  content/help-helper.xul (chrome/content/help-helper.xul)
+  content/help-helper.js (chrome/content/help-helper.js)

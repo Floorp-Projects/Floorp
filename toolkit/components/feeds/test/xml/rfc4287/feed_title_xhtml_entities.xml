@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: atom summary with entities works
+Expect: feed.subtitle.text == '&quot;test&quot; &amp; &apos;title&apos; &amp; &lt;ok&gt;'
+
+-->
+<feed xmlns="http://www.w3.org/2005/Atom">
+<subtitle type="xhtml">
+  <div xmlns="http://www.w3.org/1999/xhtml">
+    "test&quot; &amp; &apos;title' &amp; &lt;ok>
+  </div>
+</subtitle>
+</feed>

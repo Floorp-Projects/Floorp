@@ -1,0 +1,11 @@
+HTTP/1.0 200 OK
+Content-Type: text/html
+
+<html><head>
+<title>test</title>
+</head>
+<body>
+
+<iframe src="iframe" />
+
+</body></html>

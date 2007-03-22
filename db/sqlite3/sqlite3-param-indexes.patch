@@ -1,0 +1,80 @@
+diff -ru orig/sqlite333/sqlite3.h sqlite333/sqlite3.h
+--- orig/sqlite333/sqlite3.h	2006-01-31 08:23:57.000000000 -0800
++++ sqlite333/sqlite3.h	2006-02-08 12:12:42.156250000 -0800
+@@ -1377,6 +1377,20 @@
+ # undef double
+ #endif
+ 
++/*
++** Given a wildcard parameter name, return the set of indexes of the
++** variables with that name.  If there are no variables with the given
++** name, return 0.  Otherwise, return the number of indexes returned
++** in *pIndexes.  The array should be freed with
++** sqlite3_free_parameter_indexes.
++*/
++int sqlite3_bind_parameter_indexes(
++    sqlite3_stmt *pStmt,
++    const char *zName,
++    int **pIndexes
++);
++void sqlite3_free_parameter_indexes(int *pIndexes);
++
+ #ifdef __cplusplus
+ }  /* End of the 'extern "C"' block */
+ #endif
+Only in sqlite333: sqlite3.h~
+diff -ru orig/sqlite333/vdbeapi.c sqlite333/vdbeapi.c
+--- orig/sqlite333/vdbeapi.c	2006-01-31 08:23:57.000000000 -0800
++++ sqlite333/vdbeapi.c	2006-02-08 12:13:46.562500000 -0800
+@@ -764,6 +764,50 @@
+ }
+ 
+ /*
++** Given a wildcard parameter name, return the set of indexes of the
++** variables with that name.  If there are no variables with the given
++** name, return 0.  Otherwise, return the number of indexes returned
++** in *pIndexes.  The array should be freed with
++** sqlite3_free_parameter_indexes.
++*/
++int sqlite3_bind_parameter_indexes(
++    sqlite3_stmt *pStmt,
++    const char *zName,
++    int **pIndexes
++){
++  Vdbe *p = (Vdbe*)pStmt;
++  int i, j, nVars, *indexes;
++  if( p==0 ){
++    return 0;
++  }
++  createVarMap(p);
++  if( !zName )
++    return 0;
++  /* first count */
++  nVars = 0;
++  for(i=0; i<p->nVar; i++){
++    const char *z = p->azVar[i];
++    if( z && strcmp(z,zName)==0 ){
++      nVars++;
++    }
++  }
++  indexes = sqliteMalloc( sizeof(int) * nVars );
++  j = 0;
++  for(i=0; i<p->nVar; i++){
++    const char *z = p->azVar[i];
++    if( z && strcmp(z,zName)==0 )
++      indexes[j++] = i+1;
++  }
++  *pIndexes = indexes;
++  return nVars;
++} 
++  
++void sqlite3_free_parameter_indexes(int *pIndexes)
++{   
++  sqliteFree( pIndexes );
++} 
++
++/*
+ ** Transfer all bindings from the first statement over to the second.
+ ** If the two statements contain a different number of bindings, then
+ ** an SQLITE_ERROR is returned.
+Only in sqlite333: vdbeapi.c~

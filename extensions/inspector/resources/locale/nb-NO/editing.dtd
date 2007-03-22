@@ -1,0 +1,16 @@
+<!ENTITY mnEditUndo.label "Angre">
+<!ENTITY mnEditUndo.accesskey "A">
+<!ENTITY mnEditRedo.label "Gjenta">
+<!ENTITY mnEditRedo.accesskey "G">
+<!ENTITY mnEditCut.label "Klipp ut">
+<!ENTITY mnEditCut.accesskey "u">
+<!ENTITY mnEditCopy.label "Kopier">
+<!ENTITY mnEditCopy.accesskey "K">
+<!ENTITY mnEditPaste.label "Lim inn">
+<!ENTITY mnEditPaste.accesskey "L">
+<!ENTITY mnEditInsert.label "Sett inn">
+<!ENTITY mnEditInsert.accesskey "e">
+<!ENTITY mnEditEdit.label "Rediger">
+<!ENTITY mnEditEdit.accesskey "R">
+<!ENTITY mnEditDelete.label "Slett">
+<!ENTITY mnEditDelete.accesskey "S">

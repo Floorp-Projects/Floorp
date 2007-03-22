@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!--
+
+Description: stylesheets with single quoted attributes work. Bug 352549.
+Base: http://www.penny-arcade.com/rss.xml
+Expect: result.stylesheet.spec == "http://www.penny-arcade.com/stylesheets/rss-display.xsl"
+
+-->
+<?xml-stylesheet type='text/xsl' href='/stylesheets/rss-display.xsl' version='1.0'?>
+<rss version="2.0">
+<channel>
+<title>Penny-Arcade</title>
+<link>http://www.penny-arcade.com/</link>
+<language>en-us</language>
+
+<copyright>Copyright 1999 - 2006 Penny Arcade, Inc.</copyright>
+<image>
+<url>http://www.penny-arcade.com/images/rss-logo.png</url>
+<title>Penny-Arcade Logo</title>
+<link>http://www.penny-arcade.com/</link>
+<width>144</width>
+
+<height>82</height>
+</image>
+</channel>
+</rss>

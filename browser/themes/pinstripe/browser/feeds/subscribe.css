@@ -1,0 +1,128 @@
+
+*[hidden] {
+  display: none;
+}
+
+html {
+  background: -moz-Dialog;
+  font: 3mm tahoma,arial,helvetica,sans-serif;
+}
+
+#feedBody, #feedError {
+  border: 1px solid THreeDShadow;
+  padding: 3em;
+  -moz-padding-start: 30px;
+  margin: 2em auto;
+  background: -moz-Field;
+}
+
+#feedHeader {
+  border: 1px solid ThreeDShadow;
+  -moz-border-radius: 10px;
+  padding-top: 4em;
+  padding-bottom: .3em;
+  -moz-padding-start: .3em;
+  -moz-padding-end: .3em;
+  margin: -4em auto 0 auto;
+  font-size: 110%;
+  background: url("chrome://browser/skin/feeds/feedIcon.png") 1.4em 5.9em no-repeat rgb(255,255,225);
+  color: InfoText;
+  padding: 5em 3em 0 3em;
+}
+
+
+#feedHeader[firstrun="true"] #feedIntroText {
+  display: block;
+}
+
+#feedIntroText {
+  display: none;
+  -moz-margin-start: 2em;
+}
+
+#feedSubscribeLine {
+  padding: 0 1em 1em 2em;
+}
+
+#alwaysUse {
+  padding: 3px;
+}
+
+#feedHeader[firstrun="true"] #feedSubscribeLine {
+  padding-left: 3.7em;
+}
+
+/* Don't print subscription UI */
+@media print {
+  #feedHeaderContainer {
+    display: none;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0 3em;
+  color: -moz-fieldText;
+  font: message-box;
+}
+
+h1 {
+  font-size: 160%;
+  border-bottom: 2px solid ThreeDLightShadow;
+  margin: 0 0 .2em 0;
+}
+
+h2 {
+  color: #C0C0C0;
+  font-size: 110%;
+  font-weight: normal;
+  margin: 0 0 .6em 0;
+}
+
+#feedTitleLink {
+  float: right;
+  -moz-margin-start: .6em;
+  -moz-margin-end: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+a[href] img {
+  border: none;
+}
+
+#feedTitleContainer {
+  -moz-margin-start: 0;
+  -moz-margin-end: .6em;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+#feedTitleImage {
+  -moz-margin-start: .6em;
+  -moz-margin-end: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  max-width: 300px;
+  max-height: 150px;
+}
+
+.feedEntryContent {
+  font-size: 110%;
+}
+
+.link {
+  color: #0000FF;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-top: -2px;
+}
+
+.link:hover:active {
+  color: #FF0000;
+}
+
+.lastUpdated {
+  font-size: 85%;
+  font-weight: normal;
+}

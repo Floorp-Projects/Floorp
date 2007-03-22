@@ -1,0 +1,240 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998-1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Kevin Gerich (webmail@kmgerich.com)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* ===== global.css =====================================================
+  == Styles that apply everywhere.
+  ======================================================================= */
+
+/* all localizable skin settings shall live here */
+@import url("chrome://global/locale/intl.css");
+
+@import url("chrome://global/skin/formatting.css");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+button[dlgtype="help"] {
+	min-width: 1px !important;
+	padding: 0px 0px 0px 0px !important;
+	-moz-appearance: none;
+	-moz-box-align: start !important;
+	height: 24px;
+	width: 24px;
+	margin: 4px;
+}
+
+button[dlgtype="help"][disabled] {
+  opacity: 0.5;
+}
+
+button[dlgtype="help"]:focus {
+  outline: 2px solid -moz-mac-focusring;
+  outline-offset: -2px;
+  -moz-outline-radius: 100%;
+}
+
+button[dlgtype="help"] > .button-box > .button-icon {
+  list-style-image: url("chrome://global/skin/icons/question-mark.png");
+  -moz-image-region: rect(0 24px 24px 0); 
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+button[dlgtype="help"]:active > .button-box > .button-icon {
+  -moz-image-region: rect(0 48px 24px 24px); 
+}
+
+button[dlgtype="help"] > .button-box > .button-text {
+  display: none !important;
+}
+/* ::::: XBL bindings ::::: */
+
+menulist > menupopup,
+.menulist-menupopup {
+  -moz-binding: url("chrome://global/content/bindings/popup.xml#popup-scrollbars");
+}
+
+.menulist-compact {
+  -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-compact");
+}
+
+.tabbrowser-tabs {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#tabbrowser-tabs");
+}
+
+/* ::::: root elements ::::: */
+
+window,
+page,
+dialog,
+wizard,
+prefwindow { 
+  -moz-appearance: dialog;
+  background-color: #FFFFFF;
+  color: -moz-DialogText;
+  font: message-box;
+}
+
+prefwindow {
+  font: -moz-dialog;
+}
+
+prefwindow .paneSelector {
+  font: message-box;
+}
+prefwindow[type="child"] {
+  padding: 18px 20px 15px 18px !important;
+}
+
+
+/* deprecated */
+window.dialog { 
+  padding: 8px 10px 10px 8px;
+}
+
+[wait-cursor] { 
+  cursor: wait !important; 
+}
+
+/* ::::: alert icons :::::*/
+
+.message-icon,
+.alert-icon,
+.error-icon,
+.question-icon {
+  width: 64px;
+  height: 64px;
+  list-style-image: url("chrome://branding/content/icon64.png");
+  margin: 6px 20px 6px 6px !important;
+}
+
+/* ::::: iframe ::::: */
+
+iframe {
+  border: none;
+  width: 100px;
+  height: 100px;
+  min-width: 10px;
+  min-height: 10px;
+}
+
+/* ::::: statusbar ::::: */
+
+statusbar {
+  border-top: 1px solid #A3A3A3 !important;
+  min-width: 1px; /* DON'T DELETE!
+  Prevents hiding of scrollbars in browser when window is made smaller.*/
+  min-height: 15px !important;
+  background-color: #FFFFFF;
+  margin: 0px !important;
+  padding: 0px 16px 1px 1px;
+  -moz-appearance: none;
+}
+
+statusbarpanel {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  padding: 0 4px;
+  -moz-appearance: dialog;
+}
+
+.statusbarpanel-iconic {
+  padding: 0px;
+}    
+
+/* ::::: miscellaneous ::::: */
+
+.toolbar-focustarget {
+  -moz-user-focus: ignore !important;
+}
+
+#info.icon {
+	margin-right: 14px;
+}
+
+#commonDialog {
+	line-height: 13px;
+}
+
+#commonDialog > hbox > vbox {
+	max-width: 33em !important;
+}
+
+#header {
+	display: none !important;
+}
+
+#warn1 {
+	font: menu;
+	font-weight: bold;
+	line-height: 16pt;
+	padding-bottom: 10px;
+}
+
+#ok, #cancel, #launch, #reveal, #pauseResume {
+	font: menu !important;
+}
+
+.message-icon {
+	display: none !important;
+}
+
+#panelFrame {
+	margin-top: 2px;
+	padding-left: 10px;
+}
+
+description {
+	margin-bottom: 4px;
+}
+
+browser {
+    margin: 0px;
+    padding: 0px;
+    background-color: #FFFFFF;
+}
+
+/* miscellaneous stuff */
+
+#OCSPDialog {
+  font: message-box;
+}
+
+#historyTree, #bookmarks-view {
+	border-top: 1px solid #bebebe;
+}
+

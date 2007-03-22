@@ -1,0 +1,8 @@
+STRINGTABLE DISCARDABLE 
+BEGIN
+#ifdef MOZ_THUNDERBIRD
+    IDS_BRAND_NAME           "Thunderbird"
+#else
+    IDS_BRAND_NAME           "Mozilla"
+#endif
+END

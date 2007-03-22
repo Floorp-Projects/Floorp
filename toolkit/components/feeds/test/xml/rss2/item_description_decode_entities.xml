@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+
+Description: item desc encoded, double-escaped entity
+Expect: var summary = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).summary; summary.plainText() == "test D\u00e9sol\u00e9e";
+
+-->
+<rss version="2.0" >
+<channel>
+<item>
+<comments>http://example.org</comments>
+<author>jbb@dallas.example.com (Joe Bob Briggs)</author>
+<title>test</title>
+<category domain="foo">bar</category>
+
+<description>
+  &lt;b>test D&amp;eacute;sol&amp;eacute;e&lt;/b> 
+</description>
+</item>
+</channel>
+</rss>

@@ -1,0 +1,27 @@
+<HTML>
+<HEAD><TITLE>Test case for bug #7025</TITLE></HEAD>
+<BODY ONLOAD="document.forms[0].elements[0].selectedIndex=4;document.forms[0].elements[1].selectedIndex=4">
+<FORM>
+<TABLE><TR><TD>
+Multiple: 
+<SELECT SIZE="2" MULTIPLE>
+<OPTION>1
+<OPTION>2
+<OPTION>3
+<OPTION>4
+<OPTION>5
+<OPTION>6
+</SELECT>
+</TD><TD>
+Not Multiple: 
+<SELECT SIZE="2">
+<OPTION>1
+<OPTION>2
+<OPTION>3
+<OPTION>4
+<OPTION>5
+<OPTION>6
+</SELECT>
+</TD></TR></TABLE>
+</BODY>
+</HTML>

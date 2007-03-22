@@ -1,0 +1,4 @@
+[mfcembed]
+dist/bin/mfcembed.exe
+dist/bin/mfcEmbedComponents.dll
+dist/bin/mfcembed.htm

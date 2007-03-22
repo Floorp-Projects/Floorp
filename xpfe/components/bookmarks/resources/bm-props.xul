@@ -1,0 +1,215 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<!--
+
+ ***** BEGIN LICENSE BLOCK *****
+ Version: MPL 1.1/GPL 2.0/LGPL 2.1
+
+ The contents of this file are subject to the Mozilla Public License Version
+ 1.1 (the "License"); you may not use this file except in compliance with
+ the License. You may obtain a copy of the License at
+ http://www.mozilla.org/MPL/
+
+ Software distributed under the License is distributed on an "AS IS" basis,
+ WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ for the specific language governing rights and limitations under the
+ License.
+
+ The Original Code is mozilla.org code.
+
+ The Initial Developer of the Original Code is
+ Netscape Communications Corporation.
+ Portions created by the Initial Developer are Copyright (C) 1998
+ the Initial Developer. All Rights Reserved.
+
+ Contributor(s):
+
+ Alternatively, the contents of this file may be used under the terms of
+ either of the GNU General Public License Version 2 or later (the "GPL"),
+ or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ in which case the provisions of the GPL or the LGPL are applicable instead
+ of those above. If you wish to allow use of your version of this file only
+ under the terms of either the GPL or the LGPL, and not to allow others to
+ use your version of this file under the terms of the MPL, indicate your
+ decision by deleting the provisions above and replace them with the notice
+ and other provisions required by the GPL or the LGPL. If you do not delete
+ the provisions above, a recipient may use your version of this file under
+ the terms of any one of the MPL, the GPL or the LGPL.
+
+ ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
+
+<!DOCTYPE dialog [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % bmpropsDTD SYSTEM "chrome://communicator/locale/bookmarks/bm-props.dtd">
+%bmpropsDTD;
+]>
+
+<dialog id="bmPropsWindow" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&bookmarks.windowtitle.label;"
+        onload="Init()" style="width: 40em;"
+        ondialogaccept="return Commit();">
+ 
+  <stringbundleset>
+    <stringbundle id="bundle_bookmarks" src="chrome://communicator/locale/bookmarks/bookmarks.properties"/>
+    <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
+  </stringbundleset>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarks.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bm-props.js"/>
+ 
+  <keyset id="keyset"/>  
+    
+  <groupbox>
+    <caption label="&generalInfo.label;" />
+    <grid>
+      <columns>
+        <column />
+        <column flex="1"/>
+      </columns>
+      <rows>
+        <row align="center">
+          <label value="&bookmarks.name.label;" 
+                 accesskey="&bookmarks.name.accesskey;" control="name"/>
+          <textbox id="name"/>
+        </row>
+        <row id="locationrow" align="center">
+          <label value="&bookmarks.location.label;" 
+                 accesskey="&bookmarks.location.accesskey;" control="url"/>
+          <textbox id="url" class="uri-element" />
+        </row>
+        <row id="shortcutrow" align="center">
+          <label value="&bookmarks.shortcut.label;" 
+                 accesskey="&bookmarks.shortcut.accesskey;" control="shortcut"/>
+          <textbox id="shortcut" />
+        </row>
+        <row id="descriptionrow">
+          <label value="&bookmarks.description.label;" 
+                 accesskey="&bookmarks.description.accesskey;" control="description"/>
+          <textbox multiline="true" wrap="virtual" id="description" flex="1"/>
+        </row>
+      </rows>
+    </grid>
+  </groupbox>
+  <hbox id="scheduling">
+    <groupbox>
+      <caption label="&checkforupdates.legend.label;"/>
+      <grid flex="1">
+        <columns>
+          <column/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row align="center">
+            <label value="&when.label;" accesskey="&when.accesskey;" control="dayRange"/>
+            <hbox>
+              <menulist id="dayRange" oncommand="dayRangeChange(this);">
+                <menupopup>
+                  <menuitem value="" label="&checknever.label;"/>
+                  <menuseparator />
+                  <menuitem value="0123456" label="&checkeveryday.label;"/>
+                  <menuitem value="12345" label="&checkweekdays.label;"/>
+                  <menuitem value="06" label="&checkweekends.label;"/>
+                  <menuitem value="1" label="&checkmondays.label;"/>
+                  <menuitem value="2" label="&checktuesdays.label;"/>
+                  <menuitem value="3" label="&checkwednesdays.label;"/>
+                  <menuitem value="4" label="&checkthursdays.label;"/>
+                  <menuitem value="5" label="&checkfridays.label;"/>
+                  <menuitem value="6" label="&checksaturdays.label;"/>
+                  <menuitem value="0" label="&checksundays.label;"/>
+                </menupopup>
+              </menulist>
+            </hbox>
+          </row>
+          <row align="center">
+            <label id="startHourRangeLabel" value="&from.label;" 
+                   accesskey="&from.accesskey;" control="startHourRange"/>
+            <hbox align="center">
+              <menulist id="startHourRange" oncommand="setEndHourRange()" disabled="true">
+                <menupopup>
+                  <menuitem value="0" label="&midnight.label;"/>
+                  <menuitem value="1" label="&AMone.label;"/>
+                  <menuitem value="2" label="&AMtwo.label;"/>
+                  <menuitem value="3" label="&AMthree.label;"/>
+                  <menuitem value="4" label="&AMfour.label;"/>
+                  <menuitem value="5" label="&AMfive.label;"/>
+                  <menuitem value="6" label="&AMsix.label;"/>
+                  <menuitem value="7" label="&AMseven.label;"/>
+                  <menuitem value="8" label="&AMeight.label;"/>
+                  <menuitem value="9" label="&AMnine.label;"/>
+                  <menuitem value="10" label="&AMten.label;"/>
+                  <menuitem value="11" label="&AMeleven.label;"/>
+                  <menuitem value="12" label="&noon.label;"/>
+                  <menuitem value="13" label="&PMone.label;"/>
+                  <menuitem value="14" label="&PMtwo.label;"/>
+                  <menuitem value="15" label="&PMthree.label;"/>
+                  <menuitem value="16" label="&PMfour.label;"/>
+                  <menuitem value="17" label="&PMfive.label;"/>
+                  <menuitem value="18" label="&PMsix.label;"/>
+                  <menuitem value="19" label="&PMseven.label;"/>
+                  <menuitem value="20" label="&PMeight.label;"/>
+                  <menuitem value="21" label="&PMnine.label;"/>
+                  <menuitem value="22" label="&PMten.label;"/>
+                  <menuitem value="23" label="&PMeleven.label;"/>
+                </menupopup>
+              </menulist>
+              <label id="endHourRangeLabel" value="&to.label;" 
+                     accesskey="&to.accesskey;" control="endHourRange"/>
+              <menulist id="endHourRange" disabled="true">
+                <menupopup onpopupshowing="setEndHourRange()">
+                  <menuitem value="1" label="&AMone.label;"/>
+                  <menuitem value="2" label="&AMtwo.label;"/>
+                  <menuitem value="3" label="&AMthree.label;"/>
+                  <menuitem value="4" label="&AMfour.label;"/>
+                  <menuitem value="5" label="&AMfive.label;"/>
+                  <menuitem value="6" label="&AMsix.label;"/>
+                  <menuitem value="7" label="&AMseven.label;"/>
+                  <menuitem value="8" label="&AMeight.label;"/>
+                  <menuitem value="9" label="&AMnine.label;"/>
+                  <menuitem value="10" label="&AMten.label;"/>
+                  <menuitem value="11" label="&AMeleven.label;"/>
+                  <menuitem value="12" label="&noon.label;"/>
+                  <menuitem value="13" label="&PMone.label;"/>
+                  <menuitem value="14" label="&PMtwo.label;"/>
+                  <menuitem value="15" label="&PMthree.label;"/>
+                  <menuitem value="16" label="&PMfour.label;"/>
+                  <menuitem value="17" label="&PMfive.label;"/>
+                  <menuitem value="18" label="&PMsix.label;"/>
+                  <menuitem value="19" label="&PMseven.label;"/>
+                  <menuitem value="20" label="&PMeight.label;"/>
+                  <menuitem value="21" label="&PMnine.label;"/>
+                  <menuitem value="22" label="&PMten.label;"/>
+                  <menuitem value="23" label="&PMeleven.label;"/>
+                  <menuitem value="24" label="&midnight.label;"/>
+                </menupopup>
+              </menulist>
+            </hbox>
+          </row>
+          <row align="center">
+            <label id="durationLabel" value="&every.label;" 
+                   accesskey="&every.accesskey;" control="duration"/>
+            <hbox align="center">
+              <textbox id="duration" size="4" value="60" disabled="true" />
+              <label id="durationSubLabel" value="&minutes.label;" />
+            </hbox>
+          </row>
+        </rows>
+      </grid>
+    </groupbox>
+    <groupbox>
+      <caption label="&notifications.legend.label;" />
+      <vbox align="start">
+        <checkbox id="bookmarkIcon" label="&notification.icon.label;" 
+                  accesskey="&notification.icon.accesskey;" disabled="true" />
+        <checkbox id="showAlert" label="&notification.alert.label;" 
+                  accesskey="&notification.alert.accesskey;" disabled="true" />
+        <checkbox id="openWindow" label="&notification.window.label;" 
+                  accesskey="&notification.window.accesskey;" disabled="true" />
+        <checkbox id="playSound" label="&notification.sound.label;" 
+                  accesskey="&notification.sound.accesskey;" disabled="true" />
+      </vbox>
+    </groupbox>
+  </hbox>
+</dialog>

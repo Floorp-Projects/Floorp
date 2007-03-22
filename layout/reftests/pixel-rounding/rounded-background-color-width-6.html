@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Pixel rounding testcase</title>
+<style type="text/css">
+
+html, body { margin: 0; border: none; padding: 0; }
+
+body > div { margin: 10px; height: 80px; position: relative; }
+
+body > div > div {
+    position: absolute; top: 0; left: 0; height: 10px; width: 10.6px;
+}
+
+body > div > div { background: green; }
+
+.tl { top: 20px; }
+.tr { margin-top: 40px; }
+.bl { left: 20px; }
+.br { margin-left: 40px; }
+
+div.one > div.tl { -moz-border-radius-topleft: 1px; }
+div.one > div.tr { -moz-border-radius-topright: 1px; }
+div.one > div.bl { -moz-border-radius-bottomleft: 1px; }
+div.one > div.br { -moz-border-radius-bottomright: 1px; }
+div.four > div.tl { -moz-border-radius-topleft: 4px; }
+div.four > div.tr { -moz-border-radius-topright: 4px; }
+div.four > div.bl { -moz-border-radius-bottomleft: 4px; }
+div.four > div.br { -moz-border-radius-bottomright: 4px; }
+
+</style>
+</head>
+<body>
+
+<div class="one">
+<div></div>
+<div class="tl"></div>
+<div class="tr"></div>
+<div class="bl"></div>
+<div class="br"></div>
+<div class="tl tr"></div>
+<div class="tl bl"></div>
+<div class="tl br"></div>
+<div class="tr bl"></div>
+<div class="tr br"></div>
+<div class="bl br"></div>
+<div class="tl tr bl"></div>
+<div class="tl tr br"></div>
+<div class="tl bl br"></div>
+<div class="tr bl br"></div>
+<div class="tl tr bl br"></div>
+</div>
+
+<div class="four">
+<div></div>
+<div class="tl"></div>
+<div class="tr"></div>
+<div class="bl"></div>
+<div class="br"></div>
+<div class="tl tr"></div>
+<div class="tl bl"></div>
+<div class="tl br"></div>
+<div class="tr bl"></div>
+<div class="tr br"></div>
+<div class="bl br"></div>
+<div class="tl tr bl"></div>
+<div class="tl tr br"></div>
+<div class="tl bl br"></div>
+<div class="tr bl br"></div>
+<div class="tl tr bl br"></div>
+</div>
+
+</body>
+</html>

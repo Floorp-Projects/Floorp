@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Testcase, bug 367504 -- inline block as margin root</title>
+<style type="text/css">
+
+span#ib { display: inline-block; vertical-align: text-bottom; }
+
+span#ib span { display:block }
+
+</style>
+</head>
+<body>
+<table border><tr><td>
+
+<p>x<span id="ib"><span>test</span></span>x</p>
+
+</td></tr></table>
+</body>
+</html>

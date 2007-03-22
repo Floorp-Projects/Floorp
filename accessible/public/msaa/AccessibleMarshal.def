@@ -1,0 +1,7 @@
+LIBRARY        AccessibleMarshal.dll
+
+EXPORTS        DllGetClassObject      PRIVATE
+               DllCanUnloadNow        PRIVATE
+               DllRegisterServer      PRIVATE
+               DllUnregisterServer    PRIVATE
+

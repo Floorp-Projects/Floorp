@@ -1,0 +1,188 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   John Bandhauer <jband@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* The long avoided variant support for xpcom. */
+
+#include "nsISupports.idl"
+
+[scriptable,uuid(4d12e540-83d7-11d5-90ed-0010a4e73d9a)]
+interface nsIDataType : nsISupports
+{
+    // These MUST match the declarations in xpt_struct.h. 
+    // Otherwise the world is likely to explode.   
+                                                   // From xpt_struct.h ...
+    const PRUint16 VTYPE_INT8                =  0; // TD_INT8              = 0,
+    const PRUint16 VTYPE_INT16               =  1; // TD_INT16             = 1,
+    const PRUint16 VTYPE_INT32               =  2; // TD_INT32             = 2,
+    const PRUint16 VTYPE_INT64               =  3; // TD_INT64             = 3,
+    const PRUint16 VTYPE_UINT8               =  4; // TD_UINT8             = 4,
+    const PRUint16 VTYPE_UINT16              =  5; // TD_UINT16            = 5,
+    const PRUint16 VTYPE_UINT32              =  6; // TD_UINT32            = 6,
+    const PRUint16 VTYPE_UINT64              =  7; // TD_UINT64            = 7,
+    const PRUint16 VTYPE_FLOAT               =  8; // TD_FLOAT             = 8, 
+    const PRUint16 VTYPE_DOUBLE              =  9; // TD_DOUBLE            = 9,
+    const PRUint16 VTYPE_BOOL                = 10; // TD_BOOL              = 10,
+    const PRUint16 VTYPE_CHAR                = 11; // TD_CHAR              = 11,
+    const PRUint16 VTYPE_WCHAR               = 12; // TD_WCHAR             = 12,
+    const PRUint16 VTYPE_VOID                = 13; // TD_VOID              = 13,
+    const PRUint16 VTYPE_ID                  = 14; // TD_PNSIID            = 14,
+    const PRUint16 VTYPE_DOMSTRING           = 15; // TD_DOMSTRING         = 15,
+    const PRUint16 VTYPE_CHAR_STR            = 16; // TD_PSTRING           = 16,
+    const PRUint16 VTYPE_WCHAR_STR           = 17; // TD_PWSTRING          = 17,
+    const PRUint16 VTYPE_INTERFACE           = 18; // TD_INTERFACE_TYPE    = 18,
+    const PRUint16 VTYPE_INTERFACE_IS        = 19; // TD_INTERFACE_IS_TYPE = 19,
+    const PRUint16 VTYPE_ARRAY               = 20; // TD_ARRAY             = 20,
+    const PRUint16 VTYPE_STRING_SIZE_IS      = 21; // TD_PSTRING_SIZE_IS   = 21,
+    const PRUint16 VTYPE_WSTRING_SIZE_IS     = 22; // TD_PWSTRING_SIZE_IS  = 22,
+    const PRUint16 VTYPE_UTF8STRING          = 23; // TD_UTF8STRING        = 23,
+    const PRUint16 VTYPE_CSTRING             = 24; // TD_CSTRING           = 24,
+    const PRUint16 VTYPE_ASTRING             = 25; // TD_ASTRING           = 25,
+    const PRUint16 VTYPE_EMPTY_ARRAY         = 254;
+    const PRUint16 VTYPE_EMPTY               = 255;
+};
+
+
+/**
+ * XPConnect has magic to transparently convert between nsIVariant and JS types.
+ * We mark the interface [scriptable] so that JS can use methods
+ * that refer to this interface. But we mark all the methods and attributes
+ * [noscript] since any nsIVariant object will be automatically converted to a
+ * JS type anyway.
+ */
+
+[scriptable, uuid(6c9eb060-8c6a-11d5-90f3-0010a4e73d9a)]
+interface nsIVariant : nsISupports
+{
+    [noscript] readonly attribute PRUint16     dataType;
+
+    [noscript] PRUint8      getAsInt8();
+    [noscript] PRInt16      getAsInt16();
+    [noscript] PRInt32      getAsInt32();
+    [noscript] PRInt64      getAsInt64();
+    [noscript] PRUint8      getAsUint8();
+    [noscript] PRUint16     getAsUint16();
+    [noscript] PRUint32     getAsUint32();
+    [noscript] PRUint64     getAsUint64();
+    [noscript] float        getAsFloat();
+    [noscript] double       getAsDouble();
+    [noscript] PRBool       getAsBool();
+    [noscript] char         getAsChar();
+    [noscript] wchar        getAsWChar();
+    [notxpcom] nsresult     getAsID(out nsID retval);
+    [noscript] AString      getAsAString();
+    [noscript] DOMString    getAsDOMString();
+    [noscript] ACString     getAsACString();
+    [noscript] AUTF8String  getAsAUTF8String();
+    [noscript] string       getAsString();
+    [noscript] wstring      getAsWString();
+    [noscript] nsISupports  getAsISupports();
+
+    [noscript] void getAsInterface(out nsIIDPtr iid, 
+                                   [iid_is(iid), retval] out nsQIResult iface);
+
+    [notxpcom] nsresult getAsArray(out PRUint16 type, out nsIID iid,
+                                   out PRUint32 count, out voidPtr ptr);
+
+    [noscript] void getAsStringWithSize(out PRUint32 size, 
+                                        [size_is(size), retval] out string str);
+    
+    [noscript] void getAsWStringWithSize(out PRUint32 size, 
+                                         [size_is(size), retval] out wstring str);
+};
+
+/**
+ * An object that implements nsIVariant may or may NOT also implement this
+ * nsIWritableVariant.
+ * 
+ * If the 'writable' attribute is false then attempts to call any of the 'set'
+ * methods can be expected to fail. Setting the 'writable' attribute may or
+ * may not succeed.
+ *
+ */
+
+[scriptable, uuid(5586a590-8c82-11d5-90f3-0010a4e73d9a)]
+interface nsIWritableVariant : nsIVariant
+{
+    attribute PRBool writable;
+
+    void setAsInt8(in PRUint8 aValue);
+    void setAsInt16(in PRInt16 aValue);
+    void setAsInt32(in PRInt32 aValue);
+    void setAsInt64(in PRInt64 aValue);
+    void setAsUint8(in PRUint8 aValue);
+    void setAsUint16(in PRUint16 aValue);
+    void setAsUint32(in PRUint32 aValue);
+    void setAsUint64(in PRUint64 aValue);
+    void setAsFloat(in float aValue);
+    void setAsDouble(in double aValue);
+    void setAsBool(in PRBool aValue);
+    void setAsChar(in char aValue);
+    void setAsWChar(in wchar aValue);
+    void setAsID(in nsIDRef aValue);
+    void setAsAString(in AString aValue);
+    void setAsDOMString(in DOMString aValue);
+    void setAsACString(in ACString aValue);
+    void setAsAUTF8String(in AUTF8String aValue);
+    void setAsString(in string aValue);
+    void setAsWString(in wstring aValue);
+    void setAsISupports(in nsISupports aValue);
+
+    void setAsInterface(in nsIIDRef iid, 
+                        [iid_is(iid)] in nsQIResult iface);
+
+    [noscript] void setAsArray(in PRUint16 type, in nsIIDPtr iid,
+                               in PRUint32 count, in voidPtr ptr);
+
+    void setAsStringWithSize(in PRUint32 size, 
+                             [size_is(size)] in string str);
+    
+    void setAsWStringWithSize(in PRUint32 size, 
+                              [size_is(size)] in wstring str);
+
+    void setAsVoid();
+    void setAsEmpty();
+    void setAsEmptyArray();
+
+    void setFromVariant(in nsIVariant aValue);
+};
+
+%{C++
+// The contractID for the generic implementation built in to xpcom.
+#define NS_VARIANT_CONTRACTID "@mozilla.org/variant;1"
+%}

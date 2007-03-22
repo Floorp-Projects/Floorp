@@ -1,0 +1,293 @@
+<!ENTITY places.title
+  "Bookmarks Manager">
+<!ENTITY file.label
+  "File">
+<!ENTITY file.accesskey
+  "F">
+<!ENTITY file.close.label
+  "Close">
+<!ENTITY file.close.accesskey
+  "C">
+<!ENTITY cmd.close.key
+  "w">
+<!ENTITY edit.label
+  "Edit">
+<!ENTITY edit.accesskey
+  "E">
+<!ENTITY view.label
+  "View">
+<!ENTITY view.accesskey
+  "V">
+<!ENTITY view.toolbar.label
+  "Toolbar">
+<!ENTITY view.toolbar.accesskey
+  "o">
+<!ENTITY view.columns.label
+  "Show Columns">
+<!ENTITY view.columns.accesskey
+  "S">
+<!ENTITY view.unsorted.label
+  "Unsorted">
+<!ENTITY view.unsorted.accesskey
+  "U">
+<!ENTITY view.sortAscending.label
+  "A > Z Sort Order">
+<!ENTITY view.sortAscending.accesskey
+  "A">
+<!ENTITY view.sortDescending.label
+  "Z > A Sort Order">
+<!ENTITY view.sortDescending.accesskey
+  "Z">
+<!ENTITY help.usingBookmarks.label
+  "Using Bookmarks">
+<!ENTITY help.usingBookmarks.accesskey
+  "B">
+<!ENTITY help.usingHistory.label
+  "Using History">
+<!ENTITY help.usingHistory.accesskey
+  "i">
+<!ENTITY help.advancedTips.label
+  "Advanced Tips &amp; Tricks">
+<!ENTITY help.advancedTips.accesskey
+  "T">
+
+<!ENTITY cmd.find.label 
+  "Find in Bookmarks...">
+<!ENTITY cmd.find.accesskey
+  "F">
+<!ENTITY cmd.findCurrent.label
+  "Find in Current Collection...">
+<!ENTITY cmd.findCurrent.accesskey
+  "i">
+<!ENTITY cmd.export.label
+  "Export...">
+<!ENTITY cmd.export.accesskey
+  "E">
+<!ENTITY cmd.import.label
+  "Import...">
+<!ENTITY cmd.import.accesskey
+  "I">
+<!ENTITY cmd.select_all.label
+  "Select All">
+<!ENTITY cmd.select_all.accesskey
+  "A">
+<!ENTITY cmd.select_all.key
+  "a">
+<!ENTITY cmd.edit_cut.label
+  "Cut">
+<!ENTITY cmd.edit_cut.accesskey
+  "t">
+<!ENTITY cmd.edit_cut.key
+  "x">
+<!ENTITY cmd.edit_copy.label
+  "Copy">
+<!ENTITY cmd.edit_copy.accesskey
+  "C">
+<!ENTITY cmd.edit_copy.key
+  "c">
+<!ENTITY cmd.edit_paste.label
+  "Paste">
+<!ENTITY cmd.edit_paste.accesskey
+  "P">
+<!ENTITY cmd.edit_paste.key
+  "v">
+<!ENTITY cmd.edit_delete.label
+  "Delete">
+<!ENTITY cmd.edit_delete.accesskey
+  "D">
+<!ENTITY cmd.edit_undo.label
+  "Undo">
+<!ENTITY cmd.edit_undo.accesskey
+  "U">
+<!ENTITY cmd.edit_undo.key
+  "z">
+<!ENTITY cmd.edit_redo.label
+  "Redo">
+<!ENTITY cmd.edit_redo.accesskey
+  "R">
+<!ENTITY cmd.edit_redo.key
+  "y">
+<!ENTITY cmd.open.label
+  "Open">
+<!ENTITY cmd.open.accesskey
+  "O">
+<!ENTITY cmd.open_window.label
+  "Open in a New Window">
+<!ENTITY cmd.open_window.accesskey
+  "N">
+<!ENTITY cmd.open_tab.label
+  "Open in a New Tab">
+<!ENTITY cmd.open_tab.accesskey
+  "w">
+<!ENTITY cmd.open_all_in_tabs.label
+  "Open All in Tabs">
+<!ENTITY cmd.open_all_in_tabs.accesskey
+  "O">
+<!ENTITY cmd.show_infoWin.label
+  "Properties">
+<!ENTITY cmd.show_infoWin.accesskey
+  "i">
+<!ENTITY cmd.show_infoMac.label
+  "Get Info">
+<!ENTITY cmd.show_infoMac.accesskey
+  "I">
+<!ENTITY cmd.show_info.key
+  "i">
+<!ENTITY cmd.rename.label
+  "Rename">
+<!ENTITY cmd.rename.accesskey
+  "R">
+<!ENTITY cmd.sortby_name.label
+  "Sort By Name">
+<!ENTITY cmd.sortby_name.accesskey
+  "S">
+<!ENTITY cmd.context_sortby_name.accesskey
+  "r">
+<!ENTITY cmd.new_bookmark.label
+  "New Bookmark...">
+<!ENTITY cmd.new_bookmark.accesskey
+  "B">
+<!ENTITY cmd.new_livemark.label
+  "New Live Bookmark...">
+<!ENTITY cmd.new_livemark.accesskey
+  "L">
+<!ENTITY cmd.new_folder.label
+  "New Folder...">
+<!ENTITY cmd.new_folder.accesskey
+  "o">
+<!ENTITY cmd.context_new_folder.accesskey
+  "F">
+<!ENTITY cmd.new_separator.label
+  "New Separator">
+<!ENTITY cmd.new_separator.accesskey
+  "S">
+<!ENTITY cmd.reloadLivebookmark.label
+  "Reload Live Bookmark">
+<!ENTITY cmd.reloadLivebookmark.accesskey
+  "R">
+<!ENTITY cmd.groupby_site.label
+  "Group by Site">
+<!ENTITY cmd.groupby_site.accesskey
+  "S">
+<!ENTITY cmd.groupby_page.label
+  "Group by Page">
+<!ENTITY cmd.groupby_page.accesskey
+  "P">
+<!ENTITY cmd.groupby_feed.label
+  "Group by Subscription">
+<!ENTITY cmd.groupby_feed.accesskey
+  "S">
+<!ENTITY cmd.groupby_post.label
+  "Group by Post">
+<!ENTITY cmd.groupby_post.accesskey
+  "P">
+
+<!ENTITY cmd.moveBookmarks.label
+         "Move...">
+<!ENTITY cmd.moveBookmarks.accesskey
+         "M">
+<!ENTITY cmd.moveBookmarks.menuLabel
+         "Move Bookmark(s)...">
+<!ENTITY cmd.moveBookmarks.menuAccesskey
+         "M">
+<!ENTITY cmd.personalToolbarFolder.menuLabel
+         "Set as Bookmarks Toolbar Folder">
+<!ENTITY cmd.personalToolbarFolder.menuAccesskey
+         "b">
+
+<!ENTITY col.title.label
+  "Title">
+<!ENTITY col.url.label
+  "Location">
+<!ENTITY col.lastvisit.label
+  "Visit Date">
+<!ENTITY col.visitcount.label
+  "Visit Count">
+<!ENTITY search.label
+  "Search:">
+<!ENTITY search.accesskey
+  "S">
+<!ENTITY search.collection.label
+  "Current Collection Only">
+<!ENTITY search.collection.accesskey
+  "C">
+<!ENTITY search.all.label
+  "All Bookmarks">
+<!ENTITY search.all.accesskey
+  "A">
+<!ENTITY saveSearch.label
+  "Save">
+<!ENTITY saveSearch.accesskey
+  "S">
+<!ENTITY moreCriteria.label
+  "+">
+<!ENTITY advancedSearch.onlybookmarked.label
+  "Search Bookmarks only">
+<!ENTITY advancedSearch.match.label
+  "Match ">
+<!ENTITY advancedSearch.all.label
+  "all">
+<!ENTITY advancedSearch.any.label
+  "any">
+<!ENTITY advancedSearch.rules.label
+  " of the following rules:">
+<!ENTITY advancedSearch.subj_keyword.label
+  "Containing the text">
+<!ENTITY advancedSearch.subj_visited.label
+  "Visited">
+<!ENTITY advancedSearch.subj_location.label
+  "Location">
+<!ENTITY advancedSearch.location_startswith.label
+  "starts with">
+<!ENTITY advancedSearch.location_is.label
+  "is">
+<!ENTITY advancedSearch.location_onsite.label
+  "is on site">
+<!ENTITY advancedSearch.time_is.label
+  "on">
+<!ENTITY advancedSearch.time_before.label
+  "before">
+<!ENTITY advancedSearch.time_after.label
+  "after">
+<!ENTITY advancedSearch.time_inlast.label
+  "in the last">
+<!ENTITY advancedSearch.last_days.label
+  "days">
+<!ENTITY advancedSearch.last_weeks.label
+  "weeks">
+<!ENTITY advancedSearch.last_months.label
+  "months">
+<!ENTITY advancedSearch.plus.label
+  "+">
+<!ENTITY advancedSearch.minus.label
+  "-">
+<!ENTITY advancedSearch.groupby.label
+  "Group by: ">
+<!ENTITY advancedSearch.groupby_host.label
+  "host">
+<!ENTITY advancedSearch.groupby_domain.label
+  "domain">
+<!ENTITY advancedSearch.groupby_folder.label
+  "folder">
+<!ENTITY advancedSearch.sortby.label
+  "Sort by: ">
+<!ENTITY advancedSearch.sortby_title.label
+  "title">
+<!ENTITY advancedSearch.sortby_date.label
+  "date">
+<!ENTITY advancedSearch.sortby_visit.label
+  "visit count">
+<!ENTITY advancedSearch.sortby_url.label
+  "url">
+<!ENTITY advancedSearch.sortby_asc.label
+  "ascending">
+<!ENTITY advancedSearch.sortby_desc.label
+  "descending">
+<!ENTITY advancedSearch.max.label
+  "Maximum results: ">
+<!ENTITY cmd.find.key
+  "f">
+<!ENTITY feed.subscribe.label
+  "Feed">
+<!ENTITY feed.subscribe.tooltip
+  "Subscribe">

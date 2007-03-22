@@ -1,0 +1,358 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2003
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Original Author: Eric D Vaughan (evaughan@netscape.com)
+ * Contributor(s): Aaron Leventhal (aaronl@netscape.com)
+ *                 John Gaunt (jgaunt@netscape.com)
+ *                 Kyle Yuan (kyle.yuan@sun.com)
+ *                 Håkan Waara (hwaara@gmail.com)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+
+interface nsIPersistentProperties;
+interface nsIDOMDOMStringList;
+
+/**
+ * A cross-platform interface that supports platform-specific 
+ * accessibility APIs like MSAA and ATK. Contains the sum of what's needed
+ * to support IAccessible as well as ATK's generic accessibility objects.
+ * Can also be used by in-process accessibility clients to get information
+ * about objects in the accessible tree. The accessible tree is a subset of 
+ * nodes in the DOM tree -- such as documents, focusable elements and text.
+ * Mozilla creates the implementations of nsIAccessible on demand.
+ * See http://www.mozilla.org/projects/ui/accessibility for more information.
+ *
+ * @status UNDER_REVIEW
+ */
+[scriptable, uuid(6ff04a18-a66c-4e50-9099-8e46eca181f6)]
+interface nsIAccessible : nsISupports
+{
+  /**
+   * Parent node in accessible tree.
+   */
+  readonly attribute nsIAccessible parent;
+
+  /**
+   * Next sibling in accessible tree
+   */
+  readonly attribute nsIAccessible nextSibling;
+
+  /**
+   * Previous sibling in accessible tree
+   */
+  readonly attribute nsIAccessible previousSibling;
+
+  /**
+   * First child in accessible tree
+   */
+  readonly attribute nsIAccessible firstChild;
+
+  /**
+   * Last child in accessible tree
+   */
+  readonly attribute nsIAccessible lastChild;
+  
+  /**
+   * Array of all this element's children.
+   */
+  readonly attribute nsIArray children;
+
+  /**
+   * Number of accessible children
+   */
+  readonly attribute long childCount;
+
+  /**
+   * The 0-based index of this accessible in its parent's list of children,
+   * or -1 if this accessible does not have a parent.
+   */
+  readonly attribute long indexInParent;
+
+  /**
+   * Accessible name -- the main text equivalent for this node
+   */
+  attribute AString name;
+
+  /**
+   * Accessible value -- a number or a secondary text equivalent for this node
+   * Widgets that use role attribute can force a value using the valuenow attribute
+   */
+  readonly attribute AString value;
+
+  /**
+   * Accessible description -- long text associated with this node
+   */
+  readonly attribute AString description;
+
+  /**
+   * Provides localized string of accesskey name, such as Alt+D.
+   * The modifier may be affected by user and platform preferences.
+   * Usually alt+letter, or just the letter alone for menu items. 
+   */
+  readonly attribute AString keyboardShortcut;
+
+  /**
+   * Provides localized string of global keyboard accelerator for default
+   * action, such as Ctrl+O for Open file
+   */
+  readonly attribute AString defaultKeyBinding;
+
+  /**
+   * Provides array of localized string of global keyboard accelerator for
+   * the given action index supported by accessible.
+   *
+   * @param aActionIndex - index of the given action
+   */
+  nsIDOMDOMStringList getKeyBindings(in PRUint8 aActionIndex);
+
+  /**
+   * Natural enumerated accessible role for the associated element.
+   * The values depend on platform because of variations.
+   * See the ROLE_* constants defined in nsIAccessibleRole.
+   * This does not take into account role attribute as the finalRole does.
+   */
+  readonly attribute unsigned long role;
+
+  /**
+   * Enumerated accessible role. The values depend on platform because of variations.
+   * See the ROLE_* constants defined in nsIAccessibleRole.
+   * Widgets can use role attribute to force the final role
+   */
+  readonly attribute unsigned long finalRole;
+
+  /**
+   * Accessible states -- bit field which describes boolean properties of node. 
+   * See the STATE_* constants defined later in this file.
+   * Many states are only valid given a certain role attribute that supports them
+   */
+  readonly attribute unsigned long finalState;
+
+  /**
+   * Extended accessible states -- second bit field describing node
+   */
+  readonly attribute unsigned long extState;
+
+  /**
+   * True if this element is live in an editor.
+   * False if the content is being displayed but not edited. 
+   */
+  readonly attribute boolean isEditable;
+
+  /**
+   * Help text associated with node
+   */
+  readonly attribute AString help;
+
+  /**
+   * Focused accessible child of node
+   */
+  readonly attribute nsIAccessible focusedChild;
+
+  /**
+   * Attributes of accessible
+   */
+  readonly attribute nsIPersistentProperties attributes;
+
+  /**
+   * Accessible child which contains the coordinate at (x, y) in screen pixels.
+   */
+  nsIAccessible getChildAtPoint(in long x, in long y);
+
+  /**
+   * Nth accessible child using zero-based index or last child if index less than zero
+   */
+  nsIAccessible getChildAt(in long aChildIndex);
+
+  /**
+   * Accessible node geometrically to the right of this one
+   */
+  nsIAccessible getAccessibleToRight();
+
+  /**
+   * Accessible node geometrically to the left of this one
+   */
+  nsIAccessible getAccessibleToLeft();
+
+  /**
+   * Accessible node geometrically above this one
+   */
+  nsIAccessible getAccessibleAbove();
+
+  /**
+   * Accessible node geometrically below this one
+   */
+  nsIAccessible getAccessibleBelow();
+
+  /**
+   * Accessible node related to this one 
+   */
+  nsIAccessible getAccessibleRelated(in unsigned long aRelationType);
+
+  void getBounds(out long x, 
+                    out long y, 
+                    out long width, 
+                    out long height);
+
+  /**
+   * Add or remove this accessible to the current selection
+   */
+  void setSelected(in boolean isSelected);
+
+  /**
+   * Extend the current selection from its current accessible anchor node
+   * to this accessible
+   */
+  void extendSelection();
+
+  /**
+   * Select this accessible node only
+   */
+  void takeSelection();
+
+  /**
+   * Focus this accessible node,
+   * The state STATE_FOCUSABLE indicates whether this node is normally focusable.
+   * It is the callers responsibility to determine whether this node is focusable.
+   * accTakeFocus on a node that is not normally focusable (such as a table),
+   * will still set focus on that node, although normally that will not be visually 
+   * indicated in most style sheets.
+   */
+  void takeFocus();
+
+  /**
+   * The number of accessible actions associated with this accessible
+   */
+  readonly attribute PRUint8 numActions;
+
+  /**
+   * The name of the accessible action at the given zero-based index
+   */
+  AString getActionName(in PRUint8 index);
+
+  /**
+   * The description of the accessible action at the given zero-based index
+   */
+  AString getActionDescription(in PRUint8 aIndex);
+
+  /**
+   * Perform the accessible action at the given zero-based index
+   * Action number 0 is the default action
+   */
+  void doAction(in PRUint8 index);   
+
+  /**
+   * Get a pointer to accessibility interface for this node, which is specific 
+   * to the OS/accessibility toolkit we're running on.
+   */
+  [noscript] void getNativeInterface(out voidPtr aOutAccessible);
+
+  /**
+   * API states we map from opposite states
+   *   VISIBLE -- mapped as the opposite of INVISIBLE
+   *   SHOWING -- mapped as the opposite of OFFSCREEN
+   *
+   * ATK states we don't have in nsIAccessible:
+   *   ARMED -- no clear use case, used briefly when button is activated
+   *   HAS_TOOLTIP -- no known use case
+   *   ICONIFIED -- Mozilla does not have elements which are collapsable into icons
+   *   TRUNCATED -- need use case. Indicates that an object's onscreen content is truncated, e.g. a text value in a spreadsheet cell. No IA2 state.
+   */   
+
+/**
+ * Relation Types -- most of these come from ATK's atkrelationtype.h
+ * When adding support for relations, make sure to add them to appropriate
+ * places in nsAccessibleWrap implementations
+ * RELATION_NULL:
+ * RELATION_CONTROLLED_BY:    Controlled by one or more target objects.
+ * RELATION_CONTROLLER_FOR:   Controller for one or more target objects.
+ * RELATION_LABEL_FOR:        Label for one or more target objects.
+ * RELATION_LABELLED_BY:      Labelled by one or more target objects.
+ * RELATION_MEMBER_OF:        Member of a group of one or more target objects.
+ * RELATION_NODE_CHILD_OF:    Cell in a treetable which is displayed because a
+ *                            cell in the same col is expanded & identifies it.
+ * RELATION_FLOWS_TO:         Has content that flows logically to another
+ *                            object in a sequential way, e.g. text flow.
+ * RELATION_FLOWS_FROM:       Has content that flows logically from another
+ *                            object in a sequential way, e.g. text flow.
+ * RELATION_SUBWINDOW_OF:     Subwindow attached to a component but otherwise 
+ *                            not connected in the UI hierarchy to that component.
+ * RELATION_EMBEDS:           Visually embeds another object's content, i.e.
+ *                            this object's content flows around another's content.
+ * RELATION_EMBEDDED_BY:      Inverse of RELATION_EMBEDS; this object's content
+ *                            is visually embedded in another object.
+ * RELATION_POPUP_FOR:        Popup for another object.
+ * RELATION_PARENT_WINDOW_OF: Parent window of another object.
+ * RELATION_DEFAULT_BUTTON:   Part of a form/dialog with a related default button.
+ * RELATION_DESCRIBED_BY:     Described by one or more target objects.
+ * RELATION_DESCRIPTION_FOR:  Description for one or more target objects.
+ */
+
+  const unsigned long RELATION_NUL = 0x00;               // ATK_RELATION_NUL
+  const unsigned long RELATION_CONTROLLED_BY = 0x01;     // ATK_RELATION_CONTROLLED_BY
+  const unsigned long RELATION_CONTROLLER_FOR = 0x02;    // ATK_RELATION_CONTROLLER_FOR
+  const unsigned long RELATION_LABEL_FOR = 0x03;         // ATK_RELATION_LABEL_FOR
+  const unsigned long RELATION_LABELLED_BY = 0x04;       // ATK_RELATION_LABELLED_BY
+  const unsigned long RELATION_MEMBER_OF = 0x05;         // ATK_RELATION_MEMBER_OF
+  const unsigned long RELATION_NODE_CHILD_OF = 0x06;     // ATK_RELATION_NODE_CHILD_OF
+  const unsigned long RELATION_FLOWS_TO = 0x07;          // ATK_RELATION_FLOWS_TO
+  const unsigned long RELATION_FLOWS_FROM = 0x08;        // ATK_RELATION_FLOWS_FROM
+  const unsigned long RELATION_SUBWINDOW_OF = 0x09;      // ATK_RELATION_SUBWINDOW_OF
+  const unsigned long RELATION_EMBEDS = 0x0a;            // ATK_RELATION_EMBEDS
+  const unsigned long RELATION_EMBEDDED_BY = 0x0b;       // ATK_RELATION_EMBEDDED_BY
+  const unsigned long RELATION_POPUP_FOR = 0x0c;         // ATK_RELATION_POPUP_FOR
+  const unsigned long RELATION_PARENT_WINDOW_OF = 0x0d;  // ATK_RELATION_PARENT_WINDOW_OF
+  const unsigned long RELATION_DESCRIBED_BY = 0x0e;      // ATK_RELATION_DESCRIBED_BY
+  const unsigned long RELATION_DESCRIPTION_FOR = 0x0f;   // ATK_RELATION_DESCRIPTION_FOR
+  const unsigned long RELATION_DEFAULT_BUTTON = 0x4000;  // MSAA only, no ATK relation
+
+// MSAA relationship extensions to accNavigate
+  const unsigned long NAVRELATION_CONTROLLED_BY = 0x1000;
+  const unsigned long NAVRELATION_CONTROLLER_FOR = 0x1001;
+  const unsigned long NAVRELATION_LABEL_FOR = 0x1002;
+  const unsigned long NAVRELATION_LABELLED_BY = 0x1003;
+  const unsigned long NAVRELATION_MEMBER_OF = 0x1004;
+  const unsigned long NAVRELATION_NODE_CHILD_OF = 0x1005;
+  const unsigned long NAVRELATION_FLOWS_TO = 0x1006;
+  const unsigned long NAVRELATION_FLOWS_FROM = 0x1007;
+  const unsigned long NAVRELATION_SUBWINDOW_OF = 0x1008;
+  const unsigned long NAVRELATION_EMBEDS = 0x1009;
+  const unsigned long NAVRELATION_EMBEDDED_BY = 0x100a;
+  const unsigned long NAVRELATION_POPUP_FOR = 0x100b;
+  const unsigned long NAVRELATION_PARENT_WINDOW_OF = 0x100c;
+  const unsigned long NAVRELATION_DEFAULT_BUTTON = 0x100d;
+  const unsigned long NAVRELATION_DESCRIBED_BY = 0x100e;
+  const unsigned long NAVRELATION_DESCRIPTION_FOR = 0x100f;
+};

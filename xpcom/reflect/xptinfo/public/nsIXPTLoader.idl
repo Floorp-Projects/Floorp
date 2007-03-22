@@ -1,0 +1,100 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the external XPT loader interface.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corp.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   John Bandhauer <jband@netscape.com>
+ *   Alec Flett <alecf@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+
+#include "nsISupports.idl"
+#include "nsILocalFile.idl"
+#include "nsIInputStream.idl"
+
+/**
+ * Implement nsIXPTLoaderSink if you want to enumerate the entries in
+ * an XPT archive of some kind
+ */
+[scriptable, uuid(6E48C500-8682-4730-ADD6-7DB693B9E7BA)]
+interface nsIXPTLoaderSink : nsISupports {
+    
+    /**
+     * called by the loader for each entry in the archive
+     * @param itemName the name of this particular item in the archive
+     * @param index the index of the item inthe archive
+     * @param stream contains the contents of the xpt file
+     */
+    void foundEntry(in string itemName,
+                    in long index,
+                    in nsIInputStream xptData);
+};
+
+/**
+ * The XPT loader interface: implemented by a loader to grab an input
+ * stream which will be consumed by the interface loader.
+ */
+[scriptable, uuid(368A15D9-17A9-4c2b-AC3D-A35B3A22B876)]
+interface nsIXPTLoader : nsISupports {
+    /**
+     * enumerate entries in the given archive
+     * for each entry found, the loader will call the sink's
+     * foundEntry() method with the appropriate information and a
+     * stream that the consumer can read from
+     * @param file the file to read from
+     * @param sink an object which will be called with each file found
+     *             in the file
+     */
+    void enumerateEntries(in nsILocalFile file,
+                          in nsIXPTLoaderSink sink );
+
+    /**
+     * Load a specific entry from the archive
+     * @param file the file to read from
+     * @param name the name of the xpt within the file
+     * @return an input stream that will read the raw xpt data from
+     *         the file
+     */
+    nsIInputStream loadEntry(in nsILocalFile file,
+                             in string name);
+};
+
+
+%{C++
+
+// the first part of the contractID for any loader
+// append the type of loader that you need, such as "zip"
+#define NS_XPTLOADER_CONTRACTID_PREFIX \
+   "@mozilla.org/xptinfo/loader;1&type="
+
+%}

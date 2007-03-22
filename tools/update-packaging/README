@@ -1,0 +1,4 @@
+This directory contains a tool for generating update packages for
+the update system described here:
+
+  http://wiki.mozilla.org/Software_Update

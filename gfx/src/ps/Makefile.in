@@ -1,0 +1,136 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= gfx
+LIBRARY_NAME	= gfxps
+EXPORT_LIBRARY = 1
+IS_COMPONENT	= 1
+MODULE_NAME	= nsGfxPSModule
+GRE_MODULE	= 1
+LIBXUL_LIBRARY = 1
+EXTRA_DSO_LIBS = gfxpsshar gkgfx
+REQUIRES	= xpcom \
+		  string \
+		  widget \
+		  pref \
+		  caps \
+		  locale \
+		  uconv \
+		  view \
+		  necko \
+		  imglib2 \
+		  unicharutil \
+		  $(NULL)
+
+CPPSRCS		= \
+		nsDeviceContextPS.cpp \
+		nsFontMetricsPS.cpp \
+                nsEPSObjectPS.cpp \
+		nsRenderingContextPS.cpp \
+		nsPostScriptObj.cpp \
+		nsAFMObject.cpp \
+		nsGfxFactoryPS.cpp \
+		nsTempfilePS.cpp \
+		nsPrintJobPS.cpp \
+		nsPrintJobFactoryPS.cpp \
+		$(NULL)
+
+EXPORTS		= \
+		nsIDeviceContextPS.h \
+		nsGfxPSCID.h \
+		nsIDeviceContextSpecPS.h \
+		nsTempfilePS.h \
+                nsEPSObjectPS.h \
+		$(NULL)
+
+EXPORT_RESOURCE	= \
+		$(srcdir)/sample.unixpsfonts.properties
+
+EXTRA_DSO_LDOPTS = \
+	$(LIBS_DIR) \
+	$(DEPTH)/modules/libutil/src/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
+	../shared/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX) \
+	$(EXTRA_DSO_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(MOZ_UNICHARUTIL_LIBS) \
+	$(NULL)
+
+ifdef MOZ_ENABLE_XFT
+EXTRA_DSO_LDOPTS += \
+		$(MOZ_XFT_LIBS) \
+		$(FT2_LIBS) \
+		$(NULL)
+endif
+
+ifneq (,$(MOZ_ENABLE_FREETYPE2)$(MOZ_ENABLE_XFT))
+CPPSRCS		+= \
+		nsType1.cpp \
+		$(NULL)
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+CFLAGS		+= $(TK_CFLAGS)
+CXXFLAGS	+= $(TK_CFLAGS)
+
+LOCAL_INCLUDES = \
+		-I../.. \
+		-I$(srcdir)/.. \
+                 $(NULL)
+
+ifdef MOZ_ENABLE_XFT
+INCLUDES		+= $(MOZ_XFT_CFLAGS)
+LOCAL_INCLUDES	+= -I$(srcdir)/../shared
+else
+ifdef MOZ_ENABLE_FREETYPE2
+INCLUDES	+= $(FT2_CFLAGS)
+endif
+endif
+
+libs::
+	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE) $(DESTDIR)$(mozappdir)/res
+

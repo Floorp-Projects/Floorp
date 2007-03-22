@@ -1,0 +1,34 @@
+Connected to acavax.lynchburg.edu.
+220 acavax.lynchburg.edu MultiNet FTP Server Process V4.0(15) at Mon 1-Jul-02 10:51AM-EDT
+Name (acavax.lynchburg.edu:cyp): 331 anonymous user ok. Send real ident as password.
+230-Guest User FOO@BAR.COM logged into ACA:[ANONYMOUS] at Mon 1-Jul-02 10:51AM-EDT, job 2b69.
+230 Access restrictions apply
+Remote system type is VMS.
+ftp> passive
+Passive mode on.
+ftp> pwd
+257 "ACA:[ANONYMOUS]" is current directory.
+ftp> ls
+227 Entering passive mode; use PORT 161,115,147,1,10,31
+150 List started.
+
+ACA:[ANONYMOUS]
+
+AUTOEXEC.BAT;1      %RMS-E-PRV, insufficient privilege or file protection violation
+BOURNE.DIR;1                1  28-OCT-1994 10:05 [ANONYMOUS] (RWE,RWE,RE,RWE)
+FTP_SERVER.LOG;8171         0   1-JUL-2002 10:51 [ANONYMOUS] (RWED,RWED,,)
+LOGIN.COM;2                 1   4-NOV-1994 14:09 [ANONYMOUS] (RWE,RWE,,)
+NICELY.DIR;1                1  14-NOV-1994 14:17 [501,120] (RWED,RWED,RE,RE)
+NWLINK.386;1               66   7-AUG-1995 14:32 [ANONYMOUS] (RWED,RWED,,RE)
+PUB.DIR;1                   1  27-JAN-1994 14:46 [ANONYMOUS] (RWE,RWE,RE,RWE)
+README.FTP;1        %RMS-E-PRV, insufficient privilege or file protection violation
+ROUSSOS.DIR;1               1  27-JAN-1994 14:48 [CS,ROUSSOS] (RWE,RWE,RE,R)
+S67-50903.JPG;1           328  22-SEP-1998 16:19 [ANONYMOUS] (RWED,RWED,,)
+S71-43543.JPG;1           310  22-SEP-1998 16:20 [ANONYMOUS] (RWED,RWED,,)
+TEAGUE.DIR;1                1   1-JUL-1995 12:23 [ANONYMOUS] (RWE,RWE,RE,RE)
+
+
+Total of 710 blocks in 12 files.
+226 Transfer completed.
+ftp> quit
+221 QUIT command received. Goodbye.

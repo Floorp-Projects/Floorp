@@ -1,0 +1,67 @@
+Index: libpixman/src/icrop.h
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/cairo/libpixman/src/icrop.h,v
+retrieving revision 1.4
+diff -u -r1.4 libpixman/src/icrop.h
+--- libpixman/src/icrop.h
++++ libpixman/src/icrop.h
+@@ -29,7 +29,7 @@
+     FbBits   ca1, cx1, ca2, cx2;
+ } FbMergeRopRec, *FbMergeRopPtr;
+ 
+-extern const FbMergeRopRec FbMergeRopBits[16] pixman_private;
++extern const pixman_private FbMergeRopRec FbMergeRopBits[16];
+ 
+ #define FbDeclareMergeRop() FbBits   _ca1, _cx1, _ca2, _cx2;
+ #define FbDeclarePrebuiltMergeRop()	FbBits	_cca, _ccx;
+@@ -98,7 +98,7 @@
+  */
+ 
+ /* half of table */
+-extern const pixman_bits_t fbStipple16Bits[256] pixman_private;
++extern const pixman_private pixman_bits_t fbStipple16Bits[256];
+ #define FbStipple16Bits(b) \
+     (fbStipple16Bits[(b)&0xff] | fbStipple16Bits[(b) >> 8] << FB_HALFUNIT)
+ 
+Index: libpixman/src/slim_internal.h
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/cairo/libpixman/src/slim_internal.h,v
+retrieving revision 1.4
+diff -u -r1.4 libpixman/src/slim_internal.h
+--- libpixman/src/slim_internal.h
++++ libpixman/src/slim_internal.h
+@@ -27,6 +27,8 @@
+ #ifndef _SLIM_INTERNAL_H_
+ #define _SLIM_INTERNAL_H_ 1
+ 
++/* XXX THIS DOCUMENTATION IS BLOODY WRONG. SOMEONE DID NOT ACTUALLY
++       CONSULT WITH THE COMPILERS THEY CLAIMED TO SUPPORT */
+ /* This macro marks a symbol as STV_HIDDEN, which prevents it from being
+    added to the dynamic symbol table of the shared library.  This prevents
+    users of the library from knowingly or unknowingly accessing library
+@@ -40,7 +42,8 @@
+ 	somefunction(void);
+ 
+    or after a data name,
+-
++    XXX THIS IS WRONG. YOU CAN NOT DO THIS WITH THE COMPILERS THAT
++        THIS PACKAGE CLAIMS TO SUPPORT.
+ 	extern int somedata pixman_private;
+ 
+    The ELF visibility attribute did not exist before gcc 3.3.  */
+Index: libpixman/src/icint.h
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/cairo/libpixman/src/icint.h,v
+retrieving revision 1.6
+diff -u -r1.6 libpixman/src/icint.h
+--- libpixman/src/icint.h
++++ libpixman/src/icint.h
+@@ -985,7 +985,7 @@
+ #define PictureCmapPolicyColor	    3
+ #define PictureCmapPolicyAll	    4
+ 
+-extern int PictureCmapPolicy pixman_private;
++extern int pixman_private PictureCmapPolicy;
+ 
+ int	PictureParseCmapPolicy (const char *name);
+ 

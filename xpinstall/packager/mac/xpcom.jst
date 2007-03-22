@@ -1,0 +1,49 @@
+function upgradeCleanup()
+{
+  // Obsolete files from Netscape 6.0 and Netscape 6.01 that
+  // need to be cleaned up.
+  deleteThisFile("Program",    "Component Registry");
+  deleteThisFile("Program",    "Essential Files/dom.shlb");
+  deleteThisFile("Components", "compreg.dat");
+  deleteThisFile("Components", "xpti.dat");
+  deleteThisFile("Components", "xptitemp.dat");
+}
+
+var srDest = $SpaceRequired$;
+
+var err = initInstall("Mozilla XPCOM", "XPCOM", "$Version$"); 
+logComment("initInstall: " + err);
+
+var fProgram = getFolder("Program");
+logComment("fProgram: " + fProgram);
+
+var subFolder = "Mozilla Folder";
+
+if (verifyDiskSpace(fProgram, srDest))
+{
+    // Call upgradeCleanup() before addDirectory() in case we accidentaly
+    // delete files that we happen to be also installing.  This way, if we do,
+    // it will just get reinstalled.  This is for safety measure.
+    upgradeCleanup();
+    err = addDirectory("Program",
+                   "$Version$",
+                   "viewer",           // jar source folder 
+                   fProgram,           // target folder 
+                   "",                 // target subdir 
+                   true );             // force flag 
+
+    logComment("addDirectory() returned: " + err);
+
+    if (err==SUCCESS)
+    {
+	    err = performInstall(); 
+    	logComment("performInstall() returned: " + err);
+    }
+    else
+    {
+	    cancelInstall(err);
+	    logComment("cancelInstall() returned: " + err);
+    }
+}
+else
+    cancelInstall(INSUFFICIENT_DISK_SPACE);

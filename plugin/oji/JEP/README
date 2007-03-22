@@ -1,0 +1,11 @@
+These directories contain the browser plugins to enable Java 1.4.x support on
+Mac OS X from a non-Cocoa non-WebKit app. The project has a MPL-compatible
+license and the source is hosted on SourceForge.
+
+For more information on the Java Embedding Plugin project, visit:
+  
+  http://javaplugin.sourceforge.net/
+
+Check JavaEmbeddingPlugin.bundle/Contents/Info.plist to determine which version
+of the plug-in is checked in. Contact Steven Michaud (smichaud at pobox.com)
+with questions.

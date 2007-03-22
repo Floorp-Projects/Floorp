@@ -1,0 +1,212 @@
+/* -*- Mode: idl; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Oracle Corporation code.
+ *
+ * The Initial Developer of the Original Code is
+ *  Oracle Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Brett Wilson <brettw@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface mozIStorageFunction;
+interface mozIStorageStatement;
+interface nsIFile;
+
+/**
+ * mozIStorageConnection represents a database connection attached to
+ * a specific file or to the in-memory data storage.  It is the
+ * primary interface for interacting with a database, including
+ * creating prepared statements, executing SQL, and examining database
+ * errors.
+ */
+[scriptable, uuid(77015f88-bfc2-4669-b1c3-cc19fb07cd4e)]
+interface mozIStorageConnection : nsISupports {
+  /*
+   * Initialization and status
+   */
+
+  /**
+   * whether the database is open or not
+   */
+  readonly attribute boolean connectionReady;
+
+  /**
+   * The current database nsIFile.  Null if the database
+   * connection refers to an in-memory database.
+   */
+  readonly attribute nsIFile databaseFile;
+
+  /**
+   * lastInsertRowID returns the row ID from the last INSERT
+   * operation.
+   */
+  readonly attribute long long lastInsertRowID;
+
+  /**
+   * The last error SQLite error code.
+   */
+  readonly attribute long lastError;
+
+  /**
+   * The last SQLite error as a string (in english, straight from the
+   * sqlite library).
+   */
+  readonly attribute AUTF8String lastErrorString;
+
+  /*
+   * Statement creation
+   */
+
+  /**
+   * Create a mozIStorageStatement for the given SQL expression.  The
+   * expression may use ? to indicate sequential numbered arguments,
+   * or :name and $var to indicate named arguments.
+   *
+   * @param aSQLStatement  The SQL statement to execute
+   *
+   * @returns a new mozIStorageStatement
+   */
+  mozIStorageStatement createStatement(in AUTF8String aSQLStatement);
+
+  /**
+   * Execute a SQL expression, expecting no arguments.
+   *
+   * @param aSQLStatement  The SQL statement to execute
+   */
+  void executeSimpleSQL(in AUTF8String aSQLStatement);
+
+  /**
+   * Check if the given table exists.
+   *
+   * @param aTableName   The table to check
+   * @returns TRUE if table exists, FALSE otherwise.
+   */
+  boolean tableExists(in AUTF8String aTableName);
+
+  /**
+   * Check if the given index exists.
+   *
+   * @param aIndexName   The index to check
+   * @returns TRUE if the index exists, FALSE otherwise.
+   */
+  boolean indexExists(in AUTF8String aIndexName);
+
+
+  /*
+   * Transactions
+   */
+
+  /**
+   * Returns true if a transaction is active on this connection.
+   */
+  readonly attribute boolean transactionInProgress;
+
+  /**
+   * Begin a new transaction.  sqlite default transactions are deferred.
+   * If a transaction is active, throws an error.
+   */
+  void beginTransaction();
+
+  /**
+   * Begins a new transaction with the given type.
+   */
+  const PRInt32 TRANSACTION_DEFERRED = 0;
+  const PRInt32 TRANSACTION_IMMEDIATE = 1;
+  const PRInt32 TRANSACTION_EXCLUSIVE = 2;
+  void beginTransactionAs(in PRInt32 transactionType);
+
+  /**
+   * Commits the current transaction.  If no transaction is active,
+   * @throws NS_ERROR_STORAGE_NO_TRANSACTION.
+   */
+  void commitTransaction();
+
+  /**
+   * Rolls back the current transaction.  If no transaction is active,
+   * @throws NS_ERROR_STORAGE_NO_TRANSACTION.
+   */
+  void rollbackTransaction();
+
+  /*
+   * Tables
+   */
+
+  /**
+   * Create the table with the given name and schema.
+   *
+   * If the table already exists, NS_ERROR_FAILURE is thrown.
+   * (XXX at some point in the future it will check if the schema is
+   * the same as what is specified, but that doesn't happen currently.)
+   *
+   * @param aTableName the table name to be created, consisting of
+   * [A-Za-z0-9_], and beginning with a letter.
+   *
+   * @param aTableSchema the schema of the table; what would normally
+   * go between the parens in a CREATE TABLE statement: e.g., "foo
+   * INTEGER, bar STRING".
+   *
+   * @throws NS_ERROR_FAILURE if the table already exists or could not
+   * be created for any other reason.
+   *
+   */
+  void createTable(in string aTableName,
+                   in string aTableSchema);
+
+  /*
+   * Functions
+   */
+
+  /**
+   * Create a new SQLite function
+   */
+  void createFunction(in string aFunctionName,
+                      in long aNumArguments,
+                      in mozIStorageFunction aFunction);
+
+  /**
+   * This is used to preload the database cache. It loads pages from the
+   * start of the database file until the memory cache (specified by
+   * "PRAGMA cache_size=") is full or the entire file is read.
+   *
+   * The cache MUST be active on the database for this to work. This means
+   * that you must have a transaction open on the connection, or have a
+   * transaction open on another connection that shares the same pager cache.
+   * This cached data will go away when the transaction is closed.
+   *
+   * This preload operation can dramatically speed up read operations because
+   * the data is loaded as one large block. Normally, pages are read in on
+   * demand, which can cause many disk seeks.
+   */
+  void preload();
+};

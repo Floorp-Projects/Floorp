@@ -1,0 +1,39 @@
+{
+    IBClasses = (
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {CLASS = "java.lang.Object"; LANGUAGE = Java; }, 
+        {
+            ACTIONS = {hitButton1 = id; hitButton2 = id; hitButton3 = id; }; 
+            CLASS = nsAlertController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                alertCheckPanel = id; 
+                alertCheckPanelCheck = id; 
+                alertCheckPanelText = id; 
+                alertPanel = id; 
+                alertPanelText = id; 
+                confirmCheckPanel = id; 
+                confirmCheckPanelCheck = id; 
+                confirmCheckPanelText = id; 
+                confirmPanel = id; 
+                confirmPanelText = id; 
+                owner = id; 
+                passwordPanel = id; 
+                passwordPanelCheck = id; 
+                passwordPanelInput = id; 
+                passwordPanelText = id; 
+                promptPanel = id; 
+                promptPanelCheck = id; 
+                promptPanelInput = id; 
+                promptPanelText = id; 
+                usernamePanel = id; 
+                usernamePanelCheck = id; 
+                usernamePanelPassword = id; 
+                usernamePanelText = id; 
+                usernamePanelUserName = id; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }
+    ); 
+    IBVersion = 1; 
+}

@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=352728
+-->
+<head>
+  <title>Test for Bug 352728</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=352728">Mozilla Bug 352728</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 352728 **/
+
+function checkTypes(aNode, aNodeType, aTypeArray)
+{
+  for (var i = 0; i < aTypeArray.length; ++i) {
+    ok(aNode instanceof aTypeArray[i], aNodeType + " type test " + i,
+       aNodeType + " should be a " + aTypeArray[i]);
+  }
+}
+
+function checkInterfaces(aNode, aNodeType, aInterfaceArray)
+{
+  for (var i = 0; i < aInterfaceArray.length; ++i) {
+    ok(aNode instanceof Components.interfaces[aInterfaceArray[i]],
+       aNodeType + " interface test " + i,
+       aNodeType + " should be a " + aInterfaceArray[i]);
+  }
+}
+
+function testCharacterData(aNode, aText)
+{
+  is(aNode.length, aText.length, "Text length should match");
+  is(aNode.data, aText, "Text content should match");
+  is(aNode.nodeValue, aText, "Check nodeValue");
+  is(aNode.localName, null, "Check localName")
+  is(aNode.namespaceURI, null, "Check namespaceURI");
+}
+
+function testComment(aText, aShouldSucceed)
+{
+  try {
+    var comment = document.createComment(aText);
+    var types = [ Comment, CharacterData, Node ];
+    checkTypes(comment, "comment", types);
+
+    var interfaces = [ "nsIDOMComment", "nsIDOMCharacterData", "nsIDOMNode",
+                       "nsIDOM3Node", "nsIDOMEventTarget" ];
+    checkInterfaces(comment, "comment", interfaces);
+
+    testCharacterData(comment, aText);
+    is(comment.nodeName, "#comment", "Check nodeName");
+    is(comment.nodeType, Node.COMMENT_NODE, "Check nodeType");
+
+    if (!aShouldSucceed) {
+      ok(0, "Invalid comment creation",
+         "Shouldn't create comment with embedded \"--\"");
+    }
+  } catch (e) {
+    if (aShouldSucceed) {
+      ok(0, "Correct functioning of comment stuff", "something broke: " + e);
+    } else {
+      is(e.code, DOMException.INVALID_CHARACTER_ERR, "Check exception code");
+    }
+  }
+}
+
+function testCDATASection(aText, aShouldSucceed)
+{
+  try {
+    var cdataSection = document.createCDATASection(aText);
+    ok(0, "Invalid CDATA section creation",
+       "Shouldn't create CDATA sections in HTML");
+  } catch (e) {
+    is(e.code, DOMException.NOT_SUPPORTED_ERR, "Check exception code");
+  }
+}
+
+function testPI(aTarget, aData, aShouldSucceed, aReason)
+{
+  try {
+    var pi = document.createProcessingInstruction(aTarget, aData);
+    ok(0, "Invalid processing instruction creation",
+       "Shouldn't create processing instructions in HTML");
+  } catch (e) {
+    is(e.code, DOMException.NOT_SUPPORTED_ERR, "Check exception code");
+  }
+}
+
+testComment("Some text", true);
+testComment("Some text with a '-' in it", true);
+testComment("Some text with a '-' and a '-' and another '-'", true);
+testComment("Some text -- this shouldn't create a node!", false);
+testComment("<!-- This is an HTML comment -->", false);
+
+testCDATASection("Some text", true);
+testCDATASection("Some text with a '?' in it", true);
+testCDATASection("Some text with a '>' in it", true);
+testCDATASection("Some text with a '?' and a '>' in it", true);
+testCDATASection("Some text with a '? >' in it", true);
+testCDATASection("Some text -- ?> this should be ok", true);
+testCDATASection("Some text ]]&gt; this should not create a node!", false);
+
+testPI("foo", "bar", true);
+testPI("foo:bar", "baz", true);
+testPI("foo", "bar?", true);
+testPI("foo", "bar>", true);
+testPI("foo", "bar? >", true);
+testPI("<aaa", "bar", false, "Target should not contain '<'");
+testPI("aaa>", "bar", false, "Target should not contain '>'");
+testPI("aa?", "bar", false, "Target should not contain '?'");
+testPI("foo", "bar?>", false, "Data should not contain '?>'");
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,76 @@
+<html>
+<body>
+The link below has an onmousedown, an onmouseup, and an onmousemove handler.
+Mouseover or click for event info in debug console.
+<a href="jshandlers.html">Link back to this page</a>
+
+<p>The link below has an event that should open www.mozilla.org when 
+   clicked
+</p>
+<!-- The link does 'return 0' - as per bug 345521 this should *not* be 
+     interpreted as false
+-->
+<a href="http://www.mozilla.org" onclick="return 0">Click me</a>
+
+<p>The link below has an event that is cancelled - nothing should happen when 
+   clicked
+</p>
+<a href="http://www.mozilla.org" onclick="return false">Click me<a/>
+
+</body>
+<script>
+function findElementByTagName(start, tag)
+{
+    var type = start.nodeType;
+
+    if (type == Node.ELEMENT) {
+
+		if (tag == start.tagName) {
+			//dump ("found one\n");
+			return start;
+		}
+
+        if (start.hasChildNodes) {
+            var children = start.childNodes;
+            var length = children.length;
+            var count = 0;
+            while(count < length) {
+				var ret = findElementByTagName(children[count], tag)
+				if (null != ret) {
+					return ret;
+				}
+                count++;
+            }
+        }
+    }
+	return null;
+}
+
+function getFirstLink()
+{
+	var node = document.documentElement;
+	var ret = findElementByTagName(node, "A");
+	return ret;
+}
+
+function ondown() 
+{
+	dump("got mousedown in script\n");
+}
+
+function onup()
+{
+	dump("got mouseup in script\n");
+}
+
+function onmove(event)
+{
+	dump("got mousemove in script at "+event.clientX+", "+event.clientY+"\n");
+}
+
+var l = getFirstLink();
+l.onmousedown = ondown;
+l.onmouseup = onup;
+l.onmousemove = onmove;
+</script>
+</html>

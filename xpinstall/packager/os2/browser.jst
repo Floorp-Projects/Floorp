@@ -1,0 +1,253 @@
+function upgradeCleanup()
+{
+  // Obsolete files and generated files that
+  // need to be cleaned up.
+  deleteThisFile("Components", "ucvja.dll");
+  deleteThisFile("Components", "ucvko.dll");
+  deleteThisFile("Components", "ucvtw.dll");
+  deleteThisFile("Components", "ucvtw2.dll");
+  deleteThisFile("Components", "ucvlatin.dll");
+  deleteThisFile("Components", "ucvcn.dll");
+  deleteThisFile("Components", "ucvibm.dll");
+  deleteThisFile("Components", "txtsvc.dll");
+  deleteThisFile("Components", "gfx2.dll");
+  deleteThisFile("Components", "gfx2.xpt");
+  deleteThisFile("Components", "ucharuti.dll");
+  deleteThisFile("Components", "chardet.dll");
+  deleteThisFile("Components", "lwbrk.dll");
+  deleteThisFile("Components", "nslocale.dll");
+  deleteThisFile("Components", "strres.dll");
+  deleteThisFile("Components", "imggif.dll");
+  deleteThisFile("Components", "imgjpeg.dll");
+  deleteThisFile("Components", "imgpng.dll");
+  deleteThisFile("Components", "imgbmp.dll");
+  deleteThisFile("Components", "imgxbm.dll");
+  deleteThisFile("Components", "imgppm.dll");
+  deleteThisFile("Components", "imgmng.dll");
+  deleteThisFile("Components", "nkcache.dll");
+  deleteThisFile("Components", "mozbrwsr.dll");
+  deleteThisFile("Components", "jsloader.dll");
+  deleteThisFile("Components", "gkcontnt.dll");
+  deleteThisFile("Components", "t8iix.dll");
+  deleteThisFile("Components", "urildr.dll");
+  deleteThisFile("Components", "jsurl.dll");
+  deleteThisFile("Components", "gkview.dll");
+  deleteThisFile("Components", "shistory.dll");
+  deleteThisFile("Components", "gkhtml.dll");
+  deleteThisFile("Components", "regviewr.dll");
+  deleteThisFile("Components", "jsdom.dll");
+  deleteThisFile("Components", "inspectr.dll");
+  deleteThisFile("Chrome",     "chrome.rdf");
+  deleteThisFile("Chrome",     "overlays.rdf");
+  deleteThisFile("Chrome",     "stylesheets.rdf");
+  deleteThisFolder("Chrome",   "overlayinfo");
+  deleteThisFolder("Components","myspell");
+
+  deleteThisFile("Components", "accessibility.xpt");
+  deleteThisFile("Components", "appshell.xpt");
+  deleteThisFile("Components", "autocomplete.xpt");
+  deleteThisFile("Components", "autoconfig.xpt");
+  deleteThisFile("Components", "bookmarks.xpt");
+  deleteThisFile("Components", "caps.xpt");
+  deleteThisFile("Components", "chardet.xpt");
+  deleteThisFile("Components", "chrome.xpt");
+  deleteThisFile("Components", "commandhandler.xpt");
+  deleteThisFile("Components", "composer.xpt");
+  deleteThisFile("Components", "content_base.xpt");
+  deleteThisFile("Components", "content_html.xpt");
+  deleteThisFile("Components", "content_htmldoc.xpt");
+  deleteThisFile("Components", "content_xmldoc.xpt");
+  deleteThisFile("Components", "content_xslt.xpt");
+  deleteThisFile("Components", "cookie.xpt");
+  deleteThisFile("Components", "directory.xpt");
+  deleteThisFile("Components", "docshell.xpt");
+  deleteThisFile("Components", "dom.xpt");
+  deleteThisFile("Components", "dom_base.xpt");
+  deleteThisFile("Components", "dom_core.xpt");
+  deleteThisFile("Components", "dom_css.xpt");
+  deleteThisFile("Components", "dom_events.xpt");
+  deleteThisFile("Components", "dom_html.xpt");
+  deleteThisFile("Components", "dom_range.xpt");
+  deleteThisFile("Components", "dom_stylesheets.xpt");
+  deleteThisFile("Components", "dom_traversal.xpt");
+  deleteThisFile("Components", "dom_views.xpt");
+  deleteThisFile("Components", "dom_xbl.xpt");
+  deleteThisFile("Components", "dom_xpath.xpt");
+  deleteThisFile("Components", "dom_xul.xpt");
+  deleteThisFile("Components", "downloadmanager.xpt");
+  deleteThisFile("Components", "editor.xpt");
+  deleteThisFile("Components", "embed_base.xpt");
+  deleteThisFile("Components", "exthandler.xpt");
+  deleteThisFile("Components", "find.xpt");
+  deleteThisFile("Components", "gfx.xpt");
+  deleteThisFile("Components", "helperAppDlg.xpt");
+  deleteThisFile("Components", "history.xpt");
+  deleteThisFile("Components", "imgicon.xpt");
+  deleteThisFile("Components", "imglib2.xpt");
+  deleteThisFile("Components", "intl.xpt");
+  deleteThisFile("Components", "jar.xpt");
+  deleteThisFile("Components", "jsdservice.xpt");
+  deleteThisFile("Components", "jsurl.xpt");
+  deleteThisFile("Components", "layout_base.xpt");
+  deleteThisFile("Components", "layout_printing.xpt");
+  deleteThisFile("Components", "layout_xul.xpt");
+  deleteThisFile("Components", "layout_xul_tree.xpt");
+  deleteThisFile("Components", "locale.xpt");
+  deleteThisFile("Components", "mimetype.xpt");
+  deleteThisFile("Components", "mozbrwsr.xpt");
+  deleteThisFile("Components", "mozfind.xpt");
+  deleteThisFile("Components", "mozldap.xpt");
+  deleteThisFile("Components", "necko.xpt");
+  deleteThisFile("Components", "necko_about.xpt");
+  deleteThisFile("Components", "necko_cache.xpt");
+  deleteThisFile("Components", "necko_cookie.xpt");
+  deleteThisFile("Components", "necko_data.xpt");
+  deleteThisFile("Components", "necko_dns.xpt");
+  deleteThisFile("Components", "necko_file.xpt");
+  deleteThisFile("Components", "necko_ftp.xpt");
+  deleteThisFile("Components", "necko_http.xpt");
+  deleteThisFile("Components", "necko_jar.xpt");
+  deleteThisFile("Components", "necko_res.xpt");
+  deleteThisFile("Components", "necko_socket.xpt");
+  deleteThisFile("Components", "necko_strconv.xpt");
+  deleteThisFile("Components", "necko_viewsource.xpt");
+  deleteThisFile("Components", "oji.xpt");
+  deleteThisFile("Components", "p3p.xpt");
+  deleteThisFile("Components", "pref.xpt");
+  deleteThisFile("Components", "prefmigr.xpt");
+  deleteThisFile("Components", "profile.xpt");
+  deleteThisFile("Components", "progressDlg.xpt");
+  deleteThisFile("Components", "proxyObjInst.xpt");
+  deleteThisFile("Components", "rdf.xpt");
+  deleteThisFile("Components", "related.xpt");
+  deleteThisFile("Components", "search.xpt");
+  deleteThisFile("Components", "shistory.xpt");
+  deleteThisFile("Components", "sidebar.xpt");
+  deleteThisFile("Components", "signonviewer.xpt");
+  deleteThisFile("Components", "timebomb.xpt");
+  deleteThisFile("Components", "txmgr.xpt");
+  deleteThisFile("Components", "txtsvc.xpt");
+  deleteThisFile("Components", "typeaheadfind.xpt");
+  deleteThisFile("Components", "suitetypeaheadfind.xpt");
+  deleteThisFile("Components", "uconv.xpt");
+  deleteThisFile("Components", "unicharutil.xpt");
+  deleteThisFile("Components", "uriloader.xpt");
+  deleteThisFile("Components", "urlbarhistory.xpt");
+  deleteThisFile("Components", "util.xpt");
+  deleteThisFile("Components", "wallet.xpt");
+  deleteThisFile("Components", "walleteditor.xpt");
+  deleteThisFile("Components", "walletpreview.xpt");
+  deleteThisFile("Components", "webbrowserpersist.xpt");
+  deleteThisFile("Components", "webBrowser_core.xpt");
+  deleteThisFile("Components", "webshell_idls.xpt");
+  deleteThisFile("Components", "websrvcs.xpt");
+  deleteThisFile("Components", "widget.xpt");
+  deleteThisFile("Components", "windowds.xpt");
+  deleteThisFile("Components", "windowwatcher.xpt");
+  deleteThisFile("Components", "xml-rpc.xpt");
+  deleteThisFile("Components", "xmlextras.xpt");
+  deleteThisFile("Components", "xpautocomplete.xpt");
+  deleteThisFile("Components", "xpcom_base.xpt");
+  deleteThisFile("Components", "xpcom_components.xpt");
+  deleteThisFile("Components", "xpcom_ds.xpt");
+  deleteThisFile("Components", "xpcom_io.xpt");
+  deleteThisFile("Components", "xpcom_threads.xpt");
+  deleteThisFile("Components", "xpcom_xpti.xpt");
+  deleteThisFile("Components", "xpconnect.xpt");
+  deleteThisFile("Components", "xpinstall.xpt");
+  deleteThisFile("Components", "xuldoc.xpt");
+  deleteThisFile("Components", "xultmpl.xpt");
+}
+
+// main
+var srDest;
+var err;
+var fProgram;
+
+srDest = $SpaceRequired$:bin;
+err    = initInstall("$ProductName$", "Browser", "$Version$"); 
+logComment("initInstall: " + err);
+
+fProgram  = getFolder("Program");
+logComment("fProgram: " + fProgram);
+
+if(verifyDiskSpace(fProgram, srDest))
+{
+  setPackageFolder(fProgram);
+
+  upgradeCleanup();
+  err = addDirectory("",
+                     "$Version$",
+                     "bin",              // dir name in jar to extract 
+                     fProgram,           // Where to put this file (Returned from GetFolder) 
+                     "",                 // subdir name to create relative to fProgram
+                     true);              // Force Flag 
+  logComment("addDirectory() of Program returned: " + err);
+
+  // check return value
+  if( err == SUCCESS )
+  {
+    // register chrome
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global-platform/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/communicator-platform/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/navigator-platform/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global-region/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/autoconfig/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/cookie/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/wallet/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/communicator/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/communicator/downloadmanager/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/communicator-region/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/branding/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/editor/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/editor-region/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/navigator/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/navigator-region/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/necko/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/mozldap/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/communicator/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/editor/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/global/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/messenger/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/navigator/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/communicator/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/editor/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/global/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/messenger/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/navigator/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","help.jar"),"content/help/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/xbl-marquee/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/p3p/");
+
+    /* Log files that are created after the installer is done, so they can be uninstalled */
+    logComment("Installing: "    + fProgram + ".autoreg");
+    logComment("Installing: "    + fProgram + "Xpcs Registry.dat");
+    logComment("Installing: "    + fProgram + "xpcom.log");
+    logComment("Create Folder: " + fProgram + "components");
+    logComment("Installing: "    + fProgram + "components\\xpti.dat");
+    logComment("Installing: "    + fProgram + "components\\xptitemp.dat");
+    logComment("Installing: "    + fProgram + "components\\compreg.dat");
+    logComment("Create Folder: " + fProgram + "chrome");
+    logComment("Installing: "    + fProgram + "chrome\\installed-chrome.txt");
+    logComment("Installing: "    + fProgram + "chrome\\chrome.rdf");
+    logComment("Installing: "    + fProgram + "chrome\\overlays.rdf");
+    logComment("Installing: "    + fProgram + "chrome\\stylesheets.rdf");
+
+    err = getLastError();
+    if (err == SUCCESS)
+    {
+      err = performInstall();
+      logComment("performInstall() returned: " + err);
+    }
+    else
+      cancelInstall(err);
+  }
+  else
+    cancelInstall(err);
+}
+else
+  cancelInstall(INSUFFICIENT_DISK_SPACE);
+
+
+// end main

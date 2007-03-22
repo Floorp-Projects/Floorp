@@ -1,0 +1,6 @@
+<!ENTITY inspectPageTaskCmd.accesskey "i">
+<!ENTITY inspectPageTaskCmd.label "查看页面">
+<!ENTITY inspectorTaskCmd.accesskey "I">
+<!ENTITY inspectorTaskCmd.accesskey.ff "n">
+<!ENTITY inspectorTaskCmd.commandkey "i">
+<!ENTITY inspectorTaskCmd.label "DOM 查看器">

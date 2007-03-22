@@ -1,0 +1,70 @@
+browser.jar:
+%  content browser %content/browser/ xpcnativewrappers=yes
+%  overlay chrome://browser/content/pageInfo.xul chrome://pippki/content/PageInfoOverlay.xul
+#ifdef XP_MACOSX
+%  overlay chrome://mozapps/content/downloads/downloads.xul chrome://browser/content/downloadManagerOverlay.xul
+%  overlay chrome://mozapps/content/extensions/extensions.xul chrome://browser/content/extensionsManagerOverlay.xul
+%  overlay chrome://global/content/console.xul chrome://browser/content/jsConsoleOverlay.xul
+%  overlay chrome://mozapps/content/update/updates.xul chrome://browser/content/softwareUpdateOverlay.xul
+#endif
+%  overlay chrome://global/content/viewSource.xul chrome://browser/content/viewSourceOverlay.xul
+%  overlay chrome://global/content/viewPartialSource.xul chrome://browser/content/viewSourceOverlay.xul
+%  style chrome://global/content/customizeToolbar.xul chrome://browser/content/browser.css
+%  style chrome://global/content/customizeToolbar.xul chrome://browser/skin/
+*       content/browser/aboutDialog.xul               (content/aboutDialog.xul)
+*       content/browser/aboutDialog.js                (content/aboutDialog.js)
+        content/browser/aboutDialog.css               (content/aboutDialog.css)
+*       content/browser/browser.css                   (content/browser.css)
+*       content/browser/browser.js                    (content/browser.js)
+*       content/browser/browser.xul                   (content/browser.xul)
+*       content/browser/credits.xhtml                 (content/credits.xhtml)
+*       content/browser/EULA.js                       (content/EULA.js)
+*       content/browser/EULA.xhtml                    (content/EULA.xhtml)
+*       content/browser/EULA.xul                      (content/EULA.xul)
+*       content/browser/metaData.js                   (content/metaData.js)
+*       content/browser/metaData.xul                  (content/metaData.xul)
+*       content/browser/openLocation.js               (content/openLocation.js)
+*       content/browser/openLocation.xul              (content/openLocation.xul)
+*       content/browser/pageInfo.js                   (content/pageInfo.js)
+*       content/browser/pageInfo.xul                  (content/pageInfo.xul)
+*       content/browser/pageReport.js                 (content/pageReport.js)
+*       content/browser/pageReport.xul                (content/pageReport.xul)
+*       content/browser/pageReportFirstTime.xul       (content/pageReportFirstTime.xul)   
+*       content/browser/safeMode.js                   (content/safeMode.js)
+*       content/browser/safeMode.xul                  (content/safeMode.xul)
+*       content/browser/sanitize.js                   (content/sanitize.js)
+*       content/browser/sanitize.xul                  (content/sanitize.xul)
+*       content/browser/utilityOverlay.js             (content/utilityOverlay.js)
+*       content/browser/web-panels.js                 (content/web-panels.js)
+*       content/browser/web-panels.xul                (content/web-panels.xul)
+*       content/browser/baseMenuOverlay.xul           (content/baseMenuOverlay.xul)
+*       content/browser/nsContextMenu.js              (content/nsContextMenu.js)
+# XXX: We should exclude this one as well (bug 71895)
+*       content/browser/hiddenWindow.xul              (content/hiddenWindow.xul)
+#ifdef XP_MACOSX
+*       content/browser/macBrowserOverlay.xul         (content/macBrowserOverlay.xul)
+*       content/browser/downloadManagerOverlay.xul    (content/downloadManagerOverlay.xul)
+*       content/browser/extensionsManagerOverlay.xul  (content/extensionsManagerOverlay.xul)
+*       content/browser/jsConsoleOverlay.xul          (content/jsConsoleOverlay.xul)
+*       content/browser/softwareUpdateOverlay.xul  (content/softwareUpdateOverlay.xul)
+#endif
+#ifdef TOOLBAR_CUSTOMIZATION_SHEET
+*       content/browser/customizeToolbarSheet.js          (content/customizeToolbarSheet.js)
+#endif
+*       content/browser/viewSourceOverlay.xul         (content/viewSourceOverlay.xul)
+#ifdef MOZ_USE_GENERIC_BRANDING
+% content branding %content/branding/ xpcnativewrappers=yes
+  content/branding/about.png                     (branding/about.png)
+  content/branding/aboutCredits.png              (branding/aboutCredits.png)
+  content/branding/aboutFooter.png               (branding/aboutFooter.png)
+  content/branding/icon48.png                    (branding/icon48.png)
+  content/branding/icon64.png                    (branding/icon64.png)
+#ifdef XP_WIN
+  content/branding/uninstall.properties          (branding/uninstall.properties)
+#endif
+#endif
+
+#ifdef TOOLBAR_CUSTOMIZATION_SHEET
+toolkit.jar:
+*+      content/global/customizeToolbar.xul           (content/customizeToolbarSheet.xul)
+#endif

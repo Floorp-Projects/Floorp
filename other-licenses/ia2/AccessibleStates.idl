@@ -1,0 +1,123 @@
+/*************************************************************************
+ *
+ *  File Name (AccessibleStates.idl)
+ *
+ *  IAccessible2 IDL Specification
+ *
+ *  Copyright (c) IBM Corp. 2006
+ *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License version 2.1, as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02110-1301  USA
+ *
+ ************************************************************************/
+
+import "objidl.idl";
+
+typedef long AccessibleStates;
+
+/** @defgroup grpStates States
+ IAccessible2 state constants.
+*/
+///@{
+
+/** Indicates a window is currently the active window. */
+const long IA2_STATE_ACTIVE =					0x1;
+
+/** Indicates that the object is armed. */
+const long IA2_STATE_ARMED =					0x2;
+
+/** Indicates the user interface object corresponding to this object no longer exists. */
+const long IA2_STATE_DEFUNCT =					0x4;
+
+/** Indicates the user can change the contents of this object. */
+const long IA2_STATE_EDITABLE =					0x8;
+
+/** Indicates the orientation of this object is horizontal. */
+const long IA2_STATE_HORIZONTAL =				0x10;
+
+/** Indicates this object is minimized and is represented only by an icon. */
+const long IA2_STATE_ICONIFIED =				0x20;
+
+/** Indicates an invalid state. */
+const long IA2_STATE_INVALID =					0x40;
+
+/** Indicates an input validation failure. */
+const long IA2_STATE_INVALID_ENTRY =			0x80;
+
+/** Indicates that this object manages its children.
+
+ Used when children are transient.  In this case it is not necessary to add
+  listeners to the children.
+
+ The state is added to improve performance in the case of large containers such 
+  as tables. When an object manages its children it is not necessary to iterate 
+  over all the children and add listeners.  The parent object will provide state 
+  notifications regarding the state of its children.
+*/
+const long IA2_STATE_MANAGES_DESCENDANTS =		0x100;
+
+/** Indicates that an object is modal.
+
+ Modal objects have the behavior that something must be done with the object 
+  before the user can interact with an object in a different window.
+*/
+const long IA2_STATE_MODAL =					0x200;
+
+/** Indicates this text object can contain multiple lines of text. */
+const long IA2_STATE_MULTI_LINE =				0x400;
+
+/** Indicates this object paints every pixel within its rectangular region. */
+const long IA2_STATE_OPAQUE =					0x800;
+
+/** Indicates that user interaction is required.
+
+ An example of when this state is used is when a field in a form must be filled 
+  before a form can be processed.
+*/
+const long IA2_STATE_REQUIRED =					0x1000;
+
+/** Indicates an object which supports text selection.
+
+ Note: This is different than MSAA STATE_SYSTEM_SELECTABLE.
+*/
+const long IA2_STATE_SELECTABLE_TEXT =			0x2000;
+
+/** Indicates that this text object can contain only a single line of text. */
+const long IA2_STATE_SINGLE_LINE =				0x4000;
+
+/** Indicates that the accessible object is stale.
+
+ This state is used when the accessible object no longer accurately 
+  represents the state of the object which it is representing such as when an
+  object is transient or when an object has been or is in the process of being
+  destroyed.
+*/
+const long IA2_STATE_STALE =					0x8000;
+
+/** Indicates that the object implements autocompletion.
+
+ This state indicates that that a text control will respond to the input of 
+ one ore more characters and cause a sub-item to become selected.  The 
+ selection may also result in events fired on the parent object.
+*/
+const long IA2_STATE_SUPPORTS_AUTOCOMPLETION =	0x10000;
+
+/** Indicates this object is transient. */
+const long IA2_STATE_TRANSIENT =				0x20000;
+
+/** Indicates the orientation of this object is vertical. */
+const long IA2_STATE_VERTICAL =					0x40000;
+
+///@}

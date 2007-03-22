@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://browser/content/places/places.css"?>
+
+<?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
+
+<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://browser/locale/preferences/selectBookmark.dtd">
+
+<dialog id="selectBookmarkDialog"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&selectBookmark.title;" style="width: 32em;"
+        persist="screenX screenY width height" screenX="24" screenY="24"      
+        onload="SelectBookmarkDialog.init();" 
+        ondialogaccept="SelectBookmarkDialog.accept();">
+
+  <script type="application/x-javascript"
+          src="chrome://browser/content/preferences/selectBookmark.js"/>
+  
+  <description>&selectBookmark.label;</description>
+  
+  <separator class="thin"/>
+  
+  <tree id="bookmarks" flex="1" type="places" 
+        style="height: 15em;" 
+        place="place:&amp;folder=1&amp;group=3&amp;excludeQueries=1"
+        hidecolumnpicker="true"
+        seltype="single"
+        ondblclick="SelectBookmarkDialog.onItemDblClick();"
+        onselect="SelectBookmarkDialog.selectionChanged();">
+    <treecols>
+      <treecol id="title" flex="1" primary="true" hideheader="true"/>
+    </treecols>
+    <treechildren id="bookmarksChildren" flex="1"/>
+  </tree>
+
+  <separator class="thin"/>
+
+</dialog>

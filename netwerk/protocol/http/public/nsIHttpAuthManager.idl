@@ -1,0 +1,131 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla.
+ *
+ * The Initial Developer of the Original Code is
+ * Sun Microsystem.
+ * Portions created by the Initial Developer are Copyright (C) 2003
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Darin Fisher <darin@meer.net>
+ *   Louie Zhao <louie.zhao@sun.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/**
+ * nsIHttpAuthManager
+ *
+ * This service provides access to cached HTTP authentication 
+ * user credentials (domain, username, password) for sites
+ * visited during the current browser session.
+ *
+ * This interface exists to provide other HTTP stacks with the
+ * ability to share HTTP authentication credentials with Necko.
+ * This is currently used by the Java plugin (version 1.5 and
+ * higher) to avoid duplicate authentication prompts when the
+ * Java client fetches content from a HTTP site that the user
+ * has already logged into.
+ */
+[scriptable, uuid(7ce8e9d1-8b4b-4883-a307-66fe12a50153)]
+interface nsIHttpAuthManager : nsISupports
+{
+    /**
+     * Lookup auth identity.
+     *
+     * @param aScheme
+     *        the URL scheme (e.g., "http").  NOTE: for proxy authentication,
+     *        this should be "http" (this includes authentication for SSL
+     *        tunneling).
+     * @param aHost
+     *        the host of the server issuing a challenge (ASCII only).
+     * @param aPort
+     *        the port of the server issuing a challenge.
+     * @param aAuthType
+     *        optional string identifying auth type used (e.g., "basic")
+     * @param aRealm
+     *        optional string identifying auth realm.
+     * @param aPath
+     *        optional string identifying auth path. empty for proxy auth.
+     * @param aUserDomain
+     *        return value containing user domain.
+     * @param aUserName
+     *        return value containing user name.
+     * @param aUserPassword
+     *        return value containing user password.
+     */
+    void getAuthIdentity(in ACString aScheme,
+                         in ACString aHost,
+                         in PRInt32  aPort,
+                         in ACString aAuthType,
+                         in ACString aRealm,
+                         in ACString aPath,
+                         out AString aUserDomain,
+                         out AString aUserName,
+                         out AString aUserPassword);
+
+    /**
+     * Store auth identity.
+     *
+     * @param aScheme
+     *        the URL scheme (e.g., "http").  NOTE: for proxy authentication,
+     *        this should be "http" (this includes authentication for SSL
+     *        tunneling).
+     * @param aHost
+     *        the host of the server issuing a challenge (ASCII only).
+     * @param aPort
+     *        the port of the server issuing a challenge.
+     * @param aAuthType
+     *        optional string identifying auth type used (e.g., "basic")
+     * @param aRealm
+     *        optional string identifying auth realm.
+     * @param aPath
+     *        optional string identifying auth path. empty for proxy auth.
+     * @param aUserDomain
+     *        optional string containing user domain.
+     * @param aUserName
+     *        optional string containing user name.
+     * @param aUserPassword
+     *        optional string containing user password.
+     */
+    void setAuthIdentity(in ACString aScheme,
+                         in ACString aHost,
+                         in PRInt32  aPort,
+                         in ACString aAuthType,
+                         in ACString aRealm,
+                         in ACString aPath,
+                         in AString  aUserDomain,
+                         in AString  aUserName,
+                         in AString  aUserPassword);
+
+    /**
+     * Clear all auth cache.
+     */
+    void clearAll();
+};

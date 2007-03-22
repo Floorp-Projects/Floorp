@@ -1,0 +1,16 @@
+label.heading {
+  font-size:   medium;
+  font-weight: bold;
+}
+
+button.close {
+  font-size:   small;
+}
+
+iframe {
+  padding-left: 10px;
+}
+
+vbox.hidden {
+    display: none;
+}

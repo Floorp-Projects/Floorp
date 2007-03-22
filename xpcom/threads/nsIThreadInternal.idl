@@ -1,0 +1,162 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla code.
+ *
+ * The Initial Developer of the Original Code is Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2006
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Darin Fisher <darin@meer.net>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsIThread.idl"
+
+interface nsIThreadObserver;
+interface nsIThreadEventFilter;
+
+/**
+ * The XPCOM thread object implements this interface, which allows a consumer
+ * to observe dispatch activity on the thread.
+ */
+[scriptable, uuid(f89b5063-b06d-42f8-bf23-4dfcf2d80d6a)]
+interface nsIThreadInternal : nsIThread
+{
+  /**
+   * Get/set the current thread observer (may be null).  This attribute may be
+   * read from any thread, but must only be set on the thread corresponding to
+   * this thread object.
+   */
+  attribute nsIThreadObserver observer;
+
+  /**
+   * This method causes any events currently enqueued on the thread to be
+   * suppressed until PopEventQueue is called.  Additionally, any new events
+   * dispatched to the thread will only be processed if they are accepted by
+   * the given filter.  If the filter is null, then new events are accepted.
+   * Calls to PushEventQueue may be nested and must each be paired with a call
+   * to PopEventQueue in order to restore the original state of the thread.
+   *
+   * @param filter
+   *   The thread event filter to apply to dispatched events, or null to accept
+   *   all dispatched events.
+   */
+  void pushEventQueue(in nsIThreadEventFilter filter);
+
+  /**
+   * Revert a call to PushEventQueue.  When an event queue is popped, any
+   * events remaining in the queue are appended to the elder queue.
+   */
+  void popEventQueue();
+};
+
+/**
+ * This interface provides the observer with hooks to implement a layered
+ * event queue.  For example, it is possible to overlay processing events
+ * for a GUI toolkit on top of the events for a thread:
+ *
+ *   var NativeQueue;
+ *   Observer = {
+ *     onDispatchedEvent(thread) {
+ *       NativeQueue.signal();
+ *     }
+ *     onProcessNextEvent(thread, mayWait, recursionDepth) {
+ *       if (NativeQueue.hasNextEvent())
+ *         NativeQueue.processNextEvent();
+ *       while (mayWait && !thread.hasPendingEvent()) {
+ *         NativeQueue.wait();
+ *         NativeQueue.processNextEvent();
+ *       }
+ *     }
+ *   };
+ *
+ * NOTE: The implementation of this interface must be threadsafe.
+ * 
+ * NOTE: It is valid to change the thread's observer during a call to an
+ *       observer method.
+ */
+[scriptable, uuid(81D0B509-F198-4417-8020-08EB4271491F)]
+interface nsIThreadObserver : nsISupports
+{
+  /**
+   * This method is called after an event has been dispatched to the thread.
+   * This method may be called from any thread. 
+   *
+   * @param thread
+   *   The thread where the event is being dispatched.
+   */
+  void onDispatchedEvent(in nsIThreadInternal thread);
+
+  /**
+   * This method is called (from nsIThread::ProcessNextEvent) before an event
+   * is processed.  This method is only called on the target thread.
+   *
+   * @param thread
+   *   The thread being asked to process another event.
+   * @param mayWait
+   *   Indicates whether or not the method is allowed to block the calling
+   *   thread.  For example, this parameter is false during thread shutdown.
+   * @param recursionDepth
+   *   Indicates the number of calls to ProcessNextEvent on the call stack in
+   *   addition to the current call.
+   */
+  void onProcessNextEvent(in nsIThreadInternal thread, in boolean mayWait,
+                          in unsigned long recursionDepth);
+
+  /**
+   * This method is called (from nsIThread::ProcessNextEvent) after an event
+   * is processed.  This method is only called on the target thread.
+   *
+   * @param thread
+   *   The thread that processed another event.
+   * @param recursionDepth
+   *   Indicates the number of calls to ProcessNextEvent on the call stack in
+   *   addition to the current call.
+   */
+  void afterProcessNextEvent(in nsIThreadInternal thread,
+                             in unsigned long recursionDepth);
+};
+
+/**
+ * Interface passed to the nsIThreadInternal::PushEventQueue method.
+ */
+[scriptable, uuid(a0605c0b-17f5-4681-b8cd-a1cd75d42559)]
+interface nsIThreadEventFilter : nsISupports
+{
+  /**
+   * This method is called to determine whether or not an event may be accepted
+   * by a "nested" event queue (see nsIThreadInternal::PushEventQueue).
+   *
+   * @param event
+   *   The event being dispatched.
+   *
+   * WARNING: This method must not make any calls on the thread object.
+   */
+  [notxpcom] boolean acceptEvent(in nsIRunnable event);
+};

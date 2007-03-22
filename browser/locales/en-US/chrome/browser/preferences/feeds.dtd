@@ -1,0 +1,8 @@
+<!ENTITY  feedClick.label             "When I click on a web feed:">
+<!ENTITY  showPreview.label           "Show me a preview and ask me which Feed Reader to use">
+<!ENTITY  showPreview.accesskey       "S">
+<!ENTITY  subscribeUsing.label        "Subscribe to the feed using:">
+<!ENTITY  subscribeUsing.accesskey    "u">
+<!ENTITY  liveBookmarks.label         "Live Bookmarks">
+<!ENTITY  chooseApplication.label     "Choose Application...">
+<!ENTITY  chooseApplication.accesskey     "C">

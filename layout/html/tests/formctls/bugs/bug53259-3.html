@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+  <title>min-width/max-width on label and inputs</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+	<style type="text/css">
+
+		label, input, textarea, select {
+			width: 100%;
+			min-width: 300px;
+			max-width: 500px;
+			display: block;
+		}
+
+		label {
+			border: 1px dashed red;
+		}
+
+	</style>
+</head>
+
+<body>
+
+	<p>All the lables (with the red and dashed border) and I should be at least 300px, at most 500px wide.</p>
+
+	<div style="width:300px;background:red;">This is fixed at 300px wide</div>
+	<div style="width:500px;background:green;">This is fixed at 500px wide</div>
+
+	<p>
+		<label for="a">Text:</label> <input id="a" type="text" />
+	</p>
+	<p>
+		<label for="b">Textarea:</label> <textarea id="b" rows="5" cols="2"></textarea>
+	</p>
+	<p>
+		<label for="c">Checkbox:</label> <input type="checkbox" id="c" />
+	</p>
+	<p>
+		<label for="d">Radio:</label> <input type="radio" id="d" />
+	</p>
+	<p>
+		<label for="e">Select:</label> <select id="e"><option>One</option><option>Two</option></select>
+	</p>
+
+</body>
+</html>

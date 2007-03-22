@@ -1,0 +1,108 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://browser/skin/places/bookmarkProperties.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
+<?xml-stylesheet href="chrome://browser/content/places/places.css"?>
+<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
+
+<!DOCTYPE window [
+  <!ENTITY % propertiesDTD SYSTEM "chrome://browser/locale/places/bookmarkProperties.dtd">
+  %propertiesDTD;
+  <!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
+  %placesDTD;
+]>
+
+<dialog id="bookmarkproperties"
+        title="&bookmark.property.panel.title;"
+        buttons="accept, cancel"
+        ondialogaccept="BookmarkPropertiesPanel.onDialogAccept();"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="BookmarkPropertiesPanel.onDialogLoad();"
+        onunload="BookmarkPropertiesPanel.onDialogUnload();">
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="stringBundle"
+                  src="chrome://browser/locale/places/bookmarkProperties.properties"/>
+  </stringbundleset>
+
+  <script type="application/x-javascript"
+          src="chrome://browser/content/places/bookmarkProperties.js"/>
+
+      <vbox id="placesInfoOptions" flex="1">
+        <grid id="placesInfoGrid" flex="1">
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+          <rows id="placesInfoRows">
+            <row id="titleRow" align="center">
+              <label value="&bookmark.property.title;" control="titleTextfield"/>
+              <textbox id="titleTextfield"/>
+            </row>
+            <row id="locationRow" align="center">
+              <label value="&bookmark.property.location;" control="editURLBar"/>
+              <textbox id="editURLBar" size="10"
+                       onchange="BookmarkPropertiesPanel.validateChanges();"
+                       oninput="BookmarkPropertiesPanel.validateChanges();"/>
+            </row>
+            <row id="livemarkFeedLocationRow" align="center">
+              <label value="&livemark.property.feed_uri;" control="feedLocationTextfield"/>
+              <textbox id="feedLocationTextfield"
+                       onchange="BookmarkPropertiesPanel.validateChanges();"
+                       oninput="BookmarkPropertiesPanel.validateChanges();"/>
+            </row>
+            <row id="livemarkSiteLocationRow" align="center">
+              <label value="&livemark.property.site_uri;" control="feedSiteLocationTextfield"/>
+              <textbox id="feedSiteLocationTextfield"
+                       onchange="BookmarkPropertiesPanel.validateChanges();"
+                       oninput="BookmarkPropertiesPanel.validateChanges();"/>
+            </row>
+            <row id="shortcutRow" align="center">
+              <label value="&bookmark.property.shortcut;" control="keywordTextfield"/>
+              <textbox id="keywordTextfield"/>
+            </row>
+            <row id="descriptionRow">
+              <label value="&bookmark.property.description;" control="descriptionTextfield"/>
+              <textbox id="descriptionTextfield" multiline="true"/>
+            </row>
+            <row id="microsummaryRow" align="center">
+              <label value="&bookmark.property.microsummary;" control="microsummaryMenuList"/>
+              <menulist id="microsummaryMenuList">
+                <menupopup id="microsummaryMenuPopup">
+                  <menuitem label="&bookmark.property.microsummary.none;"
+                            selected="true"/>
+                </menupopup>
+              </menulist>
+            </row>
+            <row id="folderRow" flex="1" style="min-height: 100px;">
+              <vbox align="end">
+                <hbox align="start" flex="1">
+                  <label value="&bookmark.property.parents;"/>
+                </hbox>
+              </vbox>
+              <vbox>
+                <tree id="folderTree"
+                      class="placesTree"
+                      flex="1"
+                      type="places"
+                      place="place:&amp;folder=1&amp;group=3&amp;excludeItems=1&amp;excludeQueries=1&amp;excludeReadOnlyFolders=1"
+                      hidecolumnpicker="true">
+                  <treecols>
+                    <treecol id="title"
+                             flex="1" 
+                             primary="true"
+                             hideheader="true"/>
+                  </treecols>
+                  <treechildren id="placesListChildren"
+                                view="placesList"
+                                flex="1"/>
+                </tree>
+              </vbox>
+            </row>
+            <checkbox id="loadInSidebarCheckbox"
+                      label="&bookmark.loadInSidebar.title;"/>
+          </rows>
+        </grid>
+      </vbox>
+</dialog>

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % aboutDTD SYSTEM "chrome://global/locale/about.dtd" >
+%aboutDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
+]>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 1998-1999
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Henrik Gemal <mozilla@gemal.dk>
+   -   Daniel Veditz <dveditz@netscape.com>
+   -   Alexey Chernyak <alexeyc@bigfoot.com>
+   -   Steffen Wilberg <steffen.wilberg@web.de>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>About:</title>
+  <link rel="stylesheet" href="chrome://global/skin/about.css" type="text/css"/>
+</head>
+
+<body dir="&locale.dir;">
+<div id="aboutPageContainer">
+  <div id="aboutLogoContainer">
+    <a href="http://www.mozilla.org/">
+      <img src="about:logo" alt="&brandShortName;"/>
+#expand <p id="version">&about.version; __MOZ_APP_VERSION__</p>
+    </a>
+  </div>
+
+  <ul id="aboutPageList">
+    <li>&about.copy.beforeLink; <a href="about:credits">&about.copy.linkTitle;</a> &about.copy.afterLink;</li>
+    <li>&about.license.beforeLink; <a href="about:license">&about.license.linkTitle;</a> &about.license.afterLink;</li>
+    <li>&about.relnotes.beforeLink; <a id="releaseNotesURL" href="">&about.relnotes.linkTitle;</a> &about.relnotes.afterLink;</li>
+    <li>&about.buildconfig.beforeLink; <a href="about:buildconfig">&about.buildconfig.linkTitle;</a> &about.buildconfig.afterLink;</li>
+    <script type="application/x-javascript">
+      // get release notes URL from prefs
+      try {
+        var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+                                  .getService(Components.interfaces.nsIURLFormatter);
+        var releaseNotesURL = formatter.formatURLPref("app.releaseNotesURL");
+        var relnotes = document.getElementById("releaseNotesURL");
+        relnotes.setAttribute("href", releaseNotesURL);
+      }
+      catch (ex) { /* no release notes URL for you without bug 349985 being fixed */ }
+
+      var ua = navigator.userAgent;
+      if (ua) {
+        var list = document.getElementById("aboutPageList");
+        var listItem = list.appendChild(document.createElement("li"));
+        listItem.appendChild(document.createTextNode("&about.buildIdentifier;"));
+        // replace the shortened 8-digit build id in the UA with the full 10-digit 
+        // build id from navigator.buildID
+        var newUA = ua.replace(/\/\d{8}/, "/" + navigator.buildID);
+        listItem.appendChild(document.createTextNode(newUA));
+      }
+    </script>
+  </ul>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!ENTITY window.title                 "Exceptions">
+<!ENTITY window.width                 "36em">
+
+<!ENTITY treehead.sitename.label      "Site">
+<!ENTITY treehead.status.label        "Status">
+<!ENTITY removepermission.label       "Remove Site">
+<!ENTITY removepermission.accesskey   "R">
+<!ENTITY removeallpermissions.label   "Remove All Sites">
+<!ENTITY removeallpermissions.accesskey "e">
+<!ENTITY address.label                "Address of web site:">
+<!ENTITY block.label                  "Block">
+<!ENTITY block.accesskey              "B">
+<!ENTITY session.label                "Allow for Session">
+<!ENTITY session.accesskey            "S">
+<!ENTITY allow.label                  "Allow">
+<!ENTITY allow.accesskey              "A">
+<!ENTITY windowClose.key              "w">
+
+<!ENTITY button.close.label           "Close">
+<!ENTITY button.close.accesskey       "C">
+

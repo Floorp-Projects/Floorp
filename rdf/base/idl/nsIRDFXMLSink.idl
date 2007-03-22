@@ -1,0 +1,162 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+
+  Interfaces for the RDF/XML sink, which parses RDF/XML into
+  a graph representation.
+
+*/
+
+#include "nsISupports.idl"
+
+// XXX Until these get scriptable. See nsIRDFXMLSink::AddNameSpace()
+[ptr] native nsIAtomPtr(nsIAtom);
+[ref] native nsStringRef(nsString);
+%{C++
+class nsIAtom;
+class nsString;
+%}
+
+interface nsIRDFXMLSink;
+
+/**
+ * An observer that is notified as progress is made on the load
+ * of an RDF/XML document in an <code>nsIRDFXMLSink</code>.
+ */
+[scriptable, uuid(EB1A5D30-AB33-11D2-8EC6-00805F29F370)]
+interface nsIRDFXMLSinkObserver : nsISupports
+{
+    /**
+     * Called when the load begins.
+     * @param aSink the RDF/XML sink on which the load is beginning.
+     */
+    void onBeginLoad(in nsIRDFXMLSink aSink);
+
+    /**
+     * Called when the load is suspended (e.g., for network quantization).
+     * @param aSink the RDF/XML sink that is being interrupted.
+     */
+    void onInterrupt(in nsIRDFXMLSink aSink);
+
+    /**
+     * Called when a suspended load is resuming.
+     * @param aSink the RDF/XML sink that is resuming.
+     */
+    void onResume(in nsIRDFXMLSink aSink);
+
+    /**
+     * Called when an RDF/XML load completes successfully.
+     * @param aSink the RDF/XML sink that has finished loading.
+     */
+    void onEndLoad(in nsIRDFXMLSink aSink);
+
+    /**
+     * Called when an error occurs during the load
+     * @param aSink the RDF/XML sink in which the error occurred
+     * @param aStatus the networking result code
+     * @param aErrorMsg an error message, if applicable
+     */
+    void onError(in nsIRDFXMLSink aSink, in nsresult aStatus, in wstring aErrorMsg);
+};
+
+
+
+/**
+ * A "sink" that receives and processes RDF/XML. This interface is used
+ * by the RDF/XML parser.
+ */
+[scriptable, uuid(EB1A5D31-AB33-11D2-8EC6-00805F29F370)]
+interface nsIRDFXMLSink : nsISupports
+{
+    /**
+     * Set to <code>true</code> if the sink is read-only and cannot
+     * be modified
+     */
+    attribute boolean readOnly;
+
+    /**
+     * Initiate the RDF/XML load.
+     */
+    void beginLoad();
+
+    /**
+     * Suspend the RDF/XML load.
+     */
+    void interrupt();
+
+    /**
+     * Resume the RDF/XML load.
+     */
+    void resume();
+
+    /**
+     * Complete the RDF/XML load.
+     */
+    void endLoad();
+
+    /**
+     * Add namespace information to the RDF/XML sink.
+     * @param aPrefix the namespace prefix
+     * @param aURI the namespace URI
+     */
+    [noscript] void addNameSpace(in nsIAtomPtr aPrefix,
+                                 [const] in nsStringRef aURI);
+
+    /**
+     * Add an observer that will be notified as the RDF/XML load
+     * progresses.
+     * <p>
+     *
+     * Note that the sink will acquire a strong reference to the
+     * observer, so care should be taken to avoid cyclical references
+     * that cannot be released (i.e., if the observer holds a
+     * reference to the sink, it should be sure that it eventually
+     * clears the reference).
+     *
+     * @param aObserver the observer to add to the sink's set of
+     * load observers.
+     */
+    void addXMLSinkObserver(in nsIRDFXMLSinkObserver aObserver);
+
+    /**
+     * Remove an observer from the sink's set of observers.
+     * @param aObserver the observer to remove.
+     */
+    void removeXMLSinkObserver(in nsIRDFXMLSinkObserver aObserver);
+};
+

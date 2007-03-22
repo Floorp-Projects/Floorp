@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=238409
+-->
+<head>
+  <title>Test for Bug 238409</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=238409">Mozilla Bug 238409</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <table id="table_spacing0" cellspacing="0">
+    <tr><td>cellspacing="0"</td></tr>
+  </table>
+
+  <table id="table_spacing2" cellspacing="2">
+    <tr><td>cellspacing="2"</td></tr>
+  </table>
+
+  <table id="table_spacingNone">
+    <tr><td>no cellspacing</td></tr>
+  </table>
+  
+  <table id="table_spacingMalformed" cellspacing>
+    <tr><td>malformed cellspacing</td></tr>
+  </table>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 238409 **/
+
+ok(document.getElementById("table_spacing0").cellSpacing == "0", "parsing table with cellspacing='0'");
+ok(document.getElementById("table_spacing2").cellSpacing == "2", "parsing table with cellspacing='2'");
+ok(document.getElementById("table_spacingNone").cellSpacing == "", "parsing table without cellspacing");
+ok(document.getElementById("table_spacingMalformed").cellSpacing == "", "parsing table with malformed cellspacing");
+
+</script>
+</pre>
+</body>
+</html>
+

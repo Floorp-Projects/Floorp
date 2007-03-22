@@ -1,0 +1,444 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE bindings [
+  <!ENTITY % textcontextDTD SYSTEM "chrome://global/locale/textcontext.dtd" >
+  %textcontextDTD;
+]>
+
+<bindings id="textboxBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/1999/xhtml"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="textbox" extends="xul:box">
+    <resources>
+      <stylesheet src="chrome://global/skin/textbox.css"/>
+    </resources>
+
+    <content>
+      <children/>
+      <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context,spellcheck">
+        <html:input class="textbox-input" flex="1" anonid="input"
+                    xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex,accesskey"/>
+      </xul:hbox>
+    </content>
+
+    <implementation implements="nsIAccessibleProvider, nsIDOMXULTextBoxElement">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          <![CDATA[
+            return Components.interfaces.nsIAccessibleProvider.XULTextBox;
+          ]]>
+        </getter>
+      </property>
+
+      <field name="mInputField">null</field>
+      <field name="mIgnoreClick">false</field>
+      <field name="mIgnoreFocus">false</field>
+
+      <property name="inputField" readonly="true">
+        <getter><![CDATA[
+          if (!this.mInputField)
+            this.mInputField = document.getAnonymousElementByAttribute(this, "anonid", "input");
+          return this.mInputField;
+        ]]></getter>
+      </property>
+
+      <property name="value"      onset="this.inputField.value = val; return val;"
+                                  onget="return this.inputField.value;"/>
+      <property name="defaultValue" onset="this.inputField.defaultValue = val; return val;"
+                                  onget="return this.inputField.defaultValue;"/>
+      <property name="type"       onset="if (val) this.setAttribute('type', val);
+                                         else this.removeAttribute('type'); return val;"
+                                  onget="return this.getAttribute('type');"/>
+      <property name="maxLength"  onset="this.inputField.maxLength = val; return val;"
+                                  onget="return this.inputField.maxLength;"/>
+      <property name="disabled"   onset="this.inputField.disabled = val;
+                                         if (val) this.setAttribute('disabled', 'true');
+                                         else this.removeAttribute('disabled'); return val;"
+                                  onget="return this.inputField.disabled;"/>
+      <property name="tabIndex"   onget="return parseInt(this.getAttribute('tabindex'));"
+                                  onset="this.inputField.tabIndex = val;
+                                         if (val) this.setAttribute('tabindex', val);
+                                         else this.removeAttribute('tabindex'); return val;"/>
+      <property name="size"       onset="this.inputField.size = val; return val;"
+                                  onget="return this.inputField.size;"/>
+      <property name="readOnly"   onset="this.inputField.readOnly = val;
+                                         if (val) this.setAttribute('readonly', 'true');
+                                         else this.removeAttribute('readonly'); return val;"
+                                  onget="return this.inputField.readOnly;"/>
+      <property name="clickSelectsAll"
+                onget="return this.getAttribute('clickSelectsAll') == 'true';"
+                onset="if (val) this.setAttribute('clickSelectsAll', 'true');
+                       else this.removeAttribute('clickSelectsAll'); return val;" />
+
+      <property name="editor" readonly="true">
+        <getter><![CDATA[
+          const nsIDOMNSEditableElement = Components.interfaces.nsIDOMNSEditableElement;
+          return this.inputField.QueryInterface(nsIDOMNSEditableElement).editor;
+        ]]></getter>
+      </property>
+
+      <method name="reset">
+        <body><![CDATA[
+          this.value = this.defaultValue;
+          try {
+            this.editor.transactionManager.clear();
+            return true;
+          }
+          catch(e) {}
+          return false;
+        ]]></body>
+      </method>
+
+      <method name="select">
+        <body>
+          this.inputField.select();
+        </body>
+      </method>
+
+      <property name="controllers"    readonly="true" onget="return this.inputField.controllers"/>
+      <property name="textLength"     readonly="true" onget="return this.inputField.textLength;"/>
+      <property name="selectionStart" onset="this.inputField.selectionStart = val; return val;"
+                                      onget="return this.inputField.selectionStart;"/>
+      <property name="selectionEnd"   onset="this.inputField.selectionEnd = val; return val;"
+                                      onget="return this.inputField.selectionEnd;"/>
+
+      <method name="setSelectionRange">
+        <parameter name="aSelectionStart"/>
+        <parameter name="aSelectionEnd"/>
+        <body>
+          this.inputField.setSelectionRange( aSelectionStart, aSelectionEnd );
+        </body>
+      </method>
+
+      <constructor><![CDATA[
+        var str = this.boxObject.getProperty("value");
+        if (str) {
+          this.inputField.value = str;
+          this.boxObject.removeProperty("value");
+        }
+#ifndef MOZILLA_1_8_BRANCH
+# bug 253481
+
+        str = this.getAttribute("newlines");
+        if (str) {
+          const nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
+          for (var x in nsIPlaintextEditor) {
+            if (/^eNewlines/.test(x)) {
+              if (str == RegExp.rightContext.toLowerCase()) {
+                this.editor.QueryInterface(nsIPlaintextEditor)
+                    .newlineHandling = nsIPlaintextEditor[x];
+                break;
+              }
+            }
+          }
+        }
+#endif
+      ]]></constructor>
+
+      <destructor>
+        <![CDATA[
+          if (this.inputField.value)
+            this.boxObject.setProperty('value', this.inputField.value);
+          this.mInputField = null;
+        ]]>
+      </destructor>
+
+    </implementation>
+
+    <handlers>
+      <handler event="focus" phase="capturing">
+        <![CDATA[
+          if (!this.hasAttribute("focused")) {
+            if (event.originalTarget != this.inputField)
+              this.inputField.focus();
+            else if (this.mIgnoreFocus)
+              this.mIgnoreFocus = false;
+            else if (this.clickSelectsAll)
+              this.inputField.select();
+
+            this.setAttribute("focused", "true");
+          }
+        ]]>
+      </handler>
+
+      <handler event="blur" phase="capturing">
+        <![CDATA[
+          this.removeAttribute('focused');
+        ]]>
+      </handler>
+
+      <handler event="mousedown">
+        <![CDATA[
+          this.mIgnoreClick = this.hasAttribute("focused");
+
+          if (!this.mIgnoreClick) {
+            this.mIgnoreFocus = true;
+            this.inputField.setSelectionRange(0, 0);
+          }
+        ]]>
+      </handler>
+
+      <handler event="click">
+        <![CDATA[
+          if (!this.mIgnoreClick && this.clickSelectsAll &&
+              this.inputField.selectionStart == this.inputField.selectionEnd)
+            this.inputField.select();
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="timed-textbox" extends="chrome://global/content/bindings/textbox.xml#textbox">
+    <implementation>
+      <field name="_timer">null</field>
+      <property name="timeout"
+                onset="this.setAttribute('timeout', val); return val;"
+                onget="return parseInt(this.getAttribute('timeout')) || 0;"/>
+      <property name="value">
+        <getter>
+          return this.inputField.value;
+        </getter>
+        <setter>
+          <![CDATA[
+            this.inputField.value = val;
+            if (this._timer)
+              clearTimeout(this._timer);
+            return val;
+          ]]>
+        </setter>
+      </property>
+      <method name="_fireCommand">
+        <parameter name="me"/>
+        <body>
+          <![CDATA[
+            me._timer = null;
+            me.doCommand();
+          ]]>
+        </body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="input">
+        <![CDATA[
+          if (this._timer)
+            clearTimeout(this._timer);
+          this._timer = this.timeout && setTimeout(this._fireCommand, this.timeout, this);
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="VK_RETURN">
+        <![CDATA[
+          if (this._timer)
+            clearTimeout(this._timer);
+          this._fireCommand(this);
+          event.preventDefault();
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="textarea" extends="chrome://global/content/bindings/textbox.xml#textbox">
+    <content>
+      <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context,spellcheck">
+        <html:textarea class="textbox-textarea" flex="1" anonid="input"
+                       xbl:inherits="onfocus,onblur,xbl:text=value,disabled,tabindex,rows,cols,readonly,wrap"><children/></html:textarea>
+      </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="input-box">
+    <content context="_child">
+      <children/>
+      <xul:menupopup anonid="input-box-contextmenu"
+                     onpopupshowing="if (document.commandDispatcher.focusedElement != this.parentNode.firstChild)
+                                       this.parentNode.firstChild.focus();
+                                     this.parentNode._doPopupItemEnabling(this);"
+                     oncommand="var cmd = event.originalTarget.getAttribute('cmd'); if(cmd) { this.parentNode.doCommand(cmd); event.stopPropagation(); }">
+        <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo"/>
+        <xul:menuseparator/>
+        <xul:menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" cmd="cmd_cut"/>
+        <xul:menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" cmd="cmd_copy"/>
+        <xul:menuitem label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" cmd="cmd_paste"/>
+        <xul:menuitem label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" cmd="cmd_delete"/>
+        <xul:menuseparator/>
+        <xul:menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" cmd="cmd_selectAll"/>
+      </xul:menupopup>
+    </content>
+
+    <implementation>
+      <method name="_doPopupItemEnabling">
+        <parameter name="popupNode"/>
+        <body>
+          <![CDATA[
+            var children = popupNode.childNodes;
+            for (var i = 0; i < children.length; i++) {
+              var command = children[i].getAttribute("cmd");
+              if (command) {
+                var controller = document.commandDispatcher.getControllerForCommand(command);
+                var enabled = controller.isCommandEnabled(command);
+                if (enabled)
+                  children[i].removeAttribute("disabled");
+                else
+                  children[i].setAttribute("disabled", "true");
+              }
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="_setMenuItemVisibility">
+        <parameter name="anonid"/>
+        <parameter name="visible"/>
+        <body><![CDATA[
+          document.getAnonymousElementByAttribute(this, "anonid", anonid).
+            hidden = ! visible;
+        ]]></body>
+      </method>
+
+      <method name="doCommand">
+        <parameter name="command"/>
+        <body>
+          <![CDATA[
+            var controller = document.commandDispatcher.getControllerForCommand(command);
+            controller.doCommand(command);
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="input-box-spell" extends="chrome://global/content/bindings/textbox.xml#input-box">
+    <content context="_child">
+      <children/>
+      <xul:menupopup anonid="input-box-contextmenu"
+                     onpopupshowing="if (document.commandDispatcher.focusedElement != this.parentNode.firstChild)
+                                       this.parentNode.firstChild.focus();
+                                     this.parentNode._doPopupItemEnablingSpell(this);"
+                     onpopuphiding="this.parentNode._doPopupItemDisabling(this);"
+                     oncommand="var cmd = event.originalTarget.getAttribute('cmd'); if(cmd) { this.parentNode.doCommand(cmd); event.stopPropagation(); }">
+        <xul:menuitem label="&spellNoSuggestions.label;" anonid="spell-no-suggestions" disabled="true"/>
+        <xul:menuitem label="&spellAddToDictionary.label;" accesskey="&spellAddToDictionary.accesskey;" anonid="spell-add-to-dictionary"
+                      oncommand="this.parentNode.parentNode.spellCheckerUI.addToDictionary();"/>
+        <xul:menuseparator anonid="spell-suggestions-separator"/>
+        <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo"/>
+        <xul:menuseparator/>
+        <xul:menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" cmd="cmd_cut"/>
+        <xul:menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" cmd="cmd_copy"/>
+        <xul:menuitem label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" cmd="cmd_paste"/>
+        <xul:menuitem label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" cmd="cmd_delete"/>
+        <xul:menuseparator/>
+        <xul:menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" cmd="cmd_selectAll"/>
+        <xul:menuseparator anonid="spell-check-separator"/>
+        <xul:menuitem label="&spellEnable.label;" type="checkbox" accesskey="&spellEnable.accesskey;" anonid="spell-check-enabled"
+                      oncommand="this.parentNode.parentNode.spellCheckerUI.toggleEnabled();"/>
+        <xul:menu label="&spellDictionaries.label;" accesskey="&spellDictionaries.accesskey;" anonid="spell-dictionaries">
+          <xul:menupopup anonid="spell-dictionaries-menu"
+                         onpopupshowing="event.stopPropagation();"
+                         onpopuphiding="event.stopPropagation();"/>
+        </xul:menu>
+      </xul:menupopup>
+    </content>
+
+    <implementation>
+      <field name="_spellCheckInitialized">false</field>
+      <field name="_enabledCheckbox">
+        document.getAnonymousElementByAttribute(this, "anonid", "spell-check-enabled");
+      </field>
+      <field name="_suggestionsSeparator">
+        document.getAnonymousElementByAttribute(this, "anonid", "spell-no-suggestions");
+      </field>
+      <field name="_dictionariesMenu">
+        document.getAnonymousElementByAttribute(this, "anonid", "spell-dictionaries-menu");
+      </field>
+
+      <property name="spellCheckerUI" readonly="true">
+        <getter><![CDATA[
+          if (!this._spellCheckInitialized) {
+            this._spellCheckInitialized = true;
+
+            const CI = Components.interfaces;
+            if (!document instanceof CI.nsIDOMXULDocument)
+              return null;
+
+            var textbox = document.getBindingParent(this);
+            if (!textbox || !textbox instanceof CI.nsIDOMXULTextBoxElement)
+              return null;
+
+            try {
+              var loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"].
+                             getService(CI.mozIJSSubScriptLoader);
+              loader.loadSubScript("chrome://global/content/inlineSpellCheckUI.js", this);
+              if ("InlineSpellCheckerUI" in this)
+                this.InlineSpellCheckerUI.init(
+                  textbox.inputField.QueryInterface(CI.nsIDOMNSEditableElement).editor);
+            } catch(ex) { }
+          }
+
+          return this.InlineSpellCheckerUI;
+        ]]></getter>
+      </property>
+
+      <constructor>
+        <![CDATA[
+          // can't initialize the spell checker in the constructor as not
+          // everything is initialized and the editor will fail to create the
+          // inline spell checker object
+          var _delayedInitSpellCheck = function delayedInitSpellCheck(self) {
+            var spellui = self.spellCheckerUI;
+            if (spellui)
+              spellui.enabled = true;
+          }
+          setTimeout(_delayedInitSpellCheck, 0, this)
+        ]]>
+      </constructor>
+      <method name="_doPopupItemEnablingSpell">
+        <parameter name="popupNode"/>
+        <body>
+          <![CDATA[
+            var spellui = this.spellCheckerUI;
+            if (!spellui || !spellui.canSpellCheck) {
+              this._setMenuItemVisibility("spell-no-suggestions", false);
+              this._setMenuItemVisibility("spell-check-enabled", false);
+              this._setMenuItemVisibility("spell-check-separator", false);
+              this._setMenuItemVisibility("spell-add-to-dictionary", false);
+              this._setMenuItemVisibility("spell-suggestions-separator", false);
+              this._setMenuItemVisibility("spell-dictionaries", false);
+              return;
+            }
+
+            spellui.initFromEvent(document.popupRangeParent,
+                                  document.popupRangeOffset);
+
+            var enabled = spellui.enabled;
+            this._enabledCheckbox.setAttribute("checked", enabled);
+
+            var overMisspelling = spellui.overMisspelling;
+            this._setMenuItemVisibility("spell-add-to-dictionary", overMisspelling);
+            this._setMenuItemVisibility("spell-suggestions-separator", overMisspelling);
+
+            // suggestion list
+            var numsug = spellui.addSuggestionsToMenu(popupNode, this._suggestionsSeparator, 5);
+            this._setMenuItemVisibility("spell-no-suggestions", overMisspelling && numsug == 0);
+
+            // dictionary list
+            var numdicts = spellui.addDictionaryListToMenu(this._dictionariesMenu, null);
+            this._setMenuItemVisibility("spell-dictionaries", enabled && numdicts > 1);
+
+            this._doPopupItemEnabling(popupNode);
+          ]]>
+        </body>
+      </method>
+      <method name="_doPopupItemDisabling">
+        <body><![CDATA[
+          if (this.spellCheckerUI) {
+            this.spellCheckerUI.clearSuggestionsFromMenu();
+            this.spellCheckerUI.clearDictionaryListFromMenu();
+          }
+        ]]></body>
+      </method>
+    </implementation>
+  </binding>
+
+</bindings>

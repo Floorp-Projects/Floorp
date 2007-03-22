@@ -1,0 +1,228 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla IPC.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Darin Fisher <darin@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface ipcIMessageObserver;
+interface ipcIClientObserver;
+
+/**
+ * ipcIService
+ *
+ * the IPC service provides the means to communicate with an external IPC
+ * daemon and/or other mozilla-based applications on the same physical system.
+ * the IPC daemon hosts modules (some builtin and others dynamically loaded)
+ * with which applications may interact.
+ *
+ * at application startup, the IPC service will attempt to establish a
+ * connection with the IPC daemon.  the IPC daemon will be automatically
+ * started if necessary.  when a connection has been established, the IPC
+ * service will enumerate the "ipc-startup-category" and broadcast an
+ * "ipc-startup" notification using the observer service.
+ *
+ * when the connection to the IPC daemon is closed, an "ipc-shutdown"
+ * notification will be broadcast.
+ *
+ * each client has a name.  the client name need not be unique across all
+ * clients, but it is usually good if it is.  the IPC service does not require
+ * unique names.  instead, the IPC daemon assigns each client a unique ID that
+ * is good for the current "session."  clients can query other clients by name
+ * or by ID.  the IPC service supports forwarding messages from one client to
+ * another via the IPC daemon.
+ *
+ * for performance reasons, this system should not be used to transfer large
+ * amounts of data.  instead, applications may choose to utilize shared memory,
+ * and rely on the IPC service for synchronization and small message transfer
+ * only.
+ */
+[scriptable, uuid(53d3e3a7-528f-4b09-9eab-9416272568c0)]
+interface ipcIService : nsISupports
+{
+    /**************************************************************************
+     * properties of this process
+     */
+
+    /**
+     * returns the "client ID" assigned to this process by the IPC daemon.
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if no connection to the IPC daemon.
+     */
+    readonly attribute unsigned long ID;
+
+    /**
+     * this process can appear under several client names.  use the following
+     * methods to add or remove names for this process.
+     *
+     * for example, the mozilla browser might have the primary name "mozilla",
+     * but it could also register itself under the names "browser", "mail",
+     * "news", "addrbook", etc.  other IPC clients can then query the IPC
+     * daemon for the client named "mail" in order to talk with a mail program.
+     *
+     * XXX An IPC client name resembles a XPCOM contract ID.
+     */
+    void addName(in string aName);
+    void removeName(in string aName);
+
+    /**
+     * add a new observer of client status change notifications.
+     */
+    void addClientObserver(in ipcIClientObserver aObserver);
+
+    /**
+     * remove an observer of client status change notifications.
+     */
+    void removeClientObserver(in ipcIClientObserver aObserver);
+
+    /**************************************************************************
+     * client query methods
+     */
+
+    /**
+     * resolve the given client name to the id of a connected client.  this
+     * involves a round trip to the daemon, and as a result the calling thread
+     * may block on this function call while waiting for the daemon to respond.
+     */
+    unsigned long resolveClientName(in string aName);
+
+
+    /**
+     * tests whether a particular client is connected to the IPC daemon.
+     */
+    boolean clientExists(in unsigned long aClientID);
+
+
+    // XXX need other functions to enumerate clients, clients implementing targets, etc.
+    // enumerator getClients();
+    // enumerator getClientsSupportingTarget(in nsIDRef aTarget);
+    // enumerator getClientNames(in unsigned long aClientID);
+    // enumerator getClientTargets(in unsigned long aClientID);
+
+
+    /**************************************************************************
+     * message methods
+     */
+
+    /**
+     * set a message observer for a particular message target.
+     *
+     * @param aTarget
+     *        the message target being observed.  any existing observer will
+     *        be replaced.
+     * @param aObserver
+     *        the message observer to receive incoming messages for the
+     *        specified target.  pass null to remove the existing observer.
+     * @param aOnCurrentThread
+     *        if true, then the message observer will be called on the same
+     *        thread that calls defineTarget.  otherwise, aObserver will be
+     *        called on a background thread.
+     */
+    void defineTarget(in nsIDRef             aTarget,
+                      in ipcIMessageObserver aObserver,
+                      in boolean             aOnCurrentThread);
+
+    /**
+     * send message asynchronously to a client or a module in the IPC daemon.
+     * there is no guarantee that the message will be delivered.
+     *
+     * @param aClientID
+     *        the client ID of the foreign application that should receive this
+     *        message.  pass 0 to send a message to a module in the IPC daemon.
+     * @param aTarget
+     *        the target of the message.  if aClientID is 0, then this is the
+     *        ID of the daemon module that should receive this message.
+     * @param aData
+     *        the message data.
+     * @param aDataLen
+     *        the message length.
+     */
+    void sendMessage(in unsigned long aReceiverID,
+                     in nsIDRef       aTarget,
+                    [array, const, size_is(aDataLen)]
+                     in octet         aData,
+                     in unsigned long aDataLen);
+
+    /**
+     * block the calling thread until a matching message is received.
+     *
+     * @param aSenderID
+     *        pass 0 to wait for a message from the daemon.  pass PR_UINT32_MAX
+     *        to wait for a message from any source.  otherwise, pass a client
+     *        id to wait for a message from that particular client.
+     * @param aTarget
+     *        wait for a message to be delivered to this target.
+     * @param aObserver
+     *        this observer's OnMessageAvailable method is called when a
+     *        matching message is available.  pass null to use the default
+     *        observer associated with aTarget.
+     * @param aTimeout
+     *        indicates maximum length of time in milliseconds that this
+     *        function may block the calling thread.
+     *
+     * @throws IPC_ERROR_WOULD_BLOCK if the timeout expires.
+     *
+     * the observer's OnMessageAvailable method may throw IPC_WAIT_NEXT_MESSAGE
+     * to indicate that it does not wish to handle the message that it was
+     * given, and that it will wait to be called with the next message.  this
+     * enables the observer to keep messages in the queue that do not match the
+     * desired message.  messages that remain in the queue will be dispatched
+     * asynchronously to the default message handler after waitMessage finishes.
+     *
+     * NOTE: this function may hang the calling thread until a matching message
+     * is received, so use it with caution.
+     */
+    void waitMessage(in unsigned long       aSenderID,
+                     in nsIDRef             aTarget,
+                     in ipcIMessageObserver aObserver,
+                     in unsigned long       aTimeout);
+
+    /**
+     * Call this method to disable the default message observer for a target.
+     */
+    void disableMessageObserver(in nsIDRef aTarget);
+
+    /**
+     * Call this method to re-enable the default message observer for a target.
+     */
+    void enableMessageObserver(in nsIDRef aTarget);
+};
+
+%{C++
+// category and observer event defines (XXX not yet implemented)
+#define IPC_SERVICE_STARTUP_CATEGORY "ipc-startup-category"
+#define IPC_SERVICE_STARTUP_TOPIC    "ipc-startup"
+#define IPC_SERVICE_SHUTDOWN_TOPIC   "ipc-shutdown"
+%}

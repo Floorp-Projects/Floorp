@@ -1,0 +1,525 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is this file as it was released on March 28, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - Peter Annema.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Peter Annema <disttsc@bart.nl> (Original Author of <browser>)
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either of the GNU General Public License Version 2 or later (the "GPL"),
+   - or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<bindings id="browserBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="browser" extends="xul:browser">
+    <implementation type="application/x-javascript" implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          <![CDATA[
+            return Components.interfaces.nsIAccessibleProvider.OuterDoc;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="canGoBack"
+                onget="return this.webNavigation.canGoBack;"
+                readonly="true"/>
+
+      <property name="canGoForward"
+                onget="return this.webNavigation.canGoForward;"
+                readonly="true"/>
+
+      <method name="goBack">
+        <body>
+          <![CDATA[
+            var webNavigation = this.webNavigation;
+            if (webNavigation.canGoBack) {
+              try {
+                this.userTypedClear++;
+                webNavigation.goBack();
+              } finally {
+                if (this.userTypedClear)
+                  this.userTypedClear--;
+              }
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="goForward">
+        <body>
+          <![CDATA[
+            var webNavigation = this.webNavigation;
+            if (webNavigation.canGoForward) {
+              try {
+                this.userTypedClear++;
+                webNavigation.goForward();
+              } finally {
+                if (this.userTypedClear)
+                  this.userTypedClear--;
+              }
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="reload">
+        <body>
+          <![CDATA[
+            const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
+            const flags = nsIWebNavigation.LOAD_FLAGS_NONE;
+            this.reloadWithFlags(flags);
+          ]]>
+        </body>
+      </method>
+
+      <method name="reloadWithFlags">
+        <parameter name="aFlags"/>
+        <body>
+          <![CDATA[
+            this.webNavigation.reload(aFlags);
+          ]]>
+        </body>
+      </method>
+
+      <method name="stop">
+        <body>
+          <![CDATA[
+            const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
+            const flags = nsIWebNavigation.STOP_ALL;
+            this.webNavigation.stop(flags);
+          ]]>
+        </body>
+      </method>
+
+      <!-- throws exception for unknown schemes -->
+      <method name="loadURI">
+        <parameter name="aURI"/>
+        <parameter name="aReferrerURI"/>
+        <parameter name="aCharset"/>
+        <body>
+          <![CDATA[
+            const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
+            const flags = nsIWebNavigation.LOAD_FLAGS_NONE;
+            this.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset);
+          ]]>
+        </body>
+      </method>
+
+      <!-- throws exception for unknown schemes -->
+      <method name="loadURIWithFlags">
+        <parameter name="aURI"/>
+        <parameter name="aFlags"/>
+        <parameter name="aReferrerURI"/>
+        <parameter name="aCharset"/>
+        <body>
+          <![CDATA[
+            if (!aURI)
+              aURI = "about:blank";
+
+            if (aCharset) {
+              try { 
+                this.documentCharsetInfo.parentCharset = this.mAtomService.getAtom(aCharset);
+              }
+              catch (e) {
+              }
+            }
+            try {
+              this.userTypedClear++;
+              this.webNavigation.loadURI(aURI, aFlags, aReferrerURI, null, null);
+            } finally {
+              if (this.userTypedClear)
+                this.userTypedClear--;
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="goHome">
+        <body>
+          <![CDATA[
+            try {
+              this.loadURI(this.homePage);
+            }
+            catch (e) {
+            }
+          ]]>
+        </body>
+      </method>
+
+      <property name="homePage">
+        <getter>
+          <![CDATA[
+            var uri;
+
+            if (this.hasAttribute("homepage"))
+              uri = this.getAttribute("homepage");
+            else
+              uri = "http://www.mozilla.org/"; // widget pride
+
+            return uri;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            this.setAttribute("homepage", val);
+            return val;
+          ]]>
+        </setter>
+      </property>
+
+      <method name="gotoIndex">
+        <parameter name="aIndex"/>
+        <body>
+          <![CDATA[
+            try {
+              this.userTypedClear++;
+              this.webNavigation.gotoIndex(aIndex);
+            } finally {
+              if (this.userTypedClear)
+                this.userTypedClear--;
+            }
+          ]]>
+        </body>
+      </method>
+
+      <property name="currentURI"
+                onget="return this.webNavigation.currentURI;"
+                readonly="true"/>
+
+      <property name="preferences"
+                onget="return Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService);"
+                readonly="true"/>
+
+      <property name="docShell"
+                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIContainerBoxObject).docShell;"
+                readonly="true"/>
+
+      <property name="webNavigation"
+                onget="return this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);"
+                readonly="true"/>
+
+      <field name="_webBrowserFind">null</field>
+
+      <property name="webBrowserFind"
+                readonly="true">
+        <getter>
+        <![CDATA[
+          if (!this._webBrowserFind)
+            this._webBrowserFind = this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebBrowserFind);
+          return this._webBrowserFind;
+        ]]>
+        </getter>
+      </property>
+
+      <property name="webProgress"
+                readonly="true"
+                onget="return this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebProgress);"/>
+
+      <property name="contentWindow"
+                readonly="true"
+                onget="return this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindow);"/>
+
+      <property name="sessionHistory"
+                onget="return this.webNavigation.sessionHistory;"
+                readonly="true"/>
+
+      <property name="markupDocumentViewer"
+                onget="return this.docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);"
+                readonly="true"/>
+
+      <property name="contentViewerEdit"
+                onget="return this.docShell.contentViewer.QueryInterface(Components.interfaces.nsIContentViewerEdit);"
+                readonly="true"/>
+
+      <property name="contentViewerFile"
+                onget="return this.docShell.contentViewer.QueryInterface(Components.interfaces.nsIContentViewerFile);"
+                readonly="true"/>
+
+      <property name="documentCharsetInfo"
+                onget="return this.docShell.documentCharsetInfo;"
+                readonly="true"/>
+
+      <property name="contentDocument"
+                onget="return this.webNavigation.document;"
+                readonly="true"/>
+
+      <property name="contentTitle"
+                onget="return this.contentDocument.title;"
+                readonly="true"/>
+
+      <field name="mPrefs" readonly="true">
+        Components.classes['@mozilla.org/preferences-service;1']
+                  .getService(Components.interfaces.nsIPrefService)
+                  .getBranch(null);
+      </field>
+
+      <field name="mAtomService" readonly="true">
+        Components.classes['@mozilla.org/atom-service;1']
+                  .getService(Components.interfaces.nsIAtomService);
+      </field>
+
+      <field name="_mStrBundle">null</field>
+
+      <property name="mStrBundle">
+        <getter>
+        <![CDATA[
+          if (!this._mStrBundle) {
+            // need to create string bundle manually instead of using <xul:stringbundle/>
+            // see bug 63370 for details
+            var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
+                                  .getService(Components.interfaces.nsILocaleService);
+            var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                  .getService(Components.interfaces.nsIStringBundleService);
+            var bundleURL = "chrome://global/locale/tabbrowser.properties";
+            this._mStrBundle = stringBundleService.createBundle(bundleURL, localeService.getApplicationLocale());
+          }
+          return this._mStrBundle;
+        ]]></getter>
+      </property>
+
+      <method name="addProgressListener">
+        <parameter name="aListener"/>
+        <body>
+          <![CDATA[
+            this.webProgress.addProgressListener(aListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeProgressListener">
+        <parameter name="aListener"/>
+        <body>
+          <![CDATA[
+            this.webProgress.removeProgressListener(aListener);
+         ]]>
+        </body>
+      </method>
+
+      <field name="mDragDropHandler">
+        null
+      </field>
+
+      <property name="securityUI"
+                onget="return this.docShell.securityUI;"
+                onset="this.docShell.securityUI = val;"/>
+
+      <!--
+        This field tracks the location bar state. The value that the user typed
+        in to the location bar may not be changed while this field is zero.
+        However invoking a load will temporarily increase this field to allow
+        the location bar to be updated to the new URL.
+
+        Case 1: Anchor scroll
+          The user appends the anchor to the URL. This sets the location bar
+          into typed state, and disables changes to the location bar. The user
+          then requests the scroll. loadURIWithFlags temporarily increases the
+          flag by 1 so that the anchor scroll's location change resets the
+          location bar state.
+
+        Case 2: Interrupted load
+          The user types in and submits the URL. This triggers an asynchronous
+          network load which increases the flag by 2. (The temporary increase
+          from loadURIWithFlags is not noticeable in this case.) When the load
+          is interrupted the flag returns to zero, and the location bar stays
+          in typed state.
+
+        Case 3: New load
+          This works like case 2, but as the load is not interrupted the
+          location changes while the flag is still 2 thus resetting the
+          location bar state.
+
+        Case 4: Corrected load
+          This is a combination of case 2 and case 3, except that the original
+          load is interrupted by the new load. Normally cancelling and starting
+          a new load would reset the flag to 0 and then increase it to 2 again.
+          However both actions occur as a consequence of the loadURIWithFlags
+          invocation, which adds its temporary increase in to the mix. Since
+          the new URL would have been typed in the flag would have been reset
+          before loadURIWithFlags incremented it. The interruption resets the
+          flag to 0 and increases it to 2. Although loadURIWithFlags will
+          decrement the flag it remains at 1 thus allowing the location bar
+          state to be reset when the new load changes the location.
+          This case also applies when loading into a new browser, as this
+          interrupts the default load of about:blank.
+      -->
+      <field name="userTypedClear">
+        1
+      </field>
+
+      <field name="_userTypedValue">
+        null
+      </field>
+
+      <property name="userTypedValue"
+                onget="return this._userTypedValue;"
+                onset="this.userTypedClear = 0; return this._userTypedValue = val;"/>
+
+      <field name="focusedWindow">
+        null
+      </field>
+
+      <field name="focusedElement">
+        null
+      </field>
+
+      <field name="mDestroyed">
+        false
+      </field>
+
+      <constructor>
+        <![CDATA[
+          this.init();
+        ]]>
+      </constructor>
+      
+      <destructor>
+        <![CDATA[
+          this.destroy();
+        ]]>
+      </destructor>
+
+      <!-- This is necessary because the tabbrowser wants this stuff wired up
+           before adding its progress listener but the browser won't have a
+           docShell if we try to construct it before its frame is created -->
+      <method name="init">
+        <body>
+        <![CDATA[
+          try {
+            if (!this.webNavigation.sessionHistory &&
+                !this.hasAttribute("disablehistory")) {
+              // wire up session history
+              this.webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"].createInstance(Components.interfaces.nsISHistory);
+
+              // enable global history
+              this.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
+            }
+          }
+          catch (e) {
+          }
+          try {
+            if (!this.mDragDropHandler) {
+              this.mDragDropHandler = Components.classes["@mozilla.org:/content/content-area-dragdrop;1"].createInstance(Components.interfaces.nsIDragDropHandler);
+              this.mDragDropHandler.hookupTo(this, null);
+            }
+          }
+          catch (e) {
+          }
+          try {
+            const SECUREBROWSERUI_CONTRACTID = "@mozilla.org/secure_browser_ui;1";
+            if (!this.securityUI && !this.hasAttribute("disablesecurity") &&
+                SECUREBROWSERUI_CONTRACTID in Components.classes) {
+              var securityUI = Components.classes[SECUREBROWSERUI_CONTRACTID].createInstance(Components.interfaces.nsISecureBrowserUI);
+              securityUI.init(this.contentWindow);
+            }
+          }
+          catch (e) {
+          }
+        ]]>
+        </body>
+      </method>
+      
+      <!-- This is necessary because the destructor is not called
+           promptly when we are removed from a tabbrowser. This will be
+           explicitly called by tabbrowser -->
+      <method name="destroy">
+        <body>
+        <![CDATA[
+          if (this.mDestroyed)
+            return;
+          this.mDestroyed = true;
+
+          if (this.mDragDropHandler)
+            this.mDragDropHandler.detach();
+          this.mDragDropHandler = null;
+
+          this.focusedWindow = null;
+          this.focusedElement = null;
+          this._webBrowserFind = null;
+        ]]>
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="keypress" keycode="VK_F7" group="system">
+        <![CDATA[
+          if (event.getPreventDefault() || !event.isTrusted)
+            return;
+
+          // Toggle browse with caret mode
+          var browseWithCaretOn = false;
+          var warn = true;
+
+          try {
+            warn = this.mPrefs.getBoolPref("accessibility.warn_on_browsewithcaret");
+          } catch (ex) {
+          }
+
+          try {
+            browseWithCaretOn = this.mPrefs.getBoolPref("accessibility.browsewithcaret");
+          } catch (ex) {
+          }
+          if (warn && !browseWithCaretOn) {
+            var checkValue = {value:false};
+            promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+
+            var buttonPressed = promptService.confirmEx(window, 
+              this.mStrBundle.GetStringFromName('browsewithcaret.checkWindowTitle'), 
+              this.mStrBundle.GetStringFromName('browsewithcaret.checkLabel'),
+              promptService.STD_YES_NO_BUTTONS,
+              null, null, null, this.mStrBundle.GetStringFromName('browsewithcaret.checkMsg'),
+              checkValue);
+            if (buttonPressed != 0)
+              return;
+            if (checkValue.value) {
+              try {
+                this.mPrefs.setBoolPref("accessibility.warn_on_browsewithcaret", false);
+              }
+              catch (ex) {
+              }
+            }
+          }
+
+          // Toggle the pref
+          try {
+            this.mPrefs.setBoolPref("accessibility.browsewithcaret",!browseWithCaretOn);
+          } catch (ex) {
+          }
+        ]]>
+      </handler>
+    </handlers>
+
+  </binding>
+
+</bindings>

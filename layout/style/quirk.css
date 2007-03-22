@@ -1,0 +1,290 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+@namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
+
+
+/* Quirk: input images have a blue border (b=28010) */ 
+
+/* default border */
+input[type=image] {
+  border: 2px solid blue;
+}
+
+/* border when disabled -- only change color to gray */
+input[type=image][disabled] {
+  border-color: GrayText;
+}
+
+
+/* Quirk: make orphaned LIs have inside bullet (b=1049) */
+
+/* force inside position for orphaned lis */
+li {
+  list-style-position: inside; 
+}
+
+/* restore outside position for lists inside LIs */
+li ul, li ol, li dir, li menu { 
+  list-style-position: outside; 
+}
+
+/* undo previous two rules for properly nested lists */
+  ul ul,   ul ol,   ul dir,   ul menu,   ul li,
+  ol ul,   ol ol,   ol dir,   ol menu,   ol li,
+ dir ul,  dir ol,  dir dir,  dir menu,  dir li,
+menu ul, menu ol, menu dir, menu menu, menu li {
+  list-style-position: inherit;
+}
+
+
+/* Quirk: ensure that we get proper padding if the very first 
+ * node in an LI is another UL or OL. This is an ugly way to
+ * fix the problem, because it extends the LI up into what
+ * would otherwise appear to be the ULs space. (b=38832) */
+
+/* Note: this fix will fail once we implement marker box 
+ * alignment correctly. */
+li > ul:-moz-first-node,
+li > ol:-moz-first-node {
+  padding-top: 1em;
+}
+
+
+/* Quirk: prevent bullet from resizing with the list item
+ *   see bug 97351
+ */
+
+li::-moz-list-bullet {
+  font-size: -moz-initial;
+}
+
+
+table {
+  text-align: start;
+  white-space: normal; /* compatible with IE & spec */
+  line-height: normal;
+
+  /* Quirk: cut off all font inheritance in tables except for family. */
+  font-size: -moz-initial;
+  font-weight: -moz-initial;
+  font-style: -moz-initial;
+  font-variant: -moz-initial;
+}
+
+/*
+ * Make table borders gray for compatibility with what other browsers do
+ * in all modes, rather than using the foreground color.
+ */
+table, td, th {
+  border-color: gray;
+}
+
+
+/* Quirk: collapse top margin of BODY and TD and bottom margin of TD */
+
+/*
+ * While it may seem simpler to use :-moz-first-node and :-moz-last-node without
+ * tags, it's slower, since we have to do the :-moz-first-node or :-moz-last-node
+ * check on every single element in the document.  If we list all the
+ * element names for which the UA stylesheet specifies a margin, the
+ * selectors will be hashed in the RuleHash and things will be much more
+ * efficient.
+ */
+body > form:-moz-first-node, td > form:-moz-first-node, th > form:-moz-first-node,
+body > p:-moz-first-node, td > p:-moz-first-node, th > p:-moz-first-node,
+body > dl:-moz-first-node, td > dl:-moz-first-node, th > dl:-moz-first-node,
+body > multicol:-moz-first-node, td > multicol:-moz-first-node, th > multicol:-moz-first-node,
+body > blockquote:-moz-first-node, td > blockquote:-moz-first-node, th > blockquote:-moz-first-node,
+body > h1:-moz-first-node, td > h1:-moz-first-node, th > h1:-moz-first-node,
+body > h2:-moz-first-node, td > h2:-moz-first-node, th > h2:-moz-first-node,
+body > h3:-moz-first-node, td > h3:-moz-first-node, th > h3:-moz-first-node,
+body > h4:-moz-first-node, td > h4:-moz-first-node, th > h4:-moz-first-node,
+body > h5:-moz-first-node, td > h5:-moz-first-node, th > h5:-moz-first-node,
+body > h6:-moz-first-node, td > h6:-moz-first-node, th > h6:-moz-first-node,
+body > listing:-moz-first-node, td > listing:-moz-first-node, th > listing:-moz-first-node,
+body > plaintext:-moz-first-node, td > plaintext:-moz-first-node, th > plaintext:-moz-first-node,
+body > xmp:-moz-first-node, td > xmp:-moz-first-node, th > xmp:-moz-first-node,
+body > pre:-moz-first-node, td > pre:-moz-first-node, th > pre:-moz-first-node,
+body > ul:-moz-first-node, td > ul:-moz-first-node, th > ul:-moz-first-node,
+body > menu:-moz-first-node, td > menu:-moz-first-node, th > menu:-moz-first-node,
+body > dir:-moz-first-node, td > dir:-moz-first-node, th > dir:-moz-first-node,
+body > ol:-moz-first-node, td > ol:-moz-first-node, th > ol:-moz-first-node {
+  margin-top: 0;
+}
+
+td > p:-moz-last-node, th > p:-moz-last-node {
+  margin-bottom: 0;
+}
+
+/* Similar as above, but for empty elements
+ *  collapse the bottom or top margins of empty elements
+ *  - see bug 97361
+ */
+body > form:-moz-only-whitespace:-moz-first-node, td > form:-moz-only-whitespace:-moz-first-node,
+th > form:-moz-only-whitespace:-moz-first-node, body > p:-moz-only-whitespace:-moz-first-node,
+td > p:-moz-only-whitespace:-moz-first-node, th > p:-moz-only-whitespace:-moz-first-node,
+body > dl:-moz-only-whitespace:-moz-first-node, td > dl:-moz-only-whitespace:-moz-first-node,
+th > dl:-moz-only-whitespace:-moz-first-node, body > multicol:-moz-only-whitespace:-moz-first-node,
+td > multicol:-moz-only-whitespace:-moz-first-node, th > multicol:-moz-only-whitespace:-moz-first-node,
+body > blockquote:-moz-only-whitespace:-moz-first-node, td > blockquote:-moz-only-whitespace:-moz-first-node,
+th > blockquote:-moz-only-whitespace:-moz-first-node, body > h1:-moz-only-whitespace:-moz-first-node,
+td > h1:-moz-only-whitespace:-moz-first-node, th > h1:-moz-only-whitespace:-moz-first-node,
+body > h2:-moz-only-whitespace:-moz-first-node, td > h2:-moz-only-whitespace:-moz-first-node,
+th > h2:-moz-only-whitespace:-moz-first-node, body > h3:-moz-only-whitespace:-moz-first-node,
+td > h3:-moz-only-whitespace:-moz-first-node, th > h3:-moz-only-whitespace:-moz-first-node,
+body > h4:-moz-only-whitespace:-moz-first-node, td > h4:-moz-only-whitespace:-moz-first-node,
+th > h4:-moz-only-whitespace:-moz-first-node, body > h5:-moz-only-whitespace:-moz-first-node,
+td > h5:-moz-only-whitespace:-moz-first-node, th > h5:-moz-only-whitespace:-moz-first-node,
+body > h6:-moz-only-whitespace:-moz-first-node, td > h6:-moz-only-whitespace:-moz-first-node,
+th > h6:-moz-only-whitespace:-moz-first-node, body > listing:-moz-only-whitespace:-moz-first-node,
+td > listing:-moz-only-whitespace:-moz-first-node, th > listing:-moz-only-whitespace:-moz-first-node,
+body > plaintext:-moz-only-whitespace:-moz-first-node, td > plaintext:-moz-only-whitespace:-moz-first-node,
+th > plaintext:-moz-only-whitespace:-moz-first-node, body > xmp:-moz-only-whitespace:-moz-first-node,
+td > xmp:-moz-only-whitespace:-moz-first-node, th > xmp:-moz-only-whitespace:-moz-first-node,
+body > pre:-moz-only-whitespace:-moz-first-node, td > pre:-moz-only-whitespace:-moz-first-node,
+th > pre:-moz-only-whitespace:-moz-first-node, body > ul:-moz-only-whitespace:-moz-first-node,
+td > ul:-moz-only-whitespace:-moz-first-node, th > ul:-moz-only-whitespace:-moz-first-node,
+body > menu:-moz-only-whitespace:-moz-first-node, td > menu:-moz-only-whitespace:-moz-first-node,
+th > menu:-moz-only-whitespace:-moz-first-node, body > dir:-moz-only-whitespace:-moz-first-node,
+td > dir:-moz-only-whitespace:-moz-first-node, th > dir:-moz-only-whitespace:-moz-first-node,
+body > ol:-moz-only-whitespace:-moz-first-node, td > ol:-moz-only-whitespace:-moz-first-node,
+th > ol:-moz-only-whitespace:-moz-first-node {
+  margin-bottom: 0;
+}
+
+td > form:-moz-only-whitespace:-moz-last-node, th > form:-moz-only-whitespace:-moz-last-node,
+td > p:-moz-only-whitespace:-moz-last-node, th > p:-moz-only-whitespace:-moz-last-node,
+td > dl:-moz-only-whitespace:-moz-last-node, th > dl:-moz-only-whitespace:-moz-last-node,
+td > multicol:-moz-only-whitespace:-moz-last-node, th > multicol:-moz-only-whitespace:-moz-last-node,
+td > blockquote:-moz-only-whitespace:-moz-last-node, th > blockquote:-moz-only-whitespace:-moz-last-node,
+td > h1:-moz-only-whitespace:-moz-last-node, th > h1:-moz-only-whitespace:-moz-last-node,
+td > h2:-moz-only-whitespace:-moz-last-node, th > h2:-moz-only-whitespace:-moz-last-node,
+td > h3:-moz-only-whitespace:-moz-last-node, th > h3:-moz-only-whitespace:-moz-last-node,
+td > h4:-moz-only-whitespace:-moz-last-node, th > h4:-moz-only-whitespace:-moz-last-node,
+td > h5:-moz-only-whitespace:-moz-last-node, th > h5:-moz-only-whitespace:-moz-last-node,
+td > h6:-moz-only-whitespace:-moz-last-node, th > h6:-moz-only-whitespace:-moz-last-node,
+td > listing:-moz-only-whitespace:-moz-last-node, th > listing:-moz-only-whitespace:-moz-last-node,
+td > plaintext:-moz-only-whitespace:-moz-last-node, th > plaintext:-moz-only-whitespace:-moz-last-node,
+td > xmp:-moz-only-whitespace:-moz-last-node, th > xmp:-moz-only-whitespace:-moz-last-node,
+td > pre:-moz-only-whitespace:-moz-last-node, th > pre:-moz-only-whitespace:-moz-last-node,
+td > ul:-moz-only-whitespace:-moz-last-node, th > ul:-moz-only-whitespace:-moz-last-node,
+td > menu:-moz-only-whitespace:-moz-last-node, th > menu:-moz-only-whitespace:-moz-last-node,
+td > dir:-moz-only-whitespace:-moz-last-node, th > dir:-moz-only-whitespace:-moz-last-node,
+td > ol:-moz-only-whitespace:-moz-last-node, th > ol:-moz-only-whitespace:-moz-last-node {
+  margin-top: 0;
+}
+
+
+/* Quirk: support the ways of making PRE have wrapping */
+
+pre[wrap], pre[cols], pre[width] {
+  white-space: -moz-pre-wrap;
+}
+
+
+/* Quirk: DD not in DL has text-indent instead of margin (b=5119) */
+
+:not(dl) > dd {
+  display: inline;
+  margin: 0;
+}
+
+:not(dl) > dd:before {
+  display: inline;
+  white-space: pre;
+  font-size: 1px;
+  line-height: 0;
+  content: "\A  ";
+  -moz-margin-end: 40px;
+}
+
+
+/* quirk to indent nested DL elements (b=8749) */
+
+dl > dl {
+  display: block;
+  -moz-margin-start: 40px;
+}
+
+
+/* Quirk: MAP acts like an inline, not a block */
+
+map {
+  display: inline;
+}
+
+
+/* Quirk: Make floated images have a margin  (b=58899) */
+
+img[align=left] {
+  margin-right: 3px;
+}
+
+img[align=right] {
+  margin-left: 3px;
+}
+
+
+/* Quirk: Make sure that the residual style tags' size info. 
+ * does not take precedence over heading tags' size. (b=77352)
+ * Note: This special attribute is set only for a residual 
+ * style tag within a heading tag.
+ */
+
+/* XXX This is a potential performance problem.  This should not be
+ * using an attribute!
+ */
+*[_moz-rs-heading] { 
+  font-size: inherit !important; 
+}
+
+
+/*
+ * Quirk: Use border-box box sizing for text inputs, password inputs, and
+ * textareas.  (b=184478 on why we use content-box sizing in standards mode)
+ */
+
+/* Note that all other <input>s already use border-box
+   sizing, so we're ok with this selector */
+input:not([type=image]), textarea {
+  -moz-box-sizing: border-box;
+}
+
+/* Quirk: give form margin for compat (b=41806) */
+form{
+ margin: 0 0 1em 0;
+}

@@ -1,0 +1,13 @@
+tree[type="places"] {
+  -moz-binding: url("chrome://browser/content/places/tree.xml#places-tree");
+}
+
+hbox[type="places"] {
+  -moz-binding: url("chrome://browser/content/places/toolbar.xml#places-bar");
+  overflow: hidden;
+}
+
+menupopup[type="places"] {
+  -moz-binding: url("chrome://browser/content/places/menu.xml#places-menupopup");
+}
+

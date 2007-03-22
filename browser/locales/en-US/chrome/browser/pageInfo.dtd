@@ -1,0 +1,116 @@
+<!--
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla Communicator client code.
+#
+# The Initial Developer of the Original Code is Daniel Brooks.
+# Portions created by the Initial Developer are Copyright (C) 2001
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s): Daniel Brooks <db48x@yahoo.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the LGPL or the GPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+-->
+
+<!ENTITY  pageInfoWindow.width  "425">
+<!ENTITY  pageInfoWindow.height "470">
+
+<!ENTITY  copy.key              "C">
+<!ENTITY  copy.label            "Copy">
+<!ENTITY  copy.accesskey        "C">
+<!ENTITY  selectall.key         "A">
+<!ENTITY  selectall.label       "Select All">
+<!ENTITY  selectall.accesskey   "A">
+<!ENTITY  closeWindow.key       "w">
+
+<!ENTITY  generalTab            "General">
+<!ENTITY  generalTab.accesskey  "G">
+<!ENTITY  generalTitle          "Title:">
+<!ENTITY  generalURL            "Address:">
+<!ENTITY  generalMode           "Render Mode:">
+<!ENTITY  generalType           "Type:">
+<!ENTITY  generalSize           "Size:">
+<!ENTITY  generalReferrer       "Referring URL:">
+<!ENTITY  generalSource         "Cache Source:">
+<!ENTITY  generalSent           "Sent:">
+<!ENTITY  generalModified       "Modified:">
+<!ENTITY  generalExpires        "Expires:">
+<!ENTITY  generalEncoding       "Encoding:">
+<!ENTITY  generalMeta           "Meta:">
+<!ENTITY  generalMetaName       "Name">
+<!ENTITY  generalMetaContent    "Content">
+
+<!ENTITY  formsTab              "Forms">
+<!ENTITY  formsTab.accesskey    "F">
+<!ENTITY  formAction            "Form Action">
+<!ENTITY  formMethod            "Method">
+<!ENTITY  formName              "Name">
+<!ENTITY  formNo                "No.">
+<!ENTITY  formEncoding          "Encoding:">
+<!ENTITY  formTarget            "Target:">
+<!ENTITY  formFields            "Fields:">
+<!ENTITY  formLabel             "Label">
+<!ENTITY  formFName             "Field Name">
+<!ENTITY  formType              "Type">
+<!ENTITY  formCValue            "Current Value">
+
+<!ENTITY  linksTab              "Links">
+<!ENTITY  linksTab.accesskey    "L">
+<!ENTITY  linkNo                "No.">
+<!ENTITY  linkName              "Name">
+<!ENTITY  linkAddress           "Address">
+<!ENTITY  linkType              "Type">
+<!ENTITY  linkTarget            "Target">
+<!ENTITY  linkAccessKey         "Access Key">
+
+<!ENTITY  mediaTab              "Media">
+<!ENTITY  mediaTab.accesskey    "M">
+<!ENTITY  mediaHeader           "Images on this page">
+<!ENTITY  mediaURL              "Address:">
+<!ENTITY  mediaBase             "Base Address:">
+<!ENTITY  mediaAlt              "Alternate Text:">
+<!ENTITY  mediaAltHeader        "Alternate Text">
+<!ENTITY  mediaNo               "No.">
+<!ENTITY  mediaName             "Name">
+<!ENTITY  mediaAddress          "Address">
+<!ENTITY  mediaType             "Type">
+<!ENTITY  mediaCount            "Count">
+<!ENTITY  mediaPlugin           "Plugin:">
+<!ENTITY  mediaCharset          "Encoding:">
+<!ENTITY  mediaDimensions       "Specified Dimensions:">
+<!ENTITY  mediaPhysDimensions   "Actual Dimensions:">
+<!ENTITY  mediaEncryption       "Encryption:">
+<!ENTITY  mediaTitle            "Title:">
+<!ENTITY  mediaLongdesc         "Long Description:">
+<!ENTITY  mediaSaveAs           "Save As...">
+<!ENTITY  mediaSaveAs.accesskey "A">
+<!ENTITY  mediaPreview          "Media Preview:">
+
+<!ENTITY  framesTab             "Frames">
+<!ENTITY  framesTab.accesskey   "r">
+<!ENTITY  frameName             "Name">
+<!ENTITY  frameAddress          "Address">
+<!ENTITY  frameType             "Type">

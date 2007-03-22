@@ -1,0 +1,47 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD>
+<TITLE></TITLE>
+<STYLE>
+*:focus::-moz-display-comboboxcontrol-frame {
+	background-color: #FFCC99 !important;
+}
+</STYLE>
+</HEAD>
+<BODY>
+<H3>Very strange effect when using *:focus::-moz-display-comboboxcontrol-frame</H3>
+<P>Move the pointer into and out of the table</P>
+<P>Move the pointer over the controls in the second table and compare. The only difference between both tables is, that the first one has "align=left"</P>
+	<TABLE border align="left">
+		<TR>
+			<TD>
+				<SELECT>
+					<OPTION VALUE="1">genau</OPTION>
+					<OPTION VALUE="2">annährend </OPTION>
+					<OPTION VALUE="3">so ungefähr</OPTION>
+				</SELECT>
+				<INPUT type="text" maxlength="60">
+			</TD>
+		</TR>
+	</TABLE><BR>
+	<TABLE border>
+		<TR>
+			<TD>
+				<SELECT>
+					<OPTION VALUE="1">genau</OPTION>
+					<OPTION VALUE="2">annährend </OPTION>
+					<OPTION VALUE="3">so ungefähr</OPTION>
+				</SELECT>
+				<INPUT type="text" maxlength="60">
+			</TD>
+		</TR>
+	</TABLE>
+<SELECT>
+	<OPTION VALUE="1">genau</OPTION>
+	<OPTION VALUE="2">annährend </OPTION>
+	<OPTION VALUE="3">so ungefähr</OPTION>
+</SELECT>
+<INPUT type="text" maxlength="60">
+<P>Please don't tell me, that I shouldn't use internal classes. I was just searchig for workarounds to ohter SELECT-related problems and thought, that this might be a bug.</P>
+</BODY>
+</HTML>

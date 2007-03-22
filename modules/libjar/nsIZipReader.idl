@@ -1,0 +1,254 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Daniel Veditz <dveditz@netscape.com>
+ *   Don Bragg <dbragg@netscape.com>
+ *   Samir Gehani <sgehani@netscape.com>
+ *   Mitch Stoltz <mstoltz@netscape.com>
+ *   Jeff Walden <jwalden+code@mit.edu>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIUTF8StringEnumerator;
+interface nsIInputStream;
+interface nsIFile;
+
+[scriptable, uuid(e1c028bc-c478-11da-95a8-00e08161165f)]
+interface nsIZipEntry : nsISupports
+{
+    /**
+     * The type of compression used for the item.  The possible values and
+     * their meanings are defined in the zip file specification at
+     * http://www.pkware.com/business_and_developers/developer/appnote/
+     */
+    readonly attribute unsigned short   compression;
+    /**
+     * The compressed size of the data in the item.
+     */
+    readonly attribute unsigned long    size;
+    /**
+     * The uncompressed size of the data in the item.
+     */
+    readonly attribute unsigned long    realSize;
+    /**
+     * The CRC-32 hash of the file in the entry.
+     */
+    readonly attribute unsigned long    CRC32;
+    /**
+     * True if the name of the entry ends with '/' and false otherwise.
+     */
+    readonly attribute boolean          isDirectory;
+    /**
+     * The time at which this item was last modified.
+     */
+    readonly attribute PRTime           lastModifiedTime;
+    /**
+     * Use this attribute to determine whether this item is an actual zip entry
+     * or is one synthesized for part of a real entry's path.  A synthesized
+     * entry represents a directory within the zip file which has no
+     * corresponding entry within the zip file.  For example, the entry for the
+     * directory foo/ in a zip containing exactly one entry for foo/bar.txt
+     * is synthetic.  If the zip file contains an actual entry for a directory,
+     * this attribute will be false for the nsIZipEntry for that directory.
+     * It is impossible for a file to be synthetic.
+     */
+    readonly attribute boolean          isSynthetic;
+};
+
+[scriptable, uuid(5cce7f53-23b3-47f8-be05-122c0ba703fd)]
+interface nsIZipReader : nsISupports
+{
+    /**
+     * Opens a zip file for reading.
+     * It is allowed to open with another file, 
+     * but it needs to be closed first with close().
+     */
+    void open(in nsIFile zipFile);
+
+    /**
+     * The file that represents the zip with which this zip reader was
+     * initialized.
+     */
+    readonly attribute nsIFile file;
+
+    /**
+     * Closes a zip reader. Subsequent attempts to extract files or read from
+     * its input stream will result in an error.
+     */
+    void close();
+
+    /**
+     * Tests the integrity of the archive by performing a CRC check 
+     * on each item expanded into memory.  If an entry is specified
+     * the integrity of only that item is tested.  If NULL is passed 
+     * in the integrity of all items in the archive are tested.  
+     */
+    void test(in string aEntryName);
+
+    /**
+     * Extracts a zip entry into a local file specified by outFile.
+     * The entry must be stored in the zip in either uncompressed or
+     * DEFLATE-compressed format for the extraction to be successful.
+     * If the entry is a directory, the directory will be extracted
+     * non-recursively.
+     */
+    void extract(in string zipEntry, in nsIFile outFile);
+
+    /**
+     * Returns a nsIZipEntry describing a specified zip entry.
+     */
+    nsIZipEntry getEntry(in string zipEntry);
+
+    /**
+     * Checks whether the zipfile contains an entry specified by entryName.
+     */
+    boolean hasEntry(in AUTF8String zipEntry);
+ 
+    /**
+     * Returns a string enumerator containing the matching entry names.
+     *
+     * @param aPattern
+     *   A regular expression used to find matching entries in the zip file.
+     *   Set this parameter to null to get all entries; otherwise, use the
+     *   following syntax:
+     *
+     *   o * matches anything
+     *   o ? matches one character
+     *   o $ matches the end of the string
+     *   o [abc] matches one occurrence of a, b, or c. The only character that
+     *           must be escaped inside the brackets is ].  ^ and - must never
+     *           appear in the first and second positions within the brackets, 
+     *           respectively.  (In the former case, the behavior specified for
+     *           '[^az]' will happen.)
+     *   o [a-z] matches any character between a and z.  The characters a and z
+     *           must either both be letters or both be numbers, with the
+     *           character represented by 'a' having a lower ASCII value than
+     *           the character represented by 'z'.
+     *   o [^az] matches any character except a or z.  If ] is to appear inside
+     *           the brackets as a character to not match, it must be escaped.
+     *   o pat~pat2 returns matches to the pattern 'pat' which do not also match
+     *              the pattern 'pat2'.  This may be used to perform filtering
+     *              upon the results of one pattern to remove all matches which
+     *              also match another pattern.  For example, because '*'
+     *              matches any string and '*z*' matches any string containing a
+     *              'z', '*~*z*' will match all strings except those containing
+     *              a 'z'.  Note that a pattern may not use '~' multiple times,
+     *              so a string such as '*~*z*~*y*' is not a valid pattern.
+     *   o (foo|bar) will match either the pattern foo or the pattern bar.
+     *               Neither of the patterns foo or bar may use the 'pat~pat2'
+     *               syntax described immediately above.
+     *   o \ will escape a special character.  Escaping is required for all
+     *       special characters unless otherwise specified.
+     *   o All other characters match case-sensitively.
+     *
+     *   An aPattern not conforming to this syntax has undefined behavior.
+     *
+     * @throws NS_ERROR_ILLEGAL_VALUE on many but not all invalid aPattern
+     *                                values.
+     */
+    nsIUTF8StringEnumerator findEntries(in string aPattern);
+
+    /**
+     * Returns an input stream containing the contents of the specified zip
+     * entry.
+     * @param zipEntry the name of the entry to open the stream from
+     */
+    nsIInputStream getInputStream(in string zipEntry);
+
+    /**
+     * Returns an input stream containing the contents of the specified zip
+     * entry. If the entry refers to a directory (ends with '/'), a directory stream 
+     * is opened, otherwise the contents of the file entry is returned.
+     * @param aJarSpec the Spec of the URI for the JAR (only used for directory streams)
+     * @param zipEntry the name of the entry to open the stream from
+     */
+    nsIInputStream getInputStreamWithSpec(in AUTF8String aJarSpec, in string zipEntry);
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIZipReaderCache
+
+[scriptable, uuid(52c45d86-0cc3-11d4-986e-00c04fa0cf4a)]
+interface nsIZipReaderCache : nsISupports
+{
+    /**
+     * Initializes a new zip reader cache. 
+     * @param cacheSize - the number of released entries to maintain before
+     *   beginning to throw some out (note that the number of outstanding
+     *   entries can be much greater than this number -- this is the count
+     *   for those otherwise unused entries)
+     */
+    void init(in unsigned long cacheSize);
+
+    /**
+     * Returns a (possibly shared) nsIZipReader for an nsIFile.
+     *
+     * If the zip reader for given file is not in the cache, a new zip reader
+     * is created, initialized, and opened (see nsIZipReader::init and 
+     * nsIZipReader::open). Otherwise the previously created zip reader is 
+     * returned.
+     *
+     * @note If someone called close() on the shared nsIZipReader, this method 
+     *       will return the closed zip reader.
+     */
+    nsIZipReader getZip(in nsIFile zipFile);
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+%{C++
+
+#define NS_ZIPREADER_CID                             \
+{ /* 7526a738-9632-11d3-8cd9-0060b0fc14a3 */         \
+    0x7526a738,                                      \
+    0x9632,                                          \
+    0x11d3,                                          \
+    {0x8c, 0xd9, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
+
+#define NS_ZIPREADERCACHE_CID                        \
+{ /* 1b117e16-0cad-11d4-986e-00c04fa0cf4a */         \
+    0x1b117e16,                                      \
+    0x0cad,                                          \
+    0x11d4,                                          \
+    {0x98, 0x6e, 0x00, 0xc0, 0x4f, 0xa0, 0xcf, 0x4a} \
+}
+
+%}
+
+////////////////////////////////////////////////////////////////////////////////

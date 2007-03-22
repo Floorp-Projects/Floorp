@@ -1,0 +1,127 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2001
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= gfxwin
+LIBRARY_NAME	= gkgfxwin
+EXPORT_LIBRARY = 1
+IS_COMPONENT	= 1
+MODULE_NAME	= nsGfxModule
+GRE_MODULE	= 1
+LIBXUL_LIBRARY = 1
+
+REQUIRES	= xpcom \
+		  string \
+		  gfx \
+		  widget \
+		  intl \
+		  view \
+		  pref \
+		  uconv \
+		  unicharutil \
+		  locale \
+		  necko \
+		  content \
+		  layout \
+		  dom \
+		  debug \
+		  imglib2 \
+		  windowwatcher \
+		  $(NULL)
+
+CPPSRCS		= \
+		nsDeviceContextWin.cpp \
+		nsDrawingSurfaceWin.cpp \
+		nsRenderingContextWin.cpp \
+		nsFontMetricsWin.cpp \
+		nsImageWin.cpp \
+		nsRegionWin.cpp \
+		nsGfxFactoryWin.cpp \
+		nsUnicodeRange.cpp \
+		$(NULL)
+
+EXPORTS	= nsIRenderingContextWin.h nsIDrawingSurfaceWin.h
+
+EXTRA_DSO_LIBS	= gkgfx mozutil_s gfxshared_s
+
+LOCAL_INCLUDES	= \
+		-I$(srcdir)/. \
+		-I$(srcdir)/.. \
+		-I$(srcdir)/../shared \
+		$(NULL)
+
+ifndef WINCE
+_OS_LIBS	= comdlg32
+endif
+OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
+
+EXTRA_DSO_LDOPTS += \
+		$(LIBS_DIR) \
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+libs:: fontEncoding.properties fontNameMap.properties
+	$(INSTALL) $^ $(DIST)/bin/res/fonts
+
+install:: fontEncoding.properties fontNameMap.properties
+	$(INSTALL) $^ $(DESTDIR)$(mozappdir)/res/fonts
+
+DEFINES	+= -DSTRICT 
+
+ifdef NGLAYOUT_DDRAW
+DEFINES	+= DNGLAYOUT_DDRAW
+ifeq ($(MOZ_VCVER),50)
+LOCAL_INCLUDES += -I$(NGLAYOUT_DDRAW)/include
+else
+LOCAL_INCLUDES += -I$(NGLAYOUT_DDRAW)/inc
+endif
+EXTRA_DSO_LDOPTS += $(NGLAYOUT_DDRAW)/lib/ddraw.lib
+OS_LIBS	+= ole32.lib
+endif
+
+

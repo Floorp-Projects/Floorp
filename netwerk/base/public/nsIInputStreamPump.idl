@@ -1,0 +1,106 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Darin Fisher <darin@netscape.com>
+ *   Christian Biesinger <cbiesinger@web.de>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsIRequest.idl"
+
+interface nsIInputStream;
+interface nsIStreamListener;
+
+/**
+ * nsIInputStreamPump
+ *
+ * This interface provides a means to configure and use a input stream pump
+ * instance.  The input stream pump will asynchronously read from a input
+ * stream, and push data to a nsIStreamListener instance.  It utilizes the
+ * current thread's nsIEventTarget in order to make reading from the stream
+ * asynchronous.
+ *
+ * If the given stream supports nsIAsyncInputStream, then the stream pump will
+ * call the stream's AsyncWait method to drive the stream listener.  Otherwise,
+ * the stream will be read on a background thread utilizing the stream
+ * transport service.  More details are provided below.
+ */
+[scriptable, uuid(400F5468-97E7-4d2b-9C65-A82AECC7AE82)]
+interface nsIInputStreamPump : nsIRequest
+{
+    /**
+     * Initialize the input stream pump.
+     *
+     * @param aStream
+     *        contains the data to be read.  if the input stream is non-blocking,
+     *        then it will be QI'd to nsIAsyncInputStream.  if the QI succeeds
+     *        then the stream will be read directly.  otherwise, it will be read
+     *        on a background thread using the stream transport service.
+     * @param aStreamPos
+     *        specifies the stream offset from which to start reading.  the
+     *        offset value is absolute.  pass -1 to specify the current offset.
+     *        NOTE: this parameter is ignored if the underlying stream does not
+     *        implement nsISeekableStream.
+     * @param aStreamLen
+     *        specifies how much data to read from the stream.  pass -1 to read
+     *        all data available in the stream.
+     * @param aSegmentSize
+     *        if the stream transport service is used, then this parameter
+     *        specifies the segment size for the stream transport's buffer.
+     *        pass 0 to specify the default value.
+     * @param aSegmentCount
+     *        if the stream transport service is used, then this parameter
+     *        specifies the segment count for the stream transport's buffer.
+     *        pass 0 to specify the default value.
+     * @param aCloseWhenDone
+     *        if true, the input stream will be closed after it has been read.
+     */
+    void init(in nsIInputStream aStream,
+              in long long      aStreamPos,
+              in long long      aStreamLen,
+              in unsigned long  aSegmentSize,
+              in unsigned long  aSegmentCount,
+              in boolean        aCloseWhenDone);
+
+    /**
+     * asyncRead causes the input stream to be read in chunks and delivered
+     * asynchronously to the listener via OnDataAvailable.
+     *
+     * @param aListener
+     *        receives notifications.
+     * @param aListenerContext
+     *        passed to listener methods.
+     */
+    void asyncRead(in nsIStreamListener aListener,
+                   in nsISupports       aListenerContext);
+};

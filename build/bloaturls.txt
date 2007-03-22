@@ -1,0 +1,7 @@
+http://www.mozilla.org
+ftp://ftp.mozilla.org
+http://www.mozilla.org
+http://www.mozilla.org/newlayout/samples/test2.html
+http://www.mozilla.org/newlayout/samples/test8.html
+http://www.mozilla.org/newlayout/samples/test6.html
+http://www.mozilla.org/newlayout/samples/test8.html

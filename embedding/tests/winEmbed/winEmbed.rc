@@ -1,0 +1,265 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_WINEMBED            ICON                    "winEmbed.ICO"
+IDI_SMALL               ICON                    "SMALL.ICO"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDC_WINEMBED MENU 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "New Browser...",              MOZ_NewBrowser
+        MENUITEM "E&xit",                       IDM_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "Cu&t",                        MOZ_Cut
+        MENUITEM "&Copy",                       MOZ_Copy
+        MENUITEM "&Paste",                      MOZ_Paste
+        MENUITEM SEPARATOR
+        MENUITEM "Select All",                  MOZ_SelectAll
+        MENUITEM "Select None",                 MOZ_SelectNone
+    END
+    POPUP "&Go"
+    BEGIN
+        MENUITEM "&Back",                       MOZ_GoBack
+        MENUITEM "&Forward",                    MOZ_GoForward
+    END
+    POPUP "&Debug"
+    BEGIN
+        MENUITEM "&This space for rent",        ID_DEBUG_THISSPACEFORRENT
+        , GRAYED
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About winEmbed...",          MOZ_About
+    END
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+2 TEXTINCLUDE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""resource.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_APP_TITLE           "winEmbed"
+    IDS_HELLO               "Embedding Mozilla is so much fun!!"
+    IDS_ABOUT               "winEmbed - Gecko embedding sample"
+    IDS_ABOUT_TITLE         "About winEmbed"
+    IDS_HIST_BACK           "Going Back to: "
+    IDS_HIST_FORWARD        "Going Forward to: "
+    IDS_HIST_RELOAD_NORMAL  "Reloading url, (normal) :"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_HIST_RELOAD_BYPASSPROXY "Reloading url, (bypassing Proxy) :"
+    IDS_HIST_RELOAD_BYPASSCACHE "Reloading url, (bypassing cache) :"
+    IDS_HIST_ADDURL         " added to Session History"
+    IDS_HIST_RELOAD_BYPASSPROXYANDCACHE 
+                            "Reloading url, (bypassing Proxy and cache) :"
+    IDS_HIST_PURGE          "purged from session history"
+    IDS_HIST_GOTO           "Going to history index : "
+    IDS_HIST_URL            " URL : "
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.K.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_BROWSER DIALOG  0, 0, 400, 217
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | 
+    WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "winEmbed sample - UNSUPPORTED"
+MENU IDC_WINEMBED
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Back",IDC_BACK,1,1,21,13
+    PUSHBUTTON      "Forward",IDC_FORWARD,23,1,30,13
+    PUSHBUTTON      "Reload",IDC_RELOAD,57,1,28,13
+    PUSHBUTTON      "Stop",IDC_STOP,86,1,25,13
+    LTEXT           "Address:",IDC_STATIC,115,3,28,8
+    COMBOBOX        IDC_ADDRESS,145,1,193,52,CBS_DROPDOWN | CBS_AUTOHSCROLL | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "Go",IDC_GO,340,1,25,13
+    CONTROL         "Embedded Browser",IDC_BROWSER,"WINEMBED",WS_TABSTOP,0,
+                    16,400,192
+    CONTROL         "Status",IDC_STATUS,"Static",SS_LEFTNOWORDWRAP | 
+                    SS_SUNKEN | WS_GROUP,0,208,316,9
+    CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
+                    316,208,84,9
+END
+
+IDD_BROWSER_NC DIALOG  0, 0, 400, 217
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | 
+    WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "winEmbed chromeless sample"
+MENU IDC_WINEMBED
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Embedded Browser",IDC_BROWSER,"WINEMBED",WS_TABSTOP,0,0,
+                    400,217
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_BROWSER, DIALOG
+    BEGIN
+        RIGHTMARGIN, 292
+        BOTTOMMARGIN, 216
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.K.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (Ireland) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENI)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_EIRE
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_CHOOSEPROFILE DIALOG  0, 0, 186, 154
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Choose Profile"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Available Profiles:",IDC_STATIC,7,7,56,8
+    LISTBOX         IDC_PROFILELIST,7,18,117,129,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "Select",IDOK,129,18,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,129,36,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_CHOOSEPROFILE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 147
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (Ireland) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,116 @@
+<html>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is PyXPCOM.
+   -
+   - The Initial Developer of the Original Code is
+   - ActiveState Tool Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2000-2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Architecture</title>
+</head>
+
+<body>
+
+<h1>Python XPCOM Package Architecture</h1>
+<h2><a name="Architecture">Architecture</a></h2>
+<p>Much of the design for the Python XPCOM Package has been borrowed from the Python MS-COM
+extensions in <i>win32com</i>. Most of the major limitations and drawbacks in the <i>win32com</i>
+design have been addressed, mainly &quot;auto-wrapping&quot; of
+interface objects, which is not supported by <i>win32com</i>.</p>
+<p>Like <i>win32com</i>, this architecture includes the concept of <i>client COM</i> and <i>server
+COM.</i> </p>
+<p>Client COM:</p>
+<ul>
+  <li>calls other interfaces</li>
+  <li>is supported by <i>PyInterfaces</i> implemented in C++, which assists
+in making the COM calls</li>
+  <li>is supported by <i>PyGateways</i>, which assists in receiving
+external COM calls and dispatching them to the correct Python object</li>
+  <li> is supported in the <i>xpcom/client</i>  package</li>
+</ul>
+<p>Server COM:</p>
+<ul>
+  <li>implements interfaces for use by other XPCOM applications or components</li>
+  <li> is
+supported in the <i>xpcom/server</i>  package</li>
+</ul>
+<p>The XPConnect framework is very powerful, and far exceeds what COM's <i>
+IDispatch</i> can offer.&nbsp; Thus, we are able to get by with far fewer interfaces
+supported in the C++ level, and defer most things to the Python code that uses
+XPConnect.&nbsp; As a result, the requirement for a huge number of interfaces to
+exist in the <i>.pyd</i> does not exist.&nbsp; There are, however, a number of
+interfaces that do require native C++ support: these are interfaces
+required to &quot;boot&quot; the XPConnect support (i.e., the interfaces that are
+used to get information about interfaces), and also two gateways that need to
+work without interface information available. This last requirement is
+due to the XPCOM shutdown-ordering - it may be a bug, but is not an unreasonable
+amount of code anyway.</p>
+<p><b>Auto-wrapping</b> of COM objects is supported by both client COM and
+server COM.&nbsp;For client COM, auto-wrapping means that the
+Python programmer always sees Python &quot;component&quot; objects, rather than
+raw C++ interface objects; to the user, it all appears to &quot;just
+work&quot;.&nbsp; This is a major source of frustration in the <i>win32com</i>
+framework.</p>
+<p>For server COM, auto-wrapping means that you can
+pass Python instances wherever a COM object is expected. If the Python
+instance supports COM interfaces, by virtue of having a <i>_com_interfaces_</i>
+attribute that lists the interface requested, it will be automatically wrapped
+in the correct COM object.&nbsp;</p>
+<p><b>Error Handling:</b> The C++ framework has good error handling support,
+and uses the XPCOM console service to log debug messages, Python exceptions and
+tracebacks.&nbsp; <i>win32com</i> does not have good exception/traceback support
+at the C++ level, mainly because COM does not define a service like
+the console where debug messages can go.&nbsp; This does mean that in Mozilla
+release builds, these debug messages are likely to be lost, but the <i>--console</i>
+command line option to a release Mozilla will get them back.&nbsp; Therefore,
+the other error-support utilities, such as the error callbacks made on the
+policy object, may be used.</p>
+<p><b>Component Loader, Modules and Factories:</b>&nbsp; XPCOM has the concept
+of a component loader - a module used to load all components of a
+particular type.&nbsp; For example, the <i>moz.jsloader.1</i> component loads all
+the JavaScript components.&nbsp;Similarly, the <i>moz.pyloader.1</i>
+component loads all Python components.&nbsp; However, unlike
+JavaScript, the Python component loader is actually implemented in Python
+itself!&nbsp;Since the Python component loader can not be used to load
+itself, this component has some special code, <i>pyloader.dll,</i>  to boot-strap itself.</p>
+<p>This means is that all XPCOM components, including the Python loader itself and all
+XPCOM module and factory interfaces, are implemented in
+Python.&nbsp;<b>There are no components or interfaces implemented purely in C++
+in this entire package!</b></p>
+
+</body>
+
+</html>

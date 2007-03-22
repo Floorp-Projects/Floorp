@@ -1,0 +1,31 @@
+<HTML>
+<HEAD>
+<SCRIPT>
+function kill_dd()
+{
+  var x = document.forms[0].elements[0];
+
+   while (x.options.length != 0)
+   {
+     var a = x.options.length - 1;
+     x.options[a] = null;
+   }
+}
+</SCRIPT>
+</HEAD>
+
+<BODY onload="kill_dd();">
+
+text text text text
+
+<FORM>
+<table border="1"><tr><td>
+<SELECT style="width: 200px">
+<OPTION>1</option>
+<OPTION>2</option>
+</SELECT>
+</td></tr></table>
+</FORM>
+
+
+</BODY></HTML>

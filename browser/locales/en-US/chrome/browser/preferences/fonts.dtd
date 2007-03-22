@@ -1,0 +1,64 @@
+<!ENTITY  fontsDialog.title                       "Fonts">
+<!ENTITY  window.width                            "39em">
+<!ENTITY  window.macWidth                         "43em">
+<!ENTITY  window.unixWidth                        "41em">
+
+<!ENTITY  language.label                          "Fonts for:">
+<!ENTITY  language.accesskey                      "F">
+
+<!ENTITY  size.label                              "Size:">
+<!ENTITY  sizeProportional.accesskey              "z">
+<!ENTITY  sizeMonospace.accesskey                 "e">
+
+<!ENTITY  proportional.label                      "Proportional:">
+<!ENTITY  proportional.accesskey                  "P">
+
+<!ENTITY  serif.label                             "Serif:">
+<!ENTITY  serif.accesskey                         "S">
+<!ENTITY  sans-serif.label                        "Sans-serif:">
+<!ENTITY  sans-serif.accesskey                    "n">
+<!ENTITY  monospace.label                         "Monospace:">
+<!ENTITY  monospace.accesskey                     "M">
+
+<!ENTITY  font.langGroup.latin1                   "Western">
+<!ENTITY  font.langGroup.latin2                   "Central European">
+<!ENTITY  font.langGroup.japanese                 "Japanese">
+<!ENTITY  font.langGroup.trad-chinese             "Traditional Chinese (Taiwan)">
+<!ENTITY  font.langGroup.simpl-chinese            "Simplified Chinese">
+<!ENTITY  font.langGroup.trad-chinese-hk          "Traditional Chinese (Hong Kong)">
+<!ENTITY  font.langGroup.korean                   "Korean">
+<!ENTITY  font.langGroup.cyrillic                 "Cyrillic">
+<!ENTITY  font.langGroup.baltic                   "Baltic">
+<!ENTITY  font.langGroup.el                       "Greek">
+<!ENTITY  font.langGroup.turkish                  "Turkish">
+<!ENTITY  font.langGroup.unicode                  "Other Languages">
+<!ENTITY  font.langGroup.user-def                 "User Defined">
+<!ENTITY  font.langGroup.thai                     "Thai">
+<!ENTITY  font.langGroup.hebrew                   "Hebrew">
+<!ENTITY  font.langGroup.arabic                   "Arabic">
+<!ENTITY  font.langGroup.devanagari               "Devanagari">
+<!ENTITY  font.langGroup.tamil                    "Tamil">
+<!ENTITY  font.langGroup.armenian                 "Armenian">
+<!ENTITY  font.langGroup.bengali                  "Bengali">
+<!ENTITY  font.langGroup.canadian                 "Unified Canadian Syllabary">
+<!ENTITY  font.langGroup.ethiopic                 "Ethiopic">
+<!ENTITY  font.langGroup.georgian                 "Georgian">
+<!ENTITY  font.langGroup.gujarati                 "Gujarati">
+<!ENTITY  font.langGroup.gurmukhi                 "Gurmukhi">
+<!ENTITY  font.langGroup.khmer                    "Khmer">
+<!ENTITY  font.langGroup.malayalam                "Malayalam">
+<!-- Minimum font size -->
+<!ENTITY minSize.label                            "Minimum font size:">
+<!ENTITY minSize.accesskey                        "o">
+<!ENTITY minSize.none                             "None">
+
+<!-- default font type -->
+<!ENTITY  useDefaultFontSerif.label               "Serif">
+<!ENTITY  useDefaultFontSansSerif.label           "Sans Serif">
+
+<!ENTITY  allowPagesToUse.label                   "Allow pages to choose their own fonts, instead of my selections above">
+<!ENTITY  allowPagesToUse.accesskey               "A">
+
+<!ENTITY languages.customize.Charset.grouplabel         "Character Encoding">
+<!ENTITY languages.customize.DefaultCharset.label       "Default Character Encoding:">
+<!ENTITY languages.customize.DefaultCharset.accesskey   "C">

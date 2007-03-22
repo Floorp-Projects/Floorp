@@ -1,0 +1,11 @@
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Creative Commons</ShortName>
+<Description>Find photos, movies, music, and text to rip, sample, mash, and share.</Description>
+<InputEncoding>utf-8</InputEncoding>
+<Image width="16" height="16">data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAANbY1E9YMgAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAA2UExURf///wAAAD8/P+/v7y8vL19fX9/f37+/vw8PD8/Pz09PT5+fn4+Pj6+vr29vbx8fH39/f////3TGU44AAAASdFJOU///////////////////////AOK/vxIAAACWSURBVHjaNI8LEsQgCEMJIvi3vf9lN3bbN6MD0USUm3QFaVNYc7kBuvLZ0xG8oLkQV1iiYBjyktFE+tk+FCEGl3oFT0aSQBaoVDAmAyWkmOCitVfHTvV4BEsWxqyleE+PYLQAi5b9WJShPnh7MnQytDP1IxmfvZXq22dkTkpZ4/TT/qPfiX/dqoXJz+dItE0tx6l/AgwA0e4FeJjn5bsAAAAASUVORK5CYII=</Image>
+<Url type="text/html" method="GET" template="http://search.creativecommons.org/">
+  <Param name="q" value="{searchTerms}"/>
+  <Param name="sourceid" value="Mozilla-search"/>
+</Url>
+<SearchForm>http://search.creativecommons.org/</SearchForm>
+</SearchPlugin>

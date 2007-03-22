@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: wfw works with extra attribute
+Expect: feed.fields.getProperty('wfw:commentRss') == 'http://example.org'
+
+-->
+
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:foo="http://example.org"
+      xmlns:bla="http://wellformedweb.org/CommentAPI/">
+  
+  <title>Example Feed</title>
+  <link href="http://example.org/"/>
+  <updated>2003-12-13T18:30:02Z</updated>
+  <author>
+       <name>John Doe</name>
+  </author>
+  <id foo:bar="baz">urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6</id>
+  <bla:commentRss hmm="yeah">http://example.org</bla:commentRss>
+  <entry>
+    <title>Atom-Powered Robots Run Amok</title>
+    <link href="http://example.org/2003/12/13/atom03"/>
+    <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+    <updated>2003-12-13T18:30:02Z</updated>
+    <summary>Some text.</summary>
+  </entry>
+  
+</feed>

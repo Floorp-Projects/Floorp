@@ -1,0 +1,116 @@
+#! python
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is l10n test automation.
+#
+# The Initial Developer of the Original Code is
+# Mozilla Foundation
+# Portions created by the Initial Developer are Copyright (C) 2006
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#	Axel Hecht <l10n@mozilla.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+
+import logging
+import sys
+from datetime import date
+
+from Mozilla import Parser, CompareLocales, Paths
+import simplejson
+
+testLocales = []
+lvl = logging.WARNING
+date = date.today().strftime('%Y-%m-%d')
+# parse commandline arguments
+argsiter = sys.argv.__iter__()
+# drop command
+argsiter.next()
+for arg in argsiter:
+  if arg == '-V':
+    lvl -= 10
+  elif arg == '-D':
+    testLocales.append(argsiter.next())
+  else:
+    date = arg
+
+logging.basicConfig(level=lvl)
+
+res = CompareLocales.compare(testLocales=testLocales)
+
+class Separator:
+  def __init__(self, date):
+    self.date = date
+    self.baseName = 'results/details-' + date + '-'
+  def getDetails(self, res, locale):
+    dic = {}
+    res[locale]['tested'].sort()
+    self.collectList('missing', res[locale], dic)
+    self.collectList('obsolete', res[locale], dic)
+    d = open(self.baseName + locale + '.js', 'w')
+    d.write(simplejson.dumps(dic, sort_keys=True))
+    d.close()
+  def collectList(self, name, res, dic):
+    dic[name] = {}
+    if not res.has_key(name):
+      res[name] = []
+    counts = dict([(mod,0) for mod in res['tested']])
+    counts['total'] = len(res[name])
+    for mod, path, key in res[name]:
+      counts[Paths.components[mod]] +=1
+      if not dic[name].has_key(mod):
+        dic[name][mod] = {path:[key]}
+        continue
+      if not dic[name][mod].has_key(path):
+        dic[name][mod][path] = [key]
+      else:
+        dic[name][mod][path].append(key)
+    res[name] = counts
+    name += 'Files'
+    dic[name] = {}
+    if not res.has_key(name):
+      res[name] = []
+    counts = dict([(mod,0) for mod in res['tested']])
+    counts['total'] = len(res[name])
+    for mod, path in res[name]:
+      counts[Paths.components[mod]] +=1
+      if not dic[name].has_key(mod):
+        dic[name][mod] = [path]
+      else:
+        dic[name][mod].append(path)
+    res[name] = counts
+
+s = Separator(date)
+for loc,result in res.iteritems():
+  s.getDetails(res, loc)
+
+overview = open('results/data-' + date + '.js', 'w')
+overview.write(simplejson.dumps(res, sort_keys=True))
+overview.close()
+
+

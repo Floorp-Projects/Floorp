@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+  div { color: black; }
+  div::first-letter { color: green; }
+  </style>
+</head>
+<body>
+  <div>This is more text
+    <span>
+      This is text
+    </span>
+  </div>
+  <script>
+    document.body.offsetWidth;
+    document.getElementsByTagName("div")[0].firstChild.data = "";
+  </script>
+</body>
+</html>

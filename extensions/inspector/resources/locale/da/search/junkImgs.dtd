@@ -1,0 +1,2 @@
+<!ENTITY junkImgs.title "Find ubrugte billeder i det nuværende tema...">
+<!ENTITY junkImgsDescription "For at denne søgning kan foretages effektivt bliver du nød til at inspicere et dokument som indlæser ENHVER CSS fil i det nuværende tema. Derefter, peg på den placering på disken, hvor roden af det nuværende tema kan findes.">

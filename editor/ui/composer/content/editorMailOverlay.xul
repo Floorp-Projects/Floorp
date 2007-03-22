@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<!-- retrieve generic commands -->
+<?xul-overlay href="chrome://messenger/content/mailOverlay.xul"?>
+
+<!DOCTYPE overlay SYSTEM "chrome://editor/locale/editorNavigatorOverlay.dtd" >
+
+<overlay id="editorMailOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript" src="editorApplicationOverlay.js"/>
+
+  <!-- navigator specific commands -->
+  <commandset id="tasksCommands">
+    <!-- XXX insert commands here -->
+  </commandset>
+         
+  <!-- navigator specific UI items -->
+  <menupopup id="menu_NewPopup">
+    <!-- XXX insert File->New Menu add-ins here -->
+  </menupopup>
+
+  <menupopup id="menu_FilePopup">
+    <!-- XXX insert File Menu add-ins here -->
+  </menupopup>
+</overlay>
+

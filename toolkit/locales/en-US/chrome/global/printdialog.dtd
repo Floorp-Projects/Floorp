@@ -1,0 +1,29 @@
+<!-- extracted from printdialog.xul -->
+
+<!ENTITY printButton.label "Print">
+
+<!ENTITY printDialog.title "Print">
+
+<!ENTITY fpDialog.title "Save File">
+
+<!ENTITY fileCheck.label "Print to File">
+<!ENTITY propertiesButton.label "Properties...">
+<!ENTITY descText.label "Printer Description:">
+<!ENTITY printer.label "Printer">
+<!ENTITY printerInput.label "Printer Name:">
+
+<!ENTITY printrangeGroup.label "Print Range">
+<!ENTITY allpagesRadio.label "All Pages">
+<!ENTITY rangeRadio.label  "Pages">
+<!ENTITY frompageInput.label  "from">
+<!ENTITY topageInput.label  "to">
+<!ENTITY selectionRadio.label "Selection">
+
+<!ENTITY copies.label "Copies">
+<!ENTITY numCopies.label "Number of copies:">
+
+<!ENTITY printframeGroup.label "Print Frames">
+<!ENTITY aslaidoutRadio.label "As laid out on the screen">
+<!ENTITY selectedframeRadio.label  "The selected frame">
+<!ENTITY eachframesepRadio.label  "Each frame separately">
+

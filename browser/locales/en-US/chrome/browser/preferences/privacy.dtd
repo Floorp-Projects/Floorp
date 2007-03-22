@@ -1,0 +1,52 @@
+<!ENTITY  history.label "History">
+
+<!-- LOCALIZATION NOTE:
+  The entities rememberBefore.label and rememberAfter.label appear on a single
+  line in preferences as follows:
+
+  &rememberBefore.label  [ textbox for number of days ]   &rememberAfter.label;
+-->
+<!ENTITY  rememberBefore.label          "Remember visited pages for the last">
+<!ENTITY  rememberBefore.accesskey      "v">
+<!ENTITY  rememberAfter.label           "days.">
+
+<!ENTITY  rememberForms.label           "Remember what I enter in forms and the search bar">
+<!ENTITY  rememberForms.accesskey       "f">
+
+<!ENTITY  rememberDownloads.label       "Remember what I've downloaded">
+<!ENTITY  rememberDownloads.accesskey   "d">
+
+
+<!ENTITY  cookies.label                 "Cookies">
+
+<!ENTITY  acceptCookies.label           "Accept cookies from sites">
+<!ENTITY  acceptCookies.accesskey       "c">
+
+<!ENTITY  keepUntil.label               "Keep until:">
+<!ENTITY  keepUntil.accesskey           "K">
+
+<!ENTITY  expire.label                  "they expire">
+<!ENTITY  close.label                   "I close &brandShortName;">
+<!ENTITY  askEachTime.label             "ask me every time">
+
+<!ENTITY  cookieExceptions.label        "Exceptions...">
+<!ENTITY  cookieExceptions.accesskey    "E">
+
+<!ENTITY  showCookies.label             "Show Cookies...">
+<!ENTITY  showCookies.accesskey         "S">
+
+
+<!ENTITY  privateData.label             "Private Data">
+
+<!ENTITY  alwaysClear.label              "Always clear my private data when I close &brandShortName;">
+<!ENTITY  alwaysClear.accesskey          "w">
+
+<!ENTITY  askBeforeClear.label           "Ask me before clearing private data">
+<!ENTITY  askBeforeClear.accesskey       "A">
+
+<!ENTITY  clearDataSettings.label        "Settings...">
+<!ENTITY  clearDataSettings.accesskey    "t">
+
+<!ENTITY  clearDataNow.label             "Clear Now...">
+<!ENTITY  clearDataNow.label2            "Clear Now">
+<!ENTITY  clearDataNow.accesskey         "N">

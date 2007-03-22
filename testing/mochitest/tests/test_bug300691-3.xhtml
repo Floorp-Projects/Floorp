@@ -1,0 +1,51 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=300691
+-->
+<head>
+  <title>Test for Bug 300691</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=300691">Mozilla Bug 300691</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="text/javascript">
+  // First, setup.  We'll be toggling these variables as we go.
+  // Note that scripts don't execute immediately when you put text in them --
+  // they wait for the currently-running script to finish.
+  var test1Ran = false;
+  var test2Ran = false;
+  var test3Ran = false;
+</script>
+<script id="test1" type="text/javascript">test1Ran = true;</script>
+<script id="test2" type="text/javascript"></script>
+<script id="test3" type="text/javascript"></script>
+<script class="testbody" type="text/javascript">
+<![CDATA[
+  /** Test for Bug 300691 **/
+  $("test2").appendChild(document.createCDATASection("test2Ran = true"));
+  is(test2Ran, false, "Not yet 2!");
+
+  $("test3").appendChild(document.createCDATASection(""));
+]]>
+</script>
+<script type="text/javascript">
+  // Follow up on some of those
+  $("test3").firstChild.data = "test3Ran = true";
+  is(test3Ran, false, "Not yet 3!");
+</script>
+<script type="text/javascript">
+  is(test1Ran, true, "Should have run!");
+  is(test2Ran, true, "Should execute empty script on child append");
+  is(test3Ran, true, "Should execute empty script if child gets some text");
+</script>
+</pre>
+</body>
+</html>
+

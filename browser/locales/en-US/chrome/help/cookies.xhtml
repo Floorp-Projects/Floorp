@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"[
+    <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+    %brandDTD;
+    <!ENTITY % platformDTD SYSTEM "chrome://browser/locale/help/platformStrings.dtd" >
+    %platformDTD;
+]>
+<!--
+Contributors:
+  David Tenser <david.tenser@comhem.se> (original author)
+  Steffen Wilberg <steffen.wilberg@web.de>
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Managing Cookies</title>
+	<link rel="stylesheet" type="text/css" href="chrome://help/skin/helpFileLayout.css"/>
+</head>
+
+<body>
+<h1>Managing Cookies</h1>
+
+<p>This document explains what cookies are, how they are used, and how you can gain
+  control over the cookies stored on your computer by using the Cookie Manager in
+  &brandFullName;.</p>
+
+<div class="contentsBox">In this section:
+  <ul>
+    <li><a href="#what_is_a_cookie">What is a Cookie?</a></li>
+    <li><a href="#setting_up_cookie_rules">Setting Up Cookie Rules</a></li>
+    <li><a href="#accepting_and_blocking_cookies">Accepting and Blocking Cookies</a></li>
+    <li><a href="#cookies_exceptions">The Cookies Exceptions Window</a></li>
+    <li><a href="#view_cookies">The View Cookies Window</a></li>
+  </ul>
+</div>
+
+<h2 id="what_is_a_cookie">What is a Cookie?</h2>
+
+<p>A cookie is a file created by an Internet site to store information on your
+  computer, such as your preferences when visiting that site. When you visit a site
+  that uses cookies, the site might ask &brandShortName; to place one or more cookies
+  on your hard disk.</p>
+
+<p>Later, when you return to the site, &brandShortName; sends back the cookies that
+  belong to the site. This allows the site to present you with information customized
+  to fit your needs.</p>
+
+<p>Cookies can also store personally identifiable information. Personally identifiable
+  information is information that can be used to identify or contact you, such as
+  your name, e-mail address, home or work address, or telephone number. However, a
+  web site only has access to the personal information that you provide. For
+  example, a web site cannot determine your e-mail address unless you provide it. Also,
+  a web site cannot gain access to other information on your computer.</p>
+
+<p>When you use the default cookie settings, this activity is invisible to you,
+  and you won't know when a web site is setting a cookie or when &brandShortName;
+  is sending a web site its cookie. However, you can set your cookies
+  &pref.plural; so that you will be asked before a cookie is set. You can also
+  restrict the lifetime of cookies to your current &brandShortName; session.</p>
+
+<h2 id="setting_up_cookie_rules">Setting Up Cookie Rules</h2>
+
+<p>By default &brandShortName; accepts all cookies, including cookies which
+  would allow a site to recognize you effectively forever. If this doesn't suit
+  you, you can tell &brandShortName; to delete all cookies when you close
+  &brandShortName;:</p>
+
+<ol>
+  <li>Select &pref.menuPath; and open the <em>Privacy</em> panel.</li>
+  <li>Select the <em>I close &brandShortName;</em> &pref.singular; from the
+    <em>Keep until</em> menu.</li>
+</ol>
+
+<p>If you want to grant sites you trust the ability to store cookies permanently
+  (e.g., to allow you to log in automatically to a site), click <a
+  href="#cookies_exceptions"><em>Exceptions...</em></a>, enter the site address,
+  and click <em>Allow</em>.</p>
+
+<h3 id="all_the_settings">All the Settings</h3>
+
+<p>These are the &pref.plural; that affect how cookies are managed by
+  &brandShortName;:</p>
+
+<dl>
+  <dt>Accept cookies from sites</dt>
+  <dd><p>If you don't want any sites to store cookies on your computer, uncheck
+    this &pref.singular;. Note that some sites may not work properly when
+    cookies are disabled. If you want to grant certain sites the ability to
+    store cookies, open the <a href="#cookies_exceptions">Cookies Exceptions</a>
+    window by clicking <em>Exceptions...</em>, enter the site address, and click
+    <em>Allow</em> or <em>Allow for Session</em>.</p></dd>
+  <dt>Keep until</dt>
+  <dd>
+  <ul>
+    <li><em>they expire</em><br/>
+      If this &pref.singular; is selected, each cookie will be removed when the
+      site that set it has determined the cookie should expire.</li>
+    <li><em>I close &brandShortName;</em><br/>
+      If this &pref.singular; is selected, cookies will be removed when you
+      restart &brandShortName;.  Web sites requiring the use of cookies will
+      still work, but if you restart &brandShortName;, the web site will think
+      that you logged into the site for the first time again.</li>
+    <li><em>ask me every time</em><br/>
+      Display an alert every time a web site tries to store a cookie asking you
+      if you want that cookie stored.</li>
+  </ul>
+  </dd>
+</dl>
+
+<h2 id="accepting_and_blocking_cookies">Accepting and Blocking Cookies</h2>
+
+<p>If you've chosen <em>ask me every time</em> from the <em>Keep until</em>
+  menu, you'll see a dialog whenever a site tries to store a cookie on your
+  computer providing the following options:</p>
+
+<dl>
+  <dt>Allow</dt>
+  <dd>To allow this particular cookie, just click <em>Allow</em>. Use this if
+    you trust the site.</dd>
+  <dt>Allow for Session</dt>
+  <dd>If you want to allow this cookie for now, but have it deleted when you
+    exit &brandShortName;, click <em>Allow for Session</em>. Use this if the
+    site doesn't work without cookies, but you don't want to have a permanent
+    cookie stored for it.</dd>
+  <dt>Deny</dt>
+  <dd>If you don't want this cookie to be stored, click <em>Deny</em>. Use this
+    if you don't trust the site or suspect that it's compromising your privacy.</dd>
+  <dt>Use my choice for all cookies from this site</dt>
+  <dd>Select this checkbox before clicking any of the buttons if you want
+    &brandShortName; to remember your decision and not ask again. The site will
+    be added to the <a href="#cookies_exceptions">Cookie Exceptions</a> window,
+    where you can revert your choice should you wish to do so later.</dd>
+</dl>
+
+<h2 id="cookies_exceptions">The Cookies Exceptions Window</h2>
+
+<p>Access this window by clicking the <em>Exceptions...</em> button in cookies
+  &pref.plural;. Here you can make exceptions from your general cookies
+  &pref.plural; for specific sites. Using exceptions, you can allow all cookies,
+  reject all cookies, or allow all cookies but have them deleted when you exit
+  &brandShortName;, regardless of your other cookie settings.</p>
+
+<p>To add a site to this list, simply type the site's domain name in the field
+  labeled <em>Address of web site</em>. Then click <em>Block</em> to reject
+  cookies from the site, click <em>Allow</em> to allow cookies from the site,
+  or click <em>Allow for Session</em> to allow cookies from the site but have
+  them deleted when you exit &brandShortName;.</p>
+
+<p>To remove a site from this list, select it and click <em>Remove Site</em>. To
+  clear the list completely, click <em>Remove All Sites</em>. This will clear
+  the exceptions list so your general cookies &pref.plural; apply.</p>
+
+<h2 id="view_cookies">The View Cookies Window</h2>
+
+<p>Use the <em>View Cookies</em> window to view and remove cookies. To access it,
+  click the <em>View Cookies</em> button in cookies &pref.plural;.</p>
+
+<p>This window lists all cookies currently stored on your
+  computer, grouped by site. You can expand the sites and select a cookie to
+  display more information about it. You can also search for a site or a cookie
+  name by typing in the search bar.</p>
+
+<p>To remove a cookie from the list, select it and click <em>Remove Cookie</em>.
+  To remove a site's cookies, select the site and click <em>Remove
+  Cookie(s)</em>. To wipe all cookies, click <em>Remove All Cookies</em>.</p>
+
+<div class="contentsBox"><em>12 September 2006</em></div>
+<p>Copyright &copy; &copyright.years; Contributors to the Mozilla Help Viewer Project.</p>
+
+</body>
+</html>

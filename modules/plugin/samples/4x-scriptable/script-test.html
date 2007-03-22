@@ -1,0 +1,53 @@
+<html>
+<body>
+<embed type="application/mozilla-4x-scriptable-plugin" width=0 height=0>
+</embed>
+<script language="javascript">
+var plugin = document.embeds[0];
+document.write("version = " + plugin.version);
+
+function jsScriptObject(obj)
+{
+    // implementation detail, to allow unwrapping.
+    this.wrappedJSObject = obj;
+}
+jsScriptObject.prototype = {
+    getProperty : function(name)
+    {
+        return new jsScriptObject(this.wrappedJSObject[name]);
+    }
+    ,
+    setProperty : function(name, value)
+    {
+        this.wrappedJSObject[name] = value;
+    }
+    ,
+    evaluate : function(expression)
+    {
+        return new jsScriptObject(eval(expression));
+    }
+    ,
+    toString : function()
+    {
+        return this.wrappedJSObject.toString();
+    }
+    ,
+    toNumber : function()
+    {
+        return this.wrappedJSObject.valueOf();
+    }
+    ,
+    fromString : function(value)
+    {
+        return new jsScriptObject(value);
+    }
+    ,
+    fromNumber : function(value)
+    {
+        return new jsScriptObject(value);
+    }
+ };
+plugin.setWindow(new jsScriptObject(window));
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="main"
+        class="reftest-wait"
+        style="background-color: red;"
+        onload="HandleLoad()">
+  <script>
+    function HandleLoad() {
+      setTimeout(function() {
+        document.documentElement.style.backgroundColor = "green";
+        document.documentElement.className = "";
+      }, 100);
+    }
+  </script>
+</window>

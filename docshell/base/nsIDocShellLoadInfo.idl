@@ -1,0 +1,108 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla browser.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Travis Bogard <travis@netscape.com>
+ *   Viswanath Ramachandran <vishy@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/**
+ * The nsIDocShellLoadInfo interface defines an interface for specifying
+ * setup information used in a nsIDocShell::loadURI call.
+ */
+ 
+interface nsIURI;
+interface nsIInputStream;
+interface nsISHEntry;
+
+typedef long nsDocShellInfoLoadType;
+
+[scriptable, uuid(4f813a88-7aca-4607-9896-d97270cdf15e)]
+interface nsIDocShellLoadInfo : nsISupports
+{
+    /** This is the referrer for the load. */
+    attribute nsIURI referrer;
+
+    /** The owner of the load, that is, the entity responsible for 
+     *  causing the load to occur. This should be a nsIPrincipal typically.
+     */
+    attribute nsISupports owner;
+
+    /** If this attribute is true and no owner is specified, copy
+     *  the owner from the referring document.
+     */
+    attribute boolean inheritOwner;
+
+    /* these are load type enums... */
+    const long loadNormal = 0;                     // Normal Load
+    const long loadNormalReplace = 1;              // Normal Load but replaces current history slot
+    const long loadHistory = 2;                    // Load from history
+    const long loadReloadNormal = 3;               // Reload
+    const long loadReloadBypassCache = 4;
+    const long loadReloadBypassProxy = 5;
+    const long loadReloadBypassProxyAndCache = 6;
+    const long loadLink = 7;
+    const long loadRefresh = 8;
+    const long loadReloadCharsetChange = 9;
+    const long loadBypassHistory = 10;
+    const long loadStopContent = 11;
+    const long loadStopContentAndReplace = 12;
+    const long loadNormalExternal = 13;
+    const long loadNormalBypassCache = 14;
+    const long loadNormalBypassProxy = 15;
+    const long loadNormalBypassProxyAndCache = 16;
+
+    /** Contains a load type as specified by the load* constants */
+    attribute nsDocShellInfoLoadType loadType;
+
+    /** SHEntry for this page */
+    attribute nsISHEntry SHEntry;
+
+    /** Target for load, like _content, _blank etc. */
+    attribute wstring target;
+
+    /** Post data */
+    attribute nsIInputStream postDataStream;
+
+    /** Additional headers */
+    attribute nsIInputStream headersStream;
+
+    /** True if the referrer should be sent, false if it shouldn't be
+     *  sent, even if it's available. This attribute defaults to true.
+     */
+    attribute boolean sendReferrer;
+};

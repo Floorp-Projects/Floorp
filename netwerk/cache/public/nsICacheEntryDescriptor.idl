@@ -1,0 +1,179 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is nsICacheEntryDescriptor.idl, released
+ * February 10, 2001.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Gordon Sheridan <gordon@netscape.com>
+ *   Patrick Beard   <beard@netscape.com>
+ *   Darin Fisher    <darin@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsICacheVisitor.idl"
+#include "nsICache.idl"
+
+interface nsISimpleEnumerator;
+interface nsICacheListener;
+interface nsIInputStream;
+interface nsIOutputStream;
+interface nsIFile;
+interface nsICacheMetaDataVisitor;
+
+
+[scriptable, uuid(49c1a11d-f5d2-4f09-8262-551e64908ada)]
+interface nsICacheEntryDescriptor : nsICacheEntryInfo
+{
+    /**
+     * Set the time at which the cache entry should be considered invalid (in
+     * seconds since the Epoch).
+     */
+    void setExpirationTime(in PRUint32 expirationTime);
+
+    /**
+     * Set the cache entry data size.  This will fail if the cache entry
+     * IS stream based.
+     */
+    void setDataSize(in unsigned long size);
+
+    /**
+     * Open blocking input stream to cache data.  This will fail if the cache
+     * entry IS NOT stream based.  Use the stream transport service to
+     * asynchronously read this stream on a background thread.  The returned
+     * stream MAY implement nsISeekableStream.
+     *
+     * @param offset
+     *        read starting from this offset into the cached data.  an offset
+     *        beyond the end of the stream has undefined consequences.
+     *
+     * @return blocking, unbuffered input stream.
+     */
+    nsIInputStream openInputStream(in unsigned long offset);
+
+    /**
+     * Open blocking output stream to cache data.  This will fail if the cache
+     * entry IS NOT stream based.  Use the stream transport service to
+     * asynchronously write to this stream on a background thread.  The returned
+     * stream MAY implement nsISeekableStream.
+     *
+     * If opening an output stream to existing cached data, the data will be
+     * truncated to the specified offset.
+     *
+     * @param offset
+     *        write starting from this offset into the cached data.  an offset
+     *        beyond the end of the stream has undefined consequences.
+     *
+     * @return blocking, unbuffered output stream.
+     */
+    nsIOutputStream openOutputStream(in unsigned long offset);
+
+    /**
+     * Get/set the cache data element.  This will fail if the cache entry
+     * IS stream based.  The cache entry holds a strong reference to this
+     * object.  The object will be released when the cache entry is destroyed.
+     */
+    attribute nsISupports cacheElement;
+     
+    /**
+     * Get the access granted to this descriptor.  See nsICache.idl for the
+     * definitions of the access modes and a thorough description of their
+     * corresponding meanings.
+     */
+    readonly attribute nsCacheAccessMode accessGranted;
+    
+    /**
+     * Get/set the storage policy of the cache entry.  See nsICache.idl for
+     * the definitions of the storage policies.
+     */
+    attribute nsCacheStoragePolicy storagePolicy;
+
+    /**
+     * Get the disk file associated with the cache entry.
+     */
+    readonly attribute nsIFile file;
+
+    /**
+     * Get/set security info on the cache entry for this descriptor.  This fails
+     * if the storage policy is not STORE_IN_MEMORY.
+     */
+    attribute nsISupports securityInfo;
+    
+    /**
+     * Doom the cache entry this descriptor references in order to slate it for 
+     * removal.  Once doomed a cache entry cannot be undoomed.
+     *
+     * A descriptor with WRITE access can doom the cache entry and choose to
+     * fail pending requests.  This means that pending requests will not get
+     * a cache descriptor.  This is meant as a tool for clients that wish to
+     * instruct pending requests to skip the cache.
+     */
+    void doom();
+    void doomAndFailPendingRequests(in nsresult status);
+    
+    /**
+     * A writer must validate this cache object before any readers are given
+     * a descriptor to the object.
+     */
+    void markValid();
+
+    /**
+     *  Explicitly close the descriptor (optional).
+     */
+    
+    void close();
+
+    /**
+     * Methods for accessing meta data.  Meta data is a table of key/value
+     * string pairs.  The strings do not have to conform to any particular
+     * charset, but they must be null terminated.
+     */
+    string getMetaDataElement(in string key);
+    void   setMetaDataElement(in string key, in string value);
+    
+    /**
+     * Visitor will be called with key/value pair for each meta data element.
+     */
+    void   visitMetaData(in nsICacheMetaDataVisitor  visitor);
+};
+
+
+
+[scriptable, uuid(22f9a49c-3cf8-4c23-8006-54efb11ac562)]
+interface nsICacheMetaDataVisitor : nsISupports
+{
+    /**
+     * Called for each key/value pair in the meta data for a cache entry
+     */
+    boolean visitMetaDataElement(in string  key,
+                                 in string  value);
+};

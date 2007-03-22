@@ -1,0 +1,21 @@
+<html>
+<title>
+Tests HTML buttons and min/max-width, quirks mode
+</title>
+<body>
+<div>
+<button style="width: 200px">200px button</button>
+</div>
+<div>
+<button style="min-width: 200px">200px button</button>
+</div>
+<div>
+<button style="max-width: 200px"><div style="width: 300px">200px button</div></button>
+</div>
+<div>
+<button style="max-width: 200px">
+  <img src="http://www.mozilla.org/images/mozilla-banner.gif" style="width: 101px">
+  <img src="http://www.mozilla.org/images/mozilla-banner.gif" style="width: 101px"></button>
+</div>
+</body>
+</html>

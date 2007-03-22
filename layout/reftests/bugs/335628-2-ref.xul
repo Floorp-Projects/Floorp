@@ -1,0 +1,7 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <hbox orient="horizontal">
+    <label value="a"/>
+    <textbox style="visibility: hidden"/>
+    <label value="b"/>
+  </hbox>
+</window>

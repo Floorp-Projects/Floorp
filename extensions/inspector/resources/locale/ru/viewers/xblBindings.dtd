@@ -1,0 +1,9 @@
+<!ENTITY bindingContent.label "Содержимое">
+<!ENTITY bindingGetter.label "Получающий">
+<!ENTITY bindingHandlers.label "Обработчики">
+<!ENTITY bindingMethods.label "Методы">
+<!ENTITY bindingProperties.label "Свойства">
+<!ENTITY bindingProperty.label "Свойство">
+<!ENTITY bindingResources.label "Ресурсы">
+<!ENTITY bindingSetter.label "Установивший">
+<!ENTITY bindingSourceCode.label "Исходный код">

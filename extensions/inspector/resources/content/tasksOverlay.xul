@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay SYSTEM "chrome://inspector/locale/tasksOverlay.dtd" >
+
+<overlay id="eInspectorTasksOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript" src="chrome://inspector/content/hooks.js"/>
+
+  <commandset id="tasksCommands">
+    <command id="Tasks:Inspector" oncommand="inspectDOMDocument();"/>
+    <command id="Tasks:InspectPage" oncommand="inspectDOMDocument(_content.document);"/>
+  </commandset>
+
+  <keyset id="tasksKeys">
+    <key id="key_inspectPage" key="i" modifiers="accel,shift" command="Tasks:InspectPage"/>
+  </keyset>
+  
+  <menupopup id="toolsPopup">
+    <menuitem id="menu_inspector" label="&inspectorTaskCmd.label;" 
+              accesskey="&inspectorTaskCmd.accesskey;" command="Tasks:Inspector"/>
+  </menupopup>
+
+</overlay>

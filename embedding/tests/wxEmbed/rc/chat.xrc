@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+
+<resource version="2.3.0.1">
+
+  <object class="wxFrame" name="chat_frame">
+    <title>wxEmbed Chat</title>
+    <size>300,300</size>
+    <style>wxCAPTION|wxSYSTEM_MENU|wxRESIZE_BORDER|wxRESIZE_BOX|wxMINIMIZE_BOX|wxMAXIMIZE_BOX|wxCLIP_CHILDREN</style>
+    <pos>-1,-1</pos>
+
+    <!-- Mail menu -->
+    <object class="wxMenuBar" name="mainmenu">
+      <style>wxMB_DOCKABLE</style>
+      <object_ref ref="menu_file"/>
+    </object>
+
+    <object class="wxFlexGridSizer">
+      <cols>1</cols>
+      <rows>2</rows>
+      <vgap>0</vgap>
+      <hgap>0</hgap>
+      <growablecols>0</growablecols>
+      <growablerows>0</growablerows>
+
+      <!-- Gecko Window -->
+
+      <object class="sizeritem">
+        <flag>wxGROW|wxALL</flag>
+        <object class="wxPanel" name="gecko" subclass="GeckoWindow">
+          <style>wxCLIP_CHILDREN|wxSUNKEN_BORDER</style>
+          <size>500,280</size>
+        </object>
+      </object>
+      <object class="sizeritem">
+        <flag>wxGROW|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+        <object class="wxTextCtrl" name="chat">
+          <style>wxTE_PROCESS_ENTER</style>
+        </object>
+      </object>
+
+    </object>
+
+
+  </object>
+</resource>

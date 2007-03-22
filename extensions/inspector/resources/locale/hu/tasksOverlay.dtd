@@ -1,0 +1,7 @@
+<!ENTITY inspectorTaskCmd.label "DOM Inspector">
+<!ENTITY inspectorTaskCmd.commandkey "i">
+<!ENTITY inspectorTaskCmd.accesskey.ff "n">
+<!ENTITY inspectorTaskCmd.accesskey "I">
+
+<!ENTITY inspectPageTaskCmd.label "Oldal vizsgálata">
+<!ENTITY inspectPageTaskCmd.accesskey "i">

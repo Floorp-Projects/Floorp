@@ -1,0 +1,14 @@
+<!ENTITY Inspector.label "DOM Inspector">
+<!ENTITY Sidebar.label "Sidebar">
+<!ENTITY elementBlinking.label "Blinken von Elementen">
+<!ENTITY blinkSelectedElement.label "Ausgewähltes Element blinken lassen">
+<!ENTITY borderColor.label "Rahmenfarbe">
+<!ENTITY borderWidth.label "Rahmenbreite">
+<!ENTITY px.label "(px)">
+<!ENTITY blinkDuration.label "Blinkdauer">
+<!ENTITY ms.label "(ms)">
+<!ENTITY blinkSpeed.label "Blinkgeschwindigkeit">
+<!ENTITY invertColors.label "Farben invertieren">
+<!ENTITY installHowTo.label "Die DOM Inspector Sidebar ist momentan nicht installiert. Klicken Sie die 'Installieren'-Schaltfläche, um Sie zu Ihrer Sidebar hinzuzufügen.">
+<!ENTITY install.label "Installieren">
+<!ENTITY addNavigatorHooks.label "Kontextmenüs in Navigator hinzufügen">

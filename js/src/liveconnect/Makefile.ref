@@ -1,0 +1,169 @@
+# -*- Mode: makefile -*-
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+#
+# JSRef GNUmake makefile.
+#
+
+DEPTH = ..
+
+# Create JAR file
+DIRS += classes
+
+#
+# XCFLAGS may be set in the environment or on the gmake command line
+#
+CFLAGS          += $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) \
+                  -DJSFILE $(XCFLAGS)
+LDFLAGS		+= -lm $(XLDFLAGS)
+
+# For purify
+PURE_CFLAGS     = -DXP_UNIX $(OPTIMIZER) $(PURE_OS_CFLAGS) $(DEFINES) \
+                  $(INCLUDES) $(XCFLAGS)
+
+#
+# LC file lists
+#
+LC_HFILES =		\
+	jsj_hash.h      \
+	jsj_private.h   \
+	jsjava.h        \
+	netscape_javascript_JSObject.h \
+	nsCLiveconnectFactory.h        \
+	nsILiveconnect.h               \
+	nsISecureLiveconnect.h         \
+	nsISecurityContext.h           \
+	$(NULL)
+
+OTHER_HFILES =		\
+	jsj.msg		\
+	$(NULL)
+
+HFILES = $(LC_HFILES) $(OTHER_HFILES)
+
+LC_CFILES =	\
+	jsj.c \
+	jsj_JSObject.c \
+	jsj_JavaArray.c \
+	jsj_JavaClass.c \
+	jsj_JavaMember.c \
+	jsj_JavaObject.c \
+	jsj_JavaPackage.c \
+	jsj_array.c \
+	jsj_class.c \
+	jsj_convert.c \
+	jsj_field.c \
+	jsj_hash.c \
+	jsj_method.c \
+	jsj_utils.c \
+	$(NULL)
+
+LIB_CFILES  = $(LC_CFILES)
+
+PROG_FILE = js
+
+include $(DEPTH)/config.mk
+include config/$(OS_CONFIG).mk
+
+INCLUDES   += -I. -I.. -I../$(OBJDIR)
+
+ifdef USE_MSVC
+OTHER_LIBS += $(DEPTH)/fdlibm/$(OBJDIR)/fdlibm.lib
+else
+OTHER_LIBS += -L$(DEPTH)/fdlibm/$(OBJDIR) -lfdm -L../$(OBJDIR) -ljs
+endif
+
+#
+# Line editing support.
+# Define JS_READLINE or JS_EDITLINE to enable line editing in the
+# lcshell command-line interpreter.
+#
+ifdef JS_READLINE
+# For those platforms with the readline library installed.
+DEFINES += -DEDITLINE
+OTHER_LIBS += -lreadline
+else
+ifdef JS_EDITLINE
+# Use the editline library from ../editline.
+PREDIRS += ../editline
+DEFINES += -DEDITLINE
+OTHER_LIBS += -L../editline/$(OBJDIR) -ledit
+endif
+endif
+
+NSPR_LIBSUFFIX = 4
+
+ifdef JS_THREADSAFE
+DEFINES += -DJS_THREADSAFE
+INCLUDES += -I../../../dist/$(OBJDIR)/include
+ifdef USE_MSVC
+OTHER_LIBS += $(DEPTH)/../../dist/$(OBJDIR)/lib/libnspr${NSPR_LIBSUFFIX}.lib
+else
+OTHER_LIBS += -L$(DEPTH)/../../dist/$(OBJDIR)/lib -lnspr${NSPR_LIBSUFFIX}
+endif
+endif
+
+ifdef USE_MSVC
+LIBRARY = $(OBJDIR)/jsj.lib
+SHARED_LIBRARY = $(OBJDIR)/jsj.dll
+PROGRAM = $(OBJDIR)/lcshell.exe
+else
+LIBRARY = $(OBJDIR)/libjsj.a
+SHARED_LIBRARY = $(OBJDIR)/libjsj.$(SO_SUFFIX)
+PROGRAM = $(OBJDIR)/lcshell
+endif
+
+include $(DEPTH)/rules.mk
+
+ifdef USE_MSVC
+$(OBJDIR)/$(PROG_FILE)_lc.obj: ../$(PROG_FILE).c
+	@$(MAKE_OBJDIR)
+	$(CC) -Fo$@ -c $(CFLAGS) -DLIVECONNECT ../$(PROG_FILE).c
+
+$(PROGRAM): $(OBJDIR)/$(PROG_FILE)_lc.obj $(OBJDIR)/jsj_simpleapi.obj $(LIBRARY)
+	link.exe -out:"$@" $(EXE_LINK_FLAGS) ../$(OBJDIR)/js32.lib $(OTHER_LIBS) $?
+else
+$(OBJDIR)/$(PROG_FILE).o: ../$(PROG_FILE).c
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ -c $(CFLAGS) -DLIVECONNECT ../$(PROG_FILE).c
+
+$(PROGRAM): $(OBJDIR)/$(PROG_FILE).o $(OBJDIR)/jsj_simpleapi.o
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ $(CFLAGS) $+ $(LIBRARY) ../$(OBJDIR)/libjs.a $(LDFLAGS) $(OTHER_LIBS)
+endif

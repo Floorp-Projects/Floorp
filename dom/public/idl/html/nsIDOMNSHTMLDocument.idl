@@ -1,0 +1,118 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2000
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Vidur Apparao <vidur@netscape.com> (original author)
+ *   Johnny Stenback <jst@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "domstubs.idl"
+
+[scriptable, uuid(79beb289-3644-4b54-9432-9fb993945629)]
+interface nsIDOMNSHTMLDocument : nsISupports
+{
+  readonly attribute long                 width;
+  readonly attribute long                 height;
+           attribute DOMString            alinkColor;
+           attribute DOMString            linkColor;
+           attribute DOMString            vlinkColor;
+           attribute DOMString            bgColor;
+           attribute DOMString            fgColor;
+           attribute DOMString            domain;
+
+  readonly attribute nsIDOMHTMLCollection embeds;
+
+  DOMString                 getSelection();
+
+  // This is the internal version of open(); note that the version
+  // scriptable with JS is defined entirely in classinfo.
+  // If aContentType is not something supported by nsHTMLDocument and
+  // the HTML content sink, trying to write to the document will
+  // probably throw.
+  // Pass aReplace = true to trigger a replacement of the previous
+  // document in session history; pass false for normal history handling.
+  nsIDOMDocument            open(in ACString aContentType,
+                                 in boolean aReplace);
+
+  // Scriptable versions of write(), writeln(), clear().
+  void                      write();
+  void                      writeln();
+  void                      clear();
+
+  /**
+   * @deprecated These are old Netscape 4 methods. Do not use,
+   *             the implementation is no-op.
+   */
+  void                      captureEvents(in long eventFlags);
+  void                      releaseEvents(in long eventFlags);
+  void                      routeEvent(in nsIDOMEvent evt);
+
+  // returns "BackCompat" if we're in quirks mode,
+  // or "CSS1Compat" if we're in strict mode
+  readonly attribute DOMString            compatMode;
+
+  // mapped to attribute embeds for NS4 compat
+  readonly attribute nsIDOMHTMLCollection plugins;
+  
+
+  /**
+    * Midas additions
+    */
+  attribute DOMString       designMode;
+
+  boolean                   execCommand(in DOMString commandID,
+                                        in boolean doShowUI,
+                                        in DOMString value);
+
+  // returns true if the help is being shown for command (false if not)
+  boolean                   execCommandShowHelp(in DOMString commandID);
+
+  // returns true if the command is enabled (false otherwise)
+  boolean                   queryCommandEnabled(in DOMString commandID);
+  
+  // returns true if the command is in a indeterminate state (false otherwise)
+  boolean                   queryCommandIndeterm(in DOMString commandID);
+
+  // returns true if the command has been executed (false otherwise)
+  boolean                   queryCommandState(in DOMString commandID);
+
+  // returns true if the command is supported on the current range
+  boolean                   queryCommandSupported(in DOMString commandID);
+
+  //
+  DOMString                 queryCommandText(in DOMString commandID);
+
+  // returns the current value of the document or current selection for command
+  DOMString                 queryCommandValue(in DOMString commandID);
+};

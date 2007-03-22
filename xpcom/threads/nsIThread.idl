@@ -1,0 +1,117 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla code.
+ *
+ * The Initial Developer of the Original Code is Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2006
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Darin Fisher <darin@meer.net>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsIEventTarget.idl"
+
+[ptr] native PRThread(PRThread);
+
+/**
+ * This interface provides a high-level abstraction for an operating system
+ * thread.
+ *
+ * Threads have a built-in event queue, and a thread is an event target that
+ * can receive nsIRunnable objects (events) to be processed on the thread.
+ *
+ * See nsIThreadManager for the API used to create and locate threads.
+ */
+[scriptable, uuid(9c889946-a73a-4af3-ae9a-ea64f7d4e3ca)]
+interface nsIThread : nsIEventTarget
+{
+  /**
+   * @returns
+   *   The NSPR thread object corresponding to this nsIThread.
+   */
+  [noscript] readonly attribute PRThread PRThread;
+
+  /**
+   * Shutdown the thread.  This method prevents further dispatch of events to
+   * the thread, and it causes any pending events to run to completion before
+   * the thread joins (see PR_JoinThread) with the current thread.  During this
+   * method call, events for the current thread may be processed.
+   *
+   * This method MAY NOT be executed from the thread itself.  Instead, it is
+   * meant to be executed from another thread (usually the thread that created
+   * this thread or the main application thread).  When this function returns,
+   * the thread will be shutdown, and it will no longer be possible to dispatch
+   * events to the thread.
+   *
+   * @throws NS_ERROR_UNEXPECTED
+   *   Indicates that this method was erroneously called when this thread was
+   *   the current thread, that this thread was not created with a call to
+   *   nsIThreadManager::NewThread, or if this method was called more than once
+   *   on the thread object.
+   */
+  void shutdown();
+
+  /**
+   * This method may be called to determine if there are any events ready to be
+   * processed.  It may only be called when this thread is the current thread.
+   *
+   * Because events may be added to this thread by another thread, a "false"
+   * result does not mean that this thread has no pending events.  It only
+   * means that there were no pending events when this method was called.
+   *
+   * @returns
+   *   A boolean value that if "true" indicates that this thread has one or
+   *   more pending events.
+   *
+   * @throws NS_ERROR_UNEXPECTED
+   *   Indicates that this method was erroneously called when this thread was
+   *   not the current thread.
+   */
+  boolean hasPendingEvents();
+
+  /**
+   * Process the next event.  If there are no pending events, then this method
+   * may wait -- depending on the value of the mayWait parameter -- until an
+   * event is dispatched to this thread.  This method is re-entrant but may
+   * only be called if this thread is the current thread.
+   *
+   * @param mayWait
+   *   A boolean parameter that if "true" indicates that the method may block
+   *   the calling thread to wait for a pending event.
+   *
+   * @returns
+   *   A boolean value that if "true" indicates that an event was processed.
+   *
+   * @throws NS_ERROR_UNEXPECTED
+   *   Indicates that this method was erroneously called when this thread was
+   *   not the current thread.
+   */
+  boolean processNextEvent(in boolean mayWait);
+};

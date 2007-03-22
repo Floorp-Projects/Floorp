@@ -1,0 +1,9 @@
+<!ENTITY bindingContent.label "内容">
+<!ENTITY bindingGetter.label "取值方法">
+<!ENTITY bindingHandlers.label "处理方法">
+<!ENTITY bindingMethods.label "方法">
+<!ENTITY bindingProperties.label "属性">
+<!ENTITY bindingProperty.label "属性">
+<!ENTITY bindingResources.label "资源">
+<!ENTITY bindingSetter.label "设值方法">
+<!ENTITY bindingSourceCode.label "源代码">

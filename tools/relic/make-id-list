@@ -1,0 +1,85 @@
+#!/usr/bin/perl -w
+#
+# This is a script to take a long list of Initial Developers on stdin and
+# output a de-duped, munged list suitable for putting into about:licence or
+# other similar place in order to comply with the MPL section 3.3
+
+# Equivalence mappings; having these is easier than updating hundreds of files
+# to make them all use the same variant of each name.
+my %equivalents = (
+  "ActiveState Tool Corporation" => "ActiveState Tool Corp",
+  "Activestate Tool Corp" => "ActiveState Tool Corp",
+  "ActiveState Tool Corp." => "ActiveState Tool Corp",
+
+  "Crocodile Clips Ltd." => "Crocodile Clips Ltd",
+
+  "IBM" => "IBM Corporation",
+  "IBM Corp" => "IBM Corporation",
+  "International Business Machines Corporation" => "IBM Corporation",
+
+  "a mozilla.org contributor" => "Mozilla Foundation",
+  "Mozilla" => "Mozilla Foundation",
+  "Mozilla.com" => "Mozilla Corporation",
+  "The Mozilla Foundation" => "Mozilla Foundation",
+  "the Mozilla Foundation" => "Mozilla Foundation",
+  "Mozilla.org" => "Mozilla Foundation",
+  "the Mozilla Organization" => "Mozilla Foundation",
+  "mozilla.org" => "Mozilla Foundation",
+
+  "Netscape" => "Netscape Communications Corporation",
+  "Netscape Corp" => "Netscape Communications Corporation",
+  "Netscape Communications" => "Netscape Communications Corporation",
+  "Netscape Communications, Inc" => "Netscape Communications Corporation",
+  "Netscape Communications Corp" => "Netscape Communications Corporation",
+  "Netscape Communications Corp." => "Netscape Communications Corporation",
+  "Netscape Communications Corp, Inc" => "Netscape Communications Corporation",
+
+  "Novell" => "Novell Inc",
+  "Novell, Inc" => "Novell Inc",
+
+  "Red Hat Software" => "Red Hat Inc",
+  "Red Hat" => "Red Hat Inc",
+  "Red Hat, Inc" => "Red Hat Inc",
+
+  "RSA Security INC" => "RSA Security Inc",
+  "RSA Security" => "RSA Security Inc",
+  "RSA Security, Inc" => "RSA Security Inc",
+
+  "Sun Microsystem" => "Sun Microsystems Inc",
+  "Sun Microsystems" => "Sun Microsystems Inc",
+  "Sun Microsystems, Inc." => "Sun Microsystems Inc",
+  "Sun Microsystems, Inc" => "Sun Microsystems Inc",
+
+  "bmlk\@gmx.de" => "Bernd Mielke",
+  "davel\@mozilla.com" => "Dave Liebreich",
+  "Digital Creations 2" => "Digital Creations 2 Inc",
+  "Douglas F. Turner II" => "Doug Turner",
+  "Frank Schoenheit" => "Frank Schönheit",
+  "HÃ¥kan Waara" => "Håkan Waara",
+  "Kenneth Herron" => "Ken Herron",
+  "sqlite3", "The sqlite Project",
+  "The University Of Queensland" => "The University of Queensland",
+);
+
+# 'indevs' == "Initial Developers"
+my %indevs;
+
+while (<>)
+{
+  chomp;
+  my @candidates = split(" and ", $_);
+  foreach my $indev (@candidates)
+  {
+    # Chop off email addresses and suchlike
+    $indev =~ s/[<,\(].*$//;
+
+    $indev =~ s/^\s*//;
+    $indev =~ s/\s*$//;
+
+    $indev = $equivalents{$indev} || $indev;
+    $indevs{$indev} = 1;
+  }
+}
+
+# Print out the list in a form suitable for pasting into about:licence.
+print join (",\n", sort {lc $a cmp lc $b} keys %indevs);

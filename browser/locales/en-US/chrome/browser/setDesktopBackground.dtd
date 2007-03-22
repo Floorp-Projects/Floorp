@@ -1,0 +1,9 @@
+<!ENTITY position.label             "Position:">
+<!ENTITY tile.label                 "Tile">
+<!ENTITY center.label               "Center">
+<!ENTITY stretch.label              "Stretch">
+<!ENTITY preview.label              "Preview">
+<!ENTITY color.label                "Color:">
+<!ENTITY setDesktopBackground.title "Set Desktop Background">
+<!ENTITY openDesktopPrefs.label     "Open Desktop Preferences">
+<!ENTITY closeWindow.key            "w">

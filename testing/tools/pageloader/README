@@ -1,0 +1,13 @@
+This is a pageloader extension for Firefox. It cycles through a list of URLs 
+specified in a text file by the user (one URL per line), and reports statistics
+and raw data about the time each page took to load.
+
+This data is dumped to the console, so the browser.dom.window.dump.enabled pref
+(boolean) must be set to "true", and on Windows Firefox must be run with the
+"-console" command line switch.
+
+This test is intended to be run standalone from a chrome URL, e.g.:
+firefox -chrome chrome://pageloader/content/pageloader.xul
+
+The window will close and the data will be dumped to the console when the
+test has completed.

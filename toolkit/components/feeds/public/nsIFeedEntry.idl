@@ -1,0 +1,79 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Feed Processor.
+ *
+ * The Initial Developer of the Original Code is Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2006
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Ben Goodger <beng@google.com>
+ *   Robert Sayre <sayrer@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsIFeedContainer.idl"
+interface nsIArray;
+
+/**
+ * An nsIFeedEntry represents an Atom or RSS entry/item. Summary
+ * and/or full-text content may be available, but callers will have to
+ * check both.
+ */
+[scriptable, uuid(31bfd5b4-8ff5-4bfd-a8cb-b3dfbd4f0a5b)]
+interface nsIFeedEntry : nsIFeedContainer {
+
+  /**
+  * Uses description, subtitle, summary, content and extensions
+  * to generate a summary. 
+  * 
+  */
+  attribute nsIFeedTextConstruct summary;
+
+  /**
+   * The date the entry was published, in RFC822 form. Parsable by JS
+   * and mail code.
+   */
+  attribute AString published;
+
+  /**
+  * Uses atom:content and content:encoded to provide
+  * a 'full text' view of an entry.
+  *
+  */
+  attribute nsIFeedTextConstruct content;
+
+  /**
+  * Enclosures are podcasts, photocasts, etc.
+  */
+  attribute nsIArray enclosures;
+
+  /**
+  * Enclosures, etc. that might be displayed inline.
+  */
+  attribute nsIArray mediaContent;
+};

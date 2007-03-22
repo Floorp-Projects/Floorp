@@ -1,0 +1,166 @@
+body {
+  margin: 0px;
+  padding: 0px;
+  font: Arial, sans-serif;
+}
+
+/* header stuff */
+.spacetrace-header {
+  color: white;
+  background: green;
+/*  min-height: 2em; */
+}
+
+.spacetrace-title {
+  font-size: x-large;
+  font-weight: bold;
+  padding: 0.5em;
+}
+
+.navigate {
+/*  background: lightgrey; */
+  color: black;
+  position: absolute;
+  right: 0px;
+  margin: 0px;
+  padding: 2px;
+}
+
+.header-item {
+  border: 1px outset;
+  color: ButtonText;
+  background: ButtonFace;
+  margin: 0px;
+  padding: 2px;
+}
+
+.header-item > a {
+  font-weight: bold;
+  text-decoration: none;
+}
+
+
+.header-item {
+  font-weight: bold;
+}
+
+.category-title {
+  font-weight: bold;
+}
+
+/* footer stuff */
+.footer-separator {
+  border: 1px inset;
+  display: none;
+}
+
+.footer {
+  text-align: right;
+  display: none;
+}
+
+.footer-text {
+  font-style: italic;
+}
+
+.option-box {
+  border: solid black;
+  background: grey;
+  padding-left: .5em;
+  padding-right: .5em;
+  margin: .5em;
+}
+
+.option-name {
+  font-weight: bold;
+  margin: 1em;
+}
+
+.option-box input[type=text]
+{
+  border: inset thin;
+  padding: 2px;
+}
+
+.option-help {
+  white-space: pre;
+  right: 0px;
+  background: white;
+  padding: 0.5em;
+  border: thin inset;
+}
+
+.callsite-header {
+  padding: 10px;
+}
+/* data tables */
+#callsite-details {
+  position: absolute;
+  right: 1px;
+  top: 40px;
+  width: 20%;
+}
+
+#callsites {
+  width: 75%;
+  height: 40%;
+  overflow: scroll;
+}
+
+#caller-stack {
+  height: 45%;
+  width: 75%;
+  overflow: scroll;
+  padding-top: 5px;
+}
+
+#allocations {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  height: 40%;
+  width: 20%;
+  overflow: scroll;
+}
+
+/* headers at the top of specific call site pages */
+
+table.summary {
+  border: 1px solid black;
+}
+
+/* lists of callsites/etc */
+table.data td {
+  border-top: 1px solid;
+  padding: 5px;
+}
+
+table.data {
+  clear: right;
+  border-collapse: collapse;
+}
+
+tr.row-header {
+  background: #009090;
+  width: 100%;
+}
+
+table.data th {
+  padding: 5px;
+  margin: 0px;
+  text-align: right;
+}
+
+th.callsite {
+  text-align: left !important;
+}
+
+/* links to source */
+.source-extra {
+  display: none;
+}
+
+a.source, a.callsite {
+  text-decoration: none;
+}
+

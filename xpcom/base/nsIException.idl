@@ -1,0 +1,101 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Interfaces for representing cross-language exceptions and stack traces.
+ */
+
+
+#include "nsISupports.idl"
+#include "nsIProgrammingLanguage.idl"
+
+// XXX - most "string"s in this file should probably move to Unicode
+//       so may as well use AStrings...
+
+
+[scriptable, uuid(91d82105-7c62-4f8b-9779-154277c0ee90)]
+interface nsIStackFrame : nsISupports
+{
+    // see nsIProgrammingLanguage for list of language consts
+    readonly attribute PRUint32                language;
+    readonly attribute string                  languageName;
+    readonly attribute string                  filename;
+    readonly attribute string                  name;
+    // Valid line numbers begin at '1'. '0' indicates unknown.
+    readonly attribute PRInt32                 lineNumber;
+    readonly attribute string                  sourceLine;
+    readonly attribute nsIStackFrame           caller;
+
+    string toString();
+};
+
+[scriptable, uuid(F3A8D3B4-C424-4edc-8BF6-8974C983BA78)]
+interface nsIException : nsISupports
+{
+    // A custom message set by the thrower.
+    readonly attribute string                  message;
+    // The nsresult associated with this exception.
+    readonly attribute nsresult                result;
+    // The name of the error code (ie, a string repr of |result|)
+    readonly attribute string                  name;
+
+    // Filename location.  This is the location that caused the
+    // error, which may or may not be a source file location.
+    // For example, standard language errors would generally have
+    // the same location as their top stack entry.  File
+    // parsers may put the location of the file they were parsing,
+    // etc.
+
+    // null indicates "no data"
+    readonly attribute string                  filename;
+    // Valid line numbers begin at '1'. '0' indicates unknown.
+    readonly attribute PRUint32                lineNumber;
+    // Valid column numbers begin at 0. 
+    // We don't have an unambiguous indicator for unknown.
+    readonly attribute PRUint32                columnNumber;
+
+    // A stack trace, if available.
+    readonly attribute nsIStackFrame           location;
+    // An inner exception that triggered this, if available.
+    readonly attribute nsIException            inner;
+
+    // Arbitary data for the implementation.
+    readonly attribute nsISupports             data;
+
+    // A generic formatter - make it suitable to print, etc.
+    string toString();
+};

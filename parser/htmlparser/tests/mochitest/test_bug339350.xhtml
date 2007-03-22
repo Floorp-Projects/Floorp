@@ -1,0 +1,61 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!-- 
+Tests by Sam Ruby - WTFPL License (http://sam.zoy.org/wtfpl/)
+
+http://www.intertwingly.net/blog/2006/10/03/Firefox-XHTML-innerHTML-quirk#comments
+https://bugzilla.mozilla.org/show_bug.cgi?id=339350
+-->
+<head>
+  <!-- XHTML needs the packed version -->
+  <script type="text/javascript" src="/MochiKit/packed.js"/>      
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"/>   
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a  target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=339350">Mozilla Bug 339350</a>
+<div style="display: none">
+  <table border="1" cellspacing="0">
+  <thead>
+  <th></th>
+  <th>plain</th>
+  <th>brackets</th>
+  <th>braces</th>
+  </thead>
+
+  <tr>
+  <th>innerHTML</th>
+  <td><div id="i1"/></td>
+  <td style="background:yellow"><div id="i2"/></td>
+  <td><div id="i3"/></td>
+  </tr>
+  <tr>
+  <th>textNode</th>
+  <td><div id="t1"/></td>
+  <td><div id="t2"/></td>
+  <td><div id="t3"/></td>
+  </tr>
+  </table>
+</div>
+<pre id="test">
+<script type="text/javascript">
+var text1 = 'foo bar';
+var text2 = 'foo [bar]';
+var text3 = 'foo {bar}';
+
+<!-- This is the long way to write this stuff, 
+     you can use MochiKit functions too -->
+document.getElementById('i1').innerHTML = text1;
+document.getElementById('i2').innerHTML = text2;
+document.getElementById('i3').innerHTML = text3;
+
+document.getElementById('t1').appendChild(document.createTextNode(text1));
+document.getElementById('t2').appendChild(document.createTextNode(text2));
+document.getElementById('t3').appendChild(document.createTextNode(text3));
+
+<!-- The is() function is one way to add a test -->
+is(document.getElementById('i2').innerHTML, text2, "XHTML innerHTML with trailing brackets ']]'");
+
+</script>
+</pre>
+</body>
+</html>

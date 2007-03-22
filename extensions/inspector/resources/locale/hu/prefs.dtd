@@ -1,0 +1,14 @@
+<!ENTITY Inspector.label "DOM Inspector">
+<!ENTITY Sidebar.label "Oldalsáv">
+<!ENTITY elementBlinking.label "Elem villogtatása">
+<!ENTITY blinkSelectedElement.label "Kijelölt elem villogtatása">
+<!ENTITY borderColor.label "Szegély színe">
+<!ENTITY borderWidth.label "Szegély vastagsága">
+<!ENTITY px.label "(px)">
+<!ENTITY blinkDuration.label "Villogtatás időtartama">
+<!ENTITY ms.label "(ms)">
+<!ENTITY blinkSpeed.label "Villogtatás sebessége">
+<!ENTITY invertColors.label "Inverz színek">
+<!ENTITY installHowTo.label "A DOM Inspector Oldalsáv jelenleg nincs telepítve.  Az Oldalsávhoz való hozzáadáshoz kattintson a 'Telepítés' gombra.">
+<!ENTITY install.label "Telepítés">
+<!ENTITY addNavigatorHooks.label "Hozzáadás a böngésző helyi menüihez">

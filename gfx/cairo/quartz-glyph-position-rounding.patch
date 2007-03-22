@@ -1,0 +1,53 @@
+Index: gfx/cairo/cairo/src/cairo-nquartz-surface.c
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/cairo/cairo/src/cairo-nquartz-surface.c,v
+retrieving revision 1.9
+diff -u -p -1 -2 -r1.9 cairo-nquartz-surface.c
+--- gfx/cairo/cairo/src/cairo-nquartz-surface.c	24 Jan 2007 23:53:03 -0000	1.9
++++ gfx/cairo/cairo/src/cairo-nquartz-surface.c	15 Mar 2007 03:34:48 -0000
+@@ -1407,37 +1407,39 @@ _cairo_nquartz_surface_show_glyphs (void
+     // XXXtodo/perf: stack storage for glyphs/sizes
+ #define STATIC_BUF_SIZE 64
+     CGGlyph glyphs_static[STATIC_BUF_SIZE];
+     CGSize cg_advances_static[STATIC_BUF_SIZE];
+     CGGlyph *cg_glyphs = &glyphs_static[0];
+     CGSize *cg_advances = &cg_advances_static[0];
+ 
+     if (num_glyphs > STATIC_BUF_SIZE) {
+ 	cg_glyphs = (CGGlyph*) malloc(sizeof(CGGlyph) * num_glyphs);
+ 	cg_advances = (CGSize*) malloc(sizeof(CGSize) * num_glyphs);
+     }
+ 
+-    double xprev = glyphs[0].x;
+-    double yprev = glyphs[0].y;
++    float xprev = glyphs[0].x;
++    float yprev = glyphs[0].y;
+ 
+     cg_glyphs[0] = glyphs[0].index;
+     cg_advances[0].width = 0;
+     cg_advances[0].height = 0;
+ 
+     for (i = 1; i < num_glyphs; i++) {
+ 	cg_glyphs[i] = glyphs[i].index;
+-	cg_advances[i-1].width = glyphs[i].x - xprev;
+-	cg_advances[i-1].height = glyphs[i].y - yprev;
+-	xprev = glyphs[i].x;
+-	yprev = glyphs[i].y;
++        float xf = glyphs[i].x;
++        float yf = glyphs[i].y;
++	cg_advances[i-1].width = xf - xprev;
++	cg_advances[i-1].height = yf - yprev;
++	xprev = xf;
++	yprev = yf;
+     }
+ 
+ #if 0
+     for (i = 0; i < num_glyphs; i++) {
+ 	ND((stderr, "[%d: %d %f,%f]\n", i, cg_glyphs[i], cg_advances[i].width, cg_advances[i].height));
+     }
+ #endif
+ 
+     CGContextShowGlyphsWithAdvances (surface->cgContext,
+ 				     cg_glyphs,
+ 				     cg_advances,
+ 				     num_glyphs);

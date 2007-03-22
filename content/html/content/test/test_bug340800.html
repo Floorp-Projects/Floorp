@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=340800
+-->
+<head>
+  <title>Test for Bug 340800</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=340800">Mozilla Bug 340800</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <h1>iframe text/plain as DOM test</h1>
+
+  <div>
+
+  <iframe name="iframe1" width="100%" height="200"
+          src="bug340800_iframe.txt"></iframe>
+  </div>
+
+  <div>
+  <h2>textarea with iframe content</h2>
+  <textarea rows="10" cols="80" id="textarea1"></textarea>
+  </div>
+
+  <div>
+  <h2>div with white-space: pre and iframe content</h2>
+  <div id="div1"></div>
+  </div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 340800 **/
+function populateIframes () {
+  var iframe, iframeBody;
+  if ((iframe = window.frames.iframe1) && (iframeBody = iframe.document.body)) {
+    $('div1').innerHTML = iframeBody.innerHTML;
+    $('textarea1').value = iframeBody.innerHTML;
+  }
+  is($('div1').firstChild.tagName, "PRE", "innerHTML from txt iframe works with div");
+  ok($('textarea1').value.indexOf("<pre>") > -1, "innerHTML from txt iframe works with textarea.value");
+  SimpleTest.finish();
+}
+
+addLoadEvent(populateIframes);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
+

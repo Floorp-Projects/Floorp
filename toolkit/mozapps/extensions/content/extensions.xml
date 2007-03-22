@@ -1,0 +1,645 @@
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is The Extension Manager.
+#
+# The Initial Developer of the Original Code is
+# Ben Goodger.
+# Portions created by the Initial Developer are Copyright (C) 2004
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Ben Goodger <ben@bengoodger.com>
+#   Doron Rosenberg <doronr@us.ibm.com>
+#   Robert Strong <robert.bugzilla@gmail.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+
+<!DOCTYPE bindings [
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+  <!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd" >
+  %brandDTD;
+  %extensionsDTD;
+]>
+
+<bindings id="addonBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="addons" extends="chrome://global/content/bindings/richlistbox.xml#richlistbox">
+    <implementation>
+      <field name="_addonStrings">
+        document.getElementById("extensionsStrings");
+      </field>
+
+      <field name="_brandShortName">null</field>
+      <method name="getBrandShortName">
+        <body>
+          if (!this._brandShortName)
+            this._brandShortName = document.getElementById("brandStrings").getString("brandShortName");
+          return this._brandShortName;
+        </body>
+      </method>
+
+      <field name="_appVersion">null</field>
+      <method name="getAppVersion">
+        <body>
+          if (!this._appVersion) {
+            var appInfo = Components.classes["@mozilla.org/xre/app-info;1"]
+                                    .getService(Components.interfaces.nsIXULAppInfo)
+                                    .QueryInterface(Components.interfaces.nsIXULRuntime);
+            this._appVersion = appInfo.version;
+          }
+          return this._appVersion;
+        </body>
+      </method>
+
+      <field name="suppressFocus">false</field>
+
+<!-- Override of richlistbox's _setItemSelection. Allows us to prevent focus
+     when using the keyboard to navigate views and to ensure an element is
+     visible after it has had a chance to reflow. -->
+      <method name="_setItemSelection">
+        <parameter name="aItem"/>
+        <body>
+          <![CDATA[
+            // unselect current item
+            if (this._selectedItem)
+              this._selectedItem.selected = false
+
+            this._selectedItem = aItem;
+            this._selectedIndex = this.getIndexOf(aItem);
+
+            if (aItem) {
+              aItem.selected = true;
+              if (!this.suppressFocus)
+                aItem.focus();
+            }
+          ]]>
+        </body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="focus">
+        if (!this.hasAttribute("focused"))
+          this.setAttribute("focused", "true");
+      </handler>
+      <handler event="blur">
+        if (this.hasAttribute("focused"))
+          this.removeAttribute("focused");
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="addon-base" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
+    </resources>
+
+    <implementation>
+      <field name="eventPrefix">"extension-"</field>
+      <property name="type" onget="return parseInt(this.getAttribute('type'));"/>
+      <property name="isCompatible" onget="return this.getAttribute('compatible') == 'true';"/>
+      <property name="isBlocklisted" onget="return this.getAttribute('blocklisted') == 'true';"/>
+      <property name="isDisabled" onget="return this.getAttribute('isDisabled') == 'true';"/>
+      <property name="satisfiesDependencies" onget="return this.getAttribute('satisfiesDependencies') == 'true';"/>
+      <property name="opType">
+        <getter>
+          <![CDATA[
+            var opType = this.getAttribute('opType');
+            return opType == 'none' ? null : opType;
+          ]]>
+        </getter>
+      </property>
+
+      <method name="fireEvent">
+        <parameter name="aEventType"/>
+        <body>
+          var e = document.createEvent("Events");
+          e.initEvent(this.eventPrefix + aEventType, true, true);
+          this.dispatchEvent(e);
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="DOMMenuItemActive">
+        // only ensureElementIsVisible if it wasn't selected
+        if (this.parentNode.getAttribute("last-selected") != this.getAttribute("id"))
+          this.parentNode.ensureElementIsVisible(this);
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="addon" extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox class="addon-icon" xbl:inherits="iconURL"/>
+        <xul:vbox flex="1" class="addonTextBox">
+          <xul:hbox class="addon-name-version" xbl:inherits="name, version"/>
+          <xul:hbox anonid="addonDescription" class="addon-description" xbl:inherits="description, opType"/>
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+    <implementation implements="nsIAccessibleProvider, nsIDOMXULSelectControlItemElement">
+      <field name="_addonDescription">
+        document.getAnonymousElementByAttribute(this, "anonid", "addonDescription");
+      </field>
+
+      <property name="label" readonly="true">
+        <getter>
+          <![CDATA[
+            var labelPieces = [];
+
+            // Add name and version
+            labelPieces.push(this.getAttribute("name"));
+            labelPieces.push(this.getAttribute("version"));
+
+            // Add description
+            var description = this.getAttribute("description");
+            labelPieces.push(description);
+
+            // Add status message, if any
+            // description is always in this.getAttribute("description"), but
+            // description is also sometimes in anonNodes[0].value.  But other
+            // times (like when there's an actual status message) the binding
+            // of that hbox gets changed dynamically so anonNodes[0].value
+            // is the status message.  The easiest way to sort it out is
+            // to check for duplicate strings.
+            // xxxpilgrim There is some additional weirdness here.  Visually,
+            // the description is not displayed on non-selected items if
+            // the item contains a status message.  However, when you arrow
+            // up and down through the list selecting different items, we want
+            // the accessible name during the OBJ_FOCUS event to include both
+            // the description and the status message.  You would think this
+            // would be handled automatically because the binding changes
+            // (to "addon-selected", below) when the item gets selected.
+            // However, when the OBJ_FOCUS event occurs, the binding hasn't
+            // changed yet, so this property gets queried for the accessible name.
+            // Bottom line, we need to this property in the first place to
+            // ensure that items have any accessible name at all when you
+            // arrow through the list (bug 352388), _and_ we need to include
+            // both the description and the status message to make the
+            // accessible name you get during the OBJ_FOCUS event match the
+            // accessible name you would get if you queried the object
+            // after it was already focused (i.e. after the binding had
+            // changed to "addon-selected").
+            var anonNodes = document.getAnonymousNodes(this._addonDescription);
+            if (anonNodes) {
+              var statusMessage = anonNodes[0].value;
+              if (description != statusMessage)
+                labelPieces.push(statusMessage);
+            }
+            return labelPieces.join(" ");
+          ]]>
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+
+  <binding id="addon-selected" extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox class="addon-icon" xbl:inherits="iconURL"/>
+        <xul:vbox flex="1" class="addonTextBox">
+          <xul:hbox anonid="addonNameVersion" class="addon-name-version" xbl:inherits="name, version"/>
+          <xul:label anonid="addonDescriptionWrap" class="descriptionWrap" xbl:inherits="xbl:text=description"/>
+          <xul:vbox anonid="addonSelectedStatusMsgs" class="selectedStatusMsgs">
+            <xul:hbox anonid="addonOpType" class="addon-optype attention" align="center"/>
+            <xul:hbox flex="1" class="updateAvailableBox attention">
+              <xul:label xbl:inherits="value=updateAvailableMsg" crop="end"/>
+            </xul:hbox>
+            <xul:hbox flex="1" class="incompatibleBox attention">
+              <xul:label anonid="incompatibleLabel" crop="end"/>
+            </xul:hbox>
+            <xul:hbox flex="1" class="needsDependenciesBox attention">
+              <xul:label value="&needsDependencies.label;" crop="end"/>
+            </xul:hbox>
+            <xul:hbox flex="1" class="blocklistedBox attention" align="center">
+              <xul:label value="&blocklisted.label;" crop="end"/>
+              <xul:label anonid="blocklistMoreInfo" class="text-link" value="&moreInfo.label;"
+                         onclick="openURL(this.getAttribute('moreInfoURL'));"/>
+            </xul:hbox>
+          </xul:vbox>
+          <xul:hbox anonid="selectedButtons" flex="1" class="selectedButtons">
+            <xul:button class="uninstallHide optionsButton"
+#ifdef XP_WIN
+              label="&cmd.options.label;" accesskey="&cmd.options.accesskey;"
+              tooltiptext="&cmd.options.tooltip;"
+#else
+              label="&cmd.optionsUnix.label;" accesskey="&cmd.optionsUnix.accesskey;"
+              tooltiptext="&cmd.optionsUnix.tooltip;"
+#endif
+              command="cmd_options"/>
+            <xul:button class="uninstallHide themeButton useThemeButton" label="&cmd.useTheme.label;"
+                        accesskey="&cmd.useTheme.accesskey;" tooltiptext="&cmd.useTheme.tooltip;"
+                        command="cmd_useTheme"/>
+            <spacer flex="1"/>
+            <xul:button class="disableShow enableHide uninstallHide enableButton" label="&cmd.enable.label;"
+                        accesskey="&cmd.enable.accesskey;" tooltiptext="&cmd.enable.tooltip;"
+                        command="cmd_enable"/>
+            <xul:button class="enableShow disableHide uninstallHide disableButton" label="&cmd.disable.label;"
+                        accesskey="&cmd.disable.accesskey;" tooltiptext="&cmd.disable.tooltip;"
+                        command="cmd_disable"/>
+            <xul:button class="uninstallHide uninstallButton" label="&cmd.uninstall.label;"
+                        accesskey="&cmd.uninstall2.accesskey;" tooltiptext="&cmd.uninstall2.tooltip;"
+                        command="cmd_uninstall"/>
+            <xul:button class="uninstallShow cancelUninstallButton" label="&cancel.label;"
+                        accesskey="&cancel.accesskey;" tooltiptext="&cmd.cancelUninstall.tooltip;"
+                        command="cmd_cancelUninstall"/>
+          </xul:hbox>
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+
+    <implementation implements="nsIAccessibleProvider, nsIDOMXULSelectControlItemElement">
+      <constructor>
+        <![CDATA[
+          if (this.isBlocklisted) {
+            try {
+              var blocklistMoreInfo = document.getAnonymousElementByAttribute(this, "anonid", "blocklistMoreInfo");
+              var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                                    .getService(Components.interfaces.nsIPrefBranch);
+              var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+                                        .getService(Components.interfaces.nsIURLFormatter);
+              var url = formatter.formatURLPref("extensions.blocklist.detailsURL");
+              blocklistMoreInfo.setAttribute("moreInfoURL", url);
+            } catch(e) {
+              blocklistMoreInfo.hidden = true;
+            }
+          }
+
+          if (!this.isCompatible) {
+            var label = document.getAnonymousElementByAttribute(this, "anonid", "incompatibleLabel");
+            label.setAttribute("value", this.parentNode._addonStrings.getFormattedString("incompatibleAddonMsg",
+                                        [this.parentNode.getBrandShortName(), this.parentNode.getAppVersion()]));
+          }
+
+          var updatedVersion = this.getAttribute('availableUpdateVersion');
+          if (updatedVersion) {
+            var msg = this.parentNode._addonStrings.getFormattedString("updateAvailableMsg", [updatedVersion]);
+            this.setAttribute("updateAvailableMsg", msg);
+          }
+        ]]>
+      </constructor>
+
+      <field name="_nameVersion">
+        document.getAnonymousElementByAttribute(this, "anonid", "addonNameVersion");
+      </field>
+
+      <field name="_descriptionWrap">
+        document.getAnonymousElementByAttribute(this, "anonid", "addonDescriptionWrap");
+      </field>
+
+      <field name="_selectedStatusMsgs">
+        document.getAnonymousElementByAttribute(this, "anonid", "addonSelectedStatusMsgs");
+      </field>
+
+      <field name="_opType">
+        document.getAnonymousElementByAttribute(this, "anonid", "addonOpType");
+      </field>
+
+      <property name="label" readonly="true">
+        <getter>
+          <![CDATA[
+            var labelPieces = [];
+
+            // Add name and version
+            labelPieces.push(this._nameVersion.getAttribute("name"));
+            labelPieces.push(this._nameVersion.getAttribute("version"));
+
+            // Add description
+            labelPieces.push(this._descriptionWrap.textContent);
+
+            // Add operation message (if any)
+            // Note 1: must handle this separately from other the labels
+            // because this message is in an anonymous content node
+            // within an hbox which is dynamically bound to a different
+            // "addon-needs-*" binding based on the operation type.
+            // Note 2: must check hbox's CSS "display" property with
+            // getComputedStyle, because the XUL "hidden" attribute
+            // never changes.
+            // Note 3: can't just check whether the hbox has anonymous
+            // child nodes.  If (for example) you disable an extension,
+            // the hbox gets bound to "addon-needs-disable".  But if
+            // you then immediately re-enable the same extension without
+            // closing the Add-ons window, the hbox is still bound to
+            // "addon-needs-disable" (and thus still has the anonymous
+            // content child nodes with the label containing the now-unused
+            // &toBeDisabled.label text), but the hbox is no longer visible.
+            if (document.defaultView.getComputedStyle(this._opType, '').display != 'none')
+              labelPieces.push(document.getAnonymousNodes(this._opType)[0].value);
+
+            // Add selected status messages, if any are visible.
+            // Note 1: visibility of status messages is set by CSS rule,
+            // not XUL attributes, so we need to use getComputedStyle.
+            // Note 2: relevant CSS rule is set on the label's parent node;
+            // the label node itself always has "display:-moz-box" which is
+            // not useful.
+            var labels = this._selectedStatusMsgs.getElementsByTagNameNS(
+              "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+              "label");
+            var numLabels = labels.length;
+            for (var i = 0; i < numLabels; i++) {
+              var label = labels[i];
+              var parentStyle = document.defaultView.getComputedStyle(label.parentNode, "");
+
+              // Optimization: we only check a few cases here that we know
+              // are used by the Add-ons window.  For example, the generic
+              // richlistbox.xml label getter checks label.collapsed, but
+              // we don't check that here because we know that the Add-ons
+              // window doesn't use it.
+              if (!label.hidden &&
+                  label.className != "text-link" &&
+                  parentStyle.display != "none") {
+                labelPieces.push(label.value);
+              }
+            }
+
+            return labelPieces.join(" ");
+          ]]>
+        </getter>
+      </property>
+    </implementation>
+
+    <handlers>
+      <handler event="focus">
+      <![CDATA[
+        if (this.parentNode.suppressFocus)
+          event.preventDefault();
+      ]]>
+    </handler>
+
+<!-- When an add-on displays a status messages the element may extend below the
+     bottom of the list This will ensure that the element is visible for the
+     most common cases. -->
+      <handler event="DOMAttrModified">
+        <![CDATA[
+          if (event.attrName != "disabled" ||
+              !this.parentNode.selectedItem ||
+              !event.originalTarget.hasAttribute("command"))
+            return;
+
+          var cmd = event.originalTarget.getAttribute("command");
+          var opType = this.getAttribute("opType");
+          if (opType == "needs-uninstall" && cmd == "cmd_uninstall" ||
+              opType == "needs-disable" && cmd == "cmd_disable" && !this.isDisabled ||
+              opType == "needs-enable" && cmd == "cmd_disable" && this.isDisabled)
+            this.parentNode.ensureElementIsVisible(this);
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="addon-icon">
+    <content>
+      <xul:stack class="addonIconStack">
+        <xul:vbox pack="start" align="start">
+          <xul:image class="addonIcon" xbl:inherits="src=iconURL"/>
+        </xul:vbox>
+        <xul:vbox pack="end" align="start">
+          <xul:image class="notifyBadge"/>
+        </xul:vbox>
+        <xul:vbox pack="end" align="end">
+          <xul:image class="updateBadge"/>
+        </xul:vbox>
+      </xul:stack>
+      <xul:spacer flex="1"/>
+    </content>
+  </binding>
+
+  <binding id="addon-name-version">
+    <content>
+      <xul:label class="addonName" crop="end" xbl:inherits="value=name"/>
+      <xul:label class="addonVersion" xbl:inherits="value=version"/>
+    </content>
+  </binding>
+
+  <binding id="addon-description-crop">
+    <content>
+      <xul:label class="descriptionCrop" xbl:inherits="value=description" flex="1" crop="end"/>
+    </content>
+  </binding>
+
+  <binding id="addon-needs-install">
+    <content>
+      <xul:label value="&toBeInstalled.label;" crop="end"/>
+    </content>
+  </binding>
+
+  <binding id="addon-needs-upgrade">
+    <content>
+      <xul:label value="&toBeUpgraded.label;" crop="end"/>
+    </content>
+  </binding>
+
+  <binding id="addon-needs-uninstall">
+    <content>
+      <xul:label value="&toBeUninstalled.label;" crop="end"/>
+    </content>
+  </binding>
+
+  <binding id="addon-needs-enable">
+    <content>
+      <xul:label value="&toBeEnabled.label;" crop="end"/>
+    </content>
+  </binding>
+
+  <binding id="addon-needs-disable">
+    <content>
+      <xul:label value="&toBeDisabled.label;" crop="end"/>
+    </content>
+  </binding>
+
+  <binding id="update-checking" extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
+    <content>
+      <xul:hbox flex="1">
+        <xul:stack class="addonIconStack">
+          <xul:vbox pack="start" align="start">
+            <xul:image class="addonIcon" xbl:inherits="src=iconURL"/>
+          </xul:vbox>
+          <xul:vbox pack="end" align="end">
+            <xul:image class="updateBadge"/>
+          </xul:vbox>
+          <xul:vbox pack="end" align="start">
+            <xul:image class="notifyBadge"/>
+          </xul:vbox>
+        </xul:stack>
+        <xul:vbox flex="1">
+          <xul:hbox class="addon-name-version" xbl:inherits="name, version"/>
+          <xul:hbox>
+            <xul:description xbl:inherits="value=updateStatus" flex="1" crop="end"/>
+          </xul:hbox>
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="update-found" extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox pack="start" align="start">
+          <xul:image class="addonIcon" xbl:inherits="src=iconURL"/>
+        </xul:vbox>
+        <xul:vbox flex="1">
+          <xul:hbox class="addon-name-version" xbl:inherits="name, version"/>
+          <xul:hbox>
+            <xul:description xbl:inherits="value=updateAvailableMsg" flex="1" crop="end"/>
+          </xul:hbox>
+        </xul:vbox>
+        <xul:hbox pack="end" align="end">
+          <xul:checkbox anonid="includeUpdate" class="includeUpdate" checked="true"
+          label="&includeUpdate.label;" tooltiptext="&includeUpdate.tooltip;"
+          includeUpdateAccesskey="&includeUpdate.accesskey;" accesskey="&includeUpdate.accesskey;"/>
+        </xul:hbox>
+      </xul:hbox>
+    </content>
+
+    <implementation>
+      <constructor>
+        var updatedVersion = this.getAttribute('availableUpdateVersion');
+        var msg = this.parentNode._addonStrings.getFormattedString("updateAvailableMsg", [updatedVersion]);
+        this.setAttribute("updateAvailableMsg", msg);
+      </constructor>
+    </implementation>
+
+    <handlers>
+      <handler event="DOMMenuItemActive">
+        <![CDATA[
+          // 
+          var children = this.parentNode.children;
+          for (var i = 0; i < children.length; ++i) {
+            var checkbox = document.getAnonymousElementByAttribute(children[i], "anonid", "includeUpdate");
+            if (checkbox.hasAttribute("accesskey"))
+              checkbox.removeAttribute("accesskey");
+          }
+          checkbox = document.getAnonymousElementByAttribute(this, "anonid", "includeUpdate");
+          checkbox.setAttribute("accesskey", checkbox.getAttribute("includeUpdateAccesskey"));
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="install" extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox>
+          <xul:stack class="addonIcon-stack">
+            <xul:vbox pack="start" align="start">
+              <xul:image class="addonIcon" xbl:inherits="src=iconURL"/>
+            </xul:vbox>
+          </xul:stack>
+        </xul:vbox>
+        <xul:vbox flex="1">
+          <xul:hbox class="addon-name-version" xbl:inherits="name, version"/>
+          <xul:hbox class="addon-install-status" xbl:inherits="state"/>
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="addon-install-waiting">
+    <content>
+      <xul:label value="&installWaiting.label;" flex="1" crop="end"/>
+    </content>
+  </binding>
+
+  <binding id="addon-install-incompatibleUpdate">
+    <content>
+      <xul:label value="&installIncompatibleUpdate.label;" flex="1" crop="end"/>
+    </content>
+  </binding>
+
+  <binding id="addon-install-finishing">
+    <content>
+      <xul:label value="&installFinishing.label;" flex="1" crop="end"/>
+    </content>
+  </binding>
+
+  <binding id="addon-install-success">
+    <content>
+      <xul:label value="&installSuccess.label;" flex="1" crop="end"/>
+    </content>
+  </binding>
+
+  <binding id="addon-install-fail">
+    <content>
+      <xul:label value="&installFailure.label;" flex="1" crop="end"/>
+    </content>
+  </binding>
+
+  <binding id="addon-install-restart">
+    <content>
+      <xul:label value="&installSuccessRestart.label;" flex="1" crop="end"/>
+    </content>
+  </binding>
+
+  <binding id="addon-install-updated">
+    <content>
+      <xul:label value="&updateSuccess.label;" flex="1" crop="end"/>
+    </content>
+  </binding>
+
+  <binding id="install-downloading" extends="chrome://mozapps/content/extensions/extensions.xml#addon-base">
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox pack="start">
+          <xul:image class="addonIcon" xbl:inherits="src=iconURL"/>
+        </xul:vbox>
+        <xul:vbox flex="1" class="addonTextBox">
+          <xul:hbox class="addon-name-version" xbl:inherits="name, version"/>
+          <xul:progressmeter class="extension-item-progress" xbl:inherits="value=progress"/>
+          <xul:label class="extension-item-status" xbl:inherits="value=status" value="&installWaiting.label;"/>
+        </xul:vbox>
+      </xul:hbox>
+    </content>  
+  </binding>
+
+<!-- based on preferences.xml paneButton -->
+  <binding id="viewbutton" extends="chrome://global/content/bindings/radio.xml#radio">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/extensions/extensions.css"/>
+    </resources>
+    <content>
+      <xul:image class="viewButtonIcon" xbl:inherits="src"/>
+      <xul:label class="viewButtonLabel" xbl:inherits="value=label"/>
+    </content>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          <![CDATA[
+            return Components.interfaces.nsIAccessibleProvider.XULListitem;
+          ]]>
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+
+</bindings>

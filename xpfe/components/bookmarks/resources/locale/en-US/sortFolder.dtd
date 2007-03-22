@@ -1,0 +1,20 @@
+<!ENTITY window.title "Sort Folder">
+
+<!ENTITY sortOptions.label "Sort options">
+<!ENTITY description.label "&brandShortName; can sort individual folders. Use these options to customize the sorting for this Folder.">
+
+<!ENTITY sortBy.label "Sort by:">
+<!ENTITY sortBy.name.label "Name">
+<!ENTITY sortBy.url.label "Location">
+<!ENTITY sortBy.shortcutUrl.label "Keyword">
+<!ENTITY sortBy.description.label "Description">
+<!ENTITY sortBy.bookmarkAddDate.label "Added">
+<!ENTITY sortBy.lastModifiedDate.label "Last Modified">
+<!ENTITY sortBy.lastVisitDate.label "Last Visited">
+
+<!ENTITY sortOrder.label "Sort order:">
+<!ENTITY sortAscending.label "Ascending">
+<!ENTITY sortDescending.label "Descending">
+
+<!ENTITY sortFoldersFirst.label "Sort folders first">
+<!ENTITY sortRecursively.label "Sort recursively">

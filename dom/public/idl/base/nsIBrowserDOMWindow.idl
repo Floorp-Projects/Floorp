@@ -1,0 +1,111 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla.org.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIDOMWindow;
+interface nsIURI;
+
+[scriptable, uuid(af25c296-aaec-4f7f-8885-dd37a1cc0a13)]
+
+/**
+ * The C++ source has access to the browser script source through
+ * nsIBrowserDOMWindow. It is intended to be attached to the chrome DOMWindow
+ * of a toplevel browser window (a XUL window). A DOMWindow that does not
+ * happen to be a browser chrome window will simply have no access to any such
+ * interface.
+ */
+interface nsIBrowserDOMWindow : nsISupports
+{
+  /**
+   * Values for openURI's aWhere parameter.
+   */
+  /**
+   * Do whatever the default is based on application state, user preferences,
+   * and the value of the aContext parameter to openURI.
+   */
+  const short OPEN_DEFAULTWINDOW = 0;
+  /**
+   * Open in the "current window".  If aOpener is provided, this should be the
+   * top window in aOpener's window hierarchy, but exact behavior is
+   * application-dependent.  If aOpener is not provided, it's up to the
+   * application to decide what constitutes a "current window".
+   */
+  const short OPEN_CURRENTWINDOW = 1;
+  /**
+   * Open in a new window.
+   */
+  const short OPEN_NEWWINDOW     = 2;
+  /**
+   * Open in a new content tab in the toplevel browser window corresponding to
+   * this nsIBrowserDOMWindow.
+   */
+  const short OPEN_NEWTAB        = 3;
+
+  /**
+   * Values for openURI's aContext parameter.  These affect the behavior of
+   * OPEN_DEFAULTWINDOW.
+   */
+  /**
+   * external link (load request from another application, xremote, etc).
+   */
+  const short OPEN_EXTERNAL      = 1;
+  /**
+   * internal open new window
+   */
+  const short OPEN_NEW           = 2; 
+
+  /**
+   * Load a URI
+   * @param aURI the URI to open. null is allowed; it means about:blank.
+   * @param aWhere see possible values described above.
+   * @param aOpener window requesting the open (can be null).
+   * @param aContext the context in which the URI is being opened. This
+   *                 is used only when aWhere == OPEN_DEFAULTWINDOW.
+   * @return the window into which the URI was opened.
+  */
+  nsIDOMWindow openURI(in nsIURI aURI, in nsIDOMWindow aOpener,
+                       in short aWhere, in short aContext);
+
+  /**
+   * @param  aWindow the window to test.
+   * @return whether the window is the main content window for any
+   *         currently open tab in this toplevel browser window.
+   */
+  boolean      isTabContentWindow(in nsIDOMWindow aWindow);
+};
+

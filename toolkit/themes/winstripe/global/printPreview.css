@@ -1,0 +1,40 @@
+/* ..... page navigation ..... */
+
+.home-arrow, .end-arrow[chromedir="rtl"] {
+  list-style-image: url("chrome://global/skin/arrow/arrow-lft-sharp-end.gif");
+}
+
+.end-arrow, .home-arrow[chromedir="rtl"] {
+  list-style-image: url("chrome://global/skin/arrow/arrow-rit-sharp-end.gif");
+}
+
+.left-arrow, .right-arrow[chromedir="rtl"] {
+  list-style-image: url("chrome://global/skin/arrow/arrow-lft-sharp.gif");
+}
+
+.right-arrow, .left-arrow[chromedir="rtl"] {
+  list-style-image: url("chrome://global/skin/arrow/arrow-rit-sharp.gif");
+}
+
+/* ...... scale in/decrement ..... */
+
+.up-arrow {
+  list-style-image: url("chrome://global/skin/arrow/arrow-up-sharp.gif");
+}
+
+.down-arrow {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-sharp.gif");
+}
+
+
+/* ..... orientation ..... */
+
+.toolbar-portrait-page {
+  list-style-image: url("chrome://global/skin/icons/Print-preview.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+.toolbar-landscape-page {
+  list-style-image: url("chrome://global/skin/icons/Print-preview.png");
+  -moz-image-region: rect(0px 32px 16px 16px);
+}

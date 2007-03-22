@@ -1,0 +1,270 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta http-equiv="content-type"
+ content="text/html; charset=ISO-8859-1">
+  <title>Convert Gecko from unmanged to managed code in .Net</title>
+</head>
+<body>
+<h1 style="margin-left: 40px; text-align: center;">Wrapping Gecko APIs
+using Microsoft Visual Studio .NET Managed Extensions for C++<big><big><big><br
+ style="color: rgb(255, 0, 0);">
+</big></big></big> </h1>
+<div style="text-align: center;"> <big><big><big><span
+ style="color: rgb(255, 0, 0);">**DRAFT**</span></big></big></big><br>
+</div>
+<br>
+<h2>Intended Audience:</h2>
+This paper is intended for a C++ programmer who would like to know how
+to wrap Gecko engine from unmanaged C++ to managed C++ .&nbsp; Author
+assumes the reader is familiar with Gecko and MS Visual Studio.NET with
+Managed Extensions for C++.&nbsp; <br>
+<br>
+<h2>Background:</h2>
+<ol>
+  <li> Why do we go all this trouble?&nbsp; </li>
+  <li>When we have Gecko as ActiveX control, then why don't we use the
+Runtime-Callable Wrapper (RCW) and COM-Callable Wrapper (CCW)?&nbsp; </li>
+</ol>
+<br>
+<h2 class="dtH1">How do we do this?</h2>
+There are few ways to convert the existing unmanaged code to managed
+code:
+<ol type="1">
+  <li>You can use the built-in .NET runtime interop facilities (such as
+PInvoke or COM Interop)<br>
+  </li>
+  <li>You can wrap the unmanaged code using the managed extensions to
+C++.</li>
+  <li>You can rewrite the entire code in a .NET language.</li>
+</ol>
+<h2 class="dtH1">What do we need?</h2>
+We need <br>
+<ol>
+  <li>.NET Framework (1.1) <br>
+  </li>
+  <li>Microsoft Visual Studio .NET (preferably 2003)</li>
+  <li>mozilla development environment
+(http://www.mozilla.org/build/win32.html)<br>
+  </li>
+</ol>
+<h2>Terminology:</h2>
+Following terms are used throughout out this document and it is
+important to understand what each term means.&nbsp; <br>
+<ul>
+  <li><span style="font-weight: bold;">Assembly</span><br>
+  </li>
+</ul>
+<div style="margin-left: 80px;">Assembly is a building block of the
+.Net Framework.&nbsp; It is the fundamental unit of deployment, version
+control, reuse, activation, scoping, and security permissions.&nbsp; It
+provides the Common Language Runtime (CLR) with the information it needs
+to be aware of type implementations.&nbsp; It is a collection of types
+and resources that are built to work together and form a logical unit of
+functionality.&nbsp; <br>
+</div>
+<ul style="font-weight: bold;">
+  <li>Global Assembly Cache</li>
+</ul>
+<div style="margin-left: 80px;">Global Assembly Cache is a machine wide
+code cache that is installed whereever the CLR is installed.&nbsp; In
+most cases, if you intend to share an assembly with multiple
+applications, you should deploy it into the global assembly cache.<br>
+</div>
+<ul>
+  <li><span style="font-weight: bold;">Managed code vs Unmanaged code</span><br>
+  </li>
+</ul>
+<div style="margin-left: 80px;"><span style="font-style: italic;">Manged
+code</span> requires the execution environment of the CLR.&nbsp;
+Compilers emit managed code as MSIL, the intermidate language.&nbsp; The
+reason for the name is that code is managed by the CLR and objects are
+allocated from heaps managed by the CLR.<br>
+</div>
+<div style="margin-left: 80px;"><span style="font-style: italic;">Unmanaged
+code</span> does not use nor require the execution environment of the
+Common Language Runtime (CLR).&nbsp; Unmanaged code is outside the
+reach of the CLR's security system, garbage collector and other
+services.</div>
+<ul>
+  <li style="font-weight: bold;">CLR</li>
+  <li style="font-weight: bold;">Runtime-Callable Wrapper (RCW)</li>
+  <li style="font-weight: bold;">COM-Callable Wrapper (CCW)</li>
+  <li style="font-weight: bold;">Boxing</li>
+</ul>
+<div style="margin-left: 80px;">Boxing is a technique to convert a
+value type to a __gc object by using the __box<br>
+<div style="margin-left: 40px;">Int32 i = 42;<br>
+__box Int32* b = __box(i);<br>
+</div>
+</div>
+<ul>
+  <li style="font-weight: bold;">UnBoxing</li>
+</ul>
+<div style="margin-left: 80px;">UnBoxing (dereferencing) is a technique
+to convert a boxed object to value type by casting.<br>
+<div style="margin-left: 40px;">Color red;<br>
+Object* obj = Enum::Parse(__typeof(Color), S"red");<br>
+red = *static_cast&lt;__box Color*&gt;(obj);<br>
+</div>
+</div>
+<br>
+<ul>
+  <li style="font-weight: bold;">Managed Objects</li>
+</ul>
+<div style="margin-left: 80px;">Managed Object is an instance of a
+class which is created in the heap and managed by the garbage collector
+by using the <span style="font-style: italic;">__gc</span>
+modifier.&nbsp; <br>
+<div style="margin-left: 40px;"><span style="font-style: italic;">__gc</span>
+class Point<br>
+{<br>
+</div>
+<div style="margin-left: 80px;">public:<br>
+</div>
+<div style="margin-left: 120px;"> int x;<br>
+int y;<br>
+</div>
+<div style="margin-left: 40px;"> };<br>
+</div>
+</div>
+<ul style="font-weight: bold;">
+  <li>Value Types</li>
+</ul>
+<div style="margin-left: 80px;">Value Types ar typically small, short
+lived objects and they are usually created on the stack. In managed C++,
+the value types are defined by using <span style="font-style: italic;">__value</span>
+modifier.&nbsp; <br>
+<div style="margin-left: 40px;"><span style="font-style: italic;">__value</span>
+class Point<br>
+{<br>
+</div>
+<div style="margin-left: 80px;">public:<br>
+</div>
+<div style="margin-left: 120px;"> int x;<br>
+int y;<br>
+</div>
+<div style="margin-left: 40px;"> };<br>
+</div>
+</div>
+<br>
+<h2>Necessary Steps:</h2>
+<ul>
+</ul>
+<br>
+<h2>Gecko APIs</h2>
+We will be exposing list of Gecko APIs<br>
+<ul>
+  <li>nsresult NS_InitEmbedding(nsILocalFile *aMozBinDirectory,
+nsIDirectoryServiceProvider *aAppFileLocProvider);<br>
+  </li>
+  <li>nsresult NS_TermEmbedding();</li>
+  <li>...<br>
+  </li>
+</ul>
+<br>
+<h2>Coding Techniques:</h2>
+<ul>
+  <li>
+    <h3>Using managed object in unmanaged code</h3>
+  </li>
+</ul>
+<div style="margin-left: 40px;">Managed pointers are managed by the
+garbage collector so that when copies are made, the gc knows that
+references are created.&nbsp; When a pointer is passed to native code,
+the gc cannot track its usage and so cannot determine any change in
+object reference.&nbsp;&nbsp; Furthermore, if a garbage collection
+occures, the object can be moved in memory, so the gc changes all
+managed pointers so that they point to the new location.&nbsp; Because
+the gc doesn't have access to the pointers passed to native code
+(unmanaged code), potentially a pointer used in native code could
+suddenly become invalid.&nbsp; Use a pinned pointer which tells gc not
+to move the memory.<br>
+<div style="margin-left: 80px;">
+<table cellpadding="2" cellspacing="2" border="1"
+ style="text-align: left; width: 100%;">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">//Using pinning<br>
+#progma unmanaged<br>
+void print(int *p)<br>
+{<br>
+&nbsp;&nbsp;&nbsp; printf("%ld\n", *p);<br>
+}<br>
+      <br>
+#progma managed<br>
+_gc struct Test {<br>
+&nbsp;&nbsp;&nbsp; int i;<br>
+};<br>
+      <br>
+void main()<br>
+{<br>
+&nbsp;&nbsp;&nbsp; Test * t = new Test;<br>
+&nbsp;&nbsp;&nbsp; int __pin* p = &amp;t-&gt;i;<br>
+&nbsp;&nbsp;&nbsp; print(p);<br>
+}<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+<div style="margin-left: 40px;"><br>
+</div>
+<ul>
+  <li>
+    <h3>Using unmanaged object in managed code</h3>
+  </li>
+</ul>
+<div style="margin-left: 120px;">
+<table cellpadding="2" cellspacing="2" border="1"
+ style="text-align: left; width: 100%;">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span class="clsCap">//Using
+GCHandle</span> <br>
+      <pre>#using &lt;mscorlib.dll&gt;<br><br>using namespace System;<br>using namespace System::Runtime::InteropServices;<br><br>#pragma managed<br>class AppDomainWrapper<br>{<br>private:<br>   int m_handle;<br>public:<br>   AppDomainWrapper() {<br>      AppDomain* d = AppDomain::Current;<br>      m_handle = (GCHandle::op_Explicit(GCHandle::Alloc(d))).ToInt32();<br>   }<br>   ~AppDomainWrapper() {<br>      (GCHandle::op_Explicit(m_handle)).Free();<br>   }<br>   // more functions here...<br>   void PrintBaseDir() {<br>      AppDomain* domain = __try_cast&lt;AppDomain*&gt;(<br>                           (GCHandle::op_Explicit(m_handle)).Target);<br>      Console::WriteLine ( S"AppDomain Base Directory: {0}",<br>                           domain-&gt;BaseDirectory );<br>   }<br>};<br><br>#pragma unmanaged<br>int main() {<br>   AppDomainWrapper w; <br>   w.PrintBaseDir();<br>   return 0;  <br>}</pre>
+      </td>
+      <td style="vertical-align: top;"><span class="clsCap">//Using
+gcroot</span> <br>
+      <pre>#using &lt;mscorlib.dll&gt;<br>#include &lt;gcroot.h&gt;<br><br>using namespace System;<br>using namespace System::Runtime::InteropServices;<br><br>#pragma managed<br>class AppDomainWrapper<br>{<br>private:<br>   gcroot&lt;AppDomain*&gt; m_domain;<br>public:<br>   AppDomainWrapper() {<br>      m_domain = AppDomain::CurrentDomain;<br>   }<br>   ~AppDomainWrapper() {<br>   }<br>   // more functions here...<br>   void PrintBaseDir() {<br>      Console::WriteLine ( S"AppDomain Base Directory: {0}",<br>                           m_domain-&gt;BaseDirectory );<br>   }<br>};<br><br>#pragma unmanaged<br>int main() {<br>   AppDomainWrapper w; <br>   w.PrintBaseDir();<br>   return 0;  <br><br><br><br>}</pre>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<span class="clsFigure"></span><span class="clsCap"></span> </div>
+<h2>Useful Tools:</h2>
+<ul>
+  <li>Viewing Assembly Contents</li>
+  <ul>
+    <li>MSIL Disassembler (ildasm.exe)<br>
+    </li>
+  </ul>
+</ul>
+<ul>
+  <li>TLBIMP.exe</li>
+  <li>TLBEXP.exe</li>
+  <li>REGASM.exe</li>
+  <li>AXIMP.exe</li>
+  <li>REGSVCS.exe</li>
+</ul>
+<br>
+<h2 class="dtH1">References<br>
+</h2>
+<ul>
+  <li>Visual Studio .NET
+(http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vsintro7/html/vsstartpage.asp)<br>
+  </li>
+  <li>Managed Extensions for C++ programming (http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vcmex/html/vcconmcoverview.asp)</li>
+  <li>Managed Extensions for C++ specifications
+(http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vcmxspec/html/vcManagedExtensionsSpec_Start.asp)<br>
+  </li>
+</ul>
+<h2><br>
+</h2>
+<h2>History:</h2>
+Draft 0.1 : April 9 2003&nbsp; Roy Yokoyama<br>
+<br>
+<br>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>canvas3d@mozilla.com</em:id>
+    <em:version>0.1</em:version>
+
+    <em:type>2</em:type>
+
+    <em:targetApplication>
+      <!-- Firefox -->
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+	<!-- this version needs to be set to the exact version this 
+	     extension was built for, because of the way we're tied
+	     to internal interfaces.
+	  -->
+#ifdef MOZILLA_1_8_BRANCH
+        <em:minVersion>2.0b1</em:minVersion>
+        <em:maxVersion>2.0.*</em:maxVersion>
+#else
+        <em:minVersion>3.0a1</em:minVersion>
+        <em:maxVersion>3.0a1</em:maxVersion>
+#endif
+      </Description>
+    </em:targetApplication>
+	
+    <!-- front-end metadata -->
+    <em:creator>Vladimir Vukicevic/mozilla.com</em:creator>
+#ifdef MOZILLA_1_8_BRANCH
+    <em:name>Canvas 3D (Gecko 1.8.1)</em:name>
+    <em:description>Canvas 3D context(s) for Gecko 1.8.1</em:description>
+#else
+    <em:name>Canvas 3D (Gecko 1.9)</em:name>
+    <em:description>Canvas 3D context(s) for Gecko 1.9</em:description>
+#endif
+    <em:homepageURL>http://people.mozilla.com/~vladimir/canvas3d/</em:homepageURL>
+  </Description>
+</RDF>

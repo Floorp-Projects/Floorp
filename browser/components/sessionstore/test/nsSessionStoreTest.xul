@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+  title="nsSessionstore Tests">
+
+  <script type="text/javascript">
+
+    const Cc = Components.classes;
+    const Ci = Components.interfaces;
+    const Cr = Components.results;
+
+    var ssTests = {
+      log: function sst_log(aMsg) {
+        Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(aMsg);
+      },
+
+      run: function sst_run() {
+        var tests = ["componentExists", "getService", "windowValues", "tabValues"];
+        var results = {};
+        tests.forEach(function(aTest) {
+          try {
+            results[aTest] = ssTests[aTest]();
+          } catch(ex) {
+            results[aTest] = false;
+          }
+        });
+        return results;
+      },
+
+      componentExists: function sst_componentExists() {
+        return Cc["@mozilla.org/browser/sessionstore;1"] ? true : false;
+      },
+
+      getService: function sst_getService() {
+        return Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore) ? true : false;
+      },
+
+      // setWindowValue
+      windowValues: function sst_windowValues() {
+        var ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+        if (!ss)
+          return false;
+
+        var key = "key1";
+        var value = "value1";
+
+        // get current window, tabbrowser
+        var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+        var windowEnumerator = wm.getEnumerator("navigator:browser");
+        var currentWindow = windowEnumerator.getNext();
+        var tabbrowser = currentWindow.getBrowser(); 
+    
+        // create a new tab
+        var newTab = tabbrowser.addTab("http://www.mozilla.org");
+
+        // test adding
+        if (ss.setWindowValue(currentWindow, key, value) == -1) {
+          this.log("setWindowValue failed");
+          return false;
+        }
+
+        // test retrieving
+        var storedValue = ss.getWindowValue(currentWindow, key);
+        if (value != storedValue)
+          return false;
+
+        // test deleting 
+        if (ss.deleteWindowValue(currentWindow, key) == -1) {
+          this.log("deleteWindowValue failed");
+          return false;
+        }
+        if (ss.getWindowValue(currentWindow, key)) {
+          this.log("deleteWindowValue failed: data was not deleted");
+          return false;  
+        }
+
+        // clean up
+        tabbrowser.removeTab(newTab);
+        return true;
+      },
+
+      // tabValues
+      tabValues: function sst_tabValues() {
+        var ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+        if (!ss)
+          return false;
+
+        var key = "key1";
+        var value = "value1";
+
+        // get current window, tabbrowser
+        var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+        var windowEnumerator = wm.getEnumerator("navigator:browser");
+        var currentWindow = windowEnumerator.getNext();
+        var tabbrowser = currentWindow.getBrowser(); 
+    
+        // create a new tab
+        var newTab = tabbrowser.addTab("http://www.mozilla.org");
+
+        // test adding
+        if (ss.setTabValue(newTab, key, value) == -1) {
+          this.log("setTabValue failed");
+          return false;
+        }
+
+        // test retrieving
+        var storedValue = ss.getTabValue(newTab, key);
+        if (value != storedValue)
+          return false;
+
+        // test deleting 
+        if (ss.deleteTabValue(newTab, key) == -1) {
+          this.log("deleteTabValue failed");
+          return false;
+        }
+        if (ss.getTabValue(newTab, key)) {
+          this.log("deleteTabValue failed: data was not deleted");
+          return false;  
+        }
+
+        // clean up
+        tabbrowser.removeTab(newTab);
+        return true;
+      }
+    };
+
+    function debug(aMsg) {
+      Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(aMsg);
+    }
+
+    var results = ssTests.run();
+
+    for (key in results) {
+      debug(key + ": " + results[key]);
+    }
+
+  </script>
+
+</window>

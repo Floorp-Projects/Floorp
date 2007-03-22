@@ -1,0 +1,132 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org Code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Scott MacGregor <mscott@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsIURI.idl"
+
+  /**
+   * nsIIconURI
+   *
+   * This interface derives from nsIURI, to provide additional information
+   * about moz-icon URIs.
+   *
+   * What *is* a moz-icon URI you ask?  Well, it has the following syntax:
+   *
+   * moz-icon://[<file-uri> | <file-with-extension> | <stock-image>]? ['?'[<parameter-value-pairs>]]
+   *
+   * <file-uri> is a legal file: URI spec.  You only need to specify a file: URI inside the icon
+   * if the file you want the icon for actually exists.
+   *
+   * <file-with-extension> is any filename with an extension, e.g. "dummy.html".
+   * If the file you want an icon for isn't known to exist, you can omit the file URI, and just
+   * place a dummy file name with the extension or content type you want: moz-icon://dummy.html.
+   *
+   * <stock-image> is of the format:   stock/<icon-name>
+   *
+   * <icon-name> is a valid icon name, such as 'ok', 'cancel', 'yes', 'no'.
+   * XXXcaa Should these considered platform dependent or can we share and document them?
+   *
+   * Legal parameter value pairs are listed below:
+   *
+   *   Parameter:   size
+   *   Values:      [<integer> | button | toolbar | toolbarsmall | menu | dialog]
+   *   Description: If integer, this is the desired size in square pixels of the icon
+   *                Else, use the OS default for the specified keyword context.
+   *
+   *   Parameter:   state
+   *   Values:      [normal | disabled]
+   *   Description: The state of the icon.
+   *
+   *   Parameter:   contentType
+   *   Values:      <mime-type>
+   *   Description: The mime type we want an icon for. This is ignored by stock images.
+   */
+
+[scriptable, uuid(1FB33F44-F522-4880-A225-4B75D09B04C6)]
+interface nsIMozIconURI : nsIURI 
+{
+  /**
+   * iconFile
+   *
+   * the file URL contained within this moz-icon url, or null.
+   */
+  attribute nsIURI iconFile;
+
+  /**
+   * imageSize
+   *
+   * The image area in square pixels, defaulting to 16 if unspecified.
+   */
+  attribute unsigned long imageSize;
+
+  /**
+   * stockIcon
+   *
+   * The stock icon name requested from the OS.
+   */
+   readonly attribute ACString stockIcon;
+
+  /**
+   * iconSize
+   *
+   * The stock icon size requested from the OS.
+   */
+   readonly attribute ACString iconSize;
+
+  /**
+   * iconState
+   *
+   * The stock icon state requested from the OS.
+   */
+   readonly attribute ACString iconState;
+
+  /**
+   * contentType
+   *
+   * A valid mime type, or the empty string.
+   */
+
+  attribute ACString contentType;
+
+  /**
+   * fileExtension
+   *
+   * The file extension of the file which we are looking up.
+   */
+  readonly attribute ACString fileExtension;
+};

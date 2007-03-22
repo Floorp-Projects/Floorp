@@ -1,0 +1,71 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Javier Delgadillo <javi@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIPK11Token;
+
+[scriptable, uuid(c2d4f296-ee60-11d4-998b-00b0d02354a0)]
+interface nsIPKCS11Slot : nsISupports {
+
+  readonly attribute wstring name;
+  readonly attribute wstring desc;
+  readonly attribute wstring manID;
+  readonly attribute wstring HWVersion;
+  readonly attribute wstring FWVersion;
+
+  const unsigned long SLOT_DISABLED      = 0;
+  const unsigned long SLOT_NOT_PRESENT   = 1;
+  const unsigned long SLOT_UNINITIALIZED = 2;
+  const unsigned long SLOT_NOT_LOGGED_IN = 3;
+  const unsigned long SLOT_LOGGED_IN     = 4;
+  const unsigned long SLOT_READY         = 5;
+  readonly attribute unsigned long status;
+
+  /* This is really a workaround for now.  All of the "slot" functions
+   * (isTokenPresent(), etc.) are in nsIPK11Token.  For now, return the
+   * token and handle those things there.
+   */
+  nsIPK11Token getToken();
+
+  /* more fun with workarounds - we're referring to everything by token name */
+  readonly attribute wstring tokenName;
+
+};
+

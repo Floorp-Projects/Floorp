@@ -1,0 +1,98 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsIStreamListener.idl"
+
+interface nsIRequest;
+interface nsIStreamLoader;
+
+[scriptable, uuid(359F7990-D4E9-11d3-A1A5-0050041CAF44)]
+interface nsIStreamLoaderObserver : nsISupports
+{
+    /**
+     * Called when the entire stream has been loaded.
+     *
+     * @param loader the stream loader that loaded the stream.
+     * @param ctxt the context parameter of the underlying channel
+     * @param status the status of the underlying channel
+     * @param resultLength the length of the data loaded
+     * @param result the data
+     *
+     * This method will always be called asynchronously by the
+     * nsIStreamLoader involved, on the thread that called the
+     * loader's init() method.
+     */
+    void onStreamComplete(in nsIStreamLoader loader,
+                          in nsISupports ctxt,
+                          in nsresult status,
+                          in unsigned long resultLength,
+                          [const,array,size_is(resultLength)] in octet result);
+};
+
+/**
+ * Asynchronously loads a channel into a memory buffer.
+ *
+ * To use this interface, first call init() with a nsIStreamLoaderObserver
+ * that will be notified when the data has been loaded. Then call asyncOpen()
+ * on the channel with the nsIStreamLoader as the listener. The context
+ * argument in the asyncOpen() call will be passed to the onStreamComplete()
+ * callback.
+ *
+ * XXX define behaviour for sizes >4 GB
+ */
+[scriptable, uuid(8ea7e890-8211-11d9-8bde-f66bad1e3f3a)]
+interface nsIStreamLoader : nsIStreamListener
+{
+    /**
+     * Initialize this stream loader, and start loading the data.
+     *
+     * @param aObserver
+     *        An observer that will be notified when the data is complete.
+     */
+    void init(in nsIStreamLoaderObserver aObserver);
+
+    /**
+     * Gets the number of bytes read so far.
+     */
+    readonly attribute unsigned long numBytesRead;
+
+    /**
+     * Gets the request that loaded this file.
+     * null after the request has finished loading.
+     */
+    readonly attribute nsIRequest request;
+};

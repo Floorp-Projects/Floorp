@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Testcase, bug 347912</title>
+<style type="text/css">
+
+body { background: green; }
+
+div { height: 10px; margin: 1em; }
+
+</style>
+</head>
+<body>
+
+<div style="background: red; background: transparent"></div>
+<div style="color: red; color: transparent">This is text</div>
+<div style="border: medium solid red; border-color: transparent"></div>
+<div style="border: medium solid red; border: medium solid transparent"></div>
+
+<div style="background: red; background: rgba(7, 35, 210, 0)"></div>
+<div style="color: red; color: rgba(7, 35, 210, 0)">This is text</div>
+<div style="border: medium solid red; border-color: rgba(7, 35, 210, 0)"></div>
+<div style="border: medium solid red; border: medium solid rgba(7, 35, 210, 0)"></div>
+
+<div style="color: red; color: rgba(7, 35, 210, 0.0)">This is text</div>
+<div style="color: red; color: rgba(7, 35, 210, .0)">This is text</div>
+<div style="color: red; color: rgba(7, 35, 210, .00000000000)">This is text</div>
+<div style="color: red; color: rgba(7, 35, 210, +.000)">This is text</div>
+<div style="color: red; color: rgba(7, 35, 210, +0.0)">This is text</div>
+<div style="color: red; color: rgba(7, 35, 210, +0)">This is text</div>
+<div style="color: red; color: hsla(240, 40%, 20%, 0)">This is text</div>
+<div style="color: red; color: hsla(240, 40%, 20%, 0.0)">This is text</div>
+<div style="color: red; color: hsla(240, 40%, 20%, .0)">This is text</div>
+<div style="color: red; color: hsla(240, 40%, 20%, .0000000000000)">This is text</div>
+<div style="color: red; color: hsla(240, 40%, 20%, +.000)">This is text</div>
+<div style="color: red; color: hsla(240, 40%, 20%, +0.0)">This is text</div>
+<div style="color: red; color: hsla(240, 40%, 20%, +0)">This is text</div>
+
+</body>
+</html>

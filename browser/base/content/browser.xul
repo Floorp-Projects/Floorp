@@ -1,0 +1,544 @@
+<?xml version="1.0"?>
+# -*- Mode: HTML -*-
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998-2000
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Blake Ross <blake@cs.stanford.edu>
+#   David Hyatt <hyatt@mozilla.org>
+#   Joe Hewitt <hewitt@netscape.com>
+#   Pierre Chanial <chanial@noos.fr>
+#   Dean Tessman <dean_tessman@hotmail.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
+
+#ifdef MOZ_PLACES
+<?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
+#endif
+
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
+
+#ifdef MOZ_PLACES_BOOKMARKS
+<?xml-stylesheet href="chrome://browser/skin/places/browser-places.css" type="text/css"?>
+#endif
+
+<?xml-stylesheet href="chrome://global/skin/toolbar.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
+#ifdef MOZ_PLACES
+<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
+#endif
+
+# All DTD information is stored in a separate file so that it can be shared by
+# hiddenWindow.xul.
+#include browser-doctype.inc
+ 
+<window id="main-window"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="BrowserStartup()" onunload="BrowserShutdown()" onclose="return WindowIsClosing();"
+        contenttitlesetting="true"
+        title="&mainWindow.title;"
+        titlemodifier="&mainWindow.title;"
+        titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
+        windowtype="navigator:browser"
+        screenX="4" screenY="4"
+        persist="screenX screenY width height sizemode"> 
+
+# All JS files which are not content (only) dependent that browser.xul
+# wishes to include *must* go into the global-scripts.inc file
+# so that they can be shared by macBrowserOverlay.xul.
+#include global-scripts.inc
+<script type="application/x-javascript" src="chrome://browser/content/nsContextMenu.js"/>
+  
+#ifdef MOZ_SAFE_BROWSING
+<script type="application/x-javascript" src="chrome://browser/content/safebrowsing/sb-loader.js"/>
+#endif
+<script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
+
+# All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
+# browser-sets.inc file for sharing with hiddenWindow.xul.
+#include browser-sets.inc
+
+  <popupset id="mainPopupSet">
+    <popup id="backMenu" 
+           position="after_start" 
+           onpopupshowing="return BrowserBackMenu(event);"
+           oncommand="gotoHistoryIndex(event);"
+           onclick="checkForMiddleClick(this, event);"/>
+    <popup id="forwardMenu"
+           position="after_start"
+           onpopupshowing="return BrowserForwardMenu(event);"
+           oncommand="gotoHistoryIndex(event);"
+           onclick="checkForMiddleClick(this, event);"/>
+    <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
+
+    <popup type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete"/>
+
+    <popup id="toolbar-context-menu"
+           onpopupshowing="onViewToolbarsPopupShowing(event);">
+      <menuseparator/>
+      <menuitem command="cmd_CustomizeToolbars"
+                label="&viewCustomizeToolbar.label;"
+                accesskey="&viewCustomizeToolbar.accesskey;"/>
+    </popup>
+
+    <popup id="blockedPopupOptions" 
+           onpopupshowing="gPopupBlockerObserver.fillPopupList(event);">
+      <menuitem observes="blockedPopupAllowSite"/>
+      <menuitem observes="blockedPopupEditSettings"/>
+      <menuitem observes="blockedPopupDontShowMessage"/>
+      <menuseparator observes="blockedPopupsSeparator"/>
+    </popup>
+
+    <popup id="contentAreaContextMenu"
+           onpopupshowing="if (event.target != this) return true; gContextMenu = new nsContextMenu(this, window.getBrowser()); return gContextMenu.shouldDisplay;"
+           onpopuphiding="if (event.target == this) { gContextMenu = null; }">
+#include browser-context.inc
+    </popup>
+
+    <popup id="placesContext"/>
+  </popupset>
+
+# The hacky hidden tree used by the Go menu to build items.
+#include browser-gotreehack.inc
+
+#ifndef MOZ_PLACES_BOOKMARKS
+  <!-- bookmarks context menu -->
+  <popupset>
+    <menupopup id="bookmarks-context-menu" 
+               onpopupshowing="return BookmarksMenu.createContextMenu(event);"
+               onpopuphidden ="BookmarksMenu.destroyContextMenu(event);"/>
+  </popupset>
+#endif
+
+  <!-- bookmarks toolbar tooltip -->
+  <tooltip id="btTooltip" noautohide="true"
+#ifdef MOZ_PLACES_BOOKMARKS
+           onpopupshowing="return BookmarksEventHandler.fillInBTTooltip(document.tooltipNode)">
+#else
+           onpopupshowing="return BookmarksToolbar.fillInBTTooltip(document.tooltipNode)">
+#endif
+    <vbox id="btTooltipTextBox" flex="1">  
+      <label id="btTitleText" />
+      <label id="btUrlText" />
+    </vbox>
+  </tooltip>
+
+  <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons"
+           defaultmode="icons">
+    <!-- Menu -->
+    <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
+#ifdef XP_MACOSX
+             defaultset="menubar-items"
+#else
+             defaultset="menubar-items,spring,throbber-box"
+#endif
+             mode="icons" context="toolbar-context-menu">
+      <toolbaritem id="menubar-items" align="center">
+# The entire main menubar is placed into browser-menubar.inc, so that it can be shared by 
+# hiddenWindow.xul.
+#include browser-menubar.inc
+      </toolbaritem>
+    </toolbar>
+
+    <toolbarpalette id="BrowserToolbarPalette">
+      <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     chromedir="&locale.dir;"
+                     label="&backCmd.label;"
+                     oncommand="BrowserBack(event)"
+                     onclick="checkForMiddleClick(this, event);"
+                     context="backMenu"
+                     tooltiptext="&backButton.tooltip;">
+        <observes element="Browser:Back" attribute="disabled"/>
+        <menupopup context=""
+                   onpopupshowing="BrowserBackMenu(event);"
+                   oncommand="gotoHistoryIndex(event); event.stopPropagation();"
+                   onclick="checkForMiddleClick(this, event);"/>
+      </toolbarbutton>
+    
+      <toolbarbutton id="forward-button" type="menu-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     chromedir="&locale.dir;"
+                     label="&forwardCmd.label;"
+                     oncommand="BrowserForward(event)"
+                     onclick="checkForMiddleClick(this, event);"
+                     context="forwardMenu"
+                     tooltiptext="&forwardButton.tooltip;">
+        <observes element="Browser:Forward" attribute="disabled"/>
+        <menupopup context=""
+                   onpopupshowing="BrowserForwardMenu(event);"
+                   oncommand="gotoHistoryIndex(event); event.stopPropagation()"
+                   onclick="checkForMiddleClick(this, event);"/>
+      </toolbarbutton>
+    
+      <toolbarbutton id="reload-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&reloadCmd.label;"
+                     command="Browser:Reload"
+                     tooltiptext="&reloadButton.tooltip;"/>
+                    
+      <toolbarbutton id="stop-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&stopCmd.label;"
+                     command="Browser:Stop"
+                     tooltiptext="&stopButton.tooltip;"/>
+
+      <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&homeButton.label;"
+                     ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
+                     ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
+                     ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
+                     onclick="BrowserHomeClick(event);"/>
+
+      <toolbaritem id="urlbar-container" align="center" flex="400"
+                   title="&locationItem.title;" class="chromeclass-location">
+        <hbox id="urlbar-button-box" flex="1">
+            <textbox id="urlbar" flex="1"
+                     chromedir="&locale.dir;"
+                     type="autocomplete"
+                     autocompletesearch="history" 
+                     autocompletepopup="PopupAutoComplete"
+                     completeselectedindex="true"
+                     tabscrolling="true"
+                     showcommentcolumn="true"
+                     enablehistory="true"
+#ifndef MOZILLA_1_8_BRANCH
+# bug 23485
+                     newlines="stripsurroundingwhitespace"
+#endif
+                     oninput="gBrowser.userTypedValue = this.value"
+                     ontextentered="return handleURLBarCommand(param);"
+                     ontextreverted="return handleURLBarRevert();">
+              <deck id="page-proxy-deck" onclick="PageProxyClickHandler(event);">
+                <image id="page-proxy-button"
+                        ondraggesture="PageProxyDragGesture(event);"
+                        tooltiptext="&proxyIcon.tooltip;"/>
+                <image id="page-proxy-favicon" validate="never"
+                        ondraggesture="PageProxyDragGesture(event);"
+                        onload="this.parentNode.selectedIndex = 1;
+                                event.stopPropagation();"
+                        onerror="gBrowser.addToMissedIconCache(this.src);
+                                 this.removeAttribute('src');
+                                 this.parentNode.selectedIndex = 0;"
+                        tooltiptext="&proxyIcon.tooltip;"/>
+              </deck>
+              <hbox id="urlbar-icons">
+                <button type="menu"
+                        style="-moz-user-focus: none"
+                        class="plain"
+                        id="feed-button"
+                        chromedir="&locale.dir;"
+                        onclick="return FeedHandler.onFeedButtonClick(event);">
+                  <menupopup position="after_end"
+                             onpopupshowing="return FeedHandler.buildFeedList(this);"
+                             oncommand="return FeedHandler.subscribeToFeed(null, event);"
+                             onclick="checkForMiddleClick(this, event);"/>
+                </button>
+                <image id="lock-icon" onclick="if (event.button == 0) displaySecurityInfo(); event.stopPropagation();"/>
+#ifdef MOZ_SAFE_BROWSING
+                <image id="safebrowsing-urlbar-icon" tooltiptext="&safeb.urlbaricon.tooltip;"
+                       level="safe"
+                       onclick="goDoCommand('safebrowsing-show-warning')" />
+#endif
+              </hbox>
+            </textbox>
+            <stack id="go-button-stack">
+              <vbox>
+                <!-- These image segments allow the button to stretch nicely
+                     in larger urlbars. -->
+                <image id="go-button-top"
+                       class="go-button-background"
+                       chromedir="&locale.dir;" />
+                <image flex="1"
+                       id="go-button-mid-top"
+                       class="go-button-background"
+                       chromedir="&locale.dir;" />
+                <image flex="1"
+                       id="go-button-mid-bottom"
+                      class="go-button-background"
+                      chromedir="&locale.dir;" />
+                <image id="go-button-bottom"
+                       class="go-button-background"
+                       chromedir="&locale.dir;" />
+              </vbox>
+							
+            <toolbarbutton id="go-button"
+                           flex="1"
+                           chromedir="&locale.dir;"
+                           label="&goEndCap.label;"
+                           onclick="handleURLBarCommand(event);"
+                           ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
+                           ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
+                           ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
+                           tooltiptext="&goEndCap.tooltip;"/>
+          </stack>
+        </hbox>
+      </toolbaritem>
+
+      <toolbaritem id="search-container" title="&searchItem.title;" 
+                   align="center" class="chromeclass-toolbar-additional"
+                   flex="100">
+        <searchbar id="searchbar" flex="1" chromedir="&locale.dir;"/>
+      </toolbaritem>
+
+      <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&printButton.label;" command="cmd_print"
+                     tooltiptext="&printButton.tooltip;"/>
+
+      <toolbaritem id="throbber-box" title="&throbberItem.title;" align="center" pack="center">
+        <button id="navigator-throbber" disabled="true"/>
+      </toolbaritem>
+
+#ifdef MOZ_PLACES_BOOKMARKS
+      <toolbaritem flex="1" id="personal-bookmarks" title="&bookmarksItem.title;">
+         <hbox id="bookmarksBarContent" flex="1" type="places"
+               context="placesContext" asyncinit="true" 
+               onclick="BookmarksEventHandler.onClick(event);"
+               oncommand="BookmarksEventHandler.onCommand(event);"
+               onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"
+               ondragexit="PlacesMenuDNDController.onDragExit(event);"
+               tooltip="btTooltip"/>
+      </toolbaritem>
+#else
+      <toolbaritem id="personal-bookmarks" title="&bookmarksItem.title;" flex="1"
+                   class="chromeclass-directories">
+        <stack id="bookmarks-stack" flex="1" style="min-width:0px; width:0px; overflow: hidden;"
+               onpopupshowing="BookmarksToolbar.setOpenedMenu(event);"
+               onpopuphidden="BookmarksToolbar.unsetOpenedMenu(event);">
+          <hbox id="bookmarks-ptf" class="bookmarks-toolbar-items" contextmenu="bookmarks-context-menu"
+                flex="1" style="min-width:0px; width:0px;padding-left: 3px;" 
+                datasources="rdf:bookmarks rdf:files"
+                template="bookmarks-template" flags="dont-test-empty"
+                infer="forward-proxy"
+                rdf:type="http://home.netscape.com/NC-rdf#Folder"
+                onpopupshowing="BookmarksMenu.onShowMenu(event.target)"
+                onpopuphidden="BookmarksMenu.onHideMenu(event.target)"
+                oncommand="BookmarksMenu.loadBookmark(event, event.target, this.database)"
+                onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)"
+                ondraggesture="nsDragAndDrop.startDrag(event, BookmarksMenuDNDObserver)"
+                ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDNDObserver); event.stopPropagation()"
+                ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.stopPropagation()"
+                ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.stopPropagation()"
+                ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.stopPropagation()">
+          </hbox>
+          <hbox class="bookmarks-toolbar-overflow-items" mousethrough="always">
+            <hbox mousethrough="always" id="overflow-padder"/>
+              <toolbarbutton id="bookmarks-chevron" type="menu" class="chevron"
+                             chromedir="&locale.dir;"
+                             mousethrough="never" collapsed="true" 
+                             datasources="rdf:bookmarks rdf:files"
+                             template="bookmarks-template" flags="dont-test-empty"
+                             onpopupshowing="BookmarksMenu.onShowMenu(event.target)"
+                             onpopuphidden="BookmarksMenu.onHideMenu(event.target)"
+                             oncommand="BookmarksMenu.loadBookmark(event, event.target, this.database)"
+                             onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)"
+                             ondraggesture="nsDragAndDrop.startDrag(event, BookmarksMenuDNDObserver)"
+                             ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDNDObserver); event.stopPropagation()"
+                             ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.stopPropagation()"
+                             ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.stopPropagation()"
+                             ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.stopPropagation()">
+                <menupopup onpopupshowing="if (event.target == this) BookmarksToolbar.updateOverflowMenu(this);"
+#ifndef XP_MACOSX
+                           contextmenu="bookmarks-context-menu"
+#endif
+                           />
+              </toolbarbutton>
+            </hbox>
+            <toolbarbutton class="bookmark-item bookmarks-toolbar-customize" mousethrough="never"
+                           label="&bookmarksToolbarItem.label;"/>
+          </stack>
+        </toolbaritem>
+#endif
+
+        <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       observes="Tools:Downloads"
+                       ondragdrop="nsDragAndDrop.drop(event, DownloadsButtonDNDObserver); event.stopPropagation()"
+                       ondragover="nsDragAndDrop.dragOver(event, DownloadsButtonDNDObserver); event.stopPropagation()"
+                       ondragenter="nsDragAndDrop.dragEnter(event, DownloadsButtonDNDObserver); event.stopPropagation()"
+                       ondragexit="nsDragAndDrop.dragExit(event, DownloadsButtonDNDObserver); event.stopPropagation()"
+                       label="&downloads.label;"
+                       tooltiptext="&downloads.tooltip;"/>
+
+        <toolbarbutton id="history-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       observes="viewHistorySidebar" label="&historyButton.label;"
+                       tooltiptext="&historyButton.tooltip;"/>
+
+#ifndef MOZ_PLACES_BOOKMARKS
+        <toolbarbutton id="bookmarks-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       observes="viewBookmarksSidebar"
+                       tooltiptext="&bookmarksButton.tooltip;"
+                       ondragover="nsDragAndDrop.dragOver(event, bookmarksButtonObserver);"
+                       ondragdrop="nsDragAndDrop.drop(event, bookmarksButtonObserver);"
+                       ondragexit="nsDragAndDrop.dragExit(event, bookmarksButtonObserver);"/>
+#endif
+
+        <toolbarbutton id="new-tab-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       label="&tabCmd.label;"
+                       command="cmd_newNavigatorTab"
+                       tooltiptext="&newTabButton.tooltip;"
+                       ondragover="nsDragAndDrop.dragOver(event, newTabButtonObserver);"
+                       ondragdrop="nsDragAndDrop.drop(event, newTabButtonObserver);"
+                       ondragexit="nsDragAndDrop.dragExit(event, newTabButtonObserver);"/>         
+
+        <toolbarbutton id="new-window-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       label="&newNavigatorCmd.label;"
+                       command="key_newNavigator"
+                       tooltiptext="&newWindowButton.tooltip;"
+                       ondragover="nsDragAndDrop.dragOver(event, newWindowButtonObserver);"
+                       ondragdrop="nsDragAndDrop.drop(event, newWindowButtonObserver);"
+                       ondragexit="nsDragAndDrop.dragExit(event, newWindowButtonObserver);"/>
+
+        <toolbarbutton id="cut-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       label="&cutCmd.label;"
+                       command="cmd_cut"
+                       tooltiptext="&cutButton.tooltip;"/>
+
+        <toolbarbutton id="copy-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       label="&copyCmd.label;"
+                       command="cmd_copy"
+                       tooltiptext="&copyButton.tooltip;"/>
+
+        <toolbarbutton id="paste-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       label="&pasteCmd.label;"
+                       command="cmd_paste"
+                       tooltiptext="&pasteButton.tooltip;"/>
+
+    </toolbarpalette>
+
+    <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"
+             toolbarname="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;"
+             fullscreentoolbar="true" mode="icons" 
+             customizable="true"
+#ifdef XP_MACOSX
+             defaultset="back-button,forward-button,reload-button,stop-button,home-button,urlbar-container,go-container,search-container,throbber-box"
+#else
+             defaultset="back-button,forward-button,reload-button,stop-button,home-button,urlbar-container,go-container,search-container,fullscreenflex,window-controls"
+#endif
+             context="toolbar-context-menu">
+#ifndef XP_MACOSX
+      <hbox id="fullscreenflex" flex="1" hidden="true" fullscreencontrol="true"/>
+      <hbox id="window-controls" hidden="true" fullscreencontrol="true">
+        <toolbarbutton id="minimize-button" class="toolbarbutton-1"
+                       tooltiptext="&fullScreenMinimize.tooltip;"
+                       oncommand="window.minimize();"/>
+
+        <toolbarbutton id="restore-button" class="toolbarbutton-1"
+                       tooltiptext="&fullScreenRestore.tooltip;"
+                       oncommand="BrowserFullScreen();"/>
+
+        <toolbarbutton id="close-button" class="toolbarbutton-1"
+                       tooltiptext="&fullScreenClose.tooltip;"
+                       oncommand="BrowserTryToCloseWindow();"/>
+      </hbox>
+#endif
+    </toolbar>
+ 
+    <toolbarset id="customToolbars" context="toolbar-context-menu"/>
+
+#ifdef MOZ_PLACES_BOOKMARKS
+    <toolbar id="PersonalToolbar" mode="icons"  iconsize="small" 
+             class="chromeclass-directories"
+             context="toolbar-context-menu" 
+             defaultset="bookmarksBarShowPlaces,personal-bookmarks"
+             toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"
+             customizable="true"/>
+#else
+    <toolbar id="PersonalToolbar" class="chromeclass-directories" iconsize="small"
+             customizable="true" defaultset="personal-bookmarks" mode="icons"
+             toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"
+             context="toolbar-context-menu"/>
+#endif
+  </toolbox>
+  
+  <stack id="browser-stack" flex="1">
+    <hbox flex="1" id="browser">
+      <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
+        <sidebarheader align="center">
+          <label id="sidebar-title" persist="value" flex="1" crop="end" control="sidebar"/>
+          <image id="sidebar-throbber"/>
+          <toolbarbutton class="tabs-closebutton" tooltiptext="&sidebarCloseButton.tooltip;" oncommand="toggleSidebar();"/>
+        </sidebarheader>        
+        <browser id="sidebar" flex="1" autoscroll="false"
+                 style="min-width: 14em; width: 18em; max-width: 36em;"/>
+      </vbox>    
+    
+      <splitter id="sidebar-splitter" class="chromeclass-extrachrome" hidden="true"/>
+      <vbox id="appcontent" flex="1">
+        <tabbrowser id="content" disablehistory="true"
+                    flex="1" contenttooltip="aHTMLTooltip"
+                    contentcontextmenu="contentAreaContextMenu"
+                    onnewtab="BrowserOpenTab();"
+                    autocompletepopup="PopupAutoComplete"
+                    ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
+                    onclick="return contentAreaClick(event, false);"/>
+      </vbox>
+    </hbox>
+#ifdef TOOLBAR_CUSTOMIZATION_SHEET
+    <hbox flex="1" hidden="true" id="customizeToolbarSheetBox">
+      <hbox flex="1"/>
+      <vbox flex="1">
+        <iframe id="customizeToolbarSheetIFrame"
+                style="&dialog.style;"
+                src="chrome://global/content/customizeToolbar.xul"/>
+        <vbox flex="1"/>
+      </vbox>
+      <hbox flex="1"/>
+    </hbox>
+#endif
+  </stack>
+
+  <findbar browserid="content" id="FindToolbar"/>
+  
+  <statusbar class="chromeclass-status" id="status-bar"
+             ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
+    <statusbarpanel id="statusbar-display" label="" flex="1"/>
+    <statusbarpanel class="statusbarpanel-progress" collapsed="true" id="statusbar-progresspanel">
+      <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
+    </statusbarpanel>
+    <statusbarpanel id="security-button" class="statusbarpanel-iconic-text"
+                    ondblclick="if (event.button == 0) displaySecurityInfo();"/>
+    <statusbarpanel id="page-report-button" type="menu" 
+                    class="statusbarpanel-menu-iconic" 
+                    tooltiptext="&pageReportIcon.tooltip;">
+      <menupopup onpopupshowing="gPopupBlockerObserver.fillPopupList(event);">
+        <menuitem observes="blockedPopupAllowSite"/>
+        <menuitem observes="blockedPopupEditSettings"/>
+        <menuitem observes="blockedPopupDontShowMessage"/>
+        <menuseparator observes="blockedPopupsSeparator"/>
+      </menupopup>
+    </statusbarpanel>
+  </statusbar>
+</window>
+  

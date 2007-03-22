@@ -1,0 +1,273 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* base class #1 for rendering objects that have child lists */
+
+#ifndef nsContainerFrame_h___
+#define nsContainerFrame_h___
+
+#include "nsSplittableFrame.h"
+#include "nsFrameList.h"
+#include "nsLayoutUtils.h"
+
+// Option flags for ReflowChild() and FinishReflowChild()
+// member functions
+#define NS_FRAME_NO_MOVE_VIEW         0x0001
+#define NS_FRAME_NO_MOVE_FRAME        (0x0002 | NS_FRAME_NO_MOVE_VIEW)
+#define NS_FRAME_NO_SIZE_VIEW         0x0004
+#define NS_FRAME_NO_VISIBILITY        0x0008
+
+/**
+ * Implementation of a container frame.
+ */
+class nsContainerFrame : public nsSplittableFrame
+{
+public:
+  // nsIFrame overrides
+  NS_IMETHOD Init(nsIContent* aContent,
+                  nsIFrame*   aParent,
+                  nsIFrame*   aPrevInFlow);
+  NS_IMETHOD SetInitialChildList(nsIAtom*  aListName,
+                                 nsIFrame* aChildList);
+  NS_IMETHOD AppendFrames(nsIAtom*  aListName,
+                          nsIFrame* aFrameList);
+  NS_IMETHOD InsertFrames(nsIAtom*  aListName,
+                          nsIFrame* aPrevFrame,
+                          nsIFrame* aFrameList);
+  NS_IMETHOD RemoveFrame(nsIAtom*  aListName,
+                         nsIFrame* aOldFrame);
+
+  virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
+  virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
+  virtual void Destroy();
+  virtual void ChildIsDirty(nsIFrame* aChild);
+
+  virtual PRBool IsLeaf() const;
+  virtual PRBool PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset);
+  virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset);
+  
+#ifdef DEBUG
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+#endif  
+
+  // nsContainerFrame methods
+  virtual void DeleteNextInFlowChild(nsPresContext* aPresContext,
+                                     nsIFrame*       aNextInFlow);
+
+  static PRInt32 LengthOf(nsIFrame* aFrameList) {
+    nsFrameList tmp(aFrameList);
+    return tmp.GetLength();
+  }
+
+  // Positions the frame's view based on the frame's origin
+  static void PositionFrameView(nsIFrame* aKidFrame);
+
+  // Set the view's size and position after its frame has been reflowed.
+  //
+  // Flags:
+  // NS_FRAME_NO_MOVE_VIEW - don't position the frame's view. Set this if you
+  //    don't want to automatically sync the frame and view
+  // NS_FRAME_NO_SIZE_VIEW - don't size the view
+  static void SyncFrameViewAfterReflow(nsPresContext* aPresContext,
+                                       nsIFrame*       aFrame,
+                                       nsIView*        aView,
+                                       const nsRect*   aCombinedArea,
+                                       PRUint32        aFlags = 0);
+  
+  // Sets the view's attributes from the frame style.
+  // - opacity
+  // - visibility
+  // - content transparency
+  // - clip
+  // Call this when one of these styles changes or when the view has just
+  // been created.
+  // @param aStyleContext can be null, in which case the frame's style context is used
+  static void SyncFrameViewProperties(nsPresContext*  aPresContext,
+                                      nsIFrame*        aFrame,
+                                      nsStyleContext*  aStyleContext,
+                                      nsIView*         aView,
+                                      PRUint32         aFlags = 0);
+
+  // Returns PR_TRUE if the frame requires a view
+  static PRBool FrameNeedsView(nsIFrame* aFrame);
+  
+  // Used by both nsInlineFrame and nsFirstLetterFrame.
+  void DoInlineIntrinsicWidth(nsIRenderingContext *aRenderingContext,
+                              InlineIntrinsicWidthData *aData,
+                              nsLayoutUtils::IntrinsicWidthType aType);
+
+  /**
+   * This is the CSS block concept of computing 'auto' widths, which most
+   * classes derived from nsContainerFrame want.
+   */
+  virtual nsSize ComputeAutoSize(nsIRenderingContext *aRenderingContext,
+                                 nsSize aCBSize, nscoord aAvailableWidth,
+                                 nsSize aMargin, nsSize aBorder,
+                                 nsSize aPadding, PRBool aShrinkWrap);
+
+  /**
+   * Invokes the WillReflow() function, positions the frame and its view (if
+   * requested), and then calls Reflow(). If the reflow succeeds and the child
+   * frame is complete, deletes any next-in-flows using DeleteNextInFlowChild()
+   *
+   * Flags:
+   * NS_FRAME_NO_MOVE_VIEW - don't position the frame's view. Set this if you
+   *    don't want to automatically sync the frame and view
+   * NS_FRAME_NO_MOVE_VIEW - don't move the frame. aX and aY are ignored in this
+   *    case. Also implies NS_FRAME_NO_MOVE_VIEW
+   */
+  nsresult ReflowChild(nsIFrame*                aKidFrame,
+                       nsPresContext*          aPresContext,
+                       nsHTMLReflowMetrics&     aDesiredSize,
+                       const nsHTMLReflowState& aReflowState,
+                       nscoord                  aX,
+                       nscoord                  aY,
+                       PRUint32                 aFlags,
+                       nsReflowStatus&          aStatus);
+
+  /**
+   * The second half of frame reflow. Does the following:
+   * - sets the frame's bounds
+   * - sizes and positions (if requested) the frame's view. If the frame's final
+   *   position differs from the current position and the frame itself does not
+   *   have a view, then any child frames with views are positioned so they stay
+   *   in sync
+   * - sets the view's visibility, opacity, content transparency, and clip
+   * - invoked the DidReflow() function
+   *
+   * Flags:
+   * NS_FRAME_NO_MOVE_FRAME - don't move the frame. aX and aY are ignored in this
+   *    case. Also implies NS_FRAME_NO_MOVE_VIEW
+   * NS_FRAME_NO_MOVE_VIEW - don't position the frame's view. Set this if you
+   *    don't want to automatically sync the frame and view
+   * NS_FRAME_NO_SIZE_VIEW - don't size the frame's view
+   */
+  static nsresult FinishReflowChild(nsIFrame*                 aKidFrame,
+                                    nsPresContext*           aPresContext,
+                                    const nsHTMLReflowState*  aReflowState,
+                                    nsHTMLReflowMetrics&      aDesiredSize,
+                                    nscoord                   aX,
+                                    nscoord                   aY,
+                                    PRUint32                  aFlags);
+
+  
+  static void PositionChildViews(nsIFrame* aFrame);
+  
+  /**
+   * Builds display lists for the children. The background
+   * of each child is placed in the Content() list (suitable for inline
+   * children and other elements that behave like inlines,
+   * but not for in-flow block children of blocks).  DOES NOT
+   * paint the background/borders/outline of this frame. This should
+   * probably be avoided and eventually removed. It's currently here
+   * to emulate what nsContainerFrame::Paint did.
+   */
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
+
+protected:
+  nsContainerFrame(nsStyleContext* aContext) : nsSplittableFrame(aContext) {}
+  ~nsContainerFrame();
+
+  /**
+   * Builds a display list for non-block children that behave like
+   * inlines. This puts the background of each child into the
+   * Content() list (suitable for inline children but not for
+   * in-flow block children of blocks).
+   * @param aForcePseudoStack forces each child into a pseudo-stacking-context
+   * so its background and all other display items (except for positioned
+   * display items) go into the Content() list.
+   */
+  nsresult BuildDisplayListForNonBlockChildren(nsDisplayListBuilder*   aBuilder,
+                                               const nsRect&           aDirtyRect,
+                                               const nsDisplayListSet& aLists,
+                                               PRUint32                aFlags = 0);
+
+  /**
+   * Get the frames on the overflow list
+   */
+  nsIFrame* GetOverflowFrames(nsPresContext* aPresContext,
+                              PRBool          aRemoveProperty) const;
+
+  /**
+   * Set the overflow list
+   */
+  nsresult SetOverflowFrames(nsPresContext* aPresContext,
+                             nsIFrame*       aOverflowFrames);
+
+  /**
+   * Moves any frames on both the prev-in-flow's overflow list and the
+   * receiver's overflow to the receiver's child list.
+   *
+   * Resets the overlist pointers to nsnull, and updates the receiver's child
+   * count and content mapping.
+   *
+   * @return PR_TRUE if any frames were moved and PR_FALSE otherwise
+   */
+  PRBool MoveOverflowToChildList(nsPresContext* aPresContext);
+
+  /**
+   * Push aFromChild and its next siblings to the next-in-flow. Change
+   * the geometric parent of each frame that's pushed. If there is no
+   * next-in-flow the frames are placed on the overflow list (and the
+   * geometric parent is left unchanged).
+   *
+   * Updates the next-in-flow's child count. Does <b>not</b> update the
+   * pusher's child count.
+   *
+   * @param   aFromChild the first child frame to push. It is disconnected from
+   *            aPrevSibling
+   * @param   aPrevSibling aFromChild's previous sibling. Must not be null.
+   *            It's an error to push a parent's first child frame
+   */
+  void PushChildren(nsPresContext* aPresContext,
+                    nsIFrame*       aFromChild,
+                    nsIFrame*       aPrevSibling);
+
+  /**
+   * A helper for frames corresponding to generated content, which is used to
+   * remove the generated content from the tree when the :before or :after
+   * frame is destroyed.
+   */
+  static void CleanupGeneratedContentIn(nsIContent* aRealContent,
+                                        nsIFrame* aRoot);
+
+  nsFrameList mFrames;
+};
+
+#endif /* nsContainerFrame_h___ */

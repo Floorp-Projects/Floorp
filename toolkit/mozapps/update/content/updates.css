@@ -1,0 +1,34 @@
+/**
+ * General
+ */
+wizard[description=""] .wizard-header-description {
+  display: none;
+}
+
+link {
+  -moz-binding: url("chrome://mozapps/content/update/updates.xml#link");
+  -moz-user-focus: normal;
+  cursor: pointer;
+}
+
+link > label {
+  cursor: inherit;
+}
+
+/**
+ * License Page
+ */
+license {
+  -moz-binding: url("chrome://mozapps/content/update/updates.xml#license");
+  display: -moz-deck;
+}
+
+/**
+ * Update History Window
+ */
+update {
+  -moz-binding: url("chrome://mozapps/content/update/updates.xml#update");
+  display: -moz-box;
+  -moz-box-orient: vertical;
+}
+

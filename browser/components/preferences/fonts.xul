@@ -1,0 +1,289 @@
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Firefox Preferences System.
+#
+# The Initial Developer of the Original Code is
+# Ben Goodger.
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Ben Goodger <ben@mozilla.org>
+#   Gervase Markham <gerv@gerv.net>
+#   Tuukka Tolvanen <tt@lament.cjb.net>
+#   Jeff Walden <jwalden+code@mit.edu>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE prefwindow SYSTEM "chrome://browser/locale/preferences/fonts.dtd" >
+
+<prefwindow id="FontsDialog" type="child"
+            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            title="&fontsDialog.title;"
+            dlgbuttons="accept,cancel,help"
+#ifdef XP_UNIX
+#ifdef XP_MACOSX
+            style="width: &window.macWidth; !important;">
+#else
+            style="width: &window.unixWidth; !important;">
+#endif
+#else
+            style="width: &window.width; !important;">
+#endif
+
+  <prefpane id="FontsDialogPane"
+            helpTopic="prefs-fonts-and-colors" helpURI="chrome://browser/locale/help/help.rdf">
+  
+    <preferences id="fontPreferences">
+      <preference id="font.language.group"  name="font.language.group"  type="wstring"/>
+      <preference id="browser.display.use_document_fonts"
+                  name="browser.display.use_document_fonts"
+                  type="int"/>
+      <preference id="intl.charset.default" name="intl.charset.default" type="wstring"/>
+    </preferences>
+    
+    <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
+    <script type="application/x-javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
+    <script type="application/x-javascript" src="chrome://browser/content/preferences/fonts.js"/>
+
+    <!-- Fonts for: [ Language ] -->
+    <groupbox>
+      <caption>
+        <hbox align="center">
+          <label accesskey="&language.accesskey;" control="selectLangs">&language.label;</label>
+        </hbox>
+        <menulist id="selectLangs" preference="font.language.group"
+                  onsyncfrompreference="return gFontsDialog.readFontLanguageGroup();">
+          <menupopup>
+            <menuitem value="x-western"       label="&font.langGroup.latin1;"/>
+            <menuitem value="x-central-euro"  label="&font.langGroup.latin2;"/>
+            <menuitem value="ja"              label="&font.langGroup.japanese;"/>
+            <menuitem value="zh-TW"           label="&font.langGroup.trad-chinese;"/>
+            <menuitem value="zh-CN"           label="&font.langGroup.simpl-chinese;"/>
+            <menuitem value="zh-HK"           label="&font.langGroup.trad-chinese-hk;"/>
+            <menuitem value="ko"              label="&font.langGroup.korean;"/>
+            <menuitem value="x-cyrillic"      label="&font.langGroup.cyrillic;"/>
+            <menuitem value="x-baltic"        label="&font.langGroup.baltic;"/>
+            <menuitem value="el"              label="&font.langGroup.el;"/>
+            <menuitem value="tr"              label="&font.langGroup.turkish;"/>
+            <menuitem value="th"              label="&font.langGroup.thai;"/>
+            <menuitem value="he"              label="&font.langGroup.hebrew;"/>
+            <menuitem value="ar"              label="&font.langGroup.arabic;"/>
+            <menuitem value="x-devanagari"    label="&font.langGroup.devanagari;"/>
+            <menuitem value="x-tamil"         label="&font.langGroup.tamil;"/>
+            <menuitem value="x-armn"          label="&font.langGroup.armenian;"/>
+            <menuitem value="x-beng"          label="&font.langGroup.bengali;"/>
+            <menuitem value="x-ethi"          label="&font.langGroup.ethiopic;"/>
+            <menuitem value="x-geor"          label="&font.langGroup.georgian;"/>
+            <menuitem value="x-gujr"          label="&font.langGroup.gujarati;"/>
+            <menuitem value="x-guru"          label="&font.langGroup.gurmukhi;"/>
+            <menuitem value="x-khmr"          label="&font.langGroup.khmer;"/>
+            <menuitem value="x-mlym"          label="&font.langGroup.malayalam;"/>
+            <menuitem value="x-cans"          label="&font.langGroup.canadian;"/>
+            <menuitem value="x-unicode"       label="&font.langGroup.unicode;"/>
+            <menuitem value="x-user-def"      label="&font.langGroup.user-def;"/>
+          </menupopup>
+        </menulist>
+      </caption>
+      
+      <grid>
+        <columns>
+          <column/>
+          <column flex="1"/>
+          <column/>
+          <column/>
+        </columns>
+        
+        <rows>
+          <row>
+            <separator class="thin"/>
+          </row>
+
+          <row align="center">
+            <hbox align="center" pack="end">
+              <label accesskey="&proportional.accesskey;" control="defaultFontType">&proportional.label;</label>
+            </hbox>
+            <menulist id="defaultFontType" flex="1" style="width: 0px;">
+              <menupopup>
+                <menuitem value="serif" label="&useDefaultFontSerif.label;"/>
+                <menuitem value="sans-serif" label="&useDefaultFontSansSerif.label;"/>
+              </menupopup>
+            </menulist>
+            <hbox align="center" pack="end">
+              <label value="&size.label;"
+                     accesskey="&sizeProportional.accesskey;"
+                     control="sizeVar"/>
+            </hbox>  
+            <menulist id="sizeVar" class="small-margin">
+              <menupopup>
+                <menuitem value="9" label="9"/>
+                <menuitem value="10" label="10"/>
+                <menuitem value="11" label="11"/>
+                <menuitem value="12" label="12"/>
+                <menuitem value="13" label="13"/>
+                <menuitem value="14" label="14"/>
+                <menuitem value="15" label="15"/>
+                <menuitem value="16" label="16"/>
+                <menuitem value="17" label="17"/>
+                <menuitem value="18" label="18"/>
+                <menuitem value="20" label="20"/>
+                <menuitem value="22" label="22"/>
+                <menuitem value="24" label="24"/>
+                <menuitem value="26" label="26"/>
+                <menuitem value="28" label="28"/>
+                <menuitem value="30" label="30"/>
+                <menuitem value="32" label="32"/>
+                <menuitem value="34" label="34"/>
+                <menuitem value="36" label="36"/>
+                <menuitem value="40" label="40"/>
+                <menuitem value="44" label="44"/>
+                <menuitem value="48" label="48"/>
+                <menuitem value="56" label="56"/>
+                <menuitem value="64" label="64"/>
+                <menuitem value="72" label="72"/>
+              </menupopup>
+            </menulist>
+          </row>
+          <row align="center">
+            <hbox align="center" pack="end">
+              <label accesskey="&serif.accesskey;" control="serif">&serif.label;</label>
+            </hbox>
+            <menulist id="serif" flex="1" style="width: 0px;"
+                      onsyncfrompreference="return gFontsDialog.readFontSelection(document.getElementById('serif'));"/>
+            <spacer/>
+          </row>
+          <row align="center">
+            <hbox align="center" pack="end">
+              <label accesskey="&sans-serif.accesskey;" control="sans-serif">&sans-serif.label;</label>
+            </hbox>
+            <menulist id="sans-serif" flex="1" style="width: 0px;"
+                      onsyncfrompreference="return gFontsDialog.readFontSelection(document.getElementById('sans-serif'));"/>
+            <spacer/>
+          </row>
+          <row align="center">
+            <hbox align="center" pack="end">
+              <label accesskey="&monospace.accesskey;" control="monospace">&monospace.label;</label>
+            </hbox>
+            <menulist id="monospace" flex="1" style="width: 0px;" crop="right"
+                      onsyncfrompreference="return gFontsDialog.readFontSelection(document.getElementById('monospace'));"/>
+            <hbox align="center" pack="end">
+              <label value="&size.label;"
+                     accesskey="&sizeMonospace.accesskey;"
+                     control="sizeMono"/>
+            </hbox>  
+            <menulist id="sizeMono">
+              <menupopup>
+                <menuitem value="9" label="9"/>
+                <menuitem value="10" label="10"/>
+                <menuitem value="11" label="11"/>
+                <menuitem value="12" label="12"/>
+                <menuitem value="13" label="13"/>
+                <menuitem value="14" label="14"/>
+                <menuitem value="15" label="15"/>
+                <menuitem value="16" label="16"/>
+                <menuitem value="17" label="17"/>
+                <menuitem value="18" label="18"/>
+                <menuitem value="20" label="20"/>
+                <menuitem value="22" label="22"/>
+                <menuitem value="24" label="24"/>
+                <menuitem value="26" label="26"/>
+                <menuitem value="28" label="28"/>
+                <menuitem value="30" label="30"/>
+                <menuitem value="32" label="32"/>
+                <menuitem value="34" label="34"/>
+                <menuitem value="36" label="36"/>
+                <menuitem value="40" label="40"/>
+                <menuitem value="44" label="44"/>
+                <menuitem value="48" label="48"/>
+                <menuitem value="56" label="56"/>
+                <menuitem value="64" label="64"/>
+                <menuitem value="72" label="72"/>
+              </menupopup>
+            </menulist>
+          </row>
+        </rows>
+      </grid>
+      <separator class="thin"/>
+      <hbox flex="1">
+        <spacer flex="1"/>
+        <hbox align="center" pack="end">
+          <label accesskey="&minSize.accesskey;" control="minSize">&minSize.label;</label>
+          <menulist id="minSize">
+            <menupopup>
+              <menuitem value="0" label="&minSize.none;"/>
+              <menuitem value="9" label="9"/>
+              <menuitem value="10" label="10"/>
+              <menuitem value="11" label="11"/>
+              <menuitem value="12" label="12"/>
+              <menuitem value="13" label="13"/>
+              <menuitem value="14" label="14"/>
+              <menuitem value="15" label="15"/>
+              <menuitem value="16" label="16"/>
+              <menuitem value="17" label="17"/>
+              <menuitem value="18" label="18"/>
+              <menuitem value="20" label="20"/>
+              <menuitem value="22" label="22"/>
+              <menuitem value="24" label="24"/>
+            </menupopup>
+          </menulist>
+        </hbox>
+      </hbox>
+      <separator/>
+      <separator class="groove"/>
+      <hbox>
+        <checkbox id="useDocumentFonts" 
+                  label="&allowPagesToUse.label;" accesskey="&allowPagesToUse.accesskey;"
+                  preference="browser.display.use_document_fonts"
+                  onsyncfrompreference="return gFontsDialog.readUseDocumentFonts();"
+                  onsynctopreference="return gFontsDialog.writeUseDocumentFonts();"/>
+      </hbox>
+    </groupbox>
+
+    <!-- Character Encoding -->
+    <groupbox>
+      <caption label="&languages.customize.Charset.grouplabel;"/>
+      <hbox align="center">
+        <label value="&languages.customize.DefaultCharset.label;"
+               accesskey="&languages.customize.DefaultCharset.accesskey;"
+               control="DefaultCharsetList"/>
+        <menulist id="DefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
+                  preference="intl.charset.default" 
+                  onsyncfrompreference="return gFontsDialog.readDefaultCharset();">
+          <template>
+            <menupopup>
+              <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
+            </menupopup>
+          </template>
+        </menulist>
+      </hbox>
+    </groupbox>
+  </prefpane>
+</prefwindow>

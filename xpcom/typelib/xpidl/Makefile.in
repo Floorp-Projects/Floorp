@@ -1,0 +1,179 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= xpcom
+
+ifndef WINCE
+# Sadly, the code here is too smart for the WinCE compiler's brain
+PROGRAM		= xpidl$(BIN_SUFFIX)
+SDK_BINARY  = $(PROGRAM)
+endif
+
+INTERNAL_TOOLS	= 1
+
+# glib and libIDL link against the non-debug msvcrt
+MOZ_NO_DEBUG_RTL=1
+
+CSRCS		= \
+		xpidl.c \
+		xpidl_idl.c \
+		xpidl_util.c \
+		xpidl_header.c \
+		xpidl_typelib.c \
+		xpidl_doc.c \
+		xpidl_java.c \
+		$(NULL)
+
+ifdef CROSS_COMPILE
+HOST_PROGRAM	= host_xpidl$(HOST_BIN_SUFFIX)
+HOST_CSRCS	= $(CSRCS)
+endif
+
+ifdef STATIC_LIBIDL
+USE_STATIC_LIBS = 1
+endif
+
+ifeq ($(OS_ARCH),Darwin)
+# The only reason to not always strip the SDK out is that the libraries
+# in / on ppc currently aren't fat, preventing the target xpidl from linking
+# on a ppc->x86 build.  The SDK, presumably 10.4u, must be included in that
+# case in order to successfully link.  Because the target xpidl isn't
+# currently built in a cross compile, though, this point is moot for the
+# time being.
+
+ifndef CROSS_COMPILE
+# When doing a native build, don't build xpidl against the SDK.  libIDL
+# was most likely configured for the system headers, and bringing in the
+# SDK's headers instead will cause problems.
+_STRIP_SDK = 1
+else
+
+# Cross-compiling
+
+# Don't build xpidl for the target.  This is not intended to be a permanent
+# solution.  It's necessary because it is presently difficult to build
+# xpidl's prerequisites (libIDL and glib) as fat and suitable for a cross.
+# This will be fixed.  -mm
+PROGRAM=
+
+# Since only host_xpidl will be built for now, always strip out the SDK
+# (as above).
+_STRIP_SDK=1
+
+# When fat xpidl prerequisites are available, the PROGRAM= and _STRIP_SDK=1
+# above are expected to disappear, and be replaced with the following
+# conditonal.
+
+# ifeq (86_powerpc,$(findstring 86,$(host_cpu))_$(TARGET_CPU))
+# # When cross-compiling from x86 to ppc, an old (10.2-ish) SDK might be in
+# # use, and libIDL will have been configured for new (10.4-ish) headers.
+# _STRIP_SDK = 1
+# endif
+
+endif # CROSS_COMPILE
+
+ifneq (,$(_STRIP_SDK)$(MACOS_SDK_DIR))
+# libIDL is configured for the system's headers, with no SDK involved.
+# There may be header conflicts if the SDK used for the Mozilla build
+# is used here.  There are very few specific cases where the SDK needs to
+# remain set to build xpidl.
+NEXT_ROOT=
+OS_CFLAGS := $(shell echo $(OS_CFLAGS)|sed -E -e "s%((-I|-isystem )$(MACOS_SDK_DIR)/usr/(include|lib/gcc)[^ ]*)|-F$(MACOS_SDK_DIR)(/System)?/Library/Frameworks[^ ]*|-nostdinc[^ ]*|-isysroot $(MACOS_SDK_DIR)%%g")
+OS_CFLAGS := $(patsubst -I$(MACOS_SDK_DIR)%,-I%,$(OS_CFLAGS))
+OS_LIBS := $(patsubst -L$(MACOS_SDK_DIR)/usr/lib%,,$(OS_LIBS))
+LDFLAGS := $(shell echo $(LDFLAGS)|sed -E -e "s%-Wl,-syslibroot,$(MACOS_SDK_DIR)%%g")
+endif # _STRIP_SDK
+
+endif # Darwin
+
+include $(topsrcdir)/config/rules.mk
+
+CFLAGS		+= $(LIBIDL_CFLAGS)
+
+# Compile directly against the static lib, so we can use xpidl during the build
+# without the shared library path being set.
+ifneq (,$(filter WINNT WINCE OS2,$(OS_ARCH)))
+DEFINES		+= -DEXPORT_XPT_API
+ifndef GNU_CC
+LDFLAGS += \
+	-SUBSYSTEM:CONSOLE \
+	-NODEFAULTLIB:MSVCRTD \
+	-NODEFAULTLIB:LIBC \
+	$(NULL)
+
+ifdef STATIC_LIBIDL
+LDFLAGS += -NODEFAULTLIB:MSVCRT
+endif
+
+endif
+endif
+
+# Tell the $(PROGRAM) target that we need to be recompiled when libxpt changes.
+LIBS		= $(DIST)/lib/$(LIB_PREFIX)xpt.$(LIB_SUFFIX) $(LIBIDL_LIBS)
+EXTRA_DEPS	= $(wildcard $(DIST)/lib/$(LIB_PREFIX)xpt.*)
+
+ifdef CROSS_COMPILE
+
+
+HOST_CFLAGS	+= $(HOST_LIBIDL_CFLAGS)
+HOST_LIBS	= $(DIST)/host/lib/$(LIB_PREFIX)hostxpt.$(LIB_SUFFIX) $(HOST_LIBIDL_LIBS)
+HOST_EXTRA_DEPS	= $(wildcard $(DIST)/host/lib/$(LIB_PREFIX)hostxpt.*)
+
+ifdef HOST_NSPR_MDCPUCFG
+HOST_CFLAGS	+= -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
+endif
+
+ifdef WINCE
+# Compile directly against the static lib, so we can use the tools
+# during the build without the shared library path being set.
+HOST_CFLAGS +=  -DEXPORT_XPT_API
+
+# Force MOZ_NO_DEBUG_RTL=1
+HOST_CFLAGS	+= /MD
+endif
+
+endif
+
+export::
+	@$(MAKE) libs

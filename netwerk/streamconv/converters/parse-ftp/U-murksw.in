@@ -1,0 +1,29 @@
+ftp> open tui.lincoln.ac.nz
+Connected to tui.lincoln.ac.nz.
+220  tui.lincoln.ac.nz Novell NetWare FTP Server (V1.80), Copyright (C) 1992-2000 MurkWorks Inc.
+Name (tui.lincoln.ac.nz:cyp): 331 Anonymous Login OK, send id as password.
+230-User logged in, Max Connect time 600 minutes (READONLY)
+230 Current Directory : /
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> ls
+200 Command Accepted 
+150 Opening connection for ASCII transfer 
+-rwx---r--  1 anonymou other        1445 Apr 28  1994 ANON.DAT
+-rwx---r--  1 mcnaughp other          83 Apr 18 09:39 Copy of LABSPACE.SUM
+drwx---r-x  2 anonymou other         512 Jul 11 21:04 JRBUTILS
+-rwx---r--  1 labspace other          91 Jul 13 02:04 LABSPACE.SUM
+drwx---r-x  2 anonymou other         512 Jul 11 21:04 MAINT
+drwx---r-x  2 anonymou other         512 Jul 11 21:04 MISC
+drwx---r-x  2 anonymou other         512 Jul 11 21:04 PCOUNTER
+drwx---r-x  2 helleupp other         512 Jul 11 21:05 PEGASUS
+-rwx---r--  1 anonymou other       13662 Aug  6 17:14 VOL$LOG.ERR
+-rwx---r--  1 anonymou other       27945 Sep  5  1994 WHATIS.MSC
+226 Transfer complete  
+ftp> pwd
+257 "/" is the current directory
+ftp> syst
+215 UNIX Type: L8 Version: NetWare MurkWorks, Inc. 1.80
+ftp> close
+221 Goodbye. 
+ftp> 

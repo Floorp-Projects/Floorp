@@ -1,0 +1,82 @@
+ftp> open export.lcs.mit.edu
+Connected to ftp.x.org.
+220-Welcome to the ftp.x.org server.
+220-
+220-This server is provided and supported by The Open Group.
+220-
+220 ftp.x.org FTP server (Version wu-2.6.2(2) Mon Dec 17 13:03:41 GMT 2001) ready.
+Name (export.lcs.mit.edu:cyp): 
+331 Guest login ok, send your complete e-mail address as password.
+230-
+230-Welcome to ftp.x.org, the X11 anonymous FTP archive of X.Org.
+230-
+230-PLEASE NOTE THE INCOMING FACILITY IS PRESENTLY UNAVAILABLE 
+230-
+230-All activity is logged with your host name and email address.
+230-
+230-REPORTING PROBLEMS - Please report all problems to xorg_info@x.org.
+230-
+230-LOGIN PROBLEMS - If your FTP client crashes or hangs shortly after 
+230-login, try using a dash (-) as the first character of your password.  
+230-This turns off the informational messages that may be confusing 
+230-your ftp client.
+230-
+230-
+230-Please read the file README
+230-  it was last modified on Tue Apr 24 15:33:13 2001 - 444 days ago
+230 User ftp logged in.  Access restrictions apply.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> ls
+200 PORT command successful.
+150 Opening ASCII mode data connection for /bin/ls.
+total 5106
+-rw-r--r--   1 X.Org         91 May  7  2001 .banner
+----------   1 X.Org          0 May 30  2000 .notar
+-rw-r--r--   1 X.Org        885 May 27  1999 .welcome
+-rw-r--r--   1 X.Org         61 Jul 20  2001 30_days_changes
+-rw-r--r--   1 X.Org         61 Jul 20  2001 7_days_changes
+-rw-r--r--   1 X.Org       1456 Jul 20  2001 90_days_changes
+-rw-r--r--   1 X.Org       3075 Oct  7  1998 GettingBroadway
+-rw-r--r--   1 X.Org       3075 Oct  7  1998 GettingR6.3
+-rw-r--r--   1 X.Org       1847 Feb  1  1999 GettingR6.4
+-rw-r--r--   1 X.Org       1378 Aug 24  2000 GettingR6.5.1
+-rw-r--r--   1 X.Org       1229 Apr 24  2001 GettingR6.6
+-rw-r--r--   1 X.Org        194 Mar 11  1997 MIRROR.README
+drwxr-xr-x  56 X.Org      22016 May  4  2001 R5contrib
+-r--r--r--   1 X.Org       1314 Apr 24  2001 README
+-rw-r--r--   2 X.Org        479 Nov  6  2001 banner2
+lrwxrwxrwx   1 X.Org          7 Aug  8  2001 bin -> usr/bin
+drwxr-xr-x  34 X.Org       1024 Nov  6  2001 contrib
+d--x--x--x   2 X.Org        512 Aug  8  2001 dev
+drwxr-xr-x   2 X.Org        512 Oct 12  1998 digest
+d--x--x--x   3 X.Org        512 Aug  8  2001 etc
+-rw-r--r--   1 X.Org    2135632 Jul 20  2001 ls-lR
+-rw-r--r--   1 X.Org     376221 May  8  2001 ls-lR.Z
+drwxr-xr-x   2 X.Org        512 Sep 29  1998 private
+drwxr-xr-x  17 X.Org        512 May  4  2001 pub
+drwxr-xr-x   2 X.Org        512 May  4  2001 rcsfaq
+d--x--x--x   5 X.Org        512 Aug  8  2001 usr
+-rw-r--r--   2 X.Org        479 Nov  6  2001 welcome.msg
+drwxr-xr-x   2 X.Org        512 May  4  2001 10R3
+drwxr-xr-x   2 X.Org        512 May  4  2001 10R4
+-rw-r--r--   1 X.Org       9740 Mar  2  1999 Contrib.howto
+drwxr-xr-x   9 X.Org        512 Jun  2  2001 DOCS
+drwxr-xr-x   2 X.Org        512 May  4  2001 R1
+drwxr-xr-x   2 X.Org        512 May  4  2001 R2
+drwxr-xr-x   2 X.Org        512 May  4  2001 R3
+drwxr-xr-x   7 X.Org        512 May  4  2001 R4
+drwxr-xr-x   4 X.Org        512 May  4  2001 R5
+drwxr-xr-x   4 X.Org        512 May  4  2001 R6
+drwxr-xr-x   5 X.Org        512 May  4  2001 R6.1
+drwxr-xr-x   6 X.Org        512 May  4  2001 R6.3
+drwxr-xr-x   8 X.Org        512 Aug 10  2001 R6.4
+drwxr-xr-x   7 X.Org        512 Aug  9  2001 R6.5.1
+drwxr-xr-x   8 X.Org        512 May  2  2001 R6.6
+drwxr-xr-x  10 X.Org        512 May  4  2001 unsupported
+226 Transfer complete.
+ftp> close
+221-You have transferred 0 bytes in 0 files.
+221-Total traffic for this session was 2686 bytes in 1 transfers.
+221-Thank you for using the FTP service on ftp.x.org.
+221 Goodbye.

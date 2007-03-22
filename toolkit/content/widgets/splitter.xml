@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+
+<bindings id="splitterBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="splitter" extends="xul:splitter">
+    <resources>
+      <stylesheet src="chrome://global/skin/splitter.css"/>
+    </resources>
+  </binding>
+
+  <binding id="grippy" extends="xul:button">
+    <resources>
+      <stylesheet src="chrome://global/skin/splitter.css"/>
+    </resources>
+    <handlers>
+      <handler event="command">
+        <![CDATA[
+          var splitter = this.parentNode;
+          if (splitter) {
+            var state = splitter.getAttribute("state");
+            if (state == "collapsed")
+              splitter.setAttribute("state", "open");
+            else
+              splitter.setAttribute("state", "collapsed");
+          }
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+</bindings>

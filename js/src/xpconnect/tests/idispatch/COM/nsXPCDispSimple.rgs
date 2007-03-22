@@ -1,0 +1,23 @@
+HKCR
+{
+	XPCIDispatchTest.nsXPCDispSimple.1 = s 'nsXPCDispSimple Class'
+	{
+		CLSID = s '{9F39237C-D179-4260-8EF3-4B6D4D7D5570}'
+	}
+	XPCIDispatchTest.nsXPCDispSimple = s 'nsXPCDispSimple Class'
+	{
+		CLSID = s '{9F39237C-D179-4260-8EF3-4B6D4D7D5570}'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {9F39237C-D179-4260-8EF3-4B6D4D7D5570} = s 'nsXPCDispSimple Class'
+		{
+			ProgID = s 'XPCIDispatchTest.nsXPCDispSimple.1'
+			VersionIndependentProgID = s 'XPCIDispatchTest.nsXPCDispSimple'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'both'
+			}
+		}
+	}
+}

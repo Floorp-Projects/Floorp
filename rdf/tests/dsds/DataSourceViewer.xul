@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="DataSourceViewer.css" type="text/css"?>
+
+<window
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  style="width: 100%; height: 100%">
+
+
+<tree datasources="rdf:datasource"
+  id="dataSourceTree"
+  containment="http://home.netscape.com/NC-rdf#child">
+  <treecolgroup>
+    <treecol id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+    <treecol id="ValueColumn" resource="http://home.netscape.com/NC-rdf#Value" flex="1"/>
+  </treecolgroup>
+  <treehead>
+    <treeitem>
+      <treecell>Name</treecell>
+      <treecell>Value</treecell>
+    </treeitem>
+  </treehead>
+
+
+  <treebody id="rdf:mailnewsfolders" name="dataSourceTreeBody">
+  <treeitem id="msgaccounts:/" open="true">
+    <treecell>
+      <treeindentation/>
+      <html:img hspace="2" style="vertical-align: bottom" src="chrome://messenger/skin/localMailHost.gif"/>Accounts
+    </treecell>
+    <treecell/>
+    <treecell/>
+  </treeitem>
+  </treebody>
+  <treechildren flex="1"/>
+</tree>
+</window>

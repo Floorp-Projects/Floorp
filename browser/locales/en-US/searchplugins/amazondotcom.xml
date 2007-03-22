@@ -1,0 +1,13 @@
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Amazon.com</ShortName>
+<Description>Amazon.com Search</Description>
+<InputEncoding>ISO-8859-1</InputEncoding>
+<Image width="16" height="16">data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsQAAALEAGtI711AAAAB3RJTUUH0wESEi0MqTATXwAAAjVJREFUeJyFUlGLElEU/mbVHd2aaaRgWGyJgmXRINiXfJCeRgaiLEiKgYXoRQrqRejNH7D1uNBDPvbWtGxvS64IG2IIQQhxScpYMpt1l1qdptVVZ+z2oM6qu9KBC4dzv/Od73z3AmPROmjeVlWVKopCRVGkHMdRURSpoig0lUrRcfxI6LoelWV5GwCddOLx+PEklmVej0QiI80Oh4OyLHuE5Fgl/aJ9gsEgzefzm4SQzVgs9n8VqqqO7EwIsUGEkEscx9kEsizbd85BEo3eenzzRkRstTsfAVwRBOH+EP/DSb4x4wVN0wq5XE7MZDKz5XIZlUoFtVoNu7u7NkaWZaTTaWZEQV8qDYfDKBaLkwZOVkAI8UuS9GkwiWVZNBr7sLZeo1V6hb/GFrxGwW6s84twzYbgGBRM0/yZzWZtQCKRQGhuD80PT0DbdUzxF9DmA2jzAbiNIjztHUzvvT+UIoqi7TLHcVTX9QeWZVLLMikh5Nzwf2h9USlNgtIk6NSAoNlsYjgXBOG50+liAGCe3/72ayOGP28f9fZ2ewEAv89GYRMEAgGboNvtYjBtf0PB9BsZJz8/Q7dR7d3Xeia75+/0XsGyTEqNrzC/p9HVSzCr7w4N+7GGOr+IE6GnOH3+KgCgo2XhAeCak+DU16PUWL0Mr1EYfdO+027/PZxaWIKJmY4kSaX1lysXnat+HARXMOM5wzA0iSP/etDILixhp9aGz+djAEDTtLt8aflFt1GFcG2NAYB/rN8dqx12fbIAAAAASUVORK5CYII=</Image>
+<Url type="text/html" method="GET" template="http://www.amazon.com/exec/obidos/external-search/">
+  <Param name="field-keywords" value="{searchTerms}"/>
+  <Param name="mode" value="blended"/>
+  <Param name="tag" value="mozilla-20"/>
+  <Param name="sourceid" value="Mozilla-search"/>
+</Url>
+<SearchForm>http://www.amazon.com/</SearchForm>
+</SearchPlugin>

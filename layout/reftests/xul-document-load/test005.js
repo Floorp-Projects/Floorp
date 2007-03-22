@@ -1,0 +1,1 @@
+document.removeChild(document.firstChild); 

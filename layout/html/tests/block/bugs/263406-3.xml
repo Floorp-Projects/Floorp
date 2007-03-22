@@ -1,0 +1,8 @@
+<?xml-stylesheet type="text/css" href="data:text/css, root { display: block; }
+table { display: table; } inner-table { display: table; position: absolute;
+width: 200px; right: 0; top: 0"?>
+<root>
+aaa
+<table><inner-table>bbb</inner-table></table>
+</root>
+

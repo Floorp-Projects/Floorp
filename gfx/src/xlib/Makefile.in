@@ -1,0 +1,156 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= gfx
+EXPORTS		= nsGCCache.h
+LIBRARY_NAME	= gfx_xlib
+EXPORT_LIBRARY = 1
+IS_COMPONENT	= 1
+MODULE_NAME	= nsGfxXlibModule
+GRE_MODULE	= 1
+LIBXUL_LIBRARY = 1
+
+REQUIRES	= xpcom \
+		  string \
+		  xlibrgb \
+		  widget \
+		  js \
+		  necko \
+		  pref \
+		  util \
+		  view \
+		  uconv \
+		  locale \
+		  unicharutil \
+		  imglib2 \
+		  mozcomps \
+		  intl \
+		  $(NULL)
+
+# Sun's Complex Text Layout support
+ifdef SUNCTL
+REQUIRES	+= ctl
+endif
+
+ifdef MOZ_ENABLE_XPRINT
+REQUIRES	+= xprintutil
+endif
+
+# Code shared between GTK+, Xlib and Xprint gfx modules
+# (empty for now - but this will be filled soon...)
+X11SHARED_LCPPSRCS = \
+		$(NULL)
+
+CPPSRCS		= \
+		$(X11SHARED_LCPPSRCS) \
+		nsDeviceContextSpecXlib.cpp \
+		nsDeviceContextXlib.cpp \
+		nsDrawingSurfaceXlib.cpp \
+		nsFontMetricsXlib.cpp \
+		nsGfxFactoryXlib.cpp \
+		nsImageXlib.cpp \
+		nsRegionXlib.cpp \
+		nsRenderingContextXlib.cpp \
+	       	nsPrintOptionsXlib.cpp \
+		nsGCCache.cpp \
+		$(NULL)
+
+ifdef HAVE_XIE
+CSRCS		+= XIE.c
+endif
+
+GARBAGE         += $(X11SHARED_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
+
+EXTRA_DSO_LDOPTS = $(DIST)/lib/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX)
+
+include $(topsrcdir)/config/rules.mk
+
+EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(MOZ_XLIB_LDFLAGS)
+CXXFLAGS	+= $(MOZ_XLIB_CFLAGS)
+
+ifdef HAVE_XIE
+DEFINES         += -DHAVE_XIE
+GFX_XIE_LIBS    += $(MOZ_XIE_LIBS)
+endif
+
+EXTRA_DSO_LDOPTS += \
+		$(LIBS_DIR)     \
+		-lgkgfx		\
+		$(GFX_XIE_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
+		$(NULL)
+
+DEFINES		+= -DUSE_MOZILLA_TYPES
+
+ifdef MOZ_ENABLE_POSTSCRIPT
+DEFINES         += -DUSE_POSTSCRIPT
+EXTRA_DSO_LDOPTS += -lgfxpsshar
+endif
+
+ifdef MOZ_ENABLE_XPRINT
+DEFINES         += -DUSE_XPRINT
+EXTRA_DSO_LDOPTS += \
+		-lxprintutil \
+		$(MOZ_XPRINT_LDFLAGS)
+endif
+
+LOCAL_INCLUDES	+= \
+		-I../.. \
+		-I$(srcdir)/. \
+		-I$(srcdir)/.. \
+		-I$(srcdir)/../shared \
+		-I$(srcdir)/../x11shared \
+		$(NULL)
+
+ifdef MOZ_ENABLE_XPRINT
+#export:: $(addprefix $(srcdir)/../x11shared/,$(X11SHARED_LCPPSRCS))
+#	$(INSTALL) $^ .
+else
+# disabled until X11SHARED_LCPPSRCS becomes non-empty
+# export:: $(addprefix $(srcdir)/../x11shared/,$(X11SHARED_LCPPSRCS))
+#	$(INSTALL) $^ .
+endif
+

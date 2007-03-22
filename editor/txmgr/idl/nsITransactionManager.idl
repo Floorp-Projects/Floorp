@@ -1,0 +1,172 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsITransaction.idl"
+#include "nsITransactionList.idl"
+#include "nsITransactionListener.idl"
+
+%{ C++
+
+#define NS_TRANSACTIONMANAGER_CONTRACTID "@mozilla.org/transactionmanager;1"
+
+%} C++
+
+/**
+ * The nsITransactionManager interface.
+ * <P>
+ * This interface is implemented by an object that wants to
+ * manage/track transactions.
+ */
+[scriptable, uuid(58e330c2-7b48-11d2-98b9-00805f297d89)]
+interface nsITransactionManager : nsISupports
+{
+  /**
+   * Calls a transaction's doTransaction() method, then pushes it on the
+   * undo stack.
+   * <P>
+   * This method calls the transaction's AddRef() method.
+   * The transaction's Release() method will be called when the undo or redo
+   * stack is pruned or when the transaction manager is destroyed.
+   * @param aTransaction the transaction to do.
+   */
+  void doTransaction(in nsITransaction aTransaction);
+
+  /**
+   * Pops the topmost transaction on the undo stack, calls it's
+   * undoTransaction() method, then pushes it on the redo stack.
+   */
+  void undoTransaction();
+
+  /**
+   * Pops the topmost transaction on the redo stack, calls it's
+   * redoTransaction() method, then pushes it on the undo stack.
+   */
+  void redoTransaction();
+
+  /**
+   * Clears the undo and redo stacks.
+   */
+  void clear();
+
+  /**
+   * Turns on the transaction manager's batch mode, forcing all transactions
+   * executed by the transaction manager's doTransaction() method to be
+   * aggregated together until EndBatch() is called.  This mode allows an
+   * application to execute and group together several independent transactions
+   * so they can be undone with a single call to undoTransaction().
+   */
+  void beginBatch();
+
+  /**
+   * Turns off the transaction manager's batch mode.
+   */
+  void endBatch();
+
+  /**
+   * The number of items on the undo stack.
+   */
+  readonly attribute long numberOfUndoItems;
+
+  /**
+   * The number of items on the redo stack.
+   */
+  readonly attribute long numberOfRedoItems;
+
+  /**
+   * Sets the maximum number of transaction items the transaction manager will
+   * maintain at any time. This is commonly referred to as the number of levels
+   * of undo.
+   * @param aMaxCount A value of -1 means no limit. A value of zero means the
+   * transaction manager will execute each transaction, then immediately release
+   * all references it has to the transaction without pushing it on the undo
+   * stack. A value greater than zero indicates the max number of transactions
+   * that can exist at any time on both the undo and redo stacks. This method
+   * will prune the necessary number of transactions on the undo and redo
+   * stacks if the value specified is less than the number of items that exist
+   * on both the undo and redo stacks.
+   */
+  attribute long maxTransactionCount;
+
+  /**
+   * Returns an AddRef'd pointer to the transaction at the top of the
+   * undo stack. Callers should be aware that this method could return
+   * return a null in some implementations if there is a batch at the top
+   * of the undo stack.
+   */
+  nsITransaction peekUndoStack();
+
+  /**
+   * Returns an AddRef'd pointer to the transaction at the top of the
+   * redo stack. Callers should be aware that this method could return
+   * return a null in some implementations if there is a batch at the top
+   * of the redo stack.
+   */
+  nsITransaction peekRedoStack();
+
+  /**
+   * Returns the list of transactions on the undo stack. Note that the
+   * transaction at the top of the undo stack will actually be at the
+   * index 'n-1' in the list, where 'n' is the number of items in the list.
+   */
+  nsITransactionList getUndoList();
+
+  /**
+   * Returns the list of transactions on the redo stack. Note that the
+   * transaction at the top of the redo stack will actually be at the
+   * index 'n-1' in the list, where 'n' is the number of items in the list.
+   */
+  nsITransactionList getRedoList();
+
+  /**
+   * Adds a listener to the transaction manager's notification list. Listeners
+   * are notified whenever a transaction is done, undone, or redone.
+   * <P>
+   * The listener's AddRef() method is called.
+   * @param aListener the lister to add.
+   */
+  void AddListener(in nsITransactionListener aListener);
+
+  /**
+   * Removes a listener from the transaction manager's notification list.
+   * <P>
+   * The listener's Release() method is called.
+   * @param aListener the lister to remove.
+   */
+  void RemoveListener(in nsITransactionListener aListener);
+};
+

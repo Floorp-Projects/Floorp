@@ -1,0 +1,76 @@
+
+@import url("chrome://global/skin/");
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+
+#warningScreen
+{
+  background-color: -moz-Dialog;
+}
+
+#warningBox
+{
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  border: 1px solid ThreeDShadow;
+  -moz-border-radius: 10px;
+  padding: 3em;
+  -moz-padding-start: 30px;
+  margin-left: 1em;
+  margin-right: 1em;
+}
+
+#warningInnerBox
+{
+ max-width: 50em;
+}
+
+#warningTitle
+{
+  margin: 0 0 .6em 0;
+  font-size: 160%;
+  border-bottom: 1px solid ThreeDLightShadow
+}
+
+#warningText
+{
+  font-size: 110%;
+  margin-left: 0;
+}
+
+#warningButton
+{
+  margin-top: 0.6em;
+}
+
+#showWarningNextTime
+{
+  margin-top: 0.6em;
+}
+
+#exclam
+{
+  list-style-image: url("chrome://global/skin/icons/warning-large.png");
+  -moz-margin-end: 3em;
+}
+
+#configTreeBody::-moz-tree-cell-text(user)
+{
+  font-weight: bold;
+}
+
+#configTreeBody::-moz-tree-cell-text(locked)
+{
+  font-style: italic;
+}
+
+#configTree 
+{  
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+#filterRow
+{
+  margin-top: 5px;
+}

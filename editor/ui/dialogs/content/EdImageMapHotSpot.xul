@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 1999-2000
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Brian King
+   -   Dan Haddix
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either of the GNU General Public License Version 2 or later (the "GPL"),
+   - or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+<?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
+
+<?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://editor/locale/EditorImageMapHotSpot.dtd">
+
+<dialog title="&windowTitle.label;"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onload = "Startup()"
+    ondialogaccept="return onAccept();"
+    ondialogcancel="return onCancel();">
+
+  <!-- Methods common to all editor dialogs -->
+  <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdImageMapHotSpot.js"/>
+
+  <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
+  <broadcaster id="args" value=""/>
+
+  <groupbox flex="1">
+    <caption id="titleInput" label="&link.label;"/>
+
+    <grid>
+      <columns><column/><column/><column/></columns>
+      <rows>
+        <row>
+          <label control="urlInput" value="&urlFieldset.label;"/>
+
+          <textbox id="urlInput" class="MinWidth20em" value="http://"/>
+
+          <button id="Browse" oncommand="chooseFile()" label="&browseButton.label;"/>
+        </row>
+      
+        <row>
+          <label control="altInput" value="&altFieldset.label;"/>
+
+          <textbox class="MinWidth20em" id="altInput"/>
+        </row>
+      </rows>
+    </grid>
+  </groupbox>
+
+  <groupbox flex="1">
+    <caption id="targetLabel" label="&targetFieldset.label;"/>
+    <grid>
+      <columns><column/><column/><column/></columns>
+      <rows>
+        <row>
+          <label control="targetInput" value="&target.label;"/>
+        </row>
+        <row>
+          <textbox class="MinWidth20em" id="targetInput"/>
+
+          <label id="commonLabel" value="&commonFieldset.label;"/>
+
+          <menulist id="commonInput" oncommand="changeTarget()">
+            <menupopup align="center">
+              <menuitem class="middle" value="" label="&none.value;"/>
+              <menuitem class="middle" value="_self" label="&same.value;"/>
+              <menuitem class="middle" value="_top" label="&whole.value;"/>
+              <menuitem class="middle" value="_blank" label="&new.value;"/>
+              <menuitem class="middle" value="_parent" label="&parent.value;"/>
+            </menupopup>
+          </menulist>
+
+        </row>
+      </rows>
+    </grid>
+  </groupbox>
+</dialog>

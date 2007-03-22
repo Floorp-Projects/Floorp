@@ -1,0 +1,114 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Boris Zbarsky <bzbarsky@mit.edu> (original author)
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+
+/**
+ * nsINetUtil provides various network-related utility methods.
+ */
+[scriptable, uuid(c2bf4fea-7f9f-44a4-a7e0-8b323fdcc5d5)]
+interface nsINetUtil : nsISupports
+{
+  /**
+   * Parse a content-type header and return the content type and
+   * charset (if any).
+   *
+   * @param aTypeHeader the header string to parse
+   * @param [out] aCharset the charset parameter specified in the
+   *              header, if any.
+   * @param [out] aHadCharset whether a charset was explicitly specified.
+   * @return the MIME type specified in the header, in lower-case.
+   */
+  AUTF8String parseContentType(in AUTF8String aTypeHeader,
+                               out AUTF8String aCharset,
+                               out boolean aHadCharset);
+
+  /** Escape every character with its %XX-escaped equivalent */
+  const unsigned long ESCAPE_ALL = 0;
+
+  /** Leave alphanumeric characters intact and %XX-escape all others */
+  const unsigned long ESCAPE_XALPHAS = 1;
+
+  /** Leave alphanumeric characters intact, convert spaces to '+',
+      %XX-escape all others */
+  const unsigned long ESCAPE_XPALPHAS = 2;
+
+  /** Leave alphanumeric characters and forward slashes intact,
+      %XX-escape all others */
+  const unsigned long ESCAPE_URL_PATH = 3;
+
+  /**
+   * escape a string with %00-style escaping
+   */
+  ACString escapeString(in ACString aString, in unsigned long aEscapeType);
+
+  /**
+   * Test whether the given URI's handler has the given protocol flags.
+   *
+   * @param aURI the URI in question
+   * @param aFlags the flags we're testing for.
+   *
+   * @return whether the protocol handler for aURI has all the flags
+   *         in aFlags.
+   */
+  boolean protocolHasFlags(in nsIURI aURI, in unsigned long aFlag);
+
+  /**
+   * Test whether the protocol handler for this URI or that for any of
+   * its inner URIs has the given protocol flags.  This will QI aURI to
+   * nsINestedURI and walk the nested URI chain.
+   *
+   * @param aURI the URI in question
+   * @param aFlags the flags we're testing for.
+   *
+   * @return whether any of the protocol handlers involved have all the flags
+   *         in aFlags.
+   */
+  boolean URIChainHasFlags(in nsIURI aURI, in unsigned long aFlags);
+
+  /**
+   * Take aURI and produce an immutable version of it for the caller.  If aURI
+   * is immutable this will be aURI itself; otherwise this will be a clone,
+   * marked immutable if possible.  Passing null to this method is allowed; in
+   * that case it will return null.
+   */
+  nsIURI toImmutableURI(in nsIURI aURI);
+};

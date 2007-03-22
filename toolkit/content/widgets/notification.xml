@@ -1,0 +1,403 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE bindings [
+<!ENTITY % notificationDTD SYSTEM "chrome://global/locale/notification.dtd">
+%notificationDTD;
+]>
+
+<bindings id="notificationBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="notificationbox">
+    <content>
+      <xul:stack xbl:inherits="hidden=notificationshidden">
+        <xul:spacer/>
+        <children includes="notification"/>
+      </xul:stack>
+      <children/>
+    </content>
+
+    <implementation>
+      <field name="PRIORITY_INFO_LOW" readonly="true">1</field>
+      <field name="PRIORITY_INFO_MEDIUM" readonly="true">2</field>
+      <field name="PRIORITY_INFO_HIGH" readonly="true">3</field>
+      <field name="PRIORITY_WARNING_LOW" readonly="true">4</field>
+      <field name="PRIORITY_WARNING_MEDIUM" readonly="true">5</field>
+      <field name="PRIORITY_WARNING_HIGH" readonly="true">6</field>
+      <field name="PRIORITY_CRITICAL_LOW" readonly="true">7</field>
+      <field name="PRIORITY_CRITICAL_MEDIUM" readonly="true">8</field>
+      <field name="PRIORITY_CRITICAL_HIGH" readonly="true">9</field>
+      <field name="PRIORITY_CRITICAL_BLOCK" readonly="true">10</field>
+
+      <field name="currentNotification">null</field>
+      <field name="slideSteps">4</field>
+
+      <field name="_timer">null</field>
+      <field name="_closedNotification">null</field>
+      <field name="_blockingCanvas">null</field>
+
+      <property name="notificationsHidden"
+                onget="return this.getAttribute('notificationshidden') == 'true';">
+        <setter>
+          if (val)
+            this.setAttribute('notificationshidden', true);
+          else this.removeAttribute('notificationshidden');
+        </setter>
+      </property>
+
+      <property name="allNotifications" readonly="true"
+                onget="return this.getElementsByTagName('notification');"/>
+
+      <method name="getNotificationWithValue">
+        <parameter name="aValue"/>
+        <body>
+          <![CDATA[
+            var notifications = this.allNotifications;
+            for (var n = notifications.length - 1; n >= 0; n--) {
+              if (aValue == notifications[n].value)
+                return notifications[n];
+            }
+            return null;
+          ]]>
+        </body>
+      </method>
+
+      <method name="appendNotification">
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <parameter name="aImage"/>
+        <parameter name="aPriority"/>
+        <parameter name="aButtons"/>
+        <body>
+          <![CDATA[
+            if (aPriority < this.PRIORITY_INFO_LOW ||
+                aPriority > this.PRIORITY_CRITICAL_BLOCK)
+              throw "Invalid notification priority " + aPriority;
+
+            // check for where the notification should be inserted according to
+            // priority. If two are equal, the existing one appears on top.
+            var notifications = this.allNotifications;
+            var insertPos = null;
+            for (var n = notifications.length - 1; n >= 0; n--) {
+              if (notifications[n].priority < aPriority)
+                break;
+              insertPos = notifications[n];
+            }
+
+            const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+            var newitem = document.createElementNS(XULNS, "notification");
+            newitem.setAttribute("label", aLabel);
+            newitem.setAttribute("value", aValue);
+            newitem.setAttribute("image", aImage);
+            if (!insertPos) {
+              newitem.style.position = "fixed";
+              newitem.style.top = "100%";
+            }
+            this.insertBefore(newitem, insertPos);
+
+            if (aButtons) {
+              for (var b = 0; b < aButtons.length; b++) {
+                var button = aButtons[b];
+                var buttonElem = document.createElementNS(XULNS, "button");
+                buttonElem.setAttribute("label", button.label);
+                buttonElem.setAttribute("accesskey", button.accessKey);
+
+                newitem.appendChild(buttonElem);
+                buttonElem.buttonInfo = button;
+              }
+            }
+
+            newitem.priority = aPriority;
+            if (aPriority >= this.PRIORITY_CRITICAL_LOW)
+              newitem.type = "critical";
+            else if (aPriority <= this.PRIORITY_INFO_HIGH)
+              newitem.type = "info";
+            else
+              newitem.type = "warning";
+
+            if (!insertPos)
+              this._showNotification(newitem, true);
+
+            // Fire event for accessibility APIs
+            var event = document.createEvent("Events");
+            event.initEvent("AlertActive", true, true);
+            newitem.dispatchEvent(event);
+
+            return newitem;
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeNotification">
+        <parameter name="aItem"/>
+        <body>
+          <![CDATA[
+            if (aItem == this.currentNotification)
+              this.removeCurrentNotification();
+            else
+              this.removeChild(aItem);
+            return aItem;
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeCurrentNotification">
+        <body>
+          <![CDATA[
+            this._showNotification(this.currentNotification, false);
+            return null;
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeAllNotifications">
+        <parameter name="aImmediate"/>
+        <body>
+          <![CDATA[
+            var notifications = this.allNotifications;
+            for (var n = notifications.length - 1; n >= 0; n--) {
+              if (aImmediate)
+                this.removeChild(notifications[n]);
+              else
+                this.removeNotification(notifications[n]);
+            }
+            this.currentNotification = null;
+          ]]>
+        </body>
+      </method>
+
+      <method name="_showNotification">
+        <parameter name="aNotification"/>
+        <parameter name="aSlideIn"/>
+        <body>
+          <![CDATA[
+            if (this._timer) {
+              clearInterval(this._timer);
+              if (this.currentNotification) {
+                this.currentNotification.style.marginTop = "0px";
+                this.currentNotification.style.opacity = 1;
+              }
+              if (this._closedNotification)
+                this._closedNotification.parentNode.
+                  removeChild(this._closedNotification);
+              this._setBlockingState(this.currentNotification);
+            }
+
+            var height = aNotification.boxObject.height;
+            var change = height / this.slideSteps;
+            if (aSlideIn) {
+              if (this.currentNotification &&
+                  this.currentNotification.boxObject.height > height)
+                height = this.currentNotification.boxObject.height;
+
+              this.currentNotification = aNotification;
+              this._closedNotification = null;
+              aNotification.style.removeProperty("position");
+              aNotification.style.removeProperty("top");
+              aNotification.style.marginTop = -height + "px";
+              aNotification.style.opacity = 0;
+            }
+            else {
+              change = -change;
+              this._closedNotification = aNotification;
+              var notifications = this.allNotifications;
+              var idx = notifications.length - 2;
+              if (idx >= 0)
+                this.currentNotification = notifications[idx];
+              else
+                this.currentNotification = null;
+            }
+            var opacitychange = change / height;
+
+            var self = this;
+            var slide = function slideInFn()
+            {
+              var done = false;
+
+              var style = window.getComputedStyle(aNotification, null);
+              var margin = style.getPropertyCSSValue("margin-top").
+                             getFloatValue(CSSPrimitiveValue.CSS_PX);
+
+              if (change > 0 && margin + change >= 0) {
+                aNotification.style.marginTop = "0px";
+                aNotification.style.opacity = 1;
+                done = true;
+              }
+              else if (change < 0 && margin + change <= -height) {
+                aNotification.style.marginTop = -height + "px";
+                done = true;
+              }
+              else {
+                aNotification.style.marginTop = (margin + change).toFixed(4) + "px";
+                if (opacitychange)
+                  aNotification.style.opacity =
+                    Number(aNotification.style.opacity) + opacitychange;
+              }
+
+              if (done) {
+                clearInterval(self._timer);
+                self._timer = null;
+                if (self._closedNotification)
+                  self._closedNotification.parentNode.
+                    removeChild(self._closedNotification);
+                self._setBlockingState(self.currentNotification);
+              }
+            }
+
+            this._timer = setInterval(slide, 50);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_setBlockingState">
+        <parameter name="aNotification"/>
+        <body>
+          <![CDATA[
+            var isblock = aNotification &&
+                          aNotification.priority == this.PRIORITY_CRITICAL_BLOCK;
+            var canvas = this._blockingCanvas;
+            if (isblock) {
+              if (!canvas)
+                canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+              const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+              var content = this.firstChild;
+              if (!content ||
+                   content.namespaceURI != XULNS ||
+                   content.localName != "browser")
+                return;
+
+              var width = content.boxObject.width;
+              var height = content.boxObject.height;
+              content.collapsed = true;
+
+              canvas.setAttribute("width", width);
+              canvas.setAttribute("height", height);
+              canvas.setAttribute("flex", "1");
+
+              this.appendChild(canvas);
+              this._blockingCanvas = canvas;
+
+              var bgcolor = "white";
+              try {
+                var prefService = Components.classes["@mozilla.org/preferences-service;1"].
+                                    getService(Components.interfaces.nsIPrefBranch);
+                bgcolor = prefService.getCharPref("browser.display.background_color");
+
+                var win = content.contentWindow;
+                var context = canvas.getContext("2d");
+                context.globalAlpha = 0.5;
+                context.drawWindow(win, win.scrollX, win.scrollY,
+                                   width, height, bgcolor);
+              }
+              catch(ex) { };
+            }
+            else if (canvas) {
+              canvas.parentNode.removeChild(canvas);
+              this._blockingCanvas = null;
+              var content = this.firstChild;
+              if (content)
+                content.collapsed = false;
+            }
+          ]]>
+        </body>
+      </method>
+
+    </implementation>
+  </binding>
+
+  <binding id="notification">
+    <content>
+      <xul:hbox class="notification-inner outset" flex="1" xbl:inherits="type">
+        <xul:hbox anonid="details" align="center" flex="1"
+                  oncommand="this.parentNode.parentNode._doButtonCommand(event);">
+          <xul:image anonid="messageImage" class="messageImage" xbl:inherits="src=image"/>
+          <xul:description anonid="messageText" class="messageText" flex="1" xbl:inherits="xbl:text=label"/>
+          <xul:spacer flex="1"/>
+          <children/>
+        </xul:hbox>
+        <xul:toolbarbutton ondblclick="event.stopPropagation();"
+                           class="messageCloseButton tabbable"
+                           xbl:inherits="hidden=hideclose"
+                           tooltiptext="&closeNotification.tooltip;"
+                           oncommand="document.getBindingParent(this).close();"/>
+      </xul:hbox>
+    </content>
+    <resources>
+      <stylesheet src="chrome://global/skin/notification.css"/>
+    </resources>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          <![CDATA[
+            return Components.interfaces.nsIAccessibleProvider.XULAlert;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="label" onset="return this.setAttribute('label', val);"
+                             onget="return this.getAttribute('label');"/>
+      <property name="value" onset="return this.setAttribute('value', val);"
+                             onget="return this.getAttribute('value');"/>
+      <property name="image" onset="return this.setAttribute('image', val);"
+                             onget="return this.getAttribute('image');"/>
+      <property name="type" onget="return this.getAttribute('type');"
+                            onset="this.setAttribute('type', val); return val;"/>
+      <property name="priority" onget="return this.getAttribute('priority');"
+                                onset="this.setAttribute('priority', val); return val;"/>
+
+      <property name="control" readonly="true">
+        <getter>
+          <![CDATA[
+            var parent = this.parentNode;
+            while (parent) {
+              if (parent.localName == "notificationbox")
+                return parent;
+              parent = parent.parentNode;
+            }
+            return null;
+          ]]>
+        </getter>
+      </property>
+
+      <method name="close">
+        <body>
+          <![CDATA[
+            var control = this.control;
+            if (control)
+              control.removeNotification(this);
+            else
+              this.hidden = true;
+          ]]>
+        </body>
+      </method>
+
+      <method name="_doButtonCommand">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            if (!("buttonInfo" in aEvent.target))
+              return;
+
+            var button = aEvent.target.buttonInfo;
+            if (button.popup) {
+              document.getElementById(button.popup).
+                showPopup(aEvent.originalTarget, -1, -1, "popup", "bottomleft", "topleft");
+              aEvent.stopPropagation();
+            }
+            else {
+              var callback = button.callback;
+              if (callback) {
+                var result = callback(this, button);
+                if (!result)
+                  this.close();
+                aEvent.stopPropagation();
+              }
+            }
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+</bindings>

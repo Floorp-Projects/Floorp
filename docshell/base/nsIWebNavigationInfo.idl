@@ -1,0 +1,97 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Boris Zbarsky <bzbarsky@mit.edu>.
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIWebNavigation;
+
+/**
+ * The nsIWebNavigationInfo interface exposes a way to get information
+ * on the capabilities of Gecko webnavigation objects.
+ *
+ * @status UNDER_REVIEW
+ */
+[scriptable, uuid(62a93afb-93a1-465c-84c8-0432264229de)]
+interface nsIWebNavigationInfo : nsISupports
+{
+  /**
+   * Returned by isTypeSupported to indicate lack of support for a type.
+   * @note this is guaranteed not to change, so that boolean tests can be done
+   * on the return value if isTypeSupported to detect whether a type is
+   * supported at all.
+   */
+  const unsigned long UNSUPPORTED = 0;
+
+  /**
+   * Returned by isTypeSupported to indicate that a type is supported as an
+   * image.
+   */
+  const unsigned long IMAGE = 1;
+
+  /**
+   * Returned by isTypeSupported to indicate that a type is supported via an
+   * NPAPI ("Netscape 4 API") plug-in.  This is not the value returned for
+   * "XPCOM plug-ins".
+   */
+  const unsigned long PLUGIN = 2;
+
+  /**
+   * @note Other return types may be added here in the future as they become
+   * relevant.
+   */
+  
+  /**
+   * Returned by isTypeSupported to indicate that a type is supported via some
+   * other means.
+   */
+  const unsigned long OTHER = 1 << 15;
+
+  /**
+   * Query whether aType is supported.
+   * @param aType the MIME type in question.
+   * @param aWebNav the nsIWebNavigation object for which the request
+   *        is being made.  This is allowed to be null.  If it is non-null,
+   *        the return value of this method may depend on the exact state of
+   *        aWebNav and the values set through nsIWebBrowserSetup; otherwise
+   *        the method will assume that the caller is interested in information
+   *        about nsIWebNavigation objects in their default state.
+   * @return an enum value indicating whether and how aType is supported.
+   * @note This method may rescan plugins to ensure that they're properly
+   *       registered for the types they support.
+   */
+  unsigned long isTypeSupported(in ACString aType, in nsIWebNavigation aWebNav);
+};

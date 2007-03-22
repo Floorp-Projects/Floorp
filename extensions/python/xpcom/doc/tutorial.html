@@ -1,0 +1,286 @@
+<html>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is PyXPCOM.
+   -
+   - The Initial Developer of the Original Code is
+   - ActiveState Tool Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2000-2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Python XPCOM Package Tutorial</title>
+</head>
+
+<body>
+
+<h1>Python XPCOM Package Tutorial</h1>
+<p>This is a quick introduction to the Python XPCOM Package. We assume that you have a good understanding of Python and <a href="http://www.mozilla.org/projects/xpcom/">XPCOM</a>,
+and have experience both using and implementing XPCOM objects in some other
+language (e.g., C++ or JavaScript). We <b><i>do not</i></b> attempt to
+provide a tutorial to XPCOM or Python itself, only to using Python <i>and</i>
+ XPCOM.</p>
+<p>This tutorial contains the following sections:</p>
+<ul>
+  <li><a href="#Using">Using XPCOM Objects and Interfaces</a> - when you wish to
+    <i>use</i> a component written by anyone else in any XPCOM supported
+    language.</li>
+  <li><a href="#Implementing">Implementing XPCOM Objects and Interfaces</a> -
+    when you wish to implement a component for use by anyone else in any xpcom
+    supported language.</li>
+  <li><a href="#Parameters">Parameters and Types</a> - useful information
+    regarding how Python translates XPCOM types, and handles byref parameters.</li>
+</ul>
+<p>For anything not covered here, try the <a href="advanced.html">advanced
+documentation</a>, and if that fails, use the source, Luke!</p>
+<h2><a name="Using">Using XPCOM object and interfaces.</a></h2>
+<p>The techniques for using XPCOM in Python have been borrowed from JavaScript -
+thus, the model described here should be quite familiar to existing JavaScript
+XPCOM programmers.</p>
+<h3>xpcom.components module</h3>
+<p>When using an XPCOM object, the primary module used is the <u><i>xpcom.components</i></u>
+ module.&nbsp; Using this module, you can get a Python object that supports any
+scriptable XPCOM interface. Once you have this Python object, you can
+simply call XPCOM methods on the object, as normal.</p>
+<p>The <u><i>xpcom.components</i></u> module defines the following public
+members:</p>
+<table border="1" width="100%">
+  <tr>
+    <td width="16%"><b>Name</b></td>
+    <td width="84%"><b>Description</b></td>
+  </tr>
+  <tr>
+    <td width="16%">classes</td>
+    <td width="84%">A mapping (dictionary-like object) used to get XPCOM
+      &quot;classes&quot;.&nbsp; These are indexed by XPCOM contract ID, just
+      like the JavaScript object of the same name.&nbsp;&nbsp;
+      <p>Example:</p>
+      <pre>cls = components.classes[&quot;@mozilla.org/sample;1&quot;]
+ob = cls.createInstance() # Now have an nsISupports</pre>
+    </td>
+  </tr>
+  <tr>
+    <td width="16%">interfaces</td>
+    <td width="84%">An object that exposes all XPCOM interface IDs (IIDs).&nbsp;
+      Like the JavaScript object of the same name, this object uses
+      &quot;dot&quot; notation, as demonstrated below.
+      <p>Example:</p>
+      <pre>ob = cls.createInstance(components.interfaces.nsISample) 
+# Now have an nsISample</pre>
+    </td>
+  </tr>
+</table>
+<p>For many people, this is all you need to know. Consider the Mozilla Sample Component.&nbsp; The Mozilla Sample
+Component has a contract ID of <i>@mozilla.org/sample;1</i>,
+and implements the <i>nsISample</i> interface.</p>
+<p>Thus, a complete Python program that uses this component is shown below.</p>
+<pre>from xpcom import components
+cls = components.classes[&quot;@mozilla.org/sample;1&quot;]
+ob = cls.createInstance() # no need to specify an IID for most components
+# nsISample defines a &quot;value&quot; property - let's use it!
+ob.value = &quot;new value&quot;
+if ob.value != &quot;new value&quot;:
+    print &quot;Eeek - what happened?&quot;</pre>
+<p>And that is it - a complete Python program that uses XPCOM.</p>
+<h2><a name="Implementing">Implementing XPCOM Objects and Interfaces.</a></h2>
+<p>Implementing XPCOM objects is almost as simple as using them. The
+basic strategy is this:</p>
+<ol>
+  <li>Create a standard Python source file, with a standard Python class.</li>
+  <li>Add some special <a href="#Attributes"> attributes</a> to your class for use by the Python XPCOM
+    framework. This controls the XPCOM behavior of your object.</li>
+  <li>Implement the XPCOM <a href="#Properties"> properties</a> and methods of your classes as normal.</li>
+  <li>Put the Python source file in the Mozilla <i> components</i> directory.</li>
+  <li>Run <i> regxpcom.</i></li>
+</ol>
+<p>Your component is now ready to be used.</p>
+<h3><a name="Attributes">Attributes</a></h3>
+<p>There are two classes of attributes: those used at runtime to define the object
+behavior and those used at registration time to control object
+registration.&nbsp; Not all objects require registration, thus not all
+Python XPCOM objects will have registration-related attributes.</p>
+<table border="1" width="100%">
+  <tr>
+    <td width="17%"><b>Attribute</b></td>
+    <td width="83%"><b>Description</b></td>
+  </tr>
+  <tr>
+    <td width="17%">_com_interfaces_</td>
+    <td width="83%">The interface IDs (IIDs) supported by the component.&nbsp;
+      For simplicity, this may be either a single IID, or a list of IIDs.&nbsp;
+      There is no need to specify base interfaces, as all parent interfaces are
+      automatically supported. Thus, it is never necessary to nominate <i>
+      nsISupports</i> in the list of interfaces.
+      <p>This attribute is required. Objects without such an attribute are
+      deemed unsuitable for use as a XPCOM object.</td>
+  </tr>
+  <tr>
+    <td width="17%">_reg_contractid_</td>
+    <td width="83%">The contract ID of the component.&nbsp; Required if the
+      component requires registration (i.e., exists in the components directory).</td>
+  </tr>
+  <tr>
+    <td width="17%">_reg_clsid_</td>
+    <td width="83%">The Class ID (CLSID) of the component, as a string in the
+      standard &quot;{XXX-XXX-XXX-XXX}&quot; format. Required if the
+      component requires registration (i.e., exists in the components directory).</td>
+  </tr>
+  <tr>
+    <td width="17%">_reg_registrar_</td>
+    <td width="83%">Nominates a function that is called at registration
+      time. The default is for no extra function to be called. This can
+      be useful if a component has special registration requirements and needs
+      to hook into the registration process.</td>
+  </tr>
+  <tr>
+    <td width="17%">_reg_desc_</td>
+    <td width="83%">The description of the XPCOM object. This may be used by
+      browsers or other such objects.&nbsp; If not specified, the contract ID
+      is used.</td>
+  </tr>
+</table>
+<h3><a name="Properties">Properties</a></h3>
+<p>A Python class can support XPCOM properties in one of two ways.&nbsp; Either
+a standard Python property of the same name can exist - our sample
+component demonstrates this with the <i>boolean_value</i> property.&nbsp;
+Alternatively, the class can provide the <i>get_propertyName(self)</i> and <i>set_propertyName(self,
+value)</i>  functions (with <i>propertyName</i> changed to the appropriate value for the
+property), and these functions will be called instead.</p>
+<h4>Example:&nbsp; The Python XPCOM Test Component</h4>
+<p>As an example, examine the Python XPCOM Test Component.&nbsp; This
+code can be found in <i>py_test_component.py</i>.</p>
+<pre>from xpcom import components
+
+class PythonTestComponent:
+    _com_interfaces_ = components.interfaces.nsIPythonTestInterface
+    _reg_clsid_ = &quot;{7EE4BDC6-CB53-42c1-A9E4-616B8E012ABA}&quot;
+    _reg_contractid_ = &quot;Python.TestComponent&quot;
+    def __init__(self):
+        self.boolean_value = 1
+        ...
+    def do_boolean(self, p1, p2):
+        ret = p1 ^ p2
+        return ret, not ret, ret
+...</pre>
+<p><b>Note:</b> This component only specifies the mandatory attributes - <i>_com_interfaces</i>,
+<i>_reg_clsid_</i> and <i>_reg_contractid_</i>.</p>
+<p>This sample code demonstrates supporting the <i>boolean_value</i> attribute,
+supported implicitly, as it is defined in the IDL and exists as a real Python
+attribute of that name, and a method called <i>do_boolean</i>.</p>
+<h4>Tip: The xpcom/xpt.py Script</h4>
+<p> The xpcom/xpt.py script is a useful script that can generate the skeleton of a class for
+any XPCOM interface.&nbsp; Just specify the interface name on the command-line,
+and paste the output into your source file.</p>
+<p>This is the output of running this program over the <i>nsISample</i>
+interface (i.e., assuming we wanted to implement a component that supported this
+interface):</p>
+<pre>class nsISample:
+    _com_interfaces_ = xpcom.components.interfaces.nsISample
+    # If this object needs to be registered, the following 2 are also needed.
+    # _reg_clsid_ = {a new clsid generated for this object}
+    # _reg_contractid_ = &quot;The.Object.Name&quot;
+
+    def get_value( self ):
+        # Result: string
+        pass
+    def set_value( self, param0 ):
+        # Result: void - None
+        # In: param0: string
+        pass
+    def writeValue( self, param0 ):
+        # Result: void - None
+        # In: param0: string
+        pass
+    def poke( self, param0 ):
+        # Result: void - None
+        # In: param0: string
+        pass</pre>
+<p><b>Note:</b> The types of the parameters and the function itself are included in
+the comments.&nbsp;You need to implement the functions
+themselves.&nbsp; Another advantage of this script is that the <a href="#HiddenParams">hidden
+parameters</a> are handled for you; the comments indicate when parameters
+have been hidden.</p>
+<h2><a name="Parameters">Parameters and Types</a></h2>
+<p>This section briefly describes the XPCOM type support in
+Python.</p>
+<p>All XPCOM interfaces define parameters of a specific type.&nbsp; There is
+currently no concept of a variant, or union of all types. Thus, the
+conversion rules are very straightforward, and generally surprise free: for
+any given XPCOM method, there is only one possible type for a given parameter.</p>
+<h3>Type Conversion Rules:</h3>
+<ul>
+  <li>All numeric types will attempt to be coerced to the correct type.&nbsp;
+    Thus, you can pass a Python float to an XPCOM method expecting an integer,
+    or vice-versa. Specifically, when an integer is required, you can pass
+    any Python object for which <i>int()</i> would succeed; for a Python float,
+    any object for which <i>float()</i> would succeed is acceptable.&nbsp; This
+    means that you can pass a Python string object as an integer, as long as the
+    string was holding a valid integer.</li>
+  <li>Strings and Unicode objects are interchangeable, but no other automatic
+    string conversions are performed.&nbsp; Thus, you can not pass an integer
+    where a string is expected, even though the reverse is true.</li>
+  <li>Any sequence object can be passed as an array.&nbsp; List objects are
+    always returned for arrays.</li>
+  <li>Any Python instance suitable for use as a XPCOM object (i.e., with the
+    <a href="#Implementing">necessary annotations</a>) can be
+    passed as a XPCOM object. No special wrapping step is needed to turn a
+    Python instance into a XPCOM object.&nbsp; Note you must pass a class <i>instance</i>,
+    not the class itself.</li>
+  <li><a name="HiddenParams">Many XPCOM <b> method signatures</b> specify
+    &quot;count&quot; or &quot;size&quot; parameters.&nbsp; For example, every
+    time an array is passed via XPCOM, the method signature will always specify
+    an integer that holds the count of the array.&nbsp; These parameters are
+    always hidden in Python.&nbsp; As the size param can be implied from the
+    length of the Python sequence passed, the Python programmer need never pass
+    these parameters;&nbsp;in contrast, JavaScript requires these redundant parameters.</a></li>
+</ul>
+
+<h2>Interface Flattening</h2>
+<p>Most people can ignore this information - Python XPCOM objects just
+work.&nbsp; However, if you are familiar with xpcom from C++ and the concept of <i>QueryInterface</i>,
+you may like to read this.</p>
+<p>Most components support the concept of &quot;interface
+flattening&quot;.&nbsp; Such objects can report the interfaces they support,
+allowing languages such as Python and Javascript avoid using <i>QueryInterface</i>.&nbsp;
+When you are using an XPCOM object from Python, you can just call methods and
+reference properties without regard for the interface that implements it.</p>
+<p>When multiple interfaces share the same method or property name, you can use
+the name of the interface as a differentiator.&nbsp; Thus, <i>ob.nsIFoo.close()</i>
+will call close on <i>ob</i>'s <i>nsIFoo</i> interface, while <i>ob.nsIBar.close()</i>
+will use the <i>nsIBar</i> interface.&nbsp; <i>ob.close()</i> is not defined.</p>
+
+</body>
+
+</html>
+
+

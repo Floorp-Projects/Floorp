@@ -1,0 +1,177 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Help CSS.
+ *
+ * The Initial Developer of the Original Code is
+ * R.J. Keller.
+ * Portions created by the Initial Developer are Copyright (C) 2003
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+@import url("chrome://global/skin/");
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+#HelpToolbar {
+  -moz-padding-start: 5px;
+}
+
+#HelpToolbar toolbarbutton {
+  min-width: 0px;
+  list-style-image: url("chrome://help/skin/Toolbar.png");
+  -moz-box-orient: horizontal !important;
+}
+
+#HelpToolbar toolbarbutton[type="menu-button"] {
+  margin: 0px;
+  padding: 0px;
+}
+
+/* this element contains the icon and the label */
+#HelpToolbar .toolbarbutton-menubutton-button {
+  margin: 0px !important;
+  padding: 0px !important;
+  border: 0px !important;
+}
+
+
+/* Hide labels for the toolbar because we really don't need them what with the
+   tooltips */
+#HelpToolbar .toolbarbutton-text {
+  display: none;
+}
+
+/* Set the minimum sidebar width so the help contents aren't squeezed together.*/
+#help-sidebar { min-width: 15em; width: 20em; max-width: 25em; }
+
+#search-sidebar-closebutton {
+  -moz-binding: url(chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image);
+  list-style-image: url("chrome://global/skin/icons/closetab.png");
+  padding-right: 4px;
+  margin: 0;
+  border: 0;
+}
+
+#search-sidebar-closebutton:hover {
+  list-style-image: url("chrome://global/skin/icons/closetab-hover.png");
+}
+
+#search-sidebar-closebutton:hover:active {
+  list-style-image: url("chrome://global/skin/icons/closetab-active.png");
+}
+
+#help-back-button { -moz-image-region: rect(0px 24px 24px 0px); }
+#help-back-button:not([disabled="true"]):hover { -moz-image-region: rect(24px 24px 48px 0px); }
+#help-back-button[disabled="true"] { -moz-image-region: rect(48px 24px 72px 0px); }
+#help-back-button:not([disabled="true"]):hover:active { -moz-image-region: rect(72px 24px 96px 0px); }
+
+#help-forward-button { -moz-image-region: rect(0px 48px 24px 24px); }
+#help-forward-button:not([disabled="true"]):hover { -moz-image-region: rect(24px 48px 48px 24px); }
+#help-forward-button[disabled="true"] { -moz-image-region: rect(48px 48px 72px 24px); }
+#help-forward-button:not([disabled="true"]):hover:active { -moz-image-region: rect(72px 48px 96px 24px); }
+
+#help-home-button { -moz-image-region: rect(0px 72px 24px 48px); }
+#help-home-button:not([disabled="true"]):hover { -moz-image-region: rect(24px 72px 48px 48px); }
+#help-home-button[disabled="true"] { -moz-image-region: rect(48px 72px 72px 48px); }
+#help-home-button:not([disabled="true"]):hover:active { -moz-image-region: rect(72px 72px 96px 48px); }
+
+#help-print-button { -moz-image-region: rect(0px 96px 24px 72px); }
+#help-print-button:not([disabled="true"]):hover { -moz-image-region: rect(24px 96px 48px 72px); }
+#help-print-button[disabled="true"] { -moz-image-region: rect(48px 96px 72px 72px); }
+#help-print-button:not([disabled="true"]):hover:active { -moz-image-region: rect(72px 96px 96px 72px); }
+
+/* Style the back/forward dropmarks to connect them to the buttons */
+
+/* Style the back dropmark */
+
+#help-back-button .toolbarbutton-menubutton-dropmarker {
+  margin-top: 3px;
+  list-style-image: url("chrome://global/skin/toolbar/dropmark-nav.png");
+  -moz-image-region: rect(0px, 14px, 24px, 0px);
+}
+
+#help-back-button:hover .toolbarbutton-menubutton-dropmarker, 
+#help-back-button[buttonover="true"] > .toolbarbutton-menubutton-dropmarker {
+  -moz-image-region: rect(24px, 14px, 48px, 0px);
+}
+
+#help-back-button[disabled="true"] .toolbarbutton-menubutton-dropmarker {
+  list-style-image: url("chrome://global/skin/toolbar/dropmark-nav.png") !important;
+  -moz-image-region: rect(48px, 14px, 72px, 0px) !important;
+}
+
+#help-back-button:hover:active .toolbarbutton-menubutton-dropmarker, 
+#help-back-button[buttondown="true"] > .toolbarbutton-menubutton-dropmarker {
+  -moz-image-region: rect(72px, 14px, 96px, 0px);
+}
+
+/* Style the forward dropmark */
+
+#help-forward-button .toolbarbutton-menubutton-dropmarker {
+  margin-top: 3px;
+  list-style-image: url("chrome://global/skin/toolbar/dropmark-nav.png");
+  -moz-image-region: rect(0px, 14px, 24px, 0px);
+}
+#help-forward-button:hover .toolbarbutton-menubutton-dropmarker, 
+#help-forward-button[buttonover="true"] > .toolbarbutton-menubutton-dropmarker {
+  -moz-image-region: rect(24px, 14px, 48px, 0px);
+}
+#help-forward-button[disabled="true"] .toolbarbutton-menubutton-dropmarker {
+  list-style-image: url("chrome://global/skin/toolbar/dropmark-nav.png") !important;
+  -moz-image-region: rect(48px, 14px, 72px, 0px) !important;
+}
+#help-forward-button:hover:active .toolbarbutton-menubutton-dropmarker, 
+#help-forward-button[buttondown="true"] > .toolbarbutton-menubutton-dropmarker {
+  -moz-image-region: rect(72px, 14px, 96px, 0px);
+}
+
+
+#helpsidebar-splitter {
+  border-right: 1px solid #bebebe;
+}
+
+#helpsidebar-box toolbarbutton {
+  background-image: url("chrome://global/skin/icons/white-gray-gradient.gif");
+  background-repeat: repeat-x;
+  background-position: bottom right;
+  background-color: rgb(246, 246, 246);
+  border-bottom: 1px solid #b3b3b3;
+  border-right: 1px solid #bebebe;
+  margin: 0px;
+  text-align: left;
+  color: #505050;
+}
+
+#helpsidebar-box toolbarbutton[selected="true"] {
+  color: #000;
+}
+
+#helpsidebar-box tree {
+  margin: 0px !important;
+  padding: 0px !important;
+}

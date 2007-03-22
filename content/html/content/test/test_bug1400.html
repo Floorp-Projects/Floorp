@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1400
+-->
+<head>
+  <title>Test for Bug 1400</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1400">Mozilla Bug 1400</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 1400 **/
+
+table = document.createElement("TABLE");
+thead = table.createTHead();
+thead2 = table.createTHead();
+
+table.appendChild(thead);
+table.appendChild(thead);
+table.appendChild(thead);
+table.appendChild(thead2);
+table.appendChild(thead2);
+table.appendChild(thead2);
+table.appendChild(thead);
+table.appendChild(thead2);
+
+is(table.childNodes.length, 1, 
+   "adding multiple theads results in one thead child");
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,178 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Jungshik Shin <jshin@mailaps.org>
+ * Portions created by the Initial Developer are Copyright (C) 2003
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+ /*========================================================
+  This file contains  a precompiled CCMap for a class of Unicode
+  characters (dbyte_special_chars) to be identified quickly by Mozilla. 
+  It was generated  by  ccmapbin.pl which you can find  under 
+  mozilla/intl/unicharutil/tools.
+
+  Enumerated below are characters included in the precompiled CCMap
+  which is human-readable but not so human-friendly.  If you 
+  needs to modify the list of characters belonging to "dbyte_special_chars",
+  you have to make a new file (with the name of your choice)
+  listing characters (one character per line) you want to put 
+  into "dbyte_special_chars" in the format
+
+         0xuuuu // comment
+
+  In addition, the input file can have the following optional lines that
+  read
+
+      VARIABLE::gDoubleByteSpecialCharsCCMap
+      CLASS::dbyte_special_chars
+      DESCRIPTION:: description of a character class 
+      FILE:: mozilla source file to include the output file
+      
+
+  Then, run the following in the current directory.
+
+    perl ccmapbin.pl input_file [gDoubleByteSpecialCharsCCMap [dbyte_special_chars]] 
+
+  which will generate dbyte_special_chars.ccmap (or dbyte_special_chars.x-ccmap if the ccmap
+  includes non-BMP characters.). gDoubleByteSpecialCharsCCMap is used as the prefix
+  in macros for the array initializer and the array size. 
+
+  (see bug 180266, bug 167136, and bug 224337)
+
+ */
+
+
+/*
+   VARIABLE:: gDoubleByteSpecialCharsCCMap
+   CLASS:: dbyte_special_chars
+   DESCRIPTION:: description of a character class 
+   FILE:: mozilla source file to include output files
+
+   0X000152 : LATIN CAPITAL LIGATURE OE 
+   0X000153 : LATIN SMALL LIGATURE OE 
+   0X000160 : LATIN CAPITAL LETTER S WITH CARON 
+   0X000161 : LATIN SMALL LETTER S WITH CARON 
+   0X000178 : LATIN CAPITAL LETTER Y WITH DIAERESIS 
+   0X00017D : LATIN CAPITAL LETTER Z WITH CARON 
+   0X00017E : LATIN SMALL LETTER Z WITH CARON 
+   0X000192 : LATIN SMALL LETTER F WITH HOOK 
+   0X0002C6 : MODIFIER LETTER CIRCUMFLEX ACCENT 
+   0X0002DC : SMALL TILDE 
+   0X002013 : EN DASH 
+   0X002018 : LEFT SINGLE QUOTATION MARK 
+   0X002019 : RIGHT SINGLE QUOTATION MARK 
+   0X00201A : SINGLE LOW-9 QUOTATION MARK 
+   0X00201C : LEFT DOUBLE QUOTATION MARK 
+   0X00201D : RIGHT DOUBLE QUOTATION MARK 
+   0X00201E : DOUBLE LOW-9 QUOTATION MARK 
+   0X002020 : DAGGER 
+   0X002021 : DOUBLE DAGGER 
+   0X002022 : BULLET 
+   0X002026 : HORIZONTAL ELLIPSIS 
+   0X002030 : PER MILLE SIGN 
+   0X002039 : SINGLE LEFT-POINTING ANGLE QUOTATION MARK 
+   0X00203A : SINGLE RIGHT-POINTING ANGLE QUOTATION MARK 
+   0X0020AC : EURO SIGN 
+   0X002122 : TRADE MARK SIGN 
+*/
+
+#if (defined(IS_LITTLE_ENDIAN) || ALU_SIZE == 16)
+// Precompiled CCMap for Little Endian(16/32/64bit)
+// and Big Endian(16bit)
+#define gDoubleByteSpecialCharsCCMap_SIZE 144
+#define gDoubleByteSpecialCharsCCMap_INITIALIZER    \
+/* 000000 */ 0x0030,0x0010,0x0060,0x0010,0x0010,0x0010,0x0010,0x0010,    \
+             0x0010,0x0010,0x0010,0x0010,0x0010,0x0010,0x0010,0x0010,    \
+/* 000010 */ 0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,    \
+             0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,    \
+/* 000020 */ 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,    \
+             0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,    \
+/* 000030 */ 0x0020,0x0040,0x0050,0x0020,0x0020,0x0020,0x0020,0x0020,    \
+             0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,    \
+/* 000040 */ 0x0000,0x0000,0x0000,0x0000,0x0000,0x000C,0x0003,0x6100,    \
+             0x0000,0x0004,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,    \
+/* 000050 */ 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,    \
+             0x0000,0x0000,0x0000,0x0000,0x0040,0x1000,0x0000,0x0000,    \
+/* 000060 */ 0x0070,0x0080,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,    \
+             0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,    \
+/* 000070 */ 0x0000,0x7708,0x0047,0x0601,0x0000,0x0000,0x0000,0x0000,    \
+             0x0000,0x0000,0x1000,0x0000,0x0000,0x0000,0x0000,0x0000,    \
+/* 000080 */ 0x0000,0x0000,0x0004,0x0000,0x0000,0x0000,0x0000,0x0000,    \
+             0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,
+#elif (ALU_SIZE == 32)
+// Precompiled CCMap for  Big Endian(32bit)
+#define gDoubleByteSpecialCharsCCMap_SIZE 144
+#define gDoubleByteSpecialCharsCCMap_INITIALIZER    \
+/* 000000 */ 0x0030,0x0010,0x0060,0x0010,0x0010,0x0010,0x0010,0x0010,    \
+             0x0010,0x0010,0x0010,0x0010,0x0010,0x0010,0x0010,0x0010,    \
+/* 000010 */ 0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,    \
+             0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,    \
+/* 000020 */ 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,    \
+             0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,    \
+/* 000030 */ 0x0020,0x0040,0x0050,0x0020,0x0020,0x0020,0x0020,0x0020,    \
+             0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,    \
+/* 000040 */ 0x0000,0x0000,0x0000,0x0000,0x000C,0x0000,0x6100,0x0003,    \
+             0x0004,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,    \
+/* 000050 */ 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,    \
+             0x0000,0x0000,0x0000,0x0000,0x1000,0x0040,0x0000,0x0000,    \
+/* 000060 */ 0x0070,0x0080,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,    \
+             0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,    \
+/* 000070 */ 0x7708,0x0000,0x0601,0x0047,0x0000,0x0000,0x0000,0x0000,    \
+             0x0000,0x0000,0x0000,0x1000,0x0000,0x0000,0x0000,0x0000,    \
+/* 000080 */ 0x0000,0x0000,0x0000,0x0004,0x0000,0x0000,0x0000,0x0000,    \
+             0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,
+#elif (ALU_SIZE == 64)
+// Precompiled CCMap for Big Endian(64bit)
+#define gDoubleByteSpecialCharsCCMap_SIZE 144
+#define gDoubleByteSpecialCharsCCMap_INITIALIZER    \
+/* 000000 */ 0x0030,0x0010,0x0060,0x0010,0x0010,0x0010,0x0010,0x0010,    \
+             0x0010,0x0010,0x0010,0x0010,0x0010,0x0010,0x0010,0x0010,    \
+/* 000010 */ 0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,    \
+             0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,    \
+/* 000020 */ 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,    \
+             0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,    \
+/* 000030 */ 0x0020,0x0040,0x0050,0x0020,0x0020,0x0020,0x0020,0x0020,    \
+             0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,    \
+/* 000040 */ 0x0000,0x0000,0x0000,0x0000,0x6100,0x0003,0x000C,0x0000,    \
+             0x0000,0x0000,0x0004,0x0000,0x0000,0x0000,0x0000,0x0000,    \
+/* 000050 */ 0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,    \
+             0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x1000,0x0040,    \
+/* 000060 */ 0x0070,0x0080,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,    \
+             0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,0x0020,    \
+/* 000070 */ 0x0601,0x0047,0x7708,0x0000,0x0000,0x0000,0x0000,0x0000,    \
+             0x0000,0x1000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,    \
+/* 000080 */ 0x0000,0x0004,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,    \
+             0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,
+#else
+#error "We don't support this architecture."
+#endif
+

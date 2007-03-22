@@ -1,0 +1,107 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=276037
+-->
+<head>
+  <title>Test for Bug 276037</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=276037">Mozilla Bug 276037</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 276037 **/
+function countElements (node, namespaceURI, tagName) {
+  var count = 0;
+  for (var i = 0; i < node.childNodes.length; i++) {
+    var child = node.childNodes[i];
+    if (child.nodeType == Node.ELEMENT_NODE && child.tagName == tagName &&
+        child.namespaceURI == namespaceURI) {
+      count++;
+    }
+    if (child.hasChildNodes()) {
+      count += countElements(child, namespaceURI, tagName);
+    }
+  }
+  return count;
+}
+
+function checkElements(namespaceURI, tagName) {
+  var elementsNS = document.getElementsByTagNameNS(namespaceURI, tagName);
+  var elements = document.getElementsByTagName(tagName);
+  var elementCount = countElements(document, namespaceURI, tagName);
+  const gEBTN = 'document.getElementsByTagName(\'' + tagName + '\').length: ' + elements.length;
+  const gEBTNNS = '; document.getElementsByTagNameNS(\'' + namespaceURI + '\', \'' + tagName + '\').length: ' + elementsNS.length;
+
+  var text1 = gEBTN + '; element count: ' + elementCount;
+  var text2 = gEBTNNS + '; element count: ' + elementCount;
+
+  is(elements.length, elementCount, text1);
+  is(elementsNS.length, elementCount, text2);
+  is(global.gEBTN[namespaceURI][tagName].length, elementCount, text1);
+  is(global.gEBTNNS[namespaceURI][tagName].length, elementCount, text2);
+}
+
+const xhtmlNS = 'http://www.w3.org/1999/xhtml';
+
+function checkSpansAndScripts () {
+  checkElements(xhtmlNS, 'span');
+  checkElements(xhtmlNS, 'script');
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() { checkSpansAndScripts() });
+addLoadEvent(SimpleTest.finish);
+
+// Init our global lists
+var global = {};
+global.gEBTN = {};
+global.gEBTN[xhtmlNS] = {};
+global.gEBTNNS = {};
+global.gEBTNNS[xhtmlNS] = {};
+global.gEBTN[xhtmlNS].span = document.getElementsByTagName("span");
+global.gEBTNNS[xhtmlNS].span = document.getElementsByTagNameNS(xhtmlNS, "span");
+global.gEBTN[xhtmlNS].script = document.getElementsByTagName("script");
+global.gEBTNNS[xhtmlNS].script = document.getElementsByTagNameNS(xhtmlNS, "script");
+]]>
+</script>
+<p><span>Static text in span.</span></p>
+<script type="text/javascript">
+checkSpansAndScripts();
+</script>
+<p><span>Static text in span.</span></p>
+<script type="text/javascript">
+checkSpansAndScripts();
+</script>
+<p><span>Static text in span.</span></p>
+<script type="text/javascript">
+checkSpansAndScripts();
+</script>
+<p><span>Static text in span.</span></p>
+<script type="text/javascript">
+checkSpansAndScripts();
+</script>
+<p><span>Static text in span.</span></p>
+<script type="text/javascript">
+checkSpansAndScripts();
+</script>
+<p><span>Static text in span.</span></p>
+<script type="text/javascript">
+checkSpansAndScripts();
+</script>
+<p><span>Static text in span.</span></p>
+<script type="text/javascript">
+checkSpansAndScripts();
+</script>
+</pre>
+</body>
+</html>
+

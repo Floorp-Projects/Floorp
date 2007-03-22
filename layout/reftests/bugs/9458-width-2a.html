@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Testcase for inline-block (bug 9458)</title>
+<style type="text/css">
+body > div { width: 10em; }
+body > div > div { display: inline-block; background: green; color: white; }
+body > div > div > div { width: 20em; }
+</style>
+</head>
+<body>
+<div>x<div><div>y</div></div>z</div>
+</body>
+</html>

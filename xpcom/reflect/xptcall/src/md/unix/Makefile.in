@@ -1,0 +1,445 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= xpcom
+LIBRARY_NAME	= xptcmd
+MOZILLA_INTERNAL_API = 1
+
+REQUIRES = string
+
+#
+# The default is this buildable, but non-functioning code.
+#
+CPPSRCS = $(error XPTCall not implemented on this platform!)
+
+# Force use of PIC
+FORCE_USE_PIC	= 1
+
+include $(topsrcdir)/config/config.mk
+
+######################################################################
+# i386 and beyond
+######################################################################
+#
+# Lots of Unixish x86 flavors
+#
+ifneq (,$(filter FreeBSD NetBSD OpenBSD BSD_OS Darwin,$(OS_ARCH)))
+ifeq (86,$(findstring 86,$(OS_TEST)))
+CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
+ifeq (Darwin,$(OS_ARCH))
+DEFINES		+= -DKEEP_STACK_16_BYTE_ALIGNED
+endif
+endif
+endif
+#
+# New code for Linux, et. al., with gcc
+# Migrate other platforms here after testing
+#
+ifneq (,$(filter Linux,$(OS_ARCH)))
+# Linux/x86-64
+ifeq (x86_64,$(OS_TEST))
+CPPSRCS		:= xptcinvoke_x86_64_linux.cpp xptcstubs_x86_64_linux.cpp
+else
+ifeq (86,$(findstring 86,$(OS_TEST)))
+CPPSRCS		:= xptcinvoke_gcc_x86_unix.cpp xptcstubs_gcc_x86_unix.cpp
+endif
+endif
+endif
+# IA64 Linux
+ifneq (,$(filter Linux,$(OS_ARCH)))
+ifneq (,$(findstring ia64,$(OS_TEST)))
+CPPSRCS		:= xptcinvoke_ipf64.cpp xptcstubs_ipf64.cpp
+ASFILES		:= xptcstubs_asm_ipf64.s xptcinvoke_asm_ipf64.s
+endif
+endif
+#
+# BeOS/Intel (uses the same unixish_x86 code)
+#
+ifeq ($(OS_ARCH)$(OS_TEST),BeOSBePC)
+CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
+endif
+#
+# Neutrino/Intel (uses the same unixish_x86 code)
+#
+ifeq ($(OS_TARGET)$(OS_TEST),NTOx86)
+CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
+endif
+
+######################################################################
+# Solaris/Intel
+######################################################################
+#
+# Solaris/Intel
+#
+ifeq ($(OS_ARCH),SunOS)
+ifeq ($(OS_TEST),i86pc)
+CPPSRCS		:= xptcinvoke_x86_solaris.cpp xptcstubs_x86_solaris.cpp
+# 28817: if Solaris Intel OS, and native compiler, always build optimised.
+ifndef GNU_CC
+ASFILES		:= xptcinvoke_asm_x86_solaris_SUNW.s xptcstubs_asm_x86_solaris_SUNW.s
+CXXFLAGS += -O
+endif
+endif
+endif
+
+######################################################################
+# Alpha
+######################################################################
+#
+# Tru64/Alpha
+#
+ifeq ($(OS_ARCH)$(OS_TEST),OSF1alpha)
+CPPSRCS		:= xptcinvoke_osf1_alpha.cpp xptcstubs_osf1_alpha.cpp
+ASFILES		:= xptcinvoke_asm_osf1_alpha.s xptcstubs_asm_osf1_alpha.s
+endif
+#
+# Linux/Alpha
+#
+ifneq (,$(filter Linuxalpha FreeBSDalpha NetBSDalpha,$(OS_ARCH)$(OS_TEST)))                           
+CPPSRCS		:= xptcinvoke_linux_alpha.cpp xptcstubs_linux_alpha.cpp
+endif
+#
+# OpenVMS/Alpha
+#
+ifeq ($(OS_ARCH)$(CPU_ARCH),OpenVMSAlpha)
+CPPSRCS		:= xptcinvoke_openvms_alpha.cpp xptcstubs_openvms_alpha.cpp
+ASFILES		:= xptcinvoke_asm_openvms_alpha.s xptcstubs_asm_openvms_alpha.s
+endif
+
+######################################################################
+# ARM
+######################################################################
+#
+# Linux/ARM
+#
+ifeq ($(OS_ARCH),Linux)
+ifneq (,$(filter arm% sa110,$(OS_TEST)))
+CPPSRCS		:= xptcinvoke_arm.cpp xptcstubs_arm.cpp
+CXXFLAGS += -O2
+endif
+endif
+#
+# NetBSD/ARM
+#
+ifeq ($(OS_ARCH),NetBSD)
+ifneq (,$(filter arm% sa110,$(OS_TEST)))
+CPPSRCS		:= xptcinvoke_arm_netbsd.cpp xptcstubs_arm_netbsd.cpp
+endif
+endif
+
+######################################################################
+# HPPA
+######################################################################
+#
+# HP-UX/PA32
+#
+# for gas and gcc, check comment in xptcinvoke_asm_pa32.s
+ifeq ($(OS_ARCH),HP-UX)
+ifneq ($(CC),gcc)
+ifneq ($(OS_TEST),ia64)
+CPPSRCS		:= xptcinvoke_pa32.cpp xptcstubs_pa32.cpp
+ASFILES		:= xptcstubs_asm_pa32.s xptcinvoke_asm_pa32.s
+else
+CPPSRCS		:= xptcinvoke_ipf32.cpp xptcstubs_ipf32.cpp
+ASFILES		:= xptcstubs_asm_ipf32.s xptcinvoke_asm_ipf32.s
+endif
+
+# #18875  Building the CPP's (CXX) optimized causes a crash
+CXXFLAGS 	:=  $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(CXXFLAGS))
+endif
+endif
+
+######################################################################
+# M68k
+######################################################################
+#
+# NetBSD/m68k
+#
+ifeq ($(OS_ARCH),NetBSD)
+ifneq (,$(filter amiga atari hp300 mac68k mvme68k next68k sun3 sun3x x68k,$(OS_TEST)))
+CPPSRCS		:= xptcinvoke_netbsd_m68k.cpp xptcstubs_netbsd_m68k.cpp
+endif
+endif
+
+#
+# Linux/m68k
+#
+ifeq ($(OS_ARCH),Linux)
+ifeq ($(OS_TEST),m68k)
+CPPSRCS		:= xptcinvoke_linux_m68k.cpp xptcstubs_linux_m68k.cpp
+endif
+endif
+
+######################################################################
+# MIPS
+######################################################################
+#
+# IRIX/MIPS
+#
+ifeq ($(OS_ARCH),IRIX)
+ifneq ($(basename $(OS_RELEASE)),5)
+CPPSRCS		:= xptcinvoke_irix.cpp xptcstubs_irix.cpp
+ASFILES		:= xptcinvoke_asm_irix.s xptcstubs_asm_irix.s
+ifdef GNU_CC
+ASFLAGS		+= -Wa,-D__GNUC__
+else
+CXXFLAGS	:= $(shell echo $(CXXFLAGS) | sed 's/-O\(3\|fast\)/-O2/g')
+endif
+endif
+endif
+
+ifeq ($(OS_ARCH),Linux)
+ifneq (,$(findstring mips, $(OS_TEST)))
+CPPSRCS		:= xptcinvoke_mips.cpp xptcstubs_mips.cpp
+ASFILES		:= xptcinvoke_asm_mips.s xptcstubs_asm_mips.s
+#xptcstubs_mips.cpp
+# xptcstubs_asm_mips.s
+ifdef GNU_CC
+ASFLAGS		+= $(INCLUDES) -x assembler-with-cpp -D__GNUC__
+endif
+endif
+endif
+
+######################################################################
+# PowerPC
+######################################################################
+#
+# AIX/PPC
+#
+ifeq ($(OS_ARCH),AIX)
+ifdef HAVE_64BIT_OS
+CPPSRCS		:= xptcinvoke_ppc_aix64.cpp xptcstubs_ppc_aix64.cpp
+ASFILES		:= xptcinvoke_asm_ppc_aix64.s xptcstubs_asm_ppc_aix64.s
+else
+ifeq ($(AIX_OBJMODEL),ibm)
+CPPSRCS		:= xptcinvoke_ppc_aix.cpp xptcstubs_ppc_aix.cpp
+ASFILES		:= xptcinvoke_asm_ppc_ibmobj_aix.s xptcstubs_asm_ppc_aix.s
+else
+CPPSRCS		:= xptcinvoke_ppc_aix.cpp xptcstubs_ppc_aix.cpp
+ASFILES		:= xptcinvoke_asm_ppc_aix.s xptcstubs_asm_ppc_aix.s
+endif
+endif
+
+# #24617  Building the CPP's (CXX) optimized causes a crash
+CXXFLAGS 	:=  $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(CXXFLAGS))
+endif
+
+#
+# Linux/PPC
+#
+ifeq ($(OS_ARCH)$(OS_TEST),Linuxppc)
+CPPSRCS		:= xptcinvoke_ppc_linux.cpp xptcstubs_ppc_linux.cpp
+ASFILES		:= xptcinvoke_asm_ppc_linux.s xptcstubs_asm_ppc_linux.s
+AS		:= $(CC) -c -x assembler-with-cpp
+endif
+
+#
+# NetBSD/PPC
+#
+ifneq (,$(filter NetBSDmacppc NetBSDbebox NetBSDofppc NetBSDprep NetBSDamigappc,$(OS_ARCH)$(OS_TEST)))                           
+CPPSRCS		:= xptcinvoke_ppc_netbsd.cpp xptcstubs_ppc_netbsd.cpp
+ASFILES		:= xptcinvoke_asm_ppc_netbsd.s xptcstubs_asm_ppc_netbsd.s
+endif
+
+#
+# Darwin/PPC
+#
+ifeq ($(OS_ARCH),Darwin)
+ifeq ($(TARGET_CPU), powerpc)
+ASFLAGS		+= -x assembler-with-cpp   # assumes $(AS) == $(CC)
+ifdef HAVE_GCC3_ABI
+ASFLAGS		+= -DHAVE_GCC3_ABI
+endif
+CPPSRCS		:= xptcinvoke_ppc_rhapsody.cpp xptcstubs_ppc_rhapsody.cpp
+ASFILES		:= xptcinvoke_asm_ppc_rhapsody.s xptcstubs_asm_ppc_darwin.s
+endif
+endif
+
+######################################################################
+# SPARC
+######################################################################
+#
+# BSD_OS/SPARC
+#
+ifeq ($(OS_ARCH),BSD_OS)
+ifneq (,$(findstring sparc,$(OS_TEST)))
+CPPSRCS		:= xptcinvoke_sparc_solaris.cpp xptcstubs_sparc_solaris.cpp
+ASFILES		:= xptcinvoke_asm_sparc_bsdos.s xptcstubs_asm_sparc_solaris.s
+endif
+endif
+#
+# Linux/SPARC
+#
+ifeq ($(OS_ARCH),Linux)
+ifneq (,$(findstring sparc,$(OS_TEST)))
+CPPSRCS		:= xptcinvoke_sparc_solaris.cpp xptcstubs_sparc_solaris.cpp
+ifdef HAVE_GCC3_ABI
+ASFILES		:= xptcinvoke_asm_sparc_linux_GCC3.s xptcstubs_asm_sparc_solaris.s
+else
+ASFILES		:= xptcinvoke_asm_sparc_linux.s xptcstubs_asm_sparc_solaris.s
+endif
+endif
+endif
+#
+# NetBSD/SPARC
+#
+ifeq ($(OS_ARCH)$(OS_TEST),NetBSDsparc)
+CPPSRCS		:= xptcinvoke_sparc_netbsd.cpp xptcstubs_sparc_netbsd.cpp
+ASFILES		:= xptcinvoke_asm_sparc_netbsd.s xptcstubs_asm_sparc_netbsd.s
+endif
+#
+# Solaris/SPARC
+#
+ifeq ($(OS_ARCH),SunOS)
+ifneq (86,$(findstring 86,$(OS_TEST)))
+ifdef HAVE_64BIT_OS
+CPPSRCS		:= xptcinvoke_sparcv9_solaris.cpp xptcstubs_sparcv9_solaris.cpp
+else
+CPPSRCS		:= xptcinvoke_sparc_solaris.cpp xptcstubs_sparc_solaris.cpp
+endif
+
+ifeq ($(GNU_CC),1)
+ifdef HAVE_GCC3_ABI
+ASFILES		:= xptcinvoke_asm_sparc_solaris_GCC3.s xptcstubs_asm_sparc_solaris.s
+else
+ASFILES		:= xptcinvoke_asm_sparc_solaris_GCC.s xptcstubs_asm_sparc_solaris.s
+endif
+else
+ifdef HAVE_64BIT_OS
+ASFILES		:= xptcinvoke_asm_sparcv9_solaris_SUNW.s xptcstubs_asm_sparcv9_solaris.s
+else
+ASFILES		:= xptcinvoke_asm_sparc_solaris_SUNW.s xptcstubs_asm_sparc_solaris.s
+endif
+endif
+
+endif
+endif
+
+######################################################################
+# S/390
+######################################################################
+#
+# Linux for S/390
+#
+ifeq ($(OS_ARCH)$(OS_TEST),Linuxs390)
+CPPSRCS		:= xptcinvoke_linux_s390.cpp xptcstubs_linux_s390.cpp
+CXXFLAGS	+= -fno-strict-aliasing -fno-inline -fomit-frame-pointer -mbackchain
+endif
+
+ifeq ($(OS_ARCH)$(OS_TEST),Linuxs390x)
+CPPSRCS		:= xptcinvoke_linux_s390x.cpp xptcstubs_linux_s390x.cpp
+CXXFLAGS	+= -fno-strict-aliasing -fno-inline -fomit-frame-pointer -mbackchain
+endif
+
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
+
+include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= -DEXPORT_XPTC_API -D_IMPL_NS_COM
+
+LOCAL_INCLUDES += \
+	-I$(srcdir)/../.. \
+	-I$(srcdir)/../../../../xptinfo/src \
+	$(NULL)
+
+ifeq ($(OS_ARCH),Linux)
+ifneq (,$(findstring mips, $(OS_TEST)))
+xptcstubs_asm_mips.o: xptcstubs_asm_mips.s.m4 $(PUBLIC)/xptcstubsdef.inc
+	m4 $(INCLUDES) $< > ./xptcstubs_asm_mips.s && \
+	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) ./xptcstubs_asm_mips.s
+	$(RM) -f ./xptcstubs_asm_mips.s
+endif
+endif
+
+ifeq ($(OS_ARCH),Darwin)
+xptcstubs_asm_ppc_darwin.o: xptcstubs_asm_ppc_darwin.s.m4 $(PUBLIC)/xptcstubsdef.inc Makefile
+	gm4 $(INCLUDES) $< > ./xptcstubs_asm_ppc_darwin.s && \
+	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) ./xptcstubs_asm_ppc_darwin.s
+	$(RM) -f ./xptcstubs_asm_ppc_darwin.s
+endif
+
+ifeq ($(OS_ARCH),IRIX)
+# The assembler on IRIX (6.3 only?) seems to have trouble with the default command,
+# but works fine if we first copy the header and source file into the current dir.
+xptcstubs_asm_irix.o: $(PUBLIC)/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_irix.s
+	@rm -f ./xptcstubsdef.inc
+	@cp $(PUBLIC)/xptcstubsdef.inc .
+	@if test ! -f ./Makefile.in; then rm -f ./xptcstubs_asm_irix.s; cp $(srcdir)/xptcstubs_asm_irix.s .; else true; fi
+	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) ./xptcstubs_asm_irix.s
+	@rm -f ./xptcstubsdef.inc
+	@if test ! -f ./Makefile.in; then rm -f ./xptcstubs_asm_irix.s; else true; fi
+endif
+
+ifeq ($(OS_ARCH),OpenVMS)
+# Our assembler wants the include file to be of assembler syntax, not C/C++
+# syntax, so we have to massage it slightly.
+
+xptcstubs_asm_openvms_alpha.o: $(PUBLIC)/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_openvms_alpha.s
+	sed \
+	  -e 's/^\(.*_ENTRY\)(\([0-9]*\))/ \1 \2/' \
+	  -e 's/\/\*\(.*\)\*\//; \1/' \
+	$(PUBLIC)/xptcstubsdef.inc > ./xptcstubsdef_asm.vms
+	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(srcdir)/xptcstubs_asm_openvms_alpha.s
+	@rm -f ./xptcstubsdef_asm.vms
+endif
+
+ifeq ($(OS_ARCH),SunOS)
+ifeq ($(OS_TEST),i86pc)
+ifndef GNU_CC
+xptcstubs_asm_x86_solaris_SUNW.o: $(PUBLIC)/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_x86_solaris_SUNW.s
+	sed \
+	  -e 's/^\(STUB_ENTRY\)(\([0-9]\))/\11\(\2\)/' \
+	  -e 's/^\(STUB_ENTRY\)(\([0-9][0-9]\))/\12\(\2\)/' \
+	  -e 's/^\(STUB_ENTRY\)(\([0-9][0-9][0-9]\))/\13\(\2\)/' \
+	$(PUBLIC)/xptcstubsdef.inc > ./xptcstubsdef_asm.solx86
+	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) -I./ $(srcdir)/xptcstubs_asm_x86_solaris_SUNW.s
+	@rm -f ./xptcstubsdef_asm.solx86
+endif
+endif
+endif
+
+libs:: $(LIBRARY)
+	$(INSTALL) $(LIBRARY) ../..

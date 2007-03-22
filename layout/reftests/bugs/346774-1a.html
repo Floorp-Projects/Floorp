@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body>
+<form name="theForm">
+  <select name="theSelect" style="width: auto">
+    <option>xxxxxxxxxx</option>
+  </select>
+</form>
+<script>
+  // Flush reflow
+  document.body.offsetWidth;
+  document.theForm.theSelect.style.width='30em';
+  document.body.offsetWidth;
+  document.theForm.theSelect.style.width='auto';
+</script>
+</body>
+</html>
+
+  

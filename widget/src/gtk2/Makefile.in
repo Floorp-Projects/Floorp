@@ -1,0 +1,183 @@
+# 
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Christopher Blizzard. Portions created by Christopher Blizzard are Copyright (C) Christopher Blizzard.  All Rights Reserved.
+# Portions created by the Initial Developer are Copyright (C) 2001
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= widget
+LIBRARY_NAME	= widget_gtk2
+EXPORT_LIBRARY	= 1
+IS_COMPONENT	= 1
+MODULE_NAME	= nsWidgetGtk2Module
+GRE_MODULE	= 1
+LIBXUL_LIBRARY = 1
+
+PACKAGE_FILE = widget_gtk2.pkg
+
+NATIVE_THEME_SUPPORT = 1
+
+REQUIRES	= xpcom \
+		  string \
+		  gfx \
+		  pref \
+		  dom \
+		  necko \
+		  uconv \
+		  intl \
+		  gtkxtbin \
+		  imglib2 \
+		  view \
+		  content \
+		  layout \
+		  util \
+		  locale \
+		  $(NULL)
+
+ifeq ($(MOZ_ENABLE_CAIRO_GFX),1)
+REQUIRES += thebes cairo
+
+ifeq ($(MOZ_ENABLE_GLITZ),1)
+REQUIRES += glitz glitzglx
+endif
+endif
+
+CSRCS		= \
+		mozcontainer.c \
+		mozdrawingarea.c \
+		keysym2ucs.c \
+		nsPrintdGTK.c \
+		$(NULL)
+
+ifdef ACCESSIBILITY
+CSRCS += maiRedundantObjectFactory.c
+endif
+
+CPPSRCS		= \
+		nsWindow.cpp \
+		nsAppShell.cpp \
+		nsWidgetFactory.cpp \
+		nsToolkit.cpp \
+		nsBidiKeyboard.cpp \
+		nsCommonWidget.cpp \
+		nsLookAndFeel.cpp \
+		nsGtkKeyUtils.cpp \
+		nsClipboard.cpp \
+		nsDragService.cpp \
+		nsFilePicker.cpp \
+		nsSound.cpp \
+		nsNativeKeyBindings.cpp \
+		nsScreenGtk.cpp \
+		nsScreenManagerGtk.cpp \
+		nsDeviceContextSpecG.cpp \
+		nsPrintOptionsGTK.cpp \
+		nsImageToPixbuf.cpp \
+		nsAccessibilityHelper.cpp \
+		nsPrintJobFactoryGTK.cpp \
+		nsPrintJobGTK.cpp \
+		nsTempfilePS.cpp \
+		nsIdleServiceGTK.cpp \
+		$(NULL)
+
+# build our subdirs, too
+ifdef ACCESSIBILITY
+REQUIRES	+= accessibility
+endif
+
+SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
+
+EXTRA_DSO_LDOPTS += \
+		$(MOZ_COMPONENT_LIBS) \
+		-lgkgfx \
+		-lgtkxtbin \
+                $(MOZ_STARTUP_NOTIFICATION_LIBS) \
+		$(XLDFLAGS) \
+		$(XLIBS) \
+		$(MOZ_GTK2_LIBS)
+ifdef MOZ_ENABLE_XINERAMA
+EXTRA_DSO_LDOPTS += $(MOZ_XINERAMA_LIBS)
+endif
+
+ifeq ($(MOZ_ENABLE_CAIRO_GFX),1)
+EXTRA_DSO_LDOPTS += -lthebes
+endif
+
+EXPORTS		= \
+		nsIGdkPixbufImage.h \
+                nsGTKToolkit.h \
+		nsIImageToPixbuf.h \
+		mozdrawingarea.h \
+		mozcontainer.h \
+		$(NULL)
+
+ifdef NATIVE_THEME_SUPPORT
+CSRCS		+= gtk2drawing.c
+CPPSRCS		+= nsNativeThemeGTK.cpp
+DEFINES		+= -DNATIVE_THEME_SUPPORT
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+CFLAGS          += $(MOZ_GTK2_CFLAGS) $(MOZ_STARTUP_NOTIFICATION_CFLAGS)
+CXXFLAGS        += $(MOZ_GTK2_CFLAGS) $(MOZ_STARTUP_NOTIFICATION_CFLAGS)
+
+DEFINES         += -DUSE_XIM
+
+ifdef MOZ_ENABLE_CAIRO_GFX
+DEFINES		+= -DCAIRO_GFX
+endif
+
+ifdef MOZ_ENABLE_POSTSCRIPT
+DEFINES         += -DUSE_POSTSCRIPT
+EXTRA_DSO_LDOPTS += -lgfxpsshar
+endif
+
+
+DEFINES		+= 
+INCLUDES	+= \
+		-I$(srcdir)/../xpwidgets \
+		-I$(topsrcdir)/other-licenses/atk-1.0 \
+		$(NULL)
+
+test_container: mozdrawingarea.o mozcontainer.o test_container.c
+	$(CC) $(MOZ_GTK2_CFLAGS) -o test_container test_container.c \
+		mozdrawingarea.o mozcontainer.o \
+		$(MOZ_GTK2_LIBS)
+

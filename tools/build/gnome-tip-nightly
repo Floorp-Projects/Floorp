@@ -1,0 +1,63 @@
+#!/bin/tcsh -f
+# Original Author: Alec Flett <alecf@netscape.com>
+# Shameless Modifier: leaf nunes <leaf@mozilla.org>
+# Last checked in: $Date: 1999/02/09 08:09:58 $
+# Last checked in by: $Author: leaf%mozilla.org $
+
+test $# -gt 2 || echo "Usage: $0 package builddir prefix [options]" && exit
+
+set package=$1
+set builddir=$2
+set prefix=$3
+set options=$4
+
+
+# add any special bin directories for the build here
+set path = ( $path )
+
+setenv LD_LIBRARY_PATH /lib:/usr/lib:/usr/local/lib:/usr/openwin/lib:/tools/contrib/lib
+
+
+cd $builddir
+
+cvs -d :pserver:anonymous@anoncvs.gnome.org:/cvs/gnome checkout $package
+
+
+cd $package
+# find the version from the RPM spec file
+
+set ver = `grep '%define.*\<ver\>' $package.spec | awk '{print $3}'`
+
+# combine package and version to get the package-specific destination
+set packagever = $package-$ver
+set dest = $prefix/$packagever
+
+
+
+# build
+echo installing in $dest
+rm config.cache
+rm config.status
+./autogen.sh $options --prefix=$dest # --with-threads=posix
+
+# clean up last night's build
+find . -name '.deps' -exec rm -rf {} \; >& /dev/null
+find . -name '.libs' -exec rm -rf {} \; >& /dev/null
+gmake clean
+
+# now build
+gmake
+gmake install
+
+# remove the old installation of this version
+(find $dest -type l && find $dest -type f) | \
+    sed s%$dest/%% | xargs -i% rm $prefix/%
+
+# symlink in the new installation
+pushd `pwd`
+cd $prefix
+lndir -ignorelinks $packagever
+popd
+
+
+# maybe add some tests to see if the build was successful.

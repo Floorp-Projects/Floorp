@@ -1,0 +1,65 @@
+
+<!ENTITY Inspector.title "DOM Inspector">
+
+<!ENTITY thDOMNodes.label "DOM-Knoten">
+<!ENTITY btnInspect.label "Inspizieren">
+<!ENTITY bxDocPanel.title "Dokument">
+<!ENTITY bxObjectPanel.title "Objekt">
+<!ENTITY btnSelecting.tooltip "Einen Knoten zum Inspizieren durch darauf klicken suchen">
+<!ENTITY btnFind.tooltip "Einen Knoten zum Inspizieren über ID, Tag oder Attribut suchen">
+
+<!-- MAIN MENU ITEMS -->
+
+<!ENTITY mnFile.label "Datei">
+<!ENTITY mnFile.accesskey "D">
+  <!ENTITY mnInspectContentDocument.label "Inhaltsdokument inspizieren">
+  <!ENTITY mnInspectContentDocument.accesskey "h">
+  <!ENTITY mnInspectChromeDocument.label "Chrome-Dokument inspizieren">
+  <!ENTITY mnInspectChromeDocument.accesskey "C">
+  <!ENTITY cmdShowOpenURLDialog.label "URL inspizieren...">
+  <!ENTITY cmdShowOpenURLDialog.accesskey "U">
+  <!ENTITY cmdClose.label "Schließen">
+  <!ENTITY cmdClose.accesskey "L">
+  <!ENTITY cmdExit.label "Beenden">
+  <!ENTITY cmdExit.accesskey "e">
+
+<!ENTITY mnEdit.label "Bearbeiten">
+<!ENTITY mnEdit.accesskey "B">
+  <!ENTITY cmdUndo.label "Rückgängig">
+  <!ENTITY cmdUndo.accesskey "R">
+  <!ENTITY cmdRedo.label "Wiederholen">
+  <!ENTITY cmdRedo.accesskey "W">
+  <!ENTITY cmdCut.label "Ausschneiden">
+  <!ENTITY cmdCut.accesskey "s">
+  <!ENTITY cmdCopy.label "Kopieren">
+  <!ENTITY cmdCopy.accesskey "c">
+  <!ENTITY cmdPaste.label "Einfügen">
+  <!ENTITY cmdPaste.accesskey "E">
+  <!ENTITY cmdDelete.label "Löschen">
+  <!ENTITY cmdDelete.accesskey "L">
+
+<!ENTITY mnSearch.label "Suchen">
+<!ENTITY mnSearch.accesskey "S">
+  <!ENTITY mnSearchPlugins.label "Erweiterungen">
+  <!ENTITY mnSearchPlugins.accesskey "E">
+    <!ENTITY cmdRunSearch.label "Ausführen...">
+    <!ENTITY cmdRunSearch.accesskey "A">
+
+<!ENTITY mnView.label "Ansicht">
+<!ENTITY mnView.accesskey "A">
+  <!ENTITY cmdToggleBrowser.label "Browser">
+  <!ENTITY cmdToggleSearch.label "Suchergebnisse">
+
+<!ENTITY cmdViewSearchItem.label "Ansicht...">
+<!ENTITY cmdEditSearchItem.label "Bearbeiten...">
+<!ENTITY cmdCopySearchItemLine.label "Zeile kopieren">
+<!ENTITY cmdCopySearchItemAll.label "Alles Kopieren">
+<!ENTITY cmdSaveSearchItemText.label "Sichern...">
+<!ENTITY cmdClearSearch.label "Leeren">
+<!ENTITY cmdHideSearchItems.label "Verstecken">
+
+<!ENTITY browserPanel.label "Browser">
+
+<!ENTITY inspectNewWindow.label "In neuem Fenster inspizieren">
+
+<!ENTITY closeCmd.key "W">

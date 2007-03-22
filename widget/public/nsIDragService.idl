@@ -1,0 +1,135 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corp.
+ * Portions created by the Initial Developer are Copyright (C) 1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Mike Pinkerton
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsISupportsArray.idl"
+#include "nsIDragSession.idl"
+#include "nsIScriptableRegion.idl"
+
+
+interface nsIDOMNode;
+interface nsIDOMMouseEvent;
+interface nsISelection;
+
+[scriptable, uuid(D2875740-95D3-4F12-8E97-9FAB76C87093)]
+interface nsIDragService : nsISupports
+{
+  const long DRAGDROP_ACTION_NONE = 0;
+  const long DRAGDROP_ACTION_COPY = 1;
+  const long DRAGDROP_ACTION_MOVE = 2;
+  const long DRAGDROP_ACTION_LINK = 4;
+
+  /**
+    * Starts a modal drag session with an array of transaferables 
+    *
+    * @param  aTransferables - an array of transferables to be dragged
+    * @param  aRegion - a region containing rectangles for cursor feedback, 
+    *            in window coordinates.
+    * @param  aActionType - specified which of copy/move/link are allowed
+    */
+  void invokeDragSession ( in nsIDOMNode aDOMNode, in nsISupportsArray aTransferables, 
+                             in nsIScriptableRegion aRegion, in unsigned long aActionType );
+
+  /**
+   * Starts a modal drag session using an image. The first four arguments are
+   * the same as invokeDragSession.
+   *
+   * A custom image may be specified using the aImage argument. If this is
+   * supplied, the aImageX and aImageY arguments specify the offset within
+   * the image where the cursor would be positioned. That is, when the image
+   * is drawn, it is offset up and left the amount so that the cursor appears
+   * at that location within the image.
+   *
+   * If aImage is null, aImageX and aImageY are not used and the image is instead
+   * determined from the source node aDOMNode, and the offset calculated so that
+   * the initial location for the image appears in the same screen position as
+   * where the element is located. The node must be within a document.
+   *
+   * Currently, supported images are all DOM nodes. If this is an HTML <image> or
+   * <canvas>, the drag image is taken from the image data. If the element is in
+   * a document, it will be rendered at its displayed size, othewise, it will be
+   * rendered at its real size. For other types of elements, the element is
+   * rendered into an offscreen buffer in the same manner as it is currently
+   * displayed. The document selection is hidden while drawing.
+   *
+   * The aDragEvent must be supplied as the current screen coordinates of the
+   * event are needed to calculate the image location.
+   */
+  void invokeDragSessionWithImage(in nsIDOMNode aDOMNode,
+                                  in nsISupportsArray aTransferableArray,
+                                  in nsIScriptableRegion aRegion,
+                                  in unsigned long aActionType,
+                                  in nsIDOMNode aImage,
+                                  in long aImageX,
+                                  in long aImageY,
+                                  in nsIDOMMouseEvent aDragEvent);
+
+  /**
+   * Start a modal drag session using the selection as the drag image.
+   * The aDragEvent must be supplied as the current screen coordinates of the
+   * event are needed to calculate the image location.
+   */
+  void invokeDragSessionWithSelection(in nsISelection aSelection,
+                                      in nsISupportsArray aTransferableArray,
+                                      in unsigned long aActionType,
+                                      in nsIDOMMouseEvent aDragEvent);
+
+  /**
+    * Returns the current Drag Session  
+    */
+  nsIDragSession getCurrentSession ( ) ;
+
+  /**
+    * Tells the Drag Service to start a drag session. This is called when
+    * an external drag occurs
+    */
+  void startDragSession ( ) ;
+
+  /**
+    * Tells the Drag Service to end a drag session. This is called when
+    * an external drag occurs
+    */
+  void endDragSession ( ) ;
+  
+};
+
+
+%{ C++
+
+%}

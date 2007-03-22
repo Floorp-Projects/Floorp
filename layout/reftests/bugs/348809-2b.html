@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+span { color: red }
+:default + span { color: green }
+span.reverse { color: green }
+:default + span.reverse { color: red }
+button { display: none }
+</style>
+</head>
+<body>
+<form>
+<div>
+  <button type="submit" checked="checked" id="foo"></button>
+  <span>There should be no red.</span>
+</div>
+<div>
+  <button type="submit"></button><span class="reverse">There should be no red.</span>
+</div>
+</form>
+</body>
+</html>

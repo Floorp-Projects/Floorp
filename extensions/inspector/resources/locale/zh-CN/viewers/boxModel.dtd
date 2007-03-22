@@ -1,0 +1,5 @@
+<!ENTITY boxBorder.label "边框">
+<!ENTITY boxDimension.label "尺寸">
+<!ENTITY boxMargin.label "页边距">
+<!ENTITY boxPadding.label "间隙">
+<!ENTITY boxPosition.label "位置">

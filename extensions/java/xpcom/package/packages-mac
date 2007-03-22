@@ -1,0 +1,3 @@
+[javaconnect]
+bin/mozjava.jar
+bin/libjavaxpcom.jnilib

@@ -1,0 +1,26 @@
+.\"
+.\"
+.de TQ
+.br
+.ns
+.TP
+\\$1
+..
+.TH GLITZ-GLX 3 "Version 1.0"
+
+.SH NAME
+GLITZ-GLX \- GLX interface to glitz
+
+.SH SYNOPSIS
+.nf
+.B #include <glitz-glx.h>
+.fi
+.SH DESCRIPTION
+
+GLX interface to glitz.
+
+.SH AUTHOR
+David Reveman
+
+.SH "SEE ALSO"
+.BR GLITZ (3)

@@ -1,0 +1,36 @@
+[gecko]
+#if SHARED_LIBRARY
+dist/bin/components/@SHARED_LIBRARY@
+#else
+!staticcomp @LIBRARY@ @MODULE_NAME@
+#endif
+!xpt dist/bin/components/intl.xpt
+!xpt dist/bin/components/unicharutil.xpt
+!xpt dist/bin/components/locale.xpt
+!xpt dist/bin/components/chardet.xpt
+!xpt dist/bin/components/lwbrk.xpt
+dist/bin/res/langGroups.properties
+dist/bin/res/language.properties
+dist/bin/res/entityTables/html40Special.properties
+dist/bin/res/entityTables/htmlEntityVersions.properties
+dist/bin/res/entityTables/html40Latin1.properties
+dist/bin/res/entityTables/html40Symbols.properties
+dist/bin/res/entityTables/transliterate.properties
+#if MOZ_MATHML
+dist/bin/res/entityTables/mathml20.properties
+#endif
+
+#if ENABLE_TESTS
+[gecko-tests]
+dist/bin/UnicharSelfTest@BINS@
+dist/bin/StringBundleTest@BINS@
+dist/bin/TestLineBreak@BINS@
+dist/bin/res/strres.properties
+dist/bin/res/strres-test.html
+dist/bin/res/strres-test.xul
+dist/bin/res/strres-test.dtd
+dist/bin/res/strres-test.js
+#if OS_ARCH==WINNT
+dist/bin/DetectCharset@BINS@
+#endif
+#endif

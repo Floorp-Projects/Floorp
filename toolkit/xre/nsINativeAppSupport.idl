@@ -1,0 +1,139 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Bill Law    <law@netscape.com>
+ *   Blake Ross  <blake@netscape.com>
+ *   Benjamin Smedberg <bsmedberg@covad.net>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+ 
+#include "nsISupports.idl"
+
+/* nsINativeAppSupport
+ *
+ * This "pseudo" (in the XPCOM sense) interface provides for
+ * platform-specific general application support:
+ *  o It manages the details of the simple DDE communication 
+ *    supported on the Win32 platform (it is the addition of this 
+ *    item that prompted the creation of this interface.
+ *
+ * Due to the nature of the beast, this interface is not a full-blown
+ * XPCOM component.  The primary reason is that objects that implement
+ * this interface generally must be operational *before* XPCOM (or any
+ * of the rest of Mozilla) are initialized.  As a result, this 
+ * interface is instantiated by somewhat unconventional means.
+ *
+ * To create the implementor of this interface, you call the function
+ * NS_CreateNativeAppSupport.  This is done in the startup code
+ * in nsAppRunner.cpp
+ *
+ * The interface provides these functions:
+ *  start - You call this to inform the native app support that the  
+ *          application is starting.  In addition, it serves as a
+ *          query as to whether the application should continue to
+ *          run.
+ *
+ *          If the returned boolean result is PR_FALSE, then the
+ *          application should exit without further processing.  In
+ *          such cases, the returned nsresult indicates whether the
+ *          reason to exit is due to an error or not.
+ *
+ *          Win32 Note: In the case of starting a second instance
+ *                      of this executable, this function will return
+ *                      PR_FALSE and nsresult==NS_OK.  This means that
+ *                      the command line arguments have been
+ *                      successfully passed to the instance of the
+ *                      application acting as a DDE server.
+ *
+ *  stop - You call this to inform the native app support that the
+ *         application *wishes* to terminate.  If the returned boolean
+ *         value is PR_FALSE, then the application should continue
+ *         (as if there were still additional top-level windows open).
+ *         
+ *         Win32 Note: If this is the instance of the application
+ *                     acting as the DDE server, and there are current
+ *                     DDE conversations active with other instances
+ *                     acting as DDE clients, then this function will
+ *                     return PR_FALSE.
+ * 
+ *  quit - Like Stop, but this method *forces* termination (or more 
+ *         precisely, indicates that the application is about to be
+ *         terminated regardless of what a call to Stop might have
+ *         returned.
+ *
+ *         This method is intended to be called when the user selects
+ *         the "Quit" option (close all windows and exit).
+ *
+ *         Win32 Note: Stop is problematic in the case of "Quit" (close
+ *                     all windows and exit the application) because
+ *                     either we don't Quit or (potentially) we lose
+ *                     requests coming from other instances of the
+ *                     application.  The strategy is to give preference
+ *                     to the user's explicit Quit request.  In the
+ *                     unlikely event that a request is pending from
+ *                     another instance of the application, then such
+ *                     requests are essentially ignored.  This is
+ *                     roughly equivalent to handling that request by
+ *                     opening a new window, followed by immediately
+ *                     closing it.  Since this is the same as if the
+ *                     request came in immediately before the Quit
+ *                     call (versus immediately after it), no harm.
+ *
+ *                     There is an exposure here: Upon return from this
+ *                     function, any DDE connect request (for Mozilla)
+ *                     will fail and other instances of the application
+ *                     will start up as a DDE server.  In that case,
+ *                     those instances may do things that conflict with
+ *                     the subsequent shutting down of the instance that
+ *                     is quitting.  For this reason, the call to Quit
+ *                     should be deferred as long as possible.
+ *
+ *  onLastWindowClosing -  Called when the last window is closed. Used as a
+ *                         "soft" shutdown, passwords are flushed.
+ */
+
+interface nsIXULWindow;
+interface nsICmdLineService;
+
+[scriptable, uuid(5fdf8480-1f98-11d4-8077-00600811a9c3)]
+interface nsINativeAppSupport : nsISupports {
+    // Startup/shutdown.
+    boolean start();
+    void    enable();
+    boolean stop();
+    void    quit();
+
+    void onLastWindowClosing();
+    void ReOpen();
+};

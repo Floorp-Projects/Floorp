@@ -1,0 +1,87 @@
+/* ********************************************************************** */
+/* Implementation of the MathML W3C REC   http://www.w3.org/TR/REC-MathML */
+/* Section 3. Presentation Markup
+     3.2 Token Elements 
+          3.2.1 Attributes common to token elements 
+C-        3.2.2 <mi> -- identifier 
+C         3.2.3 <mn> -- number 
+C-        3.2.4 <mo> -- operator, fence, or separator 
+CSS       3.2.5 <mtext> -- text 
+          3.2.6 <mspace/> -- space 
+CSS       3.2.7 <ms> -- string literal 
+     3.3 General Layout Schemata 
+C         3.3.1 <mrow> -- horizontally group any number of subexpressions 
+C         3.3.2 <mfrac> -- form a fraction from two subexpressions 
+          3.3.3 <msqrt> and <mroot> -- form a radical 
+          3.3.4 <mstyle> -- style change 
+CSS       3.3.5 <merror> -- enclose a syntax error message from a preprocessor 
+          3.3.6 <mpadded> -- adjust space around content 
+C         3.3.7 <mphantom> -- make content invisible but preserve its size 
+          3.3.8 <mfenced> -- surround content with a pair of fences 
+     3.4 Script and Limit Schemata 
+C         3.4.1 <msub> -- attach a subscript to a base 
+C         3.4.2 <msup> -- attach a superscript to a base 
+C         3.4.3 <msubsup> -- attach a subscript-superscript pair to a base 
+C         3.4.4 <munder> -- attach an underscript to a base 
+C         3.4.5 <mover> -- attach an overscript to a base 
+C         3.4.6 <munderover> -- attach an underscript-overscript pair to a base 
+C         3.4.7 <mmultiscripts> -- attach prescripts and tensor indices to a base 
+     3.5 Tables and Matrices 
+CH        3.5.1 <mtable> -- table or matrix 
+CH        3.5.2 <mtr> -- row in a table or matrix 
+CH        3.5.3 <mtd> -- one entry in a table or matrix 
+          3.5.4 <maligngroup/> and <malignmark/> -- alignment markers 
+     3.6 Enlivening Expressions 
+          3.6.1 <maction> -- bind actions to a subexpression 
+
+Table of argument requirements
+------------------------------
+ tag        number of children
+------------------------------
+<mrow>          0 or more
+<mfrac>         2 (numerator denominator)
+<msqrt>         1
+<mroot>         2 (base index)
+<mstyle>        1
+<merror>        1
+<mpadded>       1
+<mphantom>      1
+<mfenced>       0 or more
+<msub>          2 (base subscript)
+<msup>          2 (base superscript)
+<msubsup>       3 (base subscript superscript)
+<munder>        2 (base underscript)
+<mover>         2 (base overscript)
+<munderover>    3 (base underscript overscript)
+<mmultiscripts> 1 or more
+                  (base ( subscript superscript ) * [ <mprescripts/> ( presubscript
+                  presuperscript ) * ])
+<mtable>        0 or more rows (<mtr>s, inferred if necessary)
+<mtr>           0 or more table elements (<mtd>s, inferred if necessary)
+<mtd>           1
+<maction>       1 or more (argument roles depend on actiontype attribute)
+*/ 
+ 
+/* NOTES:
+Since frames are not refCounted, don't use nsCOMPtr with them
+*/
+
+
+
+#if 0
+// NOTES ----
+// border and padding -- study nsHTMLButtonControlFrame.cpp ...
+
+// Text size infos
+  nsCOMPtr<nsIFontMetrics> fm;
+  aPresContext->GetMetricsFor(GetStyleFont()->mFont, getter_AddRefs(fm));
+ 
+  nsAutoString text;
+ 
+  fm->GetHeight([height]);
+  renderingContext->SetFont(fm);
+  renderingContext->GetWidth( text, [width] );
+  fm->GetMaxAscent( [baseline] );
+  fm->GetMaxDescent( [depth] );
+
+#endif

@@ -1,0 +1,96 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Robert Sayre.
+ * Portions created by the Initial Developer are Copyright (C) 2006
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+interface nsIFeedContainer;
+interface nsIProperties;
+interface nsIURI;
+
+/**
+ * The nsIFeedResult interface provides access to HTTP and parsing
+ * metadata for a feed or entry.
+ */
+[scriptable, uuid(7a180b78-0f46-4569-8c22-f3d720ea1c57)]
+interface nsIFeedResult : nsISupports {
+   
+  /** 
+  * The Feed parser will set the bozo bit when a feed triggers a fatal
+  * error during XML parsing. There may be entries and feed metadata
+  * that were parsed before the error.  Thanks to Tim Bray for
+  * suggesting this terminology.
+  * <http://www.tbray.org/ongoing/When/200x/2004/01/11/PostelPilgrim>
+  */
+  attribute boolean bozo;
+  
+  /**
+  * The parsed feed or entry. 
+  *
+  * Will be null if a non-feed is processed.
+  */
+  attribute nsIFeedContainer doc;
+
+  /** 
+  * The address from which the feed was fetched. 
+  */
+  attribute nsIURI uri;
+
+  /** 
+  * Feed Version: 
+  * atom, rss2, rss09, rss091, rss091userland, rss092, rss1, atom03, 
+  * atomEntry, rssItem
+  *
+  * Will be null if a non-feed is processed.
+  */
+  attribute AString version;
+
+  /**
+  * An XSLT stylesheet available to transform the source of the
+  * feed. Some feeds include this information in a processing
+  * instruction. It's generally intended for clients with specific
+  * feed capabilities.
+  */
+  attribute nsIURI stylesheet;
+
+  /**
+  * HTTP response headers that accompanied the feed. 
+  */
+  attribute nsIProperties headers;
+
+  /**
+  * Registers a prefix used to access an extension in the feed/entry 
+  */
+  void registerExtensionPrefix(in AString namespace, in AString prefix);
+};

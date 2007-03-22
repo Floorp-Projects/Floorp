@@ -1,0 +1,144 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Doug Turner <dougt@netscape.com> (Original Author)
+ *   Dan Mosedale <dmose@netscape.com>
+ *   Darin Fisher <darin@meer.net>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIEventTarget;
+
+/**
+ * An interface for the proxy object manager.
+ *
+ * See http://www.mozilla.org/projects/xpcom/Proxies.html
+ */
+[scriptable, uuid(ee8ce1e3-0319-4bd9-8f70-7258b21c7733)]
+interface nsIProxyObjectManager : nsISupports 
+{
+    /**
+     * Construct a proxy object that invokes methods on the real object
+     * synchronously (i.e., the calling thread is blocked until the real method
+     * call returns).  This flag causes methods invoked on the proxy object to
+     * emmulate a real method call.
+     *
+     * For C++ callers, NS_PROXY_SYNC is a synonym for this flag.
+     */
+    const long INVOKE_SYNC = 0x0001; 
+
+    /**
+     * Construct a proxy object that invokes methods on the real object
+     * asynchronously (i.e., the calling thread does not wait for the real
+     * method call to occur).
+     * 
+     * WARNING: do not pass pointers into the stack when using this flag.
+     *
+     * For C++ callers, NS_PROXY_ASYNC is a synonym for this flag.
+     */
+    const long INVOKE_ASYNC = 0x0002; 
+
+    /**
+     * Always create the proxy object even if for same thread as current thread.
+     *
+     * For C++ callers, NS_PROXY_ALWAYS is a synonym for this flag.
+     */
+    const long FORCE_PROXY_CREATION = 0x0004;
+
+    /**
+     * Create a proxy for the given object.  The proxy implements the specified
+     * interface, but when its methods are invoked, it causes the corresponding
+     * method on the actual object to be called via the designated event
+     * target.  Typically, the event target identifies a thread where the
+     * method call should occur.
+     *
+     * @param target
+     *   If target is null, then the current thread is used as the target.
+     *   Otherwise, target identifies the nsIEventTarget from which proxy
+     *   method calls should be executed.
+     * @param iid
+     *   Identifies the interface being proxied.  The given object must QI to
+     *   this type.
+     * @param object
+     *   The object being proxied.
+     * @param proxyType
+     *   Specifies the type of proxy to construct.  Either INVOKE_SYNC or
+     *   INVOKE_ASYNC must be specified.  FORCE_PROXY_CREATION may be bit-wise
+     *   OR'd with either of those flags.
+     * @param result
+     *   This param holds the resulting proxy object upon successful return.
+     */
+    void getProxyForObject(in nsIEventTarget target, 
+                           in nsIIDRef iid, 
+                           in nsISupports object, 
+                           in PRInt32 proxyType,
+                           [iid_is(iid),retval] out nsQIResult result);
+};
+
+
+%{C++
+/**
+ * convenience macros
+ */
+#define NS_PROXY_SYNC    nsIProxyObjectManager::INVOKE_SYNC
+#define NS_PROXY_ASYNC   nsIProxyObjectManager::INVOKE_ASYNC
+#define NS_PROXY_ALWAYS  nsIProxyObjectManager::FORCE_PROXY_CREATION
+
+/**
+ * Pass this value as the target to {NS_}GetProxyForObject to specify the current
+ * thread as the target for the proxy object.
+ */
+#define NS_PROXY_TO_CURRENT_THREAD  ((nsIEventTarget *) 0)
+
+/**
+ * Pass this value as the target to NS_GetProxyForObject to specify the main
+ * thread as the target for the proxy object.
+ */
+#define NS_PROXY_TO_MAIN_THREAD  ((nsIEventTarget *) 1)
+
+#ifdef MOZILLA_INTERNAL_API
+/**
+ * Helper function for code that already has a link-time dependency on the
+ * internal API (MOZILLA_INTERNAL_API) and needs to get proxies in a bunch of
+ * different places.  This way, the caller isn't forced to get the proxy object
+ * manager themselves every single time, thus making the calling code more
+ * readable.  The parameters are the same as for GetProxyForObject.
+ */
+extern NS_COM nsresult
+NS_GetProxyForObject(nsIEventTarget *target, REFNSIID iid, nsISupports* object,
+                     PRInt32 proxyType, void** result);
+#endif
+%}

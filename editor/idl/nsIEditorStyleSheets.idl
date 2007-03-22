@@ -1,0 +1,123 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Akkana Peck <akkana@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+%{C++
+class nsICSSStyleSheet;
+%}
+
+[ptr] native nsICSSStyleSheet(nsICSSStyleSheet);
+
+[scriptable, uuid(4805e682-49b9-11d3-9ce4-ed60bd6cb5bc)]
+
+interface nsIEditorStyleSheets : nsISupports
+{
+  /** load and apply the style sheet, specified by aURL, to the
+    * editor's document, replacing the last style sheet added (if any).
+    * This can involve asynchronous network I/O.
+    * 
+    * @param aURL         The style sheet to be loaded and applied.
+    */
+  void replaceStyleSheet(in AString aURL);
+
+  /** Add the given Style Sheet to the editor's document,
+    * on top of any that are already there.
+    * This is always synchronous.
+    *
+    * @param aURL  The style sheet to be  applied.
+    */
+  void addStyleSheet(in AString aURL);
+
+  /** load and apply the style sheet, specified by aURL, to the
+    * editor's document, replacing the last style sheet added (if any).
+    * This is always synchronous.
+    * 
+    * @param aURL         The style sheet to be loaded and applied.
+    */
+  void replaceOverrideStyleSheet(in AString aURL);
+
+  /** load and apply an Override style sheet, specified by aURL, to
+    * the editor's document, on top of any that are already there.
+    * IMPORTANT: This is assumed to be synchronous:
+    *            URL is a local file with no @import used
+    * This action is not undoable.
+    * It is not intended for use by "user", only editor developers
+    *   to change display behavior for editing (like showing special cursors)
+    *   that will not be affected by loading other "document" style sheets
+    *   loaded using addStyleSheet or replaceStyleSheet.
+    *
+    * @param aURL         The style sheet to be loaded and applied.
+    */
+  void addOverrideStyleSheet(in AString aURL);
+
+  /** Remove the given Style Sheet from the editor's document
+    * This is always synchronous
+    *
+    * @param aURL  The style sheet to be removed
+    */
+  void removeStyleSheet(in AString aURL);
+
+  /** Remove the given Override Style Sheet from the editor's document
+    * This is always synchronous
+    *
+    * @param aURL  The style sheet to be removed.
+    */
+  void removeOverrideStyleSheet(in AString aURL);
+
+  /** Enable or disable the given Style Sheet from the editor's document
+    * This is always synchronous
+    *
+    * @param aURL  The style sheet to be removed
+    */
+  void enableStyleSheet(in AString aURL, in PRBool aEnable);
+
+  /** Get the nsICSSStyleSheet associated with the given URL.
+    *
+    * @param aURL         The style sheet's URL
+    * @return             the style sheet
+    */
+  [noscript] nsICSSStyleSheet getStyleSheetForURL(in AString aURL);
+
+  /** Get the URL associated with the given nsICSSStyleSheet.
+    *
+    * @param aStyleSheet  The style sheet
+    * @return             the style sheet's URL
+    */
+  [noscript] AString getURLForStyleSheet(in nsICSSStyleSheet aStyleSheet);
+};

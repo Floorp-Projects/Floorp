@@ -1,0 +1,17 @@
+<!ENTITY newPagesIn.label             "New pages should be opened in:">
+<!ENTITY inNewWindow.label            "a new window">
+<!ENTITY inNewWindow.accesskey        "w">
+<!ENTITY inNewTab.label               "a new tab">
+<!ENTITY inNewTab.accesskey           "t">
+
+<!ENTITY warnCloseMultipleTabs.label  "Warn me when closing multiple tabs">
+<!ENTITY warnCloseMultipleTabs.accesskey  "m">
+
+<!ENTITY warnOpenManyTabs.label       "Warn me when opening multiple tabs might slow down &brandShortName;">
+<!ENTITY warnOpenManyTabs.accesskey   "o">
+
+<!ENTITY showTabBar.label             "Always show the tab bar">
+<!ENTITY showTabBar.accesskey         "b">
+
+<!ENTITY switchToNewTabs.label        "When I open a link in a new tab, switch to it immediately">
+<!ENTITY switchToNewTabs.accesskey    "s">

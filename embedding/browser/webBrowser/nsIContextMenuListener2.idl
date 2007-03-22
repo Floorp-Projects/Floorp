@@ -1,0 +1,159 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Conrad Carlen <ccarlen@netscape.com>
+ *   Adam Lock <adamlock@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIDOMEvent;
+interface nsIDOMNode;
+interface imgIContainer;
+interface nsIURI;
+interface nsIContextMenuInfo;
+
+/* THIS IS A PUBLIC EMBEDDING API */
+
+/**
+ * nsIContextMenuListener2
+ *
+ * This is an extended version of nsIContextMenuListener
+ * It provides a helper class, nsIContextMenuInfo, to allow access to
+ * background images as well as various utilities.
+ *
+ * @see nsIContextMenuListener
+ * @see nsIContextMenuInfo
+ *
+ * @status UNDER_REVIEW
+ */
+ 
+[scriptable, uuid(7fb719b3-d804-4964-9596-77cf924ee314)]
+interface nsIContextMenuListener2 : nsISupports
+{
+  /** Flag. No context. */
+  const unsigned long CONTEXT_NONE        = 0;
+  /** Flag. Context is a link element. */
+  const unsigned long CONTEXT_LINK        = 1;
+  /** Flag. Context is an image element. */
+  const unsigned long CONTEXT_IMAGE       = 2;
+  /** Flag. Context is the whole document. */
+  const unsigned long CONTEXT_DOCUMENT    = 4;
+  /** Flag. Context is a text area element. */
+  const unsigned long CONTEXT_TEXT        = 8;
+  /** Flag. Context is an input element. */
+  const unsigned long CONTEXT_INPUT       = 16;  
+  /** Flag. Context is a background image. */
+  const unsigned long CONTEXT_BACKGROUND_IMAGE  = 32;
+
+  /**
+   * Called when the browser receives a context menu event (e.g. user is right-mouse
+   * clicking somewhere on the document). The combination of flags, along with the
+   * attributes of <CODE>aUtils</CODE>, indicate where and what was clicked on.
+   *
+   * The following table describes what context flags and node combinations are
+   * possible.
+   *
+   * aContextFlags                  aUtils.targetNode
+   *
+   * CONTEXT_LINK                   <A>
+   * CONTEXT_IMAGE                  <IMG>
+   * CONTEXT_IMAGE | CONTEXT_LINK   <IMG> with <A> as an ancestor
+   * CONTEXT_INPUT                  <INPUT>
+   * CONTEXT_INPUT | CONTEXT_IMAGE  <INPUT> with type=image
+   * CONTEXT_TEXT                   <TEXTAREA>
+   * CONTEXT_DOCUMENT               <HTML>
+   * CONTEXT_BACKGROUND_IMAGE       <HTML> with background image
+   *
+   * @param aContextFlags           Flags indicating the kind of context.
+   * @param aUtils                  Context information and helper utilities.
+   *
+   * @see nsIContextMenuInfo
+   */ 
+  void onShowContextMenu(in unsigned long aContextFlags, in nsIContextMenuInfo aUtils);
+};
+
+/**
+ * nsIContextMenuInfo
+ *
+ * A helper object for implementors of nsIContextMenuListener2.
+ *
+ * @status UNDER_REVIEW
+ */
+ 
+[scriptable, uuid(2f977d56-5485-11d4-87e2-0010a4e75ef2)]
+interface nsIContextMenuInfo : nsISupports
+{
+  /**
+   * The DOM context menu event.
+   */
+  readonly attribute nsIDOMEvent mouseEvent;
+
+  /**
+   * The DOM node most relevant to the context.
+   */
+  readonly attribute nsIDOMNode targetNode;
+
+  /**
+   * Given the <CODE>CONTEXT_LINK</CODE> flag, <CODE>targetNode</CODE> may not
+   * nescesarily be a link. This returns the anchor from <CODE>targetNode</CODE>
+   * if it has one or that of its nearest ancestor if it does not.
+   */
+  readonly attribute AString associatedLink;
+
+  /**
+   * Given the <CODE>CONTEXT_IMAGE</CODE> flag, these methods can be
+   * used in order to get the image for viewing, saving, or for the clipboard.
+   *
+   * @return <CODE>NS_OK</CODE> if successful, otherwise <CODE>NS_ERROR_FAILURE</CODE> if no
+   * image was found, or NS_ERROR_NULL_POINTER if an internal error occurs where we think there 
+   * is an image, but for some reason it cannot be returned.
+   */
+
+  readonly attribute imgIContainer imageContainer;
+  readonly attribute nsIURI imageSrc;
+
+  /**
+   * Given the <CODE>CONTEXT_BACKGROUND_IMAGE</CODE> flag, these methods can be
+   * used in order to get the image for viewing, saving, or for the clipboard.
+   *
+   * @return <CODE>NS_OK</CODE> if successful, otherwise <CODE>NS_ERROR_FAILURE</CODE> if no background
+   * image was found, or NS_ERROR_NULL_POINTER if an internal error occurs where we think there is a 
+   * background image, but for some reason it cannot be returned.
+   */
+
+  readonly attribute imgIContainer backgroundImageContainer;
+  readonly attribute nsIURI backgroundImageSrc;
+};

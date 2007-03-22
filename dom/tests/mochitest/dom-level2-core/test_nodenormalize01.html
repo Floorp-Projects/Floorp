@@ -1,0 +1,235 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN""http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>http://www.w3.org/2001/DOM-Test-Suite/level2/core/nodenormalize01</title>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<script type="text/javascript" src="/MochiKit/packed.js"></script><script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script><script type="text/javascript" src="DOMTestCase.js"></script><script type="text/javascript" src="exclusions.js"></script><script type="text/javascript">
+// expose test function names
+function exposeTestFunctionNames()
+{
+return ['nodenormalize01'];
+}
+
+var docsLoaded = -1000000;
+var builder = null;
+
+//
+//   This function is called by the testing framework before
+//      running the test suite.
+//
+//   If there are no configuration exceptions, asynchronous
+//        document loading is started.  Otherwise, the status
+//        is set to complete and the exception is immediately
+//        raised when entering the body of the test.
+//
+function setUpPage() {
+   setUpPageStatus = 'running';
+   try {
+     //
+     //   creates test document builder, may throw exception
+     //
+     builder = createConfiguredBuilder();
+
+      docsLoaded = 0;
+      
+      var docRef = null;
+      if (typeof(this.doc) != 'undefined') {
+        docRef = this.doc;
+      }
+      docsLoaded += preload(docRef, "doc", "staffNS");
+        
+       if (docsLoaded == 1) {
+          setUpPage = 'complete';
+       }
+    } catch(ex) {
+    	catchInitializationError(builder, ex);
+        setUpPage = 'complete';
+    }
+}
+
+//
+//   This method is called on the completion of 
+//      each asychronous load started in setUpTests.
+//
+//   When every synchronous loaded document has completed,
+//      the page status is changed which allows the
+//      body of the test to be executed.
+function loadComplete() {
+  if (++docsLoaded == 1) {
+    setUpPageStatus = 'complete';
+    runJSUnitTests();
+    markTodos();
+    SimpleTest.finish();
+  }
+}
+
+var docName = 'nodenormalize01';
+
+
+/**
+* 
+	The method "normalize" puts all Text nodes in the full depth of the sub-tree underneath 
+	this Node, including attribute nodes, into a "normal" form where only structure 
+	(e.g., elements, comments, processing instructions, CDATA sections, and entity references) 
+	separates Text nodes, i.e., there are neither adjacent Text nodes nor empty Text nodes. 
+	
+	Create a dom tree consisting of elements, comments, processing instructions, CDATA sections, 
+	and entity references nodes seperated by text nodes.  Check the length of the node list of each
+	before and after normalize has been called.  
+
+* @author IBM
+* @author Neil Delima
+* @see http://www.w3.org/TR/DOM-Level-2-Core/core#ID-normalize
+*/
+function nodenormalize01() {
+   var success;
+    if(checkInitialization(builder, "nodenormalize01") != null) return;
+    var doc;
+      var newDoc;
+      var domImpl;
+      var docType;
+      var docTypeNull = null;
+
+      var documentElement;
+      var element1;
+      var element2;
+      var element3;
+      var element4;
+      var element5;
+      var element6;
+      var element7;
+      var text1;
+      var text2;
+      var text3;
+      var pi;
+      var cData;
+      var comment;
+      var entRef;
+      var elementList;
+      var appendedChild;
+      
+      var docRef = null;
+      if (typeof(this.doc) != 'undefined') {
+        docRef = this.doc;
+      }
+      doc = load(docRef, "doc", "staffNS");
+      domImpl = doc.implementation;
+newDoc = domImpl.createDocument("http://www.w3.org/DOM/Test","dom:root",docTypeNull);
+      element1 = newDoc.createElement("element1");
+      element2 = newDoc.createElement("element2");
+      element3 = newDoc.createElement("element3");
+      element4 = newDoc.createElement("element4");
+      element5 = newDoc.createElement("element5");
+      element6 = newDoc.createElement("element6");
+      element7 = newDoc.createElement("element7");
+      text1 = newDoc.createTextNode("text1");
+      text2 = newDoc.createTextNode("text2");
+      text3 = newDoc.createTextNode("text3");
+      cData = newDoc.createCDATASection("Cdata");
+      comment = newDoc.createComment("comment");
+      pi = newDoc.createProcessingInstruction("PITarget","PIData");
+      entRef = newDoc.createEntityReference("EntRef");
+      assertNotNull("createdEntRefNotNull",entRef);
+documentElement = newDoc.documentElement;
+
+      appendedChild = documentElement.appendChild(element1);
+      appendedChild = element2.appendChild(text1);
+      appendedChild = element2.appendChild(text2);
+      appendedChild = element2.appendChild(text3);
+      appendedChild = element1.appendChild(element2);
+      text1 = text1.cloneNode(false);
+      text2 = text2.cloneNode(false);
+      appendedChild = element3.appendChild(entRef);
+      appendedChild = element3.appendChild(text1);
+      appendedChild = element3.appendChild(text2);
+      appendedChild = element1.appendChild(element3);
+      text1 = text1.cloneNode(false);
+      text2 = text2.cloneNode(false);
+      appendedChild = element4.appendChild(cData);
+      appendedChild = element4.appendChild(text1);
+      appendedChild = element4.appendChild(text2);
+      appendedChild = element1.appendChild(element4);
+      text2 = text2.cloneNode(false);
+      text3 = text3.cloneNode(false);
+      appendedChild = element5.appendChild(comment);
+      appendedChild = element5.appendChild(text2);
+      appendedChild = element5.appendChild(text3);
+      appendedChild = element1.appendChild(element5);
+      text2 = text2.cloneNode(false);
+      text3 = text3.cloneNode(false);
+      appendedChild = element6.appendChild(pi);
+      appendedChild = element6.appendChild(text2);
+      appendedChild = element6.appendChild(text3);
+      appendedChild = element1.appendChild(element6);
+      entRef = entRef.cloneNode(false);
+      text1 = text1.cloneNode(false);
+      text2 = text2.cloneNode(false);
+      text3 = text3.cloneNode(false);
+      appendedChild = element7.appendChild(entRef);
+      appendedChild = element7.appendChild(text1);
+      appendedChild = element7.appendChild(text2);
+      appendedChild = element7.appendChild(text3);
+      appendedChild = element1.appendChild(element7);
+      elementList = element1.childNodes;
+
+      assertSize("nodeNormalize01_1Bef",6,elementList);
+elementList = element2.childNodes;
+
+      assertSize("nodeNormalize01_2Bef",3,elementList);
+elementList = element3.childNodes;
+
+      assertSize("nodeNormalize01_3Bef",3,elementList);
+elementList = element4.childNodes;
+
+      assertSize("nodeNormalize01_4Bef",3,elementList);
+elementList = element5.childNodes;
+
+      assertSize("nodeNormalize01_5Bef",3,elementList);
+elementList = element6.childNodes;
+
+      assertSize("nodeNormalize01_6Bef",3,elementList);
+elementList = element7.childNodes;
+
+      assertSize("nodeNormalize01_7Bef",4,elementList);
+newDoc.normalize();
+      elementList = element1.childNodes;
+
+      assertSize("nodeNormalize01_1Aft",6,elementList);
+elementList = element2.childNodes;
+
+      assertSize("nodeNormalize01_2Aft",1,elementList);
+elementList = element3.childNodes;
+
+      assertSize("nodeNormalize01_3Aft",2,elementList);
+elementList = element4.childNodes;
+
+      assertSize("nodeNormalize01_4Aft",2,elementList);
+elementList = element5.childNodes;
+
+      assertSize("nodeNormalize01_5Aft",2,elementList);
+elementList = element6.childNodes;
+
+      assertSize("nodeNormalize01_6Aft",2,elementList);
+elementList = element7.childNodes;
+
+      assertSize("nodeNormalize01_7Aft",2,elementList);
+
+}
+
+</script>
+</head>
+<body>
+<h2>Test http://www.w3.org/2001/DOM-Test-Suite/level2/core/nodenormalize01</h2>
+<p></p>
+<p>
+Copyright (c) 2001-2004 World Wide Web Consortium, 
+(Massachusetts Institute of Technology, European Research Consortium 
+for Informatics and Mathematics, Keio University). All 
+Rights Reserved. This work is distributed under the <a href="http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231">W3C(r) Software License</a> in the 
+hope that it will be useful, but WITHOUT ANY WARRANTY; without even 
+the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+</p>
+</body>
+</html>

@@ -1,0 +1,110 @@
+; -*- Mode: Fundamental; tab-width: 4; indent-tabs-mode: nil -*-
+;
+; ***** BEGIN LICENSE BLOCK *****
+; Version: MPL 1.1/GPL 2.0/LGPL 2.1
+;
+; The contents of this file are subject to the Mozilla Public License Version
+; 1.1 (the "License"); you may not use this file except in compliance with
+; the License. You may obtain a copy of the License at
+; http://www.mozilla.org/MPL/
+;
+; Software distributed under the License is distributed on an "AS IS" basis,
+; WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+; for the specific language governing rights and limitations under the
+; License.
+;
+; The Original Code is mozilla.org code.
+;
+; The Initial Developer of the Original Code is
+; Netscape Communications Corporation.
+; Portions created by the Initial Developer are Copyright (C) 1998
+; the Initial Developer. All Rights Reserved.
+;
+; Contributor(s):
+;
+; Alternatively, the contents of this file may be used under the terms of
+; either the GNU General Public License Version 2 or later (the "GPL"), or
+; the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+; in which case the provisions of the GPL or the LGPL are applicable instead
+; of those above. If you wish to allow use of your version of this file only
+; under the terms of either the GPL or the LGPL, and not to allow others to
+; use your version of this file under the terms of the MPL, indicate your
+; decision by deleting the provisions above and replace them with the notice
+; and other provisions required by the GPL or the LGPL. If you do not delete
+; the provisions above, a recipient may use your version of this file under
+; the terms of any one of the MPL, the GPL or the LGPL.
+;
+; ***** END LICENSE BLOCK *****
+
+
+LIBRARY JSD1640.DLL
+EXETYPE WINDOWS
+PROTMODE
+
+DESCRIPTION 'Netscape 16-bit JavaScript Debugger Library'
+
+CODE    LOADONCALL MOVEABLE DISCARDABLE
+DATA	PRELOAD MOVEABLE SINGLE
+
+HEAPSIZE    8192
+
+EXPORTS
+	WEP															@1 RESIDENTNAME	NONAME
+	_JSD_AppendSourceText
+	_JSD_ClearAllExecutionHooks
+	_JSD_ClearAllExecutionHooksForScript
+	_JSD_ClearDebugBreakHook
+	_JSD_ClearExecutionHook
+	_JSD_ClearInterruptHook
+	_JSD_ClearSourceText
+	_JSD_DebuggerOff
+	_JSD_DebuggerOn
+	_JSD_EvaluateScriptInStackFrame
+	_JSD_FindSourceForURL
+	_JSD_GetCallingStackFrame
+	_JSD_GetClosestLine
+	_JSD_GetClosestPC
+	_JSD_GetCountOfStackFrames
+	_JSD_GetDefaultJSContext
+	_JSD_GetMajorVersion
+	_JSD_GetMinorVersion
+	_JSD_GetPCForStackFrame
+	_JSD_GetScriptBaseLineNumber
+	_JSD_GetScriptFilename
+	_JSD_GetScriptForStackFrame
+	_JSD_GetScriptFunctionName
+	_JSD_GetScriptHook
+	_JSD_GetScriptLineExtent
+	_JSD_GetSourceAlterCount
+	_JSD_GetSourceStatus
+	_JSD_GetSourceText
+	_JSD_GetSourceURL
+	_JSD_GetStackFrame
+	_JSD_IncrementSourceAlterCount
+	_JSD_IsSourceDirty
+	_JSD_IterateScripts
+	_JSD_IterateSources
+	_JSD_LockScriptSubsystem
+	_JSD_LockSourceTextSubsystem
+	_JSD_NewSourceText
+	_JSD_SetDebugBreakHook
+	_JSD_SetErrorReporter
+	_JSD_SetExecutionHook
+	_JSD_SetInterruptHook
+	_JSD_SetScriptHook
+	_JSD_SetSourceDirty
+	_JSD_SetUserCallbacks
+	_JSD_UnlockScriptSubsystem
+	_JSD_UnlockSourceTextSubsystem
+	_Java_netscape_jsdebug_DebugController__0005fsetController_stub
+	_Java_netscape_jsdebug_DebugController_executeScriptInStackFrame_stub
+	_Java_netscape_jsdebug_DebugController_sendInterrupt_stub
+	_Java_netscape_jsdebug_DebugController_setInstructionHook0_stub
+	_Java_netscape_jsdebug_JSPC_getSourceLocation_stub
+	_Java_netscape_jsdebug_JSSourceTextProvider_loadSourceTextItem_stub
+	_Java_netscape_jsdebug_JSSourceTextProvider_refreshSourceTextVector_stub
+	_Java_netscape_jsdebug_JSStackFrameInfo_getCaller0_stub
+	_Java_netscape_jsdebug_JSStackFrameInfo_getPC_stub
+	_Java_netscape_jsdebug_JSThreadState_countStackFrames_stub
+	_Java_netscape_jsdebug_JSThreadState_getCurrentFrame_stub
+	_Java_netscape_jsdebug_Script_getClosestPC_stub

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: atom entry summary xhtml works
+Expect: feed.items.queryElementAt(1, Components.interfaces.nsIFeedEntry).summary.plainText() == "test summary";
+
+-->
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:foo="http://www.example.org"
+      foo:quux="quuux"
+      xmlns:content="http://purl.org/rss/1.0/modules/content/">
+
+  <title>hmm</title>
+
+  <author>
+    <email>hmm@example.com</email>
+    <name>foo</name>
+  </author>
+  <generator version="1.1" uri="http://example.org">Hmm</generator>
+  <author>
+    <email>bar@example.com</email>
+    <name>foo</name>
+  </author>
+  <rights type="xhtml">
+    <div xmlns="http://www.w3.org/1999/xhtml"><i>test</i> rights</div>
+  </rights>
+  
+
+  <entry></entry>
+
+  <entry foo:bar="baz">
+    <title>test</title>
+    <summary type="xhtml">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+	<b>test</b> summary
+      </div>
+    </summary>
+  </entry>
+
+</feed>

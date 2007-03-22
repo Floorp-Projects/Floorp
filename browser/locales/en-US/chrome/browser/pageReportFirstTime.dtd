@@ -1,0 +1,7 @@
+<!ENTITY startDescription.label            "A web site has attempted to open a popup window without your permission. &brandShortName; has automatically closed the popup window.  Whenever &brandShortName; blocks these popups, you will see an icon on the status bar.">
+
+<!ENTITY endDescription.label              "You can click on this icon to see which sites &brandShortName; blocked and to allow those sites to open popups if they are required for the site to function correctly.">
+
+<!ENTITY caption.label                     "About Popup Blocking">
+
+<!ENTITY done.label "Done">

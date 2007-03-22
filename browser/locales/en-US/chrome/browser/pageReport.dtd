@@ -1,0 +1,10 @@
+<!ENTITY caption.label "Blocked Popups">
+
+<!ENTITY intro.label "The following pages were prevented from displaying 
+unrequested popup windows:">
+
+<!ENTITY done.label "Done">
+<!ENTITY done.accesskey "D">
+
+<!ENTITY unblock.label "Unblock Site">
+<!ENTITY unblock.accesskey "U">

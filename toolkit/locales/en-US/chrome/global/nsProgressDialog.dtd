@@ -1,0 +1,136 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Progress Dialog.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corp.
+   - Portions created by the Initial Developer are Copyright (C) 2002
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Bill Law       <law@netscape.com>
+   -   Aaron Kaluszka <ask@swva.net>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!-- These strings are used on the download progress dialog.
+     See: http://lxr.mozilla.org/seamonkey/source/embedding/components/ui/progressDlg/nsProgressDialog.xul
+-->
+
+<!-- This is used prior to initializing with a proper title -->
+<!ENTITY defaultTitle     "Saving">
+
+<!-- These are used when saving -->
+<!ENTITY savingTitle      "#2&#037; of #1 Saved"> 
+<!ENTITY savingSource     "Saving From:"> 
+<!ENTITY savingTarget     "To:"> 
+
+<!-- These are used when opening (with an application) -->
+<!ENTITY openingTitle      "#2&#037; of #1 Completed">
+<!ENTITY openingSource     "Opening From:">
+<!ENTITY openingTarget     "With:">
+
+<!-- This is used when the download percentage is unknown -->
+<!ENTITY unknownSavingTitle  "Saving #1">
+<!ENTITY unknownOpeningTitle "Opening #1">
+
+<!-- Labels on other fields -->
+<!ENTITY status      "Status:"> 
+<!ENTITY timeElapsed "Time Elapsed:">
+<!ENTITY timeLeft    "Time Left:">
+<!ENTITY progress    "Progress:">
+
+<!-- Label for the "keep dialog" checkbox -->
+<!ENTITY keep "Keep this window open after the download is complete.">
+
+<!-- Button labels -->
+<!ENTITY cancel "Cancel"> 
+<!ENTITY pause  "Pause">
+<!ENTITY resume "Resume">
+<!ENTITY close  "Close">
+<!ENTITY reveal "Show File Location">
+<!ENTITY launch "Launch File">
+
+<!-- Status/progress messages -->
+
+<!-- LOCALIZATION NOTE (pausedMsg):
+    This string is used to indicate that the download is paused -->
+<!ENTITY pausedMsg "Download Paused">
+
+<!-- LOCALIZATION NOTE (progressMsg):
+
+    This string is used to generate the status message used during
+    file download.
+
+    #1 will be replaced by the number of bytes downloaded thus far
+    #2 will be replaced by the total number of bytes to be downloaded
+    #3 will be replaced by the download rate (in KB per second) -->
+<!ENTITY progressMsg "#1KB of #2KB (at #3KB/sec)">
+
+<!-- LOCALIZATION NOTE (unknownTime):
+    
+    This string is used when the time remaining is unknown. -->
+<!ENTITY unknownTime "Unknown">
+
+<!-- LOCALIZATION NOTE (longTimeFormat):
+
+    This string is used to format elapsed/remaining times when the
+    time exceeds 1 hour in length.
+
+    #1 will be replaced by the number of hours
+    #2 will be replaced by the number of minutes
+    #3 will be replaced by the number of seconds -->
+<!ENTITY longTimeFormat "#1:#2:#3">
+
+<!-- LOCALIZATION NOTE (shortTimeFormat):
+
+    This string is used to format elapsed/remaining times when the
+    time is less than 1 hour in length.  Note that you can leave
+    "#1" out of this string to omit the leading "00:" if you so choose.
+
+    #1 will be replaced by the number of hours
+    #2 will be replaced by the number of minutes
+    #3 will be replaced by the number of seconds -->
+<!ENTITY shortTimeFormat "#2:#3">
+
+<!-- LOCALIZATION NOTE (completeMsg):
+
+    This string is displayed when the download is complete.  The insert
+    "#1" is replaced by the elapsed time, formatted according to the
+    xxxTimeFormat strings defined above).  You can omit "#1" if you don't
+    want the elapsed time in the message.
+
+    #1 will be replaced by the elapsed time
+    #2 will be replaced by the size of the file in Kilobytes -->
+<!ENTITY completeMsg "Finished, #2 KB downloaded (elapsed time was #1)">
+
+<!-- LOCALIZATION NOTE (percentMsg):
+
+    This string is used to format the text to the right of the progress
+    meter.
+
+    #1 will be replaced by the percentage of the file that has been saved -->
+<!ENTITY percentMsg "#1&#037;">

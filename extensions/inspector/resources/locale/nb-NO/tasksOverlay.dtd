@@ -1,0 +1,7 @@
+<!ENTITY inspectorTaskCmd.label "DOM-inspeksjon">
+<!ENTITY inspectorTaskCmd.commandkey "i">
+<!ENTITY inspectorTaskCmd.accesskey.ff "n">
+<!ENTITY inspectorTaskCmd.accesskey "I">
+
+<!ENTITY inspectPageTaskCmd.label "Inspiser side">
+<!ENTITY inspectPageTaskCmd.accesskey "I">

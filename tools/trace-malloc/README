@@ -1,0 +1,177 @@
+                      Trace Malloc Tools
+              Chris Waterson <waterson@netscape.com>
+                      November 27, 2000
+
+This is a short primer on how to use the `trace malloc' tools
+contained in this directory.
+
+
+WHAT IS TRACE MALLOC?
+=====================
+
+Trace malloc is an optional facility that is built in to XPCOM. It
+uses `weak linking' to intercept all calls to malloc(), calloc(),
+realloc() and free(). It does two things:
+
+1. Writes information about allocations to a filehandle that you
+specify. As each call to malloc(), et. al. is made, a record is logged
+to the filehandle.
+
+2. Maintains a table of all `live objects' -- that is, objects that
+have been allocated by malloc(), calloc() or realloc(), but have not
+yet been free()'d. The contents of this table can be called by making
+a `secret' call to JavaScript.
+
+
+MAKING A TRACE MALLOC BUILD
+===========================
+
+As of this writing, trace malloc only works on Linux, but work is
+underway to port it to Windows.
+
+On Linux, start with a clean tree, and configure your build with the
+following flags:
+
+  --enable-trace-malloc
+  --enable-cpp-rtti
+
+Be sure that `--enable-boehm' is *not* set. I don't think that the
+values for `--enable-debug' and `--enable-optimize' matter, but I've
+typically had debug on and optimize off.
+
+
+COLLECTING LIVE OBJECT DATA
+===========================
+
+To collect `live object' data from `mozilla' using a build that has
+trace malloc enabled,
+
+  1. Run `mozilla' as follows:
+
+     % mozilla --trace-malloc /dev/null
+
+  2. Do whatever operations in mozilla you'd like to test.
+
+  3. Open the `live-bloat.html' file contained in this directory.
+
+  4. Press the button that says `Dump to /tmp/dump.log'
+
+An enormous file (typically 300MB) called `dump.log' will be dropped
+in your `/tmp' directory.
+
+To collect live object data from `gtkEmbed' using a build that has
+trace malloc enabled:
+
+  1. Run `gtkEmbed' as follows:
+
+     % gtkEmbed --trace-malloc /dev/null
+
+  2. Do whatever operations in gtkEmbed that you'd like to test.
+
+  3. Press the `Dump Memory' button at the bottom of gtkEmbed.
+
+The enormous file will be dropped in the current directory, and is
+called `allocations.log'.
+
+
+About Live Object Logs
+----------------------
+
+A typical entry from the `live object' dump file will look like:
+
+  Address     Type      Size
+  |           |         |
+  v           v         v
+  0x40008080 <nsFooBar> 16
+        0x00000001 <- Fields
+        0x40008084
+        0x80004001
+        0x00000036
+  __builtin_new[./libxpcom.so +0x10E9DC]  <- Stack at allocation time
+  nsFooBar::CreateFooBar(nsFooBar **)[./libfoobar.so +0x408C]
+  main+C7E5AFB5[(null) +0xC7E5AFB5]
+
+One will be printed for each object that was allocated.
+
+
+TOOLS TO PARSE LIVE OBJECT LOGS
+===============================
+
+This directory is meant to house the tools that you can use to parse
+live-object logs.
+
+Object Histograms - histogram.pl
+--------------------------------
+
+This program parses a `live object' dump and produces a histogram of
+the objects, sorted from objects that take the most memory to objects
+that take the least. The output of this program is rather spartan: on
+each line, it prints the object type, the number of objects of that
+type, and the total number of bytes that the objects consume.
+
+There are a two simple programs to `pretty print' the output from
+histogram.pl:
+
+  1. histogram-pretty.sh takes a single histogram and produces a table
+     of objects.
+
+       Type                    Count    Bytes %Total
+       TOTAL                   67348  4458127 100.00
+       nsImageGTK                 76   679092  15.23
+       void*                    8956   563572  12.64
+       ...
+       PRLock                    732    61488   1.38
+       OTHER                   24419   940235  21.09
+
+  2. histogram-diff.sh takes two histograms and computes the difference
+     between them.
+
+                  ---- Base ----   ---- Incr ----   ----- Difference ----
+       Type       Count    Bytes   Count    Bytes   Count    Bytes %Total
+       TOTAL      40241  1940945   73545  5315142   33304  3374197 100.00
+       nsImageGTK    16   106824     151   832816     135   725992  21.52
+       PresShell     16    51088     198   340706     182   289618   8.58
+       ...
+       OTHER      27334  1147033   38623  1493385   11289   346352  10.26
+
+Both of these scripts accept `-c' parameter that specifies how many
+rows you'd like to see (by default, twenty). Any rows past the first
+`n' rows are lumped into a single `OTHER' row. This allows you to keep
+your reports short n' sweet.
+
+Stack-based Type Inference - types.dat
+--------------------------------------
+
+Trace malloc uses `speculative RTTI' to determine the types of objects
+as it dumps them. Unfortunately, RTTI can only deduce the type name
+for C++ objects with a virtual destructor.
+
+This leaves:
+
+ . C++ object without a virtual destructor
+ . array allocated C++ objects, and
+ . objects allocated with the C runtime function (malloc
+   and friends)
+
+out in the cold. Trace malloc reports objects allocated this was as
+having type `void*'.
+
+The good news is that you can almost always determine the object's
+type by looking at the stack trace that's taken at the time the object
+is allocated.
+
+The file `types.dat' consists of rules to classify objects based on
+stack trace.
+
+
+Uncategorized Objects - uncategorized.pl
+----------------------------------------
+
+Categorizing objects in `types.dat' is sweaty work, and the
+`uncategorized.pl' script is a tool that makes it a bit
+easier. Specifically, it reads a `live object' dump file and sorts the
+stack traces. Stack traces that account for the most uncategorized
+objects are placed first.
+
+Using this tool, you can add the `most effective' rules to
+`types.dat': rules that account for most of the uncategorized data.

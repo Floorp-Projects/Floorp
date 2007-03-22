@@ -1,0 +1,77 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla.
+ *
+ * The Initial Developer of the Original Code is
+ * Darin Fisher <darin@meer.net>.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/**
+ * This interface exposes the general notion of a scheduled object with a
+ * integral priority value.  Following UNIX conventions, smaller (and possibly
+ * negative) values have higher priority.
+ *
+ * This interface does not strictly define what happens when the priority of an
+ * object is changed.  An implementation of this interface is free to define
+ * the side-effects of changing the priority of an object.  In some cases,
+ * changing the priority of an object may be disallowed (resulting in an
+ * exception being thrown) or may simply be ignored.
+ */
+[scriptable, uuid(aa578b44-abd5-4c19-8b14-36d4de6fdc36)]
+interface nsISupportsPriority : nsISupports
+{
+  /**
+   * Typical priority values.
+   */
+  const long PRIORITY_HIGHEST = -20;
+  const long PRIORITY_HIGH    = -10;
+  const long PRIORITY_NORMAL  =   0;
+  const long PRIORITY_LOW     =  10;
+  const long PRIORITY_LOWEST  =  20;
+  
+  /**
+   * This attribute may be modified to change the priority of this object.  The
+   * implementation of this interface is free to truncate a given priority
+   * value to whatever limits are appropriate.  Typically, this attribute is
+   * initialized to PRIORITY_NORMAL, but implementations may choose to assign a
+   * different initial value.
+   */
+  attribute long priority;
+
+  /**
+   * This method adjusts the priority attribute by a given delta.  It helps
+   * reduce the amount of coding required to increment or decrement the value
+   * of the priority attribute.
+   */
+  void adjustPriority(in long delta);
+};

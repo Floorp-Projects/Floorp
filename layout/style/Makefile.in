@@ -1,0 +1,202 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+DIRS = xbl-marquee
+
+ifdef MOZ_MOCHITEST
+DIRS		+= test
+endif
+
+MODULE		= layout
+LIBRARY_NAME	= gkstyle_s
+LIBXUL_LIBRARY	= 1
+
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  content \
+		  gfx \
+		  widget \
+		  caps \
+		  locale \
+		  unicharutil \
+		  js \
+		  necko \
+		  mimetype \
+		  webshell \
+		  docshell \
+		  htmlparser \
+		  uconv \
+		  xuldoc \
+		  xpconnect \
+		  view \
+		  intl \
+		  pref \
+		  imglib2 \
+		  $(NULL)
+
+EXPORTS		= \
+		nsCSSAnonBoxList.h \
+		nsCSSAnonBoxes.h \
+		nsCSSKeywordList.h \
+		nsCSSKeywords.h \
+		nsCSSPropList.h \
+		nsCSSProperty.h \
+		nsCSSProps.h \
+		nsCSSPseudoClassList.h \
+		nsCSSPseudoClasses.h \
+		nsCSSPseudoElementList.h \
+		nsCSSPseudoElements.h \
+		nsCSSStruct.h \
+		nsCSSValue.h \
+		nsDOMCSSDeclaration.h \
+		nsICSSDeclaration.h \
+		nsICSSGroupRule.h \
+		nsICSSImportRule.h \
+		nsICSSLoader.h \
+		nsICSSLoaderObserver.h \
+		nsICSSNameSpaceRule.h \
+		nsICSSOMFactory.h \
+		nsICSSParser.h \
+		nsICSSPseudoComparator.h \
+		nsICSSRule.h \
+		nsICSSStyleRule.h \
+		nsICSSStyleRuleDOMWrapper.h \
+		nsICSSStyleSheet.h \
+		nsIComputedDOMStyle.h \
+		nsIHTMLCSSStyleSheet.h \
+		nsIInspectorCSSUtils.h \
+		nsIStyleRule.h \
+		nsIStyleRuleProcessor.h \
+		nsIStyleSheet.h \
+		nsLayoutStylesheetCache.h \
+		nsRuleData.h \
+		nsRuleNode.h \
+		nsRuleWalker.h \
+		nsStyleContext.h \
+		nsStyleCoord.h \
+		nsStyleSet.h \
+		nsStyleStruct.h \
+		nsStyleStructList.h \
+		nsStyleUtil.h \
+		$(NULL)
+
+CPPSRCS		= \
+		nsCSSAnonBoxes.cpp \
+		nsCSSDataBlock.cpp \
+		nsCSSDeclaration.cpp \
+		nsCSSKeywords.cpp \
+		nsCSSLoader.cpp \
+		nsCSSOMFactory.cpp \
+		nsCSSParser.cpp \
+		nsCSSProps.cpp \
+		nsCSSPseudoClasses.cpp \
+		nsCSSPseudoElements.cpp \
+		nsCSSRule.cpp \
+		nsCSSRuleProcessor.cpp \
+		nsCSSRules.cpp \
+		nsCSSScanner.cpp \
+		nsCSSStruct.cpp \
+		nsCSSStyleRule.cpp \
+		nsCSSStyleSheet.cpp \
+		nsCSSValue.cpp \
+		nsComputedDOMStyle.cpp \
+		nsDOMCSSAttrDeclaration.cpp \
+		nsDOMCSSDeclaration.cpp \
+		nsDOMCSSRGBColor.cpp \
+		nsDOMCSSRect.cpp \
+		nsDOMCSSValueList.cpp \
+		nsHTMLCSSStyleSheet.cpp \
+		nsHTMLStyleSheet.cpp \
+		nsInspectorCSSUtils.cpp \
+		nsLayoutStylesheetCache.cpp \
+		nsROCSSPrimitiveValue.cpp \
+		nsRuleNode.cpp \
+		nsStyleContext.cpp \
+		nsStyleCoord.cpp \
+		nsStyleSet.cpp \
+		nsStyleStruct.cpp \
+		nsStyleUtil.cpp \
+		$(NULL)
+
+FORCE_STATIC_LIB = 1
+
+include $(topsrcdir)/config/rules.mk
+
+LOCAL_INCLUDES	= \
+		-I$(srcdir)/../../content/base/src \
+		-I$(srcdir)/../../content/html/content/src \
+		-I$(srcdir)/../../content/xbl/src \
+		-I$(srcdir)/../../content/xul/document/src \
+		$(NULL)
+
+_FILES	= \
+	ua.css \
+	html.css \
+	quirk.css \
+	viewsource.css \
+	arrow.gif \
+	arrowd.gif \
+	$(NULL)
+
+GARBAGE		+= $(addprefix $(DIST)/bin/res/,$(_FILES))
+
+FORMS_CSS_SRC = $(srcdir)/forms.css
+PREPROCESS_FORMS_CSS = $(PERL) $(MOZILLA_DIR)/config/preprocessor.pl --marker=% $(DEFINES) $(ACDEFINES) $(FORMS_CSS_SRC)
+
+$(DIST)/bin/res/forms.css $(DESTDIR)$(mozappdir)/res/forms.css: $(FORMS_CSS_SRC) Makefile
+	if test ! -d $(@D); then rm -rf $(@D); $(NSINSTALL) -D $(@D); else true; fi
+	rm -f $@
+	$(PREPROCESS_FORMS_CSS) > $@
+
+libs:: $(DIST)/bin/res/forms.css
+
+install:: $(DESTDIR)$(mozappdir)/res/forms.css
+
+libs:: $(_FILES)
+	$(INSTALL) $^ $(DIST)/bin/res
+
+install:: $(_FILES)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res
+
+DEFINES += -D_IMPL_NS_LAYOUT

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: item desc plain text works
+Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).summary.text == "I'm headed for France. I wasn't gonna go this year, but then last week \"Valley Girl\" came out and I said to myself, Joe Bob, you gotta get out of the country for a while."
+
+-->
+<rss version="2.0" >
+<channel>
+<item>
+
+<author>jbb@dallas.example.com (Joe Bob Briggs)</author>
+<comments>http://example.org</comments>
+<title>test</title>
+
+<category domain="foo">bar</category>
+<description>I'm headed for France. I wasn't gonna go this year, but then last week "Valley Girl" came out and I said to myself, Joe Bob, you gotta get out of the country for a while.</description></item>
+</channel>
+</rss>

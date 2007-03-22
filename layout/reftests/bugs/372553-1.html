@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+
+<style>
+
+body {
+  width: 5em;
+  font-family: monospace;
+  border: 1px solid yellow; 
+}
+
+body:first-letter { 
+  color: blue; 
+}
+
+</style>
+
+</head>
+<body>
+
+<span><span><span id="sss">Aaa </span></span>Bbbbbbbbbbbbbb<span></span></span>
+
+<script>
+document.body.offsetWidth;
+sss = document.getElementById("sss");
+sss.parentNode.removeChild(sss);
+</script>
+
+</body>
+</html>

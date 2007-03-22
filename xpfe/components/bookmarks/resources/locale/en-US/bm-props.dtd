@@ -1,0 +1,108 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Communicator.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corp.
+   - Portions created by the Initial Developer are Copyright (C) 1999
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Stephen Lamm          <slamm@netscape.com>
+   -   Robert John Churchill <rjc@netscape.com>
+   -   Ben Goodger           <ben@netscape.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either of the GNU General Public License Version 2 or later (the "GPL"),
+   - or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!ENTITY bookmarks.windowtitle.label  "Properties for &quot;**bm_title**&quot;">
+
+<!ENTITY generalInfo.label            "General">
+<!ENTITY bookmarks.name.label         "Name:">
+<!ENTITY bookmarks.name.accesskey     "N">
+<!ENTITY bookmarks.location.label     "Location:">
+<!ENTITY bookmarks.location.accesskey "L">
+<!ENTITY bookmarks.shortcut.label     "Keyword:">
+<!ENTITY bookmarks.shortcut.accesskey "K">
+<!ENTITY bookmarks.description.label  "Description:">
+<!ENTITY bookmarks.description.accesskey "D">
+
+<!ENTITY checkforupdates.legend.label "Check this location for updates">
+<!ENTITY when.label                   "When:">
+<!ENTITY when.accesskey               "W">
+<!ENTITY from.label                   "from:">
+<!ENTITY from.accesskey               "f">
+<!ENTITY to.label                     "to: ">
+<!ENTITY to.accesskey                 "t">
+<!ENTITY every.label                  "every">
+<!ENTITY every.accesskey              "e">
+<!ENTITY minutes.label                "minute(s)">
+<!ENTITY notifications.legend.label   "Notification">
+
+<!ENTITY checknever.label             "Never">
+<!ENTITY checkeveryday.label          "Every day">
+<!ENTITY checkweekdays.label          "Weekdays">
+<!ENTITY checkweekends.label          "Weekends">
+<!ENTITY checkmondays.label           "Mondays">
+<!ENTITY checktuesdays.label          "Tuesdays">
+<!ENTITY checkwednesdays.label        "Wednesdays">
+<!ENTITY checkthursdays.label         "Thursdays">
+<!ENTITY checkfridays.label           "Fridays">
+<!ENTITY checksaturdays.label         "Saturdays">
+<!ENTITY checksundays.label           "Sundays">
+
+<!ENTITY midnight.label               "Midnight">
+<!ENTITY AMone.label                  "1 AM">
+<!ENTITY AMtwo.label                  "2 AM">
+<!ENTITY AMthree.label                "3 AM">
+<!ENTITY AMfour.label                 "4 AM">
+<!ENTITY AMfive.label                 "5 AM">
+<!ENTITY AMsix.label                  "6 AM">
+<!ENTITY AMseven.label                "7 AM">
+<!ENTITY AMeight.label                "8 AM">
+<!ENTITY AMnine.label                 "9 AM">
+<!ENTITY AMten.label                  "10 AM">
+<!ENTITY AMeleven.label               "11 AM">
+<!ENTITY noon.label                   "Noon">
+<!ENTITY PMone.label                  "1 PM">
+<!ENTITY PMtwo.label                  "2 PM">
+<!ENTITY PMthree.label                "3 PM">
+<!ENTITY PMfour.label                 "4 PM">
+<!ENTITY PMfive.label                 "5 PM">
+<!ENTITY PMsix.label                  "6 PM">
+<!ENTITY PMseven.label                "7 PM">
+<!ENTITY PMeight.label                "8 PM">
+<!ENTITY PMnine.label                 "9 PM">
+<!ENTITY PMten.label                  "10 PM">
+<!ENTITY PMeleven.label               "11 PM">
+
+<!ENTITY notification.icon.label      "Change the bookmark's icon">
+<!ENTITY notification.icon.accesskey  "C">
+<!ENTITY notification.sound.label     "Play a sound">
+<!ENTITY notification.sound.accesskey "P">
+<!ENTITY notification.alert.label     "Display an alert">
+<!ENTITY notification.alert.accesskey "r">
+<!ENTITY notification.window.label    "Open web page in a new window">
+<!ENTITY notification.window.accesskey "O">

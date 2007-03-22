@@ -1,0 +1,117 @@
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the new Mozilla toolkit.
+ *
+ * The Initial Developer of the Original Code is
+ * Benjamin Smedberg <bsmedberg@covad.net>
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsILocalFile;
+interface nsIToolkitProfile;
+interface nsIProfileUnlocker;
+
+/**
+ * Hold on to a profile lock. Once you release the last reference to this
+ * interface, the profile lock is released.
+ */
+[scriptable, uuid(50e07b0a-f338-4da3-bcdb-f4bb0db94dbe)]
+interface nsIProfileLock : nsISupports
+{
+    /**
+     * The main profile directory.
+     */
+    readonly attribute nsILocalFile directory;
+    
+    /**
+     * A directory corresponding to the main profile directory that exists for
+     * the purpose of storing data on the local filesystem, including cache
+     * files or other data files that may not represent critical user data.
+     * (e.g., this directory may not be included as part of a backup scheme.)
+     *
+     * In some cases, this directory may just be the main profile directory.
+     */
+    readonly attribute nsILocalFile localDirectory;
+
+    /**
+     * Unlock the profile.
+     */
+    void unlock();
+};
+
+/**
+ * A interface representing a profile.
+ * @note THIS INTERFACE SHOULD BE IMPLEMENTED BY THE TOOLKIT CODE ONLY! DON'T
+ *       EVEN THINK ABOUT IMPLEMENTING THIS IN JAVASCRIPT!
+ */
+[scriptable, uuid(7422b090-4a86-4407-972e-75468a625388)]
+interface nsIToolkitProfile : nsISupports
+{
+    /**
+     * The location of the profile directory.
+     */
+    readonly attribute nsILocalFile rootDir;
+
+    /**
+     * The location of the profile local directory, which may be the same as
+     * the root directory.  See nsIProfileLock::localDirectory.
+     */
+    readonly attribute nsILocalFile localDir;
+
+    /**
+     * The name of the profile.
+     */
+    attribute AUTF8String name;
+
+    /**
+     * Removes the profile from the registry of profiles.
+     *
+     * @param removeFiles
+     *        Indicates whether or not the profile directory should be
+     *        removed in addition.
+     */
+    void remove(in boolean removeFiles);
+
+    /**
+     * Lock this profile using platform-specific locking methods.
+     *
+     * @param lockFile If locking fails, this may return a lockFile object
+     *                 which can be used in platform-specific ways to
+     *                 determine which process has the file locked. Null
+     *                 may be passed.
+     * @return An interface which holds a profile lock as long as you reference
+     *         it.
+     * @throws NS_ERROR_FILE_ACCESS_DENIED if the profile was already locked.
+     */
+    nsIProfileLock lock(out nsIProfileUnlocker aUnlocker);
+};

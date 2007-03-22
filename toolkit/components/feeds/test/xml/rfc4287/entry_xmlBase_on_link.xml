@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: atom entry with xml:base
+Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).link.spec == "http://www.example.org/bar/foo";
+
+-->
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <id>tag:example.com,2006:/atom/conformance/linktest/</id>
+  <title>Atom Link Tests</title>
+  <updated>2005-06-18T16:13:00Z</updated>
+  <link href="http://www.example.org" />
+  
+  <entry xml:base="http://www.example.org">
+    <id>tag:example.org,2006:/linkreltest/1</id>
+    <title>Does your reader support xml:base properly? </title>
+    <updated>2006-06-23T12:12:12Z</updated>
+    <link xml:base="/bar/" href="foo"/>
+  </entry>
+  
+</feed>

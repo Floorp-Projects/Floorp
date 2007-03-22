@@ -1,0 +1,93 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla code.
+ *
+ * The Initial Developer of the Original Code is Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2006
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Darin Fisher <darin@meer.net>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIRunnable;
+
+[scriptable, uuid(4e8febe4-6631-49dc-8ac9-308c1cb9b09c)]
+interface nsIEventTarget : nsISupports
+{
+  /**
+   * Dispatch an event to this event target.  This function may be called from
+   * any thread, and it may be called re-entrantly.
+   *
+   * @param event
+   *   The event to dispatch.
+   * @param flags
+   *   The flags modifying event dispatch.  The flags are described in detail
+   *   below.
+   * 
+   * @throws NS_ERROR_INVALID_ARG
+   *   Indicates that event is null.
+   */
+  void dispatch(in nsIRunnable event, in unsigned long flags);
+
+  /**
+   * This flag specifies the default mode of event dispatch, whereby the event
+   * is simply queued for later processing.  When this flag is specified,
+   * dispatch returns immediately after the event is queued.
+   */
+  const unsigned long DISPATCH_NORMAL = 0;
+
+  /**
+   * This flag specifies the synchronous mode of event dispatch, in which the
+   * dispatch method does not return until the event has been processed.
+   *
+   * NOTE: passing this flag to dispatch may have the side-effect of causing
+   * other events on the current thread to be processed while waiting for the
+   * given event to be processed.
+   */
+  const unsigned long DISPATCH_SYNC = 1;
+   
+  /**
+   * Check to see if this event target is associated with the current thread.
+   *
+   * @returns
+   *   A boolean value that if "true" indicates that events dispatched to this
+   *   event target will run on the current thread (i.e., the thread calling
+   *   this method).
+   */
+  boolean isOnCurrentThread();
+};
+
+%{C++
+// convenient aliases:
+#define NS_DISPATCH_NORMAL nsIEventTarget::DISPATCH_NORMAL
+#define NS_DISPATCH_SYNC   nsIEventTarget::DISPATCH_SYNC
+%}

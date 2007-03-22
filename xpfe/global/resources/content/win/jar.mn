@@ -1,0 +1,3 @@
+toolkit.jar:
+	content/global/platformDialogOverlay.xul
+  content/global/platformXUL.css

@@ -1,0 +1,253 @@
+; XXXThis is the Configuration file for Suite builds with MOZ_XUL_APP=0
+; set. For MOZ_XUL_APP=1 see suite/installer/unix/config.it
+; Changes should be reflected in both files.
+
+;-------------------------------------------------------------------------
+[General]
+;-------------------------------------------------------------------------
+Default Location=/usr/local/$AppName$
+; *** LOCALIZE ME BABY ***
+Title=$AppDisplayName$ Installer
+; The Default Setup Type value must exactly match the "Description Short"
+; value of the desired setup type.
+; *** LOCALIZE ME BABY ***
+Default Setup Type=Typical
+
+
+;-------------------------------------------------------------------------
+[Cleanup On Upgrade]
+;-------------------------------------------------------------------------
+ObjectToIgnore0=plugins
+ObjectToIgnore1=install.log
+
+
+;-------------------------------------------------------------------------
+[Dialog Welcome]
+;-------------------------------------------------------------------------
+Show Dialog=TRUE
+Title=$AppDisplayName$ Installer
+Readme File=README
+
+
+;-------------------------------------------------------------------------
+[Dialog License]
+;-------------------------------------------------------------------------
+Show Dialog=TRUE
+Title=$AppDisplayName$ Installer
+License File=MPL-1.1.txt
+
+
+;-------------------------------------------------------------------------
+[Dialog Setup Type]
+;-------------------------------------------------------------------------
+Title=$AppDisplayName$ Installer
+; *** LOCALIZE ME BABY ***
+Message0=Please select the setup type you wish to install.
+
+[Setup Type0]
+; *** LOCALIZE ME BABY ***
+Description Short=Typical
+; *** LOCALIZE ME BABY ***
+Description Long=Navigator and Mail & News
+C0=Component0
+C1=Component1
+C2=Component2
+C3=Component3
+C4=Component5
+C5=Component6
+C6=Component10
+
+[Setup Type1]
+; *** LOCALIZE ME BABY ***
+Description Short=Complete
+; *** LOCALIZE ME BABY ***
+Description Long=Navigator, Mail & News, Chatzilla, Debugger, Inspector, and Reporter
+C0=Component0
+C1=Component1
+C2=Component2
+C3=Component3
+C4=Component4
+C5=Component5
+C6=Component6
+C7=Component7
+C8=Component8
+C9=Component9
+C10=Component10
+
+[Setup Type2]
+; *** LOCALIZE ME BABY ***
+Description Short=Navigator
+; *** LOCALIZE ME BABY ***
+Description Long=Navigator only
+C0=Component0
+C1=Component1 
+C2=Component3 
+C3=Component5
+C4=Component6
+C5=Component10
+
+[Setup Type3]
+; *** LOCALIZE ME BABY ***
+Description Short=Custom
+; *** LOCALIZE ME BABY ***
+Description Long=Choose components you wish to install
+C0=Component0
+C1=Component1
+C2=Component2
+C3=Component3
+C4=Component4
+C5=Component5
+C6=Component6
+C7=Component7
+C8=Component8
+C9=Component9
+C10=Component10
+
+
+;-------------------------------------------------------------------------
+[Dialog Select Components]
+;-------------------------------------------------------------------------
+Title=$AppDisplayName$ Installer
+; *** LOCALIZE ME BABY ***
+Message0=Please select the components you wish to install.
+
+[Component0]
+Description Short=XPInstall Engine
+; *** LOCALIZE ME BABY ***
+Description Long=Installer technology
+Archive=xpcom.xpi
+$InstallSize$:xpcom
+$InstallSizeArchive$:xpcom.xpi
+Attributes=SELECTED|INVISIBLE
+URL0=$URLPath$
+
+[Component1]
+Description Short=Navigator
+; *** LOCALIZE ME BABY ***
+Description Long=for web browsing
+Archive=browser.xpi
+$InstallSize$:browser
+$InstallSizeArchive$:browser.xpi
+Attributes=SELECTED
+URL0=$URLPath$
+
+[Component2]
+Description Short=Mail & News
+; *** LOCALIZE ME BABY ***
+Description Long=for reading email and newsgroups
+Archive=mail.xpi
+$InstallSize$:mail
+$InstallSizeArchive$:mail.xpi
+Attributes=SELECTED
+URL0=$URLPath$
+
+[Component3]
+Description Short=Personal Security Manager
+; *** LOCALIZE ME BABY ***
+Description Long=for secure browsing and email; required for SSL(https) and S/MIME
+Archive=psm.xpi
+$InstallSize$:psm
+$InstallSizeArchive$:psm.xpi
+Attributes=SELECTED
+URL0=$URLPath$
+
+[Component4]
+Description Short=Chatzilla
+; *** LOCALIZE ME BABY ***
+Description Long=for chatting on Internet Relay Chat(IRC)
+Archive=chatzilla.xpi
+$InstallSize$:chatzilla
+$InstallSizeArchive$:chatzilla.xpi
+Attributes=SELECTED
+URL0=$URLPath$
+
+[Component5]
+Description Short=English US Profile Defaults
+; *** LOCALIZE ME BABY ***
+Description Long=English US Profile Defaults
+Archive=deflenus.xpi
+$InstallSize$:deflenus
+$InstallSizeArchive$:deflenus.xpi
+Attributes=SELECTED|INVISIBLE
+URL0=$URLPath$
+
+[Component6]
+Description Short=English (US) Language Pack
+; *** LOCALIZE ME BABY ***
+Description Long=English (US) Language Pack
+Archive=langenus.xpi
+$InstallSize$:langenus
+$InstallSizeArchive$:langenus.xpi
+Attributes=SELECTED|INVISIBLE
+URL0=$URLPath$
+
+[Component7]
+Description Short=Debugger
+; *** LOCALIZE ME BABY ***
+Description Long=for debugging JavaScript
+Archive=venkman.xpi
+$InstallSize$:venkman
+$InstallSizeArchive$:venkman.xpi
+Attributes=SELECTED
+URL0=$URLPath$
+
+[Component8]
+Description Short=Inspector
+; *** LOCALIZE ME BABY ***
+Description Long=DOM Inspector
+Archive=inspector.xpi
+$InstallSize$:inspector
+$InstallSizeArchive$:inspector.xpi
+Attributes=SELECTED
+URL0=$URLPath$
+
+[Component9]
+Description Short=Website Reporter
+; *** LOCALIZE ME BABY ***
+Description Long=Website Reporter
+Archive=reporter.xpi
+$InstallSize$:reporter
+$InstallSizeArchive$:reporter.xpi
+Attributes=SELECTED
+URL0=$URLPath$
+
+[Component10]
+Description Short=Quality Feedback Agent
+; *** LOCALIZE ME BABY ***
+Description Long=for reporting $AppDisplayName$ crash information
+Archive=talkback.xpi
+Install Size=1960
+Archive Size=812
+Attributes=SELECTED
+URL0=$URLPath$
+
+;-------------------------------------------------------------------------
+[Dialog Start Install]
+;-------------------------------------------------------------------------
+Show Dialog=TRUE
+Title=$AppDisplayName$ Installer
+; *** LOCALIZE ME BABY ***
+Message0=Click the Install button to proceed with this installation.
+XPInstall Engine=xpcom.xpi
+
+
+;-------------------------------------------------------------------------
+[PostInstallRun0]
+;-------------------------------------------------------------------------
+Target=run-mozilla.sh
+Arguments=regxpcom
+
+
+;-------------------------------------------------------------------------
+[PostInstallRun1]
+;-------------------------------------------------------------------------
+Target=run-mozilla.sh
+Arguments=regchrome
+
+
+;-------------------------------------------------------------------------
+[LegacyCheck0]
+;-------------------------------------------------------------------------
+Filename=$AppName$-bin
+; *** LOCALIZE ME BABY ***
+Message=The selected directory already contains a $AppDisplayName$ installation. To delete %s completely, please press the 'Delete Directory' button. Information in your $AppDisplayName$ profile(s) should not be affected. Or, please press the 'Cancel' button and choose a different destination directory.

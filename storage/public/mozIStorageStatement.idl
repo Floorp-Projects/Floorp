@@ -1,0 +1,145 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Oracle Corporation code.
+ *
+ * The Initial Developer of the Original Code is
+ *  Oracle Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "mozIStorageValueArray.idl"
+
+interface mozIStorageConnection;
+interface mozIStorageDataSet;
+interface nsISimpleEnumerator;
+
+[ptr] native sqlite3stmtptr(struct sqlite3_stmt);
+
+[scriptable, uuid(1f39bc95-090d-40a5-9dee-6d5a591e48bf)]
+interface mozIStorageStatement : mozIStorageValueArray {
+  /**
+   * Initialize this query with the given SQL statement.
+   *
+   */
+  void initialize(in mozIStorageConnection aDBConnection,
+                  in AUTF8String aSQLStatement);
+
+  /**
+   * Create a clone of this statement, by initializing a new statement
+   * with the same connection and same SQL statement as this one.  It
+   * does not preserve statement state; that is, if a statement is
+   * being executed when it is cloned, the new statement will not be
+   * executing.
+   */
+  mozIStorageStatement clone();
+
+  /*
+   * Number of parameters
+   */
+  readonly attribute unsigned long parameterCount;
+
+  /**
+   * Name of nth parameter, if given
+   */
+  AUTF8String getParameterName(in unsigned long aParamIndex);
+
+  /**
+   * All indexes of a named parameter, if it's specified more than once
+   */
+  void getParameterIndexes
+    (in AUTF8String aParameterName,
+     out unsigned long aCount,
+     [array,size_is(aCount),retval] out unsigned long aIndexes);
+
+  /**
+   * Number of columns returned
+   */
+  readonly attribute unsigned long columnCount;
+
+  /**
+   * Name of nth column
+   */
+  AUTF8String getColumnName(in unsigned long aColumnIndex);
+
+  /**
+   * Reset parameters/statement execution
+   */
+  void reset();
+
+  /**
+   * Bind the given value to the parameter at aParamIndex.
+   */
+  void bindUTF8StringParameter(in unsigned long aParamIndex,
+                               in AUTF8String aValue);
+  void bindStringParameter(in unsigned long aParamIndex, in AString aValue);
+  void bindDoubleParameter(in unsigned long aParamIndex, in double aValue);
+  void bindInt32Parameter(in unsigned long aParamIndex, in long aValue);
+  void bindInt64Parameter(in unsigned long aParamIndex, in long long aValue);
+  void bindNullParameter(in unsigned long aParamIndex);
+  void bindBlobParameter(in unsigned long aParamIndex,
+                         [array,const,size_is(aValueSize)] in octet aValue,
+                         in unsigned long aValueSize);
+
+  /**
+   * Execute the query, ignoring any results.  This is accomplished by
+   * calling step() once, and then calling reset().
+   *
+   * Error and last insert info, etc. are available from
+   * the mozStorageConnection.
+   */
+  void execute();
+
+  /**
+   * Execute a query, using any currently-bound parameters.  Reset
+   * must be called on the statement after the last call of
+   * executeStep.
+   *
+   * @returns a boolean indicating whether there are more rows or not;
+   * row data may be accessed using mozIStorageValueArray methods on
+   * the statement.
+   *
+   */
+  boolean executeStep();
+
+  /**
+   * The current state.  Row getters are only valid while
+   * the statement is in the "executing" state.
+   */
+  const long MOZ_STORAGE_STATEMENT_INVALID = 0;
+  const long MOZ_STORAGE_STATEMENT_READY = 1;
+  const long MOZ_STORAGE_STATEMENT_EXECUTING = 2;
+
+  readonly attribute long state;
+
+  [noscript,notxpcom] sqlite3stmtptr getNativeStatementPointer();
+};

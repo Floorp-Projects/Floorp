@@ -1,0 +1,235 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Jan Varga <varga@ku.sk>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsISupportsArray.idl"
+#include "nsIRDFResource.idl"
+#include "nsIRDFNode.idl"
+#include "nsISimpleEnumerator.idl"
+#include "nsIRDFObserver.idl"
+
+%{C++
+#include "nsISupportsArray.h"
+%}
+
+[scriptable, uuid(0F78DA58-8321-11d2-8EAC-00805F29F370)]
+interface nsIRDFDataSource : nsISupports
+{
+    /** The "URI" of the data source. This used by the RDF service's
+     * |GetDataSource()| method to cache datasources.
+     */
+    readonly attribute string URI;
+
+    /** Find an RDF resource that points to a given node over the
+     * specified arc & truth value
+     *
+     * @return NS_RDF_NO_VALUE if there is no source that leads
+     * to the target with the specified property.
+     */
+    nsIRDFResource GetSource(in nsIRDFResource aProperty,
+                             in nsIRDFNode     aTarget,
+                             in boolean        aTruthValue);
+
+    /**
+     * Find all RDF resources that point to a given node over the
+     * specified arc & truth value
+     *
+     * @return NS_OK unless a catastrophic error occurs. If the
+     * method returns NS_OK, you may assume that nsISimpleEnumerator points
+     * to a valid (but possibly empty) cursor.
+     */
+    nsISimpleEnumerator GetSources(in nsIRDFResource aProperty,
+                                   in nsIRDFNode     aTarget,
+                                   in boolean        aTruthValue);
+
+    /**
+     * Find a child of that is related to the source by the given arc
+     * arc and truth value
+     *
+     * @return NS_RDF_NO_VALUE if there is no target accessible from the
+     * source via the specified property.
+     */
+    nsIRDFNode GetTarget(in nsIRDFResource aSource,
+                         in nsIRDFResource aProperty,
+                         in boolean        aTruthValue);
+
+    /**
+     * Find all children of that are related to the source by the given arc
+     * arc and truth value.
+     *
+     * @return NS_OK unless a catastrophic error occurs. If the
+     * method returns NS_OK, you may assume that nsISimpleEnumerator points
+     * to a valid (but possibly empty) cursor.
+     */
+    nsISimpleEnumerator GetTargets(in nsIRDFResource aSource,
+                                   in nsIRDFResource aProperty,
+                                   in boolean aTruthValue);
+
+    /**
+     * Add an assertion to the graph.
+     */
+    void Assert(in nsIRDFResource aSource, 
+                in nsIRDFResource aProperty, 
+                in nsIRDFNode     aTarget,
+                in boolean        aTruthValue);
+
+    /**
+     * Remove an assertion from the graph.
+     */
+    void Unassert(in nsIRDFResource aSource,
+                  in nsIRDFResource aProperty,
+                  in nsIRDFNode     aTarget);
+
+    /**
+     * Change an assertion from
+     *
+     *   [aSource]--[aProperty]-->[aOldTarget]
+     *
+     * to
+     * 
+     *   [aSource]--[aProperty]-->[aNewTarget]
+     */
+    void Change(in nsIRDFResource aSource,
+                in nsIRDFResource aProperty,
+                in nsIRDFNode     aOldTarget,
+                in nsIRDFNode     aNewTarget);
+
+    /**
+     * 'Move' an assertion from
+     *
+     *   [aOldSource]--[aProperty]-->[aTarget]
+     *
+     * to
+     * 
+     *   [aNewSource]--[aProperty]-->[aTarget]
+     */
+    void Move(in nsIRDFResource aOldSource,
+              in nsIRDFResource aNewSource,
+              in nsIRDFResource aProperty,
+              in nsIRDFNode     aTarget);
+
+    /**
+     * Query whether an assertion exists in this graph.
+     */
+    boolean HasAssertion(in nsIRDFResource aSource,
+                         in nsIRDFResource aProperty,
+                         in nsIRDFNode     aTarget,
+                         in boolean        aTruthValue);
+
+    /**
+     * Add an observer to this data source. If the datasource
+     * supports observers, the datasource source should hold a strong
+     * reference to the observer.
+     */
+    void AddObserver(in nsIRDFObserver aObserver);
+
+    /**
+     * Remove an observer from this data source.
+     */
+    void RemoveObserver(in nsIRDFObserver aObserver);
+
+    /**
+     * Get a cursor to iterate over all the arcs that point into a node.
+     *
+     * @return NS_OK unless a catastrophic error occurs. If the method
+     * returns NS_OK, you may assume that labels points to a valid (but
+     * possible empty) nsISimpleEnumerator object.
+     */
+    nsISimpleEnumerator ArcLabelsIn(in nsIRDFNode aNode);
+
+    /**
+     * Get a cursor to iterate over all the arcs that originate in
+     * a resource.
+     *
+     * @return NS_OK unless a catastrophic error occurs. If the method
+     * returns NS_OK, you may assume that labels points to a valid (but
+     * possible empty) nsISimpleEnumerator object.
+     */
+    nsISimpleEnumerator ArcLabelsOut(in nsIRDFResource aSource);
+
+    /**
+     * Retrieve all of the resources that the data source currently
+     * refers to.
+     */
+    nsISimpleEnumerator GetAllResources();
+
+    /**
+     * Returns whether a given command is enabled for a set of sources. 
+     */
+    boolean IsCommandEnabled(in nsISupportsArray aSources,
+                             in nsIRDFResource   aCommand,
+                             in nsISupportsArray aArguments);
+
+    /**
+     * Perform the specified command on set of sources.
+     */
+    void DoCommand(in nsISupportsArray aSources,
+                   in nsIRDFResource   aCommand,
+                   in nsISupportsArray aArguments);
+
+    /**
+     * Returns the set of all commands defined for a given source.
+     */
+    nsISimpleEnumerator GetAllCmds(in nsIRDFResource aSource);
+
+    /**
+     * Returns true if the specified node is pointed to by the specified arc.
+     * Equivalent to enumerating ArcLabelsIn and comparing for the specified arc.
+     */
+    boolean hasArcIn(in nsIRDFNode aNode, in nsIRDFResource aArc);
+
+    /**
+     * Returns true if the specified node has the specified outward arc.
+     * Equivalent to enumerating ArcLabelsOut and comparing for the specified arc.
+     */
+    boolean hasArcOut(in nsIRDFResource aSource, in nsIRDFResource aArc);
+
+    /**
+     * Notify observers that the datasource is about to send several
+     * notifications at once.
+     * This must be followed by calling endUpdateBatch(), otherwise
+     * viewers will get out of sync.
+     */
+    void beginUpdateBatch();
+
+    /**
+     * Notify observers that the datasource has completed issuing
+     * a notification group.
+     */
+    void endUpdateBatch();
+};

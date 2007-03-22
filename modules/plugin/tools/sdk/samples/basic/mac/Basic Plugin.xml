@@ -1,0 +1,530 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?codewarrior exportversion="1.0.1" ideversion="4.2" ?>
+
+<!DOCTYPE PROJECT [
+<!ELEMENT PROJECT (TARGETLIST, TARGETORDER, GROUPLIST, DESIGNLIST?)>
+<!ELEMENT TARGETLIST (TARGET+)>
+<!ELEMENT TARGET (NAME, SETTINGLIST, FILELIST?, LINKORDER?, SEGMENTLIST?, OVERLAYGROUPLIST?, SUBTARGETLIST?, SUBPROJECTLIST?, FRAMEWORKLIST)>
+<!ELEMENT NAME (#PCDATA)>
+<!ELEMENT USERSOURCETREETYPE (#PCDATA)>
+<!ELEMENT PATH (#PCDATA)>
+<!ELEMENT FILELIST (FILE*)>
+<!ELEMENT FILE (PATHTYPE, PATHROOT?, ACCESSPATH?, PATH, PATHFORMAT?, ROOTFILEREF?, FILEKIND?, FILEFLAGS?)>
+<!ELEMENT PATHTYPE (#PCDATA)>
+<!ELEMENT PATHROOT (#PCDATA)>
+<!ELEMENT ACCESSPATH (#PCDATA)>
+<!ELEMENT PATHFORMAT (#PCDATA)>
+<!ELEMENT ROOTFILEREF (PATHTYPE, PATHROOT?, ACCESSPATH?, PATH, PATHFORMAT?)>
+<!ELEMENT FILEKIND (#PCDATA)>
+<!ELEMENT FILEFLAGS (#PCDATA)>
+<!ELEMENT FILEREF (TARGETNAME?, PATHTYPE, PATHROOT?, ACCESSPATH?, PATH, PATHFORMAT?)>
+<!ELEMENT TARGETNAME (#PCDATA)>
+<!ELEMENT SETTINGLIST ((SETTING|PANELDATA)+)>
+<!ELEMENT SETTING (NAME?, (VALUE|(SETTING+)))>
+<!ELEMENT PANELDATA (NAME, VALUE)>
+<!ELEMENT VALUE (#PCDATA)>
+<!ELEMENT LINKORDER (FILEREF*)>
+<!ELEMENT SEGMENTLIST (SEGMENT+)>
+<!ELEMENT SEGMENT (NAME, ATTRIBUTES?, FILEREF*)>
+<!ELEMENT ATTRIBUTES (#PCDATA)>
+<!ELEMENT OVERLAYGROUPLIST (OVERLAYGROUP+)>
+<!ELEMENT OVERLAYGROUP (NAME, BASEADDRESS, OVERLAY*)>
+<!ELEMENT BASEADDRESS (#PCDATA)>
+<!ELEMENT OVERLAY (NAME, FILEREF*)>
+<!ELEMENT SUBTARGETLIST (SUBTARGET+)>
+<!ELEMENT SUBTARGET (TARGETNAME, ATTRIBUTES?, FILEREF?)>
+<!ELEMENT SUBPROJECTLIST (SUBPROJECT+)>
+<!ELEMENT SUBPROJECT (FILEREF, SUBPROJECTTARGETLIST)>
+<!ELEMENT SUBPROJECTTARGETLIST (SUBPROJECTTARGET*)>
+<!ELEMENT SUBPROJECTTARGET (TARGETNAME, ATTRIBUTES?, FILEREF?)>
+<!ELEMENT FRAMEWORKLIST (FRAMEWORK+)>
+<!ELEMENT FRAMEWORK (FILEREF, LIBRARYFILE?, VERSION?)>
+<!ELEMENT LIBRARYFILE (FILEREF)>
+<!ELEMENT VERSION (#PCDATA)>
+<!ELEMENT TARGETORDER (ORDEREDTARGET|ORDEREDDESIGN)*>
+<!ELEMENT ORDEREDTARGET (NAME)>
+<!ELEMENT ORDEREDDESIGN (NAME, ORDEREDTARGET+)>
+<!ELEMENT GROUPLIST (GROUP|FILEREF)*>
+<!ELEMENT GROUP (NAME, (GROUP|FILEREF)*)>
+<!ELEMENT DESIGNLIST (DESIGN+)>
+<!ELEMENT DESIGN (NAME, DESIGNDATA)>
+<!ELEMENT DESIGNDATA (#PCDATA)>
+]>
+
+<PROJECT>
+    <TARGETLIST>
+        <TARGET>
+            <NAME>BasicPluginCarbon</NAME>
+            <SETTINGLIST>
+
+                <!-- Settings for "Source Trees" panel -->
+                <SETTING><NAME>UserSourceTrees</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "Access Paths" panel -->
+                <SETTING><NAME>AlwaysSearchUserPaths</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>InterpretDOSAndUnixPaths</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>RequireFrameworkStyleIncludes</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>UserSearchPaths</NAME>
+                    <SETTING>
+                        <SETTING><NAME>SearchPath</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>::</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
+                        </SETTING>
+                        <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>SearchPath</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>:::include:</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
+                        </SETTING>
+                        <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>SearchPath</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>:::common:</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
+                        </SETTING>
+                        <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>SearchPath</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>::::include:</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
+                        </SETTING>
+                        <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
+                    </SETTING>
+                </SETTING>
+                <SETTING><NAME>SystemSearchPaths</NAME>
+                    <SETTING>
+                        <SETTING><NAME>SearchPath</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>:MSL:</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>CodeWarrior</VALUE></SETTING>
+                        </SETTING>
+                        <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>HostFlags</NAME><VALUE>All</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>SearchPath</NAME>
+                            <SETTING><NAME>Path</NAME><VALUE>:MacOS Support:</VALUE></SETTING>
+                            <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
+                            <SETTING><NAME>PathRoot</NAME><VALUE>CodeWarrior</VALUE></SETTING>
+                        </SETTING>
+                        <SETTING><NAME>Recursive</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>FrameworkPath</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>HostFlags</NAME><VALUE>MacOS</VALUE></SETTING>
+                    </SETTING>
+                </SETTING>
+
+                <!-- Settings for "Debugger Runtime" panel -->
+                <SETTING><NAME>MWRuntimeSettings_WorkingDirectory</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWRuntimeSettings_CommandLine</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWRuntimeSettings_HostApplication</NAME>
+                    <SETTING><NAME>Path</NAME><VALUE></VALUE></SETTING>
+                    <SETTING><NAME>PathFormat</NAME><VALUE>Generic</VALUE></SETTING>
+                    <SETTING><NAME>PathRoot</NAME><VALUE>Absolute</VALUE></SETTING>
+                </SETTING>
+                <SETTING><NAME>MWRuntimeSettings_EnvVars</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "Target Settings" panel -->
+                <SETTING><NAME>Linker</NAME><VALUE>MacOS PPC Linker</VALUE></SETTING>
+                <SETTING><NAME>PreLinker</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>PostLinker</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>Targetname</NAME><VALUE>BasicPluginCarbon</VALUE></SETTING>
+                <SETTING><NAME>OutputDirectory</NAME>
+                    <SETTING><NAME>Path</NAME><VALUE>:</VALUE></SETTING>
+                    <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
+                    <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
+                </SETTING>
+                <SETTING><NAME>SaveEntriesUsingRelativePaths</NAME><VALUE>false</VALUE></SETTING>
+
+                <!-- Settings for "File Mappings" panel -->
+                <SETTING><NAME>FileMappings</NAME>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>APPL</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>Appl</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>MMLB</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE>Lib Import PPC</VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>MPLF</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE>Lib Import PPC</VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>MWCD</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>RSRC</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>TEXT</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE>.bh</VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE>Balloon Help</VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>TEXT</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE>.c</VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE>MW C/C++ PPC</VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE>C/C++</VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>TEXT</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE>.c++</VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE>MW C/C++ PPC</VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE>C/C++</VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>TEXT</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE>.cc</VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE>MW C/C++ PPC</VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE>C/C++</VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>TEXT</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE>.cp</VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE>MW C/C++ PPC</VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE>C/C++</VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>TEXT</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE>.cpp</VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE>MW C/C++ PPC</VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE>C/C++</VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>TEXT</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE>.exp</VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>TEXT</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE>.h</VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE>MW C/C++ PPC</VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE>C/C++</VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>true</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>TEXT</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE>.p</VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE>MW Pascal PPC</VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>TEXT</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE>.pas</VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE>MW Pascal PPC</VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>TEXT</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE>.pch</VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE>MW C/C++ PPC</VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE>C/C++</VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>TEXT</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE>.pch++</VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE>MW C/C++ PPC</VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE>C/C++</VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>TEXT</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE>.r</VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE>Rez</VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE>Rez</VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>TEXT</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE>.s</VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE>PPCAsm</VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>XCOF</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE>XCOFF Import PPC</VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>docu</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>rsrc</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>shlb</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE>PEF Import PPC</VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileType</NAME><VALUE>stub</VALUE></SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE>PEF Import PPC</VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>false</VALUE></SETTING>
+                    </SETTING>
+                    <SETTING>
+                        <SETTING><NAME>FileExtension</NAME><VALUE>.doc</VALUE></SETTING>
+                        <SETTING><NAME>Compiler</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>EditLanguage</NAME><VALUE></VALUE></SETTING>
+                        <SETTING><NAME>Precompile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>Launchable</NAME><VALUE>true</VALUE></SETTING>
+                        <SETTING><NAME>ResourceFile</NAME><VALUE>false</VALUE></SETTING>
+                        <SETTING><NAME>IgnoredByMake</NAME><VALUE>true</VALUE></SETTING>
+                    </SETTING>
+                </SETTING>
+
+                <!-- Settings for "Build Extras" panel -->
+                <SETTING><NAME>CacheModDates</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>ActivateBrowser</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>DumpBrowserInfo</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>CacheSubprojects</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>UseThirdPartyDebugger</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>DebuggerAppPath</NAME>
+                    <SETTING><NAME>Path</NAME><VALUE></VALUE></SETTING>
+                    <SETTING><NAME>PathFormat</NAME><VALUE>Generic</VALUE></SETTING>
+                    <SETTING><NAME>PathRoot</NAME><VALUE>Absolute</VALUE></SETTING>
+                </SETTING>
+                <SETTING><NAME>DebuggerCmdLineArgs</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>DebuggerWorkingDir</NAME>
+                    <SETTING><NAME>Path</NAME><VALUE></VALUE></SETTING>
+                    <SETTING><NAME>PathFormat</NAME><VALUE>Generic</VALUE></SETTING>
+                    <SETTING><NAME>PathRoot</NAME><VALUE>Absolute</VALUE></SETTING>
+                </SETTING>
+
+                <!-- Settings for "Debugger Target" panel -->
+                <SETTING><NAME>LogSystemMessages</NAME><VALUE>true</VALUE></SETTING>
+                <SETTING><NAME>AutoTargetDLLs</NAME><VALUE>true</VALUE></SETTING>
+                <SETTING><NAME>StopAtWatchpoints</NAME><VALUE>true</VALUE></SETTING>
+                <SETTING><NAME>PauseWhileRunning</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>PauseInterval</NAME><VALUE>5</VALUE></SETTING>
+                <SETTING><NAME>PauseUIFlags</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>AltExePath</NAME>
+                    <SETTING><NAME>Path</NAME><VALUE></VALUE></SETTING>
+                    <SETTING><NAME>PathFormat</NAME><VALUE>Generic</VALUE></SETTING>
+                    <SETTING><NAME>PathRoot</NAME><VALUE>Absolute</VALUE></SETTING>
+                </SETTING>
+                <SETTING><NAME>StopAtTempBPOnLaunch</NAME><VALUE>true</VALUE></SETTING>
+                <SETTING><NAME>CacheSymbolics</NAME><VALUE>true</VALUE></SETTING>
+                <SETTING><NAME>TempBPFunctionName</NAME><VALUE>main</VALUE></SETTING>
+                <SETTING><NAME>TempBPType</NAME><VALUE>0</VALUE></SETTING>
+
+                <!-- Settings for "Remote Debug" panel -->
+                <SETTING><NAME>Enabled</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>ConnectionName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>DownloadPath</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>LaunchRemoteApp</NAME><VALUE>false</VALUE></SETTING>
+                <SETTING><NAME>RemoteAppPath</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "Auto-target" panel -->
+                <SETTING><NAME>OtherExecutables</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "Custom Keywords" panel -->
+                <SETTING><NAME>CustomColor1</NAME>
+                    <SETTING><NAME>Red</NAME><VALUE>0</VALUE></SETTING>
+                    <SETTING><NAME>Green</NAME><VALUE>39321</VALUE></SETTING>
+                    <SETTING><NAME>Blue</NAME><VALUE>0</VALUE></SETTING>
+                </SETTING>
+                <SETTING><NAME>CustomColor2</NAME>
+                    <SETTING><NAME>Red</NAME><VALUE>0</VALUE></SETTING>
+                    <SETTING><NAME>Green</NAME><VALUE>32767</VALUE></SETTING>
+                    <SETTING><NAME>Blue</NAME><VALUE>0</VALUE></SETTING>
+                </SETTING>
+                <SETTING><NAME>CustomColor3</NAME>
+                    <SETTING><NAME>Red</NAME><VALUE>0</VALUE></SETTING>
+                    <SETTING><NAME>Green</NAME><VALUE>32767</VALUE></SETTING>
+                    <SETTING><NAME>Blue</NAME><VALUE>0</VALUE></SETTING>
+                </SETTING>
+                <SETTING><NAME>CustomColor4</NAME>
+                    <SETTING><NAME>Red</NAME><VALUE>0</VALUE></SETTING>
+                    <SETTING><NAME>Green</NAME><VALUE>32767</VALUE></SETTING>
+                    <SETTING><NAME>Blue</NAME><VALUE>0</VALUE></SETTING>
+                </SETTING>
+
+                <!-- Settings for "C/C++ Compiler" panel -->
+                <SETTING><NAME>MWFrontEnd_C_cplusplus</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_checkprotos</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_arm</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_trigraphs</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_onlystdkeywords</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_enumsalwaysint</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_mpwpointerstyle</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_prefixname</NAME><VALUE>pluginCarbonPrefix.h</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_ansistrict</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_mpwcnewline</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_wchar_type</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_enableexceptions</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_dontreusestrings</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_poolstrings</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_dontinline</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_useRTTI</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_multibyteaware</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_unsignedchars</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_autoinline</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_booltruefalse</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_direct_to_som</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_som_env_check</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_alwaysinline</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_inlinelevel</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_ecplusplus</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_objective_c</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWFrontEnd_C_defer_codegen</NAME><VALUE>0</VALUE></SETTING>
+
+                <!-- Settings for "C/C++ Warnings" panel -->
+                <SETTING><NAME>MWWarning_C_warn_illpragma</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWWarning_C_warn_emptydecl</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWWarning_C_warn_possunwant</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWWarning_C_warn_unusedvar</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWWarning_C_warn_unusedarg</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWWarning_C_warn_extracomma</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWWarning_C_pedantic</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWWarning_C_warningerrors</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWWarning_C_warn_hidevirtual</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWWarning_C_warn_implicitconv</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWWarning_C_warn_notinlined</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWWarning_C_warn_structclass</NAME><VALUE>0</VALUE></SETTING>
+
+                <!-- Settings for "FTP Panel" panel -->
+                <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>263pi6sn63j4esi,p'

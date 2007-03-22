@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=339494
+-->
+<head>
+  <title>Test for Bug 339494</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=339494">Mozilla Bug 339494</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <div id="d"></div>
+  <div id="s"></div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  /** Test for Bug 339494 **/
+
+  var d = document.getElementById("d");
+  
+  d.setAttribute("hhh", "testvalue");
+
+  document.addEventListener("DOMAttrModified", removeItAgain, false);
+  d.removeAttribute("hhh");
+  document.removeEventListener("DOMAttrModified", removeItAgain, false);
+
+  function removeItAgain()
+  {
+    ok(!d.hasAttribute("hhh"), "Value check 1",
+       "There should be no value");
+    isnot(d.getAttribute("hhh"), "testvalue", "Value check 2");
+    document.removeEventListener("DOMAttrModified", removeItAgain, false);
+    d.removeAttribute("hhh");
+    ok(true, "Reachability", "We shouldn't have crashed");
+  }
+  
+  var s = document.getElementById("s");
+  
+  s.setAttribute("ggg", "testvalue");
+
+  document.addEventListener("DOMAttrModified", compareVal, false);
+  s.setAttribute("ggg", "othervalue");
+  document.removeEventListener("DOMAttrModified", compareVal, false);
+
+  function compareVal()
+  {
+    ok(s.hasAttribute("ggg"), "Value check 3",
+       "There should be a value");
+    isnot(s.getAttribute("ggg"), "testvalue", "Value check 4");
+    is(s.getAttribute("ggg"), "othervalue", "Value check 5");
+  }
+
+</script>
+</pre>
+</body>
+</html>
+

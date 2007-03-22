@@ -1,0 +1,11 @@
+#ifndef MOZ_XUL_APP
+en-US.jar:
+    locale/en-US/global/nsHelperAppDlg.dtd (/toolkit/locales/en-US/chrome/global/nsHelperAppDlg.dtd)
+    locale/en-US/global/nsHelperAppDlg.properties (/toolkit/locales/en-US/chrome/global/nsHelperAppDlg.properties)
+    locale/en-US/global/nsProgressDialog.dtd (/toolkit/locales/en-US/chrome/global/nsProgressDialog.dtd)
+    locale/en-US/global/nsProgressDialog.properties (/toolkit/locales/en-US/chrome/global/nsProgressDialog.properties)
+#endif
+
+toolkit.jar:
+    content/global/nsHelperAppDlg.xul (helperAppDlg/nsHelperAppDlg.xul)
+    content/global/nsProgressDialog.xul  (progressDlg/nsProgressDialog.xul)

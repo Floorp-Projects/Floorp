@@ -1,0 +1,85 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* The nsIInterfaceInfoManager public declaration. */
+
+
+#include "nsISupports.idl"
+#include "nsIInterfaceInfo.idl"
+#include "nsIEnumerator.idl"
+#include "nsISimpleEnumerator.idl"
+
+/* this is NOT intended to be scriptable */
+[uuid(8B161900-BE2B-11d2-9831-006008962422)]
+interface nsIInterfaceInfoManager : nsISupports
+{
+    nsIInterfaceInfo getInfoForIID(in nsIIDPtr iid);
+    nsIInterfaceInfo getInfoForName(in string name);
+
+    nsIIDPtr getIIDForName(in string name);
+    string   getNameForIID(in nsIIDPtr iid);
+
+    nsIEnumerator enumerateInterfaces();
+
+    void autoRegisterInterfaces();
+
+    nsIEnumerator enumerateInterfacesWhoseNamesStartWith(in string prefix);
+};
+
+[uuid(0ee22850-bc6a-11d5-9134-0010a4e73d9a)]
+interface nsIInterfaceInfoSuperManager : nsIInterfaceInfoManager
+{
+    void addAdditionalManager(in nsIInterfaceInfoManager manager);        
+    void removeAdditionalManager(in nsIInterfaceInfoManager manager);        
+
+    PRBool hasAdditionalManagers();
+    nsISimpleEnumerator enumerateAdditionalManagers();
+};
+
+%{C++
+#define NS_INTERFACEINFOMANAGER_SERVICE_CLASSNAME  \
+   "Interface Information Manager Service"
+
+#define NS_INTERFACEINFOMANAGER_SERVICE_CID            \
+ { /* 13bef784-f8e0-4f96-85c1-09f9ef4f9a19 */          \
+  0x13bef784, 0xf8e0, 0x4f96,                          \
+  {0x85, 0xc1, 0x09, 0xf9, 0xef, 0x4f, 0x9a, 0x19} }  
+
+#define NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID  \
+   "@mozilla.org/xpti/interfaceinfomanager-service;1"
+%}
+

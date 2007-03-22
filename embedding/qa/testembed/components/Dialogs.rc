@@ -1,0 +1,214 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif //_WIN32\r\n"
+    "#include ""res\\mfcembed.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PROMPT_DIALOG DIALOG DISCARDABLE  0, 0, 249, 92
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Prompt Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,130,69,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,189,69,50,14
+    LTEXT           "Please enter something....",IDC_PROMPT_TEXT,10,7,229,29
+    EDITTEXT        IDC_PROMPT_ANSWER,7,39,232,13,ES_AUTOHSCROLL
+    CONTROL         "Save Answer",IDC_CHECK_SAVE_PASSWORD,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,57,229,10
+END
+
+IDD_PROMPT_PASSWORD_DIALOG DIALOG DISCARDABLE  0, 0, 248, 93
+STYLE DS_SYSMODAL | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Password Entry Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Please enter your password:",IDC_PROMPT_TEXT,5,7,232,20
+    DEFPUSHBUTTON   "OK",IDOK,129,75,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,188,75,50,14
+    EDITTEXT        IDC_PASSWORD,5,37,233,12,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "Save Password",IDC_CHECK_SAVE_PASSWORD,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,57,229,10
+END
+
+IDD_PROMPT_USERPASS_DIALOG DIALOG DISCARDABLE  0, 0, 214, 123
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Username and Password Required"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "This operation requires authentication.  Please enter your user name and password:",
+                    IDC_PROMPT_TEXT,6,9,171,25
+    LTEXT           "User Name:",IDC_USERNAME_LABEL,6,39,39,9
+    EDITTEXT        IDC_USERNAME,49,39,153,12,ES_AUTOHSCROLL
+    LTEXT           "Password:",IDC_PASSWORD_LABEL,6,58,36,8
+    EDITTEXT        IDC_PASSWORD,49,56,153,12,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "Save User Name and Password",IDC_CHECK_SAVE_PASSWORD,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,78,201,10
+    DEFPUSHBUTTON   "OK",IDOK,40,101,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,95,101,50,14
+END
+
+IDD_ALERT_CHECK_DIALOG DIALOG DISCARDABLE  0, 0, 233, 151
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Alert"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,91,127,50,14
+    CONTROL         "",IDC_CHECKBOX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,
+                    104,215,10
+    EDITTEXT        IDC_MSG_TEXT,10,10,214,88,ES_MULTILINE | ES_READONLY
+END
+
+IDD_CONFIRM_CHECK_DIALOG DIALOG DISCARDABLE  0, 0, 371, 111
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ConfirmCheck"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Btn1",IDC_BTN1,104,90,50,14
+    CONTROL         "",IDC_CHECKBOX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,
+                    62,355,10
+    LTEXT           "",IDC_MSG_TEXT,6,10,354,39
+    DEFPUSHBUTTON   "Btn2",IDC_BTN2,164,89,50,14
+    DEFPUSHBUTTON   "Btn3",IDC_BTN3,224,89,50,14
+END
+
+IDD_PROGRESS_DIALOG DIALOG DISCARDABLE  0, 0, 285, 95
+STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Saving File"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,115,73,50,14
+    LTEXT           "Action:",IDC_STATIC,27,23,26,9
+    CONTROL         "",IDC_ACTION,"Static",SS_LEFTNOWORDWRAP | 
+                    WS_GROUP,59,23,211,8
+    LTEXT           "Saving From:",IDC_STATIC,7,6,42,8
+    LTEXT           "",IDC_SAVING_FROM,59,6,213,8
+    LTEXT           "Progress:",IDC_STATIC,19,41,30,8
+    CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",PBS_SMOOTH | 
+                    WS_BORDER,59,41,166,10
+    LTEXT           "100%",IDC_STATIC,229,42,18,8
+END
+
+IDD_CHOOSE_ACTION_DIALOG DIALOG DISCARDABLE  0, 0, 285, 114
+STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Choose An Action"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "You have chosen to download a file of type: ",
+                    IDC_STATIC,8,9,142,8
+    LTEXT           "Static",IDC_CONTENT_TYPE,152,10,123,8
+    GROUPBOX        "What would you like MfcEmbed to do with this file?",
+                    IDC_STATIC,8,24,268,61
+    CONTROL         "O&pen using",IDC_OPEN_USING,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,19,41,60,10
+    CONTROL         "&Save this file to disk",IDC_SAVE_TO_DISK,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,19,69,103,10
+    LTEXT           "Static",IDC_APP_NAME,31,53,186,9,SS_SUNKEN
+    PUSHBUTTON      "&Choose...",IDC_CHOOSE_APP,222,51,50,12
+    PUSHBUTTON      "Ok",IDOK,94,94,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,150,94,50,14
+END
+
+IDD_PRINT_PROGRESS_DIALOG DIALOG DISCARDABLE  0, 0, 294, 53
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Print Progress"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,237,36,50,14
+    RTEXT           "URL:",IDC_PRINT_PROGRESS_URL_LABEL_TXT,7,7,30,8
+    LTEXT           "...",IDC_PRINT_PROGRESS_URL_TXT,41,7,231,8
+    RTEXT           "Progress:",IDC_STATIC,7,18,30,8
+    CONTROL         "Progress1",IDC_PRINT_PROGRESS_PRG,"msctls_progress32",
+                    WS_BORDER,41,18,217,8
+    LTEXT           "Preparing...",IDC_PRINT_PROGRESS_TXT,41,18,217,8
+    LTEXT           "",IDC_PRINT_PROGRESS_PERCENT_TXT,264,18,19,8
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif //_WIN32
+#include "afxres.rc"         // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

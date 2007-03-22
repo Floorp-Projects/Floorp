@@ -1,0 +1,7 @@
+#
+# This is a list of files to be copied to the mozilla:dist directory
+#
+
+nsjvm.h
+nsscd.h
+jvmmgr.h

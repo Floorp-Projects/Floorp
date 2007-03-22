@@ -1,0 +1,30 @@
+<!ENTITY window.width                       "36em">
+
+<!ENTITY     cookiesonsystem.label          "The following cookies are stored on your computer:">
+<!ENTITY     cookiename.label               "Cookie Name">
+<!ENTITY     cookiedomain.label             "Site"> 
+<!ENTITY     button.removecookie.label      "Remove Cookie">
+<!ENTITY     button.removecookie.accesskey  "R">
+<!ENTITY     button.removeallcookies.label  "Remove All Cookies">
+<!ENTITY     button.removeallcookies.accesskey "A">
+
+<!ENTITY     props.name.label               "Name:">
+<!ENTITY     props.value.label              "Content:">
+<!ENTITY     props.domain.label             "Host:">
+<!ENTITY     props.path.label               "Path:">
+<!ENTITY     props.secure.label             "Send For:">
+<!ENTITY     props.expires.label            "Expires:">
+
+<!ENTITY     window.title                   "Cookies">
+<!ENTITY     windowClose.key                "w">
+<!ENTITY     focusSearch1.key               "f">
+<!ENTITY     focusSearch2.key               "k">
+
+<!ENTITY     filter.label                   "Search:">
+<!ENTITY     filter.accesskey               "S">
+<!ENTITY     clear.label                    "Clear">
+<!ENTITY     clear.accesskey                "l">
+
+<!ENTITY     button.close.label             "Close">
+<!ENTITY     button.close.accesskey         "C">
+

@@ -1,0 +1,37 @@
+<!ENTITY  blockPopups.label           "Block pop-up windows">
+<!ENTITY  blockPopups.accesskey       "B">
+<!ENTITY  popupExceptions.label       "Exceptions...">
+<!ENTITY  popupExceptions.accesskey   "E">
+
+<!ENTITY  loadImages.label            "Load images automatically">
+<!ENTITY  loadImages.accesskey        "I">
+<!ENTITY  exceptions.label            "Exceptions...">
+<!ENTITY  exceptions.accesskey        "x">
+
+<!ENTITY  enableJavaScript.label      "Enable JavaScript">
+<!ENTITY  enableJavaScript.accesskey  "J">
+<!ENTITY  advancedJS.label            "Advanced...">
+<!ENTITY  advancedJS.accesskey        "v">
+
+<!ENTITY  enableJava.label            "Enable Java">
+<!ENTITY  enableJava.accesskey        "n">
+
+
+<!ENTITY  fontsAndColors.label        "Fonts &amp; Colors">
+
+<!ENTITY  defaultFont.label           "Default font:">
+<!ENTITY  defaultFont.accesskey       "D">
+<!ENTITY  defaultSize.label           "Size:">
+<!ENTITY  defaultSize.accesskey       "S">
+
+<!ENTITY  advancedFonts.label         "Advanced...">
+<!ENTITY  advancedFonts.accesskey     "A">
+
+<!ENTITY  colors.label                "Colors...">
+<!ENTITY  colors.accesskey            "C">
+
+<!ENTITY fileTypes.label              "File Types">
+
+<!ENTITY configureFileTypes.label     "Configure how &brandShortName; handles certain types of files">
+<!ENTITY manage.label                 "Manage...">
+<!ENTITY manage.accesskey             "M">

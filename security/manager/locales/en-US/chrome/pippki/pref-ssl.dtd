@@ -1,0 +1,68 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is mozilla.org code.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corp.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Bob Lord <lord@netscape.com>
+   -   Terry Hayes <thayes@netscape.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!ENTITY  SSLProtocolVersions.caption       "SSL Protocol Versions">
+<!ENTITY  SSLWarnings.caption               "SSL Warnings">
+<!ENTITY  SSLClientAuthMethod.caption       "Client Certificate Selection">
+
+<!ENTITY pref.ssl.title                     "Secure Sockets Layer (SSL)">
+<!ENTITY enable.ssl3                        "Enable SSL version 3">
+<!ENTITY enable.ssl3.accesskey              "3">
+<!ENTITY enable.tls                         "Enable TLS">
+<!ENTITY enable.tls.accesskey               "T">
+
+<!ENTITY warn.description                   "&brandShortName; can alert you to the security status of the web page you are viewing. Set &brandShortName; to show a warning and ask permission before:">
+<!ENTITY warn.enteringsecure                "Loading a page that supports encryption">
+<!ENTITY warn.enteringsecure.accesskey      "L">
+<!ENTITY warn.enteringweak                  "Loading a page that uses low-grade encryption">
+<!ENTITY warn.enteringweak.accesskey        "o">
+<!ENTITY warn.insecurepost                  "Sending form data from an unencrypted page to an unencrypted page">
+<!ENTITY warn.insecurepost.accesskey        "S">
+<!ENTITY warn.leavingsecure                 "Leaving a page that supports encryption">
+<!ENTITY warn.leavingsecure.accesskey       "a">
+<!ENTITY warn.secureredirect                "Redirecting from one encrypted page to another">
+<!ENTITY warn.secureredirecttoinsecure      "Redirecting from an encrypted page to an unencrypted page">
+<!ENTITY warn.viewmixed                     "Viewing a page with an encrypted/unencrypted mix">
+<!ENTITY warn.viewmixed.accesskey           "V">
+
+<!ENTITY certselect.description             "Decide how &brandShortName; selects a security certificate to present to web sites that require one:">
+<!ENTITY certselect.auto                    "Select Automatically">
+<!ENTITY certselect.auto.accesskey          "A">
+<!ENTITY certselect.ask                     "Ask Every Time">
+<!ENTITY certselect.ask.accesskey           "E">
+

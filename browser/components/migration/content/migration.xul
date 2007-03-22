@@ -1,0 +1,169 @@
+<?xml version="1.0"?>
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is The Browser Profile Migrator.
+#
+# The Initial Developer of the Original Code is Ben Goodger.
+# Portions created by the Initial Developer are Copyright (C) 2004
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Ben Goodger <ben@bengoodger.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://browser/locale/migration/migration.dtd" >
+
+<wizard id="migrationWizard"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        windowtype="Browser:MigrationWizard"
+        title="&migrationWizard.title;"
+        onload="MigrationWizard.init()"
+        onunload="MigrationWizard.uninit()"
+        style="width: 40em;"
+        buttons="accept,cancel"
+        branded="true"
+        xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
+        xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#">
+
+  <script type="application/x-javascript" src="chrome://browser/content/migration/migration.js"/>
+
+  <stringbundle id="bundle" src="chrome://browser/locale/migration/migration.properties"/>
+  <stringbundle id="brandBundle" src="chrome://branding/locale/brand.properties"/>
+
+  <wizardpage id="importSource" pageid="importSource" next="selectProfile"
+              label="&importSource.title;"
+              onpageadvanced="MigrationWizard.onImportSourcePageAdvanced();">
+#ifdef XP_WIN
+    <description id="importAll" control="importSourceGroup">&importFrom.label;</description>
+#else
+    <description id="importAll" control="importSourceGroup">&importFromUnix.label;</description>
+#endif
+    <description id="importBookmarks" control="importSourceGroup" hidden="true">&importFromBookmarks.label;</description>
+
+    <radiogroup id="importSourceGroup" align="start">
+      <!-- If you are adding a migrator, please add the appropriate
+           hooks to GetDefaultBrowserMigratorKey in
+           browser/components/migration/src/nsProfileMigrator.cpp -->
+      <radio id="phoenix"   label="&importFromPhoenix.label;"   accesskey="&importFromPhoenix.accesskey;"/>
+#ifdef XP_UNIX
+#ifdef XP_MACOSX
+      <radio id="safari"    label="&importFromSafari.label;"    accesskey="&importFromSafari.accesskey;"/>
+      <radio id="macie"     label="&importFromIE.label;"        accesskey="&importFromIE.accesskey;"/>
+<!-- XXXben - uncomment these as we write migrators for them
+      <radio id="camino"    label="&importFromCamino.label;"    accesskey="&importFromCamino.accesskey;"/>
+      <radio id="omniweb"   label="&importFromOmniWeb.label;"   accesskey="&importFromOmniWeb.accesskey;"/>
+      <radio id="icab"      label="&importFromICab.label;"      accesskey="&importFromICab.accesskey;"/>
+-->
+      <radio id="seamonkey" label="&importFromSeamonkey.label;" accesskey="&importFromSeamonkey.accesskey;"/>
+      <radio id="dogbert"   label="&importFromNetscape4.label;" accesskey="&importFromNetscape4.accesskey;"/>
+      <radio id="opera"     label="&importFromOpera.label;"     accesskey="&importFromOpera.accesskey;"/>
+#else
+      <radio id="seamonkey" label="&importFromSeamonkey.label;" accesskey="&importFromSeamonkey.accesskey;"/>
+      <radio id="dogbert"   label="&importFromNetscape4.label;" accesskey="&importFromNetscape4.accesskey;"/>
+      <radio id="opera"     label="&importFromOpera.label;"     accesskey="&importFromOpera.accesskey;"/>
+<!-- XXXben - uncomment these as we write migrators for them
+      <radio id="konqueror" label="&importFromKonqueror.label;" accesskey="&importFromKonqueror.accesskey;"/>
+      <radio id="epiphany"  label="&importFromEpiphany.label;"  accesskey="&importFromEpiphany.accesskey;"/>
+      <radio id="galeon"    label="&importFromGaleon.label;"    accesskey="&importFromGaleon.accesskey;"/>
+  -->
+#endif
+#endif
+#ifdef XP_WIN
+#ifndef NO_IE_MIGRATOR
+      <radio id="ie"        label="&importFromIE.label;"        accesskey="&importFromIE.accesskey;"/>
+#endif
+      <radio id="seamonkey" label="&importFromSeamonkey.label;" accesskey="&importFromSeamonkey.accesskey;"/>
+      <radio id="dogbert"   label="&importFromNetscape4.label;" accesskey="&importFromNetscape4.accesskey;"/>
+      <radio id="opera"     label="&importFromOpera.label;"     accesskey="&importFromOpera.accesskey;"/>
+#endif
+#ifndef XP_UNIX
+#ifndef XP_WIN
+      <radio id="seamonkey" label="&importFromSeamonkey.label;" accesskey="&importFromSeamonkey.accesskey;"/>
+      <radio id="dogbert"   label="&importFromNetscape4.label;" accesskey="&importFromNetscape4.accesskey;"/>
+#endif
+#endif
+      <radio id="fromfile"  label="&importFromFile.label;"      accesskey="&importFromFile.accesskey;" hidden="true"/>
+      <radio id="nothing"   label="&importFromNothing.label;"   accesskey="&importFromNothing.accesskey;" hidden="true"/>
+    </radiogroup>
+    <label id="noSources" hidden="true">&noMigrationSources.label;</label>
+  </wizardpage>
+
+  <wizardpage id="selectProfile" pageid="selectProfile" label="&selectProfile.title;"
+              next="importItems"
+              onpageshow="return MigrationWizard.onSelectProfilePageShow();"
+              onpagerewound="return MigrationWizard.onSelectProfilePageRewound();"
+              onpageadvanced="return MigrationWizard.onSelectProfilePageAdvanced();">
+    <description control="profiles">&selectProfile.label;</description>
+
+    <radiogroup id="profiles" align="left"/>
+  </wizardpage>
+
+  <wizardpage id="importItems" pageid="importItems" label="&importItems.title;"
+              next="homePageImport"
+              onpageshow="return MigrationWizard.onImportItemsPageShow();"
+              onpagerewound="return MigrationWizard.onImportItemsPageRewound();"
+              onpageadvanced="return MigrationWizard.onImportItemsPageAdvanced();"
+              oncommand="MigrationWizard.onImportItemCommand();">
+    <description control="dataSources">&importItems.label;</description>
+
+    <vbox id="dataSources" style="overflow: auto; -moz-appearance: listbox" align="left" flex="1"
+          xhtml2:role="wairole:groupbox"/>
+  </wizardpage>
+
+  <wizardpage id="homePageImport" pageid="homePageImport"
+              next="migrating"
+              onpageshow="return MigrationWizard.onHomePageMigrationPageShow();"
+              onpageadvanced="return MigrationWizard.onHomePageMigrationPageAdvanced();">
+
+    <description id="homePageImportDesc" control="homePageRadioGroup"/>
+    <radiogroup id="homePageRadiogroup">
+      <radio id="homePageSingleStart" selected="true" />
+      <radio id="oldHomePage" hidden="true" />
+    </radiogroup>
+  </wizardpage>
+
+  <wizardpage id="migrating" pageid="migrating" label="&migrating.title;"
+              next="done"
+              onpageshow="MigrationWizard.onMigratingPageShow();">
+    <description control="migratingItems">&migrating.label;</description>
+
+    <vbox id="migratingItems" style="overflow: auto;" align="left"
+          xhtml2:role="wairole:groupbox"/>
+  </wizardpage>
+
+  <wizardpage id="done" pageid="done" label="&done.title;"
+              onpageshow="MigrationWizard.onDonePageShow();">
+    <description control="doneItems">&done.label;</description>
+
+    <vbox id="doneItems" style="overflow: auto;" align="left"
+          xhtml2:role="wairole:groupbox"/>
+  </wizardpage>
+
+</wizard>
+

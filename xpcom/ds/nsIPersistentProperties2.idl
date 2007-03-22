@@ -1,0 +1,103 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsIProperties.idl"
+#include "nsISimpleEnumerator.idl"
+
+interface nsIInputStream;
+interface nsIOutputStream;
+
+[scriptable, uuid(283EE646-1AEF-11D4-98B3-00C04fA0CE9A)]
+interface nsIPropertyElement : nsISupports {
+  attribute AUTF8String key;
+  attribute AString value;
+};
+
+[scriptable, uuid(1A180F60-93B2-11d2-9B8B-00805F8A16D9)]
+interface nsIPersistentProperties : nsIProperties
+{
+  /**
+   * load a set of name/value pairs from the input stream
+   * names and values should be in UTF8
+   */
+  void load(in nsIInputStream input);
+
+  /**
+   * output the values to the stream - results will be in UTF8
+   */
+  void save(in nsIOutputStream output, in AUTF8String header);
+
+  /**
+   * call subclass() to make future calls to load() set the properties
+   * in this "superclass" instead
+   */
+  void subclass(in nsIPersistentProperties superclass);
+
+  /**
+   * get an enumeration of nsIPropertyElement objects,
+   * which are read-only (i.e. setting properties on the element will
+   * not make changes back into the source nsIPersistentProperties
+   */
+  nsISimpleEnumerator enumerate();
+
+  /**
+   * shortcut to nsIProperty's get() which retrieves a string value
+   * directly (and thus faster)
+   */
+  AString getStringProperty(in AUTF8String key);
+
+  /**
+   * shortcut to nsIProperty's set() which sets a string value
+   * directly (and thus faster). If the given property already exists,
+   * then the old value will be returned
+   */
+  AString setStringProperty(in AUTF8String key, in AString value);
+};
+
+
+%{C++
+
+#define NS_IPERSISTENTPROPERTIES_CID \
+{ 0x2245e573, 0x9464, 0x11d2, \
+  { 0x9b, 0x8b, 0x0, 0x80, 0x5f, 0x8a, 0x16, 0xd9 } }
+
+#define NS_PERSISTENTPROPERTIES_CONTRACTID "@mozilla.org/persistent-properties;1"
+#define NS_PERSISTENTPROPERTIES_CLASSNAME "Persistent Properties"
+
+%}
+

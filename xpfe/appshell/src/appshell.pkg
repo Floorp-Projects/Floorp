@@ -1,0 +1,10 @@
+# I believe that this is used in both xpfe- and toolkit-
+# style apps, so it is part of the GRE
+
+[gecko]
+#if SHARED_LIBRARY
+dist/bin/components/@SHARED_LIBRARY@
+#else
+!staticcomp @LIBRARY@ @MODULE_NAME@
+#endif
+!xpt dist/bin/components/appshell.xpt

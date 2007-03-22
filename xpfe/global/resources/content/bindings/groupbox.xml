@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+
+<bindings id="groupboxBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="groupbox-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/groupbox.css"/>
+    </resources>
+  </binding>
+
+  <binding id="groupbox" extends="chrome://global/content/bindings/groupbox.xml#groupbox-base">
+    <content>
+      <xul:hbox class="groupbox-title" align="center" pack="start">
+        <children includes="caption"/>
+      </xul:hbox>
+      <xul:box flex="1" class="groupbox-body" xbl:inherits="orient,align,pack">
+        <children/>
+      </xul:box>
+    </content>
+
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          <![CDATA[
+            return Components.interfaces.nsIAccessibleProvider.XULGroupbox;
+          ]]>
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+
+  <binding id="caption" extends="chrome://global/content/bindings/general.xml#basetext">
+    <resources>
+      <stylesheet src="chrome://global/skin/groupbox.css"/>
+    </resources>
+    
+    <content>
+      <children>
+        <xul:image class="caption-icon" xbl:inherits="src=image"/>
+        <xul:label class="caption-text" flex="1"
+                   xbl:inherits="default,value=label,crop,accesskey"/>
+      </children>
+    </content>
+  </binding>
+
+</bindings>

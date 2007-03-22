@@ -1,0 +1,48 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+<head>
+<title>loadHistoryPage</title>
+
+<! -- called from SHListenerTest.html.
+   -- Sets the sHistory listener, and purges sHistory.
+   -->
+
+
+<script TYPE="text/javascript" src="nsISHistoryTestLib.js">
+</script>
+</head>
+<body>
+
+<script TYPE="text/javascript">
+
+var tc ;
+var debug=1;
+
+function SetListener(listener)
+{
+   sHistory = sHistoryInit(window);	// js window
+   ddump("loadHistoryPage.html: session history object = " + sHistory + "\n About to set listener\n");
+   setSHistoryListener(sHistory, listener);
+}
+
+function ddump(s)
+{
+   if (debug==1)
+     dump(s);
+   else if (debug==2)
+     alert(s);
+}
+
+function purgeTheEntries(entries)
+{
+   sHistory = sHistoryInit(window);  // js window
+   ddump("session history object = " + sHistory + "\n About to purge history.\n");
+   purgeEntries(sHistory, entries);
+}
+
+</script>
+Loading Session History Listener testcase
+</body>
+</html>
+

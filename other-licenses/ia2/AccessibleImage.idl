@@ -1,0 +1,85 @@
+/*************************************************************************
+ *
+ *  File Name (AccessibleImage)
+ *
+ *  IAccessible2 IDL Specification
+ *
+ *  Copyright (c) IBM Corp. 2006
+ *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License version 2.1, as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02110-1301  USA
+ *
+ ************************************************************************/
+
+import "objidl.idl";
+import "oaidl.idl";
+import "oleacc.idl";
+       
+enum IA2ImageCoordinateType {
+  /// The returned coordinates are relative to the screen.
+  IA2_IMAGE_COORDTYPE_SCREEN_RELATIVE, 
+  /// The returned coordinates are relative to the upper left corner of parent's bounding box.
+  IA2_IMAGE_COORDTYPE_PARENT_RELATIVE  
+};
+
+/** @brief This interface represents images and icons.
+
+ This interface is used for a representation of images like icons on buttons.
+  IAccessibleImage only needs to be implemented in certain situations.  Some
+  examples are:
+  <ol>
+   <li>The accessible name and description are not enough to fully
+    describe the image, e.g. when the accessible description is used to define the
+    behavior of an actionable image and the image itself conveys semantically
+    significant information.
+   <li>The user can edit the content that includes an
+    image and therefore the user needs to be able to review the image's position.
+  </ol>
+*/
+[object, uuid(FE5ABB3D-615E-4f7b-909F-5F0EDA9E8DDE)]
+interface IAccessibleImage : IUnknown
+{
+  /** @brief Returns the localized description of the image.          
+   @param [out] description
+  */
+  [propget] HRESULT description
+    (
+     [out, retval] BSTR *description
+    );
+
+  /** @brief Returns the coordinates of the image.
+   @param [in] coordinateType
+    Specifies whether the returned coordinates should be relative to the screen or the parent object.
+   @param [out] x
+   @param [out] y
+  */
+  [propget] HRESULT imagePosition
+    (
+	 [in] enum IA2ImageCoordinateType coordinateType,
+	 [out] long *x,
+     [out, retval] long *y
+    );
+
+  /** @brief Returns the size of the image in units specified by parent's coordinate system.
+   @param [out] height
+   @param [out] width
+  */
+
+  [propget] HRESULT imageSize
+    (
+     [out] long *height,
+	 [out, retval] long *width
+    );
+}

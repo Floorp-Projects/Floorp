@@ -1,0 +1,2 @@
+<!ENTITY junkImgs.title "Trouver les images inutilisées dans le thème actuel…">
+<!ENTITY junkImgsDescription "Pour que cette recherche soit efficace, vous devrez examiner un document capable de charger TOUS les fichiers CSS utilisés par le thème actuel. Ensuite vous donnerez un emplacement sur le disque où la racine du thème courant pourra être trouvée.">

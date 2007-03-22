@@ -1,0 +1,115 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the directory index parsing code.
+ *
+ * The Initial Developer of the Original Code is
+ * Bradley Baetz.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Bradley Baetz <bbaetz@cs.mcgill.ca>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/** A class holding information about a directory index.
+ * These have no reference back to their original source -
+ * changing these attributes won't affect the directory
+ */
+[scriptable, uuid(23bbabd0-1dd2-11b2-86b7-aad68ae7d7e0)]
+interface nsIDirIndex : nsISupports
+{
+    /**
+     * Entry's type is unknown
+     */
+    const unsigned long TYPE_UNKNOWN = 0;
+
+    /**
+     * Entry is a directory
+     */
+    const unsigned long TYPE_DIRECTORY = 1;
+    
+    /**
+     * Entry is a file
+     */
+    const unsigned long TYPE_FILE = 2;
+    
+    /**
+     * Entry is a symlink
+     */
+    const unsigned long TYPE_SYMLINK = 3;
+
+    /**
+     * The type of the entry - one of the constants above
+     */
+    attribute unsigned long type;
+
+    /**
+     * The content type - may be null if it is unknown.
+     * Unspecified for directories
+     */
+    attribute string contentType;
+
+    /**
+     * The fully qualified filename, expressed as a uri
+     *
+     * This is encoded with the encoding specified in
+     * the nsIDirIndexParser, and is also escaped.
+     */
+    attribute string location;
+
+    /**
+     * A description for the filename, which should be
+     * displayed by a viewer
+     */
+    attribute wstring description;
+
+    /**
+     * File size, with -1 meaning "unknown"
+     */
+    attribute long long size;
+    
+    /**
+     * Last-modified time in seconds-since-epoch.
+     * -1 means unknown - this is valid, because there were no
+     * ftp servers in 1969
+     */
+    attribute PRTime lastModified;
+};
+
+%{C++
+
+#define NS_DIRINDEX_CID \
+/* { f6913e2e-1dd1-11b2-84be-f455dee342af } */ \
+{ 0xf6913e2e, \
+  0x1dd1, \
+  0x11b2, \
+  { 0x84, 0xbe, 0xf4, 0x55, 0xde, 0xe3, 0x42, 0xaf } \
+}
+%}

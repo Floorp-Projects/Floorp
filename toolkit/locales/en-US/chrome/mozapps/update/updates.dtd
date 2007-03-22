@@ -1,0 +1,84 @@
+<!ENTITY  updateWizard.title              "Software Update">
+
+<!ENTITY  window.width                    "36em">
+<!ENTITY  window.macWidth                 "39em">
+
+<!ENTITY  checking.title                  "Checking for Updates">
+<!ENTITY  checking.label                  "&brandShortName; is now checking for updates...">
+
+<!ENTITY  cancel.label                    "Cancel">
+<!ENTITY  cancel.accesskey                "C">
+
+<!ENTITY  noupdatesfound.title            "No Updates Found">
+<!ENTITY  noupdatesfound.intro            "There are no new updates available. &brandShortName; may check 
+                                           periodically for new updates.">
+
+<!ENTITY  updatesfound.title              "Update Available">
+
+<!ENTITY  incompatibleChecking.label      "Checking if this update will cause problems with your extensions and/or themes...">
+<!ENTITY  clickHere.label                 "View more information about this update">
+
+<!ENTITY  incompatible.warning            "This update will cause some of your extensions and/or themes 
+                                           to stop working until they are updated.">
+<!ENTITY  listIncompatible.label          "Show List">
+<!ENTITY  listIncompatible.accesskey      "L">
+
+<!ENTITY  upgrade.evangelism              "It is strongly recommended that you upgrade &brandShortName; 
+                                           as soon as possible.">
+
+<!ENTITY  license.title                   "License Agreement">
+<!ENTITY  license.intro                   "To install this update you must agree to this license agreement. 
+                                           Please read it carefully:">
+<!ENTITY  license.instructions            "If you agree to the terms of this agreement, click I Agree 
+                                           below to continue installing this update.">
+
+<!ENTITY  license.titleText               "Software License Agreement">
+<!ENTITY  license.introText               "Terms and conditions for using this software.">
+<!ENTITY  license.instructionText         "Please read the following license agreement. Use the scroll bar to view the rest of this agreement.">
+<!ENTITY  license.accept                  "I accept the terms of the License Agreement">
+<!ENTITY  license.accept.accesskey        "c">
+<!ENTITY  license.decline                 "I do NOT accept the terms of the License Agreement">
+<!ENTITY  license.decline.accesskey       "T">
+
+<!ENTITY  downloading.title               "Downloading Update">
+<!ENTITY  downloading.intro               "Downloading the update...">
+<!ENTITY  connecting.label                "Connecting to the update server...">
+<!ENTITY  verificationFailedText.label    "&brandShortName; was unable to verify the integrity of the 
+                                           incremental update it downloaded, so it is now downloading
+                                           the complete update package.">
+
+<!ENTITY  details.link                    "Details">
+<!ENTITY  pause.label                     "Pause">
+<!ENTITY  pause.accesskey                 "e">
+<!ENTITY  close.label                     "Close">
+<!ENTITY  close.accesskey                 "C">
+
+<!ENTITY  error.label                     "There were problems checking for, downloading or installing this 
+                                           update. &brandShortName; could not be updated because:">
+                                           
+<!ENTITY  errorManual.label               "You can update &brandShortName; manually by visiting this link
+                                           and downloading the latest version:">
+                                           
+<!ENTITY  errorpatching.title             "Update Failed">
+<!ENTITY  errorpatching.intro             "The partial Update could not be applied. 
+                                           &brandShortName; will try again by downloading a complete Update.">
+
+<!ENTITY  finished.title                  "Update Downloaded">
+<!ENTITY  finished.text                   "The update was successfully downloaded and verified, and it will
+                                           be installed the next time &brandShortName; starts.">
+
+<!ENTITY  finishedBackground.title        "Update Ready to Install">
+<!ENTITY  finishedBackground.text         "&brandShortName; has downloaded and verified an important update. 
+                                           Click the link below for more details.">
+<!ENTITY  finishedBackground.name         "Update:">
+<!ENTITY  finishedBackground.more1        "Click Restart &brandShortName; Now to install the update now.">
+<!ENTITY  finishedBackground.more2        "Click Later to close this dialog and continue working. &brandShortName;
+                                           will install the update the next time it starts.">
+
+<!ENTITY  installed.title                 "Update Installed">
+<!ENTITY  installed.intro                 "The update was successfully installed.">
+<!ENTITY  whatsnew.label                  "Read more about what's new...">
+
+<!ENTITY  update.details.label            "Details">
+<!ENTITY  update.installedOn.label        "Installed on:">
+<!ENTITY  update.status.label             "Status:">

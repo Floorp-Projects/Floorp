@@ -1,0 +1,290 @@
+# vim:set ts=8 sw=8 sts=8 noet:
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Mozilla Browser code.
+#
+# The Initial Developer of the Original Code is
+# Benjamin Smedberg <bsmedberg@covad.net>
+# Portions created by the Initial Developer are Copyright (C) 2004
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir = browser/locales
+
+include $(DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+vpath %.xml @srcdir@/en-US/searchplugins
+vpath %.xml $(LOCALE_SRCDIR)/searchplugins
+
+run_for_effects := $(shell if ! test -d $(DIST); then $(NSINSTALL) -D $(DIST); fi; if ! test -d $(DIST)/branding; then $(NSINSTALL) -D $(DIST)/branding; fi)
+_ABS_DIST := $(shell cd $(DIST) && pwd)
+
+ifdef MOZ_BRANDING_DIRECTORY
+SUBMAKEFILES += \
+	$(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/Makefile \
+	$(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/Makefile \
+	$(NULL)
+endif
+
+# This makefile uses variable overrides from the libs-% target to
+# build non-default locales to non-default dist/ locations. Be aware!
+
+AB = $(firstword $(subst -, ,$(AB_CD)))
+
+APP_VERSION := $(shell cat $(srcdir)/../config/version.txt)
+
+DEFINES += \
+	-DAB_CD=$(AB_CD) \
+	-DMOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox.mozilla.org \
+	-DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
+	-DLOCALE_SRCDIR=$(LOCALE_SRCDIR) \
+	-DPKG_BASENAME=$(PKG_BASENAME) \
+	$(NULL)
+
+ifndef MOZ_BRANDING_DIRECTORY
+DEFINES += -DMOZ_USE_GENERIC_BRANDING
+endif
+
+ifeq (,$(filter-out pref,$(MOZ_EXTENSIONS)))
+DEFINES += -DEXTENSION_PREF
+endif
+
+PREF_JS_EXPORTS = $(LOCALE_SRCDIR)/firefox-l10n.js
+
+include $(topsrcdir)/config/rules.mk
+
+ifeq ($(OS_ARCH),OS2)
+README_FILES = \
+	os2/README.txt \
+	$(NULL)
+else
+README_FILES = \
+	README.txt \
+	$(NULL)
+endif
+
+PROFILE_FILES = \
+	bookmarks.html \
+	localstore.rdf \
+	$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+PROFILE_FILES += win/mimeTypes.rdf
+else
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+PROFILE_FILES += mac/mimeTypes.rdf
+else
+PROFILE_FILES += unix/mimeTypes.rdf
+endif
+endif
+
+PROFILE_CHROME = userChrome-example.css userContent-example.css
+
+libs:: $(addprefix $(LOCALE_SRCDIR)/,$(README_FILES))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
+
+libs:: $(addprefix $(LOCALE_SRCDIR)/profile/,$(PROFILE_FILES))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/defaults/profile
+
+libs:: $(addprefix $(LOCALE_SRCDIR)/profile/chrome/,$(PROFILE_CHROME))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/defaults/profile/chrome
+
+install:: $(addprefix $(LOCALE_SRCDIR)/profile/,$(PROFILE_FILES))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile
+
+install:: $(addprefix $(LOCALE_SRCDIR)/profile/chrome/,$(PROFILE_CHROME))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile/chrome
+
+SEARCH_PLUGINS = $(shell cat $(LOCALE_SRCDIR)/searchplugins/list.txt)
+
+libs:: $(addsuffix .xml,$(SEARCH_PLUGINS))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/searchplugins
+
+install:: $(addsuffix .xml,$(SEARCH_PLUGINS))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/searchplugins
+
+MICROSUMMARY_GENERATORS = $(shell cat $(LOCALE_SRCDIR)/microsummary-generators/list.txt)
+MICROSUMMARY_GENERATOR_PREFIX = $(addprefix $(LOCALE_SRCDIR)/microsummary-generators/,$(MICROSUMMARY_GENERATORS))
+
+libs::
+ifneq (,$(strip $(MICROSUMMARY_GENERATORS)))
+        $(addsuffix .xml,$(MICROSUMMARY_GENERATOR_PREFIX))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/microsummary-generators
+endif
+
+install::
+ifneq (,$(strip $(MICROSUMMARY_GENERATORS)))
+        $(addsuffix .xml,$(MICROSUMMARY_GENERATOR_PREFIX))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/microsummary-generators
+endif
+
+libs-%:
+	@$(MAKE) -C ../../toolkit/locales libs-$*
+	@$(MAKE) -C ../../extensions/reporter/locales libs AB_CD=$* XPI_NAME=locale-$*
+	@$(MAKE) -C ../../extensions/spellcheck/locales AB_CD=$* XPI_NAME=locale-$*
+	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
+ifdef MOZ_BRANDING_DIRECTORY
+	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
+endif
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+MOZ_PKG_MAC_DSSTORE=$(_ABS_DIST)/branding/dsstore
+MOZ_PKG_MAC_BACKGROUND=$(_ABS_DIST)/branding/background.png
+MOZ_PKG_MAC_ICON=$(_ABS_DIST)/branding/disk.icns
+MOZ_PKG_MAC_RSRC=$(_ABS_DIST)/branding/license.r
+endif
+
+PACKAGER_NO_LIBS = 1
+include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
+include $(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/installer/windows/charset.mk
+
+repackage-win32-installer: WIN32_INSTALLER_OUT=$(_ABS_DIST)/install/sea/$(PKG_BASENAME).installer.exe
+repackage-win32-installer: $(WIN32_INSTALLER_IN) $(SUBMAKEFILES)
+	@echo "Repackaging $(WIN32_INSTALLER_IN) into $(WIN32_INSTALLER_OUT)."
+ifdef MOZ_BRANDING_DIRECTORY
+	$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY) export
+else
+	$(MAKE) -C ../installer/windows export
+endif
+	if test ! -d $(dir $(WIN32_INSTALLER_OUT)); then \
+	  $(NSINSTALL) -D $(dir $(WIN32_INSTALLER_OUT)); \
+	fi
+	$(RM) -rf l10n-stage
+	mkdir l10n-stage
+	$(CYGWIN_WRAPPER) 7z x -ol10n-stage $(WIN32_INSTALLER_IN)
+	$(RM) -r l10n-stage/localized
+	$(RM) l10n-stage/setup.exe
+	$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
+	$(MAKE) libs-$(AB_CD)
+	mv $(DIST)/xpi-stage/locale-$(AB_CD) l10n-stage/localized
+	$(MAKE) -C ../installer/windows CONFIG_DIR=l10ngen l10ngen/setup.exe l10ngen/7zSD.sfx
+	cp ../installer/windows/l10ngen/setup.exe l10n-stage
+	$(NSINSTALL) -D l10n-stage/localized/uninstall
+	cp ../installer/windows/l10ngen/helper.exe l10n-stage/localized/uninstall
+	rm -f app.7z
+	cd l10n-stage && \
+	  $(CYGWIN_WRAPPER) 7z a -r -t7z ../app.7z -mx -m0=BCJ2 -m1=LZMA:d24 -m2=LZMA:d19 -m3=LZMA:d19 -mb0:1 -mb0s1:2 -mb0s2:3
+	cat ../installer/windows/l10ngen/7zSD.sfx \
+	    $(topsrcdir)/browser/installer/windows/app.tag \
+	    app.7z > $(WIN32_INSTALLER_OUT)
+	chmod 0755 $(WIN32_INSTALLER_OUT)
+
+repackage-win32-installer-%: WIN32_INSTALLER_IN=$(_ABS_DIST)/install/sea/$(PKG_BASENAME).installer.exe
+repackage-win32-installer-%: $(WIN32_INSTALLER_IN)
+	@$(MAKE) repackage-win32-installer AB_CD=$* WIN32_INSTALLER_IN=$(WIN32_INSTALLER_IN)
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/MacOS
+else
+STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)
+endif
+
+repackage-zip: ZIP_OUT=$(_ABS_DIST)/$(PACKAGE)
+repackage-zip: UNPACKAGE=$(ZIP_IN)
+repackage-zip: $(ZIP_IN)
+	$(RM) -r $(DIST)/l10n-stage
+	mkdir $(DIST)/l10n-stage
+	cd $(DIST)/l10n-stage && \
+	  $(UNMAKE_PACKAGE)
+	$(RM) $(STAGEDIST)/chrome/en-US.jar \
+	  $(STAGEDIST)/chrome/en-US.manifest \
+	  $(STAGEDIST)/defaults/pref/firefox-l10n.js
+	$(RM) -r $(STAGEDIST)/microsummary-generators \
+	  $(STAGEDIST)/searchplugins \
+	  $(STAGEDIST)/dictionaries \
+	  $(STAGEDIST)/defaults/profile \
+	  $(STAGEDIST)/chrome/en-US
+	$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
+	$(MAKE) libs-$(AB_CD)
+ifeq (WINNT,$(OS_ARCH))
+	$(RM) -r $(STAGEDIST)/uninstall
+	$(NSINSTALL) -D $(STAGEDIST)/uninstall
+	cp ../installer/windows/l10ngen/helper.exe $(STAGEDIST)/uninstall
+endif
+	$(RM) -r $(DIST)/xpi-stage/locale-$(AB_CD)/chrome/$(AB_CD)
+	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
+	  tar $(TAR_CREATE_FLAGS) - * | ( cd $(STAGEDIST) && tar -xf - )
+ifneq (en,$(AB))
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/en.lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/$(AB).lproj
+endif
+endif
+	cd $(DIST)/l10n-stage; \
+	  $(MAKE_PACKAGE)
+	mv -f $(DIST)/l10n-stage/$(PACKAGE) $(DIST)
+
+repackage-zip-%: ZIP_IN=$(_ABS_DIST)/$(PACKAGE)
+repackage-zip-%: $(ZIP_IN)
+	@$(MAKE) repackage-zip AB_CD=$* ZIP_IN=$(ZIP_IN)
+
+langpack-%: LANGPACK_FILE=$(_ABS_DIST)/install/firefox-$(MOZ_APP_VERSION).$(AB_CD).langpack.xpi
+langpack-%: AB_CD=$*
+langpack-%: XPI_NAME=locale-$*
+langpack-%:
+	@echo "Making langpack $(LANGPACK_FILE)"
+	@$(RM) -rf $(DIST)/xpi-stage/locale-$(AB_CD)
+	@$(MAKE) libs-$(AB_CD) USE_EXTENSION_MANIFEST=1
+	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) -I$(call EXPAND_LOCALE_SRCDIR,toolkit/locales)/defines.inc -I$(LOCALE_SRCDIR)/defines.inc $(srcdir)/generic/install.rdf > $(FINAL_TARGET)/install.rdf
+	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
+	  $(ZIP) -r9D $(LANGPACK_FILE) install.rdf chrome chrome.manifest
+
+# This is a generic target that will make a langpack, repack ZIP (+tarball)
+# builds, and repack an installer if applicable. It is called from the
+# tinderbox scripts. Alter it with caution.
+#
+# Note: the last target called here should be repackage-zip-$* as the l10n build
+# systems rely on dist/l10n-stage/<product> to be in place in order to package
+# the complete MAR files.
+
+installers-%:
+	$(NSINSTALL) -D $(DIST)/install
+	@$(MAKE) langpack-$*
+ifeq (WINNT,$(OS_ARCH))
+	@$(MAKE) repackage-win32-installer-$*
+endif
+	@$(MAKE) repackage-zip-$*
+
+ifdef MOZ_UPDATER
+libs:: $(addprefix $(LOCALE_SRCDIR)/,updater/updater.ini)
+ifeq ($(OS_ARCH),WINNT)
+	iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) $< > $(FINAL_TARGET)/updater.ini
+else
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/updater.app/Contents/MacOS
+else
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
+endif
+endif
+endif

@@ -1,0 +1,292 @@
+<?xml version="1.0"?>
+<!-- Our script expects the book.css stylesheet first -->
+<?xml-stylesheet href="book.css" type="text/css"?>
+<?xml-stylesheet href="toc.css" type="text/css"?>
+<!DOCTYPE book [
+<!ATTLIST book    id ID #IMPLIED>
+<!ATTLIST chapter id ID #IMPLIED>
+<!ATTLIST section id ID #IMPLIED>
+]>
+<book id="book" xmlns:html="http://www.w3.org/1999/xhtml"
+                xmlns:xlink="http://www.w3.org/1999/xlink">
+ <html:a name="book"/>                
+ <html:script src="toc.js"/>
+ <html:img src="irslogo.gif"/>
+ <navbar>
+   <title>Table of contents</title>
+   <content>
+   To toggle the Table of Contents, click on this button
+   <html:input type="button" value="Contents" onclick="createToc();"/>
+   </content>
+ </navbar>
+
+  <title>Highlights of 1999 Tax Changes</title>
+  <subtitle>(Rev. December 1999)</subtitle>
+
+  <chapter id="chap1">
+    <html:a name="chap1"/>
+    <title>Tax Changes for Individuals</title>
+    <contents>
+      <section id="chap1sec1">
+         <html:a name="chap1sec1"/>
+         <title>Child Tax Credit Increased</title>
+         <contents>
+            <para>
+The maximum child tax credit for each qualifying child will increase from $400 to $500 in 1999. 
+            </para>
+         </contents>
+      </section>
+      <section id="chap1sec2">
+         <html:a name="chap1sec2"/>      
+         <title>Standard Mileage Rate</title>
+         <contents>
+            <para>
+Beginning April 1, 1999, the optional standard mileage rate for operating your carfor business decreases to 31 cents a mile for each business mile. Until then, the business standard mileage rate of 32 1/2 cents per mile that was in effect for 1998 will continue to apply. 
+            </para>
+         </contents>
+      </section>
+      <section id="chap1sec3">
+         <html:a name="chap1sec3"/>      
+         <title>Estimated Tax Safe Harbor for Higher Income Individuals</title>
+         <contents>
+            <para>
+For estimated tax payments for tax years beginning in 1999, the safe harbor for higher income individuals (other than farmers and fishermen) has been modified. If your 1998 adjusted gross income was more than $150,000 ($75,000 if you aremarried filing a separate return for 1999), you will have to pay the smaller of 90% of your expected tax for 1999 or 105% (up from 100%) of the tax shown on your 1998 return (provided your 1998 return covered all 12 months) to avoid an estimated tax penalty. 
+            </para>
+            <para>
+For more information on estimated tax, see 
+            <link xlink:type="simple" xlink:href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p505toc.htm" xlink:show="replace" xlink:actuate="user">Publication 505</link>. 
+            </para>
+         </contents>
+      </section>
+      <section id="chap1sec4">
+         <html:a name="chap1sec4"/>      
+         <title>Self-Employed Health Insurance Deduction</title>
+         <contents>
+            <para>
+For 1999, the health insurance deduction for the self-employed is increased from 45% to 60% of the amount you pay for medical insurance for yourself and your family. For more information, see chapter 10 in 
+              <link xlink:type="simple" xlink:href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p535toc.htm" xlink:show="replace" xlink:actuate="user">Publication 535</link>. 
+            </para>
+         </contents>
+      </section>
+      <section id="chap1sec5">
+         <html:a name="chap1sec5"/>      
+         <title>Social Security and Medicare Taxes</title>
+         <contents>
+            <para>
+For 1999, the employer and employee will continue to pay: 
+              <list>
+                <listitem>
+1.6.2% each for social security tax (old-age, survivors, and disability insurance), and
+                </listitem>
+                <listitem>
+2.1.45% each for Medicare tax (hospital insurance). 
+                </listitem>
+              </list>
+            </para>
+            <para>
+               <heading>Wage limits.</heading>
+For social security tax, the maximum amount of 1999 wages subject to the tax has increased to $72,600. For Medicare tax, all covered 1999 wages are subject to the tax. There is no wage base limit. For information about these taxes, see 
+              <link xlink:type="simple" xlink:href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p15toc.htm" xlink:show="replace" xlink:actuate="user">Publication 15</link>, <ref>Circular E, Employer's Tax Guide</ref>. 
+            </para>
+         </contents>
+      </section>
+      <section id="chap1sec6">
+         <html:a name="chap1sec6"/>      
+         <title>Self-Employment Tax</title>
+         <contents>
+            <para>
+The self-employment tax rate on net earnings remains the same for calendar year1999. This rate, 15.3%, is a total of 12.4% for social security (old-age, survivors, and disability insurance), and 2.9% for Medicare (hospital insurance). 
+            </para>
+            <para>
+The maximum amount subject to the social security part for tax years beginning in 1999 has increased to $72,600. All net earnings of at least $400 are subject to the Medicare part. 
+            </para>
+         </contents>
+      </section>
+    </contents>
+  </chapter>
+
+  <chapter id="chap2">
+    <html:a name="chap2"/>        
+    <title>Tax Changes for Businesses</title>
+    <contents>
+      <section id="chap2sec1">
+        <html:a name="chap2sec1"/>      
+        <title>Social Security and Medicare Taxes</title>
+        <contents>
+          <para>
+For 1999, the employer and employee will continue to pay: 
+            <list>
+              <listitem>
+6.2% each for social security tax (old-age, survivors, and disability insurance), and 
+              </listitem>
+              <listitem>
+1.45% each for Medicare tax (hospital insurance). 
+              </listitem>
+            </list>
+          </para>
+          <para>
+<heading>Wage limits.</heading> For social security tax, the maximum amount of 1999 wages subject to the tax has increased to $72,600. For Medicare tax, all covered 1999 wages are subject to the tax. There is no wage base limit. For information about these taxes and amounts to withhold, see 
+<link xlink:type="simple" xlink:href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p15toc.htm" xlink:show="replace" xlink:actuate="user">Publication 15</link>, <ref>Circular E, Employer's TaxGuide</ref>. 
+          </para>
+        </contents>
+      </section>
+      <section  id="chap2sec2">
+        <html:a name="chap2sec2"/>      
+        <title>Employment Tax Deposits</title>
+        <contents>
+          <para>
+Under certain circumstances, the IRS can waive the penalty for a first-time depositor's inadvertent failure to timely deposit employment taxes. For deposits required to be made after January 18, 1999, this waiver is expanded to include the first deposit required to be made after a required change in frequency of a taxpayer's deposits. 
+          </para>
+        </contents>
+      </section>
+      <section id="chap2sec3">
+        <html:a name="chap2sec3"/>      
+        <title>Electronic Deposit of Taxes</title>
+        <contents>
+          <para>
+If you were first required to deposit taxes by electronic funds transfer after June 30, 1997, the IRS will not impose the penalty for not doing so before July 1, 1999. Previously, the IRS had waived the penalty through December 31, 1998. For information about depositing taxes electronically, see <link xlink:type="simple" xlink:href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p15toc.htm" xlink:show="replace" xlink:actuate="user">Publication 15</link>. 
+          </para>
+        </contents>
+      </section>
+      <section id="chap2sec4">
+        <html:a name="chap2sec4"/>      
+        <title>941 TeleFile</title>
+        <contents>
+          <para>
+Beginning with the first quarter of 1998, many employers were able to file Form941 by phone, toll free. If you receive 941 TeleFile with your Form 941 package, check page TEL-1 of the <ref>941 TeleFile Instructions</ref> to see if you qualify for this quick, convenient, and easy method of filing. 
+          </para>
+        </contents>
+      </section>
+      <section id="chap2sec5">
+        <html:a name="chap2sec5"/>            
+        <title>941 On-Line</title>
+        <contents>
+          <para>
+In 1998, a limited number of employers were allowed to file Form 941 using commercially available software to create the return and then transmitting the return electronically to IRS through a third party. 941 On-Line uses Electronic Data Interchange (EDI) format. In 1999, IRS expects to make the 941 On-Line filing option available nationwide. 
+          </para>
+        </contents>
+      </section>
+      <section id="chap2sec6">
+        <html:a name="chap2sec6"/>      
+        <title>Self-Employment Tax </title>
+        <contents>
+          <para>
+The self-employment tax rate on net earnings remains the same for calendar year 1999. This rate, 15.3%, is a total of 12.4% for social security (old-age, survivors,and disability insurance), and 2.9% for Medicare (hospital insurance). 
+          </para>
+          <para>
+The maximum amount subject to the social security part for tax years beginning in 1999 has increased to $72,600. All net earnings of at least $400 are subject to the Medicare part. 
+          </para>
+        </contents>
+      </section>
+    </contents>
+  </chapter>
+
+  <chapter id="chap3">
+    <html:a name="chap3"/>      
+    <title>IRA and other Retirement Plans</title>
+    <contents>
+      <section id="chap3sec1">
+        <html:a name="chap3sec1"/>      
+        <title>Hardship Distributions</title>
+        <contents>
+          <para>
+Beginning in 1999, hardship distributions from 401(k) plans and 403(b) plans are not eligible rollover distributions. They cannot be rolled over into a traditional IRA. For more information on traditional IRAs, see <link xlink:type="simple" xlink:href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p590toc.htm" xlink:show="replace" xlink:actuate="user">Publication 590</link>. 
+          </para>
+        </contents>
+      </section>
+    </contents>
+  </chapter>
+
+  <chapter id="chap4">
+    <html:a name="chap4"/>      
+    <title>Gift and Estate Taxes</title>
+    <contents>
+      <section id="chap4sec1">
+        <html:a name="chap4sec1"/>      
+        <title>New Deduction From Gross Estate</title>
+        <contents>
+          <para>
+For estates of decedents dying after 1997, the executor can elect to deduct the adjusted value of a qualified family-owned business interest, up to a limited amount, from the gross estate. For more information, see section 2057 of the Internal Revenue Code and the instructions for Schedule T, Form 706, <ref>United States Estate (and Generation-Skipping Transfer) Tax Return</ref>. 
+          </para>
+        </contents>
+      </section>
+      <section id="chap4sec2">
+        <html:a name="chap4sec2"/>      
+        <title>Suit for Refund</title>
+        <contents>
+          <para>
+Effective July 23, 1998, an executor no longer needs to wait until all the installment payments have been made before filing a suit for refund with a federal district court or the U.S. Court of Federal Claims if the following conditions are met.
+            <list>
+              <listitem>
+The estate consists largely of an interest in a closely-held business. 
+              </listitem>
+              <listitem>
+The estate elected to make tax payments through the installment method. 
+              </listitem>
+            </list>
+          </para>
+          <para>
+However, all of the following must be true before a suit can be filed. 
+            <list>
+              <listitem>
+All installment payments due on or before the date the suit is filed have been made.
+              </listitem>           
+              <listitem>
+No accelerated installment payments have been made. 
+              </listitem>           
+              <listitem>
+No Tax Court case is pending with respect to any estate tax liability. 
+              </listitem>           
+              <listitem>
+The time for petitioning the Tax Court has passed if a notice of deficiency was issued to the estate regarding its liability for estate tax. 
+              </listitem>           
+              <listitem>
+No proceeding is pending for a declaratory judgment by the Tax Court on whether the estate is eligible to pay tax in installments. 
+              </listitem>  
+            </list>         
+          </para>
+          <para>
+In addition, the executor must <emph>not</emph>: 
+            <list>
+              <listitem>
+Include any previously litigated issues in the current suit for refund, and 
+              </listitem>
+              <listitem>
+Discontinue making timely installment payments while the court considers the suit for refund. 
+              </listitem>
+            </list>
+          </para>
+        </contents>
+      </section>
+    </contents>
+  </chapter>
+
+  <chapter id="chap5">
+    <html:a name="chap5"/>      
+    <title>Excise Tax</title>
+    <contents>
+      <section id="chap5sec1">
+        <html:a name="chap5sec1"/>      
+        <title>Air Transportation Taxes</title>
+        <contents>
+          <para>
+For 1999, the tax on the use of international air travel facilities will be $12.20 for both arrivals and departures. In the case of air transportation between the continental United States and Alaska or between Alaska and Hawaii, the use-of-international-facilities tax on departures will be $6.10.           
+          </para>
+        </contents>
+      </section>
+      <section id="chap5sec2">
+        <html:a name="chap5sec2"/>      
+        <title>Luxury Tax</title>
+        <contents>
+          <para>
+For 1999, the luxury tax on a passenger vehicle is reduced from 7% to 6% of the amount of the sales price that exceeds the base amount. The base amount for 1999 is $36,000. 
+          </para>
+          <para>
+The base amount is increased for electric vehicles and clean-fuel vehicles. See <link xlink:type="simple" xlink:href="http://www.irs.ustreas.gov/prod/forms_pubs/pubs/p510toc.htm" xlink:show="replace" xlink:actuate="user">Publication 510</link> for information on these amounts. 
+          </para>
+        </contents>
+      </section>
+    </contents>
+  </chapter>
+
+</book>

@@ -1,0 +1,43 @@
+<!ENTITY caption.label         "Opening #1">
+
+<!-- Localization note: The default intro text has 3 "inserts":
+        #1 - replaced with the descriptive text that describes the mime type
+             (e.g., "MSWord Document")
+        #2 - replaced with the mime type (e.g., "application/ms-word")
+        #3 - replaced with the filename (e.g., "manual.doc")
+        #4 - will be replaced by the brand name (e.g., "Mozilla")
+     If there is no descriptive text, then the alternative text is used which
+     has only insert #2.
+ -->
+<!ENTITY intro.label           "The file &quot;#3&quot; is of type #2 (#1), and #4 does not know how to handle this file type. This file is located at:">
+<!ENTITY intro.noDesc.label    "The file &quot;#3&quot; is of type #2, and #4 does not know how to handle this file type. This file is located at:">
+
+<!ENTITY intro.attachment.label "The site has suggested that &quot;#3&quot; be handled as an attachment. It is of type #2 (#1) and located at:">
+<!ENTITY intro.attachment.noDesc.label "The site has suggested that &quot;#3&quot; be handled as an attachment. It is of type #2 and located at:">
+
+<!ENTITY intro.sniffed.label "#4 has detected that the file &quot;#3&quot; is likely to be of type #2 (#1). The file is located at:">
+<!ENTITY intro.sniffed.noDesc.label "#4 has detected that the file &quot;#3&quot; is likely to be of type #2. The file is located at:">
+
+<!ENTITY prompt.label          "What should #1 do with this file?">
+
+<!ENTITY alwaysHandle.label     "Always perform this action when handling files of this type">
+<!ENTITY alwaysHandle.accesskey "A">
+
+<!ENTITY saveToDisk.label      "Save it to disk">
+<!ENTITY saveToDisk.accesskey  "S">
+
+<!ENTITY useSystemDefault.label        "Open it with the default application (#1)">
+<!ENTITY useSystemDefault.noDesc.label "Open it with the default application">
+<!ENTITY useSystemDefault.accesskey    "O">
+
+<!-- LOCALIZATION NOTE:  do not localize "#1" -->
+<!ENTITY openUsing.label       "Open it with">
+<!ENTITY openUsing.accesskey   "w">
+
+<!ENTITY chooseApp.label       "Choose...">
+<!ENTITY chooseApp.accesskey   "C">
+
+<!ENTITY chooseAppFilePickerTitle "Choose Helper Application">
+
+<!ENTITY badApp                 "The application you specified (&quot;#1&quot;) could not be found.  Check the file name or select another application.">
+<!ENTITY badApp.title           "Application not found">

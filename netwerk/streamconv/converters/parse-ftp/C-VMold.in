@@ -1,0 +1,16 @@
+This is a synthetic LISTing based on comments in mirror.pl and a 
+screenshot I saw somewhere. Either way, its 'synthetic' because I
+couldn't find an FTP server that LISTed like this. Note that (as 
+with other VM/CMS LISTings) filesize cannot be determined from 
+the listing and (AFAIK) files/dirs not on the 'A' minidisk (see 
+'Fm' field) are not RETRievable/CHDIR'able without magic.
+
+Filename FileType  Fm Format Lrecl  Records Blocks Date      Time
+LASTING  GLOBALV   A1 V      41     21     1       9/16/91   15:10:32
+J43401   NETLOG    A0 V      77     1      1       9/12/91   12:36:04
+PROFILE  EXEC      A1 V      17     3      1       9/12/91   12:39:07
+DIRUNIX  SCRIPT    A1 V      77     1216   17      1/04/93   20:30:47
+MAIL     PROFILE   A2 F      80     1      1       10/14/92  16:12:27
+ABADY2K  DATE      A0 V      1      1      1       1/03/100  10:11:12
+BBADY2K  DATE      A0 V      1      1      1       11/03/100 10:11:12
+AUTHORS            A1 DIR    -      -      -       9/20/99   10:31:11

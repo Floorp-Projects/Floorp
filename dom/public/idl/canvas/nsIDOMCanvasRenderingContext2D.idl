@@ -1,0 +1,172 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Vladimir Vukicevic <vladimir@pobox.com>
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsIVariant.idl"
+
+interface nsIDOMWindow;
+interface nsIDOMHTMLElement;
+interface nsIDOMHTMLImageElement;
+interface nsIDOMHTMLCanvasElement;
+
+[scriptable, uuid(bbb20a59-524e-4662-981e-5e142814b20c)]
+interface nsIDOMCanvasGradient : nsISupports
+{
+  void addColorStop(in float offset, in DOMString color);
+};
+
+[scriptable, uuid(21dea65c-5c08-4eb1-ac82-81fe95be77b8)]
+interface nsIDOMCanvasPattern : nsISupports
+{
+};
+
+[scriptable, uuid(87d2b1c4-b64e-41f6-98f7-7ac4244ce9bf)]
+interface nsIDOMCanvasRenderingContext2D : nsISupports
+{
+  // back-reference to the canvas element for which
+  // this context was created
+  readonly attribute nsIDOMHTMLCanvasElement canvas;
+
+  // state
+  void save();
+  void restore();
+
+  // transformations
+  void scale(in float x, in float y);
+  void rotate(in float angle);
+  void translate(in float x, in float y);
+  void transform(in float m11, in float m12, in float m21, in float m22, in float dx, in float dy);
+  void setTransform(in float m11, in float m12, in float m21, in float m22, in float dx, in float dy);
+
+  // compositing
+  attribute float globalAlpha; /* default 1.0 -- opaque */
+  attribute DOMString globalCompositeOperation; /* default "over" */
+
+  // colors and styles
+  attribute nsIVariant strokeStyle;
+  attribute nsIVariant fillStyle;
+
+  nsIDOMCanvasGradient createLinearGradient (in float x0, in float y0, in float x1, in float y1);
+  nsIDOMCanvasGradient createRadialGradient(in float x0, in float y0, in float r0, in float x1, in float y1, in float r1);
+  //nsIDOMCanvasPattern createPattern(in nsIDOMHTMLImageElement image, in DOMString repetition);
+  nsIDOMCanvasPattern createPattern(in nsIDOMHTMLElement image, in DOMString repetition);
+  attribute float lineWidth; /* default 1 */
+  attribute DOMString lineCap; /* "butt", "round", "square" (default) */
+  attribute DOMString lineJoin; /* "round", "bevel", "miter" (default) */
+  attribute float miterLimit; /* default 10 */
+
+  // shadows
+  attribute float shadowOffsetX;
+  attribute float shadowOffsetY;
+  attribute float shadowBlur;
+  attribute DOMString shadowColor;
+
+  // rects
+  void clearRect(in float x, in float y, in float w, in float h);
+  void fillRect(in float x, in float y, in float w, in float h);
+  void strokeRect(in float x, in float y, in float w, in float h);
+
+  // path API
+  void beginPath();
+  void closePath();
+
+  void moveTo(in float x, in float y);
+  void lineTo(in float x, in float y);
+  void quadraticCurveTo(in float cpx, in float cpy, in float x, in float y);
+  void bezierCurveTo(in float cp1x, in float cp1y, in float cp2x, in float cp2y, in float x, in float y);
+  void arcTo(in float x1, in float y1, in float x2, in float y2, in float radius);
+  void arc(in float x, in float y, in float r, in float startAngle, in float endAngle, in boolean clockwise);
+  void rect(in float x, in float y, in float w, in float h);
+
+  void fill();
+  void stroke();
+  void clip();
+
+  // image api
+  void drawImage();
+/*
+  void drawImage(in HTMLImageElement image, in float dx, in float dy);
+  void drawImage(in HTMLImageElement image, in float dx, in float dy, in float sw, in float sh);
+  void drawImage(in HTMLImageElement image, in float sx, in float sy, in float sw, in float sh, in float dx, in float dy, in float dw, in float dh);
+*/
+
+  // point-membership test
+  boolean isPointInPath(in float x, in float y);
+
+  // pixel manipulation
+  // ImageData getImageData (in float x, in float y, in float width, in float height);
+  // void putImageData (in ImageData d, in float x, in float y);
+  // ImageData = { width: #, height: #, data: [r, g, b, a, ...] }
+
+  void getImageData();
+  void putImageData();
+
+  /**
+   * Renders a region of a window into the canvas.  The contents of
+   * the window's viewport are rendered, ignoring viewport clipping
+   * and scrolling.
+   *
+   * @param x
+   * @param y
+   * @param w
+   * @param h specify the area of the window to render, in CSS
+   * pixels.
+   *
+   * @param backgroundColor the canvas is filled with this color
+   * before we render the window into it. This color may be
+   * transparent/translucent. It is given as a CSS color string
+   * (e.g., rgb() or rgba()).
+   *
+   * Of course, the rendering obeys the current scale, transform and
+   * globalAlpha values.
+   *
+   * Hints:
+   * -- If 'rgba(0,0,0,0)' is used for the background color, the
+   * drawing will be transparent wherever the window is transparent.
+   * -- Top-level browsed documents are usually not transparent
+   * because the user's background-color preference is applied,
+   * but IFRAMEs are transparent if the page doesn't set a background.
+   * -- If an opaque color is used for the background color, rendering
+   * will be faster because we won't have to compute the window's
+   * transparency.
+   *
+   * This API cannot currently be used by Web content. It is chrome
+   * only.
+   */
+  void drawWindow(in nsIDOMWindow window, in long x, in long y,
+                  in long w, in long h, in DOMString bgColor);
+};

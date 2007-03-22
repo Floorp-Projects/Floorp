@@ -1,0 +1,79 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2003
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Jan Varga <varga@ku.sk>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/**
+ * @status UNDER_DEVELOPMENT
+ */
+
+interface imgIRequest;
+
+[scriptable, uuid(7b80eebc-c98e-4461-8bdb-6e3b6e828890)]
+interface nsIImageDocument : nsISupports {
+
+  /* Whether the pref for image resizing has been set. */
+  readonly attribute boolean imageResizingEnabled;
+
+  /* Whether the image is overflowing visible area. */
+  readonly attribute boolean imageIsOverflowing;
+
+  /* Whether the image has been resized to fit visible area. */
+  readonly attribute boolean imageIsResized;
+
+  /* The image request being displayed in the content area */
+  readonly attribute imgIRequest imageRequest;
+
+  /* Resize the image to fit visible area. */
+  void shrinkToFit();
+
+  /* Restore image original size. */
+  void restoreImage();
+
+  /* Restore the image, trying to keep a certain pixel in the same position.
+   * The coordinate system is that of the shrunken image.
+   */
+  void restoreImageTo(in long x, in long y);
+
+  /* A helper method for switching between states.
+   * The switching logic is as follows. If the image has been resized
+   * restore image original size, otherwise if the image is overflowing
+   * current visible area resize the image to fit the area.
+   */
+  void toggleImageSize();
+};  

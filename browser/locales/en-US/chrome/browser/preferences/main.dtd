@@ -1,0 +1,47 @@
+<!ENTITY startup.label             "Startup">
+
+<!ENTITY startupPage.label         "When &brandShortName; starts:">
+<!ENTITY startupPage.accesskey     "s">
+<!ENTITY startupHomePage.label     "Show my home page">
+<!ENTITY startupBlankPage.label    "Show a blank page">
+<!ENTITY startupLastSession.label  "Show my windows and tabs from last time">
+<!ENTITY location.label            "Home Page:">
+<!ENTITY location.accesskey        "H">
+<!ENTITY useCurrentPage.label      "Use Current Page">
+<!ENTITY useCurrentPage.accesskey  "C">
+<!ENTITY useMultiple.label         "Use Current Pages">
+<!ENTITY useBookmark.label         "Use Bookmark">
+<!ENTITY useBookmark.accesskey     "B">
+<!ENTITY restoreDefault.label      "Restore to Default">
+<!ENTITY restoreDefault.accesskey  "R">
+
+<!ENTITY downloads.label     "Downloads">
+
+<!ENTITY showWhenDownloading.label     "Show the Downloads window when downloading a file">
+<!ENTITY showWhenDownloading.accesskey "D">
+<!ENTITY closeWhenDone.label "Close it when all downloads are finished">
+<!ENTITY closeWhenDone.accesskey "w">
+<!ENTITY saveTo.label "Save files to">
+<!ENTITY saveTo.accesskey "v">
+<!ENTITY chooseFolderWin.label        "Browse...">
+<!ENTITY chooseFolderWin.accesskey    "o">
+<!ENTITY chooseFolderMac.label        "Choose...">
+<!ENTITY chooseFolderMac.accesskey    "e">
+<!ENTITY alwaysAsk.label "Always ask me where to save files">
+<!ENTITY alwaysAsk.accesskey "A">
+
+
+<!ENTITY systemDefaults.label  "System Defaults">
+
+<!ENTITY alwaysCheckDefault.label      "Always check to see if &brandShortName; is the default browser on startup"><!--XXX-->
+<!ENTITY alwaysCheckDefault.accesskey  "y">
+
+<!-- LOCALIZATION NOTE (alwaysCheckDefault.height):
+  There's some sort of bug which makes wrapping checkboxes not properly reflow,
+  causing the bottom border of the groupbox to be cut off; set this
+  appropriately if your localization causes this checkbox to wrap.
+-->
+<!ENTITY alwaysCheckDefault.height  "3em">
+
+<!ENTITY checkNow.label             "Check Now">
+<!ENTITY checkNow.accesskey         "N">

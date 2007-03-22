@@ -1,0 +1,296 @@
+<?xml version="1.0"?>
+
+<bindings id="numberboxBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/1999/xhtml"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="numberbox"
+           extends="chrome://global/content/bindings/textbox.xml#textbox">
+
+    <resources>
+      <stylesheet src="chrome://global/skin/numberbox.css"/>
+    </resources>
+
+    <content>
+      <xul:hbox class="textbox-input-box numberbox-input-box" flex="1" xbl:inherits="context">
+        <html:input class="numberbox-input textbox-input" flex="1" anonid="input"
+                    xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex,accesskey"/>
+      </xul:hbox>
+      <xul:spinbuttons anonid="buttons" xbl:inherits="disabled,hidden=hidespinbuttons"
+                       onup="this.parentNode._modifyUp();"
+                       ondown="this.parentNode._modifyDown();"/>
+    </content>
+
+    <implementation>
+      <field name="_valueEntered">false</field>
+      <field name="_spinButtons">null</field>
+      <field name="_value">0</field>
+      <field name="decimalSymbol">"."</field>
+
+      <property name="spinButtons" readonly="true">
+        <getter>
+          <![CDATA[
+            if (!this._spinButtons)
+              this._spinButtons = document.getAnonymousElementByAttribute(this, "anonid", "buttons");
+            return this._spinButtons;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="value">
+        <getter>
+          if (this._valueEntered) {
+            var newval = this.inputField.value;
+            newval = newval.replace(this.decimalSymbol, ".");
+            this._validateValue(newval, false);
+          }
+          return this._value;
+        </getter>
+        <setter>
+          return this._validateValue(val, false);
+        </setter>
+      </property>
+
+      <property name="wrapAround">
+        <getter>
+        <![CDATA[
+          return (this.getAttribute('wraparound') == 'true')
+        ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+          if (val)
+            this.setAttribute('wraparound', 'true');
+          else
+            this.removeAttribute('wraparound');
+          this._enableDisableButtons();
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="min">
+        <getter>
+          var min = this.getAttribute("min");
+          return min ? Number(min) : 0;
+        </getter>
+        <setter>
+        <![CDATA[
+          if (typeof val == "number") {
+            this.setAttribute("min", val);
+            if (this.value < val)
+              this._validateValue(val, false);
+          }
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="max">
+        <getter>
+          var max = this.getAttribute("max");
+          return max ? Number(max) : Infinity;
+        </getter>
+        <setter>
+        <![CDATA[
+          if (typeof val != "number")
+            return val;
+          var min = this.min;
+          if (val < min)
+            val = min;
+          this.setAttribute("max", val);
+          if (this.value > val)
+            this._validateValue(val, false);
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="decimalPlaces">
+        <getter>
+          var places = this.getAttribute("decimalplaces");
+          return places ? Number(places) : 0;
+        </getter>
+        <setter>
+          if (typeof val == "number") {
+            this.setAttribute("decimalplaces", val);
+            this._validateValue(this.value, false);
+          }
+          return val;
+        </setter>
+      </property>
+
+      <property name="increment">
+        <getter>
+          var increment = this.getAttribute("increment");
+          return increment ? Number(increment) : 1;
+        </getter>
+        <setter>
+        <![CDATA[
+          if (typeof val == "number")
+            this.setAttribute("increment", val);
+          return increment;
+        ]]>
+        </setter>
+      </property>
+
+      <method name="decrease">
+        <body>
+          return this._validateValue(this.value - this.increment, true);
+        </body>
+      </method>
+
+      <method name="increase">
+        <body>
+          return this._validateValue(this.value + this.increment, true);
+        </body>
+      </method>
+
+      <method name="_modifyUp">
+        <body>
+          <![CDATA[
+            if (this.disabled || this.readOnly)
+              return;
+            var oldval = this.value;
+            var newval = this.increase();
+            this.inputField.select();
+            if (oldval != newval)
+              this._fireChange();
+          ]]>
+        </body>
+      </method>
+      <method name="_modifyDown">
+        <body>
+          <![CDATA[
+            if (this.disabled || this.readOnly)
+              return;
+            var oldval = this.value;
+            var newval = this.decrease();
+            this.inputField.select();
+            if (oldval != newval)
+              this._fireChange();
+          ]]>
+        </body>
+      </method>
+
+      <method name="_enableDisableButtons">
+        <body>
+          <![CDATA[
+            var buttons = this.spinButtons;
+            if (this.disabled || this.readOnly) {
+              buttons.disabled = true;
+            }
+            else {
+              buttons.decreaseDisabled = (this.value <= this.min);
+              buttons.increaseDisabled = (this.value >= this.max);
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="_validateValue">
+        <parameter name="aValue"/>
+        <parameter name="aIsIncDec"/>
+        <body>
+          <![CDATA[
+            aValue = Number(aValue) || 0;
+
+            var min = this.min;
+            var max = this.max;
+            var wrapAround = this.wrapAround &&
+                             min != -Infinity && max != Infinity;
+            if (aValue < min)
+              aValue = (aIsIncDec && wrapAround ? max : min);
+            else if (aValue > max)
+              aValue = (aIsIncDec && wrapAround ? min : max);
+
+            var places = this.decimalPlaces;
+            if (places != Infinity)
+              aValue = aValue.toFixed(places);
+
+            this._valueEntered = false;
+            this._value = Number(aValue);
+            this.inputField.value = aValue.replace(/\./, this.decimalSymbol);
+
+            if (!wrapAround)
+              this._enableDisableButtons();
+
+            return aValue;
+          ]]>
+        </body>
+      </method>
+
+      <method name="_fireChange">
+        <body>
+          var evt = document.createEvent("Events");
+          evt.initEvent("change", true, true);
+          this.dispatchEvent(evt);
+        </body>
+      </method>
+
+      <constructor><![CDATA[
+        if (this.max < this.min)
+          this.max = this.min;
+
+        var dsymbol = (Number(5.4)).toLocaleString().match(/\D/);
+        if (dsymbol != null)
+          this.decimalSymbol = dsymbol[0];
+
+        var value = this.inputField.value || 0;
+        this._validateValue(value, false);
+      ]]></constructor>
+
+    </implementation>
+
+    <handlers>
+      <handler event="input">
+        this._valueEntered = true;
+      </handler>
+
+      <handler event="keypress">
+        <![CDATA[
+          if (!event.ctrlKey && !event.metaKey && !event.altKey && event.charCode) {
+            if (event.charCode == this.decimalSymbol.charCodeAt(0) &&
+                this.decimalPlaces &&
+                String(this.inputField.value).indexOf(this.decimalSymbol) == -1)
+              return;
+
+            if (event.charCode == 45 && this.min < 0)
+              return;
+
+            if (event.charCode < 48 || event.charCode > 57)
+              event.preventDefault();
+          }
+        ]]>
+      </handler>
+
+      <handler event="keypress" keycode="VK_UP">
+        this._modifyUp();
+      </handler>
+
+      <handler event="keypress" keycode="VK_DOWN">
+        this._modifyDown();
+      </handler>
+
+      <handler event="up" preventdefault="true">
+        this._modifyUp();
+      </handler>
+
+      <handler event="down" preventdefault="true">
+        this._modifyDown();
+      </handler>
+
+      <handler event="change">
+        if (event.originalTarget == this.inputField) {
+          var newval = this.inputField.value;
+          newval = newval.replace(this.decimalSymbol, ".");
+          this._validateValue(newval, false);
+        }
+      </handler>
+    </handlers>
+
+  </binding>
+
+</bindings>

@@ -1,0 +1,8 @@
+.blackBold 
+{
+ FONT-WEIGHT: bold;
+}
+A:hover
+{
+ FONT-WEIGHT: normal;
+}

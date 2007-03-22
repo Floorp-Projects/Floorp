@@ -1,0 +1,14 @@
+<!ENTITY Inspector.label "DOM Inspektør">
+<!ENTITY Sidebar.label "Sidebjælke">
+<!ENTITY elementBlinking.label "Element Blink">
+<!ENTITY blinkSelectedElement.label "Blink det valgte element">
+<!ENTITY borderColor.label "Rammefarve">
+<!ENTITY borderWidth.label "Rammetykkelse">
+<!ENTITY px.label "(px)">
+<!ENTITY blinkDuration.label "Blink varighed">
+<!ENTITY ms.label "(ms)">
+<!ENTITY blinkSpeed.label "Blink hastighed">
+<!ENTITY invertColors.label "Inverter farver">
+<!ENTITY installHowTo.label "DOM Inspektør sidebjælken er pt. ikke installeret. Klik på knappen 'Installer' for at tilføje den til din sidebjælke.">
+<!ENTITY install.label "Installer">
+<!ENTITY addNavigatorHooks.label "Tilføj kontekst-menuer til Navigator">

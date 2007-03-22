@@ -1,0 +1,212 @@
+# 
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Mozilla browser.
+#
+# The Initial Developer of the Original Code is
+# Christopher Blizzard.
+# Portions created by the Initial Developer are Copyright (C) 1999
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Christopher Blizzard <blizzard@mozilla.org>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		=  @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= phembedmoz
+LIBRARY_NAME	= phembedmoz
+EXPORT_LIBRARY = 1
+REQUIRES	= xpcom \
+		  string \
+		  docshell \
+		  webshell \
+		  necko \
+		  widget \
+		  dom \
+		  gfx \
+		  layout \
+		  content \
+		  uriloader \
+		  webbrwsr \
+		  shistory \
+		  embed_base \
+		  pref \
+		  windowwatcher \
+		  webbrowserpersist \
+		  find \
+		  exthandler \
+			profdirserviceprovider \
+		  $(NULL)
+
+CPPSRCS		= \
+		EmbedPrivate.cpp \
+		EmbedPrintListener.cpp \
+		EmbedWindow.cpp \
+		EmbedProgress.cpp \
+		EmbedContentListener.cpp \
+		EmbedEventListener.cpp \
+		EmbedWindowCreator.cpp \
+		PtMozilla.cpp \
+		EmbedStream.cpp \
+		PromptService.cpp \
+		EmbedDownload.cpp \
+		HeaderSniffer.cpp \
+		nsUnknownContentTypeHandler.cpp
+
+DEFINES += -DMOZILLA_INTERNAL_API=1
+
+# Force applications to be built non-statically
+# when building the mozcomps meta component
+ifneq (,$(filter mozcomps,$(MOZ_META_COMPONENTS)))
+BUILD_STATIC_LIBS=
+endif
+
+ifdef BUILD_STATIC_LIBS
+# Static build stuff
+DEFINES         += -D_BUILD_STATIC_BIN=1
+CPPSRCS		+= EmbedComponents.cpp
+
+XP_LIBS		+= \
+		$(PNG_LIBS) \
+		$(JPEG_LIBS) \
+		$(ZLIB_LIBS) \
+		$(NULL)
+
+ifdef MOZ_PSM
+XP_LIBS		+= \
+		$(NSS_LIBS) \
+		$(NULL)
+endif
+
+endif
+
+SHARED_LIBRARY_LIBS= \
+		$(DIST)/lib/libembed_base_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libprofdirserviceprovider_s.$(LIB_SUFFIX) \
+		$(NULL)
+
+EXPORTS		= \
+		PtMozilla.h
+
+EXTRA_DSO_LDOPTS = \
+		$(MOZ_COMPONENT_LIBS) \
+		$(NULL)
+
+EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS)
+
+include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS        += $(MOZ_GTK_CFLAGS)
+
+ifneq ($(QCONF_OVERRIDE),)
+include $(QCONF_OVERRIDE)
+CXXFLAGS        += -I$(if $(USE_INSTALL_ROOT),$(INSTALL_ROOT_nto),$(USE_ROOT_nto))/usr/include
+endif
+
+ifdef BUILD_STATIC_LIBS
+
+# This is so sick! We'll work backwards from the embedding manifest to
+# produce the set of components that we need to link in to a
+# ``minimal'' embedding harness.
+ifdef MINIMO
+EMBED_MANIFEST=$(topsrcdir)/embedding/config/minimo-qnx
+else
+EMBED_MANIFEST=$(topsrcdir)/embedding/config/basebrowser-qnx
+endif
+
+ifdef MOZ_FAT_EMBED
+EMBED_LINK_COMPS=$(FINAL_LINK_COMPS)
+EMBED_LINK_COMP_NAMES=$(FINAL_LINK_COMP_NAMES)
+EMBED_LINK_COMP_MODULES = $(FINAL_LINK_COMP_NAMES)
+else
+EMBED_LINK_COMPS=embed-link-comps
+EMBED_LINK_COMP_NAMES=embed-link-comp-names
+EMBED_LINK_COMP_MODULES = embed-link-comp-modules
+endif
+
+# Create a map that we can use to go from library name to component
+# symbol. N.B. that this will break if the $(FINAL_LINK_COMP_NAMES)
+# and $(FINAL_LINK_COMPS) somehow get out-of-sync and aren't in
+# _exactly_ the same order. (Hey, this is a hack!)
+components: $(FINAL_LINK_COMPS) $(FINAL_LINK_COMP_NAMES)
+	cat $(FINAL_LINK_COMPS) $(FINAL_LINK_COMP_NAMES) | sort -k 1,1 > $@
+
+# Compute the embedding libs by extracting them from the embedding
+# manifest.
+#
+# We start by selecting anything that starts with `components/', as
+# these are the component libraries. We print the `first' field to
+# strip off any crap after the library name. Next, we select for files
+# ending with `.so' so we end up with only the libraries. We then rip
+# off the `components/lib' prefix and the `.so' suffix, leaving just
+# the library name. This list is sorted, and joined with the list of
+# components that were actually _built_ to cull out anything that's
+# included in the manifest, but wasn't built.
+embed-link-comps: $(EMBED_MANIFEST) components
+	grep '^components/' $< | \
+		awk '{ print $$1; }' | \
+		grep '\.so$$' | \
+		sed -e 's.^components/lib..' -e 's/\.so//' | \
+		sort | \
+		join -o 1.1 - components > $@
+		sort -u -o $@ $@
+
+# Compute the symbols we'll need for the ``minimal embedding client''
+# by joining the compoent list with the sorted list of embedding
+# components.
+embed-link-comp-names: embed-link-comps components
+	sort embed-link-comps | join -o 1.1 - components > $@
+	#sort embed-link-comps | join -o 2.2 - components > $@
+	sort -u -o $@ $@
+
+# since embed-link-comp-names is filled with the static library names, we cannot use them - we need something
+# filled with the modules names ( foe instance nsCookieModule instead of cookie
+embed-link-comp-modules: embed-link-comp-names
+	for i in `cat embed-link-comp-names` ; \
+		do ( \
+			objdump -x ../../../../dist/lib/components/lib$$i.a | \
+			grep _gModuleInfo | \
+			awk '{ print $$6; }' | \
+			sed -e "s/_gModuleInfo//" ) ; \
+		done \
+		> $@
+
+EmbedComponents.cpp: EmbedComponents.cpp.in Makefile Makefile.in $(EMBED_LINK_COMP_MODULES)
+	cat $< | \
+	sed -e "s|%DECL_NSGETMODULES%|$(foreach m,$(shell cat $(EMBED_LINK_COMP_MODULES)),DECL_NSGETMODULE($(m)))|" | \
+	sed -e "s|%MODULE_LIST%|$(foreach m, $(shell cat $(EMBED_LINK_COMP_MODULES)),MODULE($(m)),)|" \
+	> $@
+
+GARBAGE += EmbedComponents.cpp embed-link-comp-names embed-link-comps components embed-link-comp-modules
+endif
+

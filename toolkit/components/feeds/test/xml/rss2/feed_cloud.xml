@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: channel cloud works
+Expect:      ((feed.cloud.getProperty('domain')=="rpc.sys.com") && (feed.cloud.getProperty('port')=="80") && (feed.cloud.getProperty('path')=="/RPC2") && (feed.cloud.getProperty('registerProcedure')=="pingMe") && (feed.cloud.getProperty('protocol')=="soap"))
+
+-->
+<rss version="2.0" >
+<channel>
+<cloud domain="rpc.sys.com" port="80" path="/RPC2" registerProcedure="pingMe" protocol="soap"/>
+</channel>
+</rss>

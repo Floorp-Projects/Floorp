@@ -1,0 +1,43 @@
+<!-- LOCALIZATION NOTE : This file contains platform-specific strings which
+                         occur in large numbers throughout Help docs.
+                         Generally, for these strings it's less code to store
+                         them here than to hard-code the value of the entity
+                         in every place it's used, or using an entity is less
+                         confusing than typing a string like the jumbled messes
+                         used below for "preference" and derivatives.  Feel free
+                         to add more strings here as long as you run them by the
+                         Help module owner first (to prevent excessive use of
+                         such strings when other methods are preferable). -->
+
+<!-- Options -->
+
+<!ENTITY pref.menuPath     '<span class="win menuPath">Tools &gt; Options</span><span
+                              class="unix menuPath">Edit &gt; Preferences</span><span
+                              class="mac menuPath">&brandShortName; &gt; Preferences</span>' >
+<!ENTITY pref.singular     '<span class="win">option</span><span
+                             class="noWin">preference</span>' >
+<!ENTITY pref.plural       '<span class="win">options</span><span
+                             class="noWin">preferences</span>' >
+<!ENTITY pref.singularCaps '<span class="win">Option</span><span
+                             class="noWin">Preference</span>' >
+<!ENTITY pref.pluralCaps   '<span class="win">Options</span><span
+                             class="noWin">Preferences</span>' >
+
+<!-- Keys -->
+
+<!ENTITY ctrlKey            '<kbd>Ctrl</kbd>' >
+<!ENTITY accelKey           '<kbd class="noMac">Ctrl</kbd><kbd
+                             class="mac">Cmd</kbd>' >
+<!ENTITY altKey             '<kbd class="noMac">Alt</kbd><kbd
+                             class="mac">Opt</kbd>' >
+<!ENTITY shiftKey           '<kbd>Shift</kbd>' >
+<!ENTITY enterKey           '<kbd class="noMac">Enter</kbd><kbd
+                             class="mac">Return</kbd>' >
+
+<!-- Image Location Base URL -->
+
+<!ENTITY images.baseURL     'http://www.mozilla.org/projects/firefox/help/2.0'>
+
+<!-- Copyright years -->
+
+<!ENTITY copyright.years    '2003-2007'>

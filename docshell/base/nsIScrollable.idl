@@ -1,0 +1,128 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla browser.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Travis Bogard <travis@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/**
+ * The nsIScrollable is an interface that can be implemented by a control that
+ * supports scrolling.  This is a generic interface without concern for the 
+ * type of content that may be inside.  It simply deals blindly with scroll
+ * position as a composite of the lowest possible scroll position, the highest
+ * possible position and the current position lying somewhere between the 
+ * min and the max. 
+ */
+
+[scriptable, uuid(919e792a-6490-40b8-bba5-f9e9ad5640c8)]
+interface nsIScrollable : nsISupports
+{
+	/*
+	Constants declaring the two scroll orientations a scroll bar can be in.
+        ScrollOrientation_X - Horizontal scrolling.  When passing this
+                in to a scroll position method you are requesting or
+                setting the positions for the horizontal scroll bar.
+        ScrollOrientation_Y - Vertical scrolling.  When passing this
+                in to a scroll position you are requesting or setting
+                the positions for the vertical scroll bar.
+	*/
+	const long ScrollOrientation_X = 1;
+	const long ScrollOrientation_Y = 2;
+
+	/*
+	Retrieves or Sets the current thumb position to the curPos passed in for the
+	scrolling orientation passed in.  curPos should be between minPos and maxPos.
+
+	@return	NS_OK - Setting or Getting completed successfully.
+				NS_ERROR_INVALID_ARG - returned when curPos is not within the
+					minPos and maxPos.
+	*/
+	long getCurScrollPos(in long scrollOrientation);
+	void setCurScrollPos(in long scrollOrientation, in long curPos);
+
+	/*
+	This function atomizes the ability to scroll in two dimensions at the same
+	time.
+	*/
+	void setCurScrollPosEx(in long curHorizontalPos, in long curVerticalPos);
+
+	/*
+	Retrieves or Sets the valid ranges for the thumb.  When maxPos is set to 
+	something less than the current thumb position, curPos is set = to maxPos.
+
+	@return	NS_OK - Setting or Getting completed successfully.
+				NS_ERROR_INVALID_ARG - returned when curPos is not within the
+					minPos and maxPos.
+	*/
+	void getScrollRange(in long scrollOrientation, out long minPos, out long maxPos);
+	void setScrollRange(in long scrollOrientation, in long minPos, in long maxPos);
+
+	/*
+	This function atomizes the ability to set the ranges in two dimensions at 
+	the same time.
+	*/
+	void setScrollRangeEx(in long minHorizontalPos, in long maxHorizontalPos,
+		in long minVerticalPos, in long maxVerticalPos);
+
+	/*
+	Constants declaring the states of the scroll bars.
+	ScrollPref_Auto - bars visible only when needed.
+	ScrollPref_Never - bars never visible, even when scrolling still possible.
+	ScrollPref_Always - bars always visible, even when scrolling is not possible
+	*/
+	const long Scrollbar_Auto = 1;
+	const long Scrollbar_Never = 2;
+	const long Scrollbar_Always = 3;
+
+	/*
+	Retrieves or Set the preferences for the scroll bar.
+	current is 'scrolling preference for this document'
+	default is 'scrolling preference for all documents in this shell'
+	resetScrollbarPreferences resets current to default
+	*/
+	long getDefaultScrollbarPreferences(in long scrollOrientation);
+	void setDefaultScrollbarPreferences(in long scrollOrientation, in long scrollbarPref);
+
+	/*
+	Get information about whether the vertical and horizontal scrollbars are
+	currently visible.  nsnull is a valid argument.  If you are only interested
+	in one of the visibility settings pass nsnull in for the one you aren't
+	interested in.
+	*/
+	void getScrollbarVisibility(out boolean verticalVisible, 
+		out boolean horizontalVisible);
+};

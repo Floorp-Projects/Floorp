@@ -1,0 +1,50 @@
+<!ENTITY Inspector.title "DOM Inspektor">
+<!ENTITY thDOMNodes.label "Uzly DOM">
+<!ENTITY btnInspect.label "Prozkoumat">
+<!ENTITY bxDocPanel.title "Dokument">
+<!ENTITY bxObjectPanel.title "Objekt">
+<!ENTITY btnSelecting.tooltip "Pomocí klepnutí vybere uzel">
+<!ENTITY btnFind.tooltip "Pomocí id, tagu nebo atributu najde uzel ">
+<!-- MAIN MENU ITEMS -->
+<!ENTITY mnFile.label "Soubor">
+<!ENTITY mnFile.accesskey "S">
+<!ENTITY cmdShowOpenURLDialog.label "Prozkoumat URL">
+<!ENTITY cmdShowOpenURLDialog.accesskey "U">
+<!ENTITY cmdClose.label "Zavřít">
+<!ENTITY cmdClose.accesskey "Z">
+<!ENTITY cmdExit.label "Ukončit">
+<!ENTITY cmdExit.accesskey "k">
+<!ENTITY mnEdit.label "Úpravy">
+<!ENTITY mnEdit.accesskey "p">
+<!ENTITY cmdUndo.label "Zpět">
+<!ENTITY cmdUndo.accesskey "Z">
+<!ENTITY cmdRedo.label "Znovu">
+<!ENTITY cmdRedo.accesskey "o">
+<!ENTITY cmdCut.label "Vyjmout">
+<!ENTITY cmdCut.accesskey "t">
+<!ENTITY cmdCopy.label "Kopírovat">
+<!ENTITY cmdCopy.accesskey "K">
+<!ENTITY cmdPaste.label "Vložit">
+<!ENTITY cmdPaste.accesskey "l">
+<!ENTITY cmdDelete.label "Smazat">
+<!ENTITY cmdDelete.accesskey "S">
+<!ENTITY mnSearch.label "Hledat">
+<!ENTITY mnSearch.accesskey "H">
+<!ENTITY mnSearchPlugins.label "Rozšíření">
+<!ENTITY mnSearchPlugins.accesskey "e">
+<!ENTITY cmdRunSearch.label "Spustit">
+<!ENTITY cmdRunSearch.accesskey "S">
+<!ENTITY mnView.label "Zobrazit">
+<!ENTITY mnView.accesskey "Z">
+<!ENTITY cmdToggleBrowser.label "Prohlížeč">
+<!ENTITY cmdToggleSearch.label "Výsledky hledání">
+<!ENTITY cmdViewSearchItem.label "Zobrazit...">
+<!ENTITY cmdEditSearchItem.label "Úpravy">
+<!ENTITY cmdCopySearchItemLine.label "Kopírovat řádku">
+<!ENTITY cmdCopySearchItemAll.label "Kopírovat vše">
+<!ENTITY cmdSaveSearchItemText.label "Uložit">
+<!ENTITY cmdClearSearch.label "Vyčistit">
+<!ENTITY cmdHideSearchItems.label "Skrýt">
+<!ENTITY browserPanel.label "Prohlížeč">
+<!ENTITY inspectNewWindow.label "Prozkoumat v novém okně">
+<!ENTITY closeCmd.key "W">

@@ -1,0 +1,185 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Web Content Converter Registrar.
+ *
+ * The Initial Developer of the Original Code is Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2006
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Ben Goodger <beng@google.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIRequest;
+
+[scriptable, uuid(2bd97d63-e928-4d52-9fd4-34061349a9a6)]
+interface nsIWebContentHandlerInfo : nsISupports
+{
+  /**
+   * The content type handled by the handler
+   */
+  readonly attribute AString contentType;
+
+  /**
+   * The uri of the handler, with an embedded %s where the URI of the loaded
+   * document will be encoded.
+   */
+  readonly attribute AString uri;
+
+  /**
+   * A human readable title of the handler.
+   */
+  readonly attribute AString name;
+
+  /** 
+   * Gets the service URL Spec, with the loading document URI encoded in it.
+   * @param   uri
+   *          The URI of the document being loaded
+   * @returns The URI of the service with the loading document URI encoded in 
+   *          it.
+   */
+  AString getHandlerURI(in AString uri);
+
+  /**
+   * Determines if this handler object is equivalent to another.
+   * @param   other
+   *          The other handler info object
+   * @returns true if the two objects are equivalent (same content type, 
+   *          same uri).
+   */
+  boolean equals(in nsIWebContentHandlerInfo other);
+};
+
+[scriptable, uuid(632b16a8-5c6b-4dc5-a8db-01771af7a79d)]
+interface nsIWebContentConverterService : nsISupports
+{
+  /**
+   * Specifies the handler to be used to automatically handle all links of a
+   * certain content type from now on. 
+   * @param   contentType
+   *          The content type to automatically load with the specified handler
+   * @param   handler
+   *          A web service handler. If this is null, no automatic action is
+   *          performed and the user must choose.
+   * @throws  NS_ERROR_NOT_AVAILABLE if the service refered to by |handler| is 
+   *          not already registered.
+   */
+  void setAutoHandler(in AString contentType, in nsIWebContentHandlerInfo handler);
+
+  /**
+   * Gets the auto handler specified for a particular content type
+   * @param   contentType
+   *          The content type to look up an auto handler for.
+   * @returns The web service handler that will automatically handle all 
+   *          documents of the specified type. null if there is no automatic
+   *          handler. (Handlers may be registered, just none of them specified
+   *          as "automatic").
+   */
+  nsIWebContentHandlerInfo getAutoHandler(in AString contentType);
+
+  /**
+   * Gets a web handler for the specified service URI
+   * @param   contentType
+   *          The content type of the service being located
+   * @param   uri
+   *          The service URI of the handler to locate.
+   * @returns A web service handler that uses the specified uri.
+   */
+  nsIWebContentHandlerInfo getWebContentHandlerByURI(in AString contentType, 
+                                                     in AString uri);
+
+  /**
+   * Loads the preferred handler when content of a registered type is about
+   * to be loaded.
+   * @param   request
+   *          The nsIRequest for the load of the content
+   */
+  void loadPreferredHandler(in nsIRequest request);
+
+  /**
+   * Removes a registered protocol handler
+   * @param   protocol
+   *          The protocol scheme to remove a service handler for
+   * @param   uri
+   *          The uri of the service handler to remove
+   */
+  void removeProtocolHandler(in AString protocol, in AString uri);
+
+  /**
+   * Removes a registered content handler
+   * @param   contentType
+   *          The content type to remove a service handler for
+   * @param   uri
+   *          The uri of the service handler to remove
+   */
+  void removeContentHandler(in AString contentType, in AString uri);
+
+  /**
+   * Registers a protocol handler for a web service
+   * @param   protocol
+   *          The protocol scheme to register a service handler for
+   * @param   uri
+   *          The uri of the service handler to register
+   * @param   title
+   *          The human readable title of the service
+   */
+  void registerProtocolHandler(in AString scheme, in AString uri, 
+                               in AString title);
+
+  /**
+   * Registers a content handler for a web service
+   * @param   contentType
+   *          The content type to register a service handler for
+   * @param   uri
+   *          The uri of the service handler to register
+   * @param   title
+   *          The human readable title of the service
+   */
+  void registerContentHandler(in AString contentType, in AString uri,
+                              in AString title);
+
+  /**
+   * Gets the list of content handlers for a particular type.
+   * @param   contentType
+   *          The content type to get handlers for
+   * @returns An array of nsIWebContentHandlerInfo objects
+   */
+  void getContentHandlers(in AString contentType, out unsigned long count,
+                          [retval,array,size_is(count)] out nsIWebContentHandlerInfo handlers);
+
+  /**
+   * Resets the list of available content handlers to the default set from
+   * the distribution.
+   * @param   contentType
+   *          The content type to reset handlers for
+   */
+  void resetHandlersForType(in AString contentType);
+};
+

@@ -1,0 +1,123 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla FastLoad code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Brendan Eich <brendan@mozilla.org> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsrootidl.idl"
+
+interface nsIFile;
+interface nsISimpleEnumerator;
+
+/**
+ * The nsIFastLoadFileControl interface and its subinterfaces are mix-ins for
+ * classes implementing nsIObjectInputStream and nsIObjectOutputStream, so that
+ * those stream types can be used with nsIFastLoadService to access and compute
+ * FastLoad file checksums, update and check FastLoad file dependencies, and
+ * multiplex documents loaded via non-blocking i/o.
+ *
+ * If an nsIObjectInputStream class doesn't support nsIFastLoadReadControl, or
+ * an nsIObjectOutputStream class doesn't support nsIFastLoadWriteControl, that
+ * implementation may still be useful for object serialization, but it can't be
+ * used to read or write a Mozilla FastLoad file.
+ */
+[scriptable, uuid(8a1e2c63-af50-4147-af7e-26289dc180dd)]
+interface nsIFastLoadFileControl : nsISupports
+{
+    /**
+     * Get and set the recorded checksum value from the FastLoad file header.
+     */
+    attribute PRUint32 checksum;
+
+    /**
+     * Multiplexed document control methods.  A FastLoad file may contain
+     * multiple interleaved documents identified by a URI specifier string,
+     * and indexed for fast multiplexor select by an opaque URI object key.
+     * You StartMuxedDocument when initiating a document load, then Select
+     * before every batch of calls to (de)serialize document data, and End
+     * when the load completes.
+     *
+     * Document multiplexing is necessary to support incremental FastLoad
+     * development in a non-blocking i/o architecture such as Mozilla, where
+     * some (but not all, at first, or for a while during development) of the
+     * results of parsing and compiling various inputs can be multiplexed to
+     * or from a FastLoad file.
+     *
+     * Note: Select returns the previously selected URI object in case the
+     * caller is synchronously selecting and writing data to the FastLoad
+     * file, so the caller can reselect the previous URI and return to code
+     * the continues to write FastLoad data for the previous URI, unaware of
+     * the nested select/write/reselect.
+     */
+    void        startMuxedDocument(in nsISupports aURI, in string aURISpec);
+    nsISupports selectMuxedDocument(in nsISupports aURI);
+    void        endMuxedDocument(in nsISupports aURI);
+
+    /**
+     * Return true if aURISpec identifies a muxed document in the FastLoad
+     * file, false otherwise.
+     */
+    boolean     hasMuxedDocument(in string aURISpec);
+};
+
+[scriptable, uuid(652ecec6-d40b-45b6-afef-641d6c63a35b)]
+interface nsIFastLoadReadControl : nsIFastLoadFileControl
+{
+    /**
+     * Computes the correct checksum of the FastLoad file, independent of the
+     * header's checksum value.  The header checksum field is treated as zero
+     * when computing the checksum.
+     */
+    PRUint32 computeChecksum();
+
+    /**
+     * Get the collection of dependency nsIFile instances recorded during the
+     * FastLoad file write or read/update process, and checked during the read
+     * process to invalidate the FastLoad file if any dependencies are newer.
+     */
+    readonly attribute nsISimpleEnumerator dependencies;
+};
+
+[scriptable, uuid(2ad6e9e6-1379-4e45-a899-a54b27ff915c)]
+interface nsIFastLoadWriteControl : nsIFastLoadFileControl
+{
+    /**
+     * Add a file dependency of the FastLoad file (e.g., a .jar file) to the
+     * set of dependencies that trigger regeneration if any dependency has a
+     * last-modified-time greater than the FastLoad file's mtime.
+     */
+    void addDependency(in nsIFile aFile);
+};

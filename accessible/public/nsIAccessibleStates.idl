@@ -1,0 +1,108 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Alexander Surkov <surkov.alexander@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(7fe1ee90-edaa-43f1-9f3b-071099b51f08)]
+interface nsIAccessibleStates : nsISupports
+{
+  /**
+   * MSAA State flags - used for bitfield. More than 1 allowed.
+   */
+  const unsigned long  STATE_UNAVAILABLE        = 0x00000001;  // Disabled, maps to opposite of Java ENABLED, Gnome/ATK SENSITIVE?
+  const unsigned long  STATE_SELECTED           = 0x00000002;
+  const unsigned long  STATE_FOCUSED            = 0x00000004;
+  const unsigned long  STATE_PRESSED            = 0x00000008;
+  const unsigned long  STATE_CHECKED            = 0x00000010;
+  const unsigned long  STATE_MIXED              = 0x00000020; // 3-state checkbox or toolbar button
+  const unsigned long  STATE_READONLY           = 0x00000040; // Maps to opposite of Java/Gnome/ATK EDITABLE state
+  const unsigned long  STATE_HOTTRACKED         = 0x00000080;
+  const unsigned long  STATE_DEFAULT            = 0x00000100;
+  const unsigned long  STATE_EXPANDED           = 0x00000200;
+  const unsigned long  STATE_COLLAPSED          = 0x00000400;
+  const unsigned long  STATE_BUSY               = 0x00000800;
+  const unsigned long  STATE_FLOATING           = 0x00001000;  // Children "owned" not "contained" by parent
+  const unsigned long  STATE_MARQUEED           = 0x00002000;
+  const unsigned long  STATE_ANIMATED           = 0x00004000;
+  const unsigned long  STATE_INVISIBLE          = 0x00008000;  // Programatically hidden
+  const unsigned long  STATE_OFFSCREEN          = 0x00010000;  // Scrolled off
+  const unsigned long  STATE_SIZEABLE           = 0x00020000;
+  const unsigned long  STATE_MOVEABLE           = 0x00040000;
+  const unsigned long  STATE_SELFVOICING        = 0x00080000;
+  const unsigned long  STATE_FOCUSABLE          = 0x00100000;
+  const unsigned long  STATE_SELECTABLE         = 0x00200000;
+  const unsigned long  STATE_LINKED             = 0x00400000;
+  const unsigned long  STATE_TRAVERSED          = 0x00800000;
+  const unsigned long  STATE_MULTISELECTABLE    = 0x01000000;  // Supports multiple selection
+  const unsigned long  STATE_EXTSELECTABLE      = 0x02000000;  // Supports extended selection
+  const unsigned long  STATE_ALERT_LOW          = 0x04000000;  // This information is of low priority
+  const unsigned long  STATE_ALERT_MEDIUM       = 0x08000000;  // This information is of medium priority
+  const unsigned long  STATE_ALERT_HIGH         = 0x10000000;  // This information is of high priority
+  const unsigned long  STATE_PROTECTED          = 0x20000000;  // Maps to Gnome's *Role* ATK_ROLE_PASSWD_TEXT, nothing for Java?
+  const unsigned long  STATE_HASPOPUP           = 0x40000000;  // New in MSAA 2.0
+
+  // Mapping important states that we don't have to unused alert states on MSAA
+  // as per discussions with AT vendors. On ATK there will be legitimate states for
+  // STATE_REQUIRED AND STATE_INVALID
+  const unsigned long  STATE_REQUIRED           = STATE_ALERT_LOW;
+  const unsigned long  STATE_IMPORTANT          = STATE_ALERT_MEDIUM; // Not currently used
+  const unsigned long  STATE_INVALID            = STATE_ALERT_HIGH;
+  const unsigned long  STATE_CHECKABLE          = STATE_MARQUEED;
+
+/**
+ * Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)
+ * "Extended state flags" has separate value space from "MSAA State flags".
+ */
+  const unsigned long  EXT_STATE_SUPPORTS_AUTOCOMPLETION = 0x00000001;  // For editable areas that have any kind of autocompletion
+  const unsigned long  EXT_STATE_DEFUNCT                 = 0x00000002;  // Object no longer exists
+  const unsigned long  EXT_STATE_SELECTABLE_TEXT         = 0x00000004;  // For text which is selectable, object must implement nsIAccessibleText
+  const unsigned long  EXT_STATE_EDITABLE                = 0x00000008;  // Implements nsIAccessibleEditableText
+  const unsigned long  EXT_STATE_ACTIVE                  = 0x00000010;  // This window is currently the active window    
+  const unsigned long  EXT_STATE_MODAL                   = 0x00000020;  // Must do something with control before leaving it    
+  const unsigned long  EXT_STATE_MULTI_LINE              = 0x00000040;  // Edit control that can take multiple lines    
+  const unsigned long  EXT_STATE_HORIZONTAL              = 0x00000080;  // Uses horizontal layout
+  const unsigned long  EXT_STATE_OPAQUE                  = 0x00000100;  // Indicates this object paints every pixel within its rectangular region.
+  const unsigned long  EXT_STATE_SINGLE_LINE             = 0x00000200;  // This text object can only contain 1 line of text    
+  const unsigned long  EXT_STATE_TRANSIENT               = 0x00000400;  // 
+  const unsigned long  EXT_STATE_VERTICAL                = 0x00000800;  // Especially used for sliders and scrollbars  
+  const unsigned long  EXT_STATE_STALE                   = 0x00001000;  // Object not dead, but not up-to-date either
+  const unsigned long  EXT_STATE_ENABLED                 = 0x00002000;  // A widget that is not unavailable
+  const unsigned long  EXT_STATE_SENSITIVE               = 0x00004000;  // Same as ENABLED for now
+  const unsigned long  EXT_STATE_EXPANDABLE              = 0x00008000;  // If COLLAPSED or EXPANDED
+};
+

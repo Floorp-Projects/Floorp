@@ -1,0 +1,142 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   John Bandhauer <jband@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/**
+ *	Test the 'out' keyword.
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(4105ae88-5599-11d3-82ef-0060b0eb596f)]
+interface nsIXPCTestOut : nsISupports {
+	void GetLong( out long l);
+	void SetLong( in long l );
+
+	void GetShort( out short s );
+	void SetShort( in short s );
+
+	void SetChar( in char c );
+	void GetChar( out char c);
+
+	void GetBoolean( out boolean b );
+	void SetBoolean( in boolean b );
+
+	void GetOctet( out octet o );
+	void SetOctet( in octet o );
+
+	void GetLongLong( out long long ll );
+	void SetLongLong( in long long ll );
+
+	void GetUnsignedShort( out unsigned short us );
+	void SetUnsignedShort( in unsigned short us );
+
+	void GetUnsignedLong( out unsigned long ul );
+	void SetUnsignedLong(  in unsigned long ul );
+
+	void GetFloat( out float f );
+	void SetFloat( in float f );
+
+	void GetDouble( out double d );
+	void SetDouble( in double d );
+
+	void GetWchar( out wchar wc );
+	void SetWchar ( in wchar wc );
+
+	//void GetString( out wstring ws );
+	//void SetString( in wstring ws );
+
+	void GetPRBool( out PRBool b );
+	void SetPRBool (in PRBool b );
+
+	void GetPRInt32( out PRInt32 l );
+	void SetPRInt32( in PRInt32 l );
+
+	void GetPRInt16( out PRInt16 l );
+	void SetPRInt16( in PRInt16 l );
+
+	void GetPRInt64( out PRInt64 i );
+	void SetPRInt64( in PRInt64 i );
+
+	void GetPRUint8 ( out PRUint8 i );
+	void SetPRUint8( in PRUint8 i );
+
+	void GetPRUint16( out PRUint16 i );
+	void SetPRUint16( in PRUint16 i );
+
+	void GetPRUint32( out PRUint32 i );
+	void SetPRUint32( in PRUint32 i );
+
+	void GetPRUint64( out PRUint64 i );	
+	void SetPRUint64( in PRUint64 i );
+	
+	// native types must be marked noscript or they break the idl
+	// compiler
+
+//	[noscript] void GetVoidStar( out voidStar vs );
+	//[noscript] void SetVoidStar( in voidStar vs );
+
+	//[noscript] void GetCharStar( out charStar cs );
+	//[noscript] void SetCharStar( in charStar cs );
+
+//	[noscript] void GetVoidRef( out voidRef vf );
+//	[noscript] void SetVoidRef( in voidRef vf );
+
+//	[noscript] void GetNsIDRef( out nsIDRef r );
+//	[noscript] void SetNsIDRef( in nsIDRef r );
+
+//	[noscript] void GetNsCIDRef( out nsCIDRef r );
+//	[noscript] void SetNsCIDRef( in nsCIDRef r );
+/*
+	[noscript] void GetNsIDPtr( out nsIDPtr p );
+	[noscript] void SetNsIDPtr( in nsIDPtr p );
+
+	[noscript] void GetNsIIDPtr( out nsIIDPtr p );
+	[noscript] void SetNsIIDPtr( in nsIIDPtr p );
+
+	[noscript] void GetNsCIDPtr( out nsCIDPtr p );
+	[noscript] void SetNsCIDPtr( in nsCIDPtr p );
+
+	[noscript] void GetNsQIResult( out nsQIResult r );
+	[noscript] void SetNsQIResult( in nsQIResult r );
+
+	void GetVoid();
+	void SetVoid();
+*/
+};

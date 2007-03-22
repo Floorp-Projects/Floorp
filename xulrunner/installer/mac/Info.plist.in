@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+#filter substitution
+
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>org.mozilla.xulrunner</string>
+
+    <key>CFBundleName</key>
+    <string>Mozilla XULRunner</string>
+
+    <key>CFBundleShortVersionString</key>
+    <string>@MOZ_APP_VERSION@</string>
+
+    <key>IFPkgFlagAuthorizationAction</key>
+    <string>RootAuthorization</string>
+
+    <key>IFPkgFlagDefaultLocation</key>
+    <string>/Library/Frameworks</string>
+
+    <key>IFPkgFlagFollowLinks</key>
+    <true/>
+
+    <key>IFPkgFormatVersion</key>
+    <real>0.10000000149011612</real>
+</dict>
+</plist>

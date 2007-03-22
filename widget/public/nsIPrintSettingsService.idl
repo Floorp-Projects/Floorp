@@ -1,0 +1,138 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* Interface to the Service for gwetting the Global PrintSettings object
+   or a unique PrintSettings object
+*/
+
+#include "nsISupports.idl"
+
+interface nsIPrintSettings;
+
+[scriptable, uuid(841387C8-72E6-484b-9296-BF6EEA80D58A)]
+interface nsIPrintSettingsService : nsISupports
+{
+  /**
+   * Returns a "global" PrintSettings object 
+   * Creates a new the first time, if one doesn't exist.
+   *
+   * Then returns the same object each time after that.
+   *
+   * Initializes the globalPrintSettings from the default printer
+   */
+  readonly attribute nsIPrintSettings globalPrintSettings;
+
+  /**
+   * Returns a new, unique PrintSettings object each time.
+   *
+   * For example, if each browser was to have its own unique
+   * PrintSettings, then each browser window would call this to
+   * create its own unique PrintSettings object.
+   *
+   * If each browse window was to use the same PrintSettings object
+   * then it should use "globalPrintSettings"
+   *
+   * Initializes the newPrintSettings from the default printer
+   *
+   */
+  readonly attribute nsIPrintSettings newPrintSettings;
+
+  /**
+   * The name of the last printer used, or else the system default printer.
+   */
+  readonly attribute wstring defaultPrinterName;
+
+  /**
+   * Initializes certain settings from the native printer into the PrintSettings
+   * if aPrinterName is null then it uses the default printer name if it can
+   * These settings include, but are not limited to:
+   *   Page Orientation
+   *   Page Size
+   *   Number of Copies
+   */
+  void initPrintSettingsFromPrinter(in wstring aPrinterName, in nsIPrintSettings aPrintSettings);
+
+  /**
+   * Reads PrintSettings values from Prefs,
+   * the values to be read are indicated by the "flags" arg.
+   *
+   * aPrintSettings should be initialized with the name of a printer. First
+   * it reads in the PrintSettings from the last print job. Then it uses the
+   * PrinterName in the PrinterSettings to read any settings that were saved
+   * just for that printer.
+   *
+   * aPS - PrintSettings to have its settings read
+   * aUsePrinterNamePrefix - indicates whether to use the printer name as a prefix
+   * aFlags - indicates which prefs to read, see nsIPrintSettings.idl for the
+   *          const values.
+   *
+   * Items not read:
+   *   startPageRange, endPageRange, scaling, printRange, title
+   *   docURL, howToEnableFrameUI, isCancelled, printFrameTypeUsage
+   *   printFrameType, printSilent, shrinkToFit, numCopies,
+   *   printerName
+   *
+   */
+  void initPrintSettingsFromPrefs(in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags);
+
+  /**
+   * Writes PrintSettings values to Prefs, 
+   * the values to be written are indicated by the "flags" arg.
+   *
+   * If there is no PrinterName in the PrinterSettings 
+   * the values are saved as the "generic" values not associated with any printer.
+   * If a PrinterName is there, then it saves the items qualified for that Printer
+   *
+   * aPS - PrintSettings to have its settings saved
+   * aUsePrinterNamePrefix - indicates whether to use the printer name as a prefix
+   * aFlags - indicates which prefs to save, see nsIPrintSettings.idl for the const values.
+   *
+   * Items not written:
+   *   startPageRange, endPageRange, scaling, printRange, title
+   *   docURL, howToEnableFrameUI, isCancelled, printFrameTypeUsage
+   *   printFrameType, printSilent, shrinkToFit, numCopies
+   *
+   */
+  void savePrintSettingsToPrefs(in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags);
+
+};
+
+%{C++
+// {841387C8-72E6-484b-9296-BF6EEA80D58A}
+#define NS_PRINTSETTINGSSERVICE_IID \
+ {0x841387c8, 0x72e6, 0x484b, { 0x92, 0x96, 0xbf, 0x6e, 0xea, 0x80, 0xd5, 0x8a}}
+%}

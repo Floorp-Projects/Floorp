@@ -1,0 +1,13 @@
+
+<!ENTITY  incompatible.title        "Incompatible Items">
+<!ENTITY  incompatible.intro        "The following items are not compatible with this update to &brandShortName; and
+                                     will be disabled when it is installed:">
+<!ENTITY  incompatible.update       "&brandShortName; will periodically check for updates to them in the event that 
+                                     a compatible version becomes available.">
+<!ENTITY  incompatible.suffix       "&brandShortName; updates contain important security improvements. For your
+                                     protection, it is highly recommended that you update &brandShortName; even 
+                                     if some of your Extensions and Themes become incompatible.">
+                                     
+<!ENTITY  closebutton.label         "Close">
+                                     
+                                     

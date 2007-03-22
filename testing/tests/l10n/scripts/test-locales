@@ -1,0 +1,244 @@
+#! python
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is l10n test automation.
+#
+# The Initial Developer of the Original Code is
+# Mozilla Foundation
+# Portions created by the Initial Developer are Copyright (C) 2006
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#	Axel Hecht <l10n@mozilla.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+
+import logging
+import sys
+import os
+import os.path
+from datetime import datetime
+import time
+from optparse import OptionParser
+import gzip
+import codecs
+
+from Mozilla import Parser, CompareLocales, Paths, Tests
+import simplejson
+
+#
+# Helper classes
+#
+
+#
+# Logging
+#
+class LogHandler(logging.Handler):
+  def __init__(self):
+    self.log = []
+    logging.Handler.__init__(self)
+  def emit(self, record):
+    self.log.append((record.name, record.levelname, record.getMessage().strip()))
+
+#
+# JSON with optional gzip
+#
+class Wrapper:
+  def __init__(self, path, name):
+    self.p = os.path.join(path, name)
+    self.n = name
+    self.f = None
+    if opts.gzip:
+      self.p += '.gz'
+  def open(self, mode):
+    if self.f:
+      self.f.close()
+    if opts.gzip:
+      mode += 'b'
+    self.f = open(self.p, mode)
+    if opts.gzip:
+      self.f = gzip.GzipFile(fileobj = self.f, filename = self.n)
+    self.w = codecs.getwriter('utf-8')(self.f)
+    self.r = codecs.getreader('utf-8')(self.f)
+  def write(self, str):
+    self.w.write(str)
+  def read(self, size = -1):
+    return self.r.read(size)
+  def rewind(self):
+    if opts.gzip:
+      self.f.rewind()
+    else:
+      self.f.seek(0,0)
+  def close(self):
+    if opts.gzip:
+      f = self.f.fileobj;
+    self.f.close()
+    if opts.gzip:
+      f.close()
+    self.w = self.r = self.f = None
+#
+# Helper function for JSON output with optional gzip
+#
+def saveJSON(dic, localName):
+  name = os.path.join(basePath, localName) ;
+  if opts.gzip:
+    f = open(name + '.gz', 'wb')
+    s = gzip.GzipFile(fileobj = f, filename = localName)
+  else:
+    f = open(name, 'w')
+    s = f
+  sw = codecs.getwriter('utf-8')(s)
+  sw.write(simplejson.dumps(dic, sort_keys=True))
+  sw.reset()
+  if opts.gzip:
+    s.close()
+  f.close()
+
+
+lvl = logging.WARNING
+date = datetime.utcnow().replace(second=0,microsecond=0).isoformat(' ')
+# parse commandline arguments
+cp = OptionParser(version='0.2')
+cp.add_option('-v', '--verbose', action='count', dest='v', default=0,
+              help='Make more noise')
+cp.add_option('-q', '--quiet', action='count', dest='q', default=0,
+              help='Make less noise')
+cp.add_option('-O', '--base-dir', type='string', dest='target',
+              default='results',
+              help='Destination base directory')
+cp.add_option('-c', '--checkout', action='store_true', dest='checkout',
+              default=False,
+              help='Run make -f client.mk l10n-checkout [Default: not]')
+cp.add_option('-d', '--date', type='string', dest='date',
+              help='Explicit start date or subdir [Default: now]')
+cp.add_option('-z',action="store_true", dest="gzip", default=False,
+              help='Use gzip compression for output')
+cp.add_option('-w','--enable-waterfall', action="store_true",
+              dest="waterfall", default=False,
+              help='Update waterfall data')
+cp.add_option('--end-date', type='string', dest='enddate',
+              help='Explicit (faked) end date')
+opts, optlist = cp.parse_args(sys.argv[1:])
+
+#
+# Set up Logging
+#
+logging.basicConfig(level=(logging.INFO + 10*(opts.q - opts.v)))
+# Add a handler to store the output
+h = LogHandler()
+logging.getLogger('').addHandler(h)
+
+#
+# Check that we're in the right location and check out if requested
+#
+try:
+  os.chdir('mozilla')
+  if opts.checkout:
+    env = ''
+    l = logging.getLogger('cvsco')
+    if opts.date:
+      env = 'MOZ_CO_DATE="' + opts.date + ' +0" '
+    fh = os.popen(env + 'make -f client.mk l10n-checkout')
+    for ln in fh:
+      l.info(ln.strip())
+    if fh.close():
+      raise Exception('cvs checkout failed')
+  os.chdir('..')
+except Exception,e:
+  sys.exit(str(e))
+
+if not opts.date:
+  opts.date = date # use default set above
+
+logging.debug(' Ensure output directory')
+# replace : with -
+opts.date = opts.date.replace(':','-')
+if not os.path.isdir(opts.target):
+  sys.exit('error: ' + opts.target + ' is not a directory')
+if opts.waterfall:
+  startdate = time.mktime(time.strptime(opts.date, '%Y-%m-%d %H-%M-%S')) + time.altzone
+basePath = os.path.join(opts.target, opts.date)
+if not os.path.isdir(basePath):
+  os.mkdir(basePath)
+
+
+tests = [Tests.CompareTest(),
+         Tests.SearchTest(),
+         Tests.RSSReaderTest(),
+         Tests.BookmarksTest()]
+drop = {}
+for test in tests:
+  res = test.run()
+  test.serialize(res, saveJSON)
+  if opts.waterfall:
+    test.failureTest(res, drop)
+
+if not opts.waterfall:
+  saveJSON(h.log, 'buildlog.json')
+  sys.exit()
+
+
+if opts.enddate:
+  endtime = time.mktime(time.strptime(opts.enddate, '%Y-%m-%d %H:%M:%S')) + time.altzone
+else:
+  endtime = time.mktime(datetime.now().timetuple())
+f = None
+w = Wrapper(opts.target, 'waterfall.json')
+if os.path.isfile(w.p):
+  w.open('r')
+  water = simplejson.load(w)
+else:
+  water = []
+
+water.append((opts.date, (startdate, endtime), drop))
+#
+# Check if we need to rotate the waterfall
+#
+rotateLen = 24
+if len(water) > rotateLen * 1.5:
+  # rotate, maximum of 16 logs
+  suffix = ''
+  if opts.gzip:
+    suffix = '.gz'
+  fnames = [os.path.join(opts.target, 'waterfall-%x.json'%i) + suffix for i in range(16)]
+  # remove oldest log
+  if os.path.isfile(fnames[15]):
+    os.remove(fnames[15])
+  for l in range(14, -1, -1):
+    if os.path.isfile(fnames[l]):
+      os.rename(fnames[l], fnames[l+1])
+  w0 = Wrapper('.', fnames[0])
+  w0.open('w')
+  simplejson.dump(water[:rotateLen], w0, sort_keys=True)
+  w0.close()
+  water = water[rotateLen:]
+
+w.open('w')
+simplejson.dump(water, w, sort_keys=True)
+w.close()
+
+saveJSON(h.log, 'buildlog.json')

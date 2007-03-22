@@ -1,0 +1,76 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla browser.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Stuart Parmenter <pavlov@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/**
+ * Interface for the native event system layer.  This interface is designed
+ * to be used on the main application thread only.
+ */
+[uuid(3785230a-da91-4eaa-8a25-56acc7ff35d0)]
+interface nsIAppShell : nsISupports
+{
+  /**
+   * Enter an event loop.  Don't leave until exit() is called.
+   */
+  void run();
+
+  /**
+   * Exit the handle event loop
+   */
+  void exit();
+
+  /**
+   * Give hint to native event queue notification mechanism. If the native
+   * platform needs to tradeoff performance vs. native event starvation this
+   * hint tells the native dispatch code which to favor.  The default is to
+   * prevent native event starvation.
+   *
+   * Calls to this function may be nested. When the number of calls that pass
+   * PR_TRUE is subtracted from the number of calls that pass PR_FALSE is
+   * greater than 0, performance is given precedence over preventing event
+   * starvation.
+   *
+   * The starvationDelay arg is only used when favorPerfOverStarvation is
+   * PR_FALSE. It is the amount of time in milliseconds to wait before the
+   * PR_FALSE actually takes effect.
+   */
+  void favorPerformanceHint(in boolean favorPerfOverStarvation,
+                            in unsigned long starvationDelay);
+};

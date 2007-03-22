@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: atom contributor uri works
+Expect: feed.contributors.queryElementAt(1, Components.interfaces.nsIFeedPerson).uri.spec=='http://example.com/';
+
+-->
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>test title</title>
+  <contributor>
+    <email>hmm@example.com</email>
+    <name>foo</name>
+    <uri>http://example.org</uri>
+  </contributor>
+  <contributor>
+    <email>bar@example.com</email>
+    <name>foo</name>
+    <uri>http://example.com</uri>
+  </contributor>
+</feed>

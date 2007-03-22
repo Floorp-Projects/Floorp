@@ -1,0 +1,134 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is TransforMiiX XSLT Processor.
+ *
+ * The Initial Developer of the Original Code is
+ * Axel Hecht.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Axel Hecht, <axel@pike.org>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+
+interface nsIVariant;
+
+[scriptable, uuid(4a91aeb3-4100-43ee-a21e-9866268757c5)]
+interface nsIXSLTProcessor : nsISupports
+{
+    /**
+     * Import the stylesheet into this XSLTProcessor for transformations.
+     *
+     * @param style The root-node of a XSLT stylesheet. This can be either
+     *              a document node or an element node. If a document node
+     *              then the document can contain either a XSLT stylesheet
+     *              or a LRE stylesheet.
+     *              If the argument is an element node it must be the
+     *              xsl:stylesheet (or xsl:transform) element of an XSLT
+     *              stylesheet.
+     *
+     * @exception nsIXSLTException
+     */
+    void importStylesheet(in nsIDOMNode style);
+
+    /**
+     * Transforms the node source applying the stylesheet given by
+     * the importStylesheet() function. The owner document of the output node
+     * owns the returned document fragment.
+     *
+     * @param source The node to be transformed
+     * @param output This document is used to generate the output
+     * @return DocumentFragment The result of the transformation
+     *
+     * @exception nsIXSLTException
+     */
+    nsIDOMDocumentFragment transformToFragment(in nsIDOMNode source,
+                                               in nsIDOMDocument output);
+
+    /**
+     * Transforms the node source applying the stylesheet given by the
+     * importStylesheet() function.
+     *
+     * @param source The node to be transformed
+     * @return Document The result of the transformation
+     *
+     * @exception nsIXSLTException
+     */
+    nsIDOMDocument transformToDocument(in nsIDOMNode source);
+
+    /**
+     * Sets a parameter to be used in subsequent transformations with this
+     * nsIXSLTProcessor. If the parameter doesn't exist in the stylesheet the
+     * parameter will be ignored.
+     *
+     * @param namespaceURI The namespaceURI of the XSLT parameter
+     * @param localName    The local name of the XSLT parameter
+     * @param value        The new value of the XSLT parameter
+     *
+     * @exception NS_ERROR_ILLEGAL_VALUE The datatype of value is
+     *                                   not supported
+     */
+    void setParameter(in DOMString namespaceURI,
+                      in DOMString localName,
+                      in nsIVariant value);
+
+    /**
+     * Gets a parameter if previously set by setParameter. Returns null
+     * otherwise.
+     *
+     * @param namespaceURI The namespaceURI of the XSLT parameter
+     * @param localName    The local name of the XSLT parameter
+     * @return nsIVariant  The value of the XSLT parameter
+     */
+    nsIVariant getParameter(in DOMString namespaceURI,
+                            in DOMString localName);
+    /**
+     * Removes a parameter, if set. This will make the processor use the
+     * default-value for the parameter as specified in the stylesheet.
+     *
+     * @param namespaceURI The namespaceURI of the XSLT parameter
+     * @param localName    The local name of the XSLT parameter
+     */
+    void removeParameter(in DOMString namespaceURI,
+                         in DOMString localName);
+
+    /**
+     * Removes all set parameters from this nsIXSLTProcessor. This will make
+     * the processor use the default-value for all parameters as specified in
+     * the stylesheet.
+     */
+    void clearParameters();
+
+    /**
+     * Remove all parameters and stylesheets from this nsIXSLTProcessor.
+     */
+    void reset();
+};

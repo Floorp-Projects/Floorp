@@ -1,0 +1,32 @@
+; Package file for Win32
+;
+; File format:
+;
+; [] designates a toplevel component. Example: [xpcom]
+; - in front of a file specifies it to be removed from the destination
+; * wildcard support to recursively copy the entire directory
+; ; file comment
+;
+
+[xpcom]
+; files required to initialize xpinstall for Install Wizard
+bin\js3250.dll
+bin\mozreg.dll
+bin\nspr4.dll
+bin\plc4.dll
+bin\plds4.dll
+bin\xpcom.dll
+bin\xpcom_core.dll
+bin\xpistub.dll
+bin\mozz.dll
+bin\components\jar50.dll
+bin\components\xpinstal.dll
+bin\xpcom_compat.dll
+bin\components\xpcom_compat_c.dll
+bin\components\xpcom_obsolete.xpt
+bin\Microsoft.VC80.CRT.manifest
+bin\msvcm80.dll
+bin\msvcp80.dll
+bin\msvcr80.dll
+;install\ren8dot3.exe,bin\ren8dot3.exe
+

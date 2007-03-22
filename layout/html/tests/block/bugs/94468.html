@@ -1,0 +1,30 @@
+<html><head>
+  <title>Testcase for bug 94468</title>
+  <style>
+  #red {
+    position: absolute; /* missing top property */
+    left: 7px;
+    width: 300px;
+    height: 300px;
+    border: 1px solid red;
+  }
+  #blue {
+    position: absolute;
+    top: 0px;           /* specified top */
+    left: 310px;
+    width: 300px;
+    height: 300px;
+    border: 1px solid blue;
+  }
+  </style>
+</head>
+<body>
+
+
+<div id="red"></div>
+<div id="blue"></div>
+
+<img width="1" height="300" border="1">
+
+
+</body></html>

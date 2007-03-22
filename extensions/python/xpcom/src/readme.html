@@ -1,0 +1,99 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is PyXPCOM.
+   -
+   - The Initial Developer of the Original Code is
+   - ActiveState Tool Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2000-2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Building the Python XPCOM package</title>
+</head>
+
+<body>
+
+<h1>Building the Python XPCOM package.</h1>
+
+<p>This file describes how to build the Python XPCOM C++ sources.</p>
+<p>There are the following steps</p>
+<ul>
+  <li><a href="#ConfiguringTheEnvironment">Configure environment variables</a></li>
+  <li><a href="#BuildingTheSources">Building the sources</a></li>
+</ul>
+<p>Testing etc is described in the <a href="../readme.html">main readme</a>.</p>
+<h2><a name="ConfiguringTheEnvironment">Configuring environment variables</a></h2>
+<h3> MOZ_SRC&nbsp;</h3>
+<p><b>Windows: </b>Run the standard MOZENV.BAT used to build Mozilla.&nbsp; This
+sets MOZ_SRC</p>
+<p><b>Unix:</b> Set MOZ_SRC to point to the base source directory -  assumes
+&quot;mozilla&quot; sub-directory with mozilla directory  tree under that. eg: assuming
+<i>/home/user/src/mozilla/dist/...</i>&quot;</p>
+<pre>export MOZ_SRC=/home/user/src</pre>
+<h3>PYTHON_SRC</h3>
+<p><b>Windows:</b> Set <i> PYTHON_SRC</i> to point to the base Python source  directory.&nbsp;
+eg: assuming <i>c:\src\python\PCBuild\...</i><pre>set PYTHON_SRC=c:\src\python</pre>
+<p>Unix: Set PYTHON_SRC to point to the base of an &quot;installed&quot; Python
+tree. eg:<pre>export PYTHON_SRC=/usr/local/ActivePython-1.6</pre>
+<h2><a name="BuildingTheSources">Building the sources</a></h2>
+<p>You must ensure some environment variables are setup.&nbsp; The section on <a href="#ConfiguringTheEnvironment">configuring
+environment variables explains how.</a></p>
+<p>There are 2 build processes to run All C++ sources are in the <i>xpcom\src</i>
+ directory.:</p>
+<h3>Windows</h3>
+<ul>
+  <li> Execute &quot;compile.py&quot; in this directory.  This will take <i>Setup.in</i>, create an MSDev project, and build
+    <i>..\_xpcom.pyd</i> and <i>..\_xpcom_d.pyd</i>&quot;</li>
+  <li> Change to the <i>loader</i> directory.</li>
+  <li> Run <i>nmake -f makefile.win</i>.  This will create <i>pyloader.dll</i>,  and
+    automatically copy it to the Mozilla build directory.</li>
+ <a href="#ConfiguringTheEnvironment">
+  </ul>
+  <p>Finally, </a><a href="../readme.html#RunningTheTests">run the tests</a>,
+  where we also test everything imports correctly.</p>
+<h3>Linux</h3>
+<p><b> NOTE:</b>  Do not attempt to use &quot;Setup.in&quot; to create a Makefile&nbsp;</p>
+<ul>
+  <li>Run &quot;make&quot; in this directory.&nbsp; This will create <i>../_xpcommodule.so</i></li>
+  <li> Run "make" in the loader directory.  This will create <i>libpyloader.so</i>,
+    and copy it to the Mozilla directory.</li>
+ <a href="#ConfiguringTheEnvironment">
+  </ul>
+  <p>Finally, </a><a href="../readme.html#RunningTheTests">running the tests</a>,
+  where we also test everything imports correctly.</p>
+
+</body>
+
+</html>

@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<?xul-overlay href="test016-overlay.xul"?> 
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="main"
+        style="background-color: red;"/>

@@ -1,0 +1,16 @@
+<!ENTITY mnEditUndo.label "Fortryd">
+<!ENTITY mnEditUndo.accesskey "F">
+<!ENTITY mnEditRedo.label "Gentag">
+<!ENTITY mnEditRedo.accesskey "G">
+<!ENTITY mnEditCut.label "Klip">
+<!ENTITY mnEditCut.accesskey "K">
+<!ENTITY mnEditCopy.label "Kopier">
+<!ENTITY mnEditCopy.accesskey "o">
+<!ENTITY mnEditPaste.label "Indsæt">
+<!ENTITY mnEditPaste.accesskey "I">
+<!ENTITY mnEditInsert.label "Indsæt ny">
+<!ENTITY mnEditInsert.accesskey "N">
+<!ENTITY mnEditEdit.label "Rediger">
+<!ENTITY mnEditEdit.accesskey "R">
+<!ENTITY mnEditDelete.label "Slet">
+<!ENTITY mnEditDelete.accesskey "S">

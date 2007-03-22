@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"[
+    <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+    %brandDTD;
+    <!ENTITY % platformDTD SYSTEM "chrome://browser/locale/help/platformStrings.dtd" >
+    %platformDTD;
+]>
+<!--
+Contributors:
+  David Tenser <david.tenser@comhem.se> (original author)
+  R.J. Keller <rlk@trfenv.com>
+  Jeff Walden <jwalden+code@mit.edu>
+  Steffen Wilberg <steffen.wilberg@web.de>
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>&brandFullName; Menu Reference</title>
+	<link rel="stylesheet" type="text/css" href="chrome://help/skin/helpFileLayout.css"/>
+</head>
+
+<body>
+
+<h1>&brandFullName; Menu Reference</h1>
+  <p>This menu reference describes each menu item in the main
+    &brandFullName; window.</p>
+
+  <div class="contentsBox">In this section:
+    <ul>
+      <li class="mac"><a href="#firefox">&brandShortName;</a></li>
+      <li><a href="#file">File</a></li>
+      <li><a href="#edit">Edit</a></li>
+      <li><a href="#view">View</a></li>
+      <li><a href="#go">History</a></li>
+      <li><a href="#bookmarks">Bookmarks</a></li>
+      <li><a href="#tools">Tools</a></li>
+      <li class="mac"><a href="#window">Window</a></li>
+      <li><a href="#help">Help</a></li>
+    </ul>
+  </div>
+
+<div class="mac">
+  <h2 id="firefox">&brandShortName;</h2>
+    <h3 id="about_mac">About &brandFullName;</h3>
+    <p>Displays a dialog box with information about &brandShortName;, including
+      the current version and a brief list of credits.</p>
+
+    <h3 id="prefs_mac">Preferences...</h3>
+    <p>Displays the <a href="prefs.xhtml">&pref.pluralCaps; window</a>,
+      where you can change many &pref.plural; in &brandShortName;.</p>
+
+    <h3 id="quit_mac">Quit &brandShortName;</h3>
+    <p>Closes all &brandShortName; windows, cancels any active downloads, and exits
+      &brandShortName; completely. If you happen to select this menu item with
+      more than one tab or window open, &brandShortName; will ask you to confirm
+      your choice to prevent accidental exits. You can switch off this warning
+      by deselecting the <em>Warn me when closing multiple tabs</em> checkbox in
+      the <em>Tabs</em> panel of &pref.menuPath;. &brandShortName; will also
+      warn you if you are currently downloading any files.</p>
+</div>
+
+<h2 id="file">File</h2>
+
+  <h3 id="new_window">New Window</h3>
+  <p>Opens a new &brandShortName; window.</p>
+
+  <h3 id="new_tab">New Tab</h3>
+  <p>Opens a new browser tab in the current &brandShortName; window.</p>
+
+  <h3 id="open_location">Open Location...</h3>
+  <p>Focuses on the &brandShortName; URL bar so you can type in a new location to
+    visit.</p>
+
+  <h3 id="open_file">Open File...</h3>
+  <p>Displays an Open File dialog where you can select a file from your
+    local disks or network. You can view many file types in &brandShortName;,
+    including HTML/XML files, image files, text files and more.</p>
+
+  <h3 id="close">Close (Window)</h3>
+  <p>Closes the current window.</p>
+
+  <h3 id="close_tab">Close Tab</h3>
+  <p>Closes the current tab and selects the rightmost tab. This menu item is
+    visible only if more than one browser tab is currently open.</p>
+
+  <h3 id="save_page_as">Save Page As...</h3>
+  <p>Saves the page you are currently browsing. You can choose to save the
+    whole page (complete with graphics), just the current HTML page, or the
+    page text only.</p>
+
+  <h3 id="send_page">Send Link...</h3>
+  <p>Opens an email composition window using your computer's default email program
+    so you can send a message with a link to the current page.</p>
+
+  <h3 id="page_setup">Page Setup...</h3>
+  <p>Displays a Page Setup dialog where you can specify printing settings such as
+    margins, headers and footers, and page orientation.</p>
+
+  <div class="noMac">
+    <h3 id="print_preview">Print Preview</h3>
+    <p>Displays a preview of how the current document will appear when printed. It
+      reflects the settings in the Page Setup dialog and the page author's
+      intentions.</p>
+  </div>
+
+  <h3 id="print">Print...</h3>
+  <p>Displays the Print dialog, where you can specify the number of printed copies,
+    etc. Click <em>OK</em> to print the page.</p>
+
+  <h3 id="import">Import...</h3>
+  <p>Opens the Import Wizard dialog, which allows you to import &pref.plural;, bookmarks,
+    history, passwords and other data from browsers like Microsoft Internet
+    Explorer, Netscape, Mozilla or Opera.</p>
+
+  <h3 id="work_offline">Work Offline</h3>
+  <p>Toggles between online and offline mode. Offline mode allows you to view
+    web pages you've previously visited without being connected to the
+    Internet.</p>
+
+<div class="noMac">
+  <h3 id="exit">
+    <span class="win">Exit</span>
+    <span class="noWin">Quit</span>
+  </h3>
+  <p>Closes all &brandShortName; windows, cancels any active downloads, and exits
+    &brandShortName; completely. If you happen to select this menu item with
+    more than one tab or window open, &brandShortName; will ask you to confirm
+    your choice to prevent accidental exits. You can switch off this warning
+    by deselecting the <em>Warn me when closing multiple tabs</em> checkbox in
+    the <em>Tabs</em> panel of &pref.menuPath;. &brandShortName; will also
+    warn you if you are currently downloading any files.</p>
+</div>
+
+<h2 id="edit">Edit</h2>
+
+  <h3 id="undo">Undo</h3>
+  <p>Undoes the last action in a text field. If you later decide you don't want to
+    undo an action, use the Redo command.</p>
+
+  <h3 id="redo">Redo</h3>
+  <p>Redoes the last Undo command.</p>
+
+  <h3 id="cut">Cut</h3>
+  <p>Cuts the selected text from a text field and stores it in the clipboard. Paste
+    the text elsewhere by using the Paste command.</p>
+
+  <h3 id="copy">Copy</h3>
+  <p>Copies the selected text to the clipboard. Paste the text in a text field by
+    using the Paste command.</p>
+
+  <h3 id="paste">Paste</h3>
+  <p>Pastes text stored in the clipboard into a text field.</p>
+
+  <h3 id="delete">Delete</h3>
+  <p>Deletes the selected text from a text field.</p>
+
+  <h3 id="select_all">Select All</h3>
+  <p>Selects all text and other items on the page.</p>
+
+  <h3 id="find_in_this_page">Find in This Page...</h3>
+  <p>Displays the Find Toolbar at the bottom of the browser window.  Enter the
+    text you wish to find in the toolbar, and as you type &brandShortName; will
+    automatically find and select the first occurrence of the entered text on
+    the page.  Click <em>Find Next</em> or <em>Find Previous</em> to find the
+    text at other locations in the page, and click <em>Highlight</em> to
+    highlight all occurrences of the text on the page.</p>
+
+  <h3 id="find_again">Find Again</h3>
+  <p>Searches for the next occurrence of the text specified when using the
+  <em>Find in This Page...</em> command.</p>
+
+  <h3 class="unix" id="prefs">&pref.pluralCaps;</h3>
+  <p class="unix">Displays the <a href="prefs.xhtml">&pref.pluralCaps; window</a>,
+    where you can change many &pref.plural; in &brandShortName;.</p>
+
+<h2 id="view">View</h2>
+
+  <h3 id="toolbars">Toolbars</h3>
+
+    <h4 id="navigation_toolbar">Navigation Toolbar</h4>
+    <p>Toggles the visibility of the navigation toolbar, which usually contains
+      standard navigation buttons (Back, Forward, Stop, etc.).</p>
+
+    <h4 id="bookmarks_toolbar">Bookmarks Toolbar</h4>
+    <p>Toggles the visibility of the bookmarks toolbar, which contains bookmarks
+      to various sites.</p>
+
+    <h4 id="customize">Customize...</h4>
+    <p>Displays the toolbar customization dialog.  You can drag and drop toolbar
+      buttons to or from the toolbars here. You can also <span
+      class="noMac">right-click</span><span class="mac">press &ctrlKey;,
+      click</span> on the navigation toolbar and select <em>Customize...</em>
+      to show this dialog.</p>
+
+  <h3 id="status_bar">Status Bar</h3>
+  <p>Toggles the visibility of the status bar, located at the bottom of the window.
+    The status bar displays useful information about the page but may not be
+    needed by everyone.</p>
+
+  <h3 id="sidebar">Sidebar</h3>
+  <p>The Sidebar can display your bookmarks or the browsing history.  You can
+    always close the Sidebar by clicking on the X in the upper-right
+    corner.</p>
+
+    <h4 id="view_sidebar_bookmarks">Bookmarks</h4>
+    <p>Displays the Bookmarks Sidebar, which keeps your bookmarks visible all
+      the time. This can be very useful if you use bookmarks often.</p>
+
+    <h4 id="view_sidebar_history">History</h4>
+    <p>Displays the History Sidebar, which keeps track of the sites you have
+      visited. To change how many days a site should be remembered, select
+      &pref.menuPath; and select the <em>Privacy</em> panel.</p>
+
+  <h3 id="stop">Stop</h3>
+  <p>Stops loading of the current page you're browsing. This is the same as
+    clicking on the <em>Stop</em> button on the toolbar.</p>
+
+  <h3 id="reload">Reload</h3>
+  <p>Gets the most up-to-date version of the current page.  This is the same
+    as clicking the <em>Reload</em> button on the toolbar.</p>
+
+  <h3 id="text_size">Text Size</h3>
+  <p>If the text on a web page is too small or too large, you can change it to
+    a more comfortable size.</p>
+
+    <h4 id="increase_text_size">Increase</h4>
+    <p>Displays the text on the web page one size larger. You can also do this
+      with the mouse (see <a href="mouse_shortcuts.xhtml">Mouse Shortcuts</a>
+      for instructions).</p>
+
+    <h4 id="decrease_text_size">Decrease</h4>
+    <p>Displays the text on the web page one size smaller. You can also do this
+      with the mouse (see <a href="mouse_shortcuts.xhtml">Mouse Shortcuts</a>
+      for instructions).</p>
+
+    <h4 id="reset_text_size">Normal</h4>
+    <p>Displays the text on the web page at its normal size.</p>
+
+  <h3 id="page_style">Page Style</h3>
+  <p>Allows you to select a style for the current web page. By default,
+    &quot;Basic Page Style&quot; is selected unless the author specifies a
+    different default.</p>
+
+    <h4 id="no_style">No Style</h4>
+    <p>Removes style formatting from the page.</p>
+
+    <h4 id="basic_page_style">Basic Page Style</h4>
+    <p>Displays the page with a general style specified by the author.</p>
+
+    <h4 id="alternate_style"></h4>
+    <p>If the author has specified additional page styles, &brandShortName;
+     will list them here for you to select.</p>
+
+  <h3 id="character_encoding">Character Encoding</h3>
+  <p>Allows you to manually change the character encoding on a web page.
+    &brandShortName; usually does this automatically.</p>
+
+  <h3 id="page_source">Page Source</h3>
+  <p>Displays the source code for the current document. <!--A future version of
+    &brandShortName; will be capable of launching an external program for
+    viewing the source.--></p>
+
+  <div class="noMac">
+    <h3 id="full_screen">Full Screen</h3>
+    <p>Displays the window in full screen. If you have the navigation toolbar
+      hidden, you can always restore the window anyway by pressing
+      <kbd>F11</kbd>.</p>
+  </div>
+<h2 id="go">History</h2>
+
+  <p>The History menu contains a list of the most recently visited web sites and
+    closed tabs.</p>
+
+  <h3 id="back">Back</h3>
+  <p>Navigates back one page in history. This is the same as clicking on the
+    <em>Back</em> button on the toolbar.</p>
+
+  <h3 id="forward">Forward</h3>
+  <p>Navigates forward one page in history. This is the same as clicking on
+    the <em>Forward</em> button on the toolbar.</p>
+
+  <h3 id="home">Home</h3>
+  <p>Displays your home page. This is the same as clicking on the
+    <em>Home</em> button on the navigation toolbar. To change the home page,
+    select &pref.menuPath; and open the <em>Main</em> panel.  You
+    can specify to use a blank page, the current page (or tab group), a
+    bookmark, or a manually entered address.</p>
+
+  <h3 id="closed_tabs">Recently Closed Tabs</h3>
+  <p>Allows you to restore a tab you closed recently in the current window by
+    selecting it from the list. See the <a href=
+    "tabbed_browsing.xhtml#closing_tabs">Closing and Restoring Tabs</a> topic
+    for more information.</p>
+
+  <h3 id="go_history">Show in Sidebar</h3>
+  <p>Displays the History Sidebar, which keeps track of the sites you have
+    visited. To change how many days a site should be remembered, select
+    &pref.menuPath; and select the <em>Privacy</em> panel.</p>
+
+<h2 id="bookmarks">Bookmarks</h2>
+
+  <p>This menu contains all your stored bookmarks.</p>
+
+  <h3 id="add_to_bookmarks">Bookmark This Page...</h3>
+  <p>Adds the current page to your bookmarks. A dialog will be displayed,
+    allowing you to choose a title for the bookmark and specify where you
+    want it to be stored.</p>
+
+  <h3 id="subscribe">Subscribe to This Page...</h3>
+  <p>Shows a preview of the <a href="glossary.xhtml#feed">feed</a> offered by
+    the current site. From the preview page, you can subscribe to the feed using
+    a <a href="glossary.xhtml#live_bookmark">Live Bookmark</a>, a feed reader
+    on your computer, or a web service. If you have chosen to always subscribe
+    using a Live Bookmark or a feed reader in the <em>Feeds</em> panel of
+    &pref.menuPath;, the preview page will be skipped.</p>
+
+  <h3 id="bookmark_all_tabs">Bookmark All Tabs...</h3>
+  <p>Adds all the tabs in the current window to a new bookmark folder. A dialog
+    will be displayed, allowing you to choose the name of the folder and specify
+    where you want it to be stored.</p>
+
+  <h3 id="organize_bookmarks">Organize Bookmarks...</h3>
+  <p>Displays the Bookmarks Manager, a window where you can modify your
+    bookmarks. You can sort, rename and change the properties for your
+    bookmarks as well as add, remove, and move them.</p>
+
+<h2 id="tools">Tools</h2>
+
+  <h3 id="web_search">Web Search</h3>
+  <p>Highlights the Web Search box. You can then type in the terms you
+    wish to find on the Web.</p>
+
+  <h3 id="downloads">Downloads</h3>
+  <p>Opens the Download Manager, where you can see the current, as well as
+    finished downloads.</p>
+
+  <h3 id="add_ons">Add-ons</h3>
+  <p>Opens the Add-ons manager, where you can view, install, configure, update,
+    and uninstall your extensions and themes. For more information, see the
+    <a href="customization.xhtml#add_ons">Add-ons</a> help topic.</p>
+
+  <h3 id="javascript_console">Error Console</h3>
+  <p>Opens the Error Console, which tracks problems with JavaScript code.
+    JavaScript is a scripting language commonly used to construct web pages.
+    Programmers use JavaScript to make web pages more interactive; JavaScript
+    is often used to dynamically validate forms and select buttons.</p>
+
+  <h3 id="page_info">Page Info</h3>
+  <p>Displays extensive information about the current web page, such as the
+    document type, encoding, size, and security information.  The dialog also
+    displays lists of the media and links used on the page.</p>
+
+  <h3 id="clear_private_data">Clear Private Data...</h3>
+  <p>Clears the items which are selected in the Clear Private Data dialog in
+    the <em>Privacy</em> panel of &pref.menuPath;.
+    Displays a confirmation dialog by default.</p>
+
+  <h3 class="win" id="options">&pref.pluralCaps;</h3>
+  <p class="win">Displays the <a href="prefs.xhtml">&pref.pluralCaps; window</a>,
+    where you can change many &pref.plural; in &brandShortName;.</p>
+
+<div class="mac">
+  <h2 id="window">Window</h2>
+
+    <h3 id="minimize">Minimize</h3>
+    <p>Minimizes the current window.</p>
+
+    <h3 id="zoom">Zoom</h3>
+    <p>Enlarges or restores the current window.</p>
+
+    <h3 id="open-windows">(Open Windows)</h3>
+    <p>Displays all the open windows by their title.</p>
+</div>
+
+<h2 id="help">Help</h2>
+
+  <h3 id="help_contents">
+    <span class="noMac">Help Contents</span>
+    <span class="mac">&brandShortName; Help</span>
+  </h3>
+  <p>Opens the &brandShortName; Help window, which contains useful information
+    that can help you browse the web.</p>
+
+  <div class="win">
+    <h3 id="for_ie_users">For Internet Explorer Users</h3>
+    <p>Opens this Help window displaying information that can
+      help Internet Explorer users transition to &brandShortName;.</p>
+  </div>
+
+  <h3 id="relnotes">Release Notes</h3>
+  <p>Provides information about installing, uninstalling and configuring
+    &brandShortName;, as well as other important information and late-breaking
+    notices. Requires an active Internet connection.</p>
+
+  <h3 id="reporter">Report Broken Web Site...</h3>
+  <p>Allows you to report web sites that do not work correctly in
+    &brandShortName; to the &brandShortName; developers.</p>
+
+  <h3 id="web_forgery">Report Web Forgery...</h3>
+  <p>Allows you to report what you believe are forged or "phishing" sites.
+    Phishing Protection in &brandShortName; is powered by Google, and the
+    information you submit will be sent to Google and used to improve this
+    feature. Your report will be anonymous in accordance with Google's privacy
+    policy. Requires an active Internet connection.</p>
+
+  <h3 id="check_for_updates">Check for Updates...</h3>
+  <p>Displays a dialog which checks for updates to &brandShortName; and asks
+    you whether you want to download updates if any are available. After an
+    update has been downloaded, the dialog asks you to restart &brandShortName;
+    so that the update can be installed. Note that the name of this menu item
+    will change when an update is being downloaded or is ready to be installed.</p>
+
+  <div class="noMac">
+    <h3 id="about_mozilla_firebird">About &brandFullName;</h3>
+    <p>Displays a dialog box with information about &brandShortName;, including
+      the current version and a brief list of credits.</p>
+  </div>
+
+<div class="contentsBox"><em>12 September 2006</em></div>
+<p>Copyright &copy; &copyright.years; Contributors to the Mozilla Help Viewer Project.</p>
+
+</body>
+</html>

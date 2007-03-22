@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=357450
+-->
+
+<window title="Mozilla Bug 357450"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <title>Test for Bug 357450</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" 
+	  src="/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="text/javascript" src="test_bug357450.js"></script>     
+
+<body  xmlns="http://www.w3.org/1999/xhtml">
+
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=357450"
+   target="_blank">Mozilla Bug 357450</a>
+
+<p id="display"></p>
+
+<div id="content" style="display: block">
+  <a class="classtest" name="nametest">hmm</a>
+  <b class="foo">hmm</b>
+  <b id="test1" class="test1">hmm</b>
+  <b id="test2" class="test2">hmm</b>
+  <b id="int-class" class="1">hmm</b>
+  <div id="example">
+   <p id="p1" class="aaa bbb"/>
+   <p id="p2" class="aaa ccc"/>
+   <p id="p3" class="bbb ccc"/>
+  </div>
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<svg xmlns="http://www.w3.org/2000/svg"
+     height="100" width="100" style="float:left">
+
+  <path d="M38,38c0-12,24-15,23-2c0,9-16,13-16,23v7h11v-4c0-9,17-12,17-27c-2-22-45-22-45,3zM45,70h11v11h-11z" fill="#371"/>
+
+  <circle cx="50" cy="50" r="45" class="classtest" 
+	  fill="none" stroke="#371" stroke-width="10"/>
+
+</svg>
+
+<xul:label class="classtest"
+ xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+ hmm
+</xul:label>
+
+
+</window>

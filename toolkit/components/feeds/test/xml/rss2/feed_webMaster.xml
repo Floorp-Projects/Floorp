@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: channel webMaster works 
+Expect:      feed.fields.getProperty('webMaster') == 'example@example.com'
+
+-->
+<rss version="2.0" >
+<channel>
+<webMaster>example@example.com</webMaster>
+</channel>
+</rss>

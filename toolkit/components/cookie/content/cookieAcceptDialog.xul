@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is cookie manager code.
+   -
+   - The Initial Developer of the Original Code is
+   - Michiel van Leeuwen.
+   - Portions created by the Initial Developer are Copyright (C) 2002
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://cookie/locale/cookieAcceptDialog.dtd">
+
+<!-- use a overlay te be able to put the accept/deny buttons not on the bottom -->
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!-- use buttons="disclosure" to hide ok/cancel buttons. Those are added manually later -->
+<dialog id="cookieAcceptDialog"
+    acceptLabel="&button.allow.label;"
+    acceptKey="&button.allow.accesskey;"
+    extra1Label="&button.session.label;"
+    extra1Key="&button.session.accesskey;"
+    cancelLabel="&button.deny.label;"
+    cancelKey="&button.deny.accesskey;"
+    onload="onload();"
+    ondialogaccept="return doOKButton();"
+    title="&dialog.title;"
+    buttons="disclosure"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="cookieAcceptDialog.js" type="application/x-javascript"/>
+  <stringbundle id="cookieBundle"
+                src="chrome://cookie/locale/cookieAcceptDialog.properties"/>
+ 
+  <vbox>
+    <hbox>
+      <hbox align="start">
+        <image id="infoicon" class="spaced alert-icon"/>
+      </hbox>
+
+      <vbox flex="1">
+        <!-- text -->
+        <vbox id="dialogtextbox">
+          <description id="dialog-header" class="header"/>
+        </vbox>
+
+        <hbox id="checkboxContainer">
+          <checkbox id="persistDomainAcceptance"
+                    label="&dialog.remember.label;" 
+                    accesskey="&dialog.remember.accesskey;"
+                    persist="checked"/>
+        </hbox>
+      </vbox>
+
+    </hbox>
+
+    <hbox>
+      <button id="disclosureButton" dlgtype="disclosure" class="exit-dialog" 
+              oncommand="showhideinfo();"/>
+      <spacer flex="1"/>
+      <hbox id="okCancelButtonsRight"/>
+    </hbox>
+
+    <vbox id="infobox" hidden="true" persist="hidden">
+      <separator class="groove"/>
+      <grid flex="1">
+        <columns>
+          <column/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+
+          <row align="center">
+            <hbox align="center" pack="end">
+              <label value="&props.name.label;"/>
+            </hbox>
+            <textbox id="ifl_name" readonly="true" class="plain"/>
+          </row>
+
+          <row align="center">
+            <hbox align="center" pack="end">
+              <label value="&props.value.label;"/>
+            </hbox>
+            <textbox id="ifl_value" readonly="true" class="plain"/>
+          </row>
+
+          <row align="center">
+            <hbox align="center" pack="end">
+              <label id="ifl_isDomain" value="&props.domain.label;"/>
+            </hbox>
+            <textbox id="ifl_host" readonly="true" class="plain"/>
+          </row>
+
+          <row align="center">
+            <hbox align="center" pack="end">
+              <label value="&props.path.label;"/>
+            </hbox>
+            <textbox id="ifl_path" readonly="true" class="plain"/>
+          </row>
+
+          <row align="center">
+            <hbox align="center" pack="end">
+              <label value="&props.secure.label;"/>
+            </hbox>
+            <textbox id="ifl_isSecure" readonly="true" class="plain"/>
+          </row>
+
+          <row align="center">
+            <hbox align="center" pack="end">
+              <label value="&props.expires.label;"/>
+            </hbox>
+            <textbox id="ifl_expires" readonly="true" class="plain"/>
+          </row>
+
+          <row align="center" id="policyField" hidden="true">
+            <hbox align="center" pack="end">
+              <label value="&props.policy.label;"/>
+            </hbox>
+            <textbox id="ifl_policy" readonly="true" class="plain"/>
+          </row>
+
+        </rows>
+      </grid>
+    </vbox>
+  </vbox>
+</dialog>
+

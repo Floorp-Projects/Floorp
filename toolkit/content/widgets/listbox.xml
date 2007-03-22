@@ -1,0 +1,1073 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is toolkit code.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2002
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Joe Hewitt <hewitt@netscape.com> (original author)
+   -   Simon Bünzli <zeniko@gmail.com>
+   -   Alexander Surkov <surkov.alexander@gmail.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<bindings id="listboxBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <!--
+    Interface binding that is base for bindings of xul:listbox and
+    xul:richlistbox elements. This binding assumes that successors bindings
+    will implement the following properties and methods:
+
+    /** Return the number of items */
+    readonly itemCount
+
+    /** Return index of given item
+    * @param aItem - given item element */
+    getIndexOfItem(aItem)
+
+    /** Return item at given index
+    * @param aIndex - index of item element */
+    getItemAtIndex(aIndex)
+
+    /** Return count of item elements */
+    getRowCount()
+
+    /** Return count of visible item elements */
+    getNumberOfVisibleRows()
+
+    /** Return index of first visible item element */
+    getIndexOfFirstVisibleRow()
+
+    /** Return true if item of given index is visible
+     * @param aIndex - index of item element
+     *
+     * @note XXX: this method should be removed after bug 364612 is fixed
+     */
+    ensureIndexIsVisible(aIndex)
+
+    /** Return true if item element is visible
+     * @param aElement - given item element */
+    ensureElementIsVisible(aElement)
+
+    /** Scroll list control to make visible item of given index
+     * @param aIndex - index of item element
+     *
+     * @note XXX: this method should be removed after bug 364612 is fixed
+     */
+    scrollToIndex(aIndex)
+
+    /** Create item element and append it to the end of listbox
+     * @param aLabel - label of new item element
+     * @param aValue - value of new item element */
+    appendItem(aLabel, aValue)
+
+    /** Create item element and insert it to given position
+     * @param aIndex - insertion position
+     * @param aLabel - label of new item element
+     * @param aValue - value of new item element */
+    insertItemAt(aIndex, aLabel, aValue)
+
+    /** Scroll up/down one page
+     * @param aDirection - specifies scrolling direction, should be either -1
+                           or 1 */
+    scrollOnePage(aDirection)
+
+    /** Fire "select" event */
+    _fireOnSelect()
+   -->
+   <binding id="listbox-base"
+            extends="chrome://global/content/bindings/general.xml#basecontrol">
+
+    <implementation implements="nsIDOMXULMultiSelectControlElement, nsIAccessibleProvider">
+
+    <!-- nsIAccessibleProvider -->
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XULListbox;
+        </getter>
+      </property>
+
+    <!-- nsIDOMXULSelectControlElement -->
+      <property name="selectedItem"
+                onset="this.selectItem(val);">
+        <getter>
+        <![CDATA[
+          return this.selectedItems.length > 0 ? this.selectedItems[0] : null;
+        ]]>
+        </getter>
+      </property>
+
+      <property name="selectedIndex">
+        <getter>
+        <![CDATA[
+          if (this.selectedItems.length > 0)
+            return this.getIndexOfItem(this.selectedItems[0]);
+          return -1;
+        ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+          if (val >= 0)
+            this.selectItem(this.getItemAtIndex(val));
+          else
+            this.clearSelection();
+        ]]>
+        </setter>
+      </property>
+
+      <property name="value">
+        <getter>
+        <![CDATA[
+          if (this.selectedItems.length > 0)
+            return this.selectedItem.value;
+          return null;
+        ]]>
+        </getter>
+        <setter>
+        <![CDATA[
+          var kids = this.getElementsByAttribute("value", val);
+          if (kids && kids.item(0))
+            this.selectItem(kids[0]);
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <method name="removeItemAt">
+        <parameter name="index"/>
+        <body>
+        <![CDATA[
+          var remove = this.getItemAtIndex(index);
+          if (remove)
+            this.removeChild(remove);
+          return remove;
+        ]]>
+        </body>
+      </method>
+
+    <!-- nsIDOMXULMultiSelectControlElement -->
+      <property name="selType"
+                onget="return this.getAttribute('seltype');"
+                onset="this.setAttribute('seltype', val); return val;"/>
+
+      <property name="currentItem" onget="return this._currentItem;">
+        <setter>
+          if (this._currentItem == val)
+            return val;
+
+          if (this._currentItem)
+            this._currentItem.current = false;
+          this._currentItem = val;
+
+          if (val)
+            val.current = true;
+
+          return val;
+        </setter>
+      </property>
+
+      <property name="currentIndex">
+        <getter>
+          return this.currentItem ? this.getIndexOfItem(this.currentItem) : -1;
+        </getter>
+        <setter>
+        <![CDATA[
+          if (val >= 0)
+            this.currentItem = this.getItemAtIndex(val);
+          else
+            this.currentItem = null;
+        ]]>
+        </setter>
+      </property>
+
+      <field name="selectedItems">[]</field>
+
+      <method name="addItemToSelection">
+        <parameter name="aItem"/>
+        <body>
+        <![CDATA[
+          if (this.selType != "multiple" && this.selectedCount)
+            return;
+
+          if (aItem.selected)
+            return;
+
+          this.selectedItems.push(aItem);
+          aItem.selected = true;
+
+          this._fireOnSelect();
+        ]]>
+        </body>
+      </method>
+
+      <method name="removeItemFromSelection">
+        <parameter name="aItem"/>
+        <body>
+        <![CDATA[
+          if (!aItem.selected)
+            return;
+
+          for (var i = 0; i < this.selectedItems.length; ++i) {
+            if (this.selectedItems[i] == aItem) {
+              this.selectedItems.splice(i, 1);
+              aItem.selected = false;
+              break;
+            }
+          }
+
+          this._fireOnSelect();
+        ]]>
+        </body>
+      </method>
+
+      <method name="toggleItemSelection">
+        <parameter name="aItem"/>
+        <body>
+        <![CDATA[
+          if (aItem.selected)
+            this.removeItemFromSelection(aItem);
+          else
+            this.addItemToSelection(aItem);
+        ]]>
+        </body>
+      </method>
+
+      <method name="selectItem">
+        <parameter name="aItem"/>
+        <body>
+        <![CDATA[
+          if (!aItem)
+            return;
+
+          if (this.selectedItems.length == 1 && this.selectedItems[0] == aItem)
+            return;
+
+          this._selectionStart = null;
+
+          var suppress = this._suppressOnSelect;
+          this._suppressOnSelect = true;
+
+          this.clearSelection();
+          this.addItemToSelection(aItem);
+          this.currentItem = aItem;
+
+          this._suppressOnSelect = suppress;
+          this._fireOnSelect();
+        ]]>
+        </body>
+      </method>
+
+      <method name="selectItemRange">
+        <parameter name="aStartItem"/>
+        <parameter name="aEndItem"/>
+        <body>
+        <![CDATA[
+          if (this.selType != "multiple")
+            return;
+
+          if (!aStartItem)
+            aStartItem = this._selectionStart ?
+              this._selectionStart : this.currentItem;
+
+          if (!aStartItem)
+            aStartItem = aEndItem;
+
+          var suppressSelect = this._suppressOnSelect;
+          this._suppressOnSelect = true;
+
+          this._selectionStart = aStartItem;
+
+          var currentItem;
+          var startIndex = this.getIndexOfItem(aStartItem);
+          var endIndex = this.getIndexOfItem(aEndItem);
+          if (endIndex < startIndex) {
+            currentItem = aEndItem;
+            aEndItem = aStartItem;
+            aStartItem = currentItem;
+          } else {
+            currentItem = aStartItem;
+          }
+
+          while (currentItem) {
+            this.addItemToSelection(currentItem);
+            if (currentItem == aEndItem) {
+              currentItem = this.getNextItem(currentItem, 1);
+              break;
+            }
+            currentItem = this.getNextItem(currentItem, 1);
+          }
+
+          // Clear around new selection
+          // Don't use clearSelection() because it causes a lot of noise
+          // with respect to selection removed notifications used by the
+          // accessibility API support.
+          for (; currentItem; currentItem = this.getNextItem(currentItem, 1))
+            this.removeItemFromSelection(currentItem);
+
+          for (currentItem = this.getItemAtIndex(0); currentItem != aStartItem;
+               currentItem = this.getNextItem(currentItem, 1))
+            this.removeItemFromSelection(currentItem);
+
+          this._suppressOnSelect = suppressSelect;
+
+          this._fireOnSelect();
+        ]]>
+        </body>
+      </method>
+
+      <method name="selectAll">
+        <body>
+          this._selectionStart = null;
+
+          var suppress = this._suppressOnSelect;
+          this._suppressOnSelect = true;
+
+          var item = this.getItemAtIndex(0);
+          while (item) {
+            this.addItemToSelection(item);
+            item = this.getNextItem(item, 1);
+          }
+
+          this._suppressOnSelect = suppress;
+          this._fireOnSelect();
+        </body>
+      </method>
+
+      <method name="invertSelection">
+        <body>
+          this._selectionStart = null;
+
+          var suppress = this._suppressOnSelect;
+          this._suppressOnSelect = true;
+
+          var item = this.getItemAtIndex(0);
+          while (item) {
+            if (item.selected)
+              this.removeItemFromSelection(item);
+            else
+              this.addItemToSelection(item);
+            item = this.getNextItem(item, 1);
+          }
+
+          this._suppressOnSelect = suppress;
+          this._fireOnSelect();
+        </body>
+      </method>
+
+      <method name="clearSelection">
+        <body>
+        <![CDATA[
+          if (this.selectedItems) {
+            for (var i = this.selectedItems.length - 1; i >= 0; --i)
+              this.selectedItems[i].selected = false;
+
+            this.selectedItems.splice(0, this.selectedItems.length);
+          }
+
+          this._selectionStart = null;
+          this._fireOnSelect();
+        ]]>
+        </body>
+      </method>
+
+      <property name="selectedCount" readonly="true"
+                onget="return this.selectedItems.length;"/>
+
+      <method name="getSelectedItem">
+        <parameter name="aIndex"/>
+        <body>
+        <![CDATA[
+          return aIndex < this.selectedItems.length ?
+            this.selectedItems[aIndex] : null;
+        ]]>
+        </body>
+      </method>
+
+    <!-- Other public members -->
+      <property name="disableKeyNavigation"
+                onget="return this.hasAttribute('disableKeyNavigation');">
+        <setter>
+          if (val)
+            this.setAttribute("disableKeyNavigation", "true");
+          else
+            this.removeAttribute("disableKeyNavigation");
+          return val;
+        </setter>
+      </property>
+
+      <property name="suppressOnSelect"
+                onget="return this.getAttribute('suppressonselect') == 'true';"
+                onset="this.setAttribute('suppressonselect', val);"/>
+
+      <property name="_selectDelay"
+                onset="this.setAttribute('_selectDelay', val);"
+                onget="return this.getAttribute('_selectDelay') || 50;"/>
+
+      <method name="timedSelect">
+        <parameter name="aItem"/>
+        <parameter name="aTimeout"/>
+        <body>
+        <![CDATA[
+          var suppress = this._suppressOnSelect;
+          if (aTimeout != -1)
+            this._suppressOnSelect = true;
+
+          this.selectItem(aItem);
+
+          this._suppressOnSelect = suppress;
+
+          if (aTimeout != -1) {
+            if (this._selectTimeout)
+              window.clearTimeout(this._selectTimeout);
+            this._selectTimeout =
+              window.setTimeout(this._selectTimeoutHandler, aTimeout, this);
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="moveByOffset">
+        <parameter name="aOffset"/>
+        <parameter name="aIsSelecting"/>
+        <parameter name="aIsSelectingRange"/>
+        <body>
+        <![CDATA[
+          if ((aIsSelectingRange || !aIsSelecting) &&
+              this.selType != "multiple")
+            return;
+
+          var newIndex = this.currentIndex + aOffset;
+          if (newIndex < 0)
+            newIndex = 0;
+
+          var numItems = this.getRowCount();
+          if (newIndex > numItems - 1)
+            newIndex = numItems - 1;
+
+          var newItem = this.getItemAtIndex(newIndex);
+          if (newItem) {
+            this.ensureIndexIsVisible(newIndex);
+            if (aIsSelectingRange)
+              this.selectItemRange(null, newItem);
+            else if (aIsSelecting)
+              this.selectItem(newItem);
+
+            this.currentItem = newItem;
+          }
+        ]]>
+        </body>
+      </method>
+
+    <!-- Private -->
+      <method name="getNextItem">
+        <parameter name="aStartItem"/>
+        <parameter name="aDelta"/>
+        <body>
+        <![CDATA[
+          while (aStartItem) {
+            aStartItem = aStartItem.nextSibling;
+            if (aStartItem && aStartItem instanceof
+                Components.interfaces.nsIDOMXULSelectControlItemElement) {
+              --aDelta;
+              if (aDelta == 0)
+                return aStartItem;
+            }
+          }
+          return null;
+        ]]></body>
+      </method>
+
+      <method name="getPreviousItem">
+        <parameter name="aStartItem"/>
+        <parameter name="aDelta"/>
+        <body>
+        <![CDATA[
+          while (aStartItem) {
+            aStartItem = aStartItem.previousSibling;
+            if (aStartItem && aStartItem instanceof
+                Components.interfaces.nsIDOMXULSelectControlItemElement) {
+              --aDelta;
+              if (aDelta == 0)
+                return aStartItem;
+            }
+          }
+          return null;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_selectTimeoutHandler">
+        <parameter name="aMe"/>
+        <body>
+          aMe._fireOnSelect();
+          aMe._selectTimeout = null;
+        </body>
+      </method>
+
+      <constructor>
+      <![CDATA[
+        var els = this.getElementsByAttribute("selected", "true");
+        for (var i = 0; i < els.length; ++i)
+          this.selectedItems.push(els[i]);
+      ]]>
+      </constructor>
+
+      <field name="_suppressOnSelect">false</field>
+      <field name="_selectTimeout">null</field>
+      <field name="_currentItem">null</field>
+      <field name="_selectionStart">null</field>
+    </implementation>
+  </binding>
+
+
+  <!-- Binding for xul:listbox element.
+  -->
+  <binding id="listbox"
+           extends="#listbox-base">
+
+    <resources>
+      <stylesheet src="chrome://global/skin/listbox.css"/>
+    </resources>
+
+    <content>
+      <children includes="listcols">
+        <xul:listcols>
+          <xul:listcol flex="1"/>
+        </xul:listcols>
+      </children>
+      <xul:listrows>
+        <children includes="listhead"/>
+        <xul:listboxbody xbl:inherits="rows,size,minheight">
+          <children includes="listitem"/>
+        </xul:listboxbody> 
+      </xul:listrows>
+    </content>
+
+    <implementation>
+      <field name="_lastKeyTime">0</field>
+      <field name="_incrementalString">""</field>
+
+      <!-- ///////////////// public listbox members ///////////////// -->
+
+      <property name="listBoxObject"
+                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIListBoxObject);"
+                readonly="true"/>
+
+      <!-- ///////////////// private listbox members ///////////////// -->
+
+      <method name="_fireOnSelect">
+        <body>
+        <![CDATA[
+          if (!this._suppressOnSelect && !this.suppressOnSelect) {
+            var event = document.createEvent("Events");
+            event.initEvent("select", true, true);
+            this.dispatchEvent(event);
+          }
+        ]]>
+        </body>
+      </method>
+
+      <!-- ///////////////// nsIDOMXULSelectControlElement ///////////////// -->
+
+      <method name="appendItem">
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <body>
+          const XULNS =
+            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+          var item = this.ownerDocument.createElementNS(XULNS, "listitem");
+          item.setAttribute("label", aLabel);
+          item.setAttribute("value", aValue);
+          this.appendChild(item);
+          return item;
+        </body>
+      </method>
+
+      <method name="insertItemAt">
+        <parameter name="aIndex"/>
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <body>
+          const XULNS =
+            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+          var item = this.ownerDocument.createElementNS(XULNS, "listitem");
+          item.setAttribute("label", aLabel);
+          item.setAttribute("value", aValue);
+          var before = this.getItemAtIndex(aIndex);
+          if (before)
+            this.insertBefore(item, before);
+          else
+            this.appendChild(item);
+          return item;
+        </body>
+      </method>
+
+      <property name="itemCount" readonly="true"
+                onget="return this.listBoxObject.getRowCount()"/>
+
+      <!-- ///////////////// nsIListBoxObject ///////////////// -->
+      <method name="getIndexOfItem">
+        <parameter name="item"/>
+        <body>
+          return this.listBoxObject.getIndexOfItem(item);
+        </body>
+      </method>
+      <method name="getItemAtIndex">
+        <parameter name="index"/>
+        <body>
+          return this.listBoxObject.getItemAtIndex(index);
+        </body>
+      </method>
+      <method name="ensureIndexIsVisible">
+        <parameter name="index"/>
+        <body>
+          return this.listBoxObject.ensureIndexIsVisible(index);
+        </body>
+      </method>
+      <method name="ensureElementIsVisible">
+        <parameter name="element"/>
+        <body>
+          return this.ensureIndexIsVisible(this.listBoxObject.getIndexOfItem(element));
+        </body>
+      </method>
+      <method name="scrollToIndex">
+        <parameter name="index"/>
+        <body>
+          return this.listBoxObject.scrollToIndex(index);
+        </body>
+      </method>
+      <method name="getNumberOfVisibleRows">
+        <body>
+          return this.listBoxObject.getNumberOfVisibleRows();
+        </body>
+      </method>
+      <method name="getIndexOfFirstVisibleRow">
+        <body>
+          return this.listBoxObject.getIndexOfFirstVisibleRow();
+        </body>
+      </method>
+      <method name="getRowCount">
+        <body>
+          return this.listBoxObject.getRowCount();
+        </body>
+      </method>
+
+      <method name="scrollOnePage">
+        <parameter name="direction"/>  <!-- Must be -1 or 1 -->
+        <body>      
+          <![CDATA[
+            var pageOffset = this.getNumberOfVisibleRows() * direction;
+            var newTop = this.getIndexOfFirstVisibleRow() + pageOffset;
+            if (direction == 1) {
+              var maxTop = this.getRowCount() - pageOffset;
+              if (newTop >= maxTop && maxTop > this.currentIndex) {
+                newTop = maxTop;
+              }
+            }
+            else if (newTop < 0)
+              newTop = 0;
+            this.scrollToIndex(newTop);
+            return pageOffset;          
+          ]]>
+        </body>
+      </method>
+    </implementation>
+    
+    <handlers>
+      <handler event="keypress" keycode="vk_up" modifiers="control shift any"
+               phase="target" action="moveByOffset(-1, !event.ctrlKey, event.shiftKey);"/>
+      <handler event="keypress" keycode="vk_down" modifiers="control shift any"
+               phase="target" action="moveByOffset(1, !event.ctrlKey, event.shiftKey);"/>
+      <handler event="keypress" keycode="vk_home" modifiers="control shift any"
+               phase="target" action="moveByOffset(-this.currentIndex, !event.ctrlKey, event.shiftKey);"/>
+      <handler event="keypress" keycode="vk_end" modifiers="control shift any"
+               phase="target" action="moveByOffset(this.getRowCount() - this.currentIndex - 1, !event.ctrlKey, event.shiftKey);"/>
+      <handler event="keypress" keycode="vk_page_up" modifiers="control shift any"
+               phase="target" action="moveByOffset(this.scrollOnePage(-1), !event.ctrlKey, event.shiftKey);"/>
+      <handler event="keypress" keycode="vk_page_down" modifiers="control shift any"
+               phase="target" action="moveByOffset(this.scrollOnePage(1), !event.ctrlKey, event.shiftKey);"/>
+      <handler event="keypress" key=" " phase="target">
+        <![CDATA[
+          if (this.currentItem) {
+            if (this.currentItem.getAttribute("type") != "checkbox")
+              this.addItemToSelection(this.currentItem);
+            else if (!this.currentItem.disabled)
+              this.currentItem.checked = !this.currentItem.checked;
+          }
+        ]]>
+      </handler>
+      <handler event="focus">
+        <![CDATA[
+          if (this.currentIndex == -1 && this.getRowCount() > 0) {
+            this.currentIndex = this.getIndexOfFirstVisibleRow();
+          }
+          this._lastKeyTime = 0;
+        ]]>
+      </handler>
+      <handler event="keypress" key=" " modifiers="control" phase="target">
+        <![CDATA[
+          if (this.currentItem && this.selType == "multiple")
+            this.toggleItemSelection(this.currentItem);
+        ]]>
+      </handler>
+      <handler event="keypress" phase="target">
+      <![CDATA[
+         if (!this.disableKeyNavigation && event.charCode > 0 && 
+             !event.altKey && !event.ctrlKey && !event.metaKey) {
+           var key = String.fromCharCode(event.charCode);
+           key = key.toLowerCase();
+           if (event.timeStamp - this._lastKeyTime > 1000)
+             this._incrementalString = key;
+           else
+             this._incrementalString += key;
+           this._lastKeyTime = event.timeStamp;
+           
+           var length = this._incrementalString.length;
+           var incrementalString = this._incrementalString;
+           var charIndex = 1;
+           while (charIndex < length && incrementalString[charIndex] == incrementalString[charIndex - 1])
+             charIndex++;
+           // If all letters in incremental string are same, just try to match the first one
+           if (charIndex == length) {
+             length = 1;
+             incrementalString = incrementalString.substring(0, length);
+           }
+
+           var l = this.selectedItems.length;
+           var c = -1;
+           if (l > 0)
+             c = this.getIndexOfItem(this.selectedItems[l-1]);
+           var rowCount = this.getRowCount();
+           var start = 1;
+           
+           if (length > 1) {
+             start = 0;
+             if (c < 0)
+               c = 0;
+           }
+
+           for (var i = 0; i < rowCount; i++) {
+             var k = (i + start + c) % rowCount;
+             var item = this.getItemAtIndex(k); //listitem
+             var cellText = item.getAttribute("label");
+             cellText = cellText.substring(0, length).toLowerCase();
+             if (cellText == incrementalString) {
+               this.ensureIndexIsVisible(k);
+               this.timedSelect(item, this._selectDelay);
+               break;
+             }
+           }
+         }
+       ]]>
+       </handler>
+    </handlers>    
+  </binding>
+
+  <binding id="listrows">
+
+    <resources>
+      <stylesheet src="chrome://global/skin/listbox.css"/>
+    </resources>
+
+    <handlers>
+      <handler event="DOMMouseScroll" phase="capturing">
+      <![CDATA[
+        var listBox = this.parentNode.listBoxObject;
+        var rows = event.detail;
+        if (rows == NSUIEvent.SCROLL_PAGE_UP)
+          rows = -listBox.getNumberOfVisibleRows();
+        else if (rows == NSUIEvent.SCROLL_PAGE_DOWN)
+          rows = listBox.getNumberOfVisibleRows();
+
+        listBox.scrollByLines(rows);
+        event.preventDefault();
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+  
+  <binding id="listitem"
+           extends="chrome://global/content/bindings/general.xml#basetext">
+    <resources>
+      <stylesheet src="chrome://global/skin/listbox.css"/>
+    </resources>
+
+    <content>
+      <children>
+        <xul:listcell xbl:inherits="label,crop,disabled,flexlabel"/>
+      </children>
+    </content>
+
+    <implementation implements="nsIDOMXULSelectControlItemElement, nsIAccessibleProvider">
+      <property name="current" onget="return this.getAttribute('current') == 'true';">
+        <setter><![CDATA[
+          if (val)
+            this.setAttribute("current", "true");
+          else
+            this.removeAttribute("current");
+
+          this._fireEvent(val ? "DOMMenuItemActive" : "DOMMenuItemInactive");
+
+          return val;
+        ]]></setter>
+      </property>
+
+      <!-- ///////////////// nsIAccessibleProvider ///////////////// -->
+
+      <property name="accessibleType" readonly="true">
+        <getter>
+          <![CDATA[
+            return Components.interfaces.nsIAccessibleProvider.XULListitem;
+          ]]>
+        </getter>
+      </property>
+
+      <!-- ///////////////// nsIDOMXULSelectControlItemElement ///////////////// -->
+                
+      <property name="value" onget="return this.getAttribute('value');"
+                             onset="this.setAttribute('value', val); return val;"/>
+      <property name="label" onget="return this.getAttribute('label');"
+                             onset="this.setAttribute('label', val); return val;"/>
+      
+      <property name="selected" onget="return this.getAttribute('selected') == 'true';">
+        <setter><![CDATA[
+          if (val)
+            this.setAttribute("selected", "true");
+          else
+            this.removeAttribute("selected");
+
+          return val;
+        ]]></setter>
+      </property>
+
+      <property name="control">
+        <getter><![CDATA[
+          var parent = this.parentNode;
+          while (parent) {
+            if (parent instanceof Components.interfaces.nsIDOMXULSelectControlElement)
+              return parent;
+            parent = parent.parentNode;
+          }
+          return null;
+        ]]></getter>
+      </property>
+
+      <method name="_fireEvent">
+        <parameter name="name"/>
+        <body>
+        <![CDATA[
+          var event = document.createEvent("Events");
+          event.initEvent(name, true, true);
+          this.dispatchEvent(event);
+        ]]>
+        </body>
+      </method>
+    </implementation>
+    <handlers>
+      <!-- If there is no modifier key, we select on mousedown, not
+           click, so that drags work correctly. -->
+      <handler event="mousedown">
+      <![CDATA[
+        var control = this.control;
+        if (!control || control.disabled)
+          return;
+        if (!event.ctrlKey && !event.shiftKey && !event.metaKey) {
+          if (!this.selected) {
+            control.selectItem(this);
+          }
+          control.currentItem = this;
+        }
+      ]]>
+      </handler>
+
+      <!-- On a click (up+down on the same item), deselect everything
+           except this item. -->
+      <handler event="click" button="0">
+      <![CDATA[
+        var control = this.control;
+        if (!control || control.disabled)
+          return;
+        if (control.selType != "multiple") {
+          control.selectItem(this);
+        }
+        else if (event.ctrlKey || event.metaKey) {
+          control.toggleItemSelection(this);
+          control.currentItem = this;
+        }
+        else if (event.shiftKey) {
+          control.selectItemRange(null, this);
+          control.currentItem = this;
+        }
+        else {
+          /* We want to deselect all the selected items except what was
+            clicked, UNLESS it was a right-click.  We have to do this
+            in click rather than mousedown so that you can drag a
+            selected group of items */
+
+          // use selectItemRange instead of selectItem, because this
+          // doesn't de- and reselect this item if it is selected
+          control.selectItemRange(this, this);
+        }
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="listitem-iconic"
+           extends="chrome://global/content/bindings/listbox.xml#listitem">
+    <content>
+      <children>
+        <xul:listcell class="listcell-iconic" xbl:inherits="label,image,crop,disabled,flexlabel"/>
+      </children>
+    </content>
+  </binding>
+  
+  <binding id="listitem-checkbox"
+           extends="chrome://global/content/bindings/listbox.xml#listitem">
+    <content>
+      <children>
+        <xul:listcell type="checkbox" xbl:inherits="label,crop,checked,disabled,flexlabel"/>
+      </children>
+    </content>
+
+    <implementation>
+      <property name="checked"
+                onget="return this.getAttribute('checked') == 'true';">
+        <setter><![CDATA[
+          if (val)
+            this.setAttribute('checked', 'true');
+          else
+            this.removeAttribute('checked');
+          var event = document.createEvent('Events');
+          event.initEvent('CheckboxStateChange', true, true);
+          this.dispatchEvent(event);
+          return val;
+        ]]></setter>
+      </property>
+    </implementation>
+
+    <handlers> 
+      <handler event="mousedown" button="0">
+      <![CDATA[
+        if (!this.disabled && !this.control.disabled)
+          this.checked = !this.checked;
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+  
+  <binding id="listitem-checkbox-iconic"
+           extends="chrome://global/content/bindings/listbox.xml#listitem-checkbox">
+    <content>
+      <children>
+        <xul:listcell type="checkbox" class="listcell-iconic" xbl:inherits="label,image,crop,checked,disabled,flexlabel"/>
+      </children>
+    </content>
+  </binding>
+  
+  <binding id="listcell"
+           extends="chrome://global/content/bindings/general.xml#basecontrol">
+
+    <resources>
+      <stylesheet src="chrome://global/skin/listbox.css"/>
+    </resources>
+
+    <content>
+      <children>
+        <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabel,crop,disabled" flex="1" crop="right"/>
+      </children>
+    </content>
+  </binding>
+
+  <binding id="listcell-iconic"
+           extends="chrome://global/content/bindings/listbox.xml#listcell">
+    <content>
+      <children>
+        <xul:image class="listcell-icon" xbl:inherits="src=image"/>
+        <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabel,crop,disabled" flex="1" crop="right"/>
+      </children>
+    </content>
+  </binding>
+
+  <binding id="listcell-checkbox"
+           extends="chrome://global/content/bindings/listbox.xml#listcell">
+    <content>
+      <children>
+        <xul:image class="listcell-check" xbl:inherits="checked,disabled"/>
+        <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabelcrop,disabled" flex="1" crop="right"/>
+      </children>
+    </content>
+  </binding>
+
+  <binding id="listcell-checkbox-iconic"
+           extends="chrome://global/content/bindings/listbox.xml#listcell-checkbox">
+    <content>
+      <children>
+        <xul:image class="listcell-check" xbl:inherits="checked,disabled"/>
+        <xul:image class="listcell-icon" xbl:inherits="src=image"/>
+        <xul:label class="listcell-label" xbl:inherits="value=label,flex=flexlabelcrop,disabled" flex="1" crop="right"/>
+      </children>
+    </content>
+  </binding>
+
+  <binding id="listhead">
+
+    <resources>
+      <stylesheet src="chrome://global/skin/listbox.css"/>
+    </resources>
+
+    <content>
+      <xul:listheaditem>
+        <children includes="listheader"/>
+      </xul:listheaditem>
+    </content>
+  </binding>
+  
+  <binding id="listheader" display="xul:button">
+
+    <resources>
+      <stylesheet src="chrome://global/skin/listbox.css"/>
+    </resources>
+
+    <content>
+      <xul:image class="listheader-icon"/>
+      <xul:label class="listheader-label" xbl:inherits="value=label,crop" flex="1" crop="right"/>
+      <xul:image class="listheader-sortdirection" xbl:inherits="sortDirection"/>
+    </content>
+  </binding>
+
+</bindings>
+

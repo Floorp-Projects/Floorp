@@ -1,0 +1,28 @@
+<!-- extracted from printjoboptions.xul -->
+
+<!ENTITY printJobOptions.title "Printer Properties">
+
+<!ENTITY paperInput.label "Paper Size:">
+
+<!ENTITY plexInput.label "Plex mode:">
+
+<!ENTITY resolutionInput.label "Resolution/Quality:">
+
+<!ENTITY cmdInput.label "Print Command:">
+
+<!ENTITY jobTitleInput.label "Job Title:">
+
+<!ENTITY colorGroup.label "Color:">
+<!ENTITY grayRadio.label "GrayScale">
+<!ENTITY colorRadio.label "Color">
+
+<!ENTITY colorspaceInput.label "Colorspace:">
+
+<!ENTITY fontsGroup.label "Fonts:">
+<!ENTITY downloadFonts.label "Download fonts to printer?">
+
+<!ENTITY edgeMarginInput.label "Gap from edge of paper to Margin">
+<!ENTITY topInput.label "Top:">
+<!ENTITY bottomInput.label "Bottom:">
+<!ENTITY leftInput.label "Left:">
+<!ENTITY rightInput.label "Right:">

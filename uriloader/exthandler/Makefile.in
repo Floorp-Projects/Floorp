@@ -1,0 +1,163 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+OSDIR		= os2
+else
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+OSDIR		= win
+else
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+OSDIR		= mac
+else
+ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
+OSDIR		= beos
+else
+OSDIR		= unix
+endif
+endif
+endif
+endif
+
+VPATH		:= $(srcdir) $(srcdir)/$(OSDIR)
+
+MODULE = exthandler
+LIBRARY_NAME    = exthandler_s
+LIBXUL_LIBRARY  = 1
+REQUIRES	= xpcom \
+		  string \
+		  unicharutil \
+		  mimetype \
+		  uriloader \
+		  necko \
+		  rdf \
+		  webshell \
+		  plugin \
+		  pref \
+		  intl \
+		  uconv \
+		  docshell \
+		  windowwatcher \
+		  embed_base \
+		  dom \
+		  $(NULL)
+
+ifdef MOZ_PHOENIX
+REQUIRES	+= toolkitcomps
+endif
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+REQUIRES		+= windowwatcher \
+	             $(NULL)
+endif
+
+OSHELPER	= nsOSHelperAppService.cpp
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+OSHELPER		+= nsInternetConfig.cpp \
+			nsInternetConfigService.cpp \
+			nsMIMEInfoMac.cpp \
+			$(NULL)
+endif
+
+LOCAL_INCLUDES = -I$(srcdir)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+OSHELPER	+= nsGNOMERegistry.cpp
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
+OSHELPER  += nsMIMEInfoBeOS.cpp
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+OSHELPER  += nsMIMEInfoWin.cpp
+LOCAL_INCLUDES += -I$(srcdir)/win
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+OSHELPER  += nsMIMEInfoOS2.cpp
+endif
+
+EXPORTS = \
+		$(OSDIR)/nsOSHelperAppService.h \
+			$(NULL)
+
+XPIDLSRCS = \
+	nsCExternalHandlerService.idl	\
+	nsIExternalProtocolService.idl \
+	nsIExternalHelperAppService.idl	\
+	nsIHelperAppLauncherDialog.idl \
+	$(NULL)
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+XPIDLSRCS		+= nsIInternetConfigService.idl
+endif
+
+CPPSRCS	= \
+	nsExternalHelperAppService.cpp	\
+	nsExternalProtocolHandler.cpp \
+	nsMIMEInfoImpl.cpp \
+	$(OSHELPER) \
+	$(NULL)
+
+ifeq ($(OS_ARCH),WINNT WINCE)
+OS_LIBS		+= shell32.lib
+GARBAGE		+= nsOSHelperAppService.cpp $(srcdir)/nsOSHelperAppService.cpp \
+             nsMIMEInfoWin.cpp $(srcdir)/nsMIMEInfoWin.cpp
+endif
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
+SRCS_IN_OBJDIR	= 1
+include $(topsrcdir)/config/rules.mk
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+CXXFLAGS += $(TK_CFLAGS)
+endif
+
+# the use of multiple VPATH dirs is broken in cygwin make
+ifeq ($(OS_ARCH),WINNT WINCE)
+export:: $(OSDIR)/nsOSHelperAppService.cpp $(OSDIR)/nsMIMEInfoWin.cpp
+	$(INSTALL) $^ .
+endif

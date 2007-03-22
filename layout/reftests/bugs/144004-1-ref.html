@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html style="margin: 0; padding: 0; border: 0">
+  <head>
+    <script>
+      function test() {
+        var div = document.createElement("div");
+        div.appendChild(document.createTextNode("text"));
+        document.documentElement.appendChild(div);
+      }
+    </script>
+  </head>
+  <body style="margin: 0; padding: 0; border: 0">
+    <script>
+      document.body.offsetWidth;
+      test();
+    </script>
+  </body>
+</html>

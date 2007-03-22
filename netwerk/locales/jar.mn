@@ -1,0 +1,9 @@
+#filter substitution
+
+@AB_CD@.jar:
+#ifdef MOZ_XUL_APP
+% locale necko @AB_CD@ %locale/@AB_CD@/necko/
+#else
+* locale/@AB_CD@/necko/contents.rdf      (generic/contents.rdf)
+#endif
+  locale/@AB_CD@/necko/necko.properties  (%necko.properties)

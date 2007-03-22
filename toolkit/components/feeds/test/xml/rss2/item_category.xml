@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: item category works
+Expect: var cats = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.getProperty('categories'); cats.QueryInterface(Components.interfaces.nsIArray); var cat = cats.queryElementAt(0, Components.interfaces.nsIPropertyBag); ((cat.getProperty('domain') == 'foo') && (cat.getProperty('term') == 'bar'));
+
+-->
+<rss version="2.0" >
+<channel>
+<item>
+<author>jbb@dallas.example.com (Joe Bob Briggs)</author>
+<title>test</title>
+<category domain="foo">bar</category>
+</item>
+</channel>
+</rss>

@@ -1,0 +1,96 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
+ */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Jungshik Shin <jshin@mailaps.org>.
+ * Portions created by the Initial Developer are Copyright (C) 2002
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s: 
+ *   Naoki Hotta <nhotta@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(249f52a3-2599-4b00-ba40-0481364831a2)]
+interface nsIUTF8ConverterService : nsISupports
+{
+  /**
+   * Ensure that |aString| is encoded in UTF-8.  If not, 
+   * convert to UTF-8 assuming it's encoded in |aCharset|
+   * and return the converted string in UTF-8.
+   *
+   * @param aString a string to  ensure its UTF8ness
+   * @param aCharset the charset to convert from if |aString| is not in UTF-8
+   * @param aSkipCheck determines whether or not to skip 'ASCIIness' and 
+   *        'UTF8ness' check. Set this to PR_TRUE only if you suspect that 
+   *        aString can be mistaken for ASCII / UTF-8 but is actually NOT 
+   *        in ASCII / UTF-8 so that aString has to go through the conversion.
+   *        skipping ASCIIness/UTF8ness check.
+   *        The most common case is the input is in 7bit non-ASCII charsets
+   *        like ISO-2022-JP, HZ or UTF-7 (in its original form or
+   *        a modified form used in IMAP folder names).
+   * @return the converted string in UTF-8.
+   * @throws NS_ERROR_UCONV_NOCONV when there is no decoder for aCharset
+   *         or error code of nsIUnicodeDecoder in case of conversion failure
+   */
+
+    AUTF8String convertStringToUTF8(in ACString aString, 
+                                    in string   aCharset,
+                                    in boolean  aSkipCheck);
+
+/* XXX : To-be-added. convertStringFromUTF8 */
+   
+  /**
+   * Ensure that |aSpec| (after URL-unescaping it) is encoded in UTF-8.  
+   * If not,  convert it to UTF-8, assuming it's encoded in |aCharset|,  
+   * and return the result.
+   *
+   * <p>Make sure that all characters outside US-ASCII in your input spec 
+   * are url-escaped if  your spec is not in UTF-8 (before url-escaping) 
+   * because the presence of non-ASCII characters is <strong>blindly</strong>
+   * regarded as an indication that your input spec is in unescaped UTF-8
+   * and it will be returned without further processing. No valid spec
+   * going around in Mozilla code would break this assumption. 
+   *
+   * <p>XXX The above may change in the future depending on the usage pattern.
+   *
+   * @param aSpec an url-escaped URI spec to  ensure its UTF8ness
+   * @param aCharset the charset to convert from if |aSpec| is not in UTF-8
+   * @return the converted spec in UTF-8.
+   * @throws NS_ERROR_UCONV_NOCONV when there is no decoder for aCharset
+   *         or error code of nsIUnicodeDecoder in case of conversion failure
+   */
+
+    AUTF8String convertURISpecToUTF8(in ACString aSpec, 
+                                     in string   aCharset);
+};
+

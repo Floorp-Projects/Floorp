@@ -1,0 +1,43 @@
+#ifndef SUPPRESS_CHROME
+#ifdef MOZ_SUITE
+#ifndef MOZ_XUL_APP
+comm.jar:
+    content/communicator/alerts/alert.xul                       (alerts/resources/content/alert.xul)  
+    content/communicator/alerts/alert.js                        (alerts/resources/content/alert.js)  
+*   content/cookie/contents.rdf                                 (/toolkit/components/cookie/content/contents.rdf)
+    content/cookie/cookieAcceptDialog.xul                       (/toolkit/components/cookie/content/cookieAcceptDialog.xul)
+*   content/cookie/cookieAcceptDialog.js                        (/toolkit/components/cookie/content/cookieAcceptDialog.js)
+#endif
+
+en-US.jar:
+    locale/en-US/global-platform/win/nsWindowsHooks.properties  (winhooks/locale/en-US/nsWindowsHooks.properties)
+#ifndef MOZ_XUL_APP
+    locale/en-US/communicator/update-notifications.properties   (updates/resources/locale/en-US/update-notifications.properties)
+    locale/en-US/global/downloadProgress.properties             (xfer/resources/locale/en-US/downloadProgress.properties)
+    locale/en-US/global/filepicker.dtd                          (filepicker/res/locale/en-US/filepicker.dtd)
+    locale/en-US/global/filepicker.properties                   (filepicker/res/locale/en-US/filepicker.properties)
+    locale/en-US/global/console.dtd                             (console/resources/locale/en-US/console.dtd)
+    locale/en-US/global/console.properties                      (console/resources/locale/en-US/console.properties)
+    locale/en-US/global/finddialog.dtd                          (find/resources/locale/en-US/finddialog.dtd)
+    locale/en-US/global/finddialog.properties                   (find/resources/locale/en-US/finddialog.properties)
+*   locale/en-US/cookie/contents.rdf                            (cookie/locale/en-US/contents.rdf)
+    locale/en-US/cookie/cookieAcceptDialog.properties           (/toolkit/locales/en-US/chrome/cookie/cookieAcceptDialog.properties)
+    locale/en-US/cookie/cookieAcceptDialog.dtd                  (/toolkit/locales/en-US/chrome/cookie/cookieAcceptDialog.dtd)
+
+toolkit.jar:
+    content/global/blank.html                                   (console/resources/content/blank.html)
+    content/global/console.js                                   (console/resources/content/console.js)
+    content/global/console.xul                                  (console/resources/content/console.xul)
+    content/global/console.css                                  (console/resources/content/console.css)
+    content/global/consoleBindings.xml                          (console/resources/content/consoleBindings.xml)
+    content/global/finddialog.js                                (find/resources/finddialog.js)
+    content/global/finddialog.xul                               (find/resources/finddialog.xul)
+    content/global/filepicker.js				(filepicker/res/content/filepicker.js)
+    content/global/filepicker.xul				(filepicker/res/content/filepicker.xul)
+#endif
+#endif
+
+toolkit.jar:
+    content/global/autocomplete.xml                             (autocomplete/resources/content/autocomplete.xml)
+    content/global/autocomplete.css                             (autocomplete/resources/content/autocomplete.css)
+#endif

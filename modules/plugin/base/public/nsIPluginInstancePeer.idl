@@ -1,0 +1,135 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/**
+ * nsIPluginInstancePeer
+ *
+ * @status DEPRECATED
+ *
+ * Originally published XPCOM Plugin API is now deprecated
+ * Developers are welcome to use NPAPI, please refer to:
+ * http://mozilla.org/projects/plugins/
+ */
+
+#include "nsISupports.idl"
+#include "nspluginroot.idl"
+
+%{C++
+#include "nsplugindefs.h"
+struct JSObject;
+%}
+
+interface nsIOutputStream;
+
+/**
+ * The nsIPluginInstancePeer interface is the set of operations implemented
+ * by the browser to support a plugin instance. When a plugin instance is 
+ * constructed, a nsIPluginInstancePeer is passed to its initializer 
+ * representing the instantiation of the plugin on the page. 
+ *
+ * Other interfaces may be obtained from nsIPluginInstancePeer by calling
+ * QueryInterface, e.g. nsIPluginTagInfo.
+ */
+[uuid(4b7cea20-019b-11d2-815b-006008119d7a)]
+interface nsIPluginInstancePeer : nsISupports
+{
+    /**
+   * Returns the value of a variable associated with the plugin manager.
+   *
+   * (Corresponds to NPN_GetValue.)
+   *
+   * @param aVariable - the plugin manager variable to get
+   * @param aValue    - the address of where to store the resulting value
+   * @result          - NS_OK if this operation was successful
+   */
+  void getValue(in nsPluginInstancePeerVariable aVariable, in voidPtr aValue);
+  /**
+     * Returns the MIME type of the plugin instance. 
+     *
+     * (Corresponds to NPP_New's MIMEType argument.)
+     *
+   * @param aMIMEType - resulting MIME type
+   * @result          - NS_OK if this operation was successful
+     */
+  readonly attribute nsMIMEType MIMEType;
+
+    /**
+     * Returns the mode of the plugin instance, i.e. whether the plugin is
+     * embedded in the html, or full page. 
+     *
+     * (Corresponds to NPP_New's mode argument.)
+     *
+   * @param result - the resulting mode
+   * @result       - NS_OK if this operation was successful
+     */
+  readonly attribute nsPluginMode mode;
+
+    /**
+     * This operation is called by the plugin instance when it wishes to send
+     * a stream of data to the browser. It constructs a new output stream to which
+     * the plugin may send the data. When complete, the Close and Release methods
+     * should be called on the output stream.
+     *
+     * (Corresponds to NPN_NewStream.)
+     *
+   * @param aType   - MIME type of the stream to create
+   * @param aTarget - the target window name to receive the data
+   * @param aResult - the resulting output stream
+   * @result        - NS_OK if this operation was successful
+     */
+  void newStream(in nsMIMEType aType, in string aTarget, out nsIOutputStream aResult);
+
+    /**
+     * This operation causes status information to be displayed on the window
+     * associated with the plugin instance. 
+     *
+     * (Corresponds to NPN_Status.)
+     *
+   * @param aMessage - the status message to display
+   * @result         - NS_OK if this operation was successful
+     */
+  void showStatus(in string aMessage);
+
+    /**
+     * Set the desired size of the window in which the plugin instance lives.
+     *
+   * @param aWidth  - new window width
+   * @param aHeight - new window height
+   * @result        - NS_OK if this operation was successful
+     */
+  void setWindowSize(in unsigned long aWidth, in unsigned long aHeight);
+};

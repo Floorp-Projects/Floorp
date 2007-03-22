@@ -1,0 +1,17 @@
+MODULE 11111111-1111-1111-1111-111111111111 1 module1.pdb
+FILE 1 file1_1.cc
+FILE 2 file1_2.cc
+FILE 3 file1_3.cc
+FUNC 1000 c 0 Function1_1
+1000 4 44 1
+1004 4 45 1
+1008 4 46 1
+FUNC 1100 8 4 Function1_2
+1100 4 65 2
+1104 4 66 2
+FUNC 1200 100 8 Function1_3
+FUNC 1300 100 c Function1_4
+STACK WIN 4 1000 c 1 0 0 0 0 0 1 $eip 4 + ^ = $esp $ebp 8 + = $ebp $ebp ^ =
+STACK WIN 4 1100 8 1 0 0 0 0 0 1 $eip 4 + ^ = $esp $ebp 8 + = $ebp $ebp ^ =
+STACK WIN 4 1100 100 1 0 0 0 0 0 1 $eip 4 + ^ = $esp $ebp 8 + = $ebp $ebp ^ =
+STACK WIN 4 1300 100 1 0 0 0 0 0 1 $eip 4 + ^ = $esp $ebp 8 + = $ebp $ebp ^ =

@@ -1,0 +1,231 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+
+interface nsISelection;
+
+
+/*
+Editor Action Listener interface to outside world
+*/
+
+
+/**
+ * A generic editor action listener interface. 
+ * <P>
+ * nsIEditActionListener is the interface used by applications wishing to be notified
+ * when the editor modifies the DOM tree.
+ *
+ * Note:  this is the wrong class to implement if you are interested in generic
+ * change notifications.  For generic notifications, you should implement
+ * nsIDocumentObserver.
+ */
+[scriptable, uuid(b22907b1-ee93-11d2-8d50-000064657374)]
+
+interface nsIEditActionListener : nsISupports{
+
+  /** 
+   * Called before the editor creates a node.
+   * @param aTag      The tag name of the DOM Node to create.
+   * @param aParent   The node to insert the new object into
+   * @param aPosition The place in aParent to insert the new node
+   *                  0=first child, 1=second child, etc.
+   *                  any number > number of current children = last child
+   */
+  void WillCreateNode(in DOMString aTag,
+                            in nsIDOMNode   aParent,
+                            in long aPosition);
+
+  /** 
+   * Called after the editor creates a node.
+   * @param aTag      The tag name of the DOM Node to create.
+   * @param aNode     The DOM Node that was created.
+   * @param aParent   The node to insert the new object into
+   * @param aPosition The place in aParent to insert the new node
+   *                  0=first child, 1=second child, etc.
+   *                  any number > number of current children = last child
+   * @param aResult   The result of the create node operation.
+   */
+  void DidCreateNode(in DOMString aTag,
+                           in nsIDOMNode aNode,
+                           in nsIDOMNode aParent,
+                           in long          aPosition,
+                           in nsresult      aResult);
+
+  /** 
+   * Called before the editor inserts a node.
+   * @param aNode     The DOM Node to insert.
+   * @param aParent   The node to insert the new object into
+   * @param aPosition The place in aParent to insert the new node
+   *                  0=first child, 1=second child, etc.
+   *                  any number > number of current children = last child
+   */
+  void WillInsertNode(in nsIDOMNode aNode,
+                            in nsIDOMNode aParent,
+                            in long      aPosition);
+
+  /** 
+   * Called after the editor inserts a node.
+   * @param aNode     The DOM Node to insert.
+   * @param aParent   The node to insert the new object into
+   * @param aPosition The place in aParent to insert the new node
+   *                  0=first child, 1=second child, etc.
+   *                  any number > number of current children = last child
+   * @param aResult   The result of the insert node operation.
+   */
+  void DidInsertNode(in nsIDOMNode aNode,
+                           in nsIDOMNode aParent,
+                           in long      aPosition,
+                           in nsresult    aResult);
+
+  /** 
+   * Called before the editor deletes a node.
+   * @param aChild    The node to delete
+   */
+  void WillDeleteNode(in nsIDOMNode aChild);
+
+  /** 
+   * Called after the editor deletes a node.
+   * @param aChild    The node to delete
+   * @param aResult   The result of the delete node operation.
+   */
+  void DidDeleteNode(in nsIDOMNode aChild, in nsresult aResult);
+
+  /** 
+   * Called before the editor splits a node.
+   * @param aExistingRightNode   the node to split.  It will become the new node's next sibling.
+   * @param aOffset              the offset of aExistingRightNode's content|children to do the split at
+   * @param aNewLeftNode         [OUT] the new node resulting from the split, becomes aExistingRightNode's previous sibling.
+   */
+  void WillSplitNode(in nsIDOMNode aExistingRightNode,
+                           in long      aOffset);
+
+  /** 
+   * Called after the editor splits a node.
+   * @param aExistingRightNode   the node to split.  It will become the new node's next sibling.
+   * @param aOffset              the offset of aExistingRightNode's content|children to do the split at
+   * @param aNewLeftNode         [OUT] the new node resulting from the split, becomes aExistingRightNode's previous sibling.
+   */
+  void DidSplitNode(in nsIDOMNode aExistingRightNode,
+                          in long      aOffset,
+                          in nsIDOMNode aNewLeftNode,
+                          in nsresult    aResult);
+
+  /** 
+   * Called before the editor joins 2 nodes.
+   * @param aLeftNode   This node will be merged into the right node
+   * @param aRightNode  The node that will be merged into.
+   *                    There is no requirement that the two nodes be of
+   *                    the same type.
+   * @param aParent     The parent of aRightNode
+   */
+  void WillJoinNodes(in nsIDOMNode aLeftNode,
+                           in nsIDOMNode aRightNode,
+                           in nsIDOMNode aParent);
+
+  /** 
+   * Called after the editor joins 2 nodes.
+   * @param aLeftNode   This node will be merged into the right node
+   * @param aRightNode  The node that will be merged into.
+   *                    There is no requirement that the two nodes be of
+   *                    the same type.
+   * @param aParent     The parent of aRightNode
+   * @param aResult     The result of the join operation.
+   */
+  void DidJoinNodes(in nsIDOMNode aLeftNode,
+                          in nsIDOMNode aRightNode,
+                          in nsIDOMNode aParent,
+                          in nsresult    aResult);
+
+  /** 
+   * Called before the editor inserts text.
+   * @param aTextNode   This node getting inserted text
+   * @param aOffset     The offset in aTextNode to insert at.
+   * @param aString     The string that gets inserted.
+   */
+  void WillInsertText(in nsIDOMCharacterData aTextNode,
+                            in long          aOffset,
+                            in DOMString     aString);
+
+  /** 
+   * Called after the editor inserts text.
+   * @param aTextNode   This node getting inserted text
+   * @param aOffset     The offset in aTextNode to insert at.
+   * @param aString     The string that gets inserted.
+   * @param aResult     The result of the insert text operation.
+   */
+  void DidInsertText(in nsIDOMCharacterData aTextNode,
+                           in long                aOffset,
+                           in DOMString           aString,
+                           in nsresult            aResult);
+
+  /** 
+   * Called before the editor deletes text.
+   * @param aTextNode   This node getting text deleted
+   * @param aOffset     The offset in aTextNode to delete at.
+   * @param aLength     The amount of text to delete.
+   */
+  void WillDeleteText(in nsIDOMCharacterData aTextNode,
+                            in long                aOffset,
+                            in long                aLength);
+
+  /** 
+   * Called before the editor deletes text.
+   * @param aTextNode   This node getting text deleted
+   * @param aOffset     The offset in aTextNode to delete at.
+   * @param aLength     The amount of text to delete.
+   * @param aResult     The result of the delete text operation.
+   */
+  void DidDeleteText(in nsIDOMCharacterData aTextNode,
+                           in long                aOffset,
+                           in long                aLength,
+                           in nsresult              aResult);
+
+  /** 
+   * Called before the editor deletes the selection.
+   * @param aSelection   The selection to be deleted
+   */
+  void WillDeleteSelection(in nsISelection aSelection);
+
+  /** 
+   * Called after the editor deletes the selection.
+   * @param aSelection   The selection, after deletion
+   */
+  void DidDeleteSelection(in nsISelection aSelection);
+};

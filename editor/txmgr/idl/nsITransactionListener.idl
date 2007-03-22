@@ -1,0 +1,202 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsITransaction;
+interface nsITransactionManager;
+
+/**
+ * The nsITransactionListener interface.
+ * <P>
+ * This interface is implemented by an object that tracks transactions.
+ */
+[scriptable, uuid(58e330c4-7b48-11d2-98b9-00805f297d89)]
+interface nsITransactionListener : nsISupports
+{
+  /**
+   * Called before a transaction manager calls a transaction's
+   * doTransaction() method.
+   * @param aManager the transaction manager doing the transaction.
+   * @param aTransaction the transaction being executed.
+   * @result boolean value returned by listener which indicates
+   * it's desire to interrupt normal control flow. Listeners should
+   * return true if they want to interrupt normal control flow, without
+   * throwing an error.
+   */
+  boolean willDo(in nsITransactionManager aManager,
+                      in nsITransaction aTransaction);
+
+  /**
+   * Called after a transaction manager calls the doTransaction() method of
+   * a transaction.
+   * @param aManager the transaction manager that did the transaction.
+   * @param aTransaction the transaction that was executed.
+   * @param aDoResult the nsresult returned after executing
+   * the transaction.
+   */
+  void didDo(in nsITransactionManager aManager,
+             in nsITransaction aTransaction,
+             in nsresult aDoResult);
+
+  /**
+   * Called before a transaction manager calls the Undo() method of
+   * a transaction.
+   * @param aManager the transaction manager undoing the transaction.
+   * @param aTransaction the transaction being undone.
+   * @result boolean value returned by listener which indicates
+   * it's desire to interrupt normal control flow. Listeners should
+   * return true if they want to interrupt normal control flow, without
+   * throwing an error. Note that listeners can also interrupt normal
+   * control flow by throwing an nsresult that indicates an error.
+   */
+  boolean willUndo(in nsITransactionManager aManager,
+                   in nsITransaction aTransaction);
+
+  /**
+   * Called after a transaction manager calls the Undo() method of
+   * a transaction.
+   * @param aManager the transaction manager undoing the transaction.
+   * @param aTransaction the transaction being undone.
+   * @param aUndoResult the nsresult returned after undoing the transaction.
+   */
+  void didUndo(in nsITransactionManager aManager,
+               in nsITransaction aTransaction,
+               in nsresult aUndoResult);
+
+  /**
+   * Called before a transaction manager calls the Redo() method of
+   * a transaction.
+   * @param aManager the transaction manager redoing the transaction.
+   * @param aTransaction the transaction being redone.
+   * @result boolean value returned by listener which indicates
+   * it's desire to interrupt normal control flow. Listeners should
+   * return true if they want to interrupt normal control flow, without
+   * throwing an error. Note that listeners can also interrupt normal
+   * control flow by throwing an nsresult that indicates an error.
+   */
+  boolean willRedo(in nsITransactionManager aManager,
+                   in nsITransaction aTransaction);
+
+  /**
+   * Called after a transaction manager calls the Redo() method of
+   * a transaction.
+   * @param aManager the transaction manager redoing the transaction.
+   * @param aTransaction the transaction being redone.
+   * @param aRedoResult the nsresult returned after redoing the transaction.
+   */
+  void didRedo(in nsITransactionManager aManager,
+               in nsITransaction aTransaction,
+               in nsresult aRedoResult);
+
+  /**
+   * Called before a transaction manager begins a batch.
+   * @param aManager the transaction manager beginning a batch.
+   * @result boolean value returned by listener which indicates
+   * it's desire to interrupt normal control flow. Listeners should
+   * return true if they want to interrupt normal control flow, without
+   * throwing an error. Note that listeners can also interrupt normal
+   * control flow by throwing an nsresult that indicates an error.
+   */
+  boolean willBeginBatch(in nsITransactionManager aManager);
+
+  /**
+   * Called after a transaction manager begins a batch.
+   * @param aManager the transaction manager that began a batch.
+   * @param aResult the nsresult returned after beginning a batch.
+   */
+  void didBeginBatch(in nsITransactionManager aManager,
+                     in nsresult aResult);
+
+  /**
+   * Called before a transaction manager ends a batch.
+   * @param aManager the transaction manager ending a batch.
+   * @result boolean value returned by listener which indicates
+   * it's desire to interrupt normal control flow. Listeners should
+   * return true if they want to interrupt normal control flow, without
+   * throwing an error. Note that listeners can also interrupt normal
+   * control flow by throwing an nsresult that indicates an error.
+   */
+  boolean willEndBatch(in nsITransactionManager aManager);
+
+  /**
+   * Called after a transaction manager ends a batch.
+   * @param aManager the transaction manager ending a batch.
+   * @param aResult the nsresult returned after ending a batch.
+   */
+  void didEndBatch(in nsITransactionManager aManager,
+                   in nsresult aResult);
+
+  /**
+   * Called before a transaction manager tries to merge
+   * a transaction, that was just executed, with the
+   * transaction at the top of the undo stack.
+   * @param aManager the transaction manager ending a batch.
+   * @param aTopTransaction the transaction at the top of the undo stack.
+   * @param aTransactionToMerge the transaction to merge.
+   * @result boolean value returned by listener which indicates
+   * it's desire to interrupt normal control flow. Listeners should
+   * return true if they want to interrupt normal control flow, without
+   * throwing an error. Note that listeners can also interrupt normal
+   * control flow by throwing an nsresult that indicates an error.
+   */
+  boolean willMerge(in nsITransactionManager aManager,
+                    in nsITransaction aTopTransaction,
+                    in nsITransaction aTransactionToMerge);
+
+  /**
+   * Called after a transaction manager tries to merge
+   * a transaction, that was just executed, with the
+   * transaction at the top of the undo stack.
+   * @param aManager the transaction manager ending a batch.
+   * @param aTopTransaction the transaction at the top of the undo stack.
+   * @param aTransactionToMerge the transaction to merge.
+   * @param aDidMerge true if transaction was merged, else false.
+   * @param aMergeResult the nsresult returned after the merge attempt.
+   * @param aInterrupt listeners should set this to PR_TRUE if they
+   * want to interrupt normal control flow, without throwing an error.
+   */
+  void didMerge(in nsITransactionManager aManager,
+                in nsITransaction aTopTransaction,
+                in nsITransaction aTransactionToMerge,
+                in boolean aDidMerge,
+                in nsresult aMergeResult);
+
+
+  /* XXX: We should probably add pruning notification methods. */
+};
+

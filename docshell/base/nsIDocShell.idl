@@ -1,0 +1,437 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla browser.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Travis Bogard <travis@netscape.com>
+ *   Steve Clark <buster@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+%{ C++
+class nsPresContext;
+class nsIPresShell;
+%}
+
+/**
+ * The nsIDocShell interface.
+ */
+
+[ptr] native nsPresContext(nsPresContext);
+[ptr] native nsIPresShell(nsIPresShell);
+
+interface nsIURI;
+interface nsIChannel;
+interface nsIContentViewer;
+interface nsIURIContentListener;
+interface nsIDOMEventTarget;
+interface nsIDocShellLoadInfo;
+interface nsIDocumentCharsetInfo;
+interface nsIWebNavigation;
+interface nsISimpleEnumerator;
+interface nsIInputStream;
+interface nsIRequest;
+interface nsISHEntry;
+interface nsILayoutHistoryState;
+interface nsISecureBrowserUI;
+interface nsIDOMStorage;
+
+[scriptable, uuid(fbe2a673-4b8b-46a2-b225-398c52cc05cb)]
+interface nsIDocShell : nsISupports
+{
+  /**
+   * Loads a given URI.  This will give priority to loading the requested URI
+   * in the object implementing	this interface.  If it can't be loaded here
+   * however, the URL dispatcher will go through its normal process of content
+   * loading.
+   *
+   * @param uri        - The URI to load.
+   * @param loadInfo   - This is the extended load info for this load.  This
+   *                     most often will be null, but if you need to do 
+   *                     additional setup for this load you can get a loadInfo
+   *                     object by calling createLoadInfo.  Once you have this
+   *                     object you can set the needed properties on it and
+   *                     then pass it to loadURI.
+   * @param aLoadFlags - Flags to modify load behaviour. Flags are defined
+   *                     in nsIWebNavigation.
+   */
+  [noscript]void loadURI(in nsIURI uri,
+                         in nsIDocShellLoadInfo loadInfo,
+                         in unsigned long aLoadFlags,
+                         in boolean firstParty);
+
+  /**
+   * Loads a given stream. This will give priority to loading the requested
+   * stream in the object implementing this interface. If it can't be loaded
+   * here however, the URL dispatched will go through its normal process of
+   * content loading.
+   *
+   * @param aStream         - The input stream that provides access to the data
+   *                          to be loaded.  This must be a blocking, threadsafe
+   *                          stream implementation.
+   * @param aURI            - The URI representing the stream, or null.
+   * @param aContentType    - The type (MIME) of data being loaded (empty if unknown).
+   * @param aContentCharset - The charset of the data being loaded (empty if unknown).
+   * @param aLoadInfo       - This is the extended load info for this load.  This
+   *                          most often will be null, but if you need to do 
+   *                          additional setup for this load you can get a
+   *                          loadInfo object by calling createLoadInfo.  Once
+   *                          you have this object you can set the needed 
+   *                          properties on it and then pass it to loadStream.
+   */
+  [noscript]void loadStream(in nsIInputStream aStream,
+                            in nsIURI aURI,
+                            in ACString aContentType,
+                            in ACString aContentCharset,
+                            in nsIDocShellLoadInfo aLoadInfo);
+
+  const long INTERNAL_LOAD_FLAGS_NONE                    = 0x0;
+  const long INTERNAL_LOAD_FLAGS_INHERIT_OWNER           = 0x1;
+  const long INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER      = 0x2;
+  const long INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP = 0x4;
+
+  // This flag marks the first load in this object
+  // @see nsIWebNavigation::LOAD_FLAGS_FIRST_LOAD
+  const long INTERNAL_LOAD_FLAGS_FIRST_LOAD              = 0x8;
+
+  /**
+   * Loads the given URI.  This method is identical to loadURI(...) except
+   * that its parameter list is broken out instead of being packaged inside
+   * of an nsIDocShellLoadInfo object...
+   *
+   * @param aURI            - The URI to load.
+   * @param aReferrer       - Referring URI
+   * @param aOwner          - Owner (security principal) 
+   * @param aInheritOwner   - Flag indicating whether the owner of the current
+   *                          document should be inherited if aOwner is null.
+   * @param aStopActiveDoc  - Flag indicating whether loading the current
+   *                          document should be stopped.
+   * @param aWindowTarget   - Window target for the load.
+   * @param aTypeHint       - A hint as to the content-type of the resulting
+   *                          data.  May be null or empty if no hint.
+   * @param aPostDataStream - Post data stream (if POSTing)
+   * @param aHeadersStream  - Stream containing "extra" request headers...
+   * @param aLoadFlags      - Flags to modify load behaviour. Flags are defined
+   *                          in nsIWebNavigation.
+   * @param aSHEntry        - Active Session History entry (if loading from SH)
+   */
+  [noscript]void internalLoad(in nsIURI aURI,
+                              in nsIURI aReferrer,
+                              in nsISupports aOwner,
+                              in PRUint32 aFlags,
+                              in wstring aWindowTarget,
+                              in string aTypeHint,
+                              in nsIInputStream aPostDataStream,
+                              in nsIInputStream aHeadersStream,
+                              in unsigned long aLoadFlags,
+                              in nsISHEntry aSHEntry,
+                              in boolean firstParty,
+                              out nsIDocShell aDocShell,
+                              out nsIRequest aRequest);
+
+  /**
+   * Creates a DocShellLoadInfo object that you can manipulate and then pass
+   * to loadURI.
+   */
+  void createLoadInfo(out nsIDocShellLoadInfo loadInfo);
+
+  /**
+   * Reset state to a new content model within the current document and the document
+   * viewer.  Called by the document before initiating an out of band document.write().
+   */
+  void prepareForNewContentModel();
+
+  /**
+   * For editors and suchlike who wish to change the URI associated with the
+   * document. Note if you want to get the current URI, use the read-only
+   * property on nsIWebNavigation.
+   */ 
+  void setCurrentURI(in nsIURI aURI);
+
+  /**
+   * Notify the associated content viewer and all child docshells that they are
+   * about to be hidden.  If |isUnload| is true, then the document is being
+   * unloaded as well.
+   */
+  [noscript] void firePageHideNotification(in boolean isUnload);
+
+  /**
+   * Presentation context for the currently loaded document.  This may be null.
+   */
+  [noscript] readonly attribute nsPresContext presContext;
+
+  /**
+   * Presentation shell for the currently loaded document.  This may be null.
+   */
+  [noscript] readonly attribute nsIPresShell presShell;
+
+  /**
+   * Presentation shell for the oldest document, if this docshell is
+   * currently transitioning between documents.
+   */
+  [noscript] readonly attribute nsIPresShell eldestPresShell;
+
+  /**
+   * Content Viewer that is currently loaded for this DocShell.  This may
+   * change as the underlying content changes.
+   */
+  readonly attribute nsIContentViewer contentViewer;
+
+  /**
+   * This attribute allows chrome to tie in to handle DOM events that may
+   * be of interest to chrome.
+   */
+  attribute nsIDOMEventTarget chromeEventHandler;
+
+  /**
+   * The document charset info.  This is used by a load to determine priorities
+   * for charset detection etc.
+   */
+  attribute nsIDocumentCharsetInfo documentCharsetInfo;
+
+  /**
+   * Whether to allow plugin execution
+   */
+  attribute boolean allowPlugins;
+
+  /**
+   * Whether to allow Javascript execution
+   */
+  attribute boolean allowJavascript;
+
+  /**
+   * Attribute stating if refresh based redirects can be allowed
+   */
+  attribute  boolean allowMetaRedirects;
+
+  /**
+   * Attribute stating if it should allow subframes (framesets/iframes) or not
+   */
+  attribute boolean allowSubframes;
+
+  /**
+   * Attribute stating whether or not images should be loaded.
+   */
+  attribute boolean allowImages;
+
+  /**
+   * Get an enumerator over this docShell and its children.
+   *
+   * @param aItemType  - Only include docShells of this type, or if typeAll,
+   *                     include all child shells.
+   *                     Uses types from nsIDocShellTreeItem.
+   * @param aDirection - Whether to enumerate forwards or backwards.
+   */
+
+  const long ENUMERATE_FORWARDS  = 0;
+  const long ENUMERATE_BACKWARDS = 1;
+
+  nsISimpleEnumerator getDocShellEnumerator(in long aItemType,
+                                            in long aDirection);
+
+  /**
+   * The type of application that created this window
+   */
+  const unsigned long APP_TYPE_UNKNOWN  = 0;
+  const unsigned long APP_TYPE_MAIL     = 1;
+  const unsigned long APP_TYPE_EDITOR   = 2;
+
+  attribute unsigned long appType;
+
+  /**
+   * certain dochshells (like the message pane)
+   * should not throw up auth dialogs
+   * because it can act as a password trojan
+   */
+  attribute boolean allowAuth;
+
+  /**
+   * Set/Get the document scale factor.  When setting this attribute, a
+   * NS_ERROR_NOT_IMPLEMENTED error may be returned by implementations
+   * not supporting zoom.  Implementations not supporting zoom should return
+   * 1.0 all the time for the Get operation.  1.0 by the way is the default
+   * of zoom.  This means 100% of normal scaling or in other words normal size
+   * no zoom. 
+   */
+  attribute float zoom;
+
+  /*
+   * XXX Comment here!
+   */
+  attribute long marginWidth;
+
+  /*
+   * XXX Comment here!
+   */
+  attribute long marginHeight;
+
+  /*
+   * Tells the DocShell that it now has focus or has lost focus
+   */
+  attribute boolean hasFocus;
+
+  /*
+   * Tells the docshell whether the canvas should have focus
+   */
+  attribute boolean canvasHasFocus;
+
+  /*
+   * Tells the docshell to offer focus to its tree owner.
+   * This is currently only necessary for embedding chrome.
+   */
+  void tabToTreeOwner(in boolean forward,
+                      out boolean tookFocus);
+
+  /**
+   * Current busy state for DocShell
+   */
+  const unsigned long BUSY_FLAGS_NONE             = 0;
+  const unsigned long BUSY_FLAGS_BUSY             = 1;
+  const unsigned long BUSY_FLAGS_BEFORE_PAGE_LOAD = 2;
+  const unsigned long BUSY_FLAGS_PAGE_LOADING     = 4;
+
+  /**
+   * Load commands for the document 
+   */
+  const unsigned long LOAD_CMD_NORMAL  = 0x1; // Normal load
+  const unsigned long LOAD_CMD_RELOAD  = 0x2; // Reload
+  const unsigned long LOAD_CMD_HISTORY = 0x4; // Load from history
+
+  readonly attribute unsigned long busyFlags;
+
+  /* 
+   * attribute to access the loadtype  for the document
+   */
+  attribute unsigned long  loadType;
+
+  /*
+   * returns true if the docshell is being destroyed, false otherwise
+   */
+  boolean isBeingDestroyed();
+
+  /*
+   * Returns true if the docshell is currently executing the onLoad Handler
+   */
+  readonly attribute boolean isExecutingOnLoadHandler;
+
+  attribute nsILayoutHistoryState layoutHistoryState;
+
+  readonly attribute boolean shouldSaveLayoutState;
+
+  /**
+   * The SecureBrowserUI object for this docshell.  This is set by XUL
+   * <browser> or nsWebBrowser for their root docshell.
+   */
+  attribute nsISecureBrowserUI securityUI;
+
+  /**
+   * Cancel the XPCOM timers for each meta-refresh URI in this docshell,
+   * and this docshell's children, recursively. The meta-refresh timers can be
+   * restarted using resumeRefreshURIs().  If the timers are already suspended,
+   * this has no effect.
+   */
+  void suspendRefreshURIs();
+
+  /**
+   * Restart the XPCOM timers for each meta-refresh URI in this docshell,
+   * and this docshell's children, recursively.  If the timers are already
+   * running, this has no effect.
+   */
+  void resumeRefreshURIs();
+
+  /**
+   * Begin firing WebProgressListener notifications for restoring a page
+   * presentation. |viewer| is the content viewer whose document we are
+   * starting to load.  If null, it defaults to the docshell's current content
+   * viewer, creating one if necessary.  |top| should be true for the toplevel
+   * docshell that is being restored; it will be set to false when this method
+   * is called for child docshells.  This method will post an event to
+   * complete the simulated load after returning to the event loop.
+   */
+  void beginRestore(in nsIContentViewer viewer, in boolean top);
+
+  /**
+   * Finish firing WebProgressListener notifications and DOM events for
+   * restoring a page presentation.  This should only be called via
+   * beginRestore().
+   */
+  void finishRestore();
+
+  /* Track whether we're currently restoring a document presentation. */
+  readonly attribute boolean restoringDocument;
+
+  /* attribute to access whether error pages are enabled */
+  attribute boolean useErrorPages;
+
+  /**
+   * Keeps track of the previous SHTransaction index and the current
+   * SHTransaction index at the time that the doc shell begins to load.
+   * Used for ContentViewer eviction.
+   */
+  readonly attribute long previousTransIndex;
+  readonly attribute long loadedTransIndex;
+
+  /**
+   * Notification that entries have been removed from the beginning of a
+   * nsSHistory which has this as its rootDocShell.
+   *
+   * @param numEntries - The number of entries removed
+   */
+  void historyPurged(in long numEntries);
+
+  /*
+   * Retrieves the WebApps session storage object for the supplied domain.
+   * If it doesn't already exist, a new one will be created.
+   *
+   * @param domain the domain of the storage object to retrieve
+   */
+  nsIDOMStorage getSessionStorageForURI(in nsIURI uri);
+
+  /*
+   * Add a WebApps session storage object to the docshell.
+   *
+   * @param domain the domain the storage object is associated with
+   * @param storage the storage object to add
+   */
+  void addSessionStorage(in ACString aDomain, in nsIDOMStorage storage);
+
+  /**
+   * Gets the channel for the currently loaded document, if any. 
+   * For a new document load, this will be the channel of the previous document
+   * until after OnLocationChange fires.
+   */
+  readonly attribute nsIChannel currentDocumentChannel;
+};
+

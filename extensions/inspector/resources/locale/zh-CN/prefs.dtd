@@ -1,0 +1,14 @@
+<!ENTITY Inspector.label "DOM 查看器">
+<!ENTITY Sidebar.label "边栏">
+<!ENTITY addNavigatorHooks.label "添加上下文相关菜单至浏览器">
+<!ENTITY blinkDuration.label "闪烁间隔">
+<!ENTITY blinkSelectedElement.label "闪烁选中元素">
+<!ENTITY blinkSpeed.label "闪烁速度">
+<!ENTITY borderColor.label "边框颜色">
+<!ENTITY borderWidth.label "边框宽度">
+<!ENTITY elementBlinking.label "闪烁元素">
+<!ENTITY install.label "安装">
+<!ENTITY installHowTo.label "DOM 查看器侧栏尚未安装。请点击“安装”按钮将之添加至侧栏。">
+<!ENTITY invertColors.label "反转颜色">
+<!ENTITY ms.label "（毫秒）">
+<!ENTITY px.label "(px)">

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<table id="theTable" border="1"><thead id="thead">
+    <tr><th>Header</th></tr>
+  </thead>
+  <tfoot id="tfoot"><tr><th>Footer</th></tr></tfoot>
+  <tbody><tr><td id="body">BODY</td></tr></tbody>
+</table>
+
+<script>
+var style = document.getElementById('tfoot').style;
+style.display = "none";
+document.body.offsetWidth;
+style.display = "table-footer-group";
+document.body.offsetWidth;
+style.display = "none";
+</script>
+
+</body>
+</html>

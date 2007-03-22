@@ -1,0 +1,6 @@
+toolkit.jar:
+*+ content/global/console.js                            (content/console.js)
+*+ content/global/console.xul                           (content/console.xul)
++  content/global/console.css                           (content/console.css)
++  content/global/consoleBindings.xml                   (content/consoleBindings.xml)
+   content/global/blank.html                            (content/blank.html)

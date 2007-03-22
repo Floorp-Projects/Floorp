@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+
+#filter substitution
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>inspector@mozilla.org</em:id>
+    <em:version>@EXTENSION_VERSION@</em:version>
+
+    <em:targetApplication>
+      <!-- Firefox -->
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>3.0a1</em:minVersion>
+        <em:maxVersion>@FIREFOX_VERSION@</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+    <em:targetApplication>
+      <!-- Thunderbird -->
+      <Description>
+        <em:id>{3550f703-e582-4d05-9a08-453d09bdfdc6}</em:id>
+        <em:minVersion>3.0a1</em:minVersion>
+        <em:maxVersion>@THUNDERBIRD_VERSION@</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+    <em:targetApplication>
+      <!-- Sunbird -->
+      <Description>
+        <em:id>{718e30fb-e89b-41dd-9da7-e25a45638b28}</em:id>
+        <em:minVersion>0.6a1</em:minVersion>
+        <em:maxVersion>@SUNBIRD_VERSION@</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+    <em:targetApplication>
+      <!-- Suite -->
+      <Description>
+        <em:id>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</em:id>
+        <em:minVersion>1.5a</em:minVersion>
+        <em:maxVersion>@SEAMONKEY_VERSION@</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+    
+    <!-- EXTENSION AUTHORS!
+         DO NOT COPY THIS PROPERTY INTO YOUR INSTALL RDF FILES
+         It will cause users not to be informed of incompatibilities 
+         with your extension when they are updated with Software Update
+         and your extension will become unavailable to them!
+         -->
+    <em:appManaged>true</em:appManaged>
+
+    <!-- front-end metadata -->
+    <em:name>DOM Inspector</em:name>
+    <em:description>Inspects the structure and properties of a window and its contents.</em:description>
+    <em:creator>mozilla.org</em:creator>
+    <em:homepageURL>http://www.mozilla.org/projects/inspector/</em:homepageURL>
+  </Description>
+</RDF>

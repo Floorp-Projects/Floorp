@@ -1,0 +1,1359 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE bindings SYSTEM "chrome://global/locale/tree.dtd">
+
+<bindings id="treeBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+  
+  <binding id="tree-base" extends="chrome://global/content/bindings/general.xml#basecontrol">
+    <resources>
+      <stylesheet src="chrome://global/skin/tree.css"/>
+    </resources>
+    <implementation>
+      <method name="_isAccelPressed">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+# Workaround until bug 302174 is fixed
+#ifdef XP_MACOSX
+          return aEvent.metaKey;
+#else
+          return aEvent.ctrlKey;
+#endif
+        ]]></body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="tree" extends="chrome://global/content/bindings/tree.xml#tree-base">
+    <content hidevscroll="true" hidehscroll="true">
+      <children includes="treecols"/>
+      <xul:stack class="tree-stack" flex="1">
+        <xul:treerows class="tree-rows" flex="1" xbl:inherits="hidevscroll">
+          <children/>
+        </xul:treerows>
+        <xul:textbox anonid="input" class="tree-input" left="0" top="0" hidden="true"/>
+      </xul:stack>
+      <xul:hbox xbl:inherits="collapsed=hidehscroll">
+        <xul:scrollbar orient="horizontal" flex="1" increment="16"/>
+        <xul:scrollcorner xbl:inherits="collapsed=hidevscroll"/>
+      </xul:hbox>
+    </content>
+    
+    <implementation implements="nsIDOMXULTreeElement, nsIDOMXULMultiSelectControlElement, nsIAccessibleProvider">
+
+      <!-- ///////////////// nsIDOMXULTreeElement ///////////////// -->
+
+      <property name="columns"
+                onget="return this.treeBoxObject.columns;"/>
+
+      <property name="view"
+                onget="return this.treeBoxObject.view;"
+                onset="return this.treeBoxObject.view = val;"/>
+
+      <property name="body"
+                onget="return this.treeBoxObject.treeBody;"/>
+
+      <property name="editable"
+                onget="return this.hasAttribute('editable');"
+                onset="if (val) this.setAttribute('editable', 'true');
+                       else this.removeAttribute('editable'); return val;"/>
+
+      <!-- ///////////////// nsIDOMXULSelectControlElement ///////////////// -->
+
+      <!-- ///////////////// nsIDOMXULMultiSelectControlElement ///////////////// -->
+
+      <property name="selType"
+                onget="return this.getAttribute('seltype')"
+                onset="this.setAttribute('seltype', val); return val;"/>
+
+      <property name="currentIndex"
+                onget="return this.view.selection.currentIndex;"
+                onset="return this.view.selection.currentIndex = val;"/>
+
+      <!-- ///////////////// nsIAccessibleProvider ///////////////// -->
+
+      <property name="accessibleType" readonly="true">
+        <getter>
+          <![CDATA[
+            return Components.interfaces.nsIAccessibleProvider.XULTree;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="treeBoxObject"
+                onget="return this.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);"
+                readonly="true"/>
+# contentView is obsolete (see bug 202391)
+      <property name="contentView"
+                onget="return this.view; /*.QueryInterface(Components.interfaces.nsITreeContentView)*/"
+                readonly="true"/>
+# builderView is obsolete (see bug 202393)
+      <property name="builderView"
+                onget="return this.view; /*.QueryInterface(Components.interfaces.nsIXULTreeBuilder)*/"
+                readonly="true"/>
+      <field name="pageUpOrDownMovesSelection">
+#ifdef XP_MACOSX
+        false
+#else
+        true
+#endif
+      </field>
+      <property name="enableColumnDrag"
+                onget="return this.hasAttribute('enableColumnDrag');"
+                onset="if (val) this.setAttribute('enableColumnDrag', 'true');
+                       else this.removeAttribute('enableColumnDrag'); return val;"/>
+
+      <field name="mInputField">null</field>
+
+      <property name="inputField" readonly="true">
+        <getter><![CDATA[
+          if (!this.mInputField)
+            this.mInputField = document.getAnonymousElementByAttribute(this, "anonid", "input");
+          return this.mInputField;
+        ]]></getter>
+      </property>
+
+      <property name="disableKeyNavigation"
+                onget="return this.hasAttribute('disableKeyNavigation');"
+                onset="if (val) this.setAttribute('disableKeyNavigation', 'true');
+                       else this.removeAttribute('disableKeyNavigation'); return val;"/>
+
+      <field name="_editingRow">-1</field>
+      <field name="_editingColumn">null</field>
+
+      <property name="editingRow" readonly="true"
+                onget="return this._editingRow;"/>
+      <property name="editingColumn" readonly="true"
+                onget="return this._editingColumn;"/>
+
+      <property name="_selectDelay" 
+                onset="this.setAttribute('_selectDelay', val);"
+                onget="return this.getAttribute('_selectDelay') || 50;"/>
+      <field name="_columnsDirty">true</field>
+      <field name="_lastKeyTime">0</field>
+      <field name="_incrementalString">""</field>
+
+      <method name="_ensureColumnOrder">
+        <body><![CDATA[
+          if (this._columnsDirty) {
+            // update the ordinal position of each column to assure that it is
+            // an odd number and 2 positions above its next sibling
+            var cols = [];
+            var i;
+            for (var col = this.columns.getFirstColumn(); col; col = col.getNext())
+              cols.push(col.element);
+            for (i = 0; i < cols.length; ++i)
+              cols[i].setAttribute("ordinal", (i*2)+1);
+
+            // update the ordinal positions of splitters to even numbers, so that 
+            // they are in between columns
+            var splitters = this.getElementsByTagName("splitter");
+            for (i = 0; i < splitters.length; ++i)
+              splitters[i].setAttribute("ordinal", (i+1)*2);
+            
+            this._columnsDirty = false;
+          }
+        ]]></body>
+      </method>
+
+      <method name="_reorderColumn">
+        <parameter name="aColMove"/>
+        <parameter name="aColBefore"/>
+        <parameter name="aBefore"/>
+        <body><![CDATA[
+          this._ensureColumnOrder();
+          
+          var i;
+          var cols = [];
+          var col = this.columns.getColumnFor(aColBefore);
+          if (aColBefore.ordinal < aColMove.ordinal) {
+            if (aBefore)
+              cols.push(aColBefore);
+            for (col = col.getNext(); col.element != aColMove;
+                 col = col.getNext())
+              cols.push(col.element);
+
+            aColMove.ordinal = cols[0].ordinal;
+            for (i = 0; i < cols.length; ++i)
+              cols[i].ordinal += 2;
+          } else {
+            if (!aBefore)
+              cols.push(aColBefore);
+            for (col = col.getPrevious(); col.element != aColMove;
+                 col = col.getPrevious())
+              cols.push(col.element);
+
+            aColMove.ordinal = cols[0].ordinal;
+            for (i = 0; i < cols.length; ++i)
+              cols[i].ordinal -= 2;
+          }
+        ]]></body>
+      </method>
+      
+      <method name="_getColumnAtX">
+        <parameter name="aX"/>
+        <parameter name="aThresh"/>
+        <parameter name="aPos"/>
+        <body><![CDATA[
+          if (aPos) aPos.value = "before";
+
+          var col = this.columns.getFirstColumn();
+          var lastCol = null;
+          var currentX = this.boxObject.x;
+          while (col) {
+            var cw = col.element.boxObject.width;
+            if (cw > 0) {
+              currentX += cw;
+              if (currentX - (cw * aThresh) > aX)
+                return col.element;
+            }
+            lastCol = col;
+            col = col.getNext();
+          }
+
+          if (aPos) aPos.value = "after";
+          return lastCol.element;
+        ]]></body>
+      </method>
+
+      <method name="changeOpenState">
+        <parameter name="row"/>
+        <!-- Optional parameter openState == true or false to set. 
+             No openState param == toggle -->
+        <parameter name="openState"/>
+        <body><![CDATA[
+          if (row < 0 || !this.view.isContainer(row)) {
+            return false;
+          }
+          if (this.view.isContainerOpen(row) != openState) {
+            this.view.toggleOpenState(row);
+            if (row == this.currentIndex) {
+              // Only fire event when current row is expanded or collapsed
+              // because that's all the assistive technology really cares about.
+              var event = document.createEvent('Events');
+              event.initEvent('OpenStateChange', true, true);
+              this.dispatchEvent(event);
+            }
+            return true;
+          }
+          return false;
+        ]]></body>
+      </method>
+
+      <property name="_cellSelType">
+        <getter>
+          <![CDATA[
+            var seltype = this.selType;
+            if (seltype == "cell" || seltype == "text")
+              return seltype;
+            return null;
+          ]]>
+        </getter>
+      </property>
+
+      <method name="_getNextColumn">
+        <parameter name="row"/>
+        <parameter name="left"/>
+        <body><![CDATA[
+          var col = this.view.selection.currentColumn;
+          if (col) {
+            col = left ? col.getPrevious() : col.getNext();
+          }
+          else {
+            col = this.columns.getKeyColumn();
+          }
+          while (col && (col.width == 0 || !col.selectable ||
+                 !this.view.isSelectable(row, col)))
+            col = left ? col.getPrevious() : col.getNext();
+          return col;
+        ]]></body>
+      </method>
+
+      <method name="keyNavigate">
+        <parameter name="event"/>
+        <body><![CDATA[
+          var key = String.fromCharCode(event.charCode).toLowerCase();
+          if (event.timeStamp - this._lastKeyTime > 1000)
+            this._incrementalString = key;
+          else
+            this._incrementalString += key;
+          this._lastKeyTime = event.timeStamp;
+
+          var length = this._incrementalString.length;
+          var incrementalString = this._incrementalString;
+          var charIndex = 1;
+          while (charIndex < length && incrementalString[charIndex] == incrementalString[charIndex - 1])
+            charIndex++;
+          // If all letters in incremental string are same, just try to match the first one
+          if (charIndex == length) {
+            length = 1;
+            incrementalString = incrementalString.substring(0, length);
+          }
+
+          var keyCol = this.columns.getKeyColumn();
+          var rowCount = this.view.rowCount;
+          var start = 1;
+
+          var c = this.currentIndex;
+          if (length > 1) {
+            start = 0;
+            if (c < 0)
+              c = 0;
+          }
+
+          for (var i = 0; i < rowCount; i++) {
+            var l = (i + start + c) % rowCount;
+            var cellText = this.view.getCellText(l, keyCol);
+            cellText = cellText.substring(0, length).toLowerCase();
+            if (cellText == incrementalString)
+              return l;
+          }
+          return -1;
+        ]]></body>
+      </method>
+
+      <method name="startEditing">
+        <parameter name="row"/>
+        <parameter name="column"/>
+        <body>
+          <![CDATA[
+            if (row < 0 || row >= this.view.rowCount || !column)
+              return;
+            if (column.type != Components.interfaces.nsITreeColumn.TYPE_TEXT ||
+                column.cycler || !this.view.isEditable(row, column))
+              return;
+
+            if (this._editingColumn)
+              this.stopEditing();
+
+            var input = this.inputField;
+            input.hidden = false;
+
+            var box = this.treeBoxObject;
+            box.ensureCellIsVisible(row, column);
+
+            var outx = {}, outy = {}, outwidth = {}, outheight = {};
+            var coords = box.getCoordsForCellItem(row, column, "text",
+                                                  outx, outy, outwidth, outheight);
+
+            var style = window.getComputedStyle(input, "");
+            var topadj = parseInt(style.borderTopWidth) + parseInt(style.paddingTop);
+            input.top = outy.value - topadj;
+
+            var left = outx.value;
+            input.left = left;
+            input.height = outheight.value + topadj +
+                           parseInt(style.borderBottomWidth) +
+                           parseInt(style.paddingBottom);
+
+            coords = box.getCoordsForCellItem(row, column, "cell",
+                                              outx, outy, outwidth, outheight);
+            input.width = outwidth.value - (left - outx.value);
+
+            input.value = this.view.getCellText(row, column);
+            var selectText = function selectText() {
+              input.select();
+              input.inputField.focus();
+            }
+            setTimeout(selectText, 0);
+
+            this._editingRow = row;
+            this._editingColumn = column;
+
+            this.setAttribute("editing", "true");
+          ]]>
+        </body>
+      </method>
+
+      <method name="stopEditing">
+        <parameter name="accept"/>
+        <body>
+          <![CDATA[
+            if (!this._editingColumn)
+              return;
+
+            var input = this.inputField;
+            if (accept) {
+              var value = input.value;
+              this.view.setCellText(this._editingRow, this._editingColumn, value);
+            }
+            this._editingRow = -1;
+            this._editingColumn = null;
+
+            input.hidden = true;
+            input.value = "";
+            this.removeAttribute("editing");
+          ]]>
+        </body>
+      </method>
+
+    </implementation>
+    
+    <handlers>
+      <handler event="DOMMouseScroll" phase="capturing">
+        <![CDATA[
+          if (this._editingColumn)
+            return;
+
+          var rows = event.detail;
+          if (rows == NSUIEvent.SCROLL_PAGE_UP)
+            this.treeBoxObject.scrollByPages(-1);
+          else if (rows == NSUIEvent.SCROLL_PAGE_DOWN)
+            this.treeBoxObject.scrollByPages(1);
+          else
+            this.treeBoxObject.scrollByLines(rows);
+        ]]>
+      </handler>
+      <handler event="select" phase="target"
+               action="if (event.originalTarget == this) this.stopEditing(true);"/>
+      <handler event="focus">
+        <![CDATA[
+          this.treeBoxObject.focused = true;
+          if (this.currentIndex == -1 && this.view.rowCount > 0) {
+            this.currentIndex = this.treeBoxObject.getFirstVisibleRow();
+          }
+          if (this._cellSelType && !this.view.selection.currentColumn) {
+            var col = this._getNextColumn(this.currentIndex, false);
+            this.view.selection.currentColumn = col;
+          }
+        ]]>
+      </handler>
+      <handler event="blur" action="this.treeBoxObject.focused = false;"/>
+      <handler event="blur" phase="capturing"
+               action="if (event.originalTarget == this.inputField.inputField) this.stopEditing(true);"/>
+      <handler event="keypress" keycode="vk_enter">
+        <![CDATA[
+          if (this._editingColumn) {
+            this.stopEditing(true);
+            this.focus();
+            event.stopPropagation();
+          }
+          else {
+            this.changeOpenState(this.currentIndex);
+          }
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_return">
+        <![CDATA[
+          if (this._editingColumn) {
+            this.stopEditing(true);
+            this.focus();
+            event.stopPropagation();
+          }
+          else {
+            this.changeOpenState(this.currentIndex);
+          }
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_escape">
+        <![CDATA[
+          if (this._editingColumn) {
+            this.stopEditing(false);
+            this.focus();
+            event.stopPropagation();
+          }
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_left">
+        <![CDATA[
+         if (this._editingColumn)
+           return;
+
+         var row = this.currentIndex;
+         if (row < 0)
+           return;
+
+         var cellSelType = this._cellSelType;
+         var checkContainers = true;
+
+         var currentColumn;
+         if (cellSelType) {
+           currentColumn = this.view.selection.currentColumn;
+           if (currentColumn && !currentColumn.primary)
+             checkContainers = false;
+         }
+
+         if (checkContainers) {
+           if (this.changeOpenState(this.currentIndex, false))
+             return;
+           else {
+             var parentIndex = this.view.getParentIndex(this.currentIndex);
+             if (parentIndex >= 0) {
+               if (cellSelType && !this.view.isSelectable(parentIndex, currentColumn)) {
+                 return;
+               }
+               this.view.selection.select(parentIndex);
+               this.treeBoxObject.ensureRowIsVisible(parentIndex);
+               return;
+             }
+           }
+         }
+
+         if (cellSelType) {
+           var col = this._getNextColumn(row, true);
+           if (col) {
+             this.view.selection.currentColumn = col;
+             this.treeBoxObject.ensureCellIsVisible(row, col);
+           }
+         }
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_right">
+        <![CDATA[
+         if (this._editingColumn)
+           return;
+
+          var row = this.currentIndex;
+          if (row < 0)
+            return;
+
+          var cellSelType = this._cellSelType;
+          var checkContainers = true;
+
+          var currentColumn;
+          if (cellSelType) {
+            currentColumn = this.view.selection.currentColumn;
+            if (currentColumn && !currentColumn.primary)
+              checkContainers = false;
+          }
+
+          if (checkContainers) {
+            if (this.changeOpenState(row, true))
+              return;
+            else {
+              var c = row + 1;
+              var view = this.view;
+              if (c < view.rowCount &&
+                  view.getParentIndex(c) == row) {
+                // If already opened, select the first child.
+                // The getParentIndex test above ensures that the children
+                // are already populated and ready.
+                if (cellSelType && !this.view.isSelectable(c , currentColumn)) {
+                  var col = this._getNextColumn(c, false);
+                  if (col) {
+                    this.view.selection.currentColumn = col;
+                  }
+                }
+                this.view.selection.timedSelect(c, this._selectDelay);
+                this.treeBoxObject.ensureRowIsVisible(c);
+                return;
+              }
+            }
+          }
+
+          if (cellSelType) {
+            var col = this._getNextColumn(row, false);
+            if (col) {
+              this.view.selection.currentColumn = col;
+              this.treeBoxObject.ensureCellIsVisible(row, col);
+            }
+          }
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_up"
+               modifiers="accel any">
+        <![CDATA[
+         if (this._editingColumn)
+           return;
+
+         if (this._isAccelPressed(event) && this.view.selection.single) {
+           this.treeBoxObject.scrollByLines(-1);
+           return;
+         }
+
+         var c = this.currentIndex - 1;
+         if (c < 0)
+           return;
+
+         var cellSelType = this._cellSelType;
+         if (cellSelType) {
+           var column = this.view.selection.currentColumn;
+           if (!column)
+             return;
+
+           while (c >= 0 && !this.view.isSelectable(c, column))
+             c--;
+           if (c < 0)
+             return;
+         }
+
+         if (!this._isAccelPressed(event))
+           this.view.selection.timedSelect(c, this._selectDelay);
+         else // Ctrl+Up moves the anchor without selecting
+           this.currentIndex = c;
+         this.treeBoxObject.ensureRowIsVisible(c);
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_down"
+               modifiers="accel any">
+        <![CDATA[
+         if (this._editingColumn)
+           return;
+
+         if (this._isAccelPressed(event) && this.view.selection.single) {
+           this.treeBoxObject.scrollByLines(1);
+           return;
+         }
+         var c = this.currentIndex + 1;
+         if (c == this.view.rowCount)
+           return;
+
+         var cellSelType = this._cellSelType;
+
+         if (cellSelType) {
+           var column = this.view.selection.currentColumn;
+           if (!column)
+             return;
+
+           while (c < this.view.rowCount && !this.view.isSelectable(c, column))
+             c++;
+           if (c == this.view.rowCount)
+             return;
+         }
+
+         if (!this._isAccelPressed(event))
+           this.view.selection.timedSelect(c, this._selectDelay);
+         else // Ctrl+Down moves the anchor without selecting
+           this.currentIndex = c;
+         this.treeBoxObject.ensureRowIsVisible(c);
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_up"
+               modifiers="accel any, shift">
+        <![CDATA[
+         if (this._editingColumn || this.view.selection.single)
+           return;
+         var c = this.currentIndex;
+         if (c == -1 || c == 0)
+           return;
+         // Extend the selection from the existing pivot, if any
+         this.view.selection.rangedSelect(-1, c - 1,
+                                          this._isAccelPressed(event));
+         this.treeBoxObject.ensureRowIsVisible(c - 1);
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_down"
+               modifiers="accel any, shift">
+        <![CDATA[
+         if (this._editingColumn || this.view.selection.single)
+           return;
+         var c = this.currentIndex;
+         if (c+1 == this.view.rowCount)
+           return;
+         // Extend the selection from the existing pivot, if any
+         this.view.selection.rangedSelect(-1, c + 1,
+                                          this._isAccelPressed(event));
+         this.treeBoxObject.ensureRowIsVisible(c + 1);
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_page_up"
+               modifiers="accel any">
+        <![CDATA[
+         if (this._editingColumn)
+           return;
+
+         if (this.pageUpOrDownMovesSelection == this._isAccelPressed(event)) {
+           this.treeBoxObject.scrollByPages(-1);
+           return;
+         }
+         var c = this.currentIndex;
+         if (c == -1)
+           return;
+         if (c == 0 && this.view.selection.isSelected(c)) {
+           this.treeBoxObject.ensureRowIsVisible(0);
+           return;
+         }
+         var i = this.treeBoxObject.getFirstVisibleRow();
+         if (c <= i) {
+            var p = this.treeBoxObject.getPageLength();
+            i = c <= p ? 0 : c - p;
+            this.treeBoxObject.ensureRowIsVisible(i);
+         }
+         this.view.selection.timedSelect(i, this._selectDelay);
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_page_down"
+               modifiers="accel any">
+        <![CDATA[
+         if (this._editingColumn)
+           return;
+
+         if (this.pageUpOrDownMovesSelection == this._isAccelPressed(event)) {
+           this.treeBoxObject.scrollByPages(1);
+           return;
+         }
+         var c = this.currentIndex;
+         var l = this.view.rowCount - 1;
+         if (l == -1)
+           return;
+         if (c == l && this.view.selection.isSelected(c)) {
+           this.treeBoxObject.ensureRowIsVisible(l);
+           return;
+         }
+         var p = this.treeBoxObject.getPageLength();
+         var i = this.treeBoxObject.getFirstVisibleRow() + p - 1;
+         if (c >= i) {
+            i = c + p;
+            this.treeBoxObject.ensureRowIsVisible(i > l ? l : i);
+         }
+         this.view.selection.timedSelect(i > l ? l : i, this._selectDelay);
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_page_up"
+               modifiers="accel any, shift">
+        <![CDATA[
+         if (this._editingColumn || this.view.selection.single)
+           return;
+         var c = this.currentIndex;
+         if (c == -1)
+           return;
+         if (c == 0 && this.view.selection.isSelected(c)) {
+           this.treeBoxObject.ensureRowIsVisible(0);
+           return;
+         }
+         var i = this.treeBoxObject.getFirstVisibleRow();
+         if (c <= i) {
+            var p = this.treeBoxObject.getPageLength();
+            i = c <= p ? 0 : c - p;
+            this.treeBoxObject.ensureRowIsVisible(i);
+         }
+         // Extend the selection from the existing pivot, if any
+         this.view.selection.rangedSelect(-1, i, this._isAccelPressed(event));
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_page_down"
+               modifiers="accel any, shift">
+        <![CDATA[
+         if (this._editingColumn || this.view.selection.single)
+           return;
+         var c = this.currentIndex;
+         var l = this.view.rowCount - 1;
+         if (l == -1)
+           return;
+         if (c == l && this.view.selection.isSelected(c)) {
+           this.treeBoxObject.ensureRowIsVisible(l);
+           return;
+         }
+         var p = this.treeBoxObject.getPageLength();
+         var i = this.treeBoxObject.getFirstVisibleRow() + p - 1;
+         if (c >= i) {
+            i = c + p;
+            this.treeBoxObject.ensureRowIsVisible(i > l ? l : i);
+         }
+         // Extend the selection from the existing pivot, if any
+         this.view.selection.rangedSelect(-1, i > l ? l : i, this._isAccelPressed(event));
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_home"
+               modifiers="accel any">
+        <![CDATA[
+         if (this._editingColumn || this.view.rowCount == 0)
+           return;
+         // Normal behaviour is to select the first row
+         if (!this._isAccelPressed(event))
+           this.view.selection.timedSelect(0, this._selectDelay);
+         // In a multiselect tree Ctrl+Home moves the anchor
+         else if (!this.view.selection.single)
+           this.currentIndex = 0;
+         this.treeBoxObject.ensureRowIsVisible(0);
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_end"
+               modifiers="accel any">
+        <![CDATA[
+         if (this._editingColumn)
+           return;
+
+         var l = this.view.rowCount - 1;
+         if (l < 0)
+           return;
+         // Normal behaviour is to select the last row
+         if (!this._isAccelPressed(event))
+           this.view.selection.timedSelect(l, this._selectDelay);
+         // In a multiselect tree Ctrl+End moves the anchor
+         else if (!this.view.selection.single)
+           this.currentIndex = l;
+         this.treeBoxObject.ensureRowIsVisible(l);
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_home"
+               modifiers="accel any, shift">
+        <![CDATA[
+         if (this._editingColumn || this.view.selection.single)
+           return;
+         // Extend the selection from the existing pivot, if any
+         this.view.selection.rangedSelect(-1, 0, this._isAccelPressed(event));
+         this.treeBoxObject.ensureRowIsVisible(0);
+        ]]>
+      </handler>
+      <handler event="keypress" keycode="vk_end"
+               modifiers="accel any, shift">
+        <![CDATA[
+         if (this._editingColumn || this.view.selection.single)
+           return;
+         var l = this.view.rowCount - 1;
+         // Extend the selection from the existing pivot, if any
+         this.view.selection.rangedSelect(-1, l, this._isAccelPressed(event));
+         this.treeBoxObject.ensureRowIsVisible(l);
+        ]]>
+      </handler>
+      <handler event="keypress">
+        <![CDATA[
+         if (this._editingColumn)
+           return;
+
+         if (event.charCode == ' '.charCodeAt(0)) {
+           var c = this.currentIndex;
+           if (!this.view.selection.isSelected(c) ||
+               (!this.view.selection.single && this._isAccelPressed(event))) {
+             this.view.selection.toggleSelect(c);
+           }
+         }
+         else if (!this.disableKeyNavigation && event.charCode > 0 &&
+                  !event.altKey && !this._isAccelPressed(event) &&
+                  !event.metaKey) {
+           var l = this.keyNavigate(event);
+           if (l >= 0) {
+             this.view.selection.timedSelect(l, this._selectDelay);
+             this.treeBoxObject.ensureRowIsVisible(l);
+           }
+          }
+         ]]>
+      </handler>
+    </handlers>    
+  </binding>
+
+  <binding id="treecols" extends="chrome://global/content/bindings/tree.xml#tree-base">
+    <content orient="horizontal">
+      <xul:hbox class="tree-scrollable-columns" flex="1">
+        <children includes="treecol|splitter"/>
+      </xul:hbox>
+      <xul:treecolpicker class="treecol-image" fixed="true" xbl:inherits="tooltiptext=pickertooltiptext"/>
+    </content>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          <![CDATA[
+            return Components.interfaces.nsIAccessibleProvider.XULTreeColumns;
+          ]]>
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+
+  <binding id="treerows" extends="chrome://global/content/bindings/tree.xml#tree-base">
+    <content>
+      <xul:hbox flex="1" class="tree-bodybox">
+        <children/>
+      </xul:hbox>
+      <xul:scrollbar height="0" minwidth="0" minheight="0" orient="vertical" xbl:inherits="collapsed=hidevscroll"/>
+    </content>
+    <handlers>
+      <handler event="underflow">
+        <![CDATA[
+          // Scrollport event orientation
+          // 0: vertical
+          // 1: horizontal
+          // 2: both (not used)
+          var tree = document.getBindingParent(this);
+          if (event.detail == 1)
+            tree.setAttribute("hidehscroll", "true");
+          else if (event.detail == 0)
+            tree.setAttribute("hidevscroll", "true");
+          event.stopPropagation();
+        ]]>
+      </handler>
+      <handler event="overflow">
+        <![CDATA[
+          var tree = document.getBindingParent(this);
+          if (event.detail == 1)
+            tree.removeAttribute("hidehscroll");
+          else if (event.detail == 0)
+            tree.removeAttribute("hidevscroll");
+          event.stopPropagation();
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="treebody" extends="chrome://global/content/bindings/tree.xml#tree-base">
+    <implementation>
+      <constructor>
+        if ("_ensureColumnOrder" in this.parentNode)
+          this.parentNode._ensureColumnOrder();
+      </constructor>
+
+      <field name="_lastSelectedRow">
+        -1
+      </field>
+    </implementation>
+    <handlers>
+      <!-- If there is no modifier key, we select on mousedown, not
+           click, so that drags work correctly. -->
+      <handler event="mousedown" clickcount="1">
+      <![CDATA[
+         if (this.parentNode.disabled)
+           return;
+         if (((!this._isAccelPressed(event) ||
+             !this.parentNode.pageUpOrDownMovesSelection) &&
+             !event.shiftKey && !event.metaKey) ||
+             this.parentNode.view.selection.single) {
+           var row = {};
+           var col = {};
+           var obj = {};
+           var b = this.parentNode.treeBoxObject;
+           b.getCellAt(event.clientX, event.clientY, row, col, obj);
+
+           // save off the last selected row
+           this._lastSelectedRow = row.value;
+
+           if (row.value == -1)
+             return;
+
+           if (obj.value == "twisty")
+             return;
+
+           if (col.value) {
+             if (col.value.cycler) {
+               b.view.cycleCell(row.value, col.value);
+               return;
+             } else if (col.value.type == Components.interfaces.nsITreeColumn.TYPE_CHECKBOX) {
+               if (this.parentNode.editable && col.value.editable &&
+                   b.view.isEditable(row.value, col.value)) {
+                 var value = b.view.getCellValue(row.value, col.value);
+                 value = value == "true" ? "false" : "true";
+                 b.view.setCellValue(row.value, col.value, value);
+                 return;
+               }
+             }
+           } 
+
+           var cellSelType = this.parentNode._cellSelType;
+           if (cellSelType == "text" && obj.value != "text" && obj.value != "image")
+             return;
+
+           if (cellSelType) {
+             if (!col.value.selectable ||
+                 !b.view.isSelectable(row.value, col.value)) {
+               return;
+             }
+           }
+
+           if (!b.view.selection.isSelected(row.value)) {
+             b.view.selection.select(row.value);
+             b.ensureRowIsVisible(row.value);
+           }
+
+           if (cellSelType) {
+             b.view.selection.currentColumn = col.value;
+           }
+         }
+      ]]>
+      </handler>
+
+      <!-- On a click (up+down on the same item), deselect everything
+           except this item. -->
+      <handler event="click" button="0" clickcount="1">
+      <![CDATA[
+        if (this.parentNode.disabled)
+          return;
+        var row = {};
+        var col = {};
+        var obj = {};
+        var b = this.parentNode.treeBoxObject;
+        b.getCellAt(event.clientX, event.clientY, row, col, obj);
+
+        if (row.value == -1)
+          return;
+
+        if (obj.value == "twisty") {
+          if (b.view.selection.currentIndex >= 0 &&
+              b.view.isContainerOpen(row.value)) {
+            var parentIndex = b.view.getParentIndex(b.view.selection.currentIndex);
+            while (parentIndex >= 0 && parentIndex != row.value)
+              parentIndex = b.view.getParentIndex(parentIndex);
+            if (parentIndex == row.value) {
+              var parentSelectable = true;
+              if (this.parentNode._cellSelType) {
+                var currentColumn = b.view.selection.currentColumn;
+                if (!b.view.isSelectable(parentIndex, currentColumn))
+                  parentSelectable = false;
+              }
+              if (parentSelectable)
+                b.view.selection.select(parentIndex);
+            }
+          }
+          this.parentNode.changeOpenState(row.value);
+          return;
+        }
+
+        if (! b.view.selection.single) {
+          var augment = this._isAccelPressed(event);
+          if (event.shiftKey) {
+            b.view.selection.rangedSelect(-1, row.value, augment);
+            b.ensureRowIsVisible(row.value);
+            return;
+          }
+          if (augment) {
+            b.view.selection.toggleSelect(row.value);
+            b.ensureRowIsVisible(row.value);
+            b.view.selection.currentIndex = row.value;
+            return;
+          }
+        }
+
+        /* We want to deselect all the selected items except what was
+          clicked, UNLESS it was a right-click.  We have to do this
+          in click rather than mousedown so that you can drag a
+          selected group of items */
+
+        if (!col.value) return;
+
+        // if the last row has changed in between the time we 
+        // mousedown and the time we click, don't fire the select handler.
+        // see bug #92366
+        if (!col.value.cycler && this._lastSelectedRow == row.value &&
+            col.value.type != Components.interfaces.nsITreeColumn.TYPE_CHECKBOX) {
+
+          var cellSelType = this.parentNode._cellSelType;
+          if (cellSelType == "text" && obj.value != "text" && obj.value != "image")
+            return;
+
+          if (cellSelType) {
+            if (!col.value.selectable ||
+                !b.view.isSelectable(row.value, col.value)) {
+              return;
+            }
+          }
+
+          b.view.selection.select(row.value);  
+          b.ensureRowIsVisible(row.value);
+
+          if (cellSelType) {
+            b.view.selection.currentColumn = col.value;
+          }
+        }
+      ]]>
+      </handler>
+
+      <!-- double-click -->
+      <handler event="click" clickcount="2">
+      <![CDATA[
+        if (this.parentNode.disabled)
+          return;
+        var b = this.parentNode.treeBoxObject;
+        var row = b.view.selection.currentIndex;
+         if (row == -1)
+           return;
+  
+          var col = {};
+          var obj = {};
+          b.getCellAt(event.clientX, event.clientY, {}, col, obj);
+  
+          if (this.parentNode.editable)
+            this.parentNode.startEditing(row, col.value);
+ 
+          if (!b.view.isContainer(row))
+            return;
+ 
+
+         // Cyclers and twisties respond to single clicks, not double clicks
+         if (col.value && !col.value.cycler && obj.value != "twisty")
+           this.parentNode.changeOpenState(row);
+      ]]>
+      </handler>
+      
+    </handlers>
+  </binding>
+
+  <binding id="treecol-base" extends="chrome://global/content/bindings/tree.xml#tree-base">
+    <implementation implements="nsIAccessibleProvider">
+      <constructor>
+        this.parentNode.parentNode._columnsDirty = true;
+      </constructor>
+
+      <property name="accessibleType" readonly="true">
+        <getter>
+          <![CDATA[
+            return Components.interfaces.nsIAccessibleProvider.XULTreeColumnitem;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="ordinal">
+        <getter><![CDATA[
+          var val = this.getAttribute("ordinal");
+          return val == "" ? 1 : (val == "0" ? 0 : parseInt(val));
+        ]]></getter>
+        <setter><![CDATA[
+          this.setAttribute("ordinal", val);
+        ]]></setter>
+      </property>
+      
+      <property name="_previousVisibleColumn">
+        <getter><![CDATA[
+          var sib = this.boxObject.previousSibling;
+          while (sib) {
+            if (sib.localName == "treecol" && sib.boxObject.width > 0 && sib.parentNode == this.parentNode)
+              return sib;
+            sib = sib.boxObject.previousSibling;
+          }
+          return null;
+        ]]></getter>
+      </property>
+
+      <method name="onDragMouseMove">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var col = document.treecolDragging;
+          if (!col) return;
+
+          // determine if we have moved the mouse far enough
+          // to initiate a drag
+          if (col.mDragGesturing) {
+            if (Math.abs(aEvent.clientX - col.mStartDragX) < 5 &&
+                Math.abs(aEvent.clientY - col.mStartDragY) < 5) {
+              return;
+            } else {
+              col.mDragGesturing = false;
+              col.setAttribute("dragging", "true");
+              window.addEventListener("click", col.onDragMouseClick, true);
+            }
+          }
+                    
+          var pos = {};
+          var targetCol = col.parentNode.parentNode._getColumnAtX(aEvent.clientX, 0.5, pos);
+          
+          // bail if we haven't mousemoved to a different column
+          if (col.mTargetCol == targetCol && col.mTargetDir == pos.value)
+            return;
+
+          var tree = col.parentNode.parentNode;
+          var sib;
+          var column;
+          if (col.mTargetCol) {
+            // remove previous insertbefore/after attributes
+            col.mTargetCol.removeAttribute("insertbefore");
+            col.mTargetCol.removeAttribute("insertafter");
+            column = tree.columns.getColumnFor(col.mTargetCol);
+            tree.treeBoxObject.invalidateColumn(column);
+            sib = col.mTargetCol._previousVisibleColumn;
+            if (sib) {
+              sib.removeAttribute("insertafter");
+              column = tree.columns.getColumnFor(sib);
+              tree.treeBoxObject.invalidateColumn(column);
+            }
+            col.mTargetCol = null;
+            col.mTargetDir = null;
+          }
+          
+          if (targetCol) {
+            // set insertbefore/after attributes
+            if (pos.value == "after") {
+              targetCol.setAttribute("insertafter", "true");
+            } else {
+              targetCol.setAttribute("insertbefore", "true");
+              sib = targetCol._previousVisibleColumn;
+              if (sib) {
+                sib.setAttribute("insertafter", "true");
+                column = tree.columns.getColumnFor(sib);
+                tree.treeBoxObject.invalidateColumn(column);
+              }
+            }
+            column = tree.columns.getColumnFor(targetCol);
+            tree.treeBoxObject.invalidateColumn(column);
+            col.mTargetCol = targetCol;
+            col.mTargetDir = pos.value;
+          }
+        ]]></body>        
+      </method>
+
+      <method name="onDragMouseUp">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var col = document.treecolDragging;
+          if (!col) return;
+          
+          if (!col.mDragGesturing) {
+            if (col.mTargetCol) {
+              // remove insertbefore/after attributes
+              var before = col.mTargetCol.hasAttribute("insertbefore");
+              col.mTargetCol.removeAttribute(before ? "insertbefore" : "insertafter");
+              if (before) {
+                var sib = col.mTargetCol._previousVisibleColumn;
+                if (sib)
+                  sib.removeAttribute("insertafter");
+              }
+                          
+              // move the column
+              if (col != col.mTargetCol)
+                col.parentNode.parentNode._reorderColumn(col, col.mTargetCol, before);
+            
+              // repaint to remove lines
+              col.parentNode.parentNode.treeBoxObject.invalidate();
+  
+              col.mTargetCol = null;
+            }
+          } else
+            col.mDragGesturing = false;
+                    
+          document.treecolDragging = null;
+          col.removeAttribute("dragging");
+          
+          window.removeEventListener("mousemove", col.onDragMouseMove, true);
+          window.removeEventListener("mouseup", col.onDragMouseUp, true);
+          // we have to wait for the click event to fire before removing
+          // cancelling handler
+          var clickHandler = function(handler) { 
+            window.removeEventListener("click", handler, true);
+          };
+          window.setTimeout(clickHandler, 0, col.onDragMouseClick);
+        ]]></body>        
+      </method>
+
+      <method name="onDragMouseClick">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          // prevent click event from firing after column drag and drop
+          aEvent.stopPropagation();
+          aEvent.preventDefault();
+        ]]></body>        
+      </method>
+    </implementation>
+    
+    <handlers>
+      <handler event="mousedown" button="0"><![CDATA[
+        if (this.parentNode.parentNode.enableColumnDrag) {
+          var xulns = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var cols = this.parentNode.getElementsByTagNameNS(xulns, "treecol");
+          
+          // only start column drag operation if there are at least 2 visible columns
+          var visible = 0;
+          for (var i = 0; i < cols.length; ++i)
+            if (cols[i].boxObject.width > 0) ++visible;
+            
+          if (visible > 1) {
+            window.addEventListener("mousemove", this.onDragMouseMove, true);
+            window.addEventListener("mouseup", this.onDragMouseUp, true);
+            document.treecolDragging = this;
+            this.mDragGesturing = true;
+            this.mStartDragX = event.clientX;
+            this.mStartDragY = event.clientY;
+          }
+        }
+      ]]></handler>
+      <handler event="click" button="0" phase="target">
+        <![CDATA[
+          if (event.target != event.originalTarget)
+            return;
+
+          var tree = this.parentNode.parentNode;
+          var column = tree.columns.getColumnFor(this);
+          tree.view.cycleHeader(column);
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="treecol" extends="chrome://global/content/bindings/tree.xml#treecol-base">
+    <content>
+      <xul:label class="treecol-text" xbl:inherits="crop,value=label" flex="1" crop="right"/>
+      <xul:image class="treecol-sortdirection" xbl:inherits="sortDirection,hidden=hideheader"/>
+    </content>
+  </binding>
+
+  <binding id="treecol-image" extends="chrome://global/content/bindings/tree.xml#treecol-base">
+    <content>
+      <xul:image class="treecol-icon" xbl:inherits="src"/>
+    </content>
+  </binding>
+
+  <binding id="columnpicker" display="xul:button"
+           extends="chrome://global/content/bindings/tree.xml#tree-base">
+    <content>
+      <xul:image class="tree-columnpicker-icon"/>
+      <xul:menupopup anonid="popup">
+        <xul:menuseparator anonid="menuseparator"/>
+        <xul:menuitem anonid="menuitem" label="&restoreNaturalOrder.label;"/>
+      </xul:menupopup>
+    </content>
+    
+    <implementation>
+      <method name="buildPopup">
+        <parameter name="aPopup"/>
+        <body>
+          <![CDATA[
+            // We no longer cache the picker content, remove the old content.
+            while (aPopup.childNodes.length > 2)
+              aPopup.removeChild(aPopup.firstChild);
+
+            var refChild = aPopup.firstChild;
+
+            var tree = this.parentNode.parentNode;
+            for (var currCol = tree.columns.getFirstColumn(); currCol;
+                 currCol = currCol.getNext()) {
+              // Construct an entry for each column in the row, unless
+              // it is not being shown.
+              var currElement = currCol.element;
+              if (!currElement.hasAttribute("ignoreincolumnpicker")) {
+                var popupChild = document.createElement("menuitem");
+                popupChild.setAttribute("type", "checkbox");
+                var columnName = currElement.getAttribute("display") ||
+                                 currElement.getAttribute("label");
+                popupChild.setAttribute("label", columnName);
+                popupChild.setAttribute("colindex", currCol.index);
+                if (currElement.getAttribute("hidden") != "true")
+                  popupChild.setAttribute("checked", "true");
+                if (currCol.primary)
+                  popupChild.setAttribute("disabled", "true");
+                aPopup.insertBefore(popupChild, refChild);
+              }
+            }
+
+            var hidden = !tree.enableColumnDrag;
+            const anonids = ["menuseparator", "menuitem"];
+            for (var i = 0; i < anonids.length; i++) {
+              var element = document.getAnonymousElementByAttribute(this, "anonid", anonids[i]);
+              element.hidden = hidden;
+            }
+          ]]>
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="command">
+        <![CDATA[
+          if (event.originalTarget == this) {
+            var popup = document.getAnonymousElementByAttribute(this, "anonid", "popup");
+            this.buildPopup(popup);
+            popup.showPopup(this, -1, -1, "popup", "bottomright", "topright");
+          }
+          else {
+            var tree = this.parentNode.parentNode;
+            tree.stopEditing(true);
+            var menuitem = document.getAnonymousElementByAttribute(this, "anonid", "menuitem");
+            if (event.originalTarget == menuitem) {
+              tree.columns.restoreNaturalOrder();
+              tree._ensureColumnOrder();
+            }
+            else {
+              var colindex = event.originalTarget.getAttribute("colindex");
+              var column = tree.columns[colindex];
+              if (column) {
+                var element = column.element;
+                if (element.getAttribute("hidden") == "true")
+                  element.setAttribute("hidden", "false");
+                else
+                  element.setAttribute("hidden", "true");
+              }
+            }
+          }
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+</bindings>
+

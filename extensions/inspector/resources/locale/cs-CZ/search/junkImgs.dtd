@@ -1,0 +1,2 @@
+<!ENTITY junkImgs.title "V aktuálním motivu vzhledu najít nepoužité obrázky">
+<!ENTITY junkImgsDescription "Aby bylo toto vyhledávání efektivní, musíte vyšetřovat dokument, který načítá  VŠECHNY CSS soubory v aktuálním motivu vzhledu.  Po té, vložte umístění kořenového adresáře aktuálního motivu vzhledu.">

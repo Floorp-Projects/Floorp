@@ -1,0 +1,37 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-15">
+		<title>Mozilla overflow within table / JS style bug</title>
+		<style type="text/css">
+
+			div.code { border: 1px solid red; overflow: auto; }
+
+		</style>
+		<script type="text/javascript">
+
+			window.onload = function()
+			{
+				var el = document.getElementsByTagName('div'), i = el.length;
+
+				while (i--)
+				{
+					if (el.item(i).className == 'code')
+						el.item(i).style.paddingBottom = '0px';
+				}
+			}
+
+		</script>
+	</head>
+	<body>
+		<table>
+			<tr>
+				<td>
+					<div class="code">
+						content
+					</div>
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>

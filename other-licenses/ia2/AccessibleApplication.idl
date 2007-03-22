@@ -1,0 +1,100 @@
+/*************************************************************************
+ *
+ *  File Name (AccessibleApplication.idl)
+ *
+ *  IAccessible2 IDL Specification
+ *
+ *  Copyright (c) IBM Corp. 2006
+ *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License version 2.1, as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02110-1301  USA
+ *
+ ************************************************************************/
+
+import "objidl.idl";
+import "oaidl.idl";
+import "oleacc.idl";
+
+
+/** @defgroup grpIAccessibleApplication Constants used with IAccessibleApplication */
+///@{
+/** This constant is used when requesting the IAccessibleApplication interface
+  via a call to AccessibleObjectFromWindow.
+
+  The following describes how an MSAA/IA2 server will provide an object 
+  implementing the IAccessibleApplication interface.  For any and all 
+  windows in an application, the server will respond to the WM_GETOBJECT 
+  message by returning an IAccessible pointer to an object which implements the
+  IAccessibleApplication interface, provided that OBJID_IAAPPLICATION is the 
+  DWORD value received in the dwObjId parameter of the message handler. 
+
+  The WM_GETOBJECT message handler is expected to increment the reference count 
+  for the returned object by 1. 
+
+  The client may use AccessibleObjectFromWindow to get the IAccessibleApplication 
+  interface at any time during the life of a window, by specifying idObject as
+  OBJID_IAAPPLICATION.
+
+  The riid parameter on the call to AccessibleObjectFromWindow should be 
+  IID_IAccessibleApplication.
+*/ 
+const long OBJID_IAAPPLICATION = 0xffffff00;
+///@}
+
+/** @brief This interface gives access to the application's name and version information.
+        
+ This interface provides the AT with the information it needs to differentiate 
+ this application from other applications, from other versions of this 
+ application, or from other versions of this application running on different 
+ versions of an accessibility bridge or accessbility toolkit.
+*/
+[object, uuid(D49DED83-5B25-43F4-9B95-93B44595979E)]
+interface IAccessibleApplication : IUnknown
+{
+  
+  /** @brief Returns the application name.
+   @param [out] name
+  */
+  [propget] HRESULT appName
+    (
+     [out, retval] BSTR *name
+    );
+
+  /** @brief Returns the application version.
+   @param [out] version
+  */
+  [propget] HRESULT appVersion
+    (
+     [out, retval] BSTR *version
+    );
+
+  /** @brief Returns the toolkit/bridge name.
+   @param [out] name
+  */
+  [propget] HRESULT toolkitName
+    (
+     [out, retval] BSTR *name
+    );
+
+  /** @brief Returns the toolkit/bridge version.
+   @param [out] version
+  */
+  [propget] HRESULT toolkitVersion
+    (
+     [out, retval] BSTR *version
+    );  
+
+}
+

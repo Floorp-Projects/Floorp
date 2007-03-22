@@ -1,0 +1,193 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= ucvlatin
+LIBRARY_NAME	= ucvlatin_s
+FORCE_STATIC_LIB = 1
+LIBXUL_LIBRARY = 1
+
+REQUIRES	= xpcom \
+		  string \
+		  uconv \
+		  $(NULL)
+
+CPPSRCS		= \
+		nsAsciiToUnicode.cpp \
+		nsISO88592ToUnicode.cpp \
+		nsISO88593ToUnicode.cpp \
+		nsISO88594ToUnicode.cpp \
+		nsISO88595ToUnicode.cpp \
+		nsISO88596ToUnicode.cpp \
+		nsISO88596EToUnicode.cpp \
+		nsISO88596IToUnicode.cpp \
+		nsISO88597ToUnicode.cpp \
+		nsISO88598ToUnicode.cpp \
+		nsISO88598EToUnicode.cpp \
+		nsISO88598IToUnicode.cpp \
+		nsISO88599ToUnicode.cpp \
+		nsISO885910ToUnicode.cpp \
+		nsISO885911ToUnicode.cpp \
+		nsISO885913ToUnicode.cpp \
+		nsISO885914ToUnicode.cpp \
+		nsISO885915ToUnicode.cpp \
+		nsISO885916ToUnicode.cpp \
+		nsISOIR111ToUnicode.cpp \
+		nsCP1250ToUnicode.cpp \
+		nsCP1251ToUnicode.cpp \
+		nsCP1253ToUnicode.cpp \
+		nsCP1254ToUnicode.cpp \
+		nsCP1255ToUnicode.cpp \
+		nsCP1256ToUnicode.cpp \
+		nsCP1257ToUnicode.cpp \
+		nsCP1258ToUnicode.cpp \
+		nsCP866ToUnicode.cpp \
+		nsCP874ToUnicode.cpp \
+		nsTIS620ToUnicode.cpp \
+		nsKOI8UToUnicode.cpp \
+		nsKOI8RToUnicode.cpp \
+		nsMacCEToUnicode.cpp \
+		nsMacGreekToUnicode.cpp \
+		nsMacTurkishToUnicode.cpp \
+		nsMacCroatianToUnicode.cpp \
+		nsMacRomanianToUnicode.cpp \
+		nsMacCyrillicToUnicode.cpp \
+		nsMacUkrainianToUnicode.cpp \
+		nsMacIcelandicToUnicode.cpp \
+		nsMacHebrewToUnicode.cpp \
+		nsMacArabicToUnicode.cpp \
+		nsMacDevanagariToUnicode.cpp \
+		nsMacFarsiToUnicode.cpp \
+		nsMacGujaratiToUnicode.cpp \
+		nsMacGurmukhiToUnicode.cpp \
+		nsGEOSTD8ToUnicode.cpp \
+		nsARMSCII8ToUnicode.cpp \
+		nsTCVN5712ToUnicode.cpp \
+		nsVISCIIToUnicode.cpp \
+		nsVPSToUnicode.cpp \
+		nsVIQRToUnicode.cpp \
+		nsVNIToUnicode.cpp \
+		nsUTF7ToUnicode.cpp \
+		nsMUTF7ToUnicode.cpp \
+		nsUCS2BEToUnicode.cpp \
+		nsUTF32ToUnicode.cpp \
+		nsT61ToUnicode.cpp \
+		nsUserDefinedToUnicode.cpp \
+		nsUnicodeToAscii.cpp \
+		nsUnicodeToISO88592.cpp \
+		nsUnicodeToISO88593.cpp \
+		nsUnicodeToISO88594.cpp \
+		nsUnicodeToISO88595.cpp \
+		nsUnicodeToISO88596.cpp \
+		nsUnicodeToISO88596E.cpp \
+		nsUnicodeToISO88596I.cpp \
+		nsUnicodeToISO88597.cpp \
+		nsUnicodeToISO88598.cpp \
+		nsUnicodeToISO88598E.cpp \
+		nsUnicodeToISO88598I.cpp \
+		nsUnicodeToISO88599.cpp \
+		nsUnicodeToISO885910.cpp \
+		nsUnicodeToISO885911.cpp \
+		nsUnicodeToISO885913.cpp \
+		nsUnicodeToISO885914.cpp \
+		nsUnicodeToISO885915.cpp \
+		nsUnicodeToISO885916.cpp \
+		nsUnicodeToISOIR111.cpp \
+		nsUnicodeToCP1250.cpp \
+		nsUnicodeToCP1251.cpp \
+		nsUnicodeToCP1253.cpp \
+		nsUnicodeToCP1254.cpp \
+		nsUnicodeToCP1255.cpp \
+		nsUnicodeToCP1256.cpp \
+		nsUnicodeToCP1257.cpp \
+		nsUnicodeToCP1258.cpp \
+		nsUnicodeToCP874.cpp \
+		nsUnicodeToTIS620.cpp \
+		nsUnicodeToCP866.cpp \
+		nsUnicodeToKOI8R.cpp \
+		nsUnicodeToKOI8U.cpp \
+		nsUnicodeToMacCE.cpp \
+		nsUnicodeToMacGreek.cpp \
+		nsUnicodeToMacTurkish.cpp \
+		nsUnicodeToMacCroatian.cpp \
+		nsUnicodeToMacRomanian.cpp \
+		nsUnicodeToMacCyrillic.cpp \
+		nsUnicodeToMacUkrainian.cpp \
+		nsUnicodeToMacIcelandic.cpp \
+		nsUnicodeToMacHebrew.cpp \
+		nsUnicodeToMacArabic.cpp \
+		nsUnicodeToMacDevanagari.cpp \
+		nsUnicodeToMacFarsi.cpp \
+		nsUnicodeToMacGujarati.cpp \
+		nsUnicodeToMacGurmukhi.cpp \
+		nsUnicodeToGEOSTD8.cpp \
+		nsUnicodeToARMSCII8.cpp \
+		nsUnicodeToTCVN5712.cpp \
+		nsUnicodeToVISCII.cpp \
+		nsUnicodeToVPS.cpp \
+		nsUnicodeToVIQR.cpp \
+		nsUnicodeToVNI.cpp \
+		nsUnicodeToUTF7.cpp \
+		nsUnicodeToMUTF7.cpp \
+		nsUnicodeToUCS2BE.cpp \
+		nsUnicodeToUTF32.cpp \
+		nsUnicodeToT61.cpp \
+		nsUnicodeToUserDefined.cpp \
+		nsUnicodeToSymbol.cpp \
+		nsUnicodeToZapfDingbat.cpp \
+		nsUnicodeToAdobeEuro.cpp \
+		nsUnicodeToTSCII.cpp \
+		$(NULL)
+
+ifdef MOZ_EXTRA_X11CONVERTERS
+CPPSRCS		+= \
+		nsUnicodeToLangBoxArabic8.cpp \
+		nsUnicodeToLangBoxArabic16.cpp \
+		$(NULL)
+endif
+
+EXPORTS		= nsUCvLatinCID.h
+
+LOCAL_INCLUDES = -I$(srcdir)/../util -I$(srcdir)/../src
+
+include $(topsrcdir)/config/rules.mk

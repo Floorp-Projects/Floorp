@@ -1,0 +1,14 @@
+<!ENTITY Inspector.label "DOM Inspector">
+<!ENTITY Sidebar.label "Πλευρική στήη">
+<!ENTITY elementBlinking.label "Αναβόσβημα στοιχείου">
+<!ENTITY blinkSelectedElement.label "Αναβόσβημα επιλεγμένου στοιχείου">
+<!ENTITY borderColor.label "Χρώμα περιγράμματος">
+<!ENTITY borderWidth.label "Πλάτος περιγράμματος">
+<!ENTITY px.label "(px)">
+<!ENTITY blinkDuration.label "Διάρκεια αναβοσβήματος">
+<!ENTITY ms.label "(ms)">
+<!ENTITY blinkSpeed.label "Ταχύτητα αναβοσβήματος">
+<!ENTITY invertColors.label "Αντιστροφή χρωμάτων">
+<!ENTITY installHowTo.label "Ο DOM Inspector Sidebar δεν έχει εγκατασταθεί.  Πατήστε το κουμπί 'Εγκατάσταση' για να τον προσθέσετε στην πλευρική στήλη σας.">
+<!ENTITY install.label "Εγκατάσταση">
+<!ENTITY addNavigatorHooks.label "Προσθήκη μενού περιεχομένων στον Navigator">

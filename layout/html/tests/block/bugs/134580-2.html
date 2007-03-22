@@ -1,0 +1,29 @@
+<title>Testcase, bug 134580</title>
+
+<h2>Testcases where whitespace a single text node and td has explicit span</h2>
+
+Leading and trailing whitespace:
+<table border><tr><td><span> <img src="hack.gif" height=20 width=20> </span></td></tr></table>
+
+Only leading whitespace:
+<table border><tr><td><span> <img src="hack.gif" height=20 width=20></span></td></tr></table>
+
+Only trailing whitespace:
+<table border><tr><td><span><img src="hack.gif" height=20 width=20> </span></td></tr></table>
+
+A pair of images with whitespace between only:
+<table border><tr><td><span><img src="hack.gif" height=20 width=20> <img src="hack.gif" height=20 width=20></span></td></tr></table>
+
+A pair of images with no whitespace:
+<table border><tr><td><span><img src="hack.gif" height=20 width=20><img src="hack.gif" height=20 width=20></span></td></tr></table>
+
+
+<h2>A few more</h2>
+
+<p>Text with initial whitespace containing a span:
+<br><img src="hack.gif" height=5 width=80><br><font size=7> <span></span> <font size=3>Text</font><font size=3>Text</font></font><br><img src="hack.gif" height=5 width=80><br>
+
+
+<p>Text with initial whitespace containing a span:
+<br><img src="hack.gif" height=5 width=80><br><font size=7> <span> </span> <font size=3>Text</font><font size=3>Text</font></font><br><img src="hack.gif" height=5 width=80><br>
+

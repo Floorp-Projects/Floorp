@@ -1,0 +1,60 @@
+<!-- extracted from content/viewSource.xul -->
+
+<!-- LOCALIZATION NOTE (mainWindow.title) : DONT_TRANSLATE --> 
+<!ENTITY mainWindow.title "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE --> 
+<!ENTITY mainWindow.titlemodifier "&brandFullName;">
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifierseparator) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifierseparator " - ">
+<!ENTITY mainWindow.preface "Source of: ">
+
+<!ENTITY fileMenu.label "File">
+<!ENTITY fileMenu.accesskey "F">
+<!ENTITY savePageCmd.label "Save Page As...">
+<!ENTITY savePageCmd.accesskey "A">
+<!ENTITY savePageCmd.commandkey "S">
+<!ENTITY pageSetupCmd.label "Page Setup...">
+<!ENTITY pageSetupCmd.accesskey "u">
+<!ENTITY printPreviewCmd.label "Print Preview">
+<!ENTITY printPreviewCmd.accesskey "v">
+<!ENTITY printCmd.label "Print...">
+<!ENTITY printCmd.accesskey "P">
+<!ENTITY printCmd.commandkey "P">
+<!ENTITY closeCmd.label "Close">
+<!ENTITY closeCmd.accesskey "C">
+<!ENTITY closeCmd.commandkey "W">
+
+<!ENTITY textEnlarge.commandkey "+">
+<!ENTITY textEnlarge.commandkey2 "=">
+<!ENTITY textReduce.commandkey "-">
+<!ENTITY textReset.commandkey "0">
+
+<!ENTITY goToLineCmd.label "Go to Line...">
+<!ENTITY goToLineCmd.accesskey "G">
+<!ENTITY goToLineCmd.commandkey "l">
+
+<!ENTITY viewMenu.label           "View">
+<!ENTITY viewMenu.accesskey       "V">
+<!ENTITY reloadCmd.label "Reload">
+<!ENTITY reloadCmd.accesskey "R">
+<!ENTITY reloadCmd.commandkey "r">
+<!ENTITY menu_wrapLongLines.title "Wrap Long Lines"> 
+<!ENTITY menu_wrapLongLines.accesskey "W">
+<!ENTITY menu_highlightSyntax.label "Syntax Highlighting">
+<!ENTITY menu_highlightSyntax.accesskey "H">
+<!ENTITY menu_textSize.label "Text Size">
+<!ENTITY menu_textSize.accesskey "Z">
+<!ENTITY menu_textEnlarge.label "Increase">
+<!ENTITY menu_textEnlarge.accesskey "I">
+<!ENTITY menu_textReduce.label "Decrease">
+<!ENTITY menu_textReduce.accesskey "D">
+<!ENTITY menu_textReset.label "Normal">
+<!ENTITY menu_textReset.accesskey "N">
+
+<!ENTITY findOnCmd.label     "Find in This Page...">
+<!ENTITY findOnCmd.accesskey "F">
+<!ENTITY findOnCmd.commandkey "f">
+<!ENTITY findAgainCmd.label  "Find Again">
+<!ENTITY findAgainCmd.accesskey "g">
+<!ENTITY findAgainCmd.commandkey "g">
+<!ENTITY findAgainCmd.commandkey2 "VK_F3">

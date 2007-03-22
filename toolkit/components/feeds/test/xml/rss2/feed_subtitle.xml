@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: channel description works 
+Expect:      feed.subtitle.text == 'test'
+
+-->
+<rss version="2.0" >
+<channel>
+<description>test</description>
+</channel>
+</rss>

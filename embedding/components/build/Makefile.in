@@ -1,0 +1,156 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications, Inc.
+# Portions created by the Initial Developer are Copyright (C) 2001
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= embedcomponents
+LIBRARY_NAME	= embedcomponents
+EXPORT_LIBRARY = 1
+ifneq ($(OS_ARCH),WINNT)
+SHORT_LIBNAME	= embedcmp
+endif
+IS_COMPONENT	= 1
+MODULE_NAME	= embedcomponents
+GRE_MODULE	= 1
+LIBXUL_LIBRARY	= 1
+
+ifdef MOZ_PERF_METRICS
+EXTRA_DSO_LIBS	= mozutil_s
+endif
+
+PACKAGE_FILE = embedcomponents.pkg
+PACKAGE_VARS += MOZ_PROFILESHARING
+
+REQUIRES	= js \
+		  xpcom \
+		  string \
+		  windowwatcher \
+		  webbrwsr \
+		  gfx \
+		  widget \
+		  webbrowserpersist \
+		  find \
+		  htmlparser \
+		  embed_base \
+		  dom \
+		  lwbrk \
+		  mimetype \
+		  content \
+		  layout \
+		  uriloader \
+		  necko \
+		  commandhandler \
+		  xuldoc \
+		  $(NULL)
+
+ifdef MOZ_PROFILESHARING
+REQUIRES += profilesharingsetup
+endif
+
+CPPSRCS		= nsEmbeddingModule.cpp
+
+SHARED_LIBRARY_LIBS = \
+	../windowwatcher/src/$(LIB_PREFIX)windowwatcher_s.$(LIB_SUFFIX) \
+	../appstartup/src/$(LIB_PREFIX)appstartupnotifier_s.$(LIB_SUFFIX) \
+	../find/src/$(LIB_PREFIX)find_s.$(LIB_SUFFIX) \
+	../webbrowserpersist/src/$(LIB_PREFIX)webbrowserpersist_s.$(LIB_SUFFIX) \
+	../commandhandler/src/$(LIB_PREFIX)commandhandler_s.$(LIB_SUFFIX) \
+	$(NULL)
+
+ifdef MOZ_XUL
+ifdef NS_PRINTING
+ifndef WINCE
+SHARED_LIBRARY_LIBS += \
+	../printingui/src/$(LIB_PREFIX)printingui_s.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+endif
+endif
+
+LOCAL_INCLUDES	= \
+	-I$(srcdir)/../windowwatcher/src  \
+	-I$(srcdir)/../appstartup/src  \
+	-I$(srcdir)/../find/src  \
+	-I$(srcdir)/../webbrowserpersist/src  \
+	-I$(srcdir)/../commandhandler/src \
+	$(NULL)
+
+ifdef MOZ_PROFILESHARING
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)profilesharingsetup_s.$(LIB_SUFFIX)
+LOCAL_INCLUDES += -I$(srcdir)/../profilesharingsetup/src
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/os2 
+endif
+
+ifneq (,$(filter gtk gtk2 xlib beos photon qt, $(MOZ_WIDGET_TOOLKIT)))
+LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/unixshared 
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/win 
+ifneq ($(OS_ARCH), WINCE)
+OS_LIBS	+= $(call EXPAND_LIBNAME,winspool comdlg32)
+endif
+endif
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/mac
+endif
+
+EXTRA_DSO_LIBS = gkgfx
+
+EXTRA_DSO_LDOPTS = \
+	$(LIBS_DIR) \
+	$(EXTRA_DSO_LIBS) \
+	$(MOZ_UNICHARUTIL_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(MOZ_JS_LIBS) \
+	$(NULL)
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+EXTRA_DSO_LDOPTS += \
+        $(TK_LIBS) \
+        $(NULL)
+endif
+
+include $(topsrcdir)/config/rules.mk

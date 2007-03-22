@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: Full RSS1 feed not bozo
+Expect: result.bozo == false
+
+-->
+<rdf:RDF
+xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+xmlns:dc="http://purl.org/dc/elements/1.1/"
+xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+xmlns:admin="http://webns.net/mvcb/"
+xmlns:cc="http://web.resource.org/cc/"
+xmlns="http://purl.org/rss/1.0/">
+
+<channel rdf:about="http://weblogs.mozillazine.org/ben/">
+<title>Inside Firefox</title>
+<link>http://weblogs.mozillazine.org/ben/</link>
+<description>The Inside Track on Firefox Development</description>
+<dc:language>en-us</dc:language>
+<dc:creator></dc:creator>
+<dc:date>2006-04-26T14:34:49-08:00</dc:date>
+<admin:generatorAgent rdf:resource="http://www.movabletype.org/?v=3.2" />
+
+
+<items>
+<rdf:Seq><rdf:li rdf:resource="http://weblogs.mozillazine.org/ben/archives/010115.html" />
+<rdf:li rdf:resource="http://weblogs.mozillazine.org/ben/archives/010109.html" />
+<rdf:li rdf:resource="http://weblogs.mozillazine.org/ben/archives/010075.html" />
+<rdf:li rdf:resource="http://weblogs.mozillazine.org/ben/archives/010074.html" />
+<rdf:li rdf:resource="http://weblogs.mozillazine.org/ben/archives/010073.html" />
+<rdf:li rdf:resource="http://weblogs.mozillazine.org/ben/archives/010040.html" />
+<rdf:li rdf:resource="http://weblogs.mozillazine.org/ben/archives/010030.html" />
+<rdf:li rdf:resource="http://weblogs.mozillazine.org/ben/archives/010011.html" />
+<rdf:li rdf:resource="http://weblogs.mozillazine.org/ben/archives/009965.html" />
+<rdf:li rdf:resource="http://weblogs.mozillazine.org/ben/archives/009964.html" />
+<rdf:li rdf:resource="http://weblogs.mozillazine.org/ben/archives/009943.html" />
+<rdf:li rdf:resource="http://weblogs.mozillazine.org/ben/archives/009924.html" />
+<rdf:li rdf:resource="http://weblogs.mozillazine.org/ben/archives/009914.html" />
+<rdf:li rdf:resource="http://weblogs.mozillazine.org/ben/archives/009804.html" />
+<rdf:li rdf:resource="http://weblogs.mozillazine.org/ben/archives/009774.html" />
+</rdf:Seq>
+</items>
+
+</channel>
+
+<item rdf:about="http://weblogs.mozillazine.org/ben/archives/010115.html">
+<title>Firefox 2 Is Cool</title>
+<link>http://weblogs.mozillazine.org/ben/archives/010115.html</link>
+<description><![CDATA[<p>A lot of people read my previous post and came to a very reasonable conclusion: "If you take Places out of Firefox 2, shouldn't it be called Firefox 1.6?"</p>
+
+<p>I don't agree that Places was the one and only thing that sold Firefox 2 though. I took a look through the <a href="http://wiki.mozilla.org/Firefox2/Requirements">Firefox 2 Requirements</a> page to look at some of the other stuff that's going on. Reading that document, I think I can see now why people are down in the dumps about no-places Firefox 2. I don't think that document necessarily does the best possible job of capturing the excitement I have about some of the Firefox 2 features we're pursuing. </p>
+
+<p>For the past week or so, I've been toting around a printout of another document, which I wrote because I wanted to convey some of the vision I have of the Firefox 2 product as a whole - a more holistic view as it were. </p>
+
+<h3>Safer, Faster, Better</h3>
+
+<p>If you take a look at the black buttons stacked in the right column of this page, you'll see that one of them reads "Safer, Faster, Better." I don't knowwho came up with that one but it's a good tag line. It has a certain cadence about it. People have attached lots of these to Firefox in the past - "Take Back the Web" was the one I came up with, there's "Rediscover the Web", the FirefoxFlicks project has yielded a few good ones too - I like "<a href="http://www.firefoxflicks.com/flick/index.php?sort=new&id=21122&c=false">Web For All</a>". But "Safer, Faster, Better" is not just a tag line, it can also map into a set of themes for product development. </p>
+
+<p>So, taking a look at the Requirements page, I attempted to do that. My document wasn't a comprehensive collection of everything on that page, I was focused more on the things immediately visible to most users. I guess my problem with the Requirements page has always been its very engineering/technical focus.  The result of this is that the priority of items tend to reflect how difficult something is to implement, or where it lies in the development cycle, not necessarily the impact on the user. What I ended up with I guess is a sort of "Shadow PRD" that reflects what I personally thought was cool about Firefox 2, and what I wanted to get out of it. </p>
+
+<p>A copy of the document is <a href="http://www.bengoodger.com/software/mb/2.0/firefox2-vision.html">here</a>. <br />
+Some notes:</p>
+
+<ul>
+  <li>Assume the scratched out section for "Retracing Your Steps" will be part 
+      of a future release.
+  <li>The priorities shown are my opinion, and relate to potential impact on 
+      the user.      
+  <li>The document does not represent all of the work being done, just a 
+      readily marketable subset. 
+</ul>
+
+<p>All in all, I think there's easily enough here to justify a "2" designation. That's just my opinion though. I also think whole numbers are probably easier for the general populace to understand than decimals. </p>
+
+<p>Firefox has never been about date driven development (within reason). The changes with Places should not be seen as a change in this sentiment. What we're about is high quality software development with real advantages to <br />
+users, and I think that with the updated plan we're still on a trajectory that supports and encourages that, perhaps more firmly now than before.</p>
+
+<p>And that's it from today's "Ben waits for the tinderboxen to clear" report. </p>]]></description>
+<dc:subject></dc:subject>
+<dc:creator>ben</dc:creator>
+<dc:date>2006-04-26T14:34:49-08:00</dc:date>
+</item>
+<item rdf:about="http://weblogs.mozillazine.org/ben/archives/010109.html">
+<title>Firefox 2 Content Update</title>
+<link>http://weblogs.mozillazine.org/ben/archives/010109.html</link>
+<description><![CDATA[<p>When we began work on Firefox 2, we decided to focus on a development branch, a continuation of the Mozilla 1.8 branch. The reason for doing this was that there was to be a lot of significant architectural changes going on on the trunk, with the prospect of a new rendering back end, a rearchitecture of reflow in layout, and various other things. Shipping a Firefox 2 release in 2006 off of this code did not seem possible. </p>
+
+<p>As a result, we decided to pursue a release focused on application level improvements, on a separate branch. Going into it, we knew the perils of multi-branch development. We knew the divergences that would inevitably form between branch and trunk. We had experience from the painful development of Firefox 1.0 on the Aviary branch. We resolved to be more methodical about our commits, but we knew to expect some pain. The goal was to produce a high value release in short enough time so that we could all return to the trunk and help build new features that utilize the back end being developed there, to help shake them out. </p>
+
+<p>Late last year, we put together a list of things to pursue for the Firefox 2 release. A month or so ago, we got together as a group and formalized this more in a <a href="http://wiki.mozilla.org/Firefox2/Requirements">Firefox 2 PRD</a>. We had scheduled four major pre-release milestones, two alphas and two betas. We have already shipped one alpha. The intent of the second is to be "Feature Complete".</p>
+
+<p>The people driving the various sub-projects on the Requirements list get together weekly to check status. As the weeks have gone by, it has become clear to us that the most complex feature on the plan is Places. It is easily an order of magnitude more complex than anything else on the plan. Places is a great feature and it has been exciting watching its capabilities grow. We are looking forward to the capabilities that it will expose. What we have learned though is that the work required to complete Places is probably too substantial to gate the Firefox 2 release. It falls more into the "significant rearchitecture" category of feature that's generally been targeted at Firefox 3.</p>
+
+<p>What we have decided to do is as follows:</p>
+
+<ul>
+<li>We will disable places on the 1.8 branch, reverting the user interface and back end to Firefox 1.x functionality. 
+<li>We will continue to aggressively develop the capabilities of Places on the 1.9 trunk. Places will remain enabled here. 
+</ul>
+
+<p>We think this is a good decision for two reasons:</p>
+
+<ul>
+<li>It reduces the pressure on the Places team to deliver a lot of bug fixes and additional features on the very immediate timeframe required by the Firefox 2 testing releases. It is my opinion that doing so would impact the quality of the feature, if we did not add at least a couple more alpha cycles to the process. This decision provides us with an opportunity to really make the architecture and user interface of Places reach their full potential. 
+<li>It allows us as a group to circle around and consider the content of the Firefox 2 release holistically, identify high impact at risk areas and spend some more time on them. One of those for me was Feed Handling.
+</ul>
+
+<p>Michael Schroepfer of the Mozilla Corporation has a <a href="http://groups.google.com/group/mozilla.dev.planning/browse_frm/thread/4b8e7bafecccbc10/8997efd5d5d5f03f">newsgroup posting</a> with additional information. His thread is also the most appropriate forum for discussion of this topic. </p>
+
+<p>I have been working on refining some of the messaging surrounding feature content and prioritization on the PRD. I will post the initial results of that here soon.</p>]]></description>
+<dc:subject></dc:subject>
+<dc:creator>ben</dc:creator>
+<dc:date>2006-04-24T09:30:54-08:00</dc:date>
+</item>
+<item rdf:about="http://weblogs.mozillazine.org/ben/archives/010075.html">
+<title>Did I Mention...</title>
+<link>http://weblogs.mozillazine.org/ben/archives/010075.html</link>
+<description><![CDATA[<p>... that I hate this computer?</p>
+
+<p>While I'm at it... the up arrow key cap fell off after about three weeks, in early 2004. About six months later I lost the little rubber membrane thing that made it slightly easier to push the arrow. Since then, I've been typing by pushing down on the little connection thingy on the keyboard tray. </p>
+
+<p>It's been shedding pieces of plastic too. I've never dropped the computer once, but pieces of the shell have begun to snap off. </p>
+
+<p>When I first got it, when the secondary battery was in place, when the primary drained the machine would hibernate, even though the secondary was present! Pretty awful bug to ship with. There was never a solution that I could find. Speaking of batteries, the primary battery is pretty much toast... it won't go for more than 5 minutes before shutting down. It began doing this at around the 12-18 month mark. And the battery light permanently flashes orange whenever the system is on. </p>
+
+<p>Why don't I call the hotline? I guess I'll have to, before my warranty runs out. I don't because it usually involves 45 minutes on hold or explaining to someone who only has a script to read from that the issue involving a missing up arrow doesn't require restarting Windows or running some stupid diagnostic tool. I could have paid more for "premium support" at build-time but I found that concept sort of insulting: why should I have to pay extra to speak to someone who is smart and doesn't think I'm a moron?</p>
+
+<p>And I don't want a Thinkpad either. I hate those computers. They have old-fashioned 4:3 displays, and the function key and left Ctrl key are reversed. I know I could map them differently but why would I? Why couldn't IBM just have designed the product correctly in the first place? Oh, and I'd sooner drink paint than run the awful IBM access connections software to connect to a wireless network, or deal with the fact that the Num Lock key seems to reset to ON every time the system is rebooted.</p>
+
+<p>Why doesn't someone make the perfect laptop? I'd be interested to hear from someone how long the compile times are for FirefoxDebug on a 2.16GHz MacBook Pro...</p>]]></description>
+<dc:subject></dc:subject>
+<dc:creator>ben</dc:creator>
+<dc:date>2006-04-16T19:11:28-08:00</dc:date>
+</item>
+<item rdf:about="http://weblogs.mozillazine.org/ben/archives/010074.html">
+<title>I Hate This Computer</title>
+<link>http://weblogs.mozillazine.org/ben/archives/010074.html</link>
+<description><![CDATA[<p>I have been fighting with this computer for the past few days to do a build with a few patches applied. </p>
+
+<p>First, I managed to get a certain distance with a branch build, compiling with Visual C++ 6.0. But soon I realized there were too many dependencies that were trunk specific, so I had to build trunk. About a quarter of the way through my build died, of course, compiling from the same shell, wrong version of VC6.0 for Cairo/Thebes. </p>
+
+<p>Starting over again with the VC7 tools, another failure towards the end. Some sort of cyclic dependency check error. Clobber and restart. Now I forgot one of my patches had a configure change, and the process begins anew, I have effectively clobbered. </p>
+
+<p><a href="http://weblogs.mozillazine.org/ben/archives/2003_12.html">When I bought this machine</a>, a Dell Precision M60 with a Pentium M 1.7GHz processor, a 7200rpm disk and a gig of RAM, it could compile Firefox start to stop in 21 minutes. Now it takes over an hour.</p>
+
+<p>The situation is better on my Google-supplied workstation, but for how long? Over time, Windows reaches a point of being completely useless for anything aside from the most basic activities. What's the effect? I had planned to work both days this weekend on Firefox 2 features. Instead I spent the whole time fighting one of the most frustrating fights possible, and have achieved nothing. I hate Windows. I hate this computer.</p>]]></description>
+<dc:subject></dc:subject>
+<dc:creator>ben</dc:creator>
+<dc:date>2006-04-16T18:58:02-08:00</dc:date>
+</item>
+<item rdf:about="http://weblogs.mozillazine.org/ben/archives/010073.html">
+<title>Miscommunications</title>
+<link>http://weblogs.mozillazine.org/ben/archives/010073.html</link>
+<description><![CDATA[<p>My laptop was running pretty slowly yesterday so I decided to scan the Add/Remove Programs list to clear out the cruft. Things were really chugging along. I sequentially uninstalled several pieces of software, and the process was very dissatisfying. I became more and more enfuriated at my computer as it proceeded. Here are some of the nuisances:</p>
+
+<ul>
+<li>I could only remove one thing at a time. 
+<li>Many pieces of software used the Windows Installer system which seemed to take forever and report very inconsistent progress (I know, Firefox isn't the best at this in its installer, either)
+<li>Most annoyingly, the uninstaller apps all reported themselves as performing a variety of actions that I never requested, as explanations for what they were doing during long periods of inactivity and progress-bar freeze. Common excuses were "Windows is Configuring <blah>" and "InstallShield is preparing a report on <bleh>".
+</ul>
+
+<p>You know, I never <strong>asked</strong> for blah to be "configured." I never asked for a report on bleh (What am I, a manager? Where is the report anyway? Does it have the appropriate cover sheet?) <strong>I just want the software gone</strong>. I'm getting really tired of excuses from software like this. Windows software seems to be getting worse and worse. On Mac, the typical way to remove a program is to drag it into the trash can. I can even do that to several programs at once! I do however have to be able to afford a Mac (I can, I have one). Many folk aren't as fortunate as I. </p>
+
+<p>As a side note, I read an interesting article in Forbes a few weeks ago criticizing Microsoft for its delays shipping Vista, and asking why wouldn't you just side-step all the trouble and buy a Mac, since the odds were good many people would have to upgrade their PC anyway just to get the whiz-bang in Vista. The article side-swiped open source desktop initiatives, asking where the viable free alternative was. I think that was an interesting point, and especially so since the capabilities of Linux systems have come an awesome distance in the past few years but there have been few distributions or desktop environments that IMO make the most of all of those.</p>]]></description>
+<dc:subject></dc:subject>
+<dc:creator>ben</dc:creator>
+<dc:date>2006-04-16T18:05:04-08:00</dc:date>
+</item>
+<item rdf:about="http://weblogs.mozillazine.org/ben/archives/010040.html">
+<title>Firefox Version Numbers</title>
+<link>http://weblogs.mozillazine.org/ben/archives/010040.html</link>
+<description><![CDATA[<p>Mike Beltzner <a href="http://www.beltzner.ca/mike/archives/2006/04/10/when_3_is_less_than_2.html">explains</a> Firefox version numbering. i.e. Firefox 3 RTM is not "out".</p>]]></description>
+<dc:subject></dc:subject>
+<dc:creator>ben</dc:creator>
+<dc:date>2006-04-10T08:38:18-08:00</dc:date>
+</item>
+<item rdf:about="http://weblogs.mozillazine.org/ben/archives/010030.html">
+<title>Our Next Challenge?</title>
+<link>http://weblogs.mozillazine.org/ben/archives/010030.html</link>
+<description><![CDATA[<p>The past year or so has been interesting. In this time, I've been able to meet a lot of new people and learn a lot of new things. Most importantly is that for the first time in as long as I can remember, I have had a chance to see the Mozilla project from the outside, as it would appear to someone who was trying to build on Mozilla technology or contribute directly to a project, but was not part of Netscape "back in the day" or an employee of the Mozilla Foundation/Corporation itself. </p>
+
+<p>It's been an illuminating experience. From a technical perspective, it helped highlight APIs that I had developed without a clear understanding of how they would be used. The Extension Installation API was one example of this, and we were able to make some great improvements to it in 2005.</p>
+
+<p>But perhaps more importantly it has shed some light on how people perceive Mozilla as an open source project. These perceptions are not the sort of things people express explicitly. You have to notice them.</p>
+
+<h3>The Difficulty of Involvement</h3>
+
+<p>This is sort of the uber-perception. I think some of the reasons for this include the following:</p>
+
+<h3>Where is the Discussion?</h3>
+
+<p>Which newsgroup/mailing list/IRC channel/wiki/talk page/bug/forum page do I need to track in order to know what's going on in a specific area? The answer is unsatisfactorily complex.</p>
+
+<p>The traditional method of joining a project in the OSS world (where you join lists and IRC channels and lurk for a while, gradually ramping up your contributions) scales uneasily to a project the size of Mozilla. The amount of data a mere mortal would have to absorb in order to be productive quickly is staggering. I have in the past jocularly referred to it as the "learning wall". I wonder how many people just give up. </p>
+
+<h3>Madness to Method?</h3>
+
+<p>As a large project, Mozilla has thousands of source files across hundreds of directories. One of my coworkers here at Google commented that he tried to find something as simple as the browser window code a couple of years ago and couldn't, because it lived under the thoughtfully named "xpfe". </p>
+
+<p>There's not a huge amount of documentation - and I'm not just talking about public API docs. I'm talking about the much needed diagrams that show how the various building blocks fit together, and in-code documentation for pretty much anything that isn't intuitive (which is a lot). I've written as little of this as anyone else.</p>
+
+<h3>Tone</h3>
+
+<p>In the past, I have not done the best I could to establish a tone for discourse that is conducive to productive development. My tendency was to snap when provoked. I made two mistakes of judgement here, one was ignoring the effect that this sort of thing would have on those watching, aside from the victim. The other was to think that regardless of the tone set by my actions, we as a group could work through any negative effects. Any work we relied on others for we could do ourselves. Or we could hire through it.</p>
+
+<h3>The Joy of Code</h3>
+
+<p>The flaw with this is that when your project's contributions come solely from companies, for better or for worse the activities of those paid contributors will align in some way with the interests of those companies. What this does not always allow for is the pursuit of the sort of improvements that are outside the scope of these interests. Such things often include raising general code quality, speculative feature development, feature polish and detail etc. I don't mean to say that companies are <em>against</em> these things, but they're often not the primary concern during a release crunch. And what companies like to have is shipping software. </p>
+
+<p>Alternately, even in the absence of corporate support, if there is not enough redundancy that the same set of folk has to do the grunt work over and over, the risk of burnout is high.</p>
+
+<p>I feel this because I have been incredibly "plan" focused over the past few years, formally during my time at Netscape and less formally but no less importantly during the run up to Firefox 1.0 and 1.5. What I notice is that I no longer have time to work on the sort of interesting side projects that I used to enjoy doing when I was first starting out. </p>
+
+<p>For example, about six years ago I discovered a bug in the Bookmarks menu shortly after scrolling was implemented. When you moused into a submenu for a folder that was in the scrolled section, the sub menu popup was pushed off the bottom of the screen. I took a couple of days to learn the menu positioning code and fix the math error that was causing the bug. The exercise was good for me in a number of ways: I learned more about another section of the code, my general expertise was raised, and well.. I fixed the bug that was bothering<br />
+me.</p>
+
+<p>I think we need to have a project that is accessible to volunteers for this reason. We also need to provide a way to allow those volunteers to grow if they want to, so that if you're one of the folk at the center you can have a chance to step aside for a moment and take a breather and code for the pure joy of it. </p>
+
+<p>Full time paid contributors will always be a part of Open Source development. But I don't think release-focused agendas will ever be a substitute for the passion of folk who participate because of the joy of exploration and of contribution. </p>
+
+<h3>Looking Outward, Looking Forward</h3>
+
+<p>As a project, we have made overtures towards being a more inclusive lot. For some of the reasons I've listed here, I think as a project we're still more inward looking than outward. How many of us have thought about what we want to be doing in 5 years? Will we always be doing this? Will our roles remain the same? My opinion is that it's fast becoming time for us to start considering making personal sacrifices in our short term conveniences to make the project more accessible to new people. Do I know what we need to do? Not exactly. But I have some ideas: find ways to make our discussions, our public faces, and our code more accessible.</p>
+
+<p>With Firefox we did an excellent job of building a world class product that people wanted to use. We have a new challenge now, one that is larger and scope and in the long run in my opinion considerably more important because the long term success of products like Firefox depend on it. How will we grow a world class development community? How will we ensure that the freedoms we enjoy are protected, forever?</p>]]></description>
+<dc:subject></dc:subject>
+<dc:creator>ben</dc:creator>
+<dc:date>2006-04-07T09:22:59-08:00</dc:date>
+</item>
+<item rdf:about="http://weblogs.mozillazine.org/ben/archives/010011.html">
+<title>Congrats Relicensing Project!</title>
+<link>http://weblogs.mozillazine.org/ben/archives/010011.html</link>
+<description><![CDATA[<p><a href="http://weblogs.mozillazine.org/gerv/archives/2006/03/relicensing_complete.html">Gerv announces</a> that the Relicensing project is complete. Congrats Gerv and everyone else who doggedly pursued this over the years.  Part of Mozilla's mission is preserving choice, and making our code available under a variety of flexible licenses helps ensure that by allowing other projects to make use of it. This was a formidable task and a great accomplishment. </p>]]></description>
+<dc:subject></dc:subject>
+<dc:creator>ben</dc:creator>
+<dc:date>2006-04-04T07:15:22-08:00</dc:date>
+</item>
+<item rdf:about="http://weblogs.mozillazine.org/ben/archives/009965.html">
+<title>Producing Open Source Software</title>
+<link>http://weblogs.mozillazine.org/ben/archives/009965.html</link>
+<description><![CDATA[<p>I've been reading Karl Fogel's excellent <a href="http://www.producingoss.com/">Producing Open Source Software</a>. </p>
+
+<p>Karl's book is very well written, nice and compact (272 pages), and contains useful information for anyone doing anything in the Open Source world: both developers and managers. </p>
+
+<p>It will help people new to Open Source get a better understanding of how OSS projects are run. It will help people familiar with Open Source to get a better understanding of how to contribute more effectively.</p>
+
+<p>It's definitely a "must read."</p>]]></description>
+<dc:subject></dc:subject>
+<dc:creator>ben</dc:creator>
+<dc:date>2006-03-26T15:03:52-08:00</dc:date>
+</item>
+<item rdf:about="http://weblogs.mozillazine.org/ben/archives/009964.html">
+<title>Writing for Busy People</title>
+<link>http://weblogs.mozillazine.org/ben/archives/009964.html</link>
+<description><![CDATA[<p>Back when I was in <a href="http://www2.ece.auckland.ac.nz/">University</a>, many of the lecturers stressed time and time again the importance of succinct, well organized writing. They said over and over that this was the best way to have your thoughts read and understood by decision makers. In fact, they scared us by saying that 70% of us would become managers sooner or later!</p>
+
+<p>Well, I can tell you that's sage advice. It's great when people make contributions in the form of ideas and proposals, but it's even better when they're written for busy people. Here are some examples:</p>
+
+<ul>
+ <li>Making important points up front
+ <li>Clear taxonomy of headings, and lots of them
+ <li>Writing clearly and succinctly
+ <li>No long, unbroken paragraphs or tracts of text. 
+ <li>Preferring bulleted lists with clear points to paragraphs. 
+ <li>Use of emphasis in formatting to make important things clear
+</ul>
+
+<p>These days, I find I don't have a lot of time to read everything carefully, so the better structured a document is, the more I get out of it. I frequently find I miss entire subsections or points of documents, even when there's relatively little text, because of incomplete organization. My eyes definitely glaze over when i see a large block of unbroken text with few headings. At the very least, it'd be very helpful if folk would structure their thoughts into: "Problem" and "Proposed Solution". </p>
+
+<p>Before you post, stop and think if you've written something in a way that'll allow others to get the most out of it. Communicating your ideas effectively means you may get a clearer and quicker response from other people. </p>]]></description>
+<dc:subject>Editorial</dc:subject>
+<dc:creator>ben</dc:creator>
+<dc:date>2006-03-26T14:48:04-08:00</dc:date>
+</item>
+<item rdf:about="http://weblogs.mozillazine.org/ben/archives/009943.html">
+<title>Step 2: Ask Questions</title>
+<link>http://weblogs.mozillazine.org/ben/archives/009943.html</link>
+<description><![CDATA[<p>A healthy project is one where active contributors are always evaluating the project's progress, making sure it is headed in the right direction (usually stated in the project mission or goals). </p>
+
+<p>I think we could be better at this in Mozilla. I'm not suggesting people be assholes or anything, but I think some more pan-project analysis would be useful. </p>
+
+<p>Historically, I can point at a couple of groups of people who have attempted to do something like this. The <code>drivers@</code> group is one that looked beyond individual modules within Gecko to make sure that the right thing for the shipping products as a whole happened. The Firefox team is another example. By taking a holistic view, user experience was enhanced. </p>
+
+<p>I think contributors should not be afraid to poke their nose in other parts of the project and see how things are going. Ask questions. Learn more. Get involved in governance and management. If things don't seem intuitive, or a little arbitrary, ask, rather than assume it's for a good reason. One of the benefits of having an open, referencable set of discussion forums means that once you've answered a question once on the public forums, when someone else asks you can just give them a URL. </p>]]></description>
+<dc:subject></dc:subject>
+<dc:creator>ben</dc:creator>
+<dc:date>2006-03-22T17:27:14-08:00</dc:date>
+</item>
+<item rdf:about="http://weblogs.mozillazine.org/ben/archives/009924.html">
+<title>Step 1: Public Discussions</title>
+<link>http://weblogs.mozillazine.org/ben/archives/009924.html</link>
+<description><![CDATA[<p>The first step on the pathway to open source project happiness is to have our discussions in the public. </p>
+
+<p>One of the things people have (rightly) criticized about Firefox and Mozilla development in the past is that too much happens mysteriously, behind closed doors. This was for a number of reasons that sounded sufficient at the time - it was expedient, people were sitting within shouting distance, mental laziness, etc. </p>
+
+<p>What poor communication breeds is a lack of understanding of procedures, priorities and such like. A healthy project is one where the contributors understanding where things are headed, and what parts they can play. It is one where newcomers can visit the project website and within the space of a few minutes get a decent understanding of how things work, and find out opportunities for them to participate. </p>
+
+<p>People don't want to contribute to projects where things happen "magically". I've learned this lesson in the past. </p>
+
+<p>To this end, I've been encouraging everyone to have public discussions on the <a href="https://lists.mozilla.org/listinfo">Mozilla Newsgroups/Mailing Lists</a>. For Firefox, the list is dev-apps-firefox@, and the newsgroup is mozilla.dev.apps.firefox. They are mirrored through <a href="http://groups.google.com/group/mozilla.dev.apps.firefox">Google Groups</a> for ease of browsing. We're planning on improving the theme for Firefox2, and rather than pursue this effort in a walled garden like last time, we're going to proceed in dev-themes@/mozilla.dev.themes. Come on over and join in!</p>
+
+<p>At the same time, we've been encouraging other projects to use the newsgroups/lists too. Decisions made in private email, IRC (which isn't archived anywhere) even in public bugs etc make it very difficult for people who aren't central to the project to find out more or participate. I think we should strive to strike a better balance between convenience and accessibility/referencability. </p>
+
+<p>On top of this, there is a need to make the contact portions of the web site more accurate, relevant and easy to find, so people can easily find the list they want, and the person or group to contact. </p>
+
+<p>We've been having discussions about all of this in <a href="http://groups.google.com/group/mozilla.dev.general">mozilla.dev.general</a>, in <a href="http://groups.google.com/group/mozilla.dev.general/browse_thread/thread/899917f713861f06/4ae6d094ffee5ae7">these</a> <a href="http://groups.google.com/group/mozilla.dev.general/browse_thread/thread/5d1bf2bbc769919d/210246003f1f6fea">threads</a>. Rather than talk in a vacuum of only ourselves, I really hope that those of you that have experienced difficulty in the past in some of these areas will come forward and contribute to the discussion. </p>]]></description>
+<dc:subject></dc:subject>
+<dc:creator>ben</dc:creator>
+<dc:date>2006-03-20T09:23:24-08:00</dc:date>
+</item>
+<item rdf:about="http://weblogs.mozillazine.org/ben/archives/009914.html">
+<title>Reflection</title>
+<link>http://weblogs.mozillazine.org/ben/archives/009914.html</link>
+<description><![CDATA[<p>I've been doing a bit of it lately. All manner of topics. We recently moved and things have been chaotic so it's been nice to take the time to think. I've had a chance to look at how far we've come, and form some ideas about what we might need to do to go the right places. </p>
+
+<p>The past couple of years have brought some immense highs, and some considerable angst. With success has come the realization that true now as ever: the spirit of open source is expressed through the creative freedom of the many. The surest way to navigate the murky waters of increased attention and marketshare and such like is, as Leslie has been saying for some time, to keep your karma clean. Do the right thing, not only in technical matters but also relationships. </p>
+
+<p>For the Mozilla project, what we need to do (I think) is:</p>
+
+<ul>
+ <li>Better define the things that are important to us. The things that define who we are. Impart the positive aspects of open development culture and practice on everyone involved because  they're effective, and as a safeguard against recurrence of some of the <a href="http://weblogs.mozillazine.org/ben/archives/009698.html">troubles of the past</a>.
+ <li>Engage the community more effectively. Create and maintain an infrastructure of open communication to remove the "mystery" behind the decision making process. Organize our contributor materials better to make the project more accessible to newcomers. These are just a couple of examples. 
+</ul>
+
+<p>For my part, I'm starting out this year by doing things <a href="http://www.producingoss.com/">a little differently</a>. I think we need to grow more as a project. I'm hopeful that I'll be able to achieve some positive change. </p>
+
+<p>I understand that this post might seem a little abstract. I think what I'm saying might become a bit more clear after I talk about some tangible efforts, which I will do in future entries.</p>]]></description>
+<dc:subject></dc:subject>
+<dc:creator>ben</dc:creator>
+<dc:date>2006-03-19T02:00:07-08:00</dc:date>
+</item>
+<item rdf:about="http://weblogs.mozillazine.org/ben/archives/009804.html">
+<title>Bye Bye Blackberry?</title>
+<link>http://weblogs.mozillazine.org/ben/archives/009804.html</link>
+<description><![CDATA[<p><a href="http://news.com.com/Bye-bye%2C+BlackBerry+-+page+2/2100-1047_3-6042308-2.html?tag=st.num">Bye Bye, Blackberry?</a></p>
+
+<p>I cannot believe people are discussing life without these things. It's like this: I have a patent on television. I don't plan on doing anything with it, but I'm going to shut TV down for all of you, and you're going to sit about and think about life without TV? What's wrong with people?! Is this the world we all want to live in, where people without  the interest or capability to pursue technology can hold everyone else captive? That's not the world I want to live in. <br />
+</p>]]></description>
+<dc:subject></dc:subject>
+<dc:creator>ben</dc:creator>
+<dc:date>2006-02-24T10:57:32-08:00</dc:date>
+</item>
+<item rdf:about="http://weblogs.mozillazine.org/ben/archives/009774.html">
+<title>More on Memory</title>
+<link>http://weblogs.mozillazine.org/ben/archives/009774.html</link>
+<description><![CDATA[<p>Firefox's caching behavior is just one area of memory usage. I'm really glad that there's been such a lot of discussion in the previous post I made, since many people have raised specific issues, bugs have been filed, and people are looking at the things people are reporting. This sort of feedback system is one of the things that makes the open development model great. Firefox 2 will be much better because of your help!</p>]]></description>
+<dc:subject></dc:subject>
+<dc:creator>ben</dc:creator>
+<dc:date>2006-02-17T23:44:03-08:00</dc:date>
+</item>
+
+
+</rdf:RDF>

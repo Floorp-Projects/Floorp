@@ -1,0 +1,5 @@
+[mfcembed]
+@topsrcdir@/xpinstall/packager/win_mfcembed/runapp.bat dist/bin/runapp.bat
+
+[mfcembed-xpi]
+!preprocess xpiroot/install.js -E -Fsubstitution @topsrcdir@/xpinstall/packager/common/share.t @topsrcdir@/xpinstall/packager/win_mfcembed/mfcembed.jst

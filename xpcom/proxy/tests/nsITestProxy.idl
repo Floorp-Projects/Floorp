@@ -1,0 +1,9 @@
+#include "nsISupports.idl"
+
+[uuid(1979e980-1cfd-11d3-915e-0000863011c4)]
+interface nsITestProxy : nsISupports 
+{
+    long Test(in long p1, in long p2);
+    void Test2();
+    void Test3(in nsISupports p1, out nsISupports p2);
+};

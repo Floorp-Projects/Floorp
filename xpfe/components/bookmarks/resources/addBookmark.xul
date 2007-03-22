@@ -1,0 +1,129 @@
+<?xml version="1.0"?>
+
+<!-- -*- Mode: HTML; indent-tabs-mode: nil; -*- -->
+<!--
+
+ ***** BEGIN LICENSE BLOCK *****
+ Version: MPL 1.1/GPL 2.0/LGPL 2.1
+
+ The contents of this file are subject to the Mozilla Public License Version
+ 1.1 (the "License"); you may not use this file except in compliance with
+ the License. You may obtain a copy of the License at
+ http://www.mozilla.org/MPL/
+
+ Software distributed under the License is distributed on an "AS IS" basis,
+ WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ for the specific language governing rights and limitations under the
+ License.
+
+ The Original Code is mozilla.org code.
+
+ The Initial Developer of the Original Code is
+ Netscape Communications Corporation.
+ Portions created by the Initial Developer are Copyright (C) 1998
+ the Initial Developer. All Rights Reserved.
+
+ Contributor(s):
+   Ben Goodger <ben@netscape.com> (Original Author)
+   Gervase Markham <gerv@gerv.net>
+
+ Alternatively, the contents of this file may be used under the terms of
+ either of the GNU General Public License Version 2 or later (the "GPL"),
+ or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ in which case the provisions of the GPL or the LGPL are applicable instead
+ of those above. If you wish to allow use of your version of this file only
+ under the terms of either the GPL or the LGPL, and not to allow others to
+ use your version of this file under the terms of the MPL, indicate your
+ decision by deleting the provisions above and replace them with the notice
+ and other provisions required by the GPL or the LGPL. If you do not delete
+ the provisions above, a recipient may use your version of this file under
+ the terms of any one of the MPL, the GPL or the LGPL.
+
+ ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://communicator/skin/"?>
+<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css"?>
+<?xml-stylesheet href="chrome://communicator/content/bookmarks/bookmarks.css" type="text/css"?>
+
+<!DOCTYPE dialog [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % addBookmarkDTD SYSTEM "chrome://communicator/locale/bookmarks/addBookmark.dtd">
+%addBookmarkDTD;
+]>
+
+<dialog id="newBookmarkDialog"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        ondialogaccept="return onOK(event)"
+        title="&newBookmark.title;" selectFolderTitle="&selectFolder.title;"
+        onload="Startup();"
+        onunload="persistTreeSize();"
+        persist="screenX screenY"
+        screenX="24" screenY="24">
+   
+  
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarks.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/addBookmark.js"/>
+
+  <stringbundle id="bookmarksbundle"
+                src="chrome://communicator/locale/bookmarks/bookmarks.properties"/>
+
+  <broadcaster id="showaddgroup"/>
+
+  <separator id="nameseparator" class="thin"/>
+  
+  <grid id="bookmarknamegrid">
+    <columns>
+      <column/>
+      <column flex="1"/>
+    </columns>
+    <rows>
+      <row align="center">
+        <hbox pack="end">
+          <label value="&name.label;" accesskey="&name.accesskey;" control="name"/>
+        </hbox>
+        <textbox id="name" oninput="onFieldInput();"/>
+      </row>
+      <row align="center">
+        <hbox pack="end">
+          <label value="&url.label;" accesskey="&url.accesskey;" control="url"/>
+        </hbox>
+        <textbox id="url" oninput="onFieldInput();"/>
+      </row>
+      <row align="center">
+        <hbox pack="end">
+          <label value="&shortcutURL.label;" accesskey="&shortcutURL.accesskey;" control="shortcutUrl"/>
+        </hbox>
+        <textbox id="shortcutUrl"/>
+      </row>
+    </rows>
+  </grid>
+
+  <separator class="thin" observes="showaddgroup"/>
+  <hbox observes="showaddgroup">
+    <checkbox id="addgroup" label="&addGroup.label;"
+              accesskey="&addGroup.accesskey;"
+              oncommand="toggleGroup();"/>
+  </hbox>
+
+  <separator id="destinationSeparator"/>
+
+  <vbox id="folderbox" flex="1">
+    <label id="destinationLabel" value="&destination.label;" control="bookmarks-view"/>
+    <bookmarks-tree id="bookmarks-view" flex="1" type="folders"
+                    rows="10" seltype="single"
+                    persist="width height"/>
+
+    <separator id="folderbuttonseparator" class="thin"/>
+
+    <hbox pack="end">
+      <button label="&newFolder.label;"
+              accesskey="&newFolder.accesskey;"
+              oncommand="createNewFolder();"/>
+    </hbox>
+  </vbox>
+
+  <!-- Ensure a decent dialog width when the bookmarks-tree is hidden. -->
+  <spacer style="width: 36em;"/>
+
+</dialog>

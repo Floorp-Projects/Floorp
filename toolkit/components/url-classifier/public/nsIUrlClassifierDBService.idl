@@ -1,0 +1,113 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Url Classifier code
+ *
+ * The Initial Developer of the Original Code is
+ * Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2006
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Tony Chang <tony@ponderer.org> (original author)
+ *   Brett Wilson <brettw@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+// Interface for JS function callbacks
+[scriptable, function, uuid(4ca27b6b-a674-4b3d-ab30-d21e2da2dffb)]
+interface nsIUrlClassifierCallback : nsISupports {
+  void handleEvent(in ACString value);
+};
+
+/**
+ * This is a proxy class that is instantiated and called from the JS thread.
+ * It provides async methods for querying and updating the database.  As the
+ * methods complete, they call the callback function.
+ */
+[scriptable, uuid(211d5360-4af6-4a1d-99c1-926d35861eaf)]
+interface nsIUrlClassifierDBService : nsISupports
+{
+  /**
+   * Looks up a key in the database.  After it finds a value, it calls
+   * callback with the value as the first param.  If the key is not in
+   * the db or the table does not exist, the callback is called with
+   * an empty string parameter.
+   */
+  void exists(in ACString tableName, in ACString key,
+              in nsIUrlClassifierCallback c);
+
+  /**
+   * Checks to see if the tables exist.  tableNames is a comma separated list
+   * of table names to check.  The callback is called with a comma separated
+   * list of tables that no longer exist (either the db is corrupted or the
+   * user deleted the file).
+   */
+  void checkTables(in ACString tableNames, in nsIUrlClassifierCallback c);
+
+  /**
+   * Updates the table in the background.  Calls callback after each table
+   * completes processing with the new table line as the parameter.  This
+   * allows us to keep track of the table version in our main thread.
+   */
+  void updateTables(in ACString updateString, in nsIUrlClassifierCallback c);
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Incremental update methods.  These are named to match similar methods
+  // in, e.g., nsICryptoHash.
+
+  /**
+   * Update the table incrementally.
+   */
+  void update(in ACString updateChunk);
+
+  // It would be nice to have an updateFromStream method to round out the
+  // interface, but it's tricky because of XPCOM proxies.
+
+  /**
+   * Finish an incremental update.  This commits any pending tables and
+   * calls the callback for each completed table.
+   */
+  void finish(in nsIUrlClassifierCallback c);
+
+  /**
+   * Cancel an incremental update.  This rolls back and pending changes.
+   * and resets the stream interface.
+   */
+  void cancelStream();
+};
+
+/**
+ * Interface for the actual worker thread.  Implementations of this need not
+ * be thread aware and just work on the database.
+ */
+[scriptable, uuid(5d405325-2ba1-4040-b69b-8bda8353d3d3)]
+interface nsIUrlClassifierDBServiceWorker : nsIUrlClassifierDBService
+{
+  // Provide a way to forcibly close the db connection.
+  void closeDb();
+};

@@ -1,0 +1,14 @@
+<!ENTITY Inspector.label "Inspector DOM">
+<!ENTITY Sidebar.label "Barra lateral">
+<!ENTITY elementBlinking.label "Element marcat">
+<!ENTITY blinkSelectedElement.label "Marca l'element seleccionat">
+<!ENTITY borderColor.label "Color del contorn">
+<!ENTITY borderWidth.label "Amplada del contorn">
+<!ENTITY px.label "(px)">
+<!ENTITY blinkDuration.label "Duració de la marca">
+<!ENTITY ms.label "(ms)">
+<!ENTITY blinkSpeed.label "Velocitat de parpalleig del marcatge">
+<!ENTITY invertColors.label "Inverteix els colors">
+<!ENTITY installHowTo.label "La barra lateral de l'Inspector DOM no està instal·lada. Feu un clic al botó 'Instal·la' per a afegir-la a la vostra barra lateral.">
+<!ENTITY install.label "Instal·la">
+<!ENTITY addNavigatorHooks.label "Afegeix menús contextuals al navegador">

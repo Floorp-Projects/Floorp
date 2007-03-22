@@ -1,0 +1,193 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+<title>form sizing input file strict mode</title>
+<style type="text/css">
+ .fixed {width:50px}
+.tight {width:20px}
+div {border:blue 1px solid}
+.pct {width:10%}
+.cellpct{width:100%}
+.wide {width:200px}
+</style>
+</head>
+<p>intrinsic width:</p>
+<p><select><OPTION selected label="none" value="none">None</OPTION>
+     <OPTGROUP label="PortMaster 3">
+       <OPTION label="3.7.1" value="pm3_3.7.1">PortMaster 3 with ComOS 3.7.1</OPTION>
+       <OPTION label="3.7" value="pm3_3.7">PortMaster 3 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm3_3.5">PortMaster 3 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="PortMaster 2">
+       <OPTION label="3.7" value="pm2_3.7">PortMaster 2 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm2_3.5">PortMaster 2 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="IRX">
+       <OPTION label="3.7R" value="IRX_3.7R">IRX with ComOS 3.7R</OPTION>
+       <OPTION label="3.5R" value="IRX_3.5R">IRX with ComOS 3.5R</OPTION>
+     </OPTGROUP>
+ </SELECT>
+</p>
+<p>intrinsic width long nonbreakable text</p>
+<p><select>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<OPTION selected label="none" value="none">None</OPTION>
+     <OPTGROUP label="PortMaster 3">
+       <OPTION label="3.7.1" value="pm3_3.7.1">PortMaster 3 with ComOS 3.7.1</OPTION>
+       <OPTION label="3.7" value="pm3_3.7">PortMaster 3 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm3_3.5">PortMaster 3 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="PortMaster 2">
+       <OPTION label="3.7" value="pm2_3.7">PortMaster 2 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm2_3.5">PortMaster 2 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="IRX">
+       <OPTION label="3.7R" value="IRX_3.7R">IRX with ComOS 3.7R</OPTION>
+       <OPTION label="3.5R" value="IRX_3.5R">IRX with ComOS 3.5R</OPTION>
+     </OPTGROUP>
+ </SELECT>
+</p>
+<p>fixed width</p>
+<p><select class="fixed"><OPTION selected label="none" value="none">None</OPTION>
+     <OPTGROUP label="PortMaster 3">
+       <OPTION label="3.7.1" value="pm3_3.7.1">PortMaster 3 with ComOS 3.7.1</OPTION>
+       <OPTION label="3.7" value="pm3_3.7">PortMaster 3 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm3_3.5">PortMaster 3 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="PortMaster 2">
+       <OPTION label="3.7" value="pm2_3.7">PortMaster 2 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm2_3.5">PortMaster 2 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="IRX">
+       <OPTION label="3.7R" value="IRX_3.7R">IRX with ComOS 3.7R</OPTION>
+       <OPTION label="3.5R" value="IRX_3.5R">IRX with ComOS 3.5R</OPTION>
+     </OPTGROUP>
+ </SELECT>
+</p>
+<p>intrinsic width inside table</p>
+<table border><tr><td><select><OPTION selected label="none" value="none">None</OPTION>
+     <OPTGROUP label="PortMaster 3">
+       <OPTION label="3.7.1" value="pm3_3.7.1">PortMaster 3 with ComOS 3.7.1</OPTION>
+       <OPTION label="3.7" value="pm3_3.7">PortMaster 3 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm3_3.5">PortMaster 3 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="PortMaster 2">
+       <OPTION label="3.7" value="pm2_3.7">PortMaster 2 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm2_3.5">PortMaster 2 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="IRX">
+       <OPTION label="3.7R" value="IRX_3.7R">IRX with ComOS 3.7R</OPTION>
+       <OPTION label="3.5R" value="IRX_3.5R">IRX with ComOS 3.5R</OPTION>
+     </OPTGROUP>
+ </SELECT>
+</td></tr></table>
+<p>intrinsic width inside tight table cell</p>
+<table border><tr><td class="tight"><select><OPTION selected label="none" value="none">None</OPTION>
+     <OPTGROUP label="PortMaster 3">
+       <OPTION label="3.7.1" value="pm3_3.7.1">PortMaster 3 with ComOS 3.7.1</OPTION>
+       <OPTION label="3.7" value="pm3_3.7">PortMaster 3 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm3_3.5">PortMaster 3 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="PortMaster 2">
+       <OPTION label="3.7" value="pm2_3.7">PortMaster 2 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm2_3.5">PortMaster 2 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="IRX">
+       <OPTION label="3.7R" value="IRX_3.7R">IRX with ComOS 3.7R</OPTION>
+       <OPTION label="3.5R" value="IRX_3.5R">IRX with ComOS 3.5R</OPTION>
+     </OPTGROUP>
+ </SELECT>
+</td></tr></table>
+<p>fixed width inside table</p>
+<table border><tr><td><select class="fixed"><OPTION selected label="none" value="none">None</OPTION>
+     <OPTGROUP label="PortMaster 3">
+       <OPTION label="3.7.1" value="pm3_3.7.1">PortMaster 3 with ComOS 3.7.1</OPTION>
+       <OPTION label="3.7" value="pm3_3.7">PortMaster 3 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm3_3.5">PortMaster 3 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="PortMaster 2">
+       <OPTION label="3.7" value="pm2_3.7">PortMaster 2 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm2_3.5">PortMaster 2 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="IRX">
+       <OPTION label="3.7R" value="IRX_3.7R">IRX with ComOS 3.7R</OPTION>
+       <OPTION label="3.5R" value="IRX_3.5R">IRX with ComOS 3.5R</OPTION>
+     </OPTGROUP>
+ </SELECT>
+</td></tr></table>
+<p>fixed width inside smaller table cell</p>
+<table border><tr><td class="tight"><select class="fixed"><OPTION selected label="none" value="none">None</OPTION>
+     <OPTGROUP label="PortMaster 3">
+       <OPTION label="3.7.1" value="pm3_3.7.1">PortMaster 3 with ComOS 3.7.1</OPTION>
+       <OPTION label="3.7" value="pm3_3.7">PortMaster 3 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm3_3.5">PortMaster 3 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="PortMaster 2">
+       <OPTION label="3.7" value="pm2_3.7">PortMaster 2 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm2_3.5">PortMaster 2 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="IRX">
+       <OPTION label="3.7R" value="IRX_3.7R">IRX with ComOS 3.7R</OPTION>
+       <OPTION label="3.5R" value="IRX_3.5R">IRX with ComOS 3.5R</OPTION>
+     </OPTGROUP>
+ </SELECT>
+</td></tr></table>
+<p>pctwidth inside auto table</p>
+<table border><tr><td><select class="pct"><OPTION selected label="none" value="none">None</OPTION>
+     <OPTGROUP label="PortMaster 3">
+       <OPTION label="3.7.1" value="pm3_3.7.1">PortMaster 3 with ComOS 3.7.1</OPTION>
+       <OPTION label="3.7" value="pm3_3.7">PortMaster 3 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm3_3.5">PortMaster 3 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="PortMaster 2">
+       <OPTION label="3.7" value="pm2_3.7">PortMaster 2 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm2_3.5">PortMaster 2 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="IRX">
+       <OPTION label="3.7R" value="IRX_3.7R">IRX with ComOS 3.7R</OPTION>
+       <OPTION label="3.5R" value="IRX_3.5R">IRX with ComOS 3.5R</OPTION>
+     </OPTGROUP>
+ </SELECT>
+</td></tr></table>
+<p>pct width inside fixed width table cell</p>
+<table border><tr><td class="tight"><select class="pct"><OPTION selected label="none" value="none">None</OPTION>
+     <OPTGROUP label="PortMaster 3">
+       <OPTION label="3.7.1" value="pm3_3.7.1">PortMaster 3 with ComOS 3.7.1</OPTION>
+       <OPTION label="3.7" value="pm3_3.7">PortMaster 3 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm3_3.5">PortMaster 3 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="PortMaster 2">
+       <OPTION label="3.7" value="pm2_3.7">PortMaster 2 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm2_3.5">PortMaster 2 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="IRX">
+       <OPTION label="3.7R" value="IRX_3.7R">IRX with ComOS 3.7R</OPTION>
+       <OPTION label="3.5R" value="IRX_3.5R">IRX with ComOS 3.5R</OPTION>
+     </OPTGROUP>
+ </SELECT>
+</td></tr></table>
+<p>pct width inside pct width table cell</p>
+<table border class="wide"><tr><td class="cellpct"><select class="pct"><OPTION selected label="none" value="none">None</OPTION>
+     <OPTGROUP label="PortMaster 3">
+       <OPTION label="3.7.1" value="pm3_3.7.1">PortMaster 3 with ComOS 3.7.1</OPTION>
+       <OPTION label="3.7" value="pm3_3.7">PortMaster 3 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm3_3.5">PortMaster 3 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="PortMaster 2">
+       <OPTION label="3.7" value="pm2_3.7">PortMaster 2 with ComOS 3.7</OPTION>
+       <OPTION label="3.5" value="pm2_3.5">PortMaster 2 with ComOS 3.5</OPTION>
+     </OPTGROUP>
+     <OPTGROUP label="IRX">
+       <OPTION label="3.7R" value="IRX_3.7R">IRX with ComOS 3.7R</OPTION>
+       <OPTION label="3.5R" value="IRX_3.5R">IRX with ComOS 3.5R</OPTION>
+     </OPTGROUP>
+ </SELECT>
+</td></tr></table>
+
+
+
+
+</body>
+
+</html>

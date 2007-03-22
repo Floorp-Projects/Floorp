@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+
+<resource version="2.3.0.1">
+
+  <object class="wxFrame" name="editor_frame">
+    <title>wxEmbed Editor</title>
+    <size>300,300</size>
+    <style>wxCAPTION|wxSYSTEM_MENU|wxRESIZE_BORDER|wxRESIZE_BOX|wxMINIMIZE_BOX|wxMAXIMIZE_BOX|wxCLIP_CHILDREN</style>
+    <pos>-1,-1</pos>
+
+    <!-- Editor menu -->
+    <object class="wxMenuBar" name="mainmenu">
+      <style>wxMB_DOCKABLE</style>
+      <object_ref ref="menu_file"/>
+      <object_ref ref="menu_edit"/>
+    </object>
+
+    <!-- Editor tool bar -->
+    <object class="wxToolBar" name="toolbar">
+      <style>wxTB_FLAT|wxTB_DOCKABLE</style>
+      <margins>2,2</margins>
+      <bitmapsize>20,18</bitmapsize>
+  
+      <object class="tool" name="edit_bold">
+        <bitmap>bold.gif</bitmap>
+        <toggle>0</toggle>
+        <tooltip>Bold</tooltip>
+      </object>
+      <object class="tool" name="edit_italic">
+        <bitmap>italic.gif</bitmap>
+        <toggle>0</toggle>
+        <tooltip>Italic</tooltip>
+      </object>
+      <object class="tool" name="edit_underline">
+        <bitmap>underline.gif</bitmap>
+        <toggle>0</toggle>
+        <tooltip>Underline</tooltip>
+      </object>
+      <object class="separator"/>
+      <object class="tool" name="edit_indent">
+        <bitmap>indent.gif</bitmap>
+        <tooltip>Indent paragraph</tooltip>
+      </object>
+      <object class="tool" name="edit_outdent">
+        <bitmap>outdent.gif</bitmap>
+        <tooltip>Outdent paragraph</tooltip>
+      </object>
+      <object class="separator"/>
+      <object class="tool" name="edit_aleft">
+        <bitmap>alignleft.gif</bitmap>
+        <tooltip>Left align paragraph</tooltip>
+      </object>
+      <object class="tool" name="edit_acenter">
+        <bitmap>aligncenter.gif</bitmap>
+        <tooltip>Center align paragraph</tooltip>
+      </object>
+      <object class="tool" name="edit_aright">
+        <bitmap>alignright.gif</bitmap>
+        <tooltip>Right align paragraph</tooltip>
+      </object>
+      <object class="separator"/>
+      <object class="tool" name="edit_pen">
+        <bitmap>pen.gif</bitmap>
+        <tooltip>Set the text colour</tooltip>
+      </object>
+      <object class="tool" name="edit_background">
+        <bitmap>background.gif</bitmap>
+        <tooltip>Set the paragraph background colour</tooltip>
+      </object>
+    </object>
+
+    <object class="wxFlexGridSizer">
+      <cols>1</cols>
+      <rows>1</rows>
+      <vgap>0</vgap>
+      <hgap>0</hgap>
+      <growablecols>0</growablecols>
+      <growablerows>0</growablerows>
+
+      <!-- Gecko Window -->
+
+      <object class="sizeritem">
+        <flag>wxGROW|wxALL</flag>
+        <object class="wxPanel" name="gecko" subclass="GeckoWindow">
+          <style>wxCLIP_CHILDREN|wxSUNKEN_BORDER|wxTAB_TRAVERSAL|wxWANTS_CHARS</style>
+          <size>500,280</size>
+        </object>
+      </object>
+
+    </object>
+
+
+  </object>
+</resource>

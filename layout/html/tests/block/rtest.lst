@@ -1,0 +1,15 @@
+base/rtest.lst
+bugs/rtest.lst
+printing/rtest.lst
+../table/core/rtest.lst
+../table/viewer_tests/rtest.lst
+../table/bugs/rtest.lst
+../table/marvin/rtest.lst
+../table/other/rtest.lst
+../table/dom/rtest.lst
+../table/printing/rtest.lst
+../formctls/base/rtest.lst
+../formctls/bugs/rtest.lst
+../style/bugs/rtest.lst
+../xbl/rtest.lst
+net/rtest.lst

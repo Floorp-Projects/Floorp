@@ -1,0 +1,139 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Simon Fraser <sfraser@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/*
+ * nsICommandParams is used to pass parameters to commands executed
+ * via nsICommandManager, and to get command state.
+ *
+ */
+
+[scriptable, uuid(83f892cf-7ed3-490e-967a-62640f3158e1)]
+interface nsICommandParams : nsISupports
+{
+
+  /*
+   * List of primitive types for parameter values.
+   */
+  const short eNoType                     = 0;      /* Only used for sanity checking */
+  const short eBooleanType                = 1;
+  const short eLongType                   = 2;
+  const short eDoubleType                 = 3;
+  const short eWStringType                = 4;
+  const short eISupportsType              = 5;
+  const short eStringType                 = 6;
+
+  /*
+   * getValueType
+   * 
+   * Get the type of a specified parameter
+   */
+  short       getValueType(in string name);
+
+  /*
+   * get_Value
+   * 
+   * Get the value of a specified parameter. Will return
+   * an error if the parameter does not exist, or if the value
+   * is of the wrong type (no coercion is performed for you).
+   * 
+   * nsISupports values can contain any XPCOM interface,
+   * as documented for the command. It is permissible
+   * for it to contain nsICommandParams, but not *this*
+   * one (i.e. self-containing is not allowed).
+   */
+  boolean     getBooleanValue(in string name);
+  long        getLongValue(in string name);
+  double      getDoubleValue(in string name);
+  AString     getStringValue(in string name);
+  string      getCStringValue(in string name);
+  nsISupports getISupportsValue(in string name);
+  
+  /*
+   * set_Value
+   * 
+   * Set the value of a specified parameter (thus creating
+   * an entry for it).
+   * 
+   * nsISupports values can contain any XPCOM interface,
+   * as documented for the command. It is permissible
+   * for it to contain nsICommandParams, but not *this*
+   * one (i.e. self-containing is not allowed).
+   */
+  void        setBooleanValue(in string name, in boolean value);
+  void        setLongValue(in string name, in long value);
+  void        setDoubleValue(in string name, in double value);
+  void        setStringValue(in string name, in AString value);
+  void        setCStringValue(in string name, in string value);
+  void        setISupportsValue(in string name, in nsISupports value);
+  
+  /*
+   * removeValue
+   * 
+   * Remove the specified parameter from the list.
+   */
+  void        removeValue(in string name);
+  
+  /*
+   * Enumeration methods
+   * 
+   * Use these to enumerate over the contents of a parameter
+   * list. For each name that getNext() returns, use 
+   * getValueType() and then getMumbleValue to get its
+   * value.
+   */
+  boolean     hasMoreElements();
+  void        first();
+
+  /**
+   * GetNext()
+   * 
+   * @return string pointer that will be allocated and is up 
+   *         to the caller to free
+   */
+  string      getNext();
+
+};
+
+// {f7fa4581-238e-11d5-a73c-ab64fb68f2bc}
+%{C++
+#define NS_COMMAND_PARAMS_CID { 0xf7fa4581, 0x238e, 0x11d5, { 0xa7, 0x3c, 0xab, 0x64, 0xfb, 0x68, 0xf2, 0xbc } }
+#define NS_COMMAND_PARAMS_CONTRACTID "@mozilla.org/embedcomp/command-params;1"
+%}
+

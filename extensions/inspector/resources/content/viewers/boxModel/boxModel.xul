@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE page [
+  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://inspector/locale/viewers/boxModel.dtd"> %dtd3;
+]>
+
+<?xml-stylesheet href="chrome://inspector/skin/viewers/boxModel/boxModel.css"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+
+<page id="winBoxModel"
+      orient="vertical"
+      xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <script type="application/x-javascript" src="chrome://inspector/content/viewers/boxModel/boxModel.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>  
+
+  <groupbox>
+    <caption>
+      <menulist id="mlStats" value="position" oncommand="viewer.showStatGroup(this.value)">
+        <menupopup>
+          <menuitem value="position" label="&boxPosition.label;"/>
+          <menuitem value="dimension" label="&boxDimension.label;"/>
+          <menuitem value="margin" label="&boxMargin.label;"/>
+          <menuitem value="border" label="&boxBorder.label;"/>
+          <menuitem value="padding" label="&boxPadding.label;"/>
+        </menupopup>
+      </menulist>
+    </caption>
+    <grid flex="1">
+      <columns>
+        <column/>
+        <column flex="1" class="value-column"/>
+        <column/>
+        <column flex="1" class="value-column"/>
+        <column/>
+        <column flex="1" class="value-column"/>
+      </columns>
+      <rows>
+        <row>
+          <label id="txR1C1Label"/>
+          <label id="txR1C1Value"/>
+          <label id="txR1C2Label"/>
+          <label id="txR1C2Value"/>
+          <label id="txR1C3Label"/>
+          <label id="txR1C3Value"/>
+        </row>
+        <row>
+          <label id="txR2C1Label"/>
+          <label id="txR2C1Value"/>
+          <label id="txR2C2Label"/>
+          <label id="txR2C2Value"/>
+          <label id="txR2C3Label"/>
+          <label id="txR2C3Value"/>
+        </row>
+      </rows>
+    </grid>
+  </groupbox>
+
+</page>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: atom author name works
+Expect: feed.authors.queryElementAt(1, Components.interfaces.nsIFeedPerson).email=='bar@example.com';
+
+-->
+<feed xmlns="http://www.w3.org/2005/Atom">
+<title>test title</title>
+<author>
+<email>hmm@example.com</email>
+<name>foo</name>
+</author>
+<author>
+<email>bar@example.com</email>
+<name>foo</name>
+</author>
+</feed>

@@ -1,0 +1,40 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML -*- -->
+
+<!--
+
+  These are the panels that will be displayed in the sidebar.
+
+-->
+<!DOCTYPE RDF SYSTEM "chrome://communicator/locale/sidebar/local-panels.dtd">
+
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#">
+
+  <RDF:Description about="urn:sidebar:current-panel-list">
+    <NC:panel-list>
+      <RDF:Seq>
+        <RDF:li resource="urn:sidebar:panel:search"/>
+        <RDF:li resource="urn:sidebar:panel:bookmarks"/>
+        <RDF:li resource="urn:sidebar:panel:history"/>
+        <RDF:li resource="urn:sidebar:panel:addressbook"/>
+      </RDF:Seq>
+    </NC:panel-list>
+    <NC:version>0.1</NC:version>
+  </RDF:Description>
+  <RDF:Description about="urn:sidebar:panel:search">
+    <NC:title>&sidebar.search.label;</NC:title>
+    <NC:content>chrome://communicator/content/search/search-panel.xul</NC:content>
+  </RDF:Description>
+  <RDF:Description about="urn:sidebar:panel:bookmarks">
+    <NC:title>&sidebar.client-bookmarks.label;</NC:title>
+    <NC:content>chrome://communicator/content/bookmarks/bm-panel.xul</NC:content>
+  </RDF:Description>
+  <RDF:Description about="urn:sidebar:panel:history">
+    <NC:title>&sidebar.client-history.label;</NC:title>
+    <NC:content>chrome://communicator/content/history/history-panel.xul</NC:content>
+  </RDF:Description>
+  <RDF:Description about="urn:sidebar:panel:addressbook">
+    <NC:title>&sidebar.client-addressbook.label;</NC:title>
+    <NC:content>chrome://messenger/content/addressbook/addressbook-panel.xul</NC:content>
+  </RDF:Description>
+</RDF:RDF>

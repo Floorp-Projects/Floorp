@@ -1,0 +1,2 @@
+<!ENTITY junkImgs.title "Znajdź nieużywane obrazki w bieżącym motywie...">
+<!ENTITY junkImgsDescription "Aby wyszukiwanie było efektywne, należy przeprowadzić inspekcję dokumentu, który załaduje wszystkie pliki CSS zawarte w danym motywie. Następnie należy wprowadzić ścieżkę dostępu do głównego katalogu, w którym znajduje się bieżący motyw.">

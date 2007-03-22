@@ -1,0 +1,6 @@
+<!ENTITY inspectorTaskCmd.label "Scrúdaitheoir DOM">
+<!ENTITY inspectorTaskCmd.commandkey "e">
+<!ENTITY inspectorTaskCmd.accesskey.ff "n">
+<!ENTITY inspectorTaskCmd.accesskey "i">
+<!ENTITY inspectPageTaskCmd.label "Scrúdaigh Leathanach">
+<!ENTITY inspectPageTaskCmd.accesskey "L">

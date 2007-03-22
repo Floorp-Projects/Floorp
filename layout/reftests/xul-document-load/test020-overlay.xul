@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <window id="main">
+    <?xml-stylesheet href="test020.css" type="text/css"?>
+  </window>
+</overlay>

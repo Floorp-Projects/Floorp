@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+
+Description: RSS1 feed w/ item 2 dc:description
+Expect: feed.items.queryElementAt(1, Components.interfaces.nsIFeedEntry).fields.getProperty('dc:description') == 'XML is placing increasingly heavy loads on the existing technical infrastructure of the Internet 2.'
+
+-->
+<rdf:RDF 
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns="http://purl.org/rss/1.0/"
+ xmlns:dc='http://purl.org/dc/elements/1.1/'>
+  <channel rdf:about="http://www.xml.com/xml/news.rss">
+    <title>Test</title>
+    <link>http://xml.com/pub</link>
+    <dc:description>another description</dc:description>  
+  </channel>
+  <item>
+   <title>XML: A Disruptive Technology</title> 
+    <link>http://c.moreover.com/click/here.pl?r123</link>
+   <dc:description>
+      XML is placing increasingly heavy loads on the existing technical infrastructure of the Internet.
+    </dc:description>
+   <!-- <dc:publisher>The O'Reilly Network</dc:publisher>
+    <dc:creator>Simon St.Laurent (mailto:simonstl@simonstl.com)</dc:creator>
+    <dc:rights>Copyright &#169; 2000 O'Reilly &amp; Associates, Inc.</dc:rights>
+    <dc:subject>XML</dc:subject>-->
+  </item> 
+  <item>
+   <dc:description>
+      XML is placing increasingly heavy loads on the existing technical infrastructure of the Internet 2.
+    </dc:description>
+    <title>XML: A Disruptive Technology</title> 
+  </item>
+</rdf:RDF>

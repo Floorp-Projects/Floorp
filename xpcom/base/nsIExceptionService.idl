@@ -1,0 +1,97 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * ActiveState Tool Corp..
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Mark Hammond <MarkH@ActiveState.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsIException.idl"
+
+// An exception provider.  These can turn special nsresult codes
+// into nsIExceptions
+
+[scriptable, uuid(0577744c-c1d2-47f2-8bcc-ce7a9e5a88fc)]
+interface nsIExceptionProvider : nsISupports
+{
+    /** Gets an nsIException or returns NULL if not possible. **/
+    nsIException getException(in nsresult result, in nsIException defaultException);
+};
+
+// A ScriptErrorManager for a single thread.  These objects
+// are _not_ thread-safe.  Use the ScriptErrorService
+// to get a script error manager for your current thread.
+[scriptable, uuid(efc9d00b-231c-4feb-852c-ac017266a415)]
+interface nsIExceptionManager : nsISupports
+{
+    /** Sets (or clears with nsnull) the current error on the this thread. */
+    void setCurrentException( in nsIException error);
+
+    /** Gets the current error for the current thread, or NULL if no error */
+     nsIException getCurrentException();
+
+    /** Gets an exception from a registered exception provider..
+        This has no effect on the "current exception" */
+    nsIException getExceptionFromProvider( in nsresult rc, in nsIException defaultException);
+};
+
+
+// The Exception Service.  Allows you to get an set exceptions in a thread
+// safe manner, or to get an ExceptionManager for your specific thread.
+[scriptable, uuid(35A88F54-F267-4414-92A7-191F6454AB52)]
+interface nsIExceptionService : nsIExceptionManager
+{
+    /** Obtains an exception manager for the current thread. */
+    readonly attribute nsIExceptionManager currentExceptionManager;
+
+    /** Installs an "exception provider" which is capable of
+        translating an nsresult into an exception.  This enables
+        error providers to return simple nsresults and only provide
+        rich errors when specifically requested. It also has the
+        advantage of allowing code like the DOM to handle all errors
+        in a single function rather than at each XPCOM entry point.
+        NOTE: This interface must be thread-safe - it will be called
+        on whatever thread needs the error translation performed.*/
+    void registerExceptionProvider( in nsIExceptionProvider provider, in PRUint32 moduleCode );
+    void unregisterExceptionProvider( in nsIExceptionProvider provider, in PRUint32 moduleCode );
+};
+
+
+%{ C++
+#define NS_EXCEPTIONSERVICE_CLASSNAME "Exception Service"
+// {35A88F54-F267-4414-92A7-191F6454AB52}
+#define NS_EXCEPTIONSERVICE_CID \
+{ 0x35a88f54, 0xf267, 0x4414, { 0x92, 0xa7, 0x19, 0x1f, 0x64, 0x54, 0xab, 0x52 } }
+#define NS_EXCEPTIONSERVICE_CONTRACTID "@mozilla.org/exceptionservice;1"
+%}

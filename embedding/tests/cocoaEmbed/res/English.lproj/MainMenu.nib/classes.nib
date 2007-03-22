@@ -1,0 +1,13 @@
+{
+    IBClasses = (
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            ACTIONS = {load = id; }; 
+            CLASS = MyBrowserView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {progress = id; progressSuper = id; status = id; urlbar = id; }; 
+            SUPERCLASS = NSView; 
+        }
+    ); 
+    IBVersion = 1; 
+}

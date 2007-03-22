@@ -1,0 +1,298 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+* 
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Josh Lurz <jlurz24@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIDOMDocument;
+interface nsIDOMRange;
+interface nsISelection;
+interface nsIDOMNode;
+interface nsIOutputStream;
+
+[scriptable, uuid(e770c650-b3d3-11da-a94d-0800200c9a66)]
+interface nsIDocumentEncoderNodeFixup : nsISupports
+{
+  /**
+   * Create a fixed up version of a node. This method is called before
+   * each node in a document is about to be persisted. The implementor
+   * may return a new node with fixed up attributes or null. If null is
+   * returned the node should be used as-is.
+   * @param aNode Node to fixup.
+   * @return The resulting fixed up node.
+   */
+  nsIDOMNode fixupNode(in nsIDOMNode aNode);
+};
+
+[scriptable, uuid(f85c5a20-258d-11db-a98b-0800200c9a66)]
+interface nsIDocumentEncoder : nsISupports
+{
+  // Output methods flag bits. There are a frightening number of these,
+  // because everyone wants something a little bit different
+   
+
+  /** 
+   * Output only the selection (as opposed to the whole document).
+   */
+  const unsigned long OutputSelectionOnly = (1 << 0);
+
+  /** Plaintext output: Convert html to plaintext that looks like the html.
+    * Implies wrap (except inside <pre>), since html wraps.
+    * HTML output: always do prettyprinting, ignoring existing formatting.
+    * (Probably not well tested for HTML output.)
+    */
+  const unsigned long OutputFormatted     = (1 << 1);
+
+  /** Don't do prettyprinting of HTML.  Don't do any wrapping that's not in
+   * the existing HTML source.  This option overrides OutputFormatted if both
+   * are set.
+   * @note This option does not affect entity conversion.
+   */
+  const unsigned long OutputRaw           = (1 << 2);
+
+  /** 
+   * Do not print html head tags.
+   */
+  const unsigned long OutputBodyOnly      = (1 << 3);
+
+  /**
+   * Wrap even if we're not doing formatted output (e.g. for text fields)
+   * XXXbz this doesn't seem to be used by all serializers... document?  How
+   * does this interact with
+   * OutputFormatted/OutputRaw/OutputWrap/OutputFormatFlowed?
+   */
+  const unsigned long OutputPreformatted  = (1 << 4);
+
+  /**
+   * Output as though the content is preformatted
+   * (e.g. maybe it's wrapped in a MOZ_PRE or MOZ_PRE_WRAP style tag)
+   * XXXbz this doesn't seem to be used by all serializers... document?  How
+   * does this interact with
+   * OutputFormatted/OutputRaw/OutputPreformatted/OutputFormatFlowed?
+   */
+  const unsigned long OutputWrap          = (1 << 5);
+
+  /**
+   * Output for format flowed (RFC 2646). This is used when converting
+   * to text for mail sending. This differs just slightly
+   * but in an important way from normal formatted, and that is that
+   * lines are space stuffed. This can't (correctly) be done later.
+   * XXXbz this doesn't seem to be used by all serializers... document?  How
+   * does this interact with
+   * OutputFormatted/OutputRaw/OutputPreformatted/OutputWrap?
+   */
+  const unsigned long OutputFormatFlowed  = (1 << 6);
+
+  /**
+   * Convert links, image src, and script src to absolute URLs when possible
+   */
+  const unsigned long OutputAbsoluteLinks = (1 << 7);
+
+  /**
+   * Attempt to encode entities standardized at W3C (HTML, MathML, etc).
+   * This is a catch-all flag for documents with mixed contents. Beware of
+   * interoperability issues. See below for other flags which might likely
+   * do what you want.
+   */
+  const unsigned long OutputEncodeW3CEntities = (1 << 8);
+
+  /** 
+   * LineBreak processing: if this flag is set than CR line breaks will
+   * be written. If neither this nor OutputLFLineBreak is set, then we
+   * will use platform line breaks. The combination of the two flags will
+   * cause CRLF line breaks to be written.
+   */
+  const unsigned long OutputCRLineBreak = (1 << 9);
+
+  /** 
+   * LineBreak processing: if this flag is set than LF line breaks will
+   * be written. If neither this nor OutputCRLineBreak is set, then we
+   * will use platform line breaks. The combination of the two flags will
+   * cause CRLF line breaks to be written.
+   */
+  const unsigned long OutputLFLineBreak = (1 << 10);
+
+  /**
+   * Output the content of noscript elements (only for serializing
+   * to plaintext).
+   */
+  const unsigned long OutputNoScriptContent = (1 << 11);
+
+  /**
+   * Output the content of noframes elements (only for serializing
+   * to plaintext).
+   */
+  const unsigned long OutputNoFramesContent = (1 << 12);
+
+  /**
+   * Don't allow any formatting nodes (e.g. <br>, <b>) inside a <pre>.
+   * This is used primarily by mail.
+   */
+  const unsigned long OutputNoFormattingInPre = (1 << 13);
+
+  /**
+   * Encode entities when outputting to a string.
+   * E.g. If set, we'll output &nbsp; if clear, we'll output 0xa0.
+   * The basic set is just &nbsp; &amp; &lt; &gt; &quot; for interoperability
+   * with older products that don't support &alpha; and friends.
+   */
+  const unsigned long OutputEncodeBasicEntities = (1 << 14);
+    
+  /**
+   * Encode entities when outputting to a string.
+   * The Latin1 entity set additionally includes 8bit accented letters
+   * between 128 and 255.
+   */
+  const unsigned long OutputEncodeLatin1Entities = (1 << 15);
+  
+  /**
+   * Encode entities when outputting to a string.
+   * The HTML entity set additionally includes accented letters, greek
+   * letters, and other special markup symbols as defined in HTML4.
+   */
+  const unsigned long OutputEncodeHTMLEntities = (1 << 16);
+
+  /**
+   * Normally &nbsp; is replaced with a space character when
+   * encoding data as plain text, set this flag if that's
+   * not desired.
+   */
+  const unsigned long OutputPersistNBSP = (1 << 17);
+  
+  /**
+   * Initialize with a pointer to the document and the mime type.
+   * @param aDocument Document to encode.
+   * @param aMimeType MimeType to use. May also be set by SetMimeType.
+   * @param aFlags Flags to use while encoding. May also be set by SetFlags.
+   */
+  void init(in nsIDOMDocument aDocument,
+            in AString aMimeType,
+            in unsigned long aFlags);
+
+  /**
+   *  If the selection is set to a non-null value, then the
+   *  selection is used for encoding, otherwise the entire
+   *  document is encoded.
+   * @param aSelection The selection to encode.
+   */
+  void setSelection(in nsISelection aSelection);
+
+  /**
+   *  If the range is set to a non-null value, then the
+   *  range is used for encoding, otherwise the entire
+   *  document or selection is encoded.
+   * @param aRange The range to encode.
+   */
+  void setRange(in nsIDOMRange aRange);
+
+  /**
+   *  If the node is set to a non-null value, then the
+   *  node is used for encoding, otherwise the entire
+   *  document or range or selection is encoded.
+   * @param aNode The node to encode.
+   */
+  void setNode(in nsIDOMNode aNode);
+
+  /**
+   *  If the container is set to a non-null value, then its
+   *  child nodes are used for encoding, otherwise the entire
+   *  document or range or selection or node is encoded.
+   *  @param aContainer The node which child nodes will be encoded.
+   */
+  void setContainerNode(in nsIDOMNode aContainer);
+
+  /**
+   *  Documents typically have an intrinsic character set,
+   *  but if no intrinsic value is found, the platform character set
+   *  is used. This function overrides both the intrinisc and platform
+   *  charset.
+   *  @param aCharset Overrides the both the intrinsic or platform
+   *  character set when encoding the document.
+   *
+   *  Possible result codes: NS_ERROR_NO_CHARSET_CONVERTER
+   */
+  void setCharset(in ACString aCharset);
+
+  /**
+   *  Set a wrap column.  This may have no effect in some types of encoders.
+   * @param aWrapColumn Column to which to wrap.
+   */
+  void setWrapColumn(in unsigned long aWrapColumn);
+
+  /**
+   *  The mime type preferred by the encoder.  This piece of api was
+   *  added because the copy encoder may need to switch mime types on you
+   *  if you ask it to copy html that really represents plaintext content.
+   *  Call this AFTER Init() and SetSelection() have both been called.
+   */
+  readonly attribute AString mimeType;
+  
+  /**
+   *  Encode the document and send the result to the nsIOutputStream.
+   *
+   *  Possible result codes are the stream errors which might have
+   *  been encountered.
+   * @param aStream Stream into which to encode.
+   */
+  void encodeToStream(in nsIOutputStream aStream);
+
+  /**
+   * Encode the document into a string.
+   *
+   * @return The document encoded into a string.
+   */
+  AString encodeToString();
+
+  /**
+   * Encode the document into a string. Stores the extra context information
+   * into the two arguments.
+   * @param [OUT] aContextString The string where the parent heirarchy
+   *              information will be stored.
+   * @param [OUT] aInfoString The string where extra context info will
+   *              be stored.
+   * @return The document encoded as a string.
+   * 
+   */
+  AString encodeToStringWithContext( out AString aContextString,
+                                     out AString aInfoString);
+
+  /**
+   * Set the fixup object associated with node persistence.
+   * @param aFixup The fixup object.
+   */
+  void setNodeFixup(in nsIDocumentEncoderNodeFixup aFixup);
+};

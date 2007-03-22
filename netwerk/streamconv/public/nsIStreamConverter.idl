@@ -1,0 +1,132 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsIStreamListener.idl"
+#include "nsIInputStream.idl"
+#include "nsIURI.idl"
+
+/**
+ * nsIStreamConverter provides an interface to implement when you have code
+ * that converts data from one type to another.
+ *
+ * Suppose you had code that converted plain text into HTML. You could implement
+ * this interface to allow everyone else to use your conversion logic using a 
+ * standard api.
+ * <p>
+ * <b>STREAM CONVERTER USERS</b>
+ *
+ * There are currently two ways to use a stream converter:
+ * <ol>
+ * <li> <b>SYNCHRONOUS</b> Stream to Stream
+ *    You can supply the service with a stream of type X
+ *    and it will convert it to your desired output type and return
+ *    a converted (blocking) stream to you.</li>
+ *
+ * <li> <b>ASYNCHRONOUS</b> nsIStreamListener to nsIStreamListener
+ *    You can supply data directly to the converter by calling it's
+ *    nsIStreamListener::OnDataAvailable() method. It will then
+ *    convert that data from type X to your desired output type and
+ *    return converted data to you via the nsIStreamListener you passed
+ *    in by calling its OnDataAvailable() method.</li>
+ * </ol>
+ * <p>
+ *
+ * <b>STREAM CONVERTER SUPPLIERS</b>
+ *
+ * Registering a stream converter:
+ * Stream converter registration is a two step process. First of all the stream
+ * converter implementation must register itself with the component manager using
+ * a contractid in the format below. Second, the stream converter must add the contractid
+ * to the registry.
+ *
+ * Stream converter contractid format (the stream converter root key is defined in this
+ * file):
+ *
+ * <pre>@mozilla.org/streamconv;1?from=FROM_MIME_TYPE&to=TO_MIME_TYPE</pre>
+ *
+ * @author Jud Valeski
+ * @see nsIStreamConverterService
+ */
+
+[scriptable, uuid(0b6e2c69-5cf5-48b0-9dfd-c95950e2cc7b)]
+interface nsIStreamConverter : nsIStreamListener {
+
+    /**
+     * <b>SYNCRONOUS VERSION</b>
+     * Converts a stream of one type, to a stream of another type.
+     *
+     * Use this method when you have a stream you want to convert.
+     *
+     * @param aFromStream   The stream representing the original/raw data.
+     * @param aFromType     The MIME type of aFromStream.
+     * @param aToType       The MIME type of the returned stream.
+     * @param aCtxt         Either an opaque context, or a converter specific context
+     *                      (implementation specific).
+     * @return              The converted stream. NOTE: The returned stream may not
+     *                      already be converted. An efficient stream converter
+     *                      implementation will converter data on demand rather than
+     *                      buffering the converted data until it is used.
+     */
+    nsIInputStream convert(in nsIInputStream aFromStream,
+                           in string aFromType,
+                           in string aToType,
+                           in nsISupports aCtxt);
+
+    /**
+     * <b>ASYNCRONOUS VERSION</b>
+     * Converts data arriving via the converter's nsIStreamListener::OnDataAvailable() 
+     * method from one type to another, pushing the converted data out to the caller 
+     * via aListener::OnDataAvailable().
+     *
+     * Use this method when you want to proxy (and convert) nsIStreamListener callbacks
+     * asynchronously.
+     *
+     * @param aFromType     The MIME type of the original/raw data.
+     * @param aToType       The MIME type of the converted data.
+     * @param aListener     The listener who receives the converted data.
+     * @param aCtxt         Either an opaque context, or a converter specific context
+     *                      (implementation specific).
+     */
+    void asyncConvertData(in string aFromType,
+                          in string aToType,
+                          in nsIStreamListener aListener,
+                          in nsISupports aCtxt);
+};
+
+%{C++
+#define NS_ISTREAMCONVERTER_KEY         "@mozilla.org/streamconv;1"
+%}

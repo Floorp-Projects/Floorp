@@ -1,0 +1,17 @@
+<!ENTITY mnEditCut.label "Vystrihnúť">
+<!ENTITY mnEditRedo.accesskey "Z">
+<!ENTITY mnEditCopy.accesskey "K">
+<!ENTITY mnEditInsert.label "Pridať">
+<!ENTITY mnEditCopy.label "Kopírovať">
+<!ENTITY mnEditPaste.accesskey "l">
+<!ENTITY mnEditCut.accesskey "V">
+<!ENTITY mnEditRedo.label "Znovu">
+<!ENTITY mnEditUndo.label "Späť">
+<!ENTITY mnEditEdit.accesskey "u">
+<!ENTITY mnEditDelete.label "Odstrániť">
+<!ENTITY mnEditUndo.accesskey "S">
+<!ENTITY mnEditDelete.accesskey "O">
+<!ENTITY mnEditEdit.label "Upraviť">
+<!ENTITY mnEditPaste.label "Prilepiť">
+<!ENTITY mnEditInsert.accesskey "p">
+

@@ -1,0 +1,116 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla browser.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsIAccessibleRetrieval.idl"
+
+interface nsIAccessibleEventListener;
+interface nsIDocument;
+interface nsIFrame;
+interface nsObjectFrame;
+interface nsIContent;
+
+[scriptable, uuid(e4cdb7c5-d029-4bee-bff5-99455c6e0057)]
+interface nsIAccessibilityService : nsIAccessibleRetrieval
+{
+  nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
+  nsIAccessible createRootAccessible(in nsIPresShell aShell, in nsIDocument aDocument);
+
+  nsIAccessible createHTML4ButtonAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLAreaAccessible(in nsIWeakReference aPresShell, in nsIDOMNode aDOMNode, in nsIAccessible aAccParent);
+  nsIAccessible createHyperTextAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLBRAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLButtonAccessible(in nsISupports aFrame);
+  [noscript] nsIAccessible createHTMLAccessibleByMarkup(in nsIFrame aFrame, in nsIWeakReference aWeakShell, in nsIDOMNode aDOMNode, in AString aRole);
+  nsIAccessible createHTMLLIAccessible(in nsISupports aFrame, in nsISupports aBulletFrame, in AString aBulletText);
+  nsIAccessible createHTMLCheckboxAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLComboboxAccessible(in nsIDOMNode aNode, in nsIWeakReference aPresShell);
+  nsIAccessible createHTMLGenericAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLGroupboxAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLHRAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLImageAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLLabelAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLListboxAccessible(in nsIDOMNode aNode, in nsIWeakReference aPresShell);
+  nsIAccessible createHTMLObjectFrameAccessible(in nsObjectFrame aFrame);
+  nsIAccessible createHTMLRadioButtonAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLSelectOptionAccessible(in nsIDOMNode aNode, in nsIAccessible aAccParent, in nsIWeakReference aPresShell);
+  nsIAccessible createHTMLTableAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLTableCellAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLTableHeadAccessible(in nsIDOMNode aDOMNode);
+  nsIAccessible createHTMLTextAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLTextFieldAccessible(in nsISupports aFrame);
+
+  [noscript] nsIAccessible getAccessible(in nsIDOMNode aNode, in nsIPresShell aPresShell,                          
+                              in nsIWeakReference aWeakShell, 
+                              inout nsIFrame frameHint, out boolean aIsHidden);
+
+  // For gtk+ native window accessible
+  [noscript] nsIAccessible addNativeRootAccessible(in voidPtr aAtkAccessible);
+  [noscript] void removeNativeRootAccessible(in nsIAccessible aRootAccessible);
+
+  /**
+   * Invalidate the accessibility cache associated with aPresShell, for accessibles
+   * that were generated for aContainerContent and it's subtree.
+   * The container content node for the change is passed in, rather than the
+   * changed presentation for the content node itself.
+   * @param aPresShell         The presShell where changes occured
+   * @param aChangeContent     The affected DOM content
+   * @param aEvent             The event from nsIAccessibleEvent that
+   *                           caused the change:
+   *                           Must be one of:
+   *                           EVENT_REORDER (change),
+   *                           EVENT_SHOW (make visible or create) or 
+   *                           EVENT_HIDE (destroy or hide)
+   */
+  [noscript] void invalidateSubtreeFor(in nsIPresShell aPresShell,
+                                       in nsIContent aChangedContent,
+                                       in PRUint32 aEvent);
+};
+
+
+%{ C++
+
+// for component registration
+// {DE401C37-9A7F-4278-A6F8-3DE2833989EF}
+#define NS_ACCESSIBILITY_SERVICE_CID \
+{ 0xde401c37, 0x9a7f, 0x4278, { 0xa6, 0xf8, 0x3d, 0xe2, 0x83, 0x39, 0x89, 0xef } }
+
+extern nsresult
+NS_GetAccessibilityService(nsIAccessibilityService** aResult);
+
+%}

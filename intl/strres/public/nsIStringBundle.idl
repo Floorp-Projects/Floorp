@@ -1,0 +1,110 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsISimpleEnumerator.idl"
+
+%{C++
+
+// Define Contractid and CID
+// {D85A17C1-AA7C-11d2-9B8C-00805F8A16D9}
+#define NS_STRINGBUNDLESERVICE_CID \
+{ 0xd85a17c1, 0xaa7c, 0x11d2, \
+  { 0x9b, 0x8c, 0x0, 0x80, 0x5f, 0x8a, 0x16, 0xd9 } }
+
+#define NS_STRINGBUNDLE_CONTRACTID "@mozilla.org/intl/stringbundle;1"
+
+/** 
+ * observer needs to check if the bundle handle matches
+ */
+#define NS_STRBUNDLE_LOADED_TOPIC "strbundle-loaded"
+
+%}
+
+native nsStrBundleLoadedFunc(nsStrBundleLoadedFunc);
+
+[scriptable, uuid(D85A17C2-AA7C-11d2-9B8C-00805F8A16D9)]
+interface nsIStringBundle : nsISupports
+{
+  wstring GetStringFromID(in long aID);
+  wstring GetStringFromName(in wstring aName);
+
+  // this is kind of like smprintf - except that you can
+  // only pass it unicode strings, using the %S formatting character.
+  // the id or name should refer to a string in the bundle that
+  // uses %S.. do NOT try to use any other types.
+  // this uses nsTextFormatter::smprintf to do the dirty work.
+  wstring formatStringFromID(in long aID,
+                             [array, size_is(length)] in wstring params,
+                             in unsigned long length);
+  wstring formatStringFromName(in wstring aName,
+                               [array, size_is(length)] in wstring params,
+                               in unsigned long length);
+  /*
+  Implements nsISimpleEnumerator, replaces nsIEnumerator 
+  */
+  nsISimpleEnumerator getSimpleEnumeration();
+
+};
+
+[scriptable, uuid(D85A17C0-AA7C-11d2-9B8C-00805F8A16D9)]
+interface nsIStringBundleService : nsISupports
+{
+  nsIStringBundle createBundle(in string aURLSpec);
+  nsIStringBundle createExtensibleBundle(in string aRegistryKey);
+
+  /**
+   * Formats a message string from a status code and status arguments.
+   * @param aStatus - The status code. This is mapped into a string ID and
+   *            and used in the string lookup process (see nsIErrorService).
+   * @param aStatusArg - The status message argument(s). Multiple arguments
+   *            can be separated by newline ('\n') characters.
+   * @return the formatted message
+   */
+  wstring formatStatusMessage(in nsresult aStatus, in wstring aStatusArg);
+
+  /**
+   * flushes the string bundle cache - useful when the locale changes or
+   * when we need to get some extra memory back
+   * 
+   * at some point, we might want to make this flush all the bundles,
+   * because any bundles that are floating around when the locale changes
+   * will suddenly contain bad data
+   *
+   */
+  void flushBundles();
+};

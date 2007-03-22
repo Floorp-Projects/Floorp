@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Description: Ensure unknown NS element in atom:author doesn't cause exception
+Expect: var mCService = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService); var out = {}; mCService.getMessageArray(out, {}); var msg = out.value[0]; if(msg){msg = msg.message}; ((msg + "").indexOf("prefix has no properties") == -1); 
+-->
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <author>
+    <name>Sam Ruby</name>
+    <method xmlns="http://www.intertwingly.net/blog/">excerpt</method>
+    <email>rubys@intertwingly.net</email>
+    <uri>.</uri>
+  </author>
+
+</feed>
+

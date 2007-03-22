@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bug 336147</title>
+</head>
+<body>
+  <form action="http://foo.com/" method="post">
+    <input value="abc" type="button" id="fooButton">
+  </form>
+  <script>
+    document.getElementById('fooButton').innerHTML = 'xyz';
+  </script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ft=cpp tw=78 sw=2 et ts=8 : */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla code.
+ *
+ * The Initial Developer of the Original Code is
+ * Zero-Knowledge Systems, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2000
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Timothy Watt <riceman+bmo@mail.rit.edu>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIDOMNode;
+
+/**
+ * Interface for content policy mechanism.  Implementations of this
+ * interface can be used to control loading of various types of out-of-line
+ * content, or processing of certain types of in-line content.
+ *
+ * WARNING: do not block the caller from shouldLoad or shouldProcess (e.g.,
+ * by launching a dialog to prompt the user for something).
+ */
+
+[scriptable,uuid(3bb1a3c8-3073-41e0-9a26-a7671955fb65)]
+interface nsIContentPolicy : nsISupports
+{
+  const unsigned long TYPE_OTHER       = 1;
+
+  /**
+   * Indicates an executable script (such as JavaScript).
+   */
+  const unsigned long TYPE_SCRIPT      = 2;
+
+  /**
+   * Indicates an image (e.g., IMG elements).
+   */
+  const unsigned long TYPE_IMAGE       = 3;
+
+  /**
+   * Indicates a stylesheet (e.g., STYLE elements).
+   */
+  const unsigned long TYPE_STYLESHEET  = 4;
+
+  /**
+   * Indicates a generic object (plugin-handled content typically falls under
+   * this category).
+   */
+  const unsigned long TYPE_OBJECT      = 5;
+
+  /**
+   * Indicates a document at the top-level (i.e., in a browser).
+   */
+  const unsigned long TYPE_DOCUMENT    = 6;
+
+  /**
+   * Indicates a document contained within another document (e.g., IFRAMEs,
+   * FRAMES, and OBJECTs).
+   */
+  const unsigned long TYPE_SUBDOCUMENT = 7;
+
+  /**
+   * Indicates a timed refresh.
+   *
+   * shouldLoad will never get this, because it does not represent content
+   * to be loaded (the actual load triggered by the refresh will go through
+   * shouldLoad as expected).
+   *
+   * shouldProcess will get this for, e.g., META Refresh elements and HTTP
+   * Refresh headers.
+   */
+  const unsigned long TYPE_REFRESH     = 8;
+
+
+  //////////////////////////////////////////////////////////////////////
+
+  /**
+   * Returned from shouldLoad or shouldProcess if the load or process request
+   * is rejected based on details of the request.
+   */
+  const short REJECT_REQUEST = -1;
+
+  /**
+   * Returned from shouldLoad or shouldProcess if the load/process is rejected
+   * based solely on its type (of the above flags).
+   *
+   * NOTE that it is not meant to stop future requests for this type--only the
+   * current request.
+   */
+  const short REJECT_TYPE = -2;
+
+  /**
+   * Returned from shouldLoad or shouldProcess if the load/process is rejected
+   * based on the server it is hosted on or requested from (aContentLocation or
+   * aRequestOrigin), e.g., if you block an IMAGE because it is served from
+   * goatse.cx (even if you don't necessarily block other types from that
+   * server/domain).
+   * 
+   * NOTE that it is not meant to stop future requests for this server--only the
+   * current request.
+   */
+  const short REJECT_SERVER = -3;
+
+  /**
+   * Returned from shouldLoad or shouldProcess if the load/process is rejected
+   * based on some other criteria. Mozilla callers will handle this like
+   * REJECT_REQUEST; third-party implementors may, for example, use this to
+   * direct their own callers to consult the extra parameter for additional
+   * details.
+   */
+  const short REJECT_OTHER = -4;
+
+  /**
+   * Returned from shouldLoad or shouldProcess if the load or process request
+   * is not rejected.
+   */
+  const short ACCEPT = 1;
+
+  //////////////////////////////////////////////////////////////////////
+
+  /**
+   * Should the resource at this location be loaded?
+   * ShouldLoad will be called before loading the resource at aContentLocation
+   * to determine whether to start the load at all.
+   *
+   * @param aContentType      the type of content being tested. This will be one
+   *                          one of the TYPE_* constants.
+   *
+   * @param aContentLocation  the location of the content being checked; must
+   *                          not be null
+   *
+   * @param aRequestOrigin    OPTIONAL. the location of the resource that
+   *                          initiated this load request; can be null if
+   *                          inapplicable
+   *
+   * @param aContext          OPTIONAL. the nsIDOMNode or nsIDOMWindow that
+   *                          initiated the request, or something that can QI
+   *                          to one of those; can be null if inapplicable.
+   *
+   * @param aMimeTypeGuess    OPTIONAL. a guess for the requested content's
+   *                          MIME type, based on information available to
+   *                          the request initiator (e.g., an OBJECT's type
+   *                          attribute); does not reliably reflect the
+   *                          actual MIME type of the requested content
+   *
+   * @param aExtra            an OPTIONAL argument, pass-through for non-Gecko
+   *                          callers to pass extra data to callees.
+   *
+   * @return ACCEPT or REJECT_*
+   *
+   * @note shouldLoad can be called while the DOM and layout of the document
+   * involved is in an inconsistent state.  This means that implementors of
+   * this method MUST NOT do any of the following:
+   * 1)  Modify the DOM in any way (e.g. setting attributes is a no-no).
+   * 2)  Query any DOM properties that depend on layout (e.g. offset*
+   *     properties).
+   * 3)  Query any DOM properties that depend on style (e.g. computed style).
+   * 4)  Query any DOM properties that depend on the current state of the DOM
+   *     outside the "context" node (e.g. lengths of node lists).
+   * 5)  [JavaScript implementations only] Access properties of any sort on any
+   *     object without using XPCNativeWrapper (either explicitly or
+   *     implicitly).  Due to various DOM0 things, this leads to item 4.
+   * If you do any of these things in your shouldLoad implementation, expect
+   * unpredictable behavior, possibly including crashes, content not showing
+   * up, content showing up doubled, etc.  If you need to do any of the things
+   * above, do them off timeout or event.
+   */
+  short shouldLoad(in unsigned long aContentType,
+                   in nsIURI        aContentLocation,
+                   in nsIURI        aRequestOrigin,
+                   in nsISupports   aContext,
+                   in ACString      aMimeTypeGuess,
+                   in nsISupports   aExtra);
+
+  /**
+   * Should the resource be processed?
+   * ShouldProcess will be called once all the information passed to it has
+   * been determined about the resource, typically after part of the resource
+   * has been loaded.
+   *
+   * @param aContentType      the type of content being tested. This will be one
+   *                          one of the TYPE_* constants.
+   *
+   * @param aContentLocation  OPTIONAL; the location of the resource being
+   *                          requested: MAY be, e.g., a post-redirection URI
+   *                          for the resource.
+   *
+   * @param aRequestOrigin    OPTIONAL. the location of the resource that
+   *                          initiated this load request; can be null if
+   *                          inapplicable
+   *
+   * @param aContext          OPTIONAL. the nsIDOMNode or nsIDOMWindow that
+   *                          initiated the request, or something that can QI
+   *                          to one of those; can be null if inapplicable.
+   *
+   * @param aMimeType         the MIME type of the requested resource (e.g.,
+   *                          image/png), as reported by the networking library,
+   *                          if available (may be empty if inappropriate for
+   *                          the type, e.g., TYPE_REFRESH).
+   *
+   * @param aExtra            an OPTIONAL argument, pass-through for non-Gecko
+   *                          callers to pass extra data to callees.
+   *
+   * @return ACCEPT or REJECT_*
+   *
+   * @note shouldProcess can be called while the DOM and layout of the document
+   * involved is in an inconsistent state.  See the note on shouldLoad to see
+   * what this means for implementors of this method.
+   */
+  short shouldProcess(in unsigned long aContentType,
+                      in nsIURI        aContentLocation,
+                      in nsIURI        aRequestOrigin,
+                      in nsISupports   aContext,
+                      in ACString      aMimeType,
+                      in nsISupports   aExtra);
+
+};

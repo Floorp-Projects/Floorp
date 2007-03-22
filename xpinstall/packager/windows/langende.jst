@@ -1,0 +1,47 @@
+// main
+var srDest;
+var err;
+var fProgram;
+
+// ----LOCALIZATION NOTE: translate only these ------
+var prettyName = "English-German Language Pack";
+var regName    = "locales/mozilla/en-DE";
+var chromeName = "en-DE.jar";
+// --- END CHANGABLE STUFF ---
+
+srDest = $SpaceRequired$:bin;
+err    = initInstall(prettyName, regName, "$Version$"); 
+logComment("initInstall: " + err);
+
+fProgram = getFolder("Program");
+logComment("fProgram: " + fProgram);
+
+if(verifyDiskSpace(fProgram, srDest))
+{
+  setPackageFolder(fProgram);
+
+  err = addDirectory("",
+                     "$Version$",
+                     "bin",              // dir name in jar to extract 
+                     fProgram,           // Where to put this file (Returned from GetFolder) 
+                     "",                 // subdir name to create relative to fProgram
+                     true);              // Force Flag 
+  logComment("addDirectory() returned: " + err);
+
+  // register chrome
+  var cf = getFolder("Chrome");
+  registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName));
+
+  // check return value
+  if(err == SUCCESS)
+  {
+    err = performInstall(); 
+    logComment("performInstall() returned: " + err);
+  }
+  else
+    cancelInstall(err);
+}
+else
+  cancelInstall(INSUFFICIENT_DISK_SPACE);
+
+// end main

@@ -1,0 +1,343 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE bindings [
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+]>
+
+<bindings id="arrowscrollboxBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="scrollbox-base" extends="chrome://global/content/bindings/general.xml#basecontrol">
+    <resources>
+      <stylesheet src="chrome://global/skin/scrollbox.css"/>
+    </resources>
+  </binding>
+
+  <binding id="scrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
+    <content>
+      <xul:box class="box-inherit scrollbox-innerbox" xbl:inherits="orient,align,pack,dir" flex="1">
+        <children/>
+      </xul:box>
+    </content>
+  </binding>
+
+  <binding id="arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
+    <content>
+      <xul:autorepeatbutton class="autorepeatbutton-up"
+                            anonid="scrollbutton-up"
+                            collapsed="true"
+                            xbl:inherits="orient"
+                            oncommand="scrollByPixels(this.parentNode.scrollIncrement * -1); event.stopPropagation();"/>
+      <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1" anonid="scrollbox">
+        <children/>
+      </xul:scrollbox>
+      <xul:autorepeatbutton class="autorepeatbutton-down"
+                            anonid="scrollbutton-down"
+                            collapsed="true"
+                            xbl:inherits="orient"
+                            oncommand="scrollByPixels(this.parentNode.scrollIncrement); event.stopPropagation();"/>
+    </content>
+    
+    <implementation>
+      <field name="_scrollbox">
+        document.getAnonymousElementByAttribute(this, "anonid", "scrollbox");
+      </field>
+      <field name="_scrollButtonUp">
+        document.getAnonymousElementByAttribute(this, "anonid", "scrollbutton-up");
+      </field>
+      <field name="_scrollButtonDown">
+        document.getAnonymousElementByAttribute(this, "anonid", "scrollbutton-down");
+      </field>
+
+      <field name="_scrollIncrement">20</field>
+      <property name="scrollIncrement" readonly="true">
+        <getter><![CDATA[
+          if (!this._scrollIncrement) {
+            var pb2 =
+              Components.classes['@mozilla.org/preferences-service;1']
+                        .getService(Components.interfaces.nsIPrefBranch2);
+            try {
+              this._scrollIncrement = pb2.getIntPref("toolkit.scrollbox.scrollIncrement");
+            }
+            catch (ex) {
+            }
+          }
+          return this._scrollIncrement;
+        ]]></getter>
+      </property>
+
+      <field name="_scrollBoxObject">null</field>
+      <property name="scrollBoxObject" readonly="true">
+        <getter><![CDATA[
+          if (!this._scrollBoxObject) {
+            this._scrollBoxObject =
+              this._scrollbox.boxObject
+                             .QueryInterface(Components.interfaces.nsIScrollBoxObject);
+          }
+          return this._scrollBoxObject;
+        ]]></getter>
+      </property>
+
+      <field name="_isLTRScrollbox">
+        window.getComputedStyle(this._scrollbox, "").direction == "ltr";
+      </field>
+
+      <method name="ensureElementIsVisible">
+        <parameter name="aElement"/>
+        <body><![CDATA[
+          this.scrollBoxObject.ensureElementIsVisible(aElement);
+        ]]></body>
+      </method>
+
+      <method name="scrollByIndex">
+        <parameter name="lines"/>
+        <body><![CDATA[
+          this.scrollBoxObject.scrollByIndex(lines);
+        ]]></body>
+      </method>
+
+      <method name="scrollByPixels">
+        <parameter name="px"/>
+        <body><![CDATA[
+          if (this.getAttribute("orient") == "horizontal") {
+            // if not ltr, we want to scroll the other direction
+            var actualPx = this._isLTRScrollbox ? px : (-1 * px);
+            this.scrollBoxObject.scrollBy(actualPx, 0);
+          }
+          else
+            this.scrollBoxObject.scrollBy(0, px);
+        ]]></body>
+      </method>
+
+      <method name="_updateScrollButtonsDisabledState">
+        <body><![CDATA[
+          var disableUpButton = false;
+          var disableDownButton = false;
+
+          if (this.getAttribute("orient") == "horizontal") {
+            var width = { };
+            this.scrollBoxObject.getScrolledSize(width, {});
+            var xPos = { }
+            this.scrollBoxObject.getPosition(xPos, {});
+            if (xPos.value == 0) {
+              // In the RTL case, this means the _last_ element in the
+              // scrollbox is visible
+              if (this._isLTRScrollbox) 
+                disableUpButton = true;
+              else
+                disableDownButton = true;
+            }
+            else if (this._scrollbox.boxObject.width + xPos.value == width.value) {
+              // In the RTL case, this means the _first_ element in the
+              // scrollbox is visible
+              if (this._isLTRScrollbox)
+                disableDownButton = true;
+              else
+                disableUpButton = true;
+            }
+          }
+          else {  // vertical scrollbox
+            var height = { };
+            this.scrollBoxObject.getScrolledSize({}, height);
+            var yPos = { }
+            this.scrollBoxObject.getPosition({}, yPos);
+            if (yPos.value == 0)
+              disableUpButton = true;
+            else if (this._scrollbox.boxObject.height + yPos.value == height.value)
+              disableDownButton = true;
+          }
+
+          this._scrollButtonUp.disabled = disableUpButton;
+          this._scrollButtonDown.disabled = disableDownButton;
+
+          var event = document.createEvent("Events");
+          event.initEvent("UpdatedScrollButtonsDisabledState", true, false);
+          this.dispatchEvent(event);                                            
+        ]]></body>
+      </method>
+    </implementation>    
+
+    <handlers>
+      <handler event="DOMMouseScroll" action="this.scrollByIndex(event.detail); event.stopPropagation();"/>
+
+      <handler event="underflow"><![CDATA[
+        // filter underflow events which were dispatched on nested scrollboxes
+        if (event.target != this)
+          return;
+
+        // Ignore events that doesn't match our orientation.
+        // Scrollport event orientation:
+        //   0: vertical
+        //   1: horizontal
+        //   2: both
+        if (this.getAttribute("orient") == "horizontal") {
+          if (event.detail == 0) {
+            return;
+          }
+        }
+        else {    // vertical scrollbox
+          if (event.detail == 1) {
+            return;
+          }
+        }
+
+        this._scrollButtonUp.collapsed = true;
+        this._scrollButtonDown.collapsed = true;
+        try {
+          // See bug 341047 and comments in overflow handler as to why 
+          // try..catch is needed here
+          var childNodes = document.getAnonymousNodes(this._scrollbox);
+          if (childNodes && childNodes.length) {
+            if (childNodes.length > 0)
+              this.ensureElementIsVisible(childNodes[0]);
+          }
+        }
+        catch(e) {
+          this._scrollButtonUp.collapsed = false;
+          this._scrollButtonDown.collapsed = false;
+        }
+      ]]></handler>
+
+      <handler event="overflow"><![CDATA[
+        // filter underflow events which were dispatched on nested scrollboxes
+        if (event.target != this)
+          return;
+
+        // Ignore events that doesn't match our orientation.
+        // Scrollport event orientation:
+        //   0: vertical
+        //   1: horizontal
+        //   2: both
+        if (this.getAttribute("orient") == "horizontal") {
+          if (event.detail == 0) {
+            return;
+          }
+        }
+        else {    // vertical scrollbox
+          if (event.detail == 1) {
+            return;
+          }
+        }
+
+        this._scrollButtonUp.collapsed = false;
+        this._scrollButtonDown.collapsed = false;
+        try {
+          // See bug 341047, the overflow event is dispatched when the 
+          // scrollbox already is mostly destroyed. This causes some code in
+          // _updateScrollButtonsDisabledState() to throw an error. It also
+          // means that the scrollbarbuttons were uncollapsed when that should
+          // not be happening, because the whole overflow event should not be
+          // happening in that case.
+          this._updateScrollButtonsDisabledState();
+        } 
+        catch(e) {
+          this._scrollButtonUp.collapsed = true;
+          this._scrollButtonDown.collapsed = true;
+        }
+      ]]></handler>
+
+      <handler event="scroll" action="this._updateScrollButtonsDisabledState()"/>
+    </handlers>
+  </binding>
+
+  <binding id="autorepeatbutton" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
+    <content repeat="hover" chromedir="&locale.dir;">
+      <xul:image class="autorepeatbutton-icon"/>
+    </content>
+  </binding>
+
+  <binding id="arrowscrollbox-clicktoscroll" extends="chrome://global/content/bindings/scrollbox.xml#arrowscrollbox">
+    <content>
+      <xul:toolbarbutton class="scrollbutton-up" collapsed="true"
+                         xbl:inherits="orient"
+                         anonid="scrollbutton-up"
+                         onmousedown="_startScroll(-1);"
+                         onmouseup="_stopScroll();"
+                         onmouseout="_stopScroll();"
+                         chromedir="&locale.dir;"/>
+      <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1" anonid="scrollbox">
+        <children/>
+      </xul:scrollbox>
+      <xul:toolbarbutton class="scrollbutton-down" collapsed="true"
+                         xbl:inherits="orient"
+                         anonid="scrollbutton-down"
+                         onmousedown="_startScroll(1);"
+                         onmouseup="_stopScroll();"
+                         onmouseout="_stopScroll();"
+                         chromedir="&locale.dir;"/>
+    </content>
+    <implementation implements="nsITimerCallback">
+      <constructor><![CDATA[
+        var pb2 =
+          Components.classes['@mozilla.org/preferences-service;1']
+                    .getService(Components.interfaces.nsIPrefBranch2);
+        try {
+          this._scrollDelay = pb2.getIntPref("toolkit.scrollbox.clickToScroll.scrollDelay");
+        }
+        catch (ex) {
+        }
+      ]]></constructor>
+
+      <destructor><![CDATA[
+        // Release timer to avoid reference cycles.
+        if (this._scrollTimer) {
+          this._scrollTimer.cancel();
+          this._scrollTimer = null;
+        }
+      ]]></destructor>
+
+      <field name="_scrollTimer">null</field>
+      <field name="_scrollLines">0</field>
+      <field name="_scrollDelay">150</field>
+
+      <method name="notify">
+        <parameter name="aTimer"/>
+        <body>
+        <![CDATA[
+          if (!document)
+            aTimer.cancel();
+          
+          this.scrollByIndex(this._scrollLines);
+        ]]>
+        </body>
+      </method>
+
+      <method name="_setUpScrollTimer">
+        <body>
+        <![CDATA[
+          if (!this._scrollTimer) 
+            this._scrollTimer = 
+              Components.classes["@mozilla.org/timer;1"]
+                        .createInstance(Components.interfaces.nsITimer);
+          else
+             this._scrollTimer.cancel();
+
+          this._scrollTimer.initWithCallback(this, 
+                        this._scrollDelay,
+                        Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+        ]]>
+        </body>
+      </method>
+
+      <method name="_startScroll">
+        <parameter name="aScrollLines"/>
+        <body><![CDATA[
+          this._scrollLines = aScrollLines;
+          this.scrollByIndex(this._scrollLines);
+          this._setUpScrollTimer();
+        ]]></body>
+      </method>            
+
+      <method name="_stopScroll">
+        <body><![CDATA[
+          if (this._scrollTimer) 
+            this._scrollTimer.cancel();
+        ]]></body>
+      </method>            
+
+    </implementation>
+  </binding>
+</bindings>

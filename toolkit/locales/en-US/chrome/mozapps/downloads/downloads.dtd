@@ -1,0 +1,46 @@
+<!ENTITY window.width                     "400">
+<!ENTITY window.height                    "300"> 
+
+<!ENTITY done.label                       "Done">
+<!ENTITY canceled.label                   "Canceled">
+<!ENTITY installing.label                 "Installing...">
+
+<!ENTITY starting.label                   "Starting...">
+<!ENTITY failed.label                     "Failed">
+
+<!ENTITY downloads.title                  "Downloads">
+
+<!ENTITY cmd.pause.label                  "Pause">
+<!ENTITY cmd.pause.accesskey              "P">
+<!ENTITY cmd.resume.label                 "Resume">
+<!ENTITY cmd.resume.accesskey             "R">
+<!ENTITY cmd.cancel.label                 "Cancel">
+<!ENTITY cmd.cancel.accesskey             "C">
+<!ENTITY cmd.show.label                   "Open Containing Folder">
+<!ENTITY cmd.show.labelMac                "Show in Finder">
+<!ENTITY cmd.show.accesskey               "F">
+<!ENTITY cmd.show.accesskeyMac            "F">
+<!ENTITY cmd.open.label                   "Open">
+<!ENTITY cmd.open.accesskey               "O">
+<!ENTITY cmd.openWith.label               "Open With...">
+<!ENTITY cmd.openWith.accesskey           "h">
+<!ENTITY cmd.retry.label                  "Retry">
+<!ENTITY cmd.retry.accesskey              "R">
+<!ENTITY cmd.remove.label                 "Remove">
+<!ENTITY cmd.remove.accesskey             "e">
+<!ENTITY cmd.properties.label             "Properties">
+<!ENTITY cmd.properties.accesskey         "i">
+<!ENTITY cmd.info.commandKey              "i">
+
+<!ENTITY cmd.close.commandKey             "w">
+<!ENTITY cmd.close2.commandKey            "j">
+<!ENTITY cmd.close2Unix.commandKey        "y">
+<!ENTITY cmd.cleanUp.label                "Clean Up">
+<!ENTITY cmd.cleanUp.tooltip              "Removes completed, canceled and failed downloads from the list">
+<!ENTITY cmd.cleanUp.accesskey            "C">
+
+<!ENTITY closeWhenDone.label              "Close when downloads complete">
+<!ENTITY closeWhenDone.tooltip            "Closes the Downloads window when all files are done downloading">
+
+<!ENTITY filesSavedTo.label               "All files downloaded to:">
+<!ENTITY showFolder.label                 "Show this Folder">

@@ -1,0 +1,4 @@
+[gecko xpi-bootstrap]
+#if SHARED_LIBRARY
+dist/bin/@SHARED_LIBRARY@
+#endif

@@ -1,0 +1,154 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsIProfile.idl"
+
+interface nsICmdLineService;
+interface nsIFile;
+interface nsILocalFile;
+interface nsISupportsArray;
+
+%{C++
+#define NS_ERROR_PROFILE_REQUIRES_INTERACTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_PROFILE, 1)
+%}
+
+[scriptable, uuid(2f977d42-5485-11d4-87e2-0010a4e75ef2)]
+interface nsIProfileInternal : nsIProfile {
+    
+    /**
+     * Starts up the profile manager
+     *
+     * @param cmdLine       Arguments passed from command line - can be null
+     * @param canInteract   Whether dialogs can be shown during startup
+     *                      If false and dialogs would need to be shown, returns NS_ERROR_PROFILE_REQUIRES_INTERRACTION
+     */
+    [noscript] void startupWithArgs(in nsICmdLineService cmdLine, in boolean canInteract);
+ 
+    /**
+     * Returns TRUE if in the midst of startupWithArgs
+     */
+    [noscript] readonly attribute boolean isStartingUp;
+ 
+    long get4xProfileCount();
+
+   /**
+    * The following values are used with getProfileListX
+    *
+    * LIST_ONLY_NEW     - the list will contain only migrated profiles
+    * LIST_ONLY_OLD     - the list will contain only un-migrated profiles
+    * LIST_ALL          - the list will contain all profiles
+    * LIST_FOR_IMPORT   - the list is generated from 4.x registry and contains
+    *                     all the 4.x profiles
+    *                     do not use this except from the import module
+    * 
+    */
+    
+    const unsigned long LIST_ONLY_NEW  = 1;
+    const unsigned long LIST_ONLY_OLD  = 2;
+    const unsigned long LIST_ALL       = 3;
+    const unsigned long LIST_FOR_IMPORT= 4;
+    
+    void getProfileListX(in unsigned long which, out unsigned long length, [retval, array, size_is(length)] out wstring profileNames);
+   
+    void migrateProfileInfo();
+    void migrateAllProfiles();
+    void migrateProfile(in wstring profileName);
+    void remigrateProfile(in wstring profileName);
+    void forgetCurrentProfile();
+    void createDefaultProfile();
+
+    /**
+     * Returns the actual profile directory
+     */
+    nsIFile getProfileDir(in wstring profileName);
+    
+    /**
+     * Returns the path to a profile which can be shown to the user.
+     * If the actual profile directory is salted, returns the unsalted parent.
+     * This is the directory which will be deleted by deleteProfile(name, true).
+     */
+    wstring getProfilePath(in wstring profileName);
+    
+    /**
+     * Returns a profile directory of the importType. The path will point to 
+     * the 4.x profile directory. Should be used only from the import module.
+     */
+    nsILocalFile getOriginalProfileDir(in wstring profileName);
+
+    /**
+     * Returns the date on which a profile was last used.
+     * value is in milliseconds since midnight Jan 1, 1970 GMT (same as nsIFile)
+     */
+    PRInt64 getProfileLastModTime(in wstring profileName);
+    
+    attribute boolean automigrate;
+    readonly attribute nsIFile defaultProfileParentDir;
+    readonly attribute wstring firstProfile;
+    
+    /**
+     * Affects startup behavior when there are multiple profiles.
+     *  If FALSE, the profile selection dialog will be shown.
+     *  If TRUE, the last used profile will be chosen automatically.
+     */ 
+    attribute boolean startWithLastUsedProfile;
+
+    [noscript] void updateRegistry(in nsIFile regName);
+    [noscript] void getRegStrings(in wstring profileName,
+                       out wstring regString,
+                       out wstring regName,
+                       out wstring regEmail,
+                       out wstring regOption);
+    [noscript] void setRegStrings(in wstring profileName, 
+                       in wstring regString,
+                       in wstring regName,
+                       in wstring regEmail,
+                       in wstring regOption);
+    [noscript] string isRegStringSet(in wstring profileName);
+    
+    void createNewProfileWithLocales(in wstring profileName,
+                          in wstring nativeProfileDir,
+                          in wstring UILocale,
+                          in wstring contentLocale,
+                          in boolean useExistingDir);
+   /**
+    * The remaining methods are deprecated. DO NOT USE THEM.
+    */
+    
+    boolean isCurrentProfileAvailable();
+    [noscript] void getCurrentProfileDir(out nsIFile profileDir);
+
+};

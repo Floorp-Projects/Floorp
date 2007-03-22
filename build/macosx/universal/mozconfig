@@ -1,0 +1,102 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Mozilla Mac OS X Universal Binary Packaging System
+#
+# The Initial Developer of the Original Code is Google Inc.
+# Portions created by the Initial Developer are Copyright (C) 2006
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#  Mark Mentovai <mark@moxienet.com> (Original Author)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+# As used here, arguments in $MOZ_BUILD_PROJECTS are suitable as arguments
+# to gcc's -arch parameter.
+mk_add_options MOZ_BUILD_PROJECTS="ppc i386"
+
+mk_add_options MOZ_UNIFY_BDATE=1
+
+mk_add_options MOZ_POSTFLIGHT_ALL+=build/macosx/universal/flight.mk
+
+DARWIN_VERSION=`uname -r`
+ac_add_app_options ppc  --target=powerpc-apple-darwin$DARWIN_VERSION
+ac_add_app_options i386 --target=i386-apple-darwin$DARWIN_VERSION
+
+# ppc builds run on older systems.  The minimum SDK for x86 is 10.4u.
+ac_add_app_options ppc  --with-macos-sdk=/Developer/SDKs/MacOSX10.3.9.sdk
+ac_add_app_options i386 --with-macos-sdk=/Developer/SDKs/MacOSX10.4u.sdk
+
+# $MOZ_BUILD_APP is only defined when sourced by configure.  That's not a
+# problem, because the variables it affects only need to be set for
+# configure.
+if test -n "$MOZ_BUILD_APP" ; then
+  TARGET_CPU=$MOZ_BUILD_APP
+
+  # When compiling C++, Apple gcc 4.0 produces output that requires a minimum
+  # of 10.3.9.  Use 4.0 for the x86 build, which has a higher minimum than
+  # that.  Use 3.3 for ppc, which must run on older systems.  This will
+  # completely override the compiler selected with the gcc_select command.
+  if test "$TARGET_CPU" = "ppc" ; then
+    GCC_VERSION=3.3
+  else
+    GCC_VERSION=4.0
+  fi
+
+  # It's not strictly necessary to specify -arch during native builds, but it
+  # makes the merged about:buildconfig easier to follow, and it reduces
+  # conditionalized differences between builds.
+  CC="gcc-$GCC_VERSION -arch $TARGET_CPU"
+  CXX="g++-$GCC_VERSION -arch $TARGET_CPU"
+
+  # $HOST_CXX is presently unused.  $HOST_CC will only be used during a cross
+  # compile.  Always use the 4.0 compiler, since it will always be present and
+  # will always work.
+  HOST_CC=gcc-4.0
+  HOST_CXX=g++-4.0
+
+  # These must be set for cross builds, and don't hurt straight builds.
+  RANLIB=ranlib
+  AR=ar
+  AS=$CC
+  LD=ld
+  STRIP="strip -x -S"
+
+  NATIVE_CPU=`uname -p`
+  if test "$NATIVE_CPU" = "powerpc" ; then
+    NATIVE_CPU=ppc
+  fi
+
+  # Let configure know that we mean business.
+  if test "$NATIVE_CPU" != "$TARGET_CPU" ; then
+    CROSS_COMPILE=1
+  fi
+
+  # Each per-CPU build should be entirely oblivious to the fact that a
+  # universal binary will be produced.  The exception is packager.mk, which
+  # needs to know to look for universal bits when building the .dmg.
+  UNIVERSAL_BINARY=1
+fi

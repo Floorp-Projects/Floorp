@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Firefox Preferences System.
+#
+# The Initial Developer of the Original Code is
+# Ben Goodger.
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Ben Goodger <ben@mozilla.org>
+#   Steffen Wilberg <steffen.wilberg@web.de>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<!DOCTYPE prefwindow SYSTEM "chrome://browser/locale/preferences/languages.dtd">
+
+<?xml-stylesheet href="chrome://global/skin/"?>
+
+<prefwindow id="LanguagesDialog" type="child"
+            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            title="&languages.customize.Header;"
+            dlgbuttons="accept,cancel,help"
+            style="width: &window.width;;">
+
+  <prefpane id="LanguagesDialogPane" onpaneload="gLanguagesDialog.init();"
+            helpTopic="prefs-languages" helpURI="chrome://browser/locale/help/help.rdf">
+
+    <preferences>
+      <preference id="intl.accept_languages" name="intl.accept_languages" type="wstring"/>
+      <preference id="pref.browser.language.disable_button.up"
+                  name="pref.browser.language.disable_button.up"
+                  type="bool"/>
+      <preference id="pref.browser.language.disable_button.down"
+                  name="pref.browser.language.disable_button.down"
+                  type="bool"/>
+      <preference id="pref.browser.language.disable_button.remove"
+                  name="pref.browser.language.disable_button.remove"
+                  type="bool"/>
+    </preferences>
+
+    <script type="application/x-javascript" src="chrome://browser/content/preferences/languages.js"/>
+
+    <stringbundleset id="languageSet">
+      <stringbundle id="bundleRegions"      src="chrome://global/locale/regionNames.properties"/>
+      <stringbundle id="bundleLanguages"    src="chrome://global/locale/languageNames.properties"/>
+      <stringbundle id="bundlePreferences"  src="chrome://browser/locale/preferences/preferences.properties"/>
+      <stringbundle id="bundleAccepted"     src="resource://gre/res/language.properties"/>
+    </stringbundleset>
+
+    <description>&languages.customize.prefLangDescript;</description>
+    <label>&languages.customize.active.label;</label>
+    <grid flex="1">
+      <columns>
+        <column flex="1"/>
+        <column/>
+      </columns>
+      <rows>
+        <row flex="1">
+          <listbox id="activeLanguages" flex="1" rows="6"
+                    seltype="multiple" onselect="gLanguagesDialog.onLanguageSelect();"
+                    preference="intl.accept_languages"
+                    onsyncfrompreference="return gLanguagesDialog.readAcceptLanguages();"
+                    onsynctopreference="return gLanguagesDialog.writeAcceptLanguages();"/>
+          <vbox>
+            <button id="up" class="up" oncommand="gLanguagesDialog.moveUp();" disabled="true"
+                    label="&languages.customize.moveUp.label;"
+                    accesskey="&languages.customize.moveUp.accesskey;"
+                    preference="pref.browser.language.disable_button.up"/>
+            <button id="down" class="down" oncommand="gLanguagesDialog.moveDown();" disabled="true"
+                    label="&languages.customize.moveDown.label;"
+                    accesskey="&languages.customize.moveDown.accesskey;"
+                    preference="pref.browser.language.disable_button.down"/>
+            <button id="remove" oncommand="gLanguagesDialog.removeLanguage();" disabled="true"
+                    label="&languages.customize.deleteButton.label;"
+                    accesskey="&languages.customize.deleteButton.accesskey;"
+                    preference="pref.browser.language.disable_button.remove"/>
+          </vbox>
+        </row>
+        <row>
+          <separator class="thin"/>
+        </row>
+        <row>
+          <menulist id="availableLanguages" oncommand="gLanguagesDialog.onAvailableLanguageSelect();"
+                    label="&languages.customize.selectLanguage.label;"
+                    label2="&languages.customize.selectLanguage.label;">
+            <menupopup id="availableLanguagesPopup"/>
+          </menulist>
+          <button id="addButton" oncommand="gLanguagesDialog.addLanguage();" disabled="true"
+                  label="&languages.customize.addButton.label;"
+                  accesskey="&languages.customize.addButton.accesskey;"/>
+        </row>
+      </rows>
+    </grid>
+    <separator/>
+    <separator/>
+  </prefpane>
+</prefwindow>
+

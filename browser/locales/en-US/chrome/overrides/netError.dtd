@@ -1,0 +1,136 @@
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%brandDTD;
+
+<!ENTITY loadError.label "Problem loading page">
+<!ENTITY retry.label "Try Again">
+
+<!-- Specific error messages -->
+
+<!ENTITY connectionFailure.title "Unable to connect">
+<!ENTITY connectionFailure.longDesc "&sharedLongDesc;">
+
+<!ENTITY deniedPortAccess.title "This address is restricted">
+<!ENTITY deniedPortAccess.longDesc "">
+
+<!ENTITY dnsNotFound.title "Server not found">
+<!ENTITY dnsNotFound.longDesc "
+<ul>
+  <li>Check the address for typing errors such as
+    <strong>ww</strong>.example.com instead of
+    <strong>www</strong>.example.com</li>
+  <li>If you are unable to load any pages, check your computer's network
+    connection.</li>
+  <li>If your computer or network is protected by a firewall or proxy, make sure
+    that &brandShortName; is permitted to access the Web.</li>
+</ul>
+">
+
+<!ENTITY fileNotFound.title "File not found">
+<!ENTITY fileNotFound.longDesc "
+<ul>
+  <li>Check the file name for capitalization or other typing errors.</li>
+  <li>Check to see if the file was moved, renamed or deleted.</li>
+</ul>
+">
+
+
+<!ENTITY generic.title "Oops.">
+<!ENTITY generic.longDesc "
+<p>&brandShortName; can't load this page for some reason.</p>
+">
+
+<!ENTITY malformedURI.title "The address isn't valid">
+<!ENTITY malformedURI.longDesc "
+<ul>
+  <li>Web addresses are usually written like
+    <strong>http://www.example.com/</strong></li>
+  <li>Make sure that you're using forward slashes (i.e.
+    <strong>/</strong>).</li>
+</ul>
+">
+
+<!ENTITY netInterrupt.title "The connection was interrupted">
+<!ENTITY netInterrupt.longDesc "&sharedLongDesc;">
+
+<!ENTITY netOffline.title "Offline mode">
+<!ENTITY netOffline.longDesc "
+<ul>
+  <li>Uncheck &quot;Work Offline&quot; in the File menu, then try again.</li>
+</ul>
+">
+
+<!ENTITY contentEncodingError.title "Content Encoding Error">
+<!ENTITY contentEncodingError.longDesc "
+<ul>
+  <li>Please contact the website owners to inform them of this problem.</li>
+</ul>
+">
+
+<!ENTITY netReset.title "The connection was reset">
+<!ENTITY netReset.longDesc "&sharedLongDesc;">
+
+<!ENTITY netTimeout.title "The connection has timed out">
+<!ENTITY netTimeout.longDesc "&sharedLongDesc;">
+
+<!ENTITY protocolNotFound.title "The address wasn't understood">
+<!ENTITY protocolNotFound.longDesc "
+<ul>
+  <li>You might need to install other software to open this address.</li>
+</ul>
+">
+
+<!ENTITY proxyConnectFailure.title "The proxy server is refusing connections">
+<!ENTITY proxyConnectFailure.longDesc "
+<ul>
+  <li>Check the proxy settings to make sure that they are correct.</li>
+  <li>Contact your network administrator to make sure the proxy server is
+    working.</li>
+</ul>
+">
+
+<!ENTITY proxyResolveFailure.title "Unable to find the proxy server">
+<!ENTITY proxyResolveFailure.longDesc "
+<ul>
+  <li>Check the proxy settings to make sure that they are correct.</li>
+  <li>Check to make sure your computer has a working network connection.</li>
+  <li>If your computer or network is protected by a firewall or proxy, make sure
+    that &brandShortName; is permitted to access the Web.</li>
+</ul>
+">
+
+<!ENTITY redirectLoop.title "The page isn't redirecting properly">
+<!ENTITY redirectLoop.longDesc "
+<ul>
+  <li>This problem can sometimes be caused by disabling or refusing to accept
+    cookies.</li>
+</ul>
+">
+
+<!ENTITY unknownSocketType.title "Unexpected response from server">
+<!ENTITY unknownSocketType.longDesc "
+<ul>
+  <li>Check to make sure your system has the Personal Security Manager
+    installed.</li>
+  <li>This might be due to a non-standard configuration on the server.</li>
+</ul>
+">
+
+<!ENTITY nssFailure.title "Secure Connection Failed">
+<!ENTITY nssFailure.longDesc "
+<ul>
+  <li>The page you are trying to view can not be shown because the web site uses an invalid or unsupported security protocol.</li>
+  <li>Please contact the web site owners to inform them of this problem. Alternatively, use the command found in the help menu to report this broken site.</li>
+</ul>
+">
+
+
+<!ENTITY sharedLongDesc "
+<ul>
+  <li>The site could be temporarily unavailable or too busy. Try again in a few
+    moments.</li>
+  <li>If you are unable to load any pages, check your computer's network
+    connection.</li>
+  <li>If your computer or network is protected by a firewall or proxy, make sure
+    that &brandShortName; is permitted to access the Web.</li>
+</ul>
+">

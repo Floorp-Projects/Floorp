@@ -1,0 +1,4 @@
+<!ENTITY findFiles.title "Fájlkereső...">
+<!ENTITY txSearchFor.label "Keresés:">
+<!ENTITY txSearchPath.label "Keresés itt:">
+<!ENTITY cbRecurse.label "Keresés az alkönyvtárakban is">

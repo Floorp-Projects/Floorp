@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"[
+    <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+    %brandDTD;
+    <!ENTITY % platformDTD SYSTEM "chrome://browser/locale/help/platformStrings.dtd" >
+    %platformDTD;
+]>
+<!--
+Contributors:
+  David Tenser <david.tenser@comhem.se> (original author)
+  R.J. Keller <rlk@trfenv.com>
+  Sean Umphlet <nosebleed@umphlet.com> (minor bugfixes)
+  Jeff Walden <jwalden+code@mit.edu>
+  Steffen Wilberg <steffen.wilberg@web.de>
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>&brandFullName; Keyboard Shortcuts</title>
+  <link rel="stylesheet" type="text/css"
+    href="chrome://help/skin/helpFileLayout.css"/>
+</head>
+
+<body>
+
+<h1>&brandFullName; Keyboard Shortcuts</h1>
+
+<p>This is a list of the most common keyboard shortcuts in &brandFullName;.
+  <span class="unix">If you have enabled Emacs-style text editing shortcuts
+  in GNOME, they will also work in &brandShortName;.  When an Emacs text
+  editing shortcut conflicts with the default shortcuts (as occurs with
+  &accelKey;+<kbd>K</kbd>), the Emacs shortcut will take preference if
+  focus is inside a textbox (which would include the location bar and search
+  bar).  In such cases you should use the alternate keyboard shortcut
+  if one is listed below.</span></p>
+
+<table border="1">
+  <thead>
+    <tr>
+      <th>Command</th>
+      <th>Shortcut</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th colspan="2">Navigation</th>
+    </tr>
+    <tr>
+      <td>Back</td>
+      <td>
+        <span class="win">
+          &altKey;+<kbd>Left Arrow</kbd><br/>
+          <kbd>Backspace</kbd>
+        </span>
+        <span class="unix">
+          &altKey;+<kbd>Left Arrow</kbd><br/>
+          &accelKey;+<kbd>[</kbd>
+        </span>
+        <span class="mac">
+          &accelKey;+<kbd>[</kbd><br/>
+          &accelKey;+<kbd>Left Arrow</kbd><br/>
+          <kbd>Delete</kbd>
+        </span>
+      </td>
+    </tr>
+    <tr>
+      <td>Forward</td>
+      <td>
+        <span class="win">
+          &altKey;+<kbd>Right Arrow</kbd><br/>
+          &shiftKey;+<kbd>Backspace</kbd>
+        </span>
+        <span class="unix">
+          &altKey;+<kbd>Right Arrow</kbd><br/>
+          &accelKey;+<kbd>]</kbd>
+        </span>
+        <span class="mac">
+          &accelKey;+<kbd>]</kbd><br/>
+          &accelKey;+<kbd>Right Arrow</kbd><br/>
+          &shiftKey;+<kbd>Delete</kbd>
+        </span>
+      </td>
+    </tr>
+    <tr>
+      <td>Home</td>
+      <td>&altKey;+<kbd>Home</kbd></td>
+    </tr>
+    <tr>
+      <td>Open File</td>
+      <td>&accelKey;+<kbd>O</kbd></td>
+    </tr>
+    <tr>
+      <td>Reload</td>
+      <td><kbd>F5<br/></kbd>
+        &accelKey;+<kbd>R</kbd></td>
+    </tr>
+    <tr>
+      <td>Reload (override cache)</td>
+      <td><span class="noMac">&accelKey;+<kbd>F5</kbd><br/></span>
+        &accelKey;+&shiftKey;+<kbd>R</kbd></td>
+    </tr>
+    <tr>
+      <td>Stop</td>
+      <td><span class="mac">&accelKey;+<kbd>.</kbd><br/></span>
+        <kbd>Esc</kbd></td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <th colspan="2">Current Page</th>
+    </tr>
+    <tr>
+      <td>Go to Bottom of Page</td>
+      <td><kbd>End</kbd></td>
+    </tr>
+    <tr>
+      <td>Go to Top of Page</td>
+      <td><kbd>Home</kbd></td>
+    </tr>
+    <tr>
+      <td>Move to Next Frame</td>
+      <td><kbd>F6</kbd></td>
+    </tr>
+    <tr>
+      <td>Move to Previous Frame</td>
+      <td>&shiftKey;+<kbd>F6</kbd></td>
+    </tr>
+    <tr class="noWin">
+      <td>Page Info</td>
+      <td>&accelKey;+<kbd>I</kbd></td>
+    </tr>
+    <tr>
+      <td>Page Source</td>
+      <td>&accelKey;+<kbd>U</kbd></td>
+    </tr>
+    <tr>
+      <td>Print</td>
+      <td>&accelKey;+<kbd>P</kbd></td>
+    </tr>
+    <tr>
+      <td>Save Page As</td>
+      <td>&accelKey;+<kbd>S</kbd></td>
+    </tr>
+    <tr>
+      <td>Text Size: Decrease</td>
+      <td>&accelKey;+<kbd>-</kbd></td>
+    </tr>
+    <tr>
+      <td>Text Size: Increase</td>
+      <td>&accelKey;+<kbd>+</kbd></td>
+    </tr>
+    <tr>
+      <td>Text Size: Restore</td>
+      <td>&accelKey;+<kbd>0</kbd></td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <th colspan="2">Editing</th>
+    </tr>
+    <tr>
+      <td>Copy</td>
+      <td>&accelKey;+<kbd>C</kbd></td>
+    </tr>
+    <tr>
+      <td>Cut</td>
+      <td>&accelKey;+<kbd>X</kbd></td>
+    </tr>
+    <tr>
+      <td>Delete</td>
+      <td><kbd>Delete</kbd></td>
+    </tr>
+    <tr>
+      <td>Paste</td>
+      <td>&accelKey;+<kbd>V</kbd></td>
+    </tr>
+    <tr>
+      <td>Redo</td>
+      <td><span class="win">&accelKey;+<kbd>Y</kbd></span>
+        <span class="noWin">&accelKey;+&shiftKey;+<kbd>Z</kbd></span></td>
+    </tr>
+    <tr>
+      <td>Select All</td>
+      <td>&accelKey;+<kbd>A</kbd></td>
+    </tr>
+    <tr>
+      <td>Undo</td>
+      <td>&accelKey;+<kbd>Z</kbd></td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <th colspan="2">Search</th>
+    </tr>
+    <tr>
+      <td>Find</td>
+      <td>&accelKey;+<kbd>F</kbd></td>
+    </tr>
+    <tr>
+      <td>Find Again</td>
+      <td><kbd>F3</kbd><br/>
+        &accelKey;+<kbd>G</kbd></td>
+    </tr>
+    <tr>
+      <td>Find As You Type Link</td>
+      <td><kbd>'</kbd></td>
+    </tr>
+    <tr>
+      <td>Find As You Type Text</td>
+      <td><kbd>/</kbd></td>
+    </tr>
+    <tr>
+      <td>Find Previous</td>
+      <td>&shiftKey;+<kbd>F3</kbd></td>
+    </tr>
+    <tr>
+      <td>Web Search</td>
+      <td>&accelKey;+<kbd>K</kbd>
+        <span class="win"><br/>&accelKey;+<kbd>E</kbd></span>
+        <span class="unix"><br/>&accelKey;+<kbd>J</kbd></span></td>
+    </tr>
+  </tbody>
+  <tbody id="windows_tabs">
+    <tr>
+      <th colspan="2">Windows &amp; Tabs</th>
+    </tr>
+    <tr>
+      <td>Close Tab</td>
+      <td>&accelKey;+<kbd>W</kbd>
+        <span class="noMac"><br/>&ctrlKey;+<kbd>F4</kbd></span></td>
+    </tr>
+    <tr>
+      <td>Close Window</td>
+      <td>&accelKey;+&shiftKey;+<kbd>W</kbd>
+        <span class="noMac"><br/>&altKey;+<kbd>F4</kbd></span></td>
+    </tr>
+    <!-- LOCALIZATION NOTE:
+         "Left"/"Up" and "Right"/"Down" might need special treatment
+         for bidi locales, as used in the following two entries.
+    -->
+    <tr>
+      <td>Move Tab Left (when tab is focused)</td>
+      <td>&accelKey;+<kbd>Left Arrow</kbd><br/>
+          &accelKey;+<kbd>Up Arrow</kbd></td>
+    </tr>
+    <tr>
+      <td>Move Tab Right (when tab is focused)</td>
+      <td>&accelKey;+<kbd>Right Arrow</kbd><br/>
+          &accelKey;+<kbd>Down Arrow</kbd></td>
+    </tr>
+    <tr>
+      <td>Move Tab to Beginning (when tab is focused)</td>
+      <td>&accelKey;+<kbd>Home</kbd></td>
+    </tr>
+    <tr>
+      <td>Move Tab to End (when tab is focused)</td>
+      <td>&accelKey;+<kbd>End</kbd></td>
+    </tr>
+    <tr>
+      <td>New Tab</td>
+      <td>&accelKey;+<kbd>T</kbd></td>
+    </tr>
+    <tr>
+      <td>New Window</td>
+      <td>&accelKey;+<kbd>N</kbd></td>
+    </tr>
+    <tr>
+      <td>Next Tab</td>
+      <td>&ctrlKey;+<kbd>Tab</kbd><br/>
+        <span class="mac">&accelKey;+&altKey;+Right Arrow<br/></span>
+        &ctrlKey;+<kbd>Page Down</kbd></td>
+    </tr>
+    <tr>
+      <td>Open Address in New Tab</td>
+      <td>&altKey;+&enterKey;</td>
+    </tr>
+    <tr>
+      <td>Previous Tab</td>
+      <td>&ctrlKey;+&shiftKey;+<kbd>Tab</kbd><br/>
+        <span class="mac">&accelKey;+&altKey;+Left Arrow<br/></span>
+        &ctrlKey;+<kbd>Page Up</kbd></td>
+    </tr>
+    <tr>
+      <td>Restore Recently Closed Tab</td>
+      <td>&accelKey;+&shiftKey;+<kbd>T</kbd></td>
+    </tr>
+    <tr>
+      <td>Select Tab (1 to 8)</td>
+      <td><span class="noUnix">&accelKey;</span><span
+        class="unix">&altKey;</span>+(<kbd>1</kbd> to <kbd>8</kbd>)</td>
+    </tr>
+    <tr>
+      <td>Select Last Tab</td>
+      <td><span class="noUnix">&accelKey;</span><span
+        class="unix">&altKey;</span>+<kbd>9</kbd></td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <th colspan="2">Tools</th>
+    </tr>
+    <tr class="noUnix">
+      <td>Bookmark All Tabs</td>
+      <td>&accelKey;+&shiftKey;+<kbd>D</kbd></td>
+    </tr>
+    <tr>
+      <td>Bookmark This Page</td>
+      <td>&accelKey;+<kbd>D</kbd></td>
+    </tr>
+    <tr>
+      <td>Bookmarks</td>
+      <td>&accelKey;+<kbd>B</kbd>
+        <span class="win"><br/>&accelKey;+<kbd>I</kbd></span></td>
+    </tr>
+    <tr>
+      <td>Caret Browsing</td>
+      <td><kbd>F7</kbd></td>
+    </tr>
+    <tr>
+      <td>Downloads</td>
+      <td><span class="noUnix">&accelKey;+<kbd>J</kbd></span>
+        <span class="unix">&accelKey;+<kbd>Y</kbd></span></td>
+    </tr>
+    <tr>
+      <td>History</td>
+      <td><span class="noMac">&accelKey;+<kbd>H</kbd></span>
+        <span class="mac">&accelKey;+&shiftKey;+<kbd>H</kbd></span></td>
+    </tr>
+    <tr>
+      <td>Clear Private Data</td>
+      <td>&accelKey;+&shiftKey;+<kbd>Del</kbd></td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <th colspan="2">Miscellaneous</th>
+    </tr>
+    <tr>
+      <td>Complete .com Address</td>
+      <td>&accelKey;+&enterKey;</td>
+    </tr>
+    <tr>
+      <td>Complete .net Address</td>
+      <td>&shiftKey;+&enterKey;</td>
+    </tr>
+    <tr>
+      <td>Complete .org Address</td>
+      <td>&accelKey;+&shiftKey;+&enterKey;</td>
+    </tr>
+    <tr>
+      <td>Delete Selected Autocomplete Entry</td>
+      <td><span class="noMac"><kbd>Del</kbd></span>
+        <span class="mac">&shiftKey;+<kbd>Del</kbd></span></td>
+    </tr>
+    <tr class="noMac">
+      <td>Full Screen</td>
+      <td><kbd>F11</kbd></td>
+    </tr>
+    <tr>
+      <td>Select Location Bar</td>
+      <td><span class="noMac">&altKey;+<kbd>D</kbd><br/></span>
+        <kbd>F6</kbd><br />
+        &accelKey;+<kbd>L</kbd></td>
+    </tr>
+    <tr>
+      <td>Select or Manage Search Engines<br/>
+        (when Search Bar is focused)</td>
+      <td>&altKey;+<kbd>Up Arrow</kbd><br/>
+        &altKey;+<kbd>Down Arrow</kbd><span class="noMac"><br/>
+        <kbd>F4</kbd></span></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="contentsBox"><em>26 July 2006</em></div>
+<p>Copyright &copy; &copyright.years; Contributors to the Mozilla Help Viewer Project.</p>
+
+</body>
+</html>

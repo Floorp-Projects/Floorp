@@ -1,0 +1,58 @@
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+  <title>Mozilla Plugin Test Page</title>
+  <link rel="stylesheet" type="text/css" href="mozilla.css">
+</head>
+
+<body>
+
+<p>This page is designed for Communicator 4.x with the Mozilla
+ActiveX plugin installed! You also need to have the MS calendar control
+installed to see anything</p>
+
+<p>This version uses the EMBED tag</p>
+<p>
+  <!-- The embed tag is used to add controls to the page. The control 
+       is specified by its clsid. The width and height parameters specify
+       the control dimensions. The control is initialised with parameters
+       of the form param_SomeControlProperty="value".
+    -->
+  <embed
+    TYPE="application/x-oleobject"
+    ALIGN="baseline" BORDER="0"
+    WIDTH="300" HEIGHT="300"
+    CLSID="{8E27C92B-1264-101C-8A2F-040224009C02}"
+    PARAM_BACKCOLOR="16776960"
+  >
+</p>
+
+<p>This version uses the OBJECT tag, with a few different parameter settings.</p>
+<p>
+  <!-- The object tag is used to add controls to the page. The width and height
+       parameters specify the control dimensions. The control is initialised
+       with parameters
+       of the form param_SomeControlProperty="value".
+    -->
+  <object
+      TYPE="application/x-oleobject"
+      ALIGN="baseline" BORDER="0"
+      WIDTH="300" HEIGHT="300">
+    <param NAME="clsid" VALUE="{8E27C92B-1264-101C-8A2F-040224009C02}"/>
+    <param NAME="backcolor" VALUE="65535"/>
+    <param NAME="firstday" VALUE="2"/>
+    <param NAME="gridcelleffect" VALUE="0"/>
+    <param NAME="showdays" VALUE="true"/>
+    <param NAME="showdateselectors" VALUE="true"/>
+    <param NAME="titlefontcolor" VALUE="000000"/>
+    <param NAME="showhorizontalgrid" VALUE="true"/>
+    <param NAME="showverticalgrid" VALUE="false"/>
+    <param NAME="monthlength" VALUE="0"/>
+  </object>
+</p>
+
+
+</body>
+</html>

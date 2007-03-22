@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: atom rights works
+Expect:      feed.fields.getProperty('atom:rights') != null
+
+-->
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title type="xhtml">
+    <div xmlns="http://www.w3.org/1999/xhtml"><b>test</b> title</div>
+  </title>
+  <rights type="xhtml">
+    <div xmlns="http://www.w3.org/1999/xhtml"><b>test</b> rights</div>
+  </rights>
+</feed>

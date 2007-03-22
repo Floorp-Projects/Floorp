@@ -1,0 +1,165 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla browser.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   John Gaunt
+ *   Alexander Surkov <surkov.alexander@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/**
+ * nsIAccessibleProvider interface is used to link element and accessible
+   object. For that XBL binding of element should implement the interface.
+ */
+
+[scriptable, uuid(18797ea7-44cc-469e-8923-bd5d1c144461)]
+interface nsIAccessibleProvider : nsISupports
+{
+  /**
+   * Constants set of common use.
+   */
+
+  /** For elements that spawn a new document. For example now it is used by
+    <xul:iframe>, <xul:browser> and <xul:editor>. */
+  const long OuterDoc = 0x00000001;
+
+  /**
+   * Constants set is used by XUL controls.
+   */
+
+  const long XULAlert = 0x00001001;
+  const long XULButton = 0x00001002;
+  const long XULCheckbox = 0x00001003;
+  const long XULColorPicker = 0x00001004;
+  const long XULColorPickerTile = 0x00001005;
+  const long XULCombobox = 0x00001006;
+  const long XULDropmarker = 0x00001007;
+  const long XULGroupbox = 0x00001008;
+  const long XULImage = 0x00001009;
+  const long XULLink = 0x00001010;
+  const long XULListbox = 0x00001011;
+  const long XULListitem = 0x00001012;
+  const long XULMenubar = 0x00001013;
+  const long XULMenuitem = 0x00001014;
+  const long XULMenupopup = 0x00001015;
+  const long XULMenuSeparator = 0x00001016;
+  const long XULProgressMeter = 0x00001017;
+  const long XULStatusBar = 0x00001018;
+  const long XULRadioButton = 0x00001019;
+  const long XULRadioGroup = 0x00001020;
+
+  /** The single tab in a dialog or tabbrowser/editor interface */
+  const long XULTab = 0x00001021;
+
+  /** A combination of a tabs object and a tabpanels object */
+  const long XULTabBox = 0x00001022;
+
+  /** The display area for a dialog or tabbrowser interface */
+  const long XULTabPanels = 0x00001023;
+
+  /** The collection of tab objects, useable in the TabBox and independant of
+   as well */
+  const long XULTabs = 0x00001024;
+
+  const long XULText = 0x00001025;
+  const long XULTextBox = 0x00001026;
+  const long XULTree = 0x00001027;
+  const long XULTreeColumns = 0x00001028;
+  const long XULTreeColumnitem = 0x00001029;
+  const long XULToolbar = 0x00001030;
+  const long XULToolbarSeparator = 0x00001031;
+  const long XULTooltip = 0x00001032;
+
+
+  /**
+   * Constants set is used by XForms elements.
+   */
+
+  /** Used for xforms elements that provide accessible object for itself as
+   * well for anonymous content. This property are used for upload,
+   * input[type="xsd:gDay"] and input[type="xsd:gMonth"] */
+  const long XFormsContainer = 0x00002000;
+
+  /** Used for label element */
+  const long XFormsLabel = 0x00002001;
+  /** Used for output element */
+  const long XFormsOuput = 0x00002002;
+  /** Used for trigger and submit elements */
+  const long XFormsTrigger = 0x00002003;
+  /** Used for input and textarea elements */
+  const long XFormsInput = 0x00002004;
+  /** Used for input[xsd:boolean] element */
+  const long XFormsInputBoolean = 0x00002005;
+  /** Used for input[xsd:date] element */
+  const long XFormsInputDate = 0x00002006;
+  /** Used for secret element */
+  const long XFormsSecret = 0x00002007;
+  /** Used for range element represented by slider */
+  const long XFormsSliderRange = 0x00002008;
+
+  /** Used for select and select1 that are implemented using host document's
+   * native widget. For example, a select1 in a xhtml document may be
+   * represented by the native html control html:select */
+  const long XFormsSelect = 0x00002009;
+  /** Used for xforms choices element */
+  const long XFormsChoices = 0x00002010;
+  /** Used for xforms full select/select1 elements that may be represented by
+   * group of checkboxes and radiogroup */
+  const long XFormsSelectFull = 0x00002011;
+  /** Used for xforms item element that is used inside xforms select elements
+   * represented by group of checkboxes */
+  const long XFormsItemCheckgroup = 0x00002012;
+  /** Used for xforms item element that is used inside xforms select1 elements
+   * represented by radio group */
+  const long XFormsItemRadiogroup = 0x00002013;
+  /** Used for xforms select1 element that is represented by combobox */
+  const long XFormsSelectCombobox = 0x00002014;
+  /** Used for xforms item element that is used inside xforms select1
+   * elements represented by combobox */
+  const long XFormsItemCombobox = 0x00002015;
+
+  /** Used for dropmarker widget that is used by xforms elements */
+  const long XFormsDropmarkerWidget = 0x00002101;
+  /** Used for calendar widget that is used by xforms elements */
+  const long XFormsCalendarWidget = 0x00002102;
+  /** Used for popup widget that is used by xforms minimal select1 elements */
+  const long XFormsComboboxPopupWidget = 0x00002103;
+
+  /**
+   * Return one of constants declared above.
+   */
+  readonly attribute long accessibleType;
+};

@@ -1,0 +1,174 @@
+random == check-image.html check-image-ref.html # bug 371232
+== check-image-blue.html check-image-blue-ref.html
+
+
+!= background-color-base.html background-color-height-10.html
+== background-color-height-4.html background-color-base.html
+== background-color-height-5.html background-color-height-10.html
+== background-color-height-6.html background-color-height-10.html
+!= background-color-base.html background-color-top-10.html
+== background-color-top-4.html background-color-base.html
+== background-color-top-5.html background-color-top-10.html
+== background-color-top-6.html background-color-top-10.html
+!= background-color-base.html background-color-width-10.html
+== background-color-width-4.html background-color-base.html
+== background-color-width-5.html background-color-width-10.html
+== background-color-width-6.html background-color-width-10.html
+!= background-color-base.html background-color-left-10.html
+== background-color-left-4.html background-color-base.html
+== background-color-left-5.html background-color-left-10.html
+== background-color-left-6.html background-color-left-10.html
+== background-color-top-height-4.html background-color-height-4.html
+== background-color-top-height-5.html background-color-height-5.html
+== background-color-top-height-6.html background-color-height-6.html
+== background-color-left-width-4.html background-color-width-4.html
+== background-color-left-width-5.html background-color-width-5.html
+== background-color-left-width-6.html background-color-width-6.html
+== background-color-height-top-4.html background-color-height-4.html
+== background-color-height-top-5.html background-color-height-5.html
+== background-color-height-top-6.html background-color-height-6.html
+== background-color-width-left-4.html background-color-width-4.html
+== background-color-width-left-5.html background-color-width-5.html
+== background-color-width-left-6.html background-color-width-6.html
+
+
+!= border-base-ref.html border-height-10-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-height-4.html border-base-ref.html # bug 361523
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-height-5.html border-height-10-ref.html # bug 361523
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-height-6.html border-height-10-ref.html # bug 361523
+!= border-base-ref.html border-width-10-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-width-4.html border-base-ref.html # bug 361523
+fails == border-width-5.html border-width-10-ref.html # bug 363220; bug 361523 on Mac
+fails == border-width-6.html border-width-10-ref.html # bug 363220; bug 361523 on Mac
+!= border-base-ref.html border-left-10-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-left-4.html border-base-ref.html # bug 361523
+fails == border-left-5.html border-left-10-ref.html # bug 363220; bug 361523 on Mac
+fails == border-left-6.html border-left-10-ref.html # bug 363220; bug 361523 on Mac
+!= border-base-ref.html border-top-10-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-top-4.html border-base-ref.html # bug 361523
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-top-5.html border-top-10-ref.html # bug 361523
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == border-top-6.html border-top-10-ref.html # bug 361523
+
+
+!= background-image-base.html background-image-height-10-ref.html
+== background-image-height-4.html background-image-base.html
+== background-image-height-5.html background-image-height-10-ref.html
+== background-image-height-6.html background-image-height-10-ref.html
+!= background-image-base.html background-image-top-10-ref.html
+== background-image-top-4.html background-image-base.html
+== background-image-top-5.html background-image-top-10-ref.html
+== background-image-top-6.html background-image-top-10-ref.html
+!= background-image-base.html background-image-width-10-ref.html
+== background-image-width-4.html background-image-base.html
+== background-image-width-5.html background-image-width-10-ref.html
+== background-image-width-6.html background-image-width-10-ref.html
+!= background-image-base.html background-image-left-10-ref.html
+== background-image-left-4.html background-image-base.html
+== background-image-left-5.html background-image-left-10-ref.html
+== background-image-left-6.html background-image-left-10-ref.html
+== background-image-top-height-4.html background-image-height-4.html
+== background-image-top-height-5.html background-image-height-5.html
+== background-image-top-height-6.html background-image-height-6.html
+== background-image-left-width-4.html background-image-width-4.html
+== background-image-left-width-5.html background-image-width-5.html
+== background-image-left-width-6.html background-image-width-6.html
+== background-image-height-top-4.html background-image-height-4.html
+== background-image-height-top-5.html background-image-height-5.html
+== background-image-height-top-6.html background-image-height-6.html
+== background-image-width-left-4.html background-image-width-4.html
+== background-image-width-left-5.html background-image-width-5.html
+== background-image-width-left-6.html background-image-width-6.html
+
+
+# These all fail due to bug 155955, and maybe also bug 371180, plus a
+# bunch of other bugs that ought to be filed.
+fails == collapsed-border-height-4.html border-base-ref.html
+fails == collapsed-border-height-5.html border-height-10-ref.html
+fails == collapsed-border-height-6.html border-height-10-ref.html
+fails == collapsed-border-width-4.html border-base-ref.html
+fails == collapsed-border-width-5.html border-width-10-ref.html
+fails == collapsed-border-width-6.html border-width-10-ref.html
+fails == collapsed-border-left-4.html border-base-ref.html
+fails == collapsed-border-left-5.html border-left-10-ref.html
+fails == collapsed-border-left-6.html border-left-10-ref.html
+fails == collapsed-border-top-4.html border-base-ref.html
+fails == collapsed-border-top-5.html border-top-10-ref.html
+fails == collapsed-border-top-6.html border-top-10-ref.html
+
+
+# The Linux and Windows failures are bugs related to the image scaling
+# code that need to be filed (doing antialising around the edges of a
+# solid-color image).  The Mac failures are probably the same, but the
+# difference isn't visible.  All covered by bug 371316.
+!= image-base-ref.html image-height-10-ref.html
+random == image-height-4.html image-base-ref.html
+random == image-height-5.html image-height-10-ref.html
+random == image-height-6.html image-height-10-ref.html
+!= image-base-ref.html image-top-10-ref.html
+random == image-top-4.html image-base-ref.html
+random == image-top-5.html image-top-10-ref.html
+random == image-top-6.html image-top-10-ref.html
+!= image-base-ref.html image-width-10-ref.html
+random == image-width-4.html image-base-ref.html
+random == image-width-5.html image-width-10-ref.html
+random == image-width-6.html image-width-10-ref.html
+!= image-base-ref.html image-left-10-ref.html
+random == image-left-4.html image-base-ref.html
+random == image-left-5.html image-left-10-ref.html
+random == image-left-6.html image-left-10-ref.html
+random == image-top-height-4.html image-height-4.html
+random == image-top-height-5.html image-height-5.html
+random == image-top-height-6.html image-height-6.html
+random == image-left-width-4.html image-width-4.html
+random == image-left-width-5.html image-width-5.html
+random == image-left-width-6.html image-width-6.html
+random == image-height-top-4.html image-height-4.html
+random == image-height-top-5.html image-height-5.html
+random == image-height-top-6.html image-height-6.html
+random == image-width-left-4.html image-width-4.html
+random == image-width-left-5.html image-width-5.html
+random == image-width-left-6.html image-width-6.html
+
+!= offscreen-0-ref.html offscreen-10-ref.html
+== offscreen-background-color-pos-4.html offscreen-0-ref.html
+== offscreen-background-color-pos-5.html offscreen-10-ref.html
+== offscreen-background-color-pos-6.html offscreen-10-ref.html
+== offscreen-background-color-size-4.html offscreen-0-ref.html
+== offscreen-background-color-size-5.html offscreen-10-ref.html
+== offscreen-background-color-size-6.html offscreen-10-ref.html
+== offscreen-image-pos-4.html offscreen-0-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == offscreen-image-pos-5.html offscreen-10-ref.html # bug 368280
+== offscreen-image-pos-6.html offscreen-10-ref.html
+random == offscreen-image-size-4.html offscreen-0-ref.html # bug 371316
+random == offscreen-image-size-5.html offscreen-10-ref.html # bug 371316
+random == offscreen-image-size-6.html offscreen-10-ref.html # bug 371316
+
+
+!= rounded-background-color-base-ref.html rounded-background-color-height-10-ref.html
+== rounded-background-color-height-4.html rounded-background-color-base-ref.html
+fails == rounded-background-color-height-5.html rounded-background-color-height-10-ref.html # bug 353860
+fails == rounded-background-color-height-6.html rounded-background-color-height-10-ref.html # bug 353860
+!= rounded-background-color-base-ref.html rounded-background-color-top-10-ref.html
+== rounded-background-color-top-4.html rounded-background-color-base-ref.html
+fails == rounded-background-color-top-5.html rounded-background-color-top-10-ref.html # bug 353860
+fails == rounded-background-color-top-6.html rounded-background-color-top-10-ref.html # bug 353860
+!= rounded-background-color-base-ref.html rounded-background-color-width-10-ref.html
+== rounded-background-color-width-4.html rounded-background-color-base-ref.html
+fails == rounded-background-color-width-5.html rounded-background-color-width-10-ref.html # bug 353860
+fails == rounded-background-color-width-6.html rounded-background-color-width-10-ref.html # bug 353860
+!= rounded-background-color-base-ref.html rounded-background-color-left-10-ref.html
+== rounded-background-color-left-4.html rounded-background-color-base-ref.html
+fails == rounded-background-color-left-5.html rounded-background-color-left-10-ref.html # bug 353860
+fails == rounded-background-color-left-6.html rounded-background-color-left-10-ref.html # bug 353860
+== rounded-background-color-top-height-4.html rounded-background-color-height-4.html
+== rounded-background-color-top-height-5.html rounded-background-color-height-5.html
+== rounded-background-color-top-height-6.html rounded-background-color-height-6.html
+== rounded-background-color-left-width-4.html rounded-background-color-width-4.html
+== rounded-background-color-left-width-5.html rounded-background-color-width-5.html
+== rounded-background-color-left-width-6.html rounded-background-color-width-6.html
+== rounded-background-color-height-top-4.html rounded-background-color-height-4.html
+== rounded-background-color-height-top-5.html rounded-background-color-height-5.html
+== rounded-background-color-height-top-6.html rounded-background-color-height-6.html
+== rounded-background-color-width-left-4.html rounded-background-color-width-4.html
+== rounded-background-color-width-left-5.html rounded-background-color-width-5.html
+== rounded-background-color-width-left-6.html rounded-background-color-width-6.html

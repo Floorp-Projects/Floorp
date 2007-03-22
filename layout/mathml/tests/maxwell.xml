@@ -1,0 +1,286 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla MathML Project.
+   -
+   - The Initial Developer of the Original Code is
+   - The University of Queensland.
+   - Portions created by the Initial Developer are Copyright (C) 1999
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Robert Miner <rminer@geomtech.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN" 
+               "http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd" [
+  <!ENTITY mathml "http://www.w3.org/1998/Math/MathML">
+  <!ENTITY vec "&RightArrow;">
+  <!ENTITY partial "&PartialD;"> 
+]>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <title>Maxwell's Equations</title>
+</head>
+
+<body style="background-color: #ffffff">
+<h2>Maxwell's Equations</h2>
+
+<p align='center'>
+<math xmlns='&mathml;'>
+  <mstyle displaystyle='true'>
+    <mrow>
+      <mo>&lbrace;</mo>
+      <mtable columnalign='right center left' equalrows='false' equalcolumns='false'>
+        <mtr>
+          <mtd>
+            <mrow>
+              <mo>&nabla;</mo>
+              <mo>&times;</mo>
+              <munderover accent='true'>
+                <mstyle fontweight='bold'>
+                  <mi>B</mi>
+                </mstyle>
+                <mrow></mrow>
+                <mo stretchy='true'>&vec;</mo>
+              </munderover>
+              <mo>-</mo>
+              <mfrac>
+                <mn>1</mn>
+                <mi>c</mi>
+              </mfrac>
+              <mfrac>
+                <mrow>
+                  <mo>&partial;</mo>
+                  <munderover accent='true'>
+                    <mstyle fontweight='bold'>
+                      <mi>E</mi>
+                    </mstyle>
+                    <mrow></mrow>
+                    <mo stretchy='true'>&vec;</mo>
+                  </munderover>
+                </mrow>
+                <mrow>
+                  <mo>&partial;</mo>
+                  <mi>t</mi>
+                </mrow>
+              </mfrac>
+            </mrow>
+          </mtd>
+          <mtd>
+            <mo>=</mo>
+          </mtd>
+          <mtd>
+            <mrow>
+              <mfrac>
+                <mrow>
+                  <mn>4</mn>
+                  <mi>&pi;</mi>
+                </mrow>
+                <mi>c</mi>
+              </mfrac>
+              <munderover accent='true'>
+                <mstyle fontweight='bold'>
+                  <mi>j</mi>
+                </mstyle>
+                <mrow></mrow>
+                <mo stretchy='true'>&vec;</mo>
+              </munderover>
+            </mrow>
+          </mtd>
+        </mtr>
+        <mtr>
+          <mtd>
+            <mrow>
+              <mo>&nabla;</mo>
+              <mo>&cdot;</mo>
+              <munderover accent='true'>
+                <mstyle fontweight='bold'>
+                  <mi>E</mi>
+                </mstyle>
+                <mrow></mrow>
+                <mo stretchy='true'>&vec;</mo>
+              </munderover>
+            </mrow>
+          </mtd>
+          <mtd>
+            <mo>=</mo>
+          </mtd>
+          <mtd>
+            <mrow>
+              <mn>4</mn>
+              <mi>&pi;</mi>
+              <mi>&rho;</mi>
+            </mrow>
+          </mtd>
+        </mtr>
+        <mtr>
+          <mtd>
+            <mrow>
+              <mo>&nabla;</mo>
+              <mo>&times;</mo>
+              <munderover accent='true'>
+                <mstyle fontweight='bold'>
+                  <mi>E</mi>
+                </mstyle>
+                <mrow></mrow>
+                <mo stretchy='true'>&vec;</mo>
+              </munderover>
+              <mo>+</mo>
+              <mfrac>
+                <mn>1</mn>
+                <mi>c</mi>
+              </mfrac>
+              <mfrac>
+                <mrow>
+                  <mo>&partial;</mo>
+                  <munderover accent='true'>
+                    <mstyle fontweight='bold'>
+                      <mi>B</mi>
+                    </mstyle>
+                    <mrow></mrow>
+                    <mo stretchy='true'>&vec;</mo>
+                  </munderover>
+                </mrow>
+                <mrow>
+                  <mo>&partial;</mo>
+                  <mi>t</mi>
+                </mrow>
+              </mfrac>
+            </mrow>
+          </mtd>
+          <mtd>
+            <mo>=</mo>
+          </mtd>
+          <mtd>
+            <munderover accent='true'>
+              <mstyle fontweight='bold'>
+                <mn>0</mn>
+              </mstyle>
+              <mrow></mrow>
+              <mo stretchy='true'>&vec;</mo>
+            </munderover>
+          </mtd>
+        </mtr>
+        <mtr>
+          <mtd>
+            <mrow>
+              <mo>&nabla;</mo>
+              <mo>&cdot;</mo>
+              <munderover accent='true'>
+                <mstyle fontweight='bold'>
+                  <mi>B</mi>
+                </mstyle>
+                <mrow></mrow>
+                <mo stretchy='true'>&vec;</mo>
+              </munderover>
+            </mrow>
+          </mtd>
+          <mtd>
+            <mo>=</mo>
+          </mtd>
+          <mtd>
+            <mn>0</mn>
+          </mtd>
+        </mtr>
+      </mtable>
+    </mrow>
+  </mstyle>
+</math>
+</p>
+
+<h2>Einstein's field equations</h2>
+
+<p align='center'>
+<math xmlns='&mathml;'>
+  <mstyle displaystyle='true'>
+    <mrow>
+      <msubsup>
+        <mstyle fontstyle='normal'>
+          <mi>R</mi>
+        </mstyle>
+        <mstyle scriptlevel='1'>
+          <mrow>
+            <mi>&mu;</mi>
+            <mi>&nu;</mi>
+          </mrow>
+        </mstyle>
+        <mrow></mrow>
+      </msubsup>
+      <mo>-</mo>
+      <mfrac>
+        <mn>1</mn>
+        <mn>2</mn>
+      </mfrac>
+      <msubsup>
+        <mi>g</mi>
+        <mstyle scriptlevel='1'>
+          <mrow>
+            <mi>&mu;</mi>
+            <mi>&nu;</mi>
+          </mrow>
+        </mstyle>
+        <mrow></mrow>
+      </msubsup>
+      <mstyle fontstyle='normal'>
+        <mi>R</mi>
+      </mstyle>
+      <mo>=</mo>
+      <mfrac>
+        <mrow>
+          <mn>8</mn>
+          <mi>&pi;</mi>
+          <mstyle fontstyle='normal'>
+            <mi>G</mi>
+          </mstyle>
+        </mrow>
+        <msubsup>
+          <mi>c</mi>
+          <mrow></mrow>
+          <mn>4</mn>
+        </msubsup>
+      </mfrac>
+      <msubsup>
+        <mstyle fontstyle='normal'>
+          <mi>T</mi>
+        </mstyle>
+        <mstyle scriptlevel='1'>
+          <mrow>
+            <mi>&mu;</mi>
+            <mi>&nu;</mi>
+          </mrow>
+        </mstyle>
+        <mrow></mrow>
+      </msubsup>
+    </mrow>
+  </mstyle>
+</math>
+</p>
+
+</body>
+</html>

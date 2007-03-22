@@ -1,0 +1,12 @@
+[gecko]
+dist/bin/res/mathml.css
+dist/bin/res/dtd/mathml.dtd
+dist/bin/res/fonts/mathfont.properties
+dist/bin/res/fonts/mathfontPUA.properties
+dist/bin/res/fonts/mathfontCMSY10.properties
+dist/bin/res/fonts/mathfontCMEX10.properties
+dist/bin/res/fonts/mathfontMTExtra.properties
+dist/bin/res/fonts/mathfontMath1.properties
+dist/bin/res/fonts/mathfontMath2.properties
+dist/bin/res/fonts/mathfontMath4.properties
+dist/bin/res/fonts/mathfontSymbol.properties

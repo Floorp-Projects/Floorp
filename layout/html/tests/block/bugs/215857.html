@@ -1,0 +1,18 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+   <head>
+      <title>bug 215857 part 2</title>
+   </head>
+   <body>
+      <table border="1" width="766"><tr>
+            <td width="135">
+               <script>var v = document.body.offsetHeight;</script>
+               <div style="width:90%; border:solid 1px black; "></div>
+               <script>var v = document.body.offsetHeight;</script>
+            </td>
+            <td></td>
+         </tr>
+      </table>
+   </body>
+</html>

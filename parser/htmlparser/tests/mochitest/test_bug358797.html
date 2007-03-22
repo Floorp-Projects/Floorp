@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=358797
+-->
+<head>
+  <title>Test for Bug 358797</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=358797">Mozilla Bug 358797</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 358797 **/
+
+var isOK = false;
+try {
+  var range;
+  range = document.createRange();
+  range.selectNode(document.firstChild);
+  range.createContextualFragment('<span></span>');
+}
+catch (ex) {
+  isOK = true;
+}
+ok(isOK, "range.createContextualFragment() should throw when range node is " +
+         "DocType");
+
+</script>
+</pre>
+</body>
+</html>

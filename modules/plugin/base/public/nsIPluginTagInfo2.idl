@@ -1,0 +1,144 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/**
+ * nsIPluginTagInfo2
+ *
+ * @status DEPRECATED
+ *
+ * Originally published XPCOM Plugin API is now deprecated
+ * Developers are welcome to use NPAPI, please refer to:
+ * http://mozilla.org/projects/plugins/
+ */
+
+#include "nsIPluginTagInfo.idl"
+
+%{C++
+enum nsPluginTagType {
+  nsPluginTagType_Unknown,
+  nsPluginTagType_Embed,
+  nsPluginTagType_Object,
+  nsPluginTagType_Applet
+};
+%}
+
+native nsPluginTagType(nsPluginTagType);
+
+[uuid(6a49c9a0-019b-11d2-815b-006008119d7a)]
+interface nsIPluginTagInfo2 : nsIPluginTagInfo
+{
+    /**
+     * Get the type of the HTML tag that was used ot instantiate this
+     * plugin.  Currently supported tags are EMBED, OBJECT and APPLET.
+     */
+  readonly attribute nsPluginTagType tagType;
+
+    /**
+   * Get the complete text of the HTML tag that was used to instantiate this plugin.
+     */
+  void getTagText(out constCharPtr aTagText);
+
+    /**
+     * Get a ptr to the paired list of parameter names and values,
+     * returns the length of the array.
+     *
+     * Each name or value is a null-terminated string.
+     */
+  void getParameters(in PRUint16Ref aCount,
+                     in constCharStarConstStar aNames,
+                     in constCharStarConstStar aValues);
+
+    /**
+     * Get the value for the named parameter.  Returns null
+     * if the parameter was not set.
+   *
+   * @param aName   - name of the parameter
+   * @param aResult - parameter value
+   * @result        - NS_OK if this operation was successful
+     */
+  void getParameter(in string aName, out constCharPtr aResult);
+
+  /**
+   * Get the document base
+   */
+  void getDocumentBase(out constCharPtr aDocumentBase);
+    
+    /**
+     * Return an encoding whose name is specified in:
+     * http://java.sun.com/products/jdk/1.1/docs/guide/intl/intl.doc.html#25303
+     */
+  void getDocumentEncoding(out constCharPtr aDocumentEncoding);
+
+  /**
+   * Get object alignment
+   */
+  void getAlignment(out constCharPtr aElignment);
+
+  /**
+   * Get object width
+   */
+    readonly attribute unsigned long width;
+
+  /**
+   * Get object height
+   */
+    readonly attribute unsigned long height;
+
+  /**
+   * Get border vertical space
+   */
+    readonly attribute unsigned long borderVertSpace;
+
+  /**
+   * Get border horizontal space
+   */
+    readonly attribute unsigned long borderHorizSpace;
+
+    /**
+   * Returns a unique id for the current document containing plugin
+     */
+    readonly attribute unsigned long uniqueID;
+
+    /**
+     * Returns the DOM element corresponding to the tag which references
+     * this plugin in the document.
+     *
+   * @param aDOMElement - resulting DOM element
+     * @result - NS_OK if this operation was successful
+     */
+    readonly attribute nsIDOMElement DOMElement;
+};

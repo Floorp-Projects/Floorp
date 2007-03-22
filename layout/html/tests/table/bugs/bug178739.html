@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+	<title>titre</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<style type="text/css">
+	
+	div{background: lawngreen; border: 11px solid orange;}
+	
+	body{ background: moccasin }
+	table {  background: papayawhip ; display: inline-table}
+	table, td { border: 1px solid darkred; }
+	tr { background: orange }
+	td { color: black; background-color: beige; width: 100%}
+	
+	#tableA{display: block}
+	
+	#tableB{position: absolute; }
+	
+	#tableC{position: absolute; top: auto;  }
+	
+	#tableD{position: absolute; top: auto;  }
+	
+	</style>
+	
+	</head>
+	<body>
+	
+	
+	<!-- table A -->
+	<div style="position: absolute; left: 250px;top:10px">
+		<table style=''>
+		  <tr><td>Table A, the first row</td></tr>
+		  <tr><td>table style='display: block'</td></tr>
+		</table>
+	</div>
+	
+	
+	<!-- table B -->
+	<table>
+	  <tr><td>Table B, the first row</td></tr>
+	  <tr><td>just a plain old table style=''</td></tr>
+	</table>
+	
+	
+	<!-- table C -->
+	<div style="position: absolute;left: 2px;top: 30px;width: auto;">
+		<table id='tableC'>
+		  <tr><td>Table C, the first row</td></tr>
+		  <tr><td>This table is inside an absolutely positioned div. 
+		  table style='position: absolute;'</td></tr>
+		  <tr><td>The absolutely positioned div has 'width: auto;'</td></tr>
+		  <tr><td>&there4;</td></tr>
+		  <tr><td>The width of</td></tr>
+		  <tr><td>Table rows</td></tr>
+		  <tr><td>becomes 'auto'</td></tr>
+		  <tr><td>&iquest;Que?</td></tr>
+		</table>
+	</div>
+	
+	
+	<!-- table d -->
+	<div style="position: absolute;left: 2px;top:130px;width: 540px">
+		<table id='tableD'>
+		  <tr><td>Table D, the first row</td></tr>
+		  <tr><td>This table is inside an absolutely positioned div. 
+		  table style='position: absolute;'</td></tr>
+		  <tr><td>The absolutely positioned div has 'width: 540px;'</td></tr>
+		  <tr><td>&there4;</td></tr>
+		  <tr><td>The width of</td></tr>
+		  <tr><td>Table rows</td></tr>
+		  <tr><td>becomes 'auto'</td></tr>
+		  <tr><td>&iquest;Que?</td></tr>
+		</table>
+	</div>
+	
+	
+	
+	</body>
+</html>
+

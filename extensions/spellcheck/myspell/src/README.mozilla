@@ -1,0 +1,80 @@
+This is a straight copy of the openoffice myspell component
+
+Changes made for mozilla:
+
+* Renamed *.cxx to .cpp, for the build system
+* Replaced the makefile with a mozilla type makefile
+* Added a wrapper, implementing mozISpellCheckingEngine and calling myspell
+  This wrapper does the conversion from unicode to the charset used
+  by myspell for the current dictionary.
+* Rewrote get_current_cs to create tables when needed, to reduce size of
+  the resulting library.
+* Commented out std namespace declarations from .cpp files (using namespace std;)
+* Removed #include <unistd.h> for the build system
+* Some specific changes are needed for SunONE studio compiler, please refer to https://bugzilla.mozilla.org/show_bug.cgi?id=278672
+* The files cctype.h,cstring.h,cstdio.h etc are not supported by all compilers.
+  So the following files need to be changed.
+  Refer bug 280901 (http://bugzilla.mozilla.org/show_bug.cgi?id=280901)
+    - mozilla/extensions/spellcheck/myspell/src/affentry.cpp
+      Use:
+         #include <ctype.h>
+         #include <string.h>
+         #include <stdlib.h>
+         #include <stdio.h>
+      instead of
+         #include <cctype>
+         #include <cstring>
+         #include <cstdlib>
+         #include <cstdio>
+    - mozilla/extensions/spellcheck/myspell/src/affixmgr.cpp
+      Use:
+        #include <stdlib.h>
+        #include <string.h>
+        #include <stdio.h>
+      instead of:
+        #include <cstdlib>
+        #include <cstring>
+        #include <cstdio>
+    - mozilla/extensions/spellcheck/myspell/src/affixmgr.hxx
+      Use:
+        #include <stdio.h>
+      instead of:
+        #include <cstdio>
+    - mozilla/extensions/spellcheck/myspell/src/csutil.cpp
+      Use:
+        #include <stdlib.h>
+        #include <string.h>
+        #include <stdio.h>
+      instead of:
+        #include <cstdlib>
+        #include <cstring>
+        #include <cstdio>
+    - mozilla/extensions/spellcheck/myspell/src/hashmgr.cpp
+      Use:
+        #include <stdlib.h>
+        #include <string.h>
+        #include <stdio.h>
+      instead of:
+        #include <cstdlib>
+        #include <cstring>
+        #include <cstdio>
+    - mozilla/extensions/spellcheck/myspell/src/myspell.cpp
+      Use:
+        #include <string.h>
+        #include <stdlib.h>
+        #include <stdio.h>
+      instead of:
+        #include <cstring>
+        #include <cstdlib>
+        #include <cstdio>
+    - mozilla/extensions/spellcheck/myspell/src/suggestmgr.cpp
+      Use:
+        #include <stdlib.h>
+        #include <ctype.h>
+        #include <string.h>
+        #include <stdio.h>
+      instead of:
+        #include <cstdlib>
+        #include <cctype>
+        #include <cstring>
+        #include <cstdio>

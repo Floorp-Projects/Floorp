@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=357450
+-->
+
+<head>
+  <title>Test for Bug 357450</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" 
+	  src="/tests/SimpleTest/SimpleTest.js"></script>       
+  <script type="text/javascript" src="test_bug357450.js"></script>      
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=357450"
+   target="_blank">Mozilla Bug 357450</a>
+
+<p id="display"></p>
+<span class="classtest">hmm</span>
+<span class="classtest">hmm</span>
+
+<div id="content" style="display: block">
+  <a name="nametest">hmm</a>
+  <b class="foo">hmm</b>
+  <b id="test1" class="test1">hmm</b>
+  <b id="test2" class="test2">hmm</b>
+  <b id="int-class" class="1">hmm</b>
+  <span class="classtest">hmm</span>
+
+  <div id="example">
+   <p id="p1" class="aaa bbb"/>
+   <p id="p2" class="aaa ccc"/>
+   <p id="p3" class="bbb ccc"/>
+  </div>
+
+</div>
+</body>
+</html>

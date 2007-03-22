@@ -1,0 +1,100 @@
+<html>
+  <head>
+    <script type="application/x-javascript">
+
+var gl = null;
+
+function draw() {
+    // set up and draw geometry
+    var vertArray = [ -1,  1, 0,
+                      -1, -1, 0,
+                       1,  1, 0,
+                       1, -1, 0 ];
+    var normArray = [ 0, 0, 1,
+                      0, 0, 1,
+                      0, 0, 1,
+                      0, 0, 1 ];
+    var texCoordArray = [ 0, 1,
+                          0, 0,
+                          1, 1,
+                          1, 0 ];
+    var colorArray = [ 1, 1, 1, 1,
+                       1, 1, 1, 1,
+                       1, 1, 1, 1,
+                       1, 1, 1, 1 ];
+
+    gl.vertexPointer(3, gl.FLOAT, vertArray);
+    gl.normalPointer(gl.FLOAT, normArray);
+    gl.texCoordPointer(2, gl.FLOAT, texCoordArray);
+    gl.colorPointer(4, gl.FLOAT, colorArray);
+
+    gl.enableClientState(gl.VERTEX_ARRAY);
+    gl.enableClientState(gl.NORMAL_ARRAY);
+    gl.enableClientState(gl.TEXTURE_COORD_ARRAY);
+    gl.enableClientState(gl.COLOR_ARRAY);
+
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, vertArray.length / 3);
+
+    gl.disableClientState(gl.VERTEX_ARRAY);
+    gl.disableClientState(gl.NORMAL_ARRAY);
+    gl.disableClientState(gl.TEXTURE_COORD_ARRAY);
+    gl.disableClientState(gl.COLOR_ARRAY);
+}
+
+function startTextureLoad() {
+    var img = document.createElement("img");
+    img.onload = function () {
+        // set up texture
+        var texId = (gl.genTextures(1))[0];
+        gl.bindTexture(gl.TEXTURE_2D, texId);
+        gl.texParameter(gl.TEXTURE_2D, gl.GENERATE_MIPMAP, true);
+        gl.texImage2DHTML(gl.TEXTURE_2D, img);
+        gl.enable(gl.TEXTURE_2D);
+
+        draw();
+        gl.swapBuffers();
+    };
+    img.src = "tex.png";
+}
+
+function doload() {
+    var cvs = document.getElementById('canvas');
+    gl = cvs.getContext('gles11');
+
+    gl.clearColor(.2,.2,.4,1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    // (optionally) set up lighting
+    if (0) {
+        gl.enable(gl.LIGHTING);
+        gl.light(gl.LIGHT0, gl.AMBIENT, [1.0, 1.0, 1.0, 1]);
+        gl.light(gl.LIGHT0, gl.DIFFUSE, [1.0, 1.0, 1.0, 1]);
+        gl.light(gl.LIGHT0, gl.POSITION, [3, 3, -5, 0]);
+        gl.light(gl.LIGHT0, gl.SPECULAR, [1, 1, 1, 1]);
+        gl.enable(gl.LIGHT0);
+    }
+
+    // set up our viewing parameters
+    gl.matrixMode(gl.PROJECTION);
+    gl.loadIdentity();
+    gl.gluPerspective(45, 1, 0.1, 20);
+
+    gl.matrixMode(gl.MODELVIEW);
+    gl.loadIdentity();
+    gl.gluLookAt(0, 0, 4,
+                 0, 0, 0,
+                 0, 1, 0);
+
+    startTextureLoad();
+
+    draw ();
+
+    gl.swapBuffers();
+}
+    </script>
+  </head>
+
+  <body onload="doload()">
+    <canvas id="canvas" width="400" height="400" style="border: 2px solid black;"></canvas>
+  </body>
+</html>

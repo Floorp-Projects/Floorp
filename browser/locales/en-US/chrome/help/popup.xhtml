@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"[
+    <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+    %brandDTD;
+    <!ENTITY % platformDTD SYSTEM "chrome://browser/locale/help/platformStrings.dtd" >
+    %platformDTD;
+]>
+<!--
+Contributors:
+  David Tenser <david.tenser@comhem.se> (original author)
+  Steffen Wilberg <steffen.wilberg@web.de>
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Controlling Popups</title>
+	<link rel="stylesheet" type="text/css" href="chrome://help/skin/helpFileLayout.css"/>
+</head>
+
+<body>
+
+<h1>Controlling Popups</h1>
+<p>This document explains all of the &pref.plural; available in &brandFullName;
+  for controlling popups.</p>
+
+<div class="contentsBox">
+  In this section:
+  <ul>
+    <li><a href="#what_are_popups">What are Popups?</a></li>
+    <li><a href="#popup_blocker_preferences">Popup Blocker &pref.pluralCaps;</a></li>
+  </ul>
+</div>
+
+<h2 id="what_are_popups">What are Popups?</h2>
+<p>Popup windows, or popups, are windows that appear automatically without your
+permission. They vary in size but usually don't cover the whole screen. Some popups
+open on top of the current &brandShortName; window, while others appear
+underneath &brandShortName; (popunders).</p>
+
+<p>&brandShortName; allows you to control both popups and popunders through the
+<a href="prefs.xhtml#content_options">Content panel</a> in &pref.pluralCaps;.
+Popup blocking is turned on by default, so you don't have to worry about enabling it
+to prevent popups from appearing in &brandShortName;.</p>
+
+<p>When blocking a popup, &brandShortName; displays an information bar, as well
+as an icon <img src="chrome://browser/skin/Info.png" width="16" height="16"
+alt=""/> in the status bar. When you click either the <em>&pref.pluralCaps;</em>
+button in the information bar or the icon in the status bar, a menu is displayed
+with the following choices:</p>
+
+<ul>
+  <li>Allow/Block popups for this site</li>
+  <li>Edit <a href="#popup_blocker_preferences">Popup Blocker
+    &pref.pluralCaps;...</a></li>
+  <li>Don't show this message (info message) when popups are blocked</li>
+  <li>(show a blocked popup)</li>
+</ul>
+
+<p><strong>Blocking popups may interfere with some web sites</strong>: Some web sites,
+including some banking sites, use popups for important features. Blocking all popups
+disables such features. To allow specific web sites to use popups, while blocking
+all others, you can add specific web sites to the list of allowed sites.</p>
+
+<p><strong>Blocking popups doesn't always work</strong>: Although &brandShortName; blocks most
+popups, some web sites may show popups using uncovered methods, even when blocked.</p>
+
+<h2 id="popup_blocker_preferences">Popup Blocker &pref.pluralCaps;</h2>
+
+<p>The Popup Blocker &pref.pluralCaps; are located in the <a
+  href="prefs.xhtml#content_options">Content panel</a> of &pref.menuPath;.</p>
+
+<p>From there, you can do the following things:</p>
+
+<ul>
+  <li><strong>Block pop-up windows</strong>: Deselect this &pref.singular; to
+    disable the popup blocker altogether.</li>
+  <li><strong>Exceptions dialog</strong>: This is a list of sites that you want to allow
+    to display popups. The dialog has the following choices:
+  <ul>
+    <li><strong>Allow</strong>: Click this to add a web site to the exceptions list.</li>
+    <li><strong>Remove Site</strong>: Click this to remove a web site from the exceptions list.</li>
+    <li><strong>Remove All Sites</strong>: Click this to remove all of the web sites in
+      the exceptions list.</li>
+  </ul>
+  </li>
+</ul>
+
+<p><strong>Note</strong>: Blocking popups may not always work and may interfere with
+some web sites. For more information about blocking popups, see
+<a href="#what_are_popups">What are Popups</a>.</p>
+
+<div class="contentsBox"><em>12 September 2005</em></div>
+<p>Copyright &copy; &copyright.years; Contributors to the Mozilla Help Viewer Project.</p>
+
+</body>
+</html>

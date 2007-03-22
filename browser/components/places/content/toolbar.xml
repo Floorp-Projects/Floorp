@@ -1,0 +1,979 @@
+<?xml version="1.0"?>
+
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Places Toolbar View.
+#
+# The Initial Developer of the Original Code is Google Inc.
+# Portions created by the Initial Developer are Copyright (C) 2005-2006
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Annie Sullivan <annie.sullivan@gmail.com>
+#   Ben Goodger <beng@google.com>
+#   Myk Melez <myk@mozilla.org>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** 
+
+
+<!DOCTYPE bindings [
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
+%browserDTD;
+]>
+
+<bindings id="placesToolbarBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="places-bar">
+    <resources>
+      <stylesheet src="chrome://browser/skin/places/places.css"/>
+    </resources>
+    
+    <content>
+      <xul:vbox>
+        <xul:hbox class="toolbar-drop-indicator-bar">
+          <xul:hbox class="toolbar-drop-indicator"/>
+        </xul:hbox>
+        <xul:hbox flex="1">
+          <xul:hbox class="bookmarks-toolbar-items places-toolbar-items" flex="1">
+            <children/>
+          </xul:hbox>
+          <xul:hbox mousethrough="always"
+                    flex="1"
+                    pack="end">
+            <xul:toolbarbutton type="menu"
+                               class="chevron"
+                               mousethrough="never"
+                               collapsed="true">
+              <xul:menupopup type="places"
+#ifndef XP_MACOSX
+                             context="placesContext"
+#endif
+               />
+            </xul:toolbarbutton>
+          </xul:hbox>
+          <xul:toolbarbutton class="bookmark-item bookmarks-toolbar-customize"
+                             mousethrough="never"
+                             label="&bookmarksToolbarItem.label;"/>
+        </xul:hbox>
+      </xul:vbox>
+    </content>
+    
+    <implementation>
+      <constructor><![CDATA[
+        // Support an asyncinit attribute that causes the view to populate 
+        // itself only after the window has been shown. This is to ensure we
+        // do not regress browser window show time (Ts/Txul)
+#if 0
+        if (this.hasAttribute("asyncinit")) {
+          var self = this;
+          //setTimeout(function() { self._init(); }, 0);
+        }
+        else
+#endif
+          this._init();
+      ]]></constructor>
+      
+      <destructor><![CDATA[ 
+        PlacesUtils.bookmarks.removeObserver(this._observer);
+        this.genericAnnoObserver.removeObserver("bookmarks/generatedTitle",
+                                                this._generatedTitleAnnoObserver);
+        PlacesUtils.annotations.removeObserver(this.genericAnnoObserver);
+      ]]></destructor>
+
+      <property name="controller"
+                readonly="true"
+                onget="return this._controller;"/>
+
+      <method name="_init">
+        <body><![CDATA[
+        this._controller = new PlacesController(this);
+        this.controllers.appendController(this._controller);
+
+        PlacesUtils.bookmarks.addObserver(this._observer, false);
+        var t = this;
+        window.addEventListener("resize",
+                                function f(e) { t.updateChevron(e); },
+                                false);
+
+        PlacesUtils.annotations.addObserver(this.genericAnnoObserver);
+        this.genericAnnoObserver.addObserver("bookmarks/generatedTitle",
+                                             this._generatedTitleAnnoObserver);
+
+        if (this.hasAttribute("place")) {
+          // Do the initial build. 
+          this.place = this.place;
+        }
+        ]]></body>
+      </method>
+
+      <field name="_dropIndicatorBar">document.getAnonymousElementByAttribute(this, "class", "toolbar-drop-indicator-bar")</field>
+      <field name="_chevron">document.getAnonymousElementByAttribute(this, "class", "chevron")</field>
+      
+      <field name="_selection">null</field>
+      
+      <field name="_openedMenuButton">null</field>
+      
+      <field name="_result">null</field>
+
+      <!-- A cache of URIs currently in this view.  The annotation observer
+         - uses this to determine which annotation changes matter because they
+         - are happening to URIs currently in this view.  This gets generated
+         - by _rebuild().
+         -->
+      <field name="_currentURIs">null</field>
+
+      <!-- A cache of titles generated by the microsummary service/extensions.
+         - Generated titles override page/user-set titles as bookmark labels.
+         - The getter builds the cache the first time it's needed; afterwards,
+         - the _generatedTitleAnnoObserver maintains it by reflecting changes
+         - to "bookmarks/generatedTitle" annotations into it.
+         -->
+      <field name="__generatedTitles">null</field>
+      <property name="_generatedTitles">
+        <getter><![CDATA[
+          if (!this.__generatedTitles) {
+            this.__generatedTitles = {};
+
+            var annotations = PlacesUtils.annotations;
+            // This try/catch block is a temporary workaround for bug 336194.
+            var placeURIs;
+            try {
+              placeURIs = annotations.getPagesWithAnnotation("bookmarks/generatedTitle", {});
+            }
+            catch(e) {
+              placeURIs = [];
+            }
+
+            // XXX It'd be faster to grab the annotations in a single query
+            // instead of querying separately for each one, but the annotation
+            // service provides no mechanism for doing so.
+            for ( var i = 0; i < placeURIs.length; i++)
+              this.__generatedTitles[placeURIs[i].spec] =
+                annotations.getAnnotationString(placeURIs[i], "bookmarks/generatedTitle");
+          }
+          
+          return this.__generatedTitles;
+        ]]></getter>
+      </property>
+      
+      <!-- nsIPlacesView -->
+      <method name="getResult">
+        <body><![CDATA[
+          return this._result;
+        ]]></body>
+      </method>
+
+      <!-- nsIPlacesView -->
+      <method name="getResultNode">
+        <body><![CDATA[
+          return this._result.root;
+        ]]></body>
+      </method>
+
+      <method name="_rebuild">
+        <body><![CDATA[
+          // Clear out references to existing nodes, since we'll be deleting and re-adding.
+          if (this._DNDObserver._overFolder.node)
+            this._DNDObserver._clearOverFolder();
+          this._openedMenuButton = null;
+          this._currentURIs = {};
+        
+          while (this.hasChildNodes())
+            this.removeChild(this.firstChild);
+          const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          this._result.root.containerOpen = true;
+          var cc = this._result.root.childCount;
+          for (var i = 0; i < cc; ++i) {
+            var child = this._result.root.getChild(i);
+            var title = child.title;
+            var button = null;
+            if (PlacesUtils.nodeIsURI(child)) {
+              button = document.createElementNS(XULNS, "toolbarbutton");
+              button.setAttribute("url", child.uri);
+
+              // Add the URI to the list of URIs currently in the view.
+              this._currentURIs[child.uri] = true;
+
+              if (PlacesUtils.nodeIsBookmark(child)) {
+                // If the item has a generated title, use that instead.
+                var placeURI = PlacesUtils.bookmarks.getItemURI(child.bookmarkId);
+                if (this._generatedTitles[placeURI.spec])
+                  title = this._generatedTitles[placeURI.spec];
+              }
+            } else if (PlacesUtils.nodeIsSeparator(child)) {
+              button = document.createElementNS(XULNS, "toolbarseparator");
+            } else if (PlacesUtils.nodeIsContainer(child)) {
+              button = document.createElementNS(XULNS, "toolbarbutton");
+              button.setAttribute("type", "menu");
+              button.setAttribute("container", "true");
+              if (PlacesUtils.nodeIsLivemarkContainer(child)) {
+                button.setAttribute("livemark", "true");
+                var folder = asFolder(child).folderId;
+
+                // duplicate nsLivemarkService.getSiteURI to avoid instantiating
+                // the service on startup.
+                var containerURI = PlacesUtils.bookmarks.getFolderURI(folder);
+                var siteURIString;
+                try {
+                  siteURIString = 
+                    this._anno.getAnnotationString(containerURI, "livemark/siteURI");
+                }
+                catch (ex) {}
+                // end duplication
+
+                if (siteURIString)
+                  button.setAttribute("siteURI", siteURIString);
+              }
+              var popup = document.createElementNS(XULNS, "menupopup");
+              popup.setAttribute("type", "places");
+              // This is set here and not in the XBL constructor for the menu because
+              // it doesn't get initialized properly in the constructor.
+#ifndef XP_MACOSX
+              // No context menus on menuitems on Mac
+              popup.setAttribute("context", "placesContext");
+#endif
+              button.appendChild(popup);
+              popup._result = this._result;
+              popup._resultNode = child;
+            }
+            button.setAttribute("label", title);
+            if (child.icon)
+              button.setAttribute("image", child.icon.spec);
+            button.className = "menuitem-iconic bookmark-item";
+            button.node = child;
+            this.appendChild(button);
+          }
+          
+          var popup = this._chevron.firstChild;
+          popup.setAttribute("type", "places");
+          // This is set here and not in the XBL constructor for the menu because
+          // it doesn't get initialized properly in the constructor.
+#ifndef XP_MACOSX
+          // No context menus on menuitems on Mac
+          popup.setAttribute("context", "placesContext");
+#endif
+          popup._result = this._result;
+          popup._resultNode = this._result.root;
+          var t = this;
+          popup.popupShowingCallback = function() {t.chevronPopupShowing();};
+
+          // This needs to be in a timeout to make sure our boxObject has time
+          // to get its proper size
+          var self = this;
+          setTimeout(function() { self.updateChevron(); }, 0);
+        ]]></body>
+        
+      </method>
+      <method name="chevronPopupShowing">
+        <body><![CDATA[
+          var popup = this._chevron.firstChild;
+          for (var i = 0; i < popup.childNodes.length; i++) {
+            if (!this.childNodes[i].collapsed) {
+              popup.childNodes[i].hidden = true;
+            }
+          }
+        ]]></body>
+      </method>
+      
+      <method name="getElementWidth">
+        <parameter name="element"/>
+        <body><![CDATA[
+          var style = document.defaultView.getComputedStyle(element, "");
+          var leftMargin = style.getPropertyValue("margin-left");
+          leftMargin = leftMargin ? Math.round(parseFloat(leftMargin)) : 0;
+          var rightMargin = style.getPropertyValue("margin-right");
+          rightMargin = rightMargin ? Math.round(parseFloat(rightMargin)) : 0;
+          return element.boxObject.width + leftMargin + rightMargin;
+        ]]></body>
+      </method>
+      
+      <method name="updateChevron">
+        <parameter name="event"/>
+        <body><![CDATA[
+          // Ignore events that aren't on the document or the window
+          // (html document, tooltips, etc)
+          // Do not ignore content window resizes, because they may
+          // be the result of the toolbar being shown/hidden
+          if (event && event.target != document && event.target != window &&
+              event.target != content)
+            return;
+
+          var totalWidth = this.boxObject.width;
+          if(this.lastWidth == totalWidth)
+            return; // don't recalculate if the size hasn't changed 
+          this.lastWidth = totalWidth;
+          this._chevron.collapsed = false;
+          var chevronWidth = this._chevron.boxObject.width;
+          var spaceLeft = totalWidth;
+          var overflowed = false;
+          for (var i = 0; i < this.childNodes.length; i++) {
+            var child = this.childNodes[i];
+            child.collapsed = false;
+            spaceLeft -= this.getElementWidth(child);
+            var spaceNeeded = (i == this.childNodes.length - 1) ? 0 : chevronWidth;
+            if (spaceLeft < spaceNeeded) {
+              overflowed = true;
+              child.collapsed = true;
+            }
+          }
+          this._chevron.collapsed = !overflowed;
+        ]]></body>
+      </method>
+
+      <field name="lastWidth">0</field>
+      
+      <!-- nsIPlacesView -->
+      <property name="place">
+        <getter><![CDATA[
+          return this.getAttribute("place");
+        ]]></getter>
+        <setter><![CDATA[ 
+          this.setAttribute("place", val);
+
+          var history = PlacesUtils.history;
+          var queries = { }, options = { };
+          history.queryStringToQueries(val, queries, { }, options);
+          if (!queries.value.length) 
+            queries.value = [history.getNewQuery()];
+          try {
+            this._result = 
+              history.executeQueries(queries.value, queries.value.length,
+                                     options.value);
+            this._result.root.containerOpen = true;
+            this._rebuild();
+          }
+          catch(ex) {
+            // Invalid query, or had no results.
+            // This is valid, eg: user deletes their bookmarks toolbar folder. 
+          }
+          return val;
+        ]]></setter>
+      </property>
+      
+      <!-- nsIPlacesView -->
+      <property name="hasSelection">
+        <getter><![CDATA[ 
+          return this._selection != null;
+        ]]></getter>
+      </property>
+      
+      <!-- nsIPlacesView -->
+      <property name="hasSingleSelection">
+        <getter><![CDATA[ 
+          return this.hasSelection;
+        ]]></getter>
+      </property>
+      
+      <!-- nsIPlacesView -->
+      <method name="getSelectionNodes">
+        <body><![CDATA[
+          return this.hasSelection ? [this.selectedNode] : [];
+        ]]></body>
+      </method>
+      
+      <!-- nsIPlacesView -->
+      <method name="getRemovableSelectionRanges">
+        <body><![CDATA[ 
+          return [this.getSelectionNodes()];
+        ]]></body>
+      </method>
+      
+      <!-- nsIPlacesView -->
+      <method name="getCopyableSelection">
+        <body><![CDATA[ 
+          return this.getSelectionNodes();
+        ]]></body>
+      </method>
+      
+      <!-- nsIPlacesView -->
+      <method name="getDragableSelection">
+        <body><![CDATA[
+          if (PlacesUtils.nodeIsReadOnly(this._result.root))
+            return null;
+          return this.getSelectionNodes();
+        ]]></body>
+      </method>
+      
+      <!-- nsIPlacesView -->
+      <property name="selectedNode">
+        <getter><![CDATA[ 
+          return this.hasSelection ? this._selection : null;
+        ]]></getter>
+      </property>
+      
+      <!-- nsIPlacesView -->
+      <property name="selectedURINode">
+        <getter><![CDATA[
+          var node = this.selectedNode;
+          return node && PlacesUtils.nodeIsURI(node) ? node : null;
+        ]]></getter>
+      </property>
+      
+      <!-- nsIPlacesView -->
+      <property name="insertionPoint">
+        <getter><![CDATA[
+          // By default, the insertion point is at the top level, at the end. 
+          var index = -1;
+          var folderId = this._result.root.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
+          
+          if (this.hasSelection) {
+            if(PlacesUtils.nodeIsFolder(this.selectedNode)) {
+              // If there is a folder selected, the insertion point is the
+              // end of the folder.
+              folderId = this.selectedNode.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
+            } else {
+              // If there is another type of node selected, the insertion point
+              // is after that node.
+              index = PlacesUtils.getIndexOfNode(this.selectedNode)
+            }
+          }
+          return new InsertionPoint(folderId, index, 1);
+        ]]></getter>
+      </property>
+      
+      <!-- nsIPlacesView -->
+      <field name="peerDropIndex">0</field>
+      
+      <!-- nsIPlacesView -->
+      <field name="peerDropTypes">ViewConfig.GENERIC_DROP_TYPES</field>
+      
+      <!-- nsIPlacesView -->
+      <field name="childDropTypes">ViewConfig.GENERIC_DROP_TYPES</field>
+     
+      <!-- nsIPlacesView -->
+      <method name="selectAll">
+        <body><![CDATA[ 
+          // Nothing
+        ]]></body>
+      </method>
+      
+      <!-- nsINavBookmarkObserver -->
+      <field name="_observer"><![CDATA[({
+        _numBatches: 0,
+        _self: this,
+        _batchedOperation: false,
+        onBeginUpdateBatch: function TB_O_onBeginUpdateBatch() {
+          ++this._numBatches;
+        },
+        onEndUpdateBatch: function TB_O_onEndUpdateBatch() {
+          if (!--this._numBatches && this._batchedOperation)
+            this.doRebuild();
+        },
+        onItemAdded: function TB_O_onItemAdded(id, bookmark, folder, index) {
+          if (folder == PlacesUtils.bookmarks.toolbarFolder) {
+            this._self._currentURIs[bookmark.spec] = true;
+            this._numBatches ? this._batchedOperation = true : this.doRebuild();
+          }
+        },
+        onItemRemoved: function TB_O_onItemRemoved(id, bookmark, folder, index) {
+          if (folder == PlacesUtils.bookmarks.toolbarFolder) {
+            delete this._self._currentURIs[bookmark.spec];
+            this._numBatches ? this._batchedOperation = true : this.doRebuild();
+          }
+        },
+        onItemChanged: function TB_O_onItemChanged(id, bookmark, property, value) {
+          if (property == "became_toolbar_folder") {
+            var place = PlacesUtils.getQueryStringForFolder(id);
+            this._self.place = place || null;
+          }
+          this._numBatches ? this._batchedOperation = true : this.doRebuild();
+        },
+        onItemVisited: function TB_0_onItemVisited(bookmark, visitId, time) {
+          //this._self._init();
+        },
+        onFolderAdded: function TB_O_onFolderAdded(folder, parent, index) {
+          if (parent == PlacesUtils.bookmarks.toolbarFolder)
+            this._numBatches ? this._batchedOperation = true : this.doRebuild();
+        },
+        onFolderRemoved: function TB_O_onFolderRemoved(folder, parent, index) {
+          if (parent == PlacesUtils.bookmarks.toolbarFolder)
+            this._numBatches ? this._batchedOperation = true : this.doRebuild();
+        },
+        onFolderMoved: function TB_O_onFolderMoved(folder, oldParent, oldIndex, newParent, newIndex) {
+          if (oldParent == PlacesUtils.bookmarks.toolbarFolder ||
+              newParent == PlacesUtils.bookmarks.toolbarFolder)
+            this._numBatches ? this._batchedOperation = true : this.doRebuild();
+        },
+        onFolderChanged: function TB_O_onFolderChanged(folder, property) {
+          this._numBatches ? this._batchedOperation = true : this.doRebuild();
+        },
+        doRebuild: function TB_O_doRebuild() {
+          function hitch(obj, meth) {
+            return function() { meth.apply(obj, arguments); }
+          }
+          setTimeout(hitch(this._self, this._self._rebuild), 1);
+        },
+        onSeparatorAdded: function TB_O_onSeparatorAdded(parent, index) {
+          if (parent == PlacesUtils.bookmarks.toolbarFolder)
+            this._numBatches ? this._batchedOperation = true : this.doRebuild();
+        },
+        onSeparatorRemoved: function TB_O_onSeparatorRemoved(parent, index) {
+          if (parent == PlacesUtils.bookmarks.toolbarFolder)
+            this._numBatches ? this._batchedOperation = true : this.doRebuild();
+        }
+      })]]></field>
+      <field name="_DNDObserver"><![CDATA[({
+        // Inside the _DNDObserver object's functions, this points to 
+        // the _DNDObserver object.  _self points to the toolbar xbl object.
+        _self: this,
+
+        // Menu buttons should be opened when the mouse drags over them, and closed
+        // when the mouse drags off.  The overFolder object manages opening and closing
+        // of folders when the mouse hovers.
+        _overFolder: {node: null, openTimer: null, hoverTime: 350, closeTimer: null},
+
+        // timer for turning of indicator bar, to get rid of flicker
+        _ibTimer: null, 
+        
+        _setTimer: function TBV_DO_setTimer(time) {
+          var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+          timer.initWithCallback(this, time, timer.TYPE_ONE_SHOT);
+          return timer;
+        },
+        
+        // Function to process all timer notifications.
+        notify: function TBV_DO_notify(timer) {
+        
+          // Timer to turn off indicator bar.
+          if (timer == this._ibTimer) {
+            ib = this._self._dropIndicatorBar.removeAttribute('dragging');
+            this._ibTimer = null;
+          }
+          
+          // Timer to open a menubutton that's being dragged over.
+          if (timer == this._overFolder.openTimer) {
+            // Set the autoopen attribute on the folder's menupopup so that
+            // the menu will automatically close when the mouse drags off of it.
+            this._overFolder.node.lastChild.setAttribute("autoopened", "true");
+            this._overFolder.node.open = true;
+            this._overFolder.openTimer = null;
+          }
+          
+          // Timer to close a menubutton that's been dragged off of.
+          if (timer == this._overFolder.closeTimer) {
+            // Only close the menubutton if the drag session isn't currently over
+            // it or one of its children.  (The autoopened attribute will let the menu
+            // know to close later if the menu is still being dragged over.)
+            var currentNode = PlacesControllerDragHelper.currentDropTarget;
+            var inHierarchy = false;
+            while (currentNode) {
+              if (currentNode == this._self) {
+                inHierarchy = true;
+                break;
+              }
+              currentNode = currentNode.parentNode;
+            }
+            // The _clearOverFolder() function will close the menu for _overFolder.node.
+            // So null it out if we don't want to close it.
+            if (inHierarchy)
+              this._overFolder.node = null;
+            
+            // Clear out the folder and all associated timers.
+            this._clearOverFolder();
+          }
+        },
+        
+        // The mouse is no longer dragging over the stored menubutton.
+        // Close the menubutton, clear out drag styles, and clear all
+        // timers for opening/closing it.
+        _clearOverFolder: function TBV_DO_clearOverFolder() {
+          if (this._overFolder.node && this._overFolder.node.lastChild) {
+            if (!this._overFolder.node.lastChild.hasAttribute("dragover")) {
+              this._overFolder.node.lastChild.hidePopupAndChildPopups();
+            }
+            this._overFolder.node.removeAttribute("dragover");
+            this._overFolder.node = null;
+          }
+          if (this._overFolder.openTimer) {
+            this._overFolder.openTimer.cancel();
+            this._overFolder.openTimer = null;
+          }
+          if (this._overFolder.closeTimer) {
+            this._overFolder.closeTimer.cancel();
+            this._overFolder.closeTimer = null;
+          }
+        },
+        
+        // This function returns information about where to drop when
+        // dragging over this menu--insertion point, child index to drop
+        // before, and folder to drop into.
+        _getDropPoint: function TBV_DO_getDropPoint(event) {
+          // Can't drop if the toolbar isn't a folder.
+          var result = this._self.getResult();
+          if (!PlacesUtils.nodeIsFolder(result.root))
+            return null;
+          asFolder(result.root);
+          
+          var dropPoint = { ip: null, beforeIndex: null, folderNode: null };
+          // Loop through all the nodes to see which one this should
+          // get dropped in/next to
+          for (var i = 0; i < this._self.childNodes.length; i++) {
+            var xulNode = this._self.childNodes[i];
+            if (PlacesUtils.nodeIsFolder(xulNode.node) &&
+                !PlacesUtils.nodeIsReadOnly(xulNode.node)) {
+              NS_ASSERT(xulNode.getAttribute("type") == "menu");
+              // This is a folder. If the mouse is in the left 25% of the
+              // node, drop to the left of the folder.  If it's in the middle
+              // 50%, drop into the folder.  If it's past that, drop to the right.
+              if (event.clientX < xulNode.boxObject.x + (xulNode.boxObject.width * 0.25)) {
+                // Drop to the left of this folder.
+                dropPoint.ip = new InsertionPoint(result.root.folderId, i, -1);
+                dropPoint.beforeIndex = i;
+                return dropPoint;
+              }
+              else if (event.clientX < xulNode.boxObject.x + (xulNode.boxObject.width * 0.75)) {
+                // Drop inside this folder.
+                dropPoint.ip = new InsertionPoint(asFolder(xulNode.node).folderId, -1, 1);
+                dropPoint.beforeIndex = i;
+                dropPoint.folderNode = xulNode;
+                return dropPoint;
+              }
+            } else{
+              // This is a non-folder node. If the mouse is left of the middle,
+              // drop to the left of the folder.  If it's right, drop to the right.
+              if (event.clientX < xulNode.boxObject.x + (xulNode.boxObject.width / 2)) {
+                // Drop to the left of this bookmark.
+                dropPoint.ip = new InsertionPoint(result.root.folderId, i, -1);
+                dropPoint.beforeIndex = i;
+                return dropPoint;
+              }
+            }
+          }
+          // Should drop to the right of the last node.
+          dropPoint.ip = new InsertionPoint(result.root.folderId, -1, 1);
+          dropPoint.beforeIndex = -1;
+          return dropPoint;
+        },
+        
+        onDragStart: function TBV_DO_onDragStart(event, xferData, dragAction) {
+          if (event.ctrlKey) {
+            dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
+          }
+          xferData.data = this._self._controller.getTransferData(dragAction.action);
+#ifdef XP_WIN
+          // Support folder dragging on the personal toolbar when the user 
+          // holds the "alt" key while they drag (Ctrl+drag has another 
+          // meaning - Copy). This does not appear to work at all on Linux.
+          if (event.target.localName == "toolbarbutton" &&
+              event.target.getAttribute("type") == "menu") {
+            if (!event.shiftKey && !event.altKey && !event.ctrlKey)
+              return false;
+            event.target.firstChild.hidePopup();
+          }
+          return true;
+#endif
+        },
+        
+        canDrop: function TBV_DO_canDrop(event, session) {
+          return PlacesControllerDragHelper.canDrop(this._self, -1);
+        },
+        
+        onDragOver: function TBV_DO_onDragOver(event, flavor, session) {
+          PlacesControllerDragHelper.currentDropTarget = event.target;
+          var dropPoint = this._getDropPoint(event);
+          var ib = this._self._dropIndicatorBar;
+          if (this._ibTimer) {
+            this._ibTimer.cancel();
+            this._ibTimer = null;
+          }
+          if (dropPoint.folderNode) {
+            // Dropping over a menubutton, set styles and timer to open folder.
+            if (this._overFolder.node != dropPoint.folderNode) {
+              this._clearOverFolder();
+              this._overFolder.node = dropPoint.folderNode;
+              this._overFolder.openTimer = this._setTimer(this._overFolder.hoverTime);
+            }
+            if (!this._overFolder.node.hasAttribute("dragover"))
+              this._overFolder.node.setAttribute("dragover", "true");
+
+            ib.removeAttribute("dragging");
+          }
+          else {
+            // Dragging over a normal toolbarbutton,
+            // show indicator bar and move it to the appropriate drop point.
+            if (!ib.hasAttribute("dragging"))
+              ib.setAttribute("dragging", "true");
+            var ind = ib.firstChild;
+            var direction = document.defaultView.getComputedStyle(this._self.parentNode, "").direction;
+            if (direction == "ltr") {
+              if (dropPoint.beforeIndex == -1)
+                ind.style.marginLeft = this._self.lastChild.boxObject.x + 
+                                       this._self.lastChild.boxObject.width - this._self.boxObject.x - 7 + 'px';
+              else
+                ind.style.marginLeft = this._self.childNodes[dropPoint.beforeIndex].boxObject.x -
+                                       this._self.boxObject.x - 7 + 'px';
+            } else {
+              if (dropPoint.beforeIndex == -1)
+                ind.style.marginRight = '0px';
+              else
+                ind.style.marginRight = (this._self.childNodes[this._self.childNodes.length - 1].boxObject.x +
+                                         this._self.childNodes[this._self.childNodes.length - 1].boxObject.width) -
+                                        (this._self.childNodes[dropPoint.beforeIndex].boxObject.x) - 5 + 'px';
+            }
+            // Clear out old folder information
+            this._clearOverFolder();
+          }
+        },
+        
+        onDrop: function TBV_DO_onDrop(event, dropData, session) {
+          var dropPoint = this._getDropPoint(event);
+          if (dropPoint == null)
+            return;
+          PlacesControllerDragHelper.onDrop(null, this._self, dropPoint.ip);
+        },
+        
+        onDragExit: function TBV_DO_onDragExit(event, session) {
+          // Set timer to turn off indicator bar (if we turn it off
+          // here, dragenter might be called immediately after, creating
+          // flicker.)
+          if (this._ibTimer)
+            this._ibTimer.cancel();
+          this._ibTimer = this._setTimer(10);
+          // Close any folder being hovered over
+          if (this._overFolder.node)
+            this._overFolder.closeTimer = this._setTimer(this._overFolder.hoverTime);
+          PlacesControllerDragHelper.currentDropTarget = null;
+        },
+        
+        getSupportedFlavours: function TBV_DO_getSupportedFlavours() {
+          var flavorSet = new FlavourSet();
+          for (var i = 0; i < this._self.peerDropTypes.length; ++i)
+            flavorSet.appendFlavour(this._self.peerDropTypes[i]);
+          return flavorSet;
+        }
+        
+      })]]></field>
+
+      <!-- nsIAnnotationObserver -->
+      <field name="_generatedTitleAnnoObserver"><![CDATA[({
+        // Observes changes to "bookmarks/generatedTitle" annotations,
+        // which override page and user-set titles as bookmark labels.
+
+        // The microsummary service sets this annotation for summary bookmarks,
+        // and extensions might also set it.
+
+        // Inside this observer object's functions, "this" points to this
+        // observer object, while "_self" points to the toolbar XBL object.
+        _self: this,
+
+        onAnnotationSet: function TBV_GTAO_onAnnotationSet(uri, annoName) {
+          NS_ASSERT(annoName == "bookmarks/generatedTitle",
+                    "annotation " + annoName + ", is not 'bookmarks/generatedTitle'");
+          var newTitle = PlacesUtils.annotations.getAnnotationString(uri, annoName);
+          this._self._generatedTitles[uri.spec] = newTitle;
+          this._doRebuild();
+        },
+
+        onAnnotationRemoved: function TBV_GTAO_onAnnotationRemoved(uri, annoName) {
+          NS_ASSERT(annoName == "bookmarks/generatedTitle",
+                    "annotation " + annoName + ", is not 'bookmarks/generatedTitle'");
+          delete this._self._generatedTitles[uri.spec];
+          this._doRebuild();
+        },
+
+        _doRebuild: function TBV_GTAO_doRebuild() {
+          function hitch(obj, meth) {
+            return function() { meth.apply(obj, arguments); }
+          }
+          setTimeout(hitch(this._self, this._self._rebuild), 1);
+        }
+
+      })]]></field>
+
+      <!-- nsIAnnotationObserver -->
+      <field name="genericAnnoObserver"><![CDATA[({
+        // A generic nsIAnnotationObserver that provides methods for registering
+        // annotation-specific observers for this view.
+
+        // Inside this observer object's functions, "this" points to this
+        // observer object, while "_self" points to the toolbar XBL object.
+        _self: this,
+        
+        // Observers, indexed by annotation name.
+        _observers: {},
+        
+        addObserver: function TBV_GAO_addObserver(annoName, observer) {
+          if (!this._observers[annoName])
+            this._observers[annoName] = [];
+
+          // Register the observer, but only if it isn't already registered,
+          // so that we don't call the same observer twice for any given change.
+          if (this._observers[annoName].indexOf(observer) == -1)
+            this._observers[annoName].push(observer);
+        },
+        
+        removeObserver: function TBV_GAO_removeObserver(annoName, observer) {
+          NS_ASSERT(this._observers[annoName] &&
+                    this._observers[annoName].indexOf(observer) != -1,
+                    "can't remove annotation observer " + observer +
+                    " for annotation " + annoName + ": not registered");
+
+          this._observers[annoName] =
+            this._observers[annoName].filter(function(i) { observer != i });
+          
+          if (this._observers[annoName].length == 0)
+            delete this._observers[annoName];
+        },
+
+        // Determines whether or not a given annotation change applies to
+        // this view.  A change applies if the annotation being changed is one
+        // we're observing, and the change is happening to a URI currently
+        // in this view.
+        _applies: function TBV_GAO_applies(uri, annoName) {
+          if (!this._observers[annoName])
+            return false;
+
+          return true;
+        },
+
+        onAnnotationSet: function TBV_GAO_onAnnotationSet(uri, annoName) {
+          if (!this._applies(uri, annoName))
+            return;
+          
+          for ( var i = 0; i < this._observers[annoName].length; i++)
+            this._observers[annoName][i].onAnnotationSet(uri, annoName);
+        },
+
+        onAnnotationRemoved: function TBV_GAO_onAnnotationRemoved(uri, annoName) {
+          if (!this._applies(uri, annoName))
+            return;
+
+          for ( var i = 0; i < this._observers[annoName].length; i++)
+            this._observers[annoName][i].onAnnotationRemoved(uri, annoName);
+        }
+
+      })]]></field>
+      
+      <method name="checkForMenuEvent">
+        <parameter name="event"/>
+        <parameter name="action"/>
+        <body><![CDATA[
+          // It seems that even if the menu drag/drop event
+          // handlers set their phase to capturing, toolbarbutton
+          // menu events come to the toolbar first, and don't bubble.
+          // So if this is a menu/menuitem, try to send the event to its
+          // xbl handler.
+          if (event.target.localName.indexOf("menu") == 0) {
+            var parent = event.target.parentNode;
+            // XULDocument has no getAttribute() function, so check for it before calling.
+            while (parent && parent.getAttribute) {
+              if (parent.getAttribute("type") == "places") {
+                nsDragAndDrop[action](event, parent._DNDObserver);
+                return true;
+              }
+              parent = parent.parentNode;
+            }
+          }
+          return false;
+        ]]></body>
+      </method>
+
+      <method name="saveSelection">
+        <parameter name="mode"/>
+        <body><![CDATA[
+        ]]></body>
+      </method>
+      <method name="restoreSelection">
+        <body><![CDATA[
+        ]]></body>
+      </method>
+
+      <property name="selType" onget="return 'single';"/>
+
+      <method name="buildContextMenu">
+        <parameter name="aPopup"/>
+        <body><![CDATA[
+          this.focus();
+          return this.controller.buildContextMenu(aPopup);
+        ]]></body>
+      </method>
+
+      <method name="destroyContextMenu">
+        <parameter name="aPopup"/>
+        <body>
+          <![CDATA[
+            if (window.content)
+              window.content.focus();
+          ]]>
+        </body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="mousedown"><![CDATA[
+        // When the user clicks down on a button, set it as the selection and 
+        // tell the controller that we are the active view.
+        if (event.target.localName == "toolbarbutton" ||
+            event.target.localName == "toolbarseparator")
+          this._selection = event.target.node;
+        else 
+          this._selection = this.getResult().root;
+      ]]></handler>
+      <handler event="draggesture"><![CDATA[
+        if (event.target.localName == "toolbarbutton")
+          nsDragAndDrop.startDrag(event, this._DNDObserver);
+      ]]></handler>
+      <handler event="dragover"><![CDATA[
+        if (!this.checkForMenuEvent(event, "dragOver"))
+          nsDragAndDrop.dragOver(event, this._DNDObserver);
+      ]]></handler>
+      <handler event="dragdrop"><![CDATA[
+        if (!this.checkForMenuEvent(event, "drop"))
+          nsDragAndDrop.drop(event, this._DNDObserver);
+      ]]></handler>
+      <handler event="dragexit"><![CDATA[
+        if (!this.checkForMenuEvent(event, "dragExit"))
+          nsDragAndDrop.dragExit(event, this._DNDObserver);
+      ]]></handler>
+      <handler event="popupshowing"><![CDATA[
+        if (event.target.parentNode.localName == "toolbarbutton" &&
+            !PlacesControllerDragHelper.getSession())
+          this._openedMenuButton = event.target.parentNode;
+      ]]></handler>
+      <handler event="popuphidden"><![CDATA[
+        if (event.target.parentNode.localName == "toolbarbutton" &&
+            !PlacesControllerDragHelper.getSession())
+          this._openedMenuButton = null;
+      ]]></handler>
+      <handler event="mousemove"><![CDATA[
+        if (this._openedMenuButton == null || PlacesControllerDragHelper.getSession())
+          return;
+      
+        var target = event.target;
+        if (this._openedMenuButton != target &&
+            target.nodeName == "toolbarbutton" &&
+            target.type == "menu") {
+          this._openedMenuButton.open = false;
+          target.open = true;
+        }
+      ]]></handler>
+    </handlers>
+  </binding>
+
+</bindings>

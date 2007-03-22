@@ -1,0 +1,170 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Boris Zbarsky <bzbarsky@mit.edu>.
+ * Portions created by the Initial Developer are Copyright (C) 2003
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "imgIDecoderObserver.idl"
+
+interface imgIRequest;
+interface nsIChannel;
+interface nsIStreamListener;
+interface nsIURI;
+
+/**
+ * This interface represents a content node that loads images.  The interface
+ * exists to allow getting information on the images that the content node
+ * loads and to allow registration of observers for the image loads.
+ *
+ * Implementors of this interface should handle all the mechanics of actually
+ * loading an image -- getting the URI, checking with content policies and
+ * the security manager to see whether loading the URI is allowed, performing
+ * the load, firing any DOM events as needed.
+ *
+ * An implementation of this interface may support the concepts of a
+ * "current" image and a "pending" image.  If it does, a request to change
+ * the currently loaded image will start a "pending" request which will
+ * become current only when the image is loaded.  It is the responsibility of
+ * observers to check which request they are getting notifications for.
+ *
+ * Observers added in mid-load will not get any notifications they
+ * missed.  We should NOT freeze this interface without considering
+ * this issue.  (It could be that the image status on imgIRequest is
+ * sufficient, when combined with the imageBlockingStatus information.)
+ */
+
+[scriptable, uuid(7744c6d3-5c60-4b7b-a526-4fe9d5ac7e97)]
+interface nsIImageLoadingContent : imgIDecoderObserver
+{
+  /**
+   * Request types.  Image loading content nodes attempt to do atomic
+   * image changes when the image url is changed.  This means that
+   * when the url changes the new image load will start, but the old
+   * image will remain the "current" request until the new image is
+   * fully loaded.  At that point, the old "current" request will be
+   * discarded and the "pending" request will become "current".
+   */
+  const long UNKNOWN_REQUEST = -1;
+  const long CURRENT_REQUEST = 0;
+  const long PENDING_REQUEST = 1;
+
+  /**
+   * loadingEnabled is used to enable and disable loading in
+   * situations where loading images is unwanted.  Note that enabling
+   * loading will *not* automatically trigger an image load.
+   */
+  attribute boolean loadingEnabled;
+
+  /**
+   * Returns the image blocking status (@see nsIContentPolicy).  This
+   * will always be an nsIContentPolicy REJECT_* status for cases when
+   * the image was blocked.  This status always refers to the
+   * CURRENT_REQUEST load.
+   */
+  readonly attribute short imageBlockingStatus;
+
+  /**
+   * Used to register an image decoder observer.  Typically, this will
+   * be a proxy for a frame that wants to paint the image.
+   * Notifications from ongoing image loads will be passed to all
+   * registered observers.  Notifications for all request types,
+   * current and pending, will be passed through.
+   *
+   * @param aObserver the observer to register
+   *
+   * @throws NS_ERROR_OUT_OF_MEMORY
+   */
+  void addObserver(in imgIDecoderObserver aObserver);
+
+  /**
+   * Used to unregister an image decoder observer.
+   *
+   * @param aObserver the observer to unregister
+   */
+  void removeObserver(in imgIDecoderObserver aObserver);
+  
+  /**
+   * Accessor to get the image requests
+   *
+   * @param aRequestType a value saying which request is wanted
+   *
+   * @return the imgIRequest object (may be null, even when no error
+   * is thrown)
+   *
+   * @throws NS_ERROR_UNEXPECTED if the request type requested is not
+   * known
+   */
+  imgIRequest getRequest(in long aRequestType);
+
+  /**
+   * Used to find out what type of request one is dealing with (eg
+   * which request got passed through to the imgIDecoderObserver
+   * interface of an observer)
+   *
+   * @param aRequest the request whose type we want to know
+   *
+   * @return an enum value saying what type this request is
+   *
+   * @throws NS_ERROR_UNEXPECTED if aRequest is not known
+   */
+  long getRequestType(in imgIRequest aRequest);
+
+  /**
+   * Gets the URI of the current request, if available.
+   * Otherwise, returns the last URI that this content tried to load, or
+   * null if there haven't been any such attempts.
+   */
+  readonly attribute nsIURI currentURI;
+
+  /**
+   * loadImageWithChannel allows data from an existing channel to be
+   * used as the image data for this content node.
+   *
+   * @param aChannel the channel that will deliver the data
+   *
+   * @return a stream listener to pump the image data into
+   *
+   * @see imgILoader::loadImageWithChannel
+   *
+   * @throws NS_ERROR_NULL_POINTER if aChannel is null
+   */
+  nsIStreamListener loadImageWithChannel(in nsIChannel aChannel);
+
+  /**
+   * forceReload forces reloading of the image pointed to by currentURI
+   *
+   * @throws NS_ERROR_NOT_AVAILABLE if there is no current URI to reload
+   */
+  void forceReload();
+};

@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is DOM Inspector.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2003
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!DOCTYPE dialog [
+  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://inspector/locale/viewers/dom.dtd"> %dtd2;
+]>
+
+<?xml-stylesheet href="chrome://inspector/skin/viewers/dom/findDialog.css"?>
+
+<dialog id="winFind" style="width: 30em;"
+        title="&findNodes.title;"
+        ondialogaccept="return dialog.doFind();"
+        persist="screenX screenY"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <script type="application/x-javascript" src="chrome://inspector/content/viewers/dom/FindDialog.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
+
+  <hbox flex="1">
+    <vbox flex="1">
+      <grid>
+        <columns>
+          <column/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row id="rwRow1">
+            <deck id="rwRow1Text">
+              <label id="txText1Id" value="&findNodesById.label;"/>
+              <label id="txText1Tag" value="&findNodesByTag.label;"/>
+              <label id="txText1Attr" value="&findNodesByAttr.label;"/>
+            </deck>
+            <textbox id="tfText1"/>
+          </row>
+          <row id="rwRow2">
+            <label id="txText2" value="&findNodesByAttrValue.label;"/>
+            <textbox id="tfText2"/>
+          </row>
+        </rows>
+      </grid>
+      
+      <hbox>
+        <groupbox id="tbxType">
+          <caption label="&findNodesSearchBy.label;"/>
+          <radiogroup id="rgType">
+            <radio id="rdType_id" value="id"
+                   label="&findNodesById.label;"
+                   oncommand="dialog.toggleType('id')"/>
+            <radio id="rdType_tag" value="tag"
+                   label="&findNodesByTag.label;"
+                   oncommand="dialog.toggleType('tag')"/>
+            <radio id="rdType_attr" value="attr"
+                   label="&findNodesByAttr.label;"
+                   oncommand="dialog.toggleType('attr')"/>
+          </radiogroup>
+        </groupbox>
+        <groupbox id="tbxDirection" hide="true">
+          <caption label="&findNodesDirection.label;"/>
+          <radiogroup id="rgDirection">
+            <radio id="rdDir_up" value="up"
+                   label="&findNodesDirectionUp.label;"/>
+            <radio id="rdDir_down" value="down"
+                   label="&findNodesDirectionDown.label;"/>
+          </radiogroup>
+        </groupbox>
+      </hbox>
+    </vbox>
+  
+    <vbox>
+      <button label="&findNodesFind.label;" dlgtype="accept" default="true"/>
+      <button label="&findNodesCancel.label;" dlgtype="cancel"/>
+    </vbox>
+  </hbox>
+  
+</dialog>

@@ -1,0 +1,7 @@
+toolkit.jar:
+% content help %content/help/ xpcnativewrappers=yes
+* content/help/help.xul                 (content/help.xul)
+* content/help/contextHelp.js           (content/contextHelp.js)
+* content/help/help.js                  (content/help.js)
+* content/help/helpContextOverlay.xul   (content/helpContextOverlay.xul)
+* content/help/platformClasses.css      (content/platformClasses.css)

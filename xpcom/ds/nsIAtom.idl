@@ -1,0 +1,161 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998-1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+#include "nsISupports.idl"
+
+%{C++
+#include "nsStringGlue.h"
+#include "nsCOMPtr.h"
+%}
+
+/*
+ * Should this really be scriptable?  Using atoms from script or proxies
+ * could be dangerous since double-wrapping could lead to loss of
+ * pointer identity.
+ */
+ 
+[scriptable, uuid(3d1b15b0-93b4-11d1-895b-006008911b81)]
+interface nsIAtom : nsISupports
+{
+  /**
+   * Get the Unicode or UTF8 value for the string
+   */
+  AString toString(); 
+  AUTF8String toUTF8String();
+  
+  /**
+   * Return a pointer to a zero terminated UTF8 string.
+   */
+  [noscript] void getUTF8String([shared, retval] out string aResult);
+
+  /**
+   * Compare the atom to a specific string value
+   * Note that this will NEVER return/throw an error condition.
+   */
+  boolean equals(in AString aString);
+  
+  boolean equalsUTF8(in AUTF8String aString);
+
+%{C++
+  // note this is NOT virtual so this won't muck with the vtable!
+  inline PRBool Equals(const nsAString& s) {
+    PRBool result;
+    Equals(s, &result);
+    return result;
+  }
+
+  inline PRBool EqualsUTF8(const nsACString& s) {
+    PRBool result;
+    EqualsUTF8(s, &result);
+    return result;
+  }
+%}
+  
+};
+
+
+%{C++
+/*
+ * The three forms of NS_NewAtom and do_GetAtom (for use with
+ * |nsCOMPtr<nsIAtom>|) return the atom for the string given.  At any
+ * given time there will always be one atom representing a given string.
+ * Atoms are intended to make string comparison cheaper by simplifying
+ * it to pointer equality.  A pointer to the atom that does not own a
+ * reference is not guaranteed to be valid.
+ *
+ * The three forms of NS_NewPermanentAtom and do_GetPermanentAtom return
+ * the atom for the given string and ensure that the atom is permanent.
+ * An atom that is permanent will exist (occupy space at a specific
+ * location in memory) until XPCOM is shut down.  The advantage of
+ * permanent atoms is that they do not need to maintain a reference
+ * count, which requires locking and hurts performance.
+ */
+
+
+/**
+ * Find an atom that matches the given UTF-8 string.
+ * The string is assumed to be zero terminated.
+ */
+extern NS_COM nsIAtom* NS_NewAtom(const char* aUTF8String);
+extern NS_COM nsIAtom* NS_NewPermanentAtom(const char* aUTF8String);
+
+inline already_AddRefed<nsIAtom> do_GetAtom(const char* aUTF8String)
+    { return NS_NewAtom(aUTF8String); }
+inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const char* aUTF8String)
+    { return NS_NewPermanentAtom(aUTF8String); }
+ 
+/**
+ * Find an atom that matches the given UTF-8 string.
+ */
+extern NS_COM nsIAtom* NS_NewAtom(const nsACString& aUTF8String);
+extern NS_COM nsIAtom* NS_NewPermanentAtom(const nsACString& aUTF8String);
+
+inline already_AddRefed<nsIAtom> do_GetAtom(const nsACString& aUTF8String)
+    { return NS_NewAtom(aUTF8String); }
+inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const nsACString& aUTF8String)
+    { return NS_NewPermanentAtom(aUTF8String); }
+
+/**
+ * Find an atom that matches the given UTF-16 string.
+ * The string is assumed to be zero terminated.
+ */
+extern NS_COM nsIAtom* NS_NewAtom(const PRUnichar* aUTF16String);
+extern NS_COM nsIAtom* NS_NewPermanentAtom(const PRUnichar* aUTF16String);
+
+inline already_AddRefed<nsIAtom> do_GetAtom(const PRUnichar* aUTF16String)
+    { return NS_NewAtom(aUTF16String); }
+inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const PRUnichar* aUTF16String)
+    { return NS_NewPermanentAtom(aUTF16String); }
+
+/**
+ * Find an atom that matches the given UTF-16 string.
+ */
+extern NS_COM nsIAtom* NS_NewAtom(const nsAString& aUTF16String);
+extern NS_COM nsIAtom* NS_NewPermanentAtom(const nsAString& aUTF16String);
+
+inline already_AddRefed<nsIAtom> do_GetAtom(const nsAString& aUTF16String)
+    { return NS_NewAtom(aUTF16String); }
+inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const nsAString& aUTF16String)
+    { return NS_NewPermanentAtom(aUTF16String); }
+
+/**
+ * Return a count of the total number of atoms currently
+ * alive in the system.
+ */
+extern NS_COM nsrefcnt NS_GetNumberOfAtoms(void);
+
+%}

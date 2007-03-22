@@ -1,0 +1,125 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Mozilla.com.
+ * Portions created by the Initial Developer are Copyright (C) 2006
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *      Boris Zbarsky <bzbarsky@mit.edu> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/**
+ * nsIWindowProvider is a callback interface used by Gecko when it needs to
+ * open a new window.  This interface can be implemented by Gecko consumers who
+ * wish to provide a custom "new window" of their own (for example by returning
+ * a new tab, an existing window, etc) instead of just having a real new
+ * toplevel window open.
+ *
+ * @status UNDER_REVIEW
+ */
+
+#include "nsISupports.idl"
+
+interface nsIDOMWindow;
+interface nsIURI;
+
+/**
+ * The nsIWindowProvider interface exists so that the window watcher's default
+ * behavior of opening a new window can be easly modified.  When the window
+ * watcher needs to open a new window, it will first check with the
+ * nsIWindowProvider it gets from the parent window.  If there is no provider
+ * or the provider does not provide a window, the window watcher will proceed
+ * to actually open a new window.
+ */
+[uuid(5119ac7f-81dd-4061-96a7-71f2cf5efee4)]
+interface nsIWindowProvider : nsISupports
+{
+  /**
+   * A method to request that this provider provide a window.  The window
+   * returned need not to have the right name or parent set on it; setting
+   * those is the caller's responsibility.  The provider can always return null
+   * to have the caller create a brand-new window.
+   *
+   * @param aParent Must not be null.  This is the window that the caller wants
+   *                to use as the parent for the new window.  Generally,
+   *                nsIWindowProvider implementors can expect to be somehow
+   *                related to aParent; the relationship may depend on the
+   *                nsIWindowProvider implementation.
+   * @param aChromeFlags The chrome flags the caller will use to create a new
+   *                      window if this provider returns null.  See
+   *                      nsIWebBrowserChrome for the possible values of this
+   *                      field.
+   * @param aPositionSpecified Whether the attempt to create a window is trying
+   *                           to specify a position for the new window.
+   * @param aSizeSpecified Whether the attempt to create a window is trying to
+   *                       specify a size for the new window.
+   * @param aURI The URI to be loaded in the new window.  The nsIWindowProvider
+   *             implementation MUST NOT load this URI in the window it
+   *             returns.  This URI is provided solely to help the
+   *             nsIWindowProvider implenentation make decisions; the caller
+   *             will handle loading the URI in the window returned if
+   *             provideWindow returns a window.  Note that the URI may be null
+   *             if the load cannot be represented by a single URI (e.g. if
+   *             the load has extra load flags, POST data, etc).
+   * @param aName The name of the window being opened.  Setting the name on the
+   *              return value of provideWindow will be handled by the caller;
+   *              aName is provided solely to help the nsIWindowProvider
+   *              implementation make decisions.
+   * @param aFeatures The feature string for the window being opened.  This may
+   *                  be empty.  The nsIWindowProvider implementation is
+   *                  allowed to apply the feature string to the window it
+   *                  returns in any way it sees fit.  See the nsIWindowWatcher
+   *                  interface for details on feature strings.
+   * @param aWindowIsNew [out] Whether the window being returned was just
+   *                           created by the window provider implementation.
+   *                           This can be used by callers to keep track of which
+   *                           windows were opened by the user as opposed to
+   *                           being opened programmatically.  This should be set
+   *                           to false if the window being returned existed
+   *                           before the provideWindow() call.  The value of this
+   *                           out parameter is meaningless if provideWindow()
+   *                           returns null.
+   * @return A window the caller should use or null if the caller should just
+   *         create a new window.  The returned window may be newly opened by
+   *         the nsIWindowProvider implementation or may be a window that
+   *         already existed.
+   *
+   * @see nsIWindowWatcher for more information on aFeatures.
+   * @see nsIWebBrowserChrome for more information on aChromeFlags.
+   */
+  nsIDOMWindow provideWindow(in nsIDOMWindow aParent,
+                             in unsigned long aChromeFlags,
+                             in boolean aPositionSpecified,
+                             in boolean aSizeSpecified,
+                             in nsIURI aURI,
+                             in AString aName,
+                             in AUTF8String aFeatures,
+                             out boolean aWindowIsNew);
+};

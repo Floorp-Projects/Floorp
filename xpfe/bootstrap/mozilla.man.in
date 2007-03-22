@@ -1,0 +1,137 @@
+.TH @MOZ_APP_NAME@ 1 "March 28, 2005" @MOZ_APP_NAME@ "Linux User's Manual"
+.SH NAME
+@MOZ_APP_NAME@ \- an internet application suite (browser, mail, etc.)
+
+.SH SYNOPSIS
+.B @MOZ_APP_NAME@
+[\fIOPTIONS\fR] [\fIURL\fR]
+
+.B @MOZ_APP_NAME@-bin
+[\fIOPTIONS\fR] [\fIURL\fR]
+
+.SH DESCRIPTION
+\fB@MOZ_APP_DISPLAYNAME@\fR is an open-source web browser, designed for standards compliance,
+performance and portability.
+
+.SH USAGE
+\fB@MOZ_APP_NAME@\fR is a simple shell script that will set up the environment for
+the actual executable, \fB@MOZ_APP_NAME@-bin\fR.
+
+.SH OPTIONS
+A summary of the options supported by \fB@MOZ_APP_NAME@\fR is included below.
+
+.SS "GTK options"
+\fB\-\-gdk-debug=\fR\fIFLAGS\fR
+Gdk debugging flags to set
+.TP
+\fB\-\-gdk-no-debug=\fR\fIFLAGS\fR
+Gdk debugging flags to unset
+.TP
+\fB\-\-gtk-debug=\fR\fIFLAGS\fR
+Gtk+ debugging flags to set
+.TP
+\fB\-\-gtk-no-debug=\fR\fIFLAGS\fR
+Gtk+ debugging flags to unset
+.TP
+\fB\-\-gtk-module=\fR\fIMODULE\fR
+Load an additional Gtk module
+
+.SS "X11 options"
+.TP
+.BI \-\-display= DISPLAY
+X display to use
+.TP
+.B \--sync
+Make X calls synchronous
+.TP
+.B \-\-no-xshm
+Don't use X shared memory extension
+.TP
+.BI \-\-xim-preedit= STYLE
+.TP
+.BI \-\-xim-status= STYLE
+.TP
+.B \-\-g-fatal-warnings
+Make all warnings fatal
+
+.SS "@MOZ_APP_DISPLAYNAME@ options"
+.TP
+\fB\-height\fR \fIvalue\fR
+Set height of startup window to \fIvalue\fR.
+.TP
+.B \-h, \-help
+Show summary of options.
+.TP
+.B \-installer
+Start with 4.x migration window.
+.TP
+\fB\-width\fR \fIvalue\fR
+Set width of startup window to \fIvalue\fR.
+.TP
+.B \-v, \-version
+Print \fB@MOZ_APP_NAME@-bin\fR version.
+.TP
+\fB\-CreateProfile\fR \fIprofile\fR
+Create \fIprofile\fR.
+.TP
+\fB\-P\fR \fIprofile\fR
+Start with \fIprofile\fR.
+.TP
+.B \-ProfileWizard
+Start with profile wizard.
+.TP
+.B \-ProfileManager
+Start with profile manager.
+.TP
+.B \-SelectProfile
+Start with profile selection dialog.
+.TP
+\fB\-lang\fR \fIlang-region\fR
+Start with \fIlang-region\fR resources.
+.TP
+\fB\-remote\fR \fIcommand\fR
+Execute \fIcommand\fR in an already running @MOZ_APP_DISPLAYNAME@ process.  For more info,
+see: \fIhttp://www.mozilla.org/unix/remote.html\fR
+.TP
+.B \-splash
+Enable splash screen.
+.TP
+.B \-addressbook
+Start with the addressbook.
+.TP
+.B \-news
+Start with news.
+.TP
+.B \-jsconsole
+Start with Javascript Console
+.TP
+\fB\-edit\fR \fIurl\fR
+Start with editor.
+.TP
+\fB\-chrome\fR \fIurl\fR
+Load the specified chrome.
+.TP
+.B \-mail
+Start with mail.
+.TP
+\fB\-compose\fR \fIurl\fR
+Start with mail compose.
+
+.SH FILES
+\fI@bindir@/@MOZ_APP_NAME@\fR - shell script wrapping \fB@MOZ_APP_NAME@\fR
+.br
+\fI@mozappdir@/@MOZ_APP_NAME@-bin\fR - \fB@MOZ_APP_NAME@\fR executable
+
+.SH VERSION
+@MOZ_APP_VERSION@
+
+.SH BUGS
+To report a bug, please visit \fIhttps://bugzilla.mozilla.org/\fR
+
+.SH "SEE ALSO"
+.BR galeon(1)
+
+.SH AUTHORS
+.TP
+.B The Mozilla Organization
+.I http://www.mozilla.org/about.html

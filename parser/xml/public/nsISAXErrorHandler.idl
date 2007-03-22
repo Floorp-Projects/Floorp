@@ -1,0 +1,127 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Robert Sayre.
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsISAXLocator;
+
+/**
+ * Basic interface for SAX error handlers.
+ *
+ * If a SAX application needs to implement customized error
+ * handling, it must implement this interface and then register an
+ * instance with the XML reader.  The parser will then report all
+ * errors and warnings through this interface.
+ *
+ * WARNING: If an application does not register an ErrorHandler,
+ * XML parsing errors will go unreported. In order to detect validity
+ * errors, an ErrorHandler that does something with error() calls must
+ * be registered.
+ *
+ */
+[scriptable, uuid(e02b6693-6cca-11da-be43-001422106990)]
+interface nsISAXErrorHandler: nsISupports {
+
+  /**
+   * Receive notification of a recoverable error.
+   *
+   * This corresponds to the definition of "error" in section 1.2
+   * of the W3C XML 1.0 Recommendation. For example, a validating
+   * parser would use this callback to report the violation of a
+   * validity constraint. The default behaviour is to take no
+   * action.
+   *
+   * The SAX parser must continue to provide normal parsing events
+   * after invoking this method: it should still be possible for the
+   * application to process the document through to the end. If the
+   * application cannot do so, then the parser should report a fatal
+   * error even if the XML recommendation does not require it to do
+   * so.
+   *
+   * Filters may use this method to report other, non-XML errors as
+   * well.
+   *
+   * @param locator The locator object for the error (may be null).
+   * @param error The error message.
+   */
+  void error(in nsISAXLocator locator, in AString error);
+
+  /**
+   * Receive notification of a non-recoverable error.
+   *
+   * There is an apparent contradiction between the documentation
+   * for this method and the documentation for
+   * ContentHandler.endDocument(). Until this ambiguity is resolved in
+   * a future major release, clients should make no assumptions about
+   * whether endDocument() will or will not be invoked when the parser
+   * has reported a fatalError() or thrown an exception.
+   *
+   * This corresponds to the definition of "fatal error" in section
+   * 1.2 of the W3C XML 1.0 Recommendation. For example, a parser
+   * would use this callback to report the violation of a
+   * well-formedness constraint.
+   *
+   * The application must assume that the document is unusable
+   * after the parser has invoked this method, and should continue (if
+   * at all) only for the sake of collecting additional error
+   * messages: in fact, SAX parsers are free to stop reporting any
+   * other events once this method has been invoked.
+   *
+   * @param locator The locator object for the error (may be null).
+   * @param error The error message.
+   */
+  void fatalError(in nsISAXLocator locator, in AString error);
+
+  /**
+   * Receive notification of a warning.
+   *
+   * SAX parsers will use this method to report conditions that are
+   * not errors or fatal errors as defined by the XML
+   * recommendation. The default behaviour is to take no action.
+   *
+   * The SAX parser must continue to provide normal parsing events
+   * after invoking this method: it should still be possible for the
+   * application to process the document through to the end.
+   *
+   * Filters may use this method to report other, non-XML warnings
+   * as well.
+   *
+   * @param locator The locator object for the warning (may be null).
+   * @param error The warning message.
+   */
+  void ignorableWarning(in nsISAXLocator locator, in AString error);
+};

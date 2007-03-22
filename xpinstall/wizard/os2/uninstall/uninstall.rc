@@ -1,0 +1,74 @@
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+ICON           IDI_UNINSTALL    DISCARDABLE     "uninstall.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+DLGTEMPLATE DLG_UNINSTALL DISCARDABLE  
+BEGIN
+  DIALOG "", DLG_UNINSTALL, 64, 172, 282, 79,
+  WS_VISIBLE | FS_BORDER | FS_SCREENALIGN,
+  FCF_TITLEBAR | FCF_SYSMENU | FCF_MINBUTTON | FCF_NOMOVEWITHOWNER
+  BEGIN
+    DEFPUSHBUTTON "",              IDWIZNEXT,  68,  10,  67,  14
+    PUSHBUTTON    "",             DID_CANCEL, 148,  10,  67,  14
+    LTEXT         "",           IDC_MESSAGE0,  22,  36, 239,  32, NOT WS_GROUP | SS_TEXT | DT_WORDBREAK | DT_MNEMONIC
+  END
+END
+
+DLGTEMPLATE DLG_MESSAGE DISCARDABLE  
+BEGIN
+  DIALOG "", DLG_MESSAGE, 0, 273, 295, 34,
+  WS_VISIBLE | FS_DLGBORDER | FS_SCREENALIGN,
+  FCF_NOMOVEWITHOWNER
+  BEGIN
+    CTEXT         "",            IDC_MESSAGE,   0,   0, 295,  34, SS_TEXT | DT_WORDBREAK | DT_MNEMONIC
+  END
+END
+
+DLGTEMPLATE DLG_WHAT_TO_DO DISCARDABLE  
+BEGIN
+  DIALOG "", DLG_WHAT_TO_DO, 64, 111, 417, 140,
+  WS_VISIBLE | FS_DLGBORDER | FS_SCREENALIGN,
+  FCF_TITLEBAR | FCF_SYSMENU | FCF_MINBUTTON | FCF_NOMOVEWITHOWNER
+  BEGIN
+    DEFPUSHBUTTON "",                  ID_NO,  50,  18,  67,  14
+    PUSHBUTTON    "",           ID_NO_TO_ALL, 134,  18,  67,  14
+    PUSHBUTTON    "",                 ID_YES, 218,  18,  67,  14
+    PUSHBUTTON    "",          ID_YES_TO_ALL, 302,  18,  67,  14
+    LTEXT         "",           IDC_MESSAGE0,  20,  94, 377,  33, NOT WS_GROUP | SS_TEXT | DT_WORDBREAK | DT_MNEMONIC
+    LTEXT         "",           IDC_MESSAGE1,  20,  71, 377,  19, NOT WS_GROUP | SS_TEXT | DT_WORDBREAK | DT_MNEMONIC
+    RTEXT         "",             IDC_STATIC,  23,  51,  52,   8, SS_TEXT | DT_WORDBREAK | DT_MNEMONIC
+    LTEXT         "Static",IDC_STATIC_SHARED_FILENAME,83,47,314,14, SS_TEXT | DT_WORDBREAK | DT_MNEMONIC
+  END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_DLL_LOAD      "Could not load %s"
+    IDS_ERROR_STRING_LOAD   "Could not load string resource ID %d"
+    IDS_ERROR_STRING_NULL   "Null pointer encountered."
+    IDS_ERROR_GLOBALALLOC   "Memory allocation error."
+    IDS_ERROR_NO_LONG_FILENAMES "You must have at least one drive that supports long filenames to install this product."
+END
+
+/////////////////////////////////////////////////////////////////////////////
+

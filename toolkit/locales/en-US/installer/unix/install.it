@@ -1,0 +1,89 @@
+
+[String Resources]
+
+;------------------------------------------------------------------------------
+;   UI strings
+;------------------------------------------------------------------------------
+
+NEXT=Next >
+BACK=< Back
+CANCEL=Cancel
+ACCEPT=Accept
+DECLINE=Decline
+INSTALL=Install
+PAUSE=Pause
+RESUME=Resume
+DEFAULT_TITLE=Mozilla Installer
+DEST_DIR=Destination Directory
+BROWSE=Change...
+SELECT_DIR=Select a directory
+DOESNT_EXIST=Directory %s doesn't exist.  Create it?
+YES_LABEL=Yes
+NO_LABEL=No
+OK_LABEL=OK
+DELETE_LABEL=Delete Directory
+CANCEL_LABEL=Cancel
+ERROR=Error [%d]: %s
+FATAL_ERROR=Fatal error [%d]: %s
+DESCRIPTION=Description
+WILL_INSTALL=Setup will install the following components:
+TO_LOCATION=to the following location:
+PREPARING=Preparing %s...
+EXTRACTING=Extracting %s...
+INSTALLING_XPI=Installing %s...
+PROCESSING_FILE=Processing file %d of %d...
+NO_PERMS=Choose another directory because you do not have permission to install to: %s
+DL_SETTINGS=Download Settings
+SAVE_MODULES=Save installer modules upon download
+PROXY_SETTINGS=Proxy Settings...
+PS_LABEL0=Proxy Host [required]:
+PS_LABEL1=Proxy Port [required]:
+PS_LABEL2=Proxy Username [optional]:
+PS_LABEL3=Proxy Password [optional]:
+ERROR_TITLE=Error!
+DS_AVAIL=Disk Space Available = %ld KB
+DS_REQD=Disk Space Required = %ld KB
+NO_DISK_SPACE=Please select a directory on a disk with enough space to install or free some disk space on the selected disk.
+CXN_DROPPED=A network connection failure occured.  Please check your network connection and press the 'Resume' button.  Alternatively, press the 'Cancel' button to quit the installer.
+CRC_CHECK=Some files failed to download correctly. Retrying.
+CRC_FAILED=Installation has failed due to multiple CRC failures.
+DOWNLOADING=Downloading:
+FROM=From:
+TO=To:
+STATUS=Status:
+DL_STATUS_STR=%d KB  of  %d KB (at %d KB/sec)
+USAGE_MSG=Usage: %s [options]%s	[options] can be any of the following combination:%s		-h:		This help.%s		-ma:		Run setup in Auto mode: show progress UI,%s				but assume defaults without user intervention.%s		-ms:		Run setup in Silent mode: show no UI and have%s				no user intervention.%s		-ira:		Ignore the [RunAppX] sections%s
+UNKNOWN=Unknown
+
+;------------------------------------------------------------------------------
+;   Error strings
+;------------------------------------------------------------------------------
+
+-601=Out of memory
+-602=Invalid param
+-603=Invalid member variable
+-604=Invalid pointer
+-605=Parse key has no value
+-606=Failed to read readme
+-607=Failed to read license
+-608=Out of bounds in Component/Setup Type list
+-609=Mismatched ref counts
+-610=No components in the INI file
+-611=No setup types in the INI file
+-612=URL at this index already exists
+-613=Couldn't create the directory
+-614=FTP URL malformed
+-615=Download failed
+-616=Extraction of XPCOM failed
+-617=Failed to fork a process
+-618=Couldn't open xpistub library
+-619=Couldn't get symbol in library
+-620=A xpistub call failed
+-621=An Installer module %s (.xpi) failed to install
+-622=Copy of an installer module (.xpi) failed
+-623=Destination directory doesn't exist
+-624=Can't make destination directory.  Please try another directory.
+-625=A previous installation exists.
+-626=Insufficient permission
+-627=Insufficient disk space
+-628=Multiple CRC Failure

@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+
+<bindings id="globalBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <!-- :::/ widgets \ ::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
+
+  <binding id="bf-menu-button-allowevents-box"
+           display="xul:button"
+           extends="chrome://global/content/bindings/button.xml#button-base">
+    <content allowevents="true">
+      <children/>
+    </content>
+  </binding>
+
+  <binding id="bf-menu-button" extends="chrome://global/content/bindings/toolbarbutton.xml#menu-button">
+    <content>
+      <children includes="observes|template|menupopup|tooltip"/>
+      <xul:hbox flex="1" class="allowevents-box"/>
+      <xul:vbox>
+        <xul:hbox align="center" flex="1">
+          <xul:toolbarbutton class="box-inherit toolbarbutton-menubutton-button"
+                             anonid="button"
+                             allowevents="true"
+                             flex="1"
+                             align="end"
+                             xbl:inherits="disabled,crop,image,label,accesskey,command,
+                                           dir,pack,orient,toolbarmode,buttonstyle"/>
+          <xul:dropmarker type="menu-button"
+                          class="toolbarbutton-menubutton-dropmarker"
+                          xbl:inherits="align,dir,pack,orient,disabled,toolbarmode,buttonstyle,label"/>
+        </xul:hbox>
+        <xul:hbox flex="1" class="toolbarbutton-text-box allowevents-box">
+           <xul:label class="toolbarbutton-text"
+                      crop="right"
+                      xbl:inherits="value=label,accesskey,crop,toolbarmode,buttonstyle"
+                      flex="1"/>
+        </xul:hbox>
+      </xul:vbox>
+      <xul:hbox flex="1" class="allowevents-box"/>
+    </content>
+  </binding>
+
+  <binding id="bookmark-left">
+    <content>
+      	<xul:spacer class="bookmark-image-left" xbl:inherits="selected"/>
+        <children/>
+    </content>
+  </binding>
+
+  <binding id="bm-toolbarbutton" display="xul:button"
+            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
+     <resources>
+       <stylesheet src="chrome://global/skin/toolbarbutton.css"/>
+     </resources>     
+     <content>
+       <children includes="observes|template|menupopup|tooltip"/>
+       <xul:spacer class="bookmark-image-left" xbl:inherits="accesskey,crop,toolbarmode,buttonstyle"/>
+	<xul:label class="toolbarbutton-text" crop="right" flex="1"
+                  xbl:inherits="value=label,accesskey,crop,toolbarmode,buttonstyle"/>
+	<xul:spacer class="bookmark-image-right" xbl:inherits="accesskey,crop,toolbarmode,buttonstyle"/>
+     </content>
+   </binding>
+</bindings>

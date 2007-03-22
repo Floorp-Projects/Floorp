@@ -1,0 +1,152 @@
+classic.jar:
+% skin global classic/1.0 %skin/classic/global/
+        skin/classic/global/about.css
+        skin/classic/global/arrow.css
+        skin/classic/global/autocomplete.css
+        skin/classic/global/browser.css
+        skin/classic/global/button.css
+        skin/classic/global/checkbox.css
+        skin/classic/global/colorpicker.css
+        skin/classic/global/config.css
+        skin/classic/global/dialog.css
+        skin/classic/global/expander.css
+        skin/classic/global/filepicker.css
+        skin/classic/global/findBar.css
+        skin/classic/global/formatting.css
+        skin/classic/global/global.css
+        skin/classic/global/globalBindings.xml
+        skin/classic/global/groupbox.css
+        skin/classic/global/linkTree.css
+        skin/classic/global/listbox.css
+        skin/classic/global/menu.css
+        skin/classic/global/menulist.css
+        skin/classic/global/netError.css
+        skin/classic/global/dropmarker.css
+        skin/classic/global/numberbox.css
+        skin/classic/global/notification.css
+        skin/classic/global/popup.css
+        skin/classic/global/progressmeter.css
+        skin/classic/global/radio.css
+        skin/classic/global/richlistbox.css
+# chrome://global/skin/nativescrollbars.css is used on Mac
+        skin/classic/global/nativescrollbars.css                    (../../pinstripe/global/nativescrollbars.css)
+# chrome://global/skin/xulscrollbars.css is used on non-Mac platforms
+        skin/classic/global/xulscrollbars.css
+        skin/classic/global/scrollbox.css
+        skin/classic/global/spinbuttons.css
+        skin/classic/global/splitter.css
+        skin/classic/global/tabbox.css
+        skin/classic/global/textbox.css
+        skin/classic/global/datetimepicker.css
+        skin/classic/global/toolbar.css
+        skin/classic/global/toolbarbutton.css
+        skin/classic/global/tree.css
+        skin/classic/global/wizard.css
+        skin/classic/global/arrow/arrow-dn.gif                      (arrow/arrow-dn.gif)
+        skin/classic/global/arrow/arrow-dn-dis.gif                  (arrow/arrow-dn-dis.gif)
+        skin/classic/global/arrow/arrow-dn-hov.gif                  (arrow/arrow-dn-hov.gif)
+        skin/classic/global/arrow/arrow-dn-sharp.gif                (arrow/arrow-dn-sharp.gif)
+        skin/classic/global/arrow/arrow-down.png                    (arrow/arrow-down.png)
+        skin/classic/global/arrow/arrow-lft.gif                     (arrow/arrow-lft.gif)
+        skin/classic/global/arrow/arrow-lft-dis.gif                 (arrow/arrow-lft-dis.gif)
+        skin/classic/global/arrow/arrow-lft-hov.gif                 (arrow/arrow-lft-hov.gif)
+        skin/classic/global/arrow/arrow-lft-sharp.gif               (arrow/arrow-lft-sharp.gif)
+        skin/classic/global/arrow/arrow-lft-sharp-end.gif           (arrow/arrow-lft-sharp-end.gif)
+        skin/classic/global/arrow/arrow-rit.gif                     (arrow/arrow-rit.gif) 
+        skin/classic/global/arrow/arrow-rit-dis.gif                 (arrow/arrow-rit-dis.gif)
+        skin/classic/global/arrow/arrow-rit-hov.gif                 (arrow/arrow-rit-hov.gif)
+        skin/classic/global/arrow/arrow-rit-sharp.gif               (arrow/arrow-rit-sharp.gif)
+        skin/classic/global/arrow/arrow-rit-sharp-end.gif           (arrow/arrow-rit-sharp-end.gif)
+        skin/classic/global/arrow/arrow-up.gif                      (arrow/arrow-up.gif)
+        skin/classic/global/arrow/arrow-up-dis.gif                  (arrow/arrow-up-dis.gif)
+        skin/classic/global/arrow/arrow-up-hov.gif                  (arrow/arrow-up-hov.gif)
+        skin/classic/global/arrow/arrow-up-sharp.gif                (arrow/arrow-up-sharp.gif)
+        skin/classic/global/checkbox/cbox-check.gif                 (checkbox/cbox-check.gif)
+        skin/classic/global/checkbox/cbox-check-dis.gif             (checkbox/cbox-check-dis.gif) 
+        skin/classic/global/Filepicker.png                          (filepicker/Filepicker.png)
+	skin/classic/global/icons/alltabs-box-overflow-end-bkgnd-hover.png (icons/alltabs-box-overflow-end-bkgnd-hover.png)
+	skin/classic/global/icons/alltabs-box-overflow-start-bkgnd-hover.png (icons/alltabs-box-overflow-start-bkgnd-hover.png)
+	skin/classic/global/icons/alltabs-box-overflow-end-bkgnd.png   (icons/alltabs-box-overflow-end-bkgnd.png)
+    skin/classic/global/icons/alltabs-box-overflow-start-bkgnd-animate.png   (icons/alltabs-box-overflow-start-bkgnd-animate.png)
+	skin/classic/global/icons/alltabs-box-overflow-end-bkgnd-animate.png   (icons/alltabs-box-overflow-end-bkgnd-animate.png)
+	skin/classic/global/icons/alltabs-box-overflow-start-bkgnd.png (icons/alltabs-box-overflow-start-bkgnd.png)
+        skin/classic/global/icons/autocomplete-dropmark-arrow.png   (icons/autocomplete-dropmark-arrow.png)
+        skin/classic/global/icons/autocomplete-dropmark-bkgnd.png   (icons/autocomplete-dropmark-bkgnd.png)
+        skin/classic/global/icons/autocomplete-dropmark-bkgnd-mid-top.png    (icons/autocomplete-dropmark-bkgnd-mid-top.png)
+        skin/classic/global/icons/autocomplete-dropmark-bkgnd-mid-bottom.png (icons/autocomplete-dropmark-bkgnd-mid-bottom.png)
+        skin/classic/global/icons/Close.gif                         (icons/Close.gif)
+        skin/classic/global/icons/close.png                         (icons/close.png)
+        skin/classic/global/icons/alltabs.png                       (icons/alltabs.png)
+        skin/classic/global/icons/Error.png                         (icons/Error.png)
+        skin/classic/global/icons/find.png                          (icons/find.png)
+        skin/classic/global/icons/folder-item.png                   (icons/folder-item.png)
+        skin/classic/global/icons/Minimize.gif                      (icons/Minimize.gif)
+        skin/classic/global/icons/notfound.png                      (icons/notfound.png)
+        skin/classic/global/icons/Print-preview.png                 (icons/Print-preview.png)
+        skin/classic/global/icons/Portrait.png                      (icons/Portrait.png)
+        skin/classic/global/icons/Landscape.png                     (icons/Landscape.png)
+        skin/classic/global/icons/Question.png                      (icons/Question.png)        
+        skin/classic/global/icons/Restore.gif                       (icons/Restore.gif)
+	skin/classic/global/icons/tab-arrow-end.png                 (icons/tab-arrow-end.png)
+	skin/classic/global/icons/tab-arrow-start.png               (icons/tab-arrow-start.png)
+	skin/classic/global/icons/tab-arrow-end-bkgnd-hover.png     (icons/tab-arrow-end-bkgnd-hover.png)
+	skin/classic/global/icons/tab-arrow-end-bkgnd-disabled.png  (icons/tab-arrow-end-bkgnd-disabled.png)
+	skin/classic/global/icons/tab-arrow-end-bkgnd-enabled.png   (icons/tab-arrow-end-bkgnd-enabled.png)
+	skin/classic/global/icons/tab-arrow-end-bkgnd-animate.png   (icons/tab-arrow-end-bkgnd-animate.png)
+	skin/classic/global/icons/tab-arrow-start-bkgnd-hover.png   (icons/tab-arrow-start-bkgnd-hover.png)
+	skin/classic/global/icons/tab-arrow-start-bkgnd-disabled.png (icons/tab-arrow-start-bkgnd-disabled.png)
+	skin/classic/global/icons/tab-arrow-start-bkgnd-enabled.png (icons/tab-arrow-start-bkgnd-enabled.png)
+	skin/classic/global/icons/tab-arrow-start-bkgnd-animate.png (icons/tab-arrow-start-bkgnd-animate.png)
+	skin/classic/global/icons/tab-left.png                      (icons/tab-left.png)
+	skin/classic/global/icons/tab-middle.png                    (icons/tab-middle.png)
+	skin/classic/global/icons/tab-right.png                     (icons/tab-right.png)
+	skin/classic/global/icons/tab-left-bkgnd.png                (icons/tab-left-bkgnd.png)
+	skin/classic/global/icons/tab-middle-bkgnd.png              (icons/tab-middle-bkgnd.png)
+	skin/classic/global/icons/tab-right-bkgnd.png               (icons/tab-right-bkgnd.png)
+        skin/classic/global/icons/tabstrip-bottom.png               (icons/tabstrip-bottom.png)
+	skin/classic/global/icons/tabbrowser-tabs-bkgnd.png         (icons/tabbrowser-tabs-bkgnd.png)
+        skin/classic/global/icons/Warning.png                       (icons/Warning.png)
+        skin/classic/global/icons/warning-large.png                 (icons/warning-large.png)
+        skin/classic/global/icons/wrap.png                          (icons/wrap.png)
+        skin/classic/global/menu/Menu-arrow.png                     (menu/Menu-arrow.png)
+        skin/classic/global/menu/Menu-arrow-rtl.png                 (menu/Menu-arrow-rtl.png)
+        skin/classic/global/menu/Menu-arrow-disabled.png            (menu/Menu-arrow-disabled.png)
+        skin/classic/global/menu/Menu-arrow-disabled-rtl.png        (menu/Menu-arrow-disabled-rtl.png)
+        skin/classic/global/menu/Menu-arrow-hover.png               (menu/Menu-arrow-hover.png)
+        skin/classic/global/menu/Menu-arrow-hover-rtl.png           (menu/Menu-arrow-hover-rtl.png)
+        skin/classic/global/menu/menu-check.gif                     (menu/menu-check.gif)
+        skin/classic/global/menu/menu-check-disabled.gif            (menu/menu-check-disabled.gif)
+        skin/classic/global/menu/menu-check-hover.gif               (menu/menu-check-hover.gif)
+        skin/classic/global/menu/menu-radio.gif                     (menu/menu-radio.gif)
+        skin/classic/global/menu/menu-radio-disabled.gif            (menu/menu-radio-disabled.gif)
+        skin/classic/global/menu/menu-radio-hover.gif               (menu/menu-radio-hover.gif)
+        skin/classic/global/radio/radio-check.gif                   (radio/radio-check.gif)
+        skin/classic/global/radio/radio-check-dis.gif               (radio/radio-check-dis.gif)
+        skin/classic/global/scrollbar/slider.gif                    (scrollbar/slider.gif)
+        skin/classic/global/tabDragDrop/tabDragIndicator.png        (tabDragDrop/tabDragIndicator.png)
+        skin/classic/global/toolbar/chevron.gif                     (toolbar/chevron.gif)
+        skin/classic/global/toolbar/chevron-rtl.gif                 (toolbar/chevron-rtl.gif)
+        skin/classic/global/toolbar/Lighten.png                     (toolbar/Lighten.png)
+        skin/classic/global/toolbar/spring.gif                      (toolbar/spring.gif)
+        skin/classic/global/tree/columnpicker.gif                   (tree/columnpicker.gif)
+        skin/classic/global/tree/sort-asc.gif                       (tree/sort-asc.gif)
+        skin/classic/global/tree/sort-dsc.gif                       (tree/sort-dsc.gif)
+        skin/classic/global/tree/twisty-clsd.png                    (tree/twisty-clsd.png)
+        skin/classic/global/tree/twisty-open.png                    (tree/twisty-open.png)
+        skin/classic/global/throbber/Throbber-small.gif             (throbber/Throbber-small.gif)
+        skin/classic/global/throbber/Throbber-small.png             (throbber/Throbber-small.png)
+#ifndef MINIMO
+        skin/classic/global/customizeToolbar.css
+        skin/classic/global/preferences.css
+        skin/classic/global/printPageSetup.css
+*       skin/classic/global/scale.css
+        skin/classic/global/printPreview.css
+        skin/classic/global/alerts/alert.css                        (alerts/alert.css)
+        skin/classic/global/console/console.css                     (console/console.css)
+        skin/classic/global/console/console-toolbar.png             (console/console-toolbar.png)        
+        skin/classic/global/console/bullet-question.png             (console/bullet-question.png)
+        skin/classic/global/console/bullet-warning.png              (console/bullet-warning.png)
+        skin/classic/global/console/bullet-error.png                (console/bullet-error.png)
+        skin/classic/global/console/console-error-caret.gif         (console/console-error-caret.gif)
+        skin/classic/global/console/console-error-dash.gif          (console/console-error-dash.gif)
+#endif

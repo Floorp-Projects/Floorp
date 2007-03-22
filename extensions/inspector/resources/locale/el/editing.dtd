@@ -1,0 +1,16 @@
+<!ENTITY mnEditUndo.label "Αναίρεση">
+<!ENTITY mnEditUndo.accesskey "ν">
+<!ENTITY mnEditRedo.label "Ακύρωση αναίρεσης">
+<!ENTITY mnEditRedo.accesskey "ρ">
+<!ENTITY mnEditCut.label "Αποκοπή">
+<!ENTITY mnEditCut.accesskey "κ">
+<!ENTITY mnEditCopy.label "Αντιγραφή">
+<!ENTITY mnEditCopy.accesskey "γ">
+<!ENTITY mnEditPaste.label "Επικόλληση">
+<!ENTITY mnEditPaste.accesskey "π">
+<!ENTITY mnEditInsert.label "Εισαγωγή">
+<!ENTITY mnEditInsert.accesskey "ι">
+<!ENTITY mnEditEdit.label "Επεξεργασία">
+<!ENTITY mnEditEdit.accesskey "Ε">
+<!ENTITY mnEditDelete.label "Διαγραφή">
+<!ENTITY mnEditDelete.accesskey "δ">

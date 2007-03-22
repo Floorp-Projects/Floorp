@@ -1,0 +1,100 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Transaction Manager.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corp.
+ * Portions created by the Initial Developer are Copyright (C) 2003
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   John Gaunt <jgaunt@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(656c0a6a-5cb3-45ec-8cb6-e7678897f937)]
+interface ipcITransactionObserver : nsISupports
+{
+  /**
+    * This gets called when a Transaction has been sent from the 
+    *   TransactionManager. If the data passed in needs to be stored
+    *   for longer than the life of the method the observer needs
+    *   to make a copy.
+    *
+    * @param aQueueID
+    *        The queue from which the transaction originated
+    *
+    * @param aData
+    *        The data to be sent.
+    *
+    * @param aDataLen
+    *        The length of the data argument
+    */
+  void onTransactionAvailable(in unsigned long aQueueID,
+                              [array, const, size_is(aDataLen)]
+                              in octet aData,
+                              in unsigned long aDataLen);
+
+  /**
+    * Called after an application sends an Attach message to the
+    *   Transaction Manager.
+    *
+    * @param aQueueID
+    *        The client has been attached to the queue with this ID
+    *
+    * @param aStatus
+    *        The status of the operation, as defined in tmUtils.h
+    */
+  void onAttachReply(in unsigned long aQueueID, in unsigned long aStatus);
+
+  /**
+    * Called after an application sends a Detach message. Indicates 
+    *   to the client that no more messages will be coming from the
+    *   the TM to this client. Also, no messages posted from this
+    *   client to the indicated queue will be accepted.
+    *
+    * @param aQueueID
+    *        The client has been detached from the queue with this ID
+    *
+    * @param aStatus
+    *        The status of the operation, as defined in tmUtils.h
+    */
+  void onDetachReply(in unsigned long aQueueID, in unsigned long aStatus);
+
+  /**
+    * The reply from the TM indicating all messages have been removed
+    *   from the queue indicated.
+    *
+    * @param aQueueID
+    *        The queue that has been flushed.
+    *
+    * @param aStatus
+    *        The status of the operation, as defined in tmUtils.h
+    */
+  void onFlushReply(in unsigned long aQueueID, in unsigned long aStatus);
+};

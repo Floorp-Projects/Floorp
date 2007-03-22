@@ -1,0 +1,111 @@
+/* -*- Mode: idl; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Oracle Corporation code.
+ *
+ * The Initial Developer of the Original Code is
+ *  Oracle Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface mozIStorageConnection;
+interface nsIFile;
+
+/**
+ * The mozIStorageService interface is intended to be implemented by
+ * a service that can create storage connections (mozIStorageConnection)
+ * to either a well-known profile database or to a specific database file.
+ *
+ * The implementation of this service using sqlite with the async IO module
+ * must be created the first time on the main thread. If you want to use it
+ * from another thread, you should be sure you call getService from the main
+ * thread before accessing it from another thread.
+ *
+ * This is the only way to open a database connection.
+ */
+[scriptable, uuid(a4a0cad9-e0da-4379-bee4-2feef3dddc7e)]
+interface mozIStorageService : nsISupports {
+  /**
+   * Get a connection to a named special database storage.
+   *
+   * @param aStorageKey a string key identifying the type of storage
+   * requested.  Valid values include: "profile", "memory".
+   *
+   * @see openDatabase for restrictions on how database connections may be
+   * used. For the profile database, you should only access it from the main
+   * thread since other callers may also have connections.
+   *
+   * @returns a new mozIStorageConnection for the requested
+   * storage database.
+   *
+   * @throws NS_ERROR_INVALID_ARG if aStorageKey is invalid.
+   */
+  mozIStorageConnection openSpecialDatabase(in string aStorageKey);
+
+  /**
+   * Open a connection to the specified file.
+   *
+   * ==========
+   *   DANGER
+   * ==========
+   *
+   * If you have more than one connection to a file, you MUST use the EXACT
+   * SAME NAME for the file each time, including case. The sqlite code uses
+   * a simple string compare to see if there is already a connection. Opening
+   * a connection to "Foo.sqlite" and "foo.sqlite" will CORRUPT YOUR DATABASE.
+   *
+   * Opening connections from more than one thread to the same database will
+   * also CORRUPT YOUR DATABASE. All connections share the same sqlite cache,
+   * and the cache is not threadsafe.
+   *
+   * The connection object returned by this function is not threadsafe. You must
+   * use it only from the thread you created it from.
+   *
+   * @param aDatabaseFile a nsIFile of the database to open.
+   *
+   * @returns a mozIStorageConnection for the requested
+   * database file.
+   *
+   * @throws NS_ERROR_FAILURE if any operation fails while opening
+   * the database.
+   */
+  mozIStorageConnection openDatabase(in nsIFile aDatabaseFile);
+
+};
+
+%{C++
+
+#define MOZ_STORAGE_MEMORY_STORAGE_KEY    "memory"
+#define MOZ_STORAGE_PROFILE_STORAGE_KEY   "profile"
+
+%}

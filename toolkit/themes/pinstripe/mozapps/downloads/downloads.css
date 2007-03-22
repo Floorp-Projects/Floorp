@@ -1,0 +1,97 @@
+/* Download View */
+#downloadView {
+  margin: 0px;
+  border-bottom: 1px solid #8E8E8E;
+  padding: 0px;
+  -moz-appearance: none;
+}
+
+#downloadView .scrollbox-innerbox {
+  background: url("chrome://mozapps/skin/downloads/background-stripe.gif") #FFFFFF repeat;
+} 
+
+/* Download Manager Command Bar */
+#commandBar {
+	padding: 4px 16px 4px 0px;
+	-moz-box-align: center;
+}
+
+
+#cleanUpButton {
+  -moz-appearance: button-bevel;
+  min-width: 1px;
+  padding: 3px 6px;
+  margin: 0 10px 0 0;
+} 
+
+#commandBarSeparator {
+  display:none;
+}
+
+/* Download View Items */
+download {
+ padding: 4px 8px 4px 4px;
+ height: 32px !important;
+ min-height: 40px !important;
+}
+
+download[selected="true"] {
+    background-color: Highlight !important;
+    background-image: none !important;
+}
+
+download[state="0"], download[state="-1"], download[state="4"] {
+  font: icon !important;
+  padding-bottom: 7px;
+  padding-top: 7px;
+  min-height: 80px !important;
+  background: url("chrome://mozapps/skin/downloads/background-gradient.gif") repeat;
+}
+
+vbox:first-child > label:last-child, hbox:last-child > label:last-child {
+  color: #666666;
+  font-size: 95%;
+}
+
+
+/* Download View Items, implementation */
+
+progressmeter {
+  margin: 6px 6px 4px 6px;
+  min-height:19px;
+  -moz-appearance: none;
+}
+
+.progress-bar {
+  background: url("chrome://mozapps/skin/downloads/progress-bar.gif") repeat-x !important;
+  border-left: 1px solid #D9D9D9 !important;
+}
+
+download[state="4"] .progress-bar {
+  background: url("chrome://mozapps/skin/downloads/progress-bar-paused.gif") repeat-x !important;
+}
+
+.progress-remainder {
+  background: url("chrome://mozapps/skin/downloads/progress-remainder.gif") repeat-x !important;
+  border-right: 1px solid #DEDEDE !important;
+}
+
+label {
+  border: none !important;
+}
+
+dialog label {
+	color: #000000 !important;
+	font-size: 100% !important;
+    font: icon;
+}
+
+#saveToFolder .toolbarbutton-text {
+  text-align: left;
+  margin-left: 5px !important;
+  border: 1px solid transparent !important;
+}
+
+#saveToFolder:focus .toolbarbutton-text {
+  border: 1px solid -moz-mac-focusring !important;
+}

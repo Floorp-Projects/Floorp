@@ -1,0 +1,389 @@
+; Package file for Win32
+;
+; File format:
+;
+; [] designates a toplevel component. Example: [xpcom]
+; - in front of a file specifies it to be removed from the destination
+; * wildcard support to recursively copy the entire directory
+; ; file comment
+;
+
+; *****
+; *
+; * NOTE: Many files that were listed in [browser] have been moved to the
+; *       following pacakges file lists:
+; *
+; *         embedding\config\gre-win
+; *         embedding\config\gre-installer-win
+; *         embedding\config\basebrowser-win
+; *         embedding\config\basebrowser-installer-win
+; *
+; *       [psm] has been moved from this package file list because its
+; *       files have been merged with GRE's package file list:
+; *
+; *         embedding\config\basebrowser-win
+; *         embedding\config\basebrowser-installer-win
+; *
+; *****
+
+bin/.autoreg
+
+[langenus]
+;
+; en-US 
+; If you add a new directory you must explicitly call addDirectory in langenus.jst
+bin\chrome\en-US.jar
+bin\chrome\en-US\*
+bin\defaults\profile\en-US\*
+bin\defaults\messenger\en-US\*
+bin\searchplugins\*
+bin\dictionaries\*
+
+[deflenus]
+;
+; default files for en-US
+bin\defaults\profile\bookmarks.html
+bin\defaults\profile\panels.rdf
+bin\defaults\profile\localstore.rdf
+bin\defaults\profile\search.rdf
+bin\defaults\profile\mimeTypes.rdf
+bin\defaults\messenger\mailViews.dat
+bin\defaults\messenger\Habeas.sfd
+bin\defaults\messenger\SpamAssassin.sfd
+bin\defaults\messenger\SpamCatcher.sfd
+bin\defaults\messenger\SpamPal.sfd
+
+[browser]
+; files listed in xpcom (missing in this section) will be installed as part of the browser
+bin\README.txt,bin\readme.txt
+bin\LICENSE,bin\license.txt
+bin\jpeg3250.dll
+bin\seamonkey.exe
+bin\regxpcom.exe
+bin\xpicleanup.exe
+bin\thebes.dll
+bin\Microsoft.VC80.CRT.manifest
+bin\msvcm80.dll
+bin\msvcp80.dll
+bin\msvcr80.dll
+bin\Microsoft.VC90.CRT.manifest
+bin\msvcm90.dll
+bin\msvcp90.dll
+bin\msvcr90.dll
+bin\components\AcctIdl.dll
+bin\components\AcctIdl.xpt
+bin\components\appcomps.dll
+bin\components\bookmark.dll
+bin\components\windowds.dll
+bin\components\intlapp.dll
+bin\components\xpautoc.dll
+bin\components\srchsvc.dll
+bin\components\autocomplete.xpt
+bin\components\bookmarks.xpt
+bin\components\directory.xpt
+bin\components\downloadmanager.xpt
+bin\components\chrome.xpt
+
+; These 3 files need to be in browser.xpi as well as xpcom.xpi (listed in xpcom-win.pkg)
+bin\nspr4.dll
+bin\plc4.dll
+bin\plds4.dll
+
+bin\components\commandhandler.xpt
+bin\components\winhooks.xpt
+bin\components\alerts.xpt
+bin\components\related.xpt
+bin\components\search.xpt
+bin\components\urlwidgt.xpt
+bin\components\chardetc.dll
+bin\components\cookie.xpt
+bin\components\composer.dll
+bin\components\composer.xpt
+bin\components\jsd3250.dll
+bin\components\jsdservice.xpt
+bin\components\evntloop.dll
+bin\components\find.xpt
+bin\components\nsBrowserContentHandler.js
+bin\components\nsComposerCmdLineHandler.js
+bin\components\content_base.xpt
+bin\components\content_html.xpt
+bin\components\content_htmldoc.xpt
+bin\components\content_xmldoc.xpt
+bin\components\content_xslt.xpt
+bin\components\content_xtf.xpt
+bin\components\xultmpl.xpt
+bin\components\chardet.xpt
+bin\components\jsconsole-clhandler.js
+bin\components\layout_xul_tree.xpt
+bin\components\inspector.xpt
+bin\components\mork.dll
+bin\components\mozbrwsr.xpt
+bin\components\mozcomps.xpt
+bin\components\appstartup.xpt
+bin\components\mozfind.dll
+bin\components\mozfind.xpt
+bin\components\mozucth.dll
+bin\components\mozucth.xpt
+bin\components\nativapp.dll
+bin\components\mimetype.xpt
+bin\components\necko_socket.xpt
+bin\components\nsprefm.dll
+bin\components\nsSidebar.js
+bin\components\perms.dll
+bin\components\prefmigr.xpt
+bin\components\proxyObject.xpt
+bin\components\sidebar.xpt
+bin\components\signonviewer.xpt
+bin\components\tridentprofile.dll
+bin\components\tridentprofile.xpt 
+bin\components\txmgr.dll
+bin\components\txmgr.xpt
+bin\components\exthandler.xpt
+bin\components\prefetch.xpt
+bin\components\util.xpt
+bin\components\walleteditor.xpt
+bin\components\walletpreview.xpt
+bin\components\embed_base.xpt
+bin\components\webshell_idls.xpt
+bin\components\widget.xpt
+bin\components\windowds.xpt
+bin\components\xpautocomplete.xpt
+bin\components\wlltvwrs.dll
+bin\components\autoconfig.dll
+bin\components\autoconfig.xpt
+bin\components\xml-rpc.xpt
+bin\components\nsDictionary.js
+bin\components\nsProxyAutoConfig.js
+bin\components\nsXmlRpcClient.js
+bin\plugins\npnul32.dll
+bin\components\helperAppDlg.xpt
+bin\components\nsKillAll.js
+bin\components\progressDlg.xpt
+bin\components\dom_xpath.xpt
+bin\AccessibleMarshal.dll
+bin\components\nsSetDefaultBrowser.js
+bin\components\suitetypeaheadfind.xpt
+bin\components\suitetypeaheadfind.dll
+bin\components\nsAxSecurityPolicy.js
+bin\components\nsCloseAllWindows.js
+bin\components\extensions.xpt
+bin\components\nsExtensionManager.js
+bin\components\nsInterfaceInfoToIDL.js
+bin\components\nsResetPref.js
+bin\components\nsUpdateNotifier.js
+bin\components\nsURLFormatter.js
+bin\components\urlformatter.xpt
+bin\components\txEXSLTRegExFunctions.js
+
+bin\components\xulappinfo.js
+bin\components\xulappinfo.xpt
+
+; NegotiateAuth
+bin\components\auth.dll
+
+; webservices
+bin\components\websrvcs.dll
+bin\components\websrvcs.xpt
+
+; spellchecker (may not be present)
+bin\components\myspell.dll
+bin\components\spellchk.dll
+bin\components\spellchecker.xpt
+
+; LDAP components need to be in the browser for AutoConfig
+bin\components\mozldap.dll
+bin\components\mozldap.xpt
+bin\nsldap32v50.dll
+bin\nsldappr32v50.dll
+
+;PSM related files
+bin\components\pippki.dll
+bin\components\pippki.xpt
+bin\chrome\pipnss.jar
+bin\chrome\pippki.jar
+
+; chrome stuff
+bin\chrome\help.jar
+bin\chrome\comm.jar
+bin\chrome\toolkit.jar
+bin\chrome\modern.jar
+bin\chrome\classic.jar
+bin\chrome\comm\*
+bin\chrome\toolkit\*
+bin\chrome\modern\*
+bin\chrome\classic\*
+bin\chrome\chromelist.txt
+bin\chrome\icons\default\bmPropsWindow.ico
+bin\chrome\icons\default\bookmark-window.ico
+bin\chrome\icons\default\downloadManager.ico
+bin\chrome\icons\default\editorWindow.ico
+bin\chrome\icons\default\findBookmarkWindow.ico
+bin\chrome\icons\default\findHistoryWindow.ico
+bin\chrome\icons\default\history-window.ico
+bin\chrome\icons\default\jsconsoleWindow.ico
+bin\chrome\icons\default\main-window.ico
+bin\chrome\icons\default\gif-file.ico
+bin\chrome\icons\default\html-file.ico
+bin\chrome\icons\default\misc-file.ico
+bin\chrome\icons\default\image-file.ico
+bin\chrome\icons\default\jpeg-file.ico
+bin\chrome\icons\default\script-file.ico
+bin\chrome\icons\default\xml-file.ico
+bin\chrome\icons\default\xul-file.ico
+;-bin\chrome\comm\content\editor\EditorInitPage.html
+;-bin\chrome\comm\editor\content\EditorInitPagePlain.html
+;Include this for "debug" testing - remove for actual beta release:
+;-bin\chrome\comm\content\editor\TextEditorAppShell.xul
+;-bin\chrome\comm\content\editor\sb-bookmarks-panel.xul
+;-bin\chrome\comm\content\editor\sb-bookmarks.js
+;-bin\chrome\comm\content\editor\sb-file-contextMenu.js
+;-bin\chrome\comm\content\editor\sb-file-panel.js
+;-bin\chrome\comm\content\editor\sb-file-panel.xul
+;-bin\chrome\comm\content\editor\sb-FileWidgetFileHandler.js
+;-bin\chrome\comm\content\editor\viewsource.js
+;-bin\chrome\comm\content\editor\viewsource.xul
+;-bin\chrome\comm\content\communicator\domviewer
+
+; all the pref files must be part of base
+; to prevent migration bugs
+bin\defaults\pref\*
+bin\defaults\autoconfig\*
+bin\res\hiddenWindow.html
+bin\res\EditorOverride.css
+bin\res\grabber.gif
+bin\res\table-add-column-after-active.gif
+bin\res\table-add-column-after-hover.gif
+bin\res\table-add-column-after.gif
+bin\res\table-add-column-before-active.gif
+bin\res\table-add-column-before-hover.gif
+bin\res\table-add-column-before.gif
+bin\res\table-add-row-after-active.gif
+bin\res\table-add-row-after-hover.gif
+bin\res\table-add-row-after.gif
+bin\res\table-add-row-before-active.gif
+bin\res\table-add-row-before-hover.gif
+bin\res\table-add-row-before.gif
+bin\res\table-remove-column-active.gif
+bin\res\table-remove-column-hover.gif
+bin\res\table-remove-column.gif
+bin\res\table-remove-row-active.gif
+bin\res\table-remove-row-hover.gif
+bin\res\table-remove-row.gif
+bin\res\effective_tld_names.dat
+bin\defaults\wallet\VcardSchema.tbl
+bin\defaults\wallet\FieldSchema.tbl
+bin\defaults\wallet\SchemaConcat.tbl
+bin\defaults\wallet\DistinguishedSchema.tbl
+bin\defaults\wallet\SchemaStrings.tbl
+bin\defaults\wallet\PositionalSchema.tbl
+bin\defaults\wallet\StateSchema.tbl
+bin\res\rdf\folder-closed.gif
+bin\res\rdf\folder-open.gif
+bin\res\rdf\loading.gif
+
+; download progress
+bin\components\nsProgressDialog.js
+bin\components\nsHelperAppDlg.js
+bin\components\nsDownloadProgressListener.js
+
+; svg
+bin\gksvggdiplus.dll
+bin\res\svg.css
+bin\components\dom_svg.xpt
+
+[mail]
+bin\msgbsutl.dll
+bin\components\addrbook.dll
+bin\components\addrbook.xpt
+bin\components\emitter.dll
+bin\components\mailnewspublic.xpt
+bin\components\mime.dll
+bin\components\mime.xpt
+bin\components\msgbase.dll
+bin\components\msgbase.xpt
+bin\components\msgcompo.dll
+bin\components\msgcompo.xpt
+bin\components\msgdb.dll
+bin\components\msgdb.xpt
+bin\components\msgimap.dll
+bin\components\msgimap.xpt
+bin\components\msglocal.dll
+bin\components\msglocal.xpt
+bin\components\msgnews.dll
+bin\components\msgnews.xpt
+bin\components\msgsearch.xpt
+bin\components\vcard.dll
+;bin\components\signed.dll
+bin\components\smimestb.dll
+bin\components\import.dll
+bin\components\import.xpt
+bin\components\impComm4xMail.xpt
+bin\components\nsAbLDAPAttributeMap.js
+bin\components\nsLDAPPrefsService.js
+bin\chrome\messenger.jar
+bin\chrome\messenger\*
+bin\chrome\icons\default\abcardWindow.ico
+bin\chrome\icons\default\addressbookWindow.ico
+bin\chrome\icons\default\messengerWindow.ico
+bin\chrome\icons\default\msgcomposeWindow.ico
+bin\components\msgsmime.dll
+bin\components\msgsmime.xpt
+bin\components\smime-service.js
+bin\MapiProxy.dll
+bin\mozMapi32.dll
+bin\components\msgMapi.dll
+bin\components\mapihook.xpt
+bin\components\msgmdn.dll
+bin\components\msgmdn.xpt
+bin\components\mdn-service.js
+bin\components\nsSetDefaultMail.js
+bin\components\nsUnsetDefaultMail.js
+;these Palm Sync files are conditionally built so would not exist unless built
+bin\mozABConduit.dll
+bin\PalmSyncProxy.dll
+bin\PalmSyncInstall.exe
+bin\components\palmsync.dll
+bin\components\palmsync.xpt
+bin\components\bayesflt.dll
+bin\components\mailview.dll
+bin\components\mailview.xpt
+bin\components\offlineStartup.js 
+bin\palm.html
+
+[chatzilla]
+bin\components\chatzilla-service.js
+bin\chrome\chatzilla.jar
+bin\chrome\chatzilla\*
+bin\chrome\icons\default\chatzilla-window.ico
+
+[venkman]
+bin\components\venkman-service.js
+bin\chrome\venkman.jar
+bin\chrome\icons\default\venkman-window.ico
+
+[talkback]
+bin\README.txt,bin\readme.txt
+bin\components\qfaservices.dll
+bin\components\qfaservices.xpt
+bin\components\BrandRes.dll
+bin\components\fullsoft.dll
+bin\components\master.ini
+bin\components\talkback-l10n.ini
+bin\components\talkback.cnt
+bin\components\talkback.exe
+bin\components\talkback.hlp
+
+[inspector]
+bin\components\inspector-cmdline.js
+bin\chrome\inspector.jar
+bin\chrome\icons\default\winInspectorMain.ico
+bin\defaults\pref\inspector.js
+bin\res\inspector\viewer-registry.rdf
+bin\res\inspector\search-registry.rdf
+
+[sroaming]
+bin\components\sroaming.dll
+bin\chrome\sroaming.jar
+
+[reporter]
+bin\chrome\reporter.jar

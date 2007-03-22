@@ -1,0 +1,81 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Frank Yung-Fong Tang <ftang@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+%{C++
+// {ADF42751-1CEF-4ad2-AA8E-BCB849D8D31F}
+#define NS_SEMANTICUNITSCANNER_CID { 0xadf42751, 0x1cef, 0x4ad2, { 0xaa, 0x8e, 0xbc, 0xb8, 0x49, 0xd8, 0xd3, 0x1f}}
+#define NS_SEMANTICUNITSCANNER_CONTRACTID "@mozilla.org/intl/semanticunitscanner;1"
+%}
+
+/**
+ * Provides a language independent way to break UNICODE
+ * text into meaningful semantic units (e.g. words).
+ */
+[scriptable, uuid(9f620be4-e535-11d6-b254-00039310a47a)]
+interface nsISemanticUnitScanner : nsISupports {
+    /**
+     * start()
+     *
+     * Starts up the semantic unit scanner with an optional
+     * character set, which acts as a hint to optimize the heuristics
+     * used to determine the language(s) of the processed text.
+     *
+     * @param characterSet the character set the text was originally
+     *                     encoded in (can be NULL)
+     */
+    void start(in string characterSet);
+
+    /**
+     * next()
+     * Get the begin / end offset of the next unit in the current text
+     *
+     * @param text the text to be scanned
+     * @param length the number of characters in the text to be processed
+     * @param pos the current position
+     * @param isLastBuffer, the buffer is the last one
+     * @param begin the begin offset of the next unit 
+     * @param begin the end offset of the next unit 
+     * @return has more unit in the current text
+     */
+    boolean next(in wstring text, in long length, in long pos, 
+              in boolean isLastBuffer,
+              out long begin, out long end );
+
+};

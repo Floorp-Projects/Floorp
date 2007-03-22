@@ -1,0 +1,17 @@
+#include "nsISupports.idl"
+#include "nsIAtom.idl"
+
+// XXX doc me
+// XXX mark the right params "const"
+
+[scriptable, uuid(2d40b291-01e1-11d4-9d0e-0050040007b2)]
+interface nsIDocumentCharsetInfo : nsISupports
+{
+  attribute nsIAtom forcedCharset;
+
+  attribute boolean forcedDetector;
+
+  attribute nsIAtom parentCharset;
+
+  attribute PRInt32 parentCharsetSource;
+};

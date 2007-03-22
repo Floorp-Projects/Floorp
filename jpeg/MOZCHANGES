@@ -1,0 +1,10 @@
+
+Changes made to pristine jpeg source by mozilla.org developers.
+
+2003/08/18 -- change default mapping for METHODDEF, LOCAL, GLOBAL, EXTERN to better match NSPR
+
+2003/03/14  -- mingw bustage fix. w32api uses different header guard define
+               for <basestd.h> than msvc.
+
+????/??/??  -- Lots of undocumented changes. :(
+

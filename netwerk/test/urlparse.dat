@@ -1,0 +1,103 @@
+# Any blank lines and those beginning with # are comments and 
+# ignored. To add additional test cases that could potentially 
+# break URL parsing in mozilla add the input URL on a new line 
+# and follow it with the expected output for the standard URL 
+# parser and one line for the case when the URL is really 
+# created. Then run urltest with the -std option and without it 
+# on this file and hopefully the expected output should match 
+# the one from the program. 
+#   - Gagan Saksena 03/28/00
+#
+
+http://username:password@hostname.com:80/pathname/./more/stuff/../path
+http,username,password,hostname.com,80,/pathname/more/,path,,,,,http://username:password@hostname.com:80/pathname/more/path
+http,username,password,hostname.com,80,/pathname/more/,path,,,,,http://username:password@hostname.com/pathname/more/path
+
+username@host:8080/path
+,username,,host,8080,/,path,,,,,username@host:8080/path
+Can not create URL
+
+http://gagan/
+http,,,gagan,-1,/,,,,,,http://gagan/
+http,,,gagan,-1,/,,,,,,http://gagan/
+
+scheme:host/netlib
+scheme,,,host,-1,/,netlib,,,,,scheme://host/netlib
+Can not create URL
+
+mailbox:///foo
+mailbox,,,,-1,/,foo,,,,,mailbox:///foo
+mailbox,,,,-1,/,foo,,,,,mailbox:///foo
+
+scheme:user@hostname.edu:80/pathname
+scheme,user,,hostname.edu,80,/,pathname,,,,,scheme://user@hostname.edu:80/pathname
+Can not create URL
+
+http://username:password@hostname:80/pathname
+http,username,password,hostname,80,/,pathname,,,,,http://username:password@hostname:80/pathname
+http,username,password,hostname,80,/,pathname,,,,,http://username:password@hostname/pathname
+
+http://username:password@hostname:8080/path/filebasename.fileextension;param?query#ref
+http,username,password,hostname,8080,/path/,filebasename,fileextension,param,query,ref,http://username:password@hostname:8080/path/filebasename.fileextension;param?query#ref
+http,username,password,hostname,8080,/path/,filebasename,fileextension,param,query,ref,http://username:password@hostname:8080/path/filebasename.fileextension;param?query#ref
+
+resource:/pathname
+resource,,,,-1,/,pathname,,,,,resource:///pathname
+resource,,,,-1,/,pathname,,,,,resource:///pathname
+
+ftp://uname%here.com:pwd@there.com/aPath/a.html
+ftp,uname%here.com,pwd,there.com,-1,/aPath/,a,html,,,,ftp://uname%here.com:pwd@there.com/aPath/a.html
+ftp,uname%here.com,pwd,there.com,-1,/aPath/,a,html,,,,ftp://uname%here.com:pwd@there.com/aPath/a.html
+
+http://www.inf.bme.hu?foo=bar
+http,,,www.inf.bme.hu,-1,/,,,,foo=bar,,http://www.inf.bme.hu/?foo=bar
+http,,,www.inf.bme.hu,-1,/,,,,foo=bar,,http://www.inf.bme.hu/?foo=bar
+
+http://test.com/aPath/a.html#/1/2
+http,,,test.com,-1,/aPath/,a,html,,,/1/2,http://test.com/aPath/a.html#/1/2
+http,,,test.com,-1,/aPath/,a,html,,,/1/2,http://test.com/aPath/a.html#/1/2
+
+http://user:pass@ipaddres:2/get?foo/something
+http,user,pass,ipaddres,2,/,get,,,foo/something,,http://user:pass@ipaddres:2/get?foo/something
+http,user,pass,ipaddres,2,/,get,,,foo/something,,http://user:pass@ipaddres:2/get?foo/something
+
+# testing different versions of http urls
+http:www.mozilla.org
+http,,,www.mozilla.org,-1,/,,,,,,http://www.mozilla.org/
+http,,,www.mozilla.org,-1,/,,,,,,http://www.mozilla.org/
+
+http:/www.mozilla.org
+http,,,,-1,/,www.mozilla,org,,,,http:///www.mozilla.org
+http,,,www.mozilla.org,-1,/,,,,,,http://www.mozilla.org/
+
+# testing cap letters (23927)
+HtTp://wWw.mozilLa.org
+http,,,www.mozilla.org,-1,/,,,,,,http://www.mozilla.org/
+http,,,www.mozilla.org,-1,/,,,,,,http://www.mozilla.org/
+
+# testing spaces (15150)
+go.com.au?mozilla bug reports
+,,,go.com.au,-1,/,,,,mozilla%20bug%20reports,,go.com.au/?mozilla%20bug%20reports
+Can not create URL
+
+http://go.com.au?mozilla bug reports
+http,,,go.com.au,-1,/,,,,mozilla%20bug%20reports,,http://go.com.au/?mozilla%20bug%20reports
+http,,,go.com.au,-1,/,,,,mozilla%20bug%20reports,,http://go.com.au/?mozilla%20bug%20reports
+
+# testing for multiple params (14801)
+http://ad.doubleclick.net/ad/cbsmw.button.com/SIDEBAR_BUTTONS;sz=88x31;kw=DBCC;tile=4;ord=1864641213378545414
+http,,,ad.doubleclick.net,-1,/ad/cbsmw.button.com/,SIDEBAR_BUTTONS,,sz=88x31;kw=DBCC;tile=4;ord=1864641213378545414,,,http://ad.doubleclick.net/ad/cbsmw.button.com/SIDEBAR_BUTTONS;sz=88x31;kw=DBCC;tile=4;ord=1864641213378545414
+http,,,ad.doubleclick.net,-1,/ad/cbsmw.button.com/,SIDEBAR_BUTTONS,,sz=88x31;kw=DBCC;tile=4;ord=1864641213378545414,,,http://ad.doubleclick.net/ad/cbsmw.button.com/SIDEBAR_BUTTONS;sz=88x31;kw=DBCC;tile=4;ord=1864641213378545414
+
+fxqn:/us/va/reston/cnri/ietf/24/asdf%*.fred
+fxqn,,,,-1,/us/va/reston/cnri/ietf/24/,asdf%*,fred,,,,fxqn:///us/va/reston/cnri/ietf/24/asdf%*.fred
+Can not create URL
+
+news:3B5C133C.2080505@foobar.net
+news,3B5C133C.2080505,,foobar.net,-1,/,,,,,,news://3B5C133C.2080505@foobar.net/
+news,3B5C133C.2080505,,foobar.net,-1,/,,,,,,news://3B5C133C.2080505@foobar.net/
+
+http://host/path/%2E%2E/file%2Ehtml
+http,,,host,-1,/,file%2Ehtml,,,,,http://host/file%2Ehtml
+http,,,host,-1,/,file%2Ehtml,,,,,http://host/file%2Ehtml
+

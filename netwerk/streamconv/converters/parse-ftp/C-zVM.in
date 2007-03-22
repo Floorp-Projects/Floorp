@@ -1,0 +1,61 @@
+ftp> open vm.marist.edu
+220-Welcome to FTP.Marist.edu
+220-
+220-All usage logged. Usage restricted.
+220-FTPSERVE IBM VM Level 420 at VM.MARIST.EDU, 05:06:00 EDT WEDNESDAY 2002-07-10
+220 Connection will close if idle for more than 5 minutes.
+Name (vm.marist.edu:cyp): 
+230-
+230-
+230-Listserv logs for certain lists are available via CD ACADEM:listname.
+230-
+230-Lists that they are available for are:
+230-
+230-ADSM-L        ftp://vm.marist.edu/academ:adsm-l./
+230-CLINTON       ftp://vm.marist.edu/academ:clinton./
+230-CMSPIP-L      ftp://vm.marist.edu/academ:cmspip-l./
+230-CONCORD       ftp://vm.marist.edu/academ:concord./
+230-REPUB-L       ftp://vm.marist.edu/academ:repub-l./
+230-SAS-L         ftp://vm.marist.edu/academ:sas-l./
+230-VM-UTIL       ftp://vm.marist.edu/academ:vm-util./
+230-LINUX-VM      ftp://vm.marist.edu/academ:linux-vm./
+230-
+230-For example: (Note the trailing .)
+230-
+230-CD ACADEM:ADSM-L.
+230-
+230-Due to limitations of Netscape, you may need to append ";type=a"
+230-to the end of a URL when obtaining a file.
+230-
+230-CMS Pipelines RLD available as
+230-
+230-              ftp://vm.marist.edu/academ:pipeline/eweb./
+230-
+230 ANONYMOU logged in; working directory = ACADEM:ANONYMOU.
+Remote system type is z/VM.
+ftp> ls
+200 Port request OK.
+125 List started OK
+README   ANONYMOU V         71         26          1 1997-04-02 12:33:20 TCP291
+README   ANONYOLD V         71         15          1 1995-08-25 16:04:27 TCP291
+AUTHORS           DIR        -          -          - 1999-09-20 10:31:11 -
+HARRINGTON        DIR        -          -          - 1997-02-12 15:33:28 -
+PICS              DIR        -          -          - 2000-10-12 15:43:23 -
+SYSFILE           DIR        -          -          - 2000-07-20 17:48:01 -
+WELCNVT  EXEC     V         72          9          1 1999-09-20 17:16:18 -
+WELCOME  EREADME  F         80         21          1 1999-12-27 16:19:00 -
+WELCOME  README   V         82         21          1 1999-12-27 16:19:04 -
+PROJECT  PDF      V        984         10          3 1997-06-15 11:15:02 -
+CAMPUS   TIF      V       8192       3172       3606 2000-10-06 17:20:37 -
+ROTUNDA  TIF      V       8192       5745       8750 2000-10-06 17:28:25 -
+STUDENT  TIF      V       8192       5017       8557 2000-10-06 17:31:26 -
+CHILDREN TXT      V        280        310         20 1993-08-06 14:20:00 -
+SYSFILE  VMARC    F         80       2001         40 2000-07-20 17:47:35 -
+250 List completed successfully.
+ftp> syst
+215-z/VM Version 4 Release 2.0, service level 0101 (32-bit)
+    VM/CMS Level 18, Service Level 101
+215 VM is the operating system of this server.
+ftp> close
+221 Quit command received. Goodbye.
+ftp>

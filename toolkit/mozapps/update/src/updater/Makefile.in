@@ -1,0 +1,123 @@
+# vim:set ts=8 sw=8 sts=8 noet:
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla Toolkit Application Update.
+#
+# The Initial Developer of the Original Code is
+# Benjamin Smedberg <benjamin@smedbergs.us>
+
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+
+DEPTH		= ../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+CPPSRCS = \
+	updater.cpp \
+	bspatch.cpp \
+	archivereader.cpp \
+	$(NULL)
+
+PROGRAM = updater$(BIN_SUFFIX)
+
+REQUIRES = libmar libbz2
+
+LIBS += \
+	$(DEPTH)/modules/libmar/src/$(LIB_PREFIX)mar.$(LIB_SUFFIX) \
+	$(DEPTH)/modules/libbz2/src/$(LIB_PREFIX)bz2.$(LIB_SUFFIX) \
+	$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+USE_STATIC_LIBS = 1
+HAVE_PROGRESSUI = 1
+RCINCLUDE = updater.rc
+CPPSRCS += progressui_win.cpp
+OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32)
+ifndef GNU_CC
+RCFLAGS += -I$(srcdir)
+else
+RCFLAGS += --include-dir $(srcdir)
+DEFINES += -D_WIN32_IE=0x300
+endif
+endif
+
+ifneq ($(MOZ_ENABLE_GTK2),)
+HAVE_PROGRESSUI = 1
+CPPSRCS += \
+	progressui_gtk.cpp \
+	readstrings.cpp \
+	$(NULL)
+OS_CXXFLAGS += $(TK_CFLAGS)
+OS_LIBS += $(TK_LIBS)
+endif
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+HAVE_PROGRESSUI = 1
+CPPSRCS += readstrings.cpp
+CMMSRCS += progressui_osx.mm launchchild_osx.mm
+OS_LIBS += -framework Cocoa
+endif
+
+ifndef HAVE_PROGRESSUI
+CPPSRCS += progressui_null.cpp
+endif
+
+ifndef MOZ_WINCONSOLE
+ifdef MOZ_DEBUG
+MOZ_WINCONSOLE = 1
+else
+MOZ_WINCONSOLE = 0
+endif
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+libs::
+	mkdir -p $(DIST)/bin/updater.app
+	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/bin/updater.app 
+	sed -e "s/@APP_NAME@/$(MOZ_APP_DISPLAYNAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | \
+	  iconv -f UTF-8 -t UTF-16 > $(DIST)/bin/updater.app/Contents/Resources/English.lproj/InfoPlist.strings
+	mkdir -p $(DIST)/bin/updater.app/Contents/MacOS
+# copy and remove to un-symlink (FSCopyObject seems to not copy symlinks)
+	rm -f $(DIST)/bin/updater.app/Contents/MacOS/updater
+	cp -f $(DIST)/bin/updater $(DIST)/bin/updater.app/Contents/MacOS
+	rm -f $(DIST)/bin/updater
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+# Pick up nsWindowsRestart.cpp
+LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
+endif

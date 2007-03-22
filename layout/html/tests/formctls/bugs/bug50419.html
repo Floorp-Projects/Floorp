@@ -1,0 +1,65 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<style>
+TABLE
+{
+	cursor: text;
+	border:	1px solid grey;
+	border-spacing:	0px;
+	border-collapse: collapse;
+	font-family : Tahoma;
+	font-size : 10pt;
+}
+TD
+{
+	border:	1px solid grey;
+	padding-left:3px;
+	width:130px;
+	height:24px;
+	text-align:center;
+}
+INPUT
+{
+	width:125px;
+	font-family : Tahoma;
+	font-size:10pt;
+	color:#0000ff;
+	height:19px;
+	padding-left:0px;
+	margin-top:1px;
+	text-align:center;
+	border-style:solid;
+}
+</style>
+<script>
+function insertField()
+{
+	var oTd = document.getElementById("td1");
+	var oTf = document.createElement("input");
+	var oText = oTd.firstChild;
+	oTf.value = "a really, really, really, really, really long string that will never fit in the textfield.";
+	oTd.replaceChild(oTf, oText);
+}
+</script>
+</head>
+
+<body>
+<table>
+<tr><td>some more filler here</td><td id="td1">this will be replaced</td></tr>
+<tr><td>some more filler here</td><td>some more filler here</td></tr>
+<tr><td>some more filler here</td><td>some more filler here</td></tr>
+<tr><td>some more filler here</td><td>some more filler here</td></tr>
+<tr><td>some more filler here</td><td>some more filler here</td></tr>
+<tr><td>some more filler here</td><td>some more filler here</td></tr>
+<tr><td>some more filler here</td><td>some more filler here</td></tr>
+<tr><td>some more filler here</td><td>some more filler here</td></tr>
+<tr><td>some more filler here</td><td>some more filler here</td></tr>
+</table>
+<br>
+<form>
+<input type="button" value="Isert textfield in upper table cell" onclick="insertField();"
+		style="width:200px;">
+</form>
+</body>
+</html>

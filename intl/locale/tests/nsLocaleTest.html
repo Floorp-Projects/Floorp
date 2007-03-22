@@ -1,0 +1,44 @@
+<html>
+<head>
+    <title>nsLocale Scriptability Test</title>
+
+</head>
+
+<script>
+
+var localeService = null;
+var applicationLocale = null;
+var systemLocale = null;
+
+function get_locale_service() {
+      localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"].createInstance();
+      localeService = localeService.QueryInterface(Components.interfaces.nsILocaleService);
+      applicationLocale = localeService.GetApplicationLocale();
+      systemLocale = localeService.GetSystemLocale();
+}
+
+function do_application_locale(t) {
+      t.value = applicationLocale.GetCategory("NSILOCALE_MESSAGES");
+}
+
+function do_system_locale(t) {
+      t.value = systemLocale.GetCategory("NSILOCALE_MESSAGES");
+}
+
+</script>
+
+<body BGCOLOR="#FFFFFF" TEXT="#000000" onLoad="get_locale_service();">
+
+<form name="locale">
+<b>Application Locale: </b>
+<input type="button" value="Get Application Locale" onClick=do_application_locale(this);></br>
+<b>System Locale: </b>
+<input type="button" value="Get System Locale" onClick=do_system_locale(this);></br>
+</form>
+
+<hr>
+<address><a href="mailto:tague@netscape.com">Tague Griffith</a></address> 
+</body>
+</html>
+
+

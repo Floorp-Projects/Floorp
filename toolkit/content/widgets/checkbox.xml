@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+
+<bindings id="checkboxBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="checkbox" extends="chrome://global/content/bindings/checkbox.xml#checkbox-baseline">
+    <resources>
+      <stylesheet src="chrome://global/skin/checkbox.css"/>
+    </resources>
+  </binding>
+
+  <binding id="checkbox-baseline" extends="chrome://global/content/bindings/general.xml#basetext">
+    <content>
+      <xul:image class="checkbox-check" xbl:inherits="checked,disabled"/>
+      <xul:hbox class="checkbox-label-box" flex="1">
+        <xul:image class="checkbox-icon" xbl:inherits="src"/>
+        <xul:label class="checkbox-label" xbl:inherits="xbl:text=label,accesskey,crop" flex="1"/>
+      </xul:hbox>
+    </content>
+    
+    <implementation implements="nsIDOMXULCheckboxElement, nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          <![CDATA[
+            return Components.interfaces.nsIAccessibleProvider.XULCheckbox;
+          ]]>
+        </getter>
+      </property>
+
+      <method name="setChecked">
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          var change = (aValue != (this.getAttribute('checked') == 'true'));
+          if (aValue)
+            this.setAttribute('checked', 'true');
+          else
+            this.removeAttribute('checked');
+          if (change) {
+            var event = document.createEvent('Events');
+            event.initEvent('CheckboxStateChange', true, true);
+            this.dispatchEvent(event);
+          }
+          return aValue;
+        ]]>
+        </body>
+      </method>
+      
+      <!-- public implementation -->
+      <property name="checked"    onset="return this.setChecked(val);"
+                                  onget="return this.getAttribute('checked') == 'true';"/>
+    </implementation>
+    
+    <handlers>
+      <!-- While it would seem we could do this by handling oncommand, we need can't
+           because any external oncommand handlers might get called before ours, and
+           then they would see the incorrect value of checked. -->           
+      <handler event="click" button="0" action="if (!this.disabled) this.checked = !this.checked;"/>
+      <handler event="keypress" key=" ">
+        <![CDATA[
+          this.checked = !this.checked;
+        ]]>
+      </handler>
+    </handlers>
+  </binding> 
+
+  <binding id="checkbox-with-spacing"
+           extends="chrome://global/content/bindings/checkbox.xml#checkbox">
+
+    <content>
+      <xul:hbox class="checkbox-spacer-box">
+        <xul:image class="checkbox-check" xbl:inherits="checked,disabled"/>
+      </xul:hbox>
+      <xul:hbox class="checkbox-label-center-box" flex="1">
+        <xul:hbox class="checkbox-label-box" flex="1">
+          <xul:image class="checkbox-icon" xbl:inherits="src"/>
+          <xul:label class="checkbox-label" xbl:inherits="xbl:text=label,accesskey,crop" flex="1"/>
+        </xul:hbox>
+      </xul:hbox>
+    </content>
+  </binding>
+
+</bindings>

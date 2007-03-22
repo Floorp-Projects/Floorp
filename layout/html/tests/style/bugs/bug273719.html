@@ -1,0 +1,26 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Strict//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+<title>Generated Content Test Page</title>
+<style type="text/css">
+#generated div {
+	color: blue;
+}
+#generated div:before {
+	content: "Generated ";
+}
+#generated div.normal {
+	color: red;
+}
+#generated div.normal:before {
+	content: normal;
+}
+</style>
+</head>
+<body>
+<div id="generated">
+<div>Static</div>
+<div class="normal">Static</div>
+</div>
+</body>
+</html>

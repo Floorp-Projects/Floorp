@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+span { color: green }
+:checked + span { color: red }
+input { display: none }
+</style>
+
+<body onload='document.getElementById("foo").removeAttribute("type");'>
+<input type="checkbox" checked="checked" id="foo"><span>There should be no red</span>
+</body>
+</html>

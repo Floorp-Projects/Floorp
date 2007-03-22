@@ -1,0 +1,8 @@
+<!-- extracted from institems.xul -->
+
+<!ENTITY dialog.title "Software Installation">
+<!ENTITY warningText2.label "Malicious software can damage your computer or violate your privacy.">
+<!ENTITY warningText3.label "You should only install software from sources that you trust.">
+
+<!ENTITY from.label "from:">
+

@@ -1,0 +1,22 @@
+<!ENTITY sanitizeDialog.title         "Clear Private Data">
+
+<!ENTITY sanitizeItems.label          "Clear the following items now:">
+<!ENTITY clearDataSettings.label      "When I ask &brandShortName; to clear my private data, it should erase:">
+
+<!-- XXX rearrange entities to match physical layout when l10n isn't an issue -->
+
+<!ENTITY itemHistory.label            "Browsing History">
+<!ENTITY itemHistory.accesskey        "B">
+<!ENTITY itemFormSearchHistory.label  "Saved Form and Search History">
+<!ENTITY itemFormSearchHistory.accesskey "F">
+<!ENTITY itemPasswords.label          "Saved Passwords">
+<!ENTITY itemPasswords.accesskey      "P">
+<!ENTITY itemCookies.label            "Cookies">
+<!ENTITY itemCookies.accesskey        "C">
+<!ENTITY itemCache.label              "Cache">
+<!ENTITY itemCache.accesskey          "a">
+<!ENTITY itemDownloads.label          "Download History">
+<!ENTITY itemDownloads.accesskey      "D">
+<!ENTITY itemSessions.label           "Authenticated Sessions">
+<!ENTITY itemSessions.accesskey       "S">
+<!ENTITY window.width                 "30em">

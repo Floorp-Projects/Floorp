@@ -1,0 +1,103 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Gagan Saksena <gagan@netscape.com> (original author)
+ *   Denis Antrushin <adu@sparc.spb.su>
+ *   Darin Fisher <darin@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/** 
+ * The nsIProxyAutoConfig interface is used for setting arbitrary proxy
+ * configurations based on the specified URL. 
+ *
+ * Note this interface wraps (at least in the implementation) the older
+ * hacks of proxy auto config. 
+ *
+ *  - Gagan Saksena 04/23/00 
+ */
+
+[scriptable, uuid(a42619df-0a1c-46fb-8154-0e9b8f8f1ea8)]
+interface nsIProxyAutoConfig : nsISupports
+{
+    /**
+     * This method initializes the object.  This method may be called multiple
+     * times.  If either parameter is an empty value, then the object is
+     * reset to its initial state.
+     *
+     * @param aPACURI
+     *        URI used to fetch the PAC script.  This is needed for properly
+     *        constructing the JS sandbox used to evaluate the PAC script.
+     * @param aPACScript
+     *        Javascript program text.
+     */
+    void init(in ACString aPACURI, in AString aPACScript);
+
+    /**
+     * Get the proxy string for the specified URI.  The proxy string is
+     * given by the following:
+     *   
+     *   result      = proxy-spec *( proxy-sep proxy-spec )
+     *   proxy-spec  = direct-type | proxy-type LWS proxy-host [":" proxy-port]
+     *   direct-type = "DIRECT"
+     *   proxy-type  = "PROXY" | "SOCKS" | "SOCKS4" | "SOCKS5"
+     *   proxy-sep   = ";" LWS
+     *   proxy-host  = hostname | ipv4-address-literal
+     *   proxy-port  = <any 16-bit unsigned integer>
+     *   LWS         = *( SP | HT )
+     *   SP          = <US-ASCII SP, space (32)>
+     *   HT          = <US-ASCII HT, horizontal-tab (9)>
+     *
+     * NOTE: direct-type and proxy-type are case insensitive
+     * NOTE: SOCKS implies SOCKS4
+     *
+     * Examples:
+     *   "PROXY proxy1.foo.com:8080; PROXY proxy2.foo.com:8080; DIRECT"
+     *   "SOCKS socksproxy"
+     *   "DIRECT"
+     *
+     * XXX add support for IPv6 address literals.
+     * XXX quote whatever the official standard is for PAC.
+     *
+     * @param aTestURI
+     *        The URI as an ASCII string to test.
+     * @param aTestHost
+     *        The ASCII hostname to test.
+     *
+     * @return PAC result string as defined above.
+     */
+    ACString getProxyForURI(in ACString aTestURI, in ACString aTestHost);
+};

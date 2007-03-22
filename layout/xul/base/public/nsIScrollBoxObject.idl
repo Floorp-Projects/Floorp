@@ -1,0 +1,83 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Original Author: Eric D. Vaughan (evaughan@netscape.com)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsIBoxObject.idl"
+
+interface nsIDOMElement;
+
+
+[scriptable, uuid(56E2ADA8-4631-11d4-BA11-001083023C1E)]
+interface nsIScrollBoxObject : nsISupports
+{
+  /**
+   * Scroll to the given coordinates, in css pixels.
+   * (0,0) will put the top left corner of the scrolled element's padding-box
+   * at the top left corner of the scrollport (which is its inner-border-box).
+   * Values will be clamped to legal values.
+   */
+  void scrollTo(in long x, in long y);
+
+  /**
+   * Scroll the given amount of device pixels to the right and down.
+   * Values will be clamped to make the resuling position legal.
+   */
+  void scrollBy(in long dx, in long dy);
+
+  void scrollByLine(in long dlines);
+  void scrollByIndex(in long dindexes);
+  void scrollToLine(in long line);
+  void scrollToElement(in nsIDOMElement child);
+  void scrollToIndex(in long index);
+
+  /**
+   * Get the current scroll position in css pixels.
+   * @see scrollTo for the definition of x and y.
+   */
+  void getPosition(out long x, out long y);
+
+  void getScrolledSize(out long width, out long height);
+  void ensureElementIsVisible(in nsIDOMElement child);
+  void ensureIndexIsVisible(in long index);
+  void ensureLineIsVisible(in long line);
+};
+
+%{C++
+nsresult
+NS_NewScrollBoxObject(nsIBoxObject** aResult);
+
+%}

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: item guid works
+Expect: var link = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).link; link.spec == 'http://www.example.org/';
+
+-->
+<rss version="2.0" >
+<channel>
+<item>
+
+<enclosure length="24986239" type="audio/mpeg" url="http://dallas.example.com/joebob_050689.mp3" /> 
+<author>jbb@dallas.example.com (Joe Bob Briggs)</author>
+<title>test</title>
+<guid isPermaLink="true">http://www.example.org/</guid>
+<category domain="foo">bar</category>
+
+<description>I'm headed for France. I wasn't gonna go this year, but then last week &lt;a href="http://www.imdb.com/title/tt0086525/"&gt;Valley Girl&lt;/a&gt; came out and I said to myself, Joe Bob, you gotta get out of the country for a while.</description></item>
+</channel>
+</rss>

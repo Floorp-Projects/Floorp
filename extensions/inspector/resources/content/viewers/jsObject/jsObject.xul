@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<?xul-overlay href="chrome://inspector/content/viewers/jsObject/jsObjectViewer.xul"?>
+
+<page id="winJSObject"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript" src="chrome://inspector/content/viewers/jsObject/jsObject.js"/>
+
+  <stringbundle id="inspector-bundle"/>
+  <commandset id="cmdsJSObjectViewer"/>
+
+  <popup id="popupContext"/>
+  <tree id="treeJSObject"/>
+</page>

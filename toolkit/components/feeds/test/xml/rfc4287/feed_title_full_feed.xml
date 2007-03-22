@@ -1,0 +1,936 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+Description: Feed title works with full entry
+Expect: feed.title.text == 'ongoing'
+-->
+<feed xmlns='http://www.w3.org/2005/Atom'
+      xml:base='http://www.tbray.org/ongoing/ongoing.atom'
+      xml:lang='en-us'>
+ <title>ongoing</title>
+ <id>http://www.tbray.org/ongoing/</id>
+ <link href='./' />
+ <link rel='self' href='' />
+ <logo>rsslogo.jpg</logo>
+ <icon>/favicon.ico</icon>
+ <updated>2006-04-26T20:10:25-08:00</updated>
+ <author><name>Tim Bray</name></author>
+ <subtitle>ongoing fragmented essay by Tim Bray</subtitle>
+ <rights>All content written by Tim Bray and photos by Tim Bray Copyright Tim Bray, some rights reserved, see /ongoing/misc/Copyright</rights>
+ <generator uri='/misc/Colophon'>Generated from XML source code using Perl, Expat, XML::Parser, Emacs, Mysql, and ImageMagick.  Industrial strength technology, baby.</generator>
+
+<entry xml:base='When/200x/2006/04/26/'>
+ <title>Spring in White on White</title>
+ <link href='Spring-in-White-on-White' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/26/Spring-in-White-on-White</id>
+ <published>2006-04-26T13:00:00-08:00</published>
+ <updated>2006-04-26T20:10:16-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Arts/Photos' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Arts' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Photos' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Garden' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Garden' />
+ <summary type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>Most people would generally prefer a climate where it&#x2019;s bright and warm most of the time. But for Canadians and others who live where it&#x2019;s not, there are compensations, and one is the experience of spring.  I have a picture.</div></summary>
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p>Most people would generally prefer a climate where it’s bright
+and warm most of the time. But for Canadians and others who live where it’s
+not, there are compensations, and one is the experience of
+spring.  I have a picture.</p>
+<img src="IMGP3247.png" alt="Pear blossoms against cherry blossoms" />
+<div class="caption"><p>The blossoms are pear in the foreground, cherry behind.</p></div>
+<p>After all the months of 50° North Latitude winter—icy-sharp in most
+of Canada, wet and dark here in Vancouver—the soul, the spirit, and the
+libido all spring to life when the sun comes back.  We’ve had a solid year of
+crappy weather, but this last Saturday through Monday were solidly summery,
+bright 
+and warm; and in this season the days are already long and each gets
+longer so fast you can feel it.</p>
+<p>On the back porch, our pear tree’s branches were silhouetted against the
+neighbors’ big wild old cherry; the cherry yields no edible fruit but who
+cares, it’s beautiful
+tree any time of year.</p>
+</div></content></entry>
+
+<entry xml:base='When/200x/2006/04/26/'>
+ <title>Scott</title>
+ <link href='Scott' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/26/Scott</id>
+ <published>2006-04-26T13:00:00-08:00</published>
+ <updated>2006-04-26T20:06:50-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Business/Sun' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Business' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Sun' />
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p>I’ve been watching our internal leadership conference and spending quite a
+bit of time talking in the virtual hallways, and I’ve been surprised at
+the intensity of feeling about Mr. McNealy.  Yes, there are those
+here saying “About bloody time, now we can make some progress” but there’s a
+much bigger group that is genuinely emotional about this transition.
+Maybe it’s a function of seniority: I never met nor corresponded with Scott, and
+he hasn’t been
+much of a presence in the company’s conversation in the time I’ve been here.
+But there are a lot of smart, seasoned, unsentimental people making it clear
+that 
+he’s been a major force in their lives, at a more personal level than I’m
+used to hearing when people speak about executives.  I guess also that to a
+lot of people, Sun’s vision, for which Scott gets some of the credit, was a
+radical and wonderful thing.   I first used Unix in 1979 and quit a nice
+big-company job
+to become a VAX-bsd sysadmin in 1983, so I’ve always kind of
+lived inside that vision.
+But I’ll tell you one thing, what I’ve been hearing the last couple of days
+makes me really regret that I didn’t get to know Scott.</p>
+</div></content></entry>
+
+<entry xml:base='When/200x/2006/04/26/'>
+ <title>Jacobs, Pictures, Spartans</title>
+ <link href='Jane-Jacobs' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/26/Jane-Jacobs</id>
+ <published>2006-04-26T13:00:00-08:00</published>
+ <updated>2006-04-26T17:28:59-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='The World' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='The World' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Arts/Photos' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Arts' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Photos' />
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p><a href="http://en.wikipedia.org/wiki/Jane_Jacobs">Jane Jacobs</a> died;
+the city I live in, Vancouver, is pretty solidly Jacobsian both in its current
+shape and its planning dogma.  By choosing to live here I’m empirically a
+fan.  Oddly, few have remarked how great Jacobs
+<em>looked</em>; her face commanded the eye.  Which leads me Alex
+Waterhouse-Hayward’s wonderful 
+<a href="http://www.alexwaterhousehayward.com/blog/2006/04/jane-jacobs-viveca-lindfors_26.html">Jane Jacobs &amp; Viveca Lindfors</a>;
+surprising portraits and thoughts on decoration.  W-H’s blog has become one of
+only two or three that I 
+stab at excitedly whenever I see something new.  For example, see 
+<a href="http://www.alexwaterhousehayward.com/blog/archives/2006_04_01_archive.html#114476408248660848">Sex Crimes, Homicide and Drugs</a>
+and yes, that’s what it’s about.
+Staying with the death-and-betrayal theme, and apparently (but not really)
+shifting back 2&#xbd; millennia, see John Cowan’s
+<a href="http://recycledknowledge.blogspot.com/2006/04/war-after-simonides.html">The
+War (after Simonides)</a>, being careful to look closely at the links.
+I’ve
+<a href="http://www.tbray.org/ongoing/When/200x/2003/03/24/Herodotus">written</a>
+about those same wars.</p>
+</div></content></entry>
+
+<entry xml:base='When/200x/2006/04/25/'>
+ <title>LAMP and MARS</title>
+ <link href='Scaling-Rails' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/25/Scaling-Rails</id>
+ <published>2006-04-25T13:00:00-08:00</published>
+ <updated>2006-04-26T07:24:06-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology/Web' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Web' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology/Sun' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Sun' />
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p>At
+<a href="/ongoing/When/200x/2006/04/13/RoR">that Rails conference</a>, when I
+was
+<a href="http://blog.garbledygook.com/2006/04/17/ruby-on-rails-podcast-tim-bray-ruby-on-rails-podcast/">talking</a>
+to
+<a href="http://jroller.com/page/obie">Obie Fernandez</a>, he asked, more or
+less “How can Sun love us?  We’re not Java” and I said, more or less, “Hey,
+you’re programmers, you write software and there have to be computers to run
+it, we sell computers, why wouldn’t we love you?”  Anyhow, we touched on
+parallelism a bit and I talked up the
+<a href="http://www.sun.com/processors/UltraSPARC-T1/">T1</a>; 
+Obie took that ball and 
+<a href="http://jroller.com/page/obie?entry=will_ultrasparc_t1_emerge_as">ran with it</a>,
+saying all sorts of positive things about synergy between Rails’
+shared-nothing architecture and our multicore systems.  Yeah, well, good in
+theory, but I’m too old to make that kind of prediction without running some
+tests.  Hah, it turns out that
+<a href="http://joyent.com/">Joyent</a> has been
+<a href="http://scalewithrails.com/">doing that</a>, and have
+<a href="http://scalewithrails.com/downloads/ScaleWithRails-April2006.pdf">76
+PDF slides</a> on the subject.
+If you care about big-system scaling issues, read the whole thing; a little
+long, but amusing and with hardly any bullet lists.  If you’re a Sun
+shareholder looking for a pick-me up, check out slides 40-41, 49, and 52-74.
+Oh, I gather that the T1, Solaris, and ZFS are OK for Java too.
+<i>[Update: The title was just “SAMR”, as in LAMP with two new letters.  
+Enough people didn’t get it that I was forced to think about it, and MARS
+works better anyhow.]</i></p>
+</div></content></entry>
+
+<entry xml:base='When/200x/2006/04/25/'>
+ <title>Real-Time Journalism</title>
+ <link href='Talk-With-Berlind' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/25/Talk-With-Berlind</id>
+ <published>2006-04-25T13:00:00-08:00</published>
+ <updated>2006-04-26T06:40:19-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='The World/Journalism' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='The World' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Journalism' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology/Syndication' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Syndication' />
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p>I got email late yesterday from
+<a href="http://blogs.zdnet.com/bio.php#berlind">David Berlind</a>: “Hey, can
+I call you for a minute?”  He wanted commentary on
+<a href="http://blogs.zdnet.com/BTL/?p=2906">a story he was writing</a> that I
+think is about the potential for intellectual-property lock-ins on RSS and Atom
+extensions.  I say “I think is about” because the headline is “Will or could
+RSS get forked?”.  After a few minutes’ chat, David asked if he could record
+for a podcast, and even though I only had a cellphone, the audio came out OK.
+The conversation was rhythmic: David brought up a succession of potential
+issues and answered each along the lines of “Yes, it’s reasonable to worry
+about that, but in this 
+case I don’t see any particular problems.”  
+Plus I emitted a mercifully-brief rant on the difference between protocols,
+data, and software.
+On the one hand, I thought David could have been a 
+little clearer that I was pushing back against the thrust of his story, but on
+the other hand he included the whole conversation right
+there in the piece, so anyone who actually cares can listen and find out what
+I actually said, not what I think I said nor what David reported I said.
+I find this raw barely-intermediated journalism (we
+talk on the phone this afternoon, it’s on the Web in hours) a little
+shocking still.
+On balance, it’s better than the way we used to do things.</p>
+</div></content></entry>
+
+<entry xml:base='When/200x/2006/04/24/'>
+ <title>The Transition Explained</title>
+ <link href='CEO-Transition' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/24/CEO-Transition</id>
+ <published>2006-04-24T13:00:00-08:00</published>
+ <updated>2006-04-24T16:49:05-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Business/Sun' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Business' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Sun' />
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p>It’s not that complicated, really.
+Bloggers are
+<a href="http://www.sun.com/2006-0418/js/index.jsp">taking over the world</a>.
+Resistance is futile; you will be assimilated.</p>
+</div></content></entry>
+
+<entry xml:base='When/200x/2006/04/24/'>
+ <title>5&#x272d;&#x266b;: One More Cup of Coffee</title>
+ <link href='One-More-Cup-Of-Coffee' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/24/One-More-Cup-Of-Coffee</id>
+ <published>2006-04-24T13:00:00-08:00</published>
+ <updated>2006-04-24T13:00:00-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Arts/Music/Recordings' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Arts' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Music' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Recordings' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Arts/Music/5 Stars' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='5 Stars' />
+ <summary type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>I&#x2019;m not really a <a href='http://en.wikipedia.org/wiki/Bob_Dylan'>Bob Dylan</a> fan.  A voice like that, and a tunesmithing talent like that, come along only a few times per century, but he&#x2019;s still kind of irritating. That aside, the song <cite>One More Cup of Coffee</cite>, from the 1976 album <a href='http://en.wikipedia.org/wiki/Desire_%28album%29'>Desire</a>, can&#x2019;t be ignored; wonderful tune, wonderful orchestration, wonderful performance. <i>(&#x201c;5&#x272d;&#x266b;&#x201d; series introduction <a href='/ongoing/When/200x/2006/01/23/5-Star-Music'>here</a>; with <a href='/ongoing/When/200x/2006/01/23/5-Star-Music#p-1'>an explanation</a> of why the title may look broken.)</i></div></summary>
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p>I’m not really a
+<a href="http://en.wikipedia.org/wiki/Bob_Dylan">Bob Dylan</a> fan.  A voice
+like that, and a tunesmithing talent like that, come along only a few times
+per century, but he’s still kind of irritating.
+That aside, the song <cite>One More Cup of Coffee</cite>, from the 1976 album
+<a href="http://en.wikipedia.org/wiki/Desire_%28album%29">Desire</a>, can’t be
+ignored; wonderful tune, wonderful orchestration, wonderful performance.
+<i>(“5✭♫” series introduction <a href="/ongoing/When/200x/2006/01/23/5-Star-Music">here</a>;
+with <a href="/ongoing/When/200x/2006/01/23/5-Star-Music#p-1">an
+explanation</a> of why the title may look broken.)</i></p>
+<img src="Desire.png" class="inline" alt="Desire, by Bob Dylan" />
+<h2 id='p-1'>The Context</h2>
+<p>Nothing I can possibly write will add any wisdom to the
+millions of words, some 90% of them in excess of needs, written on the subject
+of this particular person.</p>
+<p>A personal statement: Bob Dylan has long irritated me for, during the first
+thirty years or 
+so of his career, never having given a straight answer to a straight question,
+and for writing songs with dozens of boring verses.  But they’ll still be
+listening 
+to lots of his performances long after I’m dead, and in recent years he’s
+become a better, more direct, interview.</p>
+<p>My taste in Dylan is a little unusual: once you get past <cite>One More Cup
+of Coffee</cite>, my favorites would be <cite>Baby Let Me Follow You
+Down</cite> (from the <cite>Last Waltz</cite> soundtrack) and 
+<cite>Crash on the Levee (Down in the Flood)</cite> from
+<a href="http://en.wikipedia.org/wiki/The_Basement_Tapes">The Basement
+Tapes</a>.</p>
+<p><cite>Desire</cite>, the record, is hit and miss. <cite>Joey</cite>,
+glorification of the life of some mafioso, is flawed in concept
+and unlistenable in execution.  <cite>Hurricane</cite>, whatever you think
+about
+<a href="http://en.wikipedia.org/wiki/Rubin_Carter">Mr. Carter</a>, that song
+rocks; and <cite>Isis</cite> hits pretty hard too.</p>
+<h2 id='p-2'>The Music</h2>
+<p>Is there anything in <cite>One More Cup of Coffee</cite> that’s not
+perfect?  Well yes, in the verses, the
+lyrics on occasion drag (“He oversees his kingdom / So no stranger does
+intrude / His voice it trembles as he calls out / For another plate of food”).
+But apart from that, the sentiment is compelling,
+<a href="http://en.wikipedia.org/wiki/Scarlet_Rivera">Scarlet Rivera’s</a>
+violin is beautifully scored and played, the tune is to die for, and the
+backing vocals are by Emmylou Harris, who you can bet is going to be here in
+the 5-✭ series one of these days.
+And while there’s not much middle ground on the subject of Dylan’s singing, if
+you like it, you’ll <em>really</em> like this song.</p>
+<p>Listen to the choruses: Bob and Emmylou veer wildly around the rhythm, then
+coalesce on the beat when it matters, and they’re making it
+up as they go along, they’re wholly inhabiting the moment, and it’s
+quite, quite perfect.</p>
+<h2 id='p-3'>Sampling It</h2>
+<p>Oh yeah, it’s out there.  And there’s a live version too; but the smart
+thing  would be to go buy the un-compressed un-DRM’ed shiny round silver
+version of <cite>Desire</cite>; it’s a keeper.</p>
+</div></content></entry>
+
+<entry xml:base='When/200x/2006/04/24/'>
+ <title>Atomic Monday</title>
+ <link href='Atomic-Monday' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/24/Atomic-Monday</id>
+ <published>2006-04-24T13:00:00-08:00</published>
+ <updated>2006-04-24T00:44:06-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology/Syndication' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Syndication' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology/Atom' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Atom' />
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p>First of all, implementors of anything Atom-related need to spend some time
+<a href="http://golem.ph.utexas.edu/~distler/blog/archives/000793.html">chez
+Jacques Distler</a>; in particular, the conversation that plays out in the
+comments. Second, there’s this piece of software called
+<a href="http://www.planetplanet.org/">Planet Planet</a> that allows you to
+make an aggregate web page by reading lots of feeds; for example, see
+<a href="http://www.planetapache.org/">Planet Apache</a> or
+<a href="http://planetsun.org/">Planet Sun</a>.
+Sam Ruby decided that its Atom support needed some work, so
+<a href="http://www.intertwingly.net/blog/2006/04/23/Adding-Atom-support-to-PlanetPlanet">he did
+it</a>.  Now, here’s the exciting part: he pinged me over the weekend and said
+“Hey, look at this” wanting to show me his cleverly-Atomized
+Planet Intertwingly feed. 
+I looked at it in
+<a href="http://ranchero.com/netnewswire/">NetNewsWire</a> and was puzzled for
+a moment; some but not all of the 
+things in the feed were highlighted as unread, even though this was the first
+time I’d seen it.  Then the light went on. 
+This
+is Atom doing <em>exactly what we went to all that trouble to make it do</em>.
+NetNewsWire has good Atom support and, because Atom entries all have unique
+IDs and timestamps,  it can
+tell that it’s seen lots of those entries before in other feeds that I
+subscribe to.  That’s how I found Jacques’ piece.  This is huge; anyone who
+uses synthetic or aggregated feeds knows that dupes are a big problem, showing
+up all over the place.
+No longer, Atom makes that problem go away.</p>
+</div></content></entry>
+
+<entry xml:base='When/200x/2006/04/22/'>
+ <title>Hyatt on the High-Res Web</title>
+ <link href='High-Res-Web' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/22/High-Res-Web</id>
+ <published>2006-04-22T13:00:00-08:00</published>
+ <updated>2006-04-23T17:12:18-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology/Web' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Web' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology/Presentation' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Presentation' />
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p>Check out Dave Hyatt’s
+<a href="http://webkit.opendarwin.org/blog/?p=55">excellent write-up</a> on
+designing and rendering Web pages so they take advantage of the
+higher-resolution screens that <em>may</em> be coming our way. 
+I emphasize “may” because I’ve seen how slowly we’ve picked up pixels over
+the years. The first really substantial screen I ever worked on was a
+1988-vintage Sun workstation with about a million pixels.  The Mac on my
+lap right now, which has 125 times as much memory as that workstation, has
+only 1.38 million pixels.
+Anyhow, Hyatt has some smart things to say on the issues,
+which are trickier than you might think.  I suspect that sometime in a couple of
+years, if I still care about <span class='o'>ongoing</span>, I’m  going to
+have to go back and reprocess all the images so that higher-res versions are
+available for those who have the screens and don’t mind downloading bigger
+files. 
+Anyhow, Dave’s piece may be slightly misleading in that he talks about SVG
+as though 
+it’s something coming in the future.  Not so, check out
+<a href="http://zcorpan.1go.dk/sandbox/svg/atom/.xml">this nifty SVG Atom
+logo</a>, which works fine in all the Mozilla browsers I have here.
+Load it up, resize the window, and watch what happens.  Then do a “view
+source”.
+<i>[Update:
+<a href="http://blog.codedread.com">Jeff Schiller</a> writes to tell me that
+Opera 9 does SVG (and Opera 8 “SVG Tiny”) too.]
+[<a href="http://www.freeke.org/ffg">Dave Walker</a> writes: Though the shipping version of Safari doesn’t support SVG,
+<a href="http://nightly.webkit.org/builds/Latest-WebKit-SVN.dmg">the
+nightlies</a> do.]
+[<a href="http://www.davelemen.com/archives/2006/04/is_it_time_for_jpeg_2000_to_go_mainstream.html">Dave Lemen</a>
+points to
+<a href="http://en.wikipedia.org/wiki/JPEG-2000">JPEG 2000</a> as possibly
+useful in a high-res context.]</i></p>
+</div></content></entry>
+
+<entry xml:base='When/200x/2006/04/23/'>
+ <title>Wrong About the Infield Fly Rule</title>
+ <link href='Wrong-About-the-Infield-Fly-Rule' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/23/Wrong-About-the-Infield-Fly-Rule</id>
+ <published>2006-04-23T13:00:00-08:00</published>
+ <updated>2006-04-23T15:02:41-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='The World/Family' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='The World' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Family' />
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p>My brother
+<a href="http://takingalongview.blogspot.com/">Rob</a> is really taking to
+this blogging medium.  Check out his recent
+<a href="http://takingalongview.blogspot.com/2006/04/credo.html">Credo</a>,
+and also the only instance I’ve seen of
+<a href="http://takingalongview.blogspot.com/2006/04/ode-to-96-chevy-lumina.html">Anglo-Saxon alliterative poetry</a>
+applied to a mini-van.</p>
+</div></content></entry>
+
+<entry xml:base='When/200x/2004/12/12/'>
+ <title>Statistics</title>
+ <link href='BMS' />
+ <id>http://www.tbray.org/ongoing/When/200x/2004/12/12/BMS</id>
+ <published>2004-12-12T12:00:00-08:00</published>
+ <updated>2006-04-23T10:10:02-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology/Publishing' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Publishing' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology/Web' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Web' />
+ <summary type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>Almost every Sunday I grab the week&#x2019;s <span class="o">ongoing</span> logfiles and update my numbers. I find it interesting and maybe others will too, so  this entry is now the charts&#x2019; permanent home. I&#x2019;ll update it most weeks, probably. <i>[Updated: 2006/04/23.]</i></div></summary>
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p>Almost every Sunday I grab the week’s <span class='o'>ongoing</span>
+logfiles and update my numbers.
+I find it interesting
+and maybe others will too, so 
+this entry is now the charts’ permanent home. I’ll update it most weeks,
+probably.
+<i>[Updated: 2006/04/23.]</i></p>
+<img src="Browser-Market-Share.png" alt="Browser market shares at ‘ongoing’" />
+<div class="caption"><p>Browsers visiting <span class='o'>ongoing</span>,
+percent.</p></div>
+<img src="Browsers-via-search.png" alt="Browser market shares at ‘ongoing’, visitors via search engines" />
+<div class="caption"><p>Browsers visiting <span class='o'>ongoing</span> via
+search engines, percent.</p></div>
+<img src="Search-Engines.png" alt="Search engine market shares at ‘ongoing’" />
+<div class="caption"><p>Search referrals to <span
+class='o'>ongoing</span> .</p></div>
+<img src="Feeds.png" alt="RSS and Atom feed fetches" />
+<div class="caption"><p>Fetches of the RSS 2.0 and Atom 1.0 feeds.</p></div>
+<p>The notes on usage and source code will return in coming weeks when I get
+the cycles to rewrite this whole article.</p>
+<h2 id='p-1'>What a “Hit” Means</h2>
+<p>I recently
+<a href="/ongoing/When/200x/2006/02/07/Thumbnail">updated</a> the
+<a href="/ongoing/misc/Colophon"><span class='o'>ongoing</span> software</a>
+(but haven’t updated the Colophon I see, oops).
+Anyhow, the <code>XMLHttpRequest</code> now issued by each page seems to be a
+pretty reliable counter of the number of actual browsers with humans behind
+them reading the pages.  I checked against
+<a href="/ongoing/When/200x/2005/12/04/Google-Analytics">Google Analytics</a>
+and the numbers agreed to within a dozen or two on days with 5,000 to 10,000
+page views; interestingly, Google Analytics was always 10 or 20 views
+higher.</p>
+<p>Anyhow, do <em>not</em> conclude that now I know how many people are
+reading whatever it is I write here; because I publish lots of short pieces
+that are all there in my RSS feed, and anyone reading my Atom feed gets the
+full content of everything.
+I and I have <em>no #&amp;*!$ idea</em> how many people look at my feeds.</p>
+<p>By the way, this was the first time in weeks and weeks that I’d looked at the
+Analytics numbers, and they showed almost exactly zero change from the report
+linked above.  So I’m going to turn them off; they’re a little too intrusive
+and I think may be slowing page loads.</p>
+<p>Anyhow, I ran some detailed statistics on the traffic for Wednesday,
+February 8th, 2006.</p>
+<table cellspacing="3" cellpadding="2" class="wltable">
+<tr valign="top"><td>Total connections to the server</td><td align="right">180,428</td></tr>
+<tr valign="top"><td>Total successful GET transactions</td><td align="right">155,507</td></tr>
+<tr valign="top"><td>Total fetches of the RSS and Atom feeds</td><td align="right">88,450</td></tr>
+<tr valign="top"><td>Total GET transactions that actually fetched data (i.e. status code
+200 as opposed to 304)</td><td align="right">87,271</td></tr>
+<tr valign="top"><td>Total GETs of actual ongoing pages (i.e. not CSS, js, or
+images)</td><td align="right">18,444</td></tr>
+<tr valign="top"><td>Actual human page-views</td><td align="right">6,348</td>
+</tr>
+</table>
+<p>So, there you have it.  Doing a bit of rounding, if you take the 180K
+transactions and subtract the 90K feed fetches and the 6000 actual human page
+views, you’re left with 84,000 or so “Web overhead” transactions, mostly
+stylesheets and graphics and so on.
+For every human who viewed a page, it was fetched almost twice again by
+various kinds of robots and non-browser automated agents.</p>
+<p>It’s amazing that the whole thing works at all.</p>
+</div></content></entry>
+
+<entry xml:base='When/200x/2006/04/18/'>
+ <title>XML Automaton</title>
+ <link href='XML-Grammar' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/18/XML-Grammar</id>
+ <published>2006-04-18T13:00:00-08:00</published>
+ <updated>2006-04-23T08:25:56-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology/XML' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='XML' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology/Coding' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Coding' />
+ <summary type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>In December of 1996 I released a piece of software called <a href='http://www.textuality.com/Lark/'>Lark</a>, which was the world&#x2019;s first <a href='http://www.w3.org/TR/REC-xml/#dt-xml-proc'>XML Processor</a> (as the term is defined in the <a href='http://www.w3.org/TR/REC-xml/'>XML Specification</a>). It was successful, but I stopped maintaining it in 1998 because lots of other smart people, and some big companies like Microsoft, were shipping perfectly good processors.  I never <em>quite</em> open-sourced it, holding back one clever bit in the moronic idea that I could make money out of Lark somehow. The magic sauce is a finite state machine that can be used to parse XML 1.0. Recently, someone out there needed one of those, so I thought I&#x2019;d publish it, with some commentary on Lark&#x2019;s construction and an amusing anecdote about the name. I doubt there are more than twelve people on the planet who care about this kind of parsing arcana. <i>[Rick Jelliffe  <a href='http://www.oreillynet.com/xml/blog/2006/04/xml_in_xml.html'>has upgraded</a> the machine].</i></div></summary>
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p>In December of 1996 I released a piece of software called
+<a href="http://www.textuality.com/Lark/">Lark</a>, which was
+the world’s first
+<a href="http://www.w3.org/TR/REC-xml/#dt-xml-proc">XML Processor</a> (as the
+term is defined in the
+<a href="http://www.w3.org/TR/REC-xml/">XML Specification</a>).
+It was successful, but I stopped maintaining it in 1998 because lots of other
+smart people, and some big companies like Microsoft, were shipping perfectly
+good processors.  I never <em>quite</em> open-sourced it, holding back one
+clever bit in the moronic idea that I could make money out of Lark somehow.
+The magic sauce is a finite state machine that can be used to parse XML 1.0.
+Recently, someone out there needed one of those, so I thought I’d publish
+it, with some commentary on Lark’s construction and an amusing anecdote about
+the name.
+I doubt there are more than twelve people on the planet who care about
+this kind of parsing arcana.
+<i>[Rick Jelliffe 
+<a href="http://www.oreillynet.com/xml/blog/2006/04/xml_in_xml.html">has
+upgraded</a> the machine].</i></p>
+<h2 id='p-1'>Why “Lark”?</h2>
+<p><a href="http://www.laurenwood.org/anyway/">Lauren</a> and I went to
+Australia in late 1996 to visit her mother and to get married, which we
+did on November 30th.  Forty-eight hours later, Lauren twisted her knee
+badly enough that she was pretty well
+confined to a sofa for the rest of our Australian vacation.</p>
+<p>So I broke out my computer and finished the work I’d already started on my
+XML processor, and decided to call it Lark for <b>La</b>uren’s <b>R</b>ight
+<b>K</b>nee.</p>
+<h2 id='p-2'>How Lark Worked</h2>
+<p>Lark was a pure
+<a href="http://en.wikipedia.org/wiki/Deterministic_finite_state_machine">deterministic
+finite automaton</a> (DFA)
+parser, with a little teeny state stack.
+Some of its transitions were labeled with named “events” that would provoke
+the parser to do something if, for example, it had just recognized a start tag
+or whatever.</p>
+<p>DFA-driven parsers are a common enough design pattern, although I think
+Lark is the only example in the XML space.
+There are well-known parser generators such as
+<a href="http://en.wikipedia.org/wiki/Yacc">yacc</a>, 
+<a href="http://en.wikipedia.org/wiki/GNU_bison">GNU bison</a>, and
+<a href="https://javacc.dev.java.net/">javacc</a>,
+usually used in combination with lexical scanners such as
+<a href="http://en.wikipedia.org/wiki/Flex_lexical_analyser">flex</a> so that
+you can write your grammar in terms of tokens not characters.
+Also, they handle LALR langauges, so the parsing technique is quite a bit
+richer than a pure state machine.</p>
+<p>I thought I had a better idea.  The grammar of XML is simple
+enough, and the syntax characters few enough, that I thought I could just
+write down the state machine by hand.
+So that’s what I did, inventing a special-purpose DFA-description
+language for the purpose.</p>
+<p>Then I had a file called <code>Lark.jin</code> which was really a Java
+program that used the state machine to parse XML.  The transition “events”
+in the machine were mapped to <code>case</code> labels in a huge
+<code>switch</code> construct.  Then there was a horrible, <em>horrible</em>
+Perl program that read the <code>Lark.jin</code> and the automaton,
+generated the DFA tables in Java syntax, inserted them into the code and 
+produced <code>Lark.java</code>, which you actually compiled
+to make the parser.</p>
+<p>So while Java doesn’t have a preprocessor, Lark did, which made quite a few
+things easier.</p>
+<p>There were a lot of tricks; some of the state transitions 
+weren’t on characters, they were on XML character classes such as
+<code>NameChar</code> and so on.
+This made the automaton easier to write, and in fact, to keep the class files
+small, the character-class transitions persisted into the Java form, and the
+real DFA was built at startup time.
+These days, quick startup might be more important than <code>.class</code>
+file size.</p>
+<h2 id='p-3'>What Was Good</h2>
+<p>It was <em>damn</em> fast.  James Clark managed to hand-craft a
+Java-language XML parser called
+<a href="http://jclark.com/xml/xp/index.html">XP</a> that was a little faster
+than Lark, but he did that by clever I/O buffering, and I was determined to
+leapfrog him by improving my I/O.</p>
+<p>This was before the time of standardized XML APIs, but Lark had a stream API
+that influenced SAX, and a DOM-like tree API; both worked just fine.
+Lark is one of very few parsers ever to have survived the
+<a href="http://www.securityfocus.com/archive/1/303509/2002-12-13/2002-12-19/0">billion
+laughs attack</a>.</p>
+<p>Lark was put into production in quite a few deployments, and the flow of
+bug reports slowed to a trickle.
+Then in 1998 I noticed that IBM and Microsoft and BEA and everyone else
+were building XML Processors, so I decided that it wasn’t worthwhile 
+maintaining mine.</p>
+<h2 id='p-4'>What Was Bad</h2>
+<p>I never got around to teaching it namespaces, which means it wouldn’t be
+real useful today.</p>
+<p>It had one serious bug that would have been real work to fix and since
+nobody ever encountered it in practice, I kept putting it off and never did.
+If you had an internal parsed entity reference in an attribute value and the
+replacement text included the attribute delimiter (<code>'</code> or
+<code>"</code>), it would scream and claim you had a busted XML document.</p>
+<h2 id='p-5'>That Automaton</h2>
+<p>What happened was,
+<a href="http://www.oreillynet.com/pub/au/1712">Rick Jelliffe</a>, who is a
+Good Person, was 
+<a href="http://www.stylusstudio.com/xmldev/200604/post30110.html">looking for
+a FSM for XML</a> and I eventually noticed, and so I sent him mine.</p>
+<p>There’s no reason whatsoever to keep it a secret: 
+<a href="/ongoing/code/lark/com/textuality/autom.txt">here it is</a>.
+Be warned: it’s ugly.</p>
+<p>Fortunately, there were only 227 states and 8732 transitions, so the state
+number fit into a 
+byte; that and the associated event index pack into a short.
+To make things even tighter, the transitions were only keyed by characters up
+to 127, as in 7-bit ASCII.
+Characters higher than that can’t be XML syntax characters, so we’re only
+interested whether they fall into classes like <code>NameChar</code> and
+<code>NameStartChar</code> and so on.  A 64K <code>byte[]</code> array takes
+care of that, each byte having a class bitmask.</p>
+<p>As a result of all this jiggery-pokery, the DFA ends up, believe it
+or not, constituting a <code>short[227][128]</code>.</p>
+<p>Here’s a typical chunk of the automaton:</p>
+<pre><code>1. # in Start tag GI
+2. State StagGI BustedMarkup {in element type}
+3. T $NameC StagGI
+4. T $S InStag !EndGI
+5. T > InDoc !EndGI !ReportSTag
+6. T / EmptyClose !EndGI</code></pre>
+<p>This state, called <code>StagGI</code>, is the state where we’re actually
+reading the name of a tag, we got here by seeing a <code>&lt;</code> followed
+by a <code>NameStart</code> character.<br/>
+Line 1 is a comment.<br/>
+In line 2 we name the state, and support error reporting, providing the name
+of another state to fall back into in case of error, and in the curly braces,
+some text to help build an error message.<br/>
+Line 3 says that if we see a valid XML Name character, we just stay in this
+state.<br/>
+Line 4 says that if we see an XML space character, we move to state
+<code>InStag</code> and process an <code>EndGI</code> event, which would stash
+the characters in the start tag.<br/>And so on.</p>
+<h2 id='p-6'>Other Hackery</h2>
+<p>An early cut of Lark used String and StringBuffer objects to hold all the
+bits and pieces of the XML.  This might be a viable strategy today, but in
+1996’s Java it was painfully slow. 
+So the code goes to heroic lengths to live in the land of character arrays at
+all times, making Strings only when a client program asks for one through the
+API.  The performance difference was mind-boggling.</p>
+<h2 id='p-7'>An Evil Idea</h2>
+<p>If you look at the automaton, and the Lark code, at least half—I’d bet
+three quarters—is there to deal with parsing the DTD and then dealing with
+entity wrangling.
+A whole bunch more is there to support DOM-building and walking.</p>
+<p>I bet if I went through and simply removed support for anything coming out
+of the <code>&lt;!DOCTYPE></code>, including all entity processing, 
+then discarded
+the DOM stuff, then added namespace support and SAX and StAX APIs, it would be
+less than half its current size.  
+Then if I reworked the I/O, knowing what I know now and stealing some tricks
+that James Clark uses in
+<a href="http://expat.sourceforge.net/">expat</a>, I bet it would
+be the fastest Java XML parser on the planet for XML docs without a
+DOCTYPE; by a wide margin.  It’s hard to beat a DFA.</p>
+<p>And it would still be fully XML 1.0 compliant.  Because (snicker) this is
+Java, and your basic core Java now includes an XML parser, so I could simply
+instrument Larkette to buffer the prologue and if it saw a DOCTYPE with an
+internal subset, defer to Java’s built-in parser.</p>
+<p>I’ll probably never do it.  But the thought brings a smile to my face.</p>
+</div></content></entry>
+
+<entry xml:base='When/200x/2006/04/22/'>
+ <title>Just A Kid</title>
+ <link href='Just-a-Kid' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/22/Just-a-Kid</id>
+ <published>2006-04-22T13:00:00-08:00</published>
+ <updated>2006-04-22T13:37:58-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='The World/Food and Drink' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='The World' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Food and Drink' />
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p>Last weekend, Lauren felt like cooking up home-made Easter eggs, so
+the shopping list included “chocolate chips (large bag)”.  I was heading down
+the bulk-foods aisle and realized one of the vertical acrylic bins was full of
+them.  Someone had been sloppy, and there was a little heap of chocolate chips
+on the shelf underneath it.  For a second, I flashed into pure eight-year-old
+mode, thinking “Holy cow, there’s a <em>whole bin</em> full of chocolate
+chips, and more just lying there!”  I popped a few in my mouth and they were
+excellent; semi-sweet, dark, strong, and firm.  I was still in the state that
+Buddhists don’t mean when they say “Child’s Mind”, thinking “I
+can get as many as I want!”  The list did say “large bag” after all, so I put
+a bag under the spout and gleefully jammed the lever <em>all the way
+over</em>.  At home, Lauren said “You went overboard, a bit, didn’t you?”
+and now we have a plastic canister-full in the pantry which should last us
+into 2007.  It’s a good feeling.</p>
+</div></content></entry>
+
+<entry xml:base='When/200x/2006/04/22/'>
+ <title>Goddess</title>
+ <link href='Goddess' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/22/Goddess</id>
+ <published>2006-04-22T13:00:00-08:00</published>
+ <updated>2006-04-22T12:25:59-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='The World/Family' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='The World' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Family' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology/Microsoft' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Microsoft' />
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p>That would be my wife 
+<a href="http://www.laurenwood.org/anyway/">Lauren</a>.  After 
+<a href="/ongoing/When/200x/2006/04/16/Mad-at-Microsoft">I b0rked</a> our
+Win2K gamebox, I tried re-installing the OS and eventually reduced it to
+complete brick-ness, it recognized neither the video adapter nor the network
+card.  So Lauren brushed me aside and started wrestling with the problem, and
+to make a long story short, it almost completely works again.  At one point
+she seemed nearly infinite in her capabilities, sitting in front of the
+computer wrangling software updates while knitting baby stuff and looking up
+words in a German dictionary for the kid’s homework.  Some of the German nouns
+and muttered curses at the Windows install sounded remarkably like each other.
+Why would anyone not marry a geek?  The only problem is that Win2K won’t
+auto-switch resolutions to play games any more, it gets the frequency wrong
+and the LCD goes pear-shaped, you have to hand-select the frequency and
+switch into the right resolution first.  LazyWeb?</p>
+</div></content></entry>
+
+<entry xml:base='When/200x/2006/04/21/'>
+ <title>Routing Around Spotlight</title>
+ <link href='Routing-Around-Spotlight' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/21/Routing-Around-Spotlight</id>
+ <published>2006-04-21T13:00:00-08:00</published>
+ <updated>2006-04-21T23:16:25-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology/Mac OS X/Gripes' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Mac OS X' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Gripes' />
+ <summary type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>Herewith two hideously ugly little shell scripts for use when Spotlight refuses to search your mail. Spotlight is a flawed v1.0 implementation of a really good idea and will, I&#x2019;m sure, be debugged in a near-future release. <i>[Update: The LazyWeb is educating me... these are moving targets.]</i></div></summary>
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p>Herewith two hideously ugly little shell scripts for use when Spotlight
+refuses to search your mail.
+Spotlight is a flawed v1.0 implementation of a really good idea and will, I’m
+sure, be debugged in a near-future release.
+<i>[Update: The LazyWeb is educating me... these are moving targets.]</i></p>
+<p>My problem is that whereas Mail.app will search my To/From/Subject
+lines (slowly, and with a
+<a href="/ongoing/When/200x/2005/11/20/UnTiger">really irritating GUI</a>),
+the “Entire Message” option just doesn’t work, it returns instantly with no
+results.  Yes, I’ve read the hints about making Spotlight re-index,
+but it just flatly refuses to work for me.  Mind you, I have a lot of
+email, but still, it should at least try.</p>
+<p>It turns out I had never really figured out the <code>-print0</code> and
+<code>-0</code> idioms that a lot of the shell-command stalwarts now have.
+Thanks to Malcolm Tredinnick for raising my consciousness.</p>
+<p>This lives in <code>$HOME/bin</code> under the name
+<code>mailgrep</code>:</p>
+<pre><code>#!/bin/sh
+find $HOME/Library/Mail/IMAP* -name '*.emlx' -print0 | \
+  xargs -0 fgrep -i $@</code></pre>
+<p>Isn’t <code>xargs</code> a funny command?  I’ve discovered that it’s nearly
+impossible to describe what does, and then why what it does is necessary, but
+there are just a whole bunch of places where you’d be lost without it.</p>
+<p>This lives in <code>$HOME/bin/mailview</code>:</p>
+<pre><code>#!/bin/sh
+find $HOME/Library/Mail/IMAP* -name '*.emlx'  -print0 | \
+  xargs -0 fgrep -i -l -Z $@ | \
+  xargs -0 open</code></pre>
+<p>The first cut of this dodged <code>xargs</code> and used an
+incredibly-inefficient and slow chain of <code>-exec</code> arguments to open
+the files one at a time with 
+<code>view</code> (aka <code>vim</code>), to work around 
+a well-known <code>vim</code> misfeature; it complained about the input
+not being a terminal and left my Terminal.app keystrokes borked.</p>
+<p>But Malcolm, confirming my belief in the broken-ness of <code>vim</code>,
+said “Oh, *that* ‘view’.  I thought it was some sexy Mac ‘view my email’ app”.
+D’oh, of course; the magic OS X <code>open</code> command does just the right
+thing. 
+Erm, you might want to run <code>mailgrep</code> before you run
+<code>mailview</code>; I’m not sure what would happen if you asked OS X to
+open three or four thousand email messages at once.</p>
+</div></content></entry>
+
+<entry xml:base='When/200x/2006/04/21/'>
+ <title>FSS: Pink Flowers</title>
+ <link href='Dracon-Help' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/21/Dracon-Help</id>
+ <published>2006-04-21T13:00:00-08:00</published>
+ <updated>2006-04-21T17:19:27-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Arts/Photos' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Arts' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Photos' />
+ <summary type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>Friday Slide Scan #28 is two Eighties florals, one interior, one exterior.  With a confession.</div></summary>
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p>Friday Slide Scan #28 is two Eighties florals, one interior, one
+exterior.  With a confession.</p>
+<p>First some spring flowers fallen from a tree, just as now in our front
+yard, at dusk.</p>
+<img src="0506.png" alt="Fallen pink treeflowers on grass at dusk" />
+<p>I’m not sure what these are, but look at the light in the center.  Rewards
+enlarging.</p>
+<img src="0713.png" alt="Flowers in shadow with light in background" />
+<p>Here’s the confession.  Sometimes on Fridays when I’m feeling kinda
+burned-out, I knock off work and do these slide scans in the office, because
+this is where I have the
+<a href="http://www.tbray.org/ongoing/When/200x/2004/04/14/MineIsBigger">big
+screen</a>.
+Blowing these pictures up to mega-huge, picking away at the old-slide crud and
+scanning artifacts, tinkering with the colour balance, and listening; I never
+play music while I’m writing or coding seriously, but I play it real loud while
+photo-editing.  It’s all pretty well pure pleasure; you just can’t imagine
+how good that second one above looks at near-native size.
+It reconstitutes the part of my mind that I earn my living with; that’s my
+story and I’m sticking to it.</p>
+<p>Images in the Friday Slide Scans are from 35mm slides taken between 1953
+and 2003 by (in rough chronological order)
+<a href="http://www.textuality.com/BillBray/">Bill Bray</a>, 
+<a href="/ongoing/When/200x/2004/08/11/MomsGarden">Jean Bray</a>, Tim Bray, Cath
+Bray, and
+<a href="http://www.laurenwood.org/anyway/">Lauren Wood</a>; when I know
+exactly who took one, I’ll say; in this case, at least one is by Cath Bray.
+Most but not all of the slides were on Kodachrome; they were digitized using
+a Nikon CoolScan 4000 ED scanner and cleaned up by a combination of the Nikon
+scanning software and PhotoShop Elements.</p>
+</div></content></entry>
+
+<entry xml:base='When/200x/2006/04/20/'>
+ <title>Spring Pix</title>
+ <link href='Spring-Pix' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/20/Spring-Pix</id>
+ <published>2006-04-20T13:00:00-08:00</published>
+ <updated>2006-04-20T23:07:10-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='The World/Places/Vancouver' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='The World' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Places' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Vancouver' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Arts/Photos' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Arts' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Photos' />
+ <summary type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>Three pictures around Vancouver; one of a fresh green springtime tree, two of rotten old buildings being torn down.</div></summary>
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p>Three pictures around Vancouver; one of a fresh green springtime tree, two
+of rotten old buildings being torn down.</p>
+<p>There’s nothing quite as fresh as just-sprouted deciduous leaves;
+another few weeks and this tree will be just a tree.</p>
+<img src="IMG_4656.png" alt="Sunlit fresh young leaves" />
+<p>I have a thing about demolition.
+The first is a rotten dingy old one-story on Main Street near 23rd, the second
+is an unlovely grey mid-rise being torn down to build still more condos at
+Homer and Helmcken.</p>
+<img src="IMG_4665.png" alt="Demolition site on Main Street, Vancouver" />
+<img src="IMG_4671.png" alt="Demolition site at Homer and Helmcken, Vancouver" />
+</div></content></entry>
+
+<entry xml:base='When/200x/2006/04/20/'>
+ <title>Totten&#x2019;s Trip</title>
+ <link href='Totten-on-Iraq' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/20/Totten-on-Iraq</id>
+ <published>2006-04-20T13:00:00-08:00</published>
+ <updated>2006-04-20T21:05:22-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='The World/Places/Middle East' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='The World' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Places' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Middle East' />
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p><a href="http://www.michaeltotten.com/">Michael J. Totten</a> is a
+journalist and blogger who’s back and forth to the 
+Middle East and writes about it, quite well in my opinion; he supports this by
+freelancing and with his blog’s tip jar.  He gets lots of
+link love from the right-wing blogosphere, which is puzzling because Totten is
+balanced and clear-eyed and doesn’t seem to have any particular axe to grind.
+Recently, he and a friend were 
+<a href="http://www.michaeltotten.com/archives/001117.html">having fun in
+Istanbul</a> and, on a random drive out into the country, decided on impulse to
+keep going, all the way across Turkey and into Iraq; into the Kurdish
+mini-state in Iraq’s north, to 
+be precise.  It makes a heck of a story, with lots of pictures, in six parts:
+<a href="http://www.michaeltotten.com/archives/001119.html">I</a>,
+<a href="http://www.michaeltotten.com/archives/001120.html">II</a>,
+<a href="http://www.michaeltotten.com/archives/001121.html">III</a>,
+<a href="http://www.michaeltotten.com/archives/001124.html">IV</a>,
+<a href="http://www.michaeltotten.com/archives/001126.html">V</a>, and
+<a href="http://www.michaeltotten.com/archives/001127.html">VI</a>.
+</p>
+</div></content></entry>
+
+<entry xml:base='When/200x/2006/04/19/'>
+ <title>The Cost of AJAX</title>
+ <link href='The-Cost-of-AJAX' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/19/The-Cost-of-AJAX</id>
+ <published>2006-04-19T13:00:00-08:00</published>
+ <updated>2006-04-20T00:37:46-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology/Web' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Technology' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Web' />
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p>James Governor
+<a href="http://www.redmonk.com/jgovernor/archives/001526.html">relays a
+question</a> that sounds important
+but I think is actively dangerous: do AJAX apps present more of
+a server-side load?  The question is dangerous because it’s meaningless and
+unanswerable.  Your typical Web page will, in the process of
+loading, call back to the server for a bunch of stylesheets and graphics and
+scripts and so on: for example, this <span class='o'>ongoing</span> page calls
+out to three different graphics, one stylesheet, and one JavaScript file.
+It also has one “AJAXy” XMLHttpRequest call.
+From the server’s point of view, those are all just requests to dereference
+one URI or another.  In the case
+of <span class='o'>ongoing</span>, the AJAX request is for a static file less
+than 200 bytes in size (i.e. cheap).
+On the other hand, it could have been for something that required a
+complex outer join on two ten-million-row tables (i.e. <em>very</em>
+expensive).  And one of the virtues of 
+the Web Architecture is that it hides those differences, the “U” in URI stands
+for “Uniform”, it’s a Uniform interface to a resource on the Web that could
+be, well, anything.
+So saying “AJAX is expensive” (or that it’s cheap) is like saying “A mountain
+bike is slower than a battle tank” (or that it’s faster).  
+The truth depends on what you’re doing with it. 
+In the case of web sites, it depends on how many fetches you do and
+where you have to go to get the data to satisfy them.
+<span class='o'>ongoing</span> is a pretty quick web site, even though it runs
+on a fairly modest server, but
+that has nothing to do with AJAX-or-not; it’s because of the particular way
+I’ve set up the Web resources that make the pages here.
+I’ve
+<a href="/ongoing/When/200x/2006/02/14/AJAX-Performance">argued elsewhere</a>
+that AJAX can be a performance win, system-wide; but that argument too is
+contingent on context, lots of context.</p>
+</div></content></entry>
+
+<entry xml:base='When/200x/2006/04/18/'>
+ <title>Hao Wu and Graham McMynn</title>
+ <link href='Hao-Wu' />
+ <id>http://www.tbray.org/ongoing/When/200x/2006/04/18/Hao-Wu</id>
+ <published>2006-04-18T13:00:00-08:00</published>
+ <updated>2006-04-18T22:00:40-08:00</updated>
+ <category scheme='http://www.tbray.org/ongoing/What/' term='The World/Places/China' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='The World' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Places' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='China' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='The World/Politics' />
+ <category scheme='http://www.tbray.org/ongoing/What/' term='Politics' />
+<content type='xhtml'><div xmlns='http://www.w3.org/1999/xhtml'>
+<p>Graham McMynn is a teenager who was kidnapped in Vancouver on April 4th and
+freed, in a large, noisy, and
+<a href="http://www.cbc.ca/story/news/national/2006/04/12/bcabduction060412.html">newsworthy</a>
+police operation, on April 12th.
+<a href="http://en.wikipedia.org/wiki/Hao_Wu">Hao Wu</a> is a Chinese
+film-maker and
+<a href="http://beijingorbust.blogspot.com/">blogger</a> who was kidnapped in
+Beijing on February 22nd in a 
+small, quiet police operation not intended to be newsworthy, and who has not
+been freed.
+Read about it
+<a href="http://spaces.msn.com/wuhaofamily/">here</a>,
+<a href="http://ethanzuckerman.com/haowu/">here</a>, and
+<a href="http://rconversation.blogs.com/rconversation/freehaowu/index.html">here</a>.
+Making noise about it <em>might</em> influence the government of China to
+moderate its actions against Mr. Wu, and can’t do any harm.
+Mr. McMynn’s kidnappers were a gaggle of small-time hoodlums, one of whom was
+out on bail while awaiting trial for another kidnapping (!).
+Mr. Wu’s were police.
+In a civilized country, the function of the police force is to deter such
+people and arrest them.  A nation where they are the same people?   Nobody
+could call it “civilized”.</p> 
+</div></content></entry>
+
+</feed>

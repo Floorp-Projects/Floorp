@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay SYSTEM "chrome://inspector/locale/viewers/dom.dtd">
+
+<overlay id="ovDOMViewerKeyset"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <keyset id="ksGlobalKeyset">
+    <key id="key:find" xulkey="true" key="&cmdShowFindDialog.accelkey;" observes="cmd:find" modifiers="accel"/>
+    <key id="key:findNext" keycode="VK_F3" observes="cmd:findNext"/>
+  </keyset>
+
+</overlay>
+
+        

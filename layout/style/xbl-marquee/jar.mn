@@ -1,0 +1,8 @@
+comm.jar:
+#ifdef MOZ_XUL_APP
+%   content xbl-marquee %content/xbl-marquee/ xpcnativewrappers=yes
+#else
+    content/xbl-marquee/contents.rdf
+#endif
+    content/xbl-marquee/xbl-marquee.xml
+    content/xbl-marquee/xbl-marquee.css

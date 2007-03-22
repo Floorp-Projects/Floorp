@@ -1,0 +1,97 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Gijs Kruitbosch <gijskruitbosch@gmail.com>
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Gijs Kruitbosch <gijskruitbosch@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+interface nsIObserver;
+
+/**
+ * This interface lets you monitor how long the user has been 'idle',
+ * i.e. not used their mouse or keyboard. You can get the idle time directly,
+ * but in most cases you will want to register an observer for a predefined
+ * interval. The observer will get an 'idle' notification when the user is idle
+ * for that interval (or longer), and receive a 'back' notification when the
+ * user starts using their computer again.
+ */
+
+[scriptable, uuid(cc52f19a-63ae-4a1c-9cc3-e79eace0b471)]
+interface nsIIdleService : nsISupports
+{
+    /**
+     * The amount of time in milliseconds that has passed
+     * since the last user activity.
+     */
+    readonly attribute unsigned long idleTime;
+
+    /**
+     * Add an observer to be notified when the user idles for some period of
+     * time, and when they get back from that.
+     *
+     * @param observer the observer to be notified
+     * @param time the amount of time in minutes the user should idle before
+     *             the observer should be notified.
+     *
+     * @note
+     * The subject of the notification the observer will get is always the
+     * nsIIdleService itself.
+     * When the user goes idle, the observer topic is "idle" and when they get
+     * back, the observer topic is "back".
+     * The data param for the notification contains the current user idle time.
+     *
+     * @note
+     * You can add the same observer twice.
+     * @note
+     * Most implementations need to poll the OS for idle info themselves,
+     * meaning your notifications could arrive with a delay up to the length
+     * of the polling interval in that implementation.
+     * Current implementations use a delay of 5 seconds.
+     */
+    void addIdleObserver(in nsIObserver observer, in unsigned long time);
+
+    /**
+     * Remove an observer registered with addIdleObserver.
+     * @param observer the observer that needs to be removed.
+     * @param time the amount of time they were listening for.
+     * @note
+     * Removing an observer will remove it once, for the idle time you specify. 
+     * If you have added an observer multiple times, you will need to remove it
+     * just as many times.
+     */
+    void removeIdleObserver(in nsIObserver observer, in unsigned long time);
+};
+

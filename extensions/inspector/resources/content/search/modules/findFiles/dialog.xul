@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE window SYSTEM "chrome://inspector/locale/search/findFiles.dtd">
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<?xml-stylesheet href="chrome://communicator/skin/"?>
+<?xml-stylesheet href="chrome://inspector/skin/"?>
+
+<window id="winJunkImgs" class="dialog"
+        title="&findFiles.title;"
+        persist="screenX screenY"    
+        orient="vertical"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript" src="chrome://inspector/content/search/modules/findFiles/dialog.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/FilePickerUtils.js"/>
+  
+  <vbox>
+    <hbox align="center">
+      <label id="txSearchFor" value="&txSearchFor.label;"/>
+      <textbox id="txfSearchFor" style="width: 25em;" persist="true"/>
+    </hbox>
+    <hbox align="center">
+      <label id="txSearchPath" value="&txSearchPath.label;"/>
+      <textbox id="txfSearchPath" style="width: 25em;" persist="true"/>
+      <button id="btnSearchPathBrowser" label="Browse" onclick="dialog.browse()" persist="true"/>
+    </hbox>
+    <hbox align="center">
+      <checkbox id="cbRecurse" label="&cbRecurse.label;"/>
+    </hbox>    
+  </vbox>
+
+  <hbox id="okCancelButtonsRight"/>
+</window>

@@ -1,0 +1,233 @@
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is The Extension Manager.
+#
+# The Initial Developer of the Original Code is
+# Ben Goodger.
+# Portions created by the Initial Developer are Copyright (C) 2004
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Ben Goodger <ben@bengoodger.com>
+#   Robert Strong <robert.bugzilla@gmail.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://mozapps/content/extensions/extensions.css"?>
+<?xml-stylesheet href="chrome://mozapps/skin/extensions/extensions.css"?>
+
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%brandDTD;
+<!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd">
+%extensionsDTD;
+]>
+
+<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
+        xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+        id="extensionsManager" windowtype="Extension:Manager"
+        orient="vertical" title="&addons.title;"
+        screenX="10" screenY="10" width="&em.width;" height="&em.height;"
+        persist="width height screenX screenY sizemode"
+        onload="Startup();" onunload="Shutdown();"
+        onclose="return closeWindow(false);">
+
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
+  <script type="application/x-javascript" src="chrome://mozapps/content/extensions/extensions.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+
+  <stringbundleset id="extensionsSet">
+    <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
+    <stringbundle id="extensionsStrings" src="chrome://mozapps/locale/extensions/extensions.properties"/>
+    <stringbundle id="xpinstallStrings" src="chrome://global/locale/xpinstall/xpinstall.properties"/>
+  </stringbundleset>
+
+  <keyset id="extensionsKeys">
+    <key id="key_close"   key="&cmd.close.commandKey;"    modifiers="accel" command="cmd_close"/>
+    <key id="key_close2"  keycode="VK_ESCAPE" command="cmd_close"/>
+    <key id="key_about"   key="&cmd.info.commandKey;"     modifiers="accel" command="cmd_about" 
+         oncommand="gExtensionsViewController.doCommand('cmd_about');"/>
+    <key id="key_options" key="&cmd.options.commandKey;"  modifiers="accel" command="cmd_options"
+         oncommand="gExtensionsViewController.doCommand('cmd_options');"/>
+  </keyset>
+
+  <commandset id="extensionsCommands"
+              events="richlistbox-select"
+              commandupdater="true"
+              oncommandupdate="gExtensionsViewController.onCommandUpdate();"
+              oncommand="gExtensionsViewController.doCommand(event.target.id);">
+    <command id="cmd_options"/>
+    <command id="cmd_about"/>
+    <command id="cmd_homepage"/>
+    <command id="cmd_uninstall"/>
+    <command id="cmd_cancelUninstall"/>
+    <command id="cmd_checkUpdate"/>
+    <command id="cmd_includeUpdate"/>
+    <command id="cmd_installUpdate"/>
+    <command id="cmd_enable"/>
+    <command id="cmd_disable"/>
+    <command id="cmd_useTheme"/>
+  </commandset>
+  
+  <commandset id="globalCommands">
+    <command id="cmd_installFile" oncommand="installWithFilePicker();"/>
+    <command id="cmd_checkUpdatesAll" oncommand="checkUpdatesAll();"/>
+    <command id="cmd_installUpdatesAll" oncommand="installUpdatesAll();"/>
+    <command id="cmd_restartApp" oncommand="restartApp();"/>
+    <command id="cmd_continue" oncommand="closeEM();" disabled="true"/>
+    <command id="cmd_close" oncommand="closeEM();"/>
+  </commandset>
+
+  <vbox id="addonContextMenuPalette" hidden="true">
+    <menuitem id="menuitem_useTheme" default="true" command="cmd_useTheme"
+              label="&cmd.useTheme.label;" accesskey="&cmd.useTheme.accesskey;"/>
+    <menuitem id="menuitem_options" default="true" command="cmd_options"
+#ifdef XP_WIN
+              label="&cmd.options.label;" accesskey="&cmd.options.accesskey;"/>
+#else
+              label="&cmd.optionsUnix.label;" accesskey="&cmd.optionsUnix.accesskey;"/>
+#endif
+    <menuitem id="menuitem_homepage" command="cmd_homepage"
+              label="&cmd.homepage.label;" accesskey="&cmd.homepage.accesskey;"/>
+    <menuitem id="menuitem_about" command="cmd_about"
+              label="&cmd.about2.label;" accesskey="&cmd.about.accesskey;"/>
+    <menuseparator id="menuseparator_1"/>
+    <menuitem id="menuitem_uninstall" command="cmd_uninstall"
+              label="&cmd.uninstall.label;" accesskey="&cmd.uninstall2.accesskey;"/>
+    <menuitem id="menuitem_cancelUninstall" command="cmd_cancelUninstall"
+              label="&cmd.cancelUninstall.label;" accesskey="&cmd.cancelUninstall.accesskey;"/>
+    <menuitem id="menuitem_checkUpdate" command="cmd_checkUpdate"
+              label="&cmd.checkUpdate.label;" accesskey="&cmd.checkUpdate.accesskey;"/>
+    <menuitem id="menuitem_enable" command="cmd_enable"
+              label="&cmd.enable.label;" accesskey="&cmd.enable.accesskey;"/>
+    <menuitem id="menuitem_disable" command="cmd_disable"
+              label="&cmd.disable.label;" accesskey="&cmd.disable.accesskey;"/>
+    <menuitem id="menuitem_installUpdate" command="cmd_installUpdate"
+              label="&cmd.installUpdate.label;" accesskey="&cmd.installUpdate.accesskey;"/>
+    <menuitem id="menuitem_includeUpdate" command="cmd_includeUpdate"
+              label="&cmd.includeUpdate.label;" accesskey="&cmd.includeUpdate.accesskey;"
+              type="checkbox"/>
+  </vbox>
+
+  <popup id="addonContextMenu" onpopupshowing="return buildContextMenu(event);"/>
+
+  <stack id="topStackBar">
+    <radiogroup id="viewGroup" xhtml2:role="wairole:list" persist="last-selected"
+                class="viewSelector chromeclass-toolbar" orient="horizontal"
+                onkeypress="onViewGroupKeypress();" onclick="onViewGroupClick();">
+      <radio id="extensions-view" label="&extensions.label;" oncommand="showView('extensions');" persist="last-selected"/>
+      <radio id="themes-view" label="&themes.label;" oncommand="showView('themes');" persist="last-selected"/>
+      <radio id="locales-view" label="&locales.label;" oncommand="showView('locales');" persist="last-selected"/>
+      <radio id="plugins-view" label="&plugins.label;" oncommand="showView('plugins');" persist="last-selected"/>
+      <radio id="updates-view" label="&update.label;" oncommand="showView('updates');"/>
+      <radio id="installs-view" label="&install.label;" oncommand="showView('installs');" hidden="true"/>
+    </radiogroup>
+    <vbox id="progressBox" hidden="true" class="viewSelector" flex="1">
+      <spacer flex="1"/>
+      <hbox>
+        <image class="addonThrobber"/>
+        <label id="progressStatus" value="&progressStatus.label;"/>
+      </hbox>
+      <progressmeter id="addonsProgress" class="extension-item-progress" flex="1"/>
+      <spacer flex="1"/>
+    </vbox>
+  </stack>
+  <notificationbox id="addonsMsg" flex="1">
+    <hbox id="extensionsBox" flex="1">
+      <richlistbox id="extensionsView" flex="1" 
+                   datasources="rdf:null" context="addonContextMenu"
+                   ondragenter="nsDragAndDrop.dragEnter(event, gExtensionsDNDObserver);"
+                   ondragover="nsDragAndDrop.dragOver(event, gExtensionsDNDObserver);"
+                   ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);"
+                   ondblclick="onViewDoubleClick(event);"/>
+
+      <splitter id="themeSplitter" hidden="true" collapse="after" persist="state"/>
+
+      <vbox id="themePreviewArea" hidden="true" width="220" persist="width">
+        <deck id="previewImageDeck" flex="1">
+          <vbox id="noThemeSelected" pack="center" align="center">
+            <label class="previewText">&previewNoThemeSelected.label;</label>
+          </vbox>
+          <vbox id="noPreviewImage" pack="center" align="center">
+            <label class="previewText">&previewNoPreviewImage.label;</label>
+          </vbox>
+          <vbox id="previewImageContainer" align="center" pack="center">
+            <description>
+              <image id="previewImage"/>
+            </description>
+          </vbox>
+        </deck>
+      </vbox>
+    </hbox>
+  </notificationbox>
+  <vbox>
+    <hbox id="commandBarBottom" align="center">
+      <button id="installFileButton" label="&cmd.installLocalFile.label;"
+              accesskey="&cmd.installFile.accesskey;"
+              tooltiptextaddons="&cmd.installFileAddon.tooltip;"
+              tooltiptextthemes="&cmd.installFileTheme.tooltip;"
+              command="cmd_installFile"/>
+      <button id="checkUpdatesAllButton" label="&cmd.checkUpdatesAll.label;"
+              accesskey="&cmd.checkUpdatesAll.accesskey;"
+              tooltiptextaddons="&cmd.checkUpdatesAllAddon.tooltip;"
+              tooltiptextthemes="&cmd.checkUpdatesAllTheme.tooltip;"
+              command="cmd_checkUpdatesAll"/>
+      <button id="skipDialogButton" label="&cmd.skip.label;"
+              accesskey="&cmd.skip.accesskey;"
+              tooltiptext="&cmd.skip.tooltip;"
+              command="cmd_close"/>
+      <spacer flex="1"/>
+      <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll.label;"
+              accesskey="&cmd.installUpdatesAll.accesskey;"
+              tooltiptext="&cmd.installUpdatesAll.tooltip;"
+              command="cmd_installUpdatesAll"/>
+      <button id="restartAppButton" label="&cmd.restartApp.label;"
+              accesskey="&cmd.restartApp.accesskey;"
+              tooltiptext="&cmd.restartApp.tooltip;"
+              command="cmd_restartApp"/>
+      <button id="continueDialogButton" label="&cmd.continue.label;"
+              accesskey="&cmd.continue.accesskey;"
+              tooltiptext="&cmd.continue.tooltip;"
+              command="cmd_continue"/>
+      <label id="getMore" class="text-link"
+             onclick="openURL(this.getAttribute('getMoreURL'));"
+             valuethemes="&getThemes.label;"
+             valueextensions="&getExtensions.label;"/>
+    </hbox>
+    <hbox id="resizerBox" style="min-width:1px;">
+      <spacer flex="1"/>
+      <resizer dir="bottomright"/>
+    </hbox>
+  </vbox>
+</window>
+

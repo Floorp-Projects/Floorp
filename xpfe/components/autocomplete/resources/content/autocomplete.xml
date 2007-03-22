@@ -1,0 +1,1736 @@
+<?xml version="1.0"?>
+
+<bindings id="autocompleteBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="autocomplete"
+           extends="chrome://global/content/bindings/textbox.xml#textbox">
+    <resources>
+      <stylesheet src="chrome://global/content/autocomplete.css"/>
+      <stylesheet src="chrome://global/skin/autocomplete.css"/>
+    </resources>
+
+    <content sizetopopup="pref">
+      <xul:hbox class="autocomplete-textbox-container" flex="1" align="center">
+        <children includes="image|deck">
+          <xul:image class="autocomplete-icon" allowevents="true"/>
+        </children>
+
+        <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context,tooltiptext=inputtooltiptext">
+          <html:input anonid="input" class="autocomplete-textbox textbox-input"
+                      flex="1" allowevents="true"
+                      xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction"/>
+        </xul:hbox>
+      </xul:hbox>
+                          
+      <xul:dropmarker class="autocomplete-history-dropmarker" allowevents="true"
+                      xbl:inherits="open,hidden=disablehistory" anonid="historydropmarker"/>
+
+      <xul:popupset>
+        <xul:popup ignorekeys="true" anonid="popup" class="autocomplete-result-popup" hidden="true" xbl:inherits="for=id,nomatch"/>
+      </xul:popupset>
+      
+      <children includes="menupopup"/>
+    </content>
+
+    <implementation implements="nsIDOMXULMenuListElement, nsIAccessibleProvider">
+
+      <constructor><![CDATA[
+        // XXX bug 90337 band-aid until we figure out what's going on here
+        if (this.value != this.mInputElt.value)
+          this.mInputElt.value = this.value;
+        delete this.value;
+
+        // set default property values
+        this.ifSetAttribute("timeout", 50);
+        this.ifSetAttribute("maxrows", 5);
+        this.ifSetAttribute("showpopup", true);
+        this.ifSetAttribute("disablehistory", true);
+        this.ifSetAttribute("disableKeyNavigation", true);
+        
+        // initialize the search sessions
+        this.initSearchSessions();
+        this.initAutoCompleteSearch();
+        
+        // hack to work around lack of bottom-up constructor calling
+        if ("initialize" in this.resultsPopup)
+          this.resultsPopup.initialize();
+      ]]></constructor>
+
+      <destructor><![CDATA[
+        this.clearResults(false);
+      ]]></destructor>
+      
+      <!-- =================== PUBLIC PROPERTIES =================== -->
+
+      <property name="value"
+                onget="return this.mInputElt.value;">
+        <setter><![CDATA[
+          this.ignoreInputEvent = true;
+          this.mInputElt.value = val;
+          this.ignoreInputEvent = false;
+          var event = document.createEvent('Events');
+          event.initEvent('ValueChange', true, true);
+          this.mInputElt.dispatchEvent(event);
+          return val;
+        ]]></setter>
+      </property>
+  
+      <property name="focused"
+                onget="return this.getAttribute('focused') == 'true';"/>
+
+      <!-- space-delimited string of search session types to use -->
+      <property name="searchSessions" readonly="true" onget="return this.getAttribute('searchSessions')"/>
+
+      <method name="initSearchSessions">
+        <body><![CDATA[
+          var list = this.getAttribute("searchSessions").split(" ");
+          for (var i = 0; i < list.length; i++) {
+            var name = list[i];
+            if (name != "") {
+              var contractid = "@mozilla.org/autocompleteSession;1?type=" + name;
+              try {
+                var session =
+                  Components.classes[contractid].getService(Components.interfaces.nsIAutoCompleteSession);
+                this.addSession(session, name);
+              } catch (e) {
+                dump("### ERROR - unable to create search session \"" + name + "\".\n");
+              }
+            }
+          }
+        ]]></body>
+      </method>
+
+      <method name="initAutoCompleteSearch">
+        <body><![CDATA[
+          var list = this.getAttribute("autocompletesearch").split(" ");
+          for (var i = 0; i < list.length; i++) {
+            var name = list[i];
+            if (name != "") {
+              var contractid = "@mozilla.org/autocomplete/search;1?name=" + name;
+              try {
+                var search =
+                  Components.classes[contractid].getService(Components.interfaces.nsIAutoCompleteSearch);
+                var session = new (this.mAutoCompleteSession)(search);
+                this.addSession(session, name);
+              } catch (e) {
+                dump("### ERROR - unable to create search \"" + name + "\".\n");
+              }
+            }
+          }
+        ]]></body>
+      </method>
+
+      <!-- the number of sessions currently in use -->
+      <field name="sessionCount">0</field>
+
+      <!-- number of milliseconds after a keystroke before a search begins -->
+      <property name="timeout"
+                onset="this.setAttribute('timeout', val); return val;"
+                onget="var t = parseInt(this.getAttribute('timeout')); return t ? t : 0;"/>
+
+      <!-- maximum number of rows to display -->
+      <property name="maxRows"
+                onset="this.setAttribute('maxrows', val); return val;"
+                onget="var t = parseInt(this.getAttribute('maxrows')); return t ? t : 0;"/>
+
+      <!-- option for filling the textbox with the best match while typing 
+           and selecting the difference -->
+      <property name="autoFill"
+                onset="this.setAttribute('autoFill', val); return val;"
+                onget="return this.getAttribute('autoFill') == 'true';"/>
+
+      <!-- if the resulting match string is not at the beginning of the typed string,
+           this will optionally autofill like this "bar |>> foobar|" -->
+      <property name="autoFillAfterMatch"
+                onset="this.setAttribute('autoFillAfterMatch', val); return val;"
+                onget="return this.getAttribute('autoFillAfterMatch') == 'true';"/>
+
+      <!--  if this attribute is set, allow different style for 
+            non auto-completed lines -->
+      <property name="highlightNonMatches"
+                onset="this.setAttribute('highlightNonMatches', val); return val;"
+                onget="return this.getAttribute('highlightNonMatches') == 'true';"/>
+
+      <!-- toggles a second column in the results list which contains
+           the string in the comment field of each autocomplete result -->
+      <property name="showCommentColumn"
+                onget=
+		  "return this.getAttribute('showCommentColumn') == 'true';">
+        <setter><![CDATA[
+
+          var currentState = this.getAttribute('showCommentColumn');          
+
+          // if comment column has been switched from off to on
+          //
+          if (val && (currentState == 'false')) { 
+
+            // reset the flex on the value column and add the comment column
+            //
+            document.getElementById("value").setAttribute("flex", 2);
+            this.resultsPopup.addColumn({id: "comment", flex: 1});
+
+          // if comment column has been switched from on to off
+          //
+          } else if (!val && (currentState == 'true')) {
+
+            // reset the flex on the value column and add the comment column
+            //
+            document.getElementById("value").setAttribute("flex", 1);
+            this.resultsPopup.removeColumn('comment');
+          }
+
+          // save and return the current state
+          //
+          this.setAttribute('showCommentColumn', val); return val;
+        ]]></setter>
+      </property>
+
+                
+      <!-- option for completing to the default result whenever the user hits
+           enter or the textbox loses focus -->
+      <property name="forceComplete"
+                onset="this.setAttribute('forceComplete', val); return val;"
+                onget="return this.getAttribute('forceComplete') == 'true';"/>
+
+      <!-- option to show the popup containing the results -->
+      <property name="showPopup"
+                onset="this.setAttribute('showpopup', val); return val;"
+                onget="return this.getAttribute('showpopup') == 'true';"/>
+
+      <!-- option to allow scrolling through the list via the tab key, rather than
+           tab moving focus out of the textbox -->
+      <property name="tabScrolling"
+                onset="return this.setAttribute('tabScrolling', val); return val;"
+                onget="return this.getAttribute('tabScrolling') == 'true';"/>
+
+      <!-- option to turn off autocomplete -->
+      <property name="disableAutocomplete"
+                onset="this.setAttribute('disableAutocomplete', val); return val;"
+                onget="return this.getAttribute('disableAutocomplete') == 'true';"/>
+
+      <!-- option to completely ignore any blur events while  
+           searches are still going on.  This is useful so that nothing
+           gets autopicked if the window is required to lose focus for
+           some reason (eg in LDAP autocomplete, another window may be
+           brought up so that the user can enter a password to authenticate
+           to an LDAP server).  -->
+      <property name="ignoreBlurWhileSearching"
+                onset="this.setAttribute('ignoreBlurWhileSearching', val); return val;"
+                onget="return this.getAttribute('ignoreBlurWhileSearching') == 'true';"/>
+
+      <property name="minResultsForPopup"
+                onset="this.setAttribute('minResultsForPopup', val); return val;"
+                onget="var t = this.getAttribute('minResultsForPopup'); return t ? parseInt(t) : 1;"/>
+      
+      <!-- state which indicates the current action being performed by the user.
+           Possible values are : none, typing, scrolling -->
+      <property name="userAction"
+                onset="this.setAttribute('userAction', val); return val;"
+                onget="return this.getAttribute('userAction');"/>
+      
+      <!-- state which indicates if the last search had no matches -->
+      <field name="noMatch">true</field>
+
+      <!-- state which indicates a search is currently happening -->
+      <field name="isSearching">false</field>
+
+      <!-- state which indicates a search timeout is current waiting -->
+      <property name="isWaiting" 
+                onget="return this.mAutoCompleteTimer != 0;"/>
+
+      <!-- reference to the results popup element -->
+      <field name="resultsPopup"><![CDATA[
+        var elt = document.getAnonymousElementByAttribute(this, "anonid", "popup");
+        elt.__AUTOCOMPLETE_BOX__ = this;
+        elt;
+      ]]></field>
+
+      <!-- nsIAccessibleProvider --> 
+      <property name="accessibleType" readonly="true">
+        <getter>
+          <![CDATA[
+            // Will be exposed as nsIAccessible::ROLE_AUTOCOMPLETE
+            return Components.interfaces.nsIAccessibleProvider.XULCombobox;
+          ]]>
+        </getter>
+      </property>
+
+      <!-- nsIDOMXULMenuListElement properties -->
+
+      <property name="editable" readonly="true" onget="return true;" />  
+
+      <property name="crop" onset="this.setAttribute('crop',val); return val;"
+                            onget="return this.getAttribute('crop');"/>
+
+      <property name="label" readonly="true" onget="return this.mInputElt.value;"/>
+
+      <property name="open">
+        <getter>
+          <![CDATA[
+            return this.getAttribute('open') == 'true';
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            var historyPopup = document.getAnonymousElementByAttribute(this, "anonid", "historydropmarker");
+            if (val) {
+              this.setAttribute('open',true); 
+              historyPopup.showPopup();
+            }
+            else {
+              this.removeAttribute('open');
+              historyPopup.hidePopup();
+            }
+          ]]>
+        </setter>
+      </property>
+
+      <!-- =================== PRIVATE PROPERTIES =================== -->
+
+      <field name="mSessions">({})</field>
+      <field name="mListeners">({})</field>
+      <field name="mLastResults">({})</field>
+      <field name="mLastStatus">({})</field>
+      <field name="mLastKeyCode">null</field>
+      <field name="mAutoCompleteTimer">0</field>
+      <field name="mMenuOpen">false</field>
+      <field name="mFireAfterSearch">false</field>
+      <field name="mFinishAfterSearch">false</field>
+      <field name="mNeedToFinish">false</field>
+      <field name="mNeedToComplete">false</field>
+      <field name="mTransientValue">false</field>
+      <field name="mView">null</field>
+      <field name="currentSearchString">""</field>
+      <field name="ignoreInputEvent">false</field>
+      <field name="oninit">null</field>
+      <field name="mDefaultMatchFilled">false</field>
+
+      <field name="mAutoCompleteSession"><![CDATA[
+        var session = function(aSession) { this.session = aSession };
+        session.prototype = {
+          session: null,
+          param: this,
+          onStartLookup: function(aSearchString, aPreviousSearchResult, aListener) {
+            this.session.startSearch(aSearchString,
+                         this.param.getAttribute("autocompletesearchparam"),
+                         aPreviousSearchResult && aPreviousSearchResult.lastResult,
+                         aListener);
+          },
+          onStopLookup: function() {
+            this.session.stopSearch();
+          },
+          onAutoComplete: function() {
+          }
+        };
+        session;
+      ]]></field>
+
+      <field name="mAutoCompleteListener"><![CDATA[
+        var listener = function(aName) { this.sessionName = aName };
+        listener.prototype = {
+          param: this,
+          sessionName: null,
+          lastResult: null,
+          lastItems: [],
+          onAutoComplete: function(aResults, aStatus) 
+          {
+            this.param.processResults(this.sessionName, aResults, aStatus);
+          },
+          onSearchResult: function(aSearch, aResult)
+          {
+            this.lastResult = aResult;
+            this.lastItems = new Array(aResult.matchCount);
+            const nsIAutoCompleteStatus = Components.interfaces.nsIAutoCompleteStatus;
+            var status = nsIAutoCompleteStatus.failed;
+            if (aResult.errorDescription) {
+              status = nsIAutoCompleteStatus.failureItems;
+              this.lastItems = [{
+                value: aResult.errorDescription,
+                comment: null,
+                className: null,
+                param: null
+              }];
+            }
+            else if (aResult.searchResult == aResult.RESULT_IGNORED)
+              status = nsIAutoCompleteStatus.ignored;
+            else if (aResult.searchResult == aResult.RESULT_NOMATCH)
+              status = nsIAutoCompleteStatus.nomatch;
+            else if (aResult.searchResult == aResult.RESULT_SUCCESS)
+              status = nsIAutoCompleteStatus.matchFound;
+            this.param.processResults(this.sessionName, {
+              searchString: aResult.searchString,
+              items: this,
+              defaultItemIndex: aResult.defaultIndex,
+              param: null,
+              lastResult: aResult
+            }, status);
+          },
+          Count: function() {
+            return this.lastItems.length;
+          },
+          QueryElementAt: function(aIndex, aIID) {
+            if (aIndex < 0 || aIndex >= this.lastItems.length)
+              return null;
+            if (!this.lastItems[aIndex]) {
+              this.lastItems[aIndex] = {
+                value: this.lastResult.getValueAt(aIndex),
+                comment: this.lastResult.getCommentAt(aIndex),
+                className: this.lastResult.getStyleAt(aIndex),
+                param: null
+              }
+            }
+            return this.lastItems[aIndex];
+          }
+        };
+        listener;
+      ]]></field>
+
+      <field name="mInputElt"><![CDATA[
+        document.getAnonymousElementByAttribute(this, "anonid", "input");
+      ]]></field>
+
+      <!-- =================== PUBLIC METHODS =================== -->
+
+      <!-- get the result object from the autocomplete results from a specific session -->
+      <method name="getResultAt">
+        <parameter name="aIndex"/>
+        <body><![CDATA[
+          var obj = this.convertIndexToSession(aIndex);
+          if (obj && this.mLastResults[obj.session]) {
+            const nsIAutoCompleteItem = Components.interfaces.nsIAutoCompleteItem;
+            if (obj.index >= 0) {
+              var item = this.mLastResults[obj.session].items.QueryElementAt(obj.index, nsIAutoCompleteItem);
+              return item;
+            }
+          }
+          return null;
+        ]]></body>
+      </method>
+
+      <!-- get the autocomplete session status returned by the session
+           that a given item came from -->
+      <method name="getSessionStatusAt">
+        <parameter name="aIndex"/>
+        <body><![CDATA[
+          var obj = this.convertIndexToSession(aIndex);
+          return obj ? this.mLastStatus[obj.session] : null;
+        ]]></body>
+      </method>
+
+
+      <!-- get a value from the autocomplete results as a string via an absolute index-->
+      <method name="getResultValueAt">
+        <parameter name="aIndex"/>
+        <body><![CDATA[
+          var obj = this.convertIndexToSession(aIndex);
+          return obj ? this.getSessionValueAt(obj.session, obj.index) : null;
+        ]]></body>
+      </method>
+
+      <!-- get the result object from the autocomplete results from a specific session -->
+      <method name="getSessionResultAt">
+        <parameter name="aSession"/>
+        <parameter name="aIndex"/>
+        <body><![CDATA[
+          var session = this.mLastResults[aSession];
+          if (session) {
+            var item = session.items.QueryElementAt(aIndex, Components.interfaces.nsIAutoCompleteItem);
+            return item;
+          }
+          return null;
+        ]]></body>
+      </method>
+
+      <!-- get a value from the autocomplete results as a string from a specific session -->
+      <method name="getSessionValueAt">
+        <parameter name="aSession"/>
+        <parameter name="aIndex"/>
+        <body><![CDATA[
+          var result = this.getSessionResultAt(aSession, aIndex);
+          if (result)
+            return result.value;
+          return null;
+        ]]></body>
+      </method>
+
+      <!-- get the total number of results in a specific session or overall if session is null-->
+      <method name="getResultCount">
+        <parameter name="aSession"/>
+        <body><![CDATA[
+          return this.view.rowCount;
+        ]]></body>
+      </method>
+      
+      <!-- get a session object by index -->
+      <method name="getSession">
+        <parameter name="aIndex"/>
+        <body><![CDATA[
+          var idx = 0;
+          for (var name in this.mSessions) {
+            if (idx == aIndex)
+              return this.mSessions[name];
+            ++idx;
+          }
+          return null;
+        ]]></body>
+      </method>
+
+      <!-- get a session object by name -->
+      <method name="getSessionByName">
+        <parameter name="aSessionName"/>
+        <body><![CDATA[
+          return this.mSessions[aSessionName];
+        ]]></body>
+      </method>
+
+      <!-- add a session by reference -->
+      <method name="addSession">
+        <parameter name="aSession"/>
+        <parameter name="aName"/>
+        <body><![CDATA[
+          ++this.sessionCount;
+          var name = aName || "anon_"+this.sessionCount;
+          this.mSessions[name] = aSession;
+          this.mListeners[name] = new (this.mAutoCompleteListener)(name);
+          this.mLastResults[name] = null;
+          this.mLastStatus[name] = null;
+          return this.mSessions[name];
+        ]]></body>
+      </method>
+
+      <!-- remove a session by reference -->
+      <method name="removeSession">
+        <parameter name="aSession"/>
+        <body><![CDATA[
+          for (var name in this.mSessions) {
+            if (this.mSessions[name] == aSession) {
+              delete this.mSessions[name];
+              delete this.mListeners[name];
+              delete this.mLastResults[name];
+              delete this.mLastStatus[name];
+              --this.sessionCount;
+              break;
+            }
+          }
+        ]]></body>
+      </method>
+
+      <!-- make this widget listen to all of the same autocomplete sessions 
+           from another autocomplete widget -->
+      <method name="syncSessions">
+        <parameter name="aCopyFrom"/>
+        <body><![CDATA[
+          this.sessionCount = aCopyFrom.sessionCount;
+          this.mSessions = {};
+          this.mListeners = {};
+          this.mLastResults = {};
+          this.mLastStatus = {};
+          for (var name in aCopyFrom.mSessions) {
+            this.mSessions[name] = aCopyFrom.mSessions[name];
+            this.mListeners[name] = new (this.mAutoCompleteListener)(name);
+            this.mLastResults[name] = null;
+            this.mLastStatus[name] = null;
+          }
+        ]]></body>
+      </method>
+
+      <!-- get the first session that has results -->
+      <method name="getDefaultSession">
+        <body><![CDATA[
+          for (var name in this.mLastResults) {
+            var results = this.mLastResults[name];
+            if (results && results.items.Count() > 0)
+              return name;
+          }
+          return null;
+        ]]></body>
+      </method>
+
+      <!-- empty the cached result data and empty the results popup -->
+      <method name="clearResults">
+        <parameter name="aInvalidate"/>
+        <body><![CDATA[
+          this.clearResultData();
+          this.clearResultElements(aInvalidate);
+        ]]></body>
+      </method>
+
+      <!-- =================== PRIVATE METHODS =================== -->
+  
+      <!-- ::::::::::::: session searching ::::::::::::: -->
+
+      <!--  -->
+      <method name="callListener">
+        <parameter name="me"/>
+        <parameter name="aAction"/>
+        <body><![CDATA[
+          // bail if the binding was detached or the element removed from
+          // document during the timeout
+          if (!("startLookup" in me) || !me.ownerDocument || !me.parentNode)
+            return;
+
+          me.clearTimer();
+            
+          if (me.disableAutocomplete)
+            return;
+
+          switch (aAction) {
+            case "startLookup":
+              me.startLookup();
+              break;
+
+            case "stopLookup":
+              me.stopLookup();
+              break;
+
+            case "autoComplete":
+              me.autoComplete();
+              break;
+          }
+        ]]></body>
+      </method>
+
+      <!--  -->
+      <method name="startLookup">
+        <body><![CDATA[
+          var str = this.currentSearchString;
+
+          this.isSearching = true;
+          this.mSessionReturns = this.sessionCount;
+          this.mFailureCount = 0;
+          this.mFailureItems = 0;
+          this.mDefaultMatchFilled = false; // clear out our prefill state.
+          this.removeAttribute("noMatchesFound");
+
+          // tell each session to start searching...
+          for (var name in this.mSessions)
+            try {
+              this.mSessions[name].onStartLookup(str, this.mLastResults[name], this.mListeners[name]);
+            } catch (e) {
+              --this.mSessionReturns;
+              this.searchFailed();
+            }
+        ]]></body>
+      </method>
+
+      <!--  -->
+      <method name="stopLookup">
+        <body><![CDATA[
+          for (var name in this.mSessions)
+            this.mSessions[name].onStopLookup();
+        ]]></body>
+      </method>
+
+      <!--  -->
+      <method name="autoComplete">
+        <body><![CDATA[
+          for (var name in this.mSessions)
+            this.mSessions[name].onAutoComplete(this.value, 
+                                                this.mLastResults[name],
+                                                this.mListeners[name]);
+        ]]></body>
+      </method>
+
+      <!--  -->
+      <method name="processResults">
+        <parameter name="aSessionName"/>
+        <parameter name="aResults"/>
+        <parameter name="aStatus"/>
+        <body><![CDATA[
+          if (this.disableAutocomplete)
+            return;
+
+          --this.mSessionReturns;
+
+          var firstReturn = this.mSessionReturns == (this.sessionCount-1) - this.mFailureCount;
+
+          this.mLastStatus[aSessionName] = aStatus;
+
+          // check the many criteria for failure
+          if (aStatus == Components.interfaces.nsIAutoCompleteStatus.failed ||
+              aStatus == Components.interfaces.nsIAutoCompleteStatus.ignored || 
+              aStatus == Components.interfaces.nsIAutoCompleteStatus.noMatch ||
+              aResults == null ||
+              aResults.items.Count() == 0 ||
+              aResults.searchString != this.currentSearchString)
+          {
+            this.mLastResults[aSessionName] = null;
+            if (firstReturn)
+              this.clearResults(false);
+            this.searchFailed();
+            return;
+          } else if (aStatus == 
+                     Components.interfaces.nsIAutoCompleteStatus.failureItems){
+            ++this.mFailureItems;
+          }
+          
+          if (firstReturn) {
+            if (this.view.mTree)
+              this.view.mTree.beginUpdateBatch();
+            this.clearResults(false); // clear results, but don't repaint yet
+          }
+          this.mLastResults[aSessionName] = aResults;
+
+          this.autoFillInput(aSessionName, aResults, false);
+
+          // always call openResultPopup...we may not have opened it
+          // if a previous search session didn't return enough search results.
+          // it's smart and doesn't try to open itself multiple times...
+          // be sure to add our result elements before calling openResultPopuup as we need
+          // to know the total # of results found so far.
+          this.addResultElements(aSessionName, aResults);      
+          if (firstReturn && this.view.mTree)
+            this.view.mTree.endUpdateBatch();
+          this.openResultPopup();
+         
+          // if this is the last session to return... 
+          if (this.mSessionReturns == 0) 
+            this.postSearchCleanup();
+               
+          if (this.mFinishAfterSearch)
+            this.finishAutoComplete(false, this.mFireAfterSearch, null);
+        ]]></body>
+      </method>
+
+      <!-- called each time a search fails, except when failure items need
+           to be displayed. If all searches have failed, clear the list
+           and close the popup -->
+      <method name="searchFailed">
+        <body><![CDATA[
+          // if it's the last session to return, time to clean up...
+          if (this.mSessionReturns == 0)
+            this.postSearchCleanup();
+
+          ++this.mFailureCount;
+          
+          // if all searches are done and they all failed...
+          if (this.mSessionReturns == 0 && this.mFailureCount == this.sessionCount) {
+            if (this.minResultsForPopup == 0) {
+              this.clearResults(true); // clear data and repaint empty
+              
+              if (this.value) {
+                this.openResultPopup();
+              } else
+                this.closeResultPopup(); 
+            } else
+              this.closeResultPopup(); 
+          }
+        ]]></body>
+      </method>
+
+      <!-- does some stuff after a search is done (success or failure) -->
+      <method name="postSearchCleanup">
+        <body><![CDATA[
+          this.isSearching = false;
+
+          // figure out if there are no matches in all search sessions
+          var failed = true;
+          for (var name in this.mSessions) {
+            if (this.mLastResults[name])
+              failed = this.mLastResults[name].items.Count() < 1;
+            if (!failed)
+              break;
+          }
+          this.noMatch = failed;
+          if (this.noMatch)
+            this.setAttribute("nomatch", 1);
+          else
+            this.removeAttribute("nomatch");
+          
+          if (!this.mDefaultMatchFilled && this.highlightNonMatches)
+            this.setAttribute("noMatchesFound", true);
+          
+          // if we have processed all of our searches, and none of them gave us a default index,
+          // then we should try to auto fill the input field with the first match. 
+          // note: autoFillInput is smart enough to kick out if we've already prefilled something...
+          if (!this.noMatch) {
+             var defaultSession = this.getDefaultSession();
+             if (defaultSession)
+                this.autoFillInput(defaultSession, this.mLastResults[defaultSession], true);         
+          }
+        ]]></body>
+      </method>
+
+      <!-- when the focus exits the widget or user hits return, 
+           determine what value to leave in the textbox -->
+      <method name="finishAutoComplete">
+        <parameter name="aForceComplete"/>
+        <parameter name="aFireTextCommand"/>
+        <parameter name="aTriggeringEvent"/>
+        <body><![CDATA[
+          this.mFinishAfterSearch = false;
+          this.mFireAfterSearch = false;
+          if (this.mNeedToFinish && !this.disableAutocomplete) {
+            // set textbox value to either override value, or default search result 
+            var val = this.resultsPopup.getOverrideValue();
+            if (val) {
+              this.setTextValue(val);
+              this.mNeedToFinish = false;
+            } else if (this.mTransientValue || 
+                       !(this.forceComplete || this.mDefaultMatchFilled) ||
+                       !(this.forceComplete || aForceComplete) ||
+                       !(this.mNeedToComplete || aForceComplete)) {
+              this.mNeedToFinish = false;
+            } else if (this.isWaiting) {
+              // if the user typed, the search results are out of date, so let
+              // the search finish, and tell it to come back here when it's done
+              this.mFinishAfterSearch = true;
+              this.mFireAfterSearch = aFireTextCommand;
+              return;
+            } else {
+              // we want to use the default item index for the first session which gave us a valid
+              // default item index...
+              for (var name in this.mLastResults) {
+                var results = this.mLastResults[name];
+                if (results && results.items.Count() > 0 && results.defaultItemIndex != -1)
+                {
+                  val = this.getSessionValueAt(name, results.defaultItemIndex);
+                  this.setTextValue(val);
+                  this.mDefaultMatchFilled = true;
+                  this.mNeedToFinish = false;
+                  break;
+                }
+              }
+
+              if (this.mNeedToFinish) {
+                // if a search is happening at this juncture, bail out of this function
+                // and let the search finish, and tell it to come back here when it's done
+                if (this.isSearching) {
+                  this.mFinishAfterSearch = true;
+                  this.mFireAfterSearch = aFireTextCommand;
+                  return;
+                }
+
+                this.mNeedToFinish = false;
+                var defaultSession = this.getDefaultSession();
+                if (defaultSession)
+                {
+                    // preselect the first one
+                    var first = this.getSessionValueAt(defaultSession, 0);
+                    this.setTextValue(first);
+                    this.mDefaultMatchFilled = true;
+                }
+              }
+            }
+
+            this.stopLookup();
+
+            if (!this.noMatch)
+              this.autoComplete();
+
+            this.closeResultPopup();
+          }
+          
+          this.mNeedToComplete = false;
+          this.removeAttribute("noMatchesFound");
+          this.clearTimer();
+
+          if (aFireTextCommand)
+            this._fireEvent("textentered", this.userAction, aTriggeringEvent);
+        ]]></body>
+      </method>
+
+      <!--  when the user clicks an entry in the autocomplete popup -->
+      <method name="onResultClick">
+        <body><![CDATA[
+         // set textbox value to either override value, or the clicked result
+          var errItem=null;
+          var val = this.resultsPopup.getOverrideValue();
+            if (val)
+              this.setTextValue(val);
+          else if (this.resultsPopup.selectedIndex != null &&
+                   !this.noMatch) {
+            if (this.getSessionStatusAt(this.resultsPopup.selectedIndex) ==
+                Components.interfaces.nsIAutoCompleteStatus.failureItems) {
+              this.setTextValue(this.currentSearchString);
+              this.mTransientValue = true;
+              errItem = this.getResultAt(this.resultsPopup.selectedIndex);
+            } else { 
+              this.setTextValue(this.getResultValueAt(
+                                             this.resultsPopup.selectedIndex));
+            }
+          }
+
+          if (!this.noMatch)
+            this.autoComplete();
+
+          this.mNeedToFinish = false;
+          this.mNeedToComplete = false;
+          
+          this.closeResultPopup();
+
+          this.currentSearchString = "";
+
+          if (errItem)
+            this._fireEvent("errorcommand", errItem);
+          this._fireEvent("textentered", "clicking");
+        ]]></body>
+      </method>
+
+      <!-- when the user hits escape, revert the previously typed value in the textbox -->
+      <method name="undoAutoComplete">
+        <body><![CDATA[
+          var val = this.currentSearchString;
+
+          var ok = this._fireEvent("textreverted");
+          if ((ok || ok == undefined) && val)
+            this.setTextValue(val);
+
+          this.userAction = "typing";
+
+          this.currentSearchString = this.value;
+          this.mNeedToComplete = false;
+        ]]></body>
+      </method>
+
+      <!-- convert an absolute result index into a session name/index pair -->
+      <method name="convertIndexToSession">
+        <parameter name="aIndex"/>
+        <body><![CDATA[
+          var idx = 0;
+          for (var name in this.mLastResults) {
+            if (this.mLastResults[name]) {
+              if ((idx+this.mLastResults[name].items.Count())-1 >= aIndex) {
+                return {session: name, index: aIndex-idx};
+              }
+              idx += this.mLastResults[name].items.Count();
+            }
+          }
+          return null;
+        ]]></body>
+      </method>
+
+      <!-- ::::::::::::: user input handling ::::::::::::: -->
+
+      <!--  -->
+      <method name="processInput">
+        <body><![CDATA[
+          // stop current lookup in case it's async.
+          this.stopLookup();
+          // stop the queued up lookup on a timer
+          this.clearTimer();
+
+          if (this.ignoreInputEvent)
+            return;
+          
+          if (this.disableAutocomplete)
+            return;
+
+          this.userAction = "typing";
+          this.mNeedToFinish = true;
+          this.mTransientValue = false;
+          this.mNeedToComplete = true;
+          var str = this.value;
+          this.currentSearchString = str;
+          this.resultsPopup.selectedIndex = null;
+          this.removeAttribute("noMatchesFound");
+          
+          this.mAutoCompleteTimer = setTimeout(this.callListener, this.timeout, this, "startLookup");
+        ]]></body>
+      </method>
+
+      <!--  -->
+      <method name="processKeyPress">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          this.mLastKeyCode = aEvent.keyCode;
+          
+          var killEvent = false;
+          
+          switch (aEvent.keyCode) {
+            case KeyEvent.DOM_VK_TAB:
+              if (this.tabScrolling) {
+                // don't kill this event if alt-tab or ctrl-tab is hit
+                if (!aEvent.altKey && !aEvent.ctrlKey) {
+                  killEvent = this.mMenuOpen;
+                  if (killEvent)
+                    this.keyNavigation(aEvent);
+                }
+              } 
+              break;              
+              
+            case KeyEvent.DOM_VK_RETURN:
+
+              // if this is a failure item, save it for fireErrorCommand
+              var errItem = null;
+              if (this.resultsPopup.selectedIndex != null && 
+                  this.getSessionStatusAt(this.resultsPopup.selectedIndex) ==
+                  Components.interfaces.nsIAutoCompleteStatus.failureItems) {
+                errItem = this.getResultAt(this.resultsPopup.selectedIndex);
+              }
+
+              killEvent = this.mMenuOpen;
+              this.finishAutoComplete(true, true, aEvent);
+              this.closeResultPopup();
+              if (errItem) {
+                  this._fireEvent("errorcommand", errItem);
+              }
+              break;
+
+            case KeyEvent.DOM_VK_ESCAPE:
+              this.clearTimer();
+              killEvent = this.mMenuOpen;
+              this.undoAutoComplete();
+              this.closeResultPopup();
+              break;
+  
+            case KeyEvent.DOM_VK_LEFT:
+            case KeyEvent.DOM_VK_RIGHT:
+              this.finishAutoComplete(false, false, aEvent);
+              this.clearTimer();
+              this.closeResultPopup();
+              break;
+
+            case KeyEvent.DOM_VK_DOWN:
+              if (!aEvent.altKey) {
+                this.clearTimer();
+                killEvent = this.keyNavigation(aEvent);
+                break;
+              }
+            // Alt+Down falls through to history popup toggling code
+              
+            case KeyEvent.DOM_VK_F4:
+              if (!aEvent.ctrlKey && !aEvent.shiftKey && this.getAttribute("disablehistory") != "true") {
+                var historyPopup = document.getAnonymousElementByAttribute(this, "anonid", "historydropmarker");
+                if (historyPopup)
+                  historyPopup.showPopup();
+                else
+                  historyPopup.hidePopup();
+              }
+              break;
+            case KeyEvent.DOM_VK_PAGE_UP:
+            case KeyEvent.DOM_VK_PAGE_DOWN:
+            case KeyEvent.DOM_VK_UP:
+              if (!aEvent.ctrlKey && !aEvent.metaKey) {
+                this.clearTimer();
+                killEvent = this.keyNavigation(aEvent);
+              }
+              break;
+          }
+          
+          if (killEvent) {
+            aEvent.preventDefault();
+            aEvent.stopPropagation();
+          }
+          
+          return true;
+        ]]></body>
+      </method>
+
+      <!--  -->
+      <method name="processStartComposition">
+        <body><![CDATA[
+          this.finishAutoComplete(false, false, null);
+          this.clearTimer();
+          this.closeResultPopup();
+        ]]></body>
+      </method>
+
+      <!--  -->
+      <method name="keyNavigation">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var k = aEvent.keyCode;
+          if (k == KeyEvent.DOM_VK_TAB ||
+              k == KeyEvent.DOM_VK_UP || k == KeyEvent.DOM_VK_DOWN ||
+              k == KeyEvent.DOM_VK_PAGE_UP || k == KeyEvent.DOM_VK_PAGE_DOWN)
+          {
+            // up/down keys while menu is closed will open menu
+            if (!this.mMenuOpen) {
+              if (this.currentSearchString != this.value) {
+                 this.processInput();
+                 return true;
+              }
+              if (this.view.rowCount < this.minResultsForPopup)
+                return false;
+
+              this.mNeedToFinish = true;
+              this.openResultPopup();
+              return true;
+            }
+            
+            this.userAction = "scrolling";
+            this.mNeedToComplete = false;
+            
+            var dir = k == KeyEvent.DOM_VK_DOWN ||
+                      k == KeyEvent.DOM_VK_PAGE_DOWN ||
+                     (k == KeyEvent.DOM_VK_TAB && !aEvent.shiftKey) ? 1 : -1;
+            var amt = k == KeyEvent.DOM_VK_PAGE_UP ||
+                      k == KeyEvent.DOM_VK_PAGE_DOWN ? this.resultsPopup.pageCount-1 : 1;
+            var selected = this.resultsPopup.selectBy(dir, amt);
+          
+            // determine which value to place in the textbox
+            this.ignoreInputEvent = true;
+            if (selected != null) {
+              if (this.getSessionStatusAt(selected) == 
+                  Components.interfaces.nsIAutoCompleteStatus.failureItems) { 
+                if (this.currentSearchString)
+                  this.setTextValue(this.currentSearchString);
+              } else {
+                this.setTextValue(this.getResultValueAt(selected));
+              }
+              this.mTransientValue = true;
+            } else {
+              if (this.currentSearchString)
+                this.setTextValue(this.currentSearchString);
+              this.mTransientValue = false;
+            }
+
+            // move cursor to the end
+            this.mInputElt.setSelectionRange(this.value.length, this.value.length);
+            this.ignoreInputEvent = false;
+          }
+          return true;
+        ]]></body>
+      </method>
+
+      <!-- while the user is typing, fill the textbox with the "default" value
+           if one can be assumed, and select the end of the text -->
+      <method name="autoFillInput">
+        <parameter name="aSessionName"/>
+        <parameter name="aResults"/>
+        <parameter name="aUseFirstMatchIfNoDefault"/>
+        <body><![CDATA[
+          if (this.mInputElt.selectionEnd < this.currentSearchString.length ||
+              this.mDefaultMatchFilled)
+            return;
+
+          if (!this.mFinishAfterSearch && this.autoFill && 
+              this.mLastKeyCode != KeyEvent.DOM_VK_BACK_SPACE &&
+              this.mLastKeyCode != KeyEvent.DOM_VK_DELETE) {
+            var indexToUse = aResults.defaultItemIndex;
+            if (aUseFirstMatchIfNoDefault && indexToUse == -1)
+              indexToUse = 0; 
+
+            if (indexToUse != -1) {
+              var resultValue = this.getSessionValueAt(aSessionName, indexToUse);
+              var match = resultValue.toLowerCase();
+              var entry = this.currentSearchString.toLowerCase();
+              this.ignoreInputEvent = true;
+              if (match.indexOf(entry) == 0) {
+                var endPoint = this.value.length;
+                this.setTextValue(this.value + resultValue.substr(endPoint));
+                this.mInputElt.setSelectionRange(endPoint, this.value.length);
+              } else {
+                if (this.autoFillAfterMatch) {
+                  this.setTextValue(this.value + " >> " + resultValue);
+                  this.mInputElt.setSelectionRange(entry.length, this.value.length);
+                } else {
+                  var postIndex = resultValue.indexOf(this.value);
+                  if (postIndex >= 0) {
+                    var startPt = this.value.length;
+                    this.setTextValue(this.value + 
+                                      resultValue.substr(startPt+postIndex));
+                    this.mInputElt.setSelectionRange(startPt, this.value.length);
+                  }
+                }
+              }
+              this.mNeedToComplete = true;
+              this.ignoreInputEvent = false;
+              this.mDefaultMatchFilled = true;
+            }
+          } 
+        ]]></body>
+      </method>
+
+      <!-- ::::::::::::: popup and tree ::::::::::::: -->
+
+      <!--  -->
+      <method name="openResultPopup">
+        <body><![CDATA[
+          if (!this.mMenuOpen && this.showPopup && this.focused &&
+               (this.getResultCount("") >= this.minResultsForPopup
+                || this.mFailureItems)) {
+            var w = this.boxObject.width;
+            if (w != this.resultsPopup.boxObject.width)
+              this.resultsPopup.setAttribute("width", w);
+            this.resultsPopup.removeAttribute("hidden");
+            this.resultsPopup.showPopup(this, -1, -1, "popup", "bottomleft", "topleft");
+            this.mMenuOpen = true;
+          }
+        ]]></body>
+      </method>
+
+      <!--  -->
+      <method name="closeResultPopup">
+        <body><![CDATA[
+          if (this.resultsPopup && this.mMenuOpen) {
+            this.resultsPopup.hidePopup();
+            this.resultsPopup.setAttribute("hidden", "true");
+            this.mMenuOpen = false;
+          }
+        ]]></body>
+      </method>
+
+      <!--  -->
+      <method name="addResultElements">
+        <parameter name="aSessionName"/>
+        <parameter name="aResults"/>
+        <body><![CDATA[
+          if (this.focused) {
+            this.view.addResults(aResults);
+            this.resultsPopup.adjustHeight();
+          }
+        ]]></body>
+      </method>
+
+      <!--  -->
+      <method name="clearResultElements">
+        <parameter name="aInvalidate"/>
+        <body><![CDATA[
+          this.view.clearResults();
+          if (aInvalidate)
+            this.resultsPopup.adjustHeight();
+
+          this.noMatch = true;
+        ]]></body>
+      </method>
+
+      <!--  -->
+      <method name="setTextValue">
+        <parameter name="aValue"/>
+        <body><![CDATA[
+          // Completing a result should simulate the user typing the result,
+          // so fire an input event.
+          this.value = aValue;
+          var evt = document.createEvent("UIEvents");
+          evt.initUIEvent("input", true, false, window, 0);
+          var oldIgnoreInput = this.ignoreInputEvent;
+          this.ignoreInputEvent = true;
+          this.dispatchEvent(evt);
+          this.ignoreInputEvent = oldIgnoreInput;
+        ]]></body>
+      </method>
+
+      <!--  -->
+      <method name="clearResultData">
+        <body><![CDATA[
+          const nsIAutoCompleteItem =
+            Components.interfaces.nsIAutoCompleteItem;
+          for (var name in this.mSessions) {
+            // clearing out mLastResults[name] does not guarantee that
+            // each result will go away right now (it might be gc'ed later)
+            // so we have to clear the 'param' element manually
+            var session = this.mLastResults[name];
+            if (session) {
+              const resultCount = session.items.Count();
+              for (var i=0; i<resultCount; i++)
+                  session.items.QueryElementAt(i, nsIAutoCompleteItem).param = null;
+              this.mLastResults[name] = null;
+            }
+            this.mLastStatus[name] = null;
+          }
+        ]]></body>
+      </method>
+
+      <!-- ::::::::::::: miscellaneous ::::::::::::: -->
+
+      <!--  -->
+      <method name="ifSetAttribute">
+        <parameter name="aAttr"/>
+        <parameter name="aVal"/>
+        <body><![CDATA[
+          if (this.getAttribute(aAttr) == "")
+            this.setAttribute(aAttr, aVal);
+        ]]></body>
+      </method>
+
+      <!--  -->
+      <method name="clearTimer">
+        <parameter name=""/>
+        <body><![CDATA[
+          if (this.mAutoCompleteTimer) {
+            clearTimeout(this.mAutoCompleteTimer);
+            this.mAutoCompleteTimer = 0;
+          }
+        ]]></body>
+      </method>
+
+      <!-- ::::::::::::: event dispatching ::::::::::::: -->
+
+      <method name="_fireEvent">
+        <parameter name="aEventType"/>
+        <parameter name="aEventParam"/>
+        <parameter name="aTriggeringEvent"/>
+        <body>
+        <![CDATA[
+          var noCancel = true;
+          // handle any xml attribute event handlers
+          var handler = this.getAttribute("on"+aEventType);
+          if (handler) {
+            var fn = new Function("eventParam", "domEvent", handler);
+            var returned = fn.apply(this, [aEventParam, aTriggeringEvent]);
+            if (returned == false)
+              noCancel = false;
+          }
+          
+          return noCancel;
+        ]]>
+        </body>
+      </method>
+
+      <!-- =================== TREE VIEW =================== -->
+
+      <field name="view"><![CDATA[
+        ({
+          mTextbox: this,
+          mTree: null,
+          mBoxObject: null,
+          mResults: [],
+          mRowCount: 0,
+          mSelectedIndex: null,
+          
+          get treeBoxObject()
+          {
+            return this.mTree;
+          },
+          
+          set selectedIndex(aRow)
+          {
+            if (!this.mBoxObject)
+              return;
+              
+            if (this.mSelectedIndex != null)
+              this.mBoxObject.invalidateRow(this.mSelectedIndex);
+              
+            this.mSelectedIndex = aRow;
+            
+            if (aRow != null) {
+              this.mBoxObject.invalidateRow(aRow);
+
+              this.mBoxObject.ensureRowIsVisible(aRow);
+              // Fire select event on xul:tree so that accessibility API 
+              // support layer can fire appropriate accessibility events.
+              var event = document.createEvent('Events');
+              event.initEvent("select", true, true);
+              this.mTree.element.dispatchEvent(event);
+            }
+          },
+          
+          get selectedIndex()
+          {
+            return this.mSelectedIndex;
+          },
+          
+          clearResults: function()
+          {
+            var oldCount = this.mRowCount;
+            this.mRowCount = 0;  
+            this.mResults = [];
+            
+            if (this.mTree)
+              this.mTree.rowCountChanged(0, -oldCount);
+            if (this.mBoxObject)
+              this.mBoxObject.scrollToRow(0);
+          },
+          
+          addResults: function(aResults)
+          {
+            this.mResults.push(aResults);
+            var oldCount = this.mRowCount;
+            this.mRowCount += aResults.items.Count();
+            
+            if (this.mTree)
+              this.mTree.rowCountChanged(oldCount, this.mRowCount - oldCount);
+          },
+          
+          createAtom: function(aVal)
+          {
+            try {
+              var i = Components.interfaces.nsIAtomService;
+              var svc = Components.classes["@mozilla.org/atom-service;1"].getService(i);
+              return svc.getAtom(aVal);
+            } catch(ex) { }
+            return null; // XXX equivalent to falling off the end?
+          },
+
+          //////////////////////////////////////////////////////////
+          // nsITreeView interface
+          
+          get rowCount() {
+            return this.mRowCount;
+          },
+          
+          // implementing these results in a crash
+          // get selection() {},
+          // set selection(aVal) { },
+          
+          setTree: function(aTree)
+          {
+            this.mTree = aTree;
+            
+            if (aTree) {
+              this.mBoxObject = this.mTextbox.resultsPopup.tree.treeBoxObject;
+            
+              // cache atoms for pseudoelement properties
+              this.mAtomSelected = this.createAtom("menuactive")
+            }
+          },
+          
+          getCellText: function(aRow, aCol)
+          {
+            var result = this.mTextbox.getResultAt(aRow);
+            if (!result) return "";
+            return aCol.id == "value" ? result.value : (aCol.id == "comment" ? result.comment : "");
+          },
+
+          getRowProperties: function(aIndex, aProperties) 
+          {
+            if (aIndex == this.mSelectedIndex)
+              aProperties.AppendElement(this.mAtomSelected);
+          },
+
+          getCellProperties: function(aIndex, aCol, aProperties)
+          {
+            this.getRowProperties(aIndex, aProperties);
+
+            // for the value column, append nsIAutoCompleteItem::className
+            // to the property list so that we can style this column
+            // using that property
+            try { 
+              if (aCol.id == "value") {
+                var className = this.mTextbox.getResultAt(aIndex).className;
+                  if ( className != "" ) {
+                    aProperties.AppendElement(this.createAtom(className));
+                  }
+              }
+            } catch (ex) {
+              // the ability to style here is a frill, so don't abort
+              // if there's a problem
+            } 
+          },
+
+          getColumnProperties: function(aCol, aProperties) 
+          {
+          },
+          
+          getParentIndex: function(aRowIndex) { },
+          hasNextSibling: function(aRowIndex, aAfterIndex) { },
+          getLevel: function(aIndex) {},
+          getImageSrc: function(aRow, aCol) {},
+          getProgressMode: function(aRow, aCol) {},
+          getCellValue: function(aRow, aCol) {},
+          isContainer: function(aIndex) {},
+          isContainerOpen: function(aIndex) {},
+          isContainerEmpty: function(aIndex) {},
+          isSeparator: function(aIndex) {},
+          isSorted: function() {},
+          toggleOpenState: function(aIndex) {},
+          selectionChanged: function() {},
+          cycleHeader: function(aCol) {},
+          cycleCell: function(aRow, aCol) {},
+          isEditable: function(aRow, aCol) {},
+          isSelectable: function(aRow, aCol) {},
+          setCellValue: function(aRow, aCol, aValue) {},
+          setCellText: function(aRow, aCol, aValue) {},
+          performAction: function(aAction) {},
+          performActionOnRow: function(aAction, aRow) {},
+          performActionOnCell: function(aAction, aRow, aCol) {}
+        });
+      ]]></field>
+
+    </implementation>
+
+    <handlers>
+      <handler event="input"
+               action="this.processInput();"/>
+
+      <handler event="keypress" phase="capturing"
+                action="return this.processKeyPress(event);"/>
+
+      <handler event="compositionstart" phase="capturing"
+                action="this.processStartComposition();"/>
+
+      <handler event="focus" phase="capturing"
+               action="this.userAction = 'typing';"/>
+
+      <handler event="blur" phase="capturing"
+               action="if ( !(this.ignoreBlurWhileSearching &amp;&amp; this.isSearching) ) {this.userAction = 'none'; this.finishAutoComplete(false, false, event);}"/>
+
+      <handler event="mousedown" phase="capturing"
+               action="if ( !this.mMenuOpen ) this.finishAutoComplete(false, false, event);"/>
+    </handlers>
+  </binding> 
+
+  <binding id="autocomplete-result-popup" extends="chrome://global/content/bindings/popup.xml#popup">
+    <content>
+      <xul:tree anonid="tree" class="autocomplete-tree plain" flex="1">
+        <xul:treecols anonid="treecols"/>
+        <xul:treechildren anonid="treebody" class="autocomplete-treebody"/>
+      </xul:tree>
+    </content>
+    
+    <implementation>
+      <constructor><![CDATA[
+        if (this.textbox && this.textbox.view)
+          this.initialize();
+      ]]></constructor>
+
+     <property name="textbox"
+                onget="return '__AUTOCOMPLETE_BOX__' in this ? this.__AUTOCOMPLETE_BOX__ : null;"/>
+      
+      <field name="tree">
+        document.getAnonymousElementByAttribute(this, "anonid", "tree");
+      </field>
+
+      <field name="treecols">
+        document.getAnonymousElementByAttribute(this, "anonid", "treecols");
+      </field>
+
+      <field name="treebody">
+        document.getAnonymousElementByAttribute(this, "anonid", "treebody");
+      </field>
+
+      <property name="view" onget="return this.mView;">
+        <setter><![CDATA[
+          this.mView = val;
+          var bx = this.tree.boxObject;
+          bx = bx.QueryInterface(Components.interfaces.nsITreeBoxObject);
+          bx.view = val;
+        ]]></setter>
+      </property>
+
+     <property name="pageCount"
+               onget="return this.tree.treeBoxObject.getPageLength();"/>
+
+     <property name="selectedIndex"
+               onget="return this.textbox.view.selectedIndex"
+               onset="this.textbox.view.selectedIndex = val; return val;"/>
+
+     <field name="mLastRows">0</field>
+
+      <method name="initialize">
+        <body><![CDATA[
+        this.tree.__AUTOCOMPLETE_BOX__ = this.textbox;
+        this.treebody.__AUTOCOMPLETE_BOX__ = this.textbox;
+
+        this._selectedIndex = null;
+
+        this.initColumns();
+        this.view = this.textbox.view;
+        ]]></body>
+      </method>
+
+      <!-- initialize the columns in the tree -->
+      <method name="initColumns">
+        <body><![CDATA[
+          if (this.textbox.showCommentColumn) {
+            this.addColumn({id: "value", flex: 2});
+            this.addColumn({id: "comment", flex: 1});
+          } else
+            this.addColumn({id: "value", flex: 1});
+        ]]></body>
+      </method>
+
+      <method name="addColumn">
+        <parameter name="aAttrs"/>
+        <body><![CDATA[
+          var col = document.createElement("treecol");
+          col.setAttribute("class", "autocomplete-treecol");
+          for (var name in aAttrs)
+            col.setAttribute(name, aAttrs[name]);
+          this.treecols.appendChild(col);
+          return col;
+        ]]></body>
+      </method>
+
+      <!-- remove a single column from the tree, specified by
+           element id -->
+      <method name="removeColumn">
+        <parameter name="aColId"/>
+        <body><![CDATA[
+          return this.tree.removeChild(document.getElementById(aColId));
+        ]]></body>
+      </method>
+
+      <method name="adjustHeight">
+        <body><![CDATA[
+          // detect the desired height of the tree
+          var bx = this.tree.treeBoxObject;
+          var view = this.textbox.view;
+          var rows = this.textbox.maxRows;
+          if (!view.rowCount || (rows && view.rowCount < rows))
+            rows = view.rowCount;
+          
+          var height = rows * bx.rowHeight;
+          
+          if (height == 0)
+            this.tree.setAttribute("collapsed", "true");
+          else {
+            if (this.tree.hasAttribute("collapsed"))
+              this.tree.removeAttribute("collapsed");
+            this.tree.setAttribute("height", height);
+          }
+        ]]></body>
+      </method>
+
+      <method name="selectBy">
+        <parameter name="aDir"/>
+        <parameter name="aAmount"/>
+        <body><![CDATA[
+          try {
+            var view = this.textbox.view;
+            this.selectedIndex = this.getNextIndex(aDir, aAmount, this.selectedIndex, view.rowCount-1);
+  
+            return this.selectedIndex;
+          } catch (ex) {
+            // do nothing - occasionally timer-related js errors happen here
+            // e.g. "this.selectedIndex has no properties", when you type fast and hit a
+            // navigation key before this popup has opened
+            return null;
+          }
+        ]]></body>
+      </method>
+
+      <method name="getNextIndex">
+        <parameter name="aDir"/>
+        <parameter name="aAmount"/>
+        <parameter name="aIndex"/>
+        <parameter name="aMaxRow"/>
+        <body><![CDATA[
+          if (aMaxRow < 0)
+            return null;
+            
+          var newIdx = aIndex + aDir*aAmount;
+          if (aDir < 0 && aIndex == null || newIdx > aMaxRow && aIndex != aMaxRow)
+            newIdx = aMaxRow;
+          else if (aDir > 0 && aIndex == null || newIdx < 0 && aIndex != 0)
+            newIdx = 0;
+          
+          if (newIdx < 0 && aIndex == 0 || newIdx > aMaxRow && aIndex == aMaxRow)
+            aIndex = null;
+          else
+            aIndex = newIdx;
+          
+          return aIndex;
+        ]]></body>
+      </method>
+
+      <!-- This method is meant to be overriden by bindings extending this one.  When the 
+           user selects an item from the list by hitting enter or clicking, this method
+           can set the value of the textbox to a different value if it wants to. -->
+      <method name="getOverrideValue">
+        <body><![CDATA[
+          return null;
+        ]]></body>
+      </method>
+
+    </implementation>
+
+    <handlers>
+      <handler event="popupshowing">
+        this.textbox.mMenuOpen = true;
+      </handler>
+
+      <handler event="popuphiding">
+        this.textbox.mMenuOpen = false;
+        this.selectedIndex = null;
+      </handler>
+
+      <handler event="mousedown" phase="capturing" preventdefault="true"/>
+    </handlers>
+  </binding>
+
+  <binding id="autocomplete-tree" extends="chrome://global/content/bindings/tree.xml#tree">
+    <implementation>
+      <property name="textbox"
+                onget="return this.__AUTOCOMPLETE_BOX__;"/>
+      <property name="currentIndex" onget="return this.textbox.view.selectedIndex;"
+                                    onset="this.textbox.view.selectedIndex = val; return val;"/>
+    </implementation>
+  </binding>
+
+  <binding id="autocomplete-treebody">
+    <implementation>
+      <property name="textbox"
+                onget="return this.__AUTOCOMPLETE_BOX__;"/>
+
+      <field name="mLastMoveTime">Date.now()</field>
+
+      <method name="getHoverRow">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+           // XXXbz We really want client*, but event.client* is bogus inside a
+           // popup!
+           var x = aEvent.screenX - document.documentElement.boxObject.screenX;
+           var y = aEvent.screenY - document.documentElement.boxObject.screenY;
+           var row = this.textbox.view.treeBoxObject.getRowAt(x, y);
+           if (row >= 0)
+             return row;
+           return null;
+        ]]></body>
+      </method>
+    </implementation>
+    
+    <handlers>
+      <handler event="mouseout" action="this.textbox.view.selectedIndex = null;"/>
+      <handler event="mouseup"><![CDATA[
+        var rc = this.getHoverRow(event);
+        if (rc != null) {
+          this.textbox.view.selectedIndex = rc;
+          this.textbox.onResultClick();
+        }
+      ]]></handler>
+
+      <handler event="mousemove"><![CDATA[
+        if (Date.now() - this.mLastMoveTime > 30) {
+          var rc = this.getHoverRow(event);
+          if (rc != null && rc != this.textbox.view.selectedIndex) 
+            this.textbox.view.selectedIndex = rc;
+          this.mLastMoveTime = Date.now();
+        }
+      ]]></handler>
+    </handlers>
+  </binding>
+
+  <binding id="autocomplete-history-popup"
+           extends="chrome://global/content/bindings/popup.xml#popup-scrollbars">
+    <resources>
+      <stylesheet src="chrome://global/content/autocomplete.css"/>
+      <stylesheet src="chrome://global/skin/autocomplete.css"/>
+    </resources>
+    
+    <implementation>
+      <method name="removeOpenAttribute">
+        <parameter name="parentNode"/>
+        <body><![CDATA[
+          parentNode.removeAttribute("open");
+        ]]></body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="popuphiding"><![CDATA[
+        setTimeout(this.removeOpenAttribute, 0, this.parentNode);
+      ]]></handler>
+    </handlers>
+  </binding>
+
+  <binding id="history-dropmarker" extends="chrome://global/content/bindings/general.xml#dropmarker">
+      
+    <implementation>
+      <method name="showPopup">
+        <body><![CDATA[
+          var textbox = document.getBindingParent(this);
+          var kids = textbox.getElementsByTagName("menupopup");
+          if (kids.item(0) && textbox.getAttribute("open") != "true") { // Open history popup
+            kids[0].showPopup(textbox, -1, -1, "popup", "bottomleft", "topleft");
+            textbox.setAttribute("open", "true");
+          }
+        ]]></body>
+      </method>
+    </implementation>
+    
+    <handlers>
+      <handler event="mousedown"><![CDATA[
+        this.showPopup();
+      ]]></handler>
+    </handlers>
+  </binding>
+
+</bindings>
+

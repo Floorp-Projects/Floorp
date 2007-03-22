@@ -1,0 +1,108 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Bradley Baetz <bbaetz@netscape.com> (Original Developer)
+ *   Malcolm Smith <malsmith@cs.rmit.edu.au>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/**
+ * This interface identifies a proxy server.
+ *
+ * @status UNDER_REVIEW
+ */
+[scriptable, uuid(3fe9308b-1608-4fa0-933c-c5ec2c6175fd)]
+interface nsIProxyInfo : nsISupports
+{
+  /**
+   * This attribute specifies the hostname of the proxy server.
+   */
+  readonly attribute AUTF8String host;
+
+  /**
+   * This attribute specifies the port number of the proxy server.
+   */
+  readonly attribute long port;
+
+  /**
+   * This attribute specifies the type of the proxy server as an ASCII string.
+   *
+   * Some special values for this attribute include (but are not limited to)
+   * the following:
+   *   "http"     HTTP proxy (or SSL CONNECT for HTTPS)
+   *   "socks"    SOCKS v5 proxy
+   *   "socks4"   SOCKS v4 proxy
+   *   "direct"   no proxy
+   *   "unknown"  unknown proxy (see nsIProtocolProxyService::resolve)
+   *
+   * A future version of this interface may define additional types.
+   */
+  readonly attribute ACString type; 
+
+  /**
+   * This attribute specifies flags that modify the proxy type.  The value of
+   * this attribute is the bit-wise combination of the Proxy Flags defined
+   * below.  Any undefined bits are reserved for future use.
+   */
+  readonly attribute unsigned long flags;
+
+  /**
+   * This attribute specifies the failover timeout in seconds for this proxy.
+   * If a nsIProxyInfo is reported as failed via nsIProtocolProxyService::
+   * getFailoverForProxy, then the failed proxy will not be used again for this
+   * many seconds.
+   */
+  readonly attribute unsigned long failoverTimeout;
+
+  /**
+   * This attribute specifies the proxy to failover to when this proxy fails.
+   */
+  attribute nsIProxyInfo failoverProxy;
+
+
+  /****************************************************************************
+   * The following "Proxy Flags" may be bit-wise combined to construct the
+   * flags attribute defined on this interface.  All unspecified bits are
+   * reserved for future use.
+   */
+
+  /**
+   * This flag is set if the proxy is to perform name resolution itself.  If
+   * this is the case, the hostname is used in some fashion, and we shouldn't
+   * do any form of DNS lookup ourselves.
+   */
+  const unsigned short TRANSPARENT_PROXY_RESOLVES_HOST = 1 << 0;
+};

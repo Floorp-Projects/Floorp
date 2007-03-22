@@ -1,0 +1,32 @@
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= qgeckoembed
+LIBRARY_NAME	= qgeckoplugin
+REQUIRES	= qgeckoembed \
+		  $(NULL)
+
+CPPSRCS		= \
+		plugin.cpp \
+		$(NULL)
+
+# Include config.mk 
+include $(topsrcdir)/config/config.mk
+
+#don't link with qgeckoembed and mozilla
+EXTRA_DSO_LDOPTS += \
+		    $(MOZ_QT_LDFLAGS) \
+		    $(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS        += $(MOZ_QT_CFLAGS)
+CFLAGS          += $(MOZ_QT_CFLAGS)
+
+#FIXME this should come from configure ?
+CXXFLAGS        += -DQT_THREAD_SUPPORT
+CFLAGS        += -DQT_THREAD_SUPPORT

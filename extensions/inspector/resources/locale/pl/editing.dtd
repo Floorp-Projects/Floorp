@@ -1,0 +1,17 @@
+<!ENTITY mnEditUndo.label "Cofnij">
+<!ENTITY mnEditUndo.accesskey "C">
+<!ENTITY mnEditRedo.label "Przywróć">
+<!ENTITY mnEditRedo.accesskey "r">
+<!ENTITY mnEditCut.label "Wytnij">
+<!ENTITY mnEditCut.accesskey "t">
+<!ENTITY mnEditCopy.label "Kopiuj">
+<!ENTITY mnEditCopy.accesskey "K">
+<!ENTITY mnEditPaste.label "Wklej">
+<!ENTITY mnEditPaste.accesskey "e">
+<!ENTITY mnEditInsert.label "Wstaw">
+<!ENTITY mnEditInsert.accesskey "w">
+<!ENTITY mnEditEdit.label "Edytuj">
+<!ENTITY mnEditEdit.accesskey "d">
+<!ENTITY mnEditDelete.label "Usuń">
+<!ENTITY mnEditDelete.accesskey "s">
+

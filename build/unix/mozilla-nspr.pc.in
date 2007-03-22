@@ -1,0 +1,12 @@
+prefix=%prefix%
+exec_prefix=%exec_prefix%
+libdir=%libdir%
+includedir=%includedir%
+
+Name: NSPR
+Description: The Netscape Portable Runtime
+Version: %NSPR_VERSION%
+Libs: %FULL_NSPR_LIBS%
+Cflags: %FULL_NSPR_CFLAGS%
+
+

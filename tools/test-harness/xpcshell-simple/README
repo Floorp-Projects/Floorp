@@ -1,0 +1,7 @@
+Simple xpcshell-based test harness
+
+converted from netwerk/test/unit
+
+Some documentation at http://developer.mozilla.org/en/docs/Writing_xpcshell-based_unit_tests
+See also http://wiki.mozilla.org/SoftwareTesting:Tools:Simple_xpcshell_test_harness
+

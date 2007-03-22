@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: channel textInput works
+Expect: ((feed.textInput.getProperty('description') == 'Your aggregator supports the textInput element. What software are you using?') && (feed.textInput.getProperty('link') == 'http://www.cadenhead.org/textinput.php') && (feed.textInput.getProperty('name') == 'query') && (feed.textInput.getProperty('title') == 'TextInput Inquiry'))
+
+-->
+<rss version="2.0" >
+<channel>
+<textInput>
+  <description>Your aggregator supports the textInput element. What software are you using?</description>
+  <link>http://www.cadenhead.org/textinput.php</link>
+  <name>query</name>
+  <title>TextInput Inquiry</title>
+</textInput>
+</channel>
+</rss>

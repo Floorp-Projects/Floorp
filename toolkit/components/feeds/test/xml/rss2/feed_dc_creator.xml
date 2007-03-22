@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: channel copyright works 
+Expect: feed.authors.queryElementAt(0, Components.interfaces.nsIFeedPerson).name == 'me'
+
+-->
+<rss version="2.0" >
+<channel xmlns:dc="http://purl.org/dc/elements/1.1/">
+<copyright>copyright 2006</copyright>
+<dc:creator>me</dc:creator>
+</channel>
+</rss>

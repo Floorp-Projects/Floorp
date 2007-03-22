@@ -1,0 +1,58 @@
+#aboutDialog {
+  padding: 0px 0px 10px 0px;
+  width: 299px;
+}
+
+#modes {
+  min-height: 380px;
+}
+
+#clientBox {
+  background-image: url("chrome://branding/content/about.png");
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding-top: 203px;
+  color: #000000;
+}
+
+#brandName {
+  font-weight: bold; font-size: larger;
+} 
+
+#userAgent {
+  margin: 11px 20px 0px 13px;
+  background-color: #FFFFFF;
+  color: #000000;
+  padding: 1px 0px 0px 3px;
+  -moz-appearance: none;
+  overflow: hidden;
+  border: 0px;
+}
+
+#groove {
+  margin-top: 0px;
+}
+
+#creditsIframe {
+  cursor: default;
+  -moz-user-select: none;
+  border: 0px;
+}
+
+#version {
+  font-weight: bold;
+  color: #909090;
+  margin: 1em 0px 10px 17px;
+}
+
+#copyright {
+  margin: 0px 0px 3px 16px;
+}
+
+button[dlgtype="extra2"] {
+  margin-left: 13px;
+}
+
+button[dlgtype="accept"] {
+  margin-right: 13px;
+}

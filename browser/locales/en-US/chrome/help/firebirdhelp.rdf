@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE window [
+    <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+    %brandDTD;
+]>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:nc="http://home.netscape.com/NC-rdf#">
+
+    <!-- MOZILLA MASTER HELP DOCUMENT -->
+    <Description rdf:about="urn:root"
+            nc:title="&brandFullName; Help"
+            nc:defaulttopic="firefox-help"
+            nc:base="chrome://browser/locale/help/">
+        <nc:panellist>
+            <Seq>
+                <li>
+                    <Description nc:panelid="toc"
+                        nc:datasources="chrome://help/locale/help-toc.rdf firebird-toc.rdf"/>
+                </li>
+                <li>
+                    <Description nc:panelid="search"
+                        nc:datasources="search-db.rdf"
+                        nc:emptysearchtext="[No matching items found.]"
+                        nc:emptysearchlink="chrome://help/locale/welcome.xhtml#search_tips"/>
+                </li>
+            </Seq>
+        </nc:panellist>
+    </Description>
+</RDF>

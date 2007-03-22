@@ -1,0 +1,4 @@
+<?xml-stylesheet type="text/css" href="data:text/css, root { display: table; }
+   block {display: block; position: fixed; top: auto; left: 200px }
+   "?>
+<root><block>bbb</block></root>

@@ -1,0 +1,359 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998-1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* Styles to alter look of things in the Editor content window 
+ *  that should NOT be removed when we display in completely WYSIWYG 
+ *  "Browser Preview" mode.
+ *  Anything that should change, like appearance of table borders
+ *  and Named Anchors, should be placed in EditorContent.css instead of here.
+*/
+
+/* Primary cursor is text I-beam */
+
+::-moz-canvas, a:link {
+  cursor: text;
+}
+
+/* Use default arrow over objects with size that 
+   are selected when clicked on.
+   Override the browser's pointer cursor over links
+*/
+
+img, img[usemap], area,
+object, object[usemap], 
+applet, hr, button, input, isindex, textarea, select,
+a:link img, a:visited img, a:active img,
+a[name]:-moz-only-whitespace {
+  cursor: default;
+}
+
+a:visited, a:active {
+  cursor: text;
+  color : inherit;
+}
+
+/* Prevent clicking on links from going to link */
+a:link img, a:visited img {
+  -moz-user-input: none;
+}
+
+/* We suppress user/author's prefs for link underline, 
+   so we must set explicitly. This isn't good!
+*/
+a:link {
+  text-decoration: underline -moz-anchor-decoration;
+  color: -moz-hyperlinktext;
+}
+
+/* Allow double-clicks on these widgets to open properties dialogs
+   XXX except when the widget has disabled attribute */
+input, button, textarea {
+  -moz-user-select: all !important;
+  -moz-user-input: auto !important;
+  -moz-user-focus: none !important;
+}
+
+/* XXX Still need a better way of blocking other events to these widgets */
+select, input[disabled], input[type="checkbox"], input[type="radio"], input[type="file"] {
+  -moz-user-select: all !important;
+  -moz-user-input: none !important;
+  -moz-user-focus: none !important;
+}
+
+isindex[prompt]
+{
+  -moz-user-select: none !important;
+  -moz-user-input: none !important;
+  -moz-user-focus: none !important;
+}
+
+input[type="hidden"] {
+  border: 1px solid black !important;
+  visibility: visible !important;
+}
+
+label {
+    -moz-user-select: all !important;
+}
+
+::-moz-display-comboboxcontrol-frame {
+  -moz-user-select: text !important;
+}
+
+option {
+  -moz-user-select: text !important;
+}
+
+#mozToc.readonly {
+  -moz-user-select: all !important;
+  -moz-user-input: none !important;
+}
+
+/* the following rules are for Image Resizing */
+
+span[\_moz_anonclass="mozResizer"] {
+  width: 5px;
+  height: 5px;
+  position: absolute;
+  border: 1px black solid;
+  background-color: white;
+  -moz-user-select: none;
+  z-index: 2147483646; /* max value -1 for this property */
+}
+
+/* we can't use :active below */
+span[\_moz_anonclass="mozResizer"][\_moz_activated],
+span[\_moz_anonclass="mozResizer"]:hover {
+  background-color: black;
+}
+
+span[\_moz_anonclass="mozResizer"].hidden,
+span[\_moz_anonclass="mozResizingShadow"].hidden,
+img[\_moz_anonclass="mozResizingShadow"].hidden,
+span[\_moz_anonclass="mozGrabber"].hidden,
+span[\_moz_anonclass="mozResizingInfo"].hidden,
+a[\_moz_anonclass="mozTableRemoveRow"].hidden,
+a[\_moz_anonclass="mozTableRemoveColumn"].hidden {
+  display: none !important;
+}
+
+span[\_moz_anonclass="mozResizer"][anonlocation="nw"] {
+  cursor: nw-resize;
+}
+span[\_moz_anonclass="mozResizer"][anonlocation="n"] {
+  cursor: n-resize;
+}
+span[\_moz_anonclass="mozResizer"][anonlocation="ne"] {
+  cursor: ne-resize;
+}
+span[\_moz_anonclass="mozResizer"][anonlocation="w"] {
+  cursor: w-resize;
+}
+span[\_moz_anonclass="mozResizer"][anonlocation="e"] {
+  cursor: e-resize;
+}
+span[\_moz_anonclass="mozResizer"][anonlocation="sw"] {
+  cursor: sw-resize;
+}
+span[\_moz_anonclass="mozResizer"][anonlocation="s"] {
+  cursor: s-resize;
+}
+span[\_moz_anonclass="mozResizer"][anonlocation="se"] {
+  cursor: se-resize;
+}
+
+span[\_moz_anonclass="mozResizingShadow"],
+img[\_moz_anonclass="mozResizingShadow"] {
+  outline: thin dashed black;
+  -moz-user-select: none;
+  opacity: 0.5;
+  position: absolute;
+  z-index: 2147483647; /* max value for this property */
+}
+
+span[\_moz_anonclass="mozResizingInfo"] {
+  font-family: sans-serif;
+  font-size: x-small;
+  color: black;
+  background-color: #d0d0d0;
+  border: ridge 2px #d0d0d0;
+  padding: 2px;
+  position: absolute;
+  z-index: 2147483647; /* max value for this property */
+}
+
+img[\_moz_resizing] {
+  outline: thin solid black;
+}
+
+*[\_moz_abspos] {
+  outline: silver ridge 2px;
+  z-index: 2147483645 !important; /* max value -2 for this property */
+}
+*[\_moz_abspos="white"] {
+  background-color: white !important;
+}
+*[\_moz_abspos="black"] {
+  background-color: black !important;
+}
+
+span[\_moz_anonclass="mozGrabber"] {
+  outline: ridge 2px silver;
+  padding: 2px;
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background-image: url("resource:/res/grabber.gif");
+  background-repeat: no-repeat;
+  background-position: center center;
+  -moz-user-select: none;
+  cursor: move;
+}
+
+/* INLINE TABLE EDITING */
+
+a[\_moz_anonclass="mozTableAddColumnBefore"] {
+  position: absolute;
+  z-index: 2147483647; /* max value for this property */
+  text-decoration: none !important;
+  border: none 0px !important;
+  width: 4px;
+  height: 8px;
+  background-image: url("resource:/res/table-add-column-before.gif");
+  background-repeat: no-repeat;
+  background-position: center center;
+  -moz-user-select: none !important;
+  -moz-user-focus: none !important;
+}
+
+a[\_moz_anonclass="mozTableAddColumnBefore"]:hover {
+  background-image: url("resource:/res/table-add-column-before-hover.gif");
+}
+
+a[\_moz_anonclass="mozTableAddColumnBefore"]:active {
+  background-image: url("resource:/res/table-add-column-before-active.gif");
+}
+
+a[\_moz_anonclass="mozTableAddColumnAfter"] {
+  position: absolute;
+  z-index: 2147483647; /* max value for this property */
+  text-decoration: none !important;
+  border: none 0px !important;
+  width: 4px;
+  height: 8px;
+  background-image: url("resource:/res/table-add-column-after.gif");
+  background-repeat: no-repeat;
+  background-position: center center;
+  -moz-user-select: none !important;
+  -moz-user-focus: none !important;
+}
+
+a[\_moz_anonclass="mozTableAddColumnAfter"]:hover {
+  background-image: url("resource:/res/table-add-column-after-hover.gif");
+}
+
+a[\_moz_anonclass="mozTableAddColumnAfter"]:active {
+  background-image: url("resource:/res/table-add-column-after-active.gif");
+}
+
+a[\_moz_anonclass="mozTableRemoveColumn"] {
+  position: absolute;
+  z-index: 2147483647; /* max value for this property */
+  text-decoration: none !important;
+  border: none 0px !important;
+  width: 8px;
+  height: 8px;
+  background-image: url("resource:/res/table-remove-column.gif");
+  background-repeat: no-repeat;
+  background-position: center center;
+  -moz-user-select: none !important;
+  -moz-user-focus: none !important;
+}
+
+a[\_moz_anonclass="mozTableRemoveColumn"]:hover {
+  background-image: url("resource:/res/table-remove-column-hover.gif");
+}
+
+a[\_moz_anonclass="mozTableRemoveColumn"]:active {
+  background-image: url("resource:/res/table-remove-column-active.gif");
+}
+
+a[\_moz_anonclass="mozTableAddRowBefore"] {
+  position: absolute;
+  z-index: 2147483647; /* max value for this property */
+  text-decoration: none !important;
+  border: none 0px !important;
+  width: 8px;
+  height: 4px;
+  background-image: url("resource:/res/table-add-row-before.gif");
+  background-repeat: no-repeat;
+  background-position: center center;
+  -moz-user-select: none !important;
+  -moz-user-focus: none !important;
+}
+
+a[\_moz_anonclass="mozTableAddRowBefore"]:hover {
+  background-image: url("resource:/res/table-add-row-before-hover.gif");
+}
+
+a[\_moz_anonclass="mozTableAddRowBefore"]:active {
+  background-image: url("resource:/res/table-add-row-before-active.gif");
+}
+
+a[\_moz_anonclass="mozTableAddRowAfter"] {
+  position: absolute;
+  z-index: 2147483647; /* max value for this property */
+  text-decoration: none !important;
+  border: none 0px !important;
+  width: 8px;
+  height: 4px;
+  background-image: url("resource:/res/table-add-row-after.gif");
+  background-repeat: no-repeat;
+  background-position: center center;
+  -moz-user-select: none !important;
+  -moz-user-focus: none !important;
+}
+
+a[\_moz_anonclass="mozTableAddRowAfter"]:hover {
+  background-image: url("resource:/res/table-add-row-after-hover.gif");
+}
+
+a[\_moz_anonclass="mozTableAddRowAfter"]:active {
+  background-image: url("resource:/res/table-add-row-after-active.gif");
+}
+
+a[\_moz_anonclass="mozTableRemoveRow"] {
+  position: absolute;
+  z-index: 2147483647; /* max value for this property */
+  text-decoration: none !important;
+  border: none 0px !important;
+  width: 8px;
+  height: 8px;
+  background-image: url("resource:/res/table-remove-row.gif");
+  background-repeat: no-repeat;
+  background-position: center center;
+  -moz-user-select: none !important;
+  -moz-user-focus: none !important;
+}
+
+a[\_moz_anonclass="mozTableRemoveRow"]:hover {
+  background-image: url("resource:/res/table-remove-row-hover.gif");
+}
+
+a[\_moz_anonclass="mozTableRemoveRow"]:active {
+  background-image: url("resource:/res/table-remove-row-active.gif");
+}

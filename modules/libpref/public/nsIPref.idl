@@ -1,0 +1,263 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsILocalFile;
+interface nsIObserver;
+interface nsIFileSpec;
+
+#include "nsIPrefService.idl"
+#include "nsIPrefBranch.idl"
+
+%{C++
+
+#ifndef have_PrefChangedFunc_typedef
+typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
+#define have_PrefChangedFunc_typedef
+#endif
+typedef void (*PrefEnumerationFunc)(const char *, void *);
+
+#define NS_PREF_CID                                    \
+  { /* {dc26e0e0-ca94-11d1-a9a4-00805f8a7ac4} */       \
+    0xdc26e0e0,                                        \
+    0xca94,                                            \
+    0x11d1,                                            \
+    { 0xa9, 0xa4, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xc4 } \
+  }
+
+#define NS_PREF_CONTRACTID \
+  "@mozilla.org/preferences;1" 
+
+#define NS_PREF_CLASSNAME "Preferences Service"
+ 
+#define NS_PREF_VALUE_CHANGED 1 
+%}
+native PrefChangedFunc(PrefChangedFunc);
+native PrefEnumerationFunc(PrefEnumerationFunc);
+
+/**
+ * This entire interface is deprecated and should not be used.
+ * See nsIPrefService and nsIPrefBranch for the new implementations.
+ *
+ * @status DEPRECATED  Replaced by nsIPrefService and nsIPrefBranch
+ */
+[scriptable, uuid(a22ad7b0-ca86-11d1-a9a4-00805f8a7ac4)]
+interface nsIPref : nsISupports {
+
+  /*
+   * These are the the Prefs Service methods we will support for now
+   */
+
+  /*
+   * readUserPrefs
+   * 
+   * read a user preference file, pass in null for default file
+   */
+  void readUserPrefs(in nsIFile aFile);
+
+  /*
+   * resetPrefs
+   * 
+   * completely flush and reload the preferences system
+   */
+  void ResetPrefs();
+
+  /*
+   * resetUserPrefs
+   * 
+   * flush all current user prefrences (reset all preferences to the default values)
+   */
+  void ResetUserPrefs();
+
+  /*
+   * savePrefFile
+   * 
+   * write current preferences state to a file, pass in null for default file
+   */
+  void savePrefFile(in nsIFile aFile);
+
+  /*
+   * branch operations
+   */
+
+  nsIPrefBranch getBranch(in string aPrefRoot);
+  nsIPrefBranch getDefaultBranch(in string aPrefRoot);
+
+
+  /*
+   * These are the the Prefs Branch methods we will support for now
+   */
+
+  const long ePrefInvalid = 0;
+  const long ePrefLocked = 1;
+  const long ePrefUserset = 2;
+  const long ePrefConfig = 4;
+  const long ePrefRemote = 8;
+  const long ePrefLilocal = 16;
+  const long ePrefString = 32;
+  const long ePrefInt = 64;
+  const long ePrefBool = 128;
+  const long ePrefValuetypeMask = (ePrefString | ePrefInt | ePrefBool);
+
+  /*
+   * the root of this branch, such as "browser."
+   */
+  readonly attribute string root;
+
+  /*
+   * standard methods for accessing preferences
+   */
+  long    GetPrefType(in string aPrefName);
+
+  boolean GetBoolPref(in string aPrefName);
+  void    SetBoolPref(in string aPrefName, in long aValue);
+
+  string  GetCharPref(in string aPrefName);
+  void    SetCharPref(in string aPrefName, in string aValue);
+
+  long    GetIntPref(in string aPrefName);
+  void    SetIntPref(in string aPrefName, in long aValue);
+
+  /*
+   * methods for accessing complex preferences (i.e. items beyond the simple bool, char, and int)
+   */
+  void getComplexValue(in string aPrefName, in nsIIDRef aType, [iid_is(aType), retval] out nsQIResult aValue);
+  void setComplexValue(in string aPrefName, in nsIIDRef aType, in nsISupports aValue);
+
+  /*
+   * methods for preference state manipulation
+   */
+  void    ClearUserPref(in string aPrefName);
+  boolean PrefIsLocked(in string aPrefName);
+  void    lockPref(in string aPrefName);
+  void    unlockPref(in string aPrefName);
+
+
+  /*
+   * branch-level operations
+   */
+
+  /*
+   * resetBranch
+   * 
+   * clears all user preferences starting at the given preference prefix
+   * pass in null or "" to clear this branch
+   */
+  void resetBranch(in string aStartingAt);
+
+  /*
+   * deleteBranch
+   * 
+   * removes all preferences starting at the given preference prefix
+   * pass in null or "" to remove this branch
+   */
+  void DeleteBranch(in string aStartingAt);
+
+  /*
+   * getChildList
+   *
+   * Returns an array of strings representing the child preferences of the branch root
+   * 
+   * @param startingAt pass in null or "" to enumerate the entire branch
+   * @param count Receives the number of elements in the array.
+   * @param childArray Receives the array of child preferences.
+   */
+  void getChildList(in string aStartingAt,
+                    out unsigned long aCount,
+                    [array, size_is(aCount), retval] out string aChildArray);
+
+
+  /*
+   * Listeners
+   */
+
+  /*
+   * The observers have their |Observe| methods called with
+   * ([the observer], "nsPref:changed", [pref name]).
+   */
+  void addObserver(in string aDomain, in nsIObserver aObserver, in boolean aHoldWeak);
+  void removeObserver(in string aDomain, in nsIObserver aObserver);
+
+
+  /*
+   * Finally some deprecated methods
+   */
+
+  
+  // these are changing from Copy->get
+  string CopyCharPref(in string pref);
+  string CopyDefaultCharPref(in string pref);
+
+  /* get & set defaults */
+  boolean GetDefaultBoolPref(in string pref);
+  long    GetDefaultIntPref(in string pref);
+
+  void SetDefaultBoolPref(in string pref, in boolean value);
+  void SetDefaultCharPref(in string pref, in string value);
+  void SetDefaultIntPref(in string pref, in long value);
+
+  /* unichar & localized unichar prefs */
+  wstring CopyUnicharPref(in string pref);
+  wstring CopyDefaultUnicharPref(in string pref);
+  void SetUnicharPref(in string pref, in wstring value);
+  void SetDefaultUnicharPref(in string pref, in wstring value);
+  wstring getLocalizedUnicharPref(in string pref);
+  wstring getDefaultLocalizedUnicharPref(in string pref);
+
+  /* file & filespec prefs */
+  nsIFileSpec  GetFilePref(in string pref);
+  void         SetFilePref(in string pref, in nsIFileSpec value, in boolean setDefault);
+  nsILocalFile getFileXPref(in string pref);
+  void         setFileXPref(in string pref, in nsILocalFile value);
+
+  /* callbacks */
+  [noscript] void RegisterCallback(in string domain, in PrefChangedFunc callback, in voidPtr closure);
+  [noscript] void UnregisterCallback(in string domain, in PrefChangedFunc callback, in voidPtr closure);
+
+  /**
+   * EnumerateChildren
+   *
+   * Call back function "callback" with every preference string
+   * having prefix "parent". Pass "data" to "callback" when calling.
+   * 
+   * @param parent A string representation of a prefix of preferences
+   * @param callback A function to call back for each matching preference
+   * @param data A piece of data to pass on to the callback
+   */
+  [noscript] void EnumerateChildren(in string parent, in PrefEnumerationFunc callback, in voidPtr data);
+};

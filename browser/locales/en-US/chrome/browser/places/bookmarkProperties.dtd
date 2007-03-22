@@ -1,0 +1,32 @@
+<!ENTITY bookmark.property.panel.title
+  "Bookmark Properties">
+<!ENTITY bookmark.property.location
+  "Location">
+<!ENTITY bookmark.property.title
+  "Name">
+<!ENTITY bookmark.property.shortcut
+  "Shortcut">
+<!ENTITY bookmark.property.description
+  "Description">
+<!ENTITY bookmark.property.microsummary
+  "Summary">
+<!ENTITY bookmark.property.microsummary.none
+  "Don't Display a Summary">
+<!ENTITY bookmark.property.folders
+  "Folders">
+<!ENTITY bookmark.property.folder_list
+  "Folder List">
+<!ENTITY bookmark.property.parents
+  "Visible In">
+<!ENTITY livemark.property.feed_uri
+  "Feed Location">
+<!ENTITY livemark.property.site_uri
+  "Site Location">
+<!ENTITY cmd.delete_bookmark.label
+  "Delete Bookmark">
+<!ENTITY cmd.accept.edit
+  "Save Changes">
+<!ENTITY cmd.accept.add
+  "Add Bookmark">
+<!ENTITY bookmark.loadInSidebar.title
+  "Load this bookmark in the sidebar">

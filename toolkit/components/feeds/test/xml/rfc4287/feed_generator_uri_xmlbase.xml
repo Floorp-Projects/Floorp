@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: atom generator works
+Expect: feed.generator.uri.spec == 'http://example.org/gen/';
+
+-->
+<feed xml:base="http://example.org/" xmlns="http://www.w3.org/2005/Atom">
+
+<author>
+<email>hmm@example.com</email>
+<name>foo</name>
+</author>
+
+
+  <generator uri="/gen/">Hmm</generator>
+
+<author>
+<email>bar@example.com</email>
+<name>foo</name>
+</author>
+
+
+  <title type="xhtml">
+    <div xmlns="http://www.w3.org/1999/xhtml"><b>test</b> title</div>
+  </title>
+  <rights type="xhtml">
+    <div xmlns="http://www.w3.org/1999/xhtml"><i>test</i> rights</div>
+  </rights>
+  <summary type="xhtml">
+    <div xmlns="http://www.w3.org/1999/xhtml"><div><div>test</div> summary</div></div>
+  </summary>
+</feed>

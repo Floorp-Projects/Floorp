@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: item title works
+Expect: feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.getProperty('title') == 'test'
+
+-->
+<rss version="2.0" >
+<channel>
+<item>
+  <title>test</title>
+</item>
+</channel>
+</rss>

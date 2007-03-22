@@ -1,0 +1,234 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+@import url(resource://gre/res/html.css);
+@import url(chrome://global/content/xul.css);
+@import url(resource://gre/res/quirk.css);
+
+@namespace parsererror url(http://www.mozilla.org/newlayout/xml/parsererror.xml);
+
+/* defaults for the root element that are easier to specify here than in
+   C++ code */
+*|*:root {
+  quotes: "\201C" "\201D" "\2018" "\2019";
+}
+
+/* magic -- some of these rules are important to keep pages from overriding
+            them
+*/
+
+/* Tables */
+
+*|*::-moz-table {
+  display: table !important;
+  -moz-box-sizing: border-box; /* XXX do we really want this? */
+}
+
+*|*::-moz-inline-table {
+  display: inline-table !important;
+  -moz-box-sizing: border-box; /* XXX do we really want this? */
+}
+
+*|*::-moz-table-outer {
+  display: inherit !important; /* table or inline-table */
+  margin: 0 ! important;
+  padding: 0 ! important;
+  border: none ! important;
+  float: inherit;
+  clear: inherit;
+  position: inherit;
+  top: inherit;
+  right: inherit;
+  bottom: inherit;
+  left: inherit;
+  z-index: inherit;
+  page-break-before: inherit;
+  page-break-after: inherit;
+}
+
+*|*::-moz-table-row {
+  display: table-row !important;
+}
+
+/* The ::-moz-table-column pseudo-element is for extra columns at the end 
+   of a table. */
+*|*::-moz-table-column {
+  display: table-column !important;
+}
+
+*|*::-moz-table-column-group {
+  display: table-column-group !important;
+}
+ 
+*|*::-moz-table-row-group {
+  display: table-row-group !important;
+}
+
+*|*::-moz-table-cell {
+  display: table-cell !important;
+  white-space: inherit;
+}
+
+/* Lists */
+
+*|*::-moz-list-bullet, *|*::-moz-list-number {
+  display: inline;
+  vertical-align: baseline;
+  -moz-margin-end: 8px;
+}
+
+/* Links */
+
+*|*:-moz-any-link {
+  cursor: pointer;
+}
+
+*|*:-moz-any-link:focus {
+  /* Don't specify the outline-color, we should always use initial value. */
+  outline: 1px dotted;
+}
+
+/* Miscellaneous */
+
+*|*::-moz-anonymous-block, *|*::-moz-cell-content {
+  display: block !important;
+  position: static !important;
+}
+
+*|*::-moz-scrolled-content, *|*::-moz-scrolled-canvas,
+*|*::-moz-scrolled-page-sequence {
+  /* e.g., text inputs, select boxes */
+  padding: inherit;
+  display: inherit;
+  -moz-box-orient: inherit;
+  /* make unicode-bidi inherit, otherwise it has no effect on text inputs and
+     blocks with overflow: scroll; */
+  unicode-bidi: inherit;
+  -moz-column-count: inherit;
+  -moz-column-width: inherit;
+  -moz-column-gap: inherit;
+  /* Do not change these. nsCSSFrameConstructor depends on them to create a good
+     frame tree. */
+  position: static !important;
+  float: none !important;
+}
+
+*|*::-moz-viewport, *|*::-moz-viewport-scroll, *|*::-moz-canvas, *|*::-moz-scrolled-canvas {
+  display: block !important;
+  background-color: inherit;
+}
+
+*|*::-moz-viewport-scroll {
+  overflow: auto;
+}
+
+*|*::-moz-column-content { 
+  /* the column boxes inside a column-flowed block */
+  /* make unicode-bidi inherit, otherwise it has no effect on column boxes */
+  unicode-bidi: inherit;
+  /* inherit the outer frame's display, otherwise we turn into an inline */
+  display: inherit !important;
+  /* Carry through our parent's height so that %-height children get
+  their heights set */
+  height: 100%;
+}
+
+*|*::-moz-page, *|*::-moz-page-sequence, *|*::-moz-scrolled-page-sequence {
+  display: block !important;
+  background: transparent;
+}
+
+*|*::-moz-pagecontent {
+  display: block !important;
+}
+
+*|*::-moz-pagebreak {
+  display: block !important;
+}
+
+*|*::-moz-anonymous-positioned-block {
+  display: block !important;
+  position: relative;
+  top: inherit; 
+  left: inherit;
+  bottom: inherit;
+  right: inherit;
+  z-index: inherit;
+  clip: inherit;
+  opacity: inherit;
+}
+
+/* Printing */
+
+@media print {
+
+  * {
+    cursor: default !important;
+  }
+
+  *|*::-moz-viewport, *|*::-moz-viewport-scroll, *|*::-moz-canvas,
+  *|*::-moz-scrolled-canvas {
+    background-color: #737373 !important;
+  }
+
+}
+
+/* XML parse error reporting */
+
+parsererror|parsererror {
+  display: block;
+  font-family: sans-serif;
+  font-weight: bold;
+  white-space: pre;
+  margin: 1em;
+  padding: 1em;
+  border-width: thin;
+  border-style: inset;
+  border-color: red;
+  font-size: 14pt;
+  background-color: lightyellow;
+}
+
+parsererror|sourcetext {
+  display: block;
+  white-space: pre;
+  font-family: -moz-fixed;
+  margin-top: 2em;
+  margin-bottom: 1em;
+  color: red;
+  font-weight: bold;
+  font-size: 12pt;
+}

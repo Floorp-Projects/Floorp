@@ -1,0 +1,138 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=277724
+-->
+<head>
+  <title>Test for Bug 277724</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=277724">Mozilla Bug 277724</a>
+<p id="display"></p>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 277724 **/
+
+var childUnloaded = false;
+
+var nodes = [
+  [ "select", HTMLSelectElement ],
+  [ "textarea", HTMLTextAreaElement ],
+  [ "text", HTMLInputElement ],
+  [ "password", HTMLInputElement ],
+  [ "checkbox", HTMLInputElement ],
+  [ "radio", HTMLInputElement ],
+  [ "image", HTMLInputElement ],
+  [ "submit", HTMLInputElement ],
+  [ "reset", HTMLInputElement ],
+  [ "button input", HTMLInputElement ],
+  [ "hidden", HTMLInputElement ],
+  [ "file", HTMLInputElement ],
+  [ "submit button", HTMLButtonElement ],
+  [ "reset button", HTMLButtonElement ],
+  [ "button", HTMLButtonElement ]
+];
+
+function startTest(frameid) {
+  is(childUnloaded, false, "Child not unloaded yet");
+
+  var doc = $(frameid).contentDocument;
+  ok(doc instanceof Document, "Check for doc", "doc should be a document");
+
+  for (var i = 0; i < nodes.length; ++i) {
+    var id = nodes[i][0];
+    var node = doc.getElementById(id);
+    ok(node instanceof nodes[i][1],
+       "Check for " + id, id + " should be a " + nodes[i][1]);
+    is(node.disabled, false, "check for " + id + " state");
+    node.disabled = true;
+    is(node.disabled, true, "check for " + id + " state change");
+  }
+  
+  $(frameid).onload = function () { continueTest(frameid) };
+
+  // Do this off a timeout so it's not treated like a replace load.
+  function loadBlank() {
+    $(frameid).contentWindow.location = "about:blank";
+  }
+  setTimeout(loadBlank, 0);
+}
+
+function continueTest(frameid) {
+  is(childUnloaded, true, "Unload handler should have fired");
+  var doc = $(frameid).contentDocument;
+  ok(doc instanceof Document, "Check for doc", "doc should be a document");
+
+  for (var i = 0; i < nodes.length; ++i) {
+    var id = nodes[i][0];
+    var node = doc.getElementById(id);
+    ok(node === null,
+       "Check for " + id, id + " should be null");
+  }
+  
+  $(frameid).onload = function() { finishTest(frameid) };
+
+  // Do this off a timeout too.  Why, I'm not sure.  Something in session
+  // history creates another history state if we don't.  :(
+  function goBack() {
+    $(frameid).contentWindow.history.back();
+  }
+  setTimeout(goBack, 0);
+}
+
+// XXXbz this is a nasty hack to work around the XML content sink not being
+// incremental, so that the _first_ control we test is ok but others are not.
+var testIs = is;
+var once = false;
+function flipper(a, b, c) {
+  if (once) {
+    todo(a == b, c);
+  } else {
+    once = true;
+    is(a, b, c);
+  }
+}
+
+function finishTest(frameid) {
+  var doc = $(frameid).contentDocument;
+  ok(doc instanceof Document, "Check for doc", "doc should be a document");
+
+  for (var i = 0; i < nodes.length; ++i) {
+    var id = nodes[i][0];
+    var node = doc.getElementById(id);
+    ok(node instanceof nodes[i][1],
+       "Check for " + id, id + " should be a " + nodes[i][1]);
+    //testIs(node.disabled, true, "check for " + id + " state restore");
+  }
+
+  if (frameid == "frame2") {
+    SimpleTest.finish();
+  } else {
+    childUnloaded = false;
+
+    // XXXbz this is a nasty hack to deal with the content sink.  See above.
+    testIs = flipper;
+    
+    $("frame2").onload = function () { startTest("frame2") };
+    $("frame2").src = "bug277724_iframe2.xhtml";
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+
+<!-- Don't use display:none, since we don't support framestate restoration
+     without a frame tree -->
+<div id="content" style="visibility: hidden">
+  <iframe src="bug277724_iframe1.html" id="frame1"
+          onload="startTest('frame1')"></iframe>
+  <iframe src="" id="frame2"></iframe>
+</div>
+</body>
+</html>
+

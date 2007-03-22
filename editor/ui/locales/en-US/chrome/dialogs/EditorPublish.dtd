@@ -1,0 +1,103 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 1998-1999
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either of the GNU General Public License Version 2 or later (the "GPL"),
+   - or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+
+<!-- Window title -->
+<!ENTITY windowTitle.label            "Publish Page">
+<!ENTITY windowTitleSettings.label    "Publish Settings">
+
+<!ENTITY publishTab.label             "Publish">
+<!ENTITY settingsTab.label            "Settings">
+
+<!ENTITY publishButton.label          "Publish">
+
+<!-- Publish Tab Panel -->
+<!ENTITY siteList.label               "Site Name:">
+<!ENTITY siteList.accesskey           "e">
+<!ENTITY siteList.tooltip             "Choose the site that you want to publish to">
+<!ENTITY newSiteButton.label          "New Site">
+<!ENTITY newSiteButton.accesskey      "N">
+<!ENTITY docDirList.label             "Site subdirectory for this page:">
+<!ENTITY docDirList.accesskey         "S">
+<!ENTITY docDirList.tooltip           "Choose or enter the name of the remote subdirectory for this page">
+<!ENTITY publishImgCheckbox.label     "Include images and other files">
+<!ENTITY publishImgCheckbox.accesskey "o">
+<!ENTITY publishImgCheckbox.tooltip   "Publish images and other files referenced by this page">
+<!ENTITY sameLocationRadio.label      "Use same location as page">
+<!ENTITY sameLocationRadio.accesskey  "U">
+<!ENTITY sameLocationRadio.tooltip    "Publish files to the same location as the page">
+<!ENTITY useSubdirRadio.label         "Use this site subdirectory:">
+<!ENTITY useSubdirRadio.accesskey     "d">
+<!ENTITY useSubdirRadio.tooltip       "Publish files to the selected remote subdirectory">
+<!ENTITY otherDirList.tooltip         "Choose or enter name of remote subdirectory where files will be published">
+<!ENTITY pageTitle.label              "Page Title:">
+<!ENTITY pageTitle.accesskey          "T">
+<!ENTITY pageTitle.tooltip            "Enter a title to identify the page in the window and in bookmarks">
+<!ENTITY pageTitleExample.label       "e.g.: &quot;My Web Page&quot;">
+<!ENTITY filename.label               "Filename:">
+<!ENTITY filename.accesskey           "F">
+<!ENTITY filename.tooltip             "Enter a name for this file, including '.html' for a web page">
+<!ENTITY filenameExample.label        "e.g,: &quot;mypage.html&quot;">
+<!ENTITY relatedDocs.label            "Other files to publish">
+<!ENTITY setDefaultButton.label       "Set as Default">
+<!ENTITY setDefaultButton.accesskey   "D">
+<!ENTITY setDefSiteAndDir.label       "Set as Default Site and Directory">
+<!ENTITY removeButton.label           "Remove Site">
+<!ENTITY removeButton.accesskey       "R">
+
+<!-- Settings Tab Panel -->
+<!ENTITY publishSites.label           "Publishing Sites">
+<!ENTITY serverInfo.label             "Server Information">
+<!ENTITY loginInfo.label              "Login Information">
+<!ENTITY siteName.label               "Site Name:">
+<!ENTITY siteName.accesskey           "e">
+<!ENTITY siteName.tooltip             "A nickname that identifies this publishing site (e.g.: 'MySite')">
+<!ENTITY siteUrl.label                "Publishing address (e.g.: 'ftp://ftp.myisp.com/myusername'):">
+<!ENTITY siteUrl.accesskey            "a">
+<!ENTITY siteUrl.tooltip              "The FTP:// or HTTP:// address provided by your ISP or web hosting service">
+<!ENTITY browseUrl.label              "HTTP address of your homepage (e.g.: 'http://www.myisp.com/myusername'):">
+<!ENTITY browseUrl.accesskey          "T">
+<!ENTITY browseUrl.tooltip            "The HTTP:// address of your home directory (don't include filename)">
+<!ENTITY username.label               "User name:">
+<!ENTITY username.accesskey           "U">
+<!ENTITY username.tooltip             "The user name you use to log in to your ISP or web hosting service">
+<!ENTITY password.label               "Password:">
+<!ENTITY password.accesskey           "w">
+<!ENTITY password.tooltip             "The password associated with your user name">
+<!ENTITY savePassword.label           "Save Password">
+<!ENTITY savePassword.accesskey       "S">
+<!ENTITY savePassword.tooltip         "Select this to save your password securely using Password Manager">

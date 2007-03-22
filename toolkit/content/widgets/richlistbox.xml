@@ -1,0 +1,573 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Richlistbox code.
+   -
+   - The Initial Developer of the Original Code is
+   - IBM Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - IBM Corporation. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Doron Rosenberg <doronr@us.ibm.com> (Original Author)
+   -   Simon Bünzli <zeniko@gmail.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<bindings id="richlistboxBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="richlistbox"
+           extends="chrome://global/content/bindings/listbox.xml#listbox-base">
+    <resources>
+      <stylesheet src="chrome://global/skin/richlistbox.css"/>
+    </resources>
+
+    <content>
+      <xul:scrollbox allowevents="true" orient="vertical" anonid="main-box"
+                     flex="1" style="overflow: auto;">
+        <children />
+      </xul:scrollbox>
+    </content>
+
+    <implementation>
+      <field name="scrollBoxObject">null</field>
+      <constructor>
+        <![CDATA[
+          var x = document.getAnonymousElementByAttribute(this, "anonid", "main-box");
+          this.scrollBoxObject = x.boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+
+          // add a template build listener
+          if (this.builder)
+            this.builder.addListener(this._builderListener);
+          else
+            this._refreshSelection();
+        ]]>
+      </constructor>
+
+      <destructor>
+        <![CDATA[
+          // remove the template build listener
+          if (this.builder)
+            this.builder.removeListener(this._builderListener);
+        ]]>
+      </destructor>
+
+    <!-- Overriding baselistbox -->
+      <method name="_fireOnSelect">
+        <body>
+          <![CDATA[
+            // make sure not to modify last-selected when suppressing select events
+            // (otherwise we'll lose the selection when a template gets rebuilt)
+            if (this._suppressOnSelect || this.suppressOnSelect)
+              return;
+
+            // remember the current item and all selected items with IDs
+            var state = this.currentItem ? this.currentItem.id : "";
+            if (this.selType == "multiple" && this.selectedCount) {
+              function getId(aItem) { return aItem.id; }
+              state += " " + this.selectedItems.filter(getId).map(getId).join(" ");
+            }
+            if (state)
+              this.setAttribute("last-selected", state);
+            else
+              this.removeAttribute("last-selected");
+
+            // preserve the index just in case no IDs are available
+            if (this.currentIndex > -1)
+              this._currentIndex = this.currentIndex + 1;
+
+            var event = document.createEvent("Events");
+            event.initEvent("select", true, true);
+            this.dispatchEvent(event);
+
+            // always call this (allows a commandupdater without controller)
+            document.commandDispatcher.updateCommands("richlistbox-select");
+          ]]>
+        </body>
+      </method>
+
+      <method name="appendItem">
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <body>
+          return this.insertItemAt(-1, aLabel, aValue);
+        </body>
+      </method>
+
+      <method name="insertItemAt">
+        <parameter name="aIndex"/>
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <body>
+          const XULNS =
+            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+          var item =
+            this.ownerDocument.createElementNS(XULNS, "richlistitem");
+          item.setAttribute("value", aValue);
+
+          var label = this.ownerDocument.createElementNS(XULNS, "label");
+          label.setAttribute("value", aLabel);
+          label.setAttribute("flex", "1");
+          label.setAttribute("crop", "end");
+          item.appendChild(label);
+
+          var before = this.getItemAtIndex(aIndex);
+          if (!before)
+            this.appendChild(item);
+          else
+            this.insertBefore(item, before);
+
+          return item;
+        </body>
+      </method>
+
+      <property name="itemCount" readonly="true"
+                onget="return this.children.length"/>
+
+      <method name="getIndexOfItem">
+        <parameter name="aItem"/>
+        <body>
+          <![CDATA[
+            // don't search the children, if we're looking for none of them
+            if (aItem == null)
+              return -1;
+
+            return this.children.indexOf(aItem);
+          ]]>
+        </body>
+      </method>
+
+      <method name="getItemAtIndex">
+        <parameter name="aIndex"/>
+        <body>
+          return this.children[aIndex] || null;
+        </body>
+      </method>
+
+      <method name="ensureIndexIsVisible">
+        <parameter name="aIndex"/>
+        <body>
+          <![CDATA[
+            // work around missing implementation in scrollBoxObject
+            return this.ensureElementIsVisible(this.getItemAtIndex(aIndex));
+          ]]>
+        </body>
+      </method>
+
+      <method name="ensureElementIsVisible">
+        <parameter name="aElement"/>
+        <body>
+          <![CDATA[
+            if (aElement)
+              this.scrollBoxObject.ensureElementIsVisible(aElement);
+          ]]>
+        </body>
+      </method>
+
+      <method name="scrollToIndex">
+        <parameter name="aIndex"/>
+        <body>
+          <![CDATA[
+            var item = this.getItemAtIndex(aIndex);
+            if (item)
+              this.scrollBoxObject.scrollToElement(item);
+          ]]>
+        </body>
+      </method>
+
+      <method name="getNumberOfVisibleRows">
+        <!-- returns the number of currently visible rows                -->
+        <!-- don't rely on this function, if the items' height can vary! -->
+        <body>
+          <![CDATA[
+            var children = this.children;
+
+            for (var top = 0; top < children.length && !this._isItemVisible(children[top]); top++);
+            for (var ix = top; ix < children.length && this._isItemVisible(children[ix]); ix++);
+
+            return ix - top;
+          ]]>
+        </body>
+      </method>
+
+      <method name="getIndexOfFirstVisibleRow">
+        <body>
+          <![CDATA[
+            var children = this.children;
+
+            for (var ix = 0; ix < children.length; ix++)
+              if (this._isItemVisible(children[ix]))
+                return ix;
+
+            return -1;
+          ]]>
+        </body>
+      </method>
+
+      <method name="getRowCount">
+        <body>
+          <![CDATA[
+            return this.children.length;
+          ]]>
+        </body>
+      </method>
+
+      <method name="scrollOnePage">
+        <parameter name="aDirection"/> <!-- Must be -1 or 1 -->
+        <body>
+          <![CDATA[
+            var children = this.children;
+
+            if (children.length == 0)
+              return 0;
+
+            // If nothing is selected, we just select the first element
+            // at the extreme we're moving away from
+            if (!this.currentItem)
+              return aDirection == -1 ? children.length : 0;
+
+            // If the current item is visible, scroll by one page so that
+            // the new current item is at approximately the same position as
+            // the existing current item.
+            if (this._isItemVisible(this.currentItem))
+              this.scrollBoxObject.scrollBy(0, this.scrollBoxObject.height * aDirection);
+
+            // Figure out, how many items fully fit into the view port
+            // (including the currently selected one), and determine
+            // the index of the first one lying (partially) outside
+            var height = this.scrollBoxObject.height;
+            var border = this.currentItem.boxObject.y;
+            if (aDirection == -1)
+              border += this.currentItem.boxObject.height;
+            var index = this.currentIndex;
+            while (0 <= index && index < children.length) {
+              var border2 = children[index].boxObject.y;
+              if (aDirection == -1)
+                border2 += children[index].boxObject.height;
+              if ((border2 - border) * aDirection > height)
+                break;
+              index += aDirection;
+            }
+            index -= aDirection;
+
+            return index != this.currentIndex ? index - this.currentIndex : aDirection;
+          ]]>
+        </body>
+      </method>
+
+    <!-- richlistbox specific -->
+      <property name="children" readonly="true">
+        <getter>
+          <![CDATA[
+            var childNodes = [];
+            for (var child = this.firstChild; child; child = child.nextSibling) {
+              if (child instanceof Components.interfaces.nsIDOMXULSelectControlItemElement)
+                childNodes.push(child);
+            }
+            return childNodes;
+          ]]>
+        </getter>
+      </property>
+
+      <field name="_builderListener" readonly="true">
+        <![CDATA[
+          ({
+            mOuter: this,
+            item: null,
+            willRebuild: function(builder) { },
+            didRebuild: function(builder) {
+              this.mOuter._refreshSelection();
+            }
+          });
+        ]]>
+      </field>
+
+      <method name="_refreshSelection">
+        <body>
+          <![CDATA[
+            // when this method is called, we know that either the currentItem
+            // and selectedItems we have are null (ctor) or a reference to an
+            // element no longer in the DOM (template).
+
+            // first look for the last-selected attribute
+            var state = this.getAttribute("last-selected");
+            if (state) {
+              var ids = state.split(" ");
+
+              var suppressSelect = this._suppressOnSelect;
+              this._suppressOnSelect = true;
+              this.clearSelection();
+              for (var i = 1; i < ids.length; i++) {
+                var selectedItem = document.getElementById(ids[i]);
+                if (selectedItem)
+                  this.addItemToSelection(selectedItem);
+              }
+
+              var currentItem = document.getElementById(ids[0]);
+              if (!currentItem && this._currentIndex)
+                currentItem = this.getItemAtIndex(Math.min(
+                  this._currentIndex - 1, this.getRowCount()));
+              if (currentItem) {
+                this.currentItem = currentItem;
+                if (this.selType != "multiple" && this.selectedCount == 0)
+                  this.selectedItem = currentItem;
+
+                if (this.scrollBoxObject.height)
+                  this.ensureElementIsVisible(currentItem);
+                else // XXX hack around a bug in ensureElementIsVisible
+                  this.ensureElementIsVisible(currentItem.previousSibling);
+              }
+              this._suppressOnSelect = suppressSelect;
+              // XXX actually it's just a refresh, but at least
+              // the Extensions manager expects this:
+              this._fireOnSelect();
+              return;
+            }
+
+            // try to restore the selected items according to their IDs
+            // (applies after a template rebuild, if last-selected was not set)
+            if (this.selectedItems) {
+              for (i = this.selectedCount - 1; i >= 0; i--) {
+                if (this.selectedItems[i] && this.selectedItems[i].id)
+                  this.selectedItems[i] = document.getElementById(this.selectedItems[i].id);
+                else
+                  this.selectedItems[i] = null;
+                if (!this.selectedItems[i])
+                  this.selectedItems.splice(i, 1);
+              }
+            }
+            if (this.currentItem && this.currentItem.id)
+              this.currentItem = document.getElementById(this.currentItem.id);
+            else
+              this.currentItem = null;
+
+            // if we have no previously current item or if the above check fails to
+            // find the previous nodes (which causes it to clear selection)
+            if (!this.currentItem && this.selectedCount == 0) {
+              this.currentIndex = this._currentIndex ? this._currentIndex - 1 : 0;
+
+              // cf. listbox constructor:
+              // select items according to their attributes
+              var els = this.getElementsByAttribute("selected", "true");
+              for (i = 0; i < els.length; i++)
+                this.selectedItems.push(els[i]);
+            }
+
+            if (this.selType != "multiple" && this.selectedCount == 0)
+              this.selectedItem = this.currentItem;
+
+            // XXX hack for the Downloads manager (better to focus the list than
+            // the individual items - these usually aren't tabbable anyway, and
+            // we need the keyboard focus for navigation), see bug 363271:
+            this.focus();
+          ]]>
+        </body>
+      </method>
+
+      <method name="_isItemVisible">
+        <parameter name="aItem"/>
+        <body>
+          <![CDATA[
+            if (!aItem)
+              return false;
+
+            var y = {};
+            this.scrollBoxObject.getPosition({}, y);
+            y.value += this.scrollBoxObject.y;
+
+            // Partially visible items are also considered visible
+            return (aItem.boxObject.y + aItem.boxObject.height > y.value) &&
+                   (aItem.boxObject.y < y.value + this.scrollBoxObject.height);
+          ]]>
+        </body>
+      </method>
+
+      <field name="_currentIndex">null</field>
+
+      <!-- For backwards-compatibility and for convenience.
+        Use getIndexOfItem instead. -->
+      <method name="getIndexOf">
+        <parameter name="aElement"/>
+        <body>
+          <![CDATA[
+            return this.getIndexOfItem(aElement);
+          ]]>
+        </body>
+      </method>
+
+      <!-- For backwards-compatibility and for convenience.
+        Use ensureElementIsVisible instead -->
+      <method name="ensureSelectedElementIsVisible">
+        <body>
+          <![CDATA[
+            return this.ensureElementIsVisible(this.selectedItem);
+          ]]>
+        </body>
+      </method>
+
+      <!-- For backwards-compatibility and for convenience.
+        Use moveByOffset instead. -->
+      <method name="goUp">
+        <body>
+          <![CDATA[
+            var index = this.currentIndex;
+            this.moveByOffset(-1, true, false);
+            return index != this.currentIndex;
+          ]]>
+        </body>
+      </method>
+      <method name="goDown">
+        <body>
+          <![CDATA[
+            var index = this.currentIndex;
+            this.moveByOffset(1, true, false);
+            return index != this.currentIndex;
+          ]]>
+        </body>
+      </method>
+
+      <!-- deprecated (is implied by currentItem and selectItem) -->
+      <method name="fireActiveItemEvent"><body/></method>
+    </implementation>
+
+    <handlers>
+      <!-- handle keyboard navigation also when a child element has got the focus -->
+      <handler event="keypress" keycode="VK_UP"
+               modifiers="control shift any"
+               action="this.moveByOffset(-1, !event.ctrlKey, event.shiftKey);"
+               preventdefault="true"/>
+      <handler event="keypress" keycode="VK_DOWN"
+               modifiers="control shift any"
+               action="this.moveByOffset(1, !event.ctrlKey, event.shiftKey);"
+               preventdefault="true"/>
+      <handler event="keypress" keycode="VK_HOME"
+               modifiers="control shift any"
+               action="this.moveByOffset(-this.currentIndex, !event.ctrlKey, event.shiftKey);"
+               preventdefault="true"/>
+      <handler event="keypress" keycode="VK_END"
+               modifiers="control shift any"
+               action="this.moveByOffset(this.getRowCount(), !event.ctrlKey, event.shiftKey);"
+               preventdefault="true"/>
+      <handler event="keypress" keycode="VK_PAGE_UP"
+               modifiers="control shift any"
+               action="this.moveByOffset(this.scrollOnePage(-1), !event.ctrlKey, event.shiftKey);"
+               preventdefault="true"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN"
+               modifiers="control shift any"
+               action="this.moveByOffset(this.scrollOnePage(1), !event.ctrlKey, event.shiftKey);"
+               preventdefault="true"/>
+
+      <handler event="click">
+        <![CDATA[
+          // clicking into nothing should unselect
+          if (event.originalTarget.getAttribute("anonid") == "main-box") {
+            this.clearSelection();
+            this.currentItem = null;
+          }
+        ]]>
+      </handler>
+      <handler event="contextmenu">
+        <![CDATA[
+          // if the context menu was opened via the keyboard, display it in the
+          // right location.
+          if (event.button != 2) {
+            var popup = document.getElementById(this.getAttribute("context"));
+            if (popup)
+              popup.showPopup(this.currentItem, -1, -1, "context", "bottomleft", "topleft");
+          }
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="richlistitem"
+           extends="chrome://global/content/bindings/listbox.xml#listitem">
+    <content>
+      <children/>
+    </content>
+
+    <resources>
+      <stylesheet src="chrome://global/skin/richlistbox.css"/>
+    </resources>
+
+    <implementation>
+      <destructor>
+        <![CDATA[
+          var control = this.control;
+          if (!control)
+            return;
+          // When we are destructed and we are current or selected, unselect ourselves
+          // so that richlistbox's selection doesn't point to something not in the DOM.
+          // We don't want to reset last-selected, so we set _suppressOnSelect.
+          if (this.selected) {
+            var suppressSelect = control._suppressOnSelect;
+            control._suppressOnSelect = true;
+            control.removeItemFromSelection(this);
+            control._suppressOnSelect = suppressSelect;
+          }
+          if (this.current)
+            control.currentItem = null;
+        ]]>
+      </destructor>
+
+      <property name="label" readonly="true">
+        <!-- Setter purposely not implemented; the getter returns a
+             concatentation of label text to expose via accessibility APIs -->
+        <getter>
+          <![CDATA[
+            const XULNS =
+              "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+            var labelText = "";
+            var startEl = document.getAnonymousNodes(this);
+            if (!startEl.length)
+              startEl = [this];
+            var labels = startEl[0].getElementsByTagNameNS(XULNS, "label");
+            for (var count = 0; count < labels.length; count++)
+              labelText += labels[count].value + " ";
+            return labelText;
+          ]]>
+        </getter>
+      </property>
+    </implementation>
+
+    <handlers>
+      <handler event="contextmenu" phase="capturing">
+        <![CDATA[
+          // handle someone right-clicking on an item other than the current one
+          if (event.target == this && this.control)
+            this.control.currentItem = this;
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+</bindings>
+

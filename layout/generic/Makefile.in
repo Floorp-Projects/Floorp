@@ -1,0 +1,223 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= layout
+LIBRARY_NAME	= gkgeneric_s
+LIBXUL_LIBRARY	= 1
+
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  content \
+		  thebes \
+		  cairo \
+		  gfx \
+		  widget \
+		  locale \
+		  view \
+		  necko \
+		  js \
+		  caps \
+		  pref \
+		  htmlparser \
+		  webshell \
+		  plugin \
+		  docshell \
+		  uriloader \
+		  mimetype \
+		  webbrwsr \
+		  oji \
+		  unicharutil \
+		  lwbrk \
+		  imglib2 \
+		  accessibility \
+		  xpconnect \
+		  java \
+		  exthandler \
+		  intl \
+		  uconv \
+		  $(NULL)
+
+# Sun's Complex Text Layout support
+ifdef SUNCTL
+REQUIRES	+= ctl
+endif
+
+ifdef MOZ_ENABLE_CAIRO_GFX
+REQUIRES	+= thebes cairo
+endif
+
+EXPORTS		= \
+		nsFrameList.h \
+		nsHTMLParts.h \
+		nsHTMLReflowMetrics.h \
+		nsHTMLReflowState.h \
+		nsIAnonymousContentCreator.h \
+		nsICanvasFrame.h \
+		nsIFrame.h \
+		nsIFrameDebug.h \
+		nsIFrameFrame.h \
+		nsIFrameUtil.h \
+		nsIImageFrame.h \
+		nsILineIterator.h \
+		nsIObjectFrame.h \
+		nsIPageSequenceFrame.h \
+		nsIScrollableFrame.h \
+		nsIScrollableViewProvider.h \
+		nsIStatefulFrame.h \
+		nsFrameSelection.h \
+		$(NULL)
+
+ifdef IBMBIDI
+EXPORTS		+= \
+		nsTextTransformer.h \
+		nsBidiFrames.h      \
+		$(NULL)
+endif
+
+
+CPPSRCS		= \
+		nsAbsoluteContainingBlock.cpp \
+		nsAreaFrame.cpp \
+		nsBRFrame.cpp \
+		nsBlockBandData.cpp \
+		nsBlockFrame.cpp \
+		nsBlockReflowContext.cpp \
+		nsBlockReflowState.cpp \
+		nsBulletFrame.cpp \
+		nsColumnSetFrame.cpp \
+		nsContainerFrame.cpp \
+		nsFirstLetterFrame.cpp \
+		nsFrame.cpp \
+		nsFrameFrame.cpp \
+		nsFrameList.cpp \
+		nsFrameSetFrame.cpp \
+		nsFrameUtil.cpp \
+		nsGfxScrollFrame.cpp \
+		nsHTMLCanvasFrame.cpp \
+		nsHTMLContainerFrame.cpp \
+		nsHTMLFrame.cpp \
+		nsHTMLReflowState.cpp \
+		nsImageFrame.cpp \
+		nsImageMap.cpp \
+		nsInlineFrame.cpp \
+		nsIntervalSet.cpp \
+		nsLeafFrame.cpp \
+		nsLineBox.cpp \
+		nsLineLayout.cpp \
+		nsObjectFrame.cpp \
+		nsPageContentFrame.cpp \
+		nsPageFrame.cpp \
+		nsPlaceholderFrame.cpp \
+		nsSelection.cpp \
+		nsSimplePageSequence.cpp \
+		nsSpaceManager.cpp \
+		nsSpacerFrame.cpp \
+		nsSplittableFrame.cpp \
+		nsTextTransformer.cpp \
+		nsViewportFrame.cpp \
+		$(NULL)
+
+ifdef IBMBIDI
+CPPSRCS		+= \
+		nsBidiFrames.cpp \
+		$(NULL)
+endif
+
+# set this to 1 to enable the new text frame
+MOZ_ENABLE_NEW_TEXT_FRAME =
+
+ifdef MOZ_ENABLE_NEW_TEXT_FRAME
+CPPSRCS   += \
+          nsTextFrameThebes.cpp \
+          nsTextRunTransformations.cpp \
+          nsTextFrameUtils.cpp \
+    $(NULL)
+else
+CPPSRCS   += \
+          nsTextFrame.cpp \
+    $(NULL)
+endif
+
+RESOURCES_HTML = \
+		$(srcdir)/gopher-audio.gif \
+		$(srcdir)/gopher-binary.gif \
+		$(srcdir)/gopher-find.gif \
+		$(srcdir)/gopher-image.gif \
+		$(srcdir)/gopher-menu.gif \
+		$(srcdir)/gopher-movie.gif \
+		$(srcdir)/gopher-sound.gif \
+		$(srcdir)/gopher-telnet.gif \
+		$(srcdir)/gopher-text.gif \
+		$(srcdir)/gopher-unknown.gif \
+		$(NULL)
+
+RESOURCES = \
+		$(srcdir)/broken-image.gif \
+		$(srcdir)/loading-image.gif \
+		$(NULL)
+
+FORCE_STATIC_LIB = 1
+
+include $(topsrcdir)/config/rules.mk
+
+LOCAL_INCLUDES += \
+		-I$(srcdir) \
+		-I$(srcdir)/../base \
+		-I$(srcdir)/../tables \
+		-I$(srcdir)/../xul/base/src \
+		-I$(srcdir)/../../content/xul/content/src \
+		-I$(srcdir)/../../content/base/src \
+		-I$(srcdir)/../../content/html/content/src \
+		$(MOZ_CAIRO_CFLAGS) \
+		$(NULL)
+
+libs::
+	$(INSTALL) $(RESOURCES_HTML) $(DIST)/bin/res/html
+	$(INSTALL) $(RESOURCES) $(DIST)/bin/res
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(RESOURCES_HTML) $(DESTDIR)$(mozappdir)/res/html
+	$(SYSINSTALL) $(IFLAGS1) $(RESOURCES) $(DESTDIR)$(mozappdir)/res
+
+DEFINES += -D_IMPL_NS_LAYOUT

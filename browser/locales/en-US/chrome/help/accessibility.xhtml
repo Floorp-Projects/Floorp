@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"[
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+  %brandDTD;
+  <!ENTITY % platformDTD SYSTEM
+    "chrome://browser/locale/help/platformStrings.dtd" >
+  %platformDTD;
+]>
+<!--
+Contributors:
+  Mark Pilgrim <pilgrim@gmail.com> (original author)
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Accessibility Features of &brandFullName;</title>
+<link rel="stylesheet" type="text/css"
+  href="chrome://help/skin/helpFileLayout.css"/>
+</head>
+
+<body>
+
+  <h1>Accessibility Features of &brandFullName;</h1>
+
+  <p>&brandShortName; includes many features to make the browser and web
+    content accessible to all users, including those who have low vision, no
+    vision, or limited ability to use a keyboard or mouse.</p>
+
+  <div class="contentsBox">In this section:
+    <ul>
+    <li><a href="#using_a_keyboard">Using a Keyboard</a></li>
+    <li><a href="#using_a_mouse">Using a Mouse</a></li>
+    <li><a href="#fonts_and_colors">Fonts and Colors</a></li>
+    <li><a href="#controlling_web_content">Controlling Web Content</a></li>
+    <li><a href="#compatibility_with_assistive_technologies">Compatibility
+      with Assistive Technologies</a></li>
+    <li><a href="#finding_help_online">Finding Help Online</a></li>
+    </ul>
+  </div>
+
+  <h2 id="using_a_keyboard">Using a Keyboard</h2>
+
+  <h3 id="keyboard_shortcuts">Keyboard Shortcuts</h3>
+
+  <p>A list of common keyboard shortcuts is available in
+    <a href="shortcuts.xhtml">&brandShortName; Keyboard Shortcuts</a>.
+    Online, you can find <a target="_blank"
+    href="http://www.mozilla.org/support/firefox/keyboard">a comparison
+    chart of keyboard shortcuts</a> implemented in &brandShortName;,
+    Microsoft Internet Explorer, and Opera.</p>
+
+  <h3 id="always_use_cursor_keys">Always use the cursor keys to navigate within
+    webpages</h3>
+
+  <p><a href="prefs.xhtml#accessibility">Always use the cursor keys to navigate
+    within webpages</a> allows you to move through web content as if
+    you were inside a read-only editor.
+    You can use the keyboard to select web content and copy it to the
+    clipboard.  You can enable this feature by selecting &pref.menuPath;,
+    opening the <em>General</em> tab in the <em>Advanced</em> panel,
+    and checking the <em>Always use the cursor keys to navigate within webpages
+    </em> &pref.singular;.</p>
+
+  <p>You can press <kbd>F7</kbd> at any time to turn this feature on or
+    off.  When you press <kbd>F7</kbd>, &brandShortName; will
+    ask if you really want to turn on this feature.  You can disable
+    this prompt by selecting <em>Don't show this dialog again.</em></p>
+
+  <h3 id="find_as_you_type">Search for text when I start typing</h3>
+
+  <p><a href="prefs.xhtml#accessibility">Search for text when I start typing</a>
+    allows you to quickly navigate to text or hyperlinks in a web page.  This
+    feature has two modes. Press <abbr title="forward slash"><kbd>/</kbd></abbr>
+    and start typing to search all text on the current page, or press
+    <abbr title="apostrophe"><kbd>'</kbd></abbr> before your string to search
+    hyperlinks only.  &brandShortName; will highlight matching text or hyperlinks
+    as you type.</p>
+
+  <p>The following keyboard shortcuts control this feature:</p>
+
+  <ul>
+    <li>Type more characters to narrow your search.  &brandShortName;
+      will highlight the next matching hyperlink or text or alert you
+      that nothing matched.</li>
+    <li>Press &accelKey;+<kbd>G</kbd> or <kbd>F3</kbd> to find the next
+      occurrence of your current search string.</li>
+    <li>Press &accelKey;+&shiftKey;+<kbd>G</kbd> or &shiftKey;+<kbd>F3</kbd>
+      to find the previous occurrence of your current search string.</li>
+    <li>Press <kbd>Backspace</kbd> to undo the last character you typed.
+      &brandShortName; will back up to the previously highlighted text.</li>
+    <li>Press <kbd>Esc</kbd> to cancel a search.  You can also cancel
+      a search by changing focus, scrolling the page with the mouse or
+      keyboard, or simply waiting for the timeout.</li>
+  </ul>
+
+  <p>You can change the default behavior of this feature by selecting
+    &pref.menuPath;, opening the <em>General</em> tab of the <em>Advanced</em>
+    panel, and checking the <em>Search for text when I start typing</em>
+    &pref.singular;.  If this option is checked, you can start typing at any
+    time to auto-start an inline search. By default auto-started searches look
+    for all text on the page. You can still explicitly press
+    <abbr title="apostrophe"><kbd>'</kbd></abbr> or
+    <abbr title="forward slash"><kbd>/</kbd></abbr> to start finding
+    in one mode or the other.</p>
+
+  <p>You can use this feature to get to buttons, text boxes and other
+    form controls.  Search for the text immediately before the form control
+    you want and press <kbd>Tab</kbd>. Pressing <kbd>Tab</kbd> automatically
+    exits the search and sets focus to the next form field or button
+    after the highlighted text.</p>
+
+  <h2 id="using_a_mouse">Using a Mouse</h2>
+
+  <h3 id="common_mouse_shortcuts">Common Mouse Shortcuts</h3>
+
+  <p>A list of common mouse shortcuts is available in
+    <a href="mouse_shortcuts.xhtml">&brandShortName; Mouse
+    Shortcuts</a>.</p>
+
+  <h2 id="fonts_and_colors">Fonts and Colors</h2>
+
+  <h3 id="overriding_page_fonts">Overriding Page Fonts</h3>
+
+  <p>Some web sites may display text in fonts that are difficult to read,
+    and other sites may rely on the browser's default fonts.  You can set
+    your default fonts by going to &pref.menuPath;, selecting the
+    <em>Content</em> panel, and selecting a default font and size in the
+    <em>Fonts &amp; Colors</em> section.</p>
+
+  <p>You can specify default fonts for different styles, including serif,
+    sans-serif, and monospace by clicking the <em>Advanced</em> button.
+    However, many web pages specify their own fonts, so your choices
+    will have no effect on such pages.  To override the fonts defined by
+    such pages, uncheck the <em>Allow pages to choose their own fonts, instead
+    of my selections above</em> &pref.singular;.</p>
+
+  <p>Note that some web pages may display incorrectly depending on your
+    choice of a default font.</p>
+
+  <h3 id="setting_a_minimum_font_size">Setting a Minimum Font Size</h3>
+
+  <p>Some web sites may display text which is too small to read
+    comfortably.  To make such pages easier to read, you can set a minimum
+    font size. On web pages that try to display text smaller than this
+    size, &brandShortName; will enlarge the text to your chosen size.</p>
+
+  <p>To set a minimum font size, go to &pref.menuPath;, select the
+    <em>Content</em> panel, and click the <em>Advanced</em> button in the
+    <em>Fonts &amp; Colors</em> section.  You can specify a minimum font
+    size from the dropdown menu.</p>
+
+  <p>Note that some web pages may display incorrectly depending on your
+    choice of a minimum font size.</p>
+
+  <h3 id="resizing_page_text">Resizing Page Text</h3>
+
+  <p>You can temporarily change the size of text on any web page in the
+    <span class="menuPath">View &gt; Text Size</span> menu.  The new
+    size will remain in effect until you close your browser window or
+    tab, even if you navigate to a different web site.</p>
+
+  <p>The following keyboard shortcuts control text size:</p>
+
+  <ul>
+    <li>Press &accelKey;+<kbd><abbr title="plus">+</abbr></kbd> to
+      increase the text size.  This zooms the text to 120% of its original
+      size, then 150%, 200%, 300%, 450%, 675%, 1013%, and 1519%.</li>
+    <li>Press &accelKey;+<kbd><abbr title="minus">-</abbr></kbd> to
+      decrease the text size.  This zooms the text to 90% of its original
+      size, then 50%, 33%, 22%, 15%, 10%, 7%, 4%, 3%, 2%, and 1%.</li>
+    <li>Press &accelKey;+<kbd>0</kbd> to reset the text size to the web
+      page's default size.</li>
+  </ul>
+
+  <p>Note that some web pages may display incorrectly if you increase or
+      decrease the text size.</p>
+
+  <h3 id="overriding_page_colors">Overriding Page Colors</h3>
+
+  <p>Some web sites may display text and background colors that are
+    difficult to read, and other sites may rely on the browser's default
+    colors.  You can set your default colors by going to &pref.menuPath;,
+    selecting the <em>Content</em> panel, and clicking the <em>Colors</em>
+    button in the <em>Fonts &amp; Colors</em> section.  You can set
+    default text and background colors, as well as default colors for
+    visited and unvisited hyperlinks.  You can also specify whether
+    hyperlinks should be underlined.</p>
+
+  <p>However, many web pages set their own colors, so your choices will
+    have no effect.  To override the colors defined by web pages, uncheck
+    the <em>Allow pages to choose their own colors, instead of my
+    selections above</em> &pref.singular;.</p>
+
+  <div class="noMac">
+
+    <h3 id="using_a_high_contrast_theme">Using a High Contrast Theme</h3>
+
+    <p>&brandShortName; automatically detects if you are using a High
+      Contrast theme and displays everything in your high contrast color
+      scheme.  This overrides all other other browser or web page
+      settings, and it affects the &brandShortName; interface itself (all
+      menus, windows, and dialog boxes) and the content of any web page
+      you visit.</p>
+
+    <p class="win">To use a High Contrast theme, go to
+      <span class="menuPath">Start Menu &gt; Control Panel &gt;
+      Accessibility Options &gt; Display</span> and check the
+      <em>Use High Contrast</em> &pref.singular;.</p>
+
+  </div>
+
+  <h2 id="controlling_web_content">Controlling Web Content</h2>
+
+  <h3 id="blocking_popup_windows">Blocking Popup Windows</h3>
+
+  <p>See <a href="popup.xhtml">Controlling Popups</a> for information on
+    blocking popup windows.</p>
+
+  <h3 id="turning_off_java_applets">Turning Off Java Applets</h3>
+
+  <p>Some web pages provide a rich interactive experience with Java&trade;
+    applets.  However, some users that rely on keyboard navigation may
+    experience problems with some Java applets that automatically set
+    focus and do not provide a way to <q>break out</q> of the applet and
+    navigate to the rest of the web page.  If this is a problem for you,
+    you can disable Java by going to &pref.menuPath;, selecting the
+    <em>Content</em> and unchecking the <em>Enable Java</em>
+    &pref.singular;.</p>
+
+  <h3 id="restricting_javascript_behavior">Restricting JavaScript Behavior</h3>
+
+  <p>You can turn off JavaScript entirely by going to &pref.menuPath;,
+    selecting the <em>Content</em> panel, and unchecking <em>Enable
+    JavaScript</em>.  Some web pages rely on JavaScript and may not work
+    properly if JavaScript is disabled.</p>
+
+  <p>If you do not wish to disable JavaScript entirely, there are also a
+    number of advanced JavaScript settings to restrict the behavior of
+    scripts.  Immediately after the <em>Enable JavaScript</em> checkbox,
+    click the <em>Advanced</em> button to open the <em>Advanced JavaScript
+    Settings</em> window.  You can control whether scripts are allowed
+    to move or resize existing windows, raise or lower windows, disable or
+    replace context menus, hide the status bar, or change status bar
+    text.</p>
+
+  <h2 id="compatibility_with_assistive_technologies">Compatibility With
+    Assistive Technologies</h2>
+
+  <p>The latest information about compatibility with third-party assistive
+    technologies is online at
+    <a target="_blank" href="http://www.mozilla.org/access/compatibility">Access
+    Mozilla: Compatibility with assistive technologies</a>.</p>
+
+  <h2 id="finding_help_online">Finding Help Online</h2>
+
+  <div class="win">
+
+    <p>Freedom Scientific maintains a number of
+      <a target="_blank" href="http://www.freedomscientific.com/fs_support/User_Groups.asp">mailing
+      lists for JAWS users</a>.</p>
+
+    <p>GW Micro maintains a number of
+      <a target="_blank" href="http://www.gwmicro.com/Support/Email_Lists/">mailing
+      lists for Window Eyes users</a>.</p>
+  </div>
+
+  <p>You may <span class="win">also</span> post accessibility questions to the
+    <a target="_blank" href="http://forums.mozillazine.org/viewforum.php?f=38">&brandShortName;
+    Support forum</a>.</p>
+
+  <div class="contentsBox"><em>29 Aug 2006</em></div>
+
+  <p>Copyright &copy; &copyright.years; Contributors to the Mozilla Help Viewer
+    Project.</p>
+
+</body>
+</html>

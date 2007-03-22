@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
+  <RDF:Seq about="urn:mozilla:package:root">
+    <RDF:li resource="urn:mozilla:package:reporter"/>
+  </RDF:Seq>
+  <!-- package information -->
+  <RDF:Description about="urn:mozilla:package:reporter"
+        chrome:displayName="reporter.mozilla.org"
+        chrome:author="Robert Accettura"
+        chrome:authorURL="http://reporter.mozilla.org/"
+        chrome:extension="true"
+        chrome:description="Broken Web Site Reporting Tool"
+#expand         chrome:localeVersion="__MOZILLA_LOCALE_VERSION__"
+        chrome:name="reporter"
+        chrome:xpcNativeWrappers="true">
+  </RDF:Description>
+  <!-- overlay information -->
+  <!-- some of this is ffx 1.0 only -->
+  <RDF:Seq about="urn:mozilla:overlays">
+    <RDF:li resource="chrome://browser/content/browser.xul"/>
+    <RDF:li resource="chrome://navigator/content/navigator.xul"/>
+    <RDF:li resource="chrome://global/content/customizeToolbar.xul"/>
+  </RDF:Seq>
+    <RDF:Seq about="chrome://browser/content/browser.xul">
+    <RDF:li>chrome://reporter/content/reporterOverlay.xul</RDF:li>
+  </RDF:Seq>
+  <RDF:Seq about="chrome://navigator/content/navigator.xul">
+    <RDF:li>chrome://reporter/content/reporterOverlay.xul</RDF:li>
+  </RDF:Seq>
+  <RDF:Seq about="chrome://global/content/customizeToolbar.xul">
+    <RDF:li>chrome://reporter/content/reporterOverlay.xul</RDF:li>
+  </RDF:Seq>
+</RDF:RDF>

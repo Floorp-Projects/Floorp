@@ -1,0 +1,4 @@
+<!ENTITY cbRecurse.label "搜索子文件夹">
+<!ENTITY findFiles.title "搜索文件...">
+<!ENTITY txSearchFor.label "搜索：">
+<!ENTITY txSearchPath.label "搜索到：">

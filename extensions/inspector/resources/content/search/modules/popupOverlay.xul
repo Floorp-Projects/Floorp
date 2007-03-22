@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay [
+  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/search/junkImgs.dtd"> %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://inspector/locale/search/findFiles.dtd"> %dtd2;
+]>
+
+<overlay id="ovJunkImgsPopup"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <menupopup id="mppSearchPlugins" onpopupshowing="inspector.initPopup(this);">
+  
+    <menuitem id="item:startFindFiles" position="1"
+      label="&findFiles.title;"
+      observes="cmd:startFindFiles"/>
+
+    <menuitem id="item:startJunkImgs" position="2"
+      label="&junkImgs.title;"
+      isDisabled="return !inspector.isViewingContent"
+      observes="cmd:startJunkImgs"/>
+    
+    <menuseparator position="3"/>
+    
+  </menupopup>
+
+</overlay>
+
+        

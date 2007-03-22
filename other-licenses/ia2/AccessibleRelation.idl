@@ -1,0 +1,148 @@
+/*************************************************************************
+ *
+ *  File Name (AccessibleRelation.idl)
+ *
+ *  IAccessible2 IDL Specification
+ *
+ *  Copyright (c) IBM Corp. 2006
+ *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License version 2.1, as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02110-1301  USA
+ *
+ ************************************************************************/
+
+import "objidl.idl";
+import "oaidl.idl";
+import "oleacc.idl";
+
+/** @defgroup grpRelations Relations 
+  Use the following constants to compare against the BSTRs returned by 
+  IAccessibleRelation::relationType.
+*/ 
+///@{
+
+/** Some attribute of this object is affected by a target object. */
+const WCHAR *const IA2_RELATION_CONTROLLED_BY = L"controlledBy";
+
+/** This object is interactive and controls some attribute of a target object. */
+const WCHAR *const IA2_RELATION_CONTROLLER_FOR = L"controllerFor";
+
+/** This object is described by the target object. */
+const WCHAR *const IA2_RELATION_DESCRIBED_BY = L"describedBy";
+
+/** This object is describes the target object. */
+const WCHAR *const IA2_RELATION_DESCRIPTION_FOR = L"descriptionFor";
+
+/** This object is embedded by a target object. */
+const WCHAR *const IA2_RELATION_EMBEDDED_BY = L"embeddedBy";
+
+/** This object embeds a target object. This relation can be used on the
+ OBJID_CLIENT accessible for a top level window to show where the content 
+ areas are.
+*/
+const WCHAR *const IA2_RELATION_EMBEDS = L"embeds";
+
+/** Content flows to this object from a target object. */
+const WCHAR *const IA2_RELATION_FLOWS_FROM = L"flowsFrom";
+
+/** Content flows from this object to a target object. */
+const WCHAR *const IA2_RELATION_FLOWS_TO = L"flowsTo";
+
+/** This object is label for a target object. */
+const WCHAR *const IA2_RELATION_LABEL_FOR = L"labelFor";
+
+/** This object is labelled by a target object. */
+const WCHAR *const IA2_RELATION_LABELED_BY = L"labelledBy";
+
+/** This object is a member of a group of one or more objects. When 
+ there is more than one object in the group each member may have one and the 
+ same target, e.g. a grouping object.  It is also possible that each member has 
+ multiple additional targets, e.g. one for every other member in the group.
+*/
+const WCHAR *const IA2_RELATION_MEMBER_OF = L"memberOf";
+
+/** This object is a child of a target object. */
+const WCHAR *const IA2_RELATION_NODE_CHILD_OF = L"nodeChildOf";
+
+/** This object is a parent window of the target object. */
+const WCHAR *const IA2_RELATION_PARENT_WINDOW_OF = L"parentWindowOf";
+
+/** This object is a transient component related to the target object. 
+ When this object is activated the target object doesn't loose focus.
+*/
+const WCHAR *const IA2_RELATION_POPUP_FOR = L"popupFor";
+
+/** This object is a sub window of a target object. */
+const WCHAR *const IA2_RELATION_SUBWINDOW_OF = L"subwindowOf";
+
+///@}
+
+/// This interface gives access to an object's set of relations.
+[object, uuid(7CDF86EE-C3DA-496a-BDA4-281B336E1FDC)]
+interface IAccessibleRelation : IUnknown
+{
+  /** @brief Returns the type of the relation.
+   @param [out] relationType
+  */
+  [propget] HRESULT relationType
+    (
+     [out, retval] BSTR *relationType
+    );
+
+  /** @brief Returns a localized version of the relation type.
+   @param [out] localizedRelationType
+  */
+  [propget] HRESULT localizedRelationType
+    (
+     [out, retval] BSTR *localizedRelationType
+    );
+
+  /** @brief Returns the number of targets for this relation.
+   @param [out] nTargets
+  */
+  [propget] HRESULT nTargets
+    (
+     [out, retval] long *nTargets
+    );
+
+  /** @brief Returns one accessible relation target.
+   @param [in] targetIndex
+    0 based index
+   @param [out] target
+    Note: Use QueryInterface to get IAccessible2.
+  */
+  [propget] HRESULT target
+    (
+     [in] long targetIndex,
+     [out, retval] IUnknown **target 
+    );
+
+  /** @brief Returns multiple accessible relation targets
+   @param [in] maxTargets
+    Maximum number of targets to get.
+   @param [out] target
+    Array of accessible targets. Use QueryInterface to get IAccessible2.
+   @param [out] nTargets
+    length of array (not more than maxTargets)
+  */
+  [propget] HRESULT targets
+    (
+     [in] long maxTargets, 
+     [out, size_is(maxTargets), length_is(*nTargets)]
+       IUnknown **target, 
+     [out, retval] long *nTargets 
+    );
+
+}

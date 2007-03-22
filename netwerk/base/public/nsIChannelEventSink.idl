@@ -1,0 +1,103 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 cin: */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Gagan Saksena <gagan@netscape.com> (original author)
+ *   Darin Fisher <darin@netscape.com>
+ *   Christian Biesinger <cbiesinger@web.de>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIChannel;
+
+/**
+ * Implement this interface to receive control over various channel events.
+ * Channels will try to get this interface from a channel's
+ * notificationCallbacks or, if not available there, from the loadGroup's
+ * notificationCallbacks.
+ *
+ * These methods are called before onStartRequest, and should be handled
+ * SYNCHRONOUSLY.
+ */
+[scriptable, uuid(6757d790-2916-498e-aaca-6b668a956875)]
+interface nsIChannelEventSink : nsISupports
+{
+    /**
+     * This is a temporary redirect. New requests for this resource should
+     * continue to use the URI of the old channel.
+     *
+     * The new URI may be identical to the old one.
+     */
+    const unsigned long REDIRECT_TEMPORARY = 1 << 0;
+
+    /**
+     * This is a permanent redirect. New requests for this resource should use
+     * the URI of the new channel (This might be an HTTP 301 reponse).
+     * If this flag is not set, this is a temporary redirect.
+     *
+     * The new URI may be identical to the old one.
+     */
+    const unsigned long REDIRECT_PERMANENT = 1 << 1;
+
+    /**
+     * This is an internal redirect, i.e. it was not initiated by the remote
+     * server, but is specific to the channel implementation.
+     *
+     * The new URI may be identical to the old one.
+     */
+    const unsigned long REDIRECT_INTERNAL = 1 << 2;
+
+    /**
+     * Called when a redirect occurs. This may happen due to an HTTP 3xx status
+     * code.
+     *
+     * @param oldChannel
+     *        The channel that's being redirected.
+     * @param newChannel
+     *        The new channel. This channel is not opened yet.
+     * @param flags
+     *        Flags indicating the type of redirect. A bitmask consisting
+     *        of flags from above.
+     *        One of REDIRECT_TEMPORARY and REDIRECT_PERMANENT will always be
+     *        set.
+     *
+     * @throw <any> Throwing an exception will cancel the load. No network
+     * request for the new channel will be made.
+     */
+    void onChannelRedirect(in nsIChannel oldChannel, 
+                           in nsIChannel newChannel,
+                           in unsigned long flags);
+};

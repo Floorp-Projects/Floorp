@@ -1,0 +1,160 @@
+/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla browser.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Scott MacGregor <mscott@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsICancelable.idl"
+
+interface nsIURI;
+interface nsIRequest;
+interface nsIStreamListener;
+interface nsIFile;
+interface nsIMIMEInfo;
+interface nsIWebProgressListener2;
+interface nsIInterfaceRequestor;
+
+/**
+ * The external helper app service is used for finding and launching
+ * platform specific external applications for a given mime content type.
+ */
+[scriptable, uuid(0ea90cf3-2dd9-470f-8f76-f141743c5678)]
+interface nsIExternalHelperAppService : nsISupports
+{
+  /**
+   * Binds an external helper application to a stream listener. The caller
+   * should pump data into the returned stream listener. When the OnStopRequest
+   * is issued, the stream listener implementation will launch the helper app
+   * with this data.
+   * @param aMimeContentType The content type of the incoming data
+   * @param aRequest The request corresponding to the incoming data
+   * @param aWindowContext Use GetInterface to retrieve properties like the
+   *                       dom window or parent window...
+   *                       The service might need this in order to bring up dialogs.
+   * @return A nsIStreamListener which the caller should pump the data into.
+   */
+  nsIStreamListener doContent (in ACString aMimeContentType, in nsIRequest aRequest,
+                               in nsIInterfaceRequestor aWindowContext); 
+
+  /**
+   * Returns true if data from a URL with this extension combination
+   * is to be decoded from aEncodingType prior to saving or passing
+   * off to helper apps, false otherwise.
+   */
+  boolean applyDecodingForExtension(in AUTF8String aExtension,
+                                    in ACString aEncodingType);
+
+};
+
+/**
+ * This is a private interface shared between external app handlers and the platform specific
+ * external helper app service
+ */
+[scriptable, uuid(d0b5d7d3-9565-403d-9fb5-e5089c4567c6)]
+interface nsPIExternalAppLauncher : nsISupports
+{
+  /**
+   * mscott --> eventually I should move this into a new service so other
+   * consumers can add temporary files they want deleted on exit.
+   * @param aTemporaryFile A temporary file we should delete on exit.
+   */
+  void deleteTemporaryFileOnExit(in nsIFile aTemporaryFile); 
+};
+
+/**
+ * A helper app launcher is a small object created to handle the launching
+ * of an external application.
+ *
+ * Note that cancelling the load via the nsICancelable interface will release
+ * the reference to the launcher dialog.
+ */
+[scriptable, uuid(99a0882d-2ff9-4659-9952-9ac531ba5592)]
+interface nsIHelperAppLauncher : nsICancelable
+{
+  /**
+   * The mime info object associated with the content type this helper app
+   * launcher is currently attempting to load
+   */
+  readonly attribute nsIMIMEInfo MIMEInfo;
+
+  /**
+   * The source uri
+   */
+  readonly attribute nsIURI source;
+
+  /**
+   * The suggested name for this file
+   */
+  readonly attribute AString suggestedFileName;
+
+  /**
+   * Called when we want to just save the content to a particular file.
+   * NOTE: This will release the reference to the nsIHelperAppLauncherDialog.
+   * @param aNewFileLocation Location where the content should be saved
+   */
+  void saveToDisk(in nsIFile aNewFileLocation, in boolean aRememberThisPreference);
+
+  /**
+   * Use aApplication to launch with this content.
+   * NOTE: This will release the reference to the nsIHelperAppLauncherDialog.
+   * @param aApplication nsIFile corresponding to the location of the application to use.
+   * @param aRememberThisPreference TRUE if we should remember this choice.
+   */
+  void launchWithApplication(in nsIFile aApplication, in boolean aRememberThisPreference);
+
+  /**
+   * The following methods are used by the progress dialog to get or set
+   * information on the current helper app launcher download.
+   * This reference will be released when the download is finished (after the
+   * listener receives the STATE_STOP notification).
+   */
+  void setWebProgressListener(in nsIWebProgressListener2 aWebProgressListener);
+
+  /**
+   * when the stand alone progress window actually closes, it calls this method
+   * so we can release any local state...
+   */
+  void closeProgressWindow();
+
+  /**
+   * The file we are saving to
+   */
+  readonly attribute nsIFile targetFile;
+  /**
+   * Time when the download started
+   */
+  readonly attribute PRTime timeDownloadStarted;
+};

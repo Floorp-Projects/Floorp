@@ -1,0 +1,30 @@
+<HTML>
+<HEAD>
+<STYLE>
+ #first  { display: inline; color: green; }
+ #second { display: block; color: red; }
+</STYLE>
+<SCRIPT>
+var id = "first";
+function toggleId() {
+  var node = document.getElementById(id);
+  if (id == "first") {
+    id = "second";
+  }
+  else {
+    id = "first";
+  }
+  node.id = id;
+}
+</SCRIPT>
+</HEAD>
+<BODY>
+<H1>Changing ID test</H1>
+<P>Clicking on the button that follows this paragraph 
+should change the layout of <SPAN ID="first">these words</SPAN>
+with respect to the rest of the flow.</P>
+<FORM>
+<INPUT TYPE="button" VALUE="Toggle ID" onClick="toggleId(); return true;">
+</FORM>
+</BODY>
+</HTML>

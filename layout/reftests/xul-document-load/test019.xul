@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<?xul-overlay href="test019-overlay.xul" ?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="main"
+        style="background-color: green"
+        onload="checkDOM('xml-stylesheet', 'href=&quot;test019.css&quot; type=&quot;text/css&quot;');">
+  <script src="test017-020.js"/>
+</window>

@@ -1,0 +1,60 @@
+Index: fbcompose.c
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/cairo/libpixman/src/fbcompose.c,v
+retrieving revision 1.6
+diff -u -8 -p -r1.6 fbcompose.c
+--- pixman/src/fbcompose.c	11 Jan 2006 00:48:57 -0000	1.6
++++ pixman/src/fbcompose.c	8 Feb 2006 00:27:16 -0000
+@@ -23,16 +23,17 @@
+  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+  * SOFTWARE.
+  */
+ #ifdef HAVE_CONFIG_H
+ #include <config.h>
+ #endif
+ #include "pixman-xserver-compat.h"
+ #include "fbpict.h"
++#include "fbmmx.h"
+ 
+ #ifdef RENDER
+ 
+ #include "pixregionint.h"
+ 
+ #ifdef _MSC_VER
+ #define _USE_MATH_DEFINES
+ #endif
+@@ -3756,16 +3757,34 @@ fbCompositeRect (const FbComposeData *da
+ 	data->mask->componentAlpha &&
+ 	PICT_FORMAT_RGB (data->mask->format_code))
+     {
+ 	CARD32 *mask_buffer = dest_buffer + data->width;
+ 	CombineFuncC compose = composeFunctions.combineC[data->op];
+ 	if (!compose)
+ 	    return;
+ 
++	/* XXX: The non-MMX version of some of the fbCompose functions
++	 * overwrite the source or mask data (ones that use
++	 * fbCombineMaskC, fbCombineMaskAlphaC, or fbCombineMaskValueC
++	 * as helpers).  This causes problems with the optimization in
++	 * this function that only fetches the source or mask once if
++	 * possible.  If we're on a non-MMX machine, disable this
++	 * optimization as a bandaid fix.
++	 *
++	 * https://bugs.freedesktop.org/show_bug.cgi?id=5777
++	 */
++#ifdef USE_MMX
++	if (!fbHaveMMX())
++#endif
++	{
++	    srcClass = SourcePictClassUnknown;
++	    maskClass = SourcePictClassUnknown;
++	}
++
+ 	for (i = 0; i < data->height; ++i) {
+ 	    /* fill first half of scanline with source */
+ 	    if (fetchSrc)
+ 	    {
+ 		if (fetchMask)
+ 		{
+ 		    /* fetch mask before source so that fetching of
+ 		       source can be optimized */

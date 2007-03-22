@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=319381
+-->
+<head>
+  <title>Test for Bug 319381</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=319381">Mozilla Bug 319381</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <div id="t"></div>  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 319381 **/
+
+function c() {
+  return document.defaultView.getComputedStyle($('t'), "").
+    getPropertyValue("overflow");
+}
+
+function cval() {
+  return document.defaultView.getComputedStyle($('t'), "").
+    getPropertyCSSValue("overflow");
+}
+
+var vals = ["visible", "hidden", "auto", "scroll"];
+var mozVals = ["-moz-scrollbars-vertical", "-moz-scrollbars-horizontal"];
+var i, j;
+
+for (i = 0; i < vals.length; ++i) {
+  $('t').style.overflow = vals[i];
+  is($('t').style.overflow, vals[i], "Roundtrip");
+  is(c(), vals[i], "Simple property set");
+  isnot(cval(), null, "Simple property as CSSValue");
+}
+
+$('t').style.overflow = mozVals[0];
+is($('t').style.getPropertyValue("overflow-y"), "scroll", "Roundtrip");
+is($('t').style.getPropertyValue("overflow-x"), "hidden", "Roundtrip");
+is($('t').style.overflow, "", "Shorthand read directly");
+is(c(), "", "Shorthand computed");
+is(cval(), null, "Shorthand as CSSValue");
+
+$('t').style.overflow = mozVals[1];
+is($('t').style.getPropertyValue("overflow-x"), "scroll", "Roundtrip");
+is($('t').style.getPropertyValue("overflow-y"), "hidden", "Roundtrip");
+is($('t').style.overflow, "", "Shorthand read directly");
+is(c(), "", "Shorthand computed");
+is(cval(), null, "Shorthand as CSSValue");
+
+for (i = 0; i < vals.length; ++i) {
+  for (j = 0; j < vals.length; ++j) {
+    $('t').setAttribute("style",
+                        "overflow-x: " + vals[i] + "; overflow-y: " + vals[j]);
+    is($('t').style.getPropertyValue("overflow-x"), vals[i], "Roundtrip");
+    is($('t').style.getPropertyValue("overflow-y"), vals[j], "Roundtrip");
+
+    if (i == j) {
+      is($('t').style.overflow, vals[i], "Shorthand serialization");
+    } else {
+      is($('t').style.overflow, "", "Shorthand serialization");
+    }
+
+    // "visible" overflow-x and overflow-y become "auto" in computed style if
+    // the other direction is not also "visible".
+    if (i == j || (vals[i] == "visible" && vals[j] == "auto")) {
+      is(c(), vals[j], "Shorthand computation");
+      isnot(cval(), null, "Shorthand computation as CSSValue");
+    } else if (vals[j] == "visible" && vals[i] == "auto") {
+      is(c(), vals[i], "Shorthand computation");
+      isnot(cval(), null, "Shorthand computation as CSSValue");    
+    } else {
+      is(c(), "", "Shorthand computation");
+      is(cval(), null, "Shorthand computation as CSSValue");
+    }
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,28 @@
+/*
+    acmeIScriptObject.idl
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(f78d64e0-1dd1-11b2-a9b4-ae998c529d3e)]
+interface acmeIScriptObject : nsISupports {
+    acmeIScriptObject getProperty(in string name);
+    void setProperty(in string name, in string value);
+
+    /**
+     * Evaluates a string expression.
+     */
+    acmeIScriptObject evaluate(in string expression);
+
+    /**
+     * Conversions.
+     */
+    string toString();
+    double toNumber();
+
+    /**
+     * Constructors.
+     */
+    acmeIScriptObject fromString(in string value);
+    acmeIScriptObject fromNumber(in double value);
+};

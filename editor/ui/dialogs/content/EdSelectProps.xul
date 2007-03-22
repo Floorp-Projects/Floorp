@@ -1,0 +1,161 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Selection List Properties Dialog.
+   -
+   - The Initial Developer of the Original Code is
+   - Neil Rashbrook.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): Neil Rashbrook <neil@parkwaycc.co.uk>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
+<?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
+
+<?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
+
+<!DOCTYPE dialog SYSTEM "chrome://editor/locale/EditorSelectProperties.dtd">
+<dialog title="&windowTitle.label;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="Startup();"
+        buttons="accept,cancel"
+        ondialogaccept="return onAccept();"
+        ondialogcancel="return onCancel();">
+
+  <!-- Methods common to all editor dialogs -->
+  <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdSelectProps.js"/>
+
+  <broadcaster id="args" value=""/>
+  <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
+
+  <!-- Setting rows="7" on tree isn't working, equalsize vbox sets tree height. -->
+  <vbox equalsize="always">
+    <tree id="SelectTree" onselect="treeBoxObject.view.selectionChanged();" onkeyup="onTreeKeyUp(event);">
+      <treecols id="SelectCols">
+        <treecol id="SelectTextCol" flex="3" label="&TextHeader.label;" primary="true"/>
+        <splitter class="tree-splitter"/>
+        <treecol id="SelectValCol" flex="2" label="&ValueHeader.label;"/>
+        <treecol id="SelectSelCol" label="&SelectedHeader.label;" cycler="true"/>
+      </treecols>
+
+      <treechildren id="SelectTreeChildren"/>
+    </tree>
+
+    <hbox flex="1">
+      <deck flex="1" id="SelectDeck" index="0">
+        <groupbox flex="1"><caption label="&Select.label;"/>
+          <grid flex="1"><columns><column flex="1"/><column/></columns>
+            <rows>
+              <row align="center">
+                <label control="SelectName" value="&SelectName.label;" accesskey="&SelectName.accesskey;"/>
+                <textbox id="SelectName" flex="1" oninput="onNameInput();"/>
+              </row>
+              <row align="center">
+                <label control="SelectSize" value="&SelectSize.label;" accesskey="&SelectSize.accesskey;"/>
+                <hbox>
+                  <textbox id="SelectSize" class="narrow" oninput="forceInteger(this.id);"/>
+                </hbox>
+              </row>
+              <row>
+                <spacer/>
+                <checkbox id="SelectMultiple" flex="1" label="&SelectMultiple.label;" accesskey="&SelectMultiple.accesskey;" oncommand="onSelectMultipleClick();"/>
+              </row>
+              <row>
+                <spacer/>
+                <checkbox id="SelectDisabled" flex="1" label="&SelectDisabled.label;" accesskey="&SelectDisabled.accesskey;"/>
+              </row>
+              <row align="center">
+                <label control="SelectTabIndex" value="&SelectTabIndex.label;" accesskey="&SelectTabIndex.accesskey;"/>
+                <hbox>
+                  <textbox id="SelectTabIndex" class="narrow" oninput="forceInteger(this.id);"/>
+                </hbox>
+              </row>
+            </rows>
+          </grid>
+        </groupbox>
+
+        <groupbox flex="1"><caption label="&OptGroup.label;"/>
+          <grid flex="1"><columns><column flex="1"/><column/></columns>
+            <rows>
+              <row align="center">
+                <label control="OptGroupLabel" value="&OptGroupLabel.label;" accesskey="&OptGroupLabel.accesskey;"/>
+                <textbox id="OptGroupLabel" oninput="onLabelInput();"/>
+              </row>
+              <row>
+                <spacer/>
+                <checkbox id="OptGroupDisabled" label="&OptGroupDisabled.label;" accesskey="&OptGroupDisabled.accesskey;"/>
+              </row>
+            </rows>
+          </grid>
+        </groupbox>
+
+        <groupbox flex="1"><caption label="&Option.label;"/>
+          <grid flex="1"><columns><column flex="1"/><column/></columns>
+            <rows>
+              <row align="center">
+                <label control="OptionText" value="&OptionText.label;" accesskey="&OptionText.accesskey;"/>
+                <textbox id="OptionText" oninput="onTextInput();"/>
+              </row>
+              <row align="center">
+                <checkbox id="OptionHasValue" label="&OptionValue.label;" accesskey="&OptionValue.accesskey;" oncommand="onHasValueClick();"/>
+                <textbox id="OptionValue" oninput="onValueInput();"/>
+              </row>
+              <row>
+                <spacer/>
+                <checkbox id="OptionSelected" label="&OptionSelected.label;" accesskey="&OptionSelected.accesskey;" oncommand="currentItem.cycleCell();"/>
+              </row>
+              <row>
+                <spacer/>
+                <checkbox id="OptionDisabled" label="&OptionDisabled.label;" accesskey="&OptionDisabled.accesskey;"/>
+              </row>
+            </rows>
+          </grid>
+        </groupbox>
+      </deck>
+
+      <vbox>
+        <button label="&AddOption.label;" accesskey="&AddOption.accesskey;" oncommand="AddOption();"/>
+        <button label="&AddOptGroup.label;" accesskey="&AddOptGroup.accesskey;" oncommand="AddOptGroup();"/>
+        <button id="RemoveButton" label="&RemoveElement.label;" accesskey="&RemoveElement.accesskey;"
+                oncommand="RemoveElement();" disabled="true"/>
+        <button id="PreviousButton" label="&MoveElementUp.label;" accesskey="&MoveElementUp.accesskey;"
+                oncommand="currentItem.moveUp();" disabled="true" type="row"/>
+        <button id="NextButton" label="&MoveElementDown.label;" accesskey="&MoveElementDown.accesskey;"
+                oncommand="currentItem.moveDown();" disabled="true" type="row"/>
+        <spacer flex="1"/>
+        <button id="AdvancedEditButton"/>
+      </vbox>
+    </hbox>
+  </vbox>
+
+  <separator class="groove"/>
+
+</dialog>

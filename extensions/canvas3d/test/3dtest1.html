@@ -1,0 +1,20 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <script type="application/x-javascript">
+function doload() {
+    var cvs = document.getElementById('canvas');
+    var ctx = cvs.getContext('gles11');
+
+    ctx.clearColor(.2,.2,.2,1);
+    ctx.clear(ctx.COLOR_BUFFER_BIT);
+
+    ctx.swapBuffers();
+}
+    </script>
+  </head>
+
+  <body onload="doload()">
+    <canvas id="canvas" width="400" height="400" style="border: 2px solid black;"></canvas>
+  </body>
+</html>

@@ -1,0 +1,227 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="svg.css" type="text/css"?>
+<!DOCTYPE svg SYSTEM "SVG-20000202.dtd" > 
+<!--<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 10 January 2000//EN" --> 
+<!--  "http://www.w3.org/Graphics/SVG/SVG-19991203.dtd"> --> 
+<svg xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.svg" 
+     xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <html:script>
+<![CDATA[
+
+var gIsInit  = false;
+var barXPnts = new Array();
+var barYPnts = new Array();
+
+var nodes = new Array();
+var gBarMax   = 200;
+var gHeight   = 80;
+var gBarCount = 10;
+var gBarDir   = 1;
+var gGo       = true;
+
+function init()
+{
+  dump("----------------\n");
+  nodes[0] = findNode(document.documentElement, "bar21");
+  nodes[1] = findNode(document.documentElement, "bar22");
+  nodes[2] = findNode(document.documentElement, "bar23");
+  nodes[3] = findNode(document.documentElement, "bargrid21");
+  nodes[4] = findNode(document.documentElement, "bargrid22");
+  nodes[5] = findNode(document.documentElement, "bargrid23");
+  dump("----------------\n");
+  gGo = true;
+  setTimeout("moveit()", 100);
+}
+function stop()
+{
+  gGo = false;
+}
+function ChangeBar(name, height)
+{
+  today = new Date();
+  stime = today.getMilliseconds();
+  dump("----------------\n");
+  str = name+"1";
+  node = findNode(document.documentElement, str); 
+  //node = document.getElementById(str);
+  today = new Date();
+  etime = today.getMilliseconds();
+  dump("1----------------"+(etime-stime)+"\n");
+  attr = document.createAttribute("points"); 
+  attr.value = "30 " + height + " 30 210 50 210 50 " + height;
+  node.attributes.setNamedItem(attr); 
+  today = new Date();
+  stime = today.getMilliseconds();
+  dump("2----------------"+(stime-etime)+"\n");
+
+  str = name+"2";
+  node = findNode(document.documentElement, str); 
+  dump("3----------------\n");
+  attr.value = "30 " + height + " 50 " + height + " 60 " + (height-10) + " 40 " + (height-10);
+  node.attributes.setNamedItem(attr); 
+  dump("4----------------\n");
+
+  str = name+"3";
+  node = findNode(document.documentElement, str); 
+  dump("5----------------\n");
+  attr.value = "50 " + height + " 60 " + (height-10) + " 60 200 50 210";
+  node.attributes.setNamedItem(attr); 
+  dump("=================\n");
+}
+
+function ChangeBarWithNodes(node1, node2, node3, height)
+{
+  attr = document.createAttribute("points"); 
+  attr.value = "30 " + height + " 30 210 50 210 50 " + height;
+  node1.attributes.setNamedItem(attr); 
+
+  attr.value = "30 " + height + " 50 " + height + " 60 " + (height-10) + " 40 " + (height-10);
+  node2.attributes.setNamedItem(attr); 
+
+  attr.value = "50 " + height + " 60 " + (height-10) + " 60 200 50 210";
+  node3.attributes.setNamedItem(attr); 
+}
+
+function moveit()
+{
+  //ChangeBar("bar2", 150);
+  //ChangeBar("bargrid2", 150);
+
+  ChangeBarWithNodes(nodes[0], nodes[1], nodes[2], gHeight);
+  ChangeBarWithNodes(nodes[3], nodes[4], nodes[5], gHeight);
+
+  gHeight += gBarDir;
+  gBarCount--;
+  //dump("gHeight: "+gHeight+"   gBarCount: "+gBarCount+"  gBarDir: "+gBarDir+"\n");
+  if (gHeight > gBarMax || gHeight < 1) {
+    gBarDir *= -1;
+    gBarCount = (Math.random() * 15)+3;
+    //dump("Changining directions: "+gBarDir+"\n");
+    if (gHeight > gBarMax) {
+      gHeight = gBarMax;
+    } else {
+      gHeight = 1;
+    }
+  } else {
+    if (gBarCount < 1) {
+      gBarDir *= -1;
+      gBarCount = (Math.random() * 15)+3;
+      //dump("----> "+gBarCount+"\n");
+    }
+  }
+  if (gGo) {
+    setTimeout("moveit()", 100);
+  }
+
+}
+
+function findNode(node, nodename)
+{
+  var type = node.nodeType;
+  if (type == Node.ELEMENT_NODE) {
+
+      // open tag
+      //dump("\<" + node.tagName);
+
+      // dump the attributes if any
+      attributes = node.attributes;
+      if (null != attributes) {
+        var countAttrs = attributes.length;
+        var index = 0;
+        while(index < countAttrs) {
+          att = attributes[index];
+          if (null != att) {
+            //dump(" " + att.name + "=" + att.value+" ["+nodename+"]\n");
+            if (att.name == "id" && att.value == nodename) {
+              //dump("Found it!\n");
+              return node;
+            }
+          }
+          index++;
+        }
+      }
+
+      // recursively dump the children
+      if (node.hasChildNodes()) {
+	      // close tag
+        //dump(">");
+
+        // get the children
+        var children = node.childNodes;
+        var length = children.length;
+        var count = 0;
+        while(count < length) {
+          child = children[count];
+          fndNode = findNode(child, nodename);
+          if (fndNode != null) {
+            return fndNode;
+          }
+          count++;
+        }
+        //dump("</" + node.tagName + ">");
+      } else {
+	      // close tag
+        //dump("/>");
+      }
+
+      
+  }
+  // if it's a piece of text just dump the text
+  else if (type == Node.TEXT_NODE) {
+      //dump(node.data);
+  }
+  return null;
+}
+
+]]>
+  </html:script>	
+
+  <g>
+    <polyline x="55" y="10" id="bg" points="20 0 220 0 220 200 20 200"/> 
+    <polyline x="55" y="10" id="bg" points="20 0 20 200 0 220 0 20 0 20  20 0"/> 
+    <polyline x="55" y="10" id="bg" points="20 200 220 200 200 220 0 220"/> 
+
+    <polyline x="55" y="10" id="grid" points="20 0 220 0 220 200 20 200"/> 
+    <polyline x="55" y="10" id="grid" points="20 0 20 200 0 220 0 20 0 20"/> 
+    <polyline x="55" y="10" id="grid" points="20 200 220 200 200 220 0 220"/> 
+
+    <polyline x="55" y="10" id="grid" points="20  220 40  200  40   0"/> 
+    <polyline x="55" y="10" id="grid" points="40  220 60  200  60   0"/> 
+    <polyline x="55" y="10" id="grid" points="60  220 80  200  80   0"/> 
+    <polyline x="55" y="10" id="grid" points="80  220 100 200  100  0"/> 
+    <polyline x="55" y="10" id="grid" points="100 220 120 200  120  0"/> 
+    <polyline x="55" y="10" id="grid" points="120 220 140 200  140  0"/> 
+    <polyline x="55" y="10" id="grid" points="140 220 160 200  160  0"/> 
+    <polyline x="55" y="10" id="grid" points="160 220 180 200  180  0"/> 
+    <polyline x="55" y="10" id="grid" points="180 220 200 200  200  0"/> 
+
+    <polygon x="55" y="10" id="bar1" points="30 60 30 210 50 210 50 60"/> 
+    <polygon x="55" y="10" id="bar1" points="30 60 50 60 60 50 40 50"/> 
+    <polygon x="55" y="10" id="bar1" points="50 60 60 50 60 200 50 210"/> 
+
+    <polyline x="55" y="10" id="grid" points="30 60 30 210 50 210 50 60"/> 
+    <polyline x="55" y="10" id="grid" points="30 60 50 60 60 50 40 50"/> 
+    <polyline x="55" y="10" id="grid" points="50 60 60 50 60 200 50 210"/> 
+
+
+    <polygon x="95" y="10" id="bar21" points="30 80 30 210 50 210 50 80"/> 
+    <polygon x="95" y="10" id="bar22" points="30 80 50 80  60 70  40 70"/> 
+    <polygon x="95" y="10" id="bar23" points="50 80 60 70  60 200 50 210"/> 
+
+    <polyline x="95" y="10" id="bargrid21" points="30 80 30 210 50 210 50 80"/> 
+    <polyline x="95" y="10" id="bargrid22" points="30 80 50 80  60 70  40 70"/> 
+    <polyline x="95" y="10" id="bargrid23" points="50 80 60 70  60 200 50 210"/> 
+
+    <polygon x="400" y="20" id="rect" points="10 10 50 10 50 50"/> 
+    <polygon x="400" y="75" id="poly" points="10 10 50 10 50 50 45 70 32 32 80 20"/> 
+    <polyline x="400" y="150" id="poly" points="10 10 50 10 50 50 45 70 32 32 80 20"/> 
+
+  </g>
+  <foreignobject>
+    <html:div style="position:absolute;top:5px;left:385px;">Simple Polygons</html:div>
+    <html:div style="position:absolute;top:240px;left:115px;">A Simple Graph</html:div>
+    <html:input type="button" style="position:absolute;top:260px;left:350px;" onclick="init();" value="Start"/>
+    <html:input type="button" style="position:absolute;top:260px;left:390px;" onclick="stop();" value="Stop"/>
+  </foreignobject>
+</svg> 

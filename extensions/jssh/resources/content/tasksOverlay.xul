@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<overlay id="jsshTasksOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript">
+
+    function jssh_configure() {
+      window.openDialog("chrome://jssh/content/configure.xul", "jssh_configure", "chrome");
+    }
+
+  </script>
+
+  <menupopup id="toolsPopup">
+    <menuitem id="menu_jssh" label="JSSh" 
+              oncommand="jssh_configure();" />
+  </menupopup>
+
+</overlay>

@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=218236
+-->
+<head>
+  <title>Test for Bug 218236</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=218236">Mozilla Bug 218236</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 218236 **/
+
+SimpleTest.waitForExplicitFinish();
+
+/* Test data */
+
+var url_200 = window.location.href;
+var url_404 = url_200.replace(/[^/]+$/, "this_file_is_not_going_to_be_there.dummy");
+var url_connection_error = url_200.replace(/^(\w+:\/\/[^/]+?)(:\d+)?\//, "$1:9546/");
+
+// List of tests: name of the test, URL to be requested, expected sequence
+// of events and optionally a function to be called from readystatechange handler.
+// Numbers in the list of events are values of XMLHttpRequest.readyState
+// when readystatechange event is triggered.
+var tests = [
+  ["200 OK",                            url_200,                [1, 2, 3, 4, "load"], null],
+  ["404 Not Found",                     url_404,                [1, 2, 3, 4, "load"], null],
+  ["connection error",                  url_connection_error,   [1, 2, 4, "error"],   null],
+  ["abort() call on readyState = 1",    url_200,                [1, 4],               doAbort1],
+  ["abort() call on readyState = 2",    url_200,                [1, 2, 4],            doAbort2],
+];
+
+var testName = null;
+var currentState = 0;
+var currentSequence = null;
+var expectedSequence = null;
+var currentCallback = null;
+
+var request = null;
+
+runNextTest();
+
+function doAbort1() {
+  if (request.readyState == 1)
+    request.abort();
+}
+function doAbort2() {
+  if (request.readyState == 2)
+    request.abort();
+}
+
+/* Utility functions */
+
+function runNextTest() {
+  if (tests.length > 0) {
+    var test = tests.shift();
+
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    // Prepare request object
+    request = new XMLHttpRequest();
+    request.open("GET", test[1]);
+    request.onreadystatechange = onReadyStateChange;
+    request.onload = onLoad;
+    request.onerror = onError;
+
+    // Initialize state variables
+    testName = test[0]
+    currentState = 0;
+    currentSequence = [];
+    expectedSequence = test[2];
+    currentCallback = test[3];
+
+    // Start request
+    request.send(null);
+  }
+  else
+    SimpleTest.finish();
+}
+
+function finalizeTest() {
+  ok(compareArrays(expectedSequence, currentSequence), "event sequence for '" + testName + "' should be " + expectedSequence.join(", "));
+
+  runNextTest();
+}
+
+function onReadyStateChange() {
+  // Ignore duplicated calls for the same ready state
+  if (request.readyState != currentState) {
+    currentState = request.readyState;
+    currentSequence.push(currentState);
+  }
+
+  if (currentState == 4) {
+    // Allow remaining event to fire but then we are finished with this test
+    setTimeout(finalizeTest, 0);
+  }
+
+  if (currentCallback)
+    currentCallback();
+}
+
+function onLoad() {
+  currentSequence.push("load");
+}
+
+function onError() {
+  currentSequence.push("error");
+}
+
+function compareArrays(array1, array2) {
+  if (array1.length != array2.length)
+    return false;
+
+  for (var i = 0; i < array1.length; i++)
+    if (array1[i] != array2[i])
+      return false;
+
+  return true;
+}
+</script>
+</pre>
+</body>
+</html>
+

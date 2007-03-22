@@ -1,0 +1,5 @@
+// StringTestNo_wchar_t.Prefix
+
+#include "StringTest.Prefix"
+
+#undef HAVE_CPP_2BYTE_WCHAR_T

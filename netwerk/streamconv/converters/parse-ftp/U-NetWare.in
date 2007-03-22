@@ -1,0 +1,51 @@
+ftp> open netlab2.usu.edu
+Connected to netlab2.usu.edu.
+220 Service Ready for new User
+Name (netlab2.usu.edu:cyp): 
+331 Enter E-Mail id as Password
+230 User anonymous Logged in Successfully
+Remote system type is NETWARE.
+ftp> syst
+215 NETWARE  Type : L8
+ftp> ls
+200 PORT Command OK
+150 Opening data connection
+total 0
+- [RWCEAFMS] NFAUUser                          192 Apr 27 15:21 HEADER.html
+d [RWCEAFMS] jrd                               512 Jul 11 03:01 allupdates
+d [RWCEAFMS] jrd                               512 Dec 05  2001 apps
+d [RWCEAFMS] jrd                               512 Oct 21  2001 bsuk00
+d [RWCEAFMS] jrd                               512 Oct 21  2001 bsuk2001
+d [RWCEAFMS] jrd                               512 Oct 21  2001 bsuk99
+d [RWCEAFMS] jrd                               512 Oct 21  2001 bsus2000
+d [RWCEAFMS] jrd                               512 Oct 21  2001 bsus2001
+d [RWCEAFMS] jrd                               512 Mar 27 20:23 bsus2002
+d [RWCEAFMS] jrd                               512 Oct 21  2001 bsus99
+d [RWCEAFMS] jrd                               512 Oct 21  2001 drivers
+d [RWCEAFMS] jrd                               512 Oct 24  2001 freebird
+d [RWCEAFMS] jrd                               512 Apr 30 13:56 kermit
+d [RWCEAFMS] jrd                               512 Oct 21  2001 macipx
+d [RWCEAFMS] jrd                               512 Jun 13 01:45 misc
+d [RWCEAFMS] jrd                               512 Oct 21  2001 netwatch
+d [RWCEAFMS] jrd                               512 Oct 21  2001 netwire
+d [RWCEAFMS] jrd                               512 Oct 21  2001 odi
+d [RWCEAFMS] jrd                               512 Oct 21  2001 pktdrvr
+d [RWCEAFMS] jrd                               512 Mar 02 20:23 rfc
+d [RWCEAFMS] jrd                               512 Oct 30  2001 UnixWare
+d [RWCEAFMS] jrd                               512 Oct 21  2001 updates
+- [RWCEAFMS] jrd                            666258 Oct 30  1992 ENCAPS10.PS
+- [RWCEAFMS] jrd                             25085 Oct 28  1992 ENCAPS10.TXT
+- [RWCEAFMS] jrd                            611989 Jan 13  1993 ENCAPS11.PS
+- [RWCEAFMS] jrd                             27134 Jan 12  1993 ENCAPS11.TXT
+- [RWCEAFMS] jrd                               372 Jan 13  1993 README.TXT
+226 Transfer Complete
+ftp> site help
+214-Only DOS and LONG site commands are supported for Anonymous Users 
+ DOS : 
+ 	The DOS command shows the file/directory permissions in DOS format. 
+ LONG	: 
+ 	The LONG command shows the file/directory permissions in LONG format. 
+214 End of Help
+ftp> close
+221 Closing Session
+ftp> 

@@ -1,0 +1,3 @@
+grant codeBase "file:${jep.pluginhome}/Contents/Resources/Java/JavaEmbeddingPlugin.jar" {
+  permission java.security.AllPermission;
+};

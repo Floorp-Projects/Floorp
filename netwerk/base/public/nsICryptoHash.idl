@@ -1,0 +1,137 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Doug Turner <dougt@meer.net>.
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+interface nsIInputStream;
+
+/**
+ * nsICryptoHash
+ * This interface provides crytographic hashing algorithms.
+ */
+
+[scriptable, uuid(1e5b7c43-4688-45ce-92e1-77ed931e3bbe)]
+interface nsICryptoHash : nsISupports
+{
+    /**
+     * Hashing Algorithms.  These values are to be used by the
+     * |init| method to indicate which hashing function to
+     * use.  These values map directly onto the values defined
+     * in mozilla/security/nss/lib/cryptohi/hasht.h.
+     */
+    const short MD2    = 1;  /* String value: "md2"    */
+    const short MD5    = 2;  /* String value: "md5"    */
+    const short SHA1   = 3;  /* String value: "sha1"   */
+    const short SHA256 = 4;  /* String value: "sha256" */
+    const short SHA384 = 5;  /* String value: "sha384" */
+    const short SHA512 = 6;  /* String value: "sha512" */
+
+    /**
+     * Initialize the hashing object. This method may be
+     * called multiple times with different algorithm types.
+     *
+     * @param aAlgorithm the algorithm type to be used.
+     *        This value must be one of the above valid
+     *        algorithm types.
+     *
+     * @throws NS_ERROR_INVALID_ARG if an unsupported algorithm
+     *         type is passed.
+     *
+     * NOTE: This method or initWithString must be called
+     *       before any other method on this interface is called.
+     */
+    void init(in unsigned long aAlgorithm);
+
+    /**
+     * Initialize the hashing object. This method may be
+     * called multiple times with different algorithm types.
+     *
+     * @param aAlgorithm the algorithm type to be used.
+     *
+     * @throws NS_ERROR_INVALID_ARG if an unsupported algorithm
+     *         type is passed.
+     *
+     * NOTE: This method or init must be called before any
+     *       other method on this interface is called.
+     */
+    void initWithString(in ACString aAlgorithm);
+  
+    /**
+     * @param aData a buffer to calculate the hash over
+     *
+     * @param aLen the length of the buffer |aData|
+     *
+     * @throws NS_ERROR_NOT_INITIALIZED if |init| has not been 
+     *         called.
+     */
+    void update([const, array, size_is(aLen)] in octet aData, in unsigned long aLen);
+
+    /**
+     * Calculates and updates a new hash based on a given data stream.
+     *
+     * @param aStream an input stream to read from.
+     *
+     * @param aLen how much to read from the given |aStream|.  Passing
+     *        PR_UINT32_MAX indicates that all data available will be used 
+     *        to update the hash. 
+     *
+     * @throws NS_ERROR_NOT_INITIALIZED if |init| has not been 
+     *         called.
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if the requested amount of 
+     *         data to be calculated into the hash is not available.
+     *
+     */
+    void updateFromStream(in nsIInputStream aStream, in unsigned long aLen);
+    
+    /**
+     * Completes this hash object and produces the actual hash data.
+     *
+     * @param aASCII if true then the returned value is a base-64 
+     *        encoded string.  if false, then the returned value is
+     *        binary data.  
+     *
+     * @return a hash of the data that was read by this object.  This can
+     *         be either binary data or base 64 encoded.
+     *
+     * @throws NS_ERROR_NOT_INITIALIZED if |init| has not been 
+     *         called.
+     *
+     * NOTE: This method may be called any time after |init|
+     *       is called.  This call resets the object to its
+     *       pre-init state.
+     */
+    ACString finish(in PRBool aASCII);
+};

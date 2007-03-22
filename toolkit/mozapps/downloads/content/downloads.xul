@@ -1,0 +1,199 @@
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla.org Code.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2001
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Ben Goodger <ben@bengoodger.com> (v2.0)
+#   Blake Ross <blakeross@telocity.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+#define XP_GNOME 1
+#endif
+#endif
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://mozapps/content/downloads/downloads.css"?>
+<?xml-stylesheet href="chrome://mozapps/skin/downloads/downloads.css"?>
+
+<!DOCTYPE window [
+<!ENTITY % downloadManagerDTD SYSTEM "chrome://mozapps/locale/downloads/downloads.dtd">
+%downloadManagerDTD;
+]>
+
+<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="downloadManager" windowtype="Download:Manager"
+        orient="vertical" title="&downloads.title;" statictitle="&downloads.title;"
+        width="&window.width;" height="&window.height;" screenX="10" screenY="10"
+        persist="width height screenX screenY sizemode"
+        onload="Startup();" onunload="Shutdown();"
+        onclose="return closeWindow(false);">
+      
+  <script type="application/x-javascript" src="chrome://mozapps/content/downloads/DownloadProgressListener.js"/>
+  <script type="application/x-javascript" src="chrome://mozapps/content/downloads/downloads.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  
+  <stringbundleset id="downloadSet">
+    <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
+    <stringbundle id="downloadStrings" src="chrome://mozapps/locale/downloads/downloads.properties"/>
+  </stringbundleset>
+
+  <commandset id="downloadsCommands"
+              commandupdater="true"
+              oncommandupdate="gDownloadViewController.onCommandUpdate();">
+    <command id="cmd_cleanUp" oncommand="gDownloadViewController.doCommand('cmd_cleanUp');"/>
+  </commandset>
+    
+  <keyset id="downloadKeys">
+    <key id="key_cleanUp" keycode="VK_DELETE" command="cmd_cleanUp" modifiers="accel,shift"/>
+    <key id="key_close"   key="&cmd.close.commandKey;"  oncommand="closeWindow(true);"    modifiers="accel"/>
+#ifdef XP_GNOME
+    <key id="key_close2"  key="&cmd.close2Unix.commandKey;" oncommand="closeWindow(true);" modifiers="accel"/>
+#else
+    <key id="key_close2"  key="&cmd.close2.commandKey;" oncommand="closeWindow(true);" modifiers="accel"/>
+#endif
+    <key                  keycode="VK_ESCAPE"           oncommand="closeWindow(true);"/>
+    <key id="key_info"    key="&cmd.info.commandKey;"   oncommand="onDownloadShowInfo();" modifiers="accel"/>
+  </keyset>
+  
+  <vbox id="contextMenuPalette" hidden="true">
+    <menuitem id="menuitem_pause" 
+              label="&cmd.pause.label;" accesskey="&cmd.pause.accesskey;"
+              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'pause');"/>
+    <menuitem id="menuitem_resume" 
+              label="&cmd.resume.label;" accesskey="&cmd.resume.accesskey;"
+              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'resume');"/>
+    <menuitem id="menuitem_cancel" 
+              label="&cmd.cancel.label;" accesskey="&cmd.cancel.accesskey;"
+              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'cancel');"/>
+
+    <menuitem id="menuitem_open" default="true"
+              label="&cmd.open.label;" accesskey="&cmd.open.accesskey;"
+              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'open');"/>
+    <menuitem id="menuitem_openWith" 
+              label="&cmd.openWith.label;" accesskey="&cmd.openWith.accesskey;"
+              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'openWith');"/>
+    <menuitem id="menuitem_show"
+#ifdef XP_MACOSX
+              label="&cmd.show.labelMac;"
+              accesskey="&cmd.show.accesskeyMac;"
+#else
+              label="&cmd.show.label;"
+              accesskey="&cmd.show.accesskey;"
+#endif
+              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'show');"/>
+
+    <menuitem id="menuitem_retry" default="true"
+              label="&cmd.retry.label;" accesskey="&cmd.retry.accesskey;"
+              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'retry');"/>
+
+    <menuitem id="menuitem_remove"
+              label="&cmd.remove.label;" accesskey="&cmd.remove.accesskey;"
+              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'remove');"/>
+              
+    <menuseparator id="menuseparator_properties"/>              
+    <menuitem id="menuitem_properties" 
+              label="&cmd.properties.label;" accesskey="&cmd.properties.accesskey;"
+              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'properties');"/>
+  </vbox>
+  
+  <popup id="downloadContextMenu" onpopupshowing="return buildContextMenu(event);"/>
+
+  <richlistbox id="downloadView" flex="1" context="downloadContextMenu"
+        datasources="rdf:null" ref="NC:DownloadsRoot"
+        ondragover="nsDragAndDrop.dragOver(event, gDownloadDNDObserver);"
+        ondragdrop="nsDragAndDrop.drop(event, gDownloadDNDObserver);">
+    <template>
+      <rule>
+        <conditions>
+          <content uri="?uri"/>
+          <member container="?uri" child="?download"/>
+          <triple subject="?download"
+                  predicate="http://home.netscape.com/NC-rdf#File"
+                  object="?file"/>
+          <triple subject="?download"   
+                  predicate="http://home.netscape.com/NC-rdf#Name"
+                  object="?target"/>
+          <triple subject="?download"   
+                  predicate="http://home.netscape.com/NC-rdf#DownloadState"
+                  object="?state"/>
+        </conditions>
+        <bindings>
+          <binding subject="?download"
+                  predicate="http://home.netscape.com/NC-rdf#DownloadAnimated"
+                  object="?animated"/>
+          <binding subject="?download"
+                  predicate="http://home.netscape.com/NC-rdf#DownloadStatus"
+                  object="?status"/>
+          <binding subject="?download"
+                  predicate="http://home.netscape.com/NC-rdf#ProgressPercent"
+                  object="?progress-percent"/>
+          <binding subject="?download"
+                  predicate="http://home.netscape.com/NC-rdf#IconURL"
+                  object="?icon"/>
+        </bindings>            
+        <action>
+          <download uri="?download"
+                    image="?icon" file="?file" target="?target" state="?state"
+                    animated="?animated" status="?status" progress="?progress-percent"/>
+        </action>
+      </rule>
+    </template>
+  </richlistbox>
+  
+  <hbox>
+    <hbox id="commandBar" flex="1">
+      <hbox align="center" flex="1" id="autodownloadInfo">
+        <label>&filesSavedTo.label;</label>
+        <toolbarbutton class="tabbable" id="saveToFolder" crop="right" flex="1"
+                       oncommand="onDownloadShowFolder();"
+                       tooltiptext="&showFolder.label;"/>
+      </hbox> 
+      <spring id="autodownloadSpring" hidden="true" flex="1"/>
+      <separator id="commandBarSeparator"/> 
+      <button id="cleanUpButton" 
+              label="&cmd.cleanUp.label;" accesskey="&cmd.cleanUp.accesskey;" tooltiptext="&cmd.cleanUp.tooltip;" 
+              command="cmd_cleanUp"/>
+    </hbox>
+    
+    <resizer id="windowResizer" dir="bottomright"/>
+  </hbox>  
+
+</window>
+

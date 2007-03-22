@@ -1,0 +1,676 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Netscape's XBL Marquee Emulation code.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2002
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Doron Rosenberg <doron@netscape.com>
+   -   L. David Baron <dbaron@dbaron.org>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<bindings id="marqueeBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+
+  <binding id="marquee">
+
+    <resources>
+      <stylesheet src="chrome://xbl-marquee/content/xbl-marquee.css"/>
+    </resources>
+    <implementation>
+
+      <field name="_scrollAmount">6</field>
+      <property name="scrollAmount">
+        <getter>
+          <![CDATA[
+          var val = parseInt(this.getAttribute("scrollamount"));
+
+          if (val <= 0 || isNaN(val))
+            return this._scrollAmount;
+
+          return val;
+          ]]>
+        </getter>
+        <setter>
+          this.setAttribute("scrollamount", val);
+        </setter>
+      </property>
+
+      <field name="_scrollDelay">85</field>
+      <property name="scrollDelay">
+        <getter>
+          <![CDATA[
+          var val = parseInt(this.getAttribute("scrolldelay"));
+
+          if (val <= 0 || isNaN(val))
+            return this._scrollDelay;
+
+          return val;
+          ]]>
+        </getter>
+        <setter>
+          this.setAttribute("scrolldelay", val);
+        </setter>
+      </property>
+
+      <property name="trueSpeed">
+        <getter>
+          <![CDATA[
+          if (!this.hasAttribute("truespeed"))
+            return false;
+
+          return true;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+          if (val)
+            this.setAttribute("truespeed", "truespeed");
+          else
+            this.removeAttribute('truespeed');
+          ]]>
+        </setter>
+      </property>
+
+      <property name="direction">
+        <getter>
+          return this.getAttribute("direction");
+        </getter>
+        <setter>
+          this.setAttribute("direction", val);
+        </setter>
+      </property>
+
+      <field name="_direction">"left"</field>
+
+      <property name="behavior">
+        <getter>
+          return this._behavior;
+        </getter>
+        <setter>
+          this.setAttribute("behavior", val);
+        </setter>
+      </property>
+
+      <field name="_behavior">"scroll"</field>
+
+      <property name="loop">
+        <getter>
+          <![CDATA[
+          var val = parseInt(this.getAttribute('loop'));
+    
+          if (val < -1 || isNaN(val))
+            return this._loop;
+
+          return val;
+          ]]>
+        </getter>
+        <setter>
+          this.setAttribute("loop", val);
+        </setter>
+      </property>
+
+      <field name="_loop">-1</field>
+
+      <property name="onstart">
+        <getter>
+          return this.getAttribute("onstart");
+        </getter>
+        <setter>
+          this._setEventListener("start", val, true);
+          this.setAttribute("onstart", val);
+        </setter>
+      </property>
+
+      <field name="_onstart"></field>
+
+      <property name="onfinish">
+        <getter>
+          return this.getAttribute("onfinish");
+        </getter>
+        <setter>
+          this._setEventListener("finish", val, true);
+          this.setAttribute("onfinish", val);
+        </setter>
+      </property>
+
+      <field name="_onfinish"></field>
+
+      <property name="onbounce">
+        <getter>
+          return this.getAttribute("onbounce");
+        </getter>
+        <setter>
+          this._setEventListener("bounce", val, true);
+          this.setAttribute("onbounce", val);
+        </setter>
+      </property>
+
+      <field name="_onbounce"></field>
+
+      <field name="dirsign">1</field>
+      <field name="startAt">0</field>
+      <field name="stopAt">0</field>
+      <field name="newPosition">0</field>
+      <field name="runId">0</field>
+
+      <field name="originalHeight">0</field>
+      <field name="startNewDirection">true</field>
+
+      <property name="outerDiv"
+        onget="return document.getAnonymousNodes(this)[0]"
+      />
+
+      <property name="innerDiv"
+        onget="return document.getAnonymousElementByAttribute(this, 'class', 'innerDiv');"
+      />
+
+      <property name="height"
+        onget="return this.getAttribute('height');"
+        onset="this.setAttribute('height', val);"
+      />
+
+      <property name="width"
+        onget="return this.getAttribute('width');"
+        onset="this.setAttribute('width', val);"
+      />
+
+      <!-- For sniffing purposes -->
+      <field name="nsMarqueeVersion">"0.9.7"</field>
+
+      <method name="_set_scrollDelay">
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          if (aValue <= 0 || isNaN(aValue) || aValue == null)
+            return false;
+
+          if (aValue < 60) {
+            if (this.trueSpeed == true)
+              this._scrollDelay = aValue;
+            else
+              this._scrollDelay = 60;
+          }
+          else {
+            this._scrollDelay = aValue;
+          }
+          return true;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_set_scrollAmount">
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          if (aValue < 0 || isNaN(aValue) || aValue == null)
+            return false;
+
+          this._scrollAmount = aValue;
+          return true;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_set_behavior">
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          if (typeof aValue == 'string')
+            aValue = aValue.toLowerCase();
+          if (aValue != 'alternate' && aValue != 'slide' && aValue != 'scroll')
+            return false;
+
+          this._behavior = aValue;
+          return true;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_set_direction">
+        <parameter name="aValue"/>
+        <body>
+        <![CDATA[
+          if (typeof aValue == 'string')
+            aValue = aValue.toLowerCase();
+          if (aValue != 'left' && aValue != 'right' && aValue != 'up' && aValue != 'down')
+            return false;
+
+          if (aValue != this._direction)
+            this.startNewDirection = true;
+          this._direction = aValue;
+          return true;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_set_loop">
+        <parameter name="aValue"/>
+        <body>
+          <![CDATA[
+          if (!aValue || isNaN(aValue))
+            return false;
+
+          if (aValue < -1)
+            aValue = -1;
+
+          this._loop = aValue;
+          return true;
+          ]]>
+        </body>
+      </method>
+
+      <method name="_setEventListener">
+        <parameter name="aName"/>
+        <parameter name="aValue"/>
+        <parameter name="aIgnoreNextCall"/>
+        <body>
+          <![CDATA[
+          if (this._ignoreNextCall)
+            return this._ignoreNextCall = false;
+
+          if (aIgnoreNextCall)
+            this._ignoreNextCall = true;
+
+          if (typeof this["_on" + aName] == 'function')
+            this.removeEventListener(aName, this["_on" + aName], false);
+
+          switch (typeof aValue)
+          {
+            case "function":
+              this["_on" + aName] = aValue;
+              this.addEventListener(aName, this["_on" + aName], false);
+            break;
+
+            case "string":
+              if (!aIgnoreNextCall) {
+                try {
+                  this["_on" + aName] = new Function("event", aValue);
+                }
+                catch(e) {
+                  return false;
+                }
+                this.addEventListener(aName, this["_on" + aName], false);
+              }
+              else {
+                this["_on" + aName] = aValue;
+              }
+            break;
+
+            case "object":
+              this["_on" + aName] = aValue;
+            break;
+
+            default:
+              this._ignoreNextCall = false;
+              throw new Error("Invalid argument for Marquee::on" + aName);
+          }
+          return true;
+          ]]>
+        </body>
+      </method>
+
+      <method name="_fireEvent">
+        <parameter name="aName"/>
+        <parameter name="aBubbles"/>
+        <parameter name="aCancelable"/>
+        <body>
+        <![CDATA[
+          var e = document.createEvent("Events");
+          e.initEvent(aName, aBubbles, aCancelable);
+          this.dispatchEvent(e);
+        ]]>
+        </body>
+      </method>
+
+      <method name="start">
+        <body>
+        <![CDATA[
+          if (this.runId == 0)
+            this._doMove(false);
+        ]]>
+        </body>
+      </method>
+
+      <method name="stop">
+        <body>
+        <![CDATA[
+          if (this.runId != 0)
+            clearTimeout(this.runId);
+
+          this.runId = 0;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_doMove">
+        <parameter name="aResetPosition"/>
+        <body>
+        <![CDATA[
+
+          //startNewDirection is true at first load and whenever the direction is changed
+          if (this.startNewDirection) {
+            this.startNewDirection = false; //we only want this to run once every scroll direction change
+
+            var corrvalue = 0;
+
+            switch (this._direction)
+            {
+              case "up":
+                var height = document.defaultView.getComputedStyle(this, "").height;
+                this.outerDiv.style.height = height;
+                if (this.originalHeight > this.outerDiv.offsetHeight)
+                    corrvalue = this.originalHeight - this.outerDiv.offsetHeight;
+                this.innerDiv.style.padding = height + " 0";
+                this.dirsign = 1;
+                this.startAt = (this._behavior == 'alternate') ? (this.originalHeight - corrvalue) : 0;
+                this.stopAt  = (this._behavior == 'alternate' || this._behavior == 'slide') ? 
+                                (parseInt(height) + corrvalue) : (this.originalHeight + parseInt(height));
+              break;
+
+              case "down":
+                var height = document.defaultView.getComputedStyle(this, "").height;
+                this.outerDiv.style.height = height;
+                if (this.originalHeight > this.outerDiv.offsetHeight)
+                    corrvalue = this.originalHeight - this.outerDiv.offsetHeight;
+                this.innerDiv.style.padding = height + " 0";
+                this.dirsign = -1;
+                this.startAt  = (this._behavior == 'alternate') ?
+                                (parseInt(height) + corrvalue) : (this.originalHeight + parseInt(height));
+                this.stopAt = (this._behavior == 'alternate' || this._behavior == 'slide') ? 
+                              (this.originalHeight - corrvalue) : 0;
+              break;
+
+              case "right":
+                if (this.innerDiv.offsetWidth > this.outerDiv.offsetWidth)
+                    corrvalue = this.innerDiv.offsetWidth - this.outerDiv.offsetWidth;
+                this.dirsign = -1;
+                this.stopAt  = (this._behavior == 'alternate' || this._behavior == 'slide') ? 
+                               (this.innerDiv.offsetWidth - corrvalue) : 0;
+                this.startAt = this.outerDiv.offsetWidth + ((this._behavior == 'alternate') ? 
+                               corrvalue : (this.innerDiv.offsetWidth + this.stopAt));   
+              break;
+
+              case "left":
+              default:
+                if (this.innerDiv.offsetWidth > this.outerDiv.offsetWidth)
+                    corrvalue = this.innerDiv.offsetWidth - this.outerDiv.offsetWidth;
+                this.dirsign = 1;
+                this.startAt = (this._behavior == 'alternate') ? (this.innerDiv.offsetWidth - corrvalue) : 0;
+                this.stopAt  = this.outerDiv.offsetWidth + 
+                               ((this._behavior == 'alternate' || this._behavior == 'slide') ? 
+                               corrvalue : (this.innerDiv.offsetWidth + this.startAt));
+            }
+
+            if (aResetPosition) {
+              this.newPosition = this.startAt;
+              this._fireEvent("start", false, false);
+            }
+          } //end if
+
+          this.newPosition = this.newPosition + (this.dirsign * this._scrollAmount);
+
+          if ((this.dirsign == 1 && this.newPosition > this.stopAt) ||
+              (this.dirsign == -1 && this.newPosition < this.stopAt))
+          {
+            switch (this._behavior) 
+            {
+              case 'alternate':
+                // lets start afresh
+                this.startNewDirection = true;
+
+                // swap direction
+                const swap = {left: "right", down: "up", up: "down", right: "left"};
+                this._direction = swap[this._direction];
+                this.newPosition = this.stopAt;
+
+                if ((this._direction == "up") || (this._direction == "down"))
+                  this.outerDiv.scrollTop = this.newPosition;
+                else
+                  this.outerDiv.scrollLeft = this.newPosition;
+
+                if (this._loop != 1)
+                  this._fireEvent("bounce", false, true);
+              break;
+
+              case 'slide':
+                if (this._loop > 1)
+                  this.newPosition = this.startAt;
+              break;
+
+              default:
+                this.newPosition = this.startAt;
+
+                if ((this._direction == "up") || (this._direction == "down"))
+                  this.outerDiv.scrollTop = this.newPosition;
+                else
+                  this.outerDiv.scrollLeft = this.newPosition;
+
+                //dispatch start event, even when this._loop == 1, comp. with IE6
+                this._fireEvent("start", false, false);
+            }
+
+            if (this._loop > 1)
+              this._loop--;
+            else if (this._loop == 1) {
+              if ((this._direction == "up") || (this._direction == "down"))
+                this.outerDiv.scrollTop = this.stopAt;
+              else
+                this.outerDiv.scrollLeft = this.stopAt;
+              this.stop();
+              this._fireEvent("finish", false, true);
+              return;
+            }
+          }
+          else {
+            if ((this._direction == "up") || (this._direction == "down"))
+              this.outerDiv.scrollTop = this.newPosition;
+            else
+              this.outerDiv.scrollLeft = this.newPosition;
+          }
+
+          var myThis = this;
+          var lambda = function myTimeOutFunction(){myThis._doMove(false);}
+          this.runId = window.setTimeout(lambda, this._scrollDelay);
+        ]]>
+        </body>
+      </method>
+
+      <method name="init">
+        <body>
+        <![CDATA[
+          this.stop();
+          // store the original height before we add padding
+          this.innerDiv.style.padding = 0;
+          this.originalHeight = this.innerDiv.offsetHeight;
+
+          this._doMove(true);
+        ]]>
+        </body>
+      </method>
+
+      <constructor>
+        <![CDATA[
+          var myThis = this;
+          var lambda = function myScopeFunction() { myThis.init(); }
+
+          this._set_direction(this.getAttribute('direction'));
+          this._set_behavior(this.getAttribute('behavior'));
+          this._set_scrollDelay(this.getAttribute('scrolldelay'));
+          this._set_scrollAmount(this.getAttribute('scrollamount'));
+          this._set_loop(this.getAttribute('loop'));
+          this._setEventListener("start", this.getAttribute("onstart"));
+          this._setEventListener("finish", this.getAttribute("onfinish"));
+          this._setEventListener("bounce", this.getAttribute("onbounce"));
+          this.startNewDirection = true;
+
+          // init needs to be run after the page has loaded in order to calculate
+          // the correct height/width
+          window.addEventListener("load", lambda, false);
+        ]]>
+      </constructor>
+    </implementation>
+
+    <handlers>
+      <handler event="DOMAttrModified" phase="target">
+        <![CDATA[
+          var attrName = event.attrName.toLowerCase();
+          var oldValue = event.prevValue.toLowerCase();
+          var newValue = event.newValue.toLowerCase();
+          var attributeRemoval = false;
+          if (event.attrChange == event.REMOVAL) {
+            newValue = null;
+            attributeRemoval = true;
+          };
+
+          if (oldValue != newValue) {
+            switch (attrName) {
+              case "loop":
+                if (!this._set_loop(newValue)) {
+                  if (attributeRemoval) {
+                    this._loop = -1;
+                    if (this.runId == 0)
+                      this.start();
+                  }
+                  else
+                    throw new Error("Invalid argument for Marquee::loop");
+                }
+                if (this.rundId == 0)
+                  this.start();
+                break;
+              case "scrollamount":
+                if (!this._set_scrollAmount(newValue)) {
+                  if (attributeRemoval)
+                    this._scrollAmount = 6;
+                  else
+                    throw new Error("Invalid argument for Marquee::scrollAmount");
+                }
+                break;
+              case "scrolldelay":
+                if (!this._set_scrollDelay(newValue)) {
+                  if (attributeRemoval)
+                    this._scrollDelay = 85;
+                  else
+                    throw new Error("Invalid argument for Marquee::scrollDelay");
+                }
+                this.stop();
+                this.start();
+                break;
+              case "truespeed":
+                //needed to update this._scrollDelay
+                var myThis = this;
+                var lambda = function() {myThis._set_scrollDelay(myThis.getAttribute('scrolldelay'));}
+                window.setTimeout(lambda, 0);
+                break;
+              case "behavior":
+                if (!this._set_behavior(newValue)) {
+                  if (attributeRemoval)
+                    this._behavior = "scroll";
+                  else
+                    throw new Error("Invalid argument for Marquee::behavior");
+                }
+
+                this.startNewDirection = true;
+                if ((oldValue == "slide" && this.newPosition == this.stopAt) ||
+                    newValue == "alternate" || newValue == "slide") {
+                  this.stop();
+                  this._doMove(true);
+                }
+                break;
+              case "direction":
+                if (!this._set_direction(newValue)) {
+                  if (attributeRemoval)
+                    this._direction = "left";
+                  else
+                    throw new Error("Invalid argument for Marquee::direction");
+                }
+                break;
+              case "width":
+              case "height":
+                this.startNewDirection = true;
+                break;
+              case "onstart":
+                this._setEventListener("start", newValue);
+                break;
+              case "onfinish":
+                this._setEventListener("finish", newValue);
+                break;
+              case "onbounce":
+                this._setEventListener("bounce", newValue);
+                break;
+            }
+          }
+        ]]>
+      </handler>
+    </handlers>
+
+  </binding>
+
+  <binding id="marquee-horizontal"
+           extends="chrome://xbl-marquee/content/xbl-marquee.xml#marquee"
+           inheritstyle="false">
+
+    <!-- White-space isn't allowed because a marquee could be 
+         inside 'white-space: pre' -->
+    <content>
+      <html:div xbl:inherits="" style="overflow: hidden"
+        ><html:div style="display: -moz-box; margin: 0 100%;"
+          ><html:div class="innerDiv"
+            ><children
+          /></html:div
+        ></html:div
+      ></html:div>
+    </content>
+
+  </binding>
+
+  <!-- use -moz-margin-end to force large intrinsic width -->
+  <binding id="marquee-vertical"
+           extends="chrome://xbl-marquee/content/xbl-marquee.xml#marquee"
+           inheritstyle="false">
+
+    <!-- White-space isn't allowed because a marquee could be 
+         inside 'white-space: pre' -->
+    <content>
+      <html:div xbl:inherits="" style="overflow: hidden; width: 100%; -moz-margin-end: 100%"
+        ><html:div class="innerDiv"
+          ><children
+        /></html:div
+      ></html:div>
+    </content>
+
+  </binding>
+
+</bindings>

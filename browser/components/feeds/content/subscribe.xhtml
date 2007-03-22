@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % globalDTD
+    SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+  <!ENTITY % feedDTD
+    SYSTEM "chrome://browser/locale/feeds/subscribe.dtd">
+  %feedDTD;
+]>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<html id="feedHandler"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:aaa="http://www.w3.org/2005/07/aaa">
+  <head>
+    <title>&feedPage.title;</title>
+    <link rel="stylesheet"
+          href="chrome://browser/skin/feeds/subscribe.css"
+          type="text/css"
+          media="all"/>
+    <script type="application/x-javascript"
+            src="chrome://browser/content/feeds/subscribe.js"/>
+  </head>
+  <body onload="SubscribeHandler.writeContent();" onunload="SubscribeHandler.uninit();">
+    <div id="feedHeaderContainer">
+      <div id="feedHeader" dir="&locale.dir;">
+        <div id="feedIntroText">
+          <p id="feedSubscriptionInfo1">
+            &feedSubscriptionInfo1a;<strong>&feedName;</strong>&feedSubscriptionInfo1b;
+          </p>
+          <p id="feedSubscriptionInfo2">&feedSubscriptionInfo2;</p>
+        </div>
+
+<!-- XXXmano this has to be in one line. Otherwise you would see
+     how much XUL-in-XHTML sucks, see bug 348830 -->
+<div id="feedSubscribeLine"><xul:vbox><xul:hbox align="center"><xul:description id="subscribeUsingDescription">&subscribeUsing;</xul:description><xul:menulist id="handlersMenuList" aaa:labelledby="subscribeUsingDescription"><xul:menupopup menugenerated="true" id="handlersMenuPopup"><xul:menuitem id="liveBookmarksMenuItem" label="&feedLiveBookmarks;" class="menuitem-iconic" image="chrome://browser/skin/page-livemarks.png" selected="true"/><xul:menuseparator/></xul:menupopup></xul:menulist></xul:hbox><xul:hbox><xul:checkbox id="alwaysUse" checked="false"/></xul:hbox><xul:hbox align="center"><xul:spacer flex="1"/><span><xul:button label="&feedSubscribeNow;" id="subscribeButton"/></span></xul:hbox></xul:vbox></div></div>
+
+    </div>
+
+    <!-- XXXben - get rid of me when the feed processor is bug free! -->
+    <div id="feedError" style="display:none;" dir="&locale.dir;">
+      <h1>&error.title;</h1>
+      <p>&error.message;</p>
+      <p id="errorCode"/>
+    </div>
+
+    <script type="application/x-javascript">
+      SubscribeHandler.init();
+    </script>
+
+    <div id="feedBody">
+      <div id="feedTitle">
+        <a id="feedTitleLink">
+          <img id="feedTitleImage"/>
+        </a>
+        <div id="feedTitleContainer">
+          <h1 id="feedTitleText"/>
+          <h2 id="feedSubtitleText"/>
+        </div>
+      </div>
+      <div id="feedContent"/>
+    </div>
+  </body>
+</html>

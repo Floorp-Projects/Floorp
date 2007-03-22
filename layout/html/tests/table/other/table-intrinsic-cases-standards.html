@@ -1,0 +1,2500 @@
+<!DOCTYPE html>
+<!-- XXX Need to repeat entire test page with large and zero values of
+border, cellpadding, and cellspacing -->
+
+<style type="text/css">
+
+table { margin: 5px 0; }
+
+table.bigcellborder { border-width: 10px; }
+table.bigcellborder td { border-width: 10px; }
+
+</style>
+
+<p>Firefox 1.5 has different empty-cells defaults and different border
+coloring throughout between standards mode and quirks mode.</p>
+
+<p>Firefox 1.5 wraps the last word of the third of these tables in
+quirks mode and of all three in standards mode.</p>
+
+<table border>
+  <tr>
+    <td width="40%">s
+	<td>aose unth asnu etha snue hoae
+</table>
+
+<table border>
+  <tr>
+    <td width="50%">s
+	<td>aose unth asnu etha snue hoae
+</table>
+
+<table cellpadding="0" cellspacing="0"><tr><td>
+<table border>
+  <tr>
+    <td width="50%">s
+	<td>aose unth asnu etha snue hoae
+</table>
+</table>
+
+<table cellpadding="0" cellspacing="0"><tr><td width="1">
+<table border>
+  <tr>
+    <td width="50%">s
+	<td>aose unth asnu etha snue hoae
+</table>
+</table>
+
+<hr>
+
+<table border>
+  <tr><td width="10">x</td></tr>
+  <tr><td width="100">x</td></tr>
+</table>
+<table border>
+  <tr><td>x</td></tr>
+  <tr><td width="100">x</td></tr>
+</table>
+
+<hr>
+
+<table border>
+  <tr><td width="5%">x</td></tr>
+</table>
+<table border>
+  <tr><td width="1%">xxx</td></tr>
+</table>
+<table border>
+  <tr><td width="2%">x</td></tr>
+  <tr><td width="100%">x</td></tr>
+</table>
+<table border>
+  <tr><td>x</td></tr>
+  <tr><td width="100%">x</td></tr>
+</table>
+
+<hr>
+
+<table border>
+  <tr><td>x</td><td colspan="2">aoeuidhtns</td></tr>
+  <tr><td colspan="2">aoeuidhtns</td><td>x</td></tr>
+</table>
+<table border>
+  <col width="1"><col><col width="1">
+  <tr><td>x</td><td colspan="2">aoeuidhtns</td></tr>
+  <tr><td colspan="2">aoeuidhtns</td><td>x</td></tr>
+</table>
+<table border>
+  <tr><td width="1">x</td><td colspan="2">aoeuidhtns</td></tr>
+  <tr><td colspan="2">aoeuidhtns</td><td width="1">x</td></tr>
+</table>
+
+<p>with third row:</p>
+
+<table border>
+  <tr><td>x</td><td colspan="2">aoeuidhtns</td></tr>
+  <tr><td colspan="2">aoeuidhtns</td><td>x</td></tr>
+  <tr><td><td><td></tr>
+</table>
+<table border>
+  <col width="1"><col><col width="1">
+  <tr><td>x</td><td colspan="2">aoeuidhtns</td></tr>
+  <tr><td colspan="2">aoeuidhtns</td><td>x</td></tr>
+  <tr><td><td><td></tr>
+</table>
+<table border>
+  <tr><td width="1">x</td><td colspan="2">aoeuidhtns</td></tr>
+  <tr><td colspan="2">aoeuidhtns</td><td width="1">x</td></tr>
+  <tr><td><td><td></tr>
+</table>
+
+<hr>
+
+<table border><tr><td width="90%">x</td><td>x</td></tr></table>
+<table border><tr><td width="90%">x</td><td>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</td></tr></table>
+<table border><tr><td width="90%">x</td><td>xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx</td></tr></table>
+
+<hr>
+
+<table cellpadding="0" border><tr><td width="20">x</td></tr></table>
+<table cellpadding="20" border><tr><td width="20">x</td></tr></table>
+<table cellpadding="40" border><tr><td width="20">x</td></tr></table>
+
+<table cellspacing="0" border><tr><td width="20">x</td></tr></table>
+<table cellspacing="20" border><tr><td width="20">x</td></tr></table>
+<table cellspacing="40" border><tr><td width="20">x</td></tr></table>
+
+<hr>
+
+<table border>
+  <tr><td>x</td><td>x</td></tr>
+  <tr><td>x</td><td>x</td></tr>
+</table>
+
+<table border cellpadding="0" cellspacing="0">
+  <tr><td>x</td><td>x</td></tr>
+  <tr><td>x</td><td>x</td></tr>
+</table>
+
+<p>Padding:</p>
+<table border style="padding: 20px" cellspacing="0" cellpadding="0">
+  <tr><td>x</td><td>x</td></tr>
+  <tr><td>x</td><td>x</td></tr>
+</table>
+
+<p>Padding and cellspacing:</p>
+<table border style="padding: 10px" cellspacing="10" cellpadding="0">
+  <tr><td>x</td><td>x</td></tr>
+  <tr><td>x</td><td>x</td></tr>
+</table>
+
+<hr>
+
+<p>Firefox 1.5 handles this set slightly differently in quirks and
+standards modes.</p>
+
+<table border><tr><td width="5%">x x x x x</td><td width="95%">x</td></tr></table>
+<table border><tr><td width="5%">x x x x x</td><td width="85%">x</td></tr></table>
+<table border><tr><td width="5%">x x x x x</td><td width="85%">x</td><td>x</td></tr></table>
+<table border><tr><td width="1%">x x x x x</td><td width="50%">x</td><td width="10">x</td></tr></table>
+<table border><tr><td width="1%">x x x x x</td><td width="50%">x</td><td width="20">x</td><td width="20">x</td></tr></table>
+<table border><tr><td width="1%">x x x x x</td><td width="50%">x</td><td width="20">x</td><td width="20">xxx</td></tr></table>
+<table border><tr><td width="1%">x x x x x</td><td width="50%">x</td><td width="10">x</td><td width="20">x</td></tr></table>
+
+<hr>
+
+<table border><tr><td width="1%">x x x x x</td><td width="50%">x</td><td width="10">x</td></tr></table>
+
+<hr>
+
+<table border><tr><td width="1%">x x x x x</td><td width="80%">x</td></tr></table>
+<table border><tr><td width="1%">x x x x x</td><td width="99%">x</td></tr></table>
+<table border><tr><td width="1%">x x x x x</td><td width="3%">x</td></tr></table>
+<table border><tr><td width="1%">x x x x x</td><td width="3%">x x x</td></tr></table>
+
+<hr>
+
+<table border cellpadding="0" cellspacing="50"><tr><td width="100%">x</td></tr></table>
+<table border cellpadding="0" cellspacing="50"><tr><td width="50%">x</td><td>x</td></tr></table>
+<table border cellpadding="0" cellspacing="50"><tr><td width="25%">x</td><td>x</td></tr></table>
+<table border cellpadding="0" cellspacing="50"><tr><td width="50%">x</td><td>xxx</td></tr></table>
+
+<h1>percentage boundary and overflow conditions</h1>
+
+<h1>specified widths</h1>
+<table border="10" width="200"><tr><td>200</td></tr></table>
+<table border="10" style="width: 200px"><tr><td>200</td></tr></table>
+<table border="10"><tr><td><div style="width:200px">200</div></td></tr></table>
+<table style="border: 10px solid" width="200"><tr><td>200</td></tr></table>
+<table style="border: 10px solid; width: 200px"><tr><td>200</td></tr></table>
+<table style="border: 10px solid"><tr><td><div style="width:200px">200</div></td></tr></table>
+<p>These three are border-collapse, which means Firefox 1.5 handles them
+differently in quirks and standards modes.</p>
+<table style="border-collapse: collapse; border: 10px solid" width="200"><tr><td>200</td></tr></table>
+<table style="border-collapse: collapse; border: 10px solid; width: 200px"><tr><td>200</td></tr></table>
+<table style="border-collapse: collapse; border: 10px solid"><tr><td><div style="width:200px">200</div></td></tr></table>
+
+<h1>border-collapse</h1>
+
+<p>Firefox 1.5 handles all of these differently between quirks and
+standards modes.</p>
+
+<table border="10" cellpadding="0"><tr><td>
+<table style="border-collapse: collapse; border: 10px solid blue"><tr><td>text</td></tr></table>
+</td></tr></table>
+
+<table style="border-collapse: collapse; border: 10px solid purple" cellpadding="0"><tr><td>
+<table style="border-collapse: collapse; border: 10px solid blue"><tr><td>text</td></tr></table>
+</td></tr></table>
+
+<table border="10" cellpadding="0"><tr><td>
+<table style="border-collapse: collapse; border: 10px solid blue"><tr><td>text</td><td style="border: 10px solid blue">text</td><td>text</td></tr></table>
+</td></tr></table>
+
+<table style="border-collapse: collapse; border: 10px solid purple" cellpadding="0"><tr><td>
+<table style="border-collapse: collapse; border: 10px solid blue"><tr><td>text</td><td style="border: 10px solid blue">text</td><td>text</td></tr></table>
+</td></tr></table>
+
+<table border><tr>
+  <td>
+    <table border="10" height="80"><tr><td>80 s</td></tr></table>
+  </td>
+  <td>
+    <table border="10" height="80" style="border-collapse: collapse"><tr><td>80 c</td></tr></table>
+  </td>
+  <td>
+    <div style="height: 80px; background: yellow; color: black">80</div>
+  </td>
+</tr></table>
+
+<h1>table-layout:fixed</h1>
+
+<table border style="table-layout: fixed">
+  <tr>
+    <td>z</td>
+    <td>z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+
+<table border><tr><td>
+<table border style="table-layout: fixed">
+  <tr>
+    <td>z</td>
+    <td>z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+</td></tr></table>
+
+<table border><tr><td>
+<table border style="table-layout: fixed">
+  <tr>
+    <td>z</td>
+    <td>z</td>
+    <td>z</td>
+  </tr>
+  <tr>
+    <td>z</td>
+    <td>z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+</td></tr></table>
+
+
+<table border><tr>
+<td>z z z z z</td>
+<td>
+<table border style="table-layout: fixed">
+  <tr>
+    <td>z</td>
+    <td>z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+</td></tr></table>
+
+<table border style="table-layout: fixed; width: 400px;">
+  <tr>
+    <td>z</td>
+    <td>z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+
+<table border style="table-layout: fixed; width: 400px;">
+  <tr>
+    <td style="width: 350px">z</td>
+    <td>z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+
+<table border style="table-layout: fixed; width: 400px;">
+  <col style="width: 50px">
+  <tr>
+    <td style="width: 350px">z</td>
+    <td>z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+
+<table border style="table-layout: fixed; width: 400px;">
+  <col>
+  <col>
+  <col style="width: 50px">
+  <tr>
+    <td style="width: 350px">z</td>
+    <td>z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+
+<table border style="table-layout: fixed; width: 400px;">
+  <col style="width: 50px">
+  <col>
+  <col>
+  <tr>
+    <td style="width: 350px">z</td>
+    <td>z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+
+<table border style="table-layout: fixed; width: 400px;">
+  <col style="width: 50px">
+  <col style="width: 50px">
+  <col style="width: 50px">
+  <tr>
+    <td style="width: 350px">z</td>
+    <td>z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+
+<table border style="table-layout: fixed; width: 400px;">
+  <col style="width: 200px">
+  <col style="width: 200px">
+  <col style="width: 200px">
+  <tr>
+    <td style="width: 350px">z</td>
+    <td>z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+
+<h2>with percentages</h2>
+
+<table border style="table-layout: fixed; width: 400px;">
+  <col style="width: 20%">
+  <col>
+  <col>
+  <tr>
+    <td style="width: 350px">z</td>
+    <td style="width: 40%">z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+
+<table border style="table-layout: fixed; width: 400px;">
+  <col style="width: 20%">
+  <col style="width: 20%">
+  <col style="width: 80px">
+  <tr>
+    <td>z</td>
+    <td>z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+
+<table border style="table-layout: fixed; width: 400px;">
+  <col style="width: 45%">
+  <col style="width: 45%">
+  <col style="width: 80px">
+  <tr>
+    <td>z</td>
+    <td>z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+
+<table border style="table-layout: fixed; width: 400px;">
+  <col style="width: 49%">
+  <col style="width: 49%">
+  <col style="width: 80px">
+  <tr>
+    <td>z</td>
+    <td>z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+
+<h2>with percentages and auto width</h2>
+
+<table border style="table-layout: fixed;">
+  <col style="width: 20%">
+  <col>
+  <col>
+  <tr>
+    <td style="width: 350px">z</td>
+    <td style="width: 40%">z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+
+<table border style="table-layout: fixed;">
+  <col style="width: 20%">
+  <col style="width: 20%">
+  <col style="width: 80px">
+  <tr>
+    <td>z</td>
+    <td>z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+
+<table border style="table-layout: fixed;">
+  <col style="width: 45%">
+  <col style="width: 45%">
+  <col style="width: 80px">
+  <tr>
+    <td>z</td>
+    <td>z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+
+<table border style="table-layout: fixed;">
+  <col style="width: 49%">
+  <col style="width: 49%">
+  <col style="width: 80px">
+  <tr>
+    <td>z</td>
+    <td>z</td>
+    <td>zzzzzzzzzzzzzzzzz</td>
+  </tr>
+</table>
+
+<hr>
+
+<p>See <a
+href="http://www.hixie.ch/tests/adhoc/css/box/table/inspection/">Hixie's
+tests</a>.</p>
+
+<hr>
+
+<table border width="200"><tr>
+  <td width="150">x</td>
+  <td width="150">x</td>
+</tr></table>
+
+<table border width="200"><tr>
+  <td width="250">x</td>
+  <td width="250">x</td>
+</tr></table>
+
+<table border cellpadding="0" cellspacing="0" width="200"><tr>
+  <td width="20">x</td>
+  <td width="60">x</td>
+</tr></table>
+
+<table border cellpadding="0" cellspacing="0" width="200"><tr>
+  <td width="50">x</td>
+  <td width="150">x</td>
+</tr></table>
+
+<table border cellpadding="0" cellspacing="0" width="200"><tr>
+  <td width="55">x</td>
+  <td width="165">x</td>
+</tr></table>
+
+<table border cellpadding="0" cellspacing="0" width="200"><tr>
+  <td width="150">x</td>
+  <td width="450">x</td>
+</tr></table>
+
+<table border cellpadding="0" cellspacing="0" width="200"><tr>
+  <td width="300">x</td>
+  <td width="900">x</td>
+</tr></table>
+
+
+<table border cellpadding="0" cellspacing="0" width="200"><tr>
+  <td width="20">ZZZZZZZ</td>
+  <td width="60">ZZZZZZZ</td>
+</tr></table>
+
+<table border cellpadding="0" cellspacing="0" width="200"><tr>
+  <td width="50">ZZZZZZZ</td>
+  <td width="150">ZZZZZZZ</td>
+</tr></table>
+
+<table border cellpadding="0" cellspacing="0" width="200"><tr>
+  <td width="55">ZZZZZZZ</td>
+  <td width="165">ZZZZZZZ</td>
+</tr></table>
+
+<table border cellpadding="0" cellspacing="0" width="200"><tr>
+  <td width="150">ZZZZZZZ</td>
+  <td width="450">ZZZZZZZ</td>
+</tr></table>
+
+<table border cellpadding="0" cellspacing="0" width="200"><tr>
+  <td width="300">ZZZZZZZ</td>
+  <td width="900">ZZZZZZZ</td>
+</tr></table>
+
+<hr>
+
+<table border cellpadding="0" cellspacing="0" width="200"><tr>
+  <td width="150">Z</td>
+  <td><div style="width:150px"></div></td>
+</tr></table>
+
+<table border cellpadding="0" cellspacing="0" width="200"><tr>
+  <td><div style="width:150px"></div></td>
+  <td width="150">Z</td>
+</tr></table>
+
+<table border cellpadding="0" cellspacing="0" width="200"><tr>
+  <td width="150">Z</td>
+  <td width="150">Z</td>
+  <td><div style="width:150px"></div></td>
+</tr></table>
+
+<table border cellpadding="0" cellspacing="0" width="200"><tr>
+  <td><div style="width:150px"></div></td>
+  <td width="150">Z</td>
+  <td width="150">Z</td>
+</tr></table>
+
+<hr>
+
+<table border cellpadding="0" cellspacing="0" width="200"><tr>
+  <td><div style="width:150px"></div></td>
+  <td width="50%">Z</td>
+  <td width="150">Z</td>
+</tr></table>
+
+<table border cellpadding="0" cellspacing="0" width="200"><tr>
+  <td><div style="width:250px"></div></td>
+  <td width="50%">Z</td>
+  <td width="150">Z</td>
+</tr></table>
+
+<table border cellpadding="0" cellspacing="0" width="200"><tr>
+  <td><div style="width:150px"></div></td>
+  <td width="50%">, ,</td>
+  <td width="150">, ,</td>
+</tr></table>
+
+<table border cellpadding="0" cellspacing="0" width="200"><tr>
+  <td><div style="width:250px"></div></td>
+  <td width="50%">, ,</td>
+  <td width="150">, ,</td>
+</tr></table>
+
+<hr>
+
+<table border width="200"><tr>
+  <td>z</td>
+  <td>zzz</td>
+  <td>z&nbsp;z</td>
+</tr></table>
+
+<table border width="200"><tr>
+  <td>z</td>
+  <td>zzz</td>
+  <td>z z</td>
+</tr></table>
+
+<table border width="200"><tr>
+  <td>zzzzz</td>
+  <td>z z z z z z z z z z</td>
+  <td>z z z z z z z z z z</td>
+</tr></table>
+
+<div style="width: 200px">
+<table border><tr>
+  <td>zzzzz</td>
+  <td>z z z z z z z z z z</td>
+  <td>z z z z z z z z z z</td>
+</tr></table>
+</div>
+
+<hr>
+
+<p>Firefox 1.5 does this one very differently between quirks and
+standards modes.</p>
+
+<table border>
+<tr><td width="50">x</td></tr>
+<tr><td>z z z z z z z z z z z z z</td></tr>
+</table>
+
+<hr>
+
+<table border width="600"><tr>
+  <td style="width:50px">50</td>
+  <td style="width:50%">50%</td>
+</tr></table>
+
+<table border width="600"><tr>
+  <td>z z z z</td>
+  <td>auto</td>
+  <td>auto</td>
+  <td style="width:50%">50%</td>
+</tr></table>
+
+<table border width="600"><tr>
+  <td style="width:50px">50</td>
+  <td>auto</td>
+  <td>auto</td>
+  <td style="width:50%">50%</td>
+</tr></table>
+
+<table border width="600">
+<tr>
+  <td style="width:50px">50</td>
+  <td>auto</td>
+  <td>auto</td>
+  <td style="width:50%">50%</td>
+</tr>
+<tr>
+  <td style="width:100px"></td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
+</table>
+
+<p>Firefox 1.5 handles this one (with 100) differently in quirks and
+standards mode (wraps the 100 in standards mode; wider in quirks
+mode).</p>
+
+<table border width="600">
+<tr>
+  <td style="width:50px">50</td>
+  <td>auto</td>
+  <td>auto</td>
+  <td style="width:50%">50%</td>
+</tr>
+<tr>
+  <td><div style="background:yellow;width:100px">100</div></td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
+</table>
+
+<table border width="600">
+<tr>
+  <td style="width:50px">50</td>
+  <td>auto</td>
+  <td>auto</td>
+  <td style="width:50%">50%</td>
+</tr>
+<tr>
+  <td><div style="background:yellow;width:49px">49</div></td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
+</table>
+
+<table border width="600">
+<tr>
+  <td><div style="background:yellow;width:49px">49</div></td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td style="width:50px">50</td>
+  <td>auto</td>
+  <td>auto</td>
+  <td style="width:50%">50%</td>
+</tr>
+</table>
+
+<table border width="600">
+<tr>
+  <td style="width:50px">50</td>
+  <td>auto</td>
+  <td>auto</td>
+  <td style="width:50%">50%</td>
+</tr>
+<tr>
+  <td><div style="background:yellow;width:50px">50</div></td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
+</table>
+
+<table border width="600">
+<tr>
+  <td><div style="background:yellow;width:50px">50</div></td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td style="width:50px">50</td>
+  <td>auto</td>
+  <td>auto</td>
+  <td style="width:50%">50%</td>
+</tr>
+</table>
+
+<p>Note the row order dependence in WinIE6 for the 51 and 160 pairs.</p>
+
+<p>Firefox 1.5 has the same quirk for the 51, 60, and 160 tests (6 tests
+total) that it did for the 100 test above.</p>
+
+<table border width="600">
+<tr>
+  <td style="width:50px">50</td>
+  <td>auto</td>
+  <td>auto</td>
+  <td style="width:50%">50%</td>
+</tr>
+<tr>
+  <td><div style="background:yellow;width:51px">51</div></td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
+</table>
+
+<table border width="600">
+<tr>
+  <td><div style="background:yellow;width:51px">51</div></td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td style="width:50px">50</td>
+  <td>auto</td>
+  <td>auto</td>
+  <td style="width:50%">50%</td>
+</tr>
+</table>
+
+<table border width="600">
+<tr>
+  <td><div style="background:yellow;width:60px">60</div></td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td style="width:50px">50</td>
+  <td>auto</td>
+  <td>auto</td>
+  <td style="width:50%">50%</td>
+</tr>
+</table>
+
+
+<table border width="600">
+<tr>
+  <td style="width:50px">50</td>
+  <td>auto</td>
+  <td>auto</td>
+  <td style="width:50%">50%</td>
+</tr>
+<tr>
+  <td><div style="background:yellow;width:160px">160</div></td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
+</table>
+
+
+<table border width="600">
+<tr>
+  <td><div style="background:yellow;width:160px">160</div></td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td style="width:50px">50</td>
+  <td>auto</td>
+  <td>auto</td>
+  <td style="width:50%">50%</td>
+</tr>
+</table>
+
+<table border width="600">
+<tr>
+  <td style="width:50px"><span style="padding-left:50px;background:#99f">50</span></td>
+  <td>auto</td>
+  <td>auto</td>
+  <td style="width:50%">50%</td>
+</tr>
+<tr>
+  <td><div style="background:yellow;width:51px">51</div></td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
+</table>
+
+<table border width="600">
+<tr>
+  <td><div style="background:yellow;width:51px">51</div></td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td style="width:50px"><span style="padding-left:50px;background:#99f">50</span></td>
+  <td>auto</td>
+  <td>auto</td>
+  <td style="width:50%">50%</td>
+</tr>
+</table>
+
+<hr>
+
+<table border width="500">
+  <tr>
+    <td width="60%">60%</td>
+    <td width="50%">50%</td>
+	<td>xx xx xx xx xx</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="60%">60%</td>
+    <td width="50%">50%</td>
+	<td>xx xx xx xx xx</td>
+  </tr>
+</table>
+
+<table border width="500">
+  <tr>
+    <td width="60%">60%</td>
+    <td width="50%">50%</td>
+    <td width="50%">50%</td>
+	<td>xx xx xx xx xx</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="60%">60%</td>
+    <td width="50%">50%</td>
+    <td width="50%">50%</td>
+	<td>xx xx xx xx xx</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+	<td>xx xx xx xx xx</td>
+    <td width="60%">60%</td>
+	<td>x</td>
+	<td>x</td>
+  </tr>
+  <tr>
+	<td>xx xx xx xx xx</td>
+	<td>x</td>
+    <td width="60%">60%</td>
+	<td>x</td>
+  </tr>
+  <tr>
+	<td>xx xx xx xx xx</td>
+	<td>x</td>
+	<td>x</td>
+    <td width="60%">60%</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+	<td>xx xx xx xx xx</td>
+	<td>x</td>
+	<td>x</td>
+    <td width="60%">60%</td>
+  </tr>
+  <tr>
+	<td>xx xx xx xx xx</td>
+	<td>x</td>
+    <td width="60%">60%</td>
+	<td>x</td>
+  </tr>
+  <tr>
+	<td>xx xx xx xx xx</td>
+    <td width="60%">60%</td>
+	<td>x</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<table border dir="rtl">
+  <tr>
+	<td>xx xx xx xx xx</td>
+    <td width="60%">60%</td>
+	<td>x</td>
+	<td>x</td>
+  </tr>
+  <tr>
+	<td>xx xx xx xx xx</td>
+	<td>x</td>
+    <td width="60%">60%</td>
+	<td>x</td>
+  </tr>
+  <tr>
+	<td>xx xx xx xx xx</td>
+	<td>x</td>
+	<td>x</td>
+    <td width="60%">60%</td>
+  </tr>
+</table>
+
+<table border dir="rtl">
+  <tr>
+	<td>xx xx xx xx xx</td>
+	<td>x</td>
+	<td>x</td>
+    <td width="60%">60%</td>
+  </tr>
+  <tr>
+	<td>xx xx xx xx xx</td>
+	<td>x</td>
+    <td width="60%">60%</td>
+	<td>x</td>
+  </tr>
+  <tr>
+	<td>xx xx xx xx xx</td>
+    <td width="60%">60%</td>
+	<td>x</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<hr>
+
+<table border>
+  <tr>
+    <td width="25%">25%[1]</td>
+    <td width="25%" colspan="2">25%[2]</td>
+  </tr>
+  <tr>
+    <td width="25%" colspan="2">25%[2]</td>
+    <td width="25%">25%[1]</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="50%">50%[1]</td>
+    <td width="50%" colspan="2">50%[2]</td>
+  </tr>
+  <tr>
+    <td width="50%" colspan="2">50%[2]</td>
+    <td width="50%">50%[1]</td>
+  </tr>
+</table>
+
+<table border width="500">
+  <tr>
+    <td width="50%">50%[1]</td>
+    <td width="50%" colspan="2">50%[2]</td>
+  </tr>
+  <tr>
+    <td width="50%" colspan="2">50%[2]</td>
+    <td width="50%">50%[1]</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>ZZZZZZZZZZZZZZZZZZZZZZZZZZ</td>
+    <td width="50%" colspan="2">50%[2]</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="25%">25%[1]</td>
+    <td width="25%" colspan="2">25%[2]</td>
+	<td>Z</td>
+  </tr>
+  <tr>
+	<td>Z</td>
+    <td width="5%">5%[1]</td>
+	<td>Z</td>
+	<td>Z</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="25%">25%[1]</td>
+    <td width="25%" colspan="2">25%[2]</td>
+	<td>Z</td>
+  </tr>
+  <tr>
+	<td>Z</td>
+	<td>Z</td>
+    <td width="5%">5%[1]</td>
+	<td>Z</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="25%">25%[1]</td>
+    <td width="25%" colspan="2">25%[2]</td>
+	<td>Z</td>
+  </tr>
+  <tr>
+	<td>Z</td>
+    <td width="5%">5%[1]</td>
+    <td width="5%">5%[1]</td>
+	<td>Z</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="15%">15%[1]</td>
+    <td width="25%" colspan="2">25%[2]</td>
+	<td>Z</td>
+  </tr>
+  <tr>
+    <td width="45%" colspan="2">45%[2]</td>
+    <td width="15%">15%[1]</td>
+	<td>Z</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="45%" colspan="2">45%[2]</td>
+    <td width="15%">15%[1]</td>
+	<td>Z</td>
+  </tr>
+  <tr>
+    <td width="15%">15%[1]</td>
+    <td width="25%" colspan="2">25%[2]</td>
+	<td>Z</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="15%">15%[1]</td>
+    <td width="45%" colspan="2">45%[2]</td>
+	<td>Z</td>
+  </tr>
+  <tr>
+    <td width="25%" colspan="2">25%[2]</td>
+    <td width="15%">15%[1]</td>
+	<td>Z</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="25%" colspan="2">25%[2]</td>
+    <td width="15%">15%[1]</td>
+	<td>Z</td>
+  </tr>
+  <tr>
+    <td width="15%">15%[1]</td>
+    <td width="45%" colspan="2">45%[2]</td>
+	<td>Z</td>
+  </tr>
+</table>
+
+<hr>
+
+<p>Note that these 16 cases, in WinIE6, have a row order dependence but
+not a cell order dependence:</p>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="2" width="15%">15% [2]</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="15%">15% [3]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="2" width="15%">15% [2]</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="16%">16% [3]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="2" width="15%">15% [2]</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="17%">17% [3]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="2" width="15%">15% [2]</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="18%">18% [3]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td colspan="2" width="15%">15% [2]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="15%">15% [3]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td colspan="2" width="15%">15% [2]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="16%">16% [3]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td colspan="2" width="15%">15% [2]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="17%">17% [3]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td colspan="2" width="15%">15% [2]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="18%">18% [3]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="15%">15% [3]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="2" width="15%">15% [2]</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="16%">16% [3]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="2" width="15%">15% [2]</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="17%">17% [3]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="2" width="15%">15% [2]</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="18%">18% [3]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="2" width="15%">15% [2]</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="15%">15% [3]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td colspan="2" width="15%">15% [2]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="16%">16% [3]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td colspan="2" width="15%">15% [2]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="17%">17% [3]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td colspan="2" width="15%">15% [2]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="18%">18% [3]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td colspan="2" width="15%">15% [2]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<hr>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="15%">15% [3]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td colspan="2" width="15%">15% [2]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="15%">15% [3]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td colspan="2" width="16%">16% [2]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="15%">15% [3]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td colspan="2" width="17%">17% [2]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="15%">15% [3]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td colspan="2" width="50%">50% [2]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="15%">15% [3]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td colspan="2" width="11%">11% [2]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="15%">15% [3]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td colspan="2" width="10%">10% [2]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="15%">15% [3]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td colspan="2" width="9%">9% [2]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td colspan="3" width="15%">15% [3]</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td colspan="2" width="3%">3% [2]</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<hr>
+
+<table border>
+  <tr>
+    <td colspan="2" width="20%">20%[2]</td>
+    <td colspan="1">[1]</td>
+  </tr>
+  <tr>
+    <td colspan="1">[1]</td>
+    <td colspan="2" width="20%">20%[2]</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td colspan="2" width="20%">20%[2]</td>
+    <td colspan="2">[2]</td>
+  </tr>
+  <tr>
+    <td colspan="1">[1]</td>
+    <td colspan="2" width="20%">20%[2]</td>
+    <td colspan="1">[1]</td>
+  </tr>
+  <tr>
+    <td colspan="2">[2]</td>
+    <td colspan="2" width="20%">20%[2]</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td colspan="2" width="20%">20%[2]</td>
+    <td colspan="3">[3]</td>
+  </tr>
+  <tr>
+    <td colspan="1">[1]</td>
+    <td colspan="2" width="20%">20%[2]</td>
+    <td colspan="2">[2]</td>
+  </tr>
+  <tr>
+    <td colspan="2">[2]</td>
+    <td colspan="2" width="20%">20%[2]</td>
+    <td colspan="1">[1]</td>
+  </tr>
+  <tr>
+    <td colspan="3">[3]</td>
+    <td colspan="2" width="20%">20%[2]</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td colspan="2" width="20%">20%[2]</td>
+    <td colspan="4">[4]</td>
+  </tr>
+  <tr>
+    <td colspan="1">[1]</td>
+    <td colspan="2" width="20%">20%[2]</td>
+    <td colspan="3">[3]</td>
+  </tr>
+  <tr>
+    <td colspan="2">[2]</td>
+    <td colspan="2" width="20%">20%[2]</td>
+    <td colspan="2">[2]</td>
+  </tr>
+  <tr>
+    <td colspan="3">[3]</td>
+    <td colspan="2" width="20%">20%[2]</td>
+    <td colspan="1">[1]</td>
+  </tr>
+  <tr>
+    <td colspan="4">[4]</td>
+    <td colspan="2" width="20%">20%[2]</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td colspan="2" width="20%">20%[2]</td>
+    <td colspan="5">[5]</td>
+  </tr>
+  <tr>
+    <td colspan="1">[1]</td>
+    <td colspan="2" width="20%">20%[2]</td>
+    <td colspan="4">[4]</td>
+  </tr>
+  <tr>
+    <td colspan="2">[2]</td>
+    <td colspan="2" width="20%">20%[2]</td>
+    <td colspan="3">[3]</td>
+  </tr>
+  <tr>
+    <td colspan="3">[3]</td>
+    <td colspan="2" width="20%">20%[2]</td>
+    <td colspan="2">[2]</td>
+  </tr>
+  <tr>
+    <td colspan="4">[4]</td>
+    <td colspan="2" width="20%">20%[2]</td>
+    <td colspan="1">[1]</td>
+  </tr>
+  <tr>
+    <td colspan="5">[5]</td>
+    <td colspan="2" width="20%">20%[2]</td>
+  </tr>
+</table>
+
+<hr>
+
+<p>WinIE6 leaves the full horizontal and vertical gaps in quirks mode,
+but only leaves the gap for the third column in standards mode (in
+collapses the third row).  (Firefox 1.5 collapses both columns and rows
+in both modes, although sometimes fails to do so when incrementally
+loading.  No other layout engines appear to collapse anything.  See <a
+href="http://dbaron.org/css/test/2006/empty-cells-quirks">separate
+quirks</a> and <a
+href="http://dbaron.org/css/test/2006/empty-cells-standards">standards</a>
+mode tests.</p>
+
+<table border class="bigcellborder">
+  <tr><td>x</td><td>x</td><td></td><td>x</td><td>x</td></tr>
+  <tr><td>x</td><td>x</td><td></td><td>x</td><td>x</td></tr>
+  <tr><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>x</td><td>x</td><td></td><td>x</td><td>x</td></tr>
+  <tr><td>x</td><td>x</td><td></td><td>x</td><td>x</td></tr>
+</table>
+
+<table border cellpadding=0 class="bigcellborder">
+  <tr><td>x</td><td>x</td><td></td><td>x</td><td>x</td></tr>
+  <tr><td>x</td><td>x</td><td></td><td>x</td><td>x</td></tr>
+  <tr><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>x</td><td>x</td><td></td><td>x</td><td>x</td></tr>
+  <tr><td>x</td><td>x</td><td></td><td>x</td><td>x</td></tr>
+</table>
+
+<table border cellspacing=0 class="bigcellborder">
+  <tr><td>x</td><td>x</td><td></td><td>x</td><td>x</td></tr>
+  <tr><td>x</td><td>x</td><td></td><td>x</td><td>x</td></tr>
+  <tr><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>x</td><td>x</td><td></td><td>x</td><td>x</td></tr>
+  <tr><td>x</td><td>x</td><td></td><td>x</td><td>x</td></tr>
+</table>
+
+<table border cellpadding=0 cellspacing=0 class="bigcellborder">
+  <tr><td>x</td><td>x</td><td></td><td>x</td><td>x</td></tr>
+  <tr><td>x</td><td>x</td><td></td><td>x</td><td>x</td></tr>
+  <tr><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>x</td><td>x</td><td></td><td>x</td><td>x</td></tr>
+  <tr><td>x</td><td>x</td><td></td><td>x</td><td>x</td></tr>
+</table>
+
+<table cellpadding=0 cellspacing=0>
+  <tr><td>X</td><td>X</td><td></td><td>X</td><td>X</td></tr>
+  <tr><td>X</td><td>X</td><td></td><td>X</td><td>X</td></tr>
+  <tr><td></td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>X</td><td>X</td><td></td><td>X</td><td>X</td></tr>
+  <tr><td>X</td><td>X</td><td></td><td>X</td><td>X</td></tr>
+</table>
+
+<h1>More colspan cases</h1>
+
+<table border>
+  <tr><td>Z</td><td>ZZZZZZZ</td></tr>
+  <tr><td colspan="2">cs</td></tr>
+</table>
+
+<table border>
+  <tr><td colspan="2">cs</td></tr>
+  <tr><td>Z</td><td>ZZZZZZZ</td></tr>
+</table>
+
+<table border>
+  <tr><td>Z</td><td>ZZZZZZZ</td></tr>
+  <tr><td colspan="2" width="200">cs</td></tr>
+</table>
+
+<table border>
+  <tr><td colspan="2" width="200">cs</td></tr>
+  <tr><td>Z</td><td>ZZZZZZZ</td></tr>
+</table>
+
+<table border>
+  <tr><td width="25%">25%</td><td width="75%">75%</td></tr>
+  <tr><td colspan="2">cs</td></tr>
+</table>
+
+<table border>
+  <tr><td width="25%">25%</td><td width="75%">75%</td></tr>
+  <tr><td colspan="2" width="200">cs 200</td></tr>
+</table>
+
+<table border>
+  <tr><td width="20">20</td><td width="75%">75%</td></tr>
+  <tr><td colspan="2" width="200">cs 200</td></tr>
+</table>
+
+<table border>
+  <tr><td width="50">50</td><td width="75%">75%</td></tr>
+  <tr><td colspan="2" width="200">cs 200</td></tr>
+</table>
+
+<table border>
+  <tr><td width="100">100</td><td width="75%">75%</td></tr>
+  <tr><td colspan="2" width="200">cs 200</td></tr>
+</table>
+
+<table border>
+  <tr><td>Z</td><td>ZZZZZ</td><td>ZZZZZZZZZ</td></tr>
+  <tr><td>x</td><td colspan="2" width="400">cs 400</td></tr>
+  <tr><td colspan="2" width="400">cs 400</td><td>x</td></tr>
+</table>
+
+<table border>
+  <tr><td>Z</td><td>ZZZZZ</td><td>ZZZZZZZZZ</td></tr>
+  <tr><td colspan="2" width="400">cs 400</td><td>x</td></tr>
+  <tr><td>x</td><td colspan="2" width="400">cs 400</td></tr>
+</table>
+
+<table border>
+  <tr><td>Z</td><td>ZZZZZ</td><td>ZZZZZZZZZ</td></tr>
+  <tr><td>x</td><td colspan="2" width="75%">cs 75%</td></tr>
+  <tr><td colspan="2" width="75%">cs 75%</td><td>x</td></tr>
+</table>
+
+<table border>
+  <tr><td>Z</td><td>ZZZZZ</td><td>ZZZZZZZZZ</td></tr>
+  <tr><td colspan="2" width="75%">cs 75%</td><td>x</td></tr>
+  <tr><td>x</td><td colspan="2" width="75%">cs 75%</td></tr>
+</table>
+
+<hr>
+
+<table border>
+  <tr>
+    <td width="57%">57%</td>
+	<td>x</td>
+	<td>x</td>
+  </tr>
+  <tr>
+    <td width="60%" colspan="2">60%</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="92%">92%</td>
+	<td>x</td>
+	<td>x</td>
+  </tr>
+  <tr>
+    <td width="98%" colspan="2">98%</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="10%">10%</td>
+    <td width="10%">10%</td>
+	<td>x</td>
+  </tr>
+  <tr>
+    <td width="60%" colspan="2">60%</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="60%" colspan="2">60%</td>
+	<td>x</td>
+  </tr>
+  <tr>
+    <td width="10%">10%</td>
+    <td width="10%">10%</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="80%">80%</td>
+    <td width="80%" colspan="2">80%</td>
+	<td>x</td>
+  </tr>
+  <tr>
+    <td width="10%">10%</td>
+    <td>x</td>
+    <td width="10%">10%</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<table width="1" border>
+  <tr>
+    <td>x</td>
+    <td width="2%" colspan="2">2% (2)</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table width="1" border>
+  <tr>
+    <td>x</td>
+    <td width="98%" colspan="2">98% (2)</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table width="1" border>
+  <tr>
+    <td>x</td>
+    <td width="200" colspan="2">200 (2)</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table width="1" border><tr><td>
+<table border>
+  <tr>
+    <td>x</td>
+    <td width="200" colspan="2">200 (2)</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+</table>
+</td></tr></table>
+
+<table width="1" border><tr><td>
+<table border>
+  <tr>
+    <td>x</td>
+    <td width="200">200</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+</table>
+</td></tr></table>
+
+<table border>
+  <tr>
+    <td width="20">20</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td width="200" colspan="2">200 (2)</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="200" colspan="2">200 (2)</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td width="20">20</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="20">20</td>
+    <td width="20">20</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td width="200" colspan="2">200 (2)</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="200" colspan="2">200 (2)</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td width="20">20</td>
+    <td width="20">20</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table width="1" border><tr><td>
+<table border>
+  <tr>
+    <td>x</td>
+    <td colspan="2">2ZZZZZZZZZZZZ2</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+</table>
+</td></tr></table>
+
+<table width="1" border><tr><td>
+<table border>
+  <tr>
+    <td>x</td>
+    <td colspan="2">2ZZZZZZZZZZZZ2</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td>xxx</td>
+    <td>x</td>
+  </tr>
+</table>
+</td></tr></table>
+
+<hr>
+
+<table border width="600">
+  <tr>
+    <td width="200">200</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border width="600">
+  <tr>
+    <td width="200" colspan="2">200 (2)</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border width="600">
+  <tr>
+    <td width="200" colspan="2">200 (2)</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td width="100">100</td>
+    <td>x</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<hr>
+
+<table border width="600">
+  <tr>
+    <td width="75%" colspan="2">75% (2)</td>
+	<td>x</td>
+  </tr>
+  <tr>
+	<td>x</td>
+	<td>x</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<table border width="600">
+  <tr>
+    <td width="75%" colspan="2">75% (2)</td>
+	<td>x</td>
+  </tr>
+  <tr>
+	<td>xxxxx</td>
+	<td>x</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<table border width="600">
+  <tr>
+    <td width="75%" colspan="2">75% (2)</td>
+	<td>x</td>
+  </tr>
+  <tr>
+	<td width="20">20</td>
+	<td width="200">200</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<table border width="600">
+  <tr>
+    <td width="75%" colspan="2">75% (2)</td>
+	<td width="10">10</td>
+  </tr>
+  <tr>
+	<td width="20">20</td>
+	<td width="200">200</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<table border width="600">
+  <tr>
+    <td width="75%" colspan="2">75% (2)</td>
+	<td>x</td>
+  </tr>
+  <tr>
+	<td width="20">20</td>
+	<td width="200">200</td>
+	<td>x</td>
+  </tr>
+  <tr>
+	<td width="10%">10%</td>
+	<td width="10%">10%</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="75%" colspan="2">75% (2)</td>
+	<td>x</td>
+  </tr>
+  <tr>
+	<td>x</td>
+	<td>x</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="75%" colspan="2">75% (2)</td>
+	<td>x</td>
+  </tr>
+  <tr>
+	<td>xxxxx</td>
+	<td>x</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="75%" colspan="2">75% (2)</td>
+	<td>x</td>
+  </tr>
+  <tr>
+	<td width="20">20</td>
+	<td width="200">200</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="75%" colspan="2">75% (2)</td>
+	<td width="10">10</td>
+  </tr>
+  <tr>
+	<td width="20">20</td>
+	<td width="200">200</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td width="75%" colspan="2">75% (2)</td>
+	<td>x</td>
+  </tr>
+  <tr>
+	<td width="20">20</td>
+	<td width="200">200</td>
+	<td>x</td>
+  </tr>
+  <tr>
+	<td width="10%">10%</td>
+	<td width="10%">10%</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<hr>
+
+<table border>
+  <tr>
+    <td colspan="3">3ZZZZZZZZZZZZZZZZZZZZZZ3</td>
+  </tr>
+  <tr>
+	<td>x</td>
+	<td>xxx</td>
+	<td></td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td colspan="3">3ZZZZZZZZZZZZZZZZZZZZZZ3</td>
+  </tr>
+  <tr>
+	<td width="30">x</td>
+	<td width="30">xxx</td>
+	<td width="30"></td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td colspan="3">3ZZZZZZZZZZZZZZZZZZZZZZ3</td>
+  </tr>
+  <tr>
+	<td width="25%">x</td>
+	<td width="25%">xxx</td>
+	<td width="25%"></td>
+  </tr>
+</table>
+
+<hr>
+
+<table border>
+  <tr>
+    <td colspan="3" width="60%">60% (3)</td>
+	<td>x</td>
+  </tr>
+  <tr>
+    <td width="50%">50%</td>
+	<td>xx</td>
+	<td>xx</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td colspan="3" width="60%">60% (3)</td>
+	<td>x</td>
+  </tr>
+  <tr>
+    <td width="50%">50%</td>
+	<td>x</td>
+	<td>xxx</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<table border>
+  <tr>
+    <td colspan="3" width="60%">60% (3)</td>
+	<td>x</td>
+  </tr>
+  <tr>
+    <td width="50%">50%</td>
+	<td>x</td>
+	<td>x x x</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<hr>
+
+<table border>
+  <tr>
+    <td colspan="2">2ZZZZZZZZZZZZ2</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x x x</td>
+	<td>x</td>
+	<td>x</td>
+  </tr>
+</table>
+
+<table width="1" border><tr><td>
+<table border>
+  <tr>
+    <td colspan="2">2ZZZZZZZZZZZZ2</td>
+    <td>x</td>
+  </tr>
+  <tr>
+    <td>x x x</td>
+	<td>x</td>
+	<td>x</td>
+  </tr>
+</table>
+</td></tr></table>
+
+<h1>More balancing cases</h1>
+
+<table border width="600">
+  <tr>
+    <td width="25%">25%</td>
+    <td width="100">100</td>
+    <td>x</td>
+  </tr>
+</table>
+
+<table border width="600">
+  <tr>
+    <td width="25%">25%</td>
+    <td width="100">100</td>
+    <td></td>
+  </tr>
+</table>
+
+<table border="0" width="600" cellpadding="0" cellspacing="0">
+  <tr>
+    <td width="25%" style="background: lime">25%</td>
+    <td width="100" style="background:yellow">100</td>
+    <td style="background:aqua"></td>
+  </tr>
+</table>
+
+<table border="0" width="600" cellpadding="0" cellspacing="0">
+  <tr>
+    <td width="25%" style="background: lime">25%</td>
+    <td style="background:aqua"></td>
+  </tr>
+</table>
+
+<table border="0" width="600" cellpadding="0" cellspacing="0">
+  <tr>
+    <td width="25%" style="background: lime">25%</td>
+    <td width="100" style="background:yellow">100</td>
+  </tr>
+</table>
+
+<table border="0" width="600" cellpadding="0" cellspacing="0">
+  <tr>
+    <td width="25%" style="background: lime">25%</td>
+    <td width="100" style="background:yellow">100</td>
+    <td style="background:aqua"></td>
+  </tr>
+  <tr><td colspan="3">(3)</td></tr>
+</table>
+
+<table border="0" width="600" cellpadding="0" cellspacing="0">
+  <tr>
+    <td width="25%" style="background: lime">25%</td>
+    <td style="background:aqua"></td>
+  </tr>
+  <tr><td colspan="2">(2)</td></tr>
+</table>
+
+<table border="0" width="600" cellpadding="0" cellspacing="0">
+  <tr>
+    <td width="25%" style="background: lime">25%</td>
+    <td width="100" style="background:yellow">100</td>
+  </tr>
+  <tr><td colspan="2">(2)</td></tr>
+</table>
+
+<table border="0" width="600" cellpadding="0" cellspacing="0">
+  <tr>
+    <td width="25%" style="background: lime">25%</td>
+    <td width="100" style="background:yellow">100</td>
+    <td style="background:aqua"></td>
+  </tr>
+  <tr><td colspan="3"></td></tr>
+</table>
+
+<table border="0" width="600" cellpadding="0" cellspacing="0">
+  <tr>
+    <td width="25%" style="background: lime">25%</td>
+    <td style="background:aqua"></td>
+  </tr>
+  <tr><td colspan="2"></td></tr>
+</table>
+
+<table border="0" width="600" cellpadding="0" cellspacing="0">
+  <tr>
+    <td width="25%" style="background: lime">25%</td>
+    <td width="100" style="background:yellow">100</td>
+  </tr>
+  <tr><td colspan="2"></td></tr>
+</table>
+
+<table border="0" width="600" cellpadding="0" cellspacing="0">
+  <tr>
+    <td width="25%" style="background: lime">25%</td>
+    <td width="100" style="background:yellow">100</td>
+    <td style="background:aqua"></td>
+  </tr>
+  <tr><td colspan="3" width="200">200 (3)</td></tr>
+</table>
+
+<table border="0" width="600" cellpadding="0" cellspacing="0">
+  <tr>
+    <td width="25%" style="background: lime">25%</td>
+    <td style="background:aqua"></td>
+  </tr>
+  <tr><td colspan="2" width="200">200 (2)</td></tr>
+</table>
+
+<table border="0" width="600" cellpadding="0" cellspacing="0">
+  <tr>
+    <td width="25%" style="background: lime">25%</td>
+    <td width="100" style="background:yellow">100</td>
+  </tr>
+  <tr><td colspan="2" width="200">200 (2)</td></tr>
+</table>
+
+<h1>widths on col</h1>
+
+<table border>
+  <tr><td>x</td><td>x</td></tr>
+</table>
+
+<table border>
+  <col>
+  <col>
+  <tr><td>x</td><td>x</td></tr>
+</table>
+
+<table border>
+  <col width="200">
+  <col>
+  <tr><td>x</td><td>x</td></tr>
+</table>
+
+<table border width="600">
+  <col width="200">
+  <col>
+  <tr><td>x</td><td>x</td></tr>
+</table>
+
+<table border>
+  <col width="25%">
+  <col>
+  <tr><td>x</td><td>x</td></tr>
+</table>
+
+<table border width="600">
+  <col width="25%">
+  <col>
+  <tr><td>x</td><td>x</td></tr>
+</table>
+
+<table border>
+  <col width="2%">
+  <col>
+  <tr><td>x</td><td>x</td></tr>
+</table>
+
+<table border width="600">
+  <col width="2%">
+  <col>
+  <tr><td>x</td><td>x</td></tr>
+</table>
+
+<table border>
+  <col width="98%">
+  <col>
+  <tr><td>x</td><td>x</td></tr>
+</table>
+
+<table border width="600">
+  <col width="98%">
+  <col>
+  <tr><td>x</td><td>x</td></tr>
+</table>
+
+<hr>
+
+<table border>
+  <col width="200">
+  <col>
+  <tr><td>x</td><td>x</td></tr>
+</table>
+
+<table border>
+  <col width="200" style="border: 20px solid; margin: 20px; padding: 20px">
+  <col>
+  <tr><td>x</td><td>x</td></tr>
+</table>
+
+<hr>
+
+<table border>
+  <col width="200" span="2">
+  <col>
+  <tr><td>x</td><td>x</td><td>x</td></tr>
+</table>
+
+<table border width="800">
+  <col width="200" span="2">
+  <col>
+  <tr><td>x</td><td>x</td><td>x</td></tr>
+</table>
+
+<table border>
+  <colgroup width="200" span="2">
+    <col span="2">
+  </colgroup>
+  <col>
+  <tr><td>x</td><td>x</td><td>x</td></tr>
+</table>
+
+<table border width="800">
+  <colgroup width="200" span="2">
+    <col span="2">
+  </colgroup>
+  <col>
+  <tr><td>x</td><td>x</td><td>x</td></tr>
+</table>
+
+<table border>
+  <colgroup width="200" span="2">
+    <col>
+    <col>
+  </colgroup>
+  <col>
+  <tr><td>x</td><td>x</td><td>x</td></tr>
+</table>
+
+<table border width="800">
+  <colgroup width="200" span="2">
+    <col>
+    <col>
+  </colgroup>
+  <col>
+  <tr><td>x</td><td>x</td><td>x</td></tr>
+</table>
+
+<table border>
+  <colgroup style="width:200px" span="2">
+    <col span="2">
+  </colgroup>
+  <col>
+  <tr><td>x</td><td>x</td><td>x</td></tr>
+</table>
+
+<table border width="800">
+  <colgroup style="width:200px" span="2">
+    <col span="2">
+  </colgroup>
+  <col>
+  <tr><td>x</td><td>x</td><td>x</td></tr>
+</table>
+
+<table border>
+  <colgroup style="width:200px" span="2">
+    <col>
+    <col>
+  </colgroup>
+  <col>
+  <tr><td>x</td><td>x</td><td>x</td></tr>
+</table>
+
+<table border width="800">
+  <colgroup style="width:200px" span="2">
+    <col>
+    <col>
+  </colgroup>
+  <col>
+  <tr><td>x</td><td>x</td><td>x</td></tr>
+</table>
+
+<hr>

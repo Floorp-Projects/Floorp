@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: channel generator works
+Expect:      feed.generator.agent == 'a generator used to make feeds'
+
+-->
+<rss version="2.0" >
+<channel>
+<generator>a generator used to make feeds</generator>
+</channel>
+</rss>

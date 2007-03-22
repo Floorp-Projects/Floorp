@@ -1,0 +1,152 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Session Restore component.
+ *
+ * The Initial Developer of the Original Code is
+ * Simon Bünzli <zeniko@gmail.com>
+ * Portions created by the Initial Developer are Copyright (C) 2006
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Dietrich Ayala <dietrich@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIDOMWindow;
+interface nsIDOMNode;
+interface nsIDictionary;
+
+/**
+ * nsISessionStore keeps track of the current browsing state - i.e.
+ * tab history, cookies, scroll state, form data, POSTDATA and window features
+ * - and allows to restore everything into one window.
+ */
+
+[scriptable, uuid(11852a90-20de-11db-a98b-0800200c9a66)]
+interface nsISessionStore : nsISupports
+{
+  /**
+   * Initialize the service
+   */
+  void init(in nsIDOMWindow aWindow);
+
+  /**
+   * Get the current browsing state.
+   * @return a JSON string representing the session state.
+   */
+  AString getBrowserState();
+
+  /**
+   * Set the browsing state.
+   * This will immediately restore the state of the whole application to the state
+   * passed in, *replacing* the current session.
+   *
+   * @param aState is a JSON string representing the session state.
+   */
+  void setBrowserState(in AString aState);
+
+  /**
+   * @param aWindow is the window whose state is to be returned.
+   * 
+   * @return a JSON string representing a session state with only one window.
+   */
+  AString getWindowState(in nsIDOMWindow aWindow);
+
+  /**
+   * @param aWindow    is the window whose state is to be set.
+   * @param aState     is a JSON string representing a session state.
+   * @param aOverwrite boolean overwrite existing tabs
+   */
+  void setWindowState(in nsIDOMWindow aWindow, in AString aState, in boolean aOverwrite);
+
+  /**
+   * Get the number of restore-able tabs for a window
+   */
+  unsigned long getClosedTabCount(in nsIDOMWindow aWindow);
+
+  /**
+   * Get closed tab data
+   * @return a JSON string representing the list of closed tabs.
+   */
+  AString getClosedTabData(in nsIDOMWindow aWindow);
+
+  /**
+   * @param aWindow
+   *          The window to reopen a closed tab in.
+   * @param aIndex
+   *          Indicates the window to be restored (FIFO ordered).
+   */
+  void undoCloseTab(in nsIDOMWindow aWindow, in unsigned long aIndex);
+
+  /**
+   * @param aWindow is the window to get the value for.
+   * @param aKey    is the value's name.
+   * 
+   * @return A string value or "" if none is set.
+   */
+  AString getWindowValue(in nsIDOMWindow aWindow, in AString aKey);
+
+  /**
+   * @param aWindow      is the window to set the value for.
+   * @param aKey         is the value's name.
+   * @param aStringValue is the value itself (use toSource/eval before setting JS objects).
+   */
+  void setWindowValue(in nsIDOMWindow aWindow, in AString aKey, in AString aStringValue);
+  
+  /**
+   * @param aWindow is the window to get the value for.
+   * @param aKey    is the value's name.
+   */
+  void deleteWindowValue(in nsIDOMWindow aWindow, in AString aKey);
+
+  /**
+   * @param aTab is the tab to get the value for.
+   * @param aKey is the value's name.
+   * 
+   * @return A string value or "" if none is set.
+   */
+  AString getTabValue(in nsIDOMNode aTab, in AString aKey);
+
+  /**
+   * @param aTab         is the tab to set the value for.
+   * @param aKey         is the value's name.
+   * @param aStringValue is the value itself (use toSource/eval before setting JS objects).
+   */
+  void setTabValue(in nsIDOMNode aTab, in AString aKey, in AString aStringValue);
+
+  /**
+   * @param aTab is the tab to get the value for.
+   * @param aKey is the value's name.
+   */
+  void deleteTabValue(in nsIDOMNode aTab, in AString aKey);
+
+  /**
+   * @param aName is the name of the attribute to save/restore for all xul:tabs.
+   */
+  void persistTabAttribute(in AString aName);
+};

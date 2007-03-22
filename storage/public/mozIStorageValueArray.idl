@@ -1,0 +1,156 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Oracle Corporation code.
+ *
+ * The Initial Developer of the Original Code is
+ *  Oracle Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+[ptr] native octetPtr(PRUint8);
+
+/**
+ * mozIStorageValueArray wraps an array of SQL values,
+ * such as a single database row.
+ */
+[scriptable, uuid(07b5b93e-113c-4150-863c-d247b003a55d)]
+interface mozIStorageValueArray : nsISupports {
+  /**
+   * These type values are returned by getTypeOfIndex
+   * to indicate what type of value is present at
+   * a given column.
+   */
+  const long VALUE_TYPE_NULL = 0;
+  const long VALUE_TYPE_INTEGER = 1;
+  const long VALUE_TYPE_FLOAT = 2;
+  const long VALUE_TYPE_TEXT = 3;
+  const long VALUE_TYPE_BLOB = 4;
+
+  /**
+   * numEntries
+   *
+   * number of entries in the array (each corresponding to a column
+   * in the database row)
+   */
+  readonly attribute unsigned long numEntries;
+
+  /**
+   * Returns the type of the value at the given column index;
+   * one of VALUE_TYPE_NULL, VALUE_TYPE_INTEGER, VALUE_TYPE_FLOAT,
+   * VALUE_TYPE_TEXT, VALUE_TYPE_BLOB.
+   */
+  long getTypeOfIndex(in unsigned long aIndex);
+
+  /**
+   * Obtain a value for the given entry (column) index.
+   * Due to SQLite's type conversion rules, any of these are valid
+   * for any column regardless of the column's data type.  However,
+   * if the specific type matters, getTypeOfIndex should be used
+   * first to identify the column type, and then the appropriate
+   * get method should be called.
+   *
+   * If you ask for a string value for a NULL column, you will get an empty
+   * string with IsVoid set to distinguish it from an explicitly set empty
+   * string.
+   */
+  long getInt32(in unsigned long aIndex);
+  long long getInt64(in unsigned long aIndex);
+  double getDouble(in unsigned long aIndex);
+  AUTF8String getUTF8String(in unsigned long aIndex);
+  AString getString(in unsigned long aIndex);
+
+  // data will be NULL if dataSize = 0
+  void getBlob(in unsigned long aIndex, out unsigned long aDataSize, [array,size_is(aDataSize)] out octet aData);
+  boolean getIsNull(in unsigned long aIndex);
+
+  /**
+   * Returns a shared string pointer
+   */
+  [noscript] void getSharedUTF8String(in unsigned long aIndex, out unsigned long aLength, [shared,retval] out string aResult);
+  [noscript] void getSharedString(in unsigned long aIndex, out unsigned long aLength, [shared,retval] out wstring aResult);
+  [noscript] void getSharedBlob(in unsigned long aIndex, out unsigned long aLength, [shared,retval] out octetPtr aResult);
+
+%{C++
+  /**
+   * Getters for native code that return their values as
+   * the return type, for convenience and sanity.
+   *
+   * Not virtual; no vtable bloat.
+   */
+
+  inline PRInt32 AsInt32(PRUint32 idx) {
+    PRInt32 v;
+    GetInt32(idx, &v);
+    return v;
+  }
+
+  inline PRInt64 AsInt64(PRUint32 idx) {
+    PRInt64 v;
+    GetInt64(idx, &v);
+    return v;
+  }
+
+  inline double AsDouble(PRUint32 idx) {
+    double v;
+    GetDouble(idx, &v);
+    return v;
+  }
+
+  inline const char* AsSharedUTF8String(PRUint32 idx, PRUint32 *len) {
+    const char *str = nsnull;
+    GetSharedUTF8String(idx, len, &str);
+    return str;
+  }
+
+  inline const PRUnichar* AsSharedWString(PRUint32 idx, PRUint32 *len) {
+    const PRUnichar *str = nsnull;
+    GetSharedString(idx, len, &str);
+    return str;
+  }
+
+  inline const PRUint8* AsSharedBlob(PRUint32 idx, PRUint32 *len) {
+    const PRUint8 *blob = nsnull;
+    GetSharedBlob(idx, len, &blob);
+    return blob;
+  }
+
+  inline PRBool IsNull(PRUint32 idx) {
+    PRBool b = PR_FALSE;
+    GetIsNull(idx, &b);
+    return b;
+  }
+
+%}
+
+};

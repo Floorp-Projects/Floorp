@@ -1,0 +1,159 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is nsICacheVisitor.idl, released
+ * February 23, 2001.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Gordon Sheridan <gordon@netscape.com>
+ *   Patrick Beard   <beard@netscape.com>
+ *   Darin Fisher    <darin@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/* XXX we should define device and entry info as well (stats, etc) */
+
+interface nsICacheDeviceInfo;
+interface nsICacheEntryInfo;
+
+
+[scriptable, uuid(f8c08c4b-d778-49d1-a59b-866fdc500d95)]
+interface nsICacheVisitor : nsISupports
+{
+    /**
+     * Called to provide information about a cache device.
+     *
+     * @param deviceID - specifies the device being visited.
+     * @param deviceInfo - specifies information about this device.
+     *
+     * @return true to start visiting all entries for this device.
+     * @return false to advance to the next device.
+     */
+    boolean visitDevice(in string               deviceID,
+                        in nsICacheDeviceInfo   deviceInfo);
+
+    /**
+     * Called to provide information about a cache entry.
+     *
+     * @param deviceID - specifies the device being visited.
+     * @param entryInfo - specifies information about this entry.
+     * 
+     * @return true to visit the next entry on the current device, or if the
+     *   end of the device has been reached, advance to the next device.
+     * @return false to advance to the next device.
+     */
+    boolean visitEntry(in string                deviceID,
+                       in nsICacheEntryInfo     entryInfo);
+};
+
+
+[scriptable, uuid(31d1c294-1dd2-11b2-be3a-c79230dca297)]
+interface nsICacheDeviceInfo : nsISupports
+{
+    /**
+     * Get a human readable description of the cache device.
+     */
+    readonly attribute string  description;
+    
+    /**
+     * Get a usage report, statistics, miscellaneous data about
+     * the cache device.
+     */
+    readonly attribute string  usageReport;
+    
+    /**
+     * Get the number of stored cache entries.
+     */
+    readonly attribute unsigned long  entryCount;
+    
+    /**
+     * Get the total size of the stored cache entries.
+     */
+    readonly attribute unsigned long  totalSize;
+
+    /**
+     * Get the upper limit of the size of the data the cache can store.
+     */
+    readonly attribute unsigned long  maximumSize;
+};
+
+
+[scriptable, uuid(fab51c92-95c3-4468-b317-7de4d7588254)]
+interface nsICacheEntryInfo : nsISupports
+{
+    /**
+     * Get the client id associated with this cache entry.
+     */
+    readonly attribute string  clientID;
+
+    /**
+     * Get the id for the device that stores this cache entry.
+     */
+    readonly attribute string deviceID;
+
+    /**
+     * Get the key identifying the cache entry.
+     */
+    readonly attribute ACString key;
+    
+    /**
+     * Get the number of times the cache entry has been opened.
+     */
+    readonly attribute long  fetchCount;
+
+    /**
+     * Get the last time the cache entry was opened (in seconds since the Epoch).
+     */
+    readonly attribute PRUint32  lastFetched;
+
+    /**
+     * Get the last time the cache entry was modified (in seconds since the Epoch).
+     */
+    readonly attribute PRUint32  lastModified;
+
+    /**
+     * Get the expiration time of the cache entry (in seconds since the Epoch).
+     */
+    readonly attribute PRUint32  expirationTime;
+
+    /**
+     * Get the cache entry data size.
+     */
+    readonly attribute unsigned long  dataSize;
+
+    /**
+     * Find out whether or not the cache entry is stream based.
+     */
+    boolean  isStreamBased();
+};

@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<bindings id="richviewSkinBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="richview" extends="chrome://mozapps/content/shared/richview.xml#richview">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/shared/richview.css"/>
+    </resources>
+    <content>
+      <xul:vbox flex="1" class="richviewInner1">
+        <xul:vbox flex="1" class="richviewInner2">
+          <children/>
+        </xul:vbox>
+      </xul:vbox>
+    </content>
+  </binding>
+ 
+</bindings>
+

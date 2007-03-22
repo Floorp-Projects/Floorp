@@ -1,0 +1,165 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= xpcom
+XPIDL_MODULE	= xpcom_ds
+LIBRARY_NAME	= xpcomds_s
+GRE_MODULE	= 1
+MOZILLA_INTERNAL_API = 1
+
+REQUIRES	= \
+		  string \
+		  $(NULL)
+
+CPPSRCS		= \
+		nsAtomTable.cpp \
+		nsAtomService.cpp \
+		nsByteBuffer.cpp \
+		nsCheapSets.cpp \
+		nsCRT.cpp \
+		nsDeque.cpp \
+		nsFixedSizeAllocator.cpp \
+		nsHashSets.cpp \
+		nsHashtable.cpp \
+		nsINIParserImpl.cpp \
+		nsObserverList.cpp \
+		nsObserverService.cpp \
+		nsProperties.cpp \
+		nsPersistentProperties.cpp \
+		nsRecyclingAllocator.cpp \
+		nsStaticNameTable.cpp \
+		nsStringEnumerator.cpp \
+		nsSupportsArray.cpp \
+		nsSupportsArrayEnumerator.cpp \
+		nsSupportsPrimitives.cpp \
+		nsUnicharBuffer.cpp \
+		nsVariant.cpp \
+		nsTextFormatter.cpp \
+		nsTimelineService.cpp \
+		nsValueArray.cpp \
+		nsArray.cpp \
+		nsHashPropertyBag.cpp \
+		$(NULL)
+
+EXPORTS		= \
+		nsAtomService.h \
+		nsCheapSets.h \
+		nsCppSharedAllocator.h \
+		nsCRT.h \
+		nsDeque.h \
+		nsDoubleHashtable.h \
+		nsFixedSizeAllocator.h \
+		nsHashSets.h \
+		nsHashtable.h \
+		nsIByteBuffer.h \
+		nsIUnicharBuffer.h \
+		nsInt64.h \
+		nsMathUtils.h \
+		nsObserverService.h \
+		nsRecyclingAllocator.h \
+		nsStaticNameTable.h \
+		nsStaticAtom.h \
+		nsSupportsArray.h \
+		nsSupportsPrimitives.h \
+		nsTime.h \
+		nsUnitConversion.h \
+		nsVariant.h \
+		nsTextFormatter.h \
+		nsValueArray.h \
+		nsStringEnumerator.h \
+		nsAutoBuffer.h \
+		nsHashPropertyBag.h \
+		$(NULL)			
+
+XPIDLSRCS	= \
+		nsIAtom.idl \
+		nsIAtomService.idl \
+		nsICollection.idl \
+		nsIEnumerator.idl \
+		nsIHashable.idl \
+		nsIINIParser.idl \
+		nsIPersistentProperties2.idl \
+		nsIProperty.idl \
+		nsIPropertyBag.idl \
+		nsIPropertyBag2.idl \
+		nsIWritablePropertyBag.idl \
+		nsIWritablePropertyBag2.idl \
+		nsIRecyclingAllocator.idl \
+		nsIVariant.idl \
+		nsISerializable.idl \
+		nsIStringEnumerator.idl \
+		nsISupportsArray.idl \
+		nsISupportsIterators.idl \
+		nsITimelineService.idl \
+		$(NULL)
+
+SDK_XPIDLSRCS   = \
+		nsIArray.idl               \
+		nsIMutableArray.idl        \
+		nsIObserverService.idl	   \
+		nsIObserver.idl		   \
+		nsIProperties.idl          \
+		nsISimpleEnumerator.idl	   \
+		nsISupportsPrimitives.idl  \
+		$(NULL)
+
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
+CPPSRCS += nsWindowsRegKey.cpp
+XPIDLSRCS += nsIWindowsRegKey.idl
+EXPORTS += nsWindowsRegKey.h
+endif
+
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
+
+# Force use of PIC
+FORCE_USE_PIC	= 1
+
+include $(topsrcdir)/config/rules.mk
+
+LOCAL_INCLUDES += -I$(srcdir)/../io
+
+DEFINES		+= -D_IMPL_NS_COM

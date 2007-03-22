@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>basis of percentage widths</title>
+<style type="text/css">
+
+td { border: 3px inset blue; }
+
+</style>
+</head>
+<body>
+
+<!--
+
+  The difference between the border-box width of the table and the width allocated to the columns is:
+
+  2px = table border-left-width
+  9px = table padding-left
+  25px = 5 * table border-spacing-x
+  5px = table padding-right
+  2px = table border-left-width
+  =================================
+  43px
+
+  -->
+
+<table cellpadding="3" cellspacing="5" border="2" style="padding: 3px 5px 7px 9px">
+  <tr>
+    <td width="25%">x</td>
+    <td width="38">x</td>
+    <td><div style="width:38px">x</div></td>
+    <td><div style="width:38px">x</div></td>
+  </tr>
+</table>
+
+<table cellpadding="3" cellspacing="5" border="2" style="padding: 3px 5px 7px 9px" width="243">
+  <tr>
+    <td width="25%">x</td>
+    <td width="38">x</td>
+    <td><div style="width:38px">x</div></td>
+    <td><div style="width:38px">x</div></td>
+  </tr>
+</table>
+
+<table cellpadding="3" cellspacing="5" border="2" style="padding: 3px 5px 7px 9px" width="443">
+  <tr>
+    <td width="25%">x</td>
+    <td width="38">x</td>
+    <td><div style="width:38px">x</div></td>
+    <td><div style="width:38px">x</div></td>
+  </tr>
+</table>
+
+<table cellpadding="3" cellspacing="5" border="2" style="padding: 3px 5px 7px 9px" width="223">
+  <tr>
+    <td width="25%">x</td>
+    <td width="38">x</td>
+    <td><div style="width:38px">x</div></td>
+    <td><div style="width:38px">x</div></td>
+  </tr>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,4 @@
+<!ENTITY findFiles.title "Cerca els fitxers...">
+<!ENTITY txSearchFor.label "Cerca:">
+<!ENTITY txSearchPath.label "Cerca a:">
+<!ENTITY cbRecurse.label "Cerca les subcarpetes">

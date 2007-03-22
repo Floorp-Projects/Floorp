@@ -1,0 +1,25 @@
+var err = initInstall("Website Reporter", "Reporter", "$Version$"); 
+logComment("initInstall: " + err);
+
+var fProgram = getFolder("Program");
+logComment("fProgram: " + fProgram);
+var srDest = $SpaceRequired$;
+
+if (verifyDiskSpace(fProgram, srDest))
+{
+  err = addDirectory("", "$Version$", "bin", fProgram, "", true);
+  logComment("addDirectory: " + err);
+  
+  var jarFolder = getFolder("Chrome", "reporter.jar");
+  registerChrome(CONTENT | DELAYED_CHROME, jarFolder, "content/reporter/");
+  registerChrome(SKIN | DELAYED_CHROME, jarFolder, "skin/classic/reporter/");
+  registerChrome(LOCALE | DELAYED_CHROME, jarFolder, "locale/en-US/reporter/");
+  
+  err = getLastError();
+  if (err==SUCCESS)
+      performInstall(); 
+  else
+      cancelInstall(err);
+}
+else
+    cancelInstall(INSUFFICIENT_DISK_SPACE);

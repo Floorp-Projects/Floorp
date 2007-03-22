@@ -1,0 +1,135 @@
+Snapshot 0.1.6 (2005-07-28 Carl Worth <cworth@cworth.org>)
+==========================================================
+Behavioral changes
+------------------
+Clips are changed to only affect destination operands, not
+sources. This gives the desired behavior for cairo. If the X server's
+Render implementation wants to use pixman it will have to select
+source clipping, (presumably through a new API call that we can add at
+that point).
+
+Bug fixes
+---------
+Fix leak of the clip region associated with an image in
+pixman_image_destroy.
+
+Fix units for stride return to be FbStip-sized, (this bug was causing
+non antialiased text in cairo to appear as garbage).
+
+Other changes
+-------------
+The implementation has been merged considerably with xserver/fb. Most
+of the merge was just name changes, but there were likely some bug
+fixes or performance improvements in there as well.
+
+Snapshot 0.1.5 (2005-05-18 Carl Worth <cworth@cworth.org>)
+==========================================================
+Bug fixes
+---------
+Fix confusion of depth and bpp which was causing cairo to crash on
+some X servers.
+
+Properly declare pixman_fixed16_16_t as int32_t which fixes
+compilation failures on some platforms.
+
+Fix to find inttypes.h on AIX.
+
+Fix bug in compositing when the source image has no alpha channel.
+
+Some fixes to the clipping code.
+
+Fix memory leak when asked to draw a degenerate trapezoid list.
+
+Snapshot 0.1.4 (2005-03-07 Carl Worth <cworth@cworth.org>)
+==========================================================
+API Addition
+------------
+Add new function:
+
+	void
+	pixman_add_trapezoids (pixman_image_t           *dst,
+	                       int                      x_off,
+	                       int                      y_off,
+	                       const pixman_trapezoid_t *traps,
+	                       int                      ntraps);
+
+Performance improvement
+-----------------------
+Restrict size of intermediate surface used while compositing
+trapezoids based on the bounds of the desination surface.
+
+Bug fixes
+---------
+Fix rendering on 64-bit platforms.
+
+Snapshot 0.1.3 (2005-01-21 Carl Worth <cworth@cworth.org>)
+==========================================================
+Performance improvements
+------------------------
+Solid fills are now much faster, (thanks to Alexander Larsson).
+
+Bug fixes
+---------
+Fixed to quiet warnings in newer versions of gcc.
+
+Don't divide-by-zero if given an image of size 0x0.
+
+Fixed several corner cases where values outside a trapezoid would be
+drawn with alpha 1/255 (in the 8-bit case).
+
+Internal changes
+----------------
+Imported the newer point-sampling trapezoid rasterization code that
+Keith Packard wrote for the X server. This provide pixel-perfect
+matching with the Render extension as well as code that is simpler,
+more robust, and easier to maintain.
+
+Snapshot 0.1.2 (2004-10-27 Carl Worth <cworth@cworth.org>)
+==========================================================
+New functionality
+-----------------
+Added three new functions:
+
+	pixman_image_set_component_alpha
+	pixman_format_get_masks
+	pixman_image_get_format
+
+The first enables component-alpha compositing which can be used for
+optimizing sub-pixel rendering of text and other geometry. This is
+useful when the geometrical relationship of the sub-pixel components
+of the display device are known, (eg. with flat-panel monitors rather
+than CRTs).
+
+The other two functions are simple query functions that were missing.
+
+Bug fixes
+---------
+Enabling both transform and repeat simultaneously now works.
+Some byte-order fixes.
+Clipping fixes: pixman now takes a copy of the client clipping region
+                client clipping is now actually used, it wasn't earlier.
+
+Snapshot 0.1.1 (2004-04-16 Carl Worth <cworth@east.isi.edu>)
+============================================================
+Build fixes for cygwin
+----------------------
+This snapshot adds the -no-undefined flag during compilation which is
+necessart for building a shared library under cygwin.
+
+Cleanup of the public API
+-------------------------
+We recently noticed that there were a coupld of bugs in the script
+that renamed libic to libpixman. Fixing this requires the following
+changes in the public API:
+
+	PIXMAN_FORMAT_AR_GB32 -> PIXMAN_FORMAT_ARGB32
+	PIXMAN_FORMAT_RG_B24 -> PIXMAN_FORMAT_RGB24
+
+While we're changing that, we also normalized the names of structure
+tags, for example:
+
+	struct _pixman_region16_t -> struct pixman_region16
+	etc.
+
+but users are expected to use typedefs such as pixman_region16_t
+anyway.

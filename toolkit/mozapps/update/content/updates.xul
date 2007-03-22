@@ -1,0 +1,229 @@
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is The Update Wizard/Manager.
+#
+# The Initial Developer of the Original Code is Google Inc.
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Ben Goodger <ben@mozilla.org>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://mozapps/content/update/updates.css"?>
+<?xml-stylesheet href="chrome://mozapps/skin/update/updates.css"?>
+
+<!DOCTYPE wizard [
+<!ENTITY % updateDTD SYSTEM "chrome://mozapps/locale/update/updates.dtd">
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%updateDTD;
+%brandDTD;
+]>
+
+<wizard id="updates"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&updateWizard.title;" 
+        label="" description=""
+#ifdef XP_MACOSX
+        windowtype="Update:Wizard" style="width: &window.macWidth;;"
+#else
+        windowtype="Update:Wizard" style="width: &window.width;;"
+#endif
+        onwizardfinish="gUpdates.onWizardFinish();"
+        onwizardcancel="gUpdates.onWizardCancel();"
+        onwizardnext="gUpdates.onWizardNext();"        
+        onload="gUpdates.onLoad();">
+
+  <script type="application/x-javascript" src="chrome://mozapps/content/update/updates.js"/>
+  
+  <stringbundleset id="updateSet">
+    <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
+    <stringbundle id="updateStrings" src="chrome://mozapps/locale/update/updates.properties"/>
+  </stringbundleset>
+  
+  <wizardpage id="dummy" pageid="dummy" firstpage="true"/>
+
+  <wizardpage id="checking" pageid="checking" next="updatesfound"
+              label="&checking.title;" object="gCheckingPage"
+              onpageshow="gCheckingPage.onPageShow();">
+    <label>&checking.label;</label>
+    <separator/>
+    <progressmeter id="checkingProgress" mode="undetermined"/>
+  </wizardpage>
+  
+  <wizardpage id="noupdatesfound" pageid="noupdatesfound"
+              label="&noupdatesfound.title;" object="gNoUpdatesPage"
+              onpageshow="gNoUpdatesPage.onPageShow();">
+    <label>&noupdatesfound.intro;</label>
+  </wizardpage>
+  
+  <!-- next is "downloading" by default, but could change to "license"
+       if we have a licenseURL on the update and this is a major update -->
+  <wizardpage id="updatesfound" pageid="updatesfound" next="downloading"
+              object="gUpdatesAvailablePage" label=""
+              onpageshow="gUpdatesAvailablePage.onPageShow();"
+              onextra1="gUpdates.later()"
+              onextra2="gUpdates.never()">
+    <description id="updateType"/>
+    <separator class="thin"/>
+    <label id="updateName" crop="right"/>
+    <separator id="updateNameSep" class="thin"/>
+    <description id="upgradeEvangelism">&upgrade.evangelism;</description>
+    <separator id="upgradeEvangelismSep" flex="1"/>
+    <deck id="detailsDeck" flex="1">
+      <vbox align="start">
+        <hbox align="start">
+          <image id="incompatibleCheckingThrobber"/>
+          <vbox flex="1">
+            <description>&incompatibleChecking.label;</description>
+          </vbox>
+        </hbox>
+      </vbox>
+      <vbox>
+        <vbox id="moreInfoContent" flex="1">
+          <!-- XXX hack sspitzer not a "license", but using this for the
+               display details of a major update (using a remote web page) -->
+          <!-- note, the localized properties for this are prefixed by 
+               the id.  examples:  updateMoreInfoContentNotFound
+               and updateMoreInfoContentDownloading -->
+          <license id="updateMoreInfoContent" flex="1"/>
+        </vbox>
+        <hbox align="start" id="incompatibleWarning" hidden="true">
+          <image id="alertImage"/>
+          <vbox flex="1">
+            <description>&incompatible.warning;</description>
+            <hbox pack="end">
+              <button label="&listIncompatible.label;" accesskey="&listIncompatible.accesskey;"
+                      oncommand="gUpdatesAvailablePage.showIncompatibleItems();"/>
+            </hbox>
+          </vbox>
+        </hbox>
+        <hbox id="moreInfoURL">
+          <label class="text-link" id="updateMoreInfoURL" 
+                 value="&clickHere.label;"/> 
+        </hbox>
+      </vbox>
+    </deck>
+  </wizardpage>
+  
+  <wizardpage id="license" pageid="license" next="downloading"
+              object="gLicensePage" label="&license.titleText;"
+              onpageshow="gLicensePage.onPageShow();">
+    <label>&license.instructionText;</label>
+    <separator class="thin"/>
+    <!-- note, the localized properties for this are prefixed by 
+         the id.  examples:  licenseContentNotFound
+         and licenseContentDownloading -->
+    <license id="licenseContent" flex="1"/>
+    <separator class="thin"/>
+    <radiogroup id="acceptDeclineLicense" 
+       onselect="gLicensePage.onAcceptDeclineRadio();">
+      <radio id="accept" label="&license.accept;" 
+             accesskey="&license.accept.accesskey;"/>
+      <radio id="decline" label="&license.decline;" 
+             accesskey="&license.decline.accesskey;"
+             selected="true"/>
+    </radiogroup>
+  </wizardpage>
+  
+  <wizardpage id="downloading" pageid="downloading" next="finished"
+              object="gDownloadingPage" label="&downloading.title;"
+              onpageshow="gDownloadingPage.onPageShow();">
+    <hbox pack="start">
+      <label id="downloadName" crop="right" flex="1">&downloading.intro;</label>
+      <label class="text-link" id="detailsLink" value="&details.link;"/>
+    </hbox>
+    <progressmeter id="downloadProgress" mode="undetermined"/>
+    <hbox id="downloadStatusLine">
+      <image id="downloadThrobber"/>
+      <description id="downloadStatus" flex="1">&connecting.label;</description>
+      <button id="pauseButton" oncommand="gDownloadingPage.onPause();" 
+              disabled="true" label="&pause.label;" accesskey="&pause.accesskey;"/>
+    </hbox>
+    <separator/>
+    <hbox id="verificationFailed" align="start" hidden="true">
+      <image id="verificationFailedIcon"/>
+      <description flex="1">&verificationFailedText.label;</description>
+    </hbox>
+  </wizardpage>
+  
+  <wizardpage id="errors" pageid="errors" object="gErrorsPage"
+              onpageshow="gErrorsPage.onPageShow();">
+    <label id="errorIntro">&error.label;</label>
+    <separator/>
+    <textbox class="plain" readonly="true" id="errorReason" multiline="true"
+             rows="3"/>
+    <separator/>
+    <label id="errorManual">&errorManual.label;</label>
+    <hbox>
+      <label class="text-link" id="errorLinkLabel"/>
+    </hbox>
+  </wizardpage>
+  
+  <wizardpage id="errorpatching" pageid="errorpatching" next="downloading"
+              label="&errorpatching.title;" object="gErrorsPage"
+              onpageshow="gErrorsPage.onPageShowPatching();">
+    <label>&errorpatching.intro;</label>
+  </wizardpage>
+  
+  <wizardpage id="finished" pageid="finished"
+              label="&finished.title;" object="gFinishedPage"
+              onpageshow="gFinishedPage.onPageShow();">
+    <label>&finished.text;</label>
+  </wizardpage>
+  
+  <wizardpage id="finishedBackground" pageid="finishedBackground"
+              label="&finishedBackground.title;" object="gFinishedPage"
+              onpageshow="gFinishedPage.onPageShowBackground();">
+    <label>&finishedBackground.text;</label>
+    <separator/>
+    <hbox align="center">
+      <label>&finishedBackground.name;</label>
+      <label id="updateFinishedName" flex="1" crop="right"/>
+      <label id="finishedBackgroundLink" class="text-link" value="&details.link;"/>
+    </hbox>
+    <spacer flex="1"/>
+    <label>&finishedBackground.more1;</label>
+    <separator class="thin"/>
+    <label>&finishedBackground.more2;</label>
+  </wizardpage>
+  
+  <wizardpage id="installed" pageid="installed"
+              label="&installed.title;" object="gInstalledPage"
+              onpageshow="gInstalledPage.onPageShow();">
+    <label>&installed.intro;</label>
+    <separator/>
+    <hbox>
+      <label id="whatsnewLink" class="text-link" hidden="true" value="&whatsnew.label;"/>
+    </hbox>
+  </wizardpage>
+  
+</wizard>

@@ -1,0 +1,154 @@
+<?xml version="1.0"?>
+
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+# 
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+# 
+# The Original Code is Mozilla.org Code.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation. Portions created by Netscape are
+# Copyright (C) 1998-2000 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s):
+#   Asaf Romano <mozilla.mano@sent.com>
+#   Josh Aas <josh@mozilla.com>
+# 
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the LGPL or the GPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+# 
+# ***** END LICENSE BLOCK *****
+
+<!DOCTYPE overlay [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%brandDTD;
+<!ENTITY % baseMenuOverlayDTD SYSTEM "chrome://browser/locale/baseMenuOverlay.dtd">
+%baseMenuOverlayDTD;
+]>
+<overlay id="baseMenuOverlay"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
+<script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
+
+#ifdef XP_MACOSX
+<!-- nsMenuBarX hides these and uses them to build the Application menu.
+     When using Carbon widgets for Mac OS X widgets, some of these are not
+     used as they only apply to Cocoa widget builds. All version of Firefox
+     through Firefox 2 will use Carbon widgets. -->
+    <menupopup id="menu_ToolsPopup">
+        <menuitem id="menu_preferences" label="&preferencesCmdMac.label;" key="key_preferencesCmdMac" oncommand="openPreferences();"/>
+        <menuitem id="menu_mac_services" label="&servicesMenuMac.label;"/>
+        <menuitem id="menu_mac_hide_app" label="&hideThisAppCmdMac.label;" key="key_hideThisAppCmdMac"/>
+        <menuitem id="menu_mac_hide_others" label="&hideOtherAppsCmdMac.label;" key="key_hideOtherAppsCmdMac"/>
+        <menuitem id="menu_mac_show_all" label="&showAllAppsCmdMac.label;"/>
+    </menupopup>
+<!-- Mac window menu -->
+#include ../../../toolkit/content/macWindowMenu.inc
+#endif
+
+#ifdef XP_WIN
+    <menu id="helpMenu"
+          label="&helpMenuWin.label;"
+          accesskey="&helpMenuWin.accesskey;">
+#else
+    <menu id="helpMenu"
+          label="&helpMenu.label;"
+          accesskey="&helpMenu.accesskey;">
+#endif
+      <menupopup id="menu_HelpPopup" onpopupshowing="buildHelpMenu();">
+        <menuitem oncommand="openHelp('firefox-help', 'chrome://browser/locale/help/help.rdf');"
+#ifdef XP_MACOSX
+                  label="&helpContentsMac.label;"
+                  key="key_openHelpMacFrontend"/>
+#else
+                  label="&helpContents.label;"
+                  accesskey="&helpContents.accesskey;"
+                  key="key_openHelp"/>
+#endif
+# Show IE Users menu item on Windows only
+#ifdef XP_WIN
+        <menuitem label="&helpForIEUsers.label;"
+                  accesskey="&helpForIEUsers.accesskey;"
+                  oncommand="openHelp('ieusers', 'chrome://browser/locale/help/help.rdf');"/>
+#endif
+        <menuitem id="releaseNotes"
+                  accesskey="&helpReleaseNotes.accesskey;"
+                  label="&helpReleaseNotes.label;"
+                  oncommand="openReleaseNotes(event)"
+                  onclick="checkForMiddleClick(this, event);"/>
+        <menuseparator id="aboutSeparator"/>
+        <menuitem id="checkForUpdates"
+                  accesskey="&updateCmd.accesskey;"
+                  label="&updateCmd.label;"
+                  class="menuitem-iconic"
+                  oncommand="checkForUpdates();"/>
+#ifndef XP_MACOSX
+        <menuseparator/>
+#endif
+        <menuitem id="aboutName"
+                  accesskey="&aboutCmd.accesskey;"
+                  label="&aboutCmd.label;"
+#ifdef XP_MACOSX
+                  hidden="true"
+#endif
+                  oncommand="openAboutDialog();"/>
+      </menupopup>
+    </menu>
+
+    <keyset id="baseMenuKeyset">
+        <key id="key_openHelp"
+            oncommand="openHelp('firefox-help', 'chrome://browser/locale/help/help.rdf');"
+# VK_HELP doesn't work on other platforms yet
+#ifdef XP_MACOSX
+            keycode="&openHelpMac.commandkey;"/>
+<!-- On mac, we support both the help key and Cmd+?
+     ...Map Cmd+Shift+/, show Cmd+
+     (that's for en-US, it might be different for other keyboard layouts) -->
+        <key id="key_openHelpMac"
+             oncommand="openHelp('firefox-help', 'chrome://browser/locale/help/help.rdf');"
+             key="&openHelpMac2.commandkey;"
+             modifiers="&openHelpMac2.modifiers;"/>
+        <key id="key_openHelpMacFrontend"
+             key="&openHelpMac2.frontendCommandkey;"
+             modifiers="&openHelpMac2.frontendModifiers;"/>
+<!-- These are used to build the Application menu under Cocoa widgets -->
+        <key id="key_preferencesCmdMac"
+             key="&preferencesCmdMac.commandkey;"
+             modifiers="&preferencesCmdMac.modifiers;"/>
+        <key id="key_hideThisAppCmdMac"
+             key="&hideThisAppCmdMac.commandkey;"
+             modifiers="&hideThisAppCmdMac.modifiers;"/>
+        <key id="key_hideOtherAppsCmdMac"
+             key="&hideOtherAppsCmdMac.commandkey;"
+             modifiers="&hideOtherAppsCmdMac.modifiers;"/>
+#else
+             keycode="&openHelp.commandkey;"/>
+#endif
+    </keyset>
+
+    <stringbundleset id="stringbundleset">
+        <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
+        <stringbundle id="bundle_browser_region" src="chrome://browser-region/locale/region.properties"/>
+    </stringbundleset>
+</overlay>

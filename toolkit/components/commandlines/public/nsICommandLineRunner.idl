@@ -1,0 +1,86 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla toolkit.
+ *
+ * The Initial Developer of the Original Code is
+ * Benjamin Smedberg <benjamin@smedbergs.us>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsICommandLine.idl"
+
+[ptr] native nsCharPtrArray(char*);
+
+/**
+ * Extension of nsICommandLine that allows for initialization of new command lines
+ * and running the command line actions by processing the command line handlers.
+ *
+ * @status INTERNAL - This interface is not meant for use by embedders, and is
+ *                    not intended to be frozen. If you are an embedder and need
+ *                    functionality provided by this interface, talk to Benjamin
+ *                    Smedberg <benjamin@smedbergs.us>.
+ */
+
+[uuid(c1f4cfbf-a41f-4628-aa6c-9fb914478af8)]
+interface nsICommandLineRunner : nsICommandLine
+{
+  /**
+   * This method assumes a native character set, and is meant to be called
+   * with the argc/argv passed to main(). Talk to bsmedberg if you need to
+   * create a command line using other data. argv will not be altered in any
+   * way.
+   *
+   * @param workingDir The working directory for resolving file and URI paths.
+   * @param state      The nsICommandLine.state flag.
+   */
+  void init(in long argc, in nsCharPtrArray argv,
+            in nsIFile workingDir, in unsigned long state);
+
+  /**
+   * Set the windowContext parameter.
+   */
+  void setWindowContext(in nsIDOMWindow aWindow);
+
+  /**
+   * Process the command-line handlers in the proper order, calling "handle()" on
+   * each.
+   *
+   * @throws NS_ERROR_ABORT if any handler throws NS_ERROR_ABORT. All other errors
+   *         thrown by handlers will be silently ignored.
+   */
+  void run();
+
+  /**
+   * Process and combine the help text provided by each command-line handler.
+   */
+  readonly attribute AUTF8String helpText;
+};

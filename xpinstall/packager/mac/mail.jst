@@ -1,0 +1,63 @@
+function upgradeCleanup()
+{
+  // Obsolete files from Netscape 6.0 and Netscape 6.01 that
+  // need to be cleaned up.
+  deleteThisFile("Components", "signed.shlb");
+}
+
+var srDest = $SpaceRequired$;
+
+var err = initInstall("Mozilla Mail", "Mail", "$Version$"); 
+logComment("initInstall: " + err);
+
+var fProgram = getFolder("Program");
+logComment("fProgram: " + fProgram);
+
+if (verifyDiskSpace(fProgram, srDest))
+{
+    // Call upgradeCleanup() before addDirectory() in case we accidentaly
+    // delete files that we happen to be also installing.  This way, if we do,
+    // it will just get reinstalled.  This is for safety measure.
+    upgradeCleanup();
+    err = addDirectory("Program",
+                   "$Version$",
+                   "viewer",           // jar source folder 
+                   fProgram,           // target folder
+                   "",                 // target subdir 
+                   true );             // force flag 
+
+    logComment("addDirectory() returned: " + err);
+
+    registerChrome(CONTENT | DELAYED_CHROME, 
+                         getFolder("Chrome","messenger.jar"),
+                         "content/messenger/")
+
+    registerChrome(CONTENT | DELAYED_CHROME, 
+                         getFolder("Chrome","messenger.jar"),
+                         "content/messenger-region/");
+
+    registerChrome(CONTENT | DELAYED_CHROME,
+                   getFolder("Chrome","messenger.jar"),
+                   "content/messenger-smime/");
+
+    registerChrome(CONTENT | DELAYED_CHROME,
+                   getFolder("Chrome","messenger.jar"),
+                   "content/messenger-mdn/");
+
+    registerChrome(CONTENT | DELAYED_CHROME,
+                   getFolder("Chrome","messenger.jar"),
+                   "content/messenger-views/");
+
+    if (err==SUCCESS)
+    {
+	    err = performInstall(); 
+    	logComment("performInstall() returned: " + err);
+    }
+    else
+    {
+	    cancelInstall(err);
+    	logComment("cancelInstall() due to error: " + err);
+    }
+}
+else
+    cancelInstall(INSUFFICIENT_DISK_SPACE);

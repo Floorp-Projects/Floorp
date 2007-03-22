@@ -1,0 +1,22 @@
+<!-- extracted from finddialog.xul -->
+
+<!ENTITY findDialog.title "Find in This Page">
+<!ENTITY findDialogFrame.title "Find in This Frame">
+<!ENTITY findField.label "Find what:">
+<!ENTITY findField.accesskey "n">
+<!ENTITY caseSensitiveCheckbox.label "Match case">
+<!ENTITY caseSensitiveCheckbox.accesskey "c">
+<!ENTITY wrapCheckbox.label "Wrap">
+<!ENTITY wrapCheckbox.accesskey "W">
+<!ENTITY backwardsCheckbox.label "Search backwards">
+<!ENTITY backwardsCheckbox.accesskey "b">
+<!ENTITY findField.tooltip "Type one or more words to search for">
+<!ENTITY findButton.label "Find Next">
+<!ENTITY findButton.accesskey "F">
+<!ENTITY cancelButton.label "Cancel">
+<!ENTITY closeButton.label "Close">
+<!ENTITY up.label "Up">
+<!ENTITY up.accesskey "U">
+<!ENTITY down.label "Down">
+<!ENTITY down.accesskey "D">
+<!ENTITY direction.label "Direction">

@@ -1,0 +1,140 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= appleevents
+LIBRARY_NAME	= appleevents_s
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  content \
+		  layout \
+		  gfx \
+		  widget \
+		  necko \
+		  pref \
+		  docshell \
+		  appshell \
+		  appcomps \
+		  xulapp \
+		  $(NULL)
+
+#    PatriciaTree.cpp \
+#    nsAppleEventsService.cpp \
+
+CSRCS = \
+	patricia.c \
+	$(NULL)
+
+CPPSRCS		= \
+    nsAEApplicationClass.cpp \
+    nsAEClassDispatcher.cpp \
+    nsAEClassIterator.cpp \
+    nsAECoercionHandlers.cpp \
+    nsAECompare.cpp \
+    nsAECoreClass.cpp \
+    nsAEDocumentClass.cpp \
+    nsAEEventHandling.cpp \
+    nsAEGenericClass.cpp \
+    nsAEGetURLSuiteHandler.cpp \
+    nsAEMozillaSuiteHandler.cpp \
+    nsAESpyglassSuiteHandler.cpp \
+    nsAETokens.cpp \
+    nsAEUtils.cpp \
+    nsAEWindowClass.cpp \
+    nsMacUtils.cpp \
+    nsWindowUtils.cpp \
+    nsDocLoadObserver.cpp \
+    $(NULL)
+
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
+LIBXUL_LIBRARY = 1
+
+LOCAL_INCLUDES	= \
+	-I$(srcdir) \
+	-I$(srcdir)/.. \
+	-I$(topsrcdir)/gfx/src/mac \
+	$(NULL)
+
+ifdef MOZ_XUL_APP
+LOCAL_INCLUDES += \
+	-I$(topsrcdir)/toolkit/xre \
+	-I$(topsrcdir)/toolkit/components/startup/src \
+	$(NULL)
+else
+LOCAL_INCLUDES += -I$(topsrcdir)/xpfe/components/startup/src
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+
+# convert AppleScript dictionary .sdef file into .r format, and thence to .rsrc
+SDP_TOOL = $(SDP)
+REZ_TOOL = /Developer/Tools/Rez
+SDEF_SRC = $(srcdir)/mozilla.sdef
+RES_DEST = mozillaSuite.r
+RSRC_DEST = mozillaSuite.rsrc
+PACKAGE_DIR = $(DIST)/package
+
+$(RSRC_DEST): $(SDEF_SRC) $(PACKAGE_DIR)
+	NEXT_ROOT= $(SDP_TOOL) -fa -o $(RES_DEST) $(SDEF_SRC) 
+	$(REZ_TOOL) -useDF -o $(RSRC_DEST) $(RES_DEST) 
+	cp $(RSRC_DEST) $(PACKAGE_DIR)
+	rm -f $(RES_DEST)
+
+$(PACKAGE_DIR):
+	mkdir $(PACKAGE_DIR)
+
+libs:: $(RSRC_DEST)
+
+# workaround gcc -MD dependency issue by copying source to local dir
+export:: $(srcdir)/../nsDocLoadObserver.cpp
+	$(INSTALL) $< .
+
+GARBAGE += $(RES_DEST) $(RSRC_DEST) \
+	../nsDocLoadObserver.$(OBJ_SUFFIX) nsDocLoadObserver.cpp \
+	$(NULL)
+
+OS_CXXFLAGS += -fexceptions

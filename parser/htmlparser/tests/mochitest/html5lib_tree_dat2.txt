@@ -1,0 +1,768 @@
+#data
+<!doctype html>Test
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     "Test"
+
+#data
+<textarea>test</div>test
+#errors
+10: missing document type declaration.
+17: unescaped '</' in CDATA or RCDATA block.
+25: unexpected end of file while parsing CDATA section for element textarea.
+#document
+| <html>
+|   <head>
+|   <body>
+|     <textarea>
+|       "test</div>test"
+
+#data
+<table><td>
+#errors
+7: missing document type declaration.
+11: required tr element start tag implied by unexpected td element start tag.
+12: unexpected end of file implied table element end tag.
+#document
+| <html>
+|   <head>
+|   <body>
+|     <table>
+|       <tbody>
+|         <tr>
+|           <td>
+
+#data
+<table><td>test</tbody></table>
+#errors
+missing document type declarattion
+Unexpected and of file
+#document
+| <html>
+|   <head>
+|   <body>
+|     <table>
+|       <tbody>
+|         <tr>
+|           <td>
+|             "test"
+
+#data
+<frame>test
+#errors
+missing document type declaration
+frame element can't occur here
+#document
+| <html>
+|   <head>
+|   <body>
+|     "test"
+
+#data
+<!doctype html><frameset>test
+#errors
+frameset can't contain text
+Unexpected end of file
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <frameset>
+
+#data
+<!doctype html><frameset><!doctype html>
+#errors
+document type declaration can only occur at the start of a document
+Expected end tag </frameset>
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <frameset>
+
+#data
+<!doctype html><font><p><b>test</font>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <font>
+|     <p>
+|       <font>
+|         <b>
+|           "test"
+
+#data
+<!DOCTYPE htmL><dt><div><dd>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <dt>
+|       <div>
+|     <dd>
+
+#data
+<script></x
+#errors
+no document type
+</ in script
+Unexpected end of file. Expected </script> end tag.
+#document
+| <html>
+|   <head>
+|     <script>
+|       "</x"
+|   <body>
+
+#data
+<table><plaintext><td>
+#errors
+no document type
+<plaintext> directly inside table
+Characters inside table.
+Unexpected end of file.
+#document
+| <html>
+|   <head>
+|   <body>
+|     <plaintext>
+|       "<td>"
+|     <table>
+
+#data
+<plaintext></plaintext>
+#errors
+No DOCTYPE seen.
+Unexpected end of file.
+#document
+| <html>
+|   <head>
+|   <body>
+|     <plaintext>
+|       "</plaintext>"
+
+#data
+<!doctype html><table><tr>TEST
+#errors
+TEST can't occur in <tr>
+Unexpected end of file.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     "TEST"
+|     <table>
+|       <tbody>
+|         <tr>
+
+#data
+<!doctype html><body t1=1><body t2=2><body t3=3 t4=4>
+#errors
+Unexpected start tag "body"
+Unexpected start tag "body"
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     t4="4"
+|     t2="2"
+|     t3="3"
+|     t1="1"
+
+#data
+</b test
+#errors
+Unexpected EOF in attribute
+Unexpected attribute in end tag.
+No doctype.
+Unexpected end tag.
+#document
+| <html>
+|   <head>
+|   <body>
+
+#data
+<!doctype HtML></b test<b &=&amp>X
+#errors
+Unexpected < in attribute
+End tag contains attributes.
+Unexpected end tag.
+Named entity didn't end with ;
+Unexpected EOF. Missing closing tag.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <b>
+|       &="&"
+|       "X"
+
+#data
+<!doctypehtml><scrIPt type=text/x-foobar;baz>X</SCRipt
+#errors
+No space after literal DOCTYPE.
+Unexpected EOF in (end) tag name
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|     <script>
+|       type="text/x-foobar;baz"
+|       "X"
+|   <body>
+
+#data
+&
+#errors
+No doctype.
+Unfinished entity.
+#document
+| <html>
+|   <head>
+|   <body>
+|     "&"
+
+#data
+&#
+#errors
+No doctype.
+Unfinished numeric entity.
+#document
+| <html>
+|   <head>
+|   <body>
+|     "&#"
+
+#data
+&#X
+#errors
+No doctype.
+Unfinished hexadecimal entity.
+#document
+| <html>
+|   <head>
+|   <body>
+|     "&#X"
+
+#data
+&#x
+#errors
+No doctype.
+Unfinished hexadecimal entity.
+#document
+| <html>
+|   <head>
+|   <body>
+|     "&#x"
+
+#data
+&#45
+#errors
+No doctype.
+Numeric entity didn't end with ;
+#document
+| <html>
+|   <head>
+|   <body>
+|     "-"
+
+#data
+&x-test
+#errors
+No doctype.
+Unfinished named entity.
+#document
+| <html>
+|   <head>
+|   <body>
+|     "&x-test"
+
+#data
+<!doctypehtml><p><li>
+#errors
+No space after literal DOCTYPE.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <p>
+|     <li>
+
+#data
+<!doctypehtml><p><dt>
+#errors
+No space after literal DOCTYPE.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <p>
+|     <dt>
+
+#data
+<!doctypehtml><p><dd>
+#errors
+No space after literal DOCTYPE.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <p>
+|     <dd>
+
+#data
+<!doctypehtml><p><form>
+#errors
+No space after literal DOCTYPE.
+Unexpected EOF.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <p>
+|     <form>
+
+#data
+<!doctype html><p><b><i><u></p> <p>X
+#errors
+Unexpected end tag </p>.
+Unexpected end EOF. Missing closing tags.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <p>
+|       <b>
+|         <i>
+|           <u>
+|     " "
+|     <p>
+|       <b>
+|         <i>
+|           <u>
+|             "X"
+
+#data
+<!doctype html><p></P>X
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <p>
+|     "X"
+
+#data
+&AMP
+#errors
+No doctype.
+No closing ; for the entity.
+#document
+| <html>
+|   <head>
+|   <body>
+|     "&"
+
+#data
+&AMp;
+#errors
+No doctype.
+Invalid entity.
+#document
+| <html>
+|   <head>
+|   <body>
+|     "&AMp;"
+
+#data
+<!doctype html><html><head></head><body><thisISasillyTESTelementNameToMakeSureCrazyTagNamesArePARSEDcorrectLY>
+#errors
+Unexpected end of file.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <thisisasillytestelementnametomakesurecrazytagnamesareparsedcorrectly>
+
+#data
+<!doctype html>X</body>X
+#errors
+Unexpected non-space characters in the after body phase.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     "XX"
+
+#data
+<!doctype html><!-- X
+#errors
+Unexpected end of file in comment.
+#document
+| <!DOCTYPE HTML>
+| <!--  X -->
+| <html>
+|   <head>
+|   <body>
+
+#data
+<!doctype html><table><caption>test TEST</caption><td>test
+#errors
+Unexpected <td> in table body phase.
+Unexpected end of file.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <table>
+|       <caption>
+|         "test TEST"
+|       <tbody>
+|         <tr>
+|           <td>
+|             "test"
+
+#data
+<!doctype html><select><option><optgroup>
+#errors
+Unexpected end of file. Missing closing tags.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <select>
+|       <option>
+|       <optgroup>
+
+#data
+<!doctype html><select><optgroup><option></optgroup><option><select><option>
+#errors
+Unexpected start tag <select> in <select>.
+Unexpected start tag <option>.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <select>
+|       <optgroup>
+|         <option>
+|       <option>
+
+#data
+<!doctype html><select><optgroup><option><optgroup>
+#errors
+Unexpected end of file. Missing closing tags.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <select>
+|       <optgroup>
+|         <option>
+|       <optgroup>
+
+#data
+<!doctype html><font><input><input></font>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <font>
+|       <input>
+|       <input>
+
+#data
+<!DoctypE html><!-- XXX - XXX -->
+#errors
+#document
+| <!DOCTYPE HTML>
+| <!--  XXX - XXX  -->
+| <html>
+|   <head>
+|   <body>
+
+#data
+<!DoctypE html><!-- XXX - XXX
+#errors
+Unexpected EOF in comment.
+#document
+| <!DOCTYPE HTML>
+| <!--  XXX - XXX -->
+| <html>
+|   <head>
+|   <body>
+
+#data
+<!DoctypE html><!-- XXX - XXX - XXX -->
+#errors
+#document
+| <!DOCTYPE HTML>
+| <!--  XXX - XXX - XXX  -->
+| <html>
+|   <head>
+|   <body>
+
+#data
+<isindex test=x name=x>
+#errors
+No doctype
+<isindex> is not ok!
+#document
+| <html>
+|   <head>
+|   <body>
+|     <form>
+|       <hr>
+|       <p>
+|         <label>
+|           "This is a searchable index. Insert your search keywords here:"
+|           <input>
+|             test="x"
+|             name="isindex"
+|       <hr>
+
+#data
+test
+test
+#errors
+No doctype
+#document
+| <html>
+|   <head>
+|   <body>
+|     "test
+test"
+
+#data
+<p><b><i><u></p>
+<p>X
+#errors
+No doctype
+Unexpected end tag p.
+Unexpected EOF.
+#document
+| <html>
+|   <head>
+|   <body>
+|     <p>
+|       <b>
+|         <i>
+|           <u>
+|     "
+"
+|     <p>
+|       <b>
+|         <i>
+|           <u>
+|             "X"
+
+#data
+<!doctype html><body><title>test</body></title>
+#errors
+Unexpected start tag that belongs in the head.
+Expected closing tag after </.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|     <title>
+|       "test</body>"
+|   <body>
+
+#data
+<!doctype html><body><title>X</title><meta name=z><link rel=foo><style>
+x { content:"</style" } </style>
+#errors
+Unexpected start tag that belongs in head.
+Unexpected start tag that belongs in head.
+Unexpected start tag that belongs in head.
+Expected closing tag after </.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|     <title>
+|       "X"
+|     <meta>
+|       name="z"
+|     <link>
+|       rel="foo"
+|   <body>
+|     <style>
+|       "
+x { content:"</style" } "
+
+#data
+<!doctype html><select><optgroup></optgroup></select>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     <select>
+|       <optgroup>
+
+#data
+ 
+ 
+#errors
+No doctype.
+#document
+| " 
+ "
+| <html>
+|   <head>
+|   <body>
+
+#data
+<!doctype html>  <html>
+#errors
+#document
+| <!DOCTYPE HTML>
+| "  "
+| <html>
+|   <head>
+|   <body>
+
+#data
+<!doctype html><script>
+</script>  <title>x</title>  </head>
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|     <script>
+|       "
+"
+|     "  "
+|     <title>
+|       "x"
+|     "  "
+|   <body>
+
+#data
+<!doctype html><html><body><html id=x>
+#errors
+duplicate html start tag
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   id="x"
+|   <head>
+|   <body>
+
+#data
+<!doctype html>X</body><html id="x">
+#errors
+Unexpected html start tag in the after body phase.
+html needs to be the first start tag.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   id="x"
+|   <head>
+|   <body>
+|     "X"
+
+#data
+<!doctype html><head><html id=x>
+#errors
+html start tag too late
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   id="x"
+|   <head>
+|   <body>
+
+#data
+<!doctype html>X</html>X
+#errors
+Unexpected non-space characters. Expected end of file.
+Unexpected non-space characters in after body phase. Expected end of file.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     "XX"
+
+#data
+<!doctype html>X</html> 
+#errors
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     "X "
+
+#data
+<!doctype html>X</html><p>X
+#errors
+Unexpected start tag <p> in trailing end phase.
+Unexpected start tag <p> in after body phase.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     "X"
+|     <p>
+|       "X"
+
+#data
+<!doctype html>X<p/x/y/z>
+#errors
+Solidus (/) incorrectly placed.
+Solidus (/) incorrectly placed.
+Solidus (/) incorrectly placed.
+#document
+| <!DOCTYPE HTML>
+| <html>
+|   <head>
+|   <body>
+|     "X"
+|     <p>
+|       y=""
+|       x=""
+|       z=""
+
+#data
+<!doctype html><!--x--
+#errors
+Unexpected end of file in comment.
+#document
+| <!DOCTYPE HTML>
+| <!-- x -->
+| <html>
+|   <head>
+|   <body>

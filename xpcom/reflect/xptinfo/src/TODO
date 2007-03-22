@@ -1,0 +1,20 @@
+/* jband - 03/24/00 -  */
+
+- DOCS
+- improve error handling
+  - should some errors really be warnings?
+  - should autoreg support additional channel to receive warnings so that
+    an installer can decide whether or not to accept the consequences of 
+    leaving the newly installed files in place?
+- verification of interfaces (warnings and/or errors)
+  - verify that repeated interfaces are identical in all ways
+  - verify that interface names are always one-to-one with iids    
+- check for truncated xpt files and version problems
+  - http://bugzilla.mozilla.org/show_bug.cgi?id=33193
+- TESTS!
+   - e.g. verify the merge stuff really works for various inputs.
+   - we really need a set of .xpt and .zip files and code that does an array 
+     of autoreg and interfaceinof use activitities to test various corners
+     of the system.
+- better autoreg logging
+- use only 32 bits for file size?

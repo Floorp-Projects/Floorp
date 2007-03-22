@@ -1,0 +1,1306 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is mozilla.org viewsource frontend.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2003
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -     Blake Ross <blake@cs.stanford.edu> (Original Author)
+   -     Masayuki Nakano <masayuki@d-toybox.com>
+   -     Ben Basson <contact@cusser.net>
+   -     Jason Barnabe <jason_barnabe@fastmail.fm>
+   -     Asaf Romano <mano@mozilla.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!DOCTYPE bindings [
+<!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findbar.dtd" >
+%findBarDTD;
+]>
+
+<bindings id="findbarBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <!-- Private binding -->
+  <binding id="findbar-textbox"
+           extends="chrome://global/content/bindings/textbox.xml#textbox">
+    <implementation>
+
+      <field name="_findbar">null</field>
+      <property name="findbar" readonly="true">
+        <getter>
+          return this._findbar ?
+                 this._findbar : this._findbar = document.getBindingParent(this);
+        </getter>
+      </property>
+
+      <method name="getSupportedFlavours">
+        <body><![CDATA[
+          var flavourSet = new FlavourSet();
+          flavourSet.appendFlavour("text/unicode");
+          return flavourSet;
+        ]]></body>
+      </method>
+
+      <method name="onDrop">
+        <parameter name="aEvent"/>
+        <parameter name="aXferData"/>
+        <parameter name="aDragSession"/>
+        <body><![CDATA[
+          this.value = aXferData.data;
+          this.findbar._find(aXferData.data);
+        ]]></body>
+      </method>
+
+      <method name="_handleEnter">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (this.findbar._findMode == this.findbar.FIND_NORMAL) {
+            var findString = this.findbar._findField;
+            if (!findString.value)
+              return;
+#ifdef XP_MACOSX
+            if (aEvent.metaKey) {
+#else
+            if (aEvent.ctrlKey) {
+#endif
+              this.findbar.getElement("highlight").click();
+              return;
+            }
+
+            this.findbar.onFindAgainCommand(aEvent.shiftKey);
+          }
+          else {
+            // We need to keep a reference to _foundLink because
+            // _finishFAYT resets it to null.
+            var tmpLink = this._findbar._foundLink;
+            if (tmpLink && this.findbar._finishFAYT(aEvent))
+              this.findbar._dispatchKeypressEvent(tmpLink, aEvent);
+          }
+        ]]></body>
+      </method>
+
+      <method name="_handleTab">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var shouldHandle = !aEvent.altKey && !aEvent.ctrlKey &&
+                             !aEvent.metaKey;
+          if (shouldHandle &&
+              this.findbar._findMode != this.findbar.FIND_NORMAL &&
+              this.findbar._finishFAYT(aEvent)) {
+            if (aEvent.shiftKey)
+              document.commandDispatcher.rewindFocus();
+            else
+              document.commandDispatcher.advanceFocus();
+          }
+        ]]></body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="input"><![CDATA[
+        this.findbar._find(this.value);
+      ]]></handler>
+
+      <handler event="keypress"><![CDATA[
+        var win = this.findbar._currentWindow ||
+                  this.findbar.browser.contentWindow;
+
+        switch (event.keyCode) {
+          case KeyEvent.DOM_VK_RETURN:
+            this._handleEnter(event);
+            break;
+          case KeyEvent.DOM_VK_TAB:
+            this._handleTab(event);
+            break;
+          case KeyEvent.DOM_VK_PAGE_UP:
+            win.scrollByPages(-1);
+            event.preventDefault();
+            break;
+          case KeyEvent.DOM_VK_PAGE_DOWN:
+            win.scrollByPages(1);
+            event.preventDefault();
+            break;
+          case KeyEvent.DOM_VK_UP:
+            win.scrollByLines(-1);
+            event.preventDefault();
+            break;
+          case KeyEvent.DOM_VK_DOWN:
+            win.scrollByLines(1);
+            event.preventDefault();
+            break;
+        }
+      ]]></handler>
+
+      <handler event="blur"><![CDATA[
+        var findbar = this.findbar;
+        var fastFind = findbar.browser.fastFind;
+        if (findbar._foundEditable)
+          fastFind.collapseSelection();
+        else {
+          fastFind.setSelectionModeAndRepaint
+            (findbar.nsISelectionController.SELECTION_ON);
+        }
+        findbar._setFoundLink(null);
+        findbar._foundEditable = null;
+        findbar._currentWindow = null;
+      ]]></handler>
+
+      <handler event="compositionstart"><![CDATA[
+        // Don't close the find toolbar while IME is composing.
+        var findbar = this.findbar;
+        findbar._isIMEComposing = true;
+        if (findbar._quickFindTimeout) {
+          clearTimeout(findbar._quickFindTimeout);
+          findbar._quickFindTimeout = null;
+        }
+      ]]></handler>
+
+      <handler event="compositionend"><![CDATA[
+        var findbar = this.findbar;
+        findbar._isIMEComposing = false;
+        if (findbar._findMode != findbar.FIND_NORMAL &&
+            !findbar.hidden)
+          findbar._setFindCloseTimeout();
+      ]]></handler>
+
+      <handler event="dragdrop" phase="capturing"><![CDATA[
+        nsDragAndDrop.drop(event, this);
+      ]]></handler>
+    </handlers>
+  </binding>
+
+  <binding id="findbar"
+           extends="chrome://global/content/bindings/toolbar.xml#toolbar">
+    <resources>
+      <stylesheet src="chrome://global/skin/findBar.css"/>
+    </resources>
+
+    <content align="center" hidden="true">
+      <xul:toolbarbutton anonid="find-closebutton"
+                         class="findbar-closebutton"
+                         tooltiptext="&findCloseButton.tooltip;"
+                         oncommand="close();"/>
+      <xul:label anonid="find-label" class="findbar-find-fast"/>
+      <xul:hbox anonid="find-field-container"
+                class="find-field-container findbar-find-fast">
+        <xul:textbox class="findbar-textbox" anonid="findbar-textbox"/>
+      </xul:hbox>
+      <xul:toolbarbutton anonid="find-next"
+                         class="findbar-find-next"
+                         label="&next.label;"
+                         accesskey="&next.accesskey;"
+                         tooltiptext="&next.tooltip;"
+                         oncommand="onFindAgainCommand(false);"
+                         disabled="true"
+                         xbl:inherits="accesskey=findnextaccesskey"/>
+      <xul:toolbarbutton anonid="find-previous"
+                         class="findbar-find-previous"
+                         label="&previous.label;"
+                         accesskey="&previous.accesskey;"
+                         tooltiptext="&previous.tooltip;"
+                         oncommand="onFindAgainCommand(true);"
+                         disabled="true"
+                         xbl:inherits="accesskey=findpreviousaccesskey"/>
+      <xul:toolbarbutton anonid="highlight"
+                         class="findbar-highlight"
+                         label="&highlight.label;"
+                         accesskey="&highlight.accesskey;"
+                         tooltiptext="&highlight.tooltiptext;"
+                         oncommand="toggleHighlight(!this.checked);"
+                         type="checkbox"
+                         disabled="true"
+                         xbl:inherits="accesskey=highlightaccesskey"/>
+      <xul:checkbox anonid="find-case-sensitive"
+                    oncommand="_setCaseSensitivity(this.checked);"
+                    label="&caseSensitiveCheckbox.label;"
+                    accesskey="&caseSensitiveCheckbox.accesskey;"
+                    xbl:inherits="accesskey=matchcaseaccesskey"/>
+      <xul:label anonid="match-case-status" class="findbar-find-fast"/>
+      <xul:image anonid="find-status-icon" class="findbar-find-fast find-status-icon"/>
+      <xul:label anonid="find-status" class="findbar-find-fast findbar-find-status"/>
+    </content>
+
+    <implementation implements="nsIDOMEventListener">
+      <field name="FIND_NORMAL">0</field>
+      <field name="FIND_TYPEAHEAD">1</field>
+      <field name="FIND_LINKS">2</field>
+
+      <field name="_findMode">0</field>
+      <field name="_tmpOutline">null</field>
+      <field name="_tmpOutlineOffset">"0"</field>
+      <field name="_drawOutline">false</field>
+      <field name="_foundLink">null</field>
+
+      <field name="_flashFindBar">0</field>
+      <field name="_initialFlashFindBarCount">6</field>
+
+      <property name="prefillWithSelection"
+                onget="return this.getAttribute('prefillwithselection') != 'false'"
+                onset="this.setAttribute('prefillwithselection', val); return val;"/>
+      <field name="_selectionMaxLen">150</field>
+
+      <method name="getElement">
+        <parameter name="aAnonymousID"/>
+        <body><![CDATA[
+          return document.getAnonymousElementByAttribute(this,
+                                                         "anonid",
+                                                         aAnonymousID)
+        ]]></body>
+      </method>
+
+      <property name="findMode"
+                readonly="true"
+                onget="return this._findMode;"/>
+
+      <field name="_browser">null</field>
+      <property name="browser">
+        <getter><![CDATA[
+          if (!this._browser) {
+            this._browser =
+              document.getElementById(this.getAttribute("browserid"));
+          }
+          return this._browser;
+        ]]></getter>
+        <setter><![CDATA[
+          if (this._browser) {
+            this._browser.removeEventListener("keypress", this, false);
+            this._browser.removeEventListener("mouseup", this, false);
+            this._foundLink = null;
+            this._foundEditable = null;
+            this._currentWindow = null;
+          }
+
+          this._browser = val;
+          if (this._browser) {
+            this._browser.addEventListener("keypress", this, false);
+            this._browser.addEventListener("mouseup", this, false);
+            this._findField.value = this._browser.fastFind.searchString;
+          }
+          return val;
+        ]]></setter>
+      </property>
+
+      <field name="_observer"><![CDATA[({
+        _self: this,
+
+        QueryInterface: function(aIID) {
+          if (aIID.equals(Components.interfaces.nsIObserver) ||
+              aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+              aIID.equals(Components.interfaces.nsISupports))
+            return this;
+
+          throw Components.results.NS_ERROR_NO_INTERFACE;
+        },
+
+        observe: function(aSubject, aTopic, aPrefName) {
+          if (aTopic != "nsPref:changed")
+            return;
+
+          var prefsvc =
+            aSubject.QueryInterface(Components.interfaces.nsIPrefBranch2);
+
+          switch (aPrefName) {
+            case "accessibility.typeaheadfind":
+              this._self._useTypeAheadFind = prefsvc.getBoolPref(aPrefName);
+              break;
+            case "accessibility.typeaheadfind.linksonly":
+              this._self._typeAheadLinksOnly = prefsvc.getBoolPref(aPrefName);
+              break;
+            case "accessibility.typeaheadfind.casesensitive":
+              this._self._typeAheadCaseSensitive = prefsvc.getIntPref(aPrefName);
+              this._self._updateCaseSensitivity();
+              break;
+          }
+        }
+      })]]></field>
+
+      <constructor><![CDATA[
+        // These elements are accessed frequently and are therefore cached
+        this._findField = this.getElement("findbar-textbox");
+        this._findStatusIcon = this.getElement("find-status-icon");
+        this._findStatusLabel = this.getElement("find-status");
+
+        var prefsvc =
+          Components.classes["@mozilla.org/preferences-service;1"]
+                    .getService(Components.interfaces.nsIPrefBranch2);
+
+        this._quickFindTimeoutLength =
+          prefsvc.getIntPref("accessibility.typeaheadfind.timeout");
+        this._flashFindBar =
+          prefsvc.getIntPref("accessibility.typeaheadfind.flashBar");
+
+        prefsvc.addObserver("accessibility.typeaheadfind",
+                            this._observer, false);
+        prefsvc.addObserver("accessibility.typeaheadfind.linksonly",
+                            this._observer, false);
+        prefsvc.addObserver("accessibility.typeaheadfind.casesensitive",
+                            this._observer, false);
+
+        this._useTypeAheadFind =
+          prefsvc.getBoolPref("accessibility.typeaheadfind");
+        this._typeAheadLinksOnly =
+          prefsvc.getBoolPref("accessibility.typeaheadfind.linksonly");
+        this._typeAheadCaseSensitive =
+          prefsvc.getIntPref("accessibility.typeaheadfind.casesensitive");
+
+        // Convenience
+        this.nsITypeAheadFind = Components.interfaces.nsITypeAheadFind;
+        this.nsISelectionController = Components.interfaces.nsISelectionController;
+
+        // Make sure the FAYT keypress listener is attached by initializing the
+        // browser property
+        setTimeout(function(aSelf) { aSelf.browser = aSelf.browser; }, 0, this);
+      ]]></constructor>
+
+      <destructor><![CDATA[
+        this.browser = null;
+
+        var prefsvc =
+          Components.classes["@mozilla.org/preferences-service;1"]
+                    .getService(Components.interfaces.nsIPrefBranch2);
+        prefsvc.removeObserver("accessibility.typeaheadfind",
+                               this._observer);
+        prefsvc.removeObserver("accessibility.typeaheadfind.linksonly",
+                               this._observer);
+        prefsvc.removeObserver("accessibility.typeaheadfind.casesensitive",
+                               this._observer);
+      ]]></destructor>
+
+      <method name="_setFindCloseTimeout">
+        <body><![CDATA[
+          if (this._quickFindTimeout)
+            clearTimeout(this._quickFindTimeout);
+
+          // Don't close the find toolbar while IME is composing.
+          if (this._isIMEComposing) {
+            this._quickFindTimeout = null;
+            return;
+          }
+
+          this._quickFindTimeout =
+            setTimeout(function(aSelf) {
+                         if (aSelf._findMode != aSelf.FIND_NORMAL)
+                           aSelf.close();
+                       }, this._quickFindTimeoutLength, this);
+        ]]></body>
+      </method>
+
+      <!--
+        - Turns highlight on or off.
+        - @param aHighlight (boolean)
+        -        Whether to turn on highlight
+        -->
+      <method name="toggleHighlight">
+        <parameter name="aHighlight"/>
+        <body><![CDATA[
+          var word = this._findField.value;
+          if (aHighlight) {
+            // We have to update the status because we might still have the status
+            // of another tab
+            if (this._highlightDoc("yellow", "black", word))
+              this._updateStatusUI(this.nsITypeAheadFind.FIND_FOUND);
+            else
+              this._updateStatusUI(this.nsITypeAheadFind.FIND_NOTFOUND);
+          }
+          else {
+            this._highlightDoc(null, null, null);
+            this._lastHighlightString = null;
+          }
+        ]]></body>
+      </method>
+
+      <!--
+        - (Un)highlights each instance of the searched word in the passed
+        - window's content.
+        - @param aHighBackColor
+        -        the background color for the highlight
+        - @param aHighTextColor
+        -        the text color for the highlight, or null to make it
+        -        unhighlight
+        - @param aWord
+        -        the word to search for
+        - @param aWindow
+        -        the window to search in. Passing undefined will search the
+        -        current content window.
+        - @returns true if aWord was found
+        -->
+      <method name="_highlightDoc">
+        <parameter name="aHighBackColor"/>
+        <parameter name="aHighTextColor"/>
+        <parameter name="aWord"/>
+        <parameter name="aWindow"/>
+        <body><![CDATA[
+          var win = aWindow || this.browser.contentWindow;
+
+          var textFound = false;
+          for (var i = 0; win.frames && i < win.frames.length; i++) {
+            if (this._highlightDoc(aHighBackColor, aHighTextColor, aWord, win.frames[i]))
+              textFound = true;
+          }
+
+          var doc = win.document;
+          if (!doc || !(doc instanceof HTMLDocument))
+            return textFound;
+
+          var body = doc.body;
+
+          var count = body.childNodes.length;
+          this._searchRange = doc.createRange();
+          this._startPt = doc.createRange();
+          this._endPt = doc.createRange();
+
+          this._searchRange.setStart(body, 0);
+          this._searchRange.setEnd(body, count);
+
+          this._startPt.setStart(body, 0);
+          this._startPt.setEnd(body, 0);
+          this._endPt.setStart(body, count);
+          this._endPt.setEnd(body, count);
+
+          if (!aHighBackColor) {
+            // Remove highlighting.  We use the find API again rather than
+            // searching for our span elements so that we gain access to the
+            // anonymous content that nsIFind searches.
+
+            if (!this._lastHighlightString)
+              return textFound;
+
+            var retRange = null;
+            var finder = Components.classes["@mozilla.org/embedcomp/rangefind;1"]
+                                   .createInstance(Components.interfaces.nsIFind);
+
+            while ((retRange = finder.Find(this._lastHighlightString,
+                                           this._searchRange, this._startPt,
+                                           this._endPt))) {
+              var startContainer = retRange.startContainer;
+              var elem = null;
+              try {
+                elem = startContainer.parentNode;
+              }
+              catch (ex) { }
+
+              if (elem && elem.className == "__mozilla-findbar-search") {
+                var child = null;
+                var docfrag = doc.createDocumentFragment();
+                var next = elem.nextSibling;
+                var parent = elem.parentNode;
+
+                while ((child = elem.firstChild)) {
+                  docfrag.appendChild(child);
+                }
+
+                this._startPt = doc.createRange();
+                this._startPt.setStartAfter(elem);
+
+                parent.removeChild(elem);
+                parent.insertBefore(docfrag, next);
+                parent.normalize();
+              }
+              else {
+                // Somehow we didn't highlight this instance; just skip it.
+                this._startPt = doc.createRange();
+                this._startPt.setStart(retRange.endContainer,
+                                       retRange.endOffset);
+              }
+
+              this._startPt.collapse(true);
+
+              textFound = true;
+            }
+            return textFound;
+          }
+
+          var baseNode = doc.createElementNS("http://www.w3.org/1999/xhtml", "span");
+          baseNode.style.backgroundColor = aHighBackColor;
+          baseNode.style.color = aHighTextColor;
+          baseNode.style.display = "inline";
+          baseNode.style.fontSize = "inherit";
+          baseNode.style.padding = "0";
+          baseNode.className = "__mozilla-findbar-search";
+
+          return this._highlightText(aWord, baseNode) || textFound;
+        ]]></body>
+      </method>
+
+      <!--
+        - Highlights each instance of the searched word in the current range.
+        -
+        - @param aWord
+        -        the word to search for.
+        - @param aBaseNode
+        -        a node to use as a template for what will replace the searched
+        -        word.
+        - @returns true if aWord was found
+        -->
+      <method name="_highlightText">
+        <parameter name="aWord"/>
+        <parameter name="aBaseNode"/>
+        <body><![CDATA[
+          var retRange = null;
+          var finder = Components.classes["@mozilla.org/embedcomp/rangefind;1"]
+                                 .createInstance()
+                                 .QueryInterface(Components.interfaces.nsIFind);
+
+          finder.caseSensitive = this._shouldBeCaseSensitive(aWord);
+
+          var textFound = false;
+          while((retRange = finder.Find(aWord, this._searchRange,
+                                        this._startPt, this._endPt))) {
+            // Highlight
+            var nodeSurround = aBaseNode.cloneNode(true);
+            var node = this._highlight(retRange, nodeSurround);
+            this._startPt = node.ownerDocument.createRange();
+            this._startPt.setStart(node, node.childNodes.length);
+            this._startPt.setEnd(node, node.childNodes.length);
+
+            textFound = true;
+          }
+
+          this._lastHighlightString = aWord;
+
+          return textFound;
+        ]]></body>
+      </method>
+
+     <!--
+       - Highlights the word in the passed range.
+       -
+       - @param aRange
+       -        the range that contains the word to highlight
+       - @param aNode
+       -        the node replace the searched word with
+       - @returns the node that replaced the searched word
+       -->
+      <method name="_highlight">
+        <parameter name="aRange"/>
+        <parameter name="aNode"/>
+        <body><![CDATA[
+          var startContainer = aRange.startContainer;
+          var startOffset = aRange.startOffset;
+          var endOffset = aRange.endOffset;
+          var docfrag = aRange.extractContents();
+          var before = startContainer.splitText(startOffset);
+          var parent = before.parentNode;
+          aNode.appendChild(docfrag);
+          parent.insertBefore(aNode, before);
+          return aNode;
+        ]]></body>
+      </method>
+
+      <!--
+        - Updates the case-sensitivity mode of the findbar and its UI.
+        - @param [optional] aString
+        -        The string for which case sensitivity might be turned on.
+        -        This only used when case-sensitivity is in auto mode,
+        -        @see _shouldBeCaseSensitive. The default value for this
+        -        parameter is the find-field value.
+        -->
+      <method name="_updateCaseSensitivity">
+        <parameter name="aString"/>
+        <body><![CDATA[
+          var val = aString || this._findField.value;
+
+          var caseSensitive = this._shouldBeCaseSensitive(val);
+          var checkbox = this.getElement("find-case-sensitive");
+          var statusLabel = this.getElement("match-case-status");
+          checkbox.checked = caseSensitive;
+
+          statusLabel.value = caseSensitive ? this._caseSensitiveStr : "";
+
+          // Show the checkbox on the full Find bar in non-auto mode.
+          // Show the label in all other cases.
+          var hideCheckbox = this._findMode != this.FIND_NORMAL ||
+            (this._typeAheadCaseSensitive != 0 &&
+             this._typeAheadCaseSensitive != 1);
+          checkbox.hidden = hideCheckbox;
+          statusLabel.hidden = !hideCheckbox;
+
+          var fastFind = this.browser.fastFind;
+          fastFind.caseSensitive = caseSensitive;
+        ]]></body>
+      </method>
+
+      <!--
+        - Sets the findbar case-sensitivity mode
+        - @param aCaseSensitive (boolean)
+        -        Whether or not case-sensitivity should be turned on.
+        -->
+      <method name="_setCaseSensitivity">
+        <parameter name="aCaseSensitive"/>
+        <body><![CDATA[
+          var prefsvc =
+            Components.classes["@mozilla.org/preferences-service;1"]
+                      .getService(Components.interfaces.nsIPrefBranch2);
+
+          // Just set the pref; our observer will change the find bar behavior
+          prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive",
+                             aCaseSensitive ? 1 : 0);
+        ]]></body>
+      </method>
+
+      <!--
+        - Opens and displays the find bar.
+        -
+        - @param aMode
+        -        the find mode to be used, which is either FIND_NORMAL,
+        -        FIND_TYPEAHEAD or FIND_LINKS. If not passed, the last
+        -        find mode if any or FIND_NORMAL.
+        - @returns true if the find bar wasn't previously open, false otherwise.
+        -->
+      <method name="open">
+        <parameter name="aMode"/>
+        <body><![CDATA[
+          if (aMode != undefined)
+            this._findMode = aMode;
+
+          if (!this._notFoundStr) {
+            var stringsBundle =
+              Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService)
+                        .createBundle("chrome://global/locale/findbar.properties");
+            this._notFoundStr = stringsBundle.GetStringFromName("NotFound");
+            this._wrappedToTopStr =
+              stringsBundle.GetStringFromName("WrappedToTop");
+            this._wrappedToBottomStr =
+              stringsBundle.GetStringFromName("WrappedToBottom");
+            this._normalFindStr =
+              stringsBundle.GetStringFromName("NormalFindLabel");
+            this._fastFindStr =
+              stringsBundle.GetStringFromName("FastFindLabel");
+            this._fastFindLinksStr =
+              stringsBundle.GetStringFromName("FastFindLinksLabel");
+            this._caseSensitiveStr =
+              stringsBundle.GetStringFromName("CaseSensitive");
+          }
+
+          this._updateFindUI();
+          if (this.hidden) {
+            this.hidden = false;
+
+            this._updateCaseSensitivity(this._findField.value);
+            this._updateStatusUI(this.nsITypeAheadFind.FIND_FOUND);
+
+            return true;
+          }
+          return false;
+        ]]></body>
+      </method>
+
+      <!--
+        - Closes the findbar.
+        -->
+      <method name="close">
+        <body><![CDATA[
+          var ww =
+            Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                      .getService(Components.interfaces.nsIWindowWatcher);
+          if (window == ww.activeWindow) {
+            var focusedElement = document.commandDispatcher.focusedElement;
+            if (focusedElement) {
+              var bindingParent = document.getBindingParent(focusedElement);
+              if (bindingParent == this || bindingParent == this._findField) {
+                // block scrolling on focus since find already scrolls, further
+                // scrolling is due to user action, so don't override this
+                var suppressedScroll = document.commandDispatcher.suppressFocusScroll;
+                document.commandDispatcher.suppressFocusScroll = true;
+                // We MUST reset suppressFocusScroll.
+                try {
+                  if (this._foundLink)
+                    this._foundLink.focus();
+                  else if (this._foundEditable)
+                    this._foundEditable.focus();
+                  else if (this._currentWindow)
+                    this._currentWindow.focus();
+                  else
+                    this.browser.contentWindow.focus();
+                }
+                catch(ex) {
+                  // Retry to set focus.
+                  try {
+                    this.browser.contentWindow.focus();
+                  }
+                  catch(e) { /* We lose focused element! */ }
+                }
+                document.commandDispatcher.suppressFocusScroll = suppressedScroll;
+              }
+            }
+          }
+
+          this.hidden = true;
+          var fastFind = this.browser.fastFind;
+          fastFind.setSelectionModeAndRepaint
+            (this.nsISelectionController.SELECTION_ON);
+          this._setFoundLink(null);
+          this._foundEditable = null;
+          this._currentWindow = null;
+          if (this._quickFindTimeout) {
+            clearTimeout(this._quickFindTimeout);
+            this._quickFindTimeout = null;
+          }
+        ]]></body>
+      </method>
+
+      <method name="_dispatchKeypressEvent">
+        <parameter name="aTarget"/>
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (!aTarget)
+            return;
+
+          var event = document.createEvent("KeyEvents");
+          event.initKeyEvent(aEvent.type, aEvent.bubbles, aEvent.cancelable,
+                             aEvent.view, aEvent.ctrlKey, aEvent.altKey,
+                             aEvent.shiftKey, aEvent.metaKey, aEvent.keyCode,
+                             aEvent.charCode);
+          aTarget.dispatchEvent(event);
+        ]]></body>
+      </method>
+
+      <field name="_xulBrowserWindow">null</field>
+      <method name="_updateStatusUIBar">
+        <body><![CDATA[
+          if (!this._xulBrowserWindow) {
+            try {
+              this._xulBrowserWindow =
+                window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                      .getInterface(Components.interfaces.nsIWebNavigation)
+                      .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+                      .treeOwner
+                      .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                      .getInterface(Components.interfaces.nsIXULWindow)
+                      .XULBrowserWindow;
+            }
+            catch(ex) { }
+            if (!this._xulBrowserWindow)
+              return false;
+          }
+
+          if (!this._foundLink || !this._foundLink.href ||
+              this._foundLink.href == "") {
+            this._xulBrowserWindow.setOverLink("", null);
+            return true;
+          }
+
+          var docCharset = "";
+          var ownerDoc = this._foundLink.ownerDocument;
+          if (ownerDoc)
+            docCharset = ownerDoc.characterSet;
+
+          if (!this._textToSubURIService) {
+            this._textToSubURIService =
+              Components.classes["@mozilla.org/intl/texttosuburi;1"]
+                        .getService(Components.interfaces.nsITextToSubURI);
+          }
+          var url =
+            this._textToSubURIService.unEscapeURIForUI(docCharset,
+                                                       this._foundLink.href);
+          this._xulBrowserWindow.setOverLink(url, null);
+
+          return true;
+        ]]></body>
+      </method>
+
+      <method name="_setFoundLink">
+        <parameter name="aFoundLink"/>
+        <body><![CDATA[
+          if (this._foundLink == aFoundLink)
+            return;
+
+          if (this._foundLink && this._drawOutline) {
+            // restore original outline
+            this._foundLink.style.outline = this._tmpOutline;
+            this._foundLink.style.outlineOffset = this._tmpOutlineOffset;
+          }
+          this._drawOutline = (aFoundLink && this._findMode != this.FIND_NORMAL);
+          if (this._drawOutline) {
+            // backup original outline
+            this._tmpOutline = aFoundLink.style.outline;
+            this._tmpOutlineOffset = aFoundLink.style.outlineOffset;
+
+            // draw pseudo focus rect
+            // XXX Should we change the following style for FAYT pseudo focus?
+            // XXX Shouldn't we change default design if outline is visible
+            //     already?
+            // Don't set the outline-color, we should always use initial value.
+            aFoundLink.style.outline = "1px dotted";
+            aFoundLink.style.outlineOffset = "0";
+          }
+
+          this._foundLink = aFoundLink;
+
+          // If the mouse cursor is on the document, the status bar text is
+          // changed by a mouse event which is dispatched by a scroll event.
+          // Thus we should change it only after the mouse event is dispatched.
+          if (this._findMode != this.FIND_NORMAL)
+            setTimeout(function(aSelf) { aSelf._updateStatusUIBar(); }, 0, this);
+        ]]></body>
+      </method>
+
+      <method name="_finishFAYT">
+        <parameter name="aKeypressEvent"/>
+        <body><![CDATA[
+          try {
+            if (this._foundLink)
+              this._foundLink.focus();
+            else if (this._foundEditable) {
+              this._foundEditable.focus();
+              var fastFind = this.browser.fastFind;
+              fastFind.collapseSelection();
+            }
+            else if (this._currentWindow)
+              this._currentWindow.focus();
+            else
+              return false;
+          }
+          catch(e) {
+            return false;
+          }
+
+          if (aKeypressEvent)
+            aKeypressEvent.preventDefault();
+
+          this.close();
+          return true;
+        ]]></body>
+      </method>
+
+      <!--
+        - Returns whether FAYT can be used for the given event in
+        - the current content state.
+        -->
+      <method name="_shouldFastFind">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.ctrlKey || aEvent.altKey || aEvent.metaKey ||
+              aEvent.getPreventDefault())
+            return false;
+
+          var elt = document.commandDispatcher.focusedElement;
+          if (elt) {
+            if (elt instanceof HTMLInputElement) {
+              // block FAYT when an <input> textfield element is focused
+              var inputType = elt.type;
+              switch (inputType) {
+                case "text":
+                case "password":
+                case "file":
+                  return false;
+              }
+            }
+            else if (elt instanceof HTMLTextAreaElement ||
+                     elt instanceof HTMLSelectElement ||
+                     elt instanceof HTMLIsIndexElement ||
+                     elt instanceof HTMLObjectElement ||
+                     elt instanceof HTMLEmbedElement)
+              return false;
+          }
+
+          // disable FAYT in about:config and about:blank to prevent FAYT
+          // opening unexpectedly - to fix bugs 264562, 267150, 269712
+          var url = this.browser.currentURI.spec;
+          if (url == "about:blank" || url == "about:config")
+            return false;
+
+          var win = document.commandDispatcher.focusedWindow;
+          if (win) {
+            try {
+              var editingSession = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                                   .getInterface(Components.interfaces.nsIWebNavigation)
+                                   .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                                   .getInterface(Components.interfaces.nsIEditingSession);
+              if (editingSession.windowIsEditable(win))
+                return false;
+            }
+            catch (e) {
+              // If someone built with composer disabled, we can't get an editing session.
+            }
+          }  
+
+          return true;
+        ]]></body>
+      </method>
+
+      <method name="_shouldBeCaseSensitive">
+        <parameter name="aString"/>
+        <body><![CDATA[
+          if (this._typeAheadCaseSensitive == 0)
+            return false;
+          if (this._typeAheadCaseSensitive == 1)
+            return true;
+
+          return aString != aString.toLowerCase();
+        ]]></body>
+      </method>
+
+      <method name="_onBrowserKeypress">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          const TAF_LINKS_KEY = "'";
+          const TAF_TEXT_KEY = "/";
+
+          if (!this._shouldFastFind(aEvent))
+            return;
+
+          if (this._findMode != this.FIND_NORMAL && this._quickFindTimeout) {
+            if (!aEvent.charCode)
+              return;
+
+            this._findField.select();
+            this._findField.focus();
+            this._dispatchKeypressEvent(this._findField.inputField, aEvent);
+            aEvent.preventDefault();
+            return;
+          }
+
+          var key = aEvent.charCode ? String.fromCharCode(aEvent.charCode) : null;
+          var manualstartFAYT = (key == TAF_LINKS_KEY || key == TAF_TEXT_KEY);
+          var autostartFAYT = !manualstartFAYT && this._useTypeAheadFind &&
+                              key && key != " ";
+          if (manualstartFAYT || autostartFAYT) {
+            var mode = (key == TAF_LINKS_KEY ||
+                        (autostartFAYT && this._typeAheadLinksOnly)) ?
+              this.FIND_LINKS : this.FIND_TYPEAHEAD;
+
+            // Clear bar first, so that when openFindBar() calls setCaseSensitivity()
+            // it doesn't get confused by a lingering value
+            this._findField.value = "";
+
+            this.open(mode);
+            this._setFindCloseTimeout();
+            this._findField.select();
+            this._findField.focus();
+
+            if (autostartFAYT)
+              this._dispatchKeypressEvent(this._findField.inputField, aEvent);
+            else
+              this._updateStatusUI(this.nsITypeAheadFind.FIND_FOUND);
+
+            aEvent.preventDefault();
+          }
+        ]]></body>
+      </method>
+
+      <!-- See nsIDOMEventListener -->
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          switch (aEvent.type) {
+            case "mouseup":
+              if (!this.hidden && this._findMode != this.FIND_NORMAL)
+                this.close();
+
+              break;
+            case "keypress":
+              this._onBrowserKeypress(aEvent);
+              break;
+          }
+        ]]></body>
+      </method>
+
+      <method name="_enableFindButtons">
+        <parameter name="aEnable"/>
+        <body><![CDATA[
+          this.getElement("find-next").disabled =
+            this.getElement("find-previous").disabled =
+            this.getElement("highlight").disabled = !aEnable;
+        ]]></body>
+      </method>
+
+      <!--
+        - Determines whether minimalist or general-purpose search UI is to be
+        - displayed when the find bar is activated.
+        -->
+      <method name="_updateFindUI">
+        <body><![CDATA[
+          var showMinimalUI = this._findMode != this.FIND_NORMAL;
+
+          var nodes = document.getAnonymousNodes(this);
+          for (var i = 0; i < nodes.length; i++) {
+            if (nodes[i].className.indexOf("findbar-find-fast") != -1)
+               continue;
+
+            nodes[i].hidden = showMinimalUI;
+          }
+
+          if (this._findMode == this.FIND_TYPEAHEAD)
+            this.getElement("find-label").value = this._fastFindStr;
+          else if (this._findMode == this.FIND_LINKS)
+            this.getElement("find-label").value = this._fastFindLinksStr;
+          else
+            this.getElement("find-label").value = this._normalFindStr;
+        ]]></body>
+      </method>
+
+      <method name="_updateFoundLink">
+        <parameter name="res"/>
+        <body><![CDATA[
+          var val = this._findField.value;
+          if (res == this.nsITypeAheadFind.FIND_NOTFOUND || !val) {
+            this._setFoundLink(null);
+            this._foundEditable = null;
+            this._currentWindow = null;
+          }
+          else {
+            this._setFoundLink(this.browser.fastFind.foundLink);
+            this._foundEditable = this.browser.fastFind.foundEditable;
+            this._currentWindow = this.browser.fastFind.currentWindow;
+          }
+        ]]></body>
+      </method>
+
+      <method name="_find">
+        <parameter name="aValue"/>
+        <body><![CDATA[
+          var val = aValue || this._findField.value
+
+          this._enableFindButtons(val);
+          if (this.getElement("highlight").checked)
+            this._setHighlightTimeout();
+
+          this._updateCaseSensitivity(val);
+
+          var fastFind = this.browser.fastFind;
+          var res = fastFind.find(val, this._findMode == this.FIND_LINKS);
+          this._updateFoundLink(res);
+          this._updateStatusUI(res, false);
+
+          if (this._findMode != this.FIND_NORMAL)
+            this._setFindCloseTimeout();
+
+          return res;
+        ]]></body>
+      </method>
+
+      <method name="_flash">
+        <body><![CDATA[
+          if (this._flashFindBarCount === undefined)
+            this._flashFindBarCount = this._initialFlashFindBarCount;
+
+          if (this._flashFindBarCount-- == 0) {
+            clearInterval(this._flashFindBarTimeout);
+            this.removeAttribute("flash");
+            this._flashFindBarCount = 6;
+            return;
+          }
+
+          this.setAttribute("flash",
+                            (this._flashFindBarCount % 2 == 0) ?
+                            "false" : "true");
+        ]]></body>
+      </method>
+
+      <method name="_setHighlightTimeout">
+        <body><![CDATA[
+          if (this._highlightTimeout)
+            clearTimeout(this._highlightTimeout);
+          this._highlightTimeout =
+            setTimeout(function(aSelf) {
+                         aSelf.toggleHighlight(false);
+                         aSelf.toggleHighlight(true);
+                       }, 500, this);
+        ]]></body>
+      </method>
+
+      <method name="_findAgain">
+        <parameter name="aFindPrevious"/>
+        <body><![CDATA[
+          var fastFind = this.browser.fastFind;
+          var res = fastFind.findAgain(aFindPrevious,
+                                       this._findMode == this.FIND_LINKS);
+          this._updateFoundLink(res);
+          this._updateStatusUI(res, aFindPrevious);
+
+          if (this._findMode != this.FIND_NORMAL && !this.hidden)
+            this._setFindCloseTimeout();
+
+          return res;
+        ]]></body>
+      </method>
+
+      <method name="_updateStatusUI">
+        <parameter name="res"/>
+        <parameter name="aFindPrevious"/>
+        <body><![CDATA[
+          switch (res) {
+            case this.nsITypeAheadFind.FIND_WRAPPED:
+              this._findStatusIcon.setAttribute("status", "wrapped");
+              this._findStatusLabel.value =
+                aFindPrevious ? this._wrappedToBottomStr : this._wrappedToTopStr;
+              this._findField.removeAttribute("status");
+              break;
+            case this.nsITypeAheadFind.FIND_NOTFOUND:
+              this._findStatusIcon.setAttribute("status", "notfound");
+              this._findStatusLabel.value = this._notFoundStr;
+              this._findField.setAttribute("status", "notfound");
+              break;
+            case this.nsITypeAheadFind.FIND_FOUND:
+            default:
+              this._findStatusIcon.removeAttribute("status");
+              this._findStatusLabel.value = "";
+              this._findField.removeAttribute("status");
+              break;
+          }
+        ]]></body>
+      </method>
+
+      <method name="_getInitialSelection">
+        <body><![CDATA[
+          var focusedElement = document.commandDispatcher.focusedElement;
+          var selText;
+
+          if (focusedElement instanceof Components.interfaces.nsIDOMNSEditableElement &&
+            focusedElement.ownerDocument.defaultView.top == this._browser.contentWindow)
+          {
+            // The user may have a selection in an input or textarea
+            selText = focusedElement.editor.selectionController
+              .getSelection(Components.interfaces.nsISelectionController.SELECTION_NORMAL)
+              .toString();
+          }
+          else {
+            // Look for any selected text on the actual page
+            var focusedWindow = document.commandDispatcher.focusedWindow;
+            if (focusedWindow.top == this._browser.contentWindow)
+              selText = focusedWindow.getSelection().toString();
+          }
+
+          if (!selText)
+            return "";
+
+          // Process our text to get rid of unwanted characters
+          if (selText.length > this._selectionMaxLen) {
+            var pattern = new RegExp("^(?:\\s*.){0," + this._selectionMaxLen + "}");
+            pattern.test(selText);
+            selText = RegExp.lastMatch;
+          }
+          return selText.replace(/^\s+/, "")
+                        .replace(/\s+$/, "")
+                        .replace(/\s+/g, " ")
+                        .substr(0, this._selectionMaxLen);
+        ]]></body>
+      </method>
+
+      <!--
+        - Opens the findbar, focuses the findfield and selects its contents.
+        - Also flashes the findbar the first time it's used.
+        - @param aMode
+        -        the find mode to be used, which is either FIND_NORMAL,
+        -        FIND_TYPEAHEAD or FIND_LINKS. If not passed, the last
+        -        find mode if any or FIND_NORMAL.
+        -->
+      <method name="startFind">
+        <parameter name="aMode"/>
+        <body><![CDATA[
+          var prefsvc =
+            Components.classes["@mozilla.org/preferences-service;1"]
+                      .getService(Components.interfaces.nsIPrefBranch2);
+          var userWantsPrefill = true;
+          this.open(aMode);
+
+          if (this._flashFindBar) {
+            this._flashFindBarTimeout =
+              setInterval(function(aSelf) { aSelf._flash(); }, 500, this);
+            prefsvc.setIntPref("accessibility.typeaheadfind.flashBar",
+                               --this._flashFindBar);
+          }
+
+          if (this.prefillWithSelection)
+            userWantsPrefill = 
+              prefsvc.getBoolPref("accessibility.typeaheadfind.prefillwithselection");
+
+          var initialString = (this.prefillWithSelection && userWantsPrefill) ?
+                              this._getInitialSelection() : null;
+          if (initialString) {
+            this._findField.value = initialString;
+            this._enableFindButtons(true);
+          }
+          else if (!this._findField.value)
+            this._enableFindButtons(false);
+
+          this._findField.select();
+          this._findField.focus();
+        ]]></body>
+      </method>
+
+      <!--
+        - Convenient alias to startFind(gFindBar.FIND_NORMAL);
+        -
+        - You should generally map the window's find command to this method.
+        -   e.g. <command name="cmd_find" oncommand="gFindBar.onFindCommand();"/>
+        -->
+      <method name="onFindCommand">
+        <body><![CDATA[
+          this.startFind(this.FIND_NORMAL);
+        ]]></body>
+      </method>
+
+      <!--
+        - Stub for find-next and find-previous commands
+        - @param aFindPrevious
+        -        true for find-previous, false otherwise.
+        -->
+      <method name="onFindAgainCommand">
+        <parameter name="aFindPrevious"/>
+        <body><![CDATA[
+          var findString = this._browser.fastFind.searchString || this._findField.value;
+          if (!findString) {
+            this.startFind();
+            return;
+          }
+
+          var res;
+          // Ensure the stored SearchString is in sync with what we want to find
+          if (this._findField.value != this._browser.fastFind.searchString &&
+              !this.hidden)
+            res = this._find(this._findField.value);
+          else
+            res = this._findAgain(aFindPrevious);
+
+          if (res == this.nsITypeAheadFind.FIND_NOTFOUND) {
+            if (this.open()) {
+              if (this._findMode != this.FIND_NORMAL)
+                this._setFindCloseTimeout();
+              this._findField.focus();
+              this._findField.focus();
+              this._updateStatusUI(res, aFindPrevious);
+            }
+          }
+        ]]></body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="keypress" keycode="VK_ESCAPE" phase="capturing" action="this.close();" preventdefault="true"/>
+    </handlers>
+  </binding>
+</bindings>

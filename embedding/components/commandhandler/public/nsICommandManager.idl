@@ -1,0 +1,152 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Simon Fraser <sfraser@netscape.com>
+ *   Kathleen Brade <brade@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsIObserver.idl"
+#include "nsICommandParams.idl"
+
+interface nsIDOMWindow;
+
+/*
+ * nsICommandManager is an interface used to executing user-level commands,
+ * and getting the state of available commands.
+ *
+ * Commands are identified by strings, which are documented elsewhere.
+ * In addition, the list of required and optional parameters for
+ * each command, that are passed in via the nsICommandParams, are
+ * also documented elsewhere. (Where? Need a good location for this).
+ */
+ 
+ 
+[scriptable, uuid(080D2001-F91E-11D4-A73C-F9242928207C)]
+interface nsICommandManager : nsISupports
+{
+  /*
+   * Register an observer on the specified command. The observer's Observe
+   * method will get called when the state (enabled/disbaled, or toggled etc)
+   * of the command changes.
+   *
+   * You can register the same observer on multiple commmands by calling this
+   * multiple times.
+   */
+  void        addCommandObserver(in nsIObserver aCommandObserver,
+                                 in string aCommandToObserve);
+
+  /*
+   * Stop an observer from observering the specified command. If the observer
+   * was also registered on ther commands, they will continue to be observed.
+   *
+   * Passing an empty string in 'aCommandObserved' will remove the observer
+   * from all commands.
+   */
+  void        removeCommandObserver(in nsIObserver aCommandObserver,
+                                    in string aCommandObserved);
+
+  /*
+   * Ask the command manager if the specified command is supported.
+   * If aTargetWindow is null, the focused window is used.
+   *
+   */
+  boolean     isCommandSupported(in string aCommandName,
+                                 in nsIDOMWindow aTargetWindow);
+
+  /*
+   * Ask the command manager if the specified command is currently.
+   * enabled.
+   * If aTargetWindow is null, the focused window is used.
+   */
+  boolean     isCommandEnabled(in string aCommandName,
+                               in nsIDOMWindow aTargetWindow);
+
+  /*
+   * Get the state of the specified commands.
+   *
+   * On input: aCommandParams filled in with values that the caller cares
+   * about, most of which are command-specific (see the command documentation
+   * for details). One boolean value, "enabled", applies to all commands,
+   * and, in return will be set to indicate whether the command is enabled
+   * (equivalent to calling isCommandEnabled).
+   *
+   * aCommandName is the name of the command that needs the state
+   * aTargetWindow is the source of command controller 
+   *      (null means use focus controller)
+   * On output: aCommandParams: values set by the caller filled in with
+   * state from the command.
+   */
+  void        getCommandState(in string aCommandName,
+                              in nsIDOMWindow aTargetWindow,
+                  /* inout */ in nsICommandParams aCommandParams);
+    
+  /*
+   * Execute the specified command.
+   * The command will be executed in aTargetWindow if it is specified.
+   * If aTargetWindow is null, it will go to the focused window.
+   *
+   * param: aCommandParams, a list of name-value pairs of command parameters,
+   * may be null for parameter-less commands.
+   *
+   */
+  void        doCommand(in string aCommandName,
+                        in nsICommandParams aCommandParams,
+                        in nsIDOMWindow aTargetWindow);
+
+};
+
+
+/*
+
+Arguments to observers "Observe" method are as follows:
+
+  void Observe(   in nsISupports aSubject,          // The nsICommandManager calling this Observer
+                  in string      aTopic,            // Name of the command
+                  in wstring     aDummy );          // unused
+
+*/
+
+// {64edb481-0c04-11d5-a73c-e964b968b0bc}
+%{C++
+#define NS_COMMAND_MANAGER_CID \
+{ 0x64edb481, 0x0c04, 0x11d5, { 0xa7, 0x3c, 0xe9, 0x64, 0xb9, 0x68, 0xb0, 0xbc } }
+
+#define NS_COMMAND_MANAGER_CONTRACTID \
+ "@mozilla.org/embedcomp/command-manager;1"
+%}
+
+
+

@@ -1,0 +1,162 @@
+<?xml version="1.0"?>
+# -*- Mode: HTML -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org printing front-end.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2002
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Masaki Katakai <katakai@japan.sun.com>
+#   Dan Rosen <dr@netscape.com>
+#   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+#   Asko Tontti <atontti@cc.hut.fi>
+#   Jessica Blanco <jblanco@us.ibm.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<!DOCTYPE dialog SYSTEM "chrome://global/locale/printjoboptions.dtd">
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="onLoad();"
+  ondialogaccept="return onAccept();"
+  title="&printJobOptions.title;"
+  persist="screenX screenY"
+  screenX="24" screenY="24">
+
+  <script type="application/x-javascript" src="chrome://global/content/printjoboptions.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <grid>
+    <columns>
+      <column/>
+      <column flex="1"/>
+    </columns>
+
+    <rows>
+      <row id="jobTitleGroup">
+        <hbox align="center" pack="end">
+          <label id="jobTitleLabel" control="jobTitleInput" value="&jobTitleInput.label;"/>
+        </hbox>
+        <textbox id="jobTitleInput" flex="1"/>
+      </row>
+
+      <row id="paperGroup">
+        <hbox align="center" pack="end">
+          <label id="paperLabel" control="paperList" value="&paperInput.label;"/>
+        </hbox>
+        <menulist id="paperList" flex="1">
+          <menupopup/>
+        </menulist>
+      </row>
+
+      <row id="plexGroup">
+        <hbox align="center" pack="end">
+          <label id="plexLabel" control="plexList" value="&plexInput.label;"/>
+        </hbox>
+        <menulist id="plexList" flex="1">
+          <menupopup/>
+        </menulist>
+      </row>
+
+      <row id="resolutionGroup">
+        <hbox align="center" pack="end">
+          <label id="resolutionLabel" control="resolutionList" value="&resolutionInput.label;"/>
+        </hbox>
+        <menulist id="resolutionList" flex="1">
+          <menupopup/>
+        </menulist>
+      </row>
+
+      <row id="colorspaceGroup">
+        <hbox align="center" pack="end">
+          <label id="colorspaceLabel" control="colorspaceList" value="&colorspaceInput.label;"/>
+        </hbox>
+        <menulist id="colorspaceList" flex="1">
+          <menupopup/>
+        </menulist>
+      </row>
+
+      <row id="cmdGroup">
+        <label id="cmdLabel" control="cmdInput" value="&cmdInput.label;"/>
+        <textbox id="cmdInput" flex="1"/>
+      </row>
+
+      <row id="colorGroup">
+        <hbox align="center" pack="end">
+          <label control="colorRadioGroup" value="&colorGroup.label;"/>
+        </hbox>
+        <radiogroup id="colorRadioGroup" orient="horizontal">
+          <radio id="grayRadio" label="&grayRadio.label;"/>
+          <radio id="colorRadio" label="&colorRadio.label;"/>
+        </radiogroup>
+      </row>
+
+      <row id="fontsGroup">
+        <hbox align="center" pack="end">
+          <label control="downloadFonts" value="&fontsGroup.label;"/>
+        </hbox>
+        <checkbox id="downloadFonts" label="&downloadFonts.label;" />
+      </row>
+    </rows>
+  </grid>
+
+  <grid>
+    <columns>
+      <column/>
+    </columns>
+    <rows>
+      <row>
+       <groupbox flex="1">
+        <caption label="&edgeMarginInput.label;"/>
+        <hbox>
+          <hbox align="center">
+            <label id="topLabel" control="topInput" value="&topInput.label;"/>
+            <textbox id="topInput" style="width:5em;" onkeyup="checkDouble(this, 0.5)"/>
+          </hbox>
+          <hbox align="center">
+            <label id="bottomLabel" control="bottomInput" value="&bottomInput.label;"/>
+            <textbox id="bottomInput" style="width:5em;" onkeyup="checkDouble(this, 0.5)"/>
+          </hbox>
+          <hbox align="center">
+            <label id="leftLabel" control="leftInput" value="&leftInput.label;"/>
+            <textbox id="leftInput" style="width:5em;" onkeyup="checkDouble(this, 0.5)"/>
+          </hbox>
+          <hbox align="center">
+            <label id="rightLabel" control="rightInput" value="&rightInput.label;"/>
+            <textbox id="rightInput" style="width:5em;" onkeyup="checkDouble(this, 0.5)"/>
+          </hbox>
+        </hbox>
+        </groupbox>
+      </row>
+
+    </rows>
+  </grid>
+
+</dialog>

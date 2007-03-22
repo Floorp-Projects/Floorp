@@ -1,0 +1,141 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is cookie manager code.
+ *
+ * The Initial Developer of the Original Code is
+ * Michiel van Leeuwen (mvl@exedo.nl).
+ * Portions created by the Initial Developer are Copyright (C) 2003
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsICookie2;
+interface nsIURI;
+interface nsIChannel;
+
+typedef long nsCookieAccess;
+
+/**
+ * An interface to test for cookie permissions
+ */
+[scriptable, uuid(91f1c3ec-73a0-4bf0-bdc5-348a1f181b0e)]
+interface nsICookiePermission : nsISupports
+{
+  /**
+   * nsCookieAccess values
+   */
+  const nsCookieAccess ACCESS_DEFAULT = 0;
+  const nsCookieAccess ACCESS_ALLOW   = 1;
+  const nsCookieAccess ACCESS_DENY    = 2;
+
+  /**
+   * additional values for nsCookieAccess, which are not directly used by
+   * any methods on this interface, but are nevertheless convenient to define
+   * here. these may be relocated somewhere else if we ever consider freezing
+   * this interface.
+   */
+  const nsCookieAccess ACCESS_SESSION = 8;
+
+  /**
+   * setAccess
+   *
+   * this method is called to block cookie access for the given URI.  this
+   * may result in other URIs being blocked as well (e.g., URIs which share
+   * the same host name).
+   *
+   * @param aURI
+   *        the URI to block
+   * @param aAccess
+   *        the new cookie access for the URI.
+   */
+  void setAccess(in nsIURI         aURI,
+                 in nsCookieAccess aAccess);
+
+  /**
+   * canAccess
+   *
+   * this method is called to test whether or not the given URI/channel may
+   * access the cookie database, either to set or get cookies.
+   *
+   * @param aURI
+   *        the URI trying to access cookies
+   * @param aFirstURI
+   *        the URI initiated by the user that resulted in aURI being loaded
+   * @param aChannel
+   *        the channel corresponding to aURI
+   *
+   * @return one of the following nsCookieAccess values:
+   *         ACCESS_DEFAULT, ACCESS_ALLOW, or ACCESS_DENY
+   */
+  nsCookieAccess canAccess(in nsIURI     aURI,
+                           in nsIURI     aFirstURI,
+                           in nsIChannel aChannel);
+
+  /**
+   * canSetCookie
+   *
+   * this method is called to test whether or not the given URI/channel may
+   * set a specific cookie.  this method is always preceded by a call to
+   * canAccess. it may modify the isSession and expiry attributes of the
+   * cookie via the aIsSession and aExpiry parameters, in order to limit
+   * or extend the lifetime of the cookie. this is useful, for instance, to
+   * downgrade a cookie to session-only if it fails to meet certain criteria.
+   *
+   * @param aURI
+   *        the URI trying to set the cookie
+   * @param aChannel
+   *        the corresponding to aURI
+   * @param aCookie
+   *        the cookie being added to the cookie database
+   * @param aIsSession
+   *        when canSetCookie is invoked, this is the current isSession attribute
+   *        of the cookie. canSetCookie may leave this value unchanged to
+   *        preserve this attribute of the cookie.
+   * @param aExpiry
+   *        when canSetCookie is invoked, this is the current expiry time of
+   *        the cookie. canSetCookie may leave this value unchanged to
+   *        preserve this attribute of the cookie.
+   *
+   * @return true if the cookie can be set.
+   */
+  boolean canSetCookie(in nsIURI     aURI,
+                       in nsIChannel aChannel,
+                       in nsICookie2 aCookie,
+                       inout boolean aIsSession,
+                       inout PRInt64 aExpiry);
+};
+
+%{ C++
+/**
+ * The nsICookiePermission implementation is an XPCOM service registered
+ * under the ContractID:
+ */
+#define NS_COOKIEPERMISSION_CONTRACTID "@mozilla.org/cookie/permission;1"
+%}

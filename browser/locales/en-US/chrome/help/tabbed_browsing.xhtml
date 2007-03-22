@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"[
+    <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+    %brandDTD;
+    <!ENTITY % platformDTD SYSTEM "chrome://browser/locale/help/platformStrings.dtd" >
+    %platformDTD;
+]>
+<!--
+Contributors:
+  Daniel Wang (original author)
+  Jeff Walden <jwalden+code@mit.edu> (minor editorial nits, XHTML conversion)
+  Steffen Wilberg <steffen.wilberg@web.de> (minor editorial nits)
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Tabbed Browsing</title>
+	<link rel="stylesheet" type="text/css" href="chrome://help/skin/helpFileLayout.css"/>
+</head>
+
+<body>
+<h1>Tabbed Browsing</h1>
+
+<p>Tabbed browsing lets you open tabs, each displaying a web page, within a
+  single &brandShortName; window.  You can open links in new tabs, where they
+  will load while you read the current page.  You don't have to use tabbed
+  browsing, but if you do you might find tabbed browsing is a better, faster
+  way to browse the Web.</p>
+
+<div class="contentsBox">In this section:
+  <ul>
+    <li><a href="#creating_loading_tabs">Creating and Loading Tabs</a></li>
+    <li><a href="#moving_tabs">Moving Tabs Within a Window</a></li>
+    <li><a href="#closing_tabs">Closing Tabs</a></li>
+    <li><a href="#customizing">Customizing Tabbed Browsing</a></li>
+    <li><a href="#tips_tricks">Tips and Tricks</a></li>
+  </ul>
+</div>
+
+<h2 id="creating_loading_tabs">Creating and Loading Tabs</h2>
+
+<p>To open a new tab, press &accelKey;+<kbd>T</kbd>, select <span
+  class="menuPath">File &gt; New Tab</span>, or double-click an empty space in
+  the Tab Bar.</p>
+
+<p>To load a link in a tab, you can do one of the following:</p>
+
+<ul>
+  <li>Middle-click the link. (If you have a mouse wheel, clicking the wheel is
+    equivalent to middle-clicking.)</li>
+  <li>Drag the link and drop it on an empty space in the Tab Bar. (If only one
+    web page is open, the Tab Bar may be hidden. See <a
+    href="#customizing">Customizing Tabbed Browsing</a> for information on how
+    to change this.)</li>
+  <li>Drag and drop the link onto a tab to open the link in that tab.</li>
+  <li><span class="noMac">Right-click</span><span class="mac">Press &ctrlKey;,
+    click on</span> the link, and choose <span
+    class="menuPath">Open Link in New Tab</span> from the context menu.</li>
+</ul>
+
+<p>To open a URL in the Location Bar in a new tab, enter the URL and press
+  &altKey;+&enterKey;.</p>
+
+<h2 id="moving_tabs">Moving Tabs Within a Window</h2>
+
+<p>Tabs are displayed in the order you open them, which may not always be what
+  you want.  To move a tab to a different location within a &brandShortName;
+  window, simply drag it there using your mouse.  While you are dragging the
+  tab, &brandShortName; displays a small indicator to show where the tab will be
+  moved.  Alternately, you can use <a
+  href="shortcuts.xhtml#windows_tabs">keyboard shortcuts</a> to move tabs within
+  a window if desired.</p>
+
+<h2 id="closing_tabs">Closing and Restoring Tabs</h2>
+
+<p>To close the current tab, press &accelKey;+<kbd>W</kbd>, click the Close Tab
+  button, middle-click the tab, or select <span class="menuPath">File &gt;
+  Close Tab</span>.  To close all tabs other than the current one, <span
+  class="noMac">right-click</span><span class="mac">press &ctrlKey;,
+  click</span> on the tab and choose <span class="menuPath">Close Other
+  Tabs</span>.</p>
+  
+<p>&brandShortName; windows keep a list of tabs you closed recently. You can
+  restore any tab by selecting it from <span class="menuPath">History &gt;
+  Recently Closed Tabs</span>. You can restore all tabs by selecting <span
+  class="menuPath">History &gt; Recently Closed Tabs &gt; Open All in Tabs
+  </span>. Press &accelKey;+&shiftKey;+<kbd>T</kbd> to open them one by one in
+  reverse order.</p>
+
+<h2 id="customizing">Customizing Tabbed Browsing</h2>
+  <p>To change tabbed browsing &pref.plural; select &pref.menuPath; and open the
+    <a href="prefs.xhtml#tabs_options"><em>Tabs</em> panel</a>.</p>
+
+<h2 id="tips_tricks">Tips and Tricks</h2>
+
+<dl>
+
+  <dt id="bookmarking_tabbed_browsing">Bookmarks and Tabbed Browsing</dt>
+  <dd>To bookmark a set of tabs:</dd>
+  <dd>
+    <ol>
+      <li><span class="noUnix">Press &accelKey;+&shiftKey;+<kbd>D</kbd> or
+        select</span><span class="unix">Select</span>
+        <span class="menuPath">Bookmarks &gt; Bookmark All Tabs</span> to add
+        all the tabs in the current window to a new bookmark folder.</li>
+      <li>To open bookmarks in tabs, open a bookmark folder menu and choose
+        <span class="menuPath">Open in Tabs</span>.  You can also middle-click
+        on the folder to open its contents in tabs.  The bookmarks will open in
+        existing tabs, not new ones.</li>
+    </ol>
+  </dd>
+
+  <dt id="home_page_as_tabs">Home Page as Tabs</dt>
+  <dd>Instead of using only one web page as your homepage, you can make your
+    home page a set of tabs. Select your favorite web sites and open them in
+    tabs in a single window. Select &pref.menuPath; and open the <a
+    href="prefs.xhtml#main_options"><em>Main</em> panel</a>.  Under
+    <em>Startup</em>, press the <em>Use Current Pages</em> button. Now
+    when you press the Home button, your favorite web sites will load with just
+    a click.</dd>
+
+  <dt>Adding a New Tab Toolbar Button</dt>
+  <dd>You can add a New Tab button on the toolbar to easily open new tabs by <a
+    href="customization.xhtml#rearranging_toolbar_items">customizing your
+    toolbars</a>.</dd>
+
+  <dt id="keyboard_shortcuts">Keyboard shortcuts</dt>
+  <dd>&brandShortName; has an extensive set of shortcuts related to tabbed
+    browsing; see the full list in <a
+    href="shortcuts.xhtml#windows_tabs">Keyboard Shortcuts</a>.</dd>
+
+</dl>
+
+<div class="contentsBox"><em>12 September 2006</em></div>
+<p>Copyright &copy; &copyright.years; Contributors to the Mozilla Help Viewer Project.</p>
+
+</body>
+</html>

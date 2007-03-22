@@ -1,0 +1,344 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the MozJSHTTP server.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Jeff Walden <jwalden+code@mit.edu>          (original author)
+ *   Robert Sayre <sayrer@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsIServerSocket.idl"
+#include "nsIPropertyBag.idl"
+
+interface nsILocalFile;
+interface nsISimpleEnumerator;
+interface nsIOutputStream;
+
+interface nsIHttpServer;
+interface nsIHttpRequestHandler;
+interface nsIHttpRequestMetadata;
+interface nsIHttpResponse;
+
+/**
+ * An interface which represents an HTTP server.
+ */
+[scriptable, uuid(5520f79e-ecd5-4c40-843b-97ee13a23747)]
+interface nsIHttpServer : nsIServerSocketListener
+{
+  /**
+   * Starts up this server, listening upon the given port.  This method may
+   * throw if the process does not have sufficient privileges to open a socket
+   * for the given port, and it also throws when called upon a server which has
+   * already been started.
+   *
+   * @param port
+   *   the port upon which listening should happen, or -1 if no specific port is
+   *   desired
+   */
+  void start(in long port);
+
+  /**
+   * Shuts down this server if it is running; if it is not, this method is a
+   * no-op.
+   *
+   * This method will do its best to return after the socket in this
+   * server has been closed and all pending requests have completed being
+   * served, but this may or may not actually happen, since in some
+   * implementations this may not actually be possible.  Implementations which
+   * can make this promise should make it explicit in implementation
+   * documentation.
+   */
+  void stop();
+
+  /**
+   * Associates the local file represented by the string file with all requests
+   * which match request.
+   *
+   * @param path
+   *   the path which is to be mapped to the given file; must begin with "/" and
+   *   be a valid URI path (i.e., no query string, hash reference, etc.)
+   * @param file
+   *   the file to serve for the given path; this file must exist for the
+   *   lifetime of the server
+   */
+  void registerFile(in string path, in nsILocalFile file);
+
+  /**
+   * Registers a custom path handler.
+   *
+   * @param path
+   *   the path on the server (beginning with a "/") which is to be handled by
+   *   handler; this path must not include a query string or hash component; it
+   *   also should usually be canonicalized, since most browsers will do so
+   *   before sending otherwise-matching requests
+   * @param handler
+   *   an object which will handle any requests for the given path, or null to
+   *   remove any existing handler; if while the server is running the handler
+   *   throws an exception while responding to a request, an HTTP 500 response
+   *   will be returned
+   * @throws NS_ERROR_INVALID_ARG
+   *   if path does not begin with a "/"
+   */
+  void registerPathHandler(in string path, in nsIHttpRequestHandler handler);
+
+  /**
+   * Registers a custom error page handler.
+   *
+   * @param code
+   *   the error code which is to be handled by handler
+   * @param handler
+   *   an object which will handle any requests which generate the given status
+   *   code, or null to remove any existing handler.  If the handler throws an
+   *   exception during server operation, fallback is to the genericized error
+   *   handler (the x00 version), then to 500, using a user-defined error
+   *   handler if one exists or the server default handler otherwise.  Fallback
+   *   will never occur from a user-provided handler that throws to the same
+   *   handler as provided by the server, e.g. a throwing user 404 falls back to
+   *   400, not a server-provided 400 that might not throw.
+   * @note
+   *   If the error handler handles HTTP 500 and throws, behavior is undefined.
+   */
+  void registerErrorHandler(in unsigned long code, in nsIHttpRequestHandler handler);
+
+  /**
+   * Maps all requests to paths beneath path to the corresponding file beneath
+   * dir.
+   *
+   * @param path
+   *   the absolute path on the server against which requests will be served
+   *   from dir (e.g., "/", "/foo/", etc.); must begin and end with a forward
+   *   slash
+   * @param dir
+   *   the directory to be used to serve all requests for paths underneath path
+   *   (except those further overridden by another, deeper path registered with
+   *   another directory); if null, any current mapping for the given path is
+   *   removed
+   * @throws NS_ERROR_INVALID_ARG
+   *   if dir is non-null and does not exist or is not a directory, or if path
+   *   does not begin with and end with a forward slash
+   */
+  void registerDirectory(in string path, in nsILocalFile dir);
+
+  /**
+   * Sets the handler used to display the contents of a directory if
+   * the directory contains no index page.
+   *
+   * @param handler
+   *   an object which will handle any requests for directories which
+   *   do not contain index pages, or null to reset to the default
+   *   index handler; if while the server is running the handler
+   *   throws an exception while responding to a request, an HTTP 500
+   *   response will be returned.  An nsIFile corresponding to the
+   *   directory is available from the metadata object passed to the
+   *   handler, under the key "directory".
+   */
+  void setIndexHandler(in nsIHttpRequestHandler handler);
+};
+
+/**
+ * A representation of a handler for HTTP requests.  The handler is used by
+ * calling its .handle method with data for an incoming request; it is the
+ * handler's job to use that data as it sees fit to make the desired response.
+ *
+ * @note
+ *   This interface uses the [function] attribute, so you can pass a
+ *   script-defined function with the functionality of handle() to any
+ *   method which has a nsIHttpRequestHandler parameter, instead of wrapping
+ *   it in an otherwise empty object.
+ */
+[scriptable, function, uuid(2bbb4db7-d285-42b3-a3ce-142b8cc7e139)]
+interface nsIHttpRequestHandler : nsISupports
+{
+  /**
+   * Processes the HTTP request represented by metadata and initializes the
+   * passed-in response to reflect the correct HTTP response.
+   *
+   * Note that in some uses of nsIHttpRequestHandler, this method is required to
+   * not throw an exception; in the general case, however, this method may throw
+   * an exception (causing an HTTP 500 response to occur).
+   *
+   * @param metadata
+   *   data representing an HTTP request
+   * @param response
+   *   an initially-empty response which must be modified to reflect the data
+   *   which should be sent as the response to the request described by metadata
+   */
+  void handle(in nsIHttpRequestMetadata metadata, in nsIHttpResponse response);
+};
+
+
+/**
+ * A representation of the data included in an HTTP request.
+ */
+[scriptable, uuid(3a899b17-b6eb-4333-8ef4-912df454a551)]
+interface nsIHttpRequestMetadata : nsIPropertyBag
+{
+  /**
+   * The request type for this request (see RFC 2616, section 5.1.1).
+   */
+  readonly attribute string method;
+  
+  /**
+   * The host of the data being requested (e.g. "localhost" for the
+   * http://localhost:8080/file resource).  Note that the relevant port on the
+   * host is specified in this.port.
+   */
+  readonly attribute string host;
+
+  /**
+   * The port on the server on which the request was received.
+   */
+  readonly attribute unsigned long port;
+
+  /**
+   * The requested path, without any query string (e.g. "/dir/file.txt").  It is
+   * guaranteed to begin with a "/".  This string is in the 
+   */
+  readonly attribute string path;
+
+  /**
+   * The URL-encoded query string associated with this request, not including
+   * the initial "?".
+   */
+  readonly attribute string queryString;
+
+  /**
+   * A string containing the HTTP version of the request (i.e., "1.1").  Leading
+   * zeros for either component of the version will be omitted.  (In other
+   * words, if the request contains the version "1.01", this attribute will be
+   * "1.1"; see RFC 2616, section 3.1.)
+   */
+  readonly attribute string httpVersion;
+
+  /**
+   * Returns the value for the header in this request specified by fieldName.
+   *
+   * @param fieldName
+   *   the name of the field whose value is to be gotten; note that since HTTP
+   *   header field names are case-insensitive, this method produces equivalent
+   *   results for "HeAdER" and "hEADer" as fieldName
+   * @returns
+   *   the field value for the given header; note that this value may be
+   *   normalized (e.g., leading/trailing whitespace removed from the value [or
+   *   from the values which make this up, if the header is a comma-separated
+   *   list of values], whitespace runs compressed to single spaces, etc.)
+   * @throws NS_ERROR_INVALID_ARG
+   *   if fieldName does not constitute a valid header field name
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *   if the given header does not exist in this
+   */
+  string getHeader(in string fieldName);
+
+  /**
+   * Returns true if a header with the given field name exists in this, false
+   * otherwise.
+   *
+   * @param fieldName
+   *   the field name whose existence is to be determined in this; note that
+   *   since HTTP header field names are case-insensitive, this method produces
+   *   equivalent results for "HeAdER" and "hEADer" as fieldName
+   * @throws NS_ERROR_INVALID_ARG
+   *   if fieldName does not constitute a valid header field name
+   */
+  boolean hasHeader(in string fieldName);
+
+  /**
+   * An nsISimpleEnumerator over the names of the headers in this request.  The
+   * header field names in the enumerator may not necessarily have the same case
+   * as they do in the request itself.
+   */
+  readonly attribute nsISimpleEnumerator headers;
+
+  // XXX should expose body of request here!
+};
+
+
+/**
+ * Represents an HTTP response, as described in RFC 2616, section 6.
+ */
+[scriptable, uuid(a2aaaff7-03bd-43b6-b460-94671e288093)]
+interface nsIHttpResponse : nsISupports
+{
+  /**
+   * Sets the status line for this.  If this method is never called on this, the
+   * status line defaults to "HTTP/", followed by the server's default HTTP
+   * version (e.g. "1.1"), followed by " 200 OK".
+   *
+   * @param httpVersion
+   *   the HTTP version of this, as a string (e.g. "1.1"); if null, the server
+   *   default is used
+   * @param code
+   *   the numeric HTTP status code for this
+   * @param description
+   *   a human-readable description of code; may be null if no description is
+   *   desired
+   * @throws NS_ERROR_INVALID_ARG
+   *   if httpVersion is not a valid HTTP version string, statusCode is greater
+   *   than 999, or description contains invalid characters
+   */
+  void setStatusLine(in string httpVersion,
+                     in unsigned short statusCode,
+                     in string description);
+
+  /**
+   * Sets the specified header in this.
+   *
+   * @param name
+   *   the name of the header; must match the field-name production per RFC 2616
+   * @param value
+   *   the value of the header; must match the field-value production per RFC
+   *   2616
+   * @param merge
+   *   when true, if the given header already exists in this, the values passed
+   *   to this function will be merged into the existing header, per RFC 2616
+   *   header semantics; when false, if the given header already exists in this,
+   *   it is overwritten with the passed-in values; if the header doesn't exist
+   *   in this, it is set regardless of the value of this parameter
+   * @throws NS_ERROR_INVALID_ARG
+   *   if name or value is not a valid header component
+   */
+  void setHeader(in string name, in string value, in boolean merge);
+
+  /**
+   * A stream to which data appearing in the body of this response should be
+   * written.
+   */
+  readonly attribute nsIOutputStream bodyOutputStream;
+
+  /**
+   * Write a string to the response's output stream.
+   *
+   * @note
+   *   This method is only guaranteed to work with ASCII data.
+   */
+  void write(in string data);
+};

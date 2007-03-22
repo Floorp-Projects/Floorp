@@ -1,0 +1,16 @@
+Snapshots of cairo and glitz for mozilla usage.
+
+We only include the relevant parts of each release (generally, src/*.[ch]),
+as we have Makefile.in's that integrate into the Mozilla build system.  For
+documentation and similar, please see the official tarballs at
+http://www.cairographics.org/.
+
+VERSIONS:
+
+  cairo (1.3.12 tagged snapshot)
+  glitz 0.5.2 (cvs - 2006-01-10)
+
+***** NOTE FOR VISUAL C++ 6.0 *****
+
+VC6 is not supported.  Please upgrade to VC8.
+

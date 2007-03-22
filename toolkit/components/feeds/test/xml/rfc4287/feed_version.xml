@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+
+Description: RSS1 Version works
+Expect: result.version == 'atom'
+-->
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+</feed>

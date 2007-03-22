@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Firefox Preferences System.
+#
+# The Initial Developer of the Original Code is
+# Ben Goodger.
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Ben Goodger <ben@mozilla.org>
+#   Jeff Walden <jwalden+bmo@mit.edu>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<!DOCTYPE overlay [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%brandDTD;
+<!ENTITY % tabsDTD SYSTEM "chrome://browser/locale/preferences/tabs.dtd">
+%tabsDTD;
+]>
+
+<overlay id="TabsPaneOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <prefpane id="paneTabs" helpTopic="prefs-tabs" helpURI="chrome://browser/locale/help/help.rdf" flex="1">
+
+    <preferences id="tabsPreferences">
+      <preference id="browser.link.open_external"      name="browser.link.open_external"      type="int"/>
+      <preference id="browser.link.open_newwindow"     name="browser.link.open_newwindow"     type="int"/>
+      <preference id="browser.tabs.autoHide"           name="browser.tabs.autoHide"           type="bool" inverted="true"/>
+      <preference id="browser.tabs.loadInBackground"   name="browser.tabs.loadInBackground"   type="bool" inverted="true"/>
+      <preference id="browser.tabs.warnOnClose"        name="browser.tabs.warnOnClose"        type="bool"/>
+      <preference id="browser.tabs.warnOnOpen"         name="browser.tabs.warnOnOpen"         type="bool"/>
+    </preferences>
+    
+    <script type="application/x-javascript" src="chrome://browser/content/preferences/tabs.js"/>
+
+    <vbox id="linksOpenInBox">
+      <label control="linkTargeting">&newPagesIn.label;</label>
+      <radiogroup id="linkTargeting" class="indent"
+                  preference="browser.link.open_external"
+                  onsyncfrompreference="return gTabsPane.readLinkTarget();"
+                  onsynctopreference="return gTabsPane.writeLinkTarget();">
+        <radio label="&inNewWindow.label;" accesskey="&inNewWindow.accesskey;" value="2"/>
+        <radio label="&inNewTab.label;" accesskey="&inNewTab.accesskey;" value="3"/>
+      </radiogroup>
+    </vbox>
+
+    <separator id="tabsSeparator"/>
+
+    <!-- XXX flex below and on prefpane is a hack because wrapping checkboxes don't
+             reflow properly; see bug 349098 -->
+    <vbox id="tabPrefsBox" align="start" flex="1">
+      <checkbox id="warnCloseMultiple" label="&warnCloseMultipleTabs.label;"
+                accesskey="&warnCloseMultipleTabs.accesskey;"
+                preference="browser.tabs.warnOnClose"/>
+      <checkbox id="warnOpenMany" label="&warnOpenManyTabs.label;"
+                accesskey="&warnOpenManyTabs.accesskey;"
+                preference="browser.tabs.warnOnOpen"/>
+      <checkbox id="showTabBar" label="&showTabBar.label;"
+                accesskey="&showTabBar.accesskey;"
+                preference="browser.tabs.autoHide"/>
+      <checkbox id="switchToNewTabs" label="&switchToNewTabs.label;"
+                accesskey="&switchToNewTabs.accesskey;"
+                preference="browser.tabs.loadInBackground"/>
+    </vbox>
+
+  </prefpane>
+
+</overlay>

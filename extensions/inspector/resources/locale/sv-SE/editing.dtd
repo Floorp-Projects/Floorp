@@ -1,0 +1,16 @@
+<!ENTITY mnEditUndo.label "Ångra">
+<!ENTITY mnEditUndo.accesskey "Å">
+<!ENTITY mnEditRedo.label "Gör om">
+<!ENTITY mnEditRedo.accesskey "G">
+<!ENTITY mnEditCut.label "Klipp ut">
+<!ENTITY mnEditCut.accesskey "K">
+<!ENTITY mnEditCopy.label "Kopiera">
+<!ENTITY mnEditCopy.accesskey "o">
+<!ENTITY mnEditPaste.label "Klistra in">
+<!ENTITY mnEditPaste.accesskey "l">
+<!ENTITY mnEditInsert.label "Infoga">
+<!ENTITY mnEditInsert.accesskey "I">
+<!ENTITY mnEditEdit.label "Redigera">
+<!ENTITY mnEditEdit.accesskey "R">
+<!ENTITY mnEditDelete.label "Ta bort">
+<!ENTITY mnEditDelete.accesskey "T">

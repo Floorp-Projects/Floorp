@@ -1,0 +1,11 @@
+<!-- extracted from content/openLocation.xul -->
+
+<!ENTITY enter.label "Enter the web location (URL), or specify the local file you would like to open:">  
+<!ENTITY chooseFile.label "Choose File...">
+<!ENTITY newWindow.label "New Window">
+<!ENTITY newTab.label "New Tab">
+<!ENTITY topWindow.label "Current Window">
+<!ENTITY caption.label "Open Web Location">
+<!ENTITY openWhere.label "Open in:">
+<!ENTITY example.label "Example: &vendorURL;">
+<!ENTITY openBtn.label "Open">

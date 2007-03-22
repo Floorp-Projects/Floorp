@@ -1,0 +1,9 @@
+To run parser regression test do the following:
+
+1) perl ListGen.pl ( this will create file_list.txt )
+2) make ( build TestParser.exe )
+3) perl TestParser.pl -b <drive>:/<path>/mozilla/dist/bin file_list.txt
+  ( creates base line files. Note: Should be run _without_ your changes )
+4) apply your patch.
+5) perl TestParser.pl -v <drive>:/<path>/mozilla/dist/bin file_list.txt
+  ( creates .v files and compares against base line. )

@@ -1,0 +1,88 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *     Boris Zbarsky <bzbarsky@mit.edu>  (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/**
+ * An interface representing a channel which will have to execute some sort of
+ * program provided via its URI to compute the data it should return.
+ *
+ * If a channel implements this interface, the execution of the program in
+ * question will be restricted in the following ways:
+ *
+ * - If the channel does not have an owner principal, the program will not be
+ *   executed at all, no matter what.  This is necessary because in this
+ *   circumstance we have no way to tell whether script execution is allowed at
+ *   all for the originating security context of this channel. 
+ * - If the channel has an owner principal, how it is executed is controlled by
+ *   this interface.  However if the owner principal does not subsume the
+ *   principal of the environment in which the program is to be executed the
+ *   execution will be forced to happen in a sandbox.
+ */
+[scriptable, uuid(6dec981b-6fce-4f57-bf97-d518c6079c77)]
+interface nsIScriptChannel : nsISupports
+{
+  /**
+   * Possible ways of executing the program.
+   */
+
+  /**
+   * Don't execute at all.
+   */
+  const unsigned long NO_EXECUTION = 0;
+
+  /**
+   * Execute in a sandbox, no matter how the various principals involved are
+   * related to each other.
+   */
+  const unsigned long EXECUTE_IN_SANDBOX = 1;
+
+  /**
+   * Execute against the target environment if the principals allow it.
+   */
+  const unsigned long EXECUTE_NORMAL = 2;
+
+  /**
+   * Whether and how the program represented by this channel is to be executed.
+   * The default value if this property has never been set on this channel MUST
+   * be NO_EXECUTION.
+   *
+   * @throws NS_ERROR_INVALID_ARG when set to an unrecognized value.
+   */
+  attribute unsigned long executionPolicy;
+};

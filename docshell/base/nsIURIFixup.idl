@@ -1,0 +1,95 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla browser.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Adam Lock <adamlock@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+
+/**
+ * Interface implemented by objects capable of fixing up strings into URIs
+ */
+[scriptable, uuid(773081ac-9f81-4bdb-9e7a-5e87b4361f09)]
+interface nsIURIFixup : nsISupports
+{
+    /** No fixup flags. */
+    const unsigned long FIXUP_FLAG_NONE = 0;
+
+    /**
+     * Allow the fixup to use a keyword lookup service to complete the URI.
+     * The fixup object implementer should honour this flag and only perform
+     * any lengthy keyword (or search) operation if it is set.
+     */
+    const unsigned long FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP = 1;
+
+    /**
+     * Tell the fixup to make an alternate URI from the input URI, for example
+     * to turn foo into www.foo.com.
+     */
+    const unsigned long FIXUP_FLAGS_MAKE_ALTERNATE_URI = 2;
+
+    /**
+     * Converts an internal URI (e.g. a wyciwyg URI) into one which we can
+     * expose to the user, for example on the URL bar.
+     *
+     * @param  aURI       The URI to be converted
+     * @return nsIURI     The converted, exposable URI
+     * @throws NS_ERROR_MALFORMED_URI when the exposable portion of aURI is malformed
+     * @throws NS_ERROR_UNKNOWN_PROTOCOL when we can't get a protocol handler service
+     *         for the URI scheme.
+     */
+    nsIURI createExposableURI(in nsIURI aURI);
+
+    /**
+     * Converts the specified string into a URI, first attempting
+     * to correct any errors in the syntax or other vagaries. Returns
+     * a wellformed URI or nsnull if it can't.
+     *
+     * @param aURIText    Candidate URI.
+     * @param aFixupFlags Flags that govern ways the URI may be fixed up.
+     */
+    nsIURI createFixupURI(in AUTF8String aURIText, in unsigned long aFixupFlags);
+
+    /**
+     * Converts the specified keyword string into a URI.  Note that it's the
+     * caller's responsibility to check whether keywords are enabled and
+     * whether aKeyword is a sensible keyword.
+     */
+    nsIURI keywordToURI(in AUTF8String aKeyword);
+};
+

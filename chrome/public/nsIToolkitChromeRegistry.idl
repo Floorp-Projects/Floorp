@@ -1,0 +1,95 @@
+/* -*- Mode: C++; tab-width; 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the XUL toolkit.
+ *
+ * The Initial Developer of the Original Code is
+ * Benjamin Smedberg <benjamin@smedbergs.us>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsIChromeRegistry.idl"
+
+interface nsIURI;
+interface nsIUTF8StringEnumerator;
+
+[scriptable, uuid(94490b3f-f094-418e-b1b9-73878d29bff3)]
+interface nsIToolkitChromeRegistry : nsIXULChromeRegistry
+{
+  /**
+   * The "canonical" manifest is a plaintext file which sits outside of a
+   * JAR file. To provide backwards-compatibility with contents.rdf, we provide
+   * this function which reads a contents.rdf manifest and writes it to a file.
+   *
+   * @param aOldManifestURI  The URI of an old manifest to read, without
+   *                         the trailing "contents.rdf", e.g.
+   *                         "jar:resource:///chrome/foo.jar!/content/foo/" or
+   *                         "file://path/to/contents/rdf/"
+   * @param aFile            The URI of a manifest file to write. It's a good
+   *                         idea to use a resource: URI if possible.
+   * @param aBaseURI         The base URI for relative path creation
+   *                         "jar:resource:///chrome/foo.jar!/content/foo/"
+   *                         this is a separate param from aOldManifestURI so
+   *                         the "contents.rdf" can be read outside of the jar
+   *                         to keep the zipreader cache from holding it open.
+   * @param aAppend          Whether we should append to an existing manifest
+   *                         or truncate and start empty.
+   * @param aSkinOnly        Only allow skin packages.
+   */
+  void processContentsManifest(in nsIURI aOldManifestURI, in nsIURI aFile,
+                               in nsIURI aBaseURI, in boolean aAppend,
+                               in boolean aSkinOnly);
+
+  /**
+   * If the OS has a "high-visibility" or "disabled-friendly" theme set,
+   * we want to force mozilla into the classic theme, which (for the most part
+   * obeys the system color/font settings. We cannot do this at initialization,
+   * because it depends on the toolkit (GTK2) being initialized, which is
+   * not the case in some embedding situations. Embedders have to manually
+   * call this method during the startup process.
+   */
+  void checkForOSAccessibility();
+
+  /**
+   * Get a list of locales available for the specified package.
+   */
+  nsIUTF8StringEnumerator getLocalesForPackage(in AUTF8String aPackage);
+};
+
+/**
+ * The chrome registry will ask the directory service for this file list and
+ * process each file as a manifest. Skin manifests may contain only skin
+ * and style overlays.
+ */
+%{ C++
+#define NS_CHROME_MANIFESTS_FILE_LIST "ChromeML"
+#define NS_SKIN_MANIFESTS_FILE_LIST "SkinML"
+%}

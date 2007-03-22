@@ -1,0 +1,131 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla FastLoad code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Brendan Eich <brendan@mozilla.org> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsIBinaryOutputStream.idl"
+#include "nsrootidl.idl"
+
+/**
+ * @See nsIObjectInputStream
+ * @See nsIBinaryOutputStream
+ */
+
+[scriptable, uuid(92c898ac-5fde-4b99-87b3-5d486422094b)]
+interface nsIObjectOutputStream : nsIBinaryOutputStream
+{
+    /**
+     * Write the object whose "root" or XPCOM-identity nsISupports is aObject.
+     * The cause for writing this object is a strong or weak reference, so the
+     * aIsStrongRef argument must tell which kind of pointer is being followed
+     * here during serialization.
+     *
+     * If the object has only one strong reference in the serialization and no
+     * weak refs, use writeSingleRefObject.  This is a valuable optimization:
+     * it saves space in the stream, and cycles on both ends of the process.
+     *
+     * If the reference being serialized is a pointer to an interface not on
+     * the primary inheritance chain ending in the root nsISupports, you must
+     * call writeCompoundObject instead of this method.
+     */
+    void writeObject(in nsISupports aObject, in PRBool aIsStrongRef);
+
+    /**
+     * Write an object referenced singly and strongly via its root nsISupports
+     * or a subclass of its root nsISupports.  There must not be other refs to
+     * aObject in memory, or in the serialization.
+     */
+    void writeSingleRefObject(in nsISupports aObject);
+
+    /**
+     * Write the object referenced by an interface pointer at aObject that
+     * inherits from a non-primary nsISupports, i.e., a reference to one of
+     * the multiply inherited interfaces derived from an nsISupports other
+     * than the root or XPCOM-identity nsISupports; or a reference to an
+     * inner object in the case of true XPCOM aggregation.  aIID identifies
+     * this interface.
+     */
+    void writeCompoundObject(in nsISupports aObject,
+                             in nsIIDRef aIID,
+                             in PRBool aIsStrongRef);
+
+    void writeID(in nsIDRef aID);
+
+    /**
+     * Optimized serialization support -- see nsIStreamBufferAccess.idl.
+     */
+    [notxpcom] charPtr getBuffer(in PRUint32 aLength, in PRUint32 aAlignMask);
+    [notxpcom] void    putBuffer(in charPtr aBuffer, in PRUint32 aLength);
+};
+
+%{C++
+
+inline nsresult
+NS_WriteOptionalObject(nsIObjectOutputStream* aStream, nsISupports* aObject,
+                       PRBool aIsStrongRef)
+{
+    PRBool nonnull = (aObject != nsnull);
+    nsresult rv = aStream->WriteBoolean(nonnull);
+    if (NS_SUCCEEDED(rv) && nonnull)
+        rv = aStream->WriteObject(aObject, aIsStrongRef);
+    return rv;
+}
+
+inline nsresult
+NS_WriteOptionalSingleRefObject(nsIObjectOutputStream* aStream,
+                                nsISupports* aObject)
+{
+    PRBool nonnull = (aObject != nsnull);
+    nsresult rv = aStream->WriteBoolean(nonnull);
+    if (NS_SUCCEEDED(rv) && nonnull)
+        rv = aStream->WriteSingleRefObject(aObject);
+    return rv;
+}
+
+inline nsresult
+NS_WriteOptionalCompoundObject(nsIObjectOutputStream* aStream,
+                               nsISupports* aObject,
+                               const nsIID& aIID,
+                               PRBool aIsStrongRef)
+{
+    PRBool nonnull = (aObject != nsnull);
+    nsresult rv = aStream->WriteBoolean(nonnull);
+    if (NS_SUCCEEDED(rv) && nonnull)
+        rv = aStream->WriteCompoundObject(aObject, aIID, aIsStrongRef);
+    return rv;
+}
+
+%}

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: channel description markup is not HTML
+Expect:      feed.subtitle.plainText() == '<i><b>test</b></i>'
+
+-->
+<rss version="2.0" >
+<channel>
+<description><![CDATA[<i><b>test</b></i>]]></description>
+</channel>
+</rss>

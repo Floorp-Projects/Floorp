@@ -1,0 +1,171 @@
+#! python
+
+from xml import sax
+from types import DictType, FunctionType
+import md5
+
+import os
+import sys
+import re
+import logging
+from codecs import utf_8_encode
+
+from Mozilla import Paths, Parser
+import simplejson
+
+lvl = logging.WARNING
+# parse commandline arguments
+argsiter = sys.argv.__iter__()
+# drop command
+argsiter.next()
+for arg in argsiter:
+  if arg == '-V':
+    lvl -= 10
+
+logging.basicConfig(level=lvl)
+
+
+class DummyHandler(sax.handler.ContentHandler):
+  def startDocument(self):
+    self.md5 = md5.new()
+    self.indent = ''
+    self.engine = {'urls':[]}
+    self.lNames = []
+    self.textField = None
+    return
+  def endDocument(self):
+    self.engine['md5'] = self.md5.hexdigest()
+    return
+  def startElementNS(self, (ns, local), qname, attrs):
+    self.indent += '  '
+    if ns != u'http://www.mozilla.org/2006/browser/search/':
+      raise UserWarning, ('bad namespace: ' + ns)
+    self.lNames.append(local)
+    handler = self.getOpenHandler()
+    if handler:
+      handler(self, attrs)
+    self.update(ns+local)
+    for qna in attrs.getQNames():
+      self.update(qna[0] + qna[1] + attrs.getValueByQName(qna))
+    return
+  def endElementNS(self, (ns, local), qname):
+    self.lNames.pop()
+    self.indent = self.indent[0:-2]
+  def characters(self, content):
+    self.update(content)
+    if not self.textField:
+      return
+    self.engine[self.textField] = content
+    self.textField = None
+  def update(self, content):
+    self.md5.update(utf_8_encode(content)[0])
+  def openURL(self, attrs):
+    entry = {'params':{},
+             'type': attrs.getValueByQName(u'type'),
+             'template': attrs.getValueByQName(u'template')}
+    self.engine['urls'].append(entry)
+  def handleParam(self, attrs):
+    try:
+      self.engine['urls'][-1]['params'][attrs.getValueByQName(u'name')] = attrs.getValueByQName(u'value')
+    except KeyError:
+      raise UserWarning, 'bad param'
+    return
+  def handleMozParam(self, attrs):
+    try:
+      self.engine['urls'][-1]['MozParams'] = {
+        'name': attrs.getValueByQName(u'name'),
+        'condition': attrs.getValueByQName(u'condition'),
+        'trueValue': attrs.getValueByQName(u'trueValue'),
+        'falseValue': attrs.getValueByQName(u'falseValue')}
+    except KeyError:
+      raise UserWarning, 'bad mozParam'
+    return
+  def handleShortName(self, attrs):
+    self.textField = 'ShortName'
+    return
+  def handleImage(self, attrs):
+    self.textField = 'Image'
+    return
+  def getOpenHandler(self):
+    return self.getHandler(DummyHandler.openHandlers)
+  def getHandler(self, handlers):
+    for local in self.lNames:
+      if type(handlers) != DictType or not handlers.has_key(local):
+        return
+      handlers = handlers[local]
+    if handlers.has_key('_handler'):
+      return handlers['_handler']
+    return
+  openHandlers = {'SearchPlugin':
+                  {'ShortName': {'_handler': handleShortName},
+                   'Image': {'_handler': handleImage},
+                   'Url':{'_handler': openURL,
+                          'Param': {'_handler':handleParam},
+                          'MozParam': {'_handler':handleMozParam}
+                          }
+                   }
+                  }
+
+handler = DummyHandler()
+parser = sax.make_parser()
+parser.setContentHandler(handler)
+parser.setFeature(sax.handler.feature_namespaces, True)
+
+locales = [loc.strip() for loc in open('mozilla/browser/locales/all-locales')]
+locales.insert(0, 'en-US')
+sets = {}
+details = {}
+
+for loc in locales:
+  try:
+    lst = open(Paths.get_path('browser',loc,'searchplugins/list.txt'),'r')
+  except IOError:
+    logging.error("Locale " + loc + " doesn't have search plugins")
+    details[Paths.get_path('browser',loc,'searchplugins/list.txt')] = {
+      'error': 'not found'
+      }
+    continue
+  sets[loc] = {'list': []}
+  regprop = Paths.get_path('browser', loc, 'chrome/browser-region/region.properties')
+  p = Parser.getParser(regprop)
+  p.read(regprop)
+  orders = {}
+  for key, val in p:
+    m = re.match('browser.search.order.([1-9])', key)
+    if m:
+      orders[val.strip()] = int(m.group(1))
+  sets[loc]['orders'] = orders
+  for fn in lst:
+    name = fn.strip()
+    leaf = 'searchplugins/' + name + '.xml'
+    _path = Paths.get_path('browser','en-US', leaf)
+    if not os.access(_path, os.R_OK):
+      _path = Paths.get_path('browser', loc, leaf)
+    logging.info('testing ' + _path)
+    sets[loc]['list'].append(_path)
+    try:
+      parser.parse(_path)
+    except IOError:
+      logging.error("can't open " + _path)
+      details[_path] = {'_name': name, 'error': 'not found'}
+      continue
+    except UserWarning, ex:
+      logging.error("error in searchplugin " + _path)
+      details[_path] = {'_name': name, 'error': ex.args[0]}
+      continue
+    except sax._exceptions.SAXParseException, ex:
+      logging.error("error in searchplugin " + _path)
+      details[_path] = {'_name': name, 'error': ex.args[0]}
+      continue
+    details[_path] = handler.engine
+    details[_path]['_name'] = name
+
+engines = {'locales': sets,
+  'details': details}
+enginelist = details.keys()
+enginelist.sort()
+fp = open('search-results.js','w')
+fp.write('results = ')
+simplejson.dump(engines, fp, sort_keys=True)
+fp.close()
+print enginelist

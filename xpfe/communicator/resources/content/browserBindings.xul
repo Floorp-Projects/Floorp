@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<?xul-overlay href="chrome://communicator/content/platformCommunicatorOverlay.xul"?>
+
+<window id="browserBindings"
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+</window>

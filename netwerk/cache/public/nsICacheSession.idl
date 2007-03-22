@@ -1,0 +1,97 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is nsICacheSession.idl, released
+ * February 23, 2001.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Gordon Sheridan <gordon@netscape.com>
+ *   Patrick Beard   <beard@netscape.com>
+ *   Darin Fisher    <darin@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsICache.idl"
+
+interface nsICacheEntryDescriptor;
+interface nsICacheListener;
+
+[scriptable, uuid(ae9e84b5-3e2d-457e-8fcd-5bbd2a8b832e)]
+interface nsICacheSession : nsISupports
+{
+    /**
+     * Expired entries will be doomed or evicted if this attribute is set to
+     * true.  If false, expired entries will be returned (useful for offline-
+     * mode and clients, such as HTTP, that can update the valid lifetime of
+     * cached content).  This attribute defaults to true.
+     */
+    attribute PRBool doomEntriesIfExpired;
+
+    /**
+     * A cache session can only give out one descriptor with WRITE access
+     * to a given cache entry at a time.  Until the client calls MarkValid on
+     * its descriptor, other attempts to open the same cache entry will block.
+     */
+
+    /**
+     * Synchronous cache access.  This returns a unique descriptor each
+     * time it is called, even if the same key is specified.  When
+     * called by multiple threads for write access, only one writable
+     * descriptor will be granted.  If 'blockingMode' is set to false, it will
+     * return NS_ERROR_CACHE_WAIT_FOR_VALIDATION rather than block when another
+     * descriptor has been given WRITE access but hasn't validated the entry yet.
+     */
+    nsICacheEntryDescriptor openCacheEntry(in ACString          key,
+                                           in nsCacheAccessMode accessRequested,
+                                           in boolean           blockingMode);
+
+    /**
+     * Asynchronous cache access. Does not block the calling thread.
+     * Instead, the listener will be notified when the descriptor is
+     * available.
+     */
+    void asyncOpenCacheEntry(in ACString          key,
+                             in nsCacheAccessMode accessRequested,
+                             in nsICacheListener  listener);
+
+    /**
+     * Evict all entries for this session's clientID according to its storagePolicy.
+     */
+    void evictEntries();
+    
+    /**
+     * Return whether any of the cache devices implied by the session storage policy
+     * are currently enabled for instantiation if they don't already exist.
+     */
+    PRBool isStorageEnabled();
+};

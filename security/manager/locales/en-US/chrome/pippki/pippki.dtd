@@ -1,0 +1,133 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is mozilla.org code.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corp.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Terry Hayes <thayes@netscape.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!-- Values for changepassword.xul -->
+<!ENTITY setPassword.title  "Change Master Password">
+<!ENTITY setPassword.tokenName.label "Security Device">
+<!ENTITY setPassword.oldPassword.label "Current password:">
+<!ENTITY setPassword.newPassword.label "New password:">
+<!ENTITY setPassword.reenterPassword.label "New password (again):">
+<!ENTITY setPassword.meter.label "Password quality meter">
+<!ENTITY setPassword.meter.loading "Loading">
+
+<!-- Values for resetpassword.xul -->
+<!ENTITY resetPasswordButtonLabel "Reset">
+<!ENTITY resetPassword.title  "Reset Master Password">
+<!ENTITY resetPassword.text  "If you reset your master password, all your stored web and e-mail passwords, form data, personal certificates, and private keys will be forgotten. Are you sure you want to reset your master password?">
+
+<!-- Values for getpassword.xul -->
+<!ENTITY getPassword.title  "Enter Master Password">
+<!ENTITY getPassword.tokenName.label "Security Device">
+<!ENTITY getPassword.password.label "Password:">
+
+<!-- These should be common -->
+<!ENTITY piperror.title "Error">
+<!ENTITY pipalert.title "Error - cannot recover">
+
+<!-- Prefs panel strings -->
+<!ENTITY pref.security.general.lHeader "Security">
+<!ENTITY pref.security.general.rHeader "Settings for general security">
+<!ENTITY pref.security.general.header "Settings for general security">
+<!ENTITY pref.security.general.level.title "Security Level">
+<!ENTITY pref.security.general.paranoid.label "Use paranoid security settings">
+<!ENTITY pref.security.general.certificates.title "Certificates">
+<!ENTITY pref.security.general.manageCert.label "Manage Certificates">
+
+<!-- Downloading a cert -->
+<!ENTITY downloadCert.title "Downloading Certificate">
+<!ENTITY downloadCert.message1 "You have been asked to trust a new Certificate Authority (CA).">
+<!ENTITY downloadCert.trustSSL "Trust this CA to identify web sites.">
+<!ENTITY downloadCert.trustEmail "Trust this CA to identify email users.">
+<!ENTITY downloadCert.trustObjSign "Trust this CA to identify software developers.">
+<!ENTITY downloadCert.message3 "Before trusting this CA for any purpose, you should examine its certificate and its policy and procedures (if available).">
+<!ENTITY downloadCert.viewCert.label "View">
+<!ENTITY downloadCert.viewPolicy.label "Policy">
+<!ENTITY downloadCert.viewCert.text "Examine CA certificate">
+<!ENTITY downloadCert.viewPolicy.text "Examine CA policies and procedures">
+
+<!-- Certificate Exists in database -->
+<!ENTITY caCertExists.title "Certificate Exists">
+<!ENTITY caCertExists.message "The Certificate already exists.">
+
+<!-- Strings for the MismatchDomain dialog  -->
+<!ENTITY domainMismatch.title "Security Error: Domain Name Mismatch">
+<!ENTITY examineCert.label "View Certificate">
+<!ENTITY examineCert.accesskey "V">
+
+<!-- Strings for the Server cert expired dialog  -->
+<!ENTITY serverCertExpired.continue "Would you like to continue anyway?">
+<!ENTITY serverCertExpired.accept.label "Continue">
+
+<!-- Strings for the SSL client auth ask dialog -->
+<!ENTITY clientAuthAsk.title "User Identification Request">
+<!ENTITY clientAuthAsk.message1 "This site has requested that you identify yourself with a certificate:">
+<!ENTITY clientAuthAsk.message2 "Choose a certificate to present as identification:">
+<!ENTITY clientAuthAsk.message3 "Details of selected certificate:">
+
+<!-- Strings for the cert picker dialog -->
+<!ENTITY certPicker.title "Select Certificate">
+<!ENTITY certPicker.info  "Certificate:">
+<!ENTITY certPicker.detailsLabel "Details of selected certificate:">
+
+<!ENTITY pkcs12.setpassword.title  "Choose a Certificate Backup Password">
+<!ENTITY pkcs12.setpassword.message  "The certificate backup password you set here protects the backup file that you are about to create.  You must set this password to proceed with the backup.">
+<!ENTITY pkcs12.setpassword.label1 "Certificate backup password:">
+<!ENTITY pkcs12.setpassword.label2 "Certificate backup password (again):">
+<!ENTITY pkcs12.setpassword.reminder "Important: If you forget your certificate backup password, you will not be able to restore this backup later.  Please record it in a safe location.">
+
+<!ENTITY pkcs12.getpassword.title  "Password Entry Dialog">
+<!ENTITY pkcs12.getpassword.message "Please enter the password that was used to encrypt this certificate backup.">
+
+<!ENTITY chooseToken.title  "Choose Token Dialog">
+<!ENTITY chooseToken.message1 "Please choose a token.">
+
+<!ENTITY escrowWarn.title "Encryption Key Copy">
+<!ENTITY escrowWarn.message1 "Important: This certificate authority has asked to make a backup of your encryption private key.">
+<!ENTITY escrowWarn.benefit1 "The benefit is that if you lose access to your encryption private key, you can request a copy from this certificate authority.">
+<!ENTITY escrowWarn.message2 "However, your encryption private key will be stored by the certificate authority, and could be used to read your encrypted email or documents without your permission.">
+
+<!ENTITY serverCrlNextupdate.message "Please ask your system administrator for assistance">
+
+<!-- Strings for the CreateCertInfo dialog  -->
+<!ENTITY createCertInfo.title "Generating A Private Key">
+<!ENTITY createCertInfo.msg1 "Key Generation in progress... This may take a few minutes....">
+<!ENTITY createCertInfo.msg2 "Please wait...">
+
+<!-- Form Signing confirmation prompt -->
+<!ENTITY formSigning.title "Text Signing Request">
+<!ENTITY formSigning.cert "Signing Certificate">
+<!ENTITY formSigning.confirmPassword "To confirm you agree to sign this text message using your selected certificate, please confirm by entering the master password:">

@@ -1,0 +1,13 @@
+# gre-support is also included by various embedding packages
+[gre-support]
+dist/bin/chrome/embed.jar
+@topsrcdir@/embedding/config/installed-chrome.txt dist/bin/chrome/installed-chrome.txt
+
+[gtkembed mfcembed winembed minimo]
+!touch dist/bin/.autoreg
+@topsrcdir@/embedding/config/readme.html dist/bin/readme.html
+!optional @topsrcdir@/embedding/config/all.js dist/bin/defaults/pref/all.js
+@topsrcdir@/embedding/config/installed-chrome.txt dist/bin/chrome/installed-chrome.txt
+
+[unpackaged-files]
+dist/bin/chrome/embed-sample.jar

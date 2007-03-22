@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: atom author count works
+Expect: feed.authors.length == 1;
+
+-->
+<feed xmlns="http://www.w3.org/2005/Atom">
+<title>test title</title>
+<author>
+</author>
+</feed>

@@ -1,0 +1,27 @@
+;
+; GRE app support package file for Win32
+; embedding resources. 
+;
+; The files specified in this manifest will be added to 
+; the list of files specified in basebrowser-win-supp
+; manifest to create the GRE application support package
+;
+; 
+
+[gre_app_support]
+
+;
+; wallet
+;
+defaults\wallet\DistinguishedSchema.tbl
+defaults\wallet\FieldSchema.tbl
+defaults\wallet\VcardSchema.tbl
+defaults\wallet\SchemaConcat.tbl
+defaults\wallet\SchemaStrings.tbl
+defaults\wallet\PositionalSchema.tbl
+defaults\wallet\StateSchema.tbl
+
+;
+; XP Install Support
+;
+defaults\pref\xpinstall.js

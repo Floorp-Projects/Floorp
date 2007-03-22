@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Description: XHTML title with apos
+Expect: feed.title.plainText() == "Tantek's Updates"
+-->
+<feed xml:lang="en-US"
+      xmlns="http://www.w3.org/2005/Atom">
+  <title type="xhtml">
+    <div xmlns="http://www.w3.org/1999/xhtml">Tantek's Updates</div>
+  </title>
+  <link href="http://tantek.com/"
+	rel="alternate" title="Tantek's Posts" type="text/html"/>
+  <link href="http://tantek.com/updates.atom"
+	rel="self" />
+  <id>http://tantek.com/updates.atom</id>
+  <author>
+    <name>Tantek</name>
+    <uri>http://tantek.com/</uri>
+  </author>
+  <updated>2006-05-02T20:13:00-07:00</updated>
+  <entry>
+    <updated>2006-04-22T00:00:00-07:00</updated>
+    <published>2006-04-22T00:00:00-07:00</published>
+    <link href="http://www.makezine.com/faire/"
+	  rel="alternate" title="Make Faire" type="text/html"/>
+    <id>http://www.makezine.com/faire/</id>
+    <title>Make Faire</title>
+    <content type="xhtml" xml:space="preserve">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+	<div class="vevent">
+	  <a class="url" href="http://www.makezine.com/faire/">
+	    <abbr class="dtstart" title="20060422">
+	      4/22</abbr>-<abbr class="dtend" title="20060424">23</abbr>
+	      
+	      <span class="summary">
+		Make Faire
+		</span> @
+		<span class="location">
+		  San Mateo Fairgrounds
+		</span>
+	  </a>
+	</div>
+      </div>
+    </content>
+  </entry>
+</feed>

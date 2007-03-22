@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 1998-1999
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either of the GNU General Public License Version 2 or later (the "GPL"),
+   - or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
+<?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
+
+<?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
+
+<!DOCTYPE dialog SYSTEM "chrome://editor/locale/EdColorPicker.dtd">
+
+<dialog title="&windowTitle.label;"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onload="Startup()"
+    ondialogaccept="return onAccept();"
+    ondialogcancel="return onCancelColor();">
+
+  <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdColorPicker.js"/>
+
+  <broadcaster id="args" value=""/>
+  <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
+
+  <hbox id="TableOrCellGroup" align="center" collapsed="true">
+    <label control="CellOrTableGroup" value="&background.label;" accesskey="&background.accessKey;"/>
+    <radiogroup id="CellOrTableGroup" orient="horizontal">
+      <radio id="TableRadio" label="&table.label;" accesskey="&table.accessKey;"/>
+      <radio id="CellRadio"  label="&cell.label;"  accesskey="&cell.accessKey;"/>
+  </radiogroup>
+  </hbox>
+  <colorpicker id="ColorPicker" palettename="standard" 
+    persist="palettename"
+    onclick="SetDefaultToOk();"
+    ondblclick="if (onAccept()) window.close();"
+    onkeypress="SelectColorByKeypress(event);"
+    onselect="SelectColor();"/>
+<!-- Web palette is not implemented???
+  <hbox align="center">
+    <label value="&palette.label;"/>
+    <radio id="StandardPalette" label="&standardPalette.label;" oncommand="ChangePalette('standard')"/>
+    <radio id="WebPalette" label="&webPalette.label;" oncommand="ChangePalette('web')"/>
+  </hbox>
+-->
+  <spacer class="spacer"/>
+  <vbox flex="1">
+    <button id="LastPickedButton" crop="right" oncommand="SelectLastPickedColor();">
+      <spacer id="LastPickedColor"
+                  LastTextColor="" LastBackgroundColor=""
+                  persist="LastTextColor LastBackgroundColor"/>
+      <label value="&lastPickedColor.label;" accesskey="&lastPickedColor.accessKey;" flex="1" style="text-align: center;"/>
+    </button>
+    <label value="&setColor1.label;"/>
+    <label value="&setColor2.label;" accesskey="&setColor2.accessKey;" control="ColorInput"/>
+    <label value="&setColorExample.label;"/>
+    <hbox align="center" flex="1=">
+      <textbox id="ColorInput" style="width: 8em" oninput="SetColorSwatch(); SetDefaultToOk();"/>
+      <spacer flex="1"/>
+      <spacer id="ColorPickerSwatch"/>
+      <spacer flex="1"/>
+      <button id="DefaultColorButton" label="&default.label;" accesskey="&default.accessKey;"
+        style="margin-right:0px;" oncommand="RemoveColor()"/>
+    </hbox>
+  </vbox>
+  <separator class="groove"/>
+</dialog>

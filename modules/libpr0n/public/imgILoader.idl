@@ -1,0 +1,118 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Stuart Parmenter <pavlov@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface imgIDecoderObserver;
+interface imgIRequest;
+
+interface nsIChannel;
+interface nsILoadGroup;
+interface nsIStreamListener;
+interface nsIURI;
+
+interface nsISimpleEnumerator;
+
+#include "nsIRequest.idl" // for nsLoadFlags
+
+/**
+ * imgILoader interface
+ *
+ * @author Stuart Parmenter <pavlov@netscape.com>
+ * @version 0.3
+ * @see imagelib2
+ */
+[scriptable, uuid(a32826ff-9e56-4425-a811-97a8dba64ff5)]
+interface imgILoader : nsISupports
+{
+  /**
+   * Start the load and decode of an image.
+   * @param aURI the URI to load
+   * @param aInitialDocumentURI the URI that 'initiated' the load -- used for 3rd party cookie blocking
+   * @param aReferrerURI the 'referring' URI
+   * @param aLoadGroup Loadgroup to put the image load into
+   * @param aObserver the observer
+   * @param aCX some random data
+   * @param aLoadFlags Load flags for the request
+   * @param aCacheKey cache key to use for a load if the original
+   *                  image came from a request that had post data
+   * @param aRequest A newly created, unused imgIRequest object or NULL for one to
+                     be created for you.
+
+
+   * libpr0n does NOT keep a strong ref to the observer; this prevents
+   * reference cycles.  This means that callers of loadImage should
+   * make sure to Cancel() the resulting request before the observer
+   * goes away.
+   */
+  imgIRequest loadImage(in nsIURI aURI,
+                        in nsIURI aInitialDocumentURL,
+                        in nsIURI aReferrerURI,
+                        in nsILoadGroup aLoadGroup,
+                        in imgIDecoderObserver aObserver,
+                        in nsISupports aCX,
+                        in nsLoadFlags aLoadFlags,
+                        in nsISupports cacheKey,
+                        in imgIRequest aRequest);
+
+  /**
+   * Start the load and decode of an image.
+   * @param aChannel the channel to load the image from.  This must
+   *                 already be opened before ths method is called, and there
+   *                 must have been no OnDataAvailable calls for it yet.   
+   * @param aObserver the observer
+   * @param cx some random data
+   * @param aListener [out]
+   *        A listener that should receive the data. Can be null, in which
+   *        case imagelib has found a cached image and is not interested in
+   *        the data. The caller needs not cancel the channel in this case.
+   *
+   * libpr0n does NOT keep a strong ref to the observer; this prevents
+   * reference cycles.  This means that callers of loadImageWithChannel should
+   * make sure to Cancel() the resulting request before the observer goes away.
+   */
+  imgIRequest loadImageWithChannel(in nsIChannel aChannel, in imgIDecoderObserver aObserver, in nsISupports cx, out nsIStreamListener aListener);
+
+  /**
+   * Checks if a decoder for the an image with the given mime type is available
+   * @param mimeType The type to find a decoder for
+   * @return true if a decoder is available, false otherwise
+   */
+  boolean supportImageWithMimeType(in string mimeType);
+};

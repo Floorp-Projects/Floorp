@@ -1,0 +1,25 @@
+<html><head></head>
+<body bgcolor="#ffffff" text="#000000">
+
+   		
+
+<font face="geneva, arial, helvetica">
+<font size="-1">
+
+This text, in the body, is in "Font Face A"
+
+<table>
+        <tbody><tr>
+        <td align="center">
+            <font face="arial, helvetica" color="#404040" size="5"> 
+           This text, in a table, is in "Font Face B". Immediately following
+this text is a close font tag, and another erroneously placed close font
+tag.              </font>
+            
+        </td>
+        </tr>
+</tbody></table>  This text, back in the body, should be in Font Face A,
+but is not because Mozilla incorrectly heeded the second close-font tag in
+the above table.  </font>
+
+</font></body></html>

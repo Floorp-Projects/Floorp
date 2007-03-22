@@ -1,0 +1,2 @@
+<!ENTITY junkImgs.title "Nem használt képek keresése az aktuális témában...">
+<!ENTITY junkImgsDescription "A keresés hatékonyságához olyan dokumentumot érdemes vizsgálni, amely a témához tartozó összes CSS-fájlt betölti.  Ezután meg kell adni az aktuális téma gyökerének helyét a lemezen.">

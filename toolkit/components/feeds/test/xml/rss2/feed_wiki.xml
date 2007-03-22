@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: channel unusual prefixed ext works 
+Expect:      feed.fields.getProperty('wiki:version') == '1'
+ 
+-->
+<rss 
+xmlns:w='http://purl.org/rss/1.0/modules/wiki/'
+xmlns:wfw="http://wellformedweb.org/CommentAPI/" version="2.0" >
+<channel xmlns:dc="http://purl.org/dc/elements/1.1/">
+<copyright>copyright 2006</copyright>
+<dc:creator>me</dc:creator>
+<w:version>1</w:version>
+<wfw:commentRss>http://example.org</wfw:commentRss>
+<dc:contributor>them</dc:contributor>
+</channel>
+</rss>

@@ -1,0 +1,55 @@
+<html>
+<head>
+<title>Strres Test</title>
+</head>
+
+<body>
+<script>
+var sample = Components.classes["@mozilla.org/sample/sample-world;1"].createInstance();
+sample = sample.QueryInterface(Components.interfaces.nsISample);
+dump("sample = " + sample + "\n");
+
+function get()
+{
+  var field = document.getElementById('Value');
+  field.value = sample.Value;
+}
+
+function set()
+{
+  var field = document.getElementById('Value');
+  //sample.Value = field.value;
+  sample.WriteValue(field.value);
+}
+
+function poke()
+{
+  var field = document.getElementById('Value');
+  sample.Poke(field.value);
+}
+
+function write()
+{
+  sample.WriteValue("here is what I'm writing!");
+
+  var Bundle = JS_GetStrBundle("resource://gre/res/strres.properties", null);
+  var	ostr1 = Bundle.GetStringFromName("file");
+  dump("\n--** strBundle GetStringFromName file=" + ostr1 + " **--\n");
+  var	ostr2 = Bundle.GetStringFromID(123);
+  dump("\n--** strBundle GetStringFromID 123=" + ostr2 + " **--\n");
+
+  var field = document.getElementById('writeBtn');
+  field.value = ostr2;
+}
+
+</script>
+
+<form name="form">
+<input type="button" id="getBtn" value="Get" onclick="get();">
+<input type="button" value="Set" onclick="set();">
+<input type="button" value="Poke" onclick="poke();">
+<input type="text" id="Value">
+<input type="button" id="writeBtn" value="Write" onclick="write();">
+<form>
+</body>
+</html>

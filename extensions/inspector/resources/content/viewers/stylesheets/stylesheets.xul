@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE page [
+  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://inspector/locale/viewers/stylesheets.dtd"> %dtd3;
+]>
+
+<?xml-stylesheet href="chrome://inspector/skin/"?>
+
+<page id="winStylesheets"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inBaseTreeView.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/viewers/stylesheets/stylesheets.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>  
+
+  <tree id="olStyleSheets" class="plain" flex="1"
+            onselect="viewer.onItemSelected()">
+    <treecols>
+      <treecol id="olcHref" label="&styleLocation.label;" primary="true" persist="width,hidden,ordinal" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="olcRules" label="&styleRules.label;" persist="width,hidden,ordinal" style="width: 4em"/>
+    </treecols>
+    <treechildren id="olbStyleSheets"
+                  alternatingbackground="true"/>
+  </tree>
+</page>

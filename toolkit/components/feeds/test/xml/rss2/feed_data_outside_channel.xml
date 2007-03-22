@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: channel copyright works 
+Expect:      feed.fields.getProperty('copyright') == 'copyright 2006'
+
+-->
+<rss version="2.0" >
+<dc:creator xmlns:dc="http://example.org">heynow</dc:creator>
+<channel>
+<copyright>copyright 2006</copyright>
+</channel>
+</rss>

@@ -1,0 +1,239 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications.
+# Portions created by the Initial Developer are Copyright (C) 2001
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#  Brian Ryner <bryner@brianryner.com>
+#  Benjamin Smedberg <benjamin@smedbergs.us>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = xulapp
+LIBRARY_NAME = xulapp_s
+LIBXUL_LIBRARY = 1
+
+REQUIRES = \
+	appcomps \
+	toolkitcomps \
+	appshell \
+	appstartup \
+	chrome \
+	content \
+	docshell \
+	dom \
+	layout \
+	embed_base \
+	embedcomponents \
+	extensions \
+	gfx \
+	intl \
+	js \
+	necko \
+	pref \
+	profile \
+	string \
+	uriloader \
+        layout \
+	widget \
+	windowwatcher \
+	xpcom \
+	xpconnect \
+	xpinstall \
+	xremoteservice \
+	$(NULL)
+
+ifdef MOZ_JPROF
+REQUIRES += jprof
+endif
+
+ifdef NS_TRACE_MALLOC
+REQUIRES += tracemalloc
+endif
+
+ifdef MOZ_AIRBAG
+REQUIRES += airbag
+endif
+
+FORCE_STATIC_LIB = 1
+
+XPIDLSRCS = \
+	nsINativeAppSupport.idl \
+	nsIXULAppInfo.idl \
+	nsIXULRuntime.idl \
+	$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+XPIDLSRCS += nsIWinAppHelper.idl
+endif
+
+EXPORTS = \
+	xrecore.h \
+	nsXULAppAPI.h \
+	$(NULL)
+
+SHAREDCPPSRCS = \
+	showOSAlert.cpp \
+	$(NULL)
+
+CPPSRCS = \
+	$(SHAREDCPPSRCS) \
+	nsAppRunner.cpp \
+	nsConsoleWriter.cpp \
+	nsXREDirProvider.cpp \
+	nsNativeAppSupportBase.cpp \
+	nsAppData.cpp \
+	$(NULL)
+
+DEFINES += -DIMPL_XREAPI
+
+ifndef BUILD_STATIC_LIBS
+CPPSRCS += nsEmbedFunctions.cpp
+endif
+
+ifdef MOZ_UPDATER
+CPPSRCS += nsUpdateDriver.cpp
+DEFINES += -DMOZ_UPDATER
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+CPPSRCS += nsNativeAppSupportWin.cpp
+DEFINES += -DWIN32_LEAN_AND_MEAN
+else
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+CPPSRCS += nsNativeAppSupportMac.cpp
+else
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+CPPSRCS += nsNativeAppSupportOS2.cpp
+else
+ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
+CPPSRCS += nsNativeAppSupportBeOS.cpp
+else
+CPPSRCS += nsNativeAppSupportDefault.cpp
+endif
+endif
+endif
+endif
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+CMSRCS = MacLaunchHelper.m
+CPPSRCS += nsCommandLineServiceMac.cpp
+LOCAL_INCLUDES += -I$(topsrcdir)/xpfe/bootstrap/appleevents
+OS_CXXFLAGS += -fexceptions
+SHARED_LIBRARY_LIBS += $(DEPTH)/xpfe/bootstrap/appleevents/$(LIB_PREFIX)appleevents_s.$(LIB_SUFFIX)
+endif
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+CMMSRCS = MacApplicationDelegate.mm
+endif
+
+ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+STACKWALK_SRC_LCSRCS =               \
+		nsStackFrameUnix.cpp \
+		nsStackFrameUnix.h   \
+		$(NULL)
+
+STACKWALK_CPPSRCS := $(addprefix $(topsrcdir)/xpcom/base/, $(STACKWALK_SRC_LCSRCS))
+ifndef MOZ_ENABLE_LIBXUL
+CPPSRCS           += nsStackFrameUnix.cpp
+endif
+SHAREDCPPSRCS	  += nsSigHandlers.cpp
+endif
+
+GARBAGE += $(SHAREDCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
+ifeq ($(OS_ARCH),WINNT)
+GARBAGE	+= $(addprefix $(srcdir)/,$(SHAREDCPPSRCS))
+endif
+
+ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+GARBAGE += $(STACKWALK_SRC_LCSRCS)
+endif
+
+SHARED_LIBRARY_LIBS += ../profile/src/$(LIB_PREFIX)profile_s.$(LIB_SUFFIX)
+
+ifdef MOZ_ENABLE_XREMOTE
+SHARED_LIBRARY_LIBS += $(DEPTH)/widget/src/xremoteclient/$(LIB_PREFIX)xremote_client_s.$(LIB_SUFFIX)
+LOCAL_INCLUDES += -I$(topsrcdir)/widget/src/xremoteclient
+endif
+
+ifdef MOZ_AIRBAG
+SHARED_LIBRARY_LIBS += $(DEPTH)/toolkit/airbag/$(LIB_PREFIX)airbagexception_s.$(LIB_SUFFIX)
+ifeq ($(OS_ARCH),WINNT)
+SHARED_LIBRARY_LIBS += \
+	$(DEPTH)/toolkit/airbag/airbag/src/client/windows/handler/$(LIB_PREFIX)exception_handler.$(LIB_SUFFIX) \
+	$(DEPTH)/toolkit/airbag/airbag/src/common/windows/$(LIB_PREFIX)airbag_common_s.$(LIB_SUFFIX)
+endif
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+ifdef BUILD_STATIC_LIBS
+export::
+	@$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(FINAL_LINK_COMP_NAMES) Apprunner
+#	embedding/browser/gtk/src/Makefile.in sucks! we need to add an empty line to 
+# FINAL_LINK_COMPS to keep the two lists in sync :-(
+	@$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(FINAL_LINK_COMPS) ""
+endif
+
+LOCAL_INCLUDES += \
+	-I$(srcdir) \
+	-I$(topsrcdir)/xpfe/bootstrap \
+	-I$(srcdir)/../profile/src \
+	-I$(topsrcdir)/config \
+	$(NULL)
+
+CXXFLAGS += $(TK_CFLAGS)
+
+ifdef BUILD_STATIC_LIBS
+DEFINES += -D_BUILD_STATIC_BIN
+endif
+
+DEFINES += -DOS_TARGET=\"$(OS_TARGET)\"
+ifdef TARGET_XPCOM_ABI
+DEFINES += \
+	-DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\" \
+	-DTARGET_OS_ABI=\"$(OS_TARGET)_$(TARGET_XPCOM_ABI)\" \
+	$(NULL)
+endif
+
+DEFINES += -DTOOLKIT_EM_VERSION=\"$(shell $(PERL) $(topsrcdir)/config/milestone.pl --topsrcdir=$(topsrcdir))\"
+
+ifdef WRAP_SYSTEM_INCLUDES
+DEFINES		+= -DWRAP_SYSTEM_INCLUDES
+endif
+
+export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDCPPSRCS) $(SHAREDCMMSRCS)) $(STACKWALK_CPPSRCS)
+	$(INSTALL) $^ .

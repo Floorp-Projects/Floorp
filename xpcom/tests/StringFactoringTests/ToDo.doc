@@ -1,0 +1,41 @@
+// To Do...
+
+  - Decide: do I really want to define |Equals| (i.e., so many extra signatures)
+
+  . Make |ns[C]String| rename its converting operations to, e.g., |EqualsWithConversion|,
+    |AssignWithConversion|, |CompareWithConversion|, |AppendWithConversion|, etc.
+
+  . Bring |Equals| and |Compare| into scope
+
+  . Implement chunky iterators
+
+  . Get "nsAReadableString.h" and "nsAWritableString.h" to added to the MANIFEST, etc.
+
+  - Get "nsAReadableString.h" and "nsAWritableString.h" to compile everywhere
+
+  - Add test for |Replace|...
+
+  - Add tests for Find and RFind
+
+  - Implement the Find and RFind signatures
+
+  . Fix Truncate / SetLength confusion (make SetLength the real function in |nsString|)
+
+  . Chop out conflicting |ns[C]String| operators
+
+  . Figure out how if we can make PRUnichar be wchar_t, so we get the cheap constructors,
+      ...and ensure the cheap constructors can be made to work everywhere
+
+  x Try the |static const unsigned long kLeftString = 1 - 1; /* because VC++ doesn't like =0 */| hack
+
+  . Add tests for |nsShared[C]String|
+
+  . Implement |nsShared[C]String|
+
+  - Add tests for the shared string smart pointer
+
+  . Implement the shared string smart pointer
+
+  . Figure out why StdStringWrapper isn't as good as raw std::string
+
+  - Implement a smart allocator for StdStringWrapper

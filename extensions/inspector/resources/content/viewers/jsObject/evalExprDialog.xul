@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE dialog [
+  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://inspector/locale/viewers/jsObject.dtd"> %dtd3;
+]>
+
+<?xml-stylesheet href="chrome://communicator/skin"?>
+
+<dialog id="winEvalExpr"
+        title="&evaluateDialog.title;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        ondialogaccept="return execute();"
+        buttonlabelaccept="&jsExecute.label;"
+        style="width: 30em;">
+
+  <script type="application/x-javascript"
+          src="chrome://inspector/content/viewers/jsObject/evalExprDialog.js"/>
+  <script type="application/x-javascript"
+          src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+
+  <stringbundle id="strings"
+                src="chrome://inspector/locale/inspector.properties"/>
+
+  <description>&jsEval.desc;</description>
+
+  <textbox id="txfExprInput"/>
+
+  <groupbox>
+    <caption label="&inspectReturn.label;"/>
+    <radiogroup id="inspect-return-location">
+      <radio id="inspect-existing-window" label="&inspectReturnExisting.label;"
+             selected="true"/>
+      <radio id="inspect-new-window" label="&inspectReturnNew.label;"/>
+    </radiogroup>
+  </groupbox>
+
+</dialog>

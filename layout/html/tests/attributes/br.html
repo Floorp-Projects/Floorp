@@ -1,0 +1,37 @@
+<HTML>
+<BODY>
+<IMG src="resource:/res/samples/raptor.jpg" STYLE="float: left;">
+<IMG src="resource:/res/samples/raptor.jpg" STYLE="float: right; height: 100px;">
+This text should appear between a left justified and right justified image of a raptor.<BR clear="all">
+Resize the window such that this paragraph is located between the two images.  Then 
+use the form below to change the "clear" attribute of the BR tag that adds a line break
+between this para and the previous one.  Clearing to left should position this para below
+the big raptor.  Clearing to the right or clearing all should position this para below the 
+smaller raptor image.
+<FORM>
+<P>
+Set <I>clear</I> to
+<SELECT SIZE="1" NAME="clear">
+<OPTION VALUE="none">None</OPTION>
+<OPTION VALUE="left">Left</OPTION>
+<OPTION VALUE="right">Right</OPTION>
+<OPTION SELECTED VALUE="all">All</OPTION>
+</SELECT>
+<INPUT TYPE="button" VALUE="Change Clear" onClick="changeClear(); return true;">
+</P>
+</FORM>
+<SCRIPT>
+var br = document.getElementsByTagName("br")[0];
+function changeClear() {
+   if (document.forms[0].clear.selectedIndex == 0)
+      br.clear = "none";
+   else if (document.forms[0].clear.selectedIndex == 1)
+      br.clear = "left";
+   else if (document.forms[0].clear.selectedIndex == 2)
+      br.clear = "right";
+   else
+      br.clear = "all";
+}
+</SCRIPT>
+</BODY>
+</HTML>

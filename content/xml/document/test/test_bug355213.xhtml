@@ -1,0 +1,36 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=355213
+-->
+<head>
+  <title>Test for Bug 355213</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=355213">Mozilla Bug 355213</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 355213 **/
+  var firstWidth = document.getElementById('display').offsetWidth;
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(
+    function() {
+      is(firstWidth, document.getElementById('test').offsetWidth,
+         "Width should not change");
+    });
+  addLoadEvent(SimpleTest.finish);
+
+]]>
+</script>
+</pre>
+</body>
+</html>
+

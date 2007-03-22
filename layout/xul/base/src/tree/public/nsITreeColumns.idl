@@ -1,0 +1,126 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Jan Varga.
+ * Portions created by the Initial Developer are Copyright (C) 2003
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsITreeColumns;
+interface nsIDOMElement;
+interface nsIAtom;
+
+[scriptable, uuid(ae835ecf-6b32-4660-9b43-8a270df56e02)]
+interface nsITreeColumn : nsISupports
+{
+  readonly attribute nsIDOMElement element;
+
+  readonly attribute nsITreeColumns columns;
+
+  readonly attribute long x;
+  readonly attribute long width;
+
+  readonly attribute AString id;
+  [noscript] void getIdConst([shared] out wstring idConst);
+  [noscript] readonly attribute nsIAtom atom;
+
+  readonly attribute long index;
+
+  readonly attribute boolean primary;
+  readonly attribute boolean cycler;
+  readonly attribute boolean editable;
+  readonly attribute boolean selectable;
+
+  const short TYPE_TEXT                = 1;
+  const short TYPE_CHECKBOX            = 2;
+  const short TYPE_PROGRESSMETER       = 3;
+  readonly attribute short type;
+
+  nsITreeColumn getNext();
+  nsITreeColumn getPrevious();
+
+  void invalidate();
+};
+
+interface nsITreeBoxObject;
+
+[scriptable, uuid(f8a8d6b4-6788-438d-9009-7142798767ab)]
+interface nsITreeColumns : nsISupports
+{
+  /**
+   * The tree widget for these columns.
+   */
+  readonly attribute nsITreeBoxObject tree;
+
+  /**
+   * The number of columns.
+   */
+  readonly attribute long count;
+
+  /**
+   * An alias for count (for the benefit of scripts which treat this as an
+   * array).
+   */
+  readonly attribute long length;
+
+  /**
+   * Get the first/last column.
+   */
+  nsITreeColumn getFirstColumn();
+  nsITreeColumn getLastColumn();
+
+  /**
+   * Attribute based column getters.
+   */
+  nsITreeColumn getPrimaryColumn();
+  nsITreeColumn getSortedColumn();
+  nsITreeColumn getKeyColumn();
+
+  /**
+   * Get the column for the given element.
+   */
+  nsITreeColumn getColumnFor(in nsIDOMElement element);
+
+  /**
+   * Parametric column getters.
+   */
+  nsITreeColumn getNamedColumn(in AString id);
+  nsITreeColumn getColumnAt(in long index);
+
+  /**
+   * This method is called whenever a treecol is added or removed and
+   * the column cache needs to be rebuilt.
+   */
+  void invalidateColumns();
+
+  void restoreNaturalOrder();
+};

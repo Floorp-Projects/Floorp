@@ -1,0 +1,28 @@
+Testcases for the following:
+
+- VMS (MultiNet, UCX, and CMU) LIST format (including multi-line format)
+- IBM VM/CMS, VM/ESA LIST format (two known variants)
+- Windows NT's default "DOS-dirstyle"
+- OS/2 basic server format LIST format
+- SuperTCP FTP Server
+- NetManage Chameleon (NEWT)
+- EPLF (Easily Parsable List Format)
+- '/bin/dls' (two known variants, plus multi-line) LIST format
+- '/bin/ls -l' and all variants (even if they are not SYST UNIX)
+  including 
+   - Hellsoft FTP for NetWare (non-unix perm-bits)
+   - Hethmon Brothers FTP for OS/2 (all '-' perm bits)
+   - NetPresenz (SYST is "MACOS")
+   - "NETWARE" (Hellsoft-style perms, no linkcount, no UID/GID)
+   - OpenBSD FTPD (numeric UID/GID)
+   - Open Group's FTP servers (no GID)
+   - Novonyx [Netscape/Novell] (fields not in columns)
+   - wuFTPd and other BSD-based ftpd that exec "ls -l"
+   - Windows NT server (internal "ls -l" compatible)
+   - Netmanage ProFTPD for Win32 (internal "ls -l" compatible)
+   - SurgeFTPd for Win32 (internal "ls -l" compatible)
+   - WarFTPd for Win32 (internal "ls -l" compatible)
+   - WebStarFTP for MacOS (internal "ls -l" compatible)
+   - MurkWorks FTP for NetWare (internal "ls -l" compatible)
+   - NcFTPd for Unix (internal "ls -l" compatible).
+

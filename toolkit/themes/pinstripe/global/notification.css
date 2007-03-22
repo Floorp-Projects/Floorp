@@ -1,0 +1,62 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+notification {
+  min-height: 35px;
+}
+
+notification[type="info"] {
+  color: #0f2c65;
+  background-color: #e0e7f9;
+  border: 1px solid #a8b8de;
+}
+
+notification[type="warning"] {
+  color: #585620;
+  background-color: #fdf2ab;
+  border: 1px solid #a29330;
+}
+
+notification[type="critical"] {
+  color: #611A16;
+  background-color: #e6aeac;
+  border: 1px solid #611A16;
+}
+
+.messageImage {
+  width: 16px;
+  height: 16px;
+  margin: 0px 1px 0px 6px;
+}
+
+.messageText {
+  -moz-margin-start: 5px;
+}
+
+.messageButton {
+  margin: 0px 5px 0px 5px;
+}
+
+.notification-inner {
+  border: 0 !important;
+}
+
+.messageCloseButton {
+  -moz-appearance: none;
+  padding-right: 4px;
+  list-style-image: url("chrome://global/skin/icons/closetab.png") !important;
+  border: none;
+}
+
+.messageCloseButton > .toolbarbutton-text {
+  display: none;
+}
+
+.messageCloseButton:hover {
+  list-style-image: url("chrome://global/skin/icons/closetab-hover.png") !important;
+}
+
+.messageCloseButton:hover:active {
+  list-style-image: url("chrome://global/skin/icons/closetab-active.png") !important;
+}
+
+

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+</head>
+<body>
+<form>
+<button onclick="hideShow();return false;">Hide/Show</button>
+<div id="el1" style="position:absolute;left:200px;top:200px;width:200px;height:200px;border:1px solid #000000;">
+<input type="textbox" size="3" maxlength="3" value="240" /></div>
+<script type="text/javascript">
+
+
+function hideShow()
+{
+        if(document.defaultView.getComputedStyle(document.getElementById("el1"),"").getPropertyValue("display")=="none")
+        {
+                displayValue="block";
+        } else
+        {
+                displayValue="none";
+        }
+        document.getElementById('el1').style.display = displayValue;
+}
+
+</script>
+</form>
+</body>
+</html>

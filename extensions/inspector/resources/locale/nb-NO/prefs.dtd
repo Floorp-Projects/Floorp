@@ -1,0 +1,14 @@
+<!ENTITY Inspector.label "DOM-inspektør">
+<!ENTITY Sidebar.label "Sidestolpe">
+<!ENTITY elementBlinking.label "Varsling">
+<!ENTITY blinkSelectedElement.label "Blink valgt element">
+<!ENTITY borderColor.label "Farge">
+<!ENTITY borderWidth.label "Bredde">
+<!ENTITY px.label "(px)">
+<!ENTITY blinkDuration.label "Varighet">
+<!ENTITY ms.label "(ms)">
+<!ENTITY blinkSpeed.label "Hurtighet">
+<!ENTITY invertColors.label "Inverter farger">
+<!ENTITY installHowTo.label "DOM-inspektør sidestolpe er ikke installert. Trykk 'Installer' for å legge det til i din sidestople.">
+<!ENTITY install.label "Installer">
+<!ENTITY addNavigatorHooks.label "Opprett hurtigmeny i nettleser">

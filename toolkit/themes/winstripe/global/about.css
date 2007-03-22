@@ -1,0 +1,49 @@
+html {
+  background: -moz-Dialog;
+}
+
+body {
+  margin: 0;
+  padding: 0 1em;
+  color: -moz-FieldText;
+  font: message-box;
+}
+
+#aboutPageContainer {
+  position: relative;
+  min-width: 330px;
+  max-width: 50em;
+  margin: 4em auto;
+  border: 1px solid ThreeDShadow;
+  -moz-border-radius: 10px;
+  padding: 3em;
+  -moz-padding-start: 30px;
+  background: -moz-Field;
+}
+
+#aboutLogoContainer {
+  border: 1px solid ThreeDLightShadow;
+  width: 300px;
+  margin-bottom: 2em;
+}
+
+img {
+  border: 0;
+}
+
+#version {
+  font-weight: bold;
+  color: #909090;
+  margin: -24px 0 9px 17px;
+}
+
+ul {
+  margin: 0;
+  -moz-margin-start: 1.5em;
+  padding: 0;
+  list-style: square;
+}
+
+ul > li {
+  margin-top: .5em;
+}

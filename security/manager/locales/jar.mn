@@ -1,0 +1,25 @@
+#filter substitution
+
+@AB_CD@.jar:
+#ifdef MOZ_XUL_APP
+% locale pipnss @AB_CD@ %locale/@AB_CD@/pipnss/
+% locale pippki @AB_CD@ %locale/@AB_CD@/pippki/
+#else
+* locale/@AB_CD@/pipnss/contents.rdf          (generic/chrome/pipnss/contents.rdf)
+* locale/@AB_CD@/pippki/contents.rdf          (generic/chrome/pippki/contents.rdf)
+#endif
+  locale/@AB_CD@/pipnss/pipnss.properties     (%chrome/pipnss/pipnss.properties)
+  locale/@AB_CD@/pipnss/nsserrors.properties  (%chrome/pipnss/nsserrors.properties)
+  locale/@AB_CD@/pipnss/security.properties   (%chrome/pipnss/security.properties)
+  locale/@AB_CD@/pippki/pippki.dtd            (%chrome/pippki/pippki.dtd)
+  locale/@AB_CD@/pippki/pref-ssl.dtd          (%chrome/pippki/pref-ssl.dtd)
+  locale/@AB_CD@/pippki/pippki.properties     (%chrome/pippki/pippki.properties)
+  locale/@AB_CD@/pippki/PrefOverlay.dtd       (%chrome/pippki/PrefOverlay.dtd)
+  locale/@AB_CD@/pippki/newserver.properties  (%chrome/pippki/newserver.properties)
+  locale/@AB_CD@/pippki/newserver.dtd         (%chrome/pippki/newserver.dtd)
+  locale/@AB_CD@/pippki/pref-security.dtd     (%chrome/pippki/pref-security.dtd)
+  locale/@AB_CD@/pippki/PageInfoOverlay.dtd   (%chrome/pippki/PageInfoOverlay.dtd)
+  locale/@AB_CD@/pippki/certManager.dtd       (%chrome/pippki/certManager.dtd)
+  locale/@AB_CD@/pippki/deviceManager.dtd     (%chrome/pippki/deviceManager.dtd)
+  locale/@AB_CD@/pippki/pref-validation.dtd   (%chrome/pippki/pref-validation.dtd)
+  locale/@AB_CD@/pippki/pref-masterpass.dtd   (%chrome/pippki/pref-masterpass.dtd)

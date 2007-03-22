@@ -1,0 +1,52 @@
+<!ENTITY  warnAddonInstall.label        "Warn me when sites try to install add-ons">
+<!ENTITY  warnAddonInstall.accesskey    "W">
+
+<!-- LOCALIZATION NOTE (tellMaybeForgery.label):
+  The methods by which forged (phished) sites will be detected by phishing
+  providers will vary from human review to machine-based heuristics to a
+  combination of both, so it's important that this string and
+  useDownloadedList.label convey the meaning "suspected" (and not something like
+  "known").
+-->
+<!ENTITY  tellMaybeForgery.label     "Tell me if the site I'm visiting is a suspected forgery">
+<!ENTITY  tellMaybeForgery.accesskey "T">
+
+<!ENTITY  useDownloadedList.label     "Check using a downloaded list of suspected sites">
+<!ENTITY  useDownloadedList.accesskey "d">
+
+<!-- LOCALIZATION NOTE (askThirdParty.label):
+  The entities askThirdParty.label and askThirdPartyAfter.label appear on a
+  single line in preferences as follows:
+
+  &askThirdParty.label  [ menulist of phishing list providers ]   &askThirdPartyAfter.label;
+-->
+<!ENTITY  askThirdParty.label        "Check by asking">
+<!ENTITY  askThirdParty.accesskey    "a">
+<!ENTITY  askThirdPartyAfter.label   "about each site I visit">
+
+<!ENTITY  addonExceptions.label         "Exceptions...">
+<!ENTITY  addonExceptions.accesskey     "E">
+
+
+<!ENTITY  passwords.label               "Passwords">
+
+<!ENTITY  rememberPasswords.label       "Remember passwords for sites">
+<!ENTITY  rememberPasswords.accesskey   "R">
+<!ENTITY  passwordExceptions.label      "Exceptions...">
+<!ENTITY  passwordExceptions.accesskey  "x">
+
+<!ENTITY  useMasterPassword.label        "Use a master password">
+<!ENTITY  useMasterPassword.accesskey    "U">
+<!ENTITY  changeMasterPassword.label     "Change Master Password...">
+<!ENTITY  changeMasterPassword.accesskey "M">
+
+<!ENTITY  showPasswords.label            "Show Passwords...">
+<!ENTITY  showPasswords.accesskey        "P">
+
+
+<!ENTITY  warnings.label                "Warning Messages">
+
+<!ENTITY  chooseWarnings.label          "Choose which warning messages you want to see while browsing the web">
+
+<!ENTITY  warningSettings.label         "Settings...">
+<!ENTITY  warningSettings.accesskey     "S">

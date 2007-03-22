@@ -1,0 +1,63 @@
+#filter substitution
+
+@AB_CD@.jar:
+#ifdef MOZ_XUL_APP
+% locale editor @AB_CD@ %locale/@AB_CD@/editor/
+#else
+* locale/@AB_CD@/editor/contents.rdf                         (generic/chrome/composer/contents.rdf)
+#endif
+  locale/@AB_CD@/editor/editorSmileyOverlay.dtd              (%chrome/composer/editorSmileyOverlay.dtd)
+  locale/@AB_CD@/editor/editorOverlay.dtd                    (%chrome/composer/editorOverlay.dtd)
+  locale/@AB_CD@/editor/editor.properties                    (%chrome/composer/editor.properties)
+  locale/@AB_CD@/editor/EditorHLineProperties.dtd            (%chrome/dialogs/EditorHLineProperties.dtd)
+  locale/@AB_CD@/editor/EditorImageProperties.dtd            (%chrome/dialogs/EditorImageProperties.dtd)
+  locale/@AB_CD@/editor/EditorInsertSource.dtd               (%chrome/dialogs/EditorInsertSource.dtd)
+  locale/@AB_CD@/editor/EditorInsertChars.dtd                (%chrome/dialogs/EditorInsertChars.dtd)
+  locale/@AB_CD@/editor/EditorInsertTable.dtd                (%chrome/dialogs/EditorInsertTable.dtd)
+  locale/@AB_CD@/editor/EditorInsertTOC.dtd                  (%chrome/dialogs/EditorInsertTOC.dtd)
+  locale/@AB_CD@/editor/EditorLinkProperties.dtd             (%chrome/dialogs/EditorLinkProperties.dtd)
+  locale/@AB_CD@/editor/EditorListProperties.dtd             (%chrome/dialogs/EditorListProperties.dtd)
+  locale/@AB_CD@/editor/EditorColorProperties.dtd            (%chrome/dialogs/EditorColorProperties.dtd)
+  locale/@AB_CD@/editor/EdColorPicker.dtd                    (%chrome/dialogs/EdColorPicker.dtd)
+  locale/@AB_CD@/editor/EditorReplace.dtd                    (%chrome/dialogs/EditorReplace.dtd)
+  locale/@AB_CD@/editor/EditorSpellCheck.dtd                 (%chrome/dialogs/EditorSpellCheck.dtd)
+  locale/@AB_CD@/editor/EditorPersonalDictionary.dtd         (%chrome/dialogs/EditorPersonalDictionary.dtd)
+  locale/@AB_CD@/editor/EditorTableProperties.dtd            (%chrome/dialogs/EditorTableProperties.dtd)
+  locale/@AB_CD@/editor/EditorFormProperties.dtd             (%chrome/dialogs/EditorFormProperties.dtd)
+  locale/@AB_CD@/editor/EditorInputProperties.dtd            (%chrome/dialogs/EditorInputProperties.dtd)
+  locale/@AB_CD@/editor/EditorTextAreaProperties.dtd         (%chrome/dialogs/EditorTextAreaProperties.dtd)
+  locale/@AB_CD@/editor/EditorSelectProperties.dtd           (%chrome/dialogs/EditorSelectProperties.dtd)
+  locale/@AB_CD@/editor/EditorButtonProperties.dtd           (%chrome/dialogs/EditorButtonProperties.dtd)
+  locale/@AB_CD@/editor/EditorLabelProperties.dtd            (%chrome/dialogs/EditorLabelProperties.dtd)
+  locale/@AB_CD@/editor/EditorFieldSetProperties.dtd         (%chrome/dialogs/EditorFieldSetProperties.dtd)
+  locale/@AB_CD@/editor/EdNamedAnchorProperties.dtd          (%chrome/dialogs/EdNamedAnchorProperties.dtd)
+  locale/@AB_CD@/editor/EdDialogOverlay.dtd                  (%chrome/dialogs/EdDialogOverlay.dtd)
+  locale/@AB_CD@/editor/EdAdvancedEdit.dtd                   (%chrome/dialogs/EdAdvancedEdit.dtd)
+  locale/@AB_CD@/editor/EdConvertToTable.dtd                 (%chrome/dialogs/EdConvertToTable.dtd)
+
+
+#ifdef MOZ_SUITE
+@AB_CD@.jar:
+  locale/@AB_CD@/editor/editor.dtd                           (%chrome/composer/editor.dtd)
+  locale/@AB_CD@/editor/editorPrefsOverlay.dtd               (%chrome/composer/editorPrefsOverlay.dtd)
+  locale/@AB_CD@/editor/editorNavigatorOverlay.dtd           (%chrome/composer/editorNavigatorOverlay.dtd)
+  locale/@AB_CD@/editor/pref-toolbars.dtd                    (%chrome/composer/pref-toolbars.dtd)
+  locale/@AB_CD@/editor/pref-editing.dtd                     (%chrome/composer/pref-editing.dtd)
+  locale/@AB_CD@/editor/pref-composer.dtd                    (%chrome/composer/pref-composer.dtd)
+  locale/@AB_CD@/editor/pref-publish.dtd                     (%chrome/composer/pref-publish.dtd)
+  locale/@AB_CD@/editor/EdLinkChecker.dtd                    (%chrome/dialogs/EdLinkChecker.dtd)
+  locale/@AB_CD@/editor/EditorPageProperties.dtd             (%chrome/dialogs/EditorPageProperties.dtd)
+  locale/@AB_CD@/editor/EditorSnapToGrid.dtd                 (%chrome/dialogs/EditorSnapToGrid.dtd)
+  locale/@AB_CD@/editor/EditorImageMap.dtd                   (%chrome/dialogs/EditorImageMap.dtd)
+  locale/@AB_CD@/editor/EditorImageMapHotSpot.dtd            (%chrome/dialogs/EditorImageMapHotSpot.dtd)
+  locale/@AB_CD@/editor/EditConflict.dtd                     (%chrome/dialogs/EditConflict.dtd)
+  locale/@AB_CD@/editor/EditorSaveAsCharset.dtd              (%chrome/dialogs/EditorSaveAsCharset.dtd)
+  locale/@AB_CD@/editor/EditorPublish.dtd                    (%chrome/dialogs/EditorPublish.dtd)
+  locale/@AB_CD@/editor/EditorPublishProgress.dtd            (%chrome/dialogs/EditorPublishProgress.dtd)
+#ifdef MOZ_XUL_APP
+% locale editor-region @AB_CD@ %locale/@AB_CD@/editor-region/
+#else
+* locale/@AB_CD@/editor-region/contents.rdf                  (generic/chrome/region/contents.rdf)
+#endif
+  locale/@AB_CD@/editor-region/region.properties             (%chrome/region/region.properties)
+#endif

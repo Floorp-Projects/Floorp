@@ -1,0 +1,13 @@
+toolkit.jar:
+% content mozapps %content/mozapps/ xpcnativewrappers=yes
+* content/mozapps/extensions/extensions.xul                     (content/extensions.xul)
+* content/mozapps/extensions/extensions.js                      (content/extensions.js)
+* content/mozapps/extensions/extensions.xml                     (content/extensions.xml)
+  content/mozapps/extensions/extensions.css                     (content/extensions.css)
+* content/mozapps/extensions/about.xul                          (content/about.xul)
+* content/mozapps/extensions/about.js                           (content/about.js)
+* content/mozapps/extensions/list.xul                           (content/list.xul)
+* content/mozapps/extensions/list.js                            (content/list.js)
+* content/mozapps/extensions/update.xul                         (content/update.xul)
+* content/mozapps/extensions/update.js                          (content/update.js)
+

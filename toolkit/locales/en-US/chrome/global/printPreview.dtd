@@ -1,0 +1,73 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is the print preview toolbar.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2002
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Samir Gehani <sgehani@netscape.com> (Original Author)
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!ENTITY print.label          "Print...">
+<!ENTITY print.accesskey      "P">
+<!ENTITY pageSetup.label      "Page Setup...">
+<!ENTITY pageSetup.accesskey  "u">
+<!ENTITY page.label           "Page:">
+<!ENTITY page.accesskey       "a">
+<!ENTITY of.label             "of">
+<!ENTITY scale.label          "Scale:">
+<!ENTITY scale.accesskey      "S">
+<!ENTITY percent.label        "&#037;">
+<!ENTITY portrait.label       "Portrait">
+<!ENTITY portrait.accesskey   "o">
+<!ENTITY landscape.label      "Landscape">
+<!ENTITY landscape.accesskey  "L">
+<!ENTITY close.label          "Close">
+<!ENTITY close.accesskey      "C">
+<!ENTITY p30.label            "30&#037;">
+<!ENTITY p40.label            "40&#037;">
+<!ENTITY p50.label            "50&#037;">
+<!ENTITY p60.label            "60&#037;">
+<!ENTITY p70.label            "70&#037;">
+<!ENTITY p80.label            "80&#037;">
+<!ENTITY p90.label            "90&#037;">
+<!ENTITY p100.label           "100&#037;">
+<!ENTITY p125.label           "125&#037;">
+<!ENTITY p150.label           "150&#037;">
+<!ENTITY p175.label           "175&#037;">
+<!ENTITY p200.label           "200&#037;">
+<!ENTITY Custom.label         "Custom...">
+<!ENTITY ShrinkToFit.label    "Shrink To Fit">
+<!ENTITY customPrompt.title   "Custom Scale...">
+
+<!ENTITY homearrow.tooltip    "First page">
+<!ENTITY endarrow.tooltip     "Last page">
+<!ENTITY rightarrow.tooltip   "Next page">
+<!ENTITY leftarrow.tooltip    "Previous page">

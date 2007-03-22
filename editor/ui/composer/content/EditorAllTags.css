@@ -1,0 +1,835 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998-1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/* Styles to alter look of things in the Editor content window 
+ *  for the "All Tags Edit Mode" Every HTML tag shows up as an icon.
+*/
+
+/* For "userdefined" or "unknown" tags
+   (Note that "_" must be escaped)
+*/
+
+*:not(a):not(abbr):not(acronym):not(address):not(applet):not(area):not(b):not(base):not(basefont):not(bdo):not(bgsound):not(big):not(blink):not(blockquote):not(body):not(br):not(button):not(canvas):not(caption):not(center):not(cite):not(code):not(col):not(colgroup):not(dd):not(del):not(dfn):not(dir):not(div):not(dl):not(dt):not(em):not(embed):not(fieldset):not(font):not(form):not(frame):not(frameset):not(h1):not(h2):not(h3):not(h4):not(h5):not(h6):not(head):not(hr):not(html):not(i):not(iframe):not(image):not(img):not(input):not(ins):not(isindex):not(kbd):not(keygen):not(label):not(legend):not(li):not(link):not(listing):not(map):not(marquee):not(menu):not(meta):not(multicol):not(nobr):not(noembed):not(noframes):not(noscript):not(object):not(ol):not(optgroup):not(option):not(p):not(param):not(plaintext):not(pre):not(q):not(s):not(samp):not(script):not(select):not(server):not(small):not(sound):not(spacer):not(span):not(strike):not(strong):not(style):not(sub):not(sup):not(table):not(tbody):not(td):not(textarea):not(tfoot):not(th):not(thead):not(title):not(tr):not(tt):not(u):not(ul):not(var):not(wbr):not(xmp) {
+  display: inline;
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 16px; 
+  background-image: url(chrome://editor/content/images/tag-userdefined.gif);
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+a:not([\_moz_anonclass]) {
+  min-height: 16px; margin-left: 2px; margin-top: 2px;
+  padding-left: 20px; 
+  background-image: url(chrome://editor/content/images/tag-a.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+abbr {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 35px; 
+  background-image: url(chrome://editor/content/images/tag-abr.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+
+acronym {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 57px; 
+  background-image: url(chrome://editor/content/images/tag-acr.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+address {
+  min-height: 44px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-adr.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+applet {
+  min-height: 35px; margin-top: 2px;
+  padding-left: 47px; 
+  background-image: url(chrome://editor/content/images/tag-app.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+area {
+  min-height: 35px; margin-top: 2px;
+  padding-left: 39px; 
+  background-image: url(chrome://editor/content/images/tag-ara.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+b {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 20px; 
+  background-image: url(chrome://editor/content/images/tag-b.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+basefont {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 57px; 
+  background-image: url(chrome://editor/content/images/tag-bsf.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+bdo {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 31px; 
+  background-image: url(chrome://editor/content/images/tag-bdo.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+big {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 31px; 
+  background-image: url(chrome://editor/content/images/tag-big.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+blockquote {
+  min-height: 44px; margin-left: 2px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-blq.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+body {
+  min-height: 36px; margin-left: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-body.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+br {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 23px; 
+  background-image: url(chrome://editor/content/images/tag-br.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+button {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 57px; 
+  background-image: url(chrome://editor/content/images/tag-btn.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+caption {
+  min-height: 35px; margin-top: 2px;
+  padding-left: 55px; 
+  background-image: url(chrome://editor/content/images/tag-cpt.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+center {
+  min-height: 44px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-ctr.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+cite {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 39px; 
+  background-image: url(chrome://editor/content/images/tag-cit.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+code {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 39px; 
+  background-image: url(chrome://editor/content/images/tag-cod.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+col {
+  min-height: 35px; margin-left: 2px;
+  padding-left: 31px; 
+  background-image: url(chrome://editor/content/images/tag-col.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+colgroup {
+  min-height: 35px; margin-left: 2px;
+  padding-left: 51px; 
+  background-image: url(chrome://editor/content/images/tag-clg.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+dd {
+  min-height: 35px; margin-top: 2px;
+  padding-left: 23px; 
+  background-image: url(chrome://editor/content/images/tag-dd.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+del {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 31px; 
+  background-image: url(chrome://editor/content/images/tag-del.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+dfn {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 31px; 
+  background-image: url(chrome://editor/content/images/tag-dfn.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+dir {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 31px; 
+  background-image: url(chrome://editor/content/images/tag-dir.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+div {
+  min-height: 24px; margin-top: 2px;
+  /* TEMPORARY TO COMPENSATE FOR BUG */
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-div.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+input div {
+  min-height: 0px; margin-left: 0px; margin-top: 0px;
+  padding-left: 0px; 
+  background-image: none;
+}
+
+dl {
+  min-height: 20px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-dl.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+dt {
+  min-height: 35px; margin-top: 2px;
+  padding-left: 23px; 
+  background-image: url(chrome://editor/content/images/tag-dt.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+em {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 23px; 
+  background-image: url(chrome://editor/content/images/tag-em.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+fieldset {
+  min-height: 44px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-fld.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+font {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 39px; 
+  background-image: url(chrome://editor/content/images/tag-fnt.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+form {
+  min-height: 36px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-for.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+frame {
+  min-height: 40px; margin-left: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-frm.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+frameset {
+  min-height: 44px; margin-left: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-fst.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+h1 {
+  min-height: 20px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-h1.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+h2 {
+  min-height: 20px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-h2.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+h3 {
+  min-height: 20px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-h3.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+h4 {
+  min-height: 20px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-h4.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+h5 {
+  min-height: 20px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-h5.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+h6 {
+  min-height: 20px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-h6.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+hr {
+  min-height: 20px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-hr.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+i {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 20px; 
+  background-image: url(chrome://editor/content/images/tag-i.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+iframe {
+  min-height: 35px; margin-left: 2px;
+  padding-left: 47px; 
+  background-image: url(chrome://editor/content/images/tag-ifr.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+img:not([\_moz_anonclass]) {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 31px; 
+  background-image: url(chrome://editor/content/images/tag-img.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+input {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 39px; 
+  background-image: url(chrome://editor/content/images/tag-inp.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+ins {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 31px; 
+  background-image: url(chrome://editor/content/images/tag-ins.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+isindex {
+  min-height: 40px; margin-left: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-isx.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+kbd {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 31px; 
+  background-image: url(chrome://editor/content/images/tag-kbd.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+label {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 39px; 
+  background-image: url(chrome://editor/content/images/tag-lbl.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+legend {
+  min-height: 35px; margin-top: 2px;
+  padding-left: 49px; 
+  background-image: url(chrome://editor/content/images/tag-lgn.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+li {
+  min-height: 35px; margin-top: 2px;
+  padding-left: 23px; 
+  background-image: url(chrome://editor/content/images/tag-li.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+listing {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 57px; 
+  background-image: url(chrome://editor/content/images/tag-lst.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+map {
+  min-height: 35px; margin-left: 2px;
+  padding-left: 31px; 
+  background-image: url(chrome://editor/content/images/tag-map.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+menu {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 39px; 
+  background-image: url(chrome://editor/content/images/tag-men.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+nobr {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 39px; 
+  background-image: url(chrome://editor/content/images/tag-nbr.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+noframes {
+  min-height: 44px; margin-left: 2px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-nfr.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+noscript {
+  min-height: 44px; margin-left: 2px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-nsc.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+object {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 49px; 
+  background-image: url(chrome://editor/content/images/tag-obj.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+ol {
+  min-height: 38px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-ol.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+optgroup {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 51px; 
+  background-image: url(chrome://editor/content/images/tag-opg.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+option {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 47px; 
+  background-image: url(chrome://editor/content/images/tag-opt.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+p {
+  min-height: 38px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-p.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+param {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 43px; 
+  background-image: url(chrome://editor/content/images/tag-prm.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+plaintext {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 57px; 
+  background-image: url(chrome://editor/content/images/tag-pln.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+pre {
+  min-height: 24px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-pre.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+q {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 20px; 
+  background-image: url(chrome://editor/content/images/tag-q.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+s {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 20px; 
+  background-image: url(chrome://editor/content/images/tag-s.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+samp {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 39px; 
+  background-image: url(chrome://editor/content/images/tag-smp.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+script {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 45px; 
+  background-image: url(chrome://editor/content/images/tag-scr.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+select {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 47px; 
+  background-image: url(chrome://editor/content/images/tag-slc.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+small {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 41px; 
+  background-image: url(chrome://editor/content/images/tag-sml.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+span:not([\_moz_anonclass]) {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  /* TEMPORARY TO COMPENSATE FOR BUG */
+  padding-left: 39px; 
+  background-image: url(chrome://editor/content/images/tag-spn.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+strike {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 45px; 
+  background-image: url(chrome://editor/content/images/tag-stk.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+strong {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 51px; 
+  background-image: url(chrome://editor/content/images/tag-stn.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+sub {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 31px; 
+  background-image: url(chrome://editor/content/images/tag-sub.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+sup {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 31px; 
+  background-image: url(chrome://editor/content/images/tag-sup.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+/* The background image technique is not working for 
+   some table elements. Trying the "before" strategy
+*/
+
+table {
+  min-height: 40px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-tbl.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+tbody {
+  min-height: 42px; margin-left: 2px; margin-top: 1px;
+  padding-left: 17px; 
+  content: url(chrome://editor/content/images/tag-tbd.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+td {
+  min-height: 22px; margin-left: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-td.gif);
+
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+textarea {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 59px; 
+  background-image: url(chrome://editor/content/images/tag-txt.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+tfoot {
+  min-height: 42px; margin-left: 2px; margin-top: 1px;
+  padding-left: 17px; 
+  content: url(chrome://editor/content/images/tag-tft.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+th {
+  min-height: 22px; margin-left: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-th.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+thead {
+  min-height: 42px; margin-left: 2px; margin-top: 1px;
+  padding-left: 17px; 
+  content: url(chrome://editor/content/images/tag-thd.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+tr {
+  min-height: 22px; margin-left: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-tr.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+tt {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 23px; 
+  background-image: url(chrome://editor/content/images/tag-tt.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+u {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 23px; 
+  background-image: url(chrome://editor/content/images/tag-u.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+ul {
+  min-height: 20px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-ul.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+var {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 31px; 
+  background-image: url(chrome://editor/content/images/tag-var.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+xmp {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 31px; 
+  background-image: url(chrome://editor/content/images/tag-xmp.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+
+/* These are tags that we DON'T want to show icons for.
+   We have images for them in case we want to utilize them
+   for some other purpose than the "All Tags" editor mode
+
+html {
+  min-height: 36px; margin-left: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-html.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+head {
+  min-height: 36px; margin-left: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-hed.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+These are tags that are ONLY allowed as children of HEAD:
+
+title {
+  min-height: 40px; margin-left: 2px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-ttl.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+base {
+  min-height: 36px; margin-left: 2px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-bas.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+style {
+  min-height: 40px; margin-left: 2px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-stl.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+meta {
+  min-height: 36px; margin-left: 2px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-met.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
+link {
+  min-height: 30px; margin-left: 2px; margin-top: 2px;
+  padding-left: 17px; 
+  background-image: url(chrome://editor/content/images/tag-lnk.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+*/

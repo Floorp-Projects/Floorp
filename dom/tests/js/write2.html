@@ -1,0 +1,60 @@
+<HTML>
+<HEAD>
+<SCRIPT>
+var w = null;
+var count = 0;
+var isOpen = false;
+
+function newWin() {
+  if ((w == null) || (w.closed == true)) {
+    w = window.open("about:blank", "writetest");
+  }
+}
+
+function incrWrite() {
+  if (w != null) {
+    if (!isOpen) {
+      count = 0;
+      isOpen = true;
+      w.document.write("<p>Opening document and counting up....</p>");
+    }
+
+    w.document.write("<p>Counter at: " + count++ + "</p>");
+  }
+}
+
+function closeDoc() {
+  if ((w != null) && isOpen) {
+    w.document.write("<p>Closing document!</p>");
+    w.document.close();
+    isOpen = false;
+  }
+}
+</SCRIPT>
+</HEAD>
+<BODY>
+<h1>document.write (out-of-line) test</h1>
+<p>This test uses the open, write and close methods of a
+document to construct a document. It tests the "out-of-line"
+capabilities of document.write i.e. the ability to use 
+document.write to create an entirely new document.</p>
+
+<form>
+<p>Use this button to create a new window. If one already
+exists, we'll use it.
+<INPUT TYPE="button" NAME="newwin" VALUE="New Window" onClick="newWin(); return true;">
+</p>
+
+<p>Use this button to write the new value of a counter into
+the document. If the document was previously closed, it will be
+reopened (and the old contents will be destroyed.
+<INPUT TYPE="button" NAME="incrwrite" VALUE="Write" onClick="incrWrite(); return true;">
+</p>
+
+<p>Use this button to close the document. Subsequent writes will rewrite
+the document.
+<INPUT TYPE="button" NAME="closedoc" VALUE="Close Document" onClick="closeDoc(); return true;">
+<p>
+</FORM>
+</BODY>
+</HTML>

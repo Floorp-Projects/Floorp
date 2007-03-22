@@ -1,0 +1,119 @@
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code, copied from
+ * xpfe/appshell/public/nsIAppShellService.idl
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1999
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsICmdLineService;
+
+[scriptable, uuid(e9b0f89b-0529-4d96-98a8-eb5b2b9a8383)]
+interface nsIAppStartup : nsISupports
+{
+    /**
+     * Create the hidden window.
+     */
+    void createHiddenWindow();
+
+    /**
+     * Runs an application event loop: normally the main event pump which
+     * defines the lifetime of the application. If there are no windows open
+     * and no outstanding calls to enterLastWindowClosingSurvivalArea this
+     * method will exit immediately.
+     *
+     * @returnCode NS_SUCCESS_RESTART_APP
+     *             This return code indicates that the application should be
+     *             restarted because quit was called with the eRestart flag.
+     */
+    void run();
+
+    /**
+     * There are situations where all application windows will be
+     * closed but we don't want to take this as a signal to quit the
+     * app. Bracket the code where the last window could close with
+     * these.
+     */
+    void enterLastWindowClosingSurvivalArea();
+    void exitLastWindowClosingSurvivalArea();
+
+    /**
+     * The following flags may be passed as the aMode parameter to the quit
+     * method.  One and only one of the "Quit" flags must be specified.  The
+     * eRestart flag may be bit-wise combined with one of the "Quit" flags to
+     * cause the application to restart after it quits.
+     */
+
+    /**
+     * Attempt to quit if all windows are closed.
+     */
+    const PRUint32 eConsiderQuit = 0x01;
+
+    /**
+     * Try to close all windows, then quit if successful.
+     */
+    const PRUint32 eAttemptQuit = 0x02;
+
+    /**
+     * Quit, damnit!
+     */
+    const PRUint32 eForceQuit = 0x03;
+
+    /**
+     * Restart the application after quitting.  The application will be
+     * restarted with the same profile and an empty command line.
+     */
+    const PRUint32 eRestart = 0x10; 
+
+    /**
+     * Exit the event loop, and shut down the app.
+     *
+     * @param aMode
+     *        This parameter modifies how the app is shutdown, and it is
+     *        constructed from the constants defined above.
+     */
+    void quit(in PRUint32 aMode);
+};
+
+%{C++
+/**
+ * This success code may be returned by nsIAppStartup::Run to indicate that the
+ * application should be restarted.  This condition corresponds to the case in
+ * which nsIAppStartup::Quit was called with the eRestart flag.
+ */
+#define NS_SUCCESS_RESTART_APP \
+    NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 1)
+%}

@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+
+<bindings id="bdsMultipanel"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="multipanelset">
+    <content>
+      <xul:vbox class="multipanelset-ibox" flex="1">
+        <children/>
+      </xul:vbox>
+    </content>
+
+    <implementation>
+    </implementation>
+    
+    <resources>
+      <stylesheet src="chrome://inspector/skin/multipanel.css"/>
+    </resources>    
+  </binding>
+
+  <binding id="multipanel">
+    <content>
+      <xul:box class="multipanel-label-box" onclick="this.parentNode.toggleOpen()">
+        <xul:box class="multipanel-label-box-2" flex="1">
+          <xul:label class="multipanel-title" xbl:inherits="value=label"/>
+        </xul:box>
+      </xul:box>
+      <xul:box anonid="content-box" class="multipanel-content-box" flex="1">
+        <children/>
+      </xul:box>
+    </content>
+
+    <implementation>
+  	  <constructor><![CDATA[
+        this.mContentBox = document.getAnonymousElementByAttribute(this, "anonid", "content-box");
+        this.mOnOpen = this.hasAttribute("onopen") ? new Function(this.getAttribute("onopen")) : null;
+        this.open = this.getAttribute("open") == "true";
+      ]]></constructor>
+
+      <property name="open" onget="return this.getAttribute('open') == 'true';">
+        <setter><![CDATA[
+          this.setAttribute("open", val);
+          if (val) {
+            this.mContentBox.removeAttribute("collapsed");
+            this.setAttribute("flex", "1");
+          } else {
+            this.mContentBox.setAttribute("collapsed", "true");
+            this.removeAttribute("flex");
+          }
+          
+          if (val && this.mOnOpen)
+            this.mOnOpen();
+        ]]></setter>
+      </property>
+
+      <method name="toggleOpen">
+        <body><![CDATA[
+          this.open = !this.open;
+        ]]></body>
+      </method>
+
+    </implementation>
+    
+    <resources>
+      <stylesheet src="chrome://inspector/skin/multipanel.css"/>
+    </resources>    
+  </binding>
+
+</bindings>

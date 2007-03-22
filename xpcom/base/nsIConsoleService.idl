@@ -1,0 +1,90 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Simon Bünzli <zeniko@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsIConsoleListener.idl"
+#include "nsIConsoleMessage.idl"
+
+[scriptable, uuid(883472a0-ea9b-11da-8ad9-0800200c9a66)]
+interface nsIConsoleService : nsISupports
+{
+    void logMessage(in nsIConsoleMessage message);
+
+    /**
+     * Convenience method for logging simple messages.
+     */
+    void logStringMessage(in wstring message);
+
+    /**
+     * Get an array of all the messages logged so far.  If no messages
+     * are logged, this function will return a count of 0, but still
+     * will allocate one word for messages, so as to show up as a
+     * 0-length array when called from script.
+     */
+    void getMessageArray([array, size_is(count)] out nsIConsoleMessage messages,
+                         out PRUint32 count);
+
+    /**
+     * To guard against stack overflows from listeners that could log
+     * messages (it's easy to do this inadvertently from listeners
+     * implemented in JavaScript), we don't call any listeners when
+     * another error is already being logged.
+     */
+    void registerListener(in nsIConsoleListener listener);
+
+    /**
+     * Each registered listener should also be unregistered.
+     */
+    void unregisterListener(in nsIConsoleListener listener);
+
+    /**
+     * Clear the message buffer (e.g. for privacy reasons).
+     */
+    void reset();
+};
+
+
+%{ C++
+#define NS_CONSOLESERVICE_CLASSNAME "Console Service"
+
+#define NS_CONSOLESERVICE_CID \
+{ 0x7e3ff85c, 0x1dd2, 0x11b2, { 0x8d, 0x4b, 0xeb, 0x45, 0x2c, 0xb0, 0xff, 0x40 }}
+
+#define NS_CONSOLESERVICE_CONTRACTID "@mozilla.org/consoleservice;1"
+%}
+

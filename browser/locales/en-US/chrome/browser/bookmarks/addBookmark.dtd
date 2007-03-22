@@ -1,0 +1,27 @@
+<!ENTITY newBookmark.title          "Add Bookmark">
+<!ENTITY newbookmark.label          "&brandShortName; will add a bookmark to this page.">
+<!ENTITY name.label                 "Name:">
+<!ENTITY name.accesskey             "N">
+<!ENTITY keyword.label              "Keyword:">
+<!ENTITY keyword.accesskey          "K">
+<!ENTITY microsummary.label         "Live Titles">
+<!ENTITY url.label                  "Location:">
+<!ENTITY url.accesskey              "L">
+<!ENTITY button.createin.label      "Create In &gt;&gt;">
+<!ENTITY button.createin.accesskey  "C">
+<!ENTITY button.createin2.label     "Create In &lt;&lt;">
+<!ENTITY createin.label             "Create in:">
+<!ENTITY createin.accesskey         "C">
+<!ENTITY moveto.label               "Move to:">
+<!ENTITY moveto.accesskey           "M">
+<!ENTITY button.newfolder.label     "New Folder...">
+<!ENTITY button.newfolder.accesskey "o">
+<!ENTITY alwayscreateinfolder.label "Don't show this dialog again">
+<!ENTITY alwayscreateinfolder.accesskey "a">
+<!ENTITY dontshowmessage.tooltip    "When this option is selected, new Bookmarks will be added using the title provided by the page.">
+<!ENTITY selectFolder.label         "Choose Folder">
+
+<!ENTITY expanderDown.tooltip    "Show all the bookmarks folders">
+<!ENTITY expanderUp.tooltip      "Hide">
+<!ENTITY acceptButton.label      "Add">
+<!ENTITY bookmarksToolbar.label  "Bookmarks Toolbar">

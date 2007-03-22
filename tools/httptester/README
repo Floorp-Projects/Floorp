@@ -1,0 +1,53 @@
+This is a regression tester for http.
+
+The summary
+===========
+
+1) start the server, with python server.py
+2) Get a file of all tests available by getting http://localhost:8000/
+3) Use that file as an argument to mozilla -f (this requires either a 
+debug build or a build with --enable-perf-metrics)
+4) Look at the results of http://localhost:8000/id/report
+
+Detail
+======
+
+Each run gets a unique ID number, which is used to map a test run to a 
+database of results. Every test (which lives in the tests/ directory) is 
+enumerated in step 2. Adding a new test is as simple as just creating the 
+directory and addiing the appropriate files.
+
+Test format
+===========
+
+Each test must have a config file, which is simply a list of all the files
+which will be requested, in order. Each file (x) can either be present in
+the directory as that name, in which case the contents will be sent to the
+browser, or as x.headers and (optionally) x.body.
+
+The headers file has a first line which is the response code, and then any 
+subsequent lines are header: value pairs. If the body file is not present, 
+the test server will construct a one line response. This is useful for 
+testing mozilla's response to headers (see the responses/ subdirectory of 
+tests for examples)
+
+Advanced tests
+==============
+
+The default definition of a tests's 'success' is that all the files are 
+retreived in the correct order. This can be overridden on a per test 
+basis. For example, the referer test additionally checks that a 
+referer header was sent.
+
+To do this, a file called tester.py must exist in the test's directory. 
+This class must provide an object called tester, which is used by the 
+driver code instead of the default tester. This default tester is 
+automatically present in the file's namespace under the name 'BaseTester'. 
+This means that it can be inherited from in order to only override certain 
+functionality.
+
+The routines in the default tester are documented in BaseTest.py. The most 
+common routine which needs to be extended in verify_request. For an 
+example, see the referer test.
+
+Bradley Baetz <bbaetz@netscape.com>, <bbaetz@cs.mcgill.ca>

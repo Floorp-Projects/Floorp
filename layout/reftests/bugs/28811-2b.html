@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Testcase for resizing elements that depend on containing block width</title>
+<style type="text/css">
+html, body, iframe { height: 100%; }
+</style>
+<script type="application/javascript">
+
+function run() {
+    document.getElementById("toresize").style.width = "750px";
+}
+
+</script>
+</head>
+<body onload="run()">
+<iframe style="width: 500px" id="toresize" src="28811-2-inner.html"></iframe>
+</body>
+</html>

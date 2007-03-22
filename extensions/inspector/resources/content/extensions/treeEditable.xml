@@ -1,0 +1,175 @@
+<?xml version="1.0"?>
+
+<bindings id="bnsEditableTree"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="treeEditable" extends="chrome://global/content/bindings/tree.xml#tree">
+    <content>
+      <children/>
+      <xul:treerows class="tree-container-treerows" xbl:inherits="dragover,dragdroptree">
+        <children includes="treehead|treechildren"/>
+      </xul:treerows> 
+    </content>
+
+    <implementation>
+      <property name="onStartEdit" readonly="true">
+        new Function("event", this.getAttribute("onstartedit"));
+      </property>
+
+      <property name="onAfterEdit" readonly="true">
+        new Function("event", this.getAttribute("onafteredit"));
+      </property>
+
+      <method name="getEditorElement">
+        <parameter name="aTreecell"/>
+        <body><![CDATA[
+          var eclass = aTreecell.getAttributeNS("http://www.mozilla.org", "editorclass");
+          var cached = this.mEditorCache[eclass];
+          var event = { 
+            editingNode: aTreecell, 
+            editorCached: cached, 
+            editorClass: eclass
+          };
+
+          var userEl = this.onStartEdit(event);
+          var el = userEl ? userEl : ( cached ? cached : this.createDefaultEditor() );
+          if (userEl || !cached) {
+            el.setAttribute("class", el.getAttribute("class") + " treecell-editor");
+            this.mEditorCache[eclass] = el;
+          }
+
+          return el;
+        ]]></body>
+      </method>
+      
+      <method name="startEdit">
+        <parameter name="aTreecell"/>
+        <body><![CDATA[
+          // walk up to the treeitem containing the editing cell 
+          var item = aTreecell
+          while (item && item.localName.toLowerCase() != "treeitem")
+            item = item.parentNode;
+
+          item.setAttribute("editing", "true");
+          var editor = this.getEditorElement(aTreecell);
+          editor.setAttribute("value", aTreecell.getAttribute("label"));
+          aTreecell.parentNode.replaceChild(editor, aTreecell);
+
+          this.mEditing = true;
+          this.mEditingCell = aTreecell;
+          this.mEditingEditor = editor;
+          this.mEditingItem = item;
+
+          editor.focus();
+          // if it proves to be a textbox... select it's text
+          if (editor.select) editor.select();
+        ]]></body>
+      </method>
+      
+      <method name="stopEdit">
+        <parameter name="aCancel"/>
+        <body><![CDATA[
+          if (this.mEditing) {
+            var cell = this.mEditingCell;
+            var ed = this.mEditingEditor;
+            var ev = ed.value;
+            this.mEditingItem.removeAttribute("editing");
+            var cancel = this.onAfterEdit({ newValue: ev, editingNode: cell, editingItem: this.mEditingItem });
+            if (!aCancel && !cancel) cell.setAttribute("label", ev);
+            ed.parentNode.replaceChild(cell, ed);
+            this.mEditing = false;
+            this.focus();
+          }
+        ]]></body>
+      </method>
+
+      <method name="createDefaultEditor">
+        <body><![CDATA[
+          var el = document.createElement("textbox");
+          return el;
+        ]]></body>
+      </method>
+
+      <constructor><![CDATA[
+        this.mEditorCache = {};
+        this.mEditing = false;
+        this.mEditingCell = null;
+        this.mEditingEditor = null;
+      ]]></constructor>
+    </implementation>
+
+    <handlers>
+      <handler event="mousedown"><![CDATA[
+        if (this.mEditing && event.target != this.mEditingEditor 
+            && event.target != this.mEditingCell) 
+        {
+          this.stopEdit();
+        }
+      ]]></handler>
+      
+      <handler event="keypress"><![CDATA[
+        if (!this.mEditing && event.keyCode == 113) {
+          var sel = this.selectedItems ? this.selectedItems[0] : null;
+          if (sel) {
+            var cells = sel.getElementsByTagName("treecell");
+            for (var i = 0; i < cells.length; ++i) {
+              if (cells[i].getAttribute("editable") == "true") {
+                this.startEdit(cells[i]);
+                break;
+              }
+            }
+          }
+        }
+        if (this.mEditing && event.keyCode == 13)
+          this.stopEdit();
+        if (this.mEditing && event.keyCode == 27)
+          this.stopEdit(true);
+        if (this.mEditing && event.keyCode == 9) {
+          event.stopPropagation();
+          event.preventDefault();
+        }
+      ]]></handler>
+    </handlers>
+  </binding>
+  
+  <!-- ==================================================================================== -->
+  <!-- ==================================================================================== -->
+
+  <binding id="treecellEditable" extends="chrome://global/content/bindings/tree.xml#treecell">
+    <implementation>
+      <property name="parentItem" readonly="true"><![CDATA[
+        var parent = this.parentNode;
+        while (parent.localName != "treeitem" && parent) {
+          parent = parent.parentNode;
+        }
+        this.mParentItem = parent;
+        this.mParentItem;
+      ]]></property>
+
+      <property name="parentTree" readonly="true"><![CDATA[
+        var parent = this.parentNode;
+        while (parent.localName != "tree" && parent) {
+          parent = parent.parentNode;
+        }
+        this.mParentTree = parent;
+        this.mParentTree;
+      ]]></property>
+
+      <method name="startEdit">
+        <body><![CDATA[
+          this.parentTree.startEdit(this);
+        ]]></body>
+      </method>
+    </implementation>
+    
+    <handlers>
+      <handler event="mousedown"><![CDATA[
+        if (this.parentItem.getAttribute("selected") == "true" && event.button == 0)
+          this.startEdit();
+      ]]></handler>
+    </handlers>
+  </binding>
+
+</bindings>

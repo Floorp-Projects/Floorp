@@ -1,0 +1,118 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code
+#
+# The Initial Developer of the Original Code is
+# Aaron Leventhal
+# Portions created by the Initial Developer are Copyright (C) 2003
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH = ../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = accessibility
+LIBRARY_NAME = accessibility_toolkit_s
+LIBXUL_LIBRARY = 1
+
+REQUIRES	= content \
+		  docshell \
+		  dom \
+		  editor \
+		  gfx \
+		  intl \
+		  layout \
+		  locale \
+		  necko \
+		  string \
+		  uriloader \
+		  view \
+		  webshell \
+		  widget \
+		  xpcom \
+		  $(NULL)
+
+CPPSRCS = \
+  nsAccessNodeWrap.cpp \
+  nsAccessibleWrap.cpp \
+  nsDocAccessibleWrap.cpp \
+  nsRootAccessibleWrap.cpp \
+  nsAppRootAccessible.cpp \
+  nsMaiInterfaceComponent.cpp \
+  nsMaiInterfaceAction.cpp \
+  nsMaiInterfaceText.cpp \
+  nsMaiInterfaceEditableText.cpp \
+  nsMaiInterfaceSelection.cpp \
+  nsMaiInterfaceValue.cpp \
+  nsMaiHyperlink.cpp \
+  nsMaiInterfaceHypertext.cpp \
+  nsMaiInterfaceHyperlinkImpl.cpp \
+  nsMaiInterfaceTable.cpp \
+  nsMaiInterfaceDocument.cpp \
+  nsMaiInterfaceImage.cpp \
+  $(NULL)
+
+ifdef MOZ_XUL
+CPPSRCS += \
+  nsXULTreeAccessibleWrap.cpp \
+  $(NULL)
+endif
+
+EXPORTS = \
+  nsAccessNodeWrap.h \
+  nsAccessibleWrap.h \
+  nsDocAccessibleWrap.h \
+  nsHTMLFormControlAccessibleWrap.h \
+  nsRootAccessibleWrap.h \
+  nsTextAccessibleWrap.h \
+  nsXULMenuAccessibleWrap.h \
+  nsXULTreeAccessibleWrap.h \
+  $(NULL)
+
+# we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
+
+EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS)
+
+include $(topsrcdir)/config/rules.mk
+
+CFLAGS		+= $(MOZ_GTK2_CFLAGS)
+CXXFLAGS	+= $(MOZ_GTK2_CFLAGS)
+
+LOCAL_INCLUDES += \
+  -I$(srcdir) \
+  -I$(srcdir)/../base \
+  -I$(srcdir)/../html \
+  -I$(srcdir)/../xul \
+  -I$(topsrcdir)/other-licenses/atk-1.0 \
+  $(NULL)

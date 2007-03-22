@@ -1,0 +1,5 @@
+<!-- extracted from institems.xul -->
+
+<!ENTITY dialog.title "Software Installation">
+<!ENTITY warningText.label "A web site is requesting permission to install">
+<!ENTITY warningText2.label "Malicious software can damage your computer or violate your privacy. You should only install software from sources that you trust.">

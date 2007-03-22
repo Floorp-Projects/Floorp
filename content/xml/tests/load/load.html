@@ -1,0 +1,56 @@
+<html>
+<head>
+<title>Synchronized document.load() test</title>
+<style type="text/css">
+.box {
+  display: box;
+  border: 1px solid black;
+  margin-bottom: 0.5em;
+}
+.boxheader {
+  font-weight: bold;
+  color: maroon;
+}
+pre {
+  margin-left: 2em;
+}
+</style>
+<script type="text/javascript">
+var xmlDoc = document.implementation.createDocument("", "test", null);
+
+function documentLoaded(e) {
+  var s = new XMLSerializer();
+  var str = s.serializeToString(xmlDoc);
+  document.getElementById("id1").firstChild.nodeValue = str;
+  var eventProperties = "";
+  for (prop in e) {
+    eventProperties += prop + " : '" + e[prop] + "'\n";
+  }
+  document.getElementById("id2").firstChild.nodeValue = 
+    "Event object: " + e + "\n" +
+    "Event properties:\n" + 
+    eventProperties;
+}
+
+xmlDoc.addEventListener("load", documentLoaded, false);
+
+function execute()
+{
+  xmlDoc.load("test.xml");
+}
+
+</script>
+</head>
+<body onload="execute();">
+<h1>Synchronized document.load() test</h1>
+
+<div class="box"><span class="boxheader">XML document serialized</span>
+<pre id="id1">@@No result@@</pre>
+</div>
+<div class="box"><span class="boxheader">Event information</span>
+<pre id="id2">@@No result@@</pre>
+</div>
+
+</body>
+</body>
+</html>

@@ -1,0 +1,8 @@
+<!ENTITY inspectorTaskCmd.label "DOM Inspektor">
+<!ENTITY inspectorTaskCmd.commandkey "d">
+<!ENTITY inspectorTaskCmd.accesskey.ff "n">
+<!ENTITY inspectorTaskCmd.accesskey "D">
+
+<!ENTITY inspectPageTaskCmd.label "Preskúmať stránku">
+<!ENTITY inspectPageTaskCmd.accesskey "P">
+

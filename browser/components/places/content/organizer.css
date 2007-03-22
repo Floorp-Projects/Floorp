@@ -1,0 +1,29 @@
+
+.history-calendar {
+  -moz-binding: url("chrome://browser/content/places/places.xml#calendar");
+}
+
+#searchFilter {
+  -moz-binding: url("chrome://browser/content/places/places.xml#textbox-timed-arbitrary");
+}
+
+button.commandButton {
+  -moz-binding: url("chrome://browser/content/places/places.xml#command-button");
+}
+
+.filterList {
+  -moz-binding: url("chrome://browser/content/places/places.xml#filter-button");
+}
+
+#contentTitle {
+  width: 0px;
+}
+
+.textbox-input-closebutton {
+  display: none;
+}
+
+#searchFilter[filtered="true"] .textbox-input-closebutton {
+  display: -moz-box;
+}
+

@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+
+<resource version="2.3.0.1">
+
+  <object class="wxFrame" name="mail_frame">
+    <title>wxEmbed Mail</title>
+    <size>300,300</size>
+    <style>wxCAPTION|wxSYSTEM_MENU|wxRESIZE_BORDER|wxRESIZE_BOX|wxMINIMIZE_BOX|wxMAXIMIZE_BOX|wxCLIP_CHILDREN</style>
+    <pos>-1,-1</pos>
+
+    <!-- Mail menu -->
+    <object class="wxMenuBar" name="mainmenu">
+      <style>wxMB_DOCKABLE</style>
+      <object_ref ref="menu_file"/>
+    </object>
+
+    <object class="wxFlexGridSizer">
+      <cols>1</cols>
+      <rows>3</rows>
+      <vgap>0</vgap>
+      <hgap>0</hgap>
+      <growablecols>0</growablecols>
+      <growablerows>2</growablerows>
+
+      <object class="sizeritem">
+        <flag>wxALL|wxGROW</flag>
+        <object class="wxListCtrl" name="articles">
+          <style>wxLC_REPORT</style>
+          <size>500,150</size>
+          <!-- Must set columns etc. programatically -->
+        </object>
+      </object>
+
+      <object class="sizeritem">
+        <flag>wxALL|wxGROW</flag>
+        <object class="wxPanel" name="mail_header_panel">
+          <object class="wxFlexGridSizer">
+            <cols>2</cols>
+            <rows>3</rows>
+            <vgap>0</vgap>
+            <hgap>0</hgap>
+            <growablecols>1</growablecols>
+            <growablerows></growablerows>
+            <object class="sizeritem">
+              <flag>wxALL|wxGROW|wxALIGN_RIGHT</flag>
+              <object class="wxStaticText">
+                <label>Subject:</label>
+              </object>
+            </object>
+            <object class="sizeritem">
+              <flag>wxALL|wxGROW|wxALIGN_LEFT</flag>
+              <object class="wxStaticText" name="mail_subject">
+                <label>The Subject</label>
+              </object>
+            </object>
+            <object class="sizeritem">
+              <flag>wxALL|wxGROW|wxALIGN_RIGHT</flag>
+              <object class="wxStaticText">
+                <label>From:</label>
+              </object>
+            </object>
+            <object class="sizeritem">
+              <flag>wxALL|wxGROW|wxALIGN_LEFT</flag>
+              <object class="wxStaticText" name="mail_from">
+                <label>from</label>
+              </object>
+            </object>
+            <object class="sizeritem">
+              <flag>wxALL|wxGROW|wxALIGN_RIGHT</flag>
+              <object class="wxStaticText">
+                <label>Date:</label>
+              </object>
+            </object>
+            <object class="sizeritem">
+             <flag>wxALL|wxGROW|wxALIGN_LEFT</flag>
+              <object class="wxStaticText" name="mail_date">
+                <label>01 January 2003</label>
+              </object>
+            </object>
+          </object>
+        </object>
+      </object>
+
+      <!-- Gecko Window -->
+
+      <object class="sizeritem">
+        <flag>wxGROW|wxALL</flag>
+        <object class="wxPanel" name="gecko" subclass="GeckoWindow">
+          <style>wxCLIP_CHILDREN|wxSUNKEN_BORDER</style>
+          <size>500,280</size>
+        </object>
+      </object>
+
+    </object>
+
+  </object>
+
+</resource>

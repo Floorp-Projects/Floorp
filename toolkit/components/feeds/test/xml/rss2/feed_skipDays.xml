@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: channel skipDays works
+Expect: ((feed.skipDays.queryElementAt(0, Components.interfaces.nsISupportsString) == 'Sunday') && (feed.skipDays.queryElementAt(1, Components.interfaces.nsISupportsString) == 'Monday'))
+
+-->
+<rss version="2.0" >
+<channel>
+<skipDays>
+  <day>Sunday</day>
+  <day>Monday</day>
+</skipDays>
+</channel>
+</rss>

@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Testcase for resizing elements that depend on containing block height</title>
+<style type="text/css">
+html, body { height: 100%; }
+div { height: 3%; }
+</style>
+</head>
+<body>
+
+<div><span><img src="mozilla-banner.gif" width="100" style="height: 50%"></span></div>
+<div><span><img src="mozilla-banner.gif" width="2" style="min-height: 50%"></span></div>
+<div><span><img src="mozilla-banner.gif" width="100" style="max-height: 50%"></span></div>
+
+<div><span><span style="position:relative; top: 30%">text</span></span></div>
+<div><span><span style="position:relative; bottom: 30%">text</span></span></div>
+
+</body>
+</html>
