@@ -1,1 +1,1 @@
-/pub/mozilla.org/xulrunner/nightly/latest-mozilla1.8/xulrunner-1.8.1.3pre.en-US.linux-i686.tar.gz
+/pub/mozilla.org/xulrunner/nightly/latest-mozilla1.8/xulrunner-1.8.1.4pre.en-US.linux-i686.tar.gz
