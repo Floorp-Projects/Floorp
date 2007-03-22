@@ -37,8 +37,19 @@
           </columns>
           <rows id="placesInfoRows">
             <row id="titleRow" align="center">
-              <label value="&bookmark.property.title;" control="titleTextfield"/>
-              <textbox id="titleTextfield"/>
+              <label value="&bookmark.property.title;" control="namePicker"/>
+              <menulist id="namePicker"
+                        editable="true"
+                        droppable="false"
+                        oninput="BookmarkPropertiesPanel.onNamePickerInput();">
+                <menupopup>
+                  <menuitem id="userEnteredName"/>
+                  <menuitem disabled="true">
+                    <menuseparator flex="1"/>
+                    <label value="&liveTitlesSeparator.label;"/>
+                  </menuitem>
+                </menupopup>
+              </menulist>
             </row>
             <row id="locationRow" align="center">
               <label value="&bookmark.property.location;" control="editURLBar"/>
@@ -65,15 +76,6 @@
             <row id="descriptionRow">
               <label value="&bookmark.property.description;" control="descriptionTextfield"/>
               <textbox id="descriptionTextfield" multiline="true"/>
-            </row>
-            <row id="microsummaryRow" align="center">
-              <label value="&bookmark.property.microsummary;" control="microsummaryMenuList"/>
-              <menulist id="microsummaryMenuList">
-                <menupopup id="microsummaryMenuPopup">
-                  <menuitem label="&bookmark.property.microsummary.none;"
-                            selected="true"/>
-                </menupopup>
-              </menulist>
             </row>
             <row id="folderRow" flex="1" style="min-height: 100px;">
               <vbox align="end">

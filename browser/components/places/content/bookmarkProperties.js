@@ -78,7 +78,6 @@
  *     - "location"
  *     - "description"
  *     - "keyword"
- *     - "microsummary"
  *     - "load in sidebar"
  *     - "feedURI"
  *     - "siteURI"
@@ -358,30 +357,12 @@ var BookmarkPropertiesPanel = {
     }
   },
 
-  _initMicrosummaryPicker: function BPP__initMicrosummaryPicker() {
-    var placeURI = null;
-    if (this._action == ACTION_EDIT) {
-      NS_ASSERT(this._bookmarkId, "No bookmark identifier");
-      placeURI = PlacesUtils.bookmarks.getItemURI(this._bookmarkId);
-    }
-    try {
-      this._microsummaries = this._mss.getMicrosummaries(this._bookmarkURI,
-                                                         placeURI);
-    }
-    catch(ex) {
-      // There was a problem retrieving microsummaries; disable the picker.
-      // The microsummary service will throw an exception in at least
-      // two cases:
-      // 1. the bookmarked URI contains a scheme that the service won't
-      //    download for security reasons (currently it only handles http,
-      //    https, and file);
-      // 2. the page to which the URI refers isn't HTML or XML (the only two
-      //    content types the service knows how to summarize).
-      this._element("microsummaryRow").hidden = true;
-      return;
-    }
-    this._microsummaries.addObserver(this._microsummaryObserver);
-    this._rebuildMicrosummaryPicker();
+  QueryInterface: function BPP_QueryInterface(aIID) {
+    if (aIID.equals(Ci.nsIMicrosummaryObserver) ||
+        aIID.eqauls(Ci.nsISupports))
+      return this;
+
+    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   _element: function BPP__element(aID) {
@@ -398,7 +379,7 @@ var BookmarkPropertiesPanel = {
       return;
 
     if (hiddenRows.indexOf("title") != -1)
-      this._element("titleTextfield").hidden = true;
+      this._element("namePicker").hidden = true;
     if (hiddenRows.indexOf("location") != -1)
       this._element("locationRow").hidden = true;
     if (hiddenRows.indexOf("keyword") != -1)
@@ -411,8 +392,6 @@ var BookmarkPropertiesPanel = {
       this._element("livemarkFeedLocationRow").hidden = true;
     if (hiddenRows.indexOf("siteURI") != -1)
       this._element("livemarkSiteLocationRow").hidden = true;
-    if (hiddenRows.indexOf("microsummary") != -1)
-      this._element("microsummaryRow").hidden = true;
     if (hiddenRows.indexOf("load in sidebar") != -1)
       this._element("loadInSidebarCheckbox").hidden = true;
   },
@@ -423,8 +402,8 @@ var BookmarkPropertiesPanel = {
   _populateProperties: function BPP__populateProperties() {
     document.title = this._getDialogTitle();
     document.documentElement.getButton("accept").label = this._getAcceptLabel();
-    
-    this._element("titleTextfield").value = this._itemTitle;
+
+    this._initNamePicker();
     this._element("descriptionTextfield").value = this._itemDescription;
 
     if (this._itemType == BOOKMARK_ITEM) {
@@ -454,83 +433,127 @@ var BookmarkPropertiesPanel = {
       this._element("livemarkSiteLocationRow").hidden = true;
     }
 
-    if (this._itemType == BOOKMARK_ITEM && this._bookmarkURI) {
-      // _initMicrosummaryPicker may also hide the row
-      this._initMicrosummaryPicker();
-    }
-    else
-      this._element("microsummaryRow").hidden = true;
-
     if (this._action == ACTION_EDIT)
       this._element("folderRow").hidden = true;
   },
 
-  //XXXDietrich - bug 370215 - update to use bookmark id once 360133 is fixed.
-  _rebuildMicrosummaryPicker: function BPP__rebuildMicrosummaryPicker() {
-    var microsummaryMenuList = this._element("microsummaryMenuList");
-    var microsummaryMenuPopup = this._element("microsummaryMenuPopup");
+  _createMicrosummaryMenuItem:
+  function BPP__createMicrosummaryMenuItem(aMicrosummary) {
+    var menuItem = document.createElement("menuitem");
 
-    // Remove old items from the menu, except the first item, which represents
-    // "don't show a microsummary; show the page title instead".
-    while (microsummaryMenuPopup.childNodes.length > 1)
-      microsummaryMenuPopup.removeChild(microsummaryMenuPopup.lastChild);
+    // Store a reference to the microsummary in the menu item, so we know
+    // which microsummary this menu item represents when it's time to
+    // save changes or load its content.
+    menuItem.microsummary = aMicrosummary;
 
-    var enumerator = this._microsummaries.Enumerate();
-    while (enumerator.hasMoreElements()) {
-      var microsummary = enumerator.getNext().QueryInterface(Ci.nsIMicrosummary);
+    // Content may have to be generated asynchronously; we don't necessarily
+    // have it now.  If we do, great; otherwise, fall back to the generator
+    // name, then the URI, and we trigger a microsummary content update. Once
+    // the update completes, the microsummary will notify our observer to
+    // update the corresponding menu-item.
+    // XXX Instead of just showing the generator name or (heaven forbid)
+    // its URI when we don't have content, we should tell the user that
+    // we're loading the microsummary, perhaps with some throbbing to let
+    // her know it is in progress.
+    if (aMicrosummary.content)
+      menuItem.setAttribute("label", aMicrosummary.content);
+    else {
+      menuItem.setAttribute("label", aMicrosummary.generator.name ||
+                                     aMicrosummary.generator.uri.spec);
+      aMicrosummary.update();
+    }
 
-      var menuItem = document.createElement("menuitem");
+    return menuItem;
+  },
 
-      // Store a reference to the microsummary in the menu item, so we know
-      // which microsummary this menu item represents when it's time to save
-      // changes to the datastore.
-      menuItem.microsummary = microsummary;
+  _initNamePicker: function BPP_initNamePicker() {
+    var userEnteredNameField = this._element("userEnteredName");
+    var namePicker = this._element("namePicker");
+    userEnteredNameField.label = this._itemTitle;
 
-      // Content may have to be generated asynchronously; we don't necessarily
-      // have it now.  If we do, great; otherwise, fall back to the generator
-      // name, then the URI, and we trigger a microsummary content update.
-      // Once the update completes, the microsummary will notify our observer
-      // to rebuild the menu.
-      // XXX Instead of just showing the generator name or (heaven forbid)
-      // its URI when we don't have content, we should tell the user that we're
-      // loading the microsummary, perhaps with some throbbing to let her know
-      // it's in progress.
-      if (microsummary.content)
-        menuItem.setAttribute("label", microsummary.content);
-      else {
-        menuItem.setAttribute("label", microsummary.generator ?
-                                       microsummary.generator.name :
-                                       microsummary.generatorURI.spec);
-        microsummary.update();
+    // Non-bookmark items always use the item-title itself
+    if (this._itemType != BOOKMARK_ITEM || !this._bookmarkURI) {
+      namePicker.selectedItem = userEnteredNameField;
+      return;
+    }
+
+    var itemToSelect = userEnteredNameField;
+    var placeURI = null;
+    if (this._action == ACTION_EDIT) {
+      NS_ASSERT(this._bookmarkId, "No bookmark identifier");
+      placeURI = PlacesUtils.bookmarks.getItemURI(this._bookmarkId);
+    }
+    try {
+      this._microsummaries = this._mss.getMicrosummaries(this._bookmarkURI,
+                                                         placeURI);
+    }
+    catch(ex) {
+      // getMicrosummaries will throw an exception in at least two cases:
+      // 1. the bookmarked URI contains a scheme that the service won't
+      //    download for security reasons (currently it only handles http,
+      //    https, and file);
+      // 2. the page to which the URI refers isn't HTML or XML (the only two
+      //    content types the service knows how to summarize).
+      this._microsummaries = null;
+    }
+    if (this._microsummaries) {
+      var enumerator = this._microsummaries.Enumerate();
+
+      if (enumerator.hasMoreElements()) {
+        // Show the drop marker if there are microsummaries
+        namePicker.setAttribute("droppable", "true");
+
+        var menupopup = namePicker.menupopup;
+        while (enumerator.hasMoreElements()) {
+          var microsummary = enumerator.getNext()
+                                       .QueryInterface(Ci.nsIMicrosummary);
+          var menuItem = this._createMicrosummaryMenuItem(microsummary);
+
+          if (this._action == ACTION_EDIT &&
+              this._mss.isMicrosummary(placeURI, microsummary))
+            itemToSelect = menuItem;
+
+          menupopup.appendChild(menuItem);
+        }
       }
 
-      microsummaryMenuPopup.appendChild(menuItem);
+      this._microsummaries.addObserver(this);
+    }
 
-      if (this._action == ACTION_EDIT) {
-        NS_ASSERT(this._bookmarkId, "No bookmark identifier");
-        var placeURI = PlacesUtils.bookmarks.getItemURI(this._bookmarkId);
-        // Select the item if this is the current microsummary for the bookmark.
-        if (this._mss.isMicrosummary(placeURI, microsummary))
-          microsummaryMenuList.selectedItem = menuItem;
+    namePicker.selectedItem = itemToSelect;
+  },
+
+  // nsIMicrosummaryObserver
+  onContentLoaded: function BPP_onContentLoaded(aMicrosummary) {
+    var namePicker = this._element("namePicker");
+    var childNodes = namePicker.menupopup.childNodes;
+
+    // 0: user-entered item; 1: separator
+    for (var i = 2; i < childNodes.length; i++) {
+      if (childNodes[i].microsummary == aMicrosummary) {
+        var newLabel = aMicrosummary.content;
+        // XXXmano: non-editable menulist would do this for us, see bug 360220
+        // We should fix editable-menulsits to set the DOMAttrModified as well
+        //
+        // Also note the order importance: if the label of the menu-item is
+        // set the something different than the menulist's current value,
+        // the menulist no longer has selectedItem set
+        if (namePicker.selectedItem == childNodes[i])
+          namePicker.value = newLabel;
+        
+        childNodes[i].label = newLabel;
+        return;
       }
     }
   },
 
-  _microsummaryObserver: {
-    QueryInterface: function (aIID) {
-      if (!aIID.equals(Ci.nsIMicrosummaryObserver) &&
-          !aIID.equals(Ci.nsISupports))
-        throw Cr.NS_ERROR_NO_INTERFACE;
-      return this;
-    },
+  onElementAppended: function BPP_onElementAppended(aMicrosummary) {
+    var namePicker = this._element("namePicker");
+    namePicker.menupopup
+              .appendChild(this._createMicrosummaryMenuItem(aMicrosummary));
 
-    onContentLoaded: function(aMicrosummary) {
-      BookmarkPropertiesPanel._rebuildMicrosummaryPicker();
-    },
-
-    onElementAppended: function(aMicrosummary) {
-      BookmarkPropertiesPanel._rebuildMicrosummaryPicker();
-    }
+    // Make sure the drop-marker is shown
+    namePicker.setAttribute("droppable", "true");
   },
 
   /**
@@ -544,7 +567,7 @@ var BookmarkPropertiesPanel = {
 
   onDialogUnload: function BPP_onDialogUnload() {
     if (this._microsummaries)
-      this._microsummaries.removeObserver(this._microsummaryObserver);
+      this._microsummaries.removeObserver(this);
   },
 
   onDialogAccept: function BPP_onDialogAccept() {
@@ -648,14 +671,13 @@ var BookmarkPropertiesPanel = {
       if (siteURIString)
         siteURI = PlacesUtils._uri(siteURIString);
 
-      var name = this._element("titleTextfield").value;
-
+      var name = this._element("namePicker").value;
       return new PlacesCreateLivemarkTransaction(feedURI, siteURI,
                                                  name, containerId,
                                                  indexInContainer);
     }
     else if (this._itemType == BOOKMARK_FOLDER) { // folder
-      var name = this._element("titleTextfield").value;
+      var name = this._element("namePicker").value;
       return new PlacesCreateFolderTransaction(name, containerId,
                                                indexInContainer);
     }
@@ -688,7 +710,7 @@ var BookmarkPropertiesPanel = {
     // title transaction
     // XXXmano: this isn't necessary for new folders. We should probably
     // make insertItem take a title too (like insertFolder)
-    var newTitle = this._element("titleTextfield").value;
+    var newTitle = this._element("userEnteredName").label;
     if (this._action != ACTION_EDIT || newTitle != this._itemTitle)
       transactions.push(this._getEditTitleTransaction(itemId, newTitle));
 
@@ -736,17 +758,18 @@ var BookmarkPropertiesPanel = {
     }
 
     // microsummaries
-    var menuList = this._element("microsummaryMenuList");
-    if (isElementVisible(menuList)) {
+    if (this._itemType == BOOKMARK_ITEM) {
+      var namePicker = this._element("namePicker");
+
       // Something should always be selected in the microsummary menu,
       // but if nothing is selected, then conservatively assume we should
       // just display the bookmark title.
-      if (menuList.selectedIndex == -1)
-        menuList.selectedIndex = 0;
+      if (namePicker.selectedIndex == -1)
+        namePicker.selectedIndex = 0;
 
       // This will set microsummary == undefined if the user selected
       // the "don't display a microsummary" item.
-      var newMicrosummary = menuList.selectedItem.microsummary;
+      var newMicrosummary = namePicker.selectedItem.microsummary;
 
       if (this._action == ACTION_ADD && newMicrosummary) {
         transactions.push(
@@ -818,5 +841,9 @@ var BookmarkPropertiesPanel = {
         this._tm.doTransaction(aggregate);
       }
     }
+  },
+
+  onNamePickerInput: function BPP_onNamePickerInput() {
+    this._element("userEnteredName").label = this._element("namePicker").value;
   }
 };
