@@ -312,14 +312,16 @@
         ]]></getter>
         <setter><![CDATA[
           this.mSelected = val;
-          var child = this.bgbox.firstChild;
-          while (child) {
-            if (val) {
-              child.setAttribute("selected", "true");
-            } else {
-              child.removeAttribute("selected");
+          if (this.bgbox && this.bgbox.hasChildNodes()) {
+            var child = this.bgbox.firstChild;
+            while (child) {
+              if (val) {
+                child.setAttribute("selected", "true");
+              } else {
+                child.removeAttribute("selected");
+              }
+              child = child.nextSibling;
             }
-            child = child.nextSibling;
           }
           return val;
         ]]></setter>
