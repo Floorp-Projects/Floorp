@@ -104,11 +104,9 @@ public:
   /**
    * Find a word boundary starting from a given position and proceeding either
    * forwards (aDirection == 1) or backwards (aDirection == -1). The search
-   * is limited to a substring of an nsTextFragment. We return the index
-   * of the character that is the first character of the next/prev word; the
-   * result can be aOffset <= result <= aLength (result == aLength means
-   * that there's definitely a word boundary at the end of the text), or -1 to
-   * indicate that no boundary was found.
+   * is limited to a substring of an nsTextFragment, and starts with the
+   * first character of the word (the character at aOffset). We return the length
+   * of the word.
    * 
    * @param aTextRun a text run which we will use to ensure that we don't
    * return a boundary inside a cluster
@@ -117,8 +115,7 @@ public:
    * when transitioning from regular word text to punctuation (in content order)
    * @param aBreakAfterPunctuation if true, then we allow a word break
    * when transitioning from punctuation to regular word text (in content order)
-   * @param aWordIsWhitespace we set this to true if the word-part we skipped
-   * over is whitespace
+   * @param aWordIsWhitespace we set this to true if this word is whitespace
    * 
    * For the above properties, "punctuation" is defined as any ASCII character
    * which is not a letter or a digit. Regular word text is any non-whitespace

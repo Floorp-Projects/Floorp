@@ -62,6 +62,8 @@
 #include "punct_marks.ccmap"
 DEFINE_CCMAP(gPuncCharsCCMap, const);
   
+#define UNICODE_ZWSP 0x200B
+  
 PRBool
 nsTextFrameUtils::IsPunctuationMark(PRUnichar aChar)
 {
@@ -106,7 +108,7 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
   PRUnichar* outputStart = aOutput;
 
   if (!aCompressWhitespace) {
-    // Convert tabs to spaces and skip discardables.
+    // Convert tabs and formfeeds to spaces and skip discardables.
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
       PRUnichar ch = *aText++;
@@ -135,7 +137,7 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
       PRBool nowInWhitespace;
       if (ch == ' ' &&
           (i + 1 >= aLength ||
-           !IsSpaceCombiningSequenceTail(&aText[1], aLength - (i + 1)))) {
+           !IsSpaceCombiningSequenceTail(aText, aLength - (i + 1)))) {
         nowInWhitespace = PR_TRUE;
       } else if (ch == '\n') {
         if (i > 0 && IS_CJ_CHAR(aText[-1]) &&
@@ -147,7 +149,7 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
         }
         nowInWhitespace = PR_TRUE;
       } else {
-        nowInWhitespace = ch == '\t';
+        nowInWhitespace = ch == '\t' || ch == '\f' || ch == UNICODE_ZWSP;
       }
 
       if (!nowInWhitespace) {
@@ -228,7 +230,7 @@ nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
     for (i = 0; i < aLength; ++i) {
       PRUint8 ch = *aText++;
       allBits |= ch;
-      PRBool nowInWhitespace = ch == ' ' || ch == '\t' || ch == '\n';
+      PRBool nowInWhitespace = ch == ' ' || ch == '\t' || ch == '\n' || ch == '\f';
       if (!nowInWhitespace) {
         if (IsDiscardable(ch, &flags)) {
           aSkipChars->SkipChar();
@@ -280,6 +282,7 @@ enum SimpleCharClass {
 // This is what nsSampleWordBreaker::GetClass considers whitespace
 static PRBool IsWordBreakerWhitespace(const PRUnichar* aChars, PRInt32 aLength)
 {
+  NS_ASSERTION(aLength > 0, "Can't handle empty string");
   PRUnichar ch = aChars[0];
   if (ch == '\t' || ch == '\n' || ch == '\r')
     return PR_TRUE;
@@ -312,69 +315,76 @@ nsTextFrameUtils::FindWordBoundary(const nsTextFragment* aText,
 {
   // A space followed by combining diacritical marks is not whitespace!!
   PRInt32 textLength = aText->GetLength();
+  NS_ASSERTION(aOffset + aLength <= textLength,
+               "Substring out of bounds");
+  NS_ASSERTION(aPosition >= aOffset && aPosition < aOffset + aLength,
+               "Position out of bounds");
   *aWordIsWhitespace = aText->Is2b()
     ? IsWordBreakerWhitespace(aText->Get2b() + aPosition, textLength - aPosition)
     : Classify8BitChar(aText->Get1b()[aPosition]) == CLASS_SPACE;
 
-  PRInt32 nextWordPos; // first character of next/prev "word"
+  PRInt32 len = 0; // length of current "word", excluding first character at aPosition
   if (aText->Is2b()) {
     nsIWordBreaker* wordBreaker = nsContentUtils::WordBreaker();
     const PRUnichar* text = aText->Get2b();
-    PRInt32 pos = aPosition;
     // XXX the wordbreaker currently isn't cluster-aware. We need to make
     // it cluster-aware. In the meantime, just reject any word breaks
     // inside clusters.
     for (;;) {
-      nextWordPos = aDirection > 0
-        ? wordBreaker->NextWord(text, textLength, pos)
-        : wordBreaker->PrevWord(text, textLength, pos);
-      if (nextWordPos < 0)
+      if (aDirection > 0) {
+        // Returns the index of the first character of the next word
+        PRInt32 nextWordPos = wordBreaker->NextWord(text, textLength, aPosition + len);
+        if (nextWordPos < 0)
+          break;
+        len = nextWordPos - aPosition - 1;
+      } else {
+        // Returns the index of the first character of the current word
+        PRInt32 nextWordPos = wordBreaker->PrevWord(text, textLength, aPosition + len);
+        if (nextWordPos < 0)
+          break;
+        len = aPosition - nextWordPos;
+      }
+      if (aTextRun->IsClusterStart(aIterator->ConvertOriginalToSkipped(aPosition + len*aDirection)))
         break;
-      if (aTextRun->GetCharFlags(aIterator->ConvertOriginalToSkipped(nextWordPos)) & gfxTextRun::CLUSTER_START)
-        break;
-      pos = nextWordPos;
     }
   } else {
     const char* text = aText->Get1b();
     SimpleCharClass cl = Classify8BitChar(text[aPosition]);
-    nextWordPos = aPosition;
     // There shouldn't be any clusters in 8bit text but we'll cover that
     // possibility anyway
+    PRInt32 nextWordPos;
     do {
-      nextWordPos += aDirection;
-      if (nextWordPos < aOffset || nextWordPos >= aOffset + aLength) {
-        nextWordPos = NS_WORDBREAKER_NEED_MORE_TEXT;
+      ++len;
+      nextWordPos = aPosition + aDirection*len;
+      if (nextWordPos < aOffset || nextWordPos >= aOffset + aLength)
         break;
-      }
     } while (Classify8BitChar(text[nextWordPos]) == cl ||
-             !(aTextRun->GetCharFlags(aIterator->ConvertOriginalToSkipped(nextWordPos)) & gfxTextRun::CLUSTER_START));
+             !aTextRun->IsClusterStart(aIterator->ConvertOriginalToSkipped(nextWordPos)));
   }
 
   // Handle punctuation breaks
   PRInt32 i;
   PRBool punctPrev = IsPunctuationMark(aText->CharAt(aPosition));
-  for (i = aPosition + aDirection;
-       i != nextWordPos && i >= aOffset && i < aOffset + aLength;
-       i += aDirection) {
+  for (i = 1; i < len; ++i) {
+    PRInt32 pos = aPosition + i*aDirection;
     // See if there's a punctuation break between i-aDirection and i
-    PRBool punct = IsPunctuationMark(aText->CharAt(i));
+    PRBool punct = IsPunctuationMark(aText->CharAt(pos));
     if (punct != punctPrev &&
-        (aTextRun->GetCharFlags(aIterator->ConvertOriginalToSkipped(i)) & gfxTextRun::CLUSTER_START)) {
+        aTextRun->IsClusterStart(aIterator->ConvertOriginalToSkipped(pos))) {
       PRBool punctIsBefore = aDirection < 0 ? punct : punctPrev;
       if (punctIsBefore ? aBreakAfterPunctuation : aBreakBeforePunctuation)
         break;
     }
     punctPrev = punct;
   }
-  if (i < aOffset || i >= aOffset + aLength)
+  PRInt32 pos = aPosition + i*aDirection;
+  if (pos < aOffset || pos >= aOffset + aLength)
     return -1;
   return i;
 }
 
 PRBool nsSkipCharsRunIterator::NextRun() {
   do {
-    if (!mRemainingLength)
-      return PR_FALSE;
     if (mRunLength) {
       mIterator.AdvanceOriginal(mRunLength);
       NS_ASSERTION(mRunLength > 0, "No characters in run (initial length too large?)");
@@ -382,6 +392,8 @@ PRBool nsSkipCharsRunIterator::NextRun() {
         mRemainingLength -= mRunLength;
       }
     }
+    if (!mRemainingLength)
+      return PR_FALSE;
     PRInt32 length;
     mSkipped = mIterator.IsOriginalCharSkipped(&length);
     mRunLength = PR_MIN(length, mRemainingLength);
