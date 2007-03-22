@@ -93,7 +93,17 @@ function addSidebar() {
 [% END %]
 
 <div id="page-index">
-  <div class="intro"></div>
+  <div class="intro">
+  [% IF user.in_group('admin') %]
+    <div class="contribute"><strong>Administrator:</strong>
+      [%+ terms.Bugzilla %] is developed entirely by
+      volunteers. The best way to give back to the [% terms.Bugzilla %] project
+      is to <a href="http://www.bugzilla.org/contribute/">contribute</a>
+      yourself! You don't have to be a programmer to contribute, there are
+      lots of things that we need.
+    </div>
+  [% END %]
+  </div>
 
   <p>Welcome to [% terms.Bugzilla %]. To see what's new in this version
     of [% terms.Bugzilla %], see the 

@@ -48,11 +48,17 @@
         width: 250px;
         height: 200px;
 
-        margin-top: 2.3em;
         margin-right: 2.3em;
         float: right;
-
         background: transparent no-repeat url(index/front.png);
+    }
+    div.contribute {
+        position: relative;
+        top: 200px;
+        margin: .5em;
+        padding: .5em;
+        border: 1px dotted black;
+        font-size: small;
     }
 
     #page-index #report
