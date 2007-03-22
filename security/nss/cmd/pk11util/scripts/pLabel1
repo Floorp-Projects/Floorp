@@ -1,6 +1,0 @@
-NewTemplate certName CKA_LABEL,CKA_VALUE
-C_GetAttributeValue session certID[i] certName sizeA(certName)
-BuildTemplate certName
-C_GetAttributeValue session certID[i] certName sizeA(certName)
-print i
-print certName[0]
