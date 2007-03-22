@@ -20,6 +20,7 @@
  * Contributor(s):
  *  Myk Melez <myk@mozilla.org> (Original Author)
  *  Simon Bünzli <zeniko@gmail.com>
+ *  Asaf Romano <mano@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -350,8 +351,7 @@ MicrosummaryService.prototype = {
     // upgraded from earlier versions to make bug 346822 no longer significant.
     this._fixGeneratorID(resource.content, resource.uri);
 
-    var generator = new MicrosummaryGenerator();
-    generator.localURI = resource.uri;
+    var generator = new MicrosummaryGenerator(null, resource.uri);
     generator.initFromXML(resource.content);
 
     // Add the generator to the local generators cache.
@@ -481,8 +481,7 @@ MicrosummaryService.prototype = {
       file = this._dirs.get("UsrMicsumGens", Ci.nsIFile);
       file.append(fileName);
       file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
-      generator = new MicrosummaryGenerator();
-      generator.localURI = this._ios.newFileURI(file);
+      generator = new MicrosummaryGenerator(null, this._ios.newFileURI(file));
       this._localGenerators[generatorID] = generator;
       topic = "microsummary-generator-installed";
     }
@@ -563,10 +562,18 @@ MicrosummaryService.prototype = {
         // If this is the current microsummary for this bookmark, load the content
         // from the datastore so it shows up immediately in microsummary picking UI.
         if (bookmarkID && this.isMicrosummary(bookmarkID, microsummary))
-          microsummary.content = this._getField(bookmarkID, FIELD_GENERATED_TITLE);
+          microsummary._content = this._getField(bookmarkID, FIELD_GENERATED_TITLE);
 
         microsummaries.AppendElement(microsummary);
       }
+    }
+
+    // If a bookmark identifier has been provided, list its microsummary
+    // synchronously, if any.
+    if (bookmarkID && this.hasMicrosummary(bookmarkID)) {
+      var currentMicrosummary = this.getMicrosummary(bookmarkID);
+      if (!microsummaries.hasItemForMicrosummary(currentMicrosummary))
+        microsummaries.AppendElement(currentMicrosummary);
     }
 
     // Get microsummaries defined by the page.  If we don't have the page,
@@ -868,13 +875,10 @@ MicrosummaryService.prototype = {
     var pageURI = this._getPageForBookmark(bookmarkID);
     var generatorURI = this._uri(this._getField(bookmarkID, FIELD_MICSUM_GEN_URI));
     
-    var localGenerator = this._localGenerators[generatorURI.spec];
+    var generator = this._localGenerators[generatorURI.spec] ||
+                    new MicrosummaryGenerator(generatorURI);
 
-    var microsummary = new Microsummary(pageURI, localGenerator);
-    if (!localGenerator)
-      microsummary.generator.uri = generatorURI;
-
-    return microsummary;
+    return new Microsummary(pageURI, generator);
   },
 
   /**
@@ -994,15 +998,15 @@ MicrosummaryService.prototype = {
    *          for the bookmark
    *
    */
-  isMicrosummary: function MSS_isMicrosummary(bookmarkID, microsummary) {
-    if (!this.hasMicrosummary(bookmarkID))
-      return false;
+  isMicrosummary: function MSS_isMicrosummary(aBookmarkID, aMicrosummary) {
+    if (!aMicrosummary || !aBookmarkID)
+      throw Cr.NS_ERROR_INVALID_ARG;
 
-    var currentGen = this._getField(bookmarkID, FIELD_MICSUM_GEN_URI);
-
-    if (microsummary.generator.uri.equals(this._uri(currentGen)))
-      return true;
-
+    if (this.hasMicrosummary(aBookmarkID)) {
+      currentMicrosummarry = this.getMicrosummary(aBookmarkID);
+      if (aMicrosummary.equals(currentMicrosummarry))
+        return true;
+    }
     return false
   },
 
@@ -1033,11 +1037,10 @@ MicrosummaryService.prototype = {
       throw("can't get URL for bookmark with ID " + bookmarkID);
     var generatorURI = this._uri(this._getField(bookmarkID, FIELD_MICSUM_GEN_URI));
 
-    var localGenerator = this._localGenerators[generatorURI.spec];
+    var generator = this._localGenerators[generatorURI.spec] ||
+                    new MicrosummaryGenerator(generatorURI);
 
-    var microsummary = new Microsummary(pageURI, localGenerator);
-    if (!localGenerator)
-      microsummary.generator.uri = generatorURI;
+    var microsummary = new Microsummary(pageURI, generator);
 
     // A microsummary observer that calls the microsummary service
     // to update the datastore when the microsummary finishes loading.
@@ -1069,10 +1072,13 @@ MicrosummaryService.prototype = {
 
 
 
-function Microsummary(pageURI, generator) {
+function Microsummary(aPageURI, aGenerator) {
   this._observers = [];
-  this.pageURI = pageURI;
-  this.generator = generator ? generator : new MicrosummaryGenerator();
+  this._pageURI = aPageURI || null;
+  this._generator = aGenerator || null;
+  this._content = null;
+  this._pageContent = null;
+  this._updateInterval = null;
 }
 
 Microsummary.prototype = {
@@ -1117,15 +1123,13 @@ Microsummary.prototype = {
   },
 
   // nsIMicrosummary
-
-  _content: null,
   get content() {
     // If we have everything we need to generate the content, generate it.
-    if (this._content == null &&
+    if (!this._content &&
         this.generator.loaded &&
         (this.pageContent || !this.generator.needsPageContent)) {
       this._content = this.generator.generateMicrosummary(this.pageContent);
-      this.updateInterval = this.generator.calculateUpdateInterval(this.pageContent);
+      this._updateInterval = this.generator.calculateUpdateInterval(this.pageContent);
     }
 
     // Note: we return "null" if the content wasn't already generated and we
@@ -1135,17 +1139,21 @@ Microsummary.prototype = {
     // setting an observer to tell them when content generation is done.
     return this._content;
   },
-  set content(newValue) { this._content = newValue },
 
-  _generator: null,
   get generator()            { return this._generator },
-  set generator(newValue)    { this._generator = newValue },
+  set generator(newValue)    { return this._generator = newValue },
 
-  _pageURI: null,
-  get pageURI()              { return this._pageURI },
-  set pageURI(newValue)      { this._pageURI = newValue },
+  get pageURI() { return this._pageURI },
 
-  _pageContent: null,
+  equals: function(aOther) {
+    if (this._generator &&
+        this._pageURI.equals(aOther.pageURI) &&
+        this._generator.equals(aOther.generator))
+      return true;
+
+    return false;
+  },
+
   get pageContent() {
     if (!this._pageContent) {
       // If the page is currently loaded into a browser window, use that.
@@ -1158,15 +1166,12 @@ Microsummary.prototype = {
 
     return this._pageContent;
   },
-  set pageContent(newValue) { this._pageContent = newValue },
+  set pageContent(newValue) { return this._pageContent = newValue },
 
-  _updateInterval: null,
   get updateInterval()         { return this._updateInterval; },
-  set updateInterval(newValue) { this._updateInterval = newValue; },
+  set updateInterval(newValue) { return this._updateInterval = newValue; },
 
   // nsIMicrosummary
-
-  _observers: null,
 
   addObserver: function MS_addObserver(observer) {
     // Register the observer, but only if it isn't already registered,
@@ -1242,8 +1247,8 @@ Microsummary.prototype = {
 
     // Now that we have both the generator and (if needed) the page content,
     // generate the microsummary, then let the observers know about it.
-    this.content = this.generator.generateMicrosummary(this.pageContent);
-    this.updateInterval = this.generator.calculateUpdateInterval(this.pageContent);
+    this._content = this.generator.generateMicrosummary(this.pageContent);
+    this._updateInterval = this.generator.calculateUpdateInterval(this.pageContent);
     this.pageContent = null;
     for ( var i = 0; i < this._observers.length; i++ )
       this._observers[i].onContentLoaded(this);
@@ -1381,7 +1386,15 @@ Microsummary.prototype = {
 
 
 
-function MicrosummaryGenerator() {}
+function MicrosummaryGenerator(aURI, aLocalURI, aName) {
+  this._uri = aURI || null;
+  this._localURI = aLocalURI || null;
+  this._name = aName || null;
+  this._loaded = false;
+  this._rules = [];
+  this._template = null;
+  this._content = null;
+}
 
 MicrosummaryGenerator.prototype = {
 
@@ -1412,33 +1425,18 @@ MicrosummaryGenerator.prototype = {
   // but for generators stored in the app or profile generators directory
   // it's the value of the generator tag's "uri" attribute (or its local URI
   // should the "uri" attribute be missing).
-  _uri: null,
   get uri() { return this._uri || this.localURI },
-  set uri(newValue) { this._uri = newValue },
 
   // For generators bundled with the browser or installed by the user,
   // the local URI is the URI of the local file containing the generator XML.
-  _localURI: null,
   get localURI() { return this._localURI },
-  set localURI(newValue) { this._localURI = newValue },
-
-  _name: null,
   get name() { return this._name },
-  set name(newValue) { this._name = newValue },
-
-  _template: null,
-  get template() { return this._template },
-  set template(newValue) { this._template = newValue },
-
-  _content: null,
-  get content() { return this._content },
-  set content(newValue) { this._content = newValue },
-
-  _loaded: false,
   get loaded() { return this._loaded },
-  set loaded(newValue) { this._loaded = newValue },
 
-  _rules: null,
+  equals: function(aOther) {
+    // XXX: could the uri attribute for an exposed generator ever be null?
+    return aOther.uri.equals(this.uri);
+  },
 
   /**
    * Determines whether or not the generator applies to a given URI.
@@ -1475,12 +1473,12 @@ MicrosummaryGenerator.prototype = {
   },
 
   get needsPageContent() {
-    if (this.template)
+    if (this._template)
       return true;
-    else if (this.content)
+    if (this._content)
       return false;
-    else
-      throw("needsPageContent called on uninitialized microsummary generator");
+
+    throw("needsPageContent called on uninitialized microsummary generator");
   },
 
   /**
@@ -1490,11 +1488,10 @@ MicrosummaryGenerator.prototype = {
    *
    * @param   text
    *          the text content
-   *
    */
   initFromText: function(text) {
-    this.content = text;
-    this.loaded = true;
+    this._content = text;
+    this._loaded = true;
   },
 
   /**
@@ -1518,12 +1515,12 @@ MicrosummaryGenerator.prototype = {
     if (!generatorNode)
       throw Cr.NS_ERROR_FAILURE;
 
-    this.name = generatorNode.getAttribute("name");
+    this._name = generatorNode.getAttribute("name");
 
     // If this is a local generator (i.e. it has a local URI), then we have
     // to retrieve its URI from the "uri" attribute of its generator tag.
     if (this.localURI && generatorNode.hasAttribute("uri")) {
-      this.uri = this._ios.newURI(generatorNode.getAttribute("uri"), null, null);
+      this._uri = this._ios.newURI(generatorNode.getAttribute("uri"), null, null);
     }
 
     function getFirstChildByTagName(tagName, parentNode, namespace) {
@@ -1539,7 +1536,7 @@ MicrosummaryGenerator.prototype = {
     // Slurp the include/exclude rules that determine the pages to which
     // this generator applies.  Order is important, so we add the rules
     // in the order in which they appear in the XML.
-    this._rules = [];
+    this._rules.splice(0);
     var pages = getFirstChildByTagName("pages", generatorNode, MICSUM_NS);
     if (pages) {
       // XXX Make sure the pages tag exists.
@@ -1588,23 +1585,23 @@ MicrosummaryGenerator.prototype = {
 
     var templateNode = getFirstChildByTagName("template", generatorNode, MICSUM_NS);
     if (templateNode) {
-      this.template = getFirstChildByTagName("transform", templateNode, XSLT_NS) ||
-                      getFirstChildByTagName("stylesheet", templateNode, XSLT_NS);
+      this._template = getFirstChildByTagName("transform", templateNode, XSLT_NS) ||
+                       getFirstChildByTagName("stylesheet", templateNode, XSLT_NS);
     }
     // XXX Make sure the template is a valid XSL transform sheet.
 
-    this.loaded = true;
+    this._loaded = true;
   },
 
   generateMicrosummary: function MSD_generateMicrosummary(pageContent) {
 
     var content;
 
-    if (this.content) {
-      content = this.content;
-    } else if (this.template) {
+    if (this._content)
+      content = this._content;
+    else if (this._template)
       content = this._processTemplate(pageContent);
-    } else
+    else
       throw("generateMicrosummary called on uninitialized microsummary generator");
 
     // Clean up the output
@@ -1616,7 +1613,7 @@ MicrosummaryGenerator.prototype = {
   },
 
   calculateUpdateInterval: function MSD_calculateUpdateInterval(doc) {
-    if (this.content || !this._updateIntervals || !doc)
+    if (this._content || !this._updateIntervals || !doc)
       return null;
 
     for (var i = 0; i < this._updateIntervals.length; i++) {
@@ -1636,7 +1633,7 @@ MicrosummaryGenerator.prototype = {
   },
 
   _processTemplate: function MSD__processTemplate(doc) {
-    LOG("processing template " + this.template + " against document " + doc);
+    LOG("processing template " + this._template + " against document " + doc);
 
     // XXX Should we just have one global instance of the processor?
     var processor = Cc["@mozilla.org/document-transformer;1?type=xslt"].
@@ -1646,7 +1643,7 @@ MicrosummaryGenerator.prototype = {
     // for security (otherwise local generators would be able to load local files).
     processor.flags |= Ci.nsIXSLTProcessorPrivate.DISABLE_ALL_LOADS;
 
-    processor.importStylesheet(this.template);
+    processor.importStylesheet(this._template);
     var fragment = processor.transformToFragment(doc, doc);
 
     LOG("template processing result: " + fragment.textContent);
@@ -1672,7 +1669,6 @@ function MicrosummarySet() {
 }
 
 MicrosummarySet.prototype = {
-
   // IO Service
   __ios: null,
   get _ios() {
@@ -1694,9 +1690,6 @@ MicrosummarySet.prototype = {
       throw Cr.NS_ERROR_NO_INTERFACE;
     return this;
   },
-
-  _observers: null,
-  _elements: null,
 
   // nsIMicrosummaryObserver
 
@@ -1780,11 +1773,23 @@ MicrosummarySet.prototype = {
         continue;
       }
 
-      var microsummary = new Microsummary(resource.uri, null);
-      microsummary.generator.name = linkTitle;
-      microsummary.generator.uri  = generatorURI;
-      this.AppendElement(microsummary);
+      var generator = new MicrosummaryGenerator(generatorURI, null, linkTitle);
+      var microsummary = new Microsummary(resource.uri, generator);
+      if (!this.hasItemForMicrosummary(microsummary))
+        this.AppendElement(microsummary);
     }
+  },
+
+  /**
+   * Determines whether the given microsumary is already represented in the
+   * set.
+   */
+  hasItemForMicrosummary: function MSSet_hasItemForMicrosummary(aMicrosummary) {
+    for (var i = 0; i < this._elements.length; i++) {
+      if (this._elements[i].equals(aMicrosummary))
+        return true;
+    }
+    return false;
   },
 
   // XXX Turn this into a complete implementation of nsICollection?
@@ -1818,6 +1823,7 @@ MicrosummarySet.prototype = {
  */
 function ArrayEnumerator(aItems) {
   this._index = 0;
+  this._contents = [];
   if (aItems) {
     for (var i = 0; i < aItems.length; ++i) {
       if (!aItems[i])
@@ -1837,9 +1843,6 @@ ArrayEnumerator.prototype = {
       throw Cr.NS_ERROR_NO_INTERFACE;
     return this;
   },
-
-  _index: 0,
-  _contents: [],
   
   hasMoreElements: function() {
     return this._index < this._contents.length;
@@ -1892,7 +1895,18 @@ function MicrosummaryResource(uri) {
   if (uri.scheme != "http" && uri.scheme != "https" && uri.scheme != "file")
     throw NS_ERROR_DOM_BAD_URI;
 
-  this._uri = uri;
+  this._uri = uri || null;
+  this._content = null;
+  this._contentType = null;
+  this._isXML = false;
+  this.__authFailed = false;
+
+  // A function to call when we finish loading/parsing the resource.
+  this._loadCallback = null;
+  // A function to call if we get an error while loading/parsing the resource.
+  this._errorCallback = null;
+  // A hidden iframe to parse HTML content.
+  this._iframe = null;
 }
 
 MicrosummaryResource.prototype = {
@@ -1905,34 +1919,21 @@ MicrosummaryResource.prototype = {
     return this.__ios;
   },
 
-  _uri: null,
   get uri() {
     return this._uri;
   },
 
-  _content: null,
   get content() {
     return this._content;
   },
 
-  _contentType: null,
   get contentType() {
     return this._contentType;
   },
 
-  _isXML: false,
   get isXML() {
     return this._isXML;
   },
-
-  // A function to call when we finish loading/parsing the resource.
-  _loadCallback: null,
-
-  // A function to call if we get an error while loading/parsing the resource.
-  _errorCallback: null,
-
-  // A hidden iframe to parse HTML content.
-  _iframe: null,
 
   // Implement notification callback interfaces so we can suppress UI
   // and abort loads for bad SSL certs and HTTP authorization requests.
@@ -1995,9 +1996,8 @@ MicrosummaryResource.prototype = {
   // Auth requests appear to succeed when we cancel them (since the server
   // redirects us to a "you're not authorized" page), so we have to set a flag
   // to let the load handler know to treat the load as a failure.
-  __authFailed: false,
-  get _authFailed()         { return this.__authFailed },
-  set _authFailed(newValue) { this.__authFailed = newValue },
+  get _authFailed()         { return this.__authFailed; },
+  set _authFailed(newValue) { return this.__authFailed = newValue },
 
   // nsIAuthPromptProvider
   
