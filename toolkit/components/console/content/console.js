@@ -97,21 +97,6 @@ function updateModeCommand(aMode)
   bc.setAttribute("checked", true);
 }
 
-function copyItemToClipboard()
-{
-  gConsole.copySelectedItem();
-}
-
-function isItemSelected()
-{
-  return gConsole.selectedItem != null;
-}
-
-function updateCopyMenu()
-{
-  goSetCommandEnabled("cmd_copy", isItemSelected())
-}
-
 function onEvalKeyPress(aEvent)
 {
   if (aEvent.keyCode == 13)
