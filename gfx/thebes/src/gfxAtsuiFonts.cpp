@@ -54,6 +54,9 @@
 #include "gfxQuartzSurface.h"
 #include "gfxQuartzFontCache.h"
 
+// Uncomment this to dump all text runs created to stdout
+// #define DUMP_TEXT_RUNS
+
 #define ROUND(x) (floor((x) + 0.5))
 
 /* We might still need this for fast-pathing, but we'll see */
@@ -747,6 +750,12 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
     gfxAtsuiFont *atsuiFont = GetFontAt(0);
     ATSUStyle mainStyle = atsuiFont->GetATSUStyle();
     nsTArray<ATSUStyle> stylesToDispose;
+
+#ifdef DUMP_TEXT_RUNS
+    NS_ConvertUTF16toUTF8 str(aString + 1, aLength);
+    NS_ConvertUTF16toUTF8 families(mFamilies);
+    printf("%p(%s) TEXTRUN \"%s\" ENDTEXTRUN\n", this, families.get(), str.get());
+#endif
 
     UniCharCount runLengths = aLength;
     ATSUTextLayout layout;

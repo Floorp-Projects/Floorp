@@ -58,6 +58,7 @@ REQUIRES = \
 CPPSRCS = \
 	gfxSurfaceRefCountTest.cpp \
 	gfxFontSelectionTest.cpp \
+	gfxTextRunPerfTest.cpp \
 	$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
