@@ -344,6 +344,9 @@
             <!-- Options menu -->
             <menu label="&event.menu.options.label;">
                 <menupopup>
+                  <menuitem label="&event.toolbar.attendees.label;"
+                            command="cmd_attendees"
+                            disable-on-readonly="true"/>
                   <menuitem label="&event.menu.options.url.label;"
                             command="cmd_url"/>
                   <menuitem label="&event.menu.options.timezone.label;"
