@@ -3298,6 +3298,9 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     // We need to try backing up to before a text run
     PRInt32 offset;
     nsIContent* breakContent = aLineLayout.GetLastOptionalBreakPosition(&offset);
+    // XXX It's possible, in fact not unusual, for the break opportunity to already
+    // be the end of the line. We should detect that and optimize to not
+    // re-do the line.
     if (breakContent) {
       // We can back up!
       lineReflowStatus = LINE_REFLOW_REDO_NO_PULL;
