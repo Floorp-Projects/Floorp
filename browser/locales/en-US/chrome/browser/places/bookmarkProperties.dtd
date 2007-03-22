@@ -8,10 +8,8 @@
   "Shortcut">
 <!ENTITY bookmark.property.description
   "Description">
-<!ENTITY bookmark.property.microsummary
-  "Summary">
-<!ENTITY bookmark.property.microsummary.none
-  "Don't Display a Summary">
+<!ENTITY liveTitlesSeparator.label
+         "Live Titles">
 <!ENTITY bookmark.property.folders
   "Folders">
 <!ENTITY bookmark.property.folder_list
