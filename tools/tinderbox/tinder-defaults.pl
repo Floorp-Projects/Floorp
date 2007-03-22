@@ -129,6 +129,11 @@ $MozConfigFileName = 'mozconfig';
 $UseMozillaProfile = 1;
 $MozProfileName = 'default';
 
+# This sets the value of the XPCOM_DEBUG_BREAK environment variable.  We
+# default to 'warn', which suppresses the assertion dialogs on Windows
+# and gives platform parity.  Use 'abort' for fatal assertions.
+$MozAssertBehavior = 'warn';
+
 #- Set these to what makes sense for your system
 $Make          = 'gmake';       # Must be GNU make
 $MakeOverrides = '';
