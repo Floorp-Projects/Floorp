@@ -107,6 +107,7 @@ calTransaction.prototype = {
     mCalendar: null,
     mItem: null,
     mOldItem: null,
+    mOldCalendar: null,
     mListener: null,
     mIsDoTransaction: false,
 
@@ -174,7 +175,7 @@ calTransaction.prototype = {
                 this.mCalendar.deleteItem(this.mItem, this);
                 break;
             case 'move':
-                this.mOldCalendar = this.mOldItem.mCalendar;
+                this.mOldCalendar = this.mOldItem.calendar;
                 this.mOldCalendar.deleteItem(this.mOldItem, this);
                 this.mCalendar.addItem(this.mItem, this);
                 break;
