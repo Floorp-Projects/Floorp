@@ -41,6 +41,7 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://global/skin/console/console.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://global/content/console.css" type="text/css"?> 
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
 <!DOCTYPE window [
   <!ENTITY % console SYSTEM "chrome://global/locale/console.dtd"> %console;
@@ -60,11 +61,9 @@
 
   <stringbundle id="ConsoleBundle" src="chrome://global/locale/console.properties"/>
 
-  <commandset id="consoleCommands"
-              commandupdater="true"
-              events="select"
-              oncommandupdate="updateCopyMenu()">
-    <command id="cmd_copy" oncommand="copyItemToClipboard()"/>
+  <commandset id="editMenuCommands"/>
+
+  <commandset id="consoleCommands">
     <command id="cmd_close" oncommand="closeWindow(true)"/>
   </commandset>
 
@@ -94,8 +93,6 @@
   </broadcasterset>
 
   <keyset id="consoleKeys">
-    <key id="key_copy"  key="&copyCmd.commandkey;"  modifiers="accel"
-         command="cmd_copy"/>
     <key id="key_close" key="&closeCmd.commandkey;" modifiers="accel"
          command="cmd_close"/>
     <key keycode="VK_ESCAPE" command="cmd_close"/>
@@ -110,7 +107,7 @@
       <menuitem type="radio" observes="Console:sortAscend"/>
       <menuitem type="radio" observes="Console:sortDescend"/>
       <menuseparator/>
-      <menuitem id="menu_copy_cm" observes="cmd_copy" label="&copyCmd.label;" key="key_copy" accesskey="&copyCmd.accesskey;"/>
+      <menuitem id="menu_copy_cm" command="cmd_copy" label="&copyCmd.label;" accesskey="&copyCmd.accesskey;"/>
     </popup>
   </popupset>
   
@@ -135,5 +132,3 @@
   <iframe name="Evaluator" id="Evaluator" collapsed="true" src="chrome://global/content/blank.html"/>
 
 </window>
-
-

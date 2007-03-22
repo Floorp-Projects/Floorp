@@ -63,6 +63,9 @@
           
           this.mSelectedItem = val;
           val.setAttribute("selected", "true");
+
+          // Update edit commands
+          window.updateCommands("focus");
         ]]></setter>
       </property>
     
@@ -92,15 +95,16 @@
           this.mMode = this.getAttribute("mode") || "All";
 
           this.appendInitialItems();
+          window.controllers.insertControllerAt(0, this._controller);
         ]]></body>
       </method>
-    
+
       <method name="destroy">
         <body><![CDATA[
           this.mCService.unregisterListener(this.mConsoleListener);
         ]]></body>
       </method>
-    
+
       <method name="appendInitialItems">
         <body><![CDATA[
           var out = {}; // Throwaway references to support 'out' parameters.
@@ -278,6 +282,33 @@
           
       <constructor> this.init(); </constructor>
       <destructor> this.destroy(); </destructor>
+
+      <!-- Command controller for the copy command -->
+      <field name="_controller"><![CDATA[({
+        _outer: this,
+
+        QueryInterface: function(aIID) {
+          if (aIID.equals(Components.interfaces.nsIController) ||
+              aIID.equals(Components.interfaces.nsISupports))
+            return this;
+          throw Components.results.NS_NOINTERFACE;
+        },
+
+        supportsCommand: function(aCommand) {
+          return aCommand == "cmd_copy";
+        },
+
+        isCommandEnabled: function(aCommand) {
+          return aCommand == "cmd_copy" && this._outer.selectedItem;
+        },
+
+        doCommand: function(aCommand) {
+          if (aCommand == "cmd_copy")
+            this._outer.copySelectedItem();
+        },
+
+        onEvent: function() { }
+      });]]></field>
     </implementation>
     
     <handlers>
@@ -351,9 +382,8 @@
           return msg;
         ]]></body>
       </method>
-      
     </implementation>
-    
+
   </binding>
   
   <binding id="message" extends="xul:box">
