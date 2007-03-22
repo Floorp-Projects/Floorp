@@ -1,6 +1,6 @@
 #
-## hostname: crazyhorse
-## uname: Linux crazyhorse 2.4.18-14 #1 Wed Sep 4 13:35:50 EDT 2002 i686 i686 i386 GNU/Linux
+## hostname: tb-linux-tbox
+## uname: Linux tb-linux-tbox.build.mozilla.org 2.6.9-42.ELsmp #1 SMP Sat Aug 12 09:39:11 CDT 2006 i686 i686 i386 GNU/Linux
 #
 
 mk_add_options MOZ_CO_PROJECT=mail
