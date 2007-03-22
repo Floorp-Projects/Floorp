@@ -342,6 +342,12 @@ gfxAtsuiFontGroup::~gfxAtsuiFontGroup()
     ATSUDisposeFontFallbacks(mFallbacks);
 }
 
+gfxFontGroup *
+gfxAtsuiFontGroup::Copy(const gfxFontStyle *aStyle)
+{
+    return new gfxAtsuiFontGroup(mFamilies, aStyle);
+}
+
 static void
 SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aString, PRUint32 aLength)
 {

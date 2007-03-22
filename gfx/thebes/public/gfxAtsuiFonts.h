@@ -95,10 +95,8 @@ public:
                       const gfxFontStyle *aStyle);
     virtual ~gfxAtsuiFontGroup();
 
-    virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle) {
-        NS_ERROR("NOT IMPLEMENTED");
-        return nsnull;
-    }
+    virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle);
+
     virtual gfxTextRun *MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
                                     Parameters* aParams);
     virtual gfxTextRun *MakeTextRun(const PRUint8* aString, PRUint32 aLength,

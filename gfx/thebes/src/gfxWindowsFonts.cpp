@@ -536,6 +536,12 @@ gfxWindowsFontGroup::~gfxWindowsFontGroup()
 {
 }
 
+gfxFontGroup *
+gfxWindowsFontGroup::Copy(const gfxFontStyle *aStyle)
+{
+    return new gfxWindowsFontGroup(mFamilies, aStyle);
+}
+
 gfxTextRun *
 gfxWindowsFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
                                  Parameters *aParams)
