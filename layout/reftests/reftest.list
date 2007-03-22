@@ -80,3 +80,6 @@ include box-properties/reftest.list
 
 # first-letter/
 include first-letter/reftest.list
+
+# text-transform/
+include text-transform/reftest.list
