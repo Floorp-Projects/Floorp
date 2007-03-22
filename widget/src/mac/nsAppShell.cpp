@@ -56,6 +56,15 @@ enum {
 
 // nsAppShell implementation
 
+NS_IMETHODIMP
+nsAppShell::ResumeNative(void)
+{
+  nsresult retval = nsBaseAppShell::ResumeNative();
+  if (NS_SUCCEEDED(retval) && (mSuspendNativeCount == 0))
+    ScheduleNativeEventCallback();
+  return retval;
+}
+
 nsAppShell::nsAppShell()
 : mCFRunLoop(NULL)
 , mCFRunLoopSource(NULL)
@@ -200,7 +209,8 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
     }
   }
 
-  self->NativeEventCallback();
+  if (self->mSuspendNativeCount <= 0)
+    self->NativeEventCallback();
 
   NS_RELEASE(self);
 }

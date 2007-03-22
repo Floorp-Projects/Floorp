@@ -70,6 +70,15 @@
 
 // nsAppShell implementation
 
+NS_IMETHODIMP
+nsAppShell::ResumeNative(void)
+{
+  nsresult retval = nsBaseAppShell::ResumeNative();
+  if (NS_SUCCEEDED(retval) && (mSuspendNativeCount == 0))
+    ScheduleNativeEventCallback();
+  return retval;
+}
+
 nsAppShell::nsAppShell()
 : mAutoreleasePools(nsnull)
 , mPort(nil)
@@ -195,8 +204,9 @@ nsAppShell::ProcessGeckoEvents()
              atStart:NO];
   }
 
-  NativeEventCallback();
-  
+  if (mSuspendNativeCount <= 0)
+    NativeEventCallback();
+
   [NSApp postEvent:[NSEvent otherEventWithType:NSApplicationDefined
                                       location:NSMakePoint(0,0)
                                  modifierFlags:0
