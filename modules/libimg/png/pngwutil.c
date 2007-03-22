@@ -1754,12 +1754,12 @@ png_write_acTL(png_structp png_ptr,
 void /* PRIVATE */
 png_write_fcTL(png_structp png_ptr, png_uint_32 width, png_uint_32 height, 
     png_uint_32 x_offset, png_uint_32 y_offset,
-    png_uint_16 delay_num, png_uint_16 delay_den, png_byte render_op)
+    png_uint_16 delay_num, png_uint_16 delay_den, png_byte dispose_op, png_byte blend_op)
 {
 #ifdef PNG_USE_LOCAL_ARRAYS
     PNG_fcTL;
 #endif
-    png_byte data[25];
+    png_byte data[26];
     
     png_debug(1, "in png_write_fcTL\n");
     
@@ -1773,7 +1773,7 @@ png_write_fcTL(png_structp png_ptr, png_uint_32 width, png_uint_32 height,
     
     /* more error checking */
     png_ensure_fcTL_is_valid(png_ptr, width, height, x_offset, y_offset, 
-                             delay_num, delay_den, render_op);
+                             delay_num, delay_den, dispose_op, blend_op);
     
     png_save_uint_32(data, png_ptr->next_seq_num);
     png_save_uint_32(data + 4, width);
@@ -1782,9 +1782,10 @@ png_write_fcTL(png_structp png_ptr, png_uint_32 width, png_uint_32 height,
     png_save_uint_32(data + 16, y_offset);
     png_save_uint_16(data + 20, delay_num);
     png_save_uint_16(data + 22, delay_den);
-    data[24] = render_op;
+    data[24] = dispose_op;
+    data[25] = blend_op;
     
-    png_write_chunk(png_ptr, (png_bytep)png_fcTL, data, (png_size_t)25);
+    png_write_chunk(png_ptr, (png_bytep)png_fcTL, data, (png_size_t)26);
     
     png_ptr->next_seq_num++;
 }

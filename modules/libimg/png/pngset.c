@@ -1046,7 +1046,7 @@ png_set_next_frame_fcTL(png_structp png_ptr, png_infop info_ptr,
     png_uint_32 width, png_uint_32 height,
     png_uint_32 x_offset, png_uint_32 y_offset,
     png_uint_16 delay_num, png_uint_16 delay_den,
-    png_byte render_op)
+    png_byte dispose_op, png_byte blend_op)
 {
     png_debug1(1, "in %s storage function\n", "fcTL");
 
@@ -1059,7 +1059,7 @@ png_set_next_frame_fcTL(png_structp png_ptr, png_infop info_ptr,
     }
     
     png_ensure_fcTL_is_valid(png_ptr, width, height, x_offset, y_offset, 
-                             delay_num, delay_den, render_op);
+                             delay_num, delay_den, dispose_op, blend_op);
     
     info_ptr->next_frame_width = width;
     info_ptr->next_frame_height = height;
@@ -1067,7 +1067,8 @@ png_set_next_frame_fcTL(png_structp png_ptr, png_infop info_ptr,
     info_ptr->next_frame_y_offset = y_offset;
     info_ptr->next_frame_delay_num = delay_num;
     info_ptr->next_frame_delay_den = delay_den;
-    info_ptr->next_frame_render_op = render_op;
+    info_ptr->next_frame_dispose_op = dispose_op;
+    info_ptr->next_frame_blend_op = blend_op;
     
     info_ptr->valid |= PNG_INFO_fcTL;
     
@@ -1079,7 +1080,7 @@ png_ensure_fcTL_is_valid(png_structp png_ptr,
     png_uint_32 width, png_uint_32 height,
     png_uint_32 x_offset, png_uint_32 y_offset,
     png_uint_16 delay_num, png_uint_16 delay_den,
-    png_byte render_op)
+    png_byte dispose_op, png_byte blend_op)
 {
     if (width > png_ptr->first_frame_width || 
         height > png_ptr->first_frame_height)
@@ -1093,23 +1094,25 @@ png_ensure_fcTL_is_valid(png_structp png_ptr,
         png_error(png_ptr, "invalid x_offset in fcTL (> 2^31-1)");
     if (y_offset > PNG_UINT_31_MAX)
         png_error(png_ptr, "invalid y_offset in fcTL (> 2^31-1)");
-    if (render_op & 0xF0)
-        /* Bits 4 through 7 are reserved and must be set to zero (APNG spec) */
-        png_error(png_ptr, "invalid render_op in fcTL");
-    if (render_op & 0x08 && png_ptr->color_type == PNG_COLOR_TYPE_GRAY)
-        png_error(png_ptr, "APNG_RENDER_OP_BLEND_FLAG is not valid for "
-                           "color type 'greyscale without alpha'");
-    if ((render_op & 0x08) && 
-        (png_ptr->color_type & PNG_COLOR_MASK_COLOR) &&
-        !(png_ptr->color_type & PNG_COLOR_MASK_ALPHA))
-        png_error(png_ptr, "APNG_RENDER_OP_BLEND_FLAG is not valid for "
-                           "color type 'truecolor without alpha'");
-    if (!(render_op & PNG_RENDER_OP_DISPOSE_MASK))
-        png_error(png_ptr, "no DISPOSE_ flag found in fcTL");
-    if ( (render_op & PNG_RENDER_OP_DISPOSE_MASK) != PNG_RENDER_OP_DISPOSE_NONE && 
-         (render_op & PNG_RENDER_OP_DISPOSE_MASK) != PNG_RENDER_OP_DISPOSE_BACKGROUND && 
-         (render_op & PNG_RENDER_OP_DISPOSE_MASK) != PNG_RENDER_OP_DISPOSE_PREVIOUS)
-        png_error(png_ptr, "multiple DISPOSE_ flags set in fcTL");
+
+    if (dispose_op != PNG_DISPOSE_OP_NONE &&
+	dispose_op != PNG_DISPOSE_OP_BACKGROUND &&
+	dispose_op != PNG_DISPOSE_OP_PREVIOUS)
+        png_error(png_ptr, "invalid dispose_op in fcTL");
+
+    if (blend_op != PNG_BLEND_OP_SOURCE &&
+	blend_op != PNG_BLEND_OP_OVER)
+        png_error(png_ptr, "invalid blend_op in fcTL");
+
+    if (blend_op == PNG_BLEND_OP_OVER) {
+        if (png_ptr->color_type == PNG_COLOR_TYPE_GRAY)
+            png_error(png_ptr, "PNG_BLEND_OP_OVER is not valid for "
+                               "color type 'greyscale without alpha'");
+        else if ((png_ptr->color_type & PNG_COLOR_MASK_COLOR) &&
+		 !(png_ptr->color_type & PNG_COLOR_MASK_ALPHA))
+            png_error(png_ptr, "PNG_BLEND_OP_OVER is not valid for "
+                               "color type 'truecolor without alpha'");
+    }
 }
 #endif /* PNG_APNG_SUPPORTED */
 
