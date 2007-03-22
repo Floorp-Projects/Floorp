@@ -164,7 +164,7 @@ private:
   //  * Add to the serialization code (see nsNavHistory::QueriesToQueryString())
   //  * Add to the deserialization code (see nsNavHistory::QueryStringToQueries)
   //  * Add to the nsNavHistoryQueryOptions::Clone() function
-  //  * Add to the nsNavHistory.cpp::GetSimpleBookmarksQuery function if applicable
+  //  * Add to the nsNavHistory.cpp::GetSimpleBookmarksQueryFolder function if applicable
   PRUint32 mSort;
   PRUint32 mResultType;
   PRUint32 mGroupCount;
