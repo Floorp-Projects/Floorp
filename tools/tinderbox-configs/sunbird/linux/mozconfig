@@ -1,6 +1,6 @@
 #
-## hostname: galactica
-## uname: Linux galactica.mozilla.org 2.4.21-32.0.1.ELsmp #1 SMP Tue May 17 17:52:23 EDT 2005 i686 i686 i386 GNU/Linux
+## hostname: sb-linux-tbox
+## uname: Linux sb-linux-tbox.build.mozilla.org 2.6.9-42.ELsmp #1 SMP Sat Aug 12 09:39:11 CDT 2006 i686 i686 i386 GNU/Linux
 #
 
 mk_add_options MOZ_CO_PROJECT=calendar
@@ -17,7 +17,6 @@ ac_add_options --enable-static
 ac_add_options --disable-shared
 ac_add_options --disable-installer
 ac_add_options --disable-tests
-# Use gtk2 until pango is upgraded
-ac_add_options --enable-default-toolkit=gtk2
-ac_add_options --disable-svg
+
+#ac_add_options --enable-default-toolkit=gtk2
 #ac_add_options --enable-official-branding

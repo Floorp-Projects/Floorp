@@ -1,6 +1,6 @@
 #
-## hostname: galactica
-## uname: Linux galactica.mozilla.org 2.4.21-32.0.1.ELsmp #1 SMP Tue May 17 17:52:23 EDT 2005 i686 i686 i386 GNU/Linux
+## hostname: sb-linux-tbox
+## uname: Linux sb-linux-tbox.build.mozilla.org 2.6.9-42.ELsmp #1 SMP Sat Aug 12 09:39:11 CDT 2006 i686 i686 i386 GNU/Linux
 #
 
 #- tinder-config.pl - Tinderbox configuration file.

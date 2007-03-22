@@ -1,6 +1,6 @@
 #
-## hostname: galactica
-## uname: Linux galactica.mozilla.org 2.4.21-32.0.1.ELsmp #1 SMP Tue May 17 17:52:23 EDT 2005 i686 i686 i386 GNU/Linux
+## hostname: sb-linux-tbox
+## uname: Linux sb-linux-tbox.build.mozilla.org 2.6.9-42.ELsmp #1 SMP Sat Aug 12 09:39:11 CDT 2006 i686 i686 i386 GNU/Linux
 #
 
 mk_add_options MOZ_CO_PROJECT=mail,calendar
@@ -14,5 +14,5 @@ ac_add_options --enable-shared
 ac_add_options --disable-tests
 ac_add_options --disable-debug
 
-ac_add_options --enable-pango
-ac_add_options --enable-default-toolkit=cairo-gtk2
+#ac_add_options --enable-pango
+#ac_add_options --enable-default-toolkit=cairo-gtk2
