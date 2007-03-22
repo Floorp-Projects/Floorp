@@ -249,7 +249,8 @@ $update_package = 0;
 $update_pushinfo = 0;
 $update_aus_host = 'aus2-staging.mozilla.org';
 
-$airbag_pushsymbols = 0;
+$crashreporter_buildsymbols = 0;
+$crashreporter_pushsymbols = 0;
 #$ENV{AIRBAG_SYMBOL_SERVER} = ''
 #$ENV{AIRBAG_SYMBOL_USER}   = ''
 #$ENV{AIRBAG_SYMBOL_PATH}   = ''

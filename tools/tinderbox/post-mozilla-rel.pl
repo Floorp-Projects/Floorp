@@ -1294,8 +1294,11 @@ sub main {
     processtalkback($cachebuild && $Settings::shiptalkback, $objdir, "$mozilla_build_dir/${Settings::Topsrcdir}");
   }
 
-  if ($cachebuild && $Settings::airbag_pushsymbols) {
-    TinderUtils::run_shell_command("make -C $objdir buildsymbols uploadsymbols");
+  if ($cachebuild && $Settings::crashreporter_buildsymbols) {
+    TinderUtils::run_shell_command("make -C $objdir buildsymbols");
+  }
+  if ($cachebuild && $Settings::crashreporter_pushsymbols) {
+    TinderUtils::run_shell_command("make -C $objdir uploadsymbols");
   }
 
   $local_build_dir = $package_location . "/" . $package_dir;
