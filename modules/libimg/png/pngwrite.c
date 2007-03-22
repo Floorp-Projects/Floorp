@@ -1524,8 +1524,8 @@ void PNGAPI
 png_write_frame_head(png_structp png_ptr, png_infop info_ptr,
     png_bytepp row_pointers, png_uint_32 width, png_uint_32 height, 
     png_uint_32 x_offset, png_uint_32 y_offset, 
-    png_uint_16 delay_num, png_uint_16 delay_den, png_byte render_op,
-    png_byte first_frame_hidden)
+    png_uint_16 delay_num, png_uint_16 delay_den, png_byte dispose_op,
+    png_byte blend_op, png_byte first_frame_hidden)
 {
     png_debug(1, "in png_write_frame_head\n");
     
@@ -1540,7 +1540,7 @@ png_write_frame_head(png_structp png_ptr, png_infop info_ptr,
     
     if ( !(png_ptr->num_frames_written == 0 && first_frame_hidden) )
         png_write_fcTL(png_ptr, width, height, x_offset, y_offset, 
-                       delay_num, delay_den, render_op);
+                       delay_num, delay_den, dispose_op, blend_op);
 }
 
 void PNGAPI

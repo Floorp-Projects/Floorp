@@ -909,7 +909,8 @@ defined(PNG_READ_BACKGROUND_SUPPORTED)
    png_uint_32 next_frame_y_offset;
    png_uint_16 next_frame_delay_num;
    png_uint_16 next_frame_delay_den;
-   png_byte next_frame_render_op;
+   png_byte next_frame_dispose_op;
+   png_byte next_frame_blend_op;
 #endif
 
 } png_info;
@@ -1411,11 +1412,14 @@ struct png_struct_def
 /* For png_struct.apng_flags: */
 #define PNG_FIRST_FRAME_HIDDEN       0x0001
 
-/* dispose_op flags from render_op inside fcTL */
-#define PNG_RENDER_OP_DISPOSE_MASK        0x07
-#define PNG_RENDER_OP_DISPOSE_NONE        0x01
-#define PNG_RENDER_OP_DISPOSE_BACKGROUND  0x02
-#define PNG_RENDER_OP_DISPOSE_PREVIOUS    0x04
+/* dispose_op flags from inside fcTL */
+#define PNG_DISPOSE_OP_NONE        0x00
+#define PNG_DISPOSE_OP_BACKGROUND  0x01
+#define PNG_DISPOSE_OP_PREVIOUS    0x02
+
+/* blend_op flags from inside fcTL */
+#define PNG_BLEND_OP_SOURCE        0x00
+#define PNG_BLEND_OP_OVER          0x01
 
 /* This triggers a compiler error in png.c, if png.c and png.h
  * do not agree upon the version number.
@@ -1740,8 +1744,8 @@ extern PNG_EXPORT (void,png_write_frame_head) PNGARG((png_structp png_ptr,
    png_infop png_info, png_bytepp row_pointers,
    png_uint_32 width, png_uint_32 height,
    png_uint_32 x_offset, png_uint_32 y_offset, 
-   png_uint_16 delay_num, png_uint_16 delay_den, png_byte render_op,
-   png_byte first_frame_hidden));
+   png_uint_16 delay_num, png_uint_16 delay_den, png_byte dispose_op,
+   png_byte blend_op, png_byte first_frame_hidden));
 
 extern PNG_EXPORT (void,png_write_frame_tail) PNGARG((png_structp png_ptr,
    png_infop png_info));
@@ -2441,17 +2445,19 @@ extern PNG_EXPORT(png_uint_32,png_get_num_iterations)
 extern PNG_EXPORT(png_uint_32,png_get_next_frame_fcTL) 
    PNGARG((png_structp png_ptr, png_infop info_ptr, png_uint_32 *width, 
    png_uint_32 *height, png_uint_32 *x_offset, png_uint_32 *y_offset, 
-   png_uint_16 *delay_num, png_uint_16 *delay_den, png_byte *render_op));
+   png_uint_16 *delay_num, png_uint_16 *delay_den, png_byte *dispose_op,
+   png_byte *blend_op));
 extern PNG_EXPORT(png_uint_32,png_set_next_frame_fcTL) 
    PNGARG((png_structp png_ptr, png_infop info_ptr, png_uint_32 width, 
    png_uint_32 height, png_uint_32 x_offset, png_uint_32 y_offset, 
-   png_uint_16 delay_num, png_uint_16 delay_den, png_byte render_op));
+   png_uint_16 delay_num, png_uint_16 delay_den, png_byte dispose_op,
+   png_byte blend_op));
 extern PNG_EXPORT(void,png_ensure_fcTL_is_valid)
    PNGARG((png_structp png_ptr,
    png_uint_32 width, png_uint_32 height,
    png_uint_32 x_offset, png_uint_32 y_offset,
    png_uint_16 delay_num, png_uint_16 delay_den,
-   png_byte render_op));
+   png_byte dispose_op, png_byte blend_op));
 extern PNG_EXPORT(png_uint_32,png_get_next_frame_width)
    PNGARG((png_structp png_ptr, png_infop info_ptr));
 extern PNG_EXPORT(png_uint_32,png_get_next_frame_height)
@@ -2464,7 +2470,9 @@ extern PNG_EXPORT(png_uint_16,png_get_next_frame_delay_num)
    PNGARG((png_structp png_ptr, png_infop info_ptr));
 extern PNG_EXPORT(png_uint_16,png_get_next_frame_delay_den)
    PNGARG((png_structp png_ptr, png_infop info_ptr));
-extern PNG_EXPORT(png_byte,png_get_next_frame_render_op)
+extern PNG_EXPORT(png_byte,png_get_next_frame_dispose_op)
+   PNGARG((png_structp png_ptr, png_infop info_ptr));
+extern PNG_EXPORT(png_byte,png_get_next_frame_blend_op)
    PNGARG((png_structp png_ptr, png_infop info_ptr));
 extern PNG_EXPORT(png_byte,png_first_frame_is_hidden)
    PNGARG((png_structp png_ptr, png_infop info_ptr));
@@ -3233,7 +3241,8 @@ PNG_EXTERN void png_write_acTL PNGARG((png_structp png_ptr,
 PNG_EXTERN void png_write_fcTL PNGARG((png_structp png_ptr, 
    png_uint_32 width, png_uint_32 height, 
    png_uint_32 x_offset, png_uint_32 y_offset, 
-   png_uint_16 delay_num, png_uint_16 delay_den, png_byte render_op));
+   png_uint_16 delay_num, png_uint_16 delay_den,
+   png_byte dispose_op, png_byte blend_op));
 #endif
 
 /* Called when finished processing a row of data */
