@@ -144,7 +144,9 @@ nsNavBookmarks::Init()
   // _item_ children which are in moz_places.
   // Results are kGetInfoIndex_*
   NS_NAMED_LITERAL_CSTRING(selectItemChildren,
-    "SELECT h.id, h.url, a.title, h.user_title, h.rev_host, h.visit_count, "
+    "SELECT h.id, h.url, a.title, "
+      "(SELECT title FROM moz_bookmarks WHERE item_child = h.id), "
+      "h.rev_host, h.visit_count, "
       "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
       "f.url, null, a.position, a.item_child, a.folder_child, null, a.id "
     "FROM moz_bookmarks a "
