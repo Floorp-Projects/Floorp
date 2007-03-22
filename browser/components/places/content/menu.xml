@@ -419,23 +419,20 @@
           return new InsertionPoint(folderId, index);
         ]]></getter>
       </property>
-      
+
       <!-- nsIPlacesView -->
-      <field name="peerDropIndex">0</field>
-      
+      <field name="peerDropTypes">PlacesUtils.GENERIC_VIEW_DROP_TYPES</field>
+
       <!-- nsIPlacesView -->
-      <field name="peerDropTypes">ViewConfig.GENERIC_DROP_TYPES</field>
-      
-      <!-- nsIPlacesView -->
-      <field name="childDropTypes">ViewConfig.GENERIC_DROP_TYPES</field>
-      
+      <field name="childDropTypes">PlacesUtils.GENERIC_VIEW_DROP_TYPES</field>
+
       <!-- nsIPlacesView -->
       <method name="selectAll">
         <body><![CDATA[ 
           // Nothing
         ]]></body>
       </method>
-      
+
       <method name="saveSelection">
         <parameter name="mode"/>
         <body><![CDATA[
@@ -445,7 +442,7 @@
         <body><![CDATA[
         ]]></body>
       </method>
-      
+
       <field name="_DNDObserver"><![CDATA[({
         // Inside the _DNDObserver object's functions, this points to 
         // the _DNDObserver object.  _self points to the menu xbl object.
@@ -464,7 +461,7 @@
           timer.initWithCallback(this, time, timer.TYPE_ONE_SHOT);
           return timer;
         },
-        
+
         // Function to process all timer notifications.
         notify: function TBV_DO_notify(timer) {
 
@@ -474,7 +471,7 @@
             this._overFolder.node.lastChild.showPopup(this._overFolder.node);
             this._overFolder.openTimer = null;
           }
-          
+
           // Timer to close a submenu that's been dragged off of.
           if (timer == this._overFolder.closeTimer) {
             // Only close the submenu if the mouse isn't being dragged over any
