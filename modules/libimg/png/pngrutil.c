@@ -2190,14 +2190,15 @@ png_handle_acTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
 void /* PRIVATE */
 png_handle_fcTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
 {
-    png_byte data[21];
+    png_byte data[22];
     png_uint_32 width;
     png_uint_32 height;
     png_uint_32 x_offset;
     png_uint_32 y_offset;
     png_uint_16 delay_num;
     png_uint_16 delay_den;
-    png_byte render_op;
+    png_byte dispose_op;
+    png_byte blend_op;
     
     png_debug(1, "in png_handle_fcTL\n");
     
@@ -2220,7 +2221,7 @@ png_handle_fcTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
         png_crc_finish(png_ptr, length);
         return;
     }
-    else if (length != 25)
+    else if (length != 26)
     {
         png_warning(png_ptr, "fcTL with invalid length skipped");
         png_crc_finish(png_ptr, length);
@@ -2229,7 +2230,7 @@ png_handle_fcTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
     
     png_ensure_sequence_number(png_ptr, length);
     
-    png_crc_read(png_ptr, data, 21);
+    png_crc_read(png_ptr, data, 22);
     png_crc_finish(png_ptr, 0);
     
     width = png_get_uint_31(png_ptr, data);
@@ -2238,7 +2239,8 @@ png_handle_fcTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
     y_offset = png_get_uint_31(png_ptr, data + 12);
     delay_num = png_get_uint_16(data + 16);
     delay_den = png_get_uint_16(data + 18);
-    render_op = data[20];
+    dispose_op = data[20];
+    blend_op = data[21];
     
     if (png_ptr->num_frames_read == 0 && (x_offset != 0 || y_offset != 0))
         png_error(png_ptr, "fcTL for the first frame must have zero offset");
@@ -2250,7 +2252,7 @@ png_handle_fcTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
     /* the set function will do more error checking */
     png_set_next_frame_fcTL(png_ptr, info_ptr, width, height, 
                             x_offset, y_offset, delay_num, delay_den,
-                            render_op);
+                            dispose_op, blend_op);
     
     png_read_reinit(png_ptr, info_ptr);
     

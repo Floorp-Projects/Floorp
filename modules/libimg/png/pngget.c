@@ -838,7 +838,7 @@ png_get_next_frame_fcTL(png_structp png_ptr, png_infop info_ptr,
              png_uint_32 *width, png_uint_32 *height,
              png_uint_32 *x_offset, png_uint_32 *y_offset,
              png_uint_16 *delay_num, png_uint_16 *delay_den,
-             png_byte *render_op)
+             png_byte *dispose_op, png_byte *blend_op)
 {
     png_debug1(1, "in %s retrieval function\n", "fcTL");
     
@@ -846,7 +846,8 @@ png_get_next_frame_fcTL(png_structp png_ptr, png_infop info_ptr,
         (info_ptr->valid & PNG_INFO_fcTL) &&
         width != NULL && height != NULL && 
         x_offset != NULL && x_offset != NULL && 
-        delay_num != NULL && delay_den != NULL && render_op != NULL)
+        delay_num != NULL && delay_den != NULL &&
+	dispose_op != NULL && blend_op != NULL)
     {
         *width = info_ptr->next_frame_width;
         *height = info_ptr->next_frame_height;
@@ -854,7 +855,8 @@ png_get_next_frame_fcTL(png_structp png_ptr, png_infop info_ptr,
         *y_offset = info_ptr->next_frame_y_offset;
         *delay_num = info_ptr->next_frame_delay_num;
         *delay_den = info_ptr->next_frame_delay_den;
-        *render_op = info_ptr->next_frame_render_op;
+        *dispose_op = info_ptr->next_frame_dispose_op;
+        *blend_op = info_ptr->next_frame_blend_op;
         return (1);
     }
     
@@ -922,12 +924,22 @@ png_get_next_frame_delay_den(png_structp png_ptr, png_infop info_ptr)
 }
 
 png_byte PNGAPI
-png_get_next_frame_render_op(png_structp png_ptr, png_infop info_ptr)
+png_get_next_frame_dispose_op(png_structp png_ptr, png_infop info_ptr)
 {
-    png_debug(1, "in png_get_next_frame_render_op()\n");
+    png_debug(1, "in png_get_next_frame_dispose_op()\n");
     
     if (png_ptr != NULL && info_ptr != NULL)
-        return (info_ptr->next_frame_render_op);
+        return (info_ptr->next_frame_dispose_op);
+    return (0);
+}
+
+png_byte PNGAPI
+png_get_next_frame_blend_op(png_structp png_ptr, png_infop info_ptr)
+{
+    png_debug(1, "in png_get_next_frame_blend_op()\n");
+    
+    if (png_ptr != NULL && info_ptr != NULL)
+        return (info_ptr->next_frame_blend_op);
     return (0);
 }
 
