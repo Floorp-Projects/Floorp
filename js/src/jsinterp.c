@@ -2316,8 +2316,8 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     LOAD_INTERRUPT_HANDLER(rt);
 
     /* Check for too much js_Interpret nesting, or too deep a C stack. */
-    if (++cx->interpLevel == MAX_INTERP_LEVEL ||
-        !JS_CHECK_STACK_SIZE(cx, stackDummy)) {
+    ++cx->interpLevel;
+    if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
         ok = JS_FALSE;
         goto out2;
