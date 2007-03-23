@@ -249,6 +249,7 @@ private:
   nsresult                            mStatus;
   PRPackedBool                        mQueriedProgressSink;
   PRPackedBool                        mSynthProgressEvents;
+  PRPackedBool                        mWasOpened;
 };
 
 #endif // !nsBaseChannel_h__
