@@ -82,7 +82,7 @@ var observer =
 };
 
 var root = bmsvc.bookmarksRoot;
-const FEEDSPEC = "http://localhost:8888/tests/browser/components/places/tests/chrome/sample_feed.atom";
+const FEEDSPEC = "http://localhost:8888/tests/toolkit/components/places/tests/chrome/sample_feed.atom";
 
 gLivemarkId = lmsvc.createLivemarkFolderOnly(bmsvc, root, "foo",
                                             uri("http:/localhost/"),
