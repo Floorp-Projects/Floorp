@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Brendan Eich <brendan@mozilla.org> (Original Author)
  *   Chris Waterson <waterson@netscape.com>
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -461,6 +462,65 @@ SearchTable(JSDHashTable *table, const void *key, JSDHashNumber keyHash,
     return NULL;
 }
 
+/*
+ * This is a copy of SearchTable, used by ChangeTable, hardcoded to
+ *   1. assume |op == PL_DHASH_ADD|,
+ *   2. assume that |key| will never match an existing entry, and
+ *   3. assume that no entries have been removed from the current table
+ *      structure.
+ * Avoiding the need for |key| means we can avoid needing a way to map
+ * entries to keys, which means callers can use complex key types more
+ * easily.
+ */
+static JSDHashEntryHdr * JS_DHASH_FASTCALL
+FindFreeEntry(JSDHashTable *table, JSDHashNumber keyHash)
+{
+    JSDHashNumber hash1, hash2;
+    int hashShift, sizeLog2;
+    JSDHashEntryHdr *entry;
+    uint32 sizeMask;
+
+    METER(table->stats.searches++);
+    JS_ASSERT(!(keyHash & COLLISION_FLAG));
+
+    /* Compute the primary hash address. */
+    hashShift = table->hashShift;
+    hash1 = HASH1(keyHash, hashShift);
+    entry = ADDRESS_ENTRY(table, hash1);
+
+    /* Miss: return space for a new entry. */
+    if (JS_DHASH_ENTRY_IS_FREE(entry)) {
+        METER(table->stats.misses++);
+        return entry;
+    }
+
+    /* Collision: double hash. */
+    sizeLog2 = JS_DHASH_BITS - table->hashShift;
+    hash2 = HASH2(keyHash, sizeLog2, hashShift);
+    sizeMask = JS_BITMASK(sizeLog2);
+
+    JS_ASSERT(!ENTRY_IS_REMOVED(entry));
+    entry->keyHash |= COLLISION_FLAG;
+
+    for (;;) {
+        METER(table->stats.steps++);
+        hash1 -= hash2;
+        hash1 &= sizeMask;
+
+        entry = ADDRESS_ENTRY(table, hash1);
+        if (JS_DHASH_ENTRY_IS_FREE(entry)) {
+            METER(table->stats.misses++);
+            return entry;
+        }
+
+        JS_ASSERT(!ENTRY_IS_REMOVED(entry));
+        entry->keyHash |= COLLISION_FLAG;
+    }
+
+    /* NOTREACHED */
+    return NULL;
+}
+
 static JSBool
 ChangeTable(JSDHashTable *table, int deltaLog2)
 {
@@ -469,7 +529,6 @@ ChangeTable(JSDHashTable *table, int deltaLog2)
     char *newEntryStore, *oldEntryStore, *oldEntryAddr;
     uint32 entrySize, i, nbytes;
     JSDHashEntryHdr *oldEntry, *newEntry;
-    JSDHashGetKey getKey;
     JSDHashMoveEntry moveEntry;
 #ifdef DEBUG
     uint32 recursionLevel;
@@ -501,7 +560,6 @@ ChangeTable(JSDHashTable *table, int deltaLog2)
     memset(newEntryStore, 0, nbytes);
     oldEntryAddr = oldEntryStore = table->entryStore;
     table->entryStore = newEntryStore;
-    getKey = table->ops->getKey;
     moveEntry = table->ops->moveEntry;
 #ifdef DEBUG
     RECURSION_LEVEL(table) = recursionLevel;
@@ -512,8 +570,7 @@ ChangeTable(JSDHashTable *table, int deltaLog2)
         oldEntry = (JSDHashEntryHdr *)oldEntryAddr;
         if (ENTRY_IS_LIVE(oldEntry)) {
             oldEntry->keyHash &= ~COLLISION_FLAG;
-            newEntry = SearchTable(table, getKey(table, oldEntry),
-                                   oldEntry->keyHash, JS_DHASH_ADD);
+            newEntry = FindFreeEntry(table, oldEntry->keyHash);
             JS_ASSERT(JS_DHASH_ENTRY_IS_FREE(newEntry));
             moveEntry(table, oldEntry, newEntry);
             newEntry->keyHash = oldEntry->keyHash;
