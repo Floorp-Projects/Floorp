@@ -451,7 +451,7 @@ NS_IMETHODIMP EmbedGlobalHistory::AddURI(nsIURI *aURI, PRBool aRedirect, PRBool 
     }
   }
 #ifdef DEBUG
-  NS_WARNING("[HISTORY] Visited URL: %s\n", aURL);
+  //  NS_WARNING("[HISTORY] Visited URL: %s\n", aURL);
 #endif
   rv = LoadData();
   NS_ENSURE_SUCCESS(rv, rv);
