@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
-<?xml-stylesheet href="http://people.mozilla.com/~sayrer/tests/SimpleTest/test.css" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=371080
 -->
