@@ -207,21 +207,26 @@ NS_IMETHODIMP nsMenuX::SetAccessKey(const nsAString &aText)
 }
 
 
+// This should only be used internally by our menu implementation. In all other
+// cases menus and their items should be added and modified via the DOM.
 NS_IMETHODIMP nsMenuX::AddItem(nsISupports* aItem)
 {
   nsresult rv = NS_ERROR_FAILURE;
-  if (aItem) {
-    // Figure out what we're adding
-    nsCOMPtr<nsIMenuItem> menuItem(do_QueryInterface(aItem));
-    if (menuItem) {
-      rv = AddMenuItem(menuItem);
-    }
-    else {
-      nsCOMPtr<nsIMenu> menu(do_QueryInterface(aItem));
-      if (menu)
-        rv = AddMenu(menu);
-    }
+
+  if (!aItem)
+    return NS_ERROR_INVALID_ARG;
+
+  // Figure out what we're adding
+  nsCOMPtr<nsIMenuItem> menuItem(do_QueryInterface(aItem, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    rv = AddMenuItem(menuItem);
   }
+  else {
+    nsCOMPtr<nsIMenu> menu(do_QueryInterface(aItem, &rv));
+    if (NS_SUCCEEDED(rv))
+      rv = AddMenu(menu);
+  }
+
   return rv;
 }
 
@@ -231,7 +236,15 @@ nsresult nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
   if (!aMenuItem)
     return NS_ERROR_INVALID_ARG;
 
-  mMenuItemsArray.AppendObject(aMenuItem); // owning ref
+  nsCOMPtr<nsIContent> menuItemContent;
+  aMenuItem->GetMenuItemContent(getter_AddRefs(menuItemContent));
+  if (menuItemContent && NodeIsHiddenOrCollapsed(menuItemContent)) {
+    mHiddenMenuItemsArray.AppendObject(aMenuItem); // owning ref
+    return NS_OK;
+  }
+  else {
+    mMenuItemsArray.AppendObject(aMenuItem); // owning ref
+  }
 
   // add the menu item to this menu
   NSMenuItem* newNativeMenuItem;
@@ -263,12 +276,15 @@ nsresult nsMenuX::AddMenu(nsIMenu * aMenu)
   if (!aMenu)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsISupports> supports = do_QueryInterface(aMenu);
-  if (!supports)
-    return NS_ERROR_NO_INTERFACE;
-
-  PRUint32 currItemIndex = mMenuItemsArray.Count();
-  mMenuItemsArray.AppendObject(supports); // owning ref
+  nsCOMPtr<nsIContent> menuContent;
+  aMenu->GetMenuContent(getter_AddRefs(menuContent));
+  if (menuContent && NodeIsHiddenOrCollapsed(menuContent)) {
+    mHiddenMenuItemsArray.AppendObject(aMenu); // owning ref
+    return NS_OK;
+  }
+  else {
+    mMenuItemsArray.AppendObject(aMenu); // owning ref
+  }
 
   // We have to add a menu item and then associate the menu with it
   nsAutoString label;
@@ -284,7 +300,7 @@ nsresult nsMenuX::AddMenu(nsIMenu * aMenu)
   
   NSMenu* childMenu;
   if (aMenu->GetNativeData((void**)&childMenu) == NS_OK)
-    [[mMacMenu itemAtIndex:currItemIndex] setSubmenu:childMenu];
+    [newNativeMenuItem setSubmenu:childMenu];
 
   return NS_OK;
 }
@@ -294,7 +310,7 @@ NS_IMETHODIMP nsMenuX::AddSeparator()
 {
   // We're not really appending an nsMenuItem but a placeholder needs to be
   // here to make sure that event dispatching isn't off by one.
-  mMenuItemsArray.AppendObject(&gDummyMenuItemX); // owning ref
+  mMenuItemsArray.AppendObject(&gDummyMenuItemX);  // owning ref
   [mMacMenu addItem:[NSMenuItem separatorItem]];
   return NS_OK;
 }
@@ -342,6 +358,7 @@ NS_IMETHODIMP nsMenuX::RemoveAll()
   }
   // get rid of Gecko menu items
   mMenuItemsArray.Clear();
+  mHiddenMenuItemsArray.Clear();
   
   return NS_OK;
 }
@@ -431,8 +448,7 @@ nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
     // Make sure none of our submenus are the ones that should be handling this
     for (PRUint32 i = mMenuItemsArray.Count() - 1; i >= 0; i--) {
       nsISupports*              menuSupports = mMenuItemsArray.ObjectAt(i);
-      nsCOMPtr<nsIMenu>              submenu = do_QueryInterface(menuSupports);
-      nsCOMPtr<nsIMenuListener> menuListener = do_QueryInterface(submenu);
+      nsCOMPtr<nsIMenuListener> menuListener = do_QueryInterface(menuSupports);
       if (menuListener) {
         eventStatus = menuListener->MenuSelected(aMenuEvent);
         if (nsEventStatus_eIgnore != eventStatus)
@@ -511,11 +527,11 @@ nsEventStatus nsMenuX::MenuConstruct(
       // depending on the type, create a menu item, separator, or submenu
       nsIAtom *tag = child->Tag();
       if (tag == nsWidgetAtoms::menuitem)
-        LoadMenuItem(this, child);
+        LoadMenuItem(child);
       else if (tag == nsWidgetAtoms::menuseparator)
         LoadSeparator(child);
       else if (tag == nsWidgetAtoms::menu)
-        LoadSubMenu(this, child);
+        LoadSubMenu(child);
     }
   } // for each menu item
 
@@ -606,12 +622,9 @@ NSMenu* nsMenuX::CreateMenuWithGeckoString(nsString& menuTitle)
 }
 
 
-void nsMenuX::LoadMenuItem(nsIMenu* inParentMenu, nsIContent* inMenuItemContent)
+void nsMenuX::LoadMenuItem(nsIContent* inMenuItemContent)
 {
   if (!inMenuItemContent)
-    return;
-
-  if (NodeIsHiddenOrCollapsed(inMenuItemContent))
     return;
 
   // create nsMenuItem
@@ -638,7 +651,7 @@ void nsMenuX::LoadMenuItem(nsIMenu* inParentMenu, nsIContent* inMenuItemContent)
     return;
 
   // Create the item.
-  pnsMenuItem->Create(inParentMenu, menuitemName, PR_FALSE, itemType, mManager,
+  pnsMenuItem->Create(this, menuitemName, PR_FALSE, itemType, mManager,
                       docShell, inMenuItemContent);
 
   // Set key shortcut and modifiers
@@ -677,16 +690,12 @@ void nsMenuX::LoadMenuItem(nsIMenu* inParentMenu, nsIContent* inMenuItemContent)
   else
     pnsMenuItem->SetChecked(PR_FALSE);
 
-  nsCOMPtr<nsISupports> supports(do_QueryInterface(pnsMenuItem));
-  inParentMenu->AddItem(supports); // Parent now owns menu item
+  AddMenuItem(pnsMenuItem);
 }
 
 
-void nsMenuX::LoadSubMenu(nsIMenu * pParentMenu, nsIContent* inMenuContent)
+void nsMenuX::LoadSubMenu(nsIContent* inMenuContent)
 {
-  if (NodeIsHiddenOrCollapsed(inMenuContent))
-    return;
-  
   nsAutoString menuName; 
   inMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuName);
   //printf("Creating Menu [%s] \n", NS_LossyConvertUTF16toASCII(menuName).get());
@@ -700,8 +709,7 @@ void nsMenuX::LoadSubMenu(nsIMenu * pParentMenu, nsIContent* inMenuContent)
   nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
   if (!docShell)
     return;
-  nsCOMPtr<nsISupports> supports(do_QueryInterface(pParentMenu));
-  pnsMenu->Create(supports, menuName, EmptyString(), mManager, docShell, inMenuContent);
+  pnsMenu->Create(NS_REINTERPRET_CAST(nsISupports*, this), menuName, EmptyString(), mManager, docShell, inMenuContent);
 
   // set if it's enabled or disabled
   if (inMenuContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
@@ -710,18 +718,17 @@ void nsMenuX::LoadSubMenu(nsIMenu * pParentMenu, nsIContent* inMenuContent)
   else
     pnsMenu->SetEnabled(PR_TRUE);
 
-  // Make nsMenu a child of parent nsMenu. The parent takes ownership
-  nsCOMPtr<nsISupports> supports2(do_QueryInterface(pnsMenu));
-  pParentMenu->AddItem(supports2);
+  AddMenu(pnsMenu);
 }
 
 
 void nsMenuX::LoadSeparator(nsIContent* inSeparatorContent) 
 {
-  if (NodeIsHiddenOrCollapsed(inSeparatorContent))
-    return;
-
-  AddSeparator();
+  // Currently we don't create nsIMenuItem objects for separators so we can't
+  // track changes in their hidden/collapsed attributes. If it is hidden now it
+  // is hidden forever.
+  if (!NodeIsHiddenOrCollapsed(inSeparatorContent))
+    AddSeparator();
 }
 
 

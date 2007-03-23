@@ -88,6 +88,7 @@ public:
   NS_IMETHOD SetModifiers(PRUint8 aModifiers);
   NS_IMETHOD GetModifiers(PRUint8 * aModifiers);
   NS_IMETHOD SetupIcon();
+  NS_IMETHOD GetMenuItemContent(nsIContent ** aMenuItemContent);
     
   // nsIMenuListener interface
   nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
