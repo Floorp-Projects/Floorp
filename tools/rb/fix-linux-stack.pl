@@ -97,12 +97,14 @@ sub address_adjustment($) {
 }
 
 # Files sometimes contain a link to a separate object file that contains
-# the debug sections of the binary.
+# the debug sections of the binary, removed so that a smaller file can
+# be shipped, but kept separately so that it can be obtained by those
+# who want it.
 # See http://sources.redhat.com/gdb/current/onlinedocs/gdb_16.html#SEC154
-# for documentation of external debuginfo.
+# for documentation of debugging information in separate files.
 # On Fedora distributions, these files can be obtained by installing
 # *-debuginfo RPM packages.
-sub debuginfo_file_for($) {
+sub separate_debug_file_for($) {
     my ($file) = @_;
     # We can read the .gnu_debuglink section using either of:
     #   objdump -s --section=.gnu_debuglink $file
@@ -226,7 +228,7 @@ sub addr2line_pipe($) {
     my ($file) = @_;
     my $pipe;
     unless (exists $pipes{$file}) {
-        my $debug_file = debuginfo_file_for($file);
+        my $debug_file = separate_debug_file_for($file);
         $debug_file = $file if ($debug_file eq '');
 
         my $pid = open2($pipe->{read}, $pipe->{write},
