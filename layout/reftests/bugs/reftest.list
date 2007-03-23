@@ -112,6 +112,10 @@ random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 346774-1b.html 346774-1-ref.html
 == 346774-1c.html 346774-1-ref.html
 == 347912-1.html 347912-1-ref.html
+== 348516-1.html 348516-1-ref.html
+== 348516-2.html 348516-2-ref.html
+!= 348516-2.html 348516-2-notref.html
+!= 348516-3.html 348516-3-notref.html
 == 348809-1a.html 348809-1-ref.html
 == 348809-1b.html 348809-1-ref.html
 == 348809-1c.html 348809-1-ref.html
