@@ -2376,7 +2376,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
 
         // Status text: provide if available.  Defaults to "OK".
         nsCString statusText;
-        if (!NS_SUCCEEDED(httpChannel->GetResponseStatusText(statusText))) {
+        if (NS_FAILED(httpChannel->GetResponseStatusText(statusText))) {
           statusText = "OK";
         }
 
