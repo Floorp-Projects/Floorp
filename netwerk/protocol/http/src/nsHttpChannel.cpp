@@ -106,6 +106,7 @@ nsHttpChannel::nsHttpChannel()
     , mStartPos(LL_MAXUINT)
     , mRedirectionLimit(gHttpHandler->RedirectionLimit())
     , mIsPending(PR_FALSE)
+    , mWasOpened(PR_FALSE)
     , mApplyConversion(PR_TRUE)
     , mAllowPipelining(PR_TRUE)
     , mCachedContentIsValid(PR_FALSE)
@@ -3501,6 +3502,7 @@ nsHttpChannel::SetContentLength(PRInt32 value)
 NS_IMETHODIMP
 nsHttpChannel::Open(nsIInputStream **_retval)
 {
+    NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_IN_PROGRESS);
     return NS_ImplementChannelOpen(this, _retval);
 }
 
@@ -3511,6 +3513,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 
     NS_ENSURE_ARG_POINTER(listener);
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
+    NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
 
     nsresult rv;
 
@@ -3536,6 +3539,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         mCaps &= ~(NS_HTTP_ALLOW_KEEPALIVE | NS_HTTP_ALLOW_PIPELINING);
     
     mIsPending = PR_TRUE;
+    mWasOpened = PR_TRUE;
 
     mListener = listener;
     mListenerContext = context;

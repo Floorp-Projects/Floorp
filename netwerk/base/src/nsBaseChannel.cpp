@@ -88,6 +88,7 @@ nsBaseChannel::nsBaseChannel()
   , mStatus(NS_OK)
   , mQueriedProgressSink(PR_TRUE)
   , mSynthProgressEvents(PR_FALSE)
+  , mWasOpened(PR_FALSE)
 {
   mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
 }
@@ -448,10 +449,13 @@ nsBaseChannel::Open(nsIInputStream **result)
 {
   NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_TRUE(!mPump, NS_ERROR_IN_PROGRESS);
+  NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_IN_PROGRESS);
 
   nsresult rv = OpenContentStream(PR_FALSE, result);
   if (rv == NS_ERROR_NOT_IMPLEMENTED)
     return NS_ImplementChannelOpen(this, result);
+
+  mWasOpened = NS_SUCCEEDED(rv);
 
   return rv;
 }
@@ -461,6 +465,7 @@ nsBaseChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
   NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_TRUE(!mPump, NS_ERROR_IN_PROGRESS);
+  NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
   NS_ENSURE_ARG(listener);
 
   // Ensure that this is an allowed port before proceeding.
@@ -487,6 +492,8 @@ nsBaseChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
   }
 
   // At this point, we are going to return success no matter what.
+
+  mWasOpened = PR_TRUE;
 
   SUSPEND_PUMP_FOR_SCOPE();
 

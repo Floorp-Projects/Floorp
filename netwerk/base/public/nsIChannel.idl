@@ -165,6 +165,9 @@ interface nsIChannel : nsIRequest
      * NOTE: nsIChannel implementations are not required to implement this
      * method.  Moreover, since this method may block the calling thread, it
      * should not be called on a thread that processes UI events.
+     *
+     * NOTE: Implementations should throw NS_ERROR_IN_PROGRESS if the channel
+     * is reopened.
      */
     nsIInputStream open();
 
@@ -188,6 +191,9 @@ interface nsIChannel : nsIRequest
      * If asyncOpen returns successfully, the channel is responsible for
      * keeping itself alive until it has called onStopRequest on aListener or
      * called onChannelRedirect.
+     *
+     * NOTE: Implementations should throw NS_ERROR_ALREADY_OPENED if the
+     * channel is reopened.
      *
      * @param aListener the nsIStreamListener implementation
      * @param aContext an opaque parameter forwarded to aListener's methods
