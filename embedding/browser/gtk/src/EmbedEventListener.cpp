@@ -47,6 +47,9 @@
 #include "nsIDOMUIEvent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
+#include "nsIContent.h"
+#include "nsIPresShell.h"
+#include "nsIDOMNodeList.h"
 
 #include "EmbedEventListener.h"
 #include "EmbedPrivate.h"
@@ -89,87 +92,68 @@ EmbedEventListener::Init(EmbedPrivate *aOwner)
 #ifdef MOZ_WIDGET_GTK2
   mCtxInfo = new EmbedContextMenuInfo(aOwner);
 #endif
+  mOwner->mNeedFav = PR_TRUE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-EmbedEventListener::HandleLink (nsIDOMNode* node)
+EmbedEventListener::HandleLink(nsIDOMNode* node)
 {
-  nsresult result;
+  nsresult rv;
 
   nsCOMPtr<nsIDOMElement> linkElement;
-  linkElement = do_QueryInterface (node);
+  linkElement = do_QueryInterface(node);
   if (!linkElement) return NS_ERROR_FAILURE;
 
   nsString name;
-  result = GetLinkAttribute(linkElement, "rel", &name);
-  if (NS_FAILED(result)) return NS_ERROR_FAILURE;
+  rv = linkElement->GetAttribute(NS_LITERAL_STRING("rel"), name);
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   nsString link;
-  result = GetLinkAttribute(linkElement, "href", &link);
-  if (NS_FAILED(result) || link.IsEmpty()) return NS_ERROR_FAILURE;
+  rv = linkElement->GetAttribute(NS_LITERAL_STRING("href"), link);
+  if (NS_FAILED(rv) || link.IsEmpty()) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMDocument> domDoc;
-  result = node->GetOwnerDocument(getter_AddRefs(domDoc));
-  if (NS_FAILED(result) || !domDoc) return NS_ERROR_FAILURE;
+  rv = node->GetOwnerDocument(getter_AddRefs(domDoc));
+  if (NS_FAILED(rv) || !domDoc) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOM3Node> domnode = do_QueryInterface(domDoc);
-  if(!domnode) return NS_ERROR_FAILURE;
+  if (!domnode) return NS_ERROR_FAILURE;
 
   nsString spec;
   domnode->GetBaseURI(spec);
 
-  nsCString cSpec;
-  NS_UTF16ToCString(spec, NS_CSTRING_ENCODING_UTF8, cSpec);
-
   nsCOMPtr<nsIURI> baseURI;
-  result = NewURI(getter_AddRefs(baseURI), cSpec.get());
-  if (NS_FAILED(result) || !baseURI) return NS_ERROR_FAILURE;
+  rv = NewURI(getter_AddRefs(baseURI), NS_ConvertUTF16toUTF8(spec).get());
+  if (NS_FAILED(rv) || !baseURI) return NS_ERROR_FAILURE;
 
-  nsCString linkstring;
-  NS_UTF16ToCString(link, NS_CSTRING_ENCODING_UTF8, linkstring);
   nsCString url;
-  result = baseURI->Resolve (linkstring, url);
-  if (NS_FAILED(result)) return NS_ERROR_FAILURE;
+  rv = baseURI->Resolve(NS_ConvertUTF16toUTF8(link), url);
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   nsString type;
-  result = GetLinkAttribute(linkElement, "type", &type);
-  if (NS_FAILED(result)) return NS_ERROR_FAILURE;
-
-  nsCString cType;
-  NS_UTF16ToCString(type, NS_CSTRING_ENCODING_UTF8, cType);
+  rv = linkElement->GetAttribute(NS_LITERAL_STRING("type"), type);
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   nsString title;
-  result = GetLinkAttribute(linkElement, "title", &title);
-  if (NS_FAILED(result)) return NS_ERROR_FAILURE;
-
-  nsCString cTitle;
-  NS_UTF16ToCString(title, NS_CSTRING_ENCODING_UTF8, cTitle);
-
-  nsCString cName;
-  NS_UTF16ToCString(name, NS_CSTRING_ENCODING_UTF8, cName);
+  rv = linkElement->GetAttribute(NS_LITERAL_STRING("title"), title);
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   // XXX This does not handle |BLAH ICON POWER"
-  if (!cName.LowerCaseEqualsLiteral("icon")) {
-
+  if (mOwner->mNeedFav && (name.LowerCaseEqualsLiteral("icon") ||
+      name.LowerCaseEqualsLiteral("shortcut icon"))) {
     mOwner->mNeedFav = PR_FALSE;
     this->GetFaviconFromURI(url.get());
   }
-  else {
+  else if (name.LowerCaseEqualsLiteral("alternate") &&
+           type.LowerCaseEqualsLiteral("application/rss+xml")) {
 
-    const gchar *navi_title = cTitle.get();
-    if (*navi_title == '\0')
-      navi_title = NULL;
+    NS_ConvertUTF16toUTF8 narrowTitle(title);
 
-    const gchar *navi_type = cType.get();
-    if (*navi_type == '\0')
-      navi_type = NULL;
-
-    if (!cName.LowerCaseEqualsLiteral("alternate") &&
-        !cType.LowerCaseEqualsLiteral("application/rss+xml")) {
-    }
-    else {
-    }
+    gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
+                    moz_embed_signals[RSS_REQUEST],
+                    (gchar *)url.get(),
+                    narrowTitle.get());
   }
   return NS_OK;
 }
@@ -180,7 +164,7 @@ EmbedEventListener::HandleEvent(nsIDOMEvent* aDOMEvent)
   nsString eventType;
   aDOMEvent->GetType(eventType);
 #ifdef MOZ_WIDGET_GTK2
-  if (eventType.EqualsLiteral ("focus"))
+  if (eventType.EqualsLiteral("focus"))
     if (mCtxInfo->GetFormControlType(aDOMEvent)) {
       if (mCtxInfo->mEmbedCtxType & GTK_MOZ_EMBED_CTX_INPUT) {
         gint return_val = FALSE;
@@ -195,20 +179,53 @@ EmbedEventListener::HandleEvent(nsIDOMEvent* aDOMEvent)
     }
 #endif
 
-  if (eventType.EqualsLiteral ("DOMLinkAdded") && mOwner->mNeedFav) {
+  if (eventType.EqualsLiteral("DOMLinkAdded")) {
 
-    nsresult result;
+    nsresult rv;
     nsCOMPtr<nsIDOMEventTarget> eventTarget;
 
     aDOMEvent->GetTarget(getter_AddRefs(eventTarget));
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(eventTarget, &result);
-    if (NS_FAILED(result) || !node)
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(eventTarget, &rv);
+    if (NS_FAILED(rv) || !node)
       return NS_ERROR_FAILURE;
-    HandleLink (node);
+    HandleLink(node);
+  } else if (eventType.EqualsLiteral("load")) {
+
+    nsIWebBrowser *webBrowser = nsnull;
+    gtk_moz_embed_get_nsIWebBrowser(mOwner->mOwningWidget, &webBrowser);
+    if (!webBrowser) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDOMWindow> DOMWindow;
+    webBrowser->GetContentDOMWindow(getter_AddRefs(DOMWindow));
+    if (!DOMWindow) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDOMDocument> doc;
+    DOMWindow->GetDocument(getter_AddRefs(doc));
+    if (!doc) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDOMNodeList> nodelist = nsnull;
+    doc->GetElementsByTagName( NS_LITERAL_STRING( "rss" ), getter_AddRefs( nodelist ));
+    if (nodelist) {
+      PRUint32 length = 0;
+      nodelist->GetLength(&length);
+      if (length >= 1) {
+        char *url = gtk_moz_embed_get_location(mOwner->mOwningWidget);
+        char *title = gtk_moz_embed_get_title(mOwner->mOwningWidget);
+        gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
+                        moz_embed_signals[RSS_REQUEST],
+                        (gchar*)url,
+                        (gchar*)title);
+        if (url)
+          NS_Free(url);
+        if (title)
+          NS_Free(title);
+      }
+    }
   }
   else if (mOwner->mNeedFav) {
     mOwner->mNeedFav = PR_FALSE;
-    nsCString favicon_url = mOwner->mPrePath + nsCString("/favicon.ico");
+    nsCString favicon_url = mOwner->mPrePath;
+	favicon_url.AppendLiteral("/favicon.ico");
     this->GetFaviconFromURI(favicon_url.get());
   }
   return NS_OK;
@@ -217,7 +234,7 @@ EmbedEventListener::HandleEvent(nsIDOMEvent* aDOMEvent)
 NS_IMETHODIMP
 EmbedEventListener::KeyDown(nsIDOMEvent* aDOMEvent)
 {
-  nsCOMPtr <nsIDOMKeyEvent> keyEvent;
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent;
   keyEvent = do_QueryInterface(aDOMEvent);
   if (!keyEvent)
     return NS_OK;
@@ -237,7 +254,7 @@ EmbedEventListener::KeyDown(nsIDOMEvent* aDOMEvent)
 NS_IMETHODIMP
 EmbedEventListener::KeyUp(nsIDOMEvent* aDOMEvent)
 {
-  nsCOMPtr <nsIDOMKeyEvent> keyEvent;
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent;
   keyEvent = do_QueryInterface(aDOMEvent);
   if (!keyEvent)
     return NS_OK;
@@ -259,7 +276,7 @@ EmbedEventListener::KeyUp(nsIDOMEvent* aDOMEvent)
 NS_IMETHODIMP
 EmbedEventListener::KeyPress(nsIDOMEvent* aDOMEvent)
 {
-  nsCOMPtr <nsIDOMKeyEvent> keyEvent;
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent;
   keyEvent = do_QueryInterface(aDOMEvent);
   if (!keyEvent)
     return NS_OK;
@@ -295,7 +312,7 @@ sLongMPress(void *aOwningWidget)
 NS_IMETHODIMP
 EmbedEventListener::MouseDown(nsIDOMEvent* aDOMEvent)
 {
-  nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent;
   mouseEvent = do_QueryInterface(aDOMEvent);
   if (!mouseEvent)
     return NS_OK;
@@ -311,7 +328,7 @@ EmbedEventListener::MouseDown(nsIDOMEvent* aDOMEvent)
     sMPressed = PR_FALSE;
 #if 1
     if (sLongPressTimer)
-      g_source_remove (sLongPressTimer);
+      g_source_remove(sLongPressTimer);
 #else
     aDOMEvent->StopPropagation();
     aDOMEvent->PreventDefault();
@@ -334,7 +351,7 @@ EmbedEventListener::MouseDown(nsIDOMEvent* aDOMEvent)
 NS_IMETHODIMP
 EmbedEventListener::MouseUp(nsIDOMEvent* aDOMEvent)
 {
-  nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent;
   mouseEvent = do_QueryInterface(aDOMEvent);
   if (!mouseEvent)
     return NS_OK;
@@ -344,7 +361,7 @@ EmbedEventListener::MouseUp(nsIDOMEvent* aDOMEvent)
 
   // Return TRUE from your signal handler to mark the event as consumed.
   if (sLongPressTimer)
-    g_source_remove (sLongPressTimer);
+    g_source_remove(sLongPressTimer);
   sMPressed = PR_FALSE;
   mOwner->mOpenBlock = sIsScrolling;
   sIsScrolling = sMPressed;
@@ -362,7 +379,7 @@ EmbedEventListener::MouseUp(nsIDOMEvent* aDOMEvent)
 NS_IMETHODIMP
 EmbedEventListener::MouseClick(nsIDOMEvent* aDOMEvent)
 {
-  nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent;
   mouseEvent = do_QueryInterface(aDOMEvent);
   if (!mouseEvent)
     return NS_OK;
@@ -382,13 +399,13 @@ EmbedEventListener::MouseClick(nsIDOMEvent* aDOMEvent)
 NS_IMETHODIMP
 EmbedEventListener::MouseDblClick(nsIDOMEvent* aDOMEvent)
 {
-  nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent;
   mouseEvent = do_QueryInterface(aDOMEvent);
   if (!mouseEvent)
     return NS_OK;
   // Return TRUE from your signal handler to mark the event as consumed.
   if (sLongPressTimer)
-    g_source_remove (sLongPressTimer);
+    g_source_remove(sLongPressTimer);
   sMPressed = PR_FALSE;
   gint return_val = FALSE;
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
@@ -404,7 +421,7 @@ EmbedEventListener::MouseDblClick(nsIDOMEvent* aDOMEvent)
 NS_IMETHODIMP
 EmbedEventListener::MouseOver(nsIDOMEvent* aDOMEvent)
 {
-  nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent;
   mouseEvent = do_QueryInterface(aDOMEvent);
   if (!mouseEvent)
     return NS_OK;
@@ -425,7 +442,7 @@ EmbedEventListener::MouseOver(nsIDOMEvent* aDOMEvent)
 NS_IMETHODIMP
 EmbedEventListener::MouseOut(nsIDOMEvent* aDOMEvent)
 {
-  nsCOMPtr <nsIDOMMouseEvent> mouseEvent;
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent;
   mouseEvent = do_QueryInterface(aDOMEvent);
   if (!mouseEvent)
     return NS_OK;
@@ -444,7 +461,7 @@ EmbedEventListener::MouseOut(nsIDOMEvent* aDOMEvent)
 NS_IMETHODIMP
 EmbedEventListener::Activate(nsIDOMEvent* aDOMEvent)
 {
-  nsCOMPtr <nsIDOMUIEvent> uiEvent = do_QueryInterface(aDOMEvent);
+  nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aDOMEvent);
   if (!uiEvent)
     return NS_OK;
   // Return TRUE from your signal handler to mark the event as consumed.
@@ -462,7 +479,7 @@ EmbedEventListener::Activate(nsIDOMEvent* aDOMEvent)
 NS_IMETHODIMP
 EmbedEventListener::FocusIn(nsIDOMEvent* aDOMEvent)
 {
-  nsCOMPtr <nsIDOMUIEvent> uiEvent = do_QueryInterface(aDOMEvent);
+  nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aDOMEvent);
   if (!uiEvent)
     return NS_OK;
   // Return TRUE from your signal handler to mark the event as consumed.
@@ -480,7 +497,7 @@ EmbedEventListener::FocusIn(nsIDOMEvent* aDOMEvent)
 NS_IMETHODIMP
 EmbedEventListener::FocusOut(nsIDOMEvent* aDOMEvent)
 {
-  nsCOMPtr <nsIDOMUIEvent> uiEvent = do_QueryInterface(aDOMEvent);
+  nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aDOMEvent);
   if (!uiEvent)
     return NS_OK;
   // Return TRUE from your signal handler to mark the event as consumed.
@@ -499,13 +516,13 @@ NS_IMETHODIMP
 EmbedEventListener::MouseMove(nsIDOMEvent* aDOMEvent)
 {
   if (mCurSelCon)
-    mCurSelCon->SetDisplaySelection (nsISelectionController::SELECTION_ON);
+    mCurSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
 
   if (sMPressed &&
       gtk_signal_handler_pending(GTK_OBJECT(mOwner->mOwningWidget),
                                  moz_embed_signals[DOM_MOUSE_SCROLL], TRUE)) {
     // Return TRUE from your signal handler to mark the event as consumed.
-    nsCOMPtr <nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aDOMEvent);
+    nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aDOMEvent);
     if (!mouseEvent)
       return NS_OK;
     PRInt32  newX, newY, subX, subY;
@@ -534,14 +551,14 @@ EmbedEventListener::MouseMove(nsIDOMEvent* aDOMEvent)
       if (sIsScrolling)
       {
         if (sLongPressTimer)
-          g_source_remove (sLongPressTimer);
+          g_source_remove(sLongPressTimer);
 #ifdef MOZ_WIDGET_GTK2
         if (mCtxInfo->mNSHHTMLElementSc) {
           PRInt32 x, y;
           mCtxInfo->mNSHHTMLElementSc->GetScrollTop(&y);
           mCtxInfo->mNSHHTMLElementSc->GetScrollLeft(&x);
 #ifdef MOZ_SCROLL_TOP_LEFT_HACK
-          rv = mCtxInfo->mNSHHTMLElementSc->ScrollTopLeft (y - subY, x - subX);
+          rv = mCtxInfo->mNSHHTMLElementSc->ScrollTopLeft(y - subY, x - subX);
 #endif
         } else
 #endif
@@ -573,15 +590,57 @@ EmbedEventListener::DragMove(nsIDOMEvent* aMouseEvent)
 NS_IMETHODIMP
 EmbedEventListener::Focus(nsIDOMEvent* aEvent)
 {
+  nsString eventType;
+  aEvent->GetType(eventType);
+#ifdef MOZ_WIDGET_GTK2
+  if (eventType.EqualsLiteral("focus") &&
+      mCtxInfo->GetFormControlType(aEvent) &&
+      mCtxInfo->mEmbedCtxType & GTK_MOZ_EMBED_CTX_INPUT) {
+    gint return_val = FALSE;
+    gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
+                    moz_embed_signals[DOM_FOCUS],
+                    (void *)aEvent, &return_val);
+    if (return_val) {
+      aEvent->StopPropagation();
+      aEvent->PreventDefault();
+    }
+  }
+#endif
+
   return NS_OK;
 }
+
 
 NS_IMETHODIMP
 EmbedEventListener::Blur(nsIDOMEvent* aEvent)
 {
+  gint return_val = FALSE;
   mFocusInternalFrame = PR_FALSE;
+
+  nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aEvent));
+  nsCOMPtr<nsIDOMEventTarget> target;
+  nsevent->GetOriginalTarget(getter_AddRefs(target));
+
+  if (!target)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
+
+  if (targetContent) {
+#ifdef MOZILLA_1_8_BRANCH
+    if (targetContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
+#else
+    if (targetContent->IsNodeOfType(nsIContent::eHTML_FORM_CONTROL)) {
+#endif
+      if (sLongPressTimer)
+        g_source_remove(sLongPressTimer);
+
+      sMPressed = sIsScrolling ? PR_FALSE : sMPressed;
+      sIsScrolling = PR_FALSE;
+    }
+  }
   return NS_OK;
- }
+}
 
 NS_IMETHODIMP
 EmbedEventListener::HandleSelection(nsIDOMMouseEvent* aDOMMouseEvent)
@@ -627,77 +686,65 @@ EmbedEventListener::HandleSelection(nsIDOMMouseEvent* aDOMMouseEvent)
   /* If a mousedown after 1 click is done (and if clicked context is not a XUL
    * one (e.g. scrollbar), the selection is disabled for that context.
    */
-  if (!(mCtxInfo->mEmbedCtxType & GTK_MOZ_EMBED_CTX_XUL)) {
+  if (mCtxInfo->mEmbedCtxType & GTK_MOZ_EMBED_CTX_XUL || mCtxInfo->mEmbedCtxType & GTK_MOZ_EMBED_CTX_RICHEDIT)
+    return rv;
 
-    if (eventType.EqualsLiteral("mousedown")) {
+  if (eventType.EqualsLiteral("mousedown")) {
 
-      if (mClickCount == 1)
-        rv = mCurSelCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
+    if (mClickCount == 1)
+      rv = mCurSelCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
 
-    } // mousedown
+  } // mousedown
 
-    /* If a mouseup occurs, the selection for context is enabled again (despite of
-     * number of clicks). If this event occurs after 1 click, the selection of
-     * both last and current context is cleaned up.
+  /* If a mouseup occurs, the selection for context is enabled again (despite of
+   * number of clicks). If this event occurs after 1 click, the selection of
+   * both last and current contexts are cleaned up.
+   */
+  if (eventType.EqualsLiteral("mouseup")) {
+
+    /* Selection controller of current event context */
+    if (mCurSelCon) {
+      rv = mCurSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+      if (mClickCount == 1) {
+        nsCOMPtr<nsISelection> domSel;
+        mCurSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                                 getter_AddRefs(domSel));
+        rv = domSel->RemoveAllRanges();
+      }
+    }
+    /* Selection controller of previous event context */
+    if (mLastSelCon) {
+      rv = mLastSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+      if (mClickCount == 1) {
+        nsCOMPtr<nsISelection> domSel;
+        mLastSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                                  getter_AddRefs(domSel));
+        rv = domSel->RemoveAllRanges();
+      }
+    }
+
+    /* If 1 click was done (despite the event type), sets the last context's
+     * selection controller with current one
      */
-    if (eventType.EqualsLiteral("mouseup")) {
-
-      /* Selection controller of current event context */
-      if (mCurSelCon) {
-        rv = mCurSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
-        if (mClickCount == 1) {
-          nsCOMPtr<nsISelection> domSel;
-          mCurSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                                   getter_AddRefs(domSel));
-          rv = domSel->RemoveAllRanges();
-        }
-      }
-      /* Selection controller of previous event context */
-      if (mLastSelCon) {
-        rv = mLastSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
-        if (mClickCount == 1) {
-          nsCOMPtr<nsISelection> domSel;
-          mLastSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                                    getter_AddRefs(domSel));
-          rv = domSel->RemoveAllRanges();
-        }
-      }
-
-      /* If 1 click was done (despite the event type), sets the last context's
-       * selection controller with current one
-       */
-      if (mClickCount == 1)
-        mLastSelCon = mCurSelCon;
-    } // mouseup
-  }
+    if (mClickCount == 1)
+      mLastSelCon = mCurSelCon;
+  } // mouseup
 #endif
   return rv;
 }
 
 nsresult
-EmbedEventListener::GetLinkAttribute (nsCOMPtr<nsIDOMElement>& linkElement,
-                                      const char *name,
-                                      nsString *value)
-{
-  nsString n_name;
-  nsCString c_name(name);
-  NS_CStringToUTF16(c_name, NS_CSTRING_ENCODING_UTF8, n_name);
-
-  return linkElement->GetAttribute(n_name, *value);
-}
-
-nsresult
-EmbedEventListener::NewURI (nsIURI **result,
+EmbedEventListener::NewURI(nsIURI **result,
                             const char *spec)
 {
   nsresult rv;
   nsCString cSpec(spec);
   nsCOMPtr<nsIIOService> ioService;
-  rv = GetIOService (getter_AddRefs (ioService));
+  rv = GetIOService(getter_AddRefs(ioService));
   if (NS_FAILED(rv))
     return rv;
 
-  rv = ioService->NewURI (cSpec, nsnull, nsnull, result);
+  rv = ioService->NewURI(cSpec, nsnull, nsnull, result);
   return rv;
 }
 
@@ -707,12 +754,12 @@ EmbedEventListener::GetIOService(nsIIOService **ioService)
   nsresult rv;
 
   nsCOMPtr<nsIServiceManager> mgr;
-  NS_GetServiceManager (getter_AddRefs (mgr));
+  NS_GetServiceManager(getter_AddRefs(mgr));
   if (!mgr) return NS_ERROR_FAILURE;
 
-  rv = mgr->GetServiceByContractID ("@mozilla.org/network/io-service;1",
-                                    NS_GET_IID (nsIIOService),
-                                    (void **)ioService);
+  rv = mgr->GetServiceByContractID("@mozilla.org/network/io-service;1",
+                                   NS_GET_IID(nsIIOService),
+                                   (void **)ioService);
   return rv;
 }
 
@@ -722,7 +769,7 @@ EmbedEventListener::GeneratePixBuf()
 {
   GdkPixbuf *pixbuf = NULL;
   pixbuf = gdk_pixbuf_new_from_file(::gFavLocation, NULL);
-  if(!pixbuf) {
+  if (!pixbuf) {
     gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
                     moz_embed_signals[ICON_CHANGED],
                     NULL );
@@ -745,7 +792,6 @@ EmbedEventListener::GeneratePixBuf()
     return;
   }
 
-  // now send the signal to eal then eal send another signal to UI
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
                   moz_embed_signals[ICON_CHANGED],
                   pixbuf );
@@ -815,7 +861,7 @@ EmbedEventListener::GetFaviconFromURI(const char* aURI)
   nsString path;
   target_file->GetPath(path);
   ::gFavLocation = NS_strdup(NS_ConvertUTF16toUTF8(path).get());
-  nsCOMPtr<nsIIOService> ios (do_GetService(NS_IOSERVICE_CONTRACTID));
+  nsCOMPtr<nsIIOService> ios(do_GetService(NS_IOSERVICE_CONTRACTID));
   if (!ios) {
     NS_Free(file_name);
     NS_Free(favicon_uri);
@@ -861,19 +907,13 @@ EmbedEventListener::OnStateChange(nsIWebProgress *aWebProgress,
 {
   /* if (!(aStateFlags & (STATE_STOP | STATE_IS_NETWORK | STATE_IS_DOCUMENT))){*/
 #ifdef MOZ_WIDGET_GTK2
-  if(aStateFlags & STATE_STOP)
-  {
+  if (aStateFlags & STATE_STOP)
     /* FINISH DOWNLOADING */
-    if (NS_SUCCEEDED(aStatus)) {
+    /* XXX sometimes this==0x0 and it cause crash in GeneratePixBuf, need workaround check for this */
+    if (NS_SUCCEEDED(aStatus) && this)
       GeneratePixBuf();
-      return NS_OK;
-    }
-  }
-  else {
-  }
 #endif
   return NS_OK;
-
 }
 
 NS_IMETHODIMP

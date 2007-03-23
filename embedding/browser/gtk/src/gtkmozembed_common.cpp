@@ -68,6 +68,7 @@
 #ifdef MOZILLA_INTERNAL_API
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsString.h"
 #else
 #include "nsStringAPI.h"
 #include "nsComponentManagerUtils.h"
@@ -78,7 +79,6 @@
 #include "nsIDOMPluginArray.h"
 #include "nsIDOMPlugin.h"
 #include <plugin/nsIPluginHost.h>
-#include "nsString.h"
 #include "nsIDOMMimeType.h"
 #include "nsIObserverService.h"
 
@@ -334,7 +334,7 @@ GtkWidget *
 gtk_moz_embed_common_new(void)
 {
   GtkWidget *widget = (GtkWidget*) gtk_type_new(gtk_moz_embed_common_get_type());
-  gtk_widget_set_name (widget, "gtkmozembedcommon");
+  gtk_widget_set_name(widget, "gtkmozembedcommon");
   return (GtkWidget *) widget;
 }
 
@@ -351,19 +351,19 @@ gtk_moz_embed_common_set_pref(GtkType type, gchar *name, gpointer value)
     case GTK_TYPE_BOOL:
       {
         /* I doubt this cast pair is correct */
-        rv = pref->SetBoolPref (name, !!*(int*)value);
+        rv = pref->SetBoolPref(name, !!*(int*)value);
         break;
       }
     case GTK_TYPE_INT:
       {
         /* I doubt this cast pair is correct */
-        rv = pref->SetIntPref (name, *(int*)value);
+        rv = pref->SetIntPref(name, *(int*)value);
         break;
       }
     case GTK_TYPE_STRING:
       {
         g_return_val_if_fail (value, FALSE);
-        rv = pref->SetCharPref (name, (gchar*)value);
+        rv = pref->SetCharPref(name, (gchar*)value);
         break;
       }
     default:
@@ -386,17 +386,17 @@ gtk_moz_embed_common_get_pref(GtkType type, gchar *name, gpointer value)
     switch (type) {
     case GTK_TYPE_BOOL:
       {
-        rv = pref->GetBoolPref (name, (gboolean*)value);
+        rv = pref->GetBoolPref(name, (gboolean*)value);
         break;
       }
     case GTK_TYPE_INT:
       {
-        rv = pref->GetIntPref (name, (gint*)value);
+        rv = pref->GetIntPref(name, (gint*)value);
         break;
       }
     case GTK_TYPE_STRING:
       {
-        rv = pref->GetCharPref (name, (gchar**)value);
+        rv = pref->GetCharPref(name, (gchar**)value);
         break;
       }
     default:
@@ -432,17 +432,17 @@ gtk_moz_embed_common_get_logins(const char* uri, GList **list)
        passwordEnumerator->HasMoreElements(&enumResult))
   {
     nsCOMPtr<nsIPassword> nsPassword;
-    result = passwordEnumerator->GetNext (getter_AddRefs(nsPassword));
+    result = passwordEnumerator->GetNext(getter_AddRefs(nsPassword));
     if (NS_FAILED(result)) {
       /* this almost certainly leaks logins */
       return ret;
     }
     nsCString host;
-    nsPassword->GetHost (host);
+    nsPassword->GetHost(host);
     nsCString nsCURI(uri);
     if (uri) {
-      if (!StringBeginsWith (nsCURI, host)
-          // && !StringBeginsWith (host, nsCURI)
+      if (!StringBeginsWith(nsCURI, host)
+          // && !StringBeginsWith(host, nsCURI)
           )
         continue;
     } else if (!passwordManager->IsEqualToLastHostQuery(host))
@@ -451,8 +451,8 @@ gtk_moz_embed_common_get_logins(const char* uri, GList **list)
     if (list) {
       nsString unicodeName;
       nsString unicodePassword;
-      nsPassword->GetUser (unicodeName);
-      nsPassword->GetPassword (unicodePassword);
+      nsPassword->GetUser(unicodeName);
+      nsPassword->GetPassword(unicodePassword);
       GtkMozLogin * login = g_new0(GtkMozLogin, 1);
       UNACCEPTABLE_CRASHY_GLIB_ALLOCATION(login);
       login->user = ToNewUTF8String(unicodeName);
@@ -485,7 +485,7 @@ gtk_moz_embed_common_remove_passwords(const gchar *host, const gchar *user, gint
 }
 
 gint
-gtk_moz_embed_common_get_history_list (GtkMozHistoryItem **GtkHI)
+gtk_moz_embed_common_get_history_list(GtkMozHistoryItem **GtkHI)
 {
   gint count = 0;
   EmbedGlobalHistory *history = EmbedGlobalHistory::GetInstance();
@@ -494,7 +494,7 @@ gtk_moz_embed_common_get_history_list (GtkMozHistoryItem **GtkHI)
 }
 
 gint
-gtk_moz_embed_common_remove_history (gchar *url, gint time) {
+gtk_moz_embed_common_remove_history(gchar *url, gint time) {
   nsresult rv;
   // The global history service
   nsCOMPtr<nsIGlobalHistory2> globalHistory(do_GetService("@mozilla.org/browser/global-history;2"));
@@ -506,8 +506,8 @@ gtk_moz_embed_common_remove_history (gchar *url, gint time) {
     myHistory->Observe(nsnull, "RemoveEntries", nsnull);
   else {
     EmbedGlobalHistory *history = EmbedGlobalHistory::GetInstance();
-    PRUnichar *uniurl = LocaleToUnicode(url);
-    rv = history->RemoveEntries (uniurl, time);
+    PRUnichar *uniurl = ToNewUnicode(NS_ConvertUTF8toUTF16(url));
+    rv = history->RemoveEntries(uniurl, time);
     NS_Free(uniurl);
   }
   return 1;
@@ -554,7 +554,7 @@ gtk_moz_embed_common_get_cookie_list(void)
 }
 
 gint
-gtk_moz_embed_common_delete_all_cookies (GSList *deletedCookies)
+gtk_moz_embed_common_delete_all_cookies(GSList *deletedCookies)
 {
   nsCOMPtr<nsIPermissionManager> permissionManager =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
@@ -562,7 +562,7 @@ gtk_moz_embed_common_delete_all_cookies (GSList *deletedCookies)
   if (!permissionManager)
     return 1;
 
-  permissionManager->RemoveAll ();
+  permissionManager->RemoveAll();
 
   if (!deletedCookies)
     return 1;
@@ -574,8 +574,8 @@ gtk_moz_embed_common_delete_all_cookies (GSList *deletedCookies)
     return 1;
   cookieManager->RemoveAll();
 
-  g_slist_free (deletedCookies);
-    return 0;//False in GWebStatus means OK, as opposed to gboolean in C
+  g_slist_free(deletedCookies);
+  return 0;//False in GWebStatus means OK, as opposed to gboolean in C
 }
 
 unsigned char *
@@ -591,7 +591,7 @@ gtk_moz_embed_common_nsx509_to_raw(void *nsIX509Ptr, guint *len)
 }
 
 gint
-gtk_moz_embed_common_get_plugins_list (GList **pluginArray)
+gtk_moz_embed_common_get_plugins_list(GList **pluginArray)
 {
   nsresult rv;
   nsCOMPtr<nsIPluginManager> pluginMan =
@@ -625,27 +625,39 @@ gtk_moz_embed_common_get_plugins_list (GList **pluginArray)
   }
 
   nsString string;
-  for (int aIndex = 0; aIndex < (gint) aLength; aIndex++)
+  for (int plugin_index = 0; plugin_index < (gint) aLength; plugin_index++)
   {
     GtkMozPlugin *list_item = g_new0(GtkMozPlugin, 1);
     UNACCEPTABLE_CRASHY_GLIB_ALLOCATION(list_item);
 
-    rv = aItems[aIndex]->GetName(string);
+    rv = aItems[plugin_index]->GetName(string);
     if (!NS_FAILED(rv))
       list_item->title = g_strdup(NS_ConvertUTF16toUTF8(string).get());
 
-    aItems[aIndex]->GetFilename(string);
+    aItems[plugin_index]->GetFilename(string);
     if (!NS_FAILED(rv))
       list_item->path = g_strdup(NS_ConvertUTF16toUTF8(string).get());
 
     nsCOMPtr<nsIDOMMimeType> mimeType;
-    rv = aItems[aIndex]->Item(aIndex, getter_AddRefs(mimeType));
+    PRUint32 mime_count = 0;
+    rv = aItems[plugin_index]->GetLength(&mime_count);
     if (NS_FAILED(rv))
       continue;
-
-    rv = mimeType->GetDescription(string);
-    if (!NS_FAILED(rv))
-      list_item->type = g_strdup(NS_ConvertUTF16toUTF8(string).get());
+    
+    nsString single_mime;
+    string.SetLength(0);
+    for (int mime_index = 0; mime_index < mime_count; ++mime_index) {
+      rv = aItems[plugin_index]->Item(mime_index, getter_AddRefs(mimeType));
+      if (NS_FAILED(rv))
+        continue;
+      rv = mimeType->GetDescription(single_mime);
+      if (!NS_FAILED(rv)) {
+        string.Append(single_mime);
+        string.AppendLiteral(";");
+      }
+    }
+    
+    list_item->type = g_strdup(NS_ConvertUTF16toUTF8(string).get());
     if (!NS_FAILED(rv))
       *pluginArray = g_list_append(*pluginArray, list_item);
   }
@@ -654,7 +666,7 @@ gtk_moz_embed_common_get_plugins_list (GList **pluginArray)
 }
 
 void
-gtk_moz_embed_common_reload_plugins ()
+gtk_moz_embed_common_reload_plugins()
 {
   nsresult rv;
   nsCOMPtr<nsIPluginManager> pluginMan =
@@ -663,7 +675,7 @@ gtk_moz_embed_common_reload_plugins ()
 }
 
 guint
-gtk_moz_embed_common_get_security_mode (guint sec_state)
+gtk_moz_embed_common_get_security_mode(guint sec_state)
 {
   GtkMozEmbedSecurityMode sec_mode;
 
@@ -704,7 +716,7 @@ gtk_moz_embed_common_clear_cache(void)
 {
   nsCacheStoragePolicy storagePolicy;
 
-  nsCOMPtr<nsICacheService> cacheService = do_GetService (NS_CACHESERVICE_CONTRACTID);
+  nsCOMPtr<nsICacheService> cacheService = do_GetService(NS_CACHESERVICE_CONTRACTID);
 
   if (cacheService)
   {

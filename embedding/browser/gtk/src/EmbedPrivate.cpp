@@ -43,6 +43,7 @@
 #include "nsCRT.h"
 #include "nsNetUtil.h"
 #include "nsIWebBrowserStream.h"
+#include "nsIHistoryEntry.h"
 #include "nsIWebBrowserFocus.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -64,6 +65,8 @@
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIDOMAbstractView.h"
+#include "nsIDOMDocumentView.h"
 
 // For seting scrollbar visibilty
 #include "nsIDOMBarProp.h"
@@ -162,7 +165,7 @@ EmbedCommon::DeleteInstance()
 }
 
 nsresult
-EmbedCommon::Init (void)
+EmbedCommon::Init(void)
 {
     mCommon = NULL;
     return NS_OK;
@@ -413,7 +416,7 @@ EmbedPrivate::EmbedPrivate(void)
   mIsDestroyed      = PR_FALSE;
   mDoResizeEmbed    = PR_TRUE;
   mOpenBlock        = PR_FALSE;
-  mNeedFav          = PR_FALSE;
+  mNeedFav          = PR_TRUE;
 
   PushStartup();
   if (!sWindowList) {
@@ -552,6 +555,8 @@ EmbedPrivate::Realize(PRBool *aAlreadyRealized)
 
   // Apply the current chrome mask
   ApplyChromeMask();
+  // Initialize focus for window, help for WINDOWWATCHER Service
+  ChildFocusIn();
 
   return NS_OK;
 }
@@ -572,6 +577,10 @@ EmbedPrivate::Show(void)
 
   // and set the visibility on the thing
   nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(webBrowser);
+
+  // XXX hack around problem. probably widget/gtk2 window initialization.
+  baseWindow->SetVisibility(PR_FALSE);
+
   baseWindow->SetVisibility(PR_TRUE);
 }
 
@@ -591,37 +600,32 @@ EmbedPrivate::Hide(void)
 void
 EmbedPrivate::Resize(PRUint32 aWidth, PRUint32 aHeight)
 {
-  if (mDoResizeEmbed) {
-    mWindow->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION |
-                           nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER,
-                           0, 0, aWidth, aHeight);
-  } else {
 #ifdef MOZ_WIDGET_GTK2
-    PRInt32 X, Y, W, H;
-    mWindow->GetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION, &X, &Y, &W, &H);
-    if (Y < 0) {
-      mWindow->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION, 0, 0, nsnull, nsnull);
-      return;
-    }
+  PRInt32 sub   = 0;
+  PRInt32 diff  = 0;
+
+  if (mDoResizeEmbed){
     EmbedContextMenuInfo * ctx_menu = mEventListener->GetContextInfo();
     gint x, y, width, height, depth;
-    gdk_window_get_geometry(gtk_widget_get_parent_window(GTK_WIDGET(mOwningWidget)),
-                            &x,
-                            &y,
-                            &width,
-                            &height,
-                            &depth);
+    gdk_window_get_geometry(gtk_widget_get_parent_window(GTK_WIDGET(mOwningWidget)),&x,&y,&width,&height,&depth);
+
     if (ctx_menu) {
       if (height < ctx_menu->mFormRect.y + ctx_menu->mFormRect.height) {
-        PRInt32 sub = ctx_menu->mFormRect.y - height + ctx_menu->mFormRect.height;
-        PRInt32 diff = ctx_menu->mFormRect.y - sub;
-//        printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!height: %i, Form.y: %i, Form.Height: %i, sub: %i, diff: %i\n", height, ctx_menu->mFormRect.y, ctx_menu->mFormRect.height, sub, diff);
-        if (sub > 0 && diff >= 0)
-          mWindow->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION, 0, -sub, nsnull, nsnull);
+        sub = ctx_menu->mFormRect.y - height + ctx_menu->mFormRect.height;
+        diff = height - aHeight;
       }
     }
-#endif
   }
+#endif
+  mWindow->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION |
+                          nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER,
+                          0, 0, aWidth, aHeight);
+
+#ifdef MOZ_WIDGET_GTK2
+  if (sub > 0 && diff >= 0){
+    SetScrollTop(sub + diff);
+  }
+#endif
 }
 
 void
@@ -674,7 +678,7 @@ EmbedPrivate::Destroy(void)
   mOwningWidget = nsnull;
 
   mMozWindowWidget = 0;
-  mNeedFav = PR_FALSE;
+  mNeedFav = PR_TRUE;
 }
 
 void
@@ -687,11 +691,7 @@ EmbedPrivate::SetURI(const char *aURI)
 #endif
 
 #ifdef MOZ_WIDGET_GTK2
-#ifdef MOZILLA_INTERNAL_API
-  CopyUTF8toUTF16(aURI, mURI);
-#else
-  mURI.AssignLiteral(aURI);
-#endif
+  mURI.Assign(NS_ConvertUTF8toUTF16(aURI));
 #endif
 }
 
@@ -859,8 +859,10 @@ void EmbedPrivate::SetPath(const char *aPath)
 {
   if (sPath)
     free(sPath);
-  if (aPath)
+  if (aPath) {
     sPath = strdup(aPath);
+    setenv("MOZILLA_FIVE_HOME", sPath, 0);
+  }
   else
     sPath = nsnull;
 }
@@ -1272,6 +1274,8 @@ EmbedPrivate::AttachListeners(void)
   }
   rv = mEventReceiver->AddEventListener(NS_LITERAL_STRING("focus"), eventListener, PR_TRUE);
   rv = mEventReceiver->AddEventListener(NS_LITERAL_STRING("blur"), eventListener, PR_TRUE);
+  rv = mEventReceiver->AddEventListener(NS_LITERAL_STRING("DOMLinkAdded"), eventListener, PR_TRUE);
+  rv = mEventReceiver->AddEventListener(NS_LITERAL_STRING("load"), eventListener, PR_TRUE);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to add Mouse Motion listener\n");
     return;
@@ -1325,6 +1329,8 @@ EmbedPrivate::DetachListeners(void)
   }
   rv = mEventReceiver->RemoveEventListener(NS_LITERAL_STRING("focus"), eventListener, PR_TRUE);
   rv = mEventReceiver->RemoveEventListener(NS_LITERAL_STRING("blur"), eventListener, PR_TRUE);
+  rv = mEventReceiver->RemoveEventListener(NS_LITERAL_STRING("DOMLinkAdded"), eventListener, PR_TRUE);
+  rv = mEventReceiver->RemoveEventListener(NS_LITERAL_STRING("load"), eventListener, PR_TRUE);
   mListenersAttached = PR_FALSE;
 }
 
@@ -1421,8 +1427,8 @@ EmbedPrivate::RegisterAppComponents(void)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIComponentManager> cm;
-  rv = NS_GetComponentManager (getter_AddRefs (cm));
-  NS_ENSURE_SUCCESS (rv, rv);
+  rv = NS_GetComponentManager(getter_AddRefs(cm));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   for (int i = 0; i < sNumAppComps; ++i) {
     nsCOMPtr<nsIGenericFactory> componentFactory;
@@ -1481,7 +1487,7 @@ EmbedPrivate::ClipBoardAction(GtkMozEmbedClipboard type)
   rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
   if (NS_FAILED(rv))
     return PR_FALSE;
-  nsCOMPtr<nsIClipboardCommands> clipboard (do_GetInterface(webBrowser));
+  nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(webBrowser));
   if (!clipboard)
     return PR_FALSE;
   switch (type) {
@@ -1512,17 +1518,17 @@ EmbedPrivate::ClipBoardAction(GtkMozEmbedClipboard type)
     }
     case GTK_MOZ_EMBED_CAN_CUT:
     {
-      rv = clipboard->CanCutSelection (&canDo);
+      rv = clipboard->CanCutSelection(&canDo);
       break;
     }
     case GTK_MOZ_EMBED_CAN_PASTE:
     {
-      rv = clipboard->CanPaste (&canDo);
+      rv = clipboard->CanPaste(&canDo);
       break;
     }
     case GTK_MOZ_EMBED_CAN_COPY:
     {
-      rv = clipboard->CanCopySelection (&canDo);
+      rv = clipboard->CanCopySelection(&canDo);
       break;
     }
     default:
@@ -1534,33 +1540,27 @@ EmbedPrivate::ClipBoardAction(GtkMozEmbedClipboard type)
 }
 
 char*
-EmbedPrivate::GetEncoding ()
+EmbedPrivate::GetEncoding()
 {
   char *encoding;
   nsCOMPtr<nsIWebBrowser> webBrowser;
   mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
-  nsCOMPtr<nsIDocCharset> docCharset = do_GetInterface (webBrowser);
-  docCharset->GetCharset (&encoding);
+  nsCOMPtr<nsIDocCharset> docCharset = do_GetInterface(webBrowser);
+  docCharset->GetCharset(&encoding);
   return encoding;
 }
 
 nsresult
-EmbedPrivate::SetEncoding (const char *encoding)
+EmbedPrivate::SetEncoding(const char *encoding)
 {
   nsCOMPtr<nsIWebBrowser> webBrowser;
   mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
   nsCOMPtr<nsIContentViewer> contentViewer;
-  GetContentViewer (webBrowser, getter_AddRefs(contentViewer));
+  GetContentViewer(webBrowser, getter_AddRefs(contentViewer));
   NS_ENSURE_TRUE (contentViewer, NS_ERROR_FAILURE);
   nsCOMPtr<nsIMarkupDocumentViewer> mDocViewer = do_QueryInterface(contentViewer);
   NS_ENSURE_TRUE (mDocViewer, NS_ERROR_FAILURE);
-  nsAutoString mCharset;
-#ifdef MOZILLA_INTERNAL_API
-  mCharset.AssignWithConversion (encoding);
-#else
-  mCharset.AssignLiteral (encoding);
-#endif
-  return mDocViewer->SetForceCharacterSet(NS_LossyConvertUTF16toASCII(ToNewUnicode(mCharset)));
+  return mDocViewer->SetForceCharacterSet(nsDependentCString(encoding));
 }
 
 PRBool
@@ -1573,16 +1573,16 @@ EmbedPrivate::FindText(const char *exp, PRBool  reverse,
   nsresult rv;
   nsCOMPtr<nsIWebBrowser> webBrowser;
   mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
-  nsCOMPtr<nsIWebBrowserFind> finder(do_GetInterface (webBrowser));
+  nsCOMPtr<nsIWebBrowserFind> finder(do_GetInterface(webBrowser));
   g_return_val_if_fail(finder != NULL, FALSE);
-  text = LocaleToUnicode (exp);
-  finder->SetSearchString (text);
-  finder->SetFindBackwards (reverse);
-  finder->SetWrapFind(TRUE); //DoWrapFind
-  finder->SetEntireWord (whole_word);
+  text = ToNewUnicode(NS_ConvertUTF8toUTF16(exp));
+  finder->SetSearchString(text);
+  finder->SetFindBackwards(reverse);
+  finder->SetWrapFind(restart); //DoWrapFind
+  finder->SetEntireWord(whole_word);
   finder->SetSearchFrames(TRUE); //SearchInFrames
-  finder->SetMatchCase (case_sensitive);
-  rv = finder->FindNext (&match);
+  finder->SetMatchCase(case_sensitive);
+  rv = finder->FindNext(&match);
   NS_Free(text);
   if (NS_FAILED(rv))
     return FALSE;
@@ -1590,12 +1590,39 @@ EmbedPrivate::FindText(const char *exp, PRBool  reverse,
   return match;
 }
 
+void
+EmbedPrivate::SetScrollTop(PRUint32 aTop)
+{
+  EmbedContextMenuInfo * ctx_menu = mEventListener->GetContextInfo();
+  if (ctx_menu->mEmbedCtxType & GTK_MOZ_EMBED_CTX_IFRAME){
+    if (ctx_menu) {
+      nsIDOMWindow *ctxDomWindows = ctx_menu->mCtxDomWindow;
+      if (ctxDomWindows)
+      {
+        nsCOMPtr<nsIDOMDocument> domDoc;
+        ctxDomWindows->GetDocument(getter_AddRefs(domDoc));
+        if (domDoc) {
+          ctx_menu->GetElementForScroll(domDoc);
+          if (ctx_menu->mNSHHTMLElementSc)
+            ctx_menu->mNSHHTMLElementSc->SetScrollTop(aTop);
+        }
+      }
+    }
+  } else {
+    nsCOMPtr<nsIDOMWindow> window;
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+    webBrowser->GetContentDOMWindow(getter_AddRefs(window));
+    window->ScrollBy(0, aTop);
+  }
+} 
+
 nsresult
 EmbedPrivate::ScrollToSelectedNode(nsIDOMNode *aDOMNode)
 {
   nsresult rv = NS_ERROR_FAILURE;
   if (aDOMNode) {
-    nsCOMPtr <nsIDOMNSHTMLElement> nodeElement = do_QueryInterface(aDOMNode, &rv);
+    nsCOMPtr<nsIDOMNSHTMLElement> nodeElement = do_QueryInterface(aDOMNode, &rv);
     if (NS_SUCCEEDED(rv) && nodeElement) {
       nodeElement->ScrollIntoView(PR_FALSE);
     }
@@ -1623,7 +1650,7 @@ EmbedPrivate::InsertTextToNode(nsIDOMNode *aDOMNode, const char *string)
   nsString buffer;
 
   if (ctx_menu->mCtxFormType == NS_FORM_TEXTAREA) {
-    nsCOMPtr <nsIDOMHTMLTextAreaElement> input;
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> input;
     input = do_QueryInterface(targetNode, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     PRBool rdonly = PR_FALSE;
@@ -1631,31 +1658,21 @@ EmbedPrivate::InsertTextToNode(nsIDOMNode *aDOMNode, const char *string)
     if (rdonly)
       return NS_ERROR_FAILURE;
 
-    nsCOMPtr <nsIDOMNSHTMLTextAreaElement> nsinput;
+    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> nsinput;
     nsinput = do_QueryInterface(targetNode, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     nsinput->GetTextLength(&textLength);
     if (textLength > 0) {
       NS_ENSURE_SUCCESS(rv, rv);
       rv = input->GetValue(buffer);
-      nsinput->GetSelectionStart (&selectionStart);
-      nsinput->GetSelectionEnd (&selectionEnd);
+      nsinput->GetSelectionStart(&selectionStart);
+      nsinput->GetSelectionEnd(&selectionEnd);
 
       if (selectionStart != selectionEnd)
         buffer.Cut(selectionStart, selectionEnd - selectionStart);
-#ifdef MOZILLA_INTERNAL_API
-      buffer.Insert(UTF8ToNewUnicode(nsDependentCString(string)), selectionStart);
-#else
-      nsString nsstr;
-      nsstr.AssignLiteral(string);
-      buffer.Insert(nsstr, selectionStart);
-#endif
+      buffer.Insert(NS_ConvertUTF8toUTF16(string), selectionStart);
     } else {
-#ifdef MOZILLA_INTERNAL_API
-      CopyUTF8toUTF16(string, buffer);
-#else
-      buffer.AssignLiteral(string);
-#endif
+      buffer.Assign(NS_ConvertUTF8toUTF16(string));
     }
 
     input->SetValue(buffer);
@@ -1663,7 +1680,7 @@ EmbedPrivate::InsertTextToNode(nsIDOMNode *aDOMNode, const char *string)
     nsinput->SetSelectionRange(selectionStart + len, selectionStart + len);
   }
   else if (ctx_menu->mCtxFormType) {
-    nsCOMPtr <nsIDOMHTMLInputElement> input;
+    nsCOMPtr<nsIDOMHTMLInputElement> input;
     input = do_QueryInterface(targetNode, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     PRBool rdonly = PR_FALSE;
@@ -1671,7 +1688,7 @@ EmbedPrivate::InsertTextToNode(nsIDOMNode *aDOMNode, const char *string)
     if (rdonly)
       return NS_ERROR_FAILURE;
 
-    nsCOMPtr <nsIDOMNSHTMLInputElement> nsinput;
+    nsCOMPtr<nsIDOMNSHTMLInputElement> nsinput;
     nsinput = do_QueryInterface(targetNode, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     nsinput->GetTextLength(&textLength);
@@ -1679,24 +1696,15 @@ EmbedPrivate::InsertTextToNode(nsIDOMNode *aDOMNode, const char *string)
     if (textLength > 0) {
       NS_ENSURE_SUCCESS(rv, rv);
       rv = input->GetValue(buffer);
-      nsinput->GetSelectionStart (&selectionStart);
-      nsinput->GetSelectionEnd (&selectionEnd);
+      nsinput->GetSelectionStart(&selectionStart);
+      nsinput->GetSelectionEnd(&selectionEnd);
 
       if (selectionStart != selectionEnd) {
         buffer.Cut(selectionStart, selectionEnd - selectionStart);
       }
-#ifdef MOZILLA_INTERNAL_API
-      buffer.Insert(UTF8ToNewUnicode(nsDependentCString(string)), selectionStart);
-#else
-      nsString nsstr;
-      buffer.Insert(nsstr, selectionStart);
-#endif
+      buffer.Insert(NS_ConvertUTF8toUTF16(string), selectionStart);
     } else {
-#ifdef MOZILLA_INTERNAL_API
-      CopyUTF8toUTF16(string, buffer);
-#else
-      buffer.AssignLiteral(string);
-#endif
+      buffer.Assign(NS_ConvertUTF8toUTF16(string));
     }
 
     input->SetValue(buffer);
@@ -1725,12 +1733,7 @@ EmbedPrivate::InsertTextToNode(nsIDOMNode *aDOMNode, const char *string)
     htmlEditor = do_QueryInterface(theEditor, &rv);
     if (!htmlEditor)
       return NS_ERROR_FAILURE;
-
-#ifdef MOZILLA_INTERNAL_API
-    CopyUTF8toUTF16(string, buffer);
-#else
-    buffer.AssignLiteral(string);
-#endif
+    buffer.Assign(NS_ConvertUTF8toUTF16(string));
     htmlEditor->InsertHTML(buffer);
   }
   return NS_OK;
@@ -1740,49 +1743,24 @@ nsresult
 EmbedPrivate::GetDOMWindowByNode(nsIDOMNode *aNode, nsIDOMWindow * *aDOMWindow)
 {
   nsresult rv;
-  nsCOMPtr <nsIDOMDocument> nodeDoc;
+  nsCOMPtr<nsIDOMDocument> nodeDoc;
   rv = aNode->GetOwnerDocument(getter_AddRefs(nodeDoc));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIWebBrowser> webBrowser;
-  rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+  nsCOMPtr<nsIDOMDocumentView> docView = do_QueryInterface(nodeDoc, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr <nsIDOMWindow> mainWindow;
-  rv = webBrowser->GetContentDOMWindow(getter_AddRefs(mainWindow));
+  nsCOMPtr<nsIDOMAbstractView> absView;
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMDocument> mainDoc;
-  rv = mainWindow->GetDocument (getter_AddRefs(mainDoc));
-  if (mainDoc == nodeDoc) {
-    *aDOMWindow = mainWindow;
-    NS_IF_ADDREF(*aDOMWindow);
-    return NS_OK;
-  }
-
-  nsCOMPtr <nsIDOMWindowCollection> frames;
-  rv = mainWindow->GetFrames(getter_AddRefs (frames));
+  rv = docView->GetDefaultView(getter_AddRefs(absView));
   NS_ENSURE_SUCCESS(rv, rv);
-  PRUint32 frameCount = 0;
-  rv = frames->GetLength (&frameCount);
-  nsCOMPtr <nsIDOMWindow> curWindow;
-  for (unsigned int i= 0; i < frameCount; i++) {
-    rv = frames->Item(i, getter_AddRefs (curWindow));
-    if (!curWindow)
-      continue;
-    nsCOMPtr <nsIDOMDocument> currentDoc;
-    curWindow->GetDocument (getter_AddRefs(currentDoc));
-    if (currentDoc == nodeDoc) {
-      *aDOMWindow = curWindow;
-      NS_IF_ADDREF(*aDOMWindow);
-      break;
-    }
-  }
+  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(absView, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  *aDOMWindow = window;
+  NS_IF_ADDREF(*aDOMWindow);
   return rv;
 }
 
 nsresult
-EmbedPrivate::GetZoom (PRInt32 *aZoomLevel, nsISupports *aContext)
+EmbedPrivate::GetZoom(PRInt32 *aZoomLevel, nsISupports *aContext)
 {
 
   NS_ENSURE_ARG_POINTER(aZoomLevel);
@@ -1790,9 +1768,9 @@ EmbedPrivate::GetZoom (PRInt32 *aZoomLevel, nsISupports *aContext)
   nsresult rv;
   *aZoomLevel = 100;
 
-  nsCOMPtr <nsIDOMWindow> DOMWindow;
+  nsCOMPtr<nsIDOMWindow> DOMWindow;
   if (aContext) {
-    nsCOMPtr <nsIDOMNode> node = do_QueryInterface(aContext, &rv);
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aContext, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = GetDOMWindowByNode(node, getter_AddRefs(DOMWindow));
@@ -1810,17 +1788,17 @@ EmbedPrivate::GetZoom (PRInt32 *aZoomLevel, nsISupports *aContext)
     rv = DOMWindow->GetTextZoom(&zoomLevelFloat);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aZoomLevel = (int)round (zoomLevelFloat * 100.);
+  *aZoomLevel = (int)round(zoomLevelFloat * 100.);
   return rv;
 }
 nsresult
-EmbedPrivate::SetZoom (PRInt32 aZoomLevel, nsISupports *aContext)
+EmbedPrivate::SetZoom(PRInt32 aZoomLevel, nsISupports *aContext)
 {
   nsresult rv;
-  nsCOMPtr <nsIDOMWindow> DOMWindow;
+  nsCOMPtr<nsIDOMWindow> DOMWindow;
 
   if (aContext) {
-    nsCOMPtr <nsIDOMNode> node = do_QueryInterface(aContext, &rv);
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aContext, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = GetDOMWindowByNode(node, getter_AddRefs(DOMWindow));
@@ -1851,24 +1829,24 @@ EmbedPrivate::HasFrames  (PRUint32 *numberOfFrames)
   nsresult rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   // get main dom window
-  nsCOMPtr <nsIDOMWindow> DOMWindow;
+  nsCOMPtr<nsIDOMWindow> DOMWindow;
   rv = webBrowser->GetContentDOMWindow(getter_AddRefs(DOMWindow));
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   // get frames.
-  nsCOMPtr <nsIDOMWindowCollection> frameCollection;
-  rv = DOMWindow->GetFrames (getter_AddRefs (frameCollection));
+  nsCOMPtr<nsIDOMWindowCollection> frameCollection;
+  rv = DOMWindow->GetFrames(getter_AddRefs(frameCollection));
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   // comparing frames' zoom level
-  rv = frameCollection->GetLength (numberOfFrames);
+  rv = frameCollection->GetLength(numberOfFrames);
   return rv;
 }
 
 nsresult
-EmbedPrivate::GetMIMEInfo (const char **aMime, nsIDOMNode *aDOMNode)
+EmbedPrivate::GetMIMEInfo(const char **aMime, nsIDOMNode *aDOMNode)
 {
   NS_ENSURE_ARG_POINTER(aMime);
   nsresult rv;
-#ifdef MOZ_ENABLE_GTK2
+#ifdef MOZ_WIDGET_GTK2
   if (aDOMNode && mEventListener) {
     EmbedContextMenuInfo * ctx = mEventListener->GetContextInfo();
     if (!ctx)
@@ -1888,7 +1866,7 @@ EmbedPrivate::GetMIMEInfo (const char **aMime, nsIDOMNode *aDOMNode)
   rv = webBrowser->GetContentDOMWindow(getter_AddRefs(DOMWindow));
 
   nsCOMPtr<nsIDOMDocument> doc;
-  rv = DOMWindow->GetDocument (getter_AddRefs(doc));
+  rv = DOMWindow->GetDocument(getter_AddRefs(doc));
 
   nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(doc);
 
@@ -1935,4 +1913,71 @@ EmbedPrivate::GetCacheEntry(const char *aStorage,
   if (rv != NS_ERROR_CACHE_KEY_NOT_FOUND)
     NS_WARNING("OpenCacheEntry(ACCESS_READ) returned error for non-existent entry\n");
   return rv;
+}
+
+nsresult
+EmbedPrivate::GetSHistoryList(GtkMozHistoryItem **GtkHI,
+                              GtkMozEmbedSessionHistory type, gint *count)
+{
+   if (!mSessionHistory)
+     return NS_ERROR_FAILURE;
+
+   PRInt32 curIndex, totalCount, navIndex=0, maxItems=0;
+
+   //Get the current index at session History
+   mSessionHistory->GetIndex(&curIndex);
+   //Gets the number of toplevel documents available in session history.
+   mSessionHistory->GetCount(&totalCount);
+
+   if (type == GTK_MOZ_EMBED_BACK_SHISTORY) {
+     navIndex =  curIndex - 1;
+     maxItems = curIndex;
+   } else if (type == GTK_MOZ_EMBED_FORWARD_SHISTORY) {
+     navIndex = curIndex + 1;
+     maxItems = totalCount - navIndex;
+   }
+
+   if (maxItems <= 0)
+     return NS_ERROR_FAILURE;
+
+   *GtkHI = g_new0(GtkMozHistoryItem, maxItems);
+   GtkMozHistoryItem * item = (GtkMozHistoryItem *)*GtkHI;
+
+   nsresult rv;
+   for (PRInt32 numItems = 0; numItems < maxItems; numItems++) {
+     // Get the HistoryEntry at a given index.
+     nsCOMPtr<nsIHistoryEntry> curEntry;
+     rv = mSessionHistory->GetEntryAtIndex((navIndex), PR_FALSE,
+         getter_AddRefs(curEntry));
+     if (NS_FAILED(rv) || (!curEntry))
+       continue;
+
+     // Get the URI of the HistoryEntry
+     nsCOMPtr<nsIURI> uri;
+     rv = curEntry->GetURI(getter_AddRefs(uri));
+     if (NS_FAILED(rv) || (!uri))
+       continue;
+
+     nsCString uriString;
+     rv = uri->GetSpec(uriString);
+     if (NS_FAILED(rv) || uriString.IsEmpty())
+       continue;
+
+     // Get the title of the HistoryEntry
+     PRUnichar* title;
+     rv = curEntry->GetTitle (&title);
+     if (NS_FAILED(rv) || (!title))
+       continue;
+
+     item[numItems].url = NS_strdup(uriString.get());
+     item[numItems].title = NS_strdup(NS_ConvertUTF16toUTF8(title).get());
+     item[numItems].accessed = 0;
+
+     if (type == GTK_MOZ_EMBED_BACK_SHISTORY)
+       navIndex--;
+     else if (type == GTK_MOZ_EMBED_FORWARD_SHISTORY)
+       navIndex++;
+   }
+   *count = maxItems;
+   return NS_OK;
 }

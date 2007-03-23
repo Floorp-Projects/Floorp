@@ -45,14 +45,8 @@
 #include <gtk/gtk.h>
 #include "nsDocShellCID.h"
 
-#ifdef MOZ_ENABLE_GNOMEVFS
-#include <libgnomevfs/gnome-vfs.h>
-#define OUTPUT_STREAM GnomeVFSHandle
-#define LOCAL_FILE GnomeVFSURI
-#else
 #define OUTPUT_STREAM nsIOutputStream
 #define LOCAL_FILE nsILocalFile
-#endif
 
 //#include "gtkmozembed_common.h"
 /* {2f977d51-5485-11d4-87e2-0010a4e75ef2} */
@@ -123,10 +117,11 @@ class EmbedGlobalHistory: public nsIGlobalHistory2,
   */
     nsresult          GetEntry(const char *);
     protected:
-    OUTPUT_STREAM    *mFileHandle;             /** < The History File handle */
-    PRBool            mDataIsLoaded;           /** < If the data is loaded */
-    PRInt32           mEntriesAddedSinceFlush; /** < Number of entries added since flush */
-    gchar*            mHistoryFile;            /** < The history file path */
+    OUTPUT_STREAM    *mFileHandle;              /** < The History File handle */
+    PRBool            mDataIsLoaded;            /** < If the data is loaded */
+    PRBool            mFlushModeFullWriteNeeded;/** < If needs a full flush */
+    PRInt32           mEntriesAddedSinceFlush;  /** < Number of entries added since flush */
+    gchar*            mHistoryFile;             /** < The history file path */
 };
 // Default maximum history entries
 static const PRUint32 kDefaultMaxSize = 1000;

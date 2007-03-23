@@ -63,6 +63,7 @@
 #include "nsIWebBrowser.h"
 #include "nsIDOM3Document.h"
 #include "nsIContent.h"
+#include "nsIPresShell.h"
 #include "nsIFormControl.h"
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
@@ -77,6 +78,9 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <glib.h>
+#if defined(FIXED_BUG347731) || !defined(MOZ_ENABLE_LIBXUL)
+#include "nsIFrame.h"
+#endif
 
 //*****************************************************************************
 // class EmbedContextMenuInfo
@@ -112,18 +116,21 @@ NS_INTERFACE_MAP_END
 nsresult
 EmbedContextMenuInfo::SetFrameIndex()
 {
-  nsCOMPtr <nsIDOMWindowCollection> frames;
-  mCtxDomWindow->GetFrames (getter_AddRefs (frames));
-  nsCOMPtr <nsIDOMWindow> currentWindow;
+  nsCOMPtr<nsIDOMWindowCollection> frames;
+  mCtxDomWindow->GetFrames(getter_AddRefs(frames));
+  nsCOMPtr<nsIDOMWindow> currentWindow;
   PRUint32 frameCount = 0;
-  frames->GetLength (&frameCount);
+  frames->GetLength(&frameCount);
   for (unsigned int i= 0; i < frameCount; i++) {
-    frames->Item(i, getter_AddRefs (currentWindow));
+    frames->Item(i, getter_AddRefs(currentWindow));
     nsCOMPtr<nsIDOMDocument> currentDoc;
-    currentWindow->GetDocument (getter_AddRefs(currentDoc));
+    currentWindow->GetDocument(getter_AddRefs(currentDoc));
     if (currentDoc == mCtxDocument) {
       mCtxFrameNum = i;
       mCtxDomWindow = currentWindow;
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(currentDoc);
+      if (doc)
+        mCtxDocTitle = doc->GetDocumentTitle();
       return NS_OK;
     }
   }
@@ -146,7 +153,7 @@ EmbedContextMenuInfo::GetFormControlType(nsIDOMEvent* aEvent)
     //Frame Stuff
     nsCOMPtr<nsIDOMDocument> domDoc;
     nsresult rv = eventNode->GetOwnerDocument(getter_AddRefs(domDoc));
-    if (!NS_SUCCEEDED (rv) || !domDoc) {
+    if (!NS_SUCCEEDED(rv) || !domDoc) {
       return NS_OK;
     }
     mEventNode = eventNode;
@@ -158,14 +165,16 @@ EmbedContextMenuInfo::GetFormControlType(nsIDOMEvent* aEvent)
     if (!presShell)
       return NS_OK;
     nsCOMPtr<nsIContent> tgContent = do_QueryInterface(mEventTarget);
+	nsIFrame* frame = nsnull;
+#if defined(FIXED_BUG347731) || !defined(MOZ_ENABLE_LIBXUL)
 #ifdef MOZILLA_1_8_BRANCH
-    nsIFrame* frame = nsnull;
     presShell->GetPrimaryFrameFor(tgContent, &frame);
 #else
-    nsIFrame* frame = presShell->GetPrimaryFrameFor(tgContent);
+    frame = presShell->GetPrimaryFrameFor(tgContent);
 #endif
     if (frame)
       mFormRect = frame->GetScreenRectExternal();
+#endif
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -182,7 +191,7 @@ EmbedContextMenuInfo::SetFormControlType(nsIDOMEventTarget *originalTarget)
 #else
   if (targetContent && targetContent->IsNodeOfType(nsIContent::eHTML_FORM_CONTROL)) {
 #endif
-    nsCOMPtr<nsIFormControl> formControl (do_QueryInterface(targetContent));
+    nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(targetContent));
     if (formControl) {
       mCtxFormType = formControl->GetType();
       rv = NS_OK;
@@ -193,8 +202,6 @@ EmbedContextMenuInfo::SetFormControlType(nsIDOMEventTarget *originalTarget)
       case NS_FORM_BUTTON_RESET:
         break;
       case NS_FORM_BUTTON_SUBMIT:
-        break;
-      case NS_FORM_FIELDSET:
         break;
       case NS_FORM_INPUT_BUTTON:
         break;
@@ -241,7 +248,7 @@ EmbedContextMenuInfo::SetFormControlType(nsIDOMEventTarget *originalTarget)
       if (mEmbedCtxType & GTK_MOZ_EMBED_CTX_INPUT) {
         PRBool rdonly = PR_FALSE;
         if (mCtxFormType == NS_FORM_TEXTAREA) {
-          nsCOMPtr <nsIDOMHTMLTextAreaElement> input;
+          nsCOMPtr<nsIDOMHTMLTextAreaElement> input;
           input = do_QueryInterface(mEventNode, &rv);
           if (!NS_FAILED(rv) && input)
             rv = input->GetReadOnly(&rdonly);
@@ -249,7 +256,7 @@ EmbedContextMenuInfo::SetFormControlType(nsIDOMEventTarget *originalTarget)
             mEmbedCtxType |= GTK_MOZ_EMBED_CTX_ROINPUT;
           }
         } else {
-          nsCOMPtr <nsIDOMHTMLInputElement> input;
+          nsCOMPtr<nsIDOMHTMLInputElement> input;
           input = do_QueryInterface(mEventNode, &rv);
           if (!NS_FAILED(rv) && input)
             rv = input->GetReadOnly(&rdonly);
@@ -279,7 +286,7 @@ EmbedContextMenuInfo::GetSelectedText()
         nsinput->GetSelectionEnd(&selEnd);
         nsinput->GetSelectionStart(&selStart);
         if (selStart < selEnd || mCtxFormType == NS_FORM_INPUT_FILE) {
-          nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface (mEventNode, &rv);
+          nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(mEventNode, &rv);
           rv = input->GetValue(cString);
         }
       }
@@ -291,7 +298,7 @@ EmbedContextMenuInfo::GetSelectedText()
         nsinput->GetSelectionStart(&selStart);
         nsinput->GetSelectionEnd(&selEnd);
         if (selStart < selEnd) {
-          nsCOMPtr<nsIDOMHTMLTextAreaElement> input = do_QueryInterface (mEventNode, &rv);
+          nsCOMPtr<nsIDOMHTMLTextAreaElement> input = do_QueryInterface(mEventNode, &rv);
           rv = input->GetValue(cString);
         }
       }
@@ -323,15 +330,15 @@ EmbedContextMenuInfo::CheckDomImageElement(nsIDOMNode *node, nsString& aHref,
                                            PRInt32 *aWidth, PRInt32 *aHeight)
 {
   nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr <nsIDOMHTMLImageElement> image =
+  nsCOMPtr<nsIDOMHTMLImageElement> image =
     do_QueryInterface(node, &rv);
   if (image) {
-    rv = image->GetSrc (aHref);
+    rv = image->GetSrc(aHref);
     if (NS_FAILED(rv)) {
       return rv;
     }
-    rv = image->GetWidth (aWidth);
-    rv = image->GetHeight (aHeight);
+    rv = image->GetWidth(aWidth);
+    rv = image->GetHeight(aHeight);
     rv = NS_OK;
   }
   return rv;
@@ -352,20 +359,33 @@ EmbedContextMenuInfo::GetImageRequest(imgIRequest **aRequest, nsIDOMNode *aDOMNo
 }
 
 nsresult
-EmbedContextMenuInfo::CheckDomHtmlNode(nsIDOMNode *node)
+EmbedContextMenuInfo::CheckDomHtmlNode(nsIDOMNode *aNode)
 {
   nsresult rv = NS_ERROR_FAILURE;
   nsString uTag;
   PRUint16 dnode_type;
+
+  nsCOMPtr<nsIDOMNode> node;
+  if (!aNode && mEventNode)
+    node = mEventNode;
+  nsCOMPtr<nsIDOMHTMLElement> element  = do_QueryInterface(node, &rv);
+  if (!element) {
+    element = do_QueryInterface(mOrigNode, &rv);
+    if (element) {
+      node = mOrigNode;
+      element  = do_QueryInterface(node, &rv);
+    }
+  }
+
   rv = node->GetNodeType(&dnode_type);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  nsCOMPtr<nsIDOMHTMLElement> element  = do_QueryInterface(node);
+
   if (!((nsIDOMNode::ELEMENT_NODE == dnode_type) && element)) {
     return rv;
   }
-  nsCOMPtr <nsIDOMNSHTMLElement> nodeElement = do_QueryInterface(node, &rv);
+  nsCOMPtr<nsIDOMNSHTMLElement> nodeElement = do_QueryInterface(node, &rv);
   if (NS_SUCCEEDED(rv) && nodeElement) {
     mNSHHTMLElement = nodeElement;
   } else {
@@ -380,13 +400,13 @@ EmbedContextMenuInfo::CheckDomHtmlNode(nsIDOMNode *node)
   else if (uTag.LowerCaseEqualsLiteral("html")) {
   }
   else if (uTag.LowerCaseEqualsLiteral("a")) {
-    nsCOMPtr <nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(node);
-    anchor->GetHref (mCtxHref);
+    nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(node);
+    anchor->GetHref(mCtxHref);
     mEmbedCtxType |= GTK_MOZ_EMBED_CTX_LINK;
     if (anchor && !mCtxHref.IsEmpty()) {
       if (mCtxHref.LowerCaseEqualsLiteral("text/smartbookmark")) {
         nsCOMPtr<nsIDOMNode> childNode;
-        node->GetFirstChild (getter_AddRefs(childNode));
+        node->GetFirstChild(getter_AddRefs(childNode));
         if (childNode) {
           PRInt32 width, height;
           rv = CheckDomImageElement(node, mCtxImgHref, &width, &height);
@@ -399,14 +419,14 @@ EmbedContextMenuInfo::CheckDomHtmlNode(nsIDOMNode *node)
     }
   }
   else if (uTag.LowerCaseEqualsLiteral("area")) {
-    nsCOMPtr <nsIDOMHTMLAreaElement> area = do_QueryInterface(node, &rv);
+    nsCOMPtr<nsIDOMHTMLAreaElement> area = do_QueryInterface(node, &rv);
     if (NS_SUCCEEDED(rv) && area) {
       PRBool aNoHref = PR_FALSE;
-      rv = area->GetNoHref (&aNoHref);
+      rv = area->GetNoHref(&aNoHref);
       if (aNoHref == PR_FALSE)
-        rv = area->GetHref (mCtxHref);
+        rv = area->GetHref(mCtxHref);
       else
-        rv = area->GetTarget (mCtxHref);
+        rv = area->GetTarget(mCtxHref);
       mEmbedCtxType |= GTK_MOZ_EMBED_CTX_LINK;
       rv = NS_OK;
     }
@@ -436,30 +456,30 @@ EmbedContextMenuInfo::UpdateContextData(void *aEvent)
 nsresult
 EmbedContextMenuInfo::GetElementForScroll(nsIDOMEvent *aEvent)
 {
-    if (!aEvent) return NS_ERROR_UNEXPECTED;
-    nsCOMPtr<nsIDOMNSEvent> nsevent (do_QueryInterface(aEvent));
-    nsCOMPtr<nsIDOMEventTarget> target;
-    nsevent->GetOriginalTarget(getter_AddRefs(target));
-    if (!target) return NS_ERROR_UNEXPECTED;
-    nsCOMPtr<nsIDOMNode> targetDOMNode (do_QueryInterface (target));
-    if (!targetDOMNode) return NS_ERROR_UNEXPECTED;
-    nsCOMPtr <nsIDOMDocument> targetDOMDocument;
-    targetDOMNode->GetOwnerDocument (getter_AddRefs (targetDOMDocument));
-    if (!targetDOMDocument) return NS_ERROR_UNEXPECTED;
-    return GetElementForScroll(targetDOMDocument);
+  if (!aEvent) return NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aEvent));
+  nsCOMPtr<nsIDOMEventTarget> target;
+  nsevent->GetOriginalTarget(getter_AddRefs(target));
+  if (!target) return NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsIDOMNode> targetDOMNode(do_QueryInterface(target));
+  if (!targetDOMNode) return NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsIDOMDocument> targetDOMDocument;
+  targetDOMNode->GetOwnerDocument(getter_AddRefs(targetDOMDocument));
+  if (!targetDOMDocument) return NS_ERROR_UNEXPECTED;
+  return GetElementForScroll(targetDOMDocument);
 }
 
 nsresult
 EmbedContextMenuInfo::GetElementForScroll(nsIDOMDocument *targetDOMDocument)
 {
-  nsCOMPtr <nsIDOMElement> targetDOMElement;
-  targetDOMDocument->GetDocumentElement (getter_AddRefs (targetDOMElement));
+  nsCOMPtr<nsIDOMElement> targetDOMElement;
+  targetDOMDocument->GetDocumentElement(getter_AddRefs(targetDOMElement));
   if (!targetDOMElement) return NS_ERROR_UNEXPECTED;
-  nsString bodyName (NS_LITERAL_STRING ("body"));
-  nsCOMPtr <nsIDOMNodeList> bodyList;
-  targetDOMElement->GetElementsByTagName(bodyName, getter_AddRefs (bodyList));
+  nsString bodyName(NS_LITERAL_STRING("body"));
+  nsCOMPtr<nsIDOMNodeList> bodyList;
+  targetDOMElement->GetElementsByTagName(bodyName, getter_AddRefs(bodyList));
   PRUint32 i = 0;
-  bodyList->GetLength (&i);
+  bodyList->GetLength(&i);
   if (i) {
     nsCOMPtr<nsIDOMNode> domBodyNode;
     bodyList->Item(0, getter_AddRefs(domBodyNode));
@@ -487,7 +507,6 @@ EmbedContextMenuInfo::UpdateContextData(nsIDOMEvent *aDOMEvent)
     return NS_ERROR_FAILURE;
   }
 
-  nsresult res = nsnull;
   nsCOMPtr<nsIDOMEventTarget> originalTarget = nsnull;
   nsCOMPtr<nsIDOMNode> originalNode = nsnull;
 
@@ -495,16 +514,16 @@ EmbedContextMenuInfo::UpdateContextData(nsIDOMEvent *aDOMEvent)
   if (NS_FAILED(rv) || !aEvent)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent (do_QueryInterface(mCtxEvent, &rv));
-  if(mouseEvent) {
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(mCtxEvent, &rv));
+  if (mouseEvent) {
     ((nsIDOMMouseEvent*)mouseEvent)->GetClientX(&mX);
     ((nsIDOMMouseEvent*)mouseEvent)->GetClientY(&mY);
   }
 
   if (aEvent)
-    res = aEvent->GetOriginalTarget(getter_AddRefs(originalTarget));
+    rv = aEvent->GetOriginalTarget(getter_AddRefs(originalTarget));
   originalNode = do_QueryInterface(originalTarget);
-  if (NS_FAILED(res) || !originalNode)
+  if (NS_FAILED(rv) || !originalNode)
     return NS_ERROR_NULL_POINTER;
 
   //    nsresult SelText = mOwner->ClipBoardAction(GTK_MOZ_EMBED_CAN_COPY);
@@ -516,20 +535,20 @@ EmbedContextMenuInfo::UpdateContextData(nsIDOMEvent *aDOMEvent)
   if (mOrigNode) {
     nsString SOrigNode;
     mOrigNode->GetNodeName(SOrigNode);
-    if (SOrigNode.EqualsLiteral ("#document"))
+    if (SOrigNode.EqualsLiteral("#document"))
       return NS_OK;
-    if (SOrigNode.EqualsLiteral ("xul:thumb")
-        || SOrigNode.EqualsLiteral ("xul:slider")
-        || SOrigNode.EqualsLiteral ("xul:scrollbarbutton")
-        || SOrigNode.EqualsLiteral ("xul:vbox")
-        || SOrigNode.EqualsLiteral ("xul:spacer")) {
+    if (SOrigNode.EqualsLiteral("xul:thumb")
+        || SOrigNode.EqualsLiteral("xul:slider")
+        || SOrigNode.EqualsLiteral("xul:scrollbarbutton")
+        || SOrigNode.EqualsLiteral("xul:vbox")
+        || SOrigNode.EqualsLiteral("xul:spacer")) {
       mEmbedCtxType |= GTK_MOZ_EMBED_CTX_XUL;
       return NS_OK;
     }
   }
   if (mCtxEvent)
-    res = mCtxEvent->GetTarget(getter_AddRefs(mEventTarget));
-  if (NS_FAILED(res) || !mEventTarget) {
+    rv = mCtxEvent->GetTarget(getter_AddRefs(mEventTarget));
+  if (NS_FAILED(rv) || !mEventTarget) {
     return NS_OK;
   }
   nsCOMPtr<nsIDOMNode> eventNode = do_QueryInterface(mEventTarget, &rv);
@@ -538,20 +557,20 @@ EmbedContextMenuInfo::UpdateContextData(nsIDOMEvent *aDOMEvent)
   nsCOMPtr<nsIDOMDocument> domDoc;
   if (mEventNode)
     rv = mEventNode->GetOwnerDocument(getter_AddRefs(domDoc));
-  if (!NS_SUCCEEDED (rv) || !domDoc) {
+  if (!NS_SUCCEEDED(rv) || !domDoc) {
     //  return NS_OK;
   }
-  if (NS_SUCCEEDED (rv) && domDoc && mCtxDocument != domDoc) {
+  if (NS_SUCCEEDED(rv) && domDoc && mCtxDocument != domDoc) {
     mCtxDocument = domDoc;
     mNSHHTMLElementSc = nsnull;
     nsCOMPtr<nsIDOM3Document> docuri = do_QueryInterface(mCtxDocument);
-    docuri->GetDocumentURI (mCtxURI);
+    docuri->GetDocumentURI(mCtxURI);
     NS_ENSURE_ARG_POINTER(mOwner);
     nsCOMPtr<nsIWebBrowser> webBrowser;
     mOwner->mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
     webBrowser->GetContentDOMWindow(getter_AddRefs(mCtxDomWindow));
     nsCOMPtr<nsIDOMDocument> mainDocument;
-    mCtxDomWindow->GetDocument (getter_AddRefs(mainDocument));
+    mCtxDomWindow->GetDocument(getter_AddRefs(mainDocument));
     if (!mainDocument) {
       return NS_OK;
     }
@@ -561,14 +580,14 @@ EmbedContextMenuInfo::UpdateContextData(nsIDOMEvent *aDOMEvent)
       SetFrameIndex();
     }
   }
-  nsCOMPtr <nsIDOMElement> targetDOMElement;
-  mCtxDocument->GetDocumentElement (getter_AddRefs (targetDOMElement));
+  nsCOMPtr<nsIDOMElement> targetDOMElement;
+  mCtxDocument->GetDocumentElement(getter_AddRefs(targetDOMElement));
   if (!targetDOMElement) return NS_ERROR_UNEXPECTED;
   nsCOMPtr<nsIDOMNSHTMLDocument> htmlDoc = do_QueryInterface(mCtxDocument);
   if (htmlDoc) {
     nsString DMode;
     htmlDoc->GetDesignMode(DMode);
-    if (DMode.EqualsLiteral ("on")) {
+    if (DMode.EqualsLiteral("on")) {
       mEmbedCtxType |= GTK_MOZ_EMBED_CTX_INPUT;
       mEmbedCtxType |= GTK_MOZ_EMBED_CTX_RICHEDIT;
     }
@@ -581,11 +600,12 @@ EmbedContextMenuInfo::UpdateContextData(nsIDOMEvent *aDOMEvent)
     return NS_OK;
   nsCOMPtr<nsIContent> tgContent = do_QueryInterface(mEventTarget);
   nsIFrame* frame = nsnull;
+#if defined(FIXED_BUG347731) || !defined(MOZ_ENABLE_LIBXUL)
   if (mEmbedCtxType & GTK_MOZ_EMBED_CTX_RICHEDIT)
     frame = presShell->GetRootFrame();
   else {
 #ifdef MOZILLA_1_8_BRANCH
-    nsIFrame* frame = nsnull;
+    frame = nsnull;
     presShell->GetPrimaryFrameFor(tgContent, &frame);
 #else
     frame = presShell->GetPrimaryFrameFor(tgContent);
@@ -594,18 +614,19 @@ EmbedContextMenuInfo::UpdateContextData(nsIDOMEvent *aDOMEvent)
   if (frame) {
     mFormRect = frame->GetScreenRectExternal();
   }
+#endif
   if (NS_SUCCEEDED(SetFormControlType(mEventTarget))) {
     return NS_OK;
   }
-  CheckDomHtmlNode(mEventNode);
+  CheckDomHtmlNode();
   nsCOMPtr<nsIDOMNode> node = mEventNode;
   nsCOMPtr<nsIDOMNode> parentNode;
-  node->GetParentNode (getter_AddRefs(parentNode));
+  node->GetParentNode(getter_AddRefs(parentNode));
   node = parentNode;
   while (node) {
-    if (NS_FAILED(CheckDomHtmlNode(node)))
+    if (NS_FAILED(CheckDomHtmlNode()))
       break;
-    node->GetParentNode (getter_AddRefs(parentNode));
+    node->GetParentNode(getter_AddRefs(parentNode));
     node = parentNode;
   }
   mEmbedCtxType |= GTK_MOZ_EMBED_CTX_DOCUMENT;

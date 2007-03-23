@@ -95,7 +95,7 @@ class EmbedEventListener : public nsIDOMKeyListener,
   // nsIDOMEventListener
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-  NS_IMETHOD HandleLink (nsIDOMNode* node);
+  NS_IMETHOD HandleLink(nsIDOMNode* node);
   // nsIDOMKeyListener
 
   NS_IMETHOD KeyDown(nsIDOMEvent* aDOMEvent);
@@ -127,10 +127,6 @@ class EmbedEventListener : public nsIDOMKeyListener,
   NS_IMETHOD Blur(nsIDOMEvent* aEvent);
   NS_IMETHOD HandleSelection(nsIDOMMouseEvent* aDOMMouseEvent);
 
-  // FIXME: dont not use nsCOMPtr<...> as param !! and how to ?
-  nsresult   GetLinkAttribute  (nsCOMPtr <nsIDOMElement>& linkElement,
-                                const char *name,
-                                nsString *value);
   nsresult   NewURI            (nsIURI **result,
                                 const char *spec);
   nsresult   GetIOService      (nsIIOService **ioService);
@@ -144,8 +140,8 @@ class EmbedEventListener : public nsIDOMKeyListener,
   EmbedContextMenuInfo *mCtxInfo;
 
   // Selection and some clipboard stuff
-  nsCOMPtr <nsISelectionController> mCurSelCon;
-  nsCOMPtr <nsISelectionController> mLastSelCon;
+  nsCOMPtr<nsISelectionController> mCurSelCon;
+  nsCOMPtr<nsISelectionController> mLastSelCon;
   PRBool mFocusInternalFrame;
   PRInt32 mClickCount;
 };

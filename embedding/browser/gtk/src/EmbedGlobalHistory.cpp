@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Conrad Carlen <ccarlen@netscape.com>
+ *   Oleg Romashin <romaxa@gmail.com>
  *   (from original mozilla/embedding/lite/nsEmbedGlobalHistory.cpp)
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -72,24 +73,18 @@ static EmbedGlobalHistory *sEmbedGlobalHistory = nsnull;
 //*****************************************************************************
 // HistoryEntryOld: an entry object and its methods
 //*****************************************************************************
-typedef struct _HistoryEntry {
+class HistoryEntry
+{
+public:
   PRInt64         mLastVisitTime;     // Millisecs
   PRPackedBool    mWritten;           // TRUE if ever persisted
   nsCString       mTitle;             // The entry title
-  char            *url;               // The url itself
-} HistoryEntry;
+  nsCString       mUrl;               // The url itself
+};
 
-#ifdef MOZ_ENABLE_GNOMEVFS
 #define CLOSE_FILE_HANDLE(file_handle) \
   PR_BEGIN_MACRO \
-    if (file_handle) {\
-      gnome_vfs_close(file_handle); \
-    } \
-  PR_END_MACRO
-#else
-#define CLOSE_FILE_HANDLE(file_handle) \
-  PR_BEGIN_MACRO \
-    if (file_handle) {\
+    if (file_handle) { \
       close_output_stream(file_handle); \
       NS_RELEASE(file_handle); \
     } \
@@ -100,165 +95,75 @@ static void close_output_stream(OUTPUT_STREAM *file_handle)
   file_handle->Close();
   return;
 }
-#endif
 
 static bool file_handle_uri_exists(LOCAL_FILE *uri)
 {
   g_return_val_if_fail(uri, false);
-#ifndef MOZ_ENABLE_GNOMEVFS
   PRBool exists = PR_FALSE;
   uri->Exists(&exists);
-  return !!exists;
-#else
-  return gnome_vfs_uri_exists(uri);
-#endif
+  return exists;
 }
 
 static LOCAL_FILE* file_handle_uri_new(const char *uri)
 {
   g_return_val_if_fail(uri, nsnull);
-#ifndef MOZ_ENABLE_GNOMEVFS
   nsresult rv;
   LOCAL_FILE *historyFile = nsnull;
   rv = NS_NewNativeLocalFile(nsDependentCString(uri), 1, &historyFile);
   return historyFile;
-#else
-  return gnome_vfs_uri_new(uri);
-#endif
 }
 
 static void file_handle_uri_release(LOCAL_FILE *uri)
 {
   g_return_if_fail(uri);
-#ifndef MOZ_ENABLE_GNOMEVFS
   NS_RELEASE(uri);
-#else
-  gnome_vfs_uri_unref(uri);
-#endif
 }
 
 
 static bool file_handle_create_uri(OUTPUT_STREAM **file_handle, LOCAL_FILE *uri)
 {
   g_return_val_if_fail(file_handle, false);
-#ifndef MOZ_ENABLE_GNOMEVFS
   nsresult rv;
   rv = NS_NewLocalFileOutputStream(file_handle, uri, PR_RDWR | PR_APPEND | PR_CREATE_FILE, 0660);
 
   return NS_SUCCEEDED(rv);
-#else
-  return gnome_vfs_create_uri(
-    file_handle,
-    uri,
-    GNOME_VFS_OPEN_WRITE,
-    1,
-    0600
-  ) == GNOME_VFS_OK;
-#endif
 }
 
 static bool file_handle_open_uri(OUTPUT_STREAM **file_handle, LOCAL_FILE *uri)
 {
   g_return_val_if_fail(file_handle, false);
-#ifndef MOZ_ENABLE_GNOMEVFS
   nsresult rv;
-  rv = NS_NewLocalFileOutputStream(file_handle, uri, PR_RDWR | PR_APPEND, 0660);
+  rv = NS_NewLocalFileOutputStream(file_handle, uri, PR_RDWR, 0660);
 
   return NS_SUCCEEDED(rv);
-#else
-  return gnome_vfs_open_uri(
-    file_handle,
-    uri,
-    (GnomeVFSOpenMode)(GNOME_VFS_OPEN_WRITE
-                      | GNOME_VFS_OPEN_RANDOM
-                      | GNOME_VFS_OPEN_READ)) == GNOME_VFS_OK;
-#endif
 }
 
 static bool file_handle_seek(OUTPUT_STREAM *file_handle, gboolean end)
 {
   g_return_val_if_fail(file_handle, false);
-#ifndef MOZ_ENABLE_GNOMEVFS
   nsresult rv;
   nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(file_handle, &rv);
   rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, end ? -1 : 0);
   return NS_SUCCEEDED(rv);
-#else
-  return gnome_vfs_seek(file_handle,
-                        end ? GNOME_VFS_SEEK_END : GNOME_VFS_SEEK_START, 0) == GNOME_VFS_OK;
-#endif
 }
 
 static bool file_handle_truncate(OUTPUT_STREAM *file_handle)
 {
   g_return_val_if_fail(file_handle, false);
-#ifndef MOZ_ENABLE_GNOMEVFS
-  return true;
-#else
-  return gnome_vfs_truncate_handle (file_handle, 0) == GNOME_VFS_OK;
-#endif
-}
-
-static int file_handle_file_info_block_size(OUTPUT_STREAM *file_handle,  guint64 *size)
-{
-  g_return_val_if_fail(file_handle, 0);
-  int rtn = 0;
-#ifndef MOZ_ENABLE_GNOMEVFS
-  *size = 512;
-  return rtn;
-#else
-  GnomeVFSFileInfo * fi = gnome_vfs_file_info_new ();
-
-  if (gnome_vfs_get_file_info_from_handle (file_handle, fi,
-                                           GNOME_VFS_FILE_INFO_DEFAULT) == GNOME_VFS_OK)
-    *size = (int)fi->io_block_size;
-  else
-    rtn = -1;
-
-  gnome_vfs_file_info_unref (fi);
-#endif
-  return rtn;
-}
-
-static int64 file_handle_read(OUTPUT_STREAM *file_handle, gpointer buffer, guint64 bytes)
-{
-  g_return_val_if_fail(file_handle, -1);
-#ifndef MOZ_ENABLE_GNOMEVFS
-  PRUint32 amt = 0;
   nsresult rv;
-  nsCOMPtr<nsIInputStream> seekable = do_QueryInterface(file_handle, &rv);
-  if (NS_FAILED(rv))
-    return -1;
-  rv = seekable->Read(*(char**)buffer, bytes, &amt);
-  return NS_FAILED(rv) ? -1 : amt;
-#else
-  GnomeVFSResult vfs_result = GNOME_VFS_OK;
-  GnomeVFSFileSize read_bytes;
-  vfs_result = gnome_vfs_read(file_handle,
-  (gpointer) buffer, (GnomeVFSFileSize)bytes-1, &read_bytes);
-  if (vfs_result!=GNOME_VFS_OK)
-    return -1;
-
-  return (int64)read_bytes;
-#endif
+  nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(file_handle, &rv);
+  rv = seekable->SetEOF();
+  return NS_SUCCEEDED(rv);
 }
 
 static guint64 file_handle_write(OUTPUT_STREAM *file_handle, gpointer line)
 {
   g_return_val_if_fail(file_handle, 0);
-#ifndef MOZ_ENABLE_GNOMEVFS
   PRUint32 amt = 0;
   nsresult rv;
   rv = file_handle->Write((char*)line, strlen((char*)line), &amt);
+  /* XXX booleans are not equivalent to guint64 */
   return NS_SUCCEEDED(rv);
-#else
-  GnomeVFSFileSize written;
-  gnome_vfs_write (file_handle,
-                   (gpointer)line,
-                   strlen((const char*)line),
-                   &written);
-  return written;
-#endif
 }
 
 // Static Routine Prototypes
@@ -305,36 +210,34 @@ nsresult SetIsWritten(HistoryEntry *entry)
 }
 
 // Change the entry title
-#define SET_TITLE(entry, aTitle) entry->mTitle.Assign (aTitle);
+#define SET_TITLE(entry, aTitle) (entry->mTitle.Assign(aTitle))
+
+// Return the entry title
+#define GET_TITLE(entry) (entry && !entry->mTitle.IsEmpty() ? entry->mTitle.get() : "")
 
 // Change the entry title
-nsresult SetURL(HistoryEntry *entry, const char *url)
+nsresult SET_URL(HistoryEntry *aEntry, const char *aUrl)
 {
-  NS_ENSURE_ARG(entry);
-  NS_ENSURE_ARG(url);
-  if (entry->url)
-    g_free(entry->url);
-  entry->url = g_strdup(url);
+  NS_ENSURE_ARG(aEntry);
+  NS_ENSURE_ARG(aUrl);
+  aEntry->mUrl.Assign(aUrl);
   return NS_OK;
 }
 
-// Return the entry title
-#define GET_TITLE(entry) (entry->mTitle)
-
 // Return the entry url
-char* GetURL(HistoryEntry *entry)
+const char* GET_URL(HistoryEntry *aEntry)
 {
-  return entry->url;
+  return (aEntry && !aEntry->mUrl.IsEmpty()) ? aEntry->mUrl.get() : "";
 }
 
 // Traverse the history list trying to find a frame
-int history_entry_find_exist (gconstpointer a, gconstpointer b)
+int history_entry_find_exist(gconstpointer a, gconstpointer b)
 {
-  return g_ascii_strcasecmp(GetURL((HistoryEntry *) a), (char *) b);
+  return g_ascii_strcasecmp((char*)GET_URL((HistoryEntry *)a), (char *) b);
 }
 
 // Traverse the history list looking for the correct place to add a new item
-int find_insertion_place (gconstpointer a, gconstpointer b)
+int find_insertion_place(gconstpointer a, gconstpointer b)
 {
   PRInt64 lastVisitTime = GetLastVisitTime((HistoryEntry *) a);
   PRInt64 tempTime = GetLastVisitTime((HistoryEntry *) b);
@@ -351,23 +254,16 @@ PRBool entryHasExpired(HistoryEntry *entry)
   PRInt64 expirationIntervalAgo;
   LL_SUB(expirationIntervalAgo, nowInMilliSecs, mExpirationInterval);
   PRInt64 lastVisitTime = GetLastVisitTime(entry);
-  return (LL_CMP(lastVisitTime, <, expirationIntervalAgo));
+  return LL_CMP(lastVisitTime, <, expirationIntervalAgo);
 }
 
 // Traverse the history list to get all the entry data
-void history_entry_foreach_to_remove (gpointer data, gpointer user_data)
+void history_entry_foreach_to_remove(gpointer data, gpointer user_data)
 {
   HistoryEntry *entry = (HistoryEntry *) data;
   if (entry) {
-    if (entry->url)
-      g_free(entry->url);
-    entry->url = NULL;
-    /* XXX data should be a class and we should use new/delete instead of
-     * g_crash_happy.
-     */
-    entry->mTitle.~nsCString();
     entry->mLastVisitTime = 0;
-    g_free(entry);
+    delete entry;
   }
 }
 
@@ -391,7 +287,8 @@ EmbedGlobalHistory::GetInstance()
       return nsnull;
     }
   }
-  NS_ADDREF(sEmbedGlobalHistory);   // addref the return result
+  else
+    NS_ADDREF(sEmbedGlobalHistory);   // addref the return result
   return sEmbedGlobalHistory;
 }
 
@@ -402,7 +299,6 @@ EmbedGlobalHistory::DeleteInstance()
   if (sEmbedGlobalHistory)
   {
     delete sEmbedGlobalHistory;
-    sEmbedGlobalHistory = nsnull;
   }
 }
 
@@ -412,6 +308,7 @@ EmbedGlobalHistory::EmbedGlobalHistory()
 {
   if (!mURLList) {
     mDataIsLoaded = PR_FALSE;
+    mFlushModeFullWriteNeeded = PR_FALSE;
     mEntriesAddedSinceFlush = 0;
     mHistoryFile = nsnull;
     LL_I2L(mExpirationInterval, kDefaultExpirationIntervalDays);
@@ -423,7 +320,7 @@ EmbedGlobalHistory::EmbedGlobalHistory()
 EmbedGlobalHistory::~EmbedGlobalHistory()
 {
   LoadData();
-  FlushData();
+  FlushData(kFlushModeFullWrite);
   if (mURLList) {
     g_list_foreach(mURLList, (GFunc) history_entry_foreach_to_remove, NULL);
     g_list_free(mURLList);
@@ -436,6 +333,8 @@ EmbedGlobalHistory::~EmbedGlobalHistory()
     g_free(mHistoryFile);
     mHistoryFile = nsnull;
   }
+  if (sEmbedGlobalHistory)
+    sEmbedGlobalHistory = nsnull;
 }
 
 // Initialize the global history component
@@ -443,14 +342,6 @@ NS_IMETHODIMP EmbedGlobalHistory::Init()
 {
   if (mURLList) return NS_OK;
   // Get Pref and convert to millisecs
-
-#ifdef MOZ_ENABLE_GNOMEVFS
-  /*GnomeVFS */
-  if (!gnome_vfs_initialized()) {
-    if (!gnome_vfs_init())
-      NS_WARNING("Could not init GnomeVFS!\n");
-  }
-#endif
 
   PRInt32 expireDays;
   int success = gtk_moz_embed_common_get_pref(G_TYPE_INT, EMBED_HISTORY_PREF_EXPIRE_DAYS, &expireDays);
@@ -462,8 +353,10 @@ NS_IMETHODIMP EmbedGlobalHistory::Init()
   nsCOMPtr<nsIObserverService> observerService =
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
   NS_ASSERTION(observerService, "failed to get observer service");
-  if (observerService)
+  if (observerService) {
     observerService->AddObserver(this, "quit-application", PR_FALSE);
+    observerService->AddObserver(this, "RemoveEntries", PR_FALSE);
+  }
   nsresult rv = InitFile();
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
@@ -504,6 +397,14 @@ NS_IMETHODIMP EmbedGlobalHistory::Init()
   }                                                               \
   PR_END_MACRO
 
+#define ALLOC_NOT_CHECKED(newed) PR_BEGIN_MACRO               \
+  /* This might not crash, but the code probably isn't really \
+   * designed to handle it, perhaps the code should be fixed? \
+   */                                                         \
+  if (!newed) {                                               \
+  }                                                           \
+  PR_END_MACRO
+
 //*****************************************************************************
 // EmbedGlobalHistory::nsIGlobalHistory
 //*****************************************************************************
@@ -520,7 +421,7 @@ NS_IMETHODIMP EmbedGlobalHistory::AddURI(nsIURI *aURI, PRBool aRedirect, PRBool 
   nsresult rv = NS_OK;
   rv |= aURI->SchemeIs("http", &isHTTP);
   rv |= aURI->SchemeIs("https", &isHTTPS);
-  NS_ENSURE_SUCCESS (rv, NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   // Only get valid uri schemes
   if (!isHTTP && !isHTTPS)
   {
@@ -550,7 +451,7 @@ NS_IMETHODIMP EmbedGlobalHistory::AddURI(nsIURI *aURI, PRBool aRedirect, PRBool 
     }
   }
 #ifdef DEBUG
-  g_print("[HISTORY] Visited URL: %s\n", aURL);
+  NS_WARNING("[HISTORY] Visited URL: %s\n", aURL);
 #endif
   rv = LoadData();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -563,17 +464,16 @@ NS_IMETHODIMP EmbedGlobalHistory::AddURI(nsIURI *aURI, PRBool aRedirect, PRBool 
 
   // It is not in the history
   if (!entry) {
-    entry = g_new0(HistoryEntry, 1);
-    UNACCEPTABLE_CRASHY_GLIB_ALLOCATION(entry);
+    entry = new HistoryEntry;
+    ALLOC_NOT_CHECKED(entry);
     rv |= OnVisited(entry);
     SET_TITLE(entry, hostname);
-    rv |= SetURL(entry, aURL);
+    rv |= SET_URL(entry, aURL);
     BROKEN_RV_HANDLING_CODE(rv);
     unsigned int listSize = g_list_length(mURLList);
     if (listSize+1 > kDefaultMaxSize) {
-      GList *last = g_list_last (mURLList);
-      mURLList = g_list_remove (mURLList, last->data);
-      mEntriesAddedSinceFlush++;
+      GList *last = g_list_last(mURLList);
+      mURLList = g_list_remove(mURLList, last->data);
     }
     mURLList = g_list_insert_sorted(mURLList, entry,
                                     (GCompareFunc) find_insertion_place);
@@ -581,19 +481,19 @@ NS_IMETHODIMP EmbedGlobalHistory::AddURI(nsIURI *aURI, PRBool aRedirect, PRBool 
     BROKEN_RV_HANDLING_CODE(rv);
     if (++mEntriesAddedSinceFlush >= kNewEntriesBetweenFlush)
       rv |= FlushData(kFlushModeAppend);
-    // emit signal to let EAL knows a new item was added
-    //FIXME REIMP g_signal_emit_by_name (g_mozilla_get_current_web(),
-    //"global-history-item-added", aURL);
+    // At this point, something understands there's a new global history item
   } else {
     // update the last visited time
     rv |= OnVisited(entry);
     SET_TITLE(entry, hostname);
     // Move the element to the start of the list
     BROKEN_RV_HANDLING_CODE(rv);
-    mURLList = g_list_remove (mURLList, entry);
+    mURLList = g_list_remove(mURLList, entry);
     mURLList = g_list_insert_sorted(mURLList, entry, (GCompareFunc) find_insertion_place);
     // Flush after kNewEntriesBetweenFlush changes
     BROKEN_RV_HANDLING_CODE(rv);
+    
+    mFlushModeFullWriteNeeded = PR_TRUE;
     if (++mEntriesAddedSinceFlush >= kNewEntriesBetweenFlush)
       rv |= FlushData(kFlushModeFullWrite);
   }
@@ -643,8 +543,10 @@ NS_IMETHODIMP EmbedGlobalHistory::SetPageTitle(nsIURI *aURI,
   if (entry) {
     SET_TITLE(entry, NS_ConvertUTF16toUTF8(aTitle).get());
     BROKEN_RV_HANDLING_CODE(rv);
+    
+    mFlushModeFullWriteNeeded = PR_TRUE;
     if (++mEntriesAddedSinceFlush >= kNewEntriesBetweenFlush)
-      rv |= FlushData(kFlushModeAppend);
+      rv |= FlushData(kFlushModeFullWrite);
     BROKEN_RV_HANDLING_CODE(rv);
   }
   return rv;
@@ -662,26 +564,21 @@ nsresult EmbedGlobalHistory::RemoveEntries(const PRUnichar *url, int time)
     if (node->data) {
       HistoryEntry *entry = NS_STATIC_CAST(HistoryEntry *,
                                            node->data);
-      if (entry->url) {
-        NS_Free(entry->url);
-        entry->url = nsnull;
-        NS_Free(entry);
-      }
-      entry->mTitle.~nsCString();
+
       entry->mLastVisitTime = 0;
-      mURLList = g_list_remove (mURLList, entry);
+      delete entry;
+      mURLList = g_list_remove(mURLList, entry);
     }
-    // forcing flush.
-    mEntriesAddedSinceFlush = 1;
   } else {
     g_list_foreach (mURLList, (GFunc) history_entry_foreach_to_remove, NULL);
     g_list_free(mURLList);
     mURLList = NULL;
   }
-  mDataIsLoaded = PR_FALSE;
 
+  mFlushModeFullWriteNeeded = PR_TRUE;
+  mEntriesAddedSinceFlush++;
   rv = FlushData(kFlushModeFullWrite);
-  mEntriesAddedSinceFlush = 0;
+
   return rv;
 }
 
@@ -697,7 +594,7 @@ NS_IMETHODIMP EmbedGlobalHistory::Observe(nsISupports *aSubject,
   if (strcmp(aTopic, "quit-application") == 0) {
     rv = LoadData();
     // we have to sort the list before flush it
-    rv |= FlushData();
+    rv |= FlushData(kFlushModeFullWrite);
     if (mURLList) {
       g_list_foreach(mURLList, (GFunc) history_entry_foreach_to_remove, NULL);
       g_list_free(mURLList);
@@ -707,7 +604,7 @@ NS_IMETHODIMP EmbedGlobalHistory::Observe(nsISupports *aSubject,
       CLOSE_FILE_HANDLE(mFileHandle);
     }
   } else if (strcmp(aTopic, "RemoveEntries") == 0) {
-    RemoveEntries(aData);
+    rv |= RemoveEntries(aData, 0);
   }
   return rv;
 }
@@ -748,7 +645,7 @@ nsresult EmbedGlobalHistory::InitFile()
   gboolean rs = FALSE;
   if (!file_handle_uri_exists(uri)) {
     if (!file_handle_create_uri(&mFileHandle, uri)) {
-      printf("Could not create a history file\n");
+      NS_WARNING("Could not create a history file\n");
       file_handle_uri_release(uri);
       return NS_ERROR_FAILURE;
     }
@@ -759,7 +656,7 @@ nsresult EmbedGlobalHistory::InitFile()
   file_handle_uri_release(uri);
 
   if (!rs) {
-    printf("Could not open a history file\n");
+    NS_WARNING("Could not open a history file\n");
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -836,23 +733,25 @@ nsresult EmbedGlobalHistory::FlushData(PRIntn mode)
   gboolean rs = file_handle_uri_exists(uri);
   file_handle_uri_release(uri);
 
-  if (!rs && NS_FAILED(InitFile()))
+  if (!rs && NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
-  if (mode == kFlushModeAppend)
+  if (mode == kFlushModeFullWrite || mFlushModeFullWriteNeeded == PR_TRUE)
+  {
+    if (!file_handle_seek(mFileHandle, FALSE))
+      return NS_ERROR_FAILURE;
+    if (!file_handle_truncate(mFileHandle))
+      return NS_ERROR_FAILURE;
+    WriteEntryIfWritten(mURLList, mFileHandle);
+    mFlushModeFullWriteNeeded = PR_FALSE;
+  }
+  else
   {
     if (!file_handle_seek(mFileHandle, TRUE))
       return NS_ERROR_FAILURE;
     WriteEntryIfUnwritten(mURLList, mFileHandle);
   }
-  else
-  {
-    if (!file_handle_seek(mFileHandle, FALSE))
-      return NS_ERROR_FAILURE;
-    if (!file_handle_truncate (mFileHandle))
-      return NS_ERROR_FAILURE;
-    WriteEntryIfWritten(mURLList, mFileHandle);
-  }
+
   mEntriesAddedSinceFlush = 0;
   return NS_OK;
 }
@@ -898,8 +797,7 @@ nsresult EmbedGlobalHistory::GetEntry(const char *entry)
   }
   url[urlLength]='\0';
   title[titleLength]='\0';
-  HistoryEntry *newEntry = g_new0(HistoryEntry, 1);
-  UNACCEPTABLE_CRASHY_GLIB_ALLOCATION(newEntry);
+  HistoryEntry *newEntry = new HistoryEntry;
   if (!newEntry)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -907,7 +805,7 @@ nsresult EmbedGlobalHistory::GetEntry(const char *entry)
   SET_TITLE(newEntry, title);
   rv |= SetLastVisitTime(newEntry, outValue);
   rv |= SetIsWritten(newEntry);
-  rv |= SetURL(newEntry, url);
+  rv |= SET_URL(newEntry, url);
   BROKEN_RV_HANDLING_CODE(rv);
   // Check wheter the entry has expired
   if (!entryHasExpired(newEntry)) {
@@ -925,7 +823,6 @@ nsresult EmbedGlobalHistory::ReadEntries(LOCAL_FILE *file_uri)
 
   nsresult rv = NS_OK;
 
-#ifndef MOZ_ENABLE_GNOMEVFS
   nsCOMPtr<nsIInputStream> fileStream;
   NS_NewLocalFileInputStream(getter_AddRefs(fileStream), file_uri);
   if (!fileStream)
@@ -949,54 +846,6 @@ nsresult EmbedGlobalHistory::ReadEntries(LOCAL_FILE *file_uri)
   } while (moreData && safe_limit < kMaxSafeReadEntriesCount);
   fileStream->Close();
 
-#else
-  bool exists = file_handle_uri_exists(file_uri);
-  if (exists && !mFileHandle) {
-    rv = InitFile();
-    if (NS_FAILED(rv))
-      return NS_ERROR_FAILURE;
-  }
-  if (!file_handle_seek(mFileHandle, FALSE))
-    return NS_ERROR_FAILURE;
-
-  guint64 bytes;
-  int64 read_bytes;
-  char separator = (char) defaultSeparator;
-  int pos = 0;
-  int numStrings = 0;
-  file_handle_file_info_block_size (mFileHandle, &bytes);
-  /* Optimal buffer size for reading/writing the file. */
-  nsAutoArrayPtr<char> line(new char[bytes]);
-  nsAutoArrayPtr<char> buffer(new char[bytes]);
-  if (!line || !buffer)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  do {
-    read_bytes = file_handle_read(mFileHandle, (gpointer) buffer, bytes-1);
-    if (read_bytes < 0)
-      break;
-    buffer[read_bytes] = '\0';
-    unsigned int buf_pos = 0;
-    while (buf_pos< read_bytes) {
-      if (buffer[buf_pos]== separator)
-        numStrings++;
-      if (buffer[buf_pos]!= '\n')
-        line[pos] = buffer[buf_pos];
-      else
-        buf_pos++;
-      if (numStrings==3) {
-        line[pos+1] = '\0';
-        rv = GetEntry(line);
-        if (NS_FAILED(rv))
-          return NS_ERROR_FAILURE;
-        pos = -1;
-        numStrings = 0;
-      }
-      pos++;
-      buf_pos++;
-    }
-  } while (read_bytes != -1);
-#endif
   return rv;
 }
 
@@ -1028,9 +877,9 @@ nsresult writeEntry(OUTPUT_STREAM *file_handle, HistoryEntry *entry)
   char sep = (char) defaultSeparator;
   char time[14];
   writePRInt64(time, GetLastVisitTime(entry));
-  char *line = g_strdup_printf("%s%c%s%c%s%c\n", time, sep, GetURL(entry), sep, GET_TITLE(entry).get(), sep);
+  char *line = g_strdup_printf("%s%c%s%c%s%c\n", time, sep, GET_URL(entry), sep, GET_TITLE(entry), sep);
   BROKEN_STRING_BUILDER(line);
-  guint64 size = file_handle_write (file_handle, (gpointer)line);
+  guint64 size = file_handle_write(file_handle, (gpointer)line);
   if (size != strlen(line))
     rv = NS_ERROR_FAILURE;
   rv |= SetIsWritten(entry);
@@ -1058,10 +907,10 @@ nsresult EmbedGlobalHistory::GetContentList(GtkMozHistoryItem **GtkHI, int *coun
     LL_MUL(outValue, GetLastVisitTime(entry), kOneThousand);
     LL_DIV(temp, outValue, PR_USEC_PER_SEC);
     LL_L2I(accessed, temp);
-    // Set the EAL history list
-    item[num_items].title = GET_TITLE(entry).get();
+    // Set the External history list
+    item[num_items].title = GET_TITLE(entry);
     BROKEN_STRING_BUILDER(item[num_items].title);
-    item[num_items].url = GetURL(entry);
+    item[num_items].url = GET_URL(entry);
     item[num_items].accessed = accessed;
     num_items++;
   }

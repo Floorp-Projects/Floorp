@@ -291,7 +291,7 @@ EmbedCertificates::ConfirmBadCertificate(
   nsresult rv;
   gpointer pCert = NULL;
   guint messint = 0;
-  nsCOMPtr<nsIDOMWindow> parent (do_GetInterface (ctx));
+  nsCOMPtr<nsIDOMWindow> parent(do_GetInterface(ctx));
 
   GtkMozEmbedCommon * common = nsnull;
   GtkMozEmbed *parentWidget = GTK_MOZ_EMBED(GetGtkWidgetForDOMWindow(parent));

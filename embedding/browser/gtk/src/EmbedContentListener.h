@@ -53,7 +53,7 @@ class EmbedContentListener : public nsIURIContentListener,
   EmbedContentListener();
   virtual ~EmbedContentListener();
 
-  nsresult Init (EmbedPrivate *aOwner);
+  nsresult Init(EmbedPrivate *aOwner);
 
   NS_DECL_ISUPPORTS
 

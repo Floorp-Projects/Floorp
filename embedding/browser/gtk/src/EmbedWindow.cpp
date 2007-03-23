@@ -354,7 +354,7 @@ EmbedWindow::SetTitle(const PRUnichar *aTitle)
 NS_IMETHODIMP
 EmbedWindow::GetSiteWindow(void **aSiteWindow)
 {
-  GtkWidget *ownerAsWidget (GTK_WIDGET(mOwner->mOwningWidget));
+  GtkWidget *ownerAsWidget(GTK_WIDGET(mOwner->mOwningWidget));
   *aSiteWindow = NS_STATIC_CAST(void *, ownerAsWidget);
   return NS_OK;
 }
@@ -407,7 +407,7 @@ NS_IMETHODIMP
 EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
          const PRUnichar *aTipText)
 {
-  nsAutoString tipText (aTipText);
+  nsAutoString tipText(aTipText);
 
 #ifdef MOZ_WIDGET_GTK
   const char* tipString = ToNewCString(tipText);
