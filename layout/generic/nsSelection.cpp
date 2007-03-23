@@ -5287,7 +5287,7 @@ NS_IMETHODIMP
 nsTypedSelection::GetFrameSelection(nsFrameSelection **aFrameSelection) {
   NS_ENSURE_ARG_POINTER(aFrameSelection);
   *aFrameSelection = mFrameSelection;
-  NS_ADDREF(*aFrameSelection);
+  NS_IF_ADDREF(*aFrameSelection);
   return NS_OK;
 }
 
