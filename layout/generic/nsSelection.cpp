@@ -7287,7 +7287,7 @@ nsTypedSelection::ScrollIntoView(SelectionRegion aRegion, PRBool aIsSynchronous)
   //
   nsCOMPtr<nsIPresShell> presShell;
   result = GetPresShell(getter_AddRefs(presShell));
-  if (NS_FAILED(result))
+  if (NS_FAILED(result) || !presShell)
     return result;
   nsCOMPtr<nsICaret> caret;
   presShell->GetCaret(getter_AddRefs(caret));
