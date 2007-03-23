@@ -885,6 +885,7 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
 static const char js_options_dot_str[]   = JS_OPTIONS_DOT_STR;
 static const char js_strict_option_str[] = JS_OPTIONS_DOT_STR "strict";
 static const char js_werror_option_str[] = JS_OPTIONS_DOT_STR "werror";
+static const char js_relimit_option_str[] = JS_OPTIONS_DOT_STR "relimit";
 
 int PR_CALLBACK
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
@@ -904,6 +905,12 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     newDefaultJSOptions |= JSOPTION_WERROR;
   else
     newDefaultJSOptions &= ~JSOPTION_WERROR;
+
+  PRBool relimit = nsContentUtils::GetBoolPref(js_relimit_option_str);
+  if (relimit)
+    newDefaultJSOptions |= JSOPTION_RELIMIT;
+  else
+    newDefaultJSOptions &= ~JSOPTION_RELIMIT;
 
   if (newDefaultJSOptions != oldDefaultJSOptions) {
     // Set options only if we used the old defaults; otherwise the page has
@@ -941,7 +948,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
     // Make sure the new context gets the default context options
     ::JS_SetOptions(mContext, mDefaultJSOptions);
 
-    // Check for the JS strict option, which enables extra error checks
+    // Watch for the JS boolean options
     nsContentUtils::RegisterPrefCallback(js_options_dot_str,
                                          JSOptionChangedCallback,
                                          this);
@@ -2689,6 +2696,7 @@ nsJSContext::FindXPCNativeWrapperClass(nsIXPConnectJSObjectHolder *aHolder)
 static JSPropertySpec OptionsProperties[] = {
   {"strict",    JSOPTION_STRICT,    JSPROP_ENUMERATE | JSPROP_PERMANENT},
   {"werror",    JSOPTION_WERROR,    JSPROP_ENUMERATE | JSPROP_PERMANENT},
+  {"relimit",   JSOPTION_RELIMIT,   JSPROP_ENUMERATE | JSPROP_PERMANENT},
   {0}
 };
 
@@ -2709,9 +2717,11 @@ SetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (JSVAL_IS_INT(id)) {
     uint32 optbit = (uint32) JSVAL_TO_INT(id);
 
-    // Don't let options other than strict and werror be set -- it would be
-    // bad if web page script could clear JSOPTION_PRIVATE_IS_NSISUPPORTS!
-    if ((optbit & (optbit - 1)) == 0 && optbit <= JSOPTION_WERROR) {
+    // Don't let options other than strict, werror, or relimit be set -- it
+    // would be bad if web page script could clear
+    // JSOPTION_PRIVATE_IS_NSISUPPORTS!
+    if (((optbit & (optbit - 1)) == 0 && optbit <= JSOPTION_WERROR) ||
+        optbit == JSOPTION_RELIMIT) {
       JSBool optval;
       if (! ::JS_ValueToBoolean(cx, *vp, &optval))
         return JS_FALSE;
