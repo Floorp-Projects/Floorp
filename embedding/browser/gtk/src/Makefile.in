@@ -43,18 +43,25 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= gtkembedmoz
-LIBRARY_NAME	= gtkembedmoz
-LIBXUL_LIBRARY	= 1
+MODULE          = gtkembedmoz
+LIBRARY_NAME    = gtkembedmoz
+LIBXUL_LIBRARY  = 1
 FORCE_STATIC_LIB = 1
 
 LOCAL_INCLUDES += \
                   -I. \
                   $(NULL)
 
-#ifdef MOZ_GNOMEVFS_CFLAGS
-#DEFINES += -DMOZ_ENABLE_GNOMEVFS
-#endif
+#Temporary define for full migration from libxul
+#MOZ_GTKEMBED_DYN = 1
+
+ifdef MOZ_GTKEMBED_DYN
+#DEFINES += -DFIXED_BUG347731
+FORCE_SHARED_LIB = 1
+ifdef MOZ_ENABLE_LIBXUL
+LIBXUL_LIBRARY  = 
+endif
+endif
 
 DEFINES += -DIMPL_XREAPI
 
@@ -104,6 +111,7 @@ REQUIRES	= xpcom \
 		  webbrowserpersist \
 		  cookie \
 		  nkcache \
+		  pipboot \
 		  $(NULL)
 
 ifdef ACCESSIBILITY
@@ -138,7 +146,7 @@ CPPSRCS		+= \
 		$(NULL)
 
 XPIDLSRCS       += \
-	        nsIPassword.idl \
+		nsIPassword.idl \
 		nsIPasswordInternal.idl \
 		$(NULL)
 endif
@@ -170,6 +178,23 @@ EXPORTS		+= \
 		gtkmozembed_common.h \
 		gtkmozembed_download.h \
 		$(NULL)
+endif
+
+ifdef MOZ_GTKEMBED_DYN
+ifneq (,$(filter gtk gtk2 qt xlib,$(MOZ_WIDGET_TOOLKIT)))
+EXTRA_DSO_LDOPTS += \
+		$(DIST)/lib/libxpcomglue_s.$(LIB_SUFFIX) \
+		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_GTK2_LIBS) \
+		$(NULL)
+
+#Any Idea what can be used instead -lxul in FF configuration?
+ifndef MOZ_ENABLE_LIBXUL
+EXTRA_DSO_LDOPTS += \
+		-lxul \
+		$(NULL)
+endif
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

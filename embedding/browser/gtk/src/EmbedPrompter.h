@@ -40,6 +40,7 @@
 
 #ifdef MOZILLA_INTERNAL_API
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #else
 #include "nsStringAPI.h"
 #endif
@@ -69,7 +70,7 @@ public:
 
     nsresult Create(PromptType aType, GtkWindow* aParentWindow);
     void     SetTitle(const PRUnichar *aTitle);
-    void     SetTextValue (const PRUnichar *aTextValue);
+    void     SetTextValue(const PRUnichar *aTextValue);
     void     SetCheckMessage(const PRUnichar *aCheckMessage);
     void     SetCheckValue(const PRBool aValue);
     void     SetMessageText(const PRUnichar *aMessageText);

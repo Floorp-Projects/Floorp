@@ -86,6 +86,17 @@ extern "C" {
 
 #endif /* XPCOM_GLUE */
 
+/** @struct GtkWebHistoryItem.
+ *  Defines a web history item.
+ */
+typedef struct _GtkMozHistoryItem GtkMozHistoryItem;
+struct _GtkMozHistoryItem
+{
+  const gchar *title; /** < URL title */
+  const gchar *url;   /** < URL */
+  long accessed;      /** < The last time that the URL was accessed */
+};
+
 #ifdef MOZ_WIDGET_GTK2
 #include "gtkmozembed_common.h"
 #endif
@@ -177,6 +188,7 @@ struct _GtkMozEmbedClass
   void     (* icon_changed)    (GtkMozEmbed *, gpointer*);
   void     (* mailto)          (GtkMozEmbed *, gchar *);
   void     (* network_error)   (GtkMozEmbed *, gchar *, const gint, const gchar **);
+  void     (* rss_request)     (GtkMozEmbed *, gchar *, gchar *);
 };
 
 GTKMOZEMBED_API(GtkType,       gtk_moz_embed_get_type,            (void))
@@ -187,12 +199,9 @@ GTKMOZEMBED_API(void,          gtk_moz_embed_pop_startup,         (void))
 /* Tell gtkmozembed where the gtkmozembed libs live. If this is not specified,
    The MOZILLA_FIVE_HOME environment variable is checked. */
 GTKMOZEMBED_API(void,          gtk_moz_embed_set_path,            (const char *aPath))
-
 GTKMOZEMBED_API(void,          gtk_moz_embed_set_comp_path,       (const char *aPath))
-GTKMOZEMBED_API(void,          gtk_moz_embed_set_profile_path,    (const char *aDir,
-                                                                   const char *aName))
-GTKMOZEMBED_API(void,          gtk_moz_embed_load_url,            (GtkMozEmbed *embed,
-                                                                   const char *url))
+GTKMOZEMBED_API(void,          gtk_moz_embed_set_profile_path,    (const char *aDir, const char *aName))
+GTKMOZEMBED_API(void,          gtk_moz_embed_load_url,            (GtkMozEmbed *embed, const char *url))
 GTKMOZEMBED_API(void,          gtk_moz_embed_stop_load,           (GtkMozEmbed *embed))
 GTKMOZEMBED_API(gboolean,      gtk_moz_embed_can_go_back,         (GtkMozEmbed *embed))
 GTKMOZEMBED_API(gboolean,      gtk_moz_embed_can_go_forward,      (GtkMozEmbed *embed))
@@ -214,7 +223,6 @@ GTKMOZEMBED_API(void,          gtk_moz_embed_set_chrome_mask,     (GtkMozEmbed *
 GTKMOZEMBED_API(guint32,       gtk_moz_embed_get_chrome_mask,     (GtkMozEmbed *embed))
 GTKMOZEMBED_API(gboolean,      gtk_moz_embed_get_zoom_level,      (GtkMozEmbed *embed, gint*, gpointer))
 GTKMOZEMBED_API(gboolean,      gtk_moz_embed_set_zoom_level,      (GtkMozEmbed *embed, gint, gpointer))
-GTKMOZEMBED_API(gboolean,      gtk_moz_embed_load_image,          (GtkMozEmbed *embed, const gchar*))
 GTKMOZEMBED_API(gboolean,      gtk_moz_embed_find_text,           (GtkMozEmbed *embed, const gchar*, gboolean, gboolean, gboolean, gboolean, gint))
 GTKMOZEMBED_API(gboolean,      gtk_moz_embed_clipboard,           (GtkMozEmbed *embed, guint, gint))
 GTKMOZEMBED_API(void,          gtk_moz_embed_notify_plugins,      (GtkMozEmbed *embed, guint))
@@ -230,10 +238,17 @@ GTKMOZEMBED_API(gboolean,      gtk_moz_embed_get_doc_info,        (GtkMozEmbed *
                                                                    gint *width, gint *height))
 GTKMOZEMBED_API(gboolean,      gtk_moz_embed_insert_text,         (GtkMozEmbed *embed, const gchar*, gpointer node))
 GTKMOZEMBED_API(gboolean,      gtk_moz_embed_save_target,         (GtkMozEmbed *embed, gchar*, gchar*, gint))
+GTKMOZEMBED_API(gint,          gtk_moz_embed_get_shistory_list,   (GtkMozEmbed *embed, GtkMozHistoryItem **GtkHI, guint type))
+GTKMOZEMBED_API(gint,          gtk_moz_embed_get_shistory_index,  (GtkMozEmbed *embed))
+GTKMOZEMBED_API(void,          gtk_moz_embed_shistory_goto_index, (GtkMozEmbed *embed, gint index))
+GTKMOZEMBED_API(gboolean,      gtk_moz_embed_get_server_cert,     (GtkMozEmbed *embed, gpointer *aCert, gpointer))
 
-/* Defines used by download and upload components */
-#define GTK_MOZ_EMBED_COMMON_FILE_SCHEME "file://"
-#define GTK_MOZ_EMBED_BLUETOOTH_FILE_SCHEME "obex://"
+typedef enum
+{
+  GTK_MOZ_EMBED_BACK_SHISTORY,
+  GTK_MOZ_EMBED_FORWARD_SHISTORY
+} GtkMozEmbedSessionHistory;
+
 typedef enum
 {
   GTK_MOZ_EMBED_SELECT_ALL,
