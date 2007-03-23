@@ -998,9 +998,9 @@ PlacesController.prototype = {
     
     var performed = false;
     if (aType == "bookmark")
-      performed = PlacesUtils.showAddBookmarkUI(null, null, ip);
+      performed = PlacesUtils.showAddBookmarkUI(null, null, null, ip);
     else if (aType == "livemark")
-      performed = PlacesUtils.showAddLivemarkUI(null, null, null, ip);
+      performed = PlacesUtils.showAddLivemarkUI(null, null, null, null, ip);
     else // folder
       performed = PlacesUtils.showAddFolderUI(null, ip);
 
