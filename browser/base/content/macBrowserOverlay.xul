@@ -72,8 +72,10 @@
 # browser-sets.inc file for sharing with hiddenWindow.xul.
 #include browser-sets.inc
 
+#ifndef MOZ_PLACES
 # The hacky hidden tree used by the Go menu to build items.
 #include browser-gotreehack.inc
+#endif
 
 # The entire main menubar is placed into browser-menubar.inc, so that it can be shared by 
 # hiddenWindow.xul.
