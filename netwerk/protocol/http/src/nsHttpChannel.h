@@ -273,6 +273,7 @@ private:
 
     // state flags
     PRUint32                          mIsPending                : 1;
+    PRUint32                          mWasOpened                : 1;
     PRUint32                          mApplyConversion          : 1;
     PRUint32                          mAllowPipelining          : 1;
     PRUint32                          mCachedContentIsValid     : 1;

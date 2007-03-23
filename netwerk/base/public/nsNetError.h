@@ -131,6 +131,13 @@
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 15)
 
 /**
+ * Returned from nsIChannel::asyncOpen when trying to open the channel again
+ * (reopening is not supported).
+ */
+#define NS_ERROR_ALREADY_OPENED \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 73)
+
+/**
  * The content encoding of the source document was incorrect, for example
  * returning a plain HTML document advertised as Content-Encoding: gzip
  */
