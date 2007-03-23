@@ -148,15 +148,15 @@ ifdef MOZ_AIRBAG
 	  $(DIST)/airbag-symbols/$(BUILDID)/$(BUILDID)-symbols.txt
 	echo packing symbols
 	mkdir -p $(topsrcdir)/../$(BUILDID)
-	cd $(DIST)/airbag-symbols/$(BUILDID) && tar -cvjf airbag-symbols-$(BUILDID).tar.bz2 *
-	mv $(DIST)/airbag-symbols/$(BUILDID)/airbag-symbols-$(BUILDID).tar.bz2 $(topsrcdir)/../$(BUILDID)
+	cd $(DIST)/airbag-symbols/$(BUILDID) && zip -r9D ../airbag-symbols-$(BUILDID).zip .
+	mv $(DIST)/airbag-symbols/airbag-symbols-$(BUILDID).zip $(topsrcdir)/../$(BUILDID)
 endif # MOZ_DEBUG_SYMBOLS
 endif # MOZ_AIRBAG
 
 uploadsymbols:
 ifdef MOZ_DEBUG_SYMBOLS
 ifdef MOZ_AIRBAG
-	$(topsrcdir)/toolkit/airbag/tools/upload_symbols.sh $(topsrcdir)/../$(BUILDID)/airbag-symbols-$(BUILDID).tar.bz2
+	$(topsrcdir)/toolkit/airbag/tools/upload_symbols.sh $(topsrcdir)/../$(BUILDID)/airbag-symbols-$(BUILDID).zip
 endif
 endif
 
