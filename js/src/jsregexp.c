@@ -2872,6 +2872,9 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 cap = &x->parens[parenIndex];
                 cap->length = x->cp - (gData->cpbegin + cap->index);
                 op = (REOp) *pc++;
+
+                if (!result)
+                    result = x;
                 continue;
 
               case REOP_ASSERT:
