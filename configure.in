@@ -103,7 +103,7 @@ dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
 MOZPNG=10207
-MOZZLIB=1.2.3
+MOZZLIB=0x1230
 NSPR_VERSION=4
 NSS_VERSION=3
 
@@ -3911,19 +3911,14 @@ fi
 
 if test "$SYSTEM_JPEG" = 1; then
     LIBS="$JPEG_LIBS $LIBS"
-    AC_TRY_RUN( 
-	#include <stdio.h>
-	#include <sys/types.h>
-	#include <jpeglib.h>
-	int main () {
-	    #if JPEG_LIB_VERSION >= $MOZJPEG
-		exit(0);
-	    #else
-		exit(1);
-	    #endif
-	}
-	, SYSTEM_JPEG=1, [SYSTEM_JPEG= JPEG_CFLAGS= JPEG_LIBS=], SYSTEM_JPEG= ) 
-    rm -f core
+    AC_TRY_COMPILE([ #include <stdio.h>
+                     #include <sys/types.h>
+                     #include <jpeglib.h> ],
+                   [ #if JPEG_LIB_VERSION < $MOZJPEG
+                     #error "Insufficient JPEG library version ($MOZJPEG required)."
+                     #endif ],
+                   SYSTEM_JPEG=1,
+                   [SYSTEM_JPEG= JPEG_CFLAGS= JPEG_LIBS=]) 
 fi 
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
@@ -3956,25 +3951,14 @@ else
 fi
 if test "$SYSTEM_ZLIB" = 1; then
     LIBS="$ZLIB_LIBS $LIBS"
-    AC_TRY_RUN([
-    #include <stdio.h>
-    #include <string.h>
-    #include <zlib.h>
-    int parse_version(const char *str, int *ver) {
-      return (sscanf(str, "%d.%d.%d", ver, ver+1, ver+2)==3?0:1);
-    }
-    int main() {
-      int sys[3], req[3];
-      if (parse_version(zlib_version, sys) || parse_version("$MOZZLIB", req))
-        exit(1);
-      if ((sys[0] == req[0]) &&
-          ((sys[1] > req[1]) || ((sys[1] == req[1]) && (sys[2] >= req[2]))))
-        exit(0);
-      else
-        exit(1);
-    }
-    ], SYSTEM_ZLIB=1, [SYSTEM_ZLIB= ZLIB_CFLAGS= ZLIB_LIBS=], SYSTEM_ZLIB= ) 
-    rm -f core
+    AC_TRY_COMPILE([ #include <stdio.h>
+                     #include <string.h>
+                     #include <zlib.h> ],
+                   [ #if ZLIB_VERNUM < $MOZZLIB 
+                     #error "Insufficient zlib version ($MOZZLIB required)."
+                     #endif ],
+                   SYSTEM_ZLIB=1,
+                   [SYSTEM_ZLIB= ZLIB_CFLAGS= ZLIB_LIBS=]) 
 fi
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
@@ -4012,23 +3996,17 @@ else
 fi
 if test "$SYSTEM_PNG" = 1; then
     LIBS="$PNG_LIBS $LIBS"
-    AC_TRY_RUN(
-	#include <stdio.h>
-	#include <sys/types.h>
-	#include <png.h>
-	int main () {
-            #if PNG_LIBPNG_VER >= $MOZPNG
-                #ifdef PNG_UINT_31_MAX
-		    exit(0);
-	        #else
-	            exit(1);
-                #endif
-	    #else
-		exit(1);
-	    #endif
-	}
-	, SYSTEM_PNG=1, [SYSTEM_PNG= PNG_CFLAGS= PNG_LIBS=], SYSTEM_PNG= ) 
-    rm -f core
+    AC_TRY_COMPILE([ #include <stdio.h>
+                     #include <sys/types.h>
+                     #include <png.h> ],
+                   [ #if PNG_LIBPNG_VER < $MOZPNG
+                     #error "Insufficient libpng version ($MOZPNG required)."
+                     #endif
+                     #ifndef PNG_UINT_31_MAX
+                     #error "Insufficient libpng version."
+                     #endif ],
+                   SYSTEM_PNG=1,
+                   [SYSTEM_PNG= PNG_CFLAGS= PNG_LIBS=]) 
 fi
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
