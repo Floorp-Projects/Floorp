@@ -417,6 +417,43 @@ function run_test() {
   do_check_eq(observer._itemChanged.spec, bmsvc.getFolderURI(newToolbarFolderId).spec);
   do_check_eq(observer._itemChangedProperty, "became_toolbar_folder");
   do_check_eq(observer._itemChangedValue, "");
+
+  // insert a bookmark with title ZZZXXXYYY and then search for it.
+  // this test confirms that we can find bookmarks that we haven't visited
+  // (which are "hidden") and that we can find by title.
+  // see bug #369887 for more details
+  var newId13 = bmsvc.insertItem(testRoot, uri("http://foobarcheese.com/"), bmsvc.DEFAULT_INDEX);
+  do_check_eq(observer._itemAddedId, newId13);
+  do_check_eq(observer._itemAdded.spec, "http://foobarcheese.com/");
+  do_check_eq(observer._itemAddedFolder, testRoot);
+  do_check_eq(observer._itemAddedIndex, 12);
+
+  // set bookmark title
+  bmsvc.setItemTitle(newId13, "ZZZXXXYYY");
+  do_check_eq(observer._itemChangedId, newId13);
+  do_check_eq(observer._itemChanged.spec, "http://foobarcheese.com/");
+  do_check_eq(observer._itemChangedProperty, "title");
+  do_check_eq(observer._itemChangedValue, "ZZZXXXYYY");
+
+  // test search on bookmark title ZZZXXXYYY
+  try {
+    var options = histsvc.getNewQueryOptions();
+    options.excludeQueries = 1;
+    var query = histsvc.getNewQuery();
+    query.onlyBookmarked = true;
+    query.searchTerms = "ZZZXXXYYY";
+    var result = histsvc.executeQuery(query, options);
+    var rootNode = result.root;
+    rootNode.containerOpen = true;
+    var cc = rootNode.childCount;
+    do_check_eq(cc, 1);
+    var node = rootNode.getChild(0);
+    do_check_eq(node.title, "ZZZXXXYYY");
+    testRoot.containerOpen = false;
+  }
+  catch(ex) {
+    do_throw("bookmarks query: " + ex);
+  }
 }
 
 // XXXDietrich - get this section up to date
