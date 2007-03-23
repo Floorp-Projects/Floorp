@@ -41,10 +41,16 @@
 # AIRBAG_SYMBOL_USER    : username on that host
 # AIRBAG_SYMBOL_PATH    : path on that host to put symbols in
 #
+set -e
+
 : ${AIRBAG_SYMBOL_SERVER?} ${AIRBAG_SYMBOL_USER?} ${AIRBAG_SYMBOL_PATH?} ${1?"You must specify a symbol archive to upload"}
 archive=`basename $1`
 echo "Transferring symbols... $1"
-rsync -avvz -e "ssh -2" $1 ${AIRBAG_SYMBOL_USER}@${AIRBAG_SYMBOL_SERVER}:${AIRBAG_SYMBOL_PATH}/
+scp -v $1 ${AIRBAG_SYMBOL_USER}@${AIRBAG_SYMBOL_SERVER}:${AIRBAG_SYMBOL_PATH}/
 echo "Unpacking symbols on remote host..."
-ssh -2 -l ${AIRBAG_SYMBOL_USER} ${AIRBAG_SYMBOL_SERVER} "cd ${AIRBAG_SYMBOL_PATH}; tar -xvjf $archive; rm -fv $archive"
+ssh -2 -l ${AIRBAG_SYMBOL_USER} ${AIRBAG_SYMBOL_SERVER} \
+  "set -e;
+   cd ${AIRBAG_SYMBOL_PATH};
+   unzip $archive;
+   rm -v $archive;"
 echo "Symbol transfer completed"
