@@ -513,3 +513,12 @@ nsMenuItemX::SetupIcon()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+
+NS_IMETHODIMP
+nsMenuItemX::GetMenuItemContent(nsIContent ** aMenuItemContent)
+{
+  NS_ENSURE_ARG_POINTER(aMenuItemContent);
+  NS_IF_ADDREF(*aMenuItemContent = mContent);
+  return NS_OK;
+}

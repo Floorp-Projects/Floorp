@@ -136,8 +136,8 @@ protected:
     nsresult AddMenuItem(nsIMenuItem * aMenuItem);
     nsresult AddMenu(nsIMenu * aMenu);
 
-    void LoadMenuItem(nsIMenu* pParentMenu, nsIContent* inMenuItemContent);  
-    void LoadSubMenu(nsIMenu * pParentMenu, nsIContent* inMenuContent);
+    void LoadMenuItem(nsIContent* inMenuItemContent);  
+    void LoadSubMenu(nsIContent* inMenuContent);
     void LoadSeparator(nsIContent* inSeparatorContent);
 
     NSMenu* CreateMenuWithGeckoString(nsString& menuTitle);
@@ -145,6 +145,7 @@ protected:
 protected:
     nsString                    mLabel;
     nsCOMArray<nsISupports>     mMenuItemsArray;
+    nsCOMArray<nsISupports>     mHiddenMenuItemsArray;
 
     nsISupports*                mParent;                // weak, my parent owns me
     nsIChangeManager*           mManager;               // weak ref, it will outlive us [menubar]
