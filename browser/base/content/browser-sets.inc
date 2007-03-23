@@ -52,6 +52,7 @@
 
   <commandset id="mainCommandSet">
     <command id="cmd_newNavigator"                 oncommand="OpenBrowserWindow()"/>
+#ifndef MOZ_PLACES_BOOKMARKS
     <command id="cmd_bm_open"                      oncommand="goDoCommand('cmd_bm_open');"/>
     <command id="cmd_bm_openinnewwindow"           oncommand="goDoCommand('cmd_bm_openinnewwindow');"/>
     <command id="cmd_bm_openinnewtab"              oncommand="goDoCommand('cmd_bm_openinnewtab');"/>
@@ -66,6 +67,7 @@
     <command id="cmd_bm_rename"                    oncommand="goDoCommand('cmd_bm_rename');"/>
     <command id="cmd_bm_moveBookmark"              oncommand="goDoCommand('cmd_bm_moveBookmark');"/>
     <command id="cmd_bm_sortbyname"                oncommand="goDoCommand('cmd_bm_sortbyname');"/>
+#endif
 
     <command id="cmd_handleBackspace" oncommand="BrowserHandleBackspace();" />
     <command id="cmd_handleShiftBackspace" oncommand="BrowserHandleShiftBackspace();" />

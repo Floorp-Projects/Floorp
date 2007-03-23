@@ -134,8 +134,10 @@
     <popup id="placesContext"/>
   </popupset>
 
+#ifndef MOZ_PLACES
 # The hacky hidden tree used by the Go menu to build items.
 #include browser-gotreehack.inc
+#endif
 
 #ifndef MOZ_PLACES_BOOKMARKS
   <!-- bookmarks context menu -->
