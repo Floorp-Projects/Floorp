@@ -47,7 +47,7 @@
 #include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIFrame.h"
+#include "nsRect.h"
 // for strings
 #ifdef MOZILLA_INTERNAL_API
 #include "nsXPIDLString.h"
@@ -74,6 +74,7 @@ public:
   nsresult          CheckDomImageElement(nsIDOMNode *node, nsString& aHref,
                                        PRInt32 *aWidth, PRInt32 *aHeight);
   nsresult          GetImageRequest(imgIRequest **aRequest, nsIDOMNode *aDOMNode);
+  nsString          GetCtxDocTitle(void) { return mCtxDocTitle; };
 
 
   PRInt32                 mX, mY, mObjWidth, mObjHeight, mCtxFrameNum;
@@ -83,7 +84,7 @@ public:
   nsCOMPtr<nsIDOMNode>    mEventNode;
   nsCOMPtr<nsIDOMEventTarget> mEventTarget;
   nsCOMPtr<nsIDOMDocument>mCtxDocument;
-  nsIntRect               mFormRect;
+  nsRect               mFormRect;
   nsCOMPtr<nsIDOMWindow>  mCtxDomWindow;
   nsCOMPtr<nsIDOMEvent>   mCtxEvent;
   nsCOMPtr<nsIDOMNSHTMLElement> mNSHHTMLElement;
@@ -91,9 +92,10 @@ public:
 private:
   nsresult          SetFrameIndex();
   nsresult          SetFormControlType(nsIDOMEventTarget *originalTarget);
-  nsresult          CheckDomHtmlNode(nsIDOMNode *node);
+  nsresult          CheckDomHtmlNode(nsIDOMNode *aNode = nsnull);
 
   EmbedPrivate           *mOwner;
   nsCOMPtr<nsIDOMNode>    mOrigNode;
+  nsString                mCtxDocTitle;
 }; // class EmbedContextMenuInfo
 #endif // EmbedContextMenuInfo_h__

@@ -126,22 +126,8 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
     }
   }
   // get the uri for this request
-  nsString tmpString;
-#ifdef MOZILLA_INTERNAL_API
-  nsXPIDLCString uriString;
-  RequestToURIString(aRequest, getter_Copies(uriString));
-  CopyUTF8toUTF16(uriString, tmpString);
-#else
-  char *uriString = NULL;
-  RequestToURIString(aRequest, &uriString);
-  tmpString.AssignLiteral(uriString);
-#endif
-
-  PRBool succeeded = PR_TRUE;
-  HandleHTTPStatus(aRequest, (const char*)uriString, succeeded);
-  if (!succeeded) {
-    mOwner->mNeedFav = PR_FALSE;
-  }
+  nsCString tmpString;
+  RequestToURIString(aRequest, tmpString);
 
   // FIXME: workaround for broken progress values.
   if (mOwner->mOwningWidget) {
@@ -154,12 +140,12 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 
     gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
                     moz_embed_signals[PROGRESS_ALL],
-                    (const gchar *) uriString,
+                    (const gchar *) tmpString.get(),
                     mOwner->mOwningWidget->current_number_of_requests,
                     mOwner->mOwningWidget->total_number_of_requests);
   }
   // is it the same as the current URI?
-  if (mOwner->mURI.Equals(tmpString)) {
+  if (mOwner->mURI.Equals(NS_ConvertUTF8toUTF16(tmpString))) {
     // for people who know what they are doing
     gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
                     moz_embed_signals[NET_STATE],
@@ -168,7 +154,7 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 
   gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
                   moz_embed_signals[NET_STATE_ALL],
-                  (const gchar *)uriString,
+                  (const gchar *)tmpString.get(),
                   (gint)aStateFlags, (gint)aStatus);
 
   // and for stop, too
@@ -208,19 +194,11 @@ EmbedProgress::OnProgressChange(nsIWebProgress *aWebProgress,
                                 PRInt32         aCurTotalProgress,
                                 PRInt32         aMaxTotalProgress)
 {
-  nsString tmpString;
-#ifdef MOZILLA_INTERNAL_API
-  nsXPIDLCString uriString;
-  RequestToURIString(aRequest, getter_Copies(uriString));
-  CopyUTF8toUTF16(uriString, tmpString);
-#else
-  gchar *uriString = NULL;
-  RequestToURIString(aRequest, &uriString);
-  tmpString.AssignLiteral(uriString);
-#endif
+  nsCString tmpString;
+  RequestToURIString(aRequest, tmpString);
 
   // is it the same as the current uri?
-  if (mOwner->mURI.Equals(tmpString)) {
+  if (mOwner->mURI.Equals(NS_ConvertUTF8toUTF16(tmpString))) {
     gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
                     moz_embed_signals[PROGRESS],
                     aCurTotalProgress, aMaxTotalProgress);
@@ -265,11 +243,6 @@ EmbedProgress::OnLocationChange(nsIWebProgress *aWebProgress,
   }
   mOwner->mNeedFav = PR_TRUE;
 
-  PRBool succeeded = PR_TRUE;
-  HandleHTTPStatus(aRequest, newURI.get(), succeeded);
-  if (!succeeded)
-    mOwner->mNeedFav = PR_FALSE;
-
   return NS_OK;
 }
 
@@ -307,7 +280,7 @@ EmbedProgress::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 /* static */
 void
-EmbedProgress::RequestToURIString(nsIRequest *aRequest, gchar **aString)
+EmbedProgress::RequestToURIString(nsIRequest *aRequest, nsCString& aString)
 {
   // is it a channel
   nsCOMPtr<nsIChannel> channel;
@@ -320,10 +293,7 @@ EmbedProgress::RequestToURIString(nsIRequest *aRequest, gchar **aString)
   if (!uri)
     return;
 
-  nsCAutoString uriString;
-  uri->GetSpec(uriString);
-
-  *aString = g_strdup(uriString.get());
+  uri->GetSpec(aString);
 }
 
 nsresult

@@ -79,27 +79,10 @@ GtkWindow * GetGtkWindowForDOMWindow(nsIDOMWindow* aDOMWindow)
   return NULL;
 }
 
-nsresult GetContentViewer (nsIWebBrowser *webBrowser, nsIContentViewer **aViewer)
+nsresult GetContentViewer(nsIWebBrowser *webBrowser, nsIContentViewer **aViewer)
 {
   g_return_val_if_fail(webBrowser, NS_ERROR_FAILURE);
   nsCOMPtr<nsIDocShell> docShell(do_GetInterface((nsISupports*)webBrowser));
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
   return docShell->GetContentViewer(aViewer);
-}
-
-PRUnichar *LocaleToUnicode (const char *locStr)
-{
-  if (!locStr)
-    return NULL;
-
-  nsAutoString autoStr;
-#ifdef MOZILLA_INTERNAL_API //FIXME?
-
-  autoStr.AssignWithConversion (locStr);
-#else
-  autoStr.AssignLiteral (locStr);
-#endif
-  PRUnichar *uniStr = ToNewUnicode(autoStr);
-
-  return uniStr;
 }

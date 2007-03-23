@@ -42,6 +42,11 @@
 
 #include "nsIFilePicker.h"
 #include "nsISupports.h"
+#include "nsNetCID.h"
+
+#include "gtkmozembed.h"
+#include "gtkmozembed_common.h"
+#include "EmbedPrivate.h"
 
 #define EMBED_FILEPICKER_CID           \
 { /* f097d33b-1c97-48a6-af4c-07022857eb7c */         \
@@ -59,11 +64,14 @@ class EmbedFilePicker : public nsIFilePicker
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFILEPICKER
-  EmbedFilePicker ();
-  virtual ~EmbedFilePicker();
-private:
+  EmbedFilePicker();
+
+protected:
   nsIDOMWindow *mParent;
   PRInt16 mMode;
-  char *mFilename;
+  nsCString mFilename;
+
+private:
+  ~EmbedFilePicker();
 };
 #endif

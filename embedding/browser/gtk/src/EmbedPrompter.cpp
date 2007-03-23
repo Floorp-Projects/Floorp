@@ -38,7 +38,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "EmbedPrompter.h"
-#include "nsReadableUtils.h"
+
+#define ALLOC_NOT_CHECKED(newed) PR_BEGIN_MACRO               \
+  /* This might not crash, but the code probably isn't really \
+   * designed to handle it, perhaps the code should be fixed? \
+   */                                                         \
+  if (!newed) {                                               \
+  }                                                           \
+  PR_END_MACRO
 
 enum {
   INCLUDE_USERNAME = 1 << 0,
@@ -109,7 +116,7 @@ EmbedPrompter::Create(PromptType aType, GtkWindow* aParentWindow)
   // only add the dialog to the window group if the parent already has a window group,
   // so as not to break app's expectations about modal dialogs.
   if (aParentWindow && aParentWindow->group) {
-    gtk_window_group_add_window (aParentWindow->group, GTK_WINDOW (mWindow));
+    gtk_window_group_add_window(aParentWindow->group, GTK_WINDOW(mWindow));
   }
 
   // gtk will resize this for us as necessary
@@ -280,37 +287,37 @@ EmbedPrompter::Create(PromptType aType, GtkWindow* aParentWindow)
 void
 EmbedPrompter::SetTitle(const PRUnichar *aTitle)
 {
-  CopyUTF16toUTF8(aTitle, mTitle);
+  mTitle.Assign(NS_ConvertUTF16toUTF8(aTitle));
 }
 
 void
 EmbedPrompter::SetTextValue(const PRUnichar *aTextValue)
 {
-  CopyUTF16toUTF8(aTextValue, mTextValue);
+  mTextValue.Assign(NS_ConvertUTF16toUTF8(aTextValue));
 }
 
 void
 EmbedPrompter::SetCheckMessage(const PRUnichar *aMessage)
 {
-  CopyUTF16toUTF8(aMessage, mCheckMessage);
+  mCheckMessage.Assign(NS_ConvertUTF16toUTF8(aMessage));
 }
 
 void
 EmbedPrompter::SetMessageText(const PRUnichar *aMessageText)
 {
-  CopyUTF16toUTF8(aMessageText, mMessageText);
+  mMessageText.Assign(NS_ConvertUTF16toUTF8(aMessageText));
 }
 
 void
 EmbedPrompter::SetUser(const PRUnichar *aUser)
 {
-  CopyUTF16toUTF8(aUser, mUser);
+  mUser.Assign(NS_ConvertUTF16toUTF8(aUser));
 }
 
 void
 EmbedPrompter::SetPassword(const PRUnichar *aPass)
 {
-  CopyUTF16toUTF8(aPass, mPass);
+  mPass.Assign(NS_ConvertUTF16toUTF8(aPass));
 }
 
 void
@@ -327,8 +334,9 @@ EmbedPrompter::SetItems(const PRUnichar** aItemArray, PRUint32 aCount)
 
   mItemCount = aCount;
   mItemList = new nsCString[aCount];
+  ALLOC_NOT_CHECKED(mItemList);
   for (PRUint32 i = 0; i < aCount; ++i)
-    CopyUTF16toUTF8(aItemArray[i], mItemList[i]);
+    mItemList[i].Assign(NS_ConvertUTF16toUTF8(aItemArray[i]));
 }
 
 void
@@ -336,9 +344,9 @@ EmbedPrompter::SetButtons(const PRUnichar* aButton0Label,
               const PRUnichar* aButton1Label,
               const PRUnichar* aButton2Label)
 {
-  CopyUTF16toUTF8(aButton0Label, mButtonLabels[0]);
-  CopyUTF16toUTF8(aButton1Label, mButtonLabels[1]);
-  CopyUTF16toUTF8(aButton2Label, mButtonLabels[2]);
+  mButtonLabels[0].Assign(NS_ConvertUTF16toUTF8(aButton0Label));
+  mButtonLabels[1].Assign(NS_ConvertUTF16toUTF8(aButton1Label));
+  mButtonLabels[2].Assign(NS_ConvertUTF16toUTF8(aButton2Label));
 }
 
 void
@@ -356,19 +364,19 @@ EmbedPrompter::GetConfirmValue(PRBool *aConfirmValue)
 void
 EmbedPrompter::GetTextValue(PRUnichar **aTextValue)
 {
-  *aTextValue = UTF8ToNewUnicode(mTextValue);
+  *aTextValue = ToNewUnicode(NS_ConvertUTF8toUTF16(mTextValue));
 }
 
 void
 EmbedPrompter::GetUser(PRUnichar **aUser)
 {
-  *aUser = UTF8ToNewUnicode(mUser);
+  *aUser = ToNewUnicode(NS_ConvertUTF8toUTF16(mUser));
 }
 
 void
 EmbedPrompter::GetPassword(PRUnichar **aPass)
 {
-  *aPass = UTF8ToNewUnicode(mPass);
+  *aPass = ToNewUnicode(NS_ConvertUTF8toUTF16(mPass));
 }
 
 void

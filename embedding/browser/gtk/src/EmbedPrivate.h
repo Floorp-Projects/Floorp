@@ -45,6 +45,8 @@
 #include "nsString.h"
 #else
 #include "nsStringAPI.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #endif
 #include "nsIWebNavigation.h"
 #include "nsISHistory.h"
@@ -87,7 +89,7 @@ class EmbedCommon {
   ~EmbedCommon() { };
   static EmbedCommon* GetInstance();
   static void DeleteInstance();
-  nsresult    Init (void);
+  nsresult    Init(void);
   GtkObject   *mCommon;
   static GtkMozEmbed* GetAnyLiveWidget();
 };
@@ -158,19 +160,23 @@ class EmbedPrivate {
   PRBool      FindText(const char *exp, PRBool  reverse,
                        PRBool  whole_word, PRBool  case_sensitive,
                        PRBool  restart);
+  void        SetScrollTop(PRUint32 aTop);
   nsresult    ScrollToSelectedNode(nsIDOMNode *aDOMNode);
   nsresult    InsertTextToNode(nsIDOMNode *aDOMNode, const char *string);
   nsresult    GetFocusController(nsIFocusController **controller);
   nsresult    GetDOMWindowByNode(nsIDOMNode *aNode, nsIDOMWindow * *aDOMWindow);
-  nsresult    GetZoom (PRInt32 *aZoomLevel, nsISupports *aContext = nsnull);
-  nsresult    SetZoom (PRInt32 aZoomLevel, nsISupports *aContext = nsnull);
-  nsresult    HasFrames  (PRUint32 *numberOfFrames);
-  nsresult    GetMIMEInfo (const char **aMime, nsIDOMNode *aDOMNode = nsnull);
-  nsresult    GetCacheEntry (const char *aStorage,
-                             const char *aKeyName,
-                             PRUint32 aAccess,
-                             PRBool aIsBlocking,
-                             nsICacheEntryDescriptor **aDescriptor);
+  nsresult    GetZoom(PRInt32 *aZoomLevel, nsISupports *aContext = nsnull);
+  nsresult    SetZoom(PRInt32 aZoomLevel, nsISupports *aContext = nsnull);
+  nsresult    HasFrames(PRUint32 *numberOfFrames);
+  nsresult    GetMIMEInfo(const char **aMime, nsIDOMNode *aDOMNode = nsnull);
+  nsresult    GetCacheEntry(const char *aStorage,
+                            const char *aKeyName,
+                            PRUint32 aAccess,
+                            PRBool aIsBlocking,
+                            nsICacheEntryDescriptor **aDescriptor);
+  nsresult    GetSHistoryList(GtkMozHistoryItem **GtkHI,
+                               GtkMozEmbedSessionHistory type, gint *count);
+
 
 #ifdef MOZ_ACCESSIBILITY_ATK
   void *GetAtkObjectForCurrentDocument();

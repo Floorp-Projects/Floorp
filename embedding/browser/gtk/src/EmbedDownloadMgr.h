@@ -39,6 +39,7 @@
  */
 #ifndef __EmbedDownloadMgr_h
 #define __EmbedDownloadMgr_h
+
 #include "EmbedPrivate.h"
 #include "nsIHelperAppLauncherDialog.h"
 #include "nsIMIMEInfo.h"
@@ -46,51 +47,52 @@
 #include "nsIExternalHelperAppService.h"
 #include "nsIRequest.h"
 #include "nsILocalFile.h"
+
 #include "nsWeakReference.h"
 #define EMBED_DOWNLOADMGR_DESCRIPTION "MicroB Download Manager"
 #define EMBED_DOWNLOADMGR_CID {0x53df12a2, 0x1f4a, 0x4382, {0x99, 0x4e, 0xed, 0x62, 0xcf, 0x0d, 0x6b, 0x3a}}
-#define FILE_SCHEME "file://"
-#define SLASH "/"
+
 class nsIURI;
 class nsIFile;
 class nsIFactory;
+class nsExternalAppHandler;
+
 typedef struct _EmbedDownload EmbedDownload;
+
 struct _EmbedDownload
 {
-  GtkObject * parent;
-  GtkWidget* gtkMozEmbedParentWidget;/** Associated gtkmozembed widget */
-  char* file_name;                   /** < The file's name */
-  const char *file_name_with_path;        /** < The file's name */
+  GtkObject*  parent;
+  GtkWidget*  gtkMozEmbedParentWidget;/** Associated gtkmozembed widget */
+
+  char*       file_name;             /** < The file's name */
+  char*       file_name_with_path;   /** < The file's name */
   const char* server;                /** < The server's name */
-  PRInt64 file_size;                 /** < The file's size */
   const char* file_type;             /** < The file's type */
   const char* handler_app;           /** < The application's name */
-  PRInt64 downloaded_size;           /** < The download's size */
-  gboolean isPaused;                 /** < If download is paused or not */
-  gboolean open_with;                /** < If the file can be opened by other application */
-  gboolean started;                  /** < If the download has started or not */
+  PRInt64     file_size;             /** < The file's size */
+  PRInt64     downloaded_size;       /** < The download's size */
+  gboolean    is_paused;             /** < If download is paused or not */
+  gboolean    open_with;             /** < If the file can be opened by other application */
+
+  /* Pointer to mozilla interfaces */
   nsIHelperAppLauncher* launcher;    /** < The mozilla's download dialog */
   nsIRequest* request;               /** < The download request */
-  nsIFile* file_dest;                /** < The final file's name */
-  nsIFile* file_target;              /** < The target file's name */
 };
+
 class EmbedDownloadMgr : public nsIHelperAppLauncherDialog
 {
- public:
-  EmbedDownloadMgr();
-  virtual ~EmbedDownloadMgr();
-  nsresult Init(void);
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIHELPERAPPLAUNCHERDIALOG
- private:
-  /** Gets all informations about a file which is being downloaded.
-  */
-  NS_METHOD GetDownloadInfo (void);
-  nsCOMPtr<nsIHelperAppLauncher> mLauncher;  /** < Download dialog */
-  nsCOMPtr<nsISupports> mContext;            /** < The context object */
-  nsCOMPtr<nsIURI> mUri;                    /** < The source URL */
-  nsCOMPtr<nsIFile> mDestFileTemp;          /** < The temporary file (destiny) */
-  nsCOMPtr<nsIMIMEInfo> mMIMEInfo;           /** < MIME information */
-  nsCAutoString mSpec;                      /** < The URL without file name */
+  public:
+    EmbedDownloadMgr();
+    virtual ~EmbedDownloadMgr();
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIHELPERAPPLAUNCHERDIALOG
+
+  private:
+    /** Gets all informations about a file which is being downloaded.
+    */
+    NS_METHOD GetDownloadInfo(nsIHelperAppLauncher *aLauncher, nsISupports *aContext);
+
+    EmbedDownload *mDownload;
 };
 #endif /* __EmbedDownloadMgr_h */
