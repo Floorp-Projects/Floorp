@@ -247,17 +247,23 @@ while (<>) {
         my $address = hex($4);
         my $after = $5; # allow preservation of counts
 
-        my $pipe = addr2line_pipe($file);
-        $address += address_adjustment($file);
+        if (-f $file) {
+            my $pipe = addr2line_pipe($file);
+            $address += address_adjustment($file);
 
-        my $out = $pipe->{write};
-        my $in = $pipe->{read};
-        printf {$out} "0x%X\n", $address;
-        chomp(my $symbol = <$in>);
-        chomp(my $fileandline = <$in>);
-        if ($symbol eq '??') { $symbol = $badsymbol; }
-        if ($fileandline eq '??:0') { $fileandline = $file; }
-        print "$before$symbol ($fileandline)$after\n";
+            my $out = $pipe->{write};
+            my $in = $pipe->{read};
+            printf {$out} "0x%X\n", $address;
+            chomp(my $symbol = <$in>);
+            chomp(my $fileandline = <$in>);
+            if ($symbol eq '??') { $symbol = $badsymbol; }
+            if ($fileandline eq '??:0') { $fileandline = $file; }
+            print "$before$symbol ($fileandline)$after\n";
+        } else {
+            print STDERR "Warning: File \"$file\" does not exist.\n";
+            print $line;
+        }
+
     } else {
         print $line;
     }
