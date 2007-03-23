@@ -226,14 +226,11 @@ sub addr2line_pipe($) {
     my ($file) = @_;
     my $pipe;
     unless (exists $pipes{$file}) {
-        # If it's a system library, see if we have separate debuginfo.
-        if ($file =~ /^\//) {
-            my $debuginfo_file = debuginfo_file_for($file);
-            $file = $debuginfo_file if ($debuginfo_file ne '');
-        }
+        my $debug_file = debuginfo_file_for($file);
+        $debug_file = $file if ($debug_file eq '');
 
         my $pid = open2($pipe->{read}, $pipe->{write},
-                        '/usr/bin/addr2line', '-C', '-f', '-e', $file);
+                        '/usr/bin/addr2line', '-C', '-f', '-e', $debug_file);
         $pipes{$file} = $pipe;
     } else {
         $pipe = $pipes{$file};
