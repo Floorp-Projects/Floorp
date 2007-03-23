@@ -142,6 +142,9 @@
 #include <process.h>
 #endif
 
+#ifdef DEBUG
+#define COLLECT_TIME_DEBUG
+#endif
 
 // Various parameters of this collector can be tuned using environment
 // variables.
