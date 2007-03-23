@@ -244,6 +244,11 @@ typedef struct {
 #define MAKE_KEY_NAME3(PREFIX, MID, MID2, SUFFIX) \
   PREFIX MID MID2 SUFFIX
 
+// The DefaultIcon registry key value should never be used (e.g. NON_ESSENTIAL)
+// when checking if Firefox is the default browser since other applications
+// (e.g. MS Office) may modify the DefaultIcon registry key value to add Icon
+// Handlers.
+// see http://msdn2.microsoft.com/en-us/library/aa969357.aspx for more info.
 static SETTING gSettings[] = {
   // File Extension Aliases
   { MAKE_KEY_NAME1(CLS, ".htm"),    "", CLS_HTML, NO_SUBSTITUTION | NON_ESSENTIAL },
@@ -252,12 +257,14 @@ static SETTING gSettings[] = {
   { MAKE_KEY_NAME1(CLS, ".xht"),    "", CLS_HTML, NO_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME1(CLS, ".xhtml"),  "", CLS_HTML, NO_SUBSTITUTION | NON_ESSENTIAL },
 
-  // File Extension Class
-  { MAKE_KEY_NAME2(CLS, CLS_HTML, DI),  "", VAL_FILE_ICON, APP_PATH_SUBSTITUTION },
+  // File Extension Class - as of 1.8.1.2 the value for VAL_OPEN is also checked
+  // for CLS_HTML since Firefox should also own opeing local files when set as
+  // the default browser.
+  { MAKE_KEY_NAME2(CLS, CLS_HTML, DI),  "", VAL_FILE_ICON, APP_PATH_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME2(CLS, CLS_HTML, SOP), "", VAL_OPEN, APP_PATH_SUBSTITUTION },
 
   // Protocol Handler Class - for Vista and above
-  { MAKE_KEY_NAME2(CLS, CLS_URL, DI),  "", VAL_URL_ICON, APP_PATH_SUBSTITUTION },
+  { MAKE_KEY_NAME2(CLS, CLS_URL, DI),  "", VAL_URL_ICON, APP_PATH_SUBSTITUTION | NON_ESSENTIAL },
   { MAKE_KEY_NAME2(CLS, CLS_URL, SOP), "", VAL_OPEN, APP_PATH_SUBSTITUTION },
 
   // Protocol Handlers
