@@ -115,25 +115,29 @@ class nsIMenu : public nsISupports {
 	NS_IMETHOD GetEnabled(PRBool* aIsEnabled) = 0;
 	
 	/**
-    * Adds a Menu Item
+    * Adds a Menu Item. Do not use outside of widget menu implementations.
+    * Add and modify menu items via DOM content.
     *
     */
     NS_IMETHOD AddItem(nsISupports* aItem) = 0;
 
    /**
-    * Adds a separator
+    * Adds a separator. Do not use outside of widget menu implementations.
+    * Add and modify menu separators via DOM content.
     *
     */
     NS_IMETHOD AddSeparator() = 0;
 
    /**
     * Returns the number of menu items
-    * This does count separators as items
+    * This includes separators. It does not include hidden items.
+    *
     */
     NS_IMETHOD GetItemCount(PRUint32 &aCount) = 0;
 
    /**
-    * Returns a Menu or Menu Item at a specified Index
+    * Returns a Menu or Menu Item at a specified Index.
+    * This includes separators. It does not include hidden items.
     *
     */
     NS_IMETHOD GetItemAt(const PRUint32 aPos, nsISupports *& aMenuItem) = 0;
