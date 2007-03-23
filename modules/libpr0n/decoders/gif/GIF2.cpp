@@ -314,7 +314,7 @@ static int do_lzw(gif_struct *gs, const PRUint8 *q)
         *stackp++ = suffix[code];
         code = prefix[code];
 
-        if (stackp == stack + MAX_BITS)
+        if (stackp == stack + MAX_BITS || code >= MAX_BITS)
           return -1;
       }
 
@@ -455,7 +455,7 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
     {
       /* Initialize LZW parser/decoder */
       gs->datasize = *q;
-      if (gs->datasize > MAX_LZW_BITS) {
+      if (gs->datasize >= MAX_LZW_BITS) {
         gs->state = gif_error;
         break;
       }
