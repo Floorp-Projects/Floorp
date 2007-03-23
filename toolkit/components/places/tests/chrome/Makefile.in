@@ -39,7 +39,7 @@ DEPTH		= ../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir  = browser/components/places/tests/chrome
+relativesrcdir  = toolkit/components/places/tests/chrome
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
