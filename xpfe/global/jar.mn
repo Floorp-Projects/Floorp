@@ -16,7 +16,6 @@ toolkit.jar:
         content/global/charsetOverlay.js            (resources/content/charsetOverlay.js) 
         content/global/selectDialog.js              (resources/content/selectDialog.js) 
         content/global/selectDialog.xul             (resources/content/selectDialog.xul) 
-        content/global/nsWidgetStateManager.js      (resources/content/nsWidgetStateManager.js) 
         content/global/nsTreeController.js          (resources/content/nsTreeController.js) 
         content/global/nsTreeSorting.js             (resources/content/nsTreeSorting.js) 
         content/global/nsClipboard.js               (resources/content/nsClipboard.js) 
@@ -82,6 +81,7 @@ toolkit.jar:
         content/global/hiddenWindow.xul             (resources/content/hiddenWindow.xul) 
         content/global/fullScreen.js                (resources/content/fullScreen.js)
         content/global/build.dtd                    (build.dtd)
+        content/global/nsWidgetStateManager.js      (resources/content/nsWidgetStateManager.js)
 #endif
 
 en-US.jar:
