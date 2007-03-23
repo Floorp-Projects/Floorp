@@ -38,18 +38,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=371080
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
+dump("\n\nTEST DEBUG: start of script block\n");
+dump("TEST DEBUG: SimpleTest: " + SimpleTest + "\n");
+
 /** Test for Bug 371080 **/
 SimpleTest.waitForExplicitFinish();
 
 function checkButtonDimensions() {
+ dump("TEST DEBUG: start of checkButtonDimensions\n");
+ dump("TEST DEBUG: SimpleTest: " + SimpleTest + "\n");
+ dump("TEST DEBUG: function 'is()' defined as: " + is + "\n");
+
+ try {
   is($("button1").boxObject.width, 68, "mac button has correct width");
   is($("button1").boxObject.height, 22, "mac button has correct height");
   is($("button2").boxObject.width, 68, "mac small button has correct width");
   is($("button2").boxObject.height, 19, "mac small button has correct height");
+ } catch (ex) {
+  dump("TEST DEBUG: " + ex + "\n");
+ }
+ dump("TEST DEBUG: end of checkButtonDimensions\n");
 }
 
+addLoadEvent(function(){ dump("TEST DEBUG: load event reached\n"); } );
 addLoadEvent(checkButtonDimensions);
+addLoadEvent(function(){ dump("TEST DEBUG: load event after checkButtonDimensions\n"); } );
 addLoadEvent(SimpleTest.finish);
+
+dump("TEST DEBUG: end of script block\n\n");
 
 ]]>
 </script>
