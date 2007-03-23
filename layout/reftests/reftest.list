@@ -78,6 +78,9 @@ include xul-document-load/reftest.list
 # box-properties/
 include box-properties/reftest.list
 
+# counters/
+include counters/reftest.list
+
 # first-letter/
 include first-letter/reftest.list
 
