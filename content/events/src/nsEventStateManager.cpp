@@ -2030,7 +2030,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   mCurrentTarget = aTargetFrame;
   mCurrentTargetContent = nsnull;
 
-  // All the events we handle below requires a frame.
+  // All the events we handle below require a frame.
   if (!mCurrentTarget) {
     if (NS_EVENT_NEEDS_FRAME(aEvent)) {
       NS_ERROR("Null frame for an event that requires a frame");
