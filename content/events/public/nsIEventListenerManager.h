@@ -179,7 +179,8 @@ public:
    * Returns the mutation bits depending on which mutation listeners are
    * registered to this listener manager.
    * @note If a listener is an nsIDOMMutationListener, all possible mutation
-   *       event bits are returned.
+   *       event bits are returned. All bits are also returned if one of the
+   *       event listeners is registered to handle DOMSubtreeModified events.
    */
   virtual PRUint32 MutationListenerBits() = 0;
 };

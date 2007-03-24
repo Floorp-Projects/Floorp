@@ -2820,6 +2820,12 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
     return PR_FALSE;
   }
 
+  // To batch DOMSubtreeModified properly, all mutation events should be
+  // processed if one is being processed already.
+  if (doc->MutationEventBeingDispatched()) {
+    return PR_TRUE;
+  }
+
   // global object will be null for documents that don't have windows.
   nsCOMPtr<nsPIDOMWindow> window;
   window = do_QueryInterface(doc->GetScriptGlobalObject());
