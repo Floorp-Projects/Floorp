@@ -77,7 +77,7 @@ static PRLogModuleInfo* gLog;
 ////////////////////////////////////////////////////////////////////////
 
 nsXULCommandDispatcher::nsXULCommandDispatcher(nsIDocument* aDocument)
-    : mFocusController(nsnull), mDocument(aDocument), mUpdaters(nsnull)
+    : mDocument(aDocument), mUpdaters(nsnull)
 {
 
 #ifdef PR_LOGGING
@@ -88,12 +88,10 @@ nsXULCommandDispatcher::nsXULCommandDispatcher(nsIDocument* aDocument)
 
 nsXULCommandDispatcher::~nsXULCommandDispatcher()
 {
-  while (mUpdaters) {
-    Updater* doomed = mUpdaters;
-    mUpdaters = mUpdaters->mNext;
-    delete doomed;
-  }
+  Disconnect();
 }
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULCommandDispatcher)
 
 // QueryInterface implementation for nsXULCommandDispatcher
 NS_INTERFACE_MAP_BEGIN(nsXULCommandDispatcher)
@@ -101,37 +99,45 @@ NS_INTERFACE_MAP_BEGIN(nsXULCommandDispatcher)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXULCommandDispatcher)
     NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULCommandDispatcher)
+    NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsXULCommandDispatcher)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULCommandDispatcher)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULCommandDispatcher)
 
-NS_IMPL_ADDREF(nsXULCommandDispatcher)
-NS_IMPL_RELEASE(nsXULCommandDispatcher)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULCommandDispatcher)
+  tmp->Disconnect();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-
-NS_IMETHODIMP
-nsXULCommandDispatcher::Create(nsIDocument* aDoc, nsIDOMXULCommandDispatcher** aResult)
-{
-  nsXULCommandDispatcher* dispatcher = new nsXULCommandDispatcher(aDoc);
-  if (!dispatcher)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aResult = dispatcher;
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULCommandDispatcher)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
+  Updater* updater = tmp->mUpdaters;
+  while (updater) {
+    cb.NoteXPCOMChild(updater->mElement);
+    updater = updater->mNext;
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 void
-nsXULCommandDispatcher::EnsureFocusController()
+nsXULCommandDispatcher::Disconnect()
 {
-  if (!mFocusController) {
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mDocument->GetScriptGlobalObject()));
-  
-    // An inelegant way to retrieve this to be sure, but we are
-    // guaranteed that the focus controller outlives us, so it
-    // is safe to hold on to it (since we can't die until it has
-    // died).
-    mFocusController = win->GetRootFocusController(); // Store as a weak ptr.
+  while (mUpdaters) {
+    Updater* doomed = mUpdaters;
+    mUpdaters = mUpdaters->mNext;
+    delete doomed;
   }
+  mDocument = nsnull;
+}
+
+nsIFocusController*
+nsXULCommandDispatcher::GetFocusController()
+{
+  if (!mDocument) {
+    return nsnull;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mDocument->GetScriptGlobalObject()));
+  return win ? win->GetRootFocusController() : nsnull;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -140,10 +146,10 @@ nsXULCommandDispatcher::EnsureFocusController()
 NS_IMETHODIMP
 nsXULCommandDispatcher::GetFocusedElement(nsIDOMElement** aElement)
 {
-  EnsureFocusController();
-  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
+  nsIFocusController* fc = GetFocusController();
+  NS_ENSURE_TRUE(fc, NS_ERROR_FAILURE);
 
-  nsresult rv = mFocusController->GetFocusedElement(aElement);
+  nsresult rv = fc->GetFocusedElement(aElement);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Make sure the caller can access the focused element.
@@ -161,11 +167,11 @@ nsXULCommandDispatcher::GetFocusedElement(nsIDOMElement** aElement)
 NS_IMETHODIMP
 nsXULCommandDispatcher::GetFocusedWindow(nsIDOMWindow** aWindow)
 {
-  EnsureFocusController();
-  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
+  nsIFocusController* fc = GetFocusController();
+  NS_ENSURE_TRUE(fc, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMWindowInternal> window;
-  nsresult rv = mFocusController->GetFocusedWindow(getter_AddRefs(window));
+  nsresult rv = fc->GetFocusedWindow(getter_AddRefs(window));
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && window, rv);
 
   rv = CallQueryInterface(window, aWindow);
@@ -190,48 +196,42 @@ nsXULCommandDispatcher::GetFocusedWindow(nsIDOMWindow** aWindow)
 NS_IMETHODIMP
 nsXULCommandDispatcher::SetFocusedElement(nsIDOMElement* aElement)
 {
-  EnsureFocusController();
-  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
+  nsIFocusController* fc = GetFocusController();
+  NS_ENSURE_TRUE(fc, NS_ERROR_FAILURE);
 
-  return mFocusController->SetFocusedElement(aElement);
+  return fc->SetFocusedElement(aElement);
 }
 
 NS_IMETHODIMP
 nsXULCommandDispatcher::SetFocusedWindow(nsIDOMWindow* aWindow)
 {
-  EnsureFocusController();
-  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
+  nsIFocusController* fc = GetFocusController();
+  NS_ENSURE_TRUE(fc, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(aWindow));
 
-  return mFocusController->SetFocusedWindow(window);
+  return fc->SetFocusedWindow(window);
 }
 
 NS_IMETHODIMP
 nsXULCommandDispatcher::AdvanceFocus()
 {
-  EnsureFocusController();
-  if (mFocusController)
-    return mFocusController->MoveFocus(PR_TRUE, nsnull);
-  return NS_OK;
+  nsIFocusController* fc = GetFocusController();
+  return fc ? fc->MoveFocus(PR_TRUE, nsnull) : NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULCommandDispatcher::RewindFocus()
 {
-  EnsureFocusController();
-  if (mFocusController)
-    return mFocusController->MoveFocus(PR_FALSE, nsnull);
-  return NS_OK;
+  nsIFocusController* fc = GetFocusController();
+  return fc ? fc->MoveFocus(PR_FALSE, nsnull) : NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULCommandDispatcher::AdvanceFocusIntoSubtree(nsIDOMElement* aElt)
 {
-  EnsureFocusController();
-  if (mFocusController)
-    return mFocusController->MoveFocus(PR_TRUE, aElt);
-  return NS_OK;
+  nsIFocusController* fc = GetFocusController();
+  return fc ? fc->MoveFocus(PR_TRUE, aElt) : NS_OK;
 }
 
 NS_IMETHODIMP
@@ -349,26 +349,18 @@ nsXULCommandDispatcher::RemoveCommandUpdater(nsIDOMElement* aElement)
 NS_IMETHODIMP
 nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
 {
-  EnsureFocusController();
-  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
+  nsIFocusController* fc = GetFocusController();
+  NS_ENSURE_TRUE(fc, NS_ERROR_FAILURE);
 
   nsAutoString id;
   nsCOMPtr<nsIDOMElement> element;
-  mFocusController->GetFocusedElement(getter_AddRefs(element));
+  fc->GetFocusedElement(getter_AddRefs(element));
   if (element) {
     nsresult rv = element->GetAttribute(NS_LITERAL_STRING("id"), id);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element's id");
     if (NS_FAILED(rv)) return rv;
   }
 
-#if 0
-  {
-    char*   actionString = ToNewCString(aEventName);
-    printf("Doing UpdateCommands(\"%s\")\n", actionString);
-    free(actionString);    
-  }
-#endif
-  
   for (Updater* updater = mUpdaters; updater != nsnull; updater = updater->mNext) {
     // Skip any nodes that don't match our 'events' or 'targets'
     // filters.
@@ -395,7 +387,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
       CopyUTF16toUTF8(aEventName, aeventnameC);
       PR_LOG(gLog, PR_LOG_NOTICE,
              ("xulcmd[%p] update %p event=%s",
-              this, updater->mElement,
+              this, updater->mElement.get(),
               aeventnameC.get()));
     }
 #endif
@@ -449,36 +441,36 @@ nsXULCommandDispatcher::Matches(const nsString& aList,
 NS_IMETHODIMP
 nsXULCommandDispatcher::GetControllers(nsIControllers** aResult)
 {
-  EnsureFocusController();
-  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
+  nsIFocusController* fc = GetFocusController();
+  NS_ENSURE_TRUE(fc, NS_ERROR_FAILURE);
 
-  return mFocusController->GetControllers(aResult);
+  return fc->GetControllers(aResult);
 }
 
 NS_IMETHODIMP
 nsXULCommandDispatcher::GetControllerForCommand(const char *aCommand, nsIController** _retval)
 {
-  EnsureFocusController();
-  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
+  nsIFocusController* fc = GetFocusController();
+  NS_ENSURE_TRUE(fc, NS_ERROR_FAILURE);
 
-  return mFocusController->GetControllerForCommand(aCommand, _retval);
+  return fc->GetControllerForCommand(aCommand, _retval);
 }
 
 NS_IMETHODIMP
 nsXULCommandDispatcher::GetSuppressFocusScroll(PRBool* aSuppressFocusScroll)
 {
-  EnsureFocusController();
-  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
+  nsIFocusController* fc = GetFocusController();
+  NS_ENSURE_TRUE(fc, NS_ERROR_FAILURE);
 
-  return mFocusController->GetSuppressFocusScroll(aSuppressFocusScroll);
+  return fc->GetSuppressFocusScroll(aSuppressFocusScroll);
 }
 
 NS_IMETHODIMP
 nsXULCommandDispatcher::SetSuppressFocusScroll(PRBool aSuppressFocusScroll)
 {
-  EnsureFocusController();
-  NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
+  nsIFocusController* fc = GetFocusController();
+  NS_ENSURE_TRUE(fc, NS_ERROR_FAILURE);
 
-  return mFocusController->SetSuppressFocusScroll(aSuppressFocusScroll);
+  return fc->SetSuppressFocusScroll(aSuppressFocusScroll);
 }
 
