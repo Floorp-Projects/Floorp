@@ -2026,14 +2026,22 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 {
   NS_ENSURE_ARG(aPresContext);
   NS_ENSURE_ARG_POINTER(aStatus);
+
   mCurrentTarget = aTargetFrame;
   mCurrentTargetContent = nsnull;
-  nsresult ret = NS_OK;
+
+  // All the events we handle below requires a frame.
+  if (!mCurrentTarget) {
+    if (NS_EVENT_NEEDS_FRAME(aEvent)) {
+      NS_ERROR("Null frame for an event that requires a frame");
+      return NS_ERROR_NULL_POINTER;
+    }
+    return NS_OK;
+  }
+
   //Keep the prescontext alive, we might need it after event dispatch
   nsRefPtr<nsPresContext> presContext = aPresContext;
-
-  NS_ASSERTION(mCurrentTarget, "mCurrentTarget is null");
-  if (!mCurrentTarget) return NS_ERROR_NULL_POINTER;
+  nsresult ret = NS_OK;
 
   switch (aEvent->message) {
   case NS_MOUSE_BUTTON_DOWN:
