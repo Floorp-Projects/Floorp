@@ -3215,9 +3215,8 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
   nsCOMPtr<nsIContent> rootContent = mDocument->GetRootContent();
 
   nsCOMPtr<nsISupports> pcContainer = mPresContext->GetContainer();
-  NS_ASSERTION(pcContainer, "no container for presContext");
-
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(pcContainer));
+  NS_ENSURE_STATE(docShell);
   PRBool docHasFocus = PR_FALSE;
 
   // ignoreTabIndex allows the user to tab to the next link after clicking before it link in the page
