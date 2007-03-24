@@ -81,6 +81,7 @@
 #include "nsTextTransformer.h"
 #include "nsTextFrameUtils.h"
 #include "nsTextRunTransformations.h"
+#include "nsFrameManager.h"
 
 #include "nsTextFragment.h"
 #include "nsGkAtoms.h"
@@ -737,7 +738,7 @@ public:
 private:
   nsAutoTArray<MappedFlow,10>   mMappedFlows;
   nsAutoTArray<nsTextFrame*,50> mLineBreakBeforeFrames;
-  nsAutoTArray<BreakSink,10>    mBreakSinks;
+  nsAutoTArray<nsAutoPtr<BreakSink>,10> mBreakSinks;
   nsLineBreaker                 mLineBreaker;
   gfxTextRun*                   mCurrentFramesAllSameTextRun;
   nsBlockFrame*                 mBlockFrame;
@@ -777,6 +778,11 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
   if (!aBlockFrame) {
     aBlockFrame = nsLayoutUtils::FindNearestBlockAncestor(aForFrame);
   }
+  // XXX Need to do something here to detect situations where we're not in a block
+  // context (e.g., MathML). Need to detect the true container and scan it
+  // as if it was one line.
+
+  nsPresContext* presContext = aForFrame->GetPresContext();
 
   // Find line where we can start building text runs. It's the first line at
   // or before aForFrameLine that's after a hard break.
@@ -786,6 +792,12 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
   } else {
     nsIFrame* immediateChild =
       nsLayoutUtils::FindChildContainingDescendant(aBlockFrame, aForFrame);
+    // This may be a float e.g. for a floated first-letter
+    if (immediateChild->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+      immediateChild =
+        nsLayoutUtils::FindChildContainingDescendant(aBlockFrame,
+          presContext->FrameManager()->GetPlaceholderFrameFor(immediateChild));
+    }
     line = aBlockFrame->FindLineFor(immediateChild);
     NS_ASSERTION(line != aBlockFrame->end_lines(),
                  "Frame is not in the block!!!");
@@ -806,7 +818,7 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
   nsBlockFrame::line_iterator endLines = aBlockFrame->end_lines();
   gfxContext* ctx = NS_STATIC_CAST(gfxContext*,
     aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
-  BuildTextRunsScanner scanner(aForFrame->GetPresContext(), aBlockFrame, ctx);
+  BuildTextRunsScanner scanner(presContext, aBlockFrame, ctx);
   NS_ASSERTION(line != endLines && !line->IsBlock(), "Where is this frame anyway??");
   nsIFrame* child = line->mFirstChild;
   do {
@@ -968,7 +980,7 @@ void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks)
     mLineBreaker.Reset();
     PRUint32 i;
     for (i = 0; i < mBreakSinks.Length(); ++i) {
-      if (!mBreakSinks[i].mExistingTextRun || mBreakSinks[i].mChangedBreaks) {
+      if (!mBreakSinks[i]->mExistingTextRun || mBreakSinks[i]->mChangedBreaks) {
         // TODO cause frames associated with the textrun to be reflowed, if they
         // aren't being reflowed already!
       }
@@ -1208,7 +1220,6 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
       nsMemory::Alloc(sizeof(TextRunUserData) + mMappedFlows.Length()*sizeof(TextRunMappedFlow)));
     userData->mMappedFlows = NS_REINTERPRET_CAST(TextRunMappedFlow*, userData + 1);
   }
-  userData->mMappedFlowCount = mMappedFlows.Length();
   userData->mLastFlowIndex = 0;
 
   PRUint32 finalMappedFlowCount = 0;
@@ -1330,6 +1341,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     if (!userData)
       return;
     userData->mMappedFlows = NS_REINTERPRET_CAST(TextRunMappedFlow*, userData + 1);
+    userData->mMappedFlowCount = finalMappedFlowCount;
     finalUserData = userData;
   }
 
@@ -1476,9 +1488,9 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun, const void
   PRUint32 i;
   for (i = 0; i < mMappedFlows.Length(); ++i) {
     MappedFlow* mappedFlow = &mMappedFlows[i];
-    BreakSink* breakSink = mBreakSinks.AppendElement(
-      BreakSink(aTextRun, mappedFlow->mTransformedTextOffset, aIsExistingTextRun));
-    if (!breakSink)
+    nsAutoPtr<BreakSink>* breakSink = mBreakSinks.AppendElement(
+      new BreakSink(aTextRun, mappedFlow->mTransformedTextOffset, aIsExistingTextRun));
+    if (!breakSink || !*breakSink)
       return;
     PRUint32 offset = mappedFlow->mTransformedTextOffset;
 
@@ -1499,10 +1511,10 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun, const void
     // Thus runs of entirely-skipped whitespace can still induce breaks.
     if (aIs2b) {
       mLineBreaker.AppendText(lang, NS_STATIC_CAST(const PRUnichar*, aText) + offset,
-                              length, flags, breakSink);
+                              length, flags, *breakSink);
     } else {
       mLineBreaker.AppendText(lang, NS_STATIC_CAST(const PRUint8*, aText) + offset,
-                              length, flags, breakSink);
+                              length, flags, *breakSink);
     }
   }
 }
@@ -4372,7 +4384,7 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
   PropertyProvider provider(mTextRun, GetStyleText(), mContent->GetText(), this,
                             iter, GetInFlowContentLength());
 
-  PRBool collapseWhitespace = provider.GetStyleText()->WhiteSpaceIsSignificant();
+  PRBool collapseWhitespace = !provider.GetStyleText()->WhiteSpaceIsSignificant();
   PRUint32 start =
     FindStartAfterSkippingWhitespace(&provider, aData, collapseWhitespace,
                                      &iter, flowEndInTextRun);
@@ -4458,7 +4470,7 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
   PropertyProvider provider(mTextRun, GetStyleText(), mContent->GetText(), this,
                             iter, GetInFlowContentLength());
 
-  PRBool collapseWhitespace = provider.GetStyleText()->WhiteSpaceIsSignificant();
+  PRBool collapseWhitespace = !provider.GetStyleText()->WhiteSpaceIsSignificant();
   PRUint32 start =
     FindStartAfterSkippingWhitespace(&provider, aData, collapseWhitespace,
                                      &iter, flowEndInTextRun);
@@ -4471,7 +4483,7 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
     PRUint32 lengthAfterTrim =
       GetLengthOfTrimmedText(provider.GetFragment(), start, flowEndInTextRun, &iter);
     aData->currentLine +=
-      NSToCoordCeil(mTextRun->GetAdvanceWidth(start, lengthAfterTrim, &provider));
+      NSToCoordCeil(mTextRun->GetAdvanceWidth(start, flowEndInTextRun - start, &provider));
 
     PRUint32 trimStart = start + lengthAfterTrim;
     nscoord trimWidth =
@@ -4571,15 +4583,19 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
     mContentOffset = prevInFlow->GetContentOffset() + prevInFlow->GetContentLength();
   }
 
+  // Temporarily map all possible content while we construct our new textrun.
+  // so that when doing reflow our styles prevail over any part of the
+  // textrun we look at. Note that next-in-flows may be mapping the same
+  // content; gfxTextRun construction logic will ensure that we take priority.
   PRInt32 maxContentLength = GetInFlowContentLength();
+  mContentLength = maxContentLength;
 
   // XXX If there's no line layout, we shouldn't even have created this
   // frame. This may happen if, for example, this is text inside a table
   // but not inside a cell. For now, just don't reflow. We also don't need to
   // reflow if there is no content.
-  if (!aReflowState.mLineLayout || !maxContentLength) {
+  if (!aReflowState.mLineLayout || !mContentLength) {
     ClearMetrics(aMetrics);
-    mContentLength = maxContentLength;
     aStatus = NS_FRAME_COMPLETE;
     return NS_OK;
   }
@@ -4619,28 +4635,23 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   // the gfxTextRun based on our layout.
   PRBool layoutDependentTextRun =
     lineLayout.GetFirstLetterStyleOK() || lineLayout.GetInFirstLine();
-  PRInt32 currentContentLength = mContentLength;
   if (layoutDependentTextRun) {
     // Nuke any text run since it may not be valid for our reflow
     ClearTextRun();
-    // Temporarily map all possible content while we construct our new textrun.
-    // so that when doing reflow our styles prevail over any part of the
-    // textrun we look at. Note that next-in-flows may be mapping the same
-    // content; gfxTextRun construction logic will ensure that we take priority.
-    mContentLength = maxContentLength;
   }
+
   PRUint32 flowEndInTextRun;
+  nsIFrame* lineContainer = lineLayout.GetLineContainerFrame();
+  // Sometimes the line layout's container isn't really a block (hello
+  // floating first-letter!!)
+  nsBlockFrame* blockContainer = nsnull;
+  lineContainer->QueryInterface(kBlockFrameCID, (void**)&blockContainer);
   gfxSkipCharsIterator iter =
-    EnsureTextRun(aReflowState.rendContext,
-                  NS_STATIC_CAST(nsBlockFrame*, lineLayout.GetLineContainerFrame()),
+    EnsureTextRun(aReflowState.rendContext, blockContainer,
                   lineLayout.GetLine(), &flowEndInTextRun);
-  if (layoutDependentTextRun) {
-    mContentLength = currentContentLength;
-  }
 
   if (!mTextRun) {
     ClearMetrics(aMetrics);
-    mContentLength = maxContentLength;
     aStatus = NS_FRAME_COMPLETE;
     return NS_OK;
   }
@@ -4649,7 +4660,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   // DOM offsets of the text range we need to measure, after trimming
   // whitespace, restricting to first-letter, and restricting preformatted text
   // to nearest newline
-  PRInt32 length = maxContentLength;
+  PRInt32 length = mContentLength;
   PRInt32 offset = mContentOffset;
 
   // Restrict preformatted text to the nearest newline
