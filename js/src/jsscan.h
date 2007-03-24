@@ -329,15 +329,19 @@ js_fgets(char *buf, int size, FILE *file);
 extern JSTokenType
 js_CheckKeyword(const jschar *chars, size_t length);
 
-#define js_IsKeyword(chars, length) \
-    (js_CheckKeyword(chars, length) != TOK_EOF)
-
 /*
  * Friend-exported API entry point to call a mapping function on each reserved
  * identifier in the scanner's keyword table.
  */
 extern JS_FRIEND_API(void)
 js_MapKeywords(void (*mapfun)(const char *));
+
+/*
+ * Check that str forms a valid JS identifier name. The function does not
+ * check if str is a JS keyword.
+ */
+extern JSBool
+js_IsIdentifier(JSString *str);
 
 /*
  * Report a compile-time error by its number, using ts or cg to show context.
