@@ -1087,6 +1087,9 @@ nsresult nsRange::DeleteContents()
   if(IsDetached())
     return NS_ERROR_DOM_INVALID_STATE_ERR;
 
+  // Batch possible DOMSubtreeModified events.
+  mozAutoSubtreeModified subtree(mRoot ? mRoot->GetOwnerDoc(): nsnull, nsnull);
+
   // Save the range end points locally to avoid interference
   // of Range gravity during our edits!
 
@@ -1275,6 +1278,9 @@ nsresult nsRange::ExtractContents(nsIDOMDocumentFragment** aReturn)
 { 
   if(mIsDetached)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
+
+  // Batch possible DOMSubtreeModified events.
+  mozAutoSubtreeModified subtree(mRoot ? mRoot->GetOwnerDoc(): nsnull, nsnull);
 
   // XXX_kin: The spec says that nodes that are completely in the
   // XXX_kin: range should be moved into the document fragment, not

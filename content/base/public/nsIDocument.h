@@ -90,11 +90,12 @@ template<class E> class nsCOMArray;
 class nsIDocumentObserver;
 class nsBindingManager;
 class nsIDOMNodeList;
+class mozAutoSubtreeModified;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x0b8acf09, 0x7877, 0x4928, \
- { 0x8b, 0xfb, 0x6d, 0x7c, 0x6d, 0x53, 0xff, 0x32 } }
+{ 0x1b8ed19c, 0xb87d, 0x4058, \
+  { 0x92, 0x2a, 0xff, 0xbc, 0x36, 0x29, 0x3b, 0xd7 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -846,6 +847,11 @@ public:
    */
   virtual void FlushSkinBindings() = 0;
 
+  /**
+   * Returns PR_TRUE if one or more mutation events are being dispatched.
+   */
+  virtual PRBool MutationEventBeingDispatched() = 0;
+
 protected:
   ~nsIDocument()
   {
@@ -855,6 +861,15 @@ protected:
     //     want to expose to users of the nsIDocument API outside of Gecko.
     // XXX Same thing applies to mBindingManager
   }
+
+  /**
+   * These methods should be called before and after dispatching
+   * a mutation event.
+   * To make this easy and painless, use the mozAutoSubtreeModified helper class.
+   */
+  virtual void WillDispatchMutationEvent(nsINode* aTarget) = 0;
+  virtual void MutationEventDispatched(nsINode* aTarget) = 0;
+  friend class mozAutoSubtreeModified;
 
   nsString mDocumentTitle;
   nsCOMPtr<nsIURI> mDocumentURI;
@@ -951,6 +966,48 @@ private:
 #define MOZ_AUTO_DOC_UPDATE(doc,type,notify) \
   mozAutoDocUpdate MOZ_AUTO_DOC_UPDATE_PASTE(_autoDocUpdater_, __LINE__) \
   (doc,type,notify)
+
+/**
+ * mozAutoSubtreeModified batches DOM mutations so that a DOMSubtreeModified
+ * event is dispatched, if necessary, when the outermost mozAutoSubtreeModified
+ * object is deleted.
+ */
+class mozAutoSubtreeModified
+{
+public:
+  /**
+   * @param aSubTreeOwner The document in which a subtree will be modified.
+   * @param aTarget       The target of the possible DOMSubtreeModified event.
+   *                      Can be nsnull, in which case mozAutoSubtreeModified
+   *                      is just used to batch DOM mutations.
+   */
+  mozAutoSubtreeModified(nsIDocument* aSubtreeOwner, nsINode* aTarget)
+  {
+    UpdateTarget(aSubtreeOwner, aTarget);
+  }
+
+  ~mozAutoSubtreeModified()
+  {
+    UpdateTarget(nsnull, nsnull);
+  }
+
+  void UpdateTarget(nsIDocument* aSubtreeOwner, nsINode* aTarget)
+  {
+    if (mSubtreeOwner) {
+      mSubtreeOwner->MutationEventDispatched(mTarget);
+    }
+
+    mTarget = aTarget;
+    mSubtreeOwner = aSubtreeOwner;
+    if (mSubtreeOwner) {
+      mSubtreeOwner->WillDispatchMutationEvent(mTarget);
+    }
+  }
+
+private:
+  nsCOMPtr<nsINode>     mTarget;
+  nsCOMPtr<nsIDocument> mSubtreeOwner;
+};
 
 // XXX These belong somewhere else
 nsresult

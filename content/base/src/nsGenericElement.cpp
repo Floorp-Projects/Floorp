@@ -346,6 +346,9 @@ nsNode3Tearoff::GetTextContent(nsAString &aTextContent)
 NS_IMETHODIMP
 nsNode3Tearoff::SetTextContent(const nsAString &aTextContent)
 {
+  // Batch possible DOMSubtreeModified events.
+  mozAutoSubtreeModified subtree(mContent->GetOwnerDoc(), nsnull);
+
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
   NS_ASSERTION(node, "We have an nsIContent which doesn't support nsIDOMNode");
 
@@ -1667,6 +1670,9 @@ nsGenericElement::JoinTextNodes(nsIContent* aFirst,
 nsresult
 nsGenericElement::Normalize()
 {
+  // Batch possible DOMSubtreeModified events.
+  mozAutoSubtreeModified subtree(GetOwnerDoc(), nsnull);
+
   nsresult result = NS_OK;
   PRUint32 index, count = GetChildCount();
 
@@ -2343,6 +2349,7 @@ nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
           NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
       nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED);
       mutation.mRelatedNode = do_QueryInterface(container);
+      mozAutoSubtreeModified subtree(container->GetOwnerDoc(), container);
       nsEventDispatcher::Dispatch(aKid, nsnull, &mutation);
     }
   }
@@ -2387,11 +2394,13 @@ nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
 
   nsMutationGuard guard;
 
+  mozAutoSubtreeModified subtree(nsnull, nsnull);
   if (aNotify &&
       nsContentUtils::HasMutationListeners(aKid,
         NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
     nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED);
     mutation.mRelatedNode = do_QueryInterface(container);
+    subtree.UpdateTarget(container->GetOwnerDoc(), container);
     nsEventDispatcher::Dispatch(aKid, nsnull, &mutation);
   }
 
@@ -3326,6 +3335,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
       mutation.mPrevAttrValue = do_GetAtom(aOldValue);
     }
     mutation.mAttrChange = modType;
+    mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
     nsEventDispatcher::Dispatch(this, nsnull, &mutation);
   }
 
@@ -3553,6 +3563,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       mutation.mPrevAttrValue = do_GetAtom(value);
     mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
+    mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
     nsEventDispatcher::Dispatch(this, nsnull, &mutation);
   }
 

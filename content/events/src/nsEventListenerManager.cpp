@@ -527,7 +527,11 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     if (window) {
       NS_ASSERTION(window->IsInnerWindow(),
                    "Setting mutation listener bits on outer window?");
-      window->SetMutationListeners(MutationBitForEventType(aType));
+      // If aType is NS_MUTATION_SUBTREEMODIFIED, we need to listen all
+      // mutations.
+      window->SetMutationListeners((aType == NS_MUTATION_SUBTREEMODIFIED) ?
+                                   kAllMutationBits :
+                                   MutationBitForEventType(aType));
     }
   }
 
@@ -1868,6 +1872,9 @@ nsEventListenerManager::MutationListenerBits()
       if (ls &&
           (ls->mEventType >= NS_MUTATION_START &&
            ls->mEventType <= NS_MUTATION_END)) {
+        if (ls->mEventType == NS_MUTATION_SUBTREEMODIFIED) {
+          return kAllMutationBits;
+        }
         bits |= MutationBitForEventType(ls->mEventType);
       }
     }

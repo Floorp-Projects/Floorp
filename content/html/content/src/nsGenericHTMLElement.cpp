@@ -762,6 +762,9 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
   // scriptloader before the last EndUpdate call.
   mozAutoDocUpdate updateBatch(GetCurrentDoc(), UPDATE_CONTENT_MODEL, PR_TRUE);
 
+  // Batch possible DOMSubtreeModified events.
+  mozAutoSubtreeModified subtree(GetOwnerDoc(), nsnull);
+
   // Remove childnodes
   nsContentUtils::SetNodeTextContent(this, EmptyString(), PR_FALSE);
 
