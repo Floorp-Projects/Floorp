@@ -151,6 +151,28 @@ js_MapKeywords(void (*mapfun)(const char *))
         mapfun(keyword_defs[i].chars);
 }
 
+JSBool
+js_IsIdentifier(JSString *str)
+{
+    size_t length;
+    jschar c, *chars, *end;
+
+    length = JSSTRING_LENGTH(str);
+    if (length == 0)
+        return JS_FALSE;
+    chars = JSSTRING_CHARS(str);
+    c = *chars;
+    if (!JS_ISIDSTART(c))
+        return JS_FALSE;
+    end = chars + length;
+    while (++chars != end) {
+        c = *chars;
+        if (!JS_ISIDENT(c))
+            return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
 JSTokenStream *
 js_NewTokenStream(JSContext *cx, const jschar *base, size_t length,
                   const char *filename, uintN lineno,

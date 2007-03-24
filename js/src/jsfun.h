@@ -90,9 +90,6 @@ extern JSBool
 js_fun_toString(JSContext *cx, JSObject *obj, uint32 indent,
                 uintN argc, jsval *argv, jsval *rval);
 
-extern JSBool
-js_IsIdentifier(JSString *str);
-
 extern JSObject *
 js_InitFunctionClass(JSContext *cx, JSObject *obj);
 
