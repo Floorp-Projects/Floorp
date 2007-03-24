@@ -342,6 +342,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
                                                      nsIScriptGlobalObjectOwner)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mMasterPrototype,
                                                      nsIScriptGlobalObjectOwner)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mCommandDispatcher,
+                                                     nsIDOMXULCommandDispatcher)
+
     PRUint32 i, count = tmp->mPrototypes.Length();
     for (i = 0; i < count; ++i) {
         cb.NoteXPCOMChild(NS_STATIC_CAST(nsIScriptGlobalObjectOwner*, 
@@ -1928,10 +1931,8 @@ nsXULDocument::Init()
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Create our command dispatcher and hook it up.
-    rv = nsXULCommandDispatcher::Create(this,
-                                        getter_AddRefs(mCommandDispatcher));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a focus tracker");
-    if (NS_FAILED(rv)) return rv;
+    mCommandDispatcher = new nsXULCommandDispatcher(this);
+    NS_ENSURE_TRUE(mCommandDispatcher, NS_ERROR_OUT_OF_MEMORY);
 
     // this _could_ fail; e.g., if we've tried to grab the local store
     // before profiles have initialized. If so, no big deal; nothing

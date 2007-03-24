@@ -52,6 +52,7 @@
 #include "nsWeakReference.h"
 #include "nsIDOMNode.h"
 #include "nsString.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIDOMElement;
 class nsIFocusController;
@@ -59,26 +60,23 @@ class nsIFocusController;
 class nsXULCommandDispatcher : public nsIDOMXULCommandDispatcher,
                                public nsSupportsWeakReference
 {
-protected:
+public:
     nsXULCommandDispatcher(nsIDocument* aDocument);
     virtual ~nsXULCommandDispatcher();
 
-    void EnsureFocusController();
-
-public:
-
-    static NS_IMETHODIMP
-    Create(nsIDocument* aDocument, nsIDOMXULCommandDispatcher** aResult);
-
     // nsISupports
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULCommandDispatcher,
+                                             nsIDOMXULCommandDispatcher)
 
     // nsIDOMXULCommandDispatcher interface
     NS_DECL_NSIDOMXULCOMMANDDISPATCHER
 
+    void Disconnect();
 protected:
-    nsIFocusController* mFocusController; // Weak. We always die before the focus controller does.
-    nsIDocument* mDocument; // Weak.
+    nsIFocusController* GetFocusController();
+
+    nsCOMPtr<nsIDocument> mDocument;
 
     class Updater {
     public:
@@ -91,10 +89,10 @@ protected:
             mNext(nsnull)
       {}
 
-      nsIDOMElement* mElement; // [WEAK]
-      nsString       mEvents;
-      nsString       mTargets;
-      Updater*       mNext;
+      nsCOMPtr<nsIDOMElement> mElement;
+      nsString                mEvents;
+      nsString                mTargets;
+      Updater*                mNext;
     };
 
     Updater* mUpdaters;
