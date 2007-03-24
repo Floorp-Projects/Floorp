@@ -129,6 +129,7 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
         *aOutput++ = ch;
       }
     }
+    *aIncomingWhitespace = PR_FALSE;
   } else {
     PRBool inWhitespace = *aIncomingWhitespace;
     PRUint32 i;
@@ -149,7 +150,7 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
         }
         nowInWhitespace = PR_TRUE;
       } else {
-        nowInWhitespace = ch == '\t' || ch == '\f' || ch == UNICODE_ZWSP;
+        nowInWhitespace = ch == '\t';
       }
 
       if (!nowInWhitespace) {
@@ -179,11 +180,9 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
       }
       inWhitespace = nowInWhitespace;
     }
+    *aIncomingWhitespace = inWhitespace;
   }
 
-  if (outputStart < aOutput) {
-    *aIncomingWhitespace = aOutput[-1] == ' ';
-  }
   if (outputStart + aLength != aOutput) {
     flags |= TEXT_WAS_TRANSFORMED;
   }
@@ -224,6 +223,7 @@ nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
         *aOutput++ = ch;
       }
     }
+    *aIncomingWhitespace = PR_FALSE;
   } else {
     PRBool inWhitespace = *aIncomingWhitespace;
     PRUint32 i;
@@ -256,11 +256,9 @@ nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
       }
       inWhitespace = nowInWhitespace;
     }
+    *aIncomingWhitespace = inWhitespace;
   }
 
-  if (outputStart < aOutput) {
-    *aIncomingWhitespace = aOutput[-1] == ' ';
-  }
   if (outputStart + aLength != aOutput) {
     flags |= TEXT_WAS_TRANSFORMED;
   }
