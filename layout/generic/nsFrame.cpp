@@ -968,6 +968,7 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
   nsRect rect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
   rect.IntersectRect(rect, aDirtyRect);
   rect.ScaleRoundOut(1.0f / mFrame->GetPresContext()->AppUnitsPerDevPixel());
+  ctx->NewPath();
   ctx->Rectangle(gfxRect(rect.x, rect.y, rect.width, rect.height), PR_TRUE);
   ctx->Fill();
 #endif
