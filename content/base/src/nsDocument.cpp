@@ -145,6 +145,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsDateTimeFormatCID.h"
 #include "nsIDateTimeFormat.h"
 #include "nsEventDispatcher.h"
+#include "nsMutationEvent.h"
 #include "nsIDOMXPathEvaluator.h"
 #include "nsDOMCID.h"
 
@@ -5702,6 +5703,72 @@ nsDocument::OnPageHide(PRBool aPersisted)
   DispatchEventToWindow(&event);
 
   mVisible = PR_FALSE;
+}
+
+void
+nsDocument::WillDispatchMutationEvent(nsINode* aTarget)
+{
+  NS_ASSERTION(mSubtreeModifiedDepth != 0 ||
+               mSubtreeModifiedTargets.Count() == 0,
+               "mSubtreeModifiedTargets not cleared after dispatching?");
+  ++mSubtreeModifiedDepth;
+  if (aTarget) {
+    mSubtreeModifiedTargets.AppendObject(aTarget);
+  }
+}
+
+void
+nsDocument::MutationEventDispatched(nsINode* aTarget)
+{
+  --mSubtreeModifiedDepth;
+  if (mSubtreeModifiedDepth == 0) {
+    PRInt32 count = mSubtreeModifiedTargets.Count();
+    if (!count) {
+      return;
+    }
+
+    nsCOMPtr<nsPIDOMWindow> window;
+    window = do_QueryInterface(GetScriptGlobalObject());
+    if (window &&
+        !window->HasMutationListeners(NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
+      mSubtreeModifiedTargets.Clear();
+      return;
+    }
+
+    nsCOMArray<nsINode> realTargets;
+    for (PRInt32 i = 0; i < count; ++i) {
+      nsINode* possibleTarget = mSubtreeModifiedTargets[i];
+      nsCOMPtr<nsIContent> content = do_QueryInterface(possibleTarget);
+      if (content && content->IsAnonymousForEvents()) {
+        if (realTargets.IndexOf(possibleTarget) == -1) {
+          realTargets.AppendObject(possibleTarget);
+        }
+        continue;
+      }
+
+      nsINode* commonAncestor = nsnull;
+      PRInt32 realTargetCount = realTargets.Count();
+      for (PRInt32 j = 0; j < realTargetCount; ++j) {
+        commonAncestor =
+          nsContentUtils::GetCommonAncestor(possibleTarget, realTargets[j]);
+        if (commonAncestor) {
+          realTargets.ReplaceObjectAt(commonAncestor, j);
+          break;
+        }
+      }
+      if (!commonAncestor) {
+        realTargets.AppendObject(possibleTarget);
+      }
+    }
+
+    mSubtreeModifiedTargets.Clear();
+
+    PRInt32 realTargetCount = realTargets.Count();
+    for (PRInt32 k = 0; k < realTargetCount; ++k) {
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_SUBTREEMODIFIED);
+      nsEventDispatcher::Dispatch(realTargets[k], nsnull, &mutation);
+    }
+  }
 }
 
 static PRUint32 GetURIHash(nsIURI* aURI)

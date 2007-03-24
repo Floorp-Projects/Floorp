@@ -470,6 +470,7 @@ nsGenericDOMDataNode::SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
         mutation.mNewAttrValue = do_GetAtom(val);
       }
 
+      mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
       nsEventDispatcher::Dispatch(this, nsnull, &mutation);
     }
 
