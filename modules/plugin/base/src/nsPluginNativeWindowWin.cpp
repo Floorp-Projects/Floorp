@@ -205,11 +205,15 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
   if (!win)
     return TRUE;
 
-  // check plugin myme type and cache whether it is Flash or not
+  // The DispatchEvent(NS_PLUGIN_ACTIVATE) below can trigger a reentrant focus
+  // event which might destroy us.  Hold a strong ref on the plugin instance
+  // to prevent that, bug 374229.
+  nsCOMPtr<nsIPluginInstance> inst;
+  win->GetPluginInstance(inst);
+
+  // check plugin mime type and cache whether it is Flash or not
   // Flash will need special treatment later
   if (win->mPluginType == nsPluginType_Unknown) {
-    nsCOMPtr<nsIPluginInstance> inst;
-    win->GetPluginInstance(inst);
     if (inst) {
       nsCOMPtr<nsIPluginInstancePeer> pip;
       inst->GetPeer(getter_AddRefs(pip));
@@ -332,8 +336,6 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
   LRESULT res = TRUE;
 
   nsCOMPtr<nsIPluginInstanceInternal> instInternal;
-  nsCOMPtr<nsIPluginInstance> inst;
-  win->GetPluginInstance(inst);
 
   if (enablePopups) {
     nsCOMPtr<nsIPluginInstanceInternal> tmp = do_QueryInterface(inst);
