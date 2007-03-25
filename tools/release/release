@@ -75,7 +75,7 @@ sub DetermineSteps() {
             die("ASSERT: $desiredStep is not a valid step name.");
         }
         for (my $i=0; $i < scalar(@allSteps); $i++) {
-            if ($allSteps[$i] eq $desiredStep) {
+            if ($allSteps[$i] eq "$desiredStep") {
                 $currentStep = $i;
             }
         }
@@ -136,6 +136,7 @@ sub PerformStep {
         my $cc = $conf->Get(var => 'cc');
         my $blat = $conf->Get(var => 'blat');
         my $sendmail = $conf->Get(var => 'sendmail');
+        my $hostname = $conf->SystemInfo(var => 'hostname');
 
         my @ccList = split(', ', $cc);
  
@@ -146,8 +147,8 @@ sub PerformStep {
               from => $from,
               to => $to,
               cc => \@ccList,
-              subject => "Step $stepName died: $error",
-              message => "Step $stepName died: $error\nSee the release.log for more information.",
+              subject => "$hostname - Step $stepName died: $error",
+              message => "$hostname - Step $stepName died: $error\nSee the release.log for more information.",
             );
             exit(1);
         };

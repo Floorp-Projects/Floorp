@@ -177,9 +177,10 @@ sub SendAnnouncement {
     my $to = $config->Get(var => 'to');
     my @ccList = $config->Exists(var => 'cc') ? split(/[,\s]+/, 
      $config->Get(var => 'cc')) : ();
+    my $hostname = $config->SystemInfo(var => 'hostname');
 
-    my $subject = $args{'subject'};
-    my $message = $args{'message'};
+    my $subject = $hostname . ' - ' . $args{'subject'};
+    my $message = $hostname . ' - ' . $args{'message'};
 
     eval {
         Email(
