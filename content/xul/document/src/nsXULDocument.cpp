@@ -2868,6 +2868,19 @@ nsXULDocument::ResumeWalk()
                     // resolved.)
                     if (mState == eState_Master) {
                         AddElementToDocumentPost(element);
+
+                        if (element->NodeInfo()->Equals(nsGkAtoms::style,
+                                                        kNameSpaceID_XHTML) ||
+                            element->NodeInfo()->Equals(nsGkAtoms::style,
+                                                        kNameSpaceID_SVG)) {
+                            // XXX sucks that we have to do this -
+                            // see bug 370111
+                            nsCOMPtr<nsIStyleSheetLinkingElement> ssle =
+                                do_QueryInterface(element);
+                            NS_ASSERTION(ssle, "<html:style> doesn't implement "
+                                               "nsIStyleSheetLinkingElement?");
+                            ssle->UpdateStyleSheet(nsnull, nsnull);
+                        }
                     }
 
 #ifdef MOZ_XTF

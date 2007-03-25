@@ -59,3 +59,5 @@ test020: Same as #018 for <?xml-stylesheet ?>
 
 test021: (bug 363419) Non-XUL elements directly underneath <overlay> should
          be merged correctly into the base document.
+
+test022: (bug 369828) <html:style> works in XUL documents
