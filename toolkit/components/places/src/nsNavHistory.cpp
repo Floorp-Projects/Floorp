@@ -2899,6 +2899,11 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 
     // notify expiring system that we're quitting, it may want to do stuff
     mExpire.OnQuit();
+    
+    // notify the bookmarks service we're quitting
+    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+    NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+    (void)bookmarks->OnQuit();
   } else if (nsCRT::strcmp(aTopic, gXpcomShutdown) == 0) {
     nsresult rv;
     nsCOMPtr<nsIObserverService> observerService =
