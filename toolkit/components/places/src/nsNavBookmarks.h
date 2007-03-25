@@ -108,6 +108,10 @@ public:
   static const PRInt32 kGetFolderInfoIndex_Title;
   static const PRInt32 kGetFolderInfoIndex_Type;
 
+  // Called by History service when quitting.
+  nsresult OnQuit();
+  nsresult ArchiveBookmarksFile(PRInt32 aNumberOfBackups, PRBool aForceArchive);
+
 private:
   static nsNavBookmarks *sInstance;
 
