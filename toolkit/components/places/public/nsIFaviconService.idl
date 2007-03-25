@@ -40,7 +40,7 @@
 
 interface nsIURI;
 
-[scriptable, uuid(b7fc8b9b-d85f-4d89-9b2a-0e67bd6e8d78)]
+[scriptable, uuid(91f635a4-2531-4f3d-89ef-81403a685f44)]
 interface nsIFaviconService : nsISupports
 {
   /**
@@ -258,4 +258,9 @@ interface nsIFaviconService : nsISupports
    * page on a site that doesn't have a favicon.
    */
   boolean isFailedFavicon(in nsIURI aIcon);
+
+  /**
+   * The default favicon URL
+   */
+  readonly attribute nsIURI defaultFavicon;
 };
