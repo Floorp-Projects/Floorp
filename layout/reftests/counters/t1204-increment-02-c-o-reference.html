@@ -7,26 +7,10 @@
   <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#counter"/>
   <meta http-equiv="Content-Style-Type" content="text/css"/>
   <meta http-equiv="Content-Script-Type" content="text/javascript"/>
-  <style type="text/css">
-
-  #test, .reset { counter-reset: c; }
-  .increment:before, .use:before { content: counters(c, ".") "-"; }
-  .increment { counter-increment: c; }
-
-  </style>
-  <script type="text/javascript">
-
-  function run() {
-    document.getElementById("one").removeAttribute("class");
-	document.getElementById("two").setAttribute("class", "increment");
-	document.getElementById("three").setAttribute("style", "counter-increment: c");
-  }
-
-  </script>
  </head>
- <body onload="setTimeout('run()', 0)">
+ <body>
 
- <div id="reference">0.1-0.2-1-2-</div>
+ <div id="reference"><span>0.1-</span><span>0.2-</span><span>1-</span><span>2-</span></div>
 
  </body>
 </html>
