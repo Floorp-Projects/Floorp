@@ -6,25 +6,10 @@
   <link rel="help" href="http://www.w3.org/TR/CSS21/generate.html#propdef-content"/>
   <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#counter"/>
   <meta http-equiv="Content-Script-Type" content="text/javascript"/>
-  <style type="text/css">
-
-  #test, .reset { counter-reset: c; }
-  .increment:before { content: counters(c, ".") "-"; }
-  .increment { counter-increment: c; }
-
-  </style>
-  <script type="text/javascript">
-
-  function run() {
-	var t = document.getElementById("test");
-	t.removeChild(t.childNodes.item(1));
-  }
-
-  </script>
  </head>
- <body onload="setTimeout('run()', 0)">
+ <body>
 
- <div id="reference">1-2-3-</div>
+ <div id="reference"><span>1-</span><span>2-</span><span>3-</span></div>
 
  </body>
 </html>

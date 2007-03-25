@@ -6,19 +6,11 @@
   <link rel="help" href="http://www.w3.org/TR/CSS21/generate.html#counters"/>
   <link rel="help" href="http://www.w3.org/TR/CSS21/generate.html#propdef-content"/>
   <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#counter"/>
-  <style type="text/css">
-
-  span:before { counter-increment: c 1; content: "B" counters(c,".") "-" }
-  span:after  { counter-increment: c 1; content: "A" counters(c,".") "-" }
-
-  body, span#reset:after { counter-reset: c 0; }
-
-  </style>
  </head>
  <body>
 
 
- <div>B1-B2-B3-A4-A4.1-A5-</div>
+ <div><span>B1-</span><span>B2-</span><span>B3-</span><span>A4-</span><span>A4.1-</span><span>A5-</span></div>
 
  </body>
 </html>
