@@ -14,14 +14,4 @@
 <!ENTITY safeb.palm.decline.statustext "Close warning" >
 <!ENTITY safeb.palm.notforgery.label "This isn't a web forgery">
 
-<!ENTITY safeb.palm.addbutton.label "Add to blacklist">
-<!ENTITY safeb.palm.addbutton.tooltip "Add to blacklist">
-
-<!ENTITY safeb.palm.toolmenu.label "Safe Browsing">
-<!ENTITY safeb.palm.toolmenu.pref.label "Preferences...">
-<!ENTITY safeb.palm.toolmenu.reportphishing.label "Report phishing...">
-<!ENTITY safeb.palm.toolmenu.showphishingtestpage.label "Open Test Page">
-
-<!ENTITY safeb.palm.provider.logo.tooltip "Warning from Safe Browsing">
-
 <!ENTITY safeb.urlbaricon.tooltip "This page might be dangerous; click for details.">
