@@ -5,14 +5,14 @@ random == t1202-counter-02-b-test.html t1202-counter-02-b-reference.html # font 
 == t1202-counter-04-b-test.html t1202-counter-04-b-reference.html
 == t1202-counter-05-b-test.html t1202-counter-05-b-reference.html
 == t1202-counter-06-b-test.html t1202-counter-06-b-reference.html
-random == t1202-counter-07-b-test.html t1202-counter-07-b-reference.html # font spacing issues
-random == t1202-counter-08-b-test.html t1202-counter-08-b-reference.html # font spacing issues
+== t1202-counter-07-b-test.html t1202-counter-07-b-reference.html
+== t1202-counter-08-b-test.html t1202-counter-08-b-reference.html
 == t1202-counter-09-b-test.html t1202-counter-09-b-reference.html
 random == t1202-counter-10-b-test.html t1202-counter-10-b-reference.html # actual failure, but we don't reliably draw missing glyph boxes
 == t1202-counter-11-b-test.html t1202-counter-11-b-reference.html
 == t1202-counter-12-b-test.html t1202-counter-12-b-reference.html
-random == t1202-counter-13-b-test.html t1202-counter-13-b-reference.html # font spacing issues
-random == t1202-counter-14-b-test.html t1202-counter-14-b-reference.html # font spacing issues
+== t1202-counter-13-b-test.html t1202-counter-13-b-reference.html
+== t1202-counter-14-b-test.html t1202-counter-14-b-reference.html
 == t1202-counter-15-b-test.html t1202-counter-15-b-reference.html
 == t1202-counter-16-f-test.html t1202-counter-16-f-reference.html
 == t1202-counters-00-b-test.html t1202-counters-00-b-reference.html
@@ -22,14 +22,14 @@ random == t1202-counter-14-b-test.html t1202-counter-14-b-reference.html # font 
 == t1202-counters-04-b-test.html t1202-counters-04-b-reference.html
 == t1202-counters-05-b-test.html t1202-counters-05-b-reference.html
 == t1202-counters-06-b-test.html t1202-counters-06-b-reference.html
-random == t1202-counters-07-b-test.html t1202-counters-07-b-reference.html # font spacing issues
-random == t1202-counters-08-b-test.html t1202-counters-08-b-reference.html # font spacing issues
+== t1202-counters-07-b-test.html t1202-counters-07-b-reference.html
+== t1202-counters-08-b-test.html t1202-counters-08-b-reference.html
 == t1202-counters-09-b-test.html t1202-counters-09-b-reference.html
 random == t1202-counters-10-b-test.html t1202-counters-10-b-reference.html # actual failure, but we don't reliably draw missing glyph boxes
 == t1202-counters-11-b-test.html t1202-counters-11-b-reference.html
 == t1202-counters-12-b-test.html t1202-counters-12-b-reference.html
-random == t1202-counters-13-b-test.html t1202-counters-13-b-reference.html # font spacing issues
-random == t1202-counters-14-b-test.html t1202-counters-14-b-reference.html # font spacing issues
+== t1202-counters-13-b-test.html t1202-counters-13-b-reference.html
+== t1202-counters-14-b-test.html t1202-counters-14-b-reference.html
 == t1202-counters-15-b-test.html t1202-counters-15-b-reference.html
 == t1202-counters-16-c-test.html t1202-counters-16-c-reference.html
 == t1202-counters-17-d-test.html t1202-counters-17-d-reference.html
@@ -48,7 +48,7 @@ fails == t1204-reset-00-c-o-test.html t1204-reset-00-c-o-reference.html
 == t1204-reset-01-c-o-test.html t1204-reset-01-c-o-reference.html
 == t1204-reset-02-c-o-test.html t1204-reset-02-c-o-reference.html
 == t1204-root-e-test.html t1204-root-e-reference.html
-random == t120401-scope-00-b-test.html t120401-scope-00-b-reference.html # font spacing issues
+== t120401-scope-00-b-test.html t120401-scope-00-b-reference.html
 == t120401-scope-01-c-test.html t120401-scope-01-c-reference.html
 == t120401-scope-02-c-test.html t120401-scope-02-c-reference.html
 == t120401-scope-03-c-test.html t120401-scope-03-c-reference.html
