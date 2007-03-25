@@ -133,7 +133,7 @@ random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 351641-1a.html 351641-1-ref.html
 == 351641-1b.html 351641-1-ref.html
 == 351641-2a.html 351641-2-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT!="windows") == 351641-2b.html 351641-2-ref.html # bug 358433 (2006-10-19)
+random == 351641-2b.html 351641-2-ref.html # bug 358433 (2006-10-19); random instead of fails because of bug 372629
 == 359903-1.html 359903-1-ref.html
 == 359903-2.html 359903-2-ref.html
 == 360065-1.html 360065-1-ref.html
