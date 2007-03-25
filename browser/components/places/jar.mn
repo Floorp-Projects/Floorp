@@ -12,6 +12,7 @@ browser.jar:
 *   content/browser/places/tree.xml                      (content/tree.xml)
 *   content/browser/places/utils.js                      (content/utils.js)
 *   content/browser/places/controller.js                 (content/controller.js)
+*   content/browser/places/treeView.js                   (content/treeView.js)
 *   content/browser/places/treeHelpers.js                (content/treeHelpers.js)
 *   content/browser/places/demos/time.xul                (content/demos/time.xul)
 *   content/browser/places/demos/time.html               (content/demos/time.html)

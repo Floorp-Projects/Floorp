@@ -88,9 +88,6 @@
 #define NS_NAVHISTORYSERVICE_CONTRACTID \
   "@mozilla.org/browser/nav-history-service;1"
 
-#define NS_NAVHISTORYRESULTTREEVIEWER_CONTRACTID \
-  "@mozilla.org/browser/nav-history/result-tree-viewer;1"
-
 #define NS_ANNOTATIONSERVICE_CONTRACTID \
   "@mozilla.org/browser/annotation-service;1"
 

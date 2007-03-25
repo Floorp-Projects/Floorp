@@ -209,6 +209,19 @@ nsFaviconService::SetFaviconUrlForPage(nsIURI* aPage, nsIURI* aFavicon)
   return NS_OK;
 }
 
+// nsFaviconService::GetDefaultFavicon
+
+NS_IMETHODIMP
+nsFaviconService::GetDefaultFavicon(nsIURI** _retval)
+{
+  // not found, use default
+  if (!mDefaultIcon) {
+    nsresult rv = NS_NewURI(getter_AddRefs(mDefaultIcon),
+                            NS_LITERAL_CSTRING(FAVICON_DEFAULT_URL));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return mDefaultIcon->Clone(_retval);
+}
 
 // nsFaviconService::SetFaviconUrlForPageInternal
 //
@@ -653,12 +666,7 @@ nsFaviconService::GetFaviconImageForPage(nsIURI* aPage, nsIURI** _retval)
   }
 
   // not found, use default
-  if (! mDefaultIcon) {
-    nsresult rv = NS_NewURI(getter_AddRefs(mDefaultIcon),
-                            NS_LITERAL_CSTRING(FAVICON_DEFAULT_URL));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return mDefaultIcon->Clone(_retval);
+  return GetDefaultFavicon(_retval);
 }
 
 

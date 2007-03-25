@@ -219,11 +219,6 @@ static const char* gXpcomShutdown = "xpcom-shutdown";
 // annotation names
 const char nsNavHistory::kAnnotationPreviousEncoding[] = "history/encoding";
 
-nsIAtom* nsNavHistory::sMenuRootAtom = nsnull;
-nsIAtom* nsNavHistory::sToolbarFolderAtom = nsnull;
-nsIAtom* nsNavHistory::sSessionStartAtom = nsnull;
-nsIAtom* nsNavHistory::sSessionContinueAtom = nsnull;
-nsIAtom* nsNavHistory::sContainerAtom = nsnull;
 
 nsNavHistory* nsNavHistory::gHistoryService;
 
@@ -242,12 +237,6 @@ nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
 #endif
   NS_ASSERTION(! gHistoryService, "YOU ARE CREATING 2 COPIES OF THE HISTORY SERVICE. Everything will break.");
   gHistoryService = this;
-
-  sMenuRootAtom = NS_NewAtom("menu-root");
-  sToolbarFolderAtom = NS_NewAtom("toolbar-folder");
-  sSessionStartAtom = NS_NewAtom("session-start");
-  sSessionContinueAtom = NS_NewAtom("session-continue");
-  sContainerAtom = NS_NewAtom("container");
 }
 
 
@@ -259,12 +248,6 @@ nsNavHistory::~nsNavHistory()
   // in case somebody creates an extra instance of the service.
   NS_ASSERTION(gHistoryService == this, "YOU CREATED 2 COPIES OF THE HISTORY SERVICE.");
   gHistoryService = nsnull;
-
-  NS_IF_RELEASE(sMenuRootAtom);
-  NS_IF_RELEASE(sToolbarFolderAtom);
-  NS_IF_RELEASE(sSessionStartAtom);
-  NS_IF_RELEASE(sSessionContinueAtom);
-  NS_IF_RELEASE(sContainerAtom);
 }
 
 
