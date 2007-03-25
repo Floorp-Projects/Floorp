@@ -2191,9 +2191,13 @@ nsLocalFile::GetParent(nsIFile * *aParent)
 
     NS_ENSURE_ARG_POINTER(aParent);
 
-    nsAutoString parentPath(mWorkingPath);
+    // A two-character path must be a drive such as C:, so it has no parent
+    if (mWorkingPath.Length() == 2) {
+        *aParent = nsnull;
+        return NS_OK;
+    }
 
-    PRInt32 offset = parentPath.RFindChar(PRUnichar('\\'));
+    PRInt32 offset = mWorkingPath.RFindChar(PRUnichar('\\'));
     // adding this offset check that was removed in bug 241708 fixes mail
     // directories that aren't relative to/underneath the profile dir.
     // e.g., on a different drive. Before you remove them, please make
@@ -2201,10 +2205,14 @@ nsLocalFile::GetParent(nsIFile * *aParent)
     if (offset == kNotFound)
       return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
-    if (offset == 1 && parentPath[0] == L'\\') {
+    // A path of the form \\NAME is a top-level path and has no parent
+    if (offset == 1 && mWorkingPath[0] == L'\\') {
         *aParent = nsnull;
         return NS_OK;
     }
+
+    nsAutoString parentPath(mWorkingPath);
+
     if (offset > 0)
         parentPath.Truncate(offset);
     else
