@@ -38,6 +38,7 @@
 #include "nsIPipe.h"
 #include "nsIEventTarget.h"
 #include "nsISeekableStream.h"
+#include "nsIProgrammingLanguage.h"
 #include "nsSegmentedBuffer.h"
 #include "nsStreamUtils.h"
 #include "nsAutoLock.h"
@@ -104,6 +105,7 @@ private:
 class nsPipeInputStream : public nsIAsyncInputStream
                         , public nsISeekableStream
                         , public nsISearchableInputStream
+                        , public nsIClassInfo
 {
 public:
     // since this class will be allocated as a member of the pipe, we do not
@@ -117,6 +119,7 @@ public:
     NS_DECL_NSIASYNCINPUTSTREAM
     NS_DECL_NSISEEKABLESTREAM
     NS_DECL_NSISEARCHABLEINPUTSTREAM
+    NS_DECL_NSICLASSINFO
 
     nsPipeInputStream(nsPipe *pipe)
         : mPipe(pipe)
@@ -162,6 +165,7 @@ private:
 // the output end of a pipe (allocated as a member of the pipe).
 class nsPipeOutputStream : public nsIAsyncOutputStream
                          , public nsISeekableStream
+                         , public nsIClassInfo
 {
 public:
     // since this class will be allocated as a member of the pipe, we do not
@@ -174,6 +178,7 @@ public:
     NS_DECL_NSIOUTPUTSTREAM
     NS_DECL_NSIASYNCOUTPUTSTREAM
     NS_DECL_NSISEEKABLESTREAM
+    NS_DECL_NSICLASSINFO
 
     nsPipeOutputStream(nsPipe *pipe)
         : mPipe(pipe)
@@ -598,6 +603,21 @@ nsPipeEvents::~nsPipeEvents()
 // nsPipeInputStream methods:
 //-----------------------------------------------------------------------------
 
+NS_IMPL_QUERY_INTERFACE5(nsPipeInputStream,
+                         nsIInputStream,
+                         nsIAsyncInputStream,
+                         nsISeekableStream,
+                         nsISearchableInputStream,
+                         nsIClassInfo)
+
+NS_IMPL_CI_INTERFACE_GETTER4(nsPipeInputStream,
+                             nsIInputStream,
+                             nsIAsyncInputStream,
+                             nsISeekableStream,
+                             nsISearchableInputStream)
+
+NS_IMPL_THREADSAFE_CI(nsPipeInputStream)
+
 nsresult
 nsPipeInputStream::Wait()
 {
@@ -675,12 +695,6 @@ nsPipeInputStream::Release(void)
         Close();
     return mPipe->Release();
 }
-
-NS_IMPL_QUERY_INTERFACE4(nsPipeInputStream,
-                         nsIInputStream,
-                         nsIAsyncInputStream,
-                         nsISeekableStream,
-                         nsISearchableInputStream)
 
 NS_IMETHODIMP
 nsPipeInputStream::CloseWithStatus(nsresult reason)
@@ -952,6 +966,18 @@ nsPipeInputStream::Search(const char *forString,
 // nsPipeOutputStream methods:
 //-----------------------------------------------------------------------------
 
+NS_IMPL_QUERY_INTERFACE3(nsPipeOutputStream,
+                         nsIOutputStream,
+                         nsIAsyncOutputStream,
+                         nsIClassInfo)
+
+NS_IMPL_CI_INTERFACE_GETTER3(nsPipeOutputStream,
+                             nsIOutputStream,
+                             nsIAsyncOutputStream,
+                             nsISeekableStream)
+
+NS_IMPL_THREADSAFE_CI(nsPipeOutputStream)
+
 nsresult
 nsPipeOutputStream::Wait()
 {
@@ -1026,10 +1052,6 @@ nsPipeOutputStream::Release()
         Close();
     return mPipe->Release();
 }
-
-NS_IMPL_QUERY_INTERFACE2(nsPipeOutputStream,
-                         nsIOutputStream,
-                         nsIAsyncOutputStream)
 
 NS_IMETHODIMP
 nsPipeOutputStream::CloseWithStatus(nsresult reason)
