@@ -37,6 +37,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
+const NS_ERROR_MODULE_NETWORK = 2152398848;
+const NS_NET_STATUS_READ_FROM = NS_ERROR_MODULE_NETWORK + 8;
+const NS_NET_STATUS_WROTE_TO  = NS_ERROR_MODULE_NETWORK + 9;
+
 function getPanelBrowser()
 {
     return document.getElementById("web-panels-browser");
