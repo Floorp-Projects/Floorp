@@ -43,7 +43,7 @@ random == t1202-counters-10-b-test.html t1202-counters-10-b-reference.html # act
 == t1204-multiple-00-c-test.html t1204-multiple-00-c-reference.html
 == t1204-multiple-01-c-test.html t1204-multiple-01-c-reference.html
 == t1204-order-00-c-test.html t1204-order-00-c-reference.html
-== t1204-order-01-d-test.html t1204-order-01-d-reference.html
+fails == t1204-order-01-d-test.html t1204-order-01-d-reference.html # content:none unimplemented (need bug!)
 fails == t1204-reset-00-c-o-test.html t1204-reset-00-c-o-reference.html
 == t1204-reset-01-c-o-test.html t1204-reset-01-c-o-reference.html
 == t1204-reset-02-c-o-test.html t1204-reset-02-c-o-reference.html
