@@ -1,0 +1,14 @@
+# XXX Need to repeat these tests for RTL.  (Note that != tests can't use
+# same file.)
+
+# Also need to test intrinsic widths (bug 368155).
+
+!= text-indent-single-line-100.html text-indent-single-line-0.html
+== text-indent-single-line-100.html text-indent-single-line-ref-margin.html
+== text-indent-single-line-0.html text-indent-single-line-ref-unstyled.html
+== text-indent-single-line-percent.html text-indent-single-line-percent-ref.html
+== text-indent-single-line-indent-inline.html text-indent-single-line-indent-inline-ref-block-margin.html
+== text-indent-single-line-indent-inline.html text-indent-single-line-indent-inline-ref-inline-margin.html
+== text-indent-multiple-line.html text-indent-multiple-line-ref-inline-margin.html
+== text-indent-multiple-line.html text-indent-multiple-line-ref-float.html
+!= text-indent-multiple-line.html text-indent-multiple-line-notref-block-margin.html
