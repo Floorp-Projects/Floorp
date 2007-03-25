@@ -56,7 +56,6 @@ XPIDLSRCS += \
 		$(NULL)
 
 EXPORTS		= \
-		nsIXULContentSink.h \
 		nsIXULDocument.h \
 		nsIXULPrototypeCache.h \
 		$(NULL)

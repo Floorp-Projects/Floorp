@@ -47,6 +47,7 @@
  * see http://developer.mozilla.org/en/docs/XUL
  */
 
+#include "nsXULContentSink.h"
 #include "nsCOMPtr.h"
 #include "nsForwardReference.h"
 #include "nsICSSLoader.h"
@@ -70,17 +71,13 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsIViewManager.h"
-#include "nsIXULContentSink.h"
 #include "nsIXULDocument.h"
-#include "nsIXULPrototypeCache.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
 #include "nsRDFCID.h"
 #include "nsParserUtils.h"
 #include "nsIMIMEHeaderParam.h"
-#include "nsVoidArray.h"
-#include "nsWeakPtr.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsXULElement.h"
@@ -93,10 +90,8 @@
 #include "nsIObjectInputStream.h"       // XXXbe temporary
 #include "nsXULDocument.h"              // XXXbe temporary
 
-#include "nsIExpatSink.h"
 #include "nsUnicharUtils.h"
 #include "nsGkAtoms.h"
-#include "nsNodeInfoManager.h"
 #include "nsContentUtils.h"
 #include "nsAttrName.h"
 #include "nsXMLContentSink.h"
@@ -108,123 +103,6 @@ static PRLogModuleInfo* gLog;
 #endif
 
 static NS_DEFINE_CID(kXULPrototypeCacheCID, NS_XULPROTOTYPECACHE_CID);
-
-//----------------------------------------------------------------------
-
-class XULContentSinkImpl : public nsIXULContentSink,
-                           public nsIExpatSink
-{
-public:
-    XULContentSinkImpl(nsresult& aRV);
-    virtual ~XULContentSinkImpl();
-
-    // nsISupports
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIEXPATSINK
-
-    // nsIContentSink
-    NS_IMETHOD WillTokenize(void) { return NS_OK; }
-    NS_IMETHOD WillBuildModel(void);
-    NS_IMETHOD DidBuildModel(void);
-    NS_IMETHOD WillInterrupt(void);
-    NS_IMETHOD WillResume(void);
-    NS_IMETHOD SetParser(nsIParser* aParser);  
-    virtual void FlushPendingNotifications(mozFlushType aType) { }
-    NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
-    virtual nsISupports *GetTarget();
-
-    // nsIXULContentSink
-    NS_IMETHOD Init(nsIDocument* aDocument, nsXULPrototypeDocument* aPrototype);
-
-protected:
-    // pseudo-constants
-    PRUnichar* mText;
-    PRInt32 mTextLength;
-    PRInt32 mTextSize;
-    PRBool mConstrainSize;
-
-    nsresult AddAttributes(const PRUnichar** aAttributes, 
-                           const PRUint32 aAttrLen, 
-                           nsXULPrototypeElement* aElement);
-   
-    nsresult OpenRoot(const PRUnichar** aAttributes, 
-                      const PRUint32 aAttrLen, 
-                      nsINodeInfo *aNodeInfo);
-
-    nsresult OpenTag(const PRUnichar** aAttributes, 
-                     const PRUint32 aAttrLen, 
-                     const PRUint32 aLineNumber, 
-                     nsINodeInfo *aNodeInfo);
-    
-    nsresult OpenScript(const PRUnichar** aAttributes,
-                        const PRUint32 aLineNumber);
-
-    static PRBool IsDataInBuffer(PRUnichar* aBuffer, PRInt32 aLength);
-
-    nsresult SetElementScriptType(nsXULPrototypeElement* element,
-                                  const PRUnichar** aAttributes, 
-                                  const PRUint32 aAttrLen);
-
-    // Text management
-    nsresult FlushText(PRBool aCreateTextNode = PR_TRUE);
-    nsresult AddText(const PRUnichar* aText, PRInt32 aLength);
-
-
-    nsRefPtr<nsNodeInfoManager> mNodeInfoManager;
-    
-    
-    nsresult NormalizeAttributeString(const PRUnichar *aExpatName,
-                                      nsAttrName &aName);
-    nsresult CreateElement(nsINodeInfo *aNodeInfo, nsXULPrototypeElement** aResult);
-
-
-    public:
-    enum State { eInProlog, eInDocumentElement, eInScript, eInEpilog };
-    protected:
-
-    State mState;
-
-    // content stack management
-    class ContextStack {
-    protected:
-        struct Entry {
-            nsXULPrototypeNode* mNode;
-            // a LOT of nodes have children; preallocate for 8
-            nsAutoVoidArray     mChildren;
-            State               mState;
-            Entry*              mNext;
-        };
-
-        Entry* mTop;
-        PRInt32 mDepth;
-
-    public:
-        ContextStack();
-        ~ContextStack();
-
-        PRInt32 Depth() { return mDepth; }
-
-        nsresult Push(nsXULPrototypeNode* aNode, State aState);
-        nsresult Pop(State* aState);
-
-        nsresult GetTopNode(nsXULPrototypeNode** aNode);
-        nsresult GetTopChildren(nsVoidArray** aChildren);
-        nsresult GetTopNodeScriptType(PRUint32 *aScriptType);
-    };
-
-    friend class ContextStack;
-    ContextStack mContextStack;
-
-    nsWeakPtr              mDocument;             // [OWNER]
-    nsCOMPtr<nsIURI>       mDocumentURL;          // [OWNER]
-
-    nsRefPtr<nsXULPrototypeDocument> mPrototype;  // [OWNER]
-    nsIParser*             mParser;               // [OWNER] We use regular pointer b/c of funky exports on nsIParser
-    
-    nsCOMPtr<nsICSSLoader> mCSSLoader;            // [OWNER]
-    nsCOMPtr<nsICSSParser> mCSSParser;            // [OWNER]
-    nsCOMPtr<nsIScriptSecurityManager> mSecMan;
-};
 
 //----------------------------------------------------------------------
 
@@ -332,7 +210,7 @@ XULContentSinkImpl::ContextStack::GetTopNodeScriptType(PRUint32 *aScriptType)
 //----------------------------------------------------------------------
 
 
-XULContentSinkImpl::XULContentSinkImpl(nsresult& rv)
+XULContentSinkImpl::XULContentSinkImpl()
     : mText(nsnull),
       mTextLength(0),
       mTextSize(0),
@@ -345,8 +223,6 @@ XULContentSinkImpl::XULContentSinkImpl(nsresult& rv)
     if (! gLog)
         gLog = PR_NewLogModule("nsXULContentSink");
 #endif
-
-    rv = NS_OK;
 }
 
 
@@ -385,8 +261,7 @@ XULContentSinkImpl::~XULContentSinkImpl()
 //----------------------------------------------------------------------
 // nsISupports interface
 
-NS_IMPL_ISUPPORTS4(XULContentSinkImpl,
-                   nsIXULContentSink,
+NS_IMPL_ISUPPORTS3(XULContentSinkImpl,
                    nsIXMLContentSink,
                    nsIContentSink,
                    nsIExpatSink)
@@ -465,12 +340,10 @@ XULContentSinkImpl::GetTarget()
 }
 
 //----------------------------------------------------------------------
-//
-// nsIXULContentSink interface
-//
 
-NS_IMETHODIMP
-XULContentSinkImpl::Init(nsIDocument* aDocument, nsXULPrototypeDocument* aPrototype)
+nsresult
+XULContentSinkImpl::Init(nsIDocument* aDocument,
+                         nsXULPrototypeDocument* aPrototype)
 {
     NS_PRECONDITION(aDocument != nsnull, "null ptr");
     if (! aDocument)
@@ -628,28 +501,6 @@ XULContentSinkImpl::CreateElement(nsINodeInfo *aNodeInfo,
     element->mNodeInfo    = aNodeInfo;
     
     *aResult = element;
-    return NS_OK;
-}
-
-nsresult
-NS_NewXULContentSink(nsIXULContentSink** aResult)
-{
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    nsresult rv;
-    XULContentSinkImpl* sink = new XULContentSinkImpl(rv);
-    if (! sink)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    if (NS_FAILED(rv)) {
-        delete sink;
-        return rv;
-    }
-
-    NS_ADDREF(sink);
-    *aResult = sink;
     return NS_OK;
 }
 
