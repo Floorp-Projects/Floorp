@@ -8,6 +8,12 @@ the mozilla source code (the browser, the sdks, etc.).
 Table of Contents
 =================
 
+* sync-all-configures
+  Run from cron to generate configure on all desired branches.
+
+* sync-configure
+  Current script to generate configure from configure.in and check in.
+
 * gnome-tip-nightly
    A tcsh shell script to pull and build gnome packages from
    the gnome anonymous cvs server. This is useful for keeping
