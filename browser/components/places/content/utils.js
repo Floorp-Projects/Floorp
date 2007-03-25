@@ -127,6 +127,18 @@ var PlacesUtils = {
   },
 
   /**
+   * The Favicons Service
+   */
+  _favicons: null,
+  get favicons() {
+    if (!this._favicons) {
+      this._favicons = Cc["@mozilla.org/browser/favicon-service;1"].
+                       getService(Ci.nsIFaviconService);
+    }
+    return this._favicons;
+  },
+
+  /**
    * The Transaction Manager for this window.
    */
   _tm: null,
@@ -222,6 +234,21 @@ var PlacesUtils = {
   },
 
   /**
+   * Determines whether or not a ResultNode is a visit item or not
+   * @param   aNode
+   *          A NavHistoryResultNode
+   * @returns true if the node is a visit item, false otherwise
+   */
+  nodeIsVisit: function PU_nodeIsVisit(aNode) {
+    NS_ASSERT(aNode, "null node");
+
+    const NHRN = Ci.nsINavHistoryResultNode;
+    var type = aNode.type;
+    return type == NHRN.RESULT_TYPE_VISIT ||
+           type == NHRN.RESULT_TYPE_FULL_VISIT;
+  },
+
+  /**
    * Determines whether or not a ResultNode is a URL item or not
    * @param   aNode
    *          A NavHistoryResultNode
@@ -231,9 +258,10 @@ var PlacesUtils = {
     NS_ASSERT(aNode, "null node");
 
     const NHRN = Ci.nsINavHistoryResultNode;
-    return aNode.type == NHRN.RESULT_TYPE_URI ||
-           aNode.type == NHRN.RESULT_TYPE_VISIT ||
-           aNode.type == NHRN.RESULT_TYPE_FULL_VISIT;
+    var type = aNode.type;
+    return type == NHRN.RESULT_TYPE_URI ||
+           type == NHRN.RESULT_TYPE_VISIT ||
+           type == NHRN.RESULT_TYPE_FULL_VISIT;
   },
 
   /**
@@ -287,10 +315,12 @@ var PlacesUtils = {
     NS_ASSERT(aNode, "null node");
 
     const NHRN = Ci.nsINavHistoryResultNode;
-    return aNode.type == NHRN.RESULT_TYPE_HOST ||
-           aNode.type == NHRN.RESULT_TYPE_QUERY ||
-           aNode.type == NHRN.RESULT_TYPE_FOLDER ||
-           aNode.type == NHRN.RESULT_TYPE_REMOTE_CONTAINER;
+    var type = aNode.type;
+    return type == NHRN.RESULT_TYPE_HOST ||
+           type == NHRN.RESULT_TYPE_QUERY ||
+           type == NHRN.RESULT_TYPE_FOLDER ||
+           type == NHRN.RESULT_TYPE_DAY ||
+           type == NHRN.RESULT_TYPE_REMOTE_CONTAINER;
   },
 
   /**

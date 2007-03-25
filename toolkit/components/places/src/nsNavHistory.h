@@ -47,7 +47,6 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
-#include "nsIAtom.h"
 #include "nsINavHistoryService.h"
 #include "nsIAutoCompleteSearch.h"
 #include "nsIAutoCompleteResult.h"
@@ -241,12 +240,6 @@ public:
 
   // used in execute queries to get session ID info (only for visits)
   static const PRInt32 kGetInfoIndex_SessionId;
-
-  static nsIAtom* sMenuRootAtom;
-  static nsIAtom* sToolbarFolderAtom;
-  static nsIAtom* sSessionStartAtom;
-  static nsIAtom* sSessionContinueAtom;
-  static nsIAtom* sContainerAtom;
 
   // this actually executes a query and gives you results, it is used by
   // nsNavHistoryQueryResultNode

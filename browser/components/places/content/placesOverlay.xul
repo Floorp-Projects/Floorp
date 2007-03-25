@@ -55,6 +55,8 @@
   <script type="application/x-javascript"
           src="chrome://browser/content/places/controller.js"/>
   <script type="application/x-javascript"
+          src="chrome://browser/content/places/treeView.js"/>
+  <script type="application/x-javascript"
           src="chrome://browser/content/places/treeHelpers.js"/>
   <script type="application/x-javascript"
           src="chrome://global/content/nsDragAndDrop.js"/>

@@ -8,7 +8,6 @@
 #include "nsMorkHistoryImporter.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNavHistory, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNavHistoryResultTreeViewer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAnnoProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAnnotationService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNavBookmarks, Init)
@@ -31,11 +30,6 @@ static const nsModuleComponentInfo components[] =
     NS_NAVHISTORYSERVICE_CID,
     "@mozilla.org/autocomplete/search;1?name=history",
     nsNavHistoryConstructor },
-
-  { "History tree view",
-    NS_NAVHISTORYRESULTTREEVIEWER_CID,
-    NS_NAVHISTORYRESULTTREEVIEWER_CONTRACTID,
-    nsNavHistoryResultTreeViewerConstructor },
 
   { "Page Annotation Service",
     NS_ANNOTATIONSERVICE_CID,

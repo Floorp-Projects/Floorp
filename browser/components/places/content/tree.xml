@@ -132,18 +132,13 @@
         <parameter name="options"/>
         <body><![CDATA[ 
           var result = PlacesUtils.history.executeQueries(queries, queries.length, 
-                                                   options);
-
-          var treeviewer = 
-              Cc["@mozilla.org/browser/nav-history/result-tree-viewer;1"].
-              createInstance(Ci.nsINavHistoryResultViewer);
-          result.viewer = treeviewer;
-
-          treeviewer.QueryInterface(Ci.nsITreeView);
-          this.view = treeviewer;
+                                                          options);
+          var treeView = new PlacesTreeView();
+          result.viewer = treeView;
+          this.view = treeView;
         ]]></body>
       </method>
-      
+
       <!-- 
         Causes a particular node represented by the specified placeURI to be
         selected in the tree. All containers above the node in the hierarchy
@@ -288,7 +283,7 @@
           return this.view.selection.count == 1;
         ]]></getter>
       </property>
-
+      
       <!-- nsIPlacesView -->
       <method name="getSelectionNodes">
         <body><![CDATA[ 
