@@ -84,5 +84,8 @@ include counters/reftest.list
 # first-letter/
 include first-letter/reftest.list
 
+# text-indent/
+include text-indent/reftest.list
+
 # text-transform/
 include text-transform/reftest.list
