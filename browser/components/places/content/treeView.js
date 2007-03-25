@@ -326,7 +326,7 @@ PlacesTreeView.prototype = {
         this._visibleElements[i].viewIndex = i;
       }
 
-      // repaint the region in which we didn't change the viewIndexs, also
+      // repaint the region in which we didn't change the viewIndexes, also
       // including the container element itself since its twisty could have
       // changed.
       var minLength = Math.min(newElements.length, replaceCount);
@@ -813,7 +813,7 @@ PlacesTreeView.prototype = {
     return asContainer(this._visibleElements[aRow]).containerOpen;
   },
 
-  isContainerEmpty: function PTV_isContainerOpen(aRow) {
+  isContainerEmpty: function PTV_isContainerEmpty(aRow) {
     this._ensureValidRow(aRow);
     if (!PlacesUtils.nodeIsContainer(this._visibleElements[aRow]))
       throw Cr.NS_ERROR_INVALID_ARG;
