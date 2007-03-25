@@ -1,6 +1,6 @@
 == t1202-counter-00-b-test.html t1202-counter-00-b-reference.html
 == t1202-counter-01-b-test.html t1202-counter-01-b-reference.html
-random == t1202-counter-02-b-test.html t1202-counter-02-b-reference.html # font selection issues
+== t1202-counter-02-b-test.html t1202-counter-02-b-reference.html
 == t1202-counter-03-b-test.html t1202-counter-03-b-reference.html
 == t1202-counter-04-b-test.html t1202-counter-04-b-reference.html
 == t1202-counter-05-b-test.html t1202-counter-05-b-reference.html
