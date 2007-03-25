@@ -1468,4 +1468,63 @@ NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *count, nsIID ***array)          \
 
 #define NS_INTERFACE_MAP_END_THREADSAFE NS_IMPL_QUERY_TAIL_GUTS
 
+/**
+ * Macro to generate nsIClassInfo methods for classes which do not have
+ * corresponding nsIFactory implementations.
+ */
+#define NS_IMPL_THREADSAFE_CI(_class)                                         \
+NS_IMETHODIMP                                                                 \
+_class::GetInterfaces(PRUint32* _count, nsIID*** _array)                      \
+{                                                                             \
+  return NS_CI_INTERFACE_GETTER_NAME(_class)(_count, _array);                 \
+}                                                                             \
+                                                                              \
+NS_IMETHODIMP                                                                 \
+_class::GetHelperForLanguage(PRUint32 _language, nsISupports** _retval)       \
+{                                                                             \
+  *_retval = nsnull;                                                          \
+  return NS_OK;                                                               \
+}                                                                             \
+                                                                              \
+NS_IMETHODIMP                                                                 \
+_class::GetContractID(char** _contractID)                                     \
+{                                                                             \
+  *_contractID = nsnull;                                                      \
+  return NS_OK;                                                               \
+}                                                                             \
+                                                                              \
+NS_IMETHODIMP                                                                 \
+_class::GetClassDescription(char** _classDescription)                         \
+{                                                                             \
+  *_classDescription = nsnull;                                                \
+  return NS_OK;                                                               \
+}                                                                             \
+                                                                              \
+NS_IMETHODIMP                                                                 \
+_class::GetClassID(nsCID** _classID)                                          \
+{                                                                             \
+  *_classID = nsnull;                                                         \
+  return NS_OK;                                                               \
+}                                                                             \
+                                                                              \
+NS_IMETHODIMP                                                                 \
+_class::GetImplementationLanguage(PRUint32* _language)                        \
+{                                                                             \
+  *_language = nsIProgrammingLanguage::CPLUSPLUS;                             \
+  return NS_OK;                                                               \
+}                                                                             \
+                                                                              \
+NS_IMETHODIMP                                                                 \
+_class::GetFlags(PRUint32* _flags)                                            \
+{                                                                             \
+  *_flags = nsIClassInfo::THREADSAFE;                                         \
+  return NS_OK;                                                               \
+}                                                                             \
+                                                                              \
+NS_IMETHODIMP                                                                 \
+_class::GetClassIDNoAlloc(nsCID* _classIDNoAlloc)                             \
+{                                                                             \
+  return NS_ERROR_NOT_AVAILABLE;                                              \
+}
+
 #endif
