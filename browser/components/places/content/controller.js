@@ -113,8 +113,7 @@ PlacesController.prototype = {
     case "cmd_cut":
     case "cmd_delete":
     case "placesCmd_moveBookmarks":
-      return !this.rootNodeIsSelected() && 
-             this._hasRemovableSelection();
+      return this._hasRemovableSelection();
     case "cmd_copy":
       return this._view.hasSelection;
     case "cmd_paste":
@@ -322,10 +321,19 @@ PlacesController.prototype = {
       return false;
 
     var nodes = this._view.getSelectionNodes();
-    var root = this._view.getResult().root;
+    var root = this._view.getResultNode();
 
+    var btFolderId = PlacesUtils.toolbarFolderId;
     for (var i = 0; i < nodes.length; ++i) {
-      var parent = nodes[i].parent || root;
+      // Disallow removing the view's root node 
+      if (nodes[i] == root)
+        return false;
+
+      // Disallow removing the toolbar folder
+      if (PlacesUtils.nodeIsFolder(nodes[i]) &&
+          asFolder(nodes[i]).folderId == btFolderId)
+        return false;
+
       // We don't call nodeIsReadOnly here, because nodeIsReadOnly means that
       // a node has children that cannot be edited, reordered or removed. Here,
       // we don't care if a node's children can't be reordered or edited, just
@@ -334,7 +342,8 @@ PlacesController.prototype = {
       // removable), but some special bookmark folders may have non-removable
       // children, e.g. live bookmark folder children. It doesn't make sense
       // to delete a child of a live bookmark folder, since when the folder
-      // refreshes, the child will return. 
+      // refreshes, the child will return.
+      var parent = nodes[i].parent || root;
       if (PlacesUtils.isReadonlyFolder(parent))
         return false;
     }
@@ -370,16 +379,7 @@ PlacesController.prototype = {
    * Determines whether or not nodes can be inserted relative to the selection.
    */
   _canInsert: function PC__canInsert() {
-    var nodes = this._view.getSelectionNodes();
-    var root = this._view.getResult().root;
-    for (var i = 0; i < nodes.length; ++i) {
-      var parent = nodes[i].parent || root;
-      if (PlacesUtils.nodeIsReadOnly(parent))
-        return false;
-    }
-    // Even if there's no selection, we need to check the root. Otherwise 
-    // commands may be enabled for history views when nothing is selected. 
-    return !PlacesUtils.nodeIsReadOnly(root);
+    return this._view.insertionPoint != null;
   },
 
   /**
