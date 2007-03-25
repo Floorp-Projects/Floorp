@@ -79,6 +79,9 @@
 #include "nsDOMClassInfo.h"
 #include "nsIScriptableUConv.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIContentPolicy.h"
+#include "nsContentPolicyUtils.h"
+#include "nsContentErrors.h"
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -1035,6 +1038,23 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
 
   rv = NS_NewURI(getter_AddRefs(uri), url, nsnull, GetBaseURI());
   if (NS_FAILED(rv)) return rv;
+
+  // mScriptContext should be initialized because of GetBaseURI() above.
+  // Still need to consider the case that doc is nsnull however.
+  nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
+  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OTHER,
+                                 uri,
+                                 (doc ? doc->GetDocumentURI() : nsnull),
+                                 doc,
+                                 EmptyCString(), //mime guess
+                                 nsnull,         //extra
+                                 &shouldLoad);
+  if (NS_FAILED(rv)) return rv;
+  if (NS_CP_REJECTED(shouldLoad)) {
+    // Disallowed by content policy
+    return NS_ERROR_CONTENT_BLOCKED;
+  }
 
   if (!user.IsEmpty()) {
     nsCAutoString userpass;
