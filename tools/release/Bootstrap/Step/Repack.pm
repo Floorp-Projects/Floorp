@@ -16,11 +16,11 @@ sub Execute {
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(var => 'logDir');
-    my $buildPlatform = $config->Get(sysvar => 'buildPlatform');
+    my $l10n_buildPlatform = $config->Get(sysvar => 'l10n_buildPlatform');
     my $rcTag = $productTag . '_RC' . $rc;
 
     my $buildLog = catfile($logDir, 'repack_' . $rcTag . '-build-l10n.log');
-    my $lastBuilt = catfile($l10n_buildDir, $buildPlatform, 'last-built');
+    my $lastBuilt = catfile($l10n_buildDir, $l10n_buildPlatform, 'last-built');
     unlink($lastBuilt) 
       or $this->Log(msg => "Cannot unlink last-built file $lastBuilt: $!");
     $this->Log(msg => "Unlinked $lastBuilt");
