@@ -7,14 +7,11 @@
   <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#counter"/>
   <style type="text/css">
 
-  ul { display: block; margin: 0; padding: 0; counter-reset: c; }
-  li { counter-increment: c; }
+  ul { display: block; margin: 0; padding: 0; }
   li, div { display: block; margin: 0; padding: 0;
             width: 3em; border: thin solid; }
-  li:before, div:before { content: counter(c); }
 
   #four { border: none; }
-  #four:before { content: none; }
 
   #two { float: left; }
   #three { position: relative; }
@@ -31,15 +28,15 @@
  should appear on this page.</p>
 
  <ul>
-   <li id="one">1</li>
-   <li id="two">2</li>
-   <li id="three">3</li>
-   <li id="four"><div>4</div></li>
-   <li id="five">5</li>
-   <li id="six">6</li>
-   <li id="seven">7</li>
-   <li id="eight">8</li>
-   <li id="nine">9</li>
+   <li id="one">11</li>
+   <li id="two">22</li>
+   <li id="three">33</li>
+   <li id="four"><div>44</div></li>
+   <li id="five">55</li>
+   <li id="six">66</li>
+   <li id="seven">77</li>
+   <li id="eight">88</li>
+   <li id="nine">99</li>
  </ul>
 
  </body>
