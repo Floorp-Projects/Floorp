@@ -1,0 +1,36 @@
+#!/bin/sh -x
+
+# 3/3/03 - Now Runs on bawb as cltbld
+# 5/1/03 - Now Runs on branch as cltbld
+# 2003/02/24 - Now runs on egg as cltbld
+
+# Autoconf ***must*** be 2.13.
+AC="/usr/bin/autoconf-2.13"
+CVS="/usr/bin/cvs"
+CVSROOT='cltbld@cvs.mozilla.org:/cvsroot'
+CVS_RSH=ssh
+PATH="/usr/bin:/bin:/usr/local/bin:/usr/sbin:/usr/bsd:/sbin:/usr/bin:/bin:/usr/etc:/usr/ucb"
+TDIR="/tmp/c-s.$$"
+HOST=`/bin/hostname`
+
+export CVSROOT CVS_RSH PATH
+
+rm -rf ${TDIR}
+mkdir ${TDIR}
+cd ${TDIR}
+
+${CVS} -q checkout mozilla/configure.in mozilla/configure mozilla/build/autoconf mozilla/aclocal.m4
+
+cd mozilla
+${AC} -l build/autoconf
+
+${CVS} diff configure >/dev/null 2>&1
+if test "$?" != "0"
+then
+	${CVS} commit -m"Automated update from host $HOST" configure
+fi
+
+cd /tmp
+rm -rf ${TDIR}
+exit 0
+
