@@ -1,5 +1,5 @@
 #!/bin/sh
 
 for branch in HEAD MOZILLA_1_8_BRANCH MOZILLA_1_8_0_BRANCH; do
-    $HOME/bin/sync-configure-better $branch
+    $HOME/bin/sync-configure $branch
 done
