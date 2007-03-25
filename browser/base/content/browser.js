@@ -55,22 +55,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-const NS_ERROR_MODULE_NETWORK = 2152398848;
-const NS_NET_STATUS_READ_FROM = NS_ERROR_MODULE_NETWORK + 8;
-const NS_NET_STATUS_WROTE_TO  = NS_ERROR_MODULE_NETWORK + 9;
 const kXULNS =
     "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 #ifndef MOZ_PLACES
-// For Places-enabled builds, this is in
-// chrome://browser/content/places/controller.js
+# For Places-enabled builds, this is in
+# chrome://browser/content/places/controller.js
 var Ci = Components.interfaces;
 var Cc = Components.classes;
 var Cr = Components.results;
 #endif
 
-const nsCI               = Components.interfaces;
-const nsIWebNavigation   = nsCI.nsIWebNavigation;
+const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 
 const MAX_HISTORY_MENU_ITEMS = 15;
 
@@ -85,7 +81,7 @@ const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 const TYPE_XUL = "application/vnd.mozilla.xul+xml";
 
 var gBrowserGlue = Components.classes["@mozilla.org/browser/browserglue;1"]
-                             .getService(nsCI.nsIBrowserGlue);
+                             .getService(Components.interfaces.nsIBrowserGlue);
 var gRDF = null;
 var gGlobalHistory = null;
 var gURIFixup = null;
@@ -393,7 +389,7 @@ const gPopupBlockerObserver = {
     if (!gBrowser.pageReport.reported) {
       if (!gPrefService)
         gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                 .getService(Components.interfaces.nsIPrefBranch);
+                                 .getService(Components.interfaces.nsIPrefBranch2);
       if (gPrefService.getBoolPref("privacy.popups.showBrowserMessage")) {
         var bundle_browser = document.getElementById("bundle_browser");
         var brandBundle = document.getElementById("bundle_brand");
@@ -916,13 +912,13 @@ function prepareForStartup()
   // initialize observers and listeners
   // and give C++ access to gBrowser
   window.XULBrowserWindow = new nsBrowserStatusHandler();
-  window.QueryInterface(nsCI.nsIInterfaceRequestor)
+  window.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(nsIWebNavigation)
-        .QueryInterface(nsCI.nsIDocShellTreeItem).treeOwner
-        .QueryInterface(nsCI.nsIInterfaceRequestor)
-        .getInterface(nsCI.nsIXULWindow)
+        .QueryInterface(Ci.nsIDocShellTreeItem).treeOwner
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIXULWindow)
         .XULBrowserWindow = window.XULBrowserWindow;
-  window.QueryInterface(nsCI.nsIDOMChromeWindow).browserDOMWindow =
+  window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow =
     new nsBrowserAccess();
 
   // set default character set if provided
@@ -974,7 +970,7 @@ function delayedStartup()
 
   if (!gPrefService)
     gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
-                             .getService(Components.interfaces.nsIPrefBranch);
+                             .getService(Components.interfaces.nsIPrefBranch2);
   BrowserOffline.init();
   
   if (gURLBar && document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1) {
@@ -1039,17 +1035,17 @@ function delayedStartup()
   // Set up Sanitize Item
   gSanitizeListener = new SanitizeListener();
 
-  var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-
   // Enable/Disable URL Bar Auto Fill
   gURLBarAutoFillPrefListener = new URLBarAutoFillPrefListener();
-  pbi.addObserver(gURLBarAutoFillPrefListener.domain, gURLBarAutoFillPrefListener, false);
+  gPrefService.addObserver(gURLBarAutoFillPrefListener.domain,
+                           gURLBarAutoFillPrefListener, false);
 
   // Enable/Disable auto-hide tabbar
   gAutoHideTabbarPrefListener = new AutoHideTabbarPrefListener();
-  pbi.addObserver(gAutoHideTabbarPrefListener.domain, gAutoHideTabbarPrefListener, false);
+  gPrefService.addObserver(gAutoHideTabbarPrefListener.domain,
+                           gAutoHideTabbarPrefListener, false);
 
-  pbi.addObserver(gHomeButton.prefDomain, gHomeButton, false);
+  gPrefService.addObserver(gHomeButton.prefDomain, gHomeButton, false);
   gHomeButton.updateTooltip();
 
   gClickSelectsAll = gPrefService.getBoolPref("browser.urlbar.clickSelectsAll");
@@ -1159,11 +1155,13 @@ function BrowserShutdown()
 #endif
 
   try {
-    var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-    pbi.removeObserver(gURLBarAutoFillPrefListener.domain, gURLBarAutoFillPrefListener);
-    pbi.removeObserver(gAutoHideTabbarPrefListener.domain, gAutoHideTabbarPrefListener);
-    pbi.removeObserver(gHomeButton.prefDomain, gHomeButton);
+    gPrefService.removeObserver(gURLBarAutoFillPrefListener.domain,
+                                gURLBarAutoFillPrefListener);
+    gPrefService.removeObserver(gAutoHideTabbarPrefListener.domain,
+                                gAutoHideTabbarPrefListener);
+    gPrefService.removeObserver(gHomeButton.prefDomain, gHomeButton);
   } catch (ex) {
+    Components.utils.reportError(ex);
   }
 
   if (gSanitizeListener)
@@ -1190,7 +1188,7 @@ function BrowserShutdown()
         .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
         .getInterface(Components.interfaces.nsIXULWindow)
         .XULBrowserWindow = null;
-  window.QueryInterface(nsCI.nsIDOMChromeWindow).browserDOMWindow = null;
+  window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = null;
 
   // Close the app core.
   if (appCore)
@@ -1249,7 +1247,7 @@ function nonBrowserWindowDelayedStartup()
 
   // init global pref service
   gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
-                           .getService(Components.interfaces.nsIPrefBranch);
+                           .getService(Components.interfaces.nsIPrefBranch2);
 
   // Set up Sanitize Item
   gSanitizeListener = new SanitizeListener();
@@ -1325,8 +1323,7 @@ AutoHideTabbarPrefListener.prototype =
 
 function SanitizeListener()
 {
-  var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-  pbi.addObserver(this.promptDomain, this, false);
+  gPrefService.addObserver(this.promptDomain, this, false);
 
   this._defaultLabel = document.getElementById("sanitizeItem")
                                .getAttribute("label");
@@ -1352,8 +1349,7 @@ SanitizeListener.prototype =
 
   shutdown: function ()
   {
-    var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-    pbi.removeObserver(this.promptDomain, this);
+    gPrefService.removeObserver(this.promptDomain, this);
   },
 
   _updateSanitizeItem: function ()
@@ -4042,8 +4038,8 @@ nsBrowserAccess.prototype =
 {
   QueryInterface : function(aIID)
   {
-    if (aIID.equals(nsCI.nsIBrowserDOMWindow) ||
-        aIID.equals(nsCI.nsISupports))
+    if (aIID.equals(Ci.nsIBrowserDOMWindow) ||
+        aIID.equals(Ci.nsISupports))
       return this;
     throw Components.results.NS_NOINTERFACE;
   },
@@ -4052,7 +4048,7 @@ nsBrowserAccess.prototype =
   {
     var newWindow = null;
     var referrer = null;
-    var isExternal = (aContext == nsCI.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+    var isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
 
     if (isExternal && aURI && aURI.schemeIs("chrome")) {
       dump("use -chrome command-line option to load external chrome urls\n");
@@ -4060,12 +4056,12 @@ nsBrowserAccess.prototype =
     }
 
     var loadflags = isExternal ?
-                       nsCI.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
-                       nsCI.nsIWebNavigation.LOAD_FLAGS_NONE;
+                       Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
+                       Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
     var location;
-    if (aWhere == nsCI.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
+    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
       switch (aContext) {
-        case nsCI.nsIBrowserDOMWindow.OPEN_EXTERNAL :
+        case Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL :
           aWhere = gPrefService.getIntPref("browser.link.open_external");
           break;
         default : // OPEN_NEW or an illegal value
@@ -4074,15 +4070,15 @@ nsBrowserAccess.prototype =
     }
     var url = aURI ? aURI.spec : "about:blank";
     switch(aWhere) {
-      case nsCI.nsIBrowserDOMWindow.OPEN_NEWWINDOW :
+      case Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW :
         newWindow = openDialog(getBrowserURL(), "_blank", "all,dialog=no", url);
         break;
-      case nsCI.nsIBrowserDOMWindow.OPEN_NEWTAB :
+      case Ci.nsIBrowserDOMWindow.OPEN_NEWTAB :
         var loadInBackground = gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground");
         var newTab = gBrowser.loadOneTab("about:blank", null, null, null, loadInBackground, false);
         newWindow = gBrowser.getBrowserForTab(newTab).docShell
-                            .QueryInterface(nsCI.nsIInterfaceRequestor)
-                            .getInterface(nsCI.nsIDOMWindow);
+                            .QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindow);
         try {
           if (aOpener) {
             location = aOpener.location;
@@ -4091,8 +4087,8 @@ nsBrowserAccess.prototype =
                               .getService(Components.interfaces.nsIIOService)
                               .newURI(location, null, null);
           }
-          newWindow.QueryInterface(nsCI.nsIInterfaceRequestor)
-                   .getInterface(nsCI.nsIWebNavigation)
+          newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIWebNavigation)
                    .loadURI(url, loadflags, referrer, null, null);
         } catch(e) {
         }
@@ -4107,13 +4103,13 @@ nsBrowserAccess.prototype =
                               .getService(Components.interfaces.nsIIOService)
                               .newURI(location, null, null);
 
-            newWindow.QueryInterface(nsCI.nsIInterfaceRequestor)
+            newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(nsIWebNavigation)
                      .loadURI(url, loadflags, referrer, null, null);
           } else {
             newWindow = gBrowser.selectedBrowser.docShell
-                                .QueryInterface(nsCI.nsIInterfaceRequestor)
-                                .getInterface(nsCI.nsIDOMWindow);
+                                .QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIDOMWindow);
             getWebNavigation().loadURI(url, loadflags, null, null, null);
           }
           if(!gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground"))
