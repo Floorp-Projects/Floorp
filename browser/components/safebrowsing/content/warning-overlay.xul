@@ -19,99 +19,89 @@
     <!-- This is the spike aka tail on top of the warning -->
 
     <hbox id="safebrowsing-palm-message-tail-container" hidden="true" 
-     pack="end">
+          pack="end">
       <image id="safebrowsing-palm-message-tail"
-      src="chrome://browser/skin/safebrowsing/tail.png" />
+             src="chrome://browser/skin/safebrowsing/tail.png"/>
     </hbox>
 
     <!-- This is the phishing afterload warning message -->
 
     <vbox id="safebrowsing-palm-message" hidden="true" pack="center"
-    class="safebrowsing-palm-fixed-width">
+          class="safebrowsing-palm-fixed-width">
 
       <!-- This is the main warning area -->
 
       <vbox id="safebrowsing-palm-message-content" 
-      class="safebrowsing-palm-fixed-width"
-      style="-moz-user-focus: normal"
-      xmlns:x2="http://www.w3.org/TR/xhtml2"
-      xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
-      x2:role="wairole:alert">
+            class="safebrowsing-palm-fixed-width"
+            style="-moz-user-focus: normal"
+            xmlns:x2="http://www.w3.org/TR/xhtml2"
+            xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+            x2:role="wairole:alert">
 
-        <hbox id="safebrowsing-palm-close-container"
-        align="center" class="safebrowsing-palm-fixed-width">
-          <spacer flex="1" />
-          <image
-          id="safebrowsing-palm-close"
-          onclick="goDoCommand('safebrowsing-decline-warning')" />
+        <hbox id="safebrowsing-palm-close-container" align="center"
+              class="safebrowsing-palm-fixed-width">
+          <spacer flex="1"/>
+          <image id="safebrowsing-palm-close"
+                 onclick="goDoCommand('safebrowsing-decline-warning')"/>
         </hbox>
 
         <!-- Top line -->
         <description id="safebrowsing-palm-message-titlebox"
-        class="safebrowsing-palm-fixed-width">
+                     class="safebrowsing-palm-fixed-width">
           &safeb.palm.warning.title;
         </description>
 
-
         <!-- Content area: short warning -->
 
-        <description id="safebrowsing-palm-content" 
-          class="safebrowsing-paragraph">
+        <description id="safebrowsing-palm-content"
+                     class="safebrowsing-paragraph">
           &safeb.palm.message.p1; 
           <label class="text-link plain"
-            statustext="&safeb.palm.p1.linkStatusText;"
-            id="safebrowsing-palm-showmore-link"
-            onclick="goDoCommand('safebrowsing-palm-showmore'); document.getElementById('safebrowsing-palm-faq-link').focus()"
-            value="&safeb.palm.message.p1.linkText;" />
+                 statustext="&safeb.palm.p1.linkStatusText;"
+                 id="safebrowsing-palm-showmore-link"
+                 onclick="goDoCommand('safebrowsing-palm-showmore'); document.getElementById('safebrowsing-palm-faq-link').focus()"
+                 value="&safeb.palm.message.p1.linkText;"/>
         </description>
 
         <!-- Content area: rest of the warning, revealed if the user
              hits the more link -->
 
         <vbox id="safebrowsing-palm-extended-message" hidden="true"
-          class="safebrowsing-palm-fixed-width">
+              class="safebrowsing-palm-fixed-width">
           <description class="safebrowsing-palm-paragraph">
             &safeb.palm.message.p2.start;
-            <label class="text-link plain"
-              id="safebrowsing-palm-faq-link"
-              value="&safeb.palm.message.p2.linkText;" />
+            <label class="text-link plain" id="safebrowsing-palm-faq-link"
+                   value="&safeb.palm.message.p2.linkText;"/>
             &safeb.palm.message.p2.end;
           </description>
         </vbox>
 
         <!-- Main action links -->
         <description id="safebrowsing-palm-message-actionbox"
-         class="safebrowsing-palm-fixed-width"
-         align="center" crop="none">
-         <label
-           class="safebrowsing-palm-bigtext text-link plain"
-           statustext="&safeb.palm.accept.statustext;"
-           id="safebrowsing-palm-accept-link"
-           onclick="goDoCommand('safebrowsing-accept-warning')"
-           value="&safeb.palm.accept.label;" />
+                     class="safebrowsing-palm-fixed-width"
+                     align="center" crop="none">
+         <label class="safebrowsing-palm-bigtext text-link plain"
+                statustext="&safeb.palm.accept.statustext;"
+                id="safebrowsing-palm-accept-link"
+                onclick="goDoCommand('safebrowsing-accept-warning')"
+                value="&safeb.palm.accept.label;"/>
          <spacer flex="1"/>
-         <label
-           class="safebrowsing-palm-bigtext text-link plain"
-           statustext="&safeb.palm.decline.statustext;"
-           id="safebrowsing-palm-decline-link"
-           onclick="goDoCommand('safebrowsing-decline-warning')"
-           value="&safeb.palm.decline.label;" />
+         <label class="safebrowsing-palm-bigtext text-link plain"
+                statustext="&safeb.palm.decline.statustext;"
+                id="safebrowsing-palm-decline-link"
+                onclick="goDoCommand('safebrowsing-decline-warning')"
+                value="&safeb.palm.decline.label;"/>
         </description>
 
         <!-- Footer -->
 
         <hbox align="center" class="safebrowsing-palm-fixed-width">
-          <!-- a branding logo could be added here
-          <image id="safebrowsing-palm-logo"
-          tooltiptext="&safeb.palm.provider.logo.tooltip;"
-          src="chrome://browser/skin/safebrowsing/logo.png" />
-          -->
-          <spacer flex="1" />
+          <spacer flex="1"/>
           <description>
             [
             <label id="safebrowsing-palm-falsepositive-link"
-              class="safebrowsing-palm-smalltext text-link plain"
-              value="&safeb.palm.notforgery.label;" />
+                   class="safebrowsing-palm-smalltext text-link plain"
+                   value="&safeb.palm.notforgery.label;"/>
             ]
           </description>
         </hbox>
