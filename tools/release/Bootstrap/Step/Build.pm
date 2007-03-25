@@ -10,10 +10,10 @@ sub Execute {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $buildDir = $config->Get(var => 'buildDir');
+    my $buildDir = $config->Get(sysvar => 'buildDir');
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
-    my $buildPlatform = $config->Get(var => 'buildPlatform');
+    my $buildPlatform = $config->Get(sysvar => 'buildPlatform');
     my $logDir = $config->Get(var => 'logDir');
     my $rcTag = $productTag . '_RC' . $rc;
 

@@ -1,6 +1,7 @@
 test:
 	for f in release t/test.pl `find . -name "*.pm"`; do perl -c $$f; done
 	if [ -f t/test.log ]; then rm t/test.log; fi
+	if [ ! -f bootstrap.cfg ]; then cp bootstrap.cfg.example bootstrap.cfg; fi
 	./t/test.pl
 
 stage:
