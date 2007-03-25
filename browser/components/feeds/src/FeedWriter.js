@@ -340,7 +340,8 @@ FeedWriter.prototype = {
         else
           LOG("no base?");
         docFragment = summary.createDocumentFragment(body);
-        body.appendChild(docFragment);
+        if (docFragment)
+          body.appendChild(docFragment);
 
         // If the entry doesn't have a title, append a # permalink
         // See http://scripting.com/rss.xml for an example
