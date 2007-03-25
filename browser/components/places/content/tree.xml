@@ -432,19 +432,23 @@
           //          then use getIndexOfNode to find your absolute index in
           //          the parent container instead. 
           //
-          var selection = this.view.selection;
+          var resultView = this.getResultView();
+          var selection = resultView.selection;
           var rc = selection.getRangeCount();
           var min = { }, max = { };
           selection.getRangeAt(rc - 1, min, max);
           
-          var resultView = this.getResultView();
-          
           // If the sole selection is an open container, insert into it rather 
           // than adjacent to it. Note that this only applies to _single_ 
           // selections - if the last element within a multi-selection is an
-          // open folder, insert _adajacent_ to the selection. 
-          if (this.hasSingleSelection && this.view.isContainer(max.value) && 
-              this.view.isContainerOpen(max.value))
+          // open folder, insert _adajacent_ to the selection.
+          //
+          // If the sole selection is the bookmarks toolbar folder, we nsert
+          // into it even if it is not opened
+          if (this.hasSingleSelection && resultView.isContainer(max.value) &&
+              (resultView.isContainerOpen(max.value) ||
+               resultView.nodeForTreeIndex(max.value)
+                         .folderId == PlacesUtils.bookmarksRootId))
             orientation = NHRVO.DROP_ON;
 
           return this._getInsertionPoint(max.value, orientation);
@@ -478,7 +482,12 @@
               index = orientation == NHRVO.DROP_BEFORE ? lsi : lsi + 1;
             }
           }
-          if (PlacesUtils.nodeIsFolder(container)) 
+
+          // * Disallow insertion of items under readonly folders
+          // * Disallow insertion of items under the places root
+          if (PlacesUtils.nodeIsFolder(container) &&
+              !PlacesUtils.nodeIsReadOnly(container) &&
+              container.folderId != PlacesUtils.placesRootId) 
             return new InsertionPoint(asFolder(container).folderId, index, orientation);
           return null;
         ]]></body>

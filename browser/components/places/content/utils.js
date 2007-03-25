@@ -1070,6 +1070,28 @@ var PlacesUtils = {
       }
     }
     return "";
+  },
+
+  // identifier getters for special folders
+  get placesRootId() {
+    if (!("_placesRootId" in this))
+      this._placesRootId = this.bookmarks.placesRoot;
+
+    return this._placesRootId;
+  },
+
+  get bookmarksRootId() {
+    if (!("_bookmarksRootId" in this))
+      this._bookmarksRootId = this.bookmarks.bookmarksRoot;
+
+    return this._bookmarksRootId;
+  },
+
+  get toolbarFolderId() {
+    if (!("_toolbarFolderId" in this))
+      this._toolbarFolderId = this.bookmarks.toolbarFolder;
+
+    return this._toolbarFolderId;
   }
 };
 
