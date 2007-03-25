@@ -127,35 +127,6 @@ protected:
 };
 
 //
-// nsILocaleDefinition implementation
-//
-class nsLocaleDefinition: public nsILocaleDefinition {
-	friend class nsLocaleService;
-
-public:
-
-	//
-	// nsISupports
-	//
-	NS_DECL_ISUPPORTS
-
-	//
-	// nsILocaleDefintion
-	//
-	NS_IMETHOD SetLocaleCategory(const nsAString &category, const nsAString &value);
-
-protected:
-
-	nsLocaleDefinition();
-	virtual ~nsLocaleDefinition();
-
-	nsLocale*	mLocaleDefinition;
-};
-
-
-
-
-//
 // nsLocaleService methods
 //
 nsLocaleService::nsLocaleService(void) 
@@ -347,18 +318,6 @@ nsLocaleService::NewLocale(const nsAString &aLocale, nsILocale **_retval)
 
 
 NS_IMETHODIMP
-nsLocaleService::NewLocaleObject(nsILocaleDefinition *localeDefinition, nsILocale **_retval)
-{
-	if (!localeDefinition || !_retval) return NS_ERROR_INVALID_ARG;
-
-	nsLocale* new_locale = new nsLocale(NS_STATIC_CAST(nsLocaleDefinition*,localeDefinition)->mLocaleDefinition);
-	if (!new_locale) return NS_ERROR_OUT_OF_MEMORY;
-
-	return new_locale->QueryInterface(NS_GET_IID(nsILocale),(void**)_retval);
-}
-
-
-NS_IMETHODIMP
 nsLocaleService::GetSystemLocale(nsILocale **_retval)
 {
 	if (mSystemLocale) {
@@ -516,33 +475,4 @@ NS_NewLocaleService(nsILocaleService** result)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*result);
   return NS_OK;
-}
-
-
-//
-// nsLocaleDefinition methods
-//
-
-NS_IMPL_ISUPPORTS1(nsLocaleDefinition,nsILocaleDefinition)
-
-nsLocaleDefinition::nsLocaleDefinition(void)
-{
-	mLocaleDefinition = new nsLocale;
-	if (mLocaleDefinition)
-		mLocaleDefinition->AddRef();
-}
-
-nsLocaleDefinition::~nsLocaleDefinition(void)
-{
-	if (mLocaleDefinition)
-		mLocaleDefinition->Release();
-}
-
-NS_IMETHODIMP
-nsLocaleDefinition::SetLocaleCategory(const nsAString &category, const nsAString &value)
-{
-	if (mLocaleDefinition)
-		return mLocaleDefinition->AddCategory(category,value);
-	
-	return NS_ERROR_FAILURE;
 }

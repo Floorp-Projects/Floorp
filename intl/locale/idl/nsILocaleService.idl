@@ -38,18 +38,12 @@
 #include "nsISupports.idl"
 #include "nsILocale.idl"
 
-[scriptable, uuid(7c094410-4558-11d3-91cd-00105aa3f7dc)]
-interface nsILocaleDefinition : nsISupports {
-	void setLocaleCategory(in AString category, in AString value);
-};
-
 // The Locale service interface. This is a singleton object, and should be
 // obtained from the <tt>nsServiceManager</tt>.
-[scriptable, uuid(48ab1fa0-4550-11d3-91cd-00105aa3f7dc)]
+[scriptable, uuid(c2edc848-4219-4440-abbf-98119882c83f)]
 interface nsILocaleService : nsISupports {
 
 	nsILocale newLocale(in AString aLocale);
-	nsILocale newLocaleObject(in nsILocaleDefinition localeDefinition);
 	nsILocale getSystemLocale();
 	nsILocale getApplicationLocale();
 	nsILocale getLocaleFromAcceptLanguage(in string acceptLanguage);
@@ -65,8 +59,6 @@ interface nsILocaleService : nsISupports {
 extern nsresult
 NS_NewLocaleService(nsILocaleService** result);
 
-extern nsresult
-NS_NewLocaleDefinition(nsILocaleDefinition** result);
 %}
 
 
