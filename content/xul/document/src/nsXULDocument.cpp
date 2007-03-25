@@ -84,10 +84,9 @@
 #include "nsIDocShell.h"
 #include "nsGkAtoms.h"
 #include "nsXMLContentSink.h"
-#include "nsIXULContentSink.h"
+#include "nsXULContentSink.h"
 #include "nsXULContentUtils.h"
 #include "nsIXULOverlayProvider.h"
-#include "nsIXULPrototypeCache.h"
 #include "nsNetUtil.h"
 #include "nsParserUtils.h"
 #include "nsParserCIID.h"
@@ -2123,10 +2122,8 @@ nsXULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
 
     // Create a XUL content sink, a parser, and kick off a load for
     // the overlay.
-    nsCOMPtr<nsIXULContentSink> sink;
-    rv = NS_NewXULContentSink(getter_AddRefs(sink));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create XUL content sink");
-    if (NS_FAILED(rv)) return rv;
+    nsRefPtr<XULContentSinkImpl> sink = new XULContentSinkImpl();
+    if (!sink) return NS_ERROR_OUT_OF_MEMORY;
 
     rv = sink->Init(this, mCurrentPrototype);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to initialize datasource sink");
