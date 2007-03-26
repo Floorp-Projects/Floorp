@@ -599,34 +599,80 @@ gfxWindowsFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
     return textRun;
 }
 
+/**
+ * Set the font in the DC for aContext's surface. Return the DC if we're
+ * successful. If it's not a win32 surface or something goes wrong or if
+ * the font is not a Truetype font (hence GetGlyphIndices may be buggy) then
+ * we're not successful and return 0.
+ */
 static HDC
-SetupContextFont(gfxContext *aContext, gfxWindowsFont *aFont,
-                 double *aCairoToPixels)
+SetupContextFont(gfxContext *aContext, gfxWindowsFont *aFont)
 {
     nsRefPtr<gfxASurface> surf = aContext->CurrentSurface();
     HDC dc = GetDCFromSurface(surf);
-    NS_ASSERTION(dc, "No DC");
+    if (!dc)
+        return 0;
 
     // Set the font to have the identity matrix
     aFont->UpdateCTM(gfxMatrix());
-    cairo_scaled_font_t *scaledFont = aFont->CairoScaledFont();
-    cairo_win32_scaled_font_select_font(scaledFont, dc);
+    HFONT hfont = aFont->GetHFONT();
+    if (!hfont)
+        return 0;
+    SelectObject(dc, hfont);
 
-    double cairofontfactor = cairo_win32_scaled_font_get_metrics_factor(scaledFont);
-    *aCairoToPixels = cairofontfactor * aFont->GetAdjustedSize();
+    /* GetGlyphIndices is buggy for bitmap and vector fonts,
+       so send them to uniscribe */
+    TEXTMETRIC metrics;
+    GetTextMetrics(dc, &metrics);
+    if ((metrics.tmPitchAndFamily & (TMPF_TRUETYPE)) == 0)
+        return 0;
+
     return dc;
 }
 
-static void
-SetupTextRunFromCharacterPlacement(gfxTextRun *aRun, double aCairoToAppUnits,
-                                   int *aDXs, WCHAR *aGlyphs, gfxFont *aFont)
+static PRBool
+IsAnyGlyphMissing(WCHAR *aGlyphs, PRUint32 aLength)
 {
+    PRUint32 i;
+    for (i = 0; i < aLength; ++i) {
+        if (aGlyphs[i] == 0xFFFF)
+            return PR_TRUE;
+    }
+    return PR_FALSE;
+}
+
+static PRBool
+SetupTextRunFromGlyphs(gfxTextRun *aRun, WCHAR *aGlyphs, HDC aDC,
+                       gfxWindowsFont *aFont)
+{
+    PRUint32 length = aRun->GetLength();
+    if (IsAnyGlyphMissing(aGlyphs, length))
+        return PR_FALSE;
+       
+    SIZE size;
+    nsAutoTArray<int,500> partialWidthArray;
+    if (!partialWidthArray.AppendElements(length))
+        return PR_FALSE;
+    BOOL success = GetTextExtentExPointI(aDC,
+                                         aGlyphs,
+                                         length,
+                                         INT_MAX,
+                                         NULL,
+                                         partialWidthArray.Elements(),
+                                         &size);
+    if (!success)
+        return PR_FALSE;
+
+    aRun->AddGlyphRun(aFont, 0);
+
     gfxTextRun::CompressedGlyph g;
     PRUint32 i;
-    PRUint32 length = aRun->GetLength();
+    PRInt32 lastWidth = 0;
+    PRUint32 appUnitsPerDevPixel = aRun->GetAppUnitsPerDevUnit();
     for (i = 0; i < length; ++i) {
-        double advance = aDXs[i]*aCairoToAppUnits;
-        PRInt32 advanceAppUnits = PRInt32(advance);
+        PRInt32 advancePixels = partialWidthArray[i] - lastWidth;
+        lastWidth = partialWidthArray[i];
+        PRInt32 advanceAppUnits = advancePixels*appUnitsPerDevPixel;
         WCHAR glyph = aGlyphs[i];
         if (advanceAppUnits >= 0 &&
             gfxTextRun::CompressedGlyph::IsSimpleAdvance(advanceAppUnits) &&
@@ -642,115 +688,52 @@ SetupTextRunFromCharacterPlacement(gfxTextRun *aRun, double aCairoToAppUnits,
             aRun->SetDetailedGlyphs(i, &details, 1);
         }
     }
-    
-    aRun->AddGlyphRun(aFont, 0);
-}
-
-static inline PRBool
-IsMissingGlyphsGDI(HDC aDC, const char *aString, PRUint32 aLength, WCHAR *glyphBuffer)
-{
-    DWORD ret;
-    ret = GetGlyphIndicesA(aDC, aString, aLength, (WORD*) glyphBuffer, GGI_MARK_NONEXISTING_GLYPHS);
-    if (ret == GDI_ERROR) {
-        NS_WARNING("GetGlyphIndicies failed\n");
-        return PR_TRUE;
-    }
-    for (DWORD i = 0; i < ret; ++i) {
-        if (glyphBuffer[i] == 0xffff)
-            return PR_TRUE;
-    }
-
-    return PR_FALSE;
-}
-
-static inline PRBool
-IsMissingGlyphsGDI(HDC aDC, const PRUnichar *aString, PRUint32 aLength, WCHAR *glyphBuffer)
-{
-    DWORD ret;
-    ret = GetGlyphIndicesW(aDC, aString, aLength, (WORD*) glyphBuffer, GGI_MARK_NONEXISTING_GLYPHS);
-    if (ret == GDI_ERROR) {
-        NS_WARNING("GetGlyphIndicies failed\n");
-        return PR_TRUE;
-    }
-    for (DWORD i = 0; i < ret; ++i) {
-        if (glyphBuffer[i] == 0xffff)
-            return PR_TRUE;
-    }
-
-    return PR_FALSE;
+    return PR_TRUE;
 }
 
 void
 gfxWindowsFontGroup::InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun,
                                     const char *aString, PRUint32 aLength)
 {
-    double cairoToPixels;
     gfxWindowsFont *font = GetFontAt(0);
-    HDC dc = SetupContextFont(aContext, font, &cairoToPixels);
+    HDC dc = SetupContextFont(aContext, font);
+    if (dc) {
+        nsAutoTArray<WCHAR,500> glyphArray;
+        if (!glyphArray.AppendElements(aLength))
+            return;
 
-    nsAutoTArray<WCHAR,500> glyphArray;
-    if (!glyphArray.AppendElements(aLength))
-        return;
-
-    /* our GDI path doesn't handle font missing glyphs so
-     * punt this off to uniscribe */
-    if (IsMissingGlyphsGDI(dc, aString, aLength, glyphArray.Elements())) {
-        nsDependentCSubstring cString(aString, aString + aLength);
-        nsAutoString utf16;
-        AppendASCIItoUTF16(cString, utf16);
-        InitTextRunUniscribe(aContext, aRun, utf16.get(), aLength);
-        return;
+        DWORD ret = GetGlyphIndicesA(dc, aString, aLength, glyphArray.Elements(),
+                                     GGI_MARK_NONEXISTING_GLYPHS);
+        if (ret != GDI_ERROR &&
+            SetupTextRunFromGlyphs(aRun, glyphArray.Elements(), dc, font))
+            return;
     }
 
-    nsAutoTArray<int,500> dxArray;
-    if (!dxArray.AppendElements(aLength))
-        return;
-
-    GCP_RESULTSA results;
-    memset(&results, 0, sizeof(GCP_RESULTSA));
-    results.lStructSize = sizeof(GCP_RESULTSA);
-    results.nGlyphs = aLength;
-    results.lpDx = dxArray.Elements();
-    results.lpGlyphs = glyphArray.Elements();
-    GetCharacterPlacementA(dc, aString, aLength, 0, &results, GCP_USEKERNING);
-
-    SetupTextRunFromCharacterPlacement(aRun, cairoToPixels*aRun->GetAppUnitsPerDevUnit(),
-                                       dxArray.Elements(),
-                                       glyphArray.Elements(), font);
+    nsDependentCSubstring cString(aString, aString + aLength);
+    nsAutoString utf16;
+    AppendASCIItoUTF16(cString, utf16);
+    InitTextRunUniscribe(aContext, aRun, utf16.get(), aLength);
 }
 
 void
 gfxWindowsFontGroup::InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun,
                                     const PRUnichar *aString, PRUint32 aLength)
 {
-    double cairoToPixels;
     gfxWindowsFont *font = GetFontAt(0);
-    HDC dc = SetupContextFont(aContext, font, &cairoToPixels);
+    HDC dc = SetupContextFont(aContext, font);
+    if (dc) {
+        nsAutoTArray<WCHAR,500> glyphArray;
+        if (!glyphArray.AppendElements(aLength))
+            return;
 
-    nsAutoTArray<WCHAR,500> glyphArray;
-    if (!glyphArray.AppendElements(aLength))
-        return;
-
-    if (IsMissingGlyphsGDI(dc, aString, aLength, glyphArray.Elements())) {
-        InitTextRunUniscribe(aContext, aRun, aString, aLength);
-        return;
+        DWORD ret = GetGlyphIndicesW(dc, aString, aLength, glyphArray.Elements(),
+                                     GGI_MARK_NONEXISTING_GLYPHS);
+        if (ret != GDI_ERROR &&
+            SetupTextRunFromGlyphs(aRun, glyphArray.Elements(), dc, font))
+            return;
     }
 
-    nsAutoTArray<int,500> dxArray;
-    if (!dxArray.AppendElements(aLength))
-        return;
-
-    GCP_RESULTSW results;
-    memset(&results, 0, sizeof(GCP_RESULTSW));
-    results.lStructSize = sizeof(GCP_RESULTSW);
-    results.nGlyphs = aLength;
-    results.lpDx = dxArray.Elements();
-    results.lpGlyphs = glyphArray.Elements();
-    GetCharacterPlacementW(dc, aString, aLength, 0, &results, GCP_USEKERNING);
-
-    SetupTextRunFromCharacterPlacement(aRun, cairoToPixels*aRun->GetAppUnitsPerDevUnit(),
-                                       dxArray.Elements(),
-                                       glyphArray.Elements(), font);
+    InitTextRunUniscribe(aContext, aRun, aString, aLength);
 }
 
 /*******************
