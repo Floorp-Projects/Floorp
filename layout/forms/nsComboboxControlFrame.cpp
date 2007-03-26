@@ -394,7 +394,7 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
                      NS_XUL_POPUP_SHOWING : NS_XUL_POPUP_HIDING, nsnull,
                      nsMouseEvent::eReal);
 
-  nsIPresShell *shell = GetPresContext()->GetPresShell();
+  nsCOMPtr<nsIPresShell> shell = GetPresContext()->GetPresShell();
   if (shell) 
     shell->HandleDOMEventWithTarget(mContent, &event, &status);
 }

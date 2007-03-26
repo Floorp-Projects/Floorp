@@ -1045,7 +1045,7 @@ nsHTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext)
     return NS_OK;
   }
   
-  nsIPresShell* shell = aPresContext->GetPresShell();
+  nsCOMPtr<nsIPresShell> shell = aPresContext->GetPresShell();
   if (!shell) {
     return NS_OK;
   }
@@ -1502,7 +1502,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
     nsUIEvent actEvent(NS_IS_TRUSTED_EVENT(aVisitor.mEvent), NS_UI_ACTIVATE, 1);
 
-    nsIPresShell *shell = aVisitor.mPresContext->GetPresShell();
+    nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
     if (shell) {
       nsEventStatus status = nsEventStatus_eIgnore;
       SET_BOOLBIT(mBitField, BF_IN_INTERNAL_ACTIVATE, PR_TRUE);
@@ -1770,7 +1770,8 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             event.originator      = this;
             nsEventStatus status  = nsEventStatus_eIgnore;
 
-            nsIPresShell *presShell = aVisitor.mPresContext->GetPresShell();
+            nsCOMPtr<nsIPresShell> presShell =
+              aVisitor.mPresContext->GetPresShell();
 
             // If |nsIPresShell::Destroy| has been called due to
             // handling the event the pres context will return a null
