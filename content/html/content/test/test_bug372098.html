@@ -1,0 +1,74 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=372098
+-->
+<head>
+  <title>Test for Bug 372098</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <base target="bug372098"></base>
+</head>
+<body onload="handle_load();">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=372098">Mozilla Bug 372098</a>
+  <p id="display"></p>
+  <div id="content" style="display:none;">
+    <iframe name="bug372098"></iframe>
+    <a id="a" href="bug372098-link-target.html?a" target="">link</a>
+    <link id="link" href="bug372098-link-target.html?link" target=""/>
+    <map>
+      <area id="area" shape="default" href="bug372098-link-target.html?area" target=""/>
+    </map>
+  </div>
+  <pre id="test">
+    <script class="testbody" type="text/javascript">
+
+var a_passed = false;
+var link_passed = false;
+var area_passed = false;
+
+/* Start the test */
+
+function handle_load()
+{
+  SimpleTest.waitForExplicitFinish();
+  sendMouseEvent({type:'click'}, 'a');
+}
+
+/* Finish the test */
+
+function finish_test()
+{
+  ok(a_passed, "The 'a' element used the correct target.");
+  ok(link_passed, "The 'link' element used the correct target.");
+  ok(area_passed, "The 'area' element used the correct target.");
+  SimpleTest.finish();
+}
+
+/* Callback function used by the linked document */
+
+function callback(tag)
+{
+  switch (tag) {
+  case 'a':
+    a_passed = true;
+    sendMouseEvent({type:'click'}, 'link');
+    return;
+  case 'link':
+    link_passed = true;
+    sendMouseEvent({type:'click'}, 'area');
+    return;
+  case 'area':
+    area_passed = true;
+    finish_test();
+    return;
+  }
+  throw new Error("Eh??? We only test the 'a', 'link' and 'area' elements.");
+}
+
+    </script>
+  </pre>
+
+</body>
+</html>
