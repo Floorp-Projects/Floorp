@@ -50,7 +50,7 @@ REQUIRES	= xpcom \
 CPPSRCS		= TestXPTCInvoke.cpp
 
 LIBS		= \
-		$(XPCOM_GLUE_LDOPTS) \
+		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
