@@ -1202,6 +1202,7 @@ static const char kIconURIAttribute[] = " ICON_URI=\"";
 static const char kHrefAttribute[] = " HREF=\"";
 static const char kFeedURIAttribute[] = " FEEDURL=\"";
 static const char kWebPanelAttribute[] = " WEB_PANEL=\"true\"";
+static const char kKeywordAttribute[] = " SHORTCUTURL=\"";
 
 // WriteContainerPrologue
 //
@@ -1412,7 +1413,7 @@ nsNavBookmarks::WriteContainerHeader(PRInt64 aFolder, const nsCString& aIndent,
 
 // nsNavBookmarks::WriteContainerTitle
 //
-//    Retrieves, escaped and writes the container title to the stream.
+//    Retrieves, escapes and writes the container title to the stream.
 
 nsresult
 nsNavBookmarks::WriteContainerTitle(PRInt64 aFolder, nsIOutputStream* aOutput)
@@ -1470,11 +1471,27 @@ nsNavBookmarks::WriteItem(nsNavHistoryResultNode* aItem,
   rv = WriteFaviconAttribute(uri, aOutput);
   if (NS_FAILED(rv)) return rv;
 
-  // annotations
+  // get bookmark id 
   PRInt64 bookmarkId;
   rv = aItem->GetBookmarkId(&bookmarkId);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // keyword (shortcuturl)
+  nsAutoString keyword;
+  rv = GetKeywordForBookmark(bookmarkId, keyword);
+  if (NS_FAILED(rv)) return rv;
+  if (!keyword.IsEmpty()) {
+    rv = aOutput->Write(kKeywordAttribute, sizeof(kKeywordAttribute)-1, &dummy);
+    if (NS_FAILED(rv)) return rv;
+    char* escapedKeyword = nsEscapeHTML(NS_ConvertUTF16toUTF8(keyword).get());
+    rv = aOutput->Write(escapedKeyword, strlen(escapedKeyword), &dummy);
+    nsMemory::Free(escapedKeyword);
+    if (NS_FAILED(rv)) return rv;
+    rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  // get bookmark place URI for annotations
   nsCOMPtr<nsIURI> placeURI;
   rv = GetItemURI(bookmarkId, getter_AddRefs(placeURI));
   NS_ENSURE_SUCCESS(rv, rv);
