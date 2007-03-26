@@ -529,7 +529,7 @@ QuoteString(Sprinter *sp, JSString *str, uint32 quote)
                 if (t == z) {
                     char numbuf[10];
                     JS_snprintf(numbuf, sizeof numbuf, "0x%x", c);
-                    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
+                    JS_ReportErrorFlagsAndNumber(sp->context, JSREPORT_ERROR,
                                                  js_GetErrorMessage, NULL,
                                                  JSMSG_BAD_SURROGATE_CHAR,
                                                  numbuf);
