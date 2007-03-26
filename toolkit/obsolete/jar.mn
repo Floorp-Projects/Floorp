@@ -7,4 +7,3 @@ toolkit.jar:
 +  content/global/nsTreeSorting.js              (content/nsTreeSorting.js)
 +  content/global/nsUserSettings.js             (content/nsUserSettings.js)
 +  content/global/strres.js                     (content/strres.js)
-+  content/global/widgetStateManager.js         (content/widgetStateManager.js)

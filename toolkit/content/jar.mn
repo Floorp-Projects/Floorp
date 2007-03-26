@@ -32,7 +32,6 @@ toolkit.jar:
 *+ content/global/inlineSpellCheckUI.js       (inlineSpellCheckUI.js)
 +  content/global/mozilla.xhtml               (mozilla.xhtml)
 *+ content/global/nsDragAndDrop.js            (nsDragAndDrop.js)
-*+ content/global/nsWidgetStateManager.js     (nsWidgetStateManager.js)
 +  content/global/selectDialog.js             (selectDialog.js)
 +  content/global/selectDialog.xul            (selectDialog.xul)
 *+ content/global/viewZoomOverlay.js          (viewZoomOverlay.js)
