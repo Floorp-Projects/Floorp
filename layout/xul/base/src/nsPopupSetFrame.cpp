@@ -645,11 +645,10 @@ nsPopupSetFrame::OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
 
   if (aPopupContent) {
     nsCOMPtr<nsIContent> kungFuDeathGrip(aPopupContent);
-    nsIPresShell *shell = GetPresContext()->GetPresShell();
+    nsCOMPtr<nsIPresShell> shell = GetPresContext()->GetPresShell();
     if (shell) {
       nsresult rv = shell->HandleDOMEventWithTarget(aPopupContent, &event,
                                                     &status);
-      // shell may no longer be alive, don't use it here unless you keep a ref
       if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
         return PR_FALSE;
     }
@@ -714,11 +713,10 @@ nsPopupSetFrame::OnCreated(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
   //event.point.y = aY;
 
   if (aPopupContent) {
-    nsIPresShell *shell = GetPresContext()->GetPresShell();
+    nsCOMPtr<nsIPresShell> shell = GetPresContext()->GetPresShell();
     if (shell) {
       nsresult rv = shell->HandleDOMEventWithTarget(aPopupContent, &event,
                                                     &status);
-      // shell may no longer be alive, don't use it here unless you keep a ref
       if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
         return PR_FALSE;
     }
