@@ -106,6 +106,17 @@ function resolveURIInternal(aCmdLine, aArgument) {
   return uri;
 }
 
+const OVERRIDE_NONE        = 0;
+const OVERRIDE_NEW_PROFILE = 1;
+const OVERRIDE_NEW_MSTONE  = 2;
+/**
+ * Determines whether a home page override is needed.
+ * Returns:
+ *  OVERRIDE_NEW_PROFILE if this is the first run with a new profile.
+ *  OVERRIDE_NEW_MSTONE if this is the first run with a build with a different
+ *                      Gecko milestone (i.e. right after an upgrade).
+ *  OVERRIDE_NONE otherwise.
+ */
 function needHomepageOverride(prefb) {
   var savedmstone = null;
   try {
@@ -113,19 +124,17 @@ function needHomepageOverride(prefb) {
   } catch (e) {}
 
   if (savedmstone == "ignore")
-    return 0;
+    return OVERRIDE_NONE;
 
   var mstone = Components.classes["@mozilla.org/network/protocol;1?name=http"]
                          .getService(nsIHttpProtocolHandler).misc;
 
   if (mstone != savedmstone) {
     prefb.setCharPref("browser.startup.homepage_override.mstone", mstone);
-    // Return 1 if true if the pref didn't exist (i.e. new profile) or 2 for an upgrade
-    return (savedmstone ? 2 : 1);
+    return (savedmstone ? OVERRIDE_NEW_MSTONE : OVERRIDE_NEW_PROFILE);
   }
 
-  // Return 0 if not a new profile and not an upgrade
-  return 0;
+  return OVERRIDE_NONE;
 }
 
 function openWindow(parent, url, target, features, args) {
@@ -430,43 +439,47 @@ var nsBrowserContentHandler = {
     var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
                               .getService(Components.interfaces.nsIURLFormatter);
 
-    var pagesToLoad = "";
-    var overrideState = needHomepageOverride(prefb);
+    var overridePage = "";
+    var haveUpdateSession = false;
     try {
-      if (overrideState == 1) {
-        pagesToLoad = formatter.formatURLPref("startup.homepage_welcome_url");
-      }
-      else if (overrideState == 2) {
-        pagesToLoad = formatter.formatURLPref("startup.homepage_override_url");
-      }
+      switch (needHomepageOverride(prefb)) {
+        case OVERRIDE_NEW_PROFILE:
+          overridePage = formatter.formatURLPref("startup.homepage_welcome_url");
+          break;
+        case OVERRIDE_NEW_MSTONE:
+          // Check whether we have a session to restore. If we do, we assume
+          // that this is an "update" session.
+          var ss = Components.classes["@mozilla.org/browser/sessionstartup;1"]
+                             .getService(Components.interfaces.nsISessionStartup);
+          haveUpdateSession = ss.doRestore();
+          overridePage = formatter.formatURLPref("startup.homepage_override_url");
+          break;
     }
-    catch (e) {
-    }
+    } catch (ex) {}
 
-    if (pagesToLoad == "about:blank")
-      pagesToLoad = "";
+    // formatURLPref might return "about:blank" if getting the pref fails
+    if (overridePage == "about:blank")
+      overridePage = "";
 
     var startpage = "";
     try {
       var choice = prefb.getIntPref("browser.startup.page");
       if (choice == 1)
-        startpage = this.startPage;
+        startPage = this.startPage;
 
       if (choice == 2)
-        startpage = Components.classes["@mozilla.org/browser/global-history;2"]
+        startPage = Components.classes["@mozilla.org/browser/global-history;2"]
                               .getService(nsIBrowserHistory).lastPageVisited;
-    }
-    catch (e) {
-    }
+    } catch (e) { }
 
-    if (startpage == "about:blank")
-      startpage = "";
+    if (startPage == "about:blank")
+      startPage = "";
 
-    if (pagesToLoad && startpage)
-      pagesToLoad += "|";
-    pagesToLoad += startpage;
+    // Only show the startPage if we're not restoring an update session.
+    if (overridePage && startPage && !haveUpdateSession)
+      return overridePage + "|" + startPage;
 
-    return (pagesToLoad ?  pagesToLoad : "about:blank");
+    return overridePage || startPage || "about:blank";
   },
 
   get startPage() {
