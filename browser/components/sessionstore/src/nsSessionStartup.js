@@ -183,7 +183,7 @@ SessionStartup.prototype = {
     
     /**
      * Note: this relies on the fact that nsBrowserContentHandler will return
-     * a different value the first time it's getter is called after an update,
+     * a different value the first time its getter is called after an update,
      * due to its needHomePageOverride() logic. We don't want to remove the
      * default arguments in the update case, since they include the "What's
      * New" page.
