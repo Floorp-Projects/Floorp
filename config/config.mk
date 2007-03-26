@@ -62,6 +62,23 @@ include $(topsrcdir)/config/insure.mk
 endif
 endif
 
+# Sanity check some variables
+CHECK_VARS := \
+ XPI_NAME \
+ LIBRARY_NAME \
+ MODULE \
+ DEPTH \
+ SHORT_LIBNAME \
+ XPI_PKGNAME \
+ INSTALL_EXTENSION_ID \
+ $(NULL)
+
+# checks for internal spaces or trailing spaces in the variable
+# named by $x
+check-variable = $(if $(filter-out 0 1,$(words $($(x))z)),$(error Spaces are not allowed in $(x)))
+
+$(foreach x,$(CHECK_VARS),$(check-variable))
+
 # FINAL_TARGET specifies the location into which we copy end-user-shipped
 # build products (typelibs, components, chrome).
 #
