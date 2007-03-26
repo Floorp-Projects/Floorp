@@ -155,9 +155,8 @@ nsButtonBoxFrame::DoMouseClick(nsGUIEvent* aEvent, PRBool aTrustEvent)
   }
 
   // Have the content handle the event, propagating it according to normal DOM rules.
-  nsIPresShell *shell = GetPresContext()->GetPresShell();
+  nsCOMPtr<nsIPresShell> shell = GetPresContext()->GetPresShell();
   if (shell) {
     shell->HandleDOMEventWithTarget(mContent, &event, &status);
-    // shell may no longer be alive, don't use it here unless you keep a ref
   }
 }

@@ -514,6 +514,7 @@ public:
 
   /**
     * Interface to dispatch events via the presshell
+    * @note The caller must have a strong reference to the PresShell.
     */
   NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent,
                                    nsIFrame* aFrame,
@@ -522,6 +523,7 @@ public:
 
   /**
    * Dispatch event to content only (NOT full processing)
+   * @note The caller must have a strong reference to the PresShell.
    */
   NS_IMETHOD HandleDOMEventWithTarget(nsIContent* aTargetContent,
                                       nsEvent* aEvent,

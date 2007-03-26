@@ -1658,7 +1658,7 @@ nsListControlFrame::FireOnChange()
   nsEventStatus status = nsEventStatus_eIgnore;
   nsEvent event(PR_TRUE, NS_FORM_CHANGE);
 
-  nsIPresShell *presShell = GetPresContext()->GetPresShell();
+  nsCOMPtr<nsIPresShell> presShell = GetPresContext()->GetPresShell();
   if (presShell) {
     presShell->HandleEventWithTarget(&event, this, nsnull, &status);
   }

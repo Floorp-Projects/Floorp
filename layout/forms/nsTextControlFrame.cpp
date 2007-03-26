@@ -305,7 +305,7 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
       nsCOMPtr<nsIDocument> doc = content->GetDocument();
       if (doc) 
       {
-        nsIPresShell *presShell = doc->GetShellAt(0);
+        nsCOMPtr<nsIPresShell> presShell = doc->GetShellAt(0);
         if (presShell) 
         {
           nsEventStatus status = nsEventStatus_eIgnore;
@@ -2467,8 +2467,8 @@ nsTextControlFrame::FireOnInput()
 
   // Have the content handle the event, propagating it according to normal
   // DOM rules.
-  GetPresContext()->PresShell()->HandleEventWithTarget(&event, nsnull, mContent,
-                                                       &status); 
+  nsCOMPtr<nsIPresShell> shell = GetPresContext()->PresShell();
+  shell->HandleEventWithTarget(&event, nsnull, mContent, &status);
 }
 
 nsresult
@@ -2488,9 +2488,8 @@ nsTextControlFrame::CheckFireOnChange()
     // Dispatch the change event
     nsEventStatus status = nsEventStatus_eIgnore;
     nsInputEvent event(PR_TRUE, NS_FORM_CHANGE, nsnull);
-
-    GetPresContext()->PresShell()->HandleEventWithTarget(&event, nsnull,
-                                                         mContent, &status);
+    nsCOMPtr<nsIPresShell> shell = GetPresContext()->PresShell();
+    shell->HandleEventWithTarget(&event, nsnull, mContent, &status);
   }
   return NS_OK;
 }
