@@ -45,19 +45,17 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 
-# XXX want HOST_CPPSRCS
-CPPSRCS		= \
+HOST_CPPSRCS	= \
 		ListCSSProperties.cpp \
 		$(NULL)
 
-# XXX want HOST_SIMPLE_PROGRAMS
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
+HOST_SIMPLE_PROGRAMS	= $(addprefix host_, $(HOST_CPPSRCS:.cpp=$(HOST_BIN_SUFFIX)))
 
 include $(topsrcdir)/config/rules.mk
 
-css_properties.js: ListCSSProperties$(BIN_SUFFIX) css_properties_like_longhand.js Makefile
+css_properties.js: host_ListCSSProperties$(HOST_BIN_SUFFIX) css_properties_like_longhand.js Makefile
 	$(RM) $@
-	./ListCSSProperties$(BIN_SUFFIX) > $@
+	./host_ListCSSProperties$(HOST_BIN_SUFFIX) > $@
 	cat $(srcdir)/css_properties_like_longhand.js >> $@
 
 _TEST_FILES = 	test_bug302186.html \

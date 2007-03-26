@@ -265,7 +265,7 @@ OBJS	= $(strip $(_OBJS))
 endif
 
 ifndef HOST_OBJS
-HOST_OBJS		= $(addprefix host_,$(HOST_CSRCS:.c=.$(OBJ_SUFFIX)))
+HOST_OBJS		= $(addprefix host_,$(HOST_CSRCS:.c=.$(OBJ_SUFFIX))) $(addprefix host_,$(HOST_CPPSRCS:.cpp=.$(OBJ_SUFFIX)))
 endif
 
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
@@ -552,6 +552,12 @@ endif
 
 ifeq ($(OS_TARGET), WINCE)
 OUTOPTION = -Fo# eol
+endif
+
+ifeq (,$(CROSS_COMPILE))
+HOST_OUTOPTION = $(OUTOPTION)
+else
+HOST_OUTOPTION = -o # eol
 endif
 
 ################################################################################
@@ -974,7 +980,7 @@ else
 ifeq (WINNT_,$(HOST_OS_ARCH)_$(GNU_CC))
 	$(HOST_LD) -NOLOGO -OUT:$@ -PDB:$(PDBFILE) $< $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 else
-	$(HOST_CC) $(OUTOPTION)$@ $(HOST_CFLAGS) $(INCLUDES) $< $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+	$(HOST_CC) $(HOST_OUTOPTION)$@ $(HOST_CFLAGS) $(INCLUDES) $< $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 endif
 endif
 endif
@@ -1174,7 +1180,11 @@ endif # MOZ_AUTO_DEPS
 # Rules for building native targets must come first because of the host_ prefix
 host_%.$(OBJ_SUFFIX): %.c Makefile Makefile.in
 	$(REPORT_BUILD)
-	$(ELOG) $(HOST_CC) $(OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
+	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
+
+host_%.$(OBJ_SUFFIX): %.cpp Makefile Makefile.in
+	$(REPORT_BUILD)
+	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
 %: %.c Makefile Makefile.in
 	$(REPORT_BUILD)
