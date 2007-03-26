@@ -247,6 +247,11 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
   nsresult rv = DrawDrag(aDOMNode, aRegion,
                          NSToIntRound(screenPoint.x), NSToIntRound(screenPoint.y),
                          aDragRect, getter_AddRefs(surface));
+  if (!aDragRect->width || !aDragRect->height) {
+    // just use some suitable defaults
+    aDragRect->SetRect(NSToIntRound(screenPoint.x), NSToIntRound(screenPoint.y), 20, 20);
+  }
+
   if (NS_FAILED(rv) || !surface)
     return nsnull;
 
@@ -284,16 +289,17 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
   for (PRUint32 i = 0; i < height; ++i) {
     PRUint8* src = (PRUint8 *)imageData + i * stride;
     for (PRUint32 j = 0; j < width; ++j) {
+      // reduce transparency overall by multipying by a factor
 #ifdef IS_BIG_ENDIAN
       dest[0] = src[1];
       dest[1] = src[2];
       dest[2] = src[3];
-      dest[3] = PRUint8(src[0] * 0.8); // reduce transparency overall
+      dest[3] = PRUint8(src[0] * DRAG_TRANSLUCENCY);
 #else
       dest[0] = src[2];
       dest[1] = src[1];
       dest[2] = src[0];
-      dest[3] = PRUint8(src[3] * 0.8); // reduce transparency overall
+      dest[3] = PRUint8(src[3] * DRAG_TRANSLUCENCY);
 #endif
       src += 4;
       dest += 4;

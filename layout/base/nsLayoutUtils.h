@@ -502,6 +502,12 @@ public:
                                           nsIFrame* aKnownCommonAncestorHint);
 
   /**
+   * Get a frame's next-in-flow, or, if it doesn't have one, its special sibling.
+   */
+  static nsIFrame*
+  GetNextContinuationOrSpecialSibling(nsIFrame *aFrame);
+
+  /**
    * Check whether aFrame is a part of the scrollbar or scrollcorner of
    * the root content.
    * @param aFrame the checking frame
