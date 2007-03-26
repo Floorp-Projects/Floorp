@@ -8,3 +8,4 @@
 == rootElement-null-01.svg pass.svg
 == stroke-width-percentage-01.svg pass.svg
 == text-in-link-01.svg text-in-link-01-ref.svg
+== viewport-percent-graphic-user-01.svg pass.svg
