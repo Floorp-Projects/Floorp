@@ -479,20 +479,6 @@ GetLastSpecialSibling(nsFrameManager* aFrameManager, nsIFrame* aFrame)
   return nsnull;
 }
 
-// Get the frame's next-in-flow, or, if it doesn't have one,
-// its special sibling.
-static nsIFrame*
-GetNifOrSpecialSibling(nsFrameManager *aFrameManager, nsIFrame *aFrame)
-{
-  nsIFrame *result = aFrame->GetNextContinuation();
-  if (result)
-    return result;
-
-  if (IsFrameSpecial(aFrame))
-    GetSpecialSibling(aFrameManager, aFrame, &result);
-  return result;
-}
-
 static void
 SetFrameIsSpecial(nsIFrame* aFrame, nsIFrame* aSpecialSibling)
 {
@@ -9672,7 +9658,7 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
   NS_PRECONDITION(gInApplyRenderingChangeToTree,
                   "should only be called within ApplyRenderingChangeToTree");
 
-  for ( ; aFrame; aFrame = GetNifOrSpecialSibling(aFrameManager, aFrame)) {
+  for ( ; aFrame; aFrame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(aFrame)) {
     // Get view if this frame has one and trigger an update. If the
     // frame doesn't have a view, find the nearest containing view
     // (adjusting r's coordinate system to reflect the nesting) and
@@ -10749,7 +10735,7 @@ nsCSSFrameConstructor::FindFrameWithContent(nsFrameManager*  aFrameManager,
             nsIFrame *parentFrame = kidFrame->GetParent();
             kidFrame = nsnull;
             if (parentFrame) {
-              parentFrame = GetNifOrSpecialSibling(aFrameManager, parentFrame);
+              parentFrame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(parentFrame);
             }
             if (parentFrame) {
               // Found it, continue the search with its first child.
@@ -10832,7 +10818,7 @@ nsCSSFrameConstructor::FindFrameWithContent(nsFrameManager*  aFrameManager,
 
     // We didn't find a matching frame. If aFrame has a next-in-flow,
     // then continue looking there
-    aParentFrame = GetNifOrSpecialSibling(aFrameManager, aParentFrame);
+    aParentFrame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(aParentFrame);
 #ifdef NOISY_FINDFRAME
     if (aParentFrame) {
       FFWC_nextInFlows++;

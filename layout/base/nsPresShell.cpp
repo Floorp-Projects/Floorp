@@ -5098,7 +5098,8 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
 
   // use the nearest ancestor frame that includes all continuations as the
   // root for building the display list
-  while (ancestorFrame && ancestorFrame->GetNextInFlow())
+  while (ancestorFrame &&
+         nsLayoutUtils::GetNextContinuationOrSpecialSibling(ancestorFrame))
     ancestorFrame = ancestorFrame->GetParent();
 
   if (!ancestorFrame)
