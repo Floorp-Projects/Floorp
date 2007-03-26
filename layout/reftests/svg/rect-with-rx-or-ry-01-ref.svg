@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+
+  <title>Reference for rect with one of rx or ry</title>
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=111993 -->
+
+  <rect x="10"  y="10"  width="100" height="100"/>
+  <rect x="10"  y="120" width="100" height="100"/>
+  <rect x="120" y="10"  width="100" height="100" rx="30" ry="30"/>
+  <rect x="120" y="120" width="100" height="100" rx="30" ry="30"/>
+  <circle cx="280" cy="60"  r="50"/>
+  <circle cx="280" cy="170" r="50"/>
+
+</svg>
