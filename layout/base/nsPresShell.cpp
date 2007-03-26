@@ -2556,7 +2556,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
 
     nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, rootFrame->GetView(),
-                                               nsnull);
+                                               &desiredSize.mOverflowArea);
     rootFrame->DidReflow(mPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
       
 #ifdef NS_DEBUG
@@ -2705,7 +2705,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
 
     nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, rootFrame->GetView(),
-                                               nsnull);
+                                               &desiredSize.mOverflowArea);
     rootFrame->DidReflow(mPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
 #ifdef NS_DEBUG
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
@@ -3166,7 +3166,7 @@ PresShell::StyleChangeReflow()
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
     nsIView* view = rootFrame->GetView();
     nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
-                                               nsnull);
+                                               &desiredSize.mOverflowArea);
     rootFrame->DidReflow(mPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
 #ifdef NS_DEBUG
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
