@@ -290,7 +290,10 @@ nsHTMLAnchorElement::IsLink(nsIURI** aURI) const
 void
 nsHTMLAnchorElement::GetLinkTarget(nsAString& aTarget)
 {
-  GetTarget(aTarget);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::target, aTarget);
+  if (aTarget.IsEmpty()) {
+    GetBaseTarget(aTarget);
+  }
 }
 
 NS_IMETHODIMP

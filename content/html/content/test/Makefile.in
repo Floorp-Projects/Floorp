@@ -70,6 +70,8 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug340800.html \
 		test_bug330705-1.html \
 		test_bug373589.html \
+		bug372098-link-target.html \
+		test_bug372098.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

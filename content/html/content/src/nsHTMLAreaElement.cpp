@@ -185,7 +185,10 @@ nsHTMLAreaElement::IsLink(nsIURI** aURI) const
 void
 nsHTMLAreaElement::GetLinkTarget(nsAString& aTarget)
 {
-  GetTarget(aTarget);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::target, aTarget);
+  if (aTarget.IsEmpty()) {
+    GetBaseTarget(aTarget);
+  }
 }
 
 void
