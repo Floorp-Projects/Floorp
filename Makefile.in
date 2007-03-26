@@ -138,18 +138,20 @@ endif # MOZILLA_OFFICIAL
 buildsymbols:
 ifdef MOZ_DEBUG_SYMBOLS
 ifdef MOZ_AIRBAG
-	echo building airbag symbol store
-	mkdir -p $(DIST)/airbag-symbols/$(BUILDID)
+	echo building symbol store
+	mkdir -p $(DIST)/crashreporter-symbols/$(BUILDID)
 	/bin/find . -path "./dist" -prune -o -name "*.exe"                \
           -o -name "*.dll" -o -name "*.EXE" | sed "s/\.[^\.]*$$/\.pdb/" | \
 	  xargs $(topsrcdir)/toolkit/airbag/tools/make_symbol_store.pl -c \
 	  $(topsrcdir)/toolkit/airbag/tools/win32/dump_syms.exe           \
-	  $(DIST)/airbag-symbols/$(BUILDID) >                             \
-	  $(DIST)/airbag-symbols/$(BUILDID)/$(BUILDID)-symbols.txt
+	  $(DIST)/crashreporter-symbols/$(BUILDID) >                      \
+	  $(DIST)/crashreporter-symbols/$(BUILDID)/$(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_ARCH)-$(BUILDID)-symbols.txt
 	echo packing symbols
 	mkdir -p $(topsrcdir)/../$(BUILDID)
-	cd $(DIST)/airbag-symbols/$(BUILDID) && zip -r9D ../airbag-symbols-$(BUILDID).zip .
-	mv $(DIST)/airbag-symbols/airbag-symbols-$(BUILDID).zip $(topsrcdir)/../$(BUILDID)
+	cd $(DIST)/crashreporter-symbols/$(BUILDID) && \
+          zip -r9D ../crashreporter-symbols-$(BUILDID).zip .
+	mv $(DIST)/crashreporter-symbols/crashreporter-symbols-$(BUILDID).zip \
+          $(topsrcdir)/../$(BUILDID)
 endif # MOZ_DEBUG_SYMBOLS
 endif # MOZ_AIRBAG
 
