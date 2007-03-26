@@ -485,28 +485,6 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
     }
   }
   // XXX we should also set widget transparency for XUL popups
-
-  nsFrameState kidState = aFrame->GetStateBits();
-  PRBool isBlockLevel =
-    display->IsBlockLevel() || (kidState & NS_FRAME_OUT_OF_FLOW);
-  
-  if (!viewHasTransparentContent) {
-    const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
-    if (// If we're showing the view but the frame is hidden, then the
-        // view is transparent
-        (nsViewVisibility_kShow == aView->GetVisibility() &&
-         NS_STYLE_VISIBILITY_HIDDEN == vis->mVisible)) {
-      viewHasTransparentContent = PR_TRUE;
-    } else {
-      PRBool isScrolledContent = aView->GetParent() &&
-        aView->GetParent()->ToScrollableView();
-      // If we have overflowing kids and we're not clipped by a parent
-      // scrolling view, then the view must be transparent.
-      if (!isScrolledContent && (kidState & NS_FRAME_OUTSIDE_CHILDREN)) {
-        viewHasTransparentContent = PR_TRUE;
-      }
-    }
-  }
 }
 
 void
@@ -520,6 +498,8 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsPresContext* aPresContext,
     return;
   }
 
+  NS_ASSERTION(aCombinedArea, "Combined area must be passed in now");
+
   // Make sure the view is sized and positioned correctly
   if (0 == (aFlags & NS_FRAME_NO_MOVE_VIEW)) {
     PositionFrameView(aFrame);
@@ -528,19 +508,7 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsPresContext* aPresContext,
   if (0 == (aFlags & NS_FRAME_NO_SIZE_VIEW)) {
     nsIViewManager* vm = aView->GetViewManager();
 
-    // If the frame has child frames that stick outside the content
-    // area, then size the view large enough to include those child
-    // frames
-    NS_ASSERTION(!(aFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) ||
-                 aCombinedArea,
-                 "resizing view for frame with overflow to the wrong size");
-    if ((aFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) && aCombinedArea) {
-      vm->ResizeView(aView, *aCombinedArea, PR_TRUE);
-    } else {
-      nsSize frameSize = aFrame->GetSize();
-      nsRect newSize(0, 0, frameSize.width, frameSize.height);
-      vm->ResizeView(aView, newSize, PR_TRUE);
-    }
+    vm->ResizeView(aView, *aCombinedArea, PR_TRUE);
 
     // Even if the size hasn't changed, we need to sync up the
     // geometry dependent properties, because (kidState &
