@@ -38,7 +38,7 @@
 /* Some simple smoke tests of the typelib loader. */
 
 #include "nscore.h"
-
+#include "nsID.h"
 #include "nsISupports.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"

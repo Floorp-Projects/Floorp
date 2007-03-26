@@ -49,7 +49,7 @@ SIMPLE_PROGRAMS	= TestInterfaceInfo$(BIN_SUFFIX)
 CPPSRCS		= TestInterfaceInfo.cpp
 
 LIBS		= \
-		$(XPCOM_GLUE_LDOPTS) \
+		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
