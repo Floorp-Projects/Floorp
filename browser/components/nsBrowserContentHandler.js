@@ -461,7 +461,7 @@ var nsBrowserContentHandler = {
     if (overridePage == "about:blank")
       overridePage = "";
 
-    var startpage = "";
+    var startPage = "";
     try {
       var choice = prefb.getIntPref("browser.startup.page");
       if (choice == 1)
@@ -470,7 +470,9 @@ var nsBrowserContentHandler = {
       if (choice == 2)
         startPage = Components.classes["@mozilla.org/browser/global-history;2"]
                               .getService(nsIBrowserHistory).lastPageVisited;
-    } catch (e) { }
+    } catch (e) {
+      Components.utils.reportError(e);
+    }
 
     if (startPage == "about:blank")
       startPage = "";
