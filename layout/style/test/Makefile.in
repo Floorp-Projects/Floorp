@@ -42,14 +42,34 @@ VPATH		= @srcdir@
 relativesrcdir  = layout/style/test
 
 include $(DEPTH)/config/autoconf.mk
+
+MODULE		= layout
+
+# XXX want HOST_CPPSRCS
+CPPSRCS		= \
+		ListCSSProperties.cpp \
+		$(NULL)
+
+# XXX want HOST_SIMPLE_PROGRAMS
+SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
+
 include $(topsrcdir)/config/rules.mk
+
+css_properties.js: ListCSSProperties$(BIN_SUFFIX) css_properties_like_longhand.js Makefile
+	$(RM) $@
+	./ListCSSProperties$(BIN_SUFFIX) > $@
+	cat $(srcdir)/css_properties_like_longhand.js >> $@
 
 _TEST_FILES = 	test_bug302186.html \
 		test_bug319381.html \
 		test_bug365932.html \
 		test_bug372770.html \
 		test_bug373293.html \
+		test_inherit_storage.html \
+		test_initial_storage.html \
+		css_properties.js \
 		$(NULL)
+
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
