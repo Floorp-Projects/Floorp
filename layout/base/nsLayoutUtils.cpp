@@ -1175,6 +1175,25 @@ nsLayoutUtils::GetClosestCommonAncestorViaPlaceholders(nsIFrame* aFrame1,
   return lastCommonFrame;
 }
 
+nsIFrame*
+nsLayoutUtils::GetNextContinuationOrSpecialSibling(nsIFrame *aFrame)
+{
+  nsIFrame *result = aFrame->GetNextContinuation();
+  if (result)
+    return result;
+
+  if ((aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) != 0) {
+    // We only store the "special sibling" annotation with the first
+    // frame in the flow. Walk back to find that frame now.
+    aFrame = aFrame->GetFirstInFlow();
+
+    void* value = aFrame->GetProperty(nsGkAtoms::IBSplitSpecialSibling);
+    return NS_STATIC_CAST(nsIFrame*, value);
+  }
+
+  return nsnull;
+}
+
 PRBool
 nsLayoutUtils::IsViewportScrollbarFrame(nsIFrame* aFrame)
 {
