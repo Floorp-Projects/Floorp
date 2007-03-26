@@ -1,4 +1,5 @@
 
+== foreignObject-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
 == getElementById-a-element-01.svg pass.svg
 == opacity-and-gradient-01.svg pass.svg
