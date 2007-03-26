@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=375363
+-->
+<head>
+  <title>Test for parsing, storage, and serialization of CSS 'inherit'</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="css_properties.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=375363">Mozilla Bug 375363</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+<div id="testnode"></div>
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for parsing, storage, and serialization of CSS 'inherit' **/
+
+var gDeclaration = document.getElementById("testnode").style;
+
+/* all failures covered by bug 375363 */
+var gKnownFails = {
+  "-moz-force-broken-image-icon": true,
+  "quotes": true,
+  "-moz-box-ordinal-group": true,
+  "background-position": true
+};
+
+function test_property(property)
+{
+  var pass = true;
+  var match = true;
+
+  var val = gDeclaration.getPropertyValue(property.name);
+  pass = pass && val == "";
+  if (property.prop)
+    match = match && gDeclaration[property.prop] == val;
+
+  gDeclaration.setProperty(property.name, "inherit", "");
+
+  val = gDeclaration.getPropertyValue(property.name);
+  pass = pass && val == "inherit";
+  if (property.prop)
+    match = match && gDeclaration[property.prop] == val;
+
+  gDeclaration.removeProperty(property.name);
+
+  val = gDeclaration.getPropertyValue(property.name);
+  pass = pass && val == "";
+  if (property.prop)
+    match = match && gDeclaration[property.prop] == val;
+
+  (property.name in gKnownFails ? todo : ok)(pass && match, "inherit parsed, stored, and serialized for CSS '" + property.name + "'");
+  if (!match) {
+    /* already included in above todo/ok, but exceptional in itself */
+    ok(match, "getPropertyValue matches nsICSSProperties for CSS '" + property.name + "'");
+  }
+}
+
+for (var idx in gLonghandProperties)
+  test_property(gLonghandProperties[idx]);
+for (var idx in gShorthandPropertiesLikeLonghand)
+  test_property(gShorthandPropertiesLikeLonghand[idx]);
+
+</script>
+</pre>
+</body>
+</html>
