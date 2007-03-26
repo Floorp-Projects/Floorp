@@ -340,7 +340,8 @@ nsHTMLLinkElement::IsLink(nsIURI** aURI) const
 void
 nsHTMLLinkElement::GetLinkTarget(nsAString& aTarget)
 {
-  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::target, aTarget)) {
+  GetAttr(kNameSpaceID_None, nsGkAtoms::target, aTarget);
+  if (aTarget.IsEmpty()) {
     GetBaseTarget(aTarget);
   }
 }
