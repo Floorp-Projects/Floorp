@@ -1176,7 +1176,7 @@ public:
                     // font doesn't have the glyph. Don't draw a hexbox and
                     // don't give it width.
                     if (mString[offset] == UNICODE_ZWSP) {
-                        aRun->SetCharacterGlyph(runOffset, g.IsMissing());
+                        aRun->SetCharacterGlyph(runOffset, g.SetMissing());
                     } else {
                         aRun->SetMissingGlyph(runOffset, mString[offset]);
                     }
