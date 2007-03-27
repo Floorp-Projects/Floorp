@@ -48,6 +48,7 @@ LIBRARY_NAME = airbagexception_s
 REQUIRES = \
 	xpcom \
 	string \
+	xulapp \
 	$(NULL)
 
 DIRS = \

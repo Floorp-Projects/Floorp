@@ -2109,7 +2109,7 @@ static void MakeOrSetMinidumpPath(nsIFile* profD)
 
     nsAutoString pathStr;
     if(NS_SUCCEEDED(dumpD->GetPath(pathStr)))
-      SetAirbagMinidumpPath(&pathStr);
+      CrashReporter::SetMinidumpPath(pathStr);
   }
 }
 #endif
@@ -2205,8 +2205,22 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
 #ifdef MOZ_AIRBAG
-  //XXX: check failure?
-  SetAirbagExceptionHandler();
+  if (NS_SUCCEEDED(
+        CrashReporter::SetExceptionHandler(aAppData->xreDirectory))) {
+    // pass some basic info from the app data
+    if (aAppData->vendor)
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Vendor"),
+                                     nsDependentCString(aAppData->vendor));
+    if (aAppData->name)
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProductName"),
+                                     nsDependentCString(aAppData->name));
+    if (aAppData->version)
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Version"),
+                                     nsDependentCString(aAppData->version));
+    if (aAppData->buildID)
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("BuildID"),
+                                     nsDependentCString(aAppData->buildID));
+  }
 #endif
 
 #ifdef XP_WIN32
@@ -2932,9 +2946,12 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
       rv = LaunchChild(nativeApp, appInitiatedRestart, upgraded ? -1 : 0);
+
+      CrashReporter::UnsetExceptionHandler();
       return rv == NS_ERROR_LAUNCHED_CHILD_PROCESS ? 0 : 1;
     }
   }
 
+  CrashReporter::UnsetExceptionHandler();
   return NS_FAILED(rv) ? 1 : 0;
 }
