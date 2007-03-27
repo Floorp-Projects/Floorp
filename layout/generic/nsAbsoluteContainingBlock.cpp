@@ -425,11 +425,14 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
                                              &kidDesiredSize.mOverflowArea);
 
   if (oldRect.TopLeft() != rect.TopLeft() || 
-      (aDelegatingFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+      (aDelegatingFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW) ||
+      ((aKidFrame->GetStyleDisplay()->mClipFlags & NS_STYLE_CLIP_RECT) && 
+       (kidDesiredSize.mOverflowArea != oldOverflowRect))) {
     // The frame moved; we have to invalidate the whole frame
     // because the children may have moved after they were reflowed
-    // XXX This could be optimized in some cases, like repositioning and
-    // clipping
+    // We also have to invalidate when we're clipping and the overflow
+    // changes; the style code doesn't know how to deal with this case
+    // XXX This could be optimized in some cases, especially clipping changes
     aKidFrame->GetParent()->Invalidate(oldOverflowRect);
     aKidFrame->GetParent()->Invalidate(kidDesiredSize.mOverflowArea +
                                        rect.TopLeft());
@@ -447,18 +450,6 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   }
   aKidFrame->DidReflow(aPresContext, &kidReflowState, NS_FRAME_REFLOW_FINISHED);
 
-  // If the frame has visible overflow, then store it as a property on the
-  // frame. This allows us to be able to recover it without having to reflow
-  // the frame
-  if (aKidFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
-    // Get the property (creating a rect struct if necessary)
-    nsRect* overflowArea = aKidFrame->GetOverflowAreaProperty(PR_TRUE);
-
-    NS_ASSERTION(overflowArea, "should have created rect");
-    if (overflowArea) {
-      *overflowArea = kidDesiredSize.mOverflowArea;
-    }
-  }
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
     nsFrame::IndentBy(stdout,nsBlockFrame::gNoiseIndent - 1);

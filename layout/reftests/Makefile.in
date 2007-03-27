@@ -51,4 +51,4 @@ include $(topsrcdir)/config/rules.mk
 lcheck::
 	# XXX profiles?
 	# XXX do something with the result!
-	MOZ_NO_REMOTE=1 $(DIST)/bin/$(MOZ_APP_NAME) -reftest $(srcdir)/reftest.list
+	MOZ_NO_REMOTE=1 $(DIST)/bin/$(MOZ_APP_NAME) -P Debug -reftest file:///C:/mozilla/mozilla/layout/reftests/reftest.list
