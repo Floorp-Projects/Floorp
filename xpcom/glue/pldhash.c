@@ -108,14 +108,6 @@ PL_DHashStringKey(PLDHashTable *table, const void *key)
     return h;
 }
 
-const void *
-PL_DHashGetKeyStub(PLDHashTable *table, PLDHashEntryHdr *entry)
-{
-    PLDHashEntryStub *stub = (PLDHashEntryStub *)entry;
-
-    return stub->key;
-}
-
 PLDHashNumber
 PL_DHashVoidPtrKeyStub(PLDHashTable *table, const void *key)
 {
@@ -175,7 +167,6 @@ PL_DHashFinalizeStub(PLDHashTable *table)
 static const PLDHashTableOps stub_ops = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    PL_DHashGetKeyStub,
     PL_DHashVoidPtrKeyStub,
     PL_DHashMatchEntryStub,
     PL_DHashMoveEntryStub,

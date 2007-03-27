@@ -60,13 +60,6 @@ struct HashTableEntry : PLDHashEntryHdr {
 };
 
 
-static const void * PR_CALLBACK
-GetKey(PLDHashTable * /*table*/, PLDHashEntryHdr * header)
-{
-    return (void*) ((HashTableEntry *)header)->mBinding->mRecord.HashNumber();
-}
-
-
 static PLDHashNumber PR_CALLBACK
 HashKey( PLDHashTable *table, const void *key)
 {
@@ -168,7 +161,6 @@ PLDHashTableOps nsDiskCacheBindery::ops =
 {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    GetKey,
     HashKey,
     MatchEntry,
     MoveEntry,

@@ -47,7 +47,6 @@ PLDHashTableOps nsCommandParams::sHashOps =
 {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    HashGetKey,
     HashKey,
     HashMatchEntry,
     HashMoveEntry,
@@ -353,14 +352,6 @@ nsCommandParams::GetOrMakeEntry(const char * name, PRUint8 entryType, HashEntry*
 #if 0
 #pragma mark -
 #endif
-
-const void *
-nsCommandParams::HashGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
-{
-  HashEntry*    thisEntry = NS_STATIC_CAST(HashEntry*, entry);
-  return (void *)thisEntry->mEntryName.get();
-}
-
 
 PLDHashNumber
 nsCommandParams::HashKey(PLDHashTable *table, const void *key)

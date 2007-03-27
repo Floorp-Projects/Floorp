@@ -278,14 +278,6 @@ ArenaStrdup(const char *s, PLArenaPool *arena)
 PRBool PR_CALLBACK
 nsFactoryEntry_Destroy(nsHashKey *aKey, void *aData, void* closure);
 
-PR_STATIC_CALLBACK(const void *)
-factory_GetKey(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
-{
-    nsFactoryTableEntry* entry = NS_STATIC_CAST(nsFactoryTableEntry*, aHdr);
-
-    return &entry->mFactoryEntry->mCid;
-}
-
 PR_STATIC_CALLBACK(PLDHashNumber)
 factory_HashKey(PLDHashTable *aTable, const void *aKey)
 {
@@ -318,7 +310,6 @@ factory_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
 static const PLDHashTableOps factory_DHashTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    factory_GetKey,
     factory_HashKey,
     factory_MatchEntry,
     PL_DHashMoveEntryStub,
@@ -346,7 +337,6 @@ contractID_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
 static const PLDHashTableOps contractID_DHashTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    PL_DHashGetKeyStub,
     PL_DHashStringKey,
     PL_DHashMatchStringKey,
     PL_DHashMoveEntryStub,

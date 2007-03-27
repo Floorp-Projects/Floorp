@@ -80,10 +80,14 @@ info_InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
 }
 
 /* static */ PLDHashTableOps nsStaticModuleLoader::sInfoHashOps = {
-    PL_DHashAllocTable,    PL_DHashFreeTable,
-    PL_DHashGetKeyStub,    PL_DHashStringKey, PL_DHashMatchStringKey,
-    PL_DHashMoveEntryStub, info_ClearEntry,
-    PL_DHashFinalizeStub,  info_InitEntry
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    PL_DHashStringKey,
+    PL_DHashMatchStringKey,
+    PL_DHashMoveEntryStub,
+    info_ClearEntry,
+    PL_DHashFinalizeStub,
+    info_InitEntry
 };
 
 nsresult

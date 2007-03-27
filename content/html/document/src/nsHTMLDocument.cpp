@@ -274,14 +274,6 @@ IdAndNameMapEntry::AddIdContent(nsIContent* aContent)
 }
 
 
-PR_STATIC_CALLBACK(const void *)
-IdAndNameHashGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
-{
-  IdAndNameMapEntry *e = NS_STATIC_CAST(IdAndNameMapEntry *, entry);
-
-  return NS_STATIC_CAST(const nsIAtom *, e->mKey);
-}
-
 PR_STATIC_CALLBACK(PLDHashNumber)
 IdAndNameHashHashKey(PLDHashTable *table, const void *key)
 {
@@ -407,7 +399,6 @@ nsHTMLDocument::Init()
   {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    IdAndNameHashGetKey,
     IdAndNameHashHashKey,
     IdAndNameHashMatchEntry,
     PL_DHashMoveEntryStub,

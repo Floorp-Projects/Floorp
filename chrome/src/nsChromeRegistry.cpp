@@ -339,13 +339,6 @@ nsChromeRegistry::PackageEntry::PackageEntry(const nsACString& aPackage) :
 {
 }
 
-const void*
-nsChromeRegistry::GetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
-{
-  PackageEntry* pentry = NS_STATIC_CAST(PackageEntry*, entry);
-  return (nsACString*) &pentry->package;
-}
-
 PLHashNumber
 nsChromeRegistry::HashKey(PLDHashTable *table, const void *key)
 {
@@ -383,7 +376,6 @@ const PLDHashTableOps
 nsChromeRegistry::kTableOps = {
   PL_DHashAllocTable,
   PL_DHashFreeTable,
-  GetKey,
   HashKey,
   MatchKey,
   PL_DHashMoveEntryStub,

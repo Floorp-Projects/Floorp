@@ -502,14 +502,6 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
     return cx;
 }
 
-JS_STATIC_DLL_CALLBACK(const void *)
-resolving_GetKey(JSDHashTable *table, JSDHashEntryHdr *hdr)
-{
-    JSResolvingEntry *entry = (JSResolvingEntry *)hdr;
-
-    return &entry->key;
-}
-
 JS_STATIC_DLL_CALLBACK(JSDHashNumber)
 resolving_HashKey(JSDHashTable *table, const void *ptr)
 {
@@ -532,7 +524,6 @@ resolving_MatchEntry(JSDHashTable *table,
 static const JSDHashTableOps resolving_dhash_ops = {
     JS_DHashAllocTable,
     JS_DHashFreeTable,
-    resolving_GetKey,
     resolving_HashKey,
     resolving_MatchEntry,
     JS_DHashMoveEntryStub,

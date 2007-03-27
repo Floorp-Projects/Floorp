@@ -205,7 +205,6 @@ struct JSDHashTableOps IID2WrappedJSClassMap::Entry::sOps =
 {
     JS_DHashAllocTable,
     JS_DHashFreeTable,
-    JS_DHashGetKeyStub,
     HashIIDPtrKey,
     MatchIIDPtrKey,
     JS_DHashMoveEntryStub,
@@ -243,7 +242,6 @@ struct JSDHashTableOps IID2NativeInterfaceMap::Entry::sOps =
 {
     JS_DHashAllocTable,
     JS_DHashFreeTable,
-    JS_DHashGetKeyStub,
     HashIIDPtrKey,
     MatchIIDPtrKey,
     JS_DHashMoveEntryStub,
@@ -411,7 +409,6 @@ struct JSDHashTableOps NativeSetMap::Entry::sOps =
 {
     JS_DHashAllocTable,
     JS_DHashFreeTable,
-    JS_DHashGetKeyStub,
     HashNativeKey,
     Match,
     JS_DHashMoveEntryStub,
@@ -444,12 +441,6 @@ NativeSetMap::~NativeSetMap()
 /***************************************************************************/
 // implement IID2ThisTranslatorMap...
 
-const void* JS_DLL_CALLBACK
-IID2ThisTranslatorMap::Entry::GetKey(JSDHashTable *table, JSDHashEntryHdr *entry)
-{
-    return &((Entry*)entry)->key;
-}
-
 JSBool JS_DLL_CALLBACK
 IID2ThisTranslatorMap::Entry::Match(JSDHashTable *table,
                                     const JSDHashEntryHdr *entry,
@@ -469,7 +460,6 @@ struct JSDHashTableOps IID2ThisTranslatorMap::Entry::sOps =
 {
     JS_DHashAllocTable,
     JS_DHashFreeTable,
-    GetKey,
     HashIIDPtrKey,
     Match,
     JS_DHashMoveEntryStub,
@@ -547,7 +537,6 @@ struct JSDHashTableOps XPCNativeScriptableSharedMap::Entry::sOps =
 {
     JS_DHashAllocTable,
     JS_DHashFreeTable,
-    JS_DHashGetKeyStub,
     Hash,
     Match,
     JS_DHashMoveEntryStub,

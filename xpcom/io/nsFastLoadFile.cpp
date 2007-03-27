@@ -340,7 +340,6 @@ strmap_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
 static const PLDHashTableOps strmap_DHashTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    PL_DHashGetKeyStub,
     PL_DHashStringKey,
     PL_DHashMatchStringKey,
     PL_DHashMoveEntryStub,
@@ -376,7 +375,6 @@ objmap_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
 static const PLDHashTableOps objmap_DHashTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    PL_DHashGetKeyStub,
     PL_DHashVoidPtrKeyStub,
     PL_DHashMatchEntryStub,
     PL_DHashMoveEntryStub,
@@ -1247,14 +1245,6 @@ struct nsIDMapEntry : public PLDHashEntryHdr {
     nsID            mSlowID;            // key, used by PLDHashTableOps below
 };
 
-PR_STATIC_CALLBACK(const void *)
-idmap_GetKey(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
-{
-    nsIDMapEntry* entry = NS_STATIC_CAST(nsIDMapEntry*, aHdr);
-
-    return &entry->mSlowID;
-}
-
 PR_STATIC_CALLBACK(PLDHashNumber)
 idmap_HashKey(PLDHashTable *aTable, const void *aKey)
 {
@@ -1277,7 +1267,6 @@ idmap_MatchEntry(PLDHashTable *aTable,
 static const PLDHashTableOps idmap_DHashTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    idmap_GetKey,
     idmap_HashKey,
     idmap_MatchEntry,
     PL_DHashMoveEntryStub,

@@ -245,7 +245,6 @@ InitClassPolicyEntry(PLDHashTable *table,
     {
         PL_DHashAllocTable,
         PL_DHashFreeTable,
-        PL_DHashGetKeyStub,
         PL_DHashVoidPtrKeyStub,
         PL_DHashMatchEntryStub,
         PL_DHashMoveEntryStub,
@@ -291,7 +290,6 @@ public:
         {
             PL_DHashAllocTable,
             PL_DHashFreeTable,
-            PL_DHashGetKeyStub,
             PL_DHashStringKey,
             PL_DHashMatchStringKey,
             MoveClassPolicyEntry,

@@ -202,7 +202,6 @@ InitObjectEntry(PLDHashTable* table, PLDHashEntryHdr* entry, const void* key)
 static PLDHashTableOps ObjectTableOps = {
   PL_DHashAllocTable,
   PL_DHashFreeTable,
-  PL_DHashGetKeyStub,
   PL_DHashVoidPtrKeyStub,
   PL_DHashMatchEntryStub,
   PL_DHashMoveEntryStub,

@@ -167,13 +167,6 @@ struct ResourceHashEntry : public PLDHashEntryHdr {
     const char *mKey;
     nsIRDFResource *mResource;
 
-    static const void * PR_CALLBACK
-    GetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
-    {
-        ResourceHashEntry *entry = NS_STATIC_CAST(ResourceHashEntry *, hdr);
-        return entry->mKey;
-    }
-
     static PLDHashNumber PR_CALLBACK
     HashKey(PLDHashTable *table, const void *key)
     {
@@ -195,7 +188,6 @@ struct ResourceHashEntry : public PLDHashEntryHdr {
 static PLDHashTableOps gResourceTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    ResourceHashEntry::GetKey,
     ResourceHashEntry::HashKey,
     ResourceHashEntry::MatchEntry,
     PL_DHashMoveEntryStub,
@@ -212,13 +204,6 @@ static PLDHashTableOps gResourceTableOps = {
 struct LiteralHashEntry : public PLDHashEntryHdr {
     nsIRDFLiteral *mLiteral;
     const PRUnichar *mKey;
-
-    static const void * PR_CALLBACK
-    GetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
-    {
-        LiteralHashEntry *entry = NS_STATIC_CAST(LiteralHashEntry *, hdr);
-        return entry->mKey;
-    }
 
     static PLDHashNumber PR_CALLBACK
     HashKey(PLDHashTable *table, const void *key)
@@ -241,7 +226,6 @@ struct LiteralHashEntry : public PLDHashEntryHdr {
 static PLDHashTableOps gLiteralTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    LiteralHashEntry::GetKey,
     LiteralHashEntry::HashKey,
     LiteralHashEntry::MatchEntry,
     PL_DHashMoveEntryStub,
@@ -258,13 +242,6 @@ static PLDHashTableOps gLiteralTableOps = {
 struct IntHashEntry : public PLDHashEntryHdr {
     nsIRDFInt *mInt;
     PRInt32    mKey;
-
-    static const void * PR_CALLBACK
-    GetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
-    {
-        IntHashEntry *entry = NS_STATIC_CAST(IntHashEntry *, hdr);
-        return &entry->mKey;
-    }
 
     static PLDHashNumber PR_CALLBACK
     HashKey(PLDHashTable *table, const void *key)
@@ -286,7 +263,6 @@ struct IntHashEntry : public PLDHashEntryHdr {
 static PLDHashTableOps gIntTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    IntHashEntry::GetKey,
     IntHashEntry::HashKey,
     IntHashEntry::MatchEntry,
     PL_DHashMoveEntryStub,
@@ -303,13 +279,6 @@ static PLDHashTableOps gIntTableOps = {
 struct DateHashEntry : public PLDHashEntryHdr {
     nsIRDFDate *mDate;
     PRTime      mKey;
-
-    static const void * PR_CALLBACK
-    GetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
-    {
-        DateHashEntry *entry = NS_STATIC_CAST(DateHashEntry *, hdr);
-        return &entry->mKey;
-    }
 
     static PLDHashNumber PR_CALLBACK
     HashKey(PLDHashTable *table, const void *key)
@@ -340,7 +309,6 @@ struct DateHashEntry : public PLDHashEntryHdr {
 static PLDHashTableOps gDateTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    DateHashEntry::GetKey,
     DateHashEntry::HashKey,
     DateHashEntry::MatchEntry,
     PL_DHashMoveEntryStub,
@@ -431,13 +399,6 @@ BlobImpl::GetLength(PRInt32 *aResult)
 struct BlobHashEntry : public PLDHashEntryHdr {
     BlobImpl *mBlob;
 
-    static const void * PR_CALLBACK
-    GetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
-    {
-        BlobHashEntry *entry = NS_STATIC_CAST(BlobHashEntry *, hdr);
-        return &entry->mBlob->mData;
-    }
-
     static PLDHashNumber PR_CALLBACK
     HashKey(PLDHashTable *table, const void *key)
     {
@@ -471,7 +432,6 @@ struct BlobHashEntry : public PLDHashEntryHdr {
 static PLDHashTableOps gBlobTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    BlobHashEntry::GetKey,
     BlobHashEntry::HashKey,
     BlobHashEntry::MatchEntry,
     PL_DHashMoveEntryStub,
