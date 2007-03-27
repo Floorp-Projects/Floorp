@@ -1353,6 +1353,7 @@ nsHTMLFramesetFrame::CanChildResize(PRBool  aVertical,
 {
   nsIFrame* child = mFrames.FrameAt(aChildX);
   if (aFrameset) {
+    NS_ASSERTION(ChildIsFrameset(child), "Child frame is not a frameset!");
     return ((nsHTMLFramesetFrame*)child)->CanResize(aVertical, aLeft);
   } else {
     return !GetNoResize(child);
@@ -1373,7 +1374,7 @@ nsHTMLFramesetFrame::RecalculateBorderResize()
   if (NS_UNLIKELY(!childTypes)) {
     return;
   }
-  PRUint32 childIndex, frameOrFramesetChildIndex = 0;
+  PRUint32 childIndex, childTypeIndex = 0;
 
   // number of any type of children
   PRUint32 numChildren = mContent->GetChildCount();
@@ -1384,15 +1385,18 @@ nsHTMLFramesetFrame::RecalculateBorderResize()
       nsINodeInfo *ni = child->NodeInfo();
 
       if (ni->Equals(nsGkAtoms::frameset)) {
-        childTypes[frameOrFramesetChildIndex++] = FRAMESET;
+        childTypes[childTypeIndex++] = FRAMESET;
       } else if (ni->Equals(nsGkAtoms::frame)) {
-        childTypes[frameOrFramesetChildIndex++] = FRAME;
+        childTypes[childTypeIndex++] = FRAME;
       }
       // Don't overflow childTypes array
-      if (((PRInt32)frameOrFramesetChildIndex) >= numCells) {
+      if (((PRInt32)childTypeIndex) >= numCells) {
         break;
       }
     }
+  }
+  for (; childTypeIndex < numCells; ++childTypeIndex) {
+    childTypes[childTypeIndex] = BLANK;
   }
 
   // set the visibility and mouse sensitivity of borders
