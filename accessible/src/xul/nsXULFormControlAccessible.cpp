@@ -528,6 +528,21 @@ NS_IMETHODIMP nsXULRadioButtonAccessible::GetState(PRUint32 *_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULRadioButtonAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
+{
+  NS_ENSURE_ARG_POINTER(aAttributes);
+  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
+
+  nsresult rv = nsFormControlAccessible::GetAttributes(aAttributes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAccessibilityUtils::
+    SetAccAttrsForXULSelectControlItem(mDOMNode, *aAttributes);
+
+  return NS_OK;
+}
+
 /**
   * XUL Radio Group
   *   The Radio Group proxies for the Radio Buttons themselves. The Group gets

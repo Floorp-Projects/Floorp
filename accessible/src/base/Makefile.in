@@ -77,6 +77,7 @@ CPPSRCS = \
   nsDocAccessible.cpp \
   nsOuterDocAccessible.cpp \
   nsAccessibilityAtoms.cpp \
+  nsAccessibilityUtils.cpp \
   nsAccessibilityService.cpp \
   nsAccessible.cpp \
   nsAccessibleTreeWalker.cpp \

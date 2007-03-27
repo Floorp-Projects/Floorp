@@ -113,7 +113,8 @@ class nsXULRadioButtonAccessible : public nsRadioButtonAccessible
 
 public:
   nsXULRadioButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *aState);
+  NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
 };
 
 class nsXULRadioGroupAccessible : public nsXULSelectableAccessible

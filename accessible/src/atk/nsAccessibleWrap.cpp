@@ -58,7 +58,6 @@
 #include "nsMaiInterfaceTable.h"
 #include "nsXPCOMStrings.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIPersistentProperties2.h"
 #include "nsMaiInterfaceDocument.h"
 #include "nsMaiInterfaceImage.h"
 
