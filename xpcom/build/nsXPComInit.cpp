@@ -592,9 +592,12 @@ NS_InitXPCOM3(nsIServiceManager* *result,
     if (NS_FAILED(rv)) return rv;
 
 #ifdef GC_LEAK_DETECTOR
-  rv = NS_InitLeakDetector();
+    rv = NS_InitLeakDetector();
     if (NS_FAILED(rv)) return rv;
 #endif
+
+    rv = nsCycleCollector_startup();
+    if (NS_FAILED(rv)) return rv;
 
     // 2. Register the global services with the component manager so that
     //    clients can create new objects.
