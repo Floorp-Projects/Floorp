@@ -42,8 +42,11 @@
 #include "nsXPCOM.h"
 #include "nsStringGlue.h"
 
-nsresult SetAirbagExceptionHandler();
-nsresult SetAirbagMinidumpPath(const nsAString* aPath);
-nsresult UnsetAirbagExceptionHandler();
+namespace CrashReporter {
+nsresult SetExceptionHandler(nsILocalFile* aXREDirectory);
+nsresult SetMinidumpPath(const nsAString& aPath);
+nsresult UnsetExceptionHandler();
+nsresult AnnotateCrashReport(const nsACString &key, const nsACString &data);
+}
 
 #endif /* nsAirbagExceptionHandler_h__ */
