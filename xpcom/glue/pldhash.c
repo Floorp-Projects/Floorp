@@ -430,15 +430,17 @@ SearchTable(PLDHashTable *table, const void *key, PLDHashNumber keyHash,
     sizeMask = PR_BITMASK(sizeLog2);
 
     /* Save the first removed entry pointer so PL_DHASH_ADD can recycle it. */
-    if (ENTRY_IS_REMOVED(entry)) {
-        firstRemoved = entry;
-    } else {
-        firstRemoved = NULL;
-        if (op == PL_DHASH_ADD)
-            entry->keyHash |= COLLISION_FLAG;
-    }
+    firstRemoved = NULL;
 
     for (;;) {
+        if (NS_UNLIKELY(ENTRY_IS_REMOVED(entry))) {
+            if (!firstRemoved)
+                firstRemoved = entry;
+        } else {
+            if (op == PL_DHASH_ADD)
+                entry->keyHash |= COLLISION_FLAG;
+        }
+
         METER(table->stats.steps++);
         hash1 -= hash2;
         hash1 &= sizeMask;
@@ -453,14 +455,6 @@ SearchTable(PLDHashTable *table, const void *key, PLDHashNumber keyHash,
             matchEntry(table, entry, key)) {
             METER(table->stats.hits++);
             return entry;
-        }
-
-        if (ENTRY_IS_REMOVED(entry)) {
-            if (!firstRemoved)
-                firstRemoved = entry;
-        } else {
-            if (op == PL_DHASH_ADD)
-                entry->keyHash |= COLLISION_FLAG;
         }
     }
 
@@ -506,11 +500,11 @@ FindFreeEntry(PLDHashTable *table, PLDHashNumber keyHash)
     hash2 = HASH2(keyHash, sizeLog2, hashShift);
     sizeMask = PR_BITMASK(sizeLog2);
 
-    NS_ASSERTION(!ENTRY_IS_REMOVED(entry),
-                 "!ENTRY_IS_REMOVED(entry)");
-    entry->keyHash |= COLLISION_FLAG;
-
     for (;;) {
+        NS_ASSERTION(!ENTRY_IS_REMOVED(entry),
+                     "!ENTRY_IS_REMOVED(entry)");
+        entry->keyHash |= COLLISION_FLAG;
+
         METER(table->stats.steps++);
         hash1 -= hash2;
         hash1 &= sizeMask;
@@ -520,10 +514,6 @@ FindFreeEntry(PLDHashTable *table, PLDHashNumber keyHash)
             METER(table->stats.misses++);
             return entry;
         }
-
-        NS_ASSERTION(!ENTRY_IS_REMOVED(entry),
-                     "!ENTRY_IS_REMOVED(entry)");
-        entry->keyHash |= COLLISION_FLAG;
     }
 
     /* NOTREACHED */
