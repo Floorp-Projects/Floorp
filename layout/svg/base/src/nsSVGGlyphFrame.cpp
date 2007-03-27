@@ -1400,14 +1400,14 @@ nsSVGGlyphFrame::GetGlobalTransform(gfxContext *aContext)
   GetCanvasTM(getter_AddRefs(ctm));
   NS_ASSERTION(ctm, "graphic source didn't specify a ctm");
 
-  cairo_matrix_t matrix = nsSVGUtils::ConvertSVGMatrixToCairo(ctm);
+  gfxMatrix matrix = nsSVGUtils::ConvertSVGMatrixToThebes(ctm);
 
-  if (nsSVGUtils::IsSingular(&matrix)) {
+  if (matrix.IsSingular()) {
     aContext->IdentityMatrix();
     return NS_ERROR_FAILURE;
   }
 
-  aContext->Multiply(gfxMatrix(*reinterpret_cast<gfxMatrix*>(&matrix)));
+  aContext->Multiply(matrix);
 
   return NS_OK;
 }

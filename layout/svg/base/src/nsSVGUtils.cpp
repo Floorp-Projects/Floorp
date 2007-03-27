@@ -1157,18 +1157,6 @@ nsSVGUtils::GetThebesComputationalSurface()
   return mThebesComputationalSurface;
 }
 
-PRBool
-nsSVGUtils::IsSingular(const cairo_matrix_t *aMatrix)
-{
-  double a, b, c, d;
-
-  a = aMatrix->xx; b = aMatrix->yx;
-  c = aMatrix->xy; d = aMatrix->yy;
-
-  // if the determinant (ad - bc) is zero it's singular
-  return a * d == b * c;
-}
-
 cairo_matrix_t
 nsSVGUtils::ConvertSVGMatrixToCairo(nsIDOMSVGMatrix *aMatrix)
 {
@@ -1253,13 +1241,13 @@ nsSVGUtils::CompositeSurfaceMatrix(gfxContext *aContext,
                                    gfxASurface *aSurface,
                                    nsIDOMSVGMatrix *aCTM, float aOpacity)
 {
-  cairo_matrix_t matrix = ConvertSVGMatrixToCairo(aCTM);
-  if (IsSingular(&matrix))
+  gfxMatrix matrix = ConvertSVGMatrixToThebes(aCTM);
+  if (matrix.IsSingular())
     return;
 
   aContext->Save();
 
-  aContext->Multiply(gfxMatrix(*reinterpret_cast<gfxMatrix*>(&matrix)));
+  aContext->Multiply(matrix);
 
   aContext->SetSource(aSurface);
   aContext->Paint(aOpacity);
@@ -1272,12 +1260,12 @@ nsSVGUtils::SetClipRect(gfxContext *aContext,
                         nsIDOMSVGMatrix *aCTM, float aX, float aY,
                         float aWidth, float aHeight)
 {
-  cairo_matrix_t matrix = ConvertSVGMatrixToCairo(aCTM);
-  if (IsSingular(&matrix))
+  gfxMatrix matrix = ConvertSVGMatrixToThebes(aCTM);
+  if (matrix.IsSingular())
     return;
 
   gfxMatrix oldMatrix = aContext->CurrentMatrix();
-  aContext->Multiply(gfxMatrix(*reinterpret_cast<gfxMatrix*>(&matrix)));
+  aContext->Multiply(matrix);
   aContext->Clip(gfxRect(aX, aY, aWidth, aHeight));
   aContext->SetMatrix(oldMatrix);
 }
