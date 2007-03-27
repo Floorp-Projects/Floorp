@@ -5341,11 +5341,11 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
     aOverflowArea->x < 0 || aOverflowArea->y < 0 ||
     aOverflowArea->XMost() > aNewSize.width || aOverflowArea->YMost() > aNewSize.height;
   // Clear geometric overflow area if we clip our children
-  NS_ASSERTION((GetStyleDisplay()->mOverflowY == NS_STYLE_OVERFLOW_CLIP) ==
-               (GetStyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_CLIP),
+  NS_ASSERTION((disp->mOverflowY == NS_STYLE_OVERFLOW_CLIP) ==
+               (disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP),
                "If one overflow is clip, the other should be too");
   if (geometricOverflow &&
-      GetStyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_CLIP) {
+      disp->mOverflowX == NS_STYLE_OVERFLOW_CLIP) {
     *aOverflowArea = nsRect(nsPoint(0, 0), aNewSize);
     geometricOverflow = PR_FALSE;
   }
@@ -5353,7 +5353,14 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
   PRBool hasOutline;
   nsRect outlineRect(ComputeOutlineRect(this, &hasOutline, *aOverflowArea));
 
-  if (hasOutline || geometricOverflow) {
+  PRBool hasAbsPosClip;
+  nsRect absPosClipRect;
+  hasAbsPosClip = GetAbsPosClipRect(disp, &absPosClipRect);
+  if (hasAbsPosClip) {
+    outlineRect.IntersectRect(outlineRect, absPosClipRect);
+  }
+
+  if (outlineRect != nsRect(nsPoint(0, 0), aNewSize)) {
     // Throw out any overflow if we're -moz-hidden-unscrollable
     mState |= NS_FRAME_OUTSIDE_CHILDREN;
     nsRect* overflowArea = GetOverflowAreaProperty(PR_TRUE); 
