@@ -184,8 +184,10 @@ enum CheckboxValue {
 - (NSArray *)accessibilityActionNames
 {
   if ([self isEnabled]) {
-    return [NSArray arrayWithObjects:NSAccessibilityPressAction, 
-                                     NSAccessibilityShowMenuAction, 
+    return [NSArray arrayWithObjects:NSAccessibilityPressAction,
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
+                                     NSAccessibilityShowMenuAction,
+#endif
                                      nil];
   }
   return nil;
@@ -193,8 +195,10 @@ enum CheckboxValue {
 
 - (NSString *)accessibilityActionDescription:(NSString *)action
 {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
   if ([action isEqualToString:NSAccessibilityShowMenuAction])
     return @"show menu";
+#endif
   return [super accessibilityActionDescription:action];
 }
 
