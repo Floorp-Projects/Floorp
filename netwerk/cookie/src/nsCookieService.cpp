@@ -1118,8 +1118,8 @@ nsCookieService::Read()
                        nsInt64(expires),
                        lastAccessedCounter,
                        PR_FALSE,
-                       isHttpOnly,
                        Substring(buffer, secureIndex, expiresIndex - secureIndex - 1).EqualsLiteral(kTrue),
+                       isHttpOnly,
                        nsICookie::STATUS_UNKNOWN,
                        nsICookie::POLICY_UNKNOWN);
     if (!newCookie) {
