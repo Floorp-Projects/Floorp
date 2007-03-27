@@ -424,15 +424,17 @@ SearchTable(JSDHashTable *table, const void *key, JSDHashNumber keyHash,
     sizeMask = JS_BITMASK(sizeLog2);
 
     /* Save the first removed entry pointer so JS_DHASH_ADD can recycle it. */
-    if (ENTRY_IS_REMOVED(entry)) {
-        firstRemoved = entry;
-    } else {
-        firstRemoved = NULL;
-        if (op == JS_DHASH_ADD)
-            entry->keyHash |= COLLISION_FLAG;
-    }
+    firstRemoved = NULL;
 
     for (;;) {
+        if (JS_UNLIKELY(ENTRY_IS_REMOVED(entry))) {
+            if (!firstRemoved)
+                firstRemoved = entry;
+        } else {
+            if (op == JS_DHASH_ADD)
+                entry->keyHash |= COLLISION_FLAG;
+        }
+
         METER(table->stats.steps++);
         hash1 -= hash2;
         hash1 &= sizeMask;
@@ -447,14 +449,6 @@ SearchTable(JSDHashTable *table, const void *key, JSDHashNumber keyHash,
             matchEntry(table, entry, key)) {
             METER(table->stats.hits++);
             return entry;
-        }
-
-        if (ENTRY_IS_REMOVED(entry)) {
-            if (!firstRemoved)
-                firstRemoved = entry;
-        } else {
-            if (op == JS_DHASH_ADD)
-                entry->keyHash |= COLLISION_FLAG;
         }
     }
 
@@ -499,10 +493,10 @@ FindFreeEntry(JSDHashTable *table, JSDHashNumber keyHash)
     hash2 = HASH2(keyHash, sizeLog2, hashShift);
     sizeMask = JS_BITMASK(sizeLog2);
 
-    JS_ASSERT(!ENTRY_IS_REMOVED(entry));
-    entry->keyHash |= COLLISION_FLAG;
-
     for (;;) {
+        JS_ASSERT(!ENTRY_IS_REMOVED(entry));
+        entry->keyHash |= COLLISION_FLAG;
+
         METER(table->stats.steps++);
         hash1 -= hash2;
         hash1 &= sizeMask;
@@ -512,9 +506,6 @@ FindFreeEntry(JSDHashTable *table, JSDHashNumber keyHash)
             METER(table->stats.misses++);
             return entry;
         }
-
-        JS_ASSERT(!ENTRY_IS_REMOVED(entry));
-        entry->keyHash |= COLLISION_FLAG;
     }
 
     /* NOTREACHED */
