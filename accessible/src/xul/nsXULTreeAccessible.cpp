@@ -39,8 +39,8 @@
 #include "nsIBoxObject.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
+#include "nsIDOMXULTreeElement.h"
 #include "nsITreeSelection.h"
-#include "nsITreeColumns.h"
 #include "nsXULTreeAccessibleWrap.h"
 #include "nsIMutableArray.h"
 #include "nsComponentManagerUtils.h"
@@ -670,6 +670,47 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetActionName(PRUint8 aIndex, nsAString& 
   }
 
   return NS_ERROR_INVALID_ARG;
+}
+
+NS_IMETHODIMP
+nsXULTreeitemAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
+{
+  NS_ENSURE_ARG_POINTER(aAttributes);
+  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
+
+  nsresult rv = nsLeafAccessible::GetAttributes(aAttributes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMXULTreeElement> tree(do_QueryInterface(mDOMNode));
+  NS_ENSURE_TRUE(tree, NS_OK);
+
+  nsCOMPtr<nsITreeView> view;
+  tree->GetView(getter_AddRefs(view));
+  NS_ENSURE_TRUE(view, NS_OK);
+
+  PRInt32 level;
+  rv = view->GetLevel(mRow, &level);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 lvl = -1;
+  PRInt32 startIndex = mRow;
+  for (;startIndex - 1 > 0 &&
+        NS_SUCCEEDED(view->GetLevel(startIndex - 1, &lvl)) && lvl != level;
+        startIndex--);
+
+  lvl = -1;
+  PRInt32 endIndex = mRow;
+  for (;endIndex - 1 > 0 &&
+        NS_SUCCEEDED(view->GetLevel(endIndex - 1, &lvl)) && lvl != level;
+        endIndex--);
+
+  PRInt32 setSize = endIndex - startIndex + 1;
+  PRInt32 posInSet = mRow - startIndex + 1;
+
+  nsAccessibilityUtils::
+    SetAccGroupAttrs(*aAttributes, level + 1, posInSet, setSize);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULTreeitemAccessible::GetParent(nsIAccessible **aParent)

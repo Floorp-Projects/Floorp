@@ -47,7 +47,6 @@
 #include "nsIPresShell.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
-#include "nsIPersistentProperties2.h"
 #include "nsComponentManagerUtils.h"
 
 nsHTMLTextAccessible::nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell, nsIFrame *aFrame):

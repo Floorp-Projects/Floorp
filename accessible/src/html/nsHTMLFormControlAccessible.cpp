@@ -132,6 +132,50 @@ NS_IMETHODIMP nsHTMLRadioButtonAccessible::GetState(PRUint32 *_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLRadioButtonAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
+{
+  NS_ENSURE_ARG_POINTER(aAttributes);
+  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
+
+  nsresult rv = nsRadioButtonAccessible::GetAttributes(aAttributes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString nsURI;
+  mDOMNode->GetNamespaceURI(nsURI);
+  nsAutoString tagName;
+  mDOMNode->GetLocalName(tagName);
+
+  nsCOMPtr<nsIDOMHTMLInputElement> radio(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIDOMHTMLFormElement> form;
+  radio->GetForm(getter_AddRefs(form));
+  NS_ENSURE_TRUE(form, NS_OK);
+
+  nsCOMPtr<nsIDOMNodeList> radios;
+  form->GetElementsByTagNameNS(nsURI, tagName, getter_AddRefs(radios));
+  NS_ENSURE_TRUE(radios, NS_OK);
+
+  // setsize
+  PRUint32 radiosCount = 0;
+  radios->GetLength(&radiosCount);
+
+  // posinset
+  PRInt32 indexOf = 0;
+  for (PRUint32 index = 0; index < radiosCount; index++) {
+    nsCOMPtr<nsIDOMNode> item;
+    radios->Item(index, getter_AddRefs(item));
+    if (item == mDOMNode) {
+      indexOf = index;
+      break;
+    }
+  }
+
+  nsAccessibilityUtils::
+    SetAccGroupAttrs(*aAttributes, 0, indexOf + 1, radiosCount);
+
+  return  NS_OK;
+}
+
 // ----- Button -----
 
 nsHTMLButtonAccessible::nsHTMLButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):

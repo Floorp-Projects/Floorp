@@ -51,7 +51,6 @@
 #include "nsIDOMHTMLTableSectionElem.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIPersistentProperties2.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsITableLayout.h"

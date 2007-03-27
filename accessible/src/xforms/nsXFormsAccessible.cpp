@@ -45,7 +45,6 @@
 #include "nsIMutableArray.h"
 #include "nsIXFormsUtilityService.h"
 #include "nsIPlaintextEditor.h"
-#include "nsIPersistentProperties2.h"
 
 // nsXFormsAccessibleBase
 
