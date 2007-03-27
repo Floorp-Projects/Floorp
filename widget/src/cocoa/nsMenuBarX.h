@@ -155,8 +155,9 @@ protected:
 
     nsCOMArray<nsIMenu>     mMenusArray;          // holds refs
     nsCOMPtr<nsIContent>    mMenuBarContent;      // menubar content node, strong ref
-    nsCOMPtr<nsIContent>    mPrefItemContent;     // on X, holds the content node for the prefs item that has
-                                                  // been removed from the menubar
+    nsCOMPtr<nsIContent>    mAboutItemContent;    // holds the content node for the about item that has
+                                                  //   been removed from the menubar
+    nsCOMPtr<nsIContent>    mPrefItemContent;     // as above, but for prefs
     nsCOMPtr<nsIContent>    mQuitItemContent;     // as above, but for quit
     nsIWidget*              mParent;              // weak ref
     PRBool                  mIsMenuBarAdded;
