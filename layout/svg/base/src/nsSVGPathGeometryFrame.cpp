@@ -676,7 +676,7 @@ nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext)
     return;
   }
 
-  aContext->Multiply(gfxMatrix(*reinterpret_cast<gfxMatrix*>(&matrix)));
+  aContext->Multiply(matrix);
 
   aContext->NewPath();
   NS_STATIC_CAST(nsSVGPathGeometryElement*, mContent)->ConstructPath(ctx);
