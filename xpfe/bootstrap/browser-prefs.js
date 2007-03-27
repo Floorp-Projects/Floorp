@@ -87,9 +87,6 @@ pref("browser.toolbars.showbutton.home",    true);
 pref("browser.toolbars.showbutton.print",   true);
 pref("browser.toolbars.showbutton.search",  true);
 
-// Dialog modality issues
-pref("browser.show_about_as_stupid_modal_window", false);
-
 pref("browser.download.progressDnldDialog.keepAlive", true); // keep the dnload progress dialog up after dnload is complete
 pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", true);
 pref("browser.download.progressDnlgDialog.dontAskForLaunch", false);
