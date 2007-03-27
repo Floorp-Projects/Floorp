@@ -317,9 +317,8 @@ public:
 protected:
   nsPenMode   mPenMode;
 private:
-  static nsIDrawingSurface*  gBackbuffer;         //singleton backbuffer 
-    // Largest requested offscreen size if larger than a full screen.
-  static nsSize            gLargestRequestedSize;
+  // Largest requested offscreen size if larger than a full screen.
+  static nsSize gLargestRequestedSize;
 
 };
 
