@@ -167,9 +167,6 @@
  * DESTRUCTOR
  * Called when the entry is destroyed (of course).
  *
- * const void* GetKey()
- * Must return a pointer to the key
- *
  * PRBool MatchEntry(const void* aKey) - return true or false depending on
  *        whether the key pointed to by aKey matches this entry
  *
@@ -408,9 +405,6 @@ public:
     mKey(*NS_STATIC_CAST(const nsAString*, aKey)) { }
   ~PLDHashStringEntry() { }
 
-  const void* GetKey() const {
-    return NS_STATIC_CAST(const nsAString*, &mKey);
-  }
   static PLDHashNumber HashKey(const void* key) {
     return HashString(*NS_STATIC_CAST(const nsAString*, key));
   }
@@ -431,9 +425,6 @@ public:
     mKey(*NS_STATIC_CAST(const nsACString*, aKey)) { }
   ~PLDHashCStringEntry() { }
 
-  const void* GetKey() const {
-    return NS_STATIC_CAST(const nsACString*, &mKey);
-  }
   static PLDHashNumber HashKey(const void* key) {
     return HashString(*NS_STATIC_CAST(const nsACString*, key));
   }
@@ -454,9 +445,6 @@ public:
     mKey(*(NS_STATIC_CAST(const PRInt32*, aKey))) { }
   ~PLDHashInt32Entry() { }
 
-  const void* GetKey() const {
-    return NS_STATIC_CAST(const PRInt32*, &mKey);
-  }
   static PLDHashNumber HashKey(const void* key) {
     return *NS_STATIC_CAST(const PRInt32*, key);
   }
@@ -478,9 +466,6 @@ public:
     mKey(*(const void**)aKey) { }
   ~PLDHashVoidEntry() { }
 
-  const void* GetKey() const {
-    return (const void**)&mKey;
-  }
   static PLDHashNumber HashKey(const void* key) {
     return PLDHashNumber(NS_PTR_TO_INT32(*(const void**)key)) >> 2;
   }
