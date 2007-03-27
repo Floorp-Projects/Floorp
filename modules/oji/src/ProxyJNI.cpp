@@ -242,7 +242,6 @@ public:
   ~JavaClassMemberKey() { }
 
   KeyType GetKey() const { return mValue; }
-  KeyTypePointer GetKeyPointer() const { return &mValue; }
   PRBool KeyEquals(KeyTypePointer aKey) const { return aKey->clazz == mValue.clazz && aKey->memberID == mValue.memberID; }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }

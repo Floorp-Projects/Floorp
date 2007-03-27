@@ -108,11 +108,6 @@ class nsCookieEntry : public PLDHashEntryHdr
       return HostPtr();
     }
 
-    KeyTypePointer GetKeyPointer() const
-    {
-      return HostPtr();
-    }
-
     PRBool KeyEquals(KeyTypePointer aKey) const
     {
       return !strcmp(HostPtr(), aKey);

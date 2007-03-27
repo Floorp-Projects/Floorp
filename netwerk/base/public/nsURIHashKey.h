@@ -59,7 +59,6 @@ public:
     ~nsURIHashKey() { MOZ_COUNT_DTOR(nsURIHashKey); }
 
     nsIURI* GetKey() const { return mKey; }
-    const nsIURI* GetKeyPointer() const { return mKey; }
 
     PRBool KeyEquals(const nsIURI* aKey) const {
         PRBool eq;

@@ -133,7 +133,7 @@ public:
   // Override, since we want to compare font names as case insensitive
   PRBool KeyEquals(const KeyTypePointer aKey) const
   {
-    return GetKeyPointer()->Equals(*aKey, nsCaseInsensitiveStringComparator());
+    return GetKey().Equals(*aKey, nsCaseInsensitiveStringComparator());
   }
   static PLDHashNumber HashKey(const KeyTypePointer aKey)
   {
