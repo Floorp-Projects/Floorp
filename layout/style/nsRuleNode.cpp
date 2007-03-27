@@ -115,13 +115,6 @@ struct ChildrenHashEntry : public PLDHashEntryHdr {
   nsRuleNode *mRuleNode;
 };
 
-PR_STATIC_CALLBACK(const void *)
-ChildrenHashGetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
-{
-  ChildrenHashEntry *entry = NS_STATIC_CAST(ChildrenHashEntry*, hdr);
-  return entry->mRuleNode->GetRule();
-}
-
 PR_STATIC_CALLBACK(PRBool)
 ChildrenHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
@@ -138,7 +131,6 @@ static PLDHashTableOps ChildrenHashOps = {
   // large size allocations.
   PL_DHashAllocTable,
   PL_DHashFreeTable,
-  ChildrenHashGetKey,
   PL_DHashVoidPtrKeyStub,
   ChildrenHashMatchEntry,
   PL_DHashMoveEntryStub,

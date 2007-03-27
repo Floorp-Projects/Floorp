@@ -99,8 +99,6 @@ private:
 
     static PLDHashTableOps HashTableOps;
 
-    PR_STATIC_CALLBACK(const void*)
-        HashTableGetKey(PLDHashTable *table, PLDHashEntryHdr *hdr);
     PR_STATIC_CALLBACK(PLDHashNumber)
         HashTableHashKey(PLDHashTable *table, const void *key);
     PR_STATIC_CALLBACK(PRBool)

@@ -307,8 +307,6 @@ private:
     friend class nsCacheService; // XXX redefine interface so this isn't necessary
 
     // PLDHashTable operation callbacks
-    static const void *   PR_CALLBACK GetKey( PLDHashTable *table, PLDHashEntryHdr *entry);
-
     static PLDHashNumber  PR_CALLBACK HashKey( PLDHashTable *table, const void *key);
 
     static PRBool         PR_CALLBACK MatchEntry( PLDHashTable *           table,

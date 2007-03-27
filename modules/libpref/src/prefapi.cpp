@@ -127,7 +127,6 @@ static PRBool       gIsAnyPrefLocked = PR_FALSE;
 static PLDHashTableOps     pref_HashTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    PL_DHashGetKeyStub,
     PL_DHashStringKey,
     matchPrefEntry,
     PL_DHashMoveEntryStub,

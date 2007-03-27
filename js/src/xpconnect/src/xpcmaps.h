@@ -519,9 +519,6 @@ public:
         nsIID                         key;
         nsIXPCFunctionThisTranslator* value;
 
-        static const void* JS_DLL_CALLBACK
-        GetKey(JSDHashTable *table, JSDHashEntryHdr *entry);
-
         static JSBool JS_DLL_CALLBACK
         Match(JSDHashTable *table,
               const JSDHashEntryHdr *entry,

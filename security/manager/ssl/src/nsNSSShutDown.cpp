@@ -46,13 +46,6 @@ struct ObjectHashEntry : PLDHashEntryHdr {
   nsNSSShutDownObject *obj;
 };
 
-PR_STATIC_CALLBACK(const void *)
-ObjectSetGetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
-{
-  ObjectHashEntry *entry = NS_STATIC_CAST(ObjectHashEntry*, hdr);
-  return entry->obj;
-}
-
 PR_STATIC_CALLBACK(PRBool)
 ObjectSetMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
@@ -73,7 +66,6 @@ ObjectSetInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
 static PLDHashTableOps gSetOps = {
   PL_DHashAllocTable,
   PL_DHashFreeTable,
-  ObjectSetGetKey,
   PL_DHashVoidPtrKeyStub,
   ObjectSetMatchEntry,
   PL_DHashMoveEntryStub,

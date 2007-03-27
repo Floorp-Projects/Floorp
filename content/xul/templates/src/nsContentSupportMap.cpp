@@ -39,27 +39,11 @@
 #include "nsContentSupportMap.h"
 #include "nsXULElement.h"
 
-PLDHashTableOps nsContentSupportMap::gOps = {
-    PL_DHashAllocTable,
-    PL_DHashFreeTable,
-    PL_DHashGetKeyStub,
-    PL_DHashVoidPtrKeyStub,
-    PL_DHashMatchEntryStub,
-    PL_DHashMoveEntryStub,
-    ClearEntry,
-    PL_DHashFinalizeStub
-};
-
-void PR_CALLBACK
-nsContentSupportMap::ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr)
-{
-    PL_DHashClearEntryStub(aTable, aHdr);
-}
-
 void
 nsContentSupportMap::Init()
 {
-    if (!PL_DHashTableInit(&mMap, &gOps, nsnull, sizeof(Entry), PL_DHASH_MIN_SIZE))
+    if (!PL_DHashTableInit(&mMap, PL_DHashGetStubOps(), nsnull,
+                           sizeof(Entry), PL_DHASH_MIN_SIZE))
         mMap.ops = nsnull;
 }
 

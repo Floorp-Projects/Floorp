@@ -72,17 +72,9 @@ struct NameTableKey
 struct NameTableEntry : public PLDHashEntryHdr
 {
     // no ownership here!
-    NameTableKey mKey;
+    const nsAFlatCString* mString;
     PRInt32 mIndex;
 };
-
-PR_STATIC_CALLBACK(const void *)
-nameTableGetKey(PLDHashTable *, PLDHashEntryHdr *aHdr)
-{
-    NameTableEntry* entry =
-        NS_STATIC_CAST(NameTableEntry *, aHdr);
-    return &(entry->mKey);
-}
 
 PR_STATIC_CALLBACK(PRBool)
 matchNameKeysCaseInsensitive(PLDHashTable*, const PLDHashEntryHdr* aHdr,
@@ -92,10 +84,7 @@ matchNameKeysCaseInsensitive(PLDHashTable*, const PLDHashEntryHdr* aHdr,
         NS_STATIC_CAST(const NameTableEntry *, aHdr);
     const NameTableKey *keyValue = NS_STATIC_CAST(const NameTableKey*, key);
 
-    NS_ASSERTION(!entry->mKey.mIsUnichar,
-                 "Entry shouldn't have a unichar key!");
-
-    const nsAFlatCString* entryKey = entry->mKey.mKeyStr.m1b;
+    const nsAFlatCString* entryKey = entry->mString;
     
     if (keyValue->mIsUnichar) {
         return keyValue->mKeyStr.m2b->
@@ -138,7 +127,6 @@ caseInsensitiveStringHashKey(PLDHashTable *table, const void *key)
 static const struct PLDHashTableOps nametable_CaseInsensitiveHashTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    nameTableGetKey,
     caseInsensitiveStringHashKey,
     matchNameKeysCaseInsensitive,
     PL_DHashMoveEntryStub,
@@ -215,10 +203,9 @@ nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[], PRInt32 Count
 
         if (!entry) continue;
 
-        NS_ASSERTION(entry->mKey.mKeyStr.m1b == 0, "Entry already exists!");
+        NS_ASSERTION(entry->mString == 0, "Entry already exists!");
 
-        entry->mKey.mIsUnichar = PR_FALSE;
-        entry->mKey.mKeyStr.m1b = strPtr;      // not owned!
+        entry->mString = strPtr;      // not owned!
         entry->mIndex = index;
     }
     return PR_TRUE;

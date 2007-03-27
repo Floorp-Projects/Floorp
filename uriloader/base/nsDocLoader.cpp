@@ -148,7 +148,6 @@ nsDocLoader::nsDocLoader()
   {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    PL_DHashGetKeyStub,
     PL_DHashVoidPtrKeyStub,
     PL_DHashMatchEntryStub,
     PL_DHashMoveEntryStub,

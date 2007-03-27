@@ -114,6 +114,8 @@ private:
 // actual live entry in the table, and then mBits & ~0x1 in the
 // AtomTableEntry points to an AtomImpl or a nsStaticAtomWrapper,
 // indicated by the first bit of PtrBits.
+// XXX This whole mess could be vastly simplified now that pldhash
+// no longer has a getKey callback.
 typedef PRUword PtrBits;
 
 struct AtomTableEntry : public PLDHashEntryHdr {
@@ -240,14 +242,6 @@ struct AtomTableEntry : public PLDHashEntryHdr {
   }
 };
 
-PR_STATIC_CALLBACK(const void *)
-AtomTableGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
-{
-  AtomTableEntry *he = NS_STATIC_CAST(AtomTableEntry*, entry);
-  NS_ASSERTION(he->HasValue(), "Empty atom. how did that happen?");
-  return he;
-}
-
 PR_STATIC_CALLBACK(PLDHashNumber)
 AtomTableGetHash(PLDHashTable *table, const void *key)
 {
@@ -314,7 +308,6 @@ AtomTableClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 static const PLDHashTableOps AtomTableOps = {
   PL_DHashAllocTable,
   PL_DHashFreeTable,
-  AtomTableGetKey,
   AtomTableGetHash,
   AtomTableMatchKey,
   PL_DHashMoveEntryStub,

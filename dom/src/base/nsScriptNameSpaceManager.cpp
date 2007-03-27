@@ -68,14 +68,6 @@ public:
 };
 
 
-PR_STATIC_CALLBACK(const void *)
-GlobalNameHashGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
-{
-  GlobalNameMapEntry *e = NS_STATIC_CAST(GlobalNameMapEntry *, entry);
-
-  return NS_STATIC_CAST(const nsAString *, &e->mKey);
-}
-
 PR_STATIC_CALLBACK(PLDHashNumber)
 GlobalNameHashHashKey(PLDHashTable *table, const void *key)
 {
@@ -461,7 +453,6 @@ nsScriptNameSpaceManager::Init()
   {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    GlobalNameHashGetKey,
     GlobalNameHashHashKey,
     GlobalNameHashMatchEntry,
     PL_DHashMoveEntryStub,

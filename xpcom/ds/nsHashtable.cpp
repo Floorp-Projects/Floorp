@@ -103,7 +103,6 @@ clearHashEntry(PLDHashTable* table, PLDHashEntryHdr* entry)
 static const PLDHashTableOps hashtableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    PL_DHashGetKeyStub,
     hashKey,
     matchKeyEntry,
     PL_DHashMoveEntryStub,

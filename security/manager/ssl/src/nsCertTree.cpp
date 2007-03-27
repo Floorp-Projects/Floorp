@@ -91,13 +91,6 @@ CompareCacheHashEntry::CompareCacheHashEntry()
   }
 }
 
-PR_STATIC_CALLBACK(const void *)
-CompareCacheGetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
-{
-  CompareCacheHashEntryPtr *entryPtr = NS_STATIC_CAST(CompareCacheHashEntryPtr*, hdr);
-  return entryPtr->entry->key;
-}
-
 PR_STATIC_CALLBACK(PRBool)
 CompareCacheMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
@@ -129,7 +122,6 @@ CompareCacheClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
 static PLDHashTableOps gMapOps = {
   PL_DHashAllocTable,
   PL_DHashFreeTable,
-  CompareCacheGetKey,
   PL_DHashVoidPtrKeyStub,
   CompareCacheMatchEntry,
   PL_DHashMoveEntryStub,

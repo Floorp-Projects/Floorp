@@ -107,14 +107,6 @@ JS_DHashStringKey(JSDHashTable *table, const void *key)
     return h;
 }
 
-JS_PUBLIC_API(const void *)
-JS_DHashGetKeyStub(JSDHashTable *table, JSDHashEntryHdr *entry)
-{
-    JSDHashEntryStub *stub = (JSDHashEntryStub *)entry;
-
-    return stub->key;
-}
-
 JS_PUBLIC_API(JSDHashNumber)
 JS_DHashVoidPtrKeyStub(JSDHashTable *table, const void *key)
 {
@@ -174,7 +166,6 @@ JS_DHashFinalizeStub(JSDHashTable *table)
 static const JSDHashTableOps stub_ops = {
     JS_DHashAllocTable,
     JS_DHashFreeTable,
-    JS_DHashGetKeyStub,
     JS_DHashVoidPtrKeyStub,
     JS_DHashMatchEntryStub,
     JS_DHashMoveEntryStub,

@@ -113,7 +113,6 @@ StringCompare(PLDHashTable *table, const PLDHashEntryHdr *entry,
 static const PLDHashTableOps ops = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    PL_DHashGetKeyStub,
     StringHash,
     StringCompare,
     PL_DHashMoveEntryStub,
