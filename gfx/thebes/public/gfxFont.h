@@ -774,6 +774,9 @@ public:
         PRBool IsComplex(PRUint32 aTag) const { return (mValue & (FLAG_IS_SIMPLE_GLYPH|TAG_MASK))  == aTag; }
         PRBool IsMissing() const { return IsComplex(TAG_MISSING); }
         PRBool IsComplexCluster() const { return IsComplex(TAG_COMPLEX_CLUSTER); }
+        PRBool IsComplexOrMissing() const {
+            return IsComplex(TAG_COMPLEX_CLUSTER) || IsComplex(TAG_MISSING);
+        }
         PRBool IsLigatureContinuation() const { return IsComplex(TAG_LIGATURE_CONTINUATION); }
         PRBool IsClusterContinuation() const { return IsComplex(TAG_CLUSTER_CONTINUATION); }
         PRBool IsLowSurrogate() const { return IsComplex(TAG_LOW_SURROGATE); }
@@ -821,6 +824,8 @@ public:
         /** This is true for the last DetailedGlyph in the array. This lets
          * us track the length of the array. */
         PRUint32 mIsLastGlyph:1;
+        /** The glyphID if this is a ComplexCluster, or the Unicode character
+         * if this is a Missing glyph */
         PRUint32 mGlyphID:31;
         // The advance, x-offset and y-offset of the glyph, in appunits
         PRInt32  mAdvance;
@@ -866,6 +871,8 @@ public:
     /**
      * We've found a run of text that should use a particular font. Call this
      * only during initialization when font substitution has been computed.
+     * Call it before setting up the glyphs for the characters in this run;
+     * SetMissingGlyph requires that the correct glyphrun be installed.
      */
     nsresult AddGlyphRun(gfxFont *aFont, PRUint32 aStartCharIndex);
     void ResetGlyphRuns() { mGlyphRuns.Clear(); }
@@ -892,6 +899,7 @@ public:
      */
     void SetDetailedGlyphs(PRUint32 aCharIndex, const DetailedGlyph *aGlyphs,
                            PRUint32 aNumGlyphs);
+    void SetMissingGlyph(PRUint32 aCharIndex, PRUnichar aChar);
 
     // API for access to the raw glyph data, needed by gfxFont::Draw
     // and gfxFont::GetBoundingBox
@@ -911,6 +919,8 @@ public:
 private:
     // **** general helpers **** 
 
+    // Allocate aCount DetailedGlyphs for the given index
+    DetailedGlyph *AllocateDetailedGlyphs(PRUint32 aCharIndex, PRUint32 aCount);
     // Returns the index of the GlyphRun containing the given offset.
     // Returns mGlyphRuns.Length() when aOffset is mCharacterCount.
     PRUint32 FindFirstGlyphRunContaining(PRUint32 aOffset);

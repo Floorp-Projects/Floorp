@@ -940,8 +940,23 @@ ConvertPangoToAppUnits(PRInt32 aCoordinate, PRUint32 aAppUnitsPerDevUnit)
     return PRInt32(v);
 }
 
+static void
+SetMissingGlyphForUCS4(gfxTextRun *aTextRun, PRUint32 aIndex, gunichar aCh)
+{
+    if (aCh < 0x10000) {
+        aTextRun->SetMissingGlyph(aIndex, PRUnichar(aCh));
+        return;
+    }
+
+    // Display non-BMP characters as a surrogate pair
+    aTextRun->SetMissingGlyph(aIndex, H_SURROGATE(aCh));
+    if (aIndex + 1 < aTextRun->GetLength()) {
+        aTextRun->SetMissingGlyph(aIndex + 1, L_SURROGATE(aCh));
+    }
+}
+
 nsresult
-gfxPangoFontGroup::SetGlyphs(gfxTextRun* aTextRun,
+gfxPangoFontGroup::SetGlyphs(gfxTextRun *aTextRun,
                              const gchar *aUTF8, PRUint32 aUTF8Length,
                              PRUint32 *aUTF16Offset, PangoGlyphString *aGlyphs,
                              PangoGlyphUnit aOverrideSpaceWidth,
@@ -966,9 +981,11 @@ gfxPangoFontGroup::SetGlyphs(gfxTextRun* aTextRun,
           NS_ERROR("Someone has added too many glyphs!");
           break;
         }
-        if (aUTF8[index] == 0) {
-            // treat this null byte as a missing glyph
-            aTextRun->SetCharacterGlyph(utf16Offset, g.SetMissing());
+        gunichar ch = g_utf8_get_char(aUTF8 + index);
+        if (ch == 0) {
+            // treat this null byte as a missing glyph. Pango doesn't create
+            // glyphs for these, not even missing-glyph glyphIDs.
+            aTextRun->SetMissingGlyph(utf16Offset, 0);
         } else if (glyphCount == numGlyphs ||
                    PRUint32(logClusters[glyphIndex]) > index) {
             // No glyphs for this cluster, and it's not a null byte.
@@ -1018,7 +1035,7 @@ gfxPangoFontGroup::SetGlyphs(gfxTextRun* aTextRun,
             } else if (haveMissingGlyph) {
                 // Note that missing-glyph IDs are not simple glyph IDs, so we'll
                 // always get here when a glyph is missing
-                aTextRun->SetCharacterGlyph(utf16Offset, g.SetMissing());
+                SetMissingGlyphForUCS4(aTextRun, utf16Offset, ch);
             } else {
                 if (detailedGlyphs.Length() < glyphClusterCount) {
                     if (!detailedGlyphs.AppendElements(glyphClusterCount - detailedGlyphs.Length()))
@@ -1044,7 +1061,6 @@ gfxPangoFontGroup::SetGlyphs(gfxTextRun* aTextRun,
             }
         }
 
-        gunichar ch = g_utf8_get_char(aUTF8 + index);
         ++utf16Offset;
         NS_ASSERTION(!IS_SURROGATE(ch), "surrogates should not appear in UTF8");
         if (ch >= 0x10000) {
@@ -1071,13 +1087,16 @@ gfxPangoFontGroup::CreateGlyphRunsXft(gfxTextRun *aTextRun,
     gfxTextRun::CompressedGlyph g;
     const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
 
+    aTextRun->AddGlyphRun(font, 0);
+
     while (p < aUTF8 + aUTF8Length) {
         gunichar ch = g_utf8_get_char(p);
         p = g_utf8_next_char(p);
         
         if (ch == 0) {
-            // treat this null byte as a missing glyph
-            aTextRun->SetCharacterGlyph(utf16Offset, g.SetMissing());
+            // treat this null byte as a missing glyph. Pango
+            // doesn't create glyphs for these, not even missing-glyphs.
+            aTextRun->SetMissingGlyph(utf16Offset, 0);
         } else {
             FT_UInt glyph = XftCharIndex(dpy, xfont, ch);
             XGlyphInfo info;
@@ -1095,7 +1114,7 @@ gfxPangoFontGroup::CreateGlyphRunsXft(gfxTextRun *aTextRun,
             } else if (IS_MISSING_GLYPH(glyph)) {
                 // Note that missing-glyph IDs are not simple glyph IDs, so we'll
                 // always get here when a glyph is missing
-                aTextRun->SetCharacterGlyph(utf16Offset, g.SetMissing());
+                SetMissingGlyphForUCS4(aTextRun, utf16Offset, ch);
             } else {
                 gfxTextRun::DetailedGlyph details;
                 details.mIsLastGlyph = PR_TRUE;
@@ -1117,7 +1136,6 @@ gfxPangoFontGroup::CreateGlyphRunsXft(gfxTextRun *aTextRun,
 
         ++utf16Offset;
     }
-    aTextRun->AddGlyphRun(font, 0);    
 }
 #endif
 
@@ -1179,14 +1197,12 @@ gfxPangoFontGroup::CreateGlyphRunsFast(gfxTextRun *aTextRun,
     pango_shape(aUTF8, aUTF8Length, &analysis, glyphString);
 
     PRUint32 utf16Offset = 0;
-    nsresult rv = SetGlyphs(aTextRun, aUTF8, aUTF8Length, &utf16Offset, glyphString, 0, PR_TRUE);
-
-    pango_glyph_string_free(glyphString);
-
+    nsresult rv = aTextRun->AddGlyphRun(font, 0);
     if (NS_FAILED(rv))
-      return rv;
-
-    return aTextRun->AddGlyphRun(font, 0);
+        return rv;
+    rv = SetGlyphs(aTextRun, aUTF8, aUTF8Length, &utf16Offset, glyphString, 0, PR_TRUE);
+    pango_glyph_string_free(glyphString);
+    return rv;
 }
 
 class FontSelector
@@ -1258,11 +1274,14 @@ public:
             mItem->analysis.font = tmpFont;
         }
 
+        nsresult rv = mTextRun->AddGlyphRun(aFont, incomingUTF16Offset);
+        if (NS_FAILED(rv))
+            return rv;
         mGroup->SetGlyphs(mTextRun, mString + mSegmentOffset, aUTF8Length, &mUTF16Offset,
                           aGlyphs, mSpaceWidth, PR_FALSE);
 
         mSegmentOffset += aUTF8Length;
-        return mTextRun->AddGlyphRun(aFont, incomingUTF16Offset);
+        return NS_OK;
     }
 
 private:

@@ -518,7 +518,8 @@ GetAdvanceAppUnits(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
 static void
 SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
                            Fixed *aBaselineDeltas, PRUint32 aAppUnitsPerDevUnit,
-                           gfxTextRun *aRun)
+                           gfxTextRun *aRun, const PRPackedBool *aUnmatched,
+                           const PRUnichar *aString)
 {
     NS_ASSERTION(aGlyphCount > 0, "Must set at least one glyph");
     PRUint32 firstOffset = aGlyphs[0].originalOffset;
@@ -527,12 +528,16 @@ SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
     PRUint32 regularGlyphCount = 0;
     ATSLayoutRecord *displayGlyph = nsnull;
     PRBool inOrder = PR_TRUE;
+    PRBool allMatched = PR_TRUE;
 
     for (i = 0; i < aGlyphCount; ++i) {
         ATSLayoutRecord *glyph = &aGlyphs[i];
         PRUint32 offset = glyph->originalOffset;
         firstOffset = PR_MIN(firstOffset, offset);
         lastOffset = PR_MAX(lastOffset, offset);
+        if (aUnmatched && aUnmatched[offset/2]) {
+            allMatched = PR_FALSE;
+        }
         if (glyph->glyphID != ATSUI_SPECIAL_GLYPH_ID) {
             ++regularGlyphCount;
             displayGlyph = glyph;
@@ -540,6 +545,14 @@ SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
         if (i > 0 && aRun->IsRightToLeft() != (offset < aGlyphs[i - 1].originalOffset)) {
             inOrder = PR_FALSE;
         }
+    }
+
+    if (!allMatched) {
+        for (i = firstOffset; i <= lastOffset; ++i) {
+            PRUint32 index = i/2;
+            aRun->SetMissingGlyph(index, aString[index]);
+        }
+        return;
     }
 
     gfxTextRun::CompressedGlyph g;
@@ -572,7 +585,7 @@ SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
     ATSLayoutRecord *advanceStart = aGlyphs;
     for (i = 0; i < aGlyphCount; ++i) {
         ATSLayoutRecord *glyph = &aGlyphs[i];
-        if (glyph->glyphID != ATSUI_SPECIAL_GLYPH_ID || regularGlyphCount == 0) {
+        if (glyph->glyphID != ATSUI_SPECIAL_GLYPH_ID) {
             if (detailedGlyphs.Length() > 0) {
                 detailedGlyphs[detailedGlyphs.Length() - 1].mAdvance =
                     GetAdvanceAppUnits(advanceStart, glyph - advanceStart, aAppUnitsPerDevUnit);
@@ -598,8 +611,6 @@ SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
     detailedGlyphs[detailedGlyphs.Length() - 1].mIsLastGlyph = PR_TRUE;
     detailedGlyphs[detailedGlyphs.Length() - 1].mAdvance =
         GetAdvanceAppUnits(advanceStart, aGlyphs + aGlyphCount - advanceStart, aAppUnitsPerDevUnit);
-    // Should pass unmatchedness here but for now we'll just not tell the textrun
-    // whether these are "missing glyph" glyphs or not
     aRun->SetDetailedGlyphs(index, detailedGlyphs.Elements(), detailedGlyphs.Length());    
 }
 
@@ -653,7 +664,8 @@ PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aRun,
                aString[stringTailOffset] == ' ') {
             SetGlyphsForCharacterGroup(glyphRecords + numGlyphs - 1, 1,
                                        baselineDeltas ? baselineDeltas + numGlyphs - 1 : nsnull,
-                                       appUnitsPerDevUnit, aRun);
+                                       appUnitsPerDevUnit, aRun, aUnmatched,
+                                       aString);
             --stringTailOffset;
             --numGlyphs;
         }
@@ -663,7 +675,8 @@ PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aRun,
                aString[stringTailOffset] == ' ') {
             SetGlyphsForCharacterGroup(glyphRecords, 1,
                                        baselineDeltas,
-                                       appUnitsPerDevUnit, aRun);
+                                       appUnitsPerDevUnit, aRun, aUnmatched,
+                                       aString);
             --stringTailOffset;
             --numGlyphs;
             ++glyphRecords;
@@ -709,11 +722,13 @@ PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aRun,
             SetGlyphsForCharacterGroup(glyphRecords + numGlyphs - glyphCount,
                                        glyphCount,
                                        baselineDeltas ? baselineDeltas + numGlyphs - glyphCount : nsnull,
-                                       appUnitsPerDevUnit, aRun);
+                                       appUnitsPerDevUnit, aRun, aUnmatched,
+                                       aString);
         } else {
             SetGlyphsForCharacterGroup(glyphRecords,
                                        glyphCount, baselineDeltas,
-                                       appUnitsPerDevUnit, aRun);
+                                       appUnitsPerDevUnit, aRun, aUnmatched,
+                                       aString);
             glyphRecords += glyphCount;
             if (baselineDeltas) {
                 baselineDeltas += glyphCount;
