@@ -154,11 +154,8 @@ typedef PRUint32 nsFrameState;
 // continuation, e.g. a bidi continuation.
 #define NS_FRAME_IS_FLUID_CONTINUATION                0x00000004
 
-// If this bit is set, then there is a child frame in the frame that
-// extends outside this frame's bounding box. The implication is that
-// the frame's rect does not completely cover its children and
-// therefore operations like rendering and hit testing (for example)
-// must operate differently.
+// This bit is set when the frame's overflow rect is
+// different from its border rect (i.e. GetOverflowRect() != GetRect())
 #define NS_FRAME_OUTSIDE_CHILDREN                     0x00000008
 
 // If this bit is set, then a reference to the frame is being held
@@ -1516,10 +1513,10 @@ public:
                                   nsIFrame* aForChild, PRBool aImmediate);
 
   /**
-   * Computes a rect that includes this frame, all its descendant
-   * frames, this frame's outline (if any), and all descendant frames'
-   * outlines (if any). This is the union of everything that might be painted by
-   * this frame subtree.
+   * Computes a rect that encompasses everything that might be painted by
+   * this frame.  This includes this frame, all its descendent frames, this
+   * frame's outline, and descentant frames' outline, but does not include
+   * areas clipped out by the CSS "overflow" and "clip" properties.
    *
    * @return the rect relative to this frame's origin
    */

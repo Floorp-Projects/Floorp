@@ -1155,6 +1155,14 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
   if (mFloats != aOther.mFloats)
     NS_UpdateHint(hint, nsChangeHint_ReflowFrame);    
 
+  if (mClipFlags != aOther.mClipFlags || mClip != aOther.mClip) {
+    NS_UpdateHint(hint, nsChangeHint_ReflowFrame);
+    // The reflow code in naAbsoluteContainingBlock can deal with invalidation
+    // in all cases except changing from non-auto clip to auto clip; when
+    // changing to auto clip, the frame can't tell what happened
+    if (mClipFlags == NS_STYLE_CLIP_AUTO)
+      NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+  }
   // XXX the following is conservative, for now: changing float breaking shouldn't
   // necessarily require a repaint, reflow should suffice.
   if (mBreakType != aOther.mBreakType
@@ -1163,9 +1171,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
       || mAppearance != aOther.mAppearance)
     NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame, nsChangeHint_RepaintFrame));
 
-  if (mClipFlags != aOther.mClipFlags
-      || mClip != aOther.mClip
-      || mOpacity != aOther.mOpacity)
+  if (mOpacity != aOther.mOpacity)
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
 
   return hint;

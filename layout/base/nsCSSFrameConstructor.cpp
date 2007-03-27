@@ -9598,23 +9598,18 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
 static void
 UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager,
                    nsFrameManager* aFrameManager,
-                   nsRect& aBoundsRect, nsChangeHint aChange)
+                   nsChangeHint aChange)
 {
   NS_PRECONDITION(gInApplyRenderingChangeToTree,
                   "should only be called within ApplyRenderingChangeToTree");
 
   nsIView* view = aFrame->GetView();
   if (view) {
-    if (aChange & nsChangeHint_RepaintFrame) {
-      aViewManager->UpdateView(view, NS_VMREFRESH_NO_SYNC);
-    }
     if (aChange & nsChangeHint_SyncFrameView) {
       nsContainerFrame::SyncFrameViewProperties(aFrame->GetPresContext(),
                                                 aFrame, nsnull, view);
     }
   }
-
-  nsRect bounds = aFrame->GetOverflowRect();
 
   // now do children of frame
   PRInt32 listIndex = 0;
@@ -9634,19 +9629,13 @@ UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager,
                                        aFrameManager, aChange);
         }
         else {  // regular frame
-          nsRect  childBounds;
-          UpdateViewsForTree(child, aViewManager, aFrameManager, childBounds,
-                             aChange);
-          bounds.UnionRect(bounds, childBounds);
+          UpdateViewsForTree(child, aViewManager, aFrameManager, aChange);
         }
       }
       child = child->GetNextSibling();
     }
     childList = aFrame->GetAdditionalChildListName(listIndex++);
   } while (childList);
-
-  nsPoint parentOffset = aFrame->GetPosition();
-  aBoundsRect = bounds + parentOffset;
 }
 
 static void
@@ -9663,21 +9652,11 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
     // frame doesn't have a view, find the nearest containing view
     // (adjusting r's coordinate system to reflect the nesting) and
     // update there.
-    nsRect invalidRect;
-    UpdateViewsForTree(aFrame, aViewManager, aFrameManager, invalidRect,
-                       aChange);
+    UpdateViewsForTree(aFrame, aViewManager, aFrameManager, aChange);
 
     // if frame has view, will already be invalidated
-    if (!aFrame->HasView()
-        && (aChange & nsChangeHint_RepaintFrame)) {
-      if (aFrame->GetParent()) {
-        // Tell the parent to invalidate instead of the frame itself in case
-        // the child is clipping invalidates
-        aFrame->GetParent()->Invalidate(invalidRect);
-      } else {
-        invalidRect -= aFrame->GetPosition();
-        aFrame->Invalidate(invalidRect, PR_FALSE);
-      }
+    if (aChange & nsChangeHint_RepaintFrame) {
+      aFrame->Invalidate(aFrame->GetOverflowRect());
     }
   }
 }
