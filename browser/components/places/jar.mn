@@ -1,4 +1,7 @@
 browser.jar:
+# Provide another URI for the bookmarkProperties dialog so we can persist the
+# attributes separately
+%   override chrome://browser/content/places/bookmarkPageDialog.xul chrome://browser/content/places/bookmarkProperties.xul
 *   content/browser/places/places.xul                    (content/places.xul) 
 *   content/browser/places/places.js                     (content/places.js)
     content/browser/places/places.xml                    (content/places.xml)

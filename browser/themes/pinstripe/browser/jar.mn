@@ -50,6 +50,10 @@ classic.jar:
   skin/classic/browser/places/livemarkFolderHover.png       (places/livemarkFolderHover.png)
   skin/classic/browser/places/bookmarkProperties.css        (places/bookmarkProperties.css)
   skin/classic/browser/places/organizer-toolbar.png         (bookmarks/Bookmarks-toolbar.png)
+  skin/classic/browser/places/expander-closed-active.png    (bookmarks/expander-closed-active.png)
+  skin/classic/browser/places/expander-closed.png           (bookmarks/expander-closed.png)
+  skin/classic/browser/places/expander-open-active.png      (bookmarks/expander-open-active.png)
+  skin/classic/browser/places/expander-open.png             (bookmarks/expander-open.png)
 #else
   skin/classic/browser/bookmarks/addBookmark.css            (bookmarks/addBookmark.css)
   skin/classic/browser/bookmarks/bookmarksProperties.css    (bookmarks/bookmarksProperties.css)

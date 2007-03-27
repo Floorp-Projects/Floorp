@@ -1,30 +1,14 @@
-<!ENTITY bookmark.property.panel.title
-  "Bookmark Properties">
-<!ENTITY bookmark.property.location
-  "Location">
-<!ENTITY bookmark.property.title
-  "Name">
-<!ENTITY bookmark.property.shortcut
-  "Shortcut">
-<!ENTITY bookmark.property.description
-  "Description">
-<!ENTITY liveTitlesSeparator.label
-         "Live Titles">
-<!ENTITY bookmark.property.folders
-  "Folders">
-<!ENTITY bookmark.property.folder_list
-  "Folder List">
-<!ENTITY bookmark.property.parents
-  "Visible In">
-<!ENTITY livemark.property.feed_uri
-  "Feed Location">
-<!ENTITY livemark.property.site_uri
-  "Site Location">
-<!ENTITY cmd.delete_bookmark.label
-  "Delete Bookmark">
-<!ENTITY cmd.accept.edit
-  "Save Changes">
-<!ENTITY cmd.accept.add
-  "Add Bookmark">
-<!ENTITY bookmark.loadInSidebar.title
-  "Load this bookmark in the sidebar">
+<!ENTITY bookmarks.name.label                 "Name:">
+<!ENTITY bookmarks.location.label             "Location:">
+<!ENTITY bookmarks.keyword.label              "Keyword:">
+<!ENTITY bookmarks.description.label          "Description:">
+<!ENTITY bookmarks.liveTitlesSeparator.label  "Live Titles">
+<!ENTITY bookmarks.createIn.label             "Create in:">
+<!ENTITY bookmarks.feed_location.label        "Feed Location:">
+<!ENTITY bookmarks.site_location.label        "Site Location:">
+<!ENTITY bookmarks.loadInSidebar.label        "Load this bookmark in the sidebar">
+<!ENTITY bookmarks.bookmarksFolderItem.label  "Bookmarks">
+<!ENTITY bookmarks.toolbarFolderItem.label    "Bookmarks Toolbar">
+<!ENTITY bookmarks.expanderDown.tooltip       "Show all the bookmarks folders">
+<!ENTITY bookmarks.expanderUp.tooltip         "Hide">
+<!ENTITY bookmarks.newFolderButton.label      "New Folder">
