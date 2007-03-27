@@ -244,11 +244,11 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
 
   nsCOMPtr<nsIDOMSVGMatrix> tm = GetTMIncludingOffset();
 
-  cairo_matrix_t matrix = nsSVGUtils::ConvertSVGMatrixToCairo(tm);
+  gfxMatrix matrix = nsSVGUtils::ConvertSVGMatrixToThebes(tm);
 
   nsIRenderingContext *ctx = aContext->GetRenderingContext();
 
-  if (!ctx || nsSVGUtils::IsSingular(&matrix)) {
+  if (!ctx || matrix.IsSingular()) {
     NS_WARNING("Can't render foreignObject element!");
     return NS_ERROR_FAILURE;
   }
@@ -256,7 +256,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
   gfxContext *gfx = aContext->GetGfxContext();
 
   gfx->Save();
-  gfx->Multiply(gfxMatrix(*reinterpret_cast<gfxMatrix*>(&matrix)));
+  gfx->Multiply(matrix);
 
   nsresult rv = nsLayoutUtils::PaintFrame(ctx, kid, nsRegion(kid->GetRect()),
                                           NS_RGBA(0,0,0,0));
