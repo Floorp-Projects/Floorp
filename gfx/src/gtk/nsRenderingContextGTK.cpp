@@ -1471,19 +1471,3 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(imgIContainer *aImage, const nsRe
   UpdateGC();
   return nsRenderingContextImpl::DrawImage(aImage, aSrcRect, aDestRect);
 }
-
-NS_IMETHODIMP nsRenderingContextGTK::GetBackbuffer(const nsRect &aRequestedSize,
-                                                   const nsRect &aMaxSize,
-                                                   PRBool aForBlending,
-                                                   nsIDrawingSurface* &aBackbuffer)
-{
-  // Do not cache the backbuffer. On GTK it is more efficient to allocate
-  // the backbuffer as needed and it doesn't cause a performance hit. @see bug 95952
-  return AllocateBackbuffer(aRequestedSize, aMaxSize, aBackbuffer, PR_FALSE, 0);
-}
- 
-NS_IMETHODIMP nsRenderingContextGTK::ReleaseBackbuffer(void) {
-  // Do not cache the backbuffer. On GTK it is more efficient to allocate
-  // the backbuffer as needed and it doesn't cause a performance hit. @see bug 95952
-  return DestroyCachedBackbuffer();
-}

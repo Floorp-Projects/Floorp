@@ -242,10 +242,6 @@ public:
 
   NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect);
 
-  NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize,
-                           PRBool aForBlending, nsIDrawingSurface* &aBackbuffer);
-  NS_IMETHOD ReleaseBackbuffer(void);
-
   //locals
   NS_IMETHOD CommonInit();
 

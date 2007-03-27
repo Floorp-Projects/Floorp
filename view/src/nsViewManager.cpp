@@ -64,9 +64,7 @@
 #include "nsCOMArray.h"
 #include "nsThreadUtils.h"
 
-#ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
-#endif
 
 static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
@@ -176,7 +174,6 @@ nsViewManager::nsViewManager()
   // NOTE:  we use a zeroing operator new, so all data members are
   // assumed to be cleared here.
   mDefaultBackgroundColor = NS_RGBA(0, 0, 0, 0);
-  mAllowDoubleBuffering = PR_TRUE; 
   mHasPendingUpdates = PR_FALSE;
   mRecursiveRefreshPending = PR_FALSE;
   mUpdateBatchFlags = 0;
@@ -225,14 +222,6 @@ nsViewManager::~nsViewManager()
     // Note: A global rendering context is needed because it is not possible 
     // to create a nsIRenderingContext during the shutdown of XPCOM. The last
     // viewmanager is typically destroyed during XPCOM shutdown.
-
-    if (gCleanupContext) {
-
-      gCleanupContext->DestroyCachedBackbuffer();
-    } else {
-      NS_ASSERTION(PR_FALSE, "Cleanup of drawing surfaces + offscreen buffer failed");
-    }
-
     NS_IF_RELEASE(gCleanupContext);
   }
 
@@ -502,25 +491,6 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   }  
   SetPainting(PR_TRUE);
 
-  // force double buffering in general
-  aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
-
-  if (!DoDoubleBuffering())
-    aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
-
-  // check if the rendering context wants double-buffering or not
-  if (aContext) {
-    PRBool contextWantsBackBuffer = PR_TRUE;
-    aContext->UseBackbuffer(&contextWantsBackBuffer);
-    if (!contextWantsBackBuffer)
-      aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
-  }
-  
-  if (PR_FALSE == mAllowDoubleBuffering) {
-    // Turn off double-buffering of the display
-    aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
-  }
-
   nsCOMPtr<nsIRenderingContext> localcx;
   nsIDrawingSurface*    ds = nsnull;
 
@@ -555,7 +525,6 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   nsRect damageRect = damageRegion.GetBounds();
   PRInt32 p2a = mContext->AppUnitsPerDevPixel();
 
-#ifdef MOZ_CAIRO_GFX
   nsRefPtr<gfxContext> ctx =
     (gfxContext*) localcx->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
 
@@ -571,95 +540,6 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   RenderViews(aView, *localcx, damageRegion, ds);
 
   ctx->Restore();
-#else
-  // widgetDamageRectInPixels is the clipped damage area bounds,
-  // in pixels-relative-to-widget-origin
-  nsRect widgetDamageRectInPixels = damageRect;
-  widgetDamageRectInPixels.MoveBy(-viewRect.x, -viewRect.y);
-  widgetDamageRectInPixels.ScaleRoundOut(t2p);
-
-  // On the Mac, we normally turn doublebuffering off because Quartz is
-  // doublebuffering for us. But we need to turn it on anyway if we need
-  // to use our blender, which requires access to the "current pixel values"
-  // when it blends onto the canvas.
-  // XXX disable opacity for now on the Mac because of this ... it'll get
-  // reenabled with cairo
-  if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
-  {
-    nsRect maxWidgetSize;
-    GetMaxWidgetBounds(maxWidgetSize);
-
-    nsRect r(0, 0, widgetDamageRectInPixels.width, widgetDamageRectInPixels.height);
-    if (NS_FAILED(localcx->GetBackbuffer(r, maxWidgetSize, PR_FALSE, ds))) {
-      //Failed to get backbuffer so turn off double buffering
-      aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
-    }
-  }
-
-  nsIRenderingContext::PushedTranslation trans;
-  nsPoint delta(0,0);
-
-  // painting will be done in aView's coordinates
-  PRBool usingDoubleBuffer = (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds;
-  if (usingDoubleBuffer) {
-    // Adjust translations because the backbuffer holds just the damaged area,
-    // not the whole widget
-
-    localcx->PushTranslation(&trans);
-
-    // We want (0,0) to be translated to the widget origin. We do it this
-    // way rather than calling Translate because it is *imperative* that
-    // the tx,ty floats in the translation matrix get set to an integer
-    // number of pixels. For example, if they're off by 0.000001 for some
-    // damage rects, then a translated coordinate of NNNN.5 may get rounded
-    // differently depending on what damage rect is used to paint the object,
-    // and we may get inconsistent rendering depending on what area was
-    // damaged.
-    localcx->SetTranslation(-widgetDamageRectInPixels.x, -widgetDamageRectInPixels.y);
-    
-    // We're going to reset the clip region for the backbuffer. We can't
-    // just use damageRegion because nsIRenderingContext::SetClipRegion doesn't
-    // translate/scale the coordinates (grrrrrrrrrr)
-    // So we have to translate the region before we use it. aRegion is in
-    // pixels-relative-to-widget-origin, so:
-    aRegion->Offset(-widgetDamageRectInPixels.x, -widgetDamageRectInPixels.y);
-  }
-  // RenderViews draws in view coordinates. We want (0,0)
-  // to be translated to (viewRect.x,viewRect.y) in the widget. So:
-  localcx->Translate(viewRect.x, viewRect.y);
-
-  // Note that nsIRenderingContext::SetClipRegion always works in pixel coordinates,
-  // and nsIRenderingContext::SetClipRect always works in app coordinates. Stupid huh?
-  // Also, SetClipRegion doesn't subject its argument to the current transform, but
-  // SetClipRect does.
-  localcx->SetClipRegion(*aRegion, nsClipCombine_kReplace);
-  localcx->SetClipRect(damageRect, nsClipCombine_kIntersect);
-
-  nsRegion opaqueRegion;
-  AddCoveringWidgetsToOpaqueRegion(opaqueRegion, mContext, aView);
-  damageRegion.Sub(damageRegion, opaqueRegion);
-
-  RenderViews(aView, *localcx, damageRegion, ds);
-
-  // undo earlier translation
-  localcx->Translate(-viewRect.x, -viewRect.y);
-  if (usingDoubleBuffer) {
-    // Flush bits back to the screen
-
-    // Restore aRegion to pixels-relative-to-widget-origin
-    aRegion->Offset(widgetDamageRectInPixels.x, widgetDamageRectInPixels.y);
-    // Restore translation to its previous state
-    localcx->PopTranslation(&trans);
-    // Make damageRect twips-relative-to-widget-origin
-    damageRect.MoveBy(-viewRect.x, -viewRect.y);
-    // Reset clip region to widget-relative
-    localcx->SetClipRegion(*aRegion, nsClipCombine_kReplace);
-    localcx->SetClipRect(damageRect, nsClipCombine_kIntersect);
-    // neither source nor destination are transformed
-    localcx->CopyOffScreenBits(ds, 0, 0, widgetDamageRectInPixels, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
-    localcx->ReleaseBackbuffer();
-  }
-#endif
 
   SetPainting(PR_FALSE);
 
@@ -778,25 +658,6 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceCo
 void nsViewManager::RenderViews(nsView *aView, nsIRenderingContext& aRC,
                                 const nsRegion& aRegion, nsIDrawingSurface* aRCSurface)
 {
-#ifndef MOZ_CAIRO_GFX
-  BlendingBuffers* buffers = nsnull;
-  nsIWidget* widget = aView->GetWidget();
-  PRBool translucentWindow = PR_FALSE;
-  if (widget) {
-    widget->GetWindowTranslucency(translucentWindow);
-    if (translucentWindow) {
-      NS_WARNING("Transparent window enabled");
-      NS_ASSERTION(aRCSurface, "Cannot support transparent windows with doublebuffering disabled");
-
-      // Create a buffer wrapping aRC (which is usually the double-buffering offscreen buffer).
-      buffers = CreateBlendingBuffers(&aRC, PR_TRUE, aRCSurface, translucentWindow, aRegion.GetBounds());
-      NS_ASSERTION(buffers, "Failed to create rendering buffers");
-      if (!buffers)
-        return;
-    }
-  }
-#endif
-
   if (mObserver) {
     nsView* displayRoot = GetDisplayRootFor(aView);
     nsPoint offsetToRoot = aView->GetOffsetTo(displayRoot); 
@@ -807,29 +668,7 @@ void nsViewManager::RenderViews(nsView *aView, nsIRenderingContext& aRC,
     aRC.Translate(-offsetToRoot.x, -offsetToRoot.y);
     mObserver->Paint(displayRoot, &aRC, damageRegion);
     aRC.PopState();
-#ifndef MOZ_CAIRO_GFX
-    if (translucentWindow)
-      mObserver->Paint(displayRoot, buffers->mWhiteCX, aRegion);
-#endif
   }
-
-#ifndef MOZ_CAIRO_GFX
-  if (translucentWindow) {
-    // Get the alpha channel into an array so we can send it to the widget
-    nsRect r = aRegion.GetBounds();
-    r *= (1.0f / mContext->AppUnitsPerDevPixel());
-    nsRect bufferRect(0, 0, r.width, r.height);
-    PRUint8* alphas = nsnull;
-    nsresult rv = mBlender->GetAlphas(bufferRect, buffers->mBlack,
-                                      buffers->mWhite, &alphas);
-    
-    if (NS_SUCCEEDED(rv)) {
-      widget->UpdateTranslucentWindowAlpha(r, alphas);
-    }
-    delete[] alphas;
-    delete buffers;
-  }
-#endif
 }
 
 static nsresult NewOffscreenContext(nsIDeviceContext* deviceContext, nsIDrawingSurface* surface,
@@ -1338,12 +1177,10 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
               vm->UpdateView(vm->mRootView, NS_VMREFRESH_NO_SYNC);
               didResize = PR_TRUE;
 
-#ifdef MOZ_CAIRO_GFX
               // not sure if it's valid for us to claim that we
               // ignored this, but we're going to do so anyway, since
               // we didn't actually paint anything
               *aStatus = nsEventStatus_eIgnore;
-#endif
             }
           }
 
@@ -1444,9 +1281,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
       //be constructed with the appropriate display depth.
       //@see bugzilla bug 6061
       *aStatus = nsEventStatus_eConsumeDoDefault;
-      if (gCleanupContext) {
-        gCleanupContext->DestroyCachedBackbuffer();
-      }
       break;
 
     case NS_SYSCOLORCHANGED:
@@ -2539,14 +2373,6 @@ NS_IMETHODIMP nsViewManager::GetRectVisibility(nsIView *aView,
   else
     *aRectVisibility = nsRectVisibility_kVisible;
 
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsViewManager::AllowDoubleBuffering(PRBool aDoubleBuffer)
-{
-  mAllowDoubleBuffering = aDoubleBuffer;
   return NS_OK;
 }
 

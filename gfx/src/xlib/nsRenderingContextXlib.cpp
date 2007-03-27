@@ -2503,25 +2503,3 @@ nsRenderingContextXlib::DrawImage(imgIContainer *aImage, const nsRect & aSrcRect
   UpdateGC();
   return nsRenderingContextImpl::DrawImage(aImage, aSrcRect, aDestRect);
 }
-
-NS_IMETHODIMP
-nsRenderingContextXlib::GetBackbuffer(const nsRect &aRequestedSize,
-                                      const nsRect &aMaxSize,
-                                      PRBool aForBlending,
-                                      nsIDrawingSurface* &aBackbuffer)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetBackbuffer()\n"));
-  /* Do not cache the backbuffer. On X11 it is more efficient to allocate
-   * the backbuffer as needed and it doesn't cause a performance hit. @see bug 95952 */
-  return AllocateBackbuffer(aRequestedSize, aMaxSize, aBackbuffer, PR_FALSE, 0);
-}
- 
-NS_IMETHODIMP
-nsRenderingContextXlib::ReleaseBackbuffer(void) 
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::ReleaseBackbuffer()\n"));
-  /* Do not cache the backbuffer. On X11 it is more efficient to allocate
-   * the backbuffer as needed and it doesn't cause a performance hit. @see bug 95952 */
-  return DestroyCachedBackbuffer();
-}
-

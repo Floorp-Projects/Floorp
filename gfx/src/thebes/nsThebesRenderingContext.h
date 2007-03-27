@@ -223,13 +223,6 @@ public:
                                  const nsRect &aDestBounds,
                                  PRUint32 aCopyFlags);
     virtual void* GetNativeGraphicData(GraphicDataType aType);
-    NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize,
-                             const nsRect &aMaxSize,
-                             PRBool aForBlending,
-                             nsIDrawingSurface* &aBackbuffer);
-    NS_IMETHOD ReleaseBackbuffer(void);
-    NS_IMETHOD DestroyCachedBackbuffer(void);
-    NS_IMETHOD UseBackbuffer(PRBool* aUseBackbuffer);
 
     NS_IMETHOD PushTranslation(PushedTranslation* aState);
     NS_IMETHOD PopTranslation(PushedTranslation* aState);

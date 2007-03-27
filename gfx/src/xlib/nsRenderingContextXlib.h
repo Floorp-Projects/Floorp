@@ -199,10 +199,6 @@ public:
 
   NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect & aSrcRect, const nsRect & aDestRect);
 
-  NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize,
-                           PRBool aForBlending, nsIDrawingSurface* &aBackbuffer);
-  NS_IMETHOD ReleaseBackbuffer(void);
-
 #ifdef MOZ_MATHML
   /**
    * Returns metrics (in app units) of an 8-bit character string
