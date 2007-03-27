@@ -90,6 +90,4 @@ private:
     PRUint16 CreateMaiInterfaces(void);
 };
 
-typedef class nsHTMLRadioButtonAccessible nsHTMLRadioButtonAccessibleWrap;
-
 #endif /* __NS_ACCESSIBLE_WRAP_H__ */

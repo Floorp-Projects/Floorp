@@ -276,7 +276,6 @@ class nsAccessibleWrap : public nsAccessible,
 
   virtual void GetXPAccessibleFor(const VARIANT& aVarChild, nsIAccessible **aXPAccessible);
   NS_IMETHOD GetNativeInterface(void **aOutAccessible);
-  NS_IMETHOD GetDescription(nsAString& aDescription);
 
   // NT4 does not have the oleacc that defines these methods. So we define copies here that automatically
   // load the library only if needed.

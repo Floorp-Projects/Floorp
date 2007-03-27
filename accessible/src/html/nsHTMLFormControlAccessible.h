@@ -61,7 +61,9 @@ class nsHTMLRadioButtonAccessible : public nsRadioButtonAccessible
 
 public:
   nsHTMLRadioButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetState(PRUint32 *_retval); 
+
+  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
 };
 
 class nsHTMLButtonAccessible : public nsHyperTextAccessible

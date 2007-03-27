@@ -435,6 +435,24 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetRole(PRUint32 *aRole)
 }
 
 NS_IMETHODIMP
+nsXULMenuitemAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
+{
+  NS_ENSURE_ARG_POINTER(aAttributes);
+  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
+
+  nsresult rv = nsAccessible::GetAttributes(aAttributes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // XXX: we don't support xul:menuitem inside xul:menu element now until
+  // bug 372552 is fixed.
+
+  nsAccessibilityUtils::
+    SetAccAttrsForXULSelectControlItem(mDOMNode, *aAttributes);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULMenuitemAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
 {
   // That indicates we don't walk anonymous children for menuitems

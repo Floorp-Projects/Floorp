@@ -42,7 +42,7 @@
 #include "nsIAccessibleRole.h"
 #include "nsIAccessibleStates.h"
 #include "nsAccessNodeWrap.h"
-#include "nsAccessibilityAtoms.h"
+#include "nsAccessibilityUtils.h"
 #include "nsIAccessible.h"
 #include "nsPIAccessible.h"
 #include "nsIAccessibleHyperLink.h"

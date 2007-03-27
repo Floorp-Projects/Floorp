@@ -57,7 +57,7 @@ interface nsIDOMDOMStringList;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(6ff04a18-a66c-4e50-9099-8e46eca181f6)]
+[scriptable, uuid(1f4ab23c-2878-4b26-9679-855f839d4542)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -185,6 +185,17 @@ interface nsIAccessible : nsISupports
    * Attributes of accessible
    */
   readonly attribute nsIPersistentProperties attributes;
+
+  /**
+   * Returns grouping information. Used for tree items, list items, tab panel
+   * labels, radio buttons, etc. Also used for collectons of non-text objects.
+   *
+   * @param groupLevel - 0-based, similar to ARIA 'level' property
+   * @param similarItemsInGroup - 1-based, similar to ARIA 'setsize' property
+   * @param positionInGroup - 0-based, similar to ARIA 'posinset' property
+   */
+  void groupPosition(out long aGroupLevel, out long aSimilarItemsInGroup,
+                     out long aPositionInGroup);
 
   /**
    * Accessible child which contains the coordinate at (x, y) in screen pixels.

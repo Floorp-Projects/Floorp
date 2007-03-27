@@ -110,6 +110,7 @@ public:
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
+  NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
 
   NS_IMETHOD GetParent(nsIAccessible **_retval);
   NS_IMETHOD GetNextSibling(nsIAccessible **_retval);

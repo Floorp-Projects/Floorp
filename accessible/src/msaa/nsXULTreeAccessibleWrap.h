@@ -57,10 +57,10 @@ public:
   nsXULTreeitemAccessibleWrap(nsIAccessible *aParent, nsIDOMNode *aDOMNode, nsIWeakReference *aShell, 
     PRInt32 aRow, nsITreeColumn* aColumn);
   virtual ~nsXULTreeitemAccessibleWrap() {}
+
   NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
   NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetName(nsAString &aName);
-  NS_IMETHOD GetDescription(nsAString &aDescription);
 };
 
 #endif
