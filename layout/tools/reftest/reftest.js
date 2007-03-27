@@ -203,17 +203,22 @@ function OnDocumentLoad(event)
         // Ignore load events for subframes.
         return;
 
+    var contentRootElement = gBrowser.contentDocument.documentElement;
+
     function shouldWait() {
-        return contentRootElement.className.split(/\s+/)
+        // use getAttribute because className works differently in HTML and SVG
+        return contentRootElement.hasAttribute('class') &&
+               contentRootElement.getAttribute('class').split(/\s+/)
                                  .indexOf("reftest-wait") != -1;
     }
 
     function doPrintMode() {
-        return contentRootElement.className.split(/\s+/)
+        // use getAttribute because className works differently in HTML and SVG
+        return contentRootElement.hasAttribute('class') &&
+               contentRootElement.getAttribute('class').split(/\s+/)
                                  .indexOf("reftest-print") != -1;
     }
 
-    var contentRootElement = gBrowser.contentDocument.documentElement;
     if (shouldWait()) {
         // The testcase will let us know when the test snapshot should be made.
         // Register a mutation listener to know when the 'reftest-wait' class
