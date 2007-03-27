@@ -228,10 +228,6 @@ public:
   // nsIRenderingContextWin
   NS_IMETHOD CreateDrawingSurface(HDC aDC, nsIDrawingSurface* &aSurface);
 
-  NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, PRBool aForBlending, nsIDrawingSurface* &aBackbuffer);
- 
-  NS_IMETHOD ReleaseBackbuffer(void);
-
   NS_IMETHOD SetRightToLeftText(PRBool aIsRTL);
   NS_IMETHOD GetRightToLeftText(PRBool* aIsRTL);
 

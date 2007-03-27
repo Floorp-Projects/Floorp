@@ -440,17 +440,6 @@ public:
   // right with view update batching at all (will miss updates).  Maybe this
   // should call FlushPendingInvalidates()?
   NS_IMETHOD ForceUpdate() = 0;
-  
-  /**
-   * Control double buffering of the display. If double buffering
-   * is enabled the viewmanager is allowed to render to an offscreen
-   * drawing surface before copying to the display in order to prevent
-   * flicker. If it is disabled all rendering will appear directly on the
-   * the display. The display is double buffered by default.
-   * @param aDoubleBuffer PR_TRUE to enable double buffering
-   *                      PR_FALSE to disable double buffering
-   */
-  NS_IMETHOD AllowDoubleBuffering(PRBool aDoubleBuffer)=0;
 
   /**
    * Indicate whether the viewmanager is currently painting

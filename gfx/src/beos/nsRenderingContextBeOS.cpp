@@ -1604,20 +1604,3 @@ nsRenderingContextBeOS::GetBoundingMetrics(const PRUnichar* aString, PRUint32 aL
 	return r;
 }
 #endif /* MOZ_MATHML */
-
-#ifdef NOBBCACHE
-// Do not cache the backbuffer. Doesn't work in BeOS at the moment - cannot repaint
-// Window-attached BVIew. @see bug 95952 for other platforms
-NS_IMETHODIMP nsRenderingContextBeOS::GetBackbuffer(const nsRect &aRequestedSize,
-                                                   const nsRect &aMaxSize,
-                                                   PRBool aForBlending,
-                                                   nsIDrawingSurface* &aBackbuffer)
-{
-  return AllocateBackbuffer(aRequestedSize, aMaxSize, aBackbuffer, PR_FALSE, 0);
-}
- 
-NS_IMETHODIMP nsRenderingContextBeOS::ReleaseBackbuffer(void)
-{
-	return DestroyCachedBackbuffer();
-}
-#endif

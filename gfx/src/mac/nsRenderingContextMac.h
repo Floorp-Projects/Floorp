@@ -182,10 +182,6 @@ public:
   NS_IMETHOD CopyOffScreenBits(nsIDrawingSurface* aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
 
-  // nsRenderingContextImpl overrides
-  NS_IMETHOD ReleaseBackbuffer(void);
-  NS_IMETHOD UseBackbuffer(PRBool* aUseBackbuffer);
-
   virtual void* GetNativeGraphicData(GraphicDataType aType);
 
   /**

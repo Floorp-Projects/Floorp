@@ -870,44 +870,6 @@ nsThebesRenderingContext::DrawNativeWidgetPixmap(void* aSrcSurfaceBlack,
 }
 
 NS_IMETHODIMP
-nsThebesRenderingContext::UseBackbuffer(PRBool* aUseBackbuffer)
-{
-#ifndef XP_MACOSX
-    *aUseBackbuffer = PR_TRUE;
-#else
-    *aUseBackbuffer = PR_FALSE;
-#endif
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::GetBackbuffer(const nsRect &aRequestedSize,
-                                        const nsRect &aMaxSize,
-                                        PRBool aForBlending,
-                                        nsIDrawingSurface* &aBackbuffer)
-{
-    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG,
-           ("## %p nsTRC::GetBackBuffer req: %d %d %d %d max: %d %d %d %d blending? %d\n",
-            this, aRequestedSize.x, aRequestedSize.y, aRequestedSize.width, aRequestedSize.height,
-            aMaxSize.x, aMaxSize.y, aMaxSize.width, aMaxSize.height, aForBlending));
-
-    return AllocateBackbuffer(aRequestedSize, aMaxSize, aBackbuffer, PR_FALSE,
-                              aForBlending ? NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS : 0);
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::ReleaseBackbuffer(void)
-{
-    return DestroyCachedBackbuffer();
-}
-
-NS_IMETHODIMP
-nsThebesRenderingContext::DestroyCachedBackbuffer(void)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsThebesRenderingContext::PushFilter(const nsRect& twRect, PRBool aAreaIsOpaque, float aOpacity)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG,
