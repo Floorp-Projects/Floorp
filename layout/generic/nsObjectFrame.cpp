@@ -27,6 +27,7 @@
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  *   Christian Biesinger <cbiesinger@web.de>
+ *   Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -355,7 +356,8 @@ public:
   void SetPluginHost(nsIPluginHost* aHost);
 
 #ifdef XP_MACOSX
-  nsPluginPort* FixUpPluginWindow(PRInt32 inPaintState);
+  NPDrawingModel GetDrawingModel();
+  WindowRef FixUpPluginWindow(PRInt32 inPaintState);
   void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord* origEvent, EventRecord& aMacEvent);
 #endif
 
@@ -2568,6 +2570,23 @@ static void InitializeEventRecord(EventRecord* event)
     event->modifiers = ::GetCurrentKeyModifiers();
 }
 
+NPDrawingModel nsPluginInstanceOwner::GetDrawingModel()
+{
+#ifndef NP_NO_QUICKDRAW
+  NPDrawingModel drawingModel = NPDrawingModelQuickDraw;
+#else
+  NPDrawingModel drawingModel = NPDrawingModelCoreGraphics;
+#endif
+
+  if (!mInstance)
+    return drawingModel;
+
+  mInstance->GetValue(nsPluginInstanceVariable_DrawingModel,
+                      (void *)&drawingModel);
+
+  return drawingModel;
+}
+
 void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord* origEvent, EventRecord& aMacEvent)
 {
   nsPresContext* presContext = mOwner ? mOwner->GetPresContext() : nsnull;
@@ -2614,10 +2633,9 @@ nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nsIScrollableView* aScr
             InitializeEventRecord(&scrollEvent);
             scrollEvent.what = nsPluginEventType_ScrollingBeginsEvent;
     
-            nsPluginPort* pluginPort = FixUpPluginWindow(ePluginPaintDisable);
-            if (pluginPort) {
-              nsPluginEvent pluginEvent = { &scrollEvent, nsPluginPlatformWindowRef(GetWindowFromPort(pluginPort->port)) };
-            
+            WindowRef window = FixUpPluginWindow(ePluginPaintDisable);
+            if (window) {
+              nsPluginEvent pluginEvent = { &scrollEvent, nsPluginPlatformWindowRef(window) };
               PRBool eventHandled = PR_FALSE;
               mInstance->HandleEvent(&pluginEvent, &eventHandled);
             }
@@ -2638,13 +2656,9 @@ nsresult nsPluginInstanceOwner::ScrollPositionDidChange(nsIScrollableView* aScro
         InitializeEventRecord(&scrollEvent);
         scrollEvent.what = nsPluginEventType_ScrollingEndsEvent;
   
-        nsPluginPort* pluginPort = FixUpPluginWindow(ePluginPaintEnable);
-        if (pluginPort) {
-          nsPluginEvent pluginEvent =
-            { &scrollEvent,
-              nsPluginPlatformWindowRef(GetWindowFromPort(pluginPort->port))
-            };
-
+        WindowRef window = FixUpPluginWindow(ePluginPaintEnable);
+        if (window) {
+          nsPluginEvent pluginEvent = { &scrollEvent, nsPluginPlatformWindowRef(window) };
           PRBool eventHandled = PR_FALSE;
           mInstance->HandleEvent(&pluginEvent, &eventHandled);
         }
@@ -3003,25 +3017,17 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
         event = &macEvent;
       }
 
-#ifdef MOZ_WIDGET_COCOA
-      if (anEvent.message == NS_FOCUS_CONTENT)
-      {
+      if (anEvent.message == NS_FOCUS_CONTENT) {
         // Work around an issue in the Flash plugin, which can cache a pointer
         // to a doomed TSM document (one that belongs to a NSTSMInputContext)
         // and try to activate it after it has been deleted. See bug 183313.
         ::DeactivateTSMDocument(::TSMGetActiveDocument());
       }
-#endif
-      
-      nsPluginPort* pluginPort = FixUpPluginWindow(ePluginPaintIgnore);
-      PRBool eventHandled = PR_FALSE;
-      if (pluginPort) {
-        nsPluginEvent pluginEvent =
-          {
-            event,
-            nsPluginPlatformWindowRef(GetWindowFromPort(pluginPort->port))
-          };
 
+      PRBool eventHandled = PR_FALSE;
+      WindowRef window = FixUpPluginWindow(ePluginPaintIgnore);
+      if (window) {
+        nsPluginEvent pluginEvent = { event, nsPluginPlatformWindowRef(window) };
         mInstance->HandleEvent(&pluginEvent, &eventHandled);
       }
 
@@ -3153,16 +3159,14 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
 
   nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
   if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
-    nsPluginPort* pluginPort = FixUpPluginWindow(ePluginPaintEnable);
-    if (pluginPort) {
-      WindowRef  nativeWindowRef = ::GetWindowFromPort(pluginPort->port);
-      
+    WindowRef window = FixUpPluginWindow(ePluginPaintEnable);
+    if (window) {
       EventRecord updateEvent;
       InitializeEventRecord(&updateEvent);
       updateEvent.what = updateEvt;
-      updateEvent.message = UInt32(nativeWindowRef);
+      updateEvent.message = UInt32(window);
     
-      nsPluginEvent pluginEvent = { &updateEvent, nsPluginPlatformWindowRef(nativeWindowRef) };
+      nsPluginEvent pluginEvent = { &updateEvent, nsPluginPlatformWindowRef(window) };
       PRBool eventHandled = PR_FALSE;
       mInstance->HandleEvent(&pluginEvent, &eventHandled);
     }
@@ -3206,8 +3210,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
     if (mInstance) {
         nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
         if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
-            nsPluginPort* pluginPort = FixUpPluginWindow(ePluginPaintIgnore);
-            if (pluginPort) {
+            WindowRef window = FixUpPluginWindow(ePluginPaintIgnore);
+            if (window) {
                 EventRecord idleEvent;
                 InitializeEventRecord(&idleEvent);
                 idleEvent.what = nullEvent;
@@ -3217,7 +3221,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
                 if (!mWidgetVisible)
                     idleEvent.where.h = idleEvent.where.v = 20000;
     
-                nsPluginEvent pluginEvent = { &idleEvent, nsPluginPlatformWindowRef(GetWindowFromPort(pluginPort->port)) };
+                nsPluginEvent pluginEvent = { &idleEvent, nsPluginPlatformWindowRef(window) };
     
                 PRBool eventHandled = PR_FALSE;
                 mInstance->HandleEvent(&pluginEvent, &eventHandled);
@@ -3325,6 +3329,11 @@ nsPluginPort* nsPluginInstanceOwner::GetPluginPort()
 #ifdef XP_WIN
     if (mPluginWindow && mPluginWindow->type == nsPluginWindowType_Drawable)
       result = (nsPluginPort*) mWidget->GetNativeData(NS_NATIVE_GRAPHIC);
+    else
+#endif
+#ifdef XP_MACOSX
+    if (GetDrawingModel() == NPDrawingModelCoreGraphics)
+      result = (nsPluginPort*) mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT_CG);
     else
 #endif
       result = (nsPluginPort*) mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
@@ -3455,15 +3464,17 @@ static void ConvertRelativeToWindowAbsolute(nsIFrame*   aFrame,
 }
 #endif // DO_DIRTY_INTERSECT
 
-nsPluginPort* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
+WindowRef nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
 {
-  if (!mWidget || !mPluginWindow)
+  if (!mWidget || !mPluginWindow || !mInstance)
     return nsnull;
 
   nsPluginPort* pluginPort = GetPluginPort(); 
 
   if (!pluginPort)
     return nsnull;
+
+  NPDrawingModel drawingModel = GetDrawingModel();
 
   // first, check our view for CSS visibility style
   PRBool isVisible =
@@ -3481,10 +3492,14 @@ nsPluginPort* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
   isVisible &= widgetVisible;
   if (!isVisible)
     widgetClip.Empty();
-  
+
+#ifndef NP_NO_QUICKDRAW
   // set the port coordinates
-  mPluginWindow->x = -pluginPort->portx;
-  mPluginWindow->y = -pluginPort->porty;
+  if (drawingModel == NPDrawingModelQuickDraw) {
+    mPluginWindow->x = -pluginPort->qdPort.portx;
+    mPluginWindow->y = -pluginPort->qdPort.porty;
+  }
+#endif
 
   nsPluginRect oldClipRect = mPluginWindow->clipRect;
   
@@ -3524,7 +3539,15 @@ nsPluginPort* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
     }
   }
 
-  return pluginPort;
+#ifndef NP_NO_QUICKDRAW
+  if (drawingModel == NPDrawingModelQuickDraw)
+    return ::GetWindowFromPort(pluginPort->qdPort.port);
+#endif
+
+  if (drawingModel == NPDrawingModelCoreGraphics)
+    return pluginPort->cgPort.window;
+
+  return nsnull;
 }
 
 #endif // XP_MACOSX

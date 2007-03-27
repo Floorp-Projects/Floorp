@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1299,7 +1300,7 @@ _invalidateregion(NPP npp, NPRegion invalidRegion)
   if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && peer) {
     nsCOMPtr<nsIWindowlessPluginInstancePeer> wpeer(do_QueryInterface(peer));
     if (wpeer) {
-      // XXX nsRegion & NPRegion are typedef'd to the same thing
+      // nsPluginRegion & NPRegion are typedef'd to the same thing
       wpeer->InvalidateRegion((nsPluginRegion)invalidRegion);
     }
   }
@@ -1975,6 +1976,35 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     return NPERR_NO_ERROR;
   }
 
+#ifdef XP_MACOSX
+  case NPNVpluginDrawingModel: {
+    if (npp) {
+      ns4xPluginInstance *inst = (ns4xPluginInstance*)npp->ndata;
+      if (inst) {
+        *(NPDrawingModel*)result = inst->GetDrawingModel();
+        return NPERR_NO_ERROR;
+      }
+    }
+    else {
+      return NPERR_GENERIC_ERROR;
+    }
+  }
+
+#ifndef NP_NO_QUICKDRAW
+  case NPNVsupportsQuickDrawBool: {
+    *(NPBool*)result = PR_TRUE;
+    
+    return NPERR_NO_ERROR;
+  }
+#endif
+
+  case NPNVsupportsCoreGraphicsBool: {
+    *(NPBool*)result = PR_TRUE;
+    
+    return NPERR_NO_ERROR;
+  }
+#endif
+
   default : return NPERR_GENERIC_ERROR;
   }
 }
@@ -2048,6 +2078,19 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
       NPBool bCached = (result != nsnull);
       return inst->SetCached(bCached);
     }
+      
+#ifdef XP_MACOSX
+    case NPNVpluginDrawingModel: {
+      if (inst) {
+        int dModelValue = (int)result;
+        inst->SetDrawingModel((NPDrawingModel)dModelValue);
+        return NPERR_NO_ERROR;
+      }
+      else {
+        return NPERR_GENERIC_ERROR;
+      }
+    }
+#endif
 
     default:
       return NPERR_NO_ERROR;
