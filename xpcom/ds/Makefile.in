@@ -89,6 +89,7 @@ EXPORTS		= \
 		nsCRT.h \
 		nsDeque.h \
 		nsDoubleHashtable.h \
+		nsExpirationTracker.h \
 		nsFixedSizeAllocator.h \
 		nsHashSets.h \
 		nsHashtable.h \
