@@ -1516,24 +1516,6 @@ nsRenderingContextMac::DrawTile(imgIContainer *aImage,
 
 #pragma mark -
 
-// override to set the port back to the window port
-NS_IMETHODIMP
-nsRenderingContextMac::ReleaseBackbuffer(void)
-{
-  SelectOffScreenDrawingSurface(nsnull);
-  return NS_OK;
-}
-
-
-// override to not use a back buffer on MacOS X
-NS_IMETHODIMP 
-nsRenderingContextMac::UseBackbuffer(PRBool* aUseBackbuffer)
-{
-  *aUseBackbuffer = PR_FALSE;
-  return NS_OK;
-}
-
-
 PRBool
 nsRenderingContextMac::OnTigerOrLater()
 {

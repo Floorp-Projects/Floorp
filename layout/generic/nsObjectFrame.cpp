@@ -541,15 +541,6 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
   // XXX is the above comment correct?
   viewMan->SetViewVisibility(view, nsViewVisibility_kHide);
 
-  // Turn off double buffering on the Mac. This depends on bug 49743 and partially
-  // fixes 32327, 19931 and 51787
-#ifdef XP_MACOSX
-  PRBool doubleBuffer =
-    nsContentUtils::GetBoolPref("plugin.enable_double_buffer");
-  
-  viewMan->AllowDoubleBuffering(doubleBuffer);
-#endif
-  
   //this is ugly. it was ripped off from didreflow(). MMP
   // Position and size view relative to its parent, not relative to our
   // parent frame (our parent frame may not have a view).

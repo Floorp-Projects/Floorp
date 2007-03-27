@@ -2861,22 +2861,6 @@ nsRenderingContextWin::ConditionRect(nsRect& aSrcRect, RECT& aDestRect)
                       : (aSrcRect.x + aSrcRect.width);
 }
 
-
-NS_IMETHODIMP 
-nsRenderingContextWin::GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, PRBool aForBlending, nsIDrawingSurface* &aBackbuffer)
-{
-  // Do not cache the backbuffer. On WIN32 it is faster to get allocate
-  // the backbuffer as needed. @see bug 95952
-  return AllocateBackbuffer(aRequestedSize, aMaxSize, aBackbuffer, PR_FALSE, aForBlending ? NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS : 0);
-}
- 
-NS_IMETHODIMP 
-nsRenderingContextWin::ReleaseBackbuffer(void) {
-  // Destroy the backbuffer. Do not cache it. On WIN32 it is faster to get allocate
-  // the backbuffer as needed. @see bug 95952
-  return DestroyCachedBackbuffer();
-}
-
 /**
  * Let the device context know whether we want text reordered with
  * right-to-left base direction. The Windows implementation does this
