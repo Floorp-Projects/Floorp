@@ -37,7 +37,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.44 $
+ *  npapi.h $Revision: 3.45 $
  *  Netscape client plug-in API spec
  */
 
@@ -101,8 +101,10 @@
 #endif /* __MWERKS__ */
 
 #ifdef XP_MACOSX
-	#include <Quickdraw.h>
-	#include <Events.h>
+#include <Carbon/Carbon.h>
+#ifdef __LP64__
+#define NP_NO_QUICKDRAW
+#endif
 #endif
 
 #if defined(XP_UNIX) 
@@ -211,6 +213,15 @@ typedef long int32;
 #endif
 #ifndef NULL
 #define NULL (0L)
+#endif
+
+#ifdef XP_MACOSX
+typedef enum {
+#ifndef NP_NO_QUICKDRAW
+  NPDrawingModelQuickDraw = 0,
+#endif
+  NPDrawingModelCoreGraphics = 1
+} NPDrawingModel;
 #endif
 
 typedef unsigned char	NPBool;
@@ -426,6 +437,15 @@ typedef enum {
 
   /* Get the NPObject wrapper for the plugins DOM element. */
   NPNVPluginElementNPObject = 16
+
+#ifdef XP_MACOSX
+  /* Used for negotiating drawing models */
+  , NPNVpluginDrawingModel = 1000
+#ifndef NP_NO_QUICKDRAW
+  , NPNVsupportsQuickDrawBool = 2000
+#endif
+  , NPNVsupportsCoreGraphicsBool = 2001
+#endif
 } NPNVariable;
 
 /*
@@ -509,7 +529,11 @@ typedef void*			NPEvent;
 #endif /* XP_MACOSX */
 
 #ifdef XP_MACOSX
-typedef RgnHandle NPRegion;
+typedef void* NPRegion;
+#ifndef NP_NO_QUICKDRAW
+typedef RgnHandle NPQDRegion;
+#endif
+typedef CGPathRef NPCGRegion;
 #elif defined(XP_WIN)
 typedef HRGN NPRegion;
 #elif defined(XP_UNIX) && defined(MOZ_X11)
@@ -529,6 +553,12 @@ typedef struct NP_Port
   int32 portx;   /* position inside the topmost window */
   int32 porty;
 } NP_Port;
+
+typedef struct NP_CGContext
+{
+  CGContextRef context;
+  WindowRef window;
+} NP_CGContext;
 
 /*
  *  Non-standard event types that can be passed to HandleEvent
