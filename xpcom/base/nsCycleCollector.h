@@ -63,8 +63,9 @@ NS_COM PRBool nsCycleCollector_isScanSafe(nsISupports *n);
 NS_COM void nsCycleCollector_suspect(nsISupports *n);
 NS_COM void nsCycleCollector_suspectCurrent(nsISupports *n);
 NS_COM void nsCycleCollector_forget(nsISupports *n);
+nsresult nsCycleCollector_startup();
 NS_COM void nsCycleCollector_collect();
-NS_COM void nsCycleCollector_shutdown();
+void nsCycleCollector_shutdown();
 
 #ifdef DEBUG
 NS_COM void nsCycleCollector_DEBUG_shouldBeFreed(nsISupports *n);
