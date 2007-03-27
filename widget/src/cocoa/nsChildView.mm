@@ -91,7 +91,7 @@ nsIWidget         * gRollupWidget   = nsnull;
 // This mask is only defined on 10.4 and up.
 #if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_4
 enum {
-  NSDeviceIndependentModifierFlagsMask	= 0xffff0000U
+  NSDeviceIndependentModifierFlagsMask = 0xffff0000U
 };
 #endif
 
@@ -121,7 +121,7 @@ enum {
 - (TopLevelWindowData*)ensureWindowData;
 
 - (void)setIsPluginView:(BOOL)aIsPlugin;
-- (BOOL)getIsPluginView;
+- (BOOL)isPluginView;
 
 - (BOOL)childViewHasPlugin;
 
@@ -314,8 +314,9 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mDrawing(PR_FALSE)
 , mAcceptFocusOnClick(PR_TRUE)
 , mLiveResizeInProgress(PR_FALSE)
+, mIsPluginView(PR_FALSE)
 , mPluginDrawing(PR_FALSE)
-, mPluginPort(nsnull)
+, mPluginIsCG(PR_FALSE)
 , mVisRgn(nsnull)
 {
   SetBackgroundColor(NS_RGB(255, 255, 255));
@@ -333,8 +334,6 @@ nsChildView::~nsChildView()
 
   TearDownView(); // should have already been done from Destroy
   
-  delete mPluginPort;
-
   if (mVisRgn) {
     ::DisposeRgn(mVisRgn);
     mVisRgn = nsnull;
@@ -567,19 +566,19 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       break;
 
     case NS_NATIVE_PLUGIN_PORT:
+#ifndef NP_NO_QUICKDRAW
+    case NS_NATIVE_PLUGIN_PORT_QD:
     {
-      // this needs to be a combination of the port and the offsets.
-      if (!mPluginPort) {
-        mPluginPort = new nsPluginPort;
-        if ([mView isKindOfClass:[ChildView class]])
-          [(ChildView*)mView setIsPluginView: YES];
-      }
+      mPluginIsCG = PR_FALSE;
+      mIsPluginView = PR_TRUE;
+      if ([mView isKindOfClass:[ChildView class]])
+        [(ChildView*)mView setIsPluginView:YES];
 
       NSWindow* window = [mView nativeWindow];
       if (window) {
         WindowRef topLevelWindow = (WindowRef)[window windowRef];
         if (topLevelWindow) {
-          mPluginPort->port = ::GetWindowPort(topLevelWindow);
+          mPluginPort.qdPort.port = ::GetWindowPort(topLevelWindow);
 
           NSPoint viewOrigin = [mView convertPoint:NSZeroPoint toView:nil];
           NSRect frame = [[window contentView] frame];
@@ -587,12 +586,35 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
           
           // need to convert view's origin to window coordinates.
           // then, encode as "SetOrigin" ready values.
-          mPluginPort->portx = (PRInt32)-viewOrigin.x;
-          mPluginPort->porty = (PRInt32)-viewOrigin.y;
+          mPluginPort.qdPort.portx = (PRInt32)-viewOrigin.x;
+          mPluginPort.qdPort.porty = (PRInt32)-viewOrigin.y;
         }
       }
 
-      retVal = (void*)mPluginPort;
+      retVal = (void*)&mPluginPort;
+      break;
+    }
+#endif
+
+    case NS_NATIVE_PLUGIN_PORT_CG:
+    {
+      mPluginIsCG = PR_TRUE;
+      mIsPluginView = PR_TRUE;
+      if ([mView isKindOfClass:[ChildView class]])
+        [(ChildView*)mView setIsPluginView:YES];
+
+      if ([NSView focusView] == mView)
+        mPluginPort.cgPort.context = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
+      else
+        mPluginPort.cgPort.context = NULL;
+
+      NSWindow* window = [mView nativeWindow];
+      if (window) {
+        WindowRef topLevelWindow = (WindowRef)[window windowRef];
+        mPluginPort.cgPort.window = topLevelWindow;
+      }
+
+      retVal = (void*)&mPluginPort;
       break;
     }
   }
@@ -856,8 +878,8 @@ NS_IMETHODIMP nsChildView::EndResizingChildren(void)
 
 NS_IMETHODIMP nsChildView::GetPluginClipRect(nsRect& outClipRect, nsPoint& outOrigin, PRBool& outWidgetVisible)
 {
-  NS_ASSERTION(mPluginPort, "GetPluginClipRect must only be called on a plugin widget");
-  if (!mPluginPort) return NS_ERROR_FAILURE;
+  NS_ASSERTION(mIsPluginView, "GetPluginClipRect must only be called on a plugin widget");
+  if (!mIsPluginView) return NS_ERROR_FAILURE;
   
   NSWindow* window = [mView nativeWindow];
   if (!window) return NS_ERROR_FAILURE;
@@ -901,10 +923,13 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsRect& outClipRect, nsPoint& outOr
 
 NS_IMETHODIMP nsChildView::StartDrawPlugin()
 {
-  NS_ASSERTION(mPluginPort, "StartDrawPlugin must only be called on a plugin widget");
-  if (!mPluginPort)
-    return NS_ERROR_FAILURE;
-  
+  NS_ASSERTION(mIsPluginView, "StartDrawPlugin must only be called on a plugin widget");
+  if (!mIsPluginView) return NS_ERROR_FAILURE;
+
+  // nothing to do if this is a CoreGraphics plugin
+  if (mPluginIsCG)
+    return NS_OK;
+
   // prevent reentrant drawing
   if (mPluginDrawing)
     return NS_ERROR_FAILURE;
@@ -922,13 +947,13 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   // visible region to be the entire port every time.
   RgnHandle pluginRegion = ::NewRgn();
   if (pluginRegion) {
-    PRBool portChanged = (mPluginPort->port != CGrafPtr(GetQDGlobalsThePort()));
+    PRBool portChanged = (mPluginPort.qdPort.port != CGrafPtr(GetQDGlobalsThePort()));
     CGrafPtr oldPort;
     GDHandle oldDevice;
 
     if (portChanged) {
       ::GetGWorld(&oldPort, &oldDevice);
-      ::SetGWorld(mPluginPort->port, ::IsPortOffscreen(mPluginPort->port) ? nsnull : ::GetMainDevice());
+      ::SetGWorld(mPluginPort.qdPort.port, ::IsPortOffscreen(mPluginPort.qdPort.port) ? nsnull : ::GetMainDevice());
     }
 
     ::SetOrigin(0, 0);
@@ -943,8 +968,8 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
     ConvertGeckoRectToMacRect(clipRect, pluginRect);
     
     ::RectRgn(pluginRegion, &pluginRect);
-    ::SetPortVisibleRegion(mPluginPort->port, pluginRegion);
-    ::SetPortClipRegion(mPluginPort->port, pluginRegion);
+    ::SetPortVisibleRegion(mPluginPort.qdPort.port, pluginRegion);
+    ::SetPortClipRegion(mPluginPort.qdPort.port, pluginRegion);
     
     // now set up the origin for the plugin
     ::SetOrigin(origin.x, origin.y);
@@ -962,7 +987,9 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
 
 NS_IMETHODIMP nsChildView::EndDrawPlugin()
 {
-  NS_ASSERTION(mPluginPort, "EndDrawPlugin must only be called on a plugin widget");
+  NS_ASSERTION(mIsPluginView, "EndDrawPlugin must only be called on a plugin widget");
+  if (!mIsPluginView) return NS_ERROR_FAILURE;
+
   mPluginDrawing = PR_FALSE;
   return NS_OK;
 }
@@ -2010,7 +2037,7 @@ NSEvent* globalDragEvent = nil;
 }
 
 
--(BOOL)getIsPluginView
+-(BOOL)isPluginView
 {
   return mIsPluginView;
 }
@@ -2021,7 +2048,7 @@ NSEvent* globalDragEvent = nil;
   NSArray* subviews = [self subviews];
   for (unsigned int i = 0; i < [subviews count]; i ++) {
     id subview = [subviews objectAtIndex:i];
-    if ([subview respondsToSelector:@selector(getIsPluginView)] && [subview getIsPluginView])
+    if ([subview respondsToSelector:@selector(isPluginView)] && [subview isPluginView])
       return YES;
   }
   
@@ -2724,7 +2751,7 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
 
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
 {
-  if ([self getIsPluginView])
+  if ([self isPluginView])
     return nil;
   
   [mLastMenuForEventEvent release];

@@ -815,6 +815,14 @@ ns4xPluginInstance::ns4xPluginInstance(NPPluginFuncs* callbacks,
   mStreams = nsnull;
   mCached = PR_FALSE;
 
+#ifdef XP_MACOSX
+#ifdef NP_NO_QUICKDRAW
+  mDrawingModel = NPDrawingModelCoreGraphics;
+#else
+  mDrawingModel = NPDrawingModelQuickDraw;
+#endif
+#endif
+
   PLUGIN_LOG(PLUGIN_LOG_BASIC, ("ns4xPluginInstance ctor: this=%p\n",this));
 }
 
@@ -1529,6 +1537,12 @@ NS_IMETHODIMP ns4xPluginInstance::GetValue(nsPluginInstanceVariable variable,
       *(PRBool *)value = 0;  // not supported for 4.x plugins
       break;
 
+#ifdef XP_MACOSX
+    case nsPluginInstanceVariable_DrawingModel:
+      *(NPDrawingModel*)value = mDrawingModel;
+      break;
+#endif
+
     default:
       res = GetValueInternal((NPPVariable)variable, value);
   }
@@ -1575,6 +1589,21 @@ NPError ns4xPluginInstance::SetTransparent(PRBool aTransparent)
   mTransparent = aTransparent;
   return NPERR_NO_ERROR;
 }
+
+#ifdef XP_MACOSX
+////////////////////////////////////////////////////////////////////////
+void ns4xPluginInstance::SetDrawingModel(NPDrawingModel aModel)
+{
+  mDrawingModel = aModel;
+}
+
+
+////////////////////////////////////////////////////////////////////////
+NPDrawingModel ns4xPluginInstance::GetDrawingModel()
+{
+  return mDrawingModel;
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 /* readonly attribute nsQIResult scriptablePeer; */
