@@ -51,7 +51,7 @@ var PlacesCommandHook = {
         getService(Ci.nsIIOService);
     var linkURI = ios.newURI(url, null, null);
 
-    PlacesUtils.showAddBookmarkUI(linkURI, title);
+    PlacesUtils.showMinimalAddBookmarkUI(linkURI, title);
   },
 
   /**
@@ -75,7 +75,7 @@ var PlacesCommandHook = {
       description = PlacesUtils.getDescriptionFromDocument(webNav.document);
     }
     catch (e) { }
-    PlacesUtils.showAddBookmarkUI(url, title, description);
+    PlacesUtils.showMinimalAddBookmarkUI(url, title, description);
   },
 
   /**
@@ -120,7 +120,7 @@ var PlacesCommandHook = {
    */
   bookmarkCurrentPages: function PCH_bookmarkCurrentPages() {
     var tabURIs = this._getUniqueTabInfo();
-    PlacesUtils.showAddMultiBookmarkUI(tabURIs);
+    PlacesUtils.showMinimalAddMultiBookmarkUI(tabURIs);
   },
 
   
@@ -150,8 +150,8 @@ var PlacesCommandHook = {
 
     var toolbarIP =
       new InsertionPoint(PlacesUtils.bookmarks.toolbarFolder, -1);
-    PlacesUtils.showAddLivemarkUI(feedURI, gBrowser.currentURI,
-                                  title, description, toolbarIP, true);
+    PlacesUtils.showMinimalAddLivemarkUI(feedURI, gBrowser.currentURI,
+                                         title, description, toolbarIP, true);
   },
 
   /**

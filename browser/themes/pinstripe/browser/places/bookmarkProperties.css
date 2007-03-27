@@ -37,9 +37,52 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
+/**** folder menulist ****/
+.folder-icon > .menulist-label-box > .menulist-icon,
+.folder-icon > .menu-iconic-left > .menu-iconic-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.folder-icon > .menu-iconic-left {
+  display: -moz-box;
+}
+
+.folder-icon {
+  list-style-image: url("chrome://global/skin/tree/folder.png") !important;
+}
+
+.menulist-icon {
+	margin: 0px !important;
+}
+
 /**** folder tree ****/
 #folderTree {
-  margin: 4px;
+   margin: 6px 0;
+}
+
+/**** expander ****/
+#expander {
+  -moz-appearance: none;
+  margin-left: 8px;
+  padding: 0;
+  min-width: 0;
+}
+
+.up {
+	list-style-image: url("chrome://browser/skin/places/expander-open.png") !important;
+}
+
+.down {
+	list-style-image: url("chrome://browser/skin/places/expander-closed.png") !important;
+}
+
+.down:hover:active {
+	list-style-image: url("chrome://browser/skin/places/expander-closed-active.png") !important;
+}
+
+.up:hover:active {
+	list-style-image: url("chrome://browser/skin/places/expander-open-active.png") !important;
 }
 
 /**** name picker ****/
@@ -95,4 +138,3 @@ menulist#namePicker[droppable="false"] > .menulist-dropmarker {
 menulist#namePicker[droppable="false"] > menupopup {
   display: none;
 }
-
