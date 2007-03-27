@@ -79,8 +79,9 @@ BOOL gSomeMenuBarPainted = NO;
 // will be from the hidden window. We use these when the document for the current
 // window does not have a quit or pref item. We don't need strong refs here because
 // these items are always strong ref'd by their owning menu bar (instance variable).
-static nsIContent* sQuitItemContent = nsnull;
-static nsIContent* sPrefItemContent = nsnull;
+static nsIContent* sAboutItemContent = nsnull;
+static nsIContent* sPrefItemContent  = nsnull;
+static nsIContent* sQuitItemContent  = nsnull;
 
 // Special command IDs that we know Mac OS X does not use for anything else. We use
 // these in place of carbon's IDs for these commands in order to stop Carbon from
@@ -119,6 +120,8 @@ nsMenuBarX::~nsMenuBarX()
 
   // the quit/pref items of a random window might have been used if there was no
   // hidden window, thus we need to invalidate the weak references.
+  if (sAboutItemContent == mAboutItemContent)
+    sAboutItemContent = nsnull;
   if (sQuitItemContent == mQuitItemContent)
     sQuitItemContent = nsnull;
   if (sPrefItemContent == mPrefItemContent)
@@ -250,6 +253,11 @@ nsMenuBarX::AquifyMenuBar()
 {
   nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mMenuBarContent->GetDocument()));
   if (domDoc) {
+    // remove the "About..." menu item
+    HideItem(domDoc, NS_LITERAL_STRING("aboutName"), getter_AddRefs(mAboutItemContent));
+    if (!sAboutItemContent)
+      sAboutItemContent = mAboutItemContent;
+
     // remove quit item and its separator
     HideItem(domDoc, NS_LITERAL_STRING("menu_FileQuitSeparator"), nsnull);
     HideItem(domDoc, NS_LITERAL_STRING("menu_FileQuitItem"), getter_AddRefs(mQuitItemContent));
@@ -314,6 +322,18 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
   nsMenuBarX* self = NS_REINTERPRET_CAST(nsMenuBarX*, userData);
 
   switch (command.commandID) {
+    case eCommand_ID_About:
+    {
+      nsIContent* mostSpecificContent = sAboutItemContent;
+      if (self->mAboutItemContent)
+        mostSpecificContent = self->mAboutItemContent;
+      
+      nsEventStatus status = self->ExecuteCommand(mostSpecificContent);
+      if (status == nsEventStatus_eConsumeNoDefault) // event handled, no other processing
+        handled = noErr;
+      break;
+    }
+
     case eCommand_ID_Prefs:
     {
       nsIContent* mostSpecificContent = sPrefItemContent;
@@ -344,25 +364,6 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
         [NSApp terminate:nil];
         handled = noErr;
       }
-
-      break;
-    }
-
-    case eCommand_ID_About:
-    {
-      // the 'about' command is special because we don't have a
-      // nsIMenu or nsIMenuItem for the application menu. Grovel for the
-      // content node with an id of "aboutName" and call it
-      // directly.
-      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(self->mDocument);
-      if (domDoc) {
-        nsCOMPtr<nsIDOMElement> domElement;
-        domDoc->GetElementById(NS_LITERAL_STRING("aboutName"),
-                               getter_AddRefs(domElement));
-        nsCOMPtr<nsIContent> aboutContent(do_QueryInterface(domElement));
-        self->ExecuteCommand(aboutContent);
-      }
-      handled = noErr;
       break;
     }
 
