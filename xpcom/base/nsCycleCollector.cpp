@@ -135,6 +135,7 @@
 #include "plstr.h"
 #include "prtime.h"
 #include "nsPrintfCString.h"
+#include "nsTArray.h"
 
 #include <stdio.h>
 #ifdef WIN32
@@ -255,6 +256,9 @@ struct nsCycleCollectorStats
 #undef DUMP
     }
 };
+
+static void
+ToParticipant(nsISupports *s, nsCycleCollectionParticipant **cp);
 
 static PRBool
 nsCycleCollector_shouldSuppress(nsISupports *s);
@@ -459,15 +463,99 @@ nsPurpleBuffer::SelectAgedPointers(nsDeque *transferBuffer)
 
 
 
+////////////////////////////////////////////////////////////////////////
+// Implement the LanguageRuntime interface for C++/XPCOM 
+////////////////////////////////////////////////////////////////////////
+
+
+struct nsCycleCollectionXPCOMRuntime : 
+    public nsCycleCollectionLanguageRuntime 
+{
+    nsresult BeginCycleCollection() 
+    {
+        return NS_OK;
+    }
+
+    nsresult Traverse(void *p, nsCycleCollectionTraversalCallback &cb) 
+    {
+        nsresult rv;
+
+        nsISupports *s = NS_STATIC_CAST(nsISupports *, p);        
+        nsCycleCollectionParticipant *cp;
+        ToParticipant(s, &cp);
+        if (!cp) {
+            Fault("walking wrong type of pointer", s);
+            return NS_ERROR_FAILURE;
+        }
+
+        rv = cp->Traverse(s, cb);
+        if (NS_FAILED(rv)) {
+            Fault("XPCOM pointer traversal failed", s);
+            return NS_ERROR_FAILURE;
+        }
+        return NS_OK;
+    }
+
+    nsresult Root(const nsDeque &nodes)
+    {
+        for (PRInt32 i = 0; i < nodes.GetSize(); ++i) {
+            void *p = nodes.ObjectAt(i);
+            nsISupports *s = NS_STATIC_CAST(nsISupports *, p);
+            NS_ADDREF(s);
+        }
+        return NS_OK;
+    }
+
+    nsresult Unlink(const nsDeque &nodes)
+    {
+        nsresult rv;
+
+        for (PRInt32 i = 0; i < nodes.GetSize(); ++i) {
+            void *p = nodes.ObjectAt(i);
+
+            nsISupports *s = NS_STATIC_CAST(nsISupports *, p);
+            nsCycleCollectionParticipant *cp;
+            ToParticipant(s, &cp);
+            if (!cp) {
+                Fault("unlinking wrong kind of pointer", s);
+                return NS_ERROR_FAILURE;
+            }
+
+            rv = cp->Unlink(s);
+
+            if (NS_FAILED(rv)) {
+                Fault("failed unlink", s);
+                return NS_ERROR_FAILURE;
+            }
+        }
+        return NS_OK;
+    }
+
+    nsresult Unroot(const nsDeque &nodes)
+    {
+        for (PRInt32 i = 0; i < nodes.GetSize(); ++i) {
+            void *p = nodes.ObjectAt(i);
+            nsISupports *s = NS_STATIC_CAST(nsISupports *, p);
+            NS_RELEASE(s);
+        }
+        return NS_OK;
+    }
+
+    nsresult FinishCycleCollection() 
+    {
+        return NS_OK;
+    }
+};
+
+
 struct nsCycleCollector
 {
-    PRUint32 mTick;
-    PRTime mLastAging;
     PRBool mCollectionInProgress;
     PRBool mScanInProgress;
 
     GCTable mGraph;
     nsCycleCollectionLanguageRuntime *mRuntimes[nsIProgrammingLanguage::MAX+1];
+    nsCycleCollectionXPCOMRuntime mXPCOMRuntime;
 
     // The set of buffers |mBufs| serves a variety of purposes; mostly
     // involving the transfer of pointers from a hashtable iterator
@@ -476,7 +564,7 @@ struct nsCycleCollector
     // set-of-all-pointers); in other contexts, one buffer is used
     // per-language (as a set-of-pointers-in-language-N).
 
-    nsDeque *mBufs[nsIProgrammingLanguage::MAX+1];
+    nsDeque mBufs[nsIProgrammingLanguage::MAX + 1];
     
     nsCycleCollectorParams mParams;
     nsCycleCollectorStats mStats;    
@@ -563,17 +651,6 @@ static nsCycleCollector *sCollector = nsnull;
 // Utility functions
 ////////////////////////////////////////////////////////////////////////
 
-
-static inline nsCycleCollector*
-getCollector()
-{
-    if (!sCollector)
-        sCollector = new nsCycleCollector;
-
-    return sCollector;
-}
-
-
 struct safetyCallback :     
     public nsCycleCollectionTraversalCallback
 {
@@ -602,9 +679,11 @@ EnsurePtrInfo(GCTable & tab, void *n, PtrInfo & pi)
 static void
 Fault(const char *msg, const void *ptr=nsnull)
 {
-    nsCycleCollector* cc = getCollector();
+    // This should be nearly impossible, but just in case.
+    if (!sCollector)
+        return;
 
-    if (cc->mParams.mFaultIsFatal) {
+    if (sCollector->mParams.mFaultIsFatal) {
 
         if (ptr)
             printf("Fatal fault in cycle collector: %s (ptr: %p)\n", msg, ptr);
@@ -626,24 +705,22 @@ Fault(const char *msg, const void *ptr=nsnull)
     // probably a better user experience than crashing. Besides, we
     // *should* never hit a fault.
 
-    cc->mParams.mDoNothing = PR_TRUE;
+    sCollector->mParams.mDoNothing = PR_TRUE;
 }
 
 
 void 
 GraphWalker::DescribeNode(size_t refCount, size_t objSz, const char *objName)
 {
-    nsCycleCollector* cc = getCollector();
-
     if (refCount == 0)
         Fault("zero refcount", mCurrPtr);
 
     mCurrPi.mBytes = objSz;
     mCurrPi.mName = objName;
     this->VisitNode(mCurrPtr, mCurrPi, refCount);
-    cc->mStats.mVisitedNode++;
+    sCollector->mStats.mVisitedNode++;
     if (mCurrPi.mLang == nsIProgrammingLanguage::JAVASCRIPT)
-        cc->mStats.mVisitedJSNode++;
+        sCollector->mStats.mVisitedJSNode++;
 }
 
 
@@ -728,7 +805,7 @@ GraphWalker::Walk(void *s0)
             }
         }
     }
-    getCollector()->mStats.mWalkedGraph++;
+    sCollector->mStats.mWalkedGraph++;
 }
 
 
@@ -753,7 +830,7 @@ struct MarkGreyWalker : public GraphWalker
     { 
         pi.mColor = grey; 
         pi.mRefCount = refcount;
-        getCollector()->mStats.mSetColorGrey++;
+        sCollector->mStats.mSetColorGrey++;
         mGraph.Put(p, pi);
     }
 
@@ -767,16 +844,16 @@ struct MarkGreyWalker : public GraphWalker
 void 
 nsCycleCollector::CollectPurple()
 {
-    mPurpleBuf.SelectAgedPointers(mBufs[0]);
+    mPurpleBuf.SelectAgedPointers(&mBufs[0]);
 }
 
 void
 nsCycleCollector::MarkRoots()
 {
     int i;
-    for (i = 0; i < mBufs[0]->GetSize(); ++i) {
+    for (i = 0; i < mBufs[0].GetSize(); ++i) {
         PtrInfo pi;
-        nsISupports *s = NS_STATIC_CAST(nsISupports *, mBufs[0]->ObjectAt(i));
+        nsISupports *s = NS_STATIC_CAST(nsISupports *, mBufs[0].ObjectAt(i));
         s = canonicalize(s);
         EnsurePtrInfo(mGraph, s, pi);
         MarkGreyWalker(mGraph, mRuntimes).Walk(s);
@@ -804,7 +881,7 @@ struct ScanBlackWalker : public GraphWalker
     void VisitNode(void *p, PtrInfo & pi, size_t refcount) 
     { 
         pi.mColor = black; 
-        getCollector()->mStats.mSetColorBlack++;
+        sCollector->mStats.mSetColorBlack++;
         mGraph.Put(p, pi);
     }
 
@@ -826,8 +903,6 @@ struct scanWalker : public GraphWalker
 
     void VisitNode(void *p, PtrInfo & pi, size_t refcount) 
     {
-        nsCycleCollector* cc = getCollector();
-
         if (pi.mColor != grey)
             Fault("scanning non-grey node", p);
 
@@ -836,11 +911,11 @@ struct scanWalker : public GraphWalker
 
         if (pi.mInternalRefs == refcount) {
             pi.mColor = white;
-            cc->mStats.mSetColorWhite++;
+            sCollector->mStats.mSetColorWhite++;
         } else {
             ScanBlackWalker(mGraph, mRuntimes).Walk(p);
             pi.mColor = black;
-            cc->mStats.mSetColorBlack++;
+            sCollector->mStats.mSetColorBlack++;
         }
         mGraph.Put(p, pi);
     }
@@ -864,8 +939,8 @@ nsCycleCollector::ScanRoots()
 {
     int i;
 
-    for (i = 0; i < mBufs[0]->GetSize(); ++i) {
-        nsISupports *s = NS_STATIC_CAST(nsISupports *, mBufs[0]->ObjectAt(i));
+    for (i = 0; i < mBufs[0].GetSize(); ++i) {
+        nsISupports *s = NS_STATIC_CAST(nsISupports *, mBufs[0].ObjectAt(i));
         s = canonicalize(s);
         scanWalker(mGraph, mRuntimes).Walk(s); 
     }
@@ -896,7 +971,7 @@ FindWhiteCallback(const void*  ptr,
         if (pinfo.mLang  > nsIProgrammingLanguage::MAX)
             Fault("White node has bad language ID", p);
         else
-            collector->mBufs[pinfo.mLang]->Push(p);
+            collector->mBufs[pinfo.mLang].Push(p);
 
         if (pinfo.mLang == nsIProgrammingLanguage::CPLUSPLUS) {
             nsISupports* s = NS_STATIC_CAST(nsISupports*, p);
@@ -936,7 +1011,7 @@ nsCycleCollector::CollectWhite()
     nsresult rv;
 
     for (i = 0; i < nsIProgrammingLanguage::MAX+1; ++i)
-        mBufs[i]->Empty();
+        mBufs[i].Empty();
 
 #ifndef __MINGW32__
 #ifdef WIN32
@@ -949,8 +1024,8 @@ nsCycleCollector::CollectWhite()
 
     for (i = 0; i < nsIProgrammingLanguage::MAX+1; ++i) {
         if (mRuntimes[i] &&
-            mBufs[i]->GetSize() > 0) {
-            rv = mRuntimes[i]->Root(*mBufs[i]);
+            mBufs[i].GetSize() > 0) {
+            rv = mRuntimes[i]->Root(mBufs[i]);
             if (NS_FAILED(rv))
                 Fault("Failed root call while unlinking");
         }
@@ -958,28 +1033,28 @@ nsCycleCollector::CollectWhite()
 
     for (i = 0; i < nsIProgrammingLanguage::MAX+1; ++i) {
         if (mRuntimes[i] &&
-            mBufs[i]->GetSize() > 0) {
-            rv = mRuntimes[i]->Unlink(*mBufs[i]);
+            mBufs[i].GetSize() > 0) {
+            rv = mRuntimes[i]->Unlink(mBufs[i]);
             if (NS_FAILED(rv)) {
                 Fault("Failed unlink call while unlinking");
                 mStats.mFailedUnlink++;
             } else {
-                mStats.mCollectedNode += mBufs[i]->GetSize();
+                mStats.mCollectedNode += mBufs[i].GetSize();
             }
         }
     }
 
     for (i = 0; i < nsIProgrammingLanguage::MAX+1; ++i) {
         if (mRuntimes[i] &&
-            mBufs[i]->GetSize() > 0) {
-            rv = mRuntimes[i]->Unroot(*mBufs[i]);
+            mBufs[i].GetSize() > 0) {
+            rv = mRuntimes[i]->Unroot(mBufs[i]);
             if (NS_FAILED(rv))
                 Fault("Failed unroot call while unlinking");
         }
     }
 
     for (i = 0; i < nsIProgrammingLanguage::MAX+1; ++i)
-        mBufs[i]->Empty();
+        mBufs[i].Empty();
 
 #ifndef __MINGW32__
 #ifdef WIN32
@@ -990,98 +1065,6 @@ nsCycleCollector::CollectWhite()
 #endif // __MINGW32__
 }
 
-
-////////////////////////////////////////////////////////////////////////
-// Implement the LanguageRuntime interface for C++/XPCOM 
-////////////////////////////////////////////////////////////////////////
-
-
-struct nsCycleCollectionXPCOMRuntime : 
-    public nsCycleCollectionLanguageRuntime 
-{
-    nsresult BeginCycleCollection() 
-    {
-        return NS_OK;
-    }
-
-    nsresult Traverse(void *p, nsCycleCollectionTraversalCallback &cb) 
-    {
-        nsresult rv;
-
-        // We use QI to move from an nsISupports to an
-        // nsCycleCollectionParticipant, which is a per-class
-        // singleton helper object that implements traversal and
-        // unlinking logic for the nsISupports in question.
-
-        nsISupports *s = NS_STATIC_CAST(nsISupports *, p);        
-        nsCOMPtr<nsCycleCollectionParticipant> cp = do_QueryInterface(s, &rv);
-        if (NS_FAILED(rv)) {
-            Fault("walking wrong type of pointer", s);
-            return NS_ERROR_FAILURE;
-        }
-
-        getCollector()->mStats.mSuccessfulQI++;
-
-        rv = cp->Traverse(s, cb);
-        if (NS_FAILED(rv)) {
-            Fault("XPCOM pointer traversal failed", s);
-            return NS_ERROR_FAILURE;
-        }
-        return NS_OK;
-    }
-
-    nsresult Root(const nsDeque &nodes)
-    {
-        for (PRInt32 i = 0; i < nodes.GetSize(); ++i) {
-            void *p = nodes.ObjectAt(i);
-            nsISupports *s = NS_STATIC_CAST(nsISupports *, p);
-            NS_ADDREF(s);
-        }
-        return NS_OK;
-    }
-
-    nsresult Unlink(const nsDeque &nodes)
-    {
-        nsresult rv;
-
-        for (PRInt32 i = 0; i < nodes.GetSize(); ++i) {
-            void *p = nodes.ObjectAt(i);
-
-            nsISupports *s = NS_STATIC_CAST(nsISupports *, p);
-            nsCOMPtr<nsCycleCollectionParticipant> cp 
-                = do_QueryInterface(s, &rv);
-
-            if (NS_FAILED(rv)) {
-                Fault("unlinking wrong kind of pointer", s);
-                return NS_ERROR_FAILURE;
-            }
-
-            getCollector()->mStats.mSuccessfulQI++;
-            rv = cp->Unlink(s);
-
-            if (NS_FAILED(rv)) {
-                Fault("failed unlink", s);
-                return NS_ERROR_FAILURE;
-            }
-        }
-        return NS_OK;
-    }
-
-    nsresult Unroot(const nsDeque &nodes)
-    {
-        for (PRInt32 i = 0; i < nodes.GetSize(); ++i) {
-            void *p = nodes.ObjectAt(i);
-            nsISupports *s = NS_STATIC_CAST(nsISupports *, p);
-            NS_RELEASE(s);
-        }
-        return NS_OK;
-    }
-
-    nsresult FinishCycleCollection() 
-    {
-        return NS_OK;
-    }
-};
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -1218,16 +1201,16 @@ install_new_hooks()
 static void*
 my_realloc_hook(void *ptr, size_t size, const void *caller)
 {
-    void *result;
-    nsCycleCollector* cc = getCollector();
+    void *result;    
 
     install_old_hooks();
     result = realloc(ptr, size);
     save_old_hooks();
 
-    cc->Freed(ptr);
-
-    cc->Allocated(result, size);
+    if (sCollector) {
+        sCollector->Freed(ptr);
+        sCollector->Allocated(result, size);
+    }
 
     install_new_hooks();
 
@@ -1244,7 +1227,8 @@ my_memalign_hook(size_t size, size_t alignment, const void *caller)
     result = memalign(size, alignment);
     save_old_hooks();
 
-    getCollector()->Allocated(result, size);
+    if (sCollector)
+        sCollector->Allocated(result, size);
 
     install_new_hooks();
 
@@ -1259,7 +1243,8 @@ my_free_hook (void *ptr, const void *caller)
     free(ptr);
     save_old_hooks();
 
-    getCollector()->Freed(ptr);
+    if (sCollector)
+        sCollector->Freed(ptr);
 
     install_new_hooks();
 }      
@@ -1268,13 +1253,14 @@ my_free_hook (void *ptr, const void *caller)
 static void*
 my_malloc_hook (size_t size, const void *caller)
 {
-    void *result;    
+    void *result;
 
     install_old_hooks();
     result = malloc (size);
     save_old_hooks();
 
-    getCollector()->Allocated(result, size);
+    if (sCollector)
+        sCollector->Allocated(result, size);
 
     install_new_hooks();
 
@@ -1301,7 +1287,7 @@ AllocHook(int allocType, void *userData, size_t size, int
           lineNumber)
 {
     if (allocType == _HOOK_FREE)
-        getCollector()->Freed(userData);
+        sCollector->Freed(userData);
     return 1;
 }
 
@@ -1324,7 +1310,8 @@ static void (*old_free)(struct _malloc_zone_t *zone, void *ptr);
 static void
 freehook(struct _malloc_zone_t *zone, void *ptr)
 {
-    getCollector()->Freed(ptr);
+    if (sCollector)
+        sCollector->Freed(ptr);
     old_free(zone, ptr);
 }
 
@@ -1356,8 +1343,6 @@ InitMemHook(void)
 ////////////////////////////////////////////////////////////////////////
 
 nsCycleCollector::nsCycleCollector() : 
-    mTick(0),
-    mLastAging(0),
     mCollectionInProgress(PR_FALSE),
     mScanInProgress(PR_FALSE),
     mPurpleBuf(mParams, mStats),
@@ -1368,30 +1353,14 @@ nsCycleCollector::nsCycleCollector() :
     mExpectedGarbage.Init();
 #endif
 
-    for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
-        mRuntimes[i] = nsnull;
-        mBufs[i] = new nsDeque(nsnull);
-    }
-
-    mRuntimes[nsIProgrammingLanguage::CPLUSPLUS] 
-        = new nsCycleCollectionXPCOMRuntime();
+    memset(mRuntimes, 0, sizeof(mRuntimes));
+    mRuntimes[nsIProgrammingLanguage::CPLUSPLUS] = &mXPCOMRuntime;
 }
 
 
 nsCycleCollector::~nsCycleCollector()
 {
-    if (this == sCollector)
-        sCollector = nsnull;
-
     mGraph.Clear();    
-
-    for (PRUint32 i = 0; i < nsIProgrammingLanguage::MAX+1; ++i) {
-        delete mBufs[i];
-        mBufs[i] = NULL;
-    }
-
-    delete mRuntimes[nsIProgrammingLanguage::CPLUSPLUS];
-    mRuntimes[nsIProgrammingLanguage::CPLUSPLUS] = NULL;
 
     for (PRUint32 i = 0; i < nsIProgrammingLanguage::MAX+1; ++i) {
         mRuntimes[i] = NULL;
@@ -1440,11 +1409,11 @@ nsCycleCollector::MaybeDrawGraphs()
         PRUint32 i;
         nsDeque roots(nsnull);
 
-        while (mBufs[0]->GetSize() > 0)
-            roots.Push(mBufs[0]->Pop());
+        while (mBufs[0].GetSize() > 0)
+            roots.Push(mBufs[0].Pop());
 
         for (i = 0; i < nsIProgrammingLanguage::MAX+1; ++i)
-            mBufs[i]->Empty();
+            mBufs[i].Empty();
 
         mGraph.Enumerate(FindWhiteCallback, this);
 
@@ -1452,7 +1421,7 @@ nsCycleCollector::MaybeDrawGraphs()
         PRBool anyWhites = PR_FALSE;
 
         for (i = 0; i < nsIProgrammingLanguage::MAX+1; ++i) {
-            if (mBufs[i]->GetSize() > 0) {
+            if (mBufs[i].GetSize() > 0) {
                 anyWhites = PR_TRUE;
                 break;
             }
@@ -1468,7 +1437,7 @@ nsCycleCollector::MaybeDrawGraphs()
         }
 
         for (i = 0; i < nsIProgrammingLanguage::MAX+1; ++i)
-            mBufs[i]->Empty();
+            mBufs[i].Empty();
     }
 }
 
@@ -1553,7 +1522,7 @@ nsCycleCollector::Suspect(nsISupports *n, PRBool current)
 #endif
 
     if (current)
-        mBufs[0]->Push(n);
+        mBufs[0].Push(n);
     else
         mPurpleBuf.Put(n);
 
@@ -1646,10 +1615,10 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
         // GC calls -- so it's essential that we actually execute this
         // step!
         //
-        // It is also essential to empty mBufs->[0] here because starting up
+        // It is also essential to empty mBufs[0] here because starting up
         // collection in language runtimes may force some "current" suspects
         // into mBufs[0].
-        mBufs[0]->Empty();
+        mBufs[0].Empty();
 
 #ifdef COLLECT_TIME_DEBUG
         now = PR_Now();
@@ -1678,7 +1647,7 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
                    (PR_Now() - now) / PR_USEC_PER_MSEC);
 #endif
 
-            if (mBufs[0]->GetSize() == 0) {
+            if (mBufs[0].GetSize() == 0) {
                 aTryCollections = 0;
             } else {
                 if (mCollectionInProgress)
@@ -1744,7 +1713,7 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
 
         for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
             if (mRuntimes[i])
-            mRuntimes[i]->FinishCycleCollection();
+                mRuntimes[i]->FinishCycleCollection();
         }
     }
 
@@ -1767,7 +1736,7 @@ nsCycleCollector::Shutdown()
 
 #ifdef DEBUG
     CollectPurple();
-    if (mBufs[0]->GetSize() != 0) {
+    if (mBufs[0].GetSize() != 0) {
         printf("Might have been able to release more cycles if the cycle collector would "
                "run once more at shutdown.\n");
     }
@@ -1783,7 +1752,7 @@ PR_STATIC_CALLBACK(PLDHashOperator)
 AddExpectedGarbage(nsClearingVoidPtrHashKey *p, void *arg)
 {
     nsCycleCollector *c = NS_STATIC_CAST(nsCycleCollector*, arg);
-    c->mBufs[0]->Push(NS_CONST_CAST(void*, p->GetKey()));
+    c->mBufs[0].Push(NS_CONST_CAST(void*, p->GetKey()));
     return PL_DHASH_NEXT;
 }
 
@@ -1849,7 +1818,7 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
     mScanInProgress = PR_TRUE;
 
     mGraph.Clear();
-    mBufs[0]->Empty();
+    mBufs[0].Empty();
 
     // Instead of filling mBufs[0] from the purple buffer, we fill it
     // from the list of nodes we were expected to collect.
@@ -1860,8 +1829,8 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
 
     mScanInProgress = PR_FALSE;
 
-    for (int i = 0; i < mBufs[0]->GetSize(); ++i) {
-        nsISupports *s = NS_STATIC_CAST(nsISupports *, mBufs[0]->ObjectAt(i));
+    for (int i = 0; i < mBufs[0].GetSize(); ++i) {
+        nsISupports *s = NS_STATIC_CAST(nsISupports *, mBufs[0].ObjectAt(i));
         s = canonicalize(s);
         explainWalker(mGraph, mRuntimes).Walk(s); 
     }
@@ -1898,77 +1867,107 @@ void
 nsCycleCollector_registerRuntime(PRUint32 langID, 
                                  nsCycleCollectionLanguageRuntime *rt)
 {
-    getCollector()->RegisterRuntime(langID, rt);
+    if (sCollector)
+        sCollector->RegisterRuntime(langID, rt);
 }
 
 
 void 
 nsCycleCollector_forgetRuntime(PRUint32 langID)
 {
-    getCollector()->ForgetRuntime(langID);
+    if (sCollector)
+        sCollector->ForgetRuntime(langID);
 }
 
 
 void 
 nsCycleCollector_suspect(nsISupports *n)
 {
-    getCollector()->Suspect(n);
+    if (sCollector)
+        sCollector->Suspect(n);
 }
 
 
 void 
 nsCycleCollector_suspectCurrent(nsISupports *n)
 {
-    getCollector()->Suspect(n, true);
+    if (sCollector)
+        sCollector->Suspect(n, PR_TRUE);
 }
 
 
 void 
 nsCycleCollector_forget(nsISupports *n)
 {
-    getCollector()->Forget(n);
+    if (sCollector)
+        sCollector->Forget(n);
 }
 
 
 void 
 nsCycleCollector_collect()
 {
-    getCollector()->Collect();
+    if (sCollector)
+        sCollector->Collect();
+}
+
+nsresult 
+nsCycleCollector_startup()
+{
+    NS_ASSERTION(!sCollector, "Forgot to call nsCycleCollector_shutdown?");
+
+    sCollector = new nsCycleCollector();
+    return sCollector ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 void 
 nsCycleCollector_shutdown()
 {
-    getCollector()->Shutdown();
+    if (sCollector) {
+        sCollector->Shutdown();
+        delete sCollector;
+        sCollector = nsnull;
+    }
 }
 
 #ifdef DEBUG
 void
 nsCycleCollector_DEBUG_shouldBeFreed(nsISupports *n)
 {
-    getCollector()->ShouldBeFreed(n);
+    if (sCollector)
+        sCollector->ShouldBeFreed(n);
 }
 
 void
 nsCycleCollector_DEBUG_wasFreed(nsISupports *n)
 {
-    getCollector()->WasFreed(n);
+    if (sCollector)
+        sCollector->WasFreed(n);
 }
 #endif
 
 PRBool
 nsCycleCollector_isScanSafe(nsISupports *s)
 {
-    nsresult rv;
-
     if (!s)
         return PR_FALSE;
 
-    nsCOMPtr<nsCycleCollectionParticipant> cp = do_QueryInterface(s, &rv);
-    if (NS_FAILED(rv)) {
-        getCollector()->mStats.mFailedQI++;
-        return PR_FALSE;
-    }
+    nsCycleCollectionParticipant *cp;
+    ToParticipant(s, &cp);
 
-    return PR_TRUE;
+    return cp != nsnull;
+}
+
+static void
+ToParticipant(nsISupports *s, nsCycleCollectionParticipant **cp)
+{
+    // We use QI to move from an nsISupports to an
+    // nsCycleCollectionParticipant, which is a per-class singleton helper
+    // object that implements traversal and unlinking logic for the nsISupports
+    // in question.
+    CallQueryInterface(s, cp);
+    if (cp)
+        ++sCollector->mStats.mSuccessfulQI;
+    else
+        ++sCollector->mStats.mFailedQI;
 }

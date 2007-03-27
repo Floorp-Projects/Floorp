@@ -89,7 +89,7 @@ class nsDequeIterator;
 class NS_COM nsDeque {
   friend class nsDequeIterator;
   public:
-   nsDeque(nsDequeFunctor* aDeallocator);
+   nsDeque(nsDequeFunctor* aDeallocator = nsnull);
   ~nsDeque();
 
   /**
@@ -217,11 +217,6 @@ protected:
   void**          mData;
 
 private:
-
-  /**
-   * Simple default constructor (PRIVATE)
-   */
-  nsDeque();
 
   /**
    * Copy constructor (PRIVATE)
