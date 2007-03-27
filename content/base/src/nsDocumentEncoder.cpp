@@ -902,11 +902,40 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
     rv = mSelection->GetRangeCount(&count);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsCOMPtr<nsIDOMNode> node, prevNode;
+    nsCOMPtr<nsIContent> content;
+    PRBool bTableCellsFound = PR_FALSE;
+    NS_NAMED_LITERAL_STRING(_begin_tr, "<tr>");
+    NS_NAMED_LITERAL_STRING(_end_tr, "</tr>");
+
     for (i = 0; i < count; i++) {
       mSelection->GetRangeAt(i, getter_AddRefs(range));
 
+      // Bug 236546: newlines not added when copying table cells into clipboard
+      // Each selected cell shows up as a range containing a row with a single cell
+      // get the row, compare it to previous row and emit </tr><tr> as needed
+      range->GetStartContainer(getter_AddRefs(node));
+      NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
+      content = do_QueryInterface(node);
+      if (content) {
+        nsIAtom *name = content->Tag();
+        if (name == nsGkAtoms::tr && content->IsNodeOfType(nsINode::eHTML)) {
+          if (prevNode != node) { 
+            if (bTableCellsFound) { 
+              aOutputString.Append(_end_tr);
+            }
+            aOutputString.Append(_begin_tr);
+            prevNode = node;
+          }
+          bTableCellsFound = PR_TRUE;
+        }
+      }
+
       rv = SerializeRangeToString(range, aOutputString);
       NS_ENSURE_SUCCESS(rv, rv);
+    }
+    if (bTableCellsFound) {
+      aOutputString.Append(_end_tr);
     }
 
     mSelection = nsnull;
