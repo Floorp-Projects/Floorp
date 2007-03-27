@@ -75,7 +75,6 @@ struct txKeyValueHashEntry : public PLDHashEntryHdr
     }
 
     // @see nsDoubleHashtable.h
-    const void* GetKey();
     PRBool MatchEntry(const void* aKey) const;
     static PLDHashNumber HashKey(const void* aKey);
     
@@ -108,7 +107,6 @@ struct txIndexedKeyHashEntry : public PLDHashEntryHdr
     }
 
     // @see nsDoubleHashtable.h
-    const void* GetKey();
     PRBool MatchEntry(const void* aKey) const;
     static PLDHashNumber HashKey(const void* aKey);
 

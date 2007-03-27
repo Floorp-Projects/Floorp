@@ -155,12 +155,6 @@ txKeyFunctionCall::getNameAtom(nsIAtom** aAtom)
 DHASH_WRAPPER(txKeyValueHash, txKeyValueHashEntry, txKeyValueHashKey&)
 DHASH_WRAPPER(txIndexedKeyHash, txIndexedKeyHashEntry, txIndexedKeyHashKey&)
 
-const void*
-txKeyValueHashEntry::GetKey()
-{
-    return &mKey;
-}
-
 PRBool
 txKeyValueHashEntry::MatchEntry(const void* aKey) const
 {
@@ -182,12 +176,6 @@ txKeyValueHashEntry::HashKey(const void* aKey)
            NS_PTR_TO_INT32(key->mKeyName.mLocalName.get()) ^
            key->mRootIdentifier ^
            HashString(key->mKeyValue);
-}
-
-const void*
-txIndexedKeyHashEntry::GetKey()
-{
-    return &mKey;
 }
 
 PRBool
