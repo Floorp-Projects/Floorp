@@ -28,6 +28,7 @@ CPPSRCS	= \
 	gfxFont.cpp \
 	gfxFontTest.cpp \
 	gfxMatrix.cpp \
+	gfxFontMissingGlyphs.cpp \
 	gfxPattern.cpp \
 	gfxPlatform.cpp \
 	gfxRect.cpp \

@@ -46,6 +46,7 @@
 #include "prtypes.h"
 #include "gfxTypes.h"
 #include "gfxContext.h"
+#include "gfxFontMissingGlyphs.h"
 
 #include "cairo.h"
 #include "gfxFontTest.h"
@@ -128,8 +129,25 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
                     break;
                 ++details;
             }
+        } else if (glyphData->IsMissing()) {
+            const gfxTextRun::DetailedGlyph *details = aTextRun->GetDetailedGlyphs(i);
+            if (details) {
+                double advance = details->mAdvance;
+                if (!aDrawToPath) {
+                    gfxPoint pt(ToDeviceUnits(x, devUnitsPerAppUnit),
+                                ToDeviceUnits(y, devUnitsPerAppUnit));
+                    gfxFloat advanceDevUnits = ToDeviceUnits(advance, devUnitsPerAppUnit);
+                    if (isRTL) {
+                        pt.x -= advanceDevUnits;
+                    }
+                    gfxFloat height = GetMetrics().maxAscent;
+                    gfxRect glyphRect(pt.x, pt.y - height, advanceDevUnits, height);
+                    gfxFontMissingGlyphs::DrawMissingGlyph(aContext, glyphRect, details->mGlyphID);
+                }
+                x += direction*advance;
+            }
         }
-        // Every other glyph type (including missing glyphs) is ignored
+        // Every other glyph type is ignored
         if (aSpacing) {
             double space = aSpacing[i - aStart].mAfter;
             if (i + 1 < aEnd) {
@@ -175,9 +193,9 @@ gfxFont::Measure(gfxTextRun *aTextRun,
             ++clusterCount;
             if (g.IsSimpleGlyph()) {
                 advance += charGlyphs[i].GetSimpleAdvance();
-            } else if (g.IsComplexCluster()) {
+            } else if (g.IsComplexOrMissing()) {
                 const gfxTextRun::DetailedGlyph *details = aTextRun->GetDetailedGlyphs(i);
-                for (;;) {
+                while (details) {
                     advance += details->mAdvance;
                     if (details->mIsLastGlyph)
                         break;
@@ -653,14 +671,14 @@ gfxTextRun::GetAdjustedSpacing(PRUint32 aStart, PRUint32 aEnd,
                     aSpacing[i - 1 - aStart].mAfter -= clusterWidth;
                 }
                 clusterWidth = glyphData->GetSimpleAdvance();
-            } else if (glyphData->IsComplexCluster()) {
+            } else if (glyphData->IsComplexOrMissing()) {
                 NS_ASSERTION(mDetailedGlyphs, "No details but we have a complex cluster...");
                 if (i > aStart) {
                     aSpacing[i - 1 - aStart].mAfter -= clusterWidth;
                 }
                 DetailedGlyph *details = mDetailedGlyphs[i];
                 clusterWidth = 0;
-                for (;;) {
+                while (details) {
                     clusterWidth += details->mAdvance;
                     if (details->mIsLastGlyph)
                         break;
@@ -1135,10 +1153,10 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
             CompressedGlyph *glyphData = &charGlyphs[i];
             if (glyphData->IsSimpleGlyph()) {
                 advance += glyphData->GetSimpleAdvance();
-            } else if (glyphData->IsComplexCluster()) {
+            } else if (glyphData->IsComplexOrMissing()) {
                 NS_ASSERTION(mDetailedGlyphs, "No details but we have a complex cluster...");
                 DetailedGlyph *details = mDetailedGlyphs[i];
-                for (;;) {
+                while (details) {
                     advance += details->mAdvance;
                     if (details->mIsLastGlyph)
                         break;
@@ -1230,10 +1248,9 @@ gfxTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
         CompressedGlyph *glyphData = &charGlyphs[i];
         if (glyphData->IsSimpleGlyph()) {
             result += glyphData->GetSimpleAdvance();
-        } else if (glyphData->IsComplexCluster()) {
-            NS_ASSERTION(mDetailedGlyphs, "No details but we have a complex cluster...");
+        } else if (glyphData->IsComplexOrMissing()) {
             DetailedGlyph *details = mDetailedGlyphs[i];
-            for (;;) {
+            while (details) {
                 result += details->mAdvance;
                 if (details->mIsLastGlyph)
                     break;
@@ -1307,6 +1324,28 @@ gfxTextRun::CountMissingGlyphs()
     return count;
 }
 
+gfxTextRun::DetailedGlyph *
+gfxTextRun::AllocateDetailedGlyphs(PRUint32 aIndex, PRUint32 aCount)
+{
+    if (!mCharacterGlyphs)
+        return nsnull;
+
+    if (!mDetailedGlyphs) {
+        mDetailedGlyphs = new nsAutoArrayPtr<DetailedGlyph>[mCharacterCount];
+        if (!mDetailedGlyphs) {
+            mCharacterGlyphs[aIndex].SetMissing();
+            return nsnull;
+        }
+    }
+    DetailedGlyph *details = new DetailedGlyph[aCount];
+    if (!details) {
+        mCharacterGlyphs[aIndex].SetMissing();
+        return nsnull;
+    }
+    mDetailedGlyphs[aIndex] = details;
+    return details;
+}
+
 void
 gfxTextRun::SetDetailedGlyphs(PRUint32 aIndex, const DetailedGlyph *aGlyphs,
                               PRUint32 aCount)
@@ -1314,25 +1353,30 @@ gfxTextRun::SetDetailedGlyphs(PRUint32 aIndex, const DetailedGlyph *aGlyphs,
     NS_ASSERTION(aCount > 0, "Can't set zero detailed glyphs");
     NS_ASSERTION(aGlyphs[aCount - 1].mIsLastGlyph, "Failed to set last glyph flag");
 
-    if (!mCharacterGlyphs)
+    DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, aCount);
+    if (!details)
         return;
 
-    if (!mDetailedGlyphs) {
-        mDetailedGlyphs = new nsAutoArrayPtr<DetailedGlyph>[mCharacterCount];
-        if (!mDetailedGlyphs) {
-            mCharacterGlyphs[aIndex].SetMissing();
-            return;
-        }
-    }
-    DetailedGlyph *details = new DetailedGlyph[aCount];
-    if (!details) {
-        mCharacterGlyphs[aIndex].SetMissing();
-        return;
-    }
     memcpy(details, aGlyphs, sizeof(DetailedGlyph)*aCount);
-    
-    mDetailedGlyphs[aIndex] = details;
     mCharacterGlyphs[aIndex].SetComplexCluster();
+}
+  
+void
+gfxTextRun::SetMissingGlyph(PRUint32 aIndex, PRUnichar aChar)
+{
+    DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, 1);
+    if (!details)
+        return;
+
+    details->mIsLastGlyph = PR_TRUE;
+    details->mGlyphID = aChar;
+    GlyphRun *glyphRun = &mGlyphRuns[FindFirstGlyphRunContaining(aIndex)];
+    gfxFloat width = PR_MAX(glyphRun->mFont->GetMetrics().aveCharWidth,
+                            gfxFontMissingGlyphs::GetDesiredMinWidth());
+    details->mAdvance = PRUint32(width*GetAppUnitsPerDevUnit());
+    details->mXOffset = 0;
+    details->mYOffset = 0;
+    mCharacterGlyphs[aIndex].SetMissing();
 }
 
 void

@@ -1132,6 +1132,8 @@ public:
         PRUint32 offsetInRun = mScriptItem->iCharPos;
         SetupClusterBoundaries(aRun, offsetInRun);
 
+        aRun->AddGlyphRun(GetCurrentFont(), offsetInRun);
+
         // XXX We should store this in the item and only fetch it once
         SCRIPT_FONTPROPERTIES sfp;
         ScriptFontProperties(&sfp);
@@ -1168,7 +1170,7 @@ public:
                 PRInt32 advance = mAdvances[k]*appUnitsPerDevUnit;
                 WORD glyph = mGlyphs[k];
                 if (missing) {
-                    aRun->SetCharacterGlyph(runOffset, g.SetMissing());
+                    aRun->SetMissingGlyph(runOffset, mString[offset]);
                 } else if (glyphCount == 1 && advance >= 0 &&
                     mOffsets[k].dv == 0 && mOffsets[k].du == 0 &&
                     gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
@@ -1193,8 +1195,6 @@ public:
             }
             ++offset;
         }
-        
-        aRun->AddGlyphRun(GetCurrentFont(), offsetInRun);
     }
 
     gfxWindowsFont *GetNextFont() {
