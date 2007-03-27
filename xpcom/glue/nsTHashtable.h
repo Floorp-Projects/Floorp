@@ -82,9 +82,6 @@ PL_DHashStubEnumRemove(PLDHashTable    *table,
  *     // the destructor must be defined... or you will cause link errors!
  *     ~EntryType();
  *
- *     // return the key of this entry
- *     const KeyTypePointer GetKeyPointer() const;
- *
  *     // KeyEquals(): does this entry match this key?
  *     PRBool KeyEquals(KeyTypePointer aKey) const;
  *

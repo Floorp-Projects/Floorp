@@ -159,7 +159,6 @@ class nsUint32ToContentHashEntry : public PLDHashEntryHdr
     ~nsUint32ToContentHashEntry() { Destroy(); }
 
     KeyType GetKey() const { return mValue; }
-    KeyTypePointer GetKeyPointer() const { return &mValue; }
 
     PRBool KeyEquals(KeyTypePointer aKey) const { return mValue == *aKey; }
 

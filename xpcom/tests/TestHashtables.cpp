@@ -103,7 +103,6 @@ public:
   EntityToUnicodeEntry(const EntityToUnicodeEntry& aEntry) { mNode = aEntry.mNode; }
   ~EntityToUnicodeEntry() { };
 
-  const char* GetKeyPointer() const { return mNode->mStr; }
   PRBool KeyEquals(const char* aEntity) const { return !strcmp(mNode->mStr, aEntity); }
   static const char* KeyToPointer(const char* aEntity) { return aEntity; }
   static PLDHashNumber HashKey(const char* aEntity) { return HashString(aEntity); }

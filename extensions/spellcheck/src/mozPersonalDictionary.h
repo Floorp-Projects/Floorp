@@ -74,7 +74,6 @@ public:
   }
  
   KeyType GetKey() const { return mKey; }
-  KeyTypePointer GetKeyPointer() const { return mKey; }
   PRBool KeyEquals(KeyTypePointer aKey) const { return !nsCRT::strcmp(mKey, aKey); }
   static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
 

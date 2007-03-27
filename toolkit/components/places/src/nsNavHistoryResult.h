@@ -79,7 +79,6 @@ public:
   ~nsTrimInt64HashKey() { }
 
   KeyType GetKey() const { return mValue; }
-  KeyTypePointer GetKeyPointer() const { return &mValue; }
   PRBool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }

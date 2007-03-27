@@ -83,11 +83,6 @@ public:
     return mHost;
   }
 
-  KeyTypePointer GetKeyPointer() const
-  {
-    return mHost;
-  }
-
   PRBool KeyEquals(KeyTypePointer aKey) const
   {
     return !strcmp(mHost, aKey);

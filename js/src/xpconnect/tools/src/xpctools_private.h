@@ -163,7 +163,6 @@ public:
     ~FunctionKey() { }
 
     KeyType GetKey() const { return mF; }
-    KeyTypePointer GetKeyPointer() const { return &mF; }
     PRBool KeyEquals(const KeyTypePointer aKey) const
     {
         return mF == *aKey;
