@@ -38,6 +38,7 @@
 
 #include "nsHTMLTableAccessible.h"
 #include "nsAccessibilityAtoms.h"
+#include "nsAccessibleTreeWalker.h"
 #include "nsIDOMElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsIAccessibilityService.h"
@@ -82,6 +83,62 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTableAccessible, nsAccessible, nsIAccessibleT
 nsHTMLTableAccessible::nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsAccessibleWrap(aDomNode, aShell)
 { 
+  mHasCaption = PR_FALSE;
+}
+
+void nsHTMLTableAccessible::CacheChildren()
+{
+  if (!mWeakShell) {
+    // This node has been shut down
+    mAccChildCount = eChildCountUninitialized;
+    return;
+  }
+
+  if (mAccChildCount == eChildCountUninitialized) {
+    PRInt32 childCount = 0;
+    nsCOMPtr<nsPIAccessible> privatePrevAccessible;
+    nsCOMPtr<nsIAccessible> captionAccessible;
+    GetCaption(getter_AddRefs(captionAccessible));
+    if (captionAccessible) {
+      mHasCaption = PR_TRUE;
+      SetFirstChild(captionAccessible);
+      ++ childCount;
+      privatePrevAccessible = do_QueryInterface(captionAccessible);
+      privatePrevAccessible->SetParent(this);
+    }
+    else {
+      mHasCaption = PR_FALSE;
+    }
+
+    PRBool allowsAnonChildren = PR_FALSE;
+    GetAllowsAnonChildAccessibles(&allowsAnonChildren);
+    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, allowsAnonChildren);
+    walker.mState.frame = GetFrame();
+
+    walker.GetFirstChild();
+    while (walker.mState.accessible) {
+      nsCOMPtr<nsIContent> content(do_QueryInterface(walker.mState.domNode));
+      NS_ASSERTION(content, "Creating accessible for node in HTMLTable with no content");
+      if (content && content->IsNodeOfType(nsINode::eHTML) &&
+          content->Tag() == nsAccessibilityAtoms::caption) {
+        // We have already dealt with caption, ignore this one
+        walker.GetNextSibling();
+        continue;
+      }
+
+      ++ childCount;
+      if (privatePrevAccessible) {
+        privatePrevAccessible->SetNextSibling(walker.mState.accessible);
+      }
+      else {
+        SetFirstChild(walker.mState.accessible);
+      }
+      privatePrevAccessible = do_QueryInterface(walker.mState.accessible);
+      privatePrevAccessible->SetParent(this);
+      walker.GetNextSibling();
+    }
+    mAccChildCount = childCount;
+  }
 }
 
 /* unsigned long getRole (); */
@@ -169,15 +226,18 @@ nsHTMLTableAccessible::GetCaption(nsIAccessible **aCaption)
   nsCOMPtr<nsIDOMNode> captionNode(do_QueryInterface(caption));
   NS_ENSURE_TRUE(captionNode, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIAccessibilityService>
-    accService(do_GetService("@mozilla.org/accessibilityService;1"));
+  nsCOMPtr<nsIAccessibilityService> accService = GetAccService();
   NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
 
   accService->GetCachedAccessible(captionNode, mWeakShell, aCaption);
   if (*aCaption)
     return NS_OK;
 
-  accService->CreateHyperTextAccessible(captionNode, aCaption);
+  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
+  nsCOMPtr<nsIContent> content(do_QueryInterface(captionNode));
+  NS_ENSURE_TRUE(presShell && content, NS_ERROR_FAILURE);
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
+  accService->CreateHyperTextAccessible(frame, aCaption);
   nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(*aCaption));
   return accessNode ? accessNode->Init() : NS_ERROR_FAILURE;
 }
@@ -411,6 +471,9 @@ nsHTMLTableAccessible::GetIndexAt(PRInt32 aRow, PRInt32 aColumn,
   NS_ENSURE_SUCCESS(rv, rv);
 
   *_retval = aRow * columns + aColumn;
+  if (mHasCaption) {
+    (*_retval)++;
+  }
 
   return NS_OK;
 }
@@ -426,6 +489,9 @@ nsHTMLTableAccessible::GetColumnAtIndex(PRInt32 aIndex, PRInt32 *_retval)
   rv = GetColumns(&columns);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (mHasCaption) {
+    aIndex--;
+  }
   *_retval = aIndex % columns;
 
   return NS_OK;
@@ -442,6 +508,9 @@ nsHTMLTableAccessible::GetRowAtIndex(PRInt32 aIndex, PRInt32 *_retval)
   rv = GetColumns(&columns);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (mHasCaption) {
+    aIndex--;
+  }
   *_retval = aIndex / columns;
 
   return NS_OK;
