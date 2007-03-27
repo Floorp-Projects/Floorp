@@ -107,7 +107,6 @@ public:
   ~nsStringCaseInsensitiveHashKey() { }
 
   KeyType GetKey() const { return mStr; }
-  KeyTypePointer GetKeyPointer() const { return &mStr; }
   PRBool KeyEquals(const KeyTypePointer aKey) const
   {
     return mStr.Equals(*aKey,nsCaseInsensitiveStringComparator());

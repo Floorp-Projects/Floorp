@@ -92,7 +92,6 @@ public:
   ~nsAttrHashKey() {}
 
   KeyType GetKey() const { return mKey; }
-  KeyTypePointer GetKeyPointer() const { return &mKey; }
   PRBool KeyEquals(KeyTypePointer aKey) const
     {
       return mKey.mLocalName == aKey->mLocalName &&

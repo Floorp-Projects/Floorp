@@ -124,7 +124,6 @@ protected:
         ~FontGroupAndStringHashKeyT() { }
 
         KeyType GetKey() const { return mObj; }
-        KeyTypePointer GetKeyPointer() const { return &mObj; }
 
         PRBool KeyEquals(KeyTypePointer aKey) const {
             return

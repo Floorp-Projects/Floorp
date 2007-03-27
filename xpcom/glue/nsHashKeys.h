@@ -90,7 +90,6 @@ public:
   ~nsStringHashKey() { }
 
   KeyType GetKey() const { return mStr; }
-  KeyTypePointer GetKeyPointer() const { return &mStr; }
   PRBool KeyEquals(const KeyTypePointer aKey) const
   {
     return mStr.Equals(*aKey);
@@ -123,7 +122,6 @@ public:
   ~nsCStringHashKey() { }
 
   KeyType GetKey() const { return mStr; }
-  KeyTypePointer GetKeyPointer() const { return &mStr; }
 
   PRBool KeyEquals(KeyTypePointer aKey) const { return mStr.Equals(*aKey); }
 
@@ -154,7 +152,6 @@ public:
   ~nsUint32HashKey() { }
 
   KeyType GetKey() const { return mValue; }
-  KeyTypePointer GetKeyPointer() const { return &mValue; }
   PRBool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
@@ -183,7 +180,6 @@ public:
   ~nsISupportsHashKey() { }
 
   KeyType GetKey() const { return mSupports; }
-  KeyTypePointer GetKeyPointer() const { return mSupports; }
   
   PRBool KeyEquals(KeyTypePointer aKey) const { return aKey == mSupports; }
 
@@ -216,7 +212,6 @@ public:
   ~nsVoidPtrHashKey() { }
 
   KeyType GetKey() const { return mKey; }
-  KeyTypePointer GetKeyPointer() const { return mKey; }
   
   PRBool KeyEquals(KeyTypePointer aKey) const { return aKey == mKey; }
 
@@ -252,7 +247,6 @@ public:
   ~nsClearingVoidPtrHashKey() { mKey = NULL; }
 
   KeyType GetKey() const { return mKey; }
-  KeyTypePointer GetKeyPointer() const { return mKey; }
   
   PRBool KeyEquals(KeyTypePointer aKey) const { return aKey == mKey; }
 
@@ -283,7 +277,6 @@ public:
   ~nsIDHashKey() { }
 
   KeyType GetKey() const { return mID; }
-  KeyTypePointer GetKeyPointer() const { return &mID; }
 
   PRBool KeyEquals(KeyTypePointer aKey) const { return aKey->Equals(mID); }
 
@@ -316,7 +309,6 @@ public:
   ~nsDepCharHashKey() { }
 
   const char* GetKey() const { return mKey; }
-  const char* GetKeyPointer() const { return mKey; }
   PRBool KeyEquals(const char* aKey) const
   {
     return !strcmp(mKey, aKey);
@@ -346,7 +338,6 @@ public:
   ~nsCharPtrHashKey() { if (mKey) free(NS_CONST_CAST(char *, mKey)); }
 
   const char* GetKey() const { return mKey; }
-  const char* GetKeyPointer() const { return mKey; }
   PRBool KeyEquals(KeyTypePointer aKey) const
   {
     return !strcmp(mKey, aKey);
@@ -377,7 +368,6 @@ public:
   ~nsUnicharPtrHashKey() { if (mKey) NS_Free(NS_CONST_CAST(PRUnichar *, mKey)); }
 
   const PRUnichar* GetKey() const { return mKey; }
-  const PRUnichar* GetKeyPointer() const { return mKey; }
   PRBool KeyEquals(KeyTypePointer aKey) const
   {
     return !NS_strcmp(mKey, aKey);
@@ -408,7 +398,6 @@ public:
     ~nsHashableHashKey() { }
 
     nsIHashable* GetKey() const { return mKey; }
-    const nsIHashable* GetKeyPointer() const { return mKey; }
 
     PRBool KeyEquals(const nsIHashable* aKey) const {
         PRBool eq;

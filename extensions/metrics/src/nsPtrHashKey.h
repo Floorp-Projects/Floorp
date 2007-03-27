@@ -60,7 +60,6 @@ class nsPtrHashKey : public PLDHashEntryHdr
   ~nsPtrHashKey() {}
 
   KeyType GetKey() const { return mKey; }
-  KeyTypePointer GetKeyPointer() const { return mKey; }
 
   PRBool KeyEquals(KeyTypePointer key) const { return key == mKey; }
 

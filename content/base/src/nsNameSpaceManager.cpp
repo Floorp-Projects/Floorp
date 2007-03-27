@@ -92,10 +92,6 @@ public:
   {
     return mKey;
   }
-  KeyTypePointer GetKeyPointer() const
-  {
-    return mKey;
-  }
   PRBool KeyEquals(KeyType aKey) const
   {
     return mKey->Equals(*aKey);
