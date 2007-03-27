@@ -877,15 +877,6 @@ JSObjWrapperHash(PLDHashTable *table, const void *key)
   return (PLDHashNumber)((PRWord)e->mJSObj ^ (PRWord)e->mNpp) >> 2;
 }
 
-PR_STATIC_CALLBACK(const void *)
-JSObjWrapperHashGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
-{
-  JSObjWrapperHashEntry *e =
-    NS_STATIC_CAST(JSObjWrapperHashEntry *, entry);
-
-  return NS_STATIC_CAST(nsJSObjWrapperKey *, e->mJSObjWrapper);
-}
-
 PR_STATIC_CALLBACK(PRBool)
 JSObjWrapperHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
                            const void *key)
@@ -941,7 +932,6 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj)
       {
         PL_DHashAllocTable,
         PL_DHashFreeTable,
-        JSObjWrapperHashGetKey,
         JSObjWrapperHash,
         JSObjWrapperHashMatchEntry,
         PL_DHashMoveEntryStub,

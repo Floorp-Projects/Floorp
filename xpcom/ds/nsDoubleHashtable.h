@@ -205,12 +205,6 @@
 // ENTRY_CLASS: the classname of the entry
 //
 #define DHASH_CALLBACKS(ENTRY_CLASS)                                          \
-PR_STATIC_CALLBACK(const void *)                                              \
-ENTRY_CLASS##GetKey(PLDHashTable* table, PLDHashEntryHdr* entry)              \
-{                                                                             \
-  ENTRY_CLASS* e = NS_STATIC_CAST(ENTRY_CLASS*, entry);                       \
-  return e->GetKey();                                                         \
-}                                                                             \
 PR_STATIC_CALLBACK(PLDHashNumber)                                             \
 ENTRY_CLASS##HashKey(PLDHashTable* table, const void* key)                    \
 {                                                                             \
@@ -255,7 +249,6 @@ PR_BEGIN_MACRO                                                                \
   {                                                                           \
     PL_DHashAllocTable,                                                       \
     PL_DHashFreeTable,                                                        \
-    ENTRY_CLASS##GetKey,                                                      \
     ENTRY_CLASS##HashKey,                                                     \
     ENTRY_CLASS##MatchEntry,                                                  \
     PL_DHashMoveEntryStub,                                                    \

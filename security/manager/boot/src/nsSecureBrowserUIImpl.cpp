@@ -104,13 +104,6 @@ struct RequestHashEntry : PLDHashEntryHdr {
     void *r;
 };
 
-PR_STATIC_CALLBACK(const void *)
-RequestMapGetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
-{
-  RequestHashEntry *entry = NS_STATIC_CAST(RequestHashEntry*, hdr);
-  return entry->r;
-}
-
 PR_STATIC_CALLBACK(PRBool)
 RequestMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
                          const void *key)
@@ -131,7 +124,6 @@ RequestMapInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
 static PLDHashTableOps gMapOps = {
   PL_DHashAllocTable,
   PL_DHashFreeTable,
-  RequestMapGetKey,
   PL_DHashVoidPtrKeyStub,
   RequestMapMatchEntry,
   PL_DHashMoveEntryStub,

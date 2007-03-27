@@ -199,13 +199,6 @@ struct nsHostDBEnt : PLDHashEntryHdr
     nsHostRecord *rec;
 };
 
-PR_STATIC_CALLBACK(const void *)
-HostDB_GetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
-{
-    nsHostDBEnt *he = NS_STATIC_CAST(nsHostDBEnt *, entry);
-    return NS_STATIC_CAST(const nsHostKey *, he->rec);
-}
-
 PR_STATIC_CALLBACK(PLDHashNumber)
 HostDB_HashKey(PLDHashTable *table, const void *key)
 {
@@ -279,7 +272,6 @@ static PLDHashTableOps gHostDB_ops =
 {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    HostDB_GetKey,
     HostDB_HashKey,
     HostDB_MatchEntry,
     HostDB_MoveEntry,

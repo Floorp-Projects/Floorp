@@ -69,7 +69,6 @@ SpanningCellSorter::~SpanningCellSorter()
 SpanningCellSorter::HashTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    HashTableGetKey,
     HashTableHashKey,
     HashTableMatchEntry,
     PL_DHashMoveEntryStub,
@@ -77,14 +76,6 @@ SpanningCellSorter::HashTableOps = {
     PL_DHashFinalizeStub,
     nsnull
 };
-
-/* static */ PR_CALLBACK const void*
-SpanningCellSorter::HashTableGetKey(PLDHashTable *table,
-                                    PLDHashEntryHdr *hdr)
-{
-    HashTableEntry *entry = NS_STATIC_CAST(HashTableEntry*, hdr);
-    return NS_INT32_TO_PTR(entry->mColSpan);
-}
 
 /* static */ PR_CALLBACK PLDHashNumber
 SpanningCellSorter::HashTableHashKey(PLDHashTable *table, const void *key)

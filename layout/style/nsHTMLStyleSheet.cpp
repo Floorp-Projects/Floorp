@@ -333,7 +333,6 @@ MappedAttrTable_MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
 static PLDHashTableOps MappedAttrTable_Ops = {
   PL_DHashAllocTable,
   PL_DHashFreeTable,
-  PL_DHashGetKeyStub,
   MappedAttrTable_HashKey,
   MappedAttrTable_MatchEntry,
   PL_DHashMoveEntryStub,

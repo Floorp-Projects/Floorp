@@ -86,11 +86,12 @@ typedef struct JSDHashTableOps  JSDHashTableOps;
  * Table entry header structure.
  *
  * In order to allow in-line allocation of key and value, we do not declare
- * either here.  Instead, the API uses const void *key as a formal parameter,
- * and asks each entry for its key when necessary via a getKey callback, used
- * when growing or shrinking the table.  Other callback types are defined
- * below and grouped into the JSDHashTableOps structure, for single static
- * initialization per hash table sub-type.
+ * either here.  Instead, the API uses const void *key as a formal parameter.
+ * The key need not be stored in the entry; it may be part of the value, but
+ * need not be stored at all.
+ *
+ * Callback types are defined below and grouped into the JSDHashTableOps
+ * structure, for single static initialization per hash table sub-type.
  *
  * Each hash table sub-type should nest the JSDHashEntryHdr structure at the
  * front of its particular entry type.  The keyHash member contains the result
@@ -243,16 +244,6 @@ typedef void
 (* JS_DLL_CALLBACK JSDHashFreeTable) (JSDHashTable *table, void *ptr);
 
 /*
- * When a table grows or shrinks, each entry is queried for its key using this
- * callback.  NB: in that event, entry is not in table any longer; it's in the
- * old entryStore vector, which is due to be freed once all entries have been
- * moved via moveEntry callbacks.
- */
-typedef const void *
-(* JS_DLL_CALLBACK JSDHashGetKey)    (JSDHashTable *table,
-                                      JSDHashEntryHdr *entry);
-
-/*
  * Compute the hash code for a given key to be looked up, added, or removed
  * from table.  A hash code may have any JSDHashNumber value.
  */
@@ -339,7 +330,6 @@ struct JSDHashTableOps {
     /* Mandatory hooks.  All implementations must provide these. */
     JSDHashAllocTable   allocTable;
     JSDHashFreeTable    freeTable;
-    JSDHashGetKey       getKey;
     JSDHashHashKey      hashKey;
     JSDHashMatchEntry   matchEntry;
     JSDHashMoveEntry    moveEntry;
@@ -367,9 +357,6 @@ struct JSDHashEntryStub {
     JSDHashEntryHdr hdr;
     const void      *key;
 };
-
-extern JS_PUBLIC_API(const void *)
-JS_DHashGetKeyStub(JSDHashTable *table, JSDHashEntryHdr *entry);
 
 extern JS_PUBLIC_API(JSDHashNumber)
 JS_DHashVoidPtrKeyStub(JSDHashTable *table, const void *key);

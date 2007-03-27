@@ -196,7 +196,6 @@ public:
   };
 
 private:
-  static const void*   GetKey(PLDHashTable *table, PLDHashEntryHdr *entry);
   static PLDHashNumber HashKey(PLDHashTable *table, const void *key);
   static PRBool        MatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
                                 const void *key);

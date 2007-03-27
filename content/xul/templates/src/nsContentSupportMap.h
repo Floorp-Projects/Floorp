@@ -99,11 +99,6 @@ protected:
         nsIContent*      mContent;
         nsTemplateMatch* mMatch;
     };
-
-    static PLDHashTableOps gOps;
-
-    static void PR_CALLBACK
-    ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr);
 };
 
 #endif

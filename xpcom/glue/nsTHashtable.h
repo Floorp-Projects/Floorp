@@ -329,7 +329,6 @@ nsTHashtable<EntryType>::Init(PRUint32 initSize)
   {
     ::PL_DHashAllocTable,
     ::PL_DHashFreeTable,
-    s_GetKey,
     s_HashKey,
     s_MatchEntry,
     ::PL_DHashMoveEntryStub,
@@ -354,14 +353,6 @@ nsTHashtable<EntryType>::Init(PRUint32 initSize)
 }
 
 // static definitions
-
-template<class EntryType>
-const void*
-nsTHashtable<EntryType>::s_GetKey(PLDHashTable    *table,
-                                  PLDHashEntryHdr *entry)
-{
-  return ((EntryType*) entry)->GetKeyPointer();
-}
 
 template<class EntryType>
 PLDHashNumber

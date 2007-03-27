@@ -81,14 +81,6 @@ public:
     nsCOMPtr<nsIRequest> mKey;
 };
 
-PR_STATIC_CALLBACK(const void *)
-RequestHashGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
-{
-    RequestMapEntry *e = NS_STATIC_CAST(RequestMapEntry *, entry);
-
-    return e->mKey.get();
-}
-
 PR_STATIC_CALLBACK(PRBool)
 RequestHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
                       const void *key)
@@ -188,7 +180,6 @@ nsresult nsLoadGroup::Init()
     {
         PL_DHashAllocTable,
         PL_DHashFreeTable,
-        RequestHashGetKey,
         PL_DHashVoidPtrKeyStub,
         RequestHashMatchEntry,
         PL_DHashMoveEntryStub,

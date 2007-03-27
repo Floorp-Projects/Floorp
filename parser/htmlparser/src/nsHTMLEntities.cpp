@@ -54,20 +54,6 @@ struct EntityNodeEntry : public PLDHashEntryHdr
   const EntityNode* node;
 }; 
 
-PR_STATIC_CALLBACK(const void*)
-  getStringKey(PLDHashTable*, PLDHashEntryHdr* aHdr)
-{
-  const EntityNodeEntry* entry = NS_STATIC_CAST(const EntityNodeEntry*, aHdr);
-  return entry->node->mStr;
-}
-
-PR_STATIC_CALLBACK(const void*)
-  getUnicodeKey(PLDHashTable*, PLDHashEntryHdr* aHdr)
-{
-  const EntityNodeEntry* entry = NS_STATIC_CAST(const EntityNodeEntry*, aHdr);
-  return NS_INT32_TO_PTR(entry->node->mUnicode);
-}
-
 PR_STATIC_CALLBACK(PRBool)
   matchNodeString(PLDHashTable*, const PLDHashEntryHdr* aHdr,
                   const void* key)
@@ -97,7 +83,6 @@ PR_STATIC_CALLBACK(PLDHashNumber)
 static const PLDHashTableOps EntityToUnicodeOps = {
   PL_DHashAllocTable,
   PL_DHashFreeTable,
-  getStringKey,
   PL_DHashStringKey,
   matchNodeString,
   PL_DHashMoveEntryStub,
@@ -109,7 +94,6 @@ static const PLDHashTableOps EntityToUnicodeOps = {
 static const PLDHashTableOps UnicodeToEntityOps = {
   PL_DHashAllocTable,
   PL_DHashFreeTable,
-  getUnicodeKey,
   hashUnicodeValue,
   matchNodeUnicode,
   PL_DHashMoveEntryStub,

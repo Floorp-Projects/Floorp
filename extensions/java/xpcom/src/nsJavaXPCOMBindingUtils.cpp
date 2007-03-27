@@ -449,18 +449,6 @@ FreeJavaGlobals(JNIEnv* env)
  *  Java<->XPCOM object mappings
  **************************************/
 
-static PLDHashTableOps hash_ops =
-{
-  PL_DHashAllocTable,
-  PL_DHashFreeTable,
-  PL_DHashGetKeyStub,
-  PL_DHashVoidPtrKeyStub,
-  PL_DHashMatchEntryStub,
-  PL_DHashMoveEntryStub,
-  PL_DHashClearEntryStub,
-  PL_DHashFinalizeStub
-};
-
 // NativeToJavaProxyMap: The common case is that each XPCOM object will have
 // one Java proxy.  But there are instances where there will be multiple Java
 // proxies for a given XPCOM object, each representing a different interface.
@@ -470,7 +458,8 @@ static PLDHashTableOps hash_ops =
 nsresult
 NativeToJavaProxyMap::Init()
 {
-  mHashTable = PL_NewDHashTable(&hash_ops, nsnull, sizeof(Entry), 16);
+  mHashTable = PL_NewDHashTable(PL_DHashGetStubOps(), nsnull,
+                                sizeof(Entry), 16);
   if (!mHashTable)
     return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
@@ -659,7 +648,8 @@ NativeToJavaProxyMap::Remove(JNIEnv* env, nsISupports* aNativeObject,
 nsresult
 JavaToXPTCStubMap::Init()
 {
-  mHashTable = PL_NewDHashTable(&hash_ops, nsnull, sizeof(Entry), 16);
+  mHashTable = PL_NewDHashTable(PL_DHashGetStubOps(), nsnull,
+                                sizeof(Entry), 16);
   if (!mHashTable)
     return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
