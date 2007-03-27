@@ -2947,11 +2947,17 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
       rv = LaunchChild(nativeApp, appInitiatedRestart, upgraded ? -1 : 0);
 
+#ifdef MOZ_AIRBAG
       CrashReporter::UnsetExceptionHandler();
+#endif
+
       return rv == NS_ERROR_LAUNCHED_CHILD_PROCESS ? 0 : 1;
     }
   }
 
+#ifdef MOZ_AIRBAG
   CrashReporter::UnsetExceptionHandler();
+#endif
+
   return NS_FAILED(rv) ? 1 : 0;
 }
