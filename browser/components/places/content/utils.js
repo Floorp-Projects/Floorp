@@ -65,7 +65,7 @@ function asContainer(aNode){ return QI_node(aNode, Ci.nsINavHistoryContainerResu
 function asQuery(aNode)    { return QI_node(aNode, Ci.nsINavHistoryQueryResultNode);    }
 
 var PlacesUtils = {
-  // Place entries that are containers, e.g. bookmark folders or queries. 
+  // Place entries that are containers, e.g. bookmark folders or queries.
   TYPE_X_MOZ_PLACE_CONTAINER: "text/x-moz-place-container",
   // Place entries that are bookmark separators.
   TYPE_X_MOZ_PLACE_SEPARATOR: "text/x-moz-place-separator",
@@ -194,7 +194,7 @@ var PlacesUtils = {
   getFormattedString: function PU_getFormattedString(key, params) {
     return this._bundle.formatStringFromName(key, params, params.length);
   },
-  
+
   getString: function PU_getString(key) {
     return this._bundle.GetStringFromName(key);
   },
@@ -378,7 +378,7 @@ var PlacesUtils = {
   },
 
   /**
-   * Determines whether or not a node is a readonly folder. 
+   * Determines whether or not a node is a readonly folder.
    * @param   aNode
    *          The node to test.
    * @returns true if the node is a readonly folder.
@@ -696,6 +696,13 @@ var PlacesUtils = {
   },
 
   /**
+   * Methods to show the bookmarkProperties dialog in its various modes.
+   *
+   * The showMinimialAdd* methods open the dialog by its alternative URI. Thus
+   * they persist the dialog dimensions separately from the showAdd* methods.
+   */
+
+  /**
    * Shows the "Add Bookmark" dialog.
    *
    * @param [optional] aURI
@@ -731,15 +738,50 @@ var PlacesUtils = {
                                                    aLoadInSidebar) {
     var info = {
       action: "add",
-      type: "bookmark",
-      hiddenRows: []
+      type: "bookmark"
     };
 
-    if (aURI) {
+    if (aURI)
       info.uri = aURI;
-      info.hiddenRows = ["location", "keyword", "description",
-                         "load in sidebar"];
+
+    // allow default empty title
+    if (typeof(aTitle) == "string")
+      info.title = aTitle;
+
+    if (aDescription)
+      info.description = aDescription;
+
+    if (aDefaultInsertionPoint) {
+      info.defaultInsertionPoint = aDefaultInsertionPoint;
+      if (!aShowPicker)
+        info.hiddenRows = ["folder picker"];
     }
+
+    if (aLoadInSidebar)
+      info.loadBookmarkInSidebar = true;
+
+    return this._showBookmarkDialog(info);
+  },
+
+  /**
+   * @see showAddBookmarkUI
+   * This opens the dialog with only the name and folder pickers visible by
+   * default.
+   *
+   * You can still pass in the various paramaters as the default properties
+   * for the new bookmark.
+   */
+  showMinimalAddBookmarkUI:
+  function PU_showMinimalAddBookmarkUI(aURI, aTitle, aDescription,
+                                       aDefaultInsertionPoint, aShowPicker,
+                                       aLoadInSidebar) {
+    var info = {
+      action: "add",
+      type: "bookmark",
+      hiddenRows: ["location", "keyword", "description", "load in sidebar"]
+    };
+    if (aURI)
+      info.uri = aURI;
 
     // allow default empty title
     if (typeof(aTitle) == "string")
@@ -757,7 +799,7 @@ var PlacesUtils = {
     if (aLoadInSidebar)
       info.loadBookmarkInSidebar = true;
 
-    return this._showBookmarkDialog(info);
+    return this._showBookmarkDialog(info, true);
   },
 
   /**
@@ -775,7 +817,7 @@ var PlacesUtils = {
    * @param [optional] aShowPicker
    *        see above
    * @return true if any transaction has been performed.
-   * 
+   *
    * Notes:
    *  - the feedURI and description fields are visible only if there is no
    *    initial feed URI (aFeedURI is null).
@@ -790,14 +832,49 @@ var PlacesUtils = {
                                                     aShowPicker) {
     var info = {
       action: "add",
-      type: "livemark",
-      hiddenRows: []
+      type: "livemark"
     };
 
-    if (aFeedURI) {
+    if (aFeedURI)
       info.feedURI = aFeedURI;
-      info.hiddenRows = ["description"];
+    if (aSiteURI)
+      info.siteURI = aSiteURI;
+
+    // allow default empty title
+    if (typeof(aTitle) == "string")
+      info.title = aTitle;
+
+    if (aDescription)
+      info.description = aDescription;
+
+    if (aDefaultInsertionPoint) {
+      info.defaultInsertionPoint = aDefaultInsertionPoint;
+      if (!aShowPicker)
+        info.hiddenRows = ["folder picker"];
     }
+    return this._showBookmarkDialog(info);
+  },
+
+  /**
+   * @see showAddLivemarkUI
+   * This opens the dialog with only the name and folder pickers visible by
+   * default.
+   *
+   * You can still pass in the various paramaters as the default properties
+   * for the new live-bookmark.
+   */
+  showMinimalAddLivemarkUI:
+  function PU_showMinimalAddLivemarkURI(aFeedURI, aSiteURI, aTitle,
+                                        aDescription, aDefaultInsertionPoint,
+                                        aShowPicker) {
+    var info = {
+      action: "add",
+      type: "livemark",
+      hiddenRows: ["feedURI", "siteURI", "description"]
+    };
+
+    if (aFeedURI)
+      info.feedURI = aFeedURI;
     if (aSiteURI)
       info.siteURI = aSiteURI;
 
@@ -813,7 +890,7 @@ var PlacesUtils = {
       if (!aShowPicker)
         info.hiddenRows.push("folder picker");
     }
-    return this._showBookmarkDialog(info);
+    return this._showBookmarkDialog(info, true);
   },
 
   /**
@@ -825,7 +902,7 @@ var PlacesUtils = {
    *                  to be bookmarked.
    * @return true if any transaction has been performed.
    */
-  showAddMultiBookmarkUI: function PU_showAddMultiBookmarkUI(aURIList) {
+  showMinimalAddMultiBookmarkUI: function PU_showAddMultiBookmarkUI(aURIList) {
     NS_ASSERT(aURIList.length,
               "showAddMultiBookmarkUI expects a list of nsIURI objects");
     var info = {
@@ -834,7 +911,7 @@ var PlacesUtils = {
       hiddenRows: ["description"],
       URIList: aURIList
     };
-    return this._showBookmarkDialog(info);
+    return this._showBookmarkDialog(info, true);
   },
 
   /**
@@ -882,7 +959,7 @@ var PlacesUtils = {
    * @param [optional] aShowPicker
    *        see above
    * @return true if any transaction has been performed.
-   */        
+   */
   showAddFolderUI:
   function PU_showAddFolderUI(aTitle, aDefaultInsertionPoint, aShowPicker) {
     var info = {
@@ -909,11 +986,18 @@ var PlacesUtils = {
    * @param aInfo
    *        Describes the item to be edited/added in the dialog.
    *        See documentation at the top of bookmarkProperties.js
+   * @param aMinimalUI
+   *        [optional] if true, the dialog is opened by its alternative
+   *        chrome: uri.
    * @return true if any transaction has been performed.
    */
-  _showBookmarkDialog: function PU__showBookmarkDialog(aInfo) {
-    window.openDialog("chrome://browser/content/places/bookmarkProperties.xul",
-                      "", "width=600,height=400,chrome,dependent,modal,resizable",
+  _showBookmarkDialog: function PU__showBookmarkDialog(aInfo, aMinimalUI) {
+    var dialogURL = aMinimalUI ?
+                    "chrome://browser/content/places/bookmarkPageDialog.xul" :
+                    "chrome://browser/content/places/bookmarkProperties.xul";
+
+    window.openDialog(dialogURL, "",
+                      "width=600,height=400,chrome,dependent,modal,resizable",
                       aInfo);
     return ("performed" in aInfo && aInfo.performed);
   },
@@ -943,7 +1027,7 @@ var PlacesUtils = {
    * @param aURINode
    *        a URI node
    * @return true if it's safe to open the node in the browser, false otherwise.
-   * 
+   *
    */
   checkURLSecurity: function PU_checkURLSecurity(aURINode) {
     if (!this.nodeIsBookmark(aURINode)) {
@@ -1054,17 +1138,17 @@ var PlacesUtils = {
   },
 
   /**
-   * Get the description associated with a document, as specified in a <META> 
+   * Get the description associated with a document, as specified in a <META>
    * element.
    * @param   doc
    *          A DOM Document to get a description for
-   * @returns A description string if a META element was discovered with a 
+   * @returns A description string if a META element was discovered with a
    *          "description" or "httpequiv" attribute, empty string otherwise.
    */
   getDescriptionFromDocument: function PU_getDescriptionFromDocument(doc) {
     var metaElements = doc.getElementsByTagName("META");
     for (var i = 0; i < metaElements.length; ++i) {
-      if (metaElements[i].localName.toLowerCase() == "description" || 
+      if (metaElements[i].localName.toLowerCase() == "description" ||
           metaElements[i].httpEquiv.toLowerCase() == "description") {
         return metaElements[i].content;
       }
