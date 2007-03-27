@@ -29,8 +29,8 @@ sub Execute {
       cmd => './build-seamonkey.pl',
       cmdArgs => ['--once', '--mozconfig', 'mozconfig', '--depend', 
                   '--config-cvsup-dir', 
-                  catfile($buildDir, 'tinderbox-configs')],
-      dir => $buildDir,
+                  catfile($l10n_buildDir, 'tinderbox-configs')],
+      dir => $l10n_buildDir,
       logFile => $buildLog,
       timeout => 36000
     );
