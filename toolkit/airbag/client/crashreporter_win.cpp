@@ -45,27 +45,34 @@
 #include <shellapi.h>
 #include "resource.h"
 #include "client/windows/sender/crash_report_sender.h"
+#include <fstream>
 
 #define CRASH_REPORTER_KEY L"Software\\Mozilla\\Crash Reporter"
 #define CRASH_REPORTER_VALUE L"Enabled"
 
 #define WM_UPLOADCOMPLETE WM_APP
 
+using std::string;
 using std::wstring;
 using std::map;
+using std::ifstream;
 
 bool ReadConfig();
-BOOL CALLBACK EnableDialogProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam);
-BOOL CALLBACK SendDialogProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK EnableDialogProc(HWND hwndDlg, UINT message, WPARAM wParam,
+                               LPARAM lParam);
+BOOL CALLBACK SendDialogProc(HWND hwndDlg, UINT message, WPARAM wParam,
+                             LPARAM lParam);
 HANDLE CreateSendThread(HWND hDlg, LPCTSTR dumpFile);
 bool CheckCrashReporterEnabled(bool* enabled);
 void SetCrashReporterEnabled(bool enabled);
-bool SendCrashReport(HINSTANCE hInstance, LPCTSTR dumpFile);
+bool SendCrashReport(wstring dumpFile,
+                     const map<wstring,wstring> *query_parameters);
 DWORD WINAPI SendThreadProc(LPVOID param);
 
 typedef struct {
   HWND hDlg;
-  LPCTSTR dumpFile;
+  wstring dumpFile;
+  const map<wstring,wstring> *query_parameters;
 } SENDTHREADDATA;
 
 TCHAR sendURL[2048] = L"\0";
@@ -98,6 +105,8 @@ LPCTSTR stringNames[] = {
 };
 
 LPTSTR strings[NUM_STRINGS];
+
+const wchar_t* kExtraDataExtension = L".extra";
 
 void DoInitCommonControls()
 {
@@ -141,52 +150,6 @@ bool ReadConfig()
     }
   }
   return false;
-}
-
-int WINAPI WinMain(HINSTANCE hInstance,
-    HINSTANCE hPrevInstance,
-    LPSTR lpCmdLine,
-    int nCmdShow)
-
-{
-	bool enabled;
-  LPTSTR* argv = NULL;
-  int argc = 0;
-
-	DoInitCommonControls();
-  if (!ReadConfig()) {
-    MessageBox(NULL, L"Missing crashreporter.ini file", L"Crash Reporter Error", MB_OK | MB_ICONSTOP);
-    return 0;
-  }
-
-  argv = CommandLineToArgvW(GetCommandLine(), &argc);
-
-  if (argc == 1) {
-    // nothing specified, just ask about enabling
-    if (!CheckCrashReporterEnabled(&enabled))
-      enabled = true;
-
-    enabled = (1 == DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_ENABLEDIALOG), NULL, (DLGPROC)EnableDialogProc, (LPARAM)enabled));
-    SetCrashReporterEnabled(enabled);
-  }
-  else {
-    if (!CheckCrashReporterEnabled(&enabled)) {
-      //ask user if crash reporter should be enabled
-      enabled = (1 == DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_ENABLEDIALOG), NULL, (DLGPROC)EnableDialogProc, (LPARAM)true));
-      SetCrashReporterEnabled(enabled);
-    }
-    // if enabled, send crash report
-    if (enabled) {
-      if (SendCrashReport(hInstance, argv[1]) && deleteDump)
-        DeleteFile(argv[1]);
-      //TODO: show details?
-    }
-  }
-
-  if (argv)
-    LocalFree(argv);
-	
-	return 0;
 }
 
 BOOL CALLBACK EnableDialogProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam) 
@@ -286,8 +249,9 @@ BOOL CALLBACK SendDialogProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM l
       SendDlgItemMessage(hwndDlg, IDC_PROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, 100));
       SendDlgItemMessage(hwndDlg, IDC_PROGRESS, PBM_SETPOS, 0, 0);
       // now create a thread to actually do the sending
-      LPCTSTR dumpFile = (LPCTSTR)lParam;
-      hThread = CreateSendThread(hwndDlg, dumpFile);
+      SENDTHREADDATA* td = (SENDTHREADDATA*)lParam;
+      td->hDlg = hwndDlg;
+      CreateThread(NULL, 0, SendThreadProc, td, 0, NULL);
     }
     return TRUE;
 
@@ -315,9 +279,17 @@ BOOL CALLBACK SendDialogProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM l
   } 
 }
 
-bool SendCrashReport(HINSTANCE hInstance, LPCTSTR dumpFile)
+bool SendCrashReport(wstring dumpFile,
+                     const map<wstring,wstring> *query_parameters)
 {
-  int res = (int)DialogBoxParam(hInstance, MAKEINTRESOURCE(IDD_SENDDIALOG), NULL, (DLGPROC)SendDialogProc, (LPARAM)dumpFile);
+  SENDTHREADDATA td;
+  td.hDlg = NULL;
+  td.dumpFile = dumpFile;
+  td.query_parameters = query_parameters;
+
+  int res = (int)DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_SENDDIALOG), NULL,
+                                (DLGPROC)SendDialogProc, (LPARAM)&td);
+
   return (res >= 0);
 }
 
@@ -325,8 +297,7 @@ DWORD WINAPI SendThreadProc(LPVOID param)
 {
   bool finishedOk;
   SENDTHREADDATA* td = (SENDTHREADDATA*)param;
-  //XXX: send some extra params?
-  map<wstring, wstring> params;
+
   wstring url(sendURL);
   if (url.empty()) {
     finishedOk = false;
@@ -334,18 +305,129 @@ DWORD WINAPI SendThreadProc(LPVOID param)
   else {
     finishedOk = google_airbag::CrashReportSender
       ::SendCrashReport(url,
-                        params,
-                        wstring(td->dumpFile));
+                        *(td->query_parameters),
+                        td->dumpFile);
   }
   PostMessage(td->hDlg, WM_UPLOADCOMPLETE, finishedOk ? 1 : 0, 0);
   delete td;
   return 0;
 }
 
-HANDLE CreateSendThread(HWND hDlg, LPCTSTR dumpFile)
+//XXX: change this to use Breakpad's string conversion functions
+// when we update to latest SVN
+bool ConvertString(const char* utf8_string, wstring& ucs2_string)
 {
-  SENDTHREADDATA* td = new SENDTHREADDATA;
-  td->hDlg = hDlg;
-  td->dumpFile = dumpFile;
-  return CreateThread(NULL, 0, SendThreadProc, td, 0, NULL);
+  wchar_t *buffer = NULL;
+  int buffer_size = MultiByteToWideChar(CP_ACP, 0, utf8_string,
+                                        -1, NULL, 0);
+  if(buffer_size == 0)
+    return false;
+
+  buffer = new wchar_t[buffer_size];
+  if(buffer == NULL)
+    return false;
+  
+  MultiByteToWideChar(CP_ACP, 0, utf8_string,
+                      -1, buffer, buffer_size);
+  ucs2_string = buffer;
+  delete [] buffer;
+  return true;
 }
+
+void ReadExtraData(const wstring& filename,
+                   map<wstring, wstring>& query_parameters)
+{
+#if _MSC_VER >= 1400  // MSVC 2005/8
+  ifstream file;
+  file.open(filename.c_str(), std::ios::in);
+#else  // _MSC_VER >= 1400
+  ifstream file(_wfopen(filename.c_str(), L"rb"));
+#endif  // _MSC_VER >= 1400
+  if (file.is_open()) {
+    do {
+      string in_line;
+      std::getline(file, in_line);
+      if (!in_line.empty()) {
+        int pos = in_line.find('=');
+        if (pos >= 0) {
+          wstring key, value;
+          ConvertString(in_line.substr(0, pos).c_str(), key);
+          ConvertString(in_line.substr(pos + 1,
+                                       in_line.length() - pos - 1).c_str(),
+                        value);
+          query_parameters[key] = value;
+        }
+      }
+    } while(!file.eof());
+    file.close();
+  }
+}
+
+wstring GetExtraDataFilename(const wstring& dumpfile)
+{
+  wstring filename(dumpfile);
+  int dot = filename.rfind('.');
+  if (dot < 0)
+    return L"";
+
+  filename.replace(dot, filename.length() - dot, kExtraDataExtension);
+  return filename;
+}
+
+int main(int argc, char **argv)
+{
+  map<wstring,wstring> query_parameters;
+
+	DoInitCommonControls();
+  if (!ReadConfig()) {
+    MessageBox(NULL, L"Missing crashreporter.ini file", L"Crash Reporter Error", MB_OK | MB_ICONSTOP);
+    return 0;
+  }
+
+  wstring dumpfile;
+  bool enabled = false;
+
+  if (argc > 1) {
+    if (!ConvertString(argv[1], dumpfile))
+      return 0;
+  }
+
+  if (dumpfile.empty()) {
+    // no dump file specified, just ask about enabling
+    if (!CheckCrashReporterEnabled(&enabled))
+      enabled = true;
+
+    enabled = (1 == DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_ENABLEDIALOG), NULL, (DLGPROC)EnableDialogProc, (LPARAM)enabled));
+    SetCrashReporterEnabled(enabled);
+  }
+  else {
+    wstring extrafile = GetExtraDataFilename(dumpfile);
+    if (!extrafile.empty())
+      ReadExtraData(extrafile, query_parameters);
+
+    if (!CheckCrashReporterEnabled(&enabled)) {
+      //ask user if crash reporter should be enabled
+      enabled = (1 == DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_ENABLEDIALOG), NULL, (DLGPROC)EnableDialogProc, (LPARAM)true));
+      SetCrashReporterEnabled(enabled);
+    }
+    // if enabled, send crash report
+    if (enabled) {
+      if (SendCrashReport(dumpfile, &query_parameters) && deleteDump) {
+        DeleteFile(dumpfile.c_str());
+        if (!extrafile.empty())
+          DeleteFile(extrafile.c_str());
+      }
+      //TODO: show details?
+    }
+  }
+}
+
+#if defined(XP_WIN) && !defined(DEBUG) && !defined(__GNUC__)
+// We need WinMain in order to not be a console app.  This function is unused
+// if we are a console application.
+int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int )
+{
+  // Do the real work.
+  return main(__argc, __argv);
+}
+#endif
