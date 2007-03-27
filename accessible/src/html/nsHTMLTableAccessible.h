@@ -76,12 +76,14 @@ public:
 #endif
 
 protected:
+  virtual void CacheChildren();
   nsresult GetTableNode(nsIDOMNode **_retval);
   nsresult GetTableLayout(nsITableLayout **aLayoutObject);
   nsresult GetCellAt(PRInt32        aRowIndex,
                      PRInt32        aColIndex,
                      nsIDOMElement* &aCell);
   PRBool HasDescendant(char *aTagName);
+  PRBool mHasCaption;
 #ifdef SHOW_LAYOUT_HEURISTIC
   nsAutoString mLayoutHeuristic;
 #endif
