@@ -72,7 +72,7 @@ typedef enum REOp {
 
 #define REOP_IS_SIMPLE(op)  ((op) <= (unsigned)REOP_NCLASS)
 
-#ifdef DEBUG
+#ifdef REGEXP_DEBUG 
 const char *reop_names[] = {
 #define REOP_DEF(opcode, name) name,
 #include "jsreops.tbl"
@@ -2072,7 +2072,7 @@ PushBackTrackState(REGlobalData *gData, REOp op,
     ptrdiff_t btincr = ((char *)result + sz) -
                        ((char *)gData->backTrackStack + btsize);
 
-    re_debug("\tBT_Push[%d]: %d,%d",
+    re_debug("\tBT_Push[%ld]: %ld,%ld",
              ((char *)result - (char *)gData->backTrackStack) /
               sizeof(REBackTrackData),
              parenIndex, parenCount);
@@ -2857,7 +2857,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
 
               case REOP_LPAREN:
                 pc = ReadCompactIndex(pc, &parenIndex);
-                re_debug("[ %d ]", parenIndex);
+                re_debug("[ %ld ]", parenIndex);
                 JS_ASSERT(parenIndex < gData->regexp->parenCount);
                 if (parenIndex + 1 > parenSoFar)
                     parenSoFar = parenIndex + 1;
@@ -3219,7 +3219,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 parenSoFar = curState->parenSoFar;
             }
 
-            re_debug("\tBT_Pop[%d]: %d,%d",
+            re_debug("\tBT_Pop[%ld]: %ld,%ld",
                      ((char *)backTrackData - (char *)gData->backTrackStack) /
                       sizeof(REBackTrackData),
                      backTrackData->parenIndex, backTrackData->parenCount);
