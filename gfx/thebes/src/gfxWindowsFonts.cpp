@@ -869,8 +869,6 @@ static const char *sCJKLangGroup[] = {
 
 #define STATIC_STRING_LENGTH 100
 
-#define UNICODE_ZWSP 0x200B
-
 /**
  * XXX We could use a bunch of nsAutoTArrays to avoid memory allocation
  * for non-huge strings.
@@ -1018,8 +1016,17 @@ public:
         GenerateAlternativeString();
     }
 
-    PRBool IsGlyphMissing(SCRIPT_FONTPROPERTIES *aSFP, PRUint32 aIndex) {
-        WORD glyph = mGlyphs[aIndex];
+    static PRBool IsZeroWidthUnicodeChar(PRUnichar aChar) const {
+        return aChar == 0x200b; // ZWSP
+    }
+
+    /**
+     * @param aCharIndex the index in the string of the first character
+     * for the cluster this glyph belongs to
+     */
+    PRBool IsGlyphMissing(SCRIPT_FONTPROPERTIES *aSFP, PRUint32 aGlyphIndex,
+                          PRUint32 aCharIndex) {
+        WORD glyph = mGlyphs[aGlyphIndex];
         if (glyph == aSFP->wgDefault ||
             (glyph == aSFP->wgInvalid && glyph != aSFP->wgBlank))
             return PR_TRUE;
@@ -1027,8 +1034,9 @@ public:
         // but we're seeing cases where some fonts return glyphs such as 0x03 and 0x04
         // which are zero width and non-invalidGlyph.
         // At any rate, only make this check for non-complex scripts.
-        if (mAttr[aIndex].fZeroWidth && !ScriptProperties()->fComplex) {
-            PR_LOG(gFontLog, PR_LOG_WARNING, ("crappy font? glyph %04x is zero-width"));
+        if (mAttr[aGlyphIndex].fZeroWidth && !ScriptProperties()->fComplex &&
+            !IsZeroWidthUnicodeChar(mString[aCharIndex])) {
+            PR_LOG(gFontLog, PR_LOG_WARNING, ("crappy font? glyph %04x is zero-width", glyph));
             return PR_TRUE;
         }
         return PR_FALSE;
@@ -1049,8 +1057,14 @@ public:
     PRBool IsMissingGlyphs() {
         SCRIPT_FONTPROPERTIES sfp;
         ScriptFontProperties(&sfp);
+        PRUint32 charIndex = 0;
         for (int i = 0; i < mNumGlyphs; ++i) {
-            if (IsGlyphMissing(&sfp, i))
+            // advance charIndex to the first character such that glyph i
+            // is in its cluster (i.e. mClusters[charIndex + 1] > i)
+            while (charIndex + 1 < mLength && mClusters[charIndex + 1] <= i) {
+                ++charIndex;
+            }
+            if (IsGlyphMissing(&sfp, i, charIndex))
                 return PR_TRUE;
 #ifdef DEBUG_pavlov // excess debugging code
             PR_LOG(gFontLog, PR_LOG_DEBUG, ("%04x %04x %04x", sfp.wgBlank, sfp.wgDefault, sfp.wgInvalid));
@@ -1156,7 +1170,7 @@ public:
                 PRUint32 k = mClusters[offset];
                 PRUint32 glyphCount = mNumGlyphs - k;
                 PRUint32 nextClusterOffset;
-                PRBool missing = IsGlyphMissing(&sfp, k);
+                PRBool missing = IsGlyphMissing(&sfp, k, offset);
                 for (nextClusterOffset = offset + 1; nextClusterOffset < mLength; ++nextClusterOffset) {
                     if (mClusters[nextClusterOffset] > k) {
                         glyphCount = mClusters[nextClusterOffset] - k;
@@ -1165,7 +1179,7 @@ public:
                 }
                 PRUint32 j;
                 for (j = 1; j < glyphCount; ++j) {
-                    if (IsGlyphMissing(&sfp, k + j)) {
+                    if (IsGlyphMissing(&sfp, k + j, offset)) {
                         missing = PR_TRUE;
                     }
                 }
