@@ -12,7 +12,6 @@ download_builds() {
     exit 1
   fi
 
-  cp update/partial.mar update/update.mar
   for url in "$source_url" "$target_url"
     do
     source_file=`basename "$url"`
