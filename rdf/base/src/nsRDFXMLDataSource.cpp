@@ -757,17 +757,32 @@ RDFXMLDataSourceImpl::rdfXMLFlush(nsIURI *aURI)
         nsCOMPtr<nsIFile> file;
         fileURL->GetFile(getter_AddRefs(file));
         if (file) {
-            // if file doesn't exist, create it
-            (void)file->Create(nsIFile::NORMAL_FILE_TYPE, 0666);
-
+            // get a safe output stream, so we don't clobber the datasource file unless
+            // all the writes succeeded.
             nsCOMPtr<nsIOutputStream> out;
-            rv = NS_NewLocalFileOutputStream(getter_AddRefs(out), file);
+            rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(out),
+                                                 file,
+                                                 PR_WRONLY | PR_CREATE_FILE,
+                                                 /*octal*/ 0600,
+                                                 0);
+            if (NS_FAILED(rv)) return rv;
+
             nsCOMPtr<nsIOutputStream> bufferedOut;
-            if (out)
-                NS_NewBufferedOutputStream(getter_AddRefs(bufferedOut), out, 4096);
-            if (bufferedOut) {
-                rv = Serialize(bufferedOut);
-                if (NS_FAILED(rv)) return rv;
+            rv = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOut), out, 4096);
+            if (NS_FAILED(rv)) return rv;
+
+            rv = Serialize(bufferedOut);
+            if (NS_FAILED(rv)) return rv;
+            
+            // All went ok. Maybe except for problems in Write(), but the stream detects
+            // that for us
+            nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(bufferedOut, &rv);
+            if (NS_FAILED(rv)) return rv;
+
+            rv = safeStream->Finish();
+            if (NS_FAILED(rv)) {
+                NS_WARNING("failed to save datasource file! possible dataloss");
+                return rv;
             }
         }
     }
