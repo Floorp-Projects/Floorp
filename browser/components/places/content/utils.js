@@ -698,7 +698,7 @@ var PlacesUtils = {
   /**
    * Methods to show the bookmarkProperties dialog in its various modes.
    *
-   * The showMinimialAdd* methods open the dialog by its alternative URI. Thus
+   * The showMinimalAdd* methods open the dialog by its alternative URI. Thus
    * they persist the dialog dimensions separately from the showAdd* methods.
    */
 
@@ -722,10 +722,13 @@ var PlacesUtils = {
    * @param [optional] aLoadInSidebar
    *        If true, the dialog will default to load the new item in the
    *        sidebar (as a web panel).
+   * @param [optional] aKeyword
+   *        The default keyword for the new bookmark. The keyword field
+   *        will be shown in the dialog if this is used.
    * @return true if any transaction has been performed.
    *
    * Notes:
-   *  - the location, description, keyword and "load in sidebar" fields are
+   *  - the location, description and "load in sidebar" fields are
    *    visible only if there is no initial URI (aURI is null).
    *  - When aDefaultInsertionPoint is not set, the dialog defaults to the
    *    bookmarks root folder.
@@ -735,7 +738,8 @@ var PlacesUtils = {
                                                    aDescription,
                                                    aDefaultInsertionPoint,
                                                    aShowPicker,
-                                                   aLoadInSidebar) {
+                                                   aLoadInSidebar,
+                                                   aKeyword) {
     var info = {
       action: "add",
       type: "bookmark"
@@ -760,6 +764,9 @@ var PlacesUtils = {
     if (aLoadInSidebar)
       info.loadBookmarkInSidebar = true;
 
+    if (typeof(aKeyword) == "string")
+      info.keyword = aKeyword;
+
     return this._showBookmarkDialog(info);
   },
 
@@ -770,11 +777,14 @@ var PlacesUtils = {
    *
    * You can still pass in the various paramaters as the default properties
    * for the new bookmark.
+   *
+   * The keyword field will be visible only if the aKeyword parameter
+   * was used.
    */
   showMinimalAddBookmarkUI:
   function PU_showMinimalAddBookmarkUI(aURI, aTitle, aDescription,
                                        aDefaultInsertionPoint, aShowPicker,
-                                       aLoadInSidebar) {
+                                       aLoadInSidebar, aKeyword) {
     var info = {
       action: "add",
       type: "bookmark",
@@ -798,6 +808,11 @@ var PlacesUtils = {
 
     if (aLoadInSidebar)
       info.loadBookmarkInSidebar = true;
+
+    if (typeof(aKeyword) == "string")
+      info.keyword = aKeyword;
+    else
+      info.hiddenRows.push("keyword");
 
     return this._showBookmarkDialog(info, true);
   },
