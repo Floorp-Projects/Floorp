@@ -17,4 +17,6 @@
 <template id="bookmarks-template"/>
 #endif
 
+#ifndef MOZ_PLACES
 <tree id="hiddenHistoryTree"/>
+#endif
