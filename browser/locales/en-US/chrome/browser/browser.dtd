@@ -8,10 +8,6 @@
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
 <!ENTITY mainWindow.titlemodifiermenuseparator " - ">
 
-<!ENTITY viewsourcetitle.preface "Source for: ">
-
-<!ENTITY nothingAvailable.label "(Nothing Available)">
-
 <!ENTITY tabCmd.label "New Tab">
 <!ENTITY tabCmd.accesskey "T">
 <!ENTITY tabCmd.commandkey "t">
@@ -90,7 +86,6 @@
 <!ENTITY searchItem.title             "Search">
 <!ENTITY throbberItem.title           "Activity Indicator">
 <!ENTITY bookmarksItem.title          "Bookmarks">
-<!ENTITY updatesItem.title            "Updates">
 
 <!ENTITY proxyIcon.tooltip            "Drag and drop this icon to create a link to this page">
 
@@ -124,15 +119,11 @@
 <!ENTITY addons.tooltip               "Show and Manage installed Add-ons">
 <!ENTITY addons.accesskey             "A">
 
-<!ENTITY javaConsoleCmd.label         "Java Console">
-<!ENTITY javaConsoleCmd.accesskey     "J">
 <!ENTITY errorConsoleCmd.label        "Error Console">
 <!ENTITY errorConsoleCmd.accesskey    "C">
 
 <!ENTITY fileMenu.label         "File"> 
 <!ENTITY fileMenu.accesskey       "F">
-<!ENTITY newMenu.label            "New">
-<!ENTITY newMenu.accesskey          "N">
 <!ENTITY newNavigatorCmd.label        "New Window">
 <!ENTITY newNavigatorCmd.key        "N">
 <!ENTITY newNavigatorCmd.accesskey      "N">
@@ -181,27 +172,13 @@
 <!ENTITY historyMenu.label "History">
 <!ENTITY historyMenu.accesskey "s">
 <!ENTITY historyUndoMenu.label "Recently Closed Tabs">
-<!ENTITY historyUndoMenu.accesskey "R">
 
 <!-- XXX places only -->
 <!ENTITY historyHomeCmd.label "Home">
-<!ENTITY historyHomeCmd.accesskey "h">
-<!ENTITY historySearchCmd.label "Search in History...">
-<!ENTITY historySearchCmd.accesskey "s">
-<!ENTITY historyShowCmd.label "View All History...">
-<!ENTITY historyShowCmd.accesskey "v">
-<!ENTITY placesToolbarButton.label "Show Bookmarks &amp; History">
-<!ENTITY placesToolbarButton.tooltip "Show Bookmarks &amp; History">
 <!-- XXX remove below if places sticks -->
-<!ENTITY goMenu.label "Go">
-<!ENTITY goMenu.accesskey "g">
 <!ENTITY goHomeCmd.label "Home">
-<!ENTITY earlierHistory.label "Earlier History">
-<!ENTITY historyShowSidebarCmd.label "Show in Sidebar">
 <!-- XXX remove above if places sticks --> 
-
-<!ENTITY releaseCmd.accesskey "R">
-<!ENTITY releaseCmd.label     "Release Notes">
+<!ENTITY historyShowSidebarCmd.label "Show in Sidebar">
 
 <!ENTITY openCmd.commandkey           "l">
 <!ENTITY urlbar.accesskey             "d">
@@ -235,8 +212,6 @@
 <!ENTITY openLinkCmd.accesskey        "W">
 <!ENTITY openLinkCmdInTab.label       "Open Link in New Tab">
 <!ENTITY openLinkCmdInTab.accesskey   "T">
-<!ENTITY openLinkInWindowCmd.label    "Open">
-<!ENTITY openLinkInWindowCmd.accesskey "p">
 <!ENTITY openFrameCmd.label           "Open Frame in New Window">
 <!ENTITY openFrameCmd.accesskey       "W">
 <!ENTITY openFrameCmdInTab.label      "Open Frame in New Tab">
@@ -339,13 +314,11 @@
 
 <!ENTITY pageStyleMenu.label "Page Style">
 <!ENTITY pageStyleMenu.accesskey "y">
-<!ENTITY pageStyleButton.label "Page Styles">
 <!ENTITY pageStyleNoStyle.label "No Style">
 <!ENTITY pageStyleNoStyle.accesskey "n">
 <!ENTITY pageStylePersistentOnly.label "Basic Page Style">
 <!ENTITY pageStylePersistentOnly.accesskey "b">
 
-<!ENTITY pageStyleIcon.tooltip             "Switch to an alternate page style">
 <!ENTITY pageReportIcon.tooltip            "Change popup blocking settings for this web site">
 
 <!ENTITY allowPopups.accesskey "p">
