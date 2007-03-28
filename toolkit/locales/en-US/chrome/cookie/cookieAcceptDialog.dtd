@@ -1,4 +1,3 @@
-<!ENTITY     props.box.label                "About this cookie">
 <!ENTITY     props.name.label               "Name:">
 <!ENTITY     props.value.label              "Content:">
 <!ENTITY     props.domain.label             "Host:">

@@ -44,7 +44,6 @@
 <!ENTITY of.label             "of">
 <!ENTITY scale.label          "Scale:">
 <!ENTITY scale.accesskey      "S">
-<!ENTITY percent.label        "&#037;">
 <!ENTITY portrait.label       "Portrait">
 <!ENTITY portrait.accesskey   "o">
 <!ENTITY landscape.label      "Landscape">

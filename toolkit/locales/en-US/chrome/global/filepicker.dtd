@@ -7,7 +7,6 @@
 <!ENTITY name.label             "Name">
 <!ENTITY size.label             "Size">
 <!ENTITY lastModified.label     "Last Modified">
-<!ENTITY permissions.label      "Permissions">
 <!ENTITY showHiddenFiles.label  "Show hidden files and directories">
 <!ENTITY showHiddenFiles.accesskey  "S">
 
