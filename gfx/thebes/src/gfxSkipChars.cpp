@@ -186,10 +186,14 @@ gfxSkipCharsIterator::IsOriginalCharSkipped(PRInt32* aRunLength) const
   
     // figure out which segment we're in
     PRUint32 currentRunLength = mSkipChars->mList[mListPrefixLength];
+    NS_ASSERTION(PRUint32(mOriginalStringOffset) >= mListPrefixCharCount,
+                 "Invariant violation");
+    PRUint32 offsetIntoCurrentRun =
+      PRUint32(mOriginalStringOffset) - mListPrefixCharCount;
     if (mListPrefixLength >= mSkipChars->mListLength - 1 &&
-        PRUint32(mOriginalStringOffset) >= mListPrefixCharCount + currentRunLength) {
+        offsetIntoCurrentRun >= currentRunLength) {
         NS_ASSERTION(mListPrefixLength == mSkipChars->mListLength - 1 &&
-                     PRUint32(mOriginalStringOffset) == mListPrefixCharCount + currentRunLength,
+                     offsetIntoCurrentRun == currentRunLength,
                      "Overran end of string");
         // We're at the end of the string
         if (aRunLength) {
@@ -203,12 +207,13 @@ gfxSkipCharsIterator::IsOriginalCharSkipped(PRInt32* aRunLength) const
         // Long runs of all-skipped or all-kept characters will be encoded as
         // sequences of 255, 0, 255, 0 etc. Compute the maximum run length by skipping
         // over zero entries.
-        for (PRUint32 i = mListPrefixLength + 2; i < mSkipChars->mListLength; ++i) {
-            if (isSkipped == !IsKeepEntry(i) && mSkipChars->mList[i - 1] == 0) {
-                currentRunLength += mSkipChars->mList[i];
-            }
+        PRUint32 runLength = currentRunLength - offsetIntoCurrentRun;
+        for (PRUint32 i = mListPrefixLength + 2; i < mSkipChars->mListLength; i += 2) {
+            if (mSkipChars->mList[i - 1] != 0)
+                break;
+            runLength += mSkipChars->mList[i];
         }
-        *aRunLength = currentRunLength;
+        *aRunLength = runLength;
     }
     return isSkipped;
 }
