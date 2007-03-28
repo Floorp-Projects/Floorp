@@ -2559,6 +2559,9 @@ nsSVGFEOffsetElement::Filter(nsSVGFilterInstance *instance)
   val.Init(nsSVGUtils::Y, 0xff, fltY, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
   offsetY = (PRInt32) instance->GetPrimitiveLength(&val);
 
+  if (abs(offsetX) >= rect.width || abs(offsetY) >= rect.height)
+    return NS_OK;
+
   PRInt32 stride = fr.GetDataStride();
   PRInt32 targetColumn = rect.x + offsetX;
   for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
