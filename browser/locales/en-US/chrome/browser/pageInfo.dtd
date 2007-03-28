@@ -48,14 +48,12 @@
 
 <!ENTITY  generalTab            "General">
 <!ENTITY  generalTab.accesskey  "G">
-<!ENTITY  generalTitle          "Title:">
 <!ENTITY  generalURL            "Address:">
 <!ENTITY  generalMode           "Render Mode:">
 <!ENTITY  generalType           "Type:">
 <!ENTITY  generalSize           "Size:">
 <!ENTITY  generalReferrer       "Referring URL:">
 <!ENTITY  generalSource         "Cache Source:">
-<!ENTITY  generalSent           "Sent:">
 <!ENTITY  generalModified       "Modified:">
 <!ENTITY  generalExpires        "Expires:">
 <!ENTITY  generalEncoding       "Encoding:">
@@ -68,7 +66,6 @@
 <!ENTITY  formAction            "Form Action">
 <!ENTITY  formMethod            "Method">
 <!ENTITY  formName              "Name">
-<!ENTITY  formNo                "No.">
 <!ENTITY  formEncoding          "Encoding:">
 <!ENTITY  formTarget            "Target:">
 <!ENTITY  formFields            "Fields:">
@@ -79,7 +76,6 @@
 
 <!ENTITY  linksTab              "Links">
 <!ENTITY  linksTab.accesskey    "L">
-<!ENTITY  linkNo                "No.">
 <!ENTITY  linkName              "Name">
 <!ENTITY  linkAddress           "Address">
 <!ENTITY  linkType              "Type">
@@ -88,29 +84,16 @@
 
 <!ENTITY  mediaTab              "Media">
 <!ENTITY  mediaTab.accesskey    "M">
-<!ENTITY  mediaHeader           "Images on this page">
 <!ENTITY  mediaURL              "Address:">
-<!ENTITY  mediaBase             "Base Address:">
 <!ENTITY  mediaAlt              "Alternate Text:">
 <!ENTITY  mediaAltHeader        "Alternate Text">
-<!ENTITY  mediaNo               "No.">
-<!ENTITY  mediaName             "Name">
 <!ENTITY  mediaAddress          "Address">
 <!ENTITY  mediaType             "Type">
 <!ENTITY  mediaCount            "Count">
-<!ENTITY  mediaPlugin           "Plugin:">
-<!ENTITY  mediaCharset          "Encoding:">
 <!ENTITY  mediaDimensions       "Specified Dimensions:">
 <!ENTITY  mediaPhysDimensions   "Actual Dimensions:">
-<!ENTITY  mediaEncryption       "Encryption:">
 <!ENTITY  mediaTitle            "Title:">
 <!ENTITY  mediaLongdesc         "Long Description:">
 <!ENTITY  mediaSaveAs           "Save As...">
 <!ENTITY  mediaSaveAs.accesskey "A">
 <!ENTITY  mediaPreview          "Media Preview:">
-
-<!ENTITY  framesTab             "Frames">
-<!ENTITY  framesTab.accesskey   "r">
-<!ENTITY  frameName             "Name">
-<!ENTITY  frameAddress          "Address">
-<!ENTITY  frameType             "Type">
