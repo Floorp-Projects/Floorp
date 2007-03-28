@@ -515,6 +515,8 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     nsCOMPtr<nsIDocument> document;
     nsCOMPtr<nsINode> node(do_QueryInterface(mTarget));
     if (node) {
+      // XXX sXBL/XBL2 issue -- do we really want the owner here?  What
+      // if that's the XBL document?
       document = node->GetOwnerDoc();
       if (document) {
         window = document->GetInnerWindow();
@@ -838,20 +840,11 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
 
   if (node) {
     // Try to get context from doc
+    // XXX sXBL/XBL2 issue -- do we really want the owner here?  What
+    // if that's the XBL document?
     doc = node->GetOwnerDoc();
     if (doc)
       global = doc->GetScriptGlobalObject();
-    if (global) {
-      // This might be the first reference to this language in the global
-      // We must init the language before we attempt to fetch its context.
-      if (NS_FAILED(global->EnsureScriptEnvironment(aLanguage))) {
-        NS_WARNING("Failed to setup script environment for this language");
-        // but fall through and let the inevitable failure below handle it.
-      }
-
-      context = global->GetScriptContext(aLanguage);
-      NS_ASSERTION(context, "Failed to get language context from global");
-    }
   } else {
     nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aObject));
     if (win) {
@@ -865,52 +858,22 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
     } else {
       global = do_QueryInterface(aObject);
     }
-    if (global) {
-      // As above - ensure the global is setup for the language.
-      if (NS_FAILED(global->EnsureScriptEnvironment(aLanguage))) {
-        NS_WARNING("Failed to setup script environment for this language");
-        // but fall through and let the inevitable failure below handle it.
-      }
-      context = global->GetScriptContext(aLanguage);
-    }
   }
 
-  if (!context) {
-    NS_ASSERTION(aLanguage == nsIProgrammingLanguage::JAVASCRIPT,
-                 "Need a multi-language stack?!?!?");
-    // I've only ever seen the above fire when something else has gone wrong -
-    // in normal processing, languages other than JS should not be able to get
-    // here, as these languages are only called via nsIScriptContext
-
-    // OTOH, maybe using JS will do here - all we need is the global - try and
-    // keep going...
-    JSContext* cx = nsnull;
-    // Get JSContext from stack, or use the safe context (and hidden
-    // window global) if no JS is running.
-    nsCOMPtr<nsIThreadJSContextStack> stack =
-      do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-    NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(stack->Peek(&cx), NS_ERROR_FAILURE);
-
-    if (!cx) {
-      stack->GetSafeJSContext(&cx);
-      NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+  if (global) {
+    // This might be the first reference to this language in the global
+    // We must init the language before we attempt to fetch its context.
+    if (NS_FAILED(global->EnsureScriptEnvironment(aLanguage))) {
+      NS_WARNING("Failed to setup script environment for this language");
+      // but fall through and let the inevitable failure below handle it.
     }
 
-    context = nsJSUtils::GetDynamicScriptContext(cx);
-    NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
-
-    global = context->GetGlobalObject();
-    // but if the language is *not* js , we now have the wrong context.
     context = global->GetScriptContext(aLanguage);
-    NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
   }
-  if (!global) {
-    NS_ERROR("Context reachable, but no scope reachable in "
-             "AddScriptEventListener()!");
+  NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
-    return NS_ERROR_NOT_AVAILABLE;
-  }
+  NS_ASSERTION(global, "How could we possibly have a context without an "
+               "nsIScriptGlobalObject?");
 
   void *scope = global->GetScriptGlobal(aLanguage);
   nsresult rv;
@@ -1453,6 +1416,8 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
     return NS_ERROR_FAILURE;
   }
   
+  // XXX sXBL/XBL2 issue -- do we really want the owner here?  What
+  // if that's the XBL document?  Would we want its presshell?  Or what?
   nsCOMPtr<nsIDocument> document = targetContent->GetOwnerDoc();
 
   // Do nothing if the element does not belong to a document
