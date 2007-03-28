@@ -1155,7 +1155,7 @@ GetFontGroupForFrame(nsIFrame* aFrame)
   nsCOMPtr<nsIFontMetrics> metrics;
   devContext->GetMetricsFor(fontStyle->mFont, visibilityStyle->mLangGroup,
                             *getter_AddRefs(metrics));
-  if (!metrics) 
+  if (!metrics)
     return nsnull;
 
   nsIFontMetrics* metricsRaw = metrics;
@@ -1679,7 +1679,9 @@ static PRBool IsJustifiableCharacter(const nsTextFragment* aFrag, PRInt32 aPos,
                                      PRBool aLangIsCJ)
 {
   PRUnichar ch = aFrag->CharAt(aPos);
-  if (0x20u == ch || 0xa0u == ch) {
+  if (ch == '\n' || ch == '\t')
+    return PR_TRUE;
+  if (ch == ' ') {
     // Don't justify spaces that are combined with diacriticals
     if (!aFrag->Is2b())
       return PR_TRUE;
@@ -2085,7 +2087,7 @@ PropertyProvider::GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
 
   // Iterate through the original-string character runs
   nsSkipCharsRunIterator
-    run(mStart, nsSkipCharsRunIterator::LENGTH_INCLUDES_SKIPPED, aLength);
+    run(mStart, nsSkipCharsRunIterator::LENGTH_UNSKIPPED_ONLY, aLength);
   run.SetSkippedOffset(aStart);
   // We need to visit skipped characters so that we can detect SHY
   run.SetVisitSkipped();
@@ -2167,6 +2169,14 @@ PropertyProvider::SetupJustificationSpacing()
   gfxFloat naturalWidth =
     mTextRun->GetAdvanceWidth(mStart.GetSkippedOffset(),
                               GetSkippedDistance(mStart, realEnd), this);
+  if (mFrame->GetStateBits() & TEXT_HYPHEN_BREAK) {
+    gfxTextRun* specialTextRun =
+      GetSpecialString(GetFontGroup(), gfxFontGroup::STRING_HYPHEN, mTextRun);
+    if (specialTextRun) {
+      naturalWidth +=
+        specialTextRun->GetAdvanceWidth(0, specialTextRun->GetLength(), nsnull);
+    }
+  }
   gfxFloat totalJustificationSpace = mFrame->GetSize().width - naturalWidth;
   if (totalJustificationSpace <= 0) {
     // No space available
@@ -3481,43 +3491,39 @@ SelectionIterator::SelectionIterator(SelectionType* aSelectionBuffer,
 PRBool SelectionIterator::GetNextSegment(gfxFloat* aXOffset,
     PRUint32* aOffset, PRUint32* aLength, gfxFloat* aHyphenWidth, SelectionType* aType)
 {
-  for (;;) {
-    if (mIterator.GetOriginalOffset() >= mOriginalEnd)
-      return PR_FALSE;
+  if (mIterator.GetOriginalOffset() >= mOriginalEnd)
+    return PR_FALSE;
   
-    // save offset into transformed string now
-    PRUint32 runOffset = mIterator.GetSkippedOffset();
+  // save offset into transformed string now
+  PRUint32 runOffset = mIterator.GetSkippedOffset();
   
-    PRInt32 index = mIterator.GetOriginalOffset() - mOriginalStart;
-    SelectionType type = mSelectionBuffer[index];
-    do {
-      ++index;
-      if (mSelectionBuffer[index] != type)
-        break;
-    } while (mOriginalStart + index < mOriginalEnd);
-    mIterator.SetOriginalOffset(index + mOriginalStart);
+  PRInt32 index = mIterator.GetOriginalOffset() - mOriginalStart;
+  SelectionType type = mSelectionBuffer[index];
+  do {
+    ++index;
+    if (mSelectionBuffer[index] != type)
+      break;
+  } while (mOriginalStart + index < mOriginalEnd);
+  mIterator.SetOriginalOffset(index + mOriginalStart);
   
-    // Advance to the next cluster boundary
-    while (mIterator.GetOriginalOffset() < mOriginalEnd &&
-           !mIterator.IsOriginalCharSkipped() &&
-           !mTextRun->IsClusterStart(mIterator.GetSkippedOffset())) {
-      mIterator.AdvanceOriginal(1);
-    }
-  
-    // Check whether we actually got some non-skipped text in this segment
-    if (runOffset < mIterator.GetSkippedOffset()) {    
-      *aOffset = runOffset;
-      *aLength = mIterator.GetSkippedOffset() - runOffset;
-      *aXOffset = mXOffset;
-      *aHyphenWidth = 0;
-      if (mIterator.GetOriginalOffset() == mOriginalEnd &&
-          (mProvider.GetFrame()->GetStateBits() & TEXT_HYPHEN_BREAK)) {
-        *aHyphenWidth = mProvider.GetHyphenWidth();
-      }
-      *aType = type;
-      return PR_TRUE;
-    }
+  // Advance to the next cluster boundary
+  while (mIterator.GetOriginalOffset() < mOriginalEnd &&
+         !mIterator.IsOriginalCharSkipped() &&
+         !mTextRun->IsClusterStart(mIterator.GetSkippedOffset())) {
+    mIterator.AdvanceOriginal(1);
   }
+
+  PRBool haveHyphenBreak =
+    (mProvider.GetFrame()->GetStateBits() & TEXT_HYPHEN_BREAK) != 0;
+  *aOffset = runOffset;
+  *aLength = mIterator.GetSkippedOffset() - runOffset;
+  *aXOffset = mXOffset;
+  *aHyphenWidth = 0;
+  if (mIterator.GetOriginalOffset() == mOriginalEnd && haveHyphenBreak) {
+    *aHyphenWidth = mProvider.GetHyphenWidth();
+  }
+  *aType = type;
+  return PR_TRUE;
 }
 
 // Paints selection backgrounds and text in the correct colors. Also computes
@@ -4140,7 +4146,6 @@ nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
   PRInt32 startOffset = mContentOffset + (*aOffset < 0 ? mContentLength : *aOffset);
 
   if (!aForward) {
-    *aOffset = 0;
     PRInt32 i;
     for (i = PR_MIN(trimmed.mStart + trimmed.mLength, startOffset) - 1;
          i >= trimmed.mStart; --i) {
@@ -4151,20 +4156,22 @@ nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
         return PR_TRUE;
       }
     }
+    *aOffset = 0;
   } else {
-    *aOffset = mContentLength;
     PRInt32 i;
-    // XXX there's something weird here about end-of-line. Need to test
-    // caret movement through line endings. The old code could return mContentLength,
-    // but we can't anymore...
-    for (i = startOffset; i < trimmed.mStart + trimmed.mLength; ++i) {
+    for (i = startOffset + 1; i <= trimmed.mStart + trimmed.mLength; ++i) {
       iter.SetOriginalOffset(i);
-      if (!iter.IsOriginalCharSkipped() &&
-          mTextRun->IsClusterStart(iter.GetSkippedOffset())) {
+      // XXX we can't necessarily stop at the end of this frame,
+      // but we really have no choice right now. We need to do a deeper
+      // fix/restructuring of PeekOffsetCharacter
+      if (i == trimmed.mStart + trimmed.mLength ||
+          (!iter.IsOriginalCharSkipped() &&
+           mTextRun->IsClusterStart(iter.GetSkippedOffset()))) {
         *aOffset = i - mContentOffset;
         return PR_TRUE;
       }
     }
+    *aOffset = mContentLength;
   }
   
   return PR_FALSE;
@@ -4207,19 +4214,20 @@ nsTextFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool 
   PRBool stopAfterPunctuation = nsTextTransformer::GetWordSelectStopAtPunctuation();
   PRBool stopBeforePunctuation = stopAfterPunctuation && aIsKeyboardSelect;
   PRInt32 direction = aForward ? 1 : -1;
+  PRInt32 dirAdjust = aForward ? 0 : -1;
   *aOffset = aForward ? mContentLength : 0;
   if (startOffset + direction < offset ||
       startOffset + direction >= offset + length)
     return PR_FALSE;
 
   PRInt32 wordLen = nsTextFrameUtils::FindWordBoundary(frag,
-      mTextRun, &iter, offset, length, startOffset + direction,
+      mTextRun, &iter, offset, length, startOffset + dirAdjust,
       direction, stopBeforePunctuation, stopAfterPunctuation, &isWhitespace);
   if (wordLen < 0)
     return PR_FALSE;
 
   if (aWordSelectEatSpace == isWhitespace || !*aSawBeforeType) {
-    PRInt32 nextWordFirstChar = startOffset + direction*wordLen;
+    PRInt32 nextWordFirstChar = startOffset + dirAdjust + direction*wordLen;
     *aOffset = (aForward ? nextWordFirstChar : nextWordFirstChar + 1) - mContentOffset;
     if (aWordSelectEatSpace == isWhitespace) {
       *aSawBeforeType = PR_TRUE;
@@ -4230,7 +4238,7 @@ nsTextFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool 
         return PR_FALSE;
       wordLen = nsTextFrameUtils::FindWordBoundary(frag,
         mTextRun, &iter, offset, length, nextWordFirstChar,
-        direction, stopBeforePunctuation, stopAfterPunctuation, &isWhitespace);
+        direction, stopBeforePunctuation, stopAfterPunctuation, &isWhitespace) - 1;
       if (wordLen < 0 ||
           (aWordSelectEatSpace ? !isWhitespace : *aSawBeforeType))
         break;
@@ -4308,39 +4316,6 @@ FindFirstLetterRange(const nsTextFragment* aFrag,
   }
   *aLength = i + 1;
   return PR_TRUE;
-}
-
-static void
-AddCharToMetrics(gfxFloat aWidth, PropertyProvider* aProvider,
-                 gfxFontGroup::SpecialString aSpecial, gfxTextRun* aTextRun,
-                 gfxTextRun::Metrics* aMetrics, PRBool aTightBoundingBox)
-{
-  gfxRect charRect;
-  if (aTightBoundingBox) {
-    gfxTextRun* specialTextRun =
-      GetSpecialString(aProvider->GetFontGroup(), aSpecial, aTextRun);
-    gfxTextRun::Metrics charMetrics;
-    if (specialTextRun) {
-      charMetrics =
-        specialTextRun->MeasureText(0, specialTextRun->GetLength(), PR_TRUE, nsnull);
-    }
-    charRect = charMetrics.mBoundingBox;
-  } else {
-    // assume char does not overflow font metrics!!!
-    charRect = gfxRect(0, -aMetrics->mAscent, aWidth,
-                       aMetrics->mAscent + aMetrics->mDescent);
-  }
-  if (aTextRun->IsRightToLeft()) {
-    // Char comes before text, so the bounding box is moved to the
-    // right by aWidth
-    aMetrics->mBoundingBox.MoveBy(gfxPoint(aWidth, 0));
-  } else {
-    // char is moved to the right by mAdvanceWidth
-    charRect.MoveBy(gfxPoint(aMetrics->mAdvanceWidth, 0));
-  }
-  aMetrics->mBoundingBox = aMetrics->mBoundingBox.Union(charRect);
-
-  aMetrics->mAdvanceWidth += aWidth;
 }
 
 static nsRect ConvertGfxRectOutward(const gfxRect& aRect)
@@ -4551,6 +4526,39 @@ nsTextFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
 {
   // Inlines and text don't compute size before reflow.
   return nsSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+}
+
+static void
+AddCharToMetrics(gfxFloat aWidth, PropertyProvider* aProvider,
+                 gfxFontGroup::SpecialString aSpecial, gfxTextRun* aTextRun,
+                 gfxTextRun::Metrics* aMetrics, PRBool aTightBoundingBox)
+{
+  gfxRect charRect;
+  if (aTightBoundingBox) {
+    gfxTextRun* specialTextRun =
+      GetSpecialString(aProvider->GetFontGroup(), aSpecial, aTextRun);
+    gfxTextRun::Metrics charMetrics;
+    if (specialTextRun) {
+      charMetrics =
+        specialTextRun->MeasureText(0, specialTextRun->GetLength(), PR_TRUE, nsnull);
+    }
+    charRect = charMetrics.mBoundingBox;
+  } else {
+    // assume char does not overflow font metrics!!!
+    charRect = gfxRect(0, -aMetrics->mAscent, aWidth,
+                       aMetrics->mAscent + aMetrics->mDescent);
+  }
+  if (aTextRun->IsRightToLeft()) {
+    // Char comes before text, so the bounding box is moved to the
+    // right by aWidth
+    aMetrics->mBoundingBox.MoveBy(gfxPoint(aWidth, 0));
+  } else {
+    // char is moved to the right by mAdvanceWidth
+    charRect.MoveBy(gfxPoint(aMetrics->mAdvanceWidth, 0));
+  }
+  aMetrics->mBoundingBox = aMetrics->mBoundingBox.Union(charRect);
+
+  aMetrics->mAdvanceWidth += aWidth;
 }
 
 NS_IMETHODIMP
