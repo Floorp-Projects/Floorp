@@ -7,5 +7,4 @@
 <!ENTITY topWindow.label "Current Window">
 <!ENTITY caption.label "Open Web Location">
 <!ENTITY openWhere.label "Open in:">
-<!ENTITY example.label "Example: &vendorURL;">
 <!ENTITY openBtn.label "Open">
