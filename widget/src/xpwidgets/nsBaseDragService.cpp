@@ -351,10 +351,8 @@ nsBaseDragService::EndDragSession()
 static nsIPresShell*
 GetPresShellForContent(nsIDOMNode* aDOMNode)
 {
-  nsIContent* content;
-  CallQueryInterface(aDOMNode, &content);
-
-  nsIDocument *document = content->GetCurrentDoc();
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aDOMNode);
+  nsCOMPtr<nsIDocument> document = content->GetCurrentDoc();
   if (document) {
     document->FlushPendingNotifications(Flush_Display);
 
