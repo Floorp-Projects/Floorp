@@ -110,7 +110,7 @@ public:
 
   /* Invalidate takes a nsRect in screen pixel coordinates */
   nsresult InvalidateRect(nsRect aRect);
-  nsresult IsRedrawSuspended(PRBool* isSuspended);
+  PRBool IsRedrawSuspended();
 
   // nsISVGSVGFrame interface:
   NS_IMETHOD SuspendRedraw();
