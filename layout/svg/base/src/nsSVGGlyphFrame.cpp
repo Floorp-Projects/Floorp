@@ -1311,9 +1311,7 @@ void nsSVGGlyphFrame::UpdateGeometry(PRBool bRedraw,
     return;
   }
   
-  PRBool suspended;
-  outerSVGFrame->IsRedrawSuspended(&suspended);
-  if (suspended) {
+  if (outerSVGFrame->IsRedrawSuspended()) {
     AddStateBits(NS_STATE_SVG_DIRTY);
   } else {
     RemoveStateBits(NS_STATE_SVG_DIRTY);

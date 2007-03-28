@@ -494,9 +494,7 @@ void nsSVGForeignObjectFrame::UpdateGraphic()
     return;
   }
   
-  PRBool suspended;
-  outerSVGFrame->IsRedrawSuspended(&suspended);
-  if (suspended) {
+  if (outerSVGFrame->IsRedrawSuspended()) {
     AddStateBits(NS_STATE_SVG_DIRTY);
   } else {
     RemoveStateBits(NS_STATE_SVG_DIRTY);
@@ -593,9 +591,7 @@ nsSVGForeignObjectFrame::FlushDirtyRegion() {
     return;
   }
 
-  PRBool suspended;
-  outerSVGFrame->IsRedrawSuspended(&suspended);
-  if (suspended)
+  if (outerSVGFrame->IsRedrawSuspended())
     return;
 
   nsRect rect = nsSVGUtils::FindFilterInvalidation(this);
