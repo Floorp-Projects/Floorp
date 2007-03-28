@@ -339,9 +339,6 @@ nsThebesDeviceContext::CreateRenderingContext(nsIRenderingContext *&aContext)
     nsCOMPtr<nsIRenderingContext> pContext;
     rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
     if (NS_SUCCEEDED(rv)) {
-#ifdef XP_MACOSX
-        mDeviceContextSpec->GetSurfaceForPrinter(getter_AddRefs(mPrintingSurface));
-#endif
         if (mPrintingSurface)
             rv = pContext->Init(this, mPrintingSurface);
         else
@@ -580,10 +577,15 @@ nsThebesDeviceContext::AbortDocument(void)
 NS_IMETHODIMP
 nsThebesDeviceContext::BeginPage(void)
 {
-    mPrintingSurface->BeginPage();
-
     if (mDeviceContextSpec)
         mDeviceContextSpec->BeginPage();
+
+   /* We need to get a new surface for each page on the Mac */
+#ifdef XP_MACOSX
+    mDeviceContextSpec->GetSurfaceForPrinter(getter_AddRefs(mPrintingSurface));
+#endif
+    mPrintingSurface->BeginPage();
+
     return NS_OK;
 }
 
@@ -592,8 +594,9 @@ nsThebesDeviceContext::EndPage(void)
 {
     mPrintingSurface->EndPage();
 
-    /* uhh. yeah, don't ask.
-     * We need to release this before we call end page for mac.. */
+    /* We need to release the CGContextRef in the surface here, plus it's
+       not something you would want anyway, as these CGContextRefs are only good
+       for one page. */
 #ifdef XP_MACOSX
     mPrintingSurface = nsnull;
 #endif
