@@ -133,11 +133,25 @@
         <body><![CDATA[ 
           var result = PlacesUtils.history.executeQueries(queries, queries.length, 
                                                           options);
-          var treeView = new PlacesTreeView();
+          var treeView = new PlacesTreeView(this.showRoot);
           result.viewer = treeView;
           this.view = treeView;
         ]]></body>
       </method>
+
+      <property name="showRoot">
+        <getter><![CDATA[
+          return this.getAttribute("showRoot") == "true";
+        ]]></getter>
+        <setter><![CDATA[
+          if (this.showRoot != val) {
+            this.setAttribute("showRoot", val);
+            // reload with the last place set
+            this.place = this.place;
+          }
+          return val;
+        ]]></setter>
+      </property>
 
       <!-- 
         Causes a particular node represented by the specified placeURI to be

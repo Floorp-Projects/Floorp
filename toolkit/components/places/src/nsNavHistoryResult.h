@@ -213,7 +213,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResult, NS_NAVHISTORYRESULT_IID)
     { *aAccessCount = mAccessCount; return NS_OK; } \
   NS_IMETHOD GetTime(PRTime* aTime) \
     { *aTime = mTime; return NS_OK; } \
-  NS_IMETHOD GetIndentLevel(PRUint32* aIndentLevel) \
+  NS_IMETHOD GetIndentLevel(PRInt32* aIndentLevel) \
     { *aIndentLevel = mIndentLevel; return NS_OK; } \
   NS_IMETHOD GetViewIndex(PRInt32* aViewIndex) \
     { *aViewIndex = mViewIndex; return NS_OK; } \

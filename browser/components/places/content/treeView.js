@@ -98,12 +98,8 @@ PlacesTreeView.prototype = {
    * when calling.
    */
   _finishInit: function PTV__finishInit() {
-    if (this._tree && this._result) {
-      this._result.root
-          .QueryInterface(Ci.nsINavHistoryContainerResultNode)
-          .containerOpen = true;
+    if (this._tree && this._result)
       this.sortingChanged(this._result.sortingMode);
-    }
 
     // if there is no tree, BuildVisibleList will clear everything for us
     this._buildVisibleList();
@@ -176,10 +172,24 @@ PlacesTreeView.prototype = {
     }
     this._visibleElements.splice(0);
 
-    if (this._result.root && this._tree) {
+    var rootNode = this._result.root;
+    if (rootNode && this._tree) {
       this._computeShowSessions();
-      this._buildVisibleSection(asContainer(this._result.root),
-                                this._visibleElements, 0);
+
+      asContainer(rootNode);
+      if (this._showRoot) {
+        // List the root node
+        this._visibleElements.push(this._result.root);
+        this._result.root.viewIndex = 0;
+      }
+      else if (!rootNode.containerOpen) {
+        // this triggers containerOpened which then builds the visible
+        // selection
+        rootNode.containerOpen = true;
+        return;
+      }
+
+      this.invalidateContainer(rootNode);
     }
   },
 
@@ -253,6 +263,9 @@ PlacesTreeView.prototype = {
    * container with all of its children takes.
    */
   _countVisibleRowsForItem: function PTV__countVisibleRowsForItem(aNode) {
+    if (aNode == this._result.root)
+      return this._visibleElements.length;
+
     var viewIndex = aNode.viewIndex;
     NS_ASSERT(viewIndex >= 0, "Item is not visible, no rows to count");
     var outerLevel = aNode.indentLevel;
@@ -278,24 +291,26 @@ PlacesTreeView.prototype = {
     if (!this._tree)
       return;
 
-    // The root node is invisible, so we can't check its index and indent
-    // level. Therefore, special case it. This is easy because we just
-    // rebuild everything
-    if (aContainer == this._result.root) {
-      this._buildVisibleList();
-      return;
+    // The root node is invisible if showRoot is not set. Otherwise aContainer
+    // must be visible
+    if (this._showRoot || aContainer != this._result.root) {
+      if (aContainer.viewIndex < 0 &&
+          aContainer.viewIndex > this._visibleElements.length)
+        throw "Trying to expand a node that is not visible";
+
+      NS_ASSERT(this._visibleElements[aContainer.viewIndex] == aContainer,
+                "Visible index is out of sync!");
     }
 
-    // When the container is not the root, it better be visible if we are
-    // updating
-    if (aContainer.viewIndex < 0 &&
-        aContainer.viewIndex > this._visibleElements.length)
-      throw "Trying to expand a node that is not visible";
-    NS_ASSERT(this._visibleElements[aContainer.viewIndex] == aContainer,
-              "Visible index is out of sync!");
-
     var startReplacement = aContainer.viewIndex + 1;
-    var replaceCount = this._countVisibleRowsForItem(aContainer) - 1;
+    var replaceCount = this._countVisibleRowsForItem(aContainer);
+
+    // We don't replace the container item itself so we decrease the
+    // replaceCount by 1. We don't do so though if there is no visible item
+    // for the container. This happens when aContainer is the root node and
+    // showRoot is not set.
+    if (aContainer.viewIndex != -1)
+      replaceCount-=1;
 
     // Mark the removees as invisible
     for (var i = startReplacement; i < replaceCount; i ++)
@@ -865,6 +880,15 @@ PlacesTreeView.prototype = {
 
   getLevel: function PTV_getLevel(aRow) {
     this._ensureValidRow(aRow);
+
+    // Level is 0 for items at the root level, 1 for its children and so on.
+    // If we don't show the result's root node, the level is simply the node's
+    // indentLevel; if we do, it is the node's indentLevel increased by 1.
+    // That is because nsNavHistoryResult uses -1 as the indent level for the
+    // root node regardless of our internal showRoot state.
+    if (this._showRoot)
+      return this._visibleElements[aRow].indentLevel + 1;
+
     return this._visibleElements[aRow].indentLevel;
   },
 
@@ -1081,7 +1105,7 @@ PlacesTreeView.prototype = {
   }
 };
 
-function PlacesTreeView() {
+function PlacesTreeView(aShowRoot) {
   this._tree = null;
   this._result = null;
   this._collapseDuplicates = true;
@@ -1089,4 +1113,5 @@ function PlacesTreeView() {
   this._selection = null;
   this._visibleElements = [];
   this._observers = [];
+  this._showRoot = aShowRoot;
 }
