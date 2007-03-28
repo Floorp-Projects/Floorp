@@ -39,7 +39,7 @@ sub Verify {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $buildDir = $config->Get(var => 'buildDir');
+    my $buildDir = $config->Get(sysvar => 'buildDir');
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
     my $rcTag = $productTag.'_RC'.$rc;
