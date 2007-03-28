@@ -2380,12 +2380,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     pc += JSOP_EXCEPTION_LENGTH;
                     if (*pc == JSOP_DUP) {
                         sn2 = js_GetSrcNote(jp->script, pc);
-                        if (sn2) {
+                        if (sn2 && SN_TYPE(sn2) == SRC_HIDDEN) {
                             /*
-                             * A dup that pushes the exception object to use
-                             * after if the exception guard is false.
+                             * This is a hidden dup to save the exception for
+                             * later. It must exist only when the catch has
+                             * an exception guard.
                              */
-                            LOCAL_ASSERT(SN_TYPE(sn2) == SRC_HIDDEN);
+                            LOCAL_ASSERT(js_GetSrcNoteOffset(sn, 0) != 0);
                             pc += JSOP_DUP_LENGTH;
                         }
                     }
