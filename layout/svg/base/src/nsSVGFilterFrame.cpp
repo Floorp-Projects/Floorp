@@ -90,12 +90,6 @@ private:
   // implementation helpers
   void FilterFailCleanup(nsSVGRenderState *aContext,
                          nsISVGChildFrame *aTarget);
-  
-private:
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mFilterUnits;
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mPrimitiveUnits;
-  nsCOMPtr<nsIDOMSVGAnimatedInteger> mFilterResX;
-  nsCOMPtr<nsIDOMSVGAnimatedInteger> mFilterResY;
 };
 
 NS_INTERFACE_MAP_BEGIN(nsSVGFilterFrame)
@@ -148,11 +142,6 @@ nsSVGFilterFrame::InitSVG()
 
   nsCOMPtr<nsIDOMSVGFilterElement> filter = do_QueryInterface(mContent);
   NS_ASSERTION(filter, "wrong content element");
-
-  filter->GetFilterUnits(getter_AddRefs(mFilterUnits));
-  filter->GetPrimitiveUnits(getter_AddRefs(mPrimitiveUnits));
-  filter->GetFilterResX(getter_AddRefs(mFilterResX));
-  filter->GetFilterResY(getter_AddRefs(mFilterResY));
 
   return NS_OK;
 }
@@ -223,14 +212,17 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   aTarget->SetMatrixPropagation(PR_FALSE);
   aTarget->NotifyCanvasTMChanged(PR_TRUE);
 
+  nsSVGFilterElement *filter = NS_STATIC_CAST(nsSVGFilterElement*, mContent);
+
+  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> units;
+  filter->GetFilterUnits(getter_AddRefs(units));
   PRUint16 type;
-  mFilterUnits->GetAnimVal(&type);
+  units->GetAnimVal(&type);
 
   float x, y, width, height;
   nsCOMPtr<nsIDOMSVGRect> bbox;
   aTarget->GetBBox(getter_AddRefs(bbox));
 
-  nsSVGFilterElement *filter = NS_STATIC_CAST(nsSVGFilterElement*, mContent);
   nsSVGLength2 *tmpX, *tmpY, *tmpWidth, *tmpHeight;
   tmpX = &filter->mLengthAttributes[nsSVGFilterElement::X];
   tmpY = &filter->mLengthAttributes[nsSVGFilterElement::Y];
@@ -258,8 +250,11 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   PRInt32 filterResY = PRInt32(s2 * height + 0.5);
 
   if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::filterRes)) {
-    mFilterResX->GetAnimVal(&filterResX);
-    mFilterResY->GetAnimVal(&filterResY);
+    nsCOMPtr<nsIDOMSVGAnimatedInteger> filterRes;
+    filter->GetFilterResX(getter_AddRefs(filterRes));
+    filterRes->GetAnimVal(&filterResX);
+    filter->GetFilterResY(getter_AddRefs(filterRes));
+    filterRes->GetAnimVal(&filterResY);
   }
 
   // filterRes = 0 disables rendering, < 0 is error
@@ -293,7 +288,8 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   memset(tmpSurface->Data(), 0, tmpSurface->GetSize().height * tmpSurface->Stride());
   aTarget->PaintSVG(&tmpState, nsnull);
 
-  mPrimitiveUnits->GetAnimVal(&type);
+  filter->GetPrimitiveUnits(getter_AddRefs(units));
+  units->GetAnimVal(&type);
   nsSVGFilterInstance instance(target, bbox,
                                x, y, width, height,
                                filterResX, filterResY,
@@ -388,8 +384,12 @@ nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget)
 
   CallQueryInterface(aTarget, &svg);
 
+  nsSVGFilterElement *filter = NS_STATIC_CAST(nsSVGFilterElement*, mContent);
+
+  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> units;
+  filter->GetFilterUnits(getter_AddRefs(units));
   PRUint16 type;
-  mFilterUnits->GetAnimVal(&type);
+  units->GetAnimVal(&type);
 
   float x, y, width, height;
   nsCOMPtr<nsIDOMSVGRect> bbox;
@@ -402,7 +402,6 @@ nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget)
   svg->SetMatrixPropagation(PR_TRUE);
   svg->NotifyCanvasTMChanged(PR_TRUE);
 
-  nsSVGFilterElement *filter = NS_STATIC_CAST(nsSVGFilterElement*, mContent);
   nsSVGLength2 *tmpX, *tmpY, *tmpWidth, *tmpHeight;
   tmpX = &filter->mLengthAttributes[nsSVGFilterElement::X];
   tmpY = &filter->mLengthAttributes[nsSVGFilterElement::Y];
