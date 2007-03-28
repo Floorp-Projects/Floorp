@@ -50,7 +50,7 @@ interface nsINavHistoryResult;
 interface nsITreeColumn;
 interface nsIWritablePropertyBag;
 
-[scriptable, uuid(7c7f93e0-b174-11db-abbd-0800200c9a66)]
+[scriptable, uuid(b21008ef-995d-4bd9-97ae-1f23868930ed)]
 interface nsINavHistoryResultNode : nsISupports
 {
   /**
@@ -131,9 +131,10 @@ interface nsINavHistoryResultNode : nsISupports
   /**
    * This is the number of levels between this node and the top of the
    * hierarchy. The members of result.children have indentLevel = 0, their
-   * children have indentLevel = 1, etc.
+   * children have indentLevel = 1, etc. The indent level of the root node is
+   * set to -1.
    */
-  readonly attribute PRUint32 indentLevel;
+  readonly attribute PRInt32 indentLevel;
 
   /**
    * Value with undefined meaning for use by the view. Its initial value will
