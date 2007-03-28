@@ -590,7 +590,7 @@ XPC_SJOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   // value to set the property to.
   NS_NAMED_LITERAL_CSTRING(funScript,
     "if (arguments.length == 1) return this[arguments[0]];"
-    "this[arguments[0]] = arguments[1];");
+    "return this[arguments[0]] = arguments[1];");
 
   jsval scriptedFunVal;
   if (!GetScriptedFunction(cx, obj, unsafeObj, XPC_SJOW_SLOT_SCRIPTED_GETSET,
