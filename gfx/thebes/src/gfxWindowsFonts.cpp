@@ -1172,14 +1172,7 @@ public:
                 PRInt32 advance = mAdvances[k]*appUnitsPerDevUnit;
                 WORD glyph = mGlyphs[k];
                 if (missing) {
-                    // Special-case ZWSP so that it always "works" even if the
-                    // font doesn't have the glyph. Don't draw a hexbox and
-                    // don't give it width.
-                    if (mString[offset] == UNICODE_ZWSP) {
-                        aRun->SetCharacterGlyph(runOffset, g.SetMissing());
-                    } else {
-                        aRun->SetMissingGlyph(runOffset, mString[offset]);
-                    }
+                    aRun->SetMissingGlyph(runOffset, mString[offset]);
                 } else if (glyphCount == 1 && advance >= 0 &&
                     mOffsets[k].dv == 0 && mOffsets[k].du == 0 &&
                     gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
