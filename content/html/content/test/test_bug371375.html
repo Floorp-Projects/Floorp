@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=371375
+-->
+<head>
+  <title>Test for Bug 371375</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=371375">Mozilla Bug 371375</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  /** Test for Bug 371375 **/
+  var load1Called = false;
+  var error1Called = false;
+  var s = document.createElement('script');
+  s.type = 'text/javascript';
+  s.onload = function() { load1Called = true; };
+  s.onerror = function(event) { error1Called = true; event.stopPropagation(); };
+  s.src = 'about:cache-entry?client=image&sb=0&key=http://www.google.com';
+  document.body.appendChild(s);
+
+  var load2Called = false;
+  var error2Called = false;
+  var s2 = document.createElement('script');
+  s2.type = 'text/javascript';
+  s2.onload = function() { load2Called = true; };
+  s2.onerror = function(event) { error2Called = true; event.stopPropagation(); };
+  s2.src = 'data:text/plain, var x = 1;'
+  document.body.appendChild(s2);
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(function() {
+    is(load1Called, false, "Load handler should not be called");
+    is(error1Called, false, "Error handler should not be called");
+    is(load2Called, true, "Load handler for valid script should be called");
+    is(error2Called, false,
+       "Error handler for valid script should not be called");
+    SimpleTest.finish();
+  });
+</script>
+</body>
+</html>
+
+
+
+</script>
+</pre>
+</body>
+</html>
+
