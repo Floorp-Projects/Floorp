@@ -91,7 +91,7 @@ nsContextMenu.prototype = {
   },
 
   // Initialize context menu.
-  initMenu: function (aPopup, aBrowser) {
+  initMenu: function CM_initMenu(aPopup, aBrowser) {
     this.menu = aPopup;
     this.browser = aBrowser;
 
@@ -106,7 +106,7 @@ nsContextMenu.prototype = {
     this.initItems();
   },
 
-  initItems: function () {
+  initItems: function CM_initItems() {
     this.initOpenItems();
     this.initNavigationItems();
     this.initViewItems();
@@ -117,7 +117,7 @@ nsContextMenu.prototype = {
     this.initMetadataItems();
   },
 
-  initOpenItems: function () {
+  initOpenItems: function CM_initOpenItems() {
     var shouldShow = this.onSaveableLink ||
                      (this.inDirList && this.onLink);
     this.showItem("context-openlink", shouldShow);
@@ -125,7 +125,7 @@ nsContextMenu.prototype = {
     this.showItem("context-sep-open", shouldShow);
   },
 
-  initNavigationItems: function() {
+  initNavigationItems: function CM_initNavigationItems() {
     var shouldShow = !(this.isContentSelected || this.onLink || this.onImage ||
                        this.onTextInput);
     this.showItem("context-back", shouldShow);
@@ -138,7 +138,7 @@ nsContextMenu.prototype = {
     //this.setItemAttrFromNode( "context-stop", "disabled", "canStop" );
   },
 
-  initSaveItems: function() {
+  initSaveItems: function CM_initSaveItems() {
     var shouldShow = !(this.inDirList || this.isContentSelected ||
                        this.onTextInput || this.onLink || this.onImage);
     this.showItem("context-savepage", shouldShow);
@@ -153,7 +153,7 @@ nsContextMenu.prototype = {
     this.showItem("context-sendimage", this.onImage);
   },
 
-  initViewItems: function () {
+  initViewItems: function CM_initViewItems() {
     // View source is always OK, unless in directory listing.
     this.showItem("context-viewpartialsource-selection",
                   this.isContentSelected);
@@ -197,7 +197,7 @@ nsContextMenu.prototype = {
             .disabled = !this.hasBGImage;
   },
 
-  initMiscItems: function() {
+  initMiscItems: function CM_initMiscItems() {
     // Use "Bookmark This Link" if on a link.
     this.showItem("context-bookmarkpage",
                   !(this.isContentSelected || this.onTextInput ||
@@ -210,11 +210,11 @@ nsContextMenu.prototype = {
     this.showItem("frame-sep", this.inFrame);
 
     // BiDi UI
-    this.showItem("context-sep-bidi", gBidiUI);
+    this.showItem("context-sep-bidi", top.gBidiUI);
     this.showItem("context-bidi-text-direction-toggle",
-                  this.onTextInput && gBidiUI);
+                  this.onTextInput && top.gBidiUI);
     this.showItem("context-bidi-page-direction-toggle",
-                  !this.onTextInput && gBidiUI);
+                  !this.onTextInput && top.gBidiUI);
 
     if (this.onImage) {
       var blockImage = document.getElementById("context-blockimage");
@@ -1138,5 +1138,9 @@ nsContextMenu.prototype = {
 
   printFrame: function CM_printFrame() {
     PrintUtils.print(this.target.ownerDocument.defaultView);
+  },
+
+  switchPageDirection: function CM_switchPageDirection() {
+    SwitchDocumentDirection(this.browser.contentWindow);
   }
 };
