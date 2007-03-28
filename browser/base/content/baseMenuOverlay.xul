@@ -97,21 +97,16 @@
                   label="&helpReleaseNotes.label;"
                   oncommand="openReleaseNotes(event)"
                   onclick="checkForMiddleClick(this, event);"/>
-        <menuseparator id="aboutSeparator"/>
+        <menuseparator/>
         <menuitem id="checkForUpdates"
                   accesskey="&updateCmd.accesskey;"
                   label="&updateCmd.label;"
                   class="menuitem-iconic"
                   oncommand="checkForUpdates();"/>
-#ifndef XP_MACOSX
-        <menuseparator/>
-#endif
+        <menuseparator id="aboutSeparator"/>
         <menuitem id="aboutName"
                   accesskey="&aboutCmd.accesskey;"
                   label="&aboutCmd.label;"
-#ifdef XP_MACOSX
-                  hidden="true"
-#endif
                   oncommand="openAboutDialog();"/>
       </menupopup>
     </menu>
