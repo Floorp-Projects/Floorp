@@ -253,7 +253,8 @@ nsMenuBarX::AquifyMenuBar()
 {
   nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mMenuBarContent->GetDocument()));
   if (domDoc) {
-    // remove the "About..." menu item
+    // remove the "About..." item and its separator
+    HideItem(domDoc, NS_LITERAL_STRING("aboutSeparator"), nsnull);
     HideItem(domDoc, NS_LITERAL_STRING("aboutName"), getter_AddRefs(mAboutItemContent));
     if (!sAboutItemContent)
       sAboutItemContent = mAboutItemContent;
