@@ -1016,7 +1016,7 @@ public:
         GenerateAlternativeString();
     }
 
-    static PRBool IsZeroWidthUnicodeChar(PRUnichar aChar) const {
+    static PRBool IsZeroWidthUnicodeChar(PRUnichar aChar) {
         return aChar == 0x200b; // ZWSP
     }
 
