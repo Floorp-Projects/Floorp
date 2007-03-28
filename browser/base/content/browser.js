@@ -1976,7 +1976,7 @@ function getShortcutOrURI(aURL, aPostDataRef)
         var cmd = aURL.substr(0, aOffset);
         var text = aURL.substr(aOffset+1);
 #ifdef MOZ_PLACES_BOOKMARKS
-        shortcutURI = bookmarkService.getURIForKeyword(cmd);
+        shortcutURI = PlacesUtils.bookmarks.getURIForKeyword(cmd);
         if (shortcutURI)
           shortcutURL = shortcutURI.spec;
 #else
@@ -5188,7 +5188,8 @@ function AddKeywordForSearchField()
   openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
              BROWSER_ADD_BM_FEATURES, dialogArgs);
 #else
-  dump("*** IMPLEMENT ME: Bug 329281\n");
+  var description = PlacesUtils.getDescriptionFromDocument(node.ownerDocument);
+  PlacesUtils.showAddBookmarkUI(makeURI(spec), "", description, null, null, null, "");
 #endif
 }
 
