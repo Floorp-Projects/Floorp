@@ -89,29 +89,6 @@ nsSVGMarkerFrame::InitSVG()
   nsCOMPtr<nsIDOMSVGMarkerElement> marker = do_QueryInterface(mContent);
   NS_ASSERTION(marker, "wrong content element");
 
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedAngle> angle;
-    marker->GetOrientAngle(getter_AddRefs(angle));
-    angle->GetAnimVal(getter_AddRefs(mOrientAngle));
-    NS_ASSERTION(mOrientAngle, "no orientAngle");
-    if (!mOrientAngle) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedRect> rect;
-    nsCOMPtr<nsIDOMSVGFitToViewBox> box = do_QueryInterface(marker);
-    box->GetViewBox(getter_AddRefs(rect));
-
-    if (rect) {
-      rect->GetAnimVal(getter_AddRefs(mViewBox));
-      NS_ASSERTION(mViewBox, "no viewBox");
-      if (!mViewBox) return NS_ERROR_FAILURE;
-    }
-  }
-
-  marker->GetMarkerUnits(getter_AddRefs(mMarkerUnits));
-  marker->GetOrientType(getter_AddRefs(mOrientType));
-
   mMarkedFrame = nsnull;
   mInUse = mInUse2 = PR_FALSE;
 
