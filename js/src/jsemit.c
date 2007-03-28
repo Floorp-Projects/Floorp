@@ -4876,10 +4876,14 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
                     /*
                      * Move exception back to cx->exception to prepare for
-                     * the next catch.
+                     * the next catch. We hide [throwing] from the decompiler
+                     * since it compensates for the hidden JSOP_DUP at the
+                     * start of the previous guarded catch.
                      */
-                    if (!js_Emit1(cx, cg, JSOP_THROWING) < 0)
+                    if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
+                        js_Emit1(cx, cg, JSOP_THROWING) < 0) {
                         return JS_FALSE;
+                    }
 
                     /*
                      * Emit an unbalanced [leaveblock] for the previous catch,
