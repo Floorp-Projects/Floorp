@@ -517,11 +517,10 @@ nsSVGOuterSVGFrame::InvalidateRect(nsRect aRect)
   return NS_OK;
 }
 
-nsresult
-nsSVGOuterSVGFrame::IsRedrawSuspended(PRBool* isSuspended)
+PRBool
+nsSVGOuterSVGFrame::IsRedrawSuspended()
 {
-  *isSuspended = (mRedrawSuspendCount>0) || !mViewportInitialized;
-  return NS_OK;
+  return (mRedrawSuspendCount>0) || !mViewportInitialized;
 }
 
 //----------------------------------------------------------------------
