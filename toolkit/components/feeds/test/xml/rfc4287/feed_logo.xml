@@ -2,10 +2,10 @@
 <!--
 
 Description: atom logo works
-Expect: feed.fields.getProperty('atom:logo') == 'http://example.org/logo.jpg'
+Expect: feed.image.getProperty('url') == 'http://example.org/logo.jpg'
 
 -->
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>test title</title>
-  <logo>http://example.org/logo.jpg</logo>
+  <logo xml:base="http://example.org/">logo.jpg</logo>
 </feed>
