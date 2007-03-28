@@ -2046,7 +2046,10 @@ nsXULScrollFrame::LayoutScrollArea(nsBoxLayoutState& aState, const nsRect& aRect
 
     // remove overflow area when we update the bounds,
     // because we've already accounted for it
-    mInner.mScrolledFrame->SetBounds(aState, childRect, PR_TRUE);
+    mInner.mScrolledFrame->SetBounds(aState, childRect);
+    GetPresContext()->PropertyTable()->
+        DeleteProperty(mInner.mScrolledFrame, nsGkAtoms::overflowAreaProperty);
+    mInner.mScrolledFrame->RemoveStateBits(NS_FRAME_OUTSIDE_CHILDREN);
   }
 
   aState.SetLayoutFlags(oldflags);
@@ -2390,6 +2393,20 @@ nsGfxScrollFrameInner::ReflowFinished()
   return PR_TRUE;
 }
 
+static void LayoutAndInvalidate(nsBoxLayoutState& aState,
+                                nsIFrame* aBox, const nsRect& aRect)
+{
+  // When a child box changes shape of position, the parent
+  // is responsible for invalidation; the overflow rect must be invalidated
+  // to make sure to catch any overflow
+  PRBool rectChanged = aBox->GetRect() != aRect;
+  if (rectChanged)
+    aBox->Invalidate(aBox->GetOverflowRect());
+  nsBoxFrame::LayoutChildAt(aState, aBox, aRect);
+  if (rectChanged)
+    aBox->Invalidate(aBox->GetOverflowRect());
+}
+
 void
 nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
                                         const nsRect& aContentArea,
@@ -2407,7 +2424,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     nsMargin margin;
     mVScrollbarBox->GetMargin(margin);
     vRect.Deflate(margin);
-    nsBoxFrame::LayoutChildAt(aState, mVScrollbarBox, vRect);
+    LayoutAndInvalidate(aState, mVScrollbarBox, vRect);
   }
 
   if (mHScrollbarBox) {
@@ -2418,7 +2435,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     nsMargin margin;
     mHScrollbarBox->GetMargin(margin);
     hRect.Deflate(margin);
-    nsBoxFrame::LayoutChildAt(aState, mHScrollbarBox, hRect);
+    LayoutAndInvalidate(aState, mHScrollbarBox, hRect);
   }
 
   // place the scrollcorner
@@ -2447,7 +2464,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
       r.height = aContentArea.YMost() - aScrollArea.YMost();
       NS_ASSERTION(r.height >= 0, "Scroll area should be inside client rect");
     }
-    nsBoxFrame::LayoutChildAt(aState, mScrollCornerBox, r); 
+    LayoutAndInvalidate(aState, mScrollCornerBox, r);
   }
 
   // may need to update fixed position children of the viewport,
