@@ -51,7 +51,6 @@
 #include "nsIPresShell.h"
 #include "nsFrameManager.h"
 #include "nsStyleContext.h"
-#include "nsIScrollableView.h"
 #include "nsGkAtoms.h"
 #include "nsIDrawingSurface.h"
 #include "nsTransform2D.h"
@@ -2047,15 +2046,11 @@ nscoord width, offset;
     }
   }
 
-  nsRect* overflowArea = aForFrame->GetOverflowAreaProperty(PR_FALSE);
-  if (!overflowArea) {
-    NS_WARNING("Hmm, outline painting should always find an overflow area here");
-    return;
-  }
+  nsRect overflowArea = aForFrame->GetOverflowRect();
 
   // get the offset for our outline
   aOutlineStyle.GetOutlineOffset(offset);
-  nsRect outside(*overflowArea + aBorderArea.TopLeft());
+  nsRect outside(overflowArea + aBorderArea.TopLeft());
   nsRect inside(outside);
   if (width + offset >= 0) {
     // the overflow area is exactly the outside edge of the outline
