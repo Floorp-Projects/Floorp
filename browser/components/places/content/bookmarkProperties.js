@@ -58,6 +58,7 @@
  *         item.
  *       @ defaultInsertionPoint (InsertionPoint JS object) - optional, the
  *         default insertion point for the new item.
+ *       @ keyword (String) - optional, the default keyword for the new item.
  *      Notes:
  *        1) If |uri| is set for a bookmark/livemark item and |title| isn't,
  *           the dialog will query the history tables for the title associated
@@ -213,7 +214,7 @@ var BookmarkPropertiesPanel = {
                       "uri property should be a uri object");
             this._bookmarkURI = dialogInfo.uri;
           }
-          if (!this._itemTitle) {
+          if (typeof(this._itemTitle) != "string") {
             if (this._bookmarkURI) {
               this._itemTitle =
                 this._getURITitleFromHistory(this._bookmarkURI);
@@ -226,6 +227,9 @@ var BookmarkPropertiesPanel = {
 
           if ("loadBookmarkInSidebar" in dialogInfo)
             this._loadBookmarkInSidebar = dialogInfo.loadBookmarkInSidebar;
+
+          if ("keyword" in dialogInfo)
+            this._bookmarkKeyword = dialogInfo.keyword;
 
           break;
         case "folder":
@@ -488,7 +492,7 @@ var BookmarkPropertiesPanel = {
       if (this._bookmarkURI)
         this._element("editURLBar").value = this._bookmarkURI.spec;
 
-      if (this._bookmarkKeyword)
+      if (typeof(this._bookmarkKeyword) == "string")
         this._element("keywordTextfield").value = this._bookmarkKeyword;
 
       if (this._loadBookmarkInSidebar)
