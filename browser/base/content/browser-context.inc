@@ -260,5 +260,4 @@
       <menuitem hidden="true" id="context-bidi-page-direction-toggle"
                 label="&bidiSwitchPageDirectionItem.label;"
                 accesskey="&bidiSwitchPageDirectionItem.accesskey;"
-                oncommand="SwitchDocumentDirection(window.content);"/>
-
+                oncommand="gContextMenu.switchPageDirection();"/>
