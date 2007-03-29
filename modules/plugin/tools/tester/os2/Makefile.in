@@ -68,7 +68,7 @@ NO_DIST_INSTALL = 1
 NO_INSTALL = 1
 
 SHARED_LIBRARY_LIBS = \
-                      $(DIST)/lib/$(LIB_PREFIX)plcommon_s.$(LIB_SUFFIX) \
+                      ../common/$(LIB_PREFIX)plcommon_s.$(LIB_SUFFIX) \
                       $(NULL)
 
 include $(topsrcdir)/config/rules.mk
