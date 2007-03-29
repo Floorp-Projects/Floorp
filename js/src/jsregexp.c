@@ -1024,6 +1024,11 @@ lexHex:
             localMax = *src++;
             break;
         }
+        if (state->flags & JSREG_FOLD) {
+            c = JS_MAX(upcase((jschar) localMax), downcase((jschar) localMax));
+            if (c > localMax)
+                localMax = c;
+        }
         if (inRange) {
             if (rangeStart > localMax) {
                 JS_ReportErrorNumber(state->context,
@@ -1041,11 +1046,6 @@ lexHex:
                     continue;
                 }
             }
-        }
-        if (state->flags & JSREG_FOLD) {
-            c = JS_MAX(upcase((jschar)localMax), downcase((jschar)localMax));
-            if (c > localMax)
-                localMax = c;
         }
         if (localMax > max)
             max = localMax;
