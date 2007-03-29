@@ -36,23 +36,24 @@ workdir="$targetdir.work"
 manifest="$workdir/update.manifest"
 targetfiles="update.manifest"
 
+mkdir -p "$workdir"
+
 # Generate a list of all files in the target directory.
 pushd "$targetdir"
 if test $? -ne 0 ; then
   exit 1
 fi
 
-files=($(list_files))
+list_files files
 
 popd
 
-mkdir -p "$workdir"
 > $manifest
 
 num_files=${#files[*]}
 
 for ((i=0; $i<$num_files; i=$i+1)); do
-  eval "f=${files[$i]}"
+  f="${files[$i]}"
 
   notice "processing $f"
 
