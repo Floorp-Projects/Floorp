@@ -70,13 +70,15 @@ workdir="$newdir.work"
 manifest="$workdir/update.manifest"
 archivefiles="update.manifest"
 
+mkdir -p "$workdir"
+
 # Generate a list of all files in the target directory.
 pushd "$olddir"
 if test $? -ne 0 ; then
   exit 1
 fi
 
-oldfiles=($(list_files))
+list_files oldfiles
 
 popd
 
@@ -85,18 +87,16 @@ if test $? -ne 0 ; then
   exit 1
 fi
 
-list=$(list_files)
-newfiles=($(list_files))
+list_files newfiles
 
 popd
 
-mkdir -p "$workdir"
 > $manifest
 
 num_oldfiles=${#oldfiles[*]}
 
 for ((i=0; $i<$num_oldfiles; i=$i+1)); do
-  eval "f=${oldfiles[$i]}"
+  f="${oldfiles[$i]}"
 
   # This file is created by Talkback, so we can ignore it
   if [ "$f" = "readme.txt" ]; then
@@ -146,7 +146,7 @@ done
 num_newfiles=${#newfiles[*]}
 
 for ((i=0; $i<$num_newfiles; i=$i+1)); do
-  eval "f=${newfiles[$i]}"
+  f="${newfiles[$i]}"
 
   # If we've already tested this file, then skip it
   for ((j=0; $j<$num_oldfiles; j=$j+1)); do
