@@ -5084,23 +5084,34 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
   if (!range)
     return nsnull;
 
-  // get the common ancestor of the two endpoints of the range
-  nsINode* ancestor = nsContentUtils::GetCommonAncestor(range->GetStartParent(),
-                                                        range->GetEndParent());
-  NS_ASSERTION(!ancestor || ancestor->IsNodeOfType(nsINode::eCONTENT),
-               "common ancestor is not content");
-  if (!ancestor || !ancestor->IsNodeOfType(nsINode::eCONTENT))
-    return nsnull;
+  nsIFrame* ancestorFrame;
+  nsIFrame* rootFrame = GetRootFrame();
 
-  nsIContent* ancestorContent = NS_STATIC_CAST(nsIContent*, ancestor);
+  // If the start or end of the range is the document, just use the root
+  // frame, otherwise get the common ancestor of the two endpoints of the
+  // range.
+  nsINode* startParent = range->GetStartParent();
+  nsINode* endParent = range->GetEndParent();
+  nsIDocument* doc = startParent->GetCurrentDoc();
+  if (startParent == doc || endParent == doc) {
+    ancestorFrame = rootFrame;
+  }
+  else {
+    nsINode* ancestor = nsContentUtils::GetCommonAncestor(startParent, endParent);
+    NS_ASSERTION(!ancestor || ancestor->IsNodeOfType(nsINode::eCONTENT),
+                 "common ancestor is not content");
+    if (!ancestor || !ancestor->IsNodeOfType(nsINode::eCONTENT))
+      return nsnull;
 
-  nsIFrame* ancestorFrame = GetPrimaryFrameFor(ancestorContent);
+    nsIContent* ancestorContent = NS_STATIC_CAST(nsIContent*, ancestor);
+    ancestorFrame = GetPrimaryFrameFor(ancestorContent);
 
-  // use the nearest ancestor frame that includes all continuations as the
-  // root for building the display list
-  while (ancestorFrame &&
-         nsLayoutUtils::GetNextContinuationOrSpecialSibling(ancestorFrame))
-    ancestorFrame = ancestorFrame->GetParent();
+    // use the nearest ancestor frame that includes all continuations as the
+    // root for building the display list
+    while (ancestorFrame &&
+           nsLayoutUtils::GetNextContinuationOrSpecialSibling(ancestorFrame))
+      ancestorFrame = ancestorFrame->GetParent();
+  }
 
   if (!ancestorFrame)
     return nsnull;
@@ -5124,7 +5135,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
   // determine the offset of the reference frame for the display list
   // to the root frame. This will allow the coordinates used when painting
   // to all be offset from the same point
-  info->mRootOffset = ancestorFrame->GetOffsetTo(GetRootFrame());
+  info->mRootOffset = ancestorFrame->GetOffsetTo(rootFrame);
   rangeRect.MoveBy(info->mRootOffset);
   aSurfaceRect.UnionRect(aSurfaceRect, rangeRect);
 
