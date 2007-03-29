@@ -2072,10 +2072,8 @@ PushBackTrackState(REGlobalData *gData, REOp op,
     ptrdiff_t btincr = ((char *)result + sz) -
                        ((char *)gData->backTrackStack + btsize);
 
-    re_debug("\tBT_Push[%ld]: %ld,%ld",
-             ((char *)result - (char *)gData->backTrackStack) /
-              sizeof(REBackTrackData),
-             parenIndex, parenCount);
+    re_debug("\tBT_Push: %lu,%lu",
+             (unsigned long) parenIndex, (unsigned long) parenCount);
 
     JS_COUNT_OPERATION(gData->cx, JSOW_JUMP * (1 + parenCount));
     if (btincr > 0) {
@@ -2857,7 +2855,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
 
               case REOP_LPAREN:
                 pc = ReadCompactIndex(pc, &parenIndex);
-                re_debug("[ %ld ]", parenIndex);
+                re_debug("[ %lu ]", (unsigned long) parenIndex);
                 JS_ASSERT(parenIndex < gData->regexp->parenCount);
                 if (parenIndex + 1 > parenSoFar)
                     parenSoFar = parenIndex + 1;
@@ -3219,11 +3217,9 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 parenSoFar = curState->parenSoFar;
             }
 
-            re_debug("\tBT_Pop[%ld]: %ld,%ld",
-                     ((char *)backTrackData - (char *)gData->backTrackStack) /
-                      sizeof(REBackTrackData),
-                     backTrackData->parenIndex, backTrackData->parenCount);
-
+            re_debug("\tBT_Pop: %ld,%ld",
+                     (unsigned long) backTrackData->parenIndex,
+                     (unsigned long) backTrackData->parenCount);
             continue;
         }
         x = result;
