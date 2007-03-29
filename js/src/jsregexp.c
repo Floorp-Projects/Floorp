@@ -981,8 +981,8 @@ lexHex:
                                          JSMSG_BAD_CLASS_RANGE);
                     return JS_FALSE;
                 }
-                target->u.ucclass.bmsize = 65535;
-                return JS_TRUE;
+                localMax = 65535;
+                break;
               case '0':
               case '1':
               case '2':
