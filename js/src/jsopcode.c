@@ -1945,11 +1945,14 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 if ((cs->prec != 0 &&
                      cs->prec == js_CodeSpec[pc[JSOP_GROUP_LENGTH]].prec) ||
                     pc[JSOP_GROUP_LENGTH] == JSOP_NULL ||
-                    pc[JSOP_GROUP_LENGTH] == JSOP_DUP) {
+                    pc[JSOP_GROUP_LENGTH] == JSOP_DUP ||
+                    pc[JSOP_GROUP_LENGTH] == JSOP_IFEQ ||
+                    pc[JSOP_GROUP_LENGTH] == JSOP_IFNE) {
                     /*
                      * Force parens if this JSOP_GROUP forced re-association
                      * against precedence, or if this is a call or constructor
-                     * expression, or if it is destructured (JSOP_DUP).
+                     * expression, or if it is destructured (JSOP_DUP), or if
+                     * it is an if or loop condition test.
                      *
                      * This is necessary to handle the operator new grammar,
                      * by which new x(y).z means (new x(y))).z.  For example
@@ -3487,14 +3490,35 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     long ival = (long)JSVAL_TO_INT(val);
                     todo = Sprint(&ss->sprinter, "%ld", ival);
                 } else {
-                    char buf[DTOSTR_STANDARD_BUFFER_SIZE];
-                    char *numStr = JS_dtostr(buf, sizeof buf, DTOSTR_STANDARD,
-                                             0, *JSVAL_TO_DOUBLE(val));
-                    if (!numStr) {
-                        JS_ReportOutOfMemory(cx);
-                        return NULL;
+                    jsdouble d;
+                    char *numStr, buf[DTOSTR_STANDARD_BUFFER_SIZE];
+                   
+                    d = *JSVAL_TO_DOUBLE(val);
+                    if (JSDOUBLE_IS_NEGZERO(d)) {
+                        todo = SprintCString(&ss->sprinter, "-0");
+                        saveop = JSOP_NEG;
+                    } else if (!JSDOUBLE_IS_FINITE(d)) {
+                        /* Don't use Infinity, it's mutable. */
+                        todo = SprintCString(&ss->sprinter,
+                                             JSDOUBLE_IS_NaN(d)
+                                             ? "0 / 0"
+                                             : (d < 0)
+                                             ? "1 / -0"
+                                             : "1 / 0");
+                        saveop = JSOP_DIV;
+                    } else {
+                        numStr = JS_dtostr(buf, sizeof buf, DTOSTR_STANDARD,
+                                           0, d);
+                        if (!numStr) {
+                            JS_ReportOutOfMemory(cx);
+                            return NULL;
+                        }
+                        JS_ASSERT(strcmp(numStr, js_Infinity_str) &&
+                                  (*numStr != '-' ||
+                                   strcmp(numStr + 1, js_Infinity_str)) &&
+                                  strcmp(numStr, js_NaN_str));
+                        todo = Sprint(&ss->sprinter, numStr);
                     }
-                    todo = Sprint(&ss->sprinter, numStr);
                 }
               END_LITOPX_CASE
 
