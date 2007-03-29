@@ -49,7 +49,6 @@
 class nsPresContext;
 class nsIDOMSVGMatrix;
 class nsSVGMarkerFrame;
-class nsISVGFilterFrame;
 class nsSVGMarkerProperty;
 
 typedef nsSVGGeometryFrame nsSVGPathGeometryFrameBase;

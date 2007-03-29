@@ -42,59 +42,14 @@
 #include "nsISVGFilter.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMSVGAnimatedInteger.h"
+#include "nsIDOMSVGAnimatedEnum.h"
 #include "nsSVGUtils.h"
 #include "nsSVGFilterElement.h"
 #include "nsSVGFilterInstance.h"
 #include "nsSVGFilters.h"
-#include "nsSVGContainerFrame.h"
 #include "gfxASurface.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
-
-typedef nsSVGContainerFrame nsSVGFilterFrameBase;
-
-class nsSVGFilterFrame : public nsSVGFilterFrameBase,
-                         public nsISVGFilterFrame
-{
-protected:
-  friend nsIFrame*
-  NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
-
-  NS_IMETHOD InitSVG();
-
-public:
-  nsSVGFilterFrame(nsStyleContext* aContext) : nsSVGFilterFrameBase(aContext) {}
-
-  // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
-
-  // nsISVGFilterFrame interface:
-  NS_IMETHOD FilterPaint(nsSVGRenderState *aContext,
-                         nsISVGChildFrame *aTarget);
-  NS_IMETHOD_(nsRect) GetInvalidationRegion(nsIFrame *aTarget);
-
-  // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAString &aValue) { return NS_OK; }
-  NS_IMETHOD GetValueString(nsAString& aValue) { return NS_ERROR_NOT_IMPLEMENTED; }
-
-  /**
-   * Get the "type" of the frame
-   *
-   * @see nsGkAtoms::svgFilterFrame
-   */
-  virtual nsIAtom* GetType() const;
-
-private:
-  // implementation helpers
-  void FilterFailCleanup(nsSVGRenderState *aContext,
-                         nsISVGChildFrame *aTarget);
-};
-
-NS_INTERFACE_MAP_BEGIN(nsSVGFilterFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGFilterFrame)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGFilterFrameBase)
 
 nsIFrame*
 NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
@@ -103,7 +58,7 @@ NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCont
 }
 
 nsresult
-NS_GetSVGFilterFrame(nsISVGFilterFrame **aResult,
+NS_GetSVGFilterFrame(nsSVGFilterFrame **aResult,
                      nsIURI *aURI, nsIContent *aContent)
 {
   *aResult = nsnull;
@@ -156,7 +111,7 @@ nsSVGFilterFrame::FilterFailCleanup(nsSVGRenderState *aContext,
   aTarget->PaintSVG(aContext, nsnull);
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
                               nsISVGChildFrame *aTarget)
 {
@@ -373,7 +328,7 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP_(nsRect)
+nsRect
 nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget)
 {
   nsSVGElement *targetContent =

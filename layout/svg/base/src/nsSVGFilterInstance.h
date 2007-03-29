@@ -39,7 +39,6 @@
 
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGRect.h"
-#include "nsIDOMSVGAnimatedEnum.h"
 #include "nsInterfaceHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsIDOMSVGFilters.h"
