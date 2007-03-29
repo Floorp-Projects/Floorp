@@ -305,6 +305,47 @@ function BookmarkThisTab()
 }
 
 #ifdef MOZ_PLACES_BOOKMARKS
+
+/**
+ * Global bookmarks observer for browser-window specific stuff
+ */
+var gBookmarksObserver = {
+  QueryInterface: function G_BO_QueryInterface(aIID) {
+    if (aIID.equals(Ci.nsINavBookmarkObserver) ||
+        aIID.equals(Ci.nsISupports))
+      return this;
+
+    throw Cr.NS_NOINTERFACE;
+  },
+
+  _toolbar: null,
+  get toolbar() {
+    if (!this._toolbar)
+      this._toolbar = document.getElementById("bookmarksBarContent");
+
+    return this._toolbar;
+  },
+
+  onBeginUpdateBatch: function() { },
+  onEndUpdateBatch: function() { },
+  onItemAdded: function() { },
+  onItemRemoved: function() { },
+
+  onItemChanged:
+  function G_BO_onItemChanged(aID, aBookmark, aProperty, aValue) {
+    if (aProperty == "became_toolbar_folder" && this.toolbar)
+      this.toolbar.place = PlacesUtils.getQueryStringForFolder(aID);
+  },
+  
+  onItemVisited: function() { },
+  onFolderAdded: function() { },
+  onFolderRemoved: function() { },
+  onFolderMoved: function() { },
+  onFolderChanged: function() { },
+  onSeparatorAdded: function() { },
+  onSeparatorRemoved: function() { }
+};
+
 /**
  * Initialize the bookmarks toolbar
  */
@@ -312,6 +353,7 @@ function initBookmarksToolbar() {
   var bt = document.getElementById("bookmarksBarContent");
   if (!bt)
     return;
+
   bt.place =
     PlacesUtils.getQueryStringForFolder(PlacesUtils.bookmarks.toolbarFolder);
 }
@@ -1016,6 +1058,7 @@ function delayedStartup()
   PlacesMenuDNDController.init();
 
   initBookmarksToolbar();
+  PlacesUtils.bookmarks.addObserver(gBookmarksObserver, false);
 #endif
 
   // called when we go into full screen, even if it is
@@ -1138,7 +1181,9 @@ function BrowserShutdown()
   } catch (ex) {
   }
 
-#ifndef MOZ_PLACES_BOOKMARKS
+#ifdef MOZ_PLACES_BOOKMARKS
+  PlacesUtils.bookmarks.removeObserver(gBookmarksObserver);
+#else
   try {
     document.getElementById("PersonalToolbar")
             .controllers.removeController(BookmarksMenuController);
