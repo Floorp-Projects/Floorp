@@ -4367,7 +4367,9 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
             if (parent) {
                 /* 2(e)(i). */
-                parentobj = parent->object;
+                parentobj = js_GetXMLObject(cx, parent);
+                if (!parentobj)
+                    goto bad;
                 ok = PutProperty(cx, parentobj, id, vp);
                 if (!ok)
                     goto out;
