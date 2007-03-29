@@ -41,7 +41,6 @@
 #include "nsSVGOuterSVGFrame.h"
 #include "nsIDOMSVGAnimatedRect.h"
 #include "nsSVGMatrix.h"
-#include "nsSVGFilterFrame.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGContainerFrame.h"
 #include "gfxContext.h"
