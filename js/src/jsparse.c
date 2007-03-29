@@ -6238,7 +6238,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             pn1 = pn1->pn_kid;
         switch (pn1->pn_type) {
           case TOK_NUMBER:
-            if (pn1->pn_dval == 0)
+            if (pn1->pn_dval == 0 || JSDOUBLE_IS_NaN(pn1->pn_dval))
                 pn2 = pn3;
             break;
           case TOK_STRING:
@@ -6471,7 +6471,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 
               case JSOP_NOT:
                 pn->pn_type = TOK_PRIMARY;
-                pn->pn_op = (d == 0) ? JSOP_TRUE : JSOP_FALSE;
+                pn->pn_op = (d == 0 || JSDOUBLE_IS_NaN(d)) ? JSOP_TRUE : JSOP_FALSE;
                 pn->pn_arity = PN_NULLARY;
                 /* FALL THROUGH */
 
