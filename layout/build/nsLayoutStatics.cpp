@@ -98,10 +98,6 @@ PRBool NS_SVGEnabled();
 #include "inDOMView.h"
 #endif
 
-#ifdef MOZ_CAIRO_GFX
-#include "gfxTextRunCache.h"
-#endif
-
 #ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #include "nsHTMLEditor.h"
 #include "nsTextServicesDocument.h"
@@ -111,9 +107,6 @@ PRBool NS_SVGEnabled();
 #include "nsTraceRefcnt.h"
 
 static nsrefcnt sLayoutStaticRefcnt;
-#ifdef MOZ_CAIRO_GFX
-static PRBool initedGfxTextRunCache;
-#endif
 
 nsresult
 nsLayoutStatics::Initialize()
@@ -215,15 +208,6 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
-#ifdef MOZ_CAIRO_GFX
-  rv = gfxTextRunCache::Init();
-  initedGfxTextRunCache = PR_TRUE;  
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not initialize gfxTextRunCache");
-    return rv;
-  }
-#endif
-  
   return NS_OK;
 }
 
@@ -292,12 +276,6 @@ nsLayoutStatics::Shutdown()
 #ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
   nsHTMLEditor::Shutdown();
   nsTextServicesDocument::Shutdown();
-#endif
-
-#ifdef MOZ_CAIRO_GFX
-  if (initedGfxTextRunCache) {
-    gfxTextRunCache::Shutdown();
-  }  
 #endif
 }
 

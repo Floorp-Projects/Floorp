@@ -293,7 +293,6 @@ RunTest (TestEntry *test, gfxContext *ctx) {
 #elif defined(MOZ_ENABLE_PANGO)
     fontGroup = new gfxPangoFontGroup(NS_ConvertUTF8toUTF16(test->utf8FamilyString), &test->fontStyle);
 #elif defined(XP_MACOSX)
-    CocoaPoolInit();
     fontGroup = new gfxAtsuiFontGroup(NS_ConvertUTF8toUTF16(test->utf8FamilyString), &test->fontStyle);
 #else
     return PR_FALSE;
@@ -341,9 +340,16 @@ main (int argc, char **argv) {
 #ifdef MOZ_WIDGET_GTK2
     gtk_init(&argc, &argv); 
 #endif
+#ifdef XP_MACOSX
+    CocoaPoolInit();
+#endif
 
     // Initialize XPCOM
     nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+    if (NS_FAILED(rv))
+        return -1;
+
+    rv = gfxPlatform::Init();
     if (NS_FAILED(rv))
         return -1;
 
