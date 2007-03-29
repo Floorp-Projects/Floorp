@@ -105,9 +105,19 @@ protected:
 class gfxQuartzFontCache {
 public:
     static gfxQuartzFontCache* SharedFontCache() {
-        if (!sSharedFontCache)
-            sSharedFontCache = new gfxQuartzFontCache();
         return sSharedFontCache;
+    }
+
+    static nsresult Init() {
+        NS_ASSERTION(!sSharedFontCache, "What's this doing here?");
+        sSharedFontCache = new gfxQuartzFontCache();
+        return sSharedFontCache ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    }
+    // It's OK to call Shutdown if we never actually started or if 
+    // we already shut down.
+    static void Shutdown() {
+        delete sSharedFontCache;
+        sSharedFontCache = nsnull;
     }
 
     ATSUFontID FindATSUFontIDForFamilyAndStyle (const nsAString& aFamily,

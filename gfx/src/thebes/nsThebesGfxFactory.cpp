@@ -143,6 +143,12 @@ static const nsModuleComponentInfo components[] =
     gfxImageFrameConstructor },
 };
 
+PR_STATIC_CALLBACK(nsresult)
+nsThebesGfxModuleCtor(nsIModule *self)
+{
+    return gfxPlatform::Init();
+}
+
 PR_STATIC_CALLBACK(void)
 nsThebesGfxModuleDtor(nsIModule *self)
 {
@@ -150,5 +156,5 @@ nsThebesGfxModuleDtor(nsIModule *self)
     gfxPlatform::Shutdown();
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR(nsGfxModule, components, nsThebesGfxModuleDtor)
-
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsGfxModule, components,
+                                   nsThebesGfxModuleCtor, nsThebesGfxModuleDtor)

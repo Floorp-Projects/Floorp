@@ -74,7 +74,6 @@ Is8Bit(const PRUnichar *aString, PRUint32 aLength)
 }
 
 gfxTextRunCache* gfxTextRunCache::mGlobalCache = nsnull;
-PRInt32 gfxTextRunCache::mGlobalCacheRefCount = 0;
 
 static int gDisableCache = -1;
 
@@ -95,16 +94,11 @@ gfxTextRunCache::gfxTextRunCache()
 nsresult
 gfxTextRunCache::Init()
 {
-    // We only live on the UI thread, right?  ;)
-    ++mGlobalCacheRefCount;
+    NS_ASSERTION(!mGlobalCache, "Why do we have an mGlobalCache?");
+    mGlobalCache = new gfxTextRunCache();
 
-    if (mGlobalCacheRefCount == 1) {
-        NS_ASSERTION(!mGlobalCache, "Why do we have an mGlobalCache?");
-        mGlobalCache = new gfxTextRunCache();
-
-        if (!mGlobalCache) {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
+    if (!mGlobalCache) {
+        return NS_ERROR_OUT_OF_MEMORY;
     }
 
     return NS_OK;
@@ -114,11 +108,8 @@ gfxTextRunCache::Init()
 void
 gfxTextRunCache::Shutdown()
 {
-    --mGlobalCacheRefCount;
-    if (mGlobalCacheRefCount == 0) {
-        delete mGlobalCache;
-        mGlobalCache = nsnull;
-    }
+    delete mGlobalCache;
+    mGlobalCache = nsnull;
 }    
 
 static PRUint32

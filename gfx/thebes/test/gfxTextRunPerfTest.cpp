@@ -116,7 +116,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
     PRUint32 i;
     PRBool isASCII = PR_TRUE;
     for (i = 0; test->mString[i]; ++i) {
-        if (test->mString[i] >= 0x80) {
+        if (test->mString[i] & 0x80) {
             isASCII = PR_FALSE;
         }
     }
@@ -157,6 +157,10 @@ main (int argc, char **argv) {
     nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     if (NS_FAILED(rv))
         return -1; 
+
+    rv = gfxPlatform::Init();
+    if (NS_FAILED(rv))
+        return -1;
 
     // let's get all the xpcom goop out of the system
     fflush (stderr);
