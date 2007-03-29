@@ -385,7 +385,8 @@ nsSVGGradientFrame::SetupPaintServer(gfxContext *aContext,
                                       NS_GET_R(rgba)/255.0,
                                       NS_GET_G(rgba)/255.0,
                                       NS_GET_B(rgba)/255.0,
-                                      opacity * aOpacity);
+                                      NS_GET_A(rgba)/255.0 *
+                                        opacity * aOpacity);
   }
 
   cairo_set_source(aContext->GetCairo(), gradient);
