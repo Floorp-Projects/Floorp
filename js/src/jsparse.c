@@ -1725,7 +1725,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     JSPropertyOp getter, setter;
     JSScopeProperty *sprop;
 
-    stmt = js_LexicalLookup(tc, atom, NULL, JS_FALSE);
+    stmt = js_LexicalLookup(tc, atom, NULL, 0);
     ATOM_LIST_SEARCH(ale, &tc->decls, atom);
     op = data->op;
     if ((stmt && stmt->type != STMT_WITH) || ale) {

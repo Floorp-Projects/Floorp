@@ -470,7 +470,7 @@ js_LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
  */
 extern JSStmtInfo *
 js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp,
-                 JSBool letdecl);
+                 uintN decltype);
 
 /*
  * Emit code into cg for the tree rooted at pn.
