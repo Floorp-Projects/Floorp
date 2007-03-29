@@ -1110,19 +1110,12 @@ nsIFrame::GetAbsPosClipRect(const nsStyleDisplay* aDisp, nsRect* aRect)
       !(aDisp->mClipFlags & NS_STYLE_CLIP_RECT))
     return PR_FALSE;
 
-  // Start with the 'auto' values and then factor in user specified values
-  aRect->SetRect(nsPoint(0, 0), GetSize());
-  if (0 == (NS_STYLE_CLIP_TOP_AUTO & aDisp->mClipFlags)) {
-    aRect->y += aDisp->mClip.y;
+  *aRect = aDisp->mClip;
+  if (NS_STYLE_CLIP_RIGHT_AUTO & aDisp->mClipFlags) {
+    aRect->width = GetSize().width - aRect->x;
   }
-  if (0 == (NS_STYLE_CLIP_LEFT_AUTO & aDisp->mClipFlags)) {
-    aRect->x += aDisp->mClip.x;
-  }
-  if (0 == (NS_STYLE_CLIP_RIGHT_AUTO & aDisp->mClipFlags)) {
-    aRect->width = aDisp->mClip.width;
-  }
-  if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & aDisp->mClipFlags)) {
-    aRect->height = aDisp->mClip.height;
+  if (NS_STYLE_CLIP_BOTTOM_AUTO & aDisp->mClipFlags) {
+    aRect->height = GetSize().height - aRect->y;
   }
   return PR_TRUE;
 }
