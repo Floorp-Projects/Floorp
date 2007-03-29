@@ -47,8 +47,6 @@
 
 typedef nsContainerFrame nsSVGForeignObjectFrameBase;
 
-class nsISVGFilterFrame;
-
 class nsSVGForeignObjectFrame : public nsSVGForeignObjectFrameBase,
                                 public nsISVGChildFrame
 {

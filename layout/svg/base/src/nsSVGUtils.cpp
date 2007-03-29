@@ -84,10 +84,10 @@
 
 class nsSVGFilterProperty : public nsStubMutationObserver {
 public:
-  nsSVGFilterProperty(nsISVGFilterFrame *aFilter, nsIFrame *aFrame);
+  nsSVGFilterProperty(nsSVGFilterFrame *aFilter, nsIFrame *aFrame);
 
   nsRect GetRect() { return mFilterRect; }
-  nsISVGFilterFrame *GetFilterFrame() { return mFilter; }
+  nsSVGFilterFrame *GetFilterFrame() { return mFilter; }
   void RemoveMutationObserver();
 
   // nsISupports
@@ -109,14 +109,14 @@ private:
   void DoUpdate();
 
   nsWeakPtr mObservedFilter;
-  nsISVGFilterFrame *mFilter;
+  nsSVGFilterFrame *mFilter;
   nsIFrame *mFrame;  // frame being filtered
   nsRect mFilterRect;
 };
 
 NS_IMPL_ISUPPORTS1(nsSVGFilterProperty, nsIMutationObserver)
 
-nsSVGFilterProperty::nsSVGFilterProperty(nsISVGFilterFrame *aFilter,
+nsSVGFilterProperty::nsSVGFilterProperty(nsSVGFilterFrame *aFilter,
                                          nsIFrame *aFrame)
   : mFilter(aFilter), mFrame(aFrame)
 {
@@ -777,7 +777,7 @@ AddEffectProperties(nsIFrame *aFrame)
   const nsStyleSVGReset *style = aFrame->GetStyleSVGReset();
 
   if (style->mFilter && !(aFrame->GetStateBits() & NS_STATE_SVG_FILTERED)) {
-    nsISVGFilterFrame *filter;
+    nsSVGFilterFrame *filter;
     NS_GetSVGFilterFrame(&filter, style->mFilter, aFrame->GetContent());
     if (filter) {
       nsSVGFilterProperty *property = new nsSVGFilterProperty(filter, aFrame);
