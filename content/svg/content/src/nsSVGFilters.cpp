@@ -2734,7 +2734,7 @@ nsSVGFEFloodElement::Filter(nsSVGFilterInstance *instance)
                         NS_GET_R(floodColor) / 255.0,
                         NS_GET_G(floodColor) / 255.0,
                         NS_GET_B(floodColor) / 255.0,
-                        floodOpacity);
+                        NS_GET_A(floodColor) / 255.0 * floodOpacity);
   cairo_rectangle(cr, rect.x, rect.y, rect.width, rect.height);
   cairo_fill(cr);
   cairo_destroy(cr);
