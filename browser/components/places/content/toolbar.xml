@@ -496,10 +496,6 @@
           }
         },
         onItemChanged: function TB_O_onItemChanged(id, bookmark, property, value) {
-          if (property == "became_toolbar_folder") {
-            var place = PlacesUtils.getQueryStringForFolder(id);
-            this._self.place = place || null;
-          }
           this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onItemVisited: function TB_0_onItemVisited(bookmark, visitId, time) {
