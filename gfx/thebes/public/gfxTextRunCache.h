@@ -56,6 +56,8 @@ public:
     }
 
     static nsresult Init();
+    // It's OK to call Shutdown if we never actually started or we already
+    // shut down.
     static void Shutdown();
 
     /* Will return a pointer to a gfxTextRun, which may or may not be from
@@ -76,7 +78,6 @@ protected:
     gfxTextRunCache();
 
     static gfxTextRunCache *mGlobalCache;
-    static PRInt32 mGlobalCacheRefCount;
 
     /* A small container class to hold a gfxFontGroup ref and a string.
      * This is used as the key for the cache hash table; to avoid

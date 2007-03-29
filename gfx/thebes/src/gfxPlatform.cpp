@@ -41,6 +41,7 @@
 #include "gfxWindowsPlatform.h"
 #elif defined(XP_MACOSX)
 #include "gfxPlatformMac.h"
+#include "gfxQuartzFontCache.h"
 #elif defined(MOZ_WIDGET_GTK2)
 #include "gfxPlatformGtk.h"
 #elif defined(XP_BEOS)
@@ -51,6 +52,7 @@
 
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
+#include "gfxTextRunCache.h"
 
 #include "nsIPref.h"
 #include "nsServiceManagerUtils.h"
@@ -67,26 +69,57 @@ int gGlitzState = -1;
 gfxPlatform*
 gfxPlatform::GetPlatform()
 {
-    if (!gPlatform) {
+    return gPlatform;
+}
+
+nsresult
+gfxPlatform::Init()
+{
+    NS_ASSERTION(!gPlatform, "Already started???");
 #if defined(XP_WIN)
-        gPlatform = new gfxWindowsPlatform;
+    gPlatform = new gfxWindowsPlatform;
 #elif defined(XP_MACOSX)
-        gPlatform = new gfxPlatformMac;
+    gPlatform = new gfxPlatformMac;
 #elif defined(MOZ_WIDGET_GTK2)
-        gPlatform = new gfxPlatformGtk;
+    gPlatform = new gfxPlatformGtk;
 #elif defined(XP_BEOS)
-        gPlatform = new gfxBeOSPlatform;
+    gPlatform = new gfxBeOSPlatform;
 #elif defined(XP_OS2)
-        gPlatform = new gfxOS2Platform;
+    gPlatform = new gfxOS2Platform;
 #endif
+    if (!gPlatform)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv;
+
+#if defined(XP_MACOSX)
+    rv = gfxQuartzFontCache::Init();
+    if (NS_FAILED(rv)) {
+        NS_ERROR("Could not initialize gfxQuartzFontCache");
+        Shutdown();
+        return rv;
+    }
+#endif
+
+    rv = gfxTextRunCache::Init();
+    if (NS_FAILED(rv)) {
+        NS_ERROR("Could not initialize gfxTextRunCache");
+        Shutdown();
+        return rv;
     }
 
-    return gPlatform;
+    return NS_OK;
 }
 
 void
 gfxPlatform::Shutdown()
 {
+    // These may be called before the corresponding subsystems have actually
+    // started up. That's OK, they can handle it.
+    gfxTextRunCache::Shutdown();
+#if defined(XP_MACOSX)
+    gfxQuartzFontCache::Shutdown();
+#endif
     delete gPlatform;
     gPlatform = nsnull;
 }
