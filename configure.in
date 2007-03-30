@@ -7597,14 +7597,14 @@ if test "$MOZ_LDAP_XPCOM"; then
     LDAP_CFLAGS='-I${DIST}/public/ldap'
     if test "$OS_ARCH" = "WINNT"; then
         if test -n "$GNU_CC"; then
-            LDAP_LIBS='-L$(DIST)/lib -lnsldap32v60 -lnsldappr32v60 -lnsldif32v60'
+            LDAP_LIBS='-L$(DIST)/lib -lnsldap32v50 -lnsldappr32v50'
         else
-            LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)nsldap32v60.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)nsldappr32v60.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)nsldif32v60.${IMPORT_LIB_SUFFIX}'
+            LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)nsldap32v50.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)nsldappr32v50.${IMPORT_LIB_SUFFIX}'
         fi
     elif test "$VACPP"; then
-            LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)ldap60.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)prldap60.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)ldif60.${IMPORT_LIB_SUFFIX}'
+            LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)ldap50.${IMPORT_LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)prldap50.${IMPORT_LIB_SUFFIX}'
     else
-        LDAP_LIBS='-L${DIST}/bin -L${DIST}/lib -lldap60 -lprldap60 -lldif60'
+        LDAP_LIBS='-L${DIST}/bin -L${DIST}/lib -lldap50 -llber50 -lprldap50'
     fi
 fi
 
