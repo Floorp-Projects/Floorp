@@ -52,35 +52,31 @@ NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContex
   return new (aPresShell) nsSVGMaskFrame(aContext);
 }
 
-nsresult
-NS_GetSVGMaskFrame(nsSVGMaskFrame **aResult,
-                   nsIURI *aURI, nsIContent *aContent)
+nsSVGMaskFrame *
+NS_GetSVGMaskFrame(nsIURI *aURI, nsIContent *aContent)
 {
-  *aResult = nsnull;
-
   // Get the PresShell
   nsIDocument *myDoc = aContent->GetCurrentDoc();
   if (!myDoc) {
     NS_WARNING("No document for this content!");
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
   nsIPresShell *presShell = myDoc->GetShellAt(0);
   if (!presShell) {
     NS_WARNING("no presshell");
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
 
   // Find the referenced frame
   nsIFrame *cpframe;
   if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&cpframe, aURI, aContent, presShell)))
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
   nsIAtom* frameType = cpframe->GetType();
   if (frameType != nsGkAtoms::svgMaskFrame)
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
-  *aResult = (nsSVGMaskFrame *)cpframe;
-  return NS_OK;
+  return NS_STATIC_CAST(nsSVGMaskFrame *, cpframe);
 }
 
 NS_IMETHODIMP
