@@ -361,7 +361,7 @@ nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt,
   case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM:
   case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
   case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
-    fm = GetPresContext()->GetMetricsFor(myFont->mFont);
+    fm = PresContext()->GetMetricsFor(myFont->mFont);
 #ifdef IBMBIDI
     // If we can't render our numeral using the chars in the numbering
     // system, we'll be using "decimal"...
@@ -382,7 +382,7 @@ nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt,
   }
 #ifdef IBMBIDI
   if (charType != eCharType_LeftToRight) {
-    nsPresContext* presContext = GetPresContext();
+    nsPresContext* presContext = PresContext();
     fm = presContext->GetMetricsFor(myFont->mFont);
     aRenderingContext.SetFont(fm);
     nscoord ascent;
@@ -1573,7 +1573,7 @@ nsBulletFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 {
   nsHTMLReflowMetrics metrics;
   DISPLAY_MIN_WIDTH(this, metrics.width);
-  GetDesiredSize(GetPresContext(), aRenderingContext, metrics);
+  GetDesiredSize(PresContext(), aRenderingContext, metrics);
   return metrics.width;
 }
 
@@ -1582,7 +1582,7 @@ nsBulletFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 {
   nsHTMLReflowMetrics metrics;
   DISPLAY_PREF_WIDTH(this, metrics.width);
-  GetDesiredSize(GetPresContext(), aRenderingContext, metrics);
+  GetDesiredSize(PresContext(), aRenderingContext, metrics);
   return metrics.width;
 }
 
@@ -1603,7 +1603,7 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
   aImage->GetWidth(&w);
   aImage->GetHeight(&h);
 
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
 
   nsSize newsize(nsPresContext::CSSPixelsToAppUnits(w),
                  nsPresContext::CSSPixelsToAppUnits(h));

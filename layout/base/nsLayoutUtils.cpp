@@ -400,8 +400,8 @@ nsLayoutUtils::DoCompareTreePosition(nsIFrame* aFrame1,
   NS_PRECONDITION(aFrame1, "aFrame1 must not be null");
   NS_PRECONDITION(aFrame2, "aFrame2 must not be null");
 
-  nsPresContext* presContext = aFrame1->GetPresContext();
-  if (presContext != aFrame2->GetPresContext()) {
+  nsPresContext* presContext = aFrame1->PresContext();
+  if (presContext != aFrame2->PresContext()) {
     NS_ERROR("no common ancestor at all, different documents");
     return 0;
   }
@@ -619,7 +619,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(nsEvent* aEvent, nsIFrame* aFrame)
   if (!rootView)
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
-  nsPoint widgetToView = TranslateWidgetToView(rootFrame->GetPresContext(),
+  nsPoint widgetToView = TranslateWidgetToView(rootFrame->PresContext(),
                                GUIEvent->widget, GUIEvent->refPoint,
                                rootView);
 
@@ -648,7 +648,7 @@ nsLayoutUtils::GetEventCoordinatesForNearestView(nsEvent* aEvent,
   if (aView)
     *aView = frameView;
 
-  return TranslateWidgetToView(aFrame->GetPresContext(), GUIEvent->widget,
+  return TranslateWidgetToView(aFrame->PresContext(), GUIEvent->widget,
                                GUIEvent->refPoint, frameView);
 }
 
@@ -702,7 +702,7 @@ PRBool
 nsLayoutUtils::IsInitialContainingBlock(nsIFrame* aFrame)
 {
   return aFrame ==
-    aFrame->GetPresContext()->PresShell()->FrameConstructor()->GetInitialContainingBlock();
+    aFrame->PresContext()->PresShell()->FrameConstructor()->GetInitialContainingBlock();
 }
 
 #ifdef DEBUG
@@ -1072,7 +1072,7 @@ nsLayoutUtils::GetFontMetricsForFrame(nsIFrame* aFrame,
                                       nsIFontMetrics** aFontMetrics)
 {
   nsStyleContext* sc = aFrame->GetStyleContext();
-  return aFrame->GetPresContext()->DeviceContext()->
+  return aFrame->PresContext()->DeviceContext()->
     GetMetricsFor(sc->GetStyleFont()->mFont,
                   sc->GetStyleVisibility()->mLangGroup,
                   *aFontMetrics);
@@ -1126,8 +1126,8 @@ nsLayoutUtils::GetClosestCommonAncestorViaPlaceholders(nsIFrame* aFrame1,
   NS_PRECONDITION(aFrame1, "aFrame1 must not be null");
   NS_PRECONDITION(aFrame2, "aFrame2 must not be null");
 
-  nsPresContext* presContext = aFrame1->GetPresContext();
-  if (presContext != aFrame2->GetPresContext()) {
+  nsPresContext* presContext = aFrame1->PresContext();
+  if (presContext != aFrame2->PresContext()) {
     // different documents, no common ancestor
     return nsnull;
   }
@@ -1201,7 +1201,7 @@ nsLayoutUtils::IsViewportScrollbarFrame(nsIFrame* aFrame)
     return PR_FALSE;
 
   nsIFrame* rootScrollFrame =
-    aFrame->GetPresContext()->PresShell()->GetRootScrollFrame();
+    aFrame->PresContext()->PresShell()->GetRootScrollFrame();
   if (!rootScrollFrame)
     return PR_FALSE;
 
@@ -1398,7 +1398,7 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
   if (aFrame->IsThemed(disp)) {
     nsSize size(0, 0);
     PRBool canOverride = PR_TRUE;
-    nsPresContext *presContext = aFrame->GetPresContext();
+    nsPresContext *presContext = aFrame->PresContext();
     presContext->GetTheme()->
       GetMinimumWidgetSize(aRenderingContext, aFrame, disp->mAppearance,
                            &size, &canOverride);
@@ -1713,7 +1713,7 @@ nsLayoutUtils::DrawString(const nsIFrame*      aFrame,
 {
 #ifdef IBMBIDI
   nsresult rv = NS_ERROR_FAILURE;
-  nsPresContext* presContext = aFrame->GetPresContext();
+  nsPresContext* presContext = aFrame->PresContext();
   if (presContext->BidiEnabled()) {
     nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
 
@@ -1748,7 +1748,7 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
   // textrun implementation. Otherwise assume the platform can get
   // things right for a mixed-direction string.
   if (hints & NS_RENDERING_HINT_NEW_TEXT_RUNS) {
-    nsPresContext* presContext = aFrame->GetPresContext();
+    nsPresContext* presContext = aFrame->PresContext();
     if (presContext->BidiEnabled()) {
       nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
 
@@ -1875,7 +1875,7 @@ nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
   }
   if (layer)
     return layer;
-  return aFrame->GetPresContext()->PresShell()->FrameManager()->GetRootFrame();
+  return aFrame->PresContext()->PresShell()->FrameManager()->GetRootFrame();
 }
 
 /* static */ nsresult

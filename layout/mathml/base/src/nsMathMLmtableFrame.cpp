@@ -357,7 +357,7 @@ nsMathMLmtableOuterFrame::Init(nsIContent*      aContent,
                                nsIFrame*        aPrevInFlow)
 {
   nsresult rv = nsTableOuterFrame::Init(aContent, aParent, aPrevInFlow);
-  nsMathMLFrame::MapCommonAttributesIntoCSS(GetPresContext(), aContent);
+  nsMathMLFrame::MapCommonAttributesIntoCSS(PresContext(), aContent);
   return rv;
 }
 
@@ -419,7 +419,7 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
                                            PRInt32  aModType)
 {
   // Attributes common to MathML tags
-  if (nsMathMLFrame::CommonAttributeChangedFor(GetPresContext(), mContent, aAttribute))
+  if (nsMathMLFrame::CommonAttributeChangedFor(PresContext(), mContent, aAttribute))
     return NS_OK;
 
   // Attributes specific to <mtable>:
@@ -447,7 +447,7 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
 
   // align - just need to issue a dirty (resize) reflow command
   if (aAttribute == nsGkAtoms::align) {
-    GetPresContext()->PresShell()->
+    PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eResize);
     return NS_OK;
   }
@@ -458,7 +458,7 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
   if (aAttribute == nsGkAtoms::displaystyle_) {
     nsMathMLContainerFrame::RebuildAutomaticDataForChildren(mParent);
     nsMathMLContainerFrame::PropagateScriptStyleFor(tableFrame, mPresentationData.scriptLevel);
-    GetPresContext()->PresShell()->
+    PresContext()->PresShell()->
       FrameNeedsReflow(mParent, nsIPresShell::eStyleChange);
     return NS_OK;
   }
@@ -501,7 +501,7 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
   }
 
   // Explicitly request a re-resolve and reflow in our subtree to pick up any changes
-  GetPresContext()->PresShell()->FrameConstructor()->
+  PresContext()->PresShell()->FrameConstructor()->
     PostRestyleEvent(mContent, eReStyle_Self, nsChangeHint_ReflowFrame);
 
   return NS_OK;
@@ -684,7 +684,7 @@ nsMathMLmtableFrame::RestyleTable()
   MapAllAttributesIntoCSS(this);
 
   // Explicitly request a re-resolve and reflow in our subtree to pick up any changes
-  GetPresContext()->PresShell()->FrameConstructor()->
+  PresContext()->PresShell()->FrameConstructor()->
     PostRestyleEvent(mContent, eReStyle_Self, nsChangeHint_ReflowFrame);
 }
 
@@ -711,7 +711,7 @@ nsMathMLmtrFrame::Init(nsIContent* aContent,
                        nsIFrame*   aPrevInFlow)
 {
   nsresult rv = nsTableRowFrame::Init(aContent, aParent, aPrevInFlow);
-  nsMathMLFrame::MapCommonAttributesIntoCSS(GetPresContext(), aContent);
+  nsMathMLFrame::MapCommonAttributesIntoCSS(PresContext(), aContent);
   return rv;
 }
 
@@ -721,7 +721,7 @@ nsMathMLmtrFrame::AttributeChanged(PRInt32  aNameSpaceID,
                                    PRInt32  aModType)
 {
   // Attributes common to MathML tags
-  if (nsMathMLFrame::CommonAttributeChangedFor(GetPresContext(), mContent, aAttribute))
+  if (nsMathMLFrame::CommonAttributeChangedFor(PresContext(), mContent, aAttribute))
     return NS_OK;
 
   // Attributes specific to <mtr>:
@@ -757,7 +757,7 @@ nsMathMLmtrFrame::AttributeChanged(PRInt32  aNameSpaceID,
   }
 
   // Explicitly request a re-resolve and reflow in our subtree to pick up any changes
-  GetPresContext()->PresShell()->FrameConstructor()->
+  PresContext()->PresShell()->FrameConstructor()->
     PostRestyleEvent(mContent, eReStyle_Self, nsChangeHint_ReflowFrame);
 
   return NS_OK;
@@ -786,7 +786,7 @@ nsMathMLmtdFrame::Init(nsIContent* aContent,
                        nsIFrame*   aPrevInFlow)
 {
   nsresult rv = nsTableCellFrame::Init(aContent, aParent, aPrevInFlow);
-  nsMathMLFrame::MapCommonAttributesIntoCSS(GetPresContext(), aContent);
+  nsMathMLFrame::MapCommonAttributesIntoCSS(PresContext(), aContent);
   return rv;
 }
 
@@ -834,7 +834,7 @@ nsMathMLmtdFrame::AttributeChanged(PRInt32  aNameSpaceID,
                                    PRInt32  aModType)
 {
   // Attributes common to MathML tags
-  if (nsMathMLFrame::CommonAttributeChangedFor(GetPresContext(), mContent, aAttribute))
+  if (nsMathMLFrame::CommonAttributeChangedFor(PresContext(), mContent, aAttribute))
     return NS_OK;
 
   // Attributes specific to <mtd>:

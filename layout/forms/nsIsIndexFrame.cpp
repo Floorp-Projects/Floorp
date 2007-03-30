@@ -142,7 +142,7 @@ nsIsIndexFrame::UpdatePromptLabel()
 nsresult
 nsIsIndexFrame::GetInputFrame(nsIFormControlFrame** oFrame)
 {
-  nsIPresShell *presShell = GetPresContext()->GetPresShell();
+  nsIPresShell *presShell = PresContext()->GetPresShell();
   if (!mInputContent) NS_WARNING("null content - cannot restore state");
   if (presShell && mInputContent) {
     nsIFrame *frame = presShell->GetPrimaryFrameFor(mInputContent);
@@ -303,7 +303,7 @@ nsIsIndexFrame::KeyPress(nsIDOMEvent* aEvent)
       keyEvent->GetCharCode(&code);
     }
     if (nsIDOMKeyEvent::DOM_VK_RETURN == code) {
-      OnSubmit(GetPresContext());
+      OnSubmit(PresContext());
       aEvent->PreventDefault(); // XXX Needed?
     }
   }

@@ -92,7 +92,7 @@ nsMathMLmrootFrame::Init(nsIContent*      aContent,
 {
   nsresult rv = nsMathMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
   
-  nsPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = PresContext();
 
   // No need to tract the style context given to our MathML char. 
   // The Style System will use Get/SetAdditionalStyleContext() to keep it

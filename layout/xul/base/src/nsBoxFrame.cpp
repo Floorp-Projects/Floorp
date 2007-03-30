@@ -170,7 +170,7 @@ nsBoxFrame::SetInitialChildList(nsIAtom*        aListName,
   nsresult r = nsContainerFrame::SetInitialChildList(aListName, aChildList);
   if (r == NS_OK) {
     // initialize our list of infos.
-    nsBoxLayoutState state(GetPresContext());
+    nsBoxLayoutState state(PresContext());
     CheckBoxOrder(state);
     if (mLayoutManager)
       mLayoutManager->ChildrenSet(this, state, mFrames.FirstChild());
@@ -644,7 +644,7 @@ nsBoxFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
 
-  nsBoxLayoutState state(GetPresContext(), aRenderingContext);
+  nsBoxLayoutState state(PresContext(), aRenderingContext);
   nsSize minSize = GetMinSize(state);
 
   // GetMinSize returns border-box width, and we want to return content
@@ -665,7 +665,7 @@ nsBoxFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
 
-  nsBoxLayoutState state(GetPresContext(), aRenderingContext);
+  nsBoxLayoutState state(PresContext(), aRenderingContext);
   nsSize prefSize = GetPrefSize(state);
 
   // GetPrefSize returns border-box width, and we want to return content
@@ -1001,7 +1001,7 @@ nsBoxFrame::MarkIntrinsicWidthsDirty()
   CoordNeedsRecalc(mAscent);
 
   if (mLayoutManager) {
-    nsBoxLayoutState state(GetPresContext());
+    nsBoxLayoutState state(PresContext());
     mLayoutManager->IntrinsicWidthsDirty(this, state);
   }
 
@@ -1014,7 +1014,7 @@ nsBoxFrame::RemoveFrame(nsIAtom*        aListName,
                         nsIFrame*       aOldFrame)
 {
   NS_PRECONDITION(!aListName, "We don't support out-of-flow kids");
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   nsBoxLayoutState state(presContext);
 
   // remove the child frame
@@ -1029,7 +1029,7 @@ nsBoxFrame::RemoveFrame(nsIAtom*        aListName,
 
   // mark us dirty and generate a reflow command
   mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
-  GetPresContext()->PresShell()->
+  PresContext()->PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eTreeChange);
   return NS_OK;
 }
@@ -1042,7 +1042,7 @@ nsBoxFrame::InsertFrames(nsIAtom*        aListName,
    NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                 "inserting after sibling frame with different parent");
    NS_PRECONDITION(!aListName, "We don't support out-of-flow kids");
-   nsBoxLayoutState state(GetPresContext());
+   nsBoxLayoutState state(PresContext());
 
    // insert the child frames
    mFrames.InsertFrames(this, aPrevFrame, aFrameList);
@@ -1058,7 +1058,7 @@ nsBoxFrame::InsertFrames(nsIAtom*        aListName,
 #endif
 
    mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
-   GetPresContext()->PresShell()->
+   PresContext()->PresShell()->
      FrameNeedsReflow(this, nsIPresShell::eTreeChange);
    return NS_OK;
 }
@@ -1069,7 +1069,7 @@ nsBoxFrame::AppendFrames(nsIAtom*        aListName,
                          nsIFrame*       aFrameList)
 {
    NS_PRECONDITION(!aListName, "We don't support out-of-flow kids");
-   nsBoxLayoutState state(GetPresContext());
+   nsBoxLayoutState state(PresContext());
 
    // append the new frames
    mFrames.AppendFrames(this, aFrameList);
@@ -1086,7 +1086,7 @@ nsBoxFrame::AppendFrames(nsIAtom*        aListName,
 
    if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
      mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
-     GetPresContext()->PresShell()->
+     PresContext()->PresShell()->
        FrameNeedsReflow(this, nsIPresShell::eTreeChange);
    }
    return NS_OK;
@@ -1201,15 +1201,15 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
     }
 
     mState |= NS_FRAME_IS_DIRTY;
-    GetPresContext()->PresShell()->
+    PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eStyleChange);
   }
   else if (aAttribute == nsGkAtoms::ordinal) {
-    nsBoxLayoutState state(GetPresContext());
+    nsBoxLayoutState state(PresContext());
 
     nsIFrame* frameToMove = this;
     if (GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
-      GetPresContext()->PresShell()->GetPlaceholderFrameFor(this,
+      PresContext()->PresShell()->GetPlaceholderFrameFor(this,
                                                             &frameToMove);
       NS_ASSERTION(frameToMove, "Out of flow without placeholder?");
     }
@@ -1221,7 +1221,7 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
       parent->RelayoutChildAtOrdinal(state, frameToMove);
       mState |= NS_FRAME_IS_DIRTY;
       // XXXldb Should this instead be a tree change on the child or parent?
-      GetPresContext()->PresShell()->
+      PresContext()->PresShell()->
         FrameNeedsReflow(frameToMove, nsIPresShell::eStyleChange);
     }
   }
@@ -1925,7 +1925,7 @@ nsBoxFrame::RegUnregAccessKey(PRBool aDoReg)
 
   // With a valid PresContext we can get the ESM 
   // and register the access key
-  nsIEventStateManager *esm = GetPresContext()->EventStateManager();
+  nsIEventStateManager *esm = PresContext()->EventStateManager();
 
   nsresult rv;
 
@@ -1943,7 +1943,7 @@ nsBoxFrame::FireDOMEventSynch(const nsAString& aDOMEventName, nsIContent *aConte
 {
   // XXX This will be deprecated, because it is not good to fire synchronous DOM events
   // from layout. It's better to use nsFrame::FireDOMEvent() which is asynchronous.
-  nsPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = PresContext();
   nsIContent *content = aContent ? aContent : mContent;
   if (content && presContext) {
     // Fire a DOM event

@@ -647,7 +647,7 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIFrame*       aFrame,
     }
     else {
       // By default scriptminsize=8pt and scriptsizemultiplier=0.71
-      nscoord scriptminsize = aFrame->GetPresContext()->PointsToAppUnits(NS_MATHML_SCRIPTMINSIZE);
+      nscoord scriptminsize = aFrame->PresContext()->PointsToAppUnits(NS_MATHML_SCRIPTMINSIZE);
       float scriptsizemultiplier = NS_MATHML_SCRIPTSIZEMULTIPLIER;
 #if 0
        // XXX Bug 44201
@@ -703,7 +703,7 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIFrame*       aFrame,
     }
 
     // now, re-resolve the style contexts in our subtree
-    nsFrameManager *fm = aFrame->GetPresContext()->FrameManager();
+    nsFrameManager *fm = aFrame->PresContext()->FrameManager();
     nsStyleChangeList changeList;
     fm->ComputeStyleChangeFor(aFrame, &changeList, NS_STYLE_HINT_NONE);
 #ifdef DEBUG
@@ -774,7 +774,7 @@ nsMathMLContainerFrame::Init(nsIContent*      aContent,
                              nsIFrame*        aParent,
                              nsIFrame*        aPrevInFlow)
 {
-  MapCommonAttributesIntoCSS(GetPresContext(), aContent);
+  MapCommonAttributesIntoCSS(PresContext(), aContent);
 
   // let the base class do its Init()
   return nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
@@ -874,7 +874,7 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIFrame* aParentFrame)
   if (!parent)
     return NS_OK;
 
-  return frame->GetPresContext()->PresShell()->
+  return frame->PresContext()->PresShell()->
            FrameNeedsReflow(frame, nsIPresShell::eStyleChange);
 }
 
@@ -950,13 +950,13 @@ nsMathMLContainerFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                          PRInt32         aModType)
 {
   // Attributes common to MathML tags
-  if (CommonAttributeChangedFor(GetPresContext(), mContent, aAttribute))
+  if (CommonAttributeChangedFor(PresContext(), mContent, aAttribute))
     return NS_OK;
 
   // XXX Since they are numerous MathML attributes that affect layout, and
   // we can't check all of them here, play safe by requesting a reflow.
   // XXXldb This should only do work for attributes that cause changes!
-  return GetPresContext()->PresShell()->
+  return PresContext()->PresShell()->
            FrameNeedsReflow(this, nsIPresShell::eStyleChange);
 }
 
@@ -1333,7 +1333,7 @@ nsMathMLContainerFrame::Place(nsIRenderingContext& aRenderingContext,
       prevFrameType = childFrameType;
       // add left correction
       dx += leftCorrection;
-      FinishReflowChild(childFrame, GetPresContext(), nsnull, childSize,
+      FinishReflowChild(childFrame, PresContext(), nsnull, childSize,
                         dx, dy, 0);
       // add child size + italic correction
       dx += bmChild.width + italicCorrection;
@@ -1428,7 +1428,7 @@ nsMathMLContainerFrame::DidReflowChildren(nsIFrame* aFirst, nsIFrame* aStop)
        frame = frame->GetNextSibling()) {
     NS_ASSERTION(frame, "aStop isn't a sibling");
     if (frame->GetStateBits() & NS_FRAME_IN_REFLOW) {
-      frame->DidReflow(frame->GetPresContext(), nsnull,
+      frame->DidReflow(frame->PresContext(), nsnull,
                        NS_FRAME_REFLOW_FINISHED);
     }
   }

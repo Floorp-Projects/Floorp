@@ -454,7 +454,7 @@ public:
     NS_ASSERTION(!capturingFrame || capturingFrame->GetMouseCapturer(),
                  "Capturing frame should have a mouse capturer" );
 
-    NS_ASSERTION(!capturingFrame || mPresContext == capturingFrame->GetPresContext(),
+    NS_ASSERTION(!capturingFrame || mPresContext == capturingFrame->PresContext(),
                  "Shouldn't have different pres contexts");
 
     NS_ASSERTION(capturingFrame != mPresContext->PresShell()->FrameManager()->GetRootFrame(),

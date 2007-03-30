@@ -186,7 +186,7 @@ nsLeafBoxFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
-  nsBoxLayoutState state(GetPresContext(), aRenderingContext);
+  nsBoxLayoutState state(PresContext(), aRenderingContext);
   nsSize minSize = GetMinSize(state);
 
   // GetMinSize returns border-box width, and we want to return content
@@ -206,7 +206,7 @@ nsLeafBoxFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
-  nsBoxLayoutState state(GetPresContext(), aRenderingContext);
+  nsBoxLayoutState state(PresContext(), aRenderingContext);
   nsSize prefSize = GetPrefSize(state);
 
   // GetPrefSize returns border-box width, and we want to return content

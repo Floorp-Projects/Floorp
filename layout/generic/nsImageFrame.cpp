@@ -280,7 +280,7 @@ nsImageFrame::Init(nsIContent*      aContent,
   NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
   imageLoader->AddObserver(mListener);
 
-  nsPresContext *aPresContext = GetPresContext();
+  nsPresContext *aPresContext = PresContext();
   
   if (!gIconLoad)
     LoadIcons(aPresContext);
@@ -516,7 +516,7 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
    *   one frame = 1
    *   one loop = 2
    */
-  nsPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = PresContext();
   aImage->SetAnimationMode(presContext->ImageAnimationMode());
   // Ensure the animation (if any) is started.
   aImage->StartAnimation();
@@ -604,7 +604,7 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
                            nsresult aStatus,
                            const PRUnichar *aStatusArg)
 {
-  nsPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = PresContext();
   nsIPresShell *presShell = presContext->GetPresShell();
   NS_ASSERTION(presShell, "No PresShell.");
 
@@ -718,7 +718,7 @@ nsImageFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
                           nsSize aMargin, nsSize aBorder, nsSize aPadding,
                           PRBool aShrinkWrap)
 {
-  nsPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = PresContext();
   EnsureIntrinsicSize(presContext);
 
   return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
@@ -752,7 +752,7 @@ nsImageFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
   // min-height, and max-height properties.
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
-  nsPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = PresContext();
   EnsureIntrinsicSize(presContext);
   result = mIntrinsicSize.width;
   return result;
@@ -765,7 +765,7 @@ nsImageFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   // min-height, and max-height properties.
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
-  nsPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = PresContext();
   EnsureIntrinsicSize(presContext);
   // convert from normal twips to scaled twips (printing...)
   result = mIntrinsicSize.width;
@@ -1037,8 +1037,8 @@ nsImageFrame::DisplayAltFeedback(nsIRenderingContext& aRenderingContext,
   }
 
   // Paint the border
-  nsRecessedBorder recessedBorder(borderEdgeWidth, GetPresContext());
-  nsCSSRendering::PaintBorder(GetPresContext(), aRenderingContext, this, inner,
+  nsRecessedBorder recessedBorder(borderEdgeWidth, PresContext());
+  nsCSSRendering::PaintBorder(PresContext(), aRenderingContext, this, inner,
                               inner, recessedBorder, mStyleContext, 0);
 
   // Adjust the inner rect to account for the one pixel recessed border,
@@ -1108,7 +1108,7 @@ nsImageFrame::DisplayAltFeedback(nsIRenderingContext& aRenderingContext,
       nsXPIDLString altText;
       nsCSSFrameConstructor::GetAlternateTextFor(content, content->Tag(),
                                                  altText);
-      DisplayAltText(GetPresContext(), aRenderingContext, altText, inner);
+      DisplayAltText(PresContext(), aRenderingContext, altText, inner);
     }
   }
 
@@ -1132,7 +1132,7 @@ static void PaintDebugImageMap(nsIFrame* aFrame, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect, nsPoint aPt) {
   nsImageFrame* f = NS_STATIC_CAST(nsImageFrame*, aFrame);
   nsRect inner = f->GetInnerArea() + aPt;
-  nsPresContext* pc = f->GetPresContext();
+  nsPresContext* pc = f->PresContext();
 
   aCtx->SetColor(NS_RGB(0, 0, 0));
   aCtx->PushState();
@@ -1187,7 +1187,7 @@ nsImageFrame::PaintImage(nsIRenderingContext& aRenderingContext, nsPoint aPt,
 
   nsLayoutUtils::DrawImage(&aRenderingContext, aImage, dest, clip);
 
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   nsImageMap* map = GetImageMap(presContext);
   if (nsnull != map) {
     aRenderingContext.PushState();
@@ -1248,7 +1248,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       NS_ENSURE_SUCCESS(rv, rv);
         
 #ifdef DEBUG
-      if (GetShowFrameBorders() && GetImageMap(GetPresContext())) {
+      if (GetShowFrameBorders() && GetImageMap(PresContext())) {
         rv = aLists.Outlines()->AppendNewToTop(new (aBuilder)
             nsDisplayGeneric(this, PaintDebugImageMap, "DebugImageMap"));
         NS_ENSURE_SUCCESS(rv, rv);
@@ -1260,7 +1260,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // XXX what on EARTH is this code for?
   PRInt16 displaySelection = 0;
   nsresult result;
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   result = presContext->PresShell()->GetSelectionFlags(&displaySelection);
   if (NS_FAILED(result))
     return result;
@@ -1536,7 +1536,7 @@ NS_IMETHODIMP
 nsImageFrame::GetCursor(const nsPoint& aPoint,
                         nsIFrame::Cursor& aCursor)
 {
-  nsPresContext* context = GetPresContext();
+  nsPresContext* context = PresContext();
   nsImageMap* map = GetImageMap(context);
   if (nsnull != map) {
     nsIntPoint p;
@@ -1549,7 +1549,7 @@ nsImageFrame::GetCursor(const nsPoint& aPoint,
       // here, since it means that areas on which the cursor isn't
       // specified will inherit the style from the image.
       nsRefPtr<nsStyleContext> areaStyle = 
-        GetPresContext()->PresShell()->StyleSet()->
+        PresContext()->PresShell()->StyleSet()->
           ResolveStyleFor(area, GetStyleContext());
       if (areaStyle) {
         FillCursorInformationFromStyle(areaStyle->GetStyleUserInterface(),
@@ -1577,7 +1577,7 @@ nsImageFrame::AttributeChanged(PRInt32 aNameSpaceID,
   if (nsGkAtoms::alt == aAttribute)
   {
     AddStateBits(NS_FRAME_IS_DIRTY);
-    GetPresContext()->PresShell()->FrameNeedsReflow(
+    PresContext()->PresShell()->FrameNeedsReflow(
                                        NS_STATIC_CAST(nsIFrame*, this),
                                        nsIPresShell::eStyleChange);
   }

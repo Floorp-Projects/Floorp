@@ -253,11 +253,11 @@ nsMathMLmunderFrame::Place(nsIRenderingContext& aRenderingContext,
   if ( NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
       !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
     // place like subscript
-    return nsMathMLmsubFrame::PlaceSubScript(GetPresContext(),
+    return nsMathMLmsubFrame::PlaceSubScript(PresContext(),
                                              aRenderingContext,
                                              aPlaceOrigin,
                                              aDesiredSize,
-                                             this, 0, GetPresContext()->PointsToAppUnits(0.5f));
+                                             this, 0, PresContext()->PointsToAppUnits(0.5f));
   }
 
   ////////////////////////////////////
@@ -356,10 +356,10 @@ nsMathMLmunderFrame::Place(nsIRenderingContext& aRenderingContext,
   if (aPlaceOrigin) {
     nscoord dy = 0;
     // place base
-    FinishReflowChild(baseFrame, GetPresContext(), nsnull, baseSize, dxBase, dy, 0);
+    FinishReflowChild(baseFrame, PresContext(), nsnull, baseSize, dxBase, dy, 0);
     // place underscript
     dy = aDesiredSize.ascent + mBoundingMetrics.descent - bmUnder.descent - underSize.ascent;
-    FinishReflowChild(underFrame, GetPresContext(), nsnull, underSize, dxUnder, dy, 0);
+    FinishReflowChild(underFrame, PresContext(), nsnull, underSize, dxUnder, dy, 0);
   }
 
   return NS_OK;

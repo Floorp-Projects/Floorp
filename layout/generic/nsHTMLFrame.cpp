@@ -188,7 +188,7 @@ CanvasFrame::Init(nsIContent*      aContent,
 {
   nsresult rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
-  mViewManager = GetPresContext()->GetViewManager();
+  mViewManager = PresContext()->GetViewManager();
 
   nsIScrollableView* scrollingView = nsnull;
   mViewManager->GetRootScrollableView(&scrollingView);
@@ -250,7 +250,7 @@ CanvasFrame::SetHasFocus(PRBool aHasFocus)
 {
   if (mDoPaintFocus != aHasFocus) {
     mDoPaintFocus = aHasFocus;
-    nsIViewManager* vm = GetPresContext()->PresShell()->GetViewManager();
+    nsIViewManager* vm = PresContext()->PresShell()->GetViewManager();
     if (vm) {
       vm->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
     }
@@ -281,7 +281,7 @@ CanvasFrame::AppendFrames(nsIAtom*        aListName,
 #endif
     mFrames.AppendFrame(nsnull, aFrameList);
 
-    rv = GetPresContext()->PresShell()->
+    rv = PresContext()->PresShell()->
            FrameNeedsReflow(this, nsIPresShell::eTreeChange);
   }
 
@@ -329,7 +329,7 @@ CanvasFrame::RemoveFrame(nsIAtom*        aListName,
     mFrames.DestroyFrame(aOldFrame);
 
     AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-    rv = GetPresContext()->PresShell()->
+    rv = PresContext()->PresShell()->
            FrameNeedsReflow(this, nsIPresShell::eTreeChange);
   } else {
     rv = NS_ERROR_FAILURE;
@@ -375,7 +375,7 @@ public:
     CanvasFrame* frame = NS_STATIC_CAST(CanvasFrame*, mFrame);
     nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
     nsRect bgClipRect = frame->CanvasArea() + offset;
-    nsCSSRendering::PaintBackground(mFrame->GetPresContext(), *aCtx, mFrame,
+    nsCSSRendering::PaintBackground(mFrame->PresContext(), *aCtx, mFrame,
                                     aDirtyRect,
                                     nsRect(offset, mFrame->GetSize()),
                                     *mFrame->GetStyleBorder(),
@@ -491,7 +491,7 @@ CanvasFrame::PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt)
     focusRect.y += y;
   }
 
-  nsStyleOutline outlineStyle(GetPresContext());
+  nsStyleOutline outlineStyle(PresContext());
   outlineStyle.SetOutlineStyle(NS_STYLE_BORDER_STYLE_DOTTED);
   outlineStyle.SetOutlineInitialColor();
 

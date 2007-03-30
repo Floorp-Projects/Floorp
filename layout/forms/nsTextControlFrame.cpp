@@ -1087,7 +1087,7 @@ nsTextControlFrame::PreDestroy()
   
   // Clean up the controller
 
-  if (!SuppressEventHandlers(GetPresContext()))
+  if (!SuppressEventHandlers(PresContext()))
   {
     nsCOMPtr<nsIControllers> controllers;
     nsCOMPtr<nsIDOMNSHTMLInputElement> inputElement = do_QueryInterface(mContent);
@@ -1282,7 +1282,7 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
   NS_ENSURE_SUCCESS(rv, rv);
   aRenderingContext->SetFont(fontMet);
 
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   lineHeight = nsHTMLReflowState::CalcLineHeight(presContext,
                                                  aRenderingContext,
                                                  this);
@@ -1341,7 +1341,7 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
     CallQueryInterface(first, &scrollableFrame);
     NS_ASSERTION(scrollableFrame, "Child must be scrollable");
 
-    nsBoxLayoutState bls(GetPresContext(), aRenderingContext);
+    nsBoxLayoutState bls(PresContext(), aRenderingContext);
     nsMargin scrollbarSizes = scrollableFrame->GetDesiredScrollbarSizes(&bls);
 
     aIntrinsicSize.width  += scrollbarSizes.LeftRight();
@@ -1364,7 +1364,7 @@ nsTextControlFrame::CreateFrameFor(nsIContent*      aContent)
   mCreateFrameForCalled = PR_TRUE;
 #endif
   
-  nsPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = PresContext();
   nsIPresShell *shell = presContext->GetPresShell();
   if (!shell)
     return nsnull;
@@ -1651,7 +1651,7 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 {
   mState |= NS_FRAME_INDEPENDENT_SELECTION;
 
-  nsIPresShell* shell = GetPresContext()->GetPresShell();
+  nsIPresShell* shell = PresContext()->GetPresShell();
   if (!shell)
     return NS_ERROR_FAILURE;
 
@@ -1825,7 +1825,7 @@ void nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   // onfocus="some_where_else.focus()" can trigger several focus
   // in succession. Here, we only care if we are the winner.
   // @see also nsTextEditorFocusListener::Focus()
-  if (!IsFocusedContent(GetPresContext(), mContent))
+  if (!IsFocusedContent(PresContext(), mContent))
     return;
 
   // tell the caret to use our selection
@@ -1835,7 +1835,7 @@ void nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
     getter_AddRefs(ourSel));
   if (!ourSel) return;
 
-  nsIPresShell* presShell = GetPresContext()->GetPresShell();
+  nsIPresShell* presShell = PresContext()->GetPresShell();
   nsCOMPtr<nsICaret> caret;
   presShell->GetCaret(getter_AddRefs(caret));
   if (!caret) return;
@@ -2348,14 +2348,14 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
     if (AttributeExists(nsGkAtoms::readonly))
     { // set readonly
       flags |= nsIPlaintextEditor::eEditorReadonlyMask;
-      if (IsFocusedContent(GetPresContext(), mContent))
+      if (IsFocusedContent(PresContext(), mContent))
         mSelCon->SetCaretEnabled(PR_FALSE);
     }
     else 
     { // unset readonly
       flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
       if (!(flags & nsIPlaintextEditor::eEditorDisabledMask) &&
-          IsFocusedContent(GetPresContext(), mContent))
+          IsFocusedContent(PresContext(), mContent))
         mSelCon->SetCaretEnabled(PR_TRUE);
     }    
     mEditor->SetFlags(flags);
@@ -2368,7 +2368,7 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
     { // set disabled
       flags |= nsIPlaintextEditor::eEditorDisabledMask;
       mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
-      if (IsFocusedContent(GetPresContext(), mContent))
+      if (IsFocusedContent(PresContext(), mContent))
         mSelCon->SetCaretEnabled(PR_FALSE);
     }
     else 
@@ -2467,7 +2467,7 @@ nsTextControlFrame::FireOnInput()
 
   // Have the content handle the event, propagating it according to normal
   // DOM rules.
-  nsCOMPtr<nsIPresShell> shell = GetPresContext()->PresShell();
+  nsCOMPtr<nsIPresShell> shell = PresContext()->PresShell();
   shell->HandleEventWithTarget(&event, nsnull, mContent, &status);
 }
 
@@ -2488,7 +2488,7 @@ nsTextControlFrame::CheckFireOnChange()
     // Dispatch the change event
     nsEventStatus status = nsEventStatus_eIgnore;
     nsInputEvent event(PR_TRUE, NS_FORM_CHANGE, nsnull);
-    nsCOMPtr<nsIPresShell> shell = GetPresContext()->PresShell();
+    nsCOMPtr<nsIPresShell> shell = PresContext()->PresShell();
     shell->HandleEventWithTarget(&event, nsnull, mContent, &status);
   }
   return NS_OK;
@@ -2740,7 +2740,7 @@ nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
     rv = erP->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
     // XXXbryner do we need to check for a null presshell here?
-    if (!GetPresContext()->GetPresShell())
+    if (!PresContext()->GetPresShell())
       return NS_ERROR_FAILURE;
   }
 

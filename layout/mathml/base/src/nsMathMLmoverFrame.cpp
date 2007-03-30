@@ -256,11 +256,11 @@ nsMathMLmoverFrame::Place(nsIRenderingContext& aRenderingContext,
   if ( NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
       !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
     // place like superscript
-    return nsMathMLmsupFrame::PlaceSuperScript(GetPresContext(),
+    return nsMathMLmsupFrame::PlaceSuperScript(PresContext(),
                                                aRenderingContext,
                                                aPlaceOrigin,
                                                aDesiredSize,
-                                               this, 0, GetPresContext()->PointsToAppUnits(0.5f));
+                                               this, 0, PresContext()->PointsToAppUnits(0.5f));
   }
 
   ////////////////////////////////////
@@ -403,11 +403,11 @@ nsMathMLmoverFrame::Place(nsIRenderingContext& aRenderingContext,
   if (aPlaceOrigin) {
     // place base
     nscoord dy = aDesiredSize.ascent - baseSize.ascent;
-    FinishReflowChild (baseFrame, GetPresContext(), nsnull, baseSize, dxBase, dy, 0);
+    FinishReflowChild (baseFrame, PresContext(), nsnull, baseSize, dxBase, dy, 0);
     // place overscript
     dy = aDesiredSize.ascent - 
       mBoundingMetrics.ascent + bmOver.ascent - overSize.ascent;
-    FinishReflowChild (overFrame, GetPresContext(), nsnull, overSize, dxOver, dy, 0);
+    FinishReflowChild (overFrame, PresContext(), nsnull, overSize, dxOver, dy, 0);
   }
   return NS_OK;
 }

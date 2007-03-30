@@ -137,7 +137,7 @@ void nsDisplayButtonBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
                                             const nsRect& aDirtyRect)
 {
   NS_ASSERTION(mFrame, "No frame?");
-  nsPresContext* pc = mFrame->GetPresContext();
+  nsPresContext* pc = mFrame->PresContext();
   nsRect r = nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
   
   // draw the border and background inside the focus and outline borders
@@ -148,7 +148,7 @@ void nsDisplayButtonForeground::Paint(nsDisplayListBuilder* aBuilder,
                                       nsIRenderingContext* aCtx,
                                       const nsRect& aDirtyRect)
 {
-  nsPresContext *presContext = mFrame->GetPresContext();
+  nsPresContext *presContext = mFrame->PresContext();
   const nsStyleDisplay *disp = mFrame->GetStyleDisplay();
   if (!mFrame->IsThemed(disp) ||
       !presContext->GetTheme()->ThemeDrawsFocusForWidget(presContext, mFrame, disp->mAppearance)) {

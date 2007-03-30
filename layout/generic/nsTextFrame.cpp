@@ -1447,7 +1447,7 @@ nsContinuingTextFrame::Init(nsIContent*      aContent,
       PRInt32 start, end;
       aPrevInFlow->GetOffsets(start, mContentOffset);
 
-      nsPropertyTable *propTable = GetPresContext()->PropertyTable();
+      nsPropertyTable *propTable = PresContext()->PropertyTable();
       propTable->SetProperty(this, nsGkAtoms::embeddingLevel,
             propTable->GetProperty(aPrevInFlow, nsGkAtoms::embeddingLevel),
                              nsnull, nsnull);
@@ -2022,7 +2022,7 @@ void
 nsTextFrame::PaintText(nsIRenderingContext& aRenderingContext, nsPoint aPt)
 {
   nsStyleContext* sc = mStyleContext;
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   nsCOMPtr<nsIContent> content;
   PRInt32 offset, length;
   GetContentAndOffsetsForSelection(presContext,
@@ -2785,7 +2785,7 @@ nsTextFrame::IsTextInSelection()
   PRBool  isSelected;
   PRBool  hideStandardSelection;
   PRInt16 selectionValue;
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   if (NS_FAILED(GetTextInfoForPainting(presContext, 
                                        getter_AddRefs(shell),
                                        getter_AddRefs(selCon),
@@ -3177,7 +3177,7 @@ nsTextFrame::GetPositionSlowly(nsIRenderingContext* aRendContext,
   // initialize out param
   *aNewContent = nsnull;
 
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   nsTextStyle ts(presContext, *aRendContext, mStyleContext);
   SetupTextRunDirection(presContext, aRendContext);
   if (!ts.mSmallCaps && !ts.mWordSpacing && !ts.mLetterSpacing && !ts.mJustifying) {
@@ -3218,7 +3218,7 @@ nsTextFrame::GetPositionSlowly(nsIRenderingContext* aRendContext,
   }
 
   // Transform text from content into renderable form
-  nsTextTransformer tx(GetPresContext());
+  nsTextTransformer tx(PresContext());
   PRInt32 textLength;
   PRIntn numJustifiableCharacter;
 
@@ -4107,7 +4107,7 @@ nsTextFrame::GetPositionHelper(const nsPoint&  aPoint,
   if (mState & NS_FRAME_IS_DIRTY)
     return NS_ERROR_UNEXPECTED;
 
-  nsPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = PresContext();
   nsIPresShell *shell = presContext->GetPresShell();
   if (shell) {
     nsCOMPtr<nsIRenderingContext> rendContext;      
@@ -4134,7 +4134,7 @@ nsTextFrame::GetPositionHelper(const nsPoint&  aPoint,
       SetFontFromStyle(rendContext, mStyleContext);
 
       // Get the renderable form of the text
-      nsTextTransformer tx(GetPresContext());
+      nsTextTransformer tx(PresContext());
       PRInt32 textLength;
       // no need to worry about justification, that's always on the slow path
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
@@ -4534,7 +4534,7 @@ nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
   if (startOffset < 0)
     startOffset = mContentLength;
 
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   
   // Transform text from content into renderable form
   nsAutoTextBuffer paintBuffer;
@@ -4669,7 +4669,7 @@ nsTextFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool 
   if (startOffset < 0)
     startOffset = mContentLength;
   
-  nsTextTransformer tx(GetPresContext());
+  nsTextTransformer tx(PresContext());
   PRBool keepSearching = PR_TRUE; //if you run out of chars before you hit the end of word, maybe next frame has more text to select?
   PRBool found = PR_FALSE;
   PRBool isWhitespace, wasTransformed;
@@ -5675,7 +5675,7 @@ nsTextFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
 {
   nsresult rv;
 
-  nsPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = PresContext();
   nsTextStyle ts(presContext, *aRenderingContext, mStyleContext);
   SetupTextRunDirection(presContext, aRenderingContext);
   if (!ts.mFont->mSize)
@@ -5815,7 +5815,7 @@ nsTextFrame::AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
 {
   nsresult rv;
 
-  nsPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = PresContext();
   nsTextStyle ts(presContext, *aRenderingContext, mStyleContext);
   if (!ts.mFont->mSize)
     // XXX If font size is zero, we still need to figure out whether we've

@@ -852,8 +852,8 @@ public:
      const nsRect& aDirtyRect) {
     nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
     nsIRenderingContext::AutoPushTranslation translate(aCtx, pt.x, pt.y);
-    mFrame->GetPresContext()->PresShell()->PaintCount(mFrameName, aCtx,
-                                                      mFrame->GetPresContext(),
+    mFrame->PresContext()->PresShell()->PaintCount(mFrameName, aCtx,
+                                                      mFrame->PresContext(),
                                                       mFrame, mColor);
   }
   NS_DISPLAY_DECL_NAME("nsDisplayReflowCount")

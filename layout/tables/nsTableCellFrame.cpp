@@ -174,7 +174,7 @@ nsTableCellFrame::NeedsToObserve(const nsHTMLReflowState& aReflowState)
   // (i.e., children of the child block) in quirks mode, but only to
   // tables in standards mode.
   return rs->frame == this &&
-         (GetPresContext()->CompatibilityMode() == eCompatibility_NavQuirks ||
+         (PresContext()->CompatibilityMode() == eCompatibility_NavQuirks ||
           fType == nsGkAtoms::tableOuterFrame);
 }
 
@@ -276,7 +276,7 @@ nsTableCellFrame::DecorateForSelection(nsIRenderingContext& aRenderingContext,
   NS_ASSERTION(GetStateBits() & NS_FRAME_SELECTED_CONTENT,
                "Should only be called for selected cells");
   PRInt16 displaySelection;
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   displaySelection = DisplaySelection(presContext);
   if (displaySelection) {
     nsFrameSelection *frameSelection = presContext->PresShell()->FrameSelection();
@@ -325,7 +325,7 @@ nsTableCellFrame::PaintBackground(nsIRenderingContext& aRenderingContext,
                                   nsPoint              aPt)
 {
   nsRect rect(aPt, GetSize());
-  nsCSSRendering::PaintBackground(GetPresContext(), aRenderingContext, this,
+  nsCSSRendering::PaintBackground(PresContext(), aRenderingContext, this,
                                   aDirtyRect, rect, *GetStyleBorder(),
                                   *GetStylePadding(), PR_TRUE);
 }
@@ -427,7 +427,7 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool quirkyClip = HasPctOverHeight() &&
-    eCompatibility_NavQuirks == GetPresContext()->CompatibilityMode();
+    eCompatibility_NavQuirks == PresContext()->CompatibilityMode();
   nsIFrame* kid = mFrames.FirstChild();
   NS_ASSERTION(kid && !kid->GetNextSibling(), "Table cells should have just one child");
   if (!quirkyClip) {
@@ -585,7 +585,7 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
     nsContainerFrame::PositionChildViews(firstKid);
   }
   if (HasView()) {
-    nsContainerFrame::SyncFrameViewAfterReflow(GetPresContext(), this,
+    nsContainerFrame::SyncFrameViewAfterReflow(PresContext(), this,
                                                GetView(),
                                                &desiredSize.mOverflowArea, 0);
   }
@@ -1081,7 +1081,7 @@ nsBCTableCellFrame::PaintBackground(nsIRenderingContext& aRenderingContext,
   }
 
   nsRect rect(aPt, GetSize());
-  nsCSSRendering::PaintBackground(GetPresContext(), aRenderingContext, this,
+  nsCSSRendering::PaintBackground(PresContext(), aRenderingContext, this,
                                   aDirtyRect, rect, myBorder, *GetStylePadding(),
                                   PR_TRUE);
 }

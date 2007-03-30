@@ -197,7 +197,7 @@ nsTableRowFrame::AppendFrames(nsIAtom*        aListName,
   }
 
   AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-  GetPresContext()->PresShell()->FrameNeedsReflow(this,
+  PresContext()->PresShell()->FrameNeedsReflow(this,
                                                   nsIPresShell::eTreeChange);
   tableFrame->SetGeometryDirty();
 
@@ -238,7 +238,7 @@ nsTableRowFrame::InsertFrames(nsIAtom*        aListName,
   mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
   
   AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-  GetPresContext()->PresShell()->FrameNeedsReflow(this,
+  PresContext()->PresShell()->FrameNeedsReflow(this,
                                                   nsIPresShell::eTreeChange);
   tableFrame->SetGeometryDirty();
 
@@ -264,7 +264,7 @@ nsTableRowFrame::RemoveFrame(nsIAtom*        aListName,
       mFrames.DestroyFrame(aOldFrame);
 
       AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-      GetPresContext()->PresShell()->FrameNeedsReflow(this,
+      PresContext()->PresShell()->FrameNeedsReflow(this,
                                                     nsIPresShell::eTreeChange);
       tableFrame->SetGeometryDirty();
     }
@@ -369,7 +369,7 @@ nsTableRowFrame::DidResize()
   }
   FinishAndStoreOverflow(&desiredSize);
   if (HasView()) {
-    nsContainerFrame::SyncFrameViewAfterReflow(GetPresContext(), this, GetView(), &desiredSize.mOverflowArea, 0);
+    nsContainerFrame::SyncFrameViewAfterReflow(PresContext(), this, GetView(), &desiredSize.mOverflowArea, 0);
   }
   // Let our base class do the usual work
 }
@@ -568,7 +568,7 @@ nsDisplayTableRowBackground::Paint(nsDisplayListBuilder* aBuilder,
   nsIRenderingContext::AutoPushTranslation translate(aCtx, pt.x, pt.y);
   TableBackgroundPainter painter(tableFrame,
                                  TableBackgroundPainter::eOrigin_TableRow,
-                                 mFrame->GetPresContext(), *aCtx,
+                                 mFrame->PresContext(), *aCtx,
                                  aDirtyRect - pt);
   painter.PaintRow(NS_STATIC_CAST(nsTableRowFrame*, mFrame));
 }

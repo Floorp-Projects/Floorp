@@ -321,7 +321,7 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
     }
   }
 
-  nsPresContext* aPresContext = GetPresContext();
+  nsPresContext* aPresContext = PresContext();
 
   // create the view. a view is needed since it needs to be a mouse grabber
   nsIViewManager* viewMan = aPresContext->GetViewManager();

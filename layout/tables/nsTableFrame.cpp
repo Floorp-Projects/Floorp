@@ -415,7 +415,7 @@ void nsTableFrame::AttributeChangedFor(nsIFrame*       aFrame,
         AddStateBits(NS_FRAME_IS_DIRTY);
         // XXX Should this use eStyleChange?  It currently doesn't need
         // to, but it might given more optimization.
-        GetPresContext()->PresShell()->FrameNeedsReflow(this,
+        PresContext()->PresShell()->FrameNeedsReflow(this,
           nsIPresShell::eTreeChange);
       }
     }
@@ -701,7 +701,7 @@ nsTableColGroupFrame*
 nsTableFrame::CreateAnonymousColGroupFrame(nsTableColGroupType aColGroupType)
 {
   nsIContent* colGroupContent = GetContent();
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   nsIPresShell *shell = presContext->PresShell();
 
   nsRefPtr<nsStyleContext> colGroupStyle;
@@ -784,7 +784,7 @@ nsTableFrame::CreateAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
   NS_PRECONDITION(aColGroupFrame, "null frame");
   *aFirstNewFrame = nsnull;
   nsIFrame* lastColFrame = nsnull;
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   nsIPresShell *shell = presContext->PresShell();
 
   // Get the last col frame
@@ -1405,7 +1405,7 @@ nsTableFrame::PaintTableBorderBackground(nsIRenderingContext& aRenderingContext,
                                          const nsRect& aDirtyRect,
                                          nsPoint aPt)
 {
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   nsRect dirtyRect = aDirtyRect - aPt;
   nsIRenderingContext::AutoPushTranslation
     translate(&aRenderingContext, aPt.x, aPt.y);
@@ -2003,7 +2003,7 @@ nsTableFrame::ReflowTable(nsHTMLReflowMetrics&     aDesiredSize,
   // and our reflow height to our avail height minus border, padding, cellspacing
   aDesiredSize.width = aReflowState.ComputedWidth() +
                        aReflowState.mComputedBorderPadding.LeftRight();
-  nsTableReflowState reflowState(*GetPresContext(), aReflowState, *this,
+  nsTableReflowState reflowState(*PresContext(), aReflowState, *this,
                                  aDesiredSize.width, aAvailHeight);
   ReflowChildren(reflowState, aStatus, aLastChildReflowed,
                  aDesiredSize.mOverflowArea);
@@ -2087,13 +2087,13 @@ nsTableFrame::PushChildren(const nsAutoVoidArray& aFrames,
     // When pushing and pulling frames we need to check for whether any
     // views need to be reparented.
     for (nsIFrame* f = frames.FirstChild(); f; f = f->GetNextSibling()) {
-      nsHTMLContainerFrame::ReparentFrameView(GetPresContext(), f, this, nextInFlow);
+      nsHTMLContainerFrame::ReparentFrameView(PresContext(), f, this, nextInFlow);
     }
     nextInFlow->mFrames.InsertFrames(GetNextInFlow(), prevSibling, frames.FirstChild());
   }
   else {
     // Add the frames to our overflow list
-    SetOverflowFrames(GetPresContext(), frames.FirstChild());
+    SetOverflowFrames(PresContext(), frames.FirstChild());
   }
 }
 
@@ -2259,7 +2259,7 @@ nsTableFrame::AppendFrames(nsIAtom*        aListName,
   Dump(PR_TRUE, PR_TRUE, PR_TRUE);
 #endif
   AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-  GetPresContext()->PresShell()->FrameNeedsReflow(this,
+  PresContext()->PresShell()->FrameNeedsReflow(this,
                                                   nsIPresShell::eTreeChange);
   SetGeometryDirty();
 
@@ -2367,7 +2367,7 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
   }
 
   AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-  GetPresContext()->PresShell()->FrameNeedsReflow(this,
+  PresContext()->PresShell()->FrameNeedsReflow(this,
                                                   nsIPresShell::eTreeChange);
   SetGeometryDirty();
 #ifdef DEBUG_TABLE_CELLMAP
@@ -2447,7 +2447,7 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
     SetBCDamageArea(damageArea);
   }
   AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-  GetPresContext()->PresShell()->FrameNeedsReflow(this,
+  PresContext()->PresShell()->FrameNeedsReflow(this,
                                                   nsIPresShell::eTreeChange);
   SetGeometryDirty();
 #ifdef DEBUG_TABLE_CELLMAP
@@ -2506,7 +2506,7 @@ nsTableFrame::GetOuterBCBorder() const
 nsMargin
 nsTableFrame::GetIncludedOuterBCBorder() const
 {
-  if (eCompatibility_NavQuirks == GetPresContext()->CompatibilityMode()) {
+  if (eCompatibility_NavQuirks == PresContext()->CompatibilityMode()) {
     return GetOuterBCBorder();
   }
   nsMargin border(0, 0, 0, 0);
@@ -2516,7 +2516,7 @@ nsTableFrame::GetIncludedOuterBCBorder() const
 nsMargin
 nsTableFrame::GetExcludedOuterBCBorder() const
 {
-  if (eCompatibility_NavQuirks != GetPresContext()->CompatibilityMode()) {
+  if (eCompatibility_NavQuirks != PresContext()->CompatibilityMode()) {
     return GetOuterBCBorder();
   }
   nsMargin border(0, 0, 0, 0);
@@ -2542,7 +2542,7 @@ nsTableFrame::GetChildAreaOffset(const nsHTMLReflowState* aReflowState) const
 {
   nsMargin offset(0,0,0,0);
   if (IsBorderCollapse()) {
-    nsPresContext* presContext = GetPresContext();
+    nsPresContext* presContext = PresContext();
     if (eCompatibility_NavQuirks == presContext->CompatibilityMode()) {
       nsTableFrame* firstInFlow = (nsTableFrame*)GetFirstInFlow(); if (!firstInFlow) ABORT1(offset);
       PRInt32 p2t = nsPresContext::AppUnitsPerCSSPixel();
@@ -2583,7 +2583,7 @@ nsTableFrame::InitChildReflowState(nsHTMLReflowState& aReflowState)
   nsMargin collapseBorder;
   nsMargin padding(0,0,0,0);
   nsMargin* pCollapseBorder = nsnull;
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   if (IsBorderCollapse()) {
     nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(aReflowState.frame);
     if (rgFrame) {
@@ -2608,7 +2608,7 @@ void nsTableFrame::PlaceChild(nsTableReflowState&  aReflowState,
 {
   
   // Place and size the child
-  FinishReflowChild(aKidFrame, GetPresContext(), nsnull, aKidDesiredSize,
+  FinishReflowChild(aKidFrame, PresContext(), nsnull, aKidDesiredSize,
                     aReflowState.x, aReflowState.y, 0);
 
   // Adjust the running y-offset
@@ -2718,7 +2718,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
   nsresult  rv = NS_OK;
   nscoord   cellSpacingY = GetCellSpacingY();
 
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   // XXXldb Should we be checking constrained height instead?
   PRBool isPaginated = presContext->IsPaginated();
 
@@ -2950,7 +2950,7 @@ nsTableFrame::ReflowColGroups(nsIRenderingContext *aRenderingContext)
 {
   if (!GetPrevInFlow() && !HaveReflowedColGroups()) {
     nsHTMLReflowMetrics kidMet;
-    nsPresContext *presContext = GetPresContext();
+    nsPresContext *presContext = PresContext();
     for (nsIFrame* kidFrame = mColGroups.FirstChild(); kidFrame;
          kidFrame = kidFrame->GetNextSibling()) {
       // The column groups don't care about dimensions or reflow states.
@@ -2986,7 +2986,7 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState, nsHTMLRef
     nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState);
     if ((NS_UNCONSTRAINEDSIZE != tableSpecifiedHeight) &&
         (tableSpecifiedHeight > 0) &&
-        eCompatibility_NavQuirks != GetPresContext()->CompatibilityMode()) {
+        eCompatibility_NavQuirks != PresContext()->CompatibilityMode()) {
           // empty tables should not have a size in quirks mode
       aDesiredSize.height = tableSpecifiedHeight;
     } 
@@ -6509,7 +6509,7 @@ nsTableFrame::GetProperty(nsIFrame*            aFrame,
                           nsIAtom*             aPropertyName,
                           PRBool               aCreateIfNecessary)
 {
-  nsPropertyTable *propTable = aFrame->GetPresContext()->PropertyTable();
+  nsPropertyTable *propTable = aFrame->PresContext()->PropertyTable();
   void *value = propTable->GetProperty(aFrame, aPropertyName);
   if (value) {
     return (nsPoint*)value;  // the property already exists

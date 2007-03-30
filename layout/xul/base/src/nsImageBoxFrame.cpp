@@ -173,7 +173,7 @@ nsImageBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
   if (aAttribute == nsGkAtoms::src) {
     UpdateImage();
     AddStateBits(NS_FRAME_IS_DIRTY);
-    GetPresContext()->PresShell()->
+    PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eStyleChange);
   }
   else if (aAttribute == nsGkAtoms::validate)
@@ -508,7 +508,7 @@ NS_IMETHODIMP nsImageBoxFrame::OnStartContainer(imgIRequest *request,
                         nsPresContext::CSSPixelsToAppUnits(h));
 
   AddStateBits(NS_FRAME_IS_DIRTY);
-  GetPresContext()->PresShell()->
+  PresContext()->PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eStyleChange);
 
   return NS_OK;
@@ -517,7 +517,7 @@ NS_IMETHODIMP nsImageBoxFrame::OnStartContainer(imgIRequest *request,
 NS_IMETHODIMP nsImageBoxFrame::OnStopContainer(imgIRequest *request,
                                                imgIContainer *image)
 {
-  nsBoxLayoutState state(GetPresContext());
+  nsBoxLayoutState state(PresContext());
   this->Redraw(state);
 
   return NS_OK;
@@ -534,7 +534,7 @@ NS_IMETHODIMP nsImageBoxFrame::OnStopDecode(imgIRequest *request,
     // Fire an onerror DOM event.
     mIntrinsicSize.SizeTo(0, 0);
     AddStateBits(NS_FRAME_IS_DIRTY);
-    GetPresContext()->PresShell()->
+    PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eStyleChange);
     FireImageDOMEvent(mContent, NS_LOAD_ERROR);
   }
@@ -546,7 +546,7 @@ NS_IMETHODIMP nsImageBoxFrame::FrameChanged(imgIContainer *container,
                                             gfxIImageFrame *newframe,
                                             nsRect * dirtyRect)
 {
-  nsBoxLayoutState state(GetPresContext());
+  nsBoxLayoutState state(PresContext());
   this->Redraw(state);
 
   return NS_OK;

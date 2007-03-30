@@ -265,7 +265,7 @@ nsIFrameDebug::GetLogModuleInfo()
 void
 nsIFrameDebug::DumpFrameTree(nsIFrame* aFrame)
 {
-    RootFrameList(aFrame->GetPresContext(), stdout, 0);
+    RootFrameList(aFrame->PresContext(), stdout, 0);
 }
 
 void
@@ -448,10 +448,10 @@ void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC)
 void
 nsWeakFrame::Init(nsIFrame* aFrame)
 {
-  Clear(mFrame ? mFrame->GetPresContext()->GetPresShell() : nsnull);
+  Clear(mFrame ? mFrame->PresContext()->GetPresShell() : nsnull);
   mFrame = aFrame;
   if (mFrame) {
-    nsIPresShell* shell = mFrame->GetPresContext()->GetPresShell();
+    nsIPresShell* shell = mFrame->PresContext()->GetPresShell();
     NS_WARN_IF_FALSE(shell, "Null PresShell in nsWeakFrame!");
     if (shell) {
       shell->AddWeakFrame(this);
@@ -642,7 +642,7 @@ nsFrame::Destroy()
   // Get the view pointer now before the frame properties disappear
   // when we call NotifyDestroyingFrame()
   nsIView* view = GetView();
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
 
   nsIPresShell *shell = presContext->GetPresShell();
   NS_ASSERTION(!(mState & NS_FRAME_OUT_OF_FLOW) ||
@@ -727,7 +727,7 @@ nsIFrame::GetUsedBorder() const
   const nsStyleDisplay *disp = GetStyleDisplay();
   if (mutable_this->IsThemed(disp)) {
     nsMargin result;
-    nsPresContext *presContext = GetPresContext();
+    nsPresContext *presContext = PresContext();
     presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
                                              mutable_this, disp->mAppearance,
                                              &result);
@@ -756,7 +756,7 @@ nsIFrame::GetUsedPadding() const
 
   const nsStyleDisplay *disp = GetStyleDisplay();
   if (mutable_this->IsThemed(disp)) {
-    nsPresContext *presContext = GetPresContext();
+    nsPresContext *presContext = PresContext();
     if (presContext->GetTheme()->GetWidgetPadding(presContext->DeviceContext(),
                                                   mutable_this,
                                                   disp->mAppearance,
@@ -867,7 +867,7 @@ static nsIFrame*
 GetActiveSelectionFrame(nsIFrame* aFrame)
 {
   nsIView* mouseGrabber;
-  aFrame->GetPresContext()->GetViewManager()->GetMouseEventGrabber(mouseGrabber);
+  aFrame->PresContext()->GetViewManager()->GetMouseEventGrabber(mouseGrabber);
   if (mouseGrabber) {
     nsIFrame* activeFrame = nsLayoutUtils::GetFrameFor(mouseGrabber);
     if (activeFrame) {
@@ -967,7 +967,7 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
 
   nsRect rect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
   rect.IntersectRect(rect, aDirtyRect);
-  rect.ScaleRoundOut(1.0f / mFrame->GetPresContext()->AppUnitsPerDevPixel());
+  rect.ScaleRoundOut(1.0f / mFrame->PresContext()->AppUnitsPerDevPixel());
   ctx->NewPath();
   ctx->Rectangle(gfxRect(rect.x, rect.y, rect.width, rect.height), PR_TRUE);
   ctx->Fill();
@@ -989,7 +989,7 @@ nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleForPainting(aBuilder))
     return NS_OK;
     
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   nsIPresShell *shell = presContext->PresShell();
   if (!shell)
     return NS_OK;
@@ -1136,7 +1136,7 @@ static PRBool ApplyAbsPosClipping(nsDisplayListBuilder* aBuilder,
   // for nsLayoutUtils::ComputeRepaintRegionForCopy ... but this is a rare
   // situation.
   if (aBuilder->HasMovingFrames() &&
-      aFrame->GetPresContext()->FrameManager()->GetRootFrame()->
+      aFrame->PresContext()->FrameManager()->GetRootFrame()->
           GetFirstChild(nsGkAtoms::fixedList) &&
       aBuilder->IsMovingFrame(aFrame))
     return PR_FALSE;
@@ -1314,7 +1314,7 @@ DisplayDebugBorders(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
   }
   // Draw a border around the current event target
   if (nsIFrameDebug::GetShowEventTargetFrameBorder() &&
-      aFrame->GetPresContext()->PresShell()->GetDrawEventTargetFrame() == aFrame) {
+      aFrame->PresContext()->PresShell()->GetDrawEventTargetFrame() == aFrame) {
     aLists.Outlines()->AppendNewToTop(new (aBuilder)
         nsDisplayGeneric(aFrame, PaintEventTargetBorder, "EventTargetBorder"));
   }
@@ -1512,7 +1512,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // Note that aBuilder->GetRootMovingFrame() is non-null only if we're doing
     // ComputeRepaintRegionForCopy.
     if (aBuilder->GetRootMovingFrame() == this &&
-        !GetPresContext()->GetRenderedPositionVaryingContent()) {
+        !PresContext()->GetRenderedPositionVaryingContent()) {
       // No position-varying content has been rendered in this prescontext.
       // Therefore there is no need to descend into analyzing the moving frame's
       // descendants looking for such content, because any bitblit will
@@ -1527,7 +1527,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // REVIEW: Taken from nsBoxFrame::Paint
   // Don't paint our children if the theme object is a leaf.
   if (IsThemed(ourDisp) &&
-      !GetPresContext()->GetTheme()->WidgetIsContainer(ourDisp->mAppearance))
+      !PresContext()->GetTheme()->WidgetIsContainer(ourDisp->mAppearance))
     return NS_OK;
 
   PRBool isComposited = disp->mOpacity != 1.0f;
@@ -2131,7 +2131,7 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
   nsIFrame* theFrame;
   PRInt32 offset;
   // Maybe make this a static helper?
-  theFrame = GetPresContext()->GetPresShell()->FrameSelection()->
+  theFrame = PresContext()->GetPresShell()->FrameSelection()->
     GetFrameForNodeOffset(offsets.content, offsets.offset,
                           nsFrameSelection::HINT(offsets.associateWithNext),
                           &offset);
@@ -2424,7 +2424,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
         offsets = GetContentOffsetsFromPoint(pt);
         handleTableSelection = PR_FALSE;
       } else {
-        GetDataForTableSelection(frameselection, GetPresContext()->PresShell(),
+        GetDataForTableSelection(frameselection, PresContext()->PresShell(),
                                  (nsMouseEvent *)aEvent,
                                  getter_AddRefs(parentContent),
                                  &contentOffsetForTableSel,
@@ -2437,7 +2437,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
   // trickle down here. Make sure that document's frame selection is notified.
   // Note, this may cause the current nsFrame object to be deleted, bug 336592.
   if (activeFrame != this &&
-      NS_STATIC_CAST(nsFrame*, activeFrame)->DisplaySelection(activeFrame->GetPresContext())
+      NS_STATIC_CAST(nsFrame*, activeFrame)->DisplaySelection(activeFrame->PresContext())
         != nsISelectionController::SELECTION_OFF) {
     nsRefPtr<nsFrameSelection> frameSelection =
       activeFrame->GetFrameSelection();
@@ -3093,7 +3093,7 @@ nsFrame::IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext)
 
   const nsStyleDisplay *disp = GetStyleDisplay();
   if (IsThemed(disp)) {
-    nsPresContext *presContext = GetPresContext();
+    nsPresContext *presContext = PresContext();
 
     nsMargin border;
     presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
@@ -3200,7 +3200,7 @@ nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
   if (IsThemed(disp)) {
     nsSize size(0, 0);
     PRBool canOverride = PR_TRUE;
-    nsPresContext *presContext = GetPresContext();
+    nsPresContext *presContext = PresContext();
     presContext->GetTheme()->
       GetMinimumWidgetSize(aRenderingContext, this, disp->mAppearance,
                            &size, &canOverride);
@@ -3538,7 +3538,7 @@ nsIntRect nsIFrame::GetScreenRect() const
     if (widget) {
       nsRect ourRect = mRect;
       ourRect.MoveTo(toViewOffset + toWidgetOffset);
-      ourRect.ScaleRoundOut(1.0f / GetPresContext()->AppUnitsPerDevPixel());
+      ourRect.ScaleRoundOut(1.0f / PresContext()->AppUnitsPerDevPixel());
       // Is it safe to pass the same rect for both args of WidgetToScreen?
       // It's not clear, so let's not...
       nsIntRect ourPxRect(ourRect.x, ourRect.y, ourRect.width, ourRect.height);
@@ -3690,7 +3690,7 @@ nsIFrame::Invalidate(const nsRect& aDamageRect,
 
   // Don't allow invalidates to do anything when
   // painting is suppressed.
-  nsIPresShell *shell = GetPresContext()->GetPresShell();
+  nsIPresShell *shell = PresContext()->GetPresShell();
   if (shell) {
     PRBool suppressed = PR_FALSE;
     shell->IsPaintingSuppressed(&suppressed);
@@ -4019,7 +4019,7 @@ nsIFrame::IsVisibleForPainting() {
   if (!GetStyleVisibility()->IsVisible())
     return PR_FALSE;
 
-  nsPresContext* pc = GetPresContext();
+  nsPresContext* pc = PresContext();
   if (!pc->IsRenderingOnlySelection())
     return PR_TRUE;
 
@@ -4110,7 +4110,7 @@ nsFrameSelection* nsIFrame::GetFrameSelection()
     frame = frame->GetParent();
   }
 
-  return GetPresContext()->PresShell()->FrameSelection();
+  return PresContext()->PresShell()->FrameSelection();
 }
 
 #ifdef NS_DEBUG
@@ -4877,7 +4877,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
         //it will "drill down" to find a viable frame or it will return an error.
         nsIFrame *lastFrame = this;
         do {
-          result = nsFrame::GetNextPrevLineFromeBlockFrame(GetPresContext(),
+          result = nsFrame::GetNextPrevLineFromeBlockFrame(PresContext(),
                                                            aPos, 
                                                            blockFrame, 
                                                            thisLine, 
@@ -4972,7 +4972,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
       PRBool endOfLine = (eSelectEndLine == aPos->mAmount);
       
 #ifdef IBMBIDI
-      if (aPos->mVisual && GetPresContext()->BidiEnabled()) {
+      if (aPos->mVisual && PresContext()->BidiEnabled()) {
         PRBool lineIsRTL;
         it->GetDirection(&lineIsRTL);
         PRBool isReordered;
@@ -5079,7 +5079,7 @@ PRInt32
 nsFrame::GetLineNumber(nsIFrame *aFrame, nsIFrame** aContainingBlock)
 {
   NS_ASSERTION(aFrame, "null aFrame");
-  nsFrameManager* frameManager = aFrame->GetPresContext()->FrameManager();
+  nsFrameManager* frameManager = aFrame->PresContext()->FrameManager();
   nsIFrame *blockFrame = aFrame;
   nsIFrame *thisBlock;
   PRInt32   thisLine;
@@ -5120,7 +5120,7 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, PRBool aVisual,
   if (!aOutFrame || !aOutOffset || !aOutJumpedLine)
     return NS_ERROR_NULL_POINTER;
   
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   *aOutFrame = nsnull;
   *aOutOffset = 0;
   *aOutJumpedLine = PR_FALSE;
@@ -5288,7 +5288,7 @@ nsIFrame::GetOverflowAreaProperty(PRBool aCreateIfNecessary)
     return nsnull;
   }
 
-  nsPropertyTable *propTable = GetPresContext()->PropertyTable();
+  nsPropertyTable *propTable = PresContext()->PropertyTable();
   void *value = propTable->GetProperty(this,
                                        nsGkAtoms::overflowAreaProperty);
 
@@ -5322,7 +5322,7 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
   const nsStyleDisplay *disp = GetStyleDisplay();
   if (IsThemed(disp)) {
     nsRect r;
-    nsPresContext *presContext = GetPresContext();
+    nsPresContext *presContext = PresContext();
     if (presContext->GetTheme()->
           GetWidgetOverflow(presContext->DeviceContext(), this,
                             disp->mAppearance, &r)) {
@@ -5635,14 +5635,14 @@ nsIFrame::SetProperty(nsIAtom*           aPropName,
                       NSPropertyDtorFunc aPropDtorFunc,
                       void*              aDtorData)
 {
-  return GetPresContext()->PropertyTable()->
+  return PresContext()->PropertyTable()->
     SetProperty(this, aPropName, aPropValue, aPropDtorFunc, aDtorData);
 }
 
 void* 
 nsIFrame::GetProperty(nsIAtom* aPropName, nsresult* aStatus) const
 {
-  return GetPresContext()->PropertyTable()->GetProperty(this, aPropName,
+  return PresContext()->PropertyTable()->GetProperty(this, aPropName,
                                                         aStatus);
 }
 
@@ -5655,13 +5655,13 @@ nsIFrame::GetPropertyExternal(nsIAtom* aPropName, nsresult* aStatus) const
 nsresult
 nsIFrame::DeleteProperty(nsIAtom* aPropName) const
 {
-  return GetPresContext()->PropertyTable()->DeleteProperty(this, aPropName);
+  return PresContext()->PropertyTable()->DeleteProperty(this, aPropName);
 }
 
 void*
 nsIFrame::UnsetProperty(nsIAtom* aPropName, nsresult* aStatus) const
 {
-  return GetPresContext()->PropertyTable()->UnsetProperty(this, aPropName,
+  return PresContext()->PropertyTable()->UnsetProperty(this, aPropName,
                                                           aStatus);
 }
 
@@ -5687,7 +5687,7 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
     if (vis->mVisible != NS_STYLE_VISIBILITY_COLLAPSE &&
         vis->mVisible != NS_STYLE_VISIBILITY_HIDDEN) {
       if (mContent->IsNodeOfType(nsINode::eHTML)) {
-        nsCOMPtr<nsISupports> container(GetPresContext()->GetContainer());
+        nsCOMPtr<nsISupports> container(PresContext()->GetContainer());
         nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(container));
         if (editorDocShell) {
           PRBool isEditable;
