@@ -1729,7 +1729,7 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
           {
             cmdArray->AppendElement(mNC_SearchCommand_AddToBookmarks);
           }
-          Recycle(uri);
+          NS_Free(uri);
         }
       }
     }
@@ -1844,7 +1844,7 @@ InternetSearchDataSource::addToBookmarks(nsIRDFResource *src)
       {
         rv = bookmarks->AddBookmarkImmediately(NS_ConvertUTF8toUTF16(uri).get(),
                                                name, nsIBookmarksService::BOOKMARK_SEARCH_TYPE, nsnull);
-        Recycle(uri);
+        NS_Free(uri);
       }
     }
   }
@@ -1929,7 +1929,7 @@ InternetSearchDataSource::filterResult(nsIRDFResource *aResource)
   if (!uri) return(NS_ERROR_UNEXPECTED);
   nsAutoString  url;
   url.AssignWithConversion(uri);
-  Recycle(uri);
+  NS_Free(uri);
 
   nsresult      rv;
   nsCOMPtr<nsIRDFLiteral> urlLiteral;
@@ -2002,14 +2002,14 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
   if (!uri) return(NS_ERROR_UNEXPECTED);
   nsAutoString  host;
   host.AssignWithConversion(uri);
-  Recycle(uri);
+  NS_Free(uri);
 
   // determine site (host name)
   PRInt32   slashOffset1 = host.Find("://");
   if (slashOffset1 < 1)     return(NS_ERROR_UNEXPECTED);
   PRInt32   slashOffset2 = host.FindChar(PRUnichar('/'), slashOffset1 + 3);
   if (slashOffset2 <= slashOffset1) return(NS_ERROR_UNEXPECTED);
-  host.Truncate(slashOffset2 + 1);
+  host.SetLength(slashOffset2 + 1);
 
   nsresult      rv;
   nsCOMPtr<nsIRDFLiteral> urlLiteral;
@@ -2095,14 +2095,14 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
         if (!uri) return(NS_ERROR_UNEXPECTED);
         nsAutoString  site;
         site.AssignWithConversion(uri);
-        Recycle(uri);
+        NS_Free(uri);
 
         // determine site (host name)
         slashOffset1 = site.Find("://");
         if (slashOffset1 < 1)     return(NS_ERROR_UNEXPECTED);
         slashOffset2 = site.FindChar(PRUnichar('/'), slashOffset1 + 3);
         if (slashOffset2 <= slashOffset1) return(NS_ERROR_UNEXPECTED);
-        site.Truncate(slashOffset2 + 1);
+        site.SetLength(slashOffset2 + 1);
 
         if (site.Equals(host, nsCaseInsensitiveStringComparator()))
         {
@@ -2208,7 +2208,7 @@ InternetSearchDataSource::isSearchResultFiltered(const nsString &hrefStr)
   if (slashOffset1 < 1)     return(NS_ERROR_UNEXPECTED);
   PRInt32   slashOffset2 = host.FindChar(PRUnichar('/'), slashOffset1 + 3);
   if (slashOffset2 <= slashOffset1) return(NS_ERROR_UNEXPECTED);
-  host.Truncate(slashOffset2 + 1);
+  host.SetLength(slashOffset2 + 1);
 
   nsCOMPtr<nsIRDFLiteral> urlLiteral;
   if (NS_FAILED(rv = mRDFService->GetLiteral(host.get(), getter_AddRefs(urlLiteral)))
@@ -2585,12 +2585,12 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
           if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(queryencodingstrC.get(), uni, &charsetData)) && (charsetData))
           {
             text.AssignWithConversion(charsetData);
-            Recycle(charsetData);
+            NS_Free(charsetData);
           }
-          Recycle(uni);
+          NS_Free(uni);
         }
       }
-      Recycle(utf8data);
+      NS_Free(utf8data);
     }
   }
   
@@ -2671,7 +2671,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
   shortURL.AssignWithConversion(url);
   PRInt32     optionsOffset;
   if ((optionsOffset = shortURL.FindChar(PRUnichar('?'))) < 0)  return(NS_OK);
-  shortURL.Truncate(optionsOffset);
+  shortURL.SetLength(optionsOffset);
 
   // if we haven't already, load in the engines
   if (!mEngineListBuilt)
@@ -2767,7 +2767,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 
       if ((andOffset = searchText.FindChar(PRUnichar('&'))) >= 0)
       {
-        searchText.Truncate(andOffset);
+        searchText.SetLength(andOffset);
       }
     }
     if (!searchText.IsEmpty())
@@ -2801,9 +2801,9 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 
               searchText.AssignWithConversion(unescapedSearchText.get());
 
-              Recycle(convertedSearchText);
+              NS_Free(convertedSearchText);
             }
-            Recycle(uni);
+            NS_Free(uni);
           }
         }
       }
@@ -2820,7 +2820,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
       {
         printf("FindInternetSearchResults: search for: '%s'\n\n",
           engineMatch);
-        Recycle(engineMatch);
+        NS_Free(engineMatch);
         engineMatch = nsnull;
       }
 #endif
@@ -3463,7 +3463,7 @@ InternetSearchDataSource::updateDataHintsInGraph(nsIRDFResource *engine, const P
       updateStr.Right(extension, 4);
       if (extension.LowerCaseEqualsLiteral(".hqx"))
       {
-        updateStr.Truncate(updateStr.Length() - 4);
+        updateStr.SetLength(updateStr.Length() - 4);
       }
 
       // now, either way, ensure that we have a ".src" file
@@ -3890,12 +3890,12 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
                   && (charsetData))
           {
             textTemp.AssignWithConversion(charsetData);
-            Recycle(charsetData);
+            NS_Free(charsetData);
           }
-          Recycle(uni);
+          NS_Free(uni);
         }
       }
-      Recycle(utf8data);
+      NS_Free(utf8data);
     }
   }
 
@@ -4033,7 +4033,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
   PRInt32   extensionOffset;
   if ((extensionOffset = basename.RFindChar(PRUnichar('.'))) > 0)
   {
-    basename.Truncate(extensionOffset);
+    basename.SetLength(extensionOffset);
     basename.AppendLiteral(".src");
   }
 
@@ -4050,7 +4050,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 
   if ((extensionOffset = searchURL.RFindChar(PRUnichar('.'))) > 0)
   {
-    searchURL.Truncate(extensionOffset);
+    searchURL.SetLength(extensionOffset);
     searchURL.AppendLiteral(".src");
   }
 
@@ -4454,7 +4454,7 @@ InternetSearchDataSource::GetData(const PRUnichar *dataUni, const char *sectionT
           PRInt32 quoteEnd = value.FindChar(quoteChar);
           if (quoteEnd >= 0)
           {
-            value.Truncate(quoteEnd);
+            value.SetLength(quoteEnd);
           }
         }
       }
@@ -4463,7 +4463,7 @@ InternetSearchDataSource::GetData(const PRUnichar *dataUni, const char *sectionT
         PRInt32 commentOffset = value.FindCharInSet("# \t", 0);
         if (commentOffset >= 0)
         {
-          value.Truncate(commentOffset);
+          value.SetLength(commentOffset);
         }
         value.Trim(" \t");
       }
@@ -4572,7 +4572,7 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &engineNa
             PRInt32 space = nameAttrib.FindCharInSet(" \t", 0);
             if (space > 0)
             {
-              nameAttrib.Truncate(space);
+              nameAttrib.SetLength(space);
               line.Cut(0, equal+1+space);
             }
             else
@@ -4616,7 +4616,7 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &engineNa
             PRInt32 space = valueAttrib.FindCharInSet(" \t>", 0);
             if (space > 0)
             {
-              valueAttrib.Truncate(space);
+              valueAttrib.SetLength(space);
             }
           }
         }
@@ -5319,7 +5319,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
         serverPath.Truncate();
 
     PRInt32 serverOptionsOffset = serverPathStr.FindChar(PRUnichar('?'));
-    if (serverOptionsOffset >= 0) serverPathStr.Truncate(serverOptionsOffset);
+    if (serverOptionsOffset >= 0) serverPathStr.SetLength(serverOptionsOffset);
   }
 
   PRBool    hasPriceFlag = PR_FALSE, hasAvailabilityFlag = PR_FALSE, hasRelevanceFlag = PR_FALSE;
@@ -5581,7 +5581,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
                         NS_ConvertUTF8toUTF16 absPathStr(absPath);
             PRInt32 pathOptionsOffset = absPathStr.FindChar(PRUnichar('?'));
             if (pathOptionsOffset >= 0)
-              absPathStr.Truncate(pathOptionsOffset);
+              absPathStr.SetLength(pathOptionsOffset);
             PRBool  pathsMatchFlag = serverPathStr.Equals(absPathStr, nsCaseInsensitiveStringComparator());
             if (pathsMatchFlag)
               continue;
@@ -5671,7 +5671,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
           PRInt32 slashOffset = site.FindChar('/', 0);
           if (slashOffset >= 0)
           {
-            site.Truncate(slashOffset);
+            site.SetLength(slashOffset);
           }
           if (!site.IsEmpty())
           {

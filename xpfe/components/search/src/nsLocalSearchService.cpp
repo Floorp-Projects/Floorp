@@ -327,7 +327,7 @@ LocalSearchDataSource::parseResourceIntoFindTokens(nsIRDFResource *u, findTokenP
             				if (NS_SUCCEEDED(rv = textToSubURI->UnEscapeAndConvert("UTF-8", value, &uni)) && (uni))
             				{
     					        tokens[loop].value = uni;
-    					        Recycle(uni);
+    					        NS_Free(uni);
     					    }
     					}
 				    }
