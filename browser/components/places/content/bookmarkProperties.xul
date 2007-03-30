@@ -58,6 +58,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="BookmarkPropertiesPanel.onDialogLoad();"
         onunload="BookmarkPropertiesPanel.onDialogUnload();"
+        style="min-width: 30em;"
         persist="screenX screenY width">
 
   <stringbundleset id="stringbundleset">
