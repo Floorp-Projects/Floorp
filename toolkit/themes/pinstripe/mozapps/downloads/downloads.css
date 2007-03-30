@@ -37,6 +37,7 @@ download {
 
 download[selected="true"] {
     background-color: Highlight !important;
+    color: HighlightText;
     background-image: none !important;
 }
 
@@ -53,9 +54,12 @@ vbox:first-child > label:last-child, hbox:last-child > label:last-child {
   font-size: 95%;
 }
 
+download[selected="true"] vbox:first-child > label:last-child,
+download[selected="true"] hbox:last-child > label:last-child {
+  color: HighlightText;
+}
 
 /* Download View Items, implementation */
-
 progressmeter {
   margin: 6px 6px 4px 6px;
   min-height:19px;
