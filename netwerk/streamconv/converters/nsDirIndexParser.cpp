@@ -302,7 +302,7 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr) {
               aIdx->SetDescription(result);
             success = PR_TRUE;
           }
-          Recycle(result);
+          NS_Free(result);
         } else {
           NS_WARNING("UnEscapeAndConvert error");
         }

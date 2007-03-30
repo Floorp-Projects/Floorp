@@ -1144,7 +1144,7 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
             continue;
   
         nsCAutoString           leaf(escLeafStr);
-        Recycle(escLeafStr);
+        NS_Free(escLeafStr);
         escLeafStr = nsnull;
 
         // using nsEscape() [above] doesn't escape slashes, so do that by hand

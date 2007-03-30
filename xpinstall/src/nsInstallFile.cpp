@@ -383,9 +383,9 @@ char* nsInstallFile::toString()
                 mFinalFile->GetNativePath(fname);
 
             PR_snprintf( buffer, RESBUFSIZE, interimCStr, fname.get() );
-            Recycle(interimCStr);
+            NS_Free(interimCStr);
         }
-        Recycle(rsrcVal);
+        NS_Free(rsrcVal);
     }
 
     return buffer;
