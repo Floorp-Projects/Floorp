@@ -476,11 +476,8 @@ var PlacesUtils = {
    * @returns A nsITransaction object that performs the copy.
    */
   _getURIItemCopyTransaction: function (aURI, aContainer, aIndex) {
-    var itemTitle = this.history.getPageTitle(aURI);
-    var createTxn = new PlacesCreateItemTransaction(aURI, aContainer, aIndex);
-    createTxn.childTransactions.push(
-      new PlacesEditItemTitleTransaction(-1, itemTitle));
-    return new PlacesAggregateTransaction("ItemCopy", [createTxn]);
+    var title = this.history.getPageTitle(aURI);
+    return new PlacesCreateItemTransaction(aURI, aContainer, aIndex, title);
   },
 
   /**
@@ -494,13 +491,16 @@ var PlacesUtils = {
    *          The index within the container the item is copied to
    * @returns A nsITransaction object that performs the copy.
    */
-  _getBookmarkItemCopyTransaction: function (aID, aContainer, aIndex) {
-    var itemURL = this.bookmarks.getBookmarkURI(aID);
-    var itemTitle = this.bookmarks.getItemTitle(aID);
-    var createTxn = new PlacesCreateItemTransaction(itemURL, aContainer, aIndex);
-    createTxn.childTransactions.push(
-      new PlacesEditItemTitleTransaction(-1, itemTitle));
-    return new PlacesAggregateTransaction("ItemCopy", [createTxn]);
+  _getBookmarkItemCopyTransaction: function (aId, aContainer, aIndex) {
+    var bookmarks = this.bookmarks;
+    var itemURL = bookmarks.getBookmarkURI(aId);
+    var itemTitle = bookmarks.getItemTitle(aId);
+    var keyword = bookmarks.getKeywordForBookmark(aId);
+    var annos = this.getAnnotationsForURI(bookmarks.getItemURI(aId));
+    var createTxn =
+      new PlacesCreateItemTransaction(itemURL, aContainer, aIndex, itemTitle,
+                                      keyword, annos);
+    return createTxn;
   },
 
   /**
@@ -517,40 +517,47 @@ var PlacesUtils = {
   _getFolderCopyTransaction:
   function PU__getFolderCopyTransaction(aData, aContainer, aIndex) {
     var self = this;
-    function getChildTransactions(folderId) {
-      var childTransactions = [];
-      var children = self.getFolderContents(folderId, false, false);
+    function getChildItemsTransactions(aFolderId) {
+      var childItemsTransactions = [];
+      var children = self.getFolderContents(aFolderId, false, false);
       var cc = children.childCount;
-      var txn = null;
       for (var i = 0; i < cc; ++i) {
+        var txn = null;
         var node = children.getChild(i);
         if (self.nodeIsFolder(node)) {
           var nodeFolderId = asFolder(node).folderId;
           var title = self.bookmarks.getFolderTitle(nodeFolderId);
-          txn = new PlacesCreateFolderTransaction(title, -1, aIndex);
-          txn.childTransactions = getChildTransactions(nodeFolderId);
+          var annos = self.getAnnotationsForURI(self._uri(node.uri));
+          var folderItemsTransactions =
+            getChildItemsTransactions(nodeFolderId);
+          txn = new PlacesCreateFolderTransaction(title, -1, aIndex, annos,
+                                                  folderItemsTransactions);
         }
         else if (self.nodeIsBookmark(node)) {
-          txn = self._getBookmarkItemCopyTransaction(self._uri(node.uri), -1,
+          txn = self._getBookmarkItemCopyTransaction(node.bookmarkId, -1,
                                                      aIndex);
         }
         else if (self.nodeIsURI(node) || self.nodeIsQuery(node)) {
+          // XXXmano: can this ^ ever happen?
           txn = self._getURIItemCopyTransaction(self._uri(node.uri), -1,
                                                 aIndex);
         }
-        else if (self.nodeIsSeparator(node)) {
+        else if (self.nodeIsSeparator(node))
           txn = new PlacesCreateSeparatorTransaction(-1, aIndex);
-        }
-        childTransactions.push(txn);
+
+        NS_ASSERT(txn, "Unexpected item under a bookmarks folder");
+        if (txn)
+          childItemsTransactions.push(txn);
       }
-      return childTransactions;
+      return childItemsTransactions;
     }
 
     var title = this.bookmarks.getFolderTitle(aData.id);
+    var annos =
+      this.getAnnotationsForURI(this.bookmarks.getFolderURI(aData.id));
     var createTxn =
-      new PlacesCreateFolderTransaction(title, aContainer, aIndex);
-    createTxn.childTransactions =
-      getChildTransactions(aData.id, createTxn);
+      new PlacesCreateFolderTransaction(title, aContainer, aIndex, annos,
+                                        getChildItemsTransactions(aData.id));
     return createTxn;
   },
 
@@ -922,7 +929,7 @@ var PlacesUtils = {
               "showAddMultiBookmarkUI expects a list of nsIURI objects");
     var info = {
       action: "add",
-      type: "folder with items",
+      type: "folder",
       hiddenRows: ["description"],
       URIList: aURIList
     };
@@ -930,7 +937,7 @@ var PlacesUtils = {
   },
 
   /**
-   * Opens the bookmark properties panel for a given bookmark idnetifier.
+   * Opens the bookmark properties panel for a given bookmark identifier.
    *
    * @param aId
    *        bookmark identifier for which the properties are to be shown

@@ -1610,144 +1610,208 @@ PlacesAggregateTransaction.prototype = {
 
 
 /**
- * Create a new Folder
+ * Transaction for creating a new folder item.
+ *
+ * @param aName
+ *        the name of the new folder
+ * @param aContainer
+ *        the identifier of the folder in which the new folder should be
+ *        added.
+ * @param [optional] aIndex
+ *        the index of the item in aContainer, pass -1 or nothing to create
+ *        the item at the end of aContainer.
+ * @param [optional] aAnnotations
+ *        the annotations to set for the new folder.
+ * @param [optional] aChildItemsTransactions
+ *        array of transactions for items to be created under the new folder.
  */
-function PlacesCreateFolderTransaction(name, container, index) {
-  NS_ASSERT(index >= -1, "invalid insertion index");
-  this._name = name;
-  this.container = container;
-  this._index = index;
+function PlacesCreateFolderTransaction(aName, aContainer, aIndex,
+                                       aAnnotations, aChildItemsTransaction) {
+  this._name = aName;
+  this._container = aContainer;
+  this._index = typeof(aIndex) == "number" ? aIndex : -1;
+  this._annotations = aAnnotations;
   this._id = null;
-  this.childItemsTransactions = [];
-  this.childTransactions = [];
+  this._childItemsTransactions = aChildItemsTransactions || [];
   this.redoTransaction = this.doTransaction;
 }
 PlacesCreateFolderTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
+  // childItemsTransaction support
+  get container() { return this._container; },
+  set container(val) { return this._container = val; },
+
   doTransaction: function PCFT_doTransaction() {
-    this.LOG("Create Folder: " + this._name + " in: " + this.container + "," + this._index);
-    this._id = this.bookmarks.createFolder(this.container, this._name, this._index);
-    for (var i = 0; i < this.childItemsTransactions.length; ++i) {
-      var txn = this.childItemsTransactions[i];
-      txn.container = this._id;
-      txn.doTransaction();
+    var bookmarks = this.utils.bookmarks;
+    this._id = bookmarks.createFolder(this._container, this._name, this._index);
+    if (this._annotations.length > 0) {
+      var placeURI = bookmarks.getFolderURI(this._id);
+      this.utils.setAnnotationsForURI(placeURI, this._annotations);
     }
-    for (var i = 0; i < this.childTransactions.length; ++i) {
-      var txn = this.childTransactions[i];
-      txn.id = this._id;
+    for (var i = 0; i < this._childItemsTransactions.length; ++i) {
+      var txn = this._childItemsTransactions[i];
+      txn.container = this._id;
       txn.doTransaction();
     }
   },
 
   undoTransaction: function PCFT_undoTransaction() {
-    this.LOG("UNCreate Folder: " + this._name + " from: " + this.container + "," + this._index);
     this.bookmarks.removeFolder(this._id);
-    for (var i = 0; i < this.childItemsTransactions.length; ++i) {
+    for (var i = 0; i < this._childItemsTransactions.length; ++i) {
       var txn = this.childItemsTransactions[i];
-      txn.undoTransaction();
-    }
-    for (var i = 0; i < this.childTransactions.length; ++i) {
-      var txn = this.childTransactions[i];
       txn.undoTransaction();
     }
   }
 };
 
 /**
- * Create a new Item
+ * Transaction for creating a new bookmark item
+ *
+ * @param aURI
+ *        the uri of the new bookmark (nsIURI)
+ * @param aContainer
+ *        the identifier of the folder in which the bookmark should be added.
+ * @param [optional] aIndex
+ *        the index of the item in aContainer, pass -1 or nothing to create
+ *        the item at the end of aContainer.
+ * @param [optional] aTitle
+ *        the title of the new bookmark.
+ * @param [optional] aKeyword
+ *        the keyword of the new bookmark.
+ * @param [optional] aAnnotations
+ *        the annotations to set for the new bookmark.
+ * @param [optional] aChildTransactions
+ *        child transactions to commit after creating the bookmark. Prefer
+ *        using any of the arguments above if possible. In general, a child
+ *        transations should be used only if the change it does has to be
+ *        reverted manually when removing the bookmark item.
+ *        a child transaction must support setting its bookmark-item
+ *        identifier via an "id" js setter.
  */
-function PlacesCreateItemTransaction(uri, container, index) {
-  this.LOG("PlacesCreateItemTransaction(" + uri.spec + ", " + container + ", " + index + ")");
-  NS_ASSERT(index >= -1, "invalid insertion index");
-  this._id = null;
-  this._uri = uri;
-  this.container = container;
-  this._index = index;
-  this.childTransactions = [];
+function PlacesCreateItemTransaction(aURI, aContainer, aIndex, aTitle,
+                                     aKeyword, aAnnotations,
+                                     aChildTransactions) {
+  this._uri = aURI;
+  this._container = aContainer;
+  this._index = typeof(aIndex) == "number" ? aIndex : -1;
+  this._title = aTitle;
+  this._keyword = aKeyword;
+  this._annotations = aAnnotations;
+  this._childTransactions = aChildTransactions || [];
   this.redoTransaction = this.doTransaction;
 }
 PlacesCreateItemTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
+  // childItemsTransactions support for the create-folder transaction
+  get container() { return this._container; },
+  set container(val) { return this._container = val; },
+
   doTransaction: function PCIT_doTransaction() {
-    this.LOG("Create Item: " + this._uri.spec + " in: " + this.container + "," + this._index);
-    this._id = this.bookmarks.insertItem(this.container, this._uri, this._index);
-    for (var i = 0; i < this.childTransactions.length; ++i) {
-      var txn = this.childTransactions[i];
+    var bookmarks = this.utils.bookmarks;
+    this._id = bookmarks.insertItem(this.container, this._uri, this._index);
+    if (this._title)
+      bookmarks.setItemTitle(this._id, this._title);
+    if (this._keyword)
+      bookmarks.setKeywordForBookmark(this._id, this._keyword);
+    if (this._annotations && this._annotations.length > 0) {
+      var placeURI = bookmarks.getItemURI(this._id);
+      this.utils.setAnnotationsForURI(placeURI, this._annotations);
+    }
+
+    for (var i = 0; i < this._childTransactions.length; ++i) {
+      var txn = this._childTransactions[i];
       txn.id = this._id;
       txn.doTransaction();
     }
   },
 
   undoTransaction: function PCIT_undoTransaction() {
-    this.LOG("UNCreate Item: bookmark " + this._id + " for uri " + this._uri.spec + " from: " + this.container + "," + this._index);
-    this.bookmarks.removeItem(this._id);
-    for (var i = 0; i < this.childTransactions.length; ++i) {
-      var txn = this.childTransactions[i];
+    this.utils.bookmarks.removeItem(this._id);
+    for (var i = 0; i < this._childTransactions.length; ++i) {
+      var txn = this._childTransactions[i];
       txn.undoTransaction();
     }
   }
 };
 
 /**
- * Create a new Separator
+ * Transaction for creating a new separator item
+ *
+ * @param aContainer
+ *        the identifier of the folder in which the separator should be
+ *        added.
+ * @param [optional] aIndex
+ *        the index of the item in aContainer, pass -1 or nothing to create
+ *        the separator at the end of aContainer.
  */
-function PlacesCreateSeparatorTransaction(container, index) {
-  NS_ASSERT(index >= -1, "invalid insertion index");
-  this.container = container;
-  this._index = index;
+function PlacesCreateSeparatorTransaction(aContainer, aIndex) {
+  this._container = aContainer;
+  this._index = typeof(aIndex) == "number" ? aIndex : -1;
   this._id = null;
 }
 PlacesCreateSeparatorTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
-  doTransaction: function PIST_doTransaction() {
+  // childItemsTransaction support
+  get container() { return this._container; },
+  set container(val) { return this._container = val; },
+
+  doTransaction: function PCST_doTransaction() {
     this.LOG("Create separator in: " + this.container + "," + this._index);
     this._id = this.bookmarks.insertSeparator(this.container, this._index);
   },
 
-  undoTransaction: function PIST_undoTransaction() {
+  undoTransaction: function PCST_undoTransaction() {
     this.LOG("UNCreate separator from: " + this.container + "," + this._index);
     this.bookmarks.removeChildAt(this.container, this._index);
   }
 };
 
 /**
- * Create a new live bookmark
+ * Transaction for creating a new live-bookmark item.
+ *
+ * @see nsILivemarksService::createLivemark for documentation regarding the
+ * first three arguments.
+ *
+ * @param aContainer
+ *        the identifier of the folder in which the live-bookmark should be
+ *        added.
+ * @param [optional] aIndex
+ *        the index of the item in aContainer, pass -1 or nothing to create
+ *        the item at the end of aContainer.
+ * @param [optional] aAnnotations
+ *        the annotations to set for the new live-bookmark.
  */
 function PlacesCreateLivemarkTransaction(aFeedURI, aSiteURI, aName,
-                                         aContainer, aIndexInContainer) {
+                                         aContainer, aIndex, aAnnotations) {
   this._feedURI = aFeedURI;
   this._siteURI = aSiteURI;
   this._name = aName;
   this._container = aContainer;
-  this._indexInContainer = aIndexInContainer;
-  this.childTransactions = [];
+  this._index = typeof(aIndex) == "number" ? aIndex : -1;
+  this._annotations = aAnnotations;
 }
 PlacesCreateLivemarkTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
+  // childItemsTransaction support
+  get container() { return this._container; },
+  set container(val) { return this._container = val; },
+
   doTransaction: function PCLT_doTransaction() {
-    this._id = this.livemarks.createLivemark(this._container,
-                                             this._name,
-                                             this._siteURI,
-                                             this._feedURI,
-                                             this._indexInContainer);
-    for (var i = 0; i < this.childTransactions.length; ++i) {
-      var txn = this.childTransactions[i];
-      txn.id = this._id;
-      txn.doTransaction();
+    this._id = this.utils.livemarks
+                   .createLivemark(this._container, this._name, this._siteURI,
+                                   this._feedURI, this._index);
+    if (this._annotations)  {
+      var placeURI = this.utils.bookmarks.getItemURI(this._id);
+      this.utils.setAnnotationsForURI(placeURI, this._annotations);
     }
   },
 
   undoTransaction: function PCLT_undoTransaction() {
     this.bookmarks.removeFolder(this._id);
-
-    for (var i = 0; i < this.childTransactions.length; ++i) {
-      var txn = this.childTransactions[i];
-      txn.undoTransaction();
-    }
   }
 };
 
@@ -1953,7 +2017,7 @@ PlacesRemoveSeparatorTransaction.prototype = {
  * Edit a bookmark's title.
  */
 function PlacesEditItemTitleTransaction(id, newTitle) {
-  this.id = id;
+  this._id = id;
   this._newTitle = newTitle;
   this._oldTitle = "";
   this.redoTransaction = this.doTransaction;
@@ -1962,12 +2026,12 @@ PlacesEditItemTitleTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
   doTransaction: function PEITT_doTransaction() {
-    this._oldTitle = this.bookmarks.getItemTitle(this.id);
-    this.bookmarks.setItemTitle(this.id, this._newTitle);
+    this._oldTitle = this.bookmarks.getItemTitle(this._id);
+    this.bookmarks.setItemTitle(this._id, this._newTitle);
   },
 
   undoTransaction: function PEITT_undoTransaction() {
-    this.bookmarks.setItemTitle(this.id, this._oldTitle);
+    this.bookmarks.setItemTitle(this._id, this._oldTitle);
   }
 };
 
@@ -1975,7 +2039,7 @@ PlacesEditItemTitleTransaction.prototype = {
  * Edit a bookmark's uri.
  */
 function PlacesEditBookmarkURITransaction(aBookmarkId, aNewURI) {
-  this.id = aBookmarkId;
+  this._id = aBookmarkId;
   this._newURI = aNewURI;
   this.redoTransaction = this.doTransaction;
 }
@@ -1983,12 +2047,12 @@ PlacesEditBookmarkURITransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
   doTransaction: function PEBUT_doTransaction() {
-    this._oldURI = this.bookmarks.getBookmarkURI(this.id);
-    this.bookmarks.changeBookmarkURI(this.id, this._newURI);
+    this._oldURI = this.bookmarks.getBookmarkURI(this._id);
+    this.bookmarks.changeBookmarkURI(this._id, this._newURI);
   },
 
   undoTransaction: function PEBUT_undoTransaction() {
-    this.bookmarks.changeBookmarkURI(this.id, this._oldURI);
+    this.bookmarks.changeBookmarkURI(this._id, this._oldURI);
   }
 };
 
