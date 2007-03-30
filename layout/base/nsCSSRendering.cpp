@@ -4238,21 +4238,21 @@ nsCSSRendering::DrawTableBorderSegment(nsIRenderingContext&     aContext,
       if (horizontal) {
         GetDashInfo(aBorder.width, dashLength, twipsPerPixel, numDashSpaces, startDashLength, endDashLength);
         nsRect rect(aBorder.x, aBorder.y, startDashLength, aBorder.height);
-        DrawSolidBorderSegment(aContext, rect, PR_TRUE);
+        DrawSolidBorderSegment(aContext, rect, twipsPerPixel);
         for (PRInt32 spaceX = 0; spaceX < numDashSpaces; spaceX++) {
           rect.x += rect.width + dashLength;
           rect.width = (spaceX == (numDashSpaces - 1)) ? endDashLength : dashLength;
-          DrawSolidBorderSegment(aContext, rect, PR_TRUE);
+          DrawSolidBorderSegment(aContext, rect, twipsPerPixel);
         }
       }
       else {
         GetDashInfo(aBorder.height, dashLength, twipsPerPixel, numDashSpaces, startDashLength, endDashLength);
         nsRect rect(aBorder.x, aBorder.y, aBorder.width, startDashLength);
-        DrawSolidBorderSegment(aContext, rect, PR_FALSE);
+        DrawSolidBorderSegment(aContext, rect, twipsPerPixel);
         for (PRInt32 spaceY = 0; spaceY < numDashSpaces; spaceY++) {
           rect.y += rect.height + dashLength;
           rect.height = (spaceY == (numDashSpaces - 1)) ? endDashLength : dashLength;
-          DrawSolidBorderSegment(aContext, rect, PR_FALSE);
+          DrawSolidBorderSegment(aContext, rect, twipsPerPixel);
         }
       }
     }
