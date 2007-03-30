@@ -70,9 +70,7 @@ private:
                          nsISVGChildFrame *aTarget);
 };
 
-nsresult
-NS_GetSVGFilterFrame(nsSVGFilterFrame **aResult,
-                     nsIURI *aURI,
-                     nsIContent *aContent);
+nsSVGFilterFrame *
+NS_GetSVGFilterFrame(nsIURI *aURI, nsIContent *aContent);
 
 #endif

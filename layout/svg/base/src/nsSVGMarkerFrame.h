@@ -38,10 +38,6 @@
 #define __NS_SVGMARKERFRAME_H__
 
 #include "nsSVGContainerFrame.h"
-#include "nsIDOMSVGAnimatedEnum.h"
-#include "nsIDOMSVGAnimatedAngle.h"
-#include "nsIDOMSVGRect.h"
-#include "nsIDOMSVGAngle.h"
 
 class gfxContext;
 class nsSVGPathGeometryFrame;
@@ -123,9 +119,7 @@ private:
   PRPackedBool mInUse2;
 };
 
-nsresult
-NS_GetSVGMarkerFrame(nsSVGMarkerFrame **aResult,
-                     nsIURI *aURI,
-                     nsIContent *aContent);
+nsSVGMarkerFrame *
+NS_GetSVGMarkerFrame(nsIURI *aURI, nsIContent *aContent);
 
 #endif
