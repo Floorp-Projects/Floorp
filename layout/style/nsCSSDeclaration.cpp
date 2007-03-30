@@ -266,10 +266,21 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
       case eCSSType_Quotes: {
         const nsCSSQuotes* quotes = 
             *NS_STATIC_CAST(nsCSSQuotes*const*, storage);
+        NS_ASSERTION((quotes->mOpen.GetUnit() != eCSSUnit_String) ==
+                     (quotes->mNext == nsnull),
+                     "non-strings must be alone");
         do {
           AppendCSSValueToString(aProperty, quotes->mOpen, aResult);
-          aResult.Append(PRUnichar(' '));
-          AppendCSSValueToString(aProperty, quotes->mClose, aResult);
+          NS_ASSERTION((quotes->mOpen.GetUnit() == eCSSUnit_String) ==
+                       (quotes->mClose.GetUnit() == eCSSUnit_String),
+                       "strings must come in pairs");
+          NS_ASSERTION((quotes->mOpen.GetUnit() != eCSSUnit_String) ==
+                       (quotes->mClose.GetUnit() == eCSSUnit_Null),
+                       "non-strings must be alone");
+          if (quotes->mClose.GetUnit() != eCSSUnit_Null) {
+            aResult.Append(PRUnichar(' '));
+            AppendCSSValueToString(aProperty, quotes->mClose, aResult);
+          }
           quotes = quotes->mNext;
           if (quotes) {
             aResult.Append(PRUnichar(' '));
