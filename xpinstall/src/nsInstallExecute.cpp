@@ -239,7 +239,7 @@ PRInt32 nsInstallExecute::Complete()
       rv = nsInstall::UNEXPECTED_ERROR;
 
    if(arguments)
-      Recycle(arguments);
+      NS_Free(arguments);
 
    return rv;
 }
@@ -275,7 +275,7 @@ char* nsInstallExecute::toString()
         }
         
         if (tempString)
-            Recycle(tempString);
+            NS_Free(tempString);
     }
     else
     {

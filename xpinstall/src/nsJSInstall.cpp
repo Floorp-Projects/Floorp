@@ -1569,7 +1569,7 @@ InstallTRACE(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   tempStr = ToNewCString(b0);
   printf("Install:\t%s\n", tempStr);
 
-  Recycle(tempStr);
+  NS_Free(tempStr);
 
   return JS_TRUE;
 }

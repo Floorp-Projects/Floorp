@@ -780,7 +780,7 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   
   if (NS_SUCCEEDED(rv) && value) {
     char* str = ToNewUTF8String(nsDependentString(password));
-    Recycle(password);
+    NS_Free(password);
     return str;
   }
 
