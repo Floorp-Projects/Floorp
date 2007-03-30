@@ -49,6 +49,8 @@
 #include "nsIBaseWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIXULWindow.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 // defined in nsMenuBarX.mm
 extern NSMenu* sApplicationMenu; // Application menu shared by all menubars
@@ -185,12 +187,17 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
       allOrDefault = PR_TRUE;
       mWindowType = eWindowType_toplevel;
     }
-    
-#ifdef MOZ_MACBROWSER
-    if (mWindowType == eWindowType_popup)
-      return NS_OK;
-#endif
-    
+
+    // Some applications like Camino use native popup windows
+    // (native context menus, native tooltips)
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefs) {
+      PRBool useNativeContextMenus;
+      nsresult rv = prefs->GetBoolPref("ui.use_native_popup_windows", &useNativeContextMenus);
+      if (NS_SUCCEEDED(rv) && useNativeContextMenus && mWindowType == eWindowType_popup)
+        return NS_OK;
+    }
+
     // we default to NSBorderlessWindowMask, add features if needed
     unsigned int features = NSBorderlessWindowMask;
     
