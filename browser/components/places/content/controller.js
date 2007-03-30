@@ -1626,7 +1626,7 @@ PlacesAggregateTransaction.prototype = {
  *        array of transactions for items to be created under the new folder.
  */
 function PlacesCreateFolderTransaction(aName, aContainer, aIndex,
-                                       aAnnotations, aChildItemsTransaction) {
+                                       aAnnotations, aChildItemsTransactions) {
   this._name = aName;
   this._container = aContainer;
   this._index = typeof(aIndex) == "number" ? aIndex : -1;
