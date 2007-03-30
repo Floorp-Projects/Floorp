@@ -2599,6 +2599,11 @@ nsRuleNode::ComputeUIResetData(nsStyleStruct* aStartStruct,
   // force-broken-image-icons: integer
   if (eCSSUnit_Integer == uiData.mForceBrokenImageIcon.GetUnit()) {
     ui->mForceBrokenImageIcon = uiData.mForceBrokenImageIcon.GetIntValue();
+  } else if (eCSSUnit_Inherit == uiData.mForceBrokenImageIcon.GetUnit()) {
+    inherited = PR_TRUE;
+    ui->mForceBrokenImageIcon = parentUI->mForceBrokenImageIcon;
+  } else if (eCSSUnit_Initial == uiData.mForceBrokenImageIcon.GetUnit()) {
+    ui->mForceBrokenImageIcon = 0;
   }
   COMPUTE_END_RESET(UIReset, ui)
 }
@@ -3978,6 +3983,11 @@ nsRuleNode::ComputeXULData(nsStyleStruct* aStartStruct,
   // box-ordinal-group: integer
   if (eCSSUnit_Integer == xulData.mBoxOrdinal.GetUnit()) {
     xul->mBoxOrdinal = xulData.mBoxOrdinal.GetIntValue();
+  } else if (eCSSUnit_Inherit == xulData.mBoxOrdinal.GetUnit()) {
+    inherited = PR_TRUE;
+    xul->mBoxOrdinal = parentXUL->mBoxOrdinal;
+  } else if (eCSSUnit_Initial == xulData.mBoxOrdinal.GetUnit()) {
+    xul->mBoxOrdinal = 1;
   }
 
   COMPUTE_END_RESET(XUL, xul)
