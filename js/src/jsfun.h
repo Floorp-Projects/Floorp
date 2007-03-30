@@ -86,12 +86,6 @@ extern JS_FRIEND_DATA(JSClass) js_FunctionClass;
     (!JSVAL_IS_PRIMITIVE(v) &&                                                \
      OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_FunctionClass)
 
-extern void
-js_MarkFunction(JSContext *cx, JSFunction *fun);
-
-extern void
-js_FinalizeFunction(JSContext *cx, JSFunction *fun);
-
 extern JSBool
 js_fun_toString(JSContext *cx, JSObject *obj, uint32 indent,
                 uintN argc, jsval *argv, jsval *rval);
