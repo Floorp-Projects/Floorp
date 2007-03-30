@@ -565,7 +565,7 @@ nsSVGPatternFrame::checkURITarget(void) {
   if (NS_SUCCEEDED(
           nsSVGUtils::GetReferencedFrame(&nextPattern, targetURI, 
                                          mContent, 
-                                         GetPresContext()->PresShell()))) {
+                                         PresContext()->PresShell()))) {
     nsIAtom* frameType = nextPattern->GetType();
     if (frameType != nsGkAtoms::svgPatternFrame)
       return PR_FALSE;

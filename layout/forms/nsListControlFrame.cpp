@@ -260,7 +260,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
     focusedIndex = mEndSelectionIndex;
   }
 
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   if (!GetScrollableView()) return;
 
   nsIPresShell *presShell = presContext->GetPresShell();
@@ -405,7 +405,7 @@ NS_IMETHODIMP nsListControlFrame::GetAccessible(nsIAccessible** aAccessible)
 
   if (accService) {
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-    nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(GetPresContext()->PresShell()));
+    nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(PresContext()->PresShell()));
     return accService->CreateHTMLListboxAccessible(node, weakShell, aAccessible);
   }
 
@@ -1658,7 +1658,7 @@ nsListControlFrame::FireOnChange()
   nsEventStatus status = nsEventStatus_eIgnore;
   nsEvent event(PR_TRUE, NS_FORM_CHANGE);
 
-  nsCOMPtr<nsIPresShell> presShell = GetPresContext()->GetPresShell();
+  nsCOMPtr<nsIPresShell> presShell = PresContext()->GetPresShell();
   if (presShell) {
     presShell->HandleEventWithTarget(&event, this, nsnull, &status);
   }
@@ -1896,7 +1896,7 @@ nsListControlFrame::CalcFallbackRowHeight(PRInt32 aNumOptions)
     // Try the first option
     nsCOMPtr<nsIContent> option = GetOptionContent(0);
     if (option) {
-      nsIFrame * optFrame = GetPresContext()->PresShell()->
+      nsIFrame * optFrame = PresContext()->PresShell()->
         GetPrimaryFrameFor(option);
       if (optFrame) {
         styleFont = optFrame->GetStyleFont();
@@ -1914,7 +1914,7 @@ nsListControlFrame::CalcFallbackRowHeight(PRInt32 aNumOptions)
   nscoord rowHeight = 0;
   
   nsCOMPtr<nsIFontMetrics> fontMet;
-  nsresult result = GetPresContext()->DeviceContext()->
+  nsresult result = PresContext()->DeviceContext()->
     GetMetricsFor(styleFont->mFont, *getter_AddRefs(fontMet));
   if (NS_SUCCEEDED(result) && fontMet) {
     if (fontMet) {
@@ -1943,7 +1943,7 @@ nsListControlFrame::CalcIntrinsicHeight(nscoord aHeightOfARow,
     // [2..kMaxDropDownRows] rows.  We add in the height of optgroup labels
     // (within the constraint above), bug 300474.
     nscoord labelHeight =
-      ::GetOptGroupLabelsHeight(GetPresContext(), mContent, aHeightOfARow);
+      ::GetOptGroupLabelsHeight(PresContext(), mContent, aHeightOfARow);
 
     if (GetMultiple()) {
       if (aNumberOfOptions < 2) {
@@ -2166,7 +2166,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   }
 
   nsCOMPtr<nsIContent> content;
-  GetPresContext()->EventStateManager()->
+  PresContext()->EventStateManager()->
     GetEventTargetContent(nsnull, getter_AddRefs(content));
 
   nsCOMPtr<nsIContent> optionContent = GetOptionFromContent(content);
@@ -2175,7 +2175,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
     return NS_OK;
   }
 
-  nsIPresShell *presShell = GetPresContext()->PresShell();
+  nsIPresShell *presShell = PresContext()->PresShell();
   PRInt32 numOptions = GetNumberOfOptions();
   if (numOptions < 1)
     return NS_ERROR_FAILURE;
@@ -2368,7 +2368,7 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
     }
   
     // otherwise we find the content's frame and scroll to it
-    nsIPresShell *presShell = GetPresContext()->PresShell();
+    nsIPresShell *presShell = PresContext()->PresShell();
     nsIFrame * childframe;
     if (aOptElement) {
       childframe = presShell->GetPrimaryFrameFor(aOptElement);
@@ -2807,7 +2807,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     // because this isn't needed for Gfx
     if (IsInDropDownMode()) {
       // Don't flush anything but reflows lest it destroy us
-      GetPresContext()->PresShell()->
+      PresContext()->PresShell()->
         GetDocument()->FlushPendingNotifications(Flush_OnlyReflow);
     }
 

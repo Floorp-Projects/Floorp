@@ -817,7 +817,7 @@ nsAbsoluteItems::nsAbsoluteItems(nsIFrame* aContainingBlock)
 void
 nsAbsoluteItems::AddChild(nsIFrame* aChild)
 {
-  NS_ASSERTION(aChild->GetPresContext()->FrameManager()->
+  NS_ASSERTION(aChild->PresContext()->FrameManager()->
                GetPlaceholderFrameFor(aChild),
                "Child without placeholder being added to nsAbsoluteItems?");
   aChild->AddStateBits(NS_FRAME_OUT_OF_FLOW);
@@ -9606,7 +9606,7 @@ UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager,
   nsIView* view = aFrame->GetView();
   if (view) {
     if (aChange & nsChangeHint_SyncFrameView) {
-      nsContainerFrame::SyncFrameViewProperties(aFrame->GetPresContext(),
+      nsContainerFrame::SyncFrameViewProperties(aFrame->PresContext(),
                                                 aFrame, nsnull, view);
     }
   }
@@ -9748,7 +9748,7 @@ InvalidateCanvasIfNeeded(nsIFrame* aFrame)
   nsIFrame *ancestor = aFrame;
   const nsStyleBackground *bg;
   PRBool isCanvas;
-  nsPresContext* presContext = aFrame->GetPresContext();
+  nsPresContext* presContext = aFrame->PresContext();
   while (!nsCSSRendering::FindBackground(presContext, ancestor,
                                          &bg, &isCanvas)) {
     ancestor = ancestor->GetParent();

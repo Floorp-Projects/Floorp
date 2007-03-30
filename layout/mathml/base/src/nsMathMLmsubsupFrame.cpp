@@ -102,7 +102,7 @@ nsMathMLmsubsupFrame::Place(nsIRenderingContext& aRenderingContext,
   if (!value.IsEmpty()) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
-      subScriptShift = CalcLength(GetPresContext(), mStyleContext, cssValue);
+      subScriptShift = CalcLength(PresContext(), mStyleContext, cssValue);
     }
   }
   // check if the superscriptshift attribute is there
@@ -112,11 +112,11 @@ nsMathMLmsubsupFrame::Place(nsIRenderingContext& aRenderingContext,
   if (!value.IsEmpty()) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
-      supScriptShift = CalcLength(GetPresContext(), mStyleContext, cssValue);
+      supScriptShift = CalcLength(PresContext(), mStyleContext, cssValue);
     }
   }
 
-  return nsMathMLmsubsupFrame::PlaceSubSupScript(GetPresContext(),
+  return nsMathMLmsubsupFrame::PlaceSubSupScript(PresContext(),
                                                  aRenderingContext,
                                                  aPlaceOrigin,
                                                  aDesiredSize,

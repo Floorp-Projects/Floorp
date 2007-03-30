@@ -133,7 +133,7 @@ nsHTMLContainerFrame::DisplayTextDecorations(nsDisplayListBuilder* aBuilder,
                                              nsDisplayList* aAboveTextDecorations,
                                              nsLineBox* aLine)
 {
-  if (eCompatibility_NavQuirks == GetPresContext()->CompatibilityMode())
+  if (eCompatibility_NavQuirks == PresContext()->CompatibilityMode())
     return NS_OK;
   if (!IsVisibleForPainting(aBuilder))
     return NS_OK;
@@ -143,7 +143,7 @@ nsHTMLContainerFrame::DisplayTextDecorations(nsDisplayListBuilder* aBuilder,
   // nsTextFrame::PaintTextDecorations.  (See bug 1777.)
   nscolor underColor, overColor, strikeColor;
   PRUint8 decorations = NS_STYLE_TEXT_DECORATION_NONE;
-  GetTextDecorations(GetPresContext(), aLine != nsnull, decorations, underColor, 
+  GetTextDecorations(PresContext(), aLine != nsnull, decorations, underColor, 
                      overColor, strikeColor);
 
   if (decorations & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
@@ -554,7 +554,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIFrame* aFrame,
   if (!view)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  SyncFrameViewProperties(aFrame->GetPresContext(), aFrame, nsnull, view);
+  SyncFrameViewProperties(aFrame->PresContext(), aFrame, nsnull, view);
 
   // Insert the view into the view hierarchy. If the parent view is a
   // scrolling view we need to do this differently

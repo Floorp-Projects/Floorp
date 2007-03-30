@@ -1992,7 +1992,7 @@ void nsDisplayMathMLSelectionRect::Paint(nsDisplayListBuilder* aBuilder,
 {
   // get color to use for selection from the look&feel object
   nscolor bgColor = NS_RGB(0, 0, 0);
-  mFrame->GetPresContext()->LookAndFeel()->
+  mFrame->PresContext()->LookAndFeel()->
       GetColor(nsILookAndFeel::eColor_TextSelectBackground, bgColor);
   aCtx->SetColor(bgColor);
   aCtx->FillRect(mRect + aBuilder->ToReferenceFrame(mFrame));
@@ -2025,7 +2025,7 @@ void nsDisplayMathMLCharBackground::Paint(nsDisplayListBuilder* aBuilder,
   const nsStyleBorder* border = mStyleContext->GetStyleBorder();
   const nsStylePadding* padding = mStyleContext->GetStylePadding();
   const nsStyleBackground* backg = mStyleContext->GetStyleBackground();
-  nsCSSRendering::PaintBackgroundWithSC(mFrame->GetPresContext(), *aCtx, mFrame,
+  nsCSSRendering::PaintBackgroundWithSC(mFrame->PresContext(), *aCtx, mFrame,
                                         aDirtyRect,
                                         mRect + aBuilder->ToReferenceFrame(mFrame),
                                         *backg, *border, *padding,
@@ -2056,7 +2056,7 @@ private:
 void nsDisplayMathMLCharForeground::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  mChar->PaintForeground(mFrame->GetPresContext(), *aCtx,
+  mChar->PaintForeground(mFrame->PresContext(), *aCtx,
                          aBuilder->ToReferenceFrame(mFrame), mIsSelected);
 }
 
@@ -2085,7 +2085,7 @@ void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
 {
   // for visual debug
   PRIntn skipSides = 0;
-  nsPresContext* presContext = mFrame->GetPresContext();
+  nsPresContext* presContext = mFrame->PresContext();
   const nsStyleBorder* border = mFrame->GetStyleBorder();
   nsStyleContext* styleContext = mFrame->GetStyleContext();
   nsRect rect = mRect + aBuilder->ToReferenceFrame(mFrame);

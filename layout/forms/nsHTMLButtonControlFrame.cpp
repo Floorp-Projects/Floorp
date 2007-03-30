@@ -100,7 +100,7 @@ nsHTMLButtonControlFrame::Init(
 {
   nsresult  rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
   if (NS_SUCCEEDED(rv)) {
-    mRenderer.SetFrame(this, GetPresContext());
+    mRenderer.SetFrame(this, PresContext());
   }
   return rv;
 }

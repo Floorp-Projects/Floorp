@@ -1480,7 +1480,7 @@ nsEventStateManager::FireContextClick()
     mCurrentTarget = shell->GetPrimaryFrameFor(mGestureDownFrameOwner);
 
     if ( mCurrentTarget ) {
-      NS_ASSERTION(mPresContext == mCurrentTarget->GetPresContext(),
+      NS_ASSERTION(mPresContext == mCurrentTarget->PresContext(),
                    "a prescontext returned a primary frame that didn't belong to it?");
 
       // before dispatching, check that we're not on something that

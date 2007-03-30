@@ -124,7 +124,7 @@ nsSliderFrame::Init(nsIContent*      aContent,
     gSnapMultiplier = nsContentUtils::GetIntPref("slider.snapMultiplier");
   }
 
-  CreateViewForFrame(GetPresContext(), this, GetStyleContext(), PR_TRUE);
+  CreateViewForFrame(PresContext(), this, GetStyleContext(), PR_TRUE);
   return rv;
 }
 
@@ -223,7 +223,7 @@ nsSliderFrame::AttributeChanged(PRInt32 aNameSpaceID,
                                              aModType);
   // if the current position changes
   if (aAttribute == nsGkAtoms::curpos) {
-     rv = CurrentPositionChanged(GetPresContext());
+     rv = CurrentPositionChanged(PresContext());
      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to change position");
      if (NS_FAILED(rv))
         return rv;
@@ -266,7 +266,7 @@ nsSliderFrame::AttributeChanged(PRInt32 aNameSpaceID,
       aAttribute == nsGkAtoms::increment) {
 
       AddStateBits(NS_FRAME_IS_DIRTY);
-      GetPresContext()->PresShell()->
+      PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eStyleChange);
   }
 
@@ -738,7 +738,7 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
       mediator->PositionChanged(scrollbarFrame, GetCurrentPosition(scrollbar), newpos);
       // 'mediator' might be dangling now...
       UpdateAttribute(scrollbar, newpos, PR_FALSE, aIsSmooth);
-      CurrentPositionChanged(GetPresContext());
+      CurrentPositionChanged(PresContext());
       return;
     }
   }
@@ -811,11 +811,11 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   if (isHorizontal) {
     mouseEvent->GetScreenX(&clientPosPx);
     pos = nsPresContext::CSSPixelsToAppUnits(clientPosPx) - 
-          GetPresContext()->DevPixelsToAppUnits(screenRect.x);
+          PresContext()->DevPixelsToAppUnits(screenRect.x);
   } else {
     mouseEvent->GetScreenY(&clientPosPx);
     pos = nsPresContext::CSSPixelsToAppUnits(clientPosPx) - 
-          GetPresContext()->DevPixelsToAppUnits(screenRect.y);
+          PresContext()->DevPixelsToAppUnits(screenRect.y);
   }
 
   // If shift click or middle button, first

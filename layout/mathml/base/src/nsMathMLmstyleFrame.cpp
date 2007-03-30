@@ -160,7 +160,7 @@ nsMathMLmstyleFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                       PRInt32         aModType)
 {
   // Attributes common to MathML tags
-  if (CommonAttributeChangedFor(GetPresContext(), mContent, aAttribute))
+  if (CommonAttributeChangedFor(PresContext(), mContent, aAttribute))
     return NS_OK;
 
   // Other attributes can affect too many things, ask our parent to re-layout

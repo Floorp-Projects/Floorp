@@ -117,7 +117,7 @@ nsFormControlFrame::RegUnRegAccessKey(nsIFrame * aFrame, PRBool aDoReg)
 {
   NS_ENSURE_ARG_POINTER(aFrame);
   
-  nsPresContext* presContext = aFrame->GetPresContext();
+  nsPresContext* presContext = aFrame->PresContext();
   
   NS_ASSERTION(presContext, "aPresContext is NULL in RegUnRegAccessKey!");
 

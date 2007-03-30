@@ -221,7 +221,7 @@ nsHTMLReflowState::SetComputedWidth(nscoord aComputedWidth)
   mComputedWidth = aComputedWidth;
   if (mComputedWidth != oldComputedWidth &&
       frame->GetType() != nsGkAtoms::viewportFrame) {  // Or check GetParent()?
-    InitResizeFlags(frame->GetPresContext());
+    InitResizeFlags(frame->PresContext());
   }
 }
 
@@ -1686,7 +1686,7 @@ nsCSSOffsetState::InitOffsets(nscoord aContainingBlockWidth,
 
   const nsStyleDisplay *disp = frame->GetStyleDisplay();
   PRBool isThemed = frame->IsThemed(disp);
-  nsPresContext *presContext = frame->GetPresContext();
+  nsPresContext *presContext = frame->PresContext();
 
   if (isThemed &&
       presContext->GetTheme()->GetWidgetPadding(presContext->DeviceContext(),

@@ -713,7 +713,7 @@ nsLineIterator::CheckLineOrder(PRInt32                  aLine,
     return NS_OK;
   }
   
-  nsPresContext* presContext = line->mFirstChild->GetPresContext();
+  nsPresContext* presContext = line->mFirstChild->PresContext();
 
   nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
 

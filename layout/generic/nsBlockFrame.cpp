@@ -307,7 +307,7 @@ nsBlockFrame::Destroy()
 
   mFloats.DestroyFrames();
   
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
 
   nsLineBox::DeleteLineList(presContext, mLines);
 
@@ -603,7 +603,7 @@ static void ReparentFrame(nsIFrame* aFrame, nsIFrame* aOldParent,
 
   // When pushing and pulling frames we need to check for whether any
   // views need to be reparented
-  nsHTMLContainerFrame::ReparentFrameView(aFrame->GetPresContext(), aFrame,
+  nsHTMLContainerFrame::ReparentFrameView(aFrame->PresContext(), aFrame,
                                           aOldParent, aNewParent);
 }
  
@@ -785,7 +785,7 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
       CallQueryInterface(aLastRS->frame, &scrollFrame);
       nsMargin scrollbars(0,0,0,0);
       if (scrollFrame) {
-        nsBoxLayoutState dummyState(aLastRS->frame->GetPresContext(),
+        nsBoxLayoutState dummyState(aLastRS->frame->PresContext(),
                                     aLastRS->rendContext);
         scrollbars = scrollFrame->GetDesiredScrollbarSizes(&dummyState);
         // XXX We should account for the horizontal scrollbar too --- but currently
@@ -2423,7 +2423,7 @@ nsBlockFrame::AttributeChanged(PRInt32         aNameSpaceID,
     return rv;
   }
   if (nsGkAtoms::start == aAttribute) {
-    nsPresContext* presContext = GetPresContext();
+    nsPresContext* presContext = PresContext();
 
     // XXX Not sure if this is necessary anymore
     RenumberLists(presContext);
@@ -2443,7 +2443,7 @@ nsBlockFrame::AttributeChanged(PRInt32         aNameSpaceID,
       // Tell the enclosing block frame to renumber list items within
       // itself
       if (nsnull != blockParent) {
-        nsPresContext* presContext = GetPresContext();
+        nsPresContext* presContext = PresContext();
         // XXX Not sure if this is necessary anymore
         blockParent->RenumberLists(presContext);
 
@@ -4457,7 +4457,7 @@ nsBlockFrame::SetOverflowLines(nsLineList* aOverflowLines)
   NS_ASSERTION(!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_LINES),
                "Overwriting existing overflow lines");
 
-  nsPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = PresContext();
   nsresult rv = presContext->PropertyTable()->
     SetProperty(this, nsGkAtoms::overflowLinesProperty, aOverflowLines,
                 DestroyOverflowLines, presContext);
@@ -4564,7 +4564,7 @@ nsBlockFrame::AppendFrames(nsIAtom*  aListName,
   nsresult rv = AddFrames(aFrameList, lastKid);
   if (NS_SUCCEEDED(rv)) {
     AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
-    GetPresContext()->PresShell()->
+    PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eTreeChange);
   }
   return rv;
@@ -4612,7 +4612,7 @@ nsBlockFrame::InsertFrames(nsIAtom*  aListName,
 #endif // IBMBIDI
   if (NS_SUCCEEDED(rv)) {
     AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
-    GetPresContext()->PresShell()->
+    PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eTreeChange);
   }
   return rv;
@@ -4651,7 +4651,7 @@ nsBlockFrame::AddFrames(nsIFrame* aFrameList,
     aPrevSibling = mBullet;
   }
   
-  nsIPresShell *presShell = GetPresContext()->PresShell();
+  nsIPresShell *presShell = PresContext()->PresShell();
 
   // Attempt to find the line that contains the previous sibling
   nsLineList::iterator prevSibLine = end_lines();
@@ -4762,7 +4762,7 @@ nsBlockFrame::RemoveFloat(nsIFrame* aFloat) {
 
   // Unlink the placeholder *after* we searched the lines, because
   // the line search uses the placeholder relationship.
-  nsFrameManager* fm = GetPresContext()->GetPresShell()->FrameManager();
+  nsFrameManager* fm = PresContext()->GetPresShell()->FrameManager();
   nsPlaceholderFrame* placeholder = fm->GetPlaceholderFrameFor(aFloat);
   if (placeholder) {
     fm->UnregisterPlaceholderFrame(placeholder);
@@ -4887,7 +4887,7 @@ nsBlockFrame::RemoveFrame(nsIAtom*  aListName,
 
   if (NS_SUCCEEDED(rv)) {
     AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
-    GetPresContext()->PresShell()->
+    PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eTreeChange);
   }
   return rv;
@@ -4971,7 +4971,7 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRBool aDestroyFrames,
     return NS_OK;
   }
   
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   nsIPresShell* presShell = presContext->PresShell();
 
   PRBool isPlaceholder = nsGkAtoms::placeholderFrame == aDeletedFrame->GetType();
@@ -5688,7 +5688,7 @@ NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
     return accService->CreateHTMLHRAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
   }
 
-  nsPresContext *aPresContext = GetPresContext();
+  nsPresContext *aPresContext = PresContext();
   if (!mBullet || !aPresContext) {
     if (!mContent || !mContent->GetParent()) {
       // Don't create accessible objects for the root content node, they are redundant with
@@ -5928,7 +5928,7 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
     mFloats.SetFrames(aChildList);
   }
   else {
-    nsPresContext* presContext = GetPresContext();
+    nsPresContext* presContext = PresContext();
 
     // Lookup up the two pseudo style contexts
     if (nsnull == GetPrevInFlow()) {

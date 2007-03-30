@@ -186,7 +186,7 @@ nsMathMLTokenFrame::Place(nsIRenderingContext& aRenderingContext,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
   nsCOMPtr<nsIFontMetrics> fm =
-    GetPresContext()->GetMetricsFor(GetStyleFont()->mFont);
+    PresContext()->GetMetricsFor(GetStyleFont()->mFont);
   nscoord ascent, descent;
   fm->GetMaxAscent(ascent);
   fm->GetMaxDescent(descent);
@@ -208,7 +208,7 @@ nsMathMLTokenFrame::Place(nsIRenderingContext& aRenderingContext,
 
       // place and size the child; (dx,0) makes the caret happy - bug 188146
       dy = rect.IsEmpty() ? 0 : aDesiredSize.ascent - rect.y;
-      FinishReflowChild(childFrame, GetPresContext(), nsnull, childSize, dx, dy, 0);
+      FinishReflowChild(childFrame, PresContext(), nsnull, childSize, dx, dy, 0);
       dx += rect.width;
       childFrame = childFrame->GetNextSibling();
     }
@@ -255,7 +255,7 @@ nsMathMLTokenFrame::ProcessTextData(PRBool aComputeStyleChange)
     return;
 
   // otherwise re-resolve the style contexts in our subtree to pick up the change
-  nsFrameManager* fm = GetPresContext()->FrameManager();
+  nsFrameManager* fm = PresContext()->FrameManager();
   nsStyleChangeList changeList;
   fm->ComputeStyleChangeFor(this, &changeList, NS_STYLE_HINT_NONE);
 #ifdef DEBUG

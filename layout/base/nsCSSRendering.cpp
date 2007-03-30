@@ -2554,7 +2554,7 @@ FindCanvasBackground(nsIFrame* aForFrame,
             // and thus |InitialReflow| on the pres shell.  See bug 119351
             // for the ugly details.
             if (bodyContent) {
-              nsIFrame *bodyFrame = aForFrame->GetPresContext()->GetPresShell()->
+              nsIFrame *bodyFrame = aForFrame->PresContext()->GetPresShell()->
                 GetPrimaryFrameFor(bodyContent);
               if (bodyFrame)
                 result = bodyFrame->GetStyleBackground();

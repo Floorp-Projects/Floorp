@@ -298,7 +298,7 @@ nsSplitterFrame::AttributeChanged(PRInt32 aNameSpaceID,
     // tell the slider its attribute changed so it can 
     // update itself
     nsIFrame* grippy = nsnull;
-    nsScrollbarButtonFrame::GetChildWithTag(GetPresContext(), nsGkAtoms::grippy, this, grippy);
+    nsScrollbarButtonFrame::GetChildWithTag(PresContext(), nsGkAtoms::grippy, this, grippy);
     if (grippy)
       grippy->AttributeChanged(aNameSpaceID, aAttribute, aModType);
   } else if (aAttribute == nsGkAtoms::state) {
@@ -371,7 +371,7 @@ nsSplitterFrame::Init(nsIContent*      aContent,
   }
 
   mInner->mState = nsSplitterFrameInner::Open;
-  mInner->AddListener(GetPresContext());
+  mInner->AddListener(PresContext());
   mInner->mParentBox = nsnull;
   return rv;
 }
@@ -689,7 +689,7 @@ nsSplitterFrameInner::MouseUp(nsIDOMEvent* aMouseEvent)
 {  
   mPressed = PR_FALSE;
 
-  mOuter->CaptureMouse(mOuter->GetPresContext(), PR_FALSE);
+  mOuter->CaptureMouse(mOuter->PresContext(), PR_FALSE);
 
   return NS_OK;
 }
@@ -716,7 +716,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
     return NS_OK;
   
   // get our index
-  nsPresContext* outerPresContext = mOuter->GetPresContext();
+  nsPresContext* outerPresContext = mOuter->PresContext();
   nscoord childIndex = nsFrameNavigator::IndexOf(outerPresContext, mParentBox, mOuter);
   PRInt32 childCount = nsFrameNavigator::CountFrames(outerPresContext, mParentBox);
 
@@ -947,7 +947,7 @@ nsSplitterFrameInner::UpdateState()
     nsIBox* splitter = mOuter;
     // Find the splitter's immediate sibling.
     nsIBox* splitterSibling =
-      nsFrameNavigator::GetChildBeforeAfter(mOuter->GetPresContext(), splitter,
+      nsFrameNavigator::GetChildBeforeAfter(mOuter->PresContext(), splitter,
                                             (newState == CollapsedBefore ||
                                              mState == CollapsedBefore));
     if (splitterSibling) {

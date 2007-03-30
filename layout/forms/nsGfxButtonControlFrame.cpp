@@ -140,7 +140,7 @@ nsGfxButtonControlFrame::CreateFrameFor(nsIContent*      aContent)
     nsIFrame * parentFrame = mFrames.FirstChild();
     nsStyleContext* styleContext = parentFrame->GetStyleContext();
 
-    nsPresContext* presContext = GetPresContext();
+    nsPresContext* presContext = PresContext();
     nsRefPtr<nsStyleContext> textStyleContext;
     textStyleContext = presContext->StyleSet()->
       ResolveStyleForNonElement(styleContext);

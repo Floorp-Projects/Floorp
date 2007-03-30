@@ -672,7 +672,7 @@ nsSVGGlyphFrame::GetHighlight(PRUint32 *charnum, PRUint32 *nchars,
     return NS_ERROR_FAILURE;
   }
 
-  nsPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = PresContext();
 
   // The selection ranges are relative to the uncompressed text in
   // the content element. We'll need the text fragment:
@@ -1293,7 +1293,7 @@ void nsSVGGlyphFrame::SelectFont(gfxContext *aContext)
   // Since SVG has its own scaling, we really don't want
   // fonts in SVG to respond to the browser's "TextZoom"
   // (Ctrl++,Ctrl+-)
-  nsPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = PresContext();
   float textZoom = presContext->TextZoom();
 
   cairo_set_font_size(ctx, presContext->AppUnitsToDevPixels(fontData->mSize) / textZoom);

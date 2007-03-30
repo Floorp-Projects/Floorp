@@ -262,7 +262,7 @@ nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
        
   nscoord topBorder = borderStyle->GetBorderWidth(NS_SIDE_TOP);
   nscoord yoff = 0;
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
      
   // if the border is smaller than the legend. Move the border down
   // to be centered on the legend. 
@@ -700,7 +700,7 @@ nsFieldSetFrame::RemoveFrame(nsIAtom*       aListName,
     mFrames.DestroyFrame(mLegendFrame);
     mLegendFrame = nsnull;
     AddStateBits(NS_FRAME_IS_DIRTY);
-    GetPresContext()->PresShell()->
+    PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eTreeChange);
     return NS_OK;
   }
@@ -730,7 +730,7 @@ nsFieldSetFrame::MaybeSetLegend(nsIFrame* aFrameList, nsIAtom* aListName)
     mLegendFrame->SetNextSibling(mContentFrame);
     mFrames.SetFrames(mLegendFrame);
     AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-    GetPresContext()->PresShell()->
+    PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eTreeChange);
   }
   return aFrameList;
@@ -739,7 +739,7 @@ nsFieldSetFrame::MaybeSetLegend(nsIFrame* aFrameList, nsIAtom* aListName)
 void
 nsFieldSetFrame::ReParentFrameList(nsIFrame* aFrameList)
 {
-  nsFrameManager* frameManager = GetPresContext()->FrameManager();
+  nsFrameManager* frameManager = PresContext()->FrameManager();
   for (nsIFrame* frame = aFrameList; frame; frame = frame->GetNextSibling()) {
     frame->SetParent(mContentFrame);
     frameManager->ReParentStyleContext(frame);

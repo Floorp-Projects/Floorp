@@ -443,7 +443,7 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
     return aFrame ? GetPrevSiblingFor(aFrame) : LastChild();
 
   nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(mFirstChild);  
-  nsBidiPresUtils* bidiUtils = mFirstChild->GetPresContext()->GetBidiUtils();
+  nsBidiPresUtils* bidiUtils = mFirstChild->PresContext()->GetBidiUtils();
 
   nsresult result = parent->QueryInterface(NS_GET_IID(nsILineIterator), (void**)&iter);
   if (NS_FAILED(result) || !iter) { 
@@ -520,7 +520,7 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
     return aFrame ? GetPrevSiblingFor(aFrame) : mFirstChild;
 
   nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(mFirstChild);
-  nsBidiPresUtils* bidiUtils = mFirstChild->GetPresContext()->GetBidiUtils();
+  nsBidiPresUtils* bidiUtils = mFirstChild->PresContext()->GetBidiUtils();
   
   nsresult result = parent->QueryInterface(NS_GET_IID(nsILineIterator), (void**)&iter);
   if (NS_FAILED(result) || !iter) { 

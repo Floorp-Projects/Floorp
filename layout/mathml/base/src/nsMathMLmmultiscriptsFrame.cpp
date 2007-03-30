@@ -126,7 +126,7 @@ nsMathMLmmultiscriptsFrame::ProcessAttributes()
   if (!value.IsEmpty()) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
-      mSubScriptShift = CalcLength(GetPresContext(), mStyleContext, cssValue);
+      mSubScriptShift = CalcLength(PresContext(), mStyleContext, cssValue);
     }
   }
   // check if the superscriptshift attribute is there
@@ -135,7 +135,7 @@ nsMathMLmmultiscriptsFrame::ProcessAttributes()
   if (!value.IsEmpty()) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
-      mSupScriptShift = CalcLength(GetPresContext(), mStyleContext, cssValue);
+      mSupScriptShift = CalcLength(PresContext(), mStyleContext, cssValue);
     }
   }
 }
@@ -171,7 +171,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
   // scriptspace from TeX for extra spacing after sup/subscript (0.5pt in plain TeX)
   // forced to be at least 1 pixel here
   nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
-  nscoord scriptSpace = PR_MAX(GetPresContext()->PointsToAppUnits(0.5f), onePixel);
+  nscoord scriptSpace = PR_MAX(PresContext()->PointsToAppUnits(0.5f), onePixel);
 
   /////////////////////////////////////
   // first the shift for the subscript
@@ -418,7 +418,7 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
         // place the base ...
         childFrame = baseFrame;
         dy = aDesiredSize.ascent - baseSize.ascent;
-        FinishReflowChild (baseFrame, GetPresContext(), nsnull, baseSize, dx, dy, 0);
+        FinishReflowChild (baseFrame, PresContext(), nsnull, baseSize, dx, dy, 0);
         dx += bmBase.width + italicCorrection;
       }
       else if (mprescriptsFrame != childFrame) {
@@ -441,12 +441,12 @@ nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
 
           dy = aDesiredSize.ascent - subScriptSize.ascent +
             maxSubScriptShift;
-          FinishReflowChild (subScriptFrame, GetPresContext(), nsnull, subScriptSize,
+          FinishReflowChild (subScriptFrame, PresContext(), nsnull, subScriptSize,
                              dx + (width-subScriptSize.width)/2, dy, 0);
 
           dy = aDesiredSize.ascent - supScriptSize.ascent -
             maxSupScriptShift;
-          FinishReflowChild (supScriptFrame, GetPresContext(), nsnull, supScriptSize,
+          FinishReflowChild (supScriptFrame, PresContext(), nsnull, supScriptSize,
                              dx + (width-supScriptSize.width)/2, dy, 0);
 
           dx += width + scriptSpace;

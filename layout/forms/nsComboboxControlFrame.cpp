@@ -328,7 +328,7 @@ NS_IMETHODIMP nsComboboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
 
   if (accService) {
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-    nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(GetPresContext()->PresShell()));
+    nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(PresContext()->PresShell()));
     return accService->CreateHTMLComboboxAccessible(node, weakShell, aAccessible);
   }
 
@@ -365,7 +365,7 @@ nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   // This is only needed for embedding, the focus may go to 
   // the chrome that is not part of the Gecko system (Bug 83493)
   // XXX this is rather inefficient
-  nsIViewManager* vm = GetPresContext()->GetViewManager();
+  nsIViewManager* vm = PresContext()->GetViewManager();
   if (vm) {
     vm->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
   }
@@ -394,7 +394,7 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
                      NS_XUL_POPUP_SHOWING : NS_XUL_POPUP_HIDING, nsnull,
                      nsMouseEvent::eReal);
 
-  nsCOMPtr<nsIPresShell> shell = GetPresContext()->GetPresShell();
+  nsCOMPtr<nsIPresShell> shell = PresContext()->GetPresShell();
   if (shell) 
     shell->HandleDOMEventWithTarget(mContent, &event, &status);
 }
@@ -513,7 +513,7 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
    // Use the height calculated for the area frame so it includes both
    // the display and button heights.
   nscoord dropdownYOffset = GetRect().height;
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
 // XXX: Enable this code to debug popping up above the display frame, rather than below it
   nsSize dropdownSize = mDropdownFrame->GetSize();
 
@@ -637,7 +637,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   nsIScrollableFrame* scrollable;
   CallQueryInterface(mListControlFrame, &scrollable);
   NS_ASSERTION(scrollable, "List must be a scrollable frame");
-  nsBoxLayoutState bls(GetPresContext(), aReflowState.rendContext);
+  nsBoxLayoutState bls(PresContext(), aReflowState.rendContext);
   nscoord buttonWidth = scrollable->GetDesiredScrollbarSizes(&bls).LeftRight();
 
   if (buttonWidth > aReflowState.ComputedWidth()) {
@@ -711,9 +711,9 @@ nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown)
     if (mListControlFrame) {
       mListControlFrame->SyncViewWithFrame();
     }
-    ToggleList(GetPresContext());
+    ToggleList(PresContext());
   } else if (mDroppedDown && !aDoDropDown) {
-    ToggleList(GetPresContext());
+    ToggleList(PresContext());
   }
 }
 
@@ -791,7 +791,7 @@ nsComboboxControlFrame::HandleRedisplayTextEvent()
   // ActuallyDisplayText, since that flushes out the content sink by
   // calling SetText on a DOM node with aNotify set to true.  See bug
   // 289730.
-  GetPresContext()->Document()->
+  PresContext()->Document()->
     FlushPendingNotifications(Flush_ContentAndNotify);
   
   // Redirect frame insertions during this method (see GetContentInsertionFrame())
@@ -804,7 +804,7 @@ nsComboboxControlFrame::HandleRedisplayTextEvent()
   ActuallyDisplayText(PR_TRUE);
   mDisplayFrame->AddStateBits(NS_FRAME_IS_DIRTY);
   // XXXbz This should perhaps be eResize.  Check.
-  GetPresContext()->PresShell()->FrameNeedsReflow(mDisplayFrame,
+  PresContext()->PresShell()->FrameNeedsReflow(mDisplayFrame,
                                                   nsIPresShell::eStyleChange);
 
   mInRedisplayText = PR_FALSE;
@@ -1102,7 +1102,7 @@ nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
   }
   
   // Get PresShell
-  nsIPresShell *shell = GetPresContext()->PresShell();
+  nsIPresShell *shell = PresContext()->PresShell();
   nsStyleSet *styleSet = shell->StyleSet();
 
   // create the style contexts for the anonymous block frame and text frame
@@ -1250,7 +1250,7 @@ nsComboboxControlFrame::Rollup()
 void
 nsComboboxControlFrame::RollupFromList()
 {
-  nsPresContext* aPresContext = GetPresContext();
+  nsPresContext* aPresContext = PresContext();
 
   ShowList(aPresContext, PR_FALSE);
   mListControlFrame->CaptureMouseEvents(PR_FALSE);
@@ -1311,7 +1311,7 @@ nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = PresContext();
   const nsStyleDisplay *disp = GetStyleDisplay();
   if ((!IsThemed(disp) ||
        !presContext->GetTheme()->ThemeDrawsFocusForWidget(presContext, this, disp->mAppearance)) &&
@@ -1410,7 +1410,7 @@ void nsComboboxControlFrame::FireValueChangeEvent()
 {
   // Fire ValueChange event to indicate data value of combo box has changed
   nsCOMPtr<nsIDOMEvent> event;
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   if (NS_SUCCEEDED(nsEventDispatcher::CreateEvent(presContext, nsnull,
                                                   NS_LITERAL_STRING("Events"),
                                                   getter_AddRefs(event)))) {

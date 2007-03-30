@@ -207,7 +207,7 @@ nsTreeBodyFrame::Init(nsIContent*     aContent,
                       nsIFrame*       aPrevInFlow)
 {
   nsresult rv = nsLeafBoxFrame::Init(aContent, aParent, aPrevInFlow);
-  nsBoxFrame::CreateViewForFrame(GetPresContext(), this, GetStyleContext(), PR_TRUE);
+  nsBoxFrame::CreateViewForFrame(PresContext(), this, GetStyleContext(), PR_TRUE);
   nsLeafBoxFrame::GetView()->CreateWidget(kWidgetCID);
 
   mIndentation = GetIndentation();
@@ -283,7 +283,7 @@ nsTreeBodyFrame::CalcMaxRowWidth()
   nsTreeColumn* col;
 
   nsCOMPtr<nsIRenderingContext> rc;
-  GetPresContext()->PresShell()->CreateRenderingContext(this, getter_AddRefs(rc));
+  PresContext()->PresShell()->CreateRenderingContext(this, getter_AddRefs(rc));
 
   for (PRInt32 row = 0; row < mRowCount; ++row) {
     rowWidth = 0;
@@ -311,7 +311,7 @@ nsTreeBodyFrame::Destroy()
 {
   // Make sure we cancel any posted callbacks. 
   if (mReflowCallbackPosted) {
-    GetPresContext()->PresShell()->CancelReflowCallback(this);
+    PresContext()->PresShell()->CancelReflowCallback(this);
     mReflowCallbackPosted = PR_FALSE;
   }
 
@@ -408,7 +408,7 @@ nsTreeBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRec
   nscoord horzWidth = CalcHorzWidth(GetScrollParts());
   if ((aRect != mRect || mHorzWidth != horzWidth) && !mReflowCallbackPosted) {
     mReflowCallbackPosted = PR_TRUE;
-    GetPresContext()->PresShell()->PostReflowCallback(this);
+    PresContext()->PresShell()->PostReflowCallback(this);
   }
 
   mHorzWidth = horzWidth;
@@ -776,7 +776,7 @@ FindScrollParts(nsIFrame* aCurrFrame, nsTreeBodyFrame::ScrollParts* aResult)
 
 nsTreeBodyFrame::ScrollParts nsTreeBodyFrame::GetScrollParts()
 {
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   ScrollParts result = { nsnull, nsnull, nsnull, nsnull, nsnull };
   nsIContent* baseElement = GetBaseElement();
   nsIFrame* treeFrame =
@@ -836,7 +836,7 @@ nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
     verticalOverflowChanged = PR_TRUE;
   }
 
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
 
   if (verticalOverflowChanged) {
     nsScrollPortEvent event(PR_TRUE, mVerticalOverflow ? NS_SCROLLPORT_OVERFLOW
@@ -935,7 +935,7 @@ nsTreeBodyFrame::AdjustClientCoordsToBoxCoordSpace(PRInt32 aX, PRInt32 aY,
                                                    nscoord* aResultX,
                                                    nscoord* aResultY)
 {
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
 
   nsPoint point(nsPresContext::CSSPixelsToAppUnits(aX),
                 nsPresContext::CSSPixelsToAppUnits(aY));
@@ -1052,7 +1052,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
   // The Rect for the requested item. 
   nsRect theRect;
 
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
 
   for (nsTreeColumn* currCol = mColumns->GetFirstColumn(); currCol && currX < mInnerBox.x + mInnerBox.width;
        currCol = currCol->GetNext()) {
@@ -1263,7 +1263,7 @@ nsTreeBodyFrame::CheckTextForBidi(nsAutoString& aText)
   if (!maybeRTL)
     return;
 
-  GetPresContext()->SetBidiEnabled(PR_TRUE);
+  PresContext()->SetBidiEnabled(PR_TRUE);
 }
 
 void
@@ -1481,7 +1481,7 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
         hasTwisty = PR_TRUE;
     }
 
-    nsPresContext* presContext = GetPresContext();
+    nsPresContext* presContext = PresContext();
     nsCOMPtr<nsIRenderingContext> rc;
     presContext->PresShell()->CreateRenderingContext(this, getter_AddRefs(rc));
 
@@ -1550,7 +1550,7 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
   AdjustForBorderPadding(textContext, textRect);
 
   nsCOMPtr<nsIRenderingContext> renderingContext;
-  GetPresContext()->PresShell()->CreateRenderingContext(this, getter_AddRefs(renderingContext));
+  PresContext()->PresShell()->CreateRenderingContext(this, getter_AddRefs(renderingContext));
 
   renderingContext->SetFont(textContext->GetStyleFont()->mFont, nsnull);
 
@@ -1650,7 +1650,7 @@ nsTreeBodyFrame::GetCellWidth(PRInt32 aRow, nsTreeColumn* aCol,
 
     nsRect imageSize;
     nsRect twistyRect(cellRect);
-    GetTwistyRect(aRow, aCol, imageSize, twistyRect, GetPresContext(),
+    GetTwistyRect(aRow, aCol, imageSize, twistyRect, PresContext(),
                   *aRenderingContext, twistyContext);
 
     // Add in the margins of the twisty element.
@@ -1706,7 +1706,7 @@ nsTreeBodyFrame::IsCellCropped(PRInt32 aRow, nsITreeColumn* aCol, PRBool *_retva
     return NS_ERROR_INVALID_ARG;
 
   nsCOMPtr<nsIRenderingContext> rc;
-  rv = GetPresContext()->PresShell()->
+  rv = PresContext()->PresShell()->
     CreateRenderingContext(this, getter_AddRefs(rc));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1731,7 +1731,7 @@ nsTreeBodyFrame::MarkDirtyIfSelect()
 
     mStringWidth = -1;
     AddStateBits(NS_FRAME_IS_DIRTY);
-    GetPresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+    PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange);
   }
 }
 
@@ -1742,7 +1742,7 @@ nsTreeBodyFrame::CreateTimer(const nsILookAndFeel::nsMetricID aID,
 {
   // Get the delay from the look and feel service.
   PRInt32 delay = 0;
-  GetPresContext()->LookAndFeel()->GetMetric(aID, delay);
+  PresContext()->LookAndFeel()->GetMetric(aID, delay);
 
   nsCOMPtr<nsITimer> timer;
 
@@ -2695,7 +2695,7 @@ nsTreeBodyFrame::PaintTreeBody(nsIRenderingContext& aRenderingContext,
   if (oldPageCount != mPageLength || mHorzWidth != CalcHorzWidth(GetScrollParts())) {
     // Schedule a ResizeReflow that will update our info properly.
     AddStateBits(NS_FRAME_IS_DIRTY);
-    GetPresContext()->PresShell()->
+    PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eResize);
   }
   #ifdef DEBUG
@@ -2719,7 +2719,7 @@ nsTreeBodyFrame::PaintTreeBody(nsIRenderingContext& aRenderingContext,
       nsRect dirtyRect;
       colRect += aPt;
       if (dirtyRect.IntersectRect(aDirtyRect, colRect)) {
-        PaintColumn(currCol, colRect, GetPresContext(), aRenderingContext, aDirtyRect);
+        PaintColumn(currCol, colRect, PresContext(), aRenderingContext, aDirtyRect);
       }
     }
   }
@@ -2729,7 +2729,7 @@ nsTreeBodyFrame::PaintTreeBody(nsIRenderingContext& aRenderingContext,
     nsRect dirtyRect;
     if (dirtyRect.IntersectRect(aDirtyRect, rowRect + aPt) &&
         rowRect.y < (mInnerBox.y+mInnerBox.height)) {
-      PaintRow(i, rowRect + aPt, GetPresContext(), aRenderingContext, aDirtyRect, aPt);
+      PaintRow(i, rowRect + aPt, PresContext(), aRenderingContext, aDirtyRect, aPt);
     }
   }
 
@@ -2743,7 +2743,7 @@ nsTreeBodyFrame::PaintTreeBody(nsIRenderingContext& aRenderingContext,
     nsRect dirtyRect;
     feedbackRect += aPt;
     if (dirtyRect.IntersectRect(aDirtyRect, feedbackRect)) {
-      PaintDropFeedback(feedbackRect, GetPresContext(), aRenderingContext, aDirtyRect);
+      PaintDropFeedback(feedbackRect, PresContext(), aRenderingContext, aDirtyRect);
     }
   }
   aRenderingContext.PopState();
@@ -3878,7 +3878,7 @@ nsTreeBodyFrame::ScrollInternal(const ScrollParts& aParts, PRInt32 aRow)
 
   mTopRowIndex += delta;
 
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
 
   // See if we have a transparent background or a background image.  
   // If we do, then we cannot blit.
@@ -3932,7 +3932,7 @@ nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts, PRInt32 aPosition
   } else {
     nsIWidget* widget = nsLeafBoxFrame::GetView()->GetWidget();
     if (widget) {
-      widget->Scroll(GetPresContext()->AppUnitsToDevPixels(-delta), 0, nsnull);
+      widget->Scroll(PresContext()->AppUnitsToDevPixels(-delta), 0, nsnull);
     }
   }
 
@@ -3953,7 +3953,7 @@ nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts, PRInt32 aPosition
   event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsEventDispatcher::Dispatch(mContent, GetPresContext(), &event, nsnull,
+  nsEventDispatcher::Dispatch(mContent, PresContext(), &event, nsnull,
                               &status);
 
   return NS_OK;
@@ -4026,7 +4026,7 @@ nsTreeBodyFrame::PositionChanged(nsISupports* aScrollbar, PRInt32 aOldIndex, PRI
 nsStyleContext*
 nsTreeBodyFrame::GetPseudoStyleContext(nsIAtom* aPseudoElement)
 {
-  return mStyleCache.GetStyleContext(this, GetPresContext(), mContent,
+  return mStyleCache.GetStyleContext(this, PresContext(), mContent,
                                      mStyleContext, aPseudoElement,
                                      mScratchArray);
 }
@@ -4180,7 +4180,7 @@ nsTreeBodyFrame::ComputeDropPosition(nsGUIEvent* aEvent, PRInt32* aRow, PRInt16*
   if (CanAutoScroll(*aRow)) {
     // Get the max value from the look and feel service.
     PRInt32 scrollLinesMax = 0;
-    GetPresContext()->LookAndFeel()->
+    PresContext()->LookAndFeel()->
       GetMetric(nsILookAndFeel::eMetric_TreeScrollLinesMax, scrollLinesMax);
     scrollLinesMax--;
     if (scrollLinesMax < 0)

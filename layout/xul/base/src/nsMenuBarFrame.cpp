@@ -188,7 +188,7 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
   // The caret distracts screen readers and other assistive technologies from the menu selection
   // There is 1 caret per document, we need to find the focused document and toggle its caret 
   do {
-    nsIPresShell *presShell = GetPresContext()->GetPresShell();
+    nsIPresShell *presShell = PresContext()->GetPresShell();
     if (!presShell)
       break;
 
@@ -294,7 +294,7 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
 
   // Enumerate over our list of frames.
   nsIFrame* immediateParent = nsnull;
-  GetInsertionPoint(GetPresContext()->PresShell(), this, nsnull, &immediateParent);
+  GetInsertionPoint(PresContext()->PresShell(), this, nsnull, &immediateParent);
   if (!immediateParent)
     immediateParent = this;
 
@@ -442,7 +442,7 @@ nsMenuBarFrame::KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag)
 nsMenuBarFrame::GetNextMenuItem(nsIMenuFrame* aStart)
 {
   nsIFrame* immediateParent = nsnull;
-  GetInsertionPoint(GetPresContext()->PresShell(), this, nsnull, &immediateParent);
+  GetInsertionPoint(PresContext()->PresShell(), this, nsnull, &immediateParent);
   if (!immediateParent)
     immediateParent = this;
 
@@ -492,7 +492,7 @@ nsMenuBarFrame::GetNextMenuItem(nsIMenuFrame* aStart)
 nsMenuBarFrame::GetPreviousMenuItem(nsIMenuFrame* aStart)
 {
   nsIFrame* immediateParent = nsnull;
-  GetInsertionPoint(GetPresContext()->PresShell(), this, nsnull, &immediateParent);
+  GetInsertionPoint(PresContext()->PresShell(), this, nsnull, &immediateParent);
   if (!immediateParent)
     immediateParent = this;
 

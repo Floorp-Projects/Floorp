@@ -200,7 +200,7 @@ PaintRowGroupBackground(nsIFrame* aFrame, nsIRenderingContext* aCtx,
   nsIRenderingContext::AutoPushTranslation translate(aCtx, aPt.x, aPt.y);
   TableBackgroundPainter painter(tableFrame,
                                  TableBackgroundPainter::eOrigin_TableRowGroup,
-                                 aFrame->GetPresContext(), *aCtx,
+                                 aFrame->PresContext(), *aCtx,
                                  aDirtyRect - aPt);
   painter.PaintRowGroup(NS_STATIC_CAST(nsTableRowGroupFrame*, aFrame));
 }
@@ -1343,7 +1343,7 @@ nsTableRowGroupFrame::AppendFrames(nsIAtom*        aListName,
     if (tableFrame) {
       tableFrame->AppendRows(*this, rowIndex, rows);
       AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-      GetPresContext()->PresShell()->FrameNeedsReflow(this,
+      PresContext()->PresShell()->FrameNeedsReflow(this,
                                                     nsIPresShell::eTreeChange);
       tableFrame->SetGeometryDirty();
     }
@@ -1393,7 +1393,7 @@ nsTableRowGroupFrame::InsertFrames(nsIAtom*        aListName,
     tableFrame->InsertRows(*this, rows, rowIndex, PR_TRUE);
 
     AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-    GetPresContext()->PresShell()->FrameNeedsReflow(this,
+    PresContext()->PresShell()->FrameNeedsReflow(this,
                                                     nsIPresShell::eTreeChange);
     tableFrame->SetGeometryDirty();
   }
@@ -1415,7 +1415,7 @@ nsTableRowGroupFrame::RemoveFrame(nsIAtom*        aListName,
       tableFrame->RemoveRows((nsTableRowFrame &)*aOldFrame, 1, PR_TRUE);
 
       AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-      GetPresContext()->PresShell()->FrameNeedsReflow(this,
+      PresContext()->PresShell()->FrameNeedsReflow(this,
                                                     nsIPresShell::eTreeChange);
       tableFrame->SetGeometryDirty();
     }

@@ -77,7 +77,7 @@ nsTitleBarFrame::Init(nsIContent*      aContent,
 {
   nsresult rv = nsBoxFrame::Init(aContent, aParent, asPrevInFlow);
 
-  CreateViewForFrame(GetPresContext(), this, GetStyleContext(), PR_TRUE);
+  CreateViewForFrame(PresContext(), this, GetStyleContext(), PR_TRUE);
 
   return rv;
 }
