@@ -613,7 +613,7 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
       assertmsg.Append(tagName);
       char* assertstr = ToNewCString(assertmsg);
       NS_ASSERTION(*aIsBlock, assertstr);
-      Recycle(assertstr);
+      NS_Free(assertstr);
     }
   }
 #endif /* DEBUG */

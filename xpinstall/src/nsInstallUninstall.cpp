@@ -133,7 +133,7 @@ char* nsInstallUninstall::toString()
     }
 
     if (temp)
-         Recycle(temp);
+         NS_Free(temp);
 
     return buffer;
 }
