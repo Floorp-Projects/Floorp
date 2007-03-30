@@ -243,14 +243,6 @@ JS_STATIC_ASSERT(sizeof(JSGCThing) >= sizeof(jsdouble));
 JS_STATIC_ASSERT(sizeof(JSObject) % sizeof(JSGCThing) == 0);
 
 /*
- * Ensure that GC-allocated JSFunction and JSObject would go to different
- * lists so we can easily finalize JSObject before JSFunction. See comments
- * in js_GC.
- */
-JS_STATIC_ASSERT(GC_FREELIST_INDEX(sizeof(JSFunction)) !=
-                 GC_FREELIST_INDEX(sizeof(JSObject)));
-
-/*
  * JSPtrTable capacity growth descriptor. The table grows by powers of two
  * starting from capacity JSPtrTableInfo.minCapacity, but switching to linear
  * growth when capacity reaches JSPtrTableInfo.linearGrowthThreshold.
@@ -540,7 +532,7 @@ static GCFinalizeOp gc_finalizers[GCX_NTYPES] = {
     (GCFinalizeOp) js_FinalizeString,           /* GCX_STRING */
     (GCFinalizeOp) js_FinalizeDouble,           /* GCX_DOUBLE */
     (GCFinalizeOp) js_FinalizeString,           /* GCX_MUTABLE_STRING */
-    NULL,                                       /* GCX_PRIVATE */
+    (GCFinalizeOp) js_FinalizeFunction,         /* GCX_FUNCTION */
     (GCFinalizeOp) js_FinalizeXMLNamespace,     /* GCX_NAMESPACE */
     (GCFinalizeOp) js_FinalizeXMLQName,         /* GCX_QNAME */
     (GCFinalizeOp) js_FinalizeXML,              /* GCX_XML */
@@ -1922,6 +1914,17 @@ gc_dump_thing(JSContext *cx, JSGCThing *thing, FILE *fp)
         fprintf(fp, "object %8p %s", privateThing, className);
         break;
       }
+      case GCX_FUNCTION:
+      {
+        JSFunction *fun = (JSFunction *)thing;
+
+        fprintf(fp, "function");
+        if (fun->atom && ATOM_IS_STRING(fun->atom)) {
+            fputc(' ', fp);
+            js_FileEscapedString(fp, ATOM_TO_STRING(fun->atom), 0);
+        }
+        break;
+      }
 #if JS_HAS_XML_SUPPORT
       case GCX_NAMESPACE:
       {
@@ -1957,9 +1960,6 @@ gc_dump_thing(JSContext *cx, JSGCThing *thing, FILE *fp)
 #endif
       case GCX_DOUBLE:
         fprintf(fp, "double %g", *(jsdouble *)thing);
-        break;
-      case GCX_PRIVATE:
-        fprintf(fp, "private %8p", (void *)thing);
         break;
       default:
         fputs("string ", fp);
@@ -2204,6 +2204,12 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
         goto start;
 #endif
 
+      case GCX_FUNCTION:
+        if (RECURSION_TOO_DEEP())
+            goto add_to_unscanned_bag;
+        js_MarkFunction(cx, (JSFunction *)thing);
+        break;
+
 #if JS_HAS_XML_SUPPORT
       case GCX_NAMESPACE:
         if (RECURSION_TOO_DEEP())
@@ -2435,6 +2441,7 @@ ScanDelayedChildren(JSContext *cx)
                  */
                 switch (*flagp & GCF_TYPEMASK) {
                   case GCX_OBJECT:
+                  case GCX_FUNCTION:
 # if JS_HAS_XML_SUPPORT
                   case GCX_NAMESPACE:
                   case GCX_QNAME:
@@ -3059,12 +3066,8 @@ restart:
      * so that any attempt to allocate a GC-thing from a finalizer will fail,
      * rather than nest badly and leave the unmarked newborn to be swept.
      *
-     * Here we need to ensure that JSObject instances are finalized before GC-
-     * allocated JSFunction instances so fun_finalize from jsfun.c can get the
-     * proper result from the call to js_IsAboutToBeFinalized. For that we
-     * simply finalize the list containing JSObject first since the static
-     * assert at the beginning of the file guarantees that JSFunction instances
-     * are allocated from a different list.
+     * Here we finalize the list containing JSObject first to ensure that
+     * JSObject finalizers can access JSString * and other GC things safely.
      */
     for (i = 0; i < GC_NUM_FREELISTS; i++) {
         arenaList = &rt->gcArenaList[i == 0
@@ -3072,6 +3075,7 @@ restart:
                                      : i == GC_FREELIST_INDEX(sizeof(JSObject))
                                      ? 0
                                      : i];
+        arenaList = &rt->gcArenaList[i];
         nbytes = arenaList->thingSize;
         limit = arenaList->lastLimit;
         for (a = arenaList->last; a; a = a->prev) {
