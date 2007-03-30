@@ -629,7 +629,13 @@ ifdef MOZ_CO_FLAGS
   LDAPCSDK_CO_FLAGS := $(MOZ_CO_FLAGS)
 endif
 LDAPCSDK_CO_FLAGS := $(LDAPCSDK_CO_FLAGS) $(if $(LDAPCSDK_CO_TAG),-r $(LDAPCSDK_CO_TAG),-A)
+
+# Can only pull the tip or branch tags by date
+ifeq (,$(filter-out HEAD %BRANCH,$(LDAPCSDK_CO_TAG)))
 CVSCO_LDAPCSDK = $(CVS) $(CVS_FLAGS) co $(LDAPCSDK_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(LDAPCSDK_CO_MODULE)
+else
+CVSCO_LDAPCSDK = $(CVS) $(CVS_FLAGS) co $(LDAPCSDK_CO_FLAGS) $(LDAPCSDK_CO_MODULE)
+endif
 
 ####################################
 # Error on obsolete variables.
