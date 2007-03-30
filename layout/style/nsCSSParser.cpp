@@ -4521,7 +4521,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kBoxPackKTable);
   case eCSSProperty_box_ordinal_group:
-    return ParseVariant(aErrorCode, aValue, VARIANT_INTEGER, nsnull);
+    return ParseVariant(aErrorCode, aValue, VARIANT_HI, nsnull);
 #ifdef MOZ_SVG
   case eCSSProperty_clip_path:
     return ParseVariant(aErrorCode, aValue, VARIANT_HUO, nsnull);
@@ -4597,7 +4597,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_width:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_AHLP, nsnull);
   case eCSSProperty_force_broken_image_icon:
-    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_INTEGER, nsnull);
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HI, nsnull);
   case eCSSProperty_caption_side:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK, 
                         nsCSSProps::kCaptionSideKTable);
