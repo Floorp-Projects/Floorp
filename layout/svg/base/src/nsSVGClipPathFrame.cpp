@@ -62,35 +62,31 @@ NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCo
   return new (aPresShell) nsSVGClipPathFrame(aContext);
 }
 
-nsresult
-NS_GetSVGClipPathFrame(nsSVGClipPathFrame **aResult,
-                       nsIURI *aURI, nsIContent *aContent)
+nsSVGClipPathFrame *
+NS_GetSVGClipPathFrame(nsIURI *aURI, nsIContent *aContent)
 {
-  *aResult = nsnull;
-
   // Get the PresShell
   nsIDocument *myDoc = aContent->GetCurrentDoc();
   if (!myDoc) {
     NS_WARNING("No document for this content!");
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
   nsIPresShell *presShell = myDoc->GetShellAt(0);
   if (!presShell) {
     NS_WARNING("no presshell");
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
 
   // Find the referenced frame
   nsIFrame *cpframe;
   if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&cpframe, aURI, aContent, presShell)))
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
   nsIAtom* frameType = cpframe->GetType();
   if (frameType != nsGkAtoms::svgClipPathFrame)
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
-  *aResult = (nsSVGClipPathFrame *)cpframe;
-  return NS_OK;
+  return NS_STATIC_CAST(nsSVGClipPathFrame *, cpframe);
 }
 
 NS_IMETHODIMP

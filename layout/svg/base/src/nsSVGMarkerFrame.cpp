@@ -35,6 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDOMSVGAnimatedRect.h"
+#include "nsIDOMSVGRect.h"
 #include "nsIDocument.h"
 #include "nsSVGMarkerFrame.h"
 #include "nsSVGPathGeometryFrame.h"
@@ -49,35 +50,31 @@ NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCont
   return new (aPresShell) nsSVGMarkerFrame(aContext);
 }
 
-nsresult
-NS_GetSVGMarkerFrame(nsSVGMarkerFrame **aResult,
-                     nsIURI *aURI, nsIContent *aContent)
+nsSVGMarkerFrame *
+NS_GetSVGMarkerFrame(nsIURI *aURI, nsIContent *aContent)
 {
-  *aResult = nsnull;
-
   // Get the PresShell
   nsIDocument *myDoc = aContent->GetCurrentDoc();
   if (!myDoc) {
     NS_WARNING("No document for this content!");
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
   nsIPresShell *presShell = myDoc->GetShellAt(0);
   if (!presShell) {
     NS_WARNING("no presshell");
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
 
   // Find the referenced frame
   nsIFrame *marker;
   if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&marker, aURI, aContent, presShell)))
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
   nsIAtom* frameType = marker->GetType();
   if (frameType != nsGkAtoms::svgMarkerFrame)
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
-  *aResult = (nsSVGMarkerFrame *)marker;
-  return NS_OK;
+  return NS_STATIC_CAST(nsSVGMarkerFrame *, marker);
 }
 
 NS_IMETHODIMP

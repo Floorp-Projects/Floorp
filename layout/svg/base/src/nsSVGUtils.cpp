@@ -65,7 +65,6 @@
 #include "nsIDOMSVGAnimPresAspRatio.h"
 #include "nsIDOMSVGPresAspectRatio.h"
 #include "nsSVGMatrix.h"
-#include "nsSVGFilterFrame.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGMaskFrame.h"
 #include "nsSVGContainerFrame.h"
@@ -777,8 +776,8 @@ AddEffectProperties(nsIFrame *aFrame)
   const nsStyleSVGReset *style = aFrame->GetStyleSVGReset();
 
   if (style->mFilter && !(aFrame->GetStateBits() & NS_STATE_SVG_FILTERED)) {
-    nsSVGFilterFrame *filter;
-    NS_GetSVGFilterFrame(&filter, style->mFilter, aFrame->GetContent());
+    nsSVGFilterFrame *filter = NS_GetSVGFilterFrame(style->mFilter,
+                                                    aFrame->GetContent());
     if (filter) {
       nsSVGFilterProperty *property = new nsSVGFilterProperty(filter, aFrame);
       if (!property) {
@@ -794,8 +793,8 @@ AddEffectProperties(nsIFrame *aFrame)
   }
 
   if (style->mClipPath && !(aFrame->GetStateBits() & NS_STATE_SVG_CLIPPED_MASK)) {
-    nsSVGClipPathFrame *clip;
-    NS_GetSVGClipPathFrame(&clip, style->mClipPath, aFrame->GetContent());
+    nsSVGClipPathFrame *clip = NS_GetSVGClipPathFrame(style->mClipPath,
+                                                      aFrame->GetContent());
     if (clip) {
       aFrame->SetProperty(nsGkAtoms::clipPath, clip);
 
@@ -809,8 +808,8 @@ AddEffectProperties(nsIFrame *aFrame)
   }
 
   if (style->mMask && !(aFrame->GetStateBits() & NS_STATE_SVG_MASKED)) {
-    nsSVGMaskFrame *mask;
-    NS_GetSVGMaskFrame(&mask, style->mMask, aFrame->GetContent());
+    nsSVGMaskFrame *mask = NS_GetSVGMaskFrame(style->mMask,
+                                              aFrame->GetContent());
     if (mask) {
       aFrame->SetProperty(nsGkAtoms::mask, mask);
       aFrame->AddStateBits(NS_STATE_SVG_MASKED);

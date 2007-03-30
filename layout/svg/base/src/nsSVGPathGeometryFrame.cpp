@@ -122,7 +122,7 @@ nsSVGMarkerProperty::GetMarkerFromStyle(nsSVGMarkerFrame **aMarkerFrame,
   if (!aURI || *aMarkerFrame)
     return;
 
-  NS_GetSVGMarkerFrame(aMarkerFrame, aURI, mFrame->GetContent());
+  *aMarkerFrame = NS_GetSVGMarkerFrame(aURI, mFrame->GetContent());
 
   if (*aMarkerFrame) {
     nsIContent* markerContent = (*aMarkerFrame)->GetContent();

@@ -85,8 +85,7 @@ class nsSVGMaskFrame : public nsSVGMaskFrameBase
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 };
 
-nsresult
-NS_GetSVGMaskFrame(nsSVGMaskFrame **aResult,
-                   nsIURI *aURI, nsIContent *aContent);
+nsSVGMaskFrame *
+NS_GetSVGMaskFrame(nsIURI *aURI, nsIContent *aContent);
 
 #endif
