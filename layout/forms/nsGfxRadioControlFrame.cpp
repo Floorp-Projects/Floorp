@@ -150,7 +150,7 @@ nsGfxRadioControlFrame::PaintRadioButtonFromStyle(
   // doesn't draw a round enough circle.
   nsStyleBackground tmpColor     = *myColor;
   tmpColor.mBackgroundColor = color->mColor;
-  nsPresContext* pc = GetPresContext();
+  nsPresContext* pc = PresContext();
   nsCSSRendering::PaintBackgroundWithSC(pc, aRenderingContext,
                                         this, aDirtyRect, rect,
                                         tmpColor, *myBorder, *myPadding, PR_FALSE);

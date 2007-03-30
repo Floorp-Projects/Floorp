@@ -92,7 +92,7 @@ nsTreeColumn::GetFrame(nsIFrame* aBodyFrame)
 {
   NS_PRECONDITION(aBodyFrame, "null frame?");
 
-  nsIPresShell *shell = aBodyFrame->GetPresContext()->PresShell();
+  nsIPresShell *shell = aBodyFrame->PresContext()->PresShell();
   if (!shell)
     return nsnull;
 

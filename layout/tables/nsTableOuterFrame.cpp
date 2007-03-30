@@ -261,7 +261,7 @@ nsTableOuterFrame::AppendFrames(nsIAtom*        aListName,
     // Reflow the new caption frame. It's already marked dirty, so
     // just tell the pres shell.
     AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-    GetPresContext()->PresShell()->
+    PresContext()->PresShell()->
       FrameNeedsReflow(mCaptionFrame, nsIPresShell::eTreeChange);
     
   }
@@ -315,7 +315,7 @@ nsTableOuterFrame::RemoveFrame(nsIAtom*        aListName,
   mCaptionFrame = mCaptionFrames.FirstChild();
   
   AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN); // also means child removed
-  GetPresContext()->PresShell()->
+  PresContext()->PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eTreeChange);
 
   return NS_OK;

@@ -125,7 +125,7 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
                 // width which is bigger than the intrinsic minimum width uses
                 // that coord value as the minimum width.
                 if (aCellFrame && w > minCoord &&
-                    aCellFrame->GetPresContext()->CompatibilityMode() ==
+                    aCellFrame->PresContext()->CompatibilityMode() ==
                       eCompatibility_NavQuirks &&
                     aCellFrame->GetContent()->HasAttr(kNameSpaceID_None,
                                                       nsGkAtoms::nowrap)) {
@@ -224,7 +224,7 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
     nsTableCellMap *cellMap = tableFrame->GetCellMap();
 
     nscoord spacing = tableFrame->GetCellSpacingX();
-    SpanningCellSorter spanningCells(tableFrame->GetPresContext()->PresShell());
+    SpanningCellSorter spanningCells(tableFrame->PresContext()->PresShell());
 
     // Loop over the columns to consider the columns and cells *without*
     // a colspan.

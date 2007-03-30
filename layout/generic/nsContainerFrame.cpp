@@ -139,7 +139,7 @@ nsContainerFrame::AppendFrames(nsIAtom*  aListName,
 #endif
     {
       AddStateBits(NS_FRAME_IS_DIRTY);
-      GetPresContext()->PresShell()->
+      PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange);
     }
   }
@@ -173,7 +173,7 @@ nsContainerFrame::InsertFrames(nsIAtom*  aListName,
     {
       // Ask the parent frame to reflow me.
       AddStateBits(NS_FRAME_IS_DIRTY);
-      GetPresContext()->PresShell()->
+      PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange);
     }
   }
@@ -231,7 +231,7 @@ nsContainerFrame::RemoveFrame(nsIAtom*  aListName,
     if (generateReflowCommand) {
       // Ask the parent frame to reflow me.
       AddStateBits(NS_FRAME_IS_DIRTY);
-      GetPresContext()->PresShell()->
+      PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange);
     }
   }
@@ -251,7 +251,7 @@ nsContainerFrame::CleanupGeneratedContentIn(nsIContent* aRealContent,
       if (content && content != aRealContent) {
         // Tell the ESM that this content is going away now, so it'll update
         // its hover content, etc.
-        aRoot->GetPresContext()->EventStateManager()->ContentRemoved(content);
+        aRoot->PresContext()->EventStateManager()->ContentRemoved(content);
         content->UnbindFromTree();
       }
       CleanupGeneratedContentIn(aRealContent, child);
@@ -273,7 +273,7 @@ nsContainerFrame::Destroy()
   mFrames.DestroyFrames();
   
   // Destroy overflow frames now
-  nsFrameList overflowFrames(GetOverflowFrames(GetPresContext(), PR_TRUE));
+  nsFrameList overflowFrames(GetOverflowFrames(PresContext(), PR_TRUE));
   overflowFrames.DestroyFrames();
 
   // Destroy the frame and remove the flow pointers
@@ -291,7 +291,7 @@ nsContainerFrame::GetFirstChild(nsIAtom* aListName) const
   if (nsnull == aListName) {
     return mFrames.FirstChild();
   } else if (nsGkAtoms::overflowList == aListName) {
-    return GetOverflowFrames(GetPresContext(), PR_FALSE);
+    return GetOverflowFrames(PresContext(), PR_FALSE);
   } else {
     return nsnull;
   }

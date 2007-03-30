@@ -91,7 +91,7 @@ nsDeckFrame::AttributeChanged(PRInt32         aNameSpaceID,
 
    // if the index changed hide the old element and make the new element visible
   if (aAttribute == nsGkAtoms::selectedIndex) {
-    IndexChanged(GetPresContext());
+    IndexChanged(PresContext());
   }
 
   return rv;

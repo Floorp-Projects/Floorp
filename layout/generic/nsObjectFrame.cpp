@@ -754,7 +754,7 @@ nsObjectFrame::InstantiatePlugin(nsIPluginHost* aPluginHost,
   // XXX having to do this sucks. it'd be better to move the code from DidReflow
   // to FixupWindow or something.
   AddStateBits(NS_FRAME_IS_DIRTY);
-  GetPresContext()->GetPresShell()->
+  PresContext()->GetPresShell()->
     FrameNeedsReflow(this, nsIPresShell::eStyleChange);
   return rv;
 }
@@ -762,7 +762,7 @@ nsObjectFrame::InstantiatePlugin(nsIPluginHost* aPluginHost,
 void
 nsObjectFrame::FixupWindow(const nsSize& aSize)
 {
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
 
   if (!mInstanceOwner)
     return;
@@ -857,8 +857,8 @@ nsPoint nsObjectFrame::GetWindowOriginInPixels(PRBool aWindowless)
     }  
   }
 
-  origin.x = GetPresContext()->AppUnitsToDevPixels(origin.x);
-  origin.y = GetPresContext()->AppUnitsToDevPixels(origin.y);
+  origin.x = PresContext()->AppUnitsToDevPixels(origin.x);
+  origin.y = PresContext()->AppUnitsToDevPixels(origin.y);
 
   return origin;
 }
@@ -948,7 +948,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  nsPresContext::nsPresContextType type = GetPresContext()->Type();
+  nsPresContext::nsPresContextType type = PresContext()->Type();
 
   // If we are painting in Print Preview do nothing....
   if (type == nsPresContext::eContext_PrintPreview)
@@ -988,7 +988,7 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   if (!frame)
     return;
 
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   // make sure this is REALLY an nsIObjectFrame
   // we may need to go through the children to get it
   nsIObjectFrame* objectFrame = nsnull;
@@ -1296,7 +1296,7 @@ nsObjectFrame::PrepareInstanceOwner()
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(mInstanceOwner);
-  mInstanceOwner->Init(GetPresContext(), this, GetContent());
+  mInstanceOwner->Init(PresContext(), this, GetContent());
   return NS_OK;
 }
 
@@ -1318,7 +1318,7 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
 
   // XXX having to do this sucks. it'd be better to move the code from DidReflow
   // to FixupWindow.
-  GetPresContext()->GetPresShell()->
+  PresContext()->GetPresShell()->
     FrameNeedsReflow(this, nsIPresShell::eStyleChange);
   return rv;
 }
@@ -1737,7 +1737,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
   NS_ENSURE_TRUE(mOwner,NS_ERROR_NULL_POINTER);
 
   // the container of the pres context will give us the link handler
-  nsCOMPtr<nsISupports> container = mOwner->GetPresContext()->GetContainer();
+  nsCOMPtr<nsISupports> container = mOwner->PresContext()->GetContainer();
   NS_ENSURE_TRUE(container,NS_ERROR_FAILURE);
   nsCOMPtr<nsILinkHandler> lh = do_QueryInterface(container);
   NS_ENSURE_TRUE(lh, NS_ERROR_FAILURE);
@@ -1804,7 +1804,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::ShowStatus(const PRUnichar *aStatusMsg)
   if (!mOwner) {
     return rv;
   }
-  nsCOMPtr<nsISupports> cont = mOwner->GetPresContext()->GetContainer();
+  nsCOMPtr<nsISupports> cont = mOwner->PresContext()->GetContainer();
   if (!cont) {
     return NS_OK;
   }
@@ -1850,7 +1850,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(nsPluginRect *invalidRect)
     nsIView* view = mOwner->GetView();
 
     if (view) {
-      nsPresContext* presContext = mOwner->GetPresContext();
+      nsPresContext* presContext = mOwner->PresContext();
 
       nsRect rect(presContext->DevPixelsToAppUnits(invalidRect->left),
             presContext->DevPixelsToAppUnits(invalidRect->top),
@@ -1889,7 +1889,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetValue(nsPluginInstancePeerVariable varia
     {      
       if (mOwner) {
         void** pvalue = (void**)value;
-        nsIViewManager* vm = mOwner->GetPresContext()->GetViewManager();
+        nsIViewManager* vm = mOwner->PresContext()->GetViewManager();
         if (vm) {
 #if defined(XP_WIN)
           // This property is provided to allow a "windowless" plugin to determine the window it is drawing
@@ -2580,7 +2580,7 @@ NPDrawingModel nsPluginInstanceOwner::GetDrawingModel()
 
 void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord* origEvent, EventRecord& aMacEvent)
 {
-  nsPresContext* presContext = mOwner ? mOwner->GetPresContext() : nsnull;
+  nsPresContext* presContext = mOwner ? mOwner->PresContext() : nsnull;
   InitializeEventRecord(&aMacEvent);
   switch (anEvent.message) {
     case NS_FOCUS_EVENT_START:   // this is the same as NS_FOCUS_CONTENT
@@ -2898,7 +2898,7 @@ nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
   // otherwise, we might not get key events
   if (mOwner && mPluginWindow &&
       mPluginWindow->type == nsPluginWindowType_Drawable) {
-    mContent->SetFocus(mOwner->GetPresContext());
+    mContent->SetFocus(mOwner->PresContext());
   }
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aMouseEvent));
@@ -3170,7 +3170,7 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
   GetWindow(window);
   nsRect relDirtyRect = nsRect(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   nsRect relDirtyRectInPixels;
-  ConvertAppUnitsToPixels(*mOwner->GetPresContext(), relDirtyRect,
+  ConvertAppUnitsToPixels(*mOwner->PresContext(), relDirtyRect,
                           relDirtyRectInPixels);
 
   // we got dirty rectangle in relative window coordinates, but we
@@ -3361,7 +3361,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
                           (void *)&windowless);
 
       // always create widgets in Twips, not pixels
-      nsPresContext* context = mOwner->GetPresContext();
+      nsPresContext* context = mOwner->PresContext();
       rv = mOwner->CreateWidget(context->DevPixelsToAppUnits(mPluginWindow->width),
                                 context->DevPixelsToAppUnits(mPluginWindow->height),
                                 windowless);

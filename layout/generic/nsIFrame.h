@@ -404,7 +404,7 @@ class nsIFrame : public nsISupports
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFRAME_IID)
 
-  nsPresContext* GetPresContext() const {
+  nsPresContext* PresContext() const {
     return GetStyleContext()->GetRuleNode()->GetPresContext();
   }
 
@@ -775,7 +775,7 @@ public:
   PRBool IsThemed(const nsStyleDisplay* aDisp) {
     if (!aDisp->mAppearance)
       return PR_FALSE;
-    nsPresContext* pc = GetPresContext();
+    nsPresContext* pc = PresContext();
     nsITheme *theme = pc->GetTheme();
     return theme && theme->ThemeSupportsWidget(pc, this, aDisp->mAppearance);
   }
@@ -2083,7 +2083,7 @@ public:
 
   ~nsWeakFrame()
   {
-    Clear(mFrame ? mFrame->GetPresContext()->GetPresShell() : nsnull);
+    Clear(mFrame ? mFrame->PresContext()->GetPresShell() : nsnull);
   }
 private:
   void Init(nsIFrame* aFrame);

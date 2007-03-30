@@ -385,7 +385,7 @@ nsSVGOuterSVGFrame::AttributeChanged(PRInt32         aNameSpaceID,
       !(GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
       (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height)) {
     AddStateBits(NS_FRAME_IS_DIRTY);
-    GetPresContext()->PresShell()->
+    PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eStyleChange);
   }
 
@@ -399,8 +399,8 @@ nsSVGOuterSVGFrame::GetFrameForPoint(const nsPoint& aPoint)
   // singly-linked list we have to test each and every SVG element for
   // a hit. What we really want is a double-linked list.
 
-  float x = GetPresContext()->AppUnitsToDevPixels(aPoint.x);
-  float y = GetPresContext()->AppUnitsToDevPixels(aPoint.y);
+  float x = PresContext()->AppUnitsToDevPixels(aPoint.x);
+  float y = PresContext()->AppUnitsToDevPixels(aPoint.y);
 
   nsRect thisRect(nsPoint(0,0), GetSize());
   if (!thisRect.Contains(aPoint)) {
@@ -469,7 +469,7 @@ nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
   PRTime start = PR_Now();
 #endif
 
-  dirtyRect.ScaleRoundOut(1.0f / GetPresContext()->AppUnitsPerDevPixel());
+  dirtyRect.ScaleRoundOut(1.0f / PresContext()->AppUnitsPerDevPixel());
 
   nsSVGRenderState ctx(&aRenderingContext);
 
@@ -511,7 +511,7 @@ nsSVGOuterSVGFrame::GetType() const
 nsresult
 nsSVGOuterSVGFrame::InvalidateRect(nsRect aRect)
 {
-  aRect.ScaleRoundOut(GetPresContext()->AppUnitsPerDevPixel());
+  aRect.ScaleRoundOut(PresContext()->AppUnitsPerDevPixel());
   Invalidate(aRect);
 
   return NS_OK;
@@ -640,7 +640,7 @@ void nsSVGOuterSVGFrame::InitiateReflow()
 {
   mNeedsReflow = PR_FALSE;
   
-  nsIPresShell* presShell = GetPresContext()->PresShell();
+  nsIPresShell* presShell = PresContext()->PresShell();
   presShell->FrameNeedsReflow(this, nsIPresShell::eStyleChange);
   // XXXbz why is this synchronously flushing reflows, exactly?  If it
   // needs to, why is it not using the presshell's reflow batching

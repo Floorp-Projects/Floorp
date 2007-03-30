@@ -1196,7 +1196,7 @@ nsTableCellMap::SetBCBorderCorner(Corner      aCorner,
 nsCellMap::nsCellMap(nsTableRowGroupFrame& aRowGroup, PRBool aIsBC)
   : mRows(8), mContentRowCount(0), mRowGroupFrame(&aRowGroup),
     mNextSibling(nsnull), mIsBC(aIsBC),
-    mPresContext(aRowGroup.GetPresContext())
+    mPresContext(aRowGroup.PresContext())
 {
   MOZ_COUNT_CTOR(nsCellMap);
   NS_ASSERTION(mPresContext, "Must have prescontext");

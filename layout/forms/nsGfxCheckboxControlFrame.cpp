@@ -264,10 +264,10 @@ nsGfxCheckboxControlFrame::PaintCheckBoxFromStyle(
   nscoord y = (mRect.height - height) / 2;
   nsRect rect(aPt.x + x, aPt.y + y, width, height);
 
-  nsCSSRendering::PaintBackgroundWithSC(GetPresContext(), aRenderingContext,
+  nsCSSRendering::PaintBackgroundWithSC(PresContext(), aRenderingContext,
                                         this, aDirtyRect, rect, *myBackground,
                                         *myBorder, *myPadding, PR_FALSE);
-  nsCSSRendering::PaintBorder(GetPresContext(), aRenderingContext, this,
+  nsCSSRendering::PaintBorder(PresContext(), aRenderingContext, this,
                               aDirtyRect, rect, *myBorder, mCheckButtonFaceStyle, 0);
 }
 

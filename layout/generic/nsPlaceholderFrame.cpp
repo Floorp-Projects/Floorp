@@ -125,7 +125,7 @@ nsPlaceholderFrame::Reflow(nsPresContext*          aPresContext,
 void
 nsPlaceholderFrame::Destroy()
 {
-  nsIPresShell* shell = GetPresContext()->GetPresShell();
+  nsIPresShell* shell = PresContext()->GetPresShell();
   if (shell && mOutOfFlowFrame) {
     NS_ASSERTION(!shell->FrameManager()->GetPlaceholderFrameFor(mOutOfFlowFrame),
                  "Placeholder relationship should have been torn down; see "

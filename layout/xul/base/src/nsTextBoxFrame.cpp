@@ -124,10 +124,10 @@ nsTextBoxFrame::AttributeChanged(PRInt32         aNameSpaceID,
 
     if (aResize) {
         AddStateBits(NS_FRAME_IS_DIRTY);
-        GetPresContext()->PresShell()->
+        PresContext()->PresShell()->
           FrameNeedsReflow(this, nsIPresShell::eStyleChange);
     } else if (aRedraw) {
-        nsBoxLayoutState state(GetPresContext());
+        nsBoxLayoutState state(PresContext());
         Redraw(state);
     }
 
@@ -325,7 +325,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
     textRect.Deflate(GetUsedBorderAndPadding());
 
     // determine (cropped) title and underline position
-    nsPresContext* presContext = GetPresContext();
+    nsPresContext* presContext = PresContext();
     LayoutTitle(presContext, aRenderingContext, textRect);
 
     // make the rect as small as our (cropped) text.
@@ -955,7 +955,7 @@ nsTextBoxFrame::RegUnregAccessKey(PRBool aDoReg)
 
     // With a valid PresContext we can get the ESM 
     // and (un)register the access key
-    nsIEventStateManager *esm = GetPresContext()->EventStateManager();
+    nsIEventStateManager *esm = PresContext()->EventStateManager();
 
     PRUint32 key = accessKey.First();
     if (aDoReg)

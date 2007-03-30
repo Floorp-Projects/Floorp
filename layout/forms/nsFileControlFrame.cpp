@@ -234,7 +234,7 @@ nsFileControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   if (mTextFrame) {
     nsIContent* content = mTextFrame->GetContent();
     if (content) {
-      content->SetFocus(GetPresContext());
+      content->SetFocus(PresContext());
     }
   }
 }

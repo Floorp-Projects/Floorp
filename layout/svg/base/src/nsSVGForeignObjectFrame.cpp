@@ -158,7 +158,7 @@ nsSVGForeignObjectFrame::MarkIntrinsicWidthsDirty()
   // This is really a style change, except we're already being called
   // from MarkIntrinsicWidthsDirty, so say it's a resize to avoid doing
   // the same work over again.
-  GetPresContext()->PresShell()->FrameNeedsReflow(kid,
+  PresContext()->PresShell()->FrameNeedsReflow(kid,
                                                   nsIPresShell::eResize);
 }
 
@@ -479,7 +479,7 @@ void nsSVGForeignObjectFrame::PostChildDirty()
   nsIFrame* kid = GetFirstChild(nsnull);
   if (!kid)
     return;
-  GetPresContext()->PresShell()->
+  PresContext()->PresShell()->
     FrameNeedsReflow(kid, nsIPresShell::eStyleChange);
 }
 
@@ -526,7 +526,7 @@ nsSVGForeignObjectFrame::DoReflow()
   if (mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return;
 
-  nsPresContext *presContext = GetPresContext();
+  nsPresContext *presContext = PresContext();
   nsIFrame* kid = GetFirstChild(nsnull);
   if (!kid)
     return;

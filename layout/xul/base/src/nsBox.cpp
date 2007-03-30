@@ -283,7 +283,7 @@ nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect, PRBool aRemoveOv
     // it if necessary.
     if (aRemoveOverflowArea && (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN)) {
       // remove the previously stored overflow area
-      GetPresContext()->PropertyTable()->
+      PresContext()->PropertyTable()->
         DeleteProperty(this, nsGkAtoms::overflowAreaProperty);
       RemoveStateBits(NS_FRAME_OUTSIDE_CHILDREN);
     }
@@ -342,7 +342,7 @@ nsBox::GetBorder(nsMargin& aMargin)
   const nsStyleDisplay* disp = GetStyleDisplay();
   if (disp->mAppearance && gTheme) {
     // Go to the theme for the border.
-    nsPresContext *context = GetPresContext();
+    nsPresContext *context = PresContext();
     if (gTheme->ThemeSupportsWidget(context, this, disp->mAppearance)) {
       nsMargin margin(0, 0, 0, 0);
       gTheme->GetWidgetBorder(context->DeviceContext(), this,
@@ -366,7 +366,7 @@ nsBox::GetPadding(nsMargin& aMargin)
   const nsStyleDisplay *disp = GetStyleDisplay();
   if (disp->mAppearance && gTheme) {
     // Go to the theme for the padding.
-    nsPresContext *context = GetPresContext();
+    nsPresContext *context = PresContext();
     if (gTheme->ThemeSupportsWidget(context, this, disp->mAppearance)) {
       nsMargin margin(0, 0, 0, 0);
       PRBool useThemePadding;

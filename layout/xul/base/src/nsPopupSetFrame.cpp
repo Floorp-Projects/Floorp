@@ -390,7 +390,7 @@ nsPopupSetFrame::ShowPopup(nsIContent* aElementContent, nsIContent* aPopupConten
   entry->mYPos = aYPos;
 
   // If a frame exists already, go ahead and use it.
-  entry->mPopupFrame = GetPresContext()->PresShell()
+  entry->mPopupFrame = PresContext()->PresShell()
     ->GetPrimaryFrameFor(aPopupContent);
 
 #ifdef DEBUG_PINK
@@ -454,7 +454,7 @@ nsPopupSetFrame::HidePopup(nsIFrame* aPopup)
     // menupopup, then hiding us should also hide the parent menu
     // popup.
     if (entry->mElementContent->Tag() == nsGkAtoms::menupopup) {
-      nsIFrame* popupFrame = GetPresContext()->PresShell()
+      nsIFrame* popupFrame = PresContext()->PresShell()
         ->GetPrimaryFrameFor(entry->mElementContent);
       if (popupFrame) {
         nsIMenuParent *menuParent;
@@ -486,7 +486,7 @@ nsPopupSetFrame::DestroyPopup(nsIFrame* aPopup, PRBool aDestroyEntireChain)
         // menupopup, then destroying us should also dismiss the parent
         // menu popup.
         if (entry->mElementContent->Tag() == nsGkAtoms::menupopup) {
-          nsIFrame* popupFrame = GetPresContext()->PresShell()
+          nsIFrame* popupFrame = PresContext()->PresShell()
             ->GetPrimaryFrameFor(entry->mElementContent);
           if (popupFrame) {
             nsIMenuParent *menuParent;
@@ -531,7 +531,7 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
   nsWeakFrame weakFrame(this);
   nsIFrame* activeChild = aEntry->mPopupFrame;
   nsWeakFrame weakPopupFrame(activeChild);
-  nsRefPtr<nsPresContext> presContext = GetPresContext();
+  nsRefPtr<nsPresContext> presContext = PresContext();
   nsCOMPtr<nsIContent> popupContent = aEntry->mPopupContent;
   PRBool createHandlerSucceeded = aEntry->mCreateHandlerSucceeded;
   nsAutoString popupType = aEntry->mPopupType;
@@ -581,7 +581,7 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
 
   if (weakFrame.IsAlive()) {
     AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-    GetPresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+    PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange);
   }
 }
 
@@ -645,7 +645,7 @@ nsPopupSetFrame::OnCreate(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
 
   if (aPopupContent) {
     nsCOMPtr<nsIContent> kungFuDeathGrip(aPopupContent);
-    nsCOMPtr<nsIPresShell> shell = GetPresContext()->GetPresShell();
+    nsCOMPtr<nsIPresShell> shell = PresContext()->GetPresShell();
     if (shell) {
       nsresult rv = shell->HandleDOMEventWithTarget(aPopupContent, &event,
                                                     &status);
@@ -713,7 +713,7 @@ nsPopupSetFrame::OnCreated(PRInt32 aX, PRInt32 aY, nsIContent* aPopupContent)
   //event.point.y = aY;
 
   if (aPopupContent) {
-    nsCOMPtr<nsIPresShell> shell = GetPresContext()->GetPresShell();
+    nsCOMPtr<nsIPresShell> shell = PresContext()->GetPresShell();
     if (shell) {
       nsresult rv = shell->HandleDOMEventWithTarget(aPopupContent, &event,
                                                     &status);
@@ -733,7 +733,7 @@ nsPopupSetFrame::OnDestroy(nsIContent* aPopupContent)
                      nsMouseEvent::eReal);
 
   if (aPopupContent) {
-    nsCOMPtr<nsIPresShell> shell = GetPresContext()->GetPresShell();
+    nsCOMPtr<nsIPresShell> shell = PresContext()->GetPresShell();
     if (shell) {
       nsresult rv = shell->HandleDOMEventWithTarget(aPopupContent, &event,
                                                     &status);
@@ -840,7 +840,7 @@ nsPopupSetFrame::AddPopupFrame(nsIFrame* aPopup)
 PRBool
 nsPopupSetFrame::MayOpenPopup(nsIFrame* aFrame)
 {
-  nsCOMPtr<nsISupports> cont = aFrame->GetPresContext()->GetContainer();
+  nsCOMPtr<nsISupports> cont = aFrame->PresContext()->GetContainer();
   nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(cont);
   if (!dsti)
     return PR_FALSE;

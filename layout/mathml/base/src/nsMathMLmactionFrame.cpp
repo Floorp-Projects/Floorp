@@ -142,7 +142,7 @@ nsMathMLmactionFrame::Init(nsIContent*      aContent,
 
         // then, re-resolve our style
         nsStyleContext* parentStyleContext = aParent->GetStyleContext();
-        newStyleContext = GetPresContext()->StyleSet()->
+        newStyleContext = PresContext()->StyleSet()->
           ResolveStyleFor(aContent, parentStyleContext);
 
         if (!newStyleContext) 
@@ -311,7 +311,7 @@ nsMathMLmactionFrame::Place(nsIRenderingContext& aRenderingContext,
   if (childFrame) {
     GetReflowAndBoundingMetricsFor(childFrame, aDesiredSize, mBoundingMetrics);
     if (aPlaceOrigin) {
-      FinishReflowChild(childFrame, GetPresContext(), nsnull, aDesiredSize, 0, 0, 0);
+      FinishReflowChild(childFrame, PresContext(), nsnull, aDesiredSize, 0, 0, 0);
     }
     mReference.x = 0;
     mReference.y = aDesiredSize.ascent;
@@ -357,7 +357,7 @@ nsMathMLmactionFrame::MouseOver(nsIDOMEvent* aMouseEvent)
     // expected statusline prefix (11ch)...
     if (11 < value.Length() && 0 == value.Find("statusline#")) {
       value.Cut(0, 11);
-      ShowStatus(GetPresContext(), value);
+      ShowStatus(PresContext(), value);
     }
   }
   return NS_OK;
@@ -370,7 +370,7 @@ nsMathMLmactionFrame::MouseOut(nsIDOMEvent* aMouseEvent)
   if (NS_MATHML_ACTION_TYPE_STATUSLINE == mActionType) {
     nsAutoString value;
     value.SetLength(0);
-    ShowStatus(GetPresContext(), value);
+    ShowStatus(PresContext(), value);
   }
   return NS_OK;
 }
@@ -390,7 +390,7 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 
       // Now trigger a content-changed reflow...
       mSelectedFrame->AddStateBits(NS_FRAME_IS_DIRTY);
-      GetPresContext()->PresShell()->
+      PresContext()->PresShell()->
         FrameNeedsReflow(mSelectedFrame, nsIPresShell::eTreeChange);
     }
   }
@@ -406,7 +406,7 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 
         // Trigger a style change reflow
         mSelectedFrame->AddStateBits(NS_FRAME_IS_DIRTY);
-        GetPresContext()->PresShell()->
+        PresContext()->PresShell()->
           FrameNeedsReflow(mSelectedFrame, nsIPresShell::eStyleChange);
       }
     }

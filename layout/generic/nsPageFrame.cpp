@@ -440,7 +440,7 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsDisplayListCollection set;
   nsresult rv;
 
-  if (GetPresContext()->IsScreen()) {
+  if (PresContext()->IsScreen()) {
     rv = set.BorderBackground()->AppendNewToTop(new (aBuilder)
         nsDisplayGeneric(this, ::PaintPrintPreviewBackground, "PrintPreviewBackground"));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -450,7 +450,7 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         nsDisplayGeneric(this, ::PaintPageContent, "PageContent"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (GetPresContext()->IsRootPaginatedDocument()) {
+  if (PresContext()->IsRootPaginatedDocument()) {
     rv = set.Content()->AppendNewToTop(new (aBuilder)
         nsDisplayGeneric(this, ::PaintHeaderFooter, "HeaderFooter"));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -508,7 +508,7 @@ void
 nsPageFrame::PaintHeaderFooter(nsIRenderingContext& aRenderingContext,
                                nsPoint aPt)
 {
-  nsPresContext* pc = GetPresContext();
+  nsPresContext* pc = PresContext();
 
   if (!mPD->mPrintSettings) {
     if (pc->Type() == nsPresContext::eContext_PrintPreview || pc->IsDynamic())
@@ -559,7 +559,7 @@ nsPageFrame::PaintPageContent(nsIRenderingContext& aRenderingContext,
                               nsPoint              aPt) {
   nsIFrame* pageContentFrame  = mFrames.FirstChild();
   nsRect rect = aDirtyRect;
-  float scale = GetPresContext()->GetPageScale();
+  float scale = PresContext()->GetPageScale();
   aRenderingContext.PushState();
   // Make sure we don't draw where we aren't supposed to draw, especially
   // when printing selection
@@ -577,7 +577,7 @@ nsPageFrame::PaintPageContent(nsIRenderingContext& aRenderingContext,
   const nsStyleBorder* border = GetStyleBorder();
   const nsStylePadding* padding = GetStylePadding();
   nsRect backgroundRect = nsRect(nsPoint(0, 0), pageContentFrame->GetSize());
-  nsCSSRendering::PaintBackground(GetPresContext(), aRenderingContext, this,
+  nsCSSRendering::PaintBackground(PresContext(), aRenderingContext, this,
                                   rect, backgroundRect, *border, *padding,
                                   PR_TRUE);
 

@@ -183,8 +183,8 @@ nsHTMLCanvasFrame::PaintCanvas(nsIRenderingContext& aRenderingContext,
     return;
 
   nsSize canvasSize = GetCanvasSize();
-  nsSize sizeAppUnits(GetPresContext()->DevPixelsToAppUnits(canvasSize.width),
-                      GetPresContext()->DevPixelsToAppUnits(canvasSize.height));
+  nsSize sizeAppUnits(PresContext()->DevPixelsToAppUnits(canvasSize.width),
+                      PresContext()->DevPixelsToAppUnits(canvasSize.height));
 
   // XXXvlad clip to aDirtyRect!
 

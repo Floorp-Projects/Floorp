@@ -170,7 +170,7 @@ nsMathMLmoFrame::ProcessTextData(PRBool aComputeStyleChange)
 
   // don't bother doing anything special if we don't have a
   // single child with a visible text content
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
   if (NS_MATHML_OPERATOR_IS_INVISIBLE(mFlags) || mFrames.GetLength() != 1) {
     data.Truncate(); // empty data to reset the char
     mMathMLChar.SetData(presContext, data);
@@ -317,7 +317,7 @@ nsMathMLmoFrame::ProcessOperatorData()
      return;
   }
 
-  nsPresContext* presContext = GetPresContext();
+  nsPresContext* presContext = PresContext();
 
   // beware of bug 133814 - there is a two-way dependency in the
   // embellished hierarchy: our embellished ancestors need to set
@@ -747,7 +747,7 @@ nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
     }
 
     // let the MathMLChar stretch itself...
-    nsresult res = mMathMLChar.Stretch(GetPresContext(), aRenderingContext,
+    nsresult res = mMathMLChar.Stretch(PresContext(), aRenderingContext,
                                        aStretchDirection, container, charSize, stretchHint);
     if (NS_FAILED(res)) {
       // gracefully handle cases where stretching the char failed (i.e., GetBoundingMetrics failed)

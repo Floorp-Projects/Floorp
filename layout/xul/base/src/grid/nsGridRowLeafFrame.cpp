@@ -84,7 +84,7 @@ nsGridRowLeafFrame::GetBorderAndPadding(nsMargin& aBorderAndPadding)
 
   PRBool isHorizontal = IsHorizontal();
 
-  nsBoxLayoutState state((nsPresContext*) GetPresContext());
+  nsBoxLayoutState state((nsPresContext*) PresContext());
 
   PRInt32 firstIndex = 0;
   PRInt32 lastIndex = 0;

@@ -150,7 +150,7 @@ nsFirstLetterFrame::SetInitialChildList(nsIAtom*  aListName,
                                         nsIFrame* aChildList)
 {
   mFrames.SetFrames(aChildList);
-  nsFrameManager *frameManager = GetPresContext()->FrameManager();
+  nsFrameManager *frameManager = PresContext()->FrameManager();
 
   for (nsIFrame* frame = aChildList; frame; frame = frame->GetNextSibling()) {
     NS_ASSERTION(frame->GetParent() == this, "Unexpected parent");

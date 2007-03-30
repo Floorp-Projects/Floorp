@@ -181,7 +181,7 @@ nsSVGTextPathFrame::GetPathFrame() {
                                             mContent->GetCurrentDoc(), base);
 
   nsSVGUtils::GetReferencedFrame(&path, targetURI, mContent,
-                                 GetPresContext()->PresShell());
+                                 PresContext()->PresShell());
   if (!path || (path->GetType() != nsGkAtoms::svgPathGeometryFrame))
     return nsnull;
   return path;

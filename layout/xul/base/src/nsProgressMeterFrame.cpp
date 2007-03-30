@@ -119,7 +119,7 @@ nsProgressMeterFrame::AttributeChanged(PRInt32 aNameSpaceID,
 
     if (weakFrame.IsAlive()) {
       AddStateBits(NS_FRAME_IS_DIRTY);
-      GetPresContext()->PresShell()->
+      PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange);
     }
   }

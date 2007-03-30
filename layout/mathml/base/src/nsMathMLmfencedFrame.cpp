@@ -86,7 +86,7 @@ nsMathMLmfencedFrame::SetInitialChildList(nsIAtom*        aListName,
   // No need to tract the style contexts given to our MathML chars. 
   // The Style System will use Get/SetAdditionalStyleContext() to keep them
   // up-to-date if dynamic changes arise.
-  return CreateFencesAndSeparators(GetPresContext());
+  return CreateFencesAndSeparators(PresContext());
 }
 
 NS_IMETHODIMP
@@ -95,7 +95,7 @@ nsMathMLmfencedFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                        PRInt32         aModType)
 {
   RemoveFencesAndSeparators();
-  CreateFencesAndSeparators(GetPresContext());
+  CreateFencesAndSeparators(PresContext());
 
   return nsMathMLContainerFrame::
          AttributeChanged(aNameSpaceID, aAttribute, aModType);
@@ -105,7 +105,7 @@ nsresult
 nsMathMLmfencedFrame::ChildListChanged(PRInt32 aModType)
 {
   RemoveFencesAndSeparators();
-  CreateFencesAndSeparators(GetPresContext());
+  CreateFencesAndSeparators(PresContext());
 
   return nsMathMLContainerFrame::ChildListChanged(aModType);
 }

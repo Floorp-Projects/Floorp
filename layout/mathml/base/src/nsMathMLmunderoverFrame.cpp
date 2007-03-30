@@ -290,11 +290,11 @@ nsMathMLmunderoverFrame::Place(nsIRenderingContext& aRenderingContext,
   if ( NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
       !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
     // place like sub-superscript pair
-    return nsMathMLmsubsupFrame::PlaceSubSupScript(GetPresContext(),
+    return nsMathMLmsubsupFrame::PlaceSubSupScript(PresContext(),
                                                    aRenderingContext,
                                                    aPlaceOrigin,
                                                    aDesiredSize,
-                                                   this, 0, 0, GetPresContext()->PointsToAppUnits(0.5f));
+                                                   this, 0, 0, PresContext()->PointsToAppUnits(0.5f));
   }
 
   ////////////////////////////////////
@@ -478,13 +478,13 @@ nsMathMLmunderoverFrame::Place(nsIRenderingContext& aRenderingContext,
     nscoord dy;
     // place overscript
     dy = aDesiredSize.ascent - mBoundingMetrics.ascent + bmOver.ascent - overSize.ascent;
-    FinishReflowChild (overFrame, GetPresContext(), nsnull, overSize, dxOver, dy, 0);
+    FinishReflowChild (overFrame, PresContext(), nsnull, overSize, dxOver, dy, 0);
     // place base
     dy = aDesiredSize.ascent - baseSize.ascent;
-    FinishReflowChild (baseFrame, GetPresContext(), nsnull, baseSize, dxBase, dy, 0);
+    FinishReflowChild (baseFrame, PresContext(), nsnull, baseSize, dxBase, dy, 0);
     // place underscript
     dy = aDesiredSize.ascent + mBoundingMetrics.descent - bmUnder.descent - underSize.ascent;
-    FinishReflowChild (underFrame, GetPresContext(), nsnull, underSize, dxUnder, dy, 0);
+    FinishReflowChild (underFrame, PresContext(), nsnull, underSize, dxUnder, dy, 0);
   }
   return NS_OK;
 }

@@ -120,8 +120,8 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext) :
 
   // XXX Unsafe to assume successful allocation
   mPageData = new nsSharedPageData();
-  mPageData->mHeadFootFont = new nsFont(*GetPresContext()->GetDefaultFont(kGenericFont_serif));
-  mPageData->mHeadFootFont->size = GetPresContext()->PointsToAppUnits(10);
+  mPageData->mHeadFootFont = new nsFont(*PresContext()->GetDefaultFont(kGenericFont_serif));
+  mPageData->mHeadFootFont->size = PresContext()->PointsToAppUnits(10);
 
   nsresult rv;
   mPageData->mPrintOptions = do_GetService(sPrintOptionsContractID, &rv);
@@ -366,8 +366,8 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   // Return our desired size
   // Adjustr the reflow size by PrintPreviewScale so the scrollbars end up the
   // correct size
-  aDesiredSize.height  = y * GetPresContext()->GetPrintPreviewScale(); // includes page heights and dead space
-  aDesiredSize.width   = (x + availSize.width + deadSpaceGap) * GetPresContext()->GetPrintPreviewScale();
+  aDesiredSize.height  = y * PresContext()->GetPrintPreviewScale(); // includes page heights and dead space
+  aDesiredSize.width   = (x + availSize.width + deadSpaceGap) * PresContext()->GetPrintPreviewScale();
 
   aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width,
                                       aDesiredSize.height);
@@ -557,7 +557,7 @@ nsSimplePageSequenceFrame::PrintNextPage()
   mPageData->mPrintSettings->GetPrintOptions(nsIPrintSettings::kPrintOddPages, &printOddPages);
 
   // Begin printing of the document
-  nsIDeviceContext *dc = GetPresContext()->DeviceContext();
+  nsIDeviceContext *dc = PresContext()->DeviceContext();
 
   nsresult rv = NS_OK;
 
@@ -600,8 +600,8 @@ nsSimplePageSequenceFrame::PrintNextPage()
     // I will soon improve this to work with IFrames 
     PRBool  continuePrinting = PR_TRUE;
     PRInt32 width, height;
-    width = GetPresContext()->GetPageSize().width;
-    height = GetPresContext()->GetPageSize().height;
+    width = PresContext()->GetPageSize().width;
+    height = PresContext()->GetPageSize().height;
     height -= mMargin.top + mMargin.bottom;
     width  -= mMargin.left + mMargin.right;
     nscoord selectionY = height;
@@ -617,7 +617,7 @@ nsSimplePageSequenceFrame::PrintNextPage()
 
     PRInt32 printedPageNum = 1;
     while (continuePrinting) {
-      if (GetPresContext()->IsRootPaginatedDocument()) {
+      if (PresContext()->IsRootPaginatedDocument()) {
         PR_PL(("\n"));
         PR_PL(("***************** BeginPage *****************\n"));
         rv = dc->BeginPage();
@@ -627,7 +627,7 @@ nsSimplePageSequenceFrame::PrintNextPage()
       PR_PL(("SeqFr::Paint -> %p PageNo: %d", pf, mPageNum));
 
       nsCOMPtr<nsIRenderingContext> renderingContext;
-      GetPresContext()->PresShell()->
+      PresContext()->PresShell()->
               CreateRenderingContext(mCurrentPageFrame,
                                      getter_AddRefs(renderingContext));
       nsRect drawingRect(nsPoint(0, 0),
@@ -657,9 +657,9 @@ NS_IMETHODIMP
 nsSimplePageSequenceFrame::DoPageEnd()
 {
   nsresult rv = NS_OK;
-  if (GetPresContext()->IsRootPaginatedDocument() && mPrintThisPage) {
+  if (PresContext()->IsRootPaginatedDocument() && mPrintThisPage) {
     PR_PL(("***************** End Page (DoPageEnd) *****************\n"));
-    rv = GetPresContext()->DeviceContext()->EndPage();
+    rv = PresContext()->DeviceContext()->EndPage();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -684,7 +684,7 @@ nsSimplePageSequenceFrame::PaintPageSequence(nsIRenderingContext& aRenderingCont
                                              const nsRect&        aDirtyRect,
                                              nsPoint              aPt) {
   nsRect rect = aDirtyRect;
-  float scale = GetPresContext()->GetPrintPreviewScale();
+  float scale = PresContext()->GetPrintPreviewScale();
   aRenderingContext.PushState();
   nsPoint framePos = aPt;
   aRenderingContext.Translate(framePos.x, framePos.y);

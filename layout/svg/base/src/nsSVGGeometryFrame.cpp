@@ -85,7 +85,7 @@ nsSVGGeometryFrame::GetPaintServer(const nsStyleSVGPaint *aPaint)
 
   nsIFrame *result;
   if (NS_FAILED(nsSVGUtils::GetReferencedFrame(&result, uri, mContent,
-                                               GetPresContext()->PresShell())))
+                                               PresContext()->PresShell())))
     return nsnull;
 
   nsIAtom *type = result->GetType();
@@ -198,7 +198,7 @@ nsSVGGeometryFrame::GetStrokeWidth()
                                      mContent->GetParent() : mContent);
 
   return
-    nsSVGUtils::CoordToFloat(GetPresContext(),
+    nsSVGUtils::CoordToFloat(PresContext(),
                              ctx,
                              GetStyleSVG()->mStrokeWidth);
 }
@@ -214,7 +214,7 @@ nsSVGGeometryFrame::GetStrokeDashArray(gfxFloat **aDashes, PRUint32 *aCount)
 
   if (count) {
     const nsStyleCoord *dasharray = GetStyleSVG()->mStrokeDasharray;
-    nsPresContext *presContext = GetPresContext();
+    nsPresContext *presContext = PresContext();
     gfxFloat totalLength = 0.0f;
 
     dashes = new gfxFloat[count];
@@ -250,7 +250,7 @@ float
 nsSVGGeometryFrame::GetStrokeDashoffset()
 {
   return
-    nsSVGUtils::CoordToFloat(GetPresContext(),
+    nsSVGUtils::CoordToFloat(PresContext(),
                              NS_STATIC_CAST(nsSVGElement*, mContent),
                              GetStyleSVG()->mStrokeDashoffset);
 }
