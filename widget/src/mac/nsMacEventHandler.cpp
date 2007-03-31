@@ -745,7 +745,7 @@ static PRUint32 ConvertMacToRaptorKeyCode(char charCode, UInt32 keyCode, UInt32 
     case kKeypadDivideKeyCode:   raptorKeyCode = nsIDOMKeyEvent::DOM_VK_DIVIDE;       break;
 //  case ??             :        raptorKeyCode = nsIDOMKeyEvent::DOM_VK_SEPARATOR;    break;
 
-// this may clash with vk_insert, but help key is more useful in mozilla
+// this may clash with VK_INSERT, but help key is more useful in mozilla
     case kHelpKeyCode:          raptorKeyCode = nsIDOMKeyEvent::DOM_VK_HELP;          break;
     case kDeleteKeyCode:        raptorKeyCode = nsIDOMKeyEvent::DOM_VK_DELETE;        break;
     case kEscapeKeyCode:        raptorKeyCode = nsIDOMKeyEvent::DOM_VK_ESCAPE;        break;
