@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet
+  href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window title="Bug 371798"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+   src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml" />
+
+<script type="application/javascript">
+<![CDATA[
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
+
+var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+
+function uri(spec) {
+  return iosvc.newURI(spec, null, null);
+}
+
+var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
+                getService(Ci.nsINavHistoryService);
+var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+              getService(Ci.nsINavBookmarksService);
+
+// add 2 bookmarks to the toolbar, same URI, different titles
+var toolbarFolderId = bmsvc.toolbarFolder;
+var testURI = uri("http://foo.com");
+var bm1 = bmsvc.insertItem(toolbarFolderId, testURI, bmsvc.DEFAULT_INDEX);
+var bm2 = bmsvc.insertItem(toolbarFolderId, testURI, bmsvc.DEFAULT_INDEX);
+
+// query for bookmarks
+var options = histsvc.getNewQueryOptions();
+options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+var query = histsvc.getNewQuery();
+query.setFolders([toolbarFolderId], 1);
+var result = histsvc.executeQuery(query, options);
+var rootNode = result.root;
+rootNode.containerOpen = true;
+
+// modify the bookmark's title
+var newTitle = "foo";
+bmsvc.setItemTitle(bm2, newTitle);
+
+// result node should be updated
+var cc = rootNode.childCount;
+for (var i=0; i < cc; ++i) {
+  var node = rootNode.getChild(i);
+  // test that bm1 does not have new title
+  if (node.bookmarkId == bm1)
+    ok(node.title != newTitle, "Changing a bookmark's title did not affect other bookmarks with the same URI");
+}
+rootNode.containerOpen = false;
+
+// clean up test
+bmsvc.removeItem(bm1);
+bmsvc.removeItem(bm2);
+
+]]>
+</script>
+
+</window>
