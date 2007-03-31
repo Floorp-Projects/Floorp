@@ -841,7 +841,7 @@ run_viewer: $(FINAL_TARGET)/viewer
 clean clobber realclean clobber_all:: $(SUBMAKEFILES)
 	-rm -f $(ALL_TRASH)
 	-rm -rf $(ALL_TRASH_DIRS)
-	+-$(foreach dir,$(STATIC_DIRS),make -C $(dir) $@; )
+	+-$(foreach dir,$(STATIC_DIRS),$(MAKE) -C $(dir) $@; )
 	+-$(LOOP_OVER_DIRS)
 	+-$(LOOP_OVER_TOOL_DIRS)
 
