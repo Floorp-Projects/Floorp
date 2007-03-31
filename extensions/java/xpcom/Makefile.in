@@ -51,7 +51,7 @@ include $(topsrcdir)/config/rules.mk
 
 # Build the implementation Java classes
 libs::
-	make -C src jar-libs
+	$(MAKE) -C src jar-libs
 
 install::
-	make -C src jar-install
+	$(MAKE) -C src jar-install
