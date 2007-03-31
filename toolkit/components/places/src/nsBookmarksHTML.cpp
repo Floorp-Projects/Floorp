@@ -125,6 +125,7 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define KEY_ICON_LOWER "icon"
 #define KEY_ICON_URI_LOWER "icon_uri"
 #define KEY_SHORTCUTURL_LOWER "shortcuturl"
+#define KEY_ID_LOWER "id"
 
 #define LOAD_IN_SIDEBAR_ANNO NS_LITERAL_CSTRING("bookmarkProperties/loadInSidebar")
 
@@ -171,6 +172,9 @@ public:
   // special. 'ConsumeHeading' resets this.
   ContainerType mLastContainerType;
 
+  // Container Id, see above
+  PRInt64 mLastContainerId;
+
   // this contains the text from the last begin tag until now. It is reset
   // at every begin tag. We can check it when we see a </a>, or </h3>
   // to see what the text content of that node should be.
@@ -201,15 +205,15 @@ public:
   // and the livemark title is known, we can create it.
   nsCOMPtr<nsIURI> mPreviousFeed;
 
-  void ConsumeHeading(nsAString* aHeading, ContainerType* aContainerType)
+  void ConsumeHeading(nsAString* aHeading, ContainerType* aContainerType, PRInt64* aContainerId)
   {
     *aHeading = mPreviousText;
     *aContainerType = mLastContainerType;
+    *aContainerId = mLastContainerId;
     mPreviousText.Truncate(0);
   }
 
-  // Contains the id of a newly created bookmark.
-  // XXXDietrich - may also be a pre-existing bookmark once we support importing Places-exported bookmarks.html files.
+  // Contains the id of an imported, or newly created bookmark.
   PRInt64 mPreviousId;
 };
 
@@ -322,6 +326,8 @@ protected:
   nsresult SetFaviconForURI(nsIURI* aPageURI, nsIURI* aFaviconURI,
                             const nsCString& aData);
   nsresult SetFaviconForFolder(PRInt64 aFolder, const nsACString& aFavicon);
+
+  PRInt64 ConvertImportedIdToInternalId(const nsCString& aId);
 
 #ifdef DEBUG_IMPORT
   // prints spaces for indenting to the current frame depth
@@ -565,6 +571,7 @@ BookmarkContentSink::HandleHeadBegin(const nsIParserNode& node)
   // the descriptions contained in a <dd>). Neither is any previous head type
   frame.mPreviousLink = nsnull;
   frame.mLastContainerType = BookmarkImportFrame::Container_Normal;
+  frame.mLastContainerId = 0;
 
   // It is syntactically possible for a heading to appear after another heading
   // but before the <dl> that encloses that folder's contents.  This should not
@@ -599,6 +606,9 @@ BookmarkContentSink::HandleHeadBegin(const nsIParserNode& node)
       } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_PLACESROOT_LOWER)) {
         frame.mLastContainerType = BookmarkImportFrame::Container_Places;
         break;
+      } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_ID_LOWER)) {
+        frame.mLastContainerId =
+          ConvertImportedIdToInternalId(NS_ConvertUTF16toUTF8(node.GetKeyAt(i)));
       }
     }
   }
@@ -628,10 +638,15 @@ BookmarkContentSink::HandleHeadEnd()
 void
 BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
 {
+  nsresult rv;
+
   BookmarkImportFrame& frame = CurFrame();
 
   // We need to make sure that the feed URIs from previous frames are emptied. 
   frame.mPreviousFeed = nsnull;
+
+  // We need to make sure that the bookmark id from previous frames are emptied. 
+  frame.mPreviousId = 0;
 
   // mPreviousText will hold our link text, clear it so that can be appended to
   frame.mPreviousText.Truncate();
@@ -644,6 +659,7 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   nsAutoString lastCharset;
   nsAutoString keyword;
   nsAutoString webPanel;
+  nsAutoString id;
   PRInt32 attrCount = node.GetAttributeCount();
   for (PRInt32 i = 0; i < attrCount; i ++) {
     const nsAString& key = node.GetKeyAt(i);
@@ -661,6 +677,8 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
       keyword = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_WEB_PANEL_LOWER)) {
       webPanel = node.GetValueAt(i);
+    } else if (key.LowerCaseEqualsLiteral(KEY_ID_LOWER)) {
+      id = node.GetValueAt(i);
     }
   }
   href.Trim(kWhitespace);
@@ -670,6 +688,7 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   lastCharset.Trim(kWhitespace);
   keyword.Trim(kWhitespace);
   webPanel.Trim(kWhitespace);
+  id.Trim(kWhitespace);
 
   // For feeds, get the feed URL. If it is invalid, it will leave mPreviousFeed
   // NULL and we'll continue trying to create it as a normal bookmark.
@@ -698,15 +717,21 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
     }
   }
 
+  // if there's a pre-existing Places bookmark id, use it
+  frame.mPreviousId = ConvertImportedIdToInternalId(NS_ConvertUTF16toUTF8(id));
+
   // if there is a feedURL, this is a livemark, which is a special case
-  // that we handle in HandleLinkBegin(): don't create normal bookmarks
+  // that we handle in HandleLinkEnd(): don't create normal bookmarks
   if (frame.mPreviousFeed)
     return;
 
-  // create the bookmark
-  nsresult rv = mBookmarksService->InsertItem(frame.mContainerID, frame.mPreviousLink,
-                                     mBookmarksService->DEFAULT_INDEX, &frame.mPreviousId);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "InsertItem failed");
+  // if no previous id (or a legacy id), create a new bookmark
+  if (frame.mPreviousId == 0) {
+    // create the bookmark
+    rv = mBookmarksService->InsertItem(frame.mContainerID, frame.mPreviousLink,
+                                       mBookmarksService->DEFAULT_INDEX, &frame.mPreviousId);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "InsertItem failed");
+  }
 
   // save the favicon, ignore errors
   if (! icon.IsEmpty() || ! iconUri.IsEmpty()) {
@@ -748,6 +773,7 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
 void
 BookmarkContentSink::HandleLinkEnd()
 {
+  nsresult rv;
   BookmarkImportFrame& frame = CurFrame();
   frame.mPreviousText.Trim(kWhitespace);
   if (frame.mPreviousFeed) {
@@ -756,21 +782,33 @@ BookmarkContentSink::HandleLinkEnd()
     // because we need to know the title before creating it.)
     PRInt64 folderId;
 
-    if (mIsImportDefaults) {
-      mLivemarkService->CreateLivemarkFolderOnly(mBookmarksService,
-                                                 frame.mContainerID,
-                                                 frame.mPreviousText,
-                                                 frame.mPreviousLink,
-                                                 frame.mPreviousFeed,
-                                                 -1,
-                                                 &folderId);
+    if (frame.mPreviousId > 0) {
+      // It's a pre-existing livemark, so update its properties
+      rv = mLivemarkService->SetSiteURI(frame.mPreviousId, frame.mPreviousLink);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "SetSiteURI failed!");
+      rv = mLivemarkService->SetFeedURI(frame.mPreviousId, frame.mPreviousFeed);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "SetFeedURI failed!");
+      rv = mBookmarksService->SetFolderTitle(frame.mPreviousId, frame.mPreviousText);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "SetFolderTitle failed!");
     } else {
-      mLivemarkService->CreateLivemark(frame.mContainerID,
-                                       frame.mPreviousText,
-                                       frame.mPreviousLink,
-                                       frame.mPreviousFeed,
-                                       -1,
-                                       &folderId);
+      if (mIsImportDefaults) {
+        rv = mLivemarkService->CreateLivemarkFolderOnly(mBookmarksService,
+                                                   frame.mContainerID,
+                                                   frame.mPreviousText,
+                                                   frame.mPreviousLink,
+                                                   frame.mPreviousFeed,
+                                                   -1,
+                                                   &folderId);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "CreateLivemarkFolderOnly failed!");
+      } else {
+        rv = mLivemarkService->CreateLivemark(frame.mContainerID,
+                                         frame.mPreviousText,
+                                         frame.mPreviousLink,
+                                         frame.mPreviousFeed,
+                                         -1,
+                                         &folderId);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "CreateLivemark failed!");
+      }
     }
 #ifdef DEBUG_IMPORT
     PrintNesting();
@@ -823,64 +861,68 @@ BookmarkContentSink::NewFrame()
 {
   nsresult rv;
 
+  PRInt64 ourID = 0;
   nsString containerName;
   BookmarkImportFrame::ContainerType containerType;
-  CurFrame().ConsumeHeading(&containerName, &containerType);
+  CurFrame().ConsumeHeading(&containerName, &containerType, &ourID);
 
   PRBool updateFolder = PR_FALSE;
-  PRInt64 ourID = 0;
-  switch (containerType) {
-    case BookmarkImportFrame::Container_Normal:
-      // regular folder: use an existing folder if that name already exists
-      rv = mBookmarksService->GetChildFolder(CurFrame().mContainerID,
-                                             containerName, &ourID);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (! ourID) {
-        // need to append a new folder
-        rv = mBookmarksService->CreateFolder(CurFrame().mContainerID,
-                                            containerName,
-                                            mBookmarksService->DEFAULT_INDEX, &ourID);
+  if (ourID == 0) {
+    switch (containerType) {
+      case BookmarkImportFrame::Container_Normal:
+        // regular folder: use an existing folder if that name already exists
+        rv = mBookmarksService->GetChildFolder(CurFrame().mContainerID,
+                                               containerName, &ourID);
         NS_ENSURE_SUCCESS(rv, rv);
-      }
-      break;
-    case BookmarkImportFrame::Container_Places:
-      // places root, never reparent here, when we're building the initial
-      // hierarchy, it will only be defined at the top level
-      rv = mBookmarksService->GetPlacesRoot(&ourID);
-      NS_ENSURE_SUCCESS(rv, rv);
-      break;
-    case BookmarkImportFrame::Container_Menu:
-      // menu root
-      rv = mBookmarksService->GetBookmarksRoot(&ourID);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (mAllowRootChanges) {
-        updateFolder = PR_TRUE;
-        SetFaviconForFolder(ourID, NS_LITERAL_CSTRING(BOOKMARKS_MENU_ICON_URI));
-      }
-      break;
-    case BookmarkImportFrame::Container_Toolbar:
-      // get toolbar folder
-      PRInt64 btf;
-      rv = mBookmarksService->GetToolbarFolder(&btf);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (!btf) {
-        // create new folder
-        rv = mBookmarksService->CreateFolder(CurFrame().mContainerID,
-                                            containerName,
-                                            mBookmarksService->DEFAULT_INDEX, &ourID);
+        if (ourID == 0) {
+          // need to append a new folder
+          rv = mBookmarksService->CreateFolder(CurFrame().mContainerID,
+                                              containerName,
+                                              mBookmarksService->DEFAULT_INDEX, &ourID);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+        break;
+      case BookmarkImportFrame::Container_Places:
+        // places root, never reparent here, when we're building the initial
+        // hierarchy, it will only be defined at the top level
+        rv = mBookmarksService->GetPlacesRoot(&ourID);
         NS_ENSURE_SUCCESS(rv, rv);
-        // there's no toolbar folder, so make us the toolbar folder
-        rv = mBookmarksService->SetToolbarFolder(ourID);
+        break;
+      case BookmarkImportFrame::Container_Menu:
+        // menu root
+        rv = mBookmarksService->GetBookmarksRoot(&ourID);
         NS_ENSURE_SUCCESS(rv, rv);
-        // set favicon
-        SetFaviconForFolder(ourID, NS_LITERAL_CSTRING(BOOKMARKS_TOOLBAR_ICON_URI));
-      }
-      else {
-        ourID = btf;
-      }
-      break;
-    default:
-      NS_NOTREACHED("Unknown container type");
+        if (mAllowRootChanges) {
+          updateFolder = PR_TRUE;
+          rv = SetFaviconForFolder(ourID, NS_LITERAL_CSTRING(BOOKMARKS_MENU_ICON_URI));
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+        break;
+      case BookmarkImportFrame::Container_Toolbar:
+        // get toolbar folder
+        PRInt64 bookmarkToolbarFolder;
+        rv = mBookmarksService->GetToolbarFolder(&bookmarkToolbarFolder);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (!bookmarkToolbarFolder) {
+          // create new folder
+          rv = mBookmarksService->CreateFolder(CurFrame().mContainerID,
+                                              containerName,
+                                              mBookmarksService->DEFAULT_INDEX, &ourID);
+          NS_ENSURE_SUCCESS(rv, rv);
+          // there's no toolbar folder, so make us the toolbar folder
+          rv = mBookmarksService->SetToolbarFolder(ourID);
+          NS_ENSURE_SUCCESS(rv, rv);
+          // set favicon
+          rv = SetFaviconForFolder(ourID, NS_LITERAL_CSTRING(BOOKMARKS_TOOLBAR_ICON_URI));
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+        else {
+          ourID = bookmarkToolbarFolder;
+        }
+        break;
+      default:
+        NS_NOTREACHED("Unknown container type");
+    }
   }
 #ifdef DEBUG_IMPORT
   PrintNesting();
@@ -1052,6 +1094,19 @@ BookmarkContentSink::SetFaviconForFolder(PRInt64 aFolder,
   return faviconService->SetFaviconUrlForPage(folderURI, faviconURI);
 }
 
+// Converts a string id (legacy rdf or contemporary) into an int id
+PRInt64
+BookmarkContentSink::ConvertImportedIdToInternalId(const nsCString& aId) {
+  PRInt64 intId = 0;
+  if (aId.IsEmpty() || nsCRT::strncasecmp("rdf:", aId.get(), 4))
+    return intId;
+  PRInt32 rv;
+  intId = aId.ToInteger(&rv);
+  if (NS_FAILED(rv))
+    intId = 0;
+  return intId;
+}
+
 
 // SyncChannelStatus
 //
@@ -1203,6 +1258,7 @@ static const char kHrefAttribute[] = " HREF=\"";
 static const char kFeedURIAttribute[] = " FEEDURL=\"";
 static const char kWebPanelAttribute[] = " WEB_PANEL=\"true\"";
 static const char kKeywordAttribute[] = " SHORTCUTURL=\"";
+static const char kIdAttribute[] = " ID=\"";
 
 // WriteContainerPrologue
 //
@@ -1387,6 +1443,16 @@ nsNavBookmarks::WriteContainerHeader(PRInt64 aFolder, const nsCString& aIndent,
     if (NS_FAILED(rv)) return rv;
   }
 
+  // id
+  rv = aOutput->Write(kIdAttribute, sizeof(kIdAttribute)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+  nsCAutoString id;
+  id.AppendInt(aFolder);
+  rv = aOutput->Write(id.get(), id.Length(), &dummy);
+  if (NS_FAILED(rv)) return rv;
+  rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+
   // favicon (most folders won't have one)
   nsCOMPtr<nsIURI> folderURI;
   rv = GetFolderURI(aFolder, getter_AddRefs(folderURI));
@@ -1475,6 +1541,16 @@ nsNavBookmarks::WriteItem(nsNavHistoryResultNode* aItem,
   PRInt64 bookmarkId;
   rv = aItem->GetBookmarkId(&bookmarkId);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // write id
+  rv = aOutput->Write(kIdAttribute, sizeof(kIdAttribute)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+  nsCAutoString id;
+  id.AppendInt(bookmarkId);
+  rv = aOutput->Write(id.get(), id.Length(), &dummy);
+  if (NS_FAILED(rv)) return rv;
+  rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
 
   // keyword (shortcuturl)
   nsAutoString keyword;
@@ -1589,6 +1665,16 @@ nsNavBookmarks::WriteLivemark(PRInt64 aFolderId, const nsCString& aIndent,
     rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
     if (NS_FAILED(rv)) return rv;
   }
+
+  // write id
+  rv = aOutput->Write(kIdAttribute, sizeof(kIdAttribute)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
+  nsCAutoString id;
+  id.AppendInt(aFolderId);
+  rv = aOutput->Write(id.get(), id.Length(), &dummy);
+  if (NS_FAILED(rv)) return rv;
+  rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+  if (NS_FAILED(rv)) return rv;
 
   // '>'
   rv = aOutput->Write(kCloseAngle, sizeof(kCloseAngle)-1, &dummy);
