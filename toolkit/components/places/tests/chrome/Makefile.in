@@ -50,6 +50,7 @@ _HTTP_FILES	= \
 
 _CHROME_FILES	= \
 		test_add_livemark.xul \
+		test_371798.xul \
 		$(NULL)
 
 libs:: $(_HTTP_FILES)
