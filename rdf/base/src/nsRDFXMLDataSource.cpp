@@ -763,7 +763,7 @@ RDFXMLDataSourceImpl::rdfXMLFlush(nsIURI *aURI)
             rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(out),
                                                  file,
                                                  PR_WRONLY | PR_CREATE_FILE,
-                                                 /*octal*/ 0600,
+                                                 /*octal*/ 0666,
                                                  0);
             if (NS_FAILED(rv)) return rv;
 
