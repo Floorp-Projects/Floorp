@@ -478,7 +478,7 @@ void XPCMarkNotification(void *thing, uint8 flags, void *closure)
 {
     uint8 ty = flags & GCF_TYPEMASK;
     if (ty != GCX_OBJECT &&
-        ty != GCX_FUNCTION && 
+        ty != GCX_PRIVATE && 
         ty != GCX_XML)
         return;
 
