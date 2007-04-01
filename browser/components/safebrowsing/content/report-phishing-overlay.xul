@@ -56,14 +56,14 @@
     <menuitem id="menu_HelpPopup_reportPhishingtoolmenu"
               label="&reportPhishSiteMenu.title;..."
               accesskey="&reportPhishSiteMenu.accesskey;"
-              insertbefore="aboutSeparator"
+              insertbefore="updateSeparator"
               observes="reportPhishingBroadcaster"
               oncommand="openUILink(safebrowsing.getReportURL('Phish'), event);"
               onclick="checkForMiddleClick(this, event);"/>
     <menuitem id="menu_HelpPopup_reportPhishingErrortoolmenu"
               label="&safeb.palm.notforgery.label;..."
               accesskey="&reportPhishSiteMenu.accesskey;"
-              insertbefore="aboutSeparator"
+              insertbefore="updateSeparator"
               observes="reportPhishingErrorBroadcaster"
               oncommand="openUILinkIn(safebrowsing.getReportURL('Error'), 'tab');"
               onclick="checkForMiddleClick(this, event);"/>

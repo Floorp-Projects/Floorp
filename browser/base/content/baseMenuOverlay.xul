@@ -97,7 +97,7 @@
                   label="&helpReleaseNotes.label;"
                   oncommand="openReleaseNotes(event)"
                   onclick="checkForMiddleClick(this, event);"/>
-        <menuseparator/>
+        <menuseparator id="updateSeparator"/>
         <menuitem id="checkForUpdates"
                   accesskey="&updateCmd.accesskey;"
                   label="&updateCmd.label;"
