@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<window xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <box>
+    <html:canvas width="300" height="300" style="background-color:lime;"/>
+  </box>
+</window>
