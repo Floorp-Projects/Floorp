@@ -363,6 +363,7 @@ protected:
 
   nsresult InitDB(PRBool *aDoImport);
   nsresult InitStatements();
+  nsresult MigrateFromVnToV1(mozIStorageConnection *aDBConn);
 
 #ifdef IN_MEMORY_LINKS
   // this is the cache DB in memory used for storing visited URLs
