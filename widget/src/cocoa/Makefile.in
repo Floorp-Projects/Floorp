@@ -117,6 +117,7 @@ CMMSRCS = \
 		nsPrintOptionsX.mm \
 		nsPrintSettingsX.mm \
 		nsPrintSessionX.mm \
+		nsIdleServiceX.mm \
 		$(NULL)
 
 XPIDLSRCS	+= \
@@ -185,9 +186,9 @@ LDFLAGS	+= \
 	-framework QuickTime \
 	-framework IOKit \
 	-framework Cocoa \
+	-framework Foundation \
 	$(NULL)
 
 CXXFLAGS += \
   -DUSE_COCOA \
   $(NULL)
-
