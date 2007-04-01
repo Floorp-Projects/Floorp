@@ -969,36 +969,6 @@ static JSPropertySpec function_props[] = {
     {0,0,0,0,0}
 };
 
-void
-js_MarkFunction(JSContext *cx, JSFunction *fun)
-{
-    if (0) {
-        /*
-         * FIXME the following is not done to avoid dealing in the current
-         * XPCOM cycle collector with Object->JSFunction->Object loop. This
-         * is safe due to the current code practice, see bug 375999 and
-         * bug 375808.
-         */
-        if (fun->object)
-            GC_MARK(cx, fun->object, "object");
-    }
-    if (fun->atom)
-        GC_MARK_ATOM(cx, fun->atom);
-    if (FUN_INTERPRETED(fun) && fun->u.i.script)
-        js_MarkScript(cx, fun->u.i.script);
-}
-
-void
-js_FinalizeFunction(JSContext *cx, JSFunction *fun)
-{
-    /*
-     * Null-check of i.script is required since the parser sets interpreted
-     * very early.
-     */
-    if (FUN_INTERPRETED(fun) && fun->u.i.script)
-        js_DestroyScript(cx, fun->u.i.script);
-}
-
 static JSBool
 fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
@@ -1208,6 +1178,36 @@ fun_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
         return JS_TRUE;
       default:
         return js_TryValueOf(cx, obj, type, vp);
+    }
+}
+
+static void
+fun_finalize(JSContext *cx, JSObject *obj)
+{
+    JSFunction *fun;
+    JSScript *script;
+
+    /* No valid function object should lack private data, but check anyway. */
+    fun = (JSFunction *) JS_GetPrivate(cx, obj);
+    if (!fun)
+        return;
+
+    if (fun->object == obj)
+        fun->object = NULL;
+
+    /*
+     * Null-check of i.script is required since the parser sets interpreted
+     * very early.
+     *
+     * Here js_IsAboutToBeFinalized works because obj is finalized before
+     * JSFunction. See comments in js_GC before the finalization loop.
+     */
+    if (FUN_INTERPRETED(fun) && fun->u.i.script &&
+        js_IsAboutToBeFinalized(cx, fun))
+    {
+        script = fun->u.i.script;
+        fun->u.i.script = NULL;
+        js_DestroyScript(cx, script);
     }
 }
 
@@ -1444,8 +1444,13 @@ fun_mark(JSContext *cx, JSObject *obj, void *arg)
     JSFunction *fun;
 
     fun = (JSFunction *) JS_GetPrivate(cx, obj);
-    if (fun)
+    if (fun) {
         GC_MARK(cx, fun, "private");
+        if (fun->atom)
+            GC_MARK_ATOM(cx, fun->atom);
+        if (FUN_INTERPRETED(fun) && fun->u.i.script)
+            js_MarkScript(cx, fun->u.i.script);
+    }
     return 0;
 }
 
@@ -1470,7 +1475,7 @@ JS_FRIEND_DATA(JSClass) js_FunctionClass = {
     JS_PropertyStub,  JS_PropertyStub,
     fun_getProperty,  JS_PropertyStub,
     fun_enumerate,    (JSResolveOp)fun_resolve,
-    fun_convert,      JS_FinalizeStub,
+    fun_convert,      fun_finalize,
     NULL,             NULL,
     NULL,             NULL,
     fun_xdrObject,    fun_hasInstance,
@@ -2120,10 +2125,10 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
     JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(funobj), &tvr);
 
     /*
-     * Allocate fun after allocating funobj so allocations in js_NewObject
-     * and hooks called from it do not wipe out fun from newborn[GCX_FUNCTION].
+     * Allocate fun after allocating funobj so slot allocation in js_NewObject
+     * does not wipe out fun from newborn[GCX_PRIVATE].
      */
-    fun = (JSFunction *) js_NewGCThing(cx, GCX_FUNCTION, sizeof(JSFunction));
+    fun = (JSFunction *) js_NewGCThing(cx, GCX_PRIVATE, sizeof(JSFunction));
     if (!fun)
         goto out;
 
