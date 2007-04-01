@@ -972,8 +972,16 @@ static JSPropertySpec function_props[] = {
 void
 js_MarkFunction(JSContext *cx, JSFunction *fun)
 {
-    if (fun->object)
-        GC_MARK(cx, fun->object, "object");
+    if (0) {
+        /*
+         * FIXME the following is not done to avoid dealing in the current
+         * XPCOM cycle collector with Object->JSFunction->Object loop. This
+         * is safe due to the current code practice, see bug 375999 and
+         * bug 375808.
+         */
+        if (fun->object)
+            GC_MARK(cx, fun->object, "object");
+    }
     if (fun->atom)
         GC_MARK_ATOM(cx, fun->atom);
     if (FUN_INTERPRETED(fun) && fun->u.i.script)
