@@ -5776,7 +5776,9 @@ void nsFrame::FillCursorInformationFromStyle(const nsStyleUserInterface* ui,
 NS_IMETHODIMP
 nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
 {
-
+  // XXXbz this comment needs some rewriting to make sense in the
+  // post-reflow-branch world.
+  
   // Ok we need to compute our minimum, preferred, and maximum sizes.
   // 1) Maximum size. This is easy. Its infinite unless it is overloaded by CSS.
   // 2) Preferred size. This is a little harder. This is the size the block would be 
@@ -5851,6 +5853,8 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
 
          count++;
       } while(firstFrame);
+    } else {
+      metrics->mBlockMinSize.height = desiredSize.height;
     }
 
     metrics->mBlockPrefSize.height = metrics->mBlockMinSize.height;
@@ -6151,8 +6155,9 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 
     // XXX Is it OK that this reflow state has no parent reflow state?
     // (It used to have a bogus parent, skipping all the boxes).
+    nsSize availSize(aWidth, NS_INTRINSICSIZE);
     nsHTMLReflowState reflowState(aPresContext, this, aRenderingContext,
-                                  nsSize(aWidth, NS_INTRINSICSIZE));
+                                  availSize);
 
     // Construct the parent chain manually since constructing it normally
     // messes up dimensions.
@@ -6172,6 +6177,18 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
         aHeight - reflowState.mComputedBorderPadding.TopBottom();
       if (reflowState.mComputedHeight < 0)
         reflowState.mComputedHeight = 0;
+    } else {
+      reflowState.mComputedHeight =
+        ComputeSize(aRenderingContext, availSize, availSize.width,
+                    nsSize(reflowState.mComputedMargin.LeftRight(),
+                           reflowState.mComputedMargin.TopBottom()),
+                    nsSize(reflowState.mComputedBorderPadding.LeftRight() -
+                             reflowState.mComputedPadding.LeftRight(),
+                           reflowState.mComputedBorderPadding.TopBottom() -
+                             reflowState.mComputedPadding.TopBottom()),
+                    nsSize(reflowState.mComputedPadding.LeftRight(),
+                           reflowState.mComputedPadding.TopBottom()),
+                    PR_FALSE).height;
     }
 
     // Box layout calls SetRect before Layout, whereas non-box layout
