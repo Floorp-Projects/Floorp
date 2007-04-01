@@ -158,25 +158,24 @@ toolbarbutton.bookmark-item .toolbarbutton-text {
   padding-top: 1px;
 }
 
-/* Image locations for these toolbar icons are overridden in places/browser-places.css in Places-enabled builds.
-   Those styles can be merged into these once the pre-Places bookmark system is no longer needed. */
+%ifndef MOZ_PLACES_BOOKMARKS
 .bookmark-item > .toolbarbutton-menu-dropmarker {
-list-style-image: url("chrome://browser/skin/bookmarks/folderarrow.png");
-height: 16px !important;
-padding: 5px 5px 4px 3px;
+  list-style-image: url("chrome://browser/skin/bookmarks/folderarrow.png");
+  height: 16px !important;
+  padding: 5px 5px 4px 3px;
 }
 
 .bookmark-item:hover > .toolbarbutton-menu-dropmarker, .bookmark-item[open] > .toolbarbutton-menu-dropmarker  {
-list-style-image: url("chrome://browser/skin/bookmarks/folderarrow-hover.png");
+  list-style-image: url("chrome://browser/skin/bookmarks/folderarrow-hover.png");
 }
 
 .bookmark-item[livemark] > .toolbarbutton-menu-dropmarker {
-list-style-image: url("chrome://browser/skin/bookmarks/livemark-folder.png");
-padding: 4px 4px 3px 2px;
+  list-style-image: url("chrome://browser/skin/bookmarks/livemark-folder.png");
+  padding: 4px 4px 3px 2px;
 }
 
 .bookmark-item[livemark]:hover > .toolbarbutton-menu-dropmarker, .bookmark-item[livemark][open] > .toolbarbutton-menu-dropmarker {
-list-style-image: url("chrome://browser/skin/bookmarks/livemark-folder-hover.png");
+  list-style-image: url("chrome://browser/skin/bookmarks/livemark-folder-hover.png");
 }
 
 .bookmark-item[livemark] {
@@ -184,8 +183,41 @@ list-style-image: url("chrome://browser/skin/bookmarks/livemark-folder-hover.png
 }
 
 .bookmark-item[livemark] .menuitem-iconic {
-list-style-image: url("chrome://browser/skin/bookmarks/livemark-item.png");
+  list-style-image: url("chrome://browser/skin/bookmarks/livemark-item.png");
 }
+%else
+.bookmark-item > .toolbarbutton-menu-dropmarker {
+  list-style-image: url("chrome://browser/skin/places/folderDropArrow.png");
+  height: 16px !important;
+  padding: 5px 5px 4px 3px;
+}
+
+.bookmark-item:hover > .toolbarbutton-menu-dropmarker, .bookmark-item[open] > .toolbarbutton-menu-dropmarker  {
+  list-style-image: url("chrome://browser/skin/places/folderDropHoverArrow.png");
+}
+
+.bookmark-item[livemark] > .toolbarbutton-menu-dropmarker {
+  list-style-image: url("chrome://browser/skin/places/livemarkFolder.png");
+  padding: 4px 4px 3px 2px;
+}
+
+.bookmark-item[livemark]:hover > .toolbarbutton-menu-dropmarker, .bookmark-item[livemark][open] > .toolbarbutton-menu-dropmarker {
+  list-style-image: url("chrome://browser/skin/places/livemarkFolderHover.png");
+}
+
+.bookmark-item[livemark] {
+  list-style-image: url("chrome://browser/skin/page-livemarks.png");
+}
+
+.bookmark-item[livemark] .menuitem-iconic {
+  list-style-image: url("chrome://browser/skin/places/livemarkItem.png");
+}
+
+.bookmark-item menuitem[openInTabs],
+.bookmark-item menuitem[siteURI] {
+  list-style-image: none;
+}
+%endif
 
 .toolbarpaletteitem-box[type="bookmarks-toolbar"][place="palette"] {
   background: url("chrome://browser/skin/bookmarks/Toolbar-bookmarks.png") no-repeat;

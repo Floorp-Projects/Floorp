@@ -39,7 +39,6 @@ classic.jar:
   skin/classic/browser/places/livemarkItem.png              (places/livemarkItem.png)
 #endif
 #ifdef MOZ_PLACES_BOOKMARKS
-  skin/classic/browser/places/browser-places.css            (places/browser-places.css)
   skin/classic/browser/places/bookmarksMenu.png             (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png          (places/bookmarksToolbar.png)
   skin/classic/browser/places/toolbarDropMarker.png         (places/toolbarDropMarker.png)
