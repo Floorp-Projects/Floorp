@@ -382,6 +382,9 @@ nsNavHistory::Init()
 // nsNavHistory::InitDB
 //
 
+
+#define PLACES_SCHEMA_VERSION 1
+
 nsresult
 nsNavHistory::InitDB(PRBool *aDoImport)
 {
@@ -436,6 +439,49 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = nsAnnotationService::InitTables(mDBConn);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get the places schema version, which we store in the user_version PRAGMA
+  PRInt32 schemaVersion;
+  {
+    nsCOMPtr<mozIStorageStatement> statement;
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA user_version"),
+                                  getter_AddRefs(statement));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasResult;
+    rv = statement->ExecuteStep(&hasResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(hasResult, NS_ERROR_FAILURE);
+    schemaVersion = statement->AsInt32(0);
+  }
+   
+  if (PLACES_SCHEMA_VERSION != schemaVersion) {
+    // Migrating from schema Vn to V1.
+    // NOTE: We don't support downgrading back to History-only. If you want to go from
+    // schema V1 back to V0, you'll need to blow away your sqlite file.
+    // Subsequent up/downgrades will have backwards and forward migration code.
+    if (PLACES_SCHEMA_VERSION == 1) {
+      if (schemaVersion < 1) {
+        // perform upgrade 
+        rv = MigrateFromVnToV1(mDBConn);
+        NS_ENSURE_SUCCESS(rv, rv);
+      } else {
+        // perform downgrade
+        // XXX Migrations from V>=2 must add downgrade migration code here,
+        // replacing this!
+        rv = MigrateFromVnToV1(mDBConn);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // update schema version in the db
+      nsCAutoString schemaVersionPragma("PRAGMA user_version=");
+      schemaVersionPragma.AppendInt(PLACES_SCHEMA_VERSION);
+      rv = mDBConn->ExecuteSimpleSQL(schemaVersionPragma);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // Further migration code goes here.
+  }
 
   // Get the page size. This may be different than was set above if the database
   // file already existed and has a different page size.
@@ -695,6 +741,31 @@ nsNavHistory::InitStatements()
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+}
+
+// nsNavHistory::MigrateFromVnToV1
+//
+//    Migrate places.sqlite to version 1.
+//
+//    This dumps all bookmarks-related tables, and recreates them,
+//    forcing a re-import of bookmarks.html.
+nsresult
+nsNavHistory::MigrateFromVnToV1(mozIStorageConnection* aDBConn) 
+{
+  // drop bookmarks tables
+  nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_bookmarks"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_bookmarks_folders"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_bookmarks_roots"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_keywords"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // initialize bookmarks tables
+  rv = nsNavBookmarks::InitTables(aDBConn);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return rv;
 }
 
 
