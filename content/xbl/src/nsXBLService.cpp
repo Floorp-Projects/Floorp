@@ -88,6 +88,8 @@
 #include "nsIDOMLoadListener.h"
 #include "nsIDOMEventGroup.h"
 
+#define NS_MAX_XBL_BINDING_RECURSION 20
+
 static PRBool IsChromeOrResourceURI(nsIURI* aURI)
 {
   PRBool isChrome = PR_FALSE;
@@ -107,6 +109,7 @@ IsAncestorBinding(nsIDocument* aDocument,
   NS_ASSERTION(aChildBindingURI, "expected a binding URI");
   NS_ASSERTION(aChild, "expected a child content");
 
+  PRUint32 bindingRecursion = 0;
   nsIContent* bindingParent = aChild->GetBindingParent();
   nsBindingManager* bindingManager = aDocument->BindingManager();
   for (nsIContent* prev = aChild;
@@ -122,12 +125,16 @@ IsAncestorBinding(nsIDocument* aDocument,
                                                         &equal);
     NS_ENSURE_SUCCESS(rv, PR_TRUE); // assume the worst
     if (equal) {
+      ++bindingRecursion;
+      if (bindingRecursion < NS_MAX_XBL_BINDING_RECURSION) {
+        continue;
+      }
       nsCAutoString spec;
       aChildBindingURI->GetSpec(spec);
       NS_ConvertUTF8toUTF16 bindingURI(spec);
       const PRUnichar* params[] = { bindingURI.get() };
       nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
-                                      "RecursiveBinding",
+                                      "TooDeepBindingRecursion",
                                       params, NS_ARRAY_LENGTH(params),
                                       aDocument->GetDocumentURI(),
                                       EmptyString(), 0, 0,
