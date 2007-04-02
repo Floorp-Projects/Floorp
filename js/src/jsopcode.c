@@ -941,6 +941,42 @@ CompareOffsets(void *arg, const void *v1, const void *v2, int *result)
     return JS_TRUE;
 }
 
+static ptrdiff_t
+SprintDoubleValue(Sprinter *sp, jsval v, JSOp *opp)
+{
+    jsdouble d;
+    ptrdiff_t todo;
+    char *s, buf[DTOSTR_STANDARD_BUFFER_SIZE];
+
+    JS_ASSERT(JSVAL_IS_DOUBLE(v));
+    d = *JSVAL_TO_DOUBLE(v);
+    if (JSDOUBLE_IS_NEGZERO(d)) {
+        todo = SprintCString(sp, "-0");
+        *opp = JSOP_NEG;
+    } else if (!JSDOUBLE_IS_FINITE(d)) {
+        /* Don't use Infinity and NaN, they're mutable. */
+        todo = SprintCString(sp,
+                             JSDOUBLE_IS_NaN(d)
+                             ? "0 / 0"
+                             : (d < 0)
+                             ? "1 / -0"
+                             : "1 / 0");
+        *opp = JSOP_DIV;
+    } else {
+        s = JS_dtostr(buf, sizeof buf, DTOSTR_STANDARD, 0, d);
+        if (!s) {
+            JS_ReportOutOfMemory(sp->context);
+            return -1;
+        }
+        JS_ASSERT(strcmp(s, js_Infinity_str) &&
+                  (*s != '-' ||
+                   strcmp(s + 1, js_Infinity_str)) &&
+                  strcmp(s, js_NaN_str));
+        todo = Sprint(sp, s);
+    }
+    return todo;
+}
+
 static jsbytecode *
 Decompile(SprintStack *ss, jsbytecode *pc, intN nb);
 
@@ -951,7 +987,7 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
 {
     JSContext *cx;
     JSPrinter *jp;
-    ptrdiff_t off, off2, diff, caseExprOff;
+    ptrdiff_t off, off2, diff, caseExprOff, todo;
     char *lval, *rval;
     uintN i;
     jsval key;
@@ -1012,18 +1048,28 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
                  * key to undefined so this identifier is escaped, if required
                  * by non-ASCII characters, but not quoted, by QuoteString.
                  */
+                todo = -1;
                 if (table[i].label) {
                     str = ATOM_TO_STRING(table[i].label);
                     key = JSVAL_VOID;
+                } else if (JSVAL_IS_DOUBLE(key)) {
+                    JSOp junk;
+
+                    todo = SprintDoubleValue(&ss->sprinter, key, &junk);
+                    str = NULL;
                 } else {
                     str = js_ValueToString(cx, key);
                     if (!str)
                         return JS_FALSE;
                 }
-                rval = QuoteString(&ss->sprinter, str,
-                                   (jschar)(JSVAL_IS_STRING(key) ? '"' : 0));
-                if (!rval)
-                    return JS_FALSE;
+                if (todo >= 0) {
+                    rval = OFF2STR(&ss->sprinter, todo);
+                } else {
+                    rval = QuoteString(&ss->sprinter, str, (jschar)
+                                       (JSVAL_IS_STRING(key) ? '"' : 0));
+                    if (!rval)
+                        return JS_FALSE;
+                }
                 RETRACT(&ss->sprinter, rval);
                 jp->indent += 2;
                 js_printf(jp, "\tcase %s:\n", rval);
@@ -3486,40 +3532,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               BEGIN_LITOPX_CASE(JSOP_NUMBER, 0)
                 val = ATOM_KEY(atom);
-                if (JSVAL_IS_INT(val)) {
-                    long ival = (long)JSVAL_TO_INT(val);
-                    todo = Sprint(&ss->sprinter, "%ld", ival);
-                } else {
-                    jsdouble d;
-                    char *numStr, buf[DTOSTR_STANDARD_BUFFER_SIZE];
-                   
-                    d = *JSVAL_TO_DOUBLE(val);
-                    if (JSDOUBLE_IS_NEGZERO(d)) {
-                        todo = SprintCString(&ss->sprinter, "-0");
-                        saveop = JSOP_NEG;
-                    } else if (!JSDOUBLE_IS_FINITE(d)) {
-                        /* Don't use Infinity, it's mutable. */
-                        todo = SprintCString(&ss->sprinter,
-                                             JSDOUBLE_IS_NaN(d)
-                                             ? "0 / 0"
-                                             : (d < 0)
-                                             ? "1 / -0"
-                                             : "1 / 0");
-                        saveop = JSOP_DIV;
-                    } else {
-                        numStr = JS_dtostr(buf, sizeof buf, DTOSTR_STANDARD,
-                                           0, d);
-                        if (!numStr) {
-                            JS_ReportOutOfMemory(cx);
-                            return NULL;
-                        }
-                        JS_ASSERT(strcmp(numStr, js_Infinity_str) &&
-                                  (*numStr != '-' ||
-                                   strcmp(numStr + 1, js_Infinity_str)) &&
-                                  strcmp(numStr, js_NaN_str));
-                        todo = Sprint(&ss->sprinter, numStr);
-                    }
-                }
+                todo = JSVAL_IS_INT(val)
+                       ? Sprint(&ss->sprinter, "%ld", (long) JSVAL_TO_INT(val))
+                       : SprintDoubleValue(&ss->sprinter, val, &saveop);
               END_LITOPX_CASE
 
               BEGIN_LITOPX_CASE(JSOP_STRING, 0)
