@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=351633
+-->
+<head>
+  <title>Test for Bug 351633</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=351633">Mozilla Bug 351633</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 351633 **/
+var passJSUrl1 = false;
+var passJSUrl2 = false;
+var passJSUrl3 = false;
+var passJSUrl4 = false;
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  is(passJSUrl1, true, "Should have stopped load before getting here");
+  is(passJSUrl2, true, "Should not have stopped load where we didn't set " +
+                       "location");
+  is(passJSUrl3, true, "Should not have stopped load where javascript: URI " +
+                       "didn't return text");
+  is(passJSUrl4, true, "Should not have stopped load where javascript: URI " +
+                       "wasn't set on the document itself");
+  SimpleTest.finish();
+});
+</script>
+</pre>
+<p id="display">
+  <iframe src="load-stopping-1a.html"></iframe>
+  <iframe src="load-stopping-1b.html"></iframe>
+  <iframe src="load-stopping-1c.html"></iframe>
+  <iframe src="load-stopping-1d.html"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+</body>
+</html>
+

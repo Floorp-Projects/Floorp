@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=351633
+-->
+<head>
+  <title>Test for Bug 351633</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=351633">Mozilla Bug 351633</a>
+<p id="display">
+  <iframe name="x" id="x"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 351633 **/
+
+var str;
+str = "a";
+window.x.location.href =
+  "javascript: parent.str += 'c'; void(parent.finishTest());"
+str += "b";
+
+SimpleTest.waitForExplicitFinish();
+
+function finishTest() {
+  is (str, "abc", "Unexpected ordering");
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>
+
