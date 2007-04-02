@@ -134,6 +134,7 @@ extern NS_COM_GLUE NS_METHOD
 NS_DispatchToMainThread(nsIRunnable *event,
                         PRUint32 dispatchFlags = NS_DISPATCH_NORMAL);
 
+#ifndef XPCOM_GLUE_AVOID_NSPR
 /**
  * Process all pending events for the given thread before returning.  This
  * method simply calls ProcessNextEvent on the thread while HasPendingEvents
@@ -152,6 +153,7 @@ NS_DispatchToMainThread(nsIRunnable *event,
 extern NS_COM_GLUE NS_METHOD
 NS_ProcessPendingEvents(nsIThread *thread,
                         PRIntervalTime timeout = PR_INTERVAL_NO_TIMEOUT);
+#endif
 
 /**
  * Shortcut for nsIThread::HasPendingEvents.
@@ -222,7 +224,7 @@ extern NS_COM_GLUE nsIThread *NS_GetCurrentThread();
 #ifndef XPCOM_GLUE_AVOID_NSPR
 
 #undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
+#define IMETHOD_VISIBILITY NS_COM_GLUE
 
 // This class is designed to be subclassed.
 class NS_COM_GLUE nsRunnable : public nsIRunnable
