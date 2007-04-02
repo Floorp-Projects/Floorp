@@ -154,6 +154,7 @@ NS_DispatchToMainThread(nsIRunnable *event, PRUint32 dispatchFlags)
   return thread->Dispatch(event, dispatchFlags);
 }
 
+#ifndef XPCOM_GLUE_AVOID_NSPR
 NS_METHOD
 NS_ProcessPendingEvents(nsIThread *thread, PRIntervalTime timeout)
 {
@@ -184,6 +185,7 @@ NS_ProcessPendingEvents(nsIThread *thread, PRIntervalTime timeout)
   }
   return rv;
 }
+#endif // XPCOM_GLUE_AVOID_NSPR
 
 PRBool
 NS_HasPendingEvents(nsIThread *thread)
