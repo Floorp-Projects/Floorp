@@ -425,7 +425,7 @@ nsEventListenerManager::GetTypeDataForIID(const nsIID& aIID)
 const EventTypeData*
 nsEventListenerManager::GetTypeDataForEventName(nsIAtom* aName)
 {
-  PRUint32 event = GetIdentifierForEvent(aName);
+  PRUint32 event = nsContentUtils::GetEventId(aName);
   if (event != NS_USER_DEFINED_EVENT) {
     for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sEventTypes); ++i) {
       for (PRInt32 j = 0; j < sEventTypes[i].numEvents; ++j) {
@@ -607,116 +607,6 @@ nsEventListenerManager::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
   return NS_OK;
 }
 
-struct EventId {
-  nsIAtom** mAtom;
-  PRUint32  mId;
-};
-
-static void
-InitializeEventIdTable() {
-  NS_ASSERTION(!gEventIdTable, "EventIdTable already initialized!");
-
-  static const EventId eventIdArray[] = {
-    { &nsGkAtoms::onmousedown,                   NS_MOUSE_BUTTON_DOWN },
-    { &nsGkAtoms::onmouseup,                     NS_MOUSE_BUTTON_UP },
-    { &nsGkAtoms::onclick,                       NS_MOUSE_CLICK },
-    { &nsGkAtoms::ondblclick,                    NS_MOUSE_DOUBLECLICK },
-    { &nsGkAtoms::onmouseover,                   NS_MOUSE_ENTER_SYNTH },
-    { &nsGkAtoms::onmouseout,                    NS_MOUSE_EXIT_SYNTH },
-    { &nsGkAtoms::onmousemove,                   NS_MOUSE_MOVE },
-    { &nsGkAtoms::oncontextmenu,                 NS_CONTEXTMENU },
-    { &nsGkAtoms::onkeydown,                     NS_KEY_DOWN },
-    { &nsGkAtoms::onkeyup,                       NS_KEY_UP },
-    { &nsGkAtoms::onkeypress,                    NS_KEY_PRESS },
-    { &nsGkAtoms::oncompositionstart,            NS_COMPOSITION_START },
-    { &nsGkAtoms::oncompositionend,              NS_COMPOSITION_END },
-    { &nsGkAtoms::onfocus,                       NS_FOCUS_CONTENT },
-    { &nsGkAtoms::onblur,                        NS_BLUR_CONTENT },
-    { &nsGkAtoms::onsubmit,                      NS_FORM_SUBMIT },
-    { &nsGkAtoms::onreset,                       NS_FORM_RESET },
-    { &nsGkAtoms::onchange,                      NS_FORM_CHANGE },
-    { &nsGkAtoms::onselect,                      NS_FORM_SELECTED },
-    { &nsGkAtoms::onload,                        NS_LOAD },
-    { &nsGkAtoms::onunload,                      NS_PAGE_UNLOAD },
-    { &nsGkAtoms::onbeforeunload,                NS_BEFORE_PAGE_UNLOAD },
-    { &nsGkAtoms::onabort,                       NS_IMAGE_ABORT },
-    { &nsGkAtoms::onerror,                       NS_LOAD_ERROR },
-    { &nsGkAtoms::onDOMAttrModified,             NS_MUTATION_ATTRMODIFIED },
-    { &nsGkAtoms::onDOMCharacterDataModified,    NS_MUTATION_CHARACTERDATAMODIFIED },
-    { &nsGkAtoms::onDOMNodeInserted,             NS_MUTATION_NODEINSERTED },
-    { &nsGkAtoms::onDOMNodeRemoved,              NS_MUTATION_NODEREMOVED },
-    { &nsGkAtoms::onDOMNodeInsertedIntoDocument, NS_MUTATION_NODEINSERTEDINTODOCUMENT },
-    { &nsGkAtoms::onDOMNodeRemovedFromDocument,  NS_MUTATION_NODEREMOVEDFROMDOCUMENT },
-    { &nsGkAtoms::onDOMSubtreeModified,          NS_MUTATION_SUBTREEMODIFIED },
-    { &nsGkAtoms::onDOMActivate,                 NS_UI_ACTIVATE },
-    { &nsGkAtoms::onDOMFocusIn,                  NS_UI_FOCUSIN },
-    { &nsGkAtoms::onDOMFocusOut,                 NS_UI_FOCUSOUT },
-    { &nsGkAtoms::oninput,                       NS_FORM_INPUT },
-    { &nsGkAtoms::onpageshow,                    NS_PAGE_SHOW },
-    { &nsGkAtoms::onpagehide,                    NS_PAGE_HIDE },
-    { &nsGkAtoms::onclose,                       NS_XUL_CLOSE },
-    { &nsGkAtoms::onpaint,                       NS_PAINT },
-    { &nsGkAtoms::onresize,                      NS_RESIZE_EVENT },
-    { &nsGkAtoms::onscroll,                      NS_SCROLL_EVENT },
-    { &nsGkAtoms::ontext,                        NS_TEXT_TEXT },
-    { &nsGkAtoms::onpopupshowing,                NS_XUL_POPUP_SHOWING },
-    { &nsGkAtoms::onpopupshown,                  NS_XUL_POPUP_SHOWN },
-    { &nsGkAtoms::onpopuphiding,                 NS_XUL_POPUP_HIDING },
-    { &nsGkAtoms::onpopuphidden,                 NS_XUL_POPUP_HIDDEN },
-    { &nsGkAtoms::oncommand,                     NS_XUL_COMMAND },
-    { &nsGkAtoms::onbroadcast,                   NS_XUL_BROADCAST },
-    { &nsGkAtoms::oncommandupdate,               NS_XUL_COMMAND_UPDATE },
-    { &nsGkAtoms::ondragenter,                   NS_DRAGDROP_ENTER },
-    { &nsGkAtoms::ondragover,                    NS_DRAGDROP_OVER_SYNTH },
-    { &nsGkAtoms::ondragexit,                    NS_DRAGDROP_EXIT_SYNTH },
-    { &nsGkAtoms::ondragdrop,                    NS_DRAGDROP_DROP },
-    { &nsGkAtoms::ondraggesture,                 NS_DRAGDROP_GESTURE },
-    { &nsGkAtoms::onoverflow,                    NS_SCROLLPORT_OVERFLOW },
-    { &nsGkAtoms::onunderflow,                   NS_SCROLLPORT_UNDERFLOW },
-    { &nsGkAtoms::onoverflowchanged,             NS_SCROLLPORT_OVERFLOWCHANGED },
-    { &nsGkAtoms::onDOMMouseScroll,              NS_MOUSE_SCROLL }
-#ifdef MOZ_SVG
-   ,{ &nsGkAtoms::onSVGLoad,                     NS_SVG_LOAD },
-    { &nsGkAtoms::onSVGUnload,                   NS_SVG_UNLOAD },
-    { &nsGkAtoms::onSVGAbort,                    NS_SVG_ABORT },
-    { &nsGkAtoms::onSVGError,                    NS_SVG_ERROR },
-    { &nsGkAtoms::onSVGResize,                   NS_SVG_RESIZE },
-    { &nsGkAtoms::onSVGScroll,                   NS_SVG_SCROLL },
-    { &nsGkAtoms::onSVGZoom,                     NS_SVG_ZOOM }
-#endif // MOZ_SVG
-  };
-
-  gEventIdTable = new nsDataHashtable<nsISupportsHashKey, PRUint32>;
-  if (!gEventIdTable ||
-      !gEventIdTable->Init(int(NS_ARRAY_LENGTH(eventIdArray) / 0.75) + 1)) {
-    delete gEventIdTable;
-    gEventIdTable = nsnull;
-    return;
-  }
-
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(eventIdArray); ++i) {
-    if (!gEventIdTable->Put(*(eventIdArray[i].mAtom), eventIdArray[i].mId)) {
-      delete gEventIdTable;
-      gEventIdTable = nsnull;
-      return;
-    }
-  }
-}
-
-PRUint32
-nsEventListenerManager::GetIdentifierForEvent(nsIAtom* aEvent)
-{
-  if (!gEventIdTable) {
-    InitializeEventIdTable();
-  }
-  PRUint32 eventId = NS_USER_DEFINED_EVENT;
-  if (gEventIdTable) {
-    // If the aEvent doesn't exists, eventId is not modified.
-    gEventIdTable->Get(aEvent, &eventId);
-  }
-  return eventId;
-}
-
 PRBool
 nsEventListenerManager::ListenerCanHandle(nsListenerStruct* aLs,
                                           nsEvent* aEvent)
@@ -735,7 +625,7 @@ nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aListener,
                                                nsIDOMEventGroup* aEvtGrp)
 {
   nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aType);
-  PRUint32 type = GetIdentifierForEvent(atom);
+  PRUint32 type = nsContentUtils::GetEventId(atom);
   AddEventListener(aListener, type, atom, nsnull, aFlags, aEvtGrp);
   return NS_OK;
 }
@@ -747,7 +637,7 @@ nsEventListenerManager::RemoveEventListenerByType(nsIDOMEventListener *aListener
                                                   nsIDOMEventGroup* aEvtGrp)
 {
   nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aType);
-  PRUint32 type = GetIdentifierForEvent(atom);
+  PRUint32 type = nsContentUtils::GetEventId(atom);
   RemoveEventListener(aListener, type, atom, nsnull, aFlags, aEvtGrp);
   return NS_OK;
 }
@@ -779,7 +669,7 @@ nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext,
                                            PRBool aPermitUntrustedEvents)
 {
   nsresult rv = NS_OK;
-  PRUint32 eventType = GetIdentifierForEvent(aName);
+  PRUint32 eventType = nsContentUtils::GetEventId(aName);
   nsListenerStruct* ls = FindJSEventListener(eventType, aName);
 
   if (!ls) {
@@ -948,7 +838,7 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
 nsresult
 nsEventListenerManager::RemoveScriptEventListener(nsIAtom* aName)
 {
-  PRUint32 eventType = GetIdentifierForEvent(aName);
+  PRUint32 eventType = nsContentUtils::GetEventId(aName);
   nsListenerStruct* ls = FindJSEventListener(eventType, aName);
 
   if (ls) {
@@ -1034,7 +924,7 @@ nsEventListenerManager::CompileScriptEventListener(nsIScriptContext *aContext,
 {
   nsresult rv = NS_OK;
   *aDidCompile = PR_FALSE;
-  PRUint32 eventType = GetIdentifierForEvent(aName);
+  PRUint32 eventType = nsContentUtils::GetEventId(aName);
   nsListenerStruct* ls = FindJSEventListener(eventType, aName);
 
   if (!ls) {

@@ -1218,17 +1218,14 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
 PRBool
 nsSVGSVGElement::IsEventName(nsIAtom* aName)
 {
-  return IsGraphicElementEventName(aName) ||
-
-  /* The following are for events that are only applicable to outermost 'svg'
-     elements. We don't check if we're an outer 'svg' element in case we're not
-     inserted into the document yet, but since the target of the events in
-     question will always be the outermost 'svg' element, this shouldn't cause
-     any real problems.
+  /* The events in EventNameType_SVGSVG are for events that are only
+     applicable to outermost 'svg' elements. We don't check if we're an outer
+     'svg' element in case we're not inserted into the document yet, but since
+     the target of the events in question will always be the outermost 'svg'
+     element, this shouldn't cause any real problems.
   */
-         aName == nsGkAtoms::onunload    ||
-         aName == nsGkAtoms::onscroll    ||
-         aName == nsGkAtoms::onzoom;
+  return nsContentUtils::IsEventAttributeName(aName,
+         (EventNameType_SVGGraphic | EventNameType_SVGSVG));
 }
 
 //----------------------------------------------------------------------

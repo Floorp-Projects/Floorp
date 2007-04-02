@@ -785,28 +785,6 @@ nsSVGElement::AddMappedSVGValue(nsIAtom* aName, nsISupports* aValue,
 }
 
 /* static */
-PRBool
-nsSVGElement::IsGraphicElementEventName(nsIAtom* aName)
-{
-  const char* name;
-  aName->GetUTF8String(&name);
-
-  if (name[0] != 'o' || name[1] != 'n') {
-    return PR_FALSE;
-  }
-
-  return (aName == nsGkAtoms::onabort     ||
-          aName == nsGkAtoms::onclick     ||
-          aName == nsGkAtoms::onerror     ||
-          aName == nsGkAtoms::onload      ||
-          aName == nsGkAtoms::onmousedown ||
-          aName == nsGkAtoms::onmouseup   ||
-          aName == nsGkAtoms::onmouseover ||
-          aName == nsGkAtoms::onmousemove ||
-          aName == nsGkAtoms::onmouseout);
-}
-
-/* static */
 nsIAtom* nsSVGElement::GetEventNameForAttr(nsIAtom* aAttr)
 {
   if (aAttr == nsGkAtoms::onload)

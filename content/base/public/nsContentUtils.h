@@ -52,6 +52,7 @@
 #include "nsDOMClassInfoID.h"
 #include "nsIClassInfo.h"
 #include "nsIDOM3Node.h"
+#include "nsDataHashtable.h"
 #include "nsIScriptRuntime.h"
 #include "nsIScriptGlobalObject.h"
 
@@ -98,6 +99,22 @@ class nsIBidiKeyboard;
 #endif
 
 extern const char kLoadAsData[];
+
+enum EventNameType {
+  EventNameType_None = 0x0000,
+  EventNameType_HTML = 0x0001,
+  EventNameType_XUL = 0x0002,
+  EventNameType_SVGGraphic = 0x0004, // svg graphic elements
+  EventNameType_SVGSVG = 0x0008, // the svg element
+
+  EventNameType_HTMLXUL = 0x0003,
+  EventNameType_All = 0xFFFF
+};
+
+struct EventNameMapping {
+  PRUint32  mId;
+  PRInt32 mType;
+};
 
 class nsContentUtils
 {
@@ -782,6 +799,25 @@ public:
                                        PRBool *aDefaultAction = nsnull);
 
   /**
+   * Determines if an event attribute name (such as onclick) is valid for
+   * a given element type. Types are from the EventNameType enumeration
+   * defined above.
+   *
+   * @param aName the event name to look up
+   * @param aType the type of content
+   */
+  static PRBool IsEventAttributeName(nsIAtom* aName, PRInt32 aType);
+
+  /**
+   * Return the event id for the event with the given name. The name is the
+   * event name with the 'on' prefix. Returns NS_USER_DEFINED_EVENT if the
+   * event doesn't match a known event name.
+   *
+   * @param aName the event name to look up
+   */
+  static PRUint32 GetEventId(nsIAtom* aName);
+
+  /**
    * Used only during traversal of the XPCOM graph by the cycle
    * collector: push a pointer to the listener manager onto the
    * children deque, if it exists. Do nothing if there is no listener
@@ -984,6 +1020,9 @@ public:
   };
 
 private:
+
+  static PRBool InitializeEventTable();
+
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            JSContext *cx,
                                            JSObject *aOldGlobal,
@@ -1020,6 +1059,8 @@ private:
   static imgILoader* sImgLoader;
 
   static nsIConsoleService* sConsoleService;
+
+  static nsDataHashtable<nsISupportsHashKey, EventNameMapping>* sEventTable;
 
   static nsIStringBundleService* sStringBundleService;
   static nsIStringBundle* sStringBundles[PropertiesFile_COUNT];

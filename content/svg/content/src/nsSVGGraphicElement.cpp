@@ -280,7 +280,7 @@ nsSVGGraphicElement::IsAttributeMapped(const nsIAtom* name) const
 PRBool
 nsSVGGraphicElement::IsEventName(nsIAtom* aName)
 {
-  return IsGraphicElementEventName(aName);
+  return nsContentUtils::IsEventAttributeName(aName, EventNameType_SVGGraphic);
 }
 
 already_AddRefed<nsIDOMSVGMatrix>

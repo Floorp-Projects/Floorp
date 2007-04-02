@@ -1323,63 +1323,12 @@ nsGenericHTMLElement::GetHrefURIForAnchors(nsIURI** aURI) const
   return NS_OK;
 }
 
-PRBool nsGenericHTMLElement::IsEventName(nsIAtom* aName)
-{
-  const char* name;
-  aName->GetUTF8String(&name);
-
-  if (name[0] != 'o' || name[1] != 'n') {
-    return PR_FALSE;
-  }
-
-  return (aName == nsGkAtoms::onclick                       ||
-          aName == nsGkAtoms::ondblclick                    ||
-          aName == nsGkAtoms::onmousedown                   ||
-          aName == nsGkAtoms::onmouseup                     ||
-          aName == nsGkAtoms::onmouseover                   ||
-          aName == nsGkAtoms::onmouseout                    ||
-          aName == nsGkAtoms::onkeydown                     ||
-          aName == nsGkAtoms::onkeyup                       ||
-          aName == nsGkAtoms::onkeypress                    ||
-          aName == nsGkAtoms::onmousemove                   ||
-          aName == nsGkAtoms::onload                        ||
-          aName == nsGkAtoms::onunload                      ||
-          aName == nsGkAtoms::onbeforeunload                ||
-          aName == nsGkAtoms::onpageshow                    ||
-          aName == nsGkAtoms::onpagehide                    ||
-          aName == nsGkAtoms::onabort                       ||
-          aName == nsGkAtoms::onerror                       ||
-          aName == nsGkAtoms::onfocus                       ||
-          aName == nsGkAtoms::onblur                        ||
-          aName == nsGkAtoms::onoffline                     ||
-          aName == nsGkAtoms::ononline                      ||
-          aName == nsGkAtoms::onsubmit                      ||
-          aName == nsGkAtoms::onreset                       ||
-          aName == nsGkAtoms::onchange                      ||
-          aName == nsGkAtoms::onselect                      || 
-          aName == nsGkAtoms::onpaint                       ||
-          aName == nsGkAtoms::onresize                      ||
-          aName == nsGkAtoms::onscroll                      ||
-          aName == nsGkAtoms::oninput                       ||
-          aName == nsGkAtoms::oncontextmenu                 ||
-          aName == nsGkAtoms::onDOMAttrModified             ||
-          aName == nsGkAtoms::onDOMCharacterDataModified    || 
-          aName == nsGkAtoms::onDOMSubtreeModified          ||
-          aName == nsGkAtoms::onDOMNodeInsertedIntoDocument || 
-          aName == nsGkAtoms::onDOMNodeRemovedFromDocument  ||
-          aName == nsGkAtoms::onDOMNodeInserted             || 
-          aName == nsGkAtoms::onDOMNodeRemoved              ||
-          aName == nsGkAtoms::onDOMActivate                 ||
-          aName == nsGkAtoms::onDOMFocusIn                  ||
-          aName == nsGkAtoms::onDOMFocusOut);
-}
-
 nsresult
 nsGenericHTMLElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                    const nsAString* aValue, PRBool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (IsEventName(aName) && aValue) {
+    if (nsContentUtils::IsEventAttributeName(aName, EventNameType_HTML) && aValue) {
       nsresult rv = AddScriptEventListener(aName, *aValue);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -1438,7 +1387,7 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 {
   // Check for event handlers
   if (aNameSpaceID == kNameSpaceID_None &&
-      IsEventName(aAttribute)) {
+      nsContentUtils::IsEventAttributeName(aAttribute, EventNameType_HTML)) {
     nsCOMPtr<nsIEventListenerManager> manager;
     GetListenerManager(PR_FALSE, getter_AddRefs(manager));
 
@@ -3790,7 +3739,7 @@ nsGenericHTMLElement::RecompileScriptEventListeners()
         }
 
         nsIAtom *attr = name->Atom();
-        if (!IsEventName(attr)) {
+        if (!nsContentUtils::IsEventAttributeName(attr, EventNameType_HTML)) {
             continue;
         }
 

@@ -382,7 +382,7 @@ nsSVGTSpanElement::IsAttributeMapped(const nsIAtom* name) const
 PRBool
 nsSVGTSpanElement::IsEventName(nsIAtom* aName)
 {
-  return IsGraphicElementEventName(aName);
+  return nsContentUtils::IsEventAttributeName(aName, EventNameType_SVGGraphic);
 }
 
 //----------------------------------------------------------------------
