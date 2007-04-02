@@ -325,16 +325,19 @@ nsHTMLSelectListAccessible::nsHTMLSelectListAccessible(nsIDOMNode* aDOMNode,
   *     nsIAccessibleStates::STATE_MULTISELECTABLE
   *     nsIAccessibleStates::STATE_EXTSELECTABLE
   */
-NS_IMETHODIMP nsHTMLSelectListAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP
+nsHTMLSelectListAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsHTMLSelectableAccessible::GetState(_retval);
+  nsresult rv = nsHTMLSelectableAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIDOMHTMLSelectElement> select (do_QueryInterface(mDOMNode));
-  if ( select ) {
+  if (select) {
     PRBool multiple;
     select->GetMultiple(&multiple);
     if ( multiple )
-      *_retval |= nsIAccessibleStates::STATE_MULTISELECTABLE |
-                  nsIAccessibleStates::STATE_EXTSELECTABLE;
+      *aState |= nsIAccessibleStates::STATE_MULTISELECTABLE |
+                 nsIAccessibleStates::STATE_EXTSELECTABLE;
   }
 
   return NS_OK;
@@ -560,8 +563,7 @@ nsIFrame* nsHTMLSelectOptionAccessible::GetBoundsFrame()
     nsCOMPtr<nsIAccessible> selAcc;
     accService->GetAccessibleFor(selectNode, getter_AddRefs(selAcc));
     if (selAcc) {
-      PRUint32 state;
-      selAcc->GetFinalState(&state);
+      PRUint32 state = State(selAcc);
       if (state & nsIAccessibleStates::STATE_COLLAPSED) {
         nsCOMPtr<nsIPresShell> presShell(GetPresShell());
         if (!presShell) {
@@ -583,9 +585,10 @@ nsIFrame* nsHTMLSelectOptionAccessible::GetBoundsFrame()
   *     STATE_FOCUSABLE
   *     STATE_INVISIBLE -- not implemented yet
   */
-NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP
+nsHTMLSelectOptionAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  *_retval = 0;
+  *aState = 0;
   nsCOMPtr<nsIDOMNode> focusedOptionNode, parentNode;
   // Go up to parent <select> element
   nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(mDOMNode));
@@ -604,7 +607,7 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetState(PRUint32 *_retval)
   // find out if we are the focused node
   GetFocusedOptionNode(parentNode, getter_AddRefs(focusedOptionNode));
   if (focusedOptionNode == mDOMNode)
-    *_retval |= nsIAccessibleStates::STATE_FOCUSED;
+    *aState |= nsIAccessibleStates::STATE_FOCUSED;
 
   // Are we selected?
   nsCOMPtr<nsIDOMHTMLOptionElement> option (do_QueryInterface(mDOMNode));
@@ -612,11 +615,11 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetState(PRUint32 *_retval)
     PRBool isSelected = PR_FALSE;
     option->GetSelected(&isSelected);
     if ( isSelected ) 
-      *_retval |= nsIAccessibleStates::STATE_SELECTED;
+      *aState |= nsIAccessibleStates::STATE_SELECTED;
   }
 
-  *_retval |= nsIAccessibleStates::STATE_SELECTABLE |
-              nsIAccessibleStates::STATE_FOCUSABLE;
+  *aState |= nsIAccessibleStates::STATE_SELECTABLE |
+             nsIAccessibleStates::STATE_FOCUSABLE;
 
   return NS_OK;
 }
@@ -777,8 +780,7 @@ void nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibl
 
   privateMultiSelect->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
                       multiSelect, nsnull);
-  PRUint32 state;
-  optionAccessible->GetFinalState(&state);
+  PRUint32 state = State(optionAccessible);
   PRUint32 eventType = (state & nsIAccessibleStates::STATE_SELECTED) ?
                        nsIAccessibleEvent::EVENT_SELECTION_ADD :
                        nsIAccessibleEvent::EVENT_SELECTION_REMOVE; 
@@ -798,11 +800,14 @@ nsHTMLSelectOptionAccessible(aDOMNode, aShell)
   * As a nsHTMLSelectOptGroupAccessible we can have the following states:
   *     nsIAccessibleStates::STATE_SELECTABLE
   */
-NS_IMETHODIMP nsHTMLSelectOptGroupAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP
+nsHTMLSelectOptGroupAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsHTMLSelectOptionAccessible::GetState(_retval);
-  *_retval &= ~(nsIAccessibleStates::STATE_FOCUSABLE |
-                nsIAccessibleStates::STATE_SELECTABLE);
+  nsresult rv = nsHTMLSelectOptionAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aState &= ~(nsIAccessibleStates::STATE_FOCUSABLE |
+               nsIAccessibleStates::STATE_SELECTABLE);
 
   return NS_OK;
 }
@@ -917,23 +922,25 @@ void nsHTMLComboboxAccessible::CacheChildren()
   *     STATE_EXPANDED
   *     STATE_COLLAPSED
   */
-NS_IMETHODIMP nsHTMLComboboxAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP
+nsHTMLComboboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   // Get focus status from base class
-  nsAccessible::GetState(_retval);
+  nsresult rv = nsAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsIFrame *frame = GetBoundsFrame();
   nsIComboboxControlFrame *comboFrame = nsnull;
   frame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
 
   if (comboFrame && comboFrame->IsDroppedDown())
-    *_retval |= nsIAccessibleStates::STATE_EXPANDED;
+    *aState |= nsIAccessibleStates::STATE_EXPANDED;
   else
-    *_retval |= nsIAccessibleStates::STATE_COLLAPSED;
+    *aState |= nsIAccessibleStates::STATE_COLLAPSED;
 
-  *_retval |= nsIAccessibleStates::STATE_HASPOPUP |
-              nsIAccessibleStates::STATE_READONLY |
-              nsIAccessibleStates::STATE_FOCUSABLE;
+  *aState |= nsIAccessibleStates::STATE_HASPOPUP |
+             nsIAccessibleStates::STATE_READONLY |
+             nsIAccessibleStates::STATE_FOCUSABLE;
 
   return NS_OK;
 }
@@ -1227,10 +1234,12 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetName(nsAString& aName)
   *     STATE_FOCUSED
   *     STATE_FOCUSABLE
   */
-NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP
+nsHTMLComboboxButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   // Get focus status from base class
-  nsAccessible::GetState(_retval);
+  nsresult rv = nsAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsIFrame *boundsFrame = GetBoundsFrame();
   nsIComboboxControlFrame* comboFrame;
@@ -1239,9 +1248,9 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetState(PRUint32 *_retval)
     return NS_ERROR_FAILURE;
 
   if (comboFrame->IsDroppedDown())
-    *_retval |= nsIAccessibleStates::STATE_PRESSED;
+    *aState |= nsIAccessibleStates::STATE_PRESSED;
 
-  *_retval |= nsIAccessibleStates::STATE_FOCUSABLE;
+  *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
 
   return NS_OK;
 }
@@ -1269,10 +1278,12 @@ nsIFrame *nsHTMLComboboxListAccessible::GetFrame()
   *     STATE_INVISIBLE
   *     STATE_FLOATING
   */
-NS_IMETHODIMP nsHTMLComboboxListAccessible::GetState(PRUint32 *aState)
+NS_IMETHODIMP
+nsHTMLComboboxListAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   // Get focus status from base class
-  nsAccessible::GetState(aState);
+  nsresult rv = nsAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsIFrame *boundsFrame = GetBoundsFrame();
   nsIComboboxControlFrame* comboFrame = nsnull;

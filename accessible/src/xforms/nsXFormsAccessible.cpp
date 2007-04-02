@@ -170,7 +170,7 @@ nsXFormsAccessible::GetValue(nsAString& aValue)
 }
 
 NS_IMETHODIMP
-nsXFormsAccessible::GetState(PRUint32 *aState)
+nsXFormsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   NS_ENSURE_ARG_POINTER(aState);
   *aState = 0;
@@ -193,7 +193,7 @@ nsXFormsAccessible::GetState(PRUint32 *aState)
   rv = sXFormsService->IsValid(mDOMNode, &isValid);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsHyperTextAccessible::GetState(aState);
+  rv = nsHyperTextAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!isRelevant)
@@ -302,16 +302,14 @@ nsXFormsEditableAccessible::
 }
 
 NS_IMETHODIMP
-nsXFormsEditableAccessible::GetExtState(PRUint32 *aExtState)
+nsXFormsEditableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  NS_ENSURE_ARG_POINTER(aExtState);
+  NS_ENSURE_ARG_POINTER(aState);
 
-  *aExtState = 0;
-
-  nsresult rv = nsXFormsAccessible::GetExtState(aExtState);
+  nsresult rv = nsXFormsAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!mEditor)
+  if (!aExtraState || !mEditor)
     return NS_OK;
 
   PRBool isReadonly = PR_FALSE;
@@ -323,17 +321,17 @@ nsXFormsEditableAccessible::GetExtState(PRUint32 *aExtState)
     rv = sXFormsService->IsRelevant(mDOMNode, &isRelevant);
     NS_ENSURE_SUCCESS(rv, rv);
     if (isRelevant) {
-      *aExtState |= nsIAccessibleStates::EXT_STATE_EDITABLE |
-                    nsIAccessibleStates::EXT_STATE_SELECTABLE_TEXT;
+      *aExtraState |= nsIAccessibleStates::EXT_STATE_EDITABLE |
+                      nsIAccessibleStates::EXT_STATE_SELECTABLE_TEXT;
     }
   }
 
   PRUint32 flags;
   mEditor->GetFlags(&flags);
   if (flags & nsIPlaintextEditor::eEditorSingleLineMask)
-    *aExtState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
   else
-    *aExtState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
 
   return NS_OK;
 }

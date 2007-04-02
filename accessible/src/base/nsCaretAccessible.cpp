@@ -228,9 +228,13 @@ NS_IMETHODIMP nsCaretAccessible::GetRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCaretAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP
+nsCaretAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  *_retval = mVisible? 0: nsIAccessibleStates::STATE_INVISIBLE;
+  if (aExtraState)
+    *aExtraState = 0;
+
+  *aState = mVisible? 0: nsIAccessibleStates::STATE_INVISIBLE;
   return NS_OK;
 }
 

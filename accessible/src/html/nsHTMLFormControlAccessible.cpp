@@ -75,7 +75,7 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::GetActionName(PRUint8 aIndex, nsAString&
   if (aIndex == eAction_Click) {    // 0 is the magic value for default action
     // check or uncheck
     PRUint32 state;
-    GetState(&state);
+    GetState(&state, nsnull);
 
     if (state & nsIAccessibleStates::STATE_CHECKED)
       aName.AssignLiteral("uncheck"); 
@@ -95,18 +95,21 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::DoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsHTMLCheckboxAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP
+nsHTMLCheckboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsFormControlAccessible::GetState(_retval);
+  nsresult rv = nsFormControlAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   PRBool checked = PR_FALSE;   // Radio buttons and check boxes can be checked
 
   nsCOMPtr<nsIDOMHTMLInputElement> htmlCheckboxElement(do_QueryInterface(mDOMNode));
-  if (htmlCheckboxElement) 
+  if (htmlCheckboxElement)
     htmlCheckboxElement->GetChecked(&checked);
 
-  if (checked) 
-    *_retval |= nsIAccessibleStates::STATE_CHECKED;
-  
+  if (checked)
+    *aState |= nsIAccessibleStates::STATE_CHECKED;
+
   return NS_OK;
 }
 
@@ -117,17 +120,20 @@ nsRadioButtonAccessible(aNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsHTMLRadioButtonAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP
+nsHTMLRadioButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsAccessibleWrap::GetState(_retval);
+  nsresult rv = nsAccessibleWrap::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   PRBool checked = PR_FALSE;   // Radio buttons and check boxes can be checked
 
   nsCOMPtr<nsIDOMHTMLInputElement> htmlRadioElement(do_QueryInterface(mDOMNode));
-  if (htmlRadioElement) 
+  if (htmlRadioElement)
     htmlRadioElement->GetChecked(&checked);
 
-  if (checked) 
-    *_retval |= nsIAccessibleStates::STATE_CHECKED;
+  if (checked)
+    *aState |= nsIAccessibleStates::STATE_CHECKED;
 
   return NS_OK;
 }
@@ -206,17 +212,19 @@ NS_IMETHODIMP nsHTMLButtonAccessible::DoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsHTMLButtonAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP
+nsHTMLButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  if (!element) {
-    return NS_ERROR_FAILURE;  // Button accessible shut down
-  }
-  nsHyperTextAccessible::GetState(_retval);
+  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
+
+  nsresult rv = nsHyperTextAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsAutoString buttonType;
   element->GetAttribute(NS_LITERAL_STRING("type"), buttonType);
   if (buttonType.LowerCaseEqualsLiteral("submit"))
-    *_retval |= nsIAccessibleStates::STATE_DEFAULT;
+    *aState |= nsIAccessibleStates::STATE_DEFAULT;
 
   return NS_OK;
 }
@@ -306,19 +314,21 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTML4ButtonAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP
+nsHTML4ButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  if (!element) {
-    return NS_ERROR_FAILURE;  // Button accessible shut down
-  }
-  nsHyperTextAccessible::GetState(_retval);
-  *_retval |= nsIAccessibleStates::STATE_FOCUSABLE;
+  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);  // Button accessible shut down
+
+  nsresult rv = nsHyperTextAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
 
   nsAutoString buttonType;
   element->GetAttribute(NS_LITERAL_STRING("type"), buttonType);
   if (buttonType.LowerCaseEqualsLiteral("submit"))
-    *_retval |= nsIAccessibleStates::STATE_DEFAULT;
+    *aState |= nsIAccessibleStates::STATE_DEFAULT;
 
   return NS_OK;
 }
@@ -362,7 +372,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetRole(PRUint32 *aRole)
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetValue(nsAString& _retval)
 {
   PRUint32 state;
-  GetState(&state);
+  GetState(&state, nsnull);
   if (state & nsIAccessibleStates::STATE_PROTECTED)    // Don't return password text!
     return NS_ERROR_FAILURE;
 
@@ -379,12 +389,11 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetValue(nsAString& _retval)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsHTMLTextFieldAccessible::GetState(PRUint32 *aState)
+NS_IMETHODIMP
+nsHTMLTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsHyperTextAccessible::GetState(aState);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  nsresult rv = nsHyperTextAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // can be focusable, focused, protected. readonly, unavailable, selected
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
@@ -406,37 +415,28 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetState(PRUint32 *aState)
     *aState |= nsIAccessibleStates::STATE_READONLY;
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsHTMLTextFieldAccessible::GetExtState(PRUint32 *aExtState)
-{
-  nsresult rv = nsHyperTextAccessible::GetExtState(aExtState);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  if (!aExtraState)
+    return NS_OK;
 
   nsCOMPtr<nsIDOMHTMLInputElement> htmlInput(do_QueryInterface(mDOMNode, &rv));
   // Is it an <input> or a <textarea> ?
-  *aExtState |= htmlInput ? nsIAccessibleStates::EXT_STATE_SINGLE_LINE :
-                            nsIAccessibleStates::EXT_STATE_MULTI_LINE;
+  *aExtraState |= htmlInput ? nsIAccessibleStates::EXT_STATE_SINGLE_LINE :
+                              nsIAccessibleStates::EXT_STATE_MULTI_LINE;
 
-  PRUint32 state;
-  GetState(&state);
   const PRUint32 kNonEditableStates = nsIAccessibleStates::STATE_READONLY |
                                       nsIAccessibleStates::STATE_UNAVAILABLE;
-  if (0 == (state & kNonEditableStates)) {
-    *aExtState |= nsIAccessibleStates::EXT_STATE_EDITABLE;
+  if (0 == (*aState & kNonEditableStates)) {
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_EDITABLE;
     nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
     if (content && (content = content->GetBindingParent()) != nsnull &&
         content->NodeInfo()->Equals(nsAccessibilityAtoms::textbox, kNameSpaceID_XUL)) {
       // If parent is XUL textbox, then it supports autocompletion if type="autocomplete"
       if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
                                NS_LITERAL_STRING("autocomplete"), eIgnoreCase)) {
-        *aExtState |= nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION;
+        *aExtraState |= nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION;
       }
     } else if (gIsFormFillEnabled && htmlInput &&
-               !(state & nsIAccessibleStates::STATE_PROTECTED)) {
+               !(*aState & nsIAccessibleStates::STATE_PROTECTED)) {
       // Check to see if autocompletion is allowed on this input
       // We don't expose it for password fields even though the entire password can
       // be remembered for a page if the user asks it to be.
@@ -450,7 +450,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetExtState(PRUint32 *aExtState)
         if (form)
           form->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
         if (!form || !autocomplete.LowerCaseEqualsLiteral("off")) {
-          *aExtState |= nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION;
+          *aExtraState |= nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION;
         }
       }
     }
@@ -526,10 +526,13 @@ NS_IMETHODIMP nsHTMLGroupboxAccessible::GetRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLGroupboxAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP
+nsHTMLGroupboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   // Groupbox doesn't support any states!
-  *_retval = 0;
+  *aState = 0;
+  if (aExtraState)
+    *aExtraState = 0;
 
   return NS_OK;
 }

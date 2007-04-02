@@ -76,9 +76,10 @@ NS_IMETHODIMP nsOuterDocAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOuterDocAccessible::GetState(PRUint32 *aState)
+NS_IMETHODIMP
+nsOuterDocAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsAccessible::GetState(aState);
+  nsAccessible::GetState(aState, aExtraState);
   *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
   return NS_OK;
 }

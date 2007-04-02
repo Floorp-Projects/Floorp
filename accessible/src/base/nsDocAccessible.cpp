@@ -196,12 +196,12 @@ NS_IMETHODIMP nsDocAccessible::GetValue(nsAString& aValue)
   return GetURL(aValue);
 }
 
-NS_IMETHODIMP nsDocAccessible::GetState(PRUint32 *aState)
+NS_IMETHODIMP
+nsDocAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  if (!mDOMNode) {
-    return NS_ERROR_FAILURE;
-  }
-  nsAccessible::GetState(aState);
+  // nsAccessible::GetState() always fail for document accessible.
+  nsAccessible::GetState(aState, aExtraState);
+
   *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
 
   if (!mIsContentLoaded) {

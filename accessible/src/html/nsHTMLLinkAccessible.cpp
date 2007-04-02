@@ -65,9 +65,12 @@ NS_IMETHODIMP nsHTMLLinkAccessible::GetRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLLinkAccessible::GetState(PRUint32 *aState)
+NS_IMETHODIMP
+nsHTMLLinkAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsLinkableAccessible::GetState(aState);
+  nsresult rv = nsLinkableAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   *aState  &= ~nsIAccessibleStates::STATE_READONLY;
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));

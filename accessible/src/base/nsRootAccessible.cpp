@@ -196,15 +196,11 @@ PRUint32 nsRootAccessible::GetChromeFlags()
 }
 #endif
 
-NS_IMETHODIMP nsRootAccessible::GetState(PRUint32 *aState) 
+NS_IMETHODIMP
+nsRootAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  if (mDOMNode) {
-    rv = nsDocAccessibleWrap::GetState(aState);
-  }
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  nsresult rv = nsDocAccessibleWrap::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ASSERTION(mDocument, "mDocument should not be null unless mDOMNode is");
   if (gLastFocusedNode) {
@@ -229,12 +225,8 @@ NS_IMETHODIMP nsRootAccessible::GetState(PRUint32 *aState)
   }
 #endif
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsRootAccessible::GetExtState(PRUint32 *aExtState)
-{
-  nsDocAccessibleWrap::GetExtState(aExtState);
+  if (!aExtraState)
+    return NS_OK;
 
   nsCOMPtr<nsIDOMWindow> domWin;
   GetWindow(getter_AddRefs(domWin));
@@ -245,12 +237,12 @@ NS_IMETHODIMP nsRootAccessible::GetExtState(PRUint32 *aExtState)
     PRBool isActive = PR_FALSE;
     focusController->GetActive(&isActive);
     if (isActive) {
-      *aExtState |= nsIAccessibleStates::EXT_STATE_ACTIVE;
+      *aExtraState |= nsIAccessibleStates::EXT_STATE_ACTIVE;
     }
   }
 #ifdef MOZ_XUL
   if (GetChromeFlags() & nsIWebBrowserChrome::CHROME_MODAL) {
-    *aExtState |= nsIAccessibleStates::EXT_STATE_MODAL;
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_MODAL;
   }
 #endif
 
@@ -425,8 +417,7 @@ void nsRootAccessible::TryFireEarlyLoadEvent(nsIDOMNode *aDocNode)
     if (!rootContentAccessible) {
       return;
     }
-    PRUint32 state;
-    rootContentAccessible->GetFinalState(&state);
+    PRUint32 state = State(rootContentAccessible);
     if (state & nsIAccessibleStates::STATE_BUSY) {
       // Don't fire page load events on subdocuments for initial page load of entire page
       return;
@@ -772,8 +763,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   else if (eventType.LowerCaseEqualsLiteral("radiostatechange") ) {
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, 
                               accessible, nsnull);
-    PRUint32 finalState;
-    accessible->GetFinalState(&finalState);
+    PRUint32 finalState = State(accessible);
     if (finalState & (nsIAccessibleStates::STATE_CHECKED |
         nsIAccessibleStates::STATE_SELECTED)) {
       FireAccessibleFocusEvent(accessible, aTargetNode, aEvent);

@@ -49,7 +49,7 @@ public:
 
   nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *aResult); 
-  NS_IMETHOD GetState(PRUint32 *aResult); 
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
 class nsITableLayout;
@@ -68,7 +68,7 @@ public:
 
   nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *aResult); 
-  NS_IMETHOD GetState(PRUint32 *aResult); 
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetName(nsAString& aResult);
   NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
 #ifdef SHOW_LAYOUT_HEURISTIC

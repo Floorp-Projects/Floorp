@@ -100,8 +100,8 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
 
     if (aIID.Equals(NS_GET_IID(nsIAccessibleEditableText))) {
       // If this contains editable text
-      PRUint32 extState;
-      GetExtState(&extState);
+      PRUint32 state, extState;
+      GetState(&state, &extState);
       if (extState & nsIAccessibleStates::EXT_STATE_EDITABLE) {
         *aInstancePtr = NS_STATIC_CAST(nsIAccessibleEditableText*, this);
         NS_ADDREF_THIS();
@@ -170,29 +170,31 @@ NS_IMETHODIMP nsHyperTextAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHyperTextAccessible::GetExtState(PRUint32 *aExtState)
+NS_IMETHODIMP
+nsHyperTextAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  *aExtState = 0;
-  if (!mDOMNode) {
-    return NS_ERROR_FAILURE; // Node is shut down
-  }
+  nsresult rv = nsAccessibleWrap::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsresult rv = nsAccessibleWrap::GetExtState(aExtState);
+  if (!aExtraState)
+    return NS_OK;
+
   nsCOMPtr<nsIEditor> editor = GetEditor();
   if (editor) {
     PRUint32 flags;
     editor->GetFlags(&flags);
     if (0 == (flags & nsIPlaintextEditor::eEditorReadonlyMask)) {
-      *aExtState |= nsIAccessibleStates::EXT_STATE_EDITABLE;
+      *aExtraState |= nsIAccessibleStates::EXT_STATE_EDITABLE;
     }
   }
 
   PRInt32 childCount;
   GetChildCount(&childCount);
   if (childCount > 0) {
-    *aExtState |= nsIAccessibleStates::EXT_STATE_SELECTABLE_TEXT;
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_SELECTABLE_TEXT;
   }
-  return rv;
+
+  return NS_OK;
 }
 
 void nsHyperTextAccessible::CacheChildren()

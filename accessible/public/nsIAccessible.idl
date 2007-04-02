@@ -57,7 +57,7 @@ interface nsIDOMDOMStringList;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(1f4ab23c-2878-4b26-9679-855f839d4542)]
+[scriptable, uuid(3494b81a-1d90-491a-be34-7893f8e27117)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -154,16 +154,16 @@ interface nsIAccessible : nsISupports
   readonly attribute unsigned long finalRole;
 
   /**
-   * Accessible states -- bit field which describes boolean properties of node. 
-   * See the STATE_* constants defined later in this file.
-   * Many states are only valid given a certain role attribute that supports them
+   * Accessible states -- bit fields which describe boolean properties of node.
+   * Many states are only valid given a certain role attribute that supports
+   * them.
+   *
+   * @param aState - the first bit field (see nsIAccessibleStates::STATE_*
+   *                 constants)
+   * @param aExtraState - the second bit field
+   *                      (see nsIAccessibleStates::EXT_STATE_* constants)
    */
-  readonly attribute unsigned long finalState;
-
-  /**
-   * Extended accessible states -- second bit field describing node
-   */
-  readonly attribute unsigned long extState;
+  void getFinalState(out unsigned long aState, out unsigned long aExtraState);
 
   /**
    * True if this element is live in an editor.

@@ -79,10 +79,12 @@ nsXULSelectableAccessible(aDOMNode, aShell)
   *     nsIAccessibleStates::STATE_READONLY
   *     nsIAccessibleStates::STATE_FOCUSABLE
   */
-NS_IMETHODIMP nsXULListboxAccessible::GetState(PRUint32 *aState)
+NS_IMETHODIMP
+nsXULListboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   // Get focus status from base class
-  nsAccessible::GetState(aState);
+  nsresult rv = nsAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
 
 // see if we are multiple select if so set ourselves as such
   nsCOMPtr<nsIDOMElement> element (do_QueryInterface(mDOMNode));
@@ -174,10 +176,11 @@ NS_IMETHODIMP nsXULListitemAccessible::GetRole(PRUint32 *aRole)
 /**
   *
   */
-NS_IMETHODIMP nsXULListitemAccessible::GetState(PRUint32 *aState)
+NS_IMETHODIMP
+nsXULListitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   if (mIsCheckbox) {
-    nsXULMenuitemAccessible::GetState(aState);
+    nsXULMenuitemAccessible::GetState(aState, aExtraState);
     return NS_OK;
   }
 
@@ -203,7 +206,7 @@ NS_IMETHODIMP nsXULListitemAccessible::GetActionName(PRUint8 aIndex, nsAString& 
   if (aIndex == eAction_Click && mIsCheckbox) {
     // check or uncheck
     PRUint32 state;
-    GetState(&state);
+    GetState(&state, nsnull);
 
     if (state & nsIAccessibleStates::STATE_CHECKED)
       aName.AssignLiteral("uncheck");
@@ -257,30 +260,32 @@ NS_IMETHODIMP nsXULComboboxAccessible::GetRole(PRUint32 *aRole)
   *     STATE_EXPANDED
   *     STATE_COLLAPSED
   */
-NS_IMETHODIMP nsXULComboboxAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP
+nsXULComboboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   // Get focus status from base class
-  nsAccessible::GetState(_retval);
+  nsresult rv = nsAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mDOMNode));
   if (menuList) {
     PRBool isOpen;
     menuList->GetOpen(&isOpen);
     if (isOpen) {
-      *_retval |= nsIAccessibleStates::STATE_EXPANDED;
+      *aState |= nsIAccessibleStates::STATE_EXPANDED;
     }
     else {
-      *_retval |= nsIAccessibleStates::STATE_COLLAPSED;
+      *aState |= nsIAccessibleStates::STATE_COLLAPSED;
     }
     PRBool isEditable;
     menuList->GetEditable(&isEditable);
     if (!isEditable) {
-      *_retval |= nsIAccessibleStates::STATE_READONLY;
+      *aState |= nsIAccessibleStates::STATE_READONLY;
     }
   }
 
-  *_retval |= nsIAccessibleStates::STATE_HASPOPUP |
-              nsIAccessibleStates::STATE_FOCUSABLE;
+  *aState |= nsIAccessibleStates::STATE_HASPOPUP |
+             nsIAccessibleStates::STATE_FOCUSABLE;
 
   return NS_OK;
 }

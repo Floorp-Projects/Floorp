@@ -115,9 +115,12 @@ NS_IMETHODIMP nsLinkableAccessible::TakeFocus()
 }
 
 /* long GetState (); */
-NS_IMETHODIMP nsLinkableAccessible::GetState(PRUint32 *aState)
+NS_IMETHODIMP
+nsLinkableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsHyperTextAccessible::GetState(aState);
+  nsresult rv = nsHyperTextAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (mIsLink) {
     *aState |= nsIAccessibleStates::STATE_LINKED;
     nsCOMPtr<nsILink> link = do_QueryInterface(mActionContent);
@@ -134,8 +137,7 @@ NS_IMETHODIMP nsLinkableAccessible::GetState(PRUint32 *aState)
     if (role != nsIAccessibleRole::ROLE_LINK) {
       nsCOMPtr<nsIAccessible> parentAccessible(GetParent());
       if (parentAccessible) {
-        PRUint32 orState = 0;
-        parentAccessible->GetFinalState(&orState);
+        PRUint32 orState = State(parentAccessible);
         *aState |= orState;
       }
     }

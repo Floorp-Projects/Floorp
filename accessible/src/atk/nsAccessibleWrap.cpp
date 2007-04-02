@@ -931,16 +931,11 @@ refStateSetCB(AtkObject *aAtkObj)
         NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
     // Map states
-    PRUint32 accState;
-    nsresult rv = accWrap->GetFinalState(&accState);
+    PRUint32 accState = 0, accExtState = 0;
+    nsresult rv = accWrap->GetFinalState(&accState, &accExtState);
     NS_ENSURE_SUCCESS(rv, state_set);
+
     TranslateStates(accState, gAtkStateMap, state_set);
-
-    // Map extended states
-    PRUint32 accExtState;
-    rv = accWrap->GetExtState(&accExtState);
-    NS_ENSURE_SUCCESS(rv, state_set);
-
     TranslateStates(accExtState, gAtkStateMapExt, state_set);
 
     // OFFSCREEN can live with INVISIBLE. However, SHOWING is no meaningful
