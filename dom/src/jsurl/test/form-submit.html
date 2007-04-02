@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<head>
+<script>
+  function test() {
+    var form = document.getElementById("test");
+    form.action = "pass.html";
+    form.submit();
+  }
+</script>
+<body>
+<form id="test" action="javascript:test()">
+<input type="submit" value="Submit the form; you should PASS when done">
+</form>
+</body>

@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=351633
+-->
+<head>
+  <title>Test for Bug 351633</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=351633">Mozilla Bug 351633</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var passJSUrl;
+var passJSUrl2;
+var finishTest;
+
+/** Test for Bug 351633 **/
+function runTests() {
+  $("testframe1").onload = test1;
+  // test2 will be called as finishTest
+  $("testframe3").onload = test3;
+  $("testframe4").onload = test4;
+  $("testframe5").onload = test5;
+  passJSUrl = false;
+  window.testframe1.location.href =
+    'javascript:"<script>parent.passJSUrl = true</' + 'script>"'
+}
+
+function test1() {
+  is(passJSUrl, true, "Script should have run in child");
+
+  passJSUrl = false;
+  passJSUrl2 = true;
+  finishTest = test2;
+
+  window.testframe2.location.href =
+    'javascript: location = "pass.html"; ' +
+    '"<script>parent.passJSUrl2 = false</' + 'script>"'
+}
+
+function test2() {
+  is(passJSUrl, true, "pass.html should have loaded");
+  is(passJSUrl2, true, "<script> should not have run");
+
+  passJSUrl = true;
+  passJSUrl2 = false;
+  finishTest = function() { };
+
+  window.testframe3.location.href = 'fail.html';
+  window.testframe3.location.href =
+    'javascript: "<script>parent.passJSUrl2 = true</' + 'script>"'
+}
+
+function test3() {
+  is(passJSUrl, true, "fail.html should not have finished loading");
+  is(passJSUrl2, true, "<script> should have run");
+
+  passJSUrl = false;
+  passJSUrl2 = true;
+  finishTest = function() { };
+
+  window.testframe4.location.href = 'pass.html';
+  window.testframe4.location.href =
+    'javascript:void("<script>parent.passJSUrl2 = false</' + 'script>")'; 
+}
+
+function test4() {
+  is(passJSUrl, true, "pass.html should have loaded again");
+  is(passJSUrl2, true, "<script> should not have run in void");
+
+  passJSUrl = false;
+  passJSUrl2 = true;
+  finishTest = function() { };
+
+  window.testframe5.location.href =
+    'javascript:void("<script>parent.passJSUrl2 = false</' + 'script>")';
+  window.testframe5.location.href = 'pass.html';  
+}
+
+function test5() {
+  is(passJSUrl, true, "pass.html should have loaded yet again");
+  is(passJSUrl2, true, "javascript: load should have been canceled");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTests);
+
+</script>
+</pre>
+<p id="display">
+  <iframe name="testframe1" id="testframe1"></iframe>
+  <iframe name="testframe2" id="testframe2"></iframe>
+  <iframe name="testframe3" id="testframe3"></iframe>
+  <iframe name="testframe4" id="testframe4"></iframe>
+  <iframe name="testframe5" id="testframe5"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+</body>
+</html>
+
