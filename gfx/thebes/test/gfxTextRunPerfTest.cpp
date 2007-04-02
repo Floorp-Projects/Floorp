@@ -52,12 +52,7 @@
 
 #include "gfxFontTest.h"
 
-#if defined(XP_WIN)
-#include "gfxWindowsFonts.h"
-#elif defined(MOZ_ENABLE_PANGO)
-#include "gfxPangoFonts.h"
-#elif defined(XP_MACOSX)
-#include "gfxAtsuiFonts.h"
+#if defined(XP_MACOSX)
 #include "gfxTestCocoaHelper.h"
 #endif
 
@@ -103,13 +98,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
                                               0.0,
                                               PR_FALSE, PR_FALSE);
 
-#if defined(XP_WIN)
-        fontGroup = new gfxWindowsFontGroup(NS_ConvertUTF8toUTF16(test->mFamilies), &style_western_normal_16);
-#elif defined(MOZ_ENABLE_PANGO)
-        fontGroup = new gfxPangoFontGroup(NS_ConvertUTF8toUTF16(test->mFamilies), &style_western_normal_16);
-#elif defined(XP_MACOSX)
-        fontGroup = new gfxAtsuiFontGroup(NS_ConvertUTF8toUTF16(test->mFamilies), &style_western_normal_16);
-#endif
+        fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(NS_ConvertUTF8toUTF16(test->mFamilies), &style_western_normal_16);
     }
 
     nsAutoPtr<gfxTextRun> textRun;

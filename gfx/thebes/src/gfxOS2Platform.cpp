@@ -38,6 +38,7 @@
 #include "gfxOS2Platform.h"
 #include "gfxOS2Surface.h"
 #include "gfxImageSurface.h"
+#include "gfxOS2Fonts.h"
 
 /**********************************************************************
  * class gfxOS2Platform
@@ -160,4 +161,11 @@ gfxOS2Platform::ResolveFontName(const nsAString& aFontName,
 #endif
     aAborted = !(*aCallback)(aFontName, aClosure);
     return NS_OK;
+}
+
+gfxFontGroup *
+gfxOS2Platform::CreateFontGroup(const nsAString &aFamilies,
+				const gfxFontStyle *aStyle)
+{
+    return new gfxOS2FontGroup(aFamilies, aStyle);
 }

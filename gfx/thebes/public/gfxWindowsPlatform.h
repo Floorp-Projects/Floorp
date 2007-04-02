@@ -69,6 +69,9 @@ public:
                              FontResolverCallback aCallback,
                              void *aClosure, PRBool& aAborted);
 
+    gfxFontGroup *CreateFontGroup(const nsAString &aFamilies,
+                                  const gfxFontStyle *aStyle);
+
     /* local methods */
     void FindOtherFonts(const PRUnichar *aString, PRUint32 aLength, const char *aLangGroup, const char *aGeneric, nsString& array);
 

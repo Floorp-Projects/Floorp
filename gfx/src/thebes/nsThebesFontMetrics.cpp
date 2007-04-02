@@ -43,20 +43,11 @@
 #include <stdio.h>
 
 #include "gfxTextRunCache.h"
+#include "gfxPlatform.h"
 
 NS_IMPL_ISUPPORTS1(nsThebesFontMetrics, nsIFontMetrics)
 
 #include <stdlib.h>
-
-#if defined(XP_WIN)
-#include "gfxWindowsFonts.h"
-#elif defined(MOZ_ENABLE_PANGO)
-#include "gfxPangoFonts.h"
-#elif defined(XP_MACOSX)
-#include "gfxAtsuiFonts.h"
-#elif defined(XP_OS2)
-#include "gfxOS2Fonts.h"
-#endif
 
 nsThebesFontMetrics::nsThebesFontMetrics()
 {
@@ -98,17 +89,8 @@ nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
                                   size, langGroup, aFont.sizeAdjust,
                                   aFont.systemFont, aFont.familyNameQuirks);
 
-#if defined(XP_WIN)
-    mFontGroup = new gfxWindowsFontGroup(aFont.name, mFontStyle);
-#elif defined(MOZ_ENABLE_PANGO)
-    mFontGroup = new gfxPangoFontGroup(aFont.name, mFontStyle);
-#elif defined(XP_MACOSX)
-    mFontGroup = new gfxAtsuiFontGroup(aFont.name, mFontStyle);
-#elif defined(XP_OS2)
-    mFontGroup = new gfxOS2FontGroup(aFont.name, mFontStyle);
-#else
-#error implement me
-#endif
+    mFontGroup =
+        gfxPlatform::GetPlatform()->CreateFontGroup(aFont.name, mFontStyle);
 
     return NS_OK;
 }
