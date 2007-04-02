@@ -65,6 +65,9 @@ public:
                              FontResolverCallback aCallback,
                              void *aClosure, PRBool& aAborted);
 
+    gfxFontGroup *CreateFontGroup(const nsAString &aFamilies,
+                                  const gfxFontStyle *aStyle);
+
 private:
     HDC mDC;
     HPS mPS;

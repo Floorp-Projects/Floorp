@@ -72,6 +72,9 @@ public:
                              FontResolverCallback aCallback,
                              void *aClosure, PRBool& aAborted);
 
+    gfxFontGroup *CreateFontGroup(const nsAString &aFamilies,
+                                  const gfxFontStyle *aStyle);
+
     static PRInt32 DPI() {
         if (sDPI == -1) {
             InitDPI();

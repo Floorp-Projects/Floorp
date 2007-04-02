@@ -50,6 +50,8 @@
 #include "gfxImageSurface.h"
 #include "gfxXlibSurface.h"
 
+#include "gfxPangoFonts.h"
+
 #ifdef MOZ_ENABLE_GLITZ
 #include "gfxGlitzSurface.h"
 #include "glitz-glx.h"
@@ -261,6 +263,13 @@ gfxPlatformGtk::ResolveFontName(const nsAString& aFontName,
 {
     return sFontconfigUtils->ResolveFontName(aFontName, aCallback,
                                              aClosure, aAborted);
+}
+
+gfxFontGroup *
+gfxPlatformGtk::CreateFontGroup(const nsAString &aFamilies,
+                                const gfxFontStyle *aStyle)
+{
+    return new gfxPangoFontGroup(aFamilies, aStyle);
 }
 
 static PRInt32
