@@ -56,7 +56,15 @@ function test2() {
 }
 
 function test3() {
-  is(passJSUrl, true, "fail.html should not have finished loading");
+  if (window.testframe3.location.href == 'fail.html') {
+    // Ignore this call; we expect the javascript: URI to still load.  Note
+    // that whether onload fires for the fail.html load before the event for
+    // the javascript: URI execution runs is a timing issue, so we can't depend
+    // on the ordering.    
+    return;
+  }
+
+  // Since fail.html could have loaded, the value of passJSUrl here is random
   is(passJSUrl2, true, "<script> should have run");
 
   passJSUrl = false;
@@ -77,7 +85,7 @@ function test4() {
   finishTest = function() { };
 
   window.testframe5.location.href =
-    'javascript:void("<script>parent.passJSUrl2 = false</' + 'script>")';
+    'javascript:"<script>parent.passJSUrl2 = false</' + 'script>"';
   window.testframe5.location.href = 'pass.html';  
 }
 
