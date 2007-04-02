@@ -53,7 +53,7 @@ public:
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
-  NS_IMETHOD GetState(PRUint32 *aState); 
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
 class nsHTMLRadioButtonAccessible : public nsRadioButtonAccessible
@@ -62,7 +62,7 @@ class nsHTMLRadioButtonAccessible : public nsRadioButtonAccessible
 public:
   nsHTMLRadioButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
 
-  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
 };
 
@@ -74,7 +74,7 @@ public:
 
   nsHTMLButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
-  NS_IMETHOD GetState(PRUint32 *_retval); 
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetName(nsAString& _retval); 
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
@@ -89,7 +89,7 @@ public:
 
   nsHTML4ButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
-  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetName(nsAString& aName) { aName.Truncate(); return GetHTMLName(aName, PR_TRUE); }
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
@@ -110,11 +110,10 @@ public:
   NS_IMETHOD Shutdown(); 
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetValue(nsAString& _retval); 
-  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
-  NS_IMETHOD GetExtState(PRUint32 *aExtState); 
 
 protected:
   // Editor helpers, subclasses of nsHyperTextAccessible may have editor
@@ -129,7 +128,7 @@ class nsHTMLGroupboxAccessible : public nsAccessibleWrap
 public:
   nsHTMLGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
-  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetName(nsAString& _retval);
   void CacheChildren();
 };

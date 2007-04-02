@@ -70,8 +70,7 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     NS_IMETHOD GetName(nsAString& aName);
     NS_IMETHOD GetParent(nsIAccessible * *aParent);
     NS_IMETHOD GetRole(PRUint32 *aRole);
-    NS_IMETHOD GetState(PRUint32 *aState);
-    NS_IMETHOD GetExtState(PRUint32 *aExtState);
+    NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
     NS_IMETHOD GetAccessibleRelated(PRUint32 aRelationType,
                                     nsIAccessible **aRelated);
 

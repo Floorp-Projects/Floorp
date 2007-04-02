@@ -130,7 +130,7 @@ public:
 
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetRole(PRUint32 *aRole);
-  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   void CacheChildren();
 
 protected:
@@ -161,7 +161,7 @@ public:
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetName(nsAString& aName);
   NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
@@ -182,7 +182,7 @@ public:
   virtual ~nsHTMLSelectOptGroupAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD DoAction(PRUint8 index);  
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
@@ -205,7 +205,7 @@ public:
 
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetRole(PRUint32 *_retval);
-  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetValue(nsAString& _retval);
   NS_IMETHOD GetDescription(nsAString& aDescription);
   NS_IMETHOD DoAction(PRUint8 index);
@@ -258,7 +258,7 @@ public:
   NS_IMETHOD GetParent(nsIAccessible **_retval);
   NS_IMETHOD GetName(nsAString& _retval);
   NS_IMETHOD GetRole(PRUint32 *_retval);
-  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetUniqueID(void **aUniqueID);
 
   virtual void GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame);
@@ -281,7 +281,7 @@ public:
   virtual ~nsHTMLComboboxListAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetState(PRUint32 *aState);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetParent(nsIAccessible **aParent);
   NS_IMETHOD GetUniqueID(void **aUniqueID);
 

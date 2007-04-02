@@ -167,7 +167,7 @@ nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
             for (PRInt32 index = 0; index < childCount; index++) {
                 accessible->GetChildAt(index, getter_AddRefs(radioAcc));
                 if (radioAcc) {
-                    radioAcc->GetFinalState(&stateData.state);
+                    stateData.state = State(radioAcc);
                     if (stateData.state & (nsIAccessibleStates::STATE_CHECKED |
                         nsIAccessibleStates::STATE_SELECTED)) {
                         break;
@@ -207,7 +207,7 @@ nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
     }
     else if (eventType.LowerCaseEqualsLiteral("checkboxstatechange") || // it's a XUL <checkbox>
              eventType.LowerCaseEqualsLiteral("radiostatechange")) { // it's a XUL <radio>
-        accessible->GetFinalState(&stateData.state);
+        stateData.state = State(accessible);
         // prefPane tab is implemented as list items in A11y, so we need to
         // check nsIAccessibleStates::STATE_SELECTED also
         stateData.enable = (stateData.state &
@@ -222,7 +222,7 @@ nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
         }
     }
     else if (eventType.LowerCaseEqualsLiteral("openstatechange")) { // collapsed/expanded changed
-        accessible->GetFinalState(&stateData.state);
+        stateData.state = State(accessible);
         stateData.enable = (stateData.state & nsIAccessibleStates::STATE_EXPANDED) != 0;
         stateData.state = nsIAccessibleStates::STATE_EXPANDED;
         privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, accessible, &stateData);

@@ -977,15 +977,21 @@ PRBool nsAccessible::IsVisible(PRBool *aIsOffscreen)
   return hasArea;
 }
 
-/* readonly attribute wstring state; */
-NS_IMETHODIMP nsAccessible::GetState(PRUint32 *aState) 
-{ 
+NS_IMETHODIMP
+nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+{
   *aState = 0;
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  if (!content) {
-    return NS_ERROR_FAILURE;  // Node shut down
+  if (aExtraState)
+    *aExtraState = 0;
+
+  if (!mDOMNode && aExtraState) {
+    *aExtraState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
+    return NS_OK; // Node shut down
   }
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
   // Set STATE_UNAVAILABLE state based on disabled attribute
   // The disabled attribute is mostly used in XUL elements and HTML forms, but
@@ -1025,6 +1031,49 @@ NS_IMETHODIMP nsAccessible::GetState(PRUint32 *aState)
   }
   if (isOffscreen) {
     *aState |= nsIAccessibleStates::STATE_OFFSCREEN;
+  }
+
+  if (!aExtraState)
+    return NS_OK;
+
+  PRUint32 state = *aState;
+  nsresult rv = GetARIAState(&state);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsIFrame *frame = GetFrame();
+  if (frame) {
+    const nsStyleDisplay* display = frame->GetStyleDisplay();
+    if (display && display->mOpacity == 1.0f &&
+        !(state & nsIAccessibleStates::STATE_INVISIBLE)) {
+      *aExtraState |= nsIAccessibleStates::EXT_STATE_OPAQUE;
+    }
+
+    const nsStyleXUL *xulStyle = frame->GetStyleXUL();
+    if (xulStyle) {
+      // In XUL all boxes are either vertical or horizontal
+      *aExtraState |= (xulStyle->mBoxOrient == NS_STYLE_BOX_ORIENT_VERTICAL) ?
+        nsIAccessibleStates::EXT_STATE_VERTICAL :
+        nsIAccessibleStates::EXT_STATE_HORIZONTAL;
+    }
+  }
+
+  // XXX We can remove this hack once we support RDF-based role & state maps
+  if (mRoleMapEntry && (mRoleMapEntry->role == nsIAccessibleRole::ROLE_ENTRY ||
+      mRoleMapEntry->role == nsIAccessibleRole::ROLE_PASSWORD_TEXT)) {
+    PRBool isEqual =
+      NS_LITERAL_CSTRING("textarea").Equals(mRoleMapEntry->roleString);
+    *aExtraState =  isEqual? nsIAccessibleStates::EXT_STATE_MULTI_LINE :
+                             nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
+  }
+
+  if (!(state & nsIAccessibleStates::STATE_UNAVAILABLE)) {  // If not disabled
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_ENABLED |
+                    nsIAccessibleStates::EXT_STATE_SENSITIVE;
+  }
+
+  if (state & (nsIAccessibleStates::STATE_COLLAPSED |
+               nsIAccessibleStates::STATE_EXPANDED)) {
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_EXPANDABLE;
   }
 
   return NS_OK;
@@ -1075,7 +1124,7 @@ NS_IMETHODIMP nsAccessible::GetChildAtPoint(PRInt32 tx, PRInt32 ty, nsIAccessibl
       if (accessNode) {
         nsIFrame *frame = accessNode->GetFrame();
         if (!frame) {
-          child->GetFinalState(&state);
+          state = State(child);
           // In some cases accessibles don't have a frame; examples are
           // tree items or combo box dropdown markers. For these cases
           // just ensure that the returned accessible is visible.
@@ -1111,7 +1160,7 @@ NS_IMETHODIMP nsAccessible::GetChildAtPoint(PRInt32 tx, PRInt32 ty, nsIAccessibl
     NS_ADDREF(*aAccessible = childAtPoint);
     return NS_OK;
   }
-  GetState(&state);
+  GetState(&state, nsnull);
   GetBounds(&x, &y, &w, &h);
   if ((state & (nsIAccessibleStates::STATE_OFFSCREEN |
                 nsIAccessibleStates::STATE_INVISIBLE)) == 0 &&
@@ -1280,8 +1329,7 @@ nsAccessible::GetMultiSelectFor(nsIDOMNode *aNode)
     return nsnull;
   }
 
-  PRUint32 state;
-  accessible->GetFinalState(&state);
+  PRUint32 state = State(accessible);
   if (0 == (state & nsIAccessibleStates::STATE_SELECTABLE)) {
     return nsnull;
   }
@@ -1294,7 +1342,7 @@ nsAccessible::GetMultiSelectFor(nsIDOMNode *aNode)
                         containerRole == nsIAccessibleRole::ROLE_PANE)) {
       return nsnull;
     }
-    accessible->GetFinalState(&state);
+    state = State(accessible);
   }
   nsIAccessible *returnAccessible = nsnull;
   accessible.swap(returnAccessible);
@@ -1309,8 +1357,7 @@ NS_IMETHODIMP nsAccessible::SetSelected(PRBool aSelect)
     return NS_ERROR_FAILURE;
   }
 
-  PRUint32 state;
-  GetFinalState(&state);
+  PRUint32 state = State(this);
   if (state & nsIAccessibleStates::STATE_SELECTABLE) {
     nsCOMPtr<nsIAccessible> multiSelect = GetMultiSelectFor(mDOMNode);
     if (!multiSelect) {
@@ -1338,8 +1385,7 @@ NS_IMETHODIMP nsAccessible::TakeSelection()
     return NS_ERROR_FAILURE;
   }
 
-  PRUint32 state;
-  GetFinalState(&state);
+  PRUint32 state = State(this);
   if (state & nsIAccessibleStates::STATE_SELECTABLE) {
     nsCOMPtr<nsIAccessible> multiSelect = GetMultiSelectFor(mDOMNode);
     if (multiSelect) {
@@ -2188,51 +2234,56 @@ PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut
   return PR_TRUE;
 }
 
-NS_IMETHODIMP nsAccessible::GetFinalState(PRUint32 *aState)
+NS_IMETHODIMP
+nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  *aState = 0;
-  if (!mDOMNode) {
-    return NS_ERROR_FAILURE;  // Node already shut down
-  }
-  nsresult rv = GetState(aState);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  NS_ENSURE_ARG_POINTER(aState);
+
+  nsresult rv = GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Apply ARIA states to be sure accessible states will be overriden.
+  return GetARIAState(aState);
+}
+
+nsresult
+nsAccessible::GetARIAState(PRUint32 *aState)
+{
+  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE); // Node already shut down
 
   // Test for universal states first
   nsIContent *content = GetRoleContent(mDOMNode);
-  if (!content) {
-    return NS_ERROR_FAILURE;  // Node already shut down
-  }
-  for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(gUnivStateMap); index ++) {
-    MappedAttrState(content, aState, &gUnivStateMap[index]);
-  }
-  if (!mRoleMapEntry) {
-    return rv;
+  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE); // Node already shut down
+
+  PRUint32 length = NS_ARRAY_LENGTH(nsAccessible::gUnivStateMap);
+  for (PRUint32 index = 0; index < length; index++) {
+    MappedAttrState(content, aState, &nsAccessible::gUnivStateMap[index]);
   }
 
-  PRUint32 finalState = *aState;
+  if (!mRoleMapEntry)
+    return NS_OK;
+
   // Once DHTML role is used, we're only readonly if DHTML readonly used
-  finalState &= ~nsIAccessibleStates::STATE_READONLY;
+  (*aState) &= ~nsIAccessibleStates::STATE_READONLY;
 
-  if (finalState & nsIAccessibleStates::STATE_UNAVAILABLE) {
+  if ((*aState) & nsIAccessibleStates::STATE_UNAVAILABLE) {
     // Disabled elements are not selectable or focusable, even if disabled
     // via DHTML accessibility disabled property
-    finalState &= ~(nsIAccessibleStates::STATE_SELECTABLE | nsIAccessibleStates::STATE_FOCUSABLE);
+    (*aState) &= ~(nsIAccessibleStates::STATE_SELECTABLE |
+                   nsIAccessibleStates::STATE_FOCUSABLE);
   }
 
-  finalState |= mRoleMapEntry->state;
-  if (MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap1) &&
-      MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap2) &&
-      MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap3) &&
-      MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap4) &&
-      MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap5) &&
-      MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap6)) {
-    MappedAttrState(content, &finalState, &mRoleMapEntry->attributeMap7);
+  (*aState) |= mRoleMapEntry->state;
+  if (MappedAttrState(content, aState, &mRoleMapEntry->attributeMap1) &&
+      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap2) &&
+      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap3) &&
+      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap4) &&
+      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap5) &&
+      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap6)) {
+    MappedAttrState(content, aState, &mRoleMapEntry->attributeMap7);
   }
 
-  *aState = finalState;
-  return rv;
+  return NS_OK;
 }
 
 // Not implemented by this class
@@ -2340,8 +2391,7 @@ NS_IMETHODIMP nsAccessible::SetCurrentValue(double aValue)
     const PRUint32 kValueCannotChange = nsIAccessibleStates::STATE_READONLY |
                                         nsIAccessibleStates::STATE_UNAVAILABLE;
 
-    PRUint32 state;
-    if (NS_FAILED(GetFinalState(&state)) || (state & kValueCannotChange)) {
+    if (State(this) & kValueCannotChange) {
       return NS_ERROR_FAILURE;
     }
     double minValue;
@@ -2670,54 +2720,6 @@ NS_IMETHODIMP nsAccessible::ExtendSelection()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* unsigned long getExtState (); */
-NS_IMETHODIMP nsAccessible::GetExtState(PRUint32 *aExtState)
-{
-  *aExtState = 0;
-
-  if (!mDOMNode) {
-    *aExtState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
-    return NS_OK; // Node shut down
-  }
-  nsIFrame *frame = GetFrame();
-  if (frame) {
-    const nsStyleDisplay* display = frame->GetStyleDisplay();
-    if (display && display->mOpacity == 1.0f &&
-        !(State(this) & nsIAccessibleStates::STATE_INVISIBLE)) {
-      *aExtState |= nsIAccessibleStates::EXT_STATE_OPAQUE;
-    }
-    const nsStyleXUL *xulStyle = frame->GetStyleXUL();
-    if (xulStyle) {
-      // In XUL all boxes are either vertical or horizontal
-      *aExtState |= (xulStyle->mBoxOrient == NS_STYLE_BOX_ORIENT_VERTICAL) ?
-        nsIAccessibleStates::EXT_STATE_VERTICAL :
-        nsIAccessibleStates::EXT_STATE_HORIZONTAL;
-    }
-  }
-
-  // XXX We can remove this hack once we support RDF-based role & state maps
-  if (mRoleMapEntry && (mRoleMapEntry->role == nsIAccessibleRole::ROLE_ENTRY ||
-      mRoleMapEntry->role == nsIAccessibleRole::ROLE_PASSWORD_TEXT)) {
-    *aExtState = NS_LITERAL_CSTRING("textarea").Equals(mRoleMapEntry->roleString) ? 
-       nsIAccessibleStates::EXT_STATE_MULTI_LINE :
-       nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
-  }
-
-  PRUint32 state ;
-  GetFinalState(&state);
-  if (0 == (state & nsIAccessibleStates::STATE_UNAVAILABLE)) {  // If not disabled
-    *aExtState |= nsIAccessibleStates::EXT_STATE_ENABLED |
-                  nsIAccessibleStates::EXT_STATE_SENSITIVE;
-  }
-
-  if (state & (nsIAccessibleStates::STATE_COLLAPSED |
-      nsIAccessibleStates::STATE_EXPANDED)) {
-    *aExtState |= nsIAccessibleStates::EXT_STATE_EXPANDABLE;
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsAccessible::GetIsEditable(PRBool *aIsEditable)
 {
   *aIsEditable = PR_FALSE;
@@ -2822,7 +2824,7 @@ nsAccessible::GetNextWithState(nsIAccessible *aStart, PRUint32 matchState)
       }
     }
     current.swap(look);
-    current->GetFinalState(&state);
+    state = State(current);
   }
 
   nsIAccessible *returnAccessible = nsnull;
@@ -2896,10 +2898,7 @@ NS_IMETHODIMP nsAccessible::AddChildToSelection(PRInt32 aIndex)
   nsCOMPtr<nsIAccessible> child;
   GetChildAt(aIndex, getter_AddRefs(child));
 
-  PRUint32 state;
-  nsresult rv = child->GetFinalState(&state);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  PRUint32 state = State(child);
   if (!(state & nsIAccessibleStates::STATE_SELECTABLE)) {
     return NS_OK;
   }
@@ -2918,10 +2917,7 @@ NS_IMETHODIMP nsAccessible::RemoveChildFromSelection(PRInt32 aIndex)
   nsCOMPtr<nsIAccessible> child;
   GetChildAt(aIndex, getter_AddRefs(child));
 
-  PRUint32 state;
-  nsresult rv = child->GetFinalState(&state);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  PRUint32 state = State(child);
   if (!(state & nsIAccessibleStates::STATE_SELECTED)) {
     return NS_OK;
   }
@@ -2941,10 +2937,7 @@ NS_IMETHODIMP nsAccessible::IsChildSelected(PRInt32 aIndex, PRBool *aIsSelected)
   nsCOMPtr<nsIAccessible> child;
   GetChildAt(aIndex, getter_AddRefs(child));
 
-  PRUint32 state;
-  nsresult rv = child->GetFinalState(&state);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  PRUint32 state = State(child);
   if (state & nsIAccessibleStates::STATE_SELECTED) {
     *aIsSelected = PR_TRUE;
   }
@@ -3015,8 +3008,7 @@ NS_IMETHODIMP nsAccessible::GetObject(PRInt32 aIndex,
 // nsIAccessibleHyperLink::IsValid()
 NS_IMETHODIMP nsAccessible::IsValid(PRBool *aIsValid)
 {
-  PRUint32 state;
-  GetFinalState(&state);
+  PRUint32 state = State(this);
   *aIsValid = (state & nsIAccessibleStates::STATE_INVALID) != 0;
   // XXX In order to implement this we would need to follow every link
   // Perhaps we can get information about invalid links from the cache

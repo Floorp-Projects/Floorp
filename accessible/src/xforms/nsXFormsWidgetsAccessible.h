@@ -55,7 +55,7 @@ public:
                                      nsIWeakReference *aShell);
 
   NS_IMETHOD GetRole(PRUint32 *aRole);
-  NS_IMETHOD GetState(PRUint32 *aState);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
 
   NS_IMETHOD GetNumActions(PRUint8 *aCount);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
@@ -86,7 +86,7 @@ public:
                                         nsIWeakReference *aShell);
 
   NS_IMETHOD GetRole(PRUint32 *aRole);
-  NS_IMETHOD GetState(PRUint32 *aState);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetValue(nsAString& aValue);
   NS_IMETHOD GetName(nsAString& aName);
   NS_IMETHOD GetDescription(nsAString& aDescription);

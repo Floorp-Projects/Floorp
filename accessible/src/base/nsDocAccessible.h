@@ -78,7 +78,7 @@ class nsDocAccessible : public nsHyperTextAccessible,
     NS_IMETHOD GetRole(PRUint32 *aRole);
     NS_IMETHOD GetName(nsAString& aName);
     NS_IMETHOD GetValue(nsAString& aValue);
-    NS_IMETHOD GetState(PRUint32 *aState);
+    NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
     NS_IMETHOD GetFocusedChild(nsIAccessible **aFocusedChild);
     NS_IMETHOD GetParent(nsIAccessible **aParent);
     NS_IMETHOD TakeFocus(void);

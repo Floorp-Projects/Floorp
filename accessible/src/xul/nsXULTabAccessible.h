@@ -51,7 +51,7 @@ public:
 
   nsXULTabAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
-  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
@@ -68,7 +68,7 @@ class nsXULTabBoxAccessible : public nsAccessibleWrap
 public:
   nsXULTabBoxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
-  NS_IMETHOD GetState(PRUint32 *_retval); 
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   //NS_IMETHOD GetChildCount(PRInt32 *_retval); // aaronl remove this?
 };
 
@@ -82,7 +82,6 @@ public:
   nsXULTabPanelsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetName(nsAString& _retval); 
-  NS_IMETHOD GetState(PRUint32 *_retval);
 
 protected:
   nsresult GetAccPluginChild(nsIAccessible **_retval);
@@ -99,9 +98,9 @@ public:
   nsXULTabsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetValue(nsAString& _retval);
   NS_IMETHOD GetName(nsAString& _retval);
 };
 
-#endif  
+#endif
