@@ -137,7 +137,6 @@ protected:
   nsresult AddMappedSVGValue(nsIAtom* aName, nsISupports* aValue,
                              PRInt32 aNamespaceID = kNameSpaceID_None);
   
-  static PRBool IsGraphicElementEventName(nsIAtom* aName);
   static nsIAtom* GetEventNameForAttr(nsIAtom* aAttr);
 
   // The following two structures should be protected, but VC6

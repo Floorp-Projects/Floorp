@@ -204,75 +204,6 @@ static NS_DEFINE_CID(kCSSOMFactoryCID,            NS_CSSOMFACTORY_CID);
 
 //----------------------------------------------------------------------
 
-
-// XXX This function is called for every attribute on every element for
-// XXX which we SetDocument, among other places.  A linear search might
-// XXX not be what we want.
-static PRBool
-IsEventHandler(nsIAtom* aName)
-{
-    const char* name;
-    aName->GetUTF8String(&name);
-
-    if (name[0] != 'o' || name[1] != 'n') {
-        return PR_FALSE;
-    }
-    
-    return aName == nsGkAtoms::onclick            ||
-           aName == nsGkAtoms::ondblclick         ||
-           aName == nsGkAtoms::onmousedown        ||
-           aName == nsGkAtoms::onmouseup          ||
-           aName == nsGkAtoms::onmouseover        ||
-           aName == nsGkAtoms::onmouseout         ||
-           aName == nsGkAtoms::onmousemove        ||
-
-           aName == nsGkAtoms::onkeydown          ||
-           aName == nsGkAtoms::onkeyup            ||
-           aName == nsGkAtoms::onkeypress         ||
-
-           aName == nsGkAtoms::oncompositionstart ||
-           aName == nsGkAtoms::oncompositionend   ||
-
-           aName == nsGkAtoms::onload             ||
-           aName == nsGkAtoms::onunload           ||
-           aName == nsGkAtoms::onabort            ||
-           aName == nsGkAtoms::onerror            ||
-
-           aName == nsGkAtoms::onpopupshowing     ||
-           aName == nsGkAtoms::onpopupshown       ||
-           aName == nsGkAtoms::onpopuphiding      ||
-           aName == nsGkAtoms::onpopuphidden      ||
-           aName == nsGkAtoms::onclose            ||
-           aName == nsGkAtoms::oncommand          ||
-           aName == nsGkAtoms::onbroadcast        ||
-           aName == nsGkAtoms::oncommandupdate    ||
-
-           aName == nsGkAtoms::onoverflow         ||
-           aName == nsGkAtoms::onunderflow        ||
-           aName == nsGkAtoms::onoverflowchanged  ||
-
-           aName == nsGkAtoms::onfocus            ||
-           aName == nsGkAtoms::onblur             ||
-
-           aName == nsGkAtoms::onsubmit           ||
-           aName == nsGkAtoms::onreset            ||
-           aName == nsGkAtoms::onchange           ||
-           aName == nsGkAtoms::onselect           ||
-           aName == nsGkAtoms::oninput            ||
-
-           aName == nsGkAtoms::onpaint            ||
-
-           aName == nsGkAtoms::ondragenter        ||
-           aName == nsGkAtoms::ondragover         ||
-           aName == nsGkAtoms::ondragexit         ||
-           aName == nsGkAtoms::ondragdrop         ||
-           aName == nsGkAtoms::ondraggesture      ||
-
-           aName == nsGkAtoms::oncontextmenu;
-}
-
-//----------------------------------------------------------------------
-
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
 PRUint32             nsXULPrototypeAttribute::gNumElements;
 PRUint32             nsXULPrototypeAttribute::gNumAttributes;
@@ -836,7 +767,8 @@ nsXULElement::AddListenerFor(const nsAttrName& aName,
     if (aName.IsAtom()) {
         nsIAtom *attr = aName.Atom();
         MaybeAddPopupListener(attr);
-        if (aCompileEventHandlers && IsEventHandler(attr)) {
+        if (aCompileEventHandlers &&
+            nsContentUtils::IsEventAttributeName(attr, EventNameType_XUL)) {
             nsAutoString value;
             GetAttr(kNameSpaceID_None, attr, value);
             AddScriptEventListener(attr, value, PR_TRUE);
@@ -1222,7 +1154,7 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
         // Add popup and event listeners. We can't call AddListenerFor since
         // the attribute isn't set yet.
         MaybeAddPopupListener(aName);
-        if (IsEventHandler(aName) && aValue) {
+        if (nsContentUtils::IsEventAttributeName(aName, EventNameType_XUL) && aValue) {
             // If mPrototype->mScriptTypeID != GetScriptTypeID(), it means
             // we are resolving an overlay with a different default script
             // language.  We can't defer compilation of those handlers as
@@ -2419,7 +2351,7 @@ nsXULElement::RecompileScriptEventListeners()
         }
 
         nsIAtom *attr = name->Atom();
-        if (!IsEventHandler(attr)) {
+        if (!nsContentUtils::IsEventAttributeName(attr, EventNameType_XUL)) {
             continue;
         }
 
@@ -2451,7 +2383,7 @@ nsXULElement::RecompileScriptEventListeners()
                 continue;
             }
 
-            if (!IsEventHandler(attr)) {
+            if (!nsContentUtils::IsEventAttributeName(attr, EventNameType_XUL)) {
                 continue;
             }
 
