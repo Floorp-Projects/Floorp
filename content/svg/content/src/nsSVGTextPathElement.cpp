@@ -371,7 +371,7 @@ nsSVGTextPathElement::IsAttributeMapped(const nsIAtom* name) const
 PRBool
 nsSVGTextPathElement::IsEventName(nsIAtom* aName)
 {
-  return IsGraphicElementEventName(aName);
+  return nsContentUtils::IsEventAttributeName(aName, EventNameType_SVGGraphic);
 }
 
 nsSVGElement::LengthAttributesInfo

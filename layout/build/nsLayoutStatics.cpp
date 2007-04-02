@@ -120,6 +120,15 @@ nsLayoutStatics::Initialize()
 
   nsresult rv;
 
+  // Register all of our atoms once
+  nsCSSAnonBoxes::AddRefAtoms();
+  nsCSSPseudoClasses::AddRefAtoms();
+  nsCSSPseudoElements::AddRefAtoms();
+  nsCSSKeywords::AddRefTable();
+  nsCSSProps::AddRefTable();
+  nsColorNames::AddRefTable();
+  nsGkAtoms::AddRefAtoms();
+
   nsDOMScriptObjectFactory::Startup();
   rv = nsContentUtils::Init();
   if (NS_FAILED(rv)) {
@@ -144,15 +153,6 @@ nsLayoutStatics::Initialize()
     NS_ERROR("Could not initialize nsCellMap");
     return rv;
   }
-
-  // Register all of our atoms once
-  nsCSSAnonBoxes::AddRefAtoms();
-  nsCSSPseudoClasses::AddRefAtoms();
-  nsCSSPseudoElements::AddRefAtoms();
-  nsCSSKeywords::AddRefTable();
-  nsCSSProps::AddRefTable();
-  nsColorNames::AddRefTable();
-  nsGkAtoms::AddRefAtoms();
 
   rv = nsCSSRendering::Init();
   if (NS_FAILED(rv)) {
