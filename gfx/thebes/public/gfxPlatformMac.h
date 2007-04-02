@@ -56,6 +56,8 @@ public:
                              FontResolverCallback aCallback,
                              void *aClosure, PRBool& aAborted);
 
+    gfxFontGroup *CreateFontGroup(const nsAString &aFamilies,
+                                  const gfxFontStyle *aStyle);
 
     nsresult GetFontList(const nsACString& aLangGroup,
                          const nsACString& aGenericFamily,

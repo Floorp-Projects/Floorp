@@ -42,6 +42,7 @@
 #include "gfxQuartzSurface.h"
 
 #include "gfxQuartzFontCache.h"
+#include "gfxAtsuiFonts.h"
 
 #ifdef MOZ_ENABLE_GLITZ
 #include "gfxGlitzSurface.h"
@@ -148,6 +149,13 @@ gfxPlatformMac::ResolveFontName(const nsAString& aFontName,
     }
     aAborted = !(*aCallback)(resolvedName, aClosure);
     return NS_OK;
+}
+
+gfxFontGroup *
+gfxPlatformMac::CreateFontGroup(const nsAString &aFamilies,
+                                const gfxFontStyle *aStyle)
+{
+    return new gfxAtsuiFontGroup(aFamilies, aStyle);
 }
 
 nsresult

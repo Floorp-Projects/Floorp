@@ -50,6 +50,8 @@
 
 #include "nsIWindowsRegKey.h"
 
+#include "gfxWindowsFonts.h"
+
 #include <string>
 
 gfxWindowsPlatform::gfxWindowsPlatform()
@@ -498,4 +500,11 @@ void
 gfxWindowsPlatform::PutFontWeightTable(const nsAString& aName, WeightTable *aWeightTable)
 {
     mFontWeights.Put(aName, aWeightTable);
+}
+
+gfxFontGroup *
+gfxWindowsPlatform::CreateFontGroup(const nsAString &aFamilies,
+                                    const gfxFontStyle *aStyle)
+{
+    return new gfxWindowsFontGroup(aFamilies, aStyle);
 }
