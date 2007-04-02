@@ -799,6 +799,9 @@ nsWindow::nsWindow() : nsBaseWidget()
 #ifdef MOZ_XUL
   mIsTranslucent      = PR_FALSE;
   mIsTopTranslucent   = PR_FALSE;
+#ifdef MOZ_CAIRO_GFX
+  mTranslucentSurface = nsnull;
+#endif
   mMemoryDC           = NULL;
   mMemoryBitmap       = NULL;
   mMemoryBits         = NULL;
@@ -5917,7 +5920,17 @@ PRBool nsWindow::OnPaint(HDC aDC)
 #endif // NS_DEBUG
 
 #ifdef MOZ_CAIRO_GFX
+#ifdef MOZ_XUL
+      nsRefPtr<gfxASurface> targetSurface;
+      if (mIsTranslucent) {
+        targetSurface = mTranslucentSurface;
+      } else {
+        targetSurface = new gfxWindowsSurface(hDC);
+      }
+#else
       nsRefPtr<gfxASurface> targetSurface = new gfxWindowsSurface(hDC);
+#endif
+
       nsRefPtr<gfxContext> thebesContext = new gfxContext(targetSurface);
 
 #ifdef MOZ_XUL
@@ -8181,7 +8194,11 @@ void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PR
   if (!force && aNewWidth == mBounds.width && aNewHeight == mBounds.height)
     return;
 
-#ifndef MOZ_CAIRO_GFX
+#ifdef MOZ_CAIRO_GFX
+  mTranslucentSurface = new gfxWindowsSurface(gfxIntSize(aNewWidth, aNewHeight), gfxASurface::ImageFormatARGB32);
+  mMemoryDC = mTranslucentSurface->GetDC();
+  mMemoryBitmap = NULL;
+#else
   // resize the alpha mask
   PRUint8* pBits;
 
@@ -8236,20 +8253,14 @@ void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PR
 
   delete [] mAlphaMask;
   mAlphaMask = pBits;
-#endif
 
   if (!mMemoryDC)
     mMemoryDC = ::CreateCompatibleDC(NULL);
 
-  // Always use at least 24-bit (32 with cairo) bitmaps regardless of the device context.
+  // Always use at least 24-bit bitmaps regardless of the device context.
   int depth = ::GetDeviceCaps(mMemoryDC, BITSPIXEL);
-#ifdef MOZ_CAIRO_GFX
-  if (depth < 32)
-    depth = 32;
-#else
   if (depth < 24)
     depth = 24;
-#endif
 
   // resize the memory bitmap
   BITMAPINFO bi = { 0 };
@@ -8267,6 +8278,7 @@ void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PR
     HGDIOBJ oldBitmap = ::SelectObject(mMemoryDC, mMemoryBitmap);
     ::DeleteObject(oldBitmap);
   }
+#endif
 }
 
 NS_IMETHODIMP nsWindow::GetWindowTranslucency(PRBool& aTranslucent)
@@ -8356,10 +8368,14 @@ nsresult nsWindow::SetupTranslucentWindowMemoryBitmap(PRBool aTranslucent)
   if (aTranslucent) {
     ResizeTranslucentWindow(mBounds.width, mBounds.height, PR_TRUE);
   } else {
+#ifdef MOZ_CAIRO_GFX
+    mTranslucentSurface = nsnull;
+#else
     if (mMemoryDC)
       ::DeleteDC(mMemoryDC);
     if (mMemoryBitmap)
       ::DeleteObject(mMemoryBitmap);
+#endif
 
     mMemoryDC = NULL;
     mMemoryBitmap = NULL;
@@ -8411,9 +8427,6 @@ nsresult nsWindow::UpdateTranslucentWindow()
   ::GdiFlush();
 
   HDC hMemoryDC;
-#ifndef MOZ_CAIRO_GFX
-  HBITMAP hAlphaBitmap;
-#endif
   PRBool needConversion;
 
 #ifdef MOZ_CAIRO_GFX
@@ -8425,6 +8438,7 @@ nsresult nsWindow::UpdateTranslucentWindow()
 
 #else
 
+  HBITMAP hAlphaBitmap;
   int depth = ::GetDeviceCaps(mMemoryDC, BITSPIXEL);
   if (depth < 24)
     depth = 24;
