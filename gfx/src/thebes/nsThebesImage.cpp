@@ -98,8 +98,10 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
     mFormat = format;
 
 #ifdef XP_WIN
-    mWinSurface = new gfxWindowsSurface(gfxIntSize(mWidth, mHeight), format);
-    mImageSurface = mWinSurface->GetImageSurface();
+    if (!ShouldUseImageSurfaces()) {
+        mWinSurface = new gfxWindowsSurface(gfxIntSize(mWidth, mHeight), format);
+        mImageSurface = mWinSurface->GetImageSurface();
+    }
 
     if (!mImageSurface) {
         mWinSurface = nsnull;
@@ -217,6 +219,11 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
         // if it's not RGB24/ARGB32, don't optimize, but we should
         // never hit this.
     }
+
+    // if we're being forced to use image surfaces due to
+    // resource constraints, don't try to optimize beyond single-pixel.
+    if (ShouldUseImageSurfaces())
+        return NS_OK;
 
 #ifdef XP_WIN
     // we need to special-case windows here, because windows has
@@ -541,4 +548,27 @@ nsThebesImage::DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY, PRInt3
     dst->Paint();
 
     return NS_OK;
+}
+
+PRBool
+nsThebesImage::ShouldUseImageSurfaces()
+{
+#ifdef XP_WIN
+    static const DWORD kGDIObjectsHighWaterMark = 7000;
+
+    // at 7000 GDI objects, stop allocating normal images to make sure
+    // we never hit the 10k hard limit.
+    // GetCurrentProcess() just returns (HANDLE)-1, it's inlined afaik
+    DWORD count = GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS);
+    if (count == 0 ||
+        count > kGDIObjectsHighWaterMark)
+    {
+        // either something's broken (count == 0),
+        // or we hit our high water mark; disable
+        // image allocations for a bit.
+        return PR_TRUE;
+    }
+#endif
+
+    return PR_FALSE;
 }
