@@ -1,6 +1,7 @@
 dropmarker {
   -moz-appearance: menulist-button;
   width: 16px;
+  height: 16px;
   -moz-box-align: center;
   -moz-box-pack: center;
   border: 2px solid;
