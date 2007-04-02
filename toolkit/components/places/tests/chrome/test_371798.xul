@@ -14,6 +14,8 @@
 
 <script type="application/javascript">
 <![CDATA[
+// Test the asynchronous live-updating of bookmarks query results
+SimpleTest.waitForExplicitFinish();
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -45,23 +47,63 @@ var result = histsvc.executeQuery(query, options);
 var rootNode = result.root;
 rootNode.containerOpen = true;
 
+// set up observer
+var observer =
+{
+  QueryInterface: function(iid) {
+    if (iid.equals(Ci.nsINavBookmarkObserver) ||
+        iid.equals(Ci.nsISupports))
+      return this;
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  // nsINavBookmarkObserver
+  onBeginUpdateBatch: function(){},
+  onEndUpdateBatch: function(){},
+  onItemAdded: function(bookmarkId, bookmark, folder, index) {},
+  onItemRemoved: function(bookmarkId, bookmark, folder, index){},
+  onItemChanged: function(bookmarkId, bookmark, property, value){
+    runTest();
+    bmsvc.removeObserver(this);
+  },
+  onItemVisited: function(bookmarkId, bookmark, aVisitID, time){},
+  onFolderAdded: function(folder, parent, index){},
+  onFolderRemoved: function(folder, parent, index){},
+  onFolderMoved: function(folder, oldParent, oldIndex, newParent, newIndex){},
+  onFolderChanged: function(folder, property){},
+  onSeparatorAdded: function(parent, index){},
+  onSeparatorRemoved: function(parent, index){}
+};
+bmsvc.addObserver(observer, false);
+
 // modify the bookmark's title
 var newTitle = "foo";
 bmsvc.setItemTitle(bm2, newTitle);
 
-// result node should be updated
-var cc = rootNode.childCount;
-for (var i=0; i < cc; ++i) {
-  var node = rootNode.getChild(i);
-  // test that bm1 does not have new title
-  if (node.bookmarkId == bm1)
-    ok(node.title != newTitle, "Changing a bookmark's title did not affect other bookmarks with the same URI");
-}
-rootNode.containerOpen = false;
+/*
+  this gets called after our observer gets notified of onItemChanged
+  which is triggered by updating the item's title.
+  after receiving the notification, our original query should also
+  have been live-updated, so we can iterate through it's children,
+  to check that only the modified bookmark has changed.
+*/
+function runTest() {
+  // result node should be updated
+  var cc = rootNode.childCount;
+  for (var i=0; i < cc; ++i) {
+    var node = rootNode.getChild(i);
+    // test that bm1 does not have new title
+    if (node.bookmarkId == bm1)
+      ok(node.title != newTitle,
+         "Changing a bookmark's title did not affect the title of other bookmarks with the same URI");
+  }
+  rootNode.containerOpen = false;
 
-// clean up test
-bmsvc.removeItem(bm1);
-bmsvc.removeItem(bm2);
+  // clean up finish test
+  bmsvc.removeItem(bm1);
+  bmsvc.removeItem(bm2);
+  SimpleTest.finish();
+}
 
 ]]>
 </script>
