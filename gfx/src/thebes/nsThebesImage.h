@@ -157,6 +157,12 @@ protected:
 #endif
 
     PRUint8 mAlphaDepth;
+
+    // this function should return true if
+    // we should (temporarily) not allocate any
+    // platform native surfaces and instead use
+    // image surfaces for everything.
+    static PRBool ShouldUseImageSurfaces();
 };
 
 #endif /* _NSTHEBESIMAGE_H_ */
