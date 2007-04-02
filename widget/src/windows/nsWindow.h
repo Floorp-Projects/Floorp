@@ -70,6 +70,10 @@ class imgIContainer;
 #include "nsIAccessible.h"
 #endif
 
+#ifdef MOZ_CAIRO_GFX
+#include "gfxWindowsSurface.h"
+#endif
+
 #define IME_MAX_CHAR_POS       64
 
 #define NSRGB_2_COLOREF(color) \
@@ -406,6 +410,9 @@ protected:
 
 #ifdef MOZ_XUL
   // use layered windows to support full 256 level alpha translucency
+#ifdef MOZ_CAIRO_GFX
+  nsRefPtr<gfxWindowsSurface> mTranslucentSurface;
+#endif
   HDC           mMemoryDC;
   HBITMAP       mMemoryBitmap;
   PRUint8*      mMemoryBits;
