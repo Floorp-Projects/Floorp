@@ -1632,9 +1632,13 @@ js_LineNumberToPC(JSScript *script, uintN target)
     lineno = script->lineno;
     bestdiff = SN_LINE_LIMIT;
     for (sn = SCRIPT_NOTES(script); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
-        if (lineno == target)
+        /*
+         * Exact-match only if offset is not in the prolog; otherwise use
+         * nearest greater-or-equal line number match.
+         */
+        if (lineno == target && script->code + offset >= script->main)
             goto out;
-        if (lineno > target) {
+        if (lineno >= target) {
             diff = lineno - target;
             if (diff < bestdiff) {
                 bestdiff = diff;
