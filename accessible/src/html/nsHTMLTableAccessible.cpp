@@ -70,10 +70,15 @@ NS_IMETHODIMP nsHTMLTableCellAccessible::GetRole(PRUint32 *aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLTableCellAccessible::GetState(PRUint32 *aResult)
+NS_IMETHODIMP
+nsHTMLTableCellAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsAccessible::GetState(aResult);
-  *aResult &= ~nsIAccessibleStates::STATE_FOCUSABLE;   // Inherit all states except focusable state since table cells cannot be focused
+  nsresult rv = nsAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Inherit all states except focusable state since table cells cannot be
+  // focused.
+  *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
   return NS_OK;
 }
 
@@ -147,11 +152,15 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetRole(PRUint32 *aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLTableAccessible::GetState(PRUint32 *aResult)
+NS_IMETHODIMP
+nsHTMLTableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsAccessible::GetState(aResult);
-  *aResult |= nsIAccessibleStates::STATE_READONLY;
-  *aResult &= ~nsIAccessibleStates::STATE_FOCUSABLE;   // Inherit all states except focusable state since tables cannot be focused
+  nsresult rv= nsAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aState |= nsIAccessibleStates::STATE_READONLY;
+  // Inherit all states except focusable state since tables cannot be focused.
+  *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
   return NS_OK;
 }
 

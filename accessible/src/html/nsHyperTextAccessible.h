@@ -75,7 +75,7 @@ public:
   NS_DECL_NSIEDITACTIONLISTENER
 
   NS_IMETHOD GetRole(PRUint32 *aRole);
-  NS_IMETHOD GetExtState(PRUint32 *aState);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
   void CacheChildren();
 

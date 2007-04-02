@@ -66,7 +66,7 @@ public:
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetParent(nsIAccessible **_retval);
   NS_IMETHOD GetRole(PRUint32 *_retval);
-  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
   NS_IMETHOD GetNextSibling(nsIAccessible **_retval);
   NS_IMETHOD GetPreviousSibling(nsIAccessible **_retval);

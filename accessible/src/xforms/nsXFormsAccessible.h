@@ -77,7 +77,7 @@ public:
 
   // Returns state of xforms element taking into account state of instance node
   // that it is bound to.
-  NS_IMETHOD GetState(PRUint32 *aState);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
 
   // Returns value of child xforms 'label' element.
   NS_IMETHOD GetName(nsAString& aName);
@@ -145,7 +145,7 @@ class nsXFormsEditableAccessible : public nsXFormsAccessible
 public:
   nsXFormsEditableAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell);
 
-  NS_IMETHOD GetExtState(PRUint32 *aState);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
 
   NS_IMETHOD Init();
   NS_IMETHOD Shutdown();

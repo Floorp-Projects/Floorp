@@ -96,15 +96,17 @@ NS_IMETHODIMP nsXULTabAccessible::GetRole(PRUint32 *_retval)
 /**
   * Possible states: focused, focusable, unavailable(disabled), offscreen
   */
-NS_IMETHODIMP nsXULTabAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP
+nsXULTabAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   // get focus and disable status from base class
-  nsLeafAccessible::GetState(_retval);
+  nsresult rv = nsLeafAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // In the past, tabs have been focusable in classic theme
   // They may be again in the future
   // Check style for -moz-user-focus: normal to see if it's focusable
-  *_retval &= ~nsIAccessibleStates::STATE_FOCUSABLE;
+  *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
   if (presShell && content) {
@@ -112,17 +114,17 @@ NS_IMETHODIMP nsXULTabAccessible::GetState(PRUint32 *_retval)
     if (frame) {
       const nsStyleUserInterface* ui = frame->GetStyleUserInterface();
       if (ui->mUserFocus == NS_STYLE_USER_FOCUS_NORMAL)
-        *_retval |= nsIAccessibleStates::STATE_FOCUSABLE;
+        *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
     }
   }
   // Check whether the tab is selected
-  *_retval |= nsIAccessibleStates::STATE_SELECTABLE;
-  *_retval &= ~nsIAccessibleStates::STATE_SELECTED;
+  *aState |= nsIAccessibleStates::STATE_SELECTABLE;
+  *aState &= ~nsIAccessibleStates::STATE_SELECTED;
   nsCOMPtr<nsIDOMXULSelectControlItemElement> tab(do_QueryInterface(mDOMNode));
   if (tab) {
     PRBool selected = PR_FALSE;
     if (NS_SUCCEEDED(tab->GetSelected(&selected)) && selected)
-      *_retval |= nsIAccessibleStates::STATE_SELECTED;
+      *aState |= nsIAccessibleStates::STATE_SELECTED;
   }
   return NS_OK;
 }
@@ -162,10 +164,13 @@ NS_IMETHODIMP nsXULTabBoxAccessible::GetRole(PRUint32 *_retval)
 }
 
 /** Possible states: normal */
-NS_IMETHODIMP nsXULTabBoxAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP
+nsXULTabBoxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsAccessible::GetState(_retval);
-  *_retval &= ~nsIAccessibleStates::STATE_FOCUSABLE;
+  nsresult rv = nsAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
   return NS_OK;
 }
 
@@ -204,16 +209,6 @@ NS_IMETHODIMP nsXULTabPanelsAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-/**
-  * Possible values: unavailable
-  */
-NS_IMETHODIMP nsXULTabPanelsAccessible::GetState(PRUint32 *_retval)
-{
-  // get focus and disable status from base class -- skip container because we have state
-  nsAccessible::GetState(_retval);
-  return NS_OK;
-}
-
 /** 
   * The name for the panel is the name from the tab associated with
   *  the panel. XXX not sure if the "panels" object should have the
@@ -249,9 +244,10 @@ NS_IMETHODIMP nsXULTabsAccessible::GetNumActions(PRUint8 *_retval)
 }
 
 /** no state -- normal */
-NS_IMETHODIMP nsXULTabsAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP
+nsXULTabsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  return nsAccessible::GetState(_retval);
+  return nsAccessible::GetState(aState, aExtraState);
 }
 
 /** no value */

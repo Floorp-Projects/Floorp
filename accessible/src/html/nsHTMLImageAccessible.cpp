@@ -77,29 +77,30 @@ nsLinkableAccessible(aDOMNode, aShell)
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLImageAccessible, nsLinkableAccessible, nsIAccessibleImage)
 
-NS_IMETHODIMP nsHTMLImageAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP
+nsHTMLImageAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   // The state is a bitfield, get our inherited state, then logically OR it with
   // STATE_ANIMATED if this is an animated image.
 
-  nsLinkableAccessible::GetState(_retval);
+  nsresult rv = nsLinkableAccessible::GetState(aState, aExtraState);
 
   nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(mDOMNode));
   nsCOMPtr<imgIRequest> imageRequest;
 
-  if (content) 
+  if (content)
     content->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
                         getter_AddRefs(imageRequest));
-  
+
   nsCOMPtr<imgIContainer> imgContainer;
-  if (imageRequest) 
+  if (imageRequest)
     imageRequest->GetImage(getter_AddRefs(imgContainer));
 
   if (imgContainer) {
     PRUint32 numFrames;
     imgContainer->GetNumFrames(&numFrames);
     if (numFrames > 1)
-      *_retval |= nsIAccessibleStates::STATE_ANIMATED;
+      *aState |= nsIAccessibleStates::STATE_ANIMATED;
   }
 
   return NS_OK;

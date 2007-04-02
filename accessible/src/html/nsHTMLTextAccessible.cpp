@@ -111,15 +111,17 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetRole(PRUint32 *aRole)
   return nsTextAccessible::GetRole(aRole);
 }
 
-NS_IMETHODIMP nsHTMLTextAccessible::GetState(PRUint32 *aState)
+NS_IMETHODIMP
+nsHTMLTextAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsTextAccessible::GetState(aState);
+  nsresult rv = nsTextAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIAccessible> docAccessible = 
     do_QueryInterface(nsCOMPtr<nsIAccessibleDocument>(GetDocAccessible()));
   if (docAccessible) {
-     PRUint32 extState;
-     docAccessible->GetExtState(&extState);
+     PRUint32 state, extState;
+     docAccessible->GetFinalState(&state, &extState);
      if (0 == (extState & nsIAccessibleStates::EXT_STATE_EDITABLE)) {
        *aState |= nsIAccessibleStates::STATE_READONLY; // Links not focusable in editor
      }
@@ -162,9 +164,12 @@ NS_IMETHODIMP nsHTMLHRAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLHRAccessible::GetState(PRUint32 *aState)
+NS_IMETHODIMP
+nsHTMLHRAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsLeafAccessible::GetState(aState);
+  nsresult rv = nsLeafAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
   return NS_OK;
 }
@@ -180,7 +185,8 @@ NS_IMETHODIMP nsHTMLBRAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLBRAccessible::GetState(PRUint32 *aState)
+NS_IMETHODIMP
+nsHTMLBRAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   *aState = nsIAccessibleStates::STATE_READONLY;
   return NS_OK;
@@ -221,9 +227,12 @@ NS_IMETHODIMP nsHTMLLabelAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLLabelAccessible::GetState(PRUint32 *aState)
+NS_IMETHODIMP
+nsHTMLLabelAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsTextAccessible::GetState(aState);
+  nsresult rv = nsTextAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   *aState &= (nsIAccessibleStates::STATE_LINKED |
               nsIAccessibleStates::STATE_TRAVERSED);  // Only use link states
   return NS_OK;
@@ -334,3 +343,40 @@ NS_IMETHODIMP nsHTMLListBulletAccessible::GetName(nsAString &aName)
   aName = mBulletText;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsHTMLListBulletAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+{
+  nsresult rv = nsHTMLTextAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
+  *aState |= nsIAccessibleStates::STATE_READONLY;
+  return NS_OK;
+}
+
+// nsHTMLListAccessible
+
+NS_IMETHODIMP
+nsHTMLListAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+{
+  nsresult rv = nsHyperTextAccessible::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
+  *aState |= nsIAccessibleStates::STATE_READONLY;
+  return NS_OK;
+}
+
+// nsHTMLLIAccessible
+
+NS_IMETHODIMP
+nsHTMLLIAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+{
+  nsresult rv = nsAccessibleWrap::GetState(aState, aExtraState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aState |= nsIAccessibleStates::STATE_READONLY;
+  return NS_OK;
+}
+
