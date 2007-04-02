@@ -434,7 +434,9 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                          nsMouseEvent::eRightButton) {
               // cancel all of these events for buttons
               //XXXsmaug What to do with these events? Why these should be cancelled?
-              aVisitor.mDOMEvent->StopPropagation();
+              if (aVisitor.mDOMEvent) {
+                aVisitor.mDOMEvent->StopPropagation();
+              }
             }
           }
         }
