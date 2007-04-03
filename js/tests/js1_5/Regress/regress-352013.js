@@ -51,7 +51,7 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
-  var f, g;
+  var f, g, h;
   var x = Function;
   var z = 'actual += arguments[0];';
   var w = 42;
@@ -71,6 +71,21 @@ function test()
   f();
   g();
   reportCompare(expect, actual, summary);
+
+  h = function () { new (x(y)(z));  }
+  expect = 'function () { new (x(y)(z)); }';
+  actual = h + '';
+  compareSource(expect, actual, summary);
+
+  h = function () { new (x(y).z);   }
+  expect = 'function () { new (x(y).z); }';
+  actual = h + '';
+  compareSource(expect, actual, summary);
+
+  h = function () { new x(y).z;   }
+  expect = 'function () { (new x(y)).z; }';
+  actual = h + '';
+  compareSource(expect, actual, summary);
 
   exitFunc ('test');
 }
