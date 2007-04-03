@@ -70,6 +70,7 @@ typedef struct _cairo_paginated_surface {
      * fallbacks. */
     cairo_surface_t *meta;
 
+    int page_num;
     cairo_bool_t page_is_blank;
 
 } cairo_paginated_surface_t;
@@ -122,6 +123,7 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
     if (cairo_surface_status (surface->meta))
 	goto FAIL_CLEANUP_SURFACE;
 
+    surface->page_num = 1;
     surface->page_is_blank = TRUE;
 
     return &surface->base;
@@ -155,12 +157,22 @@ static cairo_status_t
 _cairo_paginated_surface_finish (void *abstract_surface)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
-    cairo_surface_destroy (surface->meta);
+    if (surface->page_is_blank == FALSE || surface->page_num == 1)
+	status = _cairo_paginated_surface_show_page (abstract_surface);
+
+    if (status == CAIRO_STATUS_SUCCESS)
+	cairo_surface_finish (surface->target);
+
+    if (status == CAIRO_STATUS_SUCCESS)
+	cairo_surface_finish (surface->meta);
 
     cairo_surface_destroy (surface->target);
 
-    return CAIRO_STATUS_SUCCESS;
+    cairo_surface_destroy (surface->meta);
+
+    return status;
 }
 
 static cairo_surface_t *
@@ -288,6 +300,8 @@ _cairo_paginated_surface_copy_page (void *abstract_surface)
 
     _paint_page (surface);
 
+    surface->page_num++;
+
     /* XXX: It might make sense to add some suport here for calling
      * _cairo_surface_copy_page on the target surface. It would be an
      * optimization for the output, (so that PostScript could include
@@ -296,9 +310,7 @@ _cairo_paginated_surface_copy_page (void *abstract_surface)
      * show_page and we implement the copying by simply not destroying
      * the meta-surface. */
 
-    _cairo_surface_show_page (surface->target);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_surface_show_page (surface->target);
 }
 
 static cairo_int_status_t
@@ -322,6 +334,7 @@ _cairo_paginated_surface_show_page (void *abstract_surface)
     if (cairo_surface_status (surface->meta))
 	return cairo_surface_status (surface->meta);
 
+    surface->page_num++;
     surface->page_is_blank = TRUE;
 
     return CAIRO_STATUS_SUCCESS;
@@ -442,6 +455,7 @@ _cairo_paginated_surface_show_glyphs (void			*abstract_surface,
 				      cairo_scaled_font_t	*scaled_font)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
+    cairo_int_status_t status;
 
     /* Optimize away erasing of nothing. */
     if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
@@ -449,9 +463,23 @@ _cairo_paginated_surface_show_glyphs (void			*abstract_surface,
 
     surface->page_is_blank = FALSE;
 
-    return _cairo_surface_show_glyphs (surface->meta, op, source,
-				       glyphs, num_glyphs,
-				       scaled_font);
+    /* Since this is a "wrapping" surface, we're calling back into
+     * _cairo_surface_show_glyphs from within a call to the same.
+     * Since _cairo_surface_show_glyphs acquires a mutex, we release
+     * and re-acquire the mutex around this nested call.
+     *
+     * Yes, this is ugly, but we consider it pragmatic as compared to
+     * adding locking code to all 18 surface-backend-specific
+     * show_glyphs functions, (which would get less testing and likely
+     * lead to bugs).
+     */
+    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
+    status = _cairo_surface_show_glyphs (surface->meta, op, source,
+					 glyphs, num_glyphs,
+					 scaled_font);
+    CAIRO_MUTEX_LOCK (scaled_font->mutex);
+
+    return status;
 }
 
 static cairo_surface_t *

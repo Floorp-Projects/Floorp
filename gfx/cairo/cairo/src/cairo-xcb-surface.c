@@ -1289,10 +1289,9 @@ _create_a8_picture (cairo_xcb_surface_t *surface,
 	= _CAIRO_FORMAT_TO_XRENDER_FORMAT (surface->dpy, CAIRO_FORMAT_A8);
     xcb_rectangle_t rect = { 0, 0, width, height };
 
-    xcb_create_pixmap (surface->dpy, pixmap, surface->drawable,
-				   width <= 0 ? 1 : width,
-				   height <= 0 ? 1 : height,
-				   8);
+    xcb_create_pixmap (surface->dpy, 8, pixmap, surface->drawable,
+		       width <= 0 ? 1 : width,
+		       height <= 0 ? 1 : height);
     xcb_render_create_picture (surface->dpy, picture, pixmap, format->id, mask, values);
     xcb_render_fill_rectangles (surface->dpy, XCB_RENDER_PICT_OP_SRC, picture, *color, 1, &rect);
     xcb_free_pixmap (surface->dpy, pixmap);
