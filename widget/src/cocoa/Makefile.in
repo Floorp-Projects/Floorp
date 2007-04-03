@@ -170,6 +170,8 @@ ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 export::
 	ln -fs $(srcdir)/cursors
 endif
+
+export::
 	$(INSTALL) $(srcdir)/cursors $(DIST)/bin/res
 
 $(RESOURCE): $(RES_SRC)
