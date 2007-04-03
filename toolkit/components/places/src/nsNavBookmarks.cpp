@@ -2286,6 +2286,7 @@ nsNavBookmarks::RemoveObserver(nsINavBookmarkObserver *aObserver)
 nsresult
 nsNavBookmarks::OnQuit()
 {
+#ifdef MOZ_PLACES_BOOKMARKS
   // get bookmarks file
   nsCOMPtr<nsIFile> bookmarksFile;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_BOOKMARKS_50_FILE,
@@ -2321,6 +2322,7 @@ nsNavBookmarks::OnQuit()
     rv = ArchiveBookmarksFile(numberOfBackups, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+#endif
 
   return NS_OK;
 }
