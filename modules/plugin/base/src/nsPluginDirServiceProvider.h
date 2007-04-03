@@ -41,6 +41,11 @@
 
 #include "nsIDirectoryService.h"
 
+#if defined (XP_WIN)
+#include "nsCOMArray.h"
+#include <windows.h>
+#endif
+
 class nsISimpleEnumerator;
 
 // Note: Our directory service provider scan keys are prefs which are check
@@ -65,6 +70,9 @@ public:
 
 #ifdef XP_WIN
    static nsresult GetPLIDDirectories(nsISimpleEnumerator **aEnumerator);
+private:
+   static nsresult GetPLIDDirectoriesWithHKEY(HKEY aKey, 
+     nsCOMArray<nsILocalFile> &aDirs);
 #endif
 
 protected:
