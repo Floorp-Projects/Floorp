@@ -115,7 +115,7 @@ gfxTextRunCache::Shutdown()
 static PRUint32
 ComputeFlags(PRBool aIsRTL, PRBool aEnableSpacing)
 {
-    PRUint32 flags = gfxTextRunFactory::TEXT_HAS_SURROGATES;
+    PRUint32 flags = 0;
     if (aIsRTL) {
         flags |= gfxTextRunFactory::TEXT_IS_RTL;
     }
@@ -139,10 +139,20 @@ gfxTextRunCache::GetOrMakeTextRun(gfxContext *aContext, gfxFontGroup *aFontGroup
         aContext, nsnull, nsnull, &skipChars, nsnull, 0, aAppUnitsPerDevUnit,
         ComputeFlags(aIsRTL, aEnableSpacing)
     };
+
     if (IsAscii(aString, aLength))
         params.mFlags |= gfxTextRunFactory::TEXT_IS_ASCII;
     //    else if (Is8Bit(aString, aLength))
     //        params.mFlags |= gfxTextRunFactory::TEXT_IS_8BIT;
+
+    if (!(params.mFlags & gfxTextRunFactory::TEXT_IS_ASCII)) {
+        for (PRUint32 i = 0; i < aLength; ++i) {
+            if (NS_IS_HIGH_SURROGATE(aString[i])) {
+                params.mFlags |= gfxTextRunFactory::TEXT_HAS_SURROGATES;
+                break;
+            }
+        }
+    }
 
     gfxTextRun *tr = nsnull;
     // Don't cache textruns that use spacing
