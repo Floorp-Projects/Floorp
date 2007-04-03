@@ -187,17 +187,17 @@
       ]]>
       </handler>
       <handler event="dblclick" action="if (this.selected &amp;&amp; event.button == 0) this.selected.fireEvent('open');"/>
-      <handler event="keypress" keycode="vk_enter" action="if (this.selected) this.selected.fireEvent('open');"/>
-      <handler event="keypress" keycode="vk_return" action="if (this.selected) this.selected.fireEvent('open');"/>
-      <handler event="keypress" keycode="vk_up" action="this.selectionBackward(event);"/>
-      <handler event="keypress" keycode="vk_left" action="this.selectionBackward(event);"/>
-      <handler event="keypress" keycode="vk_down" action="this.selectionForward(event);"/>
-      <handler event="keypress" keycode="vk_right" action="this.selectionForward(event);"/>
-      <handler event="keypress" keycode="vk_up" modifiers="meta" action="this.selected = null"/>
-      <handler event="keypress" keycode="vk_down" modifiers="meta" action="this.selected = null"/>
-      <handler event="keypress" keycode="vk_left" modifiers="meta" action="this.selected = null"/>
-      <handler event="keypress" keycode="vk_right" modifiers="meta" action="this.selected = null"/>
-      <handler event="keypress" keycode="vk_delete" action="if (this.selected) this.selected.fireEvent('remove');"/>
+      <handler event="keypress" keycode="VK_ENTER" action="if (this.selected) this.selected.fireEvent('open');"/>
+      <handler event="keypress" keycode="VK_RETURN" action="if (this.selected) this.selected.fireEvent('open');"/>
+      <handler event="keypress" keycode="VK_UP" action="this.selectionBackward(event);"/>
+      <handler event="keypress" keycode="VK_LEFT" action="this.selectionBackward(event);"/>
+      <handler event="keypress" keycode="VK_DOWN" action="this.selectionForward(event);"/>
+      <handler event="keypress" keycode="VK_RIGHT" action="this.selectionForward(event);"/>
+      <handler event="keypress" keycode="VK_UP" modifiers="meta" action="this.selected = null;"/>
+      <handler event="keypress" keycode="VK_DOWN" modifiers="meta" action="this.selected = null;"/>
+      <handler event="keypress" keycode="VK_LEFT" modifiers="meta" action="this.selected = null;"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="meta" action="this.selected = null;"/>
+      <handler event="keypress" keycode="VK_DELETE" action="if (this.selected) this.selected.fireEvent('remove');"/>
     </handlers>
   </binding>
   
