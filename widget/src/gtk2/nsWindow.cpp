@@ -939,8 +939,6 @@ nsWindow::SetCursor(nsCursor aCursor)
                 return NS_OK;
 
             gdk_window_set_cursor(GTK_WIDGET(mContainer)->window, newCursor);
-
-            XFlush(GDK_DISPLAY());
         }
     }
 
@@ -1099,7 +1097,6 @@ nsWindow::SetCursor(imgIContainer* aCursor,
     if (cursor) {
         if (mContainer) {
             gdk_window_set_cursor(GTK_WIDGET(mContainer)->window, cursor);
-            XFlush(GDK_DISPLAY());
             rv = NS_OK;
         }
         gdk_cursor_unref(cursor);
