@@ -170,6 +170,7 @@ ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 export::
 	ln -fs $(srcdir)/cursors
 endif
+	$(INSTALL) $(srcdir)/cursors $(DIST)/bin/res
 
 $(RESOURCE): $(RES_SRC)
 	/Developer/Tools/Rez -i /Developer/Headers/FlatCarbon -useDF $< -o $@

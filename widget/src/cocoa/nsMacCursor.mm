@@ -37,6 +37,10 @@
 
 #include "nsMacCursor.h"
 #include "nsDebug.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsCOMPtr.h"
+#include "nsIFile.h"
+#include "nsString.h"
 
 /*! @category   nsMacCursor (PrivateMethods)
     @abstract   Private methods internal to the nsMacCursor class.
@@ -345,7 +349,32 @@
 
 - (id) initWithImageNamed: (NSString *) aCursorImage hotSpot: (NSPoint) aPoint
 {
-  return [self initWithCursor: [[NSCursor alloc] initWithImage: [NSImage imageNamed: aCursorImage] hotSpot: aPoint]];
+  nsCOMPtr<nsIFile> resDir;
+  nsCAutoString resPath;
+  NSString* pathToImage;
+  NSImage* cursorImage;
+
+  nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(resDir));
+  if (NS_FAILED(rv)) goto INIT_FAILURE;
+  resDir->AppendNative(NS_LITERAL_CSTRING("res"));
+  resDir->AppendNative(NS_LITERAL_CSTRING("cursors"));
+
+  rv = resDir->GetNativePath(resPath);
+  if (NS_FAILED(rv)) goto INIT_FAILURE;
+
+  pathToImage = [NSString stringWithUTF8String:(const char*)resPath.get()];
+  if (!pathToImage) goto INIT_FAILURE;
+  pathToImage = [pathToImage stringByAppendingPathComponent:aCursorImage];
+  pathToImage = [pathToImage stringByAppendingPathExtension:@"tiff"];
+
+  cursorImage = [[[NSImage alloc] initWithContentsOfFile:pathToImage] autorelease];
+  if (!cursorImage) goto INIT_FAILURE;
+  return [self initWithCursor: [[NSCursor alloc] initWithImage: cursorImage hotSpot: aPoint]];
+
+INIT_FAILURE:
+  NS_WARNING("Problem getting path to cursor image file!");
+  [self release];
+  return nil;
 }
 
 - (void) setFrame: (int) aFrameIndex
