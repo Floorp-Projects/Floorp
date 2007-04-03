@@ -69,13 +69,16 @@ endif
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
+include $(topsrcdir)/config/rules.mk
+
 EXTRA_LDOPS += $(TK_LIBS)
 
 LIBS =  $(HELPER_OBJS) \
+	$(call EXPAND_LIBNAME_PATH,thebes,../src) \
+	$(MOZ_UNICHARUTIL_LIBS) \
 	$(LIBS_DIR) \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
-	$(call EXPAND_MOZLIBNAME,thebes) \
 	$(TK_LIBS) \
 	$(ZLIB_LIBS) \
 	$(NULL)
@@ -92,8 +95,6 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 OS_LIBS += $(MOZ_PANGO_LIBS) $(MOZ_XFT_LIBS) $(XLIBS)
 endif
-
-include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 CFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
