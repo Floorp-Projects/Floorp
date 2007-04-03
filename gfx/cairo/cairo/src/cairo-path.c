@@ -465,19 +465,19 @@ _cairo_path_append_to_context (const cairo_path_t	*path,
 	p = &path->data[i];
 	switch (p->header.type) {
 	case CAIRO_PATH_MOVE_TO:
-	    if (p->header.length < 2)
+	    if (p->header.length != 2)
 		return CAIRO_STATUS_INVALID_PATH_DATA;
 	    cairo_move_to (cr,
 			   p[1].point.x, p[1].point.y);
 	    break;
 	case CAIRO_PATH_LINE_TO:
-	    if (p->header.length < 2)
+	    if (p->header.length != 2)
 		return CAIRO_STATUS_INVALID_PATH_DATA;
 	    cairo_line_to (cr,
 			   p[1].point.x, p[1].point.y);
 	    break;
 	case CAIRO_PATH_CURVE_TO:
-	    if (p->header.length < 4)
+	    if (p->header.length != 4)
 		return CAIRO_STATUS_INVALID_PATH_DATA;
 	    cairo_curve_to (cr,
 			    p[1].point.x, p[1].point.y,
@@ -485,7 +485,7 @@ _cairo_path_append_to_context (const cairo_path_t	*path,
 			    p[3].point.x, p[3].point.y);
 	    break;
 	case CAIRO_PATH_CLOSE_PATH:
-	    if (p->header.length < 1)
+	    if (p->header.length != 1)
 		return CAIRO_STATUS_INVALID_PATH_DATA;
 	    cairo_close_path (cr);
 	    break;

@@ -52,9 +52,9 @@
 
 
 /*
- * Rectangle causes problems (see bugs 361377, 359553, 359243 in Gnome BTS).
+ * Rectangle works fine.
  */
-#define DFB_RECTANGLES 0
+#define DFB_RECTANGLES 1
 
 /*
  * Composite works fine.

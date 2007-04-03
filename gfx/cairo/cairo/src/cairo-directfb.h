@@ -48,8 +48,5 @@ cairo_directfb_surface_create (IDirectFB *dfb,IDirectFBSurface *surface);
 
 CAIRO_END_DECLS
 
-#else  /*CAIRO_HAS_DIRECTFB_SURFACE*/
-# error Cairo was not compiled with support for the directfb backend
 #endif /*CAIRO_HAS_DIRECTFB_SURFACE*/
-
 #endif /*CAIRO_DIRECTFB_H*/

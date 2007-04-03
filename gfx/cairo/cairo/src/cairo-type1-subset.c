@@ -34,7 +34,6 @@
  */
 
 #include "cairoint.h"
-#include "cairo-type1-private.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-output-stream-private.h"
 
@@ -108,7 +107,6 @@ _cairo_type1_font_subset_create (cairo_unscaled_font_t      *unscaled_font,
                                  cairo_bool_t                hex_encode)
 {
     cairo_ft_unscaled_font_t *ft_unscaled_font;
-    cairo_status_t status;
     FT_Face face;
     PS_FontInfoRec font_info;
     cairo_type1_font_subset_t *font;
@@ -118,16 +116,12 @@ _cairo_type1_font_subset_create (cairo_unscaled_font_t      *unscaled_font,
 
     face = _cairo_ft_unscaled_font_lock_face (ft_unscaled_font);
 
-    if (FT_Get_PS_Font_Info(face, &font_info) != 0) {
-	status = CAIRO_INT_STATUS_UNSUPPORTED;
-        goto fail1;
-    }
+    if (FT_Get_PS_Font_Info(face, &font_info) != 0)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     font = calloc (sizeof (cairo_type1_font_subset_t), 1);
-    if (font == NULL) {
-	status = CAIRO_STATUS_NO_MEMORY;
-        goto fail1;
-    }
+    if (font == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
 
     font->base.unscaled_font = _cairo_unscaled_font_reference (unscaled_font);
     font->base.num_glyphs = face->num_glyphs;
@@ -138,10 +132,8 @@ _cairo_type1_font_subset_create (cairo_unscaled_font_t      *unscaled_font,
     font->base.ascent = face->ascender;
     font->base.descent = face->descender;
     font->base.base_font = strdup (face->family_name);
-    if (font->base.base_font == NULL) {
-        status = CAIRO_STATUS_NO_MEMORY;
-	goto fail2;
-    }
+    if (font->base.base_font == NULL)
+	goto fail1;
 
     for (i = 0, j = 0; font->base.base_font[j]; j++) {
 	if (font->base.base_font[j] == ' ')
@@ -151,10 +143,8 @@ _cairo_type1_font_subset_create (cairo_unscaled_font_t      *unscaled_font,
     font->base.base_font[i] = '\0';
 
     font->glyphs = calloc (face->num_glyphs, sizeof font->glyphs[0]);
-    if (font->glyphs == NULL) {
-        status = CAIRO_STATUS_NO_MEMORY;
-	goto fail3;
-    }
+    if (font->glyphs == NULL)
+	goto fail2;
 
     font->hex_encode = hex_encode;
     font->num_glyphs = 0;
@@ -169,15 +159,12 @@ _cairo_type1_font_subset_create (cairo_unscaled_font_t      *unscaled_font,
 
     return CAIRO_STATUS_SUCCESS;
 
- fail3:
-    free (font->base.base_font);
  fail2:
-    _cairo_unscaled_font_destroy (unscaled_font);
-    free (font);
+    free (font->base.base_font);
  fail1:
-    _cairo_ft_unscaled_font_unlock_face (ft_unscaled_font);
+    free (font);
 
-    return status;
+    return CAIRO_STATUS_NO_MEMORY;
 }
 
 static int
@@ -191,6 +178,11 @@ cairo_type1_font_subset_use_glyph (cairo_type1_font_subset_t *font, int glyph)
 
     return font->glyphs[glyph].subset_index;
 }
+
+/* Magic constants for the type1 eexec encryption */
+static const unsigned short c1 = 52845, c2 = 22719;
+static const unsigned short private_dict_key = 55665;
+static const unsigned short charstring_key = 4330;
 
 static cairo_bool_t
 is_ps_delimiter(int c)
@@ -333,7 +325,7 @@ cairo_type1_font_subset_write_encrypted (cairo_type1_font_subset_t *font,
     while (in < end) {
 	p = *in++;
 	c = p ^ (font->eexec_key >> 8);
-	font->eexec_key = (c + font->eexec_key) * CAIRO_TYPE1_ENCRYPT_C1 + CAIRO_TYPE1_ENCRYPT_C2;
+	font->eexec_key = (c + font->eexec_key) * c1 + c2;
 
 	if (font->hex_encode) {
 	    digits[0] = hex_digits[c >> 4];
@@ -357,7 +349,7 @@ cairo_type1_font_subset_write_encrypted (cairo_type1_font_subset_t *font,
 static cairo_status_t
 cairo_type1_font_subset_decrypt_eexec_segment (cairo_type1_font_subset_t *font)
 {
-    unsigned short r = CAIRO_TYPE1_PRIVATE_DICT_KEY;
+    unsigned short r = private_dict_key;
     unsigned char *in, *end;
     char *out;
     int c, p;
@@ -380,7 +372,7 @@ cairo_type1_font_subset_decrypt_eexec_segment (cairo_type1_font_subset_t *font)
 	    c = *in++;
 	}
 	p = c ^ (r >> 8);
-	r = (c + r) * CAIRO_TYPE1_ENCRYPT_C1 + CAIRO_TYPE1_ENCRYPT_C2;
+	r = (c + r) * c1 + c2;
 
 	*out++ = p;
     }
@@ -460,13 +452,13 @@ cairo_type1_font_subset_get_glyph_names_and_widths (cairo_type1_font_subset_t *f
 static void
 cairo_type1_font_subset_decrypt_charstring (const unsigned char *in, int size, unsigned char *out)
 {
-    unsigned short r = CAIRO_TYPE1_CHARSTRING_KEY;
+    unsigned short r = charstring_key;
     int c, p, i;
 
     for (i = 0; i < size; i++) {
         c = *in++;
 	p = c ^ (r >> 8);
-	r = (c + r) * CAIRO_TYPE1_ENCRYPT_C1 + CAIRO_TYPE1_ENCRYPT_C2;
+	r = (c + r) * c1 + c2;
 	*out++ = p;
     }
 }
@@ -1012,7 +1004,7 @@ cairo_type1_font_subset_write (cairo_type1_font_subset_t *font,
 	return font->status = CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    font->eexec_key = CAIRO_TYPE1_PRIVATE_DICT_KEY;
+    font->eexec_key = private_dict_key;
     font->hex_column = 0;
 
     cairo_type1_font_subset_write_private_dict (font, name);

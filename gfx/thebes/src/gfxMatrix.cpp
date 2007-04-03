@@ -108,60 +108,12 @@ gfxMatrix::Transform(const gfxRect& rect) const
 gfxRect
 gfxMatrix::TransformBounds(const gfxRect& rect) const
 {
-    /* Code taken from cairo-matrix.c, _cairo_matrix_transform_bounding_box isn't public */
-    int i;
-    double quad_x[4], quad_y[4];
-    double min_x, max_x;
-    double min_y, max_y;
+    double x0 = rect.pos.x;
+    double y0 = rect.pos.y;
+    double x1 = rect.pos.x + rect.size.width;
+    double y1 = rect.pos.y + rect.size.height;
 
-    quad_x[0] = rect.pos.x;
-    quad_y[0] = rect.pos.y;
-    cairo_matrix_transform_point (CONST_CAIRO_MATRIX(this), &quad_x[0], &quad_y[0]);
+    cairo_matrix_transform_bounding_box(CONST_CAIRO_MATRIX(this), &x0, &y0, &x1, &y1, NULL);
 
-    quad_x[1] = rect.pos.x + rect.size.width;
-    quad_y[1] = rect.pos.y;
-    cairo_matrix_transform_point (CONST_CAIRO_MATRIX(this), &quad_x[1], &quad_y[1]);
-
-    quad_x[2] = rect.pos.x;
-    quad_y[2] = rect.pos.y + rect.size.height;
-    cairo_matrix_transform_point (CONST_CAIRO_MATRIX(this), &quad_x[2], &quad_y[2]);
-
-    quad_x[3] = rect.pos.x + rect.size.width;
-    quad_y[3] = rect.pos.y + rect.size.height;
-    cairo_matrix_transform_point (CONST_CAIRO_MATRIX(this), &quad_x[3], &quad_y[3]);
-
-    min_x = max_x = quad_x[0];
-    min_y = max_y = quad_y[0];
-
-    for (i = 1; i < 4; i++) {
-        if (quad_x[i] < min_x)
-            min_x = quad_x[i];
-        if (quad_x[i] > max_x)
-            max_x = quad_x[i];
-
-        if (quad_y[i] < min_y)
-            min_y = quad_y[i];
-        if (quad_y[i] > max_y)
-            max_y = quad_y[i];
-    }
-
-    // we don't compute this now
-#if 0
-    if (is_tight) {
-        /* it's tight if and only if the four corner points form an axis-aligned
-           rectangle.
-           And that's true if and only if we can derive corners 0 and 3 from
-           corners 1 and 2 in one of two straightforward ways...
-           We could use a tolerance here but for now we'll fall back to FALSE in the case
-           of floating point error.
-        */
-        *is_tight =
-            (quad_x[1] == quad_x[0] && quad_y[1] == quad_y[3] &&
-             quad_x[2] == quad_x[3] && quad_y[2] == quad_y[0]) ||
-            (quad_x[1] == quad_x[3] && quad_y[1] == quad_y[0] &&
-             quad_x[2] == quad_x[0] && quad_y[2] == quad_y[3]);
-    }
-#endif
-
-    return gfxRect(min_x, min_y, max_x - min_x, max_y - min_y);
+    return gfxRect(x0, y0, x1 - x0, y1 - y0);
 }

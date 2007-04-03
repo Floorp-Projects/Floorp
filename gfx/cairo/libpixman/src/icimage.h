@@ -101,12 +101,13 @@ typedef struct _pixman_radial_gradient_image {
     int			   stopRange;
     uint32_t		   *colorTable;
     int			   colorTableSize;
-    pixman_circle_t	   c1;
-    pixman_circle_t	   c2;
-    double		   cdx;
-    double		   cdy;
-    double		   dr;
-    double		   A;
+    double		   fx;
+    double		   fy;
+    double		   dx;
+    double		   dy;
+    double		   a;
+    double		   m;
+    double		   b;
 } pixman_radial_gradient_image_t;
 
 typedef struct _pixman_conical_gradient_image {
