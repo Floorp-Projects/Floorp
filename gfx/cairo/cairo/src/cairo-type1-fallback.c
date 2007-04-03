@@ -34,6 +34,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-type1-private.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-output-stream-private.h"
@@ -115,11 +116,6 @@ fail:
 
     return CAIRO_STATUS_NO_MEMORY;
 }
-
-/* Magic constants for the type1 eexec encryption */
-static const unsigned short encrypt_c1 = 52845, encrypt_c2 = 22719;
-static const unsigned short private_dict_key = 55665;
-static const unsigned short charstring_key = 4330;
 
 /* Charstring commands. If the high byte is 0 the command is encoded
  * with a single byte. */
@@ -301,13 +297,13 @@ charstring_encrypt (cairo_array_t *data)
     unsigned char *d, *end;
     uint16_t c, p, r;
 
-    r = charstring_key;
+    r = CAIRO_TYPE1_CHARSTRING_KEY;
     d = (unsigned char *) _cairo_array_index (data, 0);
     end = d + _cairo_array_num_elements (data);
     while (d < end) {
 	p = *d;
 	c = p ^ (r >> 8);
-	r = (c + r) * encrypt_c1 + encrypt_c2;
+	r = (c + r) * CAIRO_TYPE1_ENCRYPT_C1 + CAIRO_TYPE1_ENCRYPT_C2;
         *d++ = c;
     }
 }
@@ -534,7 +530,7 @@ cairo_type1_write_stream_encrypted (void                *closure,
     while (in < end) {
 	p = *in++;
 	c = p ^ (font->eexec_key >> 8);
-	font->eexec_key = (c + font->eexec_key) * encrypt_c1 + encrypt_c2;
+	font->eexec_key = (c + font->eexec_key) * CAIRO_TYPE1_ENCRYPT_C1 + CAIRO_TYPE1_ENCRYPT_C2;
 
 	if (font->hex_encode) {
 	    digits[0] = hex_digits[c >> 4];
@@ -564,7 +560,7 @@ cairo_type1_font_write_private_dict (cairo_type1_font_t *font,
     cairo_int_status_t status;
     cairo_output_stream_t *encrypted_output;
 
-    font->eexec_key = private_dict_key;
+    font->eexec_key = CAIRO_TYPE1_PRIVATE_DICT_KEY;
     font->hex_column = 0;
     encrypted_output = _cairo_output_stream_create (
         cairo_type1_write_stream_encrypted,
@@ -680,8 +676,9 @@ static void
 cairo_type1_font_destroy (cairo_type1_font_t *font)
 {
     free (font->widths);
-    _cairo_array_fini (&font->contents);
     cairo_scaled_font_destroy (font->type1_scaled_font);
+    _cairo_array_fini (&font->contents);
+    _cairo_output_stream_destroy (font->output);
     free (font);
 }
 

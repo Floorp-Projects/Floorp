@@ -37,7 +37,7 @@
 #include "cairoint.h"
 
 static cairo_status_t
-_cairo_spline_grow_by (cairo_spline_t *spline, int additional);
+_cairo_spline_grow (cairo_spline_t *spline);
 
 static cairo_status_t
 _cairo_spline_add_point (cairo_spline_t *spline, cairo_point_t *point);
@@ -90,31 +90,47 @@ _cairo_spline_init (cairo_spline_t *spline,
 void
 _cairo_spline_fini (cairo_spline_t *spline)
 {
-    spline->num_points = 0;
-    spline->points_size = 0;
-    free (spline->points);
+    if (spline->points && spline->points != spline->points_embedded)
+	free (spline->points);
+
     spline->points = NULL;
+    spline->points_size = 0;
+    spline->num_points = 0;
 }
 
+/* make room for at least one more point */
 static cairo_status_t
-_cairo_spline_grow_by (cairo_spline_t *spline, int additional)
+_cairo_spline_grow (cairo_spline_t *spline)
 {
     cairo_point_t *new_points;
     int old_size = spline->points_size;
-    int new_size = spline->num_points + additional;
+    int embedded_size = sizeof (spline->points_embedded) / sizeof (spline->points_embedded[0]);
+    int new_size = 2 * MAX (old_size, 16);
 
-    if (new_size <= spline->points_size)
+    /* we have a local buffer at spline->points_embedded.  try to fulfill the request
+     * from there. */
+    if (old_size < embedded_size) {
+	spline->points = spline->points_embedded;
+	spline->points_size = embedded_size;
 	return CAIRO_STATUS_SUCCESS;
+    }
 
-    spline->points_size = new_size;
-    new_points = realloc (spline->points, spline->points_size * sizeof (cairo_point_t));
+    assert (spline->num_points <= spline->points_size);
+
+    if (spline->points == spline->points_embedded) {
+	new_points = malloc (new_size * sizeof (cairo_point_t));
+	if (new_points)
+	    memcpy (new_points, spline->points, old_size * sizeof (cairo_point_t));
+    } else {
+	new_points = realloc (spline->points, new_size * sizeof (cairo_point_t));
+    }
 
     if (new_points == NULL) {
-	spline->points_size = old_size;
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
     spline->points = new_points;
+    spline->points_size = new_size;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -132,8 +148,7 @@ _cairo_spline_add_point (cairo_spline_t *spline, cairo_point_t *point)
     }
 
     if (spline->num_points >= spline->points_size) {
-	int additional = spline->points_size ? spline->points_size : 32;
-	status = _cairo_spline_grow_by (spline, additional);
+	status = _cairo_spline_grow (spline);
 	if (status)
 	    return status;
     }

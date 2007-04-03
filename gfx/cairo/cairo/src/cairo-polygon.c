@@ -40,7 +40,7 @@
 /* private functions */
 
 static cairo_status_t
-_cairo_polygon_grow_by (cairo_polygon_t *polygon, int additional);
+_cairo_polygon_grow (cairo_polygon_t *polygon);
 
 void
 _cairo_polygon_init (cairo_polygon_t *polygon)
@@ -50,42 +50,55 @@ _cairo_polygon_init (cairo_polygon_t *polygon)
     polygon->edges_size = 0;
     polygon->edges = NULL;
 
-    polygon->has_current_point = 0;
+    polygon->has_current_point = FALSE;
 }
 
 void
 _cairo_polygon_fini (cairo_polygon_t *polygon)
 {
-    if (polygon->edges_size) {
+    if (polygon->edges && polygon->edges != polygon->edges_embedded)
 	free (polygon->edges);
-	polygon->edges = NULL;
-	polygon->edges_size = 0;
-	polygon->num_edges = 0;
-    }
 
-    polygon->has_current_point = 0;
+    polygon->edges = NULL;
+    polygon->edges_size = 0;
+    polygon->num_edges = 0;
+
+    polygon->has_current_point = FALSE;
 }
 
+/* make room for at least one more edge */
 static cairo_status_t
-_cairo_polygon_grow_by (cairo_polygon_t *polygon, int additional)
+_cairo_polygon_grow (cairo_polygon_t *polygon)
 {
     cairo_edge_t *new_edges;
     int old_size = polygon->edges_size;
-    int new_size = polygon->num_edges + additional;
+    int embedded_size = sizeof (polygon->edges_embedded) / sizeof (polygon->edges_embedded[0]);
+    int new_size = 2 * MAX (old_size, 16);
 
-    if (new_size <= polygon->edges_size) {
+    /* we have a local buffer at polygon->edges_embedded.  try to fulfill the request
+     * from there. */
+    if (old_size < embedded_size) {
+	polygon->edges = polygon->edges_embedded;
+	polygon->edges_size = embedded_size;
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    polygon->edges_size = new_size;
-    new_edges = realloc (polygon->edges, polygon->edges_size * sizeof (cairo_edge_t));
+    assert (polygon->num_edges <= polygon->edges_size);
+
+    if (polygon->edges == polygon->edges_embedded) {
+	new_edges = malloc (new_size * sizeof (cairo_edge_t));
+	if (new_edges)
+	    memcpy (new_edges, polygon->edges, old_size * sizeof (cairo_edge_t));
+    } else {
+	new_edges = realloc (polygon->edges, new_size * sizeof (cairo_edge_t));
+    }
 
     if (new_edges == NULL) {
-	polygon->edges_size = old_size;
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
     polygon->edges = new_edges;
+    polygon->edges_size = new_size;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -102,8 +115,7 @@ _cairo_polygon_add_edge (cairo_polygon_t *polygon, cairo_point_t *p1, cairo_poin
     }
 
     if (polygon->num_edges >= polygon->edges_size) {
-	int additional = polygon->edges_size ? polygon->edges_size : 16;
-	status = _cairo_polygon_grow_by (polygon, additional);
+	status = _cairo_polygon_grow (polygon);
 	if (status) {
 	    return status;
 	}
@@ -134,7 +146,7 @@ _cairo_polygon_move_to (cairo_polygon_t *polygon, cairo_point_t *point)
     if (! polygon->has_current_point)
 	polygon->first_point = *point;
     polygon->current_point = *point;
-    polygon->has_current_point = 1;
+    polygon->has_current_point = TRUE;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -165,7 +177,7 @@ _cairo_polygon_close (cairo_polygon_t *polygon)
 	if (status)
 	    return status;
 
-	polygon->has_current_point = 0;
+	polygon->has_current_point = FALSE;
     }
 
     return CAIRO_STATUS_SUCCESS;

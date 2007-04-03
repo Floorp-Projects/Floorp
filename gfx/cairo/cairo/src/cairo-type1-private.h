@@ -1,6 +1,6 @@
-/* cairo - a vector graphics library with display and print output
+/* Cairo - a vector graphics library with display and print output
  *
- * Copyright © 2005 Red Hat, Inc.
+ * Copyright © 2007 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -30,26 +30,16 @@
  * The Initial Developer of the Original Code is Red Hat, Inc.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@redhat.com>
+ *	Adrian Johnson <ajohnson@redneon.com>
  */
 
-#ifndef CAIRO_PRIVATE_H
-#define CAIRO_PRIVATE_H
+#ifndef CAIRO_TYPE1_PRIVATE_H
+#define CAIRO_TYPE1_PRIVATE_H
 
-#include "cairo-gstate-private.h"
-#include "cairo-path-fixed-private.h"
+/* Magic constants for the type1 eexec encryption */
+#define CAIRO_TYPE1_ENCRYPT_C1		((unsigned short) 52845)
+#define CAIRO_TYPE1_ENCRYPT_C2		((unsigned short) 22719)
+#define CAIRO_TYPE1_PRIVATE_DICT_KEY	((unsigned short) 55665)
+#define CAIRO_TYPE1_CHARSTRING_KEY	((unsigned short) 4330)
 
-struct _cairo {
-    unsigned int ref_count;
-
-    cairo_status_t status;
-
-    cairo_user_data_array_t user_data;
-
-    cairo_gstate_t *gstate;
-    cairo_gstate_t  gstate_tail[1];
-
-    cairo_path_fixed_t path[1];
-};
-
-#endif /* CAIRO_PRIVATE_H */
+#endif /* CAIRO_TYPE1_PRIVATE_H */
