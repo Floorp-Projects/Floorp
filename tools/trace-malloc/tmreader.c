@@ -56,6 +56,8 @@
 #include "nsTraceMalloc.h"
 #include "tmreader.h"
 
+#define DEBUG_tmreader
+
 static int accum_byte(FILE *fp, uint32 *uip)
 {
     int c = getc(fp);
@@ -154,6 +156,10 @@ static int get_tmevent(FILE *fp, tmevent *event)
         if (!s)
             return 0;
         event->u.libname = s;
+#ifdef DEBUG_tmreader
+        printf("tmevent %c %u libname=\"%s\"\n", event->type, event->serial,
+               event->u.libname);
+#endif
         break;
 
       case TM_EVENT_FILENAME:
@@ -161,6 +167,10 @@ static int get_tmevent(FILE *fp, tmevent *event)
         if (!s)
             return 0;
         event->u.srcname = s;
+#ifdef DEBUG_tmreader
+        printf("tmevent %c %u srcname=\"%s\"\n", event->type, event->serial,
+               event->u.srcname);
+#endif
         break;
 
       case TM_EVENT_METHOD:
@@ -174,6 +184,13 @@ static int get_tmevent(FILE *fp, tmevent *event)
         if (!s)
             return 0;
         event->u.method.name = s;
+#ifdef DEBUG_tmreader
+        printf("tmevent %c %u library=%u filename=%u linenumber=%u "
+               "name=\"%s\"\n",
+               event->type, event->serial,
+               event->u.method.library, event->u.method.filename,
+               event->u.method.linenumber, event->u.method.name);
+#endif
         break;
 
       case TM_EVENT_CALLSITE:
@@ -183,6 +200,12 @@ static int get_tmevent(FILE *fp, tmevent *event)
             return 0;
         if (!get_uint32(fp, &event->u.site.offset))
             return 0;
+#ifdef DEBUG_tmreader
+        printf("tmevent %c %u parent=%u method=%u offset=%u\n",
+               event->type, event->serial,
+               event->u.site.parent, event->u.site.method,
+               event->u.site.offset);
+#endif
         break;
 
       case TM_EVENT_MALLOC:
@@ -199,6 +222,12 @@ static int get_tmevent(FILE *fp, tmevent *event)
         event->u.alloc.oldserial = 0;
         event->u.alloc.oldptr = 0;
         event->u.alloc.oldsize = 0;
+#ifdef DEBUG_tmreader
+        printf("tmevent %c %u interval=%u cost=%u ptr=0x%x size=%u\n",
+               event->type, event->serial,
+               event->u.alloc.interval, event->u.alloc.cost,
+               event->u.alloc.ptr, event->u.alloc.size);
+#endif
 #if defined(DEBUG_dp)
         if (c == TM_EVENT_MALLOC)
             printf("%d malloc %d 0x%p\n", event->u.alloc.cost,
@@ -227,6 +256,15 @@ static int get_tmevent(FILE *fp, tmevent *event)
             return 0;
         if (!get_uint32(fp, &event->u.alloc.oldsize))
             return 0;
+#ifdef DEBUG_tmreader
+        printf("tmevent %c %u interval=%u cost=%u ptr=0x%x size=%u "
+               "oldserial=%u oldptr=0x%x oldsize=%u\n",
+               event->type, event->serial,
+               event->u.alloc.interval, event->u.alloc.cost,
+               event->u.alloc.ptr, event->u.alloc.size,
+               event->u.alloc.oldserial, event->u.alloc.oldptr,
+               event->u.alloc.oldsize);
+#endif
 #if defined(DEBUG_dp)
         printf("%d realloc %d 0x%p %d\n", event->u.alloc.cost,
                event->u.alloc.size, event->u.alloc.ptr, event->u.alloc.oldsize);
@@ -278,7 +316,13 @@ static int get_tmevent(FILE *fp, tmevent *event)
             return 0;
         if (!get_uint32(fp, &event->u.stats.calltree_maxstack_top))
             return 0;
+#ifdef DEBUG_tmreader
+        printf("tmevent %c %u\n", event->type, event->serial);
+#endif
         break;
+      default:
+        fprintf(stderr, "Unknown event type %c\n", event->type);
+        return 0;
     }
     return 1;
 }
