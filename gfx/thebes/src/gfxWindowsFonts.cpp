@@ -256,6 +256,9 @@ gfxWindowsFont::MakeHFONT()
         chosenWeight = baseWeight * 100;
     }
 
+    if (chosenWeight == 0)
+        chosenWeight = baseWeight * 100;
+
     mAdjustedSize = mStyle->size;
     if (mStyle->sizeAdjust > 0) {
         if (!mFont) {
