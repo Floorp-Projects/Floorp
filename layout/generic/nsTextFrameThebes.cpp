@@ -248,7 +248,7 @@ public:
                          nscolor* aLineColor,
                          float*   aRelativeSize);
 
-  nsPresContext* GetPresContext() { return mPresContext; }
+  nsPresContext* PresContext() { return mPresContext; }
 
   enum {
     eIndexRawInput = 0,
@@ -782,7 +782,7 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
   // context (e.g., MathML). Need to detect the true container and scan it
   // as if it was one line.
 
-  nsPresContext* presContext = aForFrame->GetPresContext();
+  nsPresContext* presContext = aForFrame->PresContext();
 
   // Find line where we can start building text runs. It's the first line at
   // or before aForFrameLine that's after a hard break.
@@ -1149,7 +1149,7 @@ GetSpacingFlags(const nsStyleCoord& aStyleCoord)
 static gfxFontGroup*
 GetFontGroupForFrame(nsIFrame* aFrame)
 {
-  nsIDeviceContext* devContext = aFrame->GetPresContext()->DeviceContext();
+  nsIDeviceContext* devContext = aFrame->PresContext()->DeviceContext();
   const nsStyleFont* fontStyle = aFrame->GetStyleFont();
   const nsStyleVisibility* visibilityStyle = aFrame->GetStyleVisibility();
   nsCOMPtr<nsIFontMetrics> metrics;
@@ -1422,7 +1422,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   gfxTextRunFactory::Parameters params =
       { mContext, finalUserData, firstFrame->GetStyleVisibility()->mLangGroup, &skipChars,
         textBreakPoints.Elements(), nextBreakIndex,
-        firstFrame->GetPresContext()->AppUnitsPerDevPixel(), textFlags };
+        firstFrame->PresContext()->AppUnitsPerDevPixel(), textFlags };
 
   gfxTextRun* textRun;
   if (mDoubleByteText) {
@@ -1569,7 +1569,7 @@ nsTextFrame::EnsureTextRun(nsIRenderingContext* aRC, nsBlockFrame* aBlock,
   if (!mTextRun) {
     if (!aRC) {
       nsCOMPtr<nsIRenderingContext> rendContext;      
-      nsresult rv = GetPresContext()->PresShell()->
+      nsresult rv = PresContext()->PresShell()->
         CreateRenderingContext(this, getter_AddRefs(rendContext));
       if (NS_SUCCEEDED(rv)) {
         BuildTextRuns(rendContext, this, aBlock, aLine);
@@ -2419,7 +2419,7 @@ ShouldDarkenColors(nsPresContext* aPresContext)
 
 nsTextPaintStyle::nsTextPaintStyle(nsTextFrame* aFrame)
   : mFrame(aFrame),
-    mPresContext(aFrame->GetPresContext()),
+    mPresContext(aFrame->PresContext()),
     mInitCommonColors(PR_FALSE),
     mInitSelectionColors(PR_FALSE)
 {
@@ -2844,7 +2844,7 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
     PRInt32 start, end;
     aPrevInFlow->GetOffsets(start, mContentOffset);
 
-    nsPropertyTable *propTable = GetPresContext()->PropertyTable();
+    nsPropertyTable *propTable = PresContext()->PropertyTable();
     propTable->SetProperty(this, nsGkAtoms::embeddingLevel,
           propTable->GetProperty(aPrevInFlow, nsGkAtoms::embeddingLevel),
                            nsnull, nsnull);
@@ -3242,7 +3242,7 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
   // Quirks mode text decoration are rendered by children; see bug 1777
   // In non-quirks mode, nsHTMLContainer::Paint and nsBlockFrame::Paint
   // does the painting of text decorations.
-  if (eCompatibility_NavQuirks != aTextPaintStyle.GetPresContext()->CompatibilityMode())
+  if (eCompatibility_NavQuirks != aTextPaintStyle.PresContext()->CompatibilityMode())
     return;
 
   PRBool useOverride = PR_FALSE;
@@ -3302,18 +3302,18 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
   gfxFloat pix2app = mTextRun->GetAppUnitsPerDevUnit();
 
   if (decorations & NS_FONT_DECORATION_OVERLINE) {
-    FillClippedRect(aCtx, aTextPaintStyle.GetPresContext(), overColor, aDirtyRect,
+    FillClippedRect(aCtx, aTextPaintStyle.PresContext(), overColor, aDirtyRect,
                     gfxRect(aFramePt.x, aFramePt.y,
                             GetRect().width, fontMetrics.underlineSize*pix2app));
   }
   if (decorations & NS_FONT_DECORATION_UNDERLINE) {
-    FillClippedRect(aCtx, aTextPaintStyle.GetPresContext(), underColor, aDirtyRect,
+    FillClippedRect(aCtx, aTextPaintStyle.PresContext(), underColor, aDirtyRect,
                     gfxRect(aFramePt.x,
                             aFramePt.y + mAscent - fontMetrics.underlineOffset,
                             GetRect().width, fontMetrics.underlineSize*pix2app));
   }
   if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
-    FillClippedRect(aCtx, aTextPaintStyle.GetPresContext(), strikeColor, aDirtyRect,
+    FillClippedRect(aCtx, aTextPaintStyle.PresContext(), strikeColor, aDirtyRect,
                     gfxRect(aFramePt.x,
                             aFramePt.y + mAscent - fontMetrics.strikeoutOffset,
                             GetRect().width, fontMetrics.strikeoutSize*pix2app));
@@ -3332,7 +3332,7 @@ static void DrawIMEUnderline(gfxContext* aContext, PRInt32 aIndex,
     nsTextPaintStyle& aTextPaintStyle, const gfxPoint& aBaselinePt, gfxFloat aWidth,
     const gfxRect& aDirtyRect, const gfxFont::Metrics& aFontMetrics)
 {
-  float p2t = aTextPaintStyle.GetPresContext()->AppUnitsPerDevPixel();
+  float p2t = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
   nscolor color;
   float relativeSize;
   if (!aTextPaintStyle.GetIMEUnderline(aIndex, &color, &relativeSize))
@@ -3340,7 +3340,7 @@ static void DrawIMEUnderline(gfxContext* aContext, PRInt32 aIndex,
 
   gfxFloat y = aBaselinePt.y - aFontMetrics.underlineOffset*p2t;
   gfxFloat size = aFontMetrics.underlineSize*p2t;
-  FillClippedRect(aContext, aTextPaintStyle.GetPresContext(),
+  FillClippedRect(aContext, aTextPaintStyle.PresContext(),
                   color, aDirtyRect,
                   gfxRect(aBaselinePt.x + size, y,
                           PR_MAX(0, aWidth - 2*size), relativeSize*size));
@@ -3354,7 +3354,7 @@ static void DrawSelectionDecorations(gfxContext* aContext, SelectionType aType,
     nsTextPaintStyle& aTextPaintStyle, const gfxPoint& aBaselinePt, gfxFloat aWidth,
     const gfxRect& aDirtyRect, const gfxFont::Metrics& aFontMetrics)
 {
-  float p2t = aTextPaintStyle.GetPresContext()->AppUnitsPerDevPixel();
+  float p2t = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
   float t2p = 1/p2t;
 
   switch (aType) {
@@ -3592,7 +3592,7 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
         mTextRun->GetAdvanceWidth(offset, length, &aProvider);
       if (NS_GET_A(background) > 0) {
         gfxFloat x = xOffset - (mTextRun->IsRightToLeft() ? advance : 0);
-        FillClippedRect(aCtx, aTextPaintStyle.GetPresContext(),
+        FillClippedRect(aCtx, aTextPaintStyle.PresContext(),
                         background, aDirtyRect,
                         gfxRect(aFramePt.x + x, aFramePt.y, advance, GetSize().height));
       }
@@ -3781,7 +3781,7 @@ nsTextFrame::GetSelectionStatus(PRInt16* aSelectionFlags)
 {
   // get the selection controller
   nsCOMPtr<nsISelectionController> selectionController;
-  nsresult rv = GetSelectionController(GetPresContext(),
+  nsresult rv = GetSelectionController(PresContext(),
                                        getter_AddRefs(selectionController));
   if (NS_FAILED(rv) || !selectionController)
     return nsISelectionController::SELECTION_OFF;
