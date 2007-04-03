@@ -43,14 +43,7 @@
 #include "cairo-gstate-private.h"
 
 static cairo_status_t
-_cairo_gstate_init (cairo_gstate_t  *gstate,
-		    cairo_surface_t *target);
-
-static cairo_status_t
 _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other);
-
-static void
-_cairo_gstate_fini (cairo_gstate_t *gstate);
 
 static cairo_status_t
 _cairo_gstate_ensure_font_face (cairo_gstate_t *gstate);
@@ -67,40 +60,7 @@ _cairo_gstate_transform_glyphs_to_backend (cairo_gstate_t      *gstate,
                                            int                  num_glyphs,
                                            cairo_glyph_t       *transformed_glyphs);
 
-/**
- * _cairo_gstate_create:
- * @target: a #cairo_surface_t, not NULL
- *
- * Create a new #cairo_gstate_t to draw to target with all graphics
- * state parameters set to defaults. gstate->next will be set to NULL
- * and may be used by the caller to chain #cairo_gstate_t objects
- * together.
- *
- * Return value: a new #cairo_gstate_t or NULL if there is
- * insufficient memory.
- **/
-cairo_gstate_t *
-_cairo_gstate_create (cairo_surface_t *target)
-{
-    cairo_status_t status;
-    cairo_gstate_t *gstate;
-
-    assert (target != NULL);
-
-    gstate = malloc (sizeof (cairo_gstate_t));
-    if (gstate == NULL)
-	return NULL;
-
-    status = _cairo_gstate_init (gstate, target);
-    if (status) {
-	free (gstate);
-	return NULL;
-    }
-
-    return gstate;
-}
-
-static cairo_status_t
+cairo_status_t
 _cairo_gstate_init (cairo_gstate_t  *gstate,
 		    cairo_surface_t *target)
 {
@@ -189,7 +149,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
+void
 _cairo_gstate_fini (cairo_gstate_t *gstate)
 {
     _cairo_stroke_style_fini (&gstate->stroke_style);
@@ -722,8 +682,8 @@ _cairo_gstate_backend_to_user_rectangle (cairo_gstate_t *gstate,
 
     cairo_matrix_multiply (&matrix_inverse, &gstate->ctm_inverse,
                            &gstate->target->device_transform_inverse);
-    cairo_matrix_transform_bounding_box (&matrix_inverse,
-					 x1, y1, x2, y2, is_tight);
+    _cairo_matrix_transform_bounding_box (&matrix_inverse,
+					  x1, y1, x2, y2, is_tight);
 }
 
 /* XXX: NYI
@@ -955,6 +915,11 @@ _cairo_gstate_in_stroke (cairo_gstate_t	    *gstate,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_traps_t traps;
 
+    if (gstate->stroke_style.line_width <= 0.0) {
+	*inside_ret = FALSE;
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     _cairo_gstate_user_to_backend (gstate, &x, &y);
 
     _cairo_traps_init (&traps);
@@ -1073,12 +1038,23 @@ _cairo_gstate_traps_extents_to_user_rectangle (cairo_gstate_t	  *gstate,
 
     if (extents.p1.x >= extents.p2.x || extents.p1.y >= extents.p2.y) {
         /* no traps, so we actually won't draw anything */
-        *x1 = *y1 = *x2 = *y2 = 0;
+	if (x1)
+	    *x1 = 0.0;
+	if (y1)
+	    *y1 = 0.0;
+	if (x2)
+	    *x2 = 0.0;
+	if (y2)
+	    *y2 = 0.0;
     } else {
-        *x1 = _cairo_fixed_to_double (extents.p1.x);
-        *y1 = _cairo_fixed_to_double (extents.p1.y);
-        *x2 = _cairo_fixed_to_double (extents.p2.x);
-        *y2 = _cairo_fixed_to_double (extents.p2.y);
+	if (x1)
+	    *x1 = _cairo_fixed_to_double (extents.p1.x);
+	if (y1)
+	    *y1 = _cairo_fixed_to_double (extents.p1.y);
+	if (x2)
+	    *x2 = _cairo_fixed_to_double (extents.p2.x);
+	if (y2)
+	    *y2 = _cairo_fixed_to_double (extents.p2.y);
 
         _cairo_gstate_backend_to_user_rectangle (gstate, x1, y1, x2, y2, NULL);
     }
@@ -1092,6 +1068,18 @@ _cairo_gstate_stroke_extents (cairo_gstate_t	 *gstate,
 {
     cairo_status_t status;
     cairo_traps_t traps;
+
+    if (gstate->stroke_style.line_width <= 0.0) {
+	if (x1)
+	    *x1 = 0.0;
+	if (y1)
+	    *y1 = 0.0;
+	if (x2)
+	    *x2 = 0.0;
+	if (y2)
+	    *y2 = 0.0;
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     _cairo_traps_init (&traps);
 
@@ -1165,11 +1153,15 @@ _cairo_gstate_clip_extents (cairo_gstate_t *gstate,
     status = _cairo_clip_intersect_to_rectangle (&gstate->clip, &extents);
     if (status)
         return status;
-    
-    *x1 = extents.x;
-    *y1 = extents.y;
-    *x2 = extents.x + extents.width;
-    *y2 = extents.y + extents.height;
+
+    if (x1)
+	*x1 = extents.x;
+    if (y1)
+	*y1 = extents.y;
+    if (x2)
+	*x2 = extents.x + extents.width;
+    if (y2)
+	*y2 = extents.y + extents.height;
 
     _cairo_gstate_backend_to_user_rectangle (gstate, x1, y1, x2, y2, NULL);
 
@@ -1267,6 +1259,21 @@ _cairo_gstate_get_font_face (cairo_gstate_t     *gstate,
 	return status;
 
     *font_face = gstate->font_face;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_gstate_get_scaled_font (cairo_gstate_t       *gstate,
+			       cairo_scaled_font_t **scaled_font)
+{
+    cairo_status_t status;
+
+    status = _cairo_gstate_ensure_scaled_font (gstate);
+    if (status)
+	return status;
+
+    *scaled_font = gstate->scaled_font;
 
     return CAIRO_STATUS_SUCCESS;
 }

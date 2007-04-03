@@ -194,6 +194,8 @@ cairo_os2_surface_set_manual_window_refresh (cairo_surface_t *surface,
 cairo_public cairo_bool_t
 cairo_os2_surface_get_manual_window_refresh (cairo_surface_t *surface);
 
+#else  /* CAIRO_HAS_OS2_SURFACE */
+# error Cairo was not compiled with support for the OS/2 backend
 #endif /* CAIRO_HAS_OS2_SURFACE */
 
 CAIRO_END_DECLS

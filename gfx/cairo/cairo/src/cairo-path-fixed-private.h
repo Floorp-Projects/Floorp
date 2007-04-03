@@ -42,34 +42,30 @@ typedef enum cairo_path_op {
     CAIRO_PATH_OP_CURVE_TO = 2,
     CAIRO_PATH_OP_CLOSE_PATH = 3
 } __attribute__ ((packed)) cairo_path_op_t; /* Don't want 32 bits if we can avoid it. */
+/* XXX Shall we just not use char instead of hoping for __attribute__ working? */
 
-#define CAIRO_PATH_BUF_SIZE 64
+/* make cairo_path_fixed fit a 512 bytes.  about 50 items */
+#define CAIRO_PATH_BUF_SIZE ((512 - 12 * sizeof (void*)) \
+			   / (sizeof (cairo_point_t) + sizeof (cairo_path_op_t)))
 
-typedef struct _cairo_path_op_buf {
+typedef struct _cairo_path_buf {
+    struct _cairo_path_buf *next, *prev;
     int num_ops;
-    cairo_path_op_t op[CAIRO_PATH_BUF_SIZE];
-
-    struct _cairo_path_op_buf *next, *prev;
-} cairo_path_op_buf_t;
-
-typedef struct _cairo_path_arg_buf {
     int num_points;
+
+    cairo_path_op_t op[CAIRO_PATH_BUF_SIZE];
     cairo_point_t points[CAIRO_PATH_BUF_SIZE];
 
-    struct _cairo_path_arg_buf *next, *prev;
-} cairo_path_arg_buf_t;
+} cairo_path_buf_t;
 
 struct _cairo_path_fixed {
-    cairo_path_op_buf_t *op_buf_head;
-    cairo_path_op_buf_t *op_buf_tail;
-
-    cairo_path_arg_buf_t *arg_buf_head;
-    cairo_path_arg_buf_t *arg_buf_tail;
-
     cairo_point_t last_move_point;
     cairo_point_t current_point;
     unsigned int has_current_point	: 1;
     unsigned int has_curve_to		: 1;
+
+    cairo_path_buf_t *buf_tail;
+    cairo_path_buf_t  buf_head[1];
 };
 
 #endif /* CAIRO_PATH_FIXED_PRIVATE_H */
