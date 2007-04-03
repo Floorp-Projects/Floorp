@@ -129,6 +129,11 @@ endif
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CSRCS   += cairo-quartz-surface.c cairo-atsui-font.c
 EXPORTS += cairo-quartz.h cairo-atsui.h
+
+ifdef MOZ_ENABLE_CAIRO_GFX
+CSRCS   += cairo-nquartz-surface.c
+EXPORTS += cairo-nquartz.h
+endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
