@@ -610,27 +610,24 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
     _swap_ximage_to_native (ximage);
 
     /*
-     * Compute the pixel format masks from either a XrenderFormat or
-     * else from a visual; failing that we assume the drawable is an
-     * alpha-only pixmap as it could only have been created that way
-     * through the cairo_xlib_surface_create_for_bitmap function.
+     * Compute the pixel format masks from either a visual or a
+     * XRenderFormat, failing we assume the drawable is an
+     * alpha-only pixmap as it could only have been created
+     * that way through the cairo_xlib_surface_create_for_bitmap
+     * function.
      */
-    if (surface->xrender_format) {
-	masks.bpp = ximage->bits_per_pixel;
-	masks.red_mask =   (unsigned long) surface->xrender_format->direct.redMask
-	    << surface->xrender_format->direct.red;
-	masks.green_mask = (unsigned long) surface->xrender_format->direct.greenMask
-	    << surface->xrender_format->direct.green;
-	masks.blue_mask =  (unsigned long) surface->xrender_format->direct.blueMask
-	    << surface->xrender_format->direct.blue;
-	masks.alpha_mask = (unsigned long) surface->xrender_format->direct.alphaMask
-	    << surface->xrender_format->direct.alpha;
-    } else if (surface->visual) {
+    if (surface->visual) {
 	masks.bpp = ximage->bits_per_pixel;
 	masks.alpha_mask = 0;
 	masks.red_mask = surface->visual->red_mask;
 	masks.green_mask = surface->visual->green_mask;
 	masks.blue_mask = surface->visual->blue_mask;
+    } else if (surface->xrender_format) {
+	masks.bpp = ximage->bits_per_pixel;
+	masks.red_mask = (unsigned long)surface->xrender_format->direct.redMask << surface->xrender_format->direct.red;
+	masks.green_mask = (unsigned long)surface->xrender_format->direct.greenMask << surface->xrender_format->direct.green;
+	masks.blue_mask = (unsigned long)surface->xrender_format->direct.blueMask << surface->xrender_format->direct.blue;
+	masks.alpha_mask = (unsigned long)surface->xrender_format->direct.alphaMask << surface->xrender_format->direct.alpha;
     } else {
 	masks.bpp = ximage->bits_per_pixel;
 	masks.red_mask = 0;
@@ -2022,7 +2019,9 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
     return _cairo_xlib_surface_create_internal (dpy, drawable, screen,
 						NULL, format, width, height, 0);
 }
+#if 0
 slim_hidden_def (cairo_xlib_surface_create_with_xrender_format);
+#endif
 
 /**
  * cairo_xlib_surface_set_size:
@@ -2271,35 +2270,12 @@ typedef struct _cairo_xlib_surface_font_private {
     XRenderPictFormat	*xrender_format;
 } cairo_xlib_surface_font_private_t;
 
-static void
-_cairo_xlib_surface_remove_scaled_font (Display *dpy,
-	                               void    *data)
-{
-    cairo_scaled_font_t *scaled_font = data;
-    cairo_xlib_surface_font_private_t	*font_private = scaled_font->surface_private;
-
-    _cairo_scaled_font_reset_cache (scaled_font);
-
-    /* separate function to avoid deadlock if we tried to remove the
-     * close display hook ala _cairo_xlib_surface_scaled_font_fini() */
-    if (font_private) {
-	XRenderFreeGlyphSet (font_private->dpy, font_private->glyphset);
-	free (font_private);
-	scaled_font->surface_private = NULL;
-    }
-}
-
 static cairo_status_t
 _cairo_xlib_surface_font_init (Display		    *dpy,
 			       cairo_scaled_font_t  *scaled_font,
 			       cairo_format_t	     format)
 {
     cairo_xlib_surface_font_private_t	*font_private;
-
-    if (!_cairo_xlib_add_close_display_hook (dpy,
-		_cairo_xlib_surface_remove_scaled_font,
-		scaled_font, scaled_font))
-	return CAIRO_STATUS_NO_MEMORY;
 
     font_private = malloc (sizeof (cairo_xlib_surface_font_private_t));
     if (!font_private)
@@ -2311,7 +2287,6 @@ _cairo_xlib_surface_font_init (Display		    *dpy,
     font_private->glyphset = XRenderCreateGlyphSet (dpy, font_private->xrender_format);
     scaled_font->surface_private = font_private;
     scaled_font->surface_backend = &cairo_xlib_surface_backend;
-
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -2321,7 +2296,6 @@ _cairo_xlib_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font)
     cairo_xlib_surface_font_private_t	*font_private = scaled_font->surface_private;
 
     if (font_private) {
-	_cairo_xlib_remove_close_display_hook (font_private->dpy, scaled_font);
 	XRenderFreeGlyphSet (font_private->dpy, font_private->glyphset);
 	free (font_private);
     }

@@ -594,7 +594,7 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	unsigned int		    *pixels;
 	unsigned int		    i, n_base_params;
 	glitz_buffer_t		    *buffer;
-	static const glitz_pixel_format_t format = {
+	static glitz_pixel_format_t format = {
 	    GLITZ_FOURCC_RGB,
 	    {
 		32,
@@ -686,12 +686,12 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	{
 	    cairo_radial_pattern_t *grad = (cairo_radial_pattern_t *) pattern;
 
-	    params[0] = grad->gradient.c1.x;
-	    params[1] = grad->gradient.c1.y;
-	    params[2] = grad->gradient.c1.radius;
-	    params[3] = grad->gradient.c2.x;
-	    params[4] = grad->gradient.c2.y;
-	    params[5] = grad->gradient.c2.radius;
+	    params[0] = grad->gradient.inner.x;
+	    params[1] = grad->gradient.inner.y;
+	    params[2] = grad->gradient.inner.radius;
+	    params[3] = grad->gradient.outer.x;
+	    params[4] = grad->gradient.outer.y;
+	    params[5] = grad->gradient.outer.radius;
 	    attr->filter = GLITZ_FILTER_RADIAL_GRADIENT;
 	}
 
@@ -976,7 +976,7 @@ _cairo_glitz_surface_fill_rectangles (void		      *abstract_dst,
 			      (glitz_rectangle_t *) rects, n_rects);
     } break;
     case CAIRO_OPERATOR_CLEAR: {
-	static const glitz_color_t glitz_color = { 0, 0, 0, 0 };
+	static glitz_color_t glitz_color = { 0, 0, 0, 0 };
 
 	glitz_set_rectangles (dst->surface, &glitz_color,
 			      (glitz_rectangle_t *) rects, n_rects);
@@ -1095,7 +1095,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 
     if (op == CAIRO_OPERATOR_ADD || n_traps <= 1)
     {
-	static const glitz_color_t	clear_black = { 0, 0, 0, 0 };
+	static glitz_color_t	clear_black = { 0, 0, 0, 0 };
 	glitz_color_t		color;
 	glitz_geometry_format_t	format;
 	int			n_trap_added;
@@ -1941,7 +1941,7 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
     int					i, cached_glyphs = 0;
     int					remaining_glyps = num_glyphs;
     glitz_float_t			x1, y1, x2, y2;
-    static const glitz_vertex_format_t	format = {
+    static glitz_vertex_format_t	format = {
 	GLITZ_PRIMITIVE_QUADS,
 	GLITZ_DATA_TYPE_FLOAT,
 	sizeof (glitz_float_t) * 4,

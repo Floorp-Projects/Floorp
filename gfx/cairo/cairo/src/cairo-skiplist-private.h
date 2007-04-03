@@ -34,7 +34,7 @@
  * a skip_elt_t, (which will be allocated with variable size).
  *
  * The caller must also pass the size of the structure to
- * _cairo_skip_list_init.
+ * skip_list_init.
  */
 typedef struct _skip_elt {
     int prev_index;
@@ -45,16 +45,16 @@ typedef struct _skip_elt {
 #define SKIP_LIST_ELT_TO_DATA(type, elt) ((type *) ((char *) (elt) - (sizeof (type) - sizeof (skip_elt_t))))
 
 typedef int
-(*cairo_skip_list_compare_t) (void *list, void *a, void *b);
+(*skip_list_compare_t) (void *list, void *a, void *b);
 
 typedef struct _skip_list {
-    cairo_skip_list_compare_t compare;
+    skip_list_compare_t compare;
     size_t elt_size;
     size_t data_size;
     skip_elt_t *chains[MAX_LEVEL];
     skip_elt_t *freelists[MAX_LEVEL];
     int		max_level;
-} cairo_skip_list_t;
+} skip_list_t;
 
 /* Initialize a new skip list. The compare function accepts a pointer
  * to the list as well as pointers to two elements. The function must
@@ -65,8 +65,8 @@ typedef struct _skip_list {
  * list elements must have as its final member a skip_elt_t
  */
 cairo_private void
-_cairo_skip_list_init (cairo_skip_list_t		*list,
-		cairo_skip_list_compare_t	 compare,
+skip_list_init (skip_list_t		*list,
+		skip_list_compare_t	 compare,
 		size_t			 elt_size);
 
 
@@ -74,7 +74,7 @@ _cairo_skip_list_init (cairo_skip_list_t		*list,
  * in it. (XXX: currently this simply deletes all elements.)
  */
 cairo_private void
-_cairo_skip_list_fini (cairo_skip_list_t		*list);
+skip_list_fini (skip_list_t		*list);
 
 /* Insert a new element into the list at the correct sort order as
  * determined by compare. If unique is true, then duplicate elements
@@ -82,18 +82,18 @@ _cairo_skip_list_fini (cairo_skip_list_t		*list);
  * Otherwise data will be copied (elt_size bytes from <data> via
  * memcpy) and the new element is returned. */
 cairo_private void *
-_cairo_skip_list_insert (cairo_skip_list_t *list, void *data, int unique);
+skip_list_insert (skip_list_t *list, void *data, int unique);
 
 /* Find an element which compare considers equal to <data> */
 cairo_private void *
-_cairo_skip_list_find (cairo_skip_list_t *list, void *data);
+skip_list_find (skip_list_t *list, void *data);
 
 /* Delete an element which compare considers equal to <data> */
 cairo_private void
-_cairo_skip_list_delete (cairo_skip_list_t *list, void *data);
+skip_list_delete (skip_list_t *list, void *data);
 
 /* Delete the given element from the list. */
 cairo_private void
-_cairo_skip_list_delete_given (cairo_skip_list_t *list, skip_elt_t *given);
+skip_list_delete_given (skip_list_t *list, skip_elt_t *given);
 
 #endif

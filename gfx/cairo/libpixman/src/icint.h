@@ -1026,7 +1026,6 @@ typedef	xFixed_16_16	xFixed;
 #define IntToxFixed(i)	((xFixed) (i) << XFIXED_BITS)
 #define xFixedE		((xFixed) 1)
 #define xFixed1		(IntToxFixed(1))
-#define xFixedToDouble(f) (double) ((f) / (double) xFixed1)
 #define xFixed1MinusE	(xFixed1 - xFixedE)
 #define xFixedFrac(f)	((f) & xFixed1MinusE)
 #define xFixedFloor(f)	((f) & ~xFixed1MinusE)

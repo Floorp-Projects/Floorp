@@ -121,7 +121,7 @@ typedef struct _cairo_bo_event {
 #define SKIP_ELT_TO_EVENT(elt) SKIP_LIST_ELT_TO_DATA (cairo_bo_event_t, (elt))
 
 typedef struct _cairo_bo_event_queue {
-    cairo_skip_list_t intersection_queue;
+    skip_list_t intersection_queue;
 
     cairo_bo_event_t *startstop_events;
     cairo_bo_event_t **sorted_startstop_event_ptrs;
@@ -129,9 +129,9 @@ typedef struct _cairo_bo_event_queue {
     unsigned num_startstop_events;
 } cairo_bo_event_queue_t;
 
-/* This structure extends cairo_skip_list_t, which must come first. */
+/* This structure extends skip_list_t, which must come first. */
 typedef struct _cairo_bo_sweep_line {
-    cairo_skip_list_t active_edges;
+    skip_list_t active_edges;
     cairo_bo_edge_t *head;
     cairo_bo_edge_t *tail;
     int32_t current_y;
@@ -697,7 +697,7 @@ _cairo_bo_event_queue_insert (cairo_bo_event_queue_t *queue,
 			      cairo_bo_event_t	     *event)
 {
     /* Don't insert if there's already an equivalent intersection event in the queue. */
-    _cairo_skip_list_insert (&queue->intersection_queue, event,
+    skip_list_insert (&queue->intersection_queue, event,
 		      event->type == CAIRO_BO_EVENT_TYPE_INTERSECTION);
 }
 
@@ -706,7 +706,7 @@ _cairo_bo_event_queue_delete (cairo_bo_event_queue_t *queue,
 			      cairo_bo_event_t	     *event)
 {
     if (CAIRO_BO_EVENT_TYPE_INTERSECTION == event->type)
-	_cairo_skip_list_delete_given ( &queue->intersection_queue, &event->elt );
+	skip_list_delete_given ( &queue->intersection_queue, &event->elt );
 }
 
 static cairo_bo_event_t *
@@ -740,7 +740,7 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
 
     memset (event_queue, 0, sizeof(*event_queue));
 
-    _cairo_skip_list_init (&event_queue->intersection_queue,
+    skip_list_init (&event_queue->intersection_queue,
 		    cairo_bo_event_compare_abstract,
 		    sizeof (cairo_bo_event_t));
     if (0 == num_edges)
@@ -789,7 +789,7 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
 static void
 _cairo_bo_event_queue_fini (cairo_bo_event_queue_t *event_queue)
 {
-    _cairo_skip_list_fini (&event_queue->intersection_queue);
+    skip_list_fini (&event_queue->intersection_queue);
     if (event_queue->startstop_events)
 	free (event_queue->startstop_events);
     if (event_queue->sorted_startstop_event_ptrs)
@@ -834,7 +834,7 @@ _cairo_bo_event_queue_insert_if_intersect_below_current_y (cairo_bo_event_queue_
 static void
 _cairo_bo_sweep_line_init (cairo_bo_sweep_line_t *sweep_line)
 {
-    _cairo_skip_list_init (&sweep_line->active_edges,
+    skip_list_init (&sweep_line->active_edges,
 		    _sweep_line_elt_compare,
 		    sizeof (sweep_line_elt_t));
     sweep_line->head = NULL;
@@ -845,7 +845,7 @@ _cairo_bo_sweep_line_init (cairo_bo_sweep_line_t *sweep_line)
 static void
 _cairo_bo_sweep_line_fini (cairo_bo_sweep_line_t *sweep_line)
 {
-    _cairo_skip_list_fini (&sweep_line->active_edges);
+    skip_list_fini (&sweep_line->active_edges);
 }
 
 static void
@@ -856,7 +856,7 @@ _cairo_bo_sweep_line_insert (cairo_bo_sweep_line_t	*sweep_line,
     sweep_line_elt_t *sweep_line_elt;
     cairo_bo_edge_t **prev_of_next, **next_of_prev;
 
-    sweep_line_elt = _cairo_skip_list_insert (&sweep_line->active_edges, &edge,
+    sweep_line_elt = skip_list_insert (&sweep_line->active_edges, &edge,
 				       1 /* unique inserts*/);
 
     next_elt = sweep_line_elt->elt.next[0];
@@ -884,7 +884,7 @@ _cairo_bo_sweep_line_delete (cairo_bo_sweep_line_t	*sweep_line,
 {
     cairo_bo_edge_t **left_next, **right_prev;
 
-    _cairo_skip_list_delete_given (&sweep_line->active_edges, &edge->sweep_line_elt->elt);
+    skip_list_delete_given (&sweep_line->active_edges, &edge->sweep_line_elt->elt);
 
     left_next = &sweep_line->head;
     if (edge->prev)
@@ -975,7 +975,7 @@ _cairo_bo_event_queue_print (cairo_bo_event_queue_t *event_queue)
 {
     skip_elt_t *elt;
     /* XXX: fixme to print the start/stop array too. */
-    cairo_skip_list_t *queue = &event_queue->intersection_queue;
+    skip_list_t *queue = &event_queue->intersection_queue;
     cairo_bo_event_t *event;
 
     printf ("Event queue:\n");
@@ -1767,7 +1767,7 @@ int
 main (void)
 {
     char random_name[] = "random-XX";
-    cairo_bo_edge_t random_edges[MAX_RANDOM], *edge;
+    static cairo_bo_edge_t random_edges[MAX_RANDOM], *edge;
     unsigned int i, num_random;
     test_t *test;
 

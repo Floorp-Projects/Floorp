@@ -247,36 +247,31 @@ CAIRO_MUTEX_DECLARE(_xlib_screen_mutex);
 
 static cairo_xlib_screen_info_t *_cairo_xlib_screen_list = NULL;
 
+/* XXX: From this function we should also run through and cleanup
+ * anything else that still has a pointer to this Display*. For
+ * example, we should clean up any Xlib-specific glyph caches. */
 static int
 _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
 {
-    cairo_xlib_screen_info_t *info, **prev, *next;
+    cairo_xlib_screen_info_t *info, *prev;
 
     /*
      * Unhook from the global list
      */
     CAIRO_MUTEX_LOCK (_xlib_screen_mutex);
 
-    prev = &_cairo_xlib_screen_list;
-    for (info = _cairo_xlib_screen_list; info; info = next) {
-	next = info->next;
+    prev = NULL;
+    for (info = _cairo_xlib_screen_list; info; info = info->next) {
 	if (info->display == dpy) {
-	    *prev = next;
-	    /* call all registered shutdown routines */
-	    while (info->close_display_hooks) {
-		cairo_xlib_hook_t *hook = info->close_display_hooks;
-		info->close_display_hooks = hook->next;
-
-		hook->func (dpy, hook->data);
-
-		free (hook);
-	    }
+	    if (prev)
+		prev->next = info->next;
+	    else
+		_cairo_xlib_screen_list = info->next;
 	    free (info);
-	} else {
-	    prev = &info->next;
+	    break;
 	}
+	prev = info;
     }
-    *prev = NULL;
     CAIRO_MUTEX_UNLOCK (_xlib_screen_mutex);
 
     /* Return value in accordance with requirements of
@@ -296,11 +291,6 @@ _cairo_xlib_screen_info_reset (void)
 
     for (info = _cairo_xlib_screen_list; info; info = next) {
 	next = info->next;
-	while (info->close_display_hooks) {
-	    cairo_xlib_hook_t *hook = info->close_display_hooks;
-	    info->close_display_hooks = hook->next;
-	    free (hook);
-	}
 	free (info);
     }
 
@@ -310,68 +300,14 @@ _cairo_xlib_screen_info_reset (void)
 
 }
 
-static cairo_xlib_screen_info_t *
-_cairo_xlib_screen_info_get_unlocked (Display *dpy, Screen *screen)
+cairo_xlib_screen_info_t *
+_cairo_xlib_screen_info_get (Display *dpy, Screen *screen)
 {
     cairo_xlib_screen_info_t *info;
     cairo_xlib_screen_info_t **prev;
     int event_base, error_base;
     XExtCodes *codes;
     cairo_bool_t seen_display = FALSE;
-
-    for (prev = &_cairo_xlib_screen_list; (info = *prev); prev = &(*prev)->next)
-    {
-	if (info->display == dpy) {
-	    seen_display = TRUE;
-	    if (info->screen == screen || screen == NULL) {
-		/*
-		 * MRU the list
-		 */
-		if (prev != &_cairo_xlib_screen_list) {
-		    *prev = info->next;
-		    info->next = _cairo_xlib_screen_list;
-		    _cairo_xlib_screen_list = info;
-		}
-		break;
-	    }
-	}
-    }
-
-    if (info)
-	return info;
-
-    info = malloc (sizeof (cairo_xlib_screen_info_t));
-    if (!info)
-	return NULL;
-
-    if (!seen_display) {
-	codes = XAddExtension (dpy);
-	if (!codes) {
-	    free (info);
-	    return NULL;
-	}
-
-	XESetCloseDisplay (dpy, codes->extension, _cairo_xlib_close_display);
-    }
-
-    info->display = dpy;
-    info->screen = screen;
-    info->has_render = (XRenderQueryExtension (dpy, &event_base, &error_base) &&
-			(XRenderFindVisualFormat (dpy, DefaultVisual (dpy, DefaultScreen (dpy))) != 0));
-
-    info->close_display_hooks = NULL;
-
-    _cairo_xlib_init_screen_font_options (info);
-
-    info->next = _cairo_xlib_screen_list;
-    _cairo_xlib_screen_list = info;
-
-    return info;
-}
-cairo_xlib_screen_info_t *
-_cairo_xlib_screen_info_get (Display *dpy, Screen *screen)
-{
-    cairo_xlib_screen_info_t *info;
 
     /* There is an apparent deadlock between this mutex and the
      * mutex for the display, but it's actually safe. For the
@@ -382,87 +318,67 @@ _cairo_xlib_screen_info_get (Display *dpy, Screen *screen)
      */
     CAIRO_MUTEX_LOCK (_xlib_screen_mutex);
 
-    info = _cairo_xlib_screen_info_get_unlocked (dpy, screen);
+    for (prev = &_cairo_xlib_screen_list; (info = *prev); prev = &(*prev)->next)
+    {
+	if (info->display == dpy) {
+	    seen_display = TRUE;
+	    if (info->screen == screen)
+	    {
+		/*
+		 * MRU the list
+		 */
+		if (prev != &_cairo_xlib_screen_list)
+		{
+		    *prev = info->next;
+		    info->next = _cairo_xlib_screen_list;
+		    _cairo_xlib_screen_list = info;
+		}
+		break;
+	    }
+	}
+    }
 
+    if (info)
+	goto out;
+
+    info = malloc (sizeof (cairo_xlib_screen_info_t));
+    if (!info)
+	goto out;
+
+    if (!seen_display) {
+	codes = XAddExtension (dpy);
+	if (!codes) {
+	    free (info);
+	    info = NULL;
+	    goto out;
+	}
+
+	XESetCloseDisplay (dpy, codes->extension, _cairo_xlib_close_display);
+    }
+
+    info->display = dpy;
+    info->screen = screen;
+    info->has_render = (XRenderQueryExtension (dpy, &event_base, &error_base) &&
+			(XRenderFindVisualFormat (dpy, DefaultVisual (dpy, DefaultScreen (dpy))) != 0));
+
+    _cairo_xlib_init_screen_font_options (info);
+
+    info->next = _cairo_xlib_screen_list;
+    _cairo_xlib_screen_list = info;
+
+ out:
     CAIRO_MUTEX_UNLOCK (_xlib_screen_mutex);
 
     return info;
-}
-
-cairo_bool_t
-_cairo_xlib_add_close_display_hook (Display *dpy, void (*func) (Display *, void *), void *data, void *key)
-{
-    cairo_xlib_screen_info_t *info;
-    cairo_xlib_hook_t *hook;
-    cairo_xlib_hook_t **prev;
-    cairo_bool_t success = FALSE;
-
-    CAIRO_MUTEX_LOCK (_xlib_screen_mutex);
-
-    info = _cairo_xlib_screen_info_get_unlocked (dpy,  NULL);
-    if (!info)
-	goto unlock;
-
-    for (prev = &info->close_display_hooks; (hook = *prev); prev = &hook->next)
-    {
-	if (hook->key == key) {
-	    /*
-	     * MRU the list
-	     */
-	    if (prev != &info->close_display_hooks) {
-		*prev = hook->next;
-		hook->next = info->close_display_hooks;
-		info->close_display_hooks = hook;
-	    }
-	    break;
-	}
-    }
-
-    if (!hook) {
-	hook = malloc (sizeof (cairo_xlib_hook_t));
-	if (!hook)
-	    goto unlock;
-	hook->func = func;
-	hook->data = data;
-	hook->key = key;
-	hook->next = info->close_display_hooks;
-	info->close_display_hooks = hook;
-    }
-
-    success = TRUE;
- unlock:
-    CAIRO_MUTEX_UNLOCK (_xlib_screen_mutex);
-    return success;
-}
-
-void
-_cairo_xlib_remove_close_display_hook (Display *dpy, void *key)
-{
-    cairo_xlib_screen_info_t *info;
-    cairo_xlib_hook_t *hook;
-    cairo_xlib_hook_t **prev;
-
-    CAIRO_MUTEX_LOCK (_xlib_screen_mutex);
-
-    info = _cairo_xlib_screen_info_get_unlocked (dpy, NULL);
-    if (!info)
-	goto unlock;
-
-    for (prev = &info->close_display_hooks; (hook = *prev); prev = &hook->next)
-    {
-	if (hook->key == key) {
-	    *prev = hook->next;
-	    free (hook);
-	    break;
-	}
-    }
-
-unlock:
-    CAIRO_MUTEX_UNLOCK (_xlib_screen_mutex);
 }
 
 void
 _cairo_xlib_screen_reset_static_data (void)
 {
     _cairo_xlib_screen_info_reset ();
+
+#if HAVE_XRMFINALIZE
+    XrmFinalize ();
+#endif
+
 }

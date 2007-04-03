@@ -51,7 +51,7 @@ _cairo_slope_init (cairo_slope_t *slope, cairo_point_t *a, cairo_point_t *b)
    difference between a and b is less than PI.
 
    <  0 => a less positive than b
-   == 0 => a equal to b
+   == 0 => a equal to be
    >  0 => a more positive than b
 */
 int
@@ -67,12 +67,6 @@ _cairo_slope_compare (cairo_slope_t *a, cairo_slope_t *b)
     if (diff < 0)
 	return -1;
 
-    /* special-case zero vectors.  the intended logic here is:
-     * zero vectors all compare equal, and more positive than any
-     * non-zero vector.
-     */
-    if (a->dx == 0 && a->dy == 0 && b->dx == 0 && b->dy ==0)
-	return 0;
     if (a->dx == 0 && a->dy == 0)
 	return 1;
     if (b->dx == 0 && b->dy ==0)

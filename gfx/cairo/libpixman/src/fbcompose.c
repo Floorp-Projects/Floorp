@@ -28,9 +28,7 @@
 #endif
 #include "pixman-xserver-compat.h"
 #include "fbpict.h"
-#ifndef MOZILLA_CAIRO_NOT_DEFINED
 #include "fbmmx.h"
-#endif /* MOZCAIRO */
 
 #ifdef RENDER
 
@@ -40,7 +38,6 @@
 #define _USE_MATH_DEFINES
 #endif
 
-#include <assert.h>
 #include <math.h>
 
 #ifndef M_PI
@@ -2743,13 +2740,12 @@ typedef struct
     CARD32        right_rb;
     int32_t       left_x;
     int32_t       right_x;
+    int32_t       width_x;
     int32_t       stepper;
 
     pixman_gradient_stop_t  *stops;
     int                      num_stops;
     unsigned int             spread;
-
-    int           need_reset;
 } GradientWalker;
 
 static void
@@ -2761,14 +2757,13 @@ _gradient_walker_init (GradientWalker  *walker,
     walker->stops     = pGradient->gradient.stops;
     walker->left_x    = 0;
     walker->right_x   = 0x10000;
+    walker->width_x   = 0;  /* will force a reset */
     walker->stepper   = 0;
     walker->left_ag   = 0;
     walker->left_rb   = 0;
     walker->right_ag  = 0;
     walker->right_rb  = 0;
     walker->spread    = spread;
-
-    walker->need_reset = TRUE;
 }
 
 static void
@@ -2858,15 +2853,13 @@ _gradient_walker_reset (GradientWalker  *walker,
 	    pixman_color_t  *tmp_c;
 	    int32_t          tmp_x;
 
-	    tmp_x   = 0x10000 - right_x;
-	    right_x = 0x10000 - left_x;
+	    tmp_x   = 0x20000 - right_x;
+	    right_x = 0x20000 - left_x;
 	    left_x  = tmp_x;
 
 	    tmp_c   = right_c;
 	    right_c = left_c;
 	    left_c  = tmp_c;
-
-            x = 0x10000 - x;
 	}
 	left_x  += (pos - x);
 	right_x += (pos - x);
@@ -2900,28 +2893,27 @@ _gradient_walker_reset (GradientWalker  *walker,
 
     walker->left_x   = left_x;
     walker->right_x  = right_x;
+    walker->width_x  = right_x - left_x;
     walker->left_ag  = ((left_c->alpha >> 8) << 16)   | (left_c->green >> 8);
     walker->left_rb  = ((left_c->red & 0xff00) << 8)  | (left_c->blue >> 8);
     walker->right_ag = ((right_c->alpha >> 8) << 16)  | (right_c->green >> 8);
     walker->right_rb = ((right_c->red & 0xff00) << 8) | (right_c->blue >> 8);
 
-    if ( walker->left_x == walker->right_x           ||
+    if ( walker->width_x == 0                      ||
 	 ( walker->left_ag == walker->right_ag &&
 	   walker->left_rb == walker->right_rb )   )
     {
+	walker->width_x = 1;
 	walker->stepper = 0;
     }
     else
     {
-	int32_t width = right_x - left_x;
-	walker->stepper = ((1 << 24) + width/2)/width;
+	walker->stepper = ((1 << 24) + walker->width_x/2)/walker->width_x;
     }
-
-    walker->need_reset = FALSE;
 }
 
 #define  GRADIENT_WALKER_NEED_RESET(w,x)  \
-   ( (w)->need_reset || (x) < (w)->left_x || (x) >= (w)->right_x)
+   ( (x) < (w)->left_x || (x) - (w)->left_x >= (w)->width_x )
 
 /* the following assumes that GRADIENT_WALKER_NEED_RESET(w,x) is FALSE */
 static CARD32
@@ -2955,6 +2947,8 @@ _gradient_walker_pixel (GradientWalker  *walker,
 
     return (color | (t1 & 0xff00ff) | (t2 & 0xff00));
 }
+
+
 
 static void fbFetchSourcePict(PicturePtr pict, int x, int y, int width, CARD32 *buffer, CARD32 *mask, CARD32 maskBits)
 {
@@ -3087,128 +3081,13 @@ static void fbFetchSourcePict(PicturePtr pict, int x, int y, int width, CARD32 *
 	    }
         }
     } else {
-
-/*
- * In the radial gradient problem we are given two circles (c₁,r₁) and
- * (c₂,r₂) that define the gradient itself. Then, for any point p, we
- * must compute the value(s) of t within [0.0, 1.0] representing the
- * circle(s) that would color the point.
- *
- * There are potentially two values of t since the point p can be
- * colored by both sides of the circle, (which happens whenever one
- * circle is not entirely contained within the other).
- *
- * If we solve for a value of t that is outside of [0.0, 1.0] then we
- * use the extend mode (NONE, REPEAT, REFLECT, or PAD) to map to a
- * value within [0.0, 1.0].
- *
- * Here is an illustration of the problem:
- *
- *              p₂
- *           p  •
- *           •   ╲
- *        ·       ╲r₂
- *  p₁ ·           ╲
- *  •              θ╲
- *   ╲             ╌╌•
- *    ╲r₁        ·   c₂
- *    θ╲    ·
- *    ╌╌•
- *      c₁
- *
- * Given (c₁,r₁), (c₂,r₂) and p, we must find an angle θ such that two
- * points p₁ and p₂ on the two circles are collinear with p. Then, the
- * desired value of t is the ratio of the length of p₁p to the length
- * of p₁p₂.
- *
- * So, we have six unknown values: (p₁x, p₁y), (p₂x, p₂y), θ and t.
- * We can also write six equations that constrain the problem:
- *
- * Point p₁ is a distance r₁ from c₁ at an angle of θ:
- *
- *	1. p₁x = c₁x + r₁·cos θ
- *	2. p₁y = c₁y + r₁·sin θ
- *
- * Point p₂ is a distance r₂ from c₂ at an angle of θ:
- *
- *	3. p₂x = c₂x + r2·cos θ
- *	4. p₂y = c₂y + r2·sin θ
- *
- * Point p lies at a fraction t along the line segment p₁p₂:
- *
- *	5. px = t·p₂x + (1-t)·p₁x
- *	6. py = t·p₂y + (1-t)·p₁y
- *
- * To solve, first subtitute 1-4 into 5 and 6:
- *
- * px = t·(c₂x + r₂·cos θ) + (1-t)·(c₁x + r₁·cos θ)
- * py = t·(c₂y + r₂·sin θ) + (1-t)·(c₁y + r₁·sin θ)
- *
- * Then solve each for cos θ and sin θ expressed as a function of t:
- *
- * cos θ = (-(c₂x - c₁x)·t + (px - c₁x)) / ((r₂-r₁)·t + r₁)
- * sin θ = (-(c₂y - c₁y)·t + (py - c₁y)) / ((r₂-r₁)·t + r₁)
- *
- * To simplify this a bit, we define new variables for several of the
- * common terms as shown below:
- *
- *              p₂
- *           p  •
- *           •   ╲
- *        ·  ┆    ╲r₂
- *  p₁ ·     ┆     ╲
- *  •     pdy┆      ╲
- *   ╲       ┆       •c₂
- *    ╲r₁    ┆   ·   ┆
- *     ╲    ·┆       ┆cdy
- *      •╌╌╌╌┴╌╌╌╌╌╌╌┘
- *    c₁  pdx   cdx
- *
- * cdx = (c₂x - c₁x)
- * cdy = (c₂y - c₁y)
- *  dr =  r₂-r₁
- * pdx =  px - c₁x
- * pdy =  py - c₁y
- *
- * Note that cdx, cdy, and dr do not depend on point p at all, so can
- * be pre-computed for the entire gradient. The simplifed equations
- * are now:
- *
- * cos θ = (-cdx·t + pdx) / (dr·t + r₁)
- * sin θ = (-cdy·t + pdy) / (dr·t + r₁)
- *
- * Finally, to get a single function of t and eliminate the last
- * unknown θ, we use the identity sin²θ + cos²θ = 1. First, square
- * each equation, (we knew a quadratic was coming since it must be
- * possible to obtain two solutions in some cases):
- *
- * cos²θ = (cdx²t² - 2·cdx·pdx·t + pdx²) / (dr²·t² + 2·r₁·dr·t + r₁²)
- * sin²θ = (cdy²t² - 2·cdy·pdy·t + pdy²) / (dr²·t² + 2·r₁·dr·t + r₁²)
- *
- * Then add both together, set the result equal to 1, and express as a
- * standard quadratic equation in t of the form At² + Bt + C = 0
- *
- * (cdx² + cdy² - dr²)·t² - 2·(cdx·pdx + cdy·pdy + r₁·dr)·t + (pdx² + pdy² - r₁²) = 0
- *
- * In other words:
- *
- * A = cdx² + cdy² - dr²
- * B = -2·(pdx·cdx + pdy·cdy + r₁·dr)
- * C = pdx² + pdy² - r₁²
- *
- * And again, notice that A does not depend on p, so can be
- * precomputed. From here we just use the quadratic formula to solve
- * for t:
- *
- * t = (-2·B ± ⎷(B² - 4·A·C)) / 2·A
- */
         /* radial or conical */
         Bool projective = FALSE;
         double cx = 1.;
         double cy = 0.;
         double cz = 0.;
-        double rx = x + 0.5;
-        double ry = y + 0.5;
+        double rx = x;
+        double ry = y;
         double rz = 1.;
 
         if (pict->transform) {
@@ -3230,36 +3109,23 @@ static void fbFetchSourcePict(PicturePtr pict, int x, int y, int width, CARD32 *
         }
 
         if (pGradient->type == SourcePictTypeRadial) {
-	    pixman_radial_gradient_image_t *radial;
-	    radial = &pGradient->radial;
             if (!projective) {
+                rx -= pGradient->radial.fx;
+                ry -= pGradient->radial.fy;
+
                 while (buffer < end) {
+                    double b, c, det, s;
+
                     if (!mask || *mask++ & maskBits)
                     {
-			double pdx, pdy;
-			double B, C;
-			double det;
-			double c1x = xFixedToDouble (radial->c1.x);
-			double c1y = xFixedToDouble (radial->c1.y);
-			double r1  = xFixedToDouble (radial->c1.radius);
-                        xFixed_48_16 t;
+                        xFixed_48_16  t;
 
-			pdx = rx - c1x;
-			pdy = ry - c1y;
+                        b = 2*(rx*pGradient->radial.dx + ry*pGradient->radial.dy);
+                        c = -(rx*rx + ry*ry);
+                        det = (b * b) - (4 * pGradient->radial.a * c);
+                        s = (-b + sqrt(det))/(2. * pGradient->radial.a);
 
-			B = -2 * (  pdx * radial->cdx
-				  + pdy * radial->cdy
-				  + r1 * radial->dr);
-			C = (pdx * pdx + pdy * pdy - r1 * r1);
-
-                        det = (B * B) - (4 * radial->A * C);
-			if (det < 0.0)
-			    det = 0.0;
-
-			if (radial->A < 0)
-			    t = (xFixed_48_16) ((- B - sqrt(det)) / (2.0 * radial->A) * 65536);
-			else
-			    t = (xFixed_48_16) ((- B + sqrt(det)) / (2.0 * radial->A) * 65536);
+                        t = (xFixed_48_16)((s*pGradient->radial.m + pGradient->radial.b)*65536);
 
                         *buffer = _gradient_walker_pixel (&walker, t);
                     }
@@ -3268,12 +3134,35 @@ static void fbFetchSourcePict(PicturePtr pict, int x, int y, int width, CARD32 *
                     ry += cy;
                 }
             } else {
-		/* In cairo, we don't have projective transformed
-		 * radial gradients---so I'm not going to bother
-		 * implementing something untested and broken
-		 * here. Instead, someone trying to get this code into
-		 * shape for use in the X server can fix this here. */
-		assert (0);
+                while (buffer < end) {
+                    double x, y;
+                    double b, c, det, s;
+
+                    if (!mask || *mask++ & maskBits)
+                    {
+                        xFixed_48_16  t;
+
+                        if (rz != 0) {
+                            x = rx/rz;
+                            y = ry/rz;
+                        } else {
+                            x = y = 0.;
+                        }
+                        x -= pGradient->radial.fx;
+                        y -= pGradient->radial.fy;
+                        b = 2*(x*pGradient->radial.dx + y*pGradient->radial.dy);
+                        c = -(x*x + y*y);
+                        det = (b * b) - (4 * pGradient->radial.a * c);
+                        s = (-b + sqrt(det))/(2. * pGradient->radial.a);
+                        t = (xFixed_48_16)((s*pGradient->radial.m + pGradient->radial.b)*65536);
+
+                        *buffer = _gradient_walker_pixel (&walker, t);
+                    }
+                    ++buffer;
+                    rx += cx;
+                    ry += cy;
+                    rz += cz;
+                }
             }
         } else /* SourcePictTypeConical */ {
             double a = pGradient->conical.angle/(180.*65536);
@@ -4038,7 +3927,6 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 	if (!compose)
 	    return;
 
-#ifndef MOZILLA_CAIRO_NOT_DEFINED
 	/* XXX: The non-MMX version of some of the fbCompose functions
 	 * overwrite the source or mask data (ones that use
 	 * fbCombineMaskC, fbCombineMaskAlphaC, or fbCombineMaskValueC
@@ -4056,7 +3944,6 @@ fbCompositeRect (const FbComposeData *data, CARD32 *scanline_buffer)
 	    srcClass = SourcePictClassUnknown;
 	    maskClass = SourcePictClassUnknown;
 	}
-#endif /* MOZCAIRO */
 
 	for (i = 0; i < data->height; ++i) {
 	    /* fill first half of scanline with source */
