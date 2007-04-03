@@ -976,6 +976,8 @@ public:
             const PRUnichar *str =
                 mAlternativeString ? mAlternativeString : mString;
             mScriptItem->a.fLogicalOrder = PR_TRUE;
+            mScriptItem->a.s.fDisplayZWG = PR_TRUE;
+
             rv = ScriptShape(shapeDC, mCurrentFont->ScriptCache(),
                              str, mLength,
                              mMaxGlyphs, &mScriptItem->a,
@@ -1016,55 +1018,44 @@ public:
         GenerateAlternativeString();
     }
 
-    static PRBool IsZeroWidthUnicodeChar(PRUnichar aChar) {
-        return aChar == 0x200b; // ZWSP
-    }
+    /* this should only be called if there are no surrogates
+     * in the string */
+    PRBool IsMissingGlyphsCMap() {
+        HRESULT rv;
+        HDC cmapDC = nsnull;
 
-    /**
-     * @param aCharIndex the index in the string of the first character
-     * for the cluster this glyph belongs to
-     */
-    PRBool IsGlyphMissing(SCRIPT_FONTPROPERTIES *aSFP, PRUint32 aGlyphIndex,
-                          PRUint32 aCharIndex) {
-        WORD glyph = mGlyphs[aGlyphIndex];
-        if (glyph == aSFP->wgDefault ||
-            (glyph == aSFP->wgInvalid && glyph != aSFP->wgBlank))
-            return PR_TRUE;
-        // I'm not sure that claiming glyphs are missing if they're zero width is valid
-        // but we're seeing cases where some fonts return glyphs such as 0x03 and 0x04
-        // which are zero width and non-invalidGlyph.
-        // At any rate, only make this check for non-complex scripts.
-        if (mAttr[aGlyphIndex].fZeroWidth && !ScriptProperties()->fComplex &&
-            !IsZeroWidthUnicodeChar(mString[aCharIndex])) {
-            PR_LOG(gFontLog, PR_LOG_WARNING, ("crappy font? glyph %04x is zero-width", glyph));
+        while (PR_TRUE) {
+            rv = ScriptGetCMap(cmapDC, mCurrentFont->ScriptCache(),
+                               mString, mLength, 0, mGlyphs);
+
+            if (rv == E_PENDING) {
+                SelectFont();
+                cmapDC = mDC;
+                continue;
+            }
+
+            if (rv == S_OK)
+                return PR_FALSE;
+
+            PR_LOG(gFontLog, PR_LOG_WARNING, ("cmap is missing a glyph"));
+            for (PRUint32 i = 0; i < mLength; i++)
+                PR_LOG(gFontLog, PR_LOG_WARNING, (" - %d", mGlyphs[i]));
             return PR_TRUE;
         }
+    }
+
+    PRBool IsGlyphMissing(SCRIPT_FONTPROPERTIES *aSFP, PRUint32 aGlyphIndex) {
+        if (mGlyphs[aGlyphIndex] == aSFP->wgDefault)
+            return PR_TRUE;
         return PR_FALSE;
     }
 
-    /* 
-     * Fonts are hopelessly inconsistent about how they handle characters that
-     * they don't have glyphs for.
-     * Some will return the glyph which ScriptFontProperties() lists as
-     * wgDefault; some will return the glyph listed as wgInvalid.
-     * Some list the same glyph as both wgInvalid and wgBlank, and use this
-     * glyph for valid whitespace characters.
-     * In some cases wgBlank with zero width represents a missing glyph,
-     * but in other cases, especially in complex scripts, wgBlank with zero
-     * width represents a valid zero width character such a zero width joiner
-     * or non-joiner.
-     */
     PRBool IsMissingGlyphs() {
         SCRIPT_FONTPROPERTIES sfp;
         ScriptFontProperties(&sfp);
         PRUint32 charIndex = 0;
         for (int i = 0; i < mNumGlyphs; ++i) {
-            // advance charIndex to the first character such that glyph i
-            // is in its cluster (i.e. mClusters[charIndex + 1] > i)
-            while (charIndex + 1 < mLength && mClusters[charIndex + 1] <= i) {
-                ++charIndex;
-            }
-            if (IsGlyphMissing(&sfp, i, charIndex))
+            if (IsGlyphMissing(&sfp, i))
                 return PR_TRUE;
 #ifdef DEBUG_pavlov // excess debugging code
             PR_LOG(gFontLog, PR_LOG_DEBUG, ("%04x %04x %04x", sfp.wgBlank, sfp.wgDefault, sfp.wgInvalid));
@@ -1173,7 +1164,7 @@ public:
                 PRUint32 k = mClusters[offset];
                 PRUint32 glyphCount = mNumGlyphs - k;
                 PRUint32 nextClusterOffset;
-                PRBool missing = IsGlyphMissing(&sfp, k, offset);
+                PRBool missing = IsGlyphMissing(&sfp, k);
                 for (nextClusterOffset = offset + 1; nextClusterOffset < mLength; ++nextClusterOffset) {
                     if (mClusters[nextClusterOffset] > k) {
                         glyphCount = mClusters[nextClusterOffset] - k;
@@ -1182,7 +1173,7 @@ public:
                 }
                 PRUint32 j;
                 for (j = 1; j < glyphCount; ++j) {
-                    if (IsGlyphMissing(&sfp, k + j, offset)) {
+                    if (IsGlyphMissing(&sfp, k + j)) {
                         missing = PR_TRUE;
                     }
                 }
@@ -1466,6 +1457,10 @@ public:
         mIsComplex(ScriptIsComplex(aString, aLength, SIC_COMPLEX) == S_OK),
         mItems(nsnull) {
     }
+    ~Uniscribe() {
+        if (mItems)
+            free(mItems);
+    }
 
     void Init() {
         memset(&mControl, 0, sizeof(SCRIPT_CONTROL));
@@ -1567,6 +1562,15 @@ gfxWindowsFontGroup::InitTextRunUniscribe(gfxContext *aContext, gfxTextRun *aRun
                 if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
                     PR_LOG(gFontLog, PR_LOG_DEBUG, ("trying: %s", NS_LossyConvertUTF16toASCII(font->GetName()).get()));
 
+                PRBool cmapHasGlyphs = PR_FALSE; // false means "maybe" here
+
+                if (!giveUp && !(aRun->GetFlags() & TEXT_HAS_SURROGATES)) {
+                    if (item->IsMissingGlyphsCMap())
+                        continue;
+                    else
+                        cmapHasGlyphs = PR_TRUE;
+                }
+
                 rv = item->Shape();
 
                 if (giveUp) {
@@ -1574,8 +1578,13 @@ gfxWindowsFontGroup::InitTextRunUniscribe(gfxContext *aContext, gfxTextRun *aRun
                         PR_LOG(gFontLog, PR_LOG_DEBUG, ("%s - gave up", NS_LossyConvertUTF16toASCII(font->GetName()).get()));
                     goto SCRIPT_PLACE;
                 }
-                if (FAILED(rv) || item->IsMissingGlyphs())
+
+                if (FAILED(rv))
                     continue;
+
+                if (!cmapHasGlyphs && item->IsMissingGlyphs())
+                    continue;
+
             } else {
 #if 0
                 /* code to try all the fonts again without shaping on.
