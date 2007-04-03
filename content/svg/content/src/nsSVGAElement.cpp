@@ -82,6 +82,7 @@ public:
   // nsIContent
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
   virtual PRBool IsLink(nsIURI** aURI) const;
+  virtual void GetLinkTarget(nsAString& aTarget);
 
 protected:
 
@@ -287,3 +288,14 @@ nsSVGAElement::IsLink(nsIURI** aURI) const
   return PR_FALSE;
 }
 
+void
+nsSVGAElement::GetLinkTarget(nsAString& aTarget)
+{
+  GetAttr(kNameSpaceID_None, nsGkAtoms::target, aTarget);
+  if (aTarget.IsEmpty()) {
+    nsIDocument* ownerDoc = GetOwnerDoc();
+    if (ownerDoc) {
+      ownerDoc->GetBaseTarget(aTarget);
+    }
+  }
+}
