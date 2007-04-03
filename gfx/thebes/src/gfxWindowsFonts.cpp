@@ -1137,7 +1137,10 @@ public:
         if (FAILED(rv))
             return;
         gfxTextRun::CompressedGlyph g;
-        for (PRUint32 i = 0; i < mLength; ++i) {
+        // The first character is never inside a cluster. Windows might tell us
+        // that it should be, but we have no before-character to cluster
+        // it with so we just can't cluster it. So skip it here.
+        for (PRUint32 i = 1; i < mLength; ++i) {
             if (!logAttr[i].fCharStop) {
                 aRun->SetCharacterGlyph(i + aOffsetInRun, g.SetClusterContinuation());
             }
