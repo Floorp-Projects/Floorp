@@ -152,32 +152,50 @@ nsHTMLRadioButtonAccessible::GetAttributes(nsIPersistentProperties **aAttributes
   nsAutoString tagName;
   mDOMNode->GetLocalName(tagName);
 
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  NS_ENSURE_STATE(content);
+
+  nsAutoString type;
+  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::type, type);
+  nsAutoString name;
+  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::name, name);
+
   nsCOMPtr<nsIDOMHTMLInputElement> radio(do_QueryInterface(mDOMNode));
   nsCOMPtr<nsIDOMHTMLFormElement> form;
   radio->GetForm(getter_AddRefs(form));
   NS_ENSURE_TRUE(form, NS_OK);
 
-  nsCOMPtr<nsIDOMNodeList> radios;
-  form->GetElementsByTagNameNS(nsURI, tagName, getter_AddRefs(radios));
-  NS_ENSURE_TRUE(radios, NS_OK);
+  nsCOMPtr<nsIDOMNodeList> inputs;
+  form->GetElementsByTagNameNS(nsURI, tagName, getter_AddRefs(inputs));
+  NS_ENSURE_TRUE(inputs, NS_OK);
 
-  // setsize
-  PRUint32 radiosCount = 0;
-  radios->GetLength(&radiosCount);
+  PRUint32 inputsCount = 0;
+  inputs->GetLength(&inputsCount);
 
-  // posinset
+  // Get posinset and setsize.
   PRInt32 indexOf = 0;
-  for (PRUint32 index = 0; index < radiosCount; index++) {
-    nsCOMPtr<nsIDOMNode> item;
-    radios->Item(index, getter_AddRefs(item));
-    if (item == mDOMNode) {
-      indexOf = index;
-      break;
+  PRInt32 count = 0;
+
+  for (PRUint32 index = 0; index < inputsCount; index++) {
+    nsCOMPtr<nsIDOMNode> itemNode;
+    inputs->Item(index, getter_AddRefs(itemNode));
+
+    nsCOMPtr<nsIContent> item(do_QueryInterface(itemNode));
+    if (item &&
+        item->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                          type, eCaseMatters) &&
+        item->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::name,
+                          name, eCaseMatters)) {
+
+      count++;
+
+      if (itemNode == mDOMNode)
+        indexOf = count;
     }
   }
 
   nsAccessibilityUtils::
-    SetAccGroupAttrs(*aAttributes, 0, indexOf + 1, radiosCount);
+    SetAccGroupAttrs(*aAttributes, 0, indexOf, count);
 
   return  NS_OK;
 }
