@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Conrad Carlen <ccarlen@netscape.com>
+ *  Ere Maijala <emaijala@kolumbus.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,11 +46,9 @@
 #include "nsDependentString.h"
 #include "nsXPIDLString.h"
 #include "prmem.h"
-#include "nsCOMArray.h"
 #include "nsArrayEnumerator.h"
 
 #if defined (XP_WIN)
-#include <windows.h>
 
 typedef struct structVer
 {
@@ -562,28 +561,35 @@ nsPluginDirServiceProvider::GetPLIDDirectories(nsISimpleEnumerator **aEnumerator
 
   nsCOMArray<nsILocalFile> dirs;
 
-  HKEY baseloc;
-  HKEY keyloc;
-  char curKey[_MAX_PATH] = "Software\\MozillaPlugins";
+  GetPLIDDirectoriesWithHKEY(HKEY_CURRENT_USER, dirs);
+  GetPLIDDirectoriesWithHKEY(HKEY_LOCAL_MACHINE, dirs);
 
-  LONG result = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, curKey, 0, KEY_READ,
-                               &baseloc);
-  if (ERROR_SUCCESS != result)
+  return NS_NewArrayEnumerator(aEnumerator, dirs);
+}
+
+nsresult
+nsPluginDirServiceProvider::GetPLIDDirectoriesWithHKEY(HKEY aKey, nsCOMArray<nsILocalFile> &aDirs)
+{
+  char subkey[_MAX_PATH] = "Software\\MozillaPlugins";
+  HKEY baseloc;
+
+  if (ERROR_SUCCESS != ::RegOpenKeyEx(aKey, subkey, 0, KEY_READ, &baseloc))
     return NS_ERROR_FAILURE;
 
   DWORD index = 0;
-  do {
-    DWORD numChars = _MAX_PATH;
-    FILETIME modTime;
-    DWORD type;
-    char path[_MAX_PATH];
-    DWORD pathlen = sizeof(path);
+  DWORD subkeylen = _MAX_PATH;
+  FILETIME modTime;
+  while (ERROR_SUCCESS == ::RegEnumKeyEx(baseloc, index++, subkey, &subkeylen,
+                                         NULL, NULL, NULL, &modTime)) {
+    subkeylen = _MAX_PATH;
+    HKEY keyloc;
 
-    result = ::RegEnumKeyEx(baseloc, index++, curKey, &numChars, NULL, NULL,
-                            NULL, &modTime);
-
-    if (ERROR_SUCCESS == ::RegOpenKeyEx(baseloc, curKey, 0, KEY_QUERY_VALUE,
+    if (ERROR_SUCCESS == ::RegOpenKeyEx(baseloc, subkey, 0, KEY_QUERY_VALUE,
                                         &keyloc)) {
+      DWORD type;
+      char path[_MAX_PATH];
+      DWORD pathlen = sizeof(path);
+
       if (ERROR_SUCCESS == ::RegQueryValueEx(keyloc, "Path", NULL, &type,
                                              (LPBYTE)&path, &pathlen)) {
         nsCOMPtr<nsILocalFile> localFile;
@@ -606,9 +612,9 @@ nsPluginDirServiceProvider::GetPLIDDirectories(nsISimpleEnumerator **aEnumerator
           PRBool isFileThere = PR_FALSE;
           PRBool isDupEntry = PR_FALSE;
           if (NS_SUCCEEDED(localFile->Exists(&isFileThere)) && isFileThere) {
-            PRInt32 c = dirs.Count();
+            PRInt32 c = aDirs.Count();
             for (PRInt32 i = 0; i < c; i++) {
-              nsIFile *dup = NS_STATIC_CAST(nsIFile*, dirs[i]);
+              nsIFile *dup = NS_STATIC_CAST(nsIFile*, aDirs[i]);
               if (dup &&
                   NS_SUCCEEDED(dup->Equals(localFile, &isDupEntry)) &&
                   isDupEntry) {
@@ -617,18 +623,16 @@ nsPluginDirServiceProvider::GetPLIDDirectories(nsISimpleEnumerator **aEnumerator
             }
 
             if (!isDupEntry) {
-              dirs.AppendObject(localFile);
+              aDirs.AppendObject(localFile);
             }
           }
         }
       }
       ::RegCloseKey(keyloc);
     }
-  } while (ERROR_SUCCESS == result);
-
+  }
   ::RegCloseKey(baseloc);
-
-  return NS_NewArrayEnumerator(aEnumerator, dirs);
+  return NS_OK;
 }
 
 #endif
