@@ -6254,7 +6254,7 @@ nsBlockFrame::CheckFloats(nsBlockReflowState& aState)
   if (!equal || lineFloats.Count() != storedFloats.Count()) {
     NS_WARNING("nsBlockFrame::CheckFloats: Explicit float list is out of sync with float cache");
 #if defined(DEBUG_roc)
-    nsIFrameDebug::RootFrameList(GetPresContext(), stdout, 0);
+    nsIFrameDebug::RootFrameList(PresContext(), stdout, 0);
     for (i = 0; i < lineFloats.Count(); ++i) {
       printf("Line float: %p\n", lineFloats.ElementAt(i));
     }
