@@ -1108,7 +1108,22 @@ static callsite *calltree(void **bp)
          * callsite info.  XXX static syms are masked by nearest lower global
          */
         info.dli_fname = info.dli_sname = NULL;
+
+        /*
+         * dladdr can acquire a lock inside the shared library loader.
+         * Another thread might call malloc while holding that lock
+         * (when loading a shared library).  So we have to exit tmmon
+         * around this call.  For details, see
+         * https://bugzilla.mozilla.org/show_bug.cgi?id=363334#c3
+         *
+         * We could be more efficient by building the nodes in the
+         * calltree, exiting the monitor once to describe all of them,
+         * and then filling in the descriptions for any that hadn't been
+         * described already.  But this is easier for now.
+         */
+        TM_EXIT_MONITOR();
         ok = my_dladdr((void*) pc, &info);
+        TM_ENTER_MONITOR();
         if (ok < 0) {
             tmstats.dladdr_failures++;
             return NULL;
