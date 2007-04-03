@@ -4052,7 +4052,8 @@ SetLvalKid(JSContext *cx, JSTokenStream *ts, JSParseNode *pn, JSParseNode *kid,
     if (kid->pn_type != TOK_NAME &&
         kid->pn_type != TOK_DOT &&
 #if JS_HAS_LVALUE_RETURN
-        (kid->pn_type != TOK_LP || kid->pn_op != JSOP_CALL) &&
+        (kid->pn_type != TOK_LP ||
+         (kid->pn_op != JSOP_CALL && kid->pn_op != JSOP_EVAL)) &&
 #endif
 #if JS_HAS_XML_SUPPORT
         (kid->pn_type != TOK_UNARYOP || kid->pn_op != JSOP_XMLNAME) &&
@@ -4095,7 +4096,7 @@ SetIncOpKid(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
 #if JS_HAS_LVALUE_RETURN
       case TOK_LP:
-        JS_ASSERT(kid->pn_op == JSOP_CALL);
+        JS_ASSERT(kid->pn_op == JSOP_CALL || kid->pn_op == JSOP_EVAL);
         kid->pn_op = JSOP_SETCALL;
         /* FALL THROUGH */
 #endif
