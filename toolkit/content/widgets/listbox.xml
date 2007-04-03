@@ -707,17 +707,17 @@
     </implementation>
     
     <handlers>
-      <handler event="keypress" keycode="vk_up" modifiers="control shift any"
+      <handler event="keypress" keycode="VK_UP" modifiers="control shift any"
                phase="target" action="moveByOffset(-1, !event.ctrlKey, event.shiftKey);"/>
-      <handler event="keypress" keycode="vk_down" modifiers="control shift any"
+      <handler event="keypress" keycode="VK_DOWN" modifiers="control shift any"
                phase="target" action="moveByOffset(1, !event.ctrlKey, event.shiftKey);"/>
-      <handler event="keypress" keycode="vk_home" modifiers="control shift any"
+      <handler event="keypress" keycode="VK_HOME" modifiers="control shift any"
                phase="target" action="moveByOffset(-this.currentIndex, !event.ctrlKey, event.shiftKey);"/>
-      <handler event="keypress" keycode="vk_end" modifiers="control shift any"
+      <handler event="keypress" keycode="VK_END" modifiers="control shift any"
                phase="target" action="moveByOffset(this.getRowCount() - this.currentIndex - 1, !event.ctrlKey, event.shiftKey);"/>
-      <handler event="keypress" keycode="vk_page_up" modifiers="control shift any"
+      <handler event="keypress" keycode="VK_PAGE_UP" modifiers="control shift any"
                phase="target" action="moveByOffset(this.scrollOnePage(-1), !event.ctrlKey, event.shiftKey);"/>
-      <handler event="keypress" keycode="vk_page_down" modifiers="control shift any"
+      <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="control shift any"
                phase="target" action="moveByOffset(this.scrollOnePage(1), !event.ctrlKey, event.shiftKey);"/>
       <handler event="keypress" key=" " phase="target">
         <![CDATA[
