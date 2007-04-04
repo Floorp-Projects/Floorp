@@ -38,7 +38,7 @@
 
 #include "processor/address_map.h"
 
-namespace google_airbag {
+namespace google_breakpad {
 
 template<typename AddressType, typename EntryType>
 bool AddressMap<AddressType, EntryType>::Store(const AddressType &address,
@@ -81,6 +81,6 @@ void AddressMap<AddressType, EntryType>::Clear() {
   map_.clear();
 }
 
-}  // namespace google_airbag
+}  // namespace google_breakpad
 
 #endif  // PROCESSOR_ADDRESS_MAP_INL_H__

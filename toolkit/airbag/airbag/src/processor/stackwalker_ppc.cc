@@ -35,18 +35,20 @@
 
 
 #include "processor/stackwalker_ppc.h"
-#include "google_airbag/processor/call_stack.h"
-#include "google_airbag/processor/minidump.h"
-#include "google_airbag/processor/stack_frame_cpu.h"
+#include "google_breakpad/processor/call_stack.h"
+#include "google_breakpad/processor/memory_region.h"
+#include "google_breakpad/processor/stack_frame_cpu.h"
 
-namespace google_airbag {
+namespace google_breakpad {
 
 
-StackwalkerPPC::StackwalkerPPC(const MDRawContextPPC *context,
+StackwalkerPPC::StackwalkerPPC(const SystemInfo *system_info,
+                               const MDRawContextPPC *context,
                                MemoryRegion *memory,
-                               MinidumpModuleList *modules,
-                               SymbolSupplier *supplier)
-    : Stackwalker(memory, modules, supplier),
+                               const CodeModules *modules,
+                               SymbolSupplier *supplier,
+                               SourceLineResolverInterface *resolver)
+    : Stackwalker(system_info, memory, modules, supplier, resolver),
       context_(context) {
   if (memory_->GetBase() + memory_->GetSize() - 1 > 0xffffffff) {
     // This implementation only covers 32-bit ppc CPUs.  The limits of the
@@ -133,4 +135,4 @@ StackFrame* StackwalkerPPC::GetCallerFrame(
 }
 
 
-}  // namespace google_airbag
+}  // namespace google_breakpad

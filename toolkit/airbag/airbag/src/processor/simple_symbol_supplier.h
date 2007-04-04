@@ -31,16 +31,19 @@
 //
 // SimpleSymbolSupplier is a straightforward implementation of SymbolSupplier
 // that stores symbol files in a filesystem tree.  A SimpleSymbolSupplier is
-// created with a base directory, which is the root for all symbol files.
-// Each symbol file contained therien has a directory entry in the base
-// directory with a name identical to the corresponding pdb file.  Within
-// each of these directories, there are subdirectories named for the uuid and
-// age of each pdb file.  The uuid is presented in hexadecimal form, with
-// uppercase characters and no dashes.  The age is appended to it in
-// hexadecimal form, without any separators.  Within that subdirectory,
+// created with one or more base directories, which are the root paths for all
+// symbol files.  Each symbol file contained therein has a directory entry in
+// the base directory with a name identical to the corresponding debugging 
+// file (pdb).  Within each of these directories, there are subdirectories
+// named for the debugging file's identifier.  For recent pdb files, this is
+// a concatenation of the pdb's uuid and age, presented in hexadecimal form,
+// without any dashes or separators.  The uuid is in uppercase hexadecimal
+// and the age is in lowercase hexadecimal.  Within that subdirectory,
 // SimpleSymbolSupplier expects to find the symbol file, which is named
-// identically to the pdb file, but with a .sym extension.  This sample
-// hierarchy is rooted at the "symbols" base directory:
+// identically to the debug file, but with a .sym extension.  If the original
+// debug file had a name ending in .pdb, the .pdb extension will be replaced
+// with .sym.  This sample hierarchy is rooted at the "symbols" base
+// directory:
 //
 // symbols
 // symbols/test_app.pdb
@@ -59,9 +62,14 @@
 // SimpleSymbolServer, provided that the pdb files are transformed to dumped
 // format using a tool such as dump_syms, and given a .sym extension.
 //
-// SimpleSymbolSupplier presently only supports symbol files that have
-// the MSVC 7.0 CodeView record format.  See MDCVInfoPDB70 in
-// minidump_format.h.
+// SimpleSymbolSupplier will iterate over all root paths searching for
+// a symbol file existing in that path.
+//
+// SimpleSymbolSupplier supports any debugging file which can be identified
+// by a CodeModule object's debug_file and debug_identifier accessors.  The
+// expected ultimate source of these CodeModule objects are MinidumpModule
+// objects; it is this class that is responsible for assigning appropriate
+// values for debug_file and debug_identifier.
 //
 // Author: Mark Mentovai
 
@@ -69,36 +77,45 @@
 #define PROCESSOR_SIMPLE_SYMBOL_SUPPLIER_H__
 
 #include <string>
+#include <vector>
 
-#include "google_airbag/processor/symbol_supplier.h"
+#include "google_breakpad/processor/symbol_supplier.h"
 
-namespace google_airbag {
+namespace google_breakpad {
 
 using std::string;
+using std::vector;
 
-class MinidumpModule;
+class CodeModule;
 
 class SimpleSymbolSupplier : public SymbolSupplier {
  public:
   // Creates a new SimpleSymbolSupplier, using path as the root path where
   // symbols are stored.
-  explicit SimpleSymbolSupplier(const string &path) : path_(path) {}
+  explicit SimpleSymbolSupplier(const string &path) : paths_(1, path) {}
+
+  // Creates a new SimpleSymbolSupplier, using paths as a list of root
+  // paths where symbols may be stored.
+  explicit SimpleSymbolSupplier(const vector<string> &paths) : paths_(paths) {}
 
   virtual ~SimpleSymbolSupplier() {}
 
   // Returns the path to the symbol file for the given module.  See the
   // description above.
-  virtual string GetSymbolFile(MinidumpModule *module) {
-    return GetSymbolFileAtPath(module, path_);
-  }
+  SymbolResult GetSymbolFile(const CodeModule *module,
+                             const SystemInfo *system_info,
+                             string *symbol_file);
 
  protected:
-  string GetSymbolFileAtPath(MinidumpModule *module, const string &root_path);
+  SymbolResult GetSymbolFileAtPath(const CodeModule *module,
+                                   const SystemInfo *system_info,
+                                   const string &root_path,
+                                   string *symbol_file);
 
  private:
-  string path_;
+  vector<string> paths_;
 };
 
-}  // namespace google_airbag
+}  // namespace google_breakpad
 
 #endif  // PROCESSOR_SIMPLE_SYMBOL_SUPPLIER_H__

@@ -64,7 +64,7 @@
 #include <map>
 
 
-namespace google_airbag {
+namespace google_breakpad {
 
 
 template<typename AddressType, typename EntryType>
@@ -140,7 +140,7 @@ class ContainedRangeMap {
 };
 
 
-}  // namespace google_airbag
+}  // namespace google_breakpad
 
 
 #endif  // PROCESSOR_CONTAINED_RANGE_MAP_H__

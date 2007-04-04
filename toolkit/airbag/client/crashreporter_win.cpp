@@ -299,17 +299,21 @@ DWORD WINAPI SendThreadProc(LPVOID param)
   SENDTHREADDATA* td = (SENDTHREADDATA*)param;
 
   wstring url(sendURL);
+  wstring result;
+
   if (url.empty()) {
     finishedOk = false;
   }
   else {
-    finishedOk = google_airbag::CrashReportSender
+    finishedOk = (google_breakpad::CrashReportSender
       ::SendCrashReport(url,
                         *(td->query_parameters),
-                        td->dumpFile);
+                        td->dumpFile,
+                        &result)
+                  == google_breakpad::RESULT_SUCCEEDED);
   }
   PostMessage(td->hDlg, WM_UPLOADCOMPLETE, finishedOk ? 1 : 0, 0);
-  delete td;
+
   return 0;
 }
 

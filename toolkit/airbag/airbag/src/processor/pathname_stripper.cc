@@ -35,7 +35,7 @@
 
 #include "processor/pathname_stripper.h"
 
-namespace google_airbag {
+namespace google_breakpad {
 
 // static
 string PathnameStripper::File(const string &path) {
@@ -53,4 +53,4 @@ string PathnameStripper::File(const string &path) {
   return path.substr(file_start);
 }
 
-}  // namespace google_airbag
+}  // namespace google_breakpad

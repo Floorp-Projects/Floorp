@@ -38,7 +38,7 @@
 
 #include "client/minidump_file_writer.h"
 
-namespace google_airbag {
+namespace google_breakpad {
 
 template<typename MDType>
 inline bool TypedMDRVA<MDType>::Allocate() {
@@ -86,6 +86,6 @@ inline bool TypedMDRVA<MDType>::Flush() {
   return writer_->Copy(position_, &data_, sizeof(MDType));
 }
 
-}  // namespace google_airbag
+}  // namespace google_breakpad
 
 #endif  // CLIENT_MINIDUMP_FILE_WRITER_INL_H__

@@ -190,11 +190,11 @@ LOCAL_INCLUDES += -I$(topsrcdir)/widget/src/xremoteclient
 endif
 
 ifdef MOZ_AIRBAG
-SHARED_LIBRARY_LIBS += $(DEPTH)/toolkit/airbag/$(LIB_PREFIX)airbagexception_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += $(DEPTH)/toolkit/airbag/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX)
 ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY_LIBS += \
-	$(DEPTH)/toolkit/airbag/airbag/src/client/windows/handler/$(LIB_PREFIX)exception_handler.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/airbag/airbag/src/common/windows/$(LIB_PREFIX)airbag_common_s.$(LIB_SUFFIX)
+	$(DEPTH)/toolkit/airbag/airbag/src/client/windows/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
+	$(DEPTH)/toolkit/airbag/airbag/src/common/windows/$(LIB_PREFIX)breakpad_windows_common_s.$(LIB_SUFFIX)
 endif
 endif
 
