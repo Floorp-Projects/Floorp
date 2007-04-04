@@ -72,8 +72,9 @@ OSStatus ATSClearGlyphVector(void *glyphVectorPtr);
 #endif
 
 gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
+                           const nsAString& name,
                            const gfxFontStyle *fontStyle)
-    : gfxFont(EmptyString(), fontStyle),
+    : gfxFont(name, fontStyle),
       mFontStyle(fontStyle), mATSUFontID(fontID), mATSUStyle(nsnull),
       mAdjustedSize(0)
 {
@@ -112,7 +113,7 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
     };
 
     gfxFloat size =
-        PR_MAX(((mAdjustedSize != 0) ? mAdjustedSize : mStyle->size), 1.0f);
+        PR_MAX(((mAdjustedSize != 0) ? mAdjustedSize : GetStyle()->size), 1.0f);
 
     //fprintf (stderr, "string: '%s', size: %f\n", NS_ConvertUTF16toUTF8(aString).get(), size);
 
@@ -153,10 +154,10 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
         mMetrics.xHeight = GetCharHeight('x');
 
     if (mAdjustedSize == 0) {
-        if (mStyle->sizeAdjust != 0) {
+        if (GetStyle()->sizeAdjust != 0) {
             gfxFloat aspect = mMetrics.xHeight / size;
             mAdjustedSize =
-                PR_MAX(ROUND(size * (mStyle->sizeAdjust / aspect)), 1.0f);
+                PR_MAX(ROUND(size * (GetStyle()->sizeAdjust / aspect)), 1.0f);
             InitMetrics(aFontID, aFontRef);
             return;
         }
@@ -212,7 +213,7 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
 nsString
 gfxAtsuiFont::GetUniqueName()
 {
-    return gfxQuartzFontCache::SharedFontCache()->GetPostscriptNameForFontID(mATSUFontID);
+    return mName;
 }
 
 float
@@ -273,6 +274,33 @@ gfxAtsuiFont::GetMetrics()
     return mMetrics;
 }
 
+/**
+ * Look up the font in the gfxFont cache. If we don't find it, create one.
+ * In either case, add a ref, append it to the aFonts array, and return it ---
+ * except for OOM in which case we do nothing and return null.
+ */
+static gfxAtsuiFont *
+GetOrMakeFont(ATSUFontID aFontID, const gfxFontStyle *aStyle,
+              nsTArray<nsRefPtr<gfxFont> > *aFonts)
+{
+    const nsAString& name =
+        gfxQuartzFontCache::SharedFontCache()->GetPostscriptNameForFontID(aFontID);
+    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(name, aStyle);
+    if (!font) {
+        font = new gfxAtsuiFont(aFontID, name, aStyle);
+        if (!font)
+            return nsnull;
+        gfxFontCache::GetCache()->AddNew(font);
+    }
+    // Add it to aFonts without unncessary refcount adjustment
+    nsRefPtr<gfxFont> *destination = aFonts->AppendElement();
+    if (!destination)
+        return nsnull;
+    destination->swap(font);
+    gfxFont *f = *destination;
+    return static_cast<gfxAtsuiFont *>(f);
+}
+
 gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
                                      const gfxFontStyle *aStyle)
     : gfxFontGroup(families, aStyle)
@@ -291,7 +319,7 @@ gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
         // a specific langGroup.  Let's just pick the default OSX
         // user font.
         ATSUFontID fontID = gfxQuartzFontCache::SharedFontCache()->GetDefaultATSUFontID (aStyle);
-        mFonts.AppendElement(new gfxAtsuiFont(fontID, aStyle));
+        GetOrMakeFont(fontID, aStyle, &mFonts);
     }
 
     // Create the fallback structure
@@ -331,7 +359,7 @@ gfxAtsuiFontGroup::FindATSUFont(const nsAString& aName,
 
     if (fontID != kATSUInvalidFontID) {
         //printf ("FindATSUFont! %s %d -> %d\n", NS_ConvertUTF16toUTF8(aName).get(), fontStyle->weight, (int)fontID);
-        fontGroup->mFonts.AppendElement(new gfxAtsuiFont(fontID, fontStyle));
+        GetOrMakeFont(fontID, fontStyle, &fontGroup->mFonts);
     }
 
     return PR_TRUE;
@@ -464,10 +492,7 @@ gfxAtsuiFontGroup::FindFontFor(ATSUFontID fid)
             return font;
     }
 
-    font = new gfxAtsuiFont(fid, GetStyle());
-    mFonts.AppendElement(font);
-
-    return font;
+    return GetOrMakeFont(fid, GetStyle(), &mFonts);
 }
 
 /**

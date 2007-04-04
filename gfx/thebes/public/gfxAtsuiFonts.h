@@ -50,6 +50,7 @@ class gfxAtsuiFontGroup;
 class gfxAtsuiFont : public gfxFont {
 public:
     gfxAtsuiFont(ATSUFontID fontID,
+                 const nsAString& name,
                  const gfxFontStyle *fontStyle);
     virtual ~gfxAtsuiFont();
 

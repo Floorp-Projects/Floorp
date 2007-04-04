@@ -44,12 +44,16 @@
 #include "nsString.h"
 #include "gfxPoint.h"
 #include "nsTArray.h"
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
 #include "gfxSkipChars.h"
 #include "gfxRect.h"
+#include "nsExpirationTracker.h"
 
 class gfxContext;
 class gfxTextRun;
 class nsIAtom;
+class gfxFont;
 class gfxFontGroup;
 typedef struct _cairo cairo_t;
 
@@ -74,6 +78,7 @@ struct THEBES_API gfxFontStyle {
                  const nsACString& aLangGroup,
                  float aSizeAdjust, PRPackedBool aSystemFont,
                  PRPackedBool aFamilyNameQuirks);
+    gfxFontStyle(const gfxFontStyle& aStyle);
 
     // The style of font (normal, italic, oblique)
     PRUint8 style : 7;
@@ -113,6 +118,12 @@ struct THEBES_API gfxFontStyle {
     // needs to be done.
     float sizeAdjust;
 
+    PLDHashNumber Hash() const {
+        return ((style + (systemFont << 7) + (familyNameQuirks << 8) +
+            (weight << 9)) + PRUint32(size*1000) + PRUint32(sizeAdjust*1000)) ^
+            HashString(langGroup);
+    }
+
     void ComputeWeightAndOffset(PRInt8 *outBaseWeight,
                                 PRInt8 *outOffset) const;
 
@@ -120,27 +131,144 @@ struct THEBES_API gfxFontStyle {
         return (size == other.size) &&
             (style == other.style) &&
             (systemFont == other.systemFont) &&
-            (variant == other.variant) &&
             (familyNameQuirks == other.familyNameQuirks) &&
             (weight == other.weight) &&
-            (decorations == other.decorations) &&
             (langGroup.Equals(other.langGroup)) &&
             (sizeAdjust == other.sizeAdjust);
     }
 };
 
+/**
+ * Font cache design:
+ * 
+ * The mFonts hashtable contains most fonts, indexed by (name, style).
+ * It does not add a reference to the fonts it contains.
+ * When a font's refcount decreases to zero, instead of deleting it we
+ * add it to our expiration tracker.
+ * The expiration tracker tracks fonts with zero refcount. After a certain
+ * period of time, such fonts expire and are deleted.
+ *
+ * We're using 3 generations with a ten-second generation interval, so
+ * zero-refcount fonts will be deleted 20-30 seconds after their refcount
+ * goes to zero, if timer events fire in a timely manner.
+ */
+class THEBES_API gfxFontCache : public nsExpirationTracker<gfxFont,3> {
+public:
+    enum { TIMEOUT_SECONDS = 1 }; // XXX change this to 10 later
+    gfxFontCache()
+        : nsExpirationTracker<gfxFont,3>(TIMEOUT_SECONDS*1000) { mFonts.Init(); }
+    ~gfxFontCache() {
+        // Expire everything that has a zero refcount, so we don't leak them.
+        AgeAllGenerations();
+        // All fonts should be gone. Otherwise we will crash releasing them
+        // later, since this cache no longer exists
+        NS_ASSERTION(mFonts.Count() == 0,
+                     "Fonts still alive while shutting down gfxFontCache");
+        // Note that we have to delete everything through the expiration
+        // tracker, since there might be fonts not in the hashtable but in
+        // the tracker.
+    }
 
+    /*
+     * Get the global gfxFontCache.  You must call Init() before
+     * calling this method --- the result will not be null.
+     */
+    static gfxFontCache* GetCache() {
+        return gGlobalCache;
+    }
+
+    static nsresult Init();
+    // It's OK to call this even if Init() has not been called.
+    static void Shutdown();
+
+    // Look up a font in the cache. Returns an addrefed pointer, or null
+    // if there's nothing matching in the cache
+    already_AddRefed<gfxFont> Lookup(const nsAString &aName,
+                                     const gfxFontStyle *aFontGroup);
+    // We created a new font (presumably because Lookup returned null);
+    // put it in the cache. The font's refcount should be nonzero. It is
+    // allowable to add a new font even if there is one already in the
+    // cache with the same key; we'll forget about the old one.
+    void AddNew(gfxFont *aFont);
+
+    // The font's refcount has gone to zero; give ownership of it to
+    // the cache. We delete it if it's not acquired again after a certain
+    // amount of time.
+    void NotifyReleased(gfxFont *aFont);
+
+    // This gets called when the timeout has expired on a zero-refcount
+    // font; we just delete it.
+    virtual void NotifyExpired(gfxFont *aFont);
+
+protected:
+    void DestroyFont(gfxFont *aFont);
+
+    static gfxFontCache *gGlobalCache;
+
+    struct Key {
+        const nsAString&    mString;
+        const gfxFontStyle* mStyle;
+        Key(const nsAString& aString, const gfxFontStyle* aStyle)
+            : mString(aString), mStyle(aStyle) {}
+    };
+
+    class HashEntry : public PLDHashEntryHdr {
+    public:
+        typedef const Key& KeyType;
+        typedef const Key* KeyTypePointer;
+
+        // When constructing a new entry in the hashtable, we'll leave this
+        // blank. The caller of Put() will fill this in.
+        HashEntry(KeyTypePointer aStr) : mFont(nsnull) { }
+        HashEntry(const HashEntry& toCopy) : mFont(toCopy.mFont) { }
+        ~HashEntry() { }
+
+        PRBool KeyEquals(const KeyTypePointer aKey) const;
+        static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+        static PLDHashNumber HashKey(const KeyTypePointer aKey) {
+            return HashString(aKey->mString) ^ aKey->mStyle->Hash();
+        }
+        enum { ALLOW_MEMMOVE = PR_TRUE };
+
+        gfxFont* mFont;
+    };
+
+    nsTHashtable<HashEntry> mFonts;
+};
 
 /* a SPECIFIC single font family */
 class THEBES_API gfxFont {
-    THEBES_INLINE_DECL_REFCOUNTING(gfxFont)
+public:
+    nsrefcnt AddRef(void) {
+        NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+        ++mRefCnt;
+        NS_LOG_ADDREF(this, mRefCnt, "gfxFont", sizeof(*this));
+        return mRefCnt;
+    }
+    nsrefcnt Release(void) {
+        NS_PRECONDITION(0 != mRefCnt, "dup release");
+        --mRefCnt;
+        NS_LOG_RELEASE(this, mRefCnt, "gfxFont");
+        if (mRefCnt == 0) {
+            // Don't delete just yet; return the object to the cache for
+            // possibly recycling within some time limit
+            gfxFontCache::GetCache()->NotifyReleased(this);
+            return 0;
+        }
+        return mRefCnt;
+    }
+
+    PRInt32 GetRefCount() { return mRefCnt; }
+
+protected:
+    nsAutoRefCnt mRefCnt;
 
 public:
     gfxFont(const nsAString &aName, const gfxFontStyle *aFontGroup);
     virtual ~gfxFont() {}
 
     const nsString& GetName() const { return mName; }
-    const gfxFontStyle *GetStyle() const { return mStyle; }
+    const gfxFontStyle *GetStyle() const { return &mStyle; }
 
     virtual nsString GetUniqueName() = 0;
 
@@ -283,14 +411,17 @@ public:
                                    PRUint32 aStart, PRUint32 aLength)
     { return PR_FALSE; }
 
+    // Expiration tracking
+    nsExpirationState *GetExpirationState() { return &mExpirationState; }
+
 protected:
     // The family name of the font
-    nsString mName;
+    nsString          mName;
+    nsExpirationState mExpirationState;
+    gfxFontStyle      mStyle;
 
     // This is called by the default Draw() implementation above.
     virtual void SetupCairoFont(cairo_t *aCR) = 0;
-
-    const gfxFontStyle *mStyle;
 };
 
 class THEBES_API gfxTextRunFactory {

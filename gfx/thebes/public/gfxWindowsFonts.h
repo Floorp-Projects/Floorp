@@ -497,17 +497,6 @@ public:
         return PR_FALSE;
     }
 
-    gfxWindowsFont *GetCachedFont(const nsAString& aName) const {
-        nsRefPtr<gfxWindowsFont> font;
-        if (mFontCache.Get(aName, &font))
-            return font;
-        return nsnull;
-    }
-
-    void PutCachedFont(const nsAString& aName, gfxWindowsFont *aFont) {
-        mFontCache.Put(aName, aFont);
-    }
-
 protected:
     static PRBool MakeFont(const nsAString& fontName,
                            const nsACString& genericName,
@@ -519,11 +508,7 @@ protected:
     void InitTextRunUniscribe(gfxContext *aContext, gfxTextRun *aRun, const PRUnichar *aString, PRUint32 aLength);
 
 private:
-    friend class gfxWindowsTextRun;
-
     nsCString mGenericFamily;
-
-    nsDataHashtable<nsStringHashKey, nsRefPtr<gfxWindowsFont> > mFontCache;
 };
 
 #endif /* GFX_WINDOWSFONTS_H */
