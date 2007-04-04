@@ -1314,7 +1314,8 @@ nsresult nsHyperTextAccessible::FireTextChangeEvent(AtkTextChange *aTextData)
 #ifdef DEBUG_A11Y
     printf("  [start=%d, length=%d, add=%d]\n", aTextData->start, aTextData->length, aTextData->add);
 #endif
-    privAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_TEXT_CHANGE, accessible, aTextData);
+    privAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_TEXT_CHANGED,
+                                     accessible, aTextData);
   }
   return NS_OK;
 }
