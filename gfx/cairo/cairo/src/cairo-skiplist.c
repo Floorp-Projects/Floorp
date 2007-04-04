@@ -34,7 +34,7 @@
 
 /* Four 256 element lookup tables back to back implementing a linear
  * feedback shift register of degree 32. */
-static unsigned const lfsr_lut[1024] = {
+static unsigned const _cairo_lfsr_random_lut[1024] = {
  0x00000000, 0x9a795537, 0xae8bff59, 0x34f2aa6e, 0xc76eab85, 0x5d17feb2,
  0x69e554dc, 0xf39c01eb, 0x14a4023d, 0x8edd570a, 0xba2ffd64, 0x2056a853,
  0xd3caa9b8, 0x49b3fc8f, 0x7d4156e1, 0xe73803d6, 0x2948047a, 0xb331514d,
@@ -207,24 +207,25 @@ static unsigned const lfsr_lut[1024] = {
  0xeaa6b0df, 0x6a98c0b4, 0x184c1316, 0x9872637d, 0x8249a6f7, 0x0277d69c,
  0xb63e2de3, 0x36005d88, 0x2c3b9802, 0xac05e869};
 
+static unsigned _cairo_lfsr_random_state = 0x12345678;
+
 static unsigned
 lfsr_random(void)
 {
-    static unsigned state = 0x12345678;
     unsigned next;
-    next  = lfsr_lut[((state>> 0) & 0xFF) + 0*256];
-    next ^= lfsr_lut[((state>> 8) & 0xFF) + 1*256];
-    next ^= lfsr_lut[((state>>16) & 0xFF) + 2*256];
-    next ^= lfsr_lut[((state>>24) & 0xFF) + 3*256];
-    return state = next;
+    next  = _cairo_lfsr_random_lut[((_cairo_lfsr_random_state>> 0) & 0xFF) + 0*256];
+    next ^= _cairo_lfsr_random_lut[((_cairo_lfsr_random_state>> 8) & 0xFF) + 1*256];
+    next ^= _cairo_lfsr_random_lut[((_cairo_lfsr_random_state>>16) & 0xFF) + 2*256];
+    next ^= _cairo_lfsr_random_lut[((_cairo_lfsr_random_state>>24) & 0xFF) + 3*256];
+    return _cairo_lfsr_random_state = next;
 }
 
 /*
  * Initialize an empty skip list
  */
 void
-skip_list_init (skip_list_t		*list,
-		skip_list_compare_t	 compare,
+_cairo_skip_list_init (cairo_skip_list_t		*list,
+		cairo_skip_list_compare_t	 compare,
 		size_t			 elt_size)
 {
     int i;
@@ -242,13 +243,13 @@ skip_list_init (skip_list_t		*list,
 }
 
 void
-skip_list_fini (skip_list_t *list)
+_cairo_skip_list_fini (cairo_skip_list_t *list)
 {
     skip_elt_t *elt;
     int i;
 
     while ((elt = list->chains[0])) {
-	skip_list_delete_given (list, elt);
+	_cairo_skip_list_delete_given (list, elt);
     }
     for (i=0; i<MAX_LEVEL; i++) {
 	elt = list->freelists[i];
@@ -283,7 +284,7 @@ random_level (void)
 }
 
 static void *
-alloc_node_for_level (skip_list_t *list, unsigned level)
+alloc_node_for_level (cairo_skip_list_t *list, unsigned level)
 {
     if (list->freelists[level-1]) {
 	skip_elt_t *elt = list->freelists[level-1];
@@ -294,7 +295,7 @@ alloc_node_for_level (skip_list_t *list, unsigned level)
 }
 
 static void
-free_elt (skip_list_t *list, skip_elt_t *elt)
+free_elt (cairo_skip_list_t *list, skip_elt_t *elt)
 {
     elt->prev = list->freelists[elt->prev_index];
     list->freelists[elt->prev_index] = elt;
@@ -304,7 +305,7 @@ free_elt (skip_list_t *list, skip_elt_t *elt)
  * Insert 'data' into the list
  */
 void *
-skip_list_insert (skip_list_t *list, void *data, int unique)
+_cairo_skip_list_insert (cairo_skip_list_t *list, void *data, int unique)
 {
     skip_elt_t **update[MAX_LEVEL];
     skip_elt_t *prev[MAX_LEVEL];
@@ -369,7 +370,7 @@ skip_list_insert (skip_list_t *list, void *data, int unique)
 }
 
 void *
-skip_list_find (skip_list_t *list, void *data)
+_cairo_skip_list_find (cairo_skip_list_t *list, void *data)
 {
     int i;
     skip_elt_t **next = list->chains;
@@ -394,7 +395,7 @@ skip_list_find (skip_list_t *list, void *data)
 }
 
 void
-skip_list_delete (skip_list_t *list, void *data)
+_cairo_skip_list_delete (cairo_skip_list_t *list, void *data)
 {
     skip_elt_t **update[MAX_LEVEL], *prev[MAX_LEVEL];
     skip_elt_t *elt, **next;
@@ -430,7 +431,7 @@ skip_list_delete (skip_list_t *list, void *data)
 }
 
 void
-skip_list_delete_given (skip_list_t *list, skip_elt_t *given)
+_cairo_skip_list_delete_given (cairo_skip_list_t *list, skip_elt_t *given)
 {
     skip_elt_t **update[MAX_LEVEL], *prev[MAX_LEVEL];
     skip_elt_t *elt, **next;

@@ -64,10 +64,10 @@ typedef struct _test_fallback_surface {
 
 const cairo_private cairo_surface_backend_t test_fallback_surface_backend;
 
-slim_hidden_proto (_test_fallback_surface_create);
+slim_hidden_proto (_cairo_test_fallback_surface_create);
 
 cairo_surface_t *
-_test_fallback_surface_create (cairo_content_t	content,
+_cairo_test_fallback_surface_create (cairo_content_t	content,
 			       int		width,
 			       int		height)
 {
@@ -91,7 +91,7 @@ _test_fallback_surface_create (cairo_content_t	content,
 
     return &surface->base;
 }
-slim_hidden_def (_test_fallback_surface_create);
+slim_hidden_def (_cairo_test_fallback_surface_create);
 
 static cairo_surface_t *
 _test_fallback_surface_create_similar (void		*abstract_surface,
@@ -101,7 +101,7 @@ _test_fallback_surface_create_similar (void		*abstract_surface,
 {
     assert (CAIRO_CONTENT_VALID (content));
 
-    return _test_fallback_surface_create (content,
+    return _cairo_test_fallback_surface_create (content,
 					  width, height);
 }
 

@@ -31,6 +31,7 @@
  *
  * Contributor(s):
  *	Adrian Johnson <ajohnson@redneon.com>
+ *      Eugeniy Meshcheryakov <eugen@debian.org>
  */
 
 #include "cairoint.h"
@@ -81,6 +82,13 @@ typedef struct _cff_dict_operator {
     int            operand_offset;
 } cff_dict_operator_t;
 
+typedef struct _cff_charset {
+    cairo_bool_t         is_builtin;
+    const uint16_t      *sids;
+    const unsigned char *data;
+    int                  length;
+} cff_charset_t;
+
 typedef struct _cairo_cff_font {
 
     cairo_scaled_font_subset_t *scaled_font_subset;
@@ -100,11 +108,14 @@ typedef struct _cairo_cff_font {
     cairo_array_t        global_sub_index;
     cairo_array_t        local_sub_index;
     int                  num_glyphs;
+    cff_charset_t        charset;
+    int                  charset_offset;
 
     /* Subsetted Font Data */
     char                *subset_font_name;
     cairo_array_t        charstrings_subset_index;
     cairo_array_t        strings_subset_index;
+    cairo_array_t        charset_subset;
     cairo_array_t        output;
 
     /* Subset Metrics */
@@ -113,34 +124,6 @@ typedef struct _cairo_cff_font {
     int                  ascent, descent;
 
 } cairo_cff_font_t;
-
-#ifdef WORDS_BIGENDIAN
-
-#define cpu_to_be16(v) (v)
-#define be16_to_cpu(v) (v)
-#define cpu_to_be32(v) (v)
-
-#else
-
-static inline uint16_t
-cpu_to_be16(uint16_t v)
-{
-    return (v << 8) | (v >> 8);
-}
-
-static inline uint16_t
-be16_to_cpu(uint16_t v)
-{
-    return cpu_to_be16 (v);
-}
-
-static inline uint32_t
-cpu_to_be32(uint32_t v)
-{
-    return (cpu_to_be16 (v) << 16) | cpu_to_be16 (v >> 16);
-}
-
-#endif
 
 /* Encoded integer using maximum sized encoding. This is required for
  * operands that are later modified after encoding. */
@@ -505,20 +488,6 @@ fail:
     return status;
 }
 
-static void
-cff_dict_remove (cairo_hash_table_t *dict, unsigned short operator)
-{
-    cff_dict_operator_t key, *op;
-
-    _cairo_dict_init_key (&key, operator);
-    if (_cairo_hash_table_lookup (dict, &key.base,
-                                  (cairo_hash_entry_t **) &op))
-    {
-        free (op->operand);
-        _cairo_hash_table_remove (dict, (cairo_hash_entry_t *) op);
-    }
-}
-
 static unsigned char *
 cff_dict_get_operands (cairo_hash_table_t *dict,
                        unsigned short      operator,
@@ -742,12 +711,19 @@ cairo_cff_font_read_top_dict (cairo_cff_font_t *font)
     decode_integer (operand, &offset);
     cairo_cff_font_read_private_dict (font, font->data + offset, size);
 
-    cff_dict_remove (font->top_dict, CHARSET_OP);
+    operand = cff_dict_get_operands (font->top_dict, CHARSET_OP, &size);
+    if (!operand)
+      font->charset_offset = 0;
+    else {
+      decode_integer (operand, &offset);
+      font->charset_offset = offset;
+    }
 
     /* Use maximum sized encoding to reserve space for later modification. */
     end_buf = encode_integer_max (buf, 0);
     cff_dict_set_operands (font->top_dict, CHARSTRINGS_OP, buf, end_buf - buf);
     cff_dict_set_operands (font->top_dict, ENCODING_OP, buf, end_buf - buf);
+    cff_dict_set_operands (font->top_dict, CHARSET_OP, buf, end_buf - buf);
     /* Private has two operands - size and offset */
     end_buf = encode_integer_max (end_buf, 0);
     cff_dict_set_operands (font->top_dict, PRIVATE_OP, buf, end_buf - buf);
@@ -770,6 +746,138 @@ cairo_cff_font_read_global_subroutines (cairo_cff_font_t *font)
     return cff_index_read (&font->global_sub_index, &font->current_ptr, font->data_end);
 }
 
+static cairo_int_status_t
+cff_charset_read_data (cff_charset_t *charset, const unsigned char *data,
+	const unsigned char *data_end, int num_glyphs)
+{
+    const unsigned char *p = data;
+
+    num_glyphs -= 1; /* do not count .notdef */
+
+    if (p + 1 > data_end)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    switch (*p++) {
+    case 0:
+	if (p + num_glyphs*2 > data_end)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	charset->is_builtin = FALSE;
+	charset->data = data;
+	charset->length = num_glyphs * 2 + 1;
+	break;
+    case 1:
+	while (num_glyphs > 0) {
+	    if (p + 3 > data_end)
+		return CAIRO_INT_STATUS_UNSUPPORTED;
+	    num_glyphs -= p[2] + 1;
+	    p += 3;
+	}
+	if (num_glyphs < 0)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	charset->is_builtin = FALSE;
+	charset->data = data;
+	charset->length = p - data;
+	break;
+    case 2:
+	while (num_glyphs > 0) {
+	    if (p + 4 > data_end)
+		return CAIRO_INT_STATUS_UNSUPPORTED;
+	    num_glyphs -= be16_to_cpu(*(uint16_t *)(p + 2)) + 1;
+	    p += 4;
+	}
+	if (num_glyphs < 0)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	charset->is_builtin = FALSE;
+	charset->data = data;
+	charset->length = p - data;
+	break;
+    default:
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static const uint16_t ISOAdobe_charset[] = {
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+    17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+    31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
+    45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58,
+    59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72,
+    73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86,
+    87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100,
+    101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111,
+    112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122,
+    123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133,
+    134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144,
+    145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155,
+    156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166,
+    167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177,
+    178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188,
+    189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199,
+    200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210,
+    211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221,
+    222, 223, 224, 225, 226, 227, 228,
+};
+
+static const uint16_t Expert_charset[] = {
+    1, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 13,
+    14, 15, 99, 239, 240, 241, 242, 243, 244, 245, 246, 247,
+    248, 27, 28, 249, 250, 251, 252, 253, 254, 255, 256, 257,
+    258, 259, 260, 261, 262, 263, 264, 265, 266, 109, 110,
+    267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277,
+    278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288,
+    289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299,
+    300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310,
+    311, 312, 313, 314, 315, 316, 317, 318, 158, 155, 163,
+    319, 320, 321, 322, 323, 324, 325, 326, 150, 164, 169,
+    327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337,
+    338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348,
+    349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359,
+    360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370,
+    371, 372, 373, 374, 375, 376, 377, 378,
+};
+
+static const uint16_t ExpertSubset_charset[] = {
+    1, 231, 232, 235, 236, 237, 238, 13, 14, 15, 99, 239, 240,
+    241, 242, 243, 244, 245, 246, 247, 248, 27, 28, 249, 250,
+    251, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262,
+    263, 264, 265, 266, 109, 110, 267, 268, 269, 270, 272,
+    300, 301, 302, 305, 314, 315, 158, 155, 163, 320, 321,
+    322, 323, 324, 325, 326, 150, 164, 169, 327, 328, 329,
+    330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340,
+    341, 342, 343, 344, 345, 346,
+};
+
+static cairo_int_status_t
+cairo_cff_font_read_charset (cairo_cff_font_t *font)
+{
+    switch (font->charset_offset) {
+    case 0:
+	/* ISOAdobe charset */
+	font->charset.is_builtin = TRUE;
+        font->charset.sids = ISOAdobe_charset;
+        font->charset.length = sizeof (ISOAdobe_charset);
+	return CAIRO_STATUS_SUCCESS;
+    case 1:
+	/* Expert charset */
+	font->charset.is_builtin = TRUE;
+        font->charset.sids = Expert_charset;
+        font->charset.length = sizeof (Expert_charset);
+	return CAIRO_STATUS_SUCCESS;
+    case 2:
+	/* ExpertSubset charset */;
+	font->charset.is_builtin = TRUE;
+        font->charset.sids = ExpertSubset_charset;
+        font->charset.length = sizeof (ExpertSubset_charset);
+	return CAIRO_STATUS_SUCCESS;
+    default:
+	break;
+    }
+    return cff_charset_read_data (&font->charset, font->data + (unsigned)font->charset_offset,
+	    font->data_end, font->num_glyphs);
+}
+
 typedef cairo_int_status_t
 (*font_read_t) (cairo_cff_font_t *font);
 
@@ -779,6 +887,8 @@ static const font_read_t font_read_funcs[] = {
     cairo_cff_font_read_top_dict,
     cairo_cff_font_read_strings,
     cairo_cff_font_read_global_subroutines,
+    /* non-contiguous */
+    cairo_cff_font_read_charset,
 };
 
 static cairo_int_status_t
@@ -898,6 +1008,80 @@ cairo_cff_font_subset_charstrings (cairo_cff_font_t  *font)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static uint16_t
+cff_sid_from_gid (const cff_charset_t *charset, int gid)
+{
+    const uint16_t *sids;
+    const unsigned char *p;
+    int prev_glyph;
+
+    if (charset->is_builtin) {
+        if (gid - 1 < charset->length / 2)
+	    return charset->sids[gid - 1];
+    }
+    else {
+	/* no need to check sizes here, this was done during reading */
+	switch (charset->data[0]) {
+	case 0:
+	    sids = (const uint16_t *)(charset->data + 1);
+	    return be16_to_cpu(sids[gid - 1]);
+	case 1:
+	    prev_glyph = 1;
+	    for (p = charset->data + 1; p < charset->data + charset->length; p += 3) {
+		if (gid <= prev_glyph + p[2]) {
+		    uint16_t sid = be16_to_cpu(*(const uint16_t *)p);
+		    return sid + gid - prev_glyph;
+		}
+		prev_glyph += p[2] + 1;
+	    }
+	    break;
+	case 2:
+	    prev_glyph = 1;
+	    for (p = charset->data + 1; p < charset->data + charset->length; p += 4) {
+		uint16_t nLeft = be16_to_cpu(*(const uint16_t *)(p + 2));
+		if (gid <= prev_glyph + nLeft) {
+		    uint16_t sid = be16_to_cpu(*(const uint16_t *)p);
+		    return sid + gid - prev_glyph;
+		}
+		prev_glyph += nLeft + 1;
+	    }
+	    break;
+	default:
+	    break;
+	}
+    }
+    return 0;
+}
+
+static cairo_status_t
+cairo_cff_font_subset_charset (cairo_cff_font_t  *font)
+{
+    unsigned int i;
+
+    for (i = 0; i < font->scaled_font_subset->num_glyphs; i++) {
+	int gid = font->scaled_font_subset->glyphs[i];
+	uint16_t original_sid = cff_sid_from_gid(&font->charset, gid);
+	uint16_t new_sid;
+	cff_index_element_t *element;
+	cairo_status_t status;
+
+	if (original_sid >= NUM_STD_STRINGS) {
+	    element = _cairo_array_index (&font->strings_index, original_sid - NUM_STD_STRINGS);
+	    new_sid = NUM_STD_STRINGS + _cairo_array_num_elements (&font->strings_subset_index);
+	    status = cff_index_append (&font->strings_subset_index, element->data, element->length);
+	    if (status)
+		return status;
+	}
+	else
+	    new_sid = original_sid;
+
+	status = _cairo_array_append(&font->charset_subset, &new_sid);
+	if (status)
+	    return status;
+    }
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_status_t
 cairo_cff_font_subset_font (cairo_cff_font_t  *font)
 {
@@ -910,6 +1094,10 @@ cairo_cff_font_subset_font (cairo_cff_font_t  *font)
         return status;
 
     status = cairo_cff_font_subset_charstrings (font);
+    if (status)
+	return status;
+
+    status = cairo_cff_font_subset_charset (font);
 
     return status;
 }
@@ -1039,6 +1227,27 @@ cairo_cff_font_write_encoding (cairo_cff_font_t  *font)
 }
 
 static cairo_status_t
+cairo_cff_font_write_charset (cairo_cff_font_t  *font)
+{
+    unsigned char format = 0;
+    unsigned int i;
+    cairo_status_t status;
+
+    cairo_cff_font_set_topdict_operator_to_cur_pos (font, CHARSET_OP);
+    status = _cairo_array_append (&font->output, &format);
+    if (status)
+	return status;
+
+    for (i = 0; i < (unsigned)_cairo_array_num_elements(&font->charset_subset); i++) {
+	uint16_t sid = cpu_to_be16(*(uint16_t *)_cairo_array_index(&font->charset_subset, i));
+	status = _cairo_array_append_multiple (&font->output, &sid, sizeof(sid));
+	if (status)
+	    return status;
+    }
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
 cairo_cff_font_write_charstrings (cairo_cff_font_t  *font)
 {
     cairo_cff_font_set_topdict_operator_to_cur_pos (font, CHARSTRINGS_OP);
@@ -1098,6 +1307,7 @@ static const font_write_t font_write_funcs[] = {
     cairo_cff_font_write_strings,
     cairo_cff_font_write_global_subrs,
     cairo_cff_font_write_encoding,
+    cairo_cff_font_write_charset,
     cairo_cff_font_write_charstrings,
     cairo_cff_font_write_private_dict_and_local_sub,
 };
@@ -1345,6 +1555,7 @@ _cairo_cff_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     cff_index_init (&font->local_sub_index);
     cff_index_init (&font->charstrings_subset_index);
     cff_index_init (&font->strings_subset_index);
+    _cairo_array_init (&font->charset_subset, sizeof(uint16_t));
 
     free (name);
     *font_return = font;
@@ -1383,6 +1594,7 @@ cairo_cff_font_destroy (cairo_cff_font_t *font)
     cff_index_fini (&font->local_sub_index);
     cff_index_fini (&font->charstrings_subset_index);
     cff_index_fini (&font->strings_subset_index);
+    _cairo_array_fini (&font->charset_subset);
     free (font);
 }
 

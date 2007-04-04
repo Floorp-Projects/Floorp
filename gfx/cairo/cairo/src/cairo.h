@@ -72,7 +72,7 @@ cairo_version_string (void);
  *      /<!-- -->* do something *<!-- -->/
  *  }
  * </programlisting></informalexample>
- */
+ **/
 typedef int cairo_bool_t;
 
 /**
@@ -80,6 +80,13 @@ typedef int cairo_bool_t;
  *
  * A #cairo_t contains the current state of the rendering device,
  * including coordinates of yet to be drawn shapes.
+ *
+ * Cairo contexts, as #cairo_t objects are named, are central to
+ * cairo and all drawing with cairo is always done to a #cairo_t
+ * object.
+ *
+ * Memory management of #cairo_t is done with
+ * cairo_reference() and cairo_destroy().
  **/
 typedef struct _cairo cairo_t;
 
@@ -88,13 +95,17 @@ typedef struct _cairo cairo_t;
  *
  * A #cairo_surface_t represents an image, either as the destination
  * of a drawing operation or as source when drawing onto another
- * surface. There are different subtypes of cairo_surface_t for
+ * surface.  To draw to a #cairo_surface_t, create a cairo context
+ * with the surface as the target, using cairo_create().
+ *
+ * There are different subtypes of #cairo_surface_t for
  * different drawing backends; for example, cairo_image_surface_create()
  * creates a bitmap image in memory.
+ * The type of a surface can be queried with cairo_surface_get_type().
  *
  * Memory management of #cairo_surface_t is done with
  * cairo_surface_reference() and cairo_surface_destroy().
- */
+ **/
 typedef struct _cairo_surface cairo_surface_t;
 
 /**
@@ -120,6 +131,25 @@ typedef struct _cairo_matrix {
     double x0; double y0;
 } cairo_matrix_t;
 
+/**
+ * cairo_pattern_t:
+ *
+ * A #cairo_pattern_t represents a source when drawing onto a
+ * surface. There are different subtypes of #cairo_pattern_t,
+ * for different types of sources; for example,
+ * cairo_pattern_create_rgb() creates a pattern for a solid
+ * opaque color.
+ *
+ * Other than various cairo_pattern_create_<emphasis>type</emphasis>
+ * functions, some of the pattern types can be implicitly created
+ * using vairous cairo_set_source_<emphasis>type</emphasis> functions;
+ * for example cairo_set_source_rgb().
+ *
+ * The type of a pattern can be queried with cairo_pattern_get_type().
+ *
+ * Memory management of #cairo_pattern_t is done with
+ * cairo_pattern_reference() and cairo_pattern_destroy().
+ **/
 typedef struct _cairo_pattern cairo_pattern_t;
 
 /**
@@ -129,7 +159,7 @@ typedef struct _cairo_pattern cairo_pattern_t;
  * #cairo_destroy_func_t the type of function which is called when a
  * data element is destroyed. It is passed the pointer to the data
  * element and should free any memory and resources allocated for it.
- */
+ **/
 typedef void (*cairo_destroy_func_t) (void *data);
 
 /**
@@ -141,7 +171,7 @@ typedef void (*cairo_destroy_func_t) (void *data);
  * and there is no need to initialize the object; only the unique
  * address of a #cairo_data_key_t object is used.  Typically, you
  * would just use the address of a static #cairo_data_key_t object.
- */
+ **/
 typedef struct _cairo_user_data_key {
     int unused;
 } cairo_user_data_key_t;
@@ -219,7 +249,7 @@ typedef enum _cairo_status {
  * Note: The large values here are designed to keep cairo_content_t
  * values distinct from cairo_format_t values so that the
  * implementation can detect the error if users confuse the two types.
- */
+ **/
 typedef enum _cairo_content {
     CAIRO_CONTENT_COLOR		= 0x1000,
     CAIRO_CONTENT_ALPHA		= 0x2000,
@@ -241,7 +271,7 @@ typedef enum _cairo_content {
  * CAIRO_STATUS_WRITE_ERROR otherwise.
  *
  * Returns: the status code of the write operation
- */
+ **/
 typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
 					      const unsigned char *data,
 					      unsigned int	   length);
@@ -261,7 +291,7 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
  * CAIRO_STATUS_READ_ERROR otherwise.
  *
  * Returns: the status code of the read operation
- */
+ **/
 typedef cairo_status_t (*cairo_read_func_t) (void		*closure,
 					     unsigned char	*data,
 					     unsigned int	length);
@@ -275,6 +305,19 @@ cairo_reference (cairo_t *cr);
 
 cairo_public void
 cairo_destroy (cairo_t *cr);
+
+cairo_public unsigned int
+cairo_get_reference_count (cairo_t *cr);
+
+cairo_public void *
+cairo_get_user_data (cairo_t			 *cr,
+		     const cairo_user_data_key_t *key);
+
+cairo_public cairo_status_t
+cairo_set_user_data (cairo_t			 *cr,
+		     const cairo_user_data_key_t *key,
+		     void			 *user_data,
+		     cairo_destroy_func_t	  destroy);
 
 cairo_public void
 cairo_save (cairo_t *cr);
@@ -402,7 +445,7 @@ cairo_set_line_width (cairo_t *cr, double width);
  * @CAIRO_LINE_CAP_ROUND: use a round ending, the center of the circle is the end point
  * @CAIRO_LINE_CAP_SQUARE: use squared ending, the center of the square is the end point
  *
- * enumeration for style of line-endings
+ * Specifies how to render the endpoint of a line when stroking.
  **/
 typedef enum _cairo_line_cap {
     CAIRO_LINE_CAP_BUTT,
@@ -413,6 +456,17 @@ typedef enum _cairo_line_cap {
 cairo_public void
 cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap);
 
+/**
+ * cairo_line_join_t
+ * @CAIRO_LINE_JOIN_MITER: use a sharp (angled) corner, see
+ * cairo_set_miter_limit()
+ * @CAIRO_LINE_JOIN_ROUND: use a rounded join, the center of the circle is the
+ * joint point
+ * @CAIRO_LINE_JOIN_BEVEL: use a cut-off join, the join is cut off at half
+ * the line width from the joint point
+ *
+ * Specifies how to render the junction of two lines when stroking.
+ **/
 typedef enum _cairo_line_join {
     CAIRO_LINE_JOIN_MITER,
     CAIRO_LINE_JOIN_ROUND,
@@ -598,23 +652,30 @@ cairo_clip_extents (cairo_t *cr,
 
 /**
  * cairo_rectangle_t:
- * 
+ * @x: X coordinate of the left side of the rectangle
+ * @y: Y coordinate of the the top side of the rectangle
+ * @width: width of the rectangle
+ * @height: height of the rectangle
+ *
  * A data structure for holding a rectangle.
  *
  * Since: 1.4
- */
+ **/
 typedef struct _cairo_rectangle {
     double x, y, width, height;
 } cairo_rectangle_t;
 
 /**
  * cairo_rectangle_list_t:
+ * @status: Error status of the rectangle list
+ * @rectangles: Array containing the rectangles
+ * @num_rectangles: Number of rectangles in this list
  * 
  * A data structure for holding a dynamically allocated
  * array of rectangles.
  *
  * Since: 1.4
- */
+ **/
 typedef struct _cairo_rectangle_list {
     cairo_status_t     status;
     cairo_rectangle_t *rectangles;
@@ -636,7 +697,14 @@ cairo_rectangle_list_destroy (cairo_rectangle_list_t *rectangle_list);
  * resolution. A cairo_scaled_font_t is most useful for low-level font
  * usage where a library or application wants to cache a reference
  * to a scaled font to speed up the computation of metrics.
- */
+ *
+ * There are various types of scaled fonts, depending on the
+ * <firstterm>font backend</firstterm> they use. The type of a
+ * scaled font can be queried using cairo_scaled_font_get_type().
+ *
+ * Memory management of #cairo_scaled_font_t is done with
+ * cairo_scaled_font_reference() and cairo_scaled_font_destroy().
+ **/
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
 
 /**
@@ -648,7 +716,14 @@ typedef struct _cairo_scaled_font cairo_scaled_font_t;
  * directions) . A font face can be set on a #cairo_t by using
  * cairo_set_font_face(); the size and font matrix are set with
  * cairo_set_font_size() and cairo_set_font_matrix().
- */
+ *
+ * There are various types of font faces, depending on the
+ * <firstterm>font backend</firstterm> they use. The type of a
+ * font face can be queried using cairo_font_face_get_type().
+ *
+ * Memory management of #cairo_font_face_t is done with
+ * cairo_font_face_reference() and cairo_font_face_destroy().
+ **/
 typedef struct _cairo_font_face cairo_font_face_t;
 
 /**
@@ -707,7 +782,7 @@ typedef struct {
  * doubled. They will change slightly due to hinting (so you can't
  * assume that metrics are independent of the transformation matrix),
  * but otherwise will remain unchanged.
- */
+ **/
 typedef struct {
     double x_bearing;
     double y_bearing;
@@ -757,7 +832,7 @@ typedef struct {
  * not be doubled. They will change slightly due to hinting (so you
  * can't assume that metrics are independent of the transformation
  * matrix), but otherwise will remain unchanged.
- */
+ **/
 typedef struct {
     double ascent;
     double descent;
@@ -766,12 +841,27 @@ typedef struct {
     double max_y_advance;
 } cairo_font_extents_t;
 
+/**
+ * cairo_font_slant_t:
+ * @CAIRO_FONT_SLANT_NORMAL: Upright font style
+ * @CAIRO_FONT_SLANT_ITALIC: Italic font style
+ * @CAIRO_FONT_SLANT_OBLIQUE: Oblique font style
+ *
+ * Specifies variants of a font face based on their slant.
+ **/
 typedef enum _cairo_font_slant {
   CAIRO_FONT_SLANT_NORMAL,
   CAIRO_FONT_SLANT_ITALIC,
   CAIRO_FONT_SLANT_OBLIQUE
 } cairo_font_slant_t;
 
+/**
+ * cairo_font_weight_t:
+ * @CAIRO_FONT_WEIGHT_NORMAL: Normal font weight
+ * @CAIRO_FONT_WEIGHT_BOLD: Bold font weight
+ *
+ * Specifies variants of a font face based on their weight.
+ **/
 typedef enum _cairo_font_weight {
   CAIRO_FONT_WEIGHT_NORMAL,
   CAIRO_FONT_WEIGHT_BOLD
@@ -823,7 +913,7 @@ typedef enum _cairo_subpixel_order {
  * styles are supported by all font backends.
  *
  * New entries may be added in future versions.
- */
+ **/
 typedef enum _cairo_hint_style {
     CAIRO_HINT_STYLE_DEFAULT,
     CAIRO_HINT_STYLE_NONE,
@@ -844,13 +934,33 @@ typedef enum _cairo_hint_style {
  * device space. Doing this improves the consistency of
  * letter and line spacing, however it also means that text
  * will be laid out differently at different zoom factors.
- */
+ **/
 typedef enum _cairo_hint_metrics {
     CAIRO_HINT_METRICS_DEFAULT,
     CAIRO_HINT_METRICS_OFF,
     CAIRO_HINT_METRICS_ON
 } cairo_hint_metrics_t;
 
+/**
+ * cairo_font_options_t:
+ *
+ * An opaque structure holding all options that are used when
+ * rendering fonts.
+ *
+ * Individual features of a #cairo_font_options_t can be set or
+ * accessed using functions named
+ * cairo_font_options_set_<emphasis>feature_name</emphasis> and
+ * cairo_font_options_get_<emphasis>feature_name</emphasis>, like
+ * cairo_font_options_set_antialias() and
+ * cairo_font_options_get_antialias().
+ *
+ * New features may be added to a #cairo_font_options_t in the
+ * future.  For this reason, cairo_font_options_copy(),
+ * cairo_font_options_equal(), cairo_font_options_merge(), and
+ * cairo_font_options_hash() should be used to copy, check
+ * for equality, merge, or compute a hash value of
+ * #cairo_font_options_t objects.
+ **/
 typedef struct _cairo_font_options cairo_font_options_t;
 
 cairo_public cairo_font_options_t *
@@ -928,8 +1038,17 @@ cairo_get_font_options (cairo_t              *cr,
 			cairo_font_options_t *options);
 
 cairo_public void
+cairo_set_font_face (cairo_t *cr, cairo_font_face_t *font_face);
+
+cairo_public cairo_font_face_t *
+cairo_get_font_face (cairo_t *cr);
+
+cairo_public void
 cairo_set_scaled_font (cairo_t                   *cr,
 		       const cairo_scaled_font_t *scaled_font);
+
+cairo_public cairo_scaled_font_t *
+cairo_get_scaled_font (cairo_t *cr);
 
 cairo_public void
 cairo_show_text (cairo_t *cr, const char *utf8);
@@ -937,15 +1056,11 @@ cairo_show_text (cairo_t *cr, const char *utf8);
 cairo_public void
 cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs);
 
-cairo_public cairo_font_face_t *
-cairo_get_font_face (cairo_t *cr);
+cairo_public void
+cairo_text_path  (cairo_t *cr, const char *utf8);
 
 cairo_public void
-cairo_font_extents (cairo_t              *cr,
-		    cairo_font_extents_t *extents);
-
-cairo_public void
-cairo_set_font_face (cairo_t *cr, cairo_font_face_t *font_face);
+cairo_glyph_path (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs);
 
 cairo_public void
 cairo_text_extents (cairo_t              *cr,
@@ -959,10 +1074,8 @@ cairo_glyph_extents (cairo_t               *cr,
 		     cairo_text_extents_t  *extents);
 
 cairo_public void
-cairo_text_path  (cairo_t *cr, const char *utf8);
-
-cairo_public void
-cairo_glyph_path (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs);
+cairo_font_extents (cairo_t              *cr,
+		    cairo_font_extents_t *extents);
 
 /* Generic identifier for a font style */
 
@@ -971,6 +1084,9 @@ cairo_font_face_reference (cairo_font_face_t *font_face);
 
 cairo_public void
 cairo_font_face_destroy (cairo_font_face_t *font_face);
+
+cairo_public unsigned int
+cairo_font_face_get_reference_count (cairo_font_face_t *font_face);
 
 cairo_public cairo_status_t
 cairo_font_face_status (cairo_font_face_t *font_face);
@@ -1010,7 +1126,7 @@ cairo_font_face_status (cairo_font_face_t *font_face);
  * New entries may be added in future versions.
  *
  * Since: 1.2
- */
+ **/
 typedef enum _cairo_font_type {
     CAIRO_FONT_TYPE_TOY,
     CAIRO_FONT_TYPE_FT,
@@ -1045,11 +1161,24 @@ cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font);
 cairo_public void
 cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font);
 
+cairo_public unsigned int
+cairo_scaled_font_get_reference_count (cairo_scaled_font_t *scaled_font);
+
 cairo_public cairo_status_t
 cairo_scaled_font_status (cairo_scaled_font_t *scaled_font);
 
 cairo_public cairo_font_type_t
 cairo_scaled_font_get_type (cairo_scaled_font_t *scaled_font);
+
+cairo_public void *
+cairo_scaled_font_get_user_data (cairo_scaled_font_t         *scaled_font,
+				 const cairo_user_data_key_t *key);
+
+cairo_public cairo_status_t
+cairo_scaled_font_set_user_data (cairo_scaled_font_t         *scaled_font,
+				 const cairo_user_data_key_t *key,
+				 void                        *user_data,
+				 cairo_destroy_func_t	      destroy);
 
 cairo_public void
 cairo_scaled_font_extents (cairo_scaled_font_t  *scaled_font,
@@ -1128,6 +1257,17 @@ cairo_get_target (cairo_t *cr);
 cairo_public cairo_surface_t *
 cairo_get_group_target (cairo_t *cr);
 
+/**
+ * cairo_path_data_type_t:
+ * @CAIRO_PATH_MOVE_TO: A move-to operation
+ * @CAIRO_PATH_LINE_TO: A line-to operation
+ * @CAIRO_PATH_CURVE_TO: A curve-to operation
+ * @CAIRO_PATH_CLOSE_PATH: A close-path operation
+ *
+ * #cairo_path_data_t is used to describe the type of one portion
+ * of a path when represented as a #cairo_path_t.
+ * See #cairo_path_data_t for details.
+ **/
 typedef enum _cairo_path_data_type {
     CAIRO_PATH_MOVE_TO,
     CAIRO_PATH_LINE_TO,
@@ -1149,8 +1289,7 @@ typedef enum _cairo_path_data_type {
  * the array, (one header followed by 0 or more points). The length
  * value of the header is the number of array elements for the current
  * portion including the header, (ie. length == 1 + # of points), and
- * where the number of points for each element type must be as
- * follows:
+ * where the number of points for each element type is as follows:
  *
  * <programlisting>
  *     %CAIRO_PATH_MOVE_TO:     1 point
@@ -1193,6 +1332,14 @@ typedef enum _cairo_path_data_type {
  *      }
  *      cairo_path_destroy (path);
  * </programlisting></informalexample>
+ *
+ * As of cairo 1.4, cairo does not mind if there are more elements in
+ * a portion of the path than needed.  Such elements can be used by
+ * users of the cairo API to hold extra values in the path data
+ * structure.  For this reason, it is recommended that applications
+ * always use <literal>data->header.length</literal> to
+ * iterate over the path data, instead of hardcoding the number of
+ * elements for each element type.
  **/
 typedef union _cairo_path_data_t cairo_path_data_t;
 union _cairo_path_data_t {
@@ -1268,11 +1415,11 @@ cairo_surface_finish (cairo_surface_t *surface);
 cairo_public void
 cairo_surface_destroy (cairo_surface_t *surface);
 
-cairo_public cairo_status_t
-cairo_surface_status (cairo_surface_t *surface);
-
 cairo_public unsigned int
 cairo_surface_get_reference_count (cairo_surface_t *surface);
+
+cairo_public cairo_status_t
+cairo_surface_status (cairo_surface_t *surface);
 
 /**
  * cairo_surface_type_t
@@ -1311,7 +1458,7 @@ cairo_surface_get_reference_count (cairo_surface_t *surface);
  * New entries may be added in future versions.
  *
  * Since: 1.2
- */
+ **/
 typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_IMAGE,
     CAIRO_SURFACE_TYPE_PDF,
@@ -1324,7 +1471,6 @@ typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_BEOS,
     CAIRO_SURFACE_TYPE_DIRECTFB,
     CAIRO_SURFACE_TYPE_SVG,
-    CAIRO_SURFACE_TYPE_NQUARTZ,
     CAIRO_SURFACE_TYPE_OS2
 } cairo_surface_type_t;
 
@@ -1417,7 +1563,7 @@ cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
  * image data.
  *
  * New entries may be added in future versions.
- */
+ **/
 typedef enum _cairo_format {
     CAIRO_FORMAT_ARGB32,
     CAIRO_FORMAT_RGB24,
@@ -1493,8 +1639,21 @@ cairo_pattern_reference (cairo_pattern_t *pattern);
 cairo_public void
 cairo_pattern_destroy (cairo_pattern_t *pattern);
 
+cairo_public unsigned int
+cairo_pattern_get_reference_count (cairo_pattern_t *pattern);
+
 cairo_public cairo_status_t
 cairo_pattern_status (cairo_pattern_t *pattern);
+
+cairo_public void *
+cairo_pattern_get_user_data (cairo_pattern_t		 *pattern,
+			     const cairo_user_data_key_t *key);
+
+cairo_public cairo_status_t
+cairo_pattern_set_user_data (cairo_pattern_t		 *pattern,
+			     const cairo_user_data_key_t *key,
+			     void			 *user_data,
+			     cairo_destroy_func_t	  destroy);
 
 /**
  * cairo_pattern_type_t
@@ -1525,7 +1684,7 @@ cairo_pattern_status (cairo_pattern_t *pattern);
  * New entries may be added in future versions.
  *
  * Since: 1.2
- */
+ **/
 typedef enum _cairo_pattern_type {
     CAIRO_PATTERN_TYPE_SOLID,
     CAIRO_PATTERN_TYPE_SURFACE,
@@ -1570,7 +1729,7 @@ cairo_pattern_get_matrix (cairo_pattern_t *pattern,
  * of a pattern will be drawn.
  *
  * New entries may be added in future versions.
- */
+ **/
 typedef enum _cairo_extend {
     CAIRO_EXTEND_NONE,
     CAIRO_EXTEND_REPEAT,
@@ -1676,12 +1835,6 @@ cairo_matrix_transform_distance (const cairo_matrix_t *matrix,
 cairo_public void
 cairo_matrix_transform_point (const cairo_matrix_t *matrix,
 			      double *x, double *y);
-
-cairo_public void
-cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
-				     double *x1, double *y1,
-				     double *x2, double *y2,
-				     cairo_bool_t *is_tight);
 
 /* Functions to be used while debugging (not intended for use in production code) */
 cairo_public void

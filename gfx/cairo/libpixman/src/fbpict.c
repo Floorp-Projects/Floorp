@@ -2123,7 +2123,9 @@ static unsigned int detectCPUFeatures(void) {
             features |= SSE;
         if (result & (1 << 26))
             features |= SSE2;
-        if ((result & MMX) && !(result & SSE) && (strcmp(vendor, "AuthenticAMD") == 0)) {
+        if ((features & MMX) && !(features & SSE) &&
+            (strcmp(vendor, "AuthenticAMD") == 0 ||
+             strcmp(vendor, "Geode by NSC") == 0)) {
             /* check for AMD MMX extensions */
 #ifdef __GNUC__
 
