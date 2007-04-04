@@ -775,7 +775,8 @@ void nsDocAccessible::ScrollTimerCallback(nsITimer *aTimer, void *aClosure)
     // We only want to fire accessibilty scroll event when scrolling stops or pauses
     // Therefore, we wait for no scroll events to occur between 2 ticks of this timer
     // That indicates a pause in scrolling, so we fire the accessibilty scroll event
-    docAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_SCROLLINGEND, docAcc, nsnull);
+    docAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_SCROLLING_END, docAcc,
+                             nsnull);
     docAcc->mScrollPositionChangedTicks = 0;
     if (docAcc->mScrollWatchTimer) {
       docAcc->mScrollWatchTimer->Cancel();
@@ -1130,15 +1131,17 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
           docAccessible->FireDocLoadEvents(nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE);
         }
       }
-      else if (eventType == nsIAccessibleEvent::EVENT_ATK_TEXT_CARET_MOVE) {
+      else if (eventType == nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED) {
         nsCOMPtr<nsIAccessibleText> accessibleText = do_QueryInterface(accessible);
         PRInt32 caretOffset;
         if (accessibleText && NS_SUCCEEDED(accessibleText->GetCaretOffset(&caretOffset))) {
-          FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_TEXT_CARET_MOVE, accessible, &caretOffset);
+          FireToolkitEvent(nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED,
+                           accessible, &caretOffset);
           PRInt32 selectionCount;
           accessibleText->GetSelectionCount(&selectionCount);
           if (selectionCount) {  // There's a selection so fire selection change as well
-           FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_TEXT_SELECTION_CHANGE, accessible, nsnull);
+           FireToolkitEvent(nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED,
+                                                accessible, nsnull);
           }
         }
       }
@@ -1185,7 +1188,7 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode, PRUint32 aChangeEvent
               if (!popup) {
                 // Popup elements already fire these via DOMMenuInactive
                 // handling in nsRootAccessible::HandleEvent
-                event = nsIAccessibleEvent::EVENT_MENUPOPUPEND;
+                event = nsIAccessibleEvent::EVENT_MENUPOPUP_END;
               }
             }
             else if (role == nsIAccessibleRole::ROLE_PROGRESSBAR &&
@@ -1279,7 +1282,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
 #endif
 
   if (aChangeEventType == nsIAccessibleEvent::EVENT_HIDE) {
-    // Fire EVENT_HIDE or EVENT_MENUPOPUPEND if previous accessible existed
+    // Fire EVENT_HIDE or EVENT_MENUPOPUP_END if previous accessible existed
     // for node being hidden. Fire this before the accessible goes away
     if (privateChildAccessible) {
       privateChildAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_HIDE,
@@ -1341,7 +1344,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   }
 
   if (aChangeEventType == nsIAccessibleEvent::EVENT_SHOW && aChild) {
-    // Fire EVENT_SHOW, EVENT_MENUPOPUPSTART for newly visible content.
+    // Fire EVENT_SHOW, EVENT_MENUPOPUP_START for newly visible content.
     // Fire after a short timer, because we want to make sure the view has been
     // updated to make this accessible content visible. If we don't wait,
     // the assistive technology may receive the event and then retrieve
@@ -1350,7 +1353,8 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     nsAutoString role;
     if (GetRoleAttribute(aChild, role) &&
         StringEndsWith(role, NS_LITERAL_STRING(":menu"), nsCaseInsensitiveStringComparator())) {
-      FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUPSTART, childNode, nsnull);
+      FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START,
+                              childNode, nsnull);
     }
   }
 

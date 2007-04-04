@@ -193,7 +193,7 @@ nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
     else if (eventType.LowerCaseEqualsLiteral("select")) {
 #ifdef MOZ_XUL
         if (treeItemAccessible) { // it's a XUL <tree>
-            // use EVENT_FOCUS instead of EVENT_ATK_SELECTION_CHANGE
+            // use EVENT_FOCUS instead of EVENT_SELECTION_CHANGED
             privAcc = do_QueryInterface(treeItemAccessible);
             privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
                                     treeItemAccessible, nsnull);
@@ -256,7 +256,7 @@ nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
         // ------------------------------------------------------------------------
         // If the AT wants to know about these popups it can track the ATK state change
         // event we fire for ATK_STATE_INVISIBLE on the popup.
-        // This is fired as a result of the nsIAccessibleEvent::EVENT_MENUPOPUPSTART 
+        // This is fired as a result of the nsIAccessibleEvent::EVENT_MENUPOPUP_START
         // we fire in the nsRootAccessible event handling for all popups.
         return NS_OK;
       }

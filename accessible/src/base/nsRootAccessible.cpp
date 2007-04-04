@@ -500,13 +500,13 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
       PRUint32 naturalRole; // The natural role is the role that this type of element normally has
       finalFocusAccessible->GetRole(&naturalRole);
       if (role != naturalRole) { // Must be a DHTML menuitem
-         FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUSTART, this, nsnull);
+         FireToolkitEvent(nsIAccessibleEvent::EVENT_MENU_START, this, nsnull);
          mIsInDHTMLMenu = nsIAccessibleRole::ROLE_MENUITEM;
       }
     }
   }
   else if (mIsInDHTMLMenu) {
-    FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUEND, this, nsnull);
+    FireToolkitEvent(nsIAccessibleEvent::EVENT_MENU_END, this, nsnull);
     mIsInDHTMLMenu = PR_FALSE;
   }
 
@@ -606,7 +606,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     // popup and the accessibility toolkit event can't be fired.
     nsCOMPtr<nsIDOMXULPopupElement> popup(do_QueryInterface(aTargetNode));
     if (popup) {
-      PRInt32 event = nsIAccessibleEvent::EVENT_MENUPOPUPSTART;
+      PRInt32 event = nsIAccessibleEvent::EVENT_MENUPOPUP_START;
       nsCOMPtr<nsIContent> content(do_QueryInterface(aTargetNode));
       if (content->NodeInfo()->Equals(nsAccessibilityAtoms::tooltip, kNameSpaceID_XUL)) {
         // There is a single <xul:tooltip> node which Mozilla moves around.
@@ -788,7 +788,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   else if (eventType.EqualsLiteral("DOMMenuInactive")) {
     nsCOMPtr<nsIDOMXULPopupElement> popup(do_QueryInterface(aTargetNode));
     if (popup) {
-      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUPEND,
+      privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_END,
                                 accessible, nsnull);
     }
   }
@@ -813,11 +813,11 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     FireAccessibleFocusEvent(accessible, aTargetNode, aEvent, PR_TRUE);
   }
   else if (eventType.LowerCaseEqualsLiteral("dommenubaractive")) {
-    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUSTART,
+    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENU_START,
                               accessible, nsnull);
   }
   else if (eventType.LowerCaseEqualsLiteral("dommenubarinactive")) {
-    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUEND,
+    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENU_END,
                               accessible, nsnull);
     FireCurrentFocusEvent();
   }

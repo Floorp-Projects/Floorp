@@ -206,7 +206,8 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   NS_ASSERTION(textAcc, "No nsIAccessibleText for caret move event!"); // No nsIAccessibleText for caret move event!
   NS_ENSURE_TRUE(textAcc, NS_ERROR_FAILURE);
 
-  return mRootAccessible->FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_ATK_TEXT_CARET_MOVE, focusNode, nsnull, PR_FALSE);
+  return mRootAccessible->FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED,
+                                                  focusNode, nsnull, PR_FALSE);
 }
 
 /** Return the caret's bounds */
