@@ -39,7 +39,7 @@ if [ $status -ne 0 ] ; then
   exit $status
 fi
 
-diff -u testdata/dump_syms_regtest.new testdata/dump_syms_regtest.out > \
+diff -u testdata/dump_syms_regtest.new testdata/dump_syms_regtest.sym > \
  testdata/dump_syms_regtest.diff
 status=$?
 

@@ -53,7 +53,7 @@
 #include <assert.h>           // for assert
 #include <stdlib.h>           // for free() decl
 
-namespace google_airbag {
+namespace google_breakpad {
 
 template <typename T>
 class scoped_ptr {
@@ -330,6 +330,6 @@ bool operator!=(T* p, const scoped_ptr_malloc<T,FP>& b) {
   return p != b.get();
 }
 
-}  // namespace google_airbag
+}  // namespace google_breakpad
 
 #endif  // PROCESSOR_SCOPED_PTR_H__

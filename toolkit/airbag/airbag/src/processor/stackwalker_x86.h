@@ -39,26 +39,27 @@
 #define PROCESSOR_STACKWALKER_X86_H__
 
 
-#include "google_airbag/common/airbag_types.h"
-#include "google_airbag/common/minidump_format.h"
-#include "google_airbag/processor/stackwalker.h"
+#include "google_breakpad/common/breakpad_types.h"
+#include "google_breakpad/common/minidump_format.h"
+#include "google_breakpad/processor/stackwalker.h"
 
-namespace google_airbag {
+namespace google_breakpad {
 
-class MinidumpContext;
-class MinidumpModuleList;
+class CodeModules;
 
 
 class StackwalkerX86 : public Stackwalker {
  public:
-  // context is a MinidumpContext object that gives access to x86-specific
+  // context is an x86 context object that gives access to x86-specific
   // register state corresponding to the innermost called frame to be
   // included in the stack.  The other arguments are passed directly through
   // to the base Stackwalker constructor.
-  StackwalkerX86(const MDRawContextX86 *context,
+  StackwalkerX86(const SystemInfo *system_info,
+                 const MDRawContextX86 *context,
                  MemoryRegion *memory,
-                 MinidumpModuleList *modules,
-                 SymbolSupplier *supplier);
+                 const CodeModules *modules,
+                 SymbolSupplier *supplier,
+                 SourceLineResolverInterface *resolver);
 
  private:
   // Implementation of Stackwalker, using x86 context (%ebp, %esp, %eip) and
@@ -75,7 +76,7 @@ class StackwalkerX86 : public Stackwalker {
 };
 
 
-}  // namespace google_airbag
+}  // namespace google_breakpad
 
 
 #endif  // PROCESSOR_STACKWALKER_X86_H__

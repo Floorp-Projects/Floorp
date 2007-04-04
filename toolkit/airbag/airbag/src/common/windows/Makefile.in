@@ -11,7 +11,7 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla Airbag integration
+# The Original Code is Mozilla Breakpad integration
 #
 # The Initial Developer of the Original Code is
 # Ted Mielczarek <ted.mielczarek@gmail.com>
@@ -41,8 +41,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= airbag_common
-LIBRARY_NAME	= airbag_common_s
+MODULE		= breakpad_windows_common
+LIBRARY_NAME	= breakpad_windows_common_s
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../..
 DEFINES += -DUNICODE -D_UNICODE

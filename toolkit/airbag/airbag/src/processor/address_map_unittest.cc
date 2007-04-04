@@ -49,8 +49,8 @@
 
 namespace {
 
-using google_airbag::AddressMap;
-using google_airbag::linked_ptr;
+using google_breakpad::AddressMap;
+using google_breakpad::linked_ptr;
 
 // A CountedObject holds an int.  A global (not thread safe!) count of
 // allocated CountedObjects is maintained to help test memory management.

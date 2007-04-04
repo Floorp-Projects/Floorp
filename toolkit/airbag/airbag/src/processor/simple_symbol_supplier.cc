@@ -33,66 +33,81 @@
 //
 // Author: Mark Mentovai
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#include <cassert>
+
 #include "processor/simple_symbol_supplier.h"
-#include "google_airbag/processor/minidump.h"
+#include "google_breakpad/processor/code_module.h"
+#include "google_breakpad/processor/system_info.h"
 #include "processor/pathname_stripper.h"
 
-namespace google_airbag {
+namespace google_breakpad {
 
-string SimpleSymbolSupplier::GetSymbolFileAtPath(MinidumpModule *module,
-                                                 const string &root_path) {
-  // For now, only support modules that have GUIDs - which means
-  // MDCVInfoPDB70.
+static bool file_exists(const string &file_name) {
+  struct stat sb;
+  return stat(file_name.c_str(), &sb) == 0;
+}
 
+SymbolSupplier::SymbolResult SimpleSymbolSupplier::GetSymbolFile(
+    const CodeModule *module, const SystemInfo *system_info,
+    string *symbol_file) {
+  assert(symbol_file);
+  for (unsigned int path_index = 0; path_index < paths_.size(); ++path_index) {
+    SymbolResult result;
+    if ((result = GetSymbolFileAtPath(module, system_info, paths_[path_index],
+                                      symbol_file)) != NOT_FOUND) {
+      return result;
+    }
+  }
+  return NOT_FOUND;
+}
+
+SymbolSupplier::SymbolResult SimpleSymbolSupplier::GetSymbolFileAtPath(
+    const CodeModule *module, const SystemInfo *system_info,
+    const string &root_path, string *symbol_file) {
+  assert(symbol_file);
   if (!module)
-    return "";
-
-  const MDCVInfoPDB70 *cv_record =
-      reinterpret_cast<const MDCVInfoPDB70*>(module->GetCVRecord());
-  if (!cv_record)
-    return "";
-
-  if (cv_record->cv_signature != MD_CVINFOPDB70_SIGNATURE)
-    return "";
+    return NOT_FOUND;
 
   // Start with the base path.
   string path = root_path;
 
-  // Append the pdb file name as a directory name.
+  // Append the debug (pdb) file name as a directory name.
   path.append("/");
-  string pdb_file_name = PathnameStripper::File(
-      reinterpret_cast<const char *>(cv_record->pdb_file_name));
-  path.append(pdb_file_name);
+  string debug_file_name = PathnameStripper::File(module->debug_file());
+  if (debug_file_name.empty())
+    return NOT_FOUND;
+  path.append(debug_file_name);
 
-  // Append the uuid and age as a directory name.
+  // Append the identifier as a directory name.
   path.append("/");
-  char uuid_age_string[43];
-  snprintf(uuid_age_string, sizeof(uuid_age_string),
-           "%08X%04X%04X%02X%02X%02X%02X%02X%02X%02X%02X%X",
-           cv_record->signature.data1, cv_record->signature.data2,
-           cv_record->signature.data3,
-           cv_record->signature.data4[0], cv_record->signature.data4[1],
-           cv_record->signature.data4[2], cv_record->signature.data4[3],
-           cv_record->signature.data4[4], cv_record->signature.data4[5],
-           cv_record->signature.data4[6], cv_record->signature.data4[7],
-           cv_record->age);
-  path.append(uuid_age_string);
+  string identifier = module->debug_identifier();
+  if (identifier.empty())
+    return NOT_FOUND;
+  path.append(identifier);
 
-  // Transform the pdb file name into one ending in .sym.  If the existing
+  // Transform the debug file name into one ending in .sym.  If the existing
   // name ends in .pdb, strip the .pdb.  Otherwise, add .sym to the non-.pdb
   // name.
   path.append("/");
-  string pdb_file_extension = pdb_file_name.substr(pdb_file_name.size() - 4);
-  transform(pdb_file_extension.begin(), pdb_file_extension.end(),
-            pdb_file_extension.begin(), tolower);
-  if (pdb_file_extension == ".pdb") {
-    path.append(pdb_file_name.substr(0, pdb_file_name.size() - 4));
+  string debug_file_extension =
+      debug_file_name.substr(debug_file_name.size() - 4);
+  transform(debug_file_extension.begin(), debug_file_extension.end(),
+            debug_file_extension.begin(), tolower);
+  if (debug_file_extension == ".pdb") {
+    path.append(debug_file_name.substr(0, debug_file_name.size() - 4));
   } else {
-    path.append(pdb_file_name);
+    path.append(debug_file_name);
   }
   path.append(".sym");
 
-  return path;
+  if (!file_exists(path))
+    return NOT_FOUND;
+
+  *symbol_file = path;
+  return FOUND;
 }
 
-}  // namespace google_airbag
+}  // namespace google_breakpad

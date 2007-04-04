@@ -43,7 +43,7 @@
 #define UNDNAME_NO_ECSU 0x8000  // Suppresses enum/class/struct/union.
 #endif  // UNDNAME_NO_ECSU
 
-namespace google_airbag {
+namespace google_breakpad {
 
 PDBSourceLineWriter::PDBSourceLineWriter() : output_(NULL) {
 }
@@ -149,6 +149,11 @@ bool PDBSourceLineWriter::PrintFunction(IDiaSymbol *function) {
   if (FAILED(function->get_length(&length))) {
     fprintf(stderr, "failed to get function length\n");
     return false;
+  }
+
+  if (length == 0) {
+    // Silently ignore zero-length functions, which can infrequently pop up.
+    return true;
   }
 
   CComBSTR name;
@@ -287,6 +292,11 @@ bool PDBSourceLineWriter::PrintFrameData() {
   if (!frame_data_enum)
     return false;
 
+  DWORD last_type = -1;
+  DWORD last_rva = -1;
+  DWORD last_code_size = 0;
+  DWORD last_prolog_size = -1;
+
   CComPtr<IDiaFrameData> frame_data;
   while (SUCCEEDED(frame_data_enum->Next(1, &frame_data, &count)) &&
          count == 1) {
@@ -348,14 +358,27 @@ bool PDBSourceLineWriter::PrintFrameData() {
       }
     }
 
-    fprintf(output_, "STACK WIN %x %x %x %x %x %x %x %x %x %d ",
-            type, rva, code_size, prolog_size, epilog_size,
-            parameter_size, saved_register_size, local_size, max_stack_size,
-            program_string_result == S_OK);
-    if (program_string_result == S_OK) {
-      fprintf(output_, "%ws\n", program_string);
-    } else {
-      fprintf(output_, "%d\n", allocates_base_pointer);
+    // Only print out a line if type, rva, code_size, or prolog_size have
+    // changed from the last line.  It is surprisingly common (especially in
+    // system library PDBs) for DIA to return a series of identical
+    // IDiaFrameData objects.  For kernel32.pdb from Windows XP SP2 on x86,
+    // this check reduces the size of the dumped symbol file by a third.
+    if (type != last_type || rva != last_rva || code_size != last_code_size ||
+        prolog_size != last_prolog_size) {
+      fprintf(output_, "STACK WIN %x %x %x %x %x %x %x %x %x %d ",
+              type, rva, code_size, prolog_size, epilog_size,
+              parameter_size, saved_register_size, local_size, max_stack_size,
+              program_string_result == S_OK);
+      if (program_string_result == S_OK) {
+        fprintf(output_, "%ws\n", program_string);
+      } else {
+        fprintf(output_, "%d\n", allocates_base_pointer);
+      }
+
+      last_type = type;
+      last_rva = rva;
+      last_code_size = code_size;
+      last_prolog_size = prolog_size;
     }
 
     frame_data.Release();
@@ -390,13 +413,17 @@ bool PDBSourceLineWriter::PrintCodePublicSymbol(IDiaSymbol *symbol) {
 }
 
 bool PDBSourceLineWriter::PrintPDBInfo() {
-  wstring guid, filename;
-  int age;
-  if (!GetModuleInfo(&guid, &age, &filename)) {
+  PDBModuleInfo info;
+  if (!GetModuleInfo(&info)) {
     return false;
   }
 
-  fprintf(output_, "MODULE %ws %x %ws\n", guid.c_str(), age, filename.c_str());
+  // Hard-code "windows" for the OS because that's the only thing that makes
+  // sense for PDB files.  (This might not be strictly correct for Windows CE
+  // support, but we don't care about that at the moment.)
+  fprintf(output_, "MODULE windows %ws %ws %ws\n",
+          info.cpu.c_str(), info.debug_identifier.c_str(),
+          info.debug_file.c_str());
 
   return true;
 }
@@ -652,47 +679,118 @@ void PDBSourceLineWriter::Close() {
   session_.Release();
 }
 
-// static
-wstring PDBSourceLineWriter::GetBaseName(const wstring &filename) {
-  wstring base_name(filename);
-  size_t slash_pos = base_name.find_last_of(L"/\\");
-  if (slash_pos != wstring::npos) {
-    base_name.erase(0, slash_pos + 1);
+bool PDBSourceLineWriter::GetModuleInfo(PDBModuleInfo *info) {
+  if (!info) {
+    return false;
   }
-  return base_name;
-}
 
-bool PDBSourceLineWriter::GetModuleInfo(wstring *guid, int *age,
-                                        wstring *filename) {
-  guid->clear();
-  *age = 0;
-  filename->clear();
+  info->debug_file.clear();
+  info->debug_identifier.clear();
+  info->cpu.clear();
 
   CComPtr<IDiaSymbol> global;
   if (FAILED(session_->get_globalScope(&global))) {
     return false;
   }
 
-  GUID guid_number;
-  if (FAILED(global->get_guid(&guid_number))) {
-    return false;
+  // All CPUs in CV_CPU_TYPE_e (cvconst.h) below 0x10 are x86.  There's no
+  // single specific constant to use.
+  DWORD platform;
+  if (SUCCEEDED(global->get_platform(&platform)) && platform < 0x10) {
+    info->cpu = L"x86";
+  } else {
+    // Unexpected, but handle gracefully.
+    info->cpu = L"unknown";
   }
-  *guid = GUIDString::GUIDToWString(&guid_number);
 
   // DWORD* and int* are not compatible.  This is clean and avoids a cast.
-  DWORD age_dword;
-  if (FAILED(global->get_age(&age_dword))) {
+  DWORD age;
+  if (FAILED(global->get_age(&age))) {
     return false;
   }
-  *age = age_dword;
 
-  CComBSTR filename_string;
-  if (FAILED(global->get_symbolsFileName(&filename_string))) {
+  bool uses_guid;
+  if (!UsesGUID(&uses_guid)) {
     return false;
   }
-  *filename = GetBaseName(wstring(filename_string));
+
+  if (uses_guid) {
+    GUID guid;
+    if (FAILED(global->get_guid(&guid))) {
+      return false;
+    }
+
+    // Use the same format that the MS symbol server uses in filesystem
+    // hierarchies.
+    wchar_t age_string[9];
+    swprintf(age_string, sizeof(age_string) / sizeof(age_string[0]),
+             L"%x", age);
+    GB_WSU_SAFE_SWPRINTF_TERMINATE(age_string,
+                                   sizeof(age_string) / sizeof(age_string[0]));
+
+    info->debug_identifier = GUIDString::GUIDToSymbolServerWString(&guid);
+    info->debug_identifier.append(age_string);
+  } else {
+    DWORD signature;
+    if (FAILED(global->get_signature(&signature))) {
+      return false;
+    }
+
+    // Use the same format that the MS symbol server uses in filesystem
+    // hierarchies.
+    wchar_t identifier_string[17];
+    swprintf(identifier_string,
+             sizeof(identifier_string) / sizeof(identifier_string[0]),
+             L"%08X%x", signature, age);
+    GB_WSU_SAFE_SWPRINTF_TERMINATE(identifier_string,
+                                   sizeof(identifier_string) /
+                                       sizeof(identifier_string[0]));
+    info->debug_identifier = identifier_string;
+  }
+
+  CComBSTR debug_file_string;
+  if (FAILED(global->get_symbolsFileName(&debug_file_string))) {
+    return false;
+  }
+  info->debug_file =
+      WindowsStringUtils::GetBaseName(wstring(debug_file_string));
 
   return true;
 }
 
-}  // namespace google_airbag
+bool PDBSourceLineWriter::UsesGUID(bool *uses_guid) {
+  if (!uses_guid)
+    return false;
+
+  CComPtr<IDiaSymbol> global;
+  if (FAILED(session_->get_globalScope(&global)))
+    return false;
+
+  GUID guid;
+  if (FAILED(global->get_guid(&guid)))
+    return false;
+
+  DWORD signature;
+  if (FAILED(global->get_signature(&signature)))
+    return false;
+
+  // There are two possibilities for guid: either it's a real 128-bit GUID
+  // as identified in a code module by a new-style CodeView record, or it's
+  // a 32-bit signature (timestamp) as identified by an old-style record.
+  // See MDCVInfoPDB70 and MDCVInfoPDB20 in minidump_format.h.
+  //
+  // Because DIA doesn't provide a way to directly determine whether a module
+  // uses a GUID or a 32-bit signature, this code checks whether the first 32
+  // bits of guid are the same as the signature, and if the rest of guid is
+  // zero.  If so, then with a pretty high degree of certainty, there's an
+  // old-style CodeView record in use.  This method will only falsely find an
+  // an old-style CodeView record if a real 128-bit GUID has its first 32
+  // bits set the same as the module's signature (timestamp) and the rest of
+  // the GUID is set to 0.  This is highly unlikely.
+
+  GUID signature_guid = {signature};  // 0-initializes other members
+  *uses_guid = !IsEqualGUID(guid, signature_guid);
+  return true;
+}
+
+}  // namespace google_breakpad
