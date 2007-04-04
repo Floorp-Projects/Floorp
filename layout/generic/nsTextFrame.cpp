@@ -4996,9 +4996,12 @@ static PRBool CanBreakBetween(nsTextFrame* aBefore,
     firstAfter = fragAfter->CharAt(afterOffset);
   }
   while (IS_DISCARDED(lastBefore)) {
-    NS_ASSERTION(beforeOffset > 0,
-                 "Before-textframe maps no content, should not have called SetTrailingTextFrame");
     --beforeOffset;
+    if (beforeOffset == 0) {
+      // aBefore was entirely skipped. Who knows why it called SetTrailingTextFrame.
+      NS_WARNING("Before-frame should not have called SetTrailingTextFrame");
+      return PR_FALSE;
+    }
     lastBefore = fragBefore->CharAt(beforeOffset - 1);
   }
 
