@@ -450,10 +450,10 @@ gfxFontGroup::GetSpecialStringTextRun(SpecialString aString,
     gfxTextRun* textRun;
 
     switch (aString) {
-        case STRING_ELLIPSIS:
+        case STRING_HYPHEN:
             textRun = MakeTextRun(&unicodeHyphen, 1, &params);
             break;
-        case STRING_HYPHEN:
+        case STRING_ELLIPSIS:
             textRun = MakeTextRun(&unicodeEllipsis, 1, &params);
             break;
         default:
@@ -1094,7 +1094,7 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
     PRPackedBool hyphenBuffer[MEASUREMENT_BUFFER_SIZE];
     PRBool haveHyphenation = (mFlags & gfxTextRunFactory::TEXT_ENABLE_HYPHEN_BREAKS) != 0;
     if (haveHyphenation) {
-        aProvider->GetHyphenationBreaks(bufferStart, bufferStart + bufferLength,
+        aProvider->GetHyphenationBreaks(bufferStart, bufferLength,
                                         hyphenBuffer);
     }
 
@@ -1120,7 +1120,7 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
                                    spacingBuffer);
             }
             if (haveHyphenation) {
-                aProvider->GetHyphenationBreaks(bufferStart, bufferStart + bufferLength,
+                aProvider->GetHyphenationBreaks(bufferStart, bufferLength,
                                                 hyphenBuffer);
             }
         }
