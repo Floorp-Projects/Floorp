@@ -56,4 +56,4 @@ fails == t1204-reset-00-c-o-test.html t1204-reset-00-c-o-reference.html
 == t120403-content-none-00-c-test.html t120403-content-none-00-c-reference.html
 == t120403-display-none-00-c-test.html t120403-display-none-00-c-reference.html
 == t120403-visibility-00-c-test.html t120403-visibility-00-c-reference.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == text-boundaries-subpixel.html text-boundaries-subpixel-ref.html
+== text-boundaries-subpixel.html text-boundaries-subpixel-ref.html
