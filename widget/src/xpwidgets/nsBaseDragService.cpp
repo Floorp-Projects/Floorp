@@ -489,6 +489,15 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
   if (!imgContainer)
     return NS_ERROR_NOT_AVAILABLE;
 
+  nsCOMPtr<gfxIImageFrame> iframe;
+  imgContainer->GetCurrentFrame(getter_AddRefs(iframe));
+  if (!iframe)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIImage> img(do_GetInterface(iframe));
+  if (!img)
+    return NS_ERROR_FAILURE;
+
   // use the size of the image as the size of the drag image
   imgContainer->GetWidth(&aScreenDragRect->width);
   imgContainer->GetHeight(&aScreenDragRect->height);
@@ -545,7 +554,10 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
   PRInt32 upp = aPresContext->AppUnitsPerDevPixel();
   srcRect.ScaleRoundOut(upp);
   destRect.ScaleRoundOut(upp);
-  return rc->DrawImage(imgContainer, srcRect, destRect);
+
+  gfxRect inRect = gfxRect(srcRect.x, srcRect.y, srcRect.width, srcRect.height);
+  gfxRect outRect = gfxRect(destRect.x, destRect.y, destRect.width, destRect.height);
+  return img->Draw(*rc, inRect, outRect);
 }
 
 #endif
