@@ -5309,12 +5309,12 @@ nsEventStateManager::GetNextDocShell(nsIDocShellTreeNode* aNode,
 {
   NS_ASSERTION(aNode, "null docshell");
   NS_ASSERTION(aResult, "null out pointer");
-  PRInt32 numChildren = 0;
 
   *aResult = nsnull;
 
-  aNode->GetChildCount(&numChildren);
-  if (numChildren) {
+  PRInt32 childCount = 0;
+  aNode->GetChildCount(&childCount);
+  if (childCount) {
     aNode->GetChildAt(0, aResult);
     if (*aResult)
       return;
@@ -5330,15 +5330,23 @@ nsEventStateManager::GetNextDocShell(nsIDocShellTreeNode* aNode,
       return;
     }
 
-    PRInt32 childOffset = 0;
-    curItem->GetChildOffset(&childOffset);
+    // Note that we avoid using GetChildOffset() here because docshell
+    // child offsets can't be trusted to be correct. bug 162283.
     nsCOMPtr<nsIDocShellTreeNode> parentNode = do_QueryInterface(parentItem);
-    numChildren = 0;
-    parentNode->GetChildCount(&numChildren);
-    if (childOffset+1 < numChildren) {
-      parentNode->GetChildAt(childOffset+1, aResult);
-      if (*aResult)
-        return;
+    nsCOMPtr<nsIDocShellTreeItem> iterItem;
+    childCount = 0;
+    parentNode->GetChildCount(&childCount);
+    for (PRInt32 index = 0; index < childCount; ++index) {
+      parentNode->GetChildAt(index, getter_AddRefs(iterItem));
+      if (iterItem == curItem) {
+        ++index;
+        if (index < childCount) {
+          parentNode->GetChildAt(index, aResult);
+          if (*aResult)
+            return;
+        }
+        break;
+      }
     }
 
     curNode = do_QueryInterface(parentItem);
@@ -5352,8 +5360,7 @@ nsEventStateManager::GetPrevDocShell(nsIDocShellTreeNode* aNode,
   NS_ASSERTION(aNode, "null docshell");
   NS_ASSERTION(aResult, "null out pointer");
 
-  nsCOMPtr<nsIDocShellTreeNode> curNode = aNode;
-  nsCOMPtr<nsIDocShellTreeItem> curItem = do_QueryInterface(curNode);
+  nsCOMPtr<nsIDocShellTreeItem> curItem = do_QueryInterface(aNode);
   nsCOMPtr<nsIDocShellTreeItem> parentItem;
 
   curItem->GetParent(getter_AddRefs(parentItem));
@@ -5362,16 +5369,26 @@ nsEventStateManager::GetPrevDocShell(nsIDocShellTreeNode* aNode,
     return;
   }
 
-  PRInt32 childOffset = 0;
-  curItem->GetChildOffset(&childOffset);
-  if (childOffset) {
-    nsCOMPtr<nsIDocShellTreeNode> parentNode = do_QueryInterface(parentItem);
-    parentNode->GetChildAt(childOffset - 1, getter_AddRefs(curItem));
+  // Note that we avoid using GetChildOffset() here because docshell
+  // child offsets can't be trusted to be correct. bug 162283.
+  nsCOMPtr<nsIDocShellTreeNode> parentNode = do_QueryInterface(parentItem);
+  PRInt32 childCount = 0;
+  parentNode->GetChildCount(&childCount);
+  nsCOMPtr<nsIDocShellTreeItem> prevItem, iterItem;
+  for (PRInt32 index = 0; index < childCount; ++index) {
+    parentNode->GetChildAt(index, getter_AddRefs(iterItem));
+    if (iterItem == curItem)
+      break;
+    prevItem = iterItem;
+  }
 
-    // get the last child recursively of this node
+  if (prevItem) {
+    curItem = prevItem;
+    nsCOMPtr<nsIDocShellTreeNode> curNode;
+    // Get the last child recursively of this node.
     while (1) {
-      PRInt32 childCount = 0;
       curNode = do_QueryInterface(curItem);
+      childCount = 0;
       curNode->GetChildCount(&childCount);
       if (!childCount)
         break;
