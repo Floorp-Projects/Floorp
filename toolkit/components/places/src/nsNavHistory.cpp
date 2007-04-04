@@ -383,7 +383,7 @@ nsNavHistory::Init()
 //
 
 
-#define PLACES_SCHEMA_VERSION 1
+#define PLACES_SCHEMA_VERSION 2
 
 nsresult
 nsNavHistory::InitDB(PRBool *aDoImport)
@@ -456,31 +456,28 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   }
    
   if (PLACES_SCHEMA_VERSION != schemaVersion) {
-    // Migrating from schema Vn to V1.
     // NOTE: We don't support downgrading back to History-only. If you want to go from
-    // schema V1 back to V0, you'll need to blow away your sqlite file.
+    // newer schema version back to V0, you'll need to blow away your sqlite file.
     // Subsequent up/downgrades will have backwards and forward migration code.
-    if (PLACES_SCHEMA_VERSION == 1) {
-      if (schemaVersion < 1) {
-        // perform upgrade 
-        rv = MigrateFromVnToV1(mDBConn);
-        NS_ENSURE_SUCCESS(rv, rv);
-      } else {
-        // perform downgrade
-        // XXX Migrations from V>=2 must add downgrade migration code here,
-        // replacing this!
-        rv = MigrateFromVnToV1(mDBConn);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      // update schema version in the db
-      nsCAutoString schemaVersionPragma("PRAGMA user_version=");
-      schemaVersionPragma.AppendInt(PLACES_SCHEMA_VERSION);
-      rv = mDBConn->ExecuteSimpleSQL(schemaVersionPragma);
+    //
+    // Migrating from schema V0 - V1 to V2.
+    if (schemaVersion < 2) {
+      // perform upgrade 
+      rv = ForceMigrateBookmarksDB(mDBConn);
+      NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+      // perform downgrade
+      // XXX Migrations from V>=3 must add downgrade migration code here,
+      // replacing this!
+      rv = ForceMigrateBookmarksDB(mDBConn);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    // Further migration code goes here.
+    // update schema version in the db
+    nsCAutoString schemaVersionPragma("PRAGMA user_version=");
+    schemaVersionPragma.AppendInt(PLACES_SCHEMA_VERSION);
+    rv = mDBConn->ExecuteSimpleSQL(schemaVersionPragma);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Get the page size. This may be different than was set above if the database
@@ -611,7 +608,7 @@ nsNavHistory::InitStatements()
   // mDBGetURLPageInfo
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, (SELECT title FROM moz_bookmarks WHERE "
-      "item_child = h.id), h.rev_host, h.visit_count "
+      "fk = h.id), h.rev_host, h.visit_count "
       "FROM moz_places h "
       "WHERE h.url = ?1"),
     getter_AddRefs(mDBGetURLPageInfo));
@@ -620,7 +617,7 @@ nsNavHistory::InitStatements()
   // mDBGetURLPageInfoFull
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, (SELECT title FROM moz_bookmarks WHERE "
-      "item_child = h.id), h.rev_host, h.visit_count, "
+      "fk = h.id), h.rev_host, h.visit_count, "
         "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
         "f.url "
       "FROM moz_places h "
@@ -632,7 +629,7 @@ nsNavHistory::InitStatements()
   // mDBGetIdPageInfo
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, (SELECT title FROM moz_bookmarks WHERE "
-      "item_child = h.id), h.rev_host, h.visit_count "
+      "fk = h.id), h.rev_host, h.visit_count "
       "FROM moz_places h WHERE h.id = ?1"),
                                 getter_AddRefs(mDBGetIdPageInfo));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -640,7 +637,7 @@ nsNavHistory::InitStatements()
   // mDBGetIdPageInfoFull
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, (SELECT title FROM moz_bookmarks WHERE "
-        "item_child = h.id), h.rev_host, h.visit_count, "
+        "fk = h.id), h.rev_host, h.visit_count, "
         "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
         "f.url "
       "FROM moz_places h "
@@ -706,7 +703,7 @@ nsNavHistory::InitStatements()
   // mDBVisitToURLResult, should match kGetInfoIndex_* (see GetQueryResults)
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, (SELECT title FROM moz_bookmarks WHERE "
-        "item_child = h.id), h.rev_host, h.visit_count, "
+        "fk = h.id), h.rev_host, h.visit_count, "
         "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
         "f.url, null "
       "FROM moz_places h "
@@ -719,7 +716,7 @@ nsNavHistory::InitStatements()
   // mDBVisitToVisitResult, should match kGetInfoIndex_* (see GetQueryResults)
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, (SELECT title FROM moz_bookmarks WHERE "
-             "item_child = h.id), h.rev_host, h.visit_count, "
+             "fk = h.id), h.rev_host, h.visit_count, "
              "v.visit_date, f.url, v.session "
       "FROM moz_places h "
       "JOIN moz_historyvisits v ON h.id = v.place_id "
@@ -731,7 +728,7 @@ nsNavHistory::InitStatements()
   // mDBUrlToURLResult, should match kGetInfoIndex_*
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, (SELECT title FROM moz_bookmarks WHERE "
-        "item_child = h.id), h.rev_host, h.visit_count, "
+        "fk = h.id), h.rev_host, h.visit_count, "
         "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
         "f.url, null "
       "FROM moz_places h "
@@ -743,14 +740,16 @@ nsNavHistory::InitStatements()
   return NS_OK;
 }
 
-// nsNavHistory::MigrateFromVnToV1
-//
-//    Migrate places.sqlite to version 1.
+// nsNavHistory::ForceMigrateBookmarksDB
 //
 //    This dumps all bookmarks-related tables, and recreates them,
 //    forcing a re-import of bookmarks.html.
+//
+//    NOTE: This may cause data-loss if downgrading!
+//    Only use this for migration if you're sure that bookmarks.html
+//    and the target version support all bookmarks fields.
 nsresult
-nsNavHistory::MigrateFromVnToV1(mozIStorageConnection* aDBConn) 
+nsNavHistory::ForceMigrateBookmarksDB(mozIStorageConnection* aDBConn) 
 {
   // drop bookmarks tables
   nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_bookmarks"));
@@ -1960,7 +1959,7 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
     // FIXME(brettw) Add full visit info
     queryString = NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, (SELECT title from moz_bookmarks WHERE "
-             "item_child = h.id), h.rev_host, h.visit_count, "
+             "fk = h.id), h.rev_host, h.visit_count, "
              "v.visit_date, f.url, v.session "
       "FROM moz_places h "
       "JOIN moz_historyvisits v ON h.id = v.place_id "
@@ -1974,7 +1973,7 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
     // FIXME(brettw) add nulls for full visit info
     queryString = NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, (SELECT title FROM moz_bookmarks WHERE "
-        "item_child = h.id), h.rev_host, h.visit_count, "
+        "fk = h.id), h.rev_host, h.visit_count, "
         "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
         "f.url, null "
       "FROM moz_places h "
@@ -2425,9 +2424,9 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "DELETE FROM moz_places WHERE id IN "
       "(SELECT id from moz_places h "
-      " LEFT OUTER JOIN moz_bookmarks b ON h.id = b.item_child ")
+      " LEFT OUTER JOIN moz_bookmarks b ON h.id = b.fk WHERE b.type = ?3")
       + conditionString +
-      NS_LITERAL_CSTRING("AND b.item_child IS NULL)"),
+      NS_LITERAL_CSTRING("AND b.fk IS NULL)"),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->BindStringParameter(0, revHostDot);
@@ -2436,6 +2435,8 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
     rv = statement->BindStringParameter(1, revHostSlash);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+  rv = statement->BindInt32Parameter(2, nsNavBookmarks::TYPE_BOOKMARK);
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3173,7 +3174,9 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
     if (! aClause->IsEmpty())
       *aClause += NS_LITERAL_CSTRING(" AND ");
 
-    *aClause += NS_LITERAL_CSTRING("EXISTS (SELECT b.item_child FROM moz_bookmarks b WHERE b.item_child = h.id)");
+    *aClause += NS_LITERAL_CSTRING("EXISTS (SELECT b.fk FROM moz_bookmarks b WHERE b.type = ") +
+                nsPrintfCString("%d", nsNavBookmarks::TYPE_BOOKMARK) +
+                NS_LITERAL_CSTRING(" AND b.fk = h.id)");
   }
 
   // domain
