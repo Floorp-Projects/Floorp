@@ -56,7 +56,7 @@
 #include "nsTraceMalloc.h"
 #include "tmreader.h"
 
-#define DEBUG_tmreader
+#undef  DEBUG_tmreader
 
 static int accum_byte(FILE *fp, uint32 *uip)
 {
