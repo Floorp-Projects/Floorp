@@ -158,7 +158,7 @@ endif # MOZ_AIRBAG
 uploadsymbols:
 ifdef MOZ_DEBUG_SYMBOLS
 ifdef MOZ_AIRBAG
-	$(topsrcdir)/toolkit/airbag/tools/upload_symbols.sh $(topsrcdir)/../$(BUILDID)/airbag-symbols-$(BUILDID).zip
+	$(topsrcdir)/toolkit/airbag/tools/upload_symbols.sh $(topsrcdir)/../$(BUILDID)/crashreporter-symbols-$(BUILDID).zip
 endif
 endif
 
