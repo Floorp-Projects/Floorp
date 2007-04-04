@@ -132,8 +132,8 @@ enum CheckboxValue {
 - (int)isChecked
 {
   PRUint32 state = 0;
-  mGeckoAccessible->GetState(&state);
-  
+  mGeckoAccessible->GetState(&state, nsnull);
+
   // check if we're checked or in a mixed state
   if (state & nsIAccessibleStates::STATE_CHECKED) {
     return (state & nsIAccessibleStates::STATE_MIXED) ? kMixed : kChecked;
