@@ -62,8 +62,8 @@ nsSVGTextContainerFrame::UpdateGraphic()
 NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGTextContainerFrame::GetX()
 {
-  nsIDOMSVGTextPositioningElement *tpElement = nsnull;
-  CallQueryInterface(mContent, &tpElement);
+  nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement =
+    do_QueryInterface(mContent);
 
   if (!tpElement)
     return nsnull;
@@ -81,8 +81,8 @@ nsSVGTextContainerFrame::GetX()
 NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGTextContainerFrame::GetY()
 {
-  nsIDOMSVGTextPositioningElement *tpElement = nsnull;
-  CallQueryInterface(mContent, &tpElement);
+  nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement =
+    do_QueryInterface(mContent);
 
   if (!tpElement)
     return nsnull;
@@ -100,8 +100,8 @@ nsSVGTextContainerFrame::GetY()
 NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGTextContainerFrame::GetDx()
 {
-  nsIDOMSVGTextPositioningElement *tpElement = nsnull;
-  CallQueryInterface(mContent, &tpElement);
+  nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement =
+    do_QueryInterface(mContent);
 
   if (!tpElement)
     return nsnull;
@@ -116,8 +116,8 @@ nsSVGTextContainerFrame::GetDx()
 NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGTextContainerFrame::GetDy()
 {
-  nsIDOMSVGTextPositioningElement *tpElement = nsnull;
-  CallQueryInterface(mContent, &tpElement);
+  nsCOMPtr<nsIDOMSVGTextPositioningElement> tpElement =
+    do_QueryInterface(mContent);
 
   if (!tpElement)
     return nsnull;
