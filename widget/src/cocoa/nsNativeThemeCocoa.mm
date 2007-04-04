@@ -322,8 +322,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 
   double offsetX = 0.0, offsetY = 0.0;
   nsRefPtr<gfxASurface> thebesSurface = thebesCtx->CurrentSurface(&offsetX, &offsetY);
-  if (thebesSurface->GetType() != gfxASurface::SurfaceTypeQuartz2) {
-    fprintf(stderr, "Expected surface of type Quartz2, got %d\n",
+  if (thebesSurface->GetType() != gfxASurface::SurfaceTypeQuartz) {
+    fprintf(stderr, "Expected surface of type Quartz, got %d\n",
             thebesSurface->GetType());
     return NS_ERROR_FAILURE;
   }

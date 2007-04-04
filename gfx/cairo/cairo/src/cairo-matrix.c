@@ -356,10 +356,10 @@ cairo_matrix_transform_point (const cairo_matrix_t *matrix, double *x, double *y
 slim_hidden_def(cairo_matrix_transform_point);
 
 void
-cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
-                                     double *x1, double *y1,
-                                     double *x2, double *y2,
-                                     cairo_bool_t *is_tight)
+_cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
+				      double *x1, double *y1,
+				      double *x2, double *y2,
+				      cairo_bool_t *is_tight)
 {
     int i;
     double quad_x[4], quad_y[4];
@@ -417,7 +417,6 @@ cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
              quad_x[2] == quad_x[0] && quad_y[2] == quad_y[3]);
     }
 }
-slim_hidden_def(cairo_matrix_transform_bounding_box);
 
 static void
 _cairo_matrix_scalar_multiply (cairo_matrix_t *matrix, double scalar)

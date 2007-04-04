@@ -1487,6 +1487,7 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 				  int			 num_glyphs,
 				  cairo_scaled_font_t	*scaled_font)
 {
+#if CAIRO_HAS_WIN32_FONT
     cairo_win32_surface_t *dst = surface;
 
     WORD glyph_buf_stack[STACK_GLYPH_SIZE];
@@ -1580,8 +1581,8 @@ _cairo_win32_surface_show_glyphs (void			*surface,
             next_logical_x = _cairo_lround (next_user_x);
             next_logical_y = _cairo_lround (next_user_y);
 
-            dxy_buf[j] = _cairo_lround ((next_logical_x - logical_x) * WIN32_FONT_LOGICAL_SCALE);
-            dxy_buf[j+1] = _cairo_lround ((next_logical_y - logical_y) * WIN32_FONT_LOGICAL_SCALE);
+            dxy_buf[j] = _cairo_lround (next_logical_x - logical_x);
+            dxy_buf[j+1] = _cairo_lround (next_logical_y - logical_y);
 
             logical_x = next_logical_x;
             logical_y = next_logical_y;
@@ -1607,6 +1608,9 @@ _cairo_win32_surface_show_glyphs (void			*surface,
         free(dxy_buf);
     }
     return (win_result) ? CAIRO_STATUS_SUCCESS : CAIRO_INT_STATUS_UNSUPPORTED;
+#else
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+#endif
 }
 
 #undef STACK_GLYPH_SIZE
@@ -1728,6 +1732,7 @@ cairo_win32_surface_create_with_dib (cairo_format_t format,
 
 /**
  * cairo_win32_surface_create_with_ddb:
+ * @hdc: the DC to create a surface for
  * @format: format of pixels in the surface to create
  * @width: width of the surface, in pixels
  * @height: height of the surface, in pixels
@@ -1890,9 +1895,11 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
  */
 #if !defined(HAVE_PTHREAD_H) 
 
-CRITICAL_SECTION cairo_toy_font_face_hash_table_mutex;
-CRITICAL_SECTION cairo_scaled_font_map_mutex;
-CRITICAL_SECTION cairo_ft_unscaled_font_map_mutex;
+CRITICAL_SECTION _cairo_scaled_font_map_mutex;
+#ifdef CAIRO_HAS_FT_FONT
+CRITICAL_SECTION _cairo_ft_unscaled_font_map_mutex;
+#endif
+CRITICAL_SECTION _cairo_font_face_mutex;
 
 static int _cairo_win32_initialized = 0;
 
@@ -1902,9 +1909,11 @@ _cairo_win32_initialize (void) {
 	return;
 
     /* every 'mutex' from CAIRO_MUTEX_DECALRE needs to be initialized here */
-    InitializeCriticalSection (&cairo_toy_font_face_hash_table_mutex);
-    InitializeCriticalSection (&cairo_scaled_font_map_mutex);
-    InitializeCriticalSection (&cairo_ft_unscaled_font_map_mutex);
+    InitializeCriticalSection (&_cairo_scaled_font_map_mutex);
+#ifdef CAIRO_HAS_FT_FONT
+    InitializeCriticalSection (&_cairo_ft_unscaled_font_map_mutex);
+#endif
+    InitializeCriticalSection (&_cairo_font_face_mutex);
 
     _cairo_win32_initialized = 1;
 }
@@ -1921,9 +1930,11 @@ DllMain (HINSTANCE hinstDLL,
     _cairo_win32_initialize();
     break;
   case DLL_PROCESS_DETACH:
-    DeleteCriticalSection (&cairo_toy_font_face_hash_table_mutex);
-    DeleteCriticalSection (&cairo_scaled_font_map_mutex);
-    DeleteCriticalSection (&cairo_ft_unscaled_font_map_mutex);
+    DeleteCriticalSection (&_cairo_scaled_font_map_mutex);
+#ifdef CAIRO_HAS_FT_FONT
+    DeleteCriticalSection (&_cairo_ft_unscaled_font_map_mutex);
+#endif
+    DeleteCriticalSection (&_cairo_font_face_mutex);
     break;
   }
   return TRUE;

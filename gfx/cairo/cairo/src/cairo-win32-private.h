@@ -46,7 +46,11 @@
 #define SB_NONE 0
 #endif
 
+#if MOZILLA_CAIRO_NOT_DEFINED
+#define WIN32_FONT_LOGICAL_SCALE 32
+#else
 #define WIN32_FONT_LOGICAL_SCALE 1
+#endif
 
 typedef struct _cairo_win32_surface {
     cairo_surface_t base;

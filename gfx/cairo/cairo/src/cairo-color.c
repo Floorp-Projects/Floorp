@@ -95,7 +95,8 @@ _cairo_color_init_rgb (cairo_color_t *color,
  * then special-casing the result of an input value of 1.0 so that it
  * maps to 65535 instead of 65536.
  */
-static inline uint16_t _color_to_short (double d)
+uint16_t
+_cairo_color_double_to_short (double d)
 {
     uint32_t i;
     i = (uint32_t) (d * 65536);
@@ -106,10 +107,10 @@ static inline uint16_t _color_to_short (double d)
 static void
 _cairo_color_compute_shorts (cairo_color_t *color)
 {
-    color->red_short   = _color_to_short (color->red   * color->alpha);
-    color->green_short = _color_to_short (color->green * color->alpha);
-    color->blue_short  = _color_to_short (color->blue  * color->alpha);
-    color->alpha_short = _color_to_short (color->alpha);
+    color->red_short   = _cairo_color_double_to_short (color->red   * color->alpha);
+    color->green_short = _cairo_color_double_to_short (color->green * color->alpha);
+    color->blue_short  = _cairo_color_double_to_short (color->blue  * color->alpha);
+    color->alpha_short = _cairo_color_double_to_short (color->alpha);
 }
 
 void

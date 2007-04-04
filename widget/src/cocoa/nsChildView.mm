@@ -2154,7 +2154,7 @@ NSEvent* globalDragEvent = nil;
 
   NSRect bounds = [self bounds];
   nsRefPtr<gfxQuartzSurface> targetSurface =
-    new gfxQuartzSurface(cgContext, PR_TRUE, gfxSize(bounds.size.width, bounds.size.height));
+    new gfxQuartzSurface(cgContext, gfxSize(bounds.size.width, bounds.size.height));
 
 #ifdef DEBUG_UPDATE
   fprintf (stderr, "---- Update[%p][%p] [%f %f %f %f] cgc: %p\n  gecko bounds: [%d %d %d %d]\n",

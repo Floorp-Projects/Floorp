@@ -99,7 +99,7 @@ SOFTWARE.
 
 #include "pixman-remap.h"
 
-#if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__)
+#if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__) && !defined(__sun__)
 #define pixman_private		__attribute__((__visibility__("hidden")))
 #elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
 #define pixman_private		__hidden
@@ -364,8 +364,8 @@ typedef struct pixman_linear_gradient {
 } pixman_linear_gradient_t;
 
 typedef struct pixman_radial_gradient {
-    pixman_circle_t inner;
-    pixman_circle_t outer;
+    pixman_circle_t c1;
+    pixman_circle_t c2;
 } pixman_radial_gradient_t;
 
 typedef enum {

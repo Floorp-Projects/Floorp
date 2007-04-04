@@ -81,7 +81,6 @@ public:
         SurfaceTypeBeOS,
         SurfaceTypeDirectFB,
         SurfaceTypeSVG,
-        SurfaceTypeQuartz2,
         SurfaceTypeOS2
     } gfxSurfaceType;
 
