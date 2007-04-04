@@ -4970,7 +4970,7 @@ nsWindow::DispatchActivateEvent(void)
         nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(rootAcc));
         if (privAcc) {
             privAcc->FireToolkitEvent(
-                         nsIAccessibleEvent::EVENT_ATK_WINDOW_ACTIVATE,
+                         nsIAccessibleEvent::EVENT_WINDOW_ACTIVATE,
                          rootAcc, nsnull);
         }
     }
@@ -4989,7 +4989,7 @@ nsWindow::DispatchDeactivateEvent(void)
         nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(rootAcc));
         if (privAcc) {
             privAcc->FireToolkitEvent(
-                         nsIAccessibleEvent::EVENT_ATK_WINDOW_DEACTIVATE,
+                         nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE,
                          rootAcc, nsnull);
         }
     }
