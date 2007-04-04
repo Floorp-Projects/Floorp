@@ -340,6 +340,9 @@ _cairo_xlib_screen_info_get_unlocked (Display *dpy, Screen *screen)
     if (info)
 	return info;
 
+    if (screen == NULL)
+        return NULL;
+
     info = malloc (sizeof (cairo_xlib_screen_info_t));
     if (!info)
 	return NULL;
