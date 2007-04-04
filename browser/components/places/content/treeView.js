@@ -170,7 +170,11 @@ PlacesTreeView.prototype = {
         this._visibleElements[i].viewIndex = -1;
       }
     }
+
+    var oldCount = this.rowCount;
     this._visibleElements.splice(0);
+    if (this._tree)
+      this._tree.rowCountChanged(0, -oldCount);
 
     var rootNode = this._result.root;
     if (rootNode && this._tree) {
@@ -180,6 +184,7 @@ PlacesTreeView.prototype = {
       if (this._showRoot) {
         // List the root node
         this._visibleElements.push(this._result.root);
+        this._tree.rowCountChanged(0, 1);
         this._result.root.viewIndex = 0;
       }
       else if (!rootNode.containerOpen) {
