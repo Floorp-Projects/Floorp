@@ -2338,6 +2338,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     todo = -2;
                     break;
                 }
+                sn = NULL;
                 break;
 
               case JSOP_POP2:
@@ -2994,6 +2995,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                  * came after JSOP_FORELEM and before JSOP_ENUMELEM.
                  */
                 atom = NULL;
+                op = JSOP_NOP;          /* turn off parens around xval */
                 xval = POP_STR();
                 op = JSOP_GETELEM;      /* lval must have high precedence */
                 lval = POP_STR();
