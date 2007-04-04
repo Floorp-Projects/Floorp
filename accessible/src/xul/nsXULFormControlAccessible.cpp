@@ -675,7 +675,8 @@ nsXULTextFieldAccessible::nsXULTextFieldAccessible(nsIDOMNode* aNode, nsIWeakRef
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsXULTextFieldAccessible, nsAccessible, nsIAccessibleText, nsIAccessibleEditableText)
+NS_IMPL_ISUPPORTS_INHERITED1(nsXULTextFieldAccessible, nsHyperTextAccessible,
+                             nsIAccessibleText)
 
 NS_IMETHODIMP nsXULTextFieldAccessible::Init()
 {
@@ -779,11 +780,6 @@ nsXULTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 
   *aExtraState |= (isMultiLine ? nsIAccessibleStates::EXT_STATE_MULTI_LINE :
                                  nsIAccessibleStates::EXT_STATE_SINGLE_LINE);
-
-  const PRUint32 kNonEditableStates = nsIAccessibleStates::STATE_READONLY |
-                                      nsIAccessibleStates::STATE_UNAVAILABLE;
-  if (0 == (*aState & kNonEditableStates))
-    *aExtraState |= nsIAccessibleStates::EXT_STATE_EDITABLE;
 
   return NS_OK;
 }
