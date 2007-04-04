@@ -2319,7 +2319,8 @@ ReturnOrYield(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     if (tt2 != TOK_EOF && tt2 != TOK_EOL && tt2 != TOK_SEMI && tt2 != TOK_RC
 #if JS_HAS_GENERATORS
-        && (tt != TOK_YIELD || (tt2 != tt && tt2 != TOK_RB && tt2 != TOK_RP))
+        && (tt != TOK_YIELD ||
+            (tt2 != tt && tt2 != TOK_RB && tt2 != TOK_RP && tt2 != TOK_COLON))
 #endif
         ) {
         pn2 = operandParser(cx, ts, tc);
