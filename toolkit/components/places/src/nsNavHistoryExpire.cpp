@@ -344,15 +344,17 @@ nsNavHistoryExpire::FindVisits(PRTime aExpireThreshold, PRUint32 aNumToExpire,
   nsCOMPtr<mozIStorageStatement> selectStatement;
   nsCString sql;
   sql.AssignLiteral("SELECT "
-      "v.id, v.place_id, v.visit_date, h.url, h.favicon_id, h.hidden, b.item_child "
+      "v.id, v.place_id, v.visit_date, h.url, h.favicon_id, h.hidden, b.fk "
       "FROM moz_historyvisits v LEFT JOIN moz_places h ON v.place_id = h.id "
-      "LEFT OUTER JOIN moz_bookmarks b on v.place_id = b.item_child");
+      "LEFT OUTER JOIN moz_bookmarks b on v.place_id = b.fk AND b.type = ?1 ");
   if (aExpireThreshold != 0)
-    sql.AppendLiteral(" WHERE visit_date < ?1");
+    sql.AppendLiteral(" WHERE visit_date < ?2");
   rv = aConnection->CreateStatement(sql, getter_AddRefs(selectStatement));
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = selectStatement->BindInt32Parameter(0, nsINavBookmarksService::TYPE_BOOKMARK);
+  NS_ENSURE_SUCCESS(rv, rv);
   if (aExpireThreshold != 0) {
-    rv = selectStatement->BindInt64Parameter(0, aExpireThreshold);
+    rv = selectStatement->BindInt64Parameter(1, aExpireThreshold);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -498,13 +500,19 @@ nsNavHistoryExpire::ExpireHistoryParanoid(mozIStorageConnection* aConnection)
 {
   // delete history entries with no visits that are not bookmarked
   // also never delete any "place:" URIs (see function header comment)
-  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_places WHERE id IN (SELECT id FROM moz_places h "
+  nsCOMPtr<mozIStorageStatement> deleteStatement;
+  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_places WHERE id IN (SELECT h.id FROM moz_places h "
       "LEFT OUTER JOIN moz_historyvisits v ON h.id = v.place_id "
-      "LEFT OUTER JOIN moz_bookmarks b ON h.id = b.item_child "
+      "LEFT OUTER JOIN moz_bookmarks b ON h.id = b.fk "
       "WHERE v.id IS NULL "
-      "AND b.item_child IS NULL "
-      "AND SUBSTR(url,0,6) <> 'place:')"));
+      "AND b.type = ?1 AND b.fk IS NULL "
+      "AND SUBSTR(h.url,0,6) <> 'place:')"),
+    getter_AddRefs(deleteStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = deleteStatement->BindInt32Parameter(0, nsINavBookmarksService::TYPE_BOOKMARK);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = deleteStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
