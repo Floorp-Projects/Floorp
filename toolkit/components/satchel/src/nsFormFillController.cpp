@@ -946,10 +946,6 @@ nsFormFillController::AddWindowListeners(nsIDOMWindow *aWindow)
   target->AddEventListener(NS_LITERAL_STRING("contextmenu"),
                            NS_STATIC_CAST(nsIDOMContextMenuListener *, this),
                            PR_TRUE);
-
-  target->AddEventListener(NS_LITERAL_STRING("keypress"),
-                           NS_STATIC_CAST(nsIDOMKeyListener *, this),
-                           PR_TRUE);
 }
 
 void
@@ -1005,10 +1001,32 @@ nsFormFillController::RemoveWindowListeners(nsIDOMWindow *aWindow)
   target->RemoveEventListener(NS_LITERAL_STRING("contextmenu"),
                               NS_STATIC_CAST(nsIDOMContextMenuListener *, this),
                               PR_TRUE);
+}
 
-  target->RemoveEventListener(NS_LITERAL_STRING("keypress"),
-                              NS_STATIC_CAST(nsIDOMKeyListener *, this),
-                              PR_TRUE);
+void
+nsFormFillController::AddKeyListener(nsIDOMHTMLInputElement *aInput)
+{
+  if (!aInput)
+    return;
+
+    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aInput);
+
+    target->AddEventListener(NS_LITERAL_STRING("keypress"),
+                             NS_STATIC_CAST(nsIDOMKeyListener *, this),
+                             PR_TRUE);
+  }
+
+void
+nsFormFillController::RemoveKeyListener()
+{
+  if (!mFocusedInput)
+    return;
+
+    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mFocusedInput);
+
+    target->RemoveEventListener(NS_LITERAL_STRING("keypress"),
+                                NS_STATIC_CAST(nsIDOMKeyListener *, this),
+                                PR_TRUE);
 }
 
 void
@@ -1026,6 +1044,7 @@ nsFormFillController::StartControllingInput(nsIDOMHTMLInputElement *aInput)
   // Cache the popup for the focused docShell
   mPopups->GetElementAt(index, getter_AddRefs(mFocusedPopup));
   
+  AddKeyListener(aInput);
   mFocusedInput = aInput;
 
   // Now we are the autocomplete controller's bitch
@@ -1035,6 +1054,8 @@ nsFormFillController::StartControllingInput(nsIDOMHTMLInputElement *aInput)
 void
 nsFormFillController::StopControllingInput()
 {
+  RemoveKeyListener();
+
   // Reset the controller's input, but not if it has been switched
   // to another input already, which might happen if the user switches
   // focus by clicking another autocomplete textbox
