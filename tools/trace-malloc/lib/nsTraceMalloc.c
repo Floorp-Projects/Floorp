@@ -274,7 +274,7 @@ struct AllocationFuncs
 
 typedef struct logfile logfile;
 
-#define STARTUP_TMBUFSIZE (16 * 1024)
+#define STARTUP_TMBUFSIZE (64 * 1024)
 #define LOGFILE_TMBUFSIZE (16 * 1024)
 
 struct logfile {
@@ -384,6 +384,8 @@ static void flush_logfile(logfile *fp)
             bp += cnt;
             len -= cnt;
         } while (len > 0);
+    } else {
+        fprintf(stderr, "### nsTraceMalloc: can't flush to closed log file\n");
     }
     fp->simsize += len;
 }
