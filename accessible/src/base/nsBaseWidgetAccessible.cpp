@@ -149,20 +149,21 @@ nsLinkableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 
   // XXX What if we're in a contenteditable container?
   //     We may need to go up the parent chain unless a better API is found
-  nsCOMPtr<nsIAccessible> docAccessible = 
+  nsCOMPtr<nsIAccessible> docAccessible =
     do_QueryInterface(nsCOMPtr<nsIAccessibleDocument>(GetDocAccessible()));
   if (docAccessible) {
-    PRBool isEditable;
-    docAccessible->GetIsEditable(&isEditable);
-    if (isEditable) {
+    PRUint32 docState = 0, docExtraState = 0;
+    rv = docAccessible->GetFinalState(&docState, &docExtraState);
+    if (NS_SUCCEEDED(rv) &&
+        (docExtraState & nsIAccessibleStates::EXT_STATE_EDITABLE)) {
       // Links not focusable in editor
       *aState &= ~(nsIAccessibleStates::STATE_FOCUSED |
                    nsIAccessibleStates::STATE_FOCUSABLE);
     }
   }
+
   return NS_OK;
 }
-
 
 NS_IMETHODIMP nsLinkableAccessible::GetValue(nsAString& _retval)
 {
