@@ -2690,13 +2690,24 @@ nsGlobalWindow::GetInnerWidth(PRInt32* aInnerWidth)
 {
   FORWARD_TO_OUTER(GetInnerWidth, (aInnerWidth), NS_ERROR_NOT_INITIALIZED);
 
+  NS_ENSURE_STATE(mDocShell);
+
   EnsureSizeUpToDate();
 
-  nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
   *aInnerWidth = 0;
+
+  nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
+  PRInt32 width = 0;
   PRInt32 notused;
   if (docShellWin)
-    docShellWin->GetSize(aInnerWidth, &notused);
+    docShellWin->GetSize(&width, &notused);
+
+  nsCOMPtr<nsPresContext> presContext;
+  mDocShell->GetPresContext(getter_AddRefs(presContext));
+  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+
+  *aInnerWidth = nsPresContext::AppUnitsToIntCSSPixels(
+                                  presContext->DevPixelsToAppUnits(width));
 
   return NS_OK;
 }
@@ -2705,6 +2716,8 @@ NS_IMETHODIMP
 nsGlobalWindow::SetInnerWidth(PRInt32 aInnerWidth)
 {
   FORWARD_TO_OUTER(SetInnerWidth, (aInnerWidth), NS_ERROR_NOT_INITIALIZED);
+
+  NS_ENSURE_STATE(mDocShell);
 
   /*
    * If caller is not chrome and dom.disable_window_move_resize is true,
@@ -2725,10 +2738,19 @@ nsGlobalWindow::SetInnerWidth(PRInt32 aInnerWidth)
   NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(&aInnerWidth, nsnull),
                     NS_ERROR_FAILURE);
 
+  nsCOMPtr<nsPresContext> presContext;
+  mDocShell->GetPresContext(getter_AddRefs(presContext));
+  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+
+  PRInt32 width;
+  width = presContext->AppUnitsToDevPixels(
+                         nsPresContext::CSSPixelsToAppUnits(aInnerWidth));
+
   nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
   PRInt32 notused, height = 0;
   docShellAsWin->GetSize(&notused, &height);
-  NS_ENSURE_SUCCESS(treeOwner->SizeShellTo(docShellAsItem, aInnerWidth, height),
+
+  NS_ENSURE_SUCCESS(treeOwner->SizeShellTo(docShellAsItem, width, height),
                     NS_ERROR_FAILURE);
   return NS_OK;
 }
@@ -2738,13 +2760,24 @@ nsGlobalWindow::GetInnerHeight(PRInt32* aInnerHeight)
 {
   FORWARD_TO_OUTER(GetInnerHeight, (aInnerHeight), NS_ERROR_NOT_INITIALIZED);
 
+  NS_ENSURE_STATE(mDocShell);
+
   EnsureSizeUpToDate();
 
-  nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
   *aInnerHeight = 0;
+
+  nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
+  PRInt32 height = 0;
   PRInt32 notused;
   if (docShellWin)
-    docShellWin->GetSize(&notused, aInnerHeight);
+    docShellWin->GetSize(&notused, &height);
+
+  nsCOMPtr<nsPresContext> presContext;
+  mDocShell->GetPresContext(getter_AddRefs(presContext));
+  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+
+  *aInnerHeight = nsPresContext::AppUnitsToIntCSSPixels(
+                                   presContext->DevPixelsToAppUnits(height));
 
   return NS_OK;
 }
@@ -2753,6 +2786,8 @@ NS_IMETHODIMP
 nsGlobalWindow::SetInnerHeight(PRInt32 aInnerHeight)
 {
   FORWARD_TO_OUTER(SetInnerHeight, (aInnerHeight), NS_ERROR_NOT_INITIALIZED);
+
+  NS_ENSURE_STATE(mDocShell);
 
   /*
    * If caller is not chrome and dom.disable_window_move_resize is true,
@@ -2773,11 +2808,19 @@ nsGlobalWindow::SetInnerHeight(PRInt32 aInnerHeight)
   NS_ENSURE_SUCCESS(CheckSecurityWidthAndHeight(nsnull, &aInnerHeight),
                     NS_ERROR_FAILURE);
 
+  nsCOMPtr<nsPresContext> presContext;
+  mDocShell->GetPresContext(getter_AddRefs(presContext));
+  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+
+  PRInt32 height;
+  height = presContext->AppUnitsToDevPixels(
+                          nsPresContext::CSSPixelsToAppUnits(aInnerHeight));
+
   nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
   PRInt32 width = 0, notused;
   docShellAsWin->GetSize(&width, &notused);
   NS_ENSURE_SUCCESS(treeOwner->
-                    SizeShellTo(docShellAsItem, width, aInnerHeight),
+                    SizeShellTo(docShellAsItem, width, height),
                     NS_ERROR_FAILURE);
   return NS_OK;
 }
