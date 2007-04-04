@@ -2098,7 +2098,7 @@ case "$target" in
     IMPORT_LIB_SUFFIX=lib
     DSO_PIC_CFLAGS=
     TARGET_MD_ARCH=os2
-    _PLATFORM_DEFAULT_TOOLKIT=os2
+    _PLATFORM_DEFAULT_TOOLKIT="cairo-os2"
     MOZ_ENABLE_POSTSCRIPT=
     RC=rc.exe
     RCFLAGS='-n'
@@ -4521,25 +4521,18 @@ MOZ_ARG_HEADER(Toolkit Options)
 	[  --enable-default-toolkit=TK
                           Select default toolkit
                           Platform specific defaults:
-                            BeOS - beos
-                            Mac OS X - mac (carbon)
+                            BeOS - cairo-beos
+                            Mac OS X - cairo-cocoa
                             Neutrino/QNX - photon
-                            OS/2 - os2
-                            Win32 - windows
-                            * - gtk],
+                            OS/2 - cairo-os2
+                            Win32 - cairo-windows
+                            WinCE - windows
+                            * - cairo-gtk2],
     [ _DEFAULT_TOOLKIT=$enableval ],
     [ _DEFAULT_TOOLKIT=$_PLATFORM_DEFAULT_TOOLKIT])
 
-    if test "$_DEFAULT_TOOLKIT" = "gtk" \
-        -o "$_DEFAULT_TOOLKIT" = "qt" \
-        -o "$_DEFAULT_TOOLKIT" = "gtk2" \
-        -o "$_DEFAULT_TOOLKIT" = "xlib" \
-        -o "$_DEFAULT_TOOLKIT" = "os2" \
-        -o "$_DEFAULT_TOOLKIT" = "beos" \
+    if test "$_DEFAULT_TOOLKIT" = "qt" \
         -o "$_DEFAULT_TOOLKIT" = "photon" \
-        -o "$_DEFAULT_TOOLKIT" = "mac" \
-        -o "$_DEFAULT_TOOLKIT" = "windows" \
-        -o "$_DEFAULT_TOOLKIT" = "cocoa" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-windows" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-beos" \
@@ -4553,9 +4546,9 @@ MOZ_ARG_HEADER(Toolkit Options)
         MOZ_WIDGET_TOOLKIT=`echo "$_DEFAULT_TOOLKIT" | sed -e "s/,.*$//"`
     else
         if test "$no_x" != "yes"; then
-            AC_MSG_ERROR([Toolkit must be xlib, gtk, gtk2 or qt.])
+            AC_MSG_ERROR([Toolkit must be cairo-xlib, cairo-gtk2, or qt.])
         else
-            AC_MSG_ERROR([Toolkit must be $_PLATFORM_DEFAULT_TOOLKIT or cairo-$_PLATFORM_DEFAULT_TOOLKIT (if supported).])
+            AC_MSG_ERROR([Toolkit must be $_PLATFORM_DEFAULT_TOOLKIT (if supported).])
         fi
     fi
 
@@ -4566,38 +4559,6 @@ dnl = Enable the toolkit as needed                         =
 dnl ========================================================
 
 case "$MOZ_WIDGET_TOOLKIT" in
-gtk)
-	MOZ_ENABLE_GTK=1
-    MOZ_ENABLE_XREMOTE=1
-    if test "$_HAVE_FREETYPE2"; then
-        MOZ_ENABLE_FREETYPE2=1
-    fi
-    MOZ_ENABLE_XPRINT=1
-    TK_CFLAGS='$(MOZ_GTK_CFLAGS)'
-    TK_LIBS='$(MOZ_GTK_LDFLAGS)'
-	AC_DEFINE(MOZ_WIDGET_GTK)
-    ;;
-
-gtk2)
-    MOZ_ENABLE_GTK2=1
-    MOZ_ENABLE_XREMOTE=1
-    MOZ_ENABLE_COREXFONTS=${MOZ_ENABLE_COREXFONTS-}
-    TK_CFLAGS='$(MOZ_GTK2_CFLAGS)'
-    TK_LIBS='$(MOZ_GTK2_LIBS)'
-    AC_DEFINE(MOZ_WIDGET_GTK2)
-    ;;
-
-xlib)
-	MOZ_ENABLE_XLIB=1
-    if test "$_HAVE_FREETYPE2"; then
-        MOZ_ENABLE_FREETYPE2=1
-    fi
-    MOZ_ENABLE_XPRINT=1
-	TK_CFLAGS='$(MOZ_XLIB_CFLAGS)'
-	TK_LIBS='$(MOZ_XLIB_LDFLAGS)'
-	AC_DEFINE(MOZ_WIDGET_XLIB)
-    ;;
-
 qt)
     MOZ_ENABLE_QT=1
     if test "$_HAVE_FREETYPE2"; then
@@ -4612,20 +4573,6 @@ qt)
 photon)
 	MOZ_ENABLE_PHOTON=1
 	AC_DEFINE(MOZ_WIDGET_PHOTON)
-    ;;
-mac|cocoa)
-    TK_LIBS='-framework Carbon'
-    TK_CFLAGS="-I${MACOS_SDK_DIR}/Developer/Headers/FlatCarbon"
-    CFLAGS="$CFLAGS $TK_CFLAGS"
-    CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
-    MOZ_USER_DIR="Mozilla"
-    AC_DEFINE(XP_MACOSX)
-    AC_DEFINE(TARGET_CARBON)
-    AC_DEFINE(TARGET_API_MAC_CARBON)
-    if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
-        MOZ_ENABLE_COCOA=1
-        AC_DEFINE(MOZ_WIDGET_COCOA)
-    fi
     ;;
 
 cairo-windows)
