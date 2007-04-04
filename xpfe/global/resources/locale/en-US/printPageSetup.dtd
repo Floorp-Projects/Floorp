@@ -51,15 +51,10 @@
 <!ENTITY footerRight.tip     "Right footer">
 
 <!ENTITY hfTitle             "Title">
-<!ENTITY hfTitle.code        "[&amp;T]">
 <!ENTITY hfURL               "URL">
-<!ENTITY hfURL.code          "[&amp;U]">
 <!ENTITY hfDateAndTime       "Date/Time">
-<!ENTITY hfDateAndTime.code  "&amp;D">
 <!ENTITY hfPage              "Page #">
-<!ENTITY hfPage.code         "[&amp;P]">
 <!ENTITY hfPageAndTotal      "Page # of #">
-<!ENTITY hfPageAndTotal.code "[&amp;PT]">
 <!ENTITY hfBlank             "--blank--">
 <!ENTITY hfCustom            "Custom...">
 
