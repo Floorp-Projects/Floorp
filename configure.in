@@ -7248,7 +7248,6 @@ if test "$MOZ_SVG" -o "$MOZ_ENABLE_CANVAS" -o "$MOZ_ENABLE_CAIRO_GFX" ; then
        fi
        if test "$MOZ_WIDGET_TOOLKIT" = "mac" -o "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
            QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
-           NQUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_NQUARTZ_SURFACE 1"
            ATSUI_FONT_FEATURE="#define CAIRO_HAS_ATSUI_FONT 1"
        fi
        if test "$MOZ_WIDGET_TOOLKIT" = "windows"; then

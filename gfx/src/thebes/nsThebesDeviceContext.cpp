@@ -150,7 +150,7 @@ nsThebesDeviceContext::SetDPI()
     if (mPrintingSurface &&
         (mPrintingSurface->GetType() == gfxASurface::SurfaceTypePDF ||
          mPrintingSurface->GetType() == gfxASurface::SurfaceTypePS ||
-         mPrintingSurface->GetType() == gfxASurface::SurfaceTypeQuartz2)) {
+         mPrintingSurface->GetType() == gfxASurface::SurfaceTypeQuartz)) {
         dpi = 72;
         dotsArePixels = PR_FALSE;
     } else {
@@ -700,7 +700,7 @@ nsThebesDeviceContext::CalcPrintingSize()
 #endif
 
 #ifdef XP_MACOSX
-    case gfxASurface::SurfaceTypeQuartz2:
+    case gfxASurface::SurfaceTypeQuartz:
         inPoints = PR_TRUE; // this is really only true when we're printing
         size = reinterpret_cast<gfxQuartzSurface*>(mPrintingSurface.get())->GetSize();
         break;
