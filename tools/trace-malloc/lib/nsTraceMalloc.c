@@ -384,8 +384,6 @@ static void flush_logfile(logfile *fp)
             bp += cnt;
             len -= cnt;
         } while (len > 0);
-    } else {
-        fprintf(stderr, "### nsTraceMalloc: can't flush to closed log file\n");
     }
     fp->simsize += len;
 }
@@ -1850,6 +1848,8 @@ PR_IMPLEMENT(void) NS_TraceMallocStartup(int logfd)
     suppress_tracing = (logfd < 0);
 
     if (suppress_tracing == 0) {
+        PR_ASSERT(logfp->simsize == 0); /* didn't overflow startup buffer */
+
         /* Log everything in logfp (aka default_logfile)'s buffer to logfd. */
         logfp->fd = logfd;
         logfile_list = &default_logfile;
