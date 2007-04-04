@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): David Finch
+ *                 Jesse Ruderman
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -64,6 +65,14 @@ function test()
   expect = 'aa,bb,cc';
   actual = arr.toString();
   reportCompare(expect, actual, summary);
+
+  arr=[x+x for ([,x] in ["a","b","c"])];
+  expect = 'aa,bb,cc';
+  actual = arr.toString();
+
+  arr=[x+y for ([x,y] in ["a","b","c"])]; 
+  expect = '0a,1b,2c';
+  actual = arr.toString();
 
   exitFunc ('test');
 }
