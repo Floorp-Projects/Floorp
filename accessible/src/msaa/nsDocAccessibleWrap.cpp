@@ -40,6 +40,7 @@
 #include "ISimpleDOMDocument_i.c"
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleEvent.h"
+#include "nsEventMap.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIFrame.h"
@@ -165,47 +166,15 @@ NS_IMETHODIMP nsDocAccessibleWrap::Shutdown()
   return nsDocAccessible::Shutdown();
 }
 
-NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData)
+NS_IMETHODIMP
+nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData)
 {
-#ifdef DEBUG_A11Y
-  // Ensure that we're only firing events that we intend to
-  PRUint32 supportedEvents[] = {
-    nsIAccessibleEvent::EVENT_SHOW,
-    nsIAccessibleEvent::EVENT_HIDE,
-    nsIAccessibleEvent::EVENT_REORDER,
-    nsIAccessibleEvent::EVENT_FOCUS,
-    nsIAccessibleEvent::EVENT_STATE_CHANGE,
-    nsIAccessibleEvent::EVENT_NAME_CHANGE,
-    nsIAccessibleEvent::EVENT_DESCRIPTIONCHANGE,
-    nsIAccessibleEvent::EVENT_LOCATION_CHANGE,
-    nsIAccessibleEvent::EVENT_VALUE_CHANGE,
-    nsIAccessibleEvent::EVENT_SELECTION,
-    nsIAccessibleEvent::EVENT_SELECTION_ADD,
-    nsIAccessibleEvent::EVENT_SELECTION_REMOVE,
-    nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
-    nsIAccessibleEvent::EVENT_ALERT,
-    nsIAccessibleEvent::EVENT_MENUSTART,
-    nsIAccessibleEvent::EVENT_MENUEND,
-    nsIAccessibleEvent::EVENT_MENUPOPUPSTART,
-    nsIAccessibleEvent::EVENT_MENUPOPUPEND,
-    nsIAccessibleEvent::EVENT_SCROLLINGSTART,
-    nsIAccessibleEvent::EVENT_SCROLLINGEND,
-  };
+  PRUint32 winEvent = gWinEventMap[aEvent];
+  if (!winEvent)
+    return NS_OK;
 
-  PRBool found = PR_FALSE;
-  for (PRUint32 count = 0; count < NS_ARRAY_LENGTH(supportedEvents); count ++) {
-    if (aEvent == supportedEvents[count]) {
-      found = PR_TRUE;
-      break;
-    }
-  }
-  if (!found) {
-    // NS_WARNING("Event not supported!");
-  }
-#endif
-  if (!mWeakShell) {   // Means we're not active
-    return NS_ERROR_FAILURE;
-  }
+  // Means we're not active.
+  NS_ENSURE_TRUE(mWeakShell, NS_ERROR_FAILURE);
 
   nsDocAccessible::FireToolkitEvent(aEvent, aAccessible, aData); // Fire nsIObserver message
 
@@ -262,7 +231,9 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessib
   // Details of the 2 window system:
   // * Scrollbar window: caret drawing window & return value for WindowFromAccessibleObject()
   // * Client area window: text drawing window & MSAA event window
-  NotifyWinEvent(aEvent, hWnd, worldID, childID);   // Fire MSAA event for client area window
+
+  // Fire MSAA event for client area window.
+  NotifyWinEvent(winEvent, hWnd, worldID, childID);
 
   return NS_OK;
 }
@@ -287,7 +258,7 @@ PRInt32 nsDocAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
 NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
 {
   // Staying on the same page, jumping to a named anchor
-  // Fire EVENT_SCROLLINGSTART on first leaf accessible -- because some
+  // Fire EVENT_SCROLLING_START on first leaf accessible -- because some
   // assistive technologies only cache the child numbers for leaf accessibles
   // the can only relate events back to their internal model if it's a leaf.
   // There is usually an accessible for the focus node, but if it's an empty text node
@@ -316,7 +287,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
   nsCOMPtr<nsIAccessible> accessible = GetFirstAvailableAccessible(focusNode, PR_TRUE);
   nsCOMPtr<nsPIAccessible> privateAccessible = do_QueryInterface(accessible);
   if (privateAccessible) {
-    privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_SCROLLINGSTART,
+    privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_SCROLLING_START,
                                         accessible, nsnull);
   }
   return NS_OK;
