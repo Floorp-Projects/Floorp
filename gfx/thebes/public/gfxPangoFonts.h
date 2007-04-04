@@ -123,17 +123,6 @@ public:
                               NS_STATIC_CAST(gfxFont*, mFonts[i]));
     }
 
-    gfxPangoFont *GetCachedFont(const nsAString& aName) const {
-        nsRefPtr<gfxPangoFont> font;
-        if (mFontCache.Get(aName, &font))
-            return font;
-        return nsnull;
-    }
-
-    void PutCachedFont(const nsAString& aName, gfxPangoFont *aFont) {
-        mFontCache.Put(aName, aFont);
-    }
-
 protected:
     friend class FontSelector;
 
@@ -167,7 +156,6 @@ protected:
                                 void *closure);
 
 private:
-    nsDataHashtable<nsStringHashKey, nsRefPtr<gfxPangoFont> > mFontCache;
     nsTArray<gfxFontStyle> mAdditionalStyles;
 };
 

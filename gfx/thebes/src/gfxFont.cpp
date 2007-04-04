@@ -39,6 +39,7 @@
 #include "nsIPref.h"
 #include "nsServiceManagerUtils.h"
 #include "nsReadableUtils.h"
+#include "nsExpirationTracker.h"
 
 #include "gfxFont.h"
 #include "gfxPlatform.h"
@@ -53,8 +54,97 @@
 
 #include "nsCRT.h"
 
+gfxFontCache *gfxFontCache::gGlobalCache = nsnull;
+
+nsresult
+gfxFontCache::Init()
+{
+    NS_ASSERTION(!gGlobalCache, "Where did this come from?");
+    gGlobalCache = new gfxFontCache();
+    return gGlobalCache ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+void
+gfxFontCache::Shutdown()
+{
+    delete gGlobalCache;
+    gGlobalCache = nsnull;
+}
+
+PRBool
+gfxFontCache::HashEntry::KeyEquals(const KeyTypePointer aKey) const
+{
+    return aKey->mString.Equals(mFont->GetName()) &&
+           aKey->mStyle->Equals(*mFont->GetStyle());
+}
+
+already_AddRefed<gfxFont>
+gfxFontCache::Lookup(const nsAString &aName,
+                     const gfxFontStyle *aStyle)
+{
+    Key key(aName, aStyle);
+    HashEntry *entry = mFonts.GetEntry(key);
+    if (!entry)
+        return nsnull;
+
+    gfxFont *font = entry->mFont;
+    NS_ADDREF(font);
+    if (font->GetExpirationState()->IsTracked()) {
+        RemoveObject(font);
+    }
+    return font;
+}
+
+void
+gfxFontCache::AddNew(gfxFont *aFont)
+{
+    Key key(aFont->GetName(), aFont->GetStyle());
+    HashEntry *entry = mFonts.PutEntry(key);
+    if (!entry)
+        return;
+    if (entry->mFont) {
+        // This is weird. Someone's asking us to overwrite an existing font.
+        // Oh well, make it happen ... just ensure that we're not tracking
+        // the old font
+        if (entry->mFont->GetExpirationState()->IsTracked()) {
+            RemoveObject(entry->mFont);
+        }
+    }
+    entry->mFont = aFont;
+}
+
+void
+gfxFontCache::NotifyReleased(gfxFont *aFont)
+{
+    nsresult rv = AddObject(aFont);
+    if (NS_FAILED(rv)) {
+        // We couldn't track it for some reason. Kill it now.
+        DestroyFont(aFont);
+    }
+    // Note that we might have fonts that aren't in the hashtable, perhaps because
+    // of OOM adding to the hashtable or because someone did an AddNew where
+    // we already had a font. These fonts are added to the expiration tracker
+    // anyway, even though Lookup can't resurrect them. Eventually they will
+    // expire and be deleted.
+}
+
+void
+gfxFontCache::NotifyExpired(gfxFont *aFont)
+{
+    RemoveObject(aFont);
+    DestroyFont(aFont);
+}
+
+void
+gfxFontCache::DestroyFont(gfxFont *aFont)
+{
+    Key key(aFont->GetName(), aFont->GetStyle());
+    mFonts.RemoveEntry(key);
+    delete aFont;
+}
+
 gfxFont::gfxFont(const nsAString &aName, const gfxFontStyle *aFontStyle) :
-    mName(aName), mStyle(aFontStyle)
+    mName(aName), mStyle(*aFontStyle)
 {
 }
 
@@ -503,6 +593,14 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint8 aVariant,
         NS_WARNING("empty langgroup");
         langGroup.Assign("x-western");
     }
+}
+
+gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
+    style(aStyle.style), systemFont(aStyle.systemFont), variant(aStyle.variant),
+    familyNameQuirks(aStyle.familyNameQuirks), weight(aStyle.weight),
+    decorations(aStyle.decorations), size(aStyle.size),
+    langGroup(aStyle.langGroup), sizeAdjust(aStyle.sizeAdjust)
+{
 }
 
 void

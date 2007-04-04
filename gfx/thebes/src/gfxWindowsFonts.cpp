@@ -203,7 +203,7 @@ gfxWindowsFont::MakeHFONT()
     }
 
     PRInt8 baseWeight, weightDistance;
-    mStyle->ComputeWeightAndOffset(&baseWeight, &weightDistance);
+    GetStyle()->ComputeWeightAndOffset(&baseWeight, &weightDistance);
 
     HDC dc = nsnull;
 
@@ -223,7 +223,7 @@ gfxWindowsFont::MakeHFONT()
                 if (!dc)
                     dc = GetDC((HWND)nsnull);
 
-                FillLogFont(mStyle->size, tryWeight);
+                FillLogFont(GetStyle()->size, tryWeight);
                 mFont = CreateFontIndirectW(&mLogFont);
                 HGDIOBJ oldFont = SelectObject(dc, mFont);
                 TEXTMETRIC metrics;
@@ -259,8 +259,8 @@ gfxWindowsFont::MakeHFONT()
     if (chosenWeight == 0)
         chosenWeight = baseWeight * 100;
 
-    mAdjustedSize = mStyle->size;
-    if (mStyle->sizeAdjust > 0) {
+    mAdjustedSize = GetStyle()->size;
+    if (GetStyle()->sizeAdjust > 0) {
         if (!mFont) {
             FillLogFont(mAdjustedSize, chosenWeight);
             mFont = CreateFontIndirectW(&mLogFont);
@@ -270,7 +270,7 @@ gfxWindowsFont::MakeHFONT()
         ComputeMetrics();
         gfxFloat aspect = mMetrics->xHeight / mMetrics->emHeight;
         mAdjustedSize =
-            PR_MAX(ROUND(mStyle->size * (mStyle->sizeAdjust / aspect)), 1.0f);
+            PR_MAX(ROUND(GetStyle()->size * (GetStyle()->sizeAdjust / aspect)), 1.0f);
 
         if (mMetrics != oldMetrics) {
             delete mMetrics;
@@ -417,8 +417,8 @@ gfxWindowsFont::FillLogFont(gfxFloat aSize, PRInt16 aWeight)
     mLogFont.lfWidth          = 0; 
     mLogFont.lfEscapement     = 0;
     mLogFont.lfOrientation    = 0;
-    mLogFont.lfUnderline      = (mStyle->decorations & FONT_DECORATION_UNDERLINE) ? TRUE : FALSE;
-    mLogFont.lfStrikeOut      = (mStyle->decorations & FONT_DECORATION_STRIKEOUT) ? TRUE : FALSE;
+    mLogFont.lfUnderline      = (GetStyle()->decorations & FONT_DECORATION_UNDERLINE) ? TRUE : FALSE;
+    mLogFont.lfStrikeOut      = (GetStyle()->decorations & FONT_DECORATION_STRIKEOUT) ? TRUE : FALSE;
     mLogFont.lfCharSet        = DEFAULT_CHARSET;
 #ifndef WINCE
     mLogFont.lfOutPrecision   = OUT_TT_PRECIS;
@@ -428,7 +428,7 @@ gfxWindowsFont::FillLogFont(gfxFloat aSize, PRInt16 aWeight)
     mLogFont.lfClipPrecision  = CLIP_TURNOFF_FONTASSOCIATION;
     mLogFont.lfQuality        = DEFAULT_QUALITY;
     mLogFont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-    mLogFont.lfItalic         = (mStyle->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) ? TRUE : FALSE;
+    mLogFont.lfItalic         = (GetStyle()->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) ? TRUE : FALSE;
     mLogFont.lfWeight         = aWeight;
 
     int len = PR_MIN(mName.Length(), LF_FACESIZE - 1);
@@ -489,6 +489,26 @@ gfxWindowsFont::SetupCairoFont(cairo_t *aCR)
  *
  **********************************************************************/
 
+/**
+ * Look up the font in the gfxFont cache. If we don't find it, create one.
+ * In either case, add a ref, append it to the aFonts array, and return it ---
+ * except for OOM in which case we do nothing and return null.
+ */
+static already_AddRefed<gfxWindowsFont>
+GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle)
+{
+    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aName, aStyle);
+    if (!font) {
+        font = new gfxWindowsFont(aName, aStyle);
+        if (!font)
+            return nsnull;
+        gfxFontCache::GetCache()->AddNew(font);
+    }
+    gfxFont *f = nsnull;
+    font.swap(f);
+    return static_cast<gfxWindowsFont *>(f);
+}
+
 PRBool
 gfxWindowsFontGroup::MakeFont(const nsAString& aName,
                               const nsACString& aGenericName,
@@ -500,8 +520,10 @@ gfxWindowsFontGroup::MakeFont(const nsAString& aName,
         if (fg->HasFontNamed(aName))
             return PR_TRUE;
 
-        gfxWindowsFont *font = new gfxWindowsFont(aName, fg->GetStyle());
-        fg->AppendFont(font);
+        nsRefPtr<gfxWindowsFont> font = GetOrMakeFont(aName, fg->GetStyle());
+        if (font) {
+            fg->AppendFont(font);
+        }
 
         if (!aGenericName.IsEmpty() && fg->GetGenericFamily().IsEmpty())
             fg->mGenericFamily = aGenericName;
@@ -514,8 +536,6 @@ gfxWindowsFontGroup::MakeFont(const nsAString& aName,
 gfxWindowsFontGroup::gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle)
     : gfxFontGroup(aFamilies, aStyle)
 {
-    mFontCache.Init(25);
-
     ForEachFont(MakeFont, this);
 
     if (mGenericFamily.IsEmpty())
@@ -930,14 +950,11 @@ public:
             if (aName.Equals(item->mFonts[i]->GetName()))
                 return PR_TRUE;
 
-
-        nsRefPtr<gfxWindowsFont> font = item->mGroup->GetCachedFont(aName);
-        if (!font) {
-            font = new gfxWindowsFont(aName, item->mGroup->GetStyle());
-            item->mGroup->PutCachedFont(aName, font);
+        nsRefPtr<gfxWindowsFont> font =
+            GetOrMakeFont(aName, item->mGroup->GetStyle());
+        if (font) {
+            item->mFonts.AppendElement(font);
         }
-        item->mFonts.AppendElement(font);
-
         return PR_TRUE;
     }
 
