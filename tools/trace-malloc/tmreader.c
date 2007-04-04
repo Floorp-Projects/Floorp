@@ -157,8 +157,8 @@ static int get_tmevent(FILE *fp, tmevent *event)
             return 0;
         event->u.libname = s;
 #ifdef DEBUG_tmreader
-        printf("tmevent %c %u libname=\"%s\"\n", event->type, event->serial,
-               event->u.libname);
+        fprintf(stderr, "tmevent %c %u libname=\"%s\"\n", event->type, event->serial,
+                event->u.libname);
 #endif
         break;
 
@@ -168,8 +168,8 @@ static int get_tmevent(FILE *fp, tmevent *event)
             return 0;
         event->u.srcname = s;
 #ifdef DEBUG_tmreader
-        printf("tmevent %c %u srcname=\"%s\"\n", event->type, event->serial,
-               event->u.srcname);
+        fprintf(stderr, "tmevent %c %u srcname=\"%s\"\n",
+                event->type, event->serial, event->u.srcname);
 #endif
         break;
 
@@ -185,11 +185,11 @@ static int get_tmevent(FILE *fp, tmevent *event)
             return 0;
         event->u.method.name = s;
 #ifdef DEBUG_tmreader
-        printf("tmevent %c %u library=%u filename=%u linenumber=%u "
-               "name=\"%s\"\n",
-               event->type, event->serial,
-               event->u.method.library, event->u.method.filename,
-               event->u.method.linenumber, event->u.method.name);
+        fprintf(stderr, "tmevent %c %u library=%u filename=%u linenumber=%u "
+                "name=\"%s\"\n",
+                event->type, event->serial,
+                event->u.method.library, event->u.method.filename,
+                event->u.method.linenumber, event->u.method.name);
 #endif
         break;
 
@@ -201,10 +201,10 @@ static int get_tmevent(FILE *fp, tmevent *event)
         if (!get_uint32(fp, &event->u.site.offset))
             return 0;
 #ifdef DEBUG_tmreader
-        printf("tmevent %c %u parent=%u method=%u offset=%u\n",
-               event->type, event->serial,
-               event->u.site.parent, event->u.site.method,
-               event->u.site.offset);
+        fprintf(stderr, "tmevent %c %u parent=%u method=%u offset=%u\n",
+                event->type, event->serial,
+                event->u.site.parent, event->u.site.method,
+                event->u.site.offset);
 #endif
         break;
 
@@ -223,10 +223,10 @@ static int get_tmevent(FILE *fp, tmevent *event)
         event->u.alloc.oldptr = 0;
         event->u.alloc.oldsize = 0;
 #ifdef DEBUG_tmreader
-        printf("tmevent %c %u interval=%u cost=%u ptr=0x%x size=%u\n",
-               event->type, event->serial,
-               event->u.alloc.interval, event->u.alloc.cost,
-               event->u.alloc.ptr, event->u.alloc.size);
+        fprintf(stderr, "tmevent %c %u interval=%u cost=%u ptr=0x%x size=%u\n",
+                event->type, event->serial,
+                event->u.alloc.interval, event->u.alloc.cost,
+                event->u.alloc.ptr, event->u.alloc.size);
 #endif
 #if defined(DEBUG_dp)
         if (c == TM_EVENT_MALLOC)
@@ -257,13 +257,13 @@ static int get_tmevent(FILE *fp, tmevent *event)
         if (!get_uint32(fp, &event->u.alloc.oldsize))
             return 0;
 #ifdef DEBUG_tmreader
-        printf("tmevent %c %u interval=%u cost=%u ptr=0x%x size=%u "
-               "oldserial=%u oldptr=0x%x oldsize=%u\n",
-               event->type, event->serial,
-               event->u.alloc.interval, event->u.alloc.cost,
-               event->u.alloc.ptr, event->u.alloc.size,
-               event->u.alloc.oldserial, event->u.alloc.oldptr,
-               event->u.alloc.oldsize);
+        fprintf(stderr, "tmevent %c %u interval=%u cost=%u ptr=0x%x size=%u "
+                "oldserial=%u oldptr=0x%x oldsize=%u\n",
+                event->type, event->serial,
+                event->u.alloc.interval, event->u.alloc.cost,
+                event->u.alloc.ptr, event->u.alloc.size,
+                event->u.alloc.oldserial, event->u.alloc.oldptr,
+                event->u.alloc.oldsize);
 #endif
 #if defined(DEBUG_dp)
         printf("%d realloc %d 0x%p %d\n", event->u.alloc.cost,
@@ -317,7 +317,7 @@ static int get_tmevent(FILE *fp, tmevent *event)
         if (!get_uint32(fp, &event->u.stats.calltree_maxstack_top))
             return 0;
 #ifdef DEBUG_tmreader
-        printf("tmevent %c %u\n", event->type, event->serial);
+        fprintf(stderr, "tmevent %c %u\n", event->type, event->serial);
 #endif
         break;
       default:
