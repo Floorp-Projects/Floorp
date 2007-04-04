@@ -26,9 +26,9 @@
 #include <sstream>
 
 #include "processor/postfix_evaluator.h"
-#include "google_airbag/processor/memory_region.h"
+#include "google_breakpad/processor/memory_region.h"
 
-namespace google_airbag {
+namespace google_breakpad {
 
 using std::istringstream;
 using std::ostringstream;
@@ -235,7 +235,7 @@ void PostfixEvaluator<ValueType>::PushValue(const ValueType &value) {
 }
 
 
-}  // namespace google_airbag
+}  // namespace google_breakpad
 
 
 #endif  // PROCESSOR_POSTFIX_EVALUATOR_INL_H__

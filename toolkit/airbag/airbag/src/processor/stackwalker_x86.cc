@@ -37,20 +37,22 @@
 #include "processor/postfix_evaluator-inl.h"
 
 #include "processor/stackwalker_x86.h"
-#include "google_airbag/processor/call_stack.h"
-#include "google_airbag/processor/minidump.h"
-#include "google_airbag/processor/stack_frame_cpu.h"
+#include "google_breakpad/processor/call_stack.h"
+#include "google_breakpad/processor/memory_region.h"
+#include "google_breakpad/processor/stack_frame_cpu.h"
 #include "processor/linked_ptr.h"
 #include "processor/stack_frame_info.h"
 
-namespace google_airbag {
+namespace google_breakpad {
 
 
-StackwalkerX86::StackwalkerX86(const MDRawContextX86 *context,
+StackwalkerX86::StackwalkerX86(const SystemInfo *system_info,
+                               const MDRawContextX86 *context,
                                MemoryRegion *memory,
-                               MinidumpModuleList *modules,
-                               SymbolSupplier *supplier)
-    : Stackwalker(memory, modules, supplier),
+                               const CodeModules *modules,
+                               SymbolSupplier *supplier,
+                               SourceLineResolverInterface *resolver)
+    : Stackwalker(system_info, memory, modules, supplier, resolver),
       context_(context) {
   if (memory_->GetBase() + memory_->GetSize() - 1 > 0xffffffff) {
     // The x86 is a 32-bit CPU, the limits of the supplied stack are invalid.
@@ -132,7 +134,7 @@ StackFrame* StackwalkerX86::GetCallerFrame(
 
   // Set up the dictionary for the PostfixEvaluator.  %ebp and %esp are used
   // in each program string, and their previous values are known, so set them
-  // here.  .cbCalleeParams is an Airbag extension that allows us to use
+  // here.  .cbCalleeParams is a Breakpad extension that allows us to use
   // the PostfixEvaluator engine when certain types of debugging information
   // are present without having to write the constants into the program string
   // as literals.
@@ -310,4 +312,4 @@ StackFrame* StackwalkerX86::GetCallerFrame(
 }
 
 
-}  // namespace google_airbag
+}  // namespace google_breakpad

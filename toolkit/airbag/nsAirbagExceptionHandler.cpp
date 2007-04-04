@@ -79,7 +79,7 @@ NS_NAMED_LITERAL_STRING(crashReporterFilename, "crashreporter.exe");
 NS_NAMED_LITERAL_STRING(crashReporterFilename, "crashreporter");
 #endif
 
-static google_airbag::ExceptionHandler* gExceptionHandler = nsnull;
+static google_breakpad::ExceptionHandler* gExceptionHandler = nsnull;
 
 // for ease of replacing the dump path when someone
 // calls SetMinidumpPath
@@ -96,18 +96,22 @@ static PRUnichar* crashReporterAPIDataFilenameEnd = nsnull;
 // this holds additional data sent via the API
 static nsCString crashReporterAPIData;
 
-static void MinidumpCallback(const wstring &minidump_id,
-                             void *context, bool succeeded)
+bool MinidumpCallback(const wchar_t *dump_path,
+                      const wchar_t *minidump_id,
+                      void *context,
+                      EXCEPTION_POINTERS *exinfo,
+                      MDRawAssertionInfo *assertion,
+                      bool succeeded)
 {
   // append minidump filename to command line
-  memcpy(crashReporterCmdLineEnd, minidump_id.c_str(),
+  memcpy(crashReporterCmdLineEnd, minidump_id,
          kGUIDLength * sizeof(PRUnichar));
   // this will copy the null terminator as well
   memcpy(crashReporterCmdLineEnd + kGUIDLength,
          dumpFileExtension, sizeof(dumpFileExtension));
 
   // append minidump filename to API data filename
-  memcpy(crashReporterAPIDataFilenameEnd, minidump_id.c_str(),
+  memcpy(crashReporterAPIDataFilenameEnd, minidump_id,
          kGUIDLength * sizeof(PRUnichar));
   // this will copy the null terminator as well
   memcpy(crashReporterAPIDataFilenameEnd + kGUIDLength,
@@ -144,6 +148,7 @@ static void MinidumpCallback(const wstring &minidump_id,
   // we're not really in a position to do anything if the CreateProcess fails
   TerminateProcess(GetCurrentProcess(), 1);
 #endif
+  return succeeded;
 }
 
 static nsresult BuildCommandLine(const nsAString &tempPath)
@@ -246,8 +251,9 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // finally, set the exception handler
-  gExceptionHandler = new google_airbag::ExceptionHandler(
+  gExceptionHandler = new google_breakpad::ExceptionHandler(
                                             PromiseFlatString(tempPath).get(),
+                                            nsnull,
                                             MinidumpCallback,
                                             nsnull,
                                             true);
