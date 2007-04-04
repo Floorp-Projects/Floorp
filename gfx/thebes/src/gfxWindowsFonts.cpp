@@ -677,7 +677,7 @@ SetupTextRunFromGlyphs(gfxTextRun *aRun, WCHAR *aGlyphs, HDC aDC,
     if (!partialWidthArray.AppendElements(length))
         return PR_FALSE;
     BOOL success = GetTextExtentExPointI(aDC,
-                                         aGlyphs,
+                                         (WORD*) aGlyphs,
                                          length,
                                          INT_MAX,
                                          NULL,
@@ -725,7 +725,7 @@ gfxWindowsFontGroup::InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun,
         if (!glyphArray.AppendElements(aLength))
             return;
 
-        DWORD ret = GetGlyphIndicesA(dc, aString, aLength, glyphArray.Elements(),
+        DWORD ret = GetGlyphIndicesA(dc, aString, aLength, (WORD*) glyphArray.Elements(),
                                      GGI_MARK_NONEXISTING_GLYPHS);
         if (ret != GDI_ERROR &&
             SetupTextRunFromGlyphs(aRun, glyphArray.Elements(), dc, font))
@@ -749,7 +749,7 @@ gfxWindowsFontGroup::InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun,
         if (!glyphArray.AppendElements(aLength))
             return;
 
-        DWORD ret = GetGlyphIndicesW(dc, aString, aLength, glyphArray.Elements(),
+        DWORD ret = GetGlyphIndicesW(dc, aString, aLength, (WORD*) glyphArray.Elements(),
                                      GGI_MARK_NONEXISTING_GLYPHS);
         if (ret != GDI_ERROR &&
             SetupTextRunFromGlyphs(aRun, glyphArray.Elements(), dc, font))
