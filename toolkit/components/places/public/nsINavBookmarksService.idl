@@ -214,6 +214,10 @@ interface nsINavBookmarksService : nsISupports
    */
   const short DEFAULT_INDEX = -1;
 
+  const short TYPE_BOOKMARK = 1;
+  const short TYPE_FOLDER = 2;
+  const short TYPE_SEPARATOR = 3;
+
   /**
    * Inserts a child item into the given folder. If this item already exists in
    * the given folder, it will be moved to the new position.
