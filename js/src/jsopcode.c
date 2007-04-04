@@ -3141,8 +3141,20 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 LOCAL_ASSERT(ss->top >= 2);
                 (void) PopOff(ss, op);
 
+                /*
+                 * Special case: new (x(y)(z)) must be parenthesized like so.
+                 * Same for new (x(y).z) -- contrast with new x(y).z.
+                 */
+                op = ss->opcodes[ss->top-1];
+                lval = PopStr(ss,
+                              (saveop == JSOP_NEW &&
+                               (op == JSOP_CALL ||
+                                (js_CodeSpec[op].format & JOF_CALLOP)))
+                              ? JSOP_NAME
+                              : saveop);
                 op = saveop;
-                argv[0] = JS_strdup(cx, POP_STR());
+
+                argv[0] = JS_strdup(cx, lval);
                 if (!argv[i])
                     ok = JS_FALSE;
 
