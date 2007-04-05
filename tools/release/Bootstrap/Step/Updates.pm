@@ -109,7 +109,7 @@ sub Verify {
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $verifyDir = $config->Get(var => 'verifyDir');
     my $product = $config->Get(var => 'product');
-    my $verifyConfig = $config->Get(var => 'verifyConfig');
+    my $verifyConfig = $config->Get(sysvar => 'verifyConfig');
 
     # Create verification area.
     my $verifyDirVersion = catfile($verifyDir, $product . '-' . $version);
