@@ -41,7 +41,7 @@ var gTreeUtils = {
   {
     for (var i = 0; i < aItems.length; ++i)
       aDeletedItems.push(aItems[i]);
-    aItems = [];
+    aItems.splice(0);
     var oldCount = aView.rowCount;
     aView._rowCount = 0;
     aTree.treeBoxObject.rowCountChanged(0, -oldCount);
