@@ -83,10 +83,10 @@
 
 class nsSVGFilterProperty : public nsStubMutationObserver {
 public:
-  nsSVGFilterProperty(nsSVGFilterFrame *aFilter, nsIFrame *aFrame);
+  nsSVGFilterProperty(nsIContent *aFilter, nsIFrame *aFilteredFrame);
 
   nsRect GetRect() { return mFilterRect; }
-  nsSVGFilterFrame *GetFilterFrame() { return mFilter; }
+  nsSVGFilterFrame *GetFilterFrame();
   void RemoveMutationObserver();
 
   // nsISupports
@@ -108,26 +108,37 @@ private:
   void DoUpdate();
 
   nsWeakPtr mObservedFilter;
-  nsSVGFilterFrame *mFilter;
   nsIFrame *mFrame;  // frame being filtered
   nsRect mFilterRect;
 };
 
 NS_IMPL_ISUPPORTS1(nsSVGFilterProperty, nsIMutationObserver)
 
-nsSVGFilterProperty::nsSVGFilterProperty(nsSVGFilterFrame *aFilter,
-                                         nsIFrame *aFrame)
-  : mFilter(aFilter), mFrame(aFrame)
+nsSVGFilterProperty::nsSVGFilterProperty(nsIContent *aFilter,
+                                         nsIFrame *aFilteredFrame)
+  : mFrame(aFilteredFrame)
 {
-  mFilterRect = mFilter->GetInvalidationRegion(mFrame);
+  mObservedFilter = do_GetWeakReference(aFilter);
 
-  nsIFrame *filter = nsnull;
-  CallQueryInterface(mFilter, &filter);
+  nsSVGFilterFrame *filter = GetFilterFrame();
+  if (filter)
+    mFilterRect = filter->GetInvalidationRegion(mFrame);
 
-  nsCOMPtr<nsIContent> filterContent = filter->GetContent();
-  mObservedFilter = do_GetWeakReference(filterContent);
+  aFilter->AddMutationObserver(this);
+}
 
-  filterContent->AddMutationObserver(this);
+nsSVGFilterFrame *
+nsSVGFilterProperty::GetFilterFrame()
+{
+  nsCOMPtr<nsIContent> filter = do_QueryReferent(mObservedFilter);
+  if (filter) {
+    nsIFrame *frame =
+      NS_STATIC_CAST(nsGenericElement*, filter.get())->GetPrimaryFrame();
+    if (frame && frame->GetType() == nsGkAtoms::svgFilterFrame)
+      return NS_STATIC_CAST(nsSVGFilterFrame*, frame);
+  }
+
+  return nsnull;
 }
 
 void
@@ -144,8 +155,11 @@ nsSVGFilterProperty::DoUpdate()
   nsSVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(mFrame);
   if (outerSVGFrame) {
     outerSVGFrame->InvalidateRect(mFilterRect);
-    mFilterRect = mFilter->GetInvalidationRegion(mFrame);
-    outerSVGFrame->InvalidateRect(mFilterRect);
+    nsSVGFilterFrame *filter = GetFilterFrame();
+    if (filter) {
+      mFilterRect = filter->GetInvalidationRegion(mFrame);
+      outerSVGFrame->InvalidateRect(mFilterRect);
+    }
   }
 }
 
@@ -776,8 +790,8 @@ AddEffectProperties(nsIFrame *aFrame)
   const nsStyleSVGReset *style = aFrame->GetStyleSVGReset();
 
   if (style->mFilter && !(aFrame->GetStateBits() & NS_STATE_SVG_FILTERED)) {
-    nsSVGFilterFrame *filter = NS_GetSVGFilterFrame(style->mFilter,
-                                                    aFrame->GetContent());
+    nsIContent *filter = NS_GetSVGFilterElement(style->mFilter,
+                                                aFrame->GetContent());
     if (filter) {
       nsSVGFilterProperty *property = new nsSVGFilterProperty(filter, aFrame);
       if (!property) {
@@ -947,7 +961,9 @@ nsSVGUtils::PaintChildWithEffects(nsSVGRenderState *aContext,
     nsSVGFilterProperty *property;
     property = NS_STATIC_CAST(nsSVGFilterProperty *,
                               aFrame->GetProperty(nsGkAtoms::filter));
-    property->GetFilterFrame()->FilterPaint(aContext, svgChildFrame);
+    nsSVGFilterFrame *filter = property->GetFilterFrame();
+    if (filter)
+      filter->FilterPaint(aContext, svgChildFrame);
   } else {
     svgChildFrame->PaintSVG(aContext, aDirtyRect);
   }

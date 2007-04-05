@@ -57,31 +57,16 @@ NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCont
   return new (aPresShell) nsSVGFilterFrame(aContext);
 }
 
-nsSVGFilterFrame *
-NS_GetSVGFilterFrame(nsIURI *aURI, nsIContent *aContent)
+nsIContent *
+NS_GetSVGFilterElement(nsIURI *aURI, nsIContent *aContent)
 {
-  // Get the PresShell
-  nsIDocument *myDoc = aContent->GetCurrentDoc();
-  if (!myDoc) {
-    NS_WARNING("No document for this content!");
-    return nsnull;
-  }
-  nsIPresShell *presShell = myDoc->GetShellAt(0);
-  if (!presShell) {
-    NS_WARNING("no presshell");
-    return nsnull;
-  }
+  nsIContent* content = nsContentUtils::GetReferencedElement(aURI, aContent);
 
-  // Find the referenced frame
-  nsIFrame *filter;
-  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&filter, aURI, aContent, presShell)))
-    return nsnull;
+  nsCOMPtr<nsIDOMSVGFilterElement> filter = do_QueryInterface(content);
+  if (filter)
+    return content;
 
-  nsIAtom* frameType = filter->GetType();
-  if (frameType != nsGkAtoms::svgFilterFrame)
-    return nsnull;
-
-  return NS_STATIC_CAST(nsSVGFilterFrame *, filter);
+  return nsnull;
 }
 
 NS_IMETHODIMP
