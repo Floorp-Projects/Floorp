@@ -122,13 +122,13 @@ nsUnicharStreamLoader::OnStopRequest(nsIRequest *request,
     return NS_ERROR_UNEXPECTED;
   }
 
+  // Make sure mChannel points to the channel that we ended up with
+  mChannel = do_QueryInterface(request);
+
   if (mInputStream) {
     nsresult rv;
     // We got some data at some point.  I guess we should tell our
     // observer about it or something....
-
-    // Make sure mChannel points to the channel that we ended up with
-    mChannel = do_QueryInterface(request);
 
     // Determine the charset
     PRUint32 readCount = 0;
