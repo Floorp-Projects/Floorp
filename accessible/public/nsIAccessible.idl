@@ -57,7 +57,7 @@ interface nsIDOMDOMStringList;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(3494b81a-1d90-491a-be34-7893f8e27117)]
+[scriptable, uuid(b3674866-49a9-4cf2-bfea-c00be2d4a695)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -164,12 +164,6 @@ interface nsIAccessible : nsISupports
    *                      (see nsIAccessibleStates::EXT_STATE_* constants)
    */
   void getFinalState(out unsigned long aState, out unsigned long aExtraState);
-
-  /**
-   * True if this element is live in an editor.
-   * False if the content is being displayed but not edited. 
-   */
-  readonly attribute boolean isEditable;
 
   /**
    * Help text associated with node
