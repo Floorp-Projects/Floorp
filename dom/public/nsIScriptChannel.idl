@@ -80,7 +80,7 @@ interface nsIScriptChannel : nsISupports
   /**
    * Whether and how the program represented by this channel is to be executed.
    * The default value if this property has never been set on this channel MUST
-   * be NO_EXECUTION.
+   * be either EXECUTE_IN_SANDBOX or NO_EXECUTION.
    *
    * @throws NS_ERROR_INVALID_ARG when set to an unrecognized value.
    */

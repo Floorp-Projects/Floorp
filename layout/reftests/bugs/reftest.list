@@ -206,3 +206,4 @@ fails == 368504-1.html 368504-1-ref.html # bug 368504
 == 372062-1.html 372062-1-ref.html
 == 374038-1.xul 374038-1-ref.xul
 == 374038-2.xul 374038-2-ref.xul
+== 376484-1.html 376484-1-ref.html

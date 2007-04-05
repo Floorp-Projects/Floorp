@@ -435,7 +435,7 @@ nsJSChannel::nsJSChannel() :
     mLoadFlags(LOAD_NORMAL),
     mActualLoadFlags(LOAD_NORMAL),
     mPopupState(openOverridden),
-    mExecutionPolicy(NO_EXECUTION),
+    mExecutionPolicy(EXECUTE_IN_SANDBOX),
     mIsActive(PR_FALSE),
     mOpenedStreamChannel(PR_FALSE)
 {
