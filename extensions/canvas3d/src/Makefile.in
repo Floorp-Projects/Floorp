@@ -48,7 +48,7 @@ LIBRARY_NAME	= canvas3d
 
 XPI_NAME	= canvas3d
 
-EXPORT_LIBRARY	= 1
+EXPORT_LIBRARY	= 0
 IS_COMPONENT	= 1
 MODULE_NAME	= nsCanvas3DModule
 GRE_MODULE	= 1
@@ -149,21 +149,24 @@ CSRCS		= $(GLITZ_CSRCS) \
 
 VPATH += $(topsrcdir)/gfx/src
 CPPSRCS		= nsCanvas3DModule.cpp \
+		  nsCanvasRenderingContextGL.cpp \
 		  nsCanvasRenderingContextGLES11.cpp \
+		  nsCanvasRenderingContextGLWeb20.cpp \
 		  $(NULL)
 
 DEFINES += -DXPCOM_GLUE -DGLEW_MX -DGLEW_STATIC
 
-EXTRA_DSO_LIBS += js3250 mozcairo mozlibpixman xpcom nspr4 xpcom_core
+EXTRA_DSO_LIBS += js3250 xpcom nspr4 xpcom_core unicharutil_s
+# mozcairo mozlibpixman
 
 ifdef MOZ_ENABLE_CAIRO_GFX
-EXTRA_DSO_LIBS += thebes
+EXTRA_DSO_LDOPTS += $(DEPTH)/gfx/thebes/src/thebes.lib $(DEPTH)/gfx/src/gkgfx.lib
 endif
 
 # Hack for getting an extension built against static vs. dynamic versions of firefox
-ifeq (,$(BUILD_STATIC_LIBS))
-EXTRA_DSO_LIBS += gkgfx
-endif
+##ifeq (,$(BUILD_STATIC_LIBS))
+#EXTRA_DSO_LIBS += gkgfx
+#endif
 
 include $(topsrcdir)/config/rules.mk
 

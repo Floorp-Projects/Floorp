@@ -46,10 +46,12 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= canvas3d
 XPI_NAME	= canvas3d
 
-XPIDLSRCS	= nsICanvasRenderingContextGLES11.idl \
-		  $(NULL)
-
-#		  nsICanvasRenderingContextGLES20.idl
+XPIDLSRCS	= \
+	nsICanvasRenderingContextGL.idl \
+	nsICanvasRenderingContextGLWeb20.idl \
+	nsICanvasRenderingContextGLES11.idl \
+	nsICanvasGLPrivate.idl \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

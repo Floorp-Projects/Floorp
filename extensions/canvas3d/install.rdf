@@ -16,25 +16,15 @@
 	     extension was built for, because of the way we're tied
 	     to internal interfaces.
 	  -->
-#ifdef MOZILLA_1_8_BRANCH
-        <em:minVersion>2.0b1</em:minVersion>
-        <em:maxVersion>2.0.*</em:maxVersion>
-#else
-        <em:minVersion>3.0a1</em:minVersion>
-        <em:maxVersion>3.0a1</em:maxVersion>
-#endif
+        <em:minVersion>3.0a4pre</em:minVersion>
+        <em:maxVersion>3.0a4pre</em:maxVersion>
       </Description>
     </em:targetApplication>
 	
     <!-- front-end metadata -->
     <em:creator>Vladimir Vukicevic/mozilla.com</em:creator>
-#ifdef MOZILLA_1_8_BRANCH
-    <em:name>Canvas 3D (Gecko 1.8.1)</em:name>
-    <em:description>Canvas 3D context(s) for Gecko 1.8.1</em:description>
-#else
     <em:name>Canvas 3D (Gecko 1.9)</em:name>
     <em:description>Canvas 3D context(s) for Gecko 1.9</em:description>
-#endif
     <em:homepageURL>http://people.mozilla.com/~vladimir/canvas3d/</em:homepageURL>
   </Description>
 </RDF>

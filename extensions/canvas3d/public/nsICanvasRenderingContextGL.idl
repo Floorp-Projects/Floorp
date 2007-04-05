@@ -1,0 +1,653 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is canvas 3D.
+ *
+ * The Initial Developer of the Original Code is
+ *   Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Vladimir Vukicevic <vladimir@pobox.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIDOMHTMLCanvasElement;
+
+interface nsICanvasRenderingContextGL;
+
+[scriptable, uuid(14eb51cd-febe-41fa-b833-4c599719121e)]
+interface nsICanvasRenderingContextGLBuffer : nsISupports
+{
+  readonly attribute nsICanvasRenderingContextGL ownerContext;
+  readonly attribute PRBool disposed;
+
+  // immediately free the memory held by this buffer,
+  // even before this object is destroyed (e.g. by the JS GC)
+  void dispose();
+
+  readonly attribute PRUint32 usage;  // either STATIC_DRAW or DYNAMIC_DRAW
+  readonly attribute PRUint32 length; // number of elements
+  readonly attribute PRUint32 type;   // type of each element
+};
+
+[scriptable, uuid(27a45ca4-0847-4f2e-8e32-6d4966ff3e56)]
+interface nsICanvasRenderingContextGLTexture : nsISupports
+{
+  readonly attribute nsICanvasRenderingContextGL ownerContext;
+  readonly attribute PRBool disposed;
+
+  const PRUint32 TARGET_2D = 0;
+  const PRUint32 TARGET_RECT = 1;
+
+  readonly attribute PRUint32 target;
+
+  // in pixels; the texture coordinates
+  // are 0..w/h for TARGET_RECT, or 0.0 .. 1.0
+  // for TARGET_2D
+  readonly attribute PRUint32 width;
+  readonly attribute PRUint32 height;
+
+  const PRUint32 FILTER_TYPE_MAG = 0;
+  const PRUint32 FILTER_TYPE_MIN = 1;
+  const PRUint32 FILTER_NEAREST = 0;
+  const PRUint32 FILTER_LINER = 1;
+
+  void setFilter (in PRUint32 filterType, in PRUint32 filterMode);
+
+  const PRUint32 WRAP_TYPE_S = 0;
+  const PRUint32 WRAP_TYPE_T = 0;
+
+  const PRUint32 WRAP_CLAMP_TO_EDGE = 1;
+  const PRUint32 WRAP_REPEAT = 3;
+  const PRUint32 WRAP_MIRRORED_REPEAT = 4;
+
+  void setWrap (in PRUint32 wrapType, in PRUint32 wrapMode);
+};
+
+[scriptable, uuid(0f3d8dae-7d43-490b-93e9-5ff908ac6ff5)]
+interface nsICanvasRenderingContextGL : nsISupports
+{
+  readonly attribute nsIDOMHTMLCanvasElement canvas;
+
+  /**
+   ** GL constants
+   **/
+
+  /* types */
+  const PRUint32 BYTE                           = 0x1400;
+  const PRUint32 UNSIGNED_BYTE                  = 0x1401;
+  const PRUint32 SHORT                          = 0x1402;
+  const PRUint32 UNSIGNED_SHORT                 = 0x1403;
+  const PRUint32 INT                            = 0x1404;
+  const PRUint32 UNSIGNED_INT                   = 0x1405;
+  const PRUint32 FLOAT                          = 0x1406;
+  const PRUint32 TWO_BYTES                      = 0x1407;
+  const PRUint32 THREE_BYTES                    = 0x1408;
+  const PRUint32 FOUR_BYTES                     = 0x1409;
+  const PRUint32 DOUBLE                         = 0x140A;
+
+  /* ClearBufferMask */
+  const PRUint32 DEPTH_BUFFER_BIT               = 0x00000100;
+  const PRUint32 STENCIL_BUFFER_BIT             = 0x00000400;
+  const PRUint32 COLOR_BUFFER_BIT               = 0x00004000;
+
+  /* BeginMode */
+  const PRUint32 POINTS                         = 0x0000;
+  const PRUint32 LINES                          = 0x0001;
+  const PRUint32 LINE_LOOP                      = 0x0002;
+  const PRUint32 LINE_STRIP                     = 0x0003;
+  const PRUint32 TRIANGLES                      = 0x0004;
+  const PRUint32 TRIANGLE_STRIP                 = 0x0005;
+  const PRUint32 TRIANGLE_FAN                   = 0x0006;
+
+  /* AlphaFunction */
+  const PRUint32 NEVER                          = 0x0200;
+  const PRUint32 LESS                           = 0x0201;
+  const PRUint32 EQUAL                          = 0x0202;
+  const PRUint32 LEQUAL                         = 0x0203;
+  const PRUint32 GREATER                        = 0x0204;
+  const PRUint32 NOTEQUAL                       = 0x0205;
+  const PRUint32 GEQUAL                         = 0x0206;
+  const PRUint32 ALWAYS                         = 0x0207;
+
+  /* BlendingFactorDest */
+  const PRUint32 ZERO                           = 0;
+  const PRUint32 ONE                            = 1;
+  const PRUint32 SRC_COLOR                      = 0x0300;
+  const PRUint32 ONE_MINUS_SRC_COLOR            = 0x0301;
+  const PRUint32 SRC_ALPHA                      = 0x0302;
+  const PRUint32 ONE_MINUS_SRC_ALPHA            = 0x0303;
+  const PRUint32 DST_ALPHA                      = 0x0304;
+  const PRUint32 ONE_MINUS_DST_ALPHA            = 0x0305;
+
+  /* BlendingFactorSrc */
+  /*    ZERO */
+  /*    ONE */
+  const PRUint32 DST_COLOR                      = 0x0306;
+  const PRUint32 ONE_MINUS_DST_COLOR            = 0x0307;
+  const PRUint32 SRC_ALPHA_SATURATE             = 0x0308;
+  /*    SRC_ALPHA */
+  /*    ONE_MINUS_SRC_ALPHA */
+  /*    DST_ALPHA */
+  /*    ONE_MINUS_DST_ALPHA */
+
+  /* BlendEquationSeperate */
+  const PRUint32 FUNC_ADD = 0x8006;
+  const PRUint32 BLEND_EQUATION = 0x8009;
+  const PRUint32 BLEND_EQUATION_RGB = 0x8009;
+  const PRUint32 BLEND_EQUATION_ALPHA = 0x883D;
+
+  /* BlendSubtract */
+  const PRUint32 FUNC_SUBTRACT = 0x800A;
+  const PRUint32 FUNC_REVERSE_SUBTRACT = 0x800B;
+
+  /* Separate Blend Functions i.e. GL_OES_blend_func_seperate */
+  const PRUint32 BLEND_DST_RGB = 0x80C8;
+  const PRUint32 BLEND_SRC_RGB = 0x80C9;
+  const PRUint32 BLEND_DST_ALPHA = 0x80CA;
+  const PRUint32 BLEND_SRC_ALPHA = 0x80CB;
+
+  const PRUint32 CONSTANT_COLOR = 0x8001;
+  const PRUint32 ONE_MINUS_CONSTANT_COLOR = 0x8002;
+  const PRUint32 CONSTANT_ALPHA = 0x8003;
+  const PRUint32 ONE_MINUS_CONSTANT_ALPHA = 0x8004;
+  const PRUint32 BLEND_COLOR = 0x8005;
+
+  /* Buffer Objects */
+  const PRUint32 BUFFER_SIZE = 0x8764;
+  const PRUint32 BUFFER_USAGE = 0x8765;
+  const PRUint32 BUFFER_ACCESS = 0x88BB;
+
+  const PRUint32 CURRENT_VERTEX_ATTRIB = 0x8626;
+
+  /* ClipPlaneName */
+  const PRUint32 CLIP_PLANE0                    = 0x3000;
+  const PRUint32 CLIP_PLANE1                    = 0x3001;
+  const PRUint32 CLIP_PLANE2                    = 0x3002;
+  const PRUint32 CLIP_PLANE3                    = 0x3003;
+  const PRUint32 CLIP_PLANE4                    = 0x3004;
+  const PRUint32 CLIP_PLANE5                    = 0x3005;
+
+  /* ColorMaterialFace */
+  /*    FRONT_AND_BACK */
+
+  /* ColorMaterialParameter */
+  /*    AMBIENT_AND_DIFFUSE */
+
+  /* CullFaceMode */
+  const PRUint32 FRONT                          = 0x0404;
+  const PRUint32 BACK                           = 0x0405;
+  const PRUint32 FRONT_AND_BACK                 = 0x0408;
+
+  /* DepthFunction */
+  /*    NEVER */
+  /*    LESS */
+  /*    EQUAL */
+  /*    LEQUAL */
+  /*    GREATER */
+  /*    NOTEQUAL */
+  /*    GEQUAL */
+  /*    ALWAYS */
+
+  /* EnableCap */
+  const PRUint32 FOG                            = 0x0B60;
+  const PRUint32 LIGHTING                       = 0x0B50;
+  const PRUint32 TEXTURE_2D                     = 0x0DE1;
+  const PRUint32 CULL_FACE                      = 0x0B44;
+  const PRUint32 ALPHA_TEST                     = 0x0BC0;
+  const PRUint32 BLEND                          = 0x0BE2;
+  const PRUint32 COLOR_LOGIC_OP                 = 0x0BF2;
+  const PRUint32 DITHER                         = 0x0BD0;
+  const PRUint32 STENCIL_TEST                   = 0x0B90;
+  const PRUint32 DEPTH_TEST                     = 0x0B71;
+  /*             LIGHT0 */
+  /*             LIGHT1 */
+  /*             LIGHT2 */
+  /*             LIGHT3 */
+  /*             LIGHT4 */
+  /*             LIGHT5 */
+  /*             LIGHT6 */
+  /*             LIGHT7 */
+  const PRUint32 POINT_SMOOTH                   = 0x0B10;
+  const PRUint32 LINE_SMOOTH                    = 0x0B20;
+  const PRUint32 SCISSOR_TEST                   = 0x0C11;
+  const PRUint32 COLOR_MATERIAL                 = 0x0B57;
+  const PRUint32 NORMALIZE                      = 0x0BA1;
+  const PRUint32 RESCALE_NORMAL                 = 0x803A;
+  const PRUint32 POLYGON_OFFSET_FILL            = 0x8037;
+  const PRUint32 VERTEX_ARRAY                   = 0x8074;
+  const PRUint32 NORMAL_ARRAY                   = 0x8075;
+  const PRUint32 COLOR_ARRAY                    = 0x8076;
+  const PRUint32 TEXTURE_COORD_ARRAY            = 0x8078;
+  const PRUint32 MULTISAMPLE                    = 0x809D;
+  const PRUint32 SAMPLE_ALPHA_TO_COVERAGE       = 0x809E;
+  const PRUint32 SAMPLE_ALPHA_TO_ONE            = 0x809F;
+  const PRUint32 SAMPLE_COVERAGE                = 0x80A0;
+
+  /* ErrorCode */
+  const PRUint32 NO_ERROR                       = 0;
+  const PRUint32 INVALID_ENUM                   = 0x0500;
+  const PRUint32 INVALID_VALUE                  = 0x0501;
+  const PRUint32 INVALID_OPERATION              = 0x0502;
+  const PRUint32 STACK_OVERFLOW                 = 0x0503;
+  const PRUint32 STACK_UNDERFLOW                = 0x0504;
+  const PRUint32 OUT_OF_MEMORY                  = 0x0505;
+
+  /* FogMode */
+  /*             LINEAR */
+  const PRUint32 EXP                            = 0x0800;
+  const PRUint32 EXP2                           = 0x0801;
+
+  /* FogParameter */
+  const PRUint32 FOG_DENSITY                    = 0x0B62;
+  const PRUint32 FOG_START                      = 0x0B63;
+  const PRUint32 FOG_END                        = 0x0B64;
+  const PRUint32 FOG_MODE                       = 0x0B65;
+  const PRUint32 FOG_COLOR                      = 0x0B66;
+
+  /* FrontFaceDirection */
+  const PRUint32 CW                             = 0x0900;
+  const PRUint32 CCW                            = 0x0901;
+
+  /* GetPName */
+  const PRUint32 CURRENT_COLOR                  = 0x0B00;
+  const PRUint32 CURRENT_NORMAL                 = 0x0B02;
+  const PRUint32 CURRENT_TEXTURE_COORDS         = 0x0B03;
+  const PRUint32 POINT_SIZE                     = 0x0B11;
+  const PRUint32 POINT_SIZE_MIN                 = 0x8126;
+  const PRUint32 POINT_SIZE_MAX                 = 0x8127;
+  const PRUint32 POINT_FADE_THRESHOLD_SIZE      = 0x8128;
+  const PRUint32 POINT_DISTANCE_ATTENUATION     = 0x8129;
+  const PRUint32 SMOOTH_POINT_SIZE_RANGE        = 0x0B12;
+  const PRUint32 LINE_WIDTH                     = 0x0B21;
+  const PRUint32 SMOOTH_LINE_WIDTH_RANGE        = 0x0B22;
+  const PRUint32 ALIASED_POINT_SIZE_RANGE       = 0x846D;
+  const PRUint32 ALIASED_LINE_WIDTH_RANGE       = 0x846E;
+  const PRUint32 CULL_FACE_MODE                 = 0x0B45;
+  const PRUint32 FRONT_FACE                     = 0x0B46;
+  const PRUint32 SHADE_MODEL                    = 0x0B54;
+  const PRUint32 DEPTH_RANGE                    = 0x0B70;
+  const PRUint32 DEPTH_WRITEMASK                = 0x0B72;
+  const PRUint32 DEPTH_CLEAR_VALUE              = 0x0B73;
+  const PRUint32 DEPTH_FUNC                     = 0x0B74;
+  const PRUint32 STENCIL_CLEAR_VALUE            = 0x0B91;
+  const PRUint32 STENCIL_FUNC                   = 0x0B92;
+  const PRUint32 STENCIL_VALUE_MASK             = 0x0B93;
+  const PRUint32 STENCIL_FAIL                   = 0x0B94;
+  const PRUint32 STENCIL_PASS_DEPTH_FAIL        = 0x0B95;
+  const PRUint32 STENCIL_PASS_DEPTH_PASS        = 0x0B96;
+  const PRUint32 STENCIL_REF                    = 0x0B97;
+  const PRUint32 STENCIL_WRITEMASK              = 0x0B98;
+  const PRUint32 MATRIX_MODE                    = 0x0BA0;
+  // VIEWPORT -> VIEWPORT_VALUE, because viewport() conflicts
+  const PRUint32 VIEWPORT_VALUE                 = 0x0BA2;
+  const PRUint32 MODELVIEW_STACK_DEPTH          = 0x0BA3;
+  const PRUint32 PROJECTION_STACK_DEPTH         = 0x0BA4;
+  const PRUint32 TEXTURE_STACK_DEPTH            = 0x0BA5;
+  const PRUint32 MODELVIEW_MATRIX               = 0x0BA6;
+  const PRUint32 PROJECTION_MATRIX              = 0x0BA7;
+  const PRUint32 TEXTURE_MATRIX                 = 0x0BA8;
+  const PRUint32 ALPHA_TEST_FUNC                = 0x0BC1;
+  const PRUint32 ALPHA_TEST_REF                 = 0x0BC2;
+  const PRUint32 BLEND_DST                      = 0x0BE0;
+  const PRUint32 BLEND_SRC                      = 0x0BE1;
+  const PRUint32 LOGIC_OP_MODE                  = 0x0BF0;
+  const PRUint32 SCISSOR_BOX                    = 0x0C10;
+  /*             SCISSOR_TEST */
+  const PRUint32 COLOR_CLEAR_VALUE              = 0x0C22;
+  const PRUint32 COLOR_WRITEMASK                = 0x0C23;
+  const PRUint32 UNPACK_ALIGNMENT               = 0x0CF5;
+  const PRUint32 PACK_ALIGNMENT                 = 0x0D05;
+  const PRUint32 MAX_LIGHTS                     = 0x0D31;
+  const PRUint32 MAX_CLIP_PLANES                = 0x0D32;
+  const PRUint32 MAX_TEXTURE_SIZE               = 0x0D33;
+  const PRUint32 MAX_MODELVIEW_STACK_DEPTH      = 0x0D36;
+  const PRUint32 MAX_PROJECTION_STACK_DEPTH     = 0x0D38;
+  const PRUint32 MAX_TEXTURE_STACK_DEPTH        = 0x0D39;
+  const PRUint32 MAX_VIEWPORT_DIMS              = 0x0D3A;
+  const PRUint32 MAX_ELEMENTS_VERTICES          = 0x80E8;
+  const PRUint32 MAX_ELEMENTS_INDICES           = 0x80E9;
+  const PRUint32 MAX_TEXTURE_UNITS              = 0x84E2;
+  const PRUint32 SUBPIXEL_BITS                  = 0x0D50;
+  const PRUint32 RED_BITS                       = 0x0D52;
+  const PRUint32 GREEN_BITS                     = 0x0D53;
+  const PRUint32 BLUE_BITS                      = 0x0D54;
+  const PRUint32 ALPHA_BITS                     = 0x0D55;
+  const PRUint32 DEPTH_BITS                     = 0x0D56;
+  const PRUint32 STENCIL_BITS                   = 0x0D57;
+  const PRUint32 POLYGON_OFFSET_UNITS           = 0x2A00;
+  //             POLYGON_OFFSET_FILL            = 0x8037;
+  const PRUint32 POLYGON_OFFSET_FACTOR          = 0x8038;
+  const PRUint32 TEXTURE_BINDING_2D             = 0x8069;
+  const PRUint32 VERTEX_ARRAY_SIZE              = 0x807A;
+  const PRUint32 VERTEX_ARRAY_TYPE              = 0x807B;
+  const PRUint32 VERTEX_ARRAY_STRIDE            = 0x807C;
+  const PRUint32 NORMAL_ARRAY_TYPE              = 0x807E;
+  const PRUint32 NORMAL_ARRAY_STRIDE            = 0x807F;
+  const PRUint32 COLOR_ARRAY_SIZE               = 0x8081;
+  const PRUint32 COLOR_ARRAY_TYPE               = 0x8082;
+  const PRUint32 COLOR_ARRAY_STRIDE             = 0x8083;
+  const PRUint32 TEXTURE_COORD_ARRAY_SIZE       = 0x8088;
+  const PRUint32 TEXTURE_COORD_ARRAY_TYPE       = 0x8089;
+  const PRUint32 TEXTURE_COORD_ARRAY_STRIDE     = 0x808A;
+  const PRUint32 VERTEX_ARRAY_POINTER           = 0x808E;
+  const PRUint32 NORMAL_ARRAY_POINTER           = 0x808F;
+  const PRUint32 COLOR_ARRAY_POINTER            = 0x8090;
+  const PRUint32 TEXTURE_COORD_ARRAY_POINTER    = 0x8092;
+  const PRUint32 SAMPLE_BUFFERS                 = 0x80A8;
+  const PRUint32 SAMPLES                        = 0x80A9;
+  const PRUint32 SAMPLE_COVERAGE_VALUE          = 0x80AA;
+  const PRUint32 SAMPLE_COVERAGE_INVERT         = 0x80AB;
+
+  /* GetTextureParameter */
+  /*             TEXTURE_MAG_FILTER */
+  /*             TEXTURE_MIN_FILTER */
+  /*             TEXTURE_WRAP_S */
+  /*             TEXTURE_WRAP_T */
+  
+  /* HintMode */
+  const PRUint32 DONT_CARE                      = 0x1100;
+  const PRUint32 FASTEST                        = 0x1101;
+  const PRUint32 NICEST                         = 0x1102;
+
+  /* HintTarget */
+  const PRUint32 PERSPECTIVE_CORRECTION_HINT    = 0x0C50;
+  const PRUint32 POINT_SMOOTH_HINT              = 0x0C51;
+  const PRUint32 LINE_SMOOTH_HINT               = 0x0C52;
+  const PRUint32 POLYGON_SMOOTH_HINT            = 0x0C53;
+  const PRUint32 FOG_HINT                       = 0x0C54;
+  const PRUint32 GENERATE_MIPMAP_HINT           = 0x8192;
+
+  /* LightModelParameter */
+  const PRUint32 LIGHT_MODEL_AMBIENT            = 0x0B53;
+  const PRUint32 LIGHT_MODEL_TWO_SIDE           = 0x0B52;
+  const PRUint32 LIGHT_MODEL_LOCAL_VIEWER       = 0x0B51;
+  const PRUint32 LIGHT_MODEL_COLOR_CONTROL      = 0x81F8;
+
+  /* LightParameter */
+  const PRUint32 AMBIENT                        = 0x1200;
+  const PRUint32 DIFFUSE                        = 0x1201;
+  const PRUint32 SPECULAR                       = 0x1202;
+  const PRUint32 POSITION                       = 0x1203;
+  const PRUint32 SPOT_DIRECTION                 = 0x1204;
+  const PRUint32 SPOT_EXPONENT                  = 0x1205;
+  const PRUint32 SPOT_CUTOFF                    = 0x1206;
+  const PRUint32 CONSTANT_ATTENUATION           = 0x1207;
+  const PRUint32 LINEAR_ATTENUATION             = 0x1208;
+  const PRUint32 QUADRATIC_ATTENUATION          = 0x1209;
+
+  /* LogicOp */
+  /* CLEAR -> CLEAR_OP, because clear() is a method */
+  const PRUint32 CLEAR_OP                       = 0x1500;
+  const PRUint32 AND                            = 0x1501;
+  const PRUint32 AND_REVERSE                    = 0x1502;
+  const PRUint32 COPY                           = 0x1503;
+  const PRUint32 AND_INVERTED                   = 0x1504;
+  const PRUint32 NOOP                           = 0x1505;
+  const PRUint32 XOR                            = 0x1506;
+  const PRUint32 OR                             = 0x1507;
+  const PRUint32 NOR                            = 0x1508;
+  const PRUint32 EQUIV                          = 0x1509;
+  const PRUint32 INVERT                         = 0x150A;
+  const PRUint32 OR_REVERSE                     = 0x150B;
+  const PRUint32 COPY_INVERTED                  = 0x150C;
+  const PRUint32 OR_INVERTED                    = 0x150D;
+  const PRUint32 NAND                           = 0x150E;
+  const PRUint32 SET                            = 0x150F;
+
+  /* MaterialFace */
+  /*             FRONT_AND_BACK */
+
+  /* MaterialParameter */
+  const PRUint32 EMISSION                       = 0x1600;
+  const PRUint32 SHININESS                      = 0x1601;
+  const PRUint32 AMBIENT_AND_DIFFUSE            = 0x1602;
+
+  /* MatrixMode */
+  const PRUint32 MODELVIEW                      = 0x1700;
+  const PRUint32 PROJECTION                     = 0x1701;
+  const PRUint32 TEXTURE                        = 0x1702;
+
+  /* LightName */
+  const PRUint32 LIGHT0                         = 0x4000;
+  const PRUint32 LIGHT1                         = 0x4001;
+  const PRUint32 LIGHT2                         = 0x4002;
+  const PRUint32 LIGHT3                         = 0x4003;
+  const PRUint32 LIGHT4                         = 0x4004;
+  const PRUint32 LIGHT5                         = 0x4005;
+  const PRUint32 LIGHT6                         = 0x4006;
+  const PRUint32 LIGHT7                         = 0x4007;
+
+  /* Shaders */
+  const PRUint32 VERTEX_PROGRAM_POINT_SIZE = 0x8642;
+  //const PRUint32 VERTEX_ATTRIB_ARRAY_NORMALIZED = 0x886A;
+
+  const PRUint32 FRAGMENT_SHADER = 0x8B30;
+  const PRUint32 VERTEX_SHADER = 0x8B31;
+  const PRUint32 MAX_VERTEX_ATTRIBS = 0x8869;
+  const PRUint32 MAX_VERTEX_UNIFORM_COMPONENTS = 0x8B4A;
+  const PRUint32 MAX_VARYING_FLOATS = 0x8B4B;
+  const PRUint32 MAX_COMBINED_TEXTURE_IMAGE_UNITS = 0x8B4D;
+  const PRUint32 MAX_VERTEX_TEXTURE_IMAGE_UNITS = 0x8B4C;
+  const PRUint32 MAX_TEXTURE_IMAGE_UNITS = 0x8872;
+  const PRUint32 MAX_FRAGMENT_UNIFORM_COMPONENTS = 0x8B49;
+  const PRUint32 SHADER_TYPE = 0x8B4F;
+  const PRUint32 FLOAT_VEC2 = 0x8B50;
+  const PRUint32 FLOAT_VEC3 = 0x8B51;
+  const PRUint32 FLOAT_VEC4 = 0x8B52;
+  const PRUint32 INT_VEC2 = 0x8B53;
+  const PRUint32 INT_VEC3 = 0x8B54;
+  const PRUint32 INT_VEC4 = 0x8B55;
+  const PRUint32 BOOL = 0x8B56;
+  const PRUint32 BOOL_VEC2 = 0x8B57;
+  const PRUint32 BOOL_VEC3 = 0x8B58;
+  const PRUint32 BOOL_VEC4 = 0x8B59;
+  const PRUint32 FLOAT_MAT2 = 0x8B5A;
+  const PRUint32 FLOAT_MAT3 = 0x8B5B;
+  const PRUint32 FLOAT_MAT4 = 0x8B5C;
+  const PRUint32 SAMPLER_1D = 0x8B5D;
+  const PRUint32 SAMPLER_2D = 0x8B5E;
+  const PRUint32 SAMPLER_3D = 0x8B5F;
+  const PRUint32 SAMPLER_CUBE = 0x8B60;
+  const PRUint32 SAMPLER_1D_SHADOW = 0x8B61;
+  const PRUint32 SAMPLER_2D_SHADOW = 0x8B62;
+  const PRUint32 DELETE_STATUS = 0x8B80;
+  const PRUint32 LINK_STATUS = 0x8B82;
+  const PRUint32 VALIDATE_STATUS = 0x8B83;
+  const PRUint32 ATTACHED_SHADERS = 0x8B85;
+  const PRUint32 ACTIVE_UNIFORMS = 0x8B86;
+  const PRUint32 ACTIVE_UNIFORM_MAX_LENGTH = 0x8B87;
+  const PRUint32 ACTIVE_ATTRIBUTES = 0x8B89;
+  const PRUint32 ACTIVE_ATTRIBUTE_MAX_LENGTH = 0x8B8A;
+  const PRUint32 SHADING_LANGUAGE_VERSION = 0x8B8C;
+  const PRUint32 CURRENT_PROGRAM = 0x8B8D;
+
+
+  /* ShadingModel */
+  const PRUint32 FLAT                           = 0x1D00;
+  const PRUint32 SMOOTH                         = 0x1D01;
+
+  /* StencilFunction */
+  /*             NEVER */
+  /*             LESS */
+  /*             EQUAL */
+  /*             LEQUAL */
+  /*             GREATER */
+  /*             NOTEQUAL */
+  /*             GEQUAL */
+  /*             ALWAYS */
+
+  /* StencilOp */
+  /*             ZERO */
+  const PRUint32 KEEP                           = 0x1E00;
+  const PRUint32 REPLACE                        = 0x1E01;
+  const PRUint32 INCR                           = 0x1E02;
+  const PRUint32 DECR                           = 0x1E03;
+  /*             INVERT */
+
+  /* StringName */
+  const PRUint32 VENDOR                         = 0x1F00;
+  const PRUint32 RENDERER                       = 0x1F01;
+  const PRUint32 VERSION                        = 0x1F02;
+  const PRUint32 EXTENSIONS                     = 0x1F03;
+
+  /* TextureEnvMode */
+  const PRUint32 MODULATE                       = 0x2100;
+  const PRUint32 DECAL                          = 0x2101;
+  /*             BLEND */
+  const PRUint32 ADD                            = 0x0104;
+  //             REPLACE
+  /*             COMBINE */
+
+  /* TextureEnvParameter */
+  const PRUint32 TEXTURE_ENV_MODE               = 0x2200;
+  const PRUint32 TEXTURE_ENV_COLOR              = 0x2201;
+
+  /* TextureEnvTarget */
+  const PRUint32 TEXTURE_ENV                    = 0x2300;
+
+  /* TextureMagFilter */
+  const PRUint32 NEAREST                        = 0x2600;
+  const PRUint32 LINEAR                         = 0x2601;
+
+  /* TextureMinFilter */
+  /*             NEAREST */
+  /*             LINEAR */
+  const PRUint32 NEAREST_MIPMAP_NEAREST         = 0x2700;
+  const PRUint32 LINEAR_MIPMAP_NEAREST          = 0x2701;
+  const PRUint32 NEAREST_MIPMAP_LINEAR          = 0x2702;
+  const PRUint32 LINEAR_MIPMAP_LINEAR           = 0x2703;
+
+  /* TextureParameterName */
+  const PRUint32 TEXTURE_MAG_FILTER             = 0x2800;
+  const PRUint32 TEXTURE_MIN_FILTER             = 0x2801;
+  const PRUint32 TEXTURE_WRAP_S                 = 0x2802;
+  const PRUint32 TEXTURE_WRAP_T                 = 0x2803;
+  const PRUint32 GENERATE_MIPMAP                = 0x8191;
+
+  /* TextureUnit */
+  const PRUint32 TEXTURE0                       = 0x84C0;
+  const PRUint32 TEXTURE1                       = 0x84C1;
+  const PRUint32 TEXTURE2                       = 0x84C2;
+  const PRUint32 TEXTURE3                       = 0x84C3;
+  const PRUint32 TEXTURE4                       = 0x84C4;
+  const PRUint32 TEXTURE5                       = 0x84C5;
+  const PRUint32 TEXTURE6                       = 0x84C6;
+  const PRUint32 TEXTURE7                       = 0x84C7;
+  const PRUint32 TEXTURE8                       = 0x84C8;
+  const PRUint32 TEXTURE9                       = 0x84C9;
+  const PRUint32 TEXTURE10                      = 0x84CA;
+  const PRUint32 TEXTURE11                      = 0x84CB;
+  const PRUint32 TEXTURE12                      = 0x84CC;
+  const PRUint32 TEXTURE13                      = 0x84CD;
+  const PRUint32 TEXTURE14                      = 0x84CE;
+  const PRUint32 TEXTURE15                      = 0x84CF;
+  const PRUint32 TEXTURE16                      = 0x84D0;
+  const PRUint32 TEXTURE17                      = 0x84D1;
+  const PRUint32 TEXTURE18                      = 0x84D2;
+  const PRUint32 TEXTURE19                      = 0x84D3;
+  const PRUint32 TEXTURE20                      = 0x84D4;
+  const PRUint32 TEXTURE21                      = 0x84D5;
+  const PRUint32 TEXTURE22                      = 0x84D6;
+  const PRUint32 TEXTURE23                      = 0x84D7;
+  const PRUint32 TEXTURE24                      = 0x84D8;
+  const PRUint32 TEXTURE25                      = 0x84D9;
+  const PRUint32 TEXTURE26                      = 0x84DA;
+  const PRUint32 TEXTURE27                      = 0x84DB;
+  const PRUint32 TEXTURE28                      = 0x84DC;
+  const PRUint32 TEXTURE29                      = 0x84DD;
+  const PRUint32 TEXTURE30                      = 0x84DE;
+  const PRUint32 TEXTURE31                      = 0x84DF;
+  const PRUint32 ACTIVE_TEXTURE                 = 0x84E0;
+  const PRUint32 CLIENT_ACTIVE_TEXTURE          = 0x84E1;
+
+  /* TextureWrapMode */
+  const PRUint32 REPEAT                         = 0x2901;
+  const PRUint32 CLAMP_TO_EDGE                  = 0x812F;
+
+  /* Texture combine + dot3 */
+  const PRUint32 SUBTRACT                       = 0x84E7;
+  const PRUint32 COMBINE                        = 0x8570;
+  const PRUint32 COMBINE_RGB                    = 0x8571;
+  const PRUint32 COMBINE_ALPHA                  = 0x8572;
+  const PRUint32 RGB_SCALE                      = 0x8573;
+  const PRUint32 ADD_SIGNED                     = 0x8574;
+  const PRUint32 INTERPOLATE                    = 0x8575;
+  const PRUint32 CONSTANT                       = 0x8576;
+  const PRUint32 PRIMARY_COLOR                  = 0x8577;
+  const PRUint32 PREVIOUS                       = 0x8578;
+  const PRUint32 OPERAND0_RGB                   = 0x8590;
+  const PRUint32 OPERAND1_RGB                   = 0x8591;
+  const PRUint32 OPERAND2_RGB                   = 0x8592;
+  const PRUint32 OPERAND0_ALPHA                 = 0x8598;
+  const PRUint32 OPERAND1_ALPHA                 = 0x8599;
+  const PRUint32 OPERAND2_ALPHA                 = 0x859A;
+
+  const PRUint32 ALPHA_SCALE                    = 0x0D1C;
+
+  const PRUint32 SRC0_RGB                       = 0x8580;
+  const PRUint32 SRC1_RGB                       = 0x8581;
+  const PRUint32 SRC2_RGB                       = 0x8582;
+  const PRUint32 SRC0_ALPHA                     = 0x8588;
+  const PRUint32 SRC1_ALPHA                     = 0x8589;
+  const PRUint32 SRC2_ALPHA                     = 0x858A;
+
+  const PRUint32 DOT3_RGB                       = 0x86AE;
+  const PRUint32 DOT3_RGBA                      = 0x86AF;
+
+  /* Vertex Arrays */
+  const PRUint32 VERTEX_ATTRIB_ARRAY_ENABLED = 0x8622;
+  const PRUint32 VERTEX_ATTRIB_ARRAY_SIZE = 0x8623;
+  const PRUint32 VERTEX_ATTRIB_ARRAY_STRIDE = 0x8624;
+  const PRUint32 VERTEX_ATTRIB_ARRAY_TYPE = 0x8625;
+  const PRUint32 VERTEX_ATTRIB_ARRAY_NORMALIZED = 0x886A;
+  const PRUint32 VERTEX_ATTRIB_ARRAY_POINTER = 0x8645;
+
+  /* Buffers */
+  const PRUint32 STATIC_DRAW                    = 0x88E4;
+  const PRUint32 DYNAMIC_DRAW                   = 0x88E8;
+  const PRUint32 ARRAY_BUFFER                   = 0x8892;
+  const PRUint32 ELEMENT_ARRAY_BUFFER           = 0x8893;
+  const PRUint32 ARRAY_BUFFER_BINDING = 0x8894;
+  const PRUint32 ELEMENT_ARRAY_BUFFER_BINDING = 0x8895;
+
+  /* Extensions */
+  const PRUint32 TEXTURE_RECTANGLE              = 0x84F5;
+  const PRUint32 TEXTURE_BINDING_RECTANGLE      = 0x84F6;
+  const PRUint32 MAX_RECTANGLE_TEXTURE_SIZE     = 0x84F8;
+
+  const PRUint32 TEXTURE_MAX_ANISOTROPY         = 0x84FE;
+  const PRUint32 MAX_TEXTURE_MAX_ANISOTROPY     = 0x84FF;
+
+
+  // Other
+  void swapBuffers ();
+
+};

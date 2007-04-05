@@ -1,0 +1,640 @@
+
+<html>
+<head>
+    <style type="text/css">
+
+.glfuncs {
+      border: 1px solid gray;
+      width: 100%;
+      font-family: Lucida Sans Console, Lucida Console, Bitstream Vera Mono, Courier New, Courier, monospace;
+      font-size: x-small;
+}
+
+.gldifferent {
+      background: #ffeeee;
+}
+
+tr > th {
+      font-family: sans;
+      font-size: small;
+      background: #dddddd;
+}
+
+.glgroup {
+      padding-top: 5px;
+      font-family: sans;
+      font-size: small;
+      background: #ddddff;
+}
+
+    </style>
+</head>
+
+<body>
+
+<h3>API Mapping</h3>
+<table class="glfuncs">
+<tr style="font-family: sans">
+<th width="50%">GL ES 2.0</th>
+<th>GLWeb20Context</th>
+</tr>
+
+<tr><td class="glgroup" colspan="2"><b><i>Core GL ES 2.0</i></b></td></tr>
+
+<tr>
+<td>ActiveTexture (GLenum texture)</td>
+</tr>
+
+<tr>
+<td>AttachShader (GLuint program, GLuint shader)</td>
+</tr>
+
+<tr>
+<td>BindAttribLocation (GLuint program, GLuint index, const char *name)</td>
+</tr>
+
+<tr>
+<td>BindBuffer (GLenum target, GLuint buffer)</td>
+</tr>
+
+<tr>
+<td>BindTexture (GLenum target, GLuint texture)</td>
+</tr>
+
+<tr>
+<td>BlendColor (GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)</td>
+</tr>
+
+<tr>
+<td>BlendEquation (GLenum mode)</td>
+</tr>
+
+<tr>
+<td>BlendEquationSeparate (GLenum modeRGB, GLenum modeAlpha)</td>
+</tr>
+
+<tr>
+<td>BlendFunc (GLenum sfactor, GLenum dfactor)</td>
+</tr>
+
+<tr>
+<td>BlendFuncSeparate (GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha)</td>
+</tr>
+
+<tr class="gldifferent">
+<td>BufferData (GLenum target, GLsizeiptr size, const void *data, GLenum usage)</td>
+<td>bufferData (uint target, Array data, uint elementType, uint usage)</td>
+</tr>
+
+<tr class="gldifferent">
+<td>BufferSubData (GLenum target, GLintptr offset, GLsizeiptr size, const void *data)</td>
+<td>bufferSubData (uint target, uint offset, Array data, uint elementType)</td>
+</tr>
+
+<tr>
+<td>Clear (GLbitfield mask)</td>
+</tr>
+
+<tr>
+<td>ClearColor (GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)</td>
+</tr>
+
+<tr class="gldifferent">
+<td>ClearDepthf (GLclampf depth)</td>
+<td>clearDepth (float depth);</td>
+</tr>
+
+<tr>
+<td>ClearStencil (GLint s)</td>
+</tr>
+
+<tr>
+<td>ColorMask (GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)</td>
+</tr>
+
+<tr class="gldifferent">
+<td>CompressedTexImage2D (GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void *data)</td>
+<td><i>see texImage2DHTML</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>CompressedTexSubImage2D (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void *data)</td>
+<td><i>see texSubImage2DHTML</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>CopyTexImage2D (GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)</td>
+<td><i>TODO</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>CopyTexSubImage2D (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)</td>
+<td><i>TODO</i></td>
+</tr>
+
+<tr>
+<td>uint glCreateProgram (void)</td>
+</tr>
+
+<tr>
+<td>uint glCreateShader (GLenum type)</td>
+</tr>
+
+<tr>
+<td>CullFace (GLenum mode)</td>
+</tr>
+
+<tr class="gldifferent">
+<td>DeleteBuffers (GLsizei n, const GLuint *buffers)</td>
+<td>deleteBuffers (Array buffers)</td>
+</tr>
+
+<tr class="gldifferent">
+<td>DeleteTextures (GLsizei n, const GLuint *textures)</td>
+<td>deleteTextures (Array textures)</td>
+</tr>
+
+<tr>
+<td>DeleteProgram (GLuint program)</td>
+</tr>
+
+<tr>
+<td>DeleteShader (GLuint shader)</td>
+</tr>
+
+<tr>
+<td>DetachShader (GLuint program, GLuint shader)</td>
+</tr>
+
+<tr>
+<td>DepthFunc (GLenum func)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>DepthMask (GLboolean flag)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>DepthRangef (GLclampf zNear, GLclampf zFar)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Disable (GLenum cap)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>DisableVertexAttribArray (GLuint index)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>DrawArrays (GLenum mode, GLint first, GLsizei count)</td>
+<td></td>
+</tr>
+
+<tr class="gldifferent">
+<td>DrawElements (GLenum mode, GLsizei count, GLenum type, const void *indices)</td>
+<td><i>TODO</i></td>
+</tr>
+
+<tr>
+<td>Enable (GLenum cap)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>EnableVertexAttribArray (GLuint index)</td>
+<td></td>
+</tr>
+
+<tr class="gldifferent">
+<td>Finish (void)</td>
+<td><i>NONE</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>Flush (void)</td>
+<td><i>NONE</i></td>
+</tr>
+
+<tr>
+<td>FrontFace (GLenum mode)</td>
+<td></td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetActiveAttrib (GLuint program, GLuint index, GLsizei bufsize, GLsizei *length, GLint *size, GLenum *type, char *name)</td><td>Object getActiveAttrib (uint program, uint index)<br>
+obj = { type: ..., size: ..., name: ... }</td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetActiveUniform (GLuint program, GLuint index, GLsizei bufsize, GLsizei *length, GLint *size, GLenum *type, char *name)</td>
+<td>Object getActiveUniform (uint program, uint index)<br>
+obj = { type: ..., size: ..., name: ... }</td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetAttachedShaders (GLuint program, GLsizei maxcount, GLsizei *count, GLuint *shaders)</td>
+<td>Array getAttachedShaders (uint program)</td>
+</tr>
+
+<tr class="gldifferent">
+<td>int glGetAttribLocation (GLuint program, const char *name)</td>
+<td>int getAttribLocation (uint program, string name)</td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetBooleanv (GLenum pname, GLboolean *params)</td>
+<td><i>see getParameter</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetBufferParameteriv (GLenum target, GLenum pname, GLint *params)</td>
+<td><i>see getBufferParameter</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>GenBuffers (GLsizei n, GLuint *buffers)</td>
+<td>Array genBuffers (uint n)</td>
+</tr>
+
+<tr class="gldifferent">
+<td>GenTextures (GLsizei n, GLuint *textures)</td>
+<td>Array genTextures (uint n)</td>
+</tr>
+
+<tr>
+<td>enum glGetError (void)</td>
+<td></td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetFloatv (GLenum pname, GLfloat *params)</td>
+<td><i>see getParameter</i></td>
+</tr>
+
+<tr class="gldifferent">
+<tr>
+<td>GetIntegerv (GLenum pname, GLint *params)</td>
+<td><i>see getParameter</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetPointerv (GLenum pname, void **params)</td>
+<td><i>see getParameter</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetProgramiv (GLuint program, GLenum pname, GLint *params)</td>
+<td><i>see getProgramParameter</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetProgramInfoLog (GLuint program, GLsizei bufsize, GLsizei *length, char *infolog)</td>
+<td>string getProgramInfoLog (uint program)</td>
+</tr>
+
+<tr class="gldifferent">
+<td>const GLubyte * glGetString (GLenum name)</td>
+<td><i>see getParameter</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetTexParameteriv (GLenum target, GLenum pname, GLint *params)</td>
+<td><i>see getTexParameter</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetTexParameterfv (GLenum target, GLenum pname, GLfloat *params)</td>
+<td><i>see getTexParameter</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetUniformfv (GLuint program, GLint location, GLfloat *params)</td>
+<td><i>TODO</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetUniformiv (GLuint program, GLint location, GLint *params)</td>
+<td><i>TODO</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>int glGetUniformLocation (GLuint program, const char *name)</td>
+<td>int getUniformLocation (uint program, string name)</td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetVertexAttribfv (GLuint index, GLenum pname, GLfloat *params)</td>
+<td><i>see getVertexAttrib</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetVertexAttribiv (GLuint index, GLenum pname, GLint *params)</td>
+<td><i>see getVertexAttrib</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetVertexAttribPointerv (GLuint index, GLenum pname, void **pointer)</td>
+<td><i>see getVertexAttrib</i></td>
+</tr>
+
+<tr>
+<td>Hint (GLenum target, GLenum mode)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>boolean glIsBuffer (GLuint buffer)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>boolean glIsEnabled (GLenum cap)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>boolean glIsProgram (GLuint program)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>boolean glIsShader (GLuint shader)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>boolean glIsTexture (GLuint texture)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>LineWidth (GLfloat width)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>LinkProgram (GLuint program)</td>
+<td></td>
+</tr>
+
+<tr class="gldifferent">
+<td>PixelStorei (GLenum pname, GLint param)</td>
+<td><i>NONE</i></td>
+</tr>
+
+<tr>
+<td>PointSize (GLfloat size)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>PolygonOffset (GLfloat factor, GLfloat units)</td>
+<td></td>
+</tr>
+
+<tr class="gldifferent">
+<td>ReadPixels (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void *pixels)</td>
+<td><i>NONE</i></td>
+</tr>
+
+<tr>
+<td>SampleCoverage (GLclampf value, GLboolean invert)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>Scissor (GLint x, GLint y, GLsizei width, GLsizei height)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>StencilFunc (GLenum func, GLint ref, GLuint mask)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>StencilFuncSeparate (GLenum face, GLenum func, GLint ref, GLuint mask)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>StencilMask (GLuint mask)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>StencilMaskSeparate (GLenum face, GLuint mask)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>StencilOp (GLenum fail, GLenum zfail, GLenum zpass)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>StencilOpSeparate (GLenum face, GLenum fail, GLenum zfail, GLenum zpass)</td>
+<td></td>
+</tr>
+
+<tr class="gldifferent">
+<td>TexImage2D (GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void *pixels)</td>
+<td><i>see texImage2DHTML</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>TexParameteri (GLenum target, GLenum pname, GLint param)</td>
+<td><i>see texParameter</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>TexParameterf (GLenum target, GLenum pname, GLfloat param)</td>
+<td><i>see texParameter</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>TexParameteriv (GLenum target, GLenum pname, const GLint *params)</td>
+<td><i>see texParameter</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>TexParameterfv (GLenum target, GLenum pname, const GLfloat *params)</td>
+<td><i>see texParameter</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>TexSubImage2D (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels)</td>
+<td><i>see texSubImage2DHTML</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>Uniform1i (GLint location, GLint x)<br>
+Uniform2i (GLint location, GLint x, GLint y)<br>
+Uniform3i (GLint location, GLint x, GLint y, GLint z)<br>
+Uniform4i (GLint location, GLint x, GLint y, GLint z, GLint w)<br>
+Uniform1iv (GLint location, GLsizei count, const GLint *v)<br>
+Uniform2iv (GLint location, GLsizei count, const GLint *v)<br>
+Uniform3iv (GLint location, GLsizei count, const GLint *v)<br>
+Uniform4iv (GLint location, GLsizei count, const GLint *v)</td>
+<td><i>see uniformi</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>Uniform1f (GLint location, GLfloat x)<br>
+Uniform2f (GLint location, GLfloat x, GLfloat y)<br>
+Uniform3f (GLint location, GLfloat x, GLfloat y, GLfloat z)<br>
+Uniform4f (GLint location, GLfloat x, GLfloat y, GLfloat z, GLfloat w)<br>
+Uniform1fv (GLint location, GLsizei count, const GLfloat *v)<br>
+Uniform2fv (GLint location, GLsizei count, const GLfloat *v)<br>
+Uniform3fv (GLint location, GLsizei count, const GLfloat *v)<br>
+Uniform4fv (GLint location, GLsizei count, const GLfloat *v)</td>
+<td><i>see uniformf</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>UniformMatrix2fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)<br>
+UniformMatrix3fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)<br>
+UniformMatrix4fv (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)</td>
+<td><i>see uniformMatrix</i></td>
+</tr>
+
+<tr>
+<td>UseProgram (GLuint program)</td>
+<td></td>
+</tr>
+
+<tr>
+<td>ValidateProgram (GLuint program)</td>
+<td></td>
+</tr>
+
+<tr class="gldifferent">
+<td>VertexAttrib1f (GLuint indx, GLfloat x)<br>
+VertexAttrib2f (GLuint indx, GLfloat x, GLfloat y)<br>
+VertexAttrib3f (GLuint indx, GLfloat x, GLfloat y, GLfloat z)<br>
+VertexAttrib4f (GLuint indx, GLfloat x, GLfloat y, GLfloat z, GLfloat w)<br>
+VertexAttrib1fv (GLuint indx, const GLfloat *values)<br>
+VertexAttrib2fv (GLuint indx, const GLfloat *values)<br>
+VertexAttrib3fv (GLuint indx, const GLfloat *values)<br>
+VertexAttrib4fv (GLuint indx, const GLfloat *values)</td>
+<td><i>TODO</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>VertexAttribPointer (GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *ptr)</td>
+<td>vertexAttribPointer (uint index, Object bufferObject)<br>
+vertexAttribPointer (uint index, uint size, uint elementType, Array data)
+</td>
+</tr>
+
+<tr>
+<td>Viewport (GLint x, GLint y, GLsizei width, GLsizei height)</td>
+<td></td>
+</tr>
+
+<tr><td class="glgroup" colspan="2"><b><i>OES_framebuffer_object</i></b></td></tr>
+<tr><td class="gldifferent"><i>TODO</i></td></tr>
+
+<tr><td class="glgroup" colspan="2"><b><i>OES_mapbuffer</i></b></td></tr>
+<tr><td class="gldifferent"><i>NOT SUPPORTED</i></td></tr>
+
+<tr><td class="glgroup" colspan="2"><b><i>OES_texture_3D</i></b></td></tr>
+<tr><td class="gldifferent"><i>TODO</i></td></tr>
+
+<tr><td class="glgroup" colspan="2"><b><i>OES_shader_source</i></b></td></tr>
+<tr><td class="gldifferent"><i>TODO</i></td></tr>
+
+<tr>
+<td>CompileShader (GLuint shader)</td>
+<td></td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetShaderiv (GLuint shader, GLenum pname, GLint *params)</td>
+<td><i>see getShaderParameter</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetShaderInfoLog (GLuint shader, GLsizei bufsize, GLsizei *length, char *infolog)</td>
+<td>string getShaderInfoLog (uint shader)</td>
+</tr>
+
+<tr class="gldifferent">
+<td>GetShaderSource (GLuint shader, GLsizei bufsize, GLsizei *length, char *source)</td>
+<td><i>TODO</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>ReleaseShaderCompilerOES(void)</td>
+<td><i>NONE</i></td>
+</tr>
+
+<tr class="gldifferent">
+<td>ShaderSource(GLuint shader, GLsizei count, const char **string, const GLint *length)</td>
+<td>shaderSource(uint shader, string source)</td>
+</table>
+
+<tr><td class="glgroup" colspan="2"><b><i>OES_shader_binary</i></b></td></tr>
+<tr><td class="gldifferent"><i>NOT SUPPORTED</i></td></tr>
+
+<h3>API Additions</h3>
+
+<table>
+<tr>
+<td>texImage2DHTML (uint target, DOMImageElement image)<br>
+texImage2DHTML (uint target, int level, DOMImageElement image)</td>
+</tr>
+
+<tr>
+<td>texSubImage2DHTML (uint target, DOMImageElement image, int xoff, int yoff, int width, int height)<br>
+texSubImage2DHTML (uint target, int level, DOMImageElement image, int xoff, int yoff, int width, int height)</td>
+</tr>
+
+<tr>
+<td>getParameter (uint pname)</td>
+</tr>
+
+<tr>
+<td>getBufferParameter (uint target, uint pname)</td>
+</tr>
+
+<tr>
+<td>getProgramParameter</td>
+</tr>
+
+<tr>
+<td>getShaderParameter</td>
+</tr>
+
+<tr>
+<td>getTexParameter</td>
+</tr>
+
+<tr>
+<td>getVertexAttrib</td>
+</tr>
+
+<tr>
+<td>texParameter</td>
+</tr>
+
+<tr>
+<td>uniformf</td>
+</tr>
+
+<tr>
+<td>uniformi</td>
+</tr>
+
+<tr>
+<td>uniformMatrix</td>
+</tr>
+</table>
+
+</body>
