@@ -2731,9 +2731,12 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   nscoord startingY = aState.mY;
   nsCollapsingMargin incomingMargin = aState.mPrevBottomMargin;
   nscoord clearance;
+  // Save the original position of the frame so that we can reposition
+  // its view as needed.
+  nsPoint originalPosition = frame->GetPosition();
   while (PR_TRUE) {
     // Save the frame's current position. We might need it later.
-    nscoord originalY = frame->GetRect().y;
+    nscoord passOriginalY = frame->GetRect().y;
     
     clearance = 0;
     nscoord topMargin = 0;
@@ -2879,7 +2882,8 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     // If this was a second-pass reflow and the block's vertical position
     // changed, invalidates from the first pass might have happened in the
     // wrong places.  Invalidate the entire overflow rect at the new position.
-    if (!mayNeedRetry && clearanceFrame && frame->GetRect().y != originalY) {
+    if (!mayNeedRetry && clearanceFrame &&
+        frame->GetRect().y != passOriginalY) {
       Invalidate(frame->GetOverflowRect() + frame->GetPosition());
     }
     
@@ -3035,6 +3039,14 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       }
     }
     break; // out of the reflow retry loop
+  }
+
+  // Now that we've got its final position all figured out, position any child
+  // views it may have.  Note that the case when frame has a view got handled
+  // by FinishReflowChild, but that function didn't have the coordinates needed
+  // to correctly decide whether to reposition child views.
+  if (originalPosition != frame->GetPosition() && !frame->HasView()) {
+    nsContainerFrame::PositionChildViews(frame);
   }
   
 #ifdef DEBUG
