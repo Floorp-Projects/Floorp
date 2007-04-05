@@ -47,7 +47,7 @@
 
 class gfxImageSurface;
 class gfxFontGroup;
-class gfxFontStyle;
+struct gfxFontStyle;
 
 class THEBES_API gfxPlatform {
 public:
