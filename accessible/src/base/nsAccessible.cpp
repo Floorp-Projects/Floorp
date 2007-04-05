@@ -2720,6 +2720,12 @@ NS_IMETHODIMP nsAccessible::ExtendSelection()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsAccessible::GetIsEditable(PRBool *aIsEditable)
+{
+  *aIsEditable = PR_FALSE;
+  return NS_OK;
+}
+
 /* [noscript] void getNativeInterface(out voidPtr aOutAccessible); */
 NS_IMETHODIMP nsAccessible::GetNativeInterface(void **aOutAccessible)
 {
