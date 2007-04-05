@@ -14,6 +14,9 @@ Table of Contents
 * sync-configure
   Current script to generate configure from configure.in and check in.
 
+* mozilla-src-tarball
+  Used to create nightly tarball.
+
 * gnome-tip-nightly
    A tcsh shell script to pull and build gnome packages from
    the gnome anonymous cvs server. This is useful for keeping
