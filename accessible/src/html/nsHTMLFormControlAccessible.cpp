@@ -358,8 +358,7 @@ nsHyperTextAccessible(aNode, aShell)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTextFieldAccessible, nsHyperTextAccessible,
-                             nsIAccessibleText)
+NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLTextFieldAccessible, nsAccessible, nsIAccessibleText, nsIAccessibleEditableText)
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::Init()
 {
@@ -434,46 +433,44 @@ nsHTMLTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     *aState |= nsIAccessibleStates::STATE_READONLY;
   }
 
-  if (!aExtraState || !(*aExtraState & nsIAccessibleStates::EXT_STATE_EDITABLE))
+  if (!aExtraState)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMHTMLInputElement> htmlInput(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIDOMHTMLInputElement> htmlInput(do_QueryInterface(mDOMNode, &rv));
   // Is it an <input> or a <textarea> ?
   *aExtraState |= htmlInput ? nsIAccessibleStates::EXT_STATE_SINGLE_LINE :
                               nsIAccessibleStates::EXT_STATE_MULTI_LINE;
 
-  nsCOMPtr<nsIContent> bindingContent = content->GetBindingParent();
-  if (bindingContent &&
-      bindingContent->NodeInfo()->Equals(nsAccessibilityAtoms::textbox,
-                                         kNameSpaceID_XUL) &&
-      bindingContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
-                                  nsAccessibilityAtoms::autocomplete,
-                                  eIgnoreCase)) {
-    // If parent is XUL textbox and value of @type attribute is "autocomplete",
-    // then this accessible supports autocompletion.
-    *aExtraState |= nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION;
-  } else if (gIsFormFillEnabled && htmlInput &&
-             !(*aState & nsIAccessibleStates::STATE_PROTECTED)) {
-    // Check to see if autocompletion is allowed on this input. We don't expose
-    // it for password fields even though the entire password can be remembered
-    // for a page if the user asks it to be. However, the kind of autocomplete
-    // we're talking here is based on what the user types, where a popup of
-    // possible choices comes up.
-    nsAutoString autocomplete;
-    content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::autocomplete,
-                     autocomplete);
-
-    if (!autocomplete.LowerCaseEqualsLiteral("off")) {
-      nsCOMPtr<nsIDOMHTMLFormElement> form;
-      htmlInput->GetForm(getter_AddRefs(form));
-      nsCOMPtr<nsIContent> formContent(do_QueryInterface(form));
-      if (formContent) {
-        formContent->GetAttr(kNameSpaceID_None,
-                     nsAccessibilityAtoms::autocomplete, autocomplete);
-      }
-
-      if (!formContent || !autocomplete.LowerCaseEqualsLiteral("off"))
+  const PRUint32 kNonEditableStates = nsIAccessibleStates::STATE_READONLY |
+                                      nsIAccessibleStates::STATE_UNAVAILABLE;
+  if (0 == (*aState & kNonEditableStates)) {
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_EDITABLE;
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+    if (content && (content = content->GetBindingParent()) != nsnull &&
+        content->NodeInfo()->Equals(nsAccessibilityAtoms::textbox, kNameSpaceID_XUL)) {
+      // If parent is XUL textbox, then it supports autocompletion if type="autocomplete"
+      if (content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                               NS_LITERAL_STRING("autocomplete"), eIgnoreCase)) {
         *aExtraState |= nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION;
+      }
+    } else if (gIsFormFillEnabled && htmlInput &&
+               !(*aState & nsIAccessibleStates::STATE_PROTECTED)) {
+      // Check to see if autocompletion is allowed on this input
+      // We don't expose it for password fields even though the entire password can
+      // be remembered for a page if the user asks it to be.
+      // However, the kind of autocomplete we're talking here is based on what
+      // the user types, where a popup of possible choices comes up.
+      nsAutoString autocomplete;
+      htmlInput->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+      if (!autocomplete.LowerCaseEqualsLiteral("off")) {
+        nsCOMPtr<nsIDOMHTMLFormElement> form;
+        htmlInput->GetForm(getter_AddRefs(form));
+        if (form)
+          form->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+        if (!form || !autocomplete.LowerCaseEqualsLiteral("off")) {
+          *aExtraState |= nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION;
+        }
+      }
     }
   }
 
