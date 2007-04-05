@@ -1,0 +1,90 @@
+#!/bin/sh
+
+DEBUG=0
+SSH=ssh
+SCP=scp
+BUILD=/builds/seamonkey
+CCACHE_DIR=/builds/.cltbldccache
+PACKAGE=/builds/seamonkey/package
+if [ ! -d $PACKAGE ] ; then
+	mkdir -p $PACKAGE
+else
+    rm -f $PACKAGE/mozilla-source*
+fi
+
+PATH=/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:/tools/ns/bin:/usr/local/gnome/bin
+
+CVS_CO_OPTION=""
+MILESTONE_SUFFIX=""
+DELIVERYDIR="/home/ftp/pub/mozilla/nightly/`date +%Y-%m-%d-%H`-trunk"
+
+while getopts r:m:d o; do
+    case "$o" in
+        r)  tag="$OPTARG";;
+        m)  milestone="$OPTARG";;
+        d)  DEBUG=1;;
+       [?]) print >&2 "Usage: $0 [-r tag] [-m milestone] [-d] ..."
+            exit 1;;
+    esac
+done
+
+if [ $tag. != "." -a $milestone. != "." ] ; then
+    CVS_CO_OPTION="-r $tag"
+    DELIVERYDIR="/home/cltbld/mozilla${milestone}/src"
+    MILESTONE_SUFFIX="-$milestone"
+else
+    milestone=""
+fi
+
+if [ $DEBUG -ne 0 ] ; then
+    SSH="echo ssh"
+    SCP="echo scp"
+fi
+
+[ -f ${BUILD}/seamonkey-config ] && MOZCONFIG=${BUILD}/seamonkey-config
+CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
+export BUILD PACKAGE PATH DELIVERYDIR MOZCONFIG CVSROOT CCACHE_DIR
+
+date
+    [ ! -e $BUILD ] && mkdir -p $BUILD
+    cd $BUILD
+    rm -rf mozilla
+    cvs -d${CVSROOT} co $CVS_CO_OPTION mozilla/client.mk
+    cd mozilla; gmake -f client.mk checkout
+    gmake -f client.mk checkout BUILD_MODULES=psm
+    cvs up $CVS_CO_OPTION security/makefile.win
+    cvs up $CVS_CO_OPTION -d other-licenses
+    # Per Gervase Markham on 1/19, do not include other-licenses/branding/.
+    rm -rf other-licenses/branding/
+    cvs up $CVS_CO_OPTION -d calendar
+    cd ..
+    rm -f mozilla-source*
+    tar -cf mozilla-source${MILESTONE_SUFFIX}.tar mozilla
+    gzip -9 -c mozilla-source${MILESTONE_SUFFIX}.tar > mozilla-source${MILESTONE_SUFFIX}.tar.gz
+    bzip2 mozilla-source${MILESTONE_SUFFIX}.tar
+    mv mozilla-source${MILESTONE_SUFFIX}.tar* $PACKAGE/
+    cd mozilla/
+###  timebomb stuff. obsolete?
+#    cd config/
+#    perl5 set-timebomb.pl
+#    cd ..
+    gmake -f client.mk build
+    cd dist/
+    if [ -f bin/seamonkey-bin ] ; then
+        cd $PACKAGE
+        $SSH stage.mozilla.org mkdir -p ${DELIVERYDIR}
+        $SCP mozilla-source${MILESTONE_SUFFIX}.tar* \
+            stage.mozilla.org:${DELIVERYDIR}
+        $SSH stage.mozilla.org chmod -R 775 \
+            ${DELIVERYDIR}
+
+        if [ $milestone. = . ] ; then
+            $SSH stage.mozilla.org mkdir -p /home/ftp/pub/mozilla/nightly/latest-trunk
+            $SCP mozilla-source${MILESTONE_SUFFIX}.tar* \
+                stage.mozilla.org:/home/ftp/pub/mozilla/nightly/latest-trunk
+            $SSH stage.mozilla.org chmod -R 775 \
+                /home/ftp/pub/mozilla/nightly/latest-trunk
+        fi
+    fi
+date
+
