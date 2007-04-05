@@ -24,3 +24,4 @@ max-font-size.patch: Clamp freetype font size to 1000 to avoid overflow issues
 
 fbcompose-bandaid.patch: Disable "optimized" code in non-MMX case due to bugs
 
+quartz-glyph-rounding.patch: Round glyph positions, not advances, to float

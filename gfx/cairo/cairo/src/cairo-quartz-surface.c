@@ -1314,6 +1314,24 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 	cg_advances = (CGSize*) malloc(sizeof(CGSize) * num_glyphs);
     }
 
+#ifndef MOZILLA_CAIRO_NOT_DEFINED
+    float xprev = glyphs[0].x;
+    float yprev = glyphs[0].y;
+
+    cg_glyphs[0] = glyphs[0].index;
+    cg_advances[0].width = 0;
+    cg_advances[0].height = 0;
+
+    for (i = 1; i < num_glyphs; i++) {
+	cg_glyphs[i] = glyphs[i].index;
+        float xf = glyphs[i].x;
+        float yf = glyphs[i].y;
+	cg_advances[i-1].width = xf - xprev;
+	cg_advances[i-1].height = yf - yprev;
+	xprev = xf;
+	yprev = yf;
+    }
+#else
     double xprev = glyphs[0].x;
     double yprev = glyphs[0].y;
 
@@ -1322,12 +1340,13 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     cg_advances[0].height = 0;
 
     for (i = 1; i < num_glyphs; i++) {
-	cg_glyphs[i] = glyphs[i].index;
-	cg_advances[i-1].width = glyphs[i].x - xprev;
-	cg_advances[i-1].height = glyphs[i].y - yprev;
-	xprev = glyphs[i].x;
-	yprev = glyphs[i].y;
+        cg_glyphs[i] = glyphs[i].index;
+        cg_advances[i-1].width = glyphs[i].x - xprev;
+        cg_advances[i-1].height = glyphs[i].y - yprev;
+        xprev = glyphs[i].x;
+        yprev = glyphs[i].y;
     }
+#endif /* MOZCAIRO */
 
 #if 0
     for (i = 0; i < num_glyphs; i++) {
