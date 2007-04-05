@@ -2838,7 +2838,7 @@ js_DeflateString(JSContext *cx, const jschar *chars, size_t length)
     size_t size;
     char *bytes;
 
-    size = js_GetDeflatedStringLength(chars, length);
+    size = js_GetDeflatedStringLength(cx, chars, length);
     if (size == (size_t)-1)
         return NULL;
     bytes = (char *) (cx ? JS_malloc(cx, size+1) : malloc(size+1));
@@ -2978,7 +2978,7 @@ js_InflateStringToBuffer(JSContext *cx, const char *src, size_t srclen,
                 if ((src[j] & 0xC0) != 0x80)
                     goto badCharacter;
             }
-            v = Utf8ToOneUcs4Char(src, n);
+            v = Utf8ToOneUcs4Char((uint8 *)src, n);
             if (v >= 0x10000) {
                 v -= 0x10000;
                 if (v > 0xFFFFF || dstlen < 2) {
