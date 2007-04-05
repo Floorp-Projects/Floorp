@@ -507,10 +507,6 @@ function getTargetFile(aFpP, aSkipPrompt)
       }
     }
   
-    fp.defaultExtension = aFpP.fileInfo.fileExt;
-    fp.defaultString = getNormalizedLeafName(aFpP.fileInfo.fileName,
-                                             aFpP.fileInfo.fileExt);
-  
     if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
       return false;
     
