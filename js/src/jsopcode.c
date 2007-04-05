@@ -3150,7 +3150,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 op = ss->opcodes[ss->top-1];
                 lval = PopStr(ss,
                               (saveop == JSOP_NEW &&
-                               (op == JSOP_CALL ||
+                               (op == JSOP_CALL || op == JSOP_EVAL ||
                                 (js_CodeSpec[op].format & JOF_CALLOP)))
                               ? JSOP_NAME
                               : saveop);
