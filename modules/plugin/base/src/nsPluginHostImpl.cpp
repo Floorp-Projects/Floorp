@@ -5733,11 +5733,11 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
   //   in to create an absolute url in case aURL is relative
   nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIPluginInstancePeer> peer;
+  nsCOMPtr<nsIPluginInstanceOwner> owner;
   rv = aInstance->GetPeer(getter_AddRefs(peer));
   if (NS_SUCCEEDED(rv) && peer)
   {
     nsCOMPtr<nsPIPluginInstancePeer> privpeer(do_QueryInterface(peer));
-    nsCOMPtr<nsIPluginInstanceOwner> owner;
     rv = privpeer->GetOwner(getter_AddRefs(owner));
     if (owner)
     {
@@ -5757,6 +5757,25 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
 
   if (NS_SUCCEEDED(rv))
   {
+    nsCOMPtr<nsIPluginTagInfo2> pti2 = do_QueryInterface(owner);
+    nsCOMPtr<nsIDOMElement> element;
+    if (pti2)
+      pti2->GetDOMElement(getter_AddRefs(element));
+
+    PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OTHER,
+                                   url,
+                                   (doc ? doc->GetDocumentURI() : nsnull),
+                                   element,
+                                   EmptyCString(), //mime guess
+                                   nsnull,         //extra
+                                   &shouldLoad);
+    if (NS_FAILED(rv)) return rv;
+    if (NS_CP_REJECTED(shouldLoad)) {
+      // Disallowed by content policy
+      return NS_ERROR_CONTENT_BLOCKED;
+    }
+
     nsPluginStreamListenerPeer *listenerPeer = new nsPluginStreamListenerPeer;
     if (listenerPeer == NULL)
       return NS_ERROR_OUT_OF_MEMORY;
