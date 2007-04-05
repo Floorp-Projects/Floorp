@@ -1741,6 +1741,9 @@ ifndef NO_DIST_INSTALL
 endif
 
 install:: $(CHROME_DEPS)
+ifneq (,$(filter flat symlink,$(MOZ_CHROME_FILE_FORMAT)))
+	$(error Flat chrome is for debugging only, and should not be used with the install target.)
+endif
 ifndef NO_INSTALL
 	@$(EXIT_ON_ERROR) \
 	if test -f $(JAR_MANIFEST); then \
