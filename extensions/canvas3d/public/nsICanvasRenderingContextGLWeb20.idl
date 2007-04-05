@@ -1,0 +1,184 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is canvas 3D.
+ *
+ * The Initial Developer of the Original Code is
+ *   Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Vladimir Vukicevic <vladimir@pobox.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsICanvasRenderingContextGL.idl"
+
+interface nsIDOMHTMLElement;
+
+[scriptable, uuid(209a9c93-495e-4085-a3e4-29354b404cc4)]
+interface nsICanvasRenderingContextGLWeb20 : nsICanvasRenderingContextGL
+{
+  void activeTexture (in PRUint32 texture);
+
+  void attachShader (in PRUint32 program, in PRUint32 shader);
+  void bindAttribLocation (in PRUint32 program, in PRUint32 index, in string name);
+
+  void bindBuffer (in PRUint32 target, in PRUint32 buffer);
+  void bindTexture (in PRUint32 target, in PRUint32 texid);
+
+  void blendColor (in float red, in float green, in float blue, in float alpha);
+  void blendEquation (in PRUint32 mode);
+  void blendEquationSeparate (in PRUint32 modeRGB, in PRUint32 modeAlpha);
+  void blendFunc (in PRUint32 sfactor, in PRUint32 dfactor);
+  void blendFuncSeparate (in PRUint32 srcRGB, in PRUint32 dstRGB, in PRUint32 srcAlpha, in PRUint32 dstAlpha);
+
+  /* array, type, usage */
+  void bufferData ();
+  /* offset, array, type */
+  void bufferSubData ();
+
+  void clear (in PRUint32 mask);
+  void clearColor (in float red, in float green, in float blue, in float alpha);
+  void clearDepth (in float depth);
+  void clearStencil (in PRInt32 s);
+  void colorMask (in boolean red, in boolean green, in boolean blue, in boolean alpha);
+  // NO compressedTexImage2D
+  // NO compressedTexSubImage2D
+
+  // YES copyTexImage2D
+
+  PRUint32 createProgram ();
+  PRUint32 createShader (in PRUint32 type);
+  void cullFace (in PRUint32 face);
+
+  /* [array of buffers] */
+  void deleteBuffers ();
+  void deleteTextures ();
+  void deleteProgram (in PRUint32 program);
+  void deleteShader (in PRUint32 shader);
+  void detachShader (in PRUint32 program, in PRUint32 shader);
+  void depthFunc (in PRUint32 func);
+  void depthMask (in boolean flag);
+  void depthRange (in float zNear, in float zFar);
+  void disable (in PRUint32 mode);
+  void disableVertexAttribArray (in PRUint32 index);
+  void drawArrays (in PRUint32 mode, in PRUint32 first, in PRUint32 count);
+  void drawElements ();
+  void enable (in PRUint32 mode);
+  void enableVertexAttribArray (in PRUint32 index);
+  // NO Finish
+  // NO Flush
+  void frontFace (in PRUint32 face);
+
+  // getActiveAttrib returns an object: { name: "..", size: .., type: .. }
+  void getActiveAttrib (in PRUint32 program, in PRUint32 index);
+
+  // getActiveUniform returns an object: { name: "..", size: .., type: .. }
+  void getActiveUniform (in PRUint32 program, in PRUint32 index);
+
+  // returns an array of shader IDs
+  void getAttachedShaders (in PRUint32 program);
+
+  PRInt32 getAttribLocation (in PRUint32 program, in string name);
+
+  // getBooleanv, getIntegerv, getFloatv, getDoublev, getString
+  // are all rolled into a single function that uses scriptable
+  // magic to return the right type of jsobj.  Colors are always
+  // returned as normalized floats (0.0 .. 1.0).
+
+  void getParameter (in PRUint32 pname);
+  void getBufferParameter (in PRUint32 target, in PRUint32 pname);
+
+  void genBuffers (in PRUint32 n);
+  void genTextures (in PRUint32 n);
+  PRUint32 getError ();
+
+  void getProgramParameter (in PRUint32 program, in PRUint32 pname);
+
+  string getProgramInfoLog (in PRUint32 program);
+
+  void getTexParameter(in PRUint32 target, in PRUint32 pname);
+
+  void getUniform (in PRUint32 program, in PRUint32 location);
+  PRInt32 getUniformLocation (in PRUint32 program, in string name);
+
+  void getVertexAttrib (in PRUint32 index, in PRUint32 pname);
+
+  // NO void getVertexAttribPointerv 
+
+  void hint (in PRUint32 target, in PRUint32 mode);
+
+  boolean isBuffer (in PRUint32 buffer);
+  boolean isEnabled (in PRUint32 cap);
+  boolean isProgram (in PRUint32 program);
+  boolean isShader (in PRUint32 shader);
+  boolean isTexture (in PRUint32 texture);
+
+  void lineWidth (in float width);
+  void linkProgram (in PRUint32 program);
+
+  // nO pixelStore
+
+  void polygonOffset (in float factor, in float units);
+
+  // NO readPixels
+
+  void sampleCoverage (in float value, in boolean invert);
+  void scissor (in PRInt32 x, in PRInt32 y, in PRInt32 width, in PRInt32 height);
+  void stencilFunc (in PRUint32 func, in PRInt32 ref, in PRUint32 mask);
+  void stencilFuncSeparate (in PRUint32 face, in PRUint32 func, in PRInt32 ref, in PRUint32 mask);
+  void stencilMask (in PRUint32 mask);
+  void stencilMaskSeparate (in PRUint32 face, in PRUint32 mask);
+  void stencilOp (in PRUint32 fail, in PRUint32 zfail, in PRUint32 zpass);
+  void stencilOpSeparate (in PRUint32 face, in PRUint32 fail, in PRUint32 zfail, in PRUint32 zpass);
+
+  void texImage2DHTML (in PRUint32 target, in nsIDOMHTMLElement imageOrCanvas);
+
+  void texParameter();
+
+  // YES void texSubImage2DHTML (...);
+
+  // need better names for this
+  void uniformi();
+  void uniformf();
+  void uniformMatrix();
+
+  void useProgram (in PRUint32 program);
+  void validateProgram (in PRUint32 program);
+
+  void vertexAttrib ();
+  void vertexAttribPointer ();
+
+  void viewport (in PRInt32 x, in PRInt32 y, in PRInt32 width, in PRInt32 height);
+
+  void compileShader (in PRUint32 shader);
+  void getShaderParameter (in PRUint32 shader, in PRUint32 pname);
+  string getShaderInfoLog (in PRUint32 shader);
+  string getShaderSource (in PRUint32 shader);
+  void shaderSource(in PRUint32 shader, in string source);
+};
