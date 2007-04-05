@@ -111,7 +111,7 @@ function historyAddBookmarks()
     return;
   
 #ifdef MOZ_PLACES_BOOKMARKS
-  PlacesUtils.showAddBookmarkUI(PlacesUtils._uri(node.uri), node.title);
+  PlacesUtils.showMinimalAddBookmarkUI(PlacesUtils._uri(node.uri), node.title);
 #else
   BookmarksUtils.addBookmark(node.uri, node.title, undefined);
 #endif
