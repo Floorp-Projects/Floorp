@@ -169,6 +169,12 @@ NS_IMETHODIMP nsDocAccessibleWrap::Shutdown()
 NS_IMETHODIMP
 nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData)
 {
+  NS_ENSURE_TRUE(aEvent > 0 && aEvent < nsIAccessibleEvent::EVENT_LAST_ENTRY,
+                 NS_ERROR_FAILURE);
+
+  NS_ASSERTION(gWinEventMap[nsIAccessibleEvent::EVENT_LAST_ENTRY] == kEVENT_LAST_ENTRY,
+               "MSAA event map skewed");
+
   PRUint32 winEvent = gWinEventMap[aEvent];
   if (!winEvent)
     return NS_OK;
