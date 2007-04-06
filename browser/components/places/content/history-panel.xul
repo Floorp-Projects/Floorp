@@ -82,6 +82,7 @@
               label="&bookmarkLink.label;"
               accesskey="&bookmarkLink.accesskey;"
               selection="link"
+              selectiontype="single"
               oncommand="historyAddBookmarks();"/>
   </popup>
 
