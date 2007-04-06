@@ -551,10 +551,6 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
   context.Rectangle(gfxRect(0, 0, destRect.width, destRect.height));
   context.Fill();
 
-  PRInt32 upp = aPresContext->AppUnitsPerDevPixel();
-  srcRect.ScaleRoundOut(upp);
-  destRect.ScaleRoundOut(upp);
-
   gfxRect inRect = gfxRect(srcRect.x, srcRect.y, srcRect.width, srcRect.height);
   gfxRect outRect = gfxRect(destRect.x, destRect.y, destRect.width, destRect.height);
   return img->Draw(*rc, inRect, outRect);
