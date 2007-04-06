@@ -193,8 +193,9 @@ bin\components\spellchecker.xpt
 ; LDAP components need to be in the browser for AutoConfig
 bin\components\mozldap.dll
 bin\components\mozldap.xpt
-bin\nsldap32v50.dll
-bin\nsldappr32v50.dll
+bin\nsldap32v60.dll
+bin\nsldappr32v60.dll
+bin\nsldif32v60.dll
 
 ;PSM related files
 bin\components\pippki.dll
