@@ -64,19 +64,14 @@
 #include "nsIMenuBar.h"
 
 #include "nsplugindefs.h"
-#import <Quickdraw.h>
-
-class gfxASurface;
-
-#define NSRGB_2_COLOREF(color) \
-            RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
-
-union nsPluginPort;
 
 #undef DARWIN
+#import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 
+class gfxASurface;
 class nsChildView;
+union nsPluginPort;
 
 @interface ChildView : NSView<
 #ifdef ACCESSIBILITY

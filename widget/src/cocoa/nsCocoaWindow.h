@@ -52,7 +52,7 @@ class nsChildView;
 
 @interface WindowDelegate : NSObject
 {
-  nsCocoaWindow* mGeckoWindow; // [WEAK] (it owns us)
+  nsCocoaWindow* mGeckoWindow; // [WEAK] (we are owned by the window)
 }
 - (id)initWithGeckoWindow:(nsCocoaWindow*)geckoWind;
 - (void)windowDidResize:(NSNotification*)aNotification;
