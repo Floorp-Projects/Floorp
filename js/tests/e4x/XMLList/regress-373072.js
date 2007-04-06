@@ -44,7 +44,15 @@ var expect = '';
 printBugNumber (bug);
 printStatus (summary);
 
-XML.prototype.function::namespace.call(new XMLList());
+try
+{
+    expect = 'TypeError: cannot call namespace method on an XML list with 0 elements';
+    XML.prototype.function::namespace.call(new XMLList());
+}
+catch(ex)
+{
+    actual = ex + '';
+}
 TEST(1, expect, actual);
 
 END();
