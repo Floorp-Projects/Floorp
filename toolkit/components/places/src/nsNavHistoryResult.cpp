@@ -2871,23 +2871,20 @@ nsNavHistoryFolderResultNode::OnItemChanged(PRInt64 aBookmarkId, nsIURI* aBookma
 
   if (aProperty.EqualsLiteral("title")) {
     node->mTitle = NS_ConvertUTF16toUTF8(aValue);
-    return NS_OK;
   }
-
-  nsCAutoString spec;
-  nsresult rv = aBookmark->GetSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aProperty.EqualsLiteral("uri")) {
+  else if (aProperty.EqualsLiteral("uri")) {
+    nsCAutoString spec;
+    nsresult rv = aBookmark->GetSpec(spec);
+    NS_ENSURE_SUCCESS(rv, rv);
     node->mURI = spec;
-    return NS_OK;
   }
-
-  if (aProperty.EqualsLiteral("favicon")) {
+  else if (aProperty.EqualsLiteral("favicon")) {
     node->mFaviconURI = NS_ConvertUTF16toUTF8(aValue);
-  } else if (aProperty.EqualsLiteral("cleartime")) {
+  }
+  else if (aProperty.EqualsLiteral("cleartime")) {
     node->mTime = 0;
-  } else {
+  }
+  else {
     NS_NOTREACHED("Unknown bookmark property changing.");
   }
 
