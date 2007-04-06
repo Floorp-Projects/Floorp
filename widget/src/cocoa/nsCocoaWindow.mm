@@ -389,10 +389,6 @@ NS_IMETHODIMP nsCocoaWindow::Destroy()
   nsBaseWidget::OnDestroy();
   nsBaseWidget::Destroy();
 
-  mMouseListener = nsnull;
-  mEventListener = nsnull;
-  mMenuListener = nsnull;
-  
   return NS_OK;
 }
 
