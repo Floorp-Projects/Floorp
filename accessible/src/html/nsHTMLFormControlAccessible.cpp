@@ -40,6 +40,7 @@
 #include "nsAccessibleTreeWalker.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsHTMLFormControlAccessible.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIDOMNSHTMLButtonElement.h"
@@ -160,13 +161,20 @@ nsHTMLRadioButtonAccessible::GetAttributes(nsIPersistentProperties **aAttributes
   nsAutoString name;
   content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::name, name);
 
+  nsCOMPtr<nsIDOMNodeList> inputs;
+
   nsCOMPtr<nsIDOMHTMLInputElement> radio(do_QueryInterface(mDOMNode));
   nsCOMPtr<nsIDOMHTMLFormElement> form;
   radio->GetForm(getter_AddRefs(form));
-  NS_ENSURE_TRUE(form, NS_OK);
+  if (form) {
+    form->GetElementsByTagNameNS(nsURI, tagName, getter_AddRefs(inputs));
+  } else {
+    nsCOMPtr<nsIDOMDocument> document;
+    mDOMNode->GetOwnerDocument(getter_AddRefs(document));
+    if (document)
+      document->GetElementsByTagNameNS(nsURI, tagName, getter_AddRefs(inputs));
+  }
 
-  nsCOMPtr<nsIDOMNodeList> inputs;
-  form->GetElementsByTagNameNS(nsURI, tagName, getter_AddRefs(inputs));
   NS_ENSURE_TRUE(inputs, NS_OK);
 
   PRUint32 inputsCount = 0;
