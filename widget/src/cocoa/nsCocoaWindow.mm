@@ -51,6 +51,8 @@
 #include "nsIXULWindow.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsIDOMChromeWindow.h"
+#include "unistd.h"
 
 // defined in nsMenuBarX.mm
 extern NSMenu* sApplicationMenu; // Application menu shared by all menubars
@@ -85,6 +87,7 @@ nsCocoaWindow::nsCocoaWindow()
 , mDelegate(nil)
 , mSheetWindowParent(nil)
 , mPopupContentView(nil)
+, mAnimation(nsIDOMChromeWindow::RESIZE_ANIMATION_OFF)
 , mIsResizing(PR_FALSE)
 , mWindowMadeHere(PR_FALSE)
 , mVisible(PR_FALSE)
@@ -735,7 +738,14 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
     newFrame.size.height = newHeight;
 
     StartResizing();
-    [mWindow setFrame:newFrame display:NO];
+    if (mAnimation == nsIDOMChromeWindow::RESIZE_ANIMATION_SLIDE) {
+      [[mWindow contentView] setHidden:YES];
+      [mWindow setFrame:newFrame display:YES animate:YES];
+      [[mWindow contentView] setHidden:NO];
+    }
+    else {
+      [mWindow setFrame:newFrame display:NO];
+    }
     StopResizing();
   }
 
@@ -1028,6 +1038,20 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 NS_IMETHODIMP nsCocoaWindow::GetAttention(PRInt32 aCycleCount)
 {
   [NSApp requestUserAttention:NSInformationalRequest];
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsCocoaWindow::SetAnimatedResize(PRUint16 aAnimation)
+{
+  mAnimation = aAnimation;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
+{
+  *aAnimation = mAnimation;
   return NS_OK;
 }
 

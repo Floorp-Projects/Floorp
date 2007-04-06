@@ -844,6 +844,18 @@ nsBaseWidget::SetIcon(const nsAString&)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBaseWidget::SetAnimatedResize(PRUint16 aAnimation)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsBaseWidget::GetAnimatedResize(PRUint16* aAnimation)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /**
  * Modifies aFile to point at an icon file with the given name and suffix.  The
  * suffix may correspond to a file extension with leading '.' if appropriate.

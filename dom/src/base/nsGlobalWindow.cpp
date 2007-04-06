@@ -7662,6 +7662,30 @@ nsGlobalChromeWindow::SetTitle(const nsAString& aTitle)
   return nsdoc->SetTitle(aTitle);
 }
 
+// returns NS_ERROR_NOT_IMPLEMENTED if animation is not implemented on widget
+// or platform
+NS_IMETHODIMP
+nsGlobalChromeWindow::SetAnimatedResize(PRUint16 aAnimation)
+{
+  nsCOMPtr<nsIWidget> widget = GetMainWidget();
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  return widget->SetAnimatedResize(aAnimation);
+}
+
+// returns NS_ERROR_NOT_IMPLEMENTED if animation is not implemented on widget
+// or platform
+NS_IMETHODIMP
+nsGlobalChromeWindow::GetAnimatedResize(PRUint16* aAnimation)
+{
+  nsCOMPtr<nsIWidget> widget = GetMainWidget();
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  return widget->GetAnimatedResize(aAnimation);
+}
+
 NS_IMETHODIMP
 nsGlobalChromeWindow::GetWindowState(PRUint16* aWindowState)
 {
