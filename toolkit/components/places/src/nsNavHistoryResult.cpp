@@ -694,13 +694,8 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_Bookmark(
 PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_TitleLess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
-  PRUint32 aType, bType;
+  PRUint32 aType;
   a->GetType(&aType);
-  b->GetType(&bType);
-
-  if (aType != bType) {
-    return bType - aType;
-  }
 
   if (aType == nsINavHistoryResultNode::RESULT_TYPE_DAY) {
     // for the history sidebar, when we do "View | By Date" or 
@@ -780,17 +775,8 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_DateGreater(
 PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_URILess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
-  PRUint32 aType, bType;
-  a->GetType(&aType);
-  b->GetType(&bType);
-
-  if (aType != bType) {
-    // comparing different types
-    return bType - aType;
-  }
-
   PRInt32 value;
-  if (a->IsURI()) {
+  if (a->IsURI() && b->IsURI()) {
     // normal URI or visit
     value = a->mURI.Compare(b->mURI.get());
   } else {
