@@ -474,6 +474,10 @@ interface nsIAccessibleEvent : nsISupports
    */
   const unsigned long EVENT_INTERNAL_LOAD = 0x005C;
 
+  /**
+   * Help make sure event map does not get out-of-line.
+   */
+  const unsigned long EVENT_LAST_ENTRY = 0x005D;
 
   /**
    * The type of event, based on the enumerated event values
