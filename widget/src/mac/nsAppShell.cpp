@@ -60,8 +60,12 @@ NS_IMETHODIMP
 nsAppShell::ResumeNative(void)
 {
   nsresult retval = nsBaseAppShell::ResumeNative();
-  if (NS_SUCCEEDED(retval) && (mSuspendNativeCount == 0))
+  if (NS_SUCCEEDED(retval) && (mSuspendNativeCount == 0) &&
+      mSkippedNativeCallback)
+  {
+    mSkippedNativeCallback = PR_FALSE;
     ScheduleNativeEventCallback();
+  }
   return retval;
 }
 
@@ -69,6 +73,7 @@ nsAppShell::nsAppShell()
 : mCFRunLoop(NULL)
 , mCFRunLoopSource(NULL)
 , mRunningEventLoop(PR_FALSE)
+, mSkippedNativeCallback(PR_FALSE)
 {
 }
 
@@ -209,8 +214,11 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
     }
   }
 
-  if (self->mSuspendNativeCount <= 0)
-    self->NativeEventCallback();
+  if (mSuspendNativeCount <= 0) {
+    NativeEventCallback();
+  } else {
+    mSkippedNativeCallback = PR_TRUE;
+  }
 
   NS_RELEASE(self);
 }
