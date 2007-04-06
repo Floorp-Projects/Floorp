@@ -81,6 +81,7 @@ protected:
 
   PRPackedBool       mRunningEventLoop;
   PRPackedBool       mTerminated;
+  PRPackedBool       mSkippedNativeCallback;
 };
 
 #endif // nsAppShell_h_

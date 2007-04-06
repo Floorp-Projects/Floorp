@@ -74,8 +74,12 @@ NS_IMETHODIMP
 nsAppShell::ResumeNative(void)
 {
   nsresult retval = nsBaseAppShell::ResumeNative();
-  if (NS_SUCCEEDED(retval) && (mSuspendNativeCount == 0))
+  if (NS_SUCCEEDED(retval) && (mSuspendNativeCount == 0) &&
+      mSkippedNativeCallback)
+  {
+    mSkippedNativeCallback = PR_FALSE;
     ScheduleNativeEventCallback();
+  }
   return retval;
 }
 
@@ -85,6 +89,7 @@ nsAppShell::nsAppShell()
 , mDelegate(nil)
 , mRunningEventLoop(PR_FALSE)
 , mTerminated(PR_FALSE)
+, mSkippedNativeCallback(PR_FALSE)
 {
   // mMainPool sits low on the autorelease pool stack to serve as a catch-all
   // for autoreleased objects on this thread.  Because it won't be popped
@@ -204,8 +209,11 @@ nsAppShell::ProcessGeckoEvents()
              atStart:NO];
   }
 
-  if (mSuspendNativeCount <= 0)
+  if (mSuspendNativeCount <= 0) {
     NativeEventCallback();
+  } else {
+    mSkippedNativeCallback = PR_TRUE;
+  }
 
   [NSApp postEvent:[NSEvent otherEventWithType:NSApplicationDefined
                                       location:NSMakePoint(0,0)
