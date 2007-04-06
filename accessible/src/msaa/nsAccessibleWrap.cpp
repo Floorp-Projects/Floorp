@@ -117,8 +117,8 @@ STDMETHODIMP nsAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
       *ppv = NS_STATIC_CAST(IEnumVARIANT*, this);
   } else if (IID_IServiceProvider == iid)
     *ppv = NS_STATIC_CAST(IServiceProvider*, this);
-  else if (IID_IAccessible2 == iid)
-    *ppv = NS_STATIC_CAST(IAccessible2*, this);
+  //else if (IID_IAccessible2 == iid)
+    //*ppv = NS_STATIC_CAST(IAccessible2*, this);
   else if (IID_IAccessibleAction == iid)
     *ppv = NS_STATIC_CAST(IAccessibleAction*, this);
 
