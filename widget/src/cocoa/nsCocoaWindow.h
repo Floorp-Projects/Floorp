@@ -151,7 +151,9 @@ public:
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) ;
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
     NS_IMETHOD GetAttention(PRInt32 aCycleCount);
-    
+    NS_IMETHOD SetAnimatedResize(PRUint16 aAnimation);
+    NS_IMETHOD GetAnimatedResize(PRUint16* aAnimation);
+
     // be notified that a some form of drag event needs to go into Gecko
     virtual PRBool DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers);
 
@@ -170,9 +172,9 @@ protected:
   WindowDelegate*      mDelegate;       // our delegate for processing window msgs [STRONG]
   nsCOMPtr<nsIMenuBar> mMenuBar;
   NSWindow*            mSheetWindowParent; // if this is a sheet, this is the NSWindow it's attached to
-  nsChildView*         mPopupContentView; // if this is a popup, this is its content widget
+  nsChildView*         mPopupContentView;  // if this is a popup, this is its content widget
+  PRUint16             mAnimation;         // the type of animation we will use when resizing
 
-  
   PRPackedBool         mIsResizing;     // we originated the resize, prevent infinite recursion
   PRPackedBool         mWindowMadeHere; // true if we created the window, false for embedding
   PRPackedBool         mVisible;        // Whether or not we're visible.

@@ -258,6 +258,9 @@ public:
 
   NS_IMETHOD        GetAttention(PRInt32 aCycleCount);
 
+  NS_IMETHOD        SetAnimatedResize(PRUint16 aAnimation);
+  NS_IMETHOD        GetAnimatedResize(PRUint16* aAnimation);
+
   // nsIPluginWidget
   NS_IMETHOD        GetPluginClipRect(nsRect& outClipRect, nsPoint& outOrigin, PRBool& outWidgetVisible);
   NS_IMETHOD        StartDrawPlugin();
