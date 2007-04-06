@@ -534,8 +534,10 @@ nsCanvasRenderingContextGLPrivate::SetCanvasElement(nsICanvasElement* aParentCan
     if (!SafeToCreateCanvas3DContext())
         return NS_ERROR_FAILURE;
 
-    if (!ValidateGL())
+    if (!ValidateGL()) {
+        LogMessage(NS_LITERAL_CSTRING("Canvas 3D: Couldn't validate OpenGL implementation; is everything needed present?"));
         return NS_ERROR_FAILURE;
+    }
 
     mCanvasElement = aParentCanvas;
     fprintf (stderr, "VVVV SetCanvasElement: %p\n", mCanvasElement);
@@ -604,8 +606,10 @@ nsCanvasRenderingContextGLPrivate::SetDimensions(PRInt32 width, PRInt32 height)
              &templ, 0);
     } while (gdformat == nsnull && templ.samples > 0);
 
-    if (!gdformat)
+    if (!gdformat) {
+        LogMessage(NS_LITERAL_CSTRING("Canvas 3D: Unable to find pbuffer format (maybe pbuffers are not available?"));
         return NS_ERROR_INVALID_ARG;
+    }
 
     mGlitzDrawable =
         glitz_wgl_create_pbuffer_drawable(gdformat,
@@ -613,13 +617,17 @@ nsCanvasRenderingContextGLPrivate::SetDimensions(PRInt32 width, PRInt32 height)
                                           height);
 #endif
 
-    if (!gdformat || !mGlitzDrawable)
+    if (!gdformat || !mGlitzDrawable) {
+        LogMessage(NS_LITERAL_CSTRING("Canvas 3D: Failed to create pbuffer drawable."));
         return NS_ERROR_FAILURE;
+    }
 
     glitz_format_t *gformat =
         glitz_find_standard_format(mGlitzDrawable, GLITZ_STANDARD_ARGB32);
-    if (!gformat)
+    if (!gformat) {
+        LogMessage(NS_LITERAL_CSTRING("Canvas 3D: Couldn't find ARGB32 format (this should never happen!)"));
         return NS_ERROR_INVALID_ARG;
+    }
 
     mGlitzSurface =
         glitz_surface_create(mGlitzDrawable,
@@ -628,8 +636,10 @@ nsCanvasRenderingContextGLPrivate::SetDimensions(PRInt32 width, PRInt32 height)
                              height,
                              0,
                              NULL);
-    if (!mGlitzSurface)
+    if (!mGlitzSurface) {
+        LogMessage(NS_LITERAL_CSTRING("Canvas 3D: Failed to create glitz surface"));
         return NS_ERROR_INVALID_ARG;
+    }
 
     glitz_surface_attach(mGlitzSurface, mGlitzDrawable, GLITZ_DRAWABLE_BUFFER_FRONT_COLOR);
 
@@ -640,6 +650,7 @@ nsCanvasRenderingContextGLPrivate::SetDimensions(PRInt32 width, PRInt32 height)
     GLenum err = glewInit();
     if (err != GLEW_OK) {
         // er, something very bad happened
+        LogMessage(NS_LITERAL_CSTRING("Canvas 3D: GLEW init failed"));
         NS_ERROR("glewInit failed!  Leaking lots of memory");
         return NS_ERROR_FAILURE;
     }
@@ -1484,7 +1495,7 @@ nsCanvasRenderingContextGLPrivate::DoSwapBuffers()
         // nsIFrame::Invalidate is an internal non-virtual method,
         // so we basically recreate it here.  I would suggest
         // an InvalidateExternal for the trunk.
-        nsIPresShell *shell = frame->GetPresContext()->GetPresShell();
+        nsIPresShell *shell = frame->PresContext()->GetPresShell();
         if (shell) {
             PRBool suppressed = PR_FALSE;
             shell->IsPaintingSuppressed(&suppressed);
@@ -1543,6 +1554,8 @@ nsCanvasRenderingContextGLPrivate::SafeToCreateCanvas3DContext()
 
     if (enabled)
         return PR_TRUE;
+
+    LogMessage("Canvas 3D: Web content tried to create 3D Canvas Context, but pref extensions.canvas3d.enabledForWebContent is not set!");
 
     return PR_FALSE;
 }

@@ -63,6 +63,9 @@
 #include "nsDOMError.h"
 #include "nsIJSRuntimeService.h"
 
+#include "nsIServiceManager.h"
+#include "nsIConsoleService.h"
+
 #include "nsDOMError.h"
 
 #include "nsContentUtils.h"
@@ -266,6 +269,12 @@ protected:
         for (PRUint32 i = 0; i < len; i++)
             jsvector[i] = INT_TO_JSVAL(vals[i]);
         return JS_NewArrayObject(ctx, len, jsvector);
+    }
+
+    void LogMessage (const nsCString& errorString) {
+        nsresult rv;
+        nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+        console->LogStringMessage(NS_ConvertUTF8toUTF16(errorString).get());
     }
 };
 
