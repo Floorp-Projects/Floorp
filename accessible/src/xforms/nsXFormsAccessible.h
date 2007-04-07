@@ -87,7 +87,7 @@ public:
 
   // Appends ARIA 'datatype' property based on datatype of instance node that
   // element is bound to.
-  NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
+  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 
   // Denies accessible nodes in anonymous content of xforms element by
   // always returning PR_FALSE value.

@@ -129,17 +129,17 @@ nsXULTabAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULTabAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
+nsresult
+nsXULTabAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
   NS_ENSURE_ARG_POINTER(aAttributes);
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
 
-  nsresult rv = nsLeafAccessible::GetAttributes(aAttributes);
+  nsresult rv = nsLeafAccessible::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAccessibilityUtils::
-    SetAccAttrsForXULSelectControlItem(mDOMNode, *aAttributes);
+    SetAccAttrsForXULSelectControlItem(mDOMNode, aAttributes);
 
   return NS_OK;
 }

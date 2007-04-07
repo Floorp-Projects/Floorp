@@ -199,20 +199,22 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetName(nsAString& aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLTableAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
+nsresult
+nsHTMLTableAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
   if (!mDOMNode) {
     return NS_ERROR_FAILURE;  // Node already shut down
   }
 
-  nsresult rv = nsAccessibleWrap::GetAttributes(aAttributes);
+  nsresult rv = nsAccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
   
   PRBool isProbablyForLayout;
   IsProbablyForLayout(&isProbablyForLayout);
   if (isProbablyForLayout) {
     nsAutoString oldValueUnused;
-    (*aAttributes)->SetStringProperty(NS_LITERAL_CSTRING("layout-guess"), NS_LITERAL_STRING("true"), oldValueUnused);
+    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("layout-guess"),
+                                   NS_LITERAL_STRING("true"), oldValueUnused);
   }
   
   return NS_OK;

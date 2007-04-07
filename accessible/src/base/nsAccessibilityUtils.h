@@ -75,7 +75,12 @@ public:
   static void GetAccGroupAttrs(nsIPersistentProperties *aAttributes,
                                PRInt32 *aLevel,
                                PRInt32 *aPosInSet,
-                               PRInt32 *aSizeSet);
+                               PRInt32 *aSetSize);
+
+  /**
+   * Returns true if there are level, posinset and sizeset attributes.
+   */
+  static PRBool HasAccGroupAttrs(nsIPersistentProperties *aAttributes);
 
   /**
    * Set group attributes ('level', 'setsize', 'posinset').
@@ -83,7 +88,7 @@ public:
   static void SetAccGroupAttrs(nsIPersistentProperties *aAttributes,
                                PRInt32 aLevel,
                                PRInt32 aPosInSet,
-                               PRInt32 aSizeSet);
+                               PRInt32 aSetSize);
 
   /**
    * Set group attributes - 'level', 'setsize', 'posinset'.

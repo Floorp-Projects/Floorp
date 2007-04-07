@@ -66,11 +66,11 @@ void
 nsAccessibilityUtils::GetAccGroupAttrs(nsIPersistentProperties *aAttributes,
                                        PRInt32 *aLevel,
                                        PRInt32 *aPosInSet,
-                                       PRInt32 *aSizeSet)
+                                       PRInt32 *aSetSize)
 {
   *aLevel = 0;
   *aPosInSet = 0;
-  *aSizeSet = 0;
+  *aSetSize = 0;
 
   nsAutoString value;
   PRInt32 error = NS_OK;
@@ -82,26 +82,40 @@ nsAccessibilityUtils::GetAccGroupAttrs(nsIPersistentProperties *aAttributes,
       *aLevel = level;
   }
 
-  GetAccAttr(aAttributes, nsAccessibilityAtoms::setsize, value);
+  GetAccAttr(aAttributes, nsAccessibilityAtoms::posinset, value);
   if (!value.IsEmpty()) {
     PRInt32 posInSet = value.ToInteger(&error);
     if (NS_SUCCEEDED(error))
       *aPosInSet = posInSet;
   }
 
-  GetAccAttr(aAttributes, nsAccessibilityAtoms::posinset, value);
+  GetAccAttr(aAttributes, nsAccessibilityAtoms::setsize, value);
   if (!value.IsEmpty()) {
     PRInt32 sizeSet = value.ToInteger(&error);
     if (NS_SUCCEEDED(error))
-      *aSizeSet = sizeSet;
+      *aSetSize = sizeSet;
   }
+}
+
+PRBool
+nsAccessibilityUtils::HasAccGroupAttrs(nsIPersistentProperties *aAttributes)
+{
+  nsAutoString value;
+
+  GetAccAttr(aAttributes, nsAccessibilityAtoms::setsize, value);
+  if (!value.IsEmpty()) {
+    GetAccAttr(aAttributes, nsAccessibilityAtoms::posinset, value);
+    return !value.IsEmpty();
+  }
+
+  return PR_FALSE;
 }
 
 void
 nsAccessibilityUtils::SetAccGroupAttrs(nsIPersistentProperties *aAttributes,
                                        PRInt32 aLevel,
                                        PRInt32 aPosInSet,
-                                       PRInt32 aSizeSet)
+                                       PRInt32 aSetSize)
 {
   nsAutoString value;
 
@@ -110,13 +124,13 @@ nsAccessibilityUtils::SetAccGroupAttrs(nsIPersistentProperties *aAttributes,
     SetAccAttr(aAttributes, nsAccessibilityAtoms::level, value);
   }
 
-  if (aSizeSet && aPosInSet) {
+  if (aSetSize && aPosInSet) {
     value.Truncate();
     value.AppendInt(aPosInSet);
     SetAccAttr(aAttributes, nsAccessibilityAtoms::posinset, value);
 
     value.Truncate();
-    value.AppendInt(aSizeSet);
+    value.AppendInt(aSetSize);
     SetAccAttr(aAttributes, nsAccessibilityAtoms::setsize, value);
   }
 }
