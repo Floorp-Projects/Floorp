@@ -1074,6 +1074,11 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     if (tt == TOK_NAME) {
         funAtom = CURRENT_TOKEN(ts).t_atom;
     } else {
+        if (!lambda && (cx->options & JSOPTION_ANONFUNFIX)) {
+            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
+                                        JSMSG_SYNTAX_ERROR);
+            return NULL;
+        }
         funAtom = NULL;
         js_UngetToken(ts);
     }
