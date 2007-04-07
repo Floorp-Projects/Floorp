@@ -285,7 +285,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-PswWxCi] [-b branchlimit] [-c stackchunksize] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: js [-PswWxCi] [-b branchlimit] [-c stackchunksize] [-o option] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -312,6 +312,19 @@ my_BranchCallback(JSContext *cx, JSScript *script)
         JS_MaybeGC(cx);
     return JS_TRUE;
 }
+
+static struct {
+    const char  *name;
+    uint32      flag;
+} js_options[] = {
+    {"strict",          JSOPTION_STRICT},
+    {"werror",          JSOPTION_WERROR},
+    {"atline",          JSOPTION_ATLINE},
+    {"xml",             JSOPTION_XML},
+    {"relimit",         JSOPTION_RELIMIT},
+    {"anonfunfix",      JSOPTION_ANONFUNFIX},
+    {NULL,              0}
+};
 
 extern JSClass global_class;
 
@@ -404,6 +417,18 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
         case 'x':
             JS_ToggleOptions(cx, JSOPTION_XML);
+            break;
+
+        case 'o':
+            if (++i == argc)
+                return usage();
+
+            for (j = 0; js_options[j].name; ++j) {
+                if (strcmp(js_options[j].name, argv[i]) == 0) {
+                    JS_ToggleOptions(cx, js_options[j].flag);
+                    break;
+                }
+            }
             break;
 
         case 'P':
@@ -504,18 +529,6 @@ Version(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         *rval = INT_TO_JSVAL(JS_GetVersion(cx));
     return JS_TRUE;
 }
-
-static struct {
-    const char  *name;
-    uint32      flag;
-} js_options[] = {
-    {"strict",          JSOPTION_STRICT},
-    {"werror",          JSOPTION_WERROR},
-    {"atline",          JSOPTION_ATLINE},
-    {"xml",             JSOPTION_XML},
-    {"relimit",         JSOPTION_RELIMIT },
-    {0,                 0}
-};
 
 static JSBool
 Options(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
