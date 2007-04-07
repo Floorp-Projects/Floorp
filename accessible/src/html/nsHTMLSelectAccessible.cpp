@@ -524,13 +524,13 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetName(nsAString& aName)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsHTMLSelectOptionAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
+nsresult
+nsHTMLSelectOptionAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
   NS_ENSURE_ARG_POINTER(aAttributes);
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
 
-  nsresult rv = nsHyperTextAccessible::GetAttributes(aAttributes);
+  nsresult rv = nsHyperTextAccessible::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
@@ -545,7 +545,7 @@ nsHTMLSelectOptionAccessible::GetAttributes(nsIPersistentProperties **aAttribute
   PRUint32 indexOf = parentContent->IndexOf(content);
 
   nsAccessibilityUtils::
-    SetAccGroupAttrs(*aAttributes, level, indexOf + 1, childCount);
+    SetAccGroupAttrs(aAttributes, level, indexOf + 1, childCount);
   return  NS_OK;
 }
 

@@ -130,10 +130,9 @@ nsHTMLTextAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLTextAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
+nsresult
+nsHTMLTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
-  *aAttributes = nsnull;
-
   if (!mDOMNode) {
     return NS_ERROR_FAILURE;  // Node already shut down
   }
@@ -141,13 +140,9 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetAttributes(nsIPersistentProperties **aAtt
   PRUint32 role;
   GetRole(&role);
   if (role == nsIAccessibleRole::ROLE_STATICTEXT) {
-    nsCOMPtr<nsIPersistentProperties> attributes =
-        do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
-    NS_ENSURE_TRUE(attributes, NS_ERROR_OUT_OF_MEMORY);
     nsAutoString oldValueUnused;
-    attributes->SetStringProperty(NS_LITERAL_CSTRING("static"),
+    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("static"),
                                   NS_LITERAL_STRING("true"), oldValueUnused);
-    attributes.swap(*aAttributes);
   }
 
   return NS_OK;

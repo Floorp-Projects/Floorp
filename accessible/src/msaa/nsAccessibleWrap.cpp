@@ -328,14 +328,49 @@ nsAccessibleWrap::get_accDescription(VARIANT varChild,
   if (NS_SUCCEEDED(rv)) {
     if (positionInGroup != -1 && similarItemsInGroup != -1) {
       if (groupLevel != -1) {
-        // XXX: How do we calculate the number of children?
-        // Normally we would append " with [numChildren]c" if we had that
-        // information. In the future we may need to use the ARIA owns property
-        // to calculate that if it's present.
-        nsTextFormatter::ssprintf(description,
-                                  NS_LITERAL_STRING("L%d, %d of %d").get(),
-                                  groupLevel, positionInGroup + 1,
-                                  similarItemsInGroup + 1);
+        // XXX: How do we calculate the number of children? Now we append
+        // " with [numChildren]c" for tree item. In the future we may need to
+        // use the ARIA owns property to calculate that if it's present.
+        PRInt32 numChildren = 0;
+
+        PRUint32 currentRole = 0;
+        rv = xpAccessible->GetFinalRole(&currentRole);
+        if (NS_SUCCEEDED(rv) &&
+            currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM) {
+          nsCOMPtr<nsIAccessible> child;
+          xpAccessible->GetFirstChild(getter_AddRefs(child));
+          while (child) {
+            child->GetFinalRole(&currentRole);
+            if (currentRole == nsIAccessibleRole::ROLE_GROUPING) {
+              nsCOMPtr<nsIAccessible> groupChild;
+              child->GetFirstChild(getter_AddRefs(groupChild));
+              while (groupChild) {
+                groupChild->GetFinalRole(&currentRole);
+                numChildren +=
+                  (currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM);
+                nsCOMPtr<nsIAccessible> nextGroupChild;
+                groupChild->GetNextSibling(getter_AddRefs(nextGroupChild));
+                groupChild.swap(nextGroupChild);
+              }
+              break;
+            }
+            nsCOMPtr<nsIAccessible> nextChild;
+            child->GetNextSibling(getter_AddRefs(nextChild));
+            child.swap(nextChild);
+          }
+        }
+
+        if (numChildren) {
+          nsTextFormatter::ssprintf(description,
+                                    NS_LITERAL_STRING("L%d, %d of %d with %d").get(),
+                                    groupLevel, positionInGroup + 1,
+                                    similarItemsInGroup + 1, numChildren);
+        } else {
+          nsTextFormatter::ssprintf(description,
+                                    NS_LITERAL_STRING("L%d, %d of %d").get(),
+                                    groupLevel, positionInGroup + 1,
+                                    similarItemsInGroup + 1);
+        }
       } else { // Position has no level
         nsTextFormatter::ssprintf(description,
                                   NS_LITERAL_STRING("%d of %d").get(),
@@ -347,106 +382,16 @@ nsAccessibleWrap::get_accDescription(VARIANT varChild,
     }
   }
 
-  PRUint32 currentRole;
-  rv = xpAccessible->GetFinalRole(&currentRole);
-  if (NS_FAILED(rv) ||
-      (currentRole != nsIAccessibleRole::ROLE_LISTITEM &&
-       currentRole != nsIAccessibleRole::ROLE_MENUITEM &&
-       currentRole != nsIAccessibleRole::ROLE_RADIOBUTTON &&
-       currentRole != nsIAccessibleRole::ROLE_PAGETAB &&
-       currentRole != nsIAccessibleRole::ROLE_OUTLINEITEM)) {
-    xpAccessible->GetDescription(description);
-    if (!description.IsEmpty()) {
-      // Signal to screen readers that this description is speakable
-      // and is not a formatted positional information description
-      // Don't localize the "Description: " part of this string, it will be
-      // parsed out by assistive technologies.
-      description = NS_LITERAL_STRING("Description: ") + description;
-    }
-
-    *pszDescription = ::SysAllocString(description.get());
-    return S_OK;
+  xpAccessible->GetDescription(description);
+  if (!description.IsEmpty()) {
+    // Signal to screen readers that this description is speakable
+    // and is not a formatted positional information description
+    // Don't localize the "Description: " part of this string, it will be
+    // parsed out by assistive technologies.
+    description = NS_LITERAL_STRING("Description: ") + description;
   }
 
-  // XXX: The role of an accessible can be pointed by ARIA attribute but
-  // ARIA posinset, level, setsize may be skipped. Therefore we calculate
-  // here these properties to map them into description. This should be
-  // handled in cross-platform code.
-
-  nsCOMPtr<nsIAccessible> parent;
-  xpAccessible->GetParent(getter_AddRefs(parent));
-  NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
-
-  positionInGroup = 0;
-  similarItemsInGroup = 0;
-
-  nsCOMPtr<nsIAccessible> sibling, nextSibling;
-  parent->GetFirstChild(getter_AddRefs(sibling));
-  if (!sibling)
-    return E_FAIL;
-
-  PRBool foundCurrent = PR_FALSE;
-  PRUint32 siblingRole;
-  while (sibling) {
-    sibling->GetFinalRole(&siblingRole);
-    if (siblingRole == currentRole) {
-      ++ similarItemsInGroup;
-      if (!foundCurrent) {
-        ++ positionInGroup;
-        if (sibling == this)
-          foundCurrent = PR_TRUE;
-      }
-    }
-    sibling->GetNextSibling(getter_AddRefs(nextSibling));
-    sibling = nextSibling;
-  }
-
-  // Don't localize the string "of" -- that's just the format of this string.
-  // The AT will parse the relevant numbers out and add its own localization.
-  if (currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM) {
-    groupLevel = 1;
-    nsCOMPtr<nsIAccessible> nextParent;
-    while (parent) {
-      parent->GetFinalRole(&currentRole);
-      if (currentRole != nsIAccessibleRole::ROLE_GROUPING)
-        break;
-
-      ++ groupLevel;
-      parent->GetParent(getter_AddRefs(nextParent));
-      parent.swap(nextParent);
-    }
-
-    // Count the number of tree item children
-    PRInt32 numChildren = 0;
-    nsCOMPtr<nsIAccessible> groupSibling;
-    xpAccessible->GetNextSibling(getter_AddRefs(groupSibling));
-    if (groupSibling) {
-      groupSibling->GetFinalRole(&currentRole);
-      if (currentRole == nsIAccessibleRole::ROLE_GROUPING) {
-        // Accessible that groups child tree items
-        nsCOMPtr<nsIAccessible> child;
-        groupSibling->GetFirstChild(getter_AddRefs(child));
-        while (child) {
-          child->GetFinalRole(&currentRole);
-          numChildren += (currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM);
-          nsCOMPtr<nsIAccessible> nextChild;
-          child->GetNextSibling(getter_AddRefs(nextChild));
-          child.swap(nextChild);
-        }
-      }
-    }
-
-    // This must be a DHTML tree item -- XUL tree items impl GetDescription()
-    nsTextFormatter::ssprintf(description,
-                              NS_LITERAL_STRING("L%d, %d of %d with %d").get(),
-                              groupLevel, positionInGroup,
-                              similarItemsInGroup, numChildren);
-  } else {
-    nsTextFormatter::ssprintf(description, NS_LITERAL_STRING("%d of %d").get(),
-                              positionInGroup, similarItemsInGroup);
-  }
-
- *pszDescription = ::SysAllocString(description.get());
+  *pszDescription = ::SysAllocString(description.get());
   return S_OK;
 }
 
