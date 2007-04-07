@@ -5043,11 +5043,11 @@ xml_mark_vector(JSContext *cx, JSXML **vec, uint32 len)
  * uses native properties. Effectively after xml_lookupProperty any property
  * stored previously using assignments to xml.function::name will be removed.
  * We partially workaround the problem in js_GetXMLFunction. There we take
- * advatage of the fact that typically function:: is used to access the
- * functions is stored in XML.prototype so when js_GetProperty returns
- * non-function property, it represents the result of GetProprty setter hiding
- * the function. Thus an extra prototype chain lookup should fix this.
- * See bug 355257 for the proper solution.
+ * advantage of the fact that typically function:: is used to access the
+ * functions from XML.prototype. So when js_GetProperty returns a non-function
+ * property, we assume that it represents the result of GetProperty setter
+ * hiding the function and use an extra prototype chain lookup to recover it.
+ * For a proper solution see bug 355257.
 */
 static JSBool
 xml_lookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
