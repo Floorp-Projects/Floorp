@@ -1540,35 +1540,37 @@ nsXMLContentSink::FlushTags()
   PRBool oldBeganUpdate = mBeganUpdate;
 
   ++mInNotification;
-  mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, PR_TRUE);
-  mBeganUpdate = PR_TRUE;
+  {
+    // Scope so we call EndUpdate before we decrease mInNotification
+    mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, PR_TRUE);
+    mBeganUpdate = PR_TRUE;
 
-  // Don't release last text node in case we need to add to it again
-  FlushText();
+    // Don't release last text node in case we need to add to it again
+    FlushText();
 
-  // Start from the base of the stack (growing downward) and do
-  // a notification from the node that is closest to the root of
-  // tree for any content that has been added.
+    // Start from the base of the stack (growing downward) and do
+    // a notification from the node that is closest to the root of
+    // tree for any content that has been added.
 
-  PRInt32 stackPos;
-  PRInt32 stackLen = mContentStack.Length();
-  PRBool flushed = PR_FALSE;
-  PRUint32 childCount;
-  nsIContent* content;
+    PRInt32 stackPos;
+    PRInt32 stackLen = mContentStack.Length();
+    PRBool flushed = PR_FALSE;
+    PRUint32 childCount;
+    nsIContent* content;
 
-  for (stackPos = 0; stackPos < stackLen; ++stackPos) {
-    content = mContentStack[stackPos].mContent;
-    childCount = content->GetChildCount();
+    for (stackPos = 0; stackPos < stackLen; ++stackPos) {
+      content = mContentStack[stackPos].mContent;
+      childCount = content->GetChildCount();
 
-    if (!flushed && (mContentStack[stackPos].mNumFlushed < childCount)) {
-      NotifyAppend(content, mContentStack[stackPos].mNumFlushed);
-      flushed = PR_TRUE;
+      if (!flushed && (mContentStack[stackPos].mNumFlushed < childCount)) {
+        NotifyAppend(content, mContentStack[stackPos].mNumFlushed);
+        flushed = PR_TRUE;
+      }
+
+      mContentStack[stackPos].mNumFlushed = childCount;
     }
-
-    mContentStack[stackPos].mNumFlushed = childCount;
+    mNotifyLevel = stackLen - 1;
   }
-  mNotifyLevel = stackLen - 1;
-
   --mInNotification;
 
   mBeganUpdate = oldBeganUpdate;
