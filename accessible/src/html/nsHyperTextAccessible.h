@@ -76,7 +76,7 @@ public:
 
   NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
-  NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
+  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
   void CacheChildren();
 
 protected:

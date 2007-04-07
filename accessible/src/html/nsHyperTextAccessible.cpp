@@ -811,37 +811,40 @@ NS_IMETHODIMP nsHyperTextAccessible::GetAttributeRange(PRInt32 aOffset, PRInt32 
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsHyperTextAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
+nsresult
+nsHyperTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
   if (!mDOMNode) {
     return NS_ERROR_FAILURE;  // Node already shut down
   }
 
-  nsresult rv = nsAccessibleWrap::GetAttributes(aAttributes);
+  nsresult rv = nsAccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   NS_ENSURE_TRUE(content, NS_ERROR_UNEXPECTED);
   nsIAtom *tag = content->Tag();
 
-  nsAutoString headLevel;
+  PRInt32 headLevel = 0;
   if (tag == nsAccessibilityAtoms::h1)
-    headLevel.AssignLiteral("1");
+    headLevel = 1;
   else if (tag == nsAccessibilityAtoms::h2)
-    headLevel.AssignLiteral("2");
+    headLevel = 2;
   else if (tag == nsAccessibilityAtoms::h3)
-    headLevel.AssignLiteral("3");
+    headLevel = 3;
   else if (tag == nsAccessibilityAtoms::h4)
-    headLevel.AssignLiteral("4");
+    headLevel = 4;
   else if (tag == nsAccessibilityAtoms::h5)
-    headLevel.AssignLiteral("5");
+    headLevel = 5;
   else if (tag == nsAccessibilityAtoms::h6)
-    headLevel.AssignLiteral("6");
+    headLevel = 6;
 
-  if (!headLevel.IsEmpty()) {
-    nsAccessibilityUtils::SetAccAttr(*aAttributes,
+  if (headLevel) {
+    nsAutoString strHeadLevel;
+    strHeadLevel.AppendInt(headLevel);
+    nsAccessibilityUtils::SetAccAttr(aAttributes,
                                      nsAccessibilityAtoms::level,
-                                     headLevel);
+                                     strHeadLevel);
   }
 
   return  NS_OK;

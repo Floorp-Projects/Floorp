@@ -241,12 +241,12 @@ nsXFormsAccessible::GetDescription(nsAString& aDescription)
   return GetBoundChildElementValue(NS_LITERAL_STRING("hint"), aDescription);
 }
 
-NS_IMETHODIMP
-nsXFormsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
+nsresult
+nsXFormsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
   NS_ENSURE_ARG_POINTER(aAttributes);
 
-  nsresult rv = nsHyperTextAccessible::GetAttributes(aAttributes);
+  nsresult rv = nsHyperTextAccessible::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString name;
@@ -254,8 +254,8 @@ nsXFormsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString unused;
-  return (*aAttributes)->SetStringProperty(NS_LITERAL_CSTRING("datatype"),
-                                           name, unused);
+  return aAttributes->SetStringProperty(NS_LITERAL_CSTRING("datatype"),
+                                        name, unused);
 }
 
 NS_IMETHODIMP

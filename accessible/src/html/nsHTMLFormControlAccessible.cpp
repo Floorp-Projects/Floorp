@@ -139,13 +139,13 @@ nsHTMLRadioButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLRadioButtonAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
+nsresult
+nsHTMLRadioButtonAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
   NS_ENSURE_ARG_POINTER(aAttributes);
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
 
-  nsresult rv = nsRadioButtonAccessible::GetAttributes(aAttributes);
+  nsresult rv = nsRadioButtonAccessible::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString nsURI;
@@ -203,7 +203,7 @@ nsHTMLRadioButtonAccessible::GetAttributes(nsIPersistentProperties **aAttributes
   }
 
   nsAccessibilityUtils::
-    SetAccGroupAttrs(*aAttributes, 0, indexOf, count);
+    SetAccGroupAttrs(aAttributes, 0, indexOf, count);
 
   return  NS_OK;
 }

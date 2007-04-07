@@ -681,13 +681,13 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetActionName(PRUint8 aIndex, nsAString& 
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP
-nsXULTreeitemAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
+nsresult
+nsXULTreeitemAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
   NS_ENSURE_ARG_POINTER(aAttributes);
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
 
-  nsresult rv = nsLeafAccessible::GetAttributes(aAttributes);
+  nsresult rv = nsLeafAccessible::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMXULTreeElement> tree(do_QueryInterface(mDOMNode));
@@ -717,7 +717,7 @@ nsXULTreeitemAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
   PRInt32 posInSet = mRow - startIndex + 1;
 
   nsAccessibilityUtils::
-    SetAccGroupAttrs(*aAttributes, level + 1, posInSet, setSize);
+    SetAccGroupAttrs(aAttributes, level + 1, posInSet, setSize);
 
   return NS_OK;
 }

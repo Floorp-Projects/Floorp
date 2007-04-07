@@ -2116,31 +2116,22 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
   return mDOMNode ? GetRole(aRole) : NS_ERROR_FAILURE;  // Node already shut down
 }
 
-NS_IMETHODIMP nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
+NS_IMETHODIMP
+nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
 {
-  *aAttributes = nsnull;
-
-  if (!mDOMNode) {
-    return NS_ERROR_FAILURE;  // Node already shut down
-  }
-
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  NS_ENSURE_TRUE(element, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_ARG_POINTER(aAttributes);
 
   nsCOMPtr<nsIPersistentProperties> attributes =
      do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
   NS_ENSURE_TRUE(attributes, NS_ERROR_OUT_OF_MEMORY);
 
-  nsAutoString tagName;
-  nsAutoString oldValueUnused; 
-  element->GetTagName(tagName);
-  if (!tagName.IsEmpty()) {
-    attributes->SetStringProperty(NS_LITERAL_CSTRING("tag"), tagName, oldValueUnused);
-  }
-  
+  nsresult rv = GetAttributesInternal(attributes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIContent> content = GetRoleContent(mDOMNode);
   if (content) {
     nsAutoString id;
+    nsAutoString oldValueUnused;
     if (content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::id, id)) {
       attributes->SetStringProperty(NS_LITERAL_CSTRING("id"), id, oldValueUnused);    
     }
@@ -2163,7 +2154,85 @@ NS_IMETHODIMP nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
     }
   }
 
+  if (!nsAccessibilityUtils::HasAccGroupAttrs(attributes)) {
+    // The role of an accessible can be pointed by ARIA attribute but ARIA
+    // posinset, level, setsize may be skipped. Therefore we calculate here
+    // these properties to map them into description.
+
+    PRUint32 role = Role(this);
+    if (role == nsIAccessibleRole::ROLE_LISTITEM ||
+        role == nsIAccessibleRole::ROLE_MENUITEM ||
+        role == nsIAccessibleRole::ROLE_RADIOBUTTON ||
+        role == nsIAccessibleRole::ROLE_PAGETAB ||
+        role == nsIAccessibleRole::ROLE_OUTLINEITEM) {
+
+      nsCOMPtr<nsIAccessible> parent = GetParent();
+      NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
+
+      PRInt32 positionInGroup = 0;
+      PRInt32 setSize = 0;
+
+      nsCOMPtr<nsIAccessible> sibling, nextSibling;
+      parent->GetFirstChild(getter_AddRefs(sibling));
+      NS_ENSURE_TRUE(sibling, NS_ERROR_FAILURE);
+
+      PRBool foundCurrent = PR_FALSE;
+      PRUint32 siblingRole;
+      while (sibling) {
+        sibling->GetFinalRole(&siblingRole);
+        if (siblingRole == role) {
+          ++ setSize;
+          if (!foundCurrent) {
+            ++ positionInGroup;
+            if (sibling == this)
+              foundCurrent = PR_TRUE;
+          }
+        }
+        sibling->GetNextSibling(getter_AddRefs(nextSibling));
+        sibling = nextSibling;
+      }
+
+      PRInt32 groupLevel = 0;
+      if (role == nsIAccessibleRole::ROLE_OUTLINEITEM) {
+        groupLevel = 1;
+        nsCOMPtr<nsIAccessible> nextParent;
+        while (parent) {
+          parent->GetFinalRole(&role);
+
+          if (role == nsIAccessibleRole::ROLE_OUTLINE)
+            break;
+          if (role == nsIAccessibleRole::ROLE_OUTLINEITEM)
+            ++ groupLevel;
+
+          parent->GetParent(getter_AddRefs(nextParent));
+          parent.swap(nextParent);
+        }
+      }
+
+      nsAccessibilityUtils::SetAccGroupAttrs(attributes, groupLevel,
+                                             positionInGroup,
+                                             setSize);
+    }
+  }
+
   attributes.swap(*aAttributes);
+
+  return NS_OK;
+}
+
+nsresult
+nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
+{
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  NS_ENSURE_TRUE(element, NS_ERROR_UNEXPECTED);
+
+  nsAutoString tagName;
+  element->GetTagName(tagName);
+  if (!tagName.IsEmpty()) {
+    nsAutoString oldValueUnused;
+    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("tag"), tagName,
+                                   oldValueUnused);
+  }
 
   return NS_OK;
 }
