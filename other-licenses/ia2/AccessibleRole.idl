@@ -39,8 +39,14 @@ enum IA2Role {
   */
   IA2_ROLE_UNKNOWN = 0,
 
+  /** An object that can be drawn into and to manage events from the objects
+   drawn into it.  Also refer to ::IA2_ROLE_FRAME,
+   ::IA2_ROLE_GLASS_PANE, and ::IA2_ROLE_LAYERED_PANE. 
+  */
+  IA2_ROLE_CANVAS = 0x401,
+
   /// A caption describing another object.
-  IA2_ROLE_CAPTION = 0x401,
+  IA2_ROLE_CAPTION,
 
   /// Used for check buttons that are menu items.
   IA2_ROLE_CHECK_MENU_ITEM,
@@ -57,7 +63,7 @@ enum IA2Role {
   IA2_ROLE_DESKTOP_ICON,
 
   /** A desktop pane. A pane that supports internal frames and iconified 
-   versions of those internal frames.
+   versions of those internal frames.  Also refer to ::IA2_ROLE_INTERNAL_FRAME.
   */
   IA2_ROLE_DESKTOP_PANE,
 
@@ -103,14 +109,14 @@ enum IA2Role {
   IA2_ROLE_FORM,
 
   /** Frame role. A top level window with a title bar, border, menu bar, etc.  
-   It is often used as the primary window for an application.  Also refer to 
-   the MSAA roles of dialog, canvas, and window.
+   It is often used as the primary window for an application.  Also refer to
+   ::IA2_ROLE_CANVAS and the MSAA roles of dialog and window.
   */
   IA2_ROLE_FRAME,
 
-  /** A glass pane. A pane that is guaranteed to be painted on top of all 
-   panes beneath it.  
-   Also refer to ::IA2_ROLE_ROOT_PANE and MSAA's canvas role.
+  /** A glass pane. A pane that is guaranteed to be painted on top of all panes
+   beneath it.  Also refer to ::IA2_ROLE_CANVAS, ::IA2_ROLE_INTERNAL_FRAME, and
+   ::IA2_ROLE_ROOT_PANE.
   */
   IA2_ROLE_GLASS_PANE,
 
@@ -139,7 +145,7 @@ enum IA2Role {
   /** An internal frame. A frame-like object that is clipped by a desktop pane.  
    The desktop pane, internal frame, and desktop icon objects are often used to 
    create multiple document interfaces within an application.
-   Also refer to ::IA2_ROLE_DESKTOP_ICON, ::IA2_ROLE_DESKTOP_PANE, and ::IA2_ROLE_FRAME
+   Also refer to ::IA2_ROLE_DESKTOP_ICON, ::IA2_ROLE_DESKTOP_PANE, and ::IA2_ROLE_FRAME.
   */
   IA2_ROLE_INTERNAL_FRAME,
 
@@ -150,14 +156,14 @@ enum IA2Role {
    in layers, providing a form of stacking order. This is usually the pane that 
    holds the menu bar as  well as the pane that contains most of the visual 
    components in a window.
-   Also refer to ::IA2_ROLE_GLASS_PANE and ::IA2_ROLE_ROOT_PANE.
+   Also refer to ::IA2_ROLE_CANVAS, ::IA2_ROLE_GLASS_PANE, and ::IA2_ROLE_ROOT_PANE.
   */
   IA2_ROLE_LAYERED_PANE,
 
   /// An embedded note which is not visible until activated.
   IA2_ROLE_NOTE,
 
- /** A specialized pane whose primary use is inside a DIALOG.
+ /** A specialized pane whose primary use is inside a dialog.
    Also refer to MSAA's dialog role.
   */
   IA2_ROLE_OPTION_PANE,
@@ -217,6 +223,14 @@ enum IA2Role {
    one panel larger and the other panel smaller.
   */
   IA2_ROLE_SPLIT_PANE,
+
+  /** An object that forms part of a menu system but which can be "undocked" 
+   from or "torn off" the menu system to exist as a separate window.
+  */
+  IA2_ROLE_TEAR_OFF_MENU,
+
+  /// An object used as a terminal emulator.
+  IA2_ROLE_TERMINAL,
 
   /// Collection of objects that constitute a logical text entity.
   IA2_ROLE_TEXT_FRAME,

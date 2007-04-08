@@ -26,13 +26,7 @@
 import "objidl.idl";
 import "oaidl.idl";
 import "oleacc.idl";
-       
-enum IA2ImageCoordinateType {
-  /// The returned coordinates are relative to the screen.
-  IA2_IMAGE_COORDTYPE_SCREEN_RELATIVE, 
-  /// The returned coordinates are relative to the upper left corner of parent's bounding box.
-  IA2_IMAGE_COORDTYPE_PARENT_RELATIVE  
-};
+import "IA2CommonTypes.idl";
 
 /** @brief This interface represents images and icons.
 
@@ -67,7 +61,7 @@ interface IAccessibleImage : IUnknown
   */
   [propget] HRESULT imagePosition
     (
-	 [in] enum IA2ImageCoordinateType coordinateType,
+	 [in] enum IA2CoordinateType coordinateType,
 	 [out] long *x,
      [out, retval] long *y
     );

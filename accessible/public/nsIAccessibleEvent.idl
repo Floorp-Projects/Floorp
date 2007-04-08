@@ -61,7 +61,7 @@ interface nsIDOMNode;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(cc8d6414-90cf-450a-8c18-8bf8302d00b7)]
+[scriptable, uuid(18612bcb-79bd-45c1-92e9-07aded5fd0f5)]
 interface nsIAccessibleEvent : nsISupports
 {
   /**
@@ -351,7 +351,7 @@ interface nsIAccessibleEvent : nsISupports
   /**
    * The caret moved from one column to the next.
    */
-  const unsigned long EVENT_COLUMN_CHANGED = 0x003A;
+  const unsigned long EVENT_TEXT_COLUMN_CHANGED = 0x003A;
 
   /**
    * The caret moved from one section to the next.
@@ -465,19 +465,14 @@ interface nsIAccessibleEvent : nsISupports
   const unsigned long EVENT_PAGE_CHANGED = 0x005A;
 
   /**
-   * An object's role changed.
-   */
-  const unsigned long EVENT_ROLE_CHANGED = 0x005B;
-
-  /**
    * Used internally in Gecko.
    */
-  const unsigned long EVENT_INTERNAL_LOAD = 0x005C;
+  const unsigned long EVENT_INTERNAL_LOAD = 0x005B;
 
   /**
    * Help make sure event map does not get out-of-line.
    */
-  const unsigned long EVENT_LAST_ENTRY = 0x005D;
+  const unsigned long EVENT_LAST_ENTRY = 0x005C;
 
   /**
    * The type of event, based on the enumerated event values

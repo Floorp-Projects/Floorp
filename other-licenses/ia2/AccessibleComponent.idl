@@ -4,7 +4,7 @@
  *
  *  IAccessible2 IDL Specification
  *
- *  Copyright (c) IBM Corp. 2006
+ *  Copyright (c) IBM Corp. 2007
  *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
  *
  *  This library is free software; you can redistribute it and/or
@@ -26,15 +26,8 @@
 import "objidl.idl";
 import "oaidl.idl";
 import "oleacc.idl";
-import "Accessible2.idl";
 
 typedef long IA2Color;
-
-/// A structure containing an x and y value.
-typedef struct {
-  long x;  ///< x coordinate
-  long y;  ///< y corrdinate
-} IA2Point;
 
 /** @brief This interface is implemented by any object that can be rendered 
  on the screen.
@@ -58,7 +51,7 @@ interface IAccessibleComponent : IUnknown
 {
 
   /** @brief Returns the location of the upper left corner of the object's
-    bounding box relative to the parent.
+    bounding box relative to the immediate parent object.
 	
 	The coordinates of the bounding box are given relative to the parent's 
 	coordinate system. The coordinates of the returned position are relative 
@@ -66,11 +59,13 @@ interface IAccessibleComponent : IUnknown
     is rendered if it has no parent. If the object is not on any screen
     the returned position is (0,0).
    
-   @param [out] locationInParent
+   @param [out] x
+   @param [out] y
   */
   [propget] HRESULT locationInParent
     (
-     [out, retval] IA2Point *locationInParent
+	 [out] long *x,
+     [out, retval] long *y
     );
 
   /** @brief Returns the foreground color of this object.

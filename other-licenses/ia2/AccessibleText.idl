@@ -4,7 +4,7 @@
  *
  *  IAccessible2 IDL Specification
  *
- *  Copyright (c) IBM Corp. 2006
+ *  Copyright (c) IBM Corp. 2007
  *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
  *
  *  This library is free software; you can redistribute it and/or
@@ -26,6 +26,7 @@
 import "objidl.idl";
 import "oaidl.idl";
 import "oleacc.idl";
+import "IA2CommonTypes.idl";
 
 /// A structure containing a substring and the start and end offsets in the enclosing string.
 typedef struct {
@@ -34,14 +35,11 @@ typedef struct {
   long end;		///< Index of the character following the last character of the segment in the enclosing text. 
 } IA2TextSegment;
 
-enum IA2TextCoordinateType {
-  /// The returned coordinates are relative to the screen.
-  IA2_COORDTYPE_SCREEN_RELATIVE, 
-  /// The returned coordinates are relative to the upper left corner of parent's bounding box.
-  IA2_COORDTYPE_PARENT_RELATIVE  
-};
+/** @brief Defines values to specify a text boundary type.
 
-/// Defines values to specify a text boundary type
+ If one of these is not implemented, such as IA2_TEXT_BOUNDARY_SENTENCE, S_FALSE is returned.
+*/
+
 enum IA2TextBoundaryType {
   IA2_TEXT_BOUNDARY_CHAR,		///< =0, 
   IA2_TEXT_BOUNDARY_WORD,		///< Range is from start of one word to the start of another word.
@@ -155,7 +153,7 @@ interface IAccessibleText : IUnknown
   [propget] HRESULT characterExtents
     (
      [in] long offset,
-     [in] enum IA2TextCoordinateType coordType,
+     [in] enum IA2CoordinateType coordType,
      [out] long *x,
      [out] long *y,
      [out] long *width,
@@ -195,7 +193,7 @@ interface IAccessibleText : IUnknown
     (
      [in] long x,
      [in] long y,
-     [in] enum IA2TextCoordinateType coordType,
+     [in] enum IA2CoordinateType coordType,
      [out, retval] long *offset
     );
 
@@ -235,7 +233,7 @@ interface IAccessibleText : IUnknown
     and up to the character at endOffset (exclusive), if startOffset is less than 
     or equal to endOffset.
 
-   NOTE: returned string may be longer than endOffset-startOffset bytes if text 
+   Note: returned string may be longer than endOffset-startOffset bytes if text 
    contains multi-byte characters.
   */
   [propget] HRESULT text
@@ -398,7 +396,7 @@ interface IAccessibleText : IUnknown
 
   /** @brief Returns total number of characters.
 
-   NOTE: this may be different than the total number of bytes required to store the 
+   Note: This may be different than the total number of bytes required to store the 
     text, if the text contains multi-byte characters.
    @param [out] nCharacters
   */
@@ -412,12 +410,37 @@ interface IAccessibleText : IUnknown
     0-based character offset.
    @param [in] endIndex
     0-based character offset - the offset of the character just past the last character of the string.
-
+   @param [in] scrollType
+    Defines where the object should be placed on the screen.
   */
-  HRESULT scrollToSubstring
+  HRESULT scrollSubstringTo
     (
      [in] long startIndex,
-     [in] long endIndex
+     [in] long endIndex,
+	 [in] enum IA2ScrollType scrollType
+    );
+
+  /** @brief Moves the top left of a substring to a specified location.
+
+   Note: S_FALSE is returned if the object is already at the specified location.
+   @param [in] startIndex
+    0-based character offset.
+   @param [in] endIndex
+    0-based character offset - the offset of the character just past the last character of the string.
+   @param [in] coordinateType
+    Specifies whether the coordinates are relative to the screen or the parent object.
+   @param [in] x
+    Defines the x coordinate.
+   @param [in] y
+    Defines the y coordinate.
+  */
+  HRESULT scrollSubstringToPoint
+    (
+     [in] long startIndex,
+     [in] long endIndex,
+     [in] enum IA2CoordinateType coordinateType,
+	 [in] long x,
+	 [in] long y 
     );
 
   /** @brief Returns any inserted text.
