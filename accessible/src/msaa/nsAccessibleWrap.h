@@ -172,23 +172,20 @@ class nsAccessibleWrap : public nsAccessible,
             /* [retval][out] */ long *role);
 
     virtual HRESULT STDMETHODCALLTYPE scrollTo(
-        /* [in] */ boolean topLeft);
+        /* [in] */ enum IA2ScrollType scrollType);
+
+    virtual HRESULT STDMETHODCALLTYPE scrollToPoint(
+        /* [in] */ enum IA2CoordinateType coordinateType,
+	      /* [in] */ long x,
+	      /* [in] */ long y);
 
     virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_groupPosition(
         /* [out] */ long *groupLevel,
         /* [out] */ long *similarItemsInGroup,
         /* [retval][out] */ long *positionInGroup);
 
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_localizedRoleName(
-        /* [retval][out] */ BSTR *localizedRoleName);
-
     virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_states(
         /* [retval][out] */ AccessibleStates *states);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_localizedStateNames(
-        /* [in] */ long maxLocalizedStateNames,
-        /* [length_is][length_is][size_is][size_is][out] */ BSTR **localizedStateNames,
-        /* [retval][out] */ long *nLocalizedStateNames);
 
     virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_extendedRole(
         /* [retval][out] */ BSTR *extendedRole);

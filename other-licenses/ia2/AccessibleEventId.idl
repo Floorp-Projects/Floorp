@@ -101,10 +101,10 @@ enum IA2EventID {
   */
   IA2_EVENT_PAGE_CHANGED,  
 
-  /** An object's role changed.
+  /** The caret moved from one section to the next.
   */
-  IA2_EVENT_ROLE_CHANGED,
-
+  IA2_EVENT_SECTION_CHANGED,
+  
   /** A table caption changed.
   */
   IA2_EVENT_TABLE_CAPTION_CHANGED,
@@ -147,6 +147,10 @@ enum IA2EventID {
   */
   IA2_EVENT_TEXT_CHANGED,
 
+  /** The caret moved from one column to the next.
+  */
+  IA2_EVENT_TEXT_COLUMN_CHANGED,
+
   /** Text was inserted.
   */
   IA2_EVENT_TEXT_INSERTED,
@@ -167,14 +171,6 @@ enum IA2EventID {
     of an accessible object.  This includes for example most of the
     attributes available via the IAccessibleComponent interface.
   */
-  IA2_EVENT_VISIBLE_DATA_CHANGED,
-
-  /** The caret moved from one column to the next.
-  */
-  IA2_EVENT_COLUMN_CHANGED,
-
-  /** The caret moved from one section to the next.
-  */
-  IA2_EVENT_SECTION_CHANGED
+  IA2_EVENT_VISIBLE_DATA_CHANGED
 
 };

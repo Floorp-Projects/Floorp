@@ -4,7 +4,7 @@
  *
  *  IAccessible2 IDL Specification
  *
- *  Copyright (c) IBM Corp. 2006
+ *  Copyright (c) IBM Corp. 2007
  *  Copyright (c) Sun Microsystems, Inc. 2000, 2006
  *
  *  This library is free software; you can redistribute it and/or
@@ -50,11 +50,8 @@ const long IA2_STATE_HORIZONTAL =				0x10;
 /** Indicates this object is minimized and is represented only by an icon. */
 const long IA2_STATE_ICONIFIED =				0x20;
 
-/** Indicates an invalid state. */
-const long IA2_STATE_INVALID =					0x40;
-
 /** Indicates an input validation failure. */
-const long IA2_STATE_INVALID_ENTRY =			0x80;
+const long IA2_STATE_INVALID_ENTRY =			0x40;
 
 /** Indicates that this object manages its children.
 
@@ -66,36 +63,36 @@ const long IA2_STATE_INVALID_ENTRY =			0x80;
   over all the children and add listeners.  The parent object will provide state 
   notifications regarding the state of its children.
 */
-const long IA2_STATE_MANAGES_DESCENDANTS =		0x100;
+const long IA2_STATE_MANAGES_DESCENDANTS =		0x80;
 
 /** Indicates that an object is modal.
 
  Modal objects have the behavior that something must be done with the object 
   before the user can interact with an object in a different window.
 */
-const long IA2_STATE_MODAL =					0x200;
+const long IA2_STATE_MODAL =					0x100;
 
 /** Indicates this text object can contain multiple lines of text. */
-const long IA2_STATE_MULTI_LINE =				0x400;
+const long IA2_STATE_MULTI_LINE =				0x200;
 
 /** Indicates this object paints every pixel within its rectangular region. */
-const long IA2_STATE_OPAQUE =					0x800;
+const long IA2_STATE_OPAQUE =					0x400;
 
 /** Indicates that user interaction is required.
 
  An example of when this state is used is when a field in a form must be filled 
   before a form can be processed.
 */
-const long IA2_STATE_REQUIRED =					0x1000;
+const long IA2_STATE_REQUIRED =					0x800;
 
 /** Indicates an object which supports text selection.
 
  Note: This is different than MSAA STATE_SYSTEM_SELECTABLE.
 */
-const long IA2_STATE_SELECTABLE_TEXT =			0x2000;
+const long IA2_STATE_SELECTABLE_TEXT =			0x1000;
 
 /** Indicates that this text object can contain only a single line of text. */
-const long IA2_STATE_SINGLE_LINE =				0x4000;
+const long IA2_STATE_SINGLE_LINE =				0x2000;
 
 /** Indicates that the accessible object is stale.
 
@@ -104,7 +101,7 @@ const long IA2_STATE_SINGLE_LINE =				0x4000;
   object is transient or when an object has been or is in the process of being
   destroyed.
 */
-const long IA2_STATE_STALE =					0x8000;
+const long IA2_STATE_STALE =					0x4000;
 
 /** Indicates that the object implements autocompletion.
 
@@ -112,12 +109,12 @@ const long IA2_STATE_STALE =					0x8000;
  one ore more characters and cause a sub-item to become selected.  The 
  selection may also result in events fired on the parent object.
 */
-const long IA2_STATE_SUPPORTS_AUTOCOMPLETION =	0x10000;
+const long IA2_STATE_SUPPORTS_AUTOCOMPLETION =	0x8000;
 
 /** Indicates this object is transient. */
-const long IA2_STATE_TRANSIENT =				0x20000;
+const long IA2_STATE_TRANSIENT =				0x10000;
 
 /** Indicates the orientation of this object is vertical. */
-const long IA2_STATE_VERTICAL =					0x40000;
+const long IA2_STATE_VERTICAL =					0x20000;
 
 ///@}

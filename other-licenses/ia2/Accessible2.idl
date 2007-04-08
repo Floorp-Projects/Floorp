@@ -40,20 +40,19 @@
   IAccessibleValue
 
  @section _structs Structs
-  IA2Point\n
   IA2Locale\n
   IA2TableModelChange\n
   IA2TextSegment
 
  @section _enums Enums
+  ::IA2CoordinateType values define the requested coordinate type (screen or parent window).\n
   ::IA2EventID values identify events.\n
   ::IA2Role values define roles.\n
+  ::IA2ScrollType values define where to place an object or substring on the screen.\n
   ::IA2TableModelChangeType values describe the kinds of changes made to a table (insert, delete, update).\n
-  ::IA2TextBoundaryType values define the requested text unit (character, word, sentence, line, paragraph).\n
-  ::IA2TextCoordinateType values define the requested coordinate type (screen or parent window).
-
+  ::IA2TextBoundaryType values define the requested text unit (character, word, sentence, line, paragraph).
+  
  @section _constants Constants
-  @ref grpIAccessibleApplication\n
   @ref grpRelations\n
   @ref grpStates\n
 
@@ -86,10 +85,10 @@
 
 import "objidl.idl";
 import "oaidl.idl";
-import "ocidl.idl";
 import "oleacc.idl";
 import "AccessibleRelation.idl";
 import "AccessibleStates.idl";
+import "IA2CommonTypes.idl";
 
 /// A structure defining the locale of an accessible object.
 typedef struct {
@@ -145,6 +144,9 @@ interface IAccessible2 : IAccessible
     );
 
   /** @brief Returns the role of an IAccessible2 object.
+
+   Note:  For convenience MSAA roles are also passed through this method so the
+    AT doesn't have to also fetch roles through MSAA's get_accRole.
    @param [out] role
     The role of an IAccessible2 object.  
   */
@@ -153,14 +155,30 @@ interface IAccessible2 : IAccessible
      [out, retval] long *role
     );
 
-  /** @brief Makes an object visible on screen.
-   @param [in] topLeft
-    If false then it will scroll the shortest distance it needs to put
-    the element on-screen.  
+  /** @brief Makes an object visible on the screen.
+   @param [in] scrollType
+    Defines where the object should be placed on the screen.
   */
   HRESULT scrollTo
     (
-     [in] boolean topLeft 
+     [in] enum IA2ScrollType scrollType 
+    );
+
+  /** @brief Moves the top left of an object to a specified location.
+
+   Note: S_FALSE is returned if the object is already at the specified location.
+   @param [in] coordinateType
+    Specifies whether the coordinates are relative to the screen or the parent object.
+   @param [in] x
+    Defines the x coordinate.
+   @param [in] y
+    Defines the y coordinate.
+  */
+  HRESULT scrollToPoint
+    (
+     [in] enum IA2CoordinateType coordinateType,
+	 [in] long x,
+	 [in] long y 
     );
 
   /** @brief Returns grouping information.
@@ -182,35 +200,12 @@ interface IAccessible2 : IAccessible
      [out, retval] long *positionInGroup 
     );
 
-  /** @brief Returns the localized role name.
-
-   Valid if the role is an IAccessible2 role; not to be used for MSAA roles.
-
-   @param [out] localizedRoleName
-  */
-  [propget] HRESULT localizedRoleName
-    (
-	 [out, retval] BSTR *localizedRoleName
-    );
-
   /** @brief Returns the bit strip containing any IAccessible2 states.
    @param [out] states
   */
   [propget] HRESULT states
     (
 	 [out, retval] AccessibleStates *states
-    );
-
-  /** @brief Returns localized state names (array of strings).
-   @param [in] maxLocalizedStateNames
-   @param [out] localizedStateNames
-   @param [out] nLocalizedStateNames
-  */
-  [propget] HRESULT localizedStateNames
-    (
-     [in] long maxLocalizedStateNames,
-     [out, size_is(,maxLocalizedStateNames), length_is(,*nLocalizedStateNames)] BSTR **localizedStateNames,
-     [out, retval] long *nLocalizedStateNames
     );
 
   /** @brief Returns the extended role.
