@@ -117,8 +117,8 @@ STDMETHODIMP nsAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
       *ppv = NS_STATIC_CAST(IEnumVARIANT*, this);
   } else if (IID_IServiceProvider == iid)
     *ppv = NS_STATIC_CAST(IServiceProvider*, this);
-  //else if (IID_IAccessible2 == iid)
-    //*ppv = NS_STATIC_CAST(IAccessible2*, this);
+  else if (IID_IAccessible2 == iid)
+    *ppv = NS_STATIC_CAST(IAccessible2*, this);
   else if (IID_IAccessibleAction == iid)
     *ppv = NS_STATIC_CAST(IAccessibleAction*, this);
 
@@ -1081,11 +1081,19 @@ nsAccessibleWrap::role(long *role)
 }
 
 STDMETHODIMP
-nsAccessibleWrap::scrollTo(boolean topLeft)
+nsAccessibleWrap::scrollTo(enum IA2ScrollType scrollType)
 {
-  if (NS_SUCCEEDED(ScrollTo(topLeft)))
+  // XXX Handle scrollType
+  if (NS_SUCCEEDED(ScrollTo(PR_TRUE)))
     return S_OK;
   return E_FAIL;
+}
+
+STDMETHODIMP
+nsAccessibleWrap::scrollToPoint(enum IA2CoordinateType coordinateType,
+                                long x, long y)
+{
+  return E_NOTIMPL;
 }
 
 STDMETHODIMP
@@ -1107,12 +1115,6 @@ nsAccessibleWrap::get_groupPosition(long *aGroupLevel,
   }
 
   return E_FAIL;
-}
-
-STDMETHODIMP
-nsAccessibleWrap::get_localizedRoleName(BSTR *localizedRoleName)
-{
-  return E_NOTIMPL;
 }
 
 STDMETHODIMP
@@ -1169,14 +1171,6 @@ nsAccessibleWrap::get_states(AccessibleStates *aStates)
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_localizedStateNames(long maxLocalizedStateNames,
-                                          BSTR **localizedStateNames,
-                                          long *nLocalizedStateNames)
-{
-  return E_NOTIMPL;
-}
-
-STDMETHODIMP
 nsAccessibleWrap::get_extendedRole(BSTR *extendedRole)
 {
   return E_NOTIMPL;
@@ -1213,9 +1207,9 @@ nsAccessibleWrap::get_localizedExtendedStates(long maxLocalizedExtendedStates,
 STDMETHODIMP
 nsAccessibleWrap::get_uniqueID(long *uniqueID)
 {
-  void **id = nsnull;
-  if (NS_SUCCEEDED(GetUniqueID(id))) {
-    *uniqueID = NS_REINTERPRET_POINTER_CAST(long, *id);
+  void *id;
+  if (NS_SUCCEEDED(GetUniqueID(&id))) {
+    *uniqueID = NS_REINTERPRET_POINTER_CAST(long, id);
     return S_OK;
   }
   return E_FAIL;

@@ -76,6 +76,7 @@ MIDL_ENUMS = \
   AccessibleEventId.idl \
   AccessibleRole.idl \
   AccessibleStates.idl \
+  IA2CommonTypes.idl \
   $(NULL)
 
 EXPORTS = \
