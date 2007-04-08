@@ -92,10 +92,6 @@ menulist > menupopup,
   -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-compact");
 }
 
-.tabbrowser-tabs {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#tabbrowser-tabs");
-}
-
 /* ::::: root elements ::::: */
 
 window,
