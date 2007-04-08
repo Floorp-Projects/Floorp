@@ -143,6 +143,7 @@
 }
 
 .tabbrowser-tabs {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#tabbrowser-tabs");
   border: none;
   padding: 0;
   margin: 0;
