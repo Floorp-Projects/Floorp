@@ -26,7 +26,7 @@
 
     <content align="center" pack="center">
       <xul:slider anonid="slider" class="scale-slider" snap="true" flex="1"
-                  xbl:inherits="disabled,orient,curpos=value,minpos=min,maxpos=max,increment,pageincrement">
+                  xbl:inherits="disabled,orient,dir,curpos=value,minpos=min,maxpos=max,increment,pageincrement">
         <xul:thumb class="scale-thumb" xbl:inherits="disabled,orient"/>
       </xul:slider>
     </content>
@@ -51,6 +51,18 @@
           return this._sliderElement;
         </getter>
       </property>
+
+      <constructor>
+        <![CDATA[
+          var value = parseInt(this.getAttribute("value"), 10);
+          if (!isNaN(value))
+            this.value = value;
+          else if (this.min > 0)
+            this.value = this.min;
+          else if (this.max < 0)
+            this.value = this.max;
+        ]]>
+      </constructor>
 
       <method name="_getIntegerAttribute">
         <parameter name="aAttr"/>
@@ -134,7 +146,7 @@
             this.setAttribute("value", event.newValue);
 
             var changeEvent = document.createEvent("Events");
-            changeEvent.initEvent("change", false, true);
+            changeEvent.initEvent("change", true, true);
             this.dispatchEvent(changeEvent);
             break;
 
@@ -149,28 +161,28 @@
       </handler>
 
       <handler event="keypress" keycode="VK_UP" preventdefault="true">
-        this.decrease();
+        return (this.dir == "reverse") ? this.increase() : this.decrease();
       </handler>
       <handler event="keypress" keycode="VK_LEFT" preventdefault="true">
-        this.decrease();
+        return (this.dir == "reverse") ? this.increase() : this.decrease();
       </handler>
       <handler event="keypress" keycode="VK_DOWN" preventdefault="true">
-        this.increase();
+        return (this.dir == "reverse") ? this.decrease() : this.increase();
       </handler>
       <handler event="keypress" keycode="VK_RIGHT" preventdefault="true">
-        this.increase();
+        return (this.dir == "reverse") ? this.decrease() : this.increase();
       </handler>
       <handler event="keypress" keycode="VK_PAGE_UP" preventdefault="true">
-        this.decreasePage();
+        return (this.dir == "reverse") ? this.increasePage() : this.decreasePage();
       </handler>
       <handler event="keypress" keycode="VK_PAGE_DOWN" preventdefault="true">
-        this.increasePage();
+        return (this.dir == "reverse") ? this.decreasePage() : this.increasePage();
       </handler>
       <handler event="keypress" keycode="VK_HOME" preventdefault="true">
-        this.value = this.min;
+        this.value = (this.dir == "reverse") ? this.max : this.min;
       </handler>
       <handler event="keypress" keycode="VK_END" preventdefault="true">
-        this.value = this.max;
+        this.value = (this.dir == "reverse") ? this.min : this.max;
       </handler>
     </handlers>
 

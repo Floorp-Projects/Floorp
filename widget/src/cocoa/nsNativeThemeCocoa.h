@@ -111,7 +111,8 @@ protected:
   void DrawTabPanel (CGContextRef context, const HIRect& inBoxRect);
   void DrawScale (CGContextRef context, const HIRect& inBoxRect,
                   PRBool inIsDisabled, PRInt32 inState,
-                  PRBool inDirection, PRInt32 inCurrentValue,
+                  PRBool inDirection, PRBool inIsReverse,
+                  PRInt32 inCurrentValue,
                   PRInt32 inMinValue, PRInt32 inMaxValue);
   void DrawButton (CGContextRef context, ThemeButtonKind inKind,
                    const HIRect& inBoxRect, PRBool inIsDefault, 

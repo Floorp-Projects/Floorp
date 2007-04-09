@@ -217,8 +217,9 @@ private:
 
   nsIBox* GetScrollbar();
 
-  void PageUpDown(nsIFrame* aThumbFrame, nscoord change);
-  void SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, nscoord pos, PRBool aIsSmooth);
+  void PageUpDown(nscoord change);
+  void SetCurrentPosition(nsIContent* scrollbar, nscoord pos, PRBool aIsSmooth);
+  void SetCurrentPositionInternal(nsIContent* scrollbar, nscoord pos, PRBool aIsSmooth);
   void DragThumb(PRBool aGrabMouseEvents);
   void AddListener();
   void RemoveListener();
