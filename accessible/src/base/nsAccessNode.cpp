@@ -693,6 +693,9 @@ already_AddRefed<nsIDOMNode> nsAccessNode::GetCurrentFocus()
     if (focusedWinInternal) {
       nsCOMPtr<nsIDOMDocument> focusedDOMDocument;
       focusedWinInternal->GetDocument(getter_AddRefs(focusedDOMDocument));
+      if (!focusedDOMDocument) {
+        return nsnull;
+      }
       focusedDOMDocument->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&focusedNode);
     }
   }
