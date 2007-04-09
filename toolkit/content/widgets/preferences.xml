@@ -744,9 +744,20 @@
                   // Don't let the new pane content flex to the current window
                   // height if we're animating 
                   aPaneElement.removeAttribute("flex");
-
+#ifdef XP_MACOSX
+                  try {
+                    window.animatedResize = window.RESIZE_ANIMATION_SLIDE;
+                    // New height is the new pane's size plus the size of the pane selection bar
+                    var newHeight = aPaneElement.contentHeight + (window.innerHeight - oldPane.contentHeight);
+                    window.innerHeight = newHeight;
+                    this._currentHeight = newHeight;
+                    window.animatedResize = window.RESIZE_ANIMATION_OFF;
+                  }
+                  catch (e) { }
+#else
                   aPaneElement.style.opacity = 0.0;
                   this.animate(oldPane, aPaneElement);
+#endif
                 }
               }
               break;
