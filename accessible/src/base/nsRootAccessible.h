@@ -90,10 +90,19 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_ROOTACCESSIBLE_IMPL_CID)
 
-    void FireAccessibleFocusEvent(nsIAccessible *focusAccessible,
-                                  nsIDOMNode *focusNode,
-                                  nsIDOMEvent *aFocusEvent,
-                                  PRBool aForceEvent = PR_FALSE);
+    /**
+      * Fire an accessible focus event for the current focusAccssible
+      * and attach a new selection listener, if necessary.
+      * @param aFocusAccessible  The accessible which has received focus.
+      * @param aFocusNode        The DOM Node which has received focus.
+      * @param aFocusEvent       DOM focus event that caused the node/accessible to receive focus
+      * @param aForceEvent       Fire a focus event even if the last focused item was the same
+      * @return                  Boolean -- was a focus event actually fired
+      */
+    PRBool FireAccessibleFocusEvent(nsIAccessible *aFocusAccessible,
+                                    nsIDOMNode *aFocusNode,
+                                    nsIDOMEvent *aFocusEvent,
+                                    PRBool aForceEvent = PR_FALSE);
 
   private:
     nsCOMPtr<nsITimer> mFireFocusTimer;
