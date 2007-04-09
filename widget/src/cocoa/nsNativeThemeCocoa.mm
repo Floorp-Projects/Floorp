@@ -247,7 +247,8 @@ nsNativeThemeCocoa::DrawTabPanel(CGContextRef cgContext, const HIRect& inBoxRect
 void
 nsNativeThemeCocoa::DrawScale(CGContextRef cgContext, const HIRect& inBoxRect,
                               PRBool inIsDisabled, PRInt32 inState,
-                              PRBool inIsVertical, PRInt32 inCurrentValue,
+                              PRBool inIsVertical, PRBool inIsReverse,
+                              PRInt32 inCurrentValue,
                               PRInt32 inMinValue, PRInt32 inMaxValue)
 {
   HIThemeTrackDrawInfo tdi;
@@ -261,6 +262,8 @@ nsNativeThemeCocoa::DrawScale(CGContextRef cgContext, const HIRect& inBoxRect,
   tdi.attributes = kThemeTrackShowThumb;
   if (!inIsVertical)
     tdi.attributes |= kThemeTrackHorizontal;
+  if (inIsReverse)
+    tdi.attributes |= kThemeTrackRightToLeft;
   if (inState & NS_EVENT_STATE_FOCUS)
     tdi.attributes |= kThemeTrackHasFocus;
   tdi.enableState = inIsDisabled ? kThemeTrackDisabled : kThemeTrackActive;
@@ -610,8 +613,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       if (!maxpos)
         maxpos = 100;
 
+      PRBool reverse = aFrame->GetContent()->
+        AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::dir,
+                    NS_LITERAL_STRING("reverse"), eCaseMatters);
       DrawScale(cgContext, macRect, IsDisabled(aFrame), eventState,
-                (aWidgetType == NS_THEME_SCALE_VERTICAL),
+                (aWidgetType == NS_THEME_SCALE_VERTICAL), reverse,
                 curpos, minpos, maxpos);
     }
       break;
