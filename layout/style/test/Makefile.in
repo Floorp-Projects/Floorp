@@ -45,6 +45,14 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 
+# XXX Yuck.  We can't transfer everything from autoconf to HOST_CFLAGS,
+# but it would be nice to pick up anything affecting nsCSSPropList.h
+# automatically.
+ifdef MOZ_SVG
+HOST_CFLAGS	+= -DMOZ_SVG=1
+HOST_CXXFLAGS	+= -DMOZ_SVG=1
+endif
+
 HOST_CPPSRCS	= \
 		ListCSSProperties.cpp \
 		$(NULL)
