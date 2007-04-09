@@ -54,7 +54,7 @@ toolkit.jar:
         content/global/bindings/radio.xml           (resources/content/bindings/radio.xml)
         content/global/bindings/scrollbar.xml       (resources/content/bindings/scrollbar.xml)
         content/global/bindings/nativescrollbar.xml (resources/content/bindings/nativescrollbar.xml)
-        content/global/bindings/scale.xml           (resources/content/bindings/scale.xml)
+        content/global/bindings/scale.xml           (/toolkit/content/widgets/scale.xml)
         content/global/bindings/scrollbox.xml       (resources/content/bindings/scrollbox.xml)
         content/global/bindings/splitter.xml        (resources/content/bindings/splitter.xml)
         content/global/bindings/spinbuttons.xml     (/toolkit/content/widgets/spinbuttons.xml)
