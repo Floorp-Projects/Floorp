@@ -203,16 +203,6 @@ nsRootAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   nsresult rv = nsDocAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ASSERTION(mDocument, "mDocument should not be null unless mDOMNode is");
-  if (gLastFocusedNode) {
-    nsCOMPtr<nsIDOMDocument> rootAccessibleDoc(do_QueryInterface(mDocument));
-    nsCOMPtr<nsIDOMDocument> focusedDoc;
-    gLastFocusedNode->GetOwnerDocument(getter_AddRefs(focusedDoc));
-    if (rootAccessibleDoc == focusedDoc) {
-      *aState |= nsIAccessibleStates::STATE_FOCUSED;
-    }
-  }
-
 #ifdef MOZ_XUL
   PRUint32 chromeFlags = GetChromeFlags();
   if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) {
@@ -430,10 +420,10 @@ void nsRootAccessible::TryFireEarlyLoadEvent(nsIDOMNode *aDocNode)
                           nsnull, PR_FALSE);
 }
 
-void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
-                                                nsIDOMNode *aNode,
-                                                nsIDOMEvent *aFocusEvent,
-                                                PRBool aForceEvent)
+PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
+                                                  nsIDOMNode *aNode,
+                                                  nsIDOMEvent *aFocusEvent,
+                                                  PRBool aForceEvent)
 {
   if (mCaretAccessible) {
     nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aFocusEvent));
@@ -465,13 +455,13 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
       nsCOMPtr<nsIDOMDocument> domDoc;
       aNode->GetOwnerDocument(getter_AddRefs(domDoc));
       if (!domDoc) {
-        return;
+        return PR_FALSE;
       }
       nsCOMPtr<nsIDOMElement> relatedEl;
       domDoc->GetElementById(id, getter_AddRefs(relatedEl));
       finalFocusContent = do_QueryInterface(relatedEl);
       if (!finalFocusContent) {
-        return;
+        return PR_FALSE;
       }
       GetAccService()->GetAccessibleFor(finalFocusNode, getter_AddRefs(finalFocusAccessible));      
       // XXX Deal with case where finalFocusNode is not in parent chain of original true focus (aNode).
@@ -482,20 +472,17 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
 
   // Fire focus only if it changes, but always fire focus events when aForceEvent == PR_TRUE
   if (gLastFocusedNode == finalFocusNode && !aForceEvent) {
-    return;
+    return PR_FALSE;
   }
 
   nsCOMPtr<nsPIAccessible> privateAccessible =
     do_QueryInterface(finalFocusAccessible);
   NS_ASSERTION(privateAccessible , "No nsPIAccessible for nsIAccessible");
   if (!privateAccessible) {
-    return;
+    return PR_FALSE;
   }
 
-  // Use focus events on DHTML menuitems to indicate when to fire menustart and menuend
-  // Special dynamic content handling
-  PRUint32 role = nsIAccessibleRole::ROLE_NOTHING;
-  finalFocusAccessible->GetFinalRole(&role);
+  PRUint32 role = Role(finalFocusAccessible);
   if (role == nsIAccessibleRole::ROLE_MENUITEM) {
     if (!mIsInDHTMLMenu) {  // Entering menus
       PRUint32 naturalRole; // The natural role is the role that this type of element normally has
@@ -515,8 +502,21 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
   gLastFocusedNode = finalFocusNode;
   NS_IF_ADDREF(gLastFocusedNode);
 
+  nsCOMPtr<nsIAccessibleDocument> docAccessible = do_QueryInterface(privateAccessible);
+  if (docAccessible) {
+    // Doc is gaining focus, but actual focus may be on an element within document
+    nsCOMPtr<nsIDOMNode> realFocusedNode = GetCurrentFocus();
+    if (realFocusedNode != aNode) {
+      // Suppress document focus, because real DOM focus will be fired next,
+      // and that's what we care about
+      return PR_FALSE;
+    }
+  }
+
   privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS,
                                       finalFocusAccessible, nsnull);
+
+  return PR_TRUE;
 }
 
 void nsRootAccessible::FireCurrentFocusEvent()
@@ -742,14 +742,6 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
         if (!accessible)
           return NS_OK;
       }
-    }
-    if (accessible == this) {
-      // Top level window focus events already automatically fired by MSAA
-      // based on HWND activities. Don't fire the extra focus event.
-      NS_IF_RELEASE(gLastFocusedNode);
-      gLastFocusedNode = mDOMNode;
-      NS_IF_ADDREF(gLastFocusedNode);
-      return NS_OK;
     }
     FireAccessibleFocusEvent(accessible, focusedItem, aEvent);
   }
