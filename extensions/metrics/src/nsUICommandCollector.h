@@ -81,7 +81,29 @@ class nsUICommandCollector : public nsIObserver,
   nsresult GetEventWindow(nsIDOMEvent *event, PRUint32 *window) const;
 
  private:
+  // This struct specifies an event we want to handle, and the method
+  // that handles it.
+  struct EventHandler {
+    const char* event;
+    nsresult (nsUICommandCollector::* handler)(nsIDOMEvent*);
+  };
+
+  // The events we'll handle.
+  static const EventHandler kEvents[];
+
   ~nsUICommandCollector();
+
+  // Adds all of our event types as listeners on the window.
+  void AddEventListeners(nsIDOMEventTarget* window);
+
+  // Removes all of our event types as listeners on the window.
+  void RemoveEventListeners(nsIDOMEventTarget* window);
+
+  // Handles a XUL command event.
+  nsresult HandleCommandEvent(nsIDOMEvent* event);
+
+  // Handles a TabMove event from the tabbrowser widget.
+  nsresult HandleTabMoveEvent(nsIDOMEvent* event);
 
   // Checks whether the given target id corresponds to a bookmark resource,
   // and if so, adds additional data about the bookmark to parentItem.
