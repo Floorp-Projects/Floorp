@@ -18,6 +18,8 @@ sub Execute {
     my $branchTag = $config->Get(var => 'branchTag');
     my $pullDate = $config->Get(var => 'pullDate');
     my $version = $config->Get(var => 'version');
+    my $milestone = $config->Exists(var => 'milestone') ? 
+     $config->Get(var => 'milestone') : undef;
     my $appName = $config->Get(var => 'appName');
     my $logDir = $config->Get(var => 'logDir');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
@@ -32,7 +34,13 @@ sub Execute {
     my $moduleVer = catfile($appName, 'app', 'module.ver');
     my $versionTxt = catfile($appName, 'config', 'version.txt');
     my $milestoneTxt = catfile('config', 'milestone.txt');
-    my @bumpFiles = ('client.mk', $moduleVer, $versionTxt, $milestoneTxt);
+
+    my @bumpFiles = ('client.mk', $moduleVer, $versionTxt);
+
+    # only bump milestone if it's defined in the config
+    if (defined($milestone)) {
+        @bumpFiles = (@bumpFiles, $milestoneTxt);
+    }
 
     # Check out Mozilla from the branch you want to tag.
     # TODO this should support running without branch tag or pull date.
@@ -73,20 +81,43 @@ sub Execute {
     ### Perform version bump
 
     my $parentDir = catfile($cvsrootTagDir, 'mozilla');
-    foreach my $file (catfile($parentDir, $moduleVer), 
-                      catfile($parentDir, $versionTxt),
-                      catfile($parentDir, $milestoneTxt)) {
+    foreach my $fileName (@bumpFiles) {
         my $found = 0;
+
+        my $file = catfile($parentDir, $fileName);
+
+        my $bumpVersion = undef;
+        my $preVersion = undef;
+        my $search = undef;
+        my $replace = undef;
+
+        if ($fileName eq 'client.mk') {
+            $search = '^MOZ_CO_TAG\s+=\s+' . $branchTag . '$';
+            $replace = 'MOZ_CO_TAG           = ' . $releaseTag;
+        } elsif ($fileName eq $moduleVer) {
+            $preVersion = $version . 'pre';
+            $search = '^WIN32_MODULE_PRODUCTVERSION_STRING=' . $preVersion . '$';
+            $replace = 'WIN32_MODULE_PRODUCTVERSION_STRING=' . $version;
+        } elsif ($fileName eq $versionTxt) {
+            $preVersion = $version . 'pre';
+            $search = '^' . $preVersion . '$';
+            $replace = $version;
+        } elsif ($fileName eq $milestoneTxt) {
+            $preVersion = $milestone . 'pre';
+            $search = '^' . $preVersion . '$';
+            $replace = $milestone;
+        } else {
+            die("ASSERT: do not know how to bump file $fileName");
+        }
+        
         open(INFILE,  "< $file") or die("Could not open $file: $!");
         open(OUTFILE, "> $file.tmp") or die("Could not open $file.tmp: $!");
         while(<INFILE>) {
-            my $preVersion = $version . 'pre';
-            if($_ =~ s/$preVersion/$version/) {
+            if($_ =~ /$search/) {
+                $this->Log(msg => "$search found");
                 $found = 1;
-            }
-            if($_ =~ /$preVersion/) {
-                $found = 1;
-                $_ =~ s/pre$//g;
+                $_ =~ s/$search/$replace/;
+                $this->Log(msg => "$search replaced with $replace");
             }
 
             print OUTFILE $_;
@@ -94,36 +125,13 @@ sub Execute {
         close INFILE or die("Could not close $file: $!");
         close OUTFILE or die("Coule not close $file.tmp: $!");
         if (not $found) {
-            die("No " . $version . "pre in file $file: $!");
+            die("No " . $search . " found in file $file: $!");
         }
 
         if (not move("$file.tmp",
                      "$file")) {
-            die("Cannot rename $clientMk.tmp to $clientMk: $!");
+            die("Cannot rename $file.tmp to $file: $!");
         }
-    }
-
-    # Add the new product tag to the client.mk
-    my $clientMk = catfile($cvsrootTagDir, 'mozilla', 'client.mk');
-    my $found = 0;
-    open(INFILE,  "< $clientMk");
-    open(OUTFILE, "> $clientMk.tmp");
-    while(<INFILE>) {
-        if ($_ =~ s/$branchTag/$releaseTag/g) {
-            $found = 1;
-        }
-        print OUTFILE $_;
-    }
-    close INFILE;
-    close OUTFILE;
-
-    if (not $found) {
-        die("No $branchTag in file $clientMk : $!");
-    }
-
-    if (not move("$clientMk.tmp",
-                 "$clientMk")) {
-        die("Cannot rename $clientMk.tmp to $clientMk: $!");
     }
 
     my $bumpCiMsg = 'version bump, remove pre tag for ' 
@@ -145,11 +153,18 @@ sub Verify {
     my $config = new Bootstrap::Config();
     my $logDir = $config->Get(var => 'logDir');
     my $appName = $config->Get(var => 'appName');
+    my $milestone = $config->Exists(var => 'milestone') ? 
+     $config->Get(var => 'milestone') : undef;
 
     my $moduleVer = catfile($appName, 'app', 'module.ver');
     my $versionTxt = catfile($appName, 'config', 'version.txt');
     my $milestoneTxt = catfile('config', 'milestone.txt');
-    my @bumpFiles = ('client.mk', $moduleVer, $versionTxt, $milestoneTxt);
+    my @bumpFiles = ('client.mk', $moduleVer, $versionTxt);
+
+    # only bump milestone if it's defined in the config
+    if (defined($milestone)) {
+        @bumpFiles = (@bumpFiles, $milestoneTxt);
+    }
 
     foreach my $file (@bumpFiles) {
         foreach my $rule ('^Checking in ' . $file, '^done') {
