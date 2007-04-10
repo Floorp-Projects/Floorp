@@ -613,7 +613,7 @@ struct JSPrinter {
 #define JS_IN_GROUP_CONTEXT 0x10000
 
 JSPrinter *
-js_NewPrinter(JSContext *cx, const char *name, uintN indent, JSBool pretty)
+JS_NEW_PRINTER(JSContext *cx, const char *name, uintN indent, JSBool pretty)
 {
     JSPrinter *jp;
 
@@ -621,7 +621,7 @@ js_NewPrinter(JSContext *cx, const char *name, uintN indent, JSBool pretty)
     if (!jp)
         return NULL;
     INIT_SPRINTER(cx, &jp->sprinter, &jp->pool, 0);
-    JS_InitArenaPool(&jp->pool, name, 256, 1);
+    JS_INIT_ARENA_POOL(&jp->pool, name, 256, 1);
     jp->indent = indent & ~JS_IN_GROUP_CONTEXT;
     jp->pretty = pretty;
     jp->grouped = (indent & JS_IN_GROUP_CONTEXT) != 0;
@@ -1956,8 +1956,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                   do_function:
                     obj = ATOM_TO_OBJECT(atom);
                     fun = (JSFunction *) JS_GetPrivate(cx, obj);
-                    jp2 = js_NewPrinter(cx, JS_GetFunctionName(fun),
-                                        jp->indent, jp->pretty);
+                    jp2 = JS_NEW_PRINTER(cx, "nested_function",
+                                         jp->indent, jp->pretty);
                     if (!jp2)
                         return NULL;
                     jp2->scope = jp->scope;
@@ -4827,7 +4827,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     }
 
     name = NULL;
-    jp = js_NewPrinter(cx, "js_DecompileValueGenerator", 0, JS_FALSE);
+    jp = JS_NEW_PRINTER(cx, "js_DecompileValueGenerator", 0, JS_FALSE);
     if (jp) {
         if (fp->fun && fp->fun->object) {
             JS_ASSERT(OBJ_IS_NATIVE(fp->fun->object));

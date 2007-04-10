@@ -93,6 +93,14 @@ struct JSArenaPool {
 #endif
 };
 
+#ifdef JS_ARENAMETER
+#define JS_INIT_NAMED_ARENA_POOL(pool, name, size, align)                     \
+    JS_InitArenaPool(pool, name, size, align)
+#else
+#define JS_INIT_NAMED_ARENA_POOL(pool, name, size, align)                     \
+    JS_InitArenaPool(pool, size, align)
+#endif
+
 /*
  * If the including .c file uses only one power-of-2 alignment, it may define
  * JS_ARENA_CONST_ALIGN_MASK to the alignment mask and save a few instructions
@@ -102,10 +110,15 @@ struct JSArenaPool {
 #define JS_ARENA_ALIGN(pool, n) (((jsuword)(n) + JS_ARENA_CONST_ALIGN_MASK)   \
                                  & ~(jsuword)JS_ARENA_CONST_ALIGN_MASK)
 
-#define JS_INIT_ARENA_POOL(pool, name, size) \
-        JS_InitArenaPool(pool, name, size, JS_ARENA_CONST_ALIGN_MASK + 1)
+#define JS_INIT_ARENA_POOL(pool, name, size)                                  \
+    JS_INIT_NAMED_ARENA_POOL(pool, name, size, JS_ARENA_CONST_ALIGN_MASK + 1)
+
 #else
 #define JS_ARENA_ALIGN(pool, n) (((jsuword)(n) + (pool)->mask) & ~(pool)->mask)
+
+#define JS_INIT_ARENA_POOL(pool, name, size, align)                           \
+    JS_INIT_NAMED_ARENA_POOL(pool, name, size, align)
+
 #endif
 
 #define JS_ARENA_ALLOCATE(p, pool, nb)                                        \
@@ -211,12 +224,13 @@ struct JSArenaPool {
     JS_END_MACRO
 
 /*
- * Initialize an arena pool with the given name for debugging and metering,
- * with a minimum size per arena of size bytes.
+ * Initialize an arena pool with a minimum size per arena of size bytes.
+ * Always call JS_SET_ARENA_METER_NAME before calling this or use
+ * JS_INIT_ARENA_POOL macro to provide a name for for debugging and metering.
  */
 extern JS_PUBLIC_API(void)
-JS_InitArenaPool(JSArenaPool *pool, const char *name, size_t size,
-                 size_t align);
+JS_INIT_NAMED_ARENA_POOL(JSArenaPool *pool, const char *name, size_t size,
+                         size_t align);
 
 /*
  * Free the arenas in pool.  The user may continue to allocate from pool

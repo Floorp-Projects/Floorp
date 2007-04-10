@@ -258,8 +258,8 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
      * done by js_DestroyContext).
      */
     cx->version = JSVERSION_DEFAULT;
-    JS_InitArenaPool(&cx->stackPool, "stack", stackChunkSize, sizeof(jsval));
-    JS_InitArenaPool(&cx->tempPool, "temp", 1024, sizeof(jsdouble));
+    JS_INIT_ARENA_POOL(&cx->stackPool, "stack", stackChunkSize, sizeof(jsval));
+    JS_INIT_ARENA_POOL(&cx->tempPool, "temp", 1024, sizeof(jsdouble));
 
     if (!js_InitRegExpStatics(cx, &cx->regExpStatics)) {
         js_DestroyContext(cx, JSDCM_NEW_FAILED);
