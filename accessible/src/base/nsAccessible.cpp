@@ -2159,6 +2159,12 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
     // posinset, level, setsize may be skipped. Therefore we calculate here
     // these properties to map them into description.
 
+    // If accessible is invisible we don't want to calculate group ARIA
+    // attributes for it.
+    PRUint32 state = State(this);
+    if (state & nsIAccessibleStates::STATE_INVISIBLE)
+      return NS_OK;
+
     PRUint32 role = Role(this);
     if (role == nsIAccessibleRole::ROLE_LISTITEM ||
         role == nsIAccessibleRole::ROLE_MENUITEM ||
@@ -2180,7 +2186,8 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
       PRUint32 siblingRole;
       while (sibling) {
         sibling->GetFinalRole(&siblingRole);
-        if (siblingRole == role) {
+        if (siblingRole == role &&
+            !(State(sibling) & nsIAccessibleStates::STATE_INVISIBLE)) {
           ++ setSize;
           if (!foundCurrent) {
             ++ positionInGroup;
