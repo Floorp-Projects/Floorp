@@ -3420,7 +3420,10 @@ IsSpecialContent(nsIContent*     aContent,
       aTag == nsGkAtoms::mrow_   ||
       aTag == nsGkAtoms::merror_ ||
       aTag == nsGkAtoms::none   ||
-      aTag == nsGkAtoms::mprescripts_;
+      aTag == nsGkAtoms::mprescripts_ ||
+      (aTag == nsGkAtoms::mtable_ &&
+       aStyleContext->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_TABLE) ||
+      aTag == nsGkAtoms::math;
 #endif
   return PR_FALSE;
 }
@@ -6707,9 +6710,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
 
   // Leverage IsSpecialContent to check if one of the |if aTag| below will
   // surely match (knowing that aNameSpaceID == kNameSpaceID_MathML here)
-  if (IsSpecialContent(aContent, aTag, aNameSpaceID, aStyleContext) ||
-      (aTag == nsGkAtoms::mtable_ && 
-       disp->mDisplay == NS_STYLE_DISPLAY_TABLE)) {
+  if (IsSpecialContent(aContent, aTag, aNameSpaceID, aStyleContext)) {
     // process pending pseudo frames
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
@@ -6768,6 +6769,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     // block so that it can mix better with other surrounding MathML markups
     // This assumes that the <mtable> is not positioned or floated.
     // (MathML does not allow/support positioned or floated elements at all.)
+    // XXXbz once we stop doing this mess, fix IsSpecialContent accordingly.
 
     nsStyleContext* parentContext = aParentFrame->GetStyleContext();
     nsStyleSet *styleSet = mPresShell->StyleSet();
@@ -6806,6 +6808,13 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     nsIFrame* outerTable;
     nsIFrame* innerTable;
     
+    // XXXbz note: since we're constructing a table frame, and it does things
+    // based on whether its parent is a pseudo or not, we need to save our
+    // pseudo state here.  This can go away if we switch to a direct
+    // construction of mtable as an inline-table.
+    nsPseudoFrames priorPseudoFrames; 
+    aState.mPseudoFrames.Reset(&priorPseudoFrames);
+
     // Pass PR_FALSE for aAllowOutOfFlow so that the resulting table will be
     // guaranteed to be in-flow (and in particular, a descendant of the <math>
     // in the _frame_ tree).
@@ -6815,6 +6824,13 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     // Note: table construction function takes care of initializing the frame,
     // processing children, and setting the initial child list
 
+    NS_ASSERTION(aState.mPseudoFrames.IsEmpty(),
+                 "How did we end up with pseudo-frames here?");
+
+    // restore the incoming pseudo frame state.  Note that we MUST do this
+    // before adding things to aFrameItems.
+    aState.mPseudoFrames = priorPseudoFrames;
+    
     // set the outerTable as the initial child of the anonymous block
     blockFrame->SetInitialChildList(nsnull, outerTable);
 
