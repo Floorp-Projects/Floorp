@@ -42,6 +42,7 @@
 #include "nsIRDFService.h"
 #include "nsIRDFInferDataSource.h"
 #include "nsIRDFDataSource.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsForwardProxyDataSource : public nsIRDFInferDataSource,
                                  public nsIRDFObserver
@@ -52,7 +53,9 @@ public:
     nsresult Init(void);
 
     // nsISupports interface
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsForwardProxyDataSource,
+                                             nsIRDFInferDataSource)
 
     // nsIRDFDataSource interface
     NS_DECL_NSIRDFDATASOURCE

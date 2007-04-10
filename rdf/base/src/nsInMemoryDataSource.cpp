@@ -348,7 +348,8 @@ protected:
     NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResult);
 
 public:
-    NS_DECL_AGGREGATED
+    NS_DECL_CYCLE_COLLECTING_AGGREGATED
+    NS_DECL_AGGREGATED_CYCLE_COLLECTION_CLASS(InMemoryDataSource)
 
     // nsIRDFDataSource methods
     NS_DECL_NSIRDFDATASOURCE
@@ -974,13 +975,22 @@ InMemoryDataSource::DeleteForwardArcsEntry(PLDHashTable* aTable, PLDHashEntryHdr
 
 ////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_AGGREGATED(InMemoryDataSource)
+NS_IMPL_CYCLE_COLLECTION_CLASS(InMemoryDataSource)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(InMemoryDataSource)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mObservers)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_AGGREGATED(InMemoryDataSource)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mObservers)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTING_AGGREGATED(InMemoryDataSource)
 NS_INTERFACE_MAP_BEGIN_AGGREGATED(InMemoryDataSource)
     NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
     NS_INTERFACE_MAP_ENTRY(nsIRDFInMemoryDataSource)
     NS_INTERFACE_MAP_ENTRY(nsIRDFPropagatableDataSource)
     NS_INTERFACE_MAP_ENTRY(nsIRDFPurgeableDataSource)
     NS_INTERFACE_MAP_ENTRY(rdfIDataSource)
+    NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION_AGGREGATED(InMemoryDataSource)
 NS_INTERFACE_MAP_END
 
 ////////////////////////////////////////////////////////////////////////

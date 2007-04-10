@@ -658,7 +658,23 @@ RelatedLinksHandlerImpl::Init()
 
 // nsISupports interface
 
-NS_IMPL_ISUPPORTS2(RelatedLinksHandlerImpl, nsIRelatedLinksHandler, nsIRDFDataSource)
+NS_IMPL_CYCLE_COLLECTION_CLASS(RelatedLinksHandlerImpl)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(RelatedLinksHandlerImpl)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(RelatedLinksHandlerImpl)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mInner)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(RelatedLinksHandlerImpl,
+                                          nsIRelatedLinksHandler)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(RelatedLinksHandlerImpl,
+                                           nsIRelatedLinksHandler)
+
+NS_INTERFACE_MAP_BEGIN(RelatedLinksHandlerImpl)
+    NS_INTERFACE_MAP_ENTRY(nsIRelatedLinksHandler)
+    NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRelatedLinksHandler)
+    NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(RelatedLinksHandlerImpl)
+NS_INTERFACE_MAP_END
 
 // nsIRelatedLinksHandler interface
 

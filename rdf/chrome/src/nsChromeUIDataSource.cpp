@@ -80,30 +80,30 @@ nsChromeUIDataSource::~nsChromeUIDataSource()
   NS_IF_RELEASE(mRDFService);
 }
 
-// we require a special implementation of Release, which knows about
-// a circular strong reference
-NS_IMPL_ADDREF(nsChromeUIDataSource)
-NS_IMPL_QUERY_INTERFACE2(nsChromeUIDataSource, nsIRDFDataSource, nsIRDFObserver)
-
-NS_IMETHODIMP_(nsrefcnt)
-nsChromeUIDataSource::Release()
-{
-  NS_PRECONDITION(PRInt32(mRefCnt) > 0, "duplicate release");
-  --mRefCnt;
-  NS_LOG_RELEASE(this, mRefCnt, "nsChromeUIDataSource");
-
-  // delete if the last reference is our strong circular reference
-  if (mComposite && PRInt32(mRefCnt) == 1) {
-    mComposite->RemoveObserver(this);
-    return 0;
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsChromeUIDataSource)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsChromeUIDataSource)
+  if (tmp->mComposite) {
+    tmp->mComposite->RemoveObserver(tmp);
+    tmp->mComposite = nsnull;
   }
-  else if (mRefCnt == 0) {
-    delete this;
-    return 0;
-  }
-  return mRefCnt;
-}
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mObservers);
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsChromeUIDataSource)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mComposite)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mObservers)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsChromeUIDataSource,
+                                          nsIRDFDataSource)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsChromeUIDataSource,
+                                           nsIRDFDataSource)
+
+NS_INTERFACE_MAP_BEGIN(nsChromeUIDataSource)
+  NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
+  NS_INTERFACE_MAP_ENTRY(nsIRDFObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRDFDataSource)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsChromeUIDataSource)
+NS_INTERFACE_MAP_END
 
 //----------------------------------------------------------------------
 //

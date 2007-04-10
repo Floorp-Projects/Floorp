@@ -48,11 +48,14 @@ class nsIDocument;
 #include "nsIRDFDataSource.h"
 #include "nsIRDFObserver.h"
 #include "nsCOMArray.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsChromeUIDataSource : public nsIRDFDataSource, public nsIRDFObserver
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsChromeUIDataSource,
+                                           nsIRDFDataSource)
 
   // nsIRDFDataSource methods
   NS_DECL_NSIRDFDATASOURCE

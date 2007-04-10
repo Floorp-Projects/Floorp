@@ -85,7 +85,6 @@ protected:
     friend NS_IMETHODIMP
     NS_NewLocalStore(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
-    nsCOMPtr<nsISupportsArray> mObservers;
     nsCOMPtr<nsIRDFService>    mRDFService;
 
 public:
@@ -162,23 +161,11 @@ public:
     }
 
     NS_IMETHOD AddObserver(nsIRDFObserver* aObserver) {
-        // Observers are _never_ notified, but we still have to play
-        // nice.
-        if (! mObservers) {
-            nsresult rv;
-            rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
-            if (NS_FAILED(rv)) return rv;
-        }
-
-        mObservers->AppendElement(aObserver);
-        return NS_OK;
+        return NS_ERROR_NOT_IMPLEMENTED;
     }
 
     NS_IMETHOD RemoveObserver(nsIRDFObserver* aObserver) {
-        if (mObservers) {
-            mObservers->RemoveElement(aObserver);
-        }
-        return NS_OK;
+        return NS_ERROR_NOT_IMPLEMENTED;
     }
 
     NS_IMETHOD HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *_retval) {

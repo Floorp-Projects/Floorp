@@ -823,18 +823,7 @@ FileSystemDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 NS_IMETHODIMP
 FileSystemDataSource::AddObserver(nsIRDFObserver *n)
 {
-    NS_PRECONDITION(n != nsnull, "null ptr");
-    if (! n)
-        return NS_ERROR_NULL_POINTER;
-
-    if (! mObservers)
-    {
-        nsresult rv;
-        rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
-        if (NS_FAILED(rv)) return rv;
-    }
-    mObservers->AppendElement(n);
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
@@ -842,15 +831,7 @@ FileSystemDataSource::AddObserver(nsIRDFObserver *n)
 NS_IMETHODIMP
 FileSystemDataSource::RemoveObserver(nsIRDFObserver *n)
 {
-    NS_PRECONDITION(n != nsnull, "null ptr");
-    if (! n)
-        return NS_ERROR_NULL_POINTER;
-
-    if (! mObservers)
-        return NS_OK;
-
-    mObservers->RemoveElement(n);
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 

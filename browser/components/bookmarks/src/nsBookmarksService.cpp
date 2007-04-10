@@ -1662,7 +1662,6 @@ BookmarkParser::AssertTime(nsIRDFResource* aSource,
 // nsBookmarksService implementation
 
 nsBookmarksService::nsBookmarksService() :
-    mInner(nsnull),
     mUpdateBatchNest(0),
     mBookmarksAvailable(PR_FALSE),
     mDirty(PR_FALSE),
@@ -1687,7 +1686,6 @@ nsBookmarksService::~nsBookmarksService()
     // has probably already been destroyed
     // Flush();
     bm_ReleaseGlobals();
-    NS_IF_RELEASE(mInner);
 }
 
 nsresult
@@ -2519,42 +2517,33 @@ NS_IMETHODIMP nsBookmarksService::Observe(nsISupports *aSubject, const char *aTo
 ////////////////////////////////////////////////////////////////////////
 // nsISupports methods
 
-NS_IMPL_ADDREF(nsBookmarksService)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsBookmarksService)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsBookmarksService)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mObservers)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsBookmarksService)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mInner)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mObservers)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMETHODIMP_(nsrefcnt)
-nsBookmarksService::Release()
-{
-    // We need a special implementation of Release() because our mInner
-    // holds a Circular References back to us.
-    NS_PRECONDITION(PRInt32(mRefCnt) > 0, "duplicate release");
-    --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "nsBookmarksService");
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsBookmarksService,
+                                          nsIBookmarksService)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsBookmarksService,
+                                           nsIBookmarksService)
 
-    if (mInner && mRefCnt == 1) {
-        nsIRDFDataSource* tmp = mInner;
-        mInner = nsnull;
-        NS_IF_RELEASE(tmp);
-        return 0;
-    }
-    else if (mRefCnt == 0) {
-        delete this;
-        return 0;
-    }
-    else {
-        return mRefCnt;
-    }
-}
-
-NS_IMPL_QUERY_INTERFACE9(nsBookmarksService,
-             nsIBookmarksService,
-             nsIRDFDataSource,
-             nsIRDFRemoteDataSource,
-             nsIRDFObserver,
-             nsIStreamListener,
-             nsIRequestObserver,
-             nsICharsetResolver,
-             nsIObserver,
-             nsISupportsWeakReference)
+NS_INTERFACE_MAP_BEGIN(nsBookmarksService)
+    NS_INTERFACE_MAP_ENTRY(nsIBookmarksService)
+    NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
+    NS_INTERFACE_MAP_ENTRY(nsIRDFRemoteDataSource)
+    NS_INTERFACE_MAP_ENTRY(nsIRDFObserver)
+    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+    NS_INTERFACE_MAP_ENTRY(nsICharsetResolver)
+    NS_INTERFACE_MAP_ENTRY(nsIObserver)
+    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBookmarksService)
+    NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsBookmarksService)
+NS_INTERFACE_MAP_END
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -4595,10 +4584,9 @@ nsBookmarksService::InitDataSource()
 {
     // the profile manager might call Readbookmarks() in certain circumstances
     // so we need to forget about any previous bookmarks
-    NS_IF_RELEASE(mInner);
-
     // don't change this to an xml-ds, it will cause serious perf problems
-    nsresult rv = CallCreateInstance(kRDFInMemoryDataSourceCID, &mInner);
+    nsresult rv;
+    mInner = do_CreateInstance(kRDFInMemoryDataSourceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = mInner->AddObserver(this);
