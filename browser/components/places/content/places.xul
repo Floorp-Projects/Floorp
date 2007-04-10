@@ -341,7 +341,7 @@
           class="placesTree"
           type="places"
           showRoot="true"
-          place="place:&amp;folder=2&amp;group=3&amp;excludeItems=1"
+          place="place:folder=2&amp;group=3&amp;excludeItems=1"
           hidecolumnpicker="true" context="placesContext"
           onselect="PlacesOrganizer.onPlaceSelected(true);
                     PlacesOrganizer.updateStatusBarForView(this);"
