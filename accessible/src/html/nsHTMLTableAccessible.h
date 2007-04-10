@@ -82,7 +82,7 @@ protected:
   nsresult GetCellAt(PRInt32        aRowIndex,
                      PRInt32        aColIndex,
                      nsIDOMElement* &aCell);
-  PRBool HasDescendant(char *aTagName);
+  PRBool HasDescendant(char *aTagName, PRBool aAllowEmpty = PR_TRUE);
   PRBool mHasCaption;
 #ifdef SHOW_LAYOUT_HEURISTIC
   nsAutoString mLayoutHeuristic;
