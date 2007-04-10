@@ -100,29 +100,43 @@ public:
   NS_IMETHOD GetChildCount(PRInt32 *aAccChildCount);
 };
 
-class nsHTMLListBulletAccessible : public nsHTMLTextAccessible
+class nsHTMLListBulletAccessible : public nsLeafAccessible
 {
 public:
   nsHTMLListBulletAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell,
                              nsIFrame *aFrame, const nsAString& aBulletText);
+
+  // nsIAccessNode
   NS_IMETHOD GetUniqueID(void **aUniqueID);
+
+  // nsPIAccessNode
   NS_IMETHOD Shutdown();
+  NS_IMETHOD_(nsIFrame *) GetFrame(void);
+
+  // nsIAccessible
   NS_IMETHOD GetName(nsAString& aName);
-  NS_IMETHOD GetRole(PRUint32 *aRole) { *aRole = nsIAccessibleRole::ROLE_STATICTEXT; return NS_OK; }
+  NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
-  // Don't cache via unique ID -- bullet accessible shares the same dom node as this LI accessible.
-  // Also, don't cache via mParent/SetParent(), prevent circular reference since li holds onto us.
-  NS_IMETHOD SetParent(nsIAccessible *aParentAccessible) { mParent = nsnull; mWeakParent = aParentAccessible; return NS_OK; }
-  NS_IMETHOD GetParent(nsIAccessible **aParentAccessible) { NS_IF_ADDREF(*aParentAccessible = mWeakParent); return NS_OK; }
+
+  // Don't cache via unique ID -- bullet accessible shares the same dom node as
+  // this LI accessible. Also, don't cache via mParent/SetParent(), prevent
+  // circular reference since li holds onto us.
+  NS_IMETHOD SetParent(nsIAccessible *aParentAccessible);
+  NS_IMETHOD GetParent(nsIAccessible **aParentAccessible);
+
+  // nsPIAccessible
+  NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTarget,
+                              void *aData);
+
 protected:
-  // XXX Ideally we'd get the bullet text directly from the bullet frame via
-  // nsBulletFrame::GetListItemText(), but we'd need an interface
-  // for getting text from contentless anonymous frames.
-  // Perhaps something like nsIAnonymousFrame::GetText() ?
-  // However, in practice storing the bullet text here should not be a
-  // problem if we invalidate the right parts of the accessibility cache
-  // when mutation events occur.
+  // XXX: Ideally we'd get the bullet text directly from the bullet frame via
+  // nsBulletFrame::GetListItemText(), but we'd need an interface for getting
+  // text from contentless anonymous frames. Perhaps something like
+  // nsIAnonymousFrame::GetText() ? However, in practice storing the bullet text
+  // here should not be a problem if we invalidate the right parts of
+  // the accessibility cache when mutation events occur.
   nsIAccessible *mWeakParent;
+  nsIFrame *mFrame;
   nsString mBulletText;
 };
 
