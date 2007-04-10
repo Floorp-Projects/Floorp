@@ -119,7 +119,7 @@ private:
   PRPackedBool mInUse2;
 };
 
-nsSVGMarkerFrame *
-NS_GetSVGMarkerFrame(nsIURI *aURI, nsIContent *aContent);
+nsIContent *
+NS_GetSVGMarkerElement(nsIURI *aURI, nsIContent *aContent);
 
 #endif
