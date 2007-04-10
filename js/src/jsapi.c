@@ -3789,8 +3789,8 @@ CompileTokenStream(JSContext *cx, JSObject *obj, JSTokenStream *ts,
 
     CHECK_REQUEST(cx);
     eof = JS_FALSE;
-    JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode));
-    JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote));
+    JS_INIT_ARENA_POOL(&codePool, "code", 1024, sizeof(jsbytecode));
+    JS_INIT_ARENA_POOL(&notePool, "note", 1024, sizeof(jssrcnote));
     if (!js_InitCodeGenerator(cx, &cg, &codePool, &notePool,
                               ts->filename, ts->lineno,
                               ts->principals)) {
@@ -4150,9 +4150,9 @@ JS_DecompileScript(JSContext *cx, JSScript *script, const char *name,
     JSString *str;
 
     CHECK_REQUEST(cx);
-    jp = js_NewPrinter(cx, name,
-                       indent & ~JS_DONT_PRETTY_PRINT,
-                       !(indent & JS_DONT_PRETTY_PRINT));
+    jp = JS_NEW_PRINTER(cx, name,
+                        indent & ~JS_DONT_PRETTY_PRINT,
+                        !(indent & JS_DONT_PRETTY_PRINT));
     if (!jp)
         return NULL;
     if (js_DecompileScript(jp, script))
@@ -4170,9 +4170,9 @@ JS_DecompileFunction(JSContext *cx, JSFunction *fun, uintN indent)
     JSString *str;
 
     CHECK_REQUEST(cx);
-    jp = js_NewPrinter(cx, JS_GetFunctionName(fun),
-                       indent & ~JS_DONT_PRETTY_PRINT,
-                       !(indent & JS_DONT_PRETTY_PRINT));
+    jp = JS_NEW_PRINTER(cx, "JS_DecompileFunction",
+                        indent & ~JS_DONT_PRETTY_PRINT,
+                        !(indent & JS_DONT_PRETTY_PRINT));
     if (!jp)
         return NULL;
     if (js_DecompileFunction(jp, fun))
@@ -4190,9 +4190,9 @@ JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent)
     JSString *str;
 
     CHECK_REQUEST(cx);
-    jp = js_NewPrinter(cx, JS_GetFunctionName(fun),
-                       indent & ~JS_DONT_PRETTY_PRINT,
-                       !(indent & JS_DONT_PRETTY_PRINT));
+    jp = JS_NEW_PRINTER(cx, "JS_DecompileFunctionBody",
+                        indent & ~JS_DONT_PRETTY_PRINT,
+                        !(indent & JS_DONT_PRETTY_PRINT));
     if (!jp)
         return NULL;
     if (js_DecompileFunctionBody(jp, fun))

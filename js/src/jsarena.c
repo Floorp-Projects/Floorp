@@ -61,7 +61,8 @@ static JSArenaStats *arena_stats_list;
 #define JS_ARENA_DEFAULT_ALIGN  sizeof(double)
 
 JS_PUBLIC_API(void)
-JS_InitArenaPool(JSArenaPool *pool, const char *name, size_t size, size_t align)
+JS_INIT_NAMED_ARENA_POOL(JSArenaPool *pool, const char *name, size_t size,
+                         size_t align)
 {
     if (align == 0)
         align = JS_ARENA_DEFAULT_ALIGN;
@@ -485,7 +486,6 @@ JS_DumpArenaStats(FILE *fp)
         fprintf(fp, "\n%s allocation statistics:\n", stats->name);
         fprintf(fp, "              number of arenas: %u\n", stats->narenas);
         fprintf(fp, "         number of allocations: %u\n", stats->nallocs);
-        fprintf(fp, " number of free arena reclaims: %u\n", stats->nreclaims);
         fprintf(fp, "        number of malloc calls: %u\n", stats->nmallocs);
         fprintf(fp, "       number of deallocations: %u\n", stats->ndeallocs);
         fprintf(fp, "  number of allocation growths: %u\n", stats->ngrows);

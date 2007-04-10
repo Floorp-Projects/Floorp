@@ -3361,7 +3361,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
     gData.start = start;
     gData.skipped = 0;
 
-    JS_InitArenaPool(&gData.pool, "RegExpPool", 8096, 4);
+    JS_INIT_ARENA_POOL(&gData.pool, "RegExpPool", 8096, 4);
     x = InitMatch(cx, &gData, re, length);
 
     if (!x) {
