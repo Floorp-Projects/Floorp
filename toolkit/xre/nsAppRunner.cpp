@@ -195,6 +195,8 @@ extern "C" void ShowOSAlert(const char* aMessage);
 
 #ifdef MOZ_AIRBAG
 #include "nsAirbagExceptionHandler.h"
+#include "nsICrashReporter.h"
+#define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 #endif
 
 // on x86 linux, the current builds of some popular plugins (notably
@@ -500,6 +502,9 @@ class nsXULAppInfo : public nsIXULAppInfo,
 #ifdef XP_WIN
                      public nsIWinAppHelper,
 #endif
+#ifdef MOZ_AIRBAG
+                     public nsICrashReporter,
+#endif
                      public nsIXULRuntime
                      
 {
@@ -507,6 +512,9 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIXULAPPINFO
   NS_DECL_NSIXULRUNTIME
+#ifdef MOZ_AIRBAG
+  NS_DECL_NSICRASHREPORTER
+#endif
 #ifdef XP_WIN
   NS_DECL_NSIWINAPPHELPER
 private:
@@ -519,6 +527,9 @@ NS_INTERFACE_MAP_BEGIN(nsXULAppInfo)
   NS_INTERFACE_MAP_ENTRY(nsIXULRuntime)
 #ifdef XP_WIN
   NS_INTERFACE_MAP_ENTRY(nsIWinAppHelper)
+#endif
+#ifdef MOZ_AIRBAG
+  NS_INTERFACE_MAP_ENTRY(nsICrashReporter)
 #endif
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIXULAppInfo, gAppData)
 NS_INTERFACE_MAP_END
@@ -716,6 +727,15 @@ nsXULAppInfo::PostUpdate(nsILocalFile *aLogFile)
 }
 #endif
 
+#ifdef MOZ_AIRBAG
+NS_IMETHODIMP
+nsXULAppInfo::AnnotateCrashReport(const nsACString& key,
+                                  const nsACString& data)
+{
+  return CrashReporter::AnnotateCrashReport(key, data);
+}
+#endif
+
 static const nsXULAppInfo kAppInfo;
 static NS_METHOD AppInfoConstructor(nsISupports* aOuter,
                                     REFNSIID aIID, void **aResult)
@@ -791,6 +811,15 @@ static nsModuleComponentInfo kComponents[] =
     XULAPPINFO_SERVICE_CONTRACTID,
     AppInfoConstructor
   }
+#ifdef MOZ_AIRBAG
+,
+  {
+    "nsXULAppInfo",
+    APPINFO_CID,
+    NS_CRASHREPORTER_CONTRACTID,
+    AppInfoConstructor
+  }
+#endif
 };
 
 NS_IMPL_NSGETMODULE(Apprunner, kComponents)
