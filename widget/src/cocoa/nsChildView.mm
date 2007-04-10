@@ -2384,15 +2384,35 @@ NSEvent* globalDragEvent = nil;
 }
 
 
+static nsEventStatus SendMouseEvent(PRBool isTrusted,
+                                    PRUint32 msg,
+                                    nsIWidget *widget,
+                                    nsMouseEvent::reasonType aReason,
+                                    NSPoint* localEventLocation)
+{
+  if (!widget || !localEventLocation)
+    return nsEventStatus_eIgnore;
+  
+  nsEventStatus status;
+  nsMouseEvent event(isTrusted, msg, widget, aReason);
+  event.refPoint.x = nscoord((PRInt32)localEventLocation->x);
+  event.refPoint.y = nscoord((PRInt32)localEventLocation->y);
+  widget->DispatchEvent(&event, status);
+  return status;
+}
+
+
 - (void)mouseMoved:(NSEvent*)theEvent
 {
+  NSPoint windowEventLocation = [theEvent locationInWindow];
+  NSPoint screenEventLocation = [mWindow convertBaseToScreen:windowEventLocation];
+  NSPoint viewEventLocation = [self convertPoint:windowEventLocation fromView:nil];
+  
   // Most of the time we don't want mouse moved events to go to any window
   // but the active one. That isn't the case for popup windows though!
   if ([mWindow level] == NSPopUpMenuWindowLevel) {
-    NSPoint screenLocation = [mWindow convertBaseToScreen:[theEvent locationInWindow]];
-    NSRect windowFrame = [mWindow frame];
-    // just take the event if it is over our own window
-    if (!NSPointInRect(screenLocation, windowFrame)) {
+    // only take the event if it is over our own window
+    if (!NSPointInRect(screenEventLocation, [mWindow frame])) {
       // it isn't over our own window, look for another popup window that is under the mouse
       NSArray* appWindows = [NSApp windows];
       unsigned int appWindowsCount = [appWindows count];
@@ -2401,14 +2421,14 @@ NSEvent* globalDragEvent = nil;
         // make sure this window is not our own window, is a popup window, is visible, and is
         // underneath the event
         if (!(currentWindow != mWindow &&
-             [currentWindow level] == NSPopUpMenuWindowLevel &&
-             [currentWindow isVisible] &&
-             NSPointInRect(screenLocation, [currentWindow frame])))
+              [currentWindow level] == NSPopUpMenuWindowLevel &&
+              [currentWindow isVisible] &&
+              NSPointInRect(screenEventLocation, [currentWindow frame])))
           continue;
         // found another popup window to send the event to, do it
-        NSPoint newLocationInWindow = [currentWindow convertScreenToBase:screenLocation];
+        NSPoint locationInOtherWindow = [currentWindow convertScreenToBase:screenEventLocation];
         NSEvent* newEvent = [NSEvent mouseEventWithType:NSMouseMoved
-                                               location:newLocationInWindow
+                                               location:locationInOtherWindow
                                           modifierFlags:[theEvent modifierFlags]
                                               timestamp:[theEvent timestamp]
                                            windowNumber:[currentWindow windowNumber]
@@ -2422,19 +2442,45 @@ NSEvent* globalDragEvent = nil;
     }
   }
 
-  NSView* view = [[mWindow contentView] hitTest:[theEvent locationInWindow]];
-  if (view != (NSView*)self) {
-    // We shouldn't handle this.  Send it to the right view.
-    [view mouseMoved: theEvent];
+  NSView* view = [[mWindow contentView] hitTest:windowEventLocation];
+  if (view) {
+    // we shouldn't handle this if the hit view is not us
+    if (view != (NSView*)self) {
+      [view mouseMoved:theEvent];
+      return;      
+    }
+  }
+  else {
+    // If the hit test returned nil then the mouse isn't over the window. If thse mouse
+    // exited the window then send mouse exit to the last view in the window it was over.
+    if (sLastViewEntered) {
+      // NSLog(@"sending NS_MOUSE_EXIT event with point %f,%f\n", viewEventLocation.x, viewEventLocation.y);
+      nsIWidget* lastViewEnteredWidget = [(NSView<mozView>*)sLastViewEntered widget];
+      SendMouseEvent(PR_TRUE, NS_MOUSE_EXIT, lastViewEnteredWidget, nsMouseEvent::eReal, &viewEventLocation);
+      sLastViewEntered = nil;      
+    }
     return;
   }
-  
-  // If we're passing handling this mouse moved event, we should be the last
-  // view entered. If that isn't the case, the mouse probably started over our
-  // view and thus we need to send a mouse entered event.
-  if (sLastViewEntered != self)
-    [self mouseEntered:nil];
-  
+
+  // At this point we are supposed to handle this event. If we were not the last view entered, then
+  // we should send an exit event to the last view entered and an enter event to ourselves.  
+  if (sLastViewEntered != self) {
+    if (sLastViewEntered != nil) {
+      // NSLog(@"sending NS_MOUSE_EXIT event with point %f,%f\n", viewEventLocation.x, viewEventLocation.y);
+      nsIWidget* lastViewEnteredWidget = [(NSView<mozView>*)sLastViewEntered widget];
+      SendMouseEvent(PR_TRUE, NS_MOUSE_EXIT, lastViewEnteredWidget, nsMouseEvent::eReal, &viewEventLocation);
+    }
+
+    // NSLog(@"sending NS_MOUSE_ENTER event with point %f,%f\n", viewEventLocation.x, viewEventLocation.y);
+    SendMouseEvent(PR_TRUE, NS_MOUSE_ENTER, mGeckoChild, nsMouseEvent::eReal, &viewEventLocation);
+
+    // mark this view as the last view entered
+    sLastViewEntered = (NSView*)self;
+
+    // checks to see if we should change to the hand cursor
+    [self setHandScrollCursor:theEvent];
+  }
+
   // check if we are in a hand scroll or if the user
   // has command and alt held down; if so,  we do not want
   // gecko messing with the cursor.
@@ -2453,8 +2499,7 @@ NSEvent* globalDragEvent = nil;
   macEvent.modifiers = GetCurrentKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
 
-  // send event into Gecko by going directly to the
-  // the widget.
+  // send event into Gecko by going directly to the the widget.
   mGeckoChild->DispatchMouseEvent(geckoEvent);
 }
 
@@ -2488,97 +2533,6 @@ NSEvent* globalDragEvent = nil;
   globalDragView = nil;
   globalDragEvent = nil;
   // XXX maybe call markedTextSelectionChanged:client: here?
-}
-
-
-static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w,
-                                    nsMouseEvent::reasonType aReason,
-                                    NSPoint* localEventLocation,
-                                    nsChildView* receiver)
-{
-  if (!receiver || !localEventLocation)
-    return nsEventStatus_eIgnore;
-  
-  nsEventStatus status;
-  nsMouseEvent event(isTrusted, msg, w, aReason);
-  event.refPoint.x = nscoord((PRInt32)localEventLocation->x);
-  event.refPoint.y = nscoord((PRInt32)localEventLocation->y);
-  receiver->DispatchEvent(&event, status);
-  return status;
-}
-
-
-- (void)mouseEntered:(NSEvent*)theEvent
-{
-  // Getting nil for theEvent is a special case. That only happens if we called 
-  // this from mouseExited: because the mouse exited a view that is a subview of this.
-  if (theEvent == nil) {
-    NSPoint windowEventLocation = [[self window] convertScreenToBase:[NSEvent mouseLocation]];
-    NSPoint localEventLocation = [self convertPoint:windowEventLocation fromView:nil];
-    // NSLog(@"sending NS_MOUSE_ENTER event with point %f,%f\n", localEventLocation.x, localEventLocation.y);
-    SendMouseEvent(PR_TRUE, NS_MOUSE_ENTER, mGeckoChild, nsMouseEvent::eReal, &localEventLocation, mGeckoChild);
-    
-    // mark this view as the last view entered
-    sLastViewEntered = (NSView*)self;
-    
-    // don't continue because this isn't a standard NSView mouseEntered: call
-    return;
-  }
-  
-  NSView* view = [[[self window] contentView] hitTest:[theEvent locationInWindow]];
-  if (view == (NSView*)self) {    
-    // if we entered from another gecko view then we need to send NS_MOUSE_EXIT to that view
-    if (sLastViewEntered)
-      [sLastViewEntered mouseExited:nil];
-    
-    NSPoint eventLocation = [theEvent locationInWindow];
-    NSPoint localEventLocation = [self convertPoint:eventLocation fromView:nil];
-    // NSLog(@"sending NS_MOUSE_ENTER event with point %f,%f\n", localEventLocation.x, localEventLocation.y);
-    SendMouseEvent(PR_TRUE, NS_MOUSE_ENTER, mGeckoChild, nsMouseEvent::eReal, &localEventLocation, mGeckoChild);
-    
-    // mark this view as the last view entered
-    sLastViewEntered = (NSView*)self;
-  }
-  
-  // checks to see if we should change to the hand cursor
-  [self setHandScrollCursor:theEvent];
-}
-
-
-- (void)mouseExited:(NSEvent*)theEvent
-{
-  // Getting nil for theEvent is a special case. That only happens if we called this
-  // from mouseEntered: because the mouse entered a view that is a subview of this.
-  if (theEvent == nil) {    
-    NSPoint windowEventLocation = [[self window] convertScreenToBase:[NSEvent mouseLocation]];
-    NSPoint localEventLocation = [self convertPoint:windowEventLocation fromView:nil];
-    // NSLog(@"sending NS_MOUSE_EXIT event with point %f,%f\n", localEventLocation.x, localEventLocation.y);
-    SendMouseEvent(PR_TRUE, NS_MOUSE_EXIT, mGeckoChild, nsMouseEvent::eReal, &localEventLocation, mGeckoChild);
-    
-    // don't continue because this isn't a standard NSView mouseExited: call
-    return;
-  }
-  
-  if (sLastViewEntered == (NSView*)self) {
-    NSPoint eventLocation = [theEvent locationInWindow];
-    NSPoint localEventLocation = [self convertPoint:eventLocation fromView:nil];
-    // NSLog(@"sending NS_MOUSE_EXIT event with point %f,%f\n", localEventLocation.x, localEventLocation.y);
-    SendMouseEvent(PR_TRUE, NS_MOUSE_EXIT, mGeckoChild, nsMouseEvent::eReal, &localEventLocation, mGeckoChild);
-    
-    // Now we need to send NS_MOUSE_ENTERED to whatever view we're over now.
-    // Otherwise that view won't get get the Cocoa mouseEntered: if it was a
-    // superview of this view. Be careful with this logic, remember that the mouse
-    // can move onto another window from another app that overlaps this view.
-    NSView* view = [[[self window] contentView] hitTest:eventLocation];
-    if (view && view != self && [view isKindOfClass:[ChildView class]] && [self isDescendantOf:view])
-      [(ChildView*)view mouseEntered:nil];
-    else
-      sLastViewEntered = nil;
-  }
-  
-  // Gecko may have set the cursor to ibeam or link hand, or handscroll may
-  // have set it to the open hand cursor. Cocoa won't call this during a drag.
-  mGeckoChild->SetCursor(eCursor_standard);
 }
 
 
