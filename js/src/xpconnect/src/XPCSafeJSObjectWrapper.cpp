@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 sw=2 et tw=80: */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -841,6 +841,13 @@ XPC_SJOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
 
   JSObject *funToCall = GetUnsafeObject(cx, JSVAL_TO_OBJECT(argv[-2]));
+
+  if (!funToCall) {
+    // Someone has called XPCSafeJSObjectWrapper.prototype() causing
+    // us to find a safe object wrapper without an unsafeObject as
+    // its parent. That call shouldn't do anything, so bail here.
+    return JS_TRUE;
+  }
 
   // Check that the caller can access the unsafe object on which the
   // call is being made, and the actual function we're about to call.
