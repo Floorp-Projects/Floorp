@@ -134,6 +134,24 @@ function run_test() {
   result = histsvc.executeQuery(query, options);
   result.root.containerOpen = true;
   do_check_eq(result.root.childCount, 2);
+  
+  // test annotation-based queries
+  var annos = Cc["@mozilla.org/browser/annotation-service;1"].
+              getService(Ci.nsIAnnotationService);
+  annos.setAnnotationInt32(uri("http://mozilla.com/"), "testAnno", 0, 0,
+                           Ci.nsIAnnotationService.EXPIRE_NEVER);
+  query.annotation = "testAnno";
+  result = histsvc.executeQuery(query, options);
+  result.root.containerOpen = true;
+  do_check_eq(result.root.childCount, 1);
+  do_check_eq(result.root.getChild(0).uri, "http://mozilla.com/");
+
+  // test annotationIsNot
+  query.annotationIsNot = true;
+  result = histsvc.executeQuery(query, options);
+  result.root.containerOpen = true;
+  do_check_eq(result.root.childCount, 1);
+  do_check_eq(result.root.getChild(0).uri, "http://google.com/");
 
   // by default, browser.history_expire_days is 9
   do_check_true(!histsvc.historyDisabled);
