@@ -506,9 +506,10 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
   if (docAccessible) {
     // Doc is gaining focus, but actual focus may be on an element within document
     nsCOMPtr<nsIDOMNode> realFocusedNode = GetCurrentFocus();
-    if (realFocusedNode != aNode) {
+    if (realFocusedNode != aNode || realFocusedNode == mDOMNode) {
       // Suppress document focus, because real DOM focus will be fired next,
       // and that's what we care about
+      // Make sure we never fire focus for the nsRootAccessible (mDOMNode)
       return PR_FALSE;
     }
   }
