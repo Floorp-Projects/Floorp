@@ -4057,7 +4057,6 @@ MOZ_BRANDING_DIRECTORY=
 MOZ_CALENDAR=
 MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_CANVAS=1
-MOZ_ENABLE_XINERAMA=1
 MOZ_EXTENSIONS_ALL=" wallet xml-rpc help p3p venkman inspector irc typeaheadfind gnomevfs sroaming datetime finger cview layout-debug tasks sql xforms schema-validation reporter"
 MOZ_FEEDS=1
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm icon"
@@ -5282,6 +5281,11 @@ dnl ========================================================
 dnl = Xinerama support. The autodetection is done above in the Xlib
 dnl = detection routines.
 dnl ========================================================
+
+if test "$MOZ_WIDGET_TOOLKIT" == "gtk2"; then
+    MOZ_ENABLE_XINERAMA=1
+fi
+
 MOZ_ARG_DISABLE_BOOL(xinerama,
 [  --disable-xinerama      Disable Xinerama support],
     MOZ_ENABLE_XINERAMA=,
