@@ -331,7 +331,7 @@
               <menupopup id="goPopup"
                          type="places"
                          onpopupshowing="HistoryMenu.onPoupShowing(this);"
-                         place="place:&amp;beginTime=-2592000000000&amp;beginTimeRef=1&amp;endTime=7200000000&amp;endTimeRef=2&amp;type=0&amp;sort=4&amp;maxResults=10">
+                         place="place:beginTime=-2592000000000&amp;beginTimeRef=1&amp;endTime=7200000000&amp;endTimeRef=2&amp;type=0&amp;sort=4&amp;maxResults=10">
                 <menuitem label="&backCmd.label;"
 #ifdef XP_MACOSX
                           key="goBackKb2"
@@ -462,7 +462,7 @@
         ondragexit="PlacesMenuDNDController.onDragExit(event);">
     <menupopup id="bookmarksMenuPopup"
                type="places" asyncinit="true"
-               place="place:&amp;folder=2&amp;group=3&amp;expandQueries=1"
+               place="place:folder=2&amp;group=3&amp;expandQueries=1"
                context="placesContext"
                openInTabs="children"
                oncommand="BookmarksEventHandler.onCommand(event);"

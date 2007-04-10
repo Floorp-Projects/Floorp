@@ -120,7 +120,7 @@
   <tree id="historyTree"
         flex="1"
         type="places"
-        place="place:&amp;beginTime=-2592000000000&amp;beginTimeRef=1&amp;endTime=7200000000&amp;endTimeRef=2&amp;type=1"
+        place="place:beginTime=-2592000000000&amp;beginTimeRef=1&amp;endTime=7200000000&amp;endTimeRef=2&amp;type=1"
         context="placesContext"
         onkeypress="if (event.keyCode == 13) this.controller.openSelectedNodeWithEvent(event);"
         hidecolumnpicker="true"
