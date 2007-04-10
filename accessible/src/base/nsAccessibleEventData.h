@@ -46,34 +46,24 @@
 #include "nsIAccessibleDocument.h"
 #include "nsIDOMNode.h"
 
-class nsAccessibleEventData: public nsIAccessibleEvent
+class nsAccEvent: public nsIAccessibleEvent
 {
-  public:
-    // Initialize with an nsIAccessible
-    nsAccessibleEventData(PRUint32 aEventType, nsIAccessible *aAccessible, 
-                          nsIAccessibleDocument *aDocAccessible, 
-                          void *aEventData);
-    // Initialize with an nsIDOMNode
-    nsAccessibleEventData(PRUint32 aEventType, nsIDOMNode *aDOMNode,
-                          nsIAccessibleDocument *aDocAccessible,
-                          void *aEventData);
-    virtual ~nsAccessibleEventData() {};
+public:
+  // Initialize with an nsIAccessible
+  nsAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible, void *aEventData);
+  // Initialize with an nsIDOMNode
+  nsAccEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode, void *aEventData);
+  virtual ~nsAccEvent() {};
 
-    NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIACCESSIBLEEVENT
 
-    //nsIAccessibleEvent
-    NS_IMETHOD GetEventType(PRUint32 *aEventType) {*aEventType = mEventType; return NS_OK;}
-    NS_IMETHOD GetAccessible(nsIAccessible **aAccessible);
-    NS_IMETHOD GetAccessibleDocument(nsIAccessibleDocument **aDocAccessible) 
-      {NS_ADDREF(*aDocAccessible = mDocAccessible); return NS_OK;}
-    NS_IMETHOD GetDOMNode(nsIDOMNode **aDOMNode);
-
-  private:
-    PRUint32 mEventType;
-    nsCOMPtr<nsIAccessible> mAccessible;
-    nsCOMPtr<nsIDOMNode> mDOMNode;
-    nsCOMPtr<nsIAccessibleDocument> mDocAccessible;
-    void *mEventData;
+private:
+  PRUint32 mEventType;
+  nsCOMPtr<nsIAccessible> mAccessible;
+  nsCOMPtr<nsIDOMNode> mDOMNode;
+  nsCOMPtr<nsIAccessibleDocument> mDocAccessible;
+  void *mEventData;
 };
 
 // XXX todo: We might want to use XPCOM interfaces instead of structs
