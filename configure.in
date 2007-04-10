@@ -2888,7 +2888,7 @@ else
     AC_CHECK_LIB(Xext, XShmCreateImage, _HAVE_XSHM_XEXT=1,,
         $XLIBS $XEXT_LIBS)
     AC_CHECK_HEADER(X11/extensions/XShm.h)
-    if test -n "$ac_cv_header_X11_extensions_XShm_h" &&
+    if test "$ac_cv_header_X11_extensions_XShm_h" = "yes" &&
         test -n "$_HAVE_XSHM_XEXT"; then
         AC_DEFINE(HAVE_XSHM)
     fi
@@ -4057,6 +4057,7 @@ MOZ_BRANDING_DIRECTORY=
 MOZ_CALENDAR=
 MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_CANVAS=1
+MOZ_ENABLE_XINERAMA=1
 MOZ_EXTENSIONS_ALL=" wallet xml-rpc help p3p venkman inspector irc typeaheadfind gnomevfs sroaming datetime finger cview layout-debug tasks sql xforms schema-validation reporter"
 MOZ_FEEDS=1
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm icon"
@@ -5278,21 +5279,19 @@ if test -n "$MOZ_OJI"; then
 fi
 
 dnl ========================================================
-dnl = This turns on xinerama support.  We just can't use the
-dnl = autodetection of the libraries since on Red Hat 7 linking with
-dnl = Xinerama crashes the dynamic loader.  Make people turn it on
-dnl = explicitly.  The autodetection is done above in the Xlib
+dnl = Xinerama support. The autodetection is done above in the Xlib
 dnl = detection routines.
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(xinerama,
-[  --enable-xinerama       Enable Xinerama support
-                           ( not safe for Red Hat 7.0 ) ],
-    _ENABLE_XINERAMA=1,
-    _ENABLE_XINERAMA= )
+MOZ_ARG_DISABLE_BOOL(xinerama,
+[  --disable-xinerama      Disable Xinerama support],
+    MOZ_ENABLE_XINERAMA=,
+    MOZ_ENABLE_XINERAMA=1 )
 
-if test -n "$_ENABLE_XINERAMA" -a -n "$MOZ_XINERAMA_LIBS" -a \
-    -n "$ac_cv_header_X11_extensions_Xinerama_h"; then
-    MOZ_ENABLE_XINERAMA=1
+if test -n "$MOZ_ENABLE_XINERAMA"; then
+    if test -z "$MOZ_XINERAMA_LIBS" || \
+        test "$ac_cv_header_X11_extensions_Xinerama_h" = "no"; then
+        AC_MSG_ERROR([Cannot find Xinerama library. To build without Xinerama support, rebuild with --disable-xinerama])
+    fi
     AC_DEFINE(MOZ_ENABLE_XINERAMA)
 fi
 
