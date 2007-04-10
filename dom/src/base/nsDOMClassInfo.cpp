@@ -6543,6 +6543,22 @@ nsEventReceiverSH::AddEventListenerHelper(JSContext *cx, JSObject *obj,
     return JS_FALSE;
   }
 
+  // Check that the caller has permission to call obj's addEventListener.
+  if (NS_FAILED(sSecMan->CheckPropertyAccess(cx, obj,
+                                             JS_GET_CLASS(cx, obj)->name,
+                                             sAddEventListener_id,
+                                             nsIXPCSecurityManager::ACCESS_GET_PROPERTY)) ||
+      NS_FAILED(sSecMan->CheckPropertyAccess(cx, obj,
+                                             JS_GET_CLASS(cx, obj)->name,
+                                             sAddEventListener_id,
+                                             nsIXPCSecurityManager::ACCESS_CALL_METHOD))) {
+    // The caller doesn't have access to get or call the callee
+    // object's addEventListener method. The security manager already
+    // threw an exception for us, so simply return false.
+
+    return JS_FALSE;
+  }
+
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
   nsresult rv =
     sXPConnect->GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrapper));
