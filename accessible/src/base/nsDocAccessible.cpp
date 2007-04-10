@@ -1111,8 +1111,7 @@ nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
   // XXX Add related data for ATK support.
   // For example, state change event should provide what state has changed,
   // as well as the old and new value.
-  nsCOMPtr<nsIAccessibleEvent> event =
-    new nsAccessibleEventData(aEvent, aDOMNode, this, aData);
+  nsCOMPtr<nsIAccessibleEvent> event = new nsAccEvent(aEvent, aDOMNode, aData);
   NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
   mEventsToFire.AppendObject(event);
   if (!isTimerStarted) {
@@ -1431,7 +1430,8 @@ NS_IMETHODIMP nsDocAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* 
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIAccessibleEvent> accEvent = new nsAccessibleEventData(aEvent, aAccessible, this, aData);
+  nsCOMPtr<nsIAccessibleEvent> accEvent = new nsAccEvent(aEvent, aAccessible,
+                                                         aData);
   NS_ENSURE_TRUE(accEvent, NS_ERROR_OUT_OF_MEMORY);
 
   return obsService->NotifyObservers(accEvent, NS_ACCESSIBLE_EVENT_TOPIC, nsnull);
