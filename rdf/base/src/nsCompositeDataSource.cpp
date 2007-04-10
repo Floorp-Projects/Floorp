@@ -76,6 +76,7 @@
 #include "nsArrayEnumerator.h"
 #include "nsXPIDLString.h"
 #include "rdf.h"
+#include "nsCycleCollectionParticipant.h"
 
 #include "nsEnumeratorUtils.h"
 
@@ -105,7 +106,9 @@ public:
     CompositeDataSourceImpl(char** dataSources);
 
     // nsISupports interface
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(CompositeDataSourceImpl,
+                                             nsIRDFCompositeDataSource)
 
     // nsIRDFDataSource interface
     NS_DECL_NSIRDFDATASOURCE
@@ -646,77 +649,34 @@ CompositeDataSourceImpl::CompositeDataSourceImpl(void)
 // nsISupports interface
 //
 
-NS_IMPL_THREADSAFE_ADDREF(CompositeDataSourceImpl)
+NS_IMPL_CYCLE_COLLECTION_CLASS(CompositeDataSourceImpl)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CompositeDataSourceImpl)
+    PRUint32 i, count = tmp->mDataSources.Count();
+    for (i = count; i > 0; --i) {
+        tmp->mDataSources[i - 1]->RemoveObserver(tmp);
+        tmp->mDataSources.RemoveObjectAt(i - 1);
+    }
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mObservers);
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CompositeDataSourceImpl)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mObservers)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mDataSources)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMETHODIMP_(nsrefcnt)
-CompositeDataSourceImpl::Release()
-{
-    // We need a special implementation of Release() because the
-    // composite datasource holds a reference to each datasource that
-    // it "composes", and each database that the composite datasource
-    // observes holds a reference _back_ to the composite datasource.
-    NS_PRECONDITION(PRInt32(mRefCnt) > 0, "duplicate release");
-    nsrefcnt count =
-      PR_AtomicDecrement(NS_REINTERPRET_CAST(PRInt32 *, &mRefCnt));
 
-    // When the number of references == the number of datasources,
-    // then we know that all that remains are the circular
-    // references from those datasources back to us. Release them.
-    if (count == 0) {
-        NS_LOG_RELEASE(this, count, "CompositeDataSourceImpl");
-        mRefCnt = 1;
-        NS_DELETEXPCOM(this);
-        return 0;
-    }
-    else if (PRInt32(count) == mDataSources.Count()) {
-        // We must add 1 here because otherwise the nested releases
-        // on this object will enter this same code path.
-        PR_AtomicIncrement(NS_REINTERPRET_CAST(PRInt32 *, &mRefCnt));
-        
-        PRInt32 dsCount;
-        while (0 != (dsCount = mDataSources.Count())) {
-            // Take ref so it won't die before its time.
-            nsCOMPtr<nsIRDFDataSource> ds = mDataSources[dsCount-1];
-            mDataSources.RemoveObjectAt(dsCount-1);
-            ds->RemoveObserver(this);
-        }
-        // Nest into Release to deal with the one last reference we added above.
-        // We don't want to assume that we can 'delete this' because an
-        // extra reference might have been added by other code while we were 
-        // calling out.
-        NS_ASSERTION(mRefCnt >= 1, "bad mRefCnt");
-        return Release();
-    }
-    else {
-        NS_LOG_RELEASE(this, count, "CompositeDataSourceImpl");
-        return count;
-    }
-}
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(CompositeDataSourceImpl,
+                                          nsIRDFCompositeDataSource)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(CompositeDataSourceImpl,
+                                           nsIRDFCompositeDataSource)
 
-NS_IMETHODIMP
-CompositeDataSourceImpl::QueryInterface(REFNSIID iid, void** result)
-{
-    if (! result)
-        return NS_ERROR_NULL_POINTER;
-
-    if (iid.Equals(NS_GET_IID(nsIRDFCompositeDataSource)) ||
-        iid.Equals(NS_GET_IID(nsIRDFDataSource)) ||
-        iid.Equals(kISupportsIID)) {
-        *result = NS_STATIC_CAST(nsIRDFCompositeDataSource*, this);
-		NS_ADDREF(this);
-        return NS_OK;
-    }
-    else if (iid.Equals(NS_GET_IID(nsIRDFObserver))) {
-        *result = NS_STATIC_CAST(nsIRDFObserver*, this);
-        NS_ADDREF(this);
-        return NS_OK;
-    }
-    else {
-        *result = nsnull;
-        return NS_NOINTERFACE;
-    }
-}
-
+NS_INTERFACE_MAP_BEGIN(CompositeDataSourceImpl)
+    NS_INTERFACE_MAP_ENTRY(nsIRDFCompositeDataSource)
+    NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
+    NS_INTERFACE_MAP_ENTRY(nsIRDFObserver)
+    NS_INTERFACE_MAP_ENTRY(nsIRDFCompositeDataSource)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRDFCompositeDataSource)
+    NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(CompositeDataSourceImpl)
+NS_INTERFACE_MAP_END
 
 
 //----------------------------------------------------------------------

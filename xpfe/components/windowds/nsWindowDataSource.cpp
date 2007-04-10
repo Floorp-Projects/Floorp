@@ -129,44 +129,26 @@ nsWindowDataSource::Observe(nsISupports *aSubject, const char* aTopic, const PRU
     return NS_OK;
 }
 
-#if 0
-NS_IMETHODIMP_(nsrefcnt)
-nsWindowMediator::Release()
-{
-	// We need a special implementation of Release() due to having
-	// two circular references:  mInner and mContainer
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsWindowDataSource)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsWindowDataSource)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsWindowDataSource)
+    // XXX mContainer?
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mInner)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-	NS_PRECONDITION(PRInt32(mRefCnt) > 0, "duplicate release");
-	--mRefCnt;
-	NS_LOG_RELEASE(this, mRefCnt, "nsWindowMediator");
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsWindowDataSource,
+                                          nsIObserver)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsWindowDataSource,
+                                           nsIObserver)
 
-	if (mInner && mRefCnt == 2)
-	{
-		NS_IF_RELEASE(mContainer);
-		mContainer = nsnull;
-
-		nsIRDFDataSource* tmp = mInner;
-		mInner = nsnull;
-		NS_IF_RELEASE(tmp);
-		return(0);
-	}
-	else if (mRefCnt == 0)
-	{
-		mRefCnt = 1;
-		delete this;
-		return(0);
-	}
-	return(mRefCnt);
-}
-
-#endif
-
-
-NS_IMPL_ISUPPORTS4(nsWindowDataSource,
-                   nsIObserver,
-                   nsIWindowMediatorListener,
-                   nsIWindowDataSource,
-                   nsIRDFDataSource)
+NS_INTERFACE_MAP_BEGIN(nsWindowDataSource)
+    NS_INTERFACE_MAP_ENTRY(nsIObserver)
+    NS_INTERFACE_MAP_ENTRY(nsIWindowMediatorListener)
+    NS_INTERFACE_MAP_ENTRY(nsIWindowDataSource)
+    NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
+    NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsWindowDataSource)
+NS_INTERFACE_MAP_END
 
 // nsIWindowMediatorListener implementation
 // handle notifications from the window mediator and reflect them into

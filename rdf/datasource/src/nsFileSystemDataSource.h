@@ -76,7 +76,6 @@ private:
     nsresult GetFileSize(nsIRDFResource *source, nsIRDFInt** aResult);
     nsresult GetLastMod(nsIRDFResource *source, nsIRDFDate** aResult);
 
-    nsCOMPtr<nsISupportsArray> mObservers;
     nsCOMPtr<nsIRDFService>    mRDFService;
 
     // pseudo-constants

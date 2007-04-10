@@ -65,6 +65,7 @@
 #include "nsIMIMEInfo.h"
 #include "nsITimer.h"
 #include "nsIAlertsService.h"
+#include "nsCycleCollectionParticipant.h"
 
 typedef PRInt16 DownloadState;
 typedef PRInt16 DownloadType;
@@ -182,7 +183,9 @@ class nsDownloadsDataSource : public nsIRDFDataSource,
 public:
   NS_DECL_NSIRDFDATASOURCE
   NS_DECL_NSIRDFREMOTEDATASOURCE
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDownloadsDataSource,
+                                           nsIRDFDataSource)
 
   nsDownloadsDataSource() { };
   virtual ~nsDownloadsDataSource() { };
