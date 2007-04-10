@@ -547,8 +547,17 @@ nsGlobalHistory::~nsGlobalHistory()
 //
 //   nsISupports methods
 
-NS_IMPL_ADDREF(nsGlobalHistory)
-NS_IMPL_RELEASE(nsGlobalHistory)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalHistory)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalHistory)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mObservers)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalHistory)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mObservers)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsGlobalHistory, nsIBrowserHistory)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsGlobalHistory, nsIBrowserHistory)
 
 NS_INTERFACE_MAP_BEGIN(nsGlobalHistory)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIGlobalHistory2, nsIGlobalHistory3)
@@ -560,6 +569,7 @@ NS_INTERFACE_MAP_BEGIN(nsGlobalHistory)
   NS_INTERFACE_MAP_ENTRY(nsIRDFRemoteDataSource)
   NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSearch)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBrowserHistory)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsGlobalHistory)
 NS_INTERFACE_MAP_END
 
 //----------------------------------------------------------------------
@@ -2296,12 +2306,7 @@ nsGlobalHistory::AddObserver(nsIRDFObserver* aObserver)
   if (! aObserver)
     return NS_ERROR_NULL_POINTER;
 
-  if (! mObservers) {
-    nsresult rv;
-    rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
-    if (NS_FAILED(rv)) return rv;
-  }
-  mObservers->AppendElement(aObserver);
+  mObservers.AppendObject(aObserver);
   return NS_OK;
 }
 
@@ -2312,10 +2317,7 @@ nsGlobalHistory::RemoveObserver(nsIRDFObserver* aObserver)
   if (! aObserver)
     return NS_ERROR_NULL_POINTER;
 
-  if (! mObservers)
-    return NS_OK;
-
-  mObservers->RemoveElement(aObserver);
+  mObservers.RemoveObject(aObserver);
 
   return NS_OK;
 }
@@ -2487,25 +2489,9 @@ nsGlobalHistory::BeginUpdateBatch()
 
   ++mBatchesInProgress;
   
-  // we could call mObservers->EnumerateForwards() here
-  // to save the addref/release on each observer, but
-  // it's unlikely that anyone but the tree builder
-  // is observing us
-  if (mObservers) {
-    PRUint32 count;
-    rv = mObservers->Count(&count);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRInt32 i = 0; i < PRInt32(count); ++i) {
-      nsIRDFObserver* observer = NS_STATIC_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
-
-      NS_ASSERTION(observer != nsnull, "null ptr");
-      if (! observer)
-        continue;
-
-      rv = observer->OnBeginUpdateBatch(this);
-      NS_RELEASE(observer);
-    }
+  PRUint32 i = mObservers.Length();
+  while (i > 0) {
+    rv = mObservers[i--]->OnBeginUpdateBatch(this);
   }
   return rv;
 }
@@ -2517,25 +2503,9 @@ nsGlobalHistory::EndUpdateBatch()
 
   --mBatchesInProgress;
 
-  // we could call mObservers->EnumerateForwards() here
-  // to save the addref/release on each observer, but
-  // it's unlikely that anyone but the tree builder
-  // is observing us
-  if (mObservers) {
-    PRUint32 count;
-    rv = mObservers->Count(&count);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRInt32 i = 0; i < PRInt32(count); ++i) {
-      nsIRDFObserver* observer = NS_STATIC_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
-
-      NS_ASSERTION(observer != nsnull, "null ptr");
-      if (! observer)
-        continue;
-
-      rv = observer->OnEndUpdateBatch(this);
-      NS_RELEASE(observer);
-    }
+  PRUint32 i = mObservers.Length();
+  while (i > 0) {
+    rv = mObservers[i--]->OnEndUpdateBatch(this);
   }
   return rv;
 }
@@ -3209,23 +3179,9 @@ nsGlobalHistory::NotifyAssert(nsIRDFResource* aSource,
                               nsIRDFResource* aProperty,
                               nsIRDFNode* aValue)
 {
-  nsresult rv;
-
-  if (mObservers) {
-    PRUint32 count;
-    rv = mObservers->Count(&count);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRInt32 i = 0; i < PRInt32(count); ++i) {
-      nsIRDFObserver* observer = NS_STATIC_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
-
-      NS_ASSERTION(observer != nsnull, "null ptr");
-      if (! observer)
-        continue;
-
-      rv = observer->OnAssert(this, aSource, aProperty, aValue);
-      NS_RELEASE(observer);
-    }
+  PRUint32 i = mObservers.Length();
+  while (i > 0) {
+    mObservers[i--]->OnAssert(this, aSource, aProperty, aValue);
   }
 
   return NS_OK;
@@ -3237,23 +3193,9 @@ nsGlobalHistory::NotifyUnassert(nsIRDFResource* aSource,
                                 nsIRDFResource* aProperty,
                                 nsIRDFNode* aValue)
 {
-  nsresult rv;
-
-  if (mObservers) {
-    PRUint32 count;
-    rv = mObservers->Count(&count);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRInt32 i = 0; i < PRInt32(count); ++i) {
-      nsIRDFObserver* observer = NS_STATIC_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
-
-      NS_ASSERTION(observer != nsnull, "null ptr");
-      if (! observer)
-        continue;
-
-      rv = observer->OnUnassert(this, aSource, aProperty, aValue);
-      NS_RELEASE(observer);
-    }
+  PRUint32 i = mObservers.Length();
+  while (i > 0) {
+    mObservers[i--]->OnUnassert(this, aSource, aProperty, aValue);
   }
 
   return NS_OK;
@@ -3267,23 +3209,9 @@ nsGlobalHistory::NotifyChange(nsIRDFResource* aSource,
                               nsIRDFNode* aOldValue,
                               nsIRDFNode* aNewValue)
 {
-  nsresult rv;
-
-  if (mObservers) {
-    PRUint32 count;
-    rv = mObservers->Count(&count);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRInt32 i = 0; i < PRInt32(count); ++i) {
-      nsIRDFObserver* observer = NS_STATIC_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
-
-      NS_ASSERTION(observer != nsnull, "null ptr");
-      if (! observer)
-        continue;
-
-      rv = observer->OnChange(this, aSource, aProperty, aOldValue, aNewValue);
-      NS_RELEASE(observer);
-    }
+  PRUint32 i = mObservers.Length();
+  while (i > 0) {
+    mObservers[i--]->OnChange(this, aSource, aProperty, aOldValue, aNewValue);
   }
 
   return NS_OK;

@@ -1586,7 +1586,24 @@ nsXPIProgressListener::AssertProgressInfoForDownload(nsDownload* aDownload)
 //          this datasource into functions on this object, to simplify the 
 //          code in the download manager service and front end.
 
-NS_IMPL_ISUPPORTS2(nsDownloadsDataSource, nsIRDFDataSource, nsIRDFRemoteDataSource)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDownloadsDataSource)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsDownloadsDataSource)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDownloadsDataSource)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mInner)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDownloadsDataSource,
+                                          nsIRDFDataSource)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsDownloadsDataSource,
+                                           nsIRDFDataSource)
+
+NS_INTERFACE_MAP_BEGIN(nsDownloadsDataSource)
+    NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
+    NS_INTERFACE_MAP_ENTRY(nsIRDFRemoteDataSource)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRDFDataSource)
+    NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDownloadsDataSource)
+NS_INTERFACE_MAP_END
 
 nsresult
 nsDownloadsDataSource::LoadDataSource()

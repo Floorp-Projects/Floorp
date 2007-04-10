@@ -137,55 +137,26 @@ nsForwardProxyDataSource::GetRealSource(nsIRDFResource *aSource, nsIRDFResource 
 // nsISupports interface
 //
 
-NS_IMPL_ADDREF(nsForwardProxyDataSource)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsForwardProxyDataSource)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsForwardProxyDataSource)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mObservers)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsForwardProxyDataSource)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDS)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mObservers)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-//
-// Use a custom Release() for the same reasons one is used in the
-// Composite DS; we have circular relationships with our child DS.
-
-NS_IMETHODIMP_(nsrefcnt)
-nsForwardProxyDataSource::Release()
-{
-    NS_PRECONDITION(PRInt32(mRefCnt) > 0, "duplicate release");
-    nsrefcnt count = --mRefCnt;
-
-    if (count == 0) {
-        NS_LOG_RELEASE(this, count, "nsForwardProxyDataSource");
-        mRefCnt = 1;
-        NS_DELETEXPCOM(this);
-        return 0;
-    }
-    else if (mDS && (PRInt32(count) == 1)) {
-        // if the count is 1, the only ref is from our nested data
-        // source, which holds on to us as an observer.
-
-        // We must add 1 here because otherwise the nested releases
-        // on this object will enter this same code path.
-        ++mRefCnt;
-
-        mDS->RemoveObserver(this);
-        mDS = nsnull;
-
-        // In CompositeDataSource, there's a comment here that we call
-        // ourselves again instead of just doing a delete in case
-        // something might have added a ref count in the meantime.
-        // However, if that happens, this object will be in an
-        // inconsistent state, because we'll have removed the Observer
-        // from mDS.  Hence the assertion.
-        NS_ASSERTION(mRefCnt >= 1, "bad mRefCnt");
-        return Release();
-    }
-    else {
-        NS_LOG_RELEASE(this, count, "nsForwardProxyDataSource");
-        return count;
-    }
-}
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsForwardProxyDataSource,
+                                          nsIRDFInferDataSource)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsForwardProxyDataSource,
+                                           nsIRDFInferDataSource)
 
 NS_INTERFACE_MAP_BEGIN(nsForwardProxyDataSource)
     NS_INTERFACE_MAP_ENTRY(nsIRDFInferDataSource)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIRDFDataSource, nsIRDFInferDataSource)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRDFInferDataSource)
     NS_INTERFACE_MAP_ENTRY(nsIRDFObserver)
+    NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsForwardProxyDataSource)
 NS_INTERFACE_MAP_END
 
 //----------------------------------------------------------------------

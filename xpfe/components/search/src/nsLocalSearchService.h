@@ -56,8 +56,6 @@ typedef	struct	_findTokenStruct
 class LocalSearchDataSource : public nsIRDFDataSource
 {
 private:
-	nsCOMPtr<nsISupportsArray> mObservers;
-
 	static PRInt32		gRefCnt;
 
     // pseudo-constants

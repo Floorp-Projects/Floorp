@@ -65,6 +65,7 @@
 #include "nsITimelineService.h"
 #include "nsCRT.h"
 #include "prmem.h"
+#include "nsCycleCollectionParticipant.h"
 
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -153,7 +154,8 @@ public:
  */
 class nsCharsetMenu : public nsIRDFDataSource, public nsICurrentCharsetListener
 {
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsCharsetMenu, nsIRDFDataSource)
 
 private:
   static nsIRDFResource * kNC_BrowserAutodetMenuRoot;
@@ -465,7 +467,20 @@ NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const char *
 //----------------------------------------------------------------------------
 // Class nsCharsetMenu [implementation]
 
-NS_IMPL_ISUPPORTS2(nsCharsetMenu, nsIRDFDataSource, nsICurrentCharsetListener)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsCharsetMenu)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsCharsetMenu)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCharsetMenu)
+  cb.NoteXPCOMChild(nsCharsetMenu::mInner);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsCharsetMenu, nsIRDFDataSource)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsCharsetMenu, nsIRDFDataSource)
+NS_INTERFACE_MAP_BEGIN(nsCharsetMenu)
+  NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
+  NS_INTERFACE_MAP_ENTRY(nsICurrentCharsetListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRDFDataSource)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsCharsetMenu)
+NS_INTERFACE_MAP_END
 
 nsIRDFDataSource * nsCharsetMenu::mInner = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_BrowserAutodetMenuRoot = NULL;
