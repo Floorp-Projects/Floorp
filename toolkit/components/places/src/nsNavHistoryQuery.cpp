@@ -398,6 +398,7 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
       aQueryString += NS_LITERAL_CSTRING(QUERYKEY_FOLDER "=");
       AppendInt64(aQueryString, folders[0]);
     }
+    nsMemory::Free(folders);
   }
 
   // grouping
