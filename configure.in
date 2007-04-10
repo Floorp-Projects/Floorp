@@ -5282,7 +5282,7 @@ dnl = Xinerama support. The autodetection is done above in the Xlib
 dnl = detection routines.
 dnl ========================================================
 
-if test "$MOZ_WIDGET_TOOLKIT" == "gtk2"; then
+if test "$MOZ_WIDGET_TOOLKIT" = "gtk2"; then
     MOZ_ENABLE_XINERAMA=1
 fi
 
