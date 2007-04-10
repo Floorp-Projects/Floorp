@@ -67,7 +67,7 @@
             class="placesTree"
             flex="1"
             type="places" 
-            place="place:&amp;folder=1&amp;group=3&amp;excludeItems=1&amp;excludeQueries=1&amp;excludeReadOnlyFolders=1" 
+            place="place:folder=1&amp;group=3&amp;excludeItems=1&amp;excludeQueries=1&amp;excludeReadOnlyFolders=1" 
             hidecolumnpicker="true">
         <treecols>
           <treecol id="title" flex="1" primary="true" hideheader="true"/>

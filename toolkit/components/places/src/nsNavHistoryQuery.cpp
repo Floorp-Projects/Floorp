@@ -263,12 +263,12 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
   nsCOMPtr<nsNavHistoryQueryOptions> options = do_QueryInterface(aOptions);
   NS_ENSURE_TRUE(options, NS_ERROR_INVALID_ARG);
 
-  aQueryString.AssignLiteral("place:");
+  nsCAutoString queryString;
   for (PRUint32 queryIndex = 0; queryIndex < aQueryCount;  queryIndex ++) {
     nsINavHistoryQuery* query = aQueries[queryIndex];
     if (queryIndex > 0) {
-      AppendAmpersandIfNonempty(aQueryString);
-      aQueryString += NS_LITERAL_CSTRING(QUERYKEY_SEPARATOR);
+      AppendAmpersandIfNonempty(queryString);
+      queryString += NS_LITERAL_CSTRING(QUERYKEY_SEPARATOR);
     }
 
     PRBool hasIt;
@@ -276,10 +276,10 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     // begin time
     query->GetHasBeginTime(&hasIt);
     if (hasIt) {
-      AppendInt64KeyValueIfNonzero(aQueryString,
+      AppendInt64KeyValueIfNonzero(queryString,
                                    NS_LITERAL_CSTRING(QUERYKEY_BEGIN_TIME),
                                    query, &nsINavHistoryQuery::GetBeginTime);
-      AppendUint32KeyValueIfNonzero(aQueryString,
+      AppendUint32KeyValueIfNonzero(queryString,
                                     NS_LITERAL_CSTRING(QUERYKEY_BEGIN_TIME_REFERENCE),
                                     query, &nsINavHistoryQuery::GetBeginTimeReference);
     }
@@ -287,10 +287,10 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     // end time
     query->GetHasEndTime(&hasIt);
     if (hasIt) {
-      AppendInt64KeyValueIfNonzero(aQueryString,
+      AppendInt64KeyValueIfNonzero(queryString,
                                    NS_LITERAL_CSTRING(QUERYKEY_END_TIME),
                                    query, &nsINavHistoryQuery::GetEndTime);
-      AppendUint32KeyValueIfNonzero(aQueryString,
+      AppendUint32KeyValueIfNonzero(queryString,
                                     NS_LITERAL_CSTRING(QUERYKEY_END_TIME_REFERENCE),
                                     query, &nsINavHistoryQuery::GetEndTimeReference);
     }
@@ -305,28 +305,28 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
                       url_XAlphas))
         return NS_ERROR_OUT_OF_MEMORY;
 
-      AppendAmpersandIfNonempty(aQueryString);
-      aQueryString += NS_LITERAL_CSTRING(QUERYKEY_SEARCH_TERMS "=");
-      aQueryString += escapedTerms;
+      AppendAmpersandIfNonempty(queryString);
+      queryString += NS_LITERAL_CSTRING(QUERYKEY_SEARCH_TERMS "=");
+      queryString += escapedTerms;
     }
 
     // min and max visits
     PRInt32 minVisits;
     if (NS_SUCCEEDED(query->GetMinVisits(&minVisits)) && minVisits >= 0) {
-      AppendAmpersandIfNonempty(aQueryString);
-      aQueryString.Append(NS_LITERAL_CSTRING(QUERYKEY_MIN_VISITS "="));
-      AppendInt32(aQueryString, minVisits);
+      AppendAmpersandIfNonempty(queryString);
+      queryString.Append(NS_LITERAL_CSTRING(QUERYKEY_MIN_VISITS "="));
+      AppendInt32(queryString, minVisits);
     }
 
     PRInt32 maxVisits;
     if (NS_SUCCEEDED(query->GetMaxVisits(&maxVisits)) && maxVisits >= 0) {
-      AppendAmpersandIfNonempty(aQueryString);
-      aQueryString.Append(NS_LITERAL_CSTRING(QUERYKEY_MAX_VISITS "="));
-      AppendInt32(aQueryString, maxVisits);
+      AppendAmpersandIfNonempty(queryString);
+      queryString.Append(NS_LITERAL_CSTRING(QUERYKEY_MAX_VISITS "="));
+      AppendInt32(queryString, maxVisits);
     }
 
     // only bookmarked
-    AppendBoolKeyValueIfTrue(aQueryString,
+    AppendBoolKeyValueIfTrue(queryString,
                              NS_LITERAL_CSTRING(QUERYKEY_ONLY_BOOKMARKED),
                              query, &nsINavHistoryQuery::GetOnlyBookmarked);
 
@@ -335,7 +335,7 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     // which is valid
     query->GetHasDomain(&hasIt);
     if (hasIt) {
-      AppendBoolKeyValueIfTrue(aQueryString,
+      AppendBoolKeyValueIfTrue(queryString,
                                NS_LITERAL_CSTRING(QUERYKEY_DOMAIN_IS_HOST),
                                query, &nsINavHistoryQuery::GetDomainIsHost);
       nsCAutoString domain;
@@ -345,9 +345,9 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
       PRBool success = NS_Escape(domain, escapedDomain, url_XAlphas);
       NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
 
-      AppendAmpersandIfNonempty(aQueryString);
-      aQueryString.Append(NS_LITERAL_CSTRING(QUERYKEY_DOMAIN "="));
-      aQueryString.Append(escapedDomain);
+      AppendAmpersandIfNonempty(queryString);
+      queryString.Append(NS_LITERAL_CSTRING(QUERYKEY_DOMAIN "="));
+      queryString.Append(escapedDomain);
     }
 
     // uri
@@ -366,27 +366,27 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
       PRBool success = NS_Escape(uriSpec, escaped, url_XAlphas);
       NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
 
-      AppendAmpersandIfNonempty(aQueryString);
-      aQueryString.Append(NS_LITERAL_CSTRING(QUERYKEY_URI "="));
-      aQueryString.Append(escaped);
+      AppendAmpersandIfNonempty(queryString);
+      queryString.Append(NS_LITERAL_CSTRING(QUERYKEY_URI "="));
+      queryString.Append(escaped);
     }
 
     // annotation
     query->GetHasAnnotation(&hasIt);
     if (hasIt) {
-      AppendAmpersandIfNonempty(aQueryString);
+      AppendAmpersandIfNonempty(queryString);
       PRBool annotationIsNot;
       query->GetAnnotationIsNot(&annotationIsNot);
       if (annotationIsNot)
-        aQueryString.AppendLiteral(QUERYKEY_NOTANNOTATION "=");
+        queryString.AppendLiteral(QUERYKEY_NOTANNOTATION "=");
       else
-        aQueryString.AppendLiteral(QUERYKEY_ANNOTATION "=");
+        queryString.AppendLiteral(QUERYKEY_ANNOTATION "=");
       nsCAutoString annot;
       query->GetAnnotation(annot);
       nsCAutoString escaped;
       PRBool success = NS_Escape(annot, escaped, url_XAlphas);
       NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
-      aQueryString.Append(escaped);
+      queryString.Append(escaped);
     }
 
     // folders
@@ -394,9 +394,9 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     PRUint32 folderCount = 0;
     query->GetFolders(&folderCount, &folders);
     for (PRUint32 i = 0; i < folderCount; ++i) {
-      AppendAmpersandIfNonempty(aQueryString);
-      aQueryString += NS_LITERAL_CSTRING(QUERYKEY_FOLDER "=");
-      AppendInt64(aQueryString, folders[0]);
+      AppendAmpersandIfNonempty(queryString);
+      queryString += NS_LITERAL_CSTRING(QUERYKEY_FOLDER "=");
+      AppendInt64(queryString, folders[0]);
     }
     nsMemory::Free(folders);
   }
@@ -405,74 +405,75 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
   PRUint32 groupCount;
   const PRUint32* groups = options->GroupingMode(&groupCount);
   for (PRUint32 i = 0; i < groupCount; i ++) {
-    AppendAmpersandIfNonempty(aQueryString);
-    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_GROUP "=");
-    AppendInt32(aQueryString, groups[i]);
+    AppendAmpersandIfNonempty(queryString);
+    queryString += NS_LITERAL_CSTRING(QUERYKEY_GROUP "=");
+    AppendInt32(queryString, groups[i]);
   }
 
   // sorting
   if (options->SortingMode() != nsINavHistoryQueryOptions::SORT_BY_NONE) {
-    AppendAmpersandIfNonempty(aQueryString);
-    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_SORT "=");
-    AppendInt32(aQueryString, options->SortingMode());
+    AppendAmpersandIfNonempty(queryString);
+    queryString += NS_LITERAL_CSTRING(QUERYKEY_SORT "=");
+    AppendInt32(queryString, options->SortingMode());
   }
 
   // result type
   if (options->ResultType() != nsINavHistoryQueryOptions::RESULTS_AS_URI) {
-    AppendAmpersandIfNonempty(aQueryString);
-    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_RESULT_TYPE "=");
-    AppendInt32(aQueryString, options->ResultType());
+    AppendAmpersandIfNonempty(queryString);
+    queryString += NS_LITERAL_CSTRING(QUERYKEY_RESULT_TYPE "=");
+    AppendInt32(queryString, options->ResultType());
   }
 
   // exclude items
   if (options->ExcludeItems()) {
-    AppendAmpersandIfNonempty(aQueryString);
-    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_EXCLUDE_ITEMS "=1");
+    AppendAmpersandIfNonempty(queryString);
+    queryString += NS_LITERAL_CSTRING(QUERYKEY_EXCLUDE_ITEMS "=1");
   }
 
   // exclude queries
   if (options->ExcludeQueries()) {
-    AppendAmpersandIfNonempty(aQueryString);
-    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_EXCLUDE_QUERIES "=1");
+    AppendAmpersandIfNonempty(queryString);
+    queryString += NS_LITERAL_CSTRING(QUERYKEY_EXCLUDE_QUERIES "=1");
   }
 
   // exclude read only folders
   if (options->ExcludeReadOnlyFolders()) {
-    AppendAmpersandIfNonempty(aQueryString);
-    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_EXCLUDE_READ_ONLY_FOLDERS "=1");
+    AppendAmpersandIfNonempty(queryString);
+    queryString += NS_LITERAL_CSTRING(QUERYKEY_EXCLUDE_READ_ONLY_FOLDERS "=1");
   }
 
   // expand queries
   if (options->ExpandQueries()) {
-    AppendAmpersandIfNonempty(aQueryString);
-    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_EXPAND_QUERIES "=1");
+    AppendAmpersandIfNonempty(queryString);
+    queryString += NS_LITERAL_CSTRING(QUERYKEY_EXPAND_QUERIES "=1");
   }
 
   // title mode
   if (options->ForceOriginalTitle()) {
-    AppendAmpersandIfNonempty(aQueryString);
-    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_FORCE_ORIGINAL_TITLE "=1");
+    AppendAmpersandIfNonempty(queryString);
+    queryString += NS_LITERAL_CSTRING(QUERYKEY_FORCE_ORIGINAL_TITLE "=1");
   }
 
   // include hidden
   if (options->IncludeHidden()) {
-    AppendAmpersandIfNonempty(aQueryString);
-    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_INCLUDE_HIDDEN "=1");
+    AppendAmpersandIfNonempty(queryString);
+    queryString += NS_LITERAL_CSTRING(QUERYKEY_INCLUDE_HIDDEN "=1");
   }
 
   // show sessions
   if (options->ShowSessions()) {
-    AppendAmpersandIfNonempty(aQueryString);
-    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_SHOW_SESSIONS "=1");
+    AppendAmpersandIfNonempty(queryString);
+    queryString += NS_LITERAL_CSTRING(QUERYKEY_SHOW_SESSIONS "=1");
   }
 
   // max results
   if (options->MaxResults()) {
-    AppendAmpersandIfNonempty(aQueryString);
-    aQueryString += NS_LITERAL_CSTRING(QUERYKEY_MAX_RESULTS "=");
-    AppendInt32(aQueryString, options->MaxResults());
+    AppendAmpersandIfNonempty(queryString);
+    queryString += NS_LITERAL_CSTRING(QUERYKEY_MAX_RESULTS "=");
+    AppendInt32(queryString, options->MaxResults());
   }
 
+  aQueryString.Assign(NS_LITERAL_CSTRING("place:") + queryString);
   return NS_OK;
 }
 
