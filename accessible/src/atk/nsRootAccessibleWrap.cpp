@@ -100,29 +100,75 @@ NS_IMETHODIMP nsRootAccessibleWrap::GetParent(nsIAccessible **  aParent)
 nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
                                                      nsIDOMNode  *aTargetNode)
 {
-    // first let the cross-platform code dispatch any events, before
-    // we start doing platform-specific things
-    nsRootAccessible::HandleEventWithTarget(aEvent, aTargetNode);
-    
     nsAutoString eventType;
     aEvent->GetType(eventType);
     nsAutoString localName;
     aTargetNode->GetLocalName(localName);
 
-    if (eventType.LowerCaseEqualsLiteral("pagehide")) {
-      // nsRootAccessible::HandleEventWithTarget() has destoryed the accessible object
-      // we don't want to create it again
-      return NS_OK;
+    if (eventType.EqualsLiteral("pagehide")) {
+        nsRootAccessible::HandleEventWithTarget(aEvent, aTargetNode);
+        return NS_OK;
     }
-    
+
     nsCOMPtr<nsIAccessible> accessible;
     nsCOMPtr<nsIAccessibilityService> accService = GetAccService();
     accService->GetAccessibleFor(aTargetNode, getter_AddRefs(accessible));
     if (!accessible)
-      return NS_OK;
+        return NS_OK;
 
+    if (eventType.EqualsLiteral("popupshown")) {
+        nsRootAccessible::HandleEventWithTarget(aEvent, aTargetNode);
+        nsCOMPtr<nsIContent> content(do_QueryInterface(aTargetNode));
+
+        // 1) Don't fire focus events for tooltips, that wouldn't make any sense.
+        // 2) Don't fire focus events for autocomplete popups, because they
+        // come up automatically while the user is typing, and setting focus
+        // there would interrupt the user.
+
+        // If the AT wants to know about these popups it can track the ATK state
+        // change event we fire for ATK_STATE_INVISIBLE on the popup. This is
+        // fired as a result of the nsIAccessibleEvent::EVENT_MENUPOPUP_START we
+        // fire in the nsRootAccessible event handling for all popups.
+        if (!content->NodeInfo()->Equals(nsAccessibilityAtoms::tooltip,
+                                        kNameSpaceID_XUL) &&
+            !content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                                 NS_LITERAL_STRING("autocomplete"), eIgnoreCase)) {
+            FireAccessibleFocusEvent(accessible, aTargetNode, aEvent);
+        }
+        return NS_OK;
+    }
+
+    StateChange stateData;
     nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(accessible));
-    
+
+    if (eventType.EqualsLiteral("CheckboxStateChange") || // it's a XUL <checkbox>
+        eventType.EqualsLiteral("RadioStateChange")) { // it's a XUL <radio>
+        stateData.state = State(accessible);
+        // prefPane tab is implemented as list items in A11y, so we need to
+        // check nsIAccessibleStates::STATE_SELECTED also
+        stateData.enable = (stateData.state &
+          (nsIAccessibleStates::STATE_CHECKED |
+           nsIAccessibleStates::STATE_SELECTED)) != 0;
+        stateData.state = nsIAccessibleStates::STATE_CHECKED;
+        privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE,
+                                  accessible, &stateData);
+        // only fire focus event for checked radio
+        if (eventType.EqualsLiteral("RadioStateChange") &&
+            stateData.enable) {
+            FireAccessibleFocusEvent(accessible, aTargetNode, aEvent);
+        }
+        return NS_OK;
+    }
+
+    if (eventType.EqualsLiteral("OpenStateChange")) {
+        stateData.state = State(accessible); // collapsed/expanded changed
+        stateData.enable = (stateData.state & nsIAccessibleStates::STATE_EXPANDED) != 0;
+        stateData.state = nsIAccessibleStates::STATE_EXPANDED;
+        privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE,
+                                  accessible, &stateData);
+        return NS_OK;
+    }
+
 #ifdef MOZ_XUL
   // If it's a tree element, need the currently selected item
     nsCOMPtr<nsIAccessible> treeItemAccessible;
@@ -147,9 +193,8 @@ nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
         }
     }
 #endif
-  
-    StateChange stateData;
-    if (eventType.LowerCaseEqualsLiteral("focus")) {
+
+    if (eventType.EqualsLiteral("focus")) {
 #ifdef MOZ_XUL
         if (treeItemAccessible) { // use focused treeitem
             privAcc = do_QueryInterface(treeItemAccessible);
@@ -190,7 +235,7 @@ nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
                                       &stateData);
         }
     }
-    else if (eventType.LowerCaseEqualsLiteral("select")) {
+    else if (eventType.EqualsLiteral("select")) {
 #ifdef MOZ_XUL
         if (treeItemAccessible) { // it's a XUL <tree>
             // use EVENT_FOCUS instead of EVENT_SELECTION_CHANGED
@@ -204,65 +249,10 @@ nsresult nsRootAccessibleWrap::HandleEventWithTarget(nsIDOMEvent *aEvent,
             // make GOK refresh "UI-Grab" window
             privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_REORDER, accessible, nsnull);
         }
+    } else {
+      nsRootAccessible::HandleEventWithTarget(aEvent, aTargetNode);
     }
-    else if (eventType.LowerCaseEqualsLiteral("checkboxstatechange") || // it's a XUL <checkbox>
-             eventType.LowerCaseEqualsLiteral("radiostatechange")) { // it's a XUL <radio>
-        stateData.state = State(accessible);
-        // prefPane tab is implemented as list items in A11y, so we need to
-        // check nsIAccessibleStates::STATE_SELECTED also
-        stateData.enable = (stateData.state &
-          (nsIAccessibleStates::STATE_CHECKED |
-           nsIAccessibleStates::STATE_SELECTED)) != 0;
-        stateData.state = nsIAccessibleStates::STATE_CHECKED;
-        privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, accessible, &stateData);
-        // only fire focus event for checked radio
-        if (eventType.LowerCaseEqualsLiteral("radiostatechange") &&
-            stateData.enable) {
-            FireAccessibleFocusEvent(accessible, aTargetNode, aEvent);
-        }
-    }
-    else if (eventType.LowerCaseEqualsLiteral("openstatechange")) { // collapsed/expanded changed
-        stateData.state = State(accessible);
-        stateData.enable = (stateData.state & nsIAccessibleStates::STATE_EXPANDED) != 0;
-        stateData.state = nsIAccessibleStates::STATE_EXPANDED;
-        privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, accessible, &stateData);
-    }
-    else if (eventType.LowerCaseEqualsLiteral("popuphiding")) {
-        // If accessible focus was inside popup that closes,
-        // then restore it to true current focus.
-        // This is the case when we've been getting DOMMenuItemActive events
-        // inside of a combo box that closes. The real focus is on the combo box.
-        if (!gLastFocusedNode) {
-            return NS_OK;
-        }
-        nsCOMPtr<nsIDOMNode> parentOfFocus;
-        gLastFocusedNode->GetParentNode(getter_AddRefs(parentOfFocus));
-        if (parentOfFocus != aTargetNode) {
-            return NS_OK;
-        }
-        // Focus was inside of popup that's being hidden
-        FireCurrentFocusEvent();
-    }
-    else if (eventType.LowerCaseEqualsLiteral("popupshown")) {
-#ifdef MOZ_XUL
-      nsCOMPtr<nsIContent> content(do_QueryInterface(aTargetNode));
-      if (content->NodeInfo()->Equals(nsAccessibilityAtoms::tooltip, kNameSpaceID_XUL) ||
-          content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
-                               NS_LITERAL_STRING("autocomplete"), eIgnoreCase)) {
-        // 1) Don't fire focus events for tooltips, that wouldn't make any sense.
-        // 2) Don't fire focus events for autocomplete popups, because they come up
-        // automatically while the user is typing, and setting focus there would
-        // interrupt the user.
-        // ------------------------------------------------------------------------
-        // If the AT wants to know about these popups it can track the ATK state change
-        // event we fire for ATK_STATE_INVISIBLE on the popup.
-        // This is fired as a result of the nsIAccessibleEvent::EVENT_MENUPOPUP_START
-        // we fire in the nsRootAccessible event handling for all popups.
-        return NS_OK;
-      }
-#endif
-      FireAccessibleFocusEvent(accessible, aTargetNode, aEvent);      
-    }
+
     return NS_OK;
 }
 
