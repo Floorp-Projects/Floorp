@@ -255,8 +255,17 @@ js_QuoteString(JSContext *cx, JSString *str, jschar quote);
  * value from js_GetPrinterOutput() is the printer's cumulative output, in
  * a GC'ed string.
  */
+
+#ifdef JS_ARENAMETER
+# define JS_NEW_PRINTER(cx, name, indent, pretty)                              \
+    js_NewPrinter(cx, name, indent, pretty)
+#else
+# define JS_NEW_PRINTER(cx, name, indent, pretty)                              \
+    js_NewPrinter(cx, indent, pretty)
+#endif
+
 extern JSPrinter *
-js_NewPrinter(JSContext *cx, const char *name, uintN indent, JSBool pretty);
+JS_NEW_PRINTER(JSContext *cx, const char *name, uintN indent, JSBool pretty);
 
 extern void
 js_DestroyPrinter(JSPrinter *jp);

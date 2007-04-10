@@ -782,8 +782,8 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
     JSObject *funobj;
     JSParseNode *pn;
 
-    JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode));
-    JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote));
+    JS_INIT_ARENA_POOL(&codePool, "code", 1024, sizeof(jsbytecode));
+    JS_INIT_ARENA_POOL(&notePool, "note", 1024, sizeof(jssrcnote));
     if (!js_InitCodeGenerator(cx, &funcg, &codePool, &notePool,
                               ts->filename, ts->lineno,
                               ts->principals)) {
