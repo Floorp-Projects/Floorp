@@ -311,44 +311,95 @@ void nsHTMLLIAccessible::CacheChildren()
 }
 
 
-nsHTMLListBulletAccessible::nsHTMLListBulletAccessible(nsIDOMNode* aDomNode, 
-  nsIWeakReference* aShell, nsIFrame *aFrame, const nsAString& aBulletText): 
-  nsHTMLTextAccessible(aDomNode, aShell, aFrame), mWeakParent(nsnull), mBulletText(aBulletText)
+// nsHTMLListBulletAccessible
+nsHTMLListBulletAccessible::
+  nsHTMLListBulletAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell,
+                             nsIFrame *aFrame, const nsAString& aBulletText) :
+    nsLeafAccessible(aDomNode, aShell), mFrame(aFrame), mWeakParent(nsnull),
+    mBulletText(aBulletText)
 {
   mBulletText += ' '; // Otherwise bullets are jammed up against list text
 }
 
-NS_IMETHODIMP nsHTMLListBulletAccessible::GetUniqueID(void **aUniqueID)
+NS_IMETHODIMP
+nsHTMLListBulletAccessible::GetUniqueID(void **aUniqueID)
 {
   // Since mDOMNode is same as for list item, use |this| pointer as the unique Id
   *aUniqueID = NS_STATIC_CAST(void*, this);
   return NS_OK;
 }
 
-
-NS_IMETHODIMP nsHTMLListBulletAccessible::Shutdown()
+NS_IMETHODIMP
+nsHTMLListBulletAccessible::Shutdown()
 {
   mBulletText.Truncate();
   mWeakParent = nsnull;
-  return nsHTMLTextAccessible::Shutdown();
+  mFrame = nsnull;
+
+  return nsLeafAccessible::Shutdown();
 }
 
-NS_IMETHODIMP nsHTMLListBulletAccessible::GetName(nsAString &aName)
+nsIFrame*
+nsHTMLListBulletAccessible::GetFrame()
+{
+  if (!mWeakShell)
+    return nsnull;
+
+  if (!mFrame)
+    mFrame = nsLeafAccessible::GetFrame();
+  return mFrame;
+}
+
+NS_IMETHODIMP
+nsHTMLListBulletAccessible::GetName(nsAString &aName)
 {
   aName = mBulletText;
   return NS_OK;
 }
 
 NS_IMETHODIMP
+nsHTMLListBulletAccessible::GetRole(PRUint32 *aRole)
+{
+  *aRole = nsIAccessibleRole::ROLE_STATICTEXT;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTMLListBulletAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsHTMLTextAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsLeafAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
   *aState |= nsIAccessibleStates::STATE_READONLY;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsHTMLListBulletAccessible::SetParent(nsIAccessible *aParentAccessible)
+{
+  mParent = nsnull;
+  mWeakParent = aParentAccessible;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLListBulletAccessible::GetParent(nsIAccessible **aParentAccessible)
+{
+  NS_IF_ADDREF(*aParentAccessible = mWeakParent);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLListBulletAccessible::FireToolkitEvent(PRUint32 aEvent,
+                                             nsIAccessible *aTarget,
+                                             void *aData)
+{
+  if (aEvent == nsIAccessibleEvent::EVENT_HIDE)
+    mFrame = nsnull;  // Invalidate cached frame
+  return nsLeafAccessible::FireToolkitEvent(aEvent, aTarget, aData);
+}
+
 
 // nsHTMLListAccessible
 
