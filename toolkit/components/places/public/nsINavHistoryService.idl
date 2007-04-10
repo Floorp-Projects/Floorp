@@ -245,6 +245,8 @@ interface nsINavHistoryContainerResultNode : nsINavHistoryResultNode
    * This gives you the children of the nodes. It is preferrable to use this
    * interface over the array one, since it avoids creating an nsIArray object
    * and the interface is already the correct type.
+   *
+   * @throws NS_ERROR_NOT_AVAILABLE if containerOpen is false.
    */
   readonly attribute PRUint32 childCount;
   nsINavHistoryResultNode getChild(in PRUint32 index);
