@@ -440,22 +440,23 @@ NS_IMETHODIMP nsDocAccessible::CacheAccessNode(void *aUniqueID, nsIAccessNode *a
 NS_IMETHODIMP nsDocAccessible::GetParent(nsIAccessible **aParent)
 {
   // Hook up our new accessible with our parent
+  *aParent = nsnull;
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
   if (!mParent) {
     nsIDocument *parentDoc = mDocument->GetParentDocument();
-    if (parentDoc) {
-      nsIContent *ownerContent = parentDoc->FindContentForSubDocument(mDocument);
-      nsCOMPtr<nsIDOMNode> ownerNode(do_QueryInterface(ownerContent));
-      if (ownerNode) {
-        nsCOMPtr<nsIAccessibilityService> accService =
-          do_GetService("@mozilla.org/accessibilityService;1");
-        if (accService) {
-          // XXX aaronl: ideally we would traverse the presshell chain
-          // Since there's no easy way to do that, we cheat and use
-          // the document hierarchy. GetAccessibleFor() is bad because
-          // it doesn't support our concept of multiple presshells per doc.
-          // It should be changed to use GetAccessibleInWeakShell()
-          accService->GetAccessibleFor(ownerNode, getter_AddRefs(mParent));
-        }
+    NS_ENSURE_TRUE(parentDoc, NS_ERROR_FAILURE);
+    nsIContent *ownerContent = parentDoc->FindContentForSubDocument(mDocument);
+    nsCOMPtr<nsIDOMNode> ownerNode(do_QueryInterface(ownerContent));
+    if (ownerNode) {
+      nsCOMPtr<nsIAccessibilityService> accService =
+        do_GetService("@mozilla.org/accessibilityService;1");
+      if (accService) {
+        // XXX aaronl: ideally we would traverse the presshell chain
+        // Since there's no easy way to do that, we cheat and use
+        // the document hierarchy. GetAccessibleFor() is bad because
+        // it doesn't support our concept of multiple presshells per doc.
+        // It should be changed to use GetAccessibleInWeakShell()
+        accService->GetAccessibleFor(ownerNode, getter_AddRefs(mParent));
       }
     }
   }
