@@ -50,9 +50,10 @@
     </resources>
 
     <content>
+      <children includes="listheader"/>
       <xul:scrollbox allowevents="true" orient="vertical" anonid="main-box"
                      flex="1" style="overflow: auto;">
-        <children />
+        <children/>
       </xul:scrollbox>
     </content>
 
