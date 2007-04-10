@@ -21,7 +21,9 @@ unpack_build () {
             if [ -d localized ]
             then
               mkdir bin/
-              cp -rp localized/* nonlocalized/* optional/* bin/
+              cp -rp nonlocalized/* bin/
+              cp -rp localized/*    bin/
+              cp -rp optional/*     bin/
             else
               for file in *.xpi
               do
