@@ -551,27 +551,14 @@ nsHTMLSelectOptionAccessible::GetAttributesInternal(nsIPersistentProperties *aAt
 
 nsIFrame* nsHTMLSelectOptionAccessible::GetBoundsFrame()
 {
-  nsCOMPtr<nsIContent> selectContent(do_QueryInterface(mDOMNode));
-
-  while (selectContent && selectContent->Tag() != nsAccessibilityAtoms::select) {
-    selectContent = selectContent->GetParent();
-  }
-
-  nsCOMPtr<nsIDOMNode> selectNode(do_QueryInterface(selectContent));
-  if (selectNode) {
-    nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
-    nsCOMPtr<nsIAccessible> selAcc;
-    accService->GetAccessibleFor(selectNode, getter_AddRefs(selAcc));
-    if (selAcc) {
-      PRUint32 state = State(selAcc);
-      if (state & nsIAccessibleStates::STATE_COLLAPSED) {
-        nsCOMPtr<nsIPresShell> presShell(GetPresShell());
-        if (!presShell) {
-          return nsnull;
-        }
-        return presShell->GetPrimaryFrameFor(selectContent);
-      }
+  PRUint32 state;
+  nsCOMPtr<nsIContent> content = GetSelectState(&state);
+  if (state & nsIAccessibleStates::STATE_COLLAPSED) {
+    nsCOMPtr<nsIPresShell> presShell(GetPresShell());
+    if (!presShell) {
+      return nsnull;
     }
+    return presShell->GetPrimaryFrameFor(content);
   }
 
   return nsAccessible::GetBoundsFrame();
@@ -620,6 +607,13 @@ nsHTMLSelectOptionAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 
   *aState |= nsIAccessibleStates::STATE_SELECTABLE |
              nsIAccessibleStates::STATE_FOCUSABLE;
+
+  // remove STATE_SHOWING if parent is STATE_COLLAPSED
+  PRUint32 state;
+  GetSelectState(&state);
+  if (state & nsIAccessibleStates::STATE_COLLAPSED) {
+    *aState |= nsIAccessibleStates::STATE_OFFSCREEN;
+  }
 
   return NS_OK;
 }
@@ -785,6 +779,29 @@ void nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibl
                        nsIAccessibleEvent::EVENT_SELECTION_ADD :
                        nsIAccessibleEvent::EVENT_SELECTION_REMOVE; 
   privateMultiSelect->FireToolkitEvent(eventType, optionAccessible, nsnull);
+}
+
+nsIContent* nsHTMLSelectOptionAccessible::GetSelectState(PRUint32* aState)
+{
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  while (content && content->Tag() != nsAccessibilityAtoms::select) {
+    content = content->GetParent();
+  }
+
+  nsCOMPtr<nsIDOMNode> selectNode(do_QueryInterface(content));
+  if (selectNode) {
+    nsCOMPtr<nsIAccessibilityService> accService = GetAccService();
+    if (accService) {
+      nsCOMPtr<nsIAccessible> selAcc;
+      accService->GetAccessibleFor(selectNode, getter_AddRefs(selAcc));
+      if (selAcc) {
+        PRUint32 dummy;
+        selAcc->GetFinalState(aState, &dummy);
+        return content;
+      }
+    }
+  }
+  return nsnull; 
 }
 
 /** ----- nsHTMLSelectOptGroupAccessible ----- */

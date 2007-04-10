@@ -169,6 +169,15 @@ public:
   nsIFrame*  GetBoundsFrame();
   static nsresult GetFocusedOptionNode(nsIDOMNode *aListNode, nsIDOMNode **aFocusedOptionNode);
   static void SelectionChangedIfOption(nsIContent *aPossibleOption);
+
+private:
+  
+  /**
+   * Get Select element's accessible state
+   * @param aState, Select element state
+   * @return Select element content, returns null if not avaliable
+   */ 
+  nsIContent* GetSelectState(PRUint32* aState);
 };
 
 /*
