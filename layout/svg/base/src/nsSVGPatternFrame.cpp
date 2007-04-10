@@ -745,7 +745,8 @@ nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM,
     CallQueryInterface(aSource, &callerSVGFrame);
   callerSVGFrame->GetBBox(aBBox);
   // Sanity check
-  {
+  PRUint16 type = GetPatternUnits();
+  if (type == nsIDOMSVGPatternElement::SVG_PUNITS_OBJECTBOUNDINGBOX) {
     float width, height;
     (*aBBox)->GetWidth(&width);
     (*aBBox)->GetHeight(&height);
