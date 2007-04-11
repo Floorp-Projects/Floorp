@@ -1133,18 +1133,6 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
         return;
     }
 
-    if (strcmp(mimeFlavor, gTextUriListType) == 0) {
-        // fall back for text/uri-list
-        gchar *uriList;
-        gint length;
-        CreateUriList(mSourceDataItems, &uriList, &length);
-        gtk_selection_data_set(aSelectionData,
-                               aSelectionData->target,
-                               8, (guchar *)uriList, length);
-        g_free(uriList);
-        return;
-    }
-
     nsCOMPtr<nsISupports> genericItem;
     mSourceDataItems->GetElementAt(0, getter_AddRefs(genericItem));
     nsCOMPtr<nsITransferable> item;
@@ -1162,6 +1150,12 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
         // plain text but we also need to look for x-moz-url
         else if (strcmp(mimeFlavor, gMozUrlType) == 0) {
             actualFlavor = kURLMime;
+            needToDoConversionToPlainText = PR_TRUE;
+        }
+        // if someone was asking for text/uri-list we need to convert to
+        // plain text.
+        else if (strcmp(mimeFlavor, gTextUriListType) == 0) {
+            actualFlavor = gTextUriListType;
             needToDoConversionToPlainText = PR_TRUE;
         }
         else
@@ -1204,6 +1198,18 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
                                        (guchar *)tmpData, tmpDataLen);
                 // this wasn't allocated with glib
                 free(tmpData);
+            }
+        } else {
+            if (strcmp(mimeFlavor, gTextUriListType) == 0) {
+                // fall back for text/uri-list
+                gchar *uriList;
+                gint length;
+                CreateUriList(mSourceDataItems, &uriList, &length);
+                gtk_selection_data_set(aSelectionData,
+                                       aSelectionData->target,
+                                       8, (guchar *)uriList, length);
+                g_free(uriList);
+                return;
             }
         }
     }
