@@ -127,6 +127,7 @@ public:
   // nsPIAccessible
   NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTarget,
                               void *aData);
+  NS_IMETHOD GetContentText(nsAString& aText);
 
 protected:
   // XXX: Ideally we'd get the bullet text directly from the bullet frame via
