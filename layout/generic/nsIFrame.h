@@ -1789,7 +1789,8 @@ NS_PTR_TO_INT32(frame->GetProperty(nsGkAtoms::embeddingLevel))
    * to the computed clip rect coordinates relative to this frame's origin.
    * aRect must not be null!
    */
-  PRBool GetAbsPosClipRect(const nsStyleDisplay* aDisp, nsRect* aRect);
+  PRBool GetAbsPosClipRect(const nsStyleDisplay* aDisp, nsRect* aRect,
+                           const nsSize& aSize);
 
   /**
    * Check if this frame is focusable and in the current tab order.

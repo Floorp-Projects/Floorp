@@ -1102,7 +1102,8 @@ nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
 }
 
 PRBool
-nsIFrame::GetAbsPosClipRect(const nsStyleDisplay* aDisp, nsRect* aRect)
+nsIFrame::GetAbsPosClipRect(const nsStyleDisplay* aDisp, nsRect* aRect,
+                            const nsSize& aSize)
 {
   NS_PRECONDITION(aRect, "Must have aRect out parameter");
 
@@ -1112,10 +1113,10 @@ nsIFrame::GetAbsPosClipRect(const nsStyleDisplay* aDisp, nsRect* aRect)
 
   *aRect = aDisp->mClip;
   if (NS_STYLE_CLIP_RIGHT_AUTO & aDisp->mClipFlags) {
-    aRect->width = GetSize().width - aRect->x;
+    aRect->width = aSize.width - aRect->x;
   }
   if (NS_STYLE_CLIP_BOTTOM_AUTO & aDisp->mClipFlags) {
-    aRect->height = GetSize().height - aRect->y;
+    aRect->height = aSize.height - aRect->y;
   }
   return PR_TRUE;
 }
@@ -1123,9 +1124,9 @@ nsIFrame::GetAbsPosClipRect(const nsStyleDisplay* aDisp, nsRect* aRect)
 static PRBool ApplyAbsPosClipping(nsDisplayListBuilder* aBuilder,
                                   const nsStyleDisplay* aDisp, nsIFrame* aFrame,
                                   nsRect* aRect) {
-  if (!aFrame->GetAbsPosClipRect(aDisp, aRect))
+  if (!aFrame->GetAbsPosClipRect(aDisp, aRect, aFrame->GetSize()))
     return PR_FALSE;
-  
+
   // A moving frame should not be allowed to clip a non-moving frame.
   // Abs-pos clipping always clips frames below it in the frame tree, except
   // for when an abs-pos frame clips a fixed-pos frame. So when fixed-pos
@@ -5348,7 +5349,7 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
 
   PRBool hasAbsPosClip;
   nsRect absPosClipRect;
-  hasAbsPosClip = GetAbsPosClipRect(disp, &absPosClipRect);
+  hasAbsPosClip = GetAbsPosClipRect(disp, &absPosClipRect, aNewSize);
   if (hasAbsPosClip) {
     outlineRect.IntersectRect(outlineRect, absPosClipRect);
   }
