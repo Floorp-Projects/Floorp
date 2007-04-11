@@ -241,7 +241,7 @@ nsPlatformCharset::InitGetCharset(nsACString &oString)
       nsCAutoString propertyFile;
       // note: NS_LITERAL_CSTRING("unixcharset." OSARCH ".properties") does not compile on AIX
       propertyFile.AssignLiteral("unixcharset.");
-      propertyFile.Append(OSARCH);
+      propertyFile.AppendLiteral(NS_STRINGIFY(OSARCH));
       propertyFile.AppendLiteral(".properties");
       nsGREResProperties *info = new nsGREResProperties(propertyFile);
       NS_ASSERTION(info, "cannot create nsGREResProperties");

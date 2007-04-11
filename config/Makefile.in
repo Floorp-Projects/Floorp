@@ -165,3 +165,11 @@ ifdef MKDEPEND_DIR
 clean clobber realclean clobber_all::
 	cd $(MKDEPEND_DIR); $(MAKE) $@
 endif
+
+PYUNITS := unit-Expression.py unit-Preprocessor.py
+
+check::
+	@$(EXIT_ON_ERROR) \
+	for test in $(PYUNITS); do \
+	  $(PYTHON) $(srcdir)/tests/$$test ; \
+	done

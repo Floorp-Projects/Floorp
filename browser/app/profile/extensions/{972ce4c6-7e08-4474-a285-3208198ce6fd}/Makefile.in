@@ -50,7 +50,7 @@ FILES := \
 	$(NULL)
 
 libs::
-	$(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(srcdir)/install.rdf.in > install.rdf
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(srcdir)/install.rdf.in > install.rdf
 	$(INSTALL) $(FILES) $(DIST)/bin/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}
  
 install::

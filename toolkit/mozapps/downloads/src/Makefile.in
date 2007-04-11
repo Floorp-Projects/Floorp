@@ -50,5 +50,5 @@ GARBAGE += nsHelperAppDlg.js
 include $(topsrcdir)/config/rules.mk
 
 nsHelperAppDlg.js: nsHelperAppDlg.js.in
-	$(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $^ > $@ 
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > $@ 
 
