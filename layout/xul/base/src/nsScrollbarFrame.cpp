@@ -112,6 +112,12 @@ nsScrollbarFrame::IsContainingBlock() const
   return PR_TRUE;
 }
 
+nsIAtom*
+nsScrollbarFrame::GetType() const
+{
+  return nsGkAtoms::scrollbarFrame;
+}
+
 NS_IMETHODIMP
 nsScrollbarFrame::AttributeChanged(PRInt32 aNameSpaceID,
                                    nsIAtom* aAttribute,

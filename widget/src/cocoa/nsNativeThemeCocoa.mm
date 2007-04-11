@@ -22,6 +22,7 @@
  * Contributor(s):
  *    Vladimir Vukicevic <vladimir@pobox.com> (HITheme rewrite)
  *    Josh Aas <josh@mozilla.com>
+ *    Colin Barrett <cbarrett@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -58,10 +59,15 @@
 #include "gfxQuartzSurface.h"
 
 #define DRAW_IN_FRAME_DEBUG 0
+#define SCROLLBARS_VISUAL_DEBUG 0
 
 extern "C" {
   CG_EXTERN void CGContextSetCTM(CGContextRef, CGAffineTransform);
 }
+
+// Copied from nsLookAndFeel.h
+// Apple hasn't defined a constant for scollbars with two arrows on each end, so we'll use this one.
+static const int kThemeScrollBarArrowsBoth = 2;
 
 #define HITHEME_ORIENTATION kHIThemeOrientationNormal
 
@@ -104,6 +110,7 @@ nsNativeThemeCocoa::DrawCheckboxRadio(CGContextRef cgContext, ThemeButtonKind in
 
   HIThemeDrawButton(&inBoxRect, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
 }
+
 
 void
 nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
@@ -154,6 +161,7 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
   HIThemeDrawButton(&drawRect, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
 }
 
+
 void
 nsNativeThemeCocoa::DrawSpinButtons(CGContextRef cgContext, ThemeButtonKind inKind,
                                     const HIRect& inBoxRect, PRBool inDisabled,
@@ -173,6 +181,7 @@ nsNativeThemeCocoa::DrawSpinButtons(CGContextRef cgContext, ThemeButtonKind inKi
 
   HIThemeDrawButton(&inBoxRect, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
 }
+
 
 void
 nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
@@ -207,6 +216,7 @@ nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
 
   HIThemeDrawFrame(&drawRect, &fdi, cgContext, HITHEME_ORIENTATION);
 }
+
 
 void
 nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext,
@@ -305,6 +315,114 @@ nsNativeThemeCocoa::DrawTab(CGContextRef cgContext, const HIRect& inBoxRect,
 
   HIThemeDrawTab(&inBoxRect, &tdi, cgContext, HITHEME_ORIENTATION, NULL);
 }
+
+
+static UInt8
+ConvertToPressState(PRInt32 aButtonState, UInt8 aPressState)
+{
+  // If the button is pressed, return the press state passed in. Otherwise, return 0.
+  return ((aButtonState & NS_EVENT_STATE_ACTIVE) && (aButtonState & NS_EVENT_STATE_HOVER)) ? aPressState : 0;
+}
+
+
+void 
+nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame *aFrame, PRInt32 aButtonStates[])
+{
+  static nsIContent::AttrValuesArray attributeValues[] = {
+    &nsWidgetAtoms::scrollbarUpTop,
+    &nsWidgetAtoms::scrollbarDownTop,
+    &nsWidgetAtoms::scrollbarUpBottom,
+    &nsWidgetAtoms::scrollbarDownBottom,
+    nsnull
+  };
+
+  // Get the state of any scrollbar buttons in our child frames
+  for (nsIFrame *childFrame = aFrame->GetFirstChild(nsnull); 
+       childFrame;
+       childFrame = childFrame->GetNextSibling()) {
+
+    nsIContent *childContent = childFrame->GetContent();
+    if (!childContent) continue;
+    PRInt32 attrIndex = childContent->FindAttrValueIn(kNameSpaceID_None, nsWidgetAtoms::sbattr, 
+                                                      attributeValues, eCaseMatters);
+    if (attrIndex < 0) continue;
+
+    PRInt32 currentState = GetContentState(childFrame, NS_THEME_BUTTON);
+    aButtonStates[attrIndex] = currentState;
+  }
+}
+
+
+void
+nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *aFrame, 
+                                         const HIRect& aRect, PRBool aShouldGetButtonStates)
+{
+  PRInt32 curpos = CheckIntAttr(aFrame, nsWidgetAtoms::curpos);
+  PRInt32 minpos = CheckIntAttr(aFrame, nsWidgetAtoms::minpos);
+  PRInt32 maxpos = CheckIntAttr(aFrame, nsWidgetAtoms::maxpos);
+
+  PRBool isHorizontal = aFrame->GetContent()->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::orient, 
+                                                          nsWidgetAtoms::horizontal, eCaseMatters);
+  PRBool isSmall = aFrame->GetStyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL;
+
+  aTdi.version = 0;
+  aTdi.kind = isSmall ? kThemeSmallScrollBar : kThemeMediumScrollBar;
+  aTdi.bounds = aRect;
+  aTdi.min = minpos;
+  aTdi.max = maxpos;
+  aTdi.value = curpos;
+  aTdi.attributes = kThemeTrackShowThumb;
+  if (isHorizontal)
+    aTdi.attributes |= kThemeTrackHorizontal;
+
+  aTdi.trackInfo.scrollbar.viewsize = (SInt32)(isHorizontal ? (aRect.size.width) : (aRect.size.height));
+
+  // Only go get these scrollbar button states if we need it. For example, there's no reaon to look up scrollbar button 
+  // states when we're only creating a TrackDrawInfo to determine the size of the thumb.
+  if (aShouldGetButtonStates) {
+    PRInt32 buttonStates[] = {0, 0, 0, 0};
+    GetScrollbarPressStates(aFrame, buttonStates);
+    ThemeScrollBarArrowStyle arrowStyle;
+    ::GetThemeScrollBarArrowStyle(&arrowStyle);
+    // If all four buttons are visible
+    if (arrowStyle == kThemeScrollBarArrowsBoth) {
+      aTdi.trackInfo.scrollbar.pressState = ConvertToPressState(buttonStates[0], kThemeTopOutsideArrowPressed) |
+                                            ConvertToPressState(buttonStates[1], kThemeTopInsideArrowPressed) |
+                                            ConvertToPressState(buttonStates[2], kThemeBottomInsideArrowPressed) |
+                                            ConvertToPressState(buttonStates[3], kThemeBottomOutsideArrowPressed);
+    } else {
+      // It seems that unless all four buttons are showing, kThemeTopOutsideArrowPressed is the correct constant for
+      // the up scrollbar button.
+      aTdi.trackInfo.scrollbar.pressState = ConvertToPressState(buttonStates[0], kThemeTopOutsideArrowPressed) |
+                                            ConvertToPressState(buttonStates[2], kThemeTopOutsideArrowPressed) |
+                                            ConvertToPressState(buttonStates[3], kThemeBottomOutsideArrowPressed);
+    }
+  }
+}
+
+
+void
+nsNativeThemeCocoa::DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRect, nsIFrame *aFrame)
+{
+  HIThemeTrackDrawInfo tdi;
+  GetScrollbarDrawInfo(tdi, aFrame, aBoxRect, PR_TRUE); //True means we want the press states
+  ::HIThemeDrawTrack(&tdi, NULL, aCGContext, HITHEME_ORIENTATION);
+}
+
+
+nsIFrame*
+nsNativeThemeCocoa::GetParentScrollbarFrame(nsIFrame *aFrame)
+{
+  // Walk our parents to find a scrollbar frame
+  nsIFrame *scrollbarFrame = aFrame;
+  do {
+    if (scrollbarFrame->GetType() == nsWidgetAtoms::scrollbarFrame) break;
+  } while ((scrollbarFrame = scrollbarFrame->GetParent()));
+  
+  // We return null if we can't find a parent scrollbar frame
+  return scrollbarFrame;
+}
+
 
 NS_IMETHODIMP
 nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* aFrame,
@@ -627,18 +745,35 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       // do nothing, drawn by scale
       break;
 
-    case NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL:
-    case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL: 
+    case NS_THEME_SCROLLBAR_SMALL:
+    case NS_THEME_SCROLLBAR: {
+      DrawScrollbar(cgContext, macRect, aFrame);
+    }
+      break;
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+#if SCROLLBARS_VISUAL_DEBUG
+      CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 0, 0.6);
+      CGContextFillRect(cgContext, macRect);
+    break;
+#endif
     case NS_THEME_SCROLLBAR_BUTTON_UP:
+    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
+#if SCROLLBARS_VISUAL_DEBUG
+      CGContextSetRGBFillColor(cgContext, 1.0, 0, 0, 0.6);
+      CGContextFillRect(cgContext, macRect);
+    break;
+#endif
     case NS_THEME_SCROLLBAR_BUTTON_DOWN:
+    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
+#if SCROLLBARS_VISUAL_DEBUG
+      CGContextSetRGBFillColor(cgContext, 0, 1.0, 0, 0.6);
+      CGContextFillRect(cgContext, macRect);
+    break;      
+#endif
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
-    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
-      // Scrollbars are now native on mac, via nsNativeScrollbarFrame.
-      // So, this should never be called.
+      // do nothing, drawn by scrollbar
       break;
     
     case NS_THEME_LISTBOX:
@@ -706,10 +841,35 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
       aResult->SizeTo(frameOutset, frameOutset, frameOutset, frameOutset);
     }
       break;
+    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+    case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+    {
+      // There's only an endcap to worry about when both arrows are on the bottom
+      ThemeScrollBarArrowStyle arrowStyle;
+      ::GetThemeScrollBarArrowStyle(&arrowStyle);
+      if (arrowStyle == kThemeScrollBarArrowsLowerRight) {
+        PRBool isHorizontal = (aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL);
+
+        nsIFrame *scrollbarFrame = GetParentScrollbarFrame(aFrame);
+        if (!scrollbarFrame) return NS_ERROR_FAILURE;
+        PRBool isSmall = (scrollbarFrame->GetStyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
+
+        // There isn't a metric for this, so just hardcode a best guess at the value.
+        // This value is even less exact due to the fact that the endcap is partially concave.
+        PRInt32 endcapSize = isSmall ? 5 : 6;
+
+        if (isHorizontal)
+          aResult->SizeTo(endcapSize, 0, 0, 0);
+        else
+          aResult->SizeTo(0, endcapSize, 0, 0);
+      }
+    }
+      break;
   }
   
   return NS_OK;
 }
+
 
 // return false here to indicate that CSS padding values should be used
 PRBool
@@ -746,6 +906,7 @@ nsNativeThemeCocoa::GetWidgetPadding(nsIDeviceContext* aContext,
   return PR_FALSE;
 }
 
+
 PRBool
 nsNativeThemeCocoa::GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFrame,
                                       PRUint8 aWidgetType, nsRect* aResult)
@@ -779,6 +940,7 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFra
 
   return PR_FALSE;
 }
+
 
 NS_IMETHODIMP
 nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
@@ -934,16 +1096,46 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       *aIsOverridable = PR_FALSE;
       break;
     }
-      
-    case NS_THEME_SCROLLBAR:
-    case NS_THEME_SCROLLBAR_BUTTON_UP:
-    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
-    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
+
+    // Get the rect of the thumb from HITheme, so we can return it to Gecko, which has different ideas about
+    // how big the thumb should be. This is kind of a hack.
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
-    case NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL:
-    case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL:
+    {
+      // Find our parent scrollbar frame. If we can't, abort.
+      nsIFrame *scrollbarFrame = GetParentScrollbarFrame(aFrame);
+      if (!scrollbarFrame) return NS_ERROR_FAILURE;
+
+      // We need to get the device context to convert from app units :(
+      nsRect scrollbarRect = scrollbarFrame->GetRect();
+      nsCOMPtr<nsIDeviceContext> dctx;
+      aContext->GetDeviceContext(*getter_AddRefs(dctx));
+      PRInt32 p2a = dctx->AppUnitsPerDevPixel();
+      CGRect macRect = CGRectMake(NSAppUnitsToIntPixels(scrollbarRect.x, p2a),
+                                  NSAppUnitsToIntPixels(scrollbarRect.y, p2a),
+                                  NSAppUnitsToIntPixels(scrollbarRect.width, p2a),
+                                  NSAppUnitsToIntPixels(scrollbarRect.height, p2a));
+
+      // False here means not to get scrollbar button state information.
+      HIThemeTrackDrawInfo tdi;
+      GetScrollbarDrawInfo(tdi, scrollbarFrame, macRect, PR_FALSE);
+
+      HIRect thumbRect;
+      ::HIThemeGetTrackPartBounds(&tdi, kControlIndicatorPart, &thumbRect);
+
+      // HITheme is just lying to us, I guess...
+      PRInt32 thumbAdjust = ((scrollbarFrame->GetStyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL) ?
+                             2 : 4);
+
+      if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL)
+        aResult->SizeTo(nscoord(thumbRect.size.width), nscoord(thumbRect.size.height - thumbAdjust));
+      else
+        aResult->SizeTo(nscoord(thumbRect.size.width - thumbAdjust), nscoord(thumbRect.size.height));
+      *aIsOverridable = PR_FALSE;
+      break;
+    }
+
+    case NS_THEME_SCROLLBAR:
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     {
@@ -951,9 +1143,41 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       // really doesn't matter if the scrollbar is vertical or horizontal
       // and the width metric is a really good metric for every piece
       // of the scrollbar.
+
+      nsIFrame *scrollbarFrame = GetParentScrollbarFrame(aFrame);
+      if (!scrollbarFrame) return NS_ERROR_FAILURE;
+
+      PRInt32 themeMetric = (scrollbarFrame->GetStyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL) ?
+                            kThemeMetricSmallScrollBarWidth :
+                            kThemeMetricScrollBarWidth;
       SInt32 scrollbarWidth = 0;
-      ::GetThemeMetric(kThemeMetricScrollBarWidth, &scrollbarWidth);
+      ::GetThemeMetric(themeMetric, &scrollbarWidth);
       aResult->SizeTo(scrollbarWidth, scrollbarWidth);
+      *aIsOverridable = PR_FALSE;
+      break;
+    }
+
+    case NS_THEME_SCROLLBAR_BUTTON_UP:
+    case NS_THEME_SCROLLBAR_BUTTON_DOWN:
+    case NS_THEME_SCROLLBAR_BUTTON_LEFT:
+    case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
+    {
+      nsIFrame *scrollbarFrame = GetParentScrollbarFrame(aFrame);
+      if (!scrollbarFrame) return NS_ERROR_FAILURE;
+
+      // Since there is no NS_THEME_SCROLLBAR_BUTTON_UP_SMALL we need to ask the parent what appearance style it has.
+      PRInt32 themeMetric = (scrollbarFrame->GetStyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL) ?
+                            kThemeMetricSmallScrollBarWidth :
+                            kThemeMetricScrollBarWidth;
+      SInt32 scrollbarWidth = 0;
+      ::GetThemeMetric(themeMetric, &scrollbarWidth);
+
+      // It seems that for both sizes of scrollbar, the buttons are one pixel "longer".
+      if (aWidgetType == NS_THEME_SCROLLBAR_BUTTON_LEFT || aWidgetType == NS_THEME_SCROLLBAR_BUTTON_RIGHT)
+        aResult->SizeTo(scrollbarWidth+1, scrollbarWidth);
+      else
+        aResult->SizeTo(scrollbarWidth, scrollbarWidth+1);
+ 
       *aIsOverridable = PR_FALSE;
       break;
     }
@@ -1092,8 +1316,6 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
-    case NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL:
-    case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL:
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
       retVal = PR_TRUE;

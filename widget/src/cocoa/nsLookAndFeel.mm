@@ -524,6 +524,11 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         case kThemeScrollBarArrowsSingle:
           aMetric = eMetric_ScrollArrowStyleSingle;
           break;
+        // This constant isn't selectable in System Preferences like the other two (don't know why) 
+        // `defaults write -g AppleScrollBarVariant DoubleBoth` to enable it.
+        case kThemeScrollBarArrowsBoth:
+          aMetric = eMetric_ScrollArrowStyleBothAtEachEnd;
+          break;
         default:
           NS_WARNING("Not handling all possible ThemeScrollBarArrowStyle values");
           // fall through so we default to BothAtBottom
