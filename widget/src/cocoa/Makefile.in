@@ -105,7 +105,6 @@ CMMSRCS = \
 		nsChildView.mm \
 		nsWindowMap.mm \
 		nsWidgetFactory.mm \
-		nsNativeScrollbar.mm \
 		nsCursorManager.mm \
 		nsMacCursor.mm \
 		nsScreenCocoa.mm \

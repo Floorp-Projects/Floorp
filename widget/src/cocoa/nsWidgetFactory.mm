@@ -64,7 +64,6 @@
 #include "nsSound.h"
 #include "nsIdleServiceX.h"
 
-#include "nsNativeScrollbar.h"
 #include "nsScreenManagerCocoa.h"
 #include "nsDeviceContextSpecX.h"
 #include "nsPrintOptionsX.h"
@@ -78,7 +77,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuBarX)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuX)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuItemX)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeScrollbar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
@@ -167,10 +165,6 @@ static const nsModuleComponentInfo gComponents[] =
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
     nsBidiKeyboardConstructor },
-  { "Native Scrollbar",
-    NS_NATIVESCROLLBAR_CID,
-    "@mozilla.org/widget/nativescrollbar;1",
-    nsNativeScrollbarConstructor },
   { "Native Theme Renderer", 
     NS_THEMERENDERER_CID,
     "@mozilla.org/chrome/chrome-native-theme;1",
