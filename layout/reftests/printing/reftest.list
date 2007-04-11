@@ -2,4 +2,4 @@
 == blank.html blank.html
 
 # Bugs
-== 272830-1.html 272830-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 272830-1.html 272830-1-ref.html # bug 377119
