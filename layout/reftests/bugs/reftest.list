@@ -200,7 +200,7 @@ fails == 368504-1.html 368504-1-ref.html # bug 368504
 == 371925-1b.html 371925-1-ref.html
 == 372553-1.html 372553-1-ref.html
 == 373381-1.html 373381-1-ref.html
-== 372037-1.html 372037-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT="cocoa") == 372037-1.html 372037-1-ref.html # bug 377118
 == 375508-1.html 375508-1-ref.html
 == 373433-1.html 373433-1-ref.html
 == 372062-1.html 372062-1-ref.html
