@@ -246,7 +246,7 @@ ifdef MOZ_PKG_REMOVALS
 MOZ_PKG_REMOVALS_GEN = removed-files
 
 $(MOZ_PKG_REMOVALS_GEN): $(MOZ_PKG_REMOVALS) Makefile Makefile.in
-	$(PERL) $(topsrcdir)/config/preprocessor.pl -Fsubstitution $(DEFINES) $(ACDEFINES) $(MOZ_PKG_REMOVALS) > $(MOZ_PKG_REMOVALS_GEN)
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) $(MOZ_PKG_REMOVALS) > $(MOZ_PKG_REMOVALS_GEN)
 endif
 
 GARBAGE		+= $(DIST)/$(PACKAGE) $(PACKAGE)

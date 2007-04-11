@@ -81,7 +81,7 @@ TEST_DRIVER_PPARGS = 	-DBROWSER_PATH=$(browser_path) \
 			$(NULL)
 
 runtests.pl: runtests.pl.in
-	$(PERL) $(MOZILLA_DIR)/config/preprocessor.pl \
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py \
 	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
 
 
