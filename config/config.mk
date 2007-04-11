@@ -777,7 +777,7 @@ endif
 # Now test variables that might have been set or overridden by $(MY_CONFIG).
 
 DEFINES		+= -DOSTYPE=\"$(OS_CONFIG)\"
-DEFINES		+= -DOSARCH=\"$(OS_ARCH)\"
+DEFINES		+= -DOSARCH=$(OS_ARCH)
 
 # For profiling
 ifdef ENABLE_EAZEL_PROFILER

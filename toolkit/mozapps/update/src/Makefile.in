@@ -58,7 +58,7 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 nsUpdateService.js: nsUpdateService.js.in
-	$(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $^ > $@ 
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > $@ 
 
 ifdef ENABLE_TESTS
 check:: nsUpdateService.js

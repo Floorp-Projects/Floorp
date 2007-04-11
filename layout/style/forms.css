@@ -564,7 +564,7 @@ input[type="file"] > input[type="text"] {
   input[type="file"] { height: 2em; }
 }
 
-%if OSARCH=="OS2"
+%if OSARCH==OS2
 input {
   font: medium serif; font-family: inherit
 }

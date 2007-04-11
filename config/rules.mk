@@ -1436,7 +1436,7 @@ libs:: $(PREF_JS_EXPORTS)
 	for i in $(PREF_JS_EXPORTS); do \
 	  dest=$(FINAL_TARGET)/$(PREF_DIR)/`basename $$i`; \
 	  $(RM) -f $$dest; \
-	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
+	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
 	done
 endif
 
@@ -1447,7 +1447,7 @@ install:: $(PREF_JS_EXPORTS)
 	for i in $(PREF_JS_EXPORTS); do \
 	  dest=$(DESTDIR)$(mozappdir)/$(PREF_DIR)/`basename $$i`; \
 	  $(RM) -f $$dest; \
-	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
+	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
 	done
 endif
 endif
@@ -1676,7 +1676,7 @@ ifndef NO_DIST_INSTALL
 	for i in $^; do \
 	  dest=$(FINAL_TARGET)/components/`basename $$i`; \
 	  $(RM) -f $$dest; \
-	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
+	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
 	done
 endif
 
@@ -1686,7 +1686,7 @@ ifndef NO_INSTALL
 	for i in $^; do \
 	  dest=$(DESTDIR)$(mozappdir)/components/`basename $$i`; \
 	  $(RM) -f $$dest; \
-	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
+	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $$i > $$dest; \
 	done
 endif
 endif
@@ -1732,7 +1732,7 @@ ifndef NO_DIST_INSTALL
 	if test -f $(JAR_MANIFEST); then \
 	  if test ! -d $(FINAL_TARGET)/chrome; then $(NSINSTALL) -D $(FINAL_TARGET)/chrome; fi; \
 	  if test ! -d $(MAKE_JARS_TARGET)/chrome; then $(NSINSTALL) -D $(MAKE_JARS_TARGET)/chrome; fi; \
-	  $(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
+	  $(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
 	    $(JAR_MANIFEST) | \
 	  $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl \
 	    -d $(MAKE_JARS_TARGET)/chrome -j $(FINAL_TARGET)/chrome \
@@ -1749,7 +1749,7 @@ ifndef NO_INSTALL
 	if test -f $(JAR_MANIFEST); then \
 	  if test ! -d $(DESTDIR)$(mozappdir)/chrome; then $(NSINSTALL) -D $(DESTDIR)$(mozappdir)/chrome; fi; \
 	  if test ! -d $(MAKE_JARS_TARGET)/chrome; then $(NSINSTALL) -D $(MAKE_JARS_TARGET)/chrome; fi; \
-	  $(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
+	  $(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
 	    $(JAR_MANIFEST) | \
 	  $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl \
 	    -d $(MAKE_JARS_TARGET)/chrome -j $(DESTDIR)$(mozappdir)/chrome \
@@ -1763,7 +1763,7 @@ libs:: $(DIST_FILES)
 	for f in $(DIST_FILES); do \
 	  dest=$(FINAL_TARGET)/`basename $$f`; \
 	  $(RM) -f $$dest; \
-	  $(PERL) $(MOZILLA_DIR)/config/preprocessor.pl \
+	  $(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py \
 	    $(XULAPP_DEFINES) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) \
 	    $(srcdir)/$$f > $$dest; \
 	done
@@ -1775,7 +1775,7 @@ libs:: $(DIST_CHROME_FILES)
 	for f in $(DIST_CHROME_FILES); do \
 	  dest=$(FINAL_TARGET)/chrome/`basename $$f`; \
 	  $(RM) -f $$dest; \
-	  $(PERL) $(MOZILLA_DIR)/config/preprocessor.pl \
+	  $(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py \
 	    $(XULAPP_DEFINES) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) \
 	    $(srcdir)/$$f > $$dest; \
 	done
