@@ -1029,6 +1029,7 @@ enum nsDragDropEventStatus {
  */
 
 #define NS_VK_CANCEL         nsIDOMKeyEvent::DOM_VK_CANCEL
+#define NS_VK_HELP           nsIDOMKeyEvent::DOM_VK_HELP
 #define NS_VK_BACK           nsIDOMKeyEvent::DOM_VK_BACK_SPACE
 #define NS_VK_TAB            nsIDOMKeyEvent::DOM_VK_TAB
 #define NS_VK_CLEAR          nsIDOMKeyEvent::DOM_VK_CLEAR
