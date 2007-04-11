@@ -296,8 +296,10 @@ nsBrowserStatusFilter::OnRefreshAttempted(nsIWebProgress *aWebProgress,
 {
     nsCOMPtr<nsIWebProgressListener2> listener =
         do_QueryInterface(mListener);
-    if (!listener)
+    if (!listener) {
+        *allowRefresh = PR_TRUE;
         return NS_OK;
+    }
 
     return listener->OnRefreshAttempted(aWebProgress, aUri, aDelay, aSameUri,
                                         allowRefresh);
