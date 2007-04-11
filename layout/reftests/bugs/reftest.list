@@ -184,7 +184,7 @@ fails == 351641-2b.html 351641-2-ref.html # bug 358433 (2006-10-19)
 == 367612-1f.html 367612-1-ref.html
 != 367612-1g.html 367612-1-ref.html
 fails == 368020-1.html 368020-1-ref.html # bug 368079
-fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 368020-2.html 368020-2-ref.html # bug 368157 (gtk), bug 371188 (cocoa)
+fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 368020-2.html 368020-2-ref.html # bug 368157 (gtk)
 fails == 368020-3.html 368020-3-ref.html # bug 368085
 fails == 368020-4.html 368020-4-ref.html # bug 368085
 == 368020-5.html 368020-5-ref.html
