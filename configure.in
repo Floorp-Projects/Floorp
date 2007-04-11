@@ -1405,7 +1405,9 @@ case "$host" in
             AS_PERL=1
             PERL="${CYGWIN_WRAPPER} $PERL"
         fi
-        PYTHON="${CYGWIN_WRAPPER} $PYTHON"
+        dnl add this in for non-cygwin python on cygwin builds
+        dnl bug 361583
+        dnl PYTHON="${CYGWIN_WRAPPER} $PYTHON"
         ;;
     esac
     ;;
