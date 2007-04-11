@@ -4031,13 +4031,18 @@ nsRuleNode::ComputeColumnData(nsStyleStruct* aStartStruct,
 static void
 SetSVGPaint(const nsCSSValuePair& aValue, const nsStyleSVGPaint& parentPaint,
             nsPresContext* aPresContext, nsStyleContext *aContext, 
-            nsStyleSVGPaint& aResult, PRBool& aInherited)
+            nsStyleSVGPaint& aResult, nsStyleSVGPaintType aInitialPaintType,
+            PRBool& aInherited)
 {
   if (aValue.mXValue.GetUnit() == eCSSUnit_Inherit) {
     aResult = parentPaint;
     aInherited = PR_TRUE;
   } else if (aValue.mXValue.GetUnit() == eCSSUnit_None) {
     aResult.mType = eStyleSVGPaintType_None;
+  } else if (aValue.mXValue.GetUnit() == eCSSUnit_Initial) {
+    aResult.mType = aInitialPaintType;
+    aResult.mPaint.mColor = NS_RGB(0, 0, 0);
+    aResult.mFallbackColor = NS_RGB(0, 0, 0);
   } else if (aValue.mXValue.GetUnit() == eCSSUnit_URL) {
     aResult.mType = eStyleSVGPaintType_Server;
     aResult.mPaint.mPaintServer = aValue.mXValue.GetURLValue();
@@ -4065,6 +4070,9 @@ SetSVGOpacity(const nsCSSValue& aValue, float parentOpacity, float& opacity, PRB
     opacity = PR_MAX(opacity, 0.0f);
     opacity = PR_MIN(opacity, 1.0f);
   }
+  else if (aValue.GetUnit() == eCSSUnit_Initial) {
+    opacity = 1.0f;
+  }
 }
 
 const nsStyleStruct* 
@@ -4083,6 +4091,9 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   else if (eCSSUnit_Inherit == SVGData.mClipRule.GetUnit()) {
     inherited = PR_TRUE;
     svg->mClipRule = parentSVG->mClipRule;
+  }
+  else if (eCSSUnit_Initial == SVGData.mClipRule.GetUnit()) {
+    svg->mClipRule = NS_STYLE_FILL_RULE_NONZERO;
   }
 
   // color-interpolation: auto, sRGB, linearRGB, inherit
@@ -4116,10 +4127,12 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   }
 
   // fill: 
-  SetSVGPaint(SVGData.mFill, parentSVG->mFill, mPresContext, aContext, svg->mFill, inherited);
+  SetSVGPaint(SVGData.mFill, parentSVG->mFill, mPresContext, aContext,
+              svg->mFill, eStyleSVGPaintType_Color, inherited);
 
   // fill-opacity:
-  SetSVGOpacity(SVGData.mFillOpacity, parentSVG->mFillOpacity, svg->mFillOpacity, inherited);
+  SetSVGOpacity(SVGData.mFillOpacity, parentSVG->mFillOpacity,
+                svg->mFillOpacity, inherited);
 
   // fill-rule: enum, inherit
   if (eCSSUnit_Enumerated == SVGData.mFillRule.GetUnit()) {
@@ -4129,11 +4142,15 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     svg->mFillRule = parentSVG->mFillRule;
   }
+  else if (eCSSUnit_Initial == SVGData.mFillRule.GetUnit()) {
+    svg->mFillRule = NS_STYLE_FILL_RULE_NONZERO;
+  }
 
   // marker-end: url, none, inherit
   if (eCSSUnit_URL == SVGData.mMarkerEnd.GetUnit()) {
     svg->mMarkerEnd = SVGData.mMarkerEnd.GetURLValue();
-  } else if (eCSSUnit_None == SVGData.mMarkerEnd.GetUnit()) {
+  } else if (eCSSUnit_None == SVGData.mMarkerEnd.GetUnit() ||
+             eCSSUnit_Initial == SVGData.mMarkerEnd.GetUnit()) {
     svg->mMarkerEnd = nsnull;
   } else if (eCSSUnit_Inherit == SVGData.mMarkerEnd.GetUnit()) {
     inherited = PR_TRUE;
@@ -4143,7 +4160,8 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   // marker-mid: url, none, inherit
   if (eCSSUnit_URL == SVGData.mMarkerMid.GetUnit()) {
     svg->mMarkerMid = SVGData.mMarkerMid.GetURLValue();
-  } else if (eCSSUnit_None == SVGData.mMarkerMid.GetUnit()) {
+  } else if (eCSSUnit_None == SVGData.mMarkerMid.GetUnit() ||
+             eCSSUnit_Initial == SVGData.mMarkerMid.GetUnit()) {
     svg->mMarkerMid = nsnull;
   } else if (eCSSUnit_Inherit == SVGData.mMarkerMid.GetUnit()) {
     inherited = PR_TRUE;
@@ -4153,7 +4171,8 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   // marker-start: url, none, inherit
   if (eCSSUnit_URL == SVGData.mMarkerStart.GetUnit()) {
     svg->mMarkerStart = SVGData.mMarkerStart.GetURLValue();
-  } else if (eCSSUnit_None == SVGData.mMarkerStart.GetUnit()) {
+  } else if (eCSSUnit_None == SVGData.mMarkerStart.GetUnit() ||
+             eCSSUnit_Initial == SVGData.mMarkerStart.GetUnit()) {
     svg->mMarkerStart = nsnull;
   } else if (eCSSUnit_Inherit == SVGData.mMarkerStart.GetUnit()) {
     inherited = PR_TRUE;
@@ -4168,13 +4187,16 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   } else if (eCSSUnit_Inherit == SVGData.mPointerEvents.GetUnit()) {
     inherited = PR_TRUE;
     svg->mPointerEvents = parentSVG->mPointerEvents;
+  } else if (eCSSUnit_Initial == SVGData.mPointerEvents.GetUnit()) {
+    svg->mPointerEvents = NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED;
   }
 
   // shape-rendering: enum, auto, inherit
   if (eCSSUnit_Enumerated == SVGData.mShapeRendering.GetUnit()) {
     svg->mShapeRendering = SVGData.mShapeRendering.GetIntValue();
   }
-  else if (eCSSUnit_Auto == SVGData.mShapeRendering.GetUnit()) {
+  else if (eCSSUnit_Auto == SVGData.mShapeRendering.GetUnit() ||
+           eCSSUnit_Initial == SVGData.mShapeRendering.GetUnit()) {
     svg->mShapeRendering = NS_STYLE_SHAPE_RENDERING_AUTO;
   }
   else if (eCSSUnit_Inherit == SVGData.mShapeRendering.GetUnit()) {
@@ -4183,7 +4205,8 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   }
 
   // stroke: 
-  SetSVGPaint(SVGData.mStroke, parentSVG->mStroke, mPresContext, aContext, svg->mStroke, inherited);
+  SetSVGPaint(SVGData.mStroke, parentSVG->mStroke, mPresContext, aContext,
+              svg->mStroke, eStyleSVGPaintType_None, inherited);
 
   // stroke-dasharray: <dasharray>, none, inherit
   nsCSSValueList *list = SVGData.mStrokeDasharray;
@@ -4251,6 +4274,9 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     svg->mStrokeLinecap = parentSVG->mStrokeLinecap;
   }
+  else if (eCSSUnit_Initial == SVGData.mStrokeLinecap.GetUnit()) {
+    svg->mStrokeLinecap = NS_STYLE_STROKE_LINECAP_BUTT;
+  }
 
   // stroke-linejoin: enum, inherit
   if (eCSSUnit_Enumerated == SVGData.mStrokeLinejoin.GetUnit()) {
@@ -4259,6 +4285,9 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   else if (eCSSUnit_Inherit == SVGData.mStrokeLinejoin.GetUnit()) {
     inherited = PR_TRUE;
     svg->mStrokeLinejoin = parentSVG->mStrokeLinejoin;
+  }
+  else if (eCSSUnit_Initial == SVGData.mStrokeLinejoin.GetUnit()) {
+    svg->mStrokeLinejoin = NS_STYLE_STROKE_LINEJOIN_MITER;
   }
 
   // stroke-miterlimit: <miterlimit>, inherit
@@ -4269,9 +4298,13 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
     svg->mStrokeMiterlimit = parentSVG->mStrokeMiterlimit;
     inherited = PR_TRUE;
   }
+  else if (eCSSUnit_Initial == SVGData.mStrokeMiterlimit.GetUnit()) {
+    svg->mStrokeMiterlimit = 4.0f;
+  }
 
   // stroke-opacity:
-  SetSVGOpacity(SVGData.mStrokeOpacity, parentSVG->mStrokeOpacity, svg->mStrokeOpacity, inherited);  
+  SetSVGOpacity(SVGData.mStrokeOpacity, parentSVG->mStrokeOpacity,
+                svg->mStrokeOpacity, inherited);  
 
   // stroke-width:
   SetCoord(SVGData.mStrokeWidth,
@@ -4287,12 +4320,16 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     svg->mTextAnchor = parentSVG->mTextAnchor;
   }
+  else if (eCSSUnit_Initial == SVGData.mTextAnchor.GetUnit()) {
+    svg->mTextAnchor = NS_STYLE_TEXT_ANCHOR_START;
+  }
   
   // text-rendering: enum, auto, inherit
   if (eCSSUnit_Enumerated == SVGData.mTextRendering.GetUnit()) {
     svg->mTextRendering = SVGData.mTextRendering.GetIntValue();
   }
-  else if (eCSSUnit_Auto == SVGData.mTextRendering.GetUnit()) {
+  else if (eCSSUnit_Auto == SVGData.mTextRendering.GetUnit() ||
+           eCSSUnit_Initial == SVGData.mTextRendering.GetUnit()) {
     svg->mTextRendering = NS_STYLE_TEXT_RENDERING_AUTO;
   }
   else if (eCSSUnit_Inherit == SVGData.mTextRendering.GetUnit()) {
@@ -4323,7 +4360,8 @@ nsRuleNode::ComputeSVGResetData(nsStyleStruct* aStartStruct,
   // clip-path: url, none, inherit
   if (eCSSUnit_URL == SVGData.mClipPath.GetUnit()) {
     svgReset->mClipPath = SVGData.mClipPath.GetURLValue();
-  } else if (eCSSUnit_None == SVGData.mClipPath.GetUnit()) {
+  } else if (eCSSUnit_None == SVGData.mClipPath.GetUnit() ||
+             eCSSUnit_Initial == SVGData.mClipPath.GetUnit()) {
     svgReset->mClipPath = nsnull;
   } else if (eCSSUnit_Inherit == SVGData.mClipPath.GetUnit()) {
     inherited = PR_TRUE;
@@ -4342,7 +4380,8 @@ nsRuleNode::ComputeSVGResetData(nsStyleStruct* aStartStruct,
   if (eCSSUnit_Enumerated == SVGData.mDominantBaseline.GetUnit()) {
     svgReset->mDominantBaseline = SVGData.mDominantBaseline.GetIntValue();
   }
-  else if (eCSSUnit_Auto == SVGData.mDominantBaseline.GetUnit()) {
+  else if (eCSSUnit_Auto == SVGData.mDominantBaseline.GetUnit() ||
+           eCSSUnit_Initial == SVGData.mDominantBaseline.GetUnit()) {
     svgReset->mDominantBaseline = NS_STYLE_DOMINANT_BASELINE_AUTO;
   }
   else if (eCSSUnit_Inherit == SVGData.mDominantBaseline.GetUnit()) {
@@ -4353,7 +4392,8 @@ nsRuleNode::ComputeSVGResetData(nsStyleStruct* aStartStruct,
   // filter: url, none, inherit
   if (eCSSUnit_URL == SVGData.mFilter.GetUnit()) {
     svgReset->mFilter = SVGData.mFilter.GetURLValue();
-  } else if (eCSSUnit_None == SVGData.mFilter.GetUnit()) {
+  } else if (eCSSUnit_None == SVGData.mFilter.GetUnit() ||
+             eCSSUnit_Initial == SVGData.mFilter.GetUnit()) {
     svgReset->mFilter = nsnull;
   } else if (eCSSUnit_Inherit == SVGData.mFilter.GetUnit()) {
     inherited = PR_TRUE;
@@ -4363,7 +4403,8 @@ nsRuleNode::ComputeSVGResetData(nsStyleStruct* aStartStruct,
   // mask: url, none, inherit
   if (eCSSUnit_URL == SVGData.mMask.GetUnit()) {
     svgReset->mMask = SVGData.mMask.GetURLValue();
-  } else if (eCSSUnit_None == SVGData.mMask.GetUnit()) {
+  } else if (eCSSUnit_None == SVGData.mMask.GetUnit() ||
+             eCSSUnit_Initial == SVGData.mMask.GetUnit()) {
     svgReset->mMask = nsnull;
   } else if (eCSSUnit_Inherit == SVGData.mMask.GetUnit()) {
     inherited = PR_TRUE;
