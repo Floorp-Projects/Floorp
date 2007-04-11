@@ -685,11 +685,13 @@ sub RemoveBrokenUpdates
                 my $gen_partial_path = $partial_path;
                 $gen_partial_path = SubstitutePath(path => $partial_path,
                                                    platform => $p,
+                                                   version => $to->{'appv'},
                                                    locale => $l);
 
                 my $gen_partial_url = $partial_url;
                 $gen_partial_url = SubstitutePath(path => $partial_url,
                                                   platform => $p,
+                                                  version => $to->{'appv'},
                                                   locale => $l);
 
                 my $partial_pathname = "$u/ftp/$gen_partial_path";
