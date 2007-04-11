@@ -337,25 +337,17 @@ nsIFrame* nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& a
       continue;
     }
     if (IsText(accessible)) {
-      // Avoid string copies
-      PRInt32 substringEndOffset = frame->GetContent()->TextLength();
+      nsCOMPtr<nsPIAccessible> pAcc(do_QueryInterface(accessible));
       nsAutoString newText;
-      if (!substringEndOffset) {
-        // This is exception to the frame owns the text.
-        // The only known case where this occurs is for list bullets
-        // We could do this for all accessibles but it's not as performant
-        // as dealing with nsIContent directly
-        accessible->GetName(newText);
-        substringEndOffset = newText.Length();
-      }
+      pAcc->GetContentText(newText);
+
+      PRInt32 substringEndOffset = newText.Length();
       if (startOffset < substringEndOffset) {
         // Our start is within this substring
         // XXX Can we somehow optimize further by getting the nsTextFragment
         // and use CopyTo to a PRUnichar buffer to copy it directly to
         // the string?
-        if (newText.IsEmpty()) { // Don't have text yet
-          frame->GetContent()->AppendTextTo(newText);
-        }
+
         if (startOffset > 0 || endOffset < substringEndOffset) {
           // XXX the Substring operation is efficient, but does the 
           // reassignment to the original nsAutoString cause a copy?

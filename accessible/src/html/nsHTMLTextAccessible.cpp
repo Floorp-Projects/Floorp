@@ -400,6 +400,13 @@ nsHTMLListBulletAccessible::FireToolkitEvent(PRUint32 aEvent,
   return nsLeafAccessible::FireToolkitEvent(aEvent, aTarget, aData);
 }
 
+NS_IMETHODIMP
+nsHTMLListBulletAccessible::GetContentText(nsAString& aText)
+{
+  aText = mBulletText;
+  return NS_OK;
+}
+
 
 // nsHTMLListAccessible
 

@@ -40,26 +40,58 @@
 
 interface nsIAccessible;
 
-[scriptable, uuid(52F1BE88-84F7-4f7f-B31C-062AFE7DF15D)]
+[uuid(e4865da3-f292-4f1a-9c56-dd307f1bdc17)]
 interface nsPIAccessible : nsISupports
 {
-  [noscript] void setParent(in nsIAccessible aAccParent);
-  [noscript] void setFirstChild(in nsIAccessible aAccFirstChild);
-  [noscript] void setNextSibling(in nsIAccessible aAccNextSibling);
-  // Return parent only if cached
-  [noscript] void getCachedParent(out nsIAccessible aAccParent);
+  /**
+   * Set accessible parent.
+   */
+  void setParent(in nsIAccessible aAccParent);
+
+  /**
+   * Set first accessible child.
+   */
+  void setFirstChild(in nsIAccessible aAccFirstChild);
+
+  /**
+   * Set next sibling accessible.
+   */
+  void setNextSibling(in nsIAccessible aAccNextSibling);
+
+  /**
+   * Return parent accessible only if cached.
+   */
+  void getCachedParent(out nsIAccessible aAccParent);
 
   /**
    * Set the child count to -1 (unknown) and null out cached child pointers
    */
-  [noscript] void invalidateChildren();
-  [noscript] void fireToolkitEvent(in unsigned long aEvent, in nsIAccessible aTarget, in voidPtr aData);
+  void invalidateChildren();
+
+  /**
+   * Fire accessible event.
+   *
+   * @param aEvent - DOM event
+   * @param aTarget - target of DOM event
+   * @param aData - additional information for accessible event.
+   */
+  void fireToolkitEvent(in unsigned long aEvent, in nsIAccessible aTarget,
+                        in voidPtr aData);
 
   /**
    * Return true if there are accessible children in anonymous content
    */
-  [noscript] readonly attribute boolean allowsAnonChildAccessibles;
+  readonly attribute boolean allowsAnonChildAccessibles;
 
-  [noscript] void testChildCache(in nsIAccessible aCachedChild); // Assert if child not in parent's cache
+  /**
+   * Assert if child not in parent's cache.
+   */
+  void testChildCache(in nsIAccessible aCachedChild);
+
+  /**
+   * Returns text of accessible if accessible has text role otherwise empty
+   * string.
+   */
+  AString getContentText();
 };
 

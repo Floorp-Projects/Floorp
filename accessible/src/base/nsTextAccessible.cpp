@@ -88,3 +88,17 @@ NS_IMETHODIMP nsTextAccessible::GetChildCount(PRInt32 *_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsTextAccessible::GetContentText(nsAString& aText)
+{
+  nsresult rv = nsLinkableAccessible::GetContentText(aText);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsIFrame *frame = GetFrame();
+  if (!frame)
+    return NS_OK;
+
+  frame->GetContent()->AppendTextTo(aText);
+  return NS_OK;
+}
+
