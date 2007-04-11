@@ -278,6 +278,7 @@ sub download_complete_patches {
                 my $download_url = $rl_config->{'completemarurl'};
                 $download_url = SubstitutePath(path => $download_url,
                                                platform => $p,
+                                               version => $r,
                                                locale => $l);
 
                 my $output_filename = SubstitutePath(
@@ -406,11 +407,13 @@ sub CreateCompletePatches {
                 my $gen_complete_path = $complete_path;
                 $gen_complete_path = SubstitutePath(path => $complete_path,
                                                     platform => $p,
+                                                    version => $to->{'appv'},
                                                     locale => $l);
 
                 my $gen_complete_url = $complete_url;
                 $gen_complete_url = SubstitutePath(path => $complete_url,
                                                    platform => $p,
+                                                   version => $to->{'appv'},
                                                    locale => $l);
 
                 #printf("%s", Data::Dumper::Dumper($to));
@@ -504,11 +507,13 @@ sub CreatePartialPatches {
                 my $gen_partial_path = $partial_path;
                 $gen_partial_path = SubstitutePath(path => $partial_path,
                                                    platform => $p,
+                                                   version => $to->{'appv'},
                                                    locale => $l );
 
                 my $gen_partial_url = $partial_url;
                 $gen_partial_url = SubstitutePath(path => $partial_url,
                                                   platform => $p,
+                                                  version => $to->{'appv'},
                                                   locale => $l );
 
                 #printf("%s", Data::Dumper::Dumper($to));
@@ -648,12 +653,14 @@ sub CreateCompletePatchinfo {
                 my $gen_complete_path = $complete_path;
                 $gen_complete_path = SubstitutePath(path => $complete_path,
                                                     platform => $p,
+                                                    version => $to->{'appv'},
                                                     locale => $l );
                 my $complete_pathname = "$u/ftp/$gen_complete_path";
 
                 my $gen_complete_url = SubstitutePath(path => $complete_url,
-                                                   platform => $p,
-                                                   locale => $l );
+                                                      platform => $p,
+                                                      version => $to->{'appv'},
+                                                      locale => $l );
 
                 my $detailsUrl = SubstitutePath(
                  path => $u_config->{$u}->{'details'},
@@ -711,9 +718,10 @@ sub CreateCompletePatchinfo {
 
                     if (exists($complete->{$channelSpecificUrlKey})) {
                         $complete_patch->{'url'} = SubstitutePath(
-                          path => $complete->{$channelSpecificUrlKey}, 
-                          platform => $p,
-                          locale => $l);
+                         path => $complete->{$channelSpecificUrlKey}, 
+                         platform => $p,
+                         version => $to->{'appv'},
+                         locale => $l);
                     } else {
                         $complete_patch->{'url'} = $gen_complete_url;
                     }
@@ -744,10 +752,11 @@ sub CreateCompletePatchinfo {
                             my $testUrlKey = $testChan . '-url';
 
                             if (exists($complete->{$testUrlKey})) {
-                                $testPatch->{'url'} = SubstitutePath(path => 
-                                  $complete->{$testUrlKey},
-                                  platform => $p,
-                                  locale => $l );
+                                $testPatch->{'url'} = SubstitutePath(
+                                 path => $complete->{$testUrlKey},
+                                 platform => $p,
+                                 version => $to->{'appv'},
+                                 locale => $l );
                             } else {
                                 $testPatch->{'url'} = $gen_complete_url;
                             }
@@ -856,12 +865,14 @@ sub CreatePastReleasePatchinfo {
 
                 my $genCompletePath = SubstitutePath(path => $completePath,
                                                      platform => $toPlatform,
+                                                     version => $patchLocaleNode->{'appv'},
                                                      locale => $locale );
 
                 my $completePathname = "$prefixStr/ftp/$genCompletePath";
 
                 my $genCompleteUrl = SubstitutePath(path => $completeUrl,
                                                     platform => $toPlatform,
+                                                    version => $patchLocaleNode->{'appv'},
                                                     locale => $locale );
 
                 my $detailsUrl = SubstitutePath(
@@ -918,6 +929,7 @@ sub CreatePastReleasePatchinfo {
                         $completePatch->{'url'} = SubstitutePath(
                          path => $complete->{$channelSpecificUrlKey},
                          platform => $toPlatform,
+                         version => $patchLocaleNode->{'appv'},
                          locale => $locale);
                     } else {
                         $completePatch->{'url'} = $genCompleteUrl;
@@ -1016,11 +1028,13 @@ sub CreatePartialPatchinfo {
                 my $gen_partial_path = $partial_path;
                 $gen_partial_path = SubstitutePath(path => $partial_path,
                                                    platform => $p,
+                                                   version => $to->{'appv'},
                                                    locale => $l );
                 my $partial_pathname = "$u/ftp/$gen_partial_path";
 
                 my $gen_partial_url = SubstitutePath(path => $partial_url,
                                                      platform => $p,
+                                                     version => $to->{'appv'},
                                                      locale => $l );
 
                 my $detailsUrl = SubstitutePath(
@@ -1078,9 +1092,10 @@ sub CreatePartialPatchinfo {
 
                     if (exists($partial->{$channelSpecificUrlKey})) {
                         $partial_patch->{'url'} = SubstitutePath(
-                          path => $partial->{$channelSpecificUrlKey}, 
-                          platform => $p,
-                          locale => $l);
+                         path => $partial->{$channelSpecificUrlKey}, 
+                         platform => $p,
+                         version => $to->{'appv'},
+                         locale => $l);
                     } else {
                         $partial_patch->{'url'} = $gen_partial_url;
                     }
@@ -1111,8 +1126,9 @@ sub CreatePartialPatchinfo {
                             my $testChanKey = $testChan . '-url';
 
                             if (exists($partial->{$testChanKey})) {
-                                $testPatch->{'url'} = SubstitutePath(path => 
-                                 $partial->{$testChanKey},
+                                $testPatch->{'url'} = SubstitutePath(
+                                 path => $partial->{$testChanKey},
+                                 version => $to->{'appv'},
                                  platform => $p,
                                  locale => $l );
                             } else {
