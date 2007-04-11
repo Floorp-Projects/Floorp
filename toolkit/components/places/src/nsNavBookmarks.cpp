@@ -1927,7 +1927,8 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
     node->mBookmarkIndex = index;
 
     // Add bookmark ID
-    node->mBookmarkId = mDBGetChildren->AsInt64(kGetChildrenIndex_ID);
+    if (!isFolder)
+      node->mBookmarkId = mDBGetChildren->AsInt64(kGetChildrenIndex_ID);
 
     NS_ENSURE_TRUE(aChildren->AppendObject(node), NS_ERROR_OUT_OF_MEMORY);
   }

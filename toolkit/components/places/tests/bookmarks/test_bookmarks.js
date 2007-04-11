@@ -362,7 +362,10 @@ function run_test() {
     var cc = rootNode.childCount;
     for (var i=0; i < cc; ++i) {
       var node = rootNode.getChild(i);
-      do_check_true(node.bookmarkId > 0);
+      if (node.type == node.RESULT_TYPE_FOLDER)
+        do_check_eq(node.bookmarkId, -1);
+      else
+        do_check_true(node.bookmarkId > 0);
     }
     testRoot.containerOpen = false;
   }
@@ -463,65 +466,3 @@ function run_test() {
     do_throw("bookmarks query: " + ex);
   }
 }
-
-// XXXDietrich - get this section up to date
-
-///  EXPECTED TABLE RESULTS
-///  moz_bookmarks:
-///  item_child    folder_child    parent    position
-///  ----------    ------------    ------    --------
-///                1               0         0
-///                2               1         4
-///                3               1         3
-///  1                             1         0
-///  2                             1         1
-///  3                             1         2
-///                4               2         0
-///  4                             4         0
-///  5                             4         1
-///  6                             4         2
-///  7                             4         3
-///  8                             4         4
-///  9                             4         5
-///  10                            4         6
-///  11                            4         7
-///  12                            2         1
-///                5               2         4
-///  14                            5         0
-///  15                            5         1
-///                6               2         2
-///  16                            6         0
-///  17                            2         3
-///
-///  moz_history:
-///  id            url
-///  --            ------------------------
-///  1             place:  // Viewed today
-///  2             place:  // Viewed past week
-///  3             place:  // All pages
-///  4             http://start.mozilla.org/firefox
-///  5             http://www.mozilla.org/products/firefox/central.html
-///  6             http://addons.mozilla.org/?application=firefox
-///  7             http://getfirefox.com/
-///  8             http://www.mozilla.org/
-///  9             http://www.mozillazine.org/
-///  10            http://store.mozilla.org/
-///  11            http://www.spreadfirefox.com/
-///  12            http://google.com/
-///  13            http://developer.mozilla.org/
-///  14            http://msdn.microsoft.com/
-///  15            http://developer.mozilla.org/devnews/
-///  16            http://espn.com/
-///  17            place:  // Google Sites
-///  18            place:folder=5&group=3
-///  19            place:folder=6&group=3
-///
-///  moz_bookmarks_folders:
-///  id            name
-///  --            -----------------------
-///  1
-///  2             Bookmarks Menu
-///  3             Bookmarks Toolbar
-///  4             Firefox and Mozilla Links
-///  5             Work
-///  6             Home
