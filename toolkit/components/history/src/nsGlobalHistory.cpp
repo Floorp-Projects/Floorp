@@ -2489,7 +2489,7 @@ nsGlobalHistory::BeginUpdateBatch()
 
   ++mBatchesInProgress;
   
-  PRUint32 i = mObservers.Length();
+  PRUint32 i = mObservers.Count();
   while (i > 0) {
     rv = mObservers[i--]->OnBeginUpdateBatch(this);
   }
@@ -2503,7 +2503,7 @@ nsGlobalHistory::EndUpdateBatch()
 
   --mBatchesInProgress;
 
-  PRUint32 i = mObservers.Length();
+  PRUint32 i = mObservers.Count();
   while (i > 0) {
     rv = mObservers[i--]->OnEndUpdateBatch(this);
   }
@@ -3179,7 +3179,7 @@ nsGlobalHistory::NotifyAssert(nsIRDFResource* aSource,
                               nsIRDFResource* aProperty,
                               nsIRDFNode* aValue)
 {
-  PRUint32 i = mObservers.Length();
+  PRUint32 i = mObservers.Count();
   while (i > 0) {
     mObservers[i--]->OnAssert(this, aSource, aProperty, aValue);
   }
@@ -3193,7 +3193,7 @@ nsGlobalHistory::NotifyUnassert(nsIRDFResource* aSource,
                                 nsIRDFResource* aProperty,
                                 nsIRDFNode* aValue)
 {
-  PRUint32 i = mObservers.Length();
+  PRUint32 i = mObservers.Count();
   while (i > 0) {
     mObservers[i--]->OnUnassert(this, aSource, aProperty, aValue);
   }
@@ -3209,7 +3209,7 @@ nsGlobalHistory::NotifyChange(nsIRDFResource* aSource,
                               nsIRDFNode* aOldValue,
                               nsIRDFNode* aNewValue)
 {
-  PRUint32 i = mObservers.Length();
+  PRUint32 i = mObservers.Count();
   while (i > 0) {
     mObservers[i--]->OnChange(this, aSource, aProperty, aOldValue, aNewValue);
   }
