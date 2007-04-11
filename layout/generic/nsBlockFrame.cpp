@@ -500,7 +500,7 @@ nsBlockFrame::InvalidateInternal(const nsRect& aDamageRect,
   // with CSS 'clip'.
   const nsStyleDisplay* disp = GetStyleDisplay();
   nsRect absPosClipRect;
-  if (GetAbsPosClipRect(disp, &absPosClipRect)) {
+  if (GetAbsPosClipRect(disp, &absPosClipRect, GetSize())) {
     // Restrict the invalidated area to abs-pos clip rect
     // abs-pos clipping clips everything in the frame
     nsRect r;
