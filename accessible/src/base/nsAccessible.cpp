@@ -3126,25 +3126,22 @@ nsresult nsAccessible::GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset)
 
 PRInt32 nsAccessible::TextLength(nsIAccessible *aAccessible)
 {
-  if (!IsText(aAccessible)) {
+  if (!IsText(aAccessible))
     return 1;
-  }
-  nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(aAccessible));
-  nsIFrame *frame = accessNode->GetFrame();
-  if (!frame) {
-    return 0;
-  }
-  PRInt32 textLength = frame->GetContent()->TextLength();
-  if (!textLength) {
-    // This is exception to the frame owns the text.
-    // The only known case where this occurs is for list bullets
-    // We could do this for all accessibles but it's not as performant
-    // as dealing with nsIContent directly
-    nsAutoString childText;
-    aAccessible->GetName(childText);
-    textLength = childText.Length();
-  }
-  return textLength;
+
+  nsCOMPtr<nsPIAccessible> pAcc(do_QueryInterface(aAccessible));
+  NS_ENSURE_TRUE(pAcc, NS_ERROR_FAILURE);
+
+  nsAutoString text;
+  pAcc->GetContentText(text);
+  return text.Length();
+}
+
+NS_IMETHODIMP
+nsAccessible::GetContentText(nsAString& aText)
+{
+  aText.Truncate();
+  return NS_OK;
 }
 
 already_AddRefed<nsIAccessible>

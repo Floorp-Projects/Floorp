@@ -52,10 +52,15 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   nsTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+
+  // nsIAccessible
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetChildCount(PRInt32 *_retval);
+
+  // nsPIAccessible
+  NS_IMETHOD GetContentText(nsAString& aText);
 };
 
 
