@@ -5299,6 +5299,8 @@ if test -n "$MOZ_ENABLE_XINERAMA"; then
         test "$ac_cv_header_X11_extensions_Xinerama_h" = "no"; then
         AC_MSG_ERROR([Cannot find Xinerama library. To build without Xinerama support, rebuild with --disable-xinerama])
     fi
+    # Xinerama depends on libXext which is not automatically included on older distribs
+    MOZ_XINERAMA_LIBS="$MOZ_XINERAMA_LIBS $XEXT_LIBS"
     AC_DEFINE(MOZ_ENABLE_XINERAMA)
 fi
 
