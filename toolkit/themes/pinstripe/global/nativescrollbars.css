@@ -47,8 +47,7 @@
 
 scrollbar {
   -moz-appearance: scrollbar;
-  -moz-binding: url(chrome://global/content/bindings/nativescrollbar.xml#scrollbar);
-  min-width: 16px;
+  -moz-binding: url(chrome://global/content/bindings/scrollbar.xml#scrollbar);
   cursor: default;
   background-color: white;
 }
@@ -56,7 +55,46 @@ scrollbar {
 html|select[size]:not([size="0"]):not([size="1"]) > scrollbar,
 html|select[multiple] > scrollbar {
   -moz-appearance: scrollbar-small;
-  min-width: 11px;
+}
+
+/* ..... track ..... */
+
+slider {
+  -moz-appearance: scrollbartrack-vertical;
+}
+
+slider[orient="horizontal"] {
+  -moz-appearance: scrollbartrack-horizontal;
+}
+
+/* ..... thumb ..... */
+
+thumb {
+  -moz-appearance: scrollbarthumb-vertical;
+}
+
+thumb[orient="horizontal"] {
+  -moz-appearance: scrollbarthumb-horizontal;
+}
+
+/* ..... increment ..... */
+
+scrollbarbutton[type="increment"] {
+  -moz-appearance: scrollbarbutton-right;
+}
+
+scrollbar[orient="vertical"] > scrollbarbutton[type="increment"] {
+  -moz-appearance: scrollbarbutton-down;
+}
+
+/* ..... decrement ..... */
+
+scrollbarbutton[type="decrement"] {
+  -moz-appearance: scrollbarbutton-left;
+}
+
+scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"] {
+  -moz-appearance: scrollbarbutton-up;
 }
 
 /* ::::: square at the corner of two scrollbars ::::: */
@@ -75,16 +113,7 @@ scrollcorner {
 @media print {
   html|div scrollbar {
     -moz-appearance: scrollbar;
-    -moz-binding: url(chrome://global/content/bindings/nativescrollbar.xml#scrollbar);
-    min-width: 16px;
+    -moz-binding: url(chrome://global/content/bindings/scrollbar.xml#scrollbar);
     cursor: default;
   }
 }
-
-/* ::::: slider ::::: */
-
-thumb {
-  background: url("chrome://global/skin/icons/thumb.png") transparent center no-repeat;
-  min-width: 15px;
-}
-

@@ -92,7 +92,7 @@ protected:
   static const int kAquaMinButtonWidth = 68;
   static const int kAquaDropdownLeftEndcap = 9;
   static const int kAquaDropwdonRightEndcap = 20; // wider on right to encompass the button
-  
+
   nsresult GetSystemColor(PRUint8 aWidgetType, nsILookAndFeel::nsColorID& aColorID);
   nsresult GetSystemFont(PRUint8 aWidgetType, nsSystemFontID& aFont);
 
@@ -125,6 +125,12 @@ protected:
   void DrawCheckboxRadio (CGContextRef context, ThemeButtonKind inKind,
                           const HIRect& inBoxRect, PRBool inChecked, 
                           PRBool inDisabled, PRInt32 inState);
+  // Scrollbars
+  void DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRect, nsIFrame *aFrame);
+  void GetScrollbarPressStates (nsIFrame *aFrame, PRInt32 aButtonStates[]);
+  void GetScrollbarDrawInfo (HIThemeTrackDrawInfo& aTdi, nsIFrame *aFrame, 
+                             const HIRect& aRect, PRBool aShouldGetButtonStates);
+  nsIFrame* GetParentScrollbarFrame(nsIFrame *aFrame);
 };
 
 #endif // nsNativeThemeCocoa_h_
