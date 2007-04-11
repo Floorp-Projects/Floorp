@@ -163,7 +163,7 @@ fails == 351641-2b.html 351641-2-ref.html # bug 358433 (2006-10-19)
 == 367220-1.html 367220-1-ref.html
 == 367247-s-visible.html 367247-s-hidden.html
 == 367247-s-hidden.html 367247-s-auto.html
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") != 367247-s-auto.html 367247-s-scroll.html # bug 369293
+!= 367247-s-auto.html 367247-s-scroll.html
 != 367247-l-visible.html 367247-l-hidden.html
 != 367247-l-hidden.html 367247-l-scroll.html
 == 367247-l-scroll.html 367247-l-auto.html
