@@ -225,7 +225,15 @@ public:
      *     +-----------+
      *       2       0
      */
-    eMetric_AlertNotificationOrigin
+    eMetric_AlertNotificationOrigin,
+
+    /**
+     * If true, clicking on a scrollbar (not as in dragging the thumb) defaults
+     * to scrolling the view corresponding to the clicked point. Otherwise, we
+     * only do so if the scrollbar is clicked using the middle mouse button or
+     * if shift is pressed when the scrollbar is clicked.
+     */
+    eMetric_ScrollToClick
   } nsMetricID;
 
   enum {

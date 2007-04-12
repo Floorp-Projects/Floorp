@@ -108,6 +108,8 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
     eMetric_TabFocusModel, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.alertNotificationOrigin",
     eMetric_AlertNotificationOrigin, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.scrollToClick",
+    eMetric_ScrollToClick, PR_FALSE, nsLookAndFeelTypeInt, 0 },
 };
 
 nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =

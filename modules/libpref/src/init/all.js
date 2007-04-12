@@ -130,6 +130,11 @@ pref("accessibility.warn_on_browsewithcaret", true);
 // unless accessibility.tabfocus is set by the user.
 pref("accessibility.tabfocus", 7);
 pref("accessibility.tabfocus_applies_to_xul", false);
+
+// On OS X, we follow the "Click in the scrollbar to:" system preference
+// unless this preference was set manually
+pref("ui.scrollToClick", 0);
+
 #else
 // Only on mac tabfocus is expected to handle UI widgets as well as web content
 pref("accessibility.tabfocus_applies_to_xul", true);
