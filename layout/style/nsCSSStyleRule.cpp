@@ -505,36 +505,38 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
       aString.Append(PRUnichar('|'));
       wroteNamespace = PR_TRUE;
     } else {
-      nsXMLNameSpaceMap *sheetNS = aSheet->GetNameSpaceMap();
+      if (aSheet) {
+        nsXMLNameSpaceMap *sheetNS = aSheet->GetNameSpaceMap();
     
-      // sheetNS is non-null if and only if we had an @namespace rule.  If it's
-      // null, that means that the only namespaces we could have are the
-      // wildcard namespace (which can be implicit in this case) and the "none"
-      // namespace, which we handled above.  So no need to output anything when
-      // sheetNS is null.
-      if (sheetNS) {
-        if (mNameSpace != kNameSpaceID_Unknown) {
-          if (sheetNS->FindNameSpaceID(nsnull) != mNameSpace) {
-            nsIAtom *prefixAtom = sheetNS->FindPrefix(mNameSpace);
-            NS_ASSERTION(prefixAtom, "how'd we get a non-default namespace "
-                                     "without a prefix?");
-            nsAutoString prefix;
-            prefixAtom->ToString(prefix);
-            aString.Append(prefix);
-            aString.Append(PRUnichar('|'));
-            wroteNamespace = PR_TRUE;
-          }
-          // otherwise it must be the default namespace
-        } else {
-          // A selector for an element in any namespace.
-          if (// Use explicit "*|" only when it's not implied
-              sheetNS->FindNameSpaceID(nsnull) != kNameSpaceID_None &&
-              // :not() is special in that the default namespace is
-              // not implied for non-type selectors
-              (!aIsNegated || (!mIDList && !mClassList &&
-                               !mPseudoClassList && !mAttrList))) {
-            aString.AppendLiteral("*|");
-            wroteNamespace = PR_TRUE;
+        // sheetNS is non-null if and only if we had an @namespace rule.  If it's
+        // null, that means that the only namespaces we could have are the
+        // wildcard namespace (which can be implicit in this case) and the "none"
+        // namespace, which we handled above.  So no need to output anything when
+        // sheetNS is null.
+        if (sheetNS) {
+          if (mNameSpace != kNameSpaceID_Unknown) {
+            if (sheetNS->FindNameSpaceID(nsnull) != mNameSpace) {
+              nsIAtom *prefixAtom = sheetNS->FindPrefix(mNameSpace);
+              NS_ASSERTION(prefixAtom, "how'd we get a non-default namespace "
+                                       "without a prefix?");
+              nsAutoString prefix;
+              prefixAtom->ToString(prefix);
+              aString.Append(prefix);
+              aString.Append(PRUnichar('|'));
+              wroteNamespace = PR_TRUE;
+            }
+            // otherwise it must be the default namespace
+          } else {
+            // A selector for an element in any namespace.
+            if (// Use explicit "*|" only when it's not implied
+                sheetNS->FindNameSpaceID(nsnull) != kNameSpaceID_None &&
+                // :not() is special in that the default namespace is
+                // not implied for non-type selectors
+                (!aIsNegated || (!mIDList && !mClassList &&
+                                 !mPseudoClassList && !mAttrList))) {
+              aString.AppendLiteral("*|");
+              wroteNamespace = PR_TRUE;
+            }
           }
         }
       }
@@ -596,14 +598,16 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
       aString.Append(PRUnichar('['));
       // Append the namespace prefix
       if (list->mNameSpace > 0) {
-        nsXMLNameSpaceMap *sheetNS = aSheet->GetNameSpaceMap();
-        // will return null if namespace was the default
-        nsIAtom *prefixAtom = sheetNS->FindPrefix(list->mNameSpace);
-        if (prefixAtom) { 
-          nsAutoString prefix;
-          prefixAtom->ToString(prefix);
-          aString.Append(prefix);
-          aString.Append(PRUnichar('|'));
+        if (aSheet) {
+          nsXMLNameSpaceMap *sheetNS = aSheet->GetNameSpaceMap();
+          // will return null if namespace was the default
+          nsIAtom *prefixAtom = sheetNS->FindPrefix(list->mNameSpace);
+          if (prefixAtom) { 
+            nsAutoString prefix;
+            prefixAtom->ToString(prefix);
+            aString.Append(prefix);
+            aString.Append(PRUnichar('|'));
+          }
         }
       }
       // Append the attribute name
