@@ -585,6 +585,20 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
       }
     }
       break;
+    case eMetric_ScrollToClick:
+    {
+      CFPropertyListRef scrollToClickProperty =
+        ::CFPreferencesCopyValue(CFSTR("AppleScrollerPagingBehavior"),
+                                 kCFPreferencesAnyApplication,
+                                 kCFPreferencesCurrentUser,
+                                 kCFPreferencesAnyHost);
+      aMetric = 0;
+      if (scrollToClickProperty) {
+        aMetric = (PRInt32)::CFBooleanGetValue((CFBooleanRef)scrollToClickProperty);
+        ::CFRelease(scrollToClickProperty);
+      }
+    }
+      break;
     default:
       aMetric = 0;
       res = NS_ERROR_FAILURE;
