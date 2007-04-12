@@ -83,6 +83,7 @@
 #include "nsXULContentUtils.h"
 #include "nsXULElement.h"
 #include "nsXULPrototypeCache.h"
+#include "nsXULTooltipListener.h"
 #endif
 
 #ifdef MOZ_MATHML
@@ -241,6 +242,7 @@ nsLayoutStatics::Shutdown()
   nsXULElement::ReleaseGlobals();
   nsXULPrototypeCache::ReleaseGlobals();
   nsXULPrototypeElement::ReleaseGlobals();
+  nsXULTooltipListener::ReleaseInstance();
   nsSprocketLayout::Shutdown();
 #endif
 

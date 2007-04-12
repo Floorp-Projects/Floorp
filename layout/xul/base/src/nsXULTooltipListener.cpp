@@ -61,6 +61,8 @@
 #include "nsContentUtils.h"
 #include "nsIRootBox.h"
 
+nsXULTooltipListener* nsXULTooltipListener::mInstance = nsnull;
+
 //////////////////////////////////////////////////////////////////////////
 //// nsISupports
 
@@ -199,7 +201,11 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
   mMouseClientX = newMouseX;
   mMouseClientY = newMouseY;
 
+  nsCOMPtr<nsIDOMEventTarget> eventTarget;
+  aMouseEvent->GetCurrentTarget(getter_AddRefs(eventTarget));
+  mSourceNode = do_QueryInterface(eventTarget);
 #ifdef MOZ_XUL
+  mIsSourceTree = mSourceNode->Tag() == nsGkAtoms::treechildren;
   if (mIsSourceTree)
     CheckTreeBodyMove(mouseEvent);
 #endif
@@ -215,17 +221,15 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
   if (!mCurrentTooltip) {
     mTooltipTimer = do_CreateInstance("@mozilla.org/timer;1");
     if (mTooltipTimer) {
-      nsCOMPtr<nsIDOMEventTarget> eventTarget;
       aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
-      if (eventTarget) {
-        nsCOMPtr<nsIContent> targetContent(do_QueryInterface(eventTarget));
-        mTargetNode = targetContent;
-      }
+      mTargetNode = do_QueryInterface(eventTarget);
       if (mTargetNode) {
         nsresult rv = mTooltipTimer->InitWithFuncCallback(sTooltipCallback, this, 
                                                           kTooltipShowTime, nsITimer::TYPE_ONE_SHOT);
-        if (NS_FAILED(rv))
+        if (NS_FAILED(rv)) {
           mTargetNode = nsnull;
+          mSourceNode = nsnull;
+        }
       }
     }
   }
@@ -284,22 +288,6 @@ nsXULTooltipListener::PopupHiding(nsIDOMEvent* aEvent)
 PRBool nsXULTooltipListener::sShowTooltips = PR_FALSE;
 PRUint32 nsXULTooltipListener::sTooltipListenerCount = 0;
 
-// XXX: This could all be done in the ctor.
-nsresult
-nsXULTooltipListener::Init(nsIContent* aSourceNode)
-{
-  mSourceNode = aSourceNode;
-  AddTooltipSupport(aSourceNode);
-  
-#ifdef MOZ_XUL
-  // if the target is an treechildren, we may have some special
-  // case handling to do
-  mIsSourceTree = mSourceNode->Tag() == nsGkAtoms::treechildren;
-#endif
-
-  return NS_OK;
-}
-
 nsresult
 nsXULTooltipListener::AddTooltipSupport(nsIContent* aNode)
 {
@@ -307,8 +295,8 @@ nsXULTooltipListener::AddTooltipSupport(nsIContent* aNode)
     return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(aNode));
-  evtTarget->AddEventListener(NS_LITERAL_STRING("mouseout"), (nsIDOMMouseListener*)this, PR_TRUE);
-  evtTarget->AddEventListener(NS_LITERAL_STRING("mousemove"), (nsIDOMMouseListener*)this, PR_TRUE);
+  evtTarget->AddEventListener(NS_LITERAL_STRING("mouseout"), (nsIDOMMouseListener*)this, PR_FALSE);
+  evtTarget->AddEventListener(NS_LITERAL_STRING("mousemove"), (nsIDOMMouseListener*)this, PR_FALSE);
   
   return NS_OK;
 }
@@ -320,8 +308,8 @@ nsXULTooltipListener::RemoveTooltipSupport(nsIContent* aNode)
     return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(aNode));
-  evtTarget->RemoveEventListener(NS_LITERAL_STRING("mouseout"), (nsIDOMMouseListener*)this, PR_TRUE);
-  evtTarget->RemoveEventListener(NS_LITERAL_STRING("mousemove"), (nsIDOMMouseListener*)this, PR_TRUE);
+  evtTarget->RemoveEventListener(NS_LITERAL_STRING("mouseout"), (nsIDOMMouseListener*)this, PR_FALSE);
+  evtTarget->RemoveEventListener(NS_LITERAL_STRING("mousemove"), (nsIDOMMouseListener*)this, PR_FALSE);
 
   return NS_OK;
 }
@@ -369,9 +357,7 @@ nsXULTooltipListener::CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent)
     // XXX check the disabletitletips attribute on the tree content
     mNeedTitletip = PR_FALSE;
     if (row >= 0 && obj.EqualsLiteral("text")) {
-      PRBool isCropped;
-      obx->IsCellCropped(row, col, &isCropped);
-      mNeedTitletip = isCropped;
+      obx->IsCellCropped(row, col, &mNeedTitletip);
     }
 
     if (mCurrentTooltip && (row != mLastTreeRow || col != mLastTreeCol)) {
@@ -405,8 +391,7 @@ nsXULTooltipListener::ShowTooltip()
       }
 #endif
 
-      nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(mTargetNode));
-      xulDoc->SetTooltipNode(targetNode);
+      xulDoc->SetTooltipNode(mTargetNode);
       LaunchTooltip(mSourceNode, mMouseClientX, mMouseClientY);
       mTargetNode = nsnull;
 
@@ -440,6 +425,7 @@ nsXULTooltipListener::ShowTooltip()
         evtTarget->AddEventListener(NS_LITERAL_STRING("keydown"), 
                                     (nsIDOMMouseListener*)this, PR_TRUE);
       }
+      mSourceNode = nsnull;
     }
   }
 
@@ -699,6 +685,10 @@ nsXULTooltipListener::DestroyTooltip()
   
   // kill any ongoing timers
   KillTooltipTimer();
+  mSourceNode = nsnull;
+#ifdef MOZ_XUL
+  mLastTreeCol = nsnull;
+#endif
   if (mAutoHideTimer) {
     mAutoHideTimer->Cancel();
     mAutoHideTimer = nsnull;
@@ -734,19 +724,15 @@ nsXULTooltipListener::CreateAutoHideTimer()
 void
 nsXULTooltipListener::sTooltipCallback(nsITimer *aTimer, void *aListener)
 {
-  nsXULTooltipListener* self = NS_STATIC_CAST(nsXULTooltipListener*, aListener);
-  if (self)
-    self->ShowTooltip();
+  if (mInstance)
+    mInstance->ShowTooltip();
 }
 
 void
 nsXULTooltipListener::sAutoHideCallback(nsITimer *aTimer, void* aListener)
 {
-  nsXULTooltipListener* self = NS_STATIC_CAST(nsXULTooltipListener*, aListener);
-  if (self) {
-    nsCOMPtr<nsIDOMMouseListener> kungFuDeathGrip(self);
-    self->HideTooltip();
-  }
+  if (mInstance)
+    mInstance->HideTooltip();
 }
 
 #ifdef MOZ_XUL
