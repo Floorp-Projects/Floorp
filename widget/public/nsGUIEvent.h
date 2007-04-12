@@ -245,10 +245,15 @@ class nsHashKey;
 #define NS_DRAGDROP_ENTER               (NS_DRAGDROP_EVENT_START)
 #define NS_DRAGDROP_OVER                (NS_DRAGDROP_EVENT_START + 1)
 #define NS_DRAGDROP_EXIT                (NS_DRAGDROP_EVENT_START + 2)
-#define NS_DRAGDROP_DROP                (NS_DRAGDROP_EVENT_START + 3)
+#define NS_DRAGDROP_DRAGDROP            (NS_DRAGDROP_EVENT_START + 3)
 #define NS_DRAGDROP_GESTURE             (NS_DRAGDROP_EVENT_START + 4)
+#define NS_DRAGDROP_DRAG                (NS_DRAGDROP_EVENT_START + 5)
+#define NS_DRAGDROP_END                 (NS_DRAGDROP_EVENT_START + 6)
+#define NS_DRAGDROP_START               (NS_DRAGDROP_EVENT_START + 7)
+#define NS_DRAGDROP_DROP                (NS_DRAGDROP_EVENT_START + 8)
 #define NS_DRAGDROP_OVER_SYNTH          (NS_DRAGDROP_EVENT_START + 1)
 #define NS_DRAGDROP_EXIT_SYNTH          (NS_DRAGDROP_EVENT_START + 2)
+#define NS_DRAGDROP_LEAVE_SYNTH         (NS_DRAGDROP_EVENT_START + 9)
 
 // Events for popups
 #define NS_XUL_EVENT_START            1500

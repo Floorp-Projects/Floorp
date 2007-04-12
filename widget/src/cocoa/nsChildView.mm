@@ -3689,8 +3689,12 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   nsCOMPtr<nsIDragSession> dragSession;
   mDragService->GetCurrentSession(getter_AddRefs(dragSession));
   if (dragSession) {
-    if (aMessage == NS_DRAGDROP_OVER)
+    if (aMessage == NS_DRAGDROP_OVER) {
+      // fire the drag event at the source. Just ignore whether it was
+      // cancelled or not as there isn't actually a means to stop the drag
+      mDragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
       dragSession->SetCanDrop(PR_FALSE);
+    }
     else if (aMessage == NS_DRAGDROP_DROP) {
       // We make the assuption that the dragOver handlers have correctly set
       // the |canDrop| property of the Drag Session.
@@ -3728,7 +3732,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
       // initiated in a different app. End the drag session,
       // since we're done with it for now (until the user
       // drags back into mozilla).
-      mDragService->EndDragSession();
+      mDragService->EndDragSession(PR_FALSE);
     }
   }
 

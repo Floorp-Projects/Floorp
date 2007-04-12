@@ -261,11 +261,16 @@ static const EventDispatchData sLoadEvents[] = {
 };
 
 static const EventDispatchData sDragEvents[] = {
-  { NS_DRAGDROP_ENTER,      HANDLER(&nsIDOMDragListener::DragEnter)   },
-  { NS_DRAGDROP_OVER_SYNTH, HANDLER(&nsIDOMDragListener::DragOver)    },
-  { NS_DRAGDROP_EXIT_SYNTH, HANDLER(&nsIDOMDragListener::DragExit)    },
-  { NS_DRAGDROP_DROP,       HANDLER(&nsIDOMDragListener::DragDrop)    },
-  { NS_DRAGDROP_GESTURE,    HANDLER(&nsIDOMDragListener::DragGesture) }
+  { NS_DRAGDROP_ENTER,       HANDLER(&nsIDOMDragListener::DragEnter)   },
+  { NS_DRAGDROP_OVER_SYNTH,  HANDLER(&nsIDOMDragListener::DragOver)    },
+  { NS_DRAGDROP_EXIT_SYNTH,  HANDLER(&nsIDOMDragListener::DragExit)    },
+  { NS_DRAGDROP_DRAGDROP,    HANDLER(&nsIDOMDragListener::DragDrop)    },
+  { NS_DRAGDROP_GESTURE,     HANDLER(&nsIDOMDragListener::DragGesture) },
+  { NS_DRAGDROP_DRAG,        HANDLER(&nsIDOMDragListener::Drag)        },
+  { NS_DRAGDROP_END,         HANDLER(&nsIDOMDragListener::DragEnd)     },
+  { NS_DRAGDROP_START,       HANDLER(&nsIDOMDragListener::DragStart)   },
+  { NS_DRAGDROP_LEAVE_SYNTH, HANDLER(&nsIDOMDragListener::DragLeave)   },
+  { NS_DRAGDROP_DROP,        HANDLER(&nsIDOMDragListener::Drop)        },
 };
 
 static const EventDispatchData sXULEvents[] = {

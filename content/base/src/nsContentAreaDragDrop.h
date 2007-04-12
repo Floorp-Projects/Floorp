@@ -93,6 +93,8 @@ public:
   NS_IMETHOD DragExit(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD DragDrop(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD DragGesture(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD Drag(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD DragEnd(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD HandleEvent(nsIDOMEvent *event);
 
 private:

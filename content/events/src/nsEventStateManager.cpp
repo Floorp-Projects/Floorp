@@ -1716,11 +1716,16 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       // reentering GenerateDragGesture inside DOM event processing.
       StopTrackingDragGesture();
 
+      nsCOMPtr<nsIWidget> widget = mCurrentTarget->GetWindow();
+
       // get the widget from the target frame
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_DRAGDROP_GESTURE,
-                         mCurrentTarget->GetWindow(), nsMouseEvent::eReal);
-      FillInEventFromGestureDown(&event);
+      nsMouseEvent startEvent(NS_IS_TRUSTED_EVENT(aEvent), NS_DRAGDROP_START,
+                              widget, nsMouseEvent::eReal);
+      FillInEventFromGestureDown(&startEvent);
+
+      nsMouseEvent gestureEvent(NS_IS_TRUSTED_EVENT(aEvent), NS_DRAGDROP_GESTURE,
+                                widget, nsMouseEvent::eReal);
+      FillInEventFromGestureDown(&gestureEvent);
 
       // Dispatch to the DOM. By setting mCurrentTarget we are faking
       // out the ESM and telling it that the current target frame is
@@ -1737,9 +1742,16 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       // Set the current target to the content for the mouse down
       mCurrentTargetContent = targetContent;
 
-      // Dispatch to DOM
-      nsEventDispatcher::Dispatch(targetContent, aPresContext, &event, nsnull,
+      // Dispatch both the dragstart and draggesture events to the DOM
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsEventDispatcher::Dispatch(targetContent, aPresContext, &startEvent, nsnull,
                                   &status);
+
+      if (status != nsEventStatus_eConsumeNoDefault) {
+        status = nsEventStatus_eIgnore;
+        nsEventDispatcher::Dispatch(targetContent, aPresContext, &gestureEvent, nsnull,
+                                    &status);
+      }
 
       // Note that frame event handling doesn't care about NS_DRAGDROP_GESTURE,
       // which is just as well since we don't really know which frame to
@@ -2223,6 +2235,34 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     break;
 
   case NS_DRAGDROP_DROP:
+    {
+      // now fire the dragdrop event, for compatibility with XUL
+      if (mCurrentTarget) {
+        nsCOMPtr<nsIContent> targetContent;
+        mCurrentTarget->GetContentForEvent(presContext, aEvent,
+                                           getter_AddRefs(targetContent));
+
+        nsCOMPtr<nsIWidget> widget = mCurrentTarget->GetWindow();
+        nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_DRAGDROP_DRAGDROP,
+                           widget, nsMouseEvent::eReal);
+
+        nsMouseEvent* mouseEvent = NS_STATIC_CAST(nsMouseEvent*, aEvent);
+        event.refPoint = mouseEvent->refPoint;
+        event.isShift = mouseEvent->isShift;
+        event.isControl = mouseEvent->isControl;
+        event.isAlt = mouseEvent->isAlt;
+        event.isMeta = mouseEvent->isMeta;
+
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
+        if (presShell) {
+          presShell->HandleEventWithTarget(&event, mCurrentTarget,
+                                           targetContent, &status);
+        }
+      }
+      // fall through and call GenerateDragDropEnterExit
+    }
+
   case NS_DRAGDROP_EXIT:
     // clean up after ourselves. make sure we do this _after_ the event, else we'll
     // clean up too early!
@@ -2844,71 +2884,17 @@ nsEventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
         mCurrentTarget->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(targetContent));
 
         if ( mLastDragOverFrame ) {
-          //fire drag exit
-          nsEventStatus status = nsEventStatus_eIgnore;
-          nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent),
-                             NS_DRAGDROP_EXIT_SYNTH, aEvent->widget,
-                             nsMouseEvent::eReal);
-          event.refPoint = aEvent->refPoint;
-          event.isShift = ((nsMouseEvent*)aEvent)->isShift;
-          event.isControl = ((nsMouseEvent*)aEvent)->isControl;
-          event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
-          event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
-          event.relatedTarget = targetContent;
-
-          //The frame has change but the content may not have.  Check before dispatching to content
+          //The frame has changed but the content may not have. Check before dispatching to content
           mLastDragOverFrame->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(lastContent));
 
-          mCurrentTargetContent = lastContent;
-
-          if ( lastContent != targetContent ) {
-            //XXX This event should still go somewhere!!
-            if (lastContent)
-              nsEventDispatcher::Dispatch(lastContent, aPresContext, &event,
-                                          nsnull, &status);
-
-            // clear the drag hover
-            if (status != nsEventStatus_eConsumeNoDefault )
-              SetContentState(nsnull, NS_EVENT_STATE_DRAGOVER);
-          }
-
-          // Finally dispatch exit to the frame
-          if ( mLastDragOverFrame ) {
-            mLastDragOverFrame->HandleEvent(aPresContext, &event, &status);
-
-          }
+          FireDragEnterOrExit(aPresContext, aEvent, NS_DRAGDROP_LEAVE_SYNTH,
+                              targetContent, lastContent, mLastDragOverFrame);
+          FireDragEnterOrExit(aPresContext, aEvent, NS_DRAGDROP_EXIT_SYNTH,
+                              targetContent, lastContent, mLastDragOverFrame);
         }
 
-        //fire drag enter
-        nsEventStatus status = nsEventStatus_eIgnore;
-        nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_DRAGDROP_ENTER,
-                           aEvent->widget, nsMouseEvent::eReal);
-        event.refPoint = aEvent->refPoint;
-        event.isShift = ((nsMouseEvent*)aEvent)->isShift;
-        event.isControl = ((nsMouseEvent*)aEvent)->isControl;
-        event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
-        event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
-        event.relatedTarget = lastContent;
-
-        mCurrentTargetContent = targetContent;
-
-        //The frame has change but the content may not have.  Check before dispatching to content
-        if (lastContent != targetContent) {
-          //XXX This event should still go somewhere!!
-          if (targetContent)
-            nsEventDispatcher::Dispatch(targetContent, aPresContext, &event,
-                                        nsnull, &status);
-
-          // set drag hover on this frame
-          if (status != nsEventStatus_eConsumeNoDefault)
-            SetContentState(targetContent, NS_EVENT_STATE_DRAGOVER);
-        }
-
-        // Finally dispatch to the frame
-        if (mCurrentTarget) {
-          //XXX Get the new frame
-          mCurrentTarget->HandleEvent(aPresContext, &event, &status);
-        }
+        FireDragEnterOrExit(aPresContext, aEvent, NS_DRAGDROP_ENTER,
+                            lastContent, targetContent, mCurrentTarget);
 
         mLastDragOverFrame = mCurrentTarget;
       }
@@ -2920,37 +2906,16 @@ nsEventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
     {
       //This is actually the window mouse exit event.
       if ( mLastDragOverFrame ) {
-
-        // fire mouseout
-        nsEventStatus status = nsEventStatus_eIgnore;
-        nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_DRAGDROP_EXIT_SYNTH,
-                           aEvent->widget, nsMouseEvent::eReal);
-        event.refPoint = aEvent->refPoint;
-        event.isShift = ((nsMouseEvent*)aEvent)->isShift;
-        event.isControl = ((nsMouseEvent*)aEvent)->isControl;
-        event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
-        event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
-
-        // dispatch to content via DOM
         nsCOMPtr<nsIContent> lastContent;
         mLastDragOverFrame->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(lastContent));
 
-        mCurrentTargetContent = lastContent;
+        FireDragEnterOrExit(aPresContext, aEvent, NS_DRAGDROP_LEAVE_SYNTH,
+                            nsnull, lastContent, mLastDragOverFrame);
+        FireDragEnterOrExit(aPresContext, aEvent, NS_DRAGDROP_EXIT_SYNTH,
+                            nsnull, lastContent, mLastDragOverFrame);
 
-        if (lastContent) {
-          nsEventDispatcher::Dispatch(lastContent, aPresContext, &event, nsnull,
-                                      &status);
-          if (status != nsEventStatus_eConsumeNoDefault)
-            SetContentState(nsnull, NS_EVENT_STATE_DRAGOVER);
-        }
-
-        // Finally dispatch to the frame
-        if ( mLastDragOverFrame ) {
-          //XXX Get the new frame
-          mLastDragOverFrame->HandleEvent(aPresContext, &event, &status);
-          mLastDragOverFrame = nsnull;
-        }
-     }
+        mLastDragOverFrame = nsnull;
+      }
     }
     break;
   }
@@ -2960,6 +2925,43 @@ nsEventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
 
   // Now flush all pending notifications, for better responsiveness.
   FlushPendingEvents(aPresContext);
+}
+
+void
+nsEventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
+                                         nsGUIEvent* aEvent,
+                                         PRUint32 aMsg,
+                                         nsIContent* aRelatedTarget,
+                                         nsIContent* aTargetContent,
+                                         nsWeakFrame& aTargetFrame)
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent), aMsg,
+                     aEvent->widget, nsMouseEvent::eReal);
+  event.refPoint = aEvent->refPoint;
+  event.isShift = ((nsMouseEvent*)aEvent)->isShift;
+  event.isControl = ((nsMouseEvent*)aEvent)->isControl;
+  event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
+  event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
+  event.relatedTarget = aRelatedTarget;
+
+  mCurrentTargetContent = aTargetContent;
+
+  if (aTargetContent != aRelatedTarget) {
+    //XXX This event should still go somewhere!!
+    if (aTargetContent)
+      nsEventDispatcher::Dispatch(aTargetContent, aPresContext, &event,
+                                  nsnull, &status);
+
+    // adjust the drag hover
+    if (status != nsEventStatus_eConsumeNoDefault)
+      SetContentState((aMsg == NS_DRAGDROP_ENTER) ? aTargetContent : nsnull,
+                      NS_EVENT_STATE_DRAGOVER);
+  }
+
+  // Finally dispatch the event to the frame
+  if (aTargetFrame)
+    aTargetFrame->HandleEvent(aPresContext, &event, &status);
 }
 
 nsresult

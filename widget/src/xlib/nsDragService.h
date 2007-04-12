@@ -68,7 +68,7 @@ public:
                                 nsIScriptableRegion * aRegion,
                                 PRUint32 aActionType);
   NS_IMETHOD StartDragSession();
-  NS_IMETHOD EndDragSession();
+  NS_IMETHOD EndDragSession(PRBool aDoneDrag);
 
   // nsIDragSession
   NS_IMETHOD GetCurrentSession     (nsIDragSession **aSession);

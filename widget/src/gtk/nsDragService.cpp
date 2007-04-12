@@ -230,12 +230,12 @@ nsDragService::StartDragSession()
 }
  
 NS_IMETHODIMP
-nsDragService::EndDragSession()
+nsDragService::EndDragSession(PRBool aDoneDrag)
 {
   PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::EndDragSession"));
   // unset our drag action
   SetDragAction(DRAGDROP_ACTION_NONE);
-  return nsBaseDragService::EndDragSession();
+  return nsBaseDragService::EndDragSession(aDoneDrag);
 }
 
 // nsIDragSession
@@ -974,7 +974,7 @@ nsDragService::SourceEndDrag(void)
   mSourceDataItems = 0;
 
   // Inform the drag session that we're ending the drag.
-  EndDragSession();
+  EndDragSession(PR_TRUE);
 }
 
 static void

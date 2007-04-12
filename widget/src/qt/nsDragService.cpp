@@ -190,13 +190,13 @@ NS_IMETHODIMP nsDragService::StartDragSession()
   return nsBaseDragService::StartDragSession();
 }
 
-NS_IMETHODIMP nsDragService::EndDragSession()
+NS_IMETHODIMP nsDragService::EndDragSession(PRBool aDragDone)
 {
 #ifdef NS_DEBUG
   printf(" DnD: EndDragSession\n");
 #endif
   mDragObject = 0;
-  return nsBaseDragService::EndDragSession();
+  return nsBaseDragService::EndDragSession(aDragDone);
 }
 
 // nsIDragSession
