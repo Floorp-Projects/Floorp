@@ -335,7 +335,7 @@ nsXULTemplateQueryProcessorRDF::CompileQuery(nsIXULTemplateBuilder* aBuilder,
         NS_ASSERTION(!mSimpleRuleMemberTest,
                      "CompileQuery called twice with the same template");
         if (!mSimpleRuleMemberTest)
-            rv = AddDefaultSimpleRules(query, &lastnode);
+            rv = CompileSimpleQuery(query, content, &lastnode);
         else
             rv = NS_ERROR_FAILURE;
     }
@@ -900,7 +900,7 @@ nsXULTemplateQueryProcessorRDF::Propagate(nsIRDFResource* aSource,
         }
     }
 
-    return rv;
+    return NS_OK;
 }
 
 
@@ -1522,6 +1522,8 @@ nsXULTemplateQueryProcessorRDF::CompileSimpleQuery(nsRDFQuery* aQuery,
         }
 
         PRInt32 attrNameSpaceID = name->NamespaceID();
+        if (attrNameSpaceID == kNameSpaceID_XMLNS)
+          continue;
         nsIAtom* attr = name->LocalName();
 
         nsAutoString value;
