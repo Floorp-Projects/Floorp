@@ -523,6 +523,9 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
 void nsRootAccessible::FireCurrentFocusEvent()
 {
   nsCOMPtr<nsIDOMNode> focusedNode = GetCurrentFocus();
+  if (!focusedNode) {
+    return; // No current focus
+  }
 
   // Simulate a focus event so that we can reuse code that fires focus for container children like treeitems
   nsCOMPtr<nsIDOMDocumentEvent> docEvent = do_QueryInterface(mDocument);
