@@ -1,7 +1,7 @@
 
 /* pngerror.c - stub functions for i/o and memory allocation
  *
- * Last changed in libpng 1.2.9 April 14, 2006
+ * Last changed in libpng 1.2.13 November 13, 2006
  * For conditions of distribution and use, see copyright notice in png.h
  * Copyright (c) 1998-2006 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
@@ -157,8 +157,11 @@ png_chunk_error(png_structp png_ptr, png_const_charp error_message)
    char msg[18+64];
    if (png_ptr == NULL)
      png_error(png_ptr, error_message);
-   png_format_buffer(png_ptr, msg, error_message);
-   png_error(png_ptr, msg);
+   else
+   {
+     png_format_buffer(png_ptr, msg, error_message);
+     png_error(png_ptr, msg);
+   }
 }
 
 void PNGAPI
@@ -167,8 +170,11 @@ png_chunk_warning(png_structp png_ptr, png_const_charp warning_message)
    char msg[18+64];
    if (png_ptr == NULL)
      png_warning(png_ptr, warning_message);
-   png_format_buffer(png_ptr, msg, warning_message);
-   png_warning(png_ptr, msg);
+   else
+   {
+     png_format_buffer(png_ptr, msg, warning_message);
+     png_warning(png_ptr, msg);
+   }
 }
 
 /* This is the default error handling function.  Note that replacements for
@@ -206,6 +212,8 @@ png_default_error(png_structp png_ptr, png_const_charp error_message)
 #endif
 
 #ifdef PNG_SETJMP_SUPPORTED
+   if (png_ptr)
+   {
 #  ifdef USE_FAR_KEYWORD
    {
       jmp_buf jmpbuf;
@@ -214,10 +222,9 @@ png_default_error(png_structp png_ptr, png_const_charp error_message)
    }
 #  else
    longjmp(png_ptr->jmpbuf, 1);
-# endif
+#  endif
+   }
 #else
-   /* make compiler happy */ ;
-   if (png_ptr)
    PNG_ABORT();
 #endif
 #ifdef PNG_NO_CONSOLE_IO
