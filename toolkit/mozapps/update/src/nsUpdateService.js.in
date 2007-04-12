@@ -217,38 +217,6 @@ function getUpdateDir(pathArray) {
   return getDirInternal(KEY_APPDIR, pathArray, true, true);
 }
 
-#ifdef XP_WIN
-/**
- * Determine if a file is a child of another file.  Needed because
- * nsILocalFile.contains() has problems with short vs. long paths
- * see bug #375710 for more details
- *
- * @param    aParent (nsILocalFile)
- * @param    aChild (nsILocalFile)
- * @return   true if aChild is a child of aParent.  Will also return
- *           true if aChild is same as aParent
- */
-function canonicalRecursiveContains(aParent, aChild)
-{ 
-  try {
-    var current = aChild;
-    while (current) {
-      if (aParent.equals(current))
-        return true;
-
-      var newCurrent = current.parent;
-      if (newCurrent.equals(current))
-        return false;
-
-      current = newCurrent;
-    }
-  }
-  catch (ex) {
-  }
-  return false;
-}
-#endif
-
 /**
  * Gets the specified directory at the speciifed hierarchy under a 
  * Directory Service key. 
@@ -274,7 +242,7 @@ function getDirInternal(key, pathArray, shouldCreate, update) {
   if (update) {
     var programFilesDir = fileLocator.get(KEY_PROGRAMFILES,
         Components.interfaces.nsILocalFile);
-    if (canonicalRecursiveContains(programFilesDir, dir)) {
+    if (programFilesDir.contains(dir, true)) {
       var relativePath = dir.getRelativeDescriptor(programFilesDir);
       var userLocalDir = fileLocator.get(KEY_LOCALDATA,
           Components.interfaces.nsILocalFile).parent;
@@ -390,7 +358,7 @@ function getUpdatesDir(key) {
 #ifdef XP_WIN
     var programFilesDir = fileLocator.get(KEY_PROGRAMFILES,
         Components.interfaces.nsILocalFile);
-    if (canonicalRecursiveContains(programFilesDir, appDir)) {
+    if (programFilesDir.contains(appDir, true)) {
       var relativePath = appDir.getRelativeDescriptor(programFilesDir);
       var userLocalDir = fileLocator.get(KEY_LOCALDATA,
           Components.interfaces.nsILocalFile).parent;
@@ -2073,7 +2041,7 @@ Checker.prototype = {
     // Always stop the current check
     if (this._request)
       this._request.abort();
- 
+    
     const nsIUpdateChecker = Components.interfaces.nsIUpdateChecker;
     switch (duration) {
     case nsIUpdateChecker.CURRENT_SESSION:
