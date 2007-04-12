@@ -294,6 +294,8 @@ nsNativeDragTarget::DragOver(DWORD   grfKeyState,
 		return ResultFromScode(E_FAIL);
   }
 
+  mDragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
+
   // Now process the native drag state and then dispatch the event
   ProcessDrag(nsnull, NS_DRAGDROP_OVER, grfKeyState, pt, pdwEffect);
   return S_OK;
@@ -325,7 +327,7 @@ nsNativeDragTarget::DragLeave()
       // initiated in a different app. End the drag session, since
       // we're done with it for now (until the user drags back into
       // mozilla).
-      mDragService->EndDragSession();
+      mDragService->EndDragSession(PR_FALSE);
     }
   }
 
@@ -360,6 +362,6 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData,
   ProcessDrag(pData, NS_DRAGDROP_DROP, grfKeyState, aPT, pdwEffect);
 
   // tell the drag service we're done with the session
-  serv->EndDragSession();
+  serv->EndDragSession(PR_TRUE);
   return S_OK;
 }

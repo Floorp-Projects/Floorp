@@ -68,6 +68,7 @@
 #include "imgIRequest.h"
 #include "nsIViewObserver.h"
 #include "nsRegion.h"
+#include "nsGUIEvent.h"
 
 #ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
@@ -324,11 +325,14 @@ nsBaseDragService::StartDragSession()
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
-nsBaseDragService::EndDragSession()
+nsBaseDragService::EndDragSession(PRBool aDoneDrag)
 {
   if (!mDoingDrag) {
     return NS_ERROR_FAILURE;
   }
+
+  if (aDoneDrag)
+    FireDragEventAtSource(NS_DRAGDROP_END);
 
   mDoingDrag = PR_FALSE;
 
@@ -342,6 +346,26 @@ nsBaseDragService::EndDragSession()
   mImageY = 0;
   mScreenX = -1;
   mScreenY = -1;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseDragService::FireDragEventAtSource(PRUint32 aMsg)
+{
+  if (mSourceNode) {
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mSourceDocument);
+    if (doc) {
+      nsCOMPtr<nsIPresShell> presShell = doc->GetShellAt(0);
+      if (presShell) {
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsMouseEvent event(PR_TRUE, aMsg, nsnull, nsMouseEvent::eReal);
+
+        nsCOMPtr<nsIContent> content = do_QueryInterface(mSourceNode);
+        return presShell->HandleDOMEventWithTarget(content, &event, &status);
+      }
+    }
+  }
 
   return NS_OK;
 }

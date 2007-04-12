@@ -43,13 +43,17 @@
 #include "nsIDOMEventListener.h"
 
 /*
- * Mouse up/down/move event listener
+ * The listener for drag events.
  *
+ * The reason for two events for the same operation are for compatibility
+ * between the WHAT-WG drag and drop spec and existing XUL code.
  */
 #define NS_IDOMDRAGLISTENER_IID \
-{ /* 6b8b25d0-ded5-11d1-bd85-00805f8ae3f4 */ \
-0x6b8b25d0, 0xded5, 0x11d1, \
-{0xbd, 0x85, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
+{ /* 1A107271-1E26-419A-BCF1-0A4CF7A66B45 */ \
+0x1a107271, 0x1e26, 0x419a, \
+{0xbc, 0xf1, 0x0a, 0x4c, 0xf7, 0xa6, 0x6b, 0x45} }
+
+
 
 class nsIDOMDragListener : public nsIDOMEventListener {
 
@@ -58,40 +62,81 @@ public:
    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMDRAGLISTENER_IID)
 
   /**
-  * Processes a drag enter event
+  * The dragenter event is fired when the mouse is moved from one node onto
+  * another. The target is the node that the mouse is moved onto and the
+  * related target is the node that the mouse left.
+  *
   * @param aMouseEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
   NS_IMETHOD DragEnter(nsIDOMEvent* aMouseEvent) = 0;
 
   /**
-  * Processes a drag over event
+  * The dragover event is fired at regular intervals (several times per second)
+  * while a drag is occuring. The target of this event is the node that the
+  * mouse is over.
+  *
   * @param aMouseEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
   NS_IMETHOD DragOver(nsIDOMEvent* aMouseEvent) = 0;
 
   /**
-  * Processes a drag Exit event
+  * The dragleave event is fired when the mouse leaves a node for another
+  * node. The dragexit event is fired immediately afterwards which will
+  * call this method. The target is the node that the mouse left and the
+  * related target is the node that the mouse is entering. A dragenter
+  * event will be fired on the node that the mouse is entering after both
+  * the dragleave and dragexit event are fired.
+  *
   * @param aMouseEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
   NS_IMETHOD DragExit(nsIDOMEvent* aMouseEvent) = 0;
 
   /**
-   * Processes a drag drop event
+   * The drop event will be fired on the node that the mouse is over once
+   * the drag is complete. The dragdrop event will be fired immediately
+   * afterwards which will call this method.
+   *
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
   NS_IMETHOD DragDrop(nsIDOMEvent* aMouseEvent) = 0;
   
   /**
-   * Processes a drag gesture event
+   * When the user begins a drag by pressing the mouse button and moving the
+   * mouse slightly, a dragstart event will be fired. Afterwards a draggesture
+   * event will be fired which will call this method.
+   *
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
   NS_IMETHOD DragGesture(nsIDOMEvent* aMouseEvent) = 0;
 
+  /**
+   * The dragend event is fired when a drag is finished, whether the data was
+   * dropped successfully or whether the drag was cancelled. The target of
+   * this event is the source node of the drag.
+   *
+   * @param aMouseEvent @see nsIDOMEvent.h 
+   * @returns whether the event was consumed or ignored. @see nsresult
+   */
+  NS_IMETHOD DragEnd(nsIDOMEvent* aMouseEvent) = 0;
+
+  /**
+   * The drag event is fired just before a dragover event is fired. The target
+   * of this event is the source node of the drag.
+   *
+   * @param aMouseEvent @see nsIDOMEvent.h 
+   * @returns whether the event was consumed or ignored. @see nsresult
+   */
+  NS_IMETHOD Drag(nsIDOMEvent* aMouseEvent) = 0;
+
+  // these methods are for compatibility 
+  NS_IMETHOD DragStart(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD DragLeave(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  NS_IMETHOD Drop(nsIDOMEvent* aMouseEvent) { return NS_OK; }
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMDragListener, NS_IDOMDRAGLISTENER_IID)

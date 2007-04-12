@@ -318,7 +318,7 @@ nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * aTran
   // reset by the dragTrackingHandler).
   StartDragSession();
   ::TrackDrag ( theDragRef, &theEvent, theDragRgn );
-  EndDragSession();
+  EndDragSession(PR_TRUE);
   
   // clean up after ourselves 
   ::DisposeRgn ( theDragRgn );

@@ -237,6 +237,7 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   mDoingDrag = PR_TRUE;
   HWND hwndDest = DrgDrag(mDragWnd, pDragInfo, &dragimage, 1, VK_BUTTON2,
                   (void*)0x80000000L); // Don't lock the desktop PS
+  FireDragEventAtSource(NS_DRAGDROP_END);
   mDoingDrag = PR_FALSE;
 
     // do clean up;  if the drop completed,
@@ -352,7 +353,7 @@ NS_IMETHODIMP nsDragService::StartDragSession()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDragService::EndDragSession()
+NS_IMETHODIMP nsDragService::EndDragSession(PRBool aDragDone)
 {
   NS_ASSERTION(0, "OS/2 version of EndDragSession() should never be called!");
   return NS_OK;

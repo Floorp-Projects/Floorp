@@ -364,7 +364,7 @@ nsDragService::InvokeDragSession(nsIDOMNode* aDOMNode, nsISupportsArray* aTransf
                  pasteboard:[NSPasteboard pasteboardWithName:NSDragPboard]
                      source:globalDragView
                   slideBack:YES];
-  nsBaseDragService::EndDragSession();
+  nsBaseDragService::EndDragSession(PR_TRUE);
 
   return NS_OK;
 }

@@ -1148,6 +1148,8 @@ void nsAppShell::HandleDragMotionEvent(XEvent *event, nsWidget *aWidget) {
   if (currentlyDragging) {
     dragServiceXlib->UpdatePosition(event->xmotion.x, event->xmotion.y);
 
+    dragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
+
     nsMouseEvent mevent(PR_TRUE, NS_DRAGDROP_OVER, aWidget,
                         nsMouseEvent::eReal);
     mevent.refPoint.x = event->xmotion.x;

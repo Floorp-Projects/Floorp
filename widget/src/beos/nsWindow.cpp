@@ -2006,7 +2006,7 @@ bool nsWindow::CallMethod(MethodInfo *info)
 			NS_RELEASE(event.widget);
 
 			if (dragService)
-				dragService->EndDragSession();
+				dragService->EndDragSession(PR_TRUE);
 		}
 		break;
 
@@ -3106,11 +3106,16 @@ void nsViewBeOS::MouseMoved(BPoint point, uint32 transit, const BMessage *msg)
 			if (msg == NULL)
 				break;
 			nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
-			dragService->EndDragSession();
+			dragService->EndDragSession(PR_FALSE);
 		}
 		break;
 	default:
 		args[0]= msg == NULL ? NS_MOUSE_MOVE : NS_DRAGDROP_OVER;
+        // fire the drag event at the source
+        if (msg != NULL) {
+			nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
+			dragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
+        }
  	}
  	
 	MethodInfo *moveInfo = nsnull;

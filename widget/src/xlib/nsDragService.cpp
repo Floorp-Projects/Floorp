@@ -139,7 +139,7 @@ NS_IMETHODIMP nsDragService::StartDragSession()
   return nsBaseDragService::StartDragSession();
 }
 
-NS_IMETHODIMP nsDragService::EndDragSession()
+NS_IMETHODIMP nsDragService::EndDragSession(PRBool aDoneDrag)
 {
   if (sWindow) {
     XDestroyWindow(sDisplay, sWindow);
@@ -147,7 +147,7 @@ NS_IMETHODIMP nsDragService::EndDragSession()
   }
   mDragging = PR_FALSE;
 
-  return nsBaseDragService::EndDragSession();
+  return nsBaseDragService::EndDragSession(aDoneDrag);
 }
 
 // nsIDragSession
@@ -231,7 +231,7 @@ NS_IMETHODIMP nsDragService::GetData(nsITransferable *aTransferable, PRUint32 an
     }
   }
 
-  EndDragSession();
+  EndDragSession(PR_TRUE);
 
   return NS_OK;
 }

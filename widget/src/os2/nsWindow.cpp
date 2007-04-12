@@ -3922,6 +3922,8 @@ PRBool nsWindow::OnDragDropMsg(ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &mr)
       switch (msg) {
 
         case DM_DRAGOVER:
+          dragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
+
           rv = dragSession->DragOverMsg((PDRAGINFO)mp1, mr, &dragFlags);
           eventType = NS_DRAGDROP_OVER;
           break;

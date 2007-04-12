@@ -47,7 +47,7 @@ interface nsIDOMNode;
 interface nsIDOMMouseEvent;
 interface nsISelection;
 
-[scriptable, uuid(D2875740-95D3-4F12-8E97-9FAB76C87093)]
+[scriptable, uuid(E8CD74A6-8BB6-4D27-9C65-4ED1B4398F8C)]
 interface nsIDragService : nsISupports
 {
   const long DRAGDROP_ACTION_NONE = 0;
@@ -124,9 +124,16 @@ interface nsIDragService : nsISupports
   /**
     * Tells the Drag Service to end a drag session. This is called when
     * an external drag occurs
+    *
+    * If aDoneDrag is true, the drag has finished, otherwise the drag has
+    * just left the window.
     */
-  void endDragSession ( ) ;
-  
+  void endDragSession ( in PRBool aDoneDrag ) ;
+
+  /**
+   * Fire a drag event at the source of the drag
+   */
+  void fireDragEventAtSource ( in unsigned long aMsg );
 };
 
 
