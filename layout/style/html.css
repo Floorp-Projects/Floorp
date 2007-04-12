@@ -492,6 +492,7 @@ noembed, param {
 marquee {
   display: inline-block;
   vertical-align: text-bottom;
+  text-align: start;
   -moz-binding: url('chrome://xbl-marquee/content/xbl-marquee.xml#marquee-horizontal');
 }
 
