@@ -749,19 +749,24 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     }
   }
   else if (eventType.EqualsLiteral("popuphiding")) {
-    // If accessible focus was inside popup that closes,
+    // If accessible focus was on or inside popup that closes,
     // then restore it to true current focus.
     // This is the case when we've been getting DOMMenuItemActive events
     // inside of a combo box that closes. The real focus is on the combo box.
+    // It's also the case when a popup gets focus in ATK -- when it closes
+    // we need to fire an event to restore focus to where it was
     if (!gLastFocusedNode) {
       return NS_OK;
     }
-    nsCOMPtr<nsIDOMNode> parentOfFocus;
-    gLastFocusedNode->GetParentNode(getter_AddRefs(parentOfFocus));
-    if (parentOfFocus != aTargetNode) {
-      return NS_OK;
+    if (gLastFocusedNode != aTargetNode) {
+      // Was not focused on popup
+      nsCOMPtr<nsIDOMNode> parentOfFocus;
+      gLastFocusedNode->GetParentNode(getter_AddRefs(parentOfFocus));
+      if (parentOfFocus != aTargetNode) {
+        return NS_OK;  // And was not focused on an item inside the popup
+      }
     }
-    // Focus was inside of popup that's being hidden
+    // Focus was on or inside of a popup that's being hidden
     FireCurrentFocusEvent();
   }
   else if (eventType.EqualsLiteral("DOMMenuInactive")) {
