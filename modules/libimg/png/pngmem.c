@@ -1,7 +1,7 @@
 
 /* pngmem.c - stub functions for memory allocation
  *
- * Last changed in libpng 1.2.9 April 14, 2006
+ * Last changed in libpng 1.2.13 November 13, 2006
  * For conditions of distribution and use, see copyright notice in png.h
  * Copyright (c) 1998-2006 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
@@ -136,6 +136,9 @@ png_malloc_default(png_structp png_ptr, png_uint_32 size)
 {
    png_voidp ret;
 #endif /* PNG_USER_MEM_SUPPORTED */
+
+   if (png_ptr == NULL || size == 0)
+      return (NULL);
 
 #ifdef PNG_MAX_MALLOC_64K
    if (size > (png_uint_32)65536L)
@@ -289,6 +292,8 @@ void PNGAPI
 png_free_default(png_structp png_ptr, png_voidp ptr)
 {
 #endif /* PNG_USER_MEM_SUPPORTED */
+
+   if(png_ptr == NULL) return;
 
    if (png_ptr->offset_table != NULL)
    {
@@ -536,8 +541,10 @@ png_voidp PNGAPI
 png_malloc_warn(png_structp png_ptr, png_uint_32 size)
 {
    png_voidp ptr;
-   png_uint_32 save_flags=png_ptr->flags;
+   png_uint_32 save_flags;
+   if(png_ptr == NULL) return (NULL);
 
+   save_flags=png_ptr->flags;
    png_ptr->flags|=PNG_FLAG_MALLOC_NULL_MEM_OK;
    ptr = (png_voidp)png_malloc((png_structp)png_ptr, size);
    png_ptr->flags=save_flags;
@@ -580,9 +587,11 @@ void PNGAPI
 png_set_mem_fn(png_structp png_ptr, png_voidp mem_ptr, png_malloc_ptr
   malloc_fn, png_free_ptr free_fn)
 {
+   if(png_ptr != NULL) {
    png_ptr->mem_ptr = mem_ptr;
    png_ptr->malloc_fn = malloc_fn;
    png_ptr->free_fn = free_fn;
+   }
 }
 
 /* This function returns a pointer to the mem_ptr associated with the user
@@ -592,6 +601,7 @@ png_set_mem_fn(png_structp png_ptr, png_voidp mem_ptr, png_malloc_ptr
 png_voidp PNGAPI
 png_get_mem_ptr(png_structp png_ptr)
 {
+   if(png_ptr == NULL) return (NULL);
    return ((png_voidp)png_ptr->mem_ptr);
 }
 #endif /* PNG_USER_MEM_SUPPORTED */

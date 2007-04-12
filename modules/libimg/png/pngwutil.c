@@ -1,9 +1,9 @@
 
 /* pngwutil.c - utilities to write a PNG file
  *
- * Last changed in libpng 1.2.11 June 4, 2006
+ * Last changed in libpng 1.2.15 January 5, 2007
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2006 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2007 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  */
@@ -62,6 +62,7 @@ void PNGAPI
 png_write_chunk(png_structp png_ptr, png_bytep chunk_name,
    png_bytep data, png_size_t length)
 {
+   if(png_ptr == NULL) return;
    png_write_chunk_start(png_ptr, chunk_name, (png_uint_32)length);
    png_write_chunk_data(png_ptr, data, length);
    png_write_chunk_end(png_ptr);
@@ -77,6 +78,7 @@ png_write_chunk_start(png_structp png_ptr, png_bytep chunk_name,
 {
    png_byte buf[4];
    png_debug2(0, "Writing %s chunk (%lu bytes)\n", chunk_name, length);
+   if(png_ptr == NULL) return;
 
    /* write the length */
    png_save_uint_32(buf, length);
@@ -98,6 +100,7 @@ void PNGAPI
 png_write_chunk_data(png_structp png_ptr, png_bytep data, png_size_t length)
 {
    /* write the data, and run the CRC over it */
+   if(png_ptr == NULL) return;
    if (data != NULL && length > 0)
    {
       png_calculate_crc(png_ptr, data, length);
@@ -110,6 +113,8 @@ void PNGAPI
 png_write_chunk_end(png_structp png_ptr)
 {
    png_byte buf[4];
+
+   if(png_ptr == NULL) return;
 
    /* write the crc */
    png_save_uint_32(buf, png_ptr->crc);
@@ -757,6 +762,7 @@ png_write_iCCP(png_structp png_ptr, png_charp name, int compression_type,
    png_size_t name_len;
    png_charp new_name;
    compression_state comp;
+   int embedded_profile_len = 0;
 
    png_debug(1, "in png_write_iCCP\n");
 
@@ -778,6 +784,27 @@ png_write_iCCP(png_structp png_ptr, png_charp name, int compression_type,
 
    if (profile == NULL)
       profile_len = 0;
+
+   if (profile_len > 3)
+      embedded_profile_len =
+          ((*( (png_bytep)profile  ))<<24) |
+          ((*( (png_bytep)profile+1))<<16) |
+          ((*( (png_bytep)profile+2))<< 8) |
+          ((*( (png_bytep)profile+3))    );
+
+   if (profile_len < embedded_profile_len)
+     {
+        png_warning(png_ptr,
+          "Embedded profile length too large in iCCP chunk");
+        return;
+     }
+
+   if (profile_len > embedded_profile_len)
+     {
+        png_warning(png_ptr,
+          "Truncating profile to actual length in iCCP chunk");
+        profile_len = embedded_profile_len;
+     }
 
    if (profile_len)
        profile_len = png_text_compress(png_ptr, profile, (png_size_t)profile_len,

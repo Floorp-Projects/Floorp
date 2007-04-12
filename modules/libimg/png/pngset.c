@@ -1,9 +1,9 @@
 
 /* pngset.c - storage of image information into info struct
  *
- * Last changed in libpng 1.2.9 April 14, 2006
+ * Last changed in libpng 1.2.15 January 5, 2007
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2006 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2007 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -981,10 +981,10 @@ png_set_sPLT(png_structp png_ptr,
         /* TODO: use png_malloc_warn */
         png_strcpy(to->name, from->name);
         to->entries = (png_sPLT_entryp)png_malloc(png_ptr,
-            from->nentries * png_sizeof(png_sPLT_t));
+            from->nentries * png_sizeof(png_sPLT_entry));
         /* TODO: use png_malloc_warn */
         png_memcpy(to->entries, from->entries,
-            from->nentries * png_sizeof(png_sPLT_t));
+            from->nentries * png_sizeof(png_sPLT_entry));
         to->nentries = from->nentries;
         to->depth = from->depth;
     }
@@ -1314,11 +1314,13 @@ png_set_invalid(png_structp png_ptr, png_infop info_ptr, int mask)
 void PNGAPI
 png_set_asm_flags (png_structp png_ptr, png_uint_32 asm_flags)
 {
+#ifdef PNG_MMX_CODE_SUPPORTED
     png_uint_32 settable_asm_flags;
     png_uint_32 settable_mmx_flags;
-
+#endif
     if (png_ptr == NULL)
        return;
+#ifdef PNG_MMX_CODE_SUPPORTED
 
     settable_mmx_flags =
 #ifdef PNG_HAVE_ASSEMBLER_COMBINE_ROW
@@ -1347,15 +1349,14 @@ png_set_asm_flags (png_structp png_ptr, png_uint_32 asm_flags)
     }
 
     /* we're replacing the settable bits with those passed in by the user,
-     * so first zero them out of the master copy, then logical-OR in the
+     * so first zero them out of the master copy, then bitwise-OR in the
      * allowed subset that was requested */
 
     png_ptr->asm_flags &= ~settable_asm_flags;               /* zero them */
     png_ptr->asm_flags |= (asm_flags & settable_asm_flags);  /* set them */
+#endif /* ?PNG_MMX_CODE_SUPPORTED */
 }
-#endif /* ?PNG_ASSEMBLER_CODE_SUPPORTED */
 
-#ifdef PNG_ASSEMBLER_CODE_SUPPORTED
 /* this function was added to libpng 1.2.0 */
 void PNGAPI
 png_set_mmx_thresholds (png_structp png_ptr,
@@ -1364,8 +1365,10 @@ png_set_mmx_thresholds (png_structp png_ptr,
 {
     if (png_ptr == NULL)
        return;
+#ifdef PNG_MMX_CODE_SUPPORTED
     png_ptr->mmx_bitdepth_threshold = mmx_bitdepth_threshold;
     png_ptr->mmx_rowbytes_threshold = mmx_rowbytes_threshold;
+#endif /* ?PNG_MMX_CODE_SUPPORTED */
 }
 #endif /* ?PNG_ASSEMBLER_CODE_SUPPORTED */
 
@@ -1379,6 +1382,7 @@ png_set_user_limits (png_structp png_ptr, png_uint_32 user_width_max,
      * rejected by png_set_IHDR().  To accept any PNG datastream
      * regardless of dimensions, set both limits to 0x7ffffffL.
      */
+    if(png_ptr == NULL) return;
     png_ptr->user_width_max = user_width_max;
     png_ptr->user_height_max = user_height_max;
 }
