@@ -39,6 +39,7 @@
 #ifndef NSEXPIRATIONTRACKER_H_
 #define NSEXPIRATIONTRACKER_H_
 
+#include "prerror.h"
 #include "nsTArray.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
@@ -105,7 +106,7 @@ template <class T, PRUint32 K> class nsExpirationTracker {
     nsExpirationTracker(PRUint32 aTimerPeriod)
       : mTimerPeriod(aTimerPeriod), mNewestGeneration(0),
         mInAgeOneGeneration(PR_FALSE) {
-      NS_ASSERTION(K >= 2 && K <= nsExpirationState::NOT_TRACKED, "K out of range");
+      PR_STATIC_ASSERT(K >= 2 && K <= nsExpirationState::NOT_TRACKED);
     }
     ~nsExpirationTracker() {
       if (mTimer) {
