@@ -3430,7 +3430,7 @@ nsWindow::OnDragDropSignal        (GtkWidget        *aWidget,
 
   // Make sure to end the drag session. If this drag started in a
   // different app, we won't get a drag_end signal to end it from.
-  dragService->EndDragSession();
+  dragService->EndDragSession(PR_TRUE);
 
   return TRUE;
 }
@@ -3501,7 +3501,7 @@ nsWindow::OnDragLeave(void)
         // initiated in a different app. End the drag session, since
         // we're done with it for now (until the user drags back into
         // mozilla).
-        dragService->EndDragSession();
+        dragService->EndDragSession(PR_FALSE);
       }
     }
   }

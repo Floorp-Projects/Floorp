@@ -326,6 +326,8 @@ public:
   NS_IMETHOD DragExit(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD DragDrop(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD DragGesture(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD Drag(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD DragEnd(nsIDOMEvent* aMouseEvent);
   
 
   nsresult Destroy();  
@@ -2756,6 +2758,28 @@ nsresult nsPluginInstanceOwner::DragDrop(nsIDOMEvent* aMouseEvent)
 }
 
 nsresult nsPluginInstanceOwner::DragGesture(nsIDOMEvent* aMouseEvent)
+{
+  if (mInstance) {
+    // Let the plugin handle drag events.
+    aMouseEvent->PreventDefault();
+    aMouseEvent->StopPropagation();
+  }
+
+  return NS_OK;
+}
+
+nsresult nsPluginInstanceOwner::Drag(nsIDOMEvent* aMouseEvent)
+{
+  if (mInstance) {
+    // Let the plugin handle drag events.
+    aMouseEvent->PreventDefault();
+    aMouseEvent->StopPropagation();
+  }
+
+  return NS_OK;
+}
+
+nsresult nsPluginInstanceOwner::DragEnd(nsIDOMEvent* aMouseEvent)
 {
   if (mInstance) {
     // Let the plugin handle drag events.

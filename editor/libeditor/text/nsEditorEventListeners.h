@@ -223,6 +223,8 @@ public:
   NS_IMETHOD DragExit(nsIDOMEvent* aDragEvent);
   NS_IMETHOD DragDrop(nsIDOMEvent* aDragEvent);
   NS_IMETHOD DragGesture(nsIDOMEvent* aDragEvent);
+  NS_IMETHOD Drag(nsIDOMEvent* aDragEvent);
+  NS_IMETHOD DragEnd(nsIDOMEvent* aDragEvent);
 /*END implementations of dragevent handler interface*/
 
 protected:

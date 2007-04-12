@@ -672,6 +672,18 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
   return mEditor->InsertFromDrop(aMouseEvent);
 }
 
+nsresult
+nsTextEditorDragListener::Drag(nsIDOMEvent* aDragEvent)
+{
+  return NS_OK;
+}
+
+nsresult
+nsTextEditorDragListener::DragEnd(nsIDOMEvent* aDragEvent)
+{
+  return NS_OK;
+}
+
 PRBool
 nsTextEditorDragListener::CanDrop(nsIDOMEvent* aEvent)
 {

@@ -472,7 +472,10 @@ nsHTMLContentSerializer::IsJavaScript(nsIAtom* aAttrNameAtom, const nsAString& a
               || (aAttrNameAtom == nsGkAtoms::oncommand)   || (aAttrNameAtom == nsGkAtoms::oncommandupdate)
               || (aAttrNameAtom == nsGkAtoms::ondragdrop)  || (aAttrNameAtom == nsGkAtoms::ondragenter)
               || (aAttrNameAtom == nsGkAtoms::ondragexit)  || (aAttrNameAtom == nsGkAtoms::ondraggesture)
-              || (aAttrNameAtom == nsGkAtoms::ondragover)  || (aAttrNameAtom == nsGkAtoms::oninput);
+              || (aAttrNameAtom == nsGkAtoms::ondragover)  || (aAttrNameAtom == nsGkAtoms::ondragstart)
+              || (aAttrNameAtom == nsGkAtoms::ondragleave) || (aAttrNameAtom == nsGkAtoms::ondrop)
+              || (aAttrNameAtom == nsGkAtoms::ondragend)   || (aAttrNameAtom == nsGkAtoms::ondrag)
+              || (aAttrNameAtom == nsGkAtoms::oninput);
   return result;
 }
 

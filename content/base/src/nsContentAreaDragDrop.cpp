@@ -395,6 +395,22 @@ nsContentAreaDragDrop::DragExit(nsIDOMEvent* aMouseEvent)
 }
 
 
+NS_IMETHODIMP
+nsContentAreaDragDrop::Drag(nsIDOMEvent* aMouseEvent)
+{
+  // nothing really to do here.
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsContentAreaDragDrop::DragEnd(nsIDOMEvent* aMouseEvent)
+{
+  // nothing really to do here.
+  return NS_OK;
+}
+
+
 //
 // ExtractURLFromData
 //

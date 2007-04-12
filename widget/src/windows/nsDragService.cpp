@@ -226,7 +226,7 @@ nsDragService::StartInvokingDragSession(IDataObject * aDataObj,
   }
 
   // We're done dragging
-  EndDragSession();
+  EndDragSession(PR_TRUE);
 
   // For some drag/drop interactions, IDataObject::SetData doesn't get
   // called with a CFSTR_PERFORMEDDROPEFFECT format and the
@@ -482,9 +482,9 @@ nsDragService::IsCollectionObject(IDataObject* inDataObj)
 // w/out crashing when we're still holding onto their data
 //
 NS_IMETHODIMP
-nsDragService::EndDragSession()
+nsDragService::EndDragSession(PRBool aDoneDrag)
 {
-  nsBaseDragService::EndDragSession();
+  nsBaseDragService::EndDragSession(aDoneDrag);
   NS_IF_RELEASE(mDataObject);
 
   return NS_OK;
