@@ -60,9 +60,6 @@ class nsXULTooltipListener : public nsIDOMMouseListener,
 {
 public:
 
-  nsXULTooltipListener();
-  virtual ~nsXULTooltipListener();
-
   // nsISupports
   NS_DECL_ISUPPORTS
 
@@ -96,11 +93,19 @@ public:
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
-  nsresult Init(nsIContent* aSourceNode);
   nsresult AddTooltipSupport(nsIContent* aNode);
   nsresult RemoveTooltipSupport(nsIContent* aNode);
+  static nsXULTooltipListener* GetInstance() {
+    if (!mInstance)
+      NS_IF_ADDREF(mInstance = new nsXULTooltipListener());
+    return mInstance;
+  }
+  static void ReleaseInstance() { NS_IF_RELEASE(mInstance); }
 
 protected:
+
+  nsXULTooltipListener();
+  ~nsXULTooltipListener();
 
   // pref callback for when the "show tooltips" pref changes
   static int sTooltipPrefChanged (const char* aPref, void* aData);
@@ -125,10 +130,11 @@ protected:
   // can be really used (i.e. tooltip is not a menu).
   nsresult GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip);
 
+  static nsXULTooltipListener* mInstance;
   static int ToolbarTipsPrefChanged(const char *aPref, void *aClosure);
 
-  nsIContent* mSourceNode;
-  nsCOMPtr<nsIContent> mTargetNode;
+  nsCOMPtr<nsIContent> mSourceNode;
+  nsCOMPtr<nsIDOMNode> mTargetNode;
   nsCOMPtr<nsIContent> mCurrentTooltip;
 
   // a timer for showing the tooltip

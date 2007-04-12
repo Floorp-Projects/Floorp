@@ -311,42 +311,16 @@ nsRootBoxFrame::SetDefaultTooltip(nsIContent* aTooltip)
   mDefaultTooltip = aTooltip;
 }
 
-static void
-TooltipListenerPropertyDtor(void *aObject, nsIAtom *aPropertyName,
-                            void *aPropertyValue, void *aData)
-{
-  nsXULTooltipListener* listener =
-    NS_STATIC_CAST(nsXULTooltipListener*, aPropertyValue);
-  if (listener) {
-    listener->RemoveTooltipSupport(NS_STATIC_CAST(nsIContent*, aObject));
-    NS_RELEASE(listener);
-  }
-}
-
 nsresult
 nsRootBoxFrame::AddTooltipSupport(nsIContent* aNode)
 {
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
-  nsRefPtr<nsXULTooltipListener> listener =
-    NS_STATIC_CAST(nsXULTooltipListener*,
-                   aNode->GetProperty(nsGkAtoms::tooltiplistener));
-  if (listener) {
-    // Tooltip listener is already installed.
-    return NS_OK;
-  }
 
-  listener = new nsXULTooltipListener();
+  nsXULTooltipListener *listener = nsXULTooltipListener::GetInstance();
   if (!listener)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  if (NS_SUCCEEDED(listener->Init(aNode))) {
-    nsresult rv = aNode->SetProperty(nsGkAtoms::tooltiplistener, listener,
-                                     TooltipListenerPropertyDtor, PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsXULTooltipListener* listenerRef = listener;
-    NS_ADDREF(listenerRef);
-  }
-  return NS_OK;
+  return listener->AddTooltipSupport(aNode);
 }
 
 nsresult
