@@ -4061,21 +4061,22 @@ nsTreeBodyFrame::PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* 
 nsIContent*
 nsTreeBodyFrame::GetBaseElement()
 {
-  nsINodeInfo *ni;
-  nsIContent* parent = mContent;
+  nsIFrame* parent = GetParent();
   while (parent) {
-    ni = parent->NodeInfo();
+    nsIContent* content = parent->GetContent();
+    if (content) {
+      nsINodeInfo* ni = content->NodeInfo();
 
-    if (ni->Equals(nsGkAtoms::tree, kNameSpaceID_XUL) ||
-        (ni->Equals(nsGkAtoms::select) &&
-         parent->IsNodeOfType(nsINode::eHTML))) {
-      break;
+      if (ni->Equals(nsGkAtoms::tree, kNameSpaceID_XUL) ||
+          (ni->Equals(nsGkAtoms::select) &&
+           content->IsNodeOfType(nsINode::eHTML)))
+        return content;
     }
 
     parent = parent->GetParent();
   }
 
-  return parent;
+  return nsnull;
 }
 
 NS_IMETHODIMP
