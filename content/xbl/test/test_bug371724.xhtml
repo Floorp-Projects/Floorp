@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=371724
+-->
+<head>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="rd">
+      <implementation>
+        <property name="hallo" onget="return true;" readonly="true"/>
+      </implementation>
+    </binding>
+  </bindings>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=371724">Mozilla Bug 371724</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <div id="a" style="-moz-binding:url('#rd');">Success!</div>
+  <pre id="test">
+    <script class="testbody" type="text/javascript">  
+      /** Test for Bug 371724 **/
+      SimpleTest.waitForExplicitFinish();
+      function doe() {
+        var isException = false;
+        try {
+          document.getElementById('a').hallo = false;
+        } catch (ex) {
+         isException = ex.name;
+        }
+        ok(isException == "TypeError", "Setting a readonly xbl property should throw a TypeError exception");
+        SimpleTest.finish();
+      }
+      setTimeout(doe, 600);
+    </script>
+  </pre>
+</body>
+</html>
