@@ -1,7 +1,7 @@
 
 /* pngtrans.c - transforms the data in a row (used by both readers and writers)
  *
- * Last changed in libpng 1.2.9 April 14, 2006
+ * Last changed in libpng 1.2.13 November 13, 2006
  * For conditions of distribution and use, see copyright notice in png.h
  * Copyright (c) 1998-2006 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
@@ -18,6 +18,7 @@ void PNGAPI
 png_set_bgr(png_structp png_ptr)
 {
    png_debug(1, "in png_set_bgr\n");
+   if(png_ptr == NULL) return;
    png_ptr->transformations |= PNG_BGR;
 }
 #endif
@@ -28,6 +29,7 @@ void PNGAPI
 png_set_swap(png_structp png_ptr)
 {
    png_debug(1, "in png_set_swap\n");
+   if(png_ptr == NULL) return;
    if (png_ptr->bit_depth == 16)
       png_ptr->transformations |= PNG_SWAP_BYTES;
 }
@@ -39,6 +41,7 @@ void PNGAPI
 png_set_packing(png_structp png_ptr)
 {
    png_debug(1, "in png_set_packing\n");
+   if(png_ptr == NULL) return;
    if (png_ptr->bit_depth < 8)
    {
       png_ptr->transformations |= PNG_PACK;
@@ -53,6 +56,7 @@ void PNGAPI
 png_set_packswap(png_structp png_ptr)
 {
    png_debug(1, "in png_set_packswap\n");
+   if(png_ptr == NULL) return;
    if (png_ptr->bit_depth < 8)
       png_ptr->transformations |= PNG_PACKSWAP;
 }
@@ -63,6 +67,7 @@ void PNGAPI
 png_set_shift(png_structp png_ptr, png_color_8p true_bits)
 {
    png_debug(1, "in png_set_shift\n");
+   if(png_ptr == NULL) return;
    png_ptr->transformations |= PNG_SHIFT;
    png_ptr->shift = *true_bits;
 }
@@ -74,7 +79,7 @@ int PNGAPI
 png_set_interlace_handling(png_structp png_ptr)
 {
    png_debug(1, "in png_set_interlace handling\n");
-   if (png_ptr->interlaced)
+   if (png_ptr && png_ptr->interlaced)
    {
       png_ptr->transformations |= PNG_INTERLACE;
       return (7);
@@ -94,6 +99,7 @@ void PNGAPI
 png_set_filler(png_structp png_ptr, png_uint_32 filler, int filler_loc)
 {
    png_debug(1, "in png_set_filler\n");
+   if(png_ptr == NULL) return;
    png_ptr->transformations |= PNG_FILLER;
    png_ptr->filler = (png_byte)filler;
    if (filler_loc == PNG_FILLER_AFTER)
@@ -126,6 +132,7 @@ void PNGAPI
 png_set_add_alpha(png_structp png_ptr, png_uint_32 filler, int filler_loc)
 {
    png_debug(1, "in png_set_add_alpha\n");
+   if(png_ptr == NULL) return;
    png_set_filler(png_ptr, filler, filler_loc);
    png_ptr->transformations |= PNG_ADD_ALPHA;
 }
@@ -139,6 +146,7 @@ void PNGAPI
 png_set_swap_alpha(png_structp png_ptr)
 {
    png_debug(1, "in png_set_swap_alpha\n");
+   if(png_ptr == NULL) return;
    png_ptr->transformations |= PNG_SWAP_ALPHA;
 }
 #endif
@@ -149,6 +157,7 @@ void PNGAPI
 png_set_invert_alpha(png_structp png_ptr)
 {
    png_debug(1, "in png_set_invert_alpha\n");
+   if(png_ptr == NULL) return;
    png_ptr->transformations |= PNG_INVERT_ALPHA;
 }
 #endif
@@ -158,6 +167,7 @@ void PNGAPI
 png_set_invert_mono(png_structp png_ptr)
 {
    png_debug(1, "in png_set_invert_mono\n");
+   if(png_ptr == NULL) return;
    png_ptr->transformations |= PNG_INVERT_MONO;
 }
 
@@ -621,6 +631,7 @@ png_set_user_transform_info(png_structp png_ptr, png_voidp
    user_transform_ptr, int user_transform_depth, int user_transform_channels)
 {
    png_debug(1, "in png_set_user_transform_info\n");
+   if(png_ptr == NULL) return;
 #if defined(PNG_USER_TRANSFORM_PTR_SUPPORTED)
    png_ptr->user_transform_ptr = user_transform_ptr;
    png_ptr->user_transform_depth = (png_byte)user_transform_depth;
@@ -641,12 +652,10 @@ png_set_user_transform_info(png_structp png_ptr, png_voidp
 png_voidp PNGAPI
 png_get_user_transform_ptr(png_structp png_ptr)
 {
+   if (png_ptr == NULL) return (NULL);
 #if defined(PNG_USER_TRANSFORM_PTR_SUPPORTED)
    return ((png_voidp)png_ptr->user_transform_ptr);
-#else
-   if(png_ptr)
-     return (NULL);
-   return (NULL);
 #endif
+   return (NULL);
 }
 #endif /* PNG_READ_SUPPORTED || PNG_WRITE_SUPPORTED */
