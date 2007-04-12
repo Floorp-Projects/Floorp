@@ -762,7 +762,7 @@ gfxQuartzFontCache::GetPostscriptNameForFontID(ATSUFontID fid)
 
     if (!mFontIDTable.Get(PRUint32(fid), &fe)) {
         NS_WARNING("Invalid font");
-        return NS_LITERAL_STRING("INVALID_FONT");
+        return EmptyString();
     }
 
     return fe->Name();
