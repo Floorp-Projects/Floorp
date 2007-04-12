@@ -65,6 +65,7 @@
 #include "nsIScrollbarFrame.h"
 #include "nsISupportsArray.h"
 #include "nsIScrollableView.h"
+#include "nsILookAndFeel.h"
 #include "nsRepeatService.h"
 #include "nsBoxLayoutState.h"
 #include "nsSprocketLayout.h"
@@ -829,6 +830,21 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
     if (button != 1 || !gMiddlePref)
       return NS_OK;
     scrollToClick = PR_TRUE;
+  }
+
+  // Check if we should scroll-to-click regardless of the pressed button and
+  // modifiers
+  if (!scrollToClick) {
+    nsresult rv;
+    nsCOMPtr<nsILookAndFeel> lookNFeel =
+      do_GetService("@mozilla.org/widget/lookandfeel;1", &rv);
+    if (NS_SUCCEEDED(rv)) {
+      PRInt32 scrollToClickMetric;
+      rv = lookNFeel->GetMetric(nsILookAndFeel::eMetric_ScrollToClick,
+                                scrollToClickMetric);
+      if (NS_SUCCEEDED(rv) && scrollToClickMetric == 1)
+        scrollToClick = PR_TRUE;
+    }
   }
 
   PRInt32 clientPosPx;
