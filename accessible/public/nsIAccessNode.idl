@@ -55,7 +55,7 @@ interface nsIAccessibleDocument;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(0bd7ccde-486d-483c-a6df-79869cb6647d)]
+[scriptable, uuid(11c0007f-531c-43b7-be63-a3060a13d8d2)]
 interface nsIAccessNode : nsISupports
 {
   /**
@@ -118,10 +118,22 @@ interface nsIAccessNode : nsISupports
   /**
    * Makes an object visible on screen.
    *
-   * @param topLeft - if false then it will scroll the shortest distance it
-   *                  needs to put the element on-screen.
+   * @param scrollType - defines where the object should be placed on
+   *                     the screen (see nsIAccessibleScrollType for
+   *                     available constants).
    */
-  void scrollTo(in boolean aTopLeft);
+  void scrollTo(in unsigned long aScrollType);
+
+  /**
+   * Moves the top left of an object to a specified location.
+   *
+   * @param coordinateType - specifies whether the coordinates are relative to
+   *                         the screen or the parent object (for available
+   *                         constants refer to nsIAccessibleCoordinateType)
+   * @param aX - defines the x coordinate
+   * @param aY - defines the y coordinate
+  */
+  void scrollToPoint(in unsigned long aCoordinateType, in long aX, in long aY);
 
   /**
    * The OS window handle for the window this node
