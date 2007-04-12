@@ -129,6 +129,36 @@ function openFileOutputStream(file, flags) {
   return stream;
 }
 
+/**
+ * Determine if a file is a child of another file.  Needed because
+ * nsILocalFile.contains() has problems with short vs. long paths
+ * see bug #375710 for more details
+ *
+ * @param    aParent (nsILocalFile)
+ * @param    aChild (nsILocalFile)
+ * @return   true if aChild is a child of aParent.  Will also return
+ *           true if aChild is same as aParent
+ */
+function canonicalRecursiveContains(aParent, aChild)
+{ 
+  try {
+    var current = aChild;
+    while (current) {
+      if (aParent.equals(current))
+        return true;
+
+      var newCurrent = current.parent;
+      if (newCurrent.equals(current))
+        return false;
+
+      current = newCurrent;
+    }
+  }
+  catch (ex) {
+  }
+  return false;
+}
+
 //-----------------------------------------------------------------------------
 
 const PREFIX_FILE = "File: ";
@@ -192,7 +222,7 @@ InstallLogWriter.prototype = {
                                 .getService(Components.interfaces.nsIProperties);
     var programFilesDir = fileLocator.get(KEY_PROGRAMFILES,
         Components.interfaces.nsILocalFile);
-    if (programFilesDir.contains(updRoot, true)) {
+    if (canonicalRecursiveContains(programFilesDir, updRoot)) {
       var relativePath = updRoot.QueryInterface(Components.interfaces.nsILocalFile).
           getRelativeDescriptor(programFilesDir);
       var userLocalDir = fileLocator.get(KEY_LOCALDATA,
