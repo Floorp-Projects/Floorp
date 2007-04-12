@@ -314,13 +314,16 @@ STDMETHODIMP nsAccessNodeWrap::get_computedStyleForProperties(
 
 STDMETHODIMP nsAccessNodeWrap::scrollTo(/* [in] */ boolean aScrollTopLeft)
 {
-  nsresult rv = ScrollTo(aScrollTopLeft);
+  PRUint32 scrollType =
+    aScrollTopLeft ? nsIAccessibleScrollType::SCROLL_TYPE_TOP_LEFT :
+                     nsIAccessibleScrollType::SCROLL_TYPE_BOTTOM_RIGHT;
+
+  nsresult rv = ScrollTo(scrollType);
   if (NS_SUCCEEDED(rv))
     return S_OK;
 
   return E_FAIL;
 }
-
 
 ISimpleDOMNode* nsAccessNodeWrap::MakeAccessNode(nsIDOMNode *node)
 {

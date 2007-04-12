@@ -1,0 +1,103 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/**
+ * These constants control the scrolling of an object or substring into a
+ * window. Note, keep them synchronized with IA2ScrollType.
+ */
+[scriptable, uuid(05cd38b1-94b3-4cdf-8371-3935a9611405)]
+interface nsIAccessibleScrollType : nsISupports
+{
+  /**
+   * Scroll the top left of the object or substring to the top left of the
+   * window (or as close as possible).
+   */
+  const unsigned long SCROLL_TYPE_TOP_LEFT =0x00;
+
+  /**
+   * Scroll the bottom right of the object or substring to the bottom right of
+   * the window (or as close as possible).
+   */
+  const unsigned long SCROLL_TYPE_BOTTOM_RIGHT = 0x01;
+
+  /**
+   * Scroll the top edge of the object or substring to the top edge of the
+   * window (or as close as possible).
+   */
+  const unsigned long SCROLL_TYPE_TOP_EDGE = 0x02;
+
+  /**
+   * Scroll the bottom edge of the object or substring to the bottom edge of
+   * the window (or as close as possible).
+   */
+  const unsigned long SCROLL_TYPE_BOTTOM_EDGE = 0x03;
+
+  /**
+   * Scroll the left edge of the object or substring to the left edge of the
+   * window (or as close as possible).
+   */
+  const unsigned long SCROLL_TYPE_LEFT_EDGE =0x04;
+
+  /**
+   * Scroll the right edge of the object or substring to the right edge of the
+   * window (or as close as possible).
+   */
+  const unsigned long SCROLL_TYPE_RIGHT_EDGE = 0x05;
+};
+
+
+/**
+ * These constants define which coordinate system a point is located in. Note,
+ * keep them synchronized with IA2CoordinateType.
+ */
+[scriptable, uuid(15a523bb-fb3b-4cb2-af87-ad26ea792c4c)]
+interface nsIAccessibleCoordinateType : nsISupports
+{
+  /**
+   * The coordinates are relative to the screen.
+   */
+  const unsigned long COORDTYPE_SCREEN_RELATIVE = 0x00;
+
+  /**
+   * The coordinates are relative to the upper left corner of the bounding box
+   * of the immediate parent.
+   */
+  const unsigned long COORDTYPE_PARENT_RELATIVE = 0x01;
+};

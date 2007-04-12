@@ -51,6 +51,7 @@ XPIDL_MODULE= accessibility
 GRE_MODULE	= 1
 
 XPIDLSRCS = \
+      nsIAccessibleTypes.idl \
       nsIAccessibilityService.idl \
       nsIAccessibleRetrieval.idl \
       nsIAccessible.idl \

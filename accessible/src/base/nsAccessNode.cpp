@@ -354,7 +354,7 @@ nsAccessNode::GetInnerHTML(nsAString& aInnerHTML)
 }
 
 NS_IMETHODIMP
-nsAccessNode::ScrollTo(PRBool aTopLeft)
+nsAccessNode::ScrollTo(PRUint32 aScrollType)
 {
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
 
@@ -367,9 +367,42 @@ nsAccessNode::ScrollTo(PRBool aTopLeft)
   nsCOMPtr<nsIContent> content = frame->GetContent();
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
-  PRInt32 percent = aTopLeft ? NS_PRESSHELL_SCROLL_TOP :
-    NS_PRESSHELL_SCROLL_ANYWHERE;
-  return shell->ScrollContentIntoView(content, percent, percent);
+  PRInt32 vPercent, hPercent;
+  switch (aScrollType)
+  {
+    case nsIAccessibleScrollType::SCROLL_TYPE_TOP_LEFT:
+      vPercent = NS_PRESSHELL_SCROLL_TOP;
+      hPercent = NS_PRESSHELL_SCROLL_LEFT;
+      break;
+    case nsIAccessibleScrollType::SCROLL_TYPE_BOTTOM_RIGHT:
+      vPercent = NS_PRESSHELL_SCROLL_BOTTOM;
+      hPercent = NS_PRESSHELL_SCROLL_RIGHT;
+      break;
+    case nsIAccessibleScrollType::SCROLL_TYPE_TOP_EDGE:
+      vPercent = NS_PRESSHELL_SCROLL_TOP;
+      hPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
+      break;
+    case nsIAccessibleScrollType::SCROLL_TYPE_BOTTOM_EDGE:
+      vPercent = NS_PRESSHELL_SCROLL_BOTTOM;
+      hPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
+      break;
+    case nsIAccessibleScrollType::SCROLL_TYPE_LEFT_EDGE:
+      vPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
+      hPercent = NS_PRESSHELL_SCROLL_LEFT;
+      break;
+    case nsIAccessibleScrollType::SCROLL_TYPE_RIGHT_EDGE:
+      vPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
+      hPercent = NS_PRESSHELL_SCROLL_RIGHT;
+      break;
+  }
+
+  return shell->ScrollContentIntoView(content, vPercent, hPercent);
+}
+
+NS_IMETHODIMP
+nsAccessNode::ScrollToPoint(PRUint32 aCoordinateType, PRInt32 aX, PRInt32 aY)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
