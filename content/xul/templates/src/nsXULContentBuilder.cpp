@@ -811,8 +811,10 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 if (NS_FAILED(rv)) return rv;
             }
 
+            // XUL elements inside a template rooted on a XUL element may have
+            // their children generated lazily.
             nsXULElement *xulcontent = nsXULElement::FromContent(realKid);
-            if (xulcontent) {
+            if (xulcontent && mRoot->IsNodeOfType(nsINode::eXUL)) {
                 PRUint32 count2 = tmplKid->GetChildCount();
 
                 if (count2 == 0 && !isGenerationElement) {
