@@ -313,9 +313,9 @@ bin/components/libwebsrvcs.so
 bin/components/websrvcs.xpt
 
 ; LDAP components need to be in the browser for AutoConfig
-bin/libldap50.so
-bin/libprldap50.so
-bin/liblber50.so
+bin/libldap60.so
+bin/libprldap60.so
+bin/libldif60.so
 bin/components/libmozldap.so
 bin/components/mozldap.xpt
 

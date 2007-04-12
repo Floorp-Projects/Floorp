@@ -315,10 +315,11 @@ bin/components/spellchecker.xpt
 ; LDAP components need to be in the browser for AutoConfig
 bin/components/mozldap.dll
 bin/components/mozldap.xpt
-;bin/nsldap32v50.dll
-bin/ldap50.dll
-;bin/nsldappr32v50.dll
-bin/prldap50.dll
+;bin/nsldap32v60.dll
+bin/ldap60.dll
+;bin/nsldappr32v60.dll
+bin/prldap60.dll
+bin/ldif60.dll
 
 ; p3p
 bin/components/p3p.xpt
