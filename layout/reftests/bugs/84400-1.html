@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+                      "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Testing controls that should match :enabled/:disabled</title>
+    <style type="text/css">
+      input, textarea, button, *.hideme { display: none; }
+      div { margin-bottom: 0.2em; }
+
+      span, option, optgroup { background-color: red; }
+      *:enabled + span.true, option.true:enabled, optgroup.true:enabled { color: lime; background-color: lime; }
+      *:disabled + span.false, option.false:disabled, optgroup.false:disabled { color: lime; background-color: lime; }
+    </style>
+    <script type="text/javascript">
+      // Runs through i1, i2, .... in and toggles the |disabled| attribute
+      function onLoad() {
+        var i = 1;
+	var el = document.getElementById("i1");
+	while (el) {
+	  if (el.hasAttribute("disabled")) {
+	    el.removeAttribute("disabled");
+	  } else {
+	    el.setAttribute("disabled", "disabled");
+	  }
+	  ++i;
+	  el = document.getElementById("i" + i);
+	}
+	if (i != 31) {
+	  alert("onLoad() handler failed!");
+	}
+      }
+
+      window.addEventListener("load", onLoad, false);
+    </script>
+  </head>
+  <body>
+    <div>
+      There should be no red in the following (note: form styling should be enabled).
+    </div>
+
+    <form method="get" action=".">
+      <div>
+	input:
+	<input/> <span class="true">FAIL</span>
+	<input disabled="disabled"/> <span class="false">FAIL</span>
+	<input id="i1"/> <span class="false">FAIL</span>
+	<input id="i2" disabled="disabled"/> <span class="true">FAIL</span>
+      </div>
+
+      <div>
+	password:
+	<input type="password"/> <span class="true">FAIL</span>
+	<input type="password" disabled="disabled"/> <span class="false">FAIL</span>
+	<input type="password" id="i3"/> <span class="false">FAIL</span>
+	<input type="password" id="i4" disabled="disabled"/> <span class="true">FAIL</span>
+      </div>
+
+      <div>
+	checkbox:
+	<input type="checkbox"/> <span class="true">FAIL</span>
+	<input type="checkbox" disabled="disabled"/> <span class="false">FAIL</span>
+	<input type="checkbox" id="i5"/> <span class="false">FAIL</span>
+	<input type="checkbox" id="i6" disabled="disabled"/> <span class="true">FAIL</span>
+      </div>
+
+      <div>
+	radio:
+	<input type="radio"/> <span class="true">FAIL</span>
+	<input type="radio" disabled="disabled"/> <span class="false">FAIL</span>
+	<input type="radio" id="i7"/> <span class="false">FAIL</span>
+	<input type="radio" id="i8" disabled="disabled"/> <span class="true">FAIL</span>
+      </div>
+
+      <div>
+	submit:
+	<input type="submit"/> <span class="true">FAIL</span>
+	<input type="submit" disabled="disabled"/> <span class="false">FAIL</span>
+	<input type="submit" id="i9"/> <span class="false">FAIL</span>
+	<input type="submit" id="i10" disabled="disabled"/> <span class="true">FAIL</span>
+      </div>
+
+      <div>
+	reset:
+	<input type="reset"/> <span class="true">FAIL</span>
+	<input type="reset" disabled="disabled"/> <span class="false">FAIL</span>
+	<input type="reset" id="i11"/> <span class="false">FAIL</span>
+	<input type="reset" id="i12" disabled="disabled"/> <span class="true">FAIL</span>
+      </div>
+
+      <div>
+	file:
+	<input type="file"/> <span class="true">FAIL</span>
+	<input type="file" disabled="disabled"/> <span class="false">FAIL</span>
+	<input type="file" id="i13"/> <span class="false">FAIL</span>
+	<input type="file" id="i14" disabled="disabled"/> <span class="true">FAIL</span>
+      </div>
+
+      <div>
+	hidden:
+	<input type="hidden"/> <span class="true">FAIL</span>
+	<input type="hidden" disabled="disabled"/> <span class="false">FAIL</span>
+	<input type="hidden" id="i15"/> <span class="false">FAIL</span>
+	<input type="hidden" id="i16" disabled="disabled"/> <span class="true">FAIL</span>
+      </div>
+
+      <div>
+	image:
+	<input type="image"/> <span class="true">FAIL</span>
+	<input type="image" disabled="disabled"/> <span class="false">FAIL</span>
+	<input type="image" id="i17"/> <span class="false">FAIL</span>
+	<input type="image" id="i18" disabled="disabled"/> <span class="true">FAIL</span>
+      </div>
+
+      <div>
+	button (input):
+	<input type="button"/> <span class="true">FAIL</span>
+	<input type="button" disabled="disabled"/> <span class="false">FAIL</span>
+	<input type="button" id="i19"/> <span class="false">FAIL</span>
+	<input type="button" id="i20" disabled="disabled"/> <span class="true">FAIL</span>
+      </div>
+
+      <div>
+	textarea:
+	<textarea cols="5" rows="5"></textarea> <span class="true">FAIL</span>
+	<textarea cols="5" rows="5" disabled="disabled"></textarea> <span class="false">FAIL</span>
+	<textarea cols="5" rows="5" id="i21"></textarea> <span class="false">FAIL</span>
+	<textarea cols="5" rows="5" id="i22" disabled="disabled"></textarea> <span class="true">FAIL</span>
+      </div>
+
+      <div>
+	button:
+	<button>bogus</button> <span class="true">FAIL</span>
+	<button disabled="disabled">bogus</button> <span class="false">FAIL</span>
+	<button id="i23">bogus</button> <span class="false">FAIL</span>
+	<button id="i24" disabled="disabled">bogus</button> <span class="true">FAIL</span>
+      </div>
+
+      <div>
+	select:
+	<select class="hideme"><option>bogus</option></select> <span class="true">FAIL</span>
+	<select class="hideme" disabled="disabled"><option>bogus</option></select> <span class="false">FAIL</span>
+	<select class="hideme" id="i25"><option>bogus</option></select> <span class="false">FAIL</span>
+	<select class="hideme" id="i26" disabled="disabled"><option>bogus</option></select> <span class="true">FAIL</span>
+
+      </div>
+
+      <div>
+	option:
+	<select size="4">
+	  <option class="true">FAIL</option>
+	  <option class="false" disabled="disabled">FAIL</option>
+	  <option class="false" id="i27">FAIL</option>
+	  <option class="true" id="i28" disabled="disabled">FAIL</option>
+	</select>
+      </div>
+
+      <div>
+	optgroup:
+	<select size="4">
+	  <optgroup class="true" label="FAIL">
+	    <option class="hideme">bogus</option>
+	  </optgroup>
+	  <optgroup class="false" disabled="disabled" label="FAIL">
+	    <option class="hideme">bogus</option>
+	  </optgroup>
+	  <optgroup class="false" id="i29" label="FAIL">
+	    <option class="hideme">bogus</option>
+	  </optgroup>
+	  <optgroup class="true" disabled="disabled" id="i30" label="FAIL">
+	    <option class="hideme">bogus</option>
+	  </optgroup>
+	</select>
+      </div>
+
+    </form>
+
+  </body>
+</html>
