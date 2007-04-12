@@ -50,7 +50,7 @@
 #include "nsComponentManagerUtils.h"
 
 nsHTMLTextAccessible::nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell, nsIFrame *aFrame):
-nsTextAccessibleWrap(aDomNode, aShell), mFrame(aFrame)
+nsTextAccessibleWrap(aDomNode, aShell)
 { 
 }
 
@@ -75,27 +75,6 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetName(nsAString& aName)
   }
   aName = name;
   return rv;
-}
-
-nsIFrame* nsHTMLTextAccessible::GetFrame()
-{
-  if (!mWeakShell) {
-    return nsnull;
-  }
-  if (!mFrame) {
-    mFrame = nsTextAccessible::GetFrame();
-  }
-  return mFrame;
-}
-
-NS_IMETHODIMP nsHTMLTextAccessible::FireToolkitEvent(PRUint32 aEvent,
-                                                     nsIAccessible *aTarget,
-                                                     void *aData)
-{
-  if (aEvent == nsIAccessibleEvent::EVENT_HIDE) {
-    mFrame = nsnull;  // Invalidate cached frame
-  }
-  return nsTextAccessibleWrap::FireToolkitEvent(aEvent, aTarget, aData);
 }
 
 NS_IMETHODIMP nsHTMLTextAccessible::GetRole(PRUint32 *aRole)
@@ -315,7 +294,7 @@ void nsHTMLLIAccessible::CacheChildren()
 nsHTMLListBulletAccessible::
   nsHTMLListBulletAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell,
                              nsIFrame *aFrame, const nsAString& aBulletText) :
-    nsLeafAccessible(aDomNode, aShell), mFrame(aFrame), mWeakParent(nsnull),
+    nsLeafAccessible(aDomNode, aShell), mWeakParent(nsnull),
     mBulletText(aBulletText)
 {
   mBulletText += ' '; // Otherwise bullets are jammed up against list text
@@ -334,20 +313,8 @@ nsHTMLListBulletAccessible::Shutdown()
 {
   mBulletText.Truncate();
   mWeakParent = nsnull;
-  mFrame = nsnull;
 
   return nsLeafAccessible::Shutdown();
-}
-
-nsIFrame*
-nsHTMLListBulletAccessible::GetFrame()
-{
-  if (!mWeakShell)
-    return nsnull;
-
-  if (!mFrame)
-    mFrame = nsLeafAccessible::GetFrame();
-  return mFrame;
 }
 
 NS_IMETHODIMP
@@ -391,22 +358,11 @@ nsHTMLListBulletAccessible::GetParent(nsIAccessible **aParentAccessible)
 }
 
 NS_IMETHODIMP
-nsHTMLListBulletAccessible::FireToolkitEvent(PRUint32 aEvent,
-                                             nsIAccessible *aTarget,
-                                             void *aData)
-{
-  if (aEvent == nsIAccessibleEvent::EVENT_HIDE)
-    mFrame = nsnull;  // Invalidate cached frame
-  return nsLeafAccessible::FireToolkitEvent(aEvent, aTarget, aData);
-}
-
-NS_IMETHODIMP
 nsHTMLListBulletAccessible::GetContentText(nsAString& aText)
 {
   aText = mBulletText;
   return NS_OK;
 }
-
 
 // nsHTMLListAccessible
 

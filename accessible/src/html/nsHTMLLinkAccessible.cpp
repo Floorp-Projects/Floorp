@@ -44,7 +44,7 @@
 NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLLinkAccessible, nsLinkableAccessible)
 
 nsHTMLLinkAccessible::nsHTMLLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell, nsIFrame *aFrame):
-nsLinkableAccessible(aDomNode, aShell), mFrame(aFrame)
+nsLinkableAccessible(aDomNode, aShell)
 { 
 }
 
@@ -83,25 +83,4 @@ nsHTMLLinkAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   }
 
   return NS_OK;
-}
-
-nsIFrame* nsHTMLLinkAccessible::GetFrame()
-{
-  if (mWeakShell) {
-    if (!mFrame) {
-      mFrame = nsLinkableAccessible::GetFrame();
-    }
-    return mFrame;
-  }
-  return nsnull;
-}
-
-NS_IMETHODIMP nsHTMLLinkAccessible::FireToolkitEvent(PRUint32 aEvent,
-                                                     nsIAccessible *aTarget,
-                                                     void *aData)
-{
-  if (aEvent == nsIAccessibleEvent::EVENT_HIDE) {
-    mFrame = nsnull;  // Invalidate cached frame
-  }
-  return nsLinkableAccessible::FireToolkitEvent(aEvent, aTarget, aData);
 }

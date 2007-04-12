@@ -55,20 +55,6 @@ public:
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetRole(PRUint32 *aRole);
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
-  NS_IMETHOD Shutdown() { mFrame = nsnull; return nsTextAccessibleWrap::Shutdown(); }
-  
-  // nsPIAccessNode
-  NS_IMETHOD_(nsIFrame *) GetFrame(void);
-
-  // nsPIAccessible
-  NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTarget,
-                              void *aData);
-
-private:
-  // We cache frames for text accessibles so that the primary frame map isn't
-  // increased in size just due to accessibility. Normally the primary frame map,
-  // which is used by nsIPresShell::GetPrimaryFrameFor(), does not include text frames
-  nsIFrame *mFrame; // Only valid if node is not shut down (mWeakShell != null)
 };
 
 class nsHTMLHRAccessible : public nsLeafAccessible
@@ -111,7 +97,6 @@ public:
 
   // nsPIAccessNode
   NS_IMETHOD Shutdown();
-  NS_IMETHOD_(nsIFrame *) GetFrame(void);
 
   // nsIAccessible
   NS_IMETHOD GetName(nsAString& aName);
@@ -125,8 +110,6 @@ public:
   NS_IMETHOD GetParent(nsIAccessible **aParentAccessible);
 
   // nsPIAccessible
-  NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTarget,
-                              void *aData);
   NS_IMETHOD GetContentText(nsAString& aText);
 
 protected:
@@ -137,7 +120,6 @@ protected:
   // here should not be a problem if we invalidate the right parts of
   // the accessibility cache when mutation events occur.
   nsIAccessible *mWeakParent;
-  nsIFrame *mFrame;
   nsString mBulletText;
 };
 
