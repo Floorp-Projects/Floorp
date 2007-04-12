@@ -1081,10 +1081,9 @@ nsAccessibleWrap::role(long *role)
 }
 
 STDMETHODIMP
-nsAccessibleWrap::scrollTo(enum IA2ScrollType scrollType)
+nsAccessibleWrap::scrollTo(enum IA2ScrollType aScrollType)
 {
-  // XXX Handle scrollType
-  if (NS_SUCCEEDED(ScrollTo(PR_TRUE)))
+  if (NS_SUCCEEDED(ScrollTo(aScrollType)))
     return S_OK;
   return E_FAIL;
 }
