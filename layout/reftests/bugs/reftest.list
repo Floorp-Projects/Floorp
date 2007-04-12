@@ -52,6 +52,8 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 != 40596-1h.html 40596-1-ref.html
 == 40596-1i.html 40596-1-ref.html
 != 40596-1j.html 40596-1-ref.html
+== 84400-1.html 84400-1-ref.html
+== 84400-2.html 84400-2-ref.html
 == 97777-1.html 97777-1-ref.html
 == 97777-2.html 97777-2-ref.html
 == 98223-1.html 98223-1-ref.html
