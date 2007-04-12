@@ -260,10 +260,21 @@ function checkForImage(elem, htmllocalname)
 
     var imageRequest = img.QueryInterface(nsIImageLoadingContent)
                           .getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
-    if (imageRequest)
-      setInfo("image-type", imageRequest.mimeType);
-    else
-      setInfo("image-type", "");
+    var imageType = "";
+    if (imageRequest) {
+      imageType = imageRequest.mimeType;
+      var imageMimeType = /^image\/(.*)/.exec(imageType);
+      if (imageMimeType) {
+        imageType = imageMimeType[1].toUpperCase();
+        var frameCount = imageRequest.image.numFrames;
+        if (frameCount > 1)
+          imageType = gMetadataBundle.getFormattedString("animatedImageType",
+                                                         [imageType, frameCount]);
+        else
+          imageType = gMetadataBundle.getFormattedString("imageType", [imageType]);
+      }
+    }
+    setInfo("image-type", imageType);
 
     var imageSize = "";
     if (img.width) {
