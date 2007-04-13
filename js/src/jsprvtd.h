@@ -116,7 +116,6 @@ typedef struct JSRegExpStatics      JSRegExpStatics;
 typedef struct JSScope              JSScope;
 typedef struct JSScopeOps           JSScopeOps;
 typedef struct JSScopeProperty      JSScopeProperty;
-typedef struct JSStackFrame         JSStackFrame;
 typedef struct JSStackHeader        JSStackHeader;
 typedef struct JSStringBuffer       JSStringBuffer;
 typedef struct JSSubString          JSSubString;
