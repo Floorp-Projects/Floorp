@@ -803,6 +803,11 @@ real_checkout:
 		 `egrep -c '^(U|C) mozilla/security/(nss|coreconf)' $(CVSCO_LOGFILE) 2>/dev/null` != 0; then \
 		touch $(TOPSRCDIR)/security/manager/.nss.checkout; \
 	fi
+ifdef RUN_AUTOCONF_LOCALLY
+	cd $(ROOTDIR) && \
+	$(RM) -f mozilla/configure mozilla/nsprpub/configure \
+		mozilla/directory/c-sdk/configure
+endif
 #	@: Check the log for conflicts. ;
 	@conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
 	if test "$$conflicts" ; then \
@@ -812,12 +817,6 @@ real_checkout:
 	  false; \
 	else true; \
 	fi
-ifdef RUN_AUTOCONF_LOCALLY
-	@echo Generating configures using $(AUTOCONF) ; \
-	cd $(TOPSRCDIR) && $(AUTOCONF) && \
-	cd $(TOPSRCDIR)/nsprpub && $(AUTOCONF) && \
-	cd $(TOPSRCDIR)/directory/c-sdk && $(AUTOCONF)
-endif
 
 fast-update:
 #	@: Backup the last checkout log.
@@ -857,6 +856,11 @@ real_fast-update:
 	@if test `egrep -c '^(U|C) mozilla/security/(nss|coreconf)' $(CVSCO_LOGFILE) 2>/dev/null` != 0; then \
 		touch $(TOPSRCDIR)/security/manager/.nss.checkout; \
 	fi
+ifdef RUN_AUTOCONF_LOCALLY
+	cd $(ROOTDIR) && \
+	$(RM) -f mozilla/configure mozilla/nsprpub/configure \
+		mozilla/directory/c-sdk/configure
+endif
 #	@: Check the log for conflicts. ;
 	@conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
 	if test "$$conflicts" ; then \
@@ -866,12 +870,6 @@ real_fast-update:
 	  false; \
 	else true; \
 	fi
-ifdef RUN_AUTOCONF_LOCALLY
-	@echo Generating configures using $(AUTOCONF) ; \
-	cd $(TOPSRCDIR) && $(AUTOCONF) && \
-	cd $(TOPSRCDIR)/nsprpub && $(AUTOCONF) && \
-	cd $(TOPSRCDIR)/directory/c-sdk && $(AUTOCONF)
-endif
 
 CVSCO_LOGFILE_L10N := $(ROOTDIR)/cvsco-l10n.log
 CVSCO_LOGFILE_L10N := $(shell echo $(CVSCO_LOGFILE_L10N) | sed s%//%/%)
@@ -999,6 +997,14 @@ EXTRA_CONFIG_DEPS := \
 $(TOPSRCDIR)/configure: $(TOPSRCDIR)/configure.in $(EXTRA_CONFIG_DEPS)
 	@echo Generating $@ using autoconf
 	cd $(TOPSRCDIR); $(AUTOCONF)
+
+$(TOPSRCDIR)/nsprpub/configure: $(TOPSRCDIR)/nsprpub/configure.in $(EXTRA_CONFIG_DEPS)
+	@echo Generating $@ using autoconf
+	cd $(TOPSRCDIR)/nsprpub; $(AUTOCONF)
+
+$(TOPSRCDIR)/directory/c-sdk/configure: $(TOPSRCDIR)/directory/c-sdk/configure.in $(EXTRA_CONFIG_DEPS)
+	@echo Generating $@ using autoconf
+	cd $(TOPSRCDIR)/directory/c-sdk; $(AUTOCONF)
 endif
 
 CONFIG_STATUS_DEPS := \
@@ -1026,7 +1032,7 @@ ifdef MOZ_TOOLS
   CONFIGURE = $(TOPSRCDIR)/configure
 endif
 
-configure::
+configure:: $(TOPSRCDIR)/configure $(TOPSRCDIR)/nsprpub/configure $(TOPSRCDIR)/directory/c-sdk/configure
 ifdef MOZ_BUILD_PROJECTS
 	@if test ! -d $(MOZ_OBJDIR); then $(MKDIR) $(MOZ_OBJDIR); else true; fi
 endif
