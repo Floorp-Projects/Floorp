@@ -900,8 +900,7 @@ ReconstructTextForRun(gfxTextRun* aTextRun, PRBool aRememberText,
 
   if (aTextRun->GetFlags() & nsTextFrameUtils::TEXT_IS_SIMPLE_FLOW) {
     f = NS_STATIC_CAST(nsTextFrame*, aTextRun->GetUserData());
-    const nsTextFragment* frag = f->GetContent()->GetText();
-    length = frag->GetLength() - f->GetContentOffset();
+    length = f->GetContentLength();
     if (!buffer.AppendElements(length*charSize))
       return;
     bufEnd = TransformTextToBuffer(f, length, buffer.Elements(), charSize, &builder,
@@ -1530,7 +1529,7 @@ BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun)
     nsTextFrame* endFrame = mappedFlow->mEndFrame;
     nsTextFrame* f;
     for (f = startFrame; f != endFrame;
-         f = NS_STATIC_CAST(nsTextFrame*, f->GetNextContinuation())) {
+         f = NS_STATIC_CAST(nsTextFrame*, f->GetNextInFlow())) {
 #ifdef DEBUG
       if (f->GetTextRun()) {
         gfxTextRun* textRun = f->GetTextRun();
