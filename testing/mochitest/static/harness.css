@@ -4,6 +4,12 @@ body   {
   font-family: Verdana, Helvetica, Arial, sans-serif;
   font-size: 11px;
   background-color: #fff;
+  position: fixed; 
+  top: 30px;
+  bottom: 0;
+  right: 0px;
+  left: 0px;
+  overflow:auto;
 }
 
 th, td {
