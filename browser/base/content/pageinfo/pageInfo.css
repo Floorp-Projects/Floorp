@@ -1,0 +1,16 @@
+
+#viewGroup radio {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#viewbutton");
+}
+
+richlistitem[feed] {
+  -moz-binding: url("chrome://browser/content/pageinfo/feeds.xml#feed");
+}
+
+richlistitem[feed]:not([selected="true"]) .feed-subscribe {
+  display: none;
+}
+
+groupbox[closed="true"] > .groupbox-body { 
+  visibility: collapse;
+}
