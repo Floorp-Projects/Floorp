@@ -66,20 +66,26 @@ private:
   void *mEventData;
 };
 
+class nsAccStateChangeEvent: public nsAccEvent,
+                             public nsIAccessibleStateChangeEvent
+{
+public:
+  nsAccStateChangeEvent(nsIAccessible *aAccessible,
+                        PRUint32 aState, PRBool aIsExtraState,
+                        PRBool aIsEnabled);
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_FORWARD_NSIACCESSIBLEEVENT(nsAccEvent::)
+  NS_DECL_NSIACCESSIBLESTATECHANGEEVENT
+
+private:
+  PRUint32 mState;
+  PRBool mIsExtraState;
+  PRBool mIsEnabled;
+};
+
 // XXX todo: We might want to use XPCOM interfaces instead of structs
 //     e.g., nsAccessibleTextChangeEvent: public nsIAccessibleTextChangeEvent
-//           
-
-struct StateChange {
-  PRUint32 state;
-  PRBool   isExtendedState;
-  PRBool   enable;
-  StateChange() {
-    state = 0;
-    isExtendedState = PR_FALSE;
-    enable = PR_FALSE;
-  }
-};
 
 enum AtkProperty {
   PROP_0,           // gobject convention
