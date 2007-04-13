@@ -931,6 +931,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
 
   mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS
                     | JSOPTION_NATIVE_BRANCH_CALLBACK
+                    | JSOPTION_ANONFUNFIX
 #ifdef DEBUG
                     | JSOPTION_STRICT   // lint catching for development
 #endif
