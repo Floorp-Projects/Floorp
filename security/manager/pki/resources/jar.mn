@@ -13,7 +13,9 @@ pippki.jar:
     content/pippki/pref-security.js          (content/pref-security.js)
     content/pippki/pref-ssl.xul              (content/pref-ssl.xul)
     content/pippki/pref-certs.xul            (content/pref-certs.xul)
+#ifndef MOZ_PHOENIX
     content/pippki/PageInfoOverlay.xul       (content/PageInfoOverlay.xul)
+#endif
     content/pippki/newserver.js              (content/newserver.js)
     content/pippki/newserver.xul             (content/newserver.xul)
     content/pippki/downloadcert.js           (content/downloadcert.js)

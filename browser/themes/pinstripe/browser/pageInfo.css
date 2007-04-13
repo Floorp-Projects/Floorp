@@ -19,8 +19,9 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Kevin Gerich (webmail@kmgerich.com)
+ *   Kevin Gerich  <webmail@kmgerich.com>
  *   Daniel Brooks <db48x@yahoo.com>
+ *   Florian QUEZE <f.qu@queze.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,39 +38,210 @@
  * ***** END LICENSE BLOCK ***** */
 
 @import "chrome://global/skin/";
-   
+
+/* View buttons */
+#viewGroup radio {
+  list-style-image: url("chrome://browser/skin/pageInfo.png");
+  -moz-box-orient: vertical;
+  -moz-box-align: center;
+  -moz-appearance: none;
+}
+
+.viewSelector {
+  padding: 0 5px;
+  border-bottom: 1px solid #a3a3a3;
+  background: url("chrome://global/skin/toolbar/toolbar-pinstripe-overlay.png") repeat;
+  margin: 0;
+}
+
+#generalTab {
+  -moz-image-region: rect(0px, 32px, 32px, 0px)
+}
+
+#generalTab:hover, #generalTab[selected="true"] {
+  -moz-image-region: rect(32px, 32px, 64px, 0px)
+}
+
+#mediaTab {
+  -moz-image-region: rect(0px, 64px, 32px, 32px)
+}
+
+#mediaTab:hover, #mediaTab[selected="true"] {
+  -moz-image-region: rect(32px, 64px, 64px, 32px)
+}
+
+#feedTab {
+  -moz-image-region: rect(0px, 96px, 32px, 64px)
+}
+
+#feedTab:hover, #feedTab[selected="true"] {
+  -moz-image-region: rect(32px, 96px, 64px, 64px)
+}
+
+#permTab {
+  -moz-image-region: rect(0px, 128px, 32px, 96px)
+}
+
+#permTab:hover, #permTab[selected="true"] {
+  -moz-image-region: rect(32px, 128px, 64px, 96px)
+}
+
+#securityTab {
+  -moz-image-region: rect(0px, 160px, 32px, 128px)
+}
+
+#securityTab:hover, #securityTab[selected="true"] {
+  -moz-image-region: rect(32px, 160px, 64px, 128px)
+}
+
+deck {
+  padding: 10px 10px 10px 10px;
+}
+
+/* Misc */
 tree {
-	margin: .5em;
+  margin: .5em;
 }
-   
-textbox,
-textbox > .textbox-internal-box,
-textbox > .textarea-internal-box {
-	background: transparent !important;
-	border: none;
-	padding: 0px;
-	-moz-appearance: none;
+
+.gridSeparator {
+  width: .5em;
 }
-  
+
+textbox {
+  background: transparent !important;
+  border: none;
+  padding: 0px;
+  margin-top: 1px;
+  -moz-appearance: none;
+}
+
 textbox.header {
-	margin-left: 0;
+  -moz-margin-start: 0;
 }
 
 .iframe {
-	margin: .5em;
-	background: white;
-	overflow: auto;
-}
-
-
-#thepreviewimage {
-	margin: 1em;
+  margin: .5em;
+  background: white;
+  overflow: auto;
 }
 
 .fixedsize {
-	height: 8.5em;
+  height: 8.5em;
 }
 
 textbox[disabled] {
-	font-style: italic;
+  font-style: italic;
+}
+
+/* General Tab */
+.caption-icon {
+  width: 11px;
+  height: 11px;
+  background-repeat: no-repeat;
+  background-position: center;
+  -moz-margin-end: 2px;
+}
+
+groupbox caption .caption-icon { 
+  background-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}
+
+groupbox[closed="true"] caption .caption-icon { 
+  background-image: url("chrome://global/skin/arrow/arrow-rit.gif");
+}
+
+groupbox tree { 
+  margin: 0;
+  border: none;
+}
+
+#metaTags .groupbox-body { 
+  padding: 0;
+}
+
+#securityBox description { 
+  -moz-margin-start: 10px;
+}
+
+/* Media Tab */
+#imagetree {
+  min-height: 10em;
+}
+
+#thepreviewimage {
+  margin: 1em;
+}
+
+treechildren::-moz-tree-cell-text(broken) {
+  font-style: italic;
+  color: graytext;
+}
+
+/* Feeds Tab */
+#feedtree {
+  margin-bottom: 0px;
+}
+
+#feedListbox richlistitem {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  -moz-padding-start: 7px;
+  -moz-padding-end: 7px;
+  min-height: 25px;
+  border-bottom: 1px dotted #C0C0C0;
+}
+
+#feedListbox richlistitem[selected="true"] {
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+}
+
+#feedListbox {
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+}
+
+.feedTitle { 
+  font-weight: bold;
+}
+
+/* Permissions Tab */
+#permList {
+  margin-top: .5em;
+  overflow: auto;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  background-color: -moz-field;
+}
+
+#permList > vbox {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  -moz-padding-start: 7px;
+  -moz-padding-end: 7px;
+  min-height: 25px;
+  border-bottom: 1px dotted #C0C0C0;
+}
+
+#permList > vbox > label {
+  font-weight: bold;
+}
+
+#permList > vbox:hover {
+  background-color: -moz-dialog;
+}
+
+/* Security Tab */
+#securityTab textbox {
+  -moz-margin-start: 4px;
+}
+
+#securityTab textarea {
+  overflow: hidden;
 }
