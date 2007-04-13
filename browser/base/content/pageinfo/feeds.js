@@ -1,3 +1,4 @@
+# -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -11,16 +12,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is the feed tab for Page Info.
 #
 # The Initial Developer of the Original Code is
-# International Business Machines Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2000
+#   Florian QUEZE <f.qu@queze.net>
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Daniel Brooks <db48x@yahoo.com>
-#   Mike Kowalski <mikejk@ameritech.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,59 +35,44 @@
 #
 # ***** END LICENSE BLOCK *****
 
-pageInfo.page.title=Page Info - %S
-pageInfo.frame.title=Frame Info - %S
+function initFeedTab()
+{
+  const feedTypes = {
+    "application/rss+xml": gBundle.getString("feedRss"),
+    "application/atom+xml": gBundle.getString("feedAtom")
+  };
 
-noPageTitle=Untitled Page:
-pageTitle=%S:
-unknown=Unknown
-default=Default
-notset=Not specified
-emptystring=Empty String
+  // get the feeds
+  var linkNodes = gDocument.getElementsByTagName("link");
+  var length = linkNodes.length;
+  for (var i = 0; i < length; i++) {
+    if (linkNodes[i].rel == "alternate" &&
+        linkNodes[i].type in feedTypes &&
+        linkNodes[i].href) {
+      addRow(linkNodes[i].title,
+             feedTypes[linkNodes[i].type],
+             linkNodes[i].href);
+    }
+  }
 
-generalNotCached=Not cached
-generalNoExpiration=No expiration set
-generalQuirksMode=Quirks mode
-generalStrictMode=Standards compliance mode
-generalNoReferrer=no referrer
+  var feedListbox = document.getElementById("feedListbox");
+  if (feedListbox.getRowCount() > 0)
+    document.getElementById("feedTab").hidden = false;
+}
 
-formTitle=Form %S:
-formUntitled=Unnamed Form:
-formDefaultTarget=None (opens in same window)
-formChecked=Checked
-formUnchecked=Unchecked
-formPassword=********
+function onSubscribeFeed()
+{
+  var listbox = document.getElementById("feedListbox");
+  openUILink(listbox.selectedItem.getAttribute("feedURL"),
+             null, false, true, false, null);
+}
 
-linkAnchor=Anchor
-linkArea=Area
-linkSubmission=Form Submission
-linkSubmit=Submit Query
-linkRel=Related Item
-linkStylesheet=Stylesheet
-linkRev=Reverse Link
-linkX=Simple XLink
-linkQuote=Quote
-linkMod=Modification
-
-mediaImg=Image
-mediaBGImg=Background
-mediaApplet=Applet
-mediaObject=Object
-mediaEmbed=Embed
-mediaLink=Icon
-mediaInput=Input
-mediaFileSize=%S KB
-mediaSize=%Spx \u00D7 %Spx
-mediaSelectFolder=Select a Folder to Save the Images
-mediaBlockImage=Block Images from %S
-
-generalDiskCache=Disk cache
-generalMemoryCache=Memory cache
-generalHTTPCache=HTTP cache
-generalFTPCache=FTP cache
-generalSize=%S KB (%S bytes)
-generalMetaTag=Meta (1 tag)
-generalMetaTags=Meta (%S tags)
-
-feedRss=RSS
-feedAtom=Atom
+function addRow(name, type, url)
+{
+  var item = document.createElement("richlistitem");
+  item.setAttribute("feed", "true");
+  item.setAttribute("name", name);
+  item.setAttribute("type", type);
+  item.setAttribute("feedURL", url);
+  document.getElementById("feedListbox").appendChild(item);
+}
