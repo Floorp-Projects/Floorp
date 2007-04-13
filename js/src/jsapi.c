@@ -4421,6 +4421,34 @@ JS_SetCallReturnValue2(JSContext *cx, jsval v)
 #endif
 }
 
+JS_PUBLIC_API(JSStackFrame *)
+JS_SaveFrameChain(JSContext *cx)
+{
+    JSStackFrame *fp;
+
+    fp = cx->fp;
+    if (!fp)
+        return fp;
+
+    JS_ASSERT(!fp->dormantNext);
+    fp->dormantNext = cx->dormantFrameChain;
+    cx->dormantFrameChain = fp;
+    cx->fp = NULL;
+    return fp;
+}
+
+JS_PUBLIC_API(void)
+JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
+{
+    JS_ASSERT(!cx->fp);
+    if (!fp)
+        return;
+
+    cx->fp = fp;
+    cx->dormantFrameChain = fp->dormantNext;
+    fp->dormantNext = NULL;
+}
+
 /************************************************************************/
 
 JS_PUBLIC_API(JSString *)
