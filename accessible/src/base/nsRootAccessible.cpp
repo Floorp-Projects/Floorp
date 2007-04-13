@@ -464,9 +464,9 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
         return PR_FALSE;
       }
       GetAccService()->GetAccessibleFor(finalFocusNode, getter_AddRefs(finalFocusAccessible));      
-      // XXX Deal with case where finalFocusNode is not in parent chain of original true focus (aNode).
-      // We need direction from ARIA spec -- should we just return because it's not valid?
-      // Or should we put focus on the original container node?
+      // For activedescendant, the ARIA spec does not require that the user agent
+      // checks whether finalFocusNode is actually a descendant of the element with
+      // the activedescendant attribute.
     }
   }
 
