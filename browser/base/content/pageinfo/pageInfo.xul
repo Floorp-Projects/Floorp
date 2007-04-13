@@ -1,0 +1,395 @@
+<?xml version="1.0"?>
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998-1999
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Simeon Morrison <smorrison@gte.com>
+#   Chris McAfee <mcafee@netscape.com>
+#   Daniel Brooks <db48x@yahoo.com>
+#   Gervase Markham <gerv@gerv.net>
+#   Florian QUEZE <f.qu@queze.net>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<?xml-stylesheet href="chrome://browser/content/pageinfo/pageInfo.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/pageInfo.css" type="text/css"?>
+
+<!DOCTYPE window [
+  <!ENTITY % pageInfoDTD SYSTEM "chrome://browser/locale/pageInfo.dtd">
+  %pageInfoDTD;
+]>
+
+#ifdef XP_MACOSX
+<?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
+#endif
+
+<window id="main-window"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  windowtype="Browser:page-info"
+  onload="onLoadPageInfo()"
+  onunload="onUnloadPageInfo()"
+  align="stretch"
+  screenX="10" screenY="10"
+  width="&pageInfoWindow.width;" height="&pageInfoWindow.height;"
+  persist="screenX screenY width height sizemode">
+
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/pageinfo/pageInfo.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/pageinfo/feeds.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/pageinfo/permissions.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/pageinfo/security.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
+
+  <stringbundleset id="pageinfobundleset">
+    <stringbundle id="pageinfobundle" src="chrome://browser/locale/pageInfo.properties"/>
+  </stringbundleset>
+
+  <commandset id="pageInfoCommandSet">
+    <command id="cmd_close"     oncommand="window.close();"/>
+    <command id="cmd_help"      oncommand="doHelpButton();"/>
+    <command id="cmd_copy"      oncommand="doCopy();"/>
+    <command id="cmd_selectall" oncommand="doSelectAll();"/>
+
+    <!-- permissions tab -->
+    <command id="cmd_imageDef"      oncommand="onCheckboxClick('image');"/>
+    <command id="cmd_popupDef"      oncommand="onCheckboxClick('popup');"/>
+    <command id="cmd_cookieDef"     oncommand="onCheckboxClick('cookie');"/>
+    <command id="cmd_installDef"    oncommand="onCheckboxClick('install');"/>
+    <command id="cmd_imageToggle"   oncommand="onRadioClick('image');"/>
+    <command id="cmd_popupToggle"   oncommand="onRadioClick('popup');"/>
+    <command id="cmd_cookieToggle"  oncommand="onRadioClick('cookies');"/>
+    <command id="cmd_installToggle" oncommand="onRadioClick('install');"/>
+  </commandset>
+
+  <keyset>
+    <key key="&closeWindow.key;" modifiers="accel" command="cmd_close"/>
+    <key keycode="VK_ESCAPE"                       command="cmd_close"/>
+#ifdef XP_MACOSX
+    <key key="."                 modifiers="meta"  command="cmd_close"/>
+#endif
+    <key keycode="VK_F1"                           command="cmd_help"/>
+    <key key="&copy.key;"        modifiers="accel" command="cmd_copy"/>
+    <key key="&selectall.key;"   modifiers="accel" command="cmd_selectall"/>
+    <key key="&selectall.key;"   modifiers="alt"   command="cmd_selectall"/>
+  </keyset>
+
+  <menupopup id="picontext">
+    <menuitem label="&selectall.label;" command="cmd_selectall" accesskey="&selectall.accesskey;"/>
+    <menuitem label="&copy.label;"      command="cmd_copy"      accesskey="&copy.accesskey;"/>
+  </menupopup>
+
+  <stack id="topStackBar">
+    <radiogroup id="viewGroup" class="viewSelector chromeclass-toolbar" orient="horizontal">
+      <radio id="generalTab"  label="&generalTab;"  accesskey="&generalTab.accesskey;"
+           oncommand="showTab('general');"/>
+      <radio id="mediaTab"    label="&mediaTab;"    accesskey="&mediaTab.accesskey;"
+           oncommand="showTab('media'); ensureSelection(gImageView)" hidden="true"/>
+      <radio id="feedTab"     label="&feedTab;"     accesskey="&feedTab.accesskey;"
+           oncommand="showTab('feed');" hidden="true"/>
+      <radio id="permTab"     label="&permTab;"     accesskey="&permTab.accesskey;"
+           oncommand="showTab('perm');"/>
+      <radio id="securityTab" label="&securityTab;" accesskey="&securityTab.accesskey;"
+           oncommand="showTab('security');"/>
+      <!-- Others added by overlay -->
+    </radiogroup>
+  </stack>
+
+  <deck id="mainDeck" flex="1">
+    <!-- General page information -->
+    <vbox id="generalPanel">
+      <textbox class="header" readonly="true" id="titletext"/>
+      <grid>
+        <columns>
+          <column/>
+          <column class="gridSeparator"/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row>
+            <label control="urltext" value="&generalURL;"/>
+            <separator/>
+            <textbox readonly="true" id="urltext"/>
+          </row>
+          <row>
+            <separator class="thin"/>
+          </row>
+          <row>
+            <label control="typetext" value="&generalType;"/>
+            <separator/>
+            <textbox readonly="true" id="typetext"/>
+          </row>
+          <row>
+            <label control="encodingtext" value="&generalEncoding;"/>
+            <separator/>
+            <textbox readonly="true" id="encodingtext"/>
+          </row>
+          <row>
+            <label control="sizetext" value="&generalSize;"/>
+            <separator/>
+            <textbox readonly="true" id="sizetext"/>
+          </row>
+          <row>
+            <label control="refertext" value="&generalReferrer;"/>
+            <separator/>
+            <textbox readonly="true" id="refertext"/>
+          </row>
+          <row>
+            <separator class="thin"/>
+          </row>
+          <row>
+            <label control="modifiedtext" value="&generalModified;"/>
+            <separator/>
+            <textbox readonly="true" id="modifiedtext"/>
+          </row>
+        </rows>
+      </grid>
+      <separator class="thin"/>
+      <groupbox id="metaTags" flex="1">
+        <caption id="metaTagsCaption" onclick="toggleGroupbox('metaTags');"/>
+        <tree id="metatree" flex="1" contextmenu="picontext">
+          <treecols>
+            <treecol id="meta-name"    label="&generalMetaName;"
+                     ignoreincolumnpicker="true" persist="width" flex="1"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="meta-content" label="&generalMetaContent;"
+                     ignoreincolumnpicker="true" persist="width" flex="4"/>
+          </treecols>
+          <treechildren flex="1"/>
+        </tree>        
+      </groupbox>
+      <groupbox id="securityBox">
+        <caption label="&securityHeader;" onclick="toggleGroupbox('securityBox');"/>
+        <description id="general-security-identity" class="header"/>
+        <description id="general-security-privacy"  class="header"/>
+        <hbox align="right">
+          <button id="security-view-more" label="&generalSecurityMore;"
+                  accesskey="&generalSecurityMore.accesskey;"
+                  oncommand="onClickMore();"/>
+        </hbox>
+      </groupbox>
+    </vbox>
+
+    <!-- Media information -->
+    <vbox id="mediaPanel">
+      <tree id="imagetree" onselect="onImageSelect();" contextmenu="picontext"
+            ondraggesture="onBeginLinkDrag(event,'image-address','image-alt')">
+        <treecols>
+          <treecol sortSeparators="true" persist="hidden width" flex="10"
+                        width="10" id="image-address" label="&mediaAddress;"/>
+          <splitter class="tree-splitter"/>
+          <treecol sortSeparators="true" persist="hidden width" flex="2"
+                        width="2"  id="image-type"    label="&mediaType;"/>
+          <splitter class="tree-splitter"/>
+          <treecol sortSeparators="true" hidden="true" persist="hidden width" flex="2"
+                        width="2"  id="image-size"    label="&mediaSize;"/>
+          <splitter class="tree-splitter"/>
+          <treecol sortSeparators="true" hidden="true" persist="hidden width" flex="4"
+                        width="4"  id="image-alt"    label="&mediaAltHeader;"/>
+          <splitter class="tree-splitter"/>
+          <treecol sortSeparators="true" hidden="true" persist="hidden width" flex="1"
+                        width="1"  id="image-count"    label="&mediaCount;"/>
+        </treecols>
+        <treechildren flex="1"/>
+      </tree>
+      <splitter orient="vertical" id="mediaSplitter"/>
+      <vbox flex="1" id="mediaPreviewBox" collapsed="true">
+        <grid>
+          <columns>
+            <column/>
+            <column class="gridSeparator"/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <row>
+              <label control="imageurltext" value="&mediaURL;"/>
+              <separator/>
+              <textbox readonly="true" id="imageurltext"/>
+            </row>
+            <row>
+              <label control="imagetitletext" value="&mediaTitle;"/>
+              <separator/>
+              <textbox readonly="true" id="imagetitletext"/>
+            </row>
+            <row>
+              <label control="imagealttext" value="&mediaAlt;"/>
+              <separator/>
+              <textbox readonly="true" id="imagealttext"/>
+            </row>
+            <row>
+              <label control="imagelongdesctext" value="&mediaLongdesc;"/>
+              <separator/>
+              <textbox readonly="true" id="imagelongdesctext"/>
+            </row>
+            <row>
+              <label control="imagetypetext" value="&generalType;"/>
+              <separator/>
+              <textbox readonly="true" id="imagetypetext"/>
+            </row>
+            <row>
+              <label control="imagesourcetext" value="&generalSource;"/>
+              <separator/>
+              <textbox readonly="true" id="imagesourcetext"/>
+            </row>
+            <row>
+              <label control="imagesizetext" value="&generalSize;"/>
+              <separator/>
+              <textbox readonly="true" id="imagesizetext"/>
+            </row>
+            <row>
+              <label control="imageSize" value="&mediaDimensions;"/>
+              <separator/>
+              <textbox readonly="true" id="imageSize"/>
+            </row>
+            <row>
+              <label control="physSize" value="&mediaPhysDimensions;"/>
+              <separator/>
+              <textbox readonly="true" id="physSize"/>
+            </row>
+          </rows>
+        </grid>
+        <hbox align="end">
+          <vbox>
+            <checkbox id="blockImage" hidden="true" oncommand="onBlockImage()"/>
+            <label control="thepreviewimage" value="&mediaPreview;" class="header"/>
+          </vbox>
+          <spacer flex="1"/>
+          <button label="&mediaSaveAs;" accesskey="&mediaSaveAs.accesskey;"
+                  icon="save" id="imagesaveasbutton"
+                  oncommand="saveMedia();"/>
+        </hbox>
+        <vbox class="inset iframe" flex="1" pack="center">
+          <hbox id="theimagecontainer" pack="center">
+            <image id="thepreviewimage"/>
+          </hbox>
+          <hbox id="brokenimagecontainer" pack="center" collapsed="true">
+            <image id="brokenimage" src="resource:///res/broken-image.gif"/>
+          </hbox>
+        </vbox>
+      </vbox>
+      <hbox id="mediaSaveBox" collapsed="true">
+        <spacer flex="1"/>
+        <button label="&mediaSaveAs;" accesskey="&mediaSaveAs.accesskey;"
+                icon="save" oncommand="saveMedia();"/>
+      </hbox>
+    </vbox>
+
+    <!-- Feeds -->
+    <vbox id="feedPanel">
+      <richlistbox id="feedListbox" flex="1"/>
+    </vbox>
+
+    <!-- Permissions -->
+    <vbox id="permPanel">
+      <hbox>
+        <label value="&permissionsFor;" control="hosttext" />
+        <textbox id="hostText" class="header" readonly="true"
+                 crop="end" flex="1"/>
+      </hbox>
+
+      <vbox id="permList" flex="1">
+        <vbox>
+          <label value="&permImage;"/>
+          <hbox>
+            <checkbox id="imageDef" command="cmd_imageDef" label="&permUseDefault;"/>
+            <spacer flex="1"/>
+            <radiogroup id="imageRadioGroup" orient="horizontal">
+              <radio id="image#1" command="cmd_imageToggle" label="&permAllow;"/>
+              <radio id="image#2" command="cmd_imageToggle" label="&permBlock;"/>
+            </radiogroup>
+          </hbox>
+        </vbox>
+        <vbox>
+          <label value="&permPopup;"/>
+          <hbox>
+            <checkbox id="popupDef" command="cmd_popupDef" label="&permUseDefault;"/>
+            <spacer flex="1"/>
+            <radiogroup id="popupRadioGroup" orient="horizontal">
+              <radio id="popup#1" command="cmd_popupToggle" label="&permAllow;"/>
+              <radio id="popup#2" command="cmd_popupToggle" label="&permBlock;"/>
+            </radiogroup>
+          </hbox>
+        </vbox>
+        <vbox>
+          <label value="&permCookie;"/>
+          <hbox>
+            <checkbox id="cookieDef" command="cmd_cookieDef" label="&permUseDefault;"/>
+            <spacer flex="1"/>
+            <radiogroup id="cookieRadioGroup" orient="horizontal">
+              <radio id="cookie#1" command="cmd_cookieToggle" label="&permAllow;"/>
+              <radio id="cookie#8" command="cmd_cookieToggle" label="&permAllowSession;"/>
+              <radio id="cookie#2" command="cmd_cookieToggle" label="&permBlock;"/>
+            </radiogroup>
+          </hbox>
+        </vbox>
+        <vbox>
+          <label value="&permInstall;"/>
+          <hbox>
+            <checkbox id="installDef" command="cmd_installDef" label="&permUseDefault;"/>
+            <spacer flex="1"/>
+            <radiogroup id="installRadioGroup" orient="horizontal">
+              <radio id="install#1" command="cmd_installToggle" label="&permAllow;"/>
+              <radio id="install#2" command="cmd_installToggle" label="&permBlock;"/>
+            </radiogroup>
+          </hbox>
+        </vbox>
+      </vbox>
+    </vbox>
+
+    <vbox id="securityPanel">
+      <textbox id="security-identity" readonly="true" class="header"/>
+      <description id="security-identity-text" control="security-identity" flex="1"/>
+      <hbox align="center">
+        <button id="security-view-cert" label="&securityView.label;"
+                accesskey="&securityView.accesskey;"
+                oncommand="security.viewCert();"/>
+        <description id="security-view-text" control="security-view-cert" flex="1"/>
+      </hbox>
+      <separator class="groove"/>
+      <description id="security-privacy" class="header"/>
+      <textbox id="security-privacy" readonly="true" multiline="true" class="header"/>
+      <vbox flex="1">
+        <description id="security-privacy-msg1" control="security-privacy"/>
+        <description id="security-privacy-msg2" control="security-privacy"/>
+      </vbox>
+    </vbox>
+    <!-- Others added by overlay -->
+  </deck>
+
+#ifdef XP_MACOSX
+#include ../browserMountPoints.inc
+#endif
+
+</window>

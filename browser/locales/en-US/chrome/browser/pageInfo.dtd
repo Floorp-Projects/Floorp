@@ -19,6 +19,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s): Daniel Brooks <db48x@yahoo.com>
+#                 Florian QUEZE <f.qu@queze.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,9 +58,10 @@
 <!ENTITY  generalModified       "Modified:">
 <!ENTITY  generalExpires        "Expires:">
 <!ENTITY  generalEncoding       "Encoding:">
-<!ENTITY  generalMeta           "Meta:">
 <!ENTITY  generalMetaName       "Name">
 <!ENTITY  generalMetaContent    "Content">
+<!ENTITY  generalSecurityMore   "More">
+<!ENTITY  generalSecurityMore.accesskey "M">
 
 <!ENTITY  formsTab              "Forms">
 <!ENTITY  formsTab.accesskey    "F">
@@ -89,6 +91,7 @@
 <!ENTITY  mediaAltHeader        "Alternate Text">
 <!ENTITY  mediaAddress          "Address">
 <!ENTITY  mediaType             "Type">
+<!ENTITY  mediaSize             "Size">
 <!ENTITY  mediaCount            "Count">
 <!ENTITY  mediaDimensions       "Specified Dimensions:">
 <!ENTITY  mediaPhysDimensions   "Actual Dimensions:">
@@ -97,3 +100,25 @@
 <!ENTITY  mediaSaveAs           "Save As...">
 <!ENTITY  mediaSaveAs.accesskey "A">
 <!ENTITY  mediaPreview          "Media Preview:">
+
+<!ENTITY  feedTab               "Feeds">
+<!ENTITY  feedTab.accesskey     "F">
+<!ENTITY  feedSubscribe         "Subscribe">
+
+<!ENTITY  permTab               "Permissions">
+<!ENTITY  permTab.accesskey     "P">
+<!ENTITY  permUseDefault        "Use Default">
+<!ENTITY  permAllow             "Allow">
+<!ENTITY  permAllowSession      "Allow for Session">
+<!ENTITY  permBlock             "Block">
+<!ENTITY  permissionsFor        "Permissions for:">
+<!ENTITY  permImage             "Load Images">
+<!ENTITY  permPopup             "Open Popup Windows">
+<!ENTITY  permCookie            "Set Cookies">
+<!ENTITY  permInstall           "Install Extensions or Themes">
+
+<!ENTITY  securityTab           "Security">
+<!ENTITY  securityTab.accesskey "S">
+<!ENTITY  securityHeader        "Security information for this page">
+<!ENTITY  securityView.label    "View">
+<!ENTITY  securityView.accesskey "V">

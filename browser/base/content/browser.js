@@ -2218,8 +2218,8 @@ function BrowserPageInfo(doc, initialTab)
   var args = {doc: doc, initialTab: initialTab};
   toOpenDialogByTypeAndUrl("Browser:page-info",
                            doc ? doc.location : window.content.document.location,
-                           "chrome://browser/content/pageInfo.xul",
-                           "chrome,dialog=no",
+                           "chrome://browser/content/pageinfo/pageInfo.xul",
+                           "chrome,toolbar,dialog=no,resizable",
                            args);
 }
 
@@ -4221,7 +4221,7 @@ function onViewToolbarCommand(aEvent)
 
 function displaySecurityInfo()
 {
-  BrowserPageInfo(null, "securityTab");
+  BrowserPageInfo(null, "security");
 }
 
 /**
