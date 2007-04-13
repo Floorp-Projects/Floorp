@@ -169,6 +169,8 @@ class Preprocessor:
       self.context[vals[0]] = vals[1]
     def handleU(option, opt, value, parser):
       del self.context[value]
+    def handleF(option, opt, value, parser):
+      self.do_filter(value)
     def handleLE(option, opt, value, parser):
       self.setLineEndings(value)
     def handleMarker(option, opt, value, parser):
@@ -182,6 +184,8 @@ class Preprocessor:
                  metavar="VAR[=VAL]", help='Define a variable')
     p.add_option('-U', action='callback', callback=handleU, type="string",
                  metavar="VAR", help='Undefine a variable')
+    p.add_option('-F', action='callback', callback=handleF, type="string",
+                 metavar="FILTER", help='Enabble the specified filter')
     p.add_option('--line-endings', action='callback', callback=handleLE,
                  type="string", metavar="[cr|lr|crlf]",
                  help='Use the specified line endings [Default: OS dependent]')
