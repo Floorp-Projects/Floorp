@@ -228,6 +228,9 @@ nsDocAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   if (!editor) {
     *aState |= nsIAccessibleStates::STATE_READONLY;
   }
+  else if (aExtraState) {
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_EDITABLE;
+  }
 
   return NS_OK;
 }
