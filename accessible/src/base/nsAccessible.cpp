@@ -94,6 +94,7 @@
 #include "nsIDOMTreeWalker.h"
 #include "nsIDOMDocumentTraversal.h"
 #include "nsIDOMNodeFilter.h"
+#include "nsIObserverService.h"
 
 #ifdef NS_DEBUG
 #include "nsIFrameDebug.h"
@@ -1968,15 +1969,24 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
 
 NS_IMETHODIMP nsAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTarget, void * aData)
 {
-  if (!mWeakShell)
-    return NS_ERROR_FAILURE; // Don't fire event for accessible that has been shut down
-  nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
-  nsCOMPtr<nsPIAccessible> eventHandlingAccessible(do_QueryInterface(docAccessible));
-  if (eventHandlingAccessible) {
-    return eventHandlingAccessible->FireToolkitEvent(aEvent, aTarget, aData);
-  }
+  // Don't fire event for accessible that has been shut down.
+  NS_ENSURE_TRUE(mWeakShell, NS_ERROR_FAILURE);
 
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIAccessibleEvent> accEvent =
+    new nsAccEvent(aEvent, aTarget, aData);
+  NS_ENSURE_TRUE(accEvent, NS_ERROR_OUT_OF_MEMORY);
+
+  return FireAccessibleEvent(accEvent);
+}
+
+NS_IMETHODIMP
+nsAccessible::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
+{
+  nsCOMPtr<nsIObserverService> obsService =
+    do_GetService("@mozilla.org/observer-service;1");
+  NS_ENSURE_TRUE(obsService, NS_ERROR_FAILURE);
+
+  return obsService->NotifyObservers(aEvent, NS_ACCESSIBLE_EVENT_TOPIC, nsnull);
 }
 
 nsRoleMapEntry nsAccessible::gWAIRoleMap[] = 
