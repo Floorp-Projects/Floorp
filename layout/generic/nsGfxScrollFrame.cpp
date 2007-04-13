@@ -1514,12 +1514,6 @@ nsresult
 nsGfxScrollFrameInner::FireScrollPortEvent()
 {
   mAsyncScrollPortEvent.Forget();
-  mOuter->PresContext()->GetPresShell()->
-    FlushPendingNotifications(Flush_OnlyReflow);
-  if (mAsyncScrollPortEvent.IsPending()) {
-    return NS_OK;
-  }
-
   nsSize scrollportSize = GetScrollPortSize();
   nsSize childSize = GetScrolledRect(scrollportSize).Size();
 
@@ -1892,6 +1886,10 @@ nsGfxScrollFrameInner::PostScrollEvent()
 NS_IMETHODIMP
 nsGfxScrollFrameInner::AsyncScrollPortEvent::Run()
 {
+  if (mInner) {
+    mInner->mOuter->PresContext()->GetPresShell()->
+      FlushPendingNotifications(Flush_OnlyReflow);
+  }
   return mInner ? mInner->FireScrollPortEvent() : NS_OK;
 }
 
