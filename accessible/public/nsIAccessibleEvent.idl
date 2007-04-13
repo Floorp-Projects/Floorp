@@ -500,3 +500,24 @@ interface nsIAccessibleEvent : nsISupports
   readonly attribute nsIDOMNode DOMNode;
 };
 
+
+[scriptable, uuid(444db51a-05fd-4576-8a64-32dbb2a83884)]
+interface nsIAccessibleStateChangeEvent : nsIAccessibleEvent
+{
+  /**
+   * Returns the state of accessible (see constants declared
+   * in nsIAccessibleStates).
+   */
+  readonly attribute unsigned long state;
+
+  /**
+   * Returns true if the state is extra state.
+   */
+  boolean isExtraState();
+
+  /**
+   * Returns true if the state is turned on.
+   */
+  boolean isEnabled();
+};
+

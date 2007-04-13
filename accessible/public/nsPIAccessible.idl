@@ -39,6 +39,7 @@
 #include "nsISupports.idl"
 
 interface nsIAccessible;
+interface nsIAccessibleEvent;
 
 [uuid(e4865da3-f292-4f1a-9c56-dd307f1bdc17)]
 interface nsPIAccessible : nsISupports
@@ -74,9 +75,16 @@ interface nsPIAccessible : nsISupports
    * @param aEvent - DOM event
    * @param aTarget - target of DOM event
    * @param aData - additional information for accessible event.
+   *
+   * XXX: eventually this method will be removed (see bug 377022)
    */
   void fireToolkitEvent(in unsigned long aEvent, in nsIAccessible aTarget,
                         in voidPtr aData);
+
+  /**
+   * Fire accessible event.
+   */
+  void fireAccessibleEvent(in nsIAccessibleEvent aAccEvent);
 
   /**
    * Return true if there are accessible children in anonymous content

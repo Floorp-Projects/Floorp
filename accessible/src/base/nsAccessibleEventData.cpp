@@ -114,3 +114,38 @@ nsAccEvent::GetAccessibleDocument(nsIAccessibleDocument **aDocAccessible)
   return NS_OK;
 }
 
+
+// nsAccStateChangeEvent
+NS_IMPL_ISUPPORTS_INHERITED1(nsAccStateChangeEvent, nsAccEvent,
+                             nsIAccessibleStateChangeEvent)
+
+nsAccStateChangeEvent::
+  nsAccStateChangeEvent(nsIAccessible *aAccessible,
+                        PRUint32 aState, PRBool aIsExtraState,
+                        PRBool aIsEnabled):
+  nsAccEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, aAccessible, nsnull),
+  mState(aState), mIsExtraState(aIsExtraState), mIsEnabled(aIsEnabled)
+{
+}
+
+NS_IMETHODIMP
+nsAccStateChangeEvent::GetState(PRUint32 *aState)
+{
+  *aState = mState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccStateChangeEvent::IsExtraState(PRBool *aIsExtraState)
+{
+  *aIsExtraState = mIsExtraState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccStateChangeEvent::IsEnabled(PRBool *aIsEnabled)
+{
+  *aIsEnabled = mIsEnabled;
+  return NS_OK;
+}
+

@@ -60,7 +60,6 @@
 #include "nsHTMLSelectAccessible.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsINameSpaceManager.h"
-#include "nsIObserverService.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsIScrollableView.h"
@@ -399,14 +398,14 @@ void nsDocAccessible::CheckForEditor()
   editingSession->GetEditorForWindow(mDocument->GetWindow(),
                                      getter_AddRefs(editor));
   SetEditor(editor);
-  if (editor) {
-    // State editable is now set, readonly is now clear
-    StateChange stateData;
-    stateData.enable = PR_TRUE;
-    stateData.isExtendedState = PR_TRUE;
-    stateData.state = nsIAccessibleStates::EXT_STATE_EDITABLE;
-    FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, &stateData);
-  }
+  if (!editor)
+    return;
+
+  // State editable is now set, readonly is now clear
+  nsCOMPtr<nsIAccessibleStateChangeEvent> event =
+    new nsAccStateChangeEvent(this, nsIAccessibleStates::EXT_STATE_EDITABLE,
+                              PR_TRUE, PR_TRUE);
+  FireAccessibleEvent(event);
 }
 
 NS_IMETHODIMP nsDocAccessible::GetCachedAccessNode(void *aUniqueID, nsIAccessNode **aAccessNode)
@@ -754,10 +753,10 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
                                           nsITimer::TYPE_ONE_SHOT);
     }
     // Finished loading: fire EVENT_STATE_CHANGE to clear STATE_BUSY
-    StateChange stateData;
-    stateData.state = nsIAccessibleStates::STATE_BUSY;
-    stateData.enable = PR_FALSE;
-    FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, &stateData);
+    nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
+      new nsAccStateChangeEvent(this, nsIAccessibleStates::STATE_BUSY,
+                                PR_FALSE, PR_FALSE);
+    FireAccessibleEvent(accEvent);
   } else {
     nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShellTreeItemFor(mDOMNode);
     if (!treeItem) {
@@ -771,10 +770,10 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
     }
 
     // Loading document: fire EVENT_STATE_CHANGE to set STATE_BUSY
-    StateChange stateData;
-    stateData.state = nsIAccessibleStates::STATE_BUSY;
-    stateData.enable = PR_TRUE;
-    FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, &stateData);
+    nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
+      new nsAccStateChangeEvent(this, nsIAccessibleStates::STATE_BUSY,
+                                PR_FALSE, PR_TRUE);
+    FireAccessibleEvent(accEvent);
   }
 
   FireToolkitEvent(aEventType, this, nsnull);
@@ -1421,21 +1420,6 @@ nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
   } while (!*aAccessible);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData)
-{
-  nsCOMPtr<nsIObserverService> obsService =
-    do_GetService("@mozilla.org/observer-service;1");
-  if (!obsService) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIAccessibleEvent> accEvent = new nsAccEvent(aEvent, aAccessible,
-                                                         aData);
-  NS_ENSURE_TRUE(accEvent, NS_ERROR_OUT_OF_MEMORY);
-
-  return obsService->NotifyObservers(accEvent, NS_ACCESSIBLE_EVENT_TOPIC, nsnull);
 }
 
 void nsDocAccessible::DocLoadCallback(nsITimer *aTimer, void *aClosure)
