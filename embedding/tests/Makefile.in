@@ -47,17 +47,6 @@ DIRS = winEmbed
 endif
 endif
 
-# disable mfcembed in static builds
-ifndef BUILD_STATIC_LIBS
-ifndef GNU_CC
-ifndef NO_MFC
-ifndef MOZ_NO_XPCOM_OBSOLETE
-DIRS += mfcembed/components mfcembed
-endif
-endif
-endif
-endif
-
 endif
 
 include $(topsrcdir)/config/rules.mk
