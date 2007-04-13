@@ -1848,6 +1848,25 @@ JS_IsAssigning(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_SetCallReturnValue2(JSContext *cx, jsval v);
 
+/*
+ * Saving and restoring frame chains.
+ *
+ * These two functions are used to set aside cx->fp while that frame is
+ * inactive. After a call to JS_SaveFrameChain, it looks as if there is no
+ * code running on cx. Before calling JS_RestoreFrameChain, cx's call stack
+ * must be balanced and all nested calls to JS_SaveFrameChain must have had
+ * matching JS_RestoreFrameChain calls.
+ *
+ * JS_SaveFrameChain deals with cx not having any code running on it. A null
+ * return does not signify an error and JS_RestoreFrameChain handles null
+ * frames.
+ */
+extern JS_PUBLIC_API(JSStackFrame *)
+JS_SaveFrameChain(JSContext *cx);
+
+extern JS_PUBLIC_API(void)
+JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp);
+
 /************************************************************************/
 
 /*
