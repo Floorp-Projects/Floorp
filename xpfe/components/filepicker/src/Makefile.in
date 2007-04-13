@@ -77,5 +77,5 @@ include $(topsrcdir)/config/rules.mk
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
 nsFilePicker.js: nsFilePicker.js.in
-	$(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $^ > $@
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > $@
 
