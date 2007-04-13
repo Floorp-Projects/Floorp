@@ -42,9 +42,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifndef MOZ_ENABLE_LIBXUL
 PROGRAM = TestCrashReporterAPI$(BIN_SUFFIX)
 
 CPPSRCS = TestCrashReporterAPI.cpp
+endif
 
 REQUIRES = \
 	xpcom \
@@ -73,5 +75,7 @@ endif
 
 OS_LIBS += $(call EXPAND_LIBNAME,ole32)
 
+ifndef MOZ_ENABLE_LIBXUL
 check:: $(PROGRAM)
 	$(RUN_TEST_PROGRAM) $(DIST)/bin/TestCrashReporterAPI
+endif
