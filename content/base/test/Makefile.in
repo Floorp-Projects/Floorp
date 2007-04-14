@@ -69,7 +69,11 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug357450_svg.xhtml \
 		test_bug357509.html \
 		test_bug358660.html \
+		test_bug362391.xhtml \
+		test_bug364092.xhtml \
+		test_bug364413.xhtml \
 		test_bug366946.html \
+		test_bug367164.html \
 		test_bug371576-1.html \
 		test_bug371576-2.html \
 		test_bug371576-3.html \
