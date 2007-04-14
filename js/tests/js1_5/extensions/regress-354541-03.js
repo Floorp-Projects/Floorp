@@ -61,8 +61,6 @@ var actualStringPrototypeInvariant;
 if (typeof Script == 'undefined')
 {
   print('Test skipped. Script not defined.');
-  var actualStringInvariant = true;
-  var actualStringPrototypeInvariant = true;
 }
 else
 {
@@ -75,12 +73,12 @@ else
   {
     actual = ex + '';
   }
+  reportCompare(expect, actual, 'trim() returned');
+  reportCompare(expectStringInvariant, actualStringInvariant, 
+                'String invariant');
+  reportCompare(expectStringPrototypeInvariant, 
+                actualStringPrototypeInvariant,
+                'String.prototype invariant');
+
 }
   
-reportCompare(expect, actual, 'trim() returned');
-reportCompare(expectStringInvariant, actualStringInvariant, 
-              'String invariant');
-reportCompare(expectStringPrototypeInvariant, 
-              actualStringPrototypeInvariant,
-              'String.prototype invariant');
-
