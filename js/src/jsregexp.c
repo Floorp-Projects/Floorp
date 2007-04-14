@@ -2869,6 +2869,8 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 JS_ASSERT(parenIndex < gData->regexp->parenCount);
                 cap = &x->parens[parenIndex];
                 cap->length = x->cp - (gData->cpbegin + cap->index);
+                JS_ASSERT(x->cp >= (gData->cpbegin + cap->index));
+                JS_ASSERT(cap->length <= (gData->cpend - gData->cpbegin));
                 op = (REOp) *pc++;
 
                 if (!result)
@@ -3002,6 +3004,9 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
               case REOP_ENDCHILD: /* marks the end of a quantifier child */
                 pc = curState[-1].continue_pc;
                 op = curState[-1].continue_op;
+
+                if (!result)
+                    result = x;
                 continue;
 
               case REOP_REPEAT:
