@@ -343,7 +343,8 @@ function onLoadPageInfo()
   var radioGroup = document.getElementById("viewGroup");
   initialTab = document.getElementById(initialTab + "Tab") || document.getElementById("generalTab");
   radioGroup.selectedItem = initialTab;
-  initialTab.focus();
+  radioGroup.selectedItem.doCommand();
+  radioGroup.focus();
 }
 
 function onUnloadPageInfo()
