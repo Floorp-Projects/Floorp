@@ -670,8 +670,11 @@ MOZ_MODULE_LIST_NS := $(sort $(MOZ_MODULE_LIST_NS))
 ####################################
 # Suppress standalone modules if they're not needed.
 #
+CONFIGURES := $(TOPSRCDIR)/configure
 ifeq (,$(filter mozilla/xpcom,$(MOZ_MODULE_LIST)))
   CVSCO_NSPR :=
+else
+  CONFIGURES += $(TOPSRCDIR)/nsprpub/configure
 endif
 
 ifeq (,$(filter mozilla/security/manager,$(MOZ_MODULE_LIST)))
@@ -679,6 +682,8 @@ ifeq (,$(filter mozilla/security/manager,$(MOZ_MODULE_LIST)))
 endif
 ifeq (,$(filter mozilla/directory/xpcom,$(MOZ_MODULE_LIST)))
   CVSCO_LDAPCSDK :=
+else
+  CONFIGURES += $(TOPSRCDIR)/directory/c-sdk/configure
 endif
 
 MODULES_CO_FLAGS := -P
@@ -776,8 +781,7 @@ checkout::
 ifdef RUN_AUTOCONF_LOCALLY
 	@echo "Removing local configures" ; \
 	cd $(ROOTDIR) && \
-	$(RM) -f mozilla/configure mozilla/nsprpub/configure \
-		mozilla/directory/c-sdk/configure
+	$(RM) -f $(CONFIGURES)
 endif
 	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE)
 	@echo '$(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/client.mk $(MOZCONFIG_MODULES)'; \
@@ -805,8 +809,7 @@ real_checkout:
 	fi
 ifdef RUN_AUTOCONF_LOCALLY
 	cd $(ROOTDIR) && \
-	$(RM) -f mozilla/configure mozilla/nsprpub/configure \
-		mozilla/directory/c-sdk/configure
+	$(RM) -f $(CONFIGURES)
 endif
 #	@: Check the log for conflicts. ;
 	@conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
@@ -827,8 +830,7 @@ fast-update:
 ifdef RUN_AUTOCONF_LOCALLY
 	@echo "Removing local configures" ; \
 	cd $(ROOTDIR) && \
-	$(RM) -f mozilla/configure mozilla/nsprpub/configure \
-		mozilla/directory/c-sdk/configure
+	$(RM) -f $(CONFIGURES)
 endif
 	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE)
 	@echo '$(CVSCO) mozilla/client.mk $(MOZCONFIG_MODULES)'; \
@@ -858,8 +860,7 @@ real_fast-update:
 	fi
 ifdef RUN_AUTOCONF_LOCALLY
 	cd $(ROOTDIR) && \
-	$(RM) -f mozilla/configure mozilla/nsprpub/configure \
-		mozilla/directory/c-sdk/configure
+	$(RM) -f $(CONFIGURES)
 endif
 #	@: Check the log for conflicts. ;
 	@conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
@@ -1032,7 +1033,7 @@ ifdef MOZ_TOOLS
   CONFIGURE = $(TOPSRCDIR)/configure
 endif
 
-configure:: $(TOPSRCDIR)/configure $(TOPSRCDIR)/nsprpub/configure $(TOPSRCDIR)/directory/c-sdk/configure
+configure:: $(CONFIGURES)
 ifdef MOZ_BUILD_PROJECTS
 	@if test ! -d $(MOZ_OBJDIR); then $(MKDIR) $(MOZ_OBJDIR); else true; fi
 endif
