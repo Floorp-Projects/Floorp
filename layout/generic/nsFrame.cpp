@@ -4675,7 +4675,8 @@ nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct *aPos)
   if (aPos->mDirection == eDirPrevious) {
     while (!reachedBlockAncestor) {
       nsIFrame* parent = frame->GetParent();
-      if (!parent) { // Treat the root frame as if it were a block frame.
+      // Treat a frame associated with the root content as if it were a block frame.
+      if (!frame->mContent || !frame->mContent->GetParent()) {
         reachedBlockAncestor = PR_TRUE;
         break;
       }
@@ -4700,7 +4701,8 @@ nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct *aPos)
   } else { // eDirNext
     while (!reachedBlockAncestor) {
       nsIFrame* parent = frame->GetParent();
-      if (!parent) { // Treat the root frame as if it were a block frame.
+      // Treat a frame associated with the root content as if it were a block frame.
+      if (!frame->mContent || !frame->mContent->GetParent()) {
         reachedBlockAncestor = PR_TRUE;
         break;
       }
