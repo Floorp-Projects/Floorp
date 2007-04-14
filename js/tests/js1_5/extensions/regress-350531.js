@@ -145,7 +145,7 @@ next_subset:
     gc();
 
     for each (var set in sets) {
-      print('for each set in sets: ' + (uneval(set)) );
+      //print('for each set in sets: ' + (uneval(set)) );
       var src = "(function () {";
       for (j in set) {
         var op = set[j], op2 = set[j-1];
