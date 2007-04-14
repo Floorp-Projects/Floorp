@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=359754
+-->
+<window title="Mozilla Bug 359754"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+
+<body  xmlns="http://www.w3.org/1999/xhtml">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=359754">Mozilla Bug 359754</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+</body>
+
+<description>
+  Displays a numberbox which ranges from 5 to 10.
+</description>
+
+<textbox id="foo" type="number" min="5" max="10"/>
+
+
+<script class="testbody" type="application/javascript">
+
+function hitIt() {
+  sendKey("up", "foo");
+}
+
+SimpleTest.waitForExplicitFinish();
+
+/** Test for Bug 359754 **/
+setTimeout('document.getElementById("foo").focus()', 0);
+addLoadEvent(function() {
+
+// pay attention to our key events
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+hitIt();
+is($("foo").value, "6", "value is now 6");
+
+hitIt();
+is($("foo").value, "7", "value is now 7");
+
+hitIt();
+is($("foo").value, "8", "value is now 8");
+
+hitIt();
+is($("foo").value, "9", "value is now 9");
+
+// now try to hit it past max
+hitIt();
+is($("foo").value, "10", "value is now 10");
+
+hitIt();
+is($("foo").value, "10", "value is now 10");
+
+hitIt();
+is($("foo").value, "10", "value is now 10");
+
+});
+
+addLoadEvent(SimpleTest.finish);
+</script>
+
+</window>

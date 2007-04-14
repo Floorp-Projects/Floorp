@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:foobar="http://www.foobar.com">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=364413
+-->
+<head>
+  <title>Test for Bug 364413</title>
+  <!-- XHTML needs explicit script elements -->
+  <script type="text/javascript" src="/MochiKit/Base.js"></script>
+  <script type="text/javascript" src="/MochiKit/Iter.js"></script>
+  <script type="text/javascript" src="/MochiKit/DOM.js"></script>
+  <script type="text/javascript" src="/MochiKit/Style.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=364413">Mozilla Bug 364413</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<div id="test1" foobar:foo="foo"/>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 364413 **/
+
+  var test1 = document.getElementById("test1");
+  var attrNode = test1.getAttributeNodeNS("http://www.foobar.com", "foo");
+  function mutationHandler(aEvent) {
+    ok(attrNode.isSameNode(aEvent.relatedNode));
+    ok(aEvent.target == attrNode.ownerElement);
+  }
+
+  function runTest() {
+    test1.removeAttributeNode(attrNode);
+    test1.addEventListener("DOMAttrModified", mutationHandler, true);
+    test1.setAttributeNodeNS(attrNode);
+    test1.removeEventListener("DOMAttrModified", mutationHandler, true);
+  }
+
+   runTest();
+</script>
+</pre>
+
+</body>
+</html>
+

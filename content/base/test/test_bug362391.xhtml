@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:foobar="http://www.foobar.com">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=362391
+-->
+<head>
+  <title>Test for Bug 362391</title>
+  <!-- XHTML needs explicit script elements -->
+  <script type="text/javascript" src="/MochiKit/Base.js"></script>
+  <script type="text/javascript" src="/MochiKit/Iter.js"></script>
+  <script type="text/javascript" src="/MochiKit/DOM.js"></script>
+  <script type="text/javascript" src="/MochiKit/Style.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=362391">Mozilla Bug 362391</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<div id="test1"/>
+<div id="test2"/>
+<div id="test3" attr="null"/>
+<div id="test4" foobar:attr="http://www.foobar.com"/>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 362391 **/
+
+      var currentTest = 0;
+      var expected = "";
+      function listener(evt) {
+        var r = document.getElementById("result");
+        ++currentTest;
+        ok(((evt.relatedNode.namespaceURI + "") == expected),
+           evt.relatedNode.namespaceURI + " == "+ expected);
+      }
+
+      document.addEventListener("DOMAttrModified", listener, true);
+
+      function test() {
+        expected = "null";
+        document.getElementById("test1")
+          .setAttribute("attr", "null");
+
+        expected = "http://www.foobar.com";
+        document.getElementById("test2")
+          .setAttributeNS("http://www.foobar.com", "attr", "http://www.foobar.com");
+
+        expected = "http://www.foobar.com";
+        document.getElementById("test3")
+          .setAttributeNS("http://www.foobar.com", "attr", "http://www.foobar.com");
+
+        expected = "null";
+        document.getElementById("test4")
+          .setAttribute("attr", "null");
+
+        expected = "http://www.foobar.com";
+        document.getElementById("test3")
+          .removeAttributeNS("http://www.foobar.com", "attr");
+
+        expected = "null";
+        document.getElementById("test4")
+          .removeAttribute("attr");
+      }
+
+      test();
+</script>
+</pre>
+
+</body>
+</html>
+
