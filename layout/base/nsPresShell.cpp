@@ -1211,6 +1211,8 @@ protected:
   ReflowCountMgr * mReflowCountMgr;
 #endif
 
+  nsresult CompleteMoveInner(PRBool aForward, PRBool aExtend, PRBool sScrollIntoView);
+  
 private:
 
   PRBool InZombieDocument(nsIContent *aContent);
@@ -3038,6 +3040,12 @@ PresShell::CompleteScroll(PRBool aForward)
 NS_IMETHODIMP
 PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
 {
+  return CompleteMoveInner(aForward, aExtend, PR_TRUE);
+}
+
+nsresult
+PresShell::CompleteMoveInner(PRBool aForward, PRBool aExtend, PRBool aScrollIntoView)
+{
   nsIScrollableView *scrollableView;
   if (!mViewManager) 
     return NS_ERROR_UNEXPECTED;
@@ -3071,7 +3079,14 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
   nsPeekOffsetStruct pos = frame->GetExtremeCaretPosition(!aForward);
 
   mSelection->HandleClick(pos.mResultContent ,pos.mContentOffset ,pos.mContentOffset/*End*/ ,aExtend, PR_FALSE, aForward);
-  return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
+
+  if (aScrollIntoView) {
+    result = ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, 
+                                     nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
+    if (NS_FAILED(result)) 
+      return result;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -4401,6 +4416,18 @@ PresShell::UnsuppressAndInvalidate()
 
   if (mViewManager)
     mViewManager->SynthesizeMouseMove(PR_FALSE);
+  
+  // If there is no selection, create a collapsed selection at the top of the document. 
+  if (mSelection) {
+    nsISelection* domSelection = mSelection->
+      GetSelection(nsISelectionController::SELECTION_NORMAL);
+    if (domSelection) {
+      PRInt32 rangeCount;
+      domSelection->GetRangeCount(&rangeCount);
+      if (rangeCount == 0)
+        CompleteMoveInner(PR_FALSE, PR_FALSE, PR_FALSE);
+    }
+  }
 }
 
 NS_IMETHODIMP
