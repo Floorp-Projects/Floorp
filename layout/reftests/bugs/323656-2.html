@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test inheritance through fieldsets and legends</title>
+    <style>
+      /**
+       * The idea is that "color" inherits by default while "border-color" does
+       * not.  So if the former is red and the latter is green on a parent, and
+       * the child's border-color is set to "inherit", it'll be green only if
+       * the child is inheriting from the parent.  If not, it'll either be
+       * whatever the border-color is on what it's inheriting from, which will
+       * be red if what it's inheriting from has the default (currentColor)
+       * border-color).
+       */
+      
+      /* 't' for "test" */
+      * { color: red; border: 0px hidden red; background: transparent }
+      .t { border-color: green }
+      .t > :first-child
+        { border-color: inherit; border-style: solid; border-width: 10px }
+    </style>
+    <script>
+      function make(str) {
+        return document.createElement(str);
+      }
+
+      window.onload = function() {
+        document.getElementById("f").appendChild(make("div"));
+        document.getElementById("l").appendChild(make("span"));
+      }
+    </script>
+  </head>
+  <body>
+    <fieldset class="t"><div></div></fieldset>
+    <fieldset><legend class="t"><span></span></legend></fieldset>
+    <fieldset class="t" id="f"></fieldset>
+    <fieldset><legend class="t" id="l"></legend></fieldset>
+  </body>
+</html>

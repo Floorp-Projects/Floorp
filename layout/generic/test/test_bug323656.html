@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=323656
+-->
+<head>
+  <title>Test for Bug 323656</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <style>
+      /**
+       * The idea is that "color" inherits by default while "border-color" does
+       * not.  So if the former is red and the latter is green on a parent, and
+       * the child's border-color is set to "inherit", it'll be green only if
+       * the child is inheriting from the parent.  If not, it'll either be
+       * whatever the border-color is on what it's inheriting from, which will
+       * be red if what it's inheriting from has the default (currentColor)
+       *border-color).
+       */
+      
+      /* 't' for "test" */
+      #display, #display *
+        { color: red; border: 0px hidden red; background: transparent }
+      #display .t { border-color: green }
+      #display .t > :first-child
+        { border-color: inherit; border-style: solid; border-width: 10px }
+    </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=323656">Mozilla Bug 323656</a>
+<p id="display">
+  <select size="1" class="t">
+    <option id="testOption"></option>
+  </select>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 323656 **/
+var s = document.defaultView.getComputedStyle($("testOption"), "");
+is(s.borderRightColor, "rgb(0, 128, 0)", "Inheritance broken");
+
+
+</script>
+</pre>
+</body>
+</html>
+
