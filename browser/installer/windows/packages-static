@@ -308,11 +308,6 @@ bin\res\svg.css
 bin\res\svg.properties
 bin\components\dom_svg.xpt
 
-; spellchecker (may not be present)
-bin\components\myspell.dll
-bin\components\spellchecker.xpt
-bin\components\spellchk.dll
-
 ; [Personal Security Manager]
 ;
 bin\nssckbi.dll
