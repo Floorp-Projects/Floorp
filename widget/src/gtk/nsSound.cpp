@@ -124,6 +124,15 @@ nsSound::Init()
   return NS_OK;
 }
 
+/* static */ void
+nsSound::Shutdown()
+{
+  if (elib) {
+    PR_UnloadLibrary(elib)
+    elib = nsnull;
+  }
+}
+
 #define GET_WORD(s, i) (s[i+1] << 8) | s[i]
 #define GET_DWORD(s, i) (s[i+3] << 24) | (s[i+2] << 16) | (s[i+1] << 8) | s[i]
 

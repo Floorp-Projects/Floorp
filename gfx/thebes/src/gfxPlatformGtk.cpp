@@ -42,6 +42,7 @@
 #include "gfxPlatformGtk.h"
 
 #include "gfxFontconfigUtils.h"
+#include "gfxPangoFonts.h"
 
 #include "cairo.h"
 #include <gtk/gtk.h>
@@ -92,6 +93,9 @@ gfxPlatformGtk::~gfxPlatformGtk()
 {
     gfxFontconfigUtils::Shutdown();
     sFontconfigUtils = nsnull;
+
+    gfxPangoFont::Shutdown();
+
 #ifndef THEBES_USE_PANGO_CAIRO
     pango_xft_shutdown_display(GDK_DISPLAY(), 0);
 #endif

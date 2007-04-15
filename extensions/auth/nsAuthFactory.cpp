@@ -270,4 +270,11 @@ InitNegotiateAuth(nsIModule *self)
 #define InitNegotiateAuth nsnull
 #endif
 
-NS_IMPL_NSGETMODULE_WITH_CTOR(nsAuthModule, components, InitNegotiateAuth)
+PR_STATIC_CALLBACK(void)
+DestroyNegotiateAuth(nsIModule *self)
+{
+  nsAuthGSSAPI::Shutdown();
+}
+
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsAuthModule, components,
+                                   InitNegotiateAuth, DestroyNegotiateAuth)

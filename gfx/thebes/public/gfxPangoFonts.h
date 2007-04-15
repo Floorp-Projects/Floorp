@@ -65,6 +65,8 @@ public:
                   const gfxFontStyle *aFontStyle);
     virtual ~gfxPangoFont ();
 
+    static void Shutdown();
+
     virtual const gfxFont::Metrics& GetMetrics();
 
     PangoFontDescription *GetPangoFontDescription() { RealizeFont(); return mPangoFontDesc; }

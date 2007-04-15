@@ -610,6 +610,8 @@ GConfProxy::~GConfProxy()
         (void)mObservers->EnumerateForwards(gconfDeleteObserver, nsnull);
         delete mObservers;
     }
+
+    PR_UnloadLibrary(mGConfLib);
 }
 
 PRBool

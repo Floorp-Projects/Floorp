@@ -60,6 +60,8 @@ public:
 
     nsAuthGSSAPI(pType package);
 
+    static void Shutdown();
+
 private:
     ~nsAuthGSSAPI() { Reset(); }
 
