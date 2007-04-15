@@ -208,6 +208,12 @@ interface nsIProtocolHandler : nsISupports
      * flag.
      */
     const unsigned long URI_IS_LOCAL_FILE = (1<<9);
+
+    /**
+     * Loading channels from this protocol has side-effects that make
+     * it unsuitable for saving to a local file.
+     */
+    const unsigned long URI_NON_PERSISTABLE = (1<<10);
     
     /**
      * This protocol handler can be proxied via a proxy (socks or http)
