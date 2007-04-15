@@ -25,11 +25,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=375363
 
 var gDeclaration = document.getElementById("testnode").style;
 
-/* all failures covered by bug 375363 */
-var gKnownFails = {
-  "background-position": true
-};
-
 function test_property(property)
 {
   var pass = true;
@@ -54,9 +49,9 @@ function test_property(property)
   if (property.prop)
     match = match && gDeclaration[property.prop] == val;
 
-  (property.name in gKnownFails ? todo : ok)(pass && match, "-moz-initial parsed, stored, and serialized for CSS '" + property.name + "'");
+  ok(pass && match, "-moz-initial parsed, stored, and serialized for CSS '" + property.name + "'");
   if (!match) {
-    /* already included in above todo/ok, but exceptional in itself */
+    /* already included in above ok, but exceptional in itself */
     ok(match, "getPropertyValue matches nsICSSProperties for CSS '" + property.name + "'");
   }
 }

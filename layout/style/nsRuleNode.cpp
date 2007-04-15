@@ -3089,46 +3089,46 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct,
   }
 
   // background-position: enum, length, percent (flags), inherit
-  if (eCSSUnit_Percent == colorData.mBackPositionX.GetUnit()) {
-    bg->mBackgroundXPosition.mFloat = colorData.mBackPositionX.GetPercentValue();
+  if (eCSSUnit_Percent == colorData.mBackPosition.mXValue.GetUnit()) {
+    bg->mBackgroundXPosition.mFloat = colorData.mBackPosition.mXValue.GetPercentValue();
     bg->mBackgroundFlags |= NS_STYLE_BG_X_POSITION_PERCENT;
     bg->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_LENGTH;
   }
-  else if (colorData.mBackPositionX.IsLengthUnit()) {
-    bg->mBackgroundXPosition.mCoord = CalcLength(colorData.mBackPositionX, nsnull, 
+  else if (colorData.mBackPosition.mXValue.IsLengthUnit()) {
+    bg->mBackgroundXPosition.mCoord = CalcLength(colorData.mBackPosition.mXValue, nsnull, 
                                                  aContext, mPresContext, inherited);
     bg->mBackgroundFlags |= NS_STYLE_BG_X_POSITION_LENGTH;
     bg->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_PERCENT;
   }
-  else if (eCSSUnit_Enumerated == colorData.mBackPositionX.GetUnit()) {
-    bg->mBackgroundXPosition.mFloat = (float)colorData.mBackPositionX.GetIntValue() / 100.0f;
+  else if (eCSSUnit_Enumerated == colorData.mBackPosition.mXValue.GetUnit()) {
+    bg->mBackgroundXPosition.mFloat = (float)colorData.mBackPosition.mXValue.GetIntValue() / 100.0f;
     bg->mBackgroundFlags |= NS_STYLE_BG_X_POSITION_PERCENT;
     bg->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_LENGTH;
   }
-  else if (eCSSUnit_Inherit == colorData.mBackPositionX.GetUnit()) {
+  else if (eCSSUnit_Inherit == colorData.mBackPosition.mXValue.GetUnit()) {
     inherited = PR_TRUE;
     bg->mBackgroundXPosition = parentBG->mBackgroundXPosition;
     bg->mBackgroundFlags &= ~(NS_STYLE_BG_X_POSITION_LENGTH | NS_STYLE_BG_X_POSITION_PERCENT);
     bg->mBackgroundFlags |= (parentFlags & (NS_STYLE_BG_X_POSITION_LENGTH | NS_STYLE_BG_X_POSITION_PERCENT));
   }
 
-  if (eCSSUnit_Percent == colorData.mBackPositionY.GetUnit()) {
-    bg->mBackgroundYPosition.mFloat = colorData.mBackPositionY.GetPercentValue();
+  if (eCSSUnit_Percent == colorData.mBackPosition.mYValue.GetUnit()) {
+    bg->mBackgroundYPosition.mFloat = colorData.mBackPosition.mYValue.GetPercentValue();
     bg->mBackgroundFlags |= NS_STYLE_BG_Y_POSITION_PERCENT;
     bg->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_LENGTH;
   }
-  else if (colorData.mBackPositionY.IsLengthUnit()) {
-    bg->mBackgroundYPosition.mCoord = CalcLength(colorData.mBackPositionY, nsnull,
+  else if (colorData.mBackPosition.mYValue.IsLengthUnit()) {
+    bg->mBackgroundYPosition.mCoord = CalcLength(colorData.mBackPosition.mYValue, nsnull,
                                                  aContext, mPresContext, inherited);
     bg->mBackgroundFlags |= NS_STYLE_BG_Y_POSITION_LENGTH;
     bg->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_PERCENT;
   }
-  else if (eCSSUnit_Enumerated == colorData.mBackPositionY.GetUnit()) {
-    bg->mBackgroundYPosition.mFloat = (float)colorData.mBackPositionY.GetIntValue() / 100.0f;
+  else if (eCSSUnit_Enumerated == colorData.mBackPosition.mYValue.GetUnit()) {
+    bg->mBackgroundYPosition.mFloat = (float)colorData.mBackPosition.mYValue.GetIntValue() / 100.0f;
     bg->mBackgroundFlags |= NS_STYLE_BG_Y_POSITION_PERCENT;
     bg->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_LENGTH;
   }
-  else if (eCSSUnit_Inherit == colorData.mBackPositionY.GetUnit()) {
+  else if (eCSSUnit_Inherit == colorData.mBackPosition.mYValue.GetUnit()) {
     inherited = PR_TRUE;
     bg->mBackgroundYPosition = parentBG->mBackgroundYPosition;
     bg->mBackgroundFlags &= ~(NS_STYLE_BG_Y_POSITION_LENGTH | NS_STYLE_BG_Y_POSITION_PERCENT);
