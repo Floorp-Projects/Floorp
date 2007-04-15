@@ -48,6 +48,7 @@
 #include "nsGkAtoms.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsIDOMNSEvent.h"
+#include "nsContentUtils.h"
 
 nsXBLEventHandler::nsXBLEventHandler(nsXBLPrototypeHandler* aHandler)
   : mProtoHandler(aHandler)
@@ -106,7 +107,8 @@ nsXBLKeyEventHandler::nsXBLKeyEventHandler(nsIAtom* aEventType, PRUint8 aPhase,
                                            PRUint8 aType)
   : mEventType(aEventType),
     mPhase(aPhase),
-    mType(aType)
+    mType(aType),
+    mIsBoundToChrome(PR_FALSE)
 {
 }
 
@@ -146,7 +148,10 @@ nsXBLKeyEventHandler::HandleEvent(nsIDOMEvent* aEvent)
   for (i = 0; i < count; ++i) {
     nsXBLPrototypeHandler* handler = NS_STATIC_CAST(nsXBLPrototypeHandler*,
                                                     mProtoHandlers[i]);
-    if ((trustedEvent || handler->AllowUntrustedEvents()) &&
+    PRBool hasAllowUntrustedAttr = handler->HasAllowUntrustedAttr();
+    if ((trustedEvent ||
+        (hasAllowUntrustedAttr && handler->AllowUntrustedEvents()) ||
+        (!hasAllowUntrustedAttr && !mIsBoundToChrome)) &&
         handler->KeyEventMatched(key)) {
       handler->ExecuteHandler(receiver, aEvent);
     }

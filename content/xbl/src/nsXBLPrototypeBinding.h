@@ -78,8 +78,6 @@ public:
 
   nsresult GetAllowScripts(PRBool* aResult);
 
-  PRBool IsChrome() { return mXBLDocInfoWeak->IsChrome(); }
-
   nsresult BindingAttached(nsIContent* aBoundElement);
   nsresult BindingDetached(nsIContent* aBoundElement);
 
