@@ -818,6 +818,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mOldExStyle         = 0;
   mPainting           = 0;
   mOldIMC             = NULL;
+  mIMEEnabled         = nsIKBStateControl::IME_STATUS_ENABLED;
 
   mLeadByte = '\0';
   mBlurEventSuppressionLevel = 0;
@@ -7473,22 +7474,24 @@ NS_IMETHODIMP nsWindow::GetIMEOpenState(PRBool* aState)
 }
 
 //==========================================================================
-NS_IMETHODIMP nsWindow::SetIMEEnabled(PRBool aState)
+NS_IMETHODIMP nsWindow::SetIMEEnabled(PRUint32 aState)
 {
   if (sIMEIsComposing)
     ResetInputState();
-  if (!aState != !mOldIMC)
+  mIMEEnabled = aState;
+  PRBool enable = (aState == nsIKBStateControl::IME_STATUS_ENABLED);
+  if (!enable != !mOldIMC)
     return NS_OK;
-  mOldIMC = ::ImmAssociateContext(mWnd, aState ? mOldIMC : NULL);
-  NS_ASSERTION(!aState || !mOldIMC, "Another IMC was associated");
+  mOldIMC = ::ImmAssociateContext(mWnd, enable ? mOldIMC : NULL);
+  NS_ASSERTION(!enable || !mOldIMC, "Another IMC was associated");
 
   return NS_OK;
 }
 
 //==========================================================================
-NS_IMETHODIMP nsWindow::GetIMEEnabled(PRBool* aState)
+NS_IMETHODIMP nsWindow::GetIMEEnabled(PRUint32* aState)
 {
-  *aState = !mOldIMC;
+  *aState = mIMEEnabled;
   return NS_OK;
 }
 

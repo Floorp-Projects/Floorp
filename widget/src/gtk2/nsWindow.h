@@ -318,14 +318,14 @@ public:
         // the decrementer must free the instance.
         PRUint32           mRefCount;
         // IME enabled state in this window.
-        PRPackedBool       mEnabled;
+        PRUint32           mEnabled;
         nsIMEData(nsWindow* aOwner) {
             mContext         = nsnull;
             mDummyContext    = nsnull;
             mComposingWindow = nsnull;
             mOwner           = aOwner;
             mRefCount        = 1;
-            mEnabled         = PR_TRUE;
+            mEnabled         = nsIKBStateControl::IME_STATUS_ENABLED;
         }
     };
     nsIMEData          *mIMEData;
@@ -334,8 +334,8 @@ public:
     NS_IMETHOD ResetInputState();
     NS_IMETHOD SetIMEOpenState(PRBool aState);
     NS_IMETHOD GetIMEOpenState(PRBool* aState);
-    NS_IMETHOD SetIMEEnabled(PRBool aState);
-    NS_IMETHOD GetIMEEnabled(PRBool* aState);
+    NS_IMETHOD SetIMEEnabled(PRUint32 aState);
+    NS_IMETHOD GetIMEEnabled(PRUint32* aState);
     NS_IMETHOD CancelIMEComposition();
 
 #endif

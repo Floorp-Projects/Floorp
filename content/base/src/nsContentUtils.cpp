@@ -136,6 +136,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsTPtrArray.h"
 #include "nsGUIEvent.h"
 #include "nsMutationEvent.h"
+#include "nsIKBStateControl.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -3572,4 +3573,21 @@ nsContentUtils::DropScriptObject(PRUint32 aLangID, void *aObject)
     NS_RELEASE(sScriptRuntimes[langIndex]);
   }
   return rv;
+}
+
+/* static */
+PRUint32
+nsContentUtils::GetKBStateControlStatusFromIMEStatus(PRUint32 aState)
+{
+  switch (aState & nsIContent::IME_STATUS_MASK_ENABLED) {
+    case nsIContent::IME_STATUS_DISABLE:
+      return nsIKBStateControl::IME_STATUS_DISABLED;
+    case nsIContent::IME_STATUS_ENABLE:
+      return nsIKBStateControl::IME_STATUS_ENABLED;
+    case nsIContent::IME_STATUS_PASSWORD:
+      return nsIKBStateControl::IME_STATUS_PASSWORD;
+    default:
+      NS_ERROR("The given state doesn't have valid enable state");
+      return nsIKBStateControl::IME_STATUS_ENABLED;
+  }
 }
