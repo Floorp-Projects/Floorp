@@ -47,20 +47,20 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsMIMEInfoBase, nsIMIMEInfo)
 
 // nsMIMEInfoImpl methods
 nsMIMEInfoBase::nsMIMEInfoBase(const char *aMIMEType) :
+    mMacType(0),
+    mMacCreator(0),
     mMIMEType(aMIMEType),
     mPreferredAction(nsIMIMEInfo::saveToDisk),
-    mAlwaysAskBeforeHandling(PR_TRUE),
-    mMacType(0),
-    mMacCreator(0)
+    mAlwaysAskBeforeHandling(PR_TRUE)
 {
 }
 
 nsMIMEInfoBase::nsMIMEInfoBase(const nsACString& aMIMEType) :
+    mMacType(0),
+    mMacCreator(0),
     mMIMEType(aMIMEType),
     mPreferredAction(nsIMIMEInfo::saveToDisk),
-    mAlwaysAskBeforeHandling(PR_TRUE),
-    mMacType(0),
-    mMacCreator(0)
+    mAlwaysAskBeforeHandling(PR_TRUE)
 {
 }
 

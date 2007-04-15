@@ -1506,13 +1506,8 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
 
   nsDependentSubstring majorType(majorTypeStart, majorTypeEnd);
   nsDependentSubstring minorType(minorTypeStart, minorTypeEnd);
-  nsAutoString extensions, mime_types_description;
-  LookUpExtensionsAndDescription(majorType,
-                                 minorType,
-                                 extensions,
-                                 mime_types_description);
 
-
+  // First check the user's private mailcap file
   nsAutoString mailcap_description, handler, mozillaFlags;
   DoLookUpHandlerAndDescription(majorType,
                                 minorType,
@@ -1521,23 +1516,46 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
                                 mailcap_description,
                                 mozillaFlags,
                                 PR_TRUE);
-
   
-  if (handler.IsEmpty() && extensions.IsEmpty() &&
-      mailcap_description.IsEmpty() && mime_types_description.IsEmpty()) {
-    // No useful data yet
-    
+  LOG(("Private Handler/Description results:  handler='%s', description='%s'\n",
+          NS_LossyConvertUTF16toASCII(handler).get(),
+          NS_LossyConvertUTF16toASCII(mailcap_description).get()));
+
 #ifdef MOZ_WIDGET_GTK2
+  nsMIMEInfoBase *gnomeInfo = nsnull;
+  if (handler.IsEmpty()) {
+    // No useful data yet.  Check the GNOME registry.  Unfortunately, newer
+    // GNOME versions no longer have type-to-extension mappings, so we might
+    // get back a MIMEInfo without any extensions set.  In that case we'll have
+    // to look in our mime.types files for the extensions.    
     LOG(("Looking in GNOME registry\n"));
-    nsMIMEInfoBase *gnomeInfo = nsGNOMERegistry::GetFromType(aMIMEType.get()).get();
-    if (gnomeInfo) {
-      LOG(("Got MIMEInfo from GNOME registry\n"));
+    gnomeInfo = nsGNOMERegistry::GetFromType(aMIMEType.get()).get();
+    if (gnomeInfo && gnomeInfo->HasExtensions()) {
+      LOG(("Got MIMEInfo from GNOME registry, and it has extensions set\n"));
       return gnomeInfo;
     }
-#endif
   }
+#endif
 
-  if (handler.IsEmpty() && mailcap_description.IsEmpty()) {
+  // Now look up our extensions
+  nsAutoString extensions, mime_types_description;
+  LookUpExtensionsAndDescription(majorType,
+                                 minorType,
+                                 extensions,
+                                 mime_types_description);
+
+#ifdef MOZ_WIDGET_GTK2
+  if (gnomeInfo) {
+    LOG(("Got MIMEInfo from GNOME registry without extensions; setting them "
+         "to %s\n", NS_LossyConvertUTF16toASCII(extensions).get()));
+
+    NS_ASSERTION(!gnomeInfo->HasExtensions(), "How'd that happen?");
+    gnomeInfo->SetFileExtensions(NS_ConvertUTF16toUTF8(extensions));
+    return gnomeInfo;
+  }
+#endif
+
+  if (handler.IsEmpty()) {
     DoLookUpHandlerAndDescription(majorType,
                                   minorType,
                                   typeOptions,
@@ -1547,7 +1565,7 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
                                   PR_FALSE);
   }
 
-  if (handler.IsEmpty() && mailcap_description.IsEmpty()) {
+  if (handler.IsEmpty()) {
     DoLookUpHandlerAndDescription(majorType,
                                   NS_LITERAL_STRING("*"),
                                   typeOptions,
@@ -1557,7 +1575,7 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
                                   PR_TRUE);
   }
 
-  if (handler.IsEmpty() && mailcap_description.IsEmpty()) {
+  if (handler.IsEmpty()) {
     DoLookUpHandlerAndDescription(majorType,
                                   NS_LITERAL_STRING("*"),
                                   typeOptions,
