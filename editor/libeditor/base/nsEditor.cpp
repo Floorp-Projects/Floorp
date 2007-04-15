@@ -2208,10 +2208,11 @@ nsEditor::GetPreferredIMEState(PRUint32 *aState)
 
   PRUint32 flags;
   if (NS_SUCCEEDED(GetFlags(&flags)) &&
-      flags & (nsIPlaintextEditor::eEditorPasswordMask |
-               nsIPlaintextEditor::eEditorReadonlyMask |
+      flags & (nsIPlaintextEditor::eEditorReadonlyMask |
                nsIPlaintextEditor::eEditorDisabledMask))
     *aState = nsIContent::IME_STATUS_DISABLE;
+  else if (flags & nsIPlaintextEditor::eEditorPasswordMask)
+    *aState = nsIContent::IME_STATUS_PASSWORD;
   else
     *aState = nsIContent::IME_STATUS_ENABLE;
   return NS_OK;

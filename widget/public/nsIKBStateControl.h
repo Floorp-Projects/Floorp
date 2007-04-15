@@ -41,11 +41,20 @@
 
 #include "nsISupports.h"
 
-// {8C636698-8075-4547-80AD-B032F08EF2D3}
+// {BC33E975-C433-4df5-B4BA-041CDE6D1A17}
 #define NS_IKBSTATECONTROL_IID \
-{ 0x8c636698, 0x8075, 0x4547, \
-{ 0x80, 0xad, 0xb0, 0x32, 0xf0, 0x8e, 0xf2, 0xd3 } }
+{ 0xbc33e975, 0xc433, 0x4df5, \
+{ 0xb4, 0xba, 0x04, 0x1c, 0xde, 0x6d, 0x1a, 0x17 } }
 
+
+#if defined(XP_MACOSX)
+/*
+ * If the all applications use same context for IME, i.e., When gecko changes
+ * the state of IME, the same changes can be on other processes.
+ * Then, NS_KBSC_USE_SHARED_CONTEXT should be defined.
+ */
+#define NS_KBSC_USE_SHARED_CONTEXT 1
+#endif
 
 /**
  * interface to control keyboard input state
@@ -86,18 +95,37 @@ class nsIKBStateControl : public nsISupports {
     NS_IMETHOD GetIMEOpenState(PRBool* aState) = 0;
 
     /*
-     * Set the state to 'Enabled' or 'Disabled'.
-     * If aState is TRUE, IME enable state is set to 'Enabled'.
-     * If aState is FALSE, set to 'Disabled'.
+     * IME enabled states, the aState value of SetIMEEnabled/GetIMEEnabled
+     * should be one value of following values.
      */
-    NS_IMETHOD SetIMEEnabled(PRBool aState) = 0;
+    enum {
+      /*
+       * 'Disabled' means the user cannot use IME. So, the open state should be
+       * 'closed' during 'disabled'.
+       */
+      IME_STATUS_DISABLED = 0,
+      /*
+       * 'Enabled' means the user can use IME.
+       */
+      IME_STATUS_ENABLED = 1,
+      /*
+       * 'Password' state is a special case for the password editors.
+       * E.g., on mac, the password editors should disable the non-Roman
+       * keyboard layouts at getting focus. Thus, the password editor may have
+       * special rules on some platforms.
+       */
+      IME_STATUS_PASSWORD = 2
+    };
 
     /*
-     * Get IME is 'Enabled' or 'Disabled'.
-     * If IME is 'Enabled', aState is set PR_TRUE.
-     * If IME is 'Disabled', aState is set PR_FALSE.
+     * Set the state to 'Enabled' or 'Disabled' or 'Password'.
      */
-    NS_IMETHOD GetIMEEnabled(PRBool* aState) = 0;
+    NS_IMETHOD SetIMEEnabled(PRUint32 aState) = 0;
+
+    /*
+     * Get IME is 'Enabled' or 'Disabled' or 'Password'.
+     */
+    NS_IMETHOD GetIMEEnabled(PRUint32* aState) = 0;
 
     /*
      * Destruct and don't commit the IME composition string.

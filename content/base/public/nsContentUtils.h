@@ -1019,6 +1019,10 @@ public:
     void *mObject;
   };
 
+  /**
+   * Convert nsIContent::IME_STATUS_* to nsIKBStateControll::IME_STATUS_*
+   */
+  static PRUint32 GetKBStateControlStatusFromIMEStatus(PRUint32 aState);
 private:
 
   static PRBool InitializeEventTable();

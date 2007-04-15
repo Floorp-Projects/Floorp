@@ -78,6 +78,10 @@ extern "C" {
   CG_EXTERN void CGContextResetClip(CGContextRef);
 }
 
+PRBool nsTSMManager::sIsIMEEnabled = PR_TRUE;
+PRBool nsTSMManager::sIsRomanKeyboardsOnly = PR_FALSE;
+NSView<mozView>* nsTSMManager::sComposingView = nsnull;
+
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 static NSView* sLastViewEntered = nil;
 #ifdef INVALIDATE_DEBUGGING
@@ -1575,17 +1579,7 @@ NS_IMETHODIMP nsChildView::ResetInputState()
   NSLog(@"**** ResetInputState");
 #endif
 
-  if (![mView isComposing])
-    return NS_OK;
-
-  NSInputManager *currentIM = [NSInputManager currentInputManager];
-  
-  // commit the current text
-  [currentIM unmarkText];
-
-  // and clear the input manager's string
-  [currentIM markedTextAbandoned:mView];
-  
+  nsTSMManager::CommitIME();
   return NS_OK;
 }
 
@@ -1593,26 +1587,66 @@ NS_IMETHODIMP nsChildView::ResetInputState()
 // 'open' means that it can take non-ASCII chars
 NS_IMETHODIMP nsChildView::SetIMEOpenState(PRBool aState)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+#ifdef DEBUG_IME
+  NSLog(@"**** SetIMEOpenState aState = %d", aState);
+#endif
+
+  nsTSMManager::SetIMEOpenState(aState);
+  return NS_OK;
 }
 
 
 // 'open' means that it can take non-ASCII chars
 NS_IMETHODIMP nsChildView::GetIMEOpenState(PRBool* aState)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+#ifdef DEBUG_IME
+  NSLog(@"**** GetIMEOpenState");
+#endif
+
+  *aState = nsTSMManager::GetIMEOpenState();
+  return NS_OK;
 }
 
 
-NS_IMETHODIMP nsChildView::SetIMEEnabled(PRBool aState)
+NS_IMETHODIMP nsChildView::SetIMEEnabled(PRUint32 aState)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+#ifdef DEBUG_IME
+  NSLog(@"**** SetIMEEnabled aState = %d", aState);
+#endif
+
+  switch (aState) {
+    case nsIKBStateControl::IME_STATUS_ENABLED:
+      nsTSMManager::SetRomanKeyboardsOnly(PR_FALSE);
+      nsTSMManager::EnableIME(PR_TRUE);
+      break;
+    case nsIKBStateControl::IME_STATUS_DISABLED:
+      nsTSMManager::SetRomanKeyboardsOnly(PR_FALSE);
+      nsTSMManager::EnableIME(PR_FALSE);
+      break;
+    case nsIKBStateControl::IME_STATUS_PASSWORD:
+      nsTSMManager::SetRomanKeyboardsOnly(PR_TRUE);
+      nsTSMManager::EnableIME(PR_FALSE);
+      break;
+    default:
+      NS_ERROR("not implemented!");
+  }
+  return NS_OK;
 }
 
 
-NS_IMETHODIMP nsChildView::GetIMEEnabled(PRBool* aState)
+NS_IMETHODIMP nsChildView::GetIMEEnabled(PRUint32* aState)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+#ifdef DEBUG_IME
+  NSLog(@"**** GetIMEEnabled");
+#endif
+
+  if (nsTSMManager::IsIMEEnabled())
+    *aState = nsIKBStateControl::IME_STATUS_ENABLED;
+  else if (nsTSMManager::IsRomanKeyboardsOnly())
+    *aState = nsIKBStateControl::IME_STATUS_PASSWORD;
+  else
+    *aState = nsIKBStateControl::IME_STATUS_DISABLED;
+  return NS_OK;
 }
 
 
@@ -1623,12 +1657,7 @@ NS_IMETHODIMP nsChildView::CancelIMEComposition()
   NSLog(@"**** CancelIMEComposition");
 #endif
 
-  if (![mView isComposing])
-    return NS_OK;
-
-  NSInputManager *currentIM = [NSInputManager currentInputManager];
-  [currentIM markedTextAbandoned:mView];
-  
+  nsTSMManager::CancelIME();
   return NS_OK;
 }
 
@@ -1785,7 +1814,6 @@ NSEvent* globalDragEvent = nil;
     mMarkedRange.length = 0;
     mSelectedRange.location = NSNotFound;
     mSelectedRange.length = 0;
-    mInComposition = NO;
     mLastMenuForEventEvent = nil;
     mDragService = nsnull;
   }
@@ -2915,7 +2943,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   [tmpStr getCharacters: bufPtr];
   bufPtr[len] = (PRUnichar)'\0';
 
-  if (len == 1 && !mInComposition) {
+  if (len == 1 && !nsTSMManager::IsComposing()) {
     // dispatch keypress event with char instead of textEvent
     nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, mGeckoChild);
     geckoEvent.time      = PR_IntervalNow();
@@ -2938,10 +2966,10 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     mGeckoChild->DispatchWindowEvent(geckoEvent);
   }
   else {
-    if (!mInComposition) {
+    if (!nsTSMManager::IsComposing()) {
       // send start composition event to gecko
       [self sendCompositionEvent: NS_COMPOSITION_START];
-      mInComposition = YES;
+      nsTSMManager::StartComposing(self);
     }
 
     // dispatch textevent (is this redundant?)
@@ -2952,7 +2980,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 
     // send end composition event to gecko
     [self sendCompositionEvent: NS_COMPOSITION_END];
-    mInComposition = NO;
+    nsTSMManager::EndComposing();
     mSelectedRange = mMarkedRange = NSMakeRange(NSNotFound, 0);
   }
 
@@ -3009,9 +3037,9 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   mMarkedRange.location = 0;
   mMarkedRange.length = len;
 
-  if (!mInComposition) {
+  if (!nsTSMManager::IsComposing()) {
     [self sendCompositionEvent:NS_COMPOSITION_START];
-    mInComposition = YES;
+    nsTSMManager::StartComposing(self);
   }
 
   [self sendTextEvent:bufPtr attributedString:aString
@@ -3019,7 +3047,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
                              markedRange:mMarkedRange
                              doCommit:NO];
 
-  if (mInComposition && len == 0)
+  if (nsTSMManager::IsComposing() && len == 0)
     [self unmarkText];
   
   if (bufPtr != buffer)
@@ -3036,9 +3064,10 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 #endif
 
   mSelectedRange = mMarkedRange = NSMakeRange(NSNotFound, 0);
-  if (mInComposition) {
+  if (nsTSMManager::IsComposing()) {
     [self sendCompositionEvent: NS_COMPOSITION_END];
-    mInComposition = NO;  // brade: do we need to send an end composition event?
+    // brade: do we need to send an end composition event?
+    nsTSMManager::EndComposing();
   }
 }
 
@@ -3191,6 +3220,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     return;
   }
 
+  PRBool dispatchedKeyPress = PR_FALSE;
   if (nonDeadKeyPress) {
     nsKeyEvent geckoEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
     [self convertKeyEvent:theEvent toGeckoEvent:&geckoEvent];
@@ -3202,17 +3232,26 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     // dispatch the keydown to gecko, so that we trap delete,
     // control-letter combinations etc before Cocoa tries to use
     // them for keybindings.
-    if ((!geckoEvent.isChar || geckoEvent.isControl) && !mInComposition) {
+    if ((!geckoEvent.isChar || geckoEvent.isControl) &&
+        !nsTSMManager::IsComposing()) {
       // plugins need a native event, it will either be keyDown or autoKey
       EventRecord macEvent;
       ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
 
       mIgnoreDoCommand = mGeckoChild->DispatchWindowEvent(geckoEvent);
+      dispatchedKeyPress = PR_TRUE;
     }
   }
 
-  [super interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
+  // We should send this event to the superclass if IME is enabled.
+  // Otherwise, we need to suppress IME composition. We can do it by
+  // not sending this event to the superclass. But in that case,
+  // we need to call insertText ourselves.
+  if (nsTSMManager::IsIMEEnabled())
+    [super interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
+  else if (nonDeadKeyPress && !dispatchedKeyPress)
+    [self insertText:[theEvent characters]];
 
   mIgnoreDoCommand = NO;
   mCurKeyEvent = nil;
@@ -3242,7 +3281,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 - (BOOL)performKeyEquivalent:(NSEvent*)theEvent
 {
   // don't bother if we're in composition
-  if (mInComposition)
+  if (nsTSMManager::IsComposing())
     return NO;
 
   // see if the menu system will handle the event
@@ -3369,12 +3408,6 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 
   nsFocusEvent unfocusEvent(PR_TRUE, NS_LOSTFOCUS, mGeckoChild);
   mGeckoChild->DispatchWindowEvent(unfocusEvent);
-}
-
-
-- (BOOL)isComposing
-{
-  return mInComposition;
 }
 
 
@@ -3925,3 +3958,94 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 #endif /* ACCESSIBILITY */
 
 @end
+
+
+#pragma mark -
+
+
+PRBool
+nsTSMManager::GetIMEOpenState()
+{
+  return GetScriptManagerVariable(smKeyScript) != smRoman ? PR_TRUE : PR_FALSE;
+}
+
+
+void
+nsTSMManager::StartComposing(NSView<mozView>* aComposingView)
+{
+  if (sComposingView && sComposingView != sComposingView)
+    CommitIME();
+  sComposingView = aComposingView;
+}
+
+
+void
+nsTSMManager::EndComposing()
+{
+  sComposingView = nsnull;
+}
+
+
+void
+nsTSMManager::EnableIME(PRBool aEnable)
+{
+  if (aEnable == sIsIMEEnabled)
+    return;
+  CommitIME();
+  sIsIMEEnabled = aEnable;
+}
+
+
+void
+nsTSMManager::SetIMEOpenState(PRBool aOpen)
+{
+  if (aOpen == GetIMEOpenState())
+    return;
+  CommitIME();
+  KeyScript(aOpen ? smKeySwapScript : smKeyRoman);
+}
+
+
+#define ENABLE_ROMAN_KYBDS_ONLY -23
+void
+nsTSMManager::SetRomanKeyboardsOnly(PRBool aRomanOnly)
+{
+  if (aRomanOnly == sIsRomanKeyboardsOnly)
+    return;
+  CommitIME();
+  KeyScript(aRomanOnly ? ENABLE_ROMAN_KYBDS_ONLY : smKeyEnableKybds);
+  sIsRomanKeyboardsOnly = aRomanOnly;
+}
+
+
+void
+nsTSMManager::CommitIME()
+{
+  if (!sComposingView)
+    return;
+
+  NSInputManager *currentIM = [NSInputManager currentInputManager];
+
+  // commit the current text
+  [currentIM unmarkText];
+
+  // and clear the input manager's string
+  [currentIM markedTextAbandoned:sComposingView];
+
+  EndComposing();
+}
+
+
+void
+nsTSMManager::CancelIME()
+{
+  if (!sComposingView)
+    return;
+
+  NSInputManager *currentIM = [NSInputManager currentInputManager];
+
+  // clear the input manager's string
+  [currentIM markedTextAbandoned:sComposingView];
+
+  EndComposing();
+}

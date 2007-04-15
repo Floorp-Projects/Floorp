@@ -174,8 +174,8 @@ public:
   NS_IMETHOD ResetInputState();
   NS_IMETHOD SetIMEOpenState(PRBool aState);
   NS_IMETHOD GetIMEOpenState(PRBool* aState);
-  NS_IMETHOD SetIMEEnabled(PRBool aState);
-  NS_IMETHOD GetIMEEnabled(PRBool* aState);
+  NS_IMETHOD SetIMEEnabled(PRUint32 aState);
+  NS_IMETHOD GetIMEEnabled(PRUint32* aState);
   NS_IMETHOD CancelIMEComposition();
 
   void InitEvent(nsGUIEvent& event, nsPoint* aPoint = nsnull);
