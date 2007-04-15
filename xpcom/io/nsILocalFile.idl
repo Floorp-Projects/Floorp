@@ -101,9 +101,22 @@ interface nsILocalFile : nsIFile
      */
     attribute PRBool followLinks;  
 
+    /**
+     * Return the result of PR_Open on the file.  The caller is
+     * responsible for calling PR_Close on the result.
+     */
     [noscript] PRFileDescStar openNSPRFileDesc(in long flags, in long mode);
+
+    /**
+     * Return the result of fopen on the file.  The caller is
+     * responsible for calling fclose on the result.
+     */
     [noscript] FILE           openANSIFileDesc(in string mode);
 
+    /**
+     * Return the result of PR_LoadLibrary on the file.  The caller is
+     * responsible for calling PR_UnloadLibrary on the result.
+     */
     [noscript] PRLibraryStar  load();
     
     readonly attribute PRInt64 diskSpaceAvailable;

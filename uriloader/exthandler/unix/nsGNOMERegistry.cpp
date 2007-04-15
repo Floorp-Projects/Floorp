@@ -102,14 +102,18 @@ static void
 CleanUp()
 {
   // Unload all libraries
-  if (gnomeLib)
+  if (gnomeLib) {
     PR_UnloadLibrary(gnomeLib);
-  if (gconfLib)
+    gnomeLib = nsnull;
+  }
+  if (gconfLib) {
     PR_UnloadLibrary(gconfLib);
-  if (vfsLib)
+    gconfLib = nsnull;
+  }
+  if (vfsLib) {
     PR_UnloadLibrary(vfsLib);
-
-  gnomeLib = gconfLib = vfsLib = nsnull;
+    vfsLib = nsnull;
+  }
 }
 
 static PRLibrary *

@@ -45,6 +45,7 @@ class nsSystemFontsGTK2
 {
 public:
     nsSystemFontsGTK2();
+    ~nsSystemFontsGTK2();
 
     nsresult GetSystemFont(nsSystemFontID anID, nsString *aFontName,
                            gfxFontStyle *aFontStyle) const;
