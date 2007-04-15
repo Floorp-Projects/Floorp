@@ -55,6 +55,38 @@ for (var idx in gShorthandPropertiesLikeLonghand) {
      "'" + prop.name + "' listed in gCSSProperties as CSS_TYPE_SHORTHAND_AND_LONGHAND with correct DOM property name");
 }
 
+/*
+ * Test that all shorthand properties have a subproperty list and all
+ * longhand properties do not.
+ */
+for (var prop in gCSSProperties) {
+  var info = gCSSProperties[prop];
+  if (info.type == CSS_TYPE_LONGHAND) {
+    ok(!("subproperties" in info),
+       "longhand property '" + prop + "' must not have subproperty list");
+  } else if (info.type == CSS_TYPE_TRUE_SHORTHAND) {
+    ok("subproperties" in info,
+       "shorthand property '" + prop + "' must have subproperty list");
+  }
+  /* optional for CSS_TYPE_SHORTHAND_AND_LONGHAND */
+
+  if ("subproperties" in info) {
+    var good = true;
+    if (info.subproperties.length < 1) {
+      info("subproperty list for '" + prop + "' is empty");
+      good = false;
+    }
+    for (var idx in info.subproperties) {
+      var subprop = info.subproperties[idx];
+      if (!(subprop in gCSSProperties)) {
+        info("subproperty list for '" + prop + "' lists nonexistent subproperty '" + subprop + "'");
+        good = false;
+      }
+    }
+    ok(good, "property '" + prop + "' has a good subproperty list");
+  }
+}
+
 </script>
 </pre>
 </body>

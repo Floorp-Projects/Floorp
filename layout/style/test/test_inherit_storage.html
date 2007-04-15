@@ -7,7 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=375363
   <title>Test for parsing, storage, and serialization of CSS 'inherit'</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="css_properties.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -25,41 +25,87 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=375363
 
 var gDeclaration = document.getElementById("testnode").style;
 
+var gKnownFails = {
+  /* bug 377519: */
+  "-moz-border-radius": true,
+  "-moz-outline-radius": true,
+  "background": true,
+  "border": true,
+  "border-bottom": true,
+  "border-color": true,
+  "border-left": true,
+  "border-right": true,
+  "border-style": true,
+  "border-top": true,
+  "border-width": true,
+  "cue": true,
+  "font": true,
+  "list-style": true,
+  "margin": true,
+  "outline": true,
+  "padding": true,
+  "pause": true
+};
+
 function test_property(property)
 {
   var pass = true;
-  var match = true;
 
-  var val = gDeclaration.getPropertyValue(property.name);
-  pass = pass && val == "";
-  if (property.prop)
-    match = match && gDeclaration[property.prop] == val;
+  var info = gCSSProperties[property];
 
-  gDeclaration.setProperty(property.name, "inherit", "");
-
-  val = gDeclaration.getPropertyValue(property.name);
-  pass = pass && val == "inherit";
-  if (property.prop)
-    match = match && gDeclaration[property.prop] == val;
-
-  gDeclaration.removeProperty(property.name);
-
-  val = gDeclaration.getPropertyValue(property.name);
-  pass = pass && val == "";
-  if (property.prop)
-    match = match && gDeclaration[property.prop] == val;
-
-  ok(pass && match, "inherit parsed, stored, and serialized for CSS '" + property.name + "'");
-  if (!match) {
-    /* already included in above ok, but exceptional in itself */
-    ok(match, "getPropertyValue matches nsICSSProperties for CSS '" + property.name + "'");
+  function check_initial(sproperty) {
+    var sinfo = gCSSProperties[sproperty];
+    var val = gDeclaration.getPropertyValue(sproperty);
+    is(val, "", "value of '" + sproperty + "' before we do anything");
+    if (sinfo.domProp) {
+      is(val, gDeclaration[sinfo.domProp],
+         "consistency between decl.getPropertyValue('" + sproperty + "') and decl." + sinfo.domProp);
+    }
   }
+  check_initial(property);
+  if ("subproperties" in info)
+    for (var idx in info.subproperties)
+      check_initial(info.subproperties[idx]);
+
+  gDeclaration.setProperty(property, "inherit", "");
+
+  function check_set(sproperty) {
+    var sinfo = gCSSProperties[sproperty];
+    val = gDeclaration.getPropertyValue(sproperty);
+    if (sproperty == property && property in gKnownFails) {
+      todo(val == "inherit", "inherit reported back for property '" + sproperty + "'");
+    } else {
+      is(val, "inherit", "inherit reported back for property '" + sproperty + "'");
+    }
+    if (sinfo.domProp) {
+      is(val, gDeclaration[sinfo.domProp],
+         "consistency between decl.getPropertyValue('" + sproperty + "') and decl." + sinfo.domProp);
+    }
+  }
+  check_set(property);
+  if ("subproperties" in info)
+    for (var idx in info.subproperties)
+      check_set(info.subproperties[idx]);
+
+  gDeclaration.removeProperty(property);
+
+  function check_final(sproperty) {
+    var sinfo = gCSSProperties[sproperty];
+    var val = gDeclaration.getPropertyValue(sproperty);
+    is(val, "", "value of '" + sproperty + "' after removal of value");
+    if (sinfo.domProp) {
+      is(val, gDeclaration[sinfo.domProp],
+         "consistency between decl.getPropertyValue('" + sproperty + "') and decl." + sinfo.domProp);
+    }
+  }
+  check_final(property);
+  if ("subproperties" in info)
+    for (var idx in info.subproperties)
+      check_final(info.subproperties[idx]);
 }
 
-for (var idx in gLonghandProperties)
-  test_property(gLonghandProperties[idx]);
-for (var idx in gShorthandPropertiesLikeLonghand)
-  test_property(gShorthandPropertiesLikeLonghand[idx]);
+for (var prop in gCSSProperties)
+  test_property(prop);
 
 </script>
 </pre>
