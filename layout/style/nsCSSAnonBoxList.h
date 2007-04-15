@@ -57,7 +57,6 @@ CSS_ANON_BOX(mozNonElement, ":-moz-non-element")
 CSS_ANON_BOX(mozAnonymousBlock, ":-moz-anonymous-block")
 CSS_ANON_BOX(mozAnonymousPositionedBlock, ":-moz-anonymous-positioned-block")
 
-CSS_ANON_BOX(mozFirstLineFixup, ":-moz-first-line-fixup")
 CSS_ANON_BOX(mozLineFrame, ":-moz-line-frame")
 
 CSS_ANON_BOX(buttonContent, ":-moz-button-content")
@@ -90,7 +89,6 @@ CSS_ANON_BOX(scrolledPageSequence, ":-moz-scrolled-page-sequence")
 CSS_ANON_BOX(columnContent, ":-moz-column-content")
 CSS_ANON_BOX(viewport, ":-moz-viewport")
 CSS_ANON_BOX(viewportScroll, ":-moz-viewport-scroll")
-CSS_ANON_BOX(selectScrolledContent, ":-moz-select-scrolled-content")
 
 #ifdef MOZ_XUL
 CSS_ANON_BOX(moztreecolumn, ":-moz-tree-column")

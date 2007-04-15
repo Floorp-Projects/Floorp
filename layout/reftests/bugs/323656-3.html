@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test inheritance through various anonymous boxes: {ib}
+           situations, buttons, overflow, columns, listboxes, first-line</title>
+    <style>
+      /**
+       * The idea is that "color" inherits by default while "border-color" does
+       * not.  So if the former is red and the latter is green on a parent, and
+       * the child's border-color is set to "inherit", it'll be green only if
+       * the child is inheriting from the parent.  If not, it'll either be
+       * whatever the border-color is on what it's inheriting from, which will
+       * be red if what it's inheriting from has the default (currentColor)
+       * border-color).
+       */
+      
+      /* 't' for "test" */
+      * { color: red; border: 0px hidden red; background: transparent }
+      .t { border-color: green }
+      .t:not(.d2) > :first-child
+        { border-color: inherit; border-style: solid; border-width: 10px }
+      .d2 > span { border-style: solid; border-width: 10px }
+      .f::first-line { border-color: green }
+    </style>
+    <script>
+      function make(str) {
+        return document.createElement(str);
+      }
+      
+      function makeDiv() {
+        return make("div");
+      }
+
+      window.onload = function() {
+        var lst = document.getElementsByClassName("d");
+        for (var i = 0; i < lst.length; ++i) {
+          if (lst[i].nodeName != "select") {
+            lst[i].appendChild(makeDiv());
+          } else {
+            lst[i].appendChild(make("option"));
+          }
+        }
+
+        lst = document.getElementsByClassName("d2");
+        for (i = 0; i < lst.length; ++i) {
+          var span = lst[i].getElementsByTagName("span")[0];
+          span.style.cssText =
+            "border-color: inherit; border-style: solid; border-width: 10px";
+        }        
+
+        var x = document.getElementsByClassName("f d")[0];
+        x.appendChild(make("span"));
+        x.appendChild(make("br"));
+        x.appendChild(make("span"));
+      }
+    </script>
+  </head>
+  <body>
+    <div class="t"><div></div></div>
+    <span class="t"><div></div></span>
+    <span style="position: relative" class="t"><div></div></span>
+    <div class="f"><span></span><br><span></span></div>
+    <button class="t"><div></div></button>
+    <div style="overflow: auto" class="t"><div></div></div>
+    <div style="-moz-column-count: 2" class="t"><div></div></div>
+    <select size="2" class="t">
+      <option></option>
+    </select>
+
+    <div class="t d"></div>
+    <span class="t d"></span>
+    <span style="position: relative" class="t d"></span>
+    <div class="f d"></div>
+    <button class="t d"></button>
+    <div style="overflow: auto" class="t d"></div>
+    <div style="-moz-column-count: 2" class="t d"></div>
+    <select size="2" class="t d">
+      <option></option>
+    </select>
+
+    <span class="t d2"><div></div><span></span></span>
+    <span style="position: relative" class="t d2"><div></div><span></span></span>
+  </body>
+</html>

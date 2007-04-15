@@ -41,6 +41,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_MOCHITEST
+DIRS		+= test
+endif
+
 MODULE		= layout
 LIBRARY_NAME	= gkgeneric_s
 LIBXUL_LIBRARY	= 1
