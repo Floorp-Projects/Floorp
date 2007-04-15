@@ -244,7 +244,10 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "1", "0", "17" ],
-		invalid_values: [ "-1", "3px" ]
+		invalid_values: [
+			// "-1", unclear: see http://lists.w3.org/Archives/Public/www-style/2007Apr/0030
+			"3px"
+		]
 	},
 	"-moz-column-gap": {
 		domProp: "MozColumnGap",
@@ -430,9 +433,14 @@ var gCSSProperties = {
 		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "background-attachment", "background-color", "background-image", "background-position", "background-repeat", "-moz-background-clip", "-moz-background-inline-policy", "-moz-background-origin" ],
-		initial_values: [ "transparent", "none", "repeat", "scroll", "0% 0%", "top left", "left top", "transparent none", "top left none", "none 0% 0%", "transparent none repeat scroll top left", "left top repeat none scroll transparent"],
+		initial_values: [ "transparent", "none", "repeat", "scroll", "0% 0%", "top left", "left top", "transparent none", "top left none", "left top none", "none left top", "none top left", "none 0% 0%", "transparent none repeat scroll top left", "left top repeat none scroll transparent"],
 		other_values: [ "green", "none green repeat scroll left top", "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)", "repeat url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==') transparent left top scroll", "repeat-x", "repeat-y", "no-repeat", "none repeat-y transparent scroll 0% 0%", "fixed", "0% top transparent fixed repeat none", "top", "left", "50% 50%", "center", "bottom right scroll none transparent repeat", "50% transparent", "transparent 50%", "50%" ],
-		invalid_values: [ "50% left", "top 50%" ]
+ 		invalid_values: [
+ 			/* mixes with keywords have to be in correct order */
+ 			"50% left", "top 50%",
+ 			/* bug 258080: don't accept background-position separated */
+ 			"left url(404.png) top", "top url(404.png) left"
+ 		]
 	},
 	"background-attachment": {
 		domProp: "backgroundAttachment",
