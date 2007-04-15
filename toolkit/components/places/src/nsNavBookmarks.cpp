@@ -129,7 +129,7 @@ nsNavBookmarks::Init()
     do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = bundleService->CreateBundle(
-      "chrome://browser/locale/places/places.properties",
+      "chrome://global/content/places/places.properties",
       getter_AddRefs(mBundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -426,12 +426,7 @@ nsNavBookmarks::InitRoots()
   if (importDefaults) {
     // when there is no places root, we should define the hierarchy by
     // importing the default one.
-    nsCOMPtr<nsIURI> defaultPlaces;
-    rv = NS_NewURI(getter_AddRefs(defaultPlaces),
-                   NS_LITERAL_CSTRING("chrome://browser/locale/places/default_places.html"),
-                   nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = ImportBookmarksHTMLInternal(defaultPlaces, PR_TRUE, 0, PR_TRUE);
+    rv = InitDefaults();
     NS_ENSURE_SUCCESS(rv, rv);
 
     // migrate the user's old bookmarks
@@ -457,6 +452,37 @@ nsNavBookmarks::InitRoots()
     }
   }
 #endif
+  return NS_OK;
+}
+
+// nsNavBookmarks::InitDefaults
+//
+// Initializes default bookmarks and containers.
+// Pulls from places.propertes for l10n.
+// Replaces the old default_places.html file.
+nsresult
+nsNavBookmarks::InitDefaults()
+{
+  // give bookmarks root folder a title "Bookmarks"
+  nsXPIDLString bookmarksTitle;
+  nsresult rv = mBundle->GetStringFromName(NS_LITERAL_STRING("PlacesBookmarksRootTitle").get(),
+                                           getter_Copies(bookmarksTitle));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetFolderTitle(mBookmarksRoot, bookmarksTitle);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // create toolbar folder, parent bookmarks root, entitled "Bookmarks Toolbar Folder"
+  PRInt64 toolbarId;
+  nsXPIDLString toolbarTitle;
+  rv = mBundle->GetStringFromName(NS_LITERAL_STRING("PlacesBookmarksToolbarTitle").get(),
+                                  getter_Copies(toolbarTitle));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = CreateFolder(mBookmarksRoot, toolbarTitle,
+                    nsINavBookmarksService::DEFAULT_INDEX, &toolbarId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = this->SetToolbarFolder(toolbarId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
