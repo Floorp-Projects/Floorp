@@ -39,6 +39,10 @@ searchplugins/yahoo.gif
 searchplugins/
 component.reg
 components/compreg.dat
+components/@DLL_PREFIX@myspell@DLL_SUFFIX@
+components/@DLL_PREFIX@spellchecker@DLL_SUFFIX@
+components/spellchecker.xpt
+components/@DLL_PREFIX@spellchk@DLL_SUFFIX@
 components/xpti.dat
 components/xptitemp.dat
 components/nsBackgroundUpdateService.js

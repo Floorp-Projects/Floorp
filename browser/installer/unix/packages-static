@@ -310,11 +310,6 @@ bin/res/entityTables/*
 bin/res/svg.css
 bin/components/dom_svg.xpt
 
-; spellchecker (may not be present)
-bin/components/libmyspell.so
-bin/components/spellchecker.xpt
-bin/components/libspellchecker.so
-
 ; [Personal Security Manager]
 ;
 bin/libnssckbi.so
