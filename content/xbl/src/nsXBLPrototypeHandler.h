@@ -56,12 +56,13 @@ class nsIDOMEventReceiver;
 class nsIDOM3EventTarget;
 class nsXBLPrototypeBinding;
 
-#define NS_HANDLER_TYPE_XBL_JS          (1 << 0)
-#define NS_HANDLER_TYPE_XBL_COMMAND     (1 << 1)
-#define NS_HANDLER_TYPE_XUL             (1 << 2)
-#define NS_HANDLER_ALLOW_UNTRUSTED      (1 << 5)
-#define NS_HANDLER_TYPE_SYSTEM          (1 << 6)
-#define NS_HANDLER_TYPE_PREVENTDEFAULT  (1 << 7)
+#define NS_HANDLER_TYPE_XBL_JS              (1 << 0)
+#define NS_HANDLER_TYPE_XBL_COMMAND         (1 << 1)
+#define NS_HANDLER_TYPE_XUL                 (1 << 2)
+#define NS_HANDLER_HAS_ALLOW_UNTRUSTED_ATTR (1 << 4)
+#define NS_HANDLER_ALLOW_UNTRUSTED          (1 << 5)
+#define NS_HANDLER_TYPE_SYSTEM              (1 << 6)
+#define NS_HANDLER_TYPE_PREVENTDEFAULT      (1 << 7)
 
 // XXX Use nsIDOMEvent:: codes?
 #define NS_PHASE_CAPTURING          1
@@ -140,6 +141,13 @@ public:
     return mHandler;
   }
 
+  PRBool HasAllowUntrustedAttr()
+  {
+    return (mType & NS_HANDLER_HAS_ALLOW_UNTRUSTED_ATTR) != 0;
+  }
+
+  // This returns a valid value only if HasAllowUntrustedEventsAttr returns
+  // PR_TRUE.
   PRBool AllowUntrustedEvents()
   {
     return (mType & NS_HANDLER_ALLOW_UNTRUSTED) != 0;

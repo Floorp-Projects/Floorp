@@ -815,10 +815,6 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   else {
     mType |= aCommand ? NS_HANDLER_TYPE_XBL_COMMAND : NS_HANDLER_TYPE_XBL_JS;
     mHandlerText = nsnull;
-
-    if (mPrototypeBinding && !mPrototypeBinding->IsChrome()) {
-      mType |= NS_HANDLER_ALLOW_UNTRUSTED;
-    }
   }
 
   mDetail = -1;
@@ -933,11 +929,12 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   if (aGroup && nsDependentString(aGroup).EqualsLiteral("system"))
     mType |= NS_HANDLER_TYPE_SYSTEM;
 
-  nsAutoString preventDefault(aPreventDefault);
-  if (preventDefault.EqualsLiteral("true"))
+  if (aPreventDefault &&
+      nsDependentString(aPreventDefault).EqualsLiteral("true"))
     mType |= NS_HANDLER_TYPE_PREVENTDEFAULT;
 
   if (aAllowUntrusted) {
+    mType |= NS_HANDLER_HAS_ALLOW_UNTRUSTED_ATTR;
     if (nsDependentString(aAllowUntrusted).EqualsLiteral("true")) {
       mType |= NS_HANDLER_ALLOW_UNTRUSTED;
     } else {
