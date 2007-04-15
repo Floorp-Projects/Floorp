@@ -90,7 +90,7 @@ nsDataHandler::GetDefaultPort(PRInt32 *result) {
 NS_IMETHODIMP
 nsDataHandler::GetProtocolFlags(PRUint32 *result) {
     *result = URI_NORELATIVE | URI_NOAUTH | URI_INHERITS_SECURITY_CONTEXT |
-        URI_LOADABLE_BY_ANYONE;
+        URI_LOADABLE_BY_ANYONE | URI_NON_PERSISTABLE;
     return NS_OK;
 }
 
