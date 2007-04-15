@@ -56,10 +56,11 @@
 #include "gfxPlatformGtk.h"
 
 // Glue to avoid build/runtime dependencies on Pango > 1.6
-
+#ifndef THEBES_USE_PANGO_CAIRO
 static gboolean
 (* PTR_pango_font_description_get_size_is_absolute)(PangoFontDescription*)
     = nsnull;
+static PRLibrary *gPangoLib = nsnull;
 
 static void InitPangoLib()
 {
@@ -68,15 +69,23 @@ static void InitPangoLib()
         return;
     initialized = PR_TRUE;
 
-    PRLibrary* lib = PR_LoadLibrary("libpango-1.0.so");
-    if (!lib)
+    gPangoLib = PR_LoadLibrary("libpango-1.0.so");
+    if (!gPangoLib)
         return;
 
     PTR_pango_font_description_get_size_is_absolute =
         (gboolean (*)(PangoFontDescription*))
-        PR_FindFunctionSymbol(lib, "pango_font_description_get_size_is_absolute");
+        PR_FindFunctionSymbol(gPangoLib,
+                              "pango_font_description_get_size_is_absolute");
+}
 
-    // leak lib deliberately
+static void
+ShutdownPangoLib()
+{
+    if (gPangoLib) {
+        PR_UnloadLibrary(gPangoLib);
+        gPangoLib = nsnull;
+    }
 }
 
 static gboolean
@@ -89,6 +98,21 @@ MOZ_pango_font_description_get_size_is_absolute(PangoFontDescription *desc)
     // In old versions of pango, this was always false.
     return PR_FALSE;
 }
+#else
+static inline void InitPangoLib()
+{
+}
+
+static inline void ShutdownPangoLib()
+{
+}
+
+static inline gboolean
+MOZ_pango_font_description_get_size_is_absolute(PangoFontDescription *desc)
+{
+    pango_font_description_get_size_is_absolute(desc);
+}
+#endif
 
 #define DEFAULT_PIXEL_FONT_SIZE 16.0f
 
@@ -179,6 +203,11 @@ nsSystemFontsGTK2::nsSystemFontsGTK2()
     GetSystemFontInfo(label, &mButtonFontName, &mButtonFontStyle);
 
     gtk_widget_destroy(window);  // no unref, windows are different
+}
+
+nsSystemFontsGTK2::~nsSystemFontsGTK2()
+{
+    ShutdownPangoLib();
 }
 
 nsresult

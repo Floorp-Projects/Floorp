@@ -51,6 +51,7 @@
 typedef GType (* AtkGetTypeType) (void);
 GType g_atk_hyperlink_impl_type = G_TYPE_INVALID;
 static PRBool sATKChecked = PR_FALSE;
+static PRLibrary *sATKLib = nsnull;
 static PRBool sInitialized = PR_FALSE;
 static const char sATKLibName[] = "libatk-1.0.so.0";
 static const char sATKHyperlinkImplGetTypeSymbol[] = "atk_hyperlink_impl_get_type";
@@ -567,6 +568,7 @@ NS_IMETHODIMP nsAppRootAccessible::Init()
         // an exit function registered will take care of it
         // if (sAtkBridge.shutdown)
         //     (*sAtkBridge.shutdown)();
+        PR_UnloadLibrary(sAtkBridge.lib);
         sAtkBridge.lib = NULL;
         sAtkBridge.init = NULL;
         sAtkBridge.shutdown = NULL;
@@ -577,9 +579,14 @@ NS_IMETHODIMP nsAppRootAccessible::Init()
         // 2) We need it to avoid assert in spi_atk_tidy_windows
         // if (sGail.shutdown)
         //   (*sGail.shutdown)();
+        PR_UnloadLibrary(sGail.lib);
         sGail.lib = NULL;
         sGail.init = NULL;
         sGail.shutdown = NULL;
+    }
+    if (sATKLib) {
+        PR_UnloadLibrary(sATKLib);
+        sATKLib = nsnull;
     }
 }
 
@@ -820,9 +827,9 @@ nsAppRootAccessible *
 nsAppRootAccessible::Create()
 {
     if (!sATKChecked) {
-        PRLibrary *atkLib = PR_LoadLibrary(sATKLibName);
-        if (atkLib) {
-            AtkGetTypeType pfn_atk_hyperlink_impl_get_type = (AtkGetTypeType) PR_FindFunctionSymbol(atkLib, sATKHyperlinkImplGetTypeSymbol);
+        sATKLib = PR_LoadLibrary(sATKLibName);
+        if (sATKLib) {
+            AtkGetTypeType pfn_atk_hyperlink_impl_get_type = (AtkGetTypeType) PR_FindFunctionSymbol(sATKLib, sATKHyperlinkImplGetTypeSymbol);
             if (pfn_atk_hyperlink_impl_get_type) {
                 g_atk_hyperlink_impl_type = pfn_atk_hyperlink_impl_get_type();
             }

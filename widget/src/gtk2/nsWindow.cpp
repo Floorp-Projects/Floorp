@@ -1012,8 +1012,18 @@ nsWindow::SetCursor(imgIContainer* aCursor,
         PRLibrary* lib;
         _gdk_cursor_new_from_pixbuf = (_gdk_cursor_new_from_pixbuf_fn)
             PR_FindFunctionSymbolAndLibrary("gdk_cursor_new_from_pixbuf", &lib);
+        if (lib) {
+            // We already link against GDK, so we can unload it.
+            PR_UnloadLibrary(lib);
+            lib = nsnull;
+        }
         _gdk_display_get_default = (_gdk_display_get_default_fn)
             PR_FindFunctionSymbolAndLibrary("gdk_display_get_default", &lib);
+        if (lib) {
+            // We already link against GDK, so we can unload it.
+            PR_UnloadLibrary(lib);
+            lib = nsnull;
+        }
         sPixbufCursorChecked = PR_TRUE;
     }
     mCursor = nsCursor(-1);

@@ -196,6 +196,7 @@ gfxPangoFontGroup::Copy(const gfxFontStyle *aStyle)
 static void
 (* PTR_pango_font_description_set_absolute_size)(PangoFontDescription*, double)
     = nsnull;
+static PRLibrary *gPangoLib = nsnull;
 
 static void InitPangoLib()
 {
@@ -206,23 +207,31 @@ static void InitPangoLib()
 
     g_type_init();
 
-    PRLibrary *lib = PR_LoadLibrary("libpango-1.0.so");
-    if (!lib)
+    gPangoLib = PR_LoadLibrary("libpango-1.0.so");
+    if (!gPangoLib)
         return;
 
     PTR_pango_font_description_set_absolute_size =
         (void (*)(PangoFontDescription*, double))
-        PR_FindFunctionSymbol(lib, "pango_font_description_set_absolute_size");
+        PR_FindFunctionSymbol(gPangoLib,
+                              "pango_font_description_set_absolute_size");
 
-    // leak lib deliberately
-
-    lib = nsnull;
+    PRLibrary *lib = nsnull;
     int *xft_max_freetype_files_ptr = nsnull;
     xft_max_freetype_files_ptr = (int*) PR_FindSymbolAndLibrary("XftMaxFreeTypeFiles", &lib);
     if (xft_max_freetype_files_ptr && *xft_max_freetype_files_ptr < 50)
         *xft_max_freetype_files_ptr = 50;
     if (lib)
         PR_UnloadLibrary(lib);
+}
+
+static void
+ShutdownPangoLib()
+{
+    if (gPangoLib) {
+        PR_UnloadLibrary(gPangoLib);
+        gPangoLib = nsnull;
+    }
 }
 
 static void
@@ -238,11 +247,15 @@ MOZ_pango_font_description_set_absolute_size(PangoFontDescription *desc,
     }
 }
 #else
-static void InitPangoLib()
+static inline void InitPangoLib()
 {
 }
 
-static void
+static inline void ShutdownPangoLib()
+{
+}
+
+static inline void
 MOZ_pango_font_description_set_absolute_size(PangoFontDescription *desc, double size)
 {
     pango_font_description_set_absolute_size(desc, size);
@@ -269,6 +282,12 @@ gfxPangoFont::~gfxPangoFont()
 
     if (mCairoFont)
         cairo_scaled_font_destroy(mCairoFont);
+}
+
+/* static */ void
+gfxPangoFont::Shutdown()
+{
+    ShutdownPangoLib();
 }
 
 static PangoStyle

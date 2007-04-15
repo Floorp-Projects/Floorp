@@ -68,6 +68,7 @@ NS_IMPL_ISUPPORTS1(nsIdleServiceGTK, nsIIdleService)
 nsIdleServiceGTK::nsIdleServiceGTK()
     : mXssInfo(nsnull)
 {
+    NS_ASSERTION(!xsslib, "created two instances of the idle service");
 #ifdef PR_LOGGING
     if (!sIdleLog)
         sIdleLog = PR_NewLogModule("nsIIdleService");
@@ -103,8 +104,10 @@ nsIdleServiceGTK::~nsIdleServiceGTK()
 {
     if (mXssInfo)
         XFree(mXssInfo);
-    if (xsslib)
+    if (xsslib) {
         PR_UnloadLibrary(xsslib);
+        xsslib = nsnull;
+    }
 }
 
 NS_IMETHODIMP
