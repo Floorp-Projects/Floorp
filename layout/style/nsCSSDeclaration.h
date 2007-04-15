@@ -193,11 +193,7 @@ private:
   void  TryBackgroundShorthand(nsAString & aString,
                                PRInt32 & aBgColor, PRInt32 & aBgImage,
                                PRInt32 & aBgRepeat, PRInt32 & aBgAttachment,
-                               PRInt32 & aBgPositionX,
-                               PRInt32 & aBgPositionY) const;
-  void  UseBackgroundPosition(nsAString & aString,
-                              PRInt32 & aBgPositionX,
-                              PRInt32 & aBgPositionY) const;
+                               PRInt32 & aBgPosition) const;
   void  TryOverflowShorthand(nsAString & aString,
                              PRInt32 & aOverflowX, PRInt32 & aOverflowY) const;
 #ifdef MOZ_SVG
@@ -209,7 +205,7 @@ private:
 
   PRBool   AllPropertiesSameImportance(PRInt32 aFirst, PRInt32 aSecond,
                                        PRInt32 aThird, PRInt32 aFourth,
-                                       PRInt32 aFifth, PRInt32 aSixth,
+                                       PRInt32 aFifth,
                                        PRBool & aImportance) const;
   PRBool   AllPropertiesSameValue(PRInt32 aFirst, PRInt32 aSecond,
                                   PRInt32 aThird, PRInt32 aFourth) const;

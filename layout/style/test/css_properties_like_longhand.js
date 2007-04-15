@@ -1,5 +1,4 @@
 var gShorthandPropertiesLikeLonghand = [
-	{ name: "background-position", prop: "backgroundPosition"},
 	{ name: "-moz-margin-end", prop: "MozMarginEnd"},
 	{ name: "margin-left", prop: "marginLeft"},
 	{ name: "margin-right", prop: "marginRight"},

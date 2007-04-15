@@ -306,6 +306,7 @@ protected:
   PRBool ParseAzimuth(nsresult& aErrorCode, nsCSSValue& aValue);
   PRBool ParseBackground(nsresult& aErrorCode);
   PRBool ParseBackgroundPosition(nsresult& aErrorCode);
+  PRBool ParseBackgroundPositionValues(nsresult& aErrorCode);
   PRBool ParseBorderColor(nsresult& aErrorCode);
   PRBool ParseBorderColors(nsresult& aErrorCode,
                            nsCSSValueList** aResult,
@@ -4185,6 +4186,8 @@ PRBool CSSParserImpl::ParseDirectionalBoxProperty(nsresult& aErrorCode,
 PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
                                     nsCSSProperty aPropID)
 {
+  NS_ASSERTION(aPropID < eCSSProperty_COUNT, "index out of range");
+
   switch (aPropID) {  // handle shorthand or multiple properties
   case eCSSProperty_background:
     return ParseBackground(aErrorCode);
@@ -4302,10 +4305,7 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
     return ParseMarker(aErrorCode);
 #endif
 
-  // Strip out properties we use internally. These properties are used
-  // by compound property parsing routines (e.g. "background-position").
-  case eCSSProperty_background_x_position:
-  case eCSSProperty_background_y_position:
+  // Strip out properties we use internally.
   case eCSSProperty_margin_end_value:
   case eCSSProperty_margin_left_value:
   case eCSSProperty_margin_right_value:
@@ -4458,10 +4458,6 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_background_repeat:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kBackgroundRepeatKTable);
-  case eCSSProperty_background_x_position: // for internal use
-  case eCSSProperty_background_y_position: // for internal use
-    return ParseVariant(aErrorCode, aValue, VARIANT_HKLP,
-                        kBackgroundXYPositionKTable);
   case eCSSProperty_binding:
     return ParseVariant(aErrorCode, aValue, VARIANT_HUO, nsnull);
   case eCSSProperty_border_collapse:
@@ -4855,144 +4851,183 @@ BackgroundPositionMaskToCSSValue(PRInt32 aMask, PRBool isX)
 
 PRBool CSSParserImpl::ParseBackground(nsresult& aErrorCode)
 {
-  const PRInt32 numProps = 6;
-  static const nsCSSProperty kBackgroundIDs[numProps] = {
-    eCSSProperty_background_color,
-    eCSSProperty_background_image,
-    eCSSProperty_background_repeat,
-    eCSSProperty_background_attachment,
-    eCSSProperty_background_x_position,
-    eCSSProperty_background_y_position
-  };
+  nsAutoParseCompoundProperty compound(this);
 
-  nsCSSValue  values[numProps];
-  PRInt32 found = ParseChoice(aErrorCode, values, kBackgroundIDs, numProps);
-  if ((found < 1) || (PR_FALSE == ExpectEndProperty(aErrorCode, PR_TRUE))) {
-    return PR_FALSE;
-  }
+  // Fill in the values that the shorthand will set if we don't find
+  // other values.
+  mTempData.mColor.mBackColor.SetIntValue(NS_STYLE_BG_COLOR_TRANSPARENT,
+                                          eCSSUnit_Enumerated);
+  mTempData.SetPropertyBit(eCSSProperty_background_color);
+  mTempData.mColor.mBackImage.SetNoneValue();
+  mTempData.SetPropertyBit(eCSSProperty_background_image);
+  mTempData.mColor.mBackRepeat.SetIntValue(NS_STYLE_BG_REPEAT_XY,
+                                           eCSSUnit_Enumerated);
+  mTempData.SetPropertyBit(eCSSProperty_background_repeat);
+  mTempData.mColor.mBackAttachment.SetIntValue(NS_STYLE_BG_ATTACHMENT_SCROLL,
+                                               eCSSUnit_Enumerated);
+  mTempData.SetPropertyBit(eCSSProperty_background_attachment);
+  mTempData.mColor.mBackPosition.mXValue.SetPercentValue(0.0f);
+  mTempData.mColor.mBackPosition.mYValue.SetPercentValue(0.0f);
+  mTempData.SetPropertyBit(eCSSProperty_background_position);
+  // including the ones that we can't set from the shorthand.
+  mTempData.mColor.mBackClip.SetInitialValue();
+  mTempData.SetPropertyBit(eCSSProperty__moz_background_clip);
+  mTempData.mColor.mBackOrigin.SetInitialValue();
+  mTempData.SetPropertyBit(eCSSProperty__moz_background_origin);
+  mTempData.mColor.mBackInlinePolicy.SetInitialValue();
+  mTempData.SetPropertyBit(eCSSProperty__moz_background_inline_policy);
 
-  if (0 != (found & 0x30)) {  // found one or more position values, validate them
-    if (0 == (found & 0x20)) {
-      if (eCSSUnit_Enumerated == values[4].GetUnit()) {
-        PRInt32 mask = values[4].GetIntValue();
-        values[4] = BackgroundPositionMaskToCSSValue(mask, PR_TRUE);
-        values[5] = BackgroundPositionMaskToCSSValue(mask, PR_FALSE);
+  // XXX If ParseSingleValueProperty were table-driven (bug 376079) and
+  // automatically filled in the right field of mTempData, we could move
+  // ParseBackgroundPosition to it (as a special case) and switch back
+  // to using ParseChoice here.
+
+  PRBool haveColor = PR_FALSE,
+         haveImage = PR_FALSE,
+         haveRepeat = PR_FALSE,
+         haveAttach = PR_FALSE,
+         havePosition = PR_FALSE;
+  while (GetToken(aErrorCode, PR_TRUE)) {
+    nsCSSTokenType tt = mToken.mType;
+    UngetToken(); // ...but we'll still cheat and use mToken
+    if (tt == eCSSToken_Symbol) {
+      // ExpectEndProperty only looks for symbols, and nothing else will
+      // show up as one.
+      break;
+    }
+
+    if (tt == eCSSToken_Ident) {
+      nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
+      PRInt32 dummy;
+      if (keyword == eCSSKeyword_inherit ||
+          keyword == eCSSKeyword__moz_initial) {
+        if (haveColor || haveImage || haveRepeat || haveAttach || havePosition)
+          return PR_FALSE;
+        haveColor = haveImage = haveRepeat = haveAttach = havePosition =
+          PR_TRUE;
+        GetToken(aErrorCode, PR_TRUE); // undo the UngetToken above
+        nsCSSValue val;
+        if (keyword == eCSSKeyword_inherit) {
+          val.SetInheritValue();
+        } else {
+          val.SetInitialValue();
+        }
+        mTempData.mColor.mBackColor = val;
+        mTempData.mColor.mBackImage = val;
+        mTempData.mColor.mBackRepeat = val;
+        mTempData.mColor.mBackAttachment = val;
+        mTempData.mColor.mBackPosition.mXValue = val;
+        mTempData.mColor.mBackPosition.mYValue = val;
+        // Reset (for 'inherit') the 3 properties that can't be
+        // specified, although it's not entirely clear in the spec:
+        // http://lists.w3.org/Archives/Public/www-style/2007Mar/0110
+        mTempData.mColor.mBackClip = val;
+        mTempData.mColor.mBackOrigin = val;
+        mTempData.mColor.mBackInlinePolicy = val;
+        break;
+      } else if (keyword == eCSSKeyword_none) {
+        if (haveImage)
+          return PR_FALSE;
+        haveImage = PR_TRUE;
+        if (!ParseSingleValueProperty(aErrorCode, mTempData.mColor.mBackImage,
+                                      eCSSProperty_background_image)) {
+          NS_NOTREACHED("should be able to parse");
+          return PR_FALSE;
+        }
+      } else if (nsCSSProps::FindKeyword(keyword,
+                   nsCSSProps::kBackgroundAttachmentKTable, dummy)) {
+        if (haveAttach)
+          return PR_FALSE;
+        haveAttach = PR_TRUE;
+        if (!ParseSingleValueProperty(aErrorCode,
+                                      mTempData.mColor.mBackAttachment,
+                                      eCSSProperty_background_attachment)) {
+          NS_NOTREACHED("should be able to parse");
+          return PR_FALSE;
+        }
+      } else if (nsCSSProps::FindKeyword(keyword,
+                   nsCSSProps::kBackgroundRepeatKTable, dummy)) {
+        if (haveRepeat)
+          return PR_FALSE;
+        haveRepeat = PR_TRUE;
+        if (!ParseSingleValueProperty(aErrorCode, mTempData.mColor.mBackRepeat,
+                                      eCSSProperty_background_repeat)) {
+          NS_NOTREACHED("should be able to parse");
+          return PR_FALSE;
+        }
+      } else if (nsCSSProps::FindKeyword(keyword,
+                   kBackgroundXYPositionKTable, dummy)) {
+        if (havePosition)
+          return PR_FALSE;
+        havePosition = PR_TRUE;
+        if (!ParseBackgroundPositionValues(aErrorCode)) {
+          return PR_FALSE;
+        }
+      } else {
+        if (haveColor)
+          return PR_FALSE;
+        haveColor = PR_TRUE;
+        if (!ParseSingleValueProperty(aErrorCode, mTempData.mColor.mBackColor,
+                                      eCSSProperty_background_color)) {
+          return PR_FALSE;
+        }
       }
-      else {
-        values[5].SetPercentValue(0.5f);
+    } else if (eCSSToken_Function == tt && 
+               mToken.mIdent.LowerCaseEqualsLiteral("url")) {
+      if (haveImage)
+        return PR_FALSE;
+      haveImage = PR_TRUE;
+      if (!ParseSingleValueProperty(aErrorCode, mTempData.mColor.mBackImage,
+                                    eCSSProperty_background_image)) {
+        return PR_FALSE;
+      }
+    } else if (mToken.IsDimension() || tt == eCSSToken_Percentage) {
+      if (havePosition)
+        return PR_FALSE;
+      havePosition = PR_TRUE;
+      if (!ParseBackgroundPositionValues(aErrorCode)) {
+        return PR_FALSE;
+      }
+    } else {
+      if (haveColor)
+        return PR_FALSE;
+      haveColor = PR_TRUE;
+      if (!ParseSingleValueProperty(aErrorCode, mTempData.mColor.mBackColor,
+                                    eCSSProperty_background_color)) {
+        return PR_FALSE;
       }
     }
-    else { // both x & y values
-      nsCSSUnit xUnit = values[4].GetUnit();
-      nsCSSUnit yUnit = values[5].GetUnit();
-      if (eCSSUnit_Enumerated == xUnit) {
-        PRInt32 xValue = values[4].GetIntValue();
-        if (eCSSUnit_Enumerated == yUnit) {
-          PRInt32 yValue = values[5].GetIntValue();
-          if (0 != (xValue & (BG_LEFT | BG_RIGHT)) &&  // x is really an x value
-              0 != (yValue & (BG_LEFT | BG_RIGHT))) {  // y is also an x value
-            return PR_FALSE;
-          }
-          if (0 != (xValue & (BG_TOP | BG_BOTTOM)) &&  // x is really an y value
-              0 != (yValue & (BG_TOP | BG_BOTTOM))) {  // y is also an y value
-            return PR_FALSE;
-          }
-          if (0 != (xValue & (BG_TOP | BG_BOTTOM)) ||  // x is really a y value
-              0 != (yValue & (BG_LEFT | BG_RIGHT))) {  // or y is really an x value
-            PRInt32 holdXValue = xValue;
-            xValue = yValue;
-            yValue = holdXValue;
-          }
-          NS_ASSERTION(xValue & BG_CLR, "bad x value");
-          NS_ASSERTION(yValue & BG_CTB, "bad y value");
-          values[4] = BackgroundPositionMaskToCSSValue(xValue, PR_TRUE);
-          values[5] = BackgroundPositionMaskToCSSValue(yValue, PR_FALSE);
-        }
-        else {
-          if (!(xValue & BG_CLR)) {
-            // The first keyword can only be 'center', 'left', or 'right'
-            return PR_FALSE;
-          }
-          values[4] = BackgroundPositionMaskToCSSValue(xValue, PR_TRUE);
-        }
-      }
-      else {
-        if (eCSSUnit_Enumerated == yUnit) {
-          PRInt32 yValue = values[5].GetIntValue();
-          if (!(yValue & BG_CTB)) {
-            // The second keyword can only be 'center', 'top', or 'bottom'
-            return PR_FALSE;
-          }
-          values[5] = BackgroundPositionMaskToCSSValue(yValue, PR_FALSE);
-        }
-      }
-    }
   }
 
-  // Provide missing values
-  if ((found & 0x01) == 0) {
-    values[0].SetIntValue(NS_STYLE_BG_COLOR_TRANSPARENT, eCSSUnit_Enumerated);
-  }
-  if ((found & 0x02) == 0) {
-    values[1].SetNoneValue();
-  }
-  if ((found & 0x04) == 0) {
-    values[2].SetIntValue(NS_STYLE_BG_REPEAT_XY, eCSSUnit_Enumerated);
-  }
-  if ((found & 0x08) == 0) {
-    values[3].SetIntValue(NS_STYLE_BG_ATTACHMENT_SCROLL, eCSSUnit_Enumerated);
-  }
-  if ((found & 0x30) == 0) {
-    values[4].SetPercentValue(0.0f);
-    values[5].SetPercentValue(0.0f);
-  }
-
-  PRInt32 index;
-  for (index = 0; index < numProps; ++index) {
-    AppendValue(kBackgroundIDs[index], values[index]);
-  }
-
-  // Background properties not settable from the shorthand get reset to their initial value
-  static const PRInt32 numResetProps = 3;
-  static const nsCSSProperty kBackgroundResetIDs[numResetProps] = {
-    eCSSProperty__moz_background_clip,
-    eCSSProperty__moz_background_inline_policy,
-    eCSSProperty__moz_background_origin
-  };
-
-  nsCSSValue initial;
-  initial.SetInitialValue();
-  for (index = 0; index < numResetProps; ++index) {
-    AppendValue(kBackgroundResetIDs[index], initial);
-  }
-
-  return PR_TRUE;
+  return ExpectEndProperty(aErrorCode, PR_TRUE) &&
+         (haveColor || haveImage || haveRepeat || haveAttach || havePosition);
 }
 
 PRBool CSSParserImpl::ParseBackgroundPosition(nsresult& aErrorCode)
 {
+  if (!ParseBackgroundPositionValues(aErrorCode) ||
+      !ExpectEndProperty(aErrorCode, PR_TRUE)) 
+    return PR_FALSE;
+  mTempData.SetPropertyBit(eCSSProperty_background_position);
+  return PR_TRUE;
+}
+
+PRBool CSSParserImpl::ParseBackgroundPositionValues(nsresult& aErrorCode)
+{
   // First try a percentage or a length value
-  nsCSSValue xValue, yValue;
+  nsCSSValue &xValue = mTempData.mColor.mBackPosition.mXValue,
+             &yValue = mTempData.mColor.mBackPosition.mYValue;
   if (ParseVariant(aErrorCode, xValue, VARIANT_HLP, nsnull)) {
     if (eCSSUnit_Inherit == xValue.GetUnit() ||
         eCSSUnit_Initial == xValue.GetUnit()) {  // both are inherited or both are set to initial
-      if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-        AppendValue(eCSSProperty_background_x_position, xValue);
-        AppendValue(eCSSProperty_background_y_position, xValue);
-        return PR_TRUE;
-      }
-      return PR_FALSE;
+      yValue = xValue;
+      return PR_TRUE;
     }
     // We have one percentage/length. Get the optional second
     // percentage/length/keyword.
     if (ParseVariant(aErrorCode, yValue, VARIANT_LP, nsnull)) {
       // We have two numbers
-      if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-        AppendValue(eCSSProperty_background_x_position, xValue);
-        AppendValue(eCSSProperty_background_y_position, yValue);
-        return PR_TRUE;
-      }
-      return PR_FALSE;
+      return PR_TRUE;
     }
 
     if (ParseEnum(aErrorCode, yValue, kBackgroundXYPositionKTable)) {
@@ -5001,23 +5036,14 @@ PRBool CSSParserImpl::ParseBackgroundPosition(nsresult& aErrorCode)
         // The second keyword can only be 'center', 'top', or 'bottom'
         return PR_FALSE;
       }
-      if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-        yValue = BackgroundPositionMaskToCSSValue(yVal, PR_FALSE);
-        AppendValue(eCSSProperty_background_x_position, xValue);
-        AppendValue(eCSSProperty_background_y_position, yValue);
-        return PR_TRUE;
-      }
-      return PR_FALSE;
+      yValue = BackgroundPositionMaskToCSSValue(yVal, PR_FALSE);
+      return PR_TRUE;
     }
 
     // If only one percentage or length value is given, it sets the
     // horizontal position only, and the vertical position will be 50%.
-    if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      AppendValue(eCSSProperty_background_x_position, xValue);
-      AppendValue(eCSSProperty_background_y_position, nsCSSValue(0.5f, eCSSUnit_Percent));
-      return PR_TRUE;
-    }
-    return PR_FALSE;
+    yValue.SetPercentValue(0.5f);
+    return PR_TRUE;
   }
 
   // Now try keywords. We do this manually to allow for the first
@@ -5046,13 +5072,8 @@ PRBool CSSParserImpl::ParseBackgroundPosition(nsresult& aErrorCode)
           return PR_FALSE;
         }
 
-        if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-          xValue = BackgroundPositionMaskToCSSValue(mask, PR_TRUE);
-          AppendValue(eCSSProperty_background_x_position, xValue);
-          AppendValue(eCSSProperty_background_y_position, yValue);
-          return PR_TRUE;
-        }
-        return PR_FALSE;
+        xValue = BackgroundPositionMaskToCSSValue(mask, PR_TRUE);
+        return PR_TRUE;
       }
     }
   }
@@ -5064,15 +5085,10 @@ PRBool CSSParserImpl::ParseBackgroundPosition(nsresult& aErrorCode)
     return PR_FALSE;
   }
 
-  if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-    // Create style values
-    xValue = BackgroundPositionMaskToCSSValue(mask, PR_TRUE);
-    yValue = BackgroundPositionMaskToCSSValue(mask, PR_FALSE);
-    AppendValue(eCSSProperty_background_x_position, xValue);
-    AppendValue(eCSSProperty_background_y_position, yValue);
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  // Create style values
+  xValue = BackgroundPositionMaskToCSSValue(mask, PR_TRUE);
+  yValue = BackgroundPositionMaskToCSSValue(mask, PR_FALSE);
+  return PR_TRUE;
 }
 
 // These must be in CSS order (top,right,bottom,left) for indexing to work

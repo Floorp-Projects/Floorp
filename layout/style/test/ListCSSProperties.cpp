@@ -112,8 +112,6 @@ const char* gShorthandPropertiesWithDOMProp[] = {
 const char *gInaccessibleProperties[] = {
     // Don't print the properties that aren't accepted by the parser, per
     // CSSParserImpl::ParseProperty
-    "-x-background-x-position",
-    "-x-background-y-position",
     "margin-end-value",
     "margin-left-value",
     "margin-right-value",

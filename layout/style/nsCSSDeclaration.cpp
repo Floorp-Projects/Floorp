@@ -223,8 +223,13 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
       case eCSSType_ValuePair: {
         const nsCSSValuePair *pair = NS_STATIC_CAST(const nsCSSValuePair*, storage);
         AppendCSSValueToString(aProperty, pair->mXValue, aResult);
-        if (pair->mYValue != pair->mXValue) {
+        if (pair->mYValue != pair->mXValue ||
+            (aProperty == eCSSProperty_background_position &&
+             pair->mXValue.GetUnit() != eCSSUnit_Inherit &&
+             pair->mXValue.GetUnit() != eCSSUnit_Initial)) {
           // Only output a Y value if it's different from the X value
+          // or if it's a background-position value other than 'initial'
+          // or 'inherit'.
           aResult.Append(PRUnichar(' '));
           AppendCSSValueToString(aProperty, pair->mYValue, aResult);
         }
@@ -614,14 +619,8 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
         aValue.Append(PRUnichar(' '));
         appendedSomething = PR_TRUE;
       }
-      if (AppendValueToString(eCSSProperty_background_x_position, aValue)) {
-        aValue.Append(PRUnichar(' '));
-#ifdef DEBUG
-        PRBool check =
-#endif
-          AppendValueToString(eCSSProperty_background_y_position, aValue);
-        NS_ASSERTION(check, "we parsed half of background-position");
-      } else if (appendedSomething) {
+      if (!AppendValueToString(eCSSProperty_background_position, aValue) &&
+          appendedSomething) {
         NS_ASSERTION(!aValue.IsEmpty() && aValue.Last() == PRUnichar(' '),
                      "We appended a space before!");
         // We appended an extra space.  Let's get rid of it
@@ -681,17 +680,6 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       }
       break;
     }
-    case eCSSProperty_background_position: {
-      if (AppendValueToString(eCSSProperty_background_x_position, aValue)) {
-        aValue.Append(PRUnichar(' '));
-#ifdef DEBUG
-        PRBool check =
-#endif
-        AppendValueToString(eCSSProperty_background_y_position, aValue);
-        NS_ASSERTION(check, "we parsed half of background-position");
-      }
-      break;
-    }
 #ifdef MOZ_SVG
     case eCSSProperty_marker: {
       nsCSSValue endValue, midValue, startValue;
@@ -727,18 +715,20 @@ nsCSSDeclaration::GetValueIsImportant(nsCSSProperty aProperty) const
   return mImportantData->StorageFor(aProperty) != nsnull;
 }
 
+// XXXldb Bug 376075 All callers of AllPropertiesSameImportance also
+// need to check for 'inherit' and 'initial' values, since you can't
+// output a mix of either mixed with other values in the same shorthand!
 PRBool
 nsCSSDeclaration::AllPropertiesSameImportance(PRInt32 aFirst, PRInt32 aSecond,
                                               PRInt32 aThird, PRInt32 aFourth,
-                                              PRInt32 aFifth, PRInt32 aSixth,
+                                              PRInt32 aFifth,
                                               PRBool & aImportance) const
 {
   aImportance = GetValueIsImportant(OrderValueAt(aFirst-1));
   if ((aSecond && aImportance != GetValueIsImportant(OrderValueAt(aSecond-1))) ||
       (aThird && aImportance != GetValueIsImportant(OrderValueAt(aThird-1))) ||
       (aFourth && aImportance != GetValueIsImportant(OrderValueAt(aFourth-1))) ||
-      (aFifth && aImportance != GetValueIsImportant(OrderValueAt(aFifth-1))) ||
-      (aSixth && aImportance != GetValueIsImportant(OrderValueAt(aSixth-1)))) {
+      (aFifth && aImportance != GetValueIsImportant(OrderValueAt(aFifth-1)))) {
     return PR_FALSE;
   }
   return PR_TRUE;
@@ -824,15 +814,15 @@ nsCSSDeclaration::TryBorderShorthand(nsAString & aString, PRUint32 aPropertiesSe
     PRBool  isWidthImportant, isStyleImportant, isColorImportant;
     if (AllPropertiesSameImportance(aBorderTopWidth, aBorderBottomWidth,
                                     aBorderLeftWidth, aBorderRightWidth,
-                                    0, 0,
+                                    0,
                                     isWidthImportant) &&
         AllPropertiesSameImportance(aBorderTopStyle, aBorderBottomStyle,
                                     aBorderLeftStyle, aBorderRightStyle,
-                                    0, 0,
+                                    0,
                                     isStyleImportant) &&
         AllPropertiesSameImportance(aBorderTopColor, aBorderBottomColor,
                                     aBorderLeftColor, aBorderRightColor,
-                                    0, 0,
+                                    0,
                                     isColorImportant)) {
       if (isWidthImportant == isStyleImportant && isWidthImportant == isColorImportant) {
         border = PR_TRUE;
@@ -874,7 +864,7 @@ nsCSSDeclaration::TryBorderSideShorthand(nsAString & aString,
 {
   PRBool isImportant;
   if (AllPropertiesSameImportance(aBorderWidth, aBorderStyle, aBorderColor,
-                                  0, 0, 0,
+                                  0, 0,
                                   isImportant)) {
     AppendASCIItoUTF16(nsCSSProps::GetStringValue(aShorthand), aString);
     aString.AppendLiteral(": ");
@@ -910,7 +900,7 @@ nsCSSDeclaration::TryFourSidesShorthand(nsAString & aString,
   PRBool isImportant;
   if (aTop && aBottom && aLeft && aRight &&
       AllPropertiesSameImportance(aTop, aBottom, aLeft, aRight,
-                                  0, 0,
+                                  0,
                                   isImportant)) {
     // all 4 properties are set, we can output a shorthand
     AppendASCIItoUTF16(nsCSSProps::GetStringValue(aShorthand), aString);
@@ -953,16 +943,15 @@ nsCSSDeclaration::TryBackgroundShorthand(nsAString & aString,
                                          PRInt32 & aBgImage,
                                          PRInt32 & aBgRepeat,
                                          PRInt32 & aBgAttachment,
-                                         PRInt32 & aBgPositionX,
-                                         PRInt32 & aBgPositionY) const
+                                         PRInt32 & aBgPosition) const
 {
   // 0 means not in the mOrder array; otherwise it's index+1
   // check if we have at least two properties set; otherwise, no need to
   // use a shorthand
   PRBool isImportant;
-  if (aBgColor && aBgImage && aBgRepeat && aBgAttachment && aBgPositionX && aBgPositionY &&
+  if (aBgColor && aBgImage && aBgRepeat && aBgAttachment && aBgPosition &&
       AllPropertiesSameImportance(aBgColor, aBgImage, aBgRepeat, aBgAttachment,
-                                  aBgPositionX, aBgPositionY, isImportant)) {
+                                  aBgPosition, isImportant)) {
     AppendASCIItoUTF16(nsCSSProps::GetStringValue(eCSSProperty_background), aString);
     aString.AppendLiteral(": ");
 
@@ -982,28 +971,12 @@ nsCSSDeclaration::TryBackgroundShorthand(nsAString & aString,
     aBgAttachment = 0;
 
     aString.Append(PRUnichar(' '));
-    UseBackgroundPosition(aString, aBgPositionX, aBgPositionY);
+    AppendValueToString(eCSSProperty_background_position, aString);
+    aBgPosition = 0;
+
     AppendImportanceToString(isImportant, aString);
     aString.AppendLiteral("; ");
   }
-}
-
-void
-nsCSSDeclaration::UseBackgroundPosition(nsAString & aString,
-                                        PRInt32 & aBgPositionX,
-                                        PRInt32 & aBgPositionY) const
-{
-  nsAutoString backgroundXValue, backgroundYValue;
-  AppendValueToString(eCSSProperty_background_x_position, backgroundXValue);
-  AppendValueToString(eCSSProperty_background_y_position, backgroundYValue);
-  aString.Append(backgroundXValue);
-  if (!backgroundXValue.Equals(backgroundYValue, nsCaseInsensitiveStringComparator())) {
-    // the two values are different
-    aString.Append(PRUnichar(' '));
-    aString.Append(backgroundYValue);
-  }
-  aBgPositionX = 0;
-  aBgPositionY = 0;
 }
 
 void
@@ -1014,7 +987,7 @@ nsCSSDeclaration::TryOverflowShorthand(nsAString & aString,
   PRBool isImportant;
   if (aOverflowX && aOverflowY &&
       AllPropertiesSameImportance(aOverflowX, aOverflowY,
-                                  0, 0, 0, 0, isImportant)) {
+                                  0, 0, 0, isImportant)) {
     nsCSSValue xValue, yValue;
     GetValueOrImportantValue(eCSSProperty_overflow_x, xValue);
     GetValueOrImportantValue(eCSSProperty_overflow_y, yValue);
@@ -1041,7 +1014,7 @@ nsCSSDeclaration::TryMarkerShorthand(nsAString & aString,
   PRBool isImportant;
   if (aMarkerEnd && aMarkerMid && aMarkerEnd &&
       AllPropertiesSameImportance(aMarkerEnd, aMarkerMid, aMarkerStart,
-                                  0, 0, 0, isImportant)) {
+                                  0, 0, isImportant)) {
     nsCSSValue endValue, midValue, startValue;
     GetValueOrImportantValue(eCSSProperty_marker_end, endValue);
     GetValueOrImportantValue(eCSSProperty_marker_mid, midValue);
@@ -1103,7 +1076,7 @@ nsCSSDeclaration::ToString(nsAString& aString) const
   PRInt32 marginTop = 0,  marginBottom = 0,  marginLeft = 0,  marginRight = 0;
   PRInt32 paddingTop = 0, paddingBottom = 0, paddingLeft = 0, paddingRight = 0;
   PRInt32 bgColor = 0, bgImage = 0, bgRepeat = 0, bgAttachment = 0;
-  PRInt32 bgPositionX = 0, bgPositionY = 0;
+  PRInt32 bgPosition = 0;
   PRInt32 overflowX = 0, overflowY = 0;
   PRUint32 borderPropertiesSet = 0, finalBorderPropertiesToSet = 0;
 #ifdef MOZ_SVG
@@ -1166,8 +1139,7 @@ nsCSSDeclaration::ToString(nsAString& aString) const
       case eCSSProperty_background_image:      bgImage       = index+1; break;
       case eCSSProperty_background_repeat:     bgRepeat      = index+1; break;
       case eCSSProperty_background_attachment: bgAttachment  = index+1; break;
-      case eCSSProperty_background_x_position: bgPositionX   = index+1; break;
-      case eCSSProperty_background_y_position: bgPositionY   = index+1; break;
+      case eCSSProperty_background_position:   bgPosition    = index+1; break;
 
       case eCSSProperty_overflow_x:            overflowX     = index+1; break;
       case eCSSProperty_overflow_y:            overflowY     = index+1; break;
@@ -1245,7 +1217,7 @@ nsCSSDeclaration::ToString(nsAString& aString) const
                         PR_TRUE);
   TryBackgroundShorthand(aString,
                          bgColor, bgImage, bgRepeat, bgAttachment,
-                         bgPositionX, bgPositionY);
+                         bgPosition);
   TryOverflowShorthand(aString, overflowX, overflowY);
 #ifdef MOZ_SVG
   TryMarkerShorthand(aString, markerEnd, markerMid, markerStart);
@@ -1300,30 +1272,7 @@ nsCSSDeclaration::ToString(nsAString& aString) const
       NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_background_image, bgImage)
       NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_background_repeat, bgRepeat)
       NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_background_attachment, bgAttachment)
-
-      case eCSSProperty_background_x_position:
-      case eCSSProperty_background_y_position: {
-        // 0 means not in the mOrder array; otherwise it's index+1
-        PRBool isImportant;
-        if (bgPositionX && bgPositionY &&
-            AllPropertiesSameImportance(bgPositionX, bgPositionY,
-                                        0, 0, 0, 0, isImportant)) {
-          AppendASCIItoUTF16(nsCSSProps::GetStringValue(eCSSProperty_background_position), aString);
-          aString.AppendLiteral(": ");
-          UseBackgroundPosition(aString, bgPositionX, bgPositionY);
-          AppendImportanceToString(isImportant, aString);
-          aString.AppendLiteral("; ");
-        }
-        else if (eCSSProperty_background_x_position == property && bgPositionX) {
-          AppendPropertyAndValueToString(eCSSProperty_background_x_position, aString);
-          bgPositionX = 0;
-        }
-        else if (eCSSProperty_background_y_position == property && bgPositionY) {
-          AppendPropertyAndValueToString(eCSSProperty_background_y_position, aString);
-          bgPositionY = 0;
-        }
-        break;
-      }
+      NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_background_position, bgPosition)
 
       NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_overflow_x, overflowX)
       NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_overflow_y, overflowY)
