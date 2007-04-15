@@ -118,6 +118,7 @@ private:
   ~nsNavBookmarks();
 
   nsresult InitRoots();
+  nsresult InitDefaults();
   nsresult InitToolbarFolder();
   nsresult CreateRoot(mozIStorageStatement* aGetRootStatement,
                       const nsCString& name, PRInt64* aID,
