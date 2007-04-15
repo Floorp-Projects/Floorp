@@ -1223,17 +1223,10 @@ static const nsCSSProperty gBackgroundSubpropTable[] = {
   eCSSProperty_background_image,
   eCSSProperty_background_repeat,
   eCSSProperty_background_attachment,
-  eCSSProperty_background_x_position,
-  eCSSProperty_background_y_position,
+  eCSSProperty_background_position,
   eCSSProperty__moz_background_clip, // XXX Added LDB.
   eCSSProperty__moz_background_origin, // XXX Added LDB.
   eCSSProperty__moz_background_inline_policy, // XXX Added LDB.
-  eCSSProperty_UNKNOWN
-};
-
-static const nsCSSProperty gBackgroundPositionSubpropTable[] = {
-  eCSSProperty_background_x_position,
-  eCSSProperty_background_y_position,
   eCSSProperty_UNKNOWN
 };
 

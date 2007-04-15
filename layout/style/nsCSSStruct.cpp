@@ -138,8 +138,7 @@ nsCSSColor::nsCSSColor(const nsCSSColor& aCopy)
     mBackImage(aCopy.mBackImage),
     mBackRepeat(aCopy.mBackRepeat),
     mBackAttachment(aCopy.mBackAttachment),
-    mBackPositionX(aCopy.mBackPositionX),
-    mBackPositionY(aCopy.mBackPositionY),
+    mBackPosition(aCopy.mBackPosition),
     mBackClip(aCopy.mBackClip),
     mBackOrigin(aCopy.mBackOrigin),
     mBackInlinePolicy(aCopy.mBackInlinePolicy)
