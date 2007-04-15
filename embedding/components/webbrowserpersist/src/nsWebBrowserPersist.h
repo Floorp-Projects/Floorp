@@ -116,7 +116,7 @@ private:
     nsresult GetLocalFileFromURI(nsIURI *aURI, nsILocalFile **aLocalFile) const;
     nsresult AppendPathToURI(nsIURI *aURI, const nsAString & aPath) const;
     nsresult MakeAndStoreLocalFilenameInURIMap(
-        const char *aURI, PRBool aNeedsPersisting, URIData **aData);
+        nsIURI *aURI, PRBool aNeedsPersisting, URIData **aData);
     nsresult MakeOutputStream(
         nsIURI *aFile, nsIOutputStream **aOutputStream);
     nsresult MakeOutputStreamFromFile(
