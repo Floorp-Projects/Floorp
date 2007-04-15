@@ -663,7 +663,8 @@ nsXBLBinding::InstallEventHandlers()
         return;
 
       nsCOMPtr<nsIDOMEventGroup> systemEventGroup;
-
+      PRBool isChromeDoc =
+        nsContentUtils::IsChromeDoc(mBoundElement->GetOwnerDoc());
       nsXBLPrototypeHandler* curr;
       for (curr = handlerChain; curr; curr = curr->GetNextHandler()) {
         // Fetch the event type.
@@ -695,7 +696,9 @@ nsXBLBinding::InstallEventHandlers()
           PRInt32 flags = (curr->GetPhase() == NS_PHASE_CAPTURING) ?
             NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
-          if (curr->AllowUntrustedEvents()) {
+          PRBool hasAllowUntrustedAttr = curr->HasAllowUntrustedAttr();
+          if ((hasAllowUntrustedAttr && curr->AllowUntrustedEvents()) ||
+              (!hasAllowUntrustedAttr && !isChromeDoc)) {
             flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
           }
 
@@ -708,6 +711,7 @@ nsXBLBinding::InstallEventHandlers()
       PRInt32 i;
       for (i = 0; i < keyHandlers->Count(); ++i) {
         nsXBLKeyEventHandler* handler = keyHandlers->ObjectAt(i);
+        handler->SetIsBoundToChrome(isChromeDoc);
 
         nsAutoString type;
         handler->GetEventName(type);
