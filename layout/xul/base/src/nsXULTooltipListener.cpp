@@ -486,7 +486,7 @@ nsXULTooltipListener::LaunchTooltip(nsIContent* aTarget, PRInt32 aX, PRInt32 aY)
     PRInt32 x = aX;
     PRInt32 y = aY;
 #ifdef MOZ_XUL
-    if (mNeedTitletip) {
+    if (mIsSourceTree && mNeedTitletip) {
       nsCOMPtr<nsITreeBoxObject> obx;
       GetSourceTreeBoxObject(getter_AddRefs(obx));
 #ifdef DEBUG_crap
