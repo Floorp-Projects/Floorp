@@ -230,8 +230,8 @@ public:
   NS_IMETHOD ResetInputState();
   NS_IMETHOD SetIMEOpenState(PRBool aState);
   NS_IMETHOD GetIMEOpenState(PRBool* aState);
-  NS_IMETHOD SetIMEEnabled(PRBool aState);
-  NS_IMETHOD GetIMEEnabled(PRBool* aState);
+  NS_IMETHOD SetIMEEnabled(PRUint32 aState);
+  NS_IMETHOD GetIMEEnabled(PRUint32* aState);
   NS_IMETHOD CancelIMEComposition();
 
   PRBool IMEMouseHandling(PRInt32 aAction, LPARAM lParam);
@@ -451,6 +451,7 @@ protected:
 
   // To enable/disable IME
   HIMC          mOldIMC;
+  PRUint32      mIMEEnabled;
 
   static HKL    gKeyboardLayout;
   static PRBool gSwitchKeyboardLayout;

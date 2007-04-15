@@ -475,7 +475,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     	break;
 
     case NS_NATIVE_COLORMAP:
-    	//¥TODO
+    	// TODO
     	break;
 
     case NS_NATIVE_OFFSETX:
@@ -638,7 +638,7 @@ NS_IMETHODIMP nsWindow::SetFont(const nsFont &aFont)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::SetColorMap(nsColorMap *aColorMap)
 {
-	//¥TODO
+	// TODO
 	// We may need to move this to nsMacWindow:
 	// I'm not sure all the individual widgets
 	// can have each their own colorMap on Mac.
@@ -1107,7 +1107,7 @@ void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 		return;
 	mDrawing = PR_TRUE;
 
-	CalcWindowRegions();	//¥REVISIT
+	CalcWindowRegions();	// REVISIT
 
 	if (aRenderingContext == nsnull)
 	{
@@ -2367,11 +2367,11 @@ NS_IMETHODIMP nsWindow::GetIMEOpenState(PRBool* aState) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsWindow::SetIMEEnabled(PRBool aState) {
+NS_IMETHODIMP nsWindow::SetIMEEnabled(PRUint32 aState) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsWindow::GetIMEEnabled(PRBool* aState) {
+NS_IMETHODIMP nsWindow::GetIMEEnabled(PRUint32* aState) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

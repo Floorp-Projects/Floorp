@@ -53,6 +53,7 @@
 #include "nsIKBStateControl.h"
 #include "nsIFocusController.h"
 #include "nsIDOMWindow.h"
+#include "nsContentUtils.h"
 
 /******************************************************************/
 /* nsIMEStateManager                                              */
@@ -123,13 +124,13 @@ nsIMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
       // the enabled state isn't changing, we should do nothing.
       return NS_OK;
     }
-    PRBool enabled;
+    PRUint32 enabled;
     if (NS_FAILED(kb->GetIMEEnabled(&enabled))) {
       // this platform doesn't support IME controlling
       return NS_OK;
     }
-    if ((enabled && newEnabledState == nsIContent::IME_STATUS_ENABLE) ||
-        (!enabled && newEnabledState == nsIContent::IME_STATUS_DISABLE)) {
+    if (enabled ==
+        nsContentUtils::GetKBStateControlStatusFromIMEStatus(newEnabledState)) {
       // the enabled state isn't changing.
       return NS_OK;
     }
@@ -172,9 +173,20 @@ nsIMEStateManager::OnDeactivate(nsPresContext* aPresContext)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
   NS_ENSURE_TRUE(aPresContext->Document()->GetWindow(), NS_ERROR_FAILURE);
-  if (sActiveWindow ==
+  if (sActiveWindow !=
       aPresContext->Document()->GetWindow()->GetPrivateRoot())
-    sActiveWindow = nsnull;
+    return NS_OK;
+
+  sActiveWindow = nsnull;
+#ifdef NS_KBSC_USE_SHARED_CONTEXT
+  // Reset the latest content. When the window is activated, the IME state
+  // may be changed on other applications.
+  sContent = nsnull;
+  // We should enable the IME state for other applications.
+  nsIKBStateControl* kb = GetKBStateControl(aPresContext);
+  if (kb)
+    SetIMEState(aPresContext, nsIContent::IME_STATUS_ENABLE, kb);
+#endif // NS_KBSC_USE_SHARED_CONTEXT
   return NS_OK;
 }
 
@@ -238,8 +250,9 @@ nsIMEStateManager::SetIMEState(nsPresContext*     aPresContext,
                                nsIKBStateControl* aKB)
 {
   if (aState & nsIContent::IME_STATUS_MASK_ENABLED) {
-    PRBool enable = (aState & nsIContent::IME_STATUS_ENABLE);
-    aKB->SetIMEEnabled(enable);
+    PRUint32 state =
+      nsContentUtils::GetKBStateControlStatusFromIMEStatus(aState);
+    aKB->SetIMEEnabled(state);
   }
   if (aState & nsIContent::IME_STATUS_MASK_OPENED) {
     PRBool open = (aState & nsIContent::IME_STATUS_OPEN);

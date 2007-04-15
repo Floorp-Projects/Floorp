@@ -524,16 +524,21 @@ public:
    *         the previous OPEN/CLOSE state will be restored (unless the newly
    *         focused content specifies the OPEN/CLOSE state by setting the OPEN
    *         or CLOSE flag with the ENABLE flag).
+   *         IME_STATUS_PASSWORD should be returned only from password editor,
+   *         this value has a special meaning. It is used as alternative of
+   *         IME_STATUS_DISABLED.
    */
   enum {
-    IME_STATUS_NONE    = 0x0000,
-    IME_STATUS_ENABLE  = 0x0001,
-    IME_STATUS_DISABLE = 0x0002,
-    IME_STATUS_OPEN    = 0x0004,
-    IME_STATUS_CLOSE   = 0x0008
+    IME_STATUS_NONE     = 0x0000,
+    IME_STATUS_ENABLE   = 0x0001,
+    IME_STATUS_DISABLE  = 0x0002,
+    IME_STATUS_PASSWORD = 0x0004,
+    IME_STATUS_OPEN     = 0x0008,
+    IME_STATUS_CLOSE    = 0x0010
   };
   enum {
-    IME_STATUS_MASK_ENABLED = IME_STATUS_ENABLE | IME_STATUS_DISABLE,
+    IME_STATUS_MASK_ENABLED = IME_STATUS_ENABLE | IME_STATUS_DISABLE |
+                              IME_STATUS_PASSWORD,
     IME_STATUS_MASK_OPENED  = IME_STATUS_OPEN | IME_STATUS_CLOSE
   };
   virtual PRUint32 GetDesiredIMEState()

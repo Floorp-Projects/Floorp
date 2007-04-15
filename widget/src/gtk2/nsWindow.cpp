@@ -5068,7 +5068,7 @@ nsWindow::IMEDestroyContext(void)
     }
 
     mIMEData->mOwner   = nsnull;
-    mIMEData->mEnabled = PR_FALSE;
+    mIMEData->mEnabled = nsIKBStateControl::IME_STATUS_DISABLED;
 
     if (mIMEData->mContext) {
         gtk_im_context_set_client_window(mIMEData->mContext, nsnull);
@@ -5231,10 +5231,16 @@ nsWindow::IMEGetContext()
     return IM_get_input_context(this);
 }
 
+static PRBool
+IsIMEEnabledState(PRUint32 aState)
+{
+    return aState == nsIKBStateControl::IME_STATUS_ENABLED ? PR_TRUE : PR_FALSE;
+}
+
 PRBool
 nsWindow::IMEIsEnabled(void)
 {
-    return mIMEData ? mIMEData->mEnabled : PR_FALSE;
+    return mIMEData ? IsIMEEnabledState(mIMEData->mEnabled) : PR_FALSE;
 }
 
 nsWindow*
@@ -5354,12 +5360,18 @@ nsWindow::GetIMEOpenState(PRBool* aState)
 }
 
 NS_IMETHODIMP
-nsWindow::SetIMEEnabled(PRBool aState)
+nsWindow::SetIMEEnabled(PRUint32 aState)
 {
     IMEInitData();
-
-    if (!mIMEData || mIMEData->mEnabled == aState)
+    if (!mIMEData)
         return NS_OK;
+
+    PRBool newState = IsIMEEnabledState(aState);
+    PRBool oldState = IsIMEEnabledState(mIMEData->mEnabled);
+    if (newState == oldState) {
+        mIMEData->mEnabled = aState;
+        return NS_OK;
+    }
 
     GtkIMContext *focusedIm = nsnull;
     // XXX Don't we need to check gFocusWindow?
@@ -5369,7 +5381,7 @@ nsWindow::SetIMEEnabled(PRBool aState)
 
     if (focusedIm && focusedIm == mIMEData->mContext) {
         // Release current IME focus if IME is enabled.
-        if (mIMEData->mEnabled) {
+        if (oldState) {
             focusedWin->ResetInputState();
             focusedWin->IMELoseFocus();
         }
@@ -5380,7 +5392,7 @@ nsWindow::SetIMEEnabled(PRBool aState)
         // Because some IMs are updating the status bar of them in this time.
         focusedWin->IMESetFocus();
     } else {
-        if (mIMEData->mEnabled)
+        if (oldState)
             ResetInputState();
         mIMEData->mEnabled = aState;
     }
@@ -5389,13 +5401,14 @@ nsWindow::SetIMEEnabled(PRBool aState)
 }
 
 NS_IMETHODIMP
-nsWindow::GetIMEEnabled(PRBool* aState)
+nsWindow::GetIMEEnabled(PRUint32* aState)
 {
     NS_ENSURE_ARG_POINTER(aState);
 
     IMEInitData();
 
-    *aState = IMEIsEnabled();
+    *aState =
+      mIMEData ? mIMEData->mEnabled : nsIKBStateControl::IME_STATUS_DISABLED;
     return NS_OK;
 }
 
