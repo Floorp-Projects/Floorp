@@ -704,3 +704,12 @@ gfxContext::GetUserStrokeExtent()
     cairo_stroke_extents(mCairo, &xmin, &ymin, &xmax, &ymax);
     return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
 }
+
+already_AddRefed<gfxFlattenedPath>
+gfxContext::GetFlattenedPath()
+{
+    gfxFlattenedPath *path =
+        new gfxFlattenedPath(cairo_copy_path_flat(mCairo));
+    NS_IF_ADDREF(path);
+    return path;
+}

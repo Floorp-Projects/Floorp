@@ -17,6 +17,7 @@ EXPORTS		= 	gfxASurface.h \
 			gfxFont.h \
 			gfxImageSurface.h \
 			gfxMatrix.h \
+			gfxPath.h \
 			gfxPattern.h \
 			gfxPlatform.h \
 			gfxPoint.h \
