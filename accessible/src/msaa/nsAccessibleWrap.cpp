@@ -38,7 +38,10 @@
 
 #include "nsAccessibleWrap.h"
 #include "nsAccessibilityAtoms.h"
+
+#include "nsIAccessibleDocument.h"
 #include "nsIAccessibleSelectable.h"
+#include "nsIAccessibleEvent.h"
 #include "nsIAccessibleWin32Object.h"
 
 #include "Accessible2_i.c"
@@ -56,6 +59,7 @@
 #include "nsTextFormatter.h"
 #include "nsIView.h"
 #include "nsRoleMap.h"
+#include "nsEventMap.h"
 #include "nsArrayUtils.h"
 
 /* For documentation of the accessibility architecture,
@@ -1406,8 +1410,114 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
   return NS_OK;
 }
 
+// nsPIAccessible
+
+NS_IMETHODIMP
+nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
+{
+  NS_ENSURE_ARG(aEvent);
+
+  nsresult rv = nsAccessible::FireAccessibleEvent(aEvent);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 eventType = 0;
+  aEvent->GetEventType(&eventType);
+
+  NS_ENSURE_TRUE(eventType > 0 &&
+                 eventType < nsIAccessibleEvent::EVENT_LAST_ENTRY,
+                 NS_ERROR_FAILURE);
+
+  PRUint32 winLastEntry = gWinEventMap[nsIAccessibleEvent::EVENT_LAST_ENTRY];
+  NS_ASSERTION(winLastEntry == kEVENT_LAST_ENTRY,
+               "MSAA event map skewed");
+
+  PRUint32 winEvent = gWinEventMap[eventType];
+  if (!winEvent)
+    return NS_OK;
+
+  // Means we're not active.
+  NS_ENSURE_TRUE(mWeakShell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIAccessible> accessible;
+  aEvent->GetAccessible(getter_AddRefs(accessible));
+  if (!accessible)
+    return NS_OK;
+
+  PRInt32 childID, worldID = OBJID_CLIENT;
+  PRUint32 role = ROLE_SYSTEM_TEXT; // Default value
+
+  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(accessible));
+  NS_ENSURE_STATE(accessNode);
+
+  HWND hWnd = 0;
+
+  if (NS_SUCCEEDED(accessible->GetRole(&role)) && role == ROLE_SYSTEM_CARET) {
+    childID = CHILDID_SELF;
+    worldID = OBJID_CARET;
+  } else {
+    childID = GetChildIDFor(accessible); // get the id for the accessible
+    if (!childID)
+      return NS_OK; // Can't fire an event without a child ID
+
+    // See if we're in a scrollable area with its own window
+    nsCOMPtr<nsIAccessible> newAccessible;
+    if (eventType == nsIAccessibleEvent::EVENT_HIDE) {
+      // Don't use frame from current accessible when we're hiding that
+      // accessible.
+      accessible->GetParent(getter_AddRefs(newAccessible));
+    } else {
+      newAccessible = accessible;
+    }
+
+    nsCOMPtr<nsPIAccessNode> privateAccessNode =
+      do_QueryInterface(newAccessible);
+    if (privateAccessNode) {
+      nsIFrame *frame = privateAccessNode->GetFrame();
+      if (frame)
+        hWnd = (HWND)frame->GetWindow()->GetNativeData(NS_NATIVE_WINDOW);
+    }
+  }
+
+  if (!hWnd) {
+    void* handle = nsnull;
+    nsCOMPtr<nsIAccessibleDocument> accessibleDoc;
+    accessNode->GetAccessibleDocument(getter_AddRefs(accessibleDoc));
+    NS_ENSURE_STATE(accessibleDoc);
+    accessibleDoc->GetWindowHandle(&handle);
+    hWnd = (HWND)handle;
+  }
+
+  // Gecko uses two windows for every scrollable area. One window contains
+  // scrollbars and the child window contains only the client area.
+  // Details of the 2 window system:
+  // * Scrollbar window: caret drawing window & return value for WindowFromAccessibleObject()
+  // * Client area window: text drawing window & MSAA event window
+
+  // Fire MSAA event for client area window.
+  NotifyWinEvent(winEvent, hWnd, worldID, childID);
+
+  return NS_OK;
+}
 
 //------- Helper methods ---------
+
+PRInt32 nsAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
+{
+  // A child ID of the window is required, when we use NotifyWinEvent,
+  // so that the 3rd party application can call back and get the IAccessible
+  // the event occured on.
+
+  void *uniqueID;
+  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aAccessible));
+  if (!accessNode) {
+    return 0;
+  }
+  accessNode->GetUniqueID(&uniqueID);
+
+  // Yes, this means we're only compatibible with 32 bit
+  // MSAA is only available for 32 bit windows, so it's okay
+  return - NS_PTR_TO_INT32(uniqueID);
+}
 
 IDispatch *nsAccessibleWrap::NativeAccessible(nsIAccessible *aXPAccessible)
 {

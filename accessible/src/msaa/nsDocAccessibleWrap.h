@@ -59,8 +59,6 @@ public:
     STDMETHODIMP_(ULONG) Release();
     STDMETHODIMP      QueryInterface(REFIID, void**);
 
-    static PRInt32 GetChildIDFor(nsIAccessible* aAccessible);
-
     void GetXPAccessibleFor(const VARIANT& varChild, nsIAccessible **aXPAccessible);
 
     // ISimpleDOMDocument
@@ -90,7 +88,6 @@ public:
         /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild);
 
     NS_IMETHOD Shutdown();
-    NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData);
     NS_IMETHOD FireAnchorJumpEvent();
 };
 
