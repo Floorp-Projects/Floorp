@@ -42,6 +42,7 @@
 #include "nsSVGLength2.h"
 #include "nsGkAtoms.h"
 #include "nsSVGUtils.h"
+#include "gfxContext.h"
 
 typedef nsSVGPathGeometryElement nsSVGEllipseElementBase;
 
@@ -64,7 +65,7 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGEllipseElementBase::)
 
   // nsSVGPathGeometryElement methods:
-  virtual void ConstructPath(cairo_t *aCtx);
+  virtual void ConstructPath(gfxContext *aCtx);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
@@ -155,17 +156,17 @@ nsSVGEllipseElement::GetLengthInfo()
 // nsSVGPathGeometryElement methods
 
 void
-nsSVGEllipseElement::ConstructPath(cairo_t *aCtx)
+nsSVGEllipseElement::ConstructPath(gfxContext *aCtx)
 {
   float x, y, rx, ry;
 
   GetAnimatedLengthValues(&x, &y, &rx, &ry, nsnull);
 
   if (rx > 0.0f && ry > 0.0f) {
-    cairo_save(aCtx);
-    cairo_translate(aCtx, x, y);
-    cairo_scale(aCtx, rx, ry);
-    cairo_arc(aCtx, 0, 0, 1, 0, 2 * M_PI);
-    cairo_restore(aCtx);
+    aCtx->Save();
+    aCtx->Translate(gfxPoint(x, y));
+    aCtx->Scale(rx, ry);
+    aCtx->Arc(gfxPoint(0, 0), 1, 0, 2 * M_PI);
+    aCtx->Restore();
   }
 }

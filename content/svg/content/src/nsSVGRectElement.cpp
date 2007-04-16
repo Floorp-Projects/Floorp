@@ -41,6 +41,7 @@
 #include "nsIDOMSVGRectElement.h"
 #include "nsSVGLength2.h"
 #include "nsGkAtoms.h"
+#include "gfxContext.h"
 
 typedef nsSVGPathGeometryElement nsSVGRectElementBase;
 
@@ -63,7 +64,7 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGRectElementBase::)
 
   // nsSVGPathGeometryElement methods:
-  virtual void ConstructPath(cairo_t *aCtx);
+  virtual void ConstructPath(gfxContext *aCtx);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
@@ -168,7 +169,7 @@ nsSVGRectElement::GetLengthInfo()
 // nsSVGPathGeometryElement methods
 
 void
-nsSVGRectElement::ConstructPath(cairo_t *aCtx)
+nsSVGRectElement::ConstructPath(gfxContext *aCtx)
 {
   float x, y, width, height, rx, ry;
 
@@ -181,7 +182,7 @@ nsSVGRectElement::ConstructPath(cairo_t *aCtx)
 
   /* optimize the no rounded corners case */
   if (rx == 0 && ry == 0) {
-    cairo_rectangle(aCtx, x, y, width, height);
+    aCtx->Rectangle(gfxRect(x, y, width, height));
     return;
   }
 
@@ -218,26 +219,30 @@ nsSVGRectElement::ConstructPath(cairo_t *aCtx)
   const float magic_x = magic*rx;
   const float magic_y = magic*ry;
 
-  cairo_move_to(aCtx, x+rx, y);
-  cairo_line_to(aCtx, x+width-rx, y);
-  cairo_curve_to(aCtx,
-                 x+width-rx + magic_x, y,
-                 x+width, y+ry-magic_y,
-                 x+width, y+ry);
-  cairo_line_to(aCtx, x+width, y+height-ry);
-  cairo_curve_to(aCtx,
-                 x+width, y+height-ry + magic_y,
-                 x+width-rx + magic_x, y+height,
-                 x+width-rx, y+height);
-  cairo_line_to(aCtx, x+rx, y+height);
-  cairo_curve_to(aCtx,
-                 x+rx - magic_x, y+height,
-                 x, y+height-ry + magic_y,
-                 x, y+height-ry);
-  cairo_line_to(aCtx, x, y+ry);
-  cairo_curve_to(aCtx,
-                 x, y+ry - magic_y,
-                 x+rx - magic_x, y,
-                 x+rx, y);
-  cairo_close_path(aCtx);
+  aCtx->MoveTo(gfxPoint(x + rx, y));
+  aCtx->LineTo(gfxPoint(x + width - rx, y));
+
+  aCtx->CurveTo(gfxPoint(x + width - rx + magic_x, y),
+                gfxPoint(x + width, y + ry - magic_y),
+                gfxPoint(x + width, y + ry));
+
+  aCtx->LineTo(gfxPoint(x + width, y + height - ry));
+
+  aCtx->CurveTo(gfxPoint(x + width, y + height - ry + magic_y),
+                gfxPoint(x + width - rx + magic_x, y+height),
+                gfxPoint(x + width - rx, y + height));
+
+  aCtx->LineTo(gfxPoint(x + rx, y + height));
+
+  aCtx->CurveTo(gfxPoint(x + rx - magic_x, y + height),
+                gfxPoint(x, y + height - ry + magic_y),
+                gfxPoint(x, y + height - ry));
+
+  aCtx->LineTo(gfxPoint(x, y + ry));
+
+  aCtx->CurveTo(gfxPoint(x, y + ry - magic_y),
+                gfxPoint(x + rx - magic_x, y),
+                gfxPoint(x + rx, y));
+
+  aCtx->ClosePath();
 }
