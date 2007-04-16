@@ -12,7 +12,7 @@
                                        else this.removeAttribute('disabled');
                                        return val;"
                                 onget="return this.getAttribute('disabled') == 'true';"/>
-      <property name="tabIndex" onget="return parseInt(this.getAttribute('tabindex'));"
+      <property name="tabIndex" onget="return parseInt(this.getAttribute('tabindex')) || 0"
                                 onset="if (val) this.setAttribute('tabindex', val);
                                        else this.removeAttribute('tabindex'); return val;"/>
     </implementation>
