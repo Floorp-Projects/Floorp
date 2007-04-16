@@ -285,7 +285,6 @@ public:
 
   nsHTMLComboboxListAccessible(nsIAccessible *aParent, 
                                nsIDOMNode* aDOMNode, 
-                               nsIFrame *aListFrame,
                                nsIWeakReference* aShell);
   virtual ~nsHTMLComboboxListAccessible() {}
 
@@ -298,9 +297,6 @@ public:
   NS_IMETHOD_(nsIFrame *) GetFrame(void);
 
   virtual void GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame);
-
-protected:
-  nsIFrame *mListFrame;
 };
 
 #endif
