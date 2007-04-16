@@ -6543,6 +6543,19 @@ nsEventReceiverSH::AddEventListenerHelper(JSContext *cx, JSObject *obj,
     return JS_FALSE;
   }
 
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+  nsresult rv =
+    sXPConnect->GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrapper));
+  if (NS_FAILED(rv)) {
+    nsDOMClassInfo::ThrowJSException(cx, rv);
+
+    return JS_FALSE;
+  }
+
+  // Set obj to be the object on which we'll actually register the
+  // event listener.
+  wrapper->GetJSObject(&obj);
+
   // Check that the caller has permission to call obj's addEventListener.
   if (NS_FAILED(sSecMan->CheckPropertyAccess(cx, obj,
                                              JS_GET_CLASS(cx, obj)->name,
@@ -6555,15 +6568,6 @@ nsEventReceiverSH::AddEventListenerHelper(JSContext *cx, JSObject *obj,
     // The caller doesn't have access to get or call the callee
     // object's addEventListener method. The security manager already
     // threw an exception for us, so simply return false.
-
-    return JS_FALSE;
-  }
-
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-  nsresult rv =
-    sXPConnect->GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrapper));
-  if (NS_FAILED(rv)) {
-    nsDOMClassInfo::ThrowJSException(cx, rv);
 
     return JS_FALSE;
   }
