@@ -43,7 +43,9 @@
 #include "nsIDOMSVGPathElement.h"
 #include "nsIDOMSVGAnimatedPathData.h"
 #include "nsSVGNumber2.h"
-#include "cairo.h"
+#include "gfxPath.h"
+
+class gfxContext;
 
 class nsSVGPathList
 {
@@ -53,7 +55,7 @@ public:
   enum { MOVETO, LINETO, CURVETO, CLOSEPATH };
   nsSVGPathList() : mArguments(nsnull), mNumCommands(0), mNumArguments(0) {}
   ~nsSVGPathList() { Clear(); }
-  void Playback(cairo_t *aCtx);
+  void Playback(gfxContext *aCtx);
 
 protected:
   void Clear();
@@ -61,25 +63,6 @@ protected:
   float   *mArguments;
   PRUint32 mNumCommands;
   PRUint32 mNumArguments;
-};
-
-class nsSVGFlattenedPath
-{
-private:
-  cairo_path_t *mPath;
-
-public:
-  nsSVGFlattenedPath(cairo_path_t *aPath) : mPath(aPath) {}
-  ~nsSVGFlattenedPath() { if (mPath) cairo_path_destroy(mPath); }
-
-  // Returns calculated length of path
-  float GetLength();
-
-  // Finds a point aXOffset along this path, for a character with
-  // aAdvance wide, offset from the path by aYOffset.  Returns
-  // position and angle.
-  void FindPoint(float aAdvance, float aXOffset, float aYOffset,
-                 float *aX, float *aY, float *aAngle);
 };
 
 typedef nsSVGPathGeometryElement nsSVGPathElementBase;
@@ -119,9 +102,9 @@ public:
   virtual PRBool IsDependentAttribute(nsIAtom *aName);
   virtual PRBool IsMarkable();
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
-  virtual void ConstructPath(cairo_t *aCtx);
+  virtual void ConstructPath(gfxContext *aCtx);
 
-  virtual nsSVGFlattenedPath *GetFlattenedPath(nsIDOMSVGMatrix *aMatrix);
+  virtual already_AddRefed<gfxFlattenedPath> GetFlattenedPath(nsIDOMSVGMatrix *aMatrix);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 

@@ -39,7 +39,7 @@
 
 #include "nsSVGGraphicElement.h"
 #include "nsTArray.h"
-#include "cairo.h"
+#include "gfxPath.h"
 
 struct nsSVGMark {
   float x, y, angle;
@@ -47,8 +47,8 @@ struct nsSVGMark {
     x(aX), y(aY), angle(aAngle) {}
 };
 
-class nsSVGFlattenedPath;
 class nsIDOMSVGMatrix;
+class gfxContext;
 
 typedef nsSVGGraphicElement nsSVGPathGeometryElementBase;
 
@@ -60,8 +60,8 @@ public:
   virtual PRBool IsDependentAttribute(nsIAtom *aName);
   virtual PRBool IsMarkable();
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
-  virtual void ConstructPath(cairo_t *aCtx) = 0;
-  virtual nsSVGFlattenedPath *GetFlattenedPath(nsIDOMSVGMatrix *aMatrix);
+  virtual void ConstructPath(gfxContext *aCtx) = 0;
+  virtual already_AddRefed<gfxFlattenedPath> GetFlattenedPath(nsIDOMSVGMatrix *aMatrix);
 };
 
 #endif

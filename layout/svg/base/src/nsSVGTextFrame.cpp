@@ -320,7 +320,7 @@ GetSingleValue(nsISVGGlyphFragmentLeaf *fragment,
     nsSVGTextPathFrame *textPath = fragment->FindTextPathParent();
 
     if (textPath) {
-      nsAutoPtr<nsSVGFlattenedPath> data(textPath->GetFlattenedPath());
+      nsRefPtr<gfxFlattenedPath> data = textPath->GetFlattenedPath();
       if (!data)
         return;
 

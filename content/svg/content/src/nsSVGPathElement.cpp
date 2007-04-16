@@ -47,6 +47,7 @@
 #include "nsISVGValueUtils.h"
 #include "nsSVGUtils.h"
 #include "nsSVGPoint.h"
+#include "gfxContext.h"
 
 nsSVGElement::NumberInfo nsSVGPathElement::sNumberInfo = 
                                                   { &nsGkAtoms::pathLength, 0 };
@@ -103,7 +104,7 @@ nsSVGPathElement::GetTotalLength(float *_retval)
 {
   *_retval = 0;
 
-  nsAutoPtr<nsSVGFlattenedPath> flat(GetFlattenedPath(nsnull));
+  nsRefPtr<gfxFlattenedPath> flat = GetFlattenedPath(nsnull);
 
   if (!flat)
     return NS_ERROR_FAILURE;
@@ -117,7 +118,7 @@ nsSVGPathElement::GetTotalLength(float *_retval)
 NS_IMETHODIMP
 nsSVGPathElement::GetPointAtLength(float distance, nsIDOMSVGPoint **_retval)
 {
-  nsAutoPtr<nsSVGFlattenedPath> flat(GetFlattenedPath(nsnull));
+  nsRefPtr<gfxFlattenedPath> flat = GetFlattenedPath(nsnull);
   if (!flat)
     return NS_ERROR_FAILURE;
 
@@ -129,10 +130,9 @@ nsSVGPathElement::GetPointAtLength(float distance, nsIDOMSVGPoint **_retval)
   distance = PR_MAX(0,           distance);
   distance = PR_MIN(totalLength, distance);
 
-  float x, y, angle;
-  flat->FindPoint(0, distance, 0, &x, &y, &angle);
+  gfxPoint pt = flat->FindPoint(gfxPoint(distance, 0));
 
-  return NS_NewSVGPoint(_retval, x, y);
+  return NS_NewSVGPoint(_retval, pt.x, pt.y);
 }
 
 /* unsigned long getPathSegAtLength (in float distance); */
@@ -471,43 +471,20 @@ nsSVGPathElement::DidModifySVGObservable(nsISVGValue* observable,
   return nsSVGPathElementBase::DidModifySVGObservable(observable, aModType);
 }
 
-nsSVGFlattenedPath *
+already_AddRefed<gfxFlattenedPath>
 nsSVGPathElement::GetFlattenedPath(nsIDOMSVGMatrix *aMatrix)
 {
-  cairo_surface_t *dummySurface =
-    cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 1, 1);
-  if (!dummySurface)
-    return nsnull;
-
-  cairo_t *ctx = cairo_create(dummySurface);
-  if (cairo_status(ctx) != CAIRO_STATUS_SUCCESS) {
-    cairo_destroy(ctx);
-    cairo_surface_destroy(dummySurface);
-    return nsnull;
-  }
+  gfxContext ctx(nsSVGUtils::GetThebesComputationalSurface());
 
   if (aMatrix) {
-    cairo_matrix_t matrix = nsSVGUtils::ConvertSVGMatrixToCairo(aMatrix);
-    cairo_set_matrix(ctx, &matrix);
+    ctx.SetMatrix(nsSVGUtils::ConvertSVGMatrixToThebes(aMatrix));
   }
 
-  mPathData.Playback(ctx);
+  mPathData.Playback(&ctx);
 
-  cairo_identity_matrix(ctx);
+  ctx.IdentityMatrix();
 
-  cairo_path_t *path = cairo_copy_path_flat(ctx);
-
-  cairo_destroy(ctx);
-  cairo_surface_destroy(dummySurface);
-
-  if (!path)
-    return nsnull;
-
-  nsSVGFlattenedPath *retval = new nsSVGFlattenedPath(path);
-  if (!retval)
-    cairo_path_destroy(path);
-
-  return retval;
+  return ctx.GetFlattenedPath();
 }
 
 //----------------------------------------------------------------------
@@ -994,7 +971,7 @@ nsSVGPathList::Clear()
 }
 
 void
-nsSVGPathList::Playback(cairo_t *aCtx)
+nsSVGPathList::Playback(gfxContext *aCtx)
 {
   float *args = mArguments;
   for (PRUint32 i = 0; i < mNumCommands; i++) {
@@ -1003,20 +980,21 @@ nsSVGPathList::Playback(cairo_t *aCtx)
     command = (command >> (2 * (i % 4))) & 0x3;
     switch (command) {
     case MOVETO:
-      cairo_move_to(aCtx, args[0], args[1]);
+      aCtx->MoveTo(gfxPoint(args[0], args[1]));
       args += 2;
       break;
     case LINETO:
-      cairo_line_to(aCtx, args[0], args[1]);
+      aCtx->LineTo(gfxPoint(args[0], args[1]));
       args += 2;
       break;
     case CURVETO:
-      cairo_curve_to(aCtx,
-                     args[0], args[1], args[2], args[3], args[4], args[5]);
+      aCtx->CurveTo(gfxPoint(args[0], args[1]),
+                    gfxPoint(args[2], args[3]),
+                    gfxPoint(args[4], args[5]));
       args += 6;
       break;
     case CLOSEPATH:
-      cairo_close_path(aCtx);
+      aCtx->ClosePath();
       break;
     default:
       break;
@@ -1024,97 +1002,8 @@ nsSVGPathList::Playback(cairo_t *aCtx)
   }
 }
 
-//==================================================================
-// nsSVGFlattenedPath
-
-static float
-CalcSubLengthAndAdvance(cairo_path_data_t *aData,
-                        float *aPathStartX, float *aPathStartY,
-                        float *aCurrentX, float *aCurrentY)
-{
-  float sublength = 0;
-
-  switch (aData->header.type) {
-    case CAIRO_PATH_MOVE_TO:
-    {
-      *aCurrentX = *aPathStartX = aData[1].point.x;
-      *aCurrentY = *aPathStartY = aData[1].point.y;
-      break;
-    }
-    case CAIRO_PATH_LINE_TO:
-    {
-      float dx = aData[1].point.x - *aCurrentX;
-      float dy = aData[1].point.y - *aCurrentY;
-      sublength = sqrt(dx * dx + dy * dy);
-      *aCurrentX = aData[1].point.x;
-      *aCurrentY = aData[1].point.y;
-      break;
-    }
-    case CAIRO_PATH_CURVE_TO:
-      /* should never happen with a flattened path */
-      NS_WARNING("curve_to in flattened path");
-      break;
-    case CAIRO_PATH_CLOSE_PATH:
-    {
-      float dx = *aPathStartX - *aCurrentX;
-      float dy = *aPathStartY - *aCurrentY;
-      sublength = sqrt(dx * dx + dy * dy);
-      *aCurrentX = *aPathStartX;
-      *aCurrentY = *aPathStartY;
-      break;
-    }
-  }
-  return sublength;
-}
-
-float
-nsSVGFlattenedPath::GetLength()
-{
-  float length = 0;      // current summed length
-  float sx = 0, sy = 0;  // start of current subpath
-  float x = 0, y = 0;    // current point
-
-  for (PRInt32 i = 0; i < mPath->num_data; i += mPath->data[i].header.length) {
-    length += CalcSubLengthAndAdvance(&mPath->data[i], &sx, &sy, &x, &y);
-  }
-  return length;
-}
-
 void
-nsSVGFlattenedPath::FindPoint(float aAdvance, float aXOffset, float aYOffset,
-                              float *aX, float *aY, float *aAngle)
-{
-  float length = 0;      // current summed length
-  float sx = 0, sy = 0;  // start of current subpath
-  float x = 0, y = 0;    // current point
-  float midpoint = aXOffset + aAdvance/2;
-
-  for (PRInt32 i = 0; i < mPath->num_data; i += mPath->data[i].header.length) {
-    float prevX = x;
-    float prevY = y;
-    float sublength = CalcSubLengthAndAdvance(&mPath->data[i],
-                                              &sx, &sy, &x, &y);
-
-    if (sublength != 0 && length + sublength >= midpoint) {
-      float ratio = (aXOffset - length) / sublength;
-      *aX = prevX * (1.0f - ratio) + x * ratio;
-      *aY = prevY * (1.0f - ratio) + y * ratio;
-
-      float dx = x - prevX;
-      float dy = y - prevY;
-      *aAngle = atan2(dy, dx);
-
-      float normalization = 1.0 / sqrt(dx * dx + dy * dy);
-      *aX += - aYOffset * dy * normalization;
-      *aY +=   aYOffset * dx * normalization;
-      return;
-    }
-    length += sublength;
-  }
-}
-
-void
-nsSVGPathElement::ConstructPath(cairo_t *aCtx)
+nsSVGPathElement::ConstructPath(gfxContext *aCtx)
 {
   mPathData.Playback(aCtx);
 }

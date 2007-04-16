@@ -187,7 +187,7 @@ nsSVGTextPathFrame::GetPathFrame() {
   return path;
 }
 
-nsSVGFlattenedPath *
+already_AddRefed<gfxFlattenedPath>
 nsSVGTextPathFrame::GetFlattenedPath() {
   nsIFrame *path = GetPathFrame();
   if (!path)

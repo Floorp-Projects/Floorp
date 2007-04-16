@@ -44,8 +44,7 @@
 #include "nsIDOMSVGPathSegList.h"
 #include "nsSVGLengthList.h"
 #include "nsIDOMSVGLength.h"
-
-class nsSVGFlattenedPath;
+#include "gfxPath.h"
 
 typedef nsSVGTSpanFrame nsSVGTextPathFrameBase;
 
@@ -83,7 +82,7 @@ public:
                                     nsISVGValue::modificationType aModType);
 
   // nsSVGTextPathFrame methods:
-  nsSVGFlattenedPath *GetFlattenedPath();
+  already_AddRefed<gfxFlattenedPath> GetFlattenedPath();
   nsIFrame *GetPathFrame();
 
    // nsISupports interface:

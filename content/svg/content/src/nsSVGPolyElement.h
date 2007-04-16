@@ -43,6 +43,8 @@
 
 typedef nsSVGPathGeometryElement nsSVGPolyElementBase;
 
+class gfxContext;
+
 class nsSVGPolyElement : public nsSVGPolyElementBase,
                          public nsIDOMSVGAnimatedPoints
 {
@@ -63,7 +65,7 @@ public:
   virtual PRBool IsDependentAttribute(nsIAtom *aName);
   virtual PRBool IsMarkable() { return PR_TRUE; }
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
-  virtual void ConstructPath(cairo_t *aCtx);
+  virtual void ConstructPath(gfxContext *aCtx);
 
 protected:
   nsCOMPtr<nsIDOMSVGPointList> mPoints;
