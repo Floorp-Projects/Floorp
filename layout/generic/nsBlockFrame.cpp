@@ -5942,18 +5942,12 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
   else {
     nsPresContext* presContext = PresContext();
 
-    // Lookup up the two pseudo style contexts
-    if (nsnull == GetPrevInFlow()) {
-      nsRefPtr<nsStyleContext> firstLetterStyle = GetFirstLetterStyle(presContext);
-      if (nsnull != firstLetterStyle) {
-        mState |= NS_BLOCK_HAS_FIRST_LETTER_STYLE;
-#ifdef NOISY_FIRST_LETTER
-        ListTag(stdout);
-        printf(": first-letter style found\n");
-#endif
-      }
-    }
-
+    NS_ASSERTION(GetPrevContinuation() ||
+                 (nsRefPtr<nsStyleContext>(GetFirstLetterStyle(presContext)) !=
+                  nsnull) ==
+                 ((mState & NS_BLOCK_HAS_FIRST_LETTER_STYLE) != 0),
+                 "NS_BLOCK_HAS_FIRST_LETTER_STYLE state out of sync");
+    
     rv = AddFrames(aChildList, nsnull);
     if (NS_FAILED(rv)) {
       return rv;
