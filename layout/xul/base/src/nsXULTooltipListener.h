@@ -121,7 +121,7 @@ protected:
 #endif
 
   nsresult ShowTooltip();
-  nsresult LaunchTooltip(nsIContent* aTarget, PRInt32 aX, PRInt32 aY);
+  void LaunchTooltip();
   nsresult HideTooltip();
   nsresult DestroyTooltip();
   // This method tries to find a tooltip for aTarget.

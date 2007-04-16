@@ -392,7 +392,7 @@ nsXULTooltipListener::ShowTooltip()
 #endif
 
       xulDoc->SetTooltipNode(mTargetNode);
-      LaunchTooltip(mSourceNode, mMouseClientX, mMouseClientY);
+      LaunchTooltip();
       mTargetNode = nsnull;
 
       // at this point, |mCurrentTooltip| holds the content node of
@@ -467,24 +467,24 @@ SetTitletipLabel(nsITreeBoxObject* aTreeBox, nsIContent* aTooltip,
 }
 #endif
 
-nsresult
-nsXULTooltipListener::LaunchTooltip(nsIContent* aTarget, PRInt32 aX, PRInt32 aY)
+void
+nsXULTooltipListener::LaunchTooltip()
 {
   if (!mCurrentTooltip)
-    return NS_OK;
+    return;
 
   nsCOMPtr<nsIBoxObject> popupBox;
   nsCOMPtr<nsIDOMXULElement> xulTooltipEl(do_QueryInterface(mCurrentTooltip));
   if (!xulTooltipEl) {
     NS_ERROR("tooltip isn't a XUL element!");
-    return NS_ERROR_FAILURE;
+    return;
   }
 
   xulTooltipEl->GetBoxObject(getter_AddRefs(popupBox));
   nsCOMPtr<nsIPopupBoxObject> popupBoxObject(do_QueryInterface(popupBox));
   if (popupBoxObject) {
-    PRInt32 x = aX;
-    PRInt32 y = aY;
+    PRInt32 x = mMouseClientX;
+    PRInt32 y = mMouseClientY;
 #ifdef MOZ_XUL
     if (mIsSourceTree && mNeedTitletip) {
       nsCOMPtr<nsITreeBoxObject> obx;
@@ -500,14 +500,14 @@ nsXULTooltipListener::LaunchTooltip(nsIContent* aTarget, PRInt32 aX, PRInt32 aY)
       mCurrentTooltip->UnsetAttr(nsnull, nsGkAtoms::titletip, PR_TRUE);
 #endif
 
-    nsCOMPtr<nsIDOMElement> targetEl(do_QueryInterface(aTarget));
+    nsCOMPtr<nsIDOMElement> targetEl(do_QueryInterface(mSourceNode));
     popupBoxObject->ShowPopup(targetEl, xulTooltipEl, x, y,
                               NS_LITERAL_STRING("tooltip").get(),
                               NS_LITERAL_STRING("none").get(),
                               NS_LITERAL_STRING("topleft").get());
   }
 
-  return NS_OK;
+  return;
 }
 
 nsresult
