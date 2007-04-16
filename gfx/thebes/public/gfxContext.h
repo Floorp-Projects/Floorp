@@ -47,6 +47,7 @@
 #include "gfxRect.h"
 #include "gfxMatrix.h"
 #include "gfxPattern.h"
+#include "gfxPath.h"
 
 typedef struct _cairo cairo_t;
 
@@ -515,6 +516,11 @@ public:
      **/
     gfxRect GetUserFillExtent();
     gfxRect GetUserStrokeExtent();
+
+    /**
+     ** Obtaining a "flattened" path - path converted to all line segments
+     **/
+    already_AddRefed<gfxFlattenedPath> GetFlattenedPath();
 
 private:
     cairo_t *mCairo;
