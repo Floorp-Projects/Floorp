@@ -133,6 +133,7 @@ public:
 
   void BeginUpdate() { ++mUpdateCount; }
   void EndUpdate();
+  void RecalcQuotesAndCounters();
 
   void WillDestroyFrameTree();
 

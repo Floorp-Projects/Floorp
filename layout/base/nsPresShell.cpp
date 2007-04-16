@@ -4602,6 +4602,7 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
     }
 
     if (aType & Flush_OnlyReflow) {
+      mFrameConstructor->RecalcQuotesAndCounters();
       ProcessReflowCommands(PR_FALSE);
     }
 
