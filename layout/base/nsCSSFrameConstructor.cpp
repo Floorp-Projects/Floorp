@@ -10180,22 +10180,28 @@ nsCSSFrameConstructor::EndUpdate()
     // This is the end of our last update.  Before we decrement
     // mUpdateCount, recalc quotes and counters as needed.
 
-    if (mQuotesDirty) {
-      mQuotesDirty = PR_FALSE;
-      mQuoteList.RecalcAll();
-    }
-
-    if (mCountersDirty) {
-      mCountersDirty = PR_FALSE;
-      mCounterManager.RecalcAll();
-    }
-
-    NS_ASSERTION(!mQuotesDirty, "Quotes updates will be lost");
-    NS_ASSERTION(!mCountersDirty, "Counter updates will be lost");
+    RecalcQuotesAndCounters();
     NS_ASSERTION(mUpdateCount == 1, "Odd update count");
   }
 
   --mUpdateCount;
+}
+
+void
+nsCSSFrameConstructor::RecalcQuotesAndCounters()
+{
+  if (mQuotesDirty) {
+    mQuotesDirty = PR_FALSE;
+    mQuoteList.RecalcAll();
+  }
+
+  if (mCountersDirty) {
+    mCountersDirty = PR_FALSE;
+    mCounterManager.RecalcAll();
+  }
+
+  NS_ASSERTION(!mQuotesDirty, "Quotes updates will be lost");
+  NS_ASSERTION(!mCountersDirty, "Counter updates will be lost");  
 }
 
 void
