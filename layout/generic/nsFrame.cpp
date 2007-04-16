@@ -5463,10 +5463,15 @@ GetCorrectedParent(nsPresContext* aPresContext, nsIFrame* aFrame,
   if (!parent) {
     *aSpecialParent = nsnull;
   } else {
-    *aSpecialParent =
-      nsFrame::CorrectStyleParentFrame(parent,
-                                       aFrame->GetStyleContext()->
-                                         GetPseudoType());
+    nsIAtom* pseudo = aFrame->GetStyleContext()->GetPseudoType();
+    // Outer tables are always anon boxes; if we're in here for an outer
+    // table, that actually means its the _inner_ table that wants to
+    // know its parent.  So get the pseudo of the inner in that case.
+    if (pseudo == nsCSSAnonBoxes::tableOuter) {
+      pseudo =
+        aFrame->GetFirstChild(nsnull)->GetStyleContext()->GetPseudoType();
+    }
+    *aSpecialParent = nsFrame::CorrectStyleParentFrame(parent, pseudo);
   }
 
   return NS_OK;
