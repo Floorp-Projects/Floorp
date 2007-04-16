@@ -72,6 +72,7 @@ public:
 public:
     // return the atk object for this nsAccessibleWrap
     NS_IMETHOD GetNativeInterface(void **aOutAccessible);
+    NS_IMETHOD FireAccessibleEvent(nsIAccessibleEvent *aEvent);
 
     AtkObject * GetAtkObject(void);
 
