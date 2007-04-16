@@ -1425,6 +1425,21 @@ nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTarget,
+                                  void * aData)
+{
+  // Don't fire event for accessible that has been shut down.
+  if (!mWeakShell)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAccessibleEvent> accEvent =
+    new nsAccEvent(aEvent, aTarget, aData);
+  NS_ENSURE_TRUE(accEvent, NS_ERROR_OUT_OF_MEMORY);
+
+  return FireAccessibleEvent(accEvent);
+}
+
 void nsDocAccessible::DocLoadCallback(nsITimer *aTimer, void *aClosure)
 {
   // Doc has finished loading, fire "load finished" event
