@@ -669,7 +669,6 @@ nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext)
   NS_ASSERTION(ctm, "graphic source didn't specify a ctm");
 
   gfxMatrix matrix = nsSVGUtils::ConvertSVGMatrixToThebes(ctm);
-  cairo_t *ctx = aContext->GetCairo();
 
   if (matrix.IsSingular()) {
     aContext->IdentityMatrix();
@@ -680,7 +679,7 @@ nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext)
   aContext->Multiply(matrix);
 
   aContext->NewPath();
-  NS_STATIC_CAST(nsSVGPathGeometryElement*, mContent)->ConstructPath(ctx);
+  NS_STATIC_CAST(nsSVGPathGeometryElement*, mContent)->ConstructPath(aContext);
 }
 
 PRUint16

@@ -151,9 +151,9 @@ public:
 
 protected:
   struct nsSVGCharacterPosition {
-    PRBool draw;
+    gfxFloat angle;
     float x, y;
-    float angle;
+    PRBool draw;
   };
 
   // VC6 does not allow the inner class to access protected members
