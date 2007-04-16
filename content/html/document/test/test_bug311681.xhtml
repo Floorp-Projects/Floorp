@@ -83,8 +83,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=311681
     }
   }
 
-  // Actually run the test once the XML parser works incrementally
-  // addLoadEvent(testClone);
+  addLoadEvent(testClone);
   addLoadEvent(SimpleTest.finish);
 ]]>
 </script>
@@ -93,8 +92,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=311681
   <script class="testbody" type="text/javascript">
   <![CDATA[
     testNode = fun.call(document, "content");
-    // Needs incremental XML parser
-    todo(testNode != null, "Should have node here");
+    ok(testNode != null, "Should have node here");
   ]]>
   </script>  
 </div>
