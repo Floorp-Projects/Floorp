@@ -1,0 +1,106 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=311681
+-->
+<head>
+  <title>Test for Bug 311681</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=311681">Mozilla Bug 311681</a>
+<script class="testbody" type="text/javascript">
+<![CDATA[
+  // Setup script
+  SimpleTest.waitForExplicitFinish();
+
+  // Make sure to trigger the hashtable case by asking for enough elements
+  // by ID.
+  for (var i = 0; i < 256; ++i) {
+    var x = document.getElementById(i);
+  }
+
+  // save off the document.getElementById function, since getting it as a
+  // property off the document it causes a content flush.      
+  var fun = document.getElementById;
+
+  // Slot for our initial element with id "content"
+  var testNode;
+
+  function getCont() {
+    return fun.call(document, "content");
+  }
+  
+  function testClone() {
+    // Test to make sure that if we have multiple nodes with the same ID in
+    // a document we don't forget about one of them when the other is
+    // removed.
+    var newParent = $("display");
+    var node = testNode.cloneNode(true);
+    isnot(node, testNode, "Clone should be a different node");
+
+    newParent.appendChild(node);
+
+    // Check what getElementById returns, no flushing
+    todo(getCont() == testNode, "Should be getting orig node pre-flush 1");
+    is(getCont(), node, "XML does it differently, for now");
+    
+    // Trigger a layout flush, just in case.
+    var itemHeight = newParent.offsetHeight/10;
+
+    // Check what getElementById returns now.
+    todo(getCont() == testNode, "Should be getting orig node post-flush 1");
+    is(getCont(), node, "XML does it differently, for now");
+    
+    clear(newParent);
+    
+    // Check what getElementById returns, no flushing
+    is(getCont(), testNode, "Should be getting orig node pre-flush 2");
+    
+    // Trigger a layout flush, just in case.
+    var itemHeight = newParent.offsetHeight/10;
+
+    // Check what getElementById returns now.
+    is(getCont(), testNode, "Should be getting orig node post-flush 2");
+
+    node = testNode.cloneNode(true);
+    newParent.appendChild(node);
+    testNode.parentNode.removeChild(testNode);
+
+    // Check what getElementById returns, no flushing
+    is(getCont(), node, "Should be getting clone pre-flush");
+    
+    // Trigger a layout flush, just in case.
+    var itemHeight = newParent.offsetHeight/10;
+
+    // Check what getElementById returns now.
+    is(getCont(), node, "Should be getting clone post-flush");
+
+  }
+
+  function clear(node) {
+    while (node.hasChildNodes()) {
+      node.removeChild(node.firstChild);
+    }
+  }
+
+  addLoadEvent(testClone);
+  addLoadEvent(SimpleTest.finish);
+]]>
+</script>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <script class="testbody" type="text/javascript">
+  <![CDATA[
+    testNode = fun.call(document, "content");
+    // Needs incremental XML parser
+    isnot(testNode, null, "Should have node here");
+  ]]>
+  </script>  
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
+

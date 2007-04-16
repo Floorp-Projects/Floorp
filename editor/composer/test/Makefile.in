@@ -39,48 +39,13 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir  = content/base/test
+relativesrcdir  = editor/composer/test
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = 	test_bug5141.html \
-		test_bug51034.html \
-		test_bug218236.html \
-		test_bug218277.html \
-		test_bug238409.html \
-		test_bug276037-1.html \
-		test_bug276037-2.xhtml \
-		test_bug308484.html \
-		test_bug311681.xml \
-		test_bug337631.html \
-		test_bug338541.xhtml \
-		test_bug338679.html \
-		test_bug339494.html \
-		test_bug339494.xhtml \
-		test_bug339494.xul \
-		test_bug343596.html \
-		test_bug352728.html \
-		test_bug352728.xhtml \
-		test_bug355026.html \
-		test_bug357450.js \
-		test_bug357450.html \
-		test_bug357450.xhtml \
-		test_bug357450.xul \
-		test_bug357450_svg.xhtml \
-		test_bug357509.html \
-		test_bug358660.html \
-		test_bug362391.xhtml \
-		test_bug364092.xhtml \
-		test_bug364413.xhtml \
-		test_bug366946.html \
-		test_bug367164.html \
-		test_bug371576-1.html \
-		test_bug371576-2.html \
-		test_bug371576-3.html \
-		test_bug371576-4.html \
-		test_bug371576-5.html \
-		test_bug372086.html \
+_TEST_FILES = \
+		test_bug348497.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

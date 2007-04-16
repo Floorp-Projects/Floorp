@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=344830
+-->
+<head>
+  <title>Test for Bug 344830</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=344830">Mozilla Bug 344830</a>
+<p id="display"></p>
+<div id="content" style="display: block">
+  <embed name="svg1"
+         width="200" height="200"
+         type="image/svg+xml"
+         src="bug344830_testembed.svg">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 344830 **/
+function getSVG() {
+ var embed = document.embeds["svg1"];
+ var svgDocument = embed.getSVGDocument();
+ var element = svgDocument.getElementById("g1");
+ ok(embed, "document.embeds[] works with SVG");
+ ok(svgDocument, "document.embeds[] works with SVG and embed.getSVGDocument()");
+ ok(element, "document.embeds[] works with SVG and svgDocument.getElementById()");
+ SimpleTest.finish();
+}
+addLoadEvent(getSVG);
+SimpleTest.waitForExplicitFinish()
+
+
+</script>
+</pre>
+</body>
+</html>
+

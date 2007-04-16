@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		+= dom-level1-core \
 		dom-level2-core \
+		bugs \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

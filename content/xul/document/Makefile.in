@@ -45,5 +45,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xuldoc
 DIRS		= public src
 
+ifdef MOZ_MOCHITEST
+DIRS		+= test
+endif
+
 include $(topsrcdir)/config/rules.mk
 

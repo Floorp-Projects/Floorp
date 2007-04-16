@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=345521
+-->
+<head>
+  <title>Test for Bug 345521</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=345521">Mozilla Bug 345521</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <a id="testlink" onclick="return 0">test</a><br />
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 345521 **/
+function hitlink() {
+  var evt = document.createEvent("MouseEvents");
+  evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+  var isOk = $("testlink").dispatchEvent(evt);
+  ok(isOk, "return 0 should not cancel an event");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(hitlink);
+
+</script>
+</pre>
+</body>
+</html>
+
