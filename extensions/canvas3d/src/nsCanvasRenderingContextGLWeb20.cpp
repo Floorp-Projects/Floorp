@@ -44,6 +44,7 @@
 #define NSGL_CONTEXT_NAME nsCanvasRenderingContextGLWeb20
 
 #include "nsCanvasRenderingContextGL.h"
+#include "nsICanvasRenderingContextGLBuffer.h"
 #include "nsICanvasRenderingContextGLWeb20.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsIDOMHTMLCanvasElement.h"
@@ -102,19 +103,6 @@
 // we're hoping that something is setting us up the remap
 
 #include "cairo.h"
-#include "glitz.h"
-
-#ifdef MOZ_X11
-#include <gdk/gdk.h>
-#include <gdk/gdkx.h>
-#include "cairo-xlib.h"
-#include "glitz-glx.h"
-#endif
-
-#ifdef XP_WIN
-#include "cairo-win32.h"
-#include "glitz-wgl.h"
-#endif
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gGLES20Log = nsnull;

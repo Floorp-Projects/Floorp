@@ -41,6 +41,8 @@
 
 #include "nsCanvasRenderingContextGL.h"
 
+#include "nsICanvasRenderingContextGL.h"
+
 #include "nsIRenderingContext.h"
 
 #include "nsICanvasRenderingContextInternal.h"
@@ -89,7 +91,6 @@
 // we're hoping that something is setting us up the remap
 
 #include "cairo.h"
-#include "glitz.h"
 
 #ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
@@ -97,9 +98,6 @@
 #endif
 
 #ifdef XP_WIN
-#include "cairo-win32.h"
-#include "glitz-wgl.h"
-
 #ifdef MOZILLA_1_8_BRANCH
 struct _cairo_surface_win32_hack {
     void *ptr;
@@ -125,13 +123,11 @@ struct _cairo_surface_win32_hack {
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include "cairo-xlib.h"
-#include "glitz-glx.h"
 #endif
 
 nsIXPConnect *gXPConnect = nsnull;
 JSRuntime *gScriptRuntime = nsnull;
 nsIJSRuntimeService *gJSRuntimeService = nsnull;
-PRBool gGlitzInitialized = PR_FALSE;
 
 // CanvasGLBuffer
 NS_DECL_CLASSINFO(CanvasGLBuffer)
@@ -176,7 +172,7 @@ CanvasGLBuffer::CanvasGLBuffer(nsCanvasRenderingContextGLPrivate *owner)
     owner->GetWeakReference(getter_AddRefs(mOwnerContext));
 
     bufferCount++;
-    fprintf (stderr, "VVVV Created; Buffers now: %d\n", bufferCount); fflush(stderr);
+    //fprintf (stderr, "VVVV Created; Buffers now: %d\n", bufferCount); fflush(stderr);
 }
 
 CanvasGLBuffer::~CanvasGLBuffer()
@@ -184,7 +180,7 @@ CanvasGLBuffer::~CanvasGLBuffer()
     Dispose();
 
     --bufferCount;
-    fprintf (stderr, "VVVV Released; Buffers now: %d\n", bufferCount); fflush(stderr);
+    //fprintf (stderr, "VVVV Released; Buffers now: %d\n", bufferCount); fflush(stderr);
 }
 
 /* nsISecurityCheckedComponent bits */
@@ -229,7 +225,7 @@ CanvasGLBuffer::Init(PRUint32 usage,
 {
     nsresult rv;
 
-    fprintf (stderr, "VVVV CanvasGLBuffer::Init\n");
+    //fprintf (stderr, "VVVV CanvasGLBuffer::Init\n");
 
     if (!mDisposed)
         Dispose();
@@ -336,7 +332,7 @@ CanvasGLBuffer::GetType(PRUint32 *retval)
 
 CanvasGLTexture::CanvasGLTexture(nsCanvasRenderingContextGLPrivate *owner)
     : mDisposed(PR_FALSE),
-      mGlitzTextureSurface(nsnull), mGlitzTextureObject(nsnull),
+      //mGlitzTextureSurface(nsnull), mGlitzTextureObject(nsnull),
       mWidth(0), mHeight(0)
 {
     owner->GetWeakReference(getter_AddRefs(mOwnerContext));
@@ -388,7 +384,7 @@ CanvasGLTexture::GetOwnerContext(nsICanvasRenderingContextGL **retval)
 NS_IMETHODIMP
 CanvasGLTexture::GetTarget(PRUint32 *aResult)
 {
-    *aResult = glitz_texture_object_get_target (mGlitzTextureObject);
+    //*aResult = glitz_texture_object_get_target (mGlitzTextureObject);
     return NS_OK;
 }
 
@@ -415,23 +411,23 @@ CanvasGLTexture::SetFilter(PRUint32 filterType, PRUint32 filterMode)
         return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
-    glitz_texture_object_set_filter (mGlitzTextureObject, (glitz_texture_filter_type_t)filterType, (glitz_texture_filter_t)filterMode);
+    //glitz_texture_object_set_filter (mGlitzTextureObject, (glitz_texture_filter_type_t)filterType, (glitz_texture_filter_t)filterMode);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 CanvasGLTexture::SetWrap(PRUint32 wrapType, PRUint32 wrapMode)
 {
-    if (wrapType != GLITZ_TEXTURE_WRAP_TYPE_S &&
-        wrapType != GLITZ_TEXTURE_WRAP_TYPE_T)
+    if (wrapType != GL_TEXTURE_WRAP_S &&
+        wrapType != GL_TEXTURE_WRAP_T)
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    if (wrapMode != GLITZ_TEXTURE_WRAP_CLAMP_TO_EDGE &&
-        wrapMode != GLITZ_TEXTURE_WRAP_REPEAT &&
-        wrapMode != GLITZ_TEXTURE_WRAP_MIRRORED_REPEAT)
+    if (wrapMode != GL_CLAMP_TO_EDGE &&
+        wrapMode != GL_REPEAT &&
+        wrapMode != GL_MIRRORED_REPEAT)
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    glitz_texture_object_set_wrap (mGlitzTextureObject, (glitz_texture_wrap_type_t)wrapType, (glitz_texture_wrap_t)wrapMode);
+    //glitz_texture_object_set_wrap (mGlitzTextureObject, (glitz_texture_wrap_type_t)wrapType, (glitz_texture_wrap_t)wrapMode);
     return NS_OK;
 }
 
@@ -491,37 +487,15 @@ JSArrayToSimpleBuffer (SimpleBuffer& sbuffer,
 void
 nsCanvasRenderingContextGLPrivate::MakeContextCurrent()
 {
-#ifdef XP_WIN
-    if (mContextToken == nsnull) {
-        glitz_context_make_current (mGlitzContext, mGlitzDrawable);
-        mContextToken = wglGetCurrentContext();
-        mCurrent = PR_TRUE;
-        return;
-    }
-
-    if (mContextToken != wglGetCurrentContext()) {
-        glitz_context_make_current (mGlitzContext, mGlitzDrawable);
-        mCurrent = PR_TRUE;
-    }
-#endif
-
-#if 0
-    if (!mCurrent) {
-        fprintf (stderr, "[this:%p] Making context %p current (current: %d)\n", this, mGlitzContext, mCurrent);
-        fflush (stderr);
-        glitz_context_set_user_data (mGlitzContext, this, LostCurrentContext);
-    }
-#endif
+    mGLPbuffer->MakeContextCurrent();
 }
 
 void
 nsCanvasRenderingContextGLPrivate::LostCurrentContext(void *closure)
 {
     nsCanvasRenderingContextGLPrivate* self = (nsCanvasRenderingContextGLPrivate*) closure;
-    fprintf (stderr, "[this:%p] Lost context\n", closure);
+    //fprintf (stderr, "[this:%p] Lost context\n", closure);
     fflush (stderr);
-
-    self->mCurrent = PR_FALSE;
 }
 
 //
@@ -534,7 +508,14 @@ nsCanvasRenderingContextGLPrivate::SetCanvasElement(nsICanvasElement* aParentCan
     if (!SafeToCreateCanvas3DContext())
         return NS_ERROR_FAILURE;
 
+    mGLPbuffer = new nsGLPbuffer();
+
+    if (!mGLPbuffer->Init(this))
+        return NS_ERROR_FAILURE;
+
     if (!ValidateGL()) {
+        // XXX over here we need to destroy mGLPbuffer and create a mesa buffer
+
         LogMessage(NS_LITERAL_CSTRING("Canvas 3D: Couldn't validate OpenGL implementation; is everything needed present?"));
         return NS_ERROR_FAILURE;
     }
@@ -547,174 +528,18 @@ nsCanvasRenderingContextGLPrivate::SetCanvasElement(nsICanvasElement* aParentCan
 NS_IMETHODIMP
 nsCanvasRenderingContextGLPrivate::SetDimensions(PRInt32 width, PRInt32 height)
 {
+    fprintf (stderr, "VVVV CanvasGLBuffer::SetDimensions %d %d\n", width, height);
+
     if (mWidth == width && mHeight == height)
         return NS_OK;
 
-    Destroy();
-
-    glitz_drawable_format_t *gdformat = nsnull;
-
-#ifdef MOZ_X11
-    Display* display = GDK_DISPLAY();
-
-    glitz_drawable_format_t templ;
-    templ.color.fourcc = GLITZ_FOURCC_RGB;
-    templ.color.red_size = 8;
-    templ.color.green_size = 8;
-    templ.color.blue_size = 8;
-    templ.color.alpha_size = 8;
-    templ.doublebuffer = 0;
-    
-    gdformat = glitz_glx_find_pbuffer_format
-        (display,
-         gdk_x11_get_default_screen(),
-         GLITZ_FORMAT_FOURCC_MASK |
-         GLITZ_FORMAT_RED_SIZE_MASK | GLITZ_FORMAT_GREEN_SIZE_MASK |
-         GLITZ_FORMAT_BLUE_SIZE_MASK | GLITZ_FORMAT_ALPHA_SIZE_MASK |
-         GLITZ_FORMAT_DOUBLEBUFFER_MASK, &templ, 0);
-
-    if (!gdformat)
-        return NS_ERROR_INVALID_ARG;
-
-    mGlitzDrawable =
-        glitz_glx_create_pbuffer_drawable(display,
-                                          DefaultScreen(display),
-                                          gdformat,
-                                          width,
-                                          height);
-#endif
-
-#ifdef XP_WIN
-    glitz_drawable_format_t templ;
-    templ.color.fourcc = GLITZ_FOURCC_RGB;
-    templ.color.red_size = 8;
-    templ.color.green_size = 8;
-    templ.color.blue_size = 8;
-    templ.color.alpha_size = 8;
-    templ.doublebuffer = 0;
-    templ.samples = 8;
-
-    gdformat = nsnull;
-
-    do {
-        templ.samples = templ.samples >> 1;
-        gdformat = glitz_wgl_find_pbuffer_format
-            (GLITZ_FORMAT_FOURCC_MASK |
-             GLITZ_FORMAT_RED_SIZE_MASK | GLITZ_FORMAT_GREEN_SIZE_MASK |
-             GLITZ_FORMAT_BLUE_SIZE_MASK | GLITZ_FORMAT_ALPHA_SIZE_MASK |
-             GLITZ_FORMAT_DOUBLEBUFFER_MASK | GLITZ_FORMAT_SAMPLES_MASK,
-             &templ, 0);
-    } while (gdformat == nsnull && templ.samples > 0);
-
-    if (!gdformat) {
-        LogMessage(NS_LITERAL_CSTRING("Canvas 3D: Unable to find pbuffer format (maybe pbuffers are not available?"));
-        return NS_ERROR_INVALID_ARG;
-    }
-
-    mGlitzDrawable =
-        glitz_wgl_create_pbuffer_drawable(gdformat,
-                                          width,
-                                          height);
-#endif
-
-    if (!gdformat || !mGlitzDrawable) {
-        LogMessage(NS_LITERAL_CSTRING("Canvas 3D: Failed to create pbuffer drawable."));
+    if (!mGLPbuffer->Resize(width, height)) {
+        LogMessage(NS_LITERAL_CSTRING("mGLPbuffer->Resize failed"));
         return NS_ERROR_FAILURE;
     }
 
-    glitz_format_t *gformat =
-        glitz_find_standard_format(mGlitzDrawable, GLITZ_STANDARD_ARGB32);
-    if (!gformat) {
-        LogMessage(NS_LITERAL_CSTRING("Canvas 3D: Couldn't find ARGB32 format (this should never happen!)"));
-        return NS_ERROR_INVALID_ARG;
-    }
-
-    mGlitzSurface =
-        glitz_surface_create(mGlitzDrawable,
-                             gformat,
-                             width,
-                             height,
-                             0,
-                             NULL);
-    if (!mGlitzSurface) {
-        LogMessage(NS_LITERAL_CSTRING("Canvas 3D: Failed to create glitz surface"));
-        return NS_ERROR_INVALID_ARG;
-    }
-
-    glitz_surface_attach(mGlitzSurface, mGlitzDrawable, GLITZ_DRAWABLE_BUFFER_FRONT_COLOR);
-
-    mGlitzContext = glitz_context_create (mGlitzDrawable, gdformat);
-
-    MakeContextCurrent();
-
-    GLenum err = glewInit();
-    if (err != GLEW_OK) {
-        // er, something very bad happened
-        LogMessage(NS_LITERAL_CSTRING("Canvas 3D: GLEW init failed"));
-        NS_ERROR("glewInit failed!  Leaking lots of memory");
-        return NS_ERROR_FAILURE;
-    }
-
-    //mSurface = new gfxGlitzSurface (mGlitzDrawable, gsurf, PR_TRUE);
     mWidth = width;
     mHeight = height;
-
-    mStride = (((mWidth*4) + 3) / 4) * 4;
-
-#ifdef XP_WIN
-    BITMAPINFO *bitmap_info = (BITMAPINFO*) PR_Malloc(sizeof(BITMAPINFOHEADER));
-    bitmap_info->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bitmap_info->bmiHeader.biWidth = mWidth;
-    bitmap_info->bmiHeader.biHeight = mHeight;
-    bitmap_info->bmiHeader.biSizeImage = 0;
-    bitmap_info->bmiHeader.biXPelsPerMeter = 2834; /* unused here */
-    bitmap_info->bmiHeader.biYPelsPerMeter = 2834; /* unused here */
-    bitmap_info->bmiHeader.biPlanes = 1;
-    bitmap_info->bmiHeader.biBitCount = 32;
-    bitmap_info->bmiHeader.biCompression = BI_RGB;
-    bitmap_info->bmiHeader.biClrUsed = 0;	/* unused */
-    bitmap_info->bmiHeader.biClrImportant = 0;
-
-    mWinBitmapDC = CreateCompatibleDC(NULL);
-    if (mWinBitmapDC) {
-        void *bits = nsnull;
-        mWinBitmap = CreateDIBSection (mWinBitmapDC,
-                                       bitmap_info,
-                                       DIB_RGB_COLORS,
-                                       &bits,
-                                       NULL, 0);
-        if (mWinBitmap) {
-            SelectObject (mWinBitmapDC, mWinBitmap);
-            GdiFlush();
-
-            mImageBuffer = (PRUint8*) bits;
-            mCairoImageSurface = cairo_win32_surface_create (mWinBitmapDC);
-#ifdef MOZILLA_1_8_BRANCH
-            ((struct _cairo_surface_win32_hack*)mCairoImageSurface)->format = CAIRO_FORMAT_ARGB32;
-#endif
-        } else {
-            DeleteDC(mWinBitmapDC);
-        }
-    }
-
-    PR_Free(bitmap_info);
-#endif
-
-    if (!mImageBuffer) {
-        mImageBuffer = (PRUint8*) PR_Malloc(mStride * mHeight);
-        if (mImageBuffer) {
-            mCairoImageSurface = cairo_image_surface_create_for_data (mImageBuffer,
-                                                                      CAIRO_FORMAT_ARGB32,
-                                                                      mWidth,
-                                                                      mHeight,
-                                                                      mStride);
-        }
-    }
-
-    if (!mImageBuffer)
-        return NS_ERROR_FAILURE;
-
-    mGlitzImageBuffer = glitz_buffer_create_for_data (mImageBuffer);
 
     return NS_OK;
 }
@@ -729,13 +554,15 @@ nsCanvasRenderingContextGLPrivate::Render(nsIRenderingContext *rc)
 {
     nsresult rv = NS_OK;
 
-    if (!mImageBuffer)
+    if (!mGLPbuffer)
+        return NS_OK;
+
+    if (!mGLPbuffer->ThebesSurface())
         return NS_OK;
 
 #ifdef MOZ_CAIRO_GFX
-
     gfxContext* ctx = (gfxContext*) rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
-    nsRefPtr<gfxASurface> surf = gfxASurface::Wrap(mCairoImageSurface);
+    nsRefPtr<gfxASurface> surf = mGLPbuffer->ThebesSurface();
     nsRefPtr<gfxPattern> pat = new gfxPattern(surf);
 
     // XXX I don't want to use PixelSnapped here, but layout doesn't guarantee
@@ -743,7 +570,6 @@ nsCanvasRenderingContextGLPrivate::Render(nsIRenderingContext *rc)
     ctx->NewPath();
     ctx->PixelSnappedRectangleAndSetPattern(gfxRect(0, 0, mWidth, mHeight), pat);
     ctx->Fill();
-
 #else
 
     // non-Thebes; this becomes exciting
@@ -913,56 +739,6 @@ nsCanvasRenderingContextGLPrivate::GetInputStream(const nsACString& aMimeType,
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-void
-nsCanvasRenderingContextGLPrivate::Destroy()
-{
-    if (mCairoImageSurface) {
-        cairo_surface_destroy (mCairoImageSurface);
-        mCairoImageSurface = nsnull;
-    }
-
-    if (mGlitzImageBuffer) {
-        glitz_buffer_destroy(mGlitzImageBuffer);
-        mGlitzImageBuffer = nsnull;
-    }
-
-    if (mGlitzContext) {
-        glitz_context_destroy (mGlitzContext);
-        mGlitzContext = nsnull;
-    }
-    if (mGlitzSurface) {
-        glitz_surface_destroy (mGlitzSurface);
-        mGlitzSurface = nsnull;
-    }
-
-    // XXX bad memlk; but we already destroyed the context,
-    // so when this tries to free the fragment shaders,
-    // it tries to activate the context, and that blows up. wtf?!
-    if (mGlitzDrawable) {
-        glitz_drawable_destroy (mGlitzDrawable);
-        mGlitzDrawable = nsnull;
-    }
-
-#ifdef XP_WIN
-    if (mWinBitmapDC) {
-        DeleteDC(mWinBitmapDC);
-        mWinBitmapDC = nsnull;
-    }
-
-    if (mWinBitmap) {
-        DeleteObject(mWinBitmap);
-        mWinBitmap = nsnull;
-        mImageBuffer = nsnull;
-    }
-#endif
-
-    if (mImageBuffer) {
-        PR_Free(mImageBuffer);
-        mImageBuffer = nsnull;
-    }
-}
-
 
 /**
  ** Helpers that really should be in some sort of cross-context shared library
@@ -1393,24 +1169,8 @@ nsCanvasRenderingContextGLPrivate::DoDrawImageSecurityCheck(nsIURI* aURI, PRBool
 
 
 nsCanvasRenderingContextGLPrivate::nsCanvasRenderingContextGLPrivate()
-    : mGlitzContext(nsnull),
-      mGlitzDrawable(nsnull),
-      mContextToken(nsnull),
-      mCurrent(PR_FALSE),
-      mWidth(0), mHeight(0), mStride(0), mImageBuffer(nsnull),
-      mCanvasElement(nsnull), mGlitzSurface(nsnull), mGlitzImageBuffer(nsnull),
-      mCairoImageSurface(nsnull)
+    : mGLPbuffer(nsnull), mWidth(0), mHeight(0), mCanvasElement(nsnull)
 {
-    if (!gGlitzInitialized) {
-#ifdef MOZ_X11
-        glitz_glx_init("libGL.so.1");
-#endif
-#ifdef XP_WIN
-        glitz_wgl_init(NULL);
-#endif
-        gGlitzInitialized = PR_TRUE;
-    }
-
     // grab the xpconnect service
     if (!gXPConnect) {
         nsresult rv = CallGetService(nsIXPConnect::GetCID(), &gXPConnect);
@@ -1440,17 +1200,14 @@ nsCanvasRenderingContextGLPrivate::nsCanvasRenderingContextGLPrivate()
     } else {
         NS_ADDREF(gJSRuntimeService);
     }
-
-#ifdef XP_WIN
-    mWinBitmap = nsnull;
-    mWinBitmapDC = nsnull;
-#endif
 }
 
 nsCanvasRenderingContextGLPrivate::~nsCanvasRenderingContextGLPrivate()
 {
-    Destroy();
-
+    delete mGLPbuffer;
+    mGLPbuffer = nsnull;
+    
+    // get rid of the context
     if (gXPConnect && gXPConnect->Release() == 0)
         gXPConnect = nsnull;
     if (gJSRuntimeService && gJSRuntimeService->Release() == 0) {
@@ -1462,25 +1219,7 @@ nsCanvasRenderingContextGLPrivate::~nsCanvasRenderingContextGLPrivate()
 nsresult
 nsCanvasRenderingContextGLPrivate::DoSwapBuffers()
 {
-    if (!mImageBuffer)
-        return NS_OK;
-
-    MakeContextCurrent();
-
-    // call glitz_get_pixels to pull out the pixels
-    glitz_pixel_format_t argb_pf =
-        { GLITZ_FOURCC_RGB,
-          { 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff },
-          0,
-          0,
-          mStride,
-          GLITZ_PIXEL_SCANLINE_ORDER_TOP_DOWN
-        };
-
-    glitz_pixel_format_t *pf = &argb_pf;
-
-    glitz_get_pixels (mGlitzSurface,
-                      0, 0, mWidth, mHeight, pf, mGlitzImageBuffer);
+    mGLPbuffer->SwapBuffers();
 
     // then invalidate the region and do a sync redraw
     // (uh, why sync?)
@@ -1555,7 +1294,7 @@ nsCanvasRenderingContextGLPrivate::SafeToCreateCanvas3DContext()
     if (enabled)
         return PR_TRUE;
 
-    LogMessage("Canvas 3D: Web content tried to create 3D Canvas Context, but pref extensions.canvas3d.enabledForWebContent is not set!");
+    LogMessage(NS_LITERAL_CSTRING("Canvas 3D: Web content tried to create 3D Canvas Context, but pref extensions.canvas3d.enabledForWebContent is not set!"));
 
     return PR_FALSE;
 }

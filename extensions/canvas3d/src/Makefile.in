@@ -85,74 +85,26 @@ ifdef MOZ_ENABLE_CAIRO_GFX
 REQUIRES += thebes
 endif
 
-GLITZ_SRC_DIR = $(topsrcdir)/gfx/cairo/glitz/src
-VPATH += $(GLITZ_SRC_DIR)
-
-GLITZ_CSRCS = \
-	glitz.c                \
-	glitz_buffer.c         \
-	glitz_compose.c        \
-	glitz_context.c        \
-	glitz_drawable.c       \
-	glitz_filter.c         \
-	glitz_format.c         \
-	glitz_framebuffer.c    \
-	glitz_geometry.c       \
-	glitz_operator.c       \
-	glitz_pixel.c          \
-	glitz_program.c        \
-	glitz_rect.c           \
-	glitz_region.c         \
-	glitz_status.c         \
-	glitz_surface.c        \
-	glitz_texture.c        \
-	glitz_trap.c           \
-	glitz_util.c           \
-	$(NULL)
-
 ifdef MOZ_X11
-GLITZ_PLATFORM_SRC_DIR = $(GLITZ_SRC_DIR)/glx
-VPATH += $(GLITZ_PLATFORM_SRC_DIR)
-
-GLITZ_CSRCS += \
-	glitz_glx_drawable.c  \
-	glitz_glx_format.c    \
-	glitz_glx_info.c      \
-	glitz_glx_extension.c \
-	glitz_glx_context.c   \
-	glitz_glx_pbuffer.c   \
-	$(NULL)
-
 EXTRA_DSO_LIBS += GL
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-GLITZ_PLATFORM_SRC_DIR = $(GLITZ_SRC_DIR)/wgl
-VPATH += $(GLITZ_PLATFORM_SRC_DIR)
-
-GLITZ_CSRCS += \
-	glitz_wgl_drawable.c  \
-	glitz_wgl_format.c    \
-	glitz_wgl_info.c      \
-	glitz_wgl_extension.c \
-	glitz_wgl_context.c   \
-	glitz_wgl_pbuffer.c   \
-	$(NULL)
-
+# nothing
 endif
 
 ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
+# nothing
 endif
 
-CSRCS		= $(GLITZ_CSRCS) \
-		  glew.c \
+CSRCS		= glew.c \
 		  $(NULL)
 
-VPATH += $(topsrcdir)/gfx/src
 CPPSRCS		= nsCanvas3DModule.cpp \
 		  nsCanvasRenderingContextGL.cpp \
 		  nsCanvasRenderingContextGLES11.cpp \
 		  nsCanvasRenderingContextGLWeb20.cpp \
+		  nsGLPbuffer.cpp \
 		  $(NULL)
 
 DEFINES += -DXPCOM_GLUE -DXPCOM_GLUE_USE_NSPR -DGLEW_MX -DGLEW_STATIC
@@ -171,8 +123,8 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-CFLAGS += -I$(GLITZ_SRC_DIR) -I$(GLITZ_PLATFORM_SRC_DIR) $(RTL_FLAGS)
-CXXFLAGS += -I$(GLITZ_SRC_DIR) -I$(GLITZ_PLATFORM_SRC_DIR) $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
+CFLAGS += $(RTL_FLAGS)
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 
 EXTRA_DSO_LIBS += $(NSPR_LIBS)
 

@@ -40,6 +40,11 @@
 #define _NSCANVASRENDERINGCONTEXTGL_H_
 
 #include "nsICanvasRenderingContextGL.h"
+
+#include <stdlib.h>
+#include "prmem.h"
+
+#include "nsICanvasRenderingContextGLBuffer.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsIDOMHTMLCanvasElement.h"
 
@@ -74,17 +79,15 @@
 #include "jsapi.h"
 
 #include "cairo.h"
-#include "glitz.h"
 #include "glew.h"
 
-#ifdef XP_WIN
-#include <windows.h>
-#endif
+#include "nsGLPbuffer.h"
 
 extern nsIXPConnect *gXPConnect;
 extern JSRuntime *gScriptRuntime;
 extern nsIJSRuntimeService *gJSRuntimeService;
-extern PRBool gGlitzInitialized;
+
+class nsICanvasRenderingContextGL;
 
 class nsCanvasRenderingContextGLES11;
 class nsCanvasRenderingContextGLWeb20;
@@ -93,6 +96,8 @@ class nsCanvasRenderingContextGLPrivate :
     public nsICanvasRenderingContextInternal,
     public nsSupportsWeakReference
 {
+    friend class nsGLPbuffer;
+
 public:
     nsCanvasRenderingContextGLPrivate();
     virtual ~nsCanvasRenderingContextGLPrivate();
@@ -105,8 +110,14 @@ public:
     static void LostCurrentContext(void *closure);
 
     inline GLEWContext *glewGetContext() {
-        return &mGlewContext;
+        return mGLPbuffer->glewGetContext();
     }
+
+#ifdef XP_WIN
+    inline WGLEWContext *wglewGetContext() {
+        return mGLPbuffer->wglewGetContext();
+    }
+#endif
 
     // nsICanvasRenderingContextInternal
     NS_IMETHOD SetCanvasElement(nsICanvasElement* aParentCanvas);
@@ -119,13 +130,8 @@ public:
 
 protected:
     PRBool SafeToCreateCanvas3DContext();
-
-    virtual void Destroy();
-
     nsIFrame *GetCanvasLayoutFrame();
-
     nsresult DoSwapBuffers();
-
     nsresult CairoSurfaceFromElement(nsIDOMElement *imgElt,
                                      cairo_surface_t **aCairoSurface,
                                      PRUint8 **imgData,
@@ -133,29 +139,9 @@ protected:
                                      nsIURI **uriOut, PRBool *forceWriteOnlyOut);
     void DoDrawImageSecurityCheck(nsIURI* aURI, PRBool forceWriteOnly);
 
-    GLEWContext mGlewContext;
-
-    glitz_context_t* mGlitzContext;
-    glitz_drawable_t* mGlitzDrawable;
-
-    void *mContextToken;
-
-    PRPackedBool mCurrent;
-
-    PRInt32 mWidth, mHeight, mStride;
-    PRUint8 *mImageBuffer;
-
+    nsGLPbuffer *mGLPbuffer;
+    PRInt32 mWidth, mHeight;
     nsICanvasElement* mCanvasElement;
-
-    glitz_surface_t* mGlitzSurface;
-    glitz_buffer_t* mGlitzImageBuffer;
-
-    cairo_surface_t *mCairoImageSurface;
-
-#ifdef XP_WIN
-    HBITMAP mWinBitmap;
-    HDC mWinBitmapDC;
-#endif
 
     static inline PRBool JSValToFloatArray (JSContext *ctx, jsval val,
                                             jsuint cnt, float *array)
@@ -272,7 +258,6 @@ protected:
     }
 
     void LogMessage (const nsCString& errorString) {
-        nsresult rv;
         nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
         console->LogStringMessage(NS_ConvertUTF8toUTF16(errorString).get());
     }
@@ -559,8 +544,8 @@ protected:
     PRBool mDisposed;
     nsCOMPtr<nsIWeakReference> mOwnerContext;
 
-    glitz_surface_t *mGlitzTextureSurface;
-    glitz_texture_object_t *mGlitzTextureObject;
+    //glitz_surface_t *mGlitzTextureSurface;
+    //glitz_texture_object_t *mGlitzTextureObject;
     PRUint32 mWidth;
     PRUint32 mHeight;
 };
