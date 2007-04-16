@@ -39,8 +39,6 @@
 #include "nsDocAccessibleWrap.h"
 #include "ISimpleDOMDocument_i.c"
 #include "nsIAccessibilityService.h"
-#include "nsIAccessibleEvent.h"
-#include "nsEventMap.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIFrame.h"
@@ -164,101 +162,6 @@ STDMETHODIMP nsDocAccessibleWrap::get_accChild(
 NS_IMETHODIMP nsDocAccessibleWrap::Shutdown()
 {
   return nsDocAccessible::Shutdown();
-}
-
-NS_IMETHODIMP
-nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData)
-{
-  NS_ENSURE_TRUE(aEvent > 0 && aEvent < nsIAccessibleEvent::EVENT_LAST_ENTRY,
-                 NS_ERROR_FAILURE);
-
-  NS_ASSERTION(gWinEventMap[nsIAccessibleEvent::EVENT_LAST_ENTRY] == kEVENT_LAST_ENTRY,
-               "MSAA event map skewed");
-
-  PRUint32 winEvent = gWinEventMap[aEvent];
-  if (!winEvent)
-    return NS_OK;
-
-  // Means we're not active.
-  NS_ENSURE_TRUE(mWeakShell, NS_ERROR_FAILURE);
-
-  nsDocAccessible::FireToolkitEvent(aEvent, aAccessible, aData); // Fire nsIObserver message
-
-#ifdef SWALLOW_DOC_FOCUS_EVENTS
-  // Remove this until we can figure out which focus events are coming at
-  // the same time as native window focus events, although
-  // perhaps 2 duplicate focus events on the window isn't really a problem
-  if (aEvent == nsIAccessibleEvent::EVENT_FOCUS) {
-    // Don't fire accessible focus event for documents, 
-    // Microsoft Windows will generate those from native window focus events
-    nsCOMPtr<nsIAccessibleDocument> accessibleDoc(do_QueryInterface(aAccessible));
-    if (accessibleDoc)
-      return NS_OK;
-  }
-#endif
-
-  PRInt32 childID, worldID = OBJID_CLIENT;
-  PRUint32 role = ROLE_SYSTEM_TEXT; // Default value
-
-  HWND hWnd = (HWND)mWnd;
-
-  if (NS_SUCCEEDED(aAccessible->GetRole(&role)) && role == ROLE_SYSTEM_CARET) {
-    childID = CHILDID_SELF;
-    worldID = OBJID_CARET;
-  }
-  else {
-    childID = GetChildIDFor(aAccessible); // get the id for the accessible
-    if (!childID) {
-      return NS_OK; // Can't fire an event without a child ID
-    }
-    if (aAccessible != this) {
-      // See if we're in a scrollable area with its own window
-      nsCOMPtr<nsIAccessible> accessible;
-      if (aEvent == nsIAccessibleEvent::EVENT_HIDE) {
-        // Don't use frame from current accessible when we're hiding that accessible
-        aAccessible->GetParent(getter_AddRefs(accessible));
-      }
-      else {
-        accessible = aAccessible;
-      }
-      nsCOMPtr<nsPIAccessNode> privateAccessNode =
-        do_QueryInterface(accessible);
-      if (privateAccessNode) {
-        nsIFrame *frame = privateAccessNode->GetFrame();
-        if (frame) {
-          hWnd = (HWND)frame->GetWindow()->GetNativeData(NS_NATIVE_WINDOW); 
-        }
-      }
-    }
-  }
-
-  // Gecko uses two windows for every scrollable area. One window contains
-  // scrollbars and the child window contains only the client area.
-  // Details of the 2 window system:
-  // * Scrollbar window: caret drawing window & return value for WindowFromAccessibleObject()
-  // * Client area window: text drawing window & MSAA event window
-
-  // Fire MSAA event for client area window.
-  NotifyWinEvent(winEvent, hWnd, worldID, childID);
-
-  return NS_OK;
-}
-
-PRInt32 nsDocAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
-{
-  // A child ID of the window is required, when we use NotifyWinEvent, so that the 3rd party application
-  // can call back and get the IAccessible the event occured on.
-
-  void *uniqueID;
-  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aAccessible));
-  if (!accessNode) {
-    return 0;
-  }
-  accessNode->GetUniqueID(&uniqueID);
-
-  // Yes, this means we're only compatibible with 32 bit
-  // MSAA is only available for 32 bit windows, so it's okay
-  return - NS_PTR_TO_INT32(uniqueID);
 }
 
 NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
