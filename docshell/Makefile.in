@@ -51,4 +51,8 @@ DIRS = \
 	resources \
 	$(NULL)
 
+ifdef MOZ_MOCHITEST
+DIRS		+= test
+endif
+
 include $(topsrcdir)/config/rules.mk
