@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+  function loaded() {
+    var node = document.createElement("frame");
+    node.src = "data:text/plain,PASS";
+    node.setAttribute("onload", "document.documentElement.className = ''");
+    document.getElementById("x").appendChild(node);
+  }
+</script>
+</head>
+<frameset rows="*" id="x" onload="loaded()">
+</frameset>
+</html>
