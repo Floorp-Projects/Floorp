@@ -45,6 +45,8 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = 	test_bug323656.html \
+		test_bug344830.html \
+		bug344830_testembed.svg \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

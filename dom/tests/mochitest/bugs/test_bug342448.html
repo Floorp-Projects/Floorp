@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=342448
+-->
+<head>
+  <title>Test for Bug 342448</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=342448">Mozilla Bug 342448</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 342448 **/
+SimpleTest.waitForExplicitFinish();
+try {
+setTimeout(1, 0);
+} catch (ex) {}
+callLater(.1, function() { ok(true, "shouldn't crash when passing a number as the first arg to setTimeout"); SimpleTest.finish(); })
+
+
+
+</script>
+</pre>
+</body>
+</html>
+

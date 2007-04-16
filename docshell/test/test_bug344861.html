@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=344861
+-->
+<head>
+  <title>Test for Bug 344861</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=344861">Mozilla Bug 344861</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 344861 **/
+SimpleTest.waitForExplicitFinish();
+
+var newwindow = window.open("/", "testwindow", "width=200,height=200");
+newwindow.onload = function() { 
+  is(newwindow.innerHeight, 200, "window.open has correct height dimensions");
+  is(newwindow.innerWidth, 200, "window.open has correct width dimensions");
+  SimpleTest.finish();
+  newwindow.close();
+}
+</script>
+</pre>
+</body>
+</html>
+
+   
