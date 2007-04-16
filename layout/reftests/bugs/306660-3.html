@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+  function loaded() {
+    var f = document.getElementById("x");
+    f.removeChild(f.firstChild);
+  }
+</script>
+</head>
+<frameset rows="*,*" id="x" onload="loaded()"
+ ><frame src="data:text/plain,PASS"
+ ><frame src="data:text/plain,PASS"></frameset>
+</html>

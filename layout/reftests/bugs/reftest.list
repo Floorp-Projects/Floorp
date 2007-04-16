@@ -92,6 +92,9 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 300691-1d.html 300691-1-ref.html
 == 300691-1e.html 300691-1-ref.html
 == 300691-1f.html 300691-1-ref.html
+== 306660-1.html 306660-1-ref.html
+== 306660-2.html 306660-2-ref.html
+== 306660-3.html 306660-3-ref.html
 == 315620-1a.html 315620-1-ref.html
 != 315620-1b.html 315620-1-ref.html
 == 315620-2a.xhtml 315620-2-ref.xhtml
