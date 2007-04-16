@@ -18,9 +18,7 @@
         <html:input class="numberbox-input textbox-input" flex="1" anonid="input"
                     xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex,accesskey"/>
       </xul:hbox>
-      <xul:spinbuttons anonid="buttons" xbl:inherits="disabled,hidden=hidespinbuttons"
-                       onup="this.parentNode._modifyUp();"
-                       ondown="this.parentNode._modifyDown();"/>
+      <xul:spinbuttons anonid="buttons" xbl:inherits="disabled,hidden=hidespinbuttons"/>
     </content>
 
     <implementation>
