@@ -912,7 +912,7 @@ void nsHTMLComboboxAccessible::CacheChildren()
     }
 
     nsHTMLComboboxListAccessible* listAccessible = 
-      new nsHTMLComboboxListAccessible(mParent, mDOMNode, listFrame, mWeakShell);
+      new nsHTMLComboboxListAccessible(mParent, mDOMNode, mWeakShell);
 #ifdef COMBO_BOX_WITH_THREE_CHILDREN
     buttonAccessible->SetNextSibling(listAccessible);
 #else
@@ -1277,15 +1277,24 @@ nsHTMLComboboxButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState
 
 nsHTMLComboboxListAccessible::nsHTMLComboboxListAccessible(nsIAccessible *aParent,
                                                            nsIDOMNode* aDOMNode,
-                                                           nsIFrame *aListFrame,
                                                            nsIWeakReference* aShell):
-nsHTMLSelectListAccessible(aDOMNode, aShell), mListFrame(aListFrame)
+nsHTMLSelectListAccessible(aDOMNode, aShell)
 {
 }
 
 nsIFrame *nsHTMLComboboxListAccessible::GetFrame()
 {
-  return mListFrame;
+  nsIFrame* frame = nsHTMLSelectListAccessible::GetFrame();
+
+  if (frame) {
+    nsIComboboxControlFrame* comboBox;
+    CallQueryInterface(frame, &comboBox);
+    if (comboBox) {
+      return comboBox->GetDropDown();
+    }
+  }
+
+  return nsnull;
 }
 
 /**
