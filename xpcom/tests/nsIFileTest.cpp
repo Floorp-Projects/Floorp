@@ -406,7 +406,7 @@ NormalizeTest(const char *testPath, int moveUpCount,
   if (!newPath.Equals(expectedPath)) {
     printf("ERROR: Normalize() test Failed!\n");
     printf("     Got: %s\n", newPath.get());
-    printf("Expected: %s\n", expectedPath);
+    printf("Expected: %s\n", expectedPath.get());
   }
 
   printf("end normalize test.\n");
