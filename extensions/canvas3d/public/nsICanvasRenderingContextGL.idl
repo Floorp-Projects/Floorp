@@ -40,57 +40,6 @@
 
 interface nsIDOMHTMLCanvasElement;
 
-interface nsICanvasRenderingContextGL;
-
-[scriptable, uuid(14eb51cd-febe-41fa-b833-4c599719121e)]
-interface nsICanvasRenderingContextGLBuffer : nsISupports
-{
-  readonly attribute nsICanvasRenderingContextGL ownerContext;
-  readonly attribute PRBool disposed;
-
-  // immediately free the memory held by this buffer,
-  // even before this object is destroyed (e.g. by the JS GC)
-  void dispose();
-
-  readonly attribute PRUint32 usage;  // either STATIC_DRAW or DYNAMIC_DRAW
-  readonly attribute PRUint32 length; // number of elements
-  readonly attribute PRUint32 type;   // type of each element
-};
-
-[scriptable, uuid(27a45ca4-0847-4f2e-8e32-6d4966ff3e56)]
-interface nsICanvasRenderingContextGLTexture : nsISupports
-{
-  readonly attribute nsICanvasRenderingContextGL ownerContext;
-  readonly attribute PRBool disposed;
-
-  const PRUint32 TARGET_2D = 0;
-  const PRUint32 TARGET_RECT = 1;
-
-  readonly attribute PRUint32 target;
-
-  // in pixels; the texture coordinates
-  // are 0..w/h for TARGET_RECT, or 0.0 .. 1.0
-  // for TARGET_2D
-  readonly attribute PRUint32 width;
-  readonly attribute PRUint32 height;
-
-  const PRUint32 FILTER_TYPE_MAG = 0;
-  const PRUint32 FILTER_TYPE_MIN = 1;
-  const PRUint32 FILTER_NEAREST = 0;
-  const PRUint32 FILTER_LINER = 1;
-
-  void setFilter (in PRUint32 filterType, in PRUint32 filterMode);
-
-  const PRUint32 WRAP_TYPE_S = 0;
-  const PRUint32 WRAP_TYPE_T = 0;
-
-  const PRUint32 WRAP_CLAMP_TO_EDGE = 1;
-  const PRUint32 WRAP_REPEAT = 3;
-  const PRUint32 WRAP_MIRRORED_REPEAT = 4;
-
-  void setWrap (in PRUint32 wrapType, in PRUint32 wrapMode);
-};
-
 [scriptable, uuid(0f3d8dae-7d43-490b-93e9-5ff908ac6ff5)]
 interface nsICanvasRenderingContextGL : nsISupports
 {

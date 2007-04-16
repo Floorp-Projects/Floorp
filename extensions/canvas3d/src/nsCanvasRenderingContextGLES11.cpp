@@ -44,6 +44,7 @@
 #define NSGL_CONTEXT_NAME nsCanvasRenderingContextGLES11
 
 #include "nsCanvasRenderingContextGL.h"
+#include "nsICanvasRenderingContextGLBuffer.h"
 #include "nsICanvasRenderingContextGLES11.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsIDOMHTMLCanvasElement.h"
@@ -101,42 +102,7 @@
 // GLEW will pull in the GL bits that we want/need
 #include "glew.h"
 
-// we're hoping that something is setting us up the remap
-
 #include "cairo.h"
-#include "glitz.h"
-
-#ifdef MOZ_X11
-#include <gdk/gdk.h>
-#include <gdk/gdkx.h>
-#include "cairo-xlib.h"
-#include "glitz-glx.h"
-#endif
-
-#ifdef XP_WIN
-#include "cairo-win32.h"
-#include "glitz-wgl.h"
-
-#ifdef MOZILLA_1_8_BRANCH
-struct _cairo_surface_win32_hack {
-    void *ptr;
-    unsigned int refcnt;
-    cairo_status_t st;
-    cairo_bool_t finished;
-    /* array_t */
-    int sz;
-    int num_el;
-    int el_sz;
-    void *elements;
-    double dx, dy, dxs, dys;
-    unsigned int a;
-    unsigned int b;
-
-    /* win32 */
-    cairo_format_t format;
-};
-#endif
-#endif
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gGLES11Log = nsnull;
@@ -1142,7 +1108,7 @@ nsCanvasRenderingContextGLES11::BindTextureObject(nsICanvasRenderingContextGLTex
         return NS_ERROR_INVALID_ARG;
 
     MakeContextCurrent();
-    glitz_context_bind_texture(mGlitzContext, texObj->mGlitzTextureObject);
+    //glitz_context_bind_texture(mGlitzContext, texObj->mGlitzTextureObject);
     return NS_OK;
 }
 

@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsICanvasRenderingContextGL.idl"
+#include "nsICanvasRenderingContextGLBuffer.idl"
 
 interface nsIDOMHTMLElement;
 

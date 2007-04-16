@@ -48,6 +48,7 @@ XPI_NAME	= canvas3d
 
 XPIDLSRCS	= \
 	nsICanvasRenderingContextGL.idl \
+	nsICanvasRenderingContextGLBuffer.idl \
 	nsICanvasRenderingContextGLWeb20.idl \
 	nsICanvasRenderingContextGLES11.idl \
 	nsICanvasGLPrivate.idl \
