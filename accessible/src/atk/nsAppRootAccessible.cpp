@@ -568,7 +568,7 @@ NS_IMETHODIMP nsAppRootAccessible::Init()
         // an exit function registered will take care of it
         // if (sAtkBridge.shutdown)
         //     (*sAtkBridge.shutdown)();
-        PR_UnloadLibrary(sAtkBridge.lib);
+        // PR_UnloadLibrary(sAtkBridge.lib);
         sAtkBridge.lib = NULL;
         sAtkBridge.init = NULL;
         sAtkBridge.shutdown = NULL;
@@ -579,15 +579,15 @@ NS_IMETHODIMP nsAppRootAccessible::Init()
         // 2) We need it to avoid assert in spi_atk_tidy_windows
         // if (sGail.shutdown)
         //   (*sGail.shutdown)();
-        PR_UnloadLibrary(sGail.lib);
+        // PR_UnloadLibrary(sGail.lib);
         sGail.lib = NULL;
         sGail.init = NULL;
         sGail.shutdown = NULL;
     }
-    if (sATKLib) {
-        PR_UnloadLibrary(sATKLib);
-        sATKLib = nsnull;
-    }
+    // if (sATKLib) {
+    //     PR_UnloadLibrary(sATKLib);
+    //     sATKLib = nsnull;
+    // }
 }
 
 NS_IMETHODIMP nsAppRootAccessible::GetName(nsAString& _retval)
