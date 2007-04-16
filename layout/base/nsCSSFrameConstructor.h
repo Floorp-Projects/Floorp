@@ -762,6 +762,10 @@ private:
   PRBool HaveFirstLetterStyle(nsIContent*      aContent,
                               nsStyleContext*  aStyleContext);
 
+  // Check whether a given block has first-letter style.  Make sure to
+  // only pass in blocks!  And don't pass in null either.
+  PRBool HaveFirstLetterStyle(nsIFrame* aBlockFrame);
+
   PRBool HaveFirstLineStyle(nsIContent*      aContent,
                             nsStyleContext*  aStyleContext);
 

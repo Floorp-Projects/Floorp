@@ -291,12 +291,14 @@ protected:
   }
   virtual ~nsBlockFrame();
 
+#ifdef DEBUG
   already_AddRefed<nsStyleContext> GetFirstLetterStyle(nsPresContext* aPresContext)
   {
     return aPresContext->StyleSet()->
       ProbePseudoStyleFor(mContent,
                           nsCSSPseudoElements::firstLetter, mStyleContext);
   }
+#endif
 
   /*
    * Overides member function of nsHTMLContainerFrame. Needed to handle the 

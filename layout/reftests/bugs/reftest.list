@@ -157,6 +157,7 @@ fails == 351641-2b.html 351641-2-ref.html # bug 358433 (2006-10-19)
 != 362594-2b.html 362594-1-standards-ref.html
 == 362594-2b.html 362594-2-standards-ref.html
 == 362594-2c.html 362594-2-standards-ref.html
+== 362901-1.html 362901-1-ref.html
 == 363329-1.html 363329-1-ref.html
 == 363329-2.html 363329-2-ref.html
 == 363637-1.html 363637-1-ref.html
