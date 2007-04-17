@@ -843,8 +843,8 @@ var gCSSProperties = {
 		domProp: "fontWeight",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "normal" ],
-		other_values: [ "bold", "100", "200", "300", "400", "500", "600", "700", "800", "900" ],
+		initial_values: [ "normal", "400" ],
+		other_values: [ "bold", "100", "200", "300", "500", "600", "700", "800", "900" ],
 		invalid_values: [ "107", "399", "401", "699", "710" ]
 	},
 	"height": {
