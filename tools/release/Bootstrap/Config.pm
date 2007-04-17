@@ -6,6 +6,7 @@ package Bootstrap::Config;
 
 use strict;
 use POSIX "uname";
+use File::Copy qw(move);
 
 # shared static config
 my %config;
@@ -30,7 +31,7 @@ sub new {
 sub Parse {
     my $this = shift;
     
-    open (CONFIG, "< bootstrap.cfg") 
+    open(CONFIG, "< bootstrap.cfg") 
       || die("Can't open config file bootstrap.cfg");
 
     while (<CONFIG>) {
@@ -42,7 +43,7 @@ sub Parse {
         my ($var, $value) = split(/\s*=\s*/, $_, 2);
         $config{$var} = $value;
     }
-    close CONFIG;
+    close(CONFIG);
 }
 
 ##
@@ -160,6 +161,74 @@ sub SystemInfo {
     } else {
         die("No system info named $var");
     }
+}
+
+##
+# Bump - modifies config files
+#
+# Searches and replaces lines of the form:
+#   # CONFIG: $BuildTag = '%productTag%_RELEASE';
+#   $BuildTag = 'FIREFOX_1_5_0_9_RELEASE';
+#
+# The comment containing "CONFIG:" is parsed, and the value in between %%
+# is treated as the key. The next line will be overwritten by the value
+# matching this key in the private %config hash.
+#
+# If any of the requested keys are not found, this function calls die().
+##
+
+sub Bump {
+    my $this = shift;
+    my %args = @_;
+
+    my $config = new Bootstrap::Config();
+
+    my $configFile = $args{'configFile'};
+    if (! defined($configFile)) {
+        die('ASSERT: Bootstrap::Config::Bump - configFile is a required argument');
+    }
+
+    my $tmpFile = $configFile . '.tmp';
+
+    open(INFILE, "< $configFile") 
+     or die ("Bootstrap::Config::Bump - Could not open $configFile for reading: $!");
+    open(OUTFILE, "> $tmpFile") 
+     or die ("Bootstrap::Config::Bump - Could not open $tmpFile for writing: $!");
+
+    my $skipNextLine = 0;
+    foreach my $line (<INFILE>) {
+        if ($skipNextLine) {
+            $skipNextLine = 0;
+            next;
+        } elsif ($line =~ /^# CONFIG:\s+/) {
+            print OUTFILE $line;
+            $skipNextLine = 1;
+            my $interpLine = $line;
+            $interpLine =~ s/^#\s+CONFIG:\s+//;
+            foreach my $variable (grep(/%\w+\-*%/, split(/\s+/, $line))) {
+                my $key = $variable;
+                if (! ($key =~ s/.*%(\w+\-*)%.*/$1/g)) {
+                    die("ASSERT: could not parse $variable");
+                }
+
+                if (! $config->Exists(var => $key)) {
+                    die("ASSERT: no replacement found for $key");
+                }
+                my $value = $config->Get(var => $key);
+                $interpLine =~ s/\%$key\%/$value/g;
+            }
+            print OUTFILE $interpLine;
+        } else {
+            print OUTFILE $line;
+        }
+    }
+
+    close(INFILE) or die ("Bootstrap::Config::Bump - Could not close $configFile for reading: $!");
+    close(OUTFILE) or die ("Bootstrap::Config::Bump - Could not close $tmpFile for writing: $!");
+
+    move($tmpFile, $configFile)
+     or die("Cannot rename $tmpFile to $configFile: $!");
+
 }
 
 1;
