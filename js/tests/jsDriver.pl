@@ -76,12 +76,15 @@ my $opt_exit_munge = ($os_type ne "MAC") ? 1 : 0;
 my $opt_timeout = 3600;
 my $opt_enable_narcissus = 0;
 my $opt_narcissus_path = "";
+my $opt_no_quit = 0; 
 
 # command line option definition
 my $options = "b=s bugurl>b c=s classpath>c e=s engine>e f=s file>f " .
-  "h help>h i j=s javapath>j k confail>k K linefail>K l=s list>l L=s neglist>L " .
-  "o=s opt>o p=s testpath>p s=s shellpath>s t trace>t T=s timeout>T u=s lxrurl>u " .
-  "x noexitmunge>x n:s narcissus>n";
+  "h help>h i j=s javapath>j k confail>k K linefail>K l=s list>l " .
+  "L=s neglist>L o=s opt>o p=s testpath>p s=s shellpath>s t trace>t " .
+  "T=s timeout>T u=s lxrurl>u " .
+  "x noexitmunge>x n:s narcissus>n " . 
+  "Q noquitinthandler>Q";
 
 if ($os_type eq "MAC") {
     $opt_suite_path = `directory`;
@@ -103,7 +106,7 @@ if ($#test_list == -1) {
     die ("Nothing to test.\n");
 }
 
-if ($unixish) {
+if ($unixish && $opt_no_quit == 0) {
     # on unix, ^C pauses the tests, and gives the user a chance to quit but 
     # report on what has been done, to just quit, or to continue (the
     # interrupted test will still be skipped.)
@@ -250,7 +253,6 @@ sub execute_tests {
         eval 
         {
             local $SIG{ALRM} = sub { die "time out" };
-            $SIG{INT} = 'int_handler';
             alarm $opt_timeout;
             $wait_pid = waitpid($pid, 0);
             alarm 0;
@@ -559,6 +561,10 @@ sub parse_args {
                 $opt_narcissus_path = $value;
             }
 
+        } elsif ($option eq "Q") {
+            &dd ("opt: disabling interrupt handler.");
+            $opt_no_quit = 1;
+
         } else {
             &dd ("opt: unknown option $option '$value'.");
             &usage;
@@ -612,7 +618,10 @@ sub usage {
        "                          as exit signals.)\n" .
        "(-n|--narcissus)[=<path>] Run the test suite through Narcissus, run\n" .
        "                          through the given shell. The optional path\n".
-       "                          is the path to Narcissus' js.js file.\n");
+       "                          is the path to Narcissus' js.js file.\n".
+       "(-Q|--noquitinthandler)   Do not prompt user to Quit, Report or Continue\n".
+       "                          in the event of a user interrupt.\n"
+       );
     exit (1);
 
 }
