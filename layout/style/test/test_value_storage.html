@@ -21,6 +21,30 @@
 
 /** Test for parsing, storage, and serialization of CSS values **/
 
+/*
+ * The idempotence tests here deserve a little bit of explanation.  What
+ * we're testing here are the following operations:
+ *   parse: string -> CSS rule
+ *   serialize: CSS rule -> string (normalization 1)
+ *     (this actually has two variants that go through partly different
+ *     codepaths, which we exercise with getPropertyValue and cssText)
+ *   compute: CSS rule -> computed style
+ *   cserialize: computed style -> string (normalization 2)
+ *
+ * Both serialize and cserialize do some normalization, so we can't test
+ * for pure round-tripping, and we also can't compare their output since
+ * they could normalize differently.  (We might at some point in the
+ * future want to guarantee that any output of cserialize is
+ * untouched by going through parse+serialize, though.)
+ *
+ * So we test idempotence of parse + serialize by running the whole
+ * operation twice.  Likewise for parse + compute + cserialize.
+ *
+ * Slightly more interestingly, we test the idempotence of serialize +
+ * parse by comparing the output of parse + compute + cserialize to the
+ * output of parse + serialize + parse + compute + cserialize.
+ */
+
 var gShorthandsWithoutCondensingSerialize = {
   "-moz-border-radius": true,
   "-moz-outline-radius": true,
