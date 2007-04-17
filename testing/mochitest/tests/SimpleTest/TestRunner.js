@@ -12,8 +12,8 @@ TestRunner._currentTest = 0;
 TestRunner._urls = [];
 
 /**
- * Make sure the tests don't hang. Runs every 60 seconds, but it will
- * take up to 120 seconds to detect a hang.
+ * Make sure the tests don't hang. Runs every 120 seconds, but it will
+ * take up to 240 seconds to detect a hang.
 **/
 TestRunner._testCheckPoint = -1;
 TestRunner._checkForHangs = function() {
@@ -25,7 +25,7 @@ TestRunner._checkForHangs = function() {
       frameWindow.SimpleTest.finish();
     }
     TestRunner._testCheckPoint = TestRunner._currentTest;
-    TestRunner.deferred = callLater(60, TestRunner._checkForHangs); 
+    TestRunner.deferred = callLater(120, TestRunner._checkForHangs); 
   }
 }
 
