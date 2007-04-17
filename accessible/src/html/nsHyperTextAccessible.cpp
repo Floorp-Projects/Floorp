@@ -1143,15 +1143,16 @@ NS_IMETHODIMP nsHyperTextAccessible::DidInsertNode(nsIDOMNode *aNode, nsIDOMNode
                                                    PRInt32 aPosition, nsresult aResult)
 {
   InvalidateChildren();
-  AtkTextChange textData;
 
-  textData.add = PR_TRUE;
+  PRInt32 start;
+  PRUint32 length = 1;
+  PRBool isInserted = PR_TRUE;
+
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
   if (content && content->IsNodeOfType(nsINode::eTEXT)) {
-    textData.length = content->TextLength();
-    if (!textData.length) {
+    length = content->TextLength();
+    if (!length)
       return NS_OK;
-    }
   }
   else {
     // Don't fire event for the first br
@@ -1163,28 +1164,29 @@ NS_IMETHODIMP nsHyperTextAccessible::DidInsertNode(nsIDOMNode *aNode, nsIDOMNode
         return NS_OK;
       }
     }
-    
-    textData.length = 1;
   }
 
-  if (NS_FAILED(DOMPointToOffset(aNode, aPosition, &textData.start))) {
+  if (NS_FAILED(DOMPointToOffset(aNode, aPosition, &start)))
     return NS_OK;
-  }
-  return FireTextChangeEvent(&textData);
+
+  nsCOMPtr<nsIAccessibleTextChangeEvent> event =
+    new nsAccTextChangeEvent(this, start, length, isInserted);
+  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+
+  return FireAccessibleEvent(event);
 }
 
 NS_IMETHODIMP nsHyperTextAccessible::WillDeleteNode(nsIDOMNode *aChild)
 {
-  AtkTextChange textData;
+  PRInt32 start;
+  PRUint32 length = 1;
+  PRBool isInserted = PR_FALSE;
 
-  textData.add = PR_FALSE;
-  textData.length = 1;
   nsCOMPtr<nsIContent> content(do_QueryInterface(aChild));
   if (content && content->IsNodeOfType(nsINode::eTEXT)) {
-    textData.length = content->TextLength();
-    if (!textData.length) {
+    length = content->TextLength();
+    if (!length)
       return NS_OK;
-    }
   }
   else {
     // Don't fire event for the last br
@@ -1204,10 +1206,14 @@ NS_IMETHODIMP nsHyperTextAccessible::WillDeleteNode(nsIDOMNode *aChild)
   NS_ENSURE_TRUE(parentContent, NS_ERROR_FAILURE);
   nsCOMPtr<nsIContent> childContent(do_QueryInterface(aChild));
   NS_ENSURE_TRUE(childContent, NS_ERROR_FAILURE);
-  if (NS_FAILED(DOMPointToOffset(parentNode, parentContent->IndexOf(childContent), &textData.start))) {
+  if (NS_FAILED(DOMPointToOffset(parentNode, parentContent->IndexOf(childContent), &start)))
     return NS_OK;
-  }
-  return FireTextChangeEvent(&textData);
+
+  nsCOMPtr<nsIAccessibleTextChangeEvent> event =
+    new nsAccTextChangeEvent(this, start, length, isInserted);
+  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+
+  return FireAccessibleEvent(event);
 }
 
 NS_IMETHODIMP nsHyperTextAccessible::DidDeleteNode(nsIDOMNode *aChild, nsresult aResult)
@@ -1247,27 +1253,35 @@ NS_IMETHODIMP nsHyperTextAccessible::WillInsertText(nsIDOMCharacterData *aTextNo
 NS_IMETHODIMP nsHyperTextAccessible::DidInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset,
                                                    const nsAString& aString, nsresult aResult)
 {
-  AtkTextChange textData;
+  PRInt32 start;
+  PRUint32 length = aString.Length();
+  PRBool isInserted = PR_TRUE;
 
-  textData.add = PR_TRUE;
-  textData.length = aString.Length();
-  if (NS_FAILED(DOMPointToOffset(aTextNode, aOffset, &textData.start))) {
+  if (NS_FAILED(DOMPointToOffset(aTextNode, aOffset, &start)))
     return NS_OK;
-  }
-  return FireTextChangeEvent(&textData);
+
+  nsCOMPtr<nsIAccessibleTextChangeEvent> event =
+    new nsAccTextChangeEvent(this, start, length, isInserted);
+  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+
+  return FireAccessibleEvent(event);
 }
 
 NS_IMETHODIMP nsHyperTextAccessible::WillDeleteText(nsIDOMCharacterData *aTextNode,
                                                     PRInt32 aOffset, PRInt32 aLength)
 {
-  AtkTextChange textData;
+  PRInt32 start;
+  PRUint32 length = aLength;
+  PRBool isInserted = PR_FALSE;
 
-  textData.add = PR_FALSE;
-  textData.length = aLength;
-  if (NS_FAILED(DOMPointToOffset(aTextNode, aOffset, &textData.start))) {
+  if (NS_FAILED(DOMPointToOffset(aTextNode, aOffset, &start)))
     return NS_OK;
-  }
-  return FireTextChangeEvent(&textData);
+
+  nsCOMPtr<nsIAccessibleTextChangeEvent> event =
+    new nsAccTextChangeEvent(this, start, length, isInserted);
+  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+
+  return FireAccessibleEvent(event);
 }
 
 NS_IMETHODIMP nsHyperTextAccessible::DidDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset,
@@ -1284,12 +1298,15 @@ NS_IMETHODIMP nsHyperTextAccessible::WillDeleteSelection(nsISelection *aSelectio
   PRInt32 selectionStart, selectionEnd;
   GetSelectionBounds(0, &selectionStart, &selectionEnd);
 
-  AtkTextChange textData;
+  PRInt32 start = PR_MIN(selectionStart, selectionEnd);;
+  PRUint32 length = PR_ABS(selectionEnd - selectionStart);
+  PRBool isInserted = PR_FALSE;
 
-  textData.add = PR_FALSE;
-  textData.start = PR_MIN(selectionStart, selectionEnd);
-  textData.length = PR_ABS(selectionEnd - selectionStart);
-  return FireTextChangeEvent(&textData);
+  nsCOMPtr<nsIAccessibleTextChangeEvent> event =
+    new nsAccTextChangeEvent(this, start, length, isInserted);
+  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+
+  return FireAccessibleEvent(event);
 }
 
 NS_IMETHODIMP nsHyperTextAccessible::DidDeleteSelection(nsISelection *aSelection)
@@ -1300,20 +1317,6 @@ NS_IMETHODIMP nsHyperTextAccessible::DidDeleteSelection(nsISelection *aSelection
 /**
   * =================== Caret & Selection ======================
   */
-
-nsresult nsHyperTextAccessible::FireTextChangeEvent(AtkTextChange *aTextData)
-{
-  nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(NS_STATIC_CAST(nsIAccessibleText*, this)));
-  nsCOMPtr<nsPIAccessible> privAccessible(do_QueryInterface(accessible));
-  if (privAccessible) {
-#ifdef DEBUG_A11Y
-    printf("  [start=%d, length=%d, add=%d]\n", aTextData->start, aTextData->length, aTextData->add);
-#endif
-    privAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_TEXT_CHANGED,
-                                     accessible, aTextData);
-  }
-  return NS_OK;
-}
 
 nsresult nsHyperTextAccessible::SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos)
 {
