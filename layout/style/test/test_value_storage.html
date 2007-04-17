@@ -143,11 +143,13 @@ function xfail_idserparse_compute(property, value)
   return false;
 }
 
-function xfail_idsersplitparse_compute(property, subprop, value)
+function xfail_idsersplitparse_compute(property, subprop, value, step1subcomp)
 {
+  // These failures depend on what the system fonts actually are,
+  // since they show up in computed style but not serialization!
   if (property == "font" &&
-      (subprop == "font-family" || subprop == "font-size") &&
-      gSpecialFont.indexOf(value) != -1)
+      gSpecialFont.indexOf(value) != -1 &&
+      gCSSProperties[subprop].initial_values.indexOf(step1subcomp) == -1)
     return true;
 
   return false;
@@ -245,9 +247,9 @@ function test_property(property)
       for (idx in info.subproperties) {
         var subprop = info.subproperties[idx];
         gDeclaration.setProperty(subprop, step1vals[idx], "");
-        if (test_computed) {
+        if (test_computed && !("backend_only" in gCSSProperties[subprop])) {
           func =
-            xfail_idsersplitparse_compute(property, subprop, value)
+            xfail_idsersplitparse_compute(property, subprop, value, step1comps[idx])
               ? todo_is : is;
           func(gComputedStyle.getPropertyValue(subprop), step1comps[idx],
                "serialize(" + subprop + ")+parse should be idempotent for '" +
@@ -272,6 +274,8 @@ function test_property(property)
       gDeclaration.removeProperty(property);
       for (idx in info.subproperties) {
         var subprop = info.subproperties[idx];
+        if ("backend_only" in gCSSProperties[subprop])
+          continue;
         gDeclaration.setProperty(subprop, step1comps[idx], "");
         func = xfail_split_compute(property, value) ? todo_is : is;
         func(gComputedStyle.getPropertyValue(subprop), step1comps[idx],
