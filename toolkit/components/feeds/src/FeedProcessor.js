@@ -770,7 +770,7 @@ function trimString(s) {
 const RFC822_RE = "^((Mon|Tue|Wed|Thu|Fri|Sat|Sun)([a-z]+)?,? *)?\\d\\d?"
 + " +(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)([a-z]+)?"
 + " +\\d\\d(\\d\\d)? +\\d?\\d:\\d\\d(:\\d\\d)?"
-+ " +([+-]?\\d\\d\\d\\d|GMT|UT|(E|C|M|P)(ST|DT)|[A-IK-Z])$";
++ " +([+-]?\\d\\d\\d\\d|GMT|UT[C]?|(E|C|M|P)(ST|DT)|[A-IK-Z])$";
 
 /**
  * XXX -- need to decide what this should return. 
