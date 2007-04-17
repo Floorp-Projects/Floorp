@@ -59,6 +59,7 @@ require Exporter;
                 ValidateToolsDirectory
                 EnsureDeliverablesDir
                 SubstitutePath
+                GetSnippetDirFromChannel
                );
 
 use strict;
@@ -71,7 +72,8 @@ use vars qw($MAR_BIN $MBSDIFF_BIN $MAKE_BIN
             $INCREMENTAL_UPDATE_BIN $UNWRAP_FULL_UPDATE_BIN
             $TMPDIR_PREFIX 
             %BOUNCER_PLATFORMS %AUS2_PLATFORMS
-            $DEFAULT_PARTIAL_MAR_OUTPUT_FILE);
+            $DEFAULT_PARTIAL_MAR_OUTPUT_FILE
+            $DEFAULT_SNIPPET_BASE_DIR $DEFAULT_SNIPPET_TEST_DIR);
 
 $MAR_BIN = 'dist/host/bin/mar';
 $MBSDIFF_BIN = 'dist/host/bin/mbsdiff';
@@ -94,6 +96,9 @@ $TMPDIR_PREFIX = '/dev/shm/tmp/MozAUSLib';
                     'win32' => 'WINNT_x86-msvc' );
 
 $DEFAULT_PARTIAL_MAR_OUTPUT_FILE = 'partial.mar';
+
+$DEFAULT_SNIPPET_BASE_DIR = 'aus2';
+$DEFAULT_SNIPPET_TEST_DIR = $DEFAULT_SNIPPET_BASE_DIR . '.test';
 
 sub EnsureDeliverablesDir
 {
@@ -317,4 +322,29 @@ sub SubstitutePath
     return $string;
 }
 
+sub GetSnippetDirFromChannel {
+    my %args = @_;
+    die 'ASSERT: GetSnippetDirFromChannel(): null/invalid update config ' .
+     "object\n" if (!exists($args{'config'}) || ref($args{'config'}) ne 'HASH');
+    die "ASSERT: GetSnippetDirFromChannel(): null channel\n" if (
+     !exists($args{'channel'}));  
+
+    my $channel = $args{'channel'};
+    my $currentUpdateConfig = $args{'config'};
+
+    die "ASSERT: GetSnippetDirFromChannel(): invalid update config object\n"
+     if (! exists($currentUpdateConfig->{'to'}) || 
+     !exists($currentUpdateConfig->{'from'}));
+
+    my $snippetDirTestKey = $channel . '-dir';
+  
+    if (exists($currentUpdateConfig->{$snippetDirTestKey})) {
+        return $DEFAULT_SNIPPET_BASE_DIR . '.' . 
+         $currentUpdateConfig->{$snippetDirTestKey};
+    } elsif ($channel =~ /test(-\w+)?$/) {
+        return $DEFAULT_SNIPPET_TEST_DIR;
+    } else {
+        return $DEFAULT_SNIPPET_BASE_DIR;
+    }
+}
 1;

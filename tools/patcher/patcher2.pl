@@ -51,12 +51,14 @@ use IO::Handle;
 use File::Path;
 use File::Copy qw(move copy);
 use File::Spec::Functions;
+use File::Basename;
 
 use MozAUSConfig;
 use MozAUSLib qw(CreatePartialMarFile
                  GetAUS2PlatformStrings
                  EnsureDeliverablesDir
-                 ValidateToolsDirectory SubstitutePath);
+                 ValidateToolsDirectory SubstitutePath
+                 GetSnippetDirFromChannel);
 
 use MozBuild::Util qw(MkdirWithPath RunShellCommand DownloadFile HashFile);
 
@@ -73,7 +75,6 @@ use vars qw($PID_FILE
             $DEFAULT_HASH_TYPE
             $DEFAULT_CVSROOT
             $DEFAULT_SCHEMA_VERSION $CURRENT_SCHEMA_VERSION
-            $SNIPPET_DIR $SNIPPET_TEST_DIR
             $ST_SIZE );
 
 $PID_FILE = 'patcher2.pid';
@@ -82,9 +83,6 @@ $DEFAULT_CVSROOT = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
 
 $DEFAULT_SCHEMA_VERSION = 0;
 $CURRENT_SCHEMA_VERSION = 1;
-
-$SNIPPET_DIR = 'aus2';
-$SNIPPET_TEST_DIR = $SNIPPET_DIR . '.test';
 
 $ST_SIZE = 7;
 
@@ -678,7 +676,10 @@ sub CreateCompletePatchinfo {
                 my $updateType = $config->GetCurrentUpdate()->{'updateType'};
 
                 for my $c (@channels) {
-                    my $aus_prefix = catfile($u, $SNIPPET_DIR, 
+                    my $snippetDir = GetSnippetDirFromChannel(
+                     config => $config->GetCurrentUpdate(), channel => $c);
+
+                    my $aus_prefix = catfile($u, $snippetDir, 
                                              $from_aus_app,
                                              $from_aus_version,
                                              $from_aus_platform,
@@ -744,8 +745,11 @@ sub CreateCompletePatchinfo {
                         foreach my $testChan (split(/[\s,]+/, 
                          $u_config->{$u}->{'testchannel'})) {
 
+                            my $snippetDir = GetSnippetDirFromChannel(
+                             config => $u_config->{$u}, channel => $testChan);
+
                             $testPatch->{'info_path'} = catfile($u,
-                             'aus2.test', $from_aus_app, 
+                             $snippetDir, $from_aus_app, 
                              $from_aus_version, $from_aus_platform, 
                              $from_aus_buildid, $l, $testChan, 'complete.txt');
 
@@ -891,9 +895,9 @@ sub CreatePastReleasePatchinfo {
                 my $updateType = $config->GetCurrentUpdate()->{'updateType'};
 
                 foreach my $channel (@{$pastUpd->{'channels'}}) {
-                    my $ausDir = ($channel =~ /test(-\w+)?$/) 
-                     ? $SNIPPET_TEST_DIR : $SNIPPET_DIR;
-
+                    my $ausDir = GetSnippetDirFromChannel(config => 
+                     $config->GetCurrentUpdate(), channel => $channel);
+                    
                      my $ausPrefix = catfile($prefixStr, $ausDir, $fromAusApp,
                                              $fromAusVersion, $fromAusPlatform,
                                              $fromAusBuildId, $locale,
@@ -1053,7 +1057,10 @@ sub CreatePartialPatchinfo {
                 my $updateType = $u_config->{$u}->{'updateType'};
 
                 for my $c (@channels) {
-                    my $aus_prefix = catfile($u, $SNIPPET_DIR, 
+                    my $snippetDir = GetSnippetDirFromChannel(config =>
+                     $u_config->{$u}, channel => $c);
+
+                    my $aus_prefix = catfile($u, $snippetDir,
                                              $from_aus_app,
                                              $from_aus_version,
                                              $from_aus_platform,
@@ -1118,8 +1125,11 @@ sub CreatePartialPatchinfo {
                         foreach my $testChan (split(/[\s,]+/, 
                          $u_config->{$u}->{'testchannel'})) {
 
+                            my $snippetDir = GetSnippetDirFromChannel(config =>
+                             $u_config->{$u}, channel => $testChan);
+
                             $testPatch->{'info_path'} = catfile($u,
-                             'aus2.test', $from_aus_app,
+                             $snippetDir, $from_aus_app,
                              $from_aus_version, $from_aus_platform,
                              $from_aus_buildid, $l, $testChan, 'partial.txt');
 
@@ -1162,8 +1172,7 @@ sub write_patch_info {
     my $schemaVersion = $args{'schemaVer'} || $DEFAULT_SCHEMA_VERSION;
 
     my $info_path = $patch->{'info_path'};
-    $info_path =~ m/^(.*)\/[^\/]*$/;
-    my $info_path_parent = $1;
+    my $info_path_parent = dirname($patch->{'info_path'});
     my $text;
 
     if ($DEFAULT_SCHEMA_VERSION == $schemaVersion) {
