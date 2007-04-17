@@ -830,6 +830,9 @@ function getNormalizedLeafName(aFile, aDefaultExtension)
   // Remove trailing dots and spaces on windows
   aFile = aFile.replace(/[\s.]+$/, "");
 #endif
+
+  // Remove leading dots
+  aFile = aFile.replace(/^\.+/, "");
       
   // Fix up the file name we're saving to to include the default extension
   var i = aFile.lastIndexOf(".");
