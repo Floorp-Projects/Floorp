@@ -47,6 +47,22 @@ var gKnownFails = {
   "pause": true
 };
 
+var gKnownFails2 = {
+  "-moz-border-radius": true,
+  "-moz-outline-radius": true,
+  "background": true,
+  "border": true,
+  "border-bottom": true,
+  "border-left": true,
+  "border-right": true,
+  "border-top": true,
+  "cue": true,
+  "font": true,
+  "list-style": true,
+  "outline": true,
+  "pause": true
+};
+
 function test_property(property)
 {
   var pass = true;
@@ -72,20 +88,29 @@ function test_property(property)
   function check_set(sproperty) {
     var sinfo = gCSSProperties[sproperty];
     val = gDeclaration.getPropertyValue(sproperty);
-    if (sproperty == property && property in gKnownFails) {
-      todo(val == "inherit", "inherit reported back for property '" + sproperty + "'");
-    } else {
-      is(val, "inherit", "inherit reported back for property '" + sproperty + "'");
-    }
+    var func = is;
+    if (sproperty == property && property in gKnownFails)
+      func = todo_is;
+    func(val, "inherit",
+         "inherit reported back for property '" + sproperty + "'");
     if (sinfo.domProp) {
       is(val, gDeclaration[sinfo.domProp],
-         "consistency between decl.getPropertyValue('" + sproperty + "') and decl." + sinfo.domProp);
+         "consistency between decl.getPropertyValue('" + sproperty +
+         "') and decl." + sinfo.domProp);
     }
   }
   check_set(property);
   if ("subproperties" in info)
     for (var idx in info.subproperties)
       check_set(info.subproperties[idx]);
+
+  // We don't care particularly about the whitespace or the placement of
+  // semicolons, but for simplicity we'll test the current behavior.
+  var cssTextFunc = is;
+  if (property in gKnownFails2)
+    cssTextFunc = todo_is;
+  cssTextFunc(gDeclaration.cssText, property + ": inherit;",
+    "declaration should serialize to exactly what went in (for inherit)");
 
   gDeclaration.removeProperty(property);
 
