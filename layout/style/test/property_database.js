@@ -50,7 +50,6 @@ var gCSSProperties = {
 	"-moz-appearance": {
 		domProp: "MozAppearance",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "radio", "menulist" ],
@@ -59,7 +58,6 @@ var gCSSProperties = {
 	"-moz-background-clip": {
 		domProp: "MozBackgroundClip",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "border" ],
 		other_values: [ "padding" ],
@@ -68,7 +66,6 @@ var gCSSProperties = {
 	"-moz-background-inline-policy": {
 		domProp: "MozBackgroundInlinePolicy",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "continuous" ],
 		other_values: ["bounding-box", "each-box" ],
@@ -77,7 +74,6 @@ var gCSSProperties = {
 	"-moz-background-origin": {
 		domProp: "MozBackgroundOrigin",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "padding" ],
 		other_values: [ "border", "content" ],
@@ -86,7 +82,6 @@ var gCSSProperties = {
 	"-moz-binding": {
 		domProp: "MozBinding",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "url(foo.xml)" ],
@@ -95,7 +90,6 @@ var gCSSProperties = {
 	"-moz-border-bottom-colors": {
 		domProp: "MozBorderBottomColors",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "red, green", "red, #fc3", "#ff00cc" ],
@@ -104,7 +98,6 @@ var gCSSProperties = {
 	"-moz-border-left-colors": {
 		domProp: "MozBorderLeftColors",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "red, green", "red, #fc3", "#ff00cc" ],
@@ -113,7 +106,6 @@ var gCSSProperties = {
 	"-moz-border-radius": {
 		domProp: "MozBorderRadius",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "-moz-border-radius-bottomleft", "-moz-border-radius-bottomright", "-moz-border-radius-topleft", "-moz-border-radius-topright" ],
 		initial_values: [ "0", "0px", "0px 0 0 0px" ], /* 0% ? */
@@ -123,7 +115,6 @@ var gCSSProperties = {
 	"-moz-border-radius-bottomleft": {
 		domProp: "MozBorderRadiusBottomleft",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em" ],
@@ -132,7 +123,6 @@ var gCSSProperties = {
 	"-moz-border-radius-bottomright": {
 		domProp: "MozBorderRadiusBottomright",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em" ],
@@ -141,7 +131,6 @@ var gCSSProperties = {
 	"-moz-border-radius-topleft": {
 		domProp: "MozBorderRadiusTopleft",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em" ],
@@ -150,7 +139,6 @@ var gCSSProperties = {
 	"-moz-border-radius-topright": {
 		domProp: "MozBorderRadiusTopright",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px" ], /* 0% ? */
 		other_values: [ "3%", "1px", "2em" ],
@@ -159,7 +147,6 @@ var gCSSProperties = {
 	"-moz-border-right-colors": {
 		domProp: "MozBorderRightColors",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "red, green", "red, #fc3", "#ff00cc" ],
@@ -168,7 +155,6 @@ var gCSSProperties = {
 	"-moz-border-top-colors": {
 		domProp: "MozBorderTopColors",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "red, green", "red, #fc3", "#ff00cc" ],
@@ -177,7 +163,6 @@ var gCSSProperties = {
 	"-moz-box-align": {
 		domProp: "MozBoxAlign",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "stretch" ],
 		other_values: [ "start", "center", "baseline", "end" ],
@@ -186,7 +171,6 @@ var gCSSProperties = {
 	"-moz-box-direction": {
 		domProp: "MozBoxDirection",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal" ],
 		other_values: [ "reverse" ],
@@ -195,7 +179,6 @@ var gCSSProperties = {
 	"-moz-box-flex": {
 		domProp: "MozBoxFlex",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0.0", "-0.0" ],
 		other_values: [ "1", "100", "0.1" ],
@@ -204,7 +187,6 @@ var gCSSProperties = {
 	"-moz-box-ordinal-group": {
 		domProp: "MozBoxOrdinalGroup",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "1" ],
 		other_values: [ "0", "-1", "100", "-1000" ],
@@ -213,7 +195,6 @@ var gCSSProperties = {
 	"-moz-box-orient": {
 		domProp: "MozBoxOrient",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "horizontal", "inline-axis" ],
 		other_values: [ "vertical", "block-axis" ],
@@ -222,7 +203,6 @@ var gCSSProperties = {
 	"-moz-box-pack": {
 		domProp: "MozBoxPack",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "start" ],
 		other_values: [ "center", "end", "justify" ],
@@ -231,7 +211,6 @@ var gCSSProperties = {
 	"-moz-box-sizing": {
 		domProp: "MozBoxSizing",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "content" ],
 		other_values: [ "border", "padding" ],
@@ -240,7 +219,6 @@ var gCSSProperties = {
 	"-moz-column-count": {
 		domProp: "MozColumnCount",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "1", "0", "17" ],
@@ -252,7 +230,6 @@ var gCSSProperties = {
 	"-moz-column-gap": {
 		domProp: "MozColumnGap",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal", "1em" ],
 		other_values: [ "2px", "4em", "3%" ],
@@ -261,7 +238,6 @@ var gCSSProperties = {
 	"-moz-column-width": {
 		domProp: "MozColumnWidth",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "50%", "15px" ],
@@ -270,7 +246,6 @@ var gCSSProperties = {
 	"-moz-float-edge": {
 		domProp: "MozFloatEdge",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "content" ],
 		other_values: [ "border", "padding", "margin" ],
@@ -279,7 +254,6 @@ var gCSSProperties = {
 	"-moz-force-broken-image-icon": {
 		domProp: "MozForceBrokenImageIcon",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0" ],
 		other_values: [ "1" ],
@@ -288,7 +262,6 @@ var gCSSProperties = {
 	"-moz-image-region": {
 		domProp: "MozImageRegion",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "rect(3px 20px 15px 4px)", "rect(17px, 21px, 33px, 2px)" ],
@@ -297,7 +270,6 @@ var gCSSProperties = {
 	"-moz-margin-end": {
 		domProp: "MozMarginEnd",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		/* no subproperties */
 		/* auto may or may not be initial */
@@ -308,7 +280,6 @@ var gCSSProperties = {
 	"-moz-margin-start": {
 		domProp: "MozMarginStart",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		/* no subproperties */
 		/* auto may or may not be initial */
@@ -319,7 +290,6 @@ var gCSSProperties = {
 	"-moz-outline-radius": {
 		domProp: "MozOutlineRadius",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "-moz-outline-radius-bottomleft", "-moz-outline-radius-bottomright", "-moz-outline-radius-topleft", "-moz-outline-radius-topright" ],
 		initial_values: [ "0", "0px", "0%" ],
@@ -329,7 +299,6 @@ var gCSSProperties = {
 	"-moz-outline-radius-bottomleft": {
 		domProp: "MozOutlineRadiusBottomleft",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "2px", "0.3em", "2%" ],
@@ -338,7 +307,6 @@ var gCSSProperties = {
 	"-moz-outline-radius-bottomright": {
 		domProp: "MozOutlineRadiusBottomright",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "2px", "0.3em", "2%" ],
@@ -347,7 +315,6 @@ var gCSSProperties = {
 	"-moz-outline-radius-topleft": {
 		domProp: "MozOutlineRadiusTopleft",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "2px", "0.3em", "2%" ],
@@ -356,7 +323,6 @@ var gCSSProperties = {
 	"-moz-outline-radius-topright": {
 		domProp: "MozOutlineRadiusTopright",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "2px", "0.3em", "2%" ],
@@ -365,7 +331,6 @@ var gCSSProperties = {
 	"-moz-padding-end": {
 		domProp: "MozPaddingEnd",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		/* no subproperties */
 		initial_values: [ "0", "0px", "0%", "0em", "0ex" ],
@@ -375,7 +340,6 @@ var gCSSProperties = {
 	"-moz-padding-start": {
 		domProp: "MozPaddingStart",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		/* no subproperties */
 		initial_values: [ "0", "0px", "0%", "0em", "0ex" ],
@@ -385,7 +349,6 @@ var gCSSProperties = {
 	"-moz-user-focus": {
 		domProp: "MozUserFocus",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "normal", "ignore", "select-all", "select-before", "select-after", "select-same", "select-menu" ],
@@ -394,7 +357,6 @@ var gCSSProperties = {
 	"-moz-user-input": {
 		domProp: "MozUserInput",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "none", "enabled", "disabled" ],
@@ -403,7 +365,6 @@ var gCSSProperties = {
 	"-moz-user-modify": {
 		domProp: "MozUserModify",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "read-only" ],
 		other_values: [ "read-write", "write-only" ],
@@ -412,7 +373,6 @@ var gCSSProperties = {
 	"-moz-user-select": {
 		domProp: "MozUserSelect",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "none", "text", "element", "elements", "all", "toggle", "tri-state", "-moz-all", "-moz-none" ],
@@ -430,7 +390,6 @@ var gCSSProperties = {
 	"background": {
 		domProp: "background",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "background-attachment", "background-color", "background-image", "background-position", "background-repeat", "-moz-background-clip", "-moz-background-inline-policy", "-moz-background-origin" ],
 		initial_values: [ "transparent", "none", "repeat", "scroll", "0% 0%", "top left", "left top", "transparent none", "top left none", "left top none", "none left top", "none top left", "none 0% 0%", "transparent none repeat scroll top left", "left top repeat none scroll transparent"],
@@ -445,7 +404,6 @@ var gCSSProperties = {
 	"background-attachment": {
 		domProp: "backgroundAttachment",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "scroll" ],
 		other_values: [ "fixed" ],
@@ -454,7 +412,6 @@ var gCSSProperties = {
 	"background-color": {
 		domProp: "backgroundColor",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "transparent", "rgba(255, 127, 15, 0)", "hsla(240, 97%, 50%, 0.0)", "rgba(0, 0, 0, 0)", "rgba(255,255,255,-3.7)" ],
 		other_values: [ "green", "rgb(255, 0, 128)", "rgb(255.0,0.387,3489)", "#fc2", "#96ed2a", "black", "rgba(255,255,0,3)" ],
@@ -463,7 +420,6 @@ var gCSSProperties = {
 	"background-image": {
 		domProp: "backgroundImage",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)", "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==')", 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")', ],
@@ -472,7 +428,6 @@ var gCSSProperties = {
 	"background-position": {
 		domProp: "backgroundPosition",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "top left", "left top", "0% 0%", "0% top", "left 0%" ],
 		other_values: [ "top", "left", "right", "bottom", "center", "center bottom", "bottom center", "center right", "right center", "center top", "top center", "center left", "left center", "right bottom", "bottom right", "50%" ],
@@ -481,7 +436,6 @@ var gCSSProperties = {
 	"background-repeat": {
 		domProp: "backgroundRepeat",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "repeat" ],
 		other_values: [ "repeat-x", "repeat-y", "no-repeat" ],
@@ -490,7 +444,6 @@ var gCSSProperties = {
 	"border": {
 		domProp: "border",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-bottom-color", "border-bottom-style", "border-bottom-width", "border-left-color", "border-left-style", "border-left-width", "border-right-color", "border-right-style", "border-right-width", "border-top-color", "border-top-style", "border-top-width" ],
 		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
@@ -500,7 +453,6 @@ var gCSSProperties = {
 	"border-bottom": {
 		domProp: "borderBottom",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-bottom-color", "border-bottom-style", "border-bottom-width" ],
 		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
@@ -510,7 +462,6 @@ var gCSSProperties = {
 	"border-bottom-color": {
 		domProp: "borderBottomColor",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "currentColor" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
@@ -519,7 +470,6 @@ var gCSSProperties = {
 	"border-bottom-style": {
 		domProp: "borderBottomStyle",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		/* XXX hidden is sometimes the same as initial */
 		initial_values: [ "none" ],
@@ -529,7 +479,6 @@ var gCSSProperties = {
 	"border-bottom-width": {
 		domProp: "borderBottomWidth",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		/* XXX a value differing from initial requires border-style to be set */
 		initial_values: [ "medium", "3px" ],
@@ -539,7 +488,6 @@ var gCSSProperties = {
 	"border-collapse": {
 		domProp: "borderCollapse",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "separate" ],
 		other_values: [ "collapse" ],
@@ -548,7 +496,6 @@ var gCSSProperties = {
 	"border-color": {
 		domProp: "borderColor",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-top-color", "border-right-color", "border-bottom-color", "border-left-color" ],
 		initial_values: [ "currentColor", "currentColor currentColor", "currentColor currentColor currentColor", "currentColor currentColor currentcolor CURRENTcolor" ],
@@ -558,7 +505,6 @@ var gCSSProperties = {
 	"border-left": {
 		domProp: "borderLeft",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-left-color", "border-left-style", "border-left-width" ],
 		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
@@ -568,7 +514,6 @@ var gCSSProperties = {
 	"border-left-color": {
 		domProp: "borderLeftColor",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "currentColor" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
@@ -577,7 +522,6 @@ var gCSSProperties = {
 	"border-left-style": {
 		domProp: "borderLeftStyle",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		/* XXX hidden is sometimes the same as initial */
 		initial_values: [ "none" ],
@@ -587,7 +531,6 @@ var gCSSProperties = {
 	"border-left-width": {
 		domProp: "borderLeftWidth",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		/* XXX a value differing from initial requires border-style to be set */
 		initial_values: [ "medium", "3px" ],
@@ -597,7 +540,6 @@ var gCSSProperties = {
 	"border-right": {
 		domProp: "borderRight",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-right-color", "border-right-style", "border-right-width" ],
 		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
@@ -607,7 +549,6 @@ var gCSSProperties = {
 	"border-right-color": {
 		domProp: "borderRightColor",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "currentColor" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
@@ -616,7 +557,6 @@ var gCSSProperties = {
 	"border-right-style": {
 		domProp: "borderRightStyle",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		/* XXX hidden is sometimes the same as initial */
 		initial_values: [ "none" ],
@@ -626,7 +566,6 @@ var gCSSProperties = {
 	"border-right-width": {
 		domProp: "borderRightWidth",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		/* XXX a value differing from initial requires border-style to be set */
 		initial_values: [ "medium", "3px" ],
@@ -636,7 +575,6 @@ var gCSSProperties = {
 	"border-spacing": {
 		domProp: "borderSpacing",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0 0", "0px", "0 0px" ],
 		other_values: [ "3px", "4em 2px", "4em 0", "0px 2px" ],
@@ -645,7 +583,6 @@ var gCSSProperties = {
 	"border-style": {
 		domProp: "borderStyle",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-top-style", "border-right-style", "border-bottom-style", "border-left-style" ],
 		/* XXX hidden is sometimes the same as initial */
@@ -656,7 +593,6 @@ var gCSSProperties = {
 	"border-top": {
 		domProp: "borderTop",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-top-color", "border-top-style", "border-top-width" ],
 		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
@@ -666,7 +602,6 @@ var gCSSProperties = {
 	"border-top-color": {
 		domProp: "borderTopColor",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "currentColor" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
@@ -675,7 +610,6 @@ var gCSSProperties = {
 	"border-top-style": {
 		domProp: "borderTopStyle",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		/* XXX hidden is sometimes the same as initial */
 		initial_values: [ "none" ],
@@ -685,7 +619,6 @@ var gCSSProperties = {
 	"border-top-width": {
 		domProp: "borderTopWidth",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		/* XXX a value differing from initial requires border-style to be set */
 		initial_values: [ "medium", "3px" ],
@@ -695,7 +628,6 @@ var gCSSProperties = {
 	"border-width": {
 		domProp: "borderWidth",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-top-width", "border-right-width", "border-bottom-width", "border-left-width" ],
 		/* XXX a value differing from initial requires border-style to be set */
@@ -706,7 +638,6 @@ var gCSSProperties = {
 	"bottom": {
 		domProp: "bottom",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		/* XXX requires position to be set */
 		/* XXX 0 may or may not be equal to auto */
@@ -717,7 +648,6 @@ var gCSSProperties = {
 	"caption-side": {
 		domProp: "captionSide",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "top" ],
 		other_values: [ "right", "left", "bottom" ],
@@ -726,7 +656,6 @@ var gCSSProperties = {
 	"clear": {
 		domProp: "clear",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "left", "right", "both" ],
@@ -735,7 +664,6 @@ var gCSSProperties = {
 	"clip": {
 		domProp: "clip",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "rect(auto,auto,auto,auto)", "rect(3px, 4px, 4em, 0)", "rect(auto, 3em, 4pt, 2px)", "rect(2px 3px 4px 5px)" ],
@@ -744,7 +672,6 @@ var gCSSProperties = {
 	"color": {
 		domProp: "color",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "currentcolor" ],
 		other_values: [ "green", "#f3c", "#fed292", "rgba(45,300,12,2)", "transparent" ],
@@ -753,7 +680,6 @@ var gCSSProperties = {
 	"content": {
 		domProp: "content",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		/* XXX needs to be on pseudo-elements */
 		initial_values: [ "normal", "none" ],
@@ -763,7 +689,6 @@ var gCSSProperties = {
 	"counter-increment": {
 		domProp: "counterIncrement",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "foo 1", "bar", "foo 3 bar baz 2" ],
@@ -772,7 +697,6 @@ var gCSSProperties = {
 	"counter-reset": {
 		domProp: "counterReset",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "bar 0", "foo", "foo 3 bar baz 2" ],
@@ -809,7 +733,6 @@ var gCSSProperties = {
 	"cursor": {
 		domProp: "cursor",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "crosshair", "default", "pointer", "move", "e-resize", "ne-resize", "nw-resize", "n-resize", "se-resize", "sw-resize", "s-resize", "w-resize", "text", "wait", "help", "progress" ],
@@ -818,7 +741,6 @@ var gCSSProperties = {
 	"direction": {
 		domProp: "direction",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "ltr" ],
 		other_values: [ "rtl" ],
@@ -827,7 +749,6 @@ var gCSSProperties = {
 	"display": {
 		domProp: "display",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "inline" ],
 		/* XXX none will really mess with other properties */
@@ -846,7 +767,6 @@ var gCSSProperties = {
 	"empty-cells": {
 		domProp: "emptyCells",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "show" ],
 		other_values: [ "hide" ],
@@ -855,7 +775,6 @@ var gCSSProperties = {
 	"float": {
 		domProp: "cssFloat",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "left", "right" ],
@@ -864,7 +783,6 @@ var gCSSProperties = {
 	"font": {
 		domProp: "font",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "font-style", "font-variant", "font-weight", "font-size", "line-height", "font-family", "font-stretch", "font-size-adjust" ],
 		/* XXX could be sans-serif */
@@ -875,7 +793,6 @@ var gCSSProperties = {
 	"font-family": {
 		domProp: "fontFamily",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "serif" ],
 		other_values: [ "sans-serif", "Times New Roman, serif", "'Times New Roman', serif", "cursive", "fantasy" ],
@@ -884,7 +801,6 @@ var gCSSProperties = {
 	"font-size": {
 		domProp: "fontSize",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "medium" ],
 		other_values: [ "2em", "50%", "large", "xx-small", "36pt", "8px" ],
@@ -893,7 +809,6 @@ var gCSSProperties = {
 	"font-size-adjust": {
 		domProp: "fontSizeAdjust",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "0.3", "0.5", "0.7" ],
@@ -911,7 +826,6 @@ var gCSSProperties = {
 	"font-style": {
 		domProp: "fontStyle",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal" ],
 		other_values: [ "italic", "oblique" ],
@@ -920,7 +834,6 @@ var gCSSProperties = {
 	"font-variant": {
 		domProp: "fontVariant",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal" ],
 		other_values: [ "small-caps" ],
@@ -929,7 +842,6 @@ var gCSSProperties = {
 	"font-weight": {
 		domProp: "fontWeight",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal" ],
 		other_values: [ "bold", "100", "200", "300", "400", "500", "600", "700", "800", "900" ],
@@ -938,7 +850,6 @@ var gCSSProperties = {
 	"height": {
 		domProp: "height",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ " auto" ],
 		/* XXX these have prerequisites */
@@ -948,7 +859,6 @@ var gCSSProperties = {
 	"left": {
 		domProp: "left",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		/* XXX requires position to be set */
 		/* XXX 0 may or may not be equal to auto */
@@ -959,7 +869,6 @@ var gCSSProperties = {
 	"letter-spacing": {
 		domProp: "letterSpacing",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal" ],
 		other_values: [ "0", "0px", "1em", "2px", "-3px" ],
@@ -968,7 +877,6 @@ var gCSSProperties = {
 	"line-height": {
 		domProp: "lineHeight",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal" ],
 		other_values: [ "1.0", "1", "1em", "27px" ],
@@ -977,7 +885,6 @@ var gCSSProperties = {
 	"list-style": {
 		domProp: "listStyle",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "list-style-type", "list-style-position", "list-style-image" ],
 		initial_values: [ "none", "outside", "disc", "none disc outside" ],
@@ -987,7 +894,6 @@ var gCSSProperties = {
 	"list-style-image": {
 		domProp: "listStyleImage",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")' ],
@@ -996,7 +902,6 @@ var gCSSProperties = {
 	"list-style-position": {
 		domProp: "listStylePosition",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "outside" ],
 		other_values: [ "inside" ],
@@ -1005,7 +910,6 @@ var gCSSProperties = {
 	"list-style-type": {
 		domProp: "listStyleType",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "disc" ],
 		other_values: [ "circle", "decimal-leading-zero", "upper-alpha" ],
@@ -1014,7 +918,6 @@ var gCSSProperties = {
 	"margin": {
 		domProp: "margin",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "margin-top", "margin-right", "margin-bottom", "margin-left" ],
 		initial_values: [ "0", "0px 0 0em", "0% 0px 0em 0pt" ],
@@ -1024,7 +927,6 @@ var gCSSProperties = {
 	"margin-bottom": {
 		domProp: "marginBottom",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		/* XXX testing auto has prerequisites */
 		initial_values: [ "0", "0px", "0%" ],
@@ -1034,7 +936,6 @@ var gCSSProperties = {
 	"margin-left": {
 		domProp: "marginLeft",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		/* no subproperties */
 		/* XXX testing auto has prerequisites */
@@ -1045,7 +946,6 @@ var gCSSProperties = {
 	"margin-right": {
 		domProp: "marginRight",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		/* no subproperties */
 		/* XXX testing auto has prerequisites */
@@ -1056,7 +956,6 @@ var gCSSProperties = {
 	"margin-top": {
 		domProp: "marginTop",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		/* XXX testing auto has prerequisites */
 		initial_values: [ "0", "0px", "0%" ],
@@ -1066,7 +965,6 @@ var gCSSProperties = {
 	"marker-offset": {
 		domProp: "markerOffset",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "6em", "-1px" ],
@@ -1085,7 +983,6 @@ var gCSSProperties = {
 	"max-height": {
 		domProp: "maxHeight",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "30px", "50%", "0" ],
@@ -1094,7 +991,6 @@ var gCSSProperties = {
 	"max-width": {
 		domProp: "maxWidth",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "30px", "50%", "0" ],
@@ -1103,7 +999,6 @@ var gCSSProperties = {
 	"min-height": {
 		domProp: "minHeight",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0" ],
 		other_values: [ "30px", "50%" ],
@@ -1112,7 +1007,6 @@ var gCSSProperties = {
 	"min-width": {
 		domProp: "minWidth",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0" ],
 		other_values: [ "30px", "50%" ],
@@ -1121,7 +1015,6 @@ var gCSSProperties = {
 	"opacity": {
 		domProp: "opacity",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "1", "17", "397.376" ],
 		other_values: [ "0", "0.4", "0.0000", "-3" ],
@@ -1144,7 +1037,6 @@ var gCSSProperties = {
 	"outline": {
 		domProp: "outline",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "outline-color", "outline-style", "outline-width" ],
 		initial_values: [
@@ -1159,7 +1051,6 @@ var gCSSProperties = {
 	"outline-color": {
 		domProp: "outlineColor",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "currentColor" ], // XXX should be invert
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
@@ -1168,7 +1059,6 @@ var gCSSProperties = {
 	"outline-offset": {
 		domProp: "outlineOffset",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0" ],
 		other_values: [ "-3px", "1em" ],
@@ -1177,7 +1067,6 @@ var gCSSProperties = {
 	"outline-style": {
 		domProp: "outlineStyle",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		// XXX Should 'hidden' be the same as initial?
 		initial_values: [ "none" ],
@@ -1187,7 +1076,6 @@ var gCSSProperties = {
 	"outline-width": {
 		domProp: "outlineWidth",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		/* XXX a value differing from initial requires border-style to be set */
 		initial_values: [ "medium", "3px" ],
@@ -1197,7 +1085,6 @@ var gCSSProperties = {
 	"overflow": {
 		domProp: "overflow",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		// XXX requires display:block
 		subproperties: [ "overflow-x", "overflow-y" ],
@@ -1208,7 +1095,6 @@ var gCSSProperties = {
 	"overflow-x": {
 		domProp: "overflowX",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		// XXX requires display:block
 		initial_values: [ "visible" ],
@@ -1218,7 +1104,6 @@ var gCSSProperties = {
 	"overflow-y": {
 		domProp: "overflowY",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		// XXX requires display:block
 		initial_values: [ "visible" ],
@@ -1228,7 +1113,6 @@ var gCSSProperties = {
 	"padding": {
 		domProp: "padding",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "padding-top", "padding-right", "padding-bottom", "padding-left" ],
 		initial_values: [ "0", "0px 0 0em", "0% 0px 0em 0pt" ],
@@ -1238,7 +1122,6 @@ var gCSSProperties = {
 	"padding-bottom": {
 		domProp: "paddingBottom",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "1px", "2em", "5%" ],
@@ -1247,7 +1130,6 @@ var gCSSProperties = {
 	"padding-left": {
 		domProp: "paddingLeft",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		/* no subproperties */
 		initial_values: [ "0", "0px", "0%" ],
@@ -1257,7 +1139,6 @@ var gCSSProperties = {
 	"padding-right": {
 		domProp: "paddingRight",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		/* no subproperties */
 		initial_values: [ "0", "0px", "0%" ],
@@ -1267,7 +1148,6 @@ var gCSSProperties = {
 	"padding-top": {
 		domProp: "paddingTop",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0px", "0%" ],
 		other_values: [ "1px", "2em", "5%" ],
@@ -1285,7 +1165,6 @@ var gCSSProperties = {
 	"page-break-after": {
 		domProp: "pageBreakAfter",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "always", "avoid", "left", "right" ],
@@ -1294,7 +1173,6 @@ var gCSSProperties = {
 	"page-break-before": {
 		domProp: "pageBreakBefore",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "always", "avoid", "left", "right" ],
@@ -1358,7 +1236,6 @@ var gCSSProperties = {
 	"position": {
 		domProp: "position",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "static" ],
 		other_values: [ "relative", "absolute", "fixed" ],
@@ -1367,7 +1244,6 @@ var gCSSProperties = {
 	"quotes": {
 		domProp: "quotes",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ '"\\201C" "\\201D" "\\2018" "\\2019"' ],
 		other_values: [ "none", "'\"' '\"'" ],
@@ -1385,7 +1261,6 @@ var gCSSProperties = {
 	"right": {
 		domProp: "right",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		/* XXX requires position to be set */
 		/* XXX 0 may or may not be equal to auto */
@@ -1465,7 +1340,6 @@ var gCSSProperties = {
 	"table-layout": {
 		domProp: "tableLayout",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "fixed" ],
@@ -1474,7 +1348,6 @@ var gCSSProperties = {
 	"text-align": {
 		domProp: "textAlign",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		// don't know whether left and right are same as start
 		initial_values: [ "start" ],
@@ -1484,7 +1357,6 @@ var gCSSProperties = {
 	"text-decoration": {
 		domProp: "textDecoration",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "underline", "overline", "line-through", "blink line-through underline", "underline overline line-through blink" ],
@@ -1493,7 +1365,6 @@ var gCSSProperties = {
 	"text-indent": {
 		domProp: "textIndent",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0" ],
 		other_values: [ "2em", "5%", "-10px" ],
@@ -1511,7 +1382,6 @@ var gCSSProperties = {
 	"text-transform": {
 		domProp: "textTransform",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "capitalize", "uppercase", "lowercase" ],
@@ -1520,7 +1390,6 @@ var gCSSProperties = {
 	"top": {
 		domProp: "top",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		/* XXX requires position to be set */
 		/* XXX 0 may or may not be equal to auto */
@@ -1531,7 +1400,6 @@ var gCSSProperties = {
 	"unicode-bidi": {
 		domProp: "unicodeBidi",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal" ],
 		other_values: [ "embed", "bidi-override" ],
@@ -1540,7 +1408,6 @@ var gCSSProperties = {
 	"vertical-align": {
 		domProp: "verticalAlign",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "baseline" ],
 		other_values: [ "sub", "super", "top", "text-top", "middle", "bottom", "text-bottom", "15%", "3px", "0.2em", "-5px", "-3%" ],
@@ -1549,7 +1416,6 @@ var gCSSProperties = {
 	"visibility": {
 		domProp: "visibility",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "visible" ],
 		other_values: [ "hidden", "collapse" ],
@@ -1576,7 +1442,6 @@ var gCSSProperties = {
 	"white-space": {
 		domProp: "whiteSpace",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal" ],
 		other_values: [ "pre", "nowrap" ],
@@ -1599,7 +1464,6 @@ var gCSSProperties = {
 	"width": {
 		domProp: "width",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ " auto" ],
 		/* XXX these have prerequisites */
@@ -1609,7 +1473,6 @@ var gCSSProperties = {
 	"word-spacing": {
 		domProp: "wordSpacing",
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal", "0", "0px", "-0em" ],
 		other_values: [ "1em", "2px", "-3px" ],
@@ -1618,7 +1481,6 @@ var gCSSProperties = {
 	"z-index": {
 		domProp: "zIndex",
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		/* XXX requires position */
 		initial_values: [ "auto" ],
@@ -1629,7 +1491,6 @@ var gCSSProperties = {
 	"clip-path": {
 		domProp: null,
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "url(#mypath)", "url('404.svg#mypath')" ],
@@ -1638,7 +1499,6 @@ var gCSSProperties = {
 	"clip-rule": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "nonzero" ],
 		other_values: [ "evenodd" ],
@@ -1647,7 +1507,6 @@ var gCSSProperties = {
 	"color-interpolation": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "sRGB" ],
 		other_values: [ "auto", "linearRGB" ],
@@ -1656,7 +1515,6 @@ var gCSSProperties = {
 	"color-interpolation-filters": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "linearRGB" ],
 		other_values: [ "sRGB", "auto" ],
@@ -1665,7 +1523,6 @@ var gCSSProperties = {
 	"dominant-baseline": {
 		domProp: null,
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "use-script", "no-change", "reset-size", "ideographic", "alphabetic", "hanging", "mathematical", "central", "middle", "text-after-edge", "text-before-edge" ],
@@ -1674,7 +1531,6 @@ var gCSSProperties = {
 	"fill": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)" ],
 		other_values: [ "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green', "none" ],
@@ -1683,7 +1539,6 @@ var gCSSProperties = {
 	"fill-opacity": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "1", "2.8", "1.000" ],
 		other_values: [ "0", "0.3", "-7.3" ],
@@ -1692,7 +1547,6 @@ var gCSSProperties = {
 	"fill-rule": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "nonzero" ],
 		other_values: [ "evenodd" ],
@@ -1701,7 +1555,6 @@ var gCSSProperties = {
 	"filter": {
 		domProp: null,
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "url(#myfilt)" ],
@@ -1710,7 +1563,6 @@ var gCSSProperties = {
 	"flood-color": {
 		domProp: null,
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)" ],
 		other_values: [ "green", "#fc3" ],
@@ -1719,7 +1571,6 @@ var gCSSProperties = {
 	"flood-opacity": {
 		domProp: null,
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "1", "2.8", "1.000" ],
 		other_values: [ "0", "0.3", "-7.3" ],
@@ -1728,7 +1579,6 @@ var gCSSProperties = {
 	"marker": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "marker-start", "marker-mid", "marker-end" ],
 		initial_values: [ "none" ],
@@ -1738,7 +1588,6 @@ var gCSSProperties = {
 	"marker-end": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "url(#mysym)" ],
@@ -1747,7 +1596,6 @@ var gCSSProperties = {
 	"marker-mid": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "url(#mysym)" ],
@@ -1756,7 +1604,6 @@ var gCSSProperties = {
 	"marker-start": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "url(#mysym)" ],
@@ -1765,7 +1612,6 @@ var gCSSProperties = {
 	"mask": {
 		domProp: null,
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "url(#mymask)" ],
@@ -1774,7 +1620,6 @@ var gCSSProperties = {
 	"pointer-events": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "visiblepainted" ],
 		other_values: [ "visibleFill", "visiblestroke", "Visible", "painted", "fill", "stroke", "all", "none" ],
@@ -1783,7 +1628,6 @@ var gCSSProperties = {
 	"shape-rendering": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "optimizeSpeed", "crispEdges", "geometricPrecision" ],
@@ -1792,7 +1636,6 @@ var gCSSProperties = {
 	"stop-color": {
 		domProp: null,
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)" ],
 		other_values: [ "green", "#fc3" ],
@@ -1801,7 +1644,6 @@ var gCSSProperties = {
 	"stop-opacity": {
 		domProp: null,
 		inherited: false,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "1", "2.8", "1.000" ],
 		other_values: [ "0", "0.3", "-7.3" ],
@@ -1810,7 +1652,6 @@ var gCSSProperties = {
 	"stroke": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)", "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ],
@@ -1819,7 +1660,6 @@ var gCSSProperties = {
 	"stroke-dasharray": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "5px,3px,2px", "  5px ,3px  , 2px ", "1px", "5%", "3em" ],
@@ -1828,7 +1668,6 @@ var gCSSProperties = {
 	"stroke-dashoffset": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "-0px", "0em" ],
 		other_values: [ "3px", "3%", "1em" ],
@@ -1837,7 +1676,6 @@ var gCSSProperties = {
 	"stroke-linecap": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "butt" ],
 		other_values: [ "round", "square" ],
@@ -1846,7 +1684,6 @@ var gCSSProperties = {
 	"stroke-linejoin": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "miter" ],
 		other_values: [ "round", "bevel" ],
@@ -1855,7 +1692,6 @@ var gCSSProperties = {
 	"stroke-miterlimit": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "4" ],
 		other_values: [ "1", "7", "5000" ],
@@ -1864,7 +1700,6 @@ var gCSSProperties = {
 	"stroke-opacity": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "1", "2.8", "1.000" ],
 		other_values: [ "0", "0.3", "-7.3" ],
@@ -1873,7 +1708,6 @@ var gCSSProperties = {
 	"stroke-width": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "1px" ],
 		other_values: [ "0", "0px", "-0em", "17px", "0.2em" ],
@@ -1882,7 +1716,6 @@ var gCSSProperties = {
 	"text-anchor": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "start" ],
 		other_values: [ "middle", "end" ],
@@ -1891,7 +1724,6 @@ var gCSSProperties = {
 	"text-rendering": {
 		domProp: null,
 		inherited: true,
-		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "optimizeSpeed", "optimizeLegibility", "geometricPrecision" ],
