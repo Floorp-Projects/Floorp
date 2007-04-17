@@ -1869,7 +1869,7 @@ nsGlobalWindow::GetGlobalObjectOwner()
 nsresult
 nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  FORWARD_TO_INNER(PreHandleEvent, (aVisitor), NS_OK);
+  NS_PRECONDITION(IsInnerWindow(), "PreHandleEvent is used on outer window!?");
   static PRUint32 count = 0;
   PRUint32 msg = aVisitor.mEvent->message;
 
@@ -1901,7 +1901,7 @@ nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 nsresult
 nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
-  FORWARD_TO_INNER(PostHandleEvent, (aVisitor), NS_OK);
+  NS_PRECONDITION(IsInnerWindow(), "PostHandleEvent is used on outer window!?");
   /* mChromeEventHandler and mContext go dangling in the middle of this
    function under some circumstances (events that destroy the window)
    without this addref. */
