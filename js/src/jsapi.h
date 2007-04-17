@@ -905,7 +905,7 @@ struct JSTracer {
  * The method to call on each reference to a traceable thing storted in a
  * particular JSObject or other runtime structure. With DEBUG defined the
  * caller before calling JS_CallTracer must initialize JSTracer fields
- * describing the reference using the macros bellow.
+ * describing the reference using the macros below.
  */
 extern JS_PUBLIC_API(void)
 JS_CallTracer(JSTracer *trc, void *thing, uint32 kind);
@@ -1183,7 +1183,7 @@ struct JSExtendedClass {
 #define JSCLASS_IS_ANONYMOUS            (1<<(JSCLASS_HIGH_FLAGS_SHIFT+1))
 #define JSCLASS_IS_GLOBAL               (1<<(JSCLASS_HIGH_FLAGS_SHIFT+2))
 
-/* Idicates that JSClass.mark is a tracer with JSTraceOp type. */
+/* Indicates that JSClass.mark is a tracer with JSTraceOp type. */
 #define JSCLASS_MARK_IS_TRACE           (1<<(JSCLASS_HIGH_FLAGS_SHIFT+3))
 
 /*
