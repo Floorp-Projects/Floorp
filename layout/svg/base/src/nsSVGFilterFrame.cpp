@@ -51,6 +51,13 @@
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 
+// maximum dimension of a filter - choose so that
+// 4*(FILTER_RES_MAX^2) < UINT_MAX, it's small
+// enough that it could be computed in a reasonable
+// amount of time, and large enough for most content
+// window sizes.
+#define FILTER_RES_MAX 16384
+
 nsIFrame*
 NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
@@ -197,6 +204,10 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   if (filterResX <= 0.0f || filterResY <= 0.0f)
     return NS_OK;
 
+  // prevent filters from overflowing or generally using excessive memory
+  filterResX = PR_MIN(FILTER_RES_MAX, filterResX);
+  filterResY = PR_MIN(FILTER_RES_MAX, filterResY);
+
 #ifdef DEBUG_tor
   fprintf(stderr, "filter bbox: %f,%f  %fx%f\n", x, y, width, height);
   fprintf(stderr, "filterRes: %u %u\n", filterResX, filterResY);
@@ -213,7 +224,7 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   // paint the target geometry
   nsRefPtr<gfxImageSurface> tmpSurface =
     new gfxImageSurface(gfxIntSize(filterResX, filterResY), gfxASurface::ImageFormatARGB32);
-  if (!tmpSurface) {
+  if (!tmpSurface || !tmpSurface->Data()) {
     FilterFailCleanup(aContext, aTarget);
     return NS_OK;
   }
@@ -239,7 +250,9 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
       cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
                                  filterResX, filterResY);
 
-    if (!alpha) {
+    if (!alpha || cairo_surface_status(alpha)) {
+      if (alpha)
+        cairo_surface_destroy(alpha);
       FilterFailCleanup(aContext, aTarget);
       return NS_OK;
     }
@@ -248,8 +261,8 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
     PRUint8 *alphaData = cairo_image_surface_get_data(alpha);
     PRUint32 stride = tmpSurface->Stride();
 
-    for (PRUint32 yy=0; yy<filterResY; yy++)
-      for (PRUint32 xx=0; xx<filterResX; xx++) {
+    for (PRUint32 yy = 0; yy < PRUint32(filterResY); yy++)
+      for (PRUint32 xx = 0; xx < PRUint32(filterResX); xx++) {
         alphaData[stride*yy + 4*xx + GFX_ARGB32_OFFSET_B] = 0;
         alphaData[stride*yy + 4*xx + GFX_ARGB32_OFFSET_G] = 0;
         alphaData[stride*yy + 4*xx + GFX_ARGB32_OFFSET_R] = 0;
@@ -500,8 +513,15 @@ nsSVGFilterInstance::GetFilterSubregion(
 cairo_surface_t *
 nsSVGFilterInstance::GetImage()
 {
-  return cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
-                                    mFilterResX, mFilterResY);
+  cairo_surface_t *surface =
+    cairo_image_surface_create(CAIRO_FORMAT_ARGB32, mFilterResX, mFilterResY);
+
+  if (surface && cairo_surface_status(surface)) {
+    cairo_surface_destroy(surface);
+    surface = nsnull;
+  }
+
+  return surface;
 }
 
 void
