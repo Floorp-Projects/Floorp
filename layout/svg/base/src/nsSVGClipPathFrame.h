@@ -48,22 +48,22 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
 
   NS_IMETHOD InitSVG();
 
- public:
   nsSVGClipPathFrame(nsStyleContext* aContext) : nsSVGClipPathFrameBase(aContext) {}
 
+ public:
   // nsSVGClipPathFrame methods:
-  NS_IMETHOD ClipPaint(nsSVGRenderState* aContext,
-                       nsISVGChildFrame* aParent,
-                       nsCOMPtr<nsIDOMSVGMatrix> aMatrix);
+  nsresult ClipPaint(nsSVGRenderState* aContext,
+                     nsISVGChildFrame* aParent,
+                     nsIDOMSVGMatrix *aMatrix);
 
-  NS_IMETHOD ClipHitTest(nsISVGChildFrame* aParent,
-                         nsCOMPtr<nsIDOMSVGMatrix> aMatrix,
-                         float aX, float aY, PRBool *aHit);
+  PRBool ClipHitTest(nsISVGChildFrame* aParent,
+                     nsIDOMSVGMatrix *aMatrix,
+                     float aX, float aY);
 
   // Check if this clipPath is made up of more than one geometry object.
   // If so, the clipping API in cairo isn't enough and we need to use
   // mask based clipping.
-  NS_IMETHOD IsTrivial(PRBool *aTrivial);
+  PRBool IsTrivial();
 
   /**
    * Get the "type" of the frame
@@ -80,6 +80,24 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
 #endif
 
  private:
+  // A helper class to allow us to paint clip paths safely. The helper
+  // automatically sets and clears the mInUse flag on the clip path frame
+  // (to prevent nasty reference loops). It's easy to mess this up
+  // and break things, so this helper makes the code far more robust.
+  class AutoClipPathReferencer
+  {
+  public:
+    AutoClipPathReferencer(nsSVGClipPathFrame *aFrame) {
+      NS_ASSERTION(mFrame->mInUse == PR_FALSE, "reference loop!");
+      mFrame->mInUse = PR_TRUE;
+    }
+    ~AutoClipPathReferencer() {
+      mFrame->mInUse = PR_FALSE;
+    }
+  private:
+    nsSVGClipPathFrame *mFrame;
+  };
+
   nsISVGChildFrame *mClipParent;
   nsCOMPtr<nsIDOMSVGMatrix> mClipParentMatrix;
 
