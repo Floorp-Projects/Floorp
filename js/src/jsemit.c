@@ -2889,7 +2889,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 switchOp = JSOP_LOOKUPSWITCH;
         } else if (switchOp == JSOP_LOOKUPSWITCH) {
             /*
-             * Lookup switch supports only atom indexes bellow 64K limit.
+             * Lookup switch supports only atom indexes below 64K limit.
              * Conservatively estimate the maximum possible index during
              * switch generation and use conditional switch if it exceeds
              * the limit.
