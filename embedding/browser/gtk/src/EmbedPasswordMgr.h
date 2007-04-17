@@ -125,7 +125,7 @@ public:
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSIPROMPTFACTORY
   // nsIFormSubmitObserver
-  NS_IMETHOD Notify(nsIContent* aFormNode,
+  NS_IMETHOD Notify(nsIDOMHTMLFormElement* aDOMForm,
                     nsIDOMWindowInternal* aWindow,
                     nsIURI* aActionURL,
                     PRBool* aCancelSubmit);

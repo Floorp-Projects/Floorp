@@ -56,7 +56,6 @@
 class nsIFile;
 class nsIStringBundle;
 class nsIComponentManager;
-class nsIContent;
 class nsIDOMWindowInternal;
 class nsIForm;
 class nsIURI;
@@ -120,7 +119,7 @@ public:
   NS_DECL_NSIPROMPTFACTORY
 
   // nsIFormSubmitObserver
-  NS_IMETHOD Notify(nsIContent* aFormNode,
+  NS_IMETHOD Notify(nsIDOMHTMLFormElement* aDOMForm,
                     nsIDOMWindowInternal* aWindow,
                     nsIURI* aActionURL,
                     PRBool* aCancelSubmit);

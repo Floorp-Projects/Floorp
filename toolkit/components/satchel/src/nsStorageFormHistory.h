@@ -96,7 +96,7 @@ public:
   NS_DECL_NSIOBSERVER
   
   // nsIFormSubmitObserver
-  NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL, PRBool* cancelSubmit);
+  NS_IMETHOD Notify(nsIDOMHTMLFormElement* formElt, nsIDOMWindowInternal* window, nsIURI* actionURL, PRBool* cancelSubmit);
 
   nsFormHistory();
   nsresult Init();
