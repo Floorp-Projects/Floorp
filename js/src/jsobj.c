@@ -103,7 +103,7 @@ JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
     js_Call,                js_Construct,
     NULL,                   js_HasInstance,
     js_SetProtoOrParent,    js_SetProtoOrParent,
-    js_Mark,                js_Clear,
+    js_TraceObject,         js_Clear,
     js_GetRequiredSlot,     js_SetRequiredSlot
 };
 
@@ -663,12 +663,13 @@ js_LeaveSharpObject(JSContext *cx, JSIdArray **idap)
 JS_STATIC_DLL_CALLBACK(intN)
 gc_sharp_table_entry_marker(JSHashEntry *he, intN i, void *arg)
 {
-    GC_MARK((JSContext *)arg, (JSObject *)he->key, "sharp table entry");
+    JS_CALL_OBJECT_TRACER((JSTracer *)arg, (JSObject *)he->key,
+                          "sharp table entry");
     return JS_DHASH_NEXT;
 }
 
 void
-js_GCMarkSharpMap(JSContext *cx, JSSharpObjectMap *map)
+js_TraceSharpMap(JSTracer *trc, JSSharpObjectMap *map)
 {
     JS_ASSERT(map->depth > 0);
     JS_ASSERT(map->table);
@@ -693,7 +694,7 @@ js_GCMarkSharpMap(JSContext *cx, JSSharpObjectMap *map)
      * with otherwise unreachable objects. But this is way too complex
      * to justify spending efforts.
      */
-    JS_HashTableEnumerateEntries(map->table, gc_sharp_table_entry_marker, cx);
+    JS_HashTableEnumerateEntries(map->table, gc_sharp_table_entry_marker, trc);
 }
 
 #define OBJ_TOSTRING_EXTRA      4       /* for 4 local GC roots */
@@ -1872,7 +1873,7 @@ JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps = {
     NULL,                   NULL,
     NULL,                   NULL,
     js_SetProtoOrParent,    js_SetProtoOrParent,
-    js_Mark,                js_Clear,
+    js_TraceObject,         js_Clear,
     NULL,                   NULL
 };
 
@@ -4108,12 +4109,12 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 }
 
 void
-js_MarkNativeIteratorStates(JSContext *cx)
+js_TraceNativeIteratorStates(JSTracer *trc)
 {
     JSNativeIteratorState *state;
     jsid *cursor, *end, id;
 
-    state = cx->runtime->nativeIteratorStates;
+    state = trc->context->runtime->nativeIteratorStates;
     if (!state)
         return;
 
@@ -4123,7 +4124,7 @@ js_MarkNativeIteratorStates(JSContext *cx)
         end = cursor + state->ida->length;
         for (; cursor != end; ++cursor) {
             id = *cursor;
-            MARK_ID(cx, id);
+            TRACE_ID(trc, id);
         }
     } while ((state = state->next) != NULL);
 }
@@ -4750,12 +4751,75 @@ js_DumpScopeMeters(JSRuntime *rt)
 }
 #endif
 
-uint32
-js_Mark(JSContext *cx, JSObject *obj, void *arg)
+#ifdef DEBUG
+static void
+PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
 {
+    JSObject *obj;
+    uint32 slot;
     JSScope *scope;
+    jsval nval;
     JSScopeProperty *sprop;
     JSClass *clasp;
+    uint32 key;
+    const char *slotname;
+
+    JS_ASSERT(trc->debugPrinter == PrintObjectSlotName);
+    obj = (JSObject *)trc->debugPrintArg;
+    slot = (uint32)trc->debugPrintIndex;
+
+    scope = OBJ_SCOPE(obj);
+    sprop = SCOPE_LAST_PROP(scope);
+    while (sprop && sprop->slot != slot)
+        sprop = sprop->parent;
+
+    if (!sprop) {
+        switch (slot) {
+          case JSSLOT_PROTO:
+            JS_snprintf(buf, bufsize, "__proto__");
+            break;
+          case JSSLOT_PARENT:
+            JS_snprintf(buf, bufsize, "__parent__");
+            break;
+          default:
+            slotname = NULL;
+            clasp = LOCKED_OBJ_GET_CLASS(obj);
+            if (clasp->flags & JSCLASS_IS_GLOBAL) {
+                key = slot - JSSLOT_START(clasp);
+#define JS_PROTO(name,code,init) \
+    if ((code) == key) { slotname = js_##name##_str; goto found; }
+#include "jsproto.tbl"
+#undef JS_PROTO
+            }
+          found:
+            if (slotname)
+                JS_snprintf(buf, bufsize, "CLASS_OBJECT(%s)", slotname);
+            else
+                JS_snprintf(buf, bufsize, "**UNKNOWN SLOT %ld**", (long)slot);
+            break;
+        }
+    } else {
+        nval = ID_TO_VALUE(sprop->id);
+        if (JSVAL_IS_INT(nval)) {
+            JS_snprintf(buf, bufsize, "%ld", (long)JSVAL_TO_INT(nval));
+        } else if (JSVAL_IS_STRING(nval)) {
+            js_PutEscapedString(buf, bufsize, JSVAL_TO_STRING(nval), 0);
+        } else {
+            JS_snprintf(buf, bufsize, "**FINALIZED ATOM KEY**");
+        }
+    }
+}
+#endif
+
+void
+js_TraceObject(JSTracer *trc, JSObject *obj)
+{
+    JSScope *scope;
+    JSContext *cx;
+    JSScopeProperty *sprop;
+    JSClass *clasp;
+    size_t nslots, i;
+    jsval v;
 
     JS_ASSERT(OBJ_IS_NATIVE(obj));
     scope = OBJ_SCOPE(obj);
@@ -4767,16 +4831,21 @@ js_Mark(JSContext *cx, JSObject *obj, void *arg)
     JS_ASSERT(!SCOPE_LAST_PROP(scope) ||
               SCOPE_HAS_PROPERTY(scope, SCOPE_LAST_PROP(scope)));
 
+    cx = trc->context;
     for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
         if (SCOPE_HAD_MIDDLE_DELETE(scope) && !SCOPE_HAS_PROPERTY(scope, sprop))
             continue;
-        MARK_SCOPE_PROPERTY(cx, sprop);
+        TRACE_SCOPE_PROPERTY(trc, sprop);
     }
 
     /* No one runs while the GC is running, so we can use LOCKED_... here. */
     clasp = LOCKED_OBJ_GET_CLASS(obj);
-    if (clasp->mark)
-        (void) clasp->mark(cx, obj, NULL);
+    if (clasp->mark) {
+        if (clasp->flags & JSCLASS_MARK_IS_TRACE)
+            ((JSTraceOp)(clasp->mark))(trc, obj);
+        else if (IS_GC_MARKING_TRACER(trc))
+            (void) clasp->mark(cx, obj, trc);
+    }
 
     if (scope->object != obj) {
         /*
@@ -4784,9 +4853,18 @@ js_Mark(JSContext *cx, JSObject *obj, void *arg)
          * how many slots are in use in obj by looking at scope, so we use
          * STOBJ_NSLOTS(obj).
          */
-        return STOBJ_NSLOTS(obj);
+        nslots = STOBJ_NSLOTS(obj);
+    } else {
+        nslots = LOCKED_OBJ_NSLOTS(obj);
     }
-    return LOCKED_OBJ_NSLOTS(obj);
+
+    for (i = 0; i != nslots; ++i) {
+        v = STOBJ_GET_SLOT(obj, i);
+        if (JSVAL_IS_TRACEABLE(v)) {
+            JS_SET_TRACING_DETAILS(trc, PrintObjectSlotName, obj, i);
+            JS_CallTracer(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
+        }
+    }
 }
 
 void
@@ -4846,8 +4924,8 @@ js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
          * we rely on STOBJ_NSLOTS(obj) to get the number of available slots
          * in obj after we allocate dynamic slots.
          *
-         * See js_Mark, before the last return, where we make a special case
-         * for unmutated (scope->object != obj) objects.
+         * See js_TraceObject, before the slot tracing, where we make a special
+         * case for unmutated (scope->object != obj) objects.
          */
         clasp = LOCKED_OBJ_GET_CLASS(obj);
         nslots = JSSLOT_FREE(clasp);

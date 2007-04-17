@@ -130,6 +130,7 @@ typedef struct JSContext         JSContext;
 typedef struct JSErrorReport     JSErrorReport;
 typedef struct JSFunction        JSFunction;
 typedef struct JSFunctionSpec    JSFunctionSpec;
+typedef struct JSTracer          JSTracer;
 typedef struct JSIdArray         JSIdArray;
 typedef struct JSProperty        JSProperty;
 typedef struct JSPropertySpec    JSPropertySpec;
@@ -329,25 +330,74 @@ typedef JSBool
                                     JSBool *bp);
 
 /*
- * Function type for JSClass.mark and JSObjectOps.mark, called from the GC to
- * scan live GC-things reachable from obj's private data structure.  For each
- * such thing, a mark implementation must call
- *
- *    JS_MarkGCThing(cx, thing, name, arg);
- *
- * The trailing name and arg parameters are used for GC_MARK_DEBUG-mode heap
- * dumping and ref-path tracing.  The mark function should pass a (typically
- * literal) string naming the private data member for name, and it must pass
- * the opaque arg parameter through from its caller.
- *
- * For the JSObjectOps.mark hook, the return value is the number of slots in
- * obj to scan. For JSClass.mark, the return value is ignored.
- *
- * NB: JSMarkOp implementations cannot allocate new GC-things (JS_NewObject
- * called from a mark function will fail silently, e.g.).
+ * Deprecated function type for JSClass.mark. All new code should define
+ * JSTraceOp instead to ensure the traversal of traceable things stored in
+ * the native structures.
  */
 typedef uint32
 (* JS_DLL_CALLBACK JSMarkOp)(JSContext *cx, JSObject *obj, void *arg);
+
+/*
+ * Function type for trace operation of the class called to enumerate all
+ * traceable things reachable from obj's private data structure. For each such
+ * thing, a trace implementation must call
+ *
+ *    JS_CallTracer(trc, thing, kind);
+ *
+ * or one of its convenience macros as described in jsapi.h.
+ *
+ * JSTraceOp implementation can assume that no other threads mutates object
+ * state. It must not change state of the object or corresponding native
+ * structures. The only exception for this rule is the case when the embedding
+ * needs a tight integration with GC. In that case the embedding can check if
+ * the traversal is a part of the marking phase through calling
+ * JS_IsGCMarkingTracer and apply a special code like emptying caches or
+ * marking its native structures.
+ *
+ * To define the tracer for a JSClass, the implementation must add
+ * JSCLASS_MARK_IS_TRACE to class flags and use JS_CLASS_TRACE(method)
+ * macro bellow to convert JSTraceOp to JSMarkOp when initializing or
+ * assigning JSClass.mark field.
+ */
+typedef void
+(* JS_DLL_CALLBACK JSTraceOp)(JSTracer *trc, JSObject *obj);
+
+#if defined __GNUC__ && __GNUC__ >= 4
+# define JS_CLASS_TRACE(method)                                               \
+    (__builtin_types_compatible_p(JSTraceOp, __typeof(&method))               \
+     ? (JSMarkOp)(method)                                                     \
+     : JS_WrongTypeForClassTacer)
+
+extern JSMarkOp JS_WrongTypeForClassTacer;
+
+#else
+# define JS_CLASS_TRACE(method) ((JSMarkOp)(method))
+#endif
+
+/*
+ * Tracer callback, called for each traceable thing directly refrenced by a
+ * particular object or runtime structure. It is the callback responsibility
+ * to ensure the traversal of the full object graph via calling eventually
+ * JS_TraceChildren on the passed thing. In this case the callback must be
+ * prepared to deal with cycles in the traversal graph.
+ *
+ * kind argument is one of JSTRACE_OBJECT, JSTRACE_DOUBLE, JSTRACE_STRING or
+ * a tag denoting internal implementation-specific traversal kind. In the
+ * latter case the only operations on thing that the callback can do is to call
+ * JS_TraceChildren or DEBUG-only JS_PrintTraceThingInfo.
+ */
+typedef void
+(* JS_DLL_CALLBACK JSTraceCallback)(JSTracer *trc, void *thing, uint32 kind);
+
+/*
+ * DEBUG only callback that JSTraceOp implementation can provide to return
+ * a string describing the reference traced with JS_CallTracer.
+ */
+#ifdef DEBUG
+typedef void
+(* JS_DLL_CALLBACK JSTraceNamePrinter)(JSTracer *trc, char *buf,
+                                       size_t bufsize);
+#endif
 
 /*
  * The optional JSClass.reserveSlots hook allows a class to make computed

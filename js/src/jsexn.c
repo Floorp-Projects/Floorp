@@ -67,8 +67,8 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 static void
 exn_finalize(JSContext *cx, JSObject *obj);
 
-static uint32
-exn_mark(JSContext *cx, JSObject *obj, void *arg);
+static void
+exn_trace(JSTracer *trc, JSObject *obj);
 
 static void
 exn_finalize(JSContext *cx, JSObject *obj);
@@ -82,12 +82,12 @@ exn_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
 JSClass js_ErrorClass = {
     js_Error_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
+    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_MARK_IS_TRACE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Error),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     exn_enumerate,    (JSResolveOp)exn_resolve, JS_ConvertStub, exn_finalize,
     NULL,             NULL,             NULL,             Exception,
-    NULL,             NULL,             exn_mark,         NULL
+    NULL,             NULL,             JS_CLASS_TRACE(exn_trace), NULL
 };
 
 typedef struct JSStackTraceElem {
@@ -375,34 +375,37 @@ GetExnPrivate(JSContext *cx, JSObject *obj)
     return priv;
 }
 
-static uint32
-exn_mark(JSContext *cx, JSObject *obj, void *arg)
+static void
+exn_trace(JSTracer *trc, JSObject *obj)
 {
     JSExnPrivate *priv;
     JSStackTraceElem *elem;
     size_t vcount, i;
     jsval *vp, v;
 
-    priv = GetExnPrivate(cx, obj);
+    priv = GetExnPrivate(trc->context, obj);
     if (priv) {
-        GC_MARK(cx, priv->message, "exception message");
-        GC_MARK(cx, priv->filename, "exception filename");
+        if (priv->message)
+            JS_CALL_STRING_TRACER(trc, priv->message, "exception message");
+        if (priv->filename)
+            JS_CALL_STRING_TRACER(trc, priv->filename, "exception filename");
+
         elem = priv->stackElems;
         for (vcount = i = 0; i != priv->stackDepth; ++i, ++elem) {
-            if (elem->funName)
-                GC_MARK(cx, elem->funName, "stack trace function name");
-            if (elem->filename)
+            if (elem->funName) {
+                JS_CALL_STRING_TRACER(trc, elem->funName,
+                                      "stack trace function name");
+            }
+            if (IS_GC_MARKING_TRACER(trc) && elem->filename)
                 js_MarkScriptFilename(elem->filename);
             vcount += elem->argc;
         }
         vp = GetStackTraceValueBuffer(priv);
         for (i = 0; i != vcount; ++i, ++vp) {
             v = *vp;
-            if (JSVAL_IS_GCTHING(v))
-                GC_MARK(cx, JSVAL_TO_GCTHING(v), "stack trace argument");
+            JS_CALL_VALUE_TRACER(trc, v, "stack trace argument");
         }
     }
-    return 0;
 }
 
 static void

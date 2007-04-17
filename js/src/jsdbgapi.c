@@ -392,23 +392,24 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
 }
 
 /*
- * NB: js_MarkWatchPoints does not acquire cx->runtime->debuggerLock, since
+ * NB: js_TraceWatchPoints does not acquire cx->runtime->debuggerLock, since
  * the debugger should never be racing with the GC (i.e., the debugger must
  * respect the request model).
  */
 void
-js_MarkWatchPoints(JSContext *cx)
+js_TraceWatchPoints(JSTracer *trc)
 {
     JSRuntime *rt;
     JSWatchPoint *wp;
 
-    rt = cx->runtime;
+    rt = trc->context->runtime;
+
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
          wp != (JSWatchPoint *)&rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
-        MARK_SCOPE_PROPERTY(cx, wp->sprop);
-        if (wp->sprop->attrs & JSPROP_SETTER)
-            JS_MarkGCThing(cx, wp->setter, "wp->setter", NULL);
+        TRACE_SCOPE_PROPERTY(trc, wp->sprop);
+        if ((wp->sprop->attrs & JSPROP_SETTER) && wp->setter)
+            JS_CALL_OBJECT_TRACER(trc, (JSObject *)wp->setter, "wp->setter");
     }
 }
 
