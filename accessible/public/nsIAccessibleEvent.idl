@@ -521,3 +521,23 @@ interface nsIAccessibleStateChangeEvent : nsIAccessibleEvent
   boolean isEnabled();
 };
 
+
+[scriptable, uuid(50a1e151-8e5f-4bcc-aaaf-a4bed1190e93)]
+interface nsIAccessibleTextChangeEvent : nsIAccessibleEvent
+{
+  /**
+   * Returns offset of changed text in accessible.
+   */
+  readonly attribute long start;
+
+  /**
+   * Returns length of changed text.
+   */
+  readonly attribute unsigned long length;
+
+  /**
+   * Returns true if text was inserted, otherwise false.
+   */
+  boolean isInserted();
+};
+

@@ -1076,6 +1076,29 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
         }
         break;
       }
+
+    case nsIAccessibleEvent::EVENT_TEXT_CHANGED:
+        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_CHANGED\n"));
+
+        nsCOMPtr<nsIAccessibleTextChangeEvent> event =
+          do_QueryInterface(aEvent);
+        NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
+
+        PRInt32 start = 0;
+        event->GetStart(&start);
+
+        PRUint32 length = 0;
+        event->GetLength(&length);
+
+        PRBool isInserted;
+        event->IsInserted(&isInserted);
+
+        g_signal_emit_by_name (atkObj,
+                               isInserted ? \
+                               "text_changed::insert":"text_changed::delete",
+                               start,
+                               length);
+        break;
     }
 
     return NS_OK;

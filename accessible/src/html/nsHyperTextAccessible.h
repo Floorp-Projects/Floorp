@@ -145,8 +145,6 @@ protected:
   // Selection helpers
   nsresult GetSelections(nsISelectionController **aSelCon, nsISelection **aDomSel);
   nsresult SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos);
-
-  // Event helpers
-  nsresult FireTextChangeEvent(AtkTextChange *aTextData);
 };
+
 #endif  // _nsHyperTextAccessible_H_
