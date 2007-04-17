@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test for parsing, storage, and serialization of CSS values</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+<div id="testnode"></div>
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for parsing, storage, and serialization of CSS values **/
+
+var gElement = document.getElementById("testnode");
+var gDeclaration = gElement.style;
+var gComputedStyle = window.getComputedStyle(gElement, "");
+
+function test_property(property)
+{
+  var info = gCSSProperties[property];
+
+  var test_computed = !("backend_only" in info);
+
+  function test_value(value) {
+    gDeclaration.setProperty(property, value, "");
+
+    var idx;
+    var step1val = gDeclaration.getPropertyValue(property);
+    var step1vals = [];
+    var step1ser = gDeclaration.cssText;
+    if ("subproperties" in info)
+      for (idx in info.subproperties)
+        step1vals.push(gDeclaration.getPropertyValue(info.subproperties[idx]));
+    var step1comp;
+    var step1comps = [];
+    if (test_computed && info.type != CSS_TYPE_TRUE_SHORTHAND)
+      step1comp = gComputedStyle.getPropertyValue(property);
+    if (test_computed && "subproperties" in info)
+      for (idx in info.subproperties)
+        step1comps.push(gComputedStyle.getPropertyValue(info.subproperties[idx]));
+
+    // We don't care particularly about the whitespace or the placement of
+    // semicolons, but for simplicity we'll test the current behavior.
+    is(step1ser, property + ": " + step1val + ";",
+       "serialization should match property value");
+
+    isnot(step1val, "", "setting '" + value + "' on '" + property);
+    if ("subproperties" in info)
+      for (idx in info.subproperties)
+        isnot(gDeclaration.getPropertyValue(info.subproperties[idx]), "",
+              "setting '" + value + "' on '" + property);
+
+    gDeclaration.removeProperty(property);
+    gDeclaration.setProperty(property, step1val, "");
+
+    is(gDeclaration.getPropertyValue(property), step1val,
+       "parse+serialize should be idempotent for '" +
+       property + ": " + value + "'");
+    if (test_computed && info.type != CSS_TYPE_TRUE_SHORTHAND) {
+      is(gComputedStyle.getPropertyValue(property), step1comp,
+         "parse+compute+serialize(computed) should be idempotent for '" +
+         property + ": " + value + "'");
+    }
+
+    if ("subproperties" in info) {
+      gDeclaration.removeProperty(property);
+      for (idx in info.subproperties) {
+        gDeclaration.setProperty(info.subproperties[idx], step1vals[idx], "");
+      }
+      is(gDeclaration.getPropertyValue(property), step1val,
+         "parse+split+serialize should be idempotent for '" +
+         property + ": " + value + "'");
+      if (test_computed) {
+        is(gComputedStyle.getPropertyValue(property), step1comp,
+           "parse+compute+split+serialize(computed) should be idempotent for '" +
+           property + ": " + value + "'");
+      }
+    }
+
+    if (test_computed && info.type != CSS_TYPE_TRUE_SHORTHAND) {
+      gDeclaration.removeProperty(property);
+      gDeclaration.setProperty(property, step1comp, "");
+      is(gComputedStyle.getPropertyValue(property), step1comp,
+         "parse+compute+serialize should be idempotent for '" +
+         property + ": " + value + "'");
+    }
+    if (test_computed && "subproperties" in info) {
+      gDeclaration.removeProperty(property);
+      for (idx in info.subproperties) {
+        gDeclaration.setProperty(info.subproperties[idx], step1comps[idx], "");
+      }
+      is(gComputedStyle.getPropertyValue(property), step1comp,
+         "parse+compute+split+serialize should be idempotent for '" +
+         property + ": " + value + "'");
+    }
+
+    gDeclaration.removeProperty(property);
+  }
+
+  var idx;
+  for (idx in info.initial_values)
+    test_value(info.initial_values[idx]);
+  for (idx in info.other_values)
+    test_value(info.other_values[idx]);
+}
+
+for (var prop in gCSSProperties)
+  test_property(prop);
+
+</script>
+</pre>
+</body>
+</html>
