@@ -201,40 +201,48 @@ js_UnlockGCThingRT(JSRuntime *rt, void *thing);
 extern JSBool
 js_IsAboutToBeFinalized(JSContext *cx, void *thing);
 
-extern void
-js_MarkAtom(JSContext *cx, JSAtom *atom);
-
-#define GC_MARK_ATOM(cx, atom)                                                \
-    JS_BEGIN_MACRO                                                            \
-        js_MarkAtom(cx, atom);                                                \
-    JS_END_MACRO
-
 /*
- * Always use GC_MARK macro and never call js_MarkGCThing directly so
- * when GC_MARK_DEBUG is defined the dump of live GC things does not miss
- * a thing.
+ * Macro to test if a traversal is the marking phase of GC to avoid exposing
+ * JSAtom and ScriptFilenameEntry to traversal implementations.
  */
-extern void
-js_MarkGCThing(JSContext *cx, void *thing);
+#define IS_GC_MARKING_TRACER(trc) ((trc)->callback == NULL)
 
-#ifdef GC_MARK_DEBUG
+#ifdef DEBUG
 
-# define GC_MARK(cx, thing, name) js_MarkNamedGCThing(cx, thing, name)
+extern JS_FRIEND_API(JSTracer *)
+js_NewGCHeapDumper(JSContext *cx, void *thingToFind, FILE *fp,
+                   size_t maxRecursionDepth, void *thingToIgnore);
 
-extern void
-js_MarkNamedGCThing(JSContext *cx, void *thing, const char *name);
-
-extern JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
-JS_EXTERN_DATA(void *) js_LiveThingToFind;
-
-#else
-
-# define GC_MARK(cx, thing, name) js_MarkGCThing(cx, thing)
+extern JS_FRIEND_API(JSBool)
+js_FreeGCHeapDumper(JSTracer *trc);
 
 #endif
 
+JS_STATIC_ASSERT(JSTRACE_STRING == 2);
+
+#define JSTRACE_FUNCTION    3
+#define JSTRACE_ATOM        4
+#define JSTRACE_NAMESPACE   5
+#define JSTRACE_QNAME       6
+#define JSTRACE_XML         7
+
+#if JS_HAS_XML_SUPPORT
+# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_XML)
+#else
+# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_ATOM)
+#endif
+
 extern void
-js_MarkStackFrame(JSContext *cx, JSStackFrame *fp);
+js_CallGCThingTracer(JSTracer *trc, void *thing);
+
+extern void
+js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp);
+
+extern JS_FRIEND_API(void)
+js_TraceRuntime(JSTracer *trc);
+
+extern JS_FRIEND_API(void)
+js_TraceContext(JSTracer *trc, JSContext *acx);
 
 /*
  * Kinds of js_GC invocation.
@@ -352,6 +360,7 @@ typedef struct JSWeakRoots {
 
 JS_STATIC_ASSERT(JSVAL_NULL == 0);
 #define JS_CLEAR_WEAK_ROOTS(wr) (memset((wr), 0, sizeof(JSWeakRoots)))
+
 
 #ifdef DEBUG_notme
 #define TOO_MUCH_GC 1

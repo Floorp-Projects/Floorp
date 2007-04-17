@@ -357,7 +357,7 @@ js_LeaveSharpObject(JSContext *cx, JSIdArray **idap);
  * and js_LeaveSharpObject. GC calls this when map->depth > 0.
  */
 extern void
-js_GCMarkSharpMap(JSContext *cx, JSSharpObjectMap *map);
+js_TraceSharpMap(JSTracer *trc, JSSharpObjectMap *map);
 
 extern JSBool
 js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
@@ -563,7 +563,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
              jsval *statep, jsid *idp);
 
 extern void
-js_MarkNativeIteratorStates(JSContext *cx);
+js_TraceNativeIteratorStates(JSTracer *trc);
 
 extern JSBool
 js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
@@ -609,8 +609,8 @@ js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
 extern JSBool
 js_XDRObject(JSXDRState *xdr, JSObject **objp);
 
-extern uint32
-js_Mark(JSContext *cx, JSObject *obj, void *arg);
+extern void
+js_TraceObject(JSTracer *trc, JSObject *obj);
 
 extern void
 js_Clear(JSContext *cx, JSObject *obj);

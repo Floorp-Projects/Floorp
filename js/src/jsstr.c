@@ -4855,7 +4855,6 @@ Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length)
 }
 
 #if defined(DEBUG) ||                                                         \
-    defined(GC_MARK_DEBUG) ||                                                 \
     defined(DUMP_CALL_TABLE) ||                                               \
     defined(DUMP_SCOPE_STATS)
 size_t

@@ -242,6 +242,25 @@ JS_STATIC_ASSERT(sizeof(JSGCThing) >= sizeof(jsdouble));
 /* We want to use all the available GC thing space for object's slots. */
 JS_STATIC_ASSERT(sizeof(JSObject) % sizeof(JSGCThing) == 0);
 
+static uint8 GCTypeToTraceKindMap[GCX_NTYPES] = {
+    JSTRACE_OBJECT,     /* GCX_OBJECT */
+    JSTRACE_STRING,     /* GCX_STRING */
+    JSTRACE_DOUBLE,     /* GCX_DOUBLE */
+    JSTRACE_STRING,     /* GCX_MUTABLE_STRING */
+    JSTRACE_FUNCTION,   /* GCX_PRIVATE */
+    JSTRACE_NAMESPACE,  /* GCX_NAMESPACE */
+    JSTRACE_QNAME,      /* GCX_QNAME */
+    JSTRACE_XML,        /* GCX_XML */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 0 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 1 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 2 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 3 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 4 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 5 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 6 */
+    JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 7 */
+};
+
 /*
  * Ensure that GC-allocated JSFunction and JSObject would go to different
  * lists so we can easily finalize JSObject before JSFunction. See comments
@@ -554,7 +573,7 @@ static GCFinalizeOp gc_finalizers[GCX_NTYPES] = {
     NULL
 };
 
-#ifdef GC_MARK_DEBUG
+#ifdef DEBUG
 static const char newborn_external_string[] = "newborn external string";
 
 static const char *gc_typenames[GCX_NTYPES] = {
@@ -1084,6 +1103,21 @@ ShouldDeferCloseHook(JSContext *cx, JSGenerator *gen, JSBool *defer)
     return JS_TRUE;
 }
 
+static void
+TraceGeneratorList(JSTracer *trc, JSGenerator *gen)
+{
+#ifdef DEBUG
+    const char *listName = (const char *)trc->debugPrintArg;
+    size_t index = 0;
+#endif
+
+    while (gen) {
+        JS_SET_TRACING_INDEX(trc, listName, index++);
+        JS_CallTracer(trc, gen->obj, JSTRACE_OBJECT);
+        gen = gen->next;
+    }
+}
+
 /*
  * Find all unreachable generators and move them to the todo queue from
  * rt->gcCloseState.reachableList to execute thier close hooks after the GC
@@ -1091,13 +1125,12 @@ ShouldDeferCloseHook(JSContext *cx, JSGenerator *gen, JSBool *defer)
  * generators we are going to close later.
  */
 static void
-FindAndMarkObjectsToClose(JSContext *cx, JSGCInvocationKind gckind,
-                          JSGenerator **todoQueueTail)
+FindAndMarkObjectsToClose(JSTracer *trc, JSGCInvocationKind gckind)
 {
     JSRuntime *rt;
     JSGenerator *todo, **genp, *gen;
 
-    rt = cx->runtime;
+    rt = trc->context->runtime;
     todo = NULL;
     genp = &rt->gcCloseState.reachableList;
     while ((gen = *genp) != NULL) {
@@ -1121,11 +1154,8 @@ FindAndMarkObjectsToClose(JSContext *cx, JSGCInvocationKind gckind,
                  * with gen->state == JSGEN_OPEN. The finalizer must deal with
                  * open generators as we may skip the close hooks, see below.
                  */
-                gen->next = NULL;
-                *todoQueueTail = gen;
-                todoQueueTail = &gen->next;
-                if (!todo)
-                    todo = gen;
+                gen->next = todo;
+                todo = gen;
                 METER(JS_ASSERT(rt->gcStats.nclose));
                 METER(rt->gcStats.nclose--);
                 METER(rt->gcStats.closelater++);
@@ -1142,32 +1172,44 @@ FindAndMarkObjectsToClose(JSContext *cx, JSGCInvocationKind gckind,
          * we do not allow execution of arbitrary scripts at this point.
          */
         rt->gcCloseState.todoQueue = NULL;
-    } else {
+    } else if (todo) {
         /*
          * Mark just-found unreachable generators *after* we scan the global
          * list to prevent a generator that refers to other unreachable
          * generators from keeping them on gcCloseState.reachableList.
          */
-        for (gen = todo; gen; gen = gen->next)
-            GC_MARK(cx, gen->obj, "newly scheduled generator");
+        JS_SET_TRACING_NAME(trc, "newly scheduled generator");
+        TraceGeneratorList(trc, todo);
+
+        /* Put the assembled list to the back of scheduled queue. */
+        genp = &rt->gcCloseState.todoQueue;
+        while ((gen = *genp) != NULL)
+            genp = &gen->next;
+        *genp = todo;
     }
 }
 
 /*
- * Mark unreachable generators already scheduled to close and return the tail
- * pointer to JSGCCloseState.todoQueue.
+ * Trace unreachable generators already scheduled to close and return the
+ * tail pointer to JSGCCloseState.todoQueue.
  */
-static JSGenerator **
-MarkScheduledGenerators(JSContext *cx)
+static void
+TraceGeneratorsToClose(JSTracer *trc)
 {
     JSRuntime *rt;
     JSGenerator **genp, *gen;
 
-    rt = cx->runtime;
+    rt = trc->context->runtime;
     genp = &rt->gcCloseState.todoQueue;
+    if (!IS_GC_MARKING_TRACER(trc)) {
+        JS_SET_TRACING_NAME(trc, "generators_to_close_list");
+        TraceGeneratorList(trc, *genp);
+        return;
+    }
+
     while ((gen = *genp) != NULL) {
         if (CanScheduleCloseHook(gen)) {
-            GC_MARK(cx, gen->obj, "scheduled generator");
+            JS_CALL_OBJECT_TRACER(trc, gen->obj, "scheduled generator");
             genp = &gen->next;
         } else {
             /* Discard the generator from the list if its schedule is over. */
@@ -1176,7 +1218,6 @@ MarkScheduledGenerators(JSContext *cx)
             METER(rt->gcStats.closelater--);
         }
     }
-    return genp;
 }
 
 #ifdef JS_THREADSAFE
@@ -1193,21 +1234,21 @@ typedef struct JSTempCloseList {
 } JSTempCloseList;
 
 JS_STATIC_DLL_CALLBACK(void)
-mark_temp_close_list(JSContext *cx, JSTempValueRooter *tvr)
+trace_temp_close_list(JSTracer *trc, JSTempValueRooter *tvr)
 {
     JSTempCloseList *list = (JSTempCloseList *)tvr;
     JSGenerator *gen;
 
     for (gen = list->head; gen; gen = gen->next)
-        GC_MARK(cx, gen->obj, "temp list generator");
+        JS_CALL_OBJECT_TRACER(trc, gen->obj, "temp list generator");
 }
 
 #define JS_PUSH_TEMP_CLOSE_LIST(cx, tempList)                                 \
-    JS_PUSH_TEMP_ROOT_MARKER(cx, mark_temp_close_list, &(tempList)->tvr)
+    JS_PUSH_TEMP_ROOT_TRACE(cx, trace_temp_close_list, &(tempList)->tvr)
 
 #define JS_POP_TEMP_CLOSE_LIST(cx, tempList)                                  \
     JS_BEGIN_MACRO                                                            \
-        JS_ASSERT((tempList)->tvr.u.marker == mark_temp_close_list);          \
+        JS_ASSERT((tempList)->tvr.u.trace == trace_temp_close_list);          \
         JS_POP_TEMP_ROOT(cx, &(tempList)->tvr);                               \
     JS_END_MACRO
 
@@ -1753,96 +1794,32 @@ out:
     return JS_TRUE;
 }
 
-#ifdef GC_MARK_DEBUG
+#ifdef DEBUG
 
 #include <stdio.h>
 #include "jsprf.h"
-
-typedef struct GCMarkNode GCMarkNode;
-
-struct GCMarkNode {
-    void        *thing;
-    const char  *name;
-    GCMarkNode  *next;
-    GCMarkNode  *prev;
-};
-
-JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
-JS_EXPORT_DATA(void *) js_LiveThingToFind;
 
 #ifdef HAVE_XPCONNECT
 #include "dump_xpc.h"
 #endif
 
-static void
-GetObjSlotName(JSObject *obj, uint32 slot, char *buf, size_t bufsize)
+JS_PUBLIC_API(void)
+JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
+                       void *thing, uint32 kind, JSBool details)
 {
-    JSScope *scope;
-    jsval nval;
-    JSScopeProperty *sprop;
-    JSClass *clasp;
-    uint32 key;
-    const char *slotname;
+    const char *name;
+    size_t n;
 
-    scope = OBJ_IS_NATIVE(obj) ? OBJ_SCOPE(obj) : NULL;
-    if (!scope) {
-        JS_snprintf(buf, bufsize, "**UNKNOWN OBJECT MAP ENTRY**");
+    if (bufsize == 0)
         return;
-    }
 
-    sprop = SCOPE_LAST_PROP(scope);
-    while (sprop && sprop->slot != slot)
-        sprop = sprop->parent;
+    switch (kind) {
+      case JSTRACE_OBJECT:
+      {
+        JSObject *obj = (JSObject *)thing;
+        JSClass *clasp = STOBJ_GET_CLASS(obj);
 
-    if (!sprop) {
-        switch (slot) {
-          case JSSLOT_PROTO:
-            JS_snprintf(buf, bufsize, "__proto__");
-            break;
-          case JSSLOT_PARENT:
-            JS_snprintf(buf, bufsize, "__parent__");
-            break;
-          default:
-            slotname = NULL;
-            clasp = LOCKED_OBJ_GET_CLASS(obj);
-            if (clasp->flags & JSCLASS_IS_GLOBAL) {
-                key = slot - JSSLOT_START(clasp);
-#define JS_PROTO(name,code,init) \
-    if ((code) == key) { slotname = js_##name##_str; goto found; }
-#include "jsproto.tbl"
-#undef JS_PROTO
-            }
-          found:
-            if (slotname)
-                JS_snprintf(buf, bufsize, "CLASS_OBJECT(%s)", slotname);
-            else
-                JS_snprintf(buf, bufsize, "**UNKNOWN SLOT %ld**", (long)slot);
-            break;
-        }
-    } else {
-        nval = ID_TO_VALUE(sprop->id);
-        if (JSVAL_IS_INT(nval)) {
-            JS_snprintf(buf, bufsize, "%ld", (long)JSVAL_TO_INT(nval));
-        } else if (JSVAL_IS_STRING(nval)) {
-            js_PutEscapedString(buf, bufsize, JSVAL_TO_STRING(nval), 0);
-        } else {
-            JS_snprintf(buf, bufsize, "**FINALIZED ATOM KEY**");
-        }
-    }
-}
-
-static const char *
-gc_object_class_name(void* thing)
-{
-    uint8 *flagp = js_GetGCThingFlags(thing);
-    const char *className = "";
-    static char depbuf[32];
-
-    switch (*flagp & GCF_TYPEMASK) {
-      case GCX_OBJECT: {
-        JSObject  *obj = (JSObject *)thing;
-        JSClass   *clasp = STOBJ_GET_CLASS(obj);
-        className = clasp->name;
+        name = clasp->name;
 #ifdef HAVE_XPCONNECT
         if (clasp->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) {
             jsval privateValue = STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
@@ -1853,385 +1830,401 @@ gc_object_class_name(void* thing)
                 const char *xpcClassName = GetXPCObjectClassName(privateThing);
 
                 if (xpcClassName)
-                    className = xpcClassName;
+                    name = xpcClassName;
             }
         }
 #endif
         break;
       }
 
-      case GCX_STRING:
-      case GCX_MUTABLE_STRING: {
-        JSString *str = (JSString *)thing;
-        if (JSSTRING_IS_DEPENDENT(str)) {
-            JS_snprintf(depbuf, sizeof depbuf, "start:%u, length:%u",
-                        JSSTRDEP_START(str), JSSTRDEP_LENGTH(str));
-            className = depbuf;
-        } else {
-            className = "string";
-        }
+      case JSTRACE_STRING:
+        name = JSSTRING_IS_DEPENDENT((JSString *)thing)
+               ? "substring"
+               : "string";
         break;
-      }
 
-      case GCX_DOUBLE:
-        className = "double";
+      case JSTRACE_DOUBLE:
+        name = "double";
         break;
-    }
 
-    return className;
-}
-
-static void
-gc_dump_thing(JSContext *cx, JSGCThing *thing, FILE *fp)
-{
-    GCMarkNode *prev = (GCMarkNode *)cx->gcCurrentMarkNode;
-    GCMarkNode *next = NULL;
-    char *path = NULL;
-
-    while (prev) {
-        next = prev;
-        prev = prev->prev;
-    }
-    while (next) {
-        uint8 nextFlags = *js_GetGCThingFlags(next->thing);
-        if ((nextFlags & GCF_TYPEMASK) == GCX_OBJECT) {
-            path = JS_sprintf_append(path, "%s(%s @ 0x%08p).",
-                                     next->name,
-                                     gc_object_class_name(next->thing),
-                                     (JSObject*)next->thing);
-        } else {
-            path = JS_sprintf_append(path, "%s(%s).",
-                                     next->name,
-                                     gc_object_class_name(next->thing));
-        }
-        next = next->next;
-    }
-    if (!path)
-        return;
-
-    fprintf(fp, "%08lx ", (long)thing);
-    switch (*js_GetGCThingFlags(thing) & GCF_TYPEMASK) {
-      case GCX_OBJECT:
-      {
-        JSObject  *obj = (JSObject *)thing;
-        jsval     privateValue = STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
-        void      *privateThing = JSVAL_IS_VOID(privateValue)
-                                  ? NULL
-                                  : JSVAL_TO_PRIVATE(privateValue);
-        const char *className = gc_object_class_name(thing);
-        fprintf(fp, "object %8p %s", privateThing, className);
+      case JSTRACE_FUNCTION:
+        name = "function";
         break;
-      }
+
+      case JSTRACE_ATOM:
+        name = "atom";
+        break;
+
 #if JS_HAS_XML_SUPPORT
-      case GCX_NAMESPACE:
-      {
-        JSXMLNamespace *ns = (JSXMLNamespace *)thing;
+      case JSTRACE_NAMESPACE:
+        name = "namespace";
+        break;
 
-        fputs("namespace ", fp);
-        if (ns->prefix)
-            js_FileEscapedString(fp, ns->prefix, 0);
-        fputc(':', fp);
-        js_FileEscapedString(fp, ns->uri, 0);
+      case JSTRACE_QNAME:
+        name = "qname";
         break;
-      }
-      case GCX_QNAME:
-      {
-        JSXMLQName *qn = (JSXMLQName *)thing;
 
-        fputs("qname ", fp);
-        if (qn->prefix)
-            js_FileEscapedString(fp, qn->prefix, 0);
-        fputc('(', fp);
-        js_FileEscapedString(fp, qn->uri, 0);
-        fputs("):", fp);
-        js_FileEscapedString(fp, qn->localName, 0);
+      case JSTRACE_XML:
+        name = "xml";
         break;
-      }
-      case GCX_XML:
-      {
-        extern const char *js_xml_class_str[];
-        JSXML *xml = (JSXML *)thing;
-        fprintf(fp, "xml %8p %s", xml, js_xml_class_str[xml->xml_class]);
-        break;
-      }
 #endif
-      case GCX_DOUBLE:
-        fprintf(fp, "double %g", *(jsdouble *)thing);
-        break;
-      case GCX_PRIVATE:
-        fprintf(fp, "private %8p", (void *)thing);
-        break;
       default:
-        fputs("string ", fp);
-        js_FileEscapedString(fp, (JSString *)thing, 0);
+        JS_ASSERT(0);
+        return;
         break;
     }
-    fprintf(fp, " via %s\n", path);
-    free(path);
+
+    n = strlen(name);
+    if (n > bufsize - 1)
+        n = bufsize - 1;
+    memcpy(buf, name, n + 1);
+    buf += n;
+    bufsize -= n;
+
+    if (details && bufsize > 2) {
+        *buf++ = ' ';
+        bufsize--;
+
+        switch (kind) {
+          case JSTRACE_OBJECT:
+          {
+            JSObject  *obj = (JSObject *)thing;
+            jsval     privateValue = STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
+            void      *privateThing = JSVAL_IS_VOID(privateValue)
+                                      ? NULL
+                                      : JSVAL_TO_PRIVATE(privateValue);
+
+            JS_snprintf(buf, bufsize, "%8p", privateThing);
+            break;
+          }
+
+          case JSTRACE_STRING:
+            js_PutEscapedString(buf, bufsize, (JSString *)thing, 0);
+            break;
+
+          case JSTRACE_DOUBLE:
+            JS_snprintf(buf, bufsize, "%g", *(jsdouble *)thing);
+            break;
+
+          case JSTRACE_FUNCTION:
+          {
+            JSFunction *fun = (JSFunction *)thing;
+
+            if (fun->atom && ATOM_IS_STRING(fun->atom))
+                js_PutEscapedString(buf, bufsize, ATOM_TO_STRING(fun->atom), 0);
+            break;
+          }
+
+          case JSTRACE_ATOM:
+          {
+            JSAtom *atom = (JSAtom *)thing;
+
+            if (ATOM_IS_INT(atom))
+                JS_snprintf(buf, bufsize, "%d", ATOM_TO_INT(atom));
+            else if (ATOM_IS_STRING(atom))
+                js_PutEscapedString(buf, bufsize, ATOM_TO_STRING(atom), 0);
+            else
+                JS_snprintf(buf, bufsize, "object");
+            break;
+          }
+
+#if JS_HAS_XML_SUPPORT
+          case GCX_NAMESPACE:
+          {
+            JSXMLNamespace *ns = (JSXMLNamespace *)thing;
+
+            if (ns->prefix) {
+                n = js_PutEscapedString(buf, bufsize, ns->prefix, 0);
+                buf += n;
+                bufsize -= n;
+            }
+            if (bufsize > 2) {
+                *buf++ = ':';
+                bufsize--;
+                js_PutEscapedString(buf, bufsize, ns->uri, 0);
+            }
+            break;
+          }
+
+          case GCX_QNAME:
+          {
+            JSXMLQName *qn = (JSXMLQName *)thing;
+
+            if (qn->prefix) {
+                n = js_PutEscapedString(buf, bufsize, qn->prefix, 0);
+                buf += n;
+                bufsize -= n;
+            }
+            if (bufsize > 2) {
+                *buf++ = '(';
+                bufsize--;
+                n = js_PutEscapedString(buf, bufsize, qn->uri, 0);
+                buf += n;
+                bufsize -= n;
+                if (bufsize > 3) {
+                    *buf++ = ')';
+                    *buf++ = ':';
+                    bufsize -= 2;
+                    js_PutEscapedString(buf, bufsize, qn->localName, 0);
+                }
+            }
+            break;
+          }
+
+          case GCX_XML:
+          {
+            extern const char *js_xml_class_str[];
+            JSXML *xml = (JSXML *)thing;
+
+            JS_snprintf(buf, bufsize, "%s", js_xml_class_str[xml->xml_class]);
+            break;
+          }
+#endif
+          default:
+            JS_ASSERT(0);
+            break;
+        }
+    }
+    buf[bufsize - 1] = '\0';
 }
 
-void
-js_MarkNamedGCThing(JSContext *cx, void *thing, const char *name)
-{
-    GCMarkNode markNode;
+typedef struct JSGCDumpNode JSGCDumpNode;
 
-    if (!thing)
+struct JSGCDumpNode {
+    void            *thing;
+    uint32          kind;
+    char            *name;
+    JSGCDumpNode    *next;
+};
+
+typedef struct JSDumpingTracer
+{
+    JSTracer        base;
+    JSDHashTable    visited;
+    JSBool          ok;
+    FILE            *file;
+    void            *thingToFind;
+    size_t          maxRecursionDepth;
+    void            *thingToIgnore;
+    size_t          recursionDepth;
+    JSGCDumpNode    *top, **bottomp;
+    char            buffer[200];
+} JSDumpingTracer;
+
+static void
+DumpThing(JSDumpingTracer *dtrc, JSGCDumpNode *node)
+{
+    FILE *fp;
+
+    fp = dtrc->file;
+    fprintf(fp, "%p ", node->thing);
+    JS_PrintTraceThingInfo(dtrc->buffer, sizeof(dtrc->buffer),
+                           &dtrc->base, node->thing, node->kind, JS_TRUE);
+    fputs(dtrc->buffer, fp);
+
+    /* Print path to this node from a traversal root. */
+    node = dtrc->top;
+    if (node->next) {
+        fputs("\tvia ", fp);
+        do {
+            if (node != dtrc->top)
+                fputc('.', fp);
+            fprintf(fp, "%s(%p ", node->name, node->thing);
+            JS_PrintTraceThingInfo(dtrc->buffer, sizeof(dtrc->buffer),
+                                   &dtrc->base, node->thing, node->kind,
+                                   JS_FALSE);
+            fputs(dtrc->buffer, fp);
+            node = node->next;
+        } while (node->next);
+    }
+    fputc('\n', fp);
+}
+
+static void
+DumpNotify(JSTracer *trc, void *thing, uint32 kind)
+{
+    JSDumpingTracer *dtrc;
+    JSContext *cx;
+    JSDHashEntryStub *entry;
+    JSGCDumpNode node, **bottomp;
+    const char *name;
+
+    JS_ASSERT(trc->callback == DumpNotify);
+    dtrc = (JSDumpingTracer *)trc;
+
+    if (!dtrc->ok)
         return;
 
-    markNode.thing = thing;
-    markNode.name  = name;
-    markNode.next  = NULL;
-    markNode.prev  = (GCMarkNode *)cx->gcCurrentMarkNode;
-    if (markNode.prev)
-        markNode.prev->next = &markNode;
-    cx->gcCurrentMarkNode = &markNode;
+    if (dtrc->thingToIgnore == thing)
+        return;
 
-    if (thing == js_LiveThingToFind) {
-        /*
-         * Dump js_LiveThingToFind each time we reach it during the marking
-         * phase of GC to print all live references to the thing.
-         */
-        gc_dump_thing(cx, thing, stderr);
+    cx = trc->context;
+    entry = (JSDHashEntryStub *)
+        JS_DHashTableOperate(&dtrc->visited, thing, JS_DHASH_ADD);
+    if (!entry) {
+        JS_ReportOutOfMemory(cx);
+        dtrc->ok = JS_FALSE;
+        return;
+    }
+    if (entry->key)
+        return;
+    entry->key = thing;
+
+    node.thing = thing;
+    node.kind = kind;
+    if (dtrc->base.debugPrinter) {
+        dtrc->base.debugPrinter(trc, dtrc->buffer, sizeof(dtrc->buffer));
+        name = dtrc->buffer;
+    } else if (dtrc->base.debugPrintIndex != (size_t)-1) {
+        JS_snprintf(dtrc->buffer, sizeof(dtrc->buffer), "%s[%lu]",
+                    (const char *)dtrc->base.debugPrintArg,
+                    dtrc->base.debugPrintIndex);
+        name = dtrc->buffer;
+    } else {
+        name = (const char*)dtrc->base.debugPrintArg;
     }
 
-    js_MarkGCThing(cx, thing);
-
-    if (markNode.prev)
-        markNode.prev->next = NULL;
-    cx->gcCurrentMarkNode = markNode.prev;
-}
-
-#endif /* !GC_MARK_DEBUG */
-
-static void
-gc_mark_atom_key_thing(void *thing, void *arg)
-{
-    JSContext *cx = (JSContext *) arg;
-
-    GC_MARK(cx, thing, "atom");
-}
-
-void
-js_MarkAtom(JSContext *cx, JSAtom *atom)
-{
-    jsval key;
-    void *thing;
-    uint8 *flagp;
-
-    if (atom->flags & ATOM_MARK) {
-        if (ATOM_IS_OBJECT(atom) && cx->runtime->gcThingCallback) {
-            thing = ATOM_TO_OBJECT(atom);
-            flagp = js_GetGCThingFlags(thing);
-            cx->runtime->gcThingCallback(thing, *flagp,
-                                         cx->runtime->gcThingCallbackClosure);
-        }
-
+    node.name = JS_strdup(cx, name);
+    if (!node.name) {
+        dtrc->ok = JS_FALSE;
         return;
     }
 
-    atom->flags |= ATOM_MARK;
-    key = ATOM_KEY(atom);
-    if (JSVAL_IS_GCTHING(key)) {
-#ifdef GC_MARK_DEBUG
-        char name[32];
-
-        if (JSVAL_IS_STRING(key)) {
-            js_PutEscapedString(name, sizeof name, JSVAL_TO_STRING(key), '\'');
-        } else {
-            JS_snprintf(name, sizeof name, "<%x>", key);
-        }
-#endif
-        GC_MARK(cx, JSVAL_TO_GCTHING(key), name);
-    }
-    if (atom->flags & ATOM_HIDDEN)
-        js_MarkAtom(cx, atom->entry.value);
-}
-
-static void
-AddThingToUnscannedBag(JSRuntime *rt, void *thing, uint8 *flagp);
-
-static void
-MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
-                    JSBool shouldCheckRecursion)
-{
-    JSRuntime *rt;
-    JSObject *obj;
-    jsval v;
-    uint32 i, end;
-#ifndef GC_MARK_DEBUG
-    void *next_thing;
-    uint8 *next_flagp;
-#endif
-    JSString *str;
-#ifdef JS_GCMETER
-    uint32 tailCallNesting;
-#endif
+    node.next  = NULL;
+    bottomp = dtrc->bottomp;
+    JS_ASSERT(!*bottomp);
+    *bottomp = &node;
+    dtrc->bottomp = &node.next;
 
     /*
-     * With JS_GC_ASSUME_LOW_C_STACK defined the mark phase of GC always
-     * uses the non-recursive code that otherwise would be called only on
-     * a low C stack condition.
+     * Dump thingToFind each time we reach it during the tracing to print all
+     * live references to the thing.
      */
-#ifdef JS_GC_ASSUME_LOW_C_STACK
-# define RECURSION_TOO_DEEP() shouldCheckRecursion
-#else
-    int stackDummy;
-# define RECURSION_TOO_DEEP() (shouldCheckRecursion &&                        \
-                               !JS_CHECK_STACK_SIZE(cx, stackDummy))
-#endif
+    if (!dtrc->thingToFind || dtrc->thingToFind == thing)
+        DumpThing(dtrc, &node);
 
-    rt = cx->runtime;
-    METER(tailCallNesting = 0);
-    METER(if (++rt->gcStats.cdepth > rt->gcStats.maxcdepth)
-              rt->gcStats.maxcdepth = rt->gcStats.cdepth);
+    if (dtrc->recursionDepth < dtrc->maxRecursionDepth) {
+        dtrc->recursionDepth++;
+        JS_TraceChildren(&dtrc->base, thing, kind);
+        dtrc->recursionDepth--;
+    }
 
-#ifndef GC_MARK_DEBUG
-  start:
-#endif
-    JS_ASSERT(flagp);
-    JS_ASSERT(*flagp & GCF_MARK); /* the caller must already mark the thing */
-    METER(if (++rt->gcStats.depth > rt->gcStats.maxdepth)
-              rt->gcStats.maxdepth = rt->gcStats.depth);
-#ifdef GC_MARK_DEBUG
-    if (js_DumpGCHeap)
-        gc_dump_thing(cx, thing, js_DumpGCHeap);
-#endif
+    *bottomp = NULL;
+    dtrc->bottomp = bottomp;
+    JS_free(cx, node.name);
+}
 
-    switch (*flagp & GCF_TYPEMASK) {
-      case GCX_OBJECT:
-        if (RECURSION_TOO_DEEP())
-            goto add_to_unscanned_bag;
+JS_FRIEND_API(JSTracer *)
+js_NewGCHeapDumper(JSContext *cx, void *thingToFind, FILE *fp,
+                   size_t maxRecursionDepth, void *thingToIgnore)
+{
+    JSDumpingTracer *dtrc;
 
+    dtrc = (JSDumpingTracer *)JS_malloc(cx, sizeof(*dtrc));
+    if (!dtrc)
+        return NULL;
+
+    JS_TRACER_INIT(&dtrc->base, cx, DumpNotify);
+    if (!JS_DHashTableInit(&dtrc->visited, JS_DHashGetStubOps(),
+                           NULL, sizeof(JSDHashEntryStub),
+                           JS_DHASH_DEFAULT_CAPACITY(100))) {
+        JS_ReportOutOfMemory(cx);
+        JS_free(cx, dtrc);
+        return NULL;
+    }
+
+    dtrc->ok = JS_TRUE;
+    dtrc->file = fp ? fp : stderr;
+    dtrc->thingToFind = thingToFind;
+    dtrc->maxRecursionDepth = maxRecursionDepth;
+    dtrc->thingToIgnore = thingToIgnore;
+    dtrc->recursionDepth = 0;
+    dtrc->top = NULL;
+    dtrc->bottomp = &dtrc->top;
+
+    return &dtrc->base;
+}
+
+JS_FRIEND_API(JSBool)
+js_FreeGCHeapDumper(JSTracer *trc)
+{
+    JSDumpingTracer *dtrc;
+    JSBool ok;
+    JSContext *cx;
+
+    JS_ASSERT(trc->callback == DumpNotify);
+    dtrc = (JSDumpingTracer *)trc;
+    JS_ASSERT(!dtrc->top);
+    JS_ASSERT(dtrc->bottomp == &dtrc->top);
+
+    JS_DHashTableFinish(&dtrc->visited);
+    ok = dtrc->ok;
+    cx = dtrc->base.context;
+    JS_free(cx, dtrc);
+    return ok;
+}
+
+#endif /* DEBUG */
+
+JS_PUBLIC_API(void)
+JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
+{
+    JSObject *obj;
+    size_t nslots, i;
+    jsval v;
+    JSString *str;
+
+    switch (kind) {
+      case JSTRACE_OBJECT:
         /* If obj has no map, it must be a newborn. */
         obj = (JSObject *) thing;
         if (!obj->map)
             break;
-
-        /* Set up local variables to loop over unmarked things. */
-        end = (obj->map->ops->mark)
-              ? obj->map->ops->mark(cx, obj, NULL)
-              : LOCKED_OBJ_NSLOTS(obj);
-        thing = NULL;
-        flagp = NULL;
-        for (i = 0; i != end; ++i) {
-            v = STOBJ_GET_SLOT(obj, i);
-            if (!JSVAL_IS_GCTHING(v) || v == JSVAL_NULL)
-                continue;
-#ifdef GC_MARK_DEBUG
-            /*
-             * Do not inline GC_MARK or eliminate tail recursion when
-             * debugging to allow js_MarkNamedGCThing to build a full
-             * dump of live GC things.
-             */
-            {
-                char name[32];
-                GetObjSlotName(obj, i, name, sizeof name);
-                GC_MARK(cx, JSVAL_TO_GCTHING(v), name);
-            }
-#else            
-            next_thing = JSVAL_TO_GCTHING(v);
-            next_flagp = js_GetGCThingFlags(next_thing);
-            if (rt->gcThingCallback) {
-                rt->gcThingCallback(next_thing, *next_flagp,
-                                    rt->gcThingCallbackClosure);
-            }
-            if (next_thing == thing)
-                continue;
-            if (*next_flagp & GCF_MARK)
-                continue;
-            JS_ASSERT(*next_flagp != GCF_FINAL);
-            if (thing) {
-                *flagp |= GCF_MARK;
-                MarkGCThingChildren(cx, thing, flagp, JS_TRUE);
-                if (*next_flagp & GCF_MARK) {
-                    /*
-                     * This happens when recursive MarkGCThingChildren marks
-                     * the thing with flags referred by *next_flagp.
-                     */
-                    thing = NULL;
-                    continue;
+        if (obj->map->ops->trace) {
+            obj->map->ops->trace(trc, obj);
+        } else {
+            nslots = STOBJ_NSLOTS(obj);
+            for (i = 0; i != nslots; ++i) {
+                v = STOBJ_GET_SLOT(obj, i);
+                if (JSVAL_IS_TRACEABLE(v)) {
+                    JS_SET_TRACING_INDEX(trc, "slot", i);
+                    JS_CallTracer(trc, JSVAL_TO_TRACEABLE(v),
+                                  JSVAL_TRACE_KIND(v));
                 }
             }
-            thing = next_thing;
-            flagp = next_flagp;
-        }
-        if (thing) {
-            /*
-             * thing came from the last unmarked GC-thing slot and we
-             * can optimize tail recursion.
-             *
-             * Since we already know that there is enough C stack space,
-             * we clear shouldCheckRecursion to avoid extra checking in
-             * RECURSION_TOO_DEEP.
-             */
-            shouldCheckRecursion = JS_FALSE;
-            goto on_tail_recursion;
-#endif
         }
         break;
 
-#ifdef DEBUG
-      case GCX_STRING:
+      case JSTRACE_STRING:
         str = (JSString *)thing;
-        JS_ASSERT(!JSSTRING_IS_DEPENDENT(str));
+        if (JSSTRING_IS_DEPENDENT(str))
+            JS_CALL_STRING_TRACER(trc, JSSTRDEP_BASE(str), "base");
         break;
-#endif
 
-      case GCX_MUTABLE_STRING:
-        str = (JSString *)thing;
-        if (!JSSTRING_IS_DEPENDENT(str))
-            break;
-        thing = JSSTRDEP_BASE(str);
-#ifdef GC_MARK_DEBUG
-        GC_MARK(cx, thing, "base");
+      case JSTRACE_FUNCTION:
+        /*
+         * No tracing of JSFunction* instance is done for now. See bug 375808.
+         */
         break;
-#else
-        flagp = js_GetGCThingFlags(thing);
-        if (rt->gcThingCallback) {
-            rt->gcThingCallback(thing, *flagp,
-                                rt->gcThingCallbackClosure);
-        }
-        if (*flagp & GCF_MARK)
-            break;
 
-        /* Fallthrough to code to deal with the tail recursion. */
-
-      on_tail_recursion:
-        /* Eliminate tail recursion for the last unmarked child. */
-        JS_ASSERT(*flagp != GCF_FINAL);
-        METER(++tailCallNesting);
-        *flagp |= GCF_MARK;
-        goto start;
-#endif
+      case JSTRACE_ATOM:
+         js_TraceAtom(trc, (JSAtom *)thing);
+         break;
 
 #if JS_HAS_XML_SUPPORT
-      case GCX_NAMESPACE:
-        if (RECURSION_TOO_DEEP())
-            goto add_to_unscanned_bag;
-        js_MarkXMLNamespace(cx, (JSXMLNamespace *)thing);
+      case JSTRACE_NAMESPACE:
+        js_TraceXMLNamespace(trc, (JSXMLNamespace *)thing);
         break;
 
-      case GCX_QNAME:
-        if (RECURSION_TOO_DEEP())
-            goto add_to_unscanned_bag;
-        js_MarkXMLQName(cx, (JSXMLQName *)thing);
+      case JSTRACE_QNAME:
+        js_TraceXMLQName(trc, (JSXMLQName *)thing);
         break;
 
-      case GCX_XML:
-        if (RECURSION_TOO_DEEP())
-            goto add_to_unscanned_bag;
-        js_MarkXML(cx, (JSXML *)thing);
+      case JSTRACE_XML:
+        js_TraceXML(trc, (JSXML *)thing);
         break;
 #endif
-      add_to_unscanned_bag:
-        AddThingToUnscannedBag(cx->runtime, thing, flagp);
-        break;
     }
-
-#undef RECURSION_TOO_DEEP
-
-    METER(rt->gcStats.depth -= 1 + tailCallNesting);
-    METER(rt->gcStats.cdepth--);
 }
 
 /*
@@ -2340,7 +2333,7 @@ AddThingToUnscannedBag(JSRuntime *rt, void *thing, uint8 *flagp)
 }
 
 static void
-ScanDelayedChildren(JSContext *cx)
+ScanDelayedChildren(JSTracer *trc)
 {
     JSRuntime *rt;
     JSGCArena *arena;
@@ -2355,7 +2348,7 @@ ScanDelayedChildren(JSContext *cx)
     uint8 *flagp;
     JSGCArena *prevArena;
 
-    rt = cx->runtime;
+    rt = trc->context->runtime;
     arena = rt->gcUnscannedArenaStackTop;
     if (!arena) {
         JS_ASSERT(rt->gcUnscannedBagSize == 0);
@@ -2428,34 +2421,19 @@ ScanDelayedChildren(JSContext *cx)
 #ifdef DEBUG
                 JS_ASSERT(rt->gcUnscannedBagSize != 0);
                 --rt->gcUnscannedBagSize;
-
-                /*
-                 * Check that GC thing type is consistent with the type of
-                 * things that can be put to the unscanned bag.
-                 */
-                switch (*flagp & GCF_TYPEMASK) {
-                  case GCX_OBJECT:
-# if JS_HAS_XML_SUPPORT
-                  case GCX_NAMESPACE:
-                  case GCX_QNAME:
-                  case GCX_XML:
-# endif
-                    break;
-                  default:
-                    JS_ASSERT(0);
-                }
 #endif
-                MarkGCThingChildren(cx, thing, flagp, JS_FALSE);
+                JS_TraceChildren(trc, thing,
+                                 GCTypeToTraceKindMap[*flagp & GCF_TYPEMASK]);
             }
         }
         /*
          * We finished scanning of the arena but we can only pop it from
          * the stack if the arena is the stack's top.
          *
-         * When MarkGCThingChildren from the above calls
-         * AddThingToUnscannedBag and the latter pushes new arenas to the
-         * stack, we have to skip popping of this arena until it becomes
-         * the top of the stack again.
+         * When JS_TraceChildren from the above calls JS_Trace that in turn
+         * on low C stack calls AddThingToUnscannedBag and the latter pushes
+         * new arenas to the unscanned stack, we have to skip popping of this
+         * arena until it becomes the top of the stack again.
          */
         if (arena == rt->gcUnscannedArenaStackTop) {
             prevArena = arena->prevUnscanned;
@@ -2480,62 +2458,142 @@ ScanDelayedChildren(JSContext *cx)
     JS_ASSERT(rt->gcUnscannedBagSize == 0);
 }
 
-void
-js_MarkGCThing(JSContext *cx, void *thing)
+JS_PUBLIC_API(void)
+JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
 {
+    JSContext *cx;
+    JSRuntime *rt;
+    JSAtom *atom;
     uint8 *flagp;
+    jsval v;
 
-    if (!thing)
-        return;
+    JS_ASSERT(JS_IS_VALID_TRACE_KIND(kind));
+    JS_ASSERT(trc->debugPrinter || trc->debugPrintArg);
+
+    if (!IS_GC_MARKING_TRACER(trc)) {
+        trc->callback(trc, thing, kind);
+        goto out;
+    }
+
+    cx = trc->context;
+    rt = cx->runtime;
+    JS_ASSERT(rt->gcMarkingTracer == trc);
+    JS_ASSERT(rt->gcLevel > 0);
+
+    if (kind == JSTRACE_ATOM) {
+        atom = (JSAtom *)thing;
+
+        /*
+         * Workaround gcThingCallback deficiency of only being able to handle
+         * GC things, not atoms. For that we must call the callback on all GC
+         * things refrenced by atoms. For unmarked atoms it is done during the
+         * tracing of things the atom refer to, but for already marked atoms
+         * we have to call the callback explicitly.
+         */
+        if (!(atom->flags & ATOM_MARK)) {
+            atom->flags |= ATOM_MARK;
+
+            /*
+             * Call js_TraceAtom directly to avoid an extra dispatch in
+             * JS_TraceChildren.
+             */
+            js_TraceAtom(trc, (JSAtom *)thing);
+        } else if (rt->gcThingCallback) {
+            v = ATOM_KEY(atom);
+
+            /*
+             * For compatibility with the current implementation call the
+             * callback only for objects, not when JSVAL_IS_GCTHING(v).
+             */
+            if (JSVAL_IS_OBJECT(v) && v != JSVAL_NULL) {
+                thing = JSVAL_TO_GCTHING(v);
+                flagp = js_GetGCThingFlags(thing);
+                rt->gcThingCallback(thing, *flagp, rt->gcThingCallbackClosure);
+            }
+        }
+        goto out;
+    }
 
     flagp = js_GetGCThingFlags(thing);
     JS_ASSERT(*flagp != GCF_FINAL);
+    JS_ASSERT(GCTypeToTraceKindMap[*flagp & GCF_TYPEMASK] == kind);
 
-    if (cx->runtime->gcThingCallback) {
-        cx->runtime->gcThingCallback(thing, *flagp,
-                                     cx->runtime->gcThingCallbackClosure);
-    }
+    if (rt->gcThingCallback)
+        rt->gcThingCallback(thing, *flagp, rt->gcThingCallbackClosure);
 
     if (*flagp & GCF_MARK)
-        return;
+        goto out;
     *flagp |= GCF_MARK;
 
     if (!cx->insideGCMarkCallback) {
-        MarkGCThingChildren(cx, thing, flagp, JS_TRUE);
+        /*
+         * With JS_GC_ASSUME_LOW_C_STACK defined the mark phase of GC always
+         * uses the non-recursive code that otherwise would be called only on
+         * a low C stack condition.
+         */
+#ifdef JS_GC_ASSUME_LOW_C_STACK
+# define RECURSION_TOO_DEEP() JS_TRUE
+#else
+        int stackDummy;
+# define RECURSION_TOO_DEEP() (!JS_CHECK_STACK_SIZE(cx, stackDummy))
+#endif
+        if (RECURSION_TOO_DEEP())
+            AddThingToUnscannedBag(rt, thing, flagp);
+        else
+            JS_TraceChildren(trc, thing, kind);
     } else {
         /*
          * For API compatibility we allow for the callback to assume that
-         * after it calls js_MarkGCThing for the last time, the callback
-         * can start to finalize its own objects that are only referenced
-         * by unmarked GC things.
+         * after it calls JS_Trace or JS_MarkGCThing for the last time, the
+         * callback can start to finalize its own objects that are only
+         * referenced by unmarked GC things.
          *
          * Since we do not know which call from inside the callback is the
          * last, we ensure that the unscanned bag is always empty when we
          * return to the callback and all marked things are scanned.
          *
-         * As an optimization we do not check for the stack size here and
-         * pass JS_FALSE as the last argument to MarkGCThingChildren.
-         * Otherwise with low C stack the thing would be pushed to the bag
-         * just to be feed to MarkGCThingChildren from inside
-         * ScanDelayedChildren.
+         * We do not check for the stack size here and uncondinally call
+         * JS_TraceChildren. Otherwise with low C stack the thing would be
+         * pushed to the bag just to be feed again to JS_TraceChildren from
+         * inside ScanDelayedChildren.
          */
         cx->insideGCMarkCallback = JS_FALSE;
-        MarkGCThingChildren(cx, thing, flagp, JS_FALSE);
-        ScanDelayedChildren(cx);
+        JS_TraceChildren(trc, thing, kind);
+        ScanDelayedChildren(trc);
         cx->insideGCMarkCallback = JS_TRUE;
     }
+
+  out:
+#ifdef DEBUG
+    trc->debugPrinter = NULL;
+    trc->debugPrintArg = NULL;
+#endif
+    return;     /* to avoid out: right_curl when DEBUG is not defined */
 }
 
+void
+js_CallGCThingTracer(JSTracer *trc, void *thing)
+{
+    uint32 traceKind;
+
+    JS_ASSERT(thing != NULL);
+
+    traceKind = GCTypeToTraceKindMap[*js_GetGCThingFlags(thing) & GCF_TYPEMASK];
+    JS_CallTracer(trc, thing, traceKind);
+}
+
+
 JS_STATIC_DLL_CALLBACK(JSDHashOperator)
-gc_root_marker(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num, void *arg)
+gc_root_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
+                  void *arg)
 {
     JSGCRootHashEntry *rhe = (JSGCRootHashEntry *)hdr;
+    JSTracer *trc = (JSTracer *)arg;
     jsval *rp = (jsval *)rhe->root;
     jsval v = *rp;
 
     /* Ignore null object and scalar values. */
     if (!JSVAL_IS_NULL(v) && JSVAL_IS_GCTHING(v)) {
-        JSContext *cx = (JSContext *)arg;
 #ifdef DEBUG
         JSBool root_points_to_gcArenaList = JS_FALSE;
         jsuword thing = (jsuword) JSVAL_TO_GCTHING(v);
@@ -2545,7 +2603,7 @@ gc_root_marker(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num, void *arg)
         size_t limit;
 
         for (i = 0; i < GC_NUM_FREELISTS; i++) {
-            arenaList = &cx->runtime->gcArenaList[i];
+            arenaList = &trc->context->runtime->gcArenaList[i];
             limit = arenaList->lastLimit;
             for (a = arenaList->last; a; a = a->prev) {
                 if (thing - FIRST_THING_PAGE(a) < limit) {
@@ -2564,57 +2622,72 @@ gc_root_marker(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num, void *arg)
         }
         JS_ASSERT(root_points_to_gcArenaList);
 #endif
-
-        GC_MARK(cx, JSVAL_TO_GCTHING(v), rhe->name ? rhe->name : "root");
+        JS_SET_TRACING_NAME(trc, rhe->name ? rhe->name : "root");
+        js_CallGCThingTracer(trc, JSVAL_TO_GCTHING(v));
     }
+
     return JS_DHASH_NEXT;
 }
 
 JS_STATIC_DLL_CALLBACK(JSDHashOperator)
-gc_lock_marker(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num, void *arg)
+gc_lock_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
+                  void *arg)
 {
     JSGCLockHashEntry *lhe = (JSGCLockHashEntry *)hdr;
     void *thing = (void *)lhe->thing;
-    JSContext *cx = (JSContext *)arg;
-    JSRuntime *rt = cx->runtime;
-    uint32 i, end;
-    uint8 *flagp;
+    JSTracer *trc = (JSTracer *)arg;
+    uint8 flags;
+    uint32 traceKind;
+    JSRuntime *rt;
+    uint32 n;
 
-    GC_MARK(cx, thing, "locked object");
-    if (rt->gcThingCallback) {
-        end = lhe->count - 1;
-        flagp = js_GetGCThingFlags(thing);
-        for (i = 0; i != end; ++i) {
-            rt->gcThingCallback(thing, *flagp, rt->gcThingCallbackClosure);
+    JS_ASSERT(lhe->count >= 1);
+    flags = *js_GetGCThingFlags(thing);
+    traceKind = GCTypeToTraceKindMap[flags & GCF_TYPEMASK];
+    JS_CALL_TRACER(trc, thing, traceKind, "locked object");
+
+    /*
+     * During GC marking JS_CALL_TRACER calls gcThingCallback once. But we need
+     * to call the callback extra lhe->count - 1 times to report an accurate
+     * reference count there.
+     */
+    if (IS_GC_MARKING_TRACER(trc) && (n = lhe->count - 1) != 0) {
+        rt = trc->context->runtime;
+        if (rt->gcThingCallback) {
+            do {
+                rt->gcThingCallback(thing, flags, rt->gcThingCallbackClosure);
+            } while (--n != 0);
         }
     }
     return JS_DHASH_NEXT;
 }
 
-#define GC_MARK_JSVALS(cx, len, vec, name)                                    \
+#define TRACE_JSVALS(trc, len, vec, name)                                     \
     JS_BEGIN_MACRO                                                            \
-        jsval _v, *_vp, *_end;                                                \
+    jsval _v, *_vp, *_end;                                                    \
                                                                               \
         for (_vp = vec, _end = _vp + len; _vp < _end; _vp++) {                \
             _v = *_vp;                                                        \
-            if (JSVAL_IS_GCTHING(_v))                                         \
-                GC_MARK(cx, JSVAL_TO_GCTHING(_v), name);                      \
+            if (JSVAL_IS_TRACEABLE(_v)) {                                     \
+                JS_SET_TRACING_INDEX(trc, name, _vp - (vec));                 \
+                JS_CallTracer(trc, JSVAL_TO_TRACEABLE(_v),                    \
+                              JSVAL_TRACE_KIND(_v));                          \
+            }                                                                 \
         }                                                                     \
     JS_END_MACRO
 
 void
-js_MarkStackFrame(JSContext *cx, JSStackFrame *fp)
+js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
 {
     uintN depth, nslots;
-
     if (fp->callobj)
-        GC_MARK(cx, fp->callobj, "call object");
+        JS_CALL_OBJECT_TRACER(trc, fp->callobj, "call object");
     if (fp->argsobj)
-        GC_MARK(cx, fp->argsobj, "arguments object");
+        JS_CALL_OBJECT_TRACER(trc, fp->argsobj, "arguments object");
     if (fp->varobj)
-        GC_MARK(cx, fp->varobj, "variables object");
+        JS_CALL_OBJECT_TRACER(trc, fp->varobj, "variables object");
     if (fp->script) {
-        js_MarkScript(cx, fp->script);
+        js_TraceScript(trc, fp->script);
         if (fp->spbase) {
             /*
              * Don't mark what has not been pushed yet, or what has been
@@ -2625,15 +2698,14 @@ js_MarkStackFrame(JSContext *cx, JSStackFrame *fp)
                       < depth * sizeof(jsval))
                      ? (uintN)(fp->sp - fp->spbase)
                      : depth;
-            GC_MARK_JSVALS(cx, nslots, fp->spbase, "operand");
+            TRACE_JSVALS(trc, nslots, fp->spbase, "operand");
         }
     }
 
     /* Allow for primitive this parameter due to JSFUN_THISP_* flags. */
     JS_ASSERT(JSVAL_IS_OBJECT((jsval)fp->thisp) ||
               (fp->fun && JSFUN_THISP_FLAGS(fp->fun->flags)));
-    if (JSVAL_IS_GCTHING((jsval)fp->thisp))
-        GC_MARK(cx, JSVAL_TO_GCTHING((jsval)fp->thisp), "this");
+    JS_CALL_VALUE_TRACER(trc, (jsval)fp->thisp, "this");
 
     /*
      * Mark fp->argv, even though in the common case it will be marked via our
@@ -2669,35 +2741,156 @@ js_MarkStackFrame(JSContext *cx, JSStackFrame *fp)
             if (!FUN_INTERPRETED(fp->fun))
                 nslots += fp->fun->u.n.extra;
         }
-        GC_MARK_JSVALS(cx, nslots, fp->argv, "arg");
+        TRACE_JSVALS(trc, nslots, fp->argv, "arg");
     }
-    if (JSVAL_IS_GCTHING(fp->rval))
-        GC_MARK(cx, JSVAL_TO_GCTHING(fp->rval), "rval");
+    JS_CALL_VALUE_TRACER(trc, fp->rval, "rval");
     if (fp->vars)
-        GC_MARK_JSVALS(cx, fp->nvars, fp->vars, "var");
-    GC_MARK(cx, fp->scopeChain, "scope chain");
+        TRACE_JSVALS(trc, fp->nvars, fp->vars, "var");
+    if (fp->scopeChain)
+        JS_CALL_OBJECT_TRACER(trc, fp->scopeChain, "scope chain");
     if (fp->sharpArray)
-        GC_MARK(cx, fp->sharpArray, "sharp array");
+        JS_CALL_OBJECT_TRACER(trc, fp->sharpArray, "sharp array");
 
     if (fp->xmlNamespace)
-        GC_MARK(cx, fp->xmlNamespace, "xmlNamespace");
+        JS_CALL_OBJECT_TRACER(trc, fp->xmlNamespace, "xmlNamespace");
 }
 
 static void
-MarkWeakRoots(JSContext *cx, JSWeakRoots *wr)
+TraceWeakRoots(JSTracer *trc, JSWeakRoots *wr)
 {
     uintN i;
     void *thing;
 
-    for (i = 0; i < GCX_NTYPES; i++)
-        GC_MARK(cx, wr->newborn[i], gc_typenames[i]);
-    if (wr->lastAtom)
-        GC_MARK_ATOM(cx, wr->lastAtom);
-    if (JSVAL_IS_GCTHING(wr->lastInternalResult)) {
-        thing = JSVAL_TO_GCTHING(wr->lastInternalResult);
+    for (i = 0; i < GCX_NTYPES; i++) {
+        thing = wr->newborn[i];
         if (thing)
-            GC_MARK(cx, thing, "lastInternalResult");
+            JS_CALL_TRACER(trc, thing, GCTypeToTraceKindMap[i], gc_typenames[i]);
     }
+    if (wr->lastAtom)
+        JS_CALL_TRACER(trc, wr->lastAtom, JSTRACE_ATOM, "lastAtom");
+    JS_CALL_VALUE_TRACER(trc, wr->lastInternalResult, "lastInternalResult");
+}
+
+JS_FRIEND_API(void)
+js_TraceContext(JSTracer *trc, JSContext *acx)
+{
+    JSStackFrame *chain, *fp;
+    JSStackHeader *sh;
+    JSTempValueRooter *tvr;
+    jsval v;
+
+    /*
+     * Iterate frame chain and dormant chains. Temporarily tack current
+     * frame onto the head of the dormant list to ease iteration.
+     *
+     * (NB: see comment on this whole "dormant" thing in js_Execute.)
+     */
+    chain = acx->fp;
+    if (chain) {
+        JS_ASSERT(!chain->dormantNext);
+        chain->dormantNext = acx->dormantFrameChain;
+    } else {
+        chain = acx->dormantFrameChain;
+    }
+
+    for (fp = chain; fp; fp = chain = chain->dormantNext) {
+        do {
+            js_TraceStackFrame(trc, fp);
+        } while ((fp = fp->down) != NULL);
+    }
+
+    /* Cleanup temporary "dormant" linkage. */
+    if (IS_GC_MARKING_TRACER(trc) && acx->fp)
+        acx->fp->dormantNext = NULL;
+
+    /* Mark other roots-by-definition in acx. */
+    if (acx->globalObject)
+        JS_CALL_OBJECT_TRACER(trc, acx->globalObject, "global object");
+    TraceWeakRoots(trc, &acx->weakRoots);
+    if (acx->throwing) {
+        JS_CALL_VALUE_TRACER(trc, acx->exception, "exception");
+    } else {
+        /* Avoid keeping GC-ed junk stored in JSContext.exception. */
+        acx->exception = JSVAL_NULL;
+    }
+#if JS_HAS_LVALUE_RETURN
+    if (acx->rval2set)
+        JS_CALL_VALUE_TRACER(trc, acx->rval2, "rval2");
+#endif
+
+    for (sh = acx->stackHeaders; sh; sh = sh->down) {
+        METER(trc->context->runtime->gcStats.stackseg++);
+        METER(trc->context->runtime->gcStats.segslots += sh->nslots);
+        TRACE_JSVALS(trc, sh->nslots, JS_STACK_SEGMENT(sh), "stack");
+    }
+
+    if (acx->localRootStack)
+        js_TraceLocalRoots(trc, acx->localRootStack);
+
+    for (tvr = acx->tempValueRooters; tvr; tvr = tvr->down) {
+        switch (tvr->count) {
+          case JSTVU_SINGLE:
+            v = tvr->u.value;
+            if (JSVAL_IS_GCTHING(v) && v != JSVAL_NULL) {
+                /*
+                 * When v is tagged as an object, it can be in fact an
+                 * arbitrary GC thing so we have to use js_CallGCThingTracer
+                 * on it.
+                 */
+                JS_SET_TRACING_NAME(trc, "tvr->u.value");
+                if (JSVAL_IS_OBJECT(v)) {
+                    js_CallGCThingTracer(trc, JSVAL_TO_GCTHING(v));
+                } else {
+                    JS_CallTracer(trc, JSVAL_TO_TRACEABLE(v),
+                                  JSVAL_TRACE_KIND(v));
+                }
+            }
+            break;
+          case JSTVU_TRACE:
+            tvr->u.trace(trc, tvr);
+            break;
+          case JSTVU_SPROP:
+            TRACE_SCOPE_PROPERTY(trc, tvr->u.sprop);
+            break;
+          case JSTVU_WEAK_ROOTS:
+            TraceWeakRoots(trc, tvr->u.weakRoots);
+            break;
+          default:
+            JS_ASSERT(tvr->count >= 0);
+            TRACE_JSVALS(trc, tvr->count, tvr->u.array, "tvr->u.array");
+        }
+    }
+
+    if (acx->sharpObjectMap.depth > 0)
+        js_TraceSharpMap(trc, &acx->sharpObjectMap);
+}
+
+static void
+TraceRuntime(JSTracer *trc, JSBool allAtoms)
+{
+    JSRuntime *rt = trc->context->runtime;
+    JSContext *iter, *acx;
+
+    JS_DHashTableEnumerate(&rt->gcRootsHash, gc_root_traversal, trc);
+    if (rt->gcLocksHash)
+        JS_DHashTableEnumerate(rt->gcLocksHash, gc_lock_traversal, trc);
+    js_TraceLockedAtoms(trc, allAtoms);
+    js_TraceWatchPoints(trc);
+    js_TraceNativeIteratorStates(trc);
+
+#if JS_HAS_GENERATORS
+    TraceGeneratorsToClose(trc);
+#endif
+
+    iter = NULL;
+    while ((acx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL)
+        js_TraceContext(trc, acx);
+}
+
+JS_FRIEND_API(void)
+js_TraceRuntime(JSTracer *trc)
+{
+    TraceRuntime(trc, JS_FALSE);
 }
 
 /*
@@ -2710,13 +2903,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     JSRuntime *rt;
     JSBool keepAtoms;
     uintN i, type;
-    JSContext *iter, *acx;
-#if JS_HAS_GENERATORS
-    JSGenerator **genTodoTail;
-#endif
-    JSStackFrame *fp, *chain;
-    JSStackHeader *sh;
-    JSTempValueRooter *tvr;
+    JSTracer trc;
     size_t nbytes, limit, offset;
     JSGCArena *a, **ap;
     uint8 flags, *flagp, *firstPage;
@@ -2726,6 +2913,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     JSBool allClear;
 #ifdef JS_THREADSAFE
     uint32 requestDebit;
+    JSContext *acx, *iter;
 #endif
 
     rt = cx->runtime;
@@ -2922,114 +3110,30 @@ restart:
     /*
      * Mark phase.
      */
-    JS_DHashTableEnumerate(&rt->gcRootsHash, gc_root_marker, cx);
-    if (rt->gcLocksHash)
-        JS_DHashTableEnumerate(rt->gcLocksHash, gc_lock_marker, cx);
-    js_MarkAtomState(&rt->atomState, keepAtoms, gc_mark_atom_key_thing, cx);
-    js_MarkWatchPoints(cx);
+    JS_TRACER_INIT(&trc, cx, NULL);
+    rt->gcMarkingTracer = &trc;
+    JS_ASSERT(IS_GC_MARKING_TRACER(&trc));
+    TraceRuntime(&trc, keepAtoms);
     js_MarkScriptFilenames(rt, keepAtoms);
-    js_MarkNativeIteratorStates(cx);
-
-#if JS_HAS_GENERATORS
-    genTodoTail = MarkScheduledGenerators(cx);
-    JS_ASSERT(!*genTodoTail);
-#endif
-
-    iter = NULL;
-    while ((acx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL) {
-        /*
-         * Iterate frame chain and dormant chains. Temporarily tack current
-         * frame onto the head of the dormant list to ease iteration.
-         *
-         * (NB: see comment on this whole "dormant" thing in js_Execute.)
-         */
-        chain = acx->fp;
-        if (chain) {
-            JS_ASSERT(!chain->dormantNext);
-            chain->dormantNext = acx->dormantFrameChain;
-        } else {
-            chain = acx->dormantFrameChain;
-        }
-
-        for (fp = chain; fp; fp = chain = chain->dormantNext) {
-            do {
-                js_MarkStackFrame(cx, fp);
-            } while ((fp = fp->down) != NULL);
-        }
-
-        /* Cleanup temporary "dormant" linkage. */
-        if (acx->fp)
-            acx->fp->dormantNext = NULL;
-
-        /* Mark other roots-by-definition in acx. */
-        GC_MARK(cx, acx->globalObject, "global object");
-        MarkWeakRoots(cx, &acx->weakRoots);
-        if (acx->throwing) {
-            if (JSVAL_IS_GCTHING(acx->exception))
-                GC_MARK(cx, JSVAL_TO_GCTHING(acx->exception), "exception");
-        } else {
-            /* Avoid keeping GC-ed junk stored in JSContext.exception. */
-            acx->exception = JSVAL_NULL;
-        }
-#if JS_HAS_LVALUE_RETURN
-        if (acx->rval2set && JSVAL_IS_GCTHING(acx->rval2))
-            GC_MARK(cx, JSVAL_TO_GCTHING(acx->rval2), "rval2");
-#endif
-
-        for (sh = acx->stackHeaders; sh; sh = sh->down) {
-            METER(rt->gcStats.stackseg++);
-            METER(rt->gcStats.segslots += sh->nslots);
-            GC_MARK_JSVALS(cx, sh->nslots, JS_STACK_SEGMENT(sh), "stack");
-        }
-
-        if (acx->localRootStack)
-            js_MarkLocalRoots(cx, acx->localRootStack);
-
-        for (tvr = acx->tempValueRooters; tvr; tvr = tvr->down) {
-            switch (tvr->count) {
-              case JSTVU_SINGLE:
-                if (JSVAL_IS_GCTHING(tvr->u.value)) {
-                    GC_MARK(cx, JSVAL_TO_GCTHING(tvr->u.value),
-                            "tvr->u.value");
-                }
-                break;
-              case JSTVU_MARKER:
-                tvr->u.marker(cx, tvr);
-                break;
-              case JSTVU_SPROP:
-                MARK_SCOPE_PROPERTY(cx, tvr->u.sprop);
-                break;
-              case JSTVU_WEAK_ROOTS:
-                MarkWeakRoots(cx, tvr->u.weakRoots);
-                break;
-              default:
-                JS_ASSERT(tvr->count >= 0);
-                GC_MARK_JSVALS(cx, tvr->count, tvr->u.array, "tvr->u.array");
-            }
-        }
-
-        if (acx->sharpObjectMap.depth > 0)
-            js_GCMarkSharpMap(cx, &acx->sharpObjectMap);
-    }
 
     /*
-     * Mark children of things that caused too deep recursion during above
-     * marking phase.
+     * Mark children of things that caused too deep recursion during the above
+     * tracing.
      */
-    ScanDelayedChildren(cx);
+    ScanDelayedChildren(&trc);
 
 #if JS_HAS_GENERATORS
     /*
      * Close phase: search and mark part. See comments in
      * FindAndMarkObjectsToClose for details.
      */
-    FindAndMarkObjectsToClose(cx, gckind, genTodoTail);
+    FindAndMarkObjectsToClose(&trc, gckind);
 
     /*
      * Mark children of things that caused too deep recursion during the
      * just-completed marking part of the close phase.
      */
-    ScanDelayedChildren(cx);
+    ScanDelayedChildren(&trc);
 #endif
 
     JS_ASSERT(!cx->insideGCMarkCallback);
@@ -3040,6 +3144,8 @@ restart:
         cx->insideGCMarkCallback = JS_FALSE;
     }
     JS_ASSERT(rt->gcUnscannedBagSize == 0);
+
+    rt->gcMarkingTracer = NULL;
 
     /* Finalize iterator states before the objects they iterate over. */
     CloseIteratorStates(cx);
