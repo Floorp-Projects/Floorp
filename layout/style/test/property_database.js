@@ -212,9 +212,9 @@ var gCSSProperties = {
 		domProp: "MozBoxSizing",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "content" ],
-		other_values: [ "border", "padding" ],
-		invalid_values: [ "margin" ]
+		initial_values: [ "content-box" ],
+		other_values: [ "border-box", "padding-box" ],
+		invalid_values: [ "margin-box", "content", "padding", "border", "margin" ]
 	},
 	"-moz-column-count": {
 		domProp: "MozColumnCount",
@@ -249,7 +249,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "content-box" ],
 		other_values: [ "border-box", "padding-box", "margin-box" ],
-		invalid_values: []
+		invalid_values: [ "content", "padding", "border", "margin" ]
 	},
 	"-moz-force-broken-image-icon": {
 		domProp: "MozForceBrokenImageIcon",
