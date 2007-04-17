@@ -170,23 +170,31 @@ NS_METHOD nsDOMEvent::GetType(nsAString& aType)
   return NS_ERROR_FAILURE;
 }
 
-NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
+static nsresult
+GetDOMEventTarget(nsISupports* aTarget,
+                  nsIDOMEventTarget** aDOMTarget)
 {
-  if (mEvent->target) {
-    return CallQueryInterface(mEvent->target, aTarget);
+  nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(aTarget);
+  nsISupports* realTarget =
+    piTarget ? piTarget->GetTargetForDOMEvent() : aTarget;
+  if (realTarget) {
+    return CallQueryInterface(realTarget, aDOMTarget);
   }
-  *aTarget = nsnull;
+
+  *aDOMTarget = nsnull;
   return NS_OK;
+}
+
+NS_METHOD
+nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
+{
+  return GetDOMEventTarget(mEvent->target, aTarget);
 }
 
 NS_IMETHODIMP
 nsDOMEvent::GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)
 {
-  if (mEvent->currentTarget) {
-    return CallQueryInterface(mEvent->currentTarget, aCurrentTarget);
-  }
-  *aCurrentTarget = nsnull;
-  return NS_OK;
+  return GetDOMEventTarget(mEvent->currentTarget, aCurrentTarget);
 }
 
 //
@@ -241,7 +249,7 @@ NS_IMETHODIMP
 nsDOMEvent::GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget)
 {
   if (mEvent->originalTarget) {
-    return CallQueryInterface(mEvent->originalTarget, aOriginalTarget);
+    return GetDOMEventTarget(mEvent->originalTarget, aOriginalTarget);
   }
 
   return GetTarget(aOriginalTarget);
