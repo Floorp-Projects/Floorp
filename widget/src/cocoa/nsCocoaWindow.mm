@@ -1251,7 +1251,7 @@ NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
 }
 
 
-- (nsCocoaWindow*)geckoWidget;
+- (nsCocoaWindow*)geckoWidget
 {
   return mGeckoWindow;
 }
