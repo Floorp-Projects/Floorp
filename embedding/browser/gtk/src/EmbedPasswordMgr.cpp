@@ -1081,11 +1081,13 @@ EmbedPasswordMgr::OnSecurityChange(nsIWebProgress* aWebProgress,
 
 // nsIFormSubmitObserver implementation
 NS_IMETHODIMP
-EmbedPasswordMgr::Notify(nsIContent* aFormNode,
+EmbedPasswordMgr::Notify(nsIDOMHTMLFormElement* aDOMForm,
                          nsIDOMWindowInternal* aWindow,
                          nsIURI* aActionURL,
                          PRBool* aCancelSubmit)
 {
+  nsCOMPtr<nsIContent> formNode = do_QueryInterface(aDOMForm);
+
   // This function must never return a failure code or the form submit
   // will be cancelled.
   NS_ENSURE_TRUE(aWindow, NS_OK);
@@ -1096,7 +1098,7 @@ EmbedPasswordMgr::Notify(nsIContent* aFormNode,
   nsCAutoString realm;
   // XXX bug 281125: GetDocument() could sometimes be null here, hinting
   // XXX at a problem with document teardown while a modal dialog is posted.
-  if (!GetPasswordRealm(aFormNode->GetOwnerDoc()->GetDocumentURI(), realm))
+  if (!GetPasswordRealm(formNode->GetOwnerDoc()->GetDocumentURI(), realm))
     return NS_OK;
   PRInt32 rejectValue;
   if (mRejectTable.Get(realm, &rejectValue)) {
@@ -1104,7 +1106,7 @@ EmbedPasswordMgr::Notify(nsIContent* aFormNode,
     return NS_OK;
   }
 #if defined(FIXED_BUG347731) || !defined(MOZ_ENABLE_LIBXUL)
-  nsCOMPtr<nsIForm> formElement = do_QueryInterface(aFormNode);
+  nsCOMPtr<nsIForm> formElement = do_QueryInterface(formNode);
   PRUint32 numControls;
   formElement->GetElementCount(&numControls);
   // Count the number of password fields in the form.
@@ -1147,8 +1149,7 @@ EmbedPasswordMgr::Notify(nsIContent* aFormNode,
           if (autocomplete.LowerCaseEqualsLiteral("off"))
             return NS_OK;
         }
-        nsCOMPtr<nsIDOMElement> formDOMEl = do_QueryInterface(aFormNode);
-        formDOMEl->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+        aDOMForm->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
         if (autocomplete.LowerCaseEqualsLiteral("off"))
             return NS_OK;
         nsCOMPtr<nsIDOMElement> passFieldElement = do_QueryInterface(passFields.ObjectAt(0));

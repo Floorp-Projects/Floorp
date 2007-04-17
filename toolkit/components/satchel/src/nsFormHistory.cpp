@@ -50,7 +50,6 @@
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
-#include "nsIContent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -229,7 +228,7 @@ nsFormHistory::Observe(nsISupports *aSubject, const char *aTopic, const PRUnicha
 //// nsIFormSubmitObserver
 
 NS_IMETHODIMP
-nsFormHistory::Notify(nsIContent* aFormNode, nsIDOMWindowInternal* aWindow, nsIURI* aActionURL, PRBool* aCancelSubmit)
+nsFormHistory::Notify(nsIDOMHTMLFormElement* formElt, nsIDOMWindowInternal* aWindow, nsIURI* aActionURL, PRBool* aCancelSubmit)
 {
   if (!FormHistoryEnabled())
     return NS_OK;
@@ -237,9 +236,6 @@ nsFormHistory::Notify(nsIContent* aFormNode, nsIDOMWindowInternal* aWindow, nsIU
   nsresult rv = OpenDatabase(); // lazily ensure that the database is open
   NS_ENSURE_SUCCESS(rv, rv);
   
-  nsCOMPtr<nsIDOMHTMLFormElement> formElt = do_QueryInterface(aFormNode);
-  NS_ENSURE_TRUE(formElt, NS_ERROR_FAILURE);
-
   nsCOMPtr<nsIDOMHTMLCollection> elts;
   formElt->GetElements(getter_AddRefs(elts));
   
