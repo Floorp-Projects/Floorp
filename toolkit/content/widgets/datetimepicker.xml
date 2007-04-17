@@ -364,7 +364,7 @@
           <![CDATA[
             if (typeof val == "number")
               this.setAttribute("increment", val);
-            return increment;
+            return val;
           ]]>
         </setter>
       </property>
