@@ -643,8 +643,40 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   nsCOMPtr<nsIAccessible> accessible;
   accService->GetAccessibleInShell(aTargetNode, eventShell,
                                    getter_AddRefs(accessible));
-  if (!accessible)
+  nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(accessible));
+  if (!privAcc)
     return NS_OK;
+
+  if (eventType.EqualsLiteral("RadioStateChange")) {
+    PRUint32 state = State(accessible);
+    PRBool isEnabled = state & nsIAccessibleStates::STATE_CHECKED;
+
+    nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
+      new nsAccStateChangeEvent(accessible, nsIAccessibleStates::STATE_CHECKED,
+                                PR_FALSE, isEnabled);
+    privAcc->FireAccessibleEvent(accEvent);
+
+    if (isEnabled)
+      FireAccessibleFocusEvent(accessible, aTargetNode, aEvent);
+
+    return NS_OK;
+  }
+
+  if (eventType.EqualsLiteral("CheckboxStateChange")) {
+    PRUint32 state = State(accessible);
+
+    // prefPane tab is implemented as list items in A11y, so we need to
+    // check nsIAccessibleStates::STATE_SELECTED also.
+    PRBool isEnabled = (state & (nsIAccessibleStates::STATE_CHECKED |
+                        nsIAccessibleStates::STATE_SELECTED)) != 0;
+
+    nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
+      new nsAccStateChangeEvent(accessible,
+                                nsIAccessibleStates::STATE_CHECKED,
+                                PR_FALSE, isEnabled);
+
+    return privAcc->FireAccessibleEvent(accEvent);
+  }
 
   nsCOMPtr<nsIAccessible> treeItemAccessible;
 #ifdef MOZ_XUL
@@ -671,16 +703,18 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   }
 #endif
 
-  nsCOMPtr<nsPIAccessible> privAcc(do_QueryInterface(accessible));
-
 #ifdef MOZ_XUL
-  // tree event
-  if (eventType.EqualsLiteral("CheckboxStateChange") ||
-      eventType.EqualsLiteral("OpenStateChange")) {
-    return privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE,
-                                     accessible, nsnull);
+  if (treeItemAccessible && eventType.EqualsLiteral("OpenStateChange")) {
+    PRUint32 state = State(accessible); // collapsed/expanded changed
+    PRBool isEnabled = (state & nsIAccessibleStates::STATE_EXPANDED) != 0;
+
+    nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
+      new nsAccStateChangeEvent(accessible, nsIAccessibleStates::STATE_EXPANDED,
+                                PR_FALSE, isEnabled);
+    return FireAccessibleEvent(accEvent);
   }
-  else if (treeItemAccessible && eventType.EqualsLiteral("select")) {
+
+  if (treeItemAccessible && eventType.EqualsLiteral("select")) {
     // If multiselect tree, we should fire selectionadd or selection removed
     if (gLastFocusedNode == aTargetNode) {
       nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSel =
@@ -741,15 +775,6 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   else if (eventType.EqualsLiteral("AlertActive")) { 
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_ALERT, 
                               accessible, nsnull);
-  }
-  else if (eventType.EqualsLiteral("RadioStateChange")) {
-    privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, 
-                              accessible, nsnull);
-    PRUint32 finalState = State(accessible);
-    if (finalState & (nsIAccessibleStates::STATE_CHECKED |
-        nsIAccessibleStates::STATE_SELECTED)) {
-      FireAccessibleFocusEvent(accessible, aTargetNode, aEvent);
-    }
   }
   else if (eventType.EqualsLiteral("popuphiding")) {
     // If accessible focus was on or inside popup that closes,
