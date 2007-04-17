@@ -14,12 +14,14 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * The Initial Developer of the Original Code is: Mozilla Corporation
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *
+ * Justin Dolske <dolske@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,51 +38,21 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-/**
- * MODULE NOTES:
- * @created  pollmann 6/21/1999
- * 
- */
+#include "nsISupports.idl"
 
-#ifndef nsIFormSubmitObserver_h__
-#define nsIFormSubmitObserver_h__
+interface nsIDOMHTMLFormElement;
+interface nsIDOMWindowInternal;
+interface nsIURI;
 
-#include "nsISupports.h"
-#include "prtypes.h"
+[scriptable, uuid(0787d64a-44bf-4273-8438-61ff13ebec0c)]
+interface nsIFormSubmitObserver: nsISupports
+{
+  void notify(in nsIDOMHTMLFormElement formNode, in nsIDOMWindowInternal window, in nsIURI actionURL, out boolean cancelSubmit);
+};
 
-class nsIContent;
-class nsIDOMWindowInternal;
-class nsIURI;
-
-// {a6cf9106-15b3-11d2-932e-00805f8add32}
-#define NS_IFORMSUBMITOBSERVER_IID      \
-{ 0xa6cf9106, 0x15b3, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
-
+%{C++
 #define NS_FORMSUBMIT_SUBJECT "formsubmit"
-// used when actionURL is not needed and accuracy of form data is more important
 #define NS_EARLYFORMSUBMIT_SUBJECT "earlyformsubmit"
 #define NS_FIRST_FORMSUBMIT_CATEGORY "firstformsubmit"
 #define NS_PASSWORDMANAGER_CATEGORY "passwordmanager"
-
-class nsIFormSubmitObserver : public nsISupports {
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFORMSUBMITOBSERVER_IID)
-
-  /*
-   *   Subject calls the observer when the form is submitted
-   *   @param formNode- the dom node corresonding to this form.
-   *   @param window- the window that the form submit occured in.
-   *                  NOTE: This is not necessarily the same window the form submit result
-   *                        will be loaded in (form could have target attribute set)
-   *   @param actionURL- URL to which the form will be submitted.
-   *   @param cancelSubmit- outparam - cancels form submit if set to true
-   */
-  NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL, PRBool* cancelSubmit) = 0;
-
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormSubmitObserver,
-                              NS_IFORMSUBMITOBSERVER_IID)
-
-#endif /* nsIFormSubmitObserver_h__ */
-
+%}

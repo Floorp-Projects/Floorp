@@ -48,6 +48,7 @@
 #include "nsIObserver.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMHTMLFormElement.h"
 #include "nsIStringBundle.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIDocShell.h"
@@ -87,7 +88,7 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSISSLSTATUSPROVIDER
 
-  NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindowInternal* window,
+  NS_IMETHOD Notify(nsIDOMHTMLFormElement* formNode, nsIDOMWindowInternal* window,
                     nsIURI *actionURL, PRBool* cancelSubmit);
   
 protected:
