@@ -247,8 +247,8 @@ var gCSSProperties = {
 		domProp: "MozFloatEdge",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "content" ],
-		other_values: [ "border", "padding", "margin" ],
+		initial_values: [ "content-box" ],
+		other_values: [ "border-box", "padding-box", "margin-box" ],
 		invalid_values: []
 	},
 	"-moz-force-broken-image-icon": {
