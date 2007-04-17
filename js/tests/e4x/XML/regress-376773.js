@@ -569,4 +569,14 @@ TEST(++nTest, expectcall + ':' + expect, actualcall + ':' + actual);
 String.prototype.toLocaleUpperCase = String.prototype.orig_toLocaleUpperCase;
 delete String.prototype.orig_toLocaleUpperCase;
 
+var l = <><a>text</a></>;
+expect = 't';
+actual = l.function::charAt.call(l, 0);
+TEST(++nTest, expect, actual);
+
+expect = 't';
+with (l) actual = function::charAt(0);
+TEST(++nTest, expect, actual);
+
+
 END();
