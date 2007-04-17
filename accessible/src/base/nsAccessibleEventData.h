@@ -74,6 +74,13 @@ public:
                         PRUint32 aState, PRBool aIsExtraState,
                         PRBool aIsEnabled);
 
+  nsAccStateChangeEvent(nsIDOMNode *aNode,
+                        PRUint32 aState, PRBool aIsExtraState,
+                        PRBool aIsEnabled);
+
+  nsAccStateChangeEvent(nsIDOMNode *aNode,
+                        PRUint32 aState, PRBool aIsExtraState);
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_NSIACCESSIBLEEVENT(nsAccEvent::)
   NS_DECL_NSIACCESSIBLESTATECHANGEEVENT
