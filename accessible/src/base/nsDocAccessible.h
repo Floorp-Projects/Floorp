@@ -106,6 +106,17 @@ class nsDocAccessible : public nsHyperTextAccessible,
     // Non-virtual
     nsresult FireDelayedToolkitEvent(PRUint32 aEvent, nsIDOMNode *aDOMNode,
                                      void *aData, PRBool aAllowDupes = PR_FALSE);
+
+    /**
+     * Fire accessible event in timeout.
+     *
+     * @param aAllowDupes - if false then delayed events of the same type and
+     *                      for the same DOM node in the event queue won't
+     *                      be fired.
+     */
+    nsresult FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent,
+                                        PRBool aAllowDupes = PR_FALSE);
+
     void ShutdownChildDocuments(nsIDocShellTreeItem *aStart);
 
   protected:
@@ -119,6 +130,14 @@ class nsDocAccessible : public nsHyperTextAccessible,
     void CheckForEditor();
     virtual void SetEditor(nsIEditor *aEditor);
     virtual already_AddRefed<nsIEditor> GetEditor() { nsIEditor *editor = mEditor; NS_IF_ADDREF(editor); return editor; }
+
+    /**
+     * Fires accessible events when ARIA attribute is chaned.
+     *
+     * @param aContent - node that attribute is changed for
+     * @param aAttribute - changed attribute
+     */
+    void ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute);
 
     nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> mAccessNodeCache;
     void *mWnd;

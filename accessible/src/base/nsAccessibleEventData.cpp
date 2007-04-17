@@ -105,6 +105,11 @@ nsAccEvent::GetAccessibleDocument(nsIAccessibleDocument **aDocAccessible)
   *aDocAccessible = nsnull;
 
   if (!mDocAccessible) {
+    if (!mAccessible) {
+      nsCOMPtr<nsIAccessible> accessible;
+      GetAccessible(getter_AddRefs(accessible));
+    }
+
     nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(mAccessible));
     NS_ENSURE_TRUE(accessNode, NS_ERROR_FAILURE);
     accessNode->GetAccessibleDocument(getter_AddRefs(mDocAccessible));
@@ -126,6 +131,32 @@ nsAccStateChangeEvent::
   nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aAccessible, nsnull),
   mState(aState), mIsExtraState(aIsExtraState), mIsEnabled(aIsEnabled)
 {
+}
+
+nsAccStateChangeEvent::
+  nsAccStateChangeEvent(nsIDOMNode *aNode,
+                        PRUint32 aState, PRBool aIsExtraState,
+                        PRBool aIsEnabled):
+  nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aNode, nsnull),
+  mState(aState), mIsExtraState(aIsExtraState), mIsEnabled(aIsEnabled)
+{
+}
+
+nsAccStateChangeEvent::
+  nsAccStateChangeEvent(nsIDOMNode *aNode,
+                        PRUint32 aState, PRBool aIsExtraState):
+  nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aNode, nsnull),
+  mState(aState), mIsExtraState(aIsExtraState)
+{
+  nsCOMPtr<nsIAccessible> accessible;
+  GetAccessible(getter_AddRefs(accessible));
+  if (accessible) {
+    PRUint32 state = 0, extraState = 0;
+    accessible->GetFinalState(&state, &extraState);
+    mIsEnabled = ((mIsExtraState ? extraState : state) & mState) != 0;
+  } else {
+    mIsEnabled = PR_FALSE;
+  }
 }
 
 NS_IMETHODIMP
