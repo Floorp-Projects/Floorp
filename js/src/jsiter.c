@@ -665,33 +665,33 @@ generator_finalize(JSContext *cx, JSObject *obj)
     }
 }
 
-static uint32
-generator_mark(JSContext *cx, JSObject *obj, void *arg)
+static void
+generator_trace(JSTracer *trc, JSObject *obj)
 {
     JSGenerator *gen;
 
-    gen = (JSGenerator *) JS_GetPrivate(cx, obj);
+    gen = (JSGenerator *) JS_GetPrivate(trc->context, obj);
     if (gen) {
         /*
-         * We must mark argv[-2], as js_MarkStackFrame will not.  Note that
-         * js_MarkStackFrame will mark thisp (argv[-1]) and actual arguments,
-         * plus any missing formals and local GC roots.
+         * We must trace argv[-2], as js_TraceStackFrame will not.  Note
+         * that js_TraceStackFrame will trace thisp (argv[-1]) and actual
+         * arguments, plus any missing formals and local GC roots.
          */
         JS_ASSERT(!JSVAL_IS_PRIMITIVE(gen->frame.argv[-2]));
-        GC_MARK(cx, JSVAL_TO_GCTHING(gen->frame.argv[-2]), "generator");
-        js_MarkStackFrame(cx, &gen->frame);
+        JS_CALL_OBJECT_TRACER(trc, JSVAL_TO_OBJECT(gen->frame.argv[-2]),
+                              "generator");
+        js_TraceStackFrame(trc, &gen->frame);
     }
-    return 0;
 }
 
 JSClass js_GeneratorClass = {
     js_Generator_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_IS_ANONYMOUS |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Generator),
+    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Generator),
     JS_PropertyStub,  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,  generator_finalize,
     NULL,             NULL,            NULL,            NULL,
-    NULL,             NULL,            generator_mark,  NULL
+    NULL,             NULL,            JS_CLASS_TRACE(generator_trace), NULL
 };
 
 /*

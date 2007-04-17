@@ -735,25 +735,8 @@ GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     rt = cx->runtime;
     preBytes = rt->gcBytes;
-#ifdef GC_MARK_DEBUG
-    if (argc && JSVAL_IS_STRING(argv[0])) {
-        char *name = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
-        FILE *file = fopen(name, "w");
-        if (!file) {
-            fprintf(gErrFile, "gc: can't open %s: %s\n", strerror(errno));
-            return JS_FALSE;
-        }
-        js_DumpGCHeap = file;
-    } else {
-        js_DumpGCHeap = stdout;
-    }
-#endif
     JS_GC(cx);
-#ifdef GC_MARK_DEBUG
-    if (js_DumpGCHeap != stdout)
-        fclose(js_DumpGCHeap);
-    js_DumpGCHeap = NULL;
-#endif
+
     fprintf(gOutFile, "before %lu, after %lu, break %08lx\n",
             (unsigned long)preBytes, (unsigned long)rt->gcBytes,
 #ifdef XP_UNIX
@@ -1364,6 +1347,79 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
     }
     return JS_TRUE;
+}
+
+static JSBool
+DumpHeap(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    jsval v = JSVAL_NULL;
+    char *fileName = NULL;
+    size_t maxRecursionLevel = (size_t)-1;
+    void *thingToIgnore = NULL;
+    FILE *dumpFile;
+    JSBool ok;
+    JSTracer *trc;
+
+    if (argc != 0 && argv[0] != JSVAL_NULL && argv[0] != JSVAL_VOID) {
+        v = argv[0];
+        if (!JSVAL_IS_TRACEABLE(v)) {
+            fprintf(gErrFile,
+                    "dumpHeap: the first argument is not null or "
+                    "a heap-allocated thing\n");
+            return JS_FALSE;
+        }
+    }
+
+    if (argc > 1 && argv[1] != JSVAL_NULL && argv[1] != JSVAL_VOID) {
+        JSString *str;
+
+        str = JS_ValueToString(cx, argv[1]);
+        if (!str)
+            return JS_FALSE;
+        argv[1] = STRING_TO_JSVAL(str);
+        fileName = JS_GetStringBytes(str);
+    }
+
+    if (argc > 2 && argv[2] != JSVAL_NULL && argv[2] != JSVAL_VOID) {
+        uint32 depth;
+
+        if (!JS_ValueToECMAUint32(cx, argv[2], &depth))
+            return JS_FALSE;
+        maxRecursionLevel = depth;
+    }
+
+    if (argc > 3 && argv[3] != JSVAL_NULL && argv[3] != JSVAL_VOID) {
+        if (JSVAL_IS_GCTHING(argv[3]))
+            thingToIgnore = JSVAL_TO_GCTHING(argv[3]);
+    }
+
+    if (!fileName) {
+        dumpFile = stdout;
+    } else {
+        dumpFile = fopen(fileName, "w");
+        if (!dumpFile) {
+            fprintf(gErrFile, "gc: can't open %s: %s\n", strerror(errno));
+            return JS_FALSE;
+        }
+    }
+
+    trc = js_NewGCHeapDumper(cx, NULL, dumpFile, maxRecursionLevel,
+                             thingToIgnore);
+    if (!trc) {
+        ok = JS_FALSE;
+    } else {
+        if (v == JSVAL_NULL) {
+            js_TraceRuntime(trc);
+        } else {
+            JS_TraceChildren(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
+        }
+        ok = js_FreeGCHeapDumper(trc);
+    }
+
+    if (dumpFile != stdout)
+        fclose(dumpFile);
+
+    return ok;
 }
 
 #endif /* DEBUG */
@@ -2146,6 +2202,7 @@ static JSFunctionSpec shell_functions[] = {
 #ifdef DEBUG
     {"dis",             Disassemble,    1,0,0},
     {"dissrc",          DisassWithSrc,  1,0,0},
+    {"dumpHeap",        DumpHeap,       3,0,0},
     {"notes",           Notes,          1,0,0},
     {"tracing",         Tracing,        0,0,0},
     {"stats",           DumpStats,      1,0,0},

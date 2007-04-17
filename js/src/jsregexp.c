@@ -3848,19 +3848,20 @@ regexp_xdrObject(JSXDRState *xdr, JSObject **objp)
 
 #endif /* !JS_HAS_XDR */
 
-static uint32
-regexp_mark(JSContext *cx, JSObject *obj, void *arg)
+static void
+regexp_trace(JSTracer *trc, JSObject *obj)
 {
-    JSRegExp *re = (JSRegExp *) JS_GetPrivate(cx, obj);
-    if (re)
-        GC_MARK(cx, re->source, "source");
-    return 0;
+    JSRegExp *re;
+
+    re = (JSRegExp *) JS_GetPrivate(trc->context, obj);
+    if (re && re->source)
+        JS_CALL_STRING_TRACER(trc, re->source, "source");
 }
 
 JSClass js_RegExpClass = {
     js_RegExp_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
+    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
     JS_PropertyStub,    JS_PropertyStub,
     regexp_getProperty, regexp_setProperty,
     JS_EnumerateStub,   JS_ResolveStub,
@@ -3868,7 +3869,7 @@ JSClass js_RegExpClass = {
     NULL,               NULL,
     regexp_call,        NULL,
     regexp_xdrObject,   NULL,
-    regexp_mark,        0
+    JS_CLASS_TRACE(regexp_trace), 0
 };
 
 static const jschar empty_regexp_ucstr[] = {'(', '?', ':', ')', 0};

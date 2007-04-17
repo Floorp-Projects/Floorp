@@ -1866,12 +1866,41 @@ JS_UnlockGCThingRT(JSRuntime *rt, void *thing)
 JS_PUBLIC_API(void)
 JS_MarkGCThing(JSContext *cx, void *thing, const char *name, void *arg)
 {
-    JS_ASSERT(cx->runtime->gcLevel > 0);
-#ifdef JS_THREADSAFE
-    JS_ASSERT(cx->runtime->gcThread->id == js_CurrentThreadId());
-#endif
+    JSTracer *trc;
 
-    GC_MARK(cx, thing, name);
+    trc = (JSTracer *)arg;
+    if (!trc)
+        trc = cx->runtime->gcMarkingTracer;
+    else
+        JS_ASSERT(trc == cx->runtime->gcMarkingTracer);
+
+#ifdef JS_THREADSAFE
+    JS_ASSERT(cx->runtime->gcThread == trc->context->thread);
+#endif
+    if (thing) {
+        JS_SET_TRACING_NAME(trc, name ? name : "unknown");
+        js_CallGCThingTracer(trc, thing);
+    }
+}
+
+extern JS_PUBLIC_API(JSBool)
+JS_IsGCMarkingTracer(JSTracer *trc)
+{
+    return IS_GC_MARKING_TRACER(trc);
+}
+
+JS_PUBLIC_API(JSTracer *)
+JS_GetGCMarkingTracer(JSContext *cx)
+{
+    JSRuntime *rt;
+
+    rt = cx->runtime;
+    JS_ASSERT(rt->gcMarkingTracer);
+    JS_ASSERT(rt->gcLevel > 0);
+#ifdef JS_THREADSAFE
+    JS_ASSERT(rt->gcThread == rt->gcMarkingTracer->context->thread);
+#endif
+    return rt->gcMarkingTracer;
 }
 
 JS_PUBLIC_API(void)
@@ -3328,8 +3357,8 @@ prop_iter_finalize(JSContext *cx, JSObject *obj)
     }
 }
 
-static uint32
-prop_iter_mark(JSContext *cx, JSObject *obj, void *arg)
+static void
+prop_iter_trace(JSTracer *trc, JSObject *obj)
 {
     jsval v;
     jsint i, n;
@@ -3337,33 +3366,33 @@ prop_iter_mark(JSContext *cx, JSObject *obj, void *arg)
     JSIdArray *ida;
     jsid id;
 
-    v = GC_AWARE_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+    v = GC_AWARE_GET_SLOT(trc->context, obj, JSSLOT_PRIVATE);
     JS_ASSERT(!JSVAL_IS_VOID(v));
 
-    i = JSVAL_TO_INT(OBJ_GET_SLOT(cx, obj, JSSLOT_ITER_INDEX));
+    i = JSVAL_TO_INT(OBJ_GET_SLOT(trc->context, obj, JSSLOT_ITER_INDEX));
     if (i < 0) {
         /* Native case: just mark the next property to visit. */
         sprop = (JSScopeProperty *) JSVAL_TO_PRIVATE(v);
         if (sprop)
-            MARK_SCOPE_PROPERTY(cx, sprop);
+            TRACE_SCOPE_PROPERTY(trc, sprop);
     } else {
         /* Non-native case: mark each id in the JSIdArray private. */
         ida = (JSIdArray *) JSVAL_TO_PRIVATE(v);
         for (i = 0, n = ida->length; i < n; i++) {
             id = ida->vector[i];
-            MARK_ID(cx, id);
+            TRACE_ID(trc, id);
         }
     }
-    return 0;
 }
 
 static JSClass prop_iter_class = {
     "PropertyIterator",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1),
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) |
+    JSCLASS_MARK_IS_TRACE,
     JS_PropertyStub,  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,  prop_iter_finalize,
     NULL,             NULL,            NULL,            NULL,
-    NULL,             NULL,            prop_iter_mark,  NULL
+    NULL,             NULL,            JS_CLASS_TRACE(prop_iter_trace), NULL
 };
 
 JS_PUBLIC_API(JSObject *)

@@ -186,6 +186,7 @@ struct JSRuntime {
     uint32              gcMaxMallocBytes;
     uint32              gcLevel;
     uint32              gcNumber;
+    JSTracer            *gcMarkingTracer;
 
     /*
      * NB: do not pack another flag here by claiming gcPadding unless the new
@@ -382,7 +383,7 @@ struct JSRuntime {
 
     /*
      * A helper list for the GC, so it can mark native iterator states. See
-     * js_MarkNativeIteratorStates for details.
+     * js_TraceNativeIteratorStates for details.
      */
     JSNativeIteratorState *nativeIteratorStates;
 
@@ -508,14 +509,14 @@ typedef struct JSLocalRootStack {
 
 typedef struct JSTempValueRooter JSTempValueRooter;
 typedef void
-(* JS_DLL_CALLBACK JSTempValueMarker)(JSContext *cx, JSTempValueRooter *tvr);
+(* JS_DLL_CALLBACK JSTempValueTrace)(JSTracer *trc, JSTempValueRooter *tvr);
 
 typedef union JSTempValueUnion {
     jsval               value;
     JSObject            *object;
     JSString            *string;
     void                *gcthing;
-    JSTempValueMarker   marker;
+    JSTempValueTrace    trace;
     JSScopeProperty     *sprop;
     JSWeakRoots         *weakRoots;
     jsval               *array;
@@ -532,7 +533,7 @@ JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(JSObject *));
  * Context-linked stack of temporary GC roots.
  *
  * If count is -1, then u.value contains the single value or GC-thing to root.
- * If count is -2, then u.marker holds a mark hook called to mark the values.
+ * If count is -2, then u.trace holds a trace hook called to trace the values.
  * If count is -3, then u.sprop points to the property tree node to mark.
  * If count is -4, then u.weakRoots points to saved weak roots.
  * If count >= 0, then u.array points to a stack-allocated vector of jsvals.
@@ -565,7 +566,7 @@ struct JSTempValueRooter {
 };
 
 #define JSTVU_SINGLE        (-1)
-#define JSTVU_MARKER        (-2)
+#define JSTVU_TRACE         (-2)
 #define JSTVU_SPROP         (-3)
 #define JSTVU_WEAK_ROOTS    (-4)
 
@@ -591,10 +592,10 @@ struct JSTempValueRooter {
         JS_PUSH_TEMP_ROOT_COMMON(cx, tvr);                                    \
     JS_END_MACRO
 
-#define JS_PUSH_TEMP_ROOT_MARKER(cx,marker_,tvr)                              \
+#define JS_PUSH_TEMP_ROOT_TRACE(cx,trace_,tvr)                                \
     JS_BEGIN_MACRO                                                            \
-        (tvr)->count = JSTVU_MARKER;                                          \
-        (tvr)->u.marker = (marker_);                                          \
+        (tvr)->count = JSTVU_TRACE;                                           \
+        (tvr)->u.trace = (trace_);                                            \
         JS_PUSH_TEMP_ROOT_COMMON(cx, tvr);                                    \
     JS_END_MACRO
 
@@ -773,11 +774,6 @@ struct JSContext {
 
     /* Stack of thread-stack-allocated temporary GC roots. */
     JSTempValueRooter   *tempValueRooters;
-
-#ifdef GC_MARK_DEBUG
-    /* Top of the GC mark stack. */
-    void                *gcCurrentMarkNode;
-#endif
 };
 
 #ifdef JS_THREADSAFE
@@ -935,7 +931,7 @@ extern int
 js_PushLocalRoot(JSContext *cx, JSLocalRootStack *lrs, jsval v);
 
 extern void
-js_MarkLocalRoots(JSContext *cx, JSLocalRootStack *lrs);
+js_TraceLocalRoots(JSTracer *trc, JSLocalRootStack *lrs);
 
 /*
  * Report an exception, which is currently realized as a printf-style format

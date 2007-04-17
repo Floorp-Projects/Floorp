@@ -798,10 +798,11 @@ js_PushLocalRoot(JSContext *cx, JSLocalRootStack *lrs, jsval v)
 }
 
 void
-js_MarkLocalRoots(JSContext *cx, JSLocalRootStack *lrs)
+js_TraceLocalRoots(JSTracer *trc, JSLocalRootStack *lrs)
 {
     uint32 n, m, mark;
     JSLocalRootChunk *lrc;
+    jsval v;
 
     n = lrs->rootCount;
     if (n == 0)
@@ -811,13 +812,19 @@ js_MarkLocalRoots(JSContext *cx, JSLocalRootStack *lrs)
     lrc = lrs->topChunk;
     do {
         while (--n > mark) {
-#ifdef GC_MARK_DEBUG
-            char name[22];
-            JS_snprintf(name, sizeof name, "<local root %u>", n);
-#endif
             m = n & JSLRS_CHUNK_MASK;
-            JS_ASSERT(JSVAL_IS_GCTHING(lrc->roots[m]));
-            GC_MARK(cx, JSVAL_TO_GCTHING(lrc->roots[m]), name);
+            v = lrc->roots[m];
+            JS_ASSERT(JSVAL_IS_GCTHING(v) && v != JSVAL_NULL);
+            JS_SET_TRACING_INDEX(trc, "local_root", n);
+
+            /*
+             * When v is tagged as an object, it can be in fact an arbitrary
+             * GC thing so we have to use js_CallGCThingTracer on it.
+             */
+            if (JSVAL_IS_OBJECT(v))
+                js_CallGCThingTracer(trc, JSVAL_TO_GCTHING(v));
+            else
+                JS_CallTracer(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
             if (m == 0)
                 lrc = lrc->down;
         }

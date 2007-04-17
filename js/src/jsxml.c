@@ -191,39 +191,28 @@ namespace_finalize(JSContext *cx, JSObject *obj)
 }
 
 static void
-namespace_mark_vector(JSContext *cx, JSXMLNamespace **vec, uint32 len)
+namespace_trace_vector(JSTracer *trc, JSXMLNamespace **vec,
+                       uint32 len)
 {
     uint32 i;
     JSXMLNamespace *ns;
 
     for (i = 0; i < len; i++) {
         ns = vec[i];
-        {
-#ifdef GC_MARK_DEBUG
-            char buf[100];
-            size_t n;
-
-            n = ns->prefix
-                ? js_PutEscapedString(buf, sizeof buf, ns->prefix, 0)
-                : 0;
-            if (n < sizeof buf - 1) {
-                buf[n++] = '=';
-                js_PutEscapedString(buf + n, sizeof buf - n, ns->uri, 0);
-            }
-#endif
-            GC_MARK(cx, ns, buf);
+        if (ns) {
+            JS_SET_TRACING_INDEX(trc, "namespace_vector", i);
+            JS_CallTracer(trc, ns, JSTRACE_NAMESPACE);
         }
     }
 }
 
-static uint32
-namespace_mark(JSContext *cx, JSObject *obj, void *arg)
+static void
+namespace_trace(JSTracer *trc, JSObject *obj)
 {
     JSXMLNamespace *ns;
 
-    ns = (JSXMLNamespace *) JS_GetPrivate(cx, obj);
-    GC_MARK(cx, ns, "private");
-    return 0;
+    ns = (JSXMLNamespace *) JS_GetPrivate(trc->context, obj);
+    JS_CALL_TRACER(trc, ns, JSTRACE_NAMESPACE, "private");
 }
 
 static JSBool
@@ -247,11 +236,11 @@ namespace_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 JS_FRIEND_DATA(JSExtendedClass) js_NamespaceClass = {
   { "Namespace",
     JSCLASS_HAS_PRIVATE | JSCLASS_CONSTRUCT_PROTOTYPE | JSCLASS_IS_EXTENDED |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Namespace),
+    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Namespace),
     JS_PropertyStub,   JS_PropertyStub,   namespace_getProperty, NULL,
     JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    namespace_finalize,
     NULL,              NULL,              NULL,              NULL,
-    NULL,              NULL,              namespace_mark,    NULL },
+    NULL,              NULL,            JS_CLASS_TRACE(namespace_trace), NULL },
     namespace_equality,NULL,              NULL,              NULL,
     NULL,              NULL,              NULL,              NULL
 };
@@ -305,11 +294,14 @@ js_NewXMLNamespace(JSContext *cx, JSString *prefix, JSString *uri,
 }
 
 void
-js_MarkXMLNamespace(JSContext *cx, JSXMLNamespace *ns)
+js_TraceXMLNamespace(JSTracer *trc, JSXMLNamespace *ns)
 {
-    GC_MARK(cx, ns->object, "object");
-    GC_MARK(cx, ns->prefix, "prefix");
-    GC_MARK(cx, ns->uri, "uri");
+    if (ns->object)
+        JS_CALL_OBJECT_TRACER(trc, ns->object, "object");
+    if (ns->prefix)
+        JS_CALL_STRING_TRACER(trc, ns->prefix, "prefix");
+    if (ns->uri)
+        JS_CALL_STRING_TRACER(trc, ns->uri, "uri");
 }
 
 void
@@ -409,14 +401,13 @@ anyname_finalize(JSContext* cx, JSObject* obj)
     qname_finalize(cx, obj);
 }
 
-static uint32
-qname_mark(JSContext *cx, JSObject *obj, void *arg)
+static void
+qname_trace(JSTracer *trc, JSObject *obj)
 {
     JSXMLQName *qn;
 
-    qn = (JSXMLQName *) JS_GetPrivate(cx, obj);
-    GC_MARK(cx, qn, "private");
-    return 0;
+    qn = (JSXMLQName *) JS_GetPrivate(trc->context, obj);
+    JS_CALL_TRACER(trc, qn, JSTRACE_QNAME, "private");
 }
 
 static JSBool
@@ -450,11 +441,11 @@ qname_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 JS_FRIEND_DATA(JSExtendedClass) js_QNameClass = {
   { "QName",
     JSCLASS_HAS_PRIVATE | JSCLASS_CONSTRUCT_PROTOTYPE | JSCLASS_IS_EXTENDED |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_QName),
+    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_QName),
     JS_PropertyStub,   JS_PropertyStub,   qname_getProperty, NULL,
     JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    qname_finalize,
     NULL,              NULL,              NULL,              NULL,
-    NULL,              NULL,              qname_mark,        NULL },
+    NULL,              NULL,              JS_CLASS_TRACE(qname_trace), NULL },
     qname_equality,    NULL,              NULL,              NULL,
     NULL,              NULL,              NULL,              NULL
 };
@@ -468,21 +459,21 @@ JS_FRIEND_DATA(JSExtendedClass) js_QNameClass = {
 JS_FRIEND_DATA(JSClass) js_AttributeNameClass = {
     js_AttributeName_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_CONSTRUCT_PROTOTYPE |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_AttributeName),
+    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_AttributeName),
     JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,
     JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    qname_finalize,
     NULL,              NULL,              NULL,              NULL,
-    NULL,              NULL,              qname_mark,        NULL
+    NULL,              NULL,              JS_CLASS_TRACE(qname_trace), NULL
 };
 
 JS_FRIEND_DATA(JSClass) js_AnyNameClass = {
     js_AnyName_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_CONSTRUCT_PROTOTYPE |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_AnyName),
+    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_AnyName),
     JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,
     JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    anyname_finalize,
     NULL,              NULL,              NULL,              NULL,
-    NULL,              NULL,              qname_mark,        NULL
+    NULL,              NULL,              JS_CLASS_TRACE(qname_trace), NULL
 };
 
 #define QNAME_ATTRS                                                           \
@@ -573,12 +564,16 @@ js_NewXMLQName(JSContext *cx, JSString *uri, JSString *prefix,
 }
 
 void
-js_MarkXMLQName(JSContext *cx, JSXMLQName *qn)
+js_TraceXMLQName(JSTracer *trc, JSXMLQName *qn)
 {
-    GC_MARK(cx, qn->object, "object");
-    GC_MARK(cx, qn->uri, "uri");
-    GC_MARK(cx, qn->prefix, "prefix");
-    GC_MARK(cx, qn->localName, "localName");
+    if (qn->object)
+        JS_CALL_OBJECT_TRACER(trc, qn->object, "object");
+    if (qn->uri)
+        JS_CALL_STRING_TRACER(trc, qn->uri, "uri");
+    if (qn->prefix)
+        JS_CALL_STRING_TRACER(trc, qn->prefix, "prefix");
+    if (qn->localName)
+        JS_CALL_STRING_TRACER(trc, qn->localName, "localName");
 }
 
 void
@@ -1043,15 +1038,24 @@ XMLArrayCursorItem(JSXMLArrayCursor *cursor)
 }
 
 static void
-XMLArrayCursorMark(JSContext *cx, JSXMLArrayCursor *cursor)
+XMLArrayCursorTrace(JSTracer *trc, JSXMLArrayCursor *cursor)
 {
+    void *root;
+#ifdef DEBUG
+    size_t index = 0;
+#endif
+
     while (cursor) {
-        GC_MARK(cx, cursor->root, "cursor->root");
+        root = cursor->root;
+        if (root) {
+            JS_SET_TRACING_INDEX(trc, "cursor_root", index++);
+            js_CallGCThingTracer(trc, root);
+        }
         cursor = cursor->next;
     }
 }
 
-/* NB: called with null cx from the GC, via xml_mark => XMLArrayTrim. */
+/* NB: called with null cx from the GC, via xml_trace => XMLArrayTrim. */
 static JSBool
 XMLArraySetCapacity(JSContext *cx, JSXMLArray *array, uint32 capacity)
 {
@@ -4494,7 +4498,7 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             goto out;
         }
         nameobj = nameqn->object;
-        roots[ID_ROOT] = OBJECT_TO_JSVAL(nameqn);
+        roots[ID_ROOT] = OBJECT_TO_JSVAL(nameobj);
 
         if (xml->xml_class == JSXML_CLASS_LIST) {
             /*
@@ -4987,40 +4991,16 @@ xml_finalize(JSContext *cx, JSObject *obj)
 }
 
 static void
-xml_mark_vector(JSContext *cx, JSXML **vec, uint32 len)
+xml_trace_vector(JSTracer *trc, JSXML **vec, uint32 len)
 {
     uint32 i;
-    JSXML *elt;
+    JSXML *xml;
 
     for (i = 0; i < len; i++) {
-        elt = vec[i];
-        {
-#ifdef GC_MARK_DEBUG
-            char buf[120];
-            size_t n;
-
-            if (elt->xml_class == JSXML_CLASS_LIST) {
-                strcpy(buf, js_XMLList_str);
-            } else if (JSXML_HAS_NAME(elt)) {
-                JSXMLQName *qn = elt->name;
-
-                if (qn->uri) {
-                    n = js_PutEscapedString(buf, sizeof buf, qn->uri, 0);
-                } else {
-                    buf[0] = '*';
-                    n = 1;
-                }
-                if (n + 2 < sizeof buf) {
-                    buf[n++] = ':';
-                    buf[n++] = ':';
-                    js_PutEscapedString(buf + n, sizeof buf - n, qn->localName,
-                                        0);
-                }
-            } else {
-                js_PutEscapedString(buf, sizeof buf, elt->xml_value, 0);
-            }
-#endif
-            GC_MARK(cx, elt, buf);
+        xml = vec[i];
+        if (xml) {
+            JS_SET_TRACING_INDEX(trc, "xml_vector", i);
+            JS_CallTracer(trc, xml, JSTRACE_XML);
         }
     }
 }
@@ -5283,14 +5263,14 @@ xml_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     return JS_TRUE;
 }
 
-static uint32
-xml_mark(JSContext *cx, JSObject *obj, void *arg)
+static void
+xml_trace(JSTracer *trc, JSObject *obj)
 {
     JSXML *xml;
 
-    xml = (JSXML *) JS_GetPrivate(cx, obj);
-    GC_MARK(cx, xml, "private");
-    return js_Mark(cx, obj, NULL);
+    xml = (JSXML *) JS_GetPrivate(trc->context, obj);
+    if (xml)
+        JS_CALL_TRACER(trc, xml, JSTRACE_XML, "private");
 }
 
 static void
@@ -5552,7 +5532,7 @@ JS_FRIEND_DATA(JSXMLObjectOps) js_XMLObjectOps = {
     NULL,                       NULL,
     NULL,                       xml_hasInstance,
     js_SetProtoOrParent,        js_SetProtoOrParent,
-    xml_mark,                   xml_clear,
+    js_TraceObject,             xml_clear,
     NULL,                       NULL },
     xml_getMethod,              xml_setMethod,
     xml_enumerateValues,        xml_equality,
@@ -5567,11 +5547,12 @@ xml_getObjectOps(JSContext *cx, JSClass *clasp)
 
 JS_FRIEND_DATA(JSClass) js_XMLClass = {
     js_XML_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_XML),
+    JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_XML),
     JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,
     JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    xml_finalize,
     xml_getObjectOps,  NULL,              NULL,              NULL,
-    NULL,              NULL,              NULL,              NULL
+    NULL,              NULL,              JS_CLASS_TRACE(xml_trace), NULL
 };
 
 static JSObject *
@@ -6146,16 +6127,15 @@ typedef struct JSTempRootedNSArray {
 } JSTempRootedNSArray;
 
 JS_STATIC_DLL_CALLBACK(void)
-mark_temp_ns_array(JSContext *cx, JSTempValueRooter *tvr)
+trace_temp_ns_array(JSTracer *trc, JSTempValueRooter *tvr)
 {
     JSTempRootedNSArray *tmp = (JSTempRootedNSArray *)tvr;
 
-    namespace_mark_vector(cx,
-                          (JSXMLNamespace **)tmp->array.vector,
-                          tmp->array.length);
-    XMLArrayCursorMark(cx, tmp->array.cursors);
-    if (JSVAL_IS_GCTHING(tmp->value))
-        GC_MARK(cx, JSVAL_TO_GCTHING(tmp->value), "temp_ns_array_value");
+    namespace_trace_vector(trc,
+                           (JSXMLNamespace **)tmp->array.vector,
+                           tmp->array.length);
+    XMLArrayCursorTrace(trc, tmp->array.cursors);
+    JS_CALL_VALUE_TRACER(trc, tmp->value, "temp_ns_array_value");
 }
 
 static void
@@ -6163,13 +6143,13 @@ InitTempNSArray(JSContext *cx, JSTempRootedNSArray *tmp)
 {
     XMLArrayInit(cx, &tmp->array, 0);
     tmp->value = JSVAL_NULL;
-    JS_PUSH_TEMP_ROOT_MARKER(cx, mark_temp_ns_array, &tmp->tvr);
+    JS_PUSH_TEMP_ROOT_TRACE(cx, trace_temp_ns_array, &tmp->tvr);
 }
 
 static void
 FinishTempNSArray(JSContext *cx, JSTempRootedNSArray *tmp)
 {
-    JS_ASSERT(tmp->tvr.u.marker == mark_temp_ns_array);
+    JS_ASSERT(tmp->tvr.u.trace == trace_temp_ns_array);
     JS_POP_TEMP_ROOT(cx, &tmp->tvr);
     XMLArrayFinish(cx, &tmp->array);
 }
@@ -6495,7 +6475,7 @@ out:
 static const char js_attribute_str[] = "attribute";
 static const char js_text_str[]      = "text";
 
-/* Exported to jsgc.c #ifdef GC_MARK_DEBUG. */
+/* Exported to jsgc.c #ifdef DEBUG. */
 const char *js_xml_class_str[] = {
     "list",
     "element",
@@ -7452,40 +7432,49 @@ js_NewXML(JSContext *cx, JSXMLClass xml_class)
 }
 
 void
-js_MarkXML(JSContext *cx, JSXML *xml)
+js_TraceXML(JSTracer *trc, JSXML *xml)
 {
-    GC_MARK(cx, xml->object, "object");
-    GC_MARK(cx, xml->name, "name");
-    GC_MARK(cx, xml->parent, "xml_parent");
+    if (xml->object)
+        JS_CALL_OBJECT_TRACER(trc, xml->object, "object");
+    if (xml->name)
+        JS_CALL_TRACER(trc, xml->name, JSTRACE_QNAME, "name");
+    if (xml->parent)
+        JS_CALL_TRACER(trc, xml->parent, JSTRACE_XML, "xml_parent");
 
     if (JSXML_HAS_VALUE(xml)) {
-        GC_MARK(cx, xml->xml_value, "value");
+        if (xml->xml_value)
+            JS_CALL_STRING_TRACER(trc, xml->xml_value, "value");
         return;
     }
 
-    xml_mark_vector(cx,
-                    (JSXML **) xml->xml_kids.vector,
-                    xml->xml_kids.length);
-    XMLArrayCursorMark(cx, xml->xml_kids.cursors);
-    XMLArrayTrim(&xml->xml_kids);
+    xml_trace_vector(trc,
+                        (JSXML **) xml->xml_kids.vector,
+                        xml->xml_kids.length);
+    XMLArrayCursorTrace(trc, xml->xml_kids.cursors);
+    if (IS_GC_MARKING_TRACER(trc))
+        XMLArrayTrim(&xml->xml_kids);
 
     if (xml->xml_class == JSXML_CLASS_LIST) {
         if (xml->xml_target)
-            GC_MARK(cx, xml->xml_target, "target");
-        if (xml->xml_targetprop)
-            GC_MARK(cx, xml->xml_targetprop, "targetprop");
+            JS_CALL_TRACER(trc, xml->xml_target, JSTRACE_XML, "target");
+        if (xml->xml_targetprop) {
+            JS_CALL_TRACER(trc, xml->xml_targetprop, JSTRACE_QNAME,
+                           "targetprop");
+        }
     } else {
-        namespace_mark_vector(cx,
-                              (JSXMLNamespace **) xml->xml_namespaces.vector,
-                              xml->xml_namespaces.length);
-        XMLArrayCursorMark(cx, xml->xml_namespaces.cursors);
-        XMLArrayTrim(&xml->xml_namespaces);
+        namespace_trace_vector(trc,
+                               (JSXMLNamespace **)xml->xml_namespaces.vector,
+                               xml->xml_namespaces.length);
+        XMLArrayCursorTrace(trc, xml->xml_namespaces.cursors);
+        if (IS_GC_MARKING_TRACER(trc))
+            XMLArrayTrim(&xml->xml_namespaces);
 
-        xml_mark_vector(cx,
-                        (JSXML **) xml->xml_attrs.vector,
-                        xml->xml_attrs.length);
-        XMLArrayCursorMark(cx, xml->xml_attrs.cursors);
-        XMLArrayTrim(&xml->xml_attrs);
+        xml_trace_vector(trc,
+                            (JSXML **) xml->xml_attrs.vector,
+                            xml->xml_attrs.length);
+        XMLArrayCursorTrace(trc, xml->xml_attrs.cursors);
+        if (IS_GC_MARKING_TRACER(trc))
+            XMLArrayTrim(&xml->xml_attrs);
     }
 }
 

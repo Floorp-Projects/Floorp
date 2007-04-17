@@ -1494,65 +1494,76 @@ js_ClearScope(JSContext *cx, JSScope *scope)
 }
 
 void
-js_MarkId(JSContext *cx, jsid id)
+js_TraceId(JSTracer *trc, jsid id)
 {
-    if (JSID_IS_ATOM(id))
-        GC_MARK_ATOM(cx, JSID_TO_ATOM(id));
-    else if (JSID_IS_OBJECT(id))
-        GC_MARK(cx, JSID_TO_OBJECT(id), "id");
-    else
-        JS_ASSERT(JSID_IS_INT(id));
+    JSObject *obj;
+
+    if (JSID_IS_ATOM(id)) {
+        JS_CALL_TRACER(trc, JSID_TO_ATOM(id), JSTRACE_ATOM, "id");
+    } else if (!JSID_IS_INT(id)) {
+        JS_ASSERT(JSID_IS_OBJECT(id));
+        obj = JSID_TO_OBJECT(id);
+        if (obj)
+            JS_CALL_OBJECT_TRACER(trc, obj, "id");
+    }
 }
 
-#if defined GC_MARK_DEBUG || defined DUMP_SCOPE_STATS
+#if defined DEBUG || defined DUMP_SCOPE_STATS
 # include "jsprf.h"
 #endif
 
+#ifdef DEBUG
+static void
+PrintPropertyGetterOrSetter(JSTracer *trc, char *buf, size_t bufsize)
+{
+    JSScopeProperty *sprop;
+    size_t n;
+    const char *name;
+
+    JS_ASSERT(trc->debugPrinter == PrintPropertyGetterOrSetter);
+    sprop = (JSScopeProperty *)trc->debugPrintArg;
+    name = trc->debugPrintIndex ? js_setter_str : js_getter_str;
+    n = strlen(name);
+
+    if (JSID_IS_ATOM(sprop->id)) {
+        JSAtom *atom = JSID_TO_ATOM(sprop->id);
+        if (atom && ATOM_IS_STRING(atom)) {
+            n = js_PutEscapedString(buf, bufsize - 1,
+                                    ATOM_TO_STRING(atom), 0);
+            buf[n++] = ' ';
+            strncpy(buf + n, name, bufsize - n);
+            buf[bufsize - 1] = '\0';
+        } else {
+            JS_snprintf(buf, bufsize, "uknown %s", name);
+        }
+    } else if (JSID_IS_INT(sprop->id)) {
+        JS_snprintf(buf, bufsize, "%d %s", JSID_TO_INT(sprop->id), name);
+    } else {
+        JS_snprintf(buf, bufsize, "<object> %s", name);
+    }
+}
+#endif
+
+
 void
-js_MarkScopeProperty(JSContext *cx, JSScopeProperty *sprop)
+js_TraceScopeProperty(JSTracer *trc, JSScopeProperty *sprop)
 {
     sprop->flags |= SPROP_MARK;
-    MARK_ID(cx, sprop->id);
+    TRACE_ID(trc, sprop->id);
 
 #if JS_HAS_GETTER_SETTER
     if (sprop->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
-#ifdef GC_MARK_DEBUG
-        char buf[64];
-        size_t n;
-
-        if (JSID_IS_ATOM(sprop->id)) {
-            JSAtom *atom = JSID_TO_ATOM(sprop->id);
-
-            if (atom && ATOM_IS_STRING(atom)) {
-                n = js_PutEscapedString(buf, sizeof buf,
-                                        ATOM_TO_STRING(atom), 0);
-            } else {
-                static const char chars[] = "unknown";
-                JS_STATIC_ASSERT(sizeof(chars) <= sizeof buf);
-                memcpy(buf, chars, sizeof chars - 1);
-                n = sizeof chars - 1;
-            }
-        } else if (JSID_IS_INT(sprop->id)) {
-            n = JS_snprintf(buf, sizeof buf, "%d", JSID_TO_INT(sprop->id));
-        } else {
-            static const char chars[] = "<object>";
-            JS_STATIC_ASSERT(sizeof(chars) <= sizeof buf);
-            memcpy(buf, chars, sizeof chars - 1);
-            n = sizeof chars - 1;
-        }
-#endif
-
         if (sprop->attrs & JSPROP_GETTER) {
-#ifdef GC_MARK_DEBUG
-            JS_snprintf(buf + n, sizeof buf - n, " %s", js_getter_str);
-#endif
-            GC_MARK(cx, JSVAL_TO_GCTHING((jsval) sprop->getter), buf);
+            JS_ASSERT(JSVAL_IS_OBJECT((jsval) sprop->getter));
+            JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, sprop, 0);
+            JS_CallTracer(trc, JSVAL_TO_OBJECT((jsval) sprop->getter),
+                          JSTRACE_OBJECT);
         }
         if (sprop->attrs & JSPROP_SETTER) {
-#ifdef GC_MARK_DEBUG
-            JS_snprintf(buf + n, sizeof buf - n, " %s", js_setter_str);
-#endif
-            GC_MARK(cx, JSVAL_TO_GCTHING((jsval) sprop->setter), buf);
+            JS_ASSERT(JSVAL_IS_OBJECT((jsval) sprop->setter));
+            JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, sprop, 1);
+            JS_CallTracer(trc, JSVAL_TO_OBJECT((jsval) sprop->setter),
+                          JSTRACE_OBJECT);
         }
     }
 #endif /* JS_HAS_GETTER_SETTER */

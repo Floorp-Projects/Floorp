@@ -926,15 +926,14 @@ script_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
 }
 
-static uint32
-script_mark(JSContext *cx, JSObject *obj, void *arg)
+static void
+script_trace(JSTracer *trc, JSObject *obj)
 {
     JSScript *script;
 
-    script = (JSScript *) JS_GetPrivate(cx, obj);
+    script = (JSScript *) JS_GetPrivate(trc->context, obj);
     if (script)
-        js_MarkScript(cx, script);
-    return 0;
+        js_TraceScript(trc, script);
 }
 
 #if !JS_HAS_SCRIPT_OBJECT
@@ -943,12 +942,12 @@ script_mark(JSContext *cx, JSObject *obj, void *arg)
 
 JS_FRIEND_DATA(JSClass) js_ScriptClass = {
     js_Script_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Script) |
-    JSCLASS_HAS_RESERVED_SLOTS(1),
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) |
+    JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Script),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   script_finalize,
     NULL,             NULL,             script_call,      NULL,/*XXXbe xdr*/
-    NULL,             NULL,             script_mark,      0
+    NULL,             NULL,             JS_CLASS_TRACE(script_trace), NULL
 };
 
 #if JS_HAS_SCRIPT_OBJECT
@@ -1472,7 +1471,7 @@ js_DestroyScript(JSContext *cx, JSScript *script)
 }
 
 void
-js_MarkScript(JSContext *cx, JSScript *script)
+js_TraceScript(JSTracer *trc, JSScript *script)
 {
     JSAtomMap *map;
     uintN i, length;
@@ -1482,9 +1481,9 @@ js_MarkScript(JSContext *cx, JSScript *script)
     length = map->length;
     vector = map->vector;
     for (i = 0; i < length; i++)
-        GC_MARK_ATOM(cx, vector[i]);
+        JS_CALL_TRACER(trc, vector[i], JSTRACE_ATOM, "atom_table");
 
-    if (script->filename)
+    if (IS_GC_MARKING_TRACER(trc) && script->filename)
         js_MarkScriptFilename(script->filename);
 }
 

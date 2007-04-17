@@ -424,42 +424,53 @@ js_FinishAtomState(JSAtomState *state)
     js_FreeAtomState(NULL, state);
 }
 
-typedef struct MarkArgs {
-    JSBool          keepAtoms;
-    JSGCThingMarker mark;
-    void            *data;
-} MarkArgs;
-
-JS_STATIC_DLL_CALLBACK(intN)
-js_atom_marker(JSHashEntry *he, intN i, void *arg)
+void
+js_TraceAtom(JSTracer *trc, JSAtom *atom)
 {
-    JSAtom *atom;
-    MarkArgs *args;
     jsval key;
 
+    key = ATOM_KEY(atom);
+    JS_CALL_VALUE_TRACER(trc, key, "key");
+    if (atom->flags & ATOM_HIDDEN)
+        JS_CALL_TRACER(trc, atom->entry.value, JSTRACE_ATOM, "hidden");
+}
+
+typedef struct TraceArgs {
+    JSBool      allAtoms;
+    JSTracer    *trc;
+} TraceArgs;
+
+JS_STATIC_DLL_CALLBACK(intN)
+js_locked_atom_tracer(JSHashEntry *he, intN i, void *arg)
+{
+    JSAtom *atom;
+    TraceArgs *args;
+
     atom = (JSAtom *)he;
-    args = (MarkArgs *)arg;
-    if ((atom->flags & (ATOM_PINNED | ATOM_INTERNED)) || args->keepAtoms) {
-        atom->flags |= ATOM_MARK;
-        key = ATOM_KEY(atom);
-        if (JSVAL_IS_GCTHING(key))
-            args->mark(JSVAL_TO_GCTHING(key), args->data);
+    args = (TraceArgs *)arg;
+    if ((atom->flags & (ATOM_PINNED | ATOM_INTERNED)) || args->allAtoms) {
+        JS_CALL_TRACER(args->trc, atom, JSTRACE_ATOM,
+                       (atom->flags & ATOM_PINNED)
+                       ? "pinned_atom"
+                       : (atom->flags & ATOM_INTERNED)
+                       ? "interned_atom"
+                       : "locked_atom");
     }
     return HT_ENUMERATE_NEXT;
 }
 
 void
-js_MarkAtomState(JSAtomState *state, JSBool keepAtoms, JSGCThingMarker mark,
-                 void *data)
+js_TraceLockedAtoms(JSTracer *trc, JSBool allAtoms)
 {
-    MarkArgs args;
+    JSAtomState *state;
+    TraceArgs args;
 
+    state = &trc->context->runtime->atomState;
     if (!state->table)
         return;
-    args.keepAtoms = keepAtoms;
-    args.mark = mark;
-    args.data = data;
-    JS_HashTableEnumerateEntries(state->table, js_atom_marker, &args);
+    args.allAtoms = allAtoms;
+    args.trc = trc;
+    JS_HashTableEnumerateEntries(state->table, js_locked_atom_tracer, &args);
 }
 
 JS_STATIC_DLL_CALLBACK(intN)
