@@ -21,6 +21,50 @@
 
 /** Test for parsing, storage, and serialization of CSS values **/
 
+var gShorthandsWithoutCondensingSerialize = {
+  "-moz-border-radius": true,
+  "-moz-outline-radius": true,
+  "background": true, // really there, but not complete
+  "cue": true,
+  "font": true,
+  "list-style": true,
+  "outline": true,
+  "pause": true,
+};
+
+var gNoComputedValue = {
+  "background-position": true,
+  "content": true,
+};
+
+function xfail_ser_val(property, value)
+{
+  if (property in gShorthandsWithoutCondensingSerialize)
+    return true;
+
+  return false;
+}
+
+function xfail_idserparse_compute(property, value)
+{
+  return false;
+}
+
+function xfail_idsersplitparse_compute(property, value)
+{
+  return false;
+}
+
+function xfail_compute(property, value)
+{
+  return false;
+}
+
+function xfail_split_compute(property, value)
+{
+  return false;
+}
+
 var gElement = document.getElementById("testnode");
 var gDeclaration = gElement.style;
 var gComputedStyle = window.getComputedStyle(gElement, "");
@@ -34,7 +78,8 @@ function test_property(property)
   function test_value(value) {
     gDeclaration.setProperty(property, value, "");
 
-    var idx;
+    var idx, func;
+
     var step1val = gDeclaration.getPropertyValue(property);
     var step1vals = [];
     var step1ser = gDeclaration.cssText;
@@ -49,16 +94,20 @@ function test_property(property)
       for (idx in info.subproperties)
         step1comps.push(gComputedStyle.getPropertyValue(info.subproperties[idx]));
 
-    // We don't care particularly about the whitespace or the placement of
-    // semicolons, but for simplicity we'll test the current behavior.
-    is(step1ser, property + ": " + step1val + ";",
-       "serialization should match property value");
-
     isnot(step1val, "", "setting '" + value + "' on '" + property);
     if ("subproperties" in info)
       for (idx in info.subproperties)
         isnot(gDeclaration.getPropertyValue(info.subproperties[idx]), "",
               "setting '" + value + "' on '" + property);
+
+    // We don't care particularly about the whitespace or the placement of
+    // semicolons, but for simplicity we'll test the current behavior.
+    func = xfail_ser_val(property, value) ? todo_is : is;
+    var expected_serialization = "";
+    if (step1val != "")
+      expected_serialization = property + ": " + step1val + ";";
+    func(step1ser, expected_serialization,
+         "serialization should match property value");
 
     gDeclaration.removeProperty(property);
     gDeclaration.setProperty(property, step1val, "");
@@ -67,41 +116,47 @@ function test_property(property)
        "parse+serialize should be idempotent for '" +
        property + ": " + value + "'");
     if (test_computed && info.type != CSS_TYPE_TRUE_SHORTHAND) {
-      is(gComputedStyle.getPropertyValue(property), step1comp,
-         "parse+compute+serialize(computed) should be idempotent for '" +
-         property + ": " + value + "'");
+      func = xfail_idserparse_compute(property, value) ? todo_is : is;
+      func(gComputedStyle.getPropertyValue(property), step1comp,
+           "serialize+parse should be idempotent for '" +
+           property + ": " + value + "'");
     }
 
     if ("subproperties" in info) {
       gDeclaration.removeProperty(property);
       for (idx in info.subproperties) {
-        gDeclaration.setProperty(info.subproperties[idx], step1vals[idx], "");
+        var subprop = info.subproperties[idx];
+        gDeclaration.setProperty(subprop, step1vals[idx], "");
+        if (test_computed) {
+          func = xfail_idsersplitparse_compute(property, value) ? todo_is : is;
+          func(gComputedStyle.getPropertyValue(subprop), step1comps[idx],
+               "serialize(" + subprop + ")+parse should be idempotent for '" +
+               property + ": " + value + "'");
+        }
       }
       is(gDeclaration.getPropertyValue(property), step1val,
          "parse+split+serialize should be idempotent for '" +
          property + ": " + value + "'");
-      if (test_computed) {
-        is(gComputedStyle.getPropertyValue(property), step1comp,
-           "parse+compute+split+serialize(computed) should be idempotent for '" +
-           property + ": " + value + "'");
-      }
     }
 
     if (test_computed && info.type != CSS_TYPE_TRUE_SHORTHAND) {
       gDeclaration.removeProperty(property);
       gDeclaration.setProperty(property, step1comp, "");
-      is(gComputedStyle.getPropertyValue(property), step1comp,
-         "parse+compute+serialize should be idempotent for '" +
-         property + ": " + value + "'");
+      func = xfail_compute(property, value) ? todo_is : is;
+      func(gComputedStyle.getPropertyValue(property), step1comp,
+           "parse+compute+serialize should be idempotent for '" +
+           property + ": " + value + "'");
     }
     if (test_computed && "subproperties" in info) {
       gDeclaration.removeProperty(property);
       for (idx in info.subproperties) {
-        gDeclaration.setProperty(info.subproperties[idx], step1comps[idx], "");
+        var subprop = info.subproperties[idx];
+        gDeclaration.setProperty(subprop, step1comps[idx], "");
+        func = xfail_split_compute(property, value) ? todo_is : is;
+        func(gComputedStyle.getPropertyValue(subprop), step1comps[idx],
+             "parse+compute+serialize(" + subprop + ") should be idempotent for '" +
+             property + ": " + value + "'");
       }
-      is(gComputedStyle.getPropertyValue(property), step1comp,
-         "parse+compute+split+serialize should be idempotent for '" +
-         property + ": " + value + "'");
     }
 
     gDeclaration.removeProperty(property);
@@ -114,8 +169,34 @@ function test_property(property)
     test_value(info.other_values[idx]);
 }
 
+// To avoid triggering the slow script dialog, we have to test one
+// property at a time.
+SimpleTest.waitForExplicitFinish();
+var props = [];
 for (var prop in gCSSProperties)
-  test_property(prop);
+  props.push(prop);
+props = props.reverse();
+function do_one(l) {
+  if (l.length == 0) {
+    // SimpleTest.finish() is really slow, so we have to disable the
+    // slow script dialog for this part
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"].
+                        getService(Components.interfaces.nsIPrefService);
+    var domBranch = prefService.getBranch("dom.");
+    var oldVal = domBranch.getIntPref("max_script_run_time");
+    domBranch.setIntPref("max_script_run_time", 0);
+
+    SimpleTest.finish();
+
+    domBranch.setIntPref("max_script_run_time", oldVal);
+
+    return;
+  }
+  test_property(l.pop());
+  setTimeout(do_one, 0, l);
+}
+setTimeout(do_one, 0, props);
 
 </script>
 </pre>
