@@ -85,6 +85,11 @@ for (var prop in gCSSProperties) {
     }
     ok(good, "property '" + prop + "' has a good subproperty list");
   }
+
+  ok("initial_values" in info && info.initial_values.length >= 1,
+     "must have initial values for property '" + prop + "'");
+  ok("other_values" in info && info.other_values.length >= 1,
+     "must have non-initial values for property '" + prop + "'");
 }
 
 </script>

@@ -1078,63 +1078,68 @@ var gCSSProperties = {
 		inherited: false,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "none" ],
+		other_values: [ "crop", "cross", "crop cross", "cross crop" ],
+		invalid_values: [ "none none", "crop none", "none crop", "cross none", "none cross" ]
 	},
 	"max-height": {
 		domProp: "maxHeight",
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "none" ],
+		other_values: [ "30px", "50%", "0" ],
+		invalid_values: [ "auto" ]
 	},
 	"max-width": {
 		domProp: "maxWidth",
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "none" ],
+		other_values: [ "30px", "50%", "0" ],
+		invalid_values: [ "auto" ]
 	},
 	"min-height": {
 		domProp: "minHeight",
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "0" ],
+		other_values: [ "30px", "50%" ],
+		invalid_values: [ "auto", "none" ]
 	},
 	"min-width": {
 		domProp: "minWidth",
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "0" ],
+		other_values: [ "30px", "50%" ],
+		invalid_values: [ "auto", "none" ]
 	},
 	"opacity": {
 		domProp: "opacity",
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "1", "17", "397.376" ],
+		other_values: [ "0", "0.4", "0.0000", "-3" ],
+		invalid_values: [ "0px", "1px" ]
 	},
 	"orphans": {
 		domProp: "orphans",
 		inherited: true,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		// XXX requires display:block
+		initial_values: [ "2" ],
+		other_values: [ "1", "7" ],
+		invalid_values: [
+			// "0", // not clear whether it's valid or not.
+			// "-1", // not clear whether it's valid or not.
+			"0px", "3px"
+		]
 	},
 	"outline": {
 		domProp: "outline",
@@ -1142,35 +1147,41 @@ var gCSSProperties = {
 		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "outline-color", "outline-style", "outline-width" ],
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [
+			"none", "medium",
+			// XXX Should be invert, but currently currentcolor.
+			//"invert", "none medium invert"
+			"currentColor", "none medium currentcolor"
+		],
+		other_values: [ "solid", "medium solid", "green solid", "10px solid", "thick solid" ],
+		invalid_values: [ "5%" ]
 	},
 	"outline-color": {
 		domProp: "outlineColor",
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "currentColor" ], // XXX should be invert
+		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
+		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
 	},
 	"outline-offset": {
 		domProp: "outlineOffset",
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "0" ],
+		other_values: [ "-3px", "1em" ],
+		invalid_values: [ "5%" ]
 	},
 	"outline-style": {
 		domProp: "outlineStyle",
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		// XXX Should 'hidden' be the same as initial?
+		initial_values: [ "none" ],
+		other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
 		invalid_values: []
 	},
 	"outline-width": {
@@ -1178,18 +1189,20 @@ var gCSSProperties = {
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		/* XXX a value differing from initial requires border-style to be set */
+		initial_values: [ "medium", "3px" ],
+		other_values: [ "thin", "thick", "1px", "2em" ],
+		invalid_values: [ "5%" ]
 	},
 	"overflow": {
 		domProp: "overflow",
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		// XXX requires display:block
 		subproperties: [ "overflow-x", "overflow-y" ],
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "visible" ],
+		other_values: [ "auto", "scroll", "hidden" ],
 		invalid_values: []
 	},
 	"overflow-x": {
@@ -1197,8 +1210,9 @@ var gCSSProperties = {
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		// XXX requires display:block
+		initial_values: [ "visible" ],
+		other_values: [ "auto", "scroll", "hidden" ],
 		invalid_values: []
 	},
 	"overflow-y": {
@@ -1206,8 +1220,9 @@ var gCSSProperties = {
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		// XXX requires display:block
+		initial_values: [ "visible" ],
+		other_values: [ "auto", "scroll", "hidden" ],
 		invalid_values: []
 	},
 	"padding": {
@@ -1216,8 +1231,8 @@ var gCSSProperties = {
 		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "padding-top", "padding-right", "padding-bottom", "padding-left" ],
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "0", "0px 0 0em", "0% 0px 0em 0pt" ],
+		other_values: [ "3px 0", "2em 4px 2pt", "1em 2em 3px 4px" ],
 		invalid_values: []
 	},
 	"padding-bottom": {
@@ -1225,9 +1240,9 @@ var gCSSProperties = {
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "0", "0px", "0%" ],
+		other_values: [ "1px", "2em", "5%" ],
+		invalid_values: [ ]
 	},
 	"padding-left": {
 		domProp: "paddingLeft",
@@ -1235,9 +1250,9 @@ var gCSSProperties = {
 		backend_only: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		/* no subproperties */
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "0", "0px", "0%" ],
+		other_values: [ "1px", "2em", "5%" ],
+		invalid_values: [ ]
 	},
 	"padding-right": {
 		domProp: "paddingRight",
@@ -1245,35 +1260,35 @@ var gCSSProperties = {
 		backend_only: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		/* no subproperties */
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "0", "0px", "0%" ],
+		other_values: [ "1px", "2em", "5%" ],
+		invalid_values: [ ]
 	},
 	"padding-top": {
 		domProp: "paddingTop",
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "0", "0px", "0%" ],
+		other_values: [ "1px", "2em", "5%" ],
+		invalid_values: [ ]
 	},
 	"page": {
 		domProp: "page",
 		inherited: true,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "auto" ],
+		other_values: [ "foo", "bar" ],
+		invalid_values: [ "3px" ]
 	},
 	"page-break-after": {
 		domProp: "pageBreakAfter",
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "auto" ],
+		other_values: [ "always", "avoid", "left", "right" ],
 		invalid_values: []
 	},
 	"page-break-before": {
@@ -1281,8 +1296,8 @@ var gCSSProperties = {
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "auto" ],
+		other_values: [ "always", "avoid", "left", "right" ],
 		invalid_values: []
 	},
 	"page-break-inside": {
@@ -1290,8 +1305,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "auto" ],
+		other_values: [ "avoid" ],
 		invalid_values: []
 	},
 	"pause": {
@@ -1300,35 +1315,35 @@ var gCSSProperties = {
 		backend_only: true,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "pause-before", "pause-after" ],
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "0", "0s", "0ms", "0 0", "0s 0ms", "0ms 0" ],
+		other_values: [ "1s", "200ms", "-2s", "50%", "-10%", "10% 200ms", "-3s -5%" ],
+		invalid_values: [ "0px" ]
 	},
 	"pause-after": {
 		domProp: "pauseAfter",
 		inherited: false,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "0", "0s", "0ms" ],
+		other_values: [ "1s", "200ms", "-2s", "50%", "-10%" ],
+		invalid_values: [ "0px" ]
 	},
 	"pause-before": {
 		domProp: "pauseBefore",
 		inherited: false,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "0", "0s", "0ms" ],
+		other_values: [ "1s", "200ms", "-2s", "50%", "-10%" ],
+		invalid_values: [ "0px" ]
 	},
 	"pitch": {
 		domProp: "pitch",
 		inherited: true,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "medium" ],
+		other_values: [ "x-low", "low", "high", "x-high" ],
 		invalid_values: []
 	},
 	"pitch-range": {
@@ -1336,17 +1351,17 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "50", "50.0" ],
+		other_values: [ "0", "100.0", "99.7", "47", "3.2" ],
+		invalid_values: [" -0.01", "100.2", "108", "-3" ]
 	},
 	"position": {
 		domProp: "position",
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "static" ],
+		other_values: [ "relative", "absolute", "fixed" ],
 		invalid_values: []
 	},
 	"quotes": {
@@ -1354,8 +1369,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ '"\\201C" "\\201D" "\\2018" "\\2019"' ],
+		other_values: [ "none", "'\"' '\"'" ],
 		invalid_values: []
 	},
 	"richness": {
@@ -1363,9 +1378,9 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "50", "50.0" ],
+		other_values: [ "0", "100.0", "99.7", "47", "3.2" ],
+		invalid_values: [" -0.01", "100.2", "108", "-3" ]
 	},
 	"right": {
 		domProp: "right",
@@ -1384,17 +1399,20 @@ var gCSSProperties = {
 		inherited: false,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "auto" ],
+		other_values: [ "landscape", "portrait", "8.5in 11in", "14in 11in", "297mm 210mm", "21cm 29.7cm", "100mm" ],
+		invalid_values: [
+			// XXX spec unclear on 0s and negatives
+			"100mm 100mm 100mm"
+		]
 	},
 	"speak": {
 		domProp: "speak",
 		inherited: true,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "normal" ],
+		other_values: [ "none", "spell-out" ],
 		invalid_values: []
 	},
 	"speak-header": {
@@ -1402,8 +1420,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "once" ],
+		other_values: [ "always" ],
 		invalid_values: []
 	},
 	"speak-numeral": {
@@ -1411,8 +1429,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "continuous" ],
+		other_values: [ "digits" ],
 		invalid_values: []
 	},
 	"speak-punctuation": {
@@ -1420,8 +1438,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "none" ],
+		other_values: [ "code" ],
 		invalid_values: []
 	},
 	"speech-rate": {
@@ -1429,26 +1447,28 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "medium" ],
+		other_values: [ "x-slow", "slow", "fast", "x-fast", "faster", "slower", "80", "500", "73.2" ],
+		invalid_values: [
+			// "0", "-80" // unclear
+		]
 	},
 	"stress": {
 		domProp: "stress",
 		inherited: true,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "50", "50.0" ],
+		other_values: [ "0", "100.0", "99.7", "47", "3.2" ],
+		invalid_values: [" -0.01", "100.2", "108", "-3" ]
 	},
 	"table-layout": {
 		domProp: "tableLayout",
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "auto" ],
+		other_values: [ "fixed" ],
 		invalid_values: []
 	},
 	"text-align": {
@@ -1456,8 +1476,9 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		// don't know whether left and right are same as start
+		initial_values: [ "start" ],
+		other_values: [ "center", "justify" ],
 		invalid_values: []
 	},
 	"text-decoration": {
@@ -1465,17 +1486,17 @@ var gCSSProperties = {
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "none" ],
+		other_values: [ "underline", "overline", "line-through", "blink line-through underline", "underline overline line-through blink" ],
+		invalid_values: [ "underline none", "none underline", "line-through blink line-through" ]
 	},
 	"text-indent": {
 		domProp: "textIndent",
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "0" ],
+		other_values: [ "2em", "5%", "-10px" ],
 		invalid_values: []
 	},
 	"text-shadow": {
@@ -1483,17 +1504,17 @@ var gCSSProperties = {
 		inherited: false,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "none" ],
+		other_values: [ "2px 2px", "2px 2px 1px", "2px 2px green", "2px 2px 1px green", "green 2px 2px", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px" ],
+		invalid_values: [ "3% 3%", "2px 2px 2px 2px", "2px 2px, none" ]
 	},
 	"text-transform": {
 		domProp: "textTransform",
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "none" ],
+		other_values: [ "capitalize", "uppercase", "lowercase" ],
 		invalid_values: []
 	},
 	"top": {
@@ -1512,17 +1533,17 @@ var gCSSProperties = {
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "normal" ],
+		other_values: [ "embed", "bidi-override" ],
+		invalid_values: [ "auto", "none" ]
 	},
 	"vertical-align": {
 		domProp: "verticalAlign",
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "baseline" ],
+		other_values: [ "sub", "super", "top", "text-top", "middle", "bottom", "text-bottom", "15%", "3px", "0.2em", "-5px", "-3%" ],
 		invalid_values: []
 	},
 	"visibility": {
@@ -1530,8 +1551,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "visible" ],
+		other_values: [ "hidden", "collapse" ],
 		invalid_values: []
 	},
 	"voice-family": {
@@ -1539,8 +1560,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "male" ], /* arbitrary guess */
+		other_values: [ "female", "child", "Bob, male", "Jane, Juliet, female" ],
 		invalid_values: []
 	},
 	"volume": {
@@ -1548,17 +1569,17 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "50", "50.0", "medium" ],
+		other_values: [ "0", "100.0", "99.7", "47", "3.2", "silent", "x-soft", "soft", "loud", "x-loud" ],
+		invalid_values: [" -0.01", "100.2", "108", "-3" ]
 	},
 	"white-space": {
 		domProp: "whiteSpace",
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "normal" ],
+		other_values: [ "pre", "nowrap" ],
 		invalid_values: []
 	},
 	"widows": {
@@ -1566,17 +1587,23 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		// XXX requires display:block
+		initial_values: [ "2" ],
+		other_values: [ "1", "7" ],
+		invalid_values: [
+			// "0", // not clear whether it's valid or not.
+			// "-1", // not clear whether it's valid or not.
+			"0px", "3px"
+		]
 	},
 	"width": {
 		domProp: "width",
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ " auto" ],
+		/* XXX these have prerequisites */
+		other_values: [ "15px", "3em", "15%" ],
 		invalid_values: []
 	},
 	"word-spacing": {
@@ -1584,8 +1611,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "normal", "0", "0px", "-0em" ],
+		other_values: [ "1em", "2px", "-3px" ],
 		invalid_values: []
 	},
 	"z-index": {
@@ -1593,9 +1620,10 @@ var gCSSProperties = {
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		/* XXX requires position */
+		initial_values: [ "auto" ],
+		other_values: [ "0", "3", "-7000", "12000" ],
+		invalid_values: [ "3.0", "17.5" ]
 	}
 	,
 	"clip-path": {
@@ -1603,8 +1631,8 @@ var gCSSProperties = {
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "none" ],
+		other_values: [ "url(#mypath)", "url('404.svg#mypath')" ],
 		invalid_values: []
 	},
 	"clip-rule": {
@@ -1612,8 +1640,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "nonzero" ],
+		other_values: [ "evenodd" ],
 		invalid_values: []
 	},
 	"color-interpolation": {
@@ -1621,8 +1649,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "sRGB" ],
+		other_values: [ "auto", "linearRGB" ],
 		invalid_values: []
 	},
 	"color-interpolation-filters": {
@@ -1630,8 +1658,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "linearRGB" ],
+		other_values: [ "sRGB", "auto" ],
 		invalid_values: []
 	},
 	"dominant-baseline": {
@@ -1639,8 +1667,8 @@ var gCSSProperties = {
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "auto" ],
+		other_values: [ "use-script", "no-change", "reset-size", "ideographic", "alphabetic", "hanging", "mathematical", "central", "middle", "text-after-edge", "text-before-edge" ],
 		invalid_values: []
 	},
 	"fill": {
@@ -1648,8 +1676,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)" ],
+		other_values: [ "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green', "none" ],
 		invalid_values: []
 	},
 	"fill-opacity": {
@@ -1657,8 +1685,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "1", "2.8", "1.000" ],
+		other_values: [ "0", "0.3", "-7.3" ],
 		invalid_values: []
 	},
 	"fill-rule": {
@@ -1666,8 +1694,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "nonzero" ],
+		other_values: [ "evenodd" ],
 		invalid_values: []
 	},
 	"filter": {
@@ -1675,26 +1703,26 @@ var gCSSProperties = {
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "none" ],
+		other_values: [ "url(#myfilt)" ],
+		invalid_values: [ "url(#myfilt) none" ]
 	},
 	"flood-color": {
 		domProp: null,
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)" ],
+		other_values: [ "green", "#fc3" ],
+		invalid_values: [ "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ]
 	},
 	"flood-opacity": {
 		domProp: null,
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "1", "2.8", "1.000" ],
+		other_values: [ "0", "0.3", "-7.3" ],
 		invalid_values: []
 	},
 	"marker": {
@@ -1703,17 +1731,17 @@ var gCSSProperties = {
 		backend_only: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "marker-start", "marker-mid", "marker-end" ],
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "none" ],
+		other_values: [ "url(#mysym)" ],
+		invalid_values: [ "none none", "url(#mysym) url(#mysym)", "none url(#mysym)", "url(#mysym) none" ]
 	},
 	"marker-end": {
 		domProp: null,
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "none" ],
+		other_values: [ "url(#mysym)" ],
 		invalid_values: []
 	},
 	"marker-mid": {
@@ -1721,8 +1749,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "none" ],
+		other_values: [ "url(#mysym)" ],
 		invalid_values: []
 	},
 	"marker-start": {
@@ -1730,8 +1758,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "none" ],
+		other_values: [ "url(#mysym)" ],
 		invalid_values: []
 	},
 	"mask": {
@@ -1739,8 +1767,8 @@ var gCSSProperties = {
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "none" ],
+		other_values: [ "url(#mymask)" ],
 		invalid_values: []
 	},
 	"pointer-events": {
@@ -1748,8 +1776,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "visiblepainted" ],
+		other_values: [ "visibleFill", "visiblestroke", "Visible", "painted", "fill", "stroke", "all", "none" ],
 		invalid_values: []
 	},
 	"shape-rendering": {
@@ -1757,8 +1785,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "auto" ],
+		other_values: [ "optimizeSpeed", "crispEdges", "geometricPrecision" ],
 		invalid_values: []
 	},
 	"stop-color": {
@@ -1766,17 +1794,17 @@ var gCSSProperties = {
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)" ],
+		other_values: [ "green", "#fc3" ],
+		invalid_values: [ "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ]
 	},
 	"stop-opacity": {
 		domProp: null,
 		inherited: false,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "1", "2.8", "1.000" ],
+		other_values: [ "0", "0.3", "-7.3" ],
 		invalid_values: []
 	},
 	"stroke": {
@@ -1784,8 +1812,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "none" ],
+		other_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)", "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ],
 		invalid_values: []
 	},
 	"stroke-dasharray": {
@@ -1793,8 +1821,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "none" ],
+		other_values: [ "5px,3px,2px", "  5px ,3px  , 2px ", "1px", "5%", "3em" ],
 		invalid_values: []
 	},
 	"stroke-dashoffset": {
@@ -1802,8 +1830,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "0", "-0px", "0em" ],
+		other_values: [ "3px", "3%", "1em" ],
 		invalid_values: []
 	},
 	"stroke-linecap": {
@@ -1811,8 +1839,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "butt" ],
+		other_values: [ "round", "square" ],
 		invalid_values: []
 	},
 	"stroke-linejoin": {
@@ -1820,8 +1848,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "miter" ],
+		other_values: [ "round", "bevel" ],
 		invalid_values: []
 	},
 	"stroke-miterlimit": {
@@ -1829,17 +1857,17 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "4" ],
+		other_values: [ "1", "7", "5000" ],
+		invalid_values: [ "0.9", "0", "-1", "3px" ]
 	},
 	"stroke-opacity": {
 		domProp: null,
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "1", "2.8", "1.000" ],
+		other_values: [ "0", "0.3", "-7.3" ],
 		invalid_values: []
 	},
 	"stroke-width": {
@@ -1847,17 +1875,17 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
-		invalid_values: []
+		initial_values: [ "1px" ],
+		other_values: [ "0", "0px", "-0em", "17px", "0.2em" ],
+		invalid_values: [ "-0.1px", "-3px" ]
 	},
 	"text-anchor": {
 		domProp: null,
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "start" ],
+		other_values: [ "middle", "end" ],
 		invalid_values: []
 	},
 	"text-rendering": {
@@ -1865,8 +1893,8 @@ var gCSSProperties = {
 		inherited: true,
 		backend_only: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [],
-		other_values: [],
+		initial_values: [ "auto" ],
+		other_values: [ "optimizeSpeed", "optimizeLegibility", "geometricPrecision" ],
 		invalid_values: []
 	}
 }

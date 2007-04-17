@@ -21,6 +21,15 @@
 
 var gDeclaration = document.getElementById("testnode").style;
 
+var gKnownFails = {
+  "pitch-range": [ " -0.01", "100.2", "108", "-3" ],
+  "richness": [ " -0.01", "100.2", "108", "-3" ],
+  "stress": [ " -0.01", "100.2", "108", "-3" ],
+  "volume": [ " -0.01", "100.2", "108", "-3" ],
+  "text-decoration": [ "line-through blink line-through" ],
+  "stroke-miterlimit": [ "0.9", "0" ]
+}
+
 for (var property in gCSSProperties) {
   var info = gCSSProperties[property];
   for (var idx in info.invalid_values) {
@@ -28,16 +37,21 @@ for (var property in gCSSProperties) {
 
     gDeclaration.setProperty(property, badval, "");
 
-    is(gDeclaration.getPropertyValue(property), "",
-       "invalid value '" + badval + "' not accepted for '" + property +
-       "' property");
+    var func = is;
+    if (property in gKnownFails &&
+        gKnownFails[property].indexOf(badval) != -1)
+      func = todo_is;
+
+    func(gDeclaration.getPropertyValue(property), "",
+         "invalid value '" + badval + "' not accepted for '" + property +
+         "' property");
 
     if ("subproperties" in info) {
       for (var sidx in info.subproperties) {
         var subprop = info.subproperties[sidx];
-        is(gDeclaration.getPropertyValue(subprop), "",
-           "invalid value '" + badval + "' not accepted for '" + property +
-           "' property when testing subproperty '" + subprop + "'");
+        func(gDeclaration.getPropertyValue(subprop), "",
+             "invalid value '" + badval + "' not accepted for '" + property +
+             "' property when testing subproperty '" + subprop + "'");
       }
     }
 
