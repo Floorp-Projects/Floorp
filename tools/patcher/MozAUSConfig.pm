@@ -417,6 +417,14 @@ sub CreateUpdateGraph
         $u_config->{$u_key}->{'force'} = $u_force;
         $u_config->{$u_key}->{'platforms'} = {};
 
+        # Add the keys that specify channel-specific snippet directories
+        foreach my $c (@channels) {
+            my $testKey = $c . '-dir';
+            if (exists($u->{$testKey})) {
+                $u_config->{$u_key}->{$testKey} = $u->{$testKey};
+            }
+        }
+
         my $r_config = $this->{'mAppConfig'}->{'release'};
         my @releases = keys %$r_config;
 
