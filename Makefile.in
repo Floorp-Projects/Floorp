@@ -162,14 +162,9 @@ ifdef MOZ_AIRBAG
 endif
 endif
 
-## XXXvlad -- the test and cp should be removed once bug 249782 is
-## completely fixed
 signnss:
 ifdef MOZILLA_OFFICIAL
 	echo signing NSS libs
-ifdef MSMANIFEST_TOOL
-	test -f $(DEPTH)/nss/shlibsign.exe.manifest && cp $(DEPTH)/nss/shlibsign.exe.manifest $(DIST)/bin
-endif
 	cd $(DIST)/bin; ./shlibsign.exe -v -i softokn3.dll
 	cd $(DIST)/bin; ./shlibsign.exe -v -i freebl3.dll
 endif # MOZILLA_OFFICIAL
