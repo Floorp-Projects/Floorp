@@ -184,9 +184,9 @@ interface nsIAccessible : nsISupports
    * Returns grouping information. Used for tree items, list items, tab panel
    * labels, radio buttons, etc. Also used for collectons of non-text objects.
    *
-   * @param groupLevel - 0-based, similar to ARIA 'level' property
+   * @param groupLevel - 1-based, similar to ARIA 'level' property
    * @param similarItemsInGroup - 1-based, similar to ARIA 'setsize' property
-   * @param positionInGroup - 0-based, similar to ARIA 'posinset' property
+   * @param positionInGroup - 1-based, similar to ARIA 'posinset' property
    */
   void groupPosition(out long aGroupLevel, out long aSimilarItemsInGroup,
                      out long aPositionInGroup);
