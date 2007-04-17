@@ -308,6 +308,14 @@ public:
 
   virtual NS_HIDDEN_(PRBool) WouldReuseInnerWindow(nsIDocument *aNewDocument);
 
+  virtual NS_HIDDEN_(nsPIDOMEventTarget*) GetTargetForDOMEvent()
+  {
+    return NS_STATIC_CAST(nsPIDOMEventTarget*, GetOuterWindowInternal());
+  }
+  virtual NS_HIDDEN_(nsPIDOMEventTarget*) GetTargetForEventTargetChain()
+  {
+    return NS_STATIC_CAST(nsPIDOMEventTarget*, GetCurrentInnerWindowInternal());
+  }
   virtual NS_HIDDEN_(nsresult) PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual NS_HIDDEN_(nsresult) PostHandleEvent(nsEventChainPostVisitor& aVisitor);
   virtual NS_HIDDEN_(nsresult) DispatchDOMEvent(nsEvent* aEvent,
