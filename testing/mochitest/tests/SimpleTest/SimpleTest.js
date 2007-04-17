@@ -79,6 +79,20 @@ SimpleTest._logResult = function(test, passString, failString) {
   }
 }
 
+/**
+ * Copies of is and isnot with the call to ok replaced by a call to todo.
+**/
+
+SimpleTest.todo_is = function (a, b, name) {
+    var repr = MochiKit.Base.repr;
+    SimpleTest.todo(a == b, name, "got " + repr(a) + ", expected " + repr(b));
+};
+
+SimpleTest.todo_isnot = function (a, b, name) {
+    var repr = MochiKit.Base.repr;
+    SimpleTest.todo(a != b, name, "Didn't expect " + repr(a) + ", but got it.");
+};
+
 
 /**
  * Makes a test report, returns it as a DIV element.
@@ -402,6 +416,8 @@ var ok = SimpleTest.ok;
 var is = SimpleTest.is;
 var isnot = SimpleTest.isnot;
 var todo = SimpleTest.todo;
+var todo_is = SimpleTest.todo_is;
+var todo_isnot = SimpleTest.todo_isnot;
 var isDeeply = SimpleTest.isDeeply;
 var oldOnError = window.onerror;
 window.onerror = function (ev) {
