@@ -45,7 +45,22 @@ var gKnownFails = {
   "outline": true,
   "padding": true,
   "pause": true
-  /* also see bug 377521 below */
+};
+
+var gKnownFails2 = {
+  "-moz-border-radius": true,
+  "-moz-outline-radius": true,
+  "background": true,
+  "border": true,
+  "border-bottom": true,
+  "border-left": true,
+  "border-right": true,
+  "border-top": true,
+  "cue": true,
+  "font": true,
+  "list-style": true,
+  "outline": true,
+  "pause": true
 };
 
 function test_property(property)
@@ -73,21 +88,30 @@ function test_property(property)
   function check_set(sproperty) {
     var sinfo = gCSSProperties[sproperty];
     val = gDeclaration.getPropertyValue(sproperty);
+    var func = is;
     if ((sproperty == property && property in gKnownFails) ||
-         (property == "font" && sproperty != "font-family")) { /* bug 377521 */
-      todo(val == "-moz-initial", "-moz-initial reported back for property '" + sproperty + "'");
-    } else {
-      is(val, "-moz-initial", "-moz-initial reported back for property '" + sproperty + "'");
-    }
+         (property == "font" && sproperty != "font-family")) /* bug 377521 */
+      func = todo_is;
+    func(val, "-moz-initial",
+         "-moz-initial reported back for property '" + sproperty + "'");
     if (sinfo.domProp) {
       is(val, gDeclaration[sinfo.domProp],
-         "consistency between decl.getPropertyValue('" + sproperty + "') and decl." + sinfo.domProp);
+         "consistency between decl.getPropertyValue('" + sproperty +
+         "') and decl." + sinfo.domProp);
     }
   }
   check_set(property);
   if ("subproperties" in info)
     for (var idx in info.subproperties)
       check_set(info.subproperties[idx]);
+
+  // We don't care particularly about the whitespace or the placement of
+  // semicolons, but for simplicity we'll test the current behavior.
+  var cssTextFunc = is;
+  if (property in gKnownFails2)
+    cssTextFunc = todo_is;
+  cssTextFunc(gDeclaration.cssText, property + ": -moz-initial;",
+    "declaration should serialize to exactly what went in (for -moz-initial)");
 
   gDeclaration.removeProperty(property);
 
