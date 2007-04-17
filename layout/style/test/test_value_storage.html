@@ -37,9 +37,102 @@ var gNoComputedValue = {
   "content": true,
 };
 
+var gNotAccepted = {
+  "-moz-column-width": [ "50%" ],
+  "-moz-user-select": [ "auto" ],
+  "background-color": [ "rgb(255.0,0.387,3489)" ],
+  "content": [ "none" ],
+  "cue": [ "none none", "none url(404.wav)" ],
+  "list-style": [ "none disc outside" ],
+  "speak-punctuation": [ "none" ],
+};
+
+var gSpecialFont = [
+  "caption", "icon", "menu", "message-box", "small-caption", "status-bar"
+];
+
+var gBadCompute = {
+  // output wrapped around to positive, in exponential notation
+  "-moz-box-ordinal-group": [ "-1", "-1000" ],
+};
+
+var gShortenableValues = {
+  "border-color": [ "currentColor currentColor currentcolor CURRENTcolor" ],
+  "border-style": [ "none none none none", "groove none none none", "none none double none" ],
+};
+
+function xfail_accepted(property, value)
+{
+  if (property in gNotAccepted &&
+      gNotAccepted[property].indexOf(value) != -1)
+    return true;
+
+  if (property == "font" && gSpecialFont.indexOf(value) != -1)
+    return true;
+
+  return false;
+}
+
+function xfail_accepted_split(property, subprop, value)
+{
+  if (property in gNotAccepted &&
+      gNotAccepted[property].indexOf(value) != -1)
+    return true;
+
+  if (property == "font" && subprop != "font-family" &&
+      gSpecialFont.indexOf(value) != -1)
+    return true;
+
+  return false;
+}
+
 function xfail_ser_val(property, value)
 {
+  if (property != "font" && xfail_accepted(property, value))
+    // We already failed the first test, which will make us always pass this
+    // one.
+    return false;
+
   if (property in gShorthandsWithoutCondensingSerialize)
+    return true;
+
+  // We output unneeded -moz-use-text-color only in the value getter and
+  // not the serialization.
+  if (property.match(/^border(|-bottom|-left|-right|-top)$/) &&
+      !value.match(/(green|currentcolor)/i))
+    return true;
+
+  // We condense multiple values in the serialization, but not in the
+  // value getter.
+  if (property.match(/^(border-(color|style|width)|margin|padding)$/) &&
+      value.split(" ").length != 4)
+    return true;
+  if (property in gShortenableValues &&
+      gShortenableValues[property].indexOf(value) != -1)
+    return true;
+
+  return false;
+}
+
+function xfail_idparseser(property, value)
+{
+  if (property != "font" && xfail_accepted(property, value))
+    // We already failed the first test, which will make us always pass this
+    // one.
+    return false;
+
+  // parse-serialize reverses pause and cue
+  if ((property == "cue" || property == "pause") &&
+      value.match(/ /) && !value.match(/^(.*) \1$/))
+    return true;
+
+  // Can't parse "cue: none none"
+  if (property == "cue" && value == "none")
+    return true;
+
+  // Can't serialize keywords for background-position (bug 258080)
+  if ((property == "background-position" || property == "background") &&
+      value.match(/(top|bottom|center|right|left)/))
     return true;
 
   return false;
@@ -50,13 +143,32 @@ function xfail_idserparse_compute(property, value)
   return false;
 }
 
-function xfail_idsersplitparse_compute(property, value)
+function xfail_idsersplitparse_compute(property, subprop, value)
 {
+  if (property == "font" &&
+      (subprop == "font-family" || subprop == "font-size") &&
+      gSpecialFont.indexOf(value) != -1)
+    return true;
+
+  return false;
+}
+
+function xfail_idparsesplitser(property, value)
+{
+  // Can't serialize keywords for background-position (bug 258080)
+  if (property == "background" &&
+      value.match(/(top|bottom|center|right|left)/))
+    return true;
+
   return false;
 }
 
 function xfail_compute(property, value)
 {
+  if (property in gBadCompute &&
+      gBadCompute[property].indexOf(value) != -1)
+    return true;
+
   return false;
 }
 
@@ -94,11 +206,16 @@ function test_property(property)
       for (idx in info.subproperties)
         step1comps.push(gComputedStyle.getPropertyValue(info.subproperties[idx]));
 
-    isnot(step1val, "", "setting '" + value + "' on '" + property);
+    func = xfail_accepted(property, value) ? todo_isnot : isnot;
+    func(step1val, "", "setting '" + value + "' on '" + property);
     if ("subproperties" in info)
-      for (idx in info.subproperties)
-        isnot(gDeclaration.getPropertyValue(info.subproperties[idx]), "",
-              "setting '" + value + "' on '" + property);
+      for (idx in info.subproperties) {
+        var subprop = info.subproperties[idx];
+        func = xfail_accepted_split(property, subprop, value)
+                 ? todo_isnot : isnot;
+        func(gDeclaration.getPropertyValue(subprop), "",
+             "setting '" + value + "' on '" + property);
+      }
 
     // We don't care particularly about the whitespace or the placement of
     // semicolons, but for simplicity we'll test the current behavior.
@@ -112,9 +229,10 @@ function test_property(property)
     gDeclaration.removeProperty(property);
     gDeclaration.setProperty(property, step1val, "");
 
-    is(gDeclaration.getPropertyValue(property), step1val,
-       "parse+serialize should be idempotent for '" +
-       property + ": " + value + "'");
+    func = xfail_idparseser(property, value) ? todo_is : is;
+    func(gDeclaration.getPropertyValue(property), step1val,
+         "parse+serialize should be idempotent for '" +
+         property + ": " + value + "'");
     if (test_computed && info.type != CSS_TYPE_TRUE_SHORTHAND) {
       func = xfail_idserparse_compute(property, value) ? todo_is : is;
       func(gComputedStyle.getPropertyValue(property), step1comp,
@@ -128,15 +246,18 @@ function test_property(property)
         var subprop = info.subproperties[idx];
         gDeclaration.setProperty(subprop, step1vals[idx], "");
         if (test_computed) {
-          func = xfail_idsersplitparse_compute(property, value) ? todo_is : is;
+          func =
+            xfail_idsersplitparse_compute(property, subprop, value)
+              ? todo_is : is;
           func(gComputedStyle.getPropertyValue(subprop), step1comps[idx],
                "serialize(" + subprop + ")+parse should be idempotent for '" +
                property + ": " + value + "'");
         }
       }
-      is(gDeclaration.getPropertyValue(property), step1val,
-         "parse+split+serialize should be idempotent for '" +
-         property + ": " + value + "'");
+      func = xfail_idparsesplitser(property, value) ? todo_is : is;
+      func(gDeclaration.getPropertyValue(property), step1val,
+           "parse+split+serialize should be idempotent for '" +
+           property + ": " + value + "'");
     }
 
     if (test_computed && info.type != CSS_TYPE_TRUE_SHORTHAND) {
