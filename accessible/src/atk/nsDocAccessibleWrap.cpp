@@ -208,23 +208,6 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
         rv = NS_OK;
         break;
 
-    case nsIAccessibleEvent::EVENT_TEXT_CHANGED:
-        AtkTextChange *pAtkTextChange;
-
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_CHANGED\n"));
-        NS_ASSERTION(aEventData, "Event needs event data");
-        if (!aEventData)
-            break;
-
-        pAtkTextChange = NS_REINTERPRET_CAST(AtkTextChange *, aEventData);
-        g_signal_emit_by_name (atkObj,
-                               pAtkTextChange->add ? \
-                               "text_changed::insert":"text_changed::delete",
-                               pAtkTextChange->start,
-                               pAtkTextChange->length);
-        rv = NS_OK;
-        break;
-
     case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_SELECTION_CHANGED\n"));
         g_signal_emit_by_name(atkObj, "text_selection_changed");

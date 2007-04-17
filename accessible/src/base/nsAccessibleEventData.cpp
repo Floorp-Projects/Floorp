@@ -180,3 +180,37 @@ nsAccStateChangeEvent::IsEnabled(PRBool *aIsEnabled)
   return NS_OK;
 }
 
+
+// nsAccStateChangeEvent
+NS_IMPL_ISUPPORTS_INHERITED1(nsAccTextChangeEvent, nsAccEvent,
+                             nsIAccessibleTextChangeEvent)
+
+nsAccTextChangeEvent::
+  nsAccTextChangeEvent(nsIAccessible *aAccessible,
+                       PRInt32 aStart, PRUint32 aLength, PRBool aIsInserted):
+  nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CHANGED, aAccessible, nsnull),
+  mStart(aStart), mLength(aLength), mIsInserted(mIsInserted)
+{
+}
+
+NS_IMETHODIMP
+nsAccTextChangeEvent::GetStart(PRInt32 *aStart)
+{
+  *aStart = mStart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccTextChangeEvent::GetLength(PRUint32 *aLength)
+{
+  *aLength = mLength;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccTextChangeEvent::IsInserted(PRBool *aIsInserted)
+{
+  *aIsInserted = mIsInserted;
+  return NS_OK;
+}
+
