@@ -40,7 +40,6 @@
 #include "nsSVGGFrame.h"
 #include "nsIFrame.h"
 #include "nsSVGMatrix.h"
-#include "nsSVGClipPathFrame.h"
 #include "nsGkAtoms.h"
 #include "nsSVGUtils.h"
 #include "nsISVGValueUtils.h"
