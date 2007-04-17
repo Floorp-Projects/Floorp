@@ -101,10 +101,10 @@ nsSVGClipPathFrame::InitSVG()
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
                               nsISVGChildFrame* aParent,
-                              nsCOMPtr<nsIDOMSVGMatrix> aMatrix)
+                              nsIDOMSVGMatrix *aMatrix)
 {
   // If the flag is set when we get here, it means this clipPath frame
   // has already been used painting the current clip, and the document
@@ -113,13 +113,12 @@ nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
     NS_WARNING("Clip loop detected!");
     return NS_OK;
   }
-  mInUse = PR_TRUE;
+  AutoClipPathReferencer clipRef(this);
 
   mClipParent = aParent,
   mClipParentMatrix = aMatrix;
 
-  PRBool isTrivial;
-  IsTrivial(&isTrivial);
+  PRBool isTrivial = IsTrivial();
 
   nsAutoSVGRenderMode mode(aContext,
                            isTrivial ? nsSVGRenderState::CLIP
@@ -140,26 +139,22 @@ nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
     aContext->GetGfxContext()->NewPath();
   }
 
-  mInUse = PR_FALSE;
-
   return NS_OK;
 }
 
-NS_IMETHODIMP
+PRBool
 nsSVGClipPathFrame::ClipHitTest(nsISVGChildFrame* aParent,
-                                nsCOMPtr<nsIDOMSVGMatrix> aMatrix,
-                                float aX, float aY, PRBool *aHit)
+                                nsIDOMSVGMatrix *aMatrix,
+                                float aX, float aY)
 {
-  *aHit = PR_FALSE;
-
   // If the flag is set when we get here, it means this clipPath frame
   // has already been used in hit testing against the current clip,
   // and the document has a clip reference loop.
   if (mInUse) {
     NS_WARNING("Clip loop detected!");
-    return NS_OK;
+    return PR_FALSE;
   }
-  mInUse = PR_TRUE;
+  AutoClipPathReferencer clipRef(this);
 
   nsRect dirty;
   mClipParent = aParent,
@@ -177,23 +172,16 @@ nsSVGClipPathFrame::ClipHitTest(nsISVGChildFrame* aParent,
 
       nsIFrame *temp = nsnull;
       nsresult rv = SVGFrame->GetFrameForPointSVG(aX, aY, &temp);
-      if (NS_SUCCEEDED(rv) && temp) {
-        *aHit = PR_TRUE;
-        mInUse = PR_FALSE;
-        return NS_OK;
-      }
+      if (NS_SUCCEEDED(rv) && temp)
+        return PR_TRUE;
     }
   }
-
-  mInUse = PR_FALSE;
-
-  return NS_OK;
+  return PR_FALSE;
 }
 
-NS_IMETHODIMP
-nsSVGClipPathFrame::IsTrivial(PRBool *aTrivial)
+PRBool
+nsSVGClipPathFrame::IsTrivial()
 {
-  *aTrivial = PR_TRUE;
   PRBool foundChild = PR_FALSE;
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
@@ -204,15 +192,12 @@ nsSVGClipPathFrame::IsTrivial(PRBool *aTrivial)
     if (svgChild) {
       // We consider a non-trivial clipPath to be one containing
       // either more than one svg child and/or a svg container
-      if (foundChild || svgChild->IsDisplayContainer()) {
-        *aTrivial = PR_FALSE;
-        return NS_OK;
-      }
+      if (foundChild || svgChild->IsDisplayContainer())
+        return PR_FALSE;
       foundChild = PR_TRUE;
     }
   }
-
-  return NS_OK;
+  return PR_TRUE;
 }
 
 nsIAtom *

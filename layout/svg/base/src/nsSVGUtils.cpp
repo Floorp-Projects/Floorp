@@ -811,13 +811,9 @@ AddEffectProperties(nsIFrame *aFrame)
                                                       aFrame->GetContent());
     if (clip) {
       aFrame->SetProperty(nsGkAtoms::clipPath, clip);
-
-      PRBool trivialClip;
-      clip->IsTrivial(&trivialClip);
-      if (trivialClip)
-        aFrame->AddStateBits(NS_STATE_SVG_CLIPPED_TRIVIAL);
-      else
-        aFrame->AddStateBits(NS_STATE_SVG_CLIPPED_COMPLEX);
+      aFrame->AddStateBits(clip->IsTrivial() ?
+                             NS_STATE_SVG_CLIPPED_TRIVIAL :
+                             NS_STATE_SVG_CLIPPED_COMPLEX);
     }
   }
 
@@ -1038,8 +1034,6 @@ nsSVGUtils::StyleEffects(nsIFrame *aFrame)
 PRBool
 nsSVGUtils::HitTestClip(nsIFrame *aFrame, float x, float y)
 {
-  PRBool clipHit = PR_TRUE;
-
   nsISVGChildFrame* SVGFrame;
   CallQueryInterface(aFrame, &SVGFrame);
 
@@ -1048,10 +1042,10 @@ nsSVGUtils::HitTestClip(nsIFrame *aFrame, float x, float y)
     clip = NS_STATIC_CAST(nsSVGClipPathFrame *,
                           aFrame->GetProperty(nsGkAtoms::clipPath));
     nsCOMPtr<nsIDOMSVGMatrix> matrix = GetCanvasTM(aFrame);
-    clip->ClipHitTest(SVGFrame, matrix, x, y, &clipHit);
+    return clip->ClipHitTest(SVGFrame, matrix, x, y);
   }
 
-  return clipHit;
+  return PR_TRUE;
 }
 
 void
