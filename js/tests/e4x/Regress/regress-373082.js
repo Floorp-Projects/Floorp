@@ -66,14 +66,6 @@ l = <><a>text</a></>;
 actual = l.charAt(0);
 TEST(4, expect, actual);
 
-expect = 't';
-actual = l.function::charAt.call(l, 0);
-TEST(5, expect, actual);
-
-expect = 't';
-with (l) actual = function::charAt(0);
-TEST(6, expect, actual);
-
 expect = 'TypeError: String.prototype.toString called on incompatible XML';
 
 try
