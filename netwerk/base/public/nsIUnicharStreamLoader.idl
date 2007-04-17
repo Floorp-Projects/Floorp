@@ -54,6 +54,9 @@ interface nsIUnicharStreamLoaderObserver : nsISupports
    * @param aLength the length of aFirstSegment
    *
    * @return charset corresponding to this stream
+   *
+   * @note this method will only be called if the stream loader receives an
+   *       OnDataAvailable call.
    */
   ACString onDetermineCharset(in nsIUnicharStreamLoader aLoader,
                               in nsISupports aContext,
@@ -72,6 +75,9 @@ interface nsIUnicharStreamLoaderObserver : nsISupports
    * This method will always be called asynchronously by the
    * nsUnicharIStreamLoader involved, on the thread that called the
    * loader's init() method.
+   *
+   * @note If the stream loader does not receive an OnDataAvailable call,
+   *       aUnicharData will be null, and aStatus will be a success value.
    */
   void onStreamComplete(in nsIUnicharStreamLoader aLoader,
                         in nsISupports aContext,
