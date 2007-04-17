@@ -127,9 +127,11 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj,
 
 static JSClass sNPObjectJSWrapperClass =
   {
-    "NPObject JS wrapper class", JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE,
+    "NPObject JS wrapper class",
+    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE,
     NPObjWrapper_AddProperty, NPObjWrapper_DelProperty,
-    NPObjWrapper_GetProperty, NPObjWrapper_SetProperty, (JSEnumerateOp)NPObjWrapper_newEnumerate,
+    NPObjWrapper_GetProperty, NPObjWrapper_SetProperty,
+    (JSEnumerateOp)NPObjWrapper_newEnumerate,
     (JSResolveOp)NPObjWrapper_NewResolve, JS_ConvertStub,
     NPObjWrapper_Finalize, nsnull, nsnull, NPObjWrapper_Call, nsnull, nsnull,
     nsnull
@@ -952,6 +954,10 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj)
   JSObjWrapperHashEntry *entry =
     NS_STATIC_CAST(JSObjWrapperHashEntry *,
                    PL_DHashTableOperate(&sJSObjWrappers, &key, PL_DHASH_ADD));
+  if (!entry) {
+    // Out of memory.
+    return nsnull;
+  }
 
   if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->mJSObjWrapper) {
     // Found a live nsJSObjWrapper, return it.
@@ -1373,7 +1379,6 @@ NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     } else {
       ok = ::JS_DefineElement(cx, obj, JSVAL_TO_INT(id), JSVAL_VOID, nsnull,
                               nsnull, JSPROP_ENUMERATE);
-      
     }
 
     if (!ok) {
@@ -1483,6 +1488,12 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
     NS_STATIC_CAST(NPObjWrapperHashEntry *,
                    PL_DHashTableOperate(&sNPObjWrappers, npobj,
                                         PL_DHASH_ADD));
+  if (!entry) {
+    // Out of memory
+    JS_ReportOutOfMemory(cx);
+
+    return nsnull;
+  }
 
   if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->mJSObj) {
     // Found a live NPObject wrapper, return it.
@@ -1754,7 +1765,7 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj,
     PR_Free(memberPrivate);
     return false;
   }
-  
+
   *vp = OBJECT_TO_JSVAL(memobj);
   ::JS_AddRoot(cx, vp);
 
@@ -1782,7 +1793,7 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj,
   memberPrivate->fieldValue = fieldValue;
   memberPrivate->methodName = id;
   memberPrivate->npp = npp;
-  
+
   ::JS_RemoveRoot(cx, vp);
 
   return true;
@@ -1875,7 +1886,7 @@ NPObjectMember_Call(JSContext *cx, JSObject *obj,
       return JS_FALSE;
     }
   }
-  
+
   NPVariant npv;
   JSBool ok;
   ok = npobj->_class->invoke(npobj, (NPIdentifier)memberPrivate->methodName,
