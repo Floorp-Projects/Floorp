@@ -883,6 +883,10 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
                                   PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                   PRInt32 aModType)
 {
+  // Fire accessible event after short timer, because we need to wait for
+  // DOM attribute & resulting layout to actually change. Otherwise,
+  // assistive technology will retrieve the wrong state/value/selection info.
+
   // XXX todo
   // We still need to handle special HTML cases here
   // For example, if an <img>'s usemap attribute is modified
@@ -905,6 +909,11 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
     return; // Document has been shut down
   }
 
+  if (aNameSpaceID == kNameSpaceID_WAIProperties) {
+    ARIAAttributeChanged(aContent, aAttribute);
+    return;
+  }
+
   nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(aContent));
   NS_ASSERTION(targetNode, "No node for attr modified");
   if (!targetNode) {
@@ -913,19 +922,18 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
 
   if (aNameSpaceID == kNameSpaceID_XHTML2_Unofficial ||
       aNameSpaceID == kNameSpaceID_XHTML) {
-    if (aAttribute == nsAccessibilityAtoms::role) {
+    if (aAttribute == nsAccessibilityAtoms::role)
       InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_REORDER);
-    }
     return;
   }
 
-  if (aAttribute == nsAccessibilityAtoms::href || aAttribute == nsAccessibilityAtoms::onclick ||
+  if (aAttribute == nsAccessibilityAtoms::href ||
+      aAttribute == nsAccessibilityAtoms::onclick ||
       aAttribute == nsAccessibilityAtoms::droppable) {
     InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_REORDER);
     return;
   }
 
-  PRUint32 eventType = 0;
   if (aAttribute == nsAccessibilityAtoms::selected) {
     // DHTML or XUL selection
     nsCOMPtr<nsIAccessible> multiSelect = GetMultiSelectFor(targetNode);
@@ -944,73 +952,122 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
       NS_ASSERTION(multiSelectDOMNode, "A new accessible without a DOM node!");
       FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
                               multiSelectDOMNode, nsnull, PR_TRUE);
+
       static nsIContent::AttrValuesArray strings[] =
         {&nsAccessibilityAtoms::_empty, &nsAccessibilityAtoms::_false, nsnull};
       if (aContent->FindAttrValueIn(kNameSpaceID_None,
                                     nsAccessibilityAtoms::selected,
                                     strings, eCaseMatters) !=
           nsIContent::ATTR_VALUE_NO_MATCH) {
-        eventType = nsIAccessibleEvent::EVENT_SELECTION_REMOVE;
+
+        FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_REMOVE,
+                                targetNode, nsnull);
+        return;
       }
-      else {
-        eventType = nsIAccessibleEvent::EVENT_SELECTION_ADD;
-      }
+
+      FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_ADD,
+                                                  targetNode, nsnull);
     }
   }
-  else if (aNameSpaceID == kNameSpaceID_WAIProperties) {
-    // ARIA attributes
-    if (aAttribute == nsAccessibilityAtoms::disabled ||
-        aAttribute == nsAccessibilityAtoms::required ||
-        aAttribute == nsAccessibilityAtoms::invalid) {
-      // Universal boolean properties that don't require a role
-      eventType = nsIAccessibleEvent::EVENT_STATE_CHANGE;
-    }
-    else if (aAttribute == nsAccessibilityAtoms::activedescendant) {
-      // The activedescendant universal property redirects accessible focus events
-      // to the element with the id that activedescendant points to
-      nsCOMPtr<nsIDOMNode> currentFocus = GetCurrentFocus();
-      if (SameCOMIdentity(currentFocus, aContent)) {
-        nsRefPtr<nsRootAccessible> rootAcc = GetRootAccessible();
-        if (rootAcc) {
-          rootAcc->FireAccessibleFocusEvent(nsnull, currentFocus, nsnull, PR_TRUE);
-        }
-      }
-      return;
-    }
-    else if (!HasRoleAttribute(aContent)) {
-      // We don't care about these other ARIA attribute changes unless there is
-      // an ARIA role set for the element
-      // XXX we should check the role map to see if the changed
-      // property is relevant for that particular role
-      return;
-    }
-    if (aAttribute == nsAccessibilityAtoms::checked ||
-        aAttribute == nsAccessibilityAtoms::expanded || 
-        aAttribute == nsAccessibilityAtoms::readonly) {
-      eventType = nsIAccessibleEvent::EVENT_STATE_CHANGE;
-    }
-    else if (aAttribute == nsAccessibilityAtoms::valuenow) {
-      eventType = nsIAccessibleEvent::EVENT_VALUE_CHANGE;
-    }
-    else if (aAttribute == nsAccessibilityAtoms::multiselectable) {
-      // This affects whether the accessible supports nsIAccessibleSelectable.
-      // COM says we cannot change what interfaces are supported on-the-fly,
-      // so invalidate this object. A new one will be created on demand.
-      if (HasRoleAttribute(aContent)) {
-        // The multiselectable and other waistate attributes only take affect
-        // when dynamic content role is present
-        InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_REORDER);
-      }
-    }
+}
+
+void
+nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
+{
+  nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(aContent));
+  if (!targetNode)
+    return;
+
+  // Universal boolean properties that don't require a role.
+  if (aAttribute == nsAccessibilityAtoms::disabled) {
+    nsCOMPtr<nsIAccessibleStateChangeEvent> event =
+      new nsAccStateChangeEvent(targetNode,
+                                nsIAccessibleStates::EXT_STATE_ENABLED,
+                                PR_TRUE);
+    FireDelayedAccessibleEvent(event);
+    return;
   }
 
-  // Fire after short timer, because we need to wait for
-  // DOM attribute & resulting layout to actually change.
-  // Otherwise, assistive technology
-  // will retrieve the wrong state/value/selection info.
-  if (eventType) {
-    // The attribute change occured on an accessible node
-    FireDelayedToolkitEvent(eventType, targetNode, nsnull);
+  if (aAttribute == nsAccessibilityAtoms::required) {
+    nsCOMPtr<nsIAccessibleStateChangeEvent> event =
+      new nsAccStateChangeEvent(targetNode,
+                                nsIAccessibleStates::STATE_REQUIRED,
+                                PR_FALSE);
+    FireDelayedAccessibleEvent(event);
+    return;
+  }
+
+  if (aAttribute == nsAccessibilityAtoms::invalid) {
+    nsCOMPtr<nsIAccessibleStateChangeEvent> event =
+      new nsAccStateChangeEvent(targetNode,
+                                nsIAccessibleStates::STATE_INVALID,
+                                PR_FALSE);
+    FireDelayedAccessibleEvent(event);
+    return;
+  }
+
+  if (aAttribute == nsAccessibilityAtoms::activedescendant) {
+    // The activedescendant universal property redirects accessible focus events
+    // to the element with the id that activedescendant points to
+    nsCOMPtr<nsIDOMNode> currentFocus = GetCurrentFocus();
+    if (SameCOMIdentity(currentFocus, aContent)) {
+      nsRefPtr<nsRootAccessible> rootAcc = GetRootAccessible();
+      if (rootAcc)
+        rootAcc->FireAccessibleFocusEvent(nsnull, currentFocus, nsnull, PR_TRUE);
+    }
+    return;
+  }
+
+  if (!HasRoleAttribute(aContent)) {
+    // We don't care about these other ARIA attribute changes unless there is
+    // an ARIA role set for the element
+    // XXX: we should check the role map to see if the changed property is
+    // relevant for that particular role.
+    return;
+  }
+
+  if (aAttribute == nsAccessibilityAtoms::checked) {
+    nsCOMPtr<nsIAccessibleStateChangeEvent> event =
+      new nsAccStateChangeEvent(targetNode,
+                                nsIAccessibleStates::STATE_CHECKED,
+                                PR_FALSE);
+    FireDelayedAccessibleEvent(event);
+    return;
+  }
+
+  if (aAttribute == nsAccessibilityAtoms::expanded) {
+    nsCOMPtr<nsIAccessibleStateChangeEvent> event =
+      new nsAccStateChangeEvent(targetNode,
+                                nsIAccessibleStates::STATE_EXPANDED,
+                                PR_FALSE);
+    FireDelayedAccessibleEvent(event);
+    return;
+  }
+
+  if (aAttribute == nsAccessibilityAtoms::readonly) {
+    nsCOMPtr<nsIAccessibleStateChangeEvent> event =
+      new nsAccStateChangeEvent(targetNode,
+                                nsIAccessibleStates::STATE_READONLY,
+                                PR_FALSE);
+    FireDelayedAccessibleEvent(event);
+    return;
+  }
+
+  if (aAttribute == nsAccessibilityAtoms::valuenow) {
+    FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE,
+                            targetNode, nsnull);
+    return;
+  }
+
+  if (aAttribute == nsAccessibilityAtoms::multiselectable) {
+    // This affects whether the accessible supports nsIAccessibleSelectable.
+    // COM says we cannot change what interfaces are supported on-the-fly,
+    // so invalidate this object. A new one will be created on demand.
+    if (HasRoleAttribute(aContent)) {
+      // The multiselectable and other waistate attributes only take affect
+      // when dynamic content role is present
+      InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_REORDER);
+    }
   }
 }
 
@@ -1077,6 +1134,16 @@ nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
                                                   void *aData,
                                                   PRBool aAllowDupes)
 {
+  nsCOMPtr<nsIAccessibleEvent> event = new nsAccEvent(aEvent, aDOMNode, aData);
+  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+
+  return FireDelayedAccessibleEvent(event);
+}
+
+nsresult
+nsDocAccessible::FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent,
+                                           PRBool aAllowDupes)
+{
   PRBool isTimerStarted = PR_TRUE;
   PRInt32 numQueuedEvents = mEventsToFire.Count();
   if (!mFireEventTimer) {
@@ -1084,10 +1151,16 @@ nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
     mFireEventTimer = do_CreateInstance("@mozilla.org/timer;1");
     NS_ENSURE_TRUE(mFireEventTimer, NS_ERROR_OUT_OF_MEMORY);
   }
+
+  PRUint32 newEventType;
+  aEvent->GetEventType(&newEventType);
+
+  nsCOMPtr<nsIDOMNode> newEventDOMNode;
+  aEvent->GetDOMNode(getter_AddRefs(newEventDOMNode));
+
   if (numQueuedEvents == 0) {
     isTimerStarted = PR_FALSE;
-  }
-  else if (!aAllowDupes) {
+  } else if (!aAllowDupes) {
     // Check for repeat events. If a redundant event exists remove
     // original and put the new event at the end of the queue
     // so it is fired after the others
@@ -1099,10 +1172,10 @@ nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
       }
       PRUint32 eventType;
       accessibleEvent->GetEventType(&eventType);
-      if (eventType == aEvent) {
+      if (eventType == newEventType) {
         nsCOMPtr<nsIDOMNode> domNode;
         accessibleEvent->GetDOMNode(getter_AddRefs(domNode));
-        if (domNode == aDOMNode) {
+        if (domNode == newEventDOMNode) {
           mEventsToFire.RemoveObjectAt(index);
           -- index;
           -- numQueuedEvents;
@@ -1111,12 +1184,7 @@ nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
     }
   }
 
-  // XXX Add related data for ATK support.
-  // For example, state change event should provide what state has changed,
-  // as well as the old and new value.
-  nsCOMPtr<nsIAccessibleEvent> event = new nsAccEvent(aEvent, aDOMNode, aData);
-  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
-  mEventsToFire.AppendObject(event);
+  mEventsToFire.AppendObject(aEvent);
   if (!isTimerStarted) {
     // This is be the first delayed event in queue, start timer
     // so that event gets fired via FlushEventsCallback
@@ -1124,6 +1192,7 @@ nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
                                           NS_STATIC_CAST(nsPIAccessibleDocument*, this),
                                           0, nsITimer::TYPE_ONE_SHOT);
   }
+
   return NS_OK;
 }
 
@@ -1133,8 +1202,10 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
   NS_ASSERTION(length, "How did we get here without events to fire?");
   PRUint32 index;
   for (index = 0; index < length; index ++) {
-    nsIAccessibleEvent *accessibleEvent = mEventsToFire[index];
+    nsCOMPtr<nsIAccessibleEvent> accessibleEvent(
+      do_QueryInterface(mEventsToFire[index]));
     NS_ASSERTION(accessibleEvent, "Array item is not an accessible event");
+
     nsCOMPtr<nsIAccessible> accessible;
     accessibleEvent->GetAccessible(getter_AddRefs(accessible));
     if (accessible) {
@@ -1163,7 +1234,7 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
         }
       }
       else {
-        FireToolkitEvent(eventType, accessible, nsnull);
+        FireAccessibleEvent(accessibleEvent);
       }
     }
   }
