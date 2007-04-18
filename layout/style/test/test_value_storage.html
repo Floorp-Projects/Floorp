@@ -154,11 +154,6 @@ function xfail_idparseser(property, value)
   if (property == "cue" && value == "none")
     return true;
 
-  // Can't serialize keywords for background-position (bug 258080)
-  if ((property == "background-position" || property == "background") &&
-      value.match(/(top|bottom|center|right|left)/))
-    return true;
-
   return false;
 }
 
@@ -181,11 +176,6 @@ function xfail_idsersplitparse_compute(property, subprop, value, step1subcomp)
 
 function xfail_idparsesplitser(property, value)
 {
-  // Can't serialize keywords for background-position (bug 258080)
-  if (property == "background" &&
-      value.match(/(top|bottom|center|right|left)/))
-    return true;
-
   return false;
 }
 

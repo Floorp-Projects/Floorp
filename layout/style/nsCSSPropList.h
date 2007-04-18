@@ -277,7 +277,7 @@ CSS_PROP_BACKGROUND(background-color, background_color, BackgroundColor, Color, 
 CSS_PROP_BACKGROUND(background-image, background_image, BackgroundImage, Color, mBackImage, eCSSType_Value, nsnull)
 CSS_PROP_BACKGROUND(-moz-background-inline-policy, _moz_background_inline_policy, MozBackgroundInlinePolicy, Color, mBackInlinePolicy, eCSSType_Value, kBackgroundInlinePolicyKTable)
 CSS_PROP_BACKGROUND(-moz-background-origin, _moz_background_origin, MozBackgroundOrigin, Color, mBackOrigin, eCSSType_Value, kBackgroundOriginKTable)
-CSS_PROP_BACKGROUND(background-position, background_position, BackgroundPosition, Color, mBackPosition, eCSSType_ValuePair, nsnull)
+CSS_PROP_BACKGROUND(background-position, background_position, BackgroundPosition, Color, mBackPosition, eCSSType_ValuePair, kBackgroundPositionKTable)
 CSS_PROP_BACKGROUND(background-repeat, background_repeat, BackgroundRepeat, Color, mBackRepeat, eCSSType_Value, kBackgroundRepeatKTable)
 CSS_PROP_DISPLAY(-moz-binding, binding, MozBinding, Display, mBinding, eCSSType_Value, nsnull) // XXX bug 3935
 CSS_PROP_SHORTHAND(border, border, Border)
