@@ -992,7 +992,9 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   }
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+  if (!content) {
+    return NS_OK;  // On document, this is not an error
+  }
 
   // Set STATE_UNAVAILABLE state based on disabled attribute
   // The disabled attribute is mostly used in XUL elements and HTML forms, but
