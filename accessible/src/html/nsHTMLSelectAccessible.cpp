@@ -911,23 +911,36 @@ void nsHTMLComboboxAccessible::CacheChildren()
       return;
     }
 
-    nsHTMLComboboxListAccessible* listAccessible = 
-      new nsHTMLComboboxListAccessible(mParent, mDOMNode, mWeakShell);
+    if (!mListAccessible) {
+      mListAccessible = 
+        new nsHTMLComboboxListAccessible(mParent, mDOMNode, mWeakShell);
+    }
 #ifdef COMBO_BOX_WITH_THREE_CHILDREN
-    buttonAccessible->SetNextSibling(listAccessible);
+    buttonAccessible->SetNextSibling(mListAccessible);
 #else
-    SetFirstChild(listAccessible);
+    SetFirstChild(mListAccessible);
 #endif
-    if (!listAccessible) {
+    if (!mListAccessible) {
       return;
     }
 
-    listAccessible->SetParent(this);
-    listAccessible->SetNextSibling(nsnull);
-    listAccessible->Init();
+    mListAccessible->SetParent(this);
+    mListAccessible->SetNextSibling(nsnull);
+    mListAccessible->Init();
 
     ++ mAccChildCount;  // List accessible child successfully added
   }
+}
+
+NS_IMETHODIMP nsHTMLComboboxAccessible::Shutdown()
+{
+  nsAccessibleWrap::Shutdown();
+
+  if (mListAccessible) {
+    mListAccessible->Shutdown();
+    mListAccessible = nsnull;
+  }
+  return NS_OK;
 }
 
 /**
