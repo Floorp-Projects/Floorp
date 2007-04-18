@@ -1007,7 +1007,7 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind);
     JS_END_MACRO
 
 extern JS_PUBLIC_API(void)
-JS_TraceChildren(JSTracer *trc, void *thing, uintN type);
+JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind);
 
 #ifdef DEBUG
 extern JS_PUBLIC_API(void)
