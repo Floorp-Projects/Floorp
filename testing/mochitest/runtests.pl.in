@@ -324,6 +324,7 @@ user_pref("capability.principal.codebase.p1.granted", "UniversalXPConnect Univer
 user_pref("capability.principal.codebase.p1.id", "http://localhost:8888");
 user_pref("capability.principal.codebase.p1.subjectName", "");
 user_pref("dom.disable_open_during_load", false);
+user_pref("dom.max_script_run_time", 0); // no slow script dialogs
 user_pref("signed.applets.codebase_principal_support", true);
 user_pref("security.warn_submit_insecure", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
