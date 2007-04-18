@@ -102,7 +102,6 @@ protected:
     nsHTMLSelectableAccessible *mParentSelect;
 
   public:
-    void Shutdown();
     iterator(nsHTMLSelectableAccessible *aParent, nsIWeakReference *aWeakShell);
 
     void CalcSelectionCount(PRInt32 *aSelectionCount);
@@ -201,6 +200,8 @@ public:
 /**  Finally, the Combobox widgets                         */
 /** ------------------------------------------------------ */
 
+class nsHTMLComboboxListAccessible;
+
 /*
  * A class the represents the HTML Combobox widget.
  */
@@ -222,9 +223,13 @@ public:
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
 
   void CacheChildren();
+  NS_IMETHOD Shutdown();
 
 protected:
   already_AddRefed<nsIAccessible> GetFocusedOptionAccessible();
+
+private:
+  nsRefPtr<nsHTMLComboboxListAccessible> mListAccessible;
 };
 
 #ifdef COMBO_BOX_WITH_THREE_CHILDREN
