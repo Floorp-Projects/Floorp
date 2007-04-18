@@ -43,7 +43,9 @@
 #include "nsISVGGlyphFragmentLeaf.h"
 #include "nsISVGChildFrame.h"
 #include "gfxContext.h"
+#include "gfxFont.h"
 
+struct nsSVGCharacterPosition;
 class nsSVGTextFrame;
 class nsSVGGlyphFrame;
 
@@ -151,8 +153,8 @@ public:
 
 protected:
   struct nsSVGCharacterPosition {
+    gfxPoint pos;
     gfxFloat angle;
-    float x, y;
     PRBool draw;
   };
 
@@ -161,45 +163,44 @@ protected:
   class nsSVGAutoGlyphHelperContext;
   friend class nsSVGAutoGlyphHelperContext;
 
-  // A helper class to deal with temporary cairo contexts.
-  // It destroys the context when it goes out of scope.
+  // A helper class to deal with gfxTextRuns and temporary thebes
+  // contexts.  It destroys them when it goes out of scope.
   class nsSVGAutoGlyphHelperContext
   {
   public:
-    nsSVGAutoGlyphHelperContext(nsSVGGlyphFrame *aSource)
+    nsSVGAutoGlyphHelperContext(nsSVGGlyphFrame *aSource,
+                                const nsString &aText)
     {
-       Init(aSource);
+      Init(aSource, aText);
     }
 
     nsSVGAutoGlyphHelperContext(nsSVGGlyphFrame *aSource,
-                                const nsAString &aText,
+                                const nsString &aText,
                                 nsSVGCharacterPosition **cp);
 
-    operator gfxContext * ()
-    {
-      return mCT;
-    }
-
-    operator cairo_t * ()
-    {
-      return mCT->GetCairo();
-    }
+    gfxContext *GetContext() { return mCT; }
+    gfxTextRun *GetTextRun() { return mTextRun; }
 
   private:
-    void Init (nsSVGGlyphFrame *aSource);
+    void Init(nsSVGGlyphFrame *aSource, const nsString &aText);
 
     nsRefPtr<gfxContext> mCT;
+    nsAutoPtr<gfxTextRun> mTextRun;
   };
 
-  void SelectFont(gfxContext *aContext);
+  gfxTextRun *GetTextRun(gfxContext *aCtx,
+                         const nsString &aText);
+
   PRBool GetCharacterData(nsAString & aCharacterData);
   nsresult GetCharacterPosition(gfxContext *aContext,
-                                const nsAString &aText,
+                                const nsString &aText,
                                 nsSVGCharacterPosition **aCharacterPosition);
-  static void LoopCharacters(cairo_t *aCtx,
-                             const nsAString &aText,
-                             const nsSVGCharacterPosition *aCP,
-                             void (*aFunc)(cairo_t *cr, const char *utf8));
+
+  enum FillOrStroke { FILL, STROKE};
+
+  void LoopCharacters(gfxContext *aCtx, const nsString &aText,
+                      const nsSVGCharacterPosition *aCP,
+                      FillOrStroke aFillOrStroke);
 
   void UpdateGeometry(PRBool bRedraw, PRBool suppressInvalidation);
   void UpdateMetrics();
@@ -208,8 +209,10 @@ protected:
   nsresult GetHighlight(PRUint32 *charnum, PRUint32 *nchars,
                         nscolor *foreground, nscolor *background);
 
-  float mX, mY;
-  PRUint8      mWhitespaceHandling;
+  nsRefPtr<gfxFontGroup> mFontGroup;
+  nsAutoPtr<gfxFontStyle> mFontStyle;
+  gfxPoint mPosition;
+  PRUint8 mWhitespaceHandling;
 };
 
 #endif

@@ -80,6 +80,7 @@
 #include "gfxImageSurface.h"
 #include "gfxMatrix.h"
 #include "nsStubMutationObserver.h"
+#include "gfxPlatform.h"
 
 class nsSVGFilterProperty : public nsStubMutationObserver {
 public:
@@ -1157,8 +1158,10 @@ gfxASurface *
 nsSVGUtils::GetThebesComputationalSurface()
 {
   if (!mThebesComputationalSurface) {
-    mThebesComputationalSurface =
-      new gfxImageSurface(GetCairoComputationalSurface());
+    nsRefPtr<gfxASurface> surface =
+      gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(1, 1),
+                                                         gfxASurface::ImageFormatARGB32);
+    mThebesComputationalSurface = surface;
     // we want to keep this surface around
     NS_IF_ADDREF(mThebesComputationalSurface);
   }
