@@ -231,6 +231,14 @@
 #define NS_STYLE_BG_ORIGIN_CONTENT        2
 
 // See nsStyleBackground
+// The parser code depends on |ing these values together.
+#define NS_STYLE_BG_POSITION_CENTER  (1<<0)
+#define NS_STYLE_BG_POSITION_TOP     (1<<1)
+#define NS_STYLE_BG_POSITION_BOTTOM  (1<<2)
+#define NS_STYLE_BG_POSITION_LEFT    (1<<3)
+#define NS_STYLE_BG_POSITION_RIGHT   (1<<4)
+
+// See nsStyleBackground
 #define NS_STYLE_BG_REPEAT_OFF                  0x00
 #define NS_STYLE_BG_REPEAT_X                    0x01
 #define NS_STYLE_BG_REPEAT_Y                    0x02

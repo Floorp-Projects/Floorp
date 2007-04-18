@@ -306,25 +306,23 @@ const PRInt32 nsCSSProps::kBackgroundOriginKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+// Note: Don't change this table unless you update
+// parseBackgroundPosition!
+
+const PRInt32 nsCSSProps::kBackgroundPositionKTable[] = {
+  eCSSKeyword_center, NS_STYLE_BG_POSITION_CENTER,
+  eCSSKeyword_top, NS_STYLE_BG_POSITION_TOP,
+  eCSSKeyword_bottom, NS_STYLE_BG_POSITION_BOTTOM,
+  eCSSKeyword_left, NS_STYLE_BG_POSITION_LEFT,
+  eCSSKeyword_right, NS_STYLE_BG_POSITION_RIGHT,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const PRInt32 nsCSSProps::kBackgroundRepeatKTable[] = {
   eCSSKeyword_no_repeat,  NS_STYLE_BG_REPEAT_OFF,
   eCSSKeyword_repeat,     NS_STYLE_BG_REPEAT_XY,
   eCSSKeyword_repeat_x,   NS_STYLE_BG_REPEAT_X,
   eCSSKeyword_repeat_y,   NS_STYLE_BG_REPEAT_Y,
-  eCSSKeyword_UNKNOWN,-1
-};
-
-const PRInt32 nsCSSProps::kBackgroundXPositionKTable[] = {
-  eCSSKeyword_left,   0,
-  eCSSKeyword_center, 50,
-  eCSSKeyword_right,  100,
-  eCSSKeyword_UNKNOWN,-1
-};
-
-const PRInt32 nsCSSProps::kBackgroundYPositionKTable[] = {
-  eCSSKeyword_top,    0,
-  eCSSKeyword_center, 50,
-  eCSSKeyword_bottom, 100,
   eCSSKeyword_UNKNOWN,-1
 };
 

@@ -4344,25 +4344,13 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
 }
 
 // Bits used in determining which background position info we have
-#define BG_CENTER  0x01
-#define BG_TOP     0x02
-#define BG_BOTTOM  0x04
-#define BG_LEFT    0x08
-#define BG_RIGHT   0x10
+#define BG_CENTER  NS_STYLE_BG_POSITION_CENTER
+#define BG_TOP     NS_STYLE_BG_POSITION_TOP
+#define BG_BOTTOM  NS_STYLE_BG_POSITION_BOTTOM
+#define BG_LEFT    NS_STYLE_BG_POSITION_LEFT
+#define BG_RIGHT   NS_STYLE_BG_POSITION_RIGHT
 #define BG_CTB    (BG_CENTER | BG_TOP | BG_BOTTOM)
 #define BG_CLR    (BG_CENTER | BG_LEFT | BG_RIGHT)
-
-// Note: Don't change this table unless you update
-// parseBackgroundPosition!
-
-static const PRInt32 kBackgroundXYPositionKTable[] = {
-  eCSSKeyword_center, BG_CENTER,
-  eCSSKeyword_top, BG_TOP,
-  eCSSKeyword_bottom, BG_BOTTOM,
-  eCSSKeyword_left, BG_LEFT,
-  eCSSKeyword_right, BG_RIGHT,
-  -1,
-};
 
 PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
                                                nsCSSValue& aValue,
@@ -4828,25 +4816,25 @@ PRBool CSSParserImpl::ParseAzimuth(nsresult& aErrorCode, nsCSSValue& aValue)
 static nsCSSValue
 BackgroundPositionMaskToCSSValue(PRInt32 aMask, PRBool isX)
 {
-  PRInt32 pct = 50;
+  PRInt32 val = NS_STYLE_BG_POSITION_CENTER;
   if (isX) {
     if (aMask & BG_LEFT) {
-      pct = 0;
+      val = NS_STYLE_BG_POSITION_LEFT;
     }
     else if (aMask & BG_RIGHT) {
-      pct = 100;
+      val = NS_STYLE_BG_POSITION_RIGHT;
     }
   }
   else {
     if (aMask & BG_TOP) {
-      pct = 0;
+      val = NS_STYLE_BG_POSITION_TOP;
     }
     else if (aMask & BG_BOTTOM) {
-      pct = 100;
+      val = NS_STYLE_BG_POSITION_BOTTOM;
     }
   }
 
-  return nsCSSValue(pct, eCSSUnit_Enumerated);
+  return nsCSSValue(val, eCSSUnit_Enumerated);
 }
 
 PRBool CSSParserImpl::ParseBackground(nsresult& aErrorCode)
@@ -4956,7 +4944,7 @@ PRBool CSSParserImpl::ParseBackground(nsresult& aErrorCode)
           return PR_FALSE;
         }
       } else if (nsCSSProps::FindKeyword(keyword,
-                   kBackgroundXYPositionKTable, dummy)) {
+                   nsCSSProps::kBackgroundPositionKTable, dummy)) {
         if (havePosition)
           return PR_FALSE;
         havePosition = PR_TRUE;
@@ -5030,7 +5018,7 @@ PRBool CSSParserImpl::ParseBackgroundPositionValues(nsresult& aErrorCode)
       return PR_TRUE;
     }
 
-    if (ParseEnum(aErrorCode, yValue, kBackgroundXYPositionKTable)) {
+    if (ParseEnum(aErrorCode, yValue, nsCSSProps::kBackgroundPositionKTable)) {
       PRInt32 yVal = yValue.GetIntValue();
       if (!(yVal & BG_CTB)) {
         // The second keyword can only be 'center', 'top', or 'bottom'
@@ -5053,10 +5041,10 @@ PRBool CSSParserImpl::ParseBackgroundPositionValues(nsresult& aErrorCode)
   // any duplicate keywords other than center. We try to get two
   // keywords but it's okay if there is only one.
   PRInt32 mask = 0;
-  if (ParseEnum(aErrorCode, xValue, kBackgroundXYPositionKTable)) {
+  if (ParseEnum(aErrorCode, xValue, nsCSSProps::kBackgroundPositionKTable)) {
     PRInt32 bit = xValue.GetIntValue();
     mask |= bit;
-    if (ParseEnum(aErrorCode, xValue, kBackgroundXYPositionKTable)) {
+    if (ParseEnum(aErrorCode, xValue, nsCSSProps::kBackgroundPositionKTable)) {
       bit = xValue.GetIntValue();
       if (mask & (bit & ~BG_CENTER)) {
         // Only the 'center' keyword can be duplicated.
