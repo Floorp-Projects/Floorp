@@ -50,39 +50,16 @@
 <!ENTITY  generalTab            "General">
 <!ENTITY  generalTab.accesskey  "G">
 <!ENTITY  generalURL            "Address:">
-<!ENTITY  generalMode           "Render Mode:">
 <!ENTITY  generalType           "Type:">
 <!ENTITY  generalSize           "Size:">
 <!ENTITY  generalReferrer       "Referring URL:">
 <!ENTITY  generalSource         "Cache Source:">
 <!ENTITY  generalModified       "Modified:">
-<!ENTITY  generalExpires        "Expires:">
 <!ENTITY  generalEncoding       "Encoding:">
 <!ENTITY  generalMetaName       "Name">
 <!ENTITY  generalMetaContent    "Content">
 <!ENTITY  generalSecurityMore   "More">
 <!ENTITY  generalSecurityMore.accesskey "M">
-
-<!ENTITY  formsTab              "Forms">
-<!ENTITY  formsTab.accesskey    "F">
-<!ENTITY  formAction            "Form Action">
-<!ENTITY  formMethod            "Method">
-<!ENTITY  formName              "Name">
-<!ENTITY  formEncoding          "Encoding:">
-<!ENTITY  formTarget            "Target:">
-<!ENTITY  formFields            "Fields:">
-<!ENTITY  formLabel             "Label">
-<!ENTITY  formFName             "Field Name">
-<!ENTITY  formType              "Type">
-<!ENTITY  formCValue            "Current Value">
-
-<!ENTITY  linksTab              "Links">
-<!ENTITY  linksTab.accesskey    "L">
-<!ENTITY  linkName              "Name">
-<!ENTITY  linkAddress           "Address">
-<!ENTITY  linkType              "Type">
-<!ENTITY  linkTarget            "Target">
-<!ENTITY  linkAccessKey         "Access Key">
 
 <!ENTITY  mediaTab              "Media">
 <!ENTITY  mediaTab.accesskey    "M">
