@@ -716,16 +716,19 @@ gfxPangoFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
     if (!run)
         return nsnull;
 
-    const gchar *utf8Chars = NS_REINTERPRET_CAST(const gchar*, aString);
-
     PRBool isRTL = run->IsRightToLeft();
-    if (!isRTL) {
+    if ((aParams->mFlags & TEXT_IS_ASCII) && !isRTL) {
         // We don't need to send an override character here, the characters must be all
         // LTR
+        const gchar *utf8Chars = NS_REINTERPRET_CAST(const gchar*, aString);
         InitTextRun(run, utf8Chars, aLength, 0, nsnull, 0);
     } else {
-        // XXX this could be more efficient
-        NS_ConvertASCIItoUTF16 unicodeString(utf8Chars, aLength);
+        const char *chars = NS_REINTERPRET_CAST(const char*, aString);
+        // XXX this could be more efficient.
+        // Although chars in not necessarily ASCII (as it may point to the low
+        // bytes of any UCS-2 characters < 256), NS_ConvertASCIItoUTF16 seems
+        // to DTRT.
+        NS_ConvertASCIItoUTF16 unicodeString(chars, aLength);
         nsCAutoString utf8;
         PRInt32 headerLen = AppendDirectionalIndicatorUTF8(isRTL, utf8);
         AppendUTF16toUTF8(unicodeString, utf8);
@@ -1131,6 +1134,10 @@ gfxPangoFontGroup::CreateGlyphRunsXft(gfxTextRun *aTextRun,
     aTextRun->AddGlyphRun(font, 0);
 
     while (p < aUTF8 + aUTF8Length) {
+        // glib-2.12.9: "If p does not point to a valid UTF-8 encoded
+        // character, results are undefined." so it is not easy to assert that
+        // aUTF8 in fact points to UTF8 data but asserting
+        // g_unichar_validate(ch) may be mildly useful.
         gunichar ch = g_utf8_get_char(p);
         p = g_utf8_next_char(p);
         
