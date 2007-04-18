@@ -94,7 +94,6 @@ private:
 
 #define NS_PURPLE_MASK (~NS_PURPLE_BIT)
 #define NS_PURPLE_BIT_SET(x) ((x) & (NS_PURPLE_BIT))
-#define NS_SET_PURPLE_BIT(x) ((x) |= (NS_PURPLE_BIT))
 #define NS_CLEAR_PURPLE_BIT(x) ((x) &= (NS_PURPLE_MASK))
 #define NS_VALUE_WITHOUT_PURPLE_BIT(x) ((x) & (NS_PURPLE_MASK))
 
@@ -149,26 +148,25 @@ public:
       return 1;
 
     nsrefcnt tmp = get();
+    NS_ASSERTION(tmp >= 1, "decr() called with zero refcnt");
+
     PRBool purple = NS_STATIC_CAST(PRBool, NS_PURPLE_BIT_SET(mValue));
+    PRBool shouldBePurple = tmp > 1;
 
-    if (NS_UNLIKELY(tmp > 1 && !purple)) {
+    if (NS_UNLIKELY(shouldBePurple && !purple)) {
       nsCycleCollector_suspect(owner);
-      purple = PR_TRUE;
-
     } else if (NS_UNLIKELY(tmp == 1 && purple)) {
       nsCycleCollector_forget(owner);
-      purple = PR_FALSE;
-
-    } else {
-      NS_ASSERTION(tmp >= 1, "decr() called with zero refcnt");
     }
 
-    mValue = tmp - 1;
+    --tmp;
 
-    if (purple)
-      NS_SET_PURPLE_BIT(mValue);
+    if (shouldBePurple)
+      mValue = tmp | NS_PURPLE_BIT;
+    else
+      mValue = tmp;
 
-    return get();
+    return tmp;
   }
 
   void unmarkPurple()

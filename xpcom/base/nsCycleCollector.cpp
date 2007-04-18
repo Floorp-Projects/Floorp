@@ -330,7 +330,7 @@ struct nsPurpleBuffer
     // remainder spill into the mBackingStore hashtable. The idea is
     // to get a higher hit rate and greater locality of reference for
     // generation zero, in which the vast majority of suspect/forget
-    // calls annaihilate one another.
+    // calls annihilate one another.
 
     nsCycleCollectorParams &mParams;
     nsCycleCollectorStats &mStats;
@@ -651,6 +651,8 @@ static nsCycleCollector *sCollector = nsnull;
 // Utility functions
 ////////////////////////////////////////////////////////////////////////
 
+#ifdef DEBUG_CC
+
 struct safetyCallback :     
     public nsCycleCollectionTraversalCallback
 {
@@ -666,6 +668,8 @@ struct safetyCallback :
 };
 
 static safetyCallback sSafetyCallback;
+
+#endif
 
 
 static inline void
@@ -747,7 +751,9 @@ GraphWalker::NoteXPCOMChild(nsISupports *child)
         PtrInfo childPi;
         EnsurePtrInfo(mGraph, child, childPi);
         this->NoteChild(child, childPi);
+#ifdef DEBUG_CC
         mRuntimes[nsIProgrammingLanguage::CPLUSPLUS]->Traverse(child, sSafetyCallback);
+#endif
         mQueue.Push(child);
     }
 }
@@ -766,7 +772,9 @@ GraphWalker::NoteScriptChild(PRUint32 langID, void *child)
     childPi.mLang = langID;
     EnsurePtrInfo(mGraph, child, childPi);
     this->NoteChild(child, childPi);
+#ifdef DEBUG_CC
     mRuntimes[langID]->Traverse(child, sSafetyCallback);
+#endif
     mQueue.Push(child);
 }
 
@@ -1502,35 +1510,35 @@ nsCycleCollector::Suspect(nsISupports *n, PRBool current)
     if (mScanInProgress)
         return;
 
-    mStats.mSuspectNode++;
+    NS_ASSERTION(nsCycleCollector_isScanSafe(n),
+                 "suspected a non-scansafe pointer");
+    NS_ASSERTION(NS_IsMainThread(), "trying to suspect from non-main thread");
 
     if (mParams.mDoNothing)
         return;
 
-    if (!NS_IsMainThread())
-        Fault("trying to suspect from non-main thread");
-
-    if (!nsCycleCollector_isScanSafe(n))
-        Fault("suspected a non-scansafe pointer", n);    
+#ifdef DEBUG_CC
+    mStats.mSuspectNode++;
 
     if (nsCycleCollector_shouldSuppress(n))
         return;
 
-#if defined(DEBUG) && !defined(__MINGW32__)
+#ifndef __MINGW32__
     if (mParams.mHookMalloc)
         InitMemHook();
 #endif
-
-    if (current)
-        mBufs[0].Push(n);
-    else
-        mPurpleBuf.Put(n);
 
     if (mParams.mLogPointers) {
         if (!mPtrLog)
             mPtrLog = fopen("pointer_log", "w");
         fprintf(mPtrLog, "S %p\n", NS_STATIC_CAST(void*, n));
     }
+#endif
+
+    if (current)
+        mBufs[0].Push(n);
+    else
+        mPurpleBuf.Put(n);
 }
 
 
@@ -1544,26 +1552,27 @@ nsCycleCollector::Forget(nsISupports *n)
     if (mScanInProgress)
         return;
 
-    mStats.mForgetNode++;
-
+    NS_ASSERTION(NS_IsMainThread(), "trying to forget from non-main thread");
+    
     if (mParams.mDoNothing)
         return;
 
-    if (!NS_IsMainThread())
-        Fault("trying to forget from non-main thread");
+#ifdef DEBUC_CC
+    mStats.mForgetNode++;
 
 #ifndef __MINGW32__
     if (mParams.mHookMalloc)
         InitMemHook();
 #endif
 
-    mPurpleBuf.Remove(n);
-    
     if (mParams.mLogPointers) {
         if (!mPtrLog)
             mPtrLog = fopen("pointer_log", "w");
         fprintf(mPtrLog, "F %p\n", NS_STATIC_CAST(void*, n));
     }
+#endif
+
+    mPurpleBuf.Remove(n);
 }
 
 void 
