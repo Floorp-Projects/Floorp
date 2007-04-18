@@ -73,11 +73,11 @@
       </property>
 
       <property name="increaseDisabled"
-                onget="return this._increaseButton.getAttribute('disabled');"
+                onget="return this._increaseButton.getAttribute('disabled') == 'true';"
                 onset="if (val) this._increaseButton.setAttribute('disabled', 'true');
                        else this._increaseButton.removeAttribute('disabled'); return val;"/>
       <property name="decreaseDisabled"
-                onget="return this._decreaseButton.getAttribute('disabled');"
+                onget="return this._decreaseButton.getAttribute('disabled') == 'true';"
                 onset="if (val) this._decreaseButton.setAttribute('disabled', 'true');
                        else this._decreaseButton.removeAttribute('disabled'); return val;"/>
     </implementation>
