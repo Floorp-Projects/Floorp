@@ -54,3 +54,9 @@ tier_app_dirs += xpfe/components/search
 endif
 
 tier_app_dirs += browser
+
+installer:
+	@$(MAKE) -C browser/installer installer
+
+package:
+	@$(MAKE) -C browser/installer

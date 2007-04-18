@@ -74,3 +74,10 @@ tier_app_dirs += extensions/java
 endif
 
 tier_app_dirs += xulrunner
+
+installer:
+	@echo "XULRunner doesn't have an installer yet."
+	@exit 1
+
+package:
+	@$(MAKE) -C xulrunner/installer
