@@ -91,7 +91,7 @@
       </property>
       
       <property name="selectedIndex"
-                onget="return this.tabs ? this.tabs.selectedIndex : null;">
+                onget="return this.tabs ? this.tabs.selectedIndex : -1;">
         <setter>
         <![CDATA[
           if (this.tabs)
