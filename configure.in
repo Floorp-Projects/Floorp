@@ -564,8 +564,8 @@ case "$target" in
 
     AC_DEFINE_UNQUOTED(WINVER,0x$WINVER)
     AC_DEFINE_UNQUOTED(_WIN32_WINNT,0x$WINVER)
-    # Require OS features provided by IE 4.0
-    AC_DEFINE_UNQUOTED(_WIN32_IE,0x0400)
+    # Require OS features provided by IE 5.0
+    AC_DEFINE_UNQUOTED(_WIN32_IE,0x0500)
     ;;
 esac
 
