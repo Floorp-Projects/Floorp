@@ -1001,7 +1001,9 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleInWeakShell(nsIDOMNode *aNode
 nsresult nsAccessibilityService::InitAccessible(nsIAccessible *aAccessibleIn,
                                                 nsIAccessible **aAccessibleOut)
 {
-  NS_ENSURE_TRUE(aAccessibleIn, NS_ERROR_FAILURE);
+  if (!aAccessibleIn) {
+    return NS_ERROR_FAILURE; // No accessible to init
+  }
   NS_ASSERTION(aAccessibleOut && !*aAccessibleOut, "Out param should already be cleared out");
 
   nsCOMPtr<nsPIAccessNode> privateAccessNode = do_QueryInterface(aAccessibleIn);
