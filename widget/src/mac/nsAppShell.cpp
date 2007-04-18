@@ -214,10 +214,10 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
     }
   }
 
-  if (mSuspendNativeCount <= 0) {
-    NativeEventCallback();
+  if (self->mSuspendNativeCount <= 0) {
+    self->NativeEventCallback();
   } else {
-    mSkippedNativeCallback = PR_TRUE;
+    self->mSkippedNativeCallback = PR_TRUE;
   }
 
   NS_RELEASE(self);
