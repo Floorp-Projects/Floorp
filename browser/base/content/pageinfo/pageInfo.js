@@ -281,17 +281,6 @@ function onLoadPageInfo()
   gBundle = document.getElementById("pageinfobundle");
   gStrings.unknown = gBundle.getString("unknown");
   gStrings.notSet = gBundle.getString("notset");
-  gStrings.emptyString = gBundle.getString("emptystring");
-  gStrings.linkAnchor = gBundle.getString("linkAnchor");
-  gStrings.linkArea = gBundle.getString("linkArea");
-  gStrings.linkSubmit = gBundle.getString("linkSubmit");
-  gStrings.linkSubmission = gBundle.getString("linkSubmission");
-  gStrings.linkRel = gBundle.getString("linkRel");
-  gStrings.linkStylesheet = gBundle.getString("linkStylesheet");
-  gStrings.linkRev = gBundle.getString("linkRev");
-  gStrings.linkX = gBundle.getString("linkX");
-  gStrings.linkQuote = gBundle.getString("linkQuote");
-  gStrings.linkMod = gBundle.getString("linkMod");
   gStrings.mediaImg = gBundle.getString("mediaImg");
   gStrings.mediaBGImg = gBundle.getString("mediaBGImg");
   gStrings.mediaApplet = gBundle.getString("mediaApplet");
