@@ -608,7 +608,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
     JSObject *obj = NS_STATIC_CAST(JSObject*, p);
     JSClass* clazz = OBJ_GET_CLASS(cx, obj);
 
-#ifdef DEBUG
+#ifdef DEBUG_CC
     char name[72];
     if(XPCNativeWrapper::IsNativeWrapperClass(clazz))
     {
