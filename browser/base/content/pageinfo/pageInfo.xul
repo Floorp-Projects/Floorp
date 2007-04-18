@@ -179,13 +179,13 @@
       <separator class="thin"/>
       <groupbox id="metaTags" flex="1">
         <caption id="metaTagsCaption" onclick="toggleGroupbox('metaTags');"/>
-        <tree id="metatree" flex="1" contextmenu="picontext">
+        <tree id="metatree" flex="1" hidecolumnpicker="true" contextmenu="picontext">
           <treecols>
             <treecol id="meta-name"    label="&generalMetaName;"
-                     ignoreincolumnpicker="true" persist="width" flex="1"/>
+                     persist="width" flex="1"/>
             <splitter class="tree-splitter"/>
             <treecol id="meta-content" label="&generalMetaContent;"
-                     ignoreincolumnpicker="true" persist="width" flex="4"/>
+                     persist="width" flex="4"/>
           </treecols>
           <treechildren flex="1"/>
         </tree>        
