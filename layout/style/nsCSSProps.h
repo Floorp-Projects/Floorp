@@ -118,9 +118,8 @@ public:
   static const PRInt32 kBackgroundColorKTable[];
   static const PRInt32 kBackgroundInlinePolicyKTable[];
   static const PRInt32 kBackgroundOriginKTable[];
+  static const PRInt32 kBackgroundPositionKTable[];
   static const PRInt32 kBackgroundRepeatKTable[];
-  static const PRInt32 kBackgroundXPositionKTable[];
-  static const PRInt32 kBackgroundYPositionKTable[];
   static const PRInt32 kBorderCollapseKTable[];
   static const PRInt32 kBorderColorKTable[];
   static const PRInt32 kBorderStyleKTable[];

@@ -3101,7 +3101,20 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct,
     bg->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_PERCENT;
   }
   else if (eCSSUnit_Enumerated == colorData.mBackPosition.mXValue.GetUnit()) {
-    bg->mBackgroundXPosition.mFloat = (float)colorData.mBackPosition.mXValue.GetIntValue() / 100.0f;
+    switch (colorData.mBackPosition.mXValue.GetIntValue()) {
+      case NS_STYLE_BG_POSITION_LEFT:
+        bg->mBackgroundXPosition.mFloat = 0.0f;
+        break;
+      case NS_STYLE_BG_POSITION_RIGHT:
+        bg->mBackgroundXPosition.mFloat = 1.0f;
+        break;
+      default:
+        NS_NOTREACHED("unexpected value");
+        // fall through
+      case NS_STYLE_BG_POSITION_CENTER:
+        bg->mBackgroundXPosition.mFloat = 0.5f;
+        break;
+    }
     bg->mBackgroundFlags |= NS_STYLE_BG_X_POSITION_PERCENT;
     bg->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_LENGTH;
   }
@@ -3124,7 +3137,20 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct,
     bg->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_PERCENT;
   }
   else if (eCSSUnit_Enumerated == colorData.mBackPosition.mYValue.GetUnit()) {
-    bg->mBackgroundYPosition.mFloat = (float)colorData.mBackPosition.mYValue.GetIntValue() / 100.0f;
+    switch (colorData.mBackPosition.mYValue.GetIntValue()) {
+      case NS_STYLE_BG_POSITION_TOP:
+        bg->mBackgroundYPosition.mFloat = 0.0f;
+        break;
+      case NS_STYLE_BG_POSITION_BOTTOM:
+        bg->mBackgroundYPosition.mFloat = 1.0f;
+        break;
+      default:
+        NS_NOTREACHED("unexpected value");
+        // fall through
+      case NS_STYLE_BG_POSITION_CENTER:
+        bg->mBackgroundYPosition.mFloat = 0.5f;
+        break;
+    }
     bg->mBackgroundFlags |= NS_STYLE_BG_Y_POSITION_PERCENT;
     bg->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_LENGTH;
   }
