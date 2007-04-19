@@ -251,18 +251,34 @@ NS_IMETHODIMP nsDocAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
 
 NS_IMETHODIMP nsDocAccessible::TakeFocus()
 {
-  nsCOMPtr<nsIDOMWindow> domWin;
-  GetWindow(getter_AddRefs(domWin));
-  nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(domWin));
-  NS_ENSURE_TRUE(privateDOMWindow, NS_ERROR_FAILURE);
-  nsIFocusController *focusController =
-    privateDOMWindow->GetRootFocusController();
-  if (focusController) {
-    nsCOMPtr<nsIDOMElement> ele(do_QueryInterface(mDOMNode));
-    focusController->SetFocusedElement(ele);
-    return NS_OK;
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
+  PRUint32 state;
+  GetState(&state, nsnull);
+  if (0 == (state & nsIAccessibleStates::STATE_FOCUSABLE)) {
+    return NS_ERROR_FAILURE; // Not focusable
   }
-  return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShellTreeItemFor(mDOMNode);
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(treeItem);
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIPresShell> shell(GetPresShell());
+  nsIEventStateManager *esm = shell->GetPresContext()->EventStateManager();
+  NS_ENSURE_TRUE(esm, NS_ERROR_FAILURE);
+
+  nsresult rv = esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = docShell->SetHasFocus(PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = docShell->SetCanvasHasFocus(PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsIContent *content = mDocument->GetRootContent();
+  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+  content->SetFocus(shell->GetPresContext());
+  esm->SetFocusedContent(content);
+  esm->MoveCaretToFocus();
+  esm->SetFocusedContent(nsnull);
+  return NS_OK;
 }
 
 // ------- nsIAccessibleDocument Methods (5) ---------------
@@ -909,14 +925,32 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
     return; // Document has been shut down
   }
 
-  if (aNameSpaceID == kNameSpaceID_WAIProperties) {
-    ARIAAttributeChanged(aContent, aAttribute);
-    return;
-  }
-
   nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(aContent));
   NS_ASSERTION(targetNode, "No node for attr modified");
   if (!targetNode) {
+    return;
+  }
+
+  // Universal boolean properties that don't require a role.
+  if (aAttribute == nsAccessibilityAtoms::disabled) {
+    // Fire the state change whether disabled attribute is
+    // set for XUL, HTML or ARIA namespace.
+    // Checking the namespace would not seem to gain us anything, because
+    // disabled really is going to mean the same thing in any namespace.
+    nsCOMPtr<nsIAccessibleStateChangeEvent> event =
+      new nsAccStateChangeEvent(targetNode,
+                                nsIAccessibleStates::EXT_STATE_ENABLED,
+                                PR_TRUE);
+    FireDelayedAccessibleEvent(event);
+    event = new nsAccStateChangeEvent(targetNode,
+                                      nsIAccessibleStates::EXT_STATE_SENSITIVE,
+                                      PR_TRUE);
+    FireDelayedAccessibleEvent(event);
+    return;
+  }
+
+  if (aNameSpaceID == kNameSpaceID_WAIProperties) {
+    ARIAAttributeChanged(aContent, aAttribute);
     return;
   }
 
@@ -978,16 +1012,6 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
   if (!targetNode)
     return;
 
-  // Universal boolean properties that don't require a role.
-  if (aAttribute == nsAccessibilityAtoms::disabled) {
-    nsCOMPtr<nsIAccessibleStateChangeEvent> event =
-      new nsAccStateChangeEvent(targetNode,
-                                nsIAccessibleStates::EXT_STATE_ENABLED,
-                                PR_TRUE);
-    FireDelayedAccessibleEvent(event);
-    return;
-  }
-
   if (aAttribute == nsAccessibilityAtoms::required) {
     nsCOMPtr<nsIAccessibleStateChangeEvent> event =
       new nsAccStateChangeEvent(targetNode,
@@ -1010,7 +1034,7 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     // The activedescendant universal property redirects accessible focus events
     // to the element with the id that activedescendant points to
     nsCOMPtr<nsIDOMNode> currentFocus = GetCurrentFocus();
-    if (SameCOMIdentity(currentFocus, aContent)) {
+    if (currentFocus == targetNode) {
       nsRefPtr<nsRootAccessible> rootAcc = GetRootAccessible();
       if (rootAcc)
         rootAcc->FireAccessibleFocusEvent(nsnull, currentFocus, nsnull, PR_TRUE);
