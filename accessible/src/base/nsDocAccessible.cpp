@@ -909,32 +909,14 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
     return; // Document has been shut down
   }
 
+  if (aNameSpaceID == kNameSpaceID_WAIProperties) {
+    ARIAAttributeChanged(aContent, aAttribute);
+    return;
+  }
+
   nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(aContent));
   NS_ASSERTION(targetNode, "No node for attr modified");
   if (!targetNode) {
-    return;
-  }
-
-  // Universal boolean properties that don't require a role.
-  if (aAttribute == nsAccessibilityAtoms::disabled) {
-    // Fire the state change whether disabled attribute is
-    // set for XUL, HTML or ARIA namespace.
-    // Checking the namespace would not seem to gain us anything, because
-    // disabled really is going to mean the same thing in any namespace.
-    nsCOMPtr<nsIAccessibleStateChangeEvent> event =
-      new nsAccStateChangeEvent(targetNode,
-                                nsIAccessibleStates::EXT_STATE_ENABLED,
-                                PR_TRUE);
-    FireDelayedAccessibleEvent(event);
-    event = new nsAccStateChangeEvent(targetNode,
-                                      nsIAccessibleStates::EXT_STATE_SENSITIVE,
-                                      PR_TRUE);
-    FireDelayedAccessibleEvent(event);
-    return;
-  }
-
-  if (aNameSpaceID == kNameSpaceID_WAIProperties) {
-    ARIAAttributeChanged(aContent, aAttribute);
     return;
   }
 
@@ -996,6 +978,16 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
   if (!targetNode)
     return;
 
+  // Universal boolean properties that don't require a role.
+  if (aAttribute == nsAccessibilityAtoms::disabled) {
+    nsCOMPtr<nsIAccessibleStateChangeEvent> event =
+      new nsAccStateChangeEvent(targetNode,
+                                nsIAccessibleStates::EXT_STATE_ENABLED,
+                                PR_TRUE);
+    FireDelayedAccessibleEvent(event);
+    return;
+  }
+
   if (aAttribute == nsAccessibilityAtoms::required) {
     nsCOMPtr<nsIAccessibleStateChangeEvent> event =
       new nsAccStateChangeEvent(targetNode,
@@ -1018,7 +1010,7 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     // The activedescendant universal property redirects accessible focus events
     // to the element with the id that activedescendant points to
     nsCOMPtr<nsIDOMNode> currentFocus = GetCurrentFocus();
-    if (currentFocus == targetNode) {
+    if (SameCOMIdentity(currentFocus, aContent)) {
       nsRefPtr<nsRootAccessible> rootAcc = GetRootAccessible();
       if (rootAcc)
         rootAcc->FireAccessibleFocusEvent(nsnull, currentFocus, nsnull, PR_TRUE);
