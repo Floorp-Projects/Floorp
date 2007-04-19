@@ -459,6 +459,9 @@ png_read_info(png_structp png_ptr, png_infop info_ptr)
                   !(png_ptr->mode & PNG_HAVE_PLTE))
             png_error(png_ptr, "Missing PLTE before IDAT");
 
+#if defined(PNG_READ_APNG_SUPPORTED)
+         png_have_info(png_ptr, info_ptr);
+#endif
          png_ptr->idat_size = length;
          png_ptr->mode |= PNG_HAVE_IDAT;
          break;

@@ -397,6 +397,9 @@ png_push_read_chunk(png_structp png_ptr, png_infop info_ptr)
             png_error(png_ptr, "Too many IDAT's found");
       }
 
+#if defined(PNG_READ_APNG_SUPPORTED)
+      png_have_info(png_ptr, info_ptr);
+#endif
       png_ptr->idat_size = png_ptr->push_length;
       png_ptr->mode |= PNG_HAVE_IDAT;
       png_ptr->process_mode = PNG_READ_IDAT_MODE;
