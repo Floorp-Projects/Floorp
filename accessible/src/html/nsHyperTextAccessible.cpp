@@ -495,8 +495,16 @@ nsresult nsHyperTextAccessible::DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNod
     nsCOMPtr<nsIContent> parentContent(do_QueryInterface(aNode));
     // Should not happen, but better to protect against crash if doc node is somehow passed in
     NS_ENSURE_TRUE(parentContent, NS_ERROR_FAILURE);
-    // findNode could be null if aNodeOffset == # of child nodes, which means we're at the end of the children
+    // findNode could be null if aNodeOffset == # of child nodes, which means one of two things:
+    // 1) we're at the end of the children, keep findNode = null, so that we get the last possible offset
+    // 2) there are no children, use parentContent for the node to find. In this case parentContent can't be
+    //    the nsIAccessibleText, because an accesible text must have children
+     
     findNode = do_QueryInterface(parentContent->GetChildAt(aNodeOffset));
+    if (!findNode && !aNodeOffset) {
+      NS_ASSERTION(!SameCOMIdentity(parentContent, mDOMNode), "Cannot find child for DOMPointToOffset search");
+      findNode = do_QueryInterface(parentContent); // Case #2: there are no children
+    }
   }
 
   // Get accessible for this findNode, or if that node isn't accessible, use the
