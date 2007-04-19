@@ -139,6 +139,7 @@ protected:
                             nsSVGElement *content);
   nsresult   GetPatternMatrix(nsIDOMSVGMatrix **aCTM, 
                               nsIDOMSVGRect *bbox,
+                              nsIDOMSVGRect *callerBBox,
                               nsIDOMSVGMatrix *callerCTM);
   nsresult   ConstructCTM(nsIDOMSVGMatrix **ctm, nsIDOMSVGRect *callerBBox);
   nsresult   GetCallerGeometry(nsIDOMSVGMatrix **aCTM, 
