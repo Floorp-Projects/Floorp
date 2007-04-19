@@ -9,21 +9,9 @@
     <resources>
       <stylesheet src="chrome://global/skin/toolbar.css"/>
     </resources>
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            if (this.localName == "toolbarseparator")
-              return Components.interfaces.nsIAccessibleProvider.XULToolbarSeparator;
-            else
-              return Components.interfaces.nsIAccessibleProvider.XULToolbar;
-          ]]>
-        </getter>
-      </property>
-    </implementation>
   </binding>
   
-  <binding id="toolbox" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">  
+  <binding id="toolbox" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
     <implementation>
       <field name="palette">
         null
@@ -82,7 +70,12 @@
   </binding>
   
   <binding id="toolbar" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
-    <implementation>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XULToolbar;
+        </getter>
+      </property>
       <field name="firstPermanentChild">
         null
       </field>
@@ -183,10 +176,7 @@
             var firstChildID = this.firstPermanentChild ? this.firstPermanentChild.id : "";
             var lastChildID = this.lastPermanentChild ? this.lastPermanentChild.id : "";
 
-            if (val == "__empty")
-              return;
-
-            if (val) {
+            if (val && val != "__empty") {
               var itemIds = val.split(",");
               var before = true;
               for (var i = 0; i < itemIds.length; i++) {
@@ -196,6 +186,8 @@
                   this.insertItem(itemIds[i], null, null, before);
               }
             }
+
+            return val;
           ]]>
         </setter>
       </property>
@@ -227,7 +219,7 @@
                                                  "toolbarspacer");
               uniqueId = (new Date()).getTime()+this.childNodes.length;
               newItem.id = "spacer" + uniqueId;
-            } else {
+            } else if (this.parentNode.localName == "toolbox") {
               // Attempt to locate an item with a matching id within palette.
               var paletteItem = this.parentNode.palette.firstChild;
               while (paletteItem) {
@@ -279,8 +271,8 @@
        <field name="_statusbar">null</field>
        <field name="_originalStatusText">null</field>
        <property name="statusbar" onget="return this.getAttribute('statusbar');"
-                                  onset="return this.setAttribute('statusbar', val)"/>
-       <method name="updateStatusText">
+                                  onset="this.setAttribute('statusbar', val); return val;"/>
+       <method name="_updateStatusText">
           <parameter name="itemText"/>
           <body>
            <![CDATA[
@@ -312,12 +304,20 @@
             this._statusbar.label = this._originalStatusText;
           ]]>
         </handler>
-        <handler event="DOMMenuItemActive">this.updateStatusText(event.target.statusText);</handler>
-        <handler event="DOMMenuItemInactive">this.updateStatusText("");</handler>
+        <handler event="DOMMenuItemActive">this._updateStatusText(event.target.statusText);</handler>
+        <handler event="DOMMenuItemInactive">this._updateStatusText("");</handler>
     </handlers>
   </binding>
 
-  <binding id="toolbardecoration" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base"/>
+  <binding id="toolbardecoration" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XULToolbarSeparator;
+        </getter>
+      </property>
+    </implementation>
+  </binding>
 
   <binding id="toolbarpaletteitem" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base" display="xul:button">
     <content>
