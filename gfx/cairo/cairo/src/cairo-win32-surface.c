@@ -473,7 +473,12 @@ _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if ((local->flags & CAIRO_WIN32_SURFACE_CAN_BITBLT) &&
+    /* Check for SURFACE_IS_DISPLAY here, because there are a lot
+     * of printer drivers that lie and say they can BitBlt, but
+     * just spit out black instead.
+     */
+    if ((local->flags & CAIRO_WIN32_SURFACE_IS_DISPLAY) &&
+	(local->flags & CAIRO_WIN32_SURFACE_CAN_BITBLT) &&
 	BitBlt (local->dc,
 		0, 0,
 		width, height,
