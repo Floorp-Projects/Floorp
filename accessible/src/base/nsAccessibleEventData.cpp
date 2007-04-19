@@ -181,7 +181,7 @@ nsAccStateChangeEvent::IsEnabled(PRBool *aIsEnabled)
 }
 
 
-// nsAccStateChangeEvent
+// nsAccTextChangeEvent
 NS_IMPL_ISUPPORTS_INHERITED1(nsAccTextChangeEvent, nsAccEvent,
                              nsIAccessibleTextChangeEvent)
 
@@ -189,7 +189,7 @@ nsAccTextChangeEvent::
   nsAccTextChangeEvent(nsIAccessible *aAccessible,
                        PRInt32 aStart, PRUint32 aLength, PRBool aIsInserted):
   nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CHANGED, aAccessible, nsnull),
-  mStart(aStart), mLength(aLength), mIsInserted(mIsInserted)
+  mStart(aStart), mLength(aLength), mIsInserted(aIsInserted)
 {
 }
 
