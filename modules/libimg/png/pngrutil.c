@@ -2144,7 +2144,7 @@ png_handle_acTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
 {
     png_byte data[8];
     png_uint_32 num_frames;
-    png_uint_32 num_iterations;
+    png_uint_32 num_plays;
     png_uint_32 didSet;
     
     png_debug(1, "in png_handle_acTL\n");
@@ -2176,18 +2176,12 @@ png_handle_acTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
     png_crc_finish(png_ptr, 0);
     
     num_frames = png_get_uint_31(png_ptr, data);
-    num_iterations = png_get_uint_31(png_ptr, data + 4);
+    num_plays = png_get_uint_31(png_ptr, data + 4);
     
     /* the set function will do error checking on num_frames */
-    didSet = png_set_acTL(png_ptr, info_ptr, num_frames, num_iterations);
+    didSet = png_set_acTL(png_ptr, info_ptr, num_frames, num_plays);
     if(didSet)
-    {
         png_ptr->mode |= PNG_HAVE_acTL;
-        
-        /* if there is an fcTL this flag will be unset in png_handle_fcTL() */
-        if (num_frames > 1)
-            png_ptr->apng_flags |= PNG_FIRST_FRAME_HIDDEN;
-    }
 }
 
 void /* PRIVATE */
@@ -2260,8 +2254,16 @@ png_handle_fcTL(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
     png_read_reinit(png_ptr, info_ptr);
     
     png_ptr->mode |= PNG_HAVE_fcTL;
-    
-    png_ptr->apng_flags &= ~PNG_FIRST_FRAME_HIDDEN;
+}
+
+void /* PRIVATE */
+png_have_info(png_structp png_ptr, png_infop info_ptr)
+{
+    if((info_ptr->valid & PNG_INFO_acTL) && !(info_ptr->valid & PNG_INFO_fcTL))
+    {
+        png_ptr->apng_flags |= PNG_FIRST_FRAME_HIDDEN;
+        info_ptr->num_frames++;
+    }
 }
 
 void /* PRIVATE */

@@ -1752,7 +1752,7 @@ png_write_tIME(png_structp png_ptr, png_timep mod_time)
 #if defined(PNG_WRITE_APNG_SUPPORTED)
 void /* PRIVATE */
 png_write_acTL(png_structp png_ptr,
-   png_uint_32 num_frames, png_uint_32 num_iterations)
+   png_uint_32 num_frames, png_uint_32 num_plays)
 {
 #ifdef PNG_USE_LOCAL_ARRAYS
     PNG_acTL;
@@ -1761,19 +1761,13 @@ png_write_acTL(png_structp png_ptr,
     
     png_debug(1, "in png_write_acTL\n");
     
-    if (num_frames == 0)
-        png_error(png_ptr, "png_write_acTL: invalid number of frames (0)");
-    if (num_frames > PNG_UINT_31_MAX)
-        png_error(png_ptr, "png_write_acTL: invalid number of frames "
-                           "(> 2^31-1)");
-    if (num_iterations > PNG_UINT_31_MAX)
-        png_error(png_ptr, "png_write_acTL: invalid number of iterations "
-                           "(> 2^31-1)");
-    
     png_ptr->num_frames_to_write = num_frames;
     
+    if (png_ptr->apng_flags & PNG_FIRST_FRAME_HIDDEN)
+        num_frames--;
+    
     png_save_uint_32(data, num_frames);
-    png_save_uint_32(data + 4, num_iterations);
+    png_save_uint_32(data + 4, num_plays);
     
     png_write_chunk(png_ptr, (png_bytep)png_acTL, data, (png_size_t)8);
 }
@@ -1781,7 +1775,8 @@ png_write_acTL(png_structp png_ptr,
 void /* PRIVATE */
 png_write_fcTL(png_structp png_ptr, png_uint_32 width, png_uint_32 height, 
     png_uint_32 x_offset, png_uint_32 y_offset,
-    png_uint_16 delay_num, png_uint_16 delay_den, png_byte dispose_op, png_byte blend_op)
+    png_uint_16 delay_num, png_uint_16 delay_den, png_byte dispose_op, 
+    png_byte blend_op)
 {
 #ifdef PNG_USE_LOCAL_ARRAYS
     PNG_fcTL;

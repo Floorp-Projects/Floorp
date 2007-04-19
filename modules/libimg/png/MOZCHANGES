@@ -1,6 +1,8 @@
 
 Changes made to pristine png source by mozilla.org developers.
 
+2007/03/20  -- Added support for APNG
+
 2006/06/27  -- Synced with libpng-1.2.12 tree
 
 2004/10/07  -- Synced with libpng-1.2.7 tree

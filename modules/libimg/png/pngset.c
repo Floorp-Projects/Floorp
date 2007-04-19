@@ -1001,7 +1001,7 @@ png_set_sPLT(png_structp png_ptr,
 #if defined(PNG_APNG_SUPPORTED)
 png_uint_32 PNGAPI
 png_set_acTL(png_structp png_ptr, png_infop info_ptr, 
-    png_uint_32 num_frames, png_uint_32 num_iterations)
+    png_uint_32 num_frames, png_uint_32 num_plays)
 {
     png_debug1(1, "in %s storage function\n", "acTL");
 
@@ -1012,28 +1012,28 @@ png_set_acTL(png_structp png_ptr, png_infop info_ptr,
                     "or info_ptr ignored");
         return (0);
     }
-    if(num_frames == 0)
+    if (num_frames == 0)
     {
         png_warning(png_ptr, 
                     "Ignoring attempt to set acTL with num_frames zero");
         return (0);
     }
-    if(num_frames > PNG_UINT_31_MAX)
+    if (num_frames > PNG_UINT_31_MAX)
     {
         png_warning(png_ptr, 
                     "Ignoring attempt to set acTL with num_frames > 2^31-1");
         return (0);
     }
-    if(num_iterations > PNG_UINT_31_MAX)
+    if (num_plays > PNG_UINT_31_MAX)
     {
         png_warning(png_ptr, 
-                    "Ignoring attempt to set acTL with num_iterations "
+                    "Ignoring attempt to set acTL with num_plays "
                     "> 2^31-1");
         return (0);
     }
     
     info_ptr->num_frames = num_frames;
-    info_ptr->num_iterations = num_iterations;
+    info_ptr->num_plays = num_plays;
     
     info_ptr->valid |= PNG_INFO_acTL;
     
@@ -1113,6 +1113,23 @@ png_ensure_fcTL_is_valid(png_structp png_ptr,
             png_error(png_ptr, "PNG_BLEND_OP_OVER is not valid for "
                                "color type 'truecolor without alpha'");
     }
+}
+
+png_uint_32 PNGAPI
+png_set_first_frame_is_hidden(png_structp png_ptr, png_infop info_ptr,
+                              png_byte is_hidden)
+{
+    png_debug(1, "in png_first_frame_is_hidden()\n");
+    
+    if (png_ptr == NULL)
+        return 0;
+    
+    if(is_hidden)
+        png_ptr->apng_flags |= PNG_FIRST_FRAME_HIDDEN;
+    else
+        png_ptr->apng_flags &= ~PNG_FIRST_FRAME_HIDDEN;
+    
+    return 1;
 }
 #endif /* PNG_APNG_SUPPORTED */
 

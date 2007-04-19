@@ -381,7 +381,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL))
     png_set_progressive_frame_fn(png_ptr, frame_info_callback, NULL);
   
-  if (png_first_frame_is_hidden(png_ptr, info_ptr)) {
+  if (png_get_first_frame_is_hidden(png_ptr, info_ptr)) {
     decoder->apngFlags |= FRAME_HIDDEN;
     
     // create a frame just to get bpr, to allocate interlacebuf
@@ -409,7 +409,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
     }
   }
   
-  if (png_first_frame_is_hidden(png_ptr, info_ptr))
+  if (png_get_first_frame_is_hidden(png_ptr, info_ptr))
     decoder->mFrame = nsnull;
   
   return;
@@ -557,11 +557,8 @@ end_callback(png_structp png_ptr, png_infop info_ptr)
   nsPNGDecoder *decoder = NS_STATIC_CAST(nsPNGDecoder*, png_get_progressive_ptr(png_ptr));
   
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL)) {
-    PRInt32 num_iterations = png_get_num_iterations(png_ptr, info_ptr);
-    if (num_iterations <= 0) /* forever */
-      num_iterations = -1;
-    
-    decoder->mImage->SetLoopCount(num_iterations);
+    PRInt32 num_plays = png_get_num_plays(png_ptr, info_ptr);
+    decoder->mImage->SetLoopCount(num_plays - 1);
   }
   
   if (!(decoder->apngFlags & FRAME_HIDDEN)) {
