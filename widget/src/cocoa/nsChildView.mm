@@ -2362,6 +2362,10 @@ NSEvent* globalDragEvent = nil;
   [self performSelector:@selector(clickHoldCallback:) withObject:theEvent afterDelay:2.0];
 #endif
 
+  // in order to send gecko events we'll need a gecko widget
+  if (!mGeckoChild)
+    return;
+
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_DOWN, nsnull, nsMouseEvent::eReal);
   [self convertEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.clickCount = [theEvent clickCount];
@@ -2378,11 +2382,19 @@ NSEvent* globalDragEvent = nil;
   macEvent.modifiers = GetCurrentKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
 
-  // send event into Gecko by going directly to the
-  // the widget.
-  if (mGeckoChild)
-    mGeckoChild->DispatchMouseEvent(geckoEvent);
-  
+  // send event into Gecko by going directly to the widget
+  mGeckoChild->DispatchMouseEvent(geckoEvent);
+
+  // if this is a right button click (either actual right click or ctrl-click) send
+  // a context menu event
+  if (geckoEvent.button == nsMouseEvent::eRightButton) {
+    nsMouseEvent geckoCMEvent(PR_TRUE, NS_CONTEXTMENU, nsnull, nsMouseEvent::eReal);
+    [self convertEvent:theEvent toGeckoEvent:&geckoCMEvent];
+    geckoCMEvent.nativeMsg = &macEvent;
+    geckoCMEvent.isControl = ((modifierFlags & NSControlKeyMask) != 0);
+    mGeckoChild->DispatchMouseEvent(geckoCMEvent);
+  }
+
   // XXX maybe call markedTextSelectionChanged:client: here?
 }
 
