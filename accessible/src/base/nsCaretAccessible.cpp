@@ -56,14 +56,16 @@
 NS_IMPL_ISUPPORTS_INHERITED2(nsCaretAccessible, nsLeafAccessible, nsIAccessibleCaret, nsISelectionListener)
 
 nsCaretAccessible::nsCaretAccessible(nsIDOMNode* aDocumentNode, nsIWeakReference* aShell, nsRootAccessible *aRootAccessible):
-nsLeafAccessible(aDocumentNode, aShell), mVisible(PR_TRUE), mCurrentDOMNode(nsnull), mRootAccessible(aRootAccessible)
+nsLeafAccessible(aDocumentNode, aShell), mVisible(PR_TRUE), mLastCaretOffset(-1), mLastNodeWithCaret(nsnull),
+mSelectionControllerNode(nsnull), mRootAccessible(aRootAccessible)
 {
 }
 
 NS_IMETHODIMP nsCaretAccessible::Shutdown()
 {
   mDomSelectionWeak = nsnull;
-  mCurrentDOMNode = nsnull;
+  mLastNodeWithCaret = nsnull;
+  mSelectionControllerNode = nsnull;
   RemoveSelectionListener();
   return NS_OK;
 }
@@ -81,7 +83,8 @@ NS_IMETHODIMP nsCaretAccessible::RemoveSelectionListener()
 
 NS_IMETHODIMP nsCaretAccessible::AttachNewSelectionListener(nsIDOMNode *aCurrentNode)
 {
-  mCurrentDOMNode = aCurrentNode;
+  mSelectionControllerNode = aCurrentNode;
+  mLastNodeWithCaret = nsnull;
 
   // When focus moves such that the caret is part of a new frame selection
   // this removes the old selection listener and attaches a new one for the current focus
@@ -123,7 +126,7 @@ NS_IMETHODIMP nsCaretAccessible::AttachNewSelectionListener(nsIDOMNode *aCurrent
 
 NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, PRInt16 aReason)
 {
-  nsCOMPtr<nsIPresShell> presShell = GetPresShellFor(mCurrentDOMNode);
+  nsCOMPtr<nsIPresShell> presShell = GetPresShellFor(mSelectionControllerNode);
   nsCOMPtr<nsISelection> domSel(do_QueryReferent(mDomSelectionWeak));
   if (!presShell || domSel != aSel)
     return NS_OK;  // Only listening to selection changes in currently focused frame
@@ -181,8 +184,11 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   nsCOMPtr<nsIDOMNode> focusNode;
   domSel->GetFocusNode(getter_AddRefs(focusNode));
   if (!focusNode) {
+    mLastNodeWithCaret = nsnull;
     return NS_OK; // No selection
   }
+  nsCOMPtr<nsIDOMNode> nodeWithCaret = focusNode;
+
   nsCOMPtr<nsIAccessibleText> textAcc;
   while (focusNode) {
     // Make sure to get the correct starting node for selection events inside XBL content trees
@@ -205,6 +211,19 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   }
   NS_ASSERTION(textAcc, "No nsIAccessibleText for caret move event!"); // No nsIAccessibleText for caret move event!
   NS_ENSURE_TRUE(textAcc, NS_ERROR_FAILURE);
+
+  PRInt32 caretOffset;
+  textAcc->GetCaretOffset(&caretOffset);
+
+  if (nodeWithCaret == mLastNodeWithCaret && caretOffset == mLastCaretOffset) {
+    PRInt32 selectionCount;
+    textAcc->GetSelectionCount(&selectionCount);   // Don't swallow similar events when selecting text
+    if (!selectionCount) {
+      return NS_OK;  // Swallow duplicate caret event
+    }
+  }
+  mLastCaretOffset = caretOffset;
+  mLastNodeWithCaret = nodeWithCaret;
 
   return mRootAccessible->FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED,
                                                   focusNode, nsnull, PR_FALSE);
