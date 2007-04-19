@@ -35,11 +35,11 @@
                              onset="return document.title = val;"/>
 
       <property name="canAdvance" onget="return this._canAdvance;"
-                                  onset="this._canAdvance=val; this._nextButton.disabled = !val;"/>
+                                  onset="this._nextButton.disabled = !val; return this._canAdvance = val;"/>
       <property name="canRewind" onget="return this._canRewind;"
-                                 onset="this._canRewind=val; this._backButton.disabled = !val;"/>
+                                 onset="this._backButton.disabled = !val; return this._canRewind = val;"/>
 
-      <property name="pageStep" onget="return this._pageStack.length"/>
+      <property name="pageStep" readonly="true" onget="return this._pageStack.length"/>
 
       <field name="pageCount">0</field>
       
@@ -106,7 +106,8 @@
         </setter>
       </property>
 
-      <property name="pageIndex" onget="return this._currentPage.pageIndex;">
+      <property name="pageIndex"
+                onget="return this._currentPage ? this._currentPage.pageIndex : -1;">
         <setter>
         <![CDATA[
           if (val < 0 || val >= this.pageCount)
@@ -121,10 +122,10 @@
         </setter>
       </property>
 
-      <property name="onFirstPage"
+      <property name="onFirstPage" readonly="true"
                 onget="return this._pageStack.length == 1;"/>
 
-      <property name="onLastPage">
+      <property name="onLastPage" readonly="true">
         <getter><![CDATA[
           var cp = this.currentPage;
           return cp && ((this._accessMethod == "sequential" && cp.pageIndex == this.pageCount-1) ||
@@ -449,7 +450,7 @@
 
   <binding id="wizardpage" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
     <implementation>
-      <field name="pageIndex">null</field>
+      <field name="pageIndex">-1</field>
       
       <property name="pageid" onget="return this.getAttribute('pageid');"
                               onset="this.setAttribute('pageid', val);"/>
