@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>MRJPlugin</string>
 	<key>CFBundleGetInfoString</key>
-	<string>MRJ Plugin 1.0-JEP-0.9.6.1, Copyright (c) 2002 The Mozilla Organization</string>
+	<string>MRJ Plugin 1.0-JEP-0.9.6.2, Copyright (c) 2002 The Mozilla Organization</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.netscape.MRJPlugin</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -17,11 +17,11 @@
 	<key>CFBundlePackageType</key>
 	<string>NSPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0-JEP-0.9.6.1</string>
+	<string>1.0-JEP-0.9.6.2</string>
 	<key>CFBundleSignature</key>
 	<string>MOSS</string>
 	<key>CFBundleVersion</key>
-	<string>1.0-JEP-0.9.6.1</string>
+	<string>1.0-JEP-0.9.6.2</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 </dict>
