@@ -481,7 +481,7 @@ Entry.prototype = {
       var isPermaLink = true;
       
       if (bagHasKey(guid, "isPermaLink"))
-        isPermaLink = new Boolean(guid.getProperty("isPermaLink"));
+        isPermaLink = guid.getProperty("isPermaLink").toLowerCase() != "false";
       
       if (guid && isPermaLink)
         this.link = strToURI(guid.getProperty("guid"));
