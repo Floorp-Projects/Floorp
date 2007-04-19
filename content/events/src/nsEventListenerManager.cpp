@@ -1392,13 +1392,6 @@ nsEventListenerManager::GetListenerManager(PRBool aCreateIfNotFound,
   NS_ADDREF(*aResult = this);
   return NS_OK;
 }
- 
-NS_IMETHODIMP 
-nsEventListenerManager::HandleEvent(nsIDOMEvent *aEvent)
-{
-  PRBool defaultActionEnabled;
-  return DispatchEvent(aEvent, &defaultActionEnabled);
-}
 
 NS_IMETHODIMP
 nsEventListenerManager::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
