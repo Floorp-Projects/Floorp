@@ -160,27 +160,26 @@ static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
 
 nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   : mType(aType), mDocument(aDocument), mTextZoom(1.0),
-    mPageSize(-1, -1),
+    mPageSize(-1, -1), mPPScale(1.0f),
     mViewportStyleOverflow(NS_STYLE_OVERFLOW_AUTO, NS_STYLE_OVERFLOW_AUTO),
     mImageAnimationModePref(imgIContainer::kNormalAnimMode),
     // Font sizes default to zero; they will be set in GetFontPreferences
     mDefaultVariableFont("serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
                          NS_FONT_WEIGHT_NORMAL, 0, 0),
-    mDefaultFixedFont("monospace", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-                      NS_FONT_WEIGHT_NORMAL, 0, 0),
+    mDefaultFixedFont("monospace", NS_FONT_STYLE_NORMAL,
+                      NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL, 0, 0),
     mDefaultSerifFont("serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
                       NS_FONT_WEIGHT_NORMAL, 0, 0),
-    mDefaultSansSerifFont("sans-serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-                          NS_FONT_WEIGHT_NORMAL, 0, 0),
-    mDefaultMonospaceFont("monospace", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-                          NS_FONT_WEIGHT_NORMAL, 0, 0),
-    mDefaultCursiveFont("cursive", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-                        NS_FONT_WEIGHT_NORMAL, 0, 0),
-    mDefaultFantasyFont("fantasy", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-                        NS_FONT_WEIGHT_NORMAL, 0, 0),
+    mDefaultSansSerifFont("sans-serif", NS_FONT_STYLE_NORMAL,
+                          NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL, 0, 0),
+    mDefaultMonospaceFont("monospace", NS_FONT_STYLE_NORMAL,
+                          NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL, 0, 0),
+    mDefaultCursiveFont("cursive", NS_FONT_STYLE_NORMAL,
+                        NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL, 0, 0),
+    mDefaultFantasyFont("fantasy", NS_FONT_STYLE_NORMAL,
+                        NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL, 0, 0),
     mCanPaginatedScroll(PR_FALSE),
-    mIsRootPaginatedDocument(PR_FALSE),
-    mPPScale(1.0f)
+    mIsRootPaginatedDocument(PR_FALSE)
 {
   // NOTE! nsPresContext::operator new() zeroes out all members, so don't
   // bother initializing members to 0.
