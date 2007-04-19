@@ -82,9 +82,10 @@ function AddTestCase( description, expect, actual ) {
  * TestCase constructor
  *
  */
-function TestCase( n, d, e, a ) {
+function TestCase( d, e, a ) {
   this.path = (typeof gTestPath == 'undefined') ? '' : gTestPath;
-  this.name        = n;
+  this.name        = d; // tests in this directory oddly depend on a 3-argument
+                        // TestCase constructor, rather than the conventional 4
   this.description = d;
   this.expect      = e;
   this.actual      = a;
