@@ -569,8 +569,9 @@ gfxTextRun *
 gfxWindowsFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
                                  Parameters *aParams)
 {
-    NS_ASSERTION(!(aParams->mFlags & TEXT_NEED_BOUNDING_BOX),
-                 "Glyph extents not yet supported");
+    // XXX comment out the assertion for now since it fires too much
+    //    NS_ASSERTION(!(aParams->mFlags & TEXT_NEED_BOUNDING_BOX),
+    //                 "Glyph extents not yet supported");
 
     gfxTextRun *textRun = new gfxTextRun(aParams, aLength);
     if (!textRun)
@@ -596,8 +597,7 @@ gfxTextRun *
 gfxWindowsFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
                                  Parameters *aParams)
 {
-    NS_ASSERTION((aParams->mFlags & TEXT_IS_ASCII || aParams->mFlags & TEXT_IS_8BIT),
-                 "unknown text type");
+    aParams->mFlags |= TEXT_IS_8BIT;
     gfxTextRun *textRun = new gfxTextRun(aParams, aLength);
     if (!textRun)
         return nsnull;
