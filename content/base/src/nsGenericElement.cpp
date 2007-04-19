@@ -816,16 +816,6 @@ nsDOMEventRTTearoff::GetListenerManager(PRBool aCreateIfNotFound,
 }
 
 NS_IMETHODIMP
-nsDOMEventRTTearoff::HandleEvent(nsIDOMEvent *aEvent)
-{
-  nsCOMPtr<nsIDOMEventReceiver> event_receiver;
-  nsresult rv = GetEventReceiver(getter_AddRefs(event_receiver));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return event_receiver->HandleEvent(aEvent);
-}
-
-NS_IMETHODIMP
 nsDOMEventRTTearoff::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 {
   nsCOMPtr<nsIEventListenerManager> manager;

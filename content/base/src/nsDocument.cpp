@@ -4559,13 +4559,6 @@ nsDocument::GetListenerManager(PRBool aCreateIfNotFound,
   return NS_OK;
 }
 
-nsresult
-nsDocument::HandleEvent(nsIDOMEvent *aEvent)
-{
-  PRBool defaultActionEnabled;
-  return DispatchEvent(aEvent, &defaultActionEnabled);
-}
-
 NS_IMETHODIMP
 nsDocument::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 {

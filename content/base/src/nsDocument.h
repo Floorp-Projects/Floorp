@@ -608,7 +608,6 @@ public:
                                       const nsIID& aIID);
   NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
                                 nsIEventListenerManager** aResult);
-  NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
   NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
   // nsIDOMEventTarget
