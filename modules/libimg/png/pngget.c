@@ -797,16 +797,16 @@ png_get_tRNS(png_structp png_ptr, png_infop info_ptr,
 #if defined(PNG_APNG_SUPPORTED)
 png_uint_32 PNGAPI
 png_get_acTL(png_structp png_ptr, png_infop info_ptr,
-             png_uint_32 *num_frames, png_uint_32 *num_iterations)
+             png_uint_32 *num_frames, png_uint_32 *num_plays)
 {
     png_debug1(1, "in %s retrieval function\n", "acTL");
     
     if (png_ptr != NULL && info_ptr != NULL &&
         (info_ptr->valid & PNG_INFO_acTL) &&
-        num_frames != NULL && num_iterations != NULL)
+        num_frames != NULL && num_plays != NULL)
     {
         *num_frames = info_ptr->num_frames;
-        *num_iterations = info_ptr->num_iterations;
+        *num_plays = info_ptr->num_plays;
         return (1);
     }
     
@@ -824,12 +824,12 @@ png_get_num_frames(png_structp png_ptr, png_infop info_ptr)
 }
 
 png_uint_32 PNGAPI
-png_get_num_iterations(png_structp png_ptr, png_infop info_ptr)
+png_get_num_plays(png_structp png_ptr, png_infop info_ptr)
 {
-    png_debug(1, "in png_get_num_iterations()\n");
+    png_debug(1, "in png_get_num_plays()\n");
     
     if (png_ptr != NULL && info_ptr != NULL)
-        return (info_ptr->num_iterations);
+        return (info_ptr->num_plays);
     return (0);
 }
 
@@ -944,14 +944,12 @@ png_get_next_frame_blend_op(png_structp png_ptr, png_infop info_ptr)
 }
 
 png_byte PNGAPI
-png_first_frame_is_hidden(png_structp png_ptr, png_infop info_ptr)
+png_get_first_frame_is_hidden(png_structp png_ptr, png_infop info_ptr)
 {
     png_debug(1, "in png_first_frame_is_hidden()\n");
     
-    if (png_ptr != NULL && info_ptr != NULL && 
-        info_ptr->valid & PNG_INFO_acTL &&
-        !(info_ptr->valid & PNG_INFO_fcTL))
-        return 1;
+    if (png_ptr != NULL)
+        return png_ptr->apng_flags & PNG_FIRST_FRAME_HIDDEN;
     
     return 0;
 }

@@ -918,8 +918,8 @@ defined(PNG_READ_BACKGROUND_SUPPORTED)
 #endif
 
 #if defined(PNG_APNG_SUPPORTED)
-   png_uint_32 num_frames;
-   png_uint_32 num_iterations;
+   png_uint_32 num_frames; /* including default image */
+   png_uint_32 num_plays;
    png_uint_32 next_frame_width;
    png_uint_32 next_frame_height;
    png_uint_32 next_frame_x_offset;
@@ -1424,7 +1424,7 @@ struct png_struct_def
 #endif
 
 #if defined(PNG_WRITE_APNG_SUPPORTED)
-   png_uint_32 num_frames_to_write;  /* copy of info_ptr->num_frames */
+   png_uint_32 num_frames_to_write;
    png_uint_32 num_frames_written;
 #endif
 
@@ -1766,7 +1766,7 @@ extern PNG_EXPORT (void,png_write_frame_head) PNGARG((png_structp png_ptr,
    png_uint_32 width, png_uint_32 height,
    png_uint_32 x_offset, png_uint_32 y_offset, 
    png_uint_16 delay_num, png_uint_16 delay_den, png_byte dispose_op,
-   png_byte blend_op, png_byte first_frame_hidden));
+   png_byte blend_op));
 
 extern PNG_EXPORT (void,png_write_frame_tail) PNGARG((png_structp png_ptr,
    png_infop png_info));
@@ -2455,12 +2455,12 @@ extern PNG_EXPORT(void,png_set_sCAL_s) PNGARG((png_structp png_ptr,
 
 #if defined(PNG_APNG_SUPPORTED)
 extern PNG_EXPORT(png_uint_32,png_get_acTL) PNGARG((png_structp png_ptr,
-   png_infop info_ptr, png_uint_32 *num_frames, png_uint_32 *num_iterations));
+   png_infop info_ptr, png_uint_32 *num_frames, png_uint_32 *num_plays));
 extern PNG_EXPORT(png_uint_32,png_set_acTL) PNGARG((png_structp png_ptr, 
-   png_infop info_ptr, png_uint_32 num_frames, png_uint_32 num_iterations));
+   png_infop info_ptr, png_uint_32 num_frames, png_uint_32 num_plays));
 extern PNG_EXPORT(png_uint_32,png_get_num_frames) PNGARG((png_structp png_ptr,
    png_infop info_ptr));
-extern PNG_EXPORT(png_uint_32,png_get_num_iterations) 
+extern PNG_EXPORT(png_uint_32,png_get_num_plays) 
    PNGARG((png_structp png_ptr, png_infop info_ptr));
 
 extern PNG_EXPORT(png_uint_32,png_get_next_frame_fcTL) 
@@ -2495,8 +2495,10 @@ extern PNG_EXPORT(png_byte,png_get_next_frame_dispose_op)
    PNGARG((png_structp png_ptr, png_infop info_ptr));
 extern PNG_EXPORT(png_byte,png_get_next_frame_blend_op)
    PNGARG((png_structp png_ptr, png_infop info_ptr));
-extern PNG_EXPORT(png_byte,png_first_frame_is_hidden)
+extern PNG_EXPORT(png_byte,png_get_first_frame_is_hidden)
    PNGARG((png_structp png_ptr, png_infop info_ptr));
+extern PNG_EXPORT(png_uint_32,png_set_first_frame_is_hidden)
+   PNGARG((png_structp png_ptr, png_infop info_ptr, png_byte is_hidden));
 #endif /* PNG_APNG_SUPPORTED */
 
 #if defined(PNG_READ_APNG_SUPPORTED)
@@ -3259,7 +3261,7 @@ PNG_EXTERN void png_write_sCAL_s PNGARG((png_structp png_ptr,
 
 #if defined(PNG_WRITE_APNG_SUPPORTED)
 PNG_EXTERN void png_write_acTL PNGARG((png_structp png_ptr,
-   png_uint_32 num_frames, png_uint_32 num_iterations));
+   png_uint_32 num_frames, png_uint_32 num_plays));
 
 PNG_EXTERN void png_write_fcTL PNGARG((png_structp png_ptr, 
    png_uint_32 width, png_uint_32 height, 
@@ -3553,6 +3555,7 @@ PNG_EXTERN void png_handle_acTL PNGARG((png_structp png_ptr, png_infop info_ptr,
    png_uint_32 length));
 PNG_EXTERN void png_handle_fcTL PNGARG((png_structp png_ptr, png_infop info_ptr,
    png_uint_32 length));
+PNG_EXTERN void png_have_info PNGARG((png_structp png_ptr, png_infop info_ptr));
 PNG_EXTERN void png_handle_fdAT PNGARG((png_structp png_ptr, png_infop info_ptr,
    png_uint_32 length));
 PNG_EXTERN void png_ensure_sequence_number PNGARG((png_structp png_ptr, 
