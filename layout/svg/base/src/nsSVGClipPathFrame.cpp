@@ -97,6 +97,7 @@ nsSVGClipPathFrame::InitSVG()
     return rv;
 
   mClipParentMatrix = NULL;
+  mInUse = PR_FALSE;
 
   return NS_OK;
 }
