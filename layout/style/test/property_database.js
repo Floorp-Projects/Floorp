@@ -240,7 +240,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
-		other_values: [ "50%", "15px" ],
+		other_values: [ "15px", "50%" ],
 		invalid_values: [ "20" ]
 	},
 	"-moz-float-edge": {
@@ -261,7 +261,7 @@ var gCSSProperties = {
 	},
 	"-moz-image-region": {
 		domProp: "MozImageRegion",
-		inherited: false,
+		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
 		other_values: [ "rect(3px 20px 15px 4px)", "rect(17px, 21px, 33px, 2px)" ],
@@ -480,7 +480,7 @@ var gCSSProperties = {
 		domProp: "borderBottomWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		/* XXX a value differing from initial requires border-style to be set */
+		prerequisites: { "border-bottom-style": "solid" },
 		initial_values: [ "medium", "3px" ],
 		other_values: [ "thin", "thick", "1px", "2em" ],
 		invalid_values: [ "5%" ]
@@ -532,7 +532,7 @@ var gCSSProperties = {
 		domProp: "borderLeftWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		/* XXX a value differing from initial requires border-style to be set */
+		prerequisites: { "border-left-style": "solid" },
 		initial_values: [ "medium", "3px" ],
 		other_values: [ "thin", "thick", "1px", "2em" ],
 		invalid_values: [ "5%" ]
@@ -567,7 +567,7 @@ var gCSSProperties = {
 		domProp: "borderRightWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		/* XXX a value differing from initial requires border-style to be set */
+		prerequisites: { "border-right-style": "solid" },
 		initial_values: [ "medium", "3px" ],
 		other_values: [ "thin", "thick", "1px", "2em" ],
 		invalid_values: [ "5%" ]
@@ -620,7 +620,7 @@ var gCSSProperties = {
 		domProp: "borderTopWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		/* XXX a value differing from initial requires border-style to be set */
+		prerequisites: { "border-top-style": "solid" },
 		initial_values: [ "medium", "3px" ],
 		other_values: [ "thin", "thick", "1px", "2em" ],
 		invalid_values: [ "5%" ]
@@ -630,7 +630,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-top-width", "border-right-width", "border-bottom-width", "border-left-width" ],
-		/* XXX a value differing from initial requires border-style to be set */
+		prerequisites: { "border-style": "solid" },
 		initial_values: [ "medium", "3px", "medium medium", "3px medium medium", "medium 3px medium medium" ],
 		other_values: [ "thin", "thick", "1px", "2em", "2px 0 0px 1em" ],
 		invalid_values: [ "5%" ]
@@ -666,14 +666,15 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
-		other_values: [ "rect(auto,auto,auto,auto)", "rect(3px, 4px, 4em, 0)", "rect(auto, 3em, 4pt, 2px)", "rect(2px 3px 4px 5px)" ],
+		other_values: [ "rect(0 0 0 0)", "rect(auto,auto,auto,auto)", "rect(3px, 4px, 4em, 0)", "rect(auto, 3em, 4pt, 2px)", "rect(2px 3px 4px 5px)" ],
 		invalid_values: [ "rect(auto, 3em, 2%, 5px)" ]
 	},
 	"color": {
 		domProp: "color",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "currentcolor" ],
+		/* XXX should test currentColor, but may or may not be initial */
+		initial_values: [ "black", "#000" ],
 		other_values: [ "green", "#f3c", "#fed292", "rgba(45,300,12,2)", "transparent" ],
 		invalid_values: [ "fff", "ffffff", "#f", "#ff", "#ffff", "#fffff", "#fffffff", "#ffffffff", "#fffffffff" ]
 	},
@@ -887,8 +888,8 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "list-style-type", "list-style-position", "list-style-image" ],
-		initial_values: [ "none", "outside", "disc", "none disc outside" ],
-		other_values: [ "inside none", "none inside", "none none inside", "none outside none", "square", 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")' ],
+		initial_values: [ "outside", "disc", "none disc outside" ],
+		other_values: [ "inside none", "none inside", "none none inside", "none outside none", "square", 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")', "none" ],
 		invalid_values: []
 	},
 	"list-style-image": {
@@ -1077,7 +1078,7 @@ var gCSSProperties = {
 		domProp: "outlineWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		/* XXX a value differing from initial requires border-style to be set */
+		prerequisites: { "outline-style": "solid" },
 		initial_values: [ "medium", "3px" ],
 		other_values: [ "thin", "thick", "1px", "2em" ],
 		invalid_values: [ "5%" ]

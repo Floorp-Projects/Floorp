@@ -1,0 +1,292 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test for computation of values in property database</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <style type="text/css" id="stylesheet"></style>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  var load_count = 0;
+  function load_done() {
+    if (++load_count == 2)
+      run_tests();
+  }
+  </script>
+</head>
+<body>
+<p id="display">
+<iframe id="unstyled" src="unstyled.xml" height="10" width="10" onload="load_done()"></iframe>
+</p>
+<div id="content" style="display: none">
+
+<div id="testnode"><span id="element"></span></div>
+
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for computation of values in property database **/
+
+var gNoComputedStyle = {
+  "-moz-force-broken-image-icon": true,
+  "-moz-margin-end": true,
+  "-moz-margin-start": true,
+  "-moz-padding-end": true,
+  "-moz-padding-start": true,
+  "background-position": true,
+  "content": true,
+  "page-break-after": true,
+  "page-break-before": true,
+  "quotes": true,
+  "clip-path": true,
+  "clip-rule": true,
+  "color-interpolation": true,
+  "color-interpolation-filters": true,
+  "dominant-baseline": true,
+  "fill": true,
+  "fill-opacity": true,
+  "fill-rule": true,
+  "filter": true,
+  "flood-color": true,
+  "flood-opacity": true,
+  "marker": true, // NB: shorthand
+  "marker-end": true,
+  "marker-mid": true,
+  "marker-start": true,
+  "mask": true,
+  "pointer-events": true,
+  "shape-rendering": true,
+  "stop-color": true,
+  "stop-opacity": true,
+  "stroke": true,
+  "stroke-dasharray": true,
+  "stroke-dashoffset": true,
+  "stroke-linecap": true,
+  "stroke-linejoin": true,
+  "stroke-miterlimit": true,
+  "stroke-opacity": true,
+  "stroke-width": true,
+  "text-anchor": true,
+  "text-rendering": true,
+};
+
+function xfail_diffcomputed(property) {
+  return property in gNoComputedStyle;
+}
+
+var gNotAccepted = {
+  "-moz-column-width": [ "50%" ],
+  "-moz-user-select": [ "auto" ],
+  "background-color": [ "rgb(255.0,0.387,3489)" ],
+  "content": [ "none" ],
+  "cue": [ "none none", "none url(404.wav)" ],
+  "list-style": [ "none disc outside" ],
+  "speak-punctuation": [ "none" ],
+};
+
+var gBackgroundValuesWithOnlyPosition = {
+  "top": true,
+  "left": true,
+  "50% 50%": true,
+  "center": true,
+  "bottom right scroll none transparent repeat": true,
+  "50% transparent": true,
+  "transparent 50%": true,
+  "50%": true,
+};
+
+var gBadComputed = {
+  // NS_STYLE_COLUMN_COUNT_AUTO is 0
+  "-moz-column-count": [ "0" ],
+
+  "clip": [ "rect(auto,auto,auto,auto)" ],
+
+  // This seems really broken!
+  "counter-increment": [ "none" ],
+  "counter-reset": [ "none" ],
+
+  // So does this.
+  "marker-offset": [ "auto" ],
+
+  // No idea what's happening for these two either
+  "border-bottom": [ "thin" ],
+  "outline-width": [ "3px" ],
+
+  // Something wrong with our alpha-component parsing or clamping.
+  "background-color": [ "rgba(255,255,255,-3.7)" ],
+
+  // 'normal' should compute to 0
+  "word-spacing": [ "0", "0px", "-0em" ],
+
+  // These are probably bogus tests...
+  "-moz-outline-radius": [ "0%" ],
+  "-moz-outline-radius-bottomleft": [ "0%" ],
+  "-moz-outline-radius-bottomright": [ "0%" ],
+  "-moz-outline-radius-topleft": [ "0%" ],
+  "-moz-outline-radius-topright": [ "0%" ],
+  "margin": [ "0% 0px 0em 0pt" ],
+  "margin-bottom": [ "0%" ],
+  "margin-left": [ "0%" ],
+  "margin-right": [ "0%" ],
+  "margin-top": [ "0%" ],
+  "padding": [ "0% 0px 0em 0pt" ],
+  "padding-bottom": [ "0%" ],
+  "padding-left": [ "0%" ],
+  "padding-right": [ "0%" ],
+  "padding-top": [ "0%" ],
+};
+
+function xfail_value(property, value, is_initial) {
+  if (property in gNoComputedStyle)
+    return !is_initial;
+
+  if ((property in gNotAccepted) &&
+      gNotAccepted[property].indexOf(value) != -1)
+    return true;
+
+  if ((property in gBadComputed) &&
+      gBadComputed[property].indexOf(value) != -1)
+    return true;
+
+  // One subproperty of 'background' is in gNoComputedStyle
+  if (property == "background" && value in gBackgroundValuesWithOnlyPosition)
+    return true;
+
+  return false;
+}
+
+var gElement = document.getElementById("element");
+var gStyleSheet = document.getElementById("stylesheet").sheet;
+var gRule1 = gStyleSheet.cssRules[gStyleSheet.insertRule("#element {}", gStyleSheet.cssRules.length)];
+var gRule2 = gStyleSheet.cssRules[gStyleSheet.insertRule("#element {}", gStyleSheet.cssRules.length)];
+
+var gInitialValues;
+var gInitialPrereqsRule;
+
+function setup_initial_values() {
+  var iframe = document.getElementById("unstyled");
+  gInitialValues = iframe.contentWindow.getComputedStyle(
+                     iframe.contentDocument.documentElement.firstChild, "");
+  var sheet = iframe.contentDocument.styleSheets[0];
+  gInitialPrereqsRule = sheet.cssRules[sheet.insertRule(":root > * {}", sheet.cssRules.length)];
+}
+
+// Get the computed value for a property.  For shorthands, return the
+// computed values of all the subproperties, delimited by " ; ".
+function get_computed_value(cs, property)
+{
+  var info = gCSSProperties[property];
+  if (!("subproperties" in info)) {
+    return cs.getPropertyValue(property);
+  }
+  var results = [];
+  for (var idx in info.subproperties) {
+    var subprop = info.subproperties[idx];
+    results.push(cs.getPropertyValue(subprop));
+  }
+  return results.join(" ; ");
+}
+
+function test_value(property, val, is_initial)
+{
+  var info = gCSSProperties[property];
+  if (info.backend_only)
+    return;
+
+  if ("prerequisites" in info) {
+    var prereqs = info.prerequisites;
+    for (var prereq in prereqs) {
+      gElement.style.setProperty(prereq, prereqs[prereq], "");
+      gInitialPrereqsRule.style.setProperty(prereq, prereqs[prereq], "");
+    }
+  }
+  if (info.inherited && is_initial) {
+    gElement.parentNode.style.setProperty(property, info.other_values[0], "");
+  }
+
+  var initial_computed = get_computed_value(gInitialValues, property);
+  if (is_initial) {
+    gRule1.style.setProperty(property, info.other_values[0], "");
+    var other_computed = get_computed_value(getComputedStyle(gElement, ""), property);
+    (xfail_diffcomputed(property) ? todo_isnot : isnot)(
+          other_computed, initial_computed,
+          "should be testing with values that compute to different things " +
+          "for '" + property + "'");
+  }
+  gRule2.style.setProperty(property, val, "");
+  var val_computed = get_computed_value(getComputedStyle(gElement, ""), property);
+  if (is_initial) {
+    (xfail_value(property, val, is_initial) ? todo_is : is)(
+       val_computed, initial_computed,
+       "should get initial value for '" + property + ":" + val + "'");
+  } else {
+    (xfail_value(property, val, is_initial) ? todo_isnot : isnot)(
+       val_computed, initial_computed,
+       "should not get initial value for '" + property + ":" + val + "'");
+  }
+  if (is_initial)
+    gRule1.style.removeProperty(property);
+  gRule2.style.removeProperty(property);
+
+  if ("prerequisites" in info) {
+    var prereqs = info.prerequisites;
+    for (var prereq in prereqs) {
+      gElement.style.removeProperty(prereq);
+      gInitialPrereqsRule.style.removeProperty(prereq);
+    }
+  }
+  if (info.inherited && is_initial) {
+    gElement.parentNode.style.removeProperty(property);
+  }
+}
+
+function test_property(prop) {
+  var info = gCSSProperties[prop];
+  for (var idx in info.initial_values)
+    test_value(prop, info.initial_values[idx], true);
+  for (var idx in info.other_values)
+    test_value(prop, info.other_values[idx], false);
+}
+
+function run_tests() {
+  setup_initial_values();
+  var props = [];
+  for (var prop in gCSSProperties)
+    props.push(prop);
+  props = props.reverse();
+  function do_one(l) {
+    if (l.length == 0) {
+      // SimpleTest.finish() is really slow, so we have to disable the
+      // slow script dialog for this part
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      var prefService = Components.classes["@mozilla.org/preferences-service;1"].
+                          getService(Components.interfaces.nsIPrefService);
+      var domBranch = prefService.getBranch("dom.");
+      var oldVal = domBranch.getIntPref("max_script_run_time");
+      domBranch.setIntPref("max_script_run_time", 0);
+
+      SimpleTest.finish();
+
+      domBranch.setIntPref("max_script_run_time", oldVal);
+
+      return;
+    }
+    test_property(l.pop());
+    setTimeout(do_one, 0, l);
+  }
+  setTimeout(do_one, 0, props);
+}
+
+load_done();
+
+</script>
+</pre>
+</body>
+</html>

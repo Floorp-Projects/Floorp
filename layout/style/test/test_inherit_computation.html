@@ -1,0 +1,198 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test for computation of CSS 'inherit'</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <style type="text/css" id="stylesheet"></style>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+<div id="testnode"><span id="parent"><span id="child"></span></span></div>
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for computation of CSS 'inherit' **/
+
+var gNoComputedStyle = {
+  "-moz-force-broken-image-icon": true,
+  "-moz-margin-end": true,
+  "-moz-margin-start": true,
+  "-moz-padding-end": true,
+  "-moz-padding-start": true,
+  "background-position": true,
+  "content": true,
+  "page-break-after": true,
+  "page-break-before": true,
+  "quotes": true,
+  "clip-path": true,
+  "clip-rule": true,
+  "color-interpolation": true,
+  "color-interpolation-filters": true,
+  "dominant-baseline": true,
+  "fill": true,
+  "fill-opacity": true,
+  "fill-rule": true,
+  "filter": true,
+  "flood-color": true,
+  "flood-opacity": true,
+  "marker": true, // NB: shorthand
+  "marker-end": true,
+  "marker-mid": true,
+  "marker-start": true,
+  "mask": true,
+  "pointer-events": true,
+  "shape-rendering": true,
+  "stop-color": true,
+  "stop-opacity": true,
+  "stroke": true,
+  "stroke-dasharray": true,
+  "stroke-dashoffset": true,
+  "stroke-linecap": true,
+  "stroke-linejoin": true,
+  "stroke-miterlimit": true,
+  "stroke-opacity": true,
+  "stroke-width": true,
+  "text-anchor": true,
+  "text-rendering": true,
+};
+
+function xfail_diffcomputed(property) {
+  return property in gNoComputedStyle;
+}
+
+var gBrokenInherit = {
+  // The nsRuleNode code uses the 'inherit' value for -moz-box-orient
+  "-moz-box-flex": true,
+
+  // Not implemented in nsRuleNode
+  "-moz-border-bottom-colors": true,
+  "-moz-border-left-colors": true,
+  "-moz-border-right-colors": true,
+  "-moz-border-top-colors": true,
+
+  // Parses inherit as a counter name
+  "counter-increment": true,
+  "counter-reset": true,
+};
+
+function xfail_inherit(property, matching_initial) {
+  if (property == "-moz-box-flex" && matching_initial) {
+    // It inherits from the wrong property, but that ends up right in
+    // this case.
+    return false;
+  }
+  return property in gBrokenInherit;
+}
+
+var gParent = document.getElementById("parent");
+var gChild = document.getElementById("child");
+var gStyleSheet = document.getElementById("stylesheet").sheet;
+var gChildRule1 = gStyleSheet.cssRules[gStyleSheet.insertRule("#child {}", gStyleSheet.cssRules.length)];
+var gChildRule2 = gStyleSheet.cssRules[gStyleSheet.insertRule("#child {}", gStyleSheet.cssRules.length)];
+
+// Get the computed value for a property.  For shorthands, return the
+// computed values of all the subproperties, delimited by " ; ".
+function get_computed_value(node, property)
+{
+  var info = gCSSProperties[property];
+  var cs = getComputedStyle(node, "");
+  if (!("subproperties" in info)) {
+    return cs.getPropertyValue(property);
+  }
+  var results = [];
+  for (var idx in info.subproperties) {
+    var subprop = info.subproperties[idx];
+    results.push(cs.getPropertyValue(subprop));
+  }
+  return results.join(" ; ");
+}
+
+function test_property(property)
+{
+  var info = gCSSProperties[property];
+  if (info.backend_only)
+    return;
+
+  if ("prerequisites" in info) {
+    var prereqs = info.prerequisites;
+    for (var prereq in prereqs) {
+      gParent.style.setProperty(prereq, prereqs[prereq], "");
+      gChild.style.setProperty(prereq, prereqs[prereq], "");
+    }
+  }
+
+  if (info.inherited) {
+    gParent.style.setProperty(property, info.initial_values[0], "");
+    var initial_computed = get_computed_value(gChild, property);
+    gChildRule1.style.setProperty(property, info.other_values[0], "");
+    var other_computed = get_computed_value(gChild, property);
+    (xfail_diffcomputed(property) ? todo_isnot : isnot)(
+          other_computed, initial_computed,
+          "should be testing with values that compute to different things " +
+          "for '" + property + "'");
+    gChildRule2.style.setProperty(property, "inherit", "");
+    var inherit_initial_computed = get_computed_value(gChild, property);
+    (xfail_inherit(property, true) ? todo_is : is)(
+       inherit_initial_computed, initial_computed,
+       "inherit should cause inheritance of initial value for '" +
+       property + "'");
+    gParent.style.setProperty(property, info.other_values[0], "");
+    var inherit_other_computed = get_computed_value(gChild, property);
+    (xfail_inherit(property, false) ? todo_is : is)(
+       inherit_other_computed, other_computed,
+       "inherit should cause inheritance of other value for '" +
+       property + "'");
+    gParent.style.removeProperty(property);
+    gChildRule1.style.removeProperty(property);
+    gChildRule2.style.removeProperty(property);
+  } else {
+    gParent.style.setProperty(property, info.other_values[0], "");
+    var initial_computed = get_computed_value(gChild, property);
+    var other_computed = get_computed_value(gParent, property);
+    (xfail_diffcomputed(property) ? todo_isnot : isnot)(
+          other_computed, initial_computed,
+          "should be testing with values that compute to different things " +
+          "for '" + property + "'");
+    gChildRule2.style.setProperty(property, "inherit", "");
+    var inherit_other_computed = get_computed_value(gChild, property);
+    (xfail_inherit(property, false) ? todo_is : is)(
+       inherit_other_computed, other_computed,
+       "inherit should cause inheritance of other value for '" +
+       property + "'");
+    gParent.style.removeProperty(property);
+    gChildRule1.style.setProperty(property, info.other_values[0], "");
+    var inherit_initial_computed = get_computed_value(gChild, property);
+    (xfail_inherit(property, true) ? todo_is : is)(
+       inherit_initial_computed, initial_computed,
+       "inherit should cause inheritance of initial value for '" +
+       property + "'");
+    gParent.style.removeProperty(property);
+    gChildRule1.style.removeProperty(property);
+    gChildRule2.style.removeProperty(property);
+  }
+
+  if ("prerequisites" in info) {
+    var prereqs = info.prerequisites;
+    for (var prereq in prereqs) {
+      gParent.style.removeProperty(prereq);
+      gChild.style.removeProperty(prereq);
+    }
+  }
+}
+
+for (var prop in gCSSProperties)
+  test_property(prop);
+
+</script>
+</pre>
+</body>
+</html>

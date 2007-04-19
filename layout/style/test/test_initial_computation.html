@@ -1,0 +1,270 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test for computation of CSS '-moz-initial'</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <style type="text/css" id="stylesheet"></style>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  var load_count = 0;
+  function load_done() {
+    if (++load_count == 2)
+      run_tests();
+  }
+  </script>
+</head>
+<body>
+<p id="display">
+<iframe id="unstyled" src="unstyled.xml" height="10" width="10" onload="load_done()"></iframe>
+</p>
+<div id="content" style="display: none">
+
+<div id="testnode"><span id="element"></span></div>
+
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for computation of CSS '-moz-initial' **/
+
+var gNoComputedStyle = {
+  "-moz-force-broken-image-icon": true,
+  "-moz-margin-end": true,
+  "-moz-margin-start": true,
+  "-moz-padding-end": true,
+  "-moz-padding-start": true,
+  "background-position": true,
+  "content": true,
+  "page-break-after": true,
+  "page-break-before": true,
+  "quotes": true,
+  "clip-path": true,
+  "clip-rule": true,
+  "color-interpolation": true,
+  "color-interpolation-filters": true,
+  "dominant-baseline": true,
+  "fill": true,
+  "fill-opacity": true,
+  "fill-rule": true,
+  "filter": true,
+  "flood-color": true,
+  "flood-opacity": true,
+  "marker": true, // NB: shorthand
+  "marker-end": true,
+  "marker-mid": true,
+  "marker-start": true,
+  "mask": true,
+  "pointer-events": true,
+  "shape-rendering": true,
+  "stop-color": true,
+  "stop-opacity": true,
+  "stroke": true,
+  "stroke-dasharray": true,
+  "stroke-dashoffset": true,
+  "stroke-linecap": true,
+  "stroke-linejoin": true,
+  "stroke-miterlimit": true,
+  "stroke-opacity": true,
+  "stroke-width": true,
+  "text-anchor": true,
+  "text-rendering": true,
+};
+
+function xfail_diffcomputed(property) {
+  return property in gNoComputedStyle;
+}
+
+var gBrokenInitial = {
+  // Presumably either not parsed or not implemented in nsRuleNode.
+  "-moz-appearance": true,
+  "-moz-binding": true,
+  "-moz-border-radius": true,
+  "-moz-border-radius-bottomleft": true,
+  "-moz-border-radius-bottomright": true,
+  "-moz-border-radius-topleft": true,
+  "-moz-border-radius-topright": true,
+  "-moz-box-align": true,
+  "-moz-box-direction": true,
+  "-moz-box-flex": true,
+  "-moz-box-orient": true,
+  "-moz-box-pack": true,
+  "-moz-box-sizing": true,
+  "-moz-column-count": true,
+  "-moz-column-gap": true,
+  "-moz-column-width": true,
+  "-moz-float-edge": true,
+  "-moz-image-region": true,
+  "-moz-outline-radius": true,
+  "-moz-outline-radius-bottomleft": true,
+  "-moz-outline-radius-bottomright": true,
+  "-moz-outline-radius-topleft": true,
+  "-moz-outline-radius-topright": true,
+  "-moz-user-focus": true,
+  "-moz-user-input": true,
+  "-moz-user-modify": true,
+  "-moz-user-select": true,
+  "background-attachment": true,
+  "background-color": true,
+  "background-image": true,
+  "background-repeat": true,
+  // XXX Why aren't the border-width values failing, etc.?
+  "border-bottom-color": true,
+  "border-collapse": true,
+  "border-color": true,
+  "border-left-color": true,
+  "border-right-color": true,
+  "border-spacing": true,
+  "border-top-color": true,
+  "bottom": true,
+  "caption-side": true,
+  "clear": true,
+  "cursor": true,
+  "direction": true,
+  "display": true,
+  "empty-cells": true,
+  "font": true, // XXX This one is weird.
+  "font-family": true, // XXX This one is weird.
+  "height": true,
+  "left": true,
+  "letter-spacing": true,
+  "line-height": true,
+  "list-style": true,
+  "list-style-image": true,
+  "list-style-position": true,
+  "list-style-type": true,
+  "margin": true,
+  "margin-bottom": true,
+  "margin-left": true,
+  "margin-right": true,
+  "margin-top": true,
+  "max-height": true,
+  "max-width": true,
+  "min-height": true,
+  "min-width": true,
+  "opacity": true,
+  "outline": true,
+  "outline-color": true, // XXX Why didn't this fail until I added the if (info.inherited) checks?
+  "outline-offset": true,
+  "outline-style": true,
+  "overflow": true,
+  "padding": true,
+  "padding-bottom": true,
+  "padding-left": true,
+  "padding-right": true,
+  "padding-top": true,
+  "position": true,
+  "right": true,
+  "table-layout": true,
+  "text-decoration": true,
+  "text-indent": true,
+  "text-transform": true,
+  "top": true,
+  "unicode-bidi": true,
+  "vertical-align": true,
+  "visibility": true,
+  "white-space": true,
+  "width": true,
+  "word-spacing": true,
+  "z-index": true,
+};
+
+function xfail_initial(property) {
+  return property in gBrokenInitial;
+}
+
+var gElement = document.getElementById("element");
+var gStyleSheet = document.getElementById("stylesheet").sheet;
+var gRule1 = gStyleSheet.cssRules[gStyleSheet.insertRule("#element {}", gStyleSheet.cssRules.length)];
+var gRule2 = gStyleSheet.cssRules[gStyleSheet.insertRule("#element {}", gStyleSheet.cssRules.length)];
+
+var gInitialValues;
+var gInitialPrereqsRule;
+
+function setup_initial_values() {
+  var iframe = document.getElementById("unstyled");
+  gInitialValues = iframe.contentWindow.getComputedStyle(
+                     iframe.contentDocument.documentElement.firstChild, "");
+  var sheet = iframe.contentDocument.styleSheets[0];
+  gInitialPrereqsRule = sheet.cssRules[sheet.insertRule(":root > * {}", sheet.cssRules.length)];
+}
+
+// Get the computed value for a property.  For shorthands, return the
+// computed values of all the subproperties, delimited by " ; ".
+function get_computed_value(cs, property)
+{
+  var info = gCSSProperties[property];
+  if (!("subproperties" in info)) {
+    return cs.getPropertyValue(property);
+  }
+  var results = [];
+  for (var idx in info.subproperties) {
+    var subprop = info.subproperties[idx];
+    results.push(cs.getPropertyValue(subprop));
+  }
+  return results.join(" ; ");
+}
+
+function test_property(property)
+{
+  var info = gCSSProperties[property];
+  if (info.backend_only)
+    return;
+
+  if ("prerequisites" in info) {
+    var prereqs = info.prerequisites;
+    for (var prereq in prereqs) {
+      gElement.style.setProperty(prereq, prereqs[prereq], "");
+      gInitialPrereqsRule.style.setProperty(prereq, prereqs[prereq], "");
+    }
+  }
+  if (info.inherited) {
+    gElement.parentNode.style.setProperty(property, info.other_values[0], "");
+  }
+
+  var initial_computed = get_computed_value(gInitialValues, property);
+  gRule1.style.setProperty(property, info.other_values[0], "");
+  var other_computed = get_computed_value(getComputedStyle(gElement, ""), property);
+  (xfail_diffcomputed(property) ? todo_isnot : isnot)(
+        other_computed, initial_computed,
+        "should be testing with values that compute to different things " +
+        "for '" + property + "'");
+  gRule2.style.setProperty(property, "-moz-initial", "");
+  var initial_val_computed = get_computed_value(getComputedStyle(gElement, ""), property);
+  (xfail_initial(property) ? todo_is : is)(
+     initial_val_computed, initial_computed,
+     "-moz-initial should cause initial value for '" + property + "'");
+  gRule1.style.removeProperty(property);
+  gRule2.style.removeProperty(property);
+
+  if ("prerequisites" in info) {
+    var prereqs = info.prerequisites;
+    for (var prereq in prereqs) {
+      gElement.style.removeProperty(prereq);
+      gInitialPrereqsRule.style.removeProperty(prereq);
+    }
+  }
+  if (info.inherited) {
+    gElement.parentNode.style.removeProperty(property);
+  }
+}
+
+function run_tests() {
+  setup_initial_values();
+  for (var prop in gCSSProperties)
+    test_property(prop);
+  SimpleTest.finish();
+}
+
+load_done();
+
+</script>
+</pre>
+</body>
+</html>

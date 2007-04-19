@@ -72,12 +72,17 @@ _TEST_FILES = 	test_bug302186.html \
 		test_bug372770.html \
 		test_bug373293.html \
 		test_inherit_storage.html \
+		test_inherit_computation.html \
 		test_initial_storage.html \
+		test_initial_computation.html \
 		test_property_database.html \
 		test_property_syntax_errors.html \
 		test_value_storage.html \
+		test_value_computation.html \
 		css_properties.js \
 		property_database.js \
+		unstyled.xml \
+		unstyled.css \
 		$(NULL)
 
 
