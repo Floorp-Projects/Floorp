@@ -231,13 +231,6 @@ nsWindowRoot::GetListenerManager(PRBool aCreateIfNotFound,
 }
 
 NS_IMETHODIMP
-nsWindowRoot::HandleEvent(nsIDOMEvent *aEvent)
-{
-  PRBool defaultActionEnabled;
-  return DispatchEvent(aEvent, &defaultActionEnabled);
-}
-
-NS_IMETHODIMP
 nsWindowRoot::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 {
   nsCOMPtr<nsIEventListenerManager> manager;

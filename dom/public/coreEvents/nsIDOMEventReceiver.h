@@ -50,10 +50,10 @@ class nsIDOMEventGroup;
  * distribution from themselves implement this interface.
  */
  
-/* 2fa04cfb-2494-41e5-ba76-9a79293eeb7e */
+/* 025957f3-7b19-452b-89a1-9be652d8d6db */
 #define NS_IDOMEVENTRECEIVER_IID \
-{0x2fa04cfb, 0x2494, 0x41e5, \
-  { 0xba, 0x76, 0x9a, 0x79, 0x29, 0x3e, 0xeb, 0x7e } }
+{ 0x025957f3, 0x7b19, 0x452b, \
+  { 0x89, 0xa1, 0x9b, 0xe6, 0x52, 0xd8, 0xd6, 0xdb } }
 
 class nsIDOMEventReceiver : public nsIDOMEventTarget
 {
@@ -66,7 +66,6 @@ public:
                                       const nsIID& aIID) = 0;
   NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
                                 nsIEventListenerManager** aResult) = 0;
-  NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent) = 0;
   NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup) = 0;
 };
 
