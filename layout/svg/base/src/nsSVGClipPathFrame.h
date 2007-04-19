@@ -87,7 +87,8 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
   class AutoClipPathReferencer
   {
   public:
-    AutoClipPathReferencer(nsSVGClipPathFrame *aFrame) {
+    AutoClipPathReferencer(nsSVGClipPathFrame *aFrame)
+       : mFrame(aFrame) {
       NS_ASSERTION(mFrame->mInUse == PR_FALSE, "reference loop!");
       mFrame->mInUse = PR_TRUE;
     }
