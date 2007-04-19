@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>JavaEmbeddingPlugin</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Java Embedding Plugin 0.9.6.1, Copyright (c) 2007 Steven Michaud</string>
+	<string>Java Embedding Plugin 0.9.6.2 Copyright (c) 2007 Steven Michaud</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -15,11 +15,11 @@
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.9.6.1</string>
+	<string>0.9.6.2</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>0.9.6.1</string>
+	<string>0.9.6.2</string>
 	<key>NSJavaNeeded</key>
 	<string>YES</string>
 	<key>NSJavaPath</key>
