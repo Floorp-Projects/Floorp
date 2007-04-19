@@ -270,7 +270,7 @@ nsSVGPatternFrame::PaintPattern(cairo_surface_t** surface,
 
   // Get the transformation matrix that we will hand to the renderer's pattern
   // routine.
-  if (NS_FAILED(GetPatternMatrix(patternMatrix, bbox, callerCTM)))
+  if (NS_FAILED(GetPatternMatrix(patternMatrix, bbox, callerBBox, callerCTM)))
      return NS_ERROR_FAILURE;
 
 #ifdef DEBUG_scooter
@@ -642,13 +642,11 @@ nsSVGPatternFrame::ConstructCTM(nsIDOMSVGMatrix **aCTM,
 
   if (type == nsIDOMSVGPatternElement::SVG_PUNITS_OBJECTBOUNDINGBOX) {
     // Use the bounding box
-    float minx,miny,width,height;
-    callerBBox->GetX(&minx);
-    callerBBox->GetY(&miny);
+    float width, height;
     callerBBox->GetWidth(&width);
     callerBBox->GetHeight(&height);
     NS_NewSVGMatrix(getter_AddRefs(tCTM), width, 0.0f, 0.0f, 
-                    height, minx, miny);
+                    height, 0.0f, 0.0f);
   } else {
     NS_NewSVGMatrix(getter_AddRefs(tCTM));
   }
@@ -690,6 +688,7 @@ nsSVGPatternFrame::ConstructCTM(nsIDOMSVGMatrix **aCTM,
 nsresult
 nsSVGPatternFrame::GetPatternMatrix(nsIDOMSVGMatrix **aCTM, 
                                     nsIDOMSVGRect *bbox,
+                                    nsIDOMSVGRect *callerBBox,
                                     nsIDOMSVGMatrix *callerCTM)
 {
   *aCTM = nsnull;
@@ -700,9 +699,18 @@ nsSVGPatternFrame::GetPatternMatrix(nsIDOMSVGMatrix **aCTM,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We really want the pattern matrix to handle translations
-  float minx,miny;
+  float minx, miny;
   bbox->GetX(&minx);
   bbox->GetY(&miny);
+
+  PRUint16 type = GetPatternContentUnits();
+  if (type == nsIDOMSVGPatternElement::SVG_PUNITS_OBJECTBOUNDINGBOX) {
+    float x, y;
+    callerBBox->GetX(&x);
+    callerBBox->GetY(&y);
+    minx += x;
+    miny += y;
+  }
   nsCOMPtr<nsIDOMSVGMatrix> tCTM;
   patternTransform->Translate(minx, miny, getter_AddRefs(tCTM));
 
@@ -761,15 +769,18 @@ nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM,
   // OK, now fix up the bounding box to reflect user coordinates
   // We handle device unit scaling in pattern matrix
   {
-    float x,y,width,height,xscale,yscale;
+    float x, y, width, height;
     (*aBBox)->GetX(&x);
     (*aBBox)->GetY(&y);
     (*aBBox)->GetWidth(&width);
     (*aBBox)->GetHeight(&height);
+    float xpos, ypos, xscale, yscale;
     (*aCTM)->GetA(&xscale);
     (*aCTM)->GetD(&yscale);
-    x = x / xscale;
-    y = y / yscale;
+    (*aCTM)->GetE(&xpos);
+    (*aCTM)->GetF(&ypos);
+    x = (x - xpos) / xscale;
+    y = (y - ypos) / yscale;
     width = width / xscale;
     height = height / yscale;
     (*aBBox)->SetX(x);
