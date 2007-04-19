@@ -54,7 +54,11 @@ REQUIRES  = xpcom \
                       embedcomponents \
             $(NULL)
 
-EXTRA_DSO_LDOPTS = $(MOZ_DBUS_GLIB_LIBS)
+EXTRA_DSO_LDOPTS = \
+	$(XPCOM_GLUE_LDOPTS) \
+	$(NSPR_LIBS) \
+	$(MOZ_DBUS_GLIB_LIBS) \
+	$(NULL)
                 
 CPPSRCS =   \
   nsDBusModule.cpp             \
