@@ -155,7 +155,7 @@ nsGLPbuffer::Resize(PRInt32 width, PRInt32 height)
     if (!WGLEW_ARB_pbuffer || !WGLEW_ARB_pixel_format)
     {
         mPriv->LogMessage(NS_LITERAL_CSTRING("Canvas 3D: WGL_ARB_pbuffer or WGL_ARB_pixel_format not available."));
-        return NS_ERROR_FAILURE;
+        return PR_FALSE;
     }
 
     int attribs[] = {
@@ -188,7 +188,7 @@ nsGLPbuffer::Resize(PRInt32 width, PRInt32 height)
     {
         mPriv->LogMessage(NS_LITERAL_CSTRING("Canvas 3D: wglChoosePixelFormat failed (or couldn't find any matching formats)."));
         ReleaseDC(NULL, mGlewDC);
-        return NS_ERROR_FAILURE;
+        return PR_FALSE;
     }
 
     nsAutoArrayPtr<int> formats = new int [numFormats];
@@ -242,7 +242,7 @@ nsGLPbuffer::Resize(PRInt32 width, PRInt32 height)
 
     if (chosenFormat == -1) {
         mPriv->LogMessage(NS_LITERAL_CSTRING("Canvas 3D: Couldn't find a suitable pixel format!"));
-        return NS_ERROR_FAILURE;
+        return PR_FALSE;
     }
     
     // ok, we now have a pixel format
@@ -252,7 +252,7 @@ nsGLPbuffer::Resize(PRInt32 width, PRInt32 height)
     mPbuffer = wglCreatePbufferARB(mGlewDC, chosenFormat, width, height, &pbattribs);
     if (!mPbuffer) {
         mPriv->LogMessage(NS_LITERAL_CSTRING("Canvas 3D: Failed to create pbuffer"));
-        return NS_ERROR_FAILURE;
+        return PR_FALSE;
     }
 
     mPbufferDC = wglGetPbufferDCARB(mPbuffer);
