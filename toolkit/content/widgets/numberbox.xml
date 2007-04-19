@@ -37,7 +37,10 @@
         </getter>
       </property>
 
-      <property name="value">
+      <property name="value" onget="return '' + this.valueInt"
+                             onset="return this.valueInt = val;"/>
+
+      <property name="valueInt">
         <getter>
           if (this._valueEntered) {
             var newval = this.inputField.value;
@@ -47,7 +50,8 @@
           return this._value;
         </getter>
         <setter>
-          return this._validateValue(val, false);
+          this._validateValue(val, false);
+          return val;
         </setter>
       </property>
 
@@ -78,7 +82,7 @@
         <![CDATA[
           if (typeof val == "number") {
             this.setAttribute("min", val);
-            if (this.value < val)
+            if (this.valueInt < val)
               this._validateValue(val, false);
           }
           return val;
@@ -99,7 +103,7 @@
           if (val < min)
             val = min;
           this.setAttribute("max", val);
-          if (this.value > val)
+          if (this.valueInt > val)
             this._validateValue(val, false);
           return val;
         ]]>
@@ -114,7 +118,7 @@
         <setter>
           if (typeof val == "number") {
             this.setAttribute("decimalplaces", val);
-            this._validateValue(this.value, false);
+            this._validateValue(this.valueInt, false);
           }
           return val;
         </setter>
@@ -129,20 +133,20 @@
         <![CDATA[
           if (typeof val == "number")
             this.setAttribute("increment", val);
-          return increment;
+          return val;
         ]]>
         </setter>
       </property>
 
       <method name="decrease">
         <body>
-          return this._validateValue(this.value - this.increment, true);
+          return this._validateValue(this.valueInt - this.increment, true);
         </body>
       </method>
 
       <method name="increase">
         <body>
-          return this._validateValue(this.value + this.increment, true);
+          return this._validateValue(this.valueInt + this.increment, true);
         </body>
       </method>
 
@@ -151,7 +155,7 @@
           <![CDATA[
             if (this.disabled || this.readOnly)
               return;
-            var oldval = this.value;
+            var oldval = this.valueInt;
             var newval = this.increase();
             this.inputField.select();
             if (oldval != newval)
@@ -164,7 +168,7 @@
           <![CDATA[
             if (this.disabled || this.readOnly)
               return;
-            var oldval = this.value;
+            var oldval = this.valueInt;
             var newval = this.decrease();
             this.inputField.select();
             if (oldval != newval)
@@ -181,8 +185,8 @@
               buttons.disabled = true;
             }
             else {
-              buttons.decreaseDisabled = (this.value <= this.min);
-              buttons.increaseDisabled = (this.value >= this.max);
+              buttons.decreaseDisabled = (this.valueInt <= this.min);
+              buttons.increaseDisabled = (this.valueInt >= this.max);
             }
           ]]>
         </body>
