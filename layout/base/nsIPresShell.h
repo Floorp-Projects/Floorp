@@ -100,10 +100,10 @@ class gfxASurface;
 
 typedef short SelectionType;
 
-// A68CFCE1-2A15-47F0-B61B-F2C34079A909
+// DC543B71-6F1A-4B9F-B4CF-693AEC4BA24A
 #define NS_IPRESSHELL_IID \
-{ 0xa78cfce1, 0x2a15, 0x47f0, \
-  { 0xb6, 0x1b, 0xf2, 0xc3, 0x40, 0x79, 0xa9, 0x09 } }
+{ 0xdc543b71, 0x6f1a, 0x4b9f, \
+  { 0xb4, 0xcf, 0x69, 0x3a, 0xec, 0x4b, 0xa2, 0x4a } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -714,6 +714,8 @@ public:
   virtual already_AddRefed<gfxASurface> RenderSelection(nsISelection* aSelection,
                                                         nsPoint& aPoint,
                                                         nsRect* aScreenRect) = 0;
+
+  virtual void HidePopups() = 0;
 
   void AddWeakFrame(nsWeakFrame* aWeakFrame);
   void RemoveWeakFrame(nsWeakFrame* aWeakFrame);

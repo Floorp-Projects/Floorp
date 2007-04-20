@@ -142,7 +142,8 @@ nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell, nsStyleContext* aContex
   mMenuCanOverlapOSBar(PR_FALSE),
   mShouldAutoPosition(PR_TRUE),
   mShouldRollup(PR_TRUE),
-  mConsumeRollupEvent(nsIPopupBoxObject::ROLLUP_DEFAULT)
+  mConsumeRollupEvent(nsIPopupBoxObject::ROLLUP_DEFAULT),
+  mInContentShell(PR_TRUE)
 {
   SetIsContextMenu(PR_FALSE);   // we're not a context menu by default
 } // ctor
@@ -191,6 +192,13 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
   // about that constraint.
   viewManager->SetViewFloating(ourView, PR_TRUE);
 
+  nsCOMPtr<nsISupports> cont = PresContext()->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(cont);
+  PRInt32 type = -1;
+  if (dsti && NS_SUCCEEDED(dsti->GetItemType(&type)) &&
+      type == nsIDocShellTreeItem::typeChrome)
+    mInContentShell = PR_FALSE;
+
   // XXX make sure we are hidden (shouldn't this be done automatically?)
   viewManager->SetViewVisibility(ourView, nsViewVisibility_kHide);
   if (!ourView->HasWidget()) {
@@ -217,15 +225,7 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
     nsCSSRendering::FindBackground(PresContext(), this, &bg, &isCanvas);
   PRBool viewHasTransparentContent = hasBG &&
     (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) &&
-    !GetStyleDisplay()->mAppearance;
-  if (viewHasTransparentContent) {
-    nsCOMPtr<nsISupports> cont = PresContext()->GetContainer();
-    nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(cont);
-    PRInt32 type = -1;
-    if (!dsti || NS_FAILED(dsti->GetItemType(&type)) ||
-        type != nsIDocShellTreeItem::typeChrome)
-      viewHasTransparentContent = PR_FALSE;
-  }
+    !GetStyleDisplay()->mAppearance && !mInContentShell;
 
   nsIContent* parentContent = GetContent()->GetParent();
   nsIAtom *tag = nsnull;
@@ -657,7 +657,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
   NS_ENSURE_ARG(aPresContext);
   NS_ENSURE_ARG(aFrame);
 
-  if (!mShouldAutoPosition) 
+  if (!mShouldAutoPosition && !mInContentShell) 
     return NS_OK;
 
   // |containingView|
@@ -755,6 +755,13 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
   // keep 3px margin to the right and bottom of the screen for WinXP dropshadow
   rect.width  -= nsPresContext::CSSPixelsToAppUnits(3);
   rect.height -= nsPresContext::CSSPixelsToAppUnits(3);
+
+  // for content shells, clip to the client area rather than the screen area
+  if (mInContentShell) {
+    nsRect rootScreenRect = presShell->GetRootFrame()->GetScreenRect();
+    rootScreenRect.ScaleRoundIn(aPresContext->AppUnitsPerDevPixel());
+    rect.IntersectRect(rect, rootScreenRect);
+  }
 
   PRInt32 screenLeftTwips   = rect.x;
   PRInt32 screenTopTwips    = rect.y;
@@ -2028,6 +2035,10 @@ nsMenuPopupFrame::MoveTo(PRInt32 aLeft, PRInt32 aTop)
 void
 nsMenuPopupFrame::MoveToInternal(PRInt32 aLeft, PRInt32 aTop)
 {
+  // just don't support moving popups for content shells
+  if (mInContentShell)
+    return;
+
   nsIView* view = GetView();
   NS_ASSERTION(view->GetParent(), "Must have parent!");
   
