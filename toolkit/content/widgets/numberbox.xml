@@ -37,10 +37,10 @@
         </getter>
       </property>
 
-      <property name="value" onget="return '' + this.valueInt"
-                             onset="return this.valueInt = val;"/>
+      <property name="value" onget="return '' + this.valueNumber"
+                             onset="return this.valueNumber = val;"/>
 
-      <property name="valueInt">
+      <property name="valueNumber">
         <getter>
           if (this._valueEntered) {
             var newval = this.inputField.value;
@@ -82,7 +82,7 @@
         <![CDATA[
           if (typeof val == "number") {
             this.setAttribute("min", val);
-            if (this.valueInt < val)
+            if (this.valueNumber < val)
               this._validateValue(val, false);
           }
           return val;
@@ -103,7 +103,7 @@
           if (val < min)
             val = min;
           this.setAttribute("max", val);
-          if (this.valueInt > val)
+          if (this.valueNumber > val)
             this._validateValue(val, false);
           return val;
         ]]>
@@ -118,7 +118,7 @@
         <setter>
           if (typeof val == "number") {
             this.setAttribute("decimalplaces", val);
-            this._validateValue(this.valueInt, false);
+            this._validateValue(this.valueNumber, false);
           }
           return val;
         </setter>
@@ -140,13 +140,13 @@
 
       <method name="decrease">
         <body>
-          return this._validateValue(this.valueInt - this.increment, true);
+          return this._validateValue(this.valueNumber - this.increment, true);
         </body>
       </method>
 
       <method name="increase">
         <body>
-          return this._validateValue(this.valueInt + this.increment, true);
+          return this._validateValue(this.valueNumber + this.increment, true);
         </body>
       </method>
 
@@ -155,7 +155,7 @@
           <![CDATA[
             if (this.disabled || this.readOnly)
               return;
-            var oldval = this.valueInt;
+            var oldval = this.valueNumber;
             var newval = this.increase();
             this.inputField.select();
             if (oldval != newval)
@@ -168,7 +168,7 @@
           <![CDATA[
             if (this.disabled || this.readOnly)
               return;
-            var oldval = this.valueInt;
+            var oldval = this.valueNumber;
             var newval = this.decrease();
             this.inputField.select();
             if (oldval != newval)
@@ -181,12 +181,15 @@
         <body>
           <![CDATA[
             var buttons = this.spinButtons;
-            if (this.disabled || this.readOnly) {
-              buttons.disabled = true;
+            if (this.wrapAround) {
+              buttons.decreaseDisabled = buttons.increaseDisabled = false;
+            }
+            else if (this.disabled || this.readOnly) {
+              buttons.decreaseDisabled = buttons.increaseDisabled = true;
             }
             else {
-              buttons.decreaseDisabled = (this.valueInt <= this.min);
-              buttons.increaseDisabled = (this.valueInt >= this.max);
+              buttons.decreaseDisabled = (this.valueNumber <= this.min);
+              buttons.increaseDisabled = (this.valueNumber >= this.max);
             }
           ]]>
         </body>
@@ -209,8 +212,7 @@
               aValue = (aIsIncDec && wrapAround ? min : max);
 
             var places = this.decimalPlaces;
-            if (places != Infinity)
-              aValue = aValue.toFixed(places);
+            aValue = (places == Infinity) ? "" + aValue : aValue.toFixed(places);
 
             this._valueEntered = false;
             this._value = Number(aValue);
