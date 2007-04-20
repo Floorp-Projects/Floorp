@@ -194,6 +194,7 @@
 #include "nsIMenuFrame.h"
 #include "nsITreeBoxObject.h"
 #endif
+#include "nsIMenuParent.h"
 #include "nsPlaceholderFrame.h"
 
 // Content viewer interfaces
@@ -933,6 +934,8 @@ public:
                                                         nsPoint& aPoint,
                                                         nsRect* aScreenRect);
 
+  virtual void HidePopups();
+
   //nsIViewObserver interface
 
   NS_IMETHOD Paint(nsIView *aView,
@@ -1149,6 +1152,9 @@ protected:
   void AddUserSheet(nsISupports* aSheet);
   void AddAgentSheet(nsISupports* aSheet);
   void RemoveSheet(nsStyleSet::sheetType aType, nsISupports* aSheet);
+
+  // Hide a view if it is a popup
+  void HideViewIfPopup(nsIView* aView);
 
   nsICSSStyleSheet*         mPrefStyleSheet; // mStyleSet owns it but we maintain a ref, may be null
 #ifdef DEBUG
@@ -6121,6 +6127,18 @@ PresShell::Thaw()
   UnsuppressPainting();
 }
 
+void
+PresShell::HidePopups()
+{
+  nsIViewManager *vm = GetViewManager();
+  if (vm) {
+    nsIView *rootView = nsnull;
+    vm->GetRootView(rootView);
+    if (rootView)
+      HideViewIfPopup(rootView);
+  }
+}
+
 //--------------------------------------------------------
 // Start of protected and private methods on the PresShell
 //--------------------------------------------------------
@@ -6586,6 +6604,27 @@ PresShell::EnumeratePlugins(nsIDOMDocument *aDocument,
     nsCOMPtr<nsIContent> content = do_QueryInterface(node);
     if (content)
       aCallback(this, content);
+  }
+}
+
+void
+PresShell::HideViewIfPopup(nsIView* aView)
+{
+  nsIFrame* frame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
+  if (frame) {
+    nsIMenuParent* parent;
+    CallQueryInterface(frame, &parent);
+    if (parent) {
+      parent->HideChain();
+      // really make sure the view is hidden
+      mViewManager->SetViewVisibility(aView, nsViewVisibility_kHide);
+    }
+  }
+
+  nsIView* child = aView->GetFirstChild();
+  while (child) {
+    HideViewIfPopup(child);
+    child = child->GetNextSibling();
   }
 }
 
