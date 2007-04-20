@@ -2534,7 +2534,14 @@ nsXULDocument::InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
         ++mPendingSheets;
     }
 
-    return rv;
+    // Ignore errors from UpdateStyleSheet; we don't want failure to
+    // do that to break the XUL document load.  But do propagate out
+    // NS_ERROR_OUT_OF_MEMORY.
+    if (rv == NS_ERROR_OUT_OF_MEMORY) {
+        return rv;
+    }
+    
+    return NS_OK;
 }
 
 nsresult
