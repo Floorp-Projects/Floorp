@@ -205,16 +205,16 @@ sub Bump {
             $skipNextLine = 1;
             my $interpLine = $line;
             $interpLine =~ s/^#\s+CONFIG:\s+//;
-            foreach my $variable (grep(/%\w+\-*%/, split(/\s+/, $line))) {
+            foreach my $variable (grep(/%[\w\-]+%/, split(/\s+/, $line))) {
                 my $key = $variable;
-                if (! ($key =~ s/.*%(\w+\-*)%.*/$1/g)) {
+                if (! ($key =~ s/.*%([\w\-]+)%.*/$1/)) {
                     die("ASSERT: could not parse $variable");
                 }
 
-                if (! $config->Exists(var => $key)) {
+                if (! $config->Exists(sysvar => $key)) {
                     die("ASSERT: no replacement found for $key");
                 }
-                my $value = $config->Get(var => $key);
+                my $value = $config->Get(sysvar => $key);
                 $interpLine =~ s/\%$key\%/$value/g;
             }
             print OUTFILE $interpLine;
