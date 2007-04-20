@@ -203,7 +203,7 @@ function test_value(property, val, is_initial)
   if ("prerequisites" in info) {
     var prereqs = info.prerequisites;
     for (var prereq in prereqs) {
-      gElement.style.setProperty(prereq, prereqs[prereq], "");
+      gRule1.style.setProperty(prereq, prereqs[prereq], "");
       gInitialPrereqsRule.style.setProperty(prereq, prereqs[prereq], "");
     }
   }
@@ -220,6 +220,15 @@ function test_value(property, val, is_initial)
           "should be testing with values that compute to different things " +
           "for '" + property + "'");
   }
+  // It's important for values that are supposed to compute to the
+  // initial value (given the current design of nsRuleNode) that we're
+  // modifying the most specific rule that matches the element, and that
+  // we've already requested style while that rule was empty.  This
+  // means we'll have a cached aStartStruct from the parent in the rule
+  // tree (caching the "other" value), so we'll make sure we don't get
+  // the initial value from the luck of default-initialization.
+  // This means that it's important that we set the prereqs on
+  // gRule1.style rather than on gElement.style.
   gRule2.style.setProperty(property, val, "");
   var val_computed = get_computed_value(getComputedStyle(gElement, ""), property);
   if (is_initial) {
@@ -238,7 +247,7 @@ function test_value(property, val, is_initial)
   if ("prerequisites" in info) {
     var prereqs = info.prerequisites;
     for (var prereq in prereqs) {
-      gElement.style.removeProperty(prereq);
+      gRule1.style.removeProperty(prereq);
       gInitialPrereqsRule.style.removeProperty(prereq);
     }
   }
