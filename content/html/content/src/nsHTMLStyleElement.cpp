@@ -196,7 +196,7 @@ nsHTMLStyleElement::CharacterDataChanged(nsIDocument* aDocument,
                                          nsIContent* aContent,
                                          CharacterDataChangeInfo* aInfo)
 {
-  UpdateStyleSheet();
+  UpdateStyleSheetInternal(nsnull);
 }
 
 void
@@ -204,7 +204,7 @@ nsHTMLStyleElement::ContentAppended(nsIDocument* aDocument,
                                     nsIContent* aContainer,
                                     PRInt32 aNewIndexInContainer)
 {
-  UpdateStyleSheet();
+  UpdateStyleSheetInternal(nsnull);
 }
 
 void
@@ -213,7 +213,7 @@ nsHTMLStyleElement::ContentInserted(nsIDocument* aDocument,
                                     nsIContent* aChild,
                                     PRInt32 aIndexInContainer)
 {
-  UpdateStyleSheet();
+  UpdateStyleSheetInternal(nsnull);
 }
 
 void
@@ -222,7 +222,7 @@ nsHTMLStyleElement::ContentRemoved(nsIDocument* aDocument,
                                    nsIContent* aChild,
                                    PRInt32 aIndexInContainer)
 {
-  UpdateStyleSheet();
+  UpdateStyleSheetInternal(nsnull);
 }
 
 nsresult
@@ -235,7 +235,7 @@ nsHTMLStyleElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  UpdateStyleSheet(nsnull);
+  UpdateStyleSheetInternal(nsnull);
 
   return rv;  
 }
@@ -246,7 +246,7 @@ nsHTMLStyleElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
-  UpdateStyleSheet(oldDoc);
+  UpdateStyleSheetInternal(oldDoc);
 }
 
 nsresult
@@ -257,11 +257,11 @@ nsHTMLStyleElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
                                               aValue, aNotify);
   if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheet(nsnull, nsnull,
-                     aNameSpaceID == kNameSpaceID_None &&
-                     (aName == nsGkAtoms::title ||
-                      aName == nsGkAtoms::media ||
-                      aName == nsGkAtoms::type));
+    UpdateStyleSheetInternal(nsnull,
+                             aNameSpaceID == kNameSpaceID_None &&
+                             (aName == nsGkAtoms::title ||
+                              aName == nsGkAtoms::media ||
+                              aName == nsGkAtoms::type));
   }
 
   return rv;
@@ -274,11 +274,11 @@ nsHTMLStyleElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute,
                                                 aNotify);
   if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheet(nsnull, nsnull,
-                     aNameSpaceID == kNameSpaceID_None &&
-                     (aAttribute == nsGkAtoms::title ||
-                      aAttribute == nsGkAtoms::media ||
-                      aAttribute == nsGkAtoms::type));
+    UpdateStyleSheetInternal(nsnull,
+                             aNameSpaceID == kNameSpaceID_None &&
+                             (aAttribute == nsGkAtoms::title ||
+                              aAttribute == nsGkAtoms::media ||
+                              aAttribute == nsGkAtoms::type));
   }
 
   return rv;
@@ -300,7 +300,7 @@ nsHTMLStyleElement::SetInnerHTML(const nsAString& aInnerHTML)
   
   SetEnableUpdates(PR_TRUE);
   
-  UpdateStyleSheet();
+  UpdateStyleSheetInternal(nsnull);
   return rv;
 }
 

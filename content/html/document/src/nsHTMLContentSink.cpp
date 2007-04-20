@@ -280,7 +280,7 @@ protected:
 
   nsresult FlushTags();
 
-  void StartLayout();
+  void StartLayout(PRBool aIgnorePendingSheets);
 
   /**
    * AddBaseTagInfo adds the "current" base URI and target to the content node
@@ -786,11 +786,11 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
     // Now disable updates so that every time we add an attribute or child
     // text token, we don't try to update the style sheet.
     if (!mSink->mInsideNoXXXTag) {
-      ssle->InitStyleLinkElement(mSink->mParser, PR_FALSE);
+      ssle->InitStyleLinkElement(PR_FALSE);
     }
     else {
       // We're not going to be evaluating this style anyway.
-      ssle->InitStyleLinkElement(nsnull, PR_TRUE);
+      ssle->InitStyleLinkElement(PR_TRUE);
     }
 
     ssle->SetEnableUpdates(PR_FALSE);
@@ -1811,7 +1811,6 @@ HTMLContentSink::WillBuildModel(void)
 NS_IMETHODIMP
 HTMLContentSink::DidBuildModel(void)
 {
-
   // NRA Dump stopwatch stop info here
 #ifdef MOZ_PERF_METRICS
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::DidBuildModel(), this=%p\n",
@@ -1845,7 +1844,7 @@ HTMLContentSink::DidBuildModel(void)
     }
 
     if (!bDestroying) {
-      StartLayout();
+      StartLayout(PR_FALSE);
     }
   }
 
@@ -2095,7 +2094,7 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
     mCurrentContext->mStack[parentIndex].mNumFlushed = childCount;
   }
 
-  StartLayout();
+  StartLayout(PR_FALSE);
 
   return NS_OK;
 }
@@ -2293,7 +2292,7 @@ HTMLContentSink::CloseFrameset()
   MOZ_TIMER_STOP(mWatch);
 
   if (done && mFramesEnabled) {
-    StartLayout();
+    StartLayout(PR_FALSE);
   }
 
   return rv;
@@ -2810,7 +2809,7 @@ HTMLContentSink::NotifyTagObservers(nsIParserNode* aNode)
 }
 
 void
-HTMLContentSink::StartLayout()
+HTMLContentSink::StartLayout(PRBool aIgnorePendingSheets)
 {
   if (mLayoutStarted) {
     return;
@@ -2818,7 +2817,7 @@ HTMLContentSink::StartLayout()
 
   mHTMLDocument->SetIsFrameset(mFrameset != nsnull);
 
-  nsContentSink::StartLayout(mFrameset != nsnull);
+  nsContentSink::StartLayout(aIgnorePendingSheets);
 }
 
 void
@@ -2967,10 +2966,10 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
     if (ssle) {
       // XXX need prefs. check here.
       if (!mInsideNoXXXTag) {
-        ssle->InitStyleLinkElement(mParser, PR_FALSE);
+        ssle->InitStyleLinkElement(PR_FALSE);
         ssle->SetEnableUpdates(PR_FALSE);
       } else {
-        ssle->InitStyleLinkElement(nsnull, PR_TRUE);
+        ssle->InitStyleLinkElement(PR_TRUE);
       }
     }
 
@@ -2985,7 +2984,13 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 
     if (ssle) {
       ssle->SetEnableUpdates(PR_TRUE);
-      result = ssle->UpdateStyleSheet(nsnull, nsnull);
+      PRBool willNotify;
+      PRBool isAlternate;
+      result = ssle->UpdateStyleSheet(this, &willNotify, &isAlternate);
+      if (NS_SUCCEEDED(result) && willNotify && !isAlternate) {
+        ++mPendingSheetCount;
+        mScriptLoader->AddExecuteBlocker();
+      }
 
       // look for <link rel="next" href="url">
       nsAutoString relVal;
@@ -3175,7 +3180,13 @@ HTMLContentSink::ProcessSTYLEEndTag(nsGenericHTMLElement* content)
     // Note: if we are inside a noXXX tag, then we init'ed this style element
     // with mDontLoadStyle = PR_TRUE, so these two calls will have no effect.
     ssle->SetEnableUpdates(PR_TRUE);
-    rv = ssle->UpdateStyleSheet(nsnull, nsnull);
+    PRBool willNotify;
+    PRBool isAlternate;
+    rv = ssle->UpdateStyleSheet(this, &willNotify, &isAlternate);
+    if (NS_SUCCEEDED(rv) && willNotify && !isAlternate) {
+      ++mPendingSheetCount;
+      mScriptLoader->AddExecuteBlocker();
+    }
   }
 
   return rv;
@@ -3196,7 +3207,7 @@ HTMLContentSink::FlushPendingNotifications(mozFlushType aType)
     if (aType & Flush_OnlyReflow) {
       // Make sure that layout has started so that the reflow flush
       // will actually happen.
-      StartLayout();
+      StartLayout(PR_TRUE);
     }
   }
 }

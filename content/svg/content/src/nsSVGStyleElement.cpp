@@ -149,7 +149,7 @@ nsSVGStyleElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 {
   nsresult rv = nsSVGStyleElementBase::InsertChildAt(aKid, aIndex, aNotify);
   if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheet();
+    UpdateStyleSheetInternal(nsnull);
   }
 
   return rv;
@@ -160,7 +160,7 @@ nsSVGStyleElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   nsresult rv = nsSVGStyleElementBase::RemoveChildAt(aIndex, aNotify);
   if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheet();
+    UpdateStyleSheetInternal(nsnull);
   }
 
   return rv;
@@ -176,7 +176,7 @@ nsSVGStyleElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                   aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  UpdateStyleSheet(nsnull);
+  UpdateStyleSheetInternal(nsnull);
 
   return rv;  
 }
@@ -187,7 +187,7 @@ nsSVGStyleElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
 
   nsSVGStyleElementBase::UnbindFromTree(aDeep, aNullParent);
-  UpdateStyleSheet(oldDoc);
+  UpdateStyleSheetInternal(oldDoc);
 }
 
 nsresult
@@ -198,11 +198,11 @@ nsSVGStyleElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   nsresult rv = nsSVGStyleElementBase::SetAttr(aNameSpaceID, aName, aPrefix,
                                                aValue, aNotify);
   if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheet(nsnull, nsnull,
-                     aNameSpaceID == kNameSpaceID_None &&
-                     (aName == nsGkAtoms::title ||
-                      aName == nsGkAtoms::media ||
-                      aName == nsGkAtoms::type));
+    UpdateStyleSheetInternal(nsnull,
+                             aNameSpaceID == kNameSpaceID_None &&
+                             (aName == nsGkAtoms::title ||
+                              aName == nsGkAtoms::media ||
+                              aName == nsGkAtoms::type));
   }
 
   return rv;
@@ -215,11 +215,11 @@ nsSVGStyleElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   nsresult rv = nsSVGStyleElementBase::UnsetAttr(aNameSpaceID, aAttribute,
                                                  aNotify);
   if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheet(nsnull, nsnull,
-                     aNameSpaceID == kNameSpaceID_None &&
-                     (aAttribute == nsGkAtoms::title ||
-                      aAttribute == nsGkAtoms::media ||
-                      aAttribute == nsGkAtoms::type));
+    UpdateStyleSheetInternal(nsnull,
+                             aNameSpaceID == kNameSpaceID_None &&
+                             (aAttribute == nsGkAtoms::title ||
+                              aAttribute == nsGkAtoms::media ||
+                              aAttribute == nsGkAtoms::type));
   }
 
   return rv;

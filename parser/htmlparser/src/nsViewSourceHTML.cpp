@@ -392,8 +392,6 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
     if(!mHasOpenRoot) {
       // For the stack-allocated tokens below, it's safe to pass a null
       // token allocator, because there are no attributes on the tokens.
-      PRBool didBlock = PR_FALSE;
-
       CStartToken htmlToken(NS_LITERAL_STRING("HTML"), eHTMLTag_html);
       nsCParserNode htmlNode(&htmlToken, 0/*stack token*/);
       mSink->OpenContainer(htmlNode);
@@ -443,17 +441,13 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
                         NS_LITERAL_STRING("href"),
                         NS_LITERAL_STRING("resource://gre/res/viewsource.css"));
           
-          result = mSink->AddLeaf(theNode);
-          didBlock = result == NS_ERROR_HTMLPARSER_BLOCK;
+          mSink->AddLeaf(theNode);
         }
       }
 
       result = mSink->CloseContainer(eHTMLTag_head);
       if(NS_SUCCEEDED(result)) {
         mHasOpenRoot = PR_TRUE;
-        if (didBlock) {
-          result = NS_ERROR_HTMLPARSER_BLOCK;
-        }
       }
     }
     if (NS_SUCCEEDED(result) && !mHasOpenBody) {
@@ -511,8 +505,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
             result = NS_ERROR_HTMLPARSER_INTERRUPTED;
             break;
           }
-        }
-        else if(NS_ERROR_HTMLPARSER_BLOCK!=result){
+        } else {
           mTokenizer->PushTokenFront(theToken);
         }
       }

@@ -53,7 +53,6 @@
 
 class CSSLoaderImpl;
 class nsIURI;
-class nsIParser;
 class nsICSSStyleSheet;
 class nsIStyleSheetLinkingElement;
 class nsICSSLoaderObserver;
@@ -113,7 +112,6 @@ public:
   // Data for loading a sheet linked from a document
   SheetLoadData(CSSLoaderImpl* aLoader,
                 const nsSubstring& aTitle,
-                nsIParser* aParserToUnblock,
                 nsIURI* aURI,
                 nsICSSStyleSheet* aSheet,
                 nsIStyleSheetLinkingElement* aOwningElement,
@@ -151,9 +149,6 @@ public:
 
   // Charset we decided to use for the sheet
   nsCString                  mCharset;
-
-  // Parser to be told to continue parsing once the load completes
-  nsCOMPtr<nsIParser>        mParserToUnblock;
 
   // URI we're loading.  Null for inline sheets
   nsCOMPtr<nsIURI>           mURI;
@@ -261,17 +256,15 @@ public:
                              PRUint32 aLineNumber,
                              const nsSubstring& aTitle,
                              const nsSubstring& aMedia,
-                             nsIParser* aParserToUnblock,
                              nsICSSLoaderObserver* aObserver,
                              PRBool* aCompleted,
                              PRBool* aIsAlternate);
 
   NS_IMETHOD LoadStyleLink(nsIContent* aElement,
                            nsIURI* aURL, 
-                           const nsSubstring& aTitle, 
+                           const nsSubstring& aTitle,
                            const nsSubstring& aMedia,
                            PRBool aHasAlternateRel,
-                           nsIParser* aParserToUnblock,
                            nsICSSLoaderObserver* aObserver,
                            PRBool* aIsAlternate);
 
@@ -357,7 +350,6 @@ private:
   nsresult PostLoadEvent(nsIURI* aURI,
                          nsICSSStyleSheet* aSheet,
                          nsICSSLoaderObserver* aObserver,
-                         nsIParser* aParserToUnblock,
                          PRBool aWasAlternate);
 public:
   // Handle an event posted by PostLoadEvent
@@ -371,17 +363,32 @@ protected:
   friend class SheetLoadData;
 
   // Protected functions and members are ones that SheetLoadData needs
-  // access to
+  // access to.
+
+  // Parse the stylesheet in aLoadData.  The sheet data comes from aStream.
+  // Set aCompleted to true if the parse finished, false otherwise (e.g. if the
+  // sheet had an @import).  If aCompleted is true when this returns, then
+  // ParseSheet also called SheetComplete on aLoadData
   nsresult ParseSheet(nsIUnicharInputStream* aStream,
                       SheetLoadData* aLoadData,
                       PRBool& aCompleted);
 
 public:
+  // The load of the sheet in aLoadData is done, one way or another.  Do final
+  // cleanup, including releasing aLoadData.
   void SheetComplete(SheetLoadData* aLoadData, nsresult aStatus);
+
+private:
+  typedef nsTArray<nsRefPtr<SheetLoadData> > LoadDataArray;
+  
+  // The guts of SheetComplete.  This may be called recursively on parent datas
+  // or datas that had glommed on to a single load.  The array is there so load
+  // datas whose observers need to be notified can be added to it.
+  void DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
+                       LoadDataArray& aDatasToNotify);
 
   static nsCOMArray<nsICSSParser>* gParsers;  // array of idle CSS parsers
 
-protected:
   // the load data needs access to the document...
   nsIDocument*      mDocument;  // the document we live for
 
@@ -389,7 +396,6 @@ protected:
   PRPackedBool            mSyncCallback;
 #endif
 
-private:
   PRPackedBool      mCaseSensitive; // is document CSS case sensitive
   PRPackedBool      mEnabled; // is enabled to load new styles
   nsCompatibility   mCompatMode;
@@ -405,7 +411,7 @@ private:
 
   // The array of posted stylesheet loaded events (SheetLoadDatas) we have.
   // Note that these are rare.
-  nsTArray<nsRefPtr<SheetLoadData> > mPostedEvents;
+  LoadDataArray mPostedEvents;
 };
 
 #endif // nsCSSLoader_h__

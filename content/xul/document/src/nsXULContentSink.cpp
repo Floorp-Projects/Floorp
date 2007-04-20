@@ -50,9 +50,6 @@
 #include "nsXULContentSink.h"
 #include "nsCOMPtr.h"
 #include "nsForwardReference.h"
-#include "nsICSSLoader.h"
-#include "nsICSSParser.h"
-#include "nsICSSStyleSheet.h"
 #include "nsIContentSink.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventListener.h"
@@ -369,10 +366,8 @@ XULContentSinkImpl::Init(nsIDocument* aDocument,
                                  preferredStyle);
     }
 
-    // Get the CSS loader from the document so we can load
-    // stylesheets
-    mCSSLoader = aDocument->CSSLoader();
-    mCSSLoader->SetPreferredSheet(preferredStyle);
+    // Set the right preferred style on the document's CSSLoader.
+    aDocument->CSSLoader()->SetPreferredSheet(preferredStyle);
 
     mNodeInfoManager = aPrototype->GetNodeInfoManager();
     if (! mNodeInfoManager)
