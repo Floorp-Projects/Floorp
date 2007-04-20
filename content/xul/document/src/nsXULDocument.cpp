@@ -2514,7 +2514,7 @@ nsXULDocument::InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
 
     nsresult rv;
 
-    ssle->InitStyleLinkElement(nsnull, PR_FALSE);
+    ssle->InitStyleLinkElement(PR_FALSE);
     // We want to be notified when the style sheet finishes loading, so
     // disable style sheet loading for now.
     ssle->SetEnableUpdates(PR_FALSE);
@@ -2527,12 +2527,11 @@ nsXULDocument::InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
 
     // load the stylesheet if necessary, passing ourselves as
     // nsICSSObserver
-    rv = ssle->UpdateStyleSheet(nsnull, this);
-    if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
+    PRBool willNotify;
+    PRBool isAlternate;
+    rv = ssle->UpdateStyleSheet(this, &willNotify, &isAlternate);
+    if (NS_SUCCEEDED(rv) && willNotify && !isAlternate) {
         ++mPendingSheets;
-        rv = NS_OK;
-    } else if (NS_FAILED(rv)) {
-        rv = NS_OK;
     }
 
     return rv;
@@ -2878,7 +2877,10 @@ nsXULDocument::ResumeWalk()
                                 do_QueryInterface(element);
                             NS_ASSERTION(ssle, "<html:style> doesn't implement "
                                                "nsIStyleSheetLinkingElement?");
-                            ssle->UpdateStyleSheet(nsnull, nsnull);
+                            PRBool willNotify;
+                            PRBool isAlternate;
+                            ssle->UpdateStyleSheet(nsnull, &willNotify,
+                                                   &isAlternate);
                         }
                     }
 

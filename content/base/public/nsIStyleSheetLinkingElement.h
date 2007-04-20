@@ -40,14 +40,13 @@
 
 #include "nsISupports.h"
 
-class nsIParser;
 class nsIDocument;
 class nsICSSLoaderObserver;
 class nsIURI;
 
 #define NS_ISTYLESHEETLINKINGELEMENT_IID          \
-  {0x259f8226, 0x8dd7, 0x11db,                    \
-  {0x98, 0x5e, 0x92, 0xb7, 0x56, 0xd8, 0x95, 0x93}}
+{ 0xd753c84a, 0x17fd, 0x4d5f, \
+ { 0xb2, 0xe9, 0x63, 0x52, 0x8c, 0x87, 0x99, 0x7a } }
 
 class nsIStyleSheet;
 
@@ -73,29 +72,30 @@ public:
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet) = 0;
 
   /**
-   * Initialize the stylesheet linking element. This method passes
-   * in a parser that the element blocks if the stylesheet is
-   * a stylesheet that should be loaded with the parser blocked.
-   * If aDontLoadStyle is true the element will ignore the first
-   * modification to the element that would cause a stylesheet to
-   * be loaded. Subsequent modifications to the element will not
-   * be ignored.
+   * Initialize the stylesheet linking element. If aDontLoadStyle is
+   * true the element will ignore the first modification to the
+   * element that would cause a stylesheet to be loaded. Subsequent
+   * modifications to the element will not be ignored.
    */
-  NS_IMETHOD InitStyleLinkElement(nsIParser *aParser, PRBool aDontLoadStyle) = 0;
+  NS_IMETHOD InitStyleLinkElement(PRBool aDontLoadStyle) = 0;
 
   /**
    * Tells this element to update the stylesheet.
    *
-   * @param aOldDocument the document that this element was part
-   *                     of (nsnull if we're not moving the element
-   *                     from one document to another).
    * @param aObserver    observer to notify once the stylesheet is loaded.
-   *                     It might be notified before the function returns.
-   * @param aForceUpdate If true, force the update even if the URI did not change
+   *                     This will be passed to the CSSLoader
+   * @param [out] aWillNotify whether aObserver will be notified when the sheet
+   *                          loads.  If this is false, then either we didn't
+   *                          start the sheet load at all, the load failed, or
+   *                          this was an inline sheet that completely finished
+   *                          loading.  In the case when the load failed the
+   *                          failure code will be returned.
+   * @param [out] whether the sheet is an alternate sheet.  This value is only
+   *              meaningful if aWillNotify is true.
    */
-  NS_IMETHOD UpdateStyleSheet(nsIDocument *aOldDocument,
-                              nsICSSLoaderObserver* aObserver,
-                              PRBool aForceUpdate = PR_FALSE) = 0;
+  NS_IMETHOD UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
+                              PRBool *aWillNotify,
+                              PRBool *aIsAlternate) = 0;
 
   /**
    * Tells this element whether to update the stylesheet when the

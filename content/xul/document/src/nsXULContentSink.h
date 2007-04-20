@@ -49,8 +49,6 @@
 #include "nsVoidArray.h"
 #include "nsWeakPtr.h"
 
-class nsICSSLoader;
-class nsICSSParser;
 class nsIDocument;
 class nsIScriptSecurityManager;
 class nsAttrName;
@@ -173,8 +171,6 @@ protected:
 
     // We use regular pointer b/c of funky exports on nsIParser:
     nsIParser*             mParser;               // [OWNER]
-    nsCOMPtr<nsICSSLoader> mCSSLoader;            // [OWNER]
-    nsCOMPtr<nsICSSParser> mCSSParser;            // [OWNER]
     nsCOMPtr<nsIScriptSecurityManager> mSecMan;
 };
 

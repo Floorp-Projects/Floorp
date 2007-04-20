@@ -111,7 +111,7 @@ nsXBLContentSink::Init(nsIDocument* aDoc,
 }
 
 void
-nsXBLContentSink::MaybeStartLayout()
+nsXBLContentSink::MaybeStartLayout(PRBool aIgnorePendingSheets)
 {
   return;
 }

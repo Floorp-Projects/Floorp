@@ -76,7 +76,7 @@ public:
 
     void Init(nsITransformObserver* aObserver);
     nsresult AddScriptElement(nsIScriptElement* aElement);
-    nsresult AddStyleSheet(nsIStyleSheet* aStyleSheet);
+    void AddPendingStylesheet();
     void OnTransformEnd(nsresult aResult = NS_OK);
     void OnTransformStart();
     nsresult SetOutputDocument(nsIDocument* aDocument);
@@ -87,7 +87,7 @@ private:
     nsCOMPtr<nsIDocument> mDocument;
     nsCOMPtr<nsITransformObserver> mObserver;
     nsCOMArray<nsIScriptElement> mScriptElements;
-    nsCOMArray<nsIStyleSheet> mStylesheets;
+    PRUint32 mPendingStylesheetCount;
     PRPackedBool mInTransform;
 };
 

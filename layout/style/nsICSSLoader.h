@@ -50,7 +50,6 @@ class nsICSSParser;
 class nsICSSStyleSheet;
 class nsPresContext;
 class nsIContent;
-class nsIParser;
 class nsIDocument;
 class nsIUnicharInputStream;
 class nsICSSLoaderObserver;
@@ -58,10 +57,10 @@ class nsMediaList;
 class nsICSSImportRule;
 
 // IID for the nsICSSLoader interface
-// 446711e6-ad01-4702-8a9b-ce3f5e5d30f0
+// 5da3a869-270c-4f10-97d1-99eaa150eb4e
 #define NS_ICSS_LOADER_IID     \
-{ 0x446711e6, 0xad01, 0x4702, \
- { 0x8a, 0x9b, 0xce, 0x3f, 0x5e, 0x5d, 0x30, 0xf0 } }
+{ 0x5da3a869, 0x270c, 0x4f10, \
+ { 0x97, 0xd1, 0x99, 0xea, 0xa1, 0x50, 0xeb, 0x4e } }
 
 typedef void (*nsCSSLoaderCallbackFunc)(nsICSSStyleSheet* aSheet, void *aData, PRBool aDidNotify);
 
@@ -98,9 +97,6 @@ public:
    * @param aLineNumber the line number at which the stylesheet data started.
    * @param aTitle the title of the sheet.
    * @param aMedia the media string for the sheet.
-   * @param aParserToUnblock the parser to unblock when the load completes.
-   *        Only loads that returned false for both aIsAlternate and
-   *        aCompleted will unblock the parser.
    * @param aObserver the observer to notify when the load completes.
    *        May be null.
    * @param [out] aCompleted whether parsing of the sheet completed.
@@ -112,7 +108,6 @@ public:
                              PRUint32 aLineNumber,
                              const nsSubstring& aTitle,
                              const nsSubstring& aMedia,
-                             nsIParser* aParserToUnblock,
                              nsICSSLoaderObserver* aObserver,
                              PRBool* aCompleted,
                              PRBool* aIsAlternate) = 0;
@@ -130,9 +125,6 @@ public:
    * @param aMedia the media string for the sheet.
    * @param aHasAlternateRel whether the rel for this link included
    *        "alternate".
-   * @param aParserToUnblock the parser to unblock when the load completes.
-   *        Only loads that returned false for aIsAlternate will unblock
-   *        the parser.
    * @param aObserver the observer to notify when the load completes.
    *                  May be null.
    * @param [out] aIsAlternate whether the stylesheet actually ended up beinga
@@ -144,7 +136,6 @@ public:
                            const nsSubstring& aTitle,
                            const nsSubstring& aMedia,
                            PRBool aHasAlternateRel,
-                           nsIParser* aParserToUnblock,
                            nsICSSLoaderObserver* aObserver,
                            PRBool* aIsAlternate) = 0;
 
