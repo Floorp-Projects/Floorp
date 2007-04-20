@@ -349,14 +349,12 @@ txMozillaXMLOutput::endElement()
             do_QueryInterface(mCurrentNode);
         if (ssle) {
             ssle->SetEnableUpdates(PR_TRUE);
-            if (ssle->UpdateStyleSheet(nsnull, mNotifier) ==
-                NS_ERROR_HTMLPARSER_BLOCK) {
-                nsCOMPtr<nsIStyleSheet> stylesheet;
-                ssle->GetStyleSheet(*getter_AddRefs(stylesheet));
-                if (mNotifier) {
-                    rv = mNotifier->AddStyleSheet(stylesheet);
-                    NS_ENSURE_SUCCESS(rv, rv);
-                }
+            PRBool willNotify;
+            PRBool isAlternate;
+            nsresult rv = ssle->UpdateStyleSheet(mNotifier, &willNotify,
+                                                 &isAlternate);
+            if (mNotifier && NS_SUCCEEDED(rv) && willNotify && !isAlternate) {
+                mNotifier->AddPendingStylesheet();
             }
         }
     }
@@ -421,7 +419,7 @@ txMozillaXMLOutput::processingInstruction(const nsString& aTarget, const nsStrin
     if (mCreatingNewDocument) {
         ssle = do_QueryInterface(pi);
         if (ssle) {
-            ssle->InitStyleLinkElement(nsnull, PR_FALSE);
+            ssle->InitStyleLinkElement(PR_FALSE);
             ssle->SetEnableUpdates(PR_FALSE);
         }
     }
@@ -431,14 +429,11 @@ txMozillaXMLOutput::processingInstruction(const nsString& aTarget, const nsStrin
 
     if (ssle) {
         ssle->SetEnableUpdates(PR_TRUE);
-        rv = ssle->UpdateStyleSheet(nsnull, mNotifier);
-        if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
-            nsCOMPtr<nsIStyleSheet> stylesheet;
-            ssle->GetStyleSheet(*getter_AddRefs(stylesheet));
-            if (mNotifier) {
-                rv = mNotifier->AddStyleSheet(stylesheet);
-                NS_ENSURE_SUCCESS(rv, rv);
-            }
+        PRBool willNotify;
+        PRBool isAlternate;
+        rv = ssle->UpdateStyleSheet(mNotifier, &willNotify, &isAlternate);
+        if (mNotifier && NS_SUCCEEDED(rv) && willNotify && !isAlternate) {
+            mNotifier->AddPendingStylesheet();
         }
     }
 
@@ -580,7 +575,7 @@ txMozillaXMLOutput::startElementInternal(nsIAtom* aPrefix,
         nsCOMPtr<nsIStyleSheetLinkingElement> ssle =
             do_QueryInterface(mOpenedElement);
         if (ssle) {
-            ssle->InitStyleLinkElement(nsnull, PR_FALSE);
+            ssle->InitStyleLinkElement(PR_FALSE);
             ssle->SetEnableUpdates(PR_FALSE);
         }
     }
@@ -1003,8 +998,8 @@ txMozillaXMLOutput::createHTMLElement(nsIAtom* aName,
 }
 
 txTransformNotifier::txTransformNotifier()
-    : mInTransform(PR_FALSE)
-      
+    : mPendingStylesheetCount(0),
+      mInTransform(PR_FALSE)      
 {
 }
 
@@ -1048,15 +1043,19 @@ txTransformNotifier::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
                                       PRBool aWasAlternate,
                                       nsresult aStatus)
 {
-    // Check that the stylesheet was in the mStylesheets array, if not it is an
-    // alternate and we don't want to call SignalTransformEnd since we don't
-    // wait on alternates before calling OnTransformDone and so the load of the
-    // alternate could finish after we called OnTransformDone already.
-    // See http://bugzilla.mozilla.org/show_bug.cgi?id=215465.
-    if (mStylesheets.RemoveObject(aSheet)) {
-        SignalTransformEnd();
+    if (mPendingStylesheetCount == 0) {
+        // We weren't waiting on this stylesheet anyway.  This can happen if
+        // SignalTransformEnd got called with an error aResult.  See
+        // http://bugzilla.mozilla.org/show_bug.cgi?id=215465.
+        return NS_OK;
     }
 
+    // We're never waiting for alternate stylesheets
+    if (!aWasAlternate) {
+        --mPendingStylesheetCount;
+        SignalTransformEnd();
+    }
+    
     return NS_OK;
 }
 
@@ -1073,11 +1072,10 @@ txTransformNotifier::AddScriptElement(nsIScriptElement* aElement)
                                                     NS_ERROR_OUT_OF_MEMORY;
 }
 
-nsresult
-txTransformNotifier::AddStyleSheet(nsIStyleSheet* aStyleSheet)
+void
+txTransformNotifier::AddPendingStylesheet()
 {
-    return mStylesheets.AppendObject(aStyleSheet) ? NS_OK :
-                                                    NS_ERROR_OUT_OF_MEMORY;
+    ++mPendingStylesheetCount;
 }
 
 void
@@ -1106,11 +1104,14 @@ void
 txTransformNotifier::SignalTransformEnd(nsresult aResult)
 {
     if (mInTransform || (NS_SUCCEEDED(aResult) &&
-        mScriptElements.Count() > 0 || mStylesheets.Count() > 0)) {
+        mScriptElements.Count() > 0 || mPendingStylesheetCount > 0)) {
         return;
     }
 
-    mStylesheets.Clear();
+    // mPendingStylesheetCount is nonzero at this point only if aResult is an
+    // error.  Set it to 0 so we won't reenter this code when we stop the
+    // CSSLoader.
+    mPendingStylesheetCount = 0;
     mScriptElements.Clear();
 
     // Make sure that we don't get deleted while this function is executed and

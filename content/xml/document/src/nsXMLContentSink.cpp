@@ -343,7 +343,7 @@ nsXMLContentSink::DidBuildModel()
     // Check if we want to prettyprint
     MaybePrettyPrint();
 
-    StartLayout();
+    StartLayout(PR_FALSE);
 
     ScrollToRef();
 
@@ -424,7 +424,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
   }
   
   // Start the layout process
-  StartLayout();
+  StartLayout(PR_FALSE);
 
   ScrollToRef();
 
@@ -520,7 +520,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
            aNodeInfo->Equals(nsGkAtoms::style, kNameSpaceID_SVG)) {
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(content));
     if (ssle) {
-      ssle->InitStyleLinkElement(mParser, PR_FALSE);
+      ssle->InitStyleLinkElement(PR_FALSE);
       ssle->SetEnableUpdates(PR_FALSE);
       if (!aNodeInfo->Equals(nsGkAtoms::link, kNameSpaceID_XHTML)) {
         ssle->SetLineNumber(aLineNumber);
@@ -626,9 +626,12 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(aContent));
     if (ssle) {
       ssle->SetEnableUpdates(PR_TRUE);
-      rv = ssle->UpdateStyleSheet(nsnull, nsnull);
-      if (rv == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
-        mParser->BlockParser();
+      PRBool willNotify;
+      PRBool isAlternate;
+      rv = ssle->UpdateStyleSheet(this, &willNotify, &isAlternate);
+      if (NS_SUCCEEDED(rv) && willNotify && !isAlternate) {
+        ++mPendingSheetCount;
+        mScriptLoader->AddExecuteBlocker();
       }
     }
   }
@@ -747,13 +750,9 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
   rv = nsContentSink::ProcessStyleLink(aElement, aHref, aAlternate,
                                        aTitle, aType, aMedia);
 
-  if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
-    if (mParser) {
-      mParser->BlockParser();
-    }
-    return NS_OK;
-  }
-
+  // nsContentSink::ProcessStyleLink handles the bookkeeping here wrt
+  // pending sheets.
+  
   return rv;
 }
 
@@ -874,32 +873,14 @@ nsXMLContentSink::PopContent()
 }
 
 void
-nsXMLContentSink::MaybeStartLayout()
+nsXMLContentSink::MaybeStartLayout(PRBool aIgnorePendingSheets)
 {
+  // XXXbz if aIgnorePendingSheets is true, what should we do when
+  // mXSLTProcessor or CanStillPrettyPrint()?
   if (mLayoutStarted || mXSLTProcessor || CanStillPrettyPrint()) {
     return;
   }
-  StartLayout();
-}
-
-void
-nsXMLContentSink::StartLayout()
-{
-  if (mLayoutStarted) {
-    return;
-  }
-  PRBool topLevelFrameset = PR_FALSE;
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
-  if (docShellAsItem) {
-    nsCOMPtr<nsIDocShellTreeItem> root;
-    docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
-    if(docShellAsItem == root) {
-      topLevelFrameset = PR_TRUE;
-    }
-  }
-  
-  nsContentSink::StartLayout(topLevelFrameset);
-
+  StartLayout(aIgnorePendingSheets);
 }
 
 #ifdef MOZ_MATHML
@@ -1055,7 +1036,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
     mInMonolithicContainer++;
   }
 
-  MaybeStartLayout();
+  MaybeStartLayout(PR_FALSE);
 
   return NS_SUCCEEDED(result) ? DidProcessATokenImpl() : result;
 }
@@ -1251,7 +1232,7 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 
   nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(node));
   if (ssle) {
-    ssle->InitStyleLinkElement(mParser, PR_FALSE);
+    ssle->InitStyleLinkElement(PR_FALSE);
     ssle->SetEnableUpdates(PR_FALSE);
     mPrettyPrintXML = PR_FALSE;
   }
@@ -1261,14 +1242,22 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
   DidAddContent();
 
   if (ssle) {
+    // This is an xml-stylesheet processing instruction... but it might not be
+    // a CSS one if the type is set to something else.
     ssle->SetEnableUpdates(PR_TRUE);
-    rv = ssle->UpdateStyleSheet(nsnull, nsnull);
-
-    if (NS_FAILED(rv)) {
-      if (rv == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
-        mParser->BlockParser();
+    PRBool willNotify;
+    PRBool isAlternate;
+    rv = ssle->UpdateStyleSheet(this, &willNotify, &isAlternate);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    if (willNotify) {
+      // Successfully started a stylesheet load
+      if (!isAlternate) {
+        ++mPendingSheetCount;
+        mScriptLoader->AddExecuteBlocker();
       }
-      return rv;
+
+      return NS_OK;
     }
   }
 
@@ -1278,6 +1267,7 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 
   if (mState != eXMLContentSinkState_InProlog ||
       !target.EqualsLiteral("xml-stylesheet") ||
+      type.IsEmpty()                          ||
       type.LowerCaseEqualsLiteral("text/css")) {
     return DidProcessATokenImpl();
   }
@@ -1520,7 +1510,7 @@ nsXMLContentSink::FlushPendingNotifications(mozFlushType aType)
     if (aType & Flush_OnlyReflow) {
       // Make sure that layout has started so that the reflow flush
       // will actually happen.
-      MaybeStartLayout();
+      MaybeStartLayout(PR_TRUE);
     }
   }
 }

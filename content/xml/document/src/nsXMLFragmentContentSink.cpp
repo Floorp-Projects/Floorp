@@ -114,7 +114,7 @@ protected:
                                  nsIContent** aResult, PRBool* aAppendContent);
   virtual nsresult CloseElement(nsIContent* aContent);
 
-  void MaybeStartLayout();
+  virtual void MaybeStartLayout(PRBool aIgnorePendingSheets);
 
   // nsContentSink overrides
   virtual nsresult ProcessStyleLink(nsIContent* aElement,
@@ -265,7 +265,7 @@ nsXMLFragmentContentSink::CloseElement(nsIContent* aContent)
 }
 
 void
-nsXMLFragmentContentSink::MaybeStartLayout()
+nsXMLFragmentContentSink::MaybeStartLayout(PRBool aIgnorePendingSheets)
 {
   return;
 }

@@ -50,7 +50,6 @@
 #include "nsIDOMLinkStyle.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIStyleSheet.h"
-#include "nsIParser.h"
 #include "nsIURI.h"
 
 class nsIDocument;
@@ -71,26 +70,10 @@ public:
   // nsIStyleSheetLinkingElement  
   NS_IMETHOD SetStyleSheet(nsIStyleSheet* aStyleSheet);
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet);
-  NS_IMETHOD InitStyleLinkElement(nsIParser *aParser, PRBool aDontLoadStyle);
-  /**
-   * @param aForceUpdate when PR_TRUE, will force the update even if
-   * the URI has not changed.  This should be used in cases when
-   * something about the content that affects the resulting sheet
-   * changed but the URI may not have changed.
-   * @returns NS_ERROR_HTMLPARSER_BLOCK if a non-alternate style sheet
-   *          is being loaded asynchronously. In this case aObserver
-   *          will be notified at a later stage when the sheet is
-   *          loaded (if it is not null).
-   * @returns NS_OK in case when the update was successful, but the
-   *          caller doesn't have to wait for a notification to
-   *          aObserver. This can happen if there was no style sheet
-   *          to load, when it's inline, or when it's alternate. Note
-   *          that in the latter case aObserver is still notified about
-   *          the load when it's done.
-   */
-  NS_IMETHOD UpdateStyleSheet(nsIDocument *aOldDocument = nsnull,
-                              nsICSSLoaderObserver* aObserver = nsnull,
-                              PRBool aForceUpdate = PR_FALSE);
+  NS_IMETHOD InitStyleLinkElement(PRBool aDontLoadStyle);
+  NS_IMETHOD UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
+                              PRBool* aWillNotify,
+                              PRBool* aIsAlternate);
   NS_IMETHOD SetEnableUpdates(PRBool aEnableUpdates);
   NS_IMETHOD GetCharset(nsAString& aCharset);
 
@@ -100,6 +83,17 @@ public:
   static void ParseLinkTypes(const nsAString& aTypes, nsStringArray& aResult);
 
 protected:
+  /**
+   * @param aOldDocument should be non-null only if we're updating because we
+   *                     removed the node from the document.
+   * @param aForceUpdate PR_TRUE will force the update even if the URI has not
+   *                     changed.  This should be used in cases when something
+   *                     about the content that affects the resulting sheet
+   *                     changed but the URI may not have changed.
+   */
+  nsresult UpdateStyleSheetInternal(nsIDocument *aOldDocument,
+                                    PRBool aForceUpdate = PR_FALSE);
+
   virtual void GetStyleSheetURL(PRBool* aIsInline,
                                 nsIURI** aURI) = 0;
   virtual void GetStyleSheetInfo(nsAString& aTitle,
@@ -107,9 +101,23 @@ protected:
                                  nsAString& aMedia,
                                  PRBool* aIsAlternate) = 0;
 
+private:
+  /**
+   * @param aOldDocument should be non-null only if we're updating because we
+   *                     removed the node from the document.
+   * @param aForceUpdate PR_TRUE will force the update even if the URI has not
+   *                     changed.  This should be used in cases when something
+   *                     about the content that affects the resulting sheet
+   *                     changed but the URI may not have changed.
+   */
+  nsresult DoUpdateStyleSheet(nsIDocument *aOldDocument,
+                              nsICSSLoaderObserver* aObserver,
+                              PRBool* aWillNotify,
+                              PRBool* aIsAlternate,
+                              PRBool aForceUpdate);
 
+protected:
   nsCOMPtr<nsIStyleSheet> mStyleSheet;
-  nsCOMPtr<nsIParser> mParser;
   PRPackedBool mDontLoadStyle;
   PRPackedBool mUpdatesEnabled;
   PRUint32 mLineNumber;

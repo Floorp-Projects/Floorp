@@ -89,12 +89,6 @@
 
 PRLogModuleInfo* gContentSinkLogModuleInfo;
 
-#ifdef ALLOW_ASYNCH_STYLE_SHEETS
-const PRBool kBlockByDefault = PR_FALSE;
-#else
-const PRBool kBlockByDefault = PR_TRUE;
-#endif
-
 class nsScriptLoaderObserverProxy : public nsIScriptLoaderObserver
 {
 public:
@@ -162,6 +156,7 @@ nsContentSink::nsContentSink()
   NS_ASSERTION(mDroppedTimer == PR_FALSE, "What?");
   NS_ASSERTION(mInMonolithicContainer == 0, "What?");
   NS_ASSERTION(mInNotification == 0, "What?");
+  NS_ASSERTION(mDeferredLayoutStart == PR_FALSE, "What?");
 
 #ifdef NS_DEBUG
   if (!gContentSinkLogModuleInfo) {
@@ -204,9 +199,9 @@ nsContentSink::Init(nsIDocument* aDoc,
       new nsScriptLoaderObserverProxy(this);
   NS_ENSURE_TRUE(proxy, NS_ERROR_OUT_OF_MEMORY);
 
-  nsScriptLoader *loader = mDocument->GetScriptLoader();
-  NS_ENSURE_TRUE(loader, NS_ERROR_FAILURE);
-  loader->AddObserver(proxy);
+  mScriptLoader = mDocument->GetScriptLoader();
+  NS_ENSURE_TRUE(mScriptLoader, NS_ERROR_FAILURE);
+  mScriptLoader->AddObserver(proxy);
 
   mCSSLoader = aDoc->CSSLoader();
 
@@ -265,6 +260,26 @@ nsContentSink::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
                                 PRBool aWasAlternate,
                                 nsresult aStatus)
 {
+  if (!aWasAlternate) {
+    NS_ASSERTION(mPendingSheetCount > 0, "How'd that happen?");
+    --mPendingSheetCount;
+
+    if (mPendingSheetCount == 0 && mDeferredLayoutStart) {
+      // We might not have really started layout, since this sheet was still
+      // loading.  Do it now.  Probably doesn't matter whether we do this
+      // before or after we unblock scripts, but before feels saner.  Note that
+      // if mDeferredLayoutStart is true, that means any subclass StartLayout()
+      // stuff that needs to happen has already happened, so we don't need to
+      // worry about it.
+      StartLayout(PR_FALSE);
+
+      // Go ahead and try to scroll to our ref if we have one
+      TryToScrollToRef();
+    }
+    
+    mScriptLoader->RemoveExecuteBlocker();
+  }
+
   return NS_OK;
 }
 
@@ -482,7 +497,6 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
   nsAutoString title;
   nsAutoString type;
   nsAutoString media;
-  PRBool didBlock = PR_FALSE;
 
   // copy to work buffer
   nsAutoString stringList(aLinkData);
@@ -621,9 +635,6 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
 
       if (!href.IsEmpty() && !rel.IsEmpty()) {
         rv = ProcessLink(aElement, href, rel, title, type, media);
-        if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
-          didBlock = PR_TRUE;
-        }
       }
 
       href.Truncate();
@@ -638,10 +649,6 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
 
   if (!href.IsEmpty() && !rel.IsEmpty()) {
     rv = ProcessLink(aElement, href, rel, title, type, media);
-
-    if (NS_SUCCEEDED(rv) && didBlock) {
-      rv = NS_ERROR_HTMLPARSER_BLOCK;
-    }
   }
 
   return rv;
@@ -710,19 +717,17 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
     return NS_OK;
   }
 
-  nsIParser* parser = nsnull;
-  if (kBlockByDefault) {
-    parser = mParser;
-  }
-  
   PRBool isAlternate;
   rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, aAlternate,
-                                 parser, this, &isAlternate);
-  if (NS_SUCCEEDED(rv) && parser && !isAlternate) {
-    rv = NS_ERROR_HTMLPARSER_BLOCK;
+                                 this, &isAlternate);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (!isAlternate) {
+    ++mPendingSheetCount;
+    mScriptLoader->AddExecuteBlocker();
   }
 
-  return rv;
+  return NS_OK;
 }
 
 
@@ -881,10 +886,25 @@ nsContentSink::RefreshIfEnabled(nsIViewManager* vm)
 }
 
 void
-nsContentSink::StartLayout(PRBool aIsFrameset)
+nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
 {
+  if (mLayoutStarted) {
+    // Nothing to do here
+    return;
+  }
+  
+  mDeferredLayoutStart = PR_TRUE;
+
+  if (!aIgnorePendingSheets && mPendingSheetCount > 0) {
+    // Bail out; we'll start layout when the sheets load
+    return;
+  }
+
+  mDeferredLayoutStart = PR_FALSE;
+
   mLayoutStarted = PR_TRUE;
   mLastNotificationTime = PR_Now();
+  
   PRUint32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
     nsIPresShell *shell = mDocument->GetShellAt(i);

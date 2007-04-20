@@ -74,6 +74,7 @@ class nsIChannel;
 class nsIContent;
 class nsIViewManager;
 class nsNodeInfoManager;
+class nsScriptLoader;
 
 #ifdef NS_DEBUG
 
@@ -169,7 +170,11 @@ protected:
 
   void ScrollToRef();
   nsresult RefreshIfEnabled(nsIViewManager* vm);
-  void StartLayout(PRBool aIsFrameset);
+
+  // Start layout.  If aIgnorePendingSheets is true, this will happen even if
+  // we still have stylesheet loads pending.  Otherwise, we'll wait until the
+  // stylesheets are all done loading.
+  void StartLayout(PRBool aIgnorePendingSheets);
 
   PRBool IsTimeToNotify();
 
@@ -219,6 +224,7 @@ protected:
   nsCOMPtr<nsIDocShell>         mDocShell;
   nsCOMPtr<nsICSSLoader>        mCSSLoader;
   nsRefPtr<nsNodeInfoManager>   mNodeInfoManager;
+  nsRefPtr<nsScriptLoader>      mScriptLoader;
 
   nsCOMArray<nsIScriptElement> mScriptElements;
 
@@ -231,6 +237,7 @@ protected:
   PRInt32 mNotificationInterval;
 
   // Time of last notification
+  // Note: mLastNotificationTime is only valid once mLayoutStarted is true.
   PRTime mLastNotificationTime;
 
   // Timer used for notification
@@ -255,6 +262,8 @@ protected:
   PRUint8 mDroppedTimer : 1;
   PRUint8 mInTitle : 1;
   PRUint8 mChangeScrollPosWhenScrollingToRef : 1;
+  // If true, we deferred starting layout until sheets load
+  PRUint8 mDeferredLayoutStart : 1;
   
   // -- Can interrupt parsing members --
   PRUint32 mDelayTimerStart;
@@ -274,6 +283,8 @@ protected:
   PRInt32 mInMonolithicContainer;
 
   PRInt32 mInNotification;
+
+  PRUint32 mPendingSheetCount;
 
   // Measures content model creation time for current document
   MOZ_TIMER_DECLARE(mWatch)

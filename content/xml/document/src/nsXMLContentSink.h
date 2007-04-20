@@ -106,8 +106,10 @@ public:
                           PRBool &aIsAlternate);
 
 protected:
-  virtual void MaybeStartLayout();
-  void StartLayout();
+  // Start layout.  If aIgnorePendingSheets is true, this will happen even if
+  // we still have stylesheet loads pending.  Otherwise, we'll wait until the
+  // stylesheets are all done loading.
+  virtual void MaybeStartLayout(PRBool aIgnorePendingSheets);
 
   virtual nsresult AddAttributes(const PRUnichar** aNode, nsIContent* aContent);
   nsresult AddText(const PRUnichar* aString, PRInt32 aLength);
