@@ -472,3 +472,12 @@ mtd[-moz-math-columnline="dashed"] {
 semantics > :not(:first-child) {
   display: none;
 }
+
+/**
+ * Temporary, until we make mtable no longer use display: table
+ */
+*|*::-moz-mathml-anonymous-block {
+  display: block !important;
+  position: static !important;
+}
+
