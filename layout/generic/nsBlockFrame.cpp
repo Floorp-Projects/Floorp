@@ -505,12 +505,12 @@ nsBlockFrame::InvalidateInternal(const nsRect& aDamageRect,
     // abs-pos clipping clips everything in the frame
     nsRect r;
     if (r.IntersectRect(aDamageRect, absPosClipRect - nsPoint(aX, aY))) {
-      nsBlockFrameSuper::InvalidateInternal(r, aX, aY, aForChild, aImmediate);
+      nsBlockFrameSuper::InvalidateInternal(r, aX, aY, this, aImmediate);
     }
     return;
   }
 
-  nsBlockFrameSuper::InvalidateInternal(aDamageRect, aX, aY, aForChild, aImmediate);
+  nsBlockFrameSuper::InvalidateInternal(aDamageRect, aX, aY, this, aImmediate);
 }
 
 nscoord
