@@ -3995,7 +3995,7 @@ else
     _SAVE_PNG_LIBS=$PNG_LIBS
     AC_CHECK_LIB(png, png_get_valid, [SYSTEM_PNG=1 PNG_LIBS="-lpng $PNG_LIBS"],
                  SYSTEM_PNG=, $PNG_LIBS)
-    AC_CHECK_LIB(png, png_get_acTl, ,
+    AC_CHECK_LIB(png, png_get_acTL, ,
                  [SYSTEM_PNG= PNG_LIBS=$_SAVE_PNG_LIBS], $_SAVE_PNG_LIBS)
 fi
 if test "$SYSTEM_PNG" = 1; then
