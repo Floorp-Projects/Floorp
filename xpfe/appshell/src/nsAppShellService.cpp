@@ -77,6 +77,9 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIUnicodeDecoder.h"
 
+// Default URL for the hidden window, can be overridden by a pref on Mac
+#define DEFAULT_HIDDENWINDOW_URL "resource://gre/res/hiddenWindow.html"
+
 class nsIAppShell;
 
 nsAppShellService::nsAppShellService() : 
@@ -152,16 +155,15 @@ nsAppShellService::CreateHiddenWindow(nsIAppShell* aAppShell)
   PRInt32 initialHeight = 100, initialWidth = 100;
     
 #ifdef XP_MACOSX
-  static const char defaultHiddenWindowURL[] = "chrome://global/content/hiddenWindow.xul";
   PRUint32    chromeMask = 0;
   nsCOMPtr<nsIPrefBranch> prefBranch;
   nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
   nsXPIDLCString prefVal;
   rv = prefBranch->GetCharPref("browser.hiddenWindowChromeURL", getter_Copies(prefVal));
-  const char* hiddenWindowURL = prefVal.get() ? prefVal.get() : defaultHiddenWindowURL;
+  const char* hiddenWindowURL = prefVal.get() ? prefVal.get() : DEFAULT_HIDDENWINDOW_URL;
 #else
-  static const char hiddenWindowURL[] = "resource://gre/res/hiddenWindow.html";
+  static const char hiddenWindowURL[] = DEFAULT_HIDDENWINDOW_URL;
   PRUint32    chromeMask =  nsIWebBrowserChrome::CHROME_ALL;
 #endif
 
