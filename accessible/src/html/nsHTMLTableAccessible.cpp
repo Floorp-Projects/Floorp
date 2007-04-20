@@ -54,6 +54,7 @@
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsITableLayout.h"
+#include "nsITableCellLayout.h"
 
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableCellAccessible, nsHyperTextAccessible)
@@ -470,60 +471,52 @@ nsHTMLTableAccessible::CellRefAt(PRInt32 aRow, PRInt32 aColumn,
 
 NS_IMETHODIMP
 nsHTMLTableAccessible::GetIndexAt(PRInt32 aRow, PRInt32 aColumn,
-                                  PRInt32 *_retval)
+                                  PRInt32 *aIndex)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_ARG_POINTER(aIndex);
 
   nsresult rv = NS_OK;
-
-  PRInt32 columns;
-  rv = GetColumns(&columns);
+  nsCOMPtr<nsIDOMElement> domElement;
+  rv = GetCellAt(aRow, aColumn, *getter_AddRefs(domElement));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *_retval = aRow * columns + aColumn;
-  if (mHasCaption) {
-    (*_retval)++;
+  nsCOMPtr<nsIAccessible> accessible;
+  GetAccService()->GetCachedAccessible(domElement, mWeakShell, getter_AddRefs(accessible));
+  if (accessible) {
+    rv = accessible->GetIndexInParent(aIndex);
+  } else {
+    // not found the corresponding cell
+    *aIndex = -1;
   }
-
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
-nsHTMLTableAccessible::GetColumnAtIndex(PRInt32 aIndex, PRInt32 *_retval)
+nsHTMLTableAccessible::GetColumnAtIndex(PRInt32 aIndex, PRInt32 *aColumn)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_ARG_POINTER(aColumn);
 
-  nsresult rv = NS_OK;
-
-  PRInt32 columns;
-  rv = GetColumns(&columns);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (mHasCaption) {
-    aIndex--;
-  }
-  *_retval = aIndex % columns;
-
-  return NS_OK;
+  nsCOMPtr<nsIAccessible> child;
+  GetChildAt(aIndex, getter_AddRefs(child));
+  nsCOMPtr<nsPIAccessNode> childNode(do_QueryInterface(child));
+  nsIFrame* frame = childNode->GetFrame();
+  nsCOMPtr<nsITableCellLayout> cellLayout(do_QueryInterface(frame));
+  NS_ENSURE_TRUE(cellLayout, NS_ERROR_FAILURE);
+  return cellLayout->GetColIndex(*aColumn);
 }
 
 NS_IMETHODIMP
-nsHTMLTableAccessible::GetRowAtIndex(PRInt32 aIndex, PRInt32 *_retval)
+nsHTMLTableAccessible::GetRowAtIndex(PRInt32 aIndex, PRInt32 *aRow)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_ARG_POINTER(aRow);
 
-  nsresult rv = NS_OK;
-
-  PRInt32 columns;
-  rv = GetColumns(&columns);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (mHasCaption) {
-    aIndex--;
-  }
-  *_retval = aIndex / columns;
-
-  return NS_OK;
+  nsCOMPtr<nsIAccessible> child;
+  GetChildAt(aIndex, getter_AddRefs(child));
+  nsCOMPtr<nsPIAccessNode> childNode(do_QueryInterface(child));
+  nsIFrame* frame = childNode->GetFrame();
+  nsCOMPtr<nsITableCellLayout> cellLayout(do_QueryInterface(frame));
+  NS_ENSURE_TRUE(cellLayout, NS_ERROR_FAILURE);
+  return cellLayout->GetRowIndex(*aRow);
 }
 
 NS_IMETHODIMP
