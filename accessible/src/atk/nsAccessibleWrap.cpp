@@ -253,6 +253,26 @@ mai_atk_object_get_type(void)
     return type;
 }
 
+/*
+ * Must keep sychronization with enumerate AtkProperty in 
+ * accessible/src/base/nsAccessibleEventData.h
+ */
+static char * sAtkPropertyNameArray[PROP_LAST] = {
+    0,
+    "accessible-name",
+    "accessible-description",
+    "accessible-parent",
+    "accessible-role",
+    "accessible-layer",
+    "accessible-mdi-zorder",
+    "accessible-table-caption",
+    "accessible-table-column-description",
+    "accessible-table-column-header",
+    "accessible-table-row-description",
+    "accessible-table-row-header",
+    "accessible-table-summary"
+};
+
 #ifdef MAI_LOGGING
 PRInt32 nsAccessibleWrap::mAccWrapCreated = 0;
 PRInt32 nsAccessibleWrap::mAccWrapDeleted = 0;
@@ -1039,67 +1059,154 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
 
     switch (type) {
     case nsIAccessibleEvent::EVENT_STATE_CHANGE:
-      {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_STATE_CHANGE\n"));
-
-        nsCOMPtr<nsIAccessibleStateChangeEvent> event =
-          do_QueryInterface(aEvent);
-        NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
-
-        PRUint32 state = 0;
-        event->GetState(&state);
-
-        PRBool isExtra;
-        event->IsExtraState(&isExtra);
-
-        PRBool isEnabled;
-        event->IsEnabled(&isEnabled);
-
-        PRInt32 stateIndex = AtkStateMap::GetStateIndexFor(state);
-        if (stateIndex >= 0) {
-            const AtkStateMap *atkStateMap = isExtra ? gAtkStateMapExt : gAtkStateMap;
-            NS_ASSERTION(atkStateMap[stateIndex].stateMapEntryType != kNoSuchState,
-                         "No such state");
-
-            if (atkStateMap[stateIndex].atkState != kNone) {
-                NS_ASSERTION(atkStateMap[stateIndex].stateMapEntryType != kNoStateChange,
-                             "State changes should not fired for this state");
-
-              if (atkStateMap[stateIndex].stateMapEntryType == kMapOpposite)
-                  isEnabled = !isEnabled;
-
-              // Fire state change for first state if there is one to map
-              atk_object_notify_state_change(atkObj,
-                                             atkStateMap[stateIndex].atkState,
-                                             isEnabled);
-            }
-        }
-        break;
-      }
+        return FireAtkStateChangeEvent(aEvent, atkObj);
 
     case nsIAccessibleEvent::EVENT_TEXT_CHANGED:
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_CHANGED\n"));
+        return FireAtkTextChangedEvent(aEvent, atkObj);
 
-        nsCOMPtr<nsIAccessibleTextChangeEvent> event =
-          do_QueryInterface(aEvent);
-        NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
-
-        PRInt32 start = 0;
-        event->GetStart(&start);
-
-        PRUint32 length = 0;
-        event->GetLength(&length);
-
-        PRBool isInserted;
-        event->IsInserted(&isInserted);
-
-        g_signal_emit_by_name (atkObj,
-                               isInserted ? \
-                               "text_changed::insert":"text_changed::delete",
-                               start,
-                               length);
-        break;
+    case nsIAccessibleEvent::EVENT_PROPERTY_CHANGED:
+        return FireAtkPropChangedEvent(aEvent, atkObj);
     }
+
+    return NS_OK;
+}
+
+nsresult
+nsAccessibleWrap::FireAtkStateChangeEvent(nsIAccessibleEvent *aEvent,
+                                          AtkObject *aObject)
+{
+    MAI_LOG_DEBUG(("\n\nReceived: EVENT_STATE_CHANGE\n"));
+
+    nsCOMPtr<nsIAccessibleStateChangeEvent> event =
+        do_QueryInterface(aEvent);
+    NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
+
+    PRUint32 state = 0;
+    event->GetState(&state);
+
+    PRBool isExtra;
+    event->IsExtraState(&isExtra);
+
+    PRBool isEnabled;
+    event->IsEnabled(&isEnabled);
+
+    PRInt32 stateIndex = AtkStateMap::GetStateIndexFor(state);
+    if (stateIndex >= 0) {
+        const AtkStateMap *atkStateMap = isExtra ? gAtkStateMapExt : gAtkStateMap;
+        NS_ASSERTION(atkStateMap[stateIndex].stateMapEntryType != kNoSuchState,
+                     "No such state");
+
+        if (atkStateMap[stateIndex].atkState != kNone) {
+            NS_ASSERTION(atkStateMap[stateIndex].stateMapEntryType != kNoStateChange,
+                         "State changes should not fired for this state");
+
+            if (atkStateMap[stateIndex].stateMapEntryType == kMapOpposite)
+                isEnabled = !isEnabled;
+
+            // Fire state change for first state if there is one to map
+            atk_object_notify_state_change(aObject,
+                                           atkStateMap[stateIndex].atkState,
+                                           isEnabled);
+        }
+    }
+
+    return NS_OK;
+}
+
+nsresult
+nsAccessibleWrap::FireAtkTextChangedEvent(nsIAccessibleEvent *aEvent,
+                                          AtkObject *aObject)
+{
+    MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_CHANGED\n"));
+
+    nsCOMPtr<nsIAccessibleTextChangeEvent> event =
+        do_QueryInterface(aEvent);
+    NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
+
+    PRInt32 start = 0;
+    event->GetStart(&start);
+
+    PRUint32 length = 0;
+    event->GetLength(&length);
+
+    PRBool isInserted;
+    event->IsInserted(&isInserted);
+
+    g_signal_emit_by_name (aObject,
+                           isInserted ? \
+                           "text_changed::insert":"text_changed::delete",
+                           start,
+                           length);
+
+    return NS_OK;
+}
+
+nsresult
+nsAccessibleWrap::FireAtkPropChangedEvent(nsIAccessibleEvent *aEvent,
+                                          AtkObject *aObject)
+{
+    MAI_LOG_DEBUG(("\n\nReceived: EVENT_PROPERTY_CHANGED\n"));
+
+    AtkPropertyChange *pAtkPropChange;
+    AtkPropertyValues values = { NULL };
+    nsAccessibleWrap *oldAccWrap = nsnull, *newAccWrap = nsnull;
+
+    nsAccEvent *event = NS_REINTERPRET_CAST(nsAccEvent*, aEvent);
+
+    pAtkPropChange = NS_REINTERPRET_CAST(AtkPropertyChange *, event->mEventData);
+    values.property_name = sAtkPropertyNameArray[pAtkPropChange->type];
+
+    NS_ASSERTION(pAtkPropChange, "Event needs event data");
+    if (!pAtkPropChange)
+        return NS_OK;
+
+    MAI_LOG_DEBUG(("\n\nthe type of EVENT_PROPERTY_CHANGED: %d\n\n",
+                   pAtkPropChange->type));
+
+    switch (pAtkPropChange->type) {
+    case PROP_TABLE_CAPTION:
+    case PROP_TABLE_SUMMARY:
+
+        if (pAtkPropChange->oldvalue)
+            oldAccWrap = NS_REINTERPRET_CAST(nsAccessibleWrap *,
+                                             pAtkPropChange->oldvalue);
+
+        if (pAtkPropChange->newvalue)
+            newAccWrap = NS_REINTERPRET_CAST(nsAccessibleWrap *,
+                                             pAtkPropChange->newvalue);
+
+        if (oldAccWrap && newAccWrap) {
+            g_value_init(&values.old_value, G_TYPE_POINTER);
+            g_value_set_pointer(&values.old_value,
+                                oldAccWrap->GetAtkObject());
+            g_value_init(&values.new_value, G_TYPE_POINTER);
+            g_value_set_pointer(&values.new_value,
+                                newAccWrap->GetAtkObject());
+        }
+        break;
+
+    case PROP_TABLE_COLUMN_DESCRIPTION:
+    case PROP_TABLE_COLUMN_HEADER:
+    case PROP_TABLE_ROW_HEADER:
+    case PROP_TABLE_ROW_DESCRIPTION:
+        g_value_init(&values.new_value, G_TYPE_INT);
+        g_value_set_int(&values.new_value,
+                        *NS_REINTERPRET_CAST(gint *,
+                                             pAtkPropChange->newvalue));
+        break;
+
+        //Perhaps need more cases in the future
+    default:
+        g_value_init (&values.old_value, G_TYPE_POINTER);
+        g_value_set_pointer (&values.old_value, pAtkPropChange->oldvalue);
+        g_value_init (&values.new_value, G_TYPE_POINTER);
+        g_value_set_pointer (&values.new_value, pAtkPropChange->newvalue);
+    }
+
+    char *signal_name = g_strconcat("property_change::",
+                                    values.property_name, NULL);
+    g_signal_emit_by_name(aObject, signal_name, &values, NULL);
+    g_free (signal_name);
 
     return NS_OK;
 }

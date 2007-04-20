@@ -53,6 +53,29 @@
 struct _AtkObject;
 typedef struct _AtkObject AtkObject;
 
+enum AtkProperty {
+  PROP_0,           // gobject convention
+  PROP_NAME,
+  PROP_DESCRIPTION,
+  PROP_PARENT,      // ancestry has changed
+  PROP_ROLE,
+  PROP_LAYER,
+  PROP_MDI_ZORDER,
+  PROP_TABLE_CAPTION,
+  PROP_TABLE_COLUMN_DESCRIPTION,
+  PROP_TABLE_COLUMN_HEADER,
+  PROP_TABLE_ROW_DESCRIPTION,
+  PROP_TABLE_ROW_HEADER,
+  PROP_TABLE_SUMMARY,
+  PROP_LAST         // gobject convention
+};
+
+struct AtkPropertyChange {
+  PRInt32 type;     // property type as listed above
+  void *oldvalue;
+  void *newvalue;
+};
+
 /**
  * nsAccessibleWrap, and its descendents in atk directory provide the
  * implementation of AtkObject.
@@ -85,6 +108,13 @@ public:
     }
     
 protected:
+    nsresult FireAtkStateChangeEvent(nsIAccessibleEvent *aEvent,
+                                     AtkObject *aObject);
+    nsresult FireAtkTextChangedEvent(nsIAccessibleEvent *aEvent,
+                                     AtkObject *aObject);
+    nsresult FireAtkPropChangedEvent(nsIAccessibleEvent *aEvent,
+                                     AtkObject *aObject);
+
     AtkObject *mAtkObject;
 
 private:
