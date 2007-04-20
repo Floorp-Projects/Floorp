@@ -184,6 +184,8 @@ public:
 
   NS_IMETHOD KillCloseTimer();
 
+  virtual nsIAtom* GetType() const { return nsGkAtoms::menuPopupFrame; }
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
