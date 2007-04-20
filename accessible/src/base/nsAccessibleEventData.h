@@ -63,6 +63,8 @@ private:
   nsCOMPtr<nsIAccessible> mAccessible;
   nsCOMPtr<nsIDOMNode> mDOMNode;
   nsCOMPtr<nsIAccessibleDocument> mDocAccessible;
+
+public:
   void *mEventData;
 };
 
@@ -110,29 +112,6 @@ private:
 
 // XXX todo: We might want to use XPCOM interfaces instead of structs
 //     e.g., nsAccessibleTextChangeEvent: public nsIAccessibleTextChangeEvent
-
-enum AtkProperty {
-  PROP_0,           // gobject convention
-  PROP_NAME,
-  PROP_DESCRIPTION,
-  PROP_PARENT,      // ancestry has changed
-  PROP_ROLE,
-  PROP_LAYER,
-  PROP_MDI_ZORDER,
-  PROP_TABLE_CAPTION,
-  PROP_TABLE_COLUMN_DESCRIPTION,
-  PROP_TABLE_COLUMN_HEADER,
-  PROP_TABLE_ROW_DESCRIPTION,
-  PROP_TABLE_ROW_HEADER,
-  PROP_TABLE_SUMMARY,
-  PROP_LAST         // gobject convention
-};
-
-struct AtkPropertyChange {
-  PRInt32 type;     // property type as listed above 
-  void *oldvalue;  
-  void *newvalue;
-};
 
 struct AtkChildrenChange {
   PRInt32      index;  // index of child in parent 

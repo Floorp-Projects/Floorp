@@ -55,26 +55,6 @@
 
 //----- nsDocAccessibleWrap -----
 
-/*
- * Must keep sychronization with enumerate AtkProperty in 
- * accessible/src/base/nsAccessibleEventData.h
- */
-static char * sAtkPropertyNameArray[PROP_LAST] = {
-    0,
-    "accessible-name",
-    "accessible-description",
-    "accessible-parent",
-    "accessible-role",
-    "accessible-layer",
-    "accessible-mdi-zorder",
-    "accessible-table-caption",
-    "accessible-table-column-description",
-    "accessible-table-column-header",
-    "accessible-table-row-description",
-    "accessible-table-row-header",
-    "accessible-table-summary"
-};
-
 nsDocAccessibleWrap::nsDocAccessibleWrap(nsIDOMNode *aDOMNode,
                                          nsIWeakReference *aShell): 
   nsDocAccessible(aDOMNode, aShell), mActivated(PR_FALSE)
@@ -107,7 +87,6 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
       return NS_OK;
     }
 
-    nsAccessibleWrap *oldAccWrap = nsnull, *newAccWrap = nsnull;
     AtkTableChange * pAtkTableChange = nsnull;
 
     switch (aEvent) {
@@ -131,76 +110,6 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
         }
       }
       break;
-        
-    /*
-     * Need handle each type of property change separately.
-     */        
-    case nsIAccessibleEvent::EVENT_PROPERTY_CHANGED :
-      {
-        AtkPropertyChange *pAtkPropChange;
-        AtkPropertyValues values = { NULL };
-
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_PROPERTY_CHANGED\n"));
-        NS_ASSERTION(aEventData, "Event needs event data");
-        if (!aEventData)
-            break;
-
-        pAtkPropChange = NS_REINTERPRET_CAST(AtkPropertyChange *, aEventData);
-        values.property_name = sAtkPropertyNameArray[pAtkPropChange->type];
-        
-        MAI_LOG_DEBUG(("\n\nthe type of EVENT_PROPERTY_CHANGED: %d\n\n",
-                       pAtkPropChange->type));
-
-        switch (pAtkPropChange->type) {
-        case PROP_TABLE_CAPTION:
-        case PROP_TABLE_SUMMARY:
-
-            if (pAtkPropChange->oldvalue)
-                oldAccWrap = NS_REINTERPRET_CAST(nsAccessibleWrap *,
-                                                 pAtkPropChange->oldvalue);
-
-            if (pAtkPropChange->newvalue)
-                newAccWrap = NS_REINTERPRET_CAST(nsAccessibleWrap *,
-                                                 pAtkPropChange->newvalue);
-
-            if (oldAccWrap && newAccWrap) {
-                g_value_init(&values.old_value, G_TYPE_POINTER);
-                g_value_set_pointer(&values.old_value,
-                                    oldAccWrap->GetAtkObject());
-                g_value_init(&values.new_value, G_TYPE_POINTER);
-                g_value_set_pointer(&values.new_value,
-                                    newAccWrap->GetAtkObject());
-                rv = NS_OK;
-            }
-            break;
-
-        case PROP_TABLE_COLUMN_DESCRIPTION:
-        case PROP_TABLE_COLUMN_HEADER:
-        case PROP_TABLE_ROW_HEADER:
-        case PROP_TABLE_ROW_DESCRIPTION:
-            g_value_init(&values.new_value, G_TYPE_INT);
-            g_value_set_int(&values.new_value,
-                            *NS_REINTERPRET_CAST(gint *,
-                                                 pAtkPropChange->newvalue));
-            rv = NS_OK;
-            break;
-  
-            //Perhaps need more cases in the future
-        default:
-            g_value_init (&values.old_value, G_TYPE_POINTER);
-            g_value_set_pointer (&values.old_value, pAtkPropChange->oldvalue);
-            g_value_init (&values.new_value, G_TYPE_POINTER);
-            g_value_set_pointer (&values.new_value, pAtkPropChange->newvalue);
-            rv = NS_OK;
-        }
-        if (NS_SUCCEEDED(rv)) {
-            char *signal_name = g_strconcat("property_change::",
-                                            values.property_name, NULL);
-            g_signal_emit_by_name(atkObj, signal_name, &values, NULL);
-            g_free (signal_name);
-        }
-      }
-        break;
 
     case nsIAccessibleEvent::EVENT_SELECTION_CHANGED:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_SELECTION_CHANGED\n"));
