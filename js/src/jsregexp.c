@@ -2870,7 +2870,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 cap = &x->parens[parenIndex];
                 cap->length = x->cp - (gData->cpbegin + cap->index);
                 JS_ASSERT(x->cp >= (gData->cpbegin + cap->index));
-                JS_ASSERT(cap->length <= (gData->cpend - gData->cpbegin));
+                JS_ASSERT((int)cap->length <= (gData->cpend - gData->cpbegin));
                 op = (REOp) *pc++;
 
                 if (!result)
