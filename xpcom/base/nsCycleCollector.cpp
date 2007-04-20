@@ -276,12 +276,11 @@ enum NodeColor { black, white, grey };
 struct PtrInfo
     : public PLDHashEntryStub
 {
+#define WORD_MINUS_2_BITS ((PR_BYTES_PER_WORD * 8) - 2)
     PRUint32 mColor : 2;
+    PRUint32 mInternalRefs : WORD_MINUS_2_BITS;
     // FIXME: mLang expands back to a full word when bug 368774 lands.
     PRUint32 mLang : 2;
-
-#define WORD_MINUS_2_BITS ((PR_BYTES_PER_WORD * 8) - 2)
-    PRUint32 mInternalRefs : WORD_MINUS_2_BITS;
     PRUint32 mRefCount : WORD_MINUS_2_BITS;
 #undef WORD_MINUS_2_BITS
 
@@ -297,9 +296,9 @@ InitPtrInfo(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
     PtrInfo* pi = (PtrInfo*)entry;
     pi->key = key;
     pi->mColor = black;
+    pi->mInternalRefs = 0;
     pi->mLang = nsIProgrammingLanguage::CPLUSPLUS;
     pi->mRefCount = 0;
-    pi->mInternalRefs = 0;
 #ifdef DEBUG
     pi->mBytes = 0;
     pi->mName = nsnull;
