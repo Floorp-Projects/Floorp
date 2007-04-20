@@ -948,6 +948,15 @@ PRBool nsAccessible::IsVisible(PRBool *aIsOffscreen)
   }
 
   if (rectVisibility != nsRectVisibility_kZeroAreaRect) {
+    // Currently one of:
+    // nsRectVisibility_kVisible, 
+    // nsRectVisibility_kAboveViewport, 
+    // nsRectVisibility_kBelowViewport, 
+    // nsRectVisibility_kLeftOfViewport, 
+    // nsRectVisibility_kRightOfViewport
+    if (rectVisibility != nsRectVisibility_kVisible) {
+      *aIsOffscreen = PR_TRUE;
+    }
     // This view says it is visible, but we need to check the parent view chain :(
     if (!mDOMNode) {
       return PR_FALSE;
@@ -962,20 +971,8 @@ PRBool nsAccessible::IsVisible(PRBool *aIsOffscreen)
     return CheckVisibilityInParentChain(doc, containingView);
   }
 
-  PRBool hasArea  = rectVisibility != nsRectVisibility_kZeroAreaRect;
-  if (hasArea) {
-    *aIsOffscreen = PR_TRUE;
-  }
-  else {
-    // Is programmatically hidden, inherit offscreen flag from parent,
-    // because GetRectVisibility() didn't tell us anything useful in that case
-    nsCOMPtr<nsIAccessible> parentAccessible;
-    GetParent(getter_AddRefs(parentAccessible));
-    if (State(parentAccessible) & nsIAccessibleStates::STATE_OFFSCREEN) {
-      *aIsOffscreen = PR_TRUE;
-    }
-  }
-  return hasArea;
+  *aIsOffscreen = PR_TRUE; // Offscreen always set to true for hidden elements
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP

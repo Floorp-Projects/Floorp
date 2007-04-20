@@ -958,12 +958,6 @@ refStateSetCB(AtkObject *aAtkObj)
     TranslateStates(accState, gAtkStateMap, state_set);
     TranslateStates(accExtState, gAtkStateMapExt, state_set);
 
-    // OFFSCREEN can live with INVISIBLE. However, SHOWING is no meaningful
-    // with INVISIBLE.
-    if (!atk_state_set_contains_state(state_set, ATK_STATE_VISIBLE)) {
-      atk_state_set_remove_state(state_set, ATK_STATE_SHOWING);
-    }
-
     return state_set;
 }
 
