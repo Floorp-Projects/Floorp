@@ -110,29 +110,63 @@ nsXPConnect::nsXPConnect()
 
 }
 
-typedef nsBaseHashtable<nsClearingVoidPtrHashKey, PRUint32, PRUint32> PointerSet;
 #ifndef XPCONNECT_STANDALONE
-typedef nsBaseHashtable<nsClearingVoidPtrHashKey, nsISupports*, nsISupports*> ScopeSet;
+typedef nsBaseHashtable<nsVoidPtrHashKey, nsISupports*, nsISupports*> ScopeSet;
 #endif
+
+#define OBJ_REFCOUNT_ENTRIES 100000
+
+static const PLDHashTableOps RefCountOps =
+{
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    PL_DHashVoidPtrKeyStub,
+    PL_DHashMatchEntryStub,
+    PL_DHashMoveEntryStub,
+    PL_DHashClearEntryStub,
+    PL_DHashFinalizeStub,
+    nsnull
+};
 
 struct JSObjectRefcounts 
 {
-    PointerSet mRefCounts;
+    PLDHashTable mRefCounts;
 #ifndef XPCONNECT_STANDALONE
     ScopeSet mScopes;
 #endif
     PRBool mMarkEnded;
+
+    struct ObjRefCount : public PLDHashEntryStub
+    {
+        PRUint32 mCount;
+    };
+
     JSObjectRefcounts() : mMarkEnded(PR_FALSE)
     {
-        mRefCounts.Init();
+        InitRefCounts();
 #ifndef XPCONNECT_STANDALONE
         mScopes.Init();
 #endif
     }
 
+    ~JSObjectRefcounts()
+    {
+        if(mRefCounts.ops)
+            PL_DHashTableFinish(&mRefCounts);
+    }
+
+    void InitRefCounts()
+    {
+        if(!PL_DHashTableInit(&mRefCounts, &RefCountOps, nsnull,
+                              sizeof(ObjRefCount),
+                              PL_DHASH_DEFAULT_CAPACITY(OBJ_REFCOUNT_ENTRIES)))
+            mRefCounts.ops = nsnull;
+    }
     void Clear()
     {
-        mRefCounts.Clear();
+        if(mRefCounts.ops)
+            PL_DHashTableFinish(&mRefCounts);
+        InitRefCounts();
 #ifndef XPCONNECT_STANDALONE
         mScopes.Clear();
 #endif
@@ -149,19 +183,36 @@ struct JSObjectRefcounts
         mMarkEnded = PR_TRUE;
     }
 
-    void Ref(void *obj, uint8 flags)
+    void Ref(void *obj)
     {
-        PRUint32 refs;
-        if (mRefCounts.Get(obj, &refs))
-            refs++;
-        else
-            refs = 1;
-        mRefCounts.Put(obj, refs);
+        if(!mRefCounts.ops)
+            return;
+
+        ObjRefCount *entry =
+            (ObjRefCount *)PL_DHashTableOperate(&mRefCounts, obj, PL_DHASH_ADD);
+        if(entry)
+        {
+            entry->key = obj;
+            ++entry->mCount;
+        }
     }
 
-    PRBool Get(void *obj, PRUint32 &refcount)
+    PRUint32 Get(void *obj)
     {
-        return mRefCounts.Get(obj, &refcount);
+        PRUint32 count;
+        if(mRefCounts.ops)
+        {
+            PLDHashEntryHdr *entry =
+                PL_DHashTableOperate(&mRefCounts, obj, PL_DHASH_LOOKUP);
+            count = PL_DHASH_ENTRY_IS_BUSY(entry) ?
+                    ((ObjRefCount *)entry)->mCount :
+                    0;
+        }
+        else
+        {
+            count = 0;
+        }
+        return count;
     }
 };
 
@@ -489,7 +540,7 @@ void XPCMarkNotification(void *thing, uint8 flags, void *closure)
     //     XPCMarkNotification, even while taking JSGC_MARK_END into account.
     if(jsr->mMarkEnded)
         jsr->MarkStart();
-    jsr->Ref(thing, flags);
+    jsr->Ref(thing);
 }
 
 nsresult 
@@ -601,9 +652,8 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 {
     XPCCallContext cx(NATIVE_CALLER);
 
-    PRUint32 refcount = 0;
-    if (!mObjRefcounts->Get(p, refcount))
-        return NS_OK;
+    PRUint32 refcount = mObjRefcounts->Get(p);
+    NS_ASSERTION(refcount > 0, "JS object but unknown to the JS GC?");
 
     JSObject *obj = NS_STATIC_CAST(JSObject*, p);
     JSClass* clazz = OBJ_GET_CLASS(cx, obj);
