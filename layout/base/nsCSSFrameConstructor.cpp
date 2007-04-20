@@ -6783,7 +6783,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     
     nsRefPtr<nsStyleContext> blockContext;
     blockContext = styleSet->ResolvePseudoStyleFor(aContent,
-                                                   nsCSSAnonBoxes::mozAnonymousBlock,
+                                                   nsCSSAnonBoxes::mozMathMLAnonymousBlock,
                                                    mrowContext);
     
     // then, create a block frame that will wrap the table frame
