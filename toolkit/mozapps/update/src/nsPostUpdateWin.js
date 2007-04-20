@@ -46,8 +46,7 @@ const URI_BRAND_PROPERTIES     = "chrome://branding/locale/brand.properties";
 
 const KEY_APPDIR          = "XCurProcD";
 const KEY_TMPDIR          = "TmpD";
-const KEY_LOCALDATA       = "DefProfLRt";
-const KEY_PROGRAMFILES    = "ProgF";
+const KEY_UPDROOT         = "UpdRootD";
 const KEY_UAPPDATA        = "UAppData";
 
 // see prio.h
@@ -187,17 +186,12 @@ InstallLogWriter.prototype = {
 
     // See the local appdata first if app dir is under Program Files.
     var file = null;
-    var updRoot = getFile(KEY_APPDIR); 
-    var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
-                                .getService(Components.interfaces.nsIProperties);
-    var programFilesDir = fileLocator.get(KEY_PROGRAMFILES,
-        Components.interfaces.nsILocalFile);
-    if (programFilesDir.contains(updRoot, true)) {
-      var relativePath = updRoot.QueryInterface(Components.interfaces.nsILocalFile).
-          getRelativeDescriptor(programFilesDir);
-      var userLocalDir = fileLocator.get(KEY_LOCALDATA,
-          Components.interfaces.nsILocalFile).parent;
-      updRoot.setRelativeDescriptor(userLocalDir, relativePath);
+    var updRoot;
+    try {
+      updRoot = getFile(KEY_UPDROOT);
+    } catch (e) {
+    }
+    if (updRoot) {
       file = appendUpdateLogPath(updRoot);
 
       // When updating from Fx 2.0.0.1 to 2.0.0.3 (or later) on Vista,

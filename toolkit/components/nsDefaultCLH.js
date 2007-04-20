@@ -47,6 +47,9 @@ const nsIModule                = Components.interfaces.nsIModule;
 const nsIPrefBranch            = Components.interfaces.nsIPrefBranch;
 const nsISupportsString        = Components.interfaces.nsISupportsString;
 const nsIWindowWatcher         = Components.interfaces.nsIWindowWatcher;
+const nsIProperties            = Components.interfaces.nsIProperties;
+const nsIFile                  = Components.interfaces.nsIFile;
+const nsISimpleEnumerator      = Components.interfaces.nsISimpleEnumerator;
 
 /**
  * This file provides a generic default command-line handler.
@@ -58,6 +61,12 @@ const nsIWindowWatcher         = Components.interfaces.nsIWindowWatcher;
  *
  * It doesn't do anything if the pref "toolkit.defaultChromeURI" is unset.
  */
+
+function getDirectoryService()
+{
+  return Components.classes["@mozilla.org/file/directory_service;1"]
+                   .getService(nsIProperties);
+}
 
 var nsDefaultCLH = {
   /* nsISupports */
@@ -74,8 +83,40 @@ var nsDefaultCLH = {
   /* nsICommandLineHandler */
 
   handle : function clh_handle(cmdLine) {
+    var printDir;
+    while (printDir = cmdLine.handleFlagWithParam("print-xpcom-dir", false)) {
+      var out = "print-xpcom-dir(\"" + printDir + "\"): ";
+      try {
+        out += getDirectoryService().get(printDir, nsIFile).path;
+      }
+      catch (e) {
+        out += "<Not Provided>";
+      }
+
+      dump(out + "\n");
+      Components.utils.reportError(out);
+    }
+
+    var printDirList;
+    while (printDirList = cmdLine.handleFlagWithParam("print-xpcom-dirlist",
+                                                      false)) {
+      out = "print-xpcom-dirlist(\"" + printDirList + "\"): ";
+      try {
+        var list = getDirectoryService().get(printDirList,
+                                             nsISimpleEnumerator);
+        while (list.hasMoreElements())
+          out += list.getNext().QueryInterface(nsIFile).path + ";";
+      }
+      catch (e) {
+        out += "<Not Provided>";
+      }
+
+      dump(out + "\n");
+      Components.utils.reportError(out);
+    }
+
     if (cmdLine.preventDefault)
-    return;
+      return;
 
     var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService(nsIPrefBranch);
@@ -90,8 +131,8 @@ var nsDefaultCLH = {
       var win = windowMediator.getMostRecentWindow(singletonWindowType);
       if (win) {
         win.focus();
-    	  cmdLine.preventDefault = true;
-	      return;
+    	cmdLine.preventDefault = true;
+	  return;
       }
     }
     catch (e) { }

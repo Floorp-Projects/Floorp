@@ -1418,27 +1418,6 @@ XRE_GetBinaryPath(const char* argv0, nsILocalFile* *aResult)
   return NS_OK;
 }
 
-// copied from nsXREDirProvider.cpp
-#ifdef XP_WIN
-static nsresult
-GetShellFolderPath(int folder, char result[MAXPATHLEN])
-{
-  LPITEMIDLIST pItemIDList = NULL;
-
-  nsresult rv;
-  if (SUCCEEDED(SHGetSpecialFolderLocation(NULL, folder, &pItemIDList)) &&
-      SUCCEEDED(SHGetPathFromIDList(pItemIDList, result))) {
-    rv = NS_OK;
-  } else {
-    rv = NS_ERROR_NOT_AVAILABLE;
-  }
-
-  CoTaskMemFree(pItemIDList);
-
-  return rv;
-}
-#endif
-
 #define NS_ERROR_LAUNCHED_CHILD_PROCESS NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_PROFILE, 200)
 
 #ifdef XP_WIN
@@ -2583,45 +2562,17 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
 #if defined(MOZ_UPDATER)
   // Check for and process any available updates
-  nsCOMPtr<nsIFile> updRoot = dirProvider.GetAppDir();
-  nsCOMPtr<nsILocalFile> updRootl(do_QueryInterface(updRoot));
-
-#ifdef XP_WIN
-  // Use <UserLocalDataDir>\updates\<relative path to app dir from
-  // Program Files> if app dir is under Program Files to avoid the
-  // folder virtualization mess on Windows Vista
-  char path[MAXPATHLEN];
-  rv = GetShellFolderPath(CSIDL_PROGRAM_FILES, path);
-  NS_ENSURE_SUCCESS(rv, 1);
-  nsCOMPtr<nsILocalFile> programFilesDir;
-  rv = NS_NewNativeLocalFile(nsDependentCString(path), PR_FALSE,
-                             getter_AddRefs(programFilesDir));
-  NS_ENSURE_SUCCESS(rv, 1);
-
-  PRBool descendant;
-  rv = programFilesDir->Contains(updRootl, PR_TRUE, &descendant);
-  NS_ENSURE_SUCCESS(rv, 1);
-  if (descendant) {
-    nsCAutoString relativePath;
-    rv = updRootl->GetRelativeDescriptor(programFilesDir, relativePath);
-    NS_ENSURE_SUCCESS(rv, 1);
-
-    nsCOMPtr<nsILocalFile> userLocalDir;
-    rv = dirProvider.GetUserLocalDataDirectory(getter_AddRefs(userLocalDir));
-    NS_ENSURE_SUCCESS(rv, 1);
-
-    rv = NS_NewNativeLocalFile(EmptyCString(), PR_FALSE,
-                               getter_AddRefs(updRootl));
-    NS_ENSURE_SUCCESS(rv, 1);
-
-    rv = updRootl->SetRelativeDescriptor(userLocalDir, relativePath);
-    NS_ENSURE_SUCCESS(rv, 1);
-  }
-#endif
+  nsCOMPtr<nsIFile> updRoot;
+  PRBool persistent;
+  rv = dirProvider.GetFile(XRE_UPDATE_ROOT_DIR, &persistent,
+                           getter_AddRefs(updRoot));
+  // XRE_UPDATE_ROOT_DIR may fail. Fallback to appDir if failed
+  if (NS_FAILED(rv))
+    updRoot = dirProvider.GetAppDir();
 
   ProcessUpdates(dirProvider.GetGREDir(),
                  dirProvider.GetAppDir(),
-                 updRootl,
+                 updRoot,
                  gRestartArgc,
                  gRestartArgv);
 #endif

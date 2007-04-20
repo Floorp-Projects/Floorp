@@ -216,6 +216,7 @@ bin/components/libbrowserdirprovider.so
 bin/components/libbrowsercomps.so
 bin/components/txEXSLTRegExFunctions.js
 bin/components/nsLivemarkService.js
+bin/components/nsDefaultCLH.js
 
 ; Safe Browsing
 bin/components/nsSafebrowsingApplication.js

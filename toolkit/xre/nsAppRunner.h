@@ -60,6 +60,16 @@
 // and we load localstore from somewhere else.
 #define NS_LOCALSTORE_UNSAFE_FILE "LStoreS"
 
+/**
+ * A directory service key which provides the update directory.
+ * At present this is supported only on Windows.
+ * Windows: Documents and Settings\<User>\Local Settings\Application Data\
+ *          <Vendor>\<Application>\<relative path to app dir from Program Files>
+ * If appDir is not under the Program Files, directory service will fail.
+ * Callers should fallback to appDir.
+ */
+#define XRE_UPDATE_ROOT_DIR "UpdRootD"
+
 class nsACString;
 struct nsStaticModuleInfo;
 

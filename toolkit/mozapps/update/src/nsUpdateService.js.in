@@ -66,8 +66,7 @@ const URI_UPDATE_NS             = "http://www.mozilla.org/2005/app-update";
 
 const KEY_APPDIR          = "XCurProcD";
 #ifdef XP_WIN
-const KEY_LOCALDATA       = "DefProfLRt";
-const KEY_PROGRAMFILES    = "ProgF";
+const KEY_UPDROOT         = "UpdRootD";
 const KEY_UAPPDATA        = "UAppData";
 #endif
 
@@ -237,16 +236,12 @@ function getUpdateDir(pathArray) {
 function getDirInternal(key, pathArray, shouldCreate, update) {
   var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
                               .getService(Components.interfaces.nsIProperties);
-  var dir = fileLocator.get(key, Components.interfaces.nsILocalFile);
+  var dir = fileLocator.get(key, Components.interfaces.nsIFile);
 #ifdef XP_WIN
   if (update) {
-    var programFilesDir = fileLocator.get(KEY_PROGRAMFILES,
-        Components.interfaces.nsILocalFile);
-    if (programFilesDir.contains(dir, true)) {
-      var relativePath = dir.getRelativeDescriptor(programFilesDir);
-      var userLocalDir = fileLocator.get(KEY_LOCALDATA,
-          Components.interfaces.nsILocalFile).parent;
-      dir.setRelativeDescriptor(userLocalDir, relativePath);
+    try {
+      dir = fileLocator.get(KEY_UPDROOT, Components.interfaces.nsIFile);
+    } catch (e) {
     }
   }
 #endif
@@ -352,17 +347,13 @@ function getUpdatesDir(key) {
       getService(Components.interfaces.nsIProperties);
   var appDir;
   if (key)
-    appDir = fileLocator.get(key, Components.interfaces.nsILocalFile);
+    appDir = fileLocator.get(key, Components.interfaces.nsIFile);
   else {
-    appDir = fileLocator.get(KEY_APPDIR, Components.interfaces.nsILocalFile);
+    appDir = fileLocator.get(KEY_APPDIR, Components.interfaces.nsIFile);
 #ifdef XP_WIN
-    var programFilesDir = fileLocator.get(KEY_PROGRAMFILES,
-        Components.interfaces.nsILocalFile);
-    if (programFilesDir.contains(appDir, true)) {
-      var relativePath = appDir.getRelativeDescriptor(programFilesDir);
-      var userLocalDir = fileLocator.get(KEY_LOCALDATA,
-          Components.interfaces.nsILocalFile).parent;
-      appDir.setRelativeDescriptor(userLocalDir, relativePath);
+    try {
+      appDir = fileLocator.get(KEY_UPDROOT, Components.interfaces.nsIFile);
+    } catch (e) {
     }
 #endif
   }
