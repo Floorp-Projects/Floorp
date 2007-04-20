@@ -1247,9 +1247,66 @@ nsAccessibleWrap::get_locale(IA2Locale *locale)
 }
 
 STDMETHODIMP
-nsAccessibleWrap::get_attributes(BSTR *attributes)
+nsAccessibleWrap::get_attributes(BSTR *aAttributes)
 {
-  return E_NOTIMPL;
+  // The format is name:value;name:value; with \ for escaping these
+  // characters ":;=,\".
+
+  *aAttributes = NULL;
+
+  nsCOMPtr<nsIPersistentProperties> attributes;
+  if (NS_FAILED(GetAttributes(getter_AddRefs(attributes))))
+    return E_FAIL;
+
+  if (!attributes)
+    return S_OK;
+
+  nsCOMPtr<nsISimpleEnumerator> propEnum;
+  attributes->Enumerate(getter_AddRefs(propEnum));
+  if (!propEnum)
+    return E_FAIL;
+
+  nsAutoString strAttrs;
+
+  const char kCharsToEscape[] = ":;=,\\";
+
+  PRBool hasMore = PR_FALSE;
+  while (NS_SUCCEEDED(propEnum->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> propSupports;
+    propEnum->GetNext(getter_AddRefs(propSupports));
+
+    nsCOMPtr<nsIPropertyElement> propElem(do_QueryInterface(propSupports));
+    if (!propElem)
+      return E_FAIL;
+
+    nsCAutoString name;
+    if (NS_FAILED(propElem->GetKey(name)))
+      return E_FAIL;
+
+    PRUint32 offset = 0;
+    while ((offset = name.FindCharInSet(kCharsToEscape, offset)) != kNotFound) {
+      name.Insert('\\', offset);
+      offset += 2;
+    }
+
+    nsAutoString value;
+    if (NS_FAILED(propElem->GetValue(value)))
+      return E_FAIL;
+
+    offset = 0;
+    while ((offset = value.FindCharInSet(kCharsToEscape, offset)) != kNotFound) {
+      name.Insert('\\', offset);
+      offset += 2;
+    }
+
+    AppendUTF8toUTF16(name, strAttrs);
+    strAttrs.Append(':');
+    strAttrs.Append(value);
+    strAttrs.Append(';');
+  }
+
+  *aAttributes = ::SysAllocString(strAttrs.get());
+  return S_OK;
 }
 
 
