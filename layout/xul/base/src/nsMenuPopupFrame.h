@@ -257,6 +257,7 @@ protected:
   PRPackedBool mShouldAutoPosition; // Should SyncViewWithFrame be allowed to auto position popup?
   PRPackedBool mShouldRollup; // Should this menupopup be allowed to dismiss automatically?
   PRPackedBool mConsumeRollupEvent; // Should the rollup event be consumed?
+  PRPackedBool mInContentShell; // True if the popup is in a content shell
 
   nsString     mIncrementalString;  // for incremental typing navigation
 
