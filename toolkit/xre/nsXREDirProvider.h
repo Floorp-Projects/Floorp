@@ -90,11 +90,18 @@ public:
   }
 
   /**
+   * Get the directory under which update directory is created.
+   * This method may be called before XPCOM is started. aResult
+   * is a clone, it may be modified.
+   */
+  nsresult GetUpdateRootDir(nsIFile* *aResult);
+
+  /**
    * Get the profile startup directory as determined by this class or by
    * mAppProvider. This method may be called before XPCOM is started. aResult
    * is a clone, it may be modified.
    */
-  nsresult GetProfileStartupDir(nsIFile* *aResult);   
+  nsresult GetProfileStartupDir(nsIFile* *aResult);
 
   /**
    * Get the profile directory as determined by this class or by an

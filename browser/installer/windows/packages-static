@@ -224,6 +224,7 @@ bin\components\browserdirprovider.dll
 bin\components\brwsrcmp.dll
 bin\components\txEXSLTRegExFunctions.js
 bin\components\nsLivemarkService.js
+bin\components\nsDefaultCLH.js
 
 ; Safe Browsing
 bin\components\nsSafebrowsingApplication.js
