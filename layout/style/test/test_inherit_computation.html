@@ -70,9 +70,6 @@ function xfail_diffcomputed(property) {
 }
 
 var gBrokenInherit = {
-  // The nsRuleNode code uses the 'inherit' value for -moz-box-orient
-  "-moz-box-flex": true,
-
   // Not implemented in nsRuleNode
   "-moz-border-bottom-colors": true,
   "-moz-border-left-colors": true,
@@ -85,11 +82,6 @@ var gBrokenInherit = {
 };
 
 function xfail_inherit(property, matching_initial) {
-  if (property == "-moz-box-flex" && matching_initial) {
-    // It inherits from the wrong property, but that ends up right in
-    // this case.
-    return false;
-  }
   return property in gBrokenInherit;
 }
 
