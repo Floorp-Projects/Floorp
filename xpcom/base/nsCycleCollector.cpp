@@ -143,6 +143,12 @@
 #include <process.h>
 #endif
 
+#define DEFAULT_SHUTDOWN_COLLECTIONS 5
+#ifdef DEBUG_CC
+#define SHUTDOWN_COLLECTIONS(params) params.mShutdownCollections
+#else
+#define SHUTDOWN_COLLECTIONS(params) DEFAULT_SHUTDOWN_COLLECTIONS
+#endif
 
 // Various parameters of this collector can be tuned using environment
 // variables.
@@ -150,22 +156,31 @@
 struct nsCycleCollectorParams
 {
     PRBool mDoNothing;
+#ifdef DEBUG_CC
     PRBool mReportStats;
     PRBool mHookMalloc;
     PRBool mDrawGraphs;
     PRBool mFaultIsFatal;
     PRBool mLogPointers;
+
+    PRUint32 mShutdownCollections;
+#endif
     
     PRUint32 mScanDelay;
-    PRUint32 mShutdownCollections;
     
     nsCycleCollectorParams() :
+#ifdef DEBUG_CC
         mDoNothing     (PR_GetEnv("XPCOM_CC_DO_NOTHING") != NULL),
         mReportStats   (PR_GetEnv("XPCOM_CC_REPORT_STATS") != NULL),
         mHookMalloc    (PR_GetEnv("XPCOM_CC_HOOK_MALLOC") != NULL),
         mDrawGraphs    (PR_GetEnv("XPCOM_CC_DRAW_GRAPHS") != NULL),
         mFaultIsFatal  (PR_GetEnv("XPCOM_CC_FAULT_IS_FATAL") != NULL),
         mLogPointers   (PR_GetEnv("XPCOM_CC_LOG_POINTERS") != NULL),
+
+        mShutdownCollections(DEFAULT_SHUTDOWN_COLLECTIONS),
+#else
+        mDoNothing     (PR_FALSE),
+#endif
 
         // The default number of collections to "age" candidate
         // pointers in the purple buffer before we decide that any
@@ -176,18 +191,20 @@ struct nsCycleCollectorParams
         //   - More time to be spent in the collector (bad)
         //   - Less delay between forming garbage and collecting it (good)
 
-        mScanDelay(10),
-        mShutdownCollections(5)
+        mScanDelay(10)
     {
+#ifdef DEBUG_CC
         char *s = PR_GetEnv("XPCOM_CC_SCAN_DELAY");
         if (s)
             PR_sscanf(s, "%d", &mScanDelay);
         s = PR_GetEnv("XPCOM_CC_SHUTDOWN_COLLECTIONS");
         if (s)
             PR_sscanf(s, "%d", &mShutdownCollections);
+#endif
     }
 };
 
+#ifdef DEBUG_CC
 // Various operations involving the collector are recorded in a
 // statistics table. These are for diagnostics.
 
@@ -256,12 +273,15 @@ struct nsCycleCollectorStats
 #undef DUMP
     }
 };
+#endif
 
 static void
 ToParticipant(nsISupports *s, nsCycleCollectionParticipant **cp);
 
+#ifdef DEBUG_CC
 static PRBool
 nsCycleCollector_shouldSuppress(nsISupports *s);
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // Base types
@@ -284,7 +304,7 @@ struct PtrInfo
     PRUint32 mRefCount : WORD_MINUS_2_BITS;
 #undef WORD_MINUS_2_BITS
 
-#ifdef DEBUG
+#ifdef DEBUG_CC
     size_t mBytes;
     const char *mName;
 #endif
@@ -299,7 +319,7 @@ InitPtrInfo(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
     pi->mInternalRefs = 0;
     pi->mLang = nsIProgrammingLanguage::CPLUSPLUS;
     pi->mRefCount = 0;
-#ifdef DEBUG
+#ifdef DEBUG_CC
     pi->mBytes = 0;
     pi->mName = nsnull;
 #endif
@@ -407,26 +427,42 @@ struct nsPurpleBuffer
     // calls annihilate one another.
 
     nsCycleCollectorParams &mParams;
+#ifdef DEBUG_CC
     nsCycleCollectorStats &mStats;
+#endif
     void* mCache[N_POINTERS];
     PRUint32 mCurrGen;    
     PointerSetWithGeneration mBackingStore;
     nsDeque *mTransferBuffer;
     
+#ifdef DEBUG_CC
     nsPurpleBuffer(nsCycleCollectorParams &params,
                    nsCycleCollectorStats &stats) 
         : mParams(params),
           mStats(stats),
           mTransferBuffer(nsnull)
     {
-        memset(mCache, 0, sizeof(mCache));
-        mBackingStore.Init();
+        Init();
     }
+#else
+    nsPurpleBuffer(nsCycleCollectorParams &params) 
+        : mParams(params),
+          mTransferBuffer(nsnull)
+    {
+        Init();
+    }
+#endif
 
     ~nsPurpleBuffer()
     {
         memset(mCache, 0, sizeof(mCache));
         mBackingStore.Clear();
+    }
+
+    void Init()
+    {
+        memset(mCache, 0, sizeof(mCache));
+        mBackingStore.Init();
     }
 
     void BumpGeneration();
@@ -452,7 +488,9 @@ struct nsPurpleBuffer
                 return;
             }
         }
+#ifdef DEBUG_CC
         mStats.mSpills++;
+#endif
         SpillOne(p);
     }
 
@@ -489,8 +527,10 @@ zeroGenerationCallback(const void*  ptr,
                        PRUint32&    generation,
                        void*        userArg)
 {
+#ifdef DEBUG_CC
     nsPurpleBuffer *purp = NS_STATIC_CAST(nsPurpleBuffer*, userArg);
     purp->mStats.mZeroGeneration++;
+#endif
     generation = 0;
     return PL_DHASH_NEXT;
 }
@@ -504,7 +544,9 @@ void nsPurpleBuffer::BumpGeneration()
     } else {
         ++mCurrGen;
     }
+#ifdef DEBUG_CC
     mStats.mBumpGeneration++;
+#endif
 }
 
 static inline PRBool
@@ -641,12 +683,9 @@ struct nsCycleCollector
     nsDeque mBufs[nsIProgrammingLanguage::MAX + 1];
     
     nsCycleCollectorParams mParams;
-    nsCycleCollectorStats mStats;    
 
     nsPurpleBuffer mPurpleBuf;
-    FILE *mPtrLog;
-    
-    void MaybeDrawGraphs();
+
     void RegisterRuntime(PRUint32 langID, 
                          nsCycleCollectionLanguageRuntime *rt);
     void ForgetRuntime(PRUint32 langID);
@@ -659,14 +698,19 @@ struct nsCycleCollector
     nsCycleCollector();
     ~nsCycleCollector();
 
-    void Suspect(nsISupports *n, PRBool current=PR_FALSE);
+    void Suspect(nsISupports *n, PRBool current = PR_FALSE);
     void Forget(nsISupports *n);
     void Allocated(void *n, size_t sz);
     void Freed(void *n);
     void Collect(PRUint32 aTryCollections = 1);
     void Shutdown();
 
-#ifdef DEBUG
+#ifdef DEBUG_CC
+    nsCycleCollectorStats mStats;    
+
+    FILE *mPtrLog;
+
+    void MaybeDrawGraphs();
     void ExplainLiveExpectedGarbage();
     void ShouldBeFreed(nsISupports *n);
     void WasFreed(nsISupports *n);
@@ -701,7 +745,11 @@ public:
     void Walk(void *s0);
 
     // nsCycleCollectionTraversalCallback methods.
+#ifdef DEBUG_CC
     void DescribeNode(size_t refCount, size_t objSz, const char *objName);
+#else
+    void DescribeNode(size_t refCount);
+#endif
     void NoteXPCOMChild(nsISupports *child);
     void NoteScriptChild(PRUint32 langID, void *child);
 
@@ -747,6 +795,7 @@ static safetyCallback sSafetyCallback;
 static void
 Fault(const char *msg, const void *ptr=nsnull)
 {
+#ifdef DEBUG_CC
     // This should be nearly impossible, but just in case.
     if (!sCollector)
         return;
@@ -761,6 +810,7 @@ Fault(const char *msg, const void *ptr=nsnull)
         exit(1);
 
     } 
+#endif
 
     NS_NOTREACHED(nsPrintfCString(256,
                   "Fault in cycle collector: %s (ptr: %p)\n",
@@ -778,20 +828,26 @@ Fault(const char *msg, const void *ptr=nsnull)
 
 
 void 
+#ifdef DEBUG_CC
 GraphWalker::DescribeNode(size_t refCount, size_t objSz, const char *objName)
+#else
+GraphWalker::DescribeNode(size_t refCount)
+#endif
 {
     if (refCount == 0)
         Fault("zero refcount", mCurrPi->key);
 
-#ifdef DEBUG
+#ifdef DEBUG_CC
     mCurrPi->mBytes = objSz;
     mCurrPi->mName = objName;
 #endif
 
     this->VisitNode(mCurrPi, refCount);
+#ifdef DEBUG_CC
     sCollector->mStats.mVisitedNode++;
     if (mCurrPi->mLang == nsIProgrammingLanguage::JAVASCRIPT)
         sCollector->mStats.mVisitedJSNode++;
+#endif
 }
 
 
@@ -813,8 +869,11 @@ GraphWalker::NoteXPCOMChild(nsISupports *child)
    
     child = canonicalize(child);
 
-    if (nsCycleCollector_isScanSafe(child) && 
-        !nsCycleCollector_shouldSuppress(child)) {
+    PRBool scanSafe = nsCycleCollector_isScanSafe(child);
+#ifdef DEBUG_CC
+    scanSafe &= !nsCycleCollector_shouldSuppress(child);
+#endif
+    if (scanSafe) {
         PtrInfo *childPi = mGraph.Add(child);
         if (!childPi)
             return;
@@ -833,8 +892,10 @@ GraphWalker::NoteScriptChild(PRUint32 langID, void *child)
     if (!child)
         return;
 
-    if (!mRuntimes[langID])
+    if (langID > nsIProgrammingLanguage::MAX || !mRuntimes[langID]) {
         Fault("traversing pointer for unregistered language", child);
+        return;
+    }
 
     PtrInfo *childPi = mGraph.Add(child);
     if (!childPi)
@@ -864,6 +925,7 @@ GraphWalker::Walk(void *s0)
             continue;
         }
 
+#ifdef DEBUG_CC
         if (mCurrPi->mLang > nsIProgrammingLanguage::MAX ) {
             Fault("unknown language during walk");
             continue;
@@ -873,6 +935,7 @@ GraphWalker::Walk(void *s0)
             Fault("script pointer for unregistered language");
             continue;
         }
+#endif
         
         if (this->ShouldVisitNode(mCurrPi)) {
             nsresult rv = mRuntimes[mCurrPi->mLang]->Traverse(ptr, *this);
@@ -881,7 +944,10 @@ GraphWalker::Walk(void *s0)
             }
         }
     }
+
+#ifdef DEBUG_CC
     sCollector->mStats.mWalkedGraph++;
+#endif
 }
 
 
@@ -906,7 +972,9 @@ struct MarkGreyWalker : public GraphWalker
     { 
         pi->mColor = grey;
         pi->mRefCount = refcount;
+#ifdef DEBUG_CC
         sCollector->mStats.mSetColorGrey++;
+#endif
     }
 
     void NoteChild(PtrInfo *childpi)
@@ -954,7 +1022,9 @@ struct ScanBlackWalker : public GraphWalker
     void VisitNode(PtrInfo *pi, size_t refcount)
     { 
         pi->mColor = black;
+#ifdef DEBUG_CC
         sCollector->mStats.mSetColorBlack++;
+#endif
     }
 
     void NoteChild(PtrInfo *childpi) {}
@@ -983,7 +1053,9 @@ struct scanWalker : public GraphWalker
 
         if (pi->mInternalRefs == refcount) {
             pi->mColor = white;
+#ifdef DEBUG_CC
             sCollector->mStats.mSetColorWhite++;
+#endif
         } else {
             ScanBlackWalker(mGraph, mRuntimes).Walk(NS_CONST_CAST(void*,
                                                                   pi->key));
@@ -995,6 +1067,7 @@ struct scanWalker : public GraphWalker
 };
 
 
+#ifdef DEBUG_CC
 PR_STATIC_CALLBACK(PLDHashOperator)
 NoGreyCallback(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
                void *arg)
@@ -1004,6 +1077,7 @@ NoGreyCallback(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
         Fault("valid grey node after scanning", pinfo->key);
     return PL_DHASH_NEXT;
 }
+#endif
 
 
 void
@@ -1017,9 +1091,11 @@ nsCycleCollector::ScanRoots()
         scanWalker(mGraph, mRuntimes).Walk(s); 
     }
 
+#ifdef DEBUG_CC
     // Sanity check: scan should have colored all grey nodes black or
     // white. So we ensure we have no grey nodes at this point.
     mGraph.Enumerate(NoGreyCallback, this);
+#endif
 }
 
 
@@ -1085,12 +1161,10 @@ nsCycleCollector::CollectWhite()
     for (i = 0; i < nsIProgrammingLanguage::MAX+1; ++i)
         mBufs[i].Empty();
 
-#ifndef __MINGW32__
-#ifdef WIN32
+#if defined(DEBUG_CC) && !defined(__MINGW32__) && defined(WIN32)
     struct _CrtMemState ms1, ms2;
     _CrtMemCheckpoint(&ms1);
-#endif // WIN32
-#endif // __MINGW32__
+#endif
 
     mGraph.Enumerate(FindWhiteCallback, this);
 
@@ -1109,9 +1183,13 @@ nsCycleCollector::CollectWhite()
             rv = mRuntimes[i]->Unlink(mBufs[i]);
             if (NS_FAILED(rv)) {
                 Fault("Failed unlink call while unlinking");
+#ifdef DEBUG_CC
                 mStats.mFailedUnlink++;
+#endif
             } else {
+#ifdef DEBUG_CC
                 mStats.mCollectedNode += mBufs[i].GetSize();
+#endif
             }
         }
     }
@@ -1128,17 +1206,15 @@ nsCycleCollector::CollectWhite()
     for (i = 0; i < nsIProgrammingLanguage::MAX+1; ++i)
         mBufs[i].Empty();
 
-#ifndef __MINGW32__
-#ifdef WIN32
+#if defined(DEBUG_CC) && !defined(__MINGW32__) && defined(WIN32)
     _CrtMemCheckpoint(&ms2);
     if (ms2.lTotalCount < ms1.lTotalCount)
         mStats.mFreedBytes += (ms1.lTotalCount - ms2.lTotalCount);
-#endif // WIN32
-#endif // __MINGW32__
+#endif
 }
 
 
-
+#ifdef DEBUG_CC
 ////////////////////////////////////////////////////////////////////////
 // Extra book-keeping functions.
 ////////////////////////////////////////////////////////////////////////
@@ -1205,11 +1281,7 @@ struct graphVizWalker : public GraphWalker
                 "n%p [label=\"%s\\n%p\\n%u/%u refs found\", "
                 "fillcolor=%s, fontcolor=%s]\n", 
                 p,
-#ifdef DEBUG
                 pi->mName,
-#else
-                "node",
-#endif
                 p,
                 pi->mInternalRefs, pi->mRefCount,
                 (pi->mColor == black ? "black" : "white"),
@@ -1414,7 +1486,7 @@ InitMemHook(void)
 }
 
 #endif // GLIBC / WIN32 / OSX
-
+#endif // DEBUG_CC
 
 ////////////////////////////////////////////////////////////////////////
 // Collector implementation
@@ -1423,10 +1495,14 @@ InitMemHook(void)
 nsCycleCollector::nsCycleCollector() : 
     mCollectionInProgress(PR_FALSE),
     mScanInProgress(PR_FALSE),
+#ifdef DEBUG_CC
     mPurpleBuf(mParams, mStats),
     mPtrLog(nsnull)
+#else
+    mPurpleBuf(mParams)
+#endif
 {
-#ifdef DEBUG
+#ifdef DEBUG_CC
     mExpectedGarbage.Init();
 #endif
 
@@ -1478,43 +1554,36 @@ nsCycleCollector::ForgetRuntime(PRUint32 langID)
 }
 
 
+#ifdef DEBUG_CC
+static PR_CALLBACK PLDHashOperator
+FindAnyWhiteCallback(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
+                     void *arg)
+{
+    PtrInfo *pinfo = (PtrInfo *) hdr;
+    if (pinfo->mColor == white) {
+        *NS_STATIC_CAST(PRBool*, arg) = PR_TRUE;
+        return PL_DHASH_STOP;
+    }
+    return PL_DHASH_NEXT;
+}
+
+
 void 
 nsCycleCollector::MaybeDrawGraphs()
 {
     if (mParams.mDrawGraphs) {
-
-        PRUint32 i;
-        nsDeque roots(nsnull);
-
-        while (mBufs[0].GetSize() > 0)
-            roots.Push(mBufs[0].Pop());
-
-        for (i = 0; i < nsIProgrammingLanguage::MAX+1; ++i)
-            mBufs[i].Empty();
-
-        mGraph.Enumerate(FindWhiteCallback, this);
-
         // We draw graphs only if there were any white nodes.
         PRBool anyWhites = PR_FALSE;
-
-        for (i = 0; i < nsIProgrammingLanguage::MAX+1; ++i) {
-            if (mBufs[i].GetSize() > 0) {
-                anyWhites = PR_TRUE;
-                break;
-            }
-        }
+        mGraph.Enumerate(FindAnyWhiteCallback, &anyWhites);
 
         if (anyWhites) {
             graphVizWalker gw(mGraph, mRuntimes);
-            while (roots.GetSize() > 0) {
-                nsISupports *s = NS_STATIC_CAST(nsISupports *, roots.Pop());
+            while (mBufs[0].GetSize() > 0) {
+                nsISupports *s = NS_STATIC_CAST(nsISupports *, mBufs[0].Pop());
                 s = canonicalize(s);
                 gw.Walk(s);
             }
         }
-
-        for (i = 0; i < nsIProgrammingLanguage::MAX+1; ++i)
-            mBufs[i].Empty();
     }
 }
 
@@ -1568,6 +1637,7 @@ nsCycleCollector_shouldSuppress(nsISupports *s)
     Suppressor supp;
     return supp.shouldSuppress(s);
 }
+#endif
 
 void 
 nsCycleCollector::Suspect(nsISupports *n, PRBool current)
@@ -1626,7 +1696,7 @@ nsCycleCollector::Forget(nsISupports *n)
     if (mParams.mDoNothing)
         return;
 
-#ifdef DEBUC_CC
+#ifdef DEBUG_CC
     mStats.mForgetNode++;
 
 #ifndef __MINGW32__
@@ -1644,6 +1714,7 @@ nsCycleCollector::Forget(nsISupports *n)
     mPurpleBuf.Remove(n);
 }
 
+#ifdef DEBUG_CC
 void 
 nsCycleCollector::Allocated(void *n, size_t sz)
 {
@@ -1672,12 +1743,12 @@ nsCycleCollector::Freed(void *n)
         }
     }
 }
-
+#endif
 
 void
 nsCycleCollector::Collect(PRUint32 aTryCollections)
 {
-#ifndef __MINGW32__
+#if defined(DEBUG_CC) && !defined(__MINGW32__)
     if (!mParams.mDoNothing && mParams.mHookMalloc)
         InitMemHook();
 #endif
@@ -1760,7 +1831,9 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
                        (PR_Now() - now) / PR_USEC_PER_MSEC);
 #endif
 
+#ifdef DEBUG_CC
                 MaybeDrawGraphs();
+#endif
 
                 mScanInProgress = PR_FALSE;
 
@@ -1783,9 +1856,13 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
             }
 
             mPurpleBuf.BumpGeneration();
+
+#ifdef DEBUG_CC
             mStats.mCollection++;
             if (mParams.mReportStats)
                 mStats.Dump();
+#endif
+
             mCollectionInProgress = PR_FALSE;
         }
 
@@ -1810,9 +1887,9 @@ nsCycleCollector::Shutdown()
 
     mPurpleBuf.BumpGeneration();
     mParams.mScanDelay = 0;
-    Collect(mParams.mShutdownCollections);
+    Collect(SHUTDOWN_COLLECTIONS(mParams));
 
-#ifdef DEBUG
+#ifdef DEBUG_CC
     CollectPurple();
     if (mBufs[0].GetSize() != 0) {
         printf("Might have been able to release more cycles if the cycle collector would "
@@ -1824,7 +1901,7 @@ nsCycleCollector::Shutdown()
     mParams.mDoNothing = PR_TRUE;
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_CC
 
 PR_STATIC_CALLBACK(PLDHashOperator)
 AddExpectedGarbage(nsVoidPtrHashKey *p, void *arg)
@@ -2010,15 +2087,19 @@ nsCycleCollector_shutdown()
 void
 nsCycleCollector_DEBUG_shouldBeFreed(nsISupports *n)
 {
+#ifdef DEBUG_CC
     if (sCollector)
         sCollector->ShouldBeFreed(n);
+#endif
 }
 
 void
 nsCycleCollector_DEBUG_wasFreed(nsISupports *n)
 {
+#ifdef DEBUG_CC
     if (sCollector)
         sCollector->WasFreed(n);
+#endif
 }
 #endif
 
@@ -2042,8 +2123,10 @@ ToParticipant(nsISupports *s, nsCycleCollectionParticipant **cp)
     // object that implements traversal and unlinking logic for the nsISupports
     // in question.
     CallQueryInterface(s, cp);
+#ifdef DEBUG_CC
     if (cp)
         ++sCollector->mStats.mSuccessfulQI;
     else
         ++sCollector->mStats.mFailedQI;
+#endif
 }

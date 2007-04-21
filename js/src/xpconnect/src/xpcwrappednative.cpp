@@ -57,7 +57,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(nsISupports *s,
     if(!tmp->IsValid())
         return NS_OK;
 
-#ifdef DEBUG
+#ifdef DEBUG_CC
     char name[72];
     XPCNativeScriptableInfo* si = tmp->GetScriptableInfo();
     if(si)
@@ -68,7 +68,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(nsISupports *s,
 
     cb.DescribeNode(tmp->mRefCnt.get(), sizeof(XPCWrappedNative), name);
 #else
-    cb.DescribeNode(tmp->mRefCnt.get(), sizeof(XPCWrappedNative), "XPCWrappedNative");
+    cb.DescribeNode(tmp->mRefCnt.get());
 #endif
 
     if (tmp->mRefCnt.get() > 1) {
