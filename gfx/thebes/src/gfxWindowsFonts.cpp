@@ -169,20 +169,6 @@ gfxWindowsFont::CairoScaledFont()
     return mScaledFont;
 }
 
-void
-gfxWindowsFont::UpdateCTM(const gfxMatrix& aMatrix)
-{
-    if (aMatrix.yy == mCTM.yy &&
-        aMatrix.xx == mCTM.xx &&
-        aMatrix.xy == mCTM.xy &&
-        aMatrix.yx == mCTM.yx)
-        return;
-
-    Destroy();
-
-    mCTM = aMatrix;
-}
-
 HFONT
 gfxWindowsFont::MakeHFONT()
 {
@@ -296,8 +282,7 @@ gfxWindowsFont::MakeCairoFontFace()
 {
     // ensure mFont is around
     MakeHFONT();
-
-    return cairo_win32_font_face_create_for_hfont(mFont);
+    return cairo_win32_font_face_create_for_logfontw_hfont(&mLogFont, mFont);
 }
 
 cairo_scaled_font_t *
@@ -306,14 +291,15 @@ gfxWindowsFont::MakeCairoScaledFont()
     cairo_scaled_font_t *font = nsnull;
 
     cairo_matrix_t sizeMatrix;
+    cairo_matrix_t identityMatrix;
 
     MakeHFONT(); // Ensure mAdjustedSize being initialized.
     cairo_matrix_init_scale(&sizeMatrix, mAdjustedSize, mAdjustedSize);
+    cairo_matrix_init_identity(&identityMatrix);
 
     cairo_font_options_t *fontOptions = cairo_font_options_create();
     font = cairo_scaled_font_create(CairoFontFace(), &sizeMatrix,
-                                    reinterpret_cast<cairo_matrix_t*>(&mCTM),
-                                    fontOptions);
+                                    &identityMatrix, fontOptions);
     cairo_font_options_destroy(fontOptions);
 
     return font;
@@ -406,9 +392,7 @@ gfxWindowsFont::FillLogFont(gfxFloat aSize, PRInt16 aWeight)
 {
 #define CLIP_TURNOFF_FONTASSOCIATION 0x40
     
-    const double yScale = mCTM.yy;
-
-    mLogFont.lfHeight = (LONG)-ROUND(aSize * yScale);
+    mLogFont.lfHeight = (LONG)-ROUND(aSize);
 
     if (mLogFont.lfHeight == 0)
         mLogFont.lfHeight = -1;
@@ -636,8 +620,6 @@ SetupContextFont(gfxContext *aContext, gfxWindowsFont *aFont)
     if (!dc)
         return 0;
 
-    // Set the font to have the identity matrix
-    aFont->UpdateCTM(gfxMatrix());
     HFONT hfont = aFont->GetHFONT();
     if (!hfont)
         return 0;
@@ -1573,9 +1555,6 @@ gfxWindowsFontGroup::InitTextRunUniscribe(gfxContext *aContext, gfxTextRun *aRun
             nsRefPtr<gfxWindowsFont> font = item->GetNextFont();
 
             if (font) {
-                /* make sure the font is set for the current matrix */
-                font->UpdateCTM(aContext->CurrentMatrix());
-
                 /* set the curret font on the item */
                 item->SetCurrentFont(font);
 
