@@ -21,39 +21,18 @@ tab {
   font-weight: normal !important;
 }
 
-/*
-tab:hover:active > .tab-image-left { 
-  background		: url(chrome://global/skin/tabbox/tab-unselect-active-left.gif) no-repeat;
-}
-
-tab:hover:active > .tab-image-middle { 
-  background-color: #666666;
-  -moz-border-top-colors: #000000 #444444 #555555;
-  -moz-border-bottom-colors: #FFFFFF #CCCCCC #000000;
-}
-
-tab:hover:active > .tab-image-right { 
-  background		: url(chrome://global/skin/tabbox/tab-unselect-active-right.gif) no-repeat;
-}
-
-*/
-
-.tab-border-top-left {
-  background-color  : #DEDEDE;
-  border-bottom     : 3px solid;
-  -moz-border-bottom-colors: #FFFFFF #CECECE #000000;
-  width				: 3px;
-}
-
 tabs {
   padding			: 0px;
   margin-bottom: -2px;
 }
 
-tabbox {
+
+tabs.tabs-bottom {
+  padding-left: 6px;
+  padding-right: 6px;
 }
 
-.tabs-left {
+.tabs-left, .tabs-right  {
 	-moz-box-flex: 1 !important;
 }
 /*** TAB: BOTTOM <tab class="tab-bottom"> ***/
@@ -61,87 +40,22 @@ tabbox {
  * SMALL TABS FOR NOW */
 
 .tab-bottom {
-	margin-bottom: 2px;
+  margin-bottom: 2px;
+  margin-top: 2px;
+  -moz-box-align: center;
 }
 
-.tab-bottom > .tab-image-left {
-  background		: url(chrome://global/skin/tabbox/tab-sm-bot-unsel-left.gif) no-repeat;
-  width				: 10px;
-  height			: 25px;
+.tab-bottom > .tab-middle {
+  padding: 0 6px 0 6px;
+  margin-bottom: 2px;
 }
+  
 
-.tab-bottom > .tab-image-middle {
-  -moz-border-top-colors: #FFFFFF #CECECE #000000;
-  -moz-border-bottom-colors: #000000 #CECECE #DEDEDE;
-}
-
-.tab-bottom > .tab-image-right {
-  background		: url(chrome://global/skin/tabbox/tab-sm-bot-unsel-right.gif) no-repeat;
-  width				: 10px;
-  height			: 25px;
-}
-
-.tab-bottom > .tab-image-middle > .tab-text {
-  font			    : message-box;
-  font-weight		: bold;
-  padding           : 0px;
-  margin            : 0px !important;
-}
-
-.tab-bottom:hover:active > .tab-image-left { 
-  background		: url(chrome://global/skin/tabbox/tab-sm-bot-unsel-acti-left.gif) no-repeat;
-}
-
-.tab-bottom:hover:active > .tab-image-middle { 
-  background-color: #666666;
-  -moz-border-top-colors: #FFFFFF #CCCCCC #000000;
-  -moz-border-bottom-colors: #000000 #444444 #555555;
-}
-
-.tab-bottom:hover:active > .tab-image-right { 
-  background		: url(chrome://global/skin/tabbox/tab-sm-bot-unsel-acti-right.gif) no-repeat;
-}
-
-/* when a tab is selected this is how it should look */
-
-.tab-bottom[selected="true"] > .tab-image-left,
-.tab-bottom:hover:active[selected="true"] > .tab-image-left { 
-  background		: url(chrome://global/skin/tabbox/tab-sm-bot-sel-left.gif) no-repeat;
-}
-
-.tab-bottom[selected="true"] > .tab-image-middle,
-.tab-bottom:hover:active[selected="true"] > .tab-image-middle { 
-  background-color: #EEEEEE;
-  -moz-border-top-colors: #EEEEEE;
-  -moz-border-bottom-colors: #000000 #CCCCCC #FFFFFF;
-}
-
-.tab-bottom[selected="true"] > .tab-image-right,
-.tab-bottom:hover:active[selected="true"] > .tab-image-right { 
-  background		: url(chrome://global/skin/tabbox/tab-sm-bot-sel-right.gif) no-repeat;
-}
-
-.tabs-bottom > .tab-border-top-left {
-  background-color  : #DEDEDE;
-  border-bottom     : 0px;
-  border-top        : 3px solid;
-  -moz-border-top-colors: #FFFFFF #CECECE #000000;
-  width				: 3px;
-}
-
-.tabs-bottom > stack > .tab-border-top-right {
-  background-color  : #DEDEDE;
-  border-bottom     : 0px;
-  border-top        : 3px solid;
-  -moz-border-top-colors: #FFFFFF #CECECE #000000;
-}
-
-.tabs-bottom > .tab-border-top-left-cap, .tabs-bottom > .tab-border-top-right-cap {
- background-color  : #DEDEDE;
-  border-bottom     : 0px;
-  border-top        : 3px solid;
-  -moz-border-top-colors: #000000;
-  width				: 1px;
+.tab-bottom > .tab-middle > .tab-text {
+  font: message-box;
+  font-weight: bold !important;
+  margin: 0 0 -1px 0 !important;
+  padding: 0 !important;
 }
 
     /* top tabs */
@@ -184,13 +98,6 @@ tabbox {
   border: none;
 }
 
-/* border on bottom only, no padding (used in search) */
-tabpanels.light {
-  border: none;
-  border-bottom: 1px outset #CCCCCC;
-  padding: 0px;
-}
-
 tabpanels {
   -moz-appearance: tabpanels; 
   border-top: 0px;
@@ -205,13 +112,5 @@ tabpanels {
 tabstrip-box {
 	-moz-appearance: tabpanels;
         margin-top: -1px;
-}
-
-.tab-border-top-left, .tabs-left, .tabs-right, .tab-border-top-right {
-	-moz-box-flex: 1 !important;
-}
-
-.tab-image-middle {
-	-moz-box-flex: 0 !important;
 }
 
