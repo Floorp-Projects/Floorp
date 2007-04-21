@@ -456,7 +456,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // We begin by examining those style structs that are capable of
   // causing the maximal difference, a FRAMECHANGE.
   // FRAMECHANGE Structs: Display, XUL, Content, UserInterface,
-  // Visibility, Outline, TableBorder, Table, Background, UIReset, Quotes
+  // Visibility, Outline, TableBorder, Table, UIReset, Quotes
   DO_STRUCT_DIFFERENCE(Display);
   DO_STRUCT_DIFFERENCE(XUL);
   DO_STRUCT_DIFFERENCE(Column);
@@ -466,7 +466,6 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   DO_STRUCT_DIFFERENCE(Outline);
   DO_STRUCT_DIFFERENCE(TableBorder);
   DO_STRUCT_DIFFERENCE(Table);
-  DO_STRUCT_DIFFERENCE(Background);
   DO_STRUCT_DIFFERENCE(UIReset);
   DO_STRUCT_DIFFERENCE(List);
   // If the quotes implementation is ever going to change we might not need
@@ -493,8 +492,9 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   maxHint = NS_STYLE_HINT_VISUAL;
 
   // The following structs cause (as their maximal difference) a
-  // re-render to occur.  VISUAL Structs: Color
+  // re-render to occur.  VISUAL Structs: Color, Background
   DO_STRUCT_DIFFERENCE(Color);
+  DO_STRUCT_DIFFERENCE(Background);
 #ifdef MOZ_SVG
   DO_STRUCT_DIFFERENCE(SVG);
 #endif
