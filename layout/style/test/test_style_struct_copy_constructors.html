@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test for nsStyleStruct copy constructors</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <style type="text/css" id="stylesheet"></style>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"><span id="one"></span><span id="two"></span><span id="parent"><span id="child"></span></span></p>
+<div id="content" style="display: none">
+
+<div id="testnode"><span id="element"></span></div>
+
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for nsStyleStruct copy constructors **/
+
+/**
+ * XXX Why doesn't putting a bug in the nsStyleFont copy-constructor for
+ * font-weight (initializing to normal) trigger a failure of this test?
+ * It works for leaving -moz-image-region uninitialized (both halves),
+ * overwriting text-decoration (only the first half, since it's not
+ * inherited), and leaving visibility uninitialized (only the second
+ * half; passes the first half ok).
+ */
+
+var gElementOne = document.getElementById("one");
+var gElementTwo = document.getElementById("two");
+var gElementParent = document.getElementById("parent");
+var gElementChild = document.getElementById("child");
+var gStyleSheet = document.getElementById("stylesheet").sheet;
+var gRule1 = gStyleSheet.cssRules[gStyleSheet.insertRule("#one, #two, #parent {}", gStyleSheet.cssRules.length)];
+var gRule2 = gStyleSheet.cssRules[gStyleSheet.insertRule("#two, #child {}", gStyleSheet.cssRules.length)];
+
+/** Test using aStartStruct **/
+
+for (var prop in gCSSProperties) {
+  var info = gCSSProperties[prop];
+  if (!("subproperties" in info)) {
+    gRule1.style.setProperty(prop, info.other_values[0], "");
+    gRule2.style.setProperty(prop, info.other_values[0], "");
+  }
+}
+
+for (var prop in gCSSProperties) {
+  var info = gCSSProperties[prop];
+  if (!("subproperties" in info)) {
+    gRule2.style.removeProperty(prop);
+
+    var one = getComputedStyle(gElementOne, "").getPropertyValue(prop);
+    var two = getComputedStyle(gElementTwo, "").getPropertyValue(prop);
+    is(two, one,
+       "property '" + prop + "' was copy-constructed correctly (aStartStruct)");
+
+    gRule2.style.setProperty(prop, info.other_values[0], "");
+  }
+}
+
+/** Test using inheritance **/
+for (var prop in gCSSProperties) {
+  var info = gCSSProperties[prop];
+  if (info.inherited && !("subproperties" in info)) {
+    gRule2.style.removeProperty(prop);
+
+    var parent = getComputedStyle(gElementParent, "").getPropertyValue(prop);
+    var child = getComputedStyle(gElementChild, "").getPropertyValue(prop);
+
+    // We get a failure here for font-family because
+    // nsRuleNode::ComputeFontData clobbers the NS_STYLE_FONT_FACE_MASK
+    // part of font->mFlags even when the font name was copied from
+    // aStartStruct.  This causes nsComputedDOMStyle::GetFontFamily to
+    // chop a bunch of characters off of the end of font->mFont.name.
+    var func = (prop == "font-family" ? todo_is : is);
+
+    func(child, parent,
+         "property '" + prop + "' was copy-constructed correctly (inheritance)");
+
+    gRule2.style.setProperty(prop, info.other_values[0], "");
+  }
+}
+
+for (var prop in gCSSProperties) {
+  var info = gCSSProperties[prop];
+  if (!("subproperties" in info)) {
+    gRule1.style.removeProperty(prop);
+    gRule2.style.removeProperty(prop);
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>
