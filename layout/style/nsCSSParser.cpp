@@ -4725,7 +4725,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kSpeakNumeralKTable);
   case eCSSProperty_speak_punctuation:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+    return ParseVariant(aErrorCode, aValue, VARIANT_HOK,
                         nsCSSProps::kSpeakPunctuationKTable);
   case eCSSProperty_speech_rate:
     return ParseVariant(aErrorCode, aValue, VARIANT_HN | VARIANT_KEYWORD,
@@ -5447,7 +5447,8 @@ PRBool CSSParserImpl::ParseCue(nsresult& aErrorCode)
 {
   nsCSSValue before;
   if (ParseSingleValueProperty(aErrorCode, before, eCSSProperty_cue_before)) {
-    if (eCSSUnit_URL == before.GetUnit()) {
+    if (eCSSUnit_Inherit != before.GetUnit() &&
+        eCSSUnit_Initial != before.GetUnit()) {
       nsCSSValue after;
       if (ParseSingleValueProperty(aErrorCode, after, eCSSProperty_cue_after)) {
         if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
