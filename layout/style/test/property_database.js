@@ -804,7 +804,7 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "medium" ],
-		other_values: [ "2em", "50%", "large", "xx-small", "36pt", "8px" ],
+		other_values: [ "large", "2em", "50%", "xx-small", "36pt", "8px" ],
 		invalid_values: []
 	},
 	"font-size-adjust": {
