@@ -82,10 +82,13 @@ struct nsCycleCollectionTraversalCallback
 {
     // You must call DescribeNode() with an accurate refcount,
     // otherwise cycle collection will fail, and probably crash.
-    // Providing an accurate objsz or objname is optional.
-    virtual void DescribeNode(size_t refcount, 
-                              size_t objsz, 
+#ifdef DEBUG_CC
+    virtual void DescribeNode(size_t refcount,
+                              size_t objsz,
                               const char *objname) = 0;
+#else
+    virtual void DescribeNode(size_t refcount) = 0;
+#endif
     virtual void NoteScriptChild(PRUint32 langID, void *child) = 0;
     virtual void NoteXPCOMChild(nsISupports *child) = 0;
 };
@@ -193,8 +196,13 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
 // Helpers for implementing nsCycleCollectionParticipant::Traverse
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef DEBUG_CC
 #define NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class)                              \
     cb.DescribeNode(tmp->mRefCnt.get(), sizeof(_class), #_class);
+#else
+#define NS_IMPL_CYCLE_COLLECTION_DESCRIBE(_class)                              \
+    cb.DescribeNode(tmp->mRefCnt.get());
+#endif
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_class)                        \
   NS_IMETHODIMP                                                                \
