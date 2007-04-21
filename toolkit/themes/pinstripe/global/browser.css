@@ -97,6 +97,7 @@
 
 .tabbrowser-tab > .tab-image-middle {
   background: url("chrome://global/skin/tab-middle.png") repeat-x;
+  -moz-box-flex: 0 !important;
 }
 
 .tabbrowser-tab:not([selected="true"]) > .tab-image-middle {
