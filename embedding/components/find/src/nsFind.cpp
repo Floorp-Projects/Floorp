@@ -542,19 +542,6 @@ static void DumpNode(nsIDOMNode* aNode)
   else
     printf(">>>> Node: %s\n", NS_LossyConvertUTF16toASCII(nodeName).get());
 }
-
-static void DumpRange(nsIDOMRange* aRange)
-{
-  nsCOMPtr<nsIDOMNode> startN;
-  nsCOMPtr<nsIDOMNode> endN;
-  PRInt32 startO, endO;
-  aRange->GetStartContainer(getter_AddRefs(startN));
-  aRange->GetStartOffset(&startO);
-  aRange->GetEndContainer(getter_AddRefs(endN));
-  aRange->GetEndOffset(&endO);
-  printf(" -- start %d, ", startO); DumpNode(startN);
-  printf(" -- end %d, ", endO); DumpNode(endN);
-}
 #endif
 
 nsresult
@@ -571,7 +558,9 @@ nsFind::InitIterator(nsIDOMNode* aStartNode, PRInt32 aStartOffset,
   NS_ENSURE_ARG_POINTER(aEndNode);
 
 #ifdef DEBUG_FIND
-  printf("InitIterator search range:\n"); DumpRange(aSearchRange);
+  printf("InitIterator search range:\n"); 
+  printf(" -- start %d, ", aStartOffset); DumpNode(aStartNode);
+  printf(" -- end %d, ", aEndOffset); DumpNode(aEndNode);
 #endif
 
   nsresult rv =
