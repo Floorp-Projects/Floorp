@@ -44,8 +44,4 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = base resources
 
-ifdef ENABLE_TESTS
-DIRS  += test
-endif
-
 include $(topsrcdir)/config/rules.mk
