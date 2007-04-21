@@ -844,7 +844,8 @@ nsresult
 nsXTFElementWrapper::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   nsresult rv = NS_OK;
-  if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault) {
+  if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
+      !(mNotificationMask & nsIXTFElement::NOTIFY_HANDLE_DEFAULT)) {
     return rv;
   }
 
