@@ -416,8 +416,6 @@ public:
     cairo_font_face_t *CairoFontFace();
     cairo_scaled_font_t *CairoScaledFont();
     SCRIPT_CACHE *ScriptCache() { return &mScriptCache; }
-    const gfxMatrix& CurrentMatrix() const { return mCTM; }
-    void UpdateCTM(const gfxMatrix& aMatrix);
     gfxFloat GetAdjustedSize() { MakeHFONT(); return mAdjustedSize; }
 
     virtual nsString GetUniqueName();
@@ -434,7 +432,6 @@ protected:
 
     HFONT mFont;
     gfxFloat mAdjustedSize;
-    gfxMatrix mCTM;
 
 private:
     void Destroy();
