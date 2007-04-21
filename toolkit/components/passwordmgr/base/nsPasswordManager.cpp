@@ -609,6 +609,17 @@ nsPasswordManager::AddUserFull(const nsACString& aKey,
                                const nsAString& aUserFieldName,
                                const nsAString& aPassFieldName)
 {
+	return AddUserFull2(aKey, aUser, aPassword, aUserFieldName, aPassFieldName, NS_LITERAL_CSTRING(""));
+}
+
+NS_IMETHODIMP
+nsPasswordManager::AddUserFull2(const nsACString& aKey,
+                                const nsAString& aUser,
+                                const nsAString& aPassword,
+                                const nsAString& aUserFieldName,
+                                const nsAString& aPassFieldName,
+                                const nsACString& aActionURL)
+{
   // Silently ignore an empty username/password entry.
   // There's no point in taking up space in the signon file with this.
   if (aUser.IsEmpty() && aPassword.IsEmpty())
@@ -633,6 +644,7 @@ nsPasswordManager::AddUserFull(const nsACString& aKey,
   }
 
   SignonDataEntry* entry = new SignonDataEntry();
+  entry->actionOrigin.Assign(aActionURL);
   entry->userField.Assign(aUserFieldName);
   entry->passField.Assign(aPassFieldName);
   EncryptDataUCS2(aUser, entry->userValue);
