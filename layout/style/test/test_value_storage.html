@@ -66,9 +66,7 @@ var gNotAccepted = {
   "-moz-user-select": [ "auto" ],
   "background-color": [ "rgb(255.0,0.387,3489)" ],
   "content": [ "none" ],
-  "cue": [ "none none", "none url(404.wav)" ],
   "list-style": [ "none disc outside" ],
-  "speak-punctuation": [ "none" ],
 };
 
 var gSpecialFont = [
@@ -144,15 +142,6 @@ function xfail_idparseser(property, value)
     // We already failed the first test, which will make us always pass this
     // one.
     return false;
-
-  // parse-serialize reverses pause and cue
-  if ((property == "cue" || property == "pause") &&
-      value.match(/ /) && !value.match(/^(.*) \1$/))
-    return true;
-
-  // Can't parse "cue: none none"
-  if (property == "cue" && value == "none")
-    return true;
 
   return false;
 }

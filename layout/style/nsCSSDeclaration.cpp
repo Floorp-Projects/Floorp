@@ -629,9 +629,9 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       break;
     }
     case eCSSProperty_cue: {
-      if (AppendValueToString(eCSSProperty_cue_after, aValue)) {
+      if (AppendValueToString(eCSSProperty_cue_before, aValue)) {
         aValue.Append(PRUnichar(' '));
-        if (!AppendValueToString(eCSSProperty_cue_before, aValue))
+        if (!AppendValueToString(eCSSProperty_cue_after, aValue))
           aValue.Truncate();
       }
       break;
@@ -673,9 +673,9 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       break;
     }
     case eCSSProperty_pause: {
-      if (AppendValueToString(eCSSProperty_pause_after, aValue)) {
+      if (AppendValueToString(eCSSProperty_pause_before, aValue)) {
         aValue.Append(PRUnichar(' '));
-        if (!AppendValueToString(eCSSProperty_pause_before, aValue))
+        if (!AppendValueToString(eCSSProperty_pause_after, aValue))
           aValue.Truncate();
       }
       break;

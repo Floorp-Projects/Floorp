@@ -3983,7 +3983,7 @@ nsRuleNode::ComputeXULData(nsStyleStruct* aStartStruct,
   if (eCSSUnit_Number == xulData.mBoxFlex.GetUnit()) {
     xul->mBoxFlex = xulData.mBoxFlex.GetFloatValue();
   }
-  else if (eCSSUnit_Inherit == xulData.mBoxOrient.GetUnit()) {
+  else if (eCSSUnit_Inherit == xulData.mBoxFlex.GetUnit()) {
     inherited = PR_TRUE;
     xul->mBoxFlex = parentXUL->mBoxFlex;
   }
