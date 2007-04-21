@@ -1,0 +1,138 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Password Manager</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Password Manager test: 360493
+<p id="display"></p>
+<div id="content" style="display: none">
+
+  <!-- normal form with normal relative action. -->
+  <form action="formtest.js" method="get">
+    <input  type="text"       name="uname1" value="">
+    <input  type="password"   name="pword1" value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- fully specify the action URL -->
+  <form action="http://localhost:8888/tests/toolkit/components/passwordmgr/test/formtest.js" method="get">
+    <input  type="text"       name="uname2" value="">
+    <input  type="password"   name="pword2" value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- fully specify the action URL, and change the path -->
+  <form action="http://localhost:8888/zomg/wtf/bbq/passwordmgr/test/formtest.js" method="get">
+    <input  type="text"       name="uname3" value="">
+    <input  type="password"   name="pword3" value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- fully specify the action URL, and change the path and filename -->
+  <form action="http://localhost:8888/zomg/wtf/bbq/passwordmgr/test/not_a_test.js" method="get">
+    <input  type="text"       name="uname4" value="">
+    <input  type="password"   name="pword4" value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- specify the action URL relative to the current document-->
+  <form action="./formtest.js" method="get">
+    <input  type="text"       name="uname5" value="">
+    <input  type="password"   name="pword5" value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- specify the action URL relative to the current server -->
+  <form action="/tests/toolkit/components/passwordmgr/test/formtest.js" method="get">
+    <input  type="text"       name="uname6" value="">
+    <input  type="password"   name="pword6" value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- Change the method from get to post -->
+  <form action="formtest.js" method="POST">
+    <input  type="text"       name="uname7" value="">
+    <input  type="password"   name="pword7" value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- Blank action URL specified -->
+  <form action="" method="get">
+    <input  type="text"       name="uname8" value="">
+    <input  type="password"   name="pword8" value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- |action| attribute entirely missing -->
+  <form method="get">
+    <input  type="text"       name="uname9" value="">
+    <input  type="password"   name="pword9" value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- action url as javascript -->
+  <form action="javascript:alert('this form is not submitted so this alert should not be invoked');">
+    <input  type="text"       name="uname10" value="">
+    <input  type="password"   name="pword10" value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- TODO: action=IP.ADDRESS instead of HOSTNAME? -->
+  <!-- TODO: test with |base href="http://othersite//"| ? -->
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Password Manger: 360493 (Cross-Site Forms + Password Manager = Security Failure) **/
+
+// This test is designed to make sure variations on the form's |action| and |method|
+// continue to work with the fix for 360493.
+
+function startTest() {
+  for (var i = 1; i <= 9; i++) {
+    // Check form i
+    is($_("uname" + i).value, "testuser" + i, "Checking for filled username " + i);
+    is($_("pword" + i).value, "testpass" + i, "Checking for filled password " + i);
+  }
+
+  // Not sure if we spec'd how JS urls should be handled here.
+  todo($_("uname10") == "testuser10", "Checking for filled username when action is js: URL");
+  todo($_("upass10") == "testpass10", "Checking for filled password when action is js: URL");
+
+  SimpleTest.finish();
+}
+
+window.onload = startTest;
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Password Manager</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Password Manager test: forms with 2 password fields (form filling)
+<p id="display"></p>
+
+<div id="content" style="display: none">
+  <p>The next three forms are <b>user/pass/pass-new</b>, as all-empty, prefilled user(only), and prefilled user/pass</p>
+  <form id="form1" onsubmit="return checkSubmit(1)" action="formtest.js" method="get">
+    <input  type="text"       name="uname1"  value="">
+    <input  type="password"   name="pword1"  value="">
+    <input  type="password"   name="pword1B" value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <form id="form2" onsubmit="return checkSubmit(2)" action="formtest.js" method="get">
+    <input  type="text"       name="uname2"  value="testuser2">
+    <input  type="password"   name="pword2"  value="">
+    <input  type="password"   name="pword2B" value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <form id="form3" onsubmit="return checkSubmit(3)" action="formtest.js" method="get">
+    <input  type="text"       name="uname3"  value="testuser3">
+    <input  type="password"   name="pword3"  value="testpass3">
+    <input  type="password"   name="pword3B" value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+
+  <p>The next three forms are <b>user/pass-new/pass</b>, as all-empty, prefilled user(only), and prefilled user/pass</p>
+  <form id="form4" onsubmit="return checkSubmit(4)" action="formtest.js" method="get">
+    <input  type="text"       name="uname4"  value="">
+    <input  type="password"   name="pword4B" value="">
+    <input  type="password"   name="pword4"  value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <form id="form5" onsubmit="return checkSubmit(5)" action="formtest.js" method="get">
+    <input  type="text"       name="uname5"  value="testuser5">
+    <input  type="password"   name="pword5B" value="">
+    <input  type="password"   name="pword5"  value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <form id="form6" onsubmit="return checkSubmit(6)" action="formtest.js" method="get">
+    <input  type="text"       name="uname6"  value="testuser6">
+    <input  type="password"   name="pword6B" value="">
+    <input  type="password"   name="pword6"  value="testpass6">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Password Manger: form fill, 2 password fields **/
+
+// This test simply checks to make sure pwmgr can autofill forms with 2 password fields.
+
+var numSubmittedForms = 0;
+var numStartingLogins = 0;
+
+function startTest() {
+  // Check for unfilled form 1
+  is($_("uname1").value,  "testuser1", "Checking username1");
+  is($_("pword1").value,  "testpass1", "Checking password1");
+  is($_("pword1B").value, "", "Checking password1B");
+
+  // Check for unfilled form 2
+  is($_("uname2").value,  "testuser2", "Checking username2");
+  is($_("pword2").value,  "testpass2", "Checking password2");
+  is($_("pword2B").value, "", "Checking password2B");
+
+  // Check for unfilled form 3
+  is($_("uname3").value,  "testuser3", "Checking username3");
+  is($_("pword3").value,  "testpass3", "Checking password3");
+  is($_("pword3B").value, "", "Checking password3B");
+
+  // Check for unfilled form 4
+  is($_("uname4").value,  "testuser4", "Checking username4");
+  is($_("pword4").value,  "testpass4", "Checking password4");
+  is($_("pword4B").value, "", "Checking password4B");
+
+  // Check for unfilled form 5
+  is($_("uname5").value,  "testuser5", "Checking username5");
+  is($_("pword5").value,  "testpass5", "Checking password5");
+  is($_("pword5B").value, "", "Checking password5B");
+
+  // Check for unfilled form 6
+  is($_("uname6").value,  "testuser6", "Checking username6");
+  is($_("pword6").value,  "testpass6", "Checking password6");
+  is($_("pword6B").value, "", "Checking password6B");
+
+  SimpleTest.finish();
+}
+
+window.onload = startTest;
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
+
