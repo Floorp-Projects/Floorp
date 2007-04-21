@@ -77,6 +77,7 @@ _TEST_FILES = 	test_bug302186.html \
 		test_initial_computation.html \
 		test_property_database.html \
 		test_property_syntax_errors.html \
+		test_style_struct_copy_constructors.html \
 		test_value_storage.html \
 		test_value_computation.html \
 		css_properties.js \
