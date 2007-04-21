@@ -1,7 +1,6 @@
 <!ENTITY window.width                                   "30em">
 
 <!ENTITY languages.customize.Header                     "Languages">
-<!ENTITY languages.customize.label                      "Languages">
 <!ENTITY languages.customize.prefLangDescript           "Web pages are sometimes offered in more than one language. Choose languages for displaying these web pages, in order of preference.">
 <!ENTITY languages.customize.active.label               "Languages in order of preference:">
 <!ENTITY languages.customize.moveUp.label               "Move Up">
