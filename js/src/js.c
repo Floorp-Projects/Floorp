@@ -1398,7 +1398,8 @@ DumpHeap(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else {
         dumpFile = fopen(fileName, "w");
         if (!dumpFile) {
-            fprintf(gErrFile, "gc: can't open %s: %s\n", strerror(errno));
+            fprintf(gErrFile, "dumpHeap: can't open %s: %s\n",
+                    fileName, strerror(errno));
             return JS_FALSE;
         }
     }
