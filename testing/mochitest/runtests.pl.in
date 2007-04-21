@@ -97,7 +97,7 @@ use constant CHROMETESTS_URL => "http://" . TEST_SERVER_HOST . CHROME_PATH;
  # Max time in seconds to wait for server startup before tests will fail -- if
  # this seems big, it's mostly for debug machines where cold startup
  # (particularly after a build) takes forever.
-use constant SERVER_STARTUP_TIMEOUT => 15;
+use constant SERVER_STARTUP_TIMEOUT => 45;
 
 my $profile = "mochitesttestingprofile";
 my $profile_dir = "$FindBin::Bin/$profile";
