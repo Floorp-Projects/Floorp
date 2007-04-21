@@ -87,6 +87,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsDisplayList.h"
 #include "nsContentErrors.h"
+#include "nsCSSAnonBoxes.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -5943,7 +5944,14 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
   else {
     nsPresContext* presContext = PresContext();
 
+    // A block that's part of an {ib} split can't have a first-letter frame, no
+    // matter what its style says.  Neither can a block with a previous
+    // continuation.  Unfortunately, we can get SetInitialChildList() called on
+    // us before we have the NS_FRAME_IS_SPECIAL bit set for an {ib} split, so
+    // check our style context pseudo instead.
     NS_ASSERTION(GetPrevContinuation() ||
+                 (GetStyleContext()->GetPseudoType() ==
+                  nsCSSAnonBoxes::mozAnonymousBlock) ||
                  (nsRefPtr<nsStyleContext>(GetFirstLetterStyle(presContext)) !=
                   nsnull) ==
                  ((mState & NS_BLOCK_HAS_FIRST_LETTER_STYLE) != 0),
