@@ -750,7 +750,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 
     cb.DescribeNode(refcount, sizeof(JSObject), name);
 #else
-    cb.DescribeNode(refcount, sizeof(JSObject), "JS Object");
+    cb.DescribeNode(refcount);
 #endif
     if (!p)
         return NS_OK;    
