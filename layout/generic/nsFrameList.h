@@ -121,10 +121,6 @@ public:
    */
   void SortByContentOrder();
 
-  nsIFrame* PullFrame(nsIFrame* aParent,
-                      nsIFrame* aLastChild,
-                      nsFrameList& aFromList);
-
   nsIFrame* FirstChild() const {
     return mFirstChild;
   }

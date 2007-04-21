@@ -160,12 +160,14 @@ protected:
   struct InlineReflowState {
     nsIFrame* mPrevFrame;
     nsInlineFrame* mNextInFlow;
+    nsIFrame*      mLineContainer;
     PRPackedBool mSetParentPointer;  // when reflowing child frame first set its
                                      // parent frame pointer
 
     InlineReflowState()  {
       mPrevFrame = nsnull;
       mNextInFlow = nsnull;
+      mLineContainer = nsnull;
       mSetParentPointer = PR_FALSE;
     };
   };
@@ -185,6 +187,15 @@ protected:
                              InlineReflowState& rs,
                              nsIFrame* aFrame,
                              nsReflowStatus& aStatus);
+
+  /**
+   * Reparent floats whose placeholders are inline descendants of aFrame from
+   * whatever block they're currently parented by to aOurBlock.
+   * @param aReparentSiblings if this is true, we follow aFrame's
+   * GetNextSibling chain reparenting them all
+   */
+  void ReparentFloatsForInlineChild(nsIFrame* aOurBlock, nsIFrame* aFrame,
+                                    PRBool aReparentSiblings);
 
   virtual nsIFrame* PullOneFrame(nsPresContext* aPresContext,
                                  InlineReflowState& rs,
