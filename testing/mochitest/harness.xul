@@ -56,7 +56,7 @@
   </script>
   <vbox>   
     <button label="Run Chrome Tests" id="runtests" />
-    <body xmlns="http://www.w3.org/1999/xhtml">
+    <body xmlns="http://www.w3.org/1999/xhtml" id="xulharness">
       <div class="container">
 	<p style="float:right;">
 	  <small>Based on the MochiKit unit tests.</small>

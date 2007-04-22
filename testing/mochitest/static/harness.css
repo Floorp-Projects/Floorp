@@ -4,6 +4,9 @@ body   {
   font-family: Verdana, Helvetica, Arial, sans-serif;
   font-size: 11px;
   background-color: #fff;
+}
+
+#xulharness {
   position: fixed; 
   top: 30px;
   bottom: 0;
