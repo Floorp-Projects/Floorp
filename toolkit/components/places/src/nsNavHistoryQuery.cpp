@@ -1095,9 +1095,22 @@ nsNavHistoryQueryOptions::GetSortingMode(PRUint32* aMode)
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::SetSortingMode(PRUint32 aMode)
 {
-  if (aMode > SORT_BY_VISITCOUNT_DESCENDING)
+  if (aMode > SORT_BY_ANNOTATION_DESCENDING)
     return NS_ERROR_INVALID_ARG;
   mSort = aMode;
+  return NS_OK;
+}
+
+// sortingAnnotation
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetSortingAnnotation(nsACString& _result) {
+  _result.Assign(mSortingAnnotation);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::SetSortingAnnotation(const nsACString& aSortingAnnotation) {
+  mSortingAnnotation.Assign(aSortingAnnotation);
   return NS_OK;
 }
 
