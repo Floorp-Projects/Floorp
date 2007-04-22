@@ -1966,7 +1966,7 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
 
   PRInt32 sortingMode = aOptions->SortingMode();
   if (sortingMode < 0 ||
-      sortingMode > nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_DESCENDING) {
+      sortingMode > nsINavHistoryQueryOptions::SORT_BY_ANNOTATION_DESCENDING) {
     return NS_ERROR_INVALID_ARG;
   }
 

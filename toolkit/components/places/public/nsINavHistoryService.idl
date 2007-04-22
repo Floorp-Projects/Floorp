@@ -674,7 +674,7 @@ interface nsINavHistoryResultTreeViewer : nsINavHistoryResultViewer
  * through the nsINavHistoryResultViewObserver interface.
  */
 
-[scriptable, uuid(25b45a94-3323-4c7b-910a-315f2c59bfb4)]
+[scriptable, uuid(412cd7f6-9ed6-4ef5-a734-ec7b50366dd6)]
 interface nsINavHistoryResult : nsISupports
 {
   /**
@@ -684,6 +684,12 @@ interface nsINavHistoryResult : nsISupports
    * always give you the current view.
    */
   attribute PRUint32 sortingMode;
+
+  /**
+   * The annotation to use in SORT_BY_ANNOTATION_* sorting modes, set this
+   * before setting the sortingMode attribute.
+   */
+  attribute AUTF8String sortingAnnotation;
 
   /**
    * The viewer for this result (see comment for the class for how these
@@ -948,7 +954,7 @@ interface nsINavHistoryQuery : nsISupports
 /**
  * This object represents the global options for executing a query.
  */
-[scriptable, uuid(25fd4de4-33b0-475e-a63d-2bcb1d123e0d)]
+[scriptable, uuid(4e6033f1-3832-4003-ad71-9695f64fa7b4)]
 interface nsINavHistoryQueryOptions : nsISupports
 {
   /**
@@ -1003,6 +1009,8 @@ interface nsINavHistoryQueryOptions : nsISupports
   const PRUint32 SORT_BY_URI_DESCENDING = 6;
   const PRUint32 SORT_BY_VISITCOUNT_ASCENDING = 7;
   const PRUint32 SORT_BY_VISITCOUNT_DESCENDING = 8;
+  const PRUint32 SORT_BY_ANNOTATION_ASCENDING = 9;
+  const PRUint32 SORT_BY_ANNOTATION_DESCENDING = 10;
 
   /**
    * "URI" results, one for each URI visited in the range. Individual result
@@ -1044,6 +1052,11 @@ interface nsINavHistoryQueryOptions : nsISupports
    * mode is one of SORT_BY_*
    */
   attribute PRUint32 sortingMode;
+
+  /**
+   * The annotation to use in SORT_BY_ANNOTATION_* sorting modes.
+   */
+  attribute AUTF8String sortingAnnotation;
 
   /**
    * Sets the result type. One of RESULT_TYPE_* which includes how URIs are
