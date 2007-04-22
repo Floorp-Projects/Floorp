@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Password Manager</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Password Manager test: 270558
+<p id="display"></p>
+<div id="content" style="display: none">
+
+  <!-- normal, simple form. -->
+  <form action="formtest.js" method="get">
+    <input  type="text"       name="uname1" value="">
+    <input  type="password"   name="pword1" value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- prefilled with correct username -->
+  <form action="formtest.js" method="get">
+    <input  type="text"       name="uname2" value="testuser2">
+    <input  type="password"   name="pword2" value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- prefilled with correct password -->
+  <form action="formtest.js" method="get">
+    <input  type="text"       name="uname3" value="">
+    <input  type="password"   name="pword3" value="testpass3">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- prefilled with correct username and password -->
+  <form action="formtest.js" method="get">
+    <input  type="text"       name="uname4" value="testuser4">
+    <input  type="password"   name="pword4" value="testpass4">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- prefilled with an unknown username (don't clobber it!) -->
+  <form action="formtest.js" method="get">
+    <input  type="text"       name="uname5" value="xxORIG5xx">
+    <input  type="password"   name="pword5" value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- prefilled with an unknown password (don't clobber it!) -->
+  <form action="formtest.js" method="get">
+    <input  type="text"       name="uname6" value="">
+    <input  type="password"   name="pword6" value="xxORIG6xx">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- prefilled with an unknown username and password (don't clobber it!) -->
+  <form action="formtest.js" method="get">
+    <input  type="text"       name="uname7" value="xxORIG7Uxx">
+    <input  type="password"   name="pword7" value="xxORIG7Pxx">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!--  prefilled with a known username, but not for these inputs. -->
+  <form action="formtest.js" method="get">
+    <input  type="text"       name="uname8" value="testuser9">
+    <input  type="password"   name="pword8" value="">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <!-- TODO: test when multiple matching accounts are known -->
+  <!-- TODO: test with prefilled known login for some other site and/or action url. -->
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Password Manger: 270558 (Password manager should not fill in username and
+    password if the username field is pre-filled by the server to a different username.
+    (frequent problem with phpBB admin interface)) **/
+
+// This test ensures pwmgr will not overwrite a prefilled username or password.
+
+function startTest() {
+  // These form are partially filled with correct login info.
+  for (var i = 1; i <= 4; i++) {
+    // Check form i
+    is($_("uname" + i).value, "testuser" + i, "Checking for filled username " + i);
+    is($_("pword" + i).value, "testpass" + i, "Checking for filled password " + i);
+  }
+
+  // These test forms partially filled with unknown login info (so pwmgr shouldn't touch them).
+  is($_("uname5").value, "xxORIG5xx", "Checking for filled username ");
+  is($_("pword5").value, "", "Checking for filled password ");
+
+  todo(false, "pwmgr will clobber the prefilled data in this weird edge case.");
+  if (false) {
+    is($_("uname6").value, "", "Checking for filled username ");
+    is($_("pword6").value, "xxORIG6xx", "Checking for filled password ");
+  }
+
+  is($_("uname7").value, "xxORIG7Uxx", "Checking for filled username ");
+  is($_("pword7").value, "xxORIG7Pxx", "Checking for filled password ");
+
+  // This tests a form with a known username, but in the wrong inputs.
+  is($_("uname8").value, "testuser9", "Checking for filled username ");
+  is($_("pword8").value, "", "Checking for filled password ");
+
+  SimpleTest.finish();
+}
+
+window.onload = startTest;
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
+
