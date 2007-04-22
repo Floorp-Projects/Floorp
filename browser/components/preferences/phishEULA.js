@@ -92,9 +92,15 @@ var gPhishDialog = {
 
     // add progress listener to enable OK, radios when page loads
     var frame = document.getElementById("phishPolicyFrame");
-    var webProgress = frame.docShell
-                           .QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIWebProgress);
+    var docShell = frame.docShell;
+
+    // disable unnecessary features
+    docShell.allowAuth = false;
+    docShell.allowPlugins = false;
+    docShell.allowSubframes = false;
+
+    var webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIWebProgress);
     webProgress.addProgressListener(this._progressListener,
                                     Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
 
