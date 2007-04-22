@@ -3012,8 +3012,15 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 #if DEBUG_IME 
   NSLog(@"**** in doCommandBySelector %s (ignore %d)", aSelector, mIgnoreDoCommand);
 #endif
-  if (!mIgnoreDoCommand)
-    [super doCommandBySelector:aSelector];
+  if (mIgnoreDoCommand)
+    return;
+
+  if (aSelector == @selector(insertNewline:)) {
+    [self insertText:@"\n"];
+    return;
+  }
+
+  [super doCommandBySelector:aSelector];
 }
 
 
