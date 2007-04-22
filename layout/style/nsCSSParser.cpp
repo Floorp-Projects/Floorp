@@ -3052,7 +3052,7 @@ PRBool CSSParserImpl::ParseColorComponent(nsresult& aErrorCode,
   if (ExpectSymbol(aErrorCode, aStop, PR_TRUE)) {
     if (value < 0.0f) value = 0.0f;
     if (value > 255.0f) value = 255.0f;
-    aComponent = (PRUint8) value;
+    aComponent = NSToIntRound(value);
     return PR_TRUE;
   }
   const PRUnichar stopString[] = { PRUnichar(aStop), PRUnichar(0) };
