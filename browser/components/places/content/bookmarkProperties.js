@@ -736,7 +736,7 @@ var BookmarkPropertiesPanel = {
   _getDescriptionAnnotation:
   function BPP__getDescriptionAnnotation(aDescription) {
     var anno = { name: DESCRIPTION_ANNO,
-                 type: Ci.mozIStorageValueArray.VALUE_TYPE_TEXT,
+                 type: Ci.nsIAnnotationService.TYPE_STRING,
                  flags: 0,
                  value: aDescription,
                  expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
@@ -762,7 +762,7 @@ var BookmarkPropertiesPanel = {
   _getLoadInSidebarAnnotation:
   function BPP__getLoadInSidebarAnnotation(aLoadInSidebar) {
     var anno = { name: LOAD_IN_SIDEBAR_ANNO,
-                 type: Ci.mozIStorageValueArray.VALUE_TYPE_INTEGER,
+                 type: Ci.nsIAnnotationsService.TYPE_INT32,
                  flags: 0,
                  value: aLoadInSidebar,
                  expires: Ci.nsIAnnotationService.EXPIRE_NEVER };

@@ -2068,7 +2068,7 @@ PlacesSetLoadInSidebarTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
   _anno: {
     name: LOAD_IN_SIDEBAR_ANNO,
-    type: Ci.mozIStorageValueArray.VALUE_TYPE_INTEGER,
+    type: Ci.nsIAnnotationService.TYPE_INT32,
     value: 1,
     flags: 0,
     expires: Ci.nsIAnnotationService.EXPIRE_NEVER

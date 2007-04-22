@@ -101,6 +101,13 @@ interface nsIAnnotationService : nsISupports
       // For small, user-entered data like notes that should never expire.
     const PRInt32 EXPIRE_NEVER = 4;
 
+    // type constants
+    const PRInt32 TYPE_INT32  = 1;
+    const PRInt32 TYPE_DOUBLE = 2;
+    const PRInt32 TYPE_STRING = 3;
+    const PRInt32 TYPE_BINARY = 4;
+    const PRInt32 TYPE_INT64  = 5;
+
     /**
      * Sets an annotation, overwriting any previous annotation with the same
      * URL/name. IT IS YOUR JOB TO NAMESPACE YOUR ANNOTATION NAMES.

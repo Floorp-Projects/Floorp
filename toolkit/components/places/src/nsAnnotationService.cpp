@@ -56,6 +56,7 @@ const PRInt32 nsAnnotationService::kAnnoIndex_MimeType = 3;
 const PRInt32 nsAnnotationService::kAnnoIndex_Content = 4;
 const PRInt32 nsAnnotationService::kAnnoIndex_Flags = 5;
 const PRInt32 nsAnnotationService::kAnnoIndex_Expiration = 6;
+const PRInt32 nsAnnotationService::kAnnoIndex_Type = 7;
 
 nsAnnotationService* nsAnnotationService::gAnnotationService;
 
@@ -103,7 +104,7 @@ nsAnnotationService::Init()
   // mDBSetAnnotation
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "UPDATE moz_annos "
-      "SET mime_type = ?4, content = ?5, flags = ?6, expiration = ?7 "
+      "SET mime_type = ?4, content = ?5, flags = ?6, expiration = ?7, type = ?8 "
       "WHERE id = ?1"),
     getter_AddRefs(mDBSetAnnotation));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -127,7 +128,8 @@ nsAnnotationService::Init()
 
   // mDBGetAnnotationFromURI
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT a.id, a.place_id, ?2, a.mime_type, a.content, a.flags, a.expiration "
+      "SELECT a.id, a.place_id, ?2, a.mime_type, a.content, a.flags, "
+        "a.expiration, a.type "
       "FROM moz_places h JOIN moz_annos a ON h.id = a.place_id "
       "WHERE h.url = ?1 AND a.anno_attribute_id = "
       "(SELECT id FROM moz_anno_attributes WHERE name = ?2)"),
@@ -150,8 +152,8 @@ nsAnnotationService::Init()
   //   Note: kAnnoIndex_Name here is a name ID and not a string like the getters
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "INSERT INTO moz_annos "
-      "(place_id, anno_attribute_id, mime_type, content, flags, expiration) "
-      "VALUES (?2, ?3, ?4, ?5, ?6, ?7)"),
+      "(place_id, anno_attribute_id, mime_type, content, flags, expiration, type) "
+      "VALUES (?2, ?3, ?4, ?5, ?6, ?7, ?8)"),
     getter_AddRefs(mDBAddAnnotation));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -226,7 +228,8 @@ nsAnnotationService::SetAnnotationString(nsIURI* aURI,
 {
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
   mozIStorageStatement* statement; // class var, not owned by this function
-  nsresult rv = StartSetAnnotation(aURI, aName, aFlags, aExpiration, &statement);
+  nsresult rv = StartSetAnnotation(aURI, aName, aFlags, aExpiration,
+                                   nsIAnnotationService::TYPE_STRING, &statement);
   NS_ENSURE_SUCCESS(rv, rv);
   mozStorageStatementScoper statementResetter(statement);
 
@@ -258,7 +261,9 @@ nsAnnotationService::SetAnnotationInt32(nsIURI* aURI,
 {
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
   mozIStorageStatement* statement; // class var, not owned by this function
-  nsresult rv = StartSetAnnotation(aURI, aName, aFlags, aExpiration, &statement);
+  nsresult rv = StartSetAnnotation(aURI, aName, aFlags, aExpiration,
+                                   nsIAnnotationService::TYPE_INT32,
+                                   &statement);
   NS_ENSURE_SUCCESS(rv, rv);
   mozStorageStatementScoper statementResetter(statement);
 
@@ -290,7 +295,9 @@ nsAnnotationService::SetAnnotationInt64(nsIURI* aURI,
 {
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
   mozIStorageStatement* statement; // class var, not owned by this function
-  nsresult rv = StartSetAnnotation(aURI, aName, aFlags, aExpiration, &statement);
+  nsresult rv = StartSetAnnotation(aURI, aName, aFlags, aExpiration,
+                                   nsIAnnotationService::TYPE_INT64,
+                                   &statement);
   NS_ENSURE_SUCCESS(rv, rv);
   mozStorageStatementScoper statementResetter(statement);
 
@@ -322,7 +329,9 @@ nsAnnotationService::SetAnnotationDouble(nsIURI* aURI,
 {
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
   mozIStorageStatement* statement; // class var, not owned by this function
-  nsresult rv = StartSetAnnotation(aURI, aName, aFlags, aExpiration, &statement);
+  nsresult rv = StartSetAnnotation(aURI, aName, aFlags, aExpiration,
+                                   nsIAnnotationService::TYPE_DOUBLE,
+                                   &statement);
   NS_ENSURE_SUCCESS(rv, rv);
   mozStorageStatementScoper statementResetter(statement);
 
@@ -359,7 +368,9 @@ nsAnnotationService::SetAnnotationBinary(nsIURI* aURI,
 
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
   mozIStorageStatement* statement; // class var, not owned by this function
-  nsresult rv = StartSetAnnotation(aURI, aName, aFlags, aExpiration, &statement);
+  nsresult rv = StartSetAnnotation(aURI, aName, aFlags, aExpiration,
+                                   nsIAnnotationService::TYPE_BINARY,
+                                   &statement);
   NS_ENSURE_SUCCESS(rv, rv);
   mozStorageStatementScoper statementResetter(statement);
 
@@ -391,6 +402,8 @@ nsAnnotationService::GetAnnotationString(nsIURI* aURI,
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
   if (NS_FAILED(rv))
     return rv;
+  PRInt32 type = mDBGetAnnotationFromURI->AsInt32(kAnnoIndex_Type);
+  NS_ENSURE_TRUE(type == nsIAnnotationService::TYPE_STRING, NS_ERROR_INVALID_ARG);
   rv = mDBGetAnnotationFromURI->GetString(kAnnoIndex_Content, _retval);
   mDBGetAnnotationFromURI->Reset();
   return rv;
@@ -407,6 +420,8 @@ nsAnnotationService::GetAnnotationInt32(nsIURI* aURI,
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
   if (NS_FAILED(rv))
     return rv;
+  PRInt32 type = mDBGetAnnotationFromURI->AsInt32(kAnnoIndex_Type);
+  NS_ENSURE_TRUE(type == nsIAnnotationService::TYPE_INT32, NS_ERROR_INVALID_ARG);
   *_retval = mDBGetAnnotationFromURI->AsInt32(kAnnoIndex_Content);
   mDBGetAnnotationFromURI->Reset();
   return NS_OK;
@@ -423,6 +438,8 @@ nsAnnotationService::GetAnnotationInt64(nsIURI* aURI,
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
   if (NS_FAILED(rv))
     return rv;
+  PRInt32 type = mDBGetAnnotationFromURI->AsInt32(kAnnoIndex_Type);
+  NS_ENSURE_TRUE(type == nsIAnnotationService::TYPE_INT64, NS_ERROR_INVALID_ARG);
   *_retval = mDBGetAnnotationFromURI->AsInt64(kAnnoIndex_Content);
   mDBGetAnnotationFromURI->Reset();
   return NS_OK;
@@ -439,6 +456,8 @@ nsAnnotationService::GetAnnotationDouble(nsIURI* aURI,
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
   if (NS_FAILED(rv))
     return rv;
+  PRInt32 type = mDBGetAnnotationFromURI->AsInt32(kAnnoIndex_Type);
+  NS_ENSURE_TRUE(type == nsIAnnotationService::TYPE_DOUBLE, NS_ERROR_INVALID_ARG);
   *_retval = mDBGetAnnotationFromURI->AsDouble(kAnnoIndex_Content);
   mDBGetAnnotationFromURI->Reset();
   return NS_OK;
@@ -456,6 +475,8 @@ nsAnnotationService::GetAnnotationBinary(nsIURI* aURI,
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
   if (NS_FAILED(rv))
     return rv;
+  PRInt32 type = mDBGetAnnotationFromURI->AsInt32(kAnnoIndex_Type);
+  NS_ENSURE_TRUE(type == nsIAnnotationService::TYPE_BINARY, NS_ERROR_INVALID_ARG);
   rv = mDBGetAnnotationFromURI->GetBlob(kAnnoIndex_Content, aDataLen, aData);
   if (NS_FAILED(rv)) {
     mDBGetAnnotationFromURI->Reset();
@@ -485,7 +506,14 @@ nsAnnotationService::GetAnnotationInfo(nsIURI* aURI,
   *aExpiration = mDBGetAnnotationFromURI->AsInt32(kAnnoIndex_Expiration);
   rv = mDBGetAnnotationFromURI->GetUTF8String(kAnnoIndex_MimeType, aMimeType);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBGetAnnotationFromURI->GetTypeOfIndex(kAnnoIndex_Content, aStorageType);
+  PRInt32 type = mDBGetAnnotationFromURI->AsInt32(kAnnoIndex_Type);
+  if (type == 0) {
+    // For annotations created before explicit typing,
+    // we can't determine type, just return as string type.
+    *aStorageType = nsIAnnotationService::TYPE_STRING;
+  } else {
+    *aStorageType = type;
+  }
   return rv;
 }
 
@@ -954,6 +982,7 @@ nsresult
 nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
                                         const nsACString& aName,
                                         PRInt32 aFlags, PRInt32 aExpiration,
+                                        PRInt32 aType,
                                         mozIStorageStatement** aStatement)
 {
   nsresult rv;
@@ -1009,6 +1038,8 @@ nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
   rv = (*aStatement)->BindInt32Parameter(kAnnoIndex_Flags, aFlags);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = (*aStatement)->BindInt32Parameter(kAnnoIndex_Expiration, aExpiration);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = (*aStatement)->BindInt32Parameter(kAnnoIndex_Type, aType);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // on success, leave the statement open, the caller will set the value
