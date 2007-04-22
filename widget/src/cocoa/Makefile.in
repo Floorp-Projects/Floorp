@@ -76,6 +76,7 @@ REQUIRES = xpcom \
 		  cairo \
 		  js \
 		  xpconnect \
+		  imglib2 \
 		  $(NULL)
 
 ifdef MOZ_ENABLE_GLITZ
@@ -96,6 +97,7 @@ CMMSRCS = \
 		nsMenuX.mm \
 		nsMenuBarX.mm \
 		nsMenuItemX.mm \
+		nsMenuItemIconX.mm \
 		nsFilePicker.mm \
 		nsDragService.mm \
 		nsToolkit.mm \

@@ -55,6 +55,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMDocumentEvent.h"
 
+#include "nsMenuItemIconX.h"
 #include "nsGUIEvent.h"
 
 
@@ -141,6 +142,8 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, PRBool 
     
     [mNativeMenuItem setEnabled:(BOOL)mEnabled];
   }
+
+  mIcon = new nsMenuItemIconX(NS_STATIC_CAST(nsIMenuItem*, this), mMenuParent, mContent);
   
   return NS_OK;
 }
@@ -450,6 +453,9 @@ nsMenuItemX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIC
       nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
       listener->SetRebuild(PR_TRUE);
     }
+    else if (aAttribute == nsWidgetAtoms::image) {
+      SetupIcon();
+    }
     else if (aAttribute == nsWidgetAtoms::disabled) {
       if (aContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled, nsWidgetAtoms::_true, eCaseMatters))
         [mNativeMenuItem setEnabled:NO];
@@ -511,7 +517,10 @@ nsMenuItemX::ContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32
 NS_IMETHODIMP
 nsMenuItemX::SetupIcon()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mIcon)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return mIcon->SetupIcon();
 }
 
 
