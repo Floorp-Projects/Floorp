@@ -107,6 +107,7 @@ protected:
   static const int kAnnoIndex_Content;
   static const int kAnnoIndex_Flags;
   static const int kAnnoIndex_Expiration;
+  static const int kAnnoIndex_Type;
 
   nsresult HasAnnotationInternal(PRInt64 aURLID, const nsACString& aName,
                                  PRBool* hasAnnotation, PRInt64* annotationID);
@@ -115,7 +116,7 @@ protected:
   nsresult StartSetAnnotation(nsIURI* aURI,
                               const nsACString& aName,
                               PRInt32 aFlags, PRInt32 aExpiration,
-                              mozIStorageStatement** aStatement);
+                              PRInt32 aType, mozIStorageStatement** aStatement);
   void CallSetObservers(nsIURI* aURI, const nsACString& aName);
 
   static nsresult MigrateFromAlpha1(mozIStorageConnection* aDBConn);

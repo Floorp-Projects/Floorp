@@ -383,7 +383,7 @@ nsNavHistory::Init()
 //
 
 
-#define PLACES_SCHEMA_VERSION 2
+#define PLACES_SCHEMA_VERSION 3
 
 nsresult
 nsNavHistory::InitDB(PRBool *aDoImport)
@@ -441,7 +441,7 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the places schema version, which we store in the user_version PRAGMA
-  PRInt32 schemaVersion;
+  PRInt32 DBSchemaVersion;
   {
     nsCOMPtr<mozIStorageStatement> statement;
     rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA user_version"),
@@ -452,25 +452,54 @@ nsNavHistory::InitDB(PRBool *aDoImport)
     rv = statement->ExecuteStep(&hasResult);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(hasResult, NS_ERROR_FAILURE);
-    schemaVersion = statement->AsInt32(0);
+    DBSchemaVersion = statement->AsInt32(0);
   }
    
-  if (PLACES_SCHEMA_VERSION != schemaVersion) {
-    // NOTE: We don't support downgrading back to History-only. If you want to go from
-    // newer schema version back to V0, you'll need to blow away your sqlite file.
-    // Subsequent up/downgrades will have backwards and forward migration code.
+  if (PLACES_SCHEMA_VERSION != DBSchemaVersion) {
+    // Migration How-to:
     //
-    // Migrating from schema V0 - V1 to V2.
-    if (schemaVersion < 2) {
-      // perform upgrade 
-      rv = ForceMigrateBookmarksDB(mDBConn);
-      NS_ENSURE_SUCCESS(rv, rv);
+    // 1. increment PLACES_SCHEMA_VERSION.
+    // 2. implement a method that performs up/sidegrade to your version
+    //    from the current version.
+    //
+    // NOTE: We don't support downgrading back to History-only Places.
+    // If you want to go from newer schema version back to V0, you'll need to
+    // blow away your sqlite file. Subsequent up/downgrades have backwards and
+    // forward migration code.
+    //
+    // XXX Backup places.sqlite to places-{version}.sqlite when doing db migration?
+    
+    if (DBSchemaVersion < PLACES_SCHEMA_VERSION) {
+      // Upgrading
+
+      // Migrating from schema V0/1 to V2.
+      if (DBSchemaVersion < 2) {
+        rv = ForceMigrateBookmarksDB(mDBConn);
+        NS_ENSURE_SUCCESS(rv, rv);
+      } 
+
+      if (DBSchemaVersion < 3) {
+        rv = MigrateV3Up(mDBConn);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // XXX Upgrades V3 must add migration code here.
+
     } else {
-      // perform downgrade
-      // XXX Migrations from V>=3 must add downgrade migration code here,
-      // replacing this!
-      rv = ForceMigrateBookmarksDB(mDBConn);
-      NS_ENSURE_SUCCESS(rv, rv);
+      // Downgrading
+
+      // XXX Need to prompt user or otherwise notify of 
+      // potential dataloss when downgrading.
+
+      // XXX Downgrades from >V2 must add migration code here.
+      
+      // V3: No backwards incompatible changes.
+
+      if (DBSchemaVersion > 2) {
+        // perform downgrade to v2
+        rv = ForceMigrateBookmarksDB(mDBConn);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
 
     // update schema version in the db
@@ -767,6 +796,20 @@ nsNavHistory::ForceMigrateBookmarksDB(mozIStorageConnection* aDBConn)
   return rv;
 }
 
+// nsNavHistory::MigrateV3Up
+nsresult
+nsNavHistory::MigrateV3Up(mozIStorageConnection* aDBConn) 
+{
+  // add type column to moz_annos
+  nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "ALTER TABLE moz_annos ADD type INTEGER DEFAULT 0"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // call annosvc::InitTables
+  rv = nsNavBookmarks::InitTables(aDBConn);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
 
 #ifdef IN_MEMORY_LINKS
 // nsNavHistory::InitMemDB

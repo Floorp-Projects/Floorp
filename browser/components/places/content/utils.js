@@ -1111,24 +1111,28 @@ var PlacesUtils = {
    */
   getAnnotationsForURI: function PU_getAnnotationsForURI(aURI) {
     var annosvc = this.annotations;
-    var sv = Ci.mozIStorageValueArray;
     var annos = [], val = null;
     var annoNames = annosvc.getPageAnnotationNames(aURI, {});
     for (var i = 0; i < annoNames.length; i++) {
       var flags = {}, exp = {}, mimeType = {}, storageType = {};
       annosvc.getAnnotationInfo(aURI, annoNames[i], flags, exp, mimeType, storageType);
       switch (storageType.value) {
-        case sv.VALUE_TYPE_INTEGER:
+        case annosvc.TYPE_INT32:
+          val = annosvc.getAnnotationInt32(aURI, annoNames[i]);
+          break;
+        case annosvc.TYPE_INT64:
           val = annosvc.getAnnotationInt64(aURI, annoNames[i]);
           break;
-        case sv.VALUE_TYPE_FLOAT:
+        case annosvc.TYPE_DOUBLE:
           val = annosvc.getAnnotationDouble(aURI, annoNames[i]);
           break;
-        case sv.VALUE_TYPE_TEXT:
+        case annosvc.TYPE_STRING:
           val = annosvc.getAnnotationString(aURI, annoNames[i]);
           break;
-        case sv.VALUE_TYPE_BLOB:
-          val = annosvc.getAnnotationBinary(aURI, annoNames[i]);
+        case annosvc.TYPE_BINARY:
+          var data = {}, length = {}, mimeType = {};
+          annosvc.getAnnotationBinary(aURI, annoNames[i], data, length, mimeType);
+          val = data.value;
           break;
       }
       annos.push({name: annoNames[i],
@@ -1152,25 +1156,28 @@ var PlacesUtils = {
    */
   setAnnotationsForURI: function PU_setAnnotationsForURI(aURI, aAnnos) {
     var annosvc = this.annotations;
-    var sv = Ci["mozIStorageValueArray"];
     aAnnos.forEach(function(anno) {
       switch (anno.type) {
-        case sv.VALUE_TYPE_INTEGER:
+        case annosvc.TYPE_INT32:
+          annosvc.setAnnotationInt32(aURI, anno.name, anno.value,
+                                     anno.flags, anno.expires);
+          break;
+        case annosvc.TYPE_INT64:
           annosvc.setAnnotationInt64(aURI, anno.name, anno.value,
-                                                     anno.flags, anno.expires);
+                                     anno.flags, anno.expires);
           break;
-        case sv.VALUE_TYPE_FLOAT:
+        case annosvc.TYPE_DOUBLE:
           annosvc.setAnnotationDouble(aURI, anno.name, anno.value,
-                                                      anno.flags, anno.expires);
+                                      anno.flags, anno.expires);
           break;
-        case sv.VALUE_TYPE_TEXT:
+        case annosvc.TYPE_STRING:
           annosvc.setAnnotationString(aURI, anno.name, anno.value,
-                                                      anno.flags, anno.expires);
+                                      anno.flags, anno.expires);
           break;
-        case sv.VALUE_TYPE_BLOB:
+        case annosvc.TYPE_BINARY:
           annosvc.setAnnotationBinary(aURI, anno.name, anno.value,
-                                                      anno.value.length, anno.mimeType,
-                                                      anno.flags, anno.expires);
+                                      anno.value.length, anno.mimeType,
+                                      anno.flags, anno.expires);
           break;
       }
     });
