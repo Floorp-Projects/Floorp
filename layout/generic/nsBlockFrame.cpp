@@ -3427,6 +3427,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   PRBool         pushedFrame;
   nsresult rv = aLineLayout.ReflowFrame(aFrame, frameReflowStatus,
                                         nsnull, pushedFrame);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (frameReflowStatus & NS_FRAME_REFLOW_NEXTINFLOW) {
     // we need to ensure that the frame's nextinflow gets reflowed.
