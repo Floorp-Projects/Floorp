@@ -54,6 +54,7 @@
 #include "wdgtos2rc.h"
 #include "nsILocalFileOS2.h"
 #include "nsIDocument.h"
+#include "nsGUIEvent.h"
 
 NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
