@@ -110,6 +110,30 @@ nsTableCaptionFrame::ComputeAutoSize(nsIRenderingContext *aRenderingContext,
   return result;
 }
 
+NS_IMETHODIMP 
+nsTableCaptionFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
+                                                nsIFrame**      aProviderFrame,
+                                                PRBool*         aIsChild)
+{
+  // The caption's style context parent is the inner frame, unless
+  // it's anonymous.
+  nsIFrame* outerFrame = GetParent();
+  if (outerFrame && outerFrame->GetType() == nsGkAtoms::tableOuterFrame) {
+    nsIFrame* innerFrame = outerFrame->GetFirstChild(nsnull);
+    if (innerFrame) {
+      *aProviderFrame =
+        nsFrame::CorrectStyleParentFrame(innerFrame,
+                                         GetStyleContext()->GetPseudoType());
+      *aIsChild = PR_FALSE;
+      return NS_OK;
+    }
+  }
+
+  NS_NOTREACHED("Where is our inner table frame?");
+  return nsBlockFrame::GetParentStyleContextFrame(aPresContext, aProviderFrame,
+                                                  aIsChild);
+}
+
 #ifdef NS_DEBUG
 NS_IMETHODIMP
 nsTableCaptionFrame::GetFrameName(nsAString& aResult) const
