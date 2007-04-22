@@ -166,6 +166,8 @@ private:
   //  * Add to the nsNavHistoryQueryOptions::Clone() function
   //  * Add to the nsNavHistory.cpp::GetSimpleBookmarksQueryFolder function if applicable
   PRUint32 mSort;
+  nsCString mSortingAnnotation;
+
   PRUint32 mResultType;
   PRUint32 mGroupCount;
   PRUint32 *mGroupings;

@@ -436,8 +436,7 @@ nsAnnotationService::GetAnnotationInt64(nsIURI* aURI,
                                         PRInt64 *_retval)
 {
   nsresult rv = StartGetAnnotationFromURI(aURI, aName);
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   PRInt32 type = mDBGetAnnotationFromURI->AsInt32(kAnnoIndex_Type);
   NS_ENSURE_TRUE(type == nsIAnnotationService::TYPE_INT64, NS_ERROR_INVALID_ARG);
   *_retval = mDBGetAnnotationFromURI->AsInt64(kAnnoIndex_Content);
@@ -445,6 +444,17 @@ nsAnnotationService::GetAnnotationInt64(nsIURI* aURI,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAnnotationService::GetAnnotationType(nsIURI* aURI,
+                                       const nsACString& aName,
+                                       PRInt32* _retval)
+{
+  nsresult rv = StartGetAnnotationFromURI(aURI, aName);
+  NS_ENSURE_SUCCESS(rv, rv);
+  *_retval = mDBGetAnnotationFromURI->AsInt32(kAnnoIndex_Type);
+  mDBGetAnnotationFromURI->Reset();
+  return NS_OK;
+}
 
 // nsAnnotationService::GetAnnotationDouble
 

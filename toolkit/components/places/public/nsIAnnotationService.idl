@@ -67,7 +67,7 @@ interface nsIAnnotationObserver : nsISupports
     void onAnnotationRemoved(in nsIURI aURI, in AUTF8String aName);
 };
 
-[scriptable, uuid(a857c97f-7705-4376-b374-bd8799f69d51)]
+[scriptable, uuid(e19a463a-0bd5-4e36-b552-e52aa4220b27)]
 interface nsIAnnotationService : nsISupports
 {
     /**
@@ -219,9 +219,7 @@ interface nsIAnnotationService : nsISupports
      * Retrieves info about an existing annotation. aMimeType will be empty
      * if the value was not binary data.
      *
-     * aStorageType will be one of mozIStorageValueArray.VALUE_TYPE_* and
-     * indicates how the value is stored (if you want to determine whether
-     * the data is binary, etc.)
+     * aType will be one of TYPE_* constansts above
      *
      * example JS:
      *   var flags = {}, exp = {}, mimeType = {};
@@ -230,7 +228,20 @@ interface nsIAnnotationService : nsISupports
      */
     void getAnnotationInfo(in nsIURI aURI, in AUTF8String aName,
                            out PRInt32 aFlags, out PRInt32 aExpiration,
-                           out AUTF8String aMimeType, out PRInt32 aStorageType);
+                           out AUTF8String aMimeType, out PRInt32 aType);
+
+    /**
+     * Retrieves the type of an existing annotation
+     * Use getAnnotationInfo if you need this along with the mime-type etc.
+     *
+     * @param aURI
+     *        the uri on which the annotation is set
+     * @param aName
+     *        the annotation name
+     * @return one of the TYPE_* constants above
+     * @throws if the annotation is not set
+     */
+    PRInt32 getAnnotationType(in nsIURI aURI, in AUTF8String aName);
 
     /**
      * Returns a list of all URIs having a given annotation.
