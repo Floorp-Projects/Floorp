@@ -48,6 +48,7 @@
 #include "nsIRollupListener.h"
 
 #include "nsMenuX.h"
+#include "nsMenuItemIconX.h"
 #include "nsIMenu.h"
 #include "nsIMenuBar.h"
 #include "nsIMenuItem.h"
@@ -166,6 +167,9 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
   nsMenuEvent fake(PR_TRUE, 0, nsnull);
   MenuConstruct(fake, nsnull, nsnull, nsnull);
   
+  if (menu)
+    mIcon = new nsMenuItemIconX(NS_STATIC_CAST(nsIMenu*, this), menu, mMenuContent);
+
   return NS_OK;
 }
 
@@ -691,6 +695,10 @@ void nsMenuX::LoadMenuItem(nsIContent* inMenuItemContent)
     pnsMenuItem->SetChecked(PR_FALSE);
 
   AddMenuItem(pnsMenuItem);
+
+  // This needs to happen after the nsIMenuItem object is inserted into
+  // our item array in AddMenuItem()
+  pnsMenuItem->SetupIcon();
 }
 
 
@@ -719,6 +727,10 @@ void nsMenuX::LoadSubMenu(nsIContent* inMenuContent)
     pnsMenu->SetEnabled(PR_TRUE);
 
   AddMenu(pnsMenu);
+
+  // This needs to happen after the nsIMenu object is inserted into
+  // our item array in AddMenu()
+  pnsMenu->SetupIcon();
 }
 
 
@@ -1001,7 +1013,21 @@ nsMenuX::GetMenuRefAndItemIndexForMenuItem(nsISupports* aMenuItem,
                                            void**       aMenuRef,
                                            PRUint16*    aMenuItemIndex)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mMacMenu)
+    return NS_ERROR_FAILURE;
+  
+  // look for the menu item given
+  PRUint32 menuItemCount = mMenuItemsArray.Count();
+  for (PRUint32 i = 0; i < menuItemCount; i++) {
+    nsCOMPtr<nsISupports> currItem = mMenuItemsArray.ObjectAt(i);
+    if (currItem == aMenuItem) {   
+      *aMenuRef = _NSGetCarbonMenu(mMacMenu);
+      *aMenuItemIndex = i + 1;
+      return NS_OK;
+    }
+  }
+  
+  return NS_ERROR_FAILURE;
 }
 
 
@@ -1099,6 +1125,9 @@ NS_IMETHODIMP nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpa
       } // if not visible
     } // if told to show menu
   }
+  else if (aAttribute == nsWidgetAtoms::image) {
+    SetupIcon();
+  }  
 
   return NS_OK;
 } // AttributeChanged
@@ -1134,7 +1163,10 @@ NS_IMETHODIMP nsMenuX::ContentInserted(nsIDocument *aDocument, nsIContent *aChil
 NS_IMETHODIMP
 nsMenuX::SetupIcon()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // In addition to out-of-memory, menus that are children of the menu bar
+  // will not have mIcon set.
+  if (!mIcon) return NS_ERROR_OUT_OF_MEMORY;
+  return mIcon->SetupIcon();
 }
 
 
