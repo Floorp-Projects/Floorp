@@ -105,6 +105,7 @@ fails == 25888-3r.html 25888-3r-ref.html # bug 25888
 == 323656-3.html 323656-3-ref.html
 == 323656-4.html 323656-4-ref.html
 fails == 323656-5.svg 323656-5-ref.svg # bug 377584
+== 323656-6.html 323656-6-ref.html
 == 325486-1.html 325486-1-ref.html
 random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 328829-2.xhtml 328829-2-ref.xhtml
