@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test inheritance into captions</title>
+    <style>
+      /**
+       * The idea is that "color" inherits by default while "border-color" does
+       * not.  So if the former is red and the latter is green on a parent, and
+       * the child's border-color is set to "inherit", it'll be green only if
+       * the child is inheriting from the parent.  If not, it'll either be
+       * whatever the border-color is on what it's inheriting from, which will
+       * be red if what it's inheriting from has the default (currentColor)
+       * border-color).
+       */
+      
+      /* 't' for "test" */
+      * { color: red; border: 0px hidden red; background: transparent }
+      .t, .t2 { border-color: green }
+      .t > caption
+        { border-color: inherit; border-style: solid; border-width: 10px }
+      .t2 > caption
+        { border-style: solid; border-width: 10px }
+      .t2 > caption.test 
+        { border-color: inherit }
+    </style>
+    <script>
+      function makeCaption() {
+        return document.createElement("caption");
+      }
+
+      window.onload = function() {
+        var lst = document.getElementsByClassName("d");
+        for (var i = 0; i < lst.length; ++i) {
+          lst[i].appendChild(makeCaption());
+        }
+
+        var lst = document.getElementsByClassName("d2");
+        for (var i = 0; i < lst.length; ++i) {
+          lst[i].firstChild.className = "test";
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <table class="t"><caption></caption></table>
+
+    <table class="t2 d2"><caption></caption></table>
+
+    <table class="t d"></table>
+    <div class="t d"></div>
+    <div style="display: table" class="t d"></div>
+
+    <table class="t2 d d2"></table>
+    <div class="t2 d d2"></div>
+    <div style="display: table" class="t2 d d2"></div>
+    </body>
+</html>
