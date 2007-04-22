@@ -40,6 +40,7 @@
 #define nsMenuX_h_
 
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsIMenu.h"
 #include "nsIMenuListener.h"
 #include "nsIChangeManager.h"
@@ -53,6 +54,7 @@
 class nsIMenuBar;
 class nsIMenuListener;
 class nsMenuX;
+class nsMenuItemIconX;
 
 
 // MenuDelegate is used to receive Cocoa notifications for
@@ -152,6 +154,7 @@ protected:
     nsWeakPtr                   mDocShellWeakRef;       // weak ref to docshell
     nsCOMPtr<nsIContent>        mMenuContent;           // the |menu| tag, strong ref
     nsCOMPtr<nsIMenuListener>   mListener;              // strong ref
+    nsRefPtr<nsMenuItemIconX>   mIcon;
 
     // Mac specific
     PRInt16                     mMacMenuID;
