@@ -1126,7 +1126,7 @@ void nsUnicodeRenderingToolkit::GetScriptTextBoundingMetrics(
     {
         widths = (Fixed*) nsMemory::Alloc(aLen * sizeof(Fixed));
         lefts = (Fixed*) nsMemory::Alloc(aLen * sizeof(Fixed));
-        rects = (Rect*) nsMemory::Alloc(aLen * sizeof(Fixed));
+        rects = (Rect*) nsMemory::Alloc(aLen * sizeof(Rect));
         
         // if any of the allocations failed the 'else' case below will be executed
     }
