@@ -482,10 +482,14 @@ case "$target" in
         # bug #249782
         # ensure that mt.exe is Microsoft (R) Manifest Tool and not magnetic tape manipulation utility (or something else)
         if test "$_CC_SUITE" -ge "8"; then
+                changequote(,)
+                _MSMT_VER_FILTER='s|.* \([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*|\1|p'
+                changequote([,])
+
                 MSMT_TOOL=`mt 2>&1|grep 'Microsoft (R) Manifest Tool'`
-                if test -n "MSMT_TOOL"; then
-                        MSMANIFEST_TOOL_VERSION=`echo ${MSMANIFEST_TOOL}|grep -Po "(^|\s)[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?(\s|$)"`
-                        if test -z "MSMANIFEST_TOOL_VERSION"; then
+                if test -n "$MSMT_TOOL"; then
+                        MSMANIFEST_TOOL_VERSION=`echo ${MSMT_TOOL}|sed -ne "$_MSMT_VER_FILTER"`
+                        if test -z "$MSMANIFEST_TOOL_VERSION"; then
                                 AC_MSG_WARN([Unknown version of the Microsoft (R) Manifest Tool.])
                         fi
                         MSMANIFEST_TOOL=1
