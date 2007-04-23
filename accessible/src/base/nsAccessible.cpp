@@ -255,14 +255,17 @@ nsAccessible::nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell): nsAcces
 #ifdef NS_DEBUG_X
    {
      nsCOMPtr<nsIPresShell> shell(do_QueryReferent(aShell));
-     printf(">>> %p Created Acc - Con: %p  Acc: %p  PS: %p", 
-             (nsIAccessible*)this, aContent, aAccessible, shell.get());
-     if (shell && aContent != nsnull) {
-       nsIFrame* frame = shell->GetPrimaryFrameFor(aContent);
-       char * name;
-       if (GetNameForFrame(frame, &name)) {
-         printf(" Name:[%s]", name);
-         nsMemory::Free(name);
+     printf(">>> %p Created Acc - DOM: %p  PS: %p", 
+            (void*)NS_STATIC_CAST(nsIAccessible*, this), (void*)aNode,
+            (void*)shell.get());
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+    if (content) {
+      nsAutoString buf;
+      if (content->NodeInfo())
+        content->NodeInfo()->GetQualifiedName(buf);
+      printf(" Con: %s@%p", NS_ConvertUTF16toUTF8(buf).get(), (void *)content.get());
+      if (NS_SUCCEEDED(GetName(buf))) {
+        printf(" Name:[%s]", NS_ConvertUTF16toUTF8(buf).get());
        }
      }
      printf("\n");

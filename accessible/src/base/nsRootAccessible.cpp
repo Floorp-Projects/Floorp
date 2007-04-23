@@ -892,7 +892,7 @@ void nsRootAccessible::FireFocusCallback(nsITimer *aTimer, void *aClosure)
 
 NS_IMETHODIMP nsRootAccessible::Shutdown()
 {
-  // Called manually or by nsAccessNode::~nsAccessNode()
+  // Called manually or by nsAccessNode::LastRelease()
   if (!mWeakShell) {
     return NS_OK;  // Already shutdown
   }

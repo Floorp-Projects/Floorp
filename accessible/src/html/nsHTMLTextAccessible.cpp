@@ -252,7 +252,7 @@ NS_IMETHODIMP nsHTMLLIAccessible::Shutdown()
     // Ensure that weak pointer to this is nulled out
     mBulletAccessible->Shutdown();
   }
-  nsresult rv = nsAccessibleWrap::Shutdown();
+  nsresult rv = nsHyperTextAccessible::Shutdown();
   mBulletAccessible = nsnull;
   return rv;
 }

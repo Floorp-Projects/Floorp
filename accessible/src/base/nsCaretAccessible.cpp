@@ -67,7 +67,8 @@ NS_IMETHODIMP nsCaretAccessible::Shutdown()
   mLastNodeWithCaret = nsnull;
   mSelectionControllerNode = nsnull;
   RemoveSelectionListener();
-  return NS_OK;
+  
+  return nsLeafAccessible::Shutdown();
 }
 
 NS_IMETHODIMP nsCaretAccessible::RemoveSelectionListener()

@@ -78,6 +78,7 @@ NS_IMETHODIMP nsRootAccessibleWrap::Shutdown()
     nsAppRootAccessible *root = nsAppRootAccessible::Create();
     if (root) {
         root->RemoveRootAccessible(this);
+        root = nsnull;
     }
     return nsRootAccessible::Shutdown();
 }
