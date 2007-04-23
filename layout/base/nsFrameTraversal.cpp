@@ -221,6 +221,7 @@ nsFrameIterator::nsFrameIterator(nsPresContext* aPresContext, nsIFrame *aStart,
                                  nsIteratorType aType, PRBool aLockInScrollView,
                                  PRBool aFollowOOFs)
 {
+  mOffEdge = 0;
   mPresContext = aPresContext;
   if (aFollowOOFs && aStart)
     aStart = nsPlaceholderFrame::GetRealFrameFor(aStart);
