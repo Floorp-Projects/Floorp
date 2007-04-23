@@ -117,7 +117,7 @@ public:
   NS_IMETHOD GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor) 
   {
     return NS_ERROR_NOT_IMPLEMENTED;
-  };
+  }
 
   // accessibility support
 #ifdef ACCESSIBILITY

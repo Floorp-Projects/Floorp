@@ -103,7 +103,7 @@ class nsJAR : public nsIZipReader, public nsIJAR
     nsJAR();
     virtual ~nsJAR();
     
-    NS_DEFINE_STATIC_CID_ACCESSOR( NS_ZIPREADER_CID );
+    NS_DEFINE_STATIC_CID_ACCESSOR( NS_ZIPREADER_CID )
   
     NS_DECL_ISUPPORTS
 
@@ -178,7 +178,7 @@ public:
     NS_DECL_NSIZIPENTRY
     
     nsJARItem(nsZipItem* aZipItem);
-    virtual ~nsJARItem() {};
+    virtual ~nsJARItem() {}
 
 private:
     PRUint32     mSize;             /* size in original file */

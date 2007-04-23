@@ -632,7 +632,7 @@ class nsBaseFontEntry : public PLDHashInt32Entry
 {
 public:
   nsBaseFontEntry(const void* aKey) : PLDHashInt32Entry(aKey) { }
-  ~nsBaseFontEntry() { };
+  ~nsBaseFontEntry() { }
 
   nsString mFontFamily; // a font-family list a-la CSS
 };

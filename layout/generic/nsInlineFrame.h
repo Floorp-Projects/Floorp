@@ -169,7 +169,7 @@ protected:
       mNextInFlow = nsnull;
       mLineContainer = nsnull;
       mSetParentPointer = PR_FALSE;
-    };
+    }
   };
 
   nsInlineFrame(nsStyleContext* aContext) : nsInlineFrameSuper(aContext) {}

@@ -55,8 +55,8 @@ class nsUnicodeToTSCII : public nsIUnicodeEncoder, public nsICharRepresentable
 NS_DECL_ISUPPORTS
 
 public:
-  nsUnicodeToTSCII() { mBuffer = 0; };
-  virtual ~nsUnicodeToTSCII() {};
+  nsUnicodeToTSCII() { mBuffer = 0; }
+  virtual ~nsUnicodeToTSCII() {}
 
   NS_IMETHOD Convert(const PRUnichar * aSrc, PRInt32 * aSrcLength,
                      char * aDest, PRInt32 * aDestLength);
@@ -90,8 +90,8 @@ class nsUnicodeToTamilTTF : public nsUnicodeToTSCII
   NS_DECL_ISUPPORTS_INHERITED
 
 public:
-  nsUnicodeToTamilTTF() : nsUnicodeToTSCII() {};
-  virtual ~nsUnicodeToTamilTTF() {};
+  nsUnicodeToTamilTTF() : nsUnicodeToTSCII() {}
+  virtual ~nsUnicodeToTamilTTF() {}
 
   NS_IMETHOD Convert      (const PRUnichar * aSrc, PRInt32 * aSrcLength,
                            char * aDest, PRInt32 * aDestLength);

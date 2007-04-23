@@ -89,7 +89,7 @@ public:
     //////////////////////////////////////////////////////////////////////
     // from nsISecureJNI:
 
-    nsCNullSecurityContext() { };
+    nsCNullSecurityContext() { }
 };
 
 #endif // CSecurityContext_h___

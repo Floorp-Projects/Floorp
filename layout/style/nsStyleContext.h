@@ -107,7 +107,7 @@ public:
   FindChildWithRules(const nsIAtom* aPseudoTag, nsRuleNode* aRules);
 
   NS_HIDDEN_(PRBool)    Equals(const nsStyleContext* aOther) const;
-  PRBool    HasTextDecorations() { return mBits & NS_STYLE_HAS_TEXT_DECORATIONS; };
+  PRBool    HasTextDecorations() { return mBits & NS_STYLE_HAS_TEXT_DECORATIONS; }
 
   NS_HIDDEN_(void) SetStyle(nsStyleStructID aSID, nsStyleStruct* aStruct);
 

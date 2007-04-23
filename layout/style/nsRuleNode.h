@@ -76,7 +76,7 @@ struct nsInheritedStyleData
 
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
-  };
+  }
 
   void ClearInheritedData(PRUint32 aBits) {
 #define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
@@ -88,7 +88,7 @@ struct nsInheritedStyleData
 
 #undef STYLE_STRUCT_INHERITED
 #undef STYLE_STRUCT_RESET
-  };
+  }
 
   void Destroy(PRUint32 aBits, nsPresContext* aContext) {
 #define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
@@ -102,7 +102,7 @@ struct nsInheritedStyleData
 #undef STYLE_STRUCT_RESET
 
     aContext->FreeToShell(sizeof(nsInheritedStyleData), this);
-  };
+  }
 
   nsInheritedStyleData() {
 #define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
@@ -114,7 +114,7 @@ struct nsInheritedStyleData
 #undef STYLE_STRUCT_INHERITED
 #undef STYLE_STRUCT_RESET
 
-  };
+  }
 };
 
 struct nsResetStyleData
@@ -129,7 +129,7 @@ struct nsResetStyleData
 
 #undef STYLE_STRUCT_RESET
 #undef STYLE_STRUCT_INHERITED
-  };
+  }
 
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
@@ -145,7 +145,7 @@ struct nsResetStyleData
 
 #undef STYLE_STRUCT_RESET
 #undef STYLE_STRUCT_INHERITED
-  };
+  }
 
   void Destroy(PRUint32 aBits, nsPresContext* aContext) {
 #define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args) \
@@ -159,7 +159,7 @@ struct nsResetStyleData
 #undef STYLE_STRUCT_INHERITED
 
     aContext->FreeToShell(sizeof(nsResetStyleData), this);
-  };
+  }
 
 #define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args) \
   nsStyle##name * m##name##Data;
@@ -187,11 +187,11 @@ struct nsCachedStyleData
 
   static PRBool IsReset(const nsStyleStructID& aSID) {
     return gInfo[aSID].mIsReset;
-  };
+  }
 
   static PRUint32 GetBitForSID(const nsStyleStructID& aSID) {
     return 1 << aSID;
-  };
+  }
 
   NS_HIDDEN_(nsStyleStruct*) NS_FASTCALL GetStyleData(const nsStyleStructID& aSID) {
     // Each struct is stored at this.m##type##Data->m##name##Data where
@@ -222,7 +222,7 @@ struct nsCachedStyleData
       data = *NS_REINTERPRET_CAST(nsStyleStruct**, dataSlot);
     }
     return data;
-  };
+  }
 
   // Typesafe and faster versions of the above
   #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_, ctor_args_)       \
@@ -253,8 +253,8 @@ struct nsCachedStyleData
     mInheritedData = nsnull;
   }
 
-  nsCachedStyleData() :mInheritedData(nsnull), mResetData(nsnull) {};
-  ~nsCachedStyleData() {};
+  nsCachedStyleData() :mInheritedData(nsnull), mResetData(nsnull) {}
+  ~nsCachedStyleData() {}
 };
 
 /**

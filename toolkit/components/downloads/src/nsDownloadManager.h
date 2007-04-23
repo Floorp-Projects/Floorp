@@ -122,7 +122,7 @@ protected:
     return aState == nsIDownloadManager::DOWNLOAD_NOTSTARTED ||
            aState == nsIDownloadManager::DOWNLOAD_DOWNLOADING ||
            aState == nsIXPInstallManagerUI::INSTALL_INSTALLING;
-  };
+  }
 
   static PRBool IsInProgress(DownloadState aState) 
   {
@@ -131,13 +131,13 @@ protected:
            aState == nsIDownloadManager::DOWNLOAD_PAUSED || 
            aState == nsIXPInstallManagerUI::INSTALL_DOWNLOADING ||
            aState == nsIXPInstallManagerUI::INSTALL_INSTALLING;
-  };
+  }
 
   static PRBool CompletedSuccessfully(DownloadState aState)
   {
     return aState == nsIDownloadManager::DOWNLOAD_FINISHED || 
            aState == nsIXPInstallManagerUI::INSTALL_FINISHED;
-  };
+  }
 
 private:
   nsCOMPtr<nsIDownloadProgressListener> mListener;
@@ -159,7 +159,7 @@ public:
   NS_DECL_NSIXPIPROGRESSDIALOG
   NS_DECL_ISUPPORTS
 
-  nsXPIProgressListener() { };
+  nsXPIProgressListener() { }
   nsXPIProgressListener(nsDownloadManager* aManager);
   virtual ~nsXPIProgressListener();
 
@@ -187,8 +187,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDownloadsDataSource,
                                            nsIRDFDataSource)
 
-  nsDownloadsDataSource() { };
-  virtual ~nsDownloadsDataSource() { };
+  nsDownloadsDataSource() { }
+  virtual ~nsDownloadsDataSource() { }
 
   nsresult LoadDataSource();
 

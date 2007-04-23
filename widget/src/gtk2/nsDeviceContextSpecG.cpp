@@ -115,7 +115,7 @@ protected:
 class nsPrinterFeatures {
 public:
   nsPrinterFeatures( const char *printername );
-  ~nsPrinterFeatures() {};
+  ~nsPrinterFeatures() {}
 
   /* Does this printer allow to set/change the paper size ? */
   void SetCanChangePaperSize( PRBool aCanSetPaperSize );

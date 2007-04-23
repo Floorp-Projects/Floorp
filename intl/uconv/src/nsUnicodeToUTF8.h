@@ -66,7 +66,7 @@ public:
   /**
    * Class constructor.
    */
-  nsUnicodeToUTF8() {mHighSurrogate = 0;};
+  nsUnicodeToUTF8() {mHighSurrogate = 0;}
 
   NS_IMETHOD FillInfo(PRUint32* aInfo);
 
@@ -83,7 +83,7 @@ public:
   NS_IMETHOD Reset() {mHighSurrogate = 0; return NS_OK;}
 
   NS_IMETHOD SetOutputErrorBehavior(PRInt32 aBehavior, 
-    nsIUnicharEncoder * aEncoder, PRUnichar aChar) {return NS_OK;};
+    nsIUnicharEncoder * aEncoder, PRUnichar aChar) {return NS_OK;}
 
 protected:
   PRUnichar mHighSurrogate;

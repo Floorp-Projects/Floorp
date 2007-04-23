@@ -162,7 +162,7 @@ public:
     return !(*this == aOther);
   }
 
-  nsCSSUnit GetUnit() const { return mUnit; };
+  nsCSSUnit GetUnit() const { return mUnit; }
   PRBool    IsLengthUnit() const
     { return PRBool((eCSSUnit_Inch <= mUnit) && (mUnit <= eCSSUnit_Proportional)); }
   PRBool    IsFixedLengthUnit() const  

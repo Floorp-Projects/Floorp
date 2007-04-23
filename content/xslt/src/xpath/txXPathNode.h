@@ -118,15 +118,15 @@ private:
     PRBool isDocument() const
     {
         return mIndex == eDocument;
-    };
+    }
     PRBool isContent() const
     {
         return mIndex == eContent;
-    };
+    }
     PRBool isAttribute() const
     {
         return mIndex != eDocument && mIndex != eContent;
-    };
+    }
 
     nsIContent* Content() const
     {

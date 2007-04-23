@@ -2135,7 +2135,7 @@ public:
     VisitorClosure(rdfITripleVisitor* aVisitor) :
         mVisitor(aVisitor),
         mRv(NS_OK)
-    {};
+    {}
     rdfITripleVisitor* mVisitor;
     nsresult mRv;
 };
@@ -2177,7 +2177,7 @@ class TriplesInnerClosure
 {
 public:
     TriplesInnerClosure(nsIRDFNode* aSubject, VisitorClosure* aClosure) :
-        mSubject(aSubject), mOuter(aClosure) {};
+        mSubject(aSubject), mOuter(aClosure) {}
     nsIRDFNode* mSubject;
     VisitorClosure* mOuter;
 };

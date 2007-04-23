@@ -199,9 +199,9 @@ public:
   nsDOMStorageList()
   {
     mStorages.Init();
-  };
+  }
 
-  virtual ~nsDOMStorageList() {};
+  virtual ~nsDOMStorageList() {}
 
   // nsISupports
   NS_DECL_ISUPPORTS

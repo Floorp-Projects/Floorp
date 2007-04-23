@@ -55,7 +55,7 @@ class nsGBKUnique2BytesToUnicode : public nsTableDecoderSupport
 public:
   nsGBKUnique2BytesToUnicode();
   virtual ~nsGBKUnique2BytesToUnicode() 
-    { };
+    { }
 protected:
 };
 
@@ -76,7 +76,7 @@ class nsGB18030Unique2BytesToUnicode : public nsTableDecoderSupport
 public:
   nsGB18030Unique2BytesToUnicode();
   virtual ~nsGB18030Unique2BytesToUnicode() 
-    { };
+    { }
 protected:
 };
 
@@ -97,7 +97,7 @@ class nsGB18030Unique4BytesToUnicode : public nsTableDecoderSupport
 public:
   nsGB18030Unique4BytesToUnicode();
   virtual ~nsGB18030Unique4BytesToUnicode() 
-    { };
+    { }
 protected:
 };
 

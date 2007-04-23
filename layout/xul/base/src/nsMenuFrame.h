@@ -120,7 +120,7 @@ public:
   NS_IMETHOD SetDebug(nsBoxLayoutState& aState, PRBool aDebug);
 #endif
 
-  NS_IMETHOD IsActive(PRBool& aResult) { aResult = PR_TRUE; return NS_OK; };
+  NS_IMETHOD IsActive(PRBool& aResult) { aResult = PR_TRUE; return NS_OK; }
 
   // The following four methods are all overridden so that the menu children
   // can be stored in a separate list (so that they don't impact reflow of the
@@ -175,10 +175,10 @@ public:
 
   NS_IMETHOD SetParent(const nsIFrame* aParent);
 
-  virtual nsIMenuParent *GetMenuParent() { return mMenuParent; };
+  virtual nsIMenuParent *GetMenuParent() { return mMenuParent; }
   virtual nsIFrame *GetMenuChild() { return mPopupFrames.FirstChild(); }
-  NS_IMETHOD GetRadioGroupName(nsString &aName) { aName = mGroupName; return NS_OK; };
-  NS_IMETHOD GetMenuType(nsMenuType &aType) { aType = mType; return NS_OK; };
+  NS_IMETHOD GetRadioGroupName(nsString &aName) { aName = mGroupName; return NS_OK; }
+  NS_IMETHOD GetMenuType(nsMenuType &aType) { aType = mType; return NS_OK; }
   NS_IMETHOD MarkAsGenerated();
 
   // nsIScrollableViewProvider methods
@@ -189,13 +189,13 @@ public:
 
   nsresult DestroyPopupFrames(nsPresContext* aPresContext);
 
-  PRBool IsOpen() { return mMenuOpen; };
+  PRBool IsOpen() { return mMenuOpen; }
   PRBool IsMenu();
   PRBool IsDisabled();
   PRBool IsGenerated();
   NS_IMETHOD ToggleMenuState(); // @see comment ***
 
-  void SetIsMenu(PRBool aIsMenu) { mIsMenu = aIsMenu; };
+  void SetIsMenu(PRBool aIsMenu) { mIsMenu = aIsMenu; }
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const

@@ -55,7 +55,7 @@ public:
 
   NS_IMETHOD CreateCollation(nsILocale* locale, nsICollation** instancePtr);
 
-  nsCollationFactory() {};
+  nsCollationFactory() {}
 };
 
 

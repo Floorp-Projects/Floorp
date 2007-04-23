@@ -374,10 +374,10 @@ private:
   BCPixelSize mLeftContBorderWidth;
 
 public:
-  virtual nsIFrame* GetFirstFrame() { return mFrames.FirstChild(); };
-  virtual nsIFrame* GetLastFrame() { return mFrames.LastChild(); };
+  virtual nsIFrame* GetFirstFrame() { return mFrames.FirstChild(); }
+  virtual nsIFrame* GetLastFrame() { return mFrames.LastChild(); }
   virtual void GetNextFrame(nsIFrame*  aFrame, 
-                            nsIFrame** aResult) { *aResult = aFrame->GetNextSibling(); };
+                            nsIFrame** aResult) { *aResult = aFrame->GetNextSibling(); }
   PRBool IsRepeatable() const;
   void   SetRepeatable(PRBool aRepeatable);
   PRBool HasStyleHeight() const;

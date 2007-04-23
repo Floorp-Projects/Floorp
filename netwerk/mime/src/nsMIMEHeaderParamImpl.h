@@ -45,8 +45,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMIMEHEADERPARAM
 
-  nsMIMEHeaderParamImpl() {};
-  virtual ~nsMIMEHeaderParamImpl() {};
+  nsMIMEHeaderParamImpl() {}
+  virtual ~nsMIMEHeaderParamImpl() {}
 };
 
 #endif 

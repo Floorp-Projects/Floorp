@@ -99,10 +99,10 @@ public:
       mFormProcessor(aFormProcessor),
       mBidiOptions(aBidiOptions)
   {
-  };
+  }
   virtual ~nsFormSubmission()
   {
-  };
+  }
 
   NS_DECL_ISUPPORTS
 

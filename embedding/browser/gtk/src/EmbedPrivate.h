@@ -85,8 +85,8 @@ class nsIDirectoryServiceProvider;
 class EmbedCommon {
  public:
   EmbedCommon() {
-  };
-  ~EmbedCommon() { };
+  }
+  ~EmbedCommon() { }
   static EmbedCommon* GetInstance();
   static void DeleteInstance();
   nsresult    Init(void);

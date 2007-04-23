@@ -80,11 +80,11 @@ class ProgressListener : public nsIWebProgressListener2
 public:
     ProgressListener(EmbedDownload *aDownload):mDownload(aDownload)
     {
-    };
+    }
 
     ~ProgressListener(void)
     {
-    };
+    }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBPROGRESSLISTENER

@@ -45,14 +45,14 @@
 class nsBig5Prober: public nsCharSetProber {
 public:
   nsBig5Prober(void){mCodingSM = new nsCodingStateMachine(&Big5SMModel);
-                      Reset();};
-  virtual ~nsBig5Prober(void){delete mCodingSM;};
+                      Reset();}
+  virtual ~nsBig5Prober(void){delete mCodingSM;}
   nsProbingState HandleData(const char* aBuf, PRUint32 aLen);
-  const char* GetCharSetName() {return "Big5";};
-  nsProbingState GetState(void) {return mState;};
+  const char* GetCharSetName() {return "Big5";}
+  nsProbingState GetState(void) {return mState;}
   void      Reset(void);
   float     GetConfidence(void);
-  void      SetOpion() {};
+  void      SetOpion() {}
 
 protected:
   void      GetDistribution(PRUint32 aCharLen, const char* aStr);

@@ -51,10 +51,10 @@ public:
   NS_DECL_NSIPROFILEMIGRATOR
   NS_DECL_ISUPPORTS
 
-  nsProfileMigrator() { };
+  nsProfileMigrator() { }
 
 protected:
-  ~nsProfileMigrator() { };
+  ~nsProfileMigrator() { }
 
   nsresult GetDefaultBrowserMigratorKey(nsACString& key,
                                         nsCOMPtr<nsIBrowserProfileMigrator>& bpm);

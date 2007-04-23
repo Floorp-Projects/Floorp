@@ -68,7 +68,7 @@ class nsUnicodeToGB18030Uniq2Bytes : public nsTableEncoderSupport
 public: 
   nsUnicodeToGB18030Uniq2Bytes() 
     : nsTableEncoderSupport(u2BytesCharset,
-                            (uMappingTable*) &g_uf_gb18030_2bytes, 2) {};
+                            (uMappingTable*) &g_uf_gb18030_2bytes, 2) {}
 protected: 
 };
 //-----------------------------------------------------------------------
@@ -83,7 +83,7 @@ class nsUnicodeTo4BytesGB18030 : public nsTableEncoderSupport
 public: 
   nsUnicodeTo4BytesGB18030()
     : nsTableEncoderSupport(u4BytesGB18030Charset, 
-                             (uMappingTable*) &g_uf_gb18030_4bytes, 4) {};
+                             (uMappingTable*) &g_uf_gb18030_4bytes, 4) {}
 protected: 
 };
 //-----------------------------------------------------------------------
@@ -98,7 +98,7 @@ class nsUnicodeToGBKUniq2Bytes : public nsTableEncoderSupport
 public: 
   nsUnicodeToGBKUniq2Bytes()
     : nsTableEncoderSupport(u2BytesCharset, 
-                             (uMappingTable*) &g_uf_gbk_2bytes, 2) {};
+                             (uMappingTable*) &g_uf_gbk_2bytes, 2) {}
 protected: 
 };
 //-----------------------------------------------------------------------

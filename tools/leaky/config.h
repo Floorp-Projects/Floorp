@@ -53,7 +53,7 @@ extern "C" {
   void* __libc_malloc(size_t);
   void* __libc_realloc(void*, size_t);
   void __libc_free(void*);
-};
+}
 
 #endif /* linux */
 

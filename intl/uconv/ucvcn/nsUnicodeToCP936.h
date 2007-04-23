@@ -56,7 +56,7 @@ public:
   /**
    * Class constructor.
    */
-  nsUnicodeToCP936() {};
+  nsUnicodeToCP936() {}
 
 
 };

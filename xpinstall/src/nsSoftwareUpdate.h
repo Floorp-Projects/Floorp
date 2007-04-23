@@ -29,7 +29,7 @@ class nsSoftwareUpdate: public nsISoftwareUpdate,
 {
     public:
 
-        NS_DEFINE_STATIC_CID_ACCESSOR( NS_SoftwareUpdate_CID );
+        NS_DEFINE_STATIC_CID_ACCESSOR( NS_SoftwareUpdate_CID )
 
         static nsSoftwareUpdate *GetInstance();
 

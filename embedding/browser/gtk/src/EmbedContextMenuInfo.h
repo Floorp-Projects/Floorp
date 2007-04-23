@@ -74,7 +74,7 @@ public:
   nsresult          CheckDomImageElement(nsIDOMNode *node, nsString& aHref,
                                        PRInt32 *aWidth, PRInt32 *aHeight);
   nsresult          GetImageRequest(imgIRequest **aRequest, nsIDOMNode *aDOMNode);
-  nsString          GetCtxDocTitle(void) { return mCtxDocTitle; };
+  nsString          GetCtxDocTitle(void) { return mCtxDocTitle; }
 
 
   PRInt32                 mX, mY, mObjWidth, mObjHeight, mCtxFrameNum;

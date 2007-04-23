@@ -241,9 +241,9 @@ class nsTextRulesInfo : public nsRulesInfo
     alignType(0),
     blockType(0),
     insertElement(0)
-    {};
+    {}
 
-  virtual ~nsTextRulesInfo() {};
+  virtual ~nsTextRulesInfo() {}
   
   // kInsertText
   const nsAString *inString;

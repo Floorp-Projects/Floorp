@@ -53,7 +53,7 @@ public:
   nsAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible, void *aEventData);
   // Initialize with an nsIDOMNode
   nsAccEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode, void *aEventData);
-  virtual ~nsAccEvent() {};
+  virtual ~nsAccEvent() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIACCESSIBLEEVENT

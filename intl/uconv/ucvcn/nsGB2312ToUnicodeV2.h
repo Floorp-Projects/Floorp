@@ -57,7 +57,7 @@ public:
   /**
    * Class constructor.
    */
-  nsGB2312ToUnicodeV2(){};
+  nsGB2312ToUnicodeV2(){}
 };
   
 

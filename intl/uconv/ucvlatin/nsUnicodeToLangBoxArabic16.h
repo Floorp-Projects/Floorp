@@ -49,8 +49,8 @@ public:
   /**
    * Class constructor.
    */
-  nsUnicodeToLangBoxArabic16() {};
-  virtual ~nsUnicodeToLangBoxArabic16() {};
+  nsUnicodeToLangBoxArabic16() {}
+  virtual ~nsUnicodeToLangBoxArabic16() {}
 
   NS_IMETHOD Convert(
       const PRUnichar * aSrc, PRInt32 * aSrcLength,

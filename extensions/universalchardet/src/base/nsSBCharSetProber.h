@@ -68,10 +68,10 @@ public:
 
   virtual const char* GetCharSetName();
   virtual nsProbingState HandleData(const char* aBuf, PRUint32 aLen);
-  virtual nsProbingState GetState(void) {return mState;};
+  virtual nsProbingState GetState(void) {return mState;}
   virtual void      Reset(void);
   virtual float     GetConfidence(void);
-  virtual void      SetOpion() {};
+  virtual void      SetOpion() {}
   
   // This feature is not implemented yet. any current language model
   // contain this parameter as PR_FALSE. No one is looking at this
@@ -79,7 +79,7 @@ public:
   // Moreover, the nsSBCSGroupProber which calls the HandleData of this
   // prober has a hard-coded call to FilterWithoutEnglishLetters which gets rid
   // of the English letters.
-  PRBool KeepEnglishLetters() {return mModel->keepEnglishLetter;}; // (not implemented)
+  PRBool KeepEnglishLetters() {return mModel->keepEnglishLetter;} // (not implemented)
 
 #ifdef DEBUG_chardet
   virtual void  DumpStatus();

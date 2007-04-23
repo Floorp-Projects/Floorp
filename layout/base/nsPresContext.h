@@ -695,10 +695,10 @@ public:
    */
   const nscoord* GetBorderWidthTable() { return mBorderWidthTable; }
 
-  PRBool IsDynamic() { return (mType == eContext_PageLayout || mType == eContext_Galley); };
+  PRBool IsDynamic() { return (mType == eContext_PageLayout || mType == eContext_Galley); }
   PRBool IsScreen() { return (mMedium == nsGkAtoms::screen ||
                               mType == eContext_PageLayout ||
-                              mType == eContext_PrintPreview); };
+                              mType == eContext_PrintPreview); }
 
   const nsTArray<nsIFrame*>& GetActivePopups() {
     NS_ASSERTION(this == RootPresContext(), "Only on root prescontext");

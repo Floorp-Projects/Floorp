@@ -98,8 +98,8 @@ class nsCyrillicDetector
       for(PRUintn i=0;i<mItems;i++)
         mProb[i] = mLastCls[i] =0;
       mDone = PR_FALSE;
-    };
-    virtual ~nsCyrillicDetector() {};
+    }
+    virtual ~nsCyrillicDetector() {}
     virtual void HandleData(const char* aBuf, PRUint32 aLen);
     virtual void   DataEnd();
   protected:
@@ -158,28 +158,28 @@ class nsRUProbDetector : public nsCyrXPCOMDetector
 {
   public:
     nsRUProbDetector() 
-      : nsCyrXPCOMDetector(5, gCyrillicCls, gRussian) {};
+      : nsCyrXPCOMDetector(5, gCyrillicCls, gRussian) {}
 };
 
 class nsRUStringProbDetector : public nsCyrXPCOMStringDetector
 {
   public:
     nsRUStringProbDetector() 
-      : nsCyrXPCOMStringDetector(5, gCyrillicCls, gRussian) {};
+      : nsCyrXPCOMStringDetector(5, gCyrillicCls, gRussian) {}
 };
 
 class nsUKProbDetector : public nsCyrXPCOMDetector
 {
   public:
     nsUKProbDetector() 
-      : nsCyrXPCOMDetector(5, gCyrillicCls, gUkrainian) {};
+      : nsCyrXPCOMDetector(5, gCyrillicCls, gUkrainian) {}
 };
 
 class nsUKStringProbDetector : public nsCyrXPCOMStringDetector
 {
   public:
     nsUKStringProbDetector() 
-      : nsCyrXPCOMStringDetector(5, gCyrillicCls, gUkrainian) {};
+      : nsCyrXPCOMStringDetector(5, gCyrillicCls, gUkrainian) {}
 };
 
 #endif
