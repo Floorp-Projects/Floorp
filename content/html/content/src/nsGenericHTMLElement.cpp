@@ -1255,8 +1255,8 @@ IsArea(nsIContent *aContent)
           aContent->IsNodeOfType(nsINode::eHTML));
 }
 
-nsresult
-nsGenericHTMLElement::PostHandleEventForAnchors(nsEventChainPostVisitor& aVisitor)
+PRBool
+nsGenericHTMLElement::CheckHandleEventForAnchorsPreconditions(nsEventChainVisitor& aVisitor)
 {
   NS_PRECONDITION(nsCOMPtr<nsILink>(do_QueryInterface(this)),
                   "should be called only when |this| implements |nsILink|");
@@ -1265,7 +1265,7 @@ nsGenericHTMLElement::PostHandleEventForAnchors(nsEventChainPostVisitor& aVisito
     // We need a pres context to do link stuff. Some events (e.g. mutation
     // events) don't have one.
     // XXX: ideally, shouldn't we be able to do what we need without one?
-    return NS_OK; 
+    return PR_FALSE; 
   }
 
   //Need to check if we hit an imagemap area and if so see if we're handling
@@ -1275,7 +1275,26 @@ nsGenericHTMLElement::PostHandleEventForAnchors(nsEventChainPostVisitor& aVisito
   aVisitor.mPresContext->EventStateManager()->
     GetEventTargetContent(aVisitor.mEvent, getter_AddRefs(target));
 
-  if (target && IsArea(target) && !IsArea(this)) {
+  return !target || !IsArea(target) || IsArea(this);
+}
+
+nsresult
+nsGenericHTMLElement::PreHandleEventForAnchors(nsEventChainPreVisitor& aVisitor)
+{
+  nsresult rv = nsGenericElement::PreHandleEvent(aVisitor);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!CheckHandleEventForAnchorsPreconditions(aVisitor)) {
+    return NS_OK;
+  }
+
+  return PreHandleEventForLinks(aVisitor);
+}
+
+nsresult
+nsGenericHTMLElement::PostHandleEventForAnchors(nsEventChainPostVisitor& aVisitor)
+{
+  if (!CheckHandleEventForAnchorsPreconditions(aVisitor)) {
     return NS_OK;
   }
 

@@ -114,6 +114,15 @@ DocShellToPresContext(nsIDocShell *aShell, nsPresContext **aPresContext)
 }
 
 nsresult
+nsXMLElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+{
+  nsresult rv = nsGenericElement::PreHandleEvent(aVisitor);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return PreHandleEventForLinks(aVisitor);
+}
+
+nsresult
 nsXMLElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   return PostHandleEventForLinks(aVisitor);

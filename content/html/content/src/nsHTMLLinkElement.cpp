@@ -107,6 +107,7 @@ public:
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
 
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
   virtual PRBool IsLink(nsIURI** aURI) const;
   virtual void GetLinkTarget(nsAString& aTarget);
@@ -323,6 +324,12 @@ nsHTMLLinkElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   }
 
   return rv;
+}
+
+nsresult
+nsHTMLLinkElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+{
+  return PreHandleEventForAnchors(aVisitor);
 }
 
 nsresult

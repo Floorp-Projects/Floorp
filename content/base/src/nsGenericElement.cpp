@@ -3794,6 +3794,74 @@ nsGenericElement::CreateSlots()
   return new nsDOMSlots(mFlagsOrSlots);
 }
 
+PRBool
+nsGenericElement::CheckHandleEventForLinksPrecondition(nsEventChainVisitor& aVisitor,
+                                                       nsIURI** aURI) const
+{
+  if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
+      !NS_IS_TRUSTED_EVENT(aVisitor.mEvent) ||
+      !aVisitor.mPresContext) {
+    return PR_FALSE;
+  }
+
+  // Make sure we actually are a link
+  return IsLink(aURI);
+}
+
+nsresult
+nsGenericElement::PreHandleEventForLinks(nsEventChainPreVisitor& aVisitor)
+{
+  // Optimisation: return early if this event doesn't interest us.
+  // IMPORTANT: this switch and the switch below it must be kept in sync!
+  switch (aVisitor.mEvent->message) {
+  case NS_MOUSE_ENTER_SYNTH:
+  case NS_FOCUS_CONTENT:
+  case NS_MOUSE_EXIT_SYNTH:
+  case NS_BLUR_CONTENT:
+    break;
+  default:
+    return NS_OK;
+  }
+
+  // Make sure we meet the preconditions before continuing
+  nsCOMPtr<nsIURI> absURI;
+  if (!CheckHandleEventForLinksPrecondition(aVisitor, getter_AddRefs(absURI))) {
+    return NS_OK;
+  }
+
+  nsresult rv = NS_OK;
+
+  // We do the status bar updates in PreHandleEvent so that the status bar gets
+  // updated even if the event is consumed before we have a chance to set it.
+  switch (aVisitor.mEvent->message) {
+  // Set the status bar the same for focus and mouseover
+  case NS_MOUSE_ENTER_SYNTH:
+    aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+    // FALL THROUGH
+  case NS_FOCUS_CONTENT:
+    {
+      nsAutoString target;
+      GetLinkTarget(target);
+      rv = TriggerLink(aVisitor.mPresContext, absURI, target, PR_FALSE, PR_TRUE);
+    }
+    break;
+
+  case NS_MOUSE_EXIT_SYNTH:
+    aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+    // FALL THROUGH
+  case NS_BLUR_CONTENT:
+    rv = LeaveLink(aVisitor.mPresContext);
+    break;
+
+  default:
+    // switch not in sync with the optimization switch earlier in this function
+    NS_NOTREACHED("switch statements not in sync");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return rv;
+}
+
 nsresult
 nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
 {
@@ -3804,24 +3872,14 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
   case NS_MOUSE_CLICK:
   case NS_UI_ACTIVATE:
   case NS_KEY_PRESS:
-  case NS_MOUSE_ENTER_SYNTH:
-  case NS_FOCUS_CONTENT:
-  case NS_MOUSE_EXIT_SYNTH:
-  case NS_BLUR_CONTENT:
     break;
   default:
     return NS_OK;
   }
 
-  if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
-      !NS_IS_TRUSTED_EVENT(aVisitor.mEvent) ||
-      !aVisitor.mPresContext) {
-    return NS_OK;
-  }
-
-  // Make sure we actually are a link before continuing
+  // Make sure we meet the preconditions before continuing
   nsCOMPtr<nsIURI> absURI;
-  if (!IsLink(getter_AddRefs(absURI))) {
+  if (!CheckHandleEventForLinksPrecondition(aVisitor, getter_AddRefs(absURI))) {
     return NS_OK;
   }
 
@@ -3906,27 +3964,6 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
         }
       }
     }
-    break;
-
-  // Set the status bar the same for focus and mouseover
-  case NS_MOUSE_ENTER_SYNTH:
-    aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-    // FALL THROUGH
-  case NS_FOCUS_CONTENT:
-    {
-      nsAutoString target;
-      GetLinkTarget(target);
-      rv = TriggerLink(aVisitor.mPresContext, absURI, target, PR_FALSE, PR_TRUE);
-    }
-    break;
-
-  case NS_MOUSE_EXIT_SYNTH:
-    aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-    rv = LeaveLink(aVisitor.mPresContext);
-    break;
-
-  case NS_BLUR_CONTENT:
-    rv = LeaveLink(aVisitor.mPresContext);
     break;
 
   default:
