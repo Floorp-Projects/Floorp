@@ -1091,7 +1091,7 @@ nsCanvasRenderingContext2D::GetInputStream(const nsACString& aMimeType,
                               imgIEncoder::INPUT_FORMAT_HOSTARGB,
                               aEncoderOptions);
     } else {
-        nsAutoArrayPtr<PRUint8> imageBuffer((PRUint8*) PR_Malloc(sizeof(PRUint8) * mWidth * mHeight * 4));
+        nsAutoArrayPtr<PRUint8> imageBuffer(new PRUint8[mWidth * mHeight * 4]);
         if (!imageBuffer)
             return NS_ERROR_FAILURE;
 
