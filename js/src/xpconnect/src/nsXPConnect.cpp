@@ -114,8 +114,6 @@ nsXPConnect::nsXPConnect()
 typedef nsBaseHashtable<nsVoidPtrHashKey, nsISupports*, nsISupports*> ScopeSet;
 #endif
 
-#define OBJ_REFCOUNT_ENTRIES 100000
-
 static const PLDHashTableOps RefCountOps =
 {
     PL_DHashAllocTable,
@@ -158,15 +156,16 @@ struct JSObjectRefcounts
     void InitRefCounts()
     {
         if(!PL_DHashTableInit(&mRefCounts, &RefCountOps, nsnull,
-                              sizeof(ObjRefCount),
-                              PL_DHASH_DEFAULT_CAPACITY(OBJ_REFCOUNT_ENTRIES)))
+                              sizeof(ObjRefCount), 65536))
             mRefCounts.ops = nsnull;
     }
     void Clear()
     {
-        if(mRefCounts.ops)
-            PL_DHashTableFinish(&mRefCounts);
-        InitRefCounts();
+        if(!mRefCounts.ops || mRefCounts.entryCount > 0) {
+            if(mRefCounts.ops)
+                PL_DHashTableFinish(&mRefCounts);
+            InitRefCounts();
+        }
 #ifndef XPCONNECT_STANDALONE
         mScopes.Clear();
 #endif
