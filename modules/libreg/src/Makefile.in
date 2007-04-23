@@ -65,6 +65,8 @@ FORCE_USE_PIC	= 1
 # We do want this in the static libraries list
 EXPORT_LIBRARY = 1
 
+USE_STATIC_LIBS = 1
+
 include $(topsrcdir)/config/config.mk
 
 DEFINES         += -DUSE_BUFFERED_REGISTRY_IO	
@@ -79,3 +81,9 @@ include $(topsrcdir)/config/rules.mk
 R_%.o: %.c
 	$(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) -DSTANDALONE_REGISTRY $<
 
+ifdef _MSC_VER
+# Don't include directives about which CRT to use
+OS_COMPILE_CXXFLAGS += -Zl
+OS_COMPILE_CFLAGS += -Zl
+DEFINES += -D_USE_ANSI_CPP
+endif

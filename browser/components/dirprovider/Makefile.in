@@ -51,6 +51,10 @@ IS_COMPONENT         = 1
 MODULE_NAME          = BrowserDirProvider
 FORCE_SHARED_LIB     = 1
 
+# Because we are an application component, link against the CRT statically
+# (on Windows)
+USE_STATIC_LIBS      = 1
+
 REQUIRES = \
 	xpcom \
 	string \

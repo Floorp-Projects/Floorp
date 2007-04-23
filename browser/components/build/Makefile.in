@@ -12,6 +12,10 @@ IS_COMPONENT = 1
 MODULE_NAME = nsBrowserCompsModule
 FORCE_SHARED_LIB = 1
 
+# Because we are an application component, link against the CRT statically
+# (on Windows)
+USE_STATIC_LIBS = 1
+
 REQUIRES = \
 	docshell \
 	xpcom \
@@ -76,7 +80,6 @@ endif
 
 EXTRA_DSO_LDOPTS += \
 	$(call EXPAND_LIBNAME_PATH,unicharutil_external_s,$(LIBXUL_DIST)/lib) \
-	$(MOZ_UNICHARUTIL_LIBS) \
 	$(LIBXUL_DIST)/../modules/libreg/src/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
 	$(MOZ_JS_LIBS) \
 	$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
