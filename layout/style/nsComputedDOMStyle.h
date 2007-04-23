@@ -287,25 +287,28 @@ private:
    * the percent value of aCoord is set as a percent value on aValue.  aTable,
    * if not null, is the keyword table to handle eStyleUnit_Enumerated.  When
    * calling SetAppUnits on aValue (for coord or percent values), the value
-   * passed in will be PR_MAX of the actual value in aCoord and the value in
-   * aMinAppUnits.
+   * passed in will be PR_MAX of the value in aMinAppUnits and the PR_MIN of
+   * the actual value in aCoord and the value in aMaxAppUnits.
    *
    * XXXbz should caller pass in some sort of bitfield indicating which units
    * can be expected or something?
    */
-  void SetValueToCoord(nsROCSSPrimitiveValue* aValue, nsStyleCoord aCoord,
+  void SetValueToCoord(nsROCSSPrimitiveValue* aValue,
+                       const nsStyleCoord& aCoord,
                        PercentageBaseGetter aPercentageBaseGetter = nsnull,
                        const PRInt32 aTable[] = nsnull,
-                       nscoord aMinAppUnits = nscoord_MIN);
+                       nscoord aMinAppUnits = nscoord_MIN,
+                       nscoord aMaxAppUnits = nscoord_MAX);
 
   /**
    * If aCoord is a eStyleUnit_Coord returns the nscoord.  If it's
-   * eStyleUnit_Percent, attempts to resolve the percentage base and returns the
-   * resulting nscoord.  If it's some other unit or a percentge base can't be
-   * determined, returns 0.
+   * eStyleUnit_Percent, attempts to resolve the percentage base and returns
+   * the resulting nscoord.  If it's some other unit or a percentge base can't
+   * be determined, returns aDefaultValue.
    */
-  nscoord StyleCoordToNSCoord(nsStyleCoord aCoord,
-                              PercentageBaseGetter aPercentageBaseGetter);
+  nscoord StyleCoordToNSCoord(const nsStyleCoord& aCoord,
+                              PercentageBaseGetter aPercentageBaseGetter,
+                              nscoord aDefaultValue);
 
   PRBool GetFrameContentWidth(nscoord& aWidth);
   PRBool GetCBContentWidth(nscoord& aWidth);

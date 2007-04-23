@@ -2177,10 +2177,19 @@ nsComputedDOMStyle::GetHeight(nsIDOMCSSValue** aValue)
   
     val->SetAppUnits(mFrame->GetContentRect().height);
   } else {
-    // Just return the value in the style context
-    // XXXbz if not mFrame, why aren't we including the min-height the
-    // way max-height does?
-    SetValueToCoord(val, GetStylePosition()->mHeight);
+    const nsStylePosition *positionData = GetStylePosition();
+
+    nscoord minHeight =
+      StyleCoordToNSCoord(positionData->mMinHeight,
+                          &nsComputedDOMStyle::GetCBContentHeight, 0);
+
+    nscoord maxHeight =
+      StyleCoordToNSCoord(positionData->mMaxHeight,
+                          &nsComputedDOMStyle::GetCBContentHeight,
+                          nscoord_MAX);
+    
+    SetValueToCoord(val, positionData->mHeight, nsnull, nsnull,
+                    minHeight, maxHeight);
   }
   
   return CallQueryInterface(val, aValue);
@@ -2209,10 +2218,19 @@ nsComputedDOMStyle::GetWidth(nsIDOMCSSValue** aValue)
 
     val->SetAppUnits(mFrame->GetContentRect().width);
   } else {
-    // Just return the value in the style context
-    // XXXbz if not mFrame, why aren't we including the min-width the
-    // way max-width does?
-    SetValueToCoord(val, GetStylePosition()->mWidth);
+    const nsStylePosition *positionData = GetStylePosition();
+
+    nscoord minWidth =
+      StyleCoordToNSCoord(positionData->mMinWidth,
+                          &nsComputedDOMStyle::GetCBContentWidth, 0);
+
+    nscoord maxWidth =
+      StyleCoordToNSCoord(positionData->mMaxWidth,
+                          &nsComputedDOMStyle::GetCBContentWidth,
+                          nscoord_MAX);
+    
+    SetValueToCoord(val, positionData->mWidth, nsnull, nsnull,
+                    minWidth, maxWidth);
   }
 
   return CallQueryInterface(val, aValue);
@@ -2224,15 +2242,8 @@ nsComputedDOMStyle::GetMaxHeight(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStylePosition *positionData = GetStylePosition();
-
-  nscoord minHeight =
-    StyleCoordToNSCoord(positionData->mMinHeight,
-                        &nsComputedDOMStyle::GetCBContentHeight);
-
-  SetValueToCoord(val, positionData->mMaxHeight,
-                  &nsComputedDOMStyle::GetCBContentHeight,
-                  nsnull, minHeight);
+  SetValueToCoord(val, GetStylePosition()->mMaxHeight,
+                  &nsComputedDOMStyle::GetCBContentHeight);
 
   return CallQueryInterface(val, aValue);
 }
@@ -2243,15 +2254,8 @@ nsComputedDOMStyle::GetMaxWidth(nsIDOMCSSValue** aValue)
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStylePosition *positionData = GetStylePosition();
-
-  nscoord minWidth =
-    StyleCoordToNSCoord(positionData->mMinWidth,
-                        &nsComputedDOMStyle::GetCBContentWidth);
-
-  SetValueToCoord(val, positionData->mMaxWidth,
-                  &nsComputedDOMStyle::GetCBContentWidth,
-                  nsnull, minWidth);
+  SetValueToCoord(val, GetStylePosition()->mMaxWidth,
+                  &nsComputedDOMStyle::GetCBContentWidth);
 
   return CallQueryInterface(val, aValue);
 }
@@ -2699,10 +2703,11 @@ nsComputedDOMStyle::GetBorderStyleFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 
 void
 nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
-                                    nsStyleCoord aCoord,
+                                    const nsStyleCoord& aCoord,
                                     PercentageBaseGetter aPercentageBaseGetter,
                                     const PRInt32 aTable[],
-                                    nscoord aMinAppUnits)
+                                    nscoord aMinAppUnits,
+                                    nscoord aMaxAppUnits)
 {
   NS_PRECONDITION(aValue, "Must have a value to work with");
   
@@ -2721,7 +2726,7 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
         if (aPercentageBaseGetter &&
             (this->*aPercentageBaseGetter)(percentageBase)) {
           nscoord val = nscoord(aCoord.GetPercentValue() * percentageBase);
-          aValue->SetAppUnits(PR_MAX(aMinAppUnits, val));
+          aValue->SetAppUnits(PR_MAX(aMinAppUnits, PR_MIN(val, aMaxAppUnits)));
         } else {
           aValue->SetPercent(aCoord.GetPercentValue());
         }
@@ -2735,7 +2740,7 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
     case eStyleUnit_Coord:
       {
         nscoord val = aCoord.GetCoordValue();
-        aValue->SetAppUnits(PR_MAX(aMinAppUnits, val));
+        aValue->SetAppUnits(PR_MAX(aMinAppUnits, PR_MIN(val, aMaxAppUnits)));
       }
       break;
       
@@ -2766,8 +2771,9 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
 }
 
 nscoord
-nsComputedDOMStyle::StyleCoordToNSCoord(nsStyleCoord aCoord,
-                                        PercentageBaseGetter aPercentageBaseGetter)
+nsComputedDOMStyle::StyleCoordToNSCoord(const nsStyleCoord& aCoord,
+                                        PercentageBaseGetter aPercentageBaseGetter,
+                                        nscoord aDefaultValue)
 {
   NS_PRECONDITION(aPercentageBaseGetter, "Must have a percentage base getter");
   switch (aCoord.GetUnit()) {
@@ -2780,12 +2786,12 @@ nsComputedDOMStyle::StyleCoordToNSCoord(nsStyleCoord aCoord,
           return nscoord(aCoord.GetPercentValue() * percentageBase);
         }
       }
-      // Fall through to returning 0 if we have no percentage base
+      // Fall through to returning aDefaultValue if we have no percentage base.
     default:
       break;
   }
       
-  return 0;
+  return aDefaultValue;
 }
 
 PRBool
