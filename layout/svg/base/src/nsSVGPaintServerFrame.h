@@ -52,10 +52,17 @@ public:
   nsSVGPaintServerFrame(nsStyleContext* aContext) :
       nsSVGPaintServerFrameBase(aContext) {}
 
-  virtual nsresult SetupPaintServer(gfxContext *aContext,
-                                    nsSVGGeometryFrame *aSource,
-                                    float aOpacity,
-                                    void **aClosure) = 0;
+  /*
+   * Configure paint server prior to rendering
+   * @return PR_FALSE to skip rendering
+   */
+  virtual PRBool SetupPaintServer(gfxContext *aContext,
+                                  nsSVGGeometryFrame *aSource,
+                                  float aOpacity,
+                                  void **aClosure) = 0;
+  /*
+   * Clean up paint server after rendering
+   */
   virtual void CleanupPaintServer(gfxContext *aContext, void *aClosure) = 0;
 
   // nsISupports interface:

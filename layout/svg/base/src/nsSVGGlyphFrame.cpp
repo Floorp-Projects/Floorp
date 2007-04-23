@@ -310,12 +310,12 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext, nsRect *aDirtyRect)
   }
 
   void *closure;
-  if (HasFill() && NS_SUCCEEDED(SetupCairoFill(gfx, &closure))) {
+  if (HasFill() && SetupCairoFill(gfx, &closure)) {
     LoopCharacters(gfx, text, cp, FILL);
     CleanupCairoFill(gfx, closure);
   }
 
-  if (HasStroke() && NS_SUCCEEDED(SetupCairoStroke(gfx, &closure))) {
+  if (HasStroke() && SetupCairoStroke(gfx, &closure)) {
     gfx->NewPath();
     LoopCharacters(gfx, text, cp, STROKE);
     gfx->Stroke();

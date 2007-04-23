@@ -68,10 +68,10 @@ public:
                         nsSVGGeometryFrame *aSource);
 
   // nsSVGPaintServerFrame methods:
-  virtual nsresult SetupPaintServer(gfxContext *aContext,
-                                    nsSVGGeometryFrame *aSource,
-                                    float aOpacity,
-                                    void **aClosure);
+  virtual PRBool SetupPaintServer(gfxContext *aContext,
+                                  nsSVGGeometryFrame *aSource,
+                                  float aOpacity,
+                                  void **aClosure);
   virtual void CleanupPaintServer(gfxContext *aContext, void *aClosure);
 
   // nsISupports interface:

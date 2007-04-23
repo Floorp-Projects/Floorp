@@ -93,8 +93,14 @@ public:
   PRBool HasFill();
   PRBool HasStroke();
 
-  // Setup/Cleanup a cairo context for filling a path
-  nsresult SetupCairoFill(gfxContext *aContext, void **aClosure);
+  /*
+   * Set up a cairo context for filling a path
+   * @return PR_FALSE to skip rendering
+   */
+  PRBool SetupCairoFill(gfxContext *aContext, void **aClosure);
+  /*
+   * Clean up after path filled
+   */
   void CleanupCairoFill(gfxContext *aContext, void *aClosure);
 
   // Set up a cairo context for measuring a stroked path
@@ -103,8 +109,14 @@ public:
   // Set up a cairo context for hit testing a stroked path
   void SetupCairoStrokeHitGeometry(gfxContext *aContext);
 
-  // Setup/Cleanup a cairo context for stroking path
-  nsresult SetupCairoStroke(gfxContext *aContext, void **aClosure);
+  /*
+   * Set up a cairo context for stroking a path
+   * @return PR_FALSE to skip rendering
+   */
+  PRBool SetupCairoStroke(gfxContext *aContext, void **aClosure);
+  /*
+   * Clean up after path stroked
+   */
   void CleanupCairoStroke(gfxContext *aContext, void *aClosure);
 
 protected:
