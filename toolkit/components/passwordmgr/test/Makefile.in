@@ -56,13 +56,16 @@ MOCHI_TESTS = \
 		test_basic_form_2pw_1.html \
 		test_basic_form_2pw_2.html \
 		test_basic_form_3pw_1.html \
-		test_bug_221634.html \
 		test_bug_227640.html \
 		test_bug_242956.html \
 		test_bug_270558.html \
 		test_bug_360493_1.html \
 		test_bug_360493_2.html \
 		$(NULL)
+
+# This test doesn't pass because we can't ensure a cross-platform
+# event that occurs between DOMContentLoaded and Pageload
+# test_bug_221634.html
 
 include $(topsrcdir)/config/rules.mk
 
