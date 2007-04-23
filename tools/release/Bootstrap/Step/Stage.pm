@@ -10,6 +10,7 @@ use File::Copy qw(copy move);
 use File::Find qw(find);
 use File::Path qw(rmtree);
 use File::Basename;
+use Cwd;
 
 use MozBuild::Util qw(MkdirWithPath);
 
@@ -38,10 +39,143 @@ my %XPIDIR_TO_PLATFORM = ('windows-xpi' => 'win32',
 
 my @NON_LOCALE_XPIS = qw(adt.xpi browser.xpi talkback.xpi xpcom.xpi);
 
+#########################################################################
+# Many, many regexps follow
+#########################################################################
+my $possible_files_re =  # Possible files that we should match on.
+  qr/ (?:                #
+      \.gz               #
+      | \.bz2            #
+      | \.exe            #
+      | \.xpi            #
+      | \.dmg            #
+      | \.mar            #
+      ) $                #
+    /x;                  #
+
+my $version_re =                 # Version strings.
+    qr/ \d+ \w*                  # The first part of the version.
+        (?: \. \d+ \w*)*         # Any remainders in the version.
+      /x;                        #
+
+my $prefix_re =                  # Generic filename prefix.
+  qr/ ([a-z])                    # First character a-z.
+      ([a-z]+)                   # All following characters a-z.
+      -                          #
+      ( $version_re )            # The version.
+    /x;                          #
+
+my $partial_update_prefix_re =   # Generic filename prefix.
+  qr/ ([a-z])                    # First character a-z.
+      ([a-z]+)                   # All following characters a-z.
+      -                          #
+      ( $version_re              # The from version.
+      -                          #
+        $version_re )            # The to version.
+    /x;                          #
+
+my $bin_prefix_re =              # Binary file prefix.
+  qr/ $prefix_re                 # Match on our prefix.
+      \.                         #
+      ([a-z]{2,3}|[a-z]{2,3}-[A-Z]{2,3}|[a-z]{2,3}-[A-Z]{2,3}-[a-zA-Z]*)  # The locale. (en-US, ja-JPM, ast-ES)
+    /x;                          #
+
+my $bin_partial_prefix_re =      # Binary file prefix.
+  qr/ $partial_update_prefix_re  # Match on our prefix.
+      \.                         #
+      ([a-z]{2,3}|[a-z]{2,3}-[A-Z]{2,3}|[a-z]{2,3}-[A-Z]{2,3}-[a-zA-Z]*)  # The locale. (en-US, ja-JPM, ast-ES)
+    /x;                          #
+
+my $win_partial_update_re =      # Mac OS X update file.
+  qr/ ^                          # From start.
+      $bin_partial_prefix_re     # Match on our prefix.
+      \.(win32)\.partial\.mar    #
+      $                          # To end.
+    /x;                          #
+
+my $win_update_re =              # Windows update files.
+  qr/ ^                          # From start.
+      $bin_prefix_re             # Match on our prefix.
+      \.(win32)                  #
+      (\.complete)?              #
+      \.mar                      #
+      $                          # To End.
+    /x;                          #
+
+my $win_installer_re =           # Windows installer files.
+  qr/ ^                          # From start.
+      $bin_prefix_re             # Match on our prefix.
+      \.(win32)\.installer\.exe  #
+      $                          # To End.
+    /x;                          #
+
+my $xpi_langpack_re =            # Langpack XPI files.
+  qr/ ^                          # From start.
+      $bin_prefix_re             # Match on our prefix.
+      \.langpack\.xpi            #
+      $                          # To End.
+    /x;                          #
+
+my $mac_partial_update_re =      # Mac OS X partial update file.
+  qr/ ^                          # From start.
+      $bin_partial_prefix_re     # Match on our prefix.
+      \.(mac)\.partial\.mar      #
+      $                          # To end.
+    /x;                          #
+
+my $mac_update_re =              # Mac OS X update file.
+  qr/ ^                          # From start.
+      $bin_prefix_re             # Match on our prefix.
+      \.(mac)                    #
+      (\.complete)?              #
+      \.mar                      #
+      $                          # To end.
+    /x;                          #
+
+my $mac_re =                     # Mac OS X disk images.
+  qr/ ^                          # From start.
+      $bin_prefix_re             # Match on our prefix.
+      \.(mac)\.dmg               #
+      $                          # To end.
+    /x;                          #
+
+my $linux_partial_update_re =        # Mac OS X update file.
+  qr/ ^                              # From start.
+      $bin_partial_prefix_re         # Match on our prefix.
+      \.(linux-i686)\.partial\.mar   #
+      $                              # To end.
+    /x;                              #
+
+my $linux_update_re =            # Linux update file.
+  qr/ ^                          # From start.
+      $bin_prefix_re             # Match on our prefix.
+      \.(linux-i686)             #
+      (\.complete)?              # 
+      \.mar                      #
+      $                          # To end.
+    /x;                          #
+
+my $linux_re =                   # Linux tarball.
+  qr/ ^                          # From start.
+      $bin_prefix_re             # Match on our prefix.
+      \.(linux-i686)             #
+      \.tar\.(bz2|gz)            #
+      $                          # To end.
+    /x;                          #
+
+my $source_re =                  # Source tarball.
+  qr/ ^                          # From start.
+      $prefix_re                 # Match on our prefix.
+      -source                    #
+      \.tar\.bz2                 #
+      $                          # To end.
+    /x;                          #
+
+#########################################################################
 # Loads and parses the shipped-locales manifest file, so get hash of
 # locale -> [bouncer] platform mappings; returns success/failure in 
 # reading/parsing the locales file.
-
+#########################################################################
 sub LoadLocaleManifest {
     my $this = shift;
     my %args = @_;
@@ -138,7 +272,6 @@ sub Execute {
           or die "Cannot create $skelDir: $!";
         $this->Log(msg => "Created directory $skelDir");
     }
-
     my (undef, undef, $gid) = getgrnam($product)
       or die "Could not getgrname for $product: $!";
 
@@ -209,7 +342,6 @@ sub Execute {
     $this->{'scrubTrimmedDirDeleteList'} = [];
     find(sub { return $this->ScrubTrimmedDirCallback(); },
      catfile($stageDir, 'batch1', 'prestage-trimmed'));
-
     foreach my $delDir (@{$this->{'scrubTrimmedDirDeleteList'}}) {
         if (-e $delDir && -d $delDir) {
             $this->Log(msg => "rmtree() ing $delDir");
@@ -257,12 +389,9 @@ sub Execute {
     # Nightly builds using a different naming scheme than production.
     # Rename the files.
     # TODO should support --long filenames, for e.g. Alpha and Beta
-    $this->Shell(
-      cmd => catfile($stageHome, 'bin', 'groom-files'),
-      cmdArgs => ['--short=' . $version, '.'],
-      logFile => catfile($logDir, 'stage_groom_files.log'),
-      dir => catfile($stageDir, 'batch1', 'stage-unsigned'),
-    );
+    $this->GroomFiles(
+                      catfile($stageDir, 'batch1', 'stage-unsigned')
+                     );
 
     # fix xpi dir names - This is a hash of directory names in the pre-stage
     # dir -> directories under which those directories should be moved to;
@@ -319,6 +448,10 @@ sub Execute {
             }
         }
     }
+
+    $this->GroomFiles(
+                      catfile($stageDir, 'batch1', 'mar')
+                      );
 
     $this->Shell(
       cmd => catfile($stageHome, 'bin', 'groom-files'),
@@ -388,7 +521,7 @@ sub RemoveMarsCallback {
     }
 }
 
-#
+#########################################################################
 # This is a bit of an odd callback; the idea is to emulate find's -maxdepth
 # option with an argument of 1; unfortunately, find2perl barfs on this option.
 # Also, File::Find::find() is an annoying combination of depth and breadth-first
@@ -400,8 +533,7 @@ sub RemoveMarsCallback {
 # find() will go bonkers, because we removed things out from under it. So,
 # the next step after find() is called with this callback is to rmtree()
 # all the directories on the list that is populated in this callback.
-#
-
+#########################################################################
 sub ScrubTrimmedDirCallback {
     my $this = shift;
 
@@ -552,6 +684,182 @@ sub Announce {
       subject => "$product $version stage step finished",
       message => "$product $version staging area has been created.",
     );
+}
+
+sub GroomFiles {
+    my $this = shift;
+    my $dir = shift;
+    
+    if (not -d $dir) {
+        $this->Log(msg => "Can't find dir: $dir");
+        return 0;
+    }
+
+    my $config = new Bootstrap::Config();
+
+    my $start_dir = getcwd();
+    chdir($dir) or
+        die("Failed to chdir() to $dir\n");
+
+    if (! $this->GatherFiles()) {
+        $this->Log(msg => "Failed to find files in $dir");
+        return 0;
+    }
+
+    for my $original_name (@{$this->{'files'}}) {
+        my $new_name = $original_name;
+
+        my $original_dir = dirname($original_name);
+        my $long_name = basename($original_name);
+
+        my @pretty_names = $this->GeneratePrettyName(
+                                                     name => $long_name
+                                                    );
+        
+        my $once = 0;
+        for my $pretty_name (@pretty_names) {
+
+            my $pretty_dirname = dirname($pretty_name);
+            my $pretty_basename = basename($pretty_name);
+
+            if ( ! -e $pretty_name ) {
+                if (! -d $pretty_dirname) {
+                    MkdirWithPath(dir => $pretty_dirname) 
+                        or die "Cannot create $pretty_dirname: $!";
+                    $this->Log(msg => "Created directory $pretty_dirname");
+                }
+                copy($original_name, $pretty_name) or
+                    die("Could not copy $original_name to $pretty_name: $!");
+                $once = 1;
+            }
+        }
+
+        if ($once) {
+            $this->Log(msg => "Deleting original file: " . 
+                        $original_name);
+                unlink($original_name) or
+                    die("Couldn't unlink() $original_name $!");
+        }
+    }
+
+    chdir($start_dir) or
+        die("Failed to chdir() to starting directory: " .
+            $start_dir . "\n");
+}
+
+sub GatherFiles {
+    my $this = shift;
+    
+    @{$this->{'files'}} = ();
+    File::Find::find(sub { return $this->GatherFilesCallback(); }, '.');
+
+    if (scalar(@{$this->{'files'}}) == 0) {
+        return 0;
+    }
+
+    @{$this->{'files'}} = sort(grep { /$possible_files_re/x } @{$this->{'files'}});
+}
+
+#########################################################################
+# Callback, with internals generated by find2perl
+# Original find call was:
+#   find . -type f -o -name "contrib*" -prune
+#########################################################################
+sub GatherFilesCallback {
+    my $this = shift;
+    my $dirent = $File::Find::name;
+    
+    my ($dev,$ino,$mode,$nlink,$uid,$gid);
+
+    ((($dev,$ino,$mode,$nlink,$uid,$gid) = lstat($dirent)) &&
+    -f _
+    ||
+    /^contrib.*\z/s &&
+    ($File::Find::prune = 1))
+        && push @{$this->{'files'}}, $dirent;
+}
+
+sub GeneratePrettyName {
+    my $this = shift;
+    my %args = @_;
+
+    my $name = $args{'name'};
+    print "name: $name\n";
+    my $config = new Bootstrap::Config();
+    my $newVersion = $config->Get(var => 'version');
+    my $newVersionShort = $newVersion;
+
+    my @result;
+
+    # $1 = first character of name
+    # $2 = rest of name
+    # $3 = old version
+    # $4 = locale
+    # $5 = platform
+    # $6 = file extension (linux only)
+
+    # Windows update files.
+    if ( $name =~ m/ $win_update_re /x ) {
+        # Windows update files.
+        push @result, "update/$5/$4/$1$2-" . $newVersionShort . ".complete.mar";
+
+    } elsif ( $name =~ m/ $win_partial_update_re /x ) {
+        # Windows partial update files.
+        push @result, "update/$5/$4/$1$2-$3" . ".partial.mar";
+
+    # Windows installer files.
+    } elsif ( $name =~ m/ $win_installer_re /x ) {
+        # Windows installer files.
+        push @result, "$5/$4/" . uc($1) . "$2 Setup " . $newVersion . ".exe";
+
+    # Mac OS X disk image files.
+    } elsif ( $name =~ m/ $mac_re /x ) {
+        # Mac OS X disk image files.
+        push @result, "$5/$4/" . uc($1) . "$2 ". $newVersion . ".dmg";
+
+    # Mac OS X update files.
+    } elsif ( $name =~ m/ $mac_update_re /x ) {
+        # Mac OS X update files.
+        push @result, "update/$5/$4/$1$2-" . $newVersionShort . ".complete.mar";
+
+    } elsif ( $name =~ m/ $mac_partial_update_re /x ) {
+         # Mac partial update files.
+         push @result, "update/$5/$4/$1$2-$3" . ".partial.mar";
+
+    # Linux tarballs.
+    } elsif ( $name =~ m/ $linux_re /x ) {
+        # Linux tarballs.
+        push @result, "$5/$4/$1$2-" . $newVersionShort . ".tar.$6";
+
+    # Linux update files.
+    } elsif ( $name =~ m/ $linux_update_re /x ) {
+        # Linux update files.
+        push @result, "update/$5/$4/$1$2-" . $newVersionShort . ".complete.mar";
+
+    } elsif ( $name =~ m/ $linux_partial_update_re /x ) {
+        # Linux partial update files.
+        push @result, "update/$5/$4/$1$2-$3" . ".partial.mar";
+
+    # Source tarballs.
+    } elsif ( $name =~ m/ $source_re /x ) {
+        # Source tarballs.
+        push @result, "source/$1$2-" . $newVersionShort . "-source.tar.bz2";
+
+    # XPI langpack files.
+    } elsif ( $name =~ m/ $xpi_langpack_re /x ) {
+        # XPI langpack files.
+        my $locale = "$4";
+        for my $platform ( "win32", "linux-i686" ) {
+            push @result, "$platform/xpi/$locale.xpi";
+        }
+     }
+
+    if (scalar(@result) == 0) {
+        $this->Log(msg => "No matches found for: $name");
+        return 0;
+    }
+
+    return @result;
 }
 
 1;
