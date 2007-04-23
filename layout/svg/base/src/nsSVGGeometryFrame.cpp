@@ -348,7 +348,7 @@ nsSVGGeometryFrame::MaybeOptimizeOpacity(float aOpacity)
   return aOpacity;
 }
 
-nsresult
+PRBool
 nsSVGGeometryFrame::SetupCairoFill(gfxContext *aContext,
                                    void **aClosure)
 {
@@ -372,7 +372,7 @@ nsSVGGeometryFrame::SetupCairoFill(gfxContext *aContext,
                     GetStyleSVG()->mFill.mPaint.mColor,
                     opacity);
 
-  return NS_OK;
+  return PR_TRUE;
 }
 
 void
@@ -431,7 +431,7 @@ nsSVGGeometryFrame::SetupCairoStrokeHitGeometry(gfxContext *aContext)
   }
 }
 
-nsresult
+PRBool
 nsSVGGeometryFrame::SetupCairoStroke(gfxContext *aContext,
                                      void **aClosure)
 {
@@ -452,7 +452,7 @@ nsSVGGeometryFrame::SetupCairoStroke(gfxContext *aContext,
                     GetStyleSVG()->mStroke.mPaint.mColor,
                     opacity);
 
-  return NS_OK;
+  return PR_TRUE;
 }
 
 void
