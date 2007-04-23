@@ -871,7 +871,8 @@ nsFtpState::R_syst() {
             ( mResponseMsg.Find("MACOS Peter's Server") > -1) ||
             ( mResponseMsg.Find("MACOS WebSTAR FTP") > -1) ||
             ( mResponseMsg.Find("MVS") > -1) ||
-            ( mResponseMsg.Find("OS/390") > -1)) {
+            ( mResponseMsg.Find("OS/390") > -1) ||
+            ( mResponseMsg.Find("OS/400") > -1)) {
             mServerType = FTP_UNIX_TYPE;
         } else if (( mResponseMsg.Find("WIN32", PR_TRUE) > -1) ||
                    ( mResponseMsg.Find("windows", PR_TRUE) > -1)) {
