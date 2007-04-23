@@ -296,13 +296,11 @@ enum NodeColor { black, white, grey };
 struct PtrInfo
     : public PLDHashEntryStub
 {
-#define WORD_MINUS_2_BITS ((PR_BYTES_PER_WORD * 8) - 2)
     PRUint32 mColor : 2;
-    PRUint32 mInternalRefs : WORD_MINUS_2_BITS;
+    PRUint32 mInternalRefs : 30;
     // FIXME: mLang expands back to a full word when bug 368774 lands.
     PRUint32 mLang : 2;
-    PRUint32 mRefCount : WORD_MINUS_2_BITS;
-#undef WORD_MINUS_2_BITS
+    PRUint32 mRefCount : 30;
 
 #ifdef DEBUG_CC
     size_t mBytes;
@@ -325,8 +323,6 @@ InitPtrInfo(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
 #endif
     return PR_TRUE;
 }
-
-#define GCTABLE_N_ENTRIES 100000
 
 static PLDHashTableOps GCTableOps = {
     PL_DHashAllocTable,
@@ -356,14 +352,16 @@ struct GCTable
     void Init()
     {
         if (!PL_DHashTableInit(&mTab, &GCTableOps, nsnull, sizeof(PtrInfo),
-                               PL_DHASH_DEFAULT_CAPACITY(GCTABLE_N_ENTRIES)))
+                               32768))
             mTab.ops = nsnull;
     }
     void Clear()
     {
-        if (mTab.ops)
-            PL_DHashTableFinish(&mTab);
-        Init();
+        if (!mTab.ops || mTab.entryCount > 0) {
+            if (mTab.ops)
+                PL_DHashTableFinish(&mTab);
+            Init();
+        }
     }
 
     PtrInfo *Lookup(void *key)
