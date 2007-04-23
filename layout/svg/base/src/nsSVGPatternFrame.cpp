@@ -305,7 +305,6 @@ nsSVGPatternFrame::PaintPattern(cairo_surface_t** surface,
   // Set our geometrical parent
   mSource = aSource;
 
-  nsRect dummyRect;
   for (nsIFrame* kid = firstKid; kid;
        kid = kid->GetNextSibling()) {
     nsSVGUtils::PaintChildWithEffects(&tmpState, nsnull, kid);
@@ -794,7 +793,7 @@ nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM,
 //----------------------------------------------------------------------
 // nsSVGPaintServerFrame methods:
 
-nsresult
+PRBool
 nsSVGPatternFrame::SetupPaintServer(gfxContext *aContext,
                                     nsSVGGeometryFrame *aSource,
                                     float aOpacity,
@@ -814,7 +813,7 @@ nsSVGPatternFrame::SetupPaintServer(gfxContext *aContext,
   cairo_set_matrix(ctx, &matrix);
   if (NS_FAILED(rv)) {
     cairo_surface_destroy(surface);
-    return rv;
+    return PR_FALSE;
   }
 
   // Translate the pattern frame
@@ -842,7 +841,7 @@ nsSVGPatternFrame::SetupPaintServer(gfxContext *aContext,
 
   *aClosure = surface_pattern;
 
-  return NS_OK;
+  return PR_TRUE;
 }
 
 void

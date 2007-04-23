@@ -646,12 +646,12 @@ nsSVGPathGeometryFrame::Render(nsSVGRenderState *aContext)
   }
 
   void *closure;
-  if (HasFill() && NS_SUCCEEDED(SetupCairoFill(gfx, &closure))) {
+  if (HasFill() && SetupCairoFill(gfx, &closure)) {
     gfx->Fill();
     CleanupCairoFill(gfx, closure);
   }
 
-  if (HasStroke() && NS_SUCCEEDED(SetupCairoStroke(gfx, &closure))) {
+  if (HasStroke() && SetupCairoStroke(gfx, &closure)) {
     gfx->Stroke();
     CleanupCairoStroke(gfx, closure);
   }

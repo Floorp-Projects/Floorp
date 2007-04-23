@@ -328,7 +328,7 @@ nsSVGGradientFrame::GetSpreadMethod()
 //----------------------------------------------------------------------
 // nsSVGPaintServerFrame methods:
 
-nsresult
+PRBool
 nsSVGGradientFrame::SetupPaintServer(gfxContext *aContext,
                                      nsSVGGeometryFrame *aSource,
                                      float aOpacity,
@@ -341,21 +341,21 @@ nsSVGGradientFrame::SetupPaintServer(gfxContext *aContext,
   // SVG specification says that no stops should be treated like
   // the corresponding fill or stroke had "none" specified.
   if (nStops == 0)
-    return NS_ERROR_FAILURE;
+    return PR_FALSE;
 
   // Get the transform list (if there is one)
   nsCOMPtr<nsIDOMSVGMatrix> svgMatrix;
   GetGradientTransform(getter_AddRefs(svgMatrix), aSource);
   if (!svgMatrix)
-    return NS_ERROR_FAILURE;
+    return PR_FALSE;
 
   cairo_matrix_t patternMatrix = nsSVGUtils::ConvertSVGMatrixToCairo(svgMatrix);
   if (cairo_matrix_invert(&patternMatrix))
-    return NS_ERROR_FAILURE;
+    return PR_FALSE;
 
   cairo_pattern_t *gradient = CreateGradient();
   if (!gradient)
-    return NS_ERROR_FAILURE;
+    return PR_FALSE;
 
   PRUint16 aSpread = GetSpreadMethod();
   if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD)
@@ -392,7 +392,7 @@ nsSVGGradientFrame::SetupPaintServer(gfxContext *aContext,
   cairo_set_source(aContext->GetCairo(), gradient);
 
   *aClosure = gradient;
-  return NS_OK;
+  return PR_TRUE;
 }
 
 void
