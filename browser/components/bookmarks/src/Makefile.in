@@ -46,6 +46,7 @@ MODULE		= bookmarks
 LIBRARY_NAME	= bookmarks_s
 FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
+USE_STATIC_LIBS = 1
 
 REQUIRES	= xpcom \
 		  string \
