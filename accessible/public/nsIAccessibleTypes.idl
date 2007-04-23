@@ -87,7 +87,7 @@ interface nsIAccessibleScrollType : nsISupports
  * These constants define which coordinate system a point is located in. Note,
  * keep them synchronized with IA2CoordinateType.
  */
-[scriptable, uuid(15a523bb-fb3b-4cb2-af87-ad26ea792c4c)]
+[scriptable, uuid(c9fbdf10-619e-436f-bf4b-8566686f1577)]
 interface nsIAccessibleCoordinateType : nsISupports
 {
   /**
@@ -96,8 +96,13 @@ interface nsIAccessibleCoordinateType : nsISupports
   const unsigned long COORDTYPE_SCREEN_RELATIVE = 0x00;
 
   /**
+   * The coordinates are relative to the window.
+   */
+  const unsigned long COORDTYPE_WINDOW_RELATIVE = 0x01;
+
+  /**
    * The coordinates are relative to the upper left corner of the bounding box
    * of the immediate parent.
    */
-  const unsigned long COORDTYPE_PARENT_RELATIVE = 0x01;
+  const unsigned long COORDTYPE_PARENT_RELATIVE = 0x02;
 };

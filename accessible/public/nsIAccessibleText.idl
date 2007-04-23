@@ -42,11 +42,10 @@
 #include "nsISupports.idl"
 
 typedef long nsAccessibleTextBoundary;
-typedef long nsAccessibleCoordType;
 
 interface nsIAccessible;
 
-[scriptable, uuid(80e64909-e96b-45e9-81c9-3521a2dea7bb)]
+[scriptable, uuid(17389a66-5cc5-4550-80e0-49e7b63990a4)]
 interface nsIAccessibleText : nsISupports
 {
   const nsAccessibleTextBoundary BOUNDARY_CHAR = 0;
@@ -57,9 +56,6 @@ interface nsIAccessibleText : nsISupports
   const nsAccessibleTextBoundary BOUNDARY_LINE_START = 5;
   const nsAccessibleTextBoundary BOUNDARY_LINE_END = 6;
   const nsAccessibleTextBoundary BOUNDARY_ATTRIBUTE_RANGE = 7;
-
-  const nsAccessibleCoordType COORD_TYPE_SCREEN = 0;
-  const nsAccessibleCoordType COORD_TYPE_WINDOW = 1;
 
   attribute long caretOffset;
 
@@ -104,12 +100,36 @@ interface nsIAccessibleText : nsISupports
                                    out long rangeStartOffset,
                                    out long rangeEndOffset);
 
+  /**
+   * Returns the bounding box of the specified position.
+   *
+   * The virtual character after the last character of the represented text,
+   * i.e. the one at position length is a special case. It represents the
+   * current input position and will therefore typically be queried by AT more
+   * often than other positions. Because it does not represent an existing
+   * character its bounding box is defined in relation to preceding characters.
+   * It should be roughly equivalent to the bounding box of some character when
+   * inserted at the end of the text. Its height typically being the maximal
+   * height of all the characters in the text or the height of the preceding
+   * character, its width being at least one pixel so that the bounding box is
+   * not degenerate.
+   *
+   * @param offset - Index of the character for which to return its bounding
+   *                  box. The valid range is 0..length.
+   * @param x - X coordinate of the bounding box of the referenced character.
+   * @param y - Y coordinate of the bounding box of the referenced character.
+   * @param width - Width of the bounding box of the referenced character.
+   * @param height - Height of the bounding box of the referenced character.
+   * @param coordType - Specifies if the coordinates are relative to the screen
+   *                    or to the parent window (see constants declared in
+   *                    nsIAccessibleCoordinateType).
+  */
   void getCharacterExtents (in long offset,
                             out long x,
                             out long y,
                             out long width,
                             out long height,
-                            in nsAccessibleCoordType coordType);
+                            in unsigned long coordType);
 
   void getRangeExtents (in long startOffset,
                         in long endOffset,
@@ -117,14 +137,24 @@ interface nsIAccessibleText : nsISupports
                         out long y,
                         out long width,
                         out long height,
-                        in nsAccessibleCoordType coordType);
+                        in unsigned long coordType);
 
   /**
    * Get the text offset at the given point, or return -1
    * if no character exists at that point
+   *
+   * @param x - The position's x value for which to look up the index of the
+   *            character that is rendered on to the display at that point.
+   * @param y - The position's y value for which to look up the index of the
+   *            character that is rendered on to the display at that point.
+   * @param coordType - Screen coordinates or window coordinates (see constants
+   *                    declared in nsIAccessibleCoordinateType).
+   * @return offset - Index of the character under the given point or -1 if
+   *                  the point is invalid or there is no character under
+   *                  the point.
    */
   long getOffsetAtPoint (in long x, in long y,
-                         in nsAccessibleCoordType coordType);
+                         in unsigned long coordType);
 
   void getSelectionBounds (in long selectionNum,
                            out long startOffset,
