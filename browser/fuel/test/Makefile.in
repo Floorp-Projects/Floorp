@@ -35,18 +35,20 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
+DEPTH          = ../../..
+topsrcdir      = @top_srcdir@
+srcdir         = @srcdir@
+VPATH          = @srcdir@
+relativesrcdir = browser/fuel/test
 
 include $(DEPTH)/config/autoconf.mk
-
-DIRS = public src
-
-ifdef MOZ_MOCHITEST
-DIRS += test
-endif
-
 include $(topsrcdir)/config/rules.mk
 
+_TEST_FILES =	test_Application.html \
+		test_ApplicationPrefs.html \
+		test_ApplicationStorage.html \
+		test_Extensions.html \
+		$(NULL)
+
+libs::	$(_TEST_FILES)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

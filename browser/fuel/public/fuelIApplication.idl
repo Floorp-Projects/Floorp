@@ -1,0 +1,390 @@
+#include "nsISupports.idl"
+#include "nsIVariant.idl"
+
+interface fuelIPreference;
+
+/**
+ * Interface that gives simplified access to the console
+ */
+[scriptable, uuid(ae8482e0-aa5a-11db-abbd-0800200c9a66)]
+interface fuelIConsole : nsISupports
+{
+  /**
+   * Sends a given string to the console.
+   * @param   aMsg
+   *          The text to send to the console
+   */
+  void log(in AString aMsg);
+
+  /**
+   * Opens the error console window. The console window
+   * is focused if already open.
+   */
+  void open();
+};
+
+
+/**
+ * Interface holds information about an event.
+ */
+[scriptable, function, uuid(05281820-ab62-11db-abbd-0800200c9a66)]
+interface fuelIEventItem : nsISupports
+{
+  /**
+   * The name of the event
+   */
+  readonly attribute AString type;
+
+  /**
+   * Can hold extra details and data associated with the event. This
+   * is optional and event specific. If the event does not send extra
+   * details, this is null.
+   */
+  readonly attribute AString data;
+
+  /**
+   * Cancels the event if it is cancelable.
+   */
+  void preventDefault();
+}; 
+
+
+/**
+ * Interface used as a callback for listening to events.
+ */
+[scriptable, function, uuid(2dfe3a50-ab2f-11db-abbd-0800200c9a66)]
+interface fuelIEventListener : nsISupports
+{
+  /**
+   * This method is called whenever an event occurs of the type for which 
+   * the fuelIEventListener interface was registered.
+   *
+   * @param   aEvent
+   *          The fuelIEventItem associated with the event.
+   */
+  void handleEvent(in fuelIEventItem aEvent);
+}; 
+
+
+/**
+ * Interface for supporting custom events.
+ */
+[scriptable, uuid(3a8ec9d0-ab19-11db-abbd-0800200c9a66)]
+interface fuelIEvents : nsISupports
+{
+  /**
+   * Adds an event listener to the list. If multiple identical event listeners
+   * are registered on the same event target with the same parameters the
+   * duplicate instances are discarded. They do not cause the EventListener
+   * to be called twice and since they are discarded they do not need to be
+   * removed with the removeListener method.
+   *
+   * @param   aEvent
+   *          The name of an event
+   * @param   aListener
+   *          The reference to a listener
+   */
+  void addListener(in AString aEvent, in fuelIEventListener aListener);
+
+  /**
+   * Removes an event listener from the list. Calling remove
+   * with arguments which do not identify any currently registered
+   * event listener has no effect.
+   * @param   aEvent
+   *          The name of an event
+   * @param   aListener
+   *          The reference to a listener
+   */
+  void removeListener(in AString aEvent, in fuelIEventListener aListener);
+}; 
+
+
+/**
+ * Interface for simplified access to preferences. The interface has a
+ * predefined root preference branch. The root branch is set based on the
+ * context of the owner. For example, an extension's preferences have a root
+ * of "extensions.<extensionid>.", while the application level preferences
+ * have an empty root. All preference "aName" parameters used in this interface
+ * are relative to the root branch.
+ */
+[scriptable, uuid(ce697d40-aa5a-11db-abbd-0800200c9a66)]
+interface fuelIPreferenceBranch : nsISupports
+{
+  /**
+   * The name of the branch root.
+   */
+  readonly attribute AString root;
+  
+  /**
+   * Array of fuelIPreference listing all preferences in this branch.
+   */
+  readonly attribute nsIVariant all;
+  
+  /**
+   * The events object for the preferences
+   * supports: "change"
+   */
+  readonly attribute fuelIEvents events;
+  
+  /**
+   * Check to see if a preference exists.
+   * @param   aName
+   *          The name of preference
+   * @returns true if the preference exists, false if not
+   */
+  boolean has(in AString aName);
+  
+  /**
+   * Gets an object representing a preference
+   * @param   aName
+   *          The name of preference
+   * @returns a preference object, or null if the preference does not exist
+   */
+  fuelIPreference get(in AString aName);
+  
+  /**
+   * Gets the value of a preference. Returns a default value if
+   * the preference does not exist.
+   * @param   aName
+   *          The name of preference
+   * @param   aDefaultValue
+   *          The value to return if preference does not exist
+   * @returns value of the preference or the given default value if preference
+   *          does not exists.
+   */
+  nsIVariant getValue(in AString aName, in nsIVariant aDefaultValue);
+
+  /**
+   * Sets the value of a storage item with the given name.
+   * @param   aName
+   *          The name of an item
+   * @param   aValue
+   *          The value to assign to the item
+   */
+  void setValue(in AString aName, in nsIVariant aValue);
+
+  /**
+   * Resets all preferences in a branch back to their default values.
+   */
+  void reset();
+};
+
+/**
+ * Interface for accessing a single preference. The data is not cached.
+ * All reads access the current state of the preference.
+ */
+[scriptable, uuid(2C7462E2-72C2-4473-9007-0E6AE71E23CA)]
+interface fuelIPreference : nsISupports
+{
+  /**
+   * The name of the preference.
+   */
+  readonly attribute AString name;
+  
+  /**
+   * A string representing the type of preference (String, Boolean, or Number).
+   */
+  readonly attribute AString type;
+  
+  /**
+   * Get/Set the value of the preference.
+   */
+  attribute nsIVariant value;
+  
+  /**
+   * Get the locked state of the preference. Set to a boolean value to (un)lock it.
+   */
+  attribute boolean locked;
+  
+  /**
+   * Check if a preference has been modified by the user, or not.
+   */
+  attribute boolean modified;
+  
+  /**
+   * The preference branch that contains this preference.
+   */
+  readonly attribute fuelIPreferenceBranch branch;
+  
+  /**
+   * The events object for this preference.
+   * supports: "change"
+   */
+  readonly attribute fuelIEvents events;
+  
+  /**
+   * Resets a preference back to its default values.
+   */
+  void reset();
+};
+
+
+/**
+ * Interface representing a simple storage system
+ */
+[scriptable, uuid(bbaf6210-aafe-11db-abbd-0800200c9a66)]
+interface fuelISessionStorage : nsISupports
+{
+  /**
+   * The events object for the storage
+   * supports: "change"
+   */
+  readonly attribute fuelIEvents events;
+
+  /**
+   * Determines if a storage item exists with the given name.
+   * @param   aName
+   *          The name of an item
+   * @returns true if an item exists with the given name,
+   *          false otherwise.
+   */
+  boolean has(in AString aName);
+
+  /**
+   * Sets the value of a storage item with the given name.
+   * @param   aName
+   *          The name of an item
+   * @param   aValue
+   *          The value to assign to the item
+   */
+  void set(in AString aName, in AString aValue);
+
+  /**
+   * Gets the value of a storage item with the given name. Returns a
+   * default value if the item does not exist.
+   * @param   aName
+   *          The name of an item
+   * @param   aDefaultValue
+   *          The value to return if no item exists with the given name
+   * @returns value of the item or the given default value if no item
+   *          exists with the given name.
+   */
+  AString get(in AString aName, in AString aDefaultValue);
+}; 
+
+
+  /**
+   * Interface representing an extension
+   */
+[scriptable, uuid(ea563b60-aa5a-11db-abbd-0800200c9a66)]
+interface fuelIExtension : nsISupports
+{
+  /**
+   * The id of the extension.
+   */
+  readonly attribute AString id;
+
+  /**
+   * The name of the extension.
+   */
+  readonly attribute AString name;
+  
+  /**
+   * The version number of the extension.
+   */
+  readonly attribute AString version;
+
+  /**
+   * Indicates whether this is the extension's first run after install
+   */
+  readonly attribute boolean firstRun;
+
+  /**
+   * The preferences object for the extension. Defaults to the
+   * "extensions.<extensionid>." branch.
+   */
+  readonly attribute fuelIPreferenceBranch prefs;
+
+  /**
+   * The storage object for the extension.
+   */
+  readonly attribute fuelISessionStorage storage;
+
+  /**
+   * The events object for the extension.
+   * supports: "uninstall"
+   */
+  readonly attribute fuelIEvents events;
+}; 
+
+
+/**
+ * Interface representing a list of all installed extensions
+ */
+[scriptable, uuid(de281930-aa5a-11db-abbd-0800200c9a66)]
+interface fuelIExtensions : nsISupports
+{
+  /**
+   * Array of fuelIExtension listing all extensions in the application.
+   */
+  readonly attribute nsIVariant all;
+
+  /**
+   * Determines if an extension exists with the given id.
+   * @param   aId
+   *          The id of an extension
+   * @returns true if an extension exists with the given id,
+   *          false otherwise.
+   */
+  boolean has(in AString aId);
+
+  /**
+   * Gets a fuelIExtension object for an extension.
+   * @param   aId
+   *          The id of an extension
+   * @returns An extension object or null if no extension exists
+   *          with the given id.
+   */
+  fuelIExtension get(in AString aId);
+}; 
+
+
+/**
+ * Interface for managing and accessing the applications systems
+ */
+[scriptable, uuid(fe74cf80-aa2d-11db-abbd-0800200c9a66)]
+interface fuelIApplication : nsISupports
+{
+  /**
+   * The id of the application.
+   */
+  readonly attribute AString id;
+
+  /**
+   * The name of the application.
+   */
+  readonly attribute AString name;
+  
+  /**
+   * The version number of the application.
+   */
+  readonly attribute AString version;
+  
+  /**
+   * The console object for the application.
+   */
+  readonly attribute fuelIConsole console;
+
+  /**
+   * The extensions object for the application. Contains a list
+   * of all installed extensions.
+   */
+  readonly attribute fuelIExtensions extensions;
+
+  /**
+   * The preferences object for the application. Defaults to an empty
+   * root branch.
+   */
+  readonly attribute fuelIPreferenceBranch prefs;
+
+  /**
+   * The storage object for the application.
+   */
+  readonly attribute fuelISessionStorage storage;
+
+  /**
+   * The events object for the application.
+   * supports: "load", "ready", "quit", "unload"
+   */
+  readonly attribute fuelIEvents events;
+}; 
