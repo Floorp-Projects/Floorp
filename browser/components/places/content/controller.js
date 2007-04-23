@@ -1805,7 +1805,7 @@ PlacesCreateLivemarkTransaction.prototype = {
                    .createLivemark(this._container, this._name, this._siteURI,
                                    this._feedURI, this._index);
     if (this._annotations)  {
-      var placeURI = this.utils.bookmarks.getItemURI(this._id);
+      var placeURI = this.utils.bookmarks.getFolderURI(this._id);
       this.utils.setAnnotationsForURI(placeURI, this._annotations);
     }
   },
