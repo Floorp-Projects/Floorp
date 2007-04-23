@@ -16,15 +16,16 @@
     </content>
     
     <implementation implements="nsIAccessibleProvider">
-      <property name="label" onset="if (this.label != val) this.setAttribute('label',val); return val;"
-                                      onget="return this.getAttribute('label');"/>
-
       <property name="mode" onset="if (this.mode != val) this.setAttribute('mode', val); return val;"
                             onget="return this.getAttribute('mode');"/>
 
-      <property name="value" onget="return this.getAttribute('value');">
+      <property name="value" onget="return this.getAttribute('value') || '0';">
         <setter><![CDATA[
           var p = Math.round(val);
+          if (p < 0)
+            p = 0;
+          else if (p > 100)
+            p = 100;
           var c = this.value; 
           if (p != c) {
             var delta = p - c;
@@ -39,7 +40,7 @@
             }
           }
           
-          return p;
+          return val;
         ]]></setter>
       </property>
 
@@ -62,7 +63,7 @@
     </content>
 
     <implementation>
-      <method name="init">
+      <method name="_init">
         <body><![CDATA[
           var stack = document.getAnonymousElementByAttribute(this, "anonid", "stack");
           var spacer = document.getAnonymousElementByAttribute(this, "anonid", "spacer");
@@ -94,7 +95,7 @@
         ]]></body>
       </method>
 
-      <constructor>this.init();</constructor>
+      <constructor>this._init();</constructor>
     </implementation>
   </binding>
 
