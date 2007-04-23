@@ -63,7 +63,7 @@ public:
   {
     mExtensionDecoder = nsnull;
     m4BytesDecoder = nsnull;
-  };
+  }
 
 protected:
 
@@ -88,8 +88,8 @@ protected:
 class nsGB18030ToUnicode : public nsGBKToUnicode
 {
 public:
-  nsGB18030ToUnicode() {};
-  virtual ~nsGB18030ToUnicode() {};
+  nsGB18030ToUnicode() {}
+  virtual ~nsGB18030ToUnicode() {}
 protected:
   virtual void CreateExtensionDecoder();
   virtual void Create4BytesDecoder();

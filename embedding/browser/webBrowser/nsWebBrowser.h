@@ -93,7 +93,7 @@ public:
     PRBool Equals(nsIWeakReference *aListener, const nsIID& aID) {
         if (mWeakPtr.get() == aListener && mID.Equals(aID)) return PR_TRUE;
         return PR_FALSE;
-    };
+    }
 
     nsWeakPtr mWeakPtr;
     nsIID mID;

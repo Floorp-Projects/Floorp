@@ -51,7 +51,7 @@ extern char jp2CharContext[83][83];
 class JapaneseContextAnalysis
 {
 public:
-  JapaneseContextAnalysis() {Reset();};
+  JapaneseContextAnalysis() {Reset();}
 
   void HandleData(const char* aBuf, PRUint32 aLen);
 
@@ -72,12 +72,12 @@ public:
       mRelSample[jp2CharContext[mLastCharOrder][order]]++;
     }
     mLastCharOrder = order;
-  };
+  }
 
   float GetConfidence();
   void      Reset(void);
-  void      SetOpion(){};
-  PRBool GotEnoughData() {return mTotalRel > ENOUGH_REL_THRESHOLD;};
+  void      SetOpion(){}
+  PRBool GotEnoughData() {return mTotalRel > ENOUGH_REL_THRESHOLD;}
 
 protected:
   virtual PRInt32 GetOrder(const char* str, PRUint32 *charLen) = 0;
@@ -115,7 +115,7 @@ protected:
           (unsigned char)*(str+1) <= (unsigned char)0xf1)
       return (unsigned char)*(str+1) - (unsigned char)0x9f;
     return -1;
-  };
+  }
 };
 
 class EUCJPContextAnalysis : public JapaneseContextAnalysis
@@ -130,7 +130,7 @@ protected:
           (unsigned char)*(str+1) <= (unsigned char)0xf3)
       return (unsigned char)*(str+1) - (unsigned char)0xa1;
     return -1;
-  };
+  }
 };
 
 #endif /* __JPCNTX_H__ */

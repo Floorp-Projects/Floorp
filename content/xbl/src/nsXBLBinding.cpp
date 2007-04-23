@@ -259,7 +259,7 @@ struct EnumData {
  
   EnumData(nsXBLBinding* aBinding)
     :mBinding(aBinding)
-  {};
+  {}
 };
 
 struct ContentListData : public EnumData {
@@ -268,7 +268,7 @@ struct ContentListData : public EnumData {
 
   ContentListData(nsXBLBinding* aBinding, nsBindingManager* aManager)
     :EnumData(aBinding), mBindingManager(aManager), mRv(NS_OK)
-  {};
+  {}
 };
 
 PR_STATIC_CALLBACK(PLDHashOperator)

@@ -61,7 +61,7 @@ class nsIDOMDocument;
 class txAXMLEventHandler
 {
 public:
-    virtual ~txAXMLEventHandler() {};
+    virtual ~txAXMLEventHandler() {}
 
     /**
      * Signals to receive the start of an attribute.
@@ -204,7 +204,7 @@ public:
 class txAOutputHandlerFactory
 {
 public:
-    virtual ~txAOutputHandlerFactory() {};
+    virtual ~txAOutputHandlerFactory() {}
 
     /**
      * Creates an outputhandler for the specified format.

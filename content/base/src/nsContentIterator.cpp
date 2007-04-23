@@ -1223,8 +1223,8 @@ nsContentIterator::GetCurrentNode()
 class nsContentSubtreeIterator : public nsContentIterator 
 {
 public:
-  nsContentSubtreeIterator() {};
-  virtual ~nsContentSubtreeIterator() {};
+  nsContentSubtreeIterator() {}
+  virtual ~nsContentSubtreeIterator() {}
 
   // nsContentIterator overrides ------------------------------
 

@@ -78,7 +78,7 @@ struct RuleProcessorData {
   void Destroy(nsPresContext* aContext) {
     this->~RuleProcessorData();
     aContext->FreeToShell(sizeof(RuleProcessorData), this);
-  };
+  }
 
   const nsString* GetLang();
 

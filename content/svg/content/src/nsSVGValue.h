@@ -78,7 +78,7 @@ protected:
                        modificationType aModType);
   PRInt32 GetModifyNestCount() { return mModifyNestCount; }
 private:
-  virtual void OnDidModify(){}; // hook that will be called before observers are notified
+  virtual void OnDidModify(){} // hook that will be called before observers are notified
   
   nsSmallVoidArray mObservers;
   PRInt32 mModifyNestCount;

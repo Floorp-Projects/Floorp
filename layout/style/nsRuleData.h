@@ -83,8 +83,8 @@ struct nsRuleData
 #ifdef MOZ_SVG
     mSVGData = nsnull;
 #endif
-  };
-  ~nsRuleData() {};
+  }
+  ~nsRuleData() {}
 };
 
 #endif

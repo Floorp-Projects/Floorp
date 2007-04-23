@@ -57,13 +57,13 @@ public:
     NS_DECL_NSISCRIPTABLEINPUTSTREAM
 
     // nsScriptableInputStream methods
-    nsScriptableInputStream() {};
+    nsScriptableInputStream() {}
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 private:
-    ~nsScriptableInputStream() {};
+    ~nsScriptableInputStream() {}
 
     nsCOMPtr<nsIInputStream> mInputStream;
 };

@@ -83,7 +83,7 @@ public:
   friend class nsTreeBodyFrame;
 
 protected:
-  void UnsuppressInvalidation() { mInvalidationSuppressed = PR_FALSE; };
+  void UnsuppressInvalidation() { mInvalidationSuppressed = PR_FALSE; }
   void Invalidate();
 
 private:
@@ -95,17 +95,17 @@ private:
   class InvalidationArea {
     public:
       InvalidationArea(nsITreeColumn* aCol);
-      ~InvalidationArea() { delete mNext; };
+      ~InvalidationArea() { delete mNext; }
 
       friend class nsTreeImageListener;
 
     protected:
       void AddRow(PRInt32 aIndex);
-      nsITreeColumn* GetCol() { return mCol.get(); };
-      PRInt32 GetMin() { return mMin; };
-      PRInt32 GetMax() { return mMax; };
-      InvalidationArea* GetNext() { return mNext; };
-      void SetNext(InvalidationArea* aNext) { mNext = aNext; };
+      nsITreeColumn* GetCol() { return mCol.get(); }
+      PRInt32 GetMin() { return mMin; }
+      PRInt32 GetMax() { return mMax; }
+      InvalidationArea* GetNext() { return mNext; }
+      void SetNext(InvalidationArea* aNext) { mNext = aNext; }
 
     private:
       nsCOMPtr<nsITreeColumn> mCol;

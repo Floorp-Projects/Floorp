@@ -77,7 +77,7 @@ protected:
                                 char * aDest, PRInt32 * aDestLength)
   {
     return NS_OK;
-  };  // just make it not abstract;
+  }  // just make it not abstract;
 
   PRUint16 mHZState;
 protected:

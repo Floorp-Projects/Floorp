@@ -50,7 +50,7 @@ class nsNetscapeProfileMigratorBase
 {
 public:
   nsNetscapeProfileMigratorBase();
-  virtual ~nsNetscapeProfileMigratorBase() { };
+  virtual ~nsNetscapeProfileMigratorBase() { }
 
 public:
   typedef nsresult(*prefConverter)(void*, nsIPrefBranch*);

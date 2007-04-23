@@ -74,28 +74,28 @@ protected:
   nsresult GetXInTwips(nsIFrame* aBodyFrame, nscoord* aResult);
   nsresult GetWidthInTwips(nsIFrame* aBodyFrame, nscoord* aResult);
 
-  void SetColumns(nsTreeColumns* aColumns) { mColumns = aColumns; };
+  void SetColumns(nsTreeColumns* aColumns) { mColumns = aColumns; }
 
-  const nsAString& GetId() { return mId; };
-  nsIAtom* GetAtom() { return mAtom; };
+  const nsAString& GetId() { return mId; }
+  nsIAtom* GetAtom() { return mAtom; }
 
-  PRInt32 GetIndex() { return mIndex; };
+  PRInt32 GetIndex() { return mIndex; }
 
-  PRBool IsPrimary() { return mIsPrimary; };
-  PRBool IsCycler() { return mIsCycler; };
-  PRBool IsEditable() { return mIsEditable; };
-  PRBool IsSelectable() { return mIsSelectable; };
-  PRBool Overflow() { return mOverflow; };
+  PRBool IsPrimary() { return mIsPrimary; }
+  PRBool IsCycler() { return mIsCycler; }
+  PRBool IsEditable() { return mIsEditable; }
+  PRBool IsSelectable() { return mIsSelectable; }
+  PRBool Overflow() { return mOverflow; }
 
-  PRInt16 GetType() { return mType; };
+  PRInt16 GetType() { return mType; }
 
-  PRInt8 GetCropStyle() { return mCropStyle; };
-  PRInt32 GetTextAlignment() { return mTextAlignment; };
+  PRInt8 GetCropStyle() { return mCropStyle; }
+  PRInt32 GetTextAlignment() { return mTextAlignment; }
 
-  nsTreeColumn* GetNext() { return mNext; };
-  nsTreeColumn* GetPrevious() { return mPrevious; };
-  void SetNext(nsTreeColumn* aNext) { NS_IF_ADDREF(mNext = aNext); };
-  void SetPrevious(nsTreeColumn* aPrevious) { mPrevious = aPrevious; };
+  nsTreeColumn* GetNext() { return mNext; }
+  nsTreeColumn* GetPrevious() { return mPrevious; }
+  void SetNext(nsTreeColumn* aNext) { NS_IF_ADDREF(mNext = aNext); }
+  void SetPrevious(nsTreeColumn* aPrevious) { mPrevious = aPrevious; }
 
 private:
   /**
@@ -143,12 +143,12 @@ public:
 
   friend class nsTreeBodyFrame;
 protected:
-  void SetTree(nsITreeBoxObject* aTree) { mTree = aTree; };
+  void SetTree(nsITreeBoxObject* aTree) { mTree = aTree; }
 
   // Builds our cache of column info.
   void EnsureColumns();
 
-  nsTreeColumn* GetFirstColumn() { EnsureColumns(); return mFirstColumn; };
+  nsTreeColumn* GetFirstColumn() { EnsureColumns(); return mFirstColumn; }
   nsTreeColumn* GetPrimaryColumn();
 
 private:

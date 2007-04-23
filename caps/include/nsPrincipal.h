@@ -117,7 +117,7 @@ protected:
         prettyName(aPrettyName),
         cert(aCert)
     {
-    };
+    }
     nsCString fingerprint;
     nsCString subjectName;
     nsCString prettyName;

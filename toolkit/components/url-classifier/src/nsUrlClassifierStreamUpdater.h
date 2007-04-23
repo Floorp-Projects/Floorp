@@ -66,7 +66,7 @@ public:
 
 private:
   // No subclassing
-  ~nsUrlClassifierStreamUpdater() {};
+  ~nsUrlClassifierStreamUpdater() {}
 
   // Disallow copy constructor
   nsUrlClassifierStreamUpdater(nsUrlClassifierStreamUpdater&);

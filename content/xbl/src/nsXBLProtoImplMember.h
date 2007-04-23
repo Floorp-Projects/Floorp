@@ -97,12 +97,12 @@ struct nsXBLTextWithLineNumber
 class nsXBLProtoImplMember
 {
 public:
-  nsXBLProtoImplMember(const PRUnichar* aName) :mNext(nsnull) { mName = ToNewUnicode(nsDependentString(aName)); };
-  virtual ~nsXBLProtoImplMember() { nsMemory::Free(mName); delete mNext; };
+  nsXBLProtoImplMember(const PRUnichar* aName) :mNext(nsnull) { mName = ToNewUnicode(nsDependentString(aName)); }
+  virtual ~nsXBLProtoImplMember() { nsMemory::Free(mName); delete mNext; }
   virtual void Destroy(PRBool aIsCompiled)=0;
 
-  nsXBLProtoImplMember* GetNext() { return mNext; };
-  void SetNext(nsXBLProtoImplMember* aNext) { mNext = aNext; };
+  nsXBLProtoImplMember* GetNext() { return mNext; }
+  void SetNext(nsXBLProtoImplMember* aNext) { mNext = aNext; }
 
   virtual nsresult InstallMember(nsIScriptContext* aContext,
                                  nsIContent* aBoundElement, 

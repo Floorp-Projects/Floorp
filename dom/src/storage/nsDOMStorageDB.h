@@ -50,8 +50,8 @@ class nsSessionStorageEntry;
 class nsDOMStorageDB
 {
 public:
-  nsDOMStorageDB() {};
-  ~nsDOMStorageDB() {};
+  nsDOMStorageDB() {}
+  ~nsDOMStorageDB() {}
 
   nsresult
   Init();

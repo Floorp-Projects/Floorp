@@ -50,9 +50,9 @@ class nsDFAState : public nsHashKey
 public:
   PRUint32 mStateID;
 
-  nsDFAState(PRUint32 aID) :mStateID(aID) {};
+  nsDFAState(PRUint32 aID) :mStateID(aID) {}
 
-  PRUint32 GetStateID() { return mStateID; };
+  PRUint32 GetStateID() { return mStateID; }
 
   PRUint32 HashCode(void) const {
     return mStateID;
@@ -74,7 +74,7 @@ public:
   PRUint32 mState;
   nsCOMPtr<nsIAtom> mInputSymbol;
 
-  nsTransitionKey(PRUint32 aState, nsIAtom* aSymbol) :mState(aState), mInputSymbol(aSymbol) {};
+  nsTransitionKey(PRUint32 aState, nsIAtom* aSymbol) :mState(aState), mInputSymbol(aSymbol) {}
 
   PRUint32 HashCode(void) const {
     // Make a 32-bit integer that combines the low-order 16 bits of the state and the input symbol.
@@ -96,10 +96,10 @@ public:
 class nsTreeStyleCache 
 {
 public:
-  nsTreeStyleCache() :mTransitionTable(nsnull), mCache(nsnull), mNextState(0) {};
-  ~nsTreeStyleCache() { Clear(); };
+  nsTreeStyleCache() :mTransitionTable(nsnull), mCache(nsnull), mNextState(0) {}
+  ~nsTreeStyleCache() { Clear(); }
 
-  void Clear() { delete mTransitionTable; mTransitionTable = nsnull; delete mCache; mCache = nsnull; mNextState = 0; };
+  void Clear() { delete mTransitionTable; mTransitionTable = nsnull; delete mCache; mCache = nsnull; mNextState = 0; }
 
   nsStyleContext* GetStyleContext(nsICSSPseudoComparator* aComparator,
                                   nsPresContext* aPresContext, 

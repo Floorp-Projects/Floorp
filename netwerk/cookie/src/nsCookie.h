@@ -116,7 +116,7 @@ class nsCookie : public nsICookie2
                              nsCookieStatus    aStatus,
                              nsCookiePolicy    aPolicy);
 
-    virtual ~nsCookie() {};
+    virtual ~nsCookie() {}
 
     // fast (inline, non-xpcom) getters
     inline const nsDependentCString Name()  const { return nsDependentCString(mName, mValue - 1); }

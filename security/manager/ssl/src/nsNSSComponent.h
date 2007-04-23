@@ -192,7 +192,7 @@ class nsNSSComponent : public nsISignatureVerifier,
                        public nsINSSErrorsService
 {
 public:
-  NS_DEFINE_STATIC_CID_ACCESSOR( NS_NSSCOMPONENT_CID );
+  NS_DEFINE_STATIC_CID_ACCESSOR( NS_NSSCOMPONENT_CID )
 
   nsNSSComponent();
   virtual ~nsNSSComponent();

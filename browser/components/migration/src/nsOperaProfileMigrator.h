@@ -181,7 +181,7 @@ public:
   } TAG;
 
 protected:
-  nsOperaCookieMigrator() { };
+  nsOperaCookieMigrator() { }
 
   nsresult ReadHeader();
 

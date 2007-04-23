@@ -253,7 +253,7 @@ protected:
   PRInt32 GetDefaultNamespaceID() const
   {
     return mDefaultNamespaceID;
-  };
+  }
 
   nsCOMArray<nsIDOMHTMLMapElement> mImageMaps;
 

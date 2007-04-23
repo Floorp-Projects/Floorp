@@ -68,6 +68,6 @@ private:
   nsRuleNode* mRoot; // The root of the tree we're walking.
 
 public:
-  nsRuleWalker(nsRuleNode* aRoot) :mCurrent(aRoot), mRoot(aRoot) { MOZ_COUNT_CTOR(nsRuleWalker); };
-  ~nsRuleWalker() { MOZ_COUNT_DTOR(nsRuleWalker); };
+  nsRuleWalker(nsRuleNode* aRoot) :mCurrent(aRoot), mRoot(aRoot) { MOZ_COUNT_CTOR(nsRuleWalker); }
+  ~nsRuleWalker() { MOZ_COUNT_DTOR(nsRuleWalker); }
 };

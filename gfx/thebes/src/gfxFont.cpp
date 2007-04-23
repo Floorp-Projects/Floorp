@@ -344,7 +344,7 @@ struct ResolveData {
         mCallback(aCallback),
         mGenericFamily(aGenericFamily),
         mClosure(aClosure) {
-    };
+    }
     gfxFontGroup::FontCreationCallback mCallback;
     nsCString mGenericFamily;
     void *mClosure;

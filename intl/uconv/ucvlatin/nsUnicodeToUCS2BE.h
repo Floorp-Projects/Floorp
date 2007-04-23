@@ -43,7 +43,7 @@
 class nsUnicodeToUTF16BE: public nsBasicEncoder
 {
 public:
-  nsUnicodeToUTF16BE() { mBOM = 0;};
+  nsUnicodeToUTF16BE() { mBOM = 0;}
 
   //--------------------------------------------------------------------
   // Interface nsIUnicodeEncoder [declaration]
@@ -69,7 +69,7 @@ protected:
 class nsUnicodeToUTF16LE: public nsUnicodeToUTF16BE
 {
 public:
-  nsUnicodeToUTF16LE() { mBOM = 0;};
+  nsUnicodeToUTF16LE() { mBOM = 0;}
 
 protected:
   NS_IMETHOD CopyData(char* aDest, const PRUnichar* aSrc, PRInt32 aLen  );
@@ -86,7 +86,7 @@ class nsUnicodeToUTF16: public nsUnicodeToUTF16BE
 #endif
 {
 public:
-  nsUnicodeToUTF16() { mBOM = 0xFEFF;};
+  nsUnicodeToUTF16() { mBOM = 0xFEFF;}
 };
 
 #endif /* nsUnicodeToUCS2BE_h___ */

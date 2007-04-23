@@ -99,7 +99,7 @@ public:
   // nsIScrollbarMediator
   NS_IMETHOD PositionChanged(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32& aNewIndex);
   NS_IMETHOD ScrollbarButtonPressed(nsISupports* aScrollbar, PRInt32 aOldIndex, PRInt32 aNewIndex);
-  NS_IMETHOD VisibilityChanged(nsISupports* aScrollbar, PRBool aVisible) { Invalidate(); return NS_OK; };
+  NS_IMETHOD VisibilityChanged(nsISupports* aScrollbar, PRBool aVisible) { Invalidate(); return NS_OK; }
 
   // Overridden from nsIFrame to cache our pres context.
   NS_IMETHOD Init(nsIContent*     aContent,
@@ -226,7 +226,7 @@ protected:
 
   PRInt32 GetLastVisibleRow() {
     return mTopRowIndex + mPageLength;
-  };
+  }
 
   // An internal hit test.  aX and aY are expected to be in twips in the
   // coordinate system of this frame.
@@ -359,7 +359,7 @@ protected:
     InvalidateRow(aRow);
     if (aOrientation != nsITreeView::DROP_ON)
       InvalidateRow(aRow + aOrientation);
-  };
+  }
 
   already_AddRefed<nsTreeColumn> GetColumnImpl(nsITreeColumn* aUnknownCol) {
     if (!aUnknownCol)
@@ -450,12 +450,12 @@ protected: // Data Members
     public:
       Slots()
         : mValueArray(~PRInt32(0)) {
-      };
+      }
 
       ~Slots() {
         if (mTimer)
           mTimer->Cancel();
-      };
+      }
 
       friend class nsTreeBodyFrame;
 

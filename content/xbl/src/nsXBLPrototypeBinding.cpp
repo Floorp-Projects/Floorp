@@ -547,7 +547,7 @@ struct InsertionData {
 
   InsertionData(nsXBLBinding* aBinding,
                 nsXBLPrototypeBinding* aPrototype) 
-    :mBinding(aBinding), mPrototype(aPrototype) {};
+    :mBinding(aBinding), mPrototype(aPrototype) {}
 };
 
 PRBool PR_CALLBACK InstantiateInsertionPoint(nsHashKey* aKey, void* aData, void* aClosure)
@@ -847,7 +847,7 @@ struct nsXBLAttrChangeData
 
   nsXBLAttrChangeData(nsXBLPrototypeBinding* aProto,
                       nsIContent* aElt, nsIContent* aContent) 
-  :mProto(aProto), mBoundElement(aElt), mContent(aContent) {};
+  :mProto(aProto), mBoundElement(aElt), mContent(aContent) {}
 };
 
 // XXXbz this duplicates lots of AttributeChanged

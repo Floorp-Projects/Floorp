@@ -136,7 +136,7 @@ public:
                               nsIContent* aContent2);
 
 protected:
-  virtual ~nsNode3Tearoff() {};
+  virtual ~nsNode3Tearoff() {}
 
 private:
   nsCOMPtr<nsIContent> mContent;

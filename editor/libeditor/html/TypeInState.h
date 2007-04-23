@@ -52,7 +52,7 @@ struct PropItem
   nsString attr;
   nsString value;
   
-  PropItem() : tag(nsnull), attr(), value() {};
+  PropItem() : tag(nsnull), attr(), value() {}
   PropItem(nsIAtom *aTag, const nsAString &aAttr, const nsAString &aValue);
   ~PropItem();
 };

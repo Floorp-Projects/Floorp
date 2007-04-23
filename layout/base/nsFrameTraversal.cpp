@@ -135,7 +135,7 @@ class nsVisualIterator: public nsFrameIterator
 public:
   nsVisualIterator(nsPresContext* aPresContext, nsIFrame *aStart,
                    nsIteratorType aType, PRBool aLockScroll, PRBool aFollowOOFs) :
-  nsFrameIterator(aPresContext, aStart, aType, aLockScroll, aFollowOOFs) {};
+  nsFrameIterator(aPresContext, aStart, aType, aLockScroll, aFollowOOFs) {}
 
 protected:
   nsIFrame* GetFirstChildInner(nsIFrame* aFrame);

@@ -48,8 +48,8 @@ class nsObserverBase {
 
 public:
 
-  nsObserverBase() {};
-  virtual ~nsObserverBase() {};
+  nsObserverBase() {}
+  virtual ~nsObserverBase() {}
 
   /*
    *   Subject call observer when the parser hit the tag

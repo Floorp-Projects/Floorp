@@ -45,7 +45,7 @@ class nsBoxLayout : public nsIBoxLayout {
 public:
 
   nsBoxLayout();
-  virtual ~nsBoxLayout() {};
+  virtual ~nsBoxLayout() {}
 
   NS_DECL_ISUPPORTS
 

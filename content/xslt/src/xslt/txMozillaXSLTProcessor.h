@@ -102,7 +102,7 @@ public:
     NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup,
                               nsIPrincipal* aCallerPrincipal);
     NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource);
-    NS_IMETHOD CancelLoads() {return NS_OK;};
+    NS_IMETHOD CancelLoads() {return NS_OK;}
     NS_IMETHOD AddXSLTParamNamespace(const nsString& aPrefix,
                                      const nsString& aNamespace);
     NS_IMETHOD AddXSLTParam(const nsString& aName,

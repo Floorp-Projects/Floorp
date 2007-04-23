@@ -88,7 +88,7 @@ public:
 
   void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
     return aContext->AllocateFromShell(sz);
-  };
+  }
   void operator delete(void* aPtr) {} // Does nothing. The arena will free us up when the rule tree
                                       // dies.
 

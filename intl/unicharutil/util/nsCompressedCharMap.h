@@ -110,7 +110,7 @@ public:
 
   PRUint16* NewCCMap();
   PRUint16* FillCCMap(PRUint16* aCCMap);
-  PRUint16  GetSize() {return mUsedLen;};
+  PRUint16  GetSize() {return mUsedLen;}
   void      SetChar(PRUint32);
   void      SetChars(PRUint16*);
   void      SetChars(PRUint16, ALU_TYPE*);

@@ -329,7 +329,7 @@ public:
       mNewScope(aNewScope),
       mNodesWithProperties(aNodesWithProperties)
   {
-  };
+  }
 
   nsIDOMElement *mElement;
   nsNodeInfoManager *mNewNodeInfoManager;

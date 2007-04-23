@@ -54,7 +54,7 @@ public:
      */
     virtual ~txObject()
     {
-    };
+    }
 };
 
 /**

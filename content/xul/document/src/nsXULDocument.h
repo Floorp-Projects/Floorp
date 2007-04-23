@@ -197,7 +197,7 @@ protected:
                                    nsIContent* aElement,
                                    void* aClosure);
 
-    void SetIsPopup(PRBool isPopup) { mIsPopup = isPopup; };
+    void SetIsPopup(PRBool isPopup) { mIsPopup = isPopup; }
 
     nsresult PrepareToLoad(nsISupports* aContainer,
                            const char* aCommand,
@@ -235,7 +235,7 @@ protected:
     PRInt32 GetDefaultNamespaceID() const
     {
         return kNameSpaceID_XUL;
-    };
+    }
 
 protected:
     // pseudo constants

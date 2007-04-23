@@ -100,7 +100,7 @@ void __log_addref(void* p, int oldrc, int newrc);
 void __log_release(void* p, int oldrc, int newrc);
 
 #ifdef __cplusplus
-}; /* end of extern "C" */
+} /* end of extern "C" */
 #endif
 
 #endif /* libmalloc_h___ */

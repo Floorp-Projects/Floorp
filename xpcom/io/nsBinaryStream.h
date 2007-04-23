@@ -61,9 +61,9 @@
 class nsBinaryOutputStream : public nsIObjectOutputStream
 {
 public:
-    nsBinaryOutputStream() {};
+    nsBinaryOutputStream() {}
     // virtual dtor since subclasses call our Release()
-    virtual ~nsBinaryOutputStream() {};
+    virtual ~nsBinaryOutputStream() {}
 
 protected:
     // nsISupports methods
@@ -101,9 +101,9 @@ protected:
 class nsBinaryInputStream : public nsIObjectInputStream
 {
 public:
-    nsBinaryInputStream() {};
+    nsBinaryInputStream() {}
     // virtual dtor since subclasses call our Release()
-    virtual ~nsBinaryInputStream() {};
+    virtual ~nsBinaryInputStream() {}
 
 protected:
     // nsISupports methods
