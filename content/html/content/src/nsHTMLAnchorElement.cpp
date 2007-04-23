@@ -111,6 +111,7 @@ public:
   virtual void SetFocus(nsPresContext* aPresContext);
   virtual PRBool IsFocusable(PRBool *aTabIndex = nsnull);
 
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
   virtual PRBool IsLink(nsIURI** aURI) const;
   virtual void GetLinkTarget(nsAString& aTarget);
@@ -273,6 +274,12 @@ nsHTMLAnchorElement::IsFocusable(PRInt32 *aTabIndex)
   }
 
   return PR_TRUE;
+}
+
+nsresult
+nsHTMLAnchorElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+{
+  return PreHandleEventForAnchors(aVisitor);
 }
 
 nsresult

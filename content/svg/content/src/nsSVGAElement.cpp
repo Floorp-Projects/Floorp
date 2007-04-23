@@ -69,6 +69,7 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGAElementBase::)
 
   // nsINode interface methods
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
@@ -167,6 +168,15 @@ nsSVGAElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 
 //----------------------------------------------------------------------
 // nsINode methods
+
+nsresult
+nsSVGAElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+{
+  nsresult rv = nsGenericElement::PreHandleEvent(aVisitor);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return PreHandleEventForLinks(aVisitor);
+}
 
 nsresult
 nsSVGAElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)

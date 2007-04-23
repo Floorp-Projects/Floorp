@@ -60,6 +60,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsGenericElement::)
 
   // nsINode interface methods
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
