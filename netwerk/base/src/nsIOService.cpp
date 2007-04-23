@@ -945,7 +945,7 @@ nsIOService::EscapeString(const nsACString& aString,
                           PRUint32 aEscapeType,
                           nsACString& aResult)
 {
-  NS_ENSURE_ARG_RANGE(aEscapeType, 0, 3);
+  NS_ENSURE_ARG_RANGE(aEscapeType, 0, 4);
 
   nsCAutoString stringCopy(aString);
   nsCString result;
@@ -955,5 +955,20 @@ nsIOService::EscapeString(const nsACString& aString,
 
   aResult.Assign(result);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIOService::UnescapeString(const nsACString& aString, nsACString& aResult)
+{
+  char *str = ToNewCString(aString);
+  
+  if (!str)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  str = nsUnescape(str);
+  aResult.Assign(str);
+
+  NS_Free(str);
   return NS_OK;
 }

@@ -44,7 +44,7 @@ interface nsIURI;
 /**
  * nsINetUtil provides various network-related utility methods.
  */
-[scriptable, uuid(c2bf4fea-7f9f-44a4-a7e0-8b323fdcc5d5)]
+[scriptable, uuid(7701f947-e4aa-431c-aec6-6bb304193460)]
 interface nsINetUtil : nsISupports
 {
   /**
@@ -73,12 +73,17 @@ interface nsINetUtil : nsISupports
 
   /** Leave alphanumeric characters and forward slashes intact,
       %XX-escape all others */
-  const unsigned long ESCAPE_URL_PATH = 3;
+  const unsigned long ESCAPE_URL_PATH = 4;
 
   /**
    * escape a string with %00-style escaping
    */
   ACString escapeString(in ACString aString, in unsigned long aEscapeType);
+
+  /**
+   * unescape a %00-style escaped string
+   */
+  ACString unescapeString(in ACString aString);
 
   /**
    * Test whether the given URI's handler has the given protocol flags.
