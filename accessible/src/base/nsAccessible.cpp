@@ -884,7 +884,7 @@ PRBool nsAccessible::IsVisible(PRBool *aIsOffscreen)
   // Otherwise it will be marked nsIAccessibleStates::STATE_OFFSCREEN
   // The STATE_INVISIBLE flag is for elements which are programmatically hidden
   
-  *aIsOffscreen = PR_FALSE;
+  *aIsOffscreen = PR_TRUE;
 
   const PRUint16 kMinPixels  = 12;
    // Set up the variables we need, return false if we can't get at them all
@@ -950,32 +950,29 @@ PRBool nsAccessible::IsVisible(PRBool *aIsOffscreen)
     }
   }
 
-  if (rectVisibility != nsRectVisibility_kZeroAreaRect) {
-    // Currently one of:
-    // nsRectVisibility_kVisible, 
-    // nsRectVisibility_kAboveViewport, 
-    // nsRectVisibility_kBelowViewport, 
-    // nsRectVisibility_kLeftOfViewport, 
-    // nsRectVisibility_kRightOfViewport
-    if (rectVisibility != nsRectVisibility_kVisible) {
-      *aIsOffscreen = PR_TRUE;
-    }
-    // This view says it is visible, but we need to check the parent view chain :(
-    if (!mDOMNode) {
-      return PR_FALSE;
-    }
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    mDOMNode->GetOwnerDocument(getter_AddRefs(domDoc));
-    NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-    return CheckVisibilityInParentChain(doc, containingView);
+  if (rectVisibility == nsRectVisibility_kZeroAreaRect || !mDOMNode) {
+    return PR_FALSE;   // Hidden element
+  }
+  
+  // Currently one of:
+  // nsRectVisibility_kVisible, 
+  // nsRectVisibility_kAboveViewport, 
+  // nsRectVisibility_kBelowViewport, 
+  // nsRectVisibility_kLeftOfViewport, 
+  // nsRectVisibility_kRightOfViewport
+  // This view says it is visible, but we need to check the parent view chain :(
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mDOMNode->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  if (!doc)  {
+    return PR_FALSE;
   }
 
-  *aIsOffscreen = PR_TRUE; // Offscreen always set to true for hidden elements
-  return PR_FALSE;
+  PRBool isVisible = CheckVisibilityInParentChain(doc, containingView);
+  if (isVisible && rectVisibility == nsRectVisibility_kVisible) {
+    *aIsOffscreen = PR_FALSE;
+  }
+  return isVisible;
 }
 
 NS_IMETHODIMP
