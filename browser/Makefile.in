@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(topsrcdir)/config/config.mk
 
-DIRS = base components locales themes app
+DIRS = base components locales themes app fuel
 
 include $(topsrcdir)/config/rules.mk
 
