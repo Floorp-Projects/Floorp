@@ -98,7 +98,9 @@ nsIAccessibilityService *nsAccessNode::GetAccService()
 //-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
-NS_IMPL_ISUPPORTS2(nsAccessNode, nsIAccessNode, nsPIAccessNode)
+NS_IMPL_QUERY_INTERFACE2(nsAccessNode, nsIAccessNode, nsPIAccessNode)
+NS_IMPL_ADDREF(nsAccessNode)
+NS_IMPL_RELEASE_WITH_DESTROY(nsAccessNode, LastRelease())
 
 nsAccessNode::nsAccessNode(nsIDOMNode *aNode, nsIWeakReference* aShell): 
   mDOMNode(aNode), mWeakShell(aShell)
@@ -113,9 +115,18 @@ nsAccessNode::nsAccessNode(nsIDOMNode *aNode, nsIWeakReference* aShell):
 //-----------------------------------------------------
 nsAccessNode::~nsAccessNode()
 {
+  NS_ASSERTION(!mWeakShell, "LastRelease was never called!?!");
+}
+
+void nsAccessNode::LastRelease()
+{
+  // First cleanup if needed...
   if (mWeakShell) {
-    Shutdown();  // Otherwise virtual Shutdown() methods could get fired twice
+    Shutdown();
+    NS_ASSERTION(!mWeakShell, "A Shutdown() impl forgot to call its parent's Shutdown?");
   }
+  // ... then die.
+  NS_DELETEXPCOM(this);
 }
 
 NS_IMETHODIMP nsAccessNode::Init()

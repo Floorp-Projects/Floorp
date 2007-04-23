@@ -156,6 +156,7 @@ protected:
     already_AddRefed<nsIPresShell> GetPresShell();
     nsPresContext* GetPresContext();
     already_AddRefed<nsIAccessibleDocument> GetDocAccessible();
+    void LastRelease();
 
     nsCOMPtr<nsIDOMNode> mDOMNode;
     nsCOMPtr<nsIWeakReference> mWeakShell;
