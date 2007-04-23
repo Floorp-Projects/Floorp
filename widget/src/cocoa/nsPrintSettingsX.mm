@@ -340,13 +340,13 @@ NS_IMETHODIMP nsPrintSettingsX::ReadPageFormatFromPrefs()
   PRUint32 maximumDataSize = (encodedDataLen * 3) / 4 - sizeof(FrozenHandle);
   PRUint32 minimumDataSize = maximumDataSize - 2;
   if (handleSize > maximumDataSize || handleSize < minimumDataSize) {
-    PR_Free(frozenHandle);
+    free(frozenHandle);
     return NS_ERROR_FAILURE;
   }
 
   Handle    decodedDataHandle = nsnull;
   OSErr err = ::PtrToHand(frozenHandle->data, &decodedDataHandle, handleSize);
-  PR_Free(frozenHandle);
+  free(frozenHandle);
   if (err != noErr)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -398,7 +398,7 @@ NS_IMETHODIMP nsPrintSettingsX::WritePageFormatToPrefs()
   // the correct size.
   PRUint32 dataSize = ::GetHandleSize(pageFormatHandle);
   PRUint32 frozenDataSize = sizeof(FrozenHandle) + dataSize;
-  FrozenHandle* frozenHandle = (FrozenHandle*)PR_Malloc(frozenDataSize);
+  FrozenHandle* frozenHandle = (FrozenHandle*)malloc(frozenDataSize);
   if (!frozenHandle)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -408,7 +408,7 @@ NS_IMETHODIMP nsPrintSettingsX::WritePageFormatToPrefs()
   nsXPIDLCString  encodedData;
   encodedData.Adopt(::PL_Base64Encode((char*)frozenHandle, frozenDataSize,
                     nsnull));
-  PR_Free(frozenHandle);
+  free(frozenHandle);
   if (!encodedData.get())
     return NS_ERROR_OUT_OF_MEMORY;
 
