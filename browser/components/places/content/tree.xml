@@ -947,8 +947,18 @@
 
       <method name="restoreSelection">
         <body><![CDATA[
+          var allowedMaxIndex = this.view.rowCount - 1;
+
           for (var i = 0; i < this._nextSelection.length; ++i) {
             var range = this._nextSelection[i];
+
+            // make sure the index is not over the end of the view
+            // this fixes bug 376581
+            if (range.max > allowedMaxIndex)
+              range.max = allowedMaxIndex;
+            if (range.min > allowedMaxIndex)
+              range.min = allowedMaxIndex;
+
             if (range.min > -1 && range.max > -1)
               this.view.selection.rangedSelect(range.min, range.max, true);
           }
