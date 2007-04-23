@@ -607,7 +607,7 @@ nsSVGGlyphFrame::GetCharacterPosition(gfxContext *aContext,
   if (!data)
     return NS_ERROR_FAILURE;
 
-  float length = data->GetLength();
+  gfxFloat length = data->GetLength();
   PRUint32 strLength = aText.Length();
 
   nsAutoPtr<gfxTextRun> textRun(GetTextRun(aContext, aText));
@@ -619,16 +619,16 @@ nsSVGGlyphFrame::GetCharacterPosition(gfxContext *aContext,
   for (PRUint32 k = 0; k < strLength; k++)
     cp[k].draw = PR_FALSE;
 
-  float x = mPosition.x;
+  gfxFloat x = mPosition.x;
   for (PRUint32 i = 0; i < strLength; i++) {
-    float halfAdvance = textRun->GetAdvanceWidth(i, 1, nsnull) / 2.0;
+    gfxFloat halfAdvance = textRun->GetAdvanceWidth(i, 1, nsnull) / 2.0;
 
     /* have we run off the end of the path? */
     if (x + halfAdvance > length)
       break;
 
     /* check that we've advanced to the start of the path */
-    if (x + halfAdvance >= 0.0f) {
+    if (x + halfAdvance >= 0.0) {
       cp[i].draw = PR_TRUE;
 
       // add y (normal)
@@ -829,7 +829,7 @@ nsSVGGlyphFrame::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retv
     }
   }
 
-  return NS_NewSVGPoint(_retval, pt.x, pt.y);
+  return NS_NewSVGPoint(_retval, pt);
 }
 
 NS_IMETHODIMP
@@ -847,23 +847,22 @@ nsSVGGlyphFrame::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval
   if (!textRun)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  gfxPoint pt;
+
   if (cp) {
     if (cp[charnum].draw == PR_FALSE) {
       return NS_ERROR_DOM_INDEX_SIZE_ERR;
     }
 
-    float advance = textRun->GetAdvanceWidth(charnum, 1, nsnull);
-
-    return NS_NewSVGPoint(_retval,
-                          cp[charnum].pos.x + advance * cos(cp[charnum].angle),
-                          cp[charnum].pos.y + advance * sin(cp[charnum].angle));
+    gfxFloat advance = textRun->GetAdvanceWidth(charnum, 1, nsnull);
+    pt = cp[charnum].pos +
+           gfxPoint(cos(cp[charnum].angle), sin(cp[charnum].angle)) * advance;
+  } else {
+    pt = mPosition;
+    pt.x += textRun->GetAdvanceWidth(0, charnum + 1, nsnull);
   }
 
-  return NS_NewSVGPoint(_retval,
-                        mPosition.x + textRun->GetAdvanceWidth(0,
-                                                               charnum + 1,
-                                                               nsnull),
-                        mPosition.y);
+  return NS_NewSVGPoint(_retval, pt);
 }
 
 NS_IMETHODIMP
@@ -923,7 +922,7 @@ nsSVGGlyphFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
 {
-  const double radPerDeg = M_PI/180.0;
+  const gfxFloat radPerDeg = M_PI/180.0;
 
   nsAutoString text;
   GetCharacterData(text);
@@ -937,9 +936,9 @@ nsSVGGlyphFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
       return NS_ERROR_DOM_INDEX_SIZE_ERR;
     }
 
-    *_retval = cp[charnum].angle / radPerDeg;
+    *_retval = float(cp[charnum].angle / radPerDeg);
   } else {
-    *_retval = 0.0;
+    *_retval = 0.0f;
   }
   return NS_OK;
 }
@@ -965,18 +964,18 @@ nsSVGGlyphFrame::GetBaselineOffset(PRUint16 baselineIdentifier)
     // not really right, but the best we can do with the information provided
     // FALLTHROUGH
   case BASELINE_TEXT_BEFORE_EDGE:
-    _retval = -metrics.mAscent;
+    _retval = -float(metrics.mAscent);
     break;
   case BASELINE_TEXT_AFTER_EDGE:
-    _retval = metrics.mDescent;
+    _retval = float(metrics.mDescent);
     break;
   case BASELINE_CENTRAL:
   case BASELINE_MIDDLE:
-    _retval = - (metrics.mAscent - metrics.mDescent) / 2.0;
+    _retval = -float(metrics.mAscent - metrics.mDescent) / 2.0f;
     break;
   case BASELINE_ALPHABETIC:
   default:
-    _retval = 0.0;
+    _retval = 0.0f;
     break;
   }
 
@@ -996,7 +995,7 @@ nsSVGGlyphFrame::GetAdvance()
   if (!textRun)
     return 0.0f;
 
-  return textRun->GetAdvanceWidth(0, text.Length(), nsnull);
+  return float(textRun->GetAdvanceWidth(0, text.Length(), nsnull));
 }
 
 NS_IMETHODIMP_(nsSVGTextPathFrame*) 
@@ -1138,7 +1137,7 @@ nsSVGGlyphFrame::GetSubStringLength(PRUint32 charnum, PRUint32 fragmentChars)
   if (!textRun)
     return 0.0f;
 
-  return textRun->GetAdvanceWidth(charnum, fragmentChars, nsnull);
+  return float(textRun->GetAdvanceWidth(charnum, fragmentChars, nsnull));
 }
 
 NS_IMETHODIMP_(PRInt32)
