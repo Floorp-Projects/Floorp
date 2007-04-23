@@ -77,7 +77,7 @@ static const PRUint32 kIconBytes = kIconBytesPerRow * kIconHeight;
 
 static void
 PRAllocCGFree(void* aInfo, const void* aData, size_t aSize) {
-  PR_Free((void*)aData);
+  free((void*)aData);
 }
 
 
@@ -252,7 +252,7 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
     if (!sInitializedPlaceholder) {
       sInitializedPlaceholder = PR_TRUE;
 
-      PRUint8* bitmap = (PRUint8*)PR_Malloc(kIconBytes);
+      PRUint8* bitmap = (PRUint8*)malloc(kIconBytes);
 
       CGColorSpaceRef colorSpace = ::CGColorSpaceCreateDeviceRGB();
 
@@ -263,7 +263,7 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
                                               colorSpace,
                                               kCGImageAlphaPremultipliedFirst);
       if (!bitmapContext) {
-        PR_Free(bitmap);
+        free(bitmap);
         ::CGColorSpaceRelease(colorSpace);
         return NS_ERROR_FAILURE;
       }
@@ -276,7 +276,7 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
       provider = ::CGDataProviderCreateWithData(NULL, bitmap, kIconBytes,
                                               PRAllocCGFree);
       if (!provider) {
-        PR_Free(bitmap);
+        free(bitmap);
         ::CGColorSpaceRelease(colorSpace);
         return NS_ERROR_FAILURE;
       }
@@ -485,7 +485,7 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
 
   CGDataProviderRef provider = ::CGDataProviderCreateWithData(NULL, reorderedData, imageLength, PRAllocCGFree);
   if (!provider) {
-    PR_Free(reorderedData);
+    free(reorderedData);
     return NS_ERROR_FAILURE;
   }
   CGColorSpaceRef colorSpace = ::CGColorSpaceCreateDeviceRGB();
@@ -502,7 +502,7 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
 
   // The image may not be the right size for a menu icon (16x16).
   // Create a new CGImage for the menu item.
-  PRUint8* bitmap = (PRUint8*)PR_Malloc(kIconBytes);
+  PRUint8* bitmap = (PRUint8*)malloc(kIconBytes);
 
   CGImageAlphaInfo alphaInfo = ::CGImageGetAlphaInfo(cgImage);
 
@@ -514,7 +514,7 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
                                           alphaInfo);
   if (!bitmapContext) {
     ::CGImageRelease(cgImage);
-    PR_Free(bitmap);
+    free(bitmap);
     ::CGColorSpaceRelease(colorSpace);
     return NS_ERROR_FAILURE;
   }
@@ -528,7 +528,7 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
   provider = ::CGDataProviderCreateWithData(NULL, bitmap, kIconBytes,
                                             PRAllocCGFree);
   if (!provider) {
-    PR_Free(bitmap);
+    free(bitmap);
     ::CGColorSpaceRelease(colorSpace);
     return NS_ERROR_FAILURE;
   }
