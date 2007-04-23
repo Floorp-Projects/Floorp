@@ -70,5 +70,13 @@ CPPSRCS	= \
 
 FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
+USE_STATIC_LIBS = 1
 
 include $(topsrcdir)/config/rules.mk
+
+ifdef _MSC_VER
+# Don't include directives about which CRT to use
+OS_COMPILE_CXXFLAGS += -Zl
+OS_COMPILE_CFLAGS += -Zl
+DEFINES += -D_USE_ANSI_CPP
+endif
