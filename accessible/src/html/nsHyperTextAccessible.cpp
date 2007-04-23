@@ -855,7 +855,7 @@ nsHyperTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
  */
 NS_IMETHODIMP nsHyperTextAccessible::GetCharacterExtents(PRInt32 aOffset, PRInt32 *aX, PRInt32 *aY,
                                                          PRInt32 *aWidth, PRInt32 *aHeight,
-                                                         nsAccessibleCoordType aCoordType)
+                                                         PRUint32 aCoordType)
 {
   return GetRangeExtents(aOffset, aOffset + 1, aX, aY, aWidth, aHeight, aCoordType);
 }
@@ -866,7 +866,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetCharacterExtents(PRInt32 aOffset, PRInt3
 NS_IMETHODIMP nsHyperTextAccessible::GetRangeExtents(PRInt32 aStartOffset, PRInt32 aEndOffset,
                                                      PRInt32 *aX, PRInt32 *aY,
                                                      PRInt32 *aWidth, PRInt32 *aHeight,
-                                                     nsAccessibleCoordType aCoordType)
+                                                     PRUint32 aCoordType)
 {
   nsIntRect boundsRect;
   nsIFrame *endFrameUnused;
@@ -879,7 +879,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetRangeExtents(PRInt32 aStartOffset, PRInt
   *aWidth = boundsRect.width;
   *aHeight = boundsRect.height;
 
-  if (aCoordType == COORD_TYPE_WINDOW) {
+  if (aCoordType == nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE) {
     //co-ord type = window
     nsCOMPtr<nsIPresShell> shell = GetPresShell();
     NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
@@ -911,7 +911,9 @@ NS_IMETHODIMP nsHyperTextAccessible::GetRangeExtents(PRInt32 aStartOffset, PRInt
  * Gets the offset of the character located at coordinates x and y. x and y are interpreted as being relative to
  * the screen or this widget's window depending on coords.
  */
-NS_IMETHODIMP nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY, nsAccessibleCoordType aCoordType, PRInt32 *aOffset)
+NS_IMETHODIMP
+nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY,
+                                        PRUint32 aCoordType, PRInt32 *aOffset)
 {
   *aOffset = -1;
   nsCOMPtr<nsIPresShell> shell = GetPresShell();
@@ -924,7 +926,7 @@ NS_IMETHODIMP nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY, ns
   }
   nsIntRect frameScreenRect = hyperFrame->GetScreenRectExternal();
 
-  if (aCoordType == COORD_TYPE_WINDOW) {
+  if (aCoordType == nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE) {
     nsCOMPtr<nsIDocument> doc = shell->GetDocument();
     nsCOMPtr<nsIDOMDocumentView> docView(do_QueryInterface(doc));
     NS_ENSURE_TRUE(docView, NS_ERROR_FAILURE);
