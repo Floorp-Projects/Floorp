@@ -2455,10 +2455,6 @@ PresShell::GetDidInitialReflow(PRBool *aDidInitialReflow)
 NS_IMETHODIMP
 PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 {
-  if (mIsDestroying) {
-    return NS_OK;
-  }
-  
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
   mDidInitialReflow = PR_TRUE;
 
@@ -2478,12 +2474,22 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   if (mCaret)
     mCaret->EraseCaret();
 
+  NS_ASSERTION(mViewManager, "Should have view manager");
+  // Painting should be suppressed for the initial reflow, so this won't
+  // really do anything right now, but it will be useful when we
+  // start batching widget changes
+  mViewManager->BeginUpdateViewBatch();
+
   // XXX Do a full invalidate at the beginning so that invalidates along
   // the way don't have region accumulation issues?
 
   WillCauseReflow();
+  WillDoReflow();
 
-  mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
+  if (mPresContext) {
+    nsRect r(0, 0, aWidth, aHeight);
+    mPresContext->SetVisibleArea(r);
+  }
 
   nsIContent *root = mDocument ? mDocument->GetRootContent() : nsnull;
 
@@ -2518,13 +2524,72 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   }
 
   if (rootFrame) {
-    rootFrame->AddStateBits(NS_FRAME_IS_DIRTY);
-    FrameNeedsReflow(rootFrame, eResize);
-    mDirtyRoots.AppendElement(rootFrame);
-    rootFrame->SetSize(mPresContext->GetVisibleArea().Size());
+    MOZ_TIMER_DEBUGLOG(("Reset and start: Reflow: PresShell::InitialReflow(), this=%p\n",
+                        (void*)this));
+    MOZ_TIMER_RESET(mReflowWatch);
+    MOZ_TIMER_START(mReflowWatch);
+    // Kick off a top-down reflow
+    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+                 ("enter nsPresShell::InitialReflow: %d,%d", aWidth, aHeight));
+#ifdef NS_DEBUG
+    if (nsIFrameDebug::GetVerifyTreeEnable()) {
+      nsIFrameDebug*  frameDebug;
+
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                                (void**)&frameDebug))) {
+        frameDebug->VerifyTree();
+      }
+    }
+#endif
+#ifdef DEBUG_kipp
+    nsPresShell_ReflowStackPointerTop = (char*) &aWidth;
+#endif
+    nsRect                bounds = mPresContext->GetVisibleArea();
+    nsSize                maxSize(bounds.width, bounds.height);
+    nsHTMLReflowMetrics   desiredSize;
+    nsReflowStatus        status;
+    nsIRenderingContext*  rcx = nsnull;
+
+    nsresult rv=CreateRenderingContext(rootFrame, &rcx);
+    if (NS_FAILED(rv)) return rv;
+
+    AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
+    mIsReflowing = PR_TRUE;
+
+    nsHTMLReflowState reflowState(mPresContext, rootFrame, rcx, maxSize);
+    rootFrame->WillReflow(mPresContext);
+    nsContainerFrame::PositionFrameView(rootFrame);
+    rootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
+    rootFrame->SetSize(nsSize(desiredSize.width, desiredSize.height));
+    mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
+
+    nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, rootFrame->GetView(),
+                                               &desiredSize.mOverflowArea);
+    rootFrame->DidReflow(mPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
+      
+#ifdef NS_DEBUG
+    if (nsIFrameDebug::GetVerifyTreeEnable()) {
+      nsIFrameDebug*  frameDebug;
+
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                                 (void**)&frameDebug))) {
+        frameDebug->VerifyTree();
+      }
+    }
+#endif
+    VERIFY_STYLE_TREE;
+    NS_IF_RELEASE(rcx);
+    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::InitialReflow"));
+    MOZ_TIMER_DEBUGLOG(("Stop: Reflow: PresShell::InitialReflow(), this=%p\n", (void*)this));
+    MOZ_TIMER_STOP(mReflowWatch);
+
+    mIsReflowing = PR_FALSE;
   }
 
   DidCauseReflow();
+  DidDoReflow();
+
+  mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
   if (mViewManager && mCaret && !mViewEventListener) {
     nsIScrollableView* scrollingView = nsnull;
