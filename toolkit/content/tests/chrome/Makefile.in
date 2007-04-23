@@ -52,6 +52,7 @@ _TEST_FILES = 	bug288254_window.xul \
 		test_bug366992.xul \
 		bug331215_window.xul \
 		test_bug331215.xul \
+        widget_progressmeter.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
