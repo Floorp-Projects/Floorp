@@ -608,7 +608,7 @@ BookmarkContentSink::HandleHeadBegin(const nsIParserNode& node)
         break;
       } else if (node.GetKeyAt(i).LowerCaseEqualsLiteral(KEY_ID_LOWER)) {
         frame.mLastContainerId =
-          ConvertImportedIdToInternalId(NS_ConvertUTF16toUTF8(node.GetKeyAt(i)));
+          ConvertImportedIdToInternalId(NS_ConvertUTF16toUTF8(node.GetValueAt(i)));
       }
     }
   }
@@ -1098,7 +1098,7 @@ BookmarkContentSink::SetFaviconForFolder(PRInt64 aFolder,
 PRInt64
 BookmarkContentSink::ConvertImportedIdToInternalId(const nsCString& aId) {
   PRInt64 intId = 0;
-  if (aId.IsEmpty() || nsCRT::strncasecmp("rdf:", aId.get(), 4))
+  if (aId.IsEmpty() || nsCRT::strncasecmp("rdf:", aId.get(), 4) == 0)
     return intId;
   PRInt32 rv;
   intId = aId.ToInteger(&rv);
