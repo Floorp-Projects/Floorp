@@ -497,7 +497,9 @@ NS_IMETHODIMP nsDocAccessible::Init()
 
 NS_IMETHODIMP nsDocAccessible::Destroy()
 {
-  gGlobalDocAccessibleCache.Remove(NS_STATIC_CAST(void*, mWeakShell));
+  if (mWeakShell) {
+    gGlobalDocAccessibleCache.Remove(NS_STATIC_CAST(void*, mWeakShell));
+  }
   return Shutdown();
 }
 
