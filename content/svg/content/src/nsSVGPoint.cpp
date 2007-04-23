@@ -78,6 +78,12 @@ NS_NewSVGPoint(nsIDOMSVGPoint** result, float x, float y)
   return NS_OK;
 }
 
+nsresult
+NS_NewSVGPoint(nsIDOMSVGPoint** result, const gfxPoint& point)
+{
+  return NS_NewSVGPoint(result, float(point.x), float(point.y));
+}
+
 nsSVGPoint::nsSVGPoint(float x, float y)
     : mX(x), mY(y)
 {
