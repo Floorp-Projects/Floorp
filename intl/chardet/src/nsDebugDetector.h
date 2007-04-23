@@ -89,19 +89,19 @@ private:
 class ns1stBlkDbgDetector : public nsDebugDetector
 {
 public:
-    ns1stBlkDbgDetector () : nsDebugDetector(k1stBlk) {} ;
+    ns1stBlkDbgDetector () : nsDebugDetector(k1stBlk) {}
 };
 
 class ns2ndBlkDbgDetector : public nsDebugDetector
 {
 public:
-  ns2ndBlkDbgDetector () : nsDebugDetector(k2ndBlk) {} ;
+  ns2ndBlkDbgDetector () : nsDebugDetector(k2ndBlk) {}
 };
 
 class nsLastBlkDbgDetector : public nsDebugDetector
 {
 public:
-  nsLastBlkDbgDetector () : nsDebugDetector(klastBlk) {} ;
+  nsLastBlkDbgDetector () : nsDebugDetector(klastBlk) {}
 };
 
 #endif // nsDebugDetector_h__

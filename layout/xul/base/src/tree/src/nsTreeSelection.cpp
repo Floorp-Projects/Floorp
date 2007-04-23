@@ -69,11 +69,11 @@ struct nsTreeRange
   PRInt32 mMax;
 
   nsTreeRange(nsTreeSelection* aSel, PRInt32 aSingleVal)
-    :mSelection(aSel), mPrev(nsnull), mNext(nsnull), mMin(aSingleVal), mMax(aSingleVal) {};
+    :mSelection(aSel), mPrev(nsnull), mNext(nsnull), mMin(aSingleVal), mMax(aSingleVal) {}
   nsTreeRange(nsTreeSelection* aSel, PRInt32 aMin, PRInt32 aMax) 
-    :mSelection(aSel), mPrev(nsnull), mNext(nsnull), mMin(aMin), mMax(aMax) {};
+    :mSelection(aSel), mPrev(nsnull), mNext(nsnull), mMin(aMin), mMax(aMax) {}
 
-  ~nsTreeRange() { delete mNext; };
+  ~nsTreeRange() { delete mNext; }
 
   void Connect(nsTreeRange* aPrev = nsnull, nsTreeRange* aNext = nsnull) {
     if (aPrev)
@@ -86,7 +86,7 @@ struct nsTreeRange
 
     mPrev = aPrev;
     mNext = aNext;
-  };
+  }
 
   nsresult RemoveRange(PRInt32 aStart, PRInt32 aEnd) {
     // This should so be a loop... sigh...
@@ -126,7 +126,7 @@ struct nsTreeRange
       mMax = aStart - 1;
     }
     return next ? next->RemoveRange(aStart, aEnd) : NS_OK;
-  };
+  }
 
   nsresult Remove(PRInt32 aIndex) {
     if (aIndex >= mMin && aIndex <= mMax) {
@@ -161,7 +161,7 @@ struct nsTreeRange
       return mNext->Remove(aIndex);
 
     return NS_OK;
-  };
+  }
 
   nsresult Add(PRInt32 aIndex) {
     if (aIndex < mMin) {
@@ -195,7 +195,7 @@ struct nsTreeRange
       }
     }
     return NS_OK;
-  };
+  }
 
   PRBool Contains(PRInt32 aIndex) {
     if (aIndex >= mMin && aIndex <= mMax)
@@ -205,21 +205,21 @@ struct nsTreeRange
       return mNext->Contains(aIndex);
 
     return PR_FALSE;
-  };
+  }
 
   PRInt32 Count() {
     PRInt32 total = mMax - mMin + 1;
     if (mNext)
       total += mNext->Count();
     return total;
-  };
+  }
 
   void Invalidate() {
     if (mSelection->mTree)
       mSelection->mTree->InvalidateRange(mMin, mMax);
     if (mNext)
       mNext->Invalidate();
-  };
+  }
 
   void RemoveAllBut(PRInt32 aIndex) {
     if (aIndex >= mMin && aIndex <= mMax) {
@@ -244,7 +244,7 @@ struct nsTreeRange
     }
     else if (mNext)
       mNext->RemoveAllBut(aIndex);
-  };
+  }
 
   void Insert(nsTreeRange* aRange) {
     if (mMin >= aRange->mMax)
@@ -253,7 +253,7 @@ struct nsTreeRange
       mNext->Insert(aRange);
     else 
       aRange->Connect(this, nsnull);
-  };
+  }
 };
 
 nsTreeSelection::nsTreeSelection(nsITreeBoxObject* aTree)

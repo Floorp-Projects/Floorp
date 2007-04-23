@@ -53,7 +53,7 @@ struct nsHTMLReflowState;
 class nsITableLayoutStrategy
 {
 public:
-    virtual ~nsITableLayoutStrategy() {};
+    virtual ~nsITableLayoutStrategy() {}
 
     /** Implement nsIFrame::GetMinWidth for the table */
     virtual nscoord GetMinWidth(nsIRenderingContext* aRenderingContext) = 0;

@@ -40,8 +40,8 @@
 #include "nscore.h"
 class nsGBKConvUtil {
 public:
-  nsGBKConvUtil() {  };
-  ~nsGBKConvUtil() { };
+  nsGBKConvUtil() {  }
+  ~nsGBKConvUtil() { }
   void InitToGBKTable();
   PRUnichar GBKCharToUnicode(char aByte1, char aByte2);
   PRBool UnicodeToGBKChar(PRUnichar aChar, PRBool aToGL, 

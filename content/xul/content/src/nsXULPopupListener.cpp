@@ -112,17 +112,17 @@ public:
 
     // nsIDOMMouseListener
     NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
-    NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; };
-    NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
-    NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
-    NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; };
-    NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; };
+    NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+    NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+    NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+    NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+    NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; }
 
     // nsIDOMContextMenuListener
     NS_IMETHOD ContextMenu(nsIDOMEvent* aContextMenuEvent);
 
     // nsIDOMEventListener
-    NS_IMETHOD HandleEvent(nsIDOMEvent* anEvent) { return NS_OK; };
+    NS_IMETHOD HandleEvent(nsIDOMEvent* anEvent) { return NS_OK; }
 
 protected:
 

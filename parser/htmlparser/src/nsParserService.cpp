@@ -226,12 +226,12 @@ class nsMatchesTopic : public nsDequeFunctor{
 public:
   PRBool matched;
   nsObserverEntry* entry;
-  nsMatchesTopic(const nsAString& aString):mString(aString),matched(PR_FALSE){};
+  nsMatchesTopic(const nsAString& aString):mString(aString),matched(PR_FALSE){}
   virtual void* operator()(void* anObject){
     entry=NS_STATIC_CAST(nsObserverEntry*, anObject);
     matched=mString.Equals(entry->mTopic);
     return matched ? nsnull : anObject;
-  };
+  }
 };
 
 // XXX This may be more efficient as a HashTable instead of linear search

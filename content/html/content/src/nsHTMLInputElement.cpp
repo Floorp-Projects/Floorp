@@ -2855,7 +2855,7 @@ nsHTMLInputElement::VisitGroup(nsIRadioVisitor* aVisitor, PRBool aFlushContent)
 class nsRadioVisitor : public nsIRadioVisitor {
 public:
   nsRadioVisitor() { }
-  virtual ~nsRadioVisitor() { };
+  virtual ~nsRadioVisitor() { }
 
   NS_DECL_ISUPPORTS
 

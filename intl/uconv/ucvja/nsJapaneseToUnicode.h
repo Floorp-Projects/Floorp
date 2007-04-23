@@ -58,8 +58,8 @@ public:
      { 
          mState=0; mData=0; 
          setMapMode();
-     };
- virtual ~nsShiftJISToUnicode() {};
+     }
+ virtual ~nsShiftJISToUnicode() {}
 
  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
      PRUnichar * aDest, PRInt32 * aDestLength) ;
@@ -68,13 +68,13 @@ public:
      {
         *aDestLength = aSrcLength;
         return NS_OK;
-     };
+     }
  NS_IMETHOD Reset()
      {
         mState = 0;
         setMapMode();
         return NS_OK;
-     };
+     }
 
 private:
 
@@ -91,8 +91,8 @@ public:
      { 
           mState=0; mData=0; 
           setMapMode();
-     };
- virtual ~nsEUCJPToUnicodeV2() {};
+     }
+ virtual ~nsEUCJPToUnicodeV2() {}
 
  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
      PRUnichar * aDest, PRInt32 * aDestLength) ;
@@ -101,13 +101,13 @@ public:
      {
         *aDestLength = aSrcLength;
         return NS_OK;
-     };
+     }
  NS_IMETHOD Reset()
      {
         mState = 0;
         setMapMode();
         return NS_OK;
-     };
+     }
 
 private:
  PRInt32  mState;
@@ -128,13 +128,13 @@ public:
         mEUCKRDecoder = nsnull;
         mISO88597Decoder = nsnull;
         setMapMode();
-     };
+     }
  virtual ~nsISO2022JPToUnicodeV2()
      {
         NS_IF_RELEASE(mGB2312Decoder);
         NS_IF_RELEASE(mEUCKRDecoder);
         NS_IF_RELEASE(mISO88597Decoder);
-     };
+     }
 
  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
      PRUnichar * aDest, PRInt32 * aDestLength) ;
@@ -143,14 +143,14 @@ public:
      {
         *aDestLength = aSrcLength;
         return NS_OK;
-     };
+     }
  NS_IMETHOD Reset()
      {
         mState = mState_ASCII;
         mLastLegalState = mState_ASCII;
         setMapMode();
         return NS_OK;
-     };
+     }
 
 private:
  enum {

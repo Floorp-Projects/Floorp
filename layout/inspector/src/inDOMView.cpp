@@ -68,7 +68,7 @@
 class inDOMViewNode
 {
 public:
-  inDOMViewNode() {};
+  inDOMViewNode() {}
   inDOMViewNode(nsIDOMNode* aNode);
   ~inDOMViewNode();
 

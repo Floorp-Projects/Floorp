@@ -62,7 +62,7 @@ public:
   nsCodingStateMachine(SMModel* sm){
           mCurrentState = eStart;
           mModel = sm;
-        };
+        }
   nsSMState NextState(char c){
     //for each byte we get its class , if it is first byte, we also get byte length
     PRUint32 byteCls = GETCLASS(c);
@@ -76,10 +76,10 @@ public:
                                        mModel->stateTable);
     mCurrentBytePos++;
     return mCurrentState;
-  };
-  PRUint32  GetCurrentCharLen(void) {return mCurrentCharLen;};
-  void      Reset(void) {mCurrentState = eStart;};
-  const char * GetCodingStateMachine() {return mModel->name;};
+  }
+  PRUint32  GetCurrentCharLen(void) {return mCurrentCharLen;}
+  void      Reset(void) {mCurrentState = eStart;}
+  const char * GetCodingStateMachine() {return mModel->name;}
 
 protected:
   nsSMState mCurrentState;

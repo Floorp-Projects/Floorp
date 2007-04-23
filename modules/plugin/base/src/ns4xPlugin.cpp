@@ -1062,7 +1062,7 @@ public:
   ~ns4xStreamWrapper();
 
   void GetStream(nsIOutputStream* &result);
-  NPStream* GetNPStream(void) { return &fNPStream; };
+  NPStream* GetNPStream(void) { return &fNPStream; }
 };
 
 NS_IMPL_ISUPPORTS1(ns4xStreamWrapper, nsISupports)

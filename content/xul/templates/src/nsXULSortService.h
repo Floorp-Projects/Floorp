@@ -120,8 +120,8 @@ struct contentSortInfo {
 class XULSortServiceImpl : public nsIXULSortService
 {
 protected:
-  XULSortServiceImpl(void) {};
-  virtual ~XULSortServiceImpl(void) {};
+  XULSortServiceImpl(void) {}
+  virtual ~XULSortServiceImpl(void) {}
 
   friend nsresult NS_NewXULSortService(nsIXULSortService** mgr);
 

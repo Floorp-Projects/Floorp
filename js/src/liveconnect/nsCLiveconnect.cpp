@@ -97,7 +97,7 @@ public:
 
     ~AutoPushJSContext();
 
-    nsresult ResultOfPush() { return mPushResult; };
+    nsresult ResultOfPush() { return mPushResult; }
 
 private:
     nsCOMPtr<nsIJSContextStack> mContextStack;

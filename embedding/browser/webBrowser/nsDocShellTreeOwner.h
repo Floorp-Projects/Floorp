@@ -201,7 +201,7 @@ public:
 
     // nsIDOMMouseMotionListener
   NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
-  NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; };
+  NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; }
 
     // nsIDOMKeyListener
   NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent) ;

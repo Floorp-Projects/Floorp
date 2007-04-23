@@ -52,7 +52,7 @@ class nsXPTZipLoader : public nsIXPTLoader
 {
  public:
     nsXPTZipLoader();
-    virtual ~nsXPTZipLoader() {};
+    virtual ~nsXPTZipLoader() {}
     
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPTLOADER

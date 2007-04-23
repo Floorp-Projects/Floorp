@@ -55,7 +55,7 @@ public:
   virtual nsProbingState GetState(void);
 
   virtual float     GetConfidence(void) { return (float)0.0; }
-  virtual void      SetOpion() {};
+  virtual void      SetOpion() {}
 
   void SetModelProbers(nsCharSetProber *logicalPrb, nsCharSetProber *visualPrb) 
   { mLogicalProb = logicalPrb; mVisualProb = visualPrb; }

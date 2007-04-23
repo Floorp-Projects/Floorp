@@ -93,7 +93,7 @@ public:
                    const nsACString& aRef,
                    nsXBLPrototypeHandler** aResult);
 
-  nsXBLSpecialDocInfo() : mInitialized(PR_FALSE) {};
+  nsXBLSpecialDocInfo() : mInitialized(PR_FALSE) {}
 };
 
 const char nsXBLSpecialDocInfo::sHTMLBindingStr[] =

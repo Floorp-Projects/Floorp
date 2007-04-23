@@ -102,7 +102,7 @@ public:
   NS_IMETHOD Blur(nsIDOMEvent* aEvent);
 
   // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* anEvent) { return NS_OK; };
+  NS_IMETHOD HandleEvent(nsIDOMEvent* anEvent) { return NS_OK; }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFocusController,
                                            nsIFocusController)

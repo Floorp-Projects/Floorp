@@ -56,7 +56,7 @@ public:
       mDestructor(nsnull)
   { 
     MOZ_COUNT_CTOR(nsXBLProtoImpl); 
-  };
+  }
   ~nsXBLProtoImpl() 
   { 
     MOZ_COUNT_DTOR(nsXBLProtoImpl);
@@ -65,7 +65,7 @@ public:
     for (nsXBLProtoImplMember* curr = mMembers; curr; curr=curr->GetNext())
       curr->Destroy(mClassObject != nsnull);
     delete mMembers; 
-  };
+  }
   
   nsresult InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIContent* aBoundElement);
   nsresult InitTargetObjects(nsXBLPrototypeBinding* aBinding, nsIScriptContext* aContext, 
@@ -74,7 +74,7 @@ public:
                              void** aTargetClassObject);
   nsresult CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding);
 
-  void SetMemberList(nsXBLProtoImplMember* aMemberList) { delete mMembers; mMembers = aMemberList; };
+  void SetMemberList(nsXBLProtoImplMember* aMemberList) { delete mMembers; mMembers = aMemberList; }
 
 protected:
   // Function to call if compilation of a member fails.  When this is called,

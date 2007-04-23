@@ -200,7 +200,7 @@ public: //for methods who access nsTextControlFrame directly
   void SetFireChangeEventState(PRBool aNewState)
   {
     mFireChangeEventState = aNewState;
-  };
+  }
 
   PRBool GetFireChangeEventState() const
   {

@@ -52,7 +52,7 @@ class nsComposeTxtSrvFilter : public nsITextServicesFilter
 {
 public:
   nsComposeTxtSrvFilter();
-  virtual ~nsComposeTxtSrvFilter() {};
+  virtual ~nsComposeTxtSrvFilter() {}
 
   // nsISupports interface...
   NS_DECL_ISUPPORTS

@@ -145,7 +145,7 @@ public:
     PRBool IsStarted(void);
 
     // cache this 4.x plugin like an XPCOM plugin
-    nsresult SetCached(PRBool aCache) { mCached = aCache; return NS_OK; };
+    nsresult SetCached(PRBool aCache) { mCached = aCache; return NS_OK; }
 
     // Non-refcounting accessor for faster access to the peer.
     nsIPluginInstancePeer *Peer()

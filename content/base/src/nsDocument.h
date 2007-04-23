@@ -700,7 +700,7 @@ protected:
   virtual PRInt32 GetDefaultNamespaceID() const
   {
     return kNameSpaceID_None;
-  };
+  }
 
   // Dispatch an event to the ScriptGlobalObject for this document
   void DispatchEventToWindow(nsEvent *aEvent);

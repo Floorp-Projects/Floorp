@@ -222,7 +222,7 @@ class nsEUCSampler {
 class nsPSMDetector {
 public :
    nsPSMDetector(PRUint8 aItems, nsVerifier* const * aVerifierSet, nsEUCStatistics* const * aStatisticsSet);
-   virtual ~nsPSMDetector() {};
+   virtual ~nsPSMDetector() {}
 
    virtual PRBool HandleData(const char* aBuf, PRUint32 aLen);
    virtual void   DataEnd();
@@ -292,84 +292,84 @@ class nsJAPSMDetector : public nsXPCOMDetector
 {
 public:
   nsJAPSMDetector() 
-    : nsXPCOMDetector(JA_DETECTOR_NUM_VERIFIERS, gJaVerifierSet, nsnull) {};
+    : nsXPCOMDetector(JA_DETECTOR_NUM_VERIFIERS, gJaVerifierSet, nsnull) {}
 };
 
 class nsJAStringPSMDetector : public nsXPCOMStringDetector
 {
 public:
   nsJAStringPSMDetector() 
-    : nsXPCOMStringDetector(JA_DETECTOR_NUM_VERIFIERS - 3, gJaVerifierSet, nsnull) {};
+    : nsXPCOMStringDetector(JA_DETECTOR_NUM_VERIFIERS - 3, gJaVerifierSet, nsnull) {}
 };
 
 class nsKOPSMDetector : public nsXPCOMDetector
 {
 public:
   nsKOPSMDetector() 
-    : nsXPCOMDetector(KO_DETECTOR_NUM_VERIFIERS, gKoVerifierSet, nsnull){};
+    : nsXPCOMDetector(KO_DETECTOR_NUM_VERIFIERS, gKoVerifierSet, nsnull){}
 };
 
 class nsKOStringPSMDetector : public nsXPCOMStringDetector
 {
 public:
   nsKOStringPSMDetector() 
-    : nsXPCOMStringDetector(KO_DETECTOR_NUM_VERIFIERS - 3, gKoVerifierSet, nsnull) {};
+    : nsXPCOMStringDetector(KO_DETECTOR_NUM_VERIFIERS - 3, gKoVerifierSet, nsnull) {}
 };
 
 class nsZHTWPSMDetector : public nsXPCOMDetector
 {
 public:
   nsZHTWPSMDetector() 
-    : nsXPCOMDetector(ZHTW_DETECTOR_NUM_VERIFIERS, gZhTwVerifierSet, gZhTwStatisticsSet) {};
+    : nsXPCOMDetector(ZHTW_DETECTOR_NUM_VERIFIERS, gZhTwVerifierSet, gZhTwStatisticsSet) {}
 };
 
 class nsZHTWStringPSMDetector : public nsXPCOMStringDetector
 {
 public:
   nsZHTWStringPSMDetector() 
-    : nsXPCOMStringDetector(ZHTW_DETECTOR_NUM_VERIFIERS - 3, gZhTwVerifierSet, gZhTwStatisticsSet) {};
+    : nsXPCOMStringDetector(ZHTW_DETECTOR_NUM_VERIFIERS - 3, gZhTwVerifierSet, gZhTwStatisticsSet) {}
 };
 
 class nsZHCNPSMDetector : public nsXPCOMDetector
 {
 public:
   nsZHCNPSMDetector() 
-    : nsXPCOMDetector(ZHCN_DETECTOR_NUM_VERIFIERS, gZhCnVerifierSet, nsnull) {};
+    : nsXPCOMDetector(ZHCN_DETECTOR_NUM_VERIFIERS, gZhCnVerifierSet, nsnull) {}
 };
 
 class nsZHCNStringPSMDetector : public nsXPCOMStringDetector
 {
 public:
   nsZHCNStringPSMDetector() 
-    : nsXPCOMStringDetector(ZHCN_DETECTOR_NUM_VERIFIERS - 3, gZhCnVerifierSet, nsnull) {};
+    : nsXPCOMStringDetector(ZHCN_DETECTOR_NUM_VERIFIERS - 3, gZhCnVerifierSet, nsnull) {}
 };
 
 class nsZHPSMDetector : public nsXPCOMDetector
 {
 public:
   nsZHPSMDetector() 
-    : nsXPCOMDetector(ZH_DETECTOR_NUM_VERIFIERS, gZhVerifierSet, gZhStatisticsSet) {};
+    : nsXPCOMDetector(ZH_DETECTOR_NUM_VERIFIERS, gZhVerifierSet, gZhStatisticsSet) {}
 };
 
 class nsZHStringPSMDetector : public nsXPCOMStringDetector
 {
 public:
   nsZHStringPSMDetector() 
-    : nsXPCOMStringDetector(ZH_DETECTOR_NUM_VERIFIERS - 3, gZhVerifierSet, gZhStatisticsSet) {};
+    : nsXPCOMStringDetector(ZH_DETECTOR_NUM_VERIFIERS - 3, gZhVerifierSet, gZhStatisticsSet) {}
 };
 
 class nsCJKPSMDetector : public nsXPCOMDetector
 {
 public:
   nsCJKPSMDetector() 
-    : nsXPCOMDetector(CJK_DETECTOR_NUM_VERIFIERS, gCJKVerifierSet, gCJKStatisticsSet) {};
+    : nsXPCOMDetector(CJK_DETECTOR_NUM_VERIFIERS, gCJKVerifierSet, gCJKStatisticsSet) {}
 };
 
 class nsCJKStringPSMDetector : public nsXPCOMStringDetector
 {
 public:
   nsCJKStringPSMDetector() 
-    : nsXPCOMStringDetector(CJK_DETECTOR_NUM_VERIFIERS - 3, gCJKVerifierSet, gCJKStatisticsSet) {};
+    : nsXPCOMStringDetector(CJK_DETECTOR_NUM_VERIFIERS - 3, gCJKVerifierSet, gCJKStatisticsSet) {}
 };
 
 #endif // nsPSMDetectors_h__

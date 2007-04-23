@@ -55,7 +55,7 @@ public:
   NS_DECL_NSISTREAMLISTENER
 
   nsUnicharStreamLoader() { }
-  virtual ~nsUnicharStreamLoader() {};
+  virtual ~nsUnicharStreamLoader() {}
 
   static NS_METHOD
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
