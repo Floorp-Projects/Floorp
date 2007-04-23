@@ -61,7 +61,7 @@ SpanningCellSorter::~SpanningCellSorter()
         PL_DHashTableFinish(&mHashTable);
         mHashTable.entryCount = 0;
     }
-    delete mSortedHashTable;
+    delete [] mSortedHashTable;
     mPresShell->PopStackMemory();
 }
 
