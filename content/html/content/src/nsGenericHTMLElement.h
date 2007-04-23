@@ -202,6 +202,12 @@ public:
   virtual void PerformAccesskey(PRBool aKeyCausesActivation,
                                 PRBool aIsTrustedEvent);
 
+  /**
+   * Check if an event for an anchor can be handled
+   * @return PR_TRUE if the event can be handled, PR_FALSE otherwise
+   */
+  PRBool CheckHandleEventForAnchorsPreconditions(nsEventChainVisitor& aVisitor);
+  nsresult PreHandleEventForAnchors(nsEventChainPreVisitor& aVisitor);
   nsresult PostHandleEventForAnchors(nsEventChainPostVisitor& aVisitor);
   PRBool IsHTMLLink(nsIURI** aURI) const;
 

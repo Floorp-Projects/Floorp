@@ -87,6 +87,7 @@ public:
   NS_IMETHOD LinkAdded() { return NS_OK; }
   NS_IMETHOD LinkRemoved() { return NS_OK; }
 
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
   virtual PRBool IsLink(nsIURI** aURI) const;
   virtual void GetLinkTarget(nsAString& aTarget);
@@ -168,6 +169,12 @@ NS_IMETHODIMP
 nsHTMLAreaElement::SetTarget(const nsAString& aValue)
 {
   return SetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue, PR_TRUE);
+}
+
+nsresult
+nsHTMLAreaElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+{
+  return PreHandleEventForAnchors(aVisitor);
 }
 
 nsresult

@@ -49,6 +49,7 @@ class nsIContent;
 class nsIDocument;
 class nsIDOMEvent;
 class nsPresContext;
+class nsEventChainVisitor;
 class nsEventChainPreVisitor;
 class nsEventChainPostVisitor;
 class nsIEventListenerManager;

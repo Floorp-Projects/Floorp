@@ -1005,8 +1005,28 @@ protected:
   void GetContentsAsText(nsAString& aText);
 
   /**
-   * Unified function to carry out event default actions for links of all types
+   * Functions to carry out event default actions for links of all types
    * (HTML links, XLinks, SVG "XLinks", etc.)
+   */
+
+  /**
+   * Check that we meet the conditions to handle a link event
+   * and that we are actually on a link.
+   *
+   * @param aVisitor event visitor
+   * @param aURI the uri of the link, set only if the return value is PR_TRUE [OUT]
+   * @return PR_TRUE if we can handle the link event, PR_FALSE otherwise
+   */
+  PRBool CheckHandleEventForLinksPrecondition(nsEventChainVisitor& aVisitor,
+                                              nsIURI** aURI) const;
+
+  /**
+   * Handle status bar updates before they can be cancelled.
+   */
+  nsresult PreHandleEventForLinks(nsEventChainPreVisitor& aVisitor);
+
+  /**
+   * Handle default actions for link event if the event isn't consumed yet.
    */
   nsresult PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor);
 
