@@ -3,7 +3,6 @@
 #
 package Bootstrap::Step::Build;
 use Bootstrap::Step;
-use Bootstrap::Config;
 @ISA = ("Bootstrap::Step");
 
 sub Execute {
@@ -18,9 +17,11 @@ sub Execute {
     my $rcTag = $productTag . '_RC' . $rc;
 
     my $lastBuilt = catfile($buildDir, $buildPlatform, 'last-built');
-    unlink($lastBuilt) 
-      or $this->Log(msg => "Cannot unlink last-built file $lastBuilt: $!");
-    $this->Log(msg => "Unlinked $lastBuilt");
+    if (! unlink($lastBuilt)) {
+        $this->Log(msg => "Cannot unlink last-built file $lastBuilt: $!");
+    } else {
+        $this->Log(msg => "Unlinked $lastBuilt");
+    }
 
     my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
  
@@ -33,6 +34,7 @@ sub Execute {
       logFile => $buildLog,
       timeout => 36000
     );
+
 }
 
 sub Verify {
@@ -51,6 +53,17 @@ sub Verify {
         log => $buildLog,
         notAllowed => 'tinderbox: status: failed',
     );
+
+    my $logParser = new MozBuild::TinderLogParse(
+        logFile => $buildLog,
+    );
+
+    if (! defined($logParser->GetBuildID())) {
+        die("No buildID found in $buildLog");
+    }
+    if (! defined($logParser->GetPushDir())) {
+        die("No pushDir found in $buildLog");
+    }
 }
 
 sub Announce {
@@ -66,9 +79,22 @@ sub Announce {
     my $rcTag = $productTag . '_RC' . $rc;
     my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
 
+    my $logParser = new MozBuild::TinderLogParse(
+        logFile => $buildLog,
+    );
+    my $buildID = $logParser->GetBuildID();
+    my $pushDir = $logParser->GetPushDir();
+
+    if (! defined($buildID)) {
+        die("No buildID found in $buildLog");
+    } 
+    if (! defined($pushDir)) {
+        die("No pushDir found in $buildLog");
+    } 
+
     $this->SendAnnouncement(
       subject => "$product $version build step finished",
-      message => "$product $version en-US build is ready to be copied to the candidates dir.",
+      message => "$product $version en-US build is ready to be copied to the candidates dir.\nBuild ID is $buildID\nPush Dir is $pushDir",
     );
 }
 
