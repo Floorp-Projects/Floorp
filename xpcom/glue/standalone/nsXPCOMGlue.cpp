@@ -491,6 +491,33 @@ NS_LogCOMPtrRelease(void *aCOMPtr, nsISupports *aObject)
         xpcomFunctions.logCOMPtrReleaseFunc(aCOMPtr, aObject);
 }
 
+XPCOM_API(nsresult)
+NS_GetXPTCallStub(REFNSIID aIID, nsIXPTCProxy* aOuter,
+                  nsISomeInterface* *aStub)
+{
+    if (!xpcomFunctions.getXPTCallStubFunc)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    return xpcomFunctions.getXPTCallStubFunc(aIID, aOuter, aStub);
+}
+
+XPCOM_API(void)
+NS_DestroyXPTCallStub(nsISomeInterface* aStub)
+{
+    if (xpcomFunctions.destroyXPTCallStubFunc)
+        xpcomFunctions.destroyXPTCallStubFunc(aStub);
+}
+
+XPCOM_API(nsresult)
+NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+                 PRUint32 paramCount, nsXPTCVariant* params)
+{
+    if (!xpcomFunctions.invokeByIndexFunc)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    return xpcomFunctions.invokeByIndexFunc(that, methodIndex,
+                                            paramCount, params);
+}
 
 // Default GRE startup/shutdown code
 

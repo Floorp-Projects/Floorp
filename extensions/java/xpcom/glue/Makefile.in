@@ -57,6 +57,10 @@ CPPSRCS	= nsJavaXPCOMGlue.cpp
 
 DEFINES += -DXPCOM_GLUE
 
+REQUIRES += \
+  xpcom \
+  $(NULL)
+
 LOCAL_INCLUDES	= -I$(JAVA_INCLUDE_PATH)
 
 ifeq ($(OS_ARCH),WINNT)

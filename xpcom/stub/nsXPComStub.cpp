@@ -38,6 +38,7 @@
 #include "nsXPCOM.h"
 #include "nsXPCOMPrivate.h"
 #include "nsXPCOMStrings.h"
+#include "xptcall.h"
 
 #include <string.h>
 
@@ -110,7 +111,10 @@ static const XPCOMFunctions kFrozenFunctions = {
     &NS_LogCtor_P,
     &NS_LogDtor_P,
     &NS_LogCOMPtrAddRef_P,
-    &NS_LogCOMPtrRelease_P
+    &NS_LogCOMPtrRelease_P,
+    &NS_GetXPTCallStub_P,
+    &NS_DestroyXPTCallStub_P,
+    &NS_InvokeByIndex_P
 };
 
 EXPORT_XPCOM_API(nsresult)
@@ -311,6 +315,28 @@ NS_LogCOMPtrRelease(void *aCOMPtr, nsISupports* aObject)
   NS_LogCOMPtrRelease_P(aCOMPtr, aObject);
 }
 
+#undef NS_GetXPTCallStub
+EXPORT_XPCOM_API(nsresult)
+NS_GetXPTCallStub(REFNSIID aIID, nsIXPTCProxy* aOuter,
+                  nsISomeInterface* *aStub)
+{
+  return NS_GetXPTCallStub_P(aIID, aOuter, aStub);
+}
+
+#undef NS_DestroyXPTCallStub
+EXPORT_XPCOM_API(void)
+NS_DestroyXPTCallStub(nsISomeInterface* aStub)
+{
+  NS_DestroyXPTCallStub_P(aStub);
+}
+
+#undef NS_InvokeByIndex
+EXPORT_XPCOM_API(nsresult)
+NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+                 PRUint32 paramCount, nsXPTCVariant* params)
+{
+  return NS_InvokeByIndex_P(that, methodIndex, paramCount, params);
+}
 
 /*
  * Stubs for nsXPCOMPrivate.h
