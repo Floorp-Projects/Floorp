@@ -1,0 +1,386 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"
+ xmlns:html="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Prototype Unit test file</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <script src="../../dist/prototype.js" type="text/javascript"></script>
+  <script src="../lib/unittest.js" type="text/javascript"></script>
+  <link rel="stylesheet" href="../test.css" type="text/css" />
+  <style type="text/css" media="screen">
+  /* <![CDATA[ */
+    #testcss1 { font-size:11px; color: #f00; }
+    #testcss2 { font-size:12px; color: #0f0; display: none; }
+  /* ]]> */
+  </style>
+</head>
+<body>
+<h1>Prototype Unit test file</h1>
+<p>
+  Test of utility functions in selector.js
+</p>
+
+<div id="fixtures" style="display: none">
+  <h1 class="title">Some title <span>here</span></h1>
+  <p id="p" class="first summary">
+    <strong id="strong">This</strong> is a short blurb
+    <a id="link_1" class="first internal" rel="external nofollow" href="#">with a <em id="em2">link</em></a> or 
+    <a id="link_2" class="internal highlight" href="#"><em id="em">two</em></a>.
+    Or <cite id="with_title" title="hello world!">a citation</cite>.
+  </p>
+  <ul id="list">
+    <li id="item_1" class="first"><a id="link_3" href="#" class="external"><span id="span">Another link</span></a></li>
+    <li id="item_2">Some text</li>
+    <li id="item_3" xml:lang="es-us" class="">Otra cosa</li>
+  </ul>
+
+  <!-- this form has a field with the name 'id',
+    therefore its ID property won't be 'troubleForm': -->
+  <form id="troubleForm">
+    <input type="hidden" name="id" id="hidden" />
+    <input type="text" name="disabled_text_field" id="disabled_text_field" disabled="disabled" />
+    <input type="text" name="enabled_text_field" id="enabled_text_field" />
+    <input type="checkbox" name="checkboxes" id="checked_box" checked="checked" value="Checked" />
+    <input type="checkbox" name="checkboxes" id="unchecked_box" value="Unchecked"/>
+    <input type="radio" name="radiobuttons" id="checked_radio" checked="checked" value="Checked" />
+    <input type="radio" name="radiobuttons" id="unchecked_radio" value="Unchecked" />
+  </form>
+  
+  <div id="level1">
+    <span id="level2_1">
+      <span id="level3_1"></span>
+      <!-- This comment should be ignored by the adjacent selector -->
+      <span id="level3_2"></span>
+    </span>
+    <span id="level2_2">
+      <em id="level_only_child">    
+      </em>
+    </span>
+    <div id="level2_3"></div>
+  </div> <!-- #level1 -->
+
+  <div id="dupContainer">
+    <span id="dupL1">
+      <span id="dupL2">
+        <span id="dupL3">
+          <span id="dupL4">
+            <span id="dupL5"></span>
+          </span>
+        </span>
+      </span>
+    </span>
+  </div> <!-- #dupContainer -->
+
+  <div id="grandfather"> grandfather    
+    <div id="father" class="brothers men"> father      
+      <div id="son"> son </div>
+    </div>
+    <div id="uncle" class="brothers men"> uncle </div>
+  </div>  
+
+  <form id="commaParent" title="commas,are,good">
+    <input type="hidden" id="commaChild" name="foo" value="#commaOne,#commaTwo" />
+    <input type="hidden" id="commaTwo" name="foo2" value="oops" />
+  </form>
+  
+</div> <!-- #fixtures -->
+
+<!-- Log output -->
+<div id="testlog"> </div>
+
+<!-- Tests follow -->
+<script type="text/javascript" language="javascript" charset="utf-8">
+// <![CDATA[
+
+  // Added by TDD - 2007.02.20
+  $RunBenchmarks = false;
+
+  new Test.Unit.Runner({
+    
+    testSelectorWithTagName: function() {with(this) {
+      assertEnumEqual($A(document.getElementsByTagName('li')), $$('li'));
+      assertEnumEqual([$('strong')], $$('strong'));
+      assertEnumEqual([], $$('nonexistent'));
+      assertEnumEqual($A(document.getElementsByTagName('*')), $$('*'));
+    }},
+    
+    testSelectorWithId: function() {with(this) {
+      assertEnumEqual([$('fixtures')], $$('#fixtures'));
+      assertEnumEqual([], $$('#nonexistent'));
+      assertEnumEqual([$('troubleForm')], $$('#troubleForm'));
+    }},
+    
+    testSelectorWithClassName: function() {with(this) {
+      assertEnumEqual($('p', 'link_1', 'item_1'), $$('.first'));
+      assertEnumEqual([], $$('.second'));
+    }},
+    
+    testSelectorWithTagNameAndId: function() {with(this) {
+      assertEnumEqual([$('strong')], $$('strong#strong'));
+      assertEnumEqual([], $$('p#strong'));
+    }},
+    
+    testSelectorWithTagNameAndClassName: function() {with(this) {
+      assertEnumEqual($('link_1', 'link_2'), $$('a.internal'));
+      assertEnumEqual([$('link_2')], $$('a.internal.highlight'));
+      assertEnumEqual([$('link_2')], $$('a.highlight.internal'));
+      assertEnumEqual([], $$('a.highlight.internal.nonexistent'));
+    }},
+    
+    testSelectorWithIdAndClassName: function() {with(this) {
+      assertEnumEqual([$('link_2')], $$('#link_2.internal'));
+      assertEnumEqual([$('link_2')], $$('.internal#link_2'));
+      assertEnumEqual([$('link_2')], $$('#link_2.internal.highlight'));
+      assertEnumEqual([], $$('#link_2.internal.nonexistent'));
+    }},
+    
+    testSelectorWithTagNameAndIdAndClassName: function() {with(this) {
+      assertEnumEqual([$('link_2')], $$('a#link_2.internal'));
+      assertEnumEqual([$('link_2')], $$('a.internal#link_2'));
+      assertEnumEqual([$('item_1')], $$('li#item_1.first'));
+      assertEnumEqual([], $$('li#item_1.nonexistent'));
+      assertEnumEqual([], $$('li#item_1.first.nonexistent'));
+    }},
+    
+    test$$MatchesAncestryWithTokensSeparatedByWhitespace: function() {with(this) {
+      assertEnumEqual($('em2', 'em', 'span'), $$('#fixtures a *'));
+      assertEnumEqual([$('p')], $$('div#fixtures p'));
+    }},
+    
+    test$$CombinesResultsWhenMultipleExpressionsArePassed: function() {with(this) {
+      assertEnumEqual($('link_1', 'link_2', 'item_1', 'item_2', 'item_3'), $$('#p a', ' ul#list li '));
+    }},
+
+    testSelectorWithTagNameAndAttributeExistence: function() {with(this) {
+      assertEnumEqual($$('#fixtures h1'), $$('h1[class]'));
+      assertEnumEqual($$('#fixtures h1'), $$('h1[CLASS]'));
+      assertEnumEqual([$('item_3')], $$('li#item_3[class]'));
+    }},
+    
+    testSelectorWithTagNameAndSpecificAttributeValue: function() {with(this) {
+      assertEnumEqual($('link_1', 'link_2', 'link_3'), $$('a[href="#"]'));
+      assertEnumEqual($('link_1', 'link_2', 'link_3'), $$('a[href=#]'));
+    }},
+    
+    testSelectorWithTagNameAndWhitespaceTokenizedAttributeValue: function() {with(this) {
+      assertEnumEqual($('link_1', 'link_2'), $$('a[class~="internal"]'));
+      assertEnumEqual($('link_1', 'link_2'), $$('a[class~=internal]'));
+    }},
+    
+    testSelectorWithUniversalAndHyphenTokenizedAttributeValue: function() {with(this) {
+      assertEnumEqual([$('item_3')], $$('*[xml:lang|="es"]'));
+      assertEnumEqual([$('item_3')], $$('*[xml:lang|="ES"]'));
+    }},
+    
+    testSelectorWithTagNameAndNegatedAttributeValue: function() {with(this) {
+      assertEnumEqual([], $$('a[href!=#]'));
+    }},
+    
+    test$$WithNestedAttributeSelectors: function() {with(this) {
+      assertEnumEqual([$('strong')], $$('div[style] p[id] strong'));
+    }},
+    
+    testSelectorWithMultipleConditions: function() {with(this) {
+      assertEnumEqual([$('link_3')], $$('a[class~=external][href="#"]'));
+      assertEnumEqual([], $$('a[class~=external][href!="#"]'));
+    }},
+    
+    testSelectorMatchElements: function() {with(this) {
+      assertElementsMatch(Selector.matchElements($('list').descendants(), 'li'), '#item_1', '#item_2', '#item_3');
+      assertElementsMatch(Selector.matchElements($('fixtures').descendants(), 'a.internal'), '#link_1', '#link_2');
+      assertEnumEqual([], Selector.matchElements($('fixtures').descendants(), 'p.last'));
+    }},
+    
+    testSelectorFindElement: function() {with(this) {
+      assertElementMatches(Selector.findElement($('list').descendants(), 'li'), 'li#item_1.first');
+      assertElementMatches(Selector.findElement($('list').descendants(), 'li', 1), 'li#item_2');
+      assertElementMatches(Selector.findElement($('list').descendants(), 'li#item_3'), 'li');
+      assertEqual(undefined, Selector.findElement($('list').descendants(), 'em'));
+    }},
+
+    testSelectorWithSpaceInAttributeValue: function() {with(this) {
+      assertEnumEqual([$('with_title')], $$('cite[title="hello world!"]'));
+    }},
+    
+    // AND NOW COME THOSE NEW TESTS AFTER ANDREW'S REWRITE!
+
+    testSelectorWithNamespacedAttributes: function() { with(this) {
+      if (Prototype.BrowserFeatures.XPath) {
+        assertUndefined(new Selector('html[xml:lang]').xpath);
+        assertUndefined(new Selector('body p[xml:lang]').xpath);
+      } else
+        info("Could not test XPath bypass: no XPath to begin with!");
+    }},
+
+    testSelectorWithChild: function() { with(this) {
+      assertEnumEqual($('link_1', 'link_2'), $$('p.first > a'));
+      assertEnumEqual($('father', 'uncle'), $$('div#grandfather > div'));
+      assertEnumEqual($('level2_1', 'level2_2'), $$('#level1>span'));
+      assertEnumEqual($('level2_1', 'level2_2'), $$('#level1 > span'));
+      assertEnumEqual($('level3_1', 'level3_2'), $$('#level2_1 > *'));
+      $RunBenchmarks && wait(500, function() {
+        benchmark(function() { $$('#level1 > span') }, 1000);
+      });
+    }},
+
+    testSelectorWithAdjacence: function() { with(this) {
+      assertEnumEqual([$('uncle')], $$('div.brothers + div.brothers'));
+      assertEnumEqual([$('uncle')], $$('div.brothers + div'));      
+      assertEqual($('level2_2'), $$('#level2_1+span').reduce());
+      assertEqual($('level2_2'), $$('#level2_1 + span').reduce());
+      assertEqual($('level2_2'), $$('#level2_1 + *').reduce());
+      assertEnumEqual([], $$('#level2_2 + span'));
+      assertEqual($('level3_2'), $$('#level3_1 + span').reduce());
+      assertEqual($('level3_2'), $$('#level3_1 + *').reduce());
+      assertEnumEqual([], $$('#level3_2 + *'));
+      assertEnumEqual([], $$('#level3_1 + em'));
+      $RunBenchmarks && wait(500, function() {
+        benchmark(function() { $$('#level3_1 + span') }, 1000);
+      });
+    }},
+
+    testSelectorWithLaterSibling: function() { with(this) {
+      assertEnumEqual([$('list')], $$('h1 ~ ul'));
+      assertEqual($('level2_2'), $$('#level2_1 ~ span').reduce());
+      assertEnumEqual($('level2_2', 'level2_3'), $$('#level2_1 ~ *').reduce());
+      assertEnumEqual([], $$('#level2_2 ~ span'));
+      assertEnumEqual([], $$('#level3_2 ~ *'));
+      assertEnumEqual([], $$('#level3_1 ~ em'));
+      assertEnumEqual([$('level3_2')], $$('#level3_1 ~ #level3_2'));
+      assertEnumEqual([$('level3_2')], $$('span ~ #level3_2'));
+      assertEnumEqual([], $$('div ~ #level3_2'));
+      assertEnumEqual([], $$('div ~ #level2_3'));
+      $RunBenchmarks && wait(500, function() {
+        benchmark(function() { $$('#level2_1 ~ span') }, 1000);
+      });
+    }},
+
+    testSelectorWithNewAttributeOperators: function() { with(this) {
+      assertEnumEqual($('father', 'uncle'), $$('div[class^=bro]'), 'matching beginning of string');
+      assertEnumEqual($('father', 'uncle'), $$('div[class$=men]'), 'matching end of string');
+      assertEnumEqual($('father', 'uncle'), $$('div[class*="ers m"]'), 'matching substring')
+      assertEnumEqual($('level2_1', 'level2_2', 'level2_3'), $$('#level1 *[id^="level2_"]'));
+      assertEnumEqual($('level2_1', 'level2_2', 'level2_3'), $$('#level1 *[id^=level2_]'));
+      assertEnumEqual($('level2_1', 'level3_1'), $$('#level1 *[id$="_1"]'));
+      assertEnumEqual($('level2_1', 'level3_1'), $$('#level1 *[id$=_1]'));
+      assertEnumEqual($('level2_1', 'level3_2', 'level2_2', 'level2_3'), $$('#level1 *[id*="2"]'));
+      assertEnumEqual($('level2_1', 'level3_2', 'level2_2', 'level2_3'), $$('#level1 *[id*=2]'));
+      $RunBenchmarks && wait(500, function() {
+        benchmark(function() { $$('#level1 *[id^=level2_]') }, 1000, '[^=]');
+        benchmark(function() { $$('#level1 *[id$=_1]') }, 1000, '[$=]');
+        benchmark(function() { $$('#level1 *[id*=_2]') }, 1000, '[*=]');
+      });
+    }},
+
+    testSelectorWithDuplicates: function() { with(this) {
+      assertEnumEqual($$('div div'), $$('div div').uniq());
+      assertEnumEqual($('dupL2', 'dupL3', 'dupL4', 'dupL5'), $$('#dupContainer span span'));
+      $RunBenchmarks && wait(500, function() {
+        benchmark(function() { $$('#dupContainer span span') }, 1000);
+      });
+    }},
+
+    testSelectorWithFirstLastOnlyNthNthLastChild: function() { with(this) {
+      assertEnumEqual([$('level2_1')], $$('#level1>*:first-child'));
+      assertEnumEqual($('level2_1', 'level3_1', 'level_only_child'), $$('#level1 *:first-child'));
+      assertEnumEqual([$('level2_3')], $$('#level1>*:last-child'));
+      assertEnumEqual($('level3_2', 'level_only_child', 'level2_3'), $$('#level1 *:last-child'));
+      assertEnumEqual([$('level2_3')], $$('#level1>div:last-child'));
+      assertEnumEqual([$('level2_3')], $$('#level1 div:last-child'));
+      assertEnumEqual([], $$('#level1>div:first-child'));
+      assertEnumEqual([], $$('#level1>span:last-child'));
+      assertEnumEqual($('level2_1', 'level3_1'), $$('#level1 span:first-child'));
+      assertEnumEqual([], $$('#level1:first-child'));
+      assertEnumEqual([], $$('#level1>*:only-child'));
+      assertEnumEqual([$('level_only_child')], $$('#level1 *:only-child'));
+      assertEnumEqual([], $$('#level1:only-child'));
+      assertEnumEqual([$('link_2')], $$('#p *:nth-last-child(2)'), 'nth-last-child');
+      assertEnumEqual([$('link_2')], $$('#p *:nth-child(3)'), 'nth-child');
+      assertEnumEqual([$('link_2')], $$('#p a:nth-child(3)'), 'nth-child');
+      assertEnumEqual($('item_2', 'item_3'), $$('#list > li:nth-child(n+2)'));
+      assertEnumEqual($('item_1', 'item_2'), $$('#list > li:nth-child(-n+2)'));
+      $RunBenchmarks && wait(500, function() {
+        benchmark(function() { $$('#level1 *:first-child') }, 1000, ':first-child');
+        benchmark(function() { $$('#level1 *:last-child') }, 1000, ':last-child');
+        benchmark(function() { $$('#level1 *:only-child') }, 1000, ':only-child');
+      });
+    }},
+    
+    testSelectorWithFirstLastNthNthLastOfType: function() {with(this) {
+      assertEnumEqual([$('link_2')], $$('#p a:nth-of-type(2)'), 'nth-of-type');
+      assertEnumEqual([$('link_1')], $$('#p a:nth-of-type(1)'), 'nth-of-type');
+      assertEnumEqual([$('link_2')], $$('#p a:nth-last-of-type(1)'), 'nth-last-of-type');
+      assertEnumEqual([$('link_1')], $$('#p a:first-of-type'), 'first-of-type');
+      assertEnumEqual([$('link_2')], $$('#p a:last-of-type'), 'last-of-type');
+    }},
+    
+    testSelectorWithNot: function() {with(this) {
+      assertEnumEqual([$('link_2')], $$('#p a:not(a:first-of-type)'), 'first-of-type');
+      assertEnumEqual([$('link_1')], $$('#p a:not(a:last-of-type)'), 'last-of-type');
+      assertEnumEqual([$('link_2')], $$('#p a:not(a:nth-of-type(1))'), 'nth-of-type');
+      assertEnumEqual([$('link_1')], $$('#p a:not(a:nth-last-of-type(1))'), 'nth-last-of-type');
+      assertEnumEqual([$('link_2')], $$('#p a:not([rel~=nofollow])'), 'attribute 1');
+      assertEnumEqual([$('link_2')], $$('#p a:not(a[rel^=external])'), 'attribute 2');
+      assertEnumEqual([$('link_2')], $$('#p a:not(a[rel$=nofollow])'), 'attribute 3');
+      assertEnumEqual([$('em')], $$('#p a:not(a[rel$="nofollow"]) > em'), 'attribute 4')
+    }},
+    
+    testSelectorWithEnabledDisabledChecked: function() {with(this) {
+      assertEnumEqual([$('disabled_text_field')], $$('#troubleForm > *:disabled'));
+      assertEnumEqual($('troubleForm').getInputs().without($('disabled_text_field')), $$('#troubleForm > *:enabled'));
+      assertEnumEqual($('checked_box', 'checked_radio'), $$('#troubleForm *:checked'));
+    }},
+    
+    testSelectorWithEmpty: function() {with(this) {
+      $('level3_1').innerHTML = "\t\n\n\r\n\t   ";
+      assertEnumEqual($('level3_1', 'level3_2', 'level_only_child', 'level2_3'), $$('#level1 *:empty'));
+      assertEnumEqual([$('level_only_child')], $$('#level_only_child:empty'));
+    }},    
+    
+    testIdenticalResultsFromEquivalentSelectors: function() {with(this) {
+      assertEnumEqual($$('div.brothers'), $$('div[class~=brothers]'));
+      assertEnumEqual($$('div.brothers'), $$('div[class~=brothers].brothers'));
+      assertEnumEqual($$('div:not(.brothers)'), $$('div:not([class~=brothers])'));
+      assertEnumEqual($$('li ~ li'), $$('li:not(:first-child)'));
+      assertEnumEqual($$('ul > li'), $$('ul > li:nth-child(n)'));
+      assertEnumEqual($$('ul > li:nth-child(even)'), $$('ul > li:nth-child(2n)'));
+      assertEnumEqual($$('ul > li:nth-child(odd)'), $$('ul > li:nth-child(2n+1)'));
+      assertEnumEqual($$('ul > li:first-child'), $$('ul > li:nth-child(1)'));
+      assertEnumEqual($$('ul > li:last-child'), $$('ul > li:nth-last-child(1)'));
+      assertEnumEqual($$('#troubleForm *:enabled'), $$('#troubleForm *:not(:disabled)'));
+      assertEnumEqual($$('ul > li:nth-child(n-999)'), $$('ul > li'));
+    }},
+    
+    testSelectorsThatShouldReturnNothing: function() {with(this) {
+      assertEnumEqual([], $$('span:empty > *'));
+      assertEnumEqual([], $$('div.brothers:not(.brothers)'));
+      assertEnumEqual([], $$('#level2_2 :only-child:not(:last-child)'));
+      assertEnumEqual([], $$('#level2_2 :only-child:not(:first-child)'));
+    }},
+
+    testCommasFor$$: function() {with(this) {
+      assertEnumEqual($('list', 'p', 'link_1', 'item_1', 'item_3', 'troubleForm'), $$('#list, .first,*[xml:lang="es-us"] , #troubleForm'));
+      assertEnumEqual($('list', 'p', 'link_1', 'item_1', 'item_3', 'troubleForm'), $$('#list, .first,', '*[xml:lang="es-us"] , #troubleForm'));
+      assertEnumEqual($('commaParent', 'commaChild'), $$('form[title*="commas,"], input[value="#commaOne,#commaTwo"]'));
+      assertEnumEqual($('commaParent', 'commaChild'), $$('form[title*="commas,"]', 'input[value="#commaOne,#commaTwo"]'));
+    }},
+    
+    testSelectorExtendsAllNodes: function(){ with(this) {
+      var element = document.createElement('div');
+      (3).times(function(){
+        element.appendChild(document.createElement('div'));
+      });
+      element.setAttribute('id','scratch_element');
+      $$('body')[0].appendChild(element);
+      
+      var results = $$('#scratch_element div');
+      assert(typeof results[0].show == 'function');
+      assert(typeof results[1].show == 'function');
+      assert(typeof results[2].show == 'function');
+    }}
+  }, 'testlog');
+// ]]>
+</script>
+</body>
+</html>
