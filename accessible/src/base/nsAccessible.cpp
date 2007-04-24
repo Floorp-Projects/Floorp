@@ -162,9 +162,6 @@ PRBool nsAccessible::IsTextInterfaceSupportCorrect(nsIAccessible *aAccessible)
 {
   PRBool foundText = PR_FALSE;
 
-  if (IsText(aAccessible)) {
-    foundText = PR_TRUE;
-  }
   nsCOMPtr<nsIAccessible> child, nextSibling;
   aAccessible->GetFirstChild(getter_AddRefs(child));
   while (child) {
@@ -2282,8 +2279,9 @@ nsAccessible::GroupPosition(PRInt32 *aGroupLevel,
   nsCOMPtr<nsIPersistentProperties> attributes;
   nsresult rv = GetAttributes(getter_AddRefs(attributes));
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(attributes, NS_ERROR_FAILURE);
-
+  if (!attributes) {
+    return NS_ERROR_FAILURE;
+  }
   PRInt32 level, posInSet, setSize;
   nsAccessibilityUtils::GetAccGroupAttrs(attributes,
                                          &level, &posInSet, &setSize);
@@ -2340,7 +2338,9 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
 nsresult
 nsAccessible::GetARIAState(PRUint32 *aState)
 {
-  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE); // Node already shut down
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE; // Node already shut down
+  }
 
   // Test for universal states first
   nsIContent *content = GetRoleContent(mDOMNode);
