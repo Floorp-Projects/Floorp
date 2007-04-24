@@ -57,7 +57,7 @@ public:
   // nsSVGPaintServerFrame methods:
   virtual PRBool SetupPaintServer(gfxContext *aContext,
                                   nsSVGGeometryFrame *aSource,
-                                  float aOpacity,
+                                  float aGraphicOpacity,
                                   void **aClosure);
   virtual void CleanupPaintServer(gfxContext *aContext, void *aClosure);
 
@@ -125,7 +125,7 @@ private:
   PRUint16 GetSpreadMethod();
   PRUint32 GetStopCount();
   void GetStopInformation(PRInt32 aIndex,
-                          float *aOffset, nscolor *aColor, float *aOpacity);
+                          float *aOffset, nscolor *aColor, float *aStopOpacity);
   nsresult GetGradientTransform(nsIDOMSVGMatrix **retval,
                                 nsSVGGeometryFrame *aSource);
 
