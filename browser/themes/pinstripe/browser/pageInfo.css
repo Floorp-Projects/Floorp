@@ -163,6 +163,15 @@ groupbox tree {
   -moz-margin-start: 10px;
 }
 
+#securityBox .caption-icon {
+  background-image: none;
+}
+
+#general-security-identity {
+  white-space: -moz-pre-wrap;
+  line-height: 2em;
+}
+
 /* Media Tab */
 #imagetree {
   min-height: 10em;
@@ -238,10 +247,15 @@ treechildren::-moz-tree-cell-text(broken) {
 }
 
 /* Security Tab */
-#securityTab textbox {
-  -moz-margin-start: 4px;
+#securityPanel .header {
+  font-size: 120%;
+}
+ 
+#securityPanel .fieldLabel {
+  margin: 5px 10px 10px 10px;
 }
 
-#securityTab textarea {
-  overflow: hidden;
+#securityPanel .fieldValue {
+  font-weight: bold;
+  margin: 5px 10px 0px 10px;
 }
