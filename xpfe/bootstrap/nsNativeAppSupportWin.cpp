@@ -1188,7 +1188,6 @@ static PRBool handlingHTTP() {
                 settings->SetIsHandlingJPEG( PR_FALSE );
                 settings->SetIsHandlingGIF( PR_FALSE );
                 settings->SetIsHandlingPNG( PR_FALSE );
-                settings->SetIsHandlingMNG( PR_FALSE );
                 settings->SetIsHandlingBMP( PR_FALSE );
                 settings->SetIsHandlingICO( PR_FALSE );
                 settings->SetIsHandlingXML( PR_FALSE );

@@ -92,7 +92,6 @@ private:
         PRBool mHandleJPEG;
         PRBool mHandleGIF;
         PRBool mHandlePNG;
-        PRBool mHandleMNG;
         PRBool mHandleXBM;
         PRBool mHandleBMP;
         PRBool mHandleICO;
@@ -134,7 +133,7 @@ protected:
 
     // Objects that describe the Windows registry entries that we need to tweak.
     ProtocolRegistryEntry http, https, ftp, chrome, gopher;
-    FileTypeRegistryEntry jpg, gif, png, mng, xbm, bmp, ico, xml, xhtml, xul;
+    FileTypeRegistryEntry jpg, gif, png, xbm, bmp, ico, xml, xhtml, xul;
     EditableFileTypeRegistryEntry mozillaMarkup;
 
     // Give nsWindowsHooksSettings full access.

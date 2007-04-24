@@ -118,7 +118,7 @@ interface nsIDOMElement;
  * for historical reasons (it corresponds to the internal Prefs struct
  * that was in nsIDefaultBrowser.h in Mozilla Classic).
  */
-[scriptable, uuid(4ce9aa90-0a6a-11d4-8076-00600811a9c3)]
+[scriptable, uuid(d7a33e08-705e-4506-aba0-843c73dfd304)]
 interface nsIWindowsHooksSettings : nsISupports {
 
     // Internet shortcuts (based on "protocol").
@@ -133,7 +133,6 @@ interface nsIWindowsHooksSettings : nsISupports {
     attribute boolean isHandlingJPEG;
     attribute boolean isHandlingGIF;
     attribute boolean isHandlingPNG;
-    attribute boolean isHandlingMNG;
     attribute boolean isHandlingXBM;
     attribute boolean isHandlingBMP;
     attribute boolean isHandlingICO;
