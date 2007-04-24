@@ -1,0 +1,234 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>Prototype Unit test file</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <script src="../../dist/prototype.js" type="text/javascript"></script>
+  <script src="../lib/unittest.js" type="text/javascript"></script>
+  <link rel="stylesheet" href="../test.css" type="text/css" />
+  <style type="text/css" media="screen">
+  /* <![CDATA[ */
+    #testcss1 { font-size:11px; color: #f00; }
+    #testcss2 { font-size:12px; color: #0f0; display: none; }
+  /* ]]> */
+  </style>
+</head>
+<body>
+<h1>Prototype Unit test file</h1>
+<p>
+  Test of utility functions in base.js
+</p>
+
+<!-- Log output -->
+<div id="testlog"> </div>
+<div id="test"></div> 
+<!-- Tests follow -->
+<script type="text/javascript" language="javascript" charset="utf-8">
+// <![CDATA[
+  var Person = function(name){
+      this.name = name;
+  };
+  
+  Person.prototype.toJSON = function() {
+    return '-' + this.name;
+  };
+
+  var peEventCount = 0;
+  // peEventFired will stop the PeriodicalExecuter after 3 callbacks
+  function peEventFired(pe) {
+    if (++peEventCount>2) {
+      pe.stop();
+    }
+  }
+  
+  var arg1 = 1;
+  var arg2 = 2;
+  var arg3 = 3;
+  function TestObj(){}
+  TestObj.prototype.assertingEventHandler = 
+    function( event, assertEvent, assert1, assert2, assert3, a1, a2, a3 ){
+      assertEvent(event);
+      assert1(a1);
+      assert2(a2);
+      assert3(a3);
+    }
+    
+  var globalBindTest = null;
+
+  new Test.Unit.Runner({
+    
+    testFunctionBind: function() { with(this) {
+      function methodWithoutArguments(){
+        globalBindTest = this.hi;
+      }
+      function methodWithArguments(){
+        globalBindTest = this.hi + ',' + $A(arguments).join(',');
+      }
+      function methodWithBindArguments(){
+        globalBindTest = this.hi + ',' + $A(arguments).join(',');
+      }
+      function methodWithBindArgumentsAndArguments(){
+        globalBindTest = this.hi + ',' + $A(arguments).join(',');
+      }
+      
+      methodWithoutArguments.bind({hi:'without'})();
+      assertEqual('without', globalBindTest);
+      
+      methodWithArguments.bind({hi:'with'})('arg1','arg2');
+      assertEqual('with,arg1,arg2', globalBindTest);
+      
+      methodWithBindArguments.bind({hi:'withBindArgs'},'arg1','arg2')();
+      assertEqual('withBindArgs,arg1,arg2', globalBindTest);
+      
+      methodWithBindArgumentsAndArguments.bind({hi:'withBindArgsAndArgs'},'arg1','arg2')('arg3','arg4');
+      assertEqual('withBindArgsAndArgs,arg1,arg2,arg3,arg4', globalBindTest);
+    }},
+
+    testObjectInspect: function() { with(this) {
+      assertEqual('undefined', Object.inspect());
+      assertEqual('undefined', Object.inspect(undefined));
+      assertEqual('null', Object.inspect(null));
+      assertEqual("'foo\\\\b\\\'ar'", Object.inspect('foo\\b\'ar'));
+      assertEqual('[]', Object.inspect([]));
+    }},
+    
+    testObjectToJSON: function() { with(this) {
+      assertUndefined(Object.toJSON(undefined));
+      assertUndefined(Object.toJSON(Prototype.K));
+      assertEqual('\"\"', Object.toJSON(''));
+      assertEqual('[]', Object.toJSON([]));
+      assertEqual('[\"a\"]', Object.toJSON(['a']));
+      assertEqual('[\"a\",1]', Object.toJSON(['a', 1]));
+      assertEqual('[\"a\",{\"b\":null}]', Object.toJSON(['a', {'b': null}]));
+      assertEqual('{\"a\":\"hello!\"}', Object.toJSON({a: 'hello!'}));
+      assertEqual('{}', Object.toJSON({}));
+      assertEqual('{}', Object.toJSON({a: undefined, b: undefined, c: Prototype.K}));
+      assertEqual('{\"b\":[false,true],\"c\":{\"a\":\"hello!\"}}',
+        Object.toJSON({'b': [undefined, false, true, undefined], c: {a: 'hello!'}}));
+      assertEqual('{\"b\":[false,true],\"c\":{\"a\":\"hello!\"}}',
+        Object.toJSON($H({'b': [undefined, false, true, undefined], c: {a: 'hello!'}})));
+      assertEqual('true', Object.toJSON(true));
+      assertEqual('false', Object.toJSON(false));
+      assertEqual('null', Object.toJSON(null));
+      var sam = new Person('sam');
+      assertEqual('-sam', Object.toJSON(sam));
+      assertEqual('-sam', sam.toJSON());
+      var element = $('test');
+      assertUndefined(Object.toJSON(element));
+      element.toJSON = function(){return 'I\'m a div with id test'};
+      assertEqual('I\'m a div with id test', Object.toJSON(element));
+    }},
+    
+    // sanity check
+    testDoesntExtendObjectPrototype: function() {with(this) {
+      // for-in is supported with objects
+      var iterations = 0, obj = { a: 1, b: 2, c: 3 };
+      for(property in obj) iterations++;
+      assertEqual(3, iterations);
+      
+      // for-in is not supported with arrays
+      iterations = 0;
+      var arr = [1,2,3];
+      for(property in arr) iterations++;
+      assert(iterations > 3);
+    }},
+    
+    testPeriodicalExecuterStop: function() {with(this) {
+      new PeriodicalExecuter(peEventFired, 0.1);
+      
+      wait(1000, function() {
+          assertEqual(3, peEventCount);
+      });
+    }},
+
+    testBindAsEventListener: function() {
+      for( var i = 0; i < 10; ++i ){
+        var div = document.createElement('div');
+        div.setAttribute('id','test-'+i);
+        document.body.appendChild(div);
+        var tobj = new TestObj();
+        var eventTest = {test:true};
+        var call = tobj.assertingEventHandler.bindAsEventListener(tobj,
+          this.assertEqual.bind(this,eventTest),
+          this.assertEqual.bind(this,arg1),
+          this.assertEqual.bind(this,arg2),
+          this.assertEqual.bind(this,arg3), arg1, arg2, arg3 );
+        call(eventTest);
+      }
+    },
+    
+    testNumberToColorPart: function() {with(this) {
+      assertEqual('00', (0).toColorPart());
+      assertEqual('0a', (10).toColorPart());
+      assertEqual('ff', (255).toColorPart());
+    }},
+    
+    testNumberToPaddedString: function() {with(this) {
+      assertEqual('00', (0).toPaddedString(2, 16));
+      assertEqual('0a', (10).toPaddedString(2, 16));
+      assertEqual('ff', (255).toPaddedString(2, 16));
+      assertEqual('000', (0).toPaddedString(3));
+      assertEqual('010', (10).toPaddedString(3));
+      assertEqual('100', (100).toPaddedString(3));
+      assertEqual('1000', (1000).toPaddedString(3));
+    }},
+    
+    testNumberToJSON: function() {with(this) {
+      assertEqual('null', Number.NaN.toJSON());
+      assertEqual('0', (0).toJSON());
+      assertEqual('-293', (-293).toJSON());
+    }},
+    
+    testDateToJSON: function() {with(this) {
+      assertEqual('\"1969-12-31T19:00:00\"', new Date(1969, 11, 31, 19).toJSON());
+    }},
+    
+    testBrowserDetection: function() {with(this) {
+      var results = $H(Prototype.Browser).map(function(engine){
+        return engine;
+      }).partition(function(engine){
+        return engine[1] === true
+      });
+      var trues = results[0], falses = results[1];
+      
+      info('User agent string is: ' + navigator.userAgent);
+      
+      assert(trues.size() == 0 || trues.size() == 1, 
+        'There should be only one or no browser detected.');
+      
+      // we should have definite trues or falses here
+      trues.each(function(result){
+        assert(result[1] === true);
+      });
+      falses.each(function(result){
+        assert(result[1] === false);
+      });
+      
+      if(navigator.userAgent.indexOf('AppleWebKit/') > -1) {
+        info('Running on WebKit');
+        assert(Prototype.Browser.WebKit);
+      }
+      
+      if(!!window.opera) {
+        info('Running on Opera');
+        assert(Prototype.Browser.Opera);
+      }
+      
+      if(!!(window.attachEvent && !window.opera)) {
+        info('Running on IE');
+        assert(Prototype.Browser.IE);
+      }
+      
+      if(navigator.userAgent.indexOf('Gecko') > -1 && navigator.userAgent.indexOf('KHTML') == -1) {
+        info('Running on Gecko');
+        assert(Prototype.Browser.Gecko);
+      } 
+    }}
+
+  }, 'testlog');
+
+// ]]>
+</script>
+</body>
+</html>
