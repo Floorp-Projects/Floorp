@@ -43,8 +43,11 @@
 #include <commctrl.h>
 #include <richedit.h>
 #include <shellapi.h>
+#include <shlobj.h>
+#include <shlwapi.h>
 #include "resource.h"
 #include "client/windows/sender/crash_report_sender.h"
+#include "common/windows/string_utils-inl.h"
 #include <fstream>
 
 #define CRASH_REPORTER_KEY L"Software\\Mozilla\\Crash Reporter"
@@ -56,6 +59,8 @@ using std::string;
 using std::wstring;
 using std::map;
 using std::ifstream;
+using std::ofstream;
+
 
 bool ReadConfig();
 BOOL CALLBACK EnableDialogProc(HWND hwndDlg, UINT message, WPARAM wParam,
@@ -66,13 +71,15 @@ HANDLE CreateSendThread(HWND hDlg, LPCTSTR dumpFile);
 bool CheckCrashReporterEnabled(bool* enabled);
 void SetCrashReporterEnabled(bool enabled);
 bool SendCrashReport(wstring dumpFile,
-                     const map<wstring,wstring> *query_parameters);
+                     const map<wstring,wstring>* query_parameters,
+                     wstring* server_response);
 DWORD WINAPI SendThreadProc(LPVOID param);
 
 typedef struct {
   HWND hDlg;
   wstring dumpFile;
-  const map<wstring,wstring> *query_parameters;
+  const map<wstring,wstring>* query_parameters;
+  wstring* server_response;
 } SENDTHREADDATA;
 
 TCHAR sendURL[2048] = L"\0";
@@ -89,6 +96,8 @@ enum {
   ST_SENDTITLE,
   ST_SUBMITSUCCESS,
   ST_SUBMITFAILED,
+  ST_CRASHID,
+  ST_CRASHDETAILSURL,
   NUM_STRINGS
 };
 
@@ -101,7 +110,9 @@ LPCTSTR stringNames[] = {
   L"RadioDisable",
   L"SendTitle",
   L"SubmitSuccess",
-  L"SubmitFailed"
+  L"SubmitFailed",
+  L"CrashID",
+  L"CrashDetailsURL"
 };
 
 LPTSTR strings[NUM_STRINGS];
@@ -128,6 +139,34 @@ bool LoadStrings(LPCTSTR fileName)
     //XXX should probably check for strings > 1024...
   }
   return true;
+}
+
+bool GetSettingsPath(wstring vendor, wstring product,
+                     wstring& settings_path)
+{
+  wchar_t path[MAX_PATH];
+  if(SUCCEEDED(SHGetFolderPath(NULL, 
+                               CSIDL_APPDATA,
+                               NULL, 
+                               0, 
+                               path)))  {
+    if (!vendor.empty()) {
+      PathAppend(path, vendor.c_str());
+    }
+    PathAppend(path, product.c_str());
+    PathAppend(path, L"Crash Reports");
+    // in case it doesn't exist
+    CreateDirectory(path, NULL);
+    settings_path = path;
+    return true;
+  }
+  return false;
+}
+
+bool EnsurePathExists(wstring base_path, wstring sub_path)
+{
+  wstring path = base_path + L"\\" + sub_path;
+  return CreateDirectory(path.c_str(), NULL) != 0;
 }
 
 bool ReadConfig()
@@ -280,12 +319,14 @@ BOOL CALLBACK SendDialogProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM l
 }
 
 bool SendCrashReport(wstring dumpFile,
-                     const map<wstring,wstring> *query_parameters)
+                     const map<wstring,wstring>* query_parameters,
+                     wstring* server_response)
 {
   SENDTHREADDATA td;
   td.hDlg = NULL;
   td.dumpFile = dumpFile;
   td.query_parameters = query_parameters;
+  td.server_response = server_response;
 
   int res = (int)DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_SENDDIALOG), NULL,
                                 (DLGPROC)SendDialogProc, (LPARAM)&td);
@@ -299,7 +340,6 @@ DWORD WINAPI SendThreadProc(LPVOID param)
   SENDTHREADDATA* td = (SENDTHREADDATA*)param;
 
   wstring url(sendURL);
-  wstring result;
 
   if (url.empty()) {
     finishedOk = false;
@@ -309,7 +349,7 @@ DWORD WINAPI SendThreadProc(LPVOID param)
       ::SendCrashReport(url,
                         *(td->query_parameters),
                         td->dumpFile,
-                        &result)
+                        td->server_response)
                   == google_breakpad::RESULT_SUCCEEDED);
   }
   PostMessage(td->hDlg, WM_UPLOADCOMPLETE, finishedOk ? 1 : 0, 0);
@@ -317,12 +357,10 @@ DWORD WINAPI SendThreadProc(LPVOID param)
   return 0;
 }
 
-//XXX: change this to use Breakpad's string conversion functions
-// when we update to latest SVN
-bool ConvertString(const char* utf8_string, wstring& ucs2_string)
+bool ConvertUTF8ToWide(const char* utf8_string, wstring& ucs2_string)
 {
-  wchar_t *buffer = NULL;
-  int buffer_size = MultiByteToWideChar(CP_ACP, 0, utf8_string,
+  wchar_t* buffer = NULL;
+  int buffer_size = MultiByteToWideChar(CP_UTF8, 0, utf8_string,
                                         -1, NULL, 0);
   if(buffer_size == 0)
     return false;
@@ -331,14 +369,55 @@ bool ConvertString(const char* utf8_string, wstring& ucs2_string)
   if(buffer == NULL)
     return false;
   
-  MultiByteToWideChar(CP_ACP, 0, utf8_string,
+  MultiByteToWideChar(CP_UTF8, 0, utf8_string,
                       -1, buffer, buffer_size);
   ucs2_string = buffer;
   delete [] buffer;
   return true;
 }
 
-void ReadExtraData(const wstring& filename,
+bool ConvertWideToUTF8(const wchar_t* ucs2_string, string& utf8_string)
+{
+  char* buffer = NULL;
+  int buffer_size = WideCharToMultiByte(CP_UTF8, 0, ucs2_string,
+                                        -1, NULL, 0, NULL, NULL);
+  if(buffer_size == 0)
+    return false;
+
+  buffer = new char[buffer_size];
+  if(buffer == NULL)
+    return false;
+  
+  WideCharToMultiByte(CP_UTF8, 0, ucs2_string,
+                      -1, buffer, buffer_size, NULL, NULL);
+  utf8_string = buffer;
+  delete [] buffer;
+  return true;
+}
+
+void ReadKeyValuePairs(const wstring& data,
+                       map<wstring, wstring>& values)
+{
+  if (data.empty())
+    return;
+
+  string line;
+  int line_begin = 0;
+  int line_end = data.find('\n');
+  while(line_end >= 0) {
+    int pos = data.find('=', line_begin);
+    if (pos >= 0 && pos < line_end) {
+      wstring key, value;
+      key = data.substr(line_begin, pos - line_begin);
+      value = data.substr(pos + 1, line_end - pos - 1);
+      values[key] = value;
+    }
+    line_begin = line_end + 1;
+    line_end = data.find('\n', line_begin);
+  }
+}
+
+bool ReadExtraData(const wstring& filename,
                    map<wstring, wstring>& query_parameters)
 {
 #if _MSC_VER >= 1400  // MSVC 2005/8
@@ -347,24 +426,27 @@ void ReadExtraData(const wstring& filename,
 #else  // _MSC_VER >= 1400
   ifstream file(_wfopen(filename.c_str(), L"rb"));
 #endif  // _MSC_VER >= 1400
-  if (file.is_open()) {
-    do {
-      string in_line;
-      std::getline(file, in_line);
-      if (!in_line.empty()) {
-        int pos = in_line.find('=');
-        if (pos >= 0) {
-          wstring key, value;
-          ConvertString(in_line.substr(0, pos).c_str(), key);
-          ConvertString(in_line.substr(pos + 1,
-                                       in_line.length() - pos - 1).c_str(),
-                        value);
-          query_parameters[key] = value;
-        }
-      }
-    } while(!file.eof());
-    file.close();
-  }
+  if (!file.is_open())
+    return false;
+
+  wstring data;
+  char* buf;
+  file.seekg(0, std::ios::end);
+  int file_size = file.tellg();
+  file.seekg(0, std::ios::beg);
+  buf = new char[file_size+1];
+  if (!buf)
+    return false;
+
+  file.read(buf, file_size);
+  buf[file_size] ='\0';
+  ConvertUTF8ToWide(buf, data);
+  delete buf;
+
+  ReadKeyValuePairs(data, query_parameters);
+
+  file.close();
+  return true;
 }
 
 wstring GetExtraDataFilename(const wstring& dumpfile)
@@ -378,11 +460,51 @@ wstring GetExtraDataFilename(const wstring& dumpfile)
   return filename;
 }
 
+bool AddSubmittedReport(wstring settings_path, wstring server_response)
+{
+  map<wstring, wstring> response_items;
+  ReadKeyValuePairs(server_response, response_items);
+
+  if (response_items.find(L"CrashID") == response_items.end())
+    return false;
+
+  wstring submitted_path = settings_path + L"\\submitted\\" +
+    response_items[L"CrashID"] + L".txt";
+
+#if _MSC_VER >= 1400  // MSVC 2005/8
+  ofstream file;
+  file.open(submitted_path.c_str(), std::ios::out);
+#else  // _MSC_VER >= 1400
+  ofstream file(_wfopen(submitted_path.c_str(), L"wb"));
+#endif  // _MSC_VER >= 1400
+  if (!file.is_open())
+    return false;
+
+  wchar_t buf[1024];
+  wsprintf(buf, strings[ST_CRASHID], response_items[L"CrashID"].c_str());
+  wstring data = buf;
+  data += L"\n";
+  if (response_items.find(L"ViewURL") != response_items.end()) {
+    wsprintf(buf, strings[ST_CRASHDETAILSURL],
+             response_items[L"ViewURL"].c_str());
+    data += buf;
+    data += L"\n";
+  }
+
+  string utf8_data;
+  if (!ConvertWideToUTF8(data.c_str(), utf8_data))
+    return false;
+
+  file << utf8_data;
+  file.close();
+  return true;
+}
+
 int main(int argc, char **argv)
 {
   map<wstring,wstring> query_parameters;
 
-	DoInitCommonControls();
+  DoInitCommonControls();
   if (!ReadConfig()) {
     MessageBox(NULL, L"Missing crashreporter.ini file", L"Crash Reporter Error", MB_OK | MB_ICONSTOP);
     return 0;
@@ -392,7 +514,7 @@ int main(int argc, char **argv)
   bool enabled = false;
 
   if (argc > 1) {
-    if (!ConvertString(argv[1], dumpfile))
+    if (!ConvertUTF8ToWide(argv[1], dumpfile))
       return 0;
   }
 
@@ -406,8 +528,44 @@ int main(int argc, char **argv)
   }
   else {
     wstring extrafile = GetExtraDataFilename(dumpfile);
-    if (!extrafile.empty())
+    if (!extrafile.empty()) {
       ReadExtraData(extrafile, query_parameters);
+    }
+    else {
+      //XXX: print error message
+      return 0;
+    }
+
+    if (query_parameters.find(L"ProductName") == query_parameters.end()) {
+      //XXX: print error message
+      return 0;
+    }
+
+    wstring product = query_parameters[L"ProductName"];
+    wstring vendor;
+    if (query_parameters.find(L"Vendor") != query_parameters.end()) {
+      vendor = query_parameters[L"Vendor"];
+    }
+    wstring settings_path;
+
+    if(!GetSettingsPath(vendor, product, settings_path)) {
+      //XXX: print error message
+      return 0;
+    }
+
+    EnsurePathExists(settings_path, L"pending");
+    EnsurePathExists(settings_path, L"submitted");
+
+    // now we move the crash report and extra data to pending
+    wstring newfile = settings_path + L"\\pending\\" +
+      google_breakpad::WindowsStringUtils::GetBaseName(dumpfile);
+    MoveFile(dumpfile.c_str(), newfile.c_str());
+    dumpfile = newfile;
+
+    newfile = settings_path + L"\\pending\\" +
+      google_breakpad::WindowsStringUtils::GetBaseName(extrafile);
+    MoveFile(extrafile.c_str(), newfile.c_str());
+    extrafile = newfile;
 
     if (!CheckCrashReporterEnabled(&enabled)) {
       //ask user if crash reporter should be enabled
@@ -416,10 +574,14 @@ int main(int argc, char **argv)
     }
     // if enabled, send crash report
     if (enabled) {
-      if (SendCrashReport(dumpfile, &query_parameters) && deleteDump) {
-        DeleteFile(dumpfile.c_str());
-        if (!extrafile.empty())
-          DeleteFile(extrafile.c_str());
+      wstring server_response;
+      if (SendCrashReport(dumpfile, &query_parameters, &server_response)) {
+        if (deleteDump) {
+          DeleteFile(dumpfile.c_str());
+          if (!extrafile.empty())
+            DeleteFile(extrafile.c_str());
+        }
+        AddSubmittedReport(settings_path, server_response);
       }
       //TODO: show details?
     }
