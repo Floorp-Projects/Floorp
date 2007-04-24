@@ -92,7 +92,7 @@ xptc_invoke_copy_to_stack_keeper (void)
 
 /*
   EXPORT_XPCOM_API(nsresult)
-  NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+  NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
                    PRUint32 paramCount, nsXPTCVariant* params);
 
   Each param takes at most two 4-byte words.
@@ -117,12 +117,12 @@ xptc_invoke_copy_to_stack_keeper (void)
  */
 #if defined(XP_WIN32) || defined(XP_OS2)
 extern "C" {
-    nsresult _NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+    nsresult _NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
                                PRUint32 paramCount, nsXPTCVariant* params);
     EXPORT_XPCOM_API(nsresult)
-    NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+    NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
                      PRUint32 paramCount, nsXPTCVariant* params) { 
-        return _NS_InvokeByIndex(that, methodIndex, paramCount, params);
+        return _NS_InvokeByIndex_P(that, methodIndex, paramCount, params);
     }
 }
 #endif
@@ -133,12 +133,12 @@ __asm__ (
    is what xptcstubs uses. */
 	".align 2\n\t"
 #if defined(XP_WIN32) || defined(XP_OS2)
-	".globl " SYMBOL_UNDERSCORE "_NS_InvokeByIndex\n\t"
-	SYMBOL_UNDERSCORE "_NS_InvokeByIndex:\n\t"
+	".globl " SYMBOL_UNDERSCORE "_NS_InvokeByIndex_P\n\t"
+	SYMBOL_UNDERSCORE "_NS_InvokeByIndex_P:\n\t"
 #else
-	".globl " SYMBOL_UNDERSCORE "NS_InvokeByIndex\n\t"
-	".type  " SYMBOL_UNDERSCORE "NS_InvokeByIndex,@function\n"
-	SYMBOL_UNDERSCORE "NS_InvokeByIndex:\n\t"
+	".globl " SYMBOL_UNDERSCORE "NS_InvokeByIndex_P\n\t"
+	".type  " SYMBOL_UNDERSCORE "NS_InvokeByIndex_P,@function\n"
+	SYMBOL_UNDERSCORE "NS_InvokeByIndex_P:\n\t"
 #endif
 	"pushl %ebp\n\t"
 	"movl  %esp, %ebp\n\t"
@@ -193,7 +193,7 @@ __asm__ (
 	"popl  %ebp\n\t"
 	"ret\n"
 #if !defined(XP_WIN32) && !defined(XP_OS2)
-	".size " SYMBOL_UNDERSCORE "NS_InvokeByIndex, . -" SYMBOL_UNDERSCORE "NS_InvokeByIndex\n\t"
+	".size " SYMBOL_UNDERSCORE "NS_InvokeByIndex_P, . -" SYMBOL_UNDERSCORE "NS_InvokeByIndex_P\n\t"
 #endif
 );
 

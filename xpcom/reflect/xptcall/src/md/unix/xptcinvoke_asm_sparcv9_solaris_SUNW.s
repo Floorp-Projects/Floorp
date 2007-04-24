@@ -48,15 +48,15 @@
     The SCD is available from http://www.sparc.com/.
 */
 
-        .global NS_InvokeByIndex
-        .type   NS_InvokeByIndex, #function
+        .global NS_InvokeByIndex_P
+        .type   NS_InvokeByIndex_P, #function
 
 /*
-    NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+    NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
                      PRUint32 paramCount, nsXPTCVariant* params);
     
 */
-NS_InvokeByIndex:
+NS_InvokeByIndex_P:
         save    %sp,-(128 + 64),%sp ! room for the register window and
                                     ! struct pointer, rounded up to 0 % 64
         sll     %i2,4,%l0           ! assume the worst case
@@ -116,4 +116,4 @@ NS_InvokeByIndex:
         ret
         restore
 
-        .size    NS_InvokeByIndex, .-NS_InvokeByIndex
+        .size    NS_InvokeByIndex_P, .-NS_InvokeByIndex
