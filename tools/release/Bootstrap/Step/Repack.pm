@@ -159,23 +159,32 @@ sub Verify {
       logFile => catfile($logDir, 'repack_metadiff-l10n_verification.log'),
     );
 }
-
 sub Announce {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
-    my $version = $config->Get(var => 'version');
     my $productTag = $config->Get(var => 'productTag');
+    my $version = $config->Get(var => 'version');
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(var => 'logDir');
 
     my $rcTag = $productTag . '_RC' . $rc;
     my $buildLog = catfile($logDir, 'repack_' . $rcTag . '-build-l10n.log');
 
+    my $logParser = new MozBuild::TinderLogParse(
+        logFile => $buildLog,
+    );
+    my $buildID = $logParser->GetBuildID();
+    my $pushDir = $logParser->GetPushDir();
+
+    if (! defined($pushDir)) {
+        die("No pushDir found in $buildLog");
+    } 
+
     $this->SendAnnouncement(
       subject => "$product $version l10n repack step finished",
-      message => "$product $version l10n builds are ready to be copied to the candidates directory.",
+      message => "$product $version l10n builds are ready to be copied to the candidates directory.\nPush Dir is $pushDir",
     );
 }
 
