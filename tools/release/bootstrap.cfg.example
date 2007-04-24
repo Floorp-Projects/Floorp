@@ -1,40 +1,55 @@
-productTag      = FIREFOX_1_5_0_11
-branchTag       = MOZILLA_1_8_0_BRANCH
-pullDate        = 2007-03-10 00:00 PST
-l10n_pullDate   = 2007-03-10 00:00 PST
-version         = 1.5.0.11
+version         = 2.0.0.4
+milestone       = 1.8.1.4
+# _RCn and _RELEASE will be appended as-needed
+productTag      = FIREFOX_2_0_0_4
+# Branch name and pull dates to use for base tag
+branchTag       = MOZILLA_1_8_BRANCH
+pullDate        = 2007-04-17 00:00:00 PDT
+l10n_pullDate   = 2007-04-17 00:00:00 PDT
 rc              = 1
-oldVersion      = 1.5.0.10
+# oldVersion and oldRc refer to the previous release
+oldVersion      = 2.0.0.3
 oldRc           = 1
-milestone       = 1.8.0.11
 appName         = browser
 product         = firefox
-linux_buildDir  = /builds/tinderbox/Fx-Mozilla1.8.0-Release
-mac_buildDir    = /builds/tinderbox/Fx-Mozilla1.8.0-Release
-win32_buildDir  = /cygdrive/c/builds/tinderbox/Fx-Mozilla1.8.0-Release
-linux_l10n_buildDir  = /builds/tinderbox/Fx-Mozilla1.8.0-l10n-Release
-mac_l10n_buildDir    = /builds/tinderbox/Fx-Mozilla1.8.0-l10n-Release
-win32_l10n_buildDir  = /cygdrive/c/builds/tinderbox/Fx-Mozilla1.8.0-l10n-Release
-logDir          = /home/rhelmer/src/full/build/logs
+# Absolute path to tinderbox build directory
+linux_buildDir  = /builds/tinderbox/Fx-Mozilla1.8-Release
+mac_buildDir    = /builds/tinderbox/Fx-Mozilla1.8-Release
+win32_buildDir  = /cygdrive/c/builds/tinderbox/Fx-Mozilla1.8-Release
+linux_l10n_buildDir  = /builds/tinderbox/Fx-Mozilla1.8-l10n-Release
+mac_l10n_buildDir    = /builds/tinderbox/Fx-Mozilla1.8-l10n-Release
+win32_l10n_buildDir  = /cygdrive/c/builds/tinderbox/Fx-Mozilla1.8-l10n-Release
+# Absolute path to store bootstrap's logs
+logDir          = /home/buildslave/console1/AutomationTest/build/logs
 mozillaCvsroot  = /builds/cvsmirror/cvsroot
 l10nCvsroot     = /builds/cvsmirror/l10n
 mofoCvsroot     = /builds/cvsmirror/mofo
+# private staging area 
 stageHome       = /data/cltbld
 updateDir       = /builds/updates
 verifyDir       = /builds/verify
-patcherConfig   = moz180-branch-patcher2.cfg
 tagDir          = /builds/tags
-linux_buildPlatform   = Linux_2.4.21-37.EL_Depend
+configBumpDir   = /builds/config
+# Build platform, as specified by tinderbox
+linux_buildPlatform   = Linux_2.6.9-42.ELsmp_Depend
 macosx_buildPlatform  = Darwin_8.7.0_Depend
 win32_buildPlatform   = WINNT_5.2_Depend
-linux_l10n_buildPlatform   = Linux_2.4.21-37.EL_Depend
+linux_l10n_buildPlatform   = Linux_2.6.9-42.ELsmp_Depend
 macosx_l10n_buildPlatform  = Darwin_8.7.0_Depend
 win32_l10n_buildPlatform   = WINNT_5.2_Depend
 from            = bootstrap@example.com
-to              = engineer@example.com
-cc              = qa@example.com, build@example.com
-patcherConfig   = moz180-branch-patcher2.cfg
+to              = test@example.com
+cc              = other@example.com
+patcherConfig   = moz18-branch-patcher2.cfg
+# Tag to use for building MAR/MBSDIFF and other update tools
 patcherToolsRev = MOZILLA_1_9a2_RELEASE
-verifyConfig    = moz180-firefox-linux.cfg
+verifyConfig    = moz18-firefox-linux.cfg
 blat            = /cygdrive/d/moztools/bin/blat.exe
 sendmail        = /usr/lib/sendmail
+# dump Log output to stdout
+dumpLogs        = 1
+# username and server to push builds
+sshUser         = buildslave
+sshServer       = localhost
+# Tinderbox server tree that clients should report to
+buildTree       = MozillaTest
