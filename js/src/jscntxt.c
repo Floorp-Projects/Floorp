@@ -816,15 +816,7 @@ js_TraceLocalRoots(JSTracer *trc, JSLocalRootStack *lrs)
             v = lrc->roots[m];
             JS_ASSERT(JSVAL_IS_GCTHING(v) && v != JSVAL_NULL);
             JS_SET_TRACING_INDEX(trc, "local_root", n);
-
-            /*
-             * When v is tagged as an object, it can be in fact an arbitrary
-             * GC thing so we have to use js_CallGCThingTracer on it.
-             */
-            if (JSVAL_IS_OBJECT(v))
-                js_CallGCThingTracer(trc, JSVAL_TO_GCTHING(v));
-            else
-                JS_CallTracer(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
+            js_CallValueTracerIfGCThing(trc, v);
             if (m == 0)
                 lrc = lrc->down;
         }

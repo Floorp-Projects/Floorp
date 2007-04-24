@@ -1877,10 +1877,8 @@ JS_MarkGCThing(JSContext *cx, void *thing, const char *name, void *arg)
 #ifdef JS_THREADSAFE
     JS_ASSERT(cx->runtime->gcThread == trc->context->thread);
 #endif
-    if (thing) {
-        JS_SET_TRACING_NAME(trc, name ? name : "unknown");
-        js_CallGCThingTracer(trc, thing);
-    }
+    JS_SET_TRACING_NAME(trc, name ? name : "unknown");
+    js_CallValueTracerIfGCThing(trc, (jsval)thing);
 }
 
 extern JS_PUBLIC_API(JSBool)

@@ -2467,6 +2467,7 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
     uint8 *flagp;
     jsval v;
 
+    JS_ASSERT(thing);
     JS_ASSERT(JS_IS_VALID_TRACE_KIND(kind));
     JS_ASSERT(trc->debugPrinter || trc->debugPrintArg);
 
@@ -2572,16 +2573,23 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
 }
 
 void
-js_CallGCThingTracer(JSTracer *trc, void *thing)
+js_CallValueTracerIfGCThing(JSTracer *trc, jsval v)
 {
-    uint32 traceKind;
+    void *thing;
+    uint32 kind;
 
-    JS_ASSERT(thing != NULL);
-
-    traceKind = GCTypeToTraceKindMap[*js_GetGCThingFlags(thing) & GCF_TYPEMASK];
-    JS_CallTracer(trc, thing, traceKind);
+    if (JSVAL_IS_DOUBLE(v) || JSVAL_IS_STRING(v)) {
+        thing = JSVAL_TO_TRACEABLE(v);
+        kind = JSVAL_TRACE_KIND(v);
+    } else if (JSVAL_IS_OBJECT(v) && v != JSVAL_NULL) {
+        /* v can be an arbitrary GC thing reinterpreted as an object. */
+        thing = JSVAL_TO_OBJECT(v);
+        kind = GCTypeToTraceKindMap[*js_GetGCThingFlags(thing) & GCF_TYPEMASK];
+    } else {
+        return;
+    }
+    JS_CallTracer(trc, thing, kind);
 }
-
 
 JS_STATIC_DLL_CALLBACK(JSDHashOperator)
 gc_root_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
@@ -2623,7 +2631,7 @@ gc_root_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
         JS_ASSERT(root_points_to_gcArenaList);
 #endif
         JS_SET_TRACING_NAME(trc, rhe->name ? rhe->name : "root");
-        js_CallGCThingTracer(trc, JSVAL_TO_GCTHING(v));
+        js_CallValueTracerIfGCThing(trc, v);
     }
 
     return JS_DHASH_NEXT;
@@ -2763,12 +2771,15 @@ TraceWeakRoots(JSTracer *trc, JSWeakRoots *wr)
 
     for (i = 0; i < GCX_NTYPES; i++) {
         thing = wr->newborn[i];
-        if (thing)
-            JS_CALL_TRACER(trc, thing, GCTypeToTraceKindMap[i], gc_typenames[i]);
+        if (thing) {
+            JS_CALL_TRACER(trc, thing, GCTypeToTraceKindMap[i],
+                           gc_typenames[i]);
+        }
     }
     if (wr->lastAtom)
         JS_CALL_TRACER(trc, wr->lastAtom, JSTRACE_ATOM, "lastAtom");
-    JS_CALL_VALUE_TRACER(trc, wr->lastInternalResult, "lastInternalResult");
+    JS_SET_TRACING_NAME(trc, "lastInternalResult");
+    js_CallValueTracerIfGCThing(trc, wr->lastInternalResult);
 }
 
 JS_FRIEND_API(void)
@@ -2777,7 +2788,6 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
     JSStackFrame *chain, *fp;
     JSStackHeader *sh;
     JSTempValueRooter *tvr;
-    jsval v;
 
     /*
      * Iterate frame chain and dormant chains. Temporarily tack current
@@ -2830,21 +2840,8 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
     for (tvr = acx->tempValueRooters; tvr; tvr = tvr->down) {
         switch (tvr->count) {
           case JSTVU_SINGLE:
-            v = tvr->u.value;
-            if (JSVAL_IS_GCTHING(v) && v != JSVAL_NULL) {
-                /*
-                 * When v is tagged as an object, it can be in fact an
-                 * arbitrary GC thing so we have to use js_CallGCThingTracer
-                 * on it.
-                 */
-                JS_SET_TRACING_NAME(trc, "tvr->u.value");
-                if (JSVAL_IS_OBJECT(v)) {
-                    js_CallGCThingTracer(trc, JSVAL_TO_GCTHING(v));
-                } else {
-                    JS_CallTracer(trc, JSVAL_TO_TRACEABLE(v),
-                                  JSVAL_TRACE_KIND(v));
-                }
-            }
+            JS_SET_TRACING_NAME(trc, "tvr->u.value");
+            js_CallValueTracerIfGCThing(trc, tvr->u.value);
             break;
           case JSTVU_TRACE:
             tvr->u.trace(trc, tvr);
