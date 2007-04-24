@@ -56,15 +56,15 @@
 		      
         .section ".text"
 	.align 2
-	.globl NS_InvokeByIndex
-	.type  NS_InvokeByIndex,@function
+	.globl NS_InvokeByIndex_P
+	.type  NS_InvokeByIndex_P,@function
 
 //
-// NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+// NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
 //                  PRUint32 paramCount, nsXPTCVariant* params)
 //
 
-NS_InvokeByIndex:
+NS_InvokeByIndex_P:
 	stwu    sp,-32(sp)			// setup standard stack frame
 	mflr    r0				// save LR
 	stw     r3,8(sp)			// r3 <= that
