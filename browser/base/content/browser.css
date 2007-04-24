@@ -20,3 +20,10 @@ menuitem.spell-suggestion {
 window[sizemode="maximized"] #content .notification-inner {
 	border-right: 0px !important;
 }
+
+/* ::::: Tooltips (multi-line) from content ::::: */
+.htmltooltip-label {
+  max-width: 40em;
+  margin: 0;
+  white-space: -moz-pre-wrap;
+}
