@@ -212,7 +212,8 @@ namespace_trace(JSTracer *trc, JSObject *obj)
     JSXMLNamespace *ns;
 
     ns = (JSXMLNamespace *) JS_GetPrivate(trc->context, obj);
-    JS_CALL_TRACER(trc, ns, JSTRACE_NAMESPACE, "private");
+    if (ns)
+        JS_CALL_TRACER(trc, ns, JSTRACE_NAMESPACE, "private");
 }
 
 static JSBool
@@ -407,7 +408,8 @@ qname_trace(JSTracer *trc, JSObject *obj)
     JSXMLQName *qn;
 
     qn = (JSXMLQName *) JS_GetPrivate(trc->context, obj);
-    JS_CALL_TRACER(trc, qn, JSTRACE_QNAME, "private");
+    if (qn)
+        JS_CALL_TRACER(trc, qn, JSTRACE_QNAME, "private");
 }
 
 static JSBool
@@ -1045,13 +1047,10 @@ XMLArrayCursorTrace(JSTracer *trc, JSXMLArrayCursor *cursor)
     size_t index = 0;
 #endif
 
-    while (cursor) {
+    for (; cursor; cursor = cursor->next) {
         root = cursor->root;
-        if (root) {
-            JS_SET_TRACING_INDEX(trc, "cursor_root", index++);
-            js_CallGCThingTracer(trc, root);
-        }
-        cursor = cursor->next;
+        JS_SET_TRACING_INDEX(trc, "cursor_root", index++);
+        js_CallValueTracerIfGCThing(trc, (jsval)root);
     }
 }
 

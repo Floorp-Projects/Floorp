@@ -232,8 +232,13 @@ JS_STATIC_ASSERT(JSTRACE_STRING == 2);
 # define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_ATOM)
 #endif
 
+/*
+ * Trace jsval when JSVAL_IS_OBJECT(v) can be an arbitrary GC thing casted as
+ * JSVAL_OBJECT and js_GetGCThingFlags has to be used to find the real type
+ * behind v.
+ */
 extern void
-js_CallGCThingTracer(JSTracer *trc, void *thing);
+js_CallValueTracerIfGCThing(JSTracer *trc, jsval v);
 
 extern void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp);
