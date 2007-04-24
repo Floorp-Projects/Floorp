@@ -128,7 +128,6 @@ DEFINE_GETTER_AND_SETTER( IsHandlingHTML,   mHandleHTML   )
 DEFINE_GETTER_AND_SETTER( IsHandlingJPEG,   mHandleJPEG   )
 DEFINE_GETTER_AND_SETTER( IsHandlingGIF,    mHandleGIF    )
 DEFINE_GETTER_AND_SETTER( IsHandlingPNG,    mHandlePNG    )
-DEFINE_GETTER_AND_SETTER( IsHandlingMNG,    mHandleMNG    )
 DEFINE_GETTER_AND_SETTER( IsHandlingXBM,    mHandleXBM    )
 DEFINE_GETTER_AND_SETTER( IsHandlingBMP,    mHandleBMP    )
 DEFINE_GETTER_AND_SETTER( IsHandlingICO,    mHandleICO    )
@@ -151,7 +150,6 @@ NS_IMPL_ISUPPORTS1( nsWindowsHooks, nsIWindowsHooks )
 static const char *jpgExts[]  = { ".jpg", ".jpe", ".jpeg", ".jfif", ".pjpeg", ".pjp", 0 };
 static const char *gifExts[]  = { ".gif", 0 };
 static const char *pngExts[]  = { ".png", 0 };
-static const char *mngExts[]  = { ".mng", 0 };
 static const char *xbmExts[]  = { ".xbm", 0 };
 static const char *bmpExts[]  = { ".bmp", ".rle", ".dib", 0 };
 static const char *icoExts[]  = { ".ico", 0 };
@@ -170,7 +168,6 @@ nsWindowsHooks::nsWindowsHooks()
     jpg(   jpgExts,  "MozillaJPEG",  "JPEG Image",           "jpegfile", "jpeg-file.ico"),
     gif(   gifExts,  "MozillaGIF",   "GIF Image",            "giffile",  "gif-file.ico"),
     png(   pngExts,  "MozillaPNG",   "PNG Image",            "pngfile",  "image-file.ico"),
-    mng(   mngExts,  "MozillaMNG",   "MNG Image",            "",         "image-file.ico"),
     xbm(   xbmExts,  "MozillaXBM",   "XBM Image",            "xbmfile",  "image-file.ico"),
     bmp(   bmpExts,  "MozillaBMP",   "BMP Image",            "",         "image-file.ico"),
     ico(   icoExts,  "MozillaICO",   "Icon",                 "icofile",  "%1"),
@@ -212,7 +209,6 @@ nsWindowsHooks::GetSettings( nsWindowsHooksSettings **result ) {
     prefs->mHandleJPEG   = BoolRegistryEntry( "isHandlingJPEG"   );
     prefs->mHandleGIF    = BoolRegistryEntry( "isHandlingGIF"    );
     prefs->mHandlePNG    = BoolRegistryEntry( "isHandlingPNG"    );
-    prefs->mHandleMNG    = BoolRegistryEntry( "isHandlingMNG"    );
     prefs->mHandleXBM    = BoolRegistryEntry( "isHandlingXBM"    );
     prefs->mHandleBMP    = BoolRegistryEntry( "isHandlingBMP"    );
     prefs->mHandleICO    = BoolRegistryEntry( "isHandlingICO"    );
@@ -323,8 +319,6 @@ nsWindowsHooksSettings::GetRegistryMatches( PRBool *_retval ) {
          ||
          misMatch( mHandlePNG,    gWindowsHooks->png )
          ||
-         misMatch( mHandleMNG,    gWindowsHooks->mng )
-         ||
          misMatch( mHandleXBM,    gWindowsHooks->xbm )
          ||
          misMatch( mHandleBMP,    gWindowsHooks->bmp )
@@ -379,7 +373,6 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent,
             settings->mHandleJPEG   = PR_FALSE;
             settings->mHandleGIF    = PR_FALSE;
             settings->mHandlePNG    = PR_FALSE;
-            settings->mHandleMNG    = PR_FALSE;
             settings->mHandleXBM    = PR_FALSE;
             settings->mHandleBMP    = PR_FALSE;
             settings->mHandleICO    = PR_FALSE;
@@ -568,7 +561,6 @@ nsWindowsHooks::SetSettings(nsIWindowsHooksSettings *prefs) {
     putPRBoolIntoRegistry( "isHandlingJPEG",   prefs, &nsIWindowsHooksSettings::GetIsHandlingJPEG );
     putPRBoolIntoRegistry( "isHandlingGIF",    prefs, &nsIWindowsHooksSettings::GetIsHandlingGIF );
     putPRBoolIntoRegistry( "isHandlingPNG",    prefs, &nsIWindowsHooksSettings::GetIsHandlingPNG );
-    putPRBoolIntoRegistry( "isHandlingMNG",    prefs, &nsIWindowsHooksSettings::GetIsHandlingMNG );
     putPRBoolIntoRegistry( "isHandlingXBM",    prefs, &nsIWindowsHooksSettings::GetIsHandlingXBM );
     putPRBoolIntoRegistry( "isHandlingBMP",    prefs, &nsIWindowsHooksSettings::GetIsHandlingBMP );
     putPRBoolIntoRegistry( "isHandlingICO",    prefs, &nsIWindowsHooksSettings::GetIsHandlingICO );
@@ -615,11 +607,6 @@ nsWindowsHooks::SetRegistry() {
         (void) png.set();
     } else {
         (void) png.reset();
-    }
-    if ( prefs->mHandleMNG ) {
-        (void) mng.set();
-    } else {
-        (void) mng.reset();
     }
     if ( prefs->mHandleXBM ) {
         (void) xbm.set();
