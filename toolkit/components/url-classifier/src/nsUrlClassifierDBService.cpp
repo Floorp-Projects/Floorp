@@ -75,6 +75,10 @@ static nsUrlClassifierDBService* sUrlClassifierDBService;
 // Thread that we do the updates on.
 static nsIThread* gDbBackgroundThread = nsnull;
 
+// Once we've committed to shutting down, don't do work in the background
+// thread.
+static PRBool gShuttingDownThread = PR_FALSE;
+
 static const char* kNEW_TABLE_SUFFIX = "_new";
 
 // This maps A-M to N-Z and N-Z to A-M.  All other characters are left alone.
@@ -207,6 +211,9 @@ nsUrlClassifierDBServiceWorker::Exists(const nsACString& tableName,
                                        const nsACString& key,
                                        nsIUrlClassifierCallback *c)
 {
+  if (gShuttingDownThread)
+    return NS_ERROR_NOT_INITIALIZED;
+
   nsresult rv = OpenDb();
   if (NS_FAILED(rv)) {
     NS_ERROR("Unable to open database");
@@ -252,6 +259,9 @@ NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::CheckTables(const nsACString & tableNames,
                                             nsIUrlClassifierCallback *c)
 {
+  if (gShuttingDownThread)
+    return NS_ERROR_NOT_INITIALIZED;
+
   nsresult rv = OpenDb();
   if (NS_FAILED(rv)) {
     NS_ERROR("Unable to open database");
@@ -294,6 +304,9 @@ NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::UpdateTables(const nsACString& updateString,
                                              nsIUrlClassifierCallback *c)
 {
+  if (gShuttingDownThread)
+    return NS_ERROR_NOT_INITIALIZED;
+
   LOG(("Updating tables\n"));
 
   nsresult rv = OpenDb();
@@ -440,6 +453,11 @@ nsUrlClassifierDBServiceWorker::Finish(nsIUrlClassifierCallback *c)
 {
   if (!mHasPendingUpdate)
     return NS_OK;
+
+  if (gShuttingDownThread) {
+    mConnection->RollbackTransaction();
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   nsresult rv = NS_OK;
   for (PRUint32 i = 0; i < mTableUpdateLines.Length(); ++i) {
@@ -995,11 +1013,14 @@ nsUrlClassifierDBService::Shutdown()
                               mWorker,
                               NS_PROXY_ASYNC,
                               getter_AddRefs(proxy));
-    proxy->CloseDb();
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = proxy->CloseDb();
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to post close db event");
+    }
   }
   LOG(("joining background thread"));
 
+  gShuttingDownThread = PR_TRUE;
   gDbBackgroundThread->Shutdown();
   NS_RELEASE(gDbBackgroundThread);
 
