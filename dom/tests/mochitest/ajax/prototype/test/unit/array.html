@@ -1,0 +1,178 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>Prototype Unit test file</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <script src="../../dist/prototype.js" type="text/javascript"></script>
+  <script src="../lib/unittest.js" type="text/javascript"></script>
+  <link rel="stylesheet" href="../test.css" type="text/css" />
+  <style type="text/css" media="screen">
+  /* <![CDATA[ */
+    #testcss1 { font-size:11px; color: #f00; }
+    #testcss2 { font-size:12px; color: #0f0; display: none; }
+  /* ]]> */
+  </style>
+</head>
+<body>
+<h1>Prototype Unit test file</h1>
+<p>
+  Test of the Array.prototype extensions
+</p>
+
+<!-- Log output -->
+<div id="testlog"> </div>
+
+<div id="test_node">22<span id="span_1"></span><span id="span_2"></span></div>
+
+<!-- Tests follow -->
+<script type="text/javascript" language="javascript" charset="utf-8">
+// <![CDATA[
+
+  var globalArgsTest = 'nothing to see here';
+
+  new Test.Unit.Runner({
+    
+    testToArrayOnArguments: function(){ with(this) {
+      function toArrayOnArguments(){
+        globalArgsTest = $A(arguments);
+      }
+      toArrayOnArguments();
+      assertEnumEqual([], globalArgsTest);
+      toArrayOnArguments('foo');
+      assertEnumEqual(['foo'], globalArgsTest);
+      toArrayOnArguments('foo','bar');
+      assertEnumEqual(['foo','bar'], globalArgsTest);
+    }},
+    
+    testToArrayOnNodeList: function(){ with(this) {
+      // direct HTML
+      assertEqual(3, $A($('test_node').childNodes).length);
+      
+      // DOM
+      var element = document.createElement('div');
+      element.appendChild(document.createTextNode('22'));
+      (2).times(function(){ element.appendChild(document.createElement('span')) });
+      assertEqual(3, $A(element.childNodes).length);
+      
+      // HTML String
+      element = document.createElement('div');
+      $(element).update('22<span></span><span></span');
+      assertEqual(3, $A(element.childNodes).length);
+    }},
+    
+    testClear: function(){ with(this) {
+      assertEnumEqual([], [].clear());
+      assertEnumEqual([], [1].clear());
+      assertEnumEqual([], [1,2].clear());
+    }},
+    
+    testClone: function(){ with(this) {
+      assertEnumEqual([], [].clone());
+      assertEnumEqual([1], [1].clone());
+      assertEnumEqual([1,2], [1,2].clone());
+      assertEnumEqual([0,1,2], [0,1,2].clone());
+      var a = [0,1,2];
+      var b = a;
+      assertIdentical(a, b);
+      b = a.clone();
+      assertNotIdentical(a, b);
+    }},
+    
+    testFirst: function(){ with(this) {
+      assertUndefined([].first());
+      assertEqual(1, [1].first());
+      assertEqual(1, [1,2].first());
+    }},
+    
+    testLast: function(){ with(this) {
+      assertUndefined([].last());
+      assertEqual(1, [1].last());
+      assertEqual(2, [1,2].last());
+    }},
+    
+    testCompact: function(){ with(this) {
+      assertEnumEqual([],      [].compact());
+      assertEnumEqual([1,2,3], [1,2,3].compact());
+      assertEnumEqual([0,1,2,3], [0,null,1,2,undefined,3].compact());
+      assertEnumEqual([1,2,3], [null,1,2,3,null].compact());
+    }},
+    
+    testFlatten: function(){ with(this) {
+      assertEnumEqual([],      [].flatten());
+      assertEnumEqual([1,2,3], [1,2,3].flatten());
+      assertEnumEqual([1,2,3], [1,[[[2,3]]]].flatten());
+      assertEnumEqual([1,2,3], [[1],[2],[3]].flatten());
+      assertEnumEqual([1,2,3], [[[[[[[1]]]]]],2,3].flatten());
+    }},
+    
+    testIndexOf: function(){ with(this) {
+      assertEqual(-1, [].indexOf(1));
+      assertEqual(-1, [0].indexOf(1));
+      assertEqual(0, [1].indexOf(1));
+      assertEqual(1, [0,1,2].indexOf(1));
+    }},
+    
+    testInspect: function(){ with(this) {
+      assertEqual('[]',[].inspect());
+      assertEqual('[1]',[1].inspect());
+      assertEqual('[\'a\']',['a'].inspect());
+      assertEqual('[\'a\', 1]',['a',1].inspect());
+    }},
+    
+    testToJSON: function(){ with(this) {
+      assertEqual('[]', [].toJSON());
+      assertEqual('[\"a\"]', ['a'].toJSON());
+      assertEqual('[\"a\",1]', ['a', 1].toJSON());
+      assertEqual('[\"a\",{\"b\":null}]', ['a', {'b': null}].toJSON());
+    }},
+        
+    testReduce: function(){ with(this) {
+      assertUndefined([].reduce());
+      assertNull([null].reduce());
+      assertEqual(1, [1].reduce());
+      assertEnumEqual([1,2,3], [1,2,3].reduce());
+      assertEnumEqual([1,null,3], [1,null,3].reduce());
+    }},
+    
+    testReverse: function(){ with(this) {
+      assertEnumEqual([], [].reverse());
+      assertEnumEqual([1], [1].reverse());
+      assertEnumEqual([2,1], [1,2].reverse());
+      assertEnumEqual([3,2,1], [1,2,3].reverse());
+    }},
+    
+    testSize: function(){ with(this) {
+      assertEqual(4, [0, 1, 2, 3].size());
+      assertEqual(0, [].size());
+    }},
+
+    testUniq: function(){ with(this) {
+      assertEnumEqual([1], [1, 1, 1].uniq());
+      assertEnumEqual([1], [1].uniq());
+      assertEnumEqual([], [].uniq());
+      assertEnumEqual([0, 1, 2, 3], [0, 1, 2, 2, 3, 0, 2].uniq());
+      assertEnumEqual([0, 1, 2, 3], [0, 0, 1, 1, 2, 3, 3, 3].uniq(true));
+    }},
+    
+    testWithout: function(){ with(this) {
+      assertEnumEqual([], [].without(0));
+      assertEnumEqual([], [0].without(0));
+      assertEnumEqual([1], [0,1].without(0));
+      assertEnumEqual([1,2], [0,1,2].without(0));
+    }},
+    
+    test$w: function(){ with(this) {
+      assertEnumEqual(['a', 'b', 'c', 'd'], $w('a b c d'));
+      assertEnumEqual([], $w(' '));
+      assertEnumEqual(['a'], $w('a'));
+      assertEnumEqual(['a'], $w('a '));
+      assertEnumEqual(['a'], $w(' a'));
+      assertEnumEqual(['a', 'b', 'c', 'd'], $w(' a   b\nc\t\nd\n'));
+    }}
+
+  }, 'testlog');
+// ]]>
+</script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>Prototype Unit test file</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <script src="../../dist/prototype.js" type="text/javascript"></script>
+  <script src="../lib/unittest.js" type="text/javascript"></script>
+  <link rel="stylesheet" href="../test.css" type="text/css" />
+  <style type="text/css" media="screen">
+  /* <![CDATA[ */
+    #testcss1 { font-size:11px; color: #f00; }
+    #testcss2 { font-size:12px; color: #0f0; display: none; }
+  /* ]]> */
+  </style>
+</head>
+<body>
+<h1>Prototype Unit test file</h1>
+<p>
+  Test of utility functions in form.js
+</p>
+
+<!-- Log output -->
+<div id="testlog"> </div>
+
+<form id="form" method="get" action="fixtures/empty.js">
+  <input type="text" name="val1" id="input_enabled" value="4" />
+  <div>This is not a form element</div>
+  <input type="text" name="val2" id="input_disabled" disabled="disabled" value="5" />
+  <input type="submit" />
+  <input type="text" name="action" value="blah" />
+</form>
+<div id="form_wrapper">
+  <form id="form_selects" action="fixtures/empty.js">
+    <select name="vu">
+       <option value="1" selected="selected">One</option>
+       <option value="2">Two</option>
+       <option value="3">Three</option>
+    </select>
+    <select id="multiSel1" name="vm[]" multiple="multiple">
+       <option id="multiSel1_opt1" value="1" selected="selected">One</option>
+       <option id="multiSel1_opt2" value="2">Two</option>
+       <option id="multiSel1_opt3" value="3" selected="selected">Three</option>
+    </select>
+    <select name="nvu">
+       <option selected="selected">One</option>
+       <option value="2">Two</option>
+       <option value="3">Three</option>
+    </select>
+    <fieldset id="form_fieldset">
+      <select name="nvm[]" multiple="multiple">
+         <option selected="selected">One</option>
+         <option>Two</option>
+         <option selected="selected">Three</option>
+      </select>
+      <select name="evu">
+         <option value="" selected="selected">One</option>
+         <option value="2">Two</option>
+         <option value="3">Three</option>
+      </select>
+      <select name="evm[]" multiple="multiple">
+         <option value="" selected="selected">One</option>
+         <option>Two</option>
+         <option selected="selected">Three</option>
+      </select>
+    </fieldset>
+  </form>
+</div>
+
+<form id="form_array"> 
+  <input type="text" name="twin" value="" /> 
+  <input type="text" name="twin" value="siamese" />
+  <!-- Rails checkbox hack with hidden input: -->
+  <input type="checkbox" id="checkbox_hack" name="checky" value="1" /> 
+  <input name="checky" type="hidden" value="0" />
+</form>
+
+<form id="form_getelements">
+  <select id="tf_selectOne" name="tf_selectOne"><option></option><option>1</option></select>
+  <textarea id="tf_textarea" name="tf_textarea"></textarea>
+  <input type="checkbox" id="tf_checkbox" name="tf_checkbox" value="on" />
+  <select id="tf_selectMany" name="tf_selectMany" multiple="multiple"></select>
+  <input type="text" id="tf_text" name="tf_text" />
+  <div>This is not a form element</div>
+  <input type="radio" id="tf_radio" name="tf_radio" value="on" />
+  <input type="hidden" id="tf_hidden" name="tf_hidden" />
+  <input type="password" id="tf_password" name="tf_password" />
+</form>
+
+<form id="form_focus">
+  <input type="text" name="focus_disabled" id="focus_disabled" disabled="disabled"/>
+  <input type="submit" name="focus_submit" id="focus_submit" />
+  <input type="button" name="focus_button" id="focus_button" value="button" />
+  <input type="reset" name="focus_reset" id="focus_reset" />
+  <input type="text" name="focus_text" id="focus_text" value="Hello" />
+</form>
+
+<form id="form_focus_hidden" style="display: none">
+  <input type="text" />
+</form>
+
+<!-- Tests follow -->
+<script type="text/javascript" language="javascript" charset="utf-8">
+// <![CDATA[
+  var callbackCounter = 0;
+  var timedCounter = 0;
+
+  new Test.Unit.Runner({
+    
+    // Make sure to set defaults in the test forms, as some browsers override this
+    // with previously entered values on page reload
+    setup: function(){ with(this) {
+      $('input_enabled').value = '4';
+      $('input_disabled').value = '5';
+      
+      $('tf_selectOne').selectedIndex = 0;
+      $('tf_textarea').value = '';
+      $('tf_text').value = '';
+      $('tf_hidden').value = '';
+      $('tf_password').value = '';
+      $('tf_checkbox').checked = false;
+      $('tf_radio').checked = false;
+    }},
+    
+    testFormElementEventObserver: function(){ with(this) {
+      var observer = new Form.Element.EventObserver('input_enabled', function(){
+        callbackCounter++;
+      });
+      
+      assertEqual(0, callbackCounter);
+      $('input_enabled').value = 'boo!';
+      observer.onElementEvent(); // can't test the event directly, simulating
+      assertEqual(1, callbackCounter);
+    }},
+
+    testFormElementObserver: function(){ with(this) {
+      // First part: regular field
+      var observer = new Form.Element.Observer('input_enabled', 0.5, function() {
+        ++timedCounter;
+      });
+
+      // Test it's unchanged yet
+      assertEqual(0, timedCounter);
+      // Test it doesn't change on first check
+      wait(550, function() {
+        assertEqual(0, timedCounter);
+        // Change, test it doesn't immediately change
+        $('input_enabled').value = 'yowza!';
+        assertEqual(0, timedCounter);
+        // Test it changes on next check, but not again on the next
+        wait(550, function() {
+          assertEqual(1, timedCounter);
+          wait(550, function() {
+            assertEqual(1, timedCounter);
+          });
+        });
+      });
+
+      // Second part: multiple-select! -- Fails before patch in #6593.
+      [1, 2, 3].each(function(index) {
+        $('multiSel1_opt' + index).selected = (1 == index);
+      });
+      timedCounter = 0;
+      observer = new Form.Element.Observer('multiSel1', 0.5, function() {
+        ++timedCounter;
+      });
+
+      // Test it's unchanged yet
+      assertEqual(0, timedCounter);
+      // Test it doesn't change on first check
+      wait(550, function() {
+        assertEqual(0, timedCounter);
+        // Change, test it doesn't immediately change
+        // NOTE: it is important that the 3rd be re-selected, for the
+        // serialize form to obtain the expected value :-)
+        $('multiSel1_opt3').selected = true;
+        assertEqual(0, timedCounter);
+        // Test it changes on next check, but not again on the next
+        wait(550, function() {
+          assertEqual(1, timedCounter);
+          wait(550, function() {
+            assertEqual(1, timedCounter);
+          });
+        });
+      });
+    }},
+    
+    testFormEnabling: function(){ with(this) {
+      var form = $('form_focus')
+      var input1 = form.focus_disabled
+      var input2 = form.focus_text
+      
+      assert(input1.disabled)
+      assert(!input2.disabled)
+      
+      form.disable()
+      assert(input1.disabled)
+      assert(input2.disabled)
+      
+      form.enable()
+      assert(!input1.disabled)
+      assert(!input2.disabled)
+      
+      input1.disable()
+      assert(input1.disabled)
+      
+      // non-form elements:
+      var fieldset = $('form_fieldset')
+      var fields = fieldset.immediateDescendants()
+      assert(fields.all(function(select){ return !select.disabled }))
+      
+      Form.disable(fieldset)
+      assert(fields.all(function(select){ return select.disabled }))
+      
+      Form.enable(fieldset)
+      assert(fields.all(function(select){ return !select.disabled }))
+    }},
+    
+    testFormElementEnabling: function(){ with(this) {
+      assert($('input_disabled').disabled);
+      $('input_disabled').enable();
+      assert(!$('input_disabled').disabled);
+      $('input_disabled').disable();
+      assert($('input_disabled').disabled);
+      
+      assert(!$('input_enabled').disabled);
+      $('input_enabled').disable();
+      assert($('input_enabled').disabled);
+      $('input_enabled').enable();
+      assert(!$('input_enabled').disabled);
+    }},
+    
+    // due to the lack of a DOM hasFocus() API method,
+    // we're simulating things here a little bit
+    testFormActivating: function(){ with(this) {
+      // Firefox, IE, and Safari 2+
+      function getSelection(element){
+        try {
+          if (typeof element.selectionStart == 'number') {
+            return element.value.substring(element.selectionStart, element.selectionEnd);
+          } else if (document.selection && document.selection.createRange) {
+            return document.selection.createRange().text;
+          }
+        }
+        catch(e){ return null }
+      }
+      
+      // Form.focusFirstElement shouldn't focus disabled elements
+      var element = Form.findFirstElement('form_focus');
+      assertEqual('focus_submit',element.id);
+      
+      // Test IE doesn't select text on buttons
+      Form.focusFirstElement('form_focus');
+      if(document.selection) assertEqual('', getSelection(element));
+      
+      // Form.Element.activate shouldn't select text on buttons
+      element = $('focus_text');
+      assertEqual('', getSelection(element));
+        
+      // Form.Element.activate should select text on text input elements
+      element.activate();
+      assertEqual('Hello', getSelection(element));
+
+      // Form.Element.activate shouldn't raise an exception when the form or field is hidden
+      assertNothingRaised(function() {
+        $('form_focus_hidden').focusFirstElement();
+      });
+    }},
+    
+    testFormGetElements: function() {with(this) {
+      var formElements = $('form_getelements').getElements();
+      assertEqual(8, formElements.length);
+      assertEqual('tf_selectOne', formElements[0].id);
+      assertEqual('tf_textarea', formElements[1].id);
+      assertEqual('tf_checkbox', formElements[2].id);
+      assertEqual('tf_selectMany', formElements[3].id);
+      assertEqual('tf_text', formElements[4].id);
+      assertEqual('tf_radio', formElements[5].id);
+      assertEqual('tf_hidden', formElements[6].id);
+      assertEqual('tf_password', formElements[7].id);
+    }},
+    
+    testFormGetInputs: function() {with(this){
+      var form = $('form_getelements'), formInputs = Form.getInputs(form);
+      assertEqual(formInputs.length, 5);
+      assert(formInputs instanceof Array);
+      assert(formInputs.all(function(input) { return (input.tagName == "INPUT"); }));
+      
+      var formInputs2 = form.getInputs();
+      assertEqual(formInputs2.length, 5);
+      assert(formInputs2 instanceof Array);
+      assert(formInputs2.all(function(input) { return (input.tagName == "INPUT"); }));
+    }},
+    
+    testFormSerialize: function() {with(this){
+      assertEqual('tf_selectOne=&tf_textarea=&tf_text=&tf_hidden=&tf_password=', 
+        Form.serialize('form_getelements'));
+        
+      $('tf_selectOne').selectedIndex = 1;
+      $('tf_textarea').value = "boo hoo!";
+      $('tf_text').value = "123öäü";
+      $('tf_hidden').value = "moo%hoo&test";
+      $('tf_password').value = 'sekrit code';
+      $('tf_checkbox').checked = true;
+      $('tf_radio').checked = true;
+      
+      assertEqual(
+        'tf_selectOne=1&tf_textarea=boo%20hoo!&tf_checkbox=on&tf_text=123%C3%B6%C3%A4%C3%BC&'+
+        'tf_radio=on&tf_hidden=moo%25hoo%26test&tf_password=sekrit%20code',
+        Form.serialize('form_getelements'));
+
+      // Checks that disabled element is not included in serialized form.
+      $('input_enabled').enable();
+      assertEqual('val1=4&action=blah', Form.serialize('form'));
+
+      // Checks that select-related serializations work just fine
+      assertEqual('vu=1&vm%5B%5D=1&vm%5B%5D=3&nvu=One&nvm%5B%5D=One'+
+        '&nvm%5B%5D=Three&evu=&evm%5B%5D=&evm%5B%5D=Three', 
+        Form.serialize('form_selects'));
+      
+      // should not eat empty values for duplicate names 
+      $('checkbox_hack').checked = false;
+      var data = Form.serialize('form_array', true); 
+      assertEnumEqual(['', 'siamese'], data['twin']); 
+      assertEqual('0', data['checky']);
+      
+      $('checkbox_hack').checked = true; 
+      assertEnumEqual($w('1 0'), Form.serialize('form_array', true)['checky']);
+    }},
+    
+    testFormSerializeWorksWithNonFormElements: function() {with(this) {
+      assertEqual('nvm%5B%5D=One&nvm%5B%5D=Three&evu=&evm%5B%5D=&evm%5B%5D=Three', Form.serialize('form_fieldset'));
+      assertEqual('vu=1&vm%5B%5D=1&vm%5B%5D=3&nvu=One&nvm%5B%5D=One&nvm%5B%5D=Three&evu=&evm%5B%5D=&evm%5B%5D=Three', Form.serialize('form_wrapper'));
+    }},
+    
+    testFormMethodsOnExtendedElements: function() {with(this) {
+      assertEqual(Form.serialize('form'), $('form').serialize());
+      assertEqual(Form.Element.serialize('input_enabled'), $('input_enabled').serialize());
+      assertNotEqual($('form').serialize, $('input_enabled').serialize);
+      
+      Element.addMethods('INPUT',  { anInputMethod: function(input)  { return 'input'  } });
+      Element.addMethods('SELECT', { aSelectMethod: function(select) { return 'select' } });
+
+      document.getElementById('tf_text')._extended = false;
+      document.getElementById('tf_selectOne')._extended = false;
+
+      assert($('tf_text').anInputMethod);
+      assert(!$('tf_text').aSelectMethod);
+      assertEqual('input', $('tf_text').anInputMethod());
+
+      assert($('tf_selectOne').aSelectMethod);
+      assert(!$('tf_selectOne').anInputMethod);      
+      assertEqual('select', $('tf_selectOne').aSelectMethod());
+    }},
+    
+    testFormRequest: function() {with(this) {
+      var request = $("form_selects").request();
+      assert(!$("form_selects").hasAttribute("method"));
+      assert(request.url.endsWith("fixtures/empty.js"));
+      assertEqual("post", request.method);
+      assertEqual("vu=1&vm%5B%5D=1&vm%5B%5D=3&nvu=One&nvm%5B%5D=One&nvm%5B%5D=Three&evu=&evm%5B%5D=&evm%5B%5D=Three", Hash.toQueryString(request.options.parameters));
+
+      request = $("form_selects").request({method: "put", parameters: {val2: "hello", val3: "world"}});
+      assertEqual("post", request.method);
+      assertEqual("put", request.parameters['_method']);
+      assertEqual("vu=1&vm%5B%5D=1&vm%5B%5D=3&nvu=One&nvm%5B%5D=One&nvm%5B%5D=Three&evu=&evm%5B%5D=&evm%5B%5D=Three&val2=hello&val3=world", Hash.toQueryString(request.options.parameters));
+      
+      request = $("form").request();
+      assert($("form").hasAttribute("method"));
+      assert(request.url.endsWith("fixtures/empty.js?val1=4&action=blah"));
+      assertEqual("get", request.method);
+      
+      request = $("form").request({method: "post"});
+      assert(request.url.endsWith("fixtures/empty.js"));
+      assertEqual("val1=4&action=blah", Hash.toQueryString(request.options.parameters));
+      assertEqual("post", request.method);
+    }},
+    
+    testFormElementMethodsChaining: function(){ with(this) {
+      var methods = $w('clear activate disable enable'),
+        formElements = $('form_getelements').getElements();
+      methods.each(function(method){
+        formElements.each(function(element){
+          var returned = element[method]();
+          assertIdentical(element, returned);
+        });
+      });
+    }}
+    
+  }, 'testlog');
+// ]]>
+</script>
+</body>
+</html>

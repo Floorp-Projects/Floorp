@@ -1,0 +1,174 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>Prototype Unit test file</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <script src="../../dist/prototype.js" type="text/javascript"></script>
+  <script src="../lib/unittest.js" type="text/javascript"></script>
+  <link rel="stylesheet" href="../test.css" type="text/css" />
+  <style type="text/css" media="screen">
+  /* <![CDATA[ */
+    #testcss1 { font-size:11px; color: #f00; }
+    #testcss2 { font-size:12px; color: #0f0; display: none; }
+  /* ]]> */
+  </style>
+</head>
+<body>
+<h1>Prototype Unit test file</h1>
+<p>
+  Test of utility functions in ajax.js
+</p>
+
+<!-- Log output -->
+<div id="testlog"> </div>
+<div id="content"></div>
+<div id="content2" style="color:red"></div>
+
+<!-- Tests follow -->
+<script type="text/javascript" language="javascript" charset="utf-8">
+// <![CDATA[
+  var responderCounter = 0;
+
+  new Test.Unit.Runner({
+    
+    setup: function(){
+      $('content').update('');
+      $('content2').update('');
+    },
+    
+    teardown: function(){
+      // hack to cleanup responders
+      Ajax.Responders.responders = [Ajax.Responders.responders[0]];
+    },
+    
+    testSynchronousRequest: function() {with(this) {
+      assertEqual("", $("content").innerHTML);
+      
+      assertEqual(0, Ajax.activeRequestCount);
+      new Ajax.Request("fixtures/hello.js", {
+        asynchronous: false,
+        method: 'GET',
+        onComplete: function(response) { eval(response.responseText) }
+      });
+      assertEqual(0, Ajax.activeRequestCount);
+      
+      var h2 = $("content").firstChild;
+      assertEqual("Hello world!", h2.innerHTML);
+    }},
+    
+    testAsynchronousRequest: function() {with(this) {
+      assertEqual("", $("content").innerHTML);
+      
+      new Ajax.Request("fixtures/hello.js", {
+        asynchronous: true,
+        method: 'get',
+        onComplete: function(response) { eval(response.responseText) }
+      });
+      wait(1000,function(){
+        var h2 = $("content").firstChild;
+        assertEqual("Hello world!", h2.innerHTML);
+      });
+    }},
+    
+    testUpdater: function() {with(this) {
+      assertEqual("", $("content").innerHTML);
+      
+      new Ajax.Updater("content", "fixtures/content.html", { method:'get' });
+      
+      // lowercase comparison because of MSIE which presents HTML tags in uppercase
+      var sentence = ("Pack my box with <em>five dozen</em> liquor jugs! " +
+        "Oh, how <strong>quickly</strong> daft jumping zebras vex...").toLowerCase();
+
+      wait(1000,function(){
+        assertEqual(sentence, $("content").innerHTML.strip().toLowerCase());
+        
+        $('content').update('');
+        assertEqual("", $("content").innerHTML);
+         
+        new Ajax.Updater({ success:"content", failure:"content2" },
+          "fixtures/content.html", { method:'get', parameters:{ pet:'monkey' } });
+        
+        new Ajax.Updater("", "fixtures/content.html", { method:'get', parameters:"pet=monkey" });
+        
+        wait(1000,function(){
+          assertEqual(sentence, $("content").innerHTML.strip().toLowerCase());
+          assertEqual("", $("content2").innerHTML);
+        });
+      });
+    }},
+    
+    testResponders: function(){with(this) {
+      // check for internal responder
+      assertEqual(1, Ajax.Responders.responders.length);
+      
+      var dummyResponder = {
+        onComplete: function(req){ /* dummy */ }
+      };
+      
+      Ajax.Responders.register(dummyResponder);
+      assertEqual(2, Ajax.Responders.responders.length);
+      
+      // don't add twice
+      Ajax.Responders.register(dummyResponder);
+      assertEqual(2, Ajax.Responders.responders.length);
+      
+      Ajax.Responders.unregister(dummyResponder);
+      assertEqual(1, Ajax.Responders.responders.length);
+      
+      var responder = {
+        onCreate:   function(req){ responderCounter++ },
+        onLoading:  function(req){ responderCounter++ },
+        onComplete: function(req){ responderCounter++ }
+      };
+      Ajax.Responders.register(responder);
+      
+      assertEqual(0, responderCounter);
+      assertEqual(0, Ajax.activeRequestCount);
+      new Ajax.Request("fixtures/content.html", { method:'get', parameters:"pet=monkey" });
+      assertEqual(1, responderCounter);
+      assertEqual(1, Ajax.activeRequestCount);
+      
+      wait(1000,function(){
+        assertEqual(3, responderCounter);
+        assertEqual(0, Ajax.activeRequestCount);
+      });
+    }},
+    
+    testEvalResponseShouldBeCalledBeforeOnComplete: function() {with(this) {
+      assertEqual("", $("content").innerHTML);
+      
+      assertEqual(0, Ajax.activeRequestCount);
+      new Ajax.Request("fixtures/hello.js", {
+        asynchronous: false,
+        method: 'GET',
+        onComplete: function(response) { assertNotEqual("", $("content").innerHTML) }
+      });
+      assertEqual(0, Ajax.activeRequestCount);
+      
+      var h2 = $("content").firstChild;
+      assertEqual("Hello world!", h2.innerHTML);
+    }},
+    
+    testContentTypeSetForSimulatedVerbs: function() {with(this) {
+      var isRunningFromRake = true;
+      
+      new Ajax.Request('/content-type', {
+        method: 'put',
+        contentType: 'application/bogus',
+        asynchronous: false,
+        onFailure: function() {
+          isRunningFromRake = false;
+        },
+        onComplete: function(response) {
+          if (isRunningFromRake)
+            assertEqual('application/bogus; charset=UTF-8', response.responseText);
+        }
+      });
+    }}
+    
+  }, 'testlog');
+// ]]>
+</script>
+</body>
+</html>
