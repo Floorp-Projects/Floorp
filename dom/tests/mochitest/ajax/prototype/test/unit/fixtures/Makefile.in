@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES	= \
+		content.html \
 		empty.js \
 		hello.js \
 		logo.gif \
