@@ -204,7 +204,8 @@ nsSVGPatternFrame::GetCanvasTM() {
 nsresult
 nsSVGPatternFrame::PaintPattern(cairo_surface_t** surface,
                                 nsIDOMSVGMatrix** patternMatrix,
-                                nsSVGGeometryFrame *aSource)
+                                nsSVGGeometryFrame *aSource,
+                                float aGraphicOpacity)
 {
 
   /*
@@ -298,6 +299,11 @@ nsSVGPatternFrame::PaintPattern(cairo_surface_t** surface,
   gfxContext tmpContext(tmpSurface);
   nsSVGRenderState tmpState(&tmpContext);
 
+  if (aGraphicOpacity != 1.0f) {
+    tmpContext.Save();
+    tmpContext.PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+  }
+
   // OK, now render -- note that we use "firstKid", which
   // we got at the beginning because it takes care of the
   // referenced pattern situation for us
@@ -310,6 +316,12 @@ nsSVGPatternFrame::PaintPattern(cairo_surface_t** surface,
     nsSVGUtils::PaintChildWithEffects(&tmpState, nsnull, kid);
   }
   mSource = nsnull;
+
+  if (aGraphicOpacity != 1.0f) {
+    tmpContext.PopGroupToSource();
+    tmpContext.Paint(aGraphicOpacity);
+    tmpContext.Restore();
+  }
 
   // caller now owns the cairo surface
   cairo_surface_reference(tmpSurface->CairoSurface());
@@ -796,10 +808,14 @@ nsSVGPatternFrame::GetCallerGeometry(nsIDOMSVGMatrix **aCTM,
 PRBool
 nsSVGPatternFrame::SetupPaintServer(gfxContext *aContext,
                                     nsSVGGeometryFrame *aSource,
-                                    float aOpacity,
+                                    float aGraphicOpacity,
                                     void **aClosure)
 {
   *aClosure = nsnull;
+
+  if (aGraphicOpacity == 0.0f)
+    return PR_FALSE;
+
   cairo_t *ctx = aContext->GetCairo();
 
   cairo_matrix_t matrix;
@@ -809,7 +825,8 @@ nsSVGPatternFrame::SetupPaintServer(gfxContext *aContext,
   cairo_surface_t *surface;
   nsCOMPtr<nsIDOMSVGMatrix> pMatrix;
   cairo_identity_matrix(ctx);
-  nsresult rv = PaintPattern(&surface, getter_AddRefs(pMatrix), aSource);
+  nsresult rv = PaintPattern(&surface, getter_AddRefs(pMatrix),
+                             aSource, aGraphicOpacity);
   cairo_set_matrix(ctx, &matrix);
   if (NS_FAILED(rv)) {
     cairo_surface_destroy(surface);

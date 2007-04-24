@@ -196,11 +196,13 @@ nsSVGGradientFrame::GetStopCount()
 
 void
 nsSVGGradientFrame::GetStopInformation(PRInt32 aIndex,
-                                       float *aOffset, nscolor *aColor, float *aOpacity)
+                                       float *aOffset,
+                                       nscolor *aStopColor,
+                                       float *aStopOpacity)
 {
   *aOffset = 0.0f;
-  *aColor = 0;
-  *aOpacity = 1.0f;
+  *aStopColor = NS_RGBA(0, 0, 0, 0);
+  *aStopOpacity = 1.0f;
 
   nsIFrame *stopFrame = nsnull;
   GetStopFrame(aIndex, &stopFrame);
@@ -219,8 +221,8 @@ nsSVGGradientFrame::GetStopInformation(PRInt32 aIndex,
   }
 
   if (stopFrame) {
-    *aColor   = stopFrame->GetStyleSVGReset()->mStopColor;
-    *aOpacity = stopFrame->GetStyleSVGReset()->mStopOpacity;
+    *aStopColor   = stopFrame->GetStyleSVGReset()->mStopColor;
+    *aStopOpacity = stopFrame->GetStyleSVGReset()->mStopOpacity;
   }
 #ifdef DEBUG
   // One way or another we have an implementation problem if we get here
@@ -331,7 +333,7 @@ nsSVGGradientFrame::GetSpreadMethod()
 PRBool
 nsSVGGradientFrame::SetupPaintServer(gfxContext *aContext,
                                      nsSVGGeometryFrame *aSource,
-                                     float aOpacity,
+                                     float aGraphicOpacity,
                                      void **aClosure)
 {
   *aClosure = nsnull;
@@ -371,10 +373,10 @@ nsSVGGradientFrame::SetupPaintServer(gfxContext *aContext,
   float lastOffset = 0.0f;
 
   for (PRUint32 i = 0; i < nStops; i++) {
-    float offset, opacity;
-    nscolor rgba;
+    float offset, stopOpacity;
+    nscolor stopColor;
 
-    GetStopInformation(i, &offset, &rgba, &opacity);
+    GetStopInformation(i, &offset, &stopColor, &stopOpacity);
 
     if (offset < lastOffset)
       offset = lastOffset;
@@ -382,11 +384,11 @@ nsSVGGradientFrame::SetupPaintServer(gfxContext *aContext,
       lastOffset = offset;
 
     cairo_pattern_add_color_stop_rgba(gradient, offset,
-                                      NS_GET_R(rgba)/255.0,
-                                      NS_GET_G(rgba)/255.0,
-                                      NS_GET_B(rgba)/255.0,
-                                      NS_GET_A(rgba)/255.0 *
-                                        opacity * aOpacity);
+                                      NS_GET_R(stopColor)/255.0,
+                                      NS_GET_G(stopColor)/255.0,
+                                      NS_GET_B(stopColor)/255.0,
+                                      NS_GET_A(stopColor)/255.0 *
+                                        stopOpacity * aGraphicOpacity);
   }
 
   cairo_set_source(aContext->GetCairo(), gradient);
