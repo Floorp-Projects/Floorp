@@ -42,6 +42,7 @@
 #include "nscore.h"
 #include "nsXPCOM.h"
 #include "nsXPCOMStrings.h"
+#include "xptcall.h"
 
 class nsStringContainer;
 class nsCStringContainer;
@@ -110,6 +111,10 @@ typedef void       (* LogReleaseFunc)(void*, nsrefcnt, const char*);
 typedef void       (* LogCtorFunc)(void*, const char*, PRUint32);
 typedef void       (* LogCOMPtrFunc)(void*, nsISupports*);
 
+typedef nsresult   (* GetXPTCallStubFunc)(REFNSIID, nsIXPTCProxy*, nsISomeInterface**);
+typedef void       (* DestroyXPTCallStubFunc)(nsISomeInterface*);
+typedef nsresult   (* InvokeByIndexFunc)(nsISupports*, PRUint32, PRUint32, nsXPTCVariant*);
+
 // PRIVATE AND DEPRECATED
 typedef NS_CALLBACK(XPCOMExitRoutine)(void);
 
@@ -174,6 +179,9 @@ typedef struct XPCOMFunctions{
     LogCtorFunc logDtorFunc;
     LogCOMPtrFunc logCOMPtrAddRefFunc;
     LogCOMPtrFunc logCOMPtrReleaseFunc;
+    GetXPTCallStubFunc getXPTCallStubFunc;
+    DestroyXPTCallStubFunc destroyXPTCallStubFunc;
+    InvokeByIndexFunc invokeByIndexFunc;
 
 } XPCOMFunctions;
 

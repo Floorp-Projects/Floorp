@@ -41,6 +41,12 @@
 #ifndef xptcall_h___
 #define xptcall_h___
 
+#ifdef MOZILLA_INTERNAL_API
+# define NS_GetXPTCallStub     NS_GetXPTCallStub_P
+# define NS_DestroyXPTCallStub NS_DestroyXPTCallStub_P
+# define NS_InvokeByIndex      NS_InvokeByIndex_P
+#endif
+
 #include "prtypes.h"
 #include "nscore.h"
 #include "nsISupports.h"
