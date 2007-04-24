@@ -456,7 +456,18 @@ NS_IMETHODIMP nsAccessible::SetParent(nsIAccessible *aParent)
 
 NS_IMETHODIMP nsAccessible::SetFirstChild(nsIAccessible *aFirstChild)
 {
+#ifdef DEBUG
+  // If there's parent of this child already, make sure it's us!
+  nsCOMPtr<nsPIAccessible> privChild = do_QueryInterface(aFirstChild);
+  if (privChild) {
+    nsCOMPtr<nsIAccessible> parent;
+    privChild->GetCachedParent(getter_AddRefs(parent));
+    NS_ASSERTION(!parent || parent == this, "Stealing child!");
+  }
+#endif
+
   mFirstChild = aFirstChild;
+
   return NS_OK;
 }
 
@@ -1964,11 +1975,25 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
   return aCanAggregateSubtree? AppendFlatStringFromSubtree(content, &aLabel) : NS_OK;
 }
 
+PRBool nsAccessible::IsNodeRelevant(nsIDOMNode *aNode)
+{
+  // Can this node be accessible and attached to
+  // the document's accessible tree?
+  nsCOMPtr<nsIAccessibilityService> accService =
+    do_GetService("@mozilla.org/accessibilityService;1");
+  NS_ENSURE_TRUE(accService, PR_FALSE);
+  nsCOMPtr<nsIDOMNode> relevantNode;
+  accService->GetRelevantContentNodeFor(aNode, getter_AddRefs(relevantNode));
+  return aNode == relevantNode;
+}
+
 NS_IMETHODIMP nsAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTarget, void * aData)
 {
   // Don't fire event for accessible that has been shut down
   if (!mWeakShell)
     return NS_ERROR_FAILURE;
+
+  NS_ENSURE_TRUE(IsNodeRelevant(mDOMNode), NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
   nsCOMPtr<nsPIAccessible> eventHandlingAccessible(do_QueryInterface(docAccessible));
@@ -1981,6 +2006,11 @@ NS_IMETHODIMP nsAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTa
 NS_IMETHODIMP
 nsAccessible::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
 {
+  NS_ENSURE_ARG_POINTER(aEvent);
+  nsCOMPtr<nsIDOMNode> eventNode;
+  aEvent->GetDOMNode(getter_AddRefs(eventNode));
+  NS_ENSURE_TRUE(IsNodeRelevant(eventNode), NS_ERROR_FAILURE);
+
   nsCOMPtr<nsIObserverService> obsService =
     do_GetService("@mozilla.org/observer-service;1");
   NS_ENSURE_TRUE(obsService, NS_ERROR_FAILURE);

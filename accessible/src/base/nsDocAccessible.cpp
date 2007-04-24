@@ -913,7 +913,7 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
 
   nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(aContent));
   NS_ASSERTION(targetNode, "No node for attr modified");
-  if (!targetNode) {
+  if (!targetNode || !IsNodeRelevant(targetNode)) {
     return;
   }
 
@@ -1350,7 +1350,11 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   // instead of just the accessible tree, although that would be faster
   // Otherwise we might miss the nsAccessNode's that are not nsAccessible's.
 
+  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
   nsCOMPtr<nsIDOMNode> childNode = aChild ? do_QueryInterface(aChild) : mDOMNode;
+  if (!IsNodeRelevant(childNode)) {
+    return NS_OK;  // Don't fire event unless it's for an attached accessible
+  }
   if (!mIsContentLoaded && mAccessNodeCache.Count() <= 1) {
     return NS_OK; // Still loading and nothing to invalidate yet
   }
