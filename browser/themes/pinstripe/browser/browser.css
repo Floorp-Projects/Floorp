@@ -1277,3 +1277,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-border-bottom-colors: -moz-mac-menushadow -moz-mac-menushadow ThreeDShadow  !important;
   -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight !important;
 }
+
+/* ::::: Tooltips (multi-line) from content ::::: */
+.htmltooltip-label {
+  max-width: 40em;
+  margin: 0;
+  white-space: -moz-pre-wrap;
+}
