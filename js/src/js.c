@@ -2247,6 +2247,7 @@ static char *shell_help_messages[] = {
 #ifdef DEBUG
     "dis([fun])             Disassemble functions into bytecodes",
     "dissrc([fun])          Disassemble functions with source lines",
+    "dumpHeap([obj])        Display reachable objects",
     "notes([fun])           Show source notes for functions",
     "tracing([toggle])      Turn tracing on or off",
     "stats([string ...])    Dump 'arena', 'atom', 'global' stats",
