@@ -2447,39 +2447,56 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
   NSPoint windowEventLocation = [theEvent locationInWindow];
   NSPoint screenEventLocation = [mWindow convertBaseToScreen:windowEventLocation];
   NSPoint viewEventLocation = [self convertPoint:windowEventLocation fromView:nil];
-  
-  // Most of the time we don't want mouse moved events to go to any window
-  // but the active one. That isn't the case for popup windows though!
-  if ([mWindow level] == NSPopUpMenuWindowLevel) {
-    // only take the event if it is over our own window
-    if (!NSPointInRect(screenEventLocation, [mWindow frame])) {
-      // it isn't over our own window, look for another popup window that is under the mouse
-      NSArray* appWindows = [NSApp windows];
-      unsigned int appWindowsCount = [appWindows count];
-      for (unsigned int i = 0; i < appWindowsCount; i++) {
-        NSWindow* currentWindow = [appWindows objectAtIndex:i];
-        // make sure this window is not our own window, is a popup window, is visible, and is
-        // underneath the event
-        if (!(currentWindow != mWindow &&
-              [currentWindow level] == NSPopUpMenuWindowLevel &&
-              [currentWindow isVisible] &&
-              NSPointInRect(screenEventLocation, [currentWindow frame])))
-          continue;
-        // found another popup window to send the event to, do it
-        NSPoint locationInOtherWindow = [currentWindow convertScreenToBase:screenEventLocation];
+
+  // if this is a popup window and the event is not over it, then we may want to send
+  // the event to another window
+  if ([mWindow level] == NSPopUpMenuWindowLevel &&
+      !NSPointInRect(screenEventLocation, [mWindow frame])) {
+    NSWindow* otherWindowForEvent = nil;
+    
+    // look for another popup window that is under the mouse
+    NSArray* appWindows = [NSApp windows];
+    unsigned int appWindowsCount = [appWindows count];
+    for (unsigned int i = 0; i < appWindowsCount; i++) {
+      NSWindow* currentWindow = [appWindows objectAtIndex:i];
+      if (currentWindow != mWindow &&
+          [currentWindow level] == NSPopUpMenuWindowLevel &&
+          [currentWindow isVisible] &&
+          NSPointInRect(screenEventLocation, [currentWindow frame])) {
+        // found another popup window to send the event to
+        otherWindowForEvent = currentWindow;
+        break;
+      }
+    }
+    
+    if (!otherWindowForEvent) {
+      // If the event is outside this active popup window but not over another popup window,
+      // see if the event is over the main window and route it there if so.
+      NSWindow* mainWindow = [NSApp mainWindow];
+      if (NSPointInRect(screenEventLocation, [mainWindow frame])) {
+        otherWindowForEvent = mainWindow;
+      }
+    }
+    
+    if (otherWindowForEvent) {
+      NSPoint locationInOtherWindow = [otherWindowForEvent convertScreenToBase:screenEventLocation];
+      NSView* targetView = [[otherWindowForEvent contentView] hitTest:locationInOtherWindow];
+      if (targetView) {
         NSEvent* newEvent = [NSEvent mouseEventWithType:NSMouseMoved
                                                location:locationInOtherWindow
                                           modifierFlags:[theEvent modifierFlags]
                                               timestamp:[theEvent timestamp]
-                                           windowNumber:[currentWindow windowNumber]
+                                           windowNumber:[otherWindowForEvent windowNumber]
                                                 context:nil
                                             eventNumber:[theEvent eventNumber]
                                              clickCount:0
                                                pressure:0.0];
-        [[currentWindow contentView] mouseMoved:newEvent];
-        return;
+        [targetView mouseMoved:newEvent];
       }
+      return;
     }
+    // at this point we mimic GTK2 by sending the event to our popup window if we
+    // couldn't find an alternative
   }
 
   NSView* view = [[mWindow contentView] hitTest:windowEventLocation];
