@@ -55,9 +55,46 @@ sub GetBuildID {
     return $buildID;
 }
 
+## 
+# GetPushDir - attempts to find the directory Tinderbox pushed to build to
+#
+# Searches for a string of the form:
+#  Linux Firefox Build available at: 
+#  localhost/2007-04-07-18-firefox2.0.0.4/ 
+# Matches on "Build available at:" and returns the next line.
+##
+
+sub GetPushDir {
+    my $this = shift;
+    my %args = @_;
+
+    my $log = $this->GetLogFileName();
+
+    my $found = 0;
+    my $pushDir = undef;
+    my $searchString = "Build available at:";
+
+    open (FILE, "< $log") or die("Cannot open file $log: $!");
+    while (<FILE>) {
+        if ($found) {
+            $pushDir = $_;
+            last;
+        }
+        if ($_ =~ /$searchString/) {
+            $found = 1;
+        }
+    }
+
+    close FILE or die("Cannot close file $log: $!");
+
+    return $pushDir;
+}
+
 sub GetLogFileName {
     my $this = shift;
     my %args = @_;
 
-    return $this->{'fileName'};
+    return $this->{'logFile'};
 }
+
+1;
