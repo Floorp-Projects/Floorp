@@ -94,20 +94,20 @@ invoke_copy_to_stack(PRUint64* d, PRUint32 paramCount, nsXPTCVariant* s)
 
 /*
  * EXPORT_XPCOM_API(nsresult)
- * NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+ * NS_InvokeByIndex_P(nsISupports* that, PRUint32 methodIndex,
  *                  PRUint32 paramCount, nsXPTCVariant* params)
  */
 __asm__(
-    "#### NS_InvokeByIndex ####\n"
+    "#### NS_InvokeByIndex_P ####\n"
 ".text\n\t"
     ".align 5\n\t"
-    ".globl NS_InvokeByIndex\n\t"
-    ".ent NS_InvokeByIndex\n"
-"NS_InvokeByIndex:\n\t"
+    ".globl NS_InvokeByIndex_P\n\t"
+    ".ent NS_InvokeByIndex_P\n"
+"NS_InvokeByIndex_P:\n\t"
     ".frame $15,32,$26,0\n\t"
     ".mask 0x4008000,-32\n\t"
     "ldgp $29,0($27)\n"
-"$NS_InvokeByIndex..ng:\n\t"
+"$NS_InvokeByIndex_P..ng:\n\t"
     "subq $30,32,$30\n\t"
     "stq $26,0($30)\n\t"
     "stq $15,8($30)\n\t"
@@ -177,5 +177,5 @@ __asm__(
     "ldq $15,8($30)\n\t"
     "addq $30,32,$30\n\t"
     "ret $31,($26),1\n\t"
-    ".end NS_InvokeByIndex"
+    ".end NS_InvokeByIndex_P"
     );
