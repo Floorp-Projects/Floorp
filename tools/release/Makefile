@@ -6,6 +6,7 @@ test:
 
 stage:
 	# basic environment
+	mkdir -p /builds/config
 	mkdir -p /builds/tags
 	mkdir -p /builds/updates/
 	mkdir -p /builds/verify/
@@ -15,7 +16,7 @@ stage:
 	mkdir -p /home/ftp/pub/firefox/releases/1.5/
 	touch /home/ftp/pub/firefox/releases/1.5/KEY
 	# staging environment
-	mkdir -p /data/cltbld/firefox-1.5.0.11/batch1/stage
+	mkdir -p /data/cltbld/firefox-2.0.0.4/batch1/stage
 
 cvsmirror: cvsmirror_mofo cvsmirror_main
 
@@ -24,11 +25,11 @@ cvsmirror_main:
 	rsync -a --delete-after cvs-mirror.mozilla.org::l10n/ /builds/cvsmirror/l10n/
 	chgrp -R cvs /builds/cvsmirror/cvsroot /builds/cvsmirror/l10n
 	chmod -R g+rw /builds/cvsmirror/cvsroot /builds/cvsmirror/l10n
-	cvs -d /builds/cvsmirror/cvsroot rtag -d FIREFOX_1_5_0_11_RELEASE mozilla
-	cvs -d /builds/cvsmirror/cvsroot rtag -d FIREFOX_1_5_0_11_RC1 mozilla
-	cvs -d /builds/cvsmirror/cvsroot rtag -d -B FIREFOX_1_5_0_11_MINIBRANCH mozilla
-	cvs -d /builds/cvsmirror/l10n rtag -d FIREFOX_1_5_0_11_RELEASE l10n
-	cvs -d /builds/cvsmirror/l10n rtag -d FIREFOX_1_5_0_11_RC1 l10n
+	cvs -d /builds/cvsmirror/cvsroot rtag -d FIREFOX_2_0_0_4_RELEASE mozilla
+	cvs -d /builds/cvsmirror/cvsroot rtag -d FIREFOX_2_0_0_4_RC1 mozilla
+	cvs -d /builds/cvsmirror/cvsroot rtag -d -B FIREFOX_2_0_0_4_MINIBRANCH mozilla
+	cvs -d /builds/cvsmirror/l10n rtag -d FIREFOX_2_0_0_4_RELEASE l10n
+	cvs -d /builds/cvsmirror/l10n rtag -d FIREFOX_2_0_0_4_RC1 l10n
 
 cvsmirror_mofo:
 	mkdir -p /builds/cvsmirror/tmp/mofo
@@ -46,6 +47,7 @@ cvsmirror_mofo:
 	chmod -R g+rw /builds/cvsmirror/mofo
 
 clean_stage:
+	rm -rf /builds/config/*
 	rm -rf /builds/tags/*
 	rm -rf /builds/release/logs/*
 	rm -rf /builds/updates/*

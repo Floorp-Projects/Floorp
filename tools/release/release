@@ -4,6 +4,7 @@ use strict;
 use Getopt::Long;
 use MozBuild::Util qw(Email);
 use Bootstrap::Step::Tag;
+use Bootstrap::Step::TinderConfig;
 use Bootstrap::Step::Build;
 use Bootstrap::Step::Source;
 use Bootstrap::Step::Repack;
@@ -13,6 +14,7 @@ use Bootstrap::Step::Sign;
 
 my @allSteps = (
     'Tag',
+    'TinderConfig',
     'Build',
     'Source',
     'Repack',
@@ -148,7 +150,7 @@ sub PerformStep {
               to => $to,
               cc => \@ccList,
               subject => "$hostname - Step $stepName died: $error",
-              message => "$hostname - Step $stepName died: $error\nSee the release.log for more information.",
+              message => "$hostname - Step $stepName died: $error",
             );
             exit(1);
         };
