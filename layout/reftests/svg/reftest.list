@@ -4,6 +4,7 @@
 == getElementById-a-element-01.svg pass.svg
 == nested-viewBox-01.svg pass.svg
 == opacity-and-gradient-01.svg pass.svg
+== opacity-and-pattern-01.svg pass.svg
 == pseudo-classes-01.svg pass.svg
 == pseudo-classes-02.svg pseudo-classes-02-ref.svg
 == rect-with-rx-or-ry-01.svg rect-with-rx-or-ry-01-ref.svg
