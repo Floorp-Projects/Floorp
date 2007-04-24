@@ -149,15 +149,15 @@
   ; protocol handler
   ${AddHandlerValues} "$0\FirefoxHTML" "$2" "$8,1" "${AppRegName} Document" "" "true"
 
-  ${AddHandlerValues} "$0\FirefoxURL" "$2" "$8,0" "${AppRegName} URL" "true" "true"
-  ${AddHandlerValues} "$0\gopher" "$2" "$8,0" "URL:Gopher Protocol" "true" "true"
+  ${AddHandlerValues} "$0\FirefoxURL" "$2" "$8,1" "${AppRegName} URL" "true" "true"
+  ${AddHandlerValues} "$0\gopher" "$2" "$8,1" "URL:Gopher Protocol" "true" "true"
 
   ; An empty string is used for the 4th & 5th params because the following
   ; protocol handlers already have a display name and additional keys required
   ; for a protocol handler.
-  ${AddHandlerValues} "$0\ftp" "$2" "$8,0" "" "" "true"
-  ${AddHandlerValues} "$0\http" "$2" "$8,0" "" "" "true"
-  ${AddHandlerValues} "$0\https" "$2" "$8,0" "" "" "true"
+  ${AddHandlerValues} "$0\ftp" "$2" "$8,1" "" "" "true"
+  ${AddHandlerValues} "$0\http" "$2" "$8,1" "" "" "true"
+  ${AddHandlerValues} "$0\https" "$2" "$8,1" "" "" "true"
 !macroend
 !define SetHandlers "!insertmacro SetHandlers"
 
@@ -369,7 +369,7 @@
 
   ; Always set the file and protocol handlers since they may specify a
   ; different path and the path is used by Vista when setting associations.
-  ${AddHandlerValues} "$0\FirefoxURL" "$1" "$8,0" "${AppRegName} URL" "true" "true"
+  ${AddHandlerValues} "$0\FirefoxURL" "$1" "$8,1" "${AppRegName} URL" "true" "true"
 
   ; An empty string is used for the 5th param because FirefoxHTML is not a
   ; protocol handler
@@ -379,33 +379,33 @@
   ClearErrors
   ${WordFind} "$2" "${FileMainEXE}" "E+1{" $R1
   ${Unless} ${Errors}
-    ${AddHandlerValues} "$0\http" "$1" "$8,0" "" "" "true"
+    ${AddHandlerValues} "$0\http" "$1" "$8,1" "" "" "true"
   ${EndUnless}
 
   ReadRegStr $2 SHCTX "$0\https\shell\open\command" ""
   ClearErrors
   ${WordFind} "$2" "${FileMainEXE}" "E+1{" $R1
   ${Unless} ${Errors}
-    ${AddHandlerValues} "$0\https" "$1" "$8,0" "" "" "true"
+    ${AddHandlerValues} "$0\https" "$1" "$8,1" "" "" "true"
   ${EndUnless}
 
   ReadRegStr $2 SHCTX "$0\ftp\shell\open\command" ""
   ClearErrors
   ${WordFind} "$2" "${FileMainEXE}" "E+1{" $R1
   ${Unless} ${Errors}
-    ${AddHandlerValues} "$0\ftp" "$1" "$8,0" "" "" "true"
+    ${AddHandlerValues} "$0\ftp" "$1" "$8,1" "" "" "true"
   ${EndUnless}
 
   ; Only set the gopher key if it doesn't already exist with a default value
   ReadRegStr $2 SHCTX "$0\gopher" ""
   ${If} $2 == ""
-    ${AddHandlerValues} "$0\gopher" "$1" "$8,0" "URL:Gopher Protocol" "true" "true"
+    ${AddHandlerValues} "$0\gopher" "$1" "$8,1" "URL:Gopher Protocol" "true" "true"
   ${Else}
     ReadRegStr $2 SHCTX "$0\gopher\shell\open\command" ""
     ClearErrors
     ${WordFind} "$2" "${FileMainEXE}" "E+1{" $R1
     ${Unless} ${Errors}
-      ${AddHandlerValues} "$0\gopher" "$1" "$8,0" "URL:Gopher Protocol" "true" "true"
+      ${AddHandlerValues} "$0\gopher" "$1" "$8,1" "URL:Gopher Protocol" "true" "true"
     ${EndUnless}
   ${EndIf}
 !macroend
