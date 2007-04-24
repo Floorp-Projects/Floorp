@@ -522,13 +522,15 @@ nsresult nsHyperTextAccessible::DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNod
       childAccessible = descendantAccessible;
       break;
     }
-    descendantAccessible = parentAccessible;
     // This offset no longer applies because the passed-in text object is not a child
     // of the hypertext. This happens when there are nested hypertexts, e.g.
     // <div>abc<h1>def</h1>ghi</div>
     // If the passed-in DOM point was not on a direct child of the hypertext, we will
     // return the offset for that entire hypertext
-    addTextOffset = 0;
+    // If the offset was at the end of the passed in object, we will now use 1 for
+    // addTextOffset, to put us after the embedded object char for that child hypertext
+    addTextOffset = (TextLength(descendantAccessible) == addTextOffset) ? 1 : 0;
+    descendantAccessible = parentAccessible;
   }  
 
   // Loop through, adding offsets until we reach childAccessible
@@ -602,6 +604,12 @@ PRInt32 nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell, nsIFr
   }  
   else if (aAmount == eSelectBeginLine) {
     // For line selection with needsStart, set start of line exactly to line break
+    if (pos.mContentOffset == 0 && mFirstChild && 
+        Role(mFirstChild) == nsIAccessibleRole::ROLE_STATICTEXT &&
+        TextLength(mFirstChild) == hyperTextOffset) {
+      // XXX Bullet hack -- we should remove this once list bullets use anonymous content
+      hyperTextOffset = 0;
+    }
     if (!aNeedsStart && hyperTextOffset > 0) {
       -- hyperTextOffset;
     }
