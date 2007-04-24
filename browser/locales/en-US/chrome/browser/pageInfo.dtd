@@ -36,8 +36,8 @@
 # ***** END LICENSE BLOCK *****
 -->
 
-<!ENTITY  pageInfoWindow.width  "425">
-<!ENTITY  pageInfoWindow.height "470">
+<!ENTITY  pageInfoWindow.width  "600">
+<!ENTITY  pageInfoWindow.height "500">
 
 <!ENTITY  copy.key              "C">
 <!ENTITY  copy.label            "Copy">
@@ -99,3 +99,21 @@
 <!ENTITY  securityHeader        "Security information for this page">
 <!ENTITY  securityView.label    "View">
 <!ENTITY  securityView.accesskey "V">
+<!ENTITY  securityView.unknown   "Unknown">
+
+
+<!ENTITY  securityView.identity.header   "Web Site Identity">
+<!ENTITY  securityView.identity.owner    "Owner: ">
+<!ENTITY  securityView.identity.domain   "Web site: ">
+<!ENTITY  securityView.identity.verifier "Verified by: ">
+
+<!ENTITY  securityView.privacy.header                   "Privacy &amp; History">
+<!ENTITY  securityView.privacy.history                  "Have I visited this website before today?">
+<!ENTITY  securityView.privacy.cookies                  "Is this web site storing information (cookies) on my computer?">
+<!ENTITY  securityView.privacy.viewCookies              "View Cookies">
+<!ENTITY  securityView.privacy.viewCookies.accessKey    "k">
+<!ENTITY  securityView.privacy.passwords                "Have I saved any passwords for this web site?">
+<!ENTITY  securityView.privacy.viewPasswords            "View Saved Passwords">
+<!ENTITY  securityView.privacy.viewPasswords.accessKey  "w">
+
+<!ENTITY  securityView.technical.header                 "Technical Details">
