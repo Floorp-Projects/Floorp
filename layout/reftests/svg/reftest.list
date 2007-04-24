@@ -1,4 +1,5 @@
 
+== clip-path.svg pass.svg
 == foreignObject-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
 == getElementById-a-element-01.svg pass.svg
