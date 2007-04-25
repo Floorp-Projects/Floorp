@@ -242,7 +242,6 @@ nsLayoutStatics::Shutdown()
   nsXULElement::ReleaseGlobals();
   nsXULPrototypeCache::ReleaseGlobals();
   nsXULPrototypeElement::ReleaseGlobals();
-  nsXULTooltipListener::ReleaseInstance();
   nsSprocketLayout::Shutdown();
 #endif
 

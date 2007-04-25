@@ -67,10 +67,7 @@ nsXULTooltipListener* nsXULTooltipListener::mInstance = nsnull;
 //// nsISupports
 
 nsXULTooltipListener::nsXULTooltipListener()
-  : mSourceNode(nsnull)
-  , mTargetNode(nsnull)
-  , mCurrentTooltip(nsnull)
-  , mMouseClientX(0)
+  : mMouseClientX(0)
   , mMouseClientY(0)
 #ifdef MOZ_XUL
   , mIsSourceTree(PR_FALSE)
@@ -90,6 +87,9 @@ nsXULTooltipListener::nsXULTooltipListener()
 
 nsXULTooltipListener::~nsXULTooltipListener()
 {
+  if (nsXULTooltipListener::mInstance == this) {
+    ClearTooltipCache();
+  }
   HideTooltip();
 
   if (--sTooltipListenerCount == 0) {
@@ -99,8 +99,7 @@ nsXULTooltipListener::~nsXULTooltipListener()
   }
 }
 
-NS_IMPL_ADDREF(nsXULTooltipListener)
-NS_IMPL_RELEASE(nsXULTooltipListener)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULTooltipListener)
 
 NS_INTERFACE_MAP_BEGIN(nsXULTooltipListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
@@ -109,7 +108,23 @@ NS_INTERFACE_MAP_BEGIN(nsXULTooltipListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMXULListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMMouseListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMouseMotionListener)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsXULTooltipListener)
 NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULTooltipListener)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULTooltipListener)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULTooltipListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mSourceNode)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTargetNode)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCurrentTooltip)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULTooltipListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSourceNode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTargetNode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCurrentTooltip)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 //////////////////////////////////////////////////////////////////////////
 //// nsIDOMMouseListener
