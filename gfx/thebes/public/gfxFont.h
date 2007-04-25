@@ -958,7 +958,10 @@ public:
         /** The glyphID if this is a ComplexCluster, or the Unicode character
          * if this is a Missing glyph */
         PRUint32 mGlyphID:31;
-        // The advance, x-offset and y-offset of the glyph, in appunits
+        /** The advance, x-offset and y-offset of the glyph, in appunits
+         *  mAdvance is in the text direction (RTL or LTR)
+         *  mXOffset is always from left to right
+         *  mYOffset is always from bottom to top */   
         PRInt32  mAdvance;
         float    mXOffset, mYOffset;
     };
