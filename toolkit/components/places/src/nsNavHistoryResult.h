@@ -170,7 +170,7 @@ public:
 
   // One of nsNavHistoryQueryOptions.SORY_BY_* This is initialized to mOptions.sortingMode,
   // but may be overridden if the user clicks on one of the columns.
-  PRUint32 mSortingMode;
+  PRUint16 mSortingMode;
 
   // The sorting annotation to be used for in SORT_BY_ANNOTATION_* modes
   nsCString mSortingAnnotation;
@@ -539,10 +539,10 @@ public:
 
   // sorting
   typedef nsCOMArray<nsNavHistoryResultNode>::nsCOMArrayComparatorFunc SortComparator;
-  virtual PRUint32 GetSortType();
+  virtual PRUint16 GetSortType();
   virtual void GetSortingAnnotation(nsACString& aSortingAnnotation);
 
-  static SortComparator GetSortingComparator(PRUint32 aSortType);
+  static SortComparator GetSortingComparator(PRUint16 aSortType);
   virtual void RecursiveSort(const char* aData,
                              SortComparator aComparator);
   PRUint32 FindInsertionPoint(nsNavHistoryResultNode* aNode, SortComparator aComparator,
@@ -677,7 +677,7 @@ public:
   void ClearChildren(PRBool unregister);
   nsresult Refresh();
 
-  virtual PRUint32 GetSortType();
+  virtual PRUint16 GetSortType();
   virtual void GetSortingAnnotation(nsACString& aSortingAnnotation);
 };
 

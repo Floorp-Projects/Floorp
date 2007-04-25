@@ -122,10 +122,16 @@ typedef NS_STDCALL_FUNCPROTO(nsresult, BoolOptionsSetter,
                              SetExpandQueries, (PRBool));
 typedef NS_STDCALL_FUNCPROTO(nsresult, Uint32OptionsSetter,
                              nsINavHistoryQueryOptions,
-                             SetResultType, (PRUint32));
+                             SetMaxResults, (PRUint32));
+typedef NS_STDCALL_FUNCPROTO(nsresult, Uint16OptionsSetter,
+                             nsINavHistoryQueryOptions,
+                             SetResultType, (PRUint16));
 static void SetOptionsKeyBool(const nsCString& aValue,
                               nsINavHistoryQueryOptions* aOptions,
                               BoolOptionsSetter setter);
+static void SetOptionsKeyUint16(const nsCString& aValue,
+                                nsINavHistoryQueryOptions* aOptions,
+                                Uint16OptionsSetter setter);
 static void SetOptionsKeyUint32(const nsCString& aValue,
                                 nsINavHistoryQueryOptions* aOptions,
                                 Uint32OptionsSetter setter);
@@ -160,11 +166,18 @@ static void SetOptionsKeyUint32(const nsCString& aValue,
 #define QUERYKEY_INCLUDE_HIDDEN "includeHidden"
 #define QUERYKEY_SHOW_SESSIONS "showSessions"
 #define QUERYKEY_MAX_RESULTS "maxResults"
+#define QUERYKEY_QUERY_TYPE "queryType"
 
 inline void AppendAmpersandIfNonempty(nsACString& aString)
 {
   if (! aString.IsEmpty())
     aString.Append('&');
+}
+inline void AppendInt16(nsACString& str, PRInt16 i)
+{
+  nsCAutoString tmp;
+  tmp.AppendInt(i);
+  str.Append(tmp);
 }
 inline void AppendInt32(nsACString& str, PRInt32 i)
 {
@@ -403,25 +416,25 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
 
   // grouping
   PRUint32 groupCount;
-  const PRUint32* groups = options->GroupingMode(&groupCount);
+  const PRUint16* groups = options->GroupingMode(&groupCount);
   for (PRUint32 i = 0; i < groupCount; i ++) {
     AppendAmpersandIfNonempty(queryString);
     queryString += NS_LITERAL_CSTRING(QUERYKEY_GROUP "=");
-    AppendInt32(queryString, groups[i]);
+    AppendInt16(queryString, groups[i]);
   }
 
   // sorting
   if (options->SortingMode() != nsINavHistoryQueryOptions::SORT_BY_NONE) {
     AppendAmpersandIfNonempty(queryString);
     queryString += NS_LITERAL_CSTRING(QUERYKEY_SORT "=");
-    AppendInt32(queryString, options->SortingMode());
+    AppendInt16(queryString, options->SortingMode());
   }
 
   // result type
   if (options->ResultType() != nsINavHistoryQueryOptions::RESULTS_AS_URI) {
     AppendAmpersandIfNonempty(queryString);
     queryString += NS_LITERAL_CSTRING(QUERYKEY_RESULT_TYPE "=");
-    AppendInt32(queryString, options->ResultType());
+    AppendInt16(queryString, options->ResultType());
   }
 
   // exclude items
@@ -448,12 +461,6 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     queryString += NS_LITERAL_CSTRING(QUERYKEY_EXPAND_QUERIES "=1");
   }
 
-  // title mode
-  if (options->ForceOriginalTitle()) {
-    AppendAmpersandIfNonempty(queryString);
-    queryString += NS_LITERAL_CSTRING(QUERYKEY_FORCE_ORIGINAL_TITLE "=1");
-  }
-
   // include hidden
   if (options->IncludeHidden()) {
     AppendAmpersandIfNonempty(queryString);
@@ -471,6 +478,13 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     AppendAmpersandIfNonempty(queryString);
     queryString += NS_LITERAL_CSTRING(QUERYKEY_MAX_RESULTS "=");
     AppendInt32(queryString, options->MaxResults());
+  }
+
+  // queryType
+  if (options->QueryType() !=  nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY) {
+    AppendAmpersandIfNonempty(queryString);
+    queryString += NS_LITERAL_CSTRING(QUERYKEY_QUERY_TYPE "=");
+    AppendInt16(queryString, options->QueryType());
   }
 
   aQueryString.Assign(NS_LITERAL_CSTRING("place:") + queryString);
@@ -529,7 +543,7 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
   if (aTokens.Length() == 0)
     return NS_OK; // nothing to do
 
-  nsTArray<PRUint32> groups;
+  nsTArray<PRUint16> groups;
   nsTArray<PRInt64> folders;
 
   nsCOMPtr<nsNavHistoryQuery> query(new nsNavHistoryQuery());
@@ -658,12 +672,12 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
 
     // sorting mode
     } else if (kvp.key.EqualsLiteral(QUERYKEY_SORT)) {
-      SetOptionsKeyUint32(kvp.value, aOptions,
+      SetOptionsKeyUint16(kvp.value, aOptions,
                           &nsINavHistoryQueryOptions::SetSortingMode);
 
     // result type
     } else if (kvp.key.EqualsLiteral(QUERYKEY_RESULT_TYPE)) {
-      SetOptionsKeyUint32(kvp.value, aOptions,
+      SetOptionsKeyUint16(kvp.value, aOptions,
                           &nsINavHistoryQueryOptions::SetResultType);
 
     // exclude items
@@ -685,12 +699,6 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
     } else if (kvp.key.EqualsLiteral(QUERYKEY_EXPAND_QUERIES)) {
       SetOptionsKeyBool(kvp.value, aOptions,
                         &nsINavHistoryQueryOptions::SetExpandQueries);
-
-    // force original title
-    } else if (kvp.key.EqualsLiteral(QUERYKEY_FORCE_ORIGINAL_TITLE)) {
-      SetOptionsKeyBool(kvp.value, aOptions,
-                        &nsINavHistoryQueryOptions::SetForceOriginalTitle);
-
     // include hidden
     } else if (kvp.key.EqualsLiteral(QUERYKEY_INCLUDE_HIDDEN)) {
       SetOptionsKeyBool(kvp.value, aOptions,
@@ -705,7 +713,10 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
     } else if (kvp.key.EqualsLiteral(QUERYKEY_MAX_RESULTS)) {
       SetOptionsKeyUint32(kvp.value, aOptions,
                           &nsINavHistoryQueryOptions::SetMaxResults);
-
+    // query type
+    } else if (kvp.key.EqualsLiteral(QUERYKEY_QUERY_TYPE)) {
+      SetOptionsKeyUint16(kvp.value, aOptions,
+                          &nsINavHistoryQueryOptions::SetQueryType);
     // unknown key
     } else {
       aQueries->Clear();
@@ -1039,15 +1050,15 @@ NS_IMPL_ISUPPORTS2(nsNavHistoryQueryOptions, nsNavHistoryQueryOptions, nsINavHis
 
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::GetGroupingMode(PRUint32 *aGroupCount,
-                                          PRUint32** aGroupingMode)
+                                          PRUint16** aGroupingMode)
 {
   if (mGroupCount == 0) {
     *aGroupCount = 0;
     *aGroupingMode = nsnull;
     return NS_OK;
   }
-  *aGroupingMode = NS_STATIC_CAST(PRUint32*,
-                                  nsMemory::Alloc(sizeof(PRUint32) * mGroupCount));
+  *aGroupingMode = NS_STATIC_CAST(PRUint16*,
+                                  nsMemory::Alloc(sizeof(PRUint16) * mGroupCount));
   if (! aGroupingMode)
     return NS_ERROR_OUT_OF_MEMORY;
   for(PRUint32 i = 0; i < mGroupCount; i ++)
@@ -1056,7 +1067,7 @@ nsNavHistoryQueryOptions::GetGroupingMode(PRUint32 *aGroupCount,
   return NS_OK;
 }
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::SetGroupingMode(const PRUint32 *aGroupingMode,
+nsNavHistoryQueryOptions::SetGroupingMode(const PRUint16 *aGroupingMode,
                                           PRUint32 aGroupCount)
 {
   // check input
@@ -1074,7 +1085,7 @@ nsNavHistoryQueryOptions::SetGroupingMode(const PRUint32 *aGroupingMode,
   if (! aGroupCount)
     return NS_OK;
 
-  mGroupings = new PRUint32[aGroupCount];
+  mGroupings = new PRUint16[aGroupCount];
   NS_ENSURE_TRUE(mGroupings, NS_ERROR_OUT_OF_MEMORY);
 
   for (i = 0; i < aGroupCount; ++i) {
@@ -1087,13 +1098,13 @@ nsNavHistoryQueryOptions::SetGroupingMode(const PRUint32 *aGroupingMode,
 
 // sortingMode
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::GetSortingMode(PRUint32* aMode)
+nsNavHistoryQueryOptions::GetSortingMode(PRUint16* aMode)
 {
   *aMode = mSort;
   return NS_OK;
 }
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::SetSortingMode(PRUint32 aMode)
+nsNavHistoryQueryOptions::SetSortingMode(PRUint16 aMode)
 {
   if (aMode > SORT_BY_ANNOTATION_DESCENDING)
     return NS_ERROR_INVALID_ARG;
@@ -1116,13 +1127,13 @@ nsNavHistoryQueryOptions::SetSortingAnnotation(const nsACString& aSortingAnnotat
 
 // resultType
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::GetResultType(PRUint32* aType)
+nsNavHistoryQueryOptions::GetResultType(PRUint16* aType)
 {
   *aType = mResultType;
   return NS_OK;
 }
 NS_IMETHODIMP
-nsNavHistoryQueryOptions::SetResultType(PRUint32 aType)
+nsNavHistoryQueryOptions::SetResultType(PRUint16 aType)
 {
   if (aType > RESULTS_AS_FULL_VISIT)
     return NS_ERROR_INVALID_ARG;
@@ -1186,20 +1197,6 @@ nsNavHistoryQueryOptions::SetExpandQueries(PRBool aExpand)
   return NS_OK;
 }
 
-// forceOriginalTitle
-NS_IMETHODIMP
-nsNavHistoryQueryOptions::GetForceOriginalTitle(PRBool* aForce)
-{
-  *aForce = mForceOriginalTitle;
-  return NS_OK;
-}
-NS_IMETHODIMP
-nsNavHistoryQueryOptions::SetForceOriginalTitle(PRBool aForce)
-{
-  mForceOriginalTitle = aForce;
-  return NS_OK;
-}
-
 // includeHidden
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::GetIncludeHidden(PRBool* aIncludeHidden)
@@ -1242,6 +1239,20 @@ nsNavHistoryQueryOptions::SetMaxResults(PRUint32 aMaxResults)
   return NS_OK;
 }
 
+// queryType
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::GetQueryType(PRUint16* _retval)
+{
+  *_retval = mQueryType;
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsNavHistoryQueryOptions::SetQueryType(PRUint16 aQueryType)
+{
+  mQueryType = aQueryType;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::Clone(nsINavHistoryQueryOptions** aResult)
 {
@@ -1264,7 +1275,7 @@ nsNavHistoryQueryOptions::Clone(nsNavHistoryQueryOptions **aResult)
   result->mResultType = mResultType;
   result->mGroupCount = mGroupCount;
   if (mGroupCount) {
-    result->mGroupings = new PRUint32[mGroupCount];
+    result->mGroupings = new PRUint16[mGroupCount];
     if (! result->mGroupings) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1277,6 +1288,8 @@ nsNavHistoryQueryOptions::Clone(nsNavHistoryQueryOptions **aResult)
   result->mExcludeQueries = mExcludeQueries;
   result->mShowSessions = mShowSessions;
   result->mExpandQueries = mExpandQueries;
+  result->mMaxResults = mMaxResults;
+  result->mQueryType = mQueryType;
 
   resultHolder.swap(*aResult);
   return NS_OK;
@@ -1409,6 +1422,23 @@ SetOptionsKeyUint32(const nsCString& aValue, nsINavHistoryQueryOptions* aOptions
     }
   } else {
     NS_WARNING("Invalid Int32 key value in query string.");
+  }
+}
+
+void // static
+SetOptionsKeyUint16(const nsCString& aValue, nsINavHistoryQueryOptions* aOptions,
+                    Uint16OptionsSetter setter)
+{
+  nsresult rv;
+  PRUint16 value = NS_STATIC_CAST(PRUint16,
+                                  aValue.ToInteger(NS_REINTERPRET_CAST(PRInt32*, &rv)));
+  if (NS_SUCCEEDED(rv)) {
+    rv = (aOptions->*setter)(value);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Error setting Int16 key value");
+    }
+  } else {
+    NS_WARNING("Invalid Int16 key value in query string.");
   }
 }
 

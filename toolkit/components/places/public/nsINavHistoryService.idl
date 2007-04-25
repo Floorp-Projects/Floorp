@@ -487,7 +487,7 @@ interface nsINavHistoryResultViewObserver : nsISupports
  *
  * @see nsINavHistoryResult for where this fits in
  */
-[scriptable, uuid(11032c23-a9fd-4918-bc8f-004726a748da)]
+[scriptable, uuid(2a709a8e-34c3-4c80-b559-789b99a4bbe6)]
 interface nsINavHistoryResultViewer : nsISupports
 {
   /**
@@ -564,7 +564,7 @@ interface nsINavHistoryResultViewer : nsISupports
    * This only is expected to update the sorting UI. invalidateAll() will also
    * get called if the sorting changes to update everything.
    */
-  void sortingChanged(in PRUint32 sortingMode);
+  void sortingChanged(in unsigned short sortingMode);
 
   /**
    * Called by the result when this object is set using
@@ -674,7 +674,7 @@ interface nsINavHistoryResultTreeViewer : nsINavHistoryResultViewer
  * through the nsINavHistoryResultViewObserver interface.
  */
 
-[scriptable, uuid(412cd7f6-9ed6-4ef5-a734-ec7b50366dd6)]
+[scriptable, uuid(6cfcb46f-9b70-4efa-b02a-c2ce85d75e00)]
 interface nsINavHistoryResult : nsISupports
 {
   /**
@@ -683,7 +683,7 @@ interface nsINavHistoryResult : nsISupports
    * options for this result, so that re-using the current options/queries will
    * always give you the current view.
    */
-  attribute PRUint32 sortingMode;
+  attribute unsigned short sortingMode;
 
   /**
    * The annotation to use in SORT_BY_ANNOTATION_* sorting modes, set this
@@ -954,7 +954,7 @@ interface nsINavHistoryQuery : nsISupports
 /**
  * This object represents the global options for executing a query.
  */
-[scriptable, uuid(4e6033f1-3832-4003-ad71-9695f64fa7b4)]
+[scriptable, uuid(923489f0-7ed7-476b-ba86-2fc3e1e474b6)]
 interface nsINavHistoryQueryOptions : nsISupports
 {
   /**
@@ -962,7 +962,7 @@ interface nsINavHistoryQueryOptions : nsISupports
    * type = RESULT_TYPE_DAY, one for each day where there are results. These
    * will have children of corresponding to the search results of that day.
    */
-  const PRUint32 GROUP_BY_DAY = 0;
+  const unsigned short GROUP_BY_DAY = 0;
 
   /**
    * Groping by exact host. The results will be an array of nsINavHistoryResults
@@ -970,7 +970,7 @@ interface nsINavHistoryQueryOptions : nsISupports
    * "bugzilla.mozilla.org" and "www.mozilla.org" will be separate). The
    * children of these will correspond to the results for each host.
    */
-  const PRUint32 GROUP_BY_HOST = 1;
+  const unsigned short GROUP_BY_HOST = 1;
 
   /**
    * Grouping by toplevel domain. Similar to GROUP_BY_HOST, but there will be
@@ -978,7 +978,7 @@ interface nsINavHistoryQueryOptions : nsISupports
    * will contain results including, for example, "bugzilla.mozilla.org" and
    * "www.mozilla.org").
    */
-  const PRUint32 GROUP_BY_DOMAIN = 2;
+  const unsigned short GROUP_BY_DOMAIN = 2;
 
   /**
    * Group by bookmark folder.  Since this determines the entire subtree
@@ -988,7 +988,7 @@ interface nsINavHistoryQueryOptions : nsISupports
    * If all of the top-level results belong to a single folder, the folder will
    * be omitted and its children will become the toplevel result nodes.
    */
-  const PRUint32 GROUP_BY_FOLDER = 3;
+  const unsigned short GROUP_BY_FOLDER = 3;
 
   /**
    * You can ask for the results to be pre-sorted. Since the DB has indices
@@ -1000,30 +1000,30 @@ interface nsINavHistoryQueryOptions : nsISupports
    *
    * For bookmark items, SORT_BY_NONE means sort by the natural bookmark order.
    */
-  const PRUint32 SORT_BY_NONE = 0;
-  const PRUint32 SORT_BY_TITLE_ASCENDING = 1;
-  const PRUint32 SORT_BY_TITLE_DESCENDING = 2;
-  const PRUint32 SORT_BY_DATE_ASCENDING = 3;
-  const PRUint32 SORT_BY_DATE_DESCENDING = 4;
-  const PRUint32 SORT_BY_URI_ASCENDING = 5;
-  const PRUint32 SORT_BY_URI_DESCENDING = 6;
-  const PRUint32 SORT_BY_VISITCOUNT_ASCENDING = 7;
-  const PRUint32 SORT_BY_VISITCOUNT_DESCENDING = 8;
-  const PRUint32 SORT_BY_ANNOTATION_ASCENDING = 9;
-  const PRUint32 SORT_BY_ANNOTATION_DESCENDING = 10;
+  const unsigned short SORT_BY_NONE = 0;
+  const unsigned short SORT_BY_TITLE_ASCENDING = 1;
+  const unsigned short SORT_BY_TITLE_DESCENDING = 2;
+  const unsigned short SORT_BY_DATE_ASCENDING = 3;
+  const unsigned short SORT_BY_DATE_DESCENDING = 4;
+  const unsigned short SORT_BY_URI_ASCENDING = 5;
+  const unsigned short SORT_BY_URI_DESCENDING = 6;
+  const unsigned short SORT_BY_VISITCOUNT_ASCENDING = 7;
+  const unsigned short SORT_BY_VISITCOUNT_DESCENDING = 8;
+  const unsigned short SORT_BY_ANNOTATION_ASCENDING = 9;
+  const unsigned short SORT_BY_ANNOTATION_DESCENDING = 10;
 
   /**
    * "URI" results, one for each URI visited in the range. Individual result
    * nodes will be of type "URI".
    */
-  const PRUint32 RESULTS_AS_URI = 0;
+  const unsigned short RESULTS_AS_URI = 0;
 
   /**
    * "Visit" results, with one for each time a page was visited (this will
    * often give you multiple results for one URI). Individual result nodes will
    * have type "Visit"
    */
-  const PRUint32 RESULTS_AS_VISIT = 1;
+  const unsigned short RESULTS_AS_VISIT = 1;
 
   /**
    * This is identical to RESULT_TYPE_VISIT except that individual result nodes
@@ -1031,7 +1031,7 @@ interface nsINavHistoryQueryOptions : nsISupports
    * commonly accessed to save space in the common case (the lists can be very
    * long).
    */
-  const PRUint32 RESULTS_AS_FULL_VISIT = 2;
+  const unsigned short RESULTS_AS_FULL_VISIT = 2;
 
   /**
    * The grouping mode to be used for this query.
@@ -1043,15 +1043,15 @@ interface nsINavHistoryQueryOptions : nsISupports
    * If you don't want grouping, you can specify an empty array.
    */
   void getGroupingMode(out PRUint32 groupCount,
-                       [retval,array,size_is(groupCount)] out PRUint32 groupingMode);
-  void setGroupingMode([const,array,size_is(groupCount)] in PRUint32 groupingMode,
+                       [retval,array,size_is(groupCount)] out PRUint16 groupingMode);
+  void setGroupingMode([const,array,size_is(groupCount)] in PRUint16 groupingMode,
                        in PRUint32 groupCount);
 
   /**
    * The sorting mode to be used for this query.
    * mode is one of SORT_BY_*
    */
-  attribute PRUint32 sortingMode;
+  attribute unsigned short sortingMode;
 
   /**
    * The annotation to use in SORT_BY_ANNOTATION_* sorting modes.
@@ -1062,7 +1062,7 @@ interface nsINavHistoryQueryOptions : nsISupports
    * Sets the result type. One of RESULT_TYPE_* which includes how URIs are
    * represented.
    */
-  attribute PRUint32 resultType;
+  attribute unsigned short resultType;
 
   /**
    * This option excludes all URIs and separators from a bookmarks query.
@@ -1102,14 +1102,6 @@ interface nsINavHistoryQueryOptions : nsISupports
   attribute boolean expandQueries;
 
   /**
-   * Normally the title of a result will be the user's custom title if there is
-   * one, falling back on the default page title. If this is set, we will not
-   * do this operation and always use the original page title extracted from
-   * the HTML of the page. Defaults to false.
-   */
-  attribute boolean forceOriginalTitle;
-
-  /**
    * Most items in history are marked "hidden." Only toplevel pages that the
    * user sees in the URL bar are not hidden. Hidden things include the content
    * of iframes and all images on web pages. Normally, you don't want these
@@ -1136,7 +1128,17 @@ interface nsINavHistoryQueryOptions : nsISupports
    * Instead, we get the result ordered by date, pick the maxResult most recent
    * ones, and THEN sort by title.
    */
-  attribute PRUint32 maxResults;
+  attribute unsigned long maxResults;
+
+  const unsigned short QUERY_TYPE_HISTORY = 0;
+  const unsigned short QUERY_TYPE_BOOKMARKS = 1;
+  const unsigned short QUERY_TYPE_UNIFIED = 2;
+
+  /**
+   * The type of search to use when querying the DB; This attribute is only
+   * honored by query nodes. It is silently ignored for simple folder queries.
+   */
+  attribute unsigned short queryType;
 
   /**
    * Creates a new options item with the same parameters of this one.
