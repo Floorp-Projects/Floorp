@@ -141,13 +141,12 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsWindowDataSource,
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsWindowDataSource,
                                            nsIObserver)
 
-NS_INTERFACE_MAP_BEGIN(nsWindowDataSource)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsWindowDataSource)
     NS_INTERFACE_MAP_ENTRY(nsIObserver)
     NS_INTERFACE_MAP_ENTRY(nsIWindowMediatorListener)
     NS_INTERFACE_MAP_ENTRY(nsIWindowDataSource)
     NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
-    NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsWindowDataSource)
 NS_INTERFACE_MAP_END
 
 // nsIWindowMediatorListener implementation

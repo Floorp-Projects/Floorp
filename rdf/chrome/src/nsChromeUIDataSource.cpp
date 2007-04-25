@@ -98,11 +98,10 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsChromeUIDataSource,
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsChromeUIDataSource,
                                            nsIRDFDataSource)
 
-NS_INTERFACE_MAP_BEGIN(nsChromeUIDataSource)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsChromeUIDataSource)
   NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
   NS_INTERFACE_MAP_ENTRY(nsIRDFObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRDFDataSource)
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsChromeUIDataSource)
 NS_INTERFACE_MAP_END
 
 //----------------------------------------------------------------------

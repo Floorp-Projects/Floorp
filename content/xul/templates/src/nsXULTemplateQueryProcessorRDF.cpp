@@ -149,11 +149,10 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXULTemplateQueryProcessorRDF,
                                           nsIXULTemplateQueryProcessor)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXULTemplateQueryProcessorRDF,
                                            nsIXULTemplateQueryProcessor)
-NS_INTERFACE_MAP_BEGIN(nsXULTemplateQueryProcessorRDF)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULTemplateQueryProcessorRDF)
     NS_INTERFACE_MAP_ENTRY(nsIXULTemplateQueryProcessor)
     NS_INTERFACE_MAP_ENTRY(nsIRDFObserver)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULTemplateQueryProcessor)
-    NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsXULTemplateQueryProcessorRDF)
 NS_INTERFACE_MAP_END
 
 nsXULTemplateQueryProcessorRDF::nsXULTemplateQueryProcessorRDF(void)

@@ -688,7 +688,7 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalWindow)
 
 // QueryInterface implementation for nsGlobalWindow
-NS_INTERFACE_MAP_BEGIN(nsGlobalWindow)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   // Make sure this matches the cast in nsGlobalWindow::FromWrapper()
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindowInternal)
@@ -708,7 +708,6 @@ NS_INTERFACE_MAP_BEGIN(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageWindow)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsGlobalWindow)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Window)
 NS_INTERFACE_MAP_END
 
@@ -7627,10 +7626,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalChromeWindow,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // QueryInterface implementation for nsGlobalChromeWindow
-NS_INTERFACE_MAP_BEGIN(nsGlobalChromeWindow)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsGlobalChromeWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMChromeWindow)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ChromeWindow)
-  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(nsGlobalChromeWindow)
 NS_INTERFACE_MAP_END_INHERITING(nsGlobalWindow)
 
 NS_IMPL_ADDREF_INHERITED(nsGlobalChromeWindow, nsGlobalWindow)
