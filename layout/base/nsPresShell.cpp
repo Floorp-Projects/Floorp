@@ -1069,11 +1069,6 @@ protected:
   nsresult ProcessReflowCommands(PRBool aInterruptible);
   void     ClearReflowEventStatus();
   void     PostReflowEvent();
-  
-  void DoReflow(nsIFrame* aFrame);
-#ifdef DEBUG
-  void DoVerifyReflow();
-#endif
 
   friend class nsPresShellEventCB;
 
@@ -2654,6 +2649,8 @@ PresShell::sPaintSuppressionCallback(nsITimer *aTimer, void* aPresShell)
 NS_IMETHODIMP
 PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
+  PRBool firstReflow = PR_FALSE;
+
   NS_ASSERTION(mViewManager, "Must have view manager");
   mViewManager->BeginUpdateViewBatch();
 
@@ -2672,29 +2669,93 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
       (aWidth == NS_UNCONSTRAINEDSIZE || aHeight == NS_UNCONSTRAINEDSIZE)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
+  
+  if (mPresContext) {
+    nsRect r(0, 0, aWidth, aHeight);
+    mPresContext->SetVisibleArea(r);
+  }
 
-  mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
-
-  // There isn't anything useful we can do if the initial reflow hasn't happened
-  if (!rootFrame)
-    return NS_OK;
-
-  {
+  if (rootFrame) {
     // Kick off a top-down reflow
+    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+                 ("enter nsPresShell::ResizeReflow: %d,%d", aWidth, aHeight));
+#ifdef NS_DEBUG
+    if (nsIFrameDebug::GetVerifyTreeEnable()) {
+      nsIFrameDebug*  frameDebug;
+
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                                 (void**)&frameDebug))) {
+        frameDebug->VerifyTree();
+      }
+    }
+#endif
+#ifdef DEBUG_kipp
+    nsPresShell_ReflowStackPointerTop = (char*) &aWidth;
+#endif
+    nsRect                bounds = mPresContext->GetVisibleArea();
+    nsSize                maxSize(bounds.width, bounds.height);
+    nsHTMLReflowMetrics   desiredSize;
+    nsReflowStatus        status;
+    nsIRenderingContext*  rcx = nsnull;
+
+    nsresult rv=CreateRenderingContext(rootFrame, &rcx);
+    if (NS_FAILED(rv)) return rv;
+
     AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
     // XXXldb Set mIsReflowing (and unset it later)?
 
-    DoReflow(rootFrame);
-    mPresContext->SetVisibleArea(nsRect(nsPoint(0, 0), rootFrame->GetSize()));
+    nsHTMLReflowState reflowState(mPresContext, rootFrame, rcx, maxSize);
+
+    rootFrame->WillReflow(mPresContext);
+    nsContainerFrame::PositionFrameView(rootFrame);
+    rootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
+    rootFrame->SetSize(nsSize(desiredSize.width, desiredSize.height));
+    mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
+
+    nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, rootFrame->GetView(),
+                                               &desiredSize.mOverflowArea);
+    rootFrame->DidReflow(mPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
+#ifdef NS_DEBUG
+    if (nsIFrameDebug::GetVerifyTreeEnable()) {
+      nsIFrameDebug*  frameDebug;
+
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                                 (void**)&frameDebug))) {
+        frameDebug->VerifyTree();
+      }
+    }
+#endif
+    VERIFY_STYLE_TREE;
+    NS_IF_RELEASE(rcx);
+    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::ResizeReflow"));
+
+    // XXX if debugging then we should assert that the cache is empty
+  } else {
+    firstReflow = PR_TRUE;
+#ifdef NOISY
+    printf("PresShell::ResizeReflow: null root frame\n");
+#endif
   }
-
   DidCauseReflow();
-
+  // if the proper flag is set, VerifyReflow now
+#ifdef NS_DEBUG
+  if (GetVerifyReflowEnable() && (VERIFY_REFLOW_DURING_RESIZE_REFLOW & gVerifyReflowFlags))
+  {
+    mInVerifyReflow = PR_TRUE;
+    /*PRBool ok = */VerifyIncrementalReflow();
+    mInVerifyReflow = PR_FALSE;
+  }
+#endif
+  
   DidDoReflow();
+
   mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
-  CreateResizeEventTimer();
-
+  if (!firstReflow) {
+    //Set resize event timer
+    CreateResizeEventTimer();
+  }
+  
   return NS_OK; //XXX this needs to be real. MMP
 }
 
@@ -3062,22 +3123,100 @@ PresShell::CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOff
 //end implementations nsISelectionController
 
 
+static void UpdateViewProperties(nsPresContext* aPresContext, nsIViewManager* aVM,
+                                 nsIView* aView) {
+  nsIViewManager* thisVM = aView->GetViewManager();
+  if (thisVM != aVM) {
+    return;
+  }
+
+  nsIFrame* frame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
+  if (frame) {
+    nsContainerFrame::SyncFrameViewProperties(aPresContext, frame, nsnull, aView);
+  }
+
+  for (nsIView* child = aView->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    UpdateViewProperties(aPresContext, aVM, child);
+  }
+}
+
 NS_IMETHODIMP
 PresShell::StyleChangeReflow()
 {
-  nsIFrame* rootFrame = FrameManager()->GetRootFrame();
-  // At the moment at least, we don't have a root frame before the initial
-  // reflow; it's safe to just ignore the request in that case
-  if (!rootFrame)
-    return NS_OK;
+  WillCauseReflow();
+  WillDoReflow();
 
-  if (!(rootFrame->GetStateBits() &
-        (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
+  nsIFrame* rootFrame = FrameManager()->GetRootFrame();
+  if (rootFrame) {
+    // Mark everything dirty
     rootFrame->AddStateBits(NS_FRAME_IS_DIRTY);
-    mDirtyRoots.AppendElement(rootFrame);
+    FrameNeedsReflow(rootFrame, eStyleChange);
+
+    // Kick off a top-down reflow
+    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+                 ("enter nsPresShell::StyleChangeReflow"));
+#ifdef NS_DEBUG
+    if (nsIFrameDebug::GetVerifyTreeEnable()) {
+      nsIFrameDebug*  frameDebug;
+
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                                 (void**)&frameDebug))) {
+        frameDebug->VerifyTree();
+      }
+    }
+#endif
+    nsRect                bounds = mPresContext->GetVisibleArea();
+    nsSize                maxSize(bounds.width, bounds.height);
+    nsHTMLReflowMetrics   desiredSize;
+    nsReflowStatus        status;
+    nsIRenderingContext*  rcx = nsnull;
+
+    nsresult rv=CreateRenderingContext(rootFrame, &rcx);
+    if (NS_FAILED(rv)) return rv;
+
+    AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
+    // XXXldb Set mIsReflowing (and unset it later)?
+
+    nsHTMLReflowState reflowState(mPresContext, rootFrame, rcx, maxSize);
+
+    rootFrame->WillReflow(mPresContext);
+    nsContainerFrame::PositionFrameView(rootFrame);
+    rootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
+    rootFrame->SetSize(nsSize(desiredSize.width, desiredSize.height));
+    mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
+    nsIView* view = rootFrame->GetView();
+    nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
+                                               &desiredSize.mOverflowArea);
+    rootFrame->DidReflow(mPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
+#ifdef NS_DEBUG
+    if (nsIFrameDebug::GetVerifyTreeEnable()) {
+      nsIFrameDebug*  frameDebug;
+
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                                 (void**)&frameDebug))) {
+        frameDebug->VerifyTree();
+      }
+    }
+#endif
+    VERIFY_STYLE_TREE;
+    NS_IF_RELEASE(rcx);
+    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::StyleChangeReflow"));
+    
+    // The following two calls are needed to make sure we reacquire any needed
+    // style structs that were cleared by the caller
+
+    // Update properties of all views to reflect style changes
+    UpdateViewProperties(mPresContext, mViewManager, view);
+
+    // Repaint everything just to be sure
+    mViewManager->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
   }
 
-  return FrameNeedsReflow(rootFrame, eStyleChange);
+  DidCauseReflow();
+  DidDoReflow();
+
+  return NS_OK; //XXX this needs to be real. MMP
 }
 
 nsIFrame*
@@ -3315,7 +3454,12 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty)
     }
   }
 
-  PostReflowEvent();
+  // If we're in the middle of a drag, process it right away (needed for mac,
+  // might as well do it on all platforms just to keep the code paths the same).
+  // XXXbz but how does this actually "process it right away"?
+  // Isn't this more like "never process it"?
+  if ( !IsDragInProgress() )
+    PostReflowEvent();
 
   return NS_OK;
 }
@@ -6102,114 +6246,6 @@ PresShell::DidDoReflow()
   }
 }
 
-void
-PresShell::DoReflow(nsIFrame* target)
-{
-  nsCOMPtr<nsIRenderingContext> rcx;
-  nsresult rv = CreateRenderingContext(target, getter_AddRefs(rcx));
-  if (NS_FAILED(rv)) {
-   NS_NOTREACHED("CreateRenderingContext failure");
-   return;
- }
-
-  nsIFrame* rootFrame = mPresContext->FrameManager()->GetRootFrame();
-
-  target->WillReflow(mPresContext);
-
-  // If the target frame is the root of the frame hierarchy, then
-  // use all the available space. If it's simply a `reflow root',
-  // then use the target frame's size as the available space.
-  nsSize size;
-  if (target == rootFrame)
-     size = mPresContext->GetVisibleArea().Size();
-  else
-     size = target->GetSize();
-
-  NS_ASSERTION(!target->GetNextInFlow() && !target->GetPrevInFlow(),
-               "reflow roots should never split");
-
-  // Don't pass size directly to the reflow state, since a
-  // constrained height implies page/column breaking.
-  // Exception: the root frame always uses a constrained reflow
-  nsSize reflowSize;
-  if (target != rootFrame)
-    reflowSize = nsSize(size.width, NS_UNCONSTRAINEDSIZE);
-  else
-    reflowSize = size;
-  nsHTMLReflowState reflowState(mPresContext, target, rcx, reflowSize);
-
-  // fix the computed height
-  NS_ASSERTION(reflowState.mComputedMargin == nsMargin(0, 0, 0, 0),
-               "reflow state should not set margin for reflow roots");
-  reflowState.mComputedHeight =
-    size.height - reflowState.mComputedBorderPadding.TopBottom();
-  NS_ASSERTION(reflowState.ComputedWidth() ==
-                 size.width -
-                   reflowState.mComputedBorderPadding.LeftRight(),
-               "reflow state computed incorrect width");
-
-  nsReflowStatus status;
-  nsHTMLReflowMetrics desiredSize;
-  target->Reflow(mPresContext, desiredSize, reflowState, status);
-
-  // If an incremental reflow is initiated at a frame other than the
-  // root frame, then its desired size had better not change!
-  NS_ASSERTION(target == rootFrame ||
-               (desiredSize.width == size.width &&
-                desiredSize.height == size.height),
-               "non-root frame's desired size changed during an "
-               "incremental reflow");
-  NS_ASSERTION(desiredSize.mOverflowArea ==
-                 nsRect(nsPoint(0, 0),
-                        nsSize(desiredSize.width, desiredSize.height)),
-               "reflow roots must not have visible overflow");
-  NS_ASSERTION(status == NS_FRAME_COMPLETE,
-               "reflow roots should never split");
-
-  target->SetSize(nsSize(desiredSize.width, desiredSize.height));
-
-  nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, target,
-                                             target->GetView(),
-                                             &desiredSize.mOverflowArea);
-
-  target->DidReflow(mPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
-}
-
-#ifdef DEBUG
-void
-PresShell::DoVerifyReflow()
-{
-  if (nsIFrameDebug::GetVerifyTreeEnable()) {
-    nsIFrameDebug*  frameDebug;
-    nsIFrame* rootFrame = FrameManager()->GetRootFrame();
-    if (NS_SUCCEEDED(rootFrame->QueryInterface(NS_GET_IID(nsIFrameDebug),
-                                               (void**)&frameDebug))) {
-      frameDebug->VerifyTree();
-    }
-  }
-  if (GetVerifyReflowEnable()) {
-    // First synchronously render what we have so far so that we can
-    // see it.
-    nsIView* rootView;
-    mViewManager->GetRootView(rootView);
-    mViewManager->UpdateView(rootView, NS_VMREFRESH_IMMEDIATE);
-
-    FlushPendingNotifications(Flush_Layout);
-    mInVerifyReflow = PR_TRUE;
-    PRBool ok = VerifyIncrementalReflow();
-    mInVerifyReflow = PR_FALSE;
-    if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
-      printf("ProcessReflowCommands: finished (%s)\n",
-             ok ? "ok" : "failed");
-    }
-
-    if (0 != mDirtyRoots.Count()) {
-      printf("XXX yikes! reflow commands queued during verify-reflow\n");
-    }
-  }
-}
-#endif
-
 nsresult
 PresShell::ProcessReflowCommands(PRBool aInterruptible)
 {
@@ -6217,10 +6253,19 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
   MOZ_TIMER_START(mReflowWatch);  
 
   if (0 != mDirtyRoots.Count()) {
+    nsHTMLReflowMetrics   desiredSize;
+    nsCOMPtr<nsIRenderingContext> rcx;
+    nsIFrame*             rootFrame = FrameManager()->GetRootFrame();
+    nsSize          maxSize = rootFrame->GetSize();
+
+    nsresult rv=CreateRenderingContext(rootFrame, getter_AddRefs(rcx));
+    if (NS_FAILED(rv)) return rv;
 
 #ifdef DEBUG
-    if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
-      printf("ProcessReflowCommands: begin incremental reflow\n");
+    if (GetVerifyReflowEnable()) {
+      if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
+        printf("ProcessReflowCommands: begin incremental reflow\n");
+      }
     }
 #endif
 
@@ -6257,7 +6302,66 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
           continue;
         }
 
-        DoReflow(target);
+        nsIFrame* root = mPresContext->FrameManager()->GetRootFrame();
+
+        target->WillReflow(mPresContext);
+        nsContainerFrame::PositionFrameView(target);
+
+        // If the target frame is the root of the frame hierarchy, then
+        // use all the available space. If it's simply a `reflow root',
+        // then use the target frame's size as the available space.
+        nsSize size;
+        if (target == root)
+          size = maxSize;
+        else
+          size = target->GetSize();
+
+        NS_ASSERTION(!target->GetNextInFlow() && !target->GetPrevInFlow(),
+                     "reflow roots should never split");
+
+        // Don't pass size directly to the reflow state, since a
+        // constrained height implies page/column breaking.
+        nsHTMLReflowState reflowState(mPresContext, target, rcx,
+                                      nsSize(size.width, NS_UNCONSTRAINEDSIZE));
+        
+        // fix the computed height
+        NS_ASSERTION(reflowState.mComputedMargin == nsMargin(0, 0, 0, 0),
+                     "reflow state should not set margin for reflow roots");
+        reflowState.mComputedHeight =
+          size.height - reflowState.mComputedBorderPadding.TopBottom();
+        NS_ASSERTION(reflowState.ComputedWidth() ==
+                       size.width -
+                         reflowState.mComputedBorderPadding.LeftRight(),
+                     "reflow state computed incorrect width");
+
+        // except the viewport frame does want availableHeight set
+        if (target == root)
+          reflowState.availableHeight = size.height;
+
+        nsReflowStatus status;
+        target->Reflow(mPresContext, desiredSize, reflowState, status);
+
+        // If an incremental reflow is initiated at a frame other than the
+        // root frame, then its desired size had better not change!
+        NS_ASSERTION(target == root ||
+                     (desiredSize.width == size.width &&
+                      desiredSize.height == size.height),
+                     "non-root frame's desired size changed during an "
+                     "incremental reflow");
+        NS_ASSERTION(desiredSize.mOverflowArea ==
+                       nsRect(nsPoint(0, 0),
+                              nsSize(desiredSize.width, desiredSize.height)),
+                     "reflow roots must not have visible overflow");
+        NS_ASSERTION(status == NS_FRAME_COMPLETE,
+                     "reflow roots should never split");
+
+        target->SetSize(nsSize(desiredSize.width, desiredSize.height));
+
+        nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, target,
+                                                   target->GetView(),
+                                                   &desiredSize.mOverflowArea);
+
+        target->DidReflow(mPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
 
         // Keep going until we're out of reflow commands, or we've run
         // past our deadline.
@@ -6274,16 +6378,42 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     // schedule another reflow event to process them.
     if (mDirtyRoots.Count())
       PostReflowEvent();
-
-    DidDoReflow();
-
+    
 #ifdef DEBUG
-    nsIFrame* rootFrame = FrameManager()->GetRootFrame();
     if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
       printf("\nPresShell::ProcessReflowCommands() finished: this=%p\n", (void*)this);
     }
-    DoVerifyReflow();
+
+    if (nsIFrameDebug::GetVerifyTreeEnable()) {
+      nsIFrameDebug*  frameDebug;
+
+      if (NS_SUCCEEDED(rootFrame->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                                 (void**)&frameDebug))) {
+        frameDebug->VerifyTree();
+      }
+    }
+    if (GetVerifyReflowEnable()) {
+      // First synchronously render what we have so far so that we can
+      // see it.
+      nsIView* rootView;
+      mViewManager->GetRootView(rootView);
+      mViewManager->UpdateView(rootView, NS_VMREFRESH_IMMEDIATE);
+
+      mInVerifyReflow = PR_TRUE;
+      PRBool ok = VerifyIncrementalReflow();
+      mInVerifyReflow = PR_FALSE;
+      if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
+        printf("ProcessReflowCommands: finished (%s)\n",
+               ok ? "ok" : "failed");
+      }
+
+      if (0 != mDirtyRoots.Count()) {
+        printf("XXX yikes! reflow commands queued during verify-reflow\n");
+      }
+    }
 #endif
+
+    DidDoReflow();
 
     // If there are no more reflow commands in the queue, we'll want
     // to unblock onload.
@@ -6539,8 +6669,6 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
   }
   fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
 
-  fprintf(stdout, " %p ", (void*)k1);
-
   printf(" != ");
 
   if (nsnull != k2) {
@@ -6555,8 +6683,6 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
     name.Assign(NS_LITERAL_STRING("(null)"));
   }
   fputs(NS_LossyConvertUTF16toASCII(name).get(), stdout);
-
-  fprintf(stdout, " %p ", (void*)k2);
 
   printf(" %s", aMsg);
 }
@@ -6893,17 +7019,32 @@ PresShell::VerifyIncrementalReflow()
    if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
      printf("Building Verification Tree...\n");
    }
+  // All the stuff we are creating that needs releasing
+  nsPresContext* cx;
+  nsIViewManager* vm;
+  nsIPresShell* sh;
 
   // Create a presentation context to view the new frame tree
-  nsCOMPtr<nsPresContext> cx =
-       new nsPresContext(mDocument, mPresContext->IsPaginated() ?
-                                        nsPresContext::eContext_PrintPreview :
-                                        nsPresContext::eContext_Galley);
-  NS_ENSURE_TRUE(cx, PR_FALSE);
+  NS_IF_ADDREF(cx = new nsPresContext(mDocument,
+                                      mPresContext->IsPaginated() ?
+                                       nsPresContext::eContext_PrintPreview :
+                                       nsPresContext::eContext_Galley));
+
+  if (!cx)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+  if (container) {
+    cx->SetContainer(container);
+    nsCOMPtr<nsILinkHandler> lh = do_QueryInterface(container);
+    if (lh) {
+      cx->SetLinkHandler(lh);
+    }
+  }
 
   nsIDeviceContext *dc = mPresContext->DeviceContext();
   nsresult rv = cx->Init(dc);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Get our scrolling preference
   nsIView* rootView;
@@ -6911,20 +7052,22 @@ PresShell::VerifyIncrementalReflow()
   void* nativeParentWidget = rootView->GetWidget()->GetNativeData(NS_NATIVE_WIDGET);
 
   // Create a new view manager.
-  nsCOMPtr<nsIViewManager> vm = do_CreateInstance(kViewManagerCID);
-  NS_ENSURE_TRUE(vm, PR_FALSE);
+  rv = CallCreateInstance(kViewManagerCID, &vm);
+  NS_ASSERTION(NS_SUCCEEDED (rv), "failed to create view manager");
   rv = vm->Init(dc);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  NS_ASSERTION(NS_SUCCEEDED (rv), "failed to init view manager");
 
   // Create a child window of the parent that is our "root view/window"
   // Create a view
   nsRect tbounds = mPresContext->GetVisibleArea();
   nsIView* view = vm->CreateView(tbounds, nsnull);
-  NS_ENSURE_TRUE(view, PR_FALSE);
+  NS_ASSERTION(view, "failed to create view");
+  if (!view)
+    return PR_FALSE;
 
   //now create the widget for the view
   rv = view->CreateWidget(kWidgetCID, nsnull, nativeParentWidget, PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create scroll view widget");
 
   // Setup hierarchical relationship in view manager
   vm->SetRootView(view);
@@ -6938,19 +7081,13 @@ PresShell::VerifyIncrementalReflow()
   // exact same style information that this document has.
   nsAutoPtr<nsStyleSet> newSet;
   rv = CloneStyleSet(mStyleSet, getter_Transfers(newSet));
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  nsCOMPtr<nsIPresShell> sh;
-  rv = mDocument->CreateShell(cx, vm, newSet, getter_AddRefs(sh));
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  newSet.forget();
-  // Note that after we create the shell, we must make sure to destroy it
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clone style set");
+  rv = mDocument->CreateShell(cx, vm, newSet, &sh);
   sh->SetVerifyReflowEnable(PR_FALSE); // turn off verify reflow while we're reflowing the test frame tree
-  vm->SetViewObserver((nsIViewObserver *)((PresShell*)sh.get()));
-  WillCauseReflow();
-  sh->InitialReflow(r.width, r.height);
-  DidCauseReflow();
-  mDocument->BindingManager()->ProcessAttachedQueue();
-  sh->FlushPendingNotifications(Flush_Layout);
+  NS_ASSERTION(NS_SUCCEEDED (rv), "failed to create presentation shell");
+  vm->SetViewObserver((nsIViewObserver *)((PresShell*)sh));
+  rv = sh->InitialReflow(r.width, r.height);
+  NS_ENSURE_SUCCESS(rv, rv);
   sh->SetVerifyReflowEnable(PR_TRUE);  // turn on verify reflow again now that we're done reflowing the test frame tree
   if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
      printf("Verification Tree built, comparing...\n");
@@ -6965,17 +7102,22 @@ PresShell::VerifyIncrementalReflow()
     printf("Verify reflow failed, primary tree:\n");
     nsIFrameDebug*  frameDebug;
 
-    if (NS_SUCCEEDED(CallQueryInterface(root1, &frameDebug))) {
+    if (NS_SUCCEEDED(root1->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                           (void**)&frameDebug))) {
       frameDebug->List(stdout, 0);
     }
     printf("Verification tree:\n");
-    if (NS_SUCCEEDED(CallQueryInterface(root2, &frameDebug))) {
+    if (NS_SUCCEEDED(root2->QueryInterface(NS_GET_IID(nsIFrameDebug),
+                                           (void**)&frameDebug))) {
       frameDebug->List(stdout, 0);
     }
   }
 
+  cx->SetContainer(nsnull);
+  NS_RELEASE(cx);
   sh->EndObservingDocument();
-  sh->Destroy();
+  NS_RELEASE(sh);
+  NS_RELEASE(vm);
   if (VERIFY_REFLOW_NOISY & gVerifyReflowFlags) {
     printf("Finished Verifying Reflow...\n");
   }
