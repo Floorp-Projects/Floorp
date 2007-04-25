@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Stuart Parmenter <pavlov@pavlov.net>
  *   Brett Wilson <brettw@gmail.com>
+ *   Justin Dolske <dolske@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,9 +43,55 @@
 /**
  * imgIEncoder interface
  */
-[scriptable, uuid(CCC5B3AD-3E67-4e3d-97E1-B06B2E96FEF8)]
+[scriptable, uuid(ba3a854b-fb8d-4881-8af9-5849df10e5e5)]
 interface imgIEncoder : nsIInputStream
 {
+  // Possible values for outputOptions. Multiple values are semicolon-separated.
+  //
+  // PNG:
+  // ----
+  // usetransparency=[yes|no|none]  --  default: "yes"
+  //     Overrides default from input format. "no" and "none" are equivalent.
+  //
+  //
+  // APNG:
+  // -----
+  // The following options can be used with startImageEncode():
+  //
+  // usetransparency=[yes|no|none]  --  default: "yes"
+  //     Overrides default from input format. "no" and "none" are equivalent.
+  // skipfirstframe=[yes|no]  --  default: "no"
+  //     Controls display of the first frame in animations. PNG-only clients always
+  //     display the first frame (and only that frame).
+  // frames=#  --  default: "1"
+  //     Total number of frames in the image. The first frame, even if skipped, is
+  //     always included in the count.
+  // plays=#  --  default: "0"
+  //     Number of times to play the animation sequence. "0" will repeat forever.
+  //
+  //
+  // The following options can be used for each frame, with addImageFrame():
+  //
+  // usetransparency=[yes|no|none]  --  default: "yes"
+  //     Overrides default from input format. "no" and "none" are equivalent.
+  // delay=#  --  default: "500"
+  //     Number of milliseconds to display the frame, before moving to the next frame.
+  // dispose=[none|background|previous]  --  default: "none"
+  //     What to do with the image's canvas before rendering the next frame. See APNG spec.
+  // blend=[source|over]  --  default: "source"
+  //     How to render the new frame on the canvas. See APNG spec.
+  // xoffset=#  --  default: "0"
+  // yoffset=#  --  default: "0"
+  //     Where to draw the frame, relative to the canvas.
+  //
+  //
+  // JPEG:
+  // -----
+  //
+  // quality=#  --  default: "50"
+  //    Quality of compression, 0-100 (worst-best). 
+
+
   // Possible values for input format (note that not all image formats
   // support saving alpha channels):
 
@@ -84,4 +131,27 @@ interface imgIEncoder : nsIInputStream
                     in PRUint32 stride,
                     in PRUint32 inputFormat,
                     in AString outputOptions);
+
+  /*
+   * For encoding images which may contain multiple frames, the 1-shot
+   * initFromData() interface is too simplistic. The alternative is to
+   * use startImageEncode(), call addImageFrame() one or more times, and
+   * then finish initialization with endImageEncode().
+   *
+   * The arguments are basically the same as in initFromData().
+   */
+  void startImageEncode(in PRUint32 width,
+                    in PRUint32 height,
+                    in PRUint32 inputFormat,
+                    in AString outputOptions);
+
+  void addImageFrame( [array, size_is(length), const] in PRUint8 data,
+                    in unsigned long length,
+                    in PRUint32 width,
+                    in PRUint32 height,
+                    in PRUint32 stride,
+                    in PRUint32 frameFormat,
+                    in AString frameOptions);
+
+  void endImageEncode();
 };
