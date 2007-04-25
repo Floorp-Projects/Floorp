@@ -7,6 +7,7 @@ classic.jar:
   skin/classic/mozapps/downloads/background-gradient.gif          (downloads/background-gradient.gif)
   skin/classic/mozapps/downloads/background-stripe.gif            (downloads/background-stripe.gif)
   skin/classic/mozapps/downloads/download-inprogress.png          (downloads/download-inprogress.png)
+  skin/classic/mozapps/downloads/downloadIcon.png                 (downloads/downloadIcon.png)
   skin/classic/mozapps/downloads/downloads.css                    (downloads/downloads.css)
   skin/classic/mozapps/downloads/unknownContentType.css           (downloads/unknownContentType.css)
   skin/classic/mozapps/downloads/downloads.xml                    (downloads/downloads.xml)

@@ -190,11 +190,7 @@ pref("browser.formfill.enable", true);
 
 pref("browser.download.useDownloadDir", true);
 pref("browser.download.folderList", 0);
-#ifdef XP_WIN
 pref("browser.download.manager.showAlertOnComplete", true);
-#else
-pref("browser.download.manager.showAlertOnComplete", false);
-#endif
 pref("browser.download.manager.showAlertInterval", 2000);
 pref("browser.download.manager.retention", 2);
 pref("browser.download.manager.showWhenStarting", true);
