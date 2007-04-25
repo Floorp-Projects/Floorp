@@ -204,24 +204,29 @@ nsDocNavStartProgressListener::SetCallback(
 NS_IMETHODIMP
 nsDocNavStartProgressListener::IsSpurious(nsIURI* aURI, PRBool* isSpurious)
 {
-  nsCAutoString scheme;
-  nsresult rv = aURI->GetScheme(scheme);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_PRECONDITION(aURI, "Must have a URI!");
 
-  *isSpurious = scheme.Equals("about") ||
-                scheme.Equals("chrome") ||
-                scheme.Equals("file") ||
-                scheme.Equals("javascript");
+  nsCAutoString scheme; 
+  nsresult rv;
 
-  if (!*isSpurious) {
-    // If there's a nested URI, we want to check the inner URI's scheme
-    nsCOMPtr<nsINestedURI> nestedURI = do_QueryInterface(aURI);
-    if (nestedURI) {
-      nsCOMPtr<nsIURI> innerURI;
-      rv = nestedURI->GetInnerURI(getter_AddRefs(innerURI));
-      NS_ENSURE_SUCCESS(rv, rv);
-      return IsSpurious(innerURI, isSpurious);
-    }
+  // If there's a nested URI, we want to check the inner URI's scheme.
+  // If we find a spurious scheme then we can break the checking loop at that point.
+  nsCOMPtr<nsIURI> inner = aURI;
+  nsCOMPtr<nsINestedURI> nestedURI = do_QueryInterface(inner);
+  while (true) {
+    rv = inner->GetScheme(scheme);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *isSpurious = scheme.Equals("about") ||
+                  scheme.Equals("chrome") ||
+                  scheme.Equals("file") ||
+                  scheme.Equals("javascript");
+    if (*isSpurious || !nestedURI)
+      break;
+
+    rv = nestedURI->GetInnerURI(getter_AddRefs(inner));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nestedURI = do_QueryInterface(inner);
   }
 
   return NS_OK;
