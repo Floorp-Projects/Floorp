@@ -63,11 +63,27 @@ private:
   ~nsPNGEncoder();
 
 protected:
+  nsresult ParseOptions(const nsAString& aOptions,
+                           PRBool* useTransparency,
+                           PRBool* skipFirstFrame,
+                           PRUint32* numAnimatedFrames,
+                           PRUint32* numIterations,
+                           PRUint32* frameDispose,
+                           PRUint32* frameBlend,
+                           PRUint32* frameDelay,
+                           PRUint32* offsetX,
+                           PRUint32* offsetY);
   void ConvertHostARGBRow(const PRUint8* aSrc, PRUint8* aDest,
                           PRUint32 aPixelWidth, PRBool aUseTransparency);
   void StripAlpha(const PRUint8* aSrc, PRUint8* aDest,
                   PRUint32 aPixelWidth);
+  static void ErrorCallback(png_structp png_ptr, png_const_charp warning_msg);
   static void WriteCallback(png_structp png, png_bytep data, png_size_t size);
+
+  png_struct* mPNG;
+  png_info* mPNGinfo;
+
+  PRBool mIsAnimation;
 
   // image buffer
   PRUint8* mImageBuffer;

@@ -195,6 +195,31 @@ NS_IMETHODIMP nsJPEGEncoder::InitFromData(const PRUint8* aData,
 }
 
 
+NS_IMETHODIMP nsJPEGEncoder::StartImageEncode(PRUint32 aWidth,
+                                              PRUint32 aHeight,
+                                              PRUint32 aInputFormat,
+                                              const nsAString& aOutputOptions)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsJPEGEncoder::AddImageFrame(const PRUint8* aData,
+                                           PRUint32 aLength,
+                                           PRUint32 aWidth,
+                                           PRUint32 aHeight,
+                                           PRUint32 aStride,
+                                           PRUint32 aFrameFormat,
+                                           const nsAString& aFrameOptions)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsJPEGEncoder::EndImageEncode()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 /* void close (); */
 NS_IMETHODIMP nsJPEGEncoder::Close()
 {
