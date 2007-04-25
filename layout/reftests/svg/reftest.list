@@ -1,4 +1,7 @@
 
+# bugs/
+include bugs/reftest.list
+
 == clipPath-basic-01.svg pass.svg
 == foreignObject-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
