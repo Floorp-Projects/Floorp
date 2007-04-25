@@ -1479,11 +1479,13 @@ public:
         int maxItems = 5;
 
         Init();
-        mItems = (SCRIPT_ITEM *)malloc(maxItems * sizeof(SCRIPT_ITEM));
+        // Allocate space for one more item than expected, to handle a rare
+        // overflow in ScriptItemize (pre XP SP2). See bug 366643.
+        mItems = (SCRIPT_ITEM *)malloc((maxItems + 1) * sizeof(SCRIPT_ITEM));
         while ((rv = ScriptItemize(mString, mLength, maxItems, &mControl, &mState,
                                    mItems, &mNumItems)) == E_OUTOFMEMORY) {
             maxItems *= 2;
-            mItems = (SCRIPT_ITEM *)realloc(mItems, maxItems * sizeof(SCRIPT_ITEM));
+            mItems = (SCRIPT_ITEM *)realloc(mItems, (maxItems + 1) * sizeof(SCRIPT_ITEM));
             Init();
         }
 
