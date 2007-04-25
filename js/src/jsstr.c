@@ -4906,10 +4906,12 @@ js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
             }
             u = *chars++;
             if (u < ' ') {
-                escape = strchr(js_EscapeMap, (int)u);
-                if (escape) {
-                    u = escape[1];
-                    goto do_escape;
+                if (u != 0) {
+                    escape = strchr(js_EscapeMap, (int)u);
+                    if (escape) {
+                        u = escape[1];
+                        goto do_escape;
+                    }
                 }
                 goto do_hex_escape;
             }
