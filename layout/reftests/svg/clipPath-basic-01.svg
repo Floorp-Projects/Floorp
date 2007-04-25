@@ -1,6 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
 
   <title>Testcase for basic clipPath</title>
+  
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=377892 -->
 
   <defs>
     <clipPath id="clip">
