@@ -190,10 +190,12 @@ public:
   virtual ~nsHTMLSelectOptGroupAccessible() {}
 
   /* ----- nsIAccessible ----- */
+  NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD DoAction(PRUint8 index);  
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
+  void CacheChildren();
 };
 
 /** ------------------------------------------------------ */
