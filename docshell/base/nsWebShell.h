@@ -49,7 +49,7 @@
 
 class nsIController;
 struct PRThread;
-struct OnLinkClickEvent;
+class OnLinkClickEvent;
 
 typedef enum {
     eCharsetReloadInit,
@@ -104,7 +104,7 @@ public:
 
     // NS_IMETHOD SetURL(const PRUnichar* aURL);
 
-    friend struct OnLinkClickEvent;
+    friend class OnLinkClickEvent;
 
 protected:
     void InitFrameData();
