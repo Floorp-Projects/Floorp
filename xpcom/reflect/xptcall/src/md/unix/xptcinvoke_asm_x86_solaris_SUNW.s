@@ -51,5 +51,5 @@ NS_InvokeByIndex_P:
 	movl       %ebp,%esp
 	pop        %ebp
 	ret        
-	.size NS_InvokeByIndex_P, . - NS_InvokeByIndex
+	.size NS_InvokeByIndex_P, . - NS_InvokeByIndex_P
 
