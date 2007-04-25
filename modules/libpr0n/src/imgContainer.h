@@ -223,54 +223,16 @@ private:
                        gfxIImageFrame* aNextFrame,
                        PRInt32 aNextFrameIndex);
   
-  /**
-   * Combine aOverlayFrame's mask into aCompositingFrame's mask.
-   *
-   * This takes the mask information from the passed in aOverlayFrame and
-   * inserts that information into the aCompositingFrame's mask at the proper
-   * offsets. It does *not* rebuild the entire mask.
-   *
-   * @param aCompositingFrame Target frame
-   * @param aOverlayFrame     This frame's mask is being copied
-   */
-  void BuildCompositeMask(gfxIImageFrame* aCompositingFrame,
-                          gfxIImageFrame* aOverlayFrame);
-  
-  /** Sets an area of the frame's mask.
-   *
-   * @param aFrame Target Frame
-   * @param aVisible Turn on (PR_TRUE) or off (PR_FALSE) visibility
-   *
-   * @note Invisible area of frame's image will need to be set to 0
-   */
-  void SetMaskVisibility(gfxIImageFrame *aFrame, PRBool aVisible);
-  //! @overload
-  void SetMaskVisibility(gfxIImageFrame *aFrame,
-                         PRInt32 aX, PRInt32 aY,
-                         PRInt32 aWidth, PRInt32 aHeight,
-                         PRBool aVisible);
-  //! @overload
-  void SetMaskVisibility(gfxIImageFrame *aFrame,
-                         nsIntRect &aRect, PRBool aVisible) {
-    SetMaskVisibility(aFrame, aRect.x, aRect.y,
-                      aRect.width, aRect.height, aVisible);
-  }
-  
-  /** Fills an area of <aFrame> with black.
+  /** Clear an area of <aFrame>.
    *
    * @param aFrame Target Frame
    *
-   * @note Does not set the mask
+   * @note Does also clear the mask
    */
-  static void BlackenFrame(gfxIImageFrame* aFrame);
+  static void ClearFrame(gfxIImageFrame* aFrame);
   //! @overload
-  static void BlackenFrame(gfxIImageFrame* aFrame,
-                    PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  //! @overload
-  static inline void BlackenFrame(gfxIImageFrame* aFrame, nsIntRect &aRect) {
-    BlackenFrame(aFrame, aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-  
+  static void ClearFrame(gfxIImageFrame* aFrame, nsIntRect &aRect);
+
   //! Copy one gfxIImageFrame's image and mask into another
   static PRBool CopyFrameImage(gfxIImageFrame *aSrcFrame,
                                gfxIImageFrame *aDstFrame);
