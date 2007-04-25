@@ -449,12 +449,14 @@ js_locked_atom_tracer(JSHashEntry *he, intN i, void *arg)
     atom = (JSAtom *)he;
     args = (TraceArgs *)arg;
     if ((atom->flags & (ATOM_PINNED | ATOM_INTERNED)) || args->allAtoms) {
-        JS_CALL_TRACER(args->trc, atom, JSTRACE_ATOM,
-                       (atom->flags & ATOM_PINNED)
-                       ? "pinned_atom"
-                       : (atom->flags & ATOM_INTERNED)
-                       ? "interned_atom"
-                       : "locked_atom");
+        JS_SET_TRACING_INDEX(args->trc,
+                             (atom->flags & ATOM_PINNED)
+                             ? "pinned_atom"
+                             : (atom->flags & ATOM_INTERNED)
+                             ? "interned_atom"
+                             : "locked_atom",
+                             (size_t)i);
+        JS_CallTracer(args->trc, atom, JSTRACE_ATOM);
     }
     return HT_ENUMERATE_NEXT;
 }

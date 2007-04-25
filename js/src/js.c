@@ -1352,45 +1352,56 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 DumpHeap(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    jsval v = JSVAL_NULL;
     char *fileName = NULL;
-    size_t maxRecursionLevel = (size_t)-1;
+    void* startThing = NULL;
+    uint32 startTraceKind = 0;
+    void *thingToFind = NULL;
+    size_t maxDepth = (size_t)-1;
     void *thingToIgnore = NULL;
+    jsval *vp;
     FILE *dumpFile;
     JSBool ok;
-    JSTracer *trc;
 
-    if (argc != 0 && argv[0] != JSVAL_NULL && argv[0] != JSVAL_VOID) {
-        v = argv[0];
-        if (!JSVAL_IS_TRACEABLE(v)) {
-            fprintf(gErrFile,
-                    "dumpHeap: the first argument is not null or "
-                    "a heap-allocated thing\n");
-            return JS_FALSE;
-        }
-    }
-
-    if (argc > 1 && argv[1] != JSVAL_NULL && argv[1] != JSVAL_VOID) {
+    vp = &argv[0];
+    if (*vp != JSVAL_NULL && *vp != JSVAL_VOID) {
         JSString *str;
 
-        str = JS_ValueToString(cx, argv[1]);
+        str = JS_ValueToString(cx, *vp);
         if (!str)
             return JS_FALSE;
-        argv[1] = STRING_TO_JSVAL(str);
+        *vp = STRING_TO_JSVAL(str);
         fileName = JS_GetStringBytes(str);
     }
 
-    if (argc > 2 && argv[2] != JSVAL_NULL && argv[2] != JSVAL_VOID) {
-        uint32 depth;
-
-        if (!JS_ValueToECMAUint32(cx, argv[2], &depth))
-            return JS_FALSE;
-        maxRecursionLevel = depth;
+    vp = &argv[1];
+    if (*vp != JSVAL_NULL && *vp != JSVAL_VOID) {
+        if (!JSVAL_IS_TRACEABLE(*vp))
+            goto not_traceable_arg;
+        startThing = JSVAL_TO_TRACEABLE(*vp);
+        startTraceKind = JSVAL_TRACE_KIND(*vp);
     }
 
-    if (argc > 3 && argv[3] != JSVAL_NULL && argv[3] != JSVAL_VOID) {
-        if (JSVAL_IS_GCTHING(argv[3]))
-            thingToIgnore = JSVAL_TO_GCTHING(argv[3]);
+    vp = &argv[2];
+    if (*vp != JSVAL_NULL && *vp != JSVAL_VOID) {
+        if (!JSVAL_IS_TRACEABLE(*vp))
+            goto not_traceable_arg;
+        thingToFind = JSVAL_TO_TRACEABLE(*vp);
+    }
+
+    vp = &argv[3];
+    if (*vp != JSVAL_NULL && *vp != JSVAL_VOID) {
+        uint32 depth;
+
+        if (!JS_ValueToECMAUint32(cx, *vp, &depth))
+            return JS_FALSE;
+        maxDepth = depth;
+    }
+
+    vp = &argv[4];
+    if (*vp != JSVAL_NULL && *vp != JSVAL_VOID) {
+        if (!JSVAL_IS_TRACEABLE(*vp))
+            goto not_traceable_arg;
+        thingToIgnore = JSVAL_TO_TRACEABLE(*vp);
     }
 
     if (!fileName) {
@@ -1404,23 +1415,18 @@ DumpHeap(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
     }
 
-    trc = js_NewGCHeapDumper(cx, NULL, dumpFile, maxRecursionLevel,
-                             thingToIgnore);
-    if (!trc) {
-        ok = JS_FALSE;
-    } else {
-        if (v == JSVAL_NULL) {
-            js_TraceRuntime(trc);
-        } else {
-            JS_TraceChildren(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
-        }
-        ok = js_FreeGCHeapDumper(trc);
-    }
-
+    ok = JS_DumpHeap(cx, startThing, startTraceKind, thingToFind,
+                     maxDepth, thingToIgnore,
+                     (JSPrintfFormater)fprintf, dumpFile);
     if (dumpFile != stdout)
         fclose(dumpFile);
-
     return ok;
+
+  not_traceable_arg:
+    fprintf(gErrFile,
+            "dumpHeap: argument %u is not null or a heap-allocated thing\n",
+            (unsigned)(vp - argv));
+    return JS_FALSE;
 }
 
 #endif /* DEBUG */
@@ -2203,7 +2209,7 @@ static JSFunctionSpec shell_functions[] = {
 #ifdef DEBUG
     {"dis",             Disassemble,    1,0,0},
     {"dissrc",          DisassWithSrc,  1,0,0},
-    {"dumpHeap",        DumpHeap,       3,0,0},
+    {"dumpHeap",        DumpHeap,       5,0,0},
     {"notes",           Notes,          1,0,0},
     {"tracing",         Tracing,        0,0,0},
     {"stats",           DumpStats,      1,0,0},
@@ -2247,7 +2253,8 @@ static char *shell_help_messages[] = {
 #ifdef DEBUG
     "dis([fun])             Disassemble functions into bytecodes",
     "dissrc([fun])          Disassemble functions with source lines",
-    "dumpHeap([obj])        Display reachable objects",
+    "dumpHeap([fileName], [start], [toFind], [maxDepth], [toIgnore])\n"
+    "                       Interface to JS_DumpHeap with output sent to file",
     "notes([fun])           Show source notes for functions",
     "tracing([toggle])      Turn tracing on or off",
     "stats([string ...])    Dump 'arena', 'atom', 'global' stats",

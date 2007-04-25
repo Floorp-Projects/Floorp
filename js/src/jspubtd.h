@@ -715,6 +715,18 @@ typedef JSBool
 typedef JSPrincipals *
 (* JS_DLL_CALLBACK JSObjectPrincipalsFinder)(JSContext *cx, JSObject *obj);
 
+/*
+ * Output formated arguments as specified by format string. See fprintf/sprintf
+ * documentation for specification of format. Return the number of characters
+ * printed or -1 if an error occur.
+ */
+typedef int
+(* JS_DLL_CALLBACK JSPrintfFormater)(void *closure, const char *format, ...)
+#if defined __GNUC__
+    __attribute__ ((format (printf, 2, 3)))
+#endif
+;
+
 JS_END_EXTERN_C
 
 #endif /* jspubtd_h___ */
