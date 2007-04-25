@@ -178,8 +178,11 @@ NS_IMETHODIMP nsDocAccessible::GetRole(PRUint32 *aRole)
       else if (itemType == nsIDocShellTreeItem::typeContent) {
 #ifdef MOZ_XUL
         nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
-        *aRole = xulDoc ? nsIAccessibleRole::ROLE_APPLICATION :
-                          nsIAccessibleRole::ROLE_DOCUMENT;
+        if (xulDoc) {
+          *aRole = nsIAccessibleRole::ROLE_APPLICATION;
+        } else {
+          *aRole = nsIAccessibleRole::ROLE_DOCUMENT;
+        }
 #else
         *aRole = nsIAccessibleRole::ROLE_DOCUMENT;
 #endif
@@ -1566,8 +1569,10 @@ void nsDocAccessible::DocLoadCallback(nsITimer *aTimer, void *aClosure)
         nsCOMPtr<nsIDocShellTreeItem> sameTypeRootOfFocus;
         focusedTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRootOfFocus));
         if (sameTypeRoot == sameTypeRootOfFocus) {
-          docAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE,
-                                  docAcc, nsnull);
+          nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
+            new nsAccStateChangeEvent(docAcc, nsIAccessibleStates::STATE_BUSY,
+                                      PR_FALSE, PR_FALSE);
+          docAcc->FireAccessibleEvent(accEvent);
           docAcc->FireAnchorJumpEvent();
         }
       }
