@@ -40,7 +40,7 @@
 #include "nsUserInfo.h"
 #include "nsXPFEComponentsCID.h"
 #include "nsToolkitCompsCID.h"
-#ifdef ALERTS_SERVICE
+#if defined(ALERTS_SERVICE) || defined(ALERTS_SERVICE_MAC)
 #include "nsAlertsService.h"
 #endif
 
@@ -73,6 +73,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
 
 #ifdef ALERTS_SERVICE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
+#elif defined(ALERTS_SERVICE_MAC)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAlertsService, Init)
 #endif
 
 #ifndef MOZ_SUITE
@@ -116,6 +118,13 @@ static const nsModuleComponentInfo components[] =
     NS_ALERTSSERVICE_CID, 
     NS_ALERTSERVICE_CONTRACTID,
     nsAlertsServiceConstructor },
+#elif defined(ALERTS_SERVICE_MAC)
+  { "Alerts Service",
+    NS_ALERTSSERVICE_CID, 
+    NS_ALERTSERVICE_CONTRACTID,
+    nsAlertsServiceConstructor,
+    nsAlertsServiceRegister,
+    nsAlertsServiceUnregister },
 #endif
 #ifndef MOZ_SUITE
 // XXX Suite isn't ready to include this just yet
