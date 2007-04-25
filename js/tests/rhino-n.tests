@@ -34,6 +34,7 @@ js1_5/Regress/regress-280769-2.js
 # performance tests
 js1_5/Regress/regress-313967-01.js
 js1_5/Regress/regress-313967-02.js
+js1_5/Array/regress-99120-02.js
 
 # concatentated string too large
 js1_5/Regress/regress-347306-01.js
