@@ -60,19 +60,19 @@ startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 //  display test information
 
-var choice = new java.awt.Choice();
+var hashMap = new java.util.HashMap();
 
 testcases[testcases.length] = new TestCase(
     SECTION,
-    "var choice = new java.awt.Choice(); choice.getSelectedObjects()",
+    "var hashMap = new java.util.HashMap(); hashMap.get('unknown');",
     null,
-    choice.getSelectedObjects() );
+    hashMap.get("unknown") );
 
 testcases[testcases.length] = new TestCase(
     SECTION,
-    "typeof choice.getSelectedObjects()",
+    "typeof hashMap.get('unknown')",
     "object",
-    typeof choice.getSelectedObjects() );
+    typeof hashMap.get('unknown') );
 
 
 
