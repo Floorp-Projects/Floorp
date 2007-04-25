@@ -184,10 +184,8 @@ To turn on GC instrumentation, define <tt>JS_GCMETER</tt>.</li>
 
 <ul>
 <li>
-To turn on GC mark-phase debugging, useful to find leaked objects by their
-address, and to dump the GC heap, define <tt>GC_MARK_DEBUG</tt>.
-See the code in jsgc.c around the declaration and use of
-<tt>js_LiveThingToFind</tt>.</li>
+To dump JS heap use JS_DumpHeap API, available in DEBUG builds. For an example
+how to call it see DumpHeap implementation in js.c.</li>
 
 <li>
 To turn on the arena package's instrumentation, define <tt>JS_ARENAMETER</tt>.</li>
