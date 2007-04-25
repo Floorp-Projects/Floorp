@@ -321,8 +321,6 @@ function run_test() {
   // 2) confirm that folder has 3 children
   try {
     var options = histsvc.getNewQueryOptions();
-    options.maxResults = 1;
-    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
     var query = histsvc.getNewQuery();
     query.setFolders([tmpFolder], 1);
     var result = histsvc.executeQuery(query, options);
@@ -353,6 +351,7 @@ function run_test() {
   try {
     var options = histsvc.getNewQueryOptions();
     options.maxResults = 1;
+    options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
     options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
     var query = histsvc.getNewQuery();
     query.setFolders([testRoot], 1);
@@ -373,33 +372,36 @@ function run_test() {
     do_throw("bookmarks query: " + ex);
   }
 
-  /* test that multiple bookmarks with same URI show up in queries
+  // test that multiple bookmarks with same URI show up right in bookmark
+  // folder queries, todo: also to do for complex folder queries
   try {
     // test uri
     var mURI = uri("http://multiple.uris.in.query");
 
+    var testFolder = bmsvc.createFolder(testRoot, "test Folder", bmsvc.DEFAULT_INDEX);
     // add 2 bookmarks
-    bmsvc.insertItem(testRoot, mURI, bmsvc.DEFAULT_INDEX);
-    bmsvc.insertItem(testRoot, mURI, bmsvc.DEFAULT_INDEX);
+    bmsvc.setItemTitle(bmsvc.insertItem(testFolder, mURI, bmsvc.DEFAULT_INDEX),
+                       "title 1");
+    bmsvc.setItemTitle(bmsvc.insertItem(testFolder, mURI, bmsvc.DEFAULT_INDEX),
+                       "title 2");
 
     // query
     var options = histsvc.getNewQueryOptions();
-    options.maxResults = 2;
     options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
     var query = histsvc.getNewQuery();
-    query.setFolders([testRoot], 1);
-    query.uri = mURI;
+    query.setFolders([testFolder], 1);
     var result = histsvc.executeQuery(query, options);
     var rootNode = result.root;
     rootNode.containerOpen = true;
     var cc = rootNode.childCount;
     do_check_eq(cc, 2);
+    do_check_eq(rootNode.getChild(0).title, "title 1");
+    do_check_eq(rootNode.getChild(1).title, "title 2");
     testRoot.containerOpen = false;
   }
   catch(ex) {
     do_throw("bookmarks query: " + ex);
   }
-  */
 
   // test change bookmark uri
   var newId10 = bmsvc.insertItem(testRoot, uri("http://foo10.com/"), bmsvc.DEFAULT_INDEX);
@@ -437,7 +439,7 @@ function run_test() {
   do_check_eq(observer._itemAddedId, newId13);
   do_check_eq(observer._itemAdded.spec, "http://foobarcheese.com/");
   do_check_eq(observer._itemAddedFolder, testRoot);
-  do_check_eq(observer._itemAddedIndex, 12);
+  do_check_eq(observer._itemAddedIndex, 13);
 
   // set bookmark title
   bmsvc.setItemTitle(newId13, "ZZZXXXYYY");
@@ -450,6 +452,7 @@ function run_test() {
   try {
     var options = histsvc.getNewQueryOptions();
     options.excludeQueries = 1;
+    options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
     var query = histsvc.getNewQuery();
     query.onlyBookmarked = true;
     query.searchTerms = "ZZZXXXYYY";
@@ -460,6 +463,7 @@ function run_test() {
     do_check_eq(cc, 1);
     var node = rootNode.getChild(0);
     do_check_eq(node.title, "ZZZXXXYYY");
+    do_check_true(node.bookmarkId > 0);
     testRoot.containerOpen = false;
   }
   catch(ex) {

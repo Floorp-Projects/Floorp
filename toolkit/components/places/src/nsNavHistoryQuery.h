@@ -123,10 +123,10 @@ public:
                                mExcludeQueries(PR_FALSE),
                                mExcludeReadOnlyFolders(PR_FALSE),
                                mExpandQueries(PR_FALSE),
-                               mForceOriginalTitle(PR_FALSE),
                                mIncludeHidden(PR_FALSE),
                                mShowSessions(PR_FALSE),
-                               mMaxResults(0)
+                               mMaxResults(0),
+                               mQueryType(nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY)
   { }
 
 #ifdef MOZILLA_1_8_BRANCH
@@ -138,19 +138,19 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYQUERYOPTIONS
 
-  PRUint32 SortingMode() const { return mSort; }
-  PRUint32 ResultType() const { return mResultType; }
-  const PRUint32* GroupingMode(PRUint32 *count) const {
+  PRUint16 SortingMode() const { return mSort; }
+  PRUint16 ResultType() const { return mResultType; }
+  const PRUint16* GroupingMode(PRUint32 *count) const {
     *count = mGroupCount; return mGroupings;
   }
   PRBool ExcludeItems() const { return mExcludeItems; }
   PRBool ExcludeQueries() const { return mExcludeQueries; }
   PRBool ExcludeReadOnlyFolders() const { return mExcludeReadOnlyFolders; }
   PRBool ExpandQueries() const { return mExpandQueries; }
-  PRBool ForceOriginalTitle() const { return mForceOriginalTitle; }
   PRBool IncludeHidden() const { return mIncludeHidden; }
   PRBool ShowSessions() const { return mShowSessions; }
   PRUint32 MaxResults() const { return mMaxResults; }
+  PRUint16 QueryType() const { return mQueryType; }
 
   nsresult Clone(nsNavHistoryQueryOptions **aResult);
 
@@ -165,20 +165,20 @@ private:
   //  * Add to the deserialization code (see nsNavHistory::QueryStringToQueries)
   //  * Add to the nsNavHistoryQueryOptions::Clone() function
   //  * Add to the nsNavHistory.cpp::GetSimpleBookmarksQueryFolder function if applicable
-  PRUint32 mSort;
+  PRUint16 mSort;
   nsCString mSortingAnnotation;
 
-  PRUint32 mResultType;
+  PRUint16 mResultType;
   PRUint32 mGroupCount;
-  PRUint32 *mGroupings;
-  PRBool mExcludeItems;
-  PRBool mExcludeQueries;
-  PRBool mExcludeReadOnlyFolders;
-  PRBool mExpandQueries;
-  PRBool mForceOriginalTitle;
-  PRBool mIncludeHidden;
-  PRBool mShowSessions;
+  PRUint16 *mGroupings;
+  PRPackedBool mExcludeItems;
+  PRPackedBool mExcludeQueries;
+  PRPackedBool mExcludeReadOnlyFolders;
+  PRPackedBool mExpandQueries;
+  PRPackedBool mIncludeHidden;
+  PRPackedBool mShowSessions;
   PRUint32 mMaxResults;
+  PRUint16 mQueryType;
 };
 
 #ifndef MOZILLA_1_8_BRANCH

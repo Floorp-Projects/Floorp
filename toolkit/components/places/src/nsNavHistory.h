@@ -218,9 +218,9 @@ public:
   static const PRInt32 kGetInfoIndex_PageID;
   static const PRInt32 kGetInfoIndex_URL;
   static const PRInt32 kGetInfoIndex_Title;
-  static const PRInt32 kGetInfoIndex_UserTitle;
   static const PRInt32 kGetInfoIndex_RevHost;
   static const PRInt32 kGetInfoIndex_VisitCount;
+  static const PRInt32 kGetInfoIndex_BookmarkItemId;
 
   // select a history row by URL, with visit date info (extra work)
   mozIStorageStatement* DBGetURLPageInfoFull()
@@ -263,6 +263,9 @@ public:
   nsresult UriToResultNode(nsIURI* aUri,
                            nsNavHistoryQueryOptions* aOptions,
                            nsNavHistoryResultNode** aResult);
+  nsresult BookmarkIdToResultNode(PRInt64 aBookmarkId,
+                                  nsNavHistoryQueryOptions* aOptions,
+                                  nsNavHistoryResultNode** aResult);
 
   // used by other places components to send history notifications (for example,
   // when the favicon has changed)
@@ -293,7 +296,7 @@ public:
                                      nsACString& aDomainName);
   static PRTime NormalizeTime(PRUint32 aRelative, PRTime aOffset);
   nsresult RecursiveGroup(const nsCOMArray<nsNavHistoryResultNode>& aSource,
-                          const PRUint32* aGroupingMode, PRUint32 aGroupCount,
+                          const PRUint16* aGroupingMode, PRUint32 aGroupCount,
                           nsCOMArray<nsNavHistoryResultNode>* aDest);
 
   // better alternative to QueryStringToQueries (in nsNavHistoryQuery.cpp)
@@ -346,7 +349,6 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBFullAutoComplete; // kAutoCompleteIndex_* results, 1 arg (max # results)
   static const PRInt32 kAutoCompleteIndex_URL;
   static const PRInt32 kAutoCompleteIndex_Title;
-  static const PRInt32 kAutoCompleteIndex_UserTitle;
   static const PRInt32 kAutoCompleteIndex_VisitCount;
   static const PRInt32 kAutoCompleteIndex_Typed;
 
@@ -360,6 +362,7 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBVisitToURLResult; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBVisitToVisitResult; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBUrlToUrlResult; // kGetInfoIndex_* results
+  nsCOMPtr<mozIStorageStatement> mDBBookmarkToUrlResult; // kGetInfoIndex_* results
 
   nsresult InitDB(PRBool *aDoImport);
   nsresult InitStatements();
@@ -459,6 +462,7 @@ protected:
 #endif
 
   nsresult QueryToSelectClause(nsNavHistoryQuery* aQuery,
+                               nsNavHistoryQueryOptions* aOptions,
                                PRInt32 aStartParameter,
                                nsCString* aClause,
                                PRInt32* aParamCount,
