@@ -281,13 +281,12 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXULTemplateBuilder,
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXULTemplateBuilder,
                                            nsIXULTemplateBuilder)
 
-NS_INTERFACE_MAP_BEGIN(nsXULTemplateBuilder)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULTemplateBuilder)
   NS_INTERFACE_MAP_ENTRY(nsIXULTemplateBuilder)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULTemplateBuilder)
   NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(XULTemplateBuilder)
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsXULTemplateBuilder)
 NS_INTERFACE_MAP_END
 
 //----------------------------------------------------------------------

@@ -94,12 +94,11 @@ nsXULCommandDispatcher::~nsXULCommandDispatcher()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULCommandDispatcher)
 
 // QueryInterface implementation for nsXULCommandDispatcher
-NS_INTERFACE_MAP_BEGIN(nsXULCommandDispatcher)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULCommandDispatcher)
     NS_INTERFACE_MAP_ENTRY(nsIDOMXULCommandDispatcher)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXULCommandDispatcher)
     NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULCommandDispatcher)
-    NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsXULCommandDispatcher)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULCommandDispatcher)

@@ -388,13 +388,12 @@ nsEventListenerManager::Shutdown()
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsEventListenerManager)
 
-NS_INTERFACE_MAP_BEGIN(nsEventListenerManager)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsEventListenerManager)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEventListenerManager)
    NS_INTERFACE_MAP_ENTRY(nsIEventListenerManager)
    NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
    NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
    NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
-   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsEventListenerManager)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsEventListenerManager, nsIEventListenerManager)

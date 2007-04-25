@@ -151,12 +151,11 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsForwardProxyDataSource,
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsForwardProxyDataSource,
                                            nsIRDFInferDataSource)
 
-NS_INTERFACE_MAP_BEGIN(nsForwardProxyDataSource)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsForwardProxyDataSource)
     NS_INTERFACE_MAP_ENTRY(nsIRDFInferDataSource)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIRDFDataSource, nsIRDFInferDataSource)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRDFInferDataSource)
     NS_INTERFACE_MAP_ENTRY(nsIRDFObserver)
-    NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsForwardProxyDataSource)
 NS_INTERFACE_MAP_END
 
 //----------------------------------------------------------------------

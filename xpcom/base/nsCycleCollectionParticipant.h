@@ -150,6 +150,14 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
   NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(_class)                              \
   NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION_ISUPPORTS(_class)
 
+#define NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(_class)                        \
+  NS_INTERFACE_MAP_BEGIN(_class)                                               \
+    NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(_class)                            \
+    NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION_ISUPPORTS(_class)
+
+#define NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(_class)              \
+  NS_INTERFACE_MAP_BEGIN(_class)                                               \
+    NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(_class)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helpers for implementing nsCycleCollectionParticipant::Unlink

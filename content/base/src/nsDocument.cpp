@@ -897,7 +897,7 @@ nsDocument::LastRelease()
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocument)
 
-NS_INTERFACE_MAP_BEGIN(nsDocument)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSDocument)
@@ -922,7 +922,6 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIRadioGroupContainer)
   NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDocument)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocument)
   if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator)) ||
       aIID.Equals(NS_GET_IID(nsIXPathEvaluatorInternal))) {

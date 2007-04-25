@@ -669,13 +669,12 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(CompositeDataSourceImpl,
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(CompositeDataSourceImpl,
                                            nsIRDFCompositeDataSource)
 
-NS_INTERFACE_MAP_BEGIN(CompositeDataSourceImpl)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CompositeDataSourceImpl)
     NS_INTERFACE_MAP_ENTRY(nsIRDFCompositeDataSource)
     NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
     NS_INTERFACE_MAP_ENTRY(nsIRDFObserver)
     NS_INTERFACE_MAP_ENTRY(nsIRDFCompositeDataSource)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRDFCompositeDataSource)
-    NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(CompositeDataSourceImpl)
 NS_INTERFACE_MAP_END
 
 

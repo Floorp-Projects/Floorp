@@ -91,13 +91,12 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsFocusController, nsIFocusController)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsFocusController,
                                            nsIFocusController)
 
-NS_INTERFACE_MAP_BEGIN(nsFocusController)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFocusController)
   NS_INTERFACE_MAP_ENTRY(nsIFocusController)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFocusController)
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsFocusController)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsFocusController)
