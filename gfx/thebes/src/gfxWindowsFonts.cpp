@@ -1199,7 +1199,7 @@ public:
                         details->mIsLastGlyph = i == glyphCount - 1;
                         details->mGlyphID = mGlyphs[k + i];
                         details->mAdvance = mAdvances[k + i]*appUnitsPerDevUnit;
-                        details->mXOffset = float(mOffsets[k + i].du)*appUnitsPerDevUnit;
+                        details->mXOffset = float(mOffsets[k + i].du)*appUnitsPerDevUnit*aRun->GetDirection();
                         details->mYOffset = float(mOffsets[k + i].dv)*appUnitsPerDevUnit;
                     }
                     aRun->SetDetailedGlyphs(runOffset, detailedGlyphs.Elements(), glyphCount);
