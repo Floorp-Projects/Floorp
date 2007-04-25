@@ -84,6 +84,8 @@ _TEST_FILES = 	test_bug302186.html \
 		property_database.js \
 		unstyled.xml \
 		unstyled.css \
+		unstyled-frame.xml \
+		unstyled-frame.css \
 		$(NULL)
 
 
