@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set cindent tabstop=4 expandtab shiftwidth=4: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -287,6 +289,135 @@ nsCycleCollector_shouldSuppress(nsISupports *s);
 // Base types
 ////////////////////////////////////////////////////////////////////////
 
+struct PtrInfo;
+
+class EdgePool
+{
+public:
+    // EdgePool allocates arrays of void*, primarily to hold PtrInfo*.
+    // However, at the end of a block, the last two pointers are a null
+    // and then a void** pointing to the next block.  This allows
+    // EdgePool::Iterators to be a single word but still capable of crossing
+    // block boundaries.
+
+    EdgePool()
+    {
+        mSentinelAndBlocks[0].block = nsnull;
+        mSentinelAndBlocks[1].block = nsnull;
+    }
+
+    ~EdgePool()
+    {
+        Block *b = Blocks();
+        while (b) {
+            Block *next = b->Next();
+            delete b;
+            b = next;
+        }
+    }
+
+private:
+    struct Block;
+    union PtrInfoOrBlock {
+        // Use a union to avoid reinterpret_cast and the ensuing
+        // potential aliasing bugs.
+        PtrInfo *ptrInfo;
+        Block *block;
+    };
+    struct Block {
+        enum { BlockSize = 64 * 1024 };
+
+        PtrInfoOrBlock mPointers[BlockSize];
+        Block() {
+            mPointers[BlockSize - 2].block = nsnull; // sentinel
+            mPointers[BlockSize - 1].block = nsnull; // next block pointer
+        }
+        Block*& Next()
+            { return mPointers[BlockSize - 1].block; }
+        PtrInfoOrBlock* Start()
+            { return &mPointers[0]; }
+        PtrInfoOrBlock* End()
+            { return &mPointers[BlockSize - 2]; }
+    };
+
+    // Store the null sentinel so that we can have valid iterators
+    // before adding any edges and without adding any blocks.
+    PtrInfoOrBlock mSentinelAndBlocks[2];
+
+    Block*& Blocks() { return mSentinelAndBlocks[1].block; }
+
+public:
+    class Iterator
+    {
+    public:
+        Iterator() : mPointer(nsnull) {}
+        Iterator(PtrInfoOrBlock *aPointer) : mPointer(aPointer) {}
+        Iterator(const Iterator& aOther) : mPointer(aOther.mPointer) {}
+
+        Iterator& operator++()
+        {
+            if (mPointer->ptrInfo == nsnull) {
+                // Null pointer is a sentinel for link to the next block.
+                mPointer = (mPointer + 1)->block->mPointers;
+            }
+            ++mPointer;
+            return *this;
+        }
+
+        PtrInfo* operator*() const
+        {
+            if (mPointer->ptrInfo == nsnull) {
+                // Null pointer is a sentinel for link to the next block.
+                return (mPointer + 1)->block->mPointers->ptrInfo;
+            }
+            return mPointer->ptrInfo;
+        }
+        PRBool operator==(const Iterator& aOther) const
+            { return mPointer == aOther.mPointer; }
+        PRBool operator!=(const Iterator& aOther) const
+            { return mPointer != aOther.mPointer; }
+
+    private:
+        PtrInfoOrBlock *mPointer;
+    };
+
+    class Builder;
+    friend class Builder;
+    class Builder {
+    public:
+        Builder(EdgePool &aPool)
+            : mCurrent(&aPool.mSentinelAndBlocks[0]),
+              mBlockEnd(&aPool.mSentinelAndBlocks[0]),
+              mNextBlockPtr(&aPool.Blocks())
+        {
+        }
+
+        EdgePool::Iterator Mark() { return EdgePool::Iterator(mCurrent); }
+
+        void Add(PtrInfo* aEdge) {
+            if (mCurrent == mBlockEnd) {
+                EdgePool::Block *b = new EdgePool::Block();
+                if (!b) {
+                    // This means we just won't collect (some) cycles.
+                    NS_NOTREACHED("out of memory, ignoring edges");
+                    return;
+                }
+                *mNextBlockPtr = b;
+                mCurrent = b->Start();
+                mBlockEnd = b->End();
+                mNextBlockPtr = &b->Next();
+            }
+            (mCurrent++)->ptrInfo = aEdge;
+        }
+    private:
+        // mBlockEnd points to space for null sentinel
+        PtrInfoOrBlock *mCurrent, *mBlockEnd;
+        EdgePool::Block **mNextBlockPtr;
+    };
+
+};
+
+
 enum NodeColor { black, white, grey };
 
 // This structure should be kept as small as possible; we may expect
@@ -294,102 +425,152 @@ enum NodeColor { black, white, grey };
 // each cycle collection.
 
 struct PtrInfo
-    : public PLDHashEntryStub
 {
+    void *mPointer;
     PRUint32 mColor : 2;
     PRUint32 mInternalRefs : 30;
     // FIXME: mLang expands back to a full word when bug 368774 lands.
     PRUint32 mLang : 2;
     PRUint32 mRefCount : 30;
+    EdgePool::Iterator mFirstChild; // first
+    EdgePool::Iterator mLastChild; // one after last
 
 #ifdef DEBUG_CC
     size_t mBytes;
     const char *mName;
 #endif
+
+    PtrInfo(void *aPointer)
+        : mPointer(aPointer),
+          mColor(grey),
+          mInternalRefs(0),
+          mLang(nsIProgrammingLanguage::CPLUSPLUS),
+          mRefCount(0),
+          mFirstChild(),
+          mLastChild()
+#ifdef DEBUG_CC
+        , mBytes(0),
+          mName(nsnull)
+#endif
+    {
+    }
+
+    // Allow uninitialized values in large arrays.
+    PtrInfo() {}
 };
 
-PR_STATIC_CALLBACK(PRBool)
-InitPtrInfo(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
+/**
+ * A structure designed to be used like a linked list of PtrInfo, except
+ * that allocates the PtrInfo 32K-at-a-time.
+ */
+class NodePool
 {
-    PtrInfo* pi = (PtrInfo*)entry;
-    pi->key = key;
-    pi->mColor = black;
-    pi->mInternalRefs = 0;
-    pi->mLang = nsIProgrammingLanguage::CPLUSPLUS;
-    pi->mRefCount = 0;
-#ifdef DEBUG_CC
-    pi->mBytes = 0;
-    pi->mName = nsnull;
-#endif
-    return PR_TRUE;
-}
+private:
+    enum { BlockSize = 32 * 1024 }; // could be int template parameter
 
-static PLDHashTableOps GCTableOps = {
-    PL_DHashAllocTable,
-    PL_DHashFreeTable,
-    PL_DHashVoidPtrKeyStub,
-    PL_DHashMatchEntryStub,
-    PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub,
-    InitPtrInfo
- };
+    struct Block {
+        Block* mNext;
+        PtrInfo mEntries[BlockSize];
 
-struct GCTable
-{
-    PLDHashTable mTab;
+        Block() : mNext(nsnull) {}
+    };
 
-    GCTable()
+public:
+    NodePool()
+        : mBlocks(nsnull),
+          mLast(nsnull)
     {
-        Init();
-    }
-    ~GCTable()
-    {
-        if (mTab.ops)
-            PL_DHashTableFinish(&mTab);
     }
 
-    void Init()
+    ~NodePool()
     {
-        if (!PL_DHashTableInit(&mTab, &GCTableOps, nsnull, sizeof(PtrInfo),
-                               32768))
-            mTab.ops = nsnull;
-    }
-    void Clear()
-    {
-        if (!mTab.ops || mTab.entryCount > 0) {
-            if (mTab.ops)
-                PL_DHashTableFinish(&mTab);
-            Init();
+        Block *b = mBlocks;
+        while (b) {
+            Block *n = b->mNext;
+            delete b;
+            b = n;
         }
     }
 
-    PtrInfo *Lookup(void *key)
-    {
-        if (!mTab.ops)
-            return nsnull;
+    class Builder;
+    friend class Builder;
+    class Builder {
+    public:
+        Builder(NodePool& aPool)
+            : mNextBlock(&aPool.mBlocks),
+              mNext(aPool.mLast),
+              mBlockEnd(nsnull)
+        {
+            NS_ASSERTION(aPool.mBlocks == nsnull && aPool.mLast == nsnull,
+                         "pool not empty");
+        }
+        PtrInfo *Add(void *aPointer)
+        {
+            if (mNext == mBlockEnd) {
+                Block *block;
+                if (!(*mNextBlock = block = new Block()))
+                    return nsnull;
+                mNext = block->mEntries;
+                mBlockEnd = block->mEntries + BlockSize;
+                mNextBlock = &block->mNext;
+            }
+            return new (mNext++) PtrInfo(aPointer);
+        }
+    private:
+        Block **mNextBlock;
+        PtrInfo *&mNext;
+        PtrInfo *mBlockEnd;
+    };
 
-        PLDHashEntryHdr *entry =
-            PL_DHashTableOperate(&mTab, key, PL_DHASH_LOOKUP);
+    class Enumerator;
+    friend class Enumerator;
+    class Enumerator {
+    public:
+        Enumerator(NodePool& aPool)
+            : mFirstBlock(aPool.mBlocks),
+              mCurBlock(nsnull),
+              mNext(nsnull),
+              mBlockEnd(nsnull),
+              mLast(aPool.mLast)
+        {
+        }
 
-        return PL_DHASH_ENTRY_IS_BUSY(entry) ? (PtrInfo*)entry : nsnull;
-    }
+        PRBool IsDone() const
+        {
+            return mNext == mLast;
+        }
 
-    PtrInfo *Add(void *key)
-    {
-        if (!mTab.ops)
-            return nsnull;
+        PtrInfo* GetNext()
+        {
+            NS_ASSERTION(!IsDone(), "calling GetNext when done");
+            if (mNext == mBlockEnd) {
+                Block *nextBlock = mCurBlock ? mCurBlock->mNext : mFirstBlock;
+                mNext = nextBlock->mEntries;
+                mBlockEnd = mNext + BlockSize;
+                mCurBlock = nextBlock;
+            }
+            return mNext++;
+        }
+    private:
+        Block *mFirstBlock, *mCurBlock;
+        // mNext is the next value we want to return, unless mNext == mBlockEnd
+        // NB: mLast is a reference to allow enumerating while building!
+        PtrInfo *mNext, *mBlockEnd, *&mLast;
+    };
 
-        return (PtrInfo*)PL_DHashTableOperate(&mTab, key, PL_DHASH_ADD);
-    }
-    
-    void Enumerate(PLDHashEnumerator etor, void *arg)
-    {
-        if (mTab.ops)
-            PL_DHashTableEnumerate(&mTab, etor, arg);
-    }
+private:
+    Block *mBlocks;
+    PtrInfo *mLast;
 };
 
+struct GCGraph
+{
+    NodePool mNodes;
+    EdgePool mEdges;
+    PRUint32 mRootCount;
+
+    GCGraph() : mRootCount(0) {}
+};
 
 // XXX Would be nice to have an nsHashSet<KeyType> API that has
 // Add/Remove/Has rather than PutEntry/RemoveEntry/GetEntry.
@@ -663,13 +844,11 @@ struct nsCycleCollectionXPCOMRuntime :
     }
 };
 
-
 struct nsCycleCollector
 {
     PRBool mCollectionInProgress;
     PRBool mScanInProgress;
 
-    GCTable mGraph;
     nsCycleCollectionLanguageRuntime *mRuntimes[nsIProgrammingLanguage::MAX+1];
     nsCycleCollectionXPCOMRuntime mXPCOMRuntime;
 
@@ -691,9 +870,9 @@ struct nsCycleCollector
     void ForgetRuntime(PRUint32 langID);
 
     void CollectPurple(); // XXXldb Should this be called SelectPurple?
-    void MarkRoots();
-    void ScanRoots();
-    void CollectWhite();
+    void MarkRoots(GCGraph &graph);
+    void ScanRoots(GCGraph &graph);
+    void CollectWhite(GCGraph &graph);
 
     nsCycleCollector();
     ~nsCycleCollector();
@@ -710,7 +889,7 @@ struct nsCycleCollector
 
     FILE *mPtrLog;
 
-    void MaybeDrawGraphs();
+    void MaybeDrawGraphs(GCGraph &graph);
     void ExplainLiveExpectedGarbage();
     void ShouldBeFreed(nsISupports *n);
     void WasFreed(nsISupports *n);
@@ -719,44 +898,18 @@ struct nsCycleCollector
 };
 
 
-class GraphWalker :
-    public nsCycleCollectionTraversalCallback
+class GraphWalker
 {
 private:
-    nsDeque mQueue;
-    PtrInfo *mCurrPi;
-
-protected:
-    GCTable &mGraph;
-    nsCycleCollectionLanguageRuntime **mRuntimes;
+    void DoWalk(nsDeque &aQueue);
 
 public:
-    GraphWalker(GCTable & tab,
-                nsCycleCollectionLanguageRuntime **runtimes) : 
-        mQueue(nsnull),
-        mCurrPi(nsnull),
-        mGraph(tab),
-        mRuntimes(runtimes)
-    {}
-
-    virtual ~GraphWalker() 
-    {}
-   
-    void Walk(void *s0);
-
-    // nsCycleCollectionTraversalCallback methods.
-#ifdef DEBUG_CC
-    void DescribeNode(size_t refCount, size_t objSz, const char *objName);
-#else
-    void DescribeNode(size_t refCount);
-#endif
-    void NoteXPCOMChild(nsISupports *child);
-    void NoteScriptChild(PRUint32 langID, void *child);
+    void Walk(PtrInfo *s0);
+    void WalkFromRoots(GCGraph &aGraph);
 
     // Provided by concrete walker subtypes.
     virtual PRBool ShouldVisitNode(PtrInfo const *pi) = 0;
-    virtual void VisitNode(PtrInfo *pi, size_t refcount) = 0;
-    virtual void NoteChild(PtrInfo *childpi) = 0;
+    virtual void VisitNode(PtrInfo *pi) = 0;
 };
 
 
@@ -771,26 +924,6 @@ static nsCycleCollector *sCollector = nsnull;
 ////////////////////////////////////////////////////////////////////////
 // Utility functions
 ////////////////////////////////////////////////////////////////////////
-
-#ifdef DEBUG_CC
-
-struct safetyCallback :     
-    public nsCycleCollectionTraversalCallback
-{
-    // This is just a dummy interface to feed to children when we're
-    // called, to force potential segfaults to happen early, so gdb
-    // can give us an informative stack trace. If we don't use it, the
-    // collector runs faster but segfaults happen after pointers have
-    // been queued and dequeued, at which point their owner is
-    // obscure.
-    void DescribeNode(size_t refCount, size_t objSz, const char *objName) {}
-    void NoteXPCOMChild(nsISupports *child) {}
-    void NoteScriptChild(PRUint32 langID, void *child) {}
-};
-
-static safetyCallback sSafetyCallback;
-
-#endif
 
 static void
 Fault(const char *msg, const void *ptr=nsnull)
@@ -827,29 +960,6 @@ Fault(const char *msg, const void *ptr=nsnull)
 }
 
 
-void 
-#ifdef DEBUG_CC
-GraphWalker::DescribeNode(size_t refCount, size_t objSz, const char *objName)
-#else
-GraphWalker::DescribeNode(size_t refCount)
-#endif
-{
-    if (refCount == 0)
-        Fault("zero refcount", mCurrPi->key);
-
-#ifdef DEBUG_CC
-    mCurrPi->mBytes = objSz;
-    mCurrPi->mName = objName;
-#endif
-
-    this->VisitNode(mCurrPi, refCount);
-#ifdef DEBUG_CC
-    sCollector->mStats.mVisitedNode++;
-    if (mCurrPi->mLang == nsIProgrammingLanguage::JAVASCRIPT)
-        sCollector->mStats.mVisitedJSNode++;
-#endif
-}
-
 
 static nsISupports *
 canonicalize(nsISupports *in)
@@ -861,89 +971,42 @@ canonicalize(nsISupports *in)
 }
 
 
-void 
-GraphWalker::NoteXPCOMChild(nsISupports *child) 
+void
+GraphWalker::Walk(PtrInfo *s0)
 {
-    if (!child)
-        return; 
-   
-    child = canonicalize(child);
-
-    PRBool scanSafe = nsCycleCollector_isScanSafe(child);
-#ifdef DEBUG_CC
-    scanSafe &= !nsCycleCollector_shouldSuppress(child);
-#endif
-    if (scanSafe) {
-        PtrInfo *childPi = mGraph.Add(child);
-        if (!childPi)
-            return;
-        this->NoteChild(childPi);
-#ifdef DEBUG_CC
-        mRuntimes[nsIProgrammingLanguage::CPLUSPLUS]->Traverse(child, sSafetyCallback);
-#endif
-        mQueue.Push(child);
-    }
+    nsDeque queue;
+    queue.Push(s0);
+    DoWalk(queue);
 }
 
-
 void
-GraphWalker::NoteScriptChild(PRUint32 langID, void *child) 
+GraphWalker::WalkFromRoots(GCGraph& aGraph)
 {
-    if (!child)
-        return;
-
-    if (langID > nsIProgrammingLanguage::MAX || !mRuntimes[langID]) {
-        Fault("traversing pointer for unregistered language", child);
-        return;
+    nsDeque queue;
+    NodePool::Enumerator etor(aGraph.mNodes);
+    for (PRUint32 i = 0; i < aGraph.mRootCount; ++i) {
+        queue.Push(etor.GetNext());
     }
-
-    PtrInfo *childPi = mGraph.Add(child);
-    if (!childPi)
-        return;
-    childPi->mLang = langID;
-    this->NoteChild(childPi);
-#ifdef DEBUG_CC
-    mRuntimes[langID]->Traverse(child, sSafetyCallback);
-#endif
-    mQueue.Push(child);
+    DoWalk(queue);
 }
 
-
 void
-GraphWalker::Walk(void *s0)
+GraphWalker::DoWalk(nsDeque &aQueue)
 {
-    mQueue.Empty();
-    mQueue.Push(s0);
+    // Use a aQueue to match the breadth-first traversal used when we
+    // built the graph, for hopefully-better locality.
+    while (aQueue.GetSize() > 0) {
+        PtrInfo *pi = NS_STATIC_CAST(PtrInfo*, aQueue.PopFront());
 
-    while (mQueue.GetSize() > 0) {
-
-        void *ptr = mQueue.Pop();
-        mCurrPi = mGraph.Lookup(ptr);
-
-        if (!mCurrPi) {
-            Fault("unknown pointer", ptr);
-            continue;
-        }
-
-#ifdef DEBUG_CC
-        if (mCurrPi->mLang > nsIProgrammingLanguage::MAX ) {
-            Fault("unknown language during walk");
-            continue;
-        }
-
-        if (!mRuntimes[mCurrPi->mLang]) {
-            Fault("script pointer for unregistered language");
-            continue;
-        }
-#endif
-        
-        if (this->ShouldVisitNode(mCurrPi)) {
-            nsresult rv = mRuntimes[mCurrPi->mLang]->Traverse(ptr, *this);
-            if (NS_FAILED(rv)) {
-                Fault("script pointer traversal failed", ptr);
+        if (this->ShouldVisitNode(pi)) {
+            this->VisitNode(pi);
+            for (EdgePool::Iterator child = pi->mFirstChild,
+                                child_end = pi->mLastChild;
+                 child != child_end; ++child) {
+                aQueue.Push(*child);
             }
         }
-    }
+    };
 
 #ifdef DEBUG_CC
     sCollector->mStats.mWalkedGraph++;
@@ -955,33 +1018,190 @@ GraphWalker::Walk(void *s0)
 // Bacon & Rajan's |MarkRoots| routine.
 ////////////////////////////////////////////////////////////////////////
 
-
-struct MarkGreyWalker : public GraphWalker
+struct PtrToNodeEntry : public PLDHashEntryHdr
 {
-    MarkGreyWalker(GCTable &tab,
-                   nsCycleCollectionLanguageRuntime **runtimes)
-        : GraphWalker(tab, runtimes) 
-    {}
-
-    PRBool ShouldVisitNode(PtrInfo const *pi)
-    { 
-        return pi->mColor != grey;
-    }
-
-    void VisitNode(PtrInfo *pi, size_t refcount)
-    { 
-        pi->mColor = grey;
-        pi->mRefCount = refcount;
-#ifdef DEBUG_CC
-        sCollector->mStats.mSetColorGrey++;
-#endif
-    }
-
-    void NoteChild(PtrInfo *childpi)
-    { 
-        childpi->mInternalRefs++;
-    }
+    // The key is mNode->mPointer
+    PtrInfo *mNode;
 };
+
+PR_STATIC_CALLBACK(PRBool)
+PtrToNodeMatchEntry(PLDHashTable *table,
+                    const PLDHashEntryHdr *entry,
+                    const void *key)
+{
+    const PtrToNodeEntry *n = NS_STATIC_CAST(const PtrToNodeEntry*, entry);
+    return n->mNode->mPointer == key;
+}
+
+static PLDHashTableOps PtrNodeOps = {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    PL_DHashVoidPtrKeyStub,
+    PtrToNodeMatchEntry,
+    PL_DHashMoveEntryStub,
+    PL_DHashClearEntryStub,
+    PL_DHashFinalizeStub,
+    nsnull
+};
+
+class GCGraphBuilder : private nsCycleCollectionTraversalCallback
+{
+private:
+    NodePool::Builder mNodeBuilder;
+    EdgePool::Builder mEdgeBuilder;
+    PLDHashTable mPtrToNodeMap;
+    PtrInfo *mCurrPi;
+    nsCycleCollectionLanguageRuntime **mRuntimes; // weak, from nsCycleCollector
+
+public:
+    GCGraphBuilder(GCGraph &aGraph,
+                   nsCycleCollectionLanguageRuntime **aRuntimes);
+    ~GCGraphBuilder();
+
+    PRUint32 Count() const { return mPtrToNodeMap.entryCount; }
+
+    PtrInfo* AddNode(void *s);
+    void Traverse(PtrInfo* aPtrInfo);
+
+private:
+    // nsCycleCollectionTraversalCallback methods.
+#ifdef DEBUG_CC
+    void DescribeNode(size_t refCount, size_t objSz, const char *objName);
+#else
+    void DescribeNode(size_t refCount);
+#endif
+    void NoteXPCOMChild(nsISupports *child);
+    void NoteScriptChild(PRUint32 langID, void *child);
+};
+
+GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
+                               nsCycleCollectionLanguageRuntime **aRuntimes)
+    : mNodeBuilder(aGraph.mNodes),
+      mEdgeBuilder(aGraph.mEdges),
+      mRuntimes(aRuntimes)
+{
+    if (!PL_DHashTableInit(&mPtrToNodeMap, &PtrNodeOps, nsnull,
+                           sizeof(PtrToNodeEntry), 32768))
+        mPtrToNodeMap.ops = nsnull;
+}
+
+GCGraphBuilder::~GCGraphBuilder()
+{
+    if (mPtrToNodeMap.ops)
+        PL_DHashTableFinish(&mPtrToNodeMap);
+}
+
+PtrInfo*
+GCGraphBuilder::AddNode(void *s)
+{
+    PtrToNodeEntry *e = NS_STATIC_CAST(PtrToNodeEntry*, 
+        PL_DHashTableOperate(&mPtrToNodeMap, s, PL_DHASH_ADD));
+    PtrInfo *result;
+    if (!e->mNode) {
+        // New entry.
+        result = mNodeBuilder.Add(s);
+        if (!result) {
+            PL_DHashTableRawRemove(&mPtrToNodeMap, e);
+            return nsnull;
+        }
+        e->mNode = result;
+    } else {
+        result = e->mNode;
+    }
+    return result;
+}
+
+void
+GCGraphBuilder::Traverse(PtrInfo* aPtrInfo)
+{
+    mCurrPi = aPtrInfo;
+
+#ifdef DEBUG_CC
+    if (mCurrPi->mLang > nsIProgrammingLanguage::MAX ) {
+        Fault("unknown language during walk");
+        return;
+    }
+
+    if (!mRuntimes[mCurrPi->mLang]) {
+        Fault("script pointer for unregistered language");
+        return;
+    }
+#endif
+
+    mCurrPi->mFirstChild = mEdgeBuilder.Mark();
+    
+    nsresult rv =
+        mRuntimes[aPtrInfo->mLang]->Traverse(aPtrInfo->mPointer, *this);
+    if (NS_FAILED(rv)) {
+        Fault("script pointer traversal failed", aPtrInfo->mPointer);
+    }
+
+    mCurrPi->mLastChild = mEdgeBuilder.Mark();
+}
+
+void 
+#ifdef DEBUG_CC
+GCGraphBuilder::DescribeNode(size_t refCount, size_t objSz, const char *objName)
+#else
+GCGraphBuilder::DescribeNode(size_t refCount)
+#endif
+{
+    if (refCount == 0)
+        Fault("zero refcount", mCurrPi->mPointer);
+
+#ifdef DEBUG_CC
+    mCurrPi->mBytes = objSz;
+    mCurrPi->mName = objName;
+#endif
+
+    mCurrPi->mRefCount = refCount;
+#ifdef DEBUG_CC
+    sCollector->mStats.mVisitedNode++;
+    if (mCurrPi->mLang == nsIProgrammingLanguage::JAVASCRIPT)
+        sCollector->mStats.mVisitedJSNode++;
+#endif
+}
+
+void 
+GCGraphBuilder::NoteXPCOMChild(nsISupports *child) 
+{
+    if (!child)
+        return; 
+   
+    child = canonicalize(child);
+
+    PRBool scanSafe = nsCycleCollector_isScanSafe(child);
+#ifdef DEBUG_CC
+    scanSafe &= !nsCycleCollector_shouldSuppress(child);
+#endif
+    if (scanSafe) {
+        PtrInfo *childPi = AddNode(child);
+        if (!childPi)
+            return;
+        mEdgeBuilder.Add(childPi);
+        ++childPi->mInternalRefs;
+    }
+}
+
+void
+GCGraphBuilder::NoteScriptChild(PRUint32 langID, void *child) 
+{
+    if (!child)
+        return;
+
+    if (langID > nsIProgrammingLanguage::MAX || !mRuntimes[langID]) {
+        Fault("traversing pointer for unregistered language", child);
+        return;
+    }
+
+    PtrInfo *childPi = AddNode(child);
+    if (!childPi)
+        return;
+    mEdgeBuilder.Add(childPi);
+    ++childPi->mInternalRefs;
+    childPi->mLang = langID;
+}
+
 
 void 
 nsCycleCollector::CollectPurple()
@@ -990,14 +1210,26 @@ nsCycleCollector::CollectPurple()
 }
 
 void
-nsCycleCollector::MarkRoots()
+nsCycleCollector::MarkRoots(GCGraph &graph)
 {
+    if (mBufs[0].GetSize() == 0)
+        return;
+
+    GCGraphBuilder builder(graph, mRuntimes);
+
     int i;
     for (i = 0; i < mBufs[0].GetSize(); ++i) {
         nsISupports *s = NS_STATIC_CAST(nsISupports *, mBufs[0].ObjectAt(i));
-        s = canonicalize(s);
-        mGraph.Add(s);
-        MarkGreyWalker(mGraph, mRuntimes).Walk(s);
+        PtrInfo *pi = builder.AddNode(canonicalize(s));
+    }
+
+    graph.mRootCount = builder.Count();
+
+    // read the PtrInfo out of the graph that we are building
+    NodePool::Enumerator queue(graph.mNodes);
+    while (!queue.IsDone()) {
+        PtrInfo *pi = queue.GetNext();
+        builder.Traverse(pi);
     }
 }
 
@@ -1009,92 +1241,68 @@ nsCycleCollector::MarkRoots()
 
 struct ScanBlackWalker : public GraphWalker
 {
-    ScanBlackWalker(GCTable &tab,
-                   nsCycleCollectionLanguageRuntime **runtimes)
-        : GraphWalker(tab, runtimes) 
-    {}
-
     PRBool ShouldVisitNode(PtrInfo const *pi)
     { 
         return pi->mColor != black;
     }
 
-    void VisitNode(PtrInfo *pi, size_t refcount)
+    void VisitNode(PtrInfo *pi)
     { 
         pi->mColor = black;
 #ifdef DEBUG_CC
         sCollector->mStats.mSetColorBlack++;
 #endif
     }
-
-    void NoteChild(PtrInfo *childpi) {}
 };
 
 
 struct scanWalker : public GraphWalker
 {
-    scanWalker(GCTable &tab,
-               nsCycleCollectionLanguageRuntime **runtimes)
-        : GraphWalker(tab, runtimes) 
-    {}
-
     PRBool ShouldVisitNode(PtrInfo const *pi)
     { 
         return pi->mColor == grey;
     }
 
-    void VisitNode(PtrInfo *pi, size_t refcount)
+    void VisitNode(PtrInfo *pi)
     {
         if (pi->mColor != grey)
-            Fault("scanning non-grey node", pi->key);
+            Fault("scanning non-grey node", pi->mPointer);
 
-        if (pi->mInternalRefs > refcount)
-            Fault("traversed refs exceed refcount", pi->key);
+        if (pi->mInternalRefs > pi->mRefCount)
+            Fault("traversed refs exceed refcount", pi->mPointer);
 
-        if (pi->mInternalRefs == refcount) {
+        if (pi->mInternalRefs == pi->mRefCount) {
             pi->mColor = white;
 #ifdef DEBUG_CC
             sCollector->mStats.mSetColorWhite++;
 #endif
         } else {
-            ScanBlackWalker(mGraph, mRuntimes).Walk(NS_CONST_CAST(void*,
-                                                                  pi->key));
+            ScanBlackWalker().Walk(pi);
             NS_ASSERTION(pi->mColor == black,
                          "Why didn't ScanBlackWalker make pi black?");
         }
     }
-    void NoteChild(PtrInfo *childpi) {}
 };
 
-
-#ifdef DEBUG_CC
-PR_STATIC_CALLBACK(PLDHashOperator)
-NoGreyCallback(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
-               void *arg)
-{
-    PtrInfo *pinfo = (PtrInfo *) hdr;
-    if (pinfo->mColor == grey)
-        Fault("valid grey node after scanning", pinfo->key);
-    return PL_DHASH_NEXT;
-}
-#endif
-
-
 void
-nsCycleCollector::ScanRoots()
+nsCycleCollector::ScanRoots(GCGraph &graph)
 {
-    int i;
-
-    for (i = 0; i < mBufs[0].GetSize(); ++i) {
-        nsISupports *s = NS_STATIC_CAST(nsISupports *, mBufs[0].ObjectAt(i));
-        s = canonicalize(s);
-        scanWalker(mGraph, mRuntimes).Walk(s); 
-    }
+    // On the assumption that most nodes will be black, it's
+    // probably faster to use a GraphWalker than a
+    // NodePool::Enumerator.
+    scanWalker().WalkFromRoots(graph); 
 
 #ifdef DEBUG_CC
     // Sanity check: scan should have colored all grey nodes black or
     // white. So we ensure we have no grey nodes at this point.
-    mGraph.Enumerate(NoGreyCallback, this);
+    NodePool::Enumerator etor(graph.mNodes);
+    while (!etor.IsDone())
+    {
+        PtrInfo *pinfo = etor.GetNext();
+        if (pinfo->mColor == grey) {
+            Fault("valid grey node after scanning", pinfo->mPointer);
+        }
+    }
 #endif
 }
 
@@ -1103,43 +1311,8 @@ nsCycleCollector::ScanRoots()
 // Bacon & Rajan's |CollectWhite| routine, somewhat modified.
 ////////////////////////////////////////////////////////////////////////
 
-
-PR_STATIC_CALLBACK(PLDHashOperator)
-FindWhiteCallback(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
-                  void *arg)
-{
-    nsCycleCollector *collector = NS_STATIC_CAST(nsCycleCollector*, arg);
-    PtrInfo *pinfo = (PtrInfo *) hdr;
-    void *p = NS_CONST_CAST(void*, pinfo->key);
-
-    NS_ASSERTION(pinfo->mLang == nsIProgrammingLanguage::CPLUSPLUS ||
-                 !collector->mPurpleBuf.Exists(p),
-                 "Need to remove non-CPLUSPLUS objects from purple buffer!");
-    if (pinfo->mColor == white) {
-        if (pinfo->mLang > nsIProgrammingLanguage::MAX)
-            Fault("White node has bad language ID", p);
-        else
-            collector->mBufs[pinfo->mLang].Push(p);
-
-        if (pinfo->mLang == nsIProgrammingLanguage::CPLUSPLUS) {
-            nsISupports* s = NS_STATIC_CAST(nsISupports*, p);
-            collector->Forget(s);
-        }
-    }
-    else if (pinfo->mLang == nsIProgrammingLanguage::CPLUSPLUS) {
-        nsISupports* s = NS_STATIC_CAST(nsISupports*, p);
-        nsCycleCollectionParticipant* cp;
-        CallQueryInterface(s, &cp);
-        if (cp)
-            cp->UnmarkPurple(s);
-        collector->Forget(s);
-    }
-    return PL_DHASH_NEXT;
-}
-
-
 void
-nsCycleCollector::CollectWhite()
+nsCycleCollector::CollectWhite(GCGraph &graph)
 {
     // Explanation of "somewhat modified": we have no way to collect the
     // set of whites "all at once", we have to ask each of them to drop
@@ -1166,7 +1339,35 @@ nsCycleCollector::CollectWhite()
     _CrtMemCheckpoint(&ms1);
 #endif
 
-    mGraph.Enumerate(FindWhiteCallback, this);
+    NodePool::Enumerator etor(graph.mNodes);
+    while (!etor.IsDone())
+    {
+        PtrInfo *pinfo = etor.GetNext();
+        void *p = pinfo->mPointer;
+
+        NS_ASSERTION(pinfo->mLang == nsIProgrammingLanguage::CPLUSPLUS ||
+                     !mPurpleBuf.Exists(p),
+                     "Need to remove non-CPLUSPLUS objects from purple buffer!");
+        if (pinfo->mColor == white) {
+            if (pinfo->mLang > nsIProgrammingLanguage::MAX)
+                Fault("White node has bad language ID", p);
+            else
+                mBufs[pinfo->mLang].Push(p);
+
+            if (pinfo->mLang == nsIProgrammingLanguage::CPLUSPLUS) {
+                nsISupports* s = NS_STATIC_CAST(nsISupports*, p);
+                Forget(s);
+            }
+        }
+        else if (pinfo->mLang == nsIProgrammingLanguage::CPLUSPLUS) {
+            nsISupports* s = NS_STATIC_CAST(nsISupports*, p);
+            nsCycleCollectionParticipant* cp;
+            CallQueryInterface(s, &cp);
+            if (cp)
+                cp->UnmarkPurple(s);
+            Forget(s);
+        }
+    }
 
     for (i = 0; i < nsIProgrammingLanguage::MAX+1; ++i) {
         if (mRuntimes[i] &&
@@ -1215,86 +1416,6 @@ nsCycleCollector::CollectWhite()
 
 
 #ifdef DEBUG_CC
-////////////////////////////////////////////////////////////////////////
-// Extra book-keeping functions.
-////////////////////////////////////////////////////////////////////////
-
-struct graphVizWalker : public GraphWalker
-{
-    // We can't just use _popen here because graphviz-for-windows
-    // doesn't set up its stdin stream properly, sigh.
-    PointerSet mVisited;
-    const void *mParent;
-    FILE *mStream;
-
-    graphVizWalker(GCTable &tab,
-                   nsCycleCollectionLanguageRuntime **runtimes)
-        : GraphWalker(tab, runtimes), 
-          mParent(nsnull), 
-          mStream(nsnull)        
-    {
-#ifdef WIN32
-        mStream = fopen("c:\\cycle-graph.dot", "w+");
-#else
-        mStream = popen("dotty -", "w");
-#endif
-        mVisited.Init();
-        fprintf(mStream, 
-                "digraph collection {\n"
-                "rankdir=LR\n"
-                "node [fontname=fixed, fontsize=10, style=filled, shape=box]\n"
-                );
-    }
-
-    ~graphVizWalker()
-    {
-        fprintf(mStream, "\n}\n");
-#ifdef WIN32
-        fclose(mStream);
-        // Even dotty doesn't work terribly well on windows, since
-        // they execute lefty asynchronously. So we'll just run 
-        // lefty ourselves.
-        _spawnlp(_P_WAIT, 
-                 "lefty", 
-                 "lefty",
-                 "-e",
-                 "\"load('dotty.lefty');"
-                 "dotty.simple('c:\\cycle-graph.dot');\"",
-                 NULL);
-        unlink("c:\\cycle-graph.dot");
-#else
-        pclose(mStream);
-#endif
-    }
-
-    PRBool ShouldVisitNode(PtrInfo const *pi)
-    { 
-        return ! mVisited.GetEntry(pi->key);
-    }
-
-    void VisitNode(PtrInfo *pi, size_t refcount)
-    {
-        const void *p = pi->key;
-        mVisited.PutEntry(p);
-        mParent = p;
-        fprintf(mStream, 
-                "n%p [label=\"%s\\n%p\\n%u/%u refs found\", "
-                "fillcolor=%s, fontcolor=%s]\n", 
-                p,
-                pi->mName,
-                p,
-                pi->mInternalRefs, pi->mRefCount,
-                (pi->mColor == black ? "black" : "white"),
-                (pi->mColor == black ? "white" : "black"));
-    }
-
-    void NoteChild(PtrInfo *childpi)
-    { 
-        fprintf(mStream, "n%p -> n%p\n", mParent, childpi->key);
-    }
-};
-
-
 ////////////////////////////////////////////////////////////////////////
 // Memory-hooking stuff
 // When debugging wild pointers, it sometimes helps to hook malloc and
@@ -1513,8 +1634,6 @@ nsCycleCollector::nsCycleCollector() :
 
 nsCycleCollector::~nsCycleCollector()
 {
-    mGraph.Clear();    
-
     for (PRUint32 i = 0; i < nsIProgrammingLanguage::MAX+1; ++i) {
         mRuntimes[i] = NULL;
     }
@@ -1555,34 +1674,74 @@ nsCycleCollector::ForgetRuntime(PRUint32 langID)
 
 
 #ifdef DEBUG_CC
-static PR_CALLBACK PLDHashOperator
-FindAnyWhiteCallback(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
-                     void *arg)
-{
-    PtrInfo *pinfo = (PtrInfo *) hdr;
-    if (pinfo->mColor == white) {
-        *NS_STATIC_CAST(PRBool*, arg) = PR_TRUE;
-        return PL_DHASH_STOP;
-    }
-    return PL_DHASH_NEXT;
-}
-
-
 void 
-nsCycleCollector::MaybeDrawGraphs()
+nsCycleCollector::MaybeDrawGraphs(GCGraph &graph)
 {
     if (mParams.mDrawGraphs) {
         // We draw graphs only if there were any white nodes.
         PRBool anyWhites = PR_FALSE;
-        mGraph.Enumerate(FindAnyWhiteCallback, &anyWhites);
+        NodePool::Enumerator fwetor(graph.mNodes);
+        while (!fwetor.IsDone())
+        {
+            PtrInfo *pinfo = fwetor.GetNext();
+            if (pinfo->mColor == white) {
+                anyWhites = PR_TRUE;
+                break;
+            }
+        }
 
         if (anyWhites) {
-            graphVizWalker gw(mGraph, mRuntimes);
-            while (mBufs[0].GetSize() > 0) {
-                nsISupports *s = NS_STATIC_CAST(nsISupports *, mBufs[0].Pop());
-                s = canonicalize(s);
-                gw.Walk(s);
+            // We can't just use _popen here because graphviz-for-windows
+            // doesn't set up its stdin stream properly, sigh.
+            FILE *stream;
+#ifdef WIN32
+            stream = fopen("c:\\cycle-graph.dot", "w+");
+#else
+            stream = popen("dotty -", "w");
+#endif
+            fprintf(stream, 
+                    "digraph collection {\n"
+                    "rankdir=LR\n"
+                    "node [fontname=fixed, fontsize=10, style=filled, shape=box]\n"
+                    );
+
+            NodePool::Enumerator etor(graph.mNodes);
+            while (!etor.IsDone()) {
+                PtrInfo *pi = etor.GetNext();
+                const void *p = pi->mPointer;
+                fprintf(stream, 
+                        "n%p [label=\"%s\\n%p\\n%u/%u refs found\", "
+                        "fillcolor=%s, fontcolor=%s]\n", 
+                        p,
+                        pi->mName,
+                        p,
+                        pi->mInternalRefs, pi->mRefCount,
+                        (pi->mColor == black ? "black" : "white"),
+                        (pi->mColor == black ? "white" : "black"));
+                for (EdgePool::Iterator child = pi->mFirstChild,
+                                    child_end = pi->mLastChild;
+                     child != child_end; ++child) {
+                    fprintf(stream, "n%p -> n%p\n", p, (*child)->mPointer);
+                }
             }
+
+            fprintf(stream, "\n}\n");
+#ifdef WIN32
+            fclose(stream);
+            // Even dotty doesn't work terribly well on windows, since
+            // they execute lefty asynchronously. So we'll just run 
+            // lefty ourselves.
+            _spawnlp(_P_WAIT, 
+                     "lefty", 
+                     "lefty",
+                     "-e",
+                     "\"load('dotty.lefty');"
+                     "dotty.simple('c:\\cycle-graph.dot');\"",
+                     NULL);
+            unlink("c:\\cycle-graph.dot");
+#else
+            pclose(stream);
+#endif
         }
     }
 }
@@ -1806,14 +1965,14 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
 
                 mScanInProgress = PR_TRUE;
 
-                mGraph.Clear();
+                GCGraph graph;
 
                 // The main Bacon & Rajan collection algorithm.
 
 #ifdef COLLECT_TIME_DEBUG
                 now = PR_Now();
 #endif
-                MarkRoots();
+                MarkRoots(graph);
 
 #ifdef COLLECT_TIME_DEBUG
                 {
@@ -1824,7 +1983,7 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
                 }
 #endif
 
-                ScanRoots();
+                ScanRoots(graph);
 
 #ifdef COLLECT_TIME_DEBUG
                 printf("cc: ScanRoots() took %lldms\n",
@@ -1832,7 +1991,7 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
 #endif
 
 #ifdef DEBUG_CC
-                MaybeDrawGraphs();
+                MaybeDrawGraphs(graph);
 #endif
 
                 mScanInProgress = PR_FALSE;
@@ -1841,7 +2000,7 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
 #ifdef COLLECT_TIME_DEBUG
                 now = PR_Now();
 #endif
-                CollectWhite();
+                CollectWhite(graph);
 
 #ifdef COLLECT_TIME_DEBUG
                 printf("cc: CollectWhite() took %lldms\n",
@@ -1849,8 +2008,6 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
 #endif
 
                 // Some additional book-keeping.
-
-                mGraph.Clear();
 
                 --aTryCollections;
             }
@@ -1911,45 +2068,6 @@ AddExpectedGarbage(nsVoidPtrHashKey *p, void *arg)
     return PL_DHASH_NEXT;
 }
 
-struct explainWalker : public GraphWalker
-{
-    explainWalker(GCTable &tab,
-                  nsCycleCollectionLanguageRuntime **runtimes)
-        : GraphWalker(tab, runtimes) 
-    {}
-
-    PRBool ShouldVisitNode(PtrInfo const *pi)
-    { 
-        // We set them back to gray as we explain problems.
-        return pi->mColor != grey;
-    }
-
-    void VisitNode(PtrInfo *pi, size_t refcount)
-    {
-        if (pi->mColor == grey)
-            Fault("scanning grey node", pi->key);
-
-        if (pi->mColor == white) {
-            printf("nsCycleCollector: %s %p was not collected due to\n"
-                   "  missing call to suspect or failure to unlink\n",
-                   pi->mName, pi->key);
-        }
-
-        if (pi->mInternalRefs != refcount) {
-            // Note that the external references may have been external
-            // to a different node in the cycle collection that just
-            // happened, if that different node was purple and then
-            // black.
-            printf("nsCycleCollector: %s %p was not collected due to %d\n"
-                   "  external references\n",
-                   pi->mName, pi->key, refcount - pi->mInternalRefs);
-        }
-
-        pi->mColor = grey;
-    }
-    void NoteChild(PtrInfo *childpi) {}
-};
-
 void
 nsCycleCollector::ExplainLiveExpectedGarbage()
 {
@@ -1970,25 +2088,40 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
     mCollectionInProgress = PR_TRUE;
     mScanInProgress = PR_TRUE;
 
-    mGraph.Clear();
-    mBufs[0].Empty();
+    {
+        GCGraph graph;
+        mBufs[0].Empty();
 
-    // Instead of filling mBufs[0] from the purple buffer, we fill it
-    // from the list of nodes we were expected to collect.
-    mExpectedGarbage.EnumerateEntries(&AddExpectedGarbage, this);
+        // Instead of filling mBufs[0] from the purple buffer, we fill it
+        // from the list of nodes we were expected to collect.
+        mExpectedGarbage.EnumerateEntries(&AddExpectedGarbage, this);
 
-    MarkRoots();
-    ScanRoots();
+        MarkRoots(graph);
+        ScanRoots(graph);
 
-    mScanInProgress = PR_FALSE;
+        mScanInProgress = PR_FALSE;
 
-    for (int i = 0; i < mBufs[0].GetSize(); ++i) {
-        nsISupports *s = NS_STATIC_CAST(nsISupports *, mBufs[0].ObjectAt(i));
-        s = canonicalize(s);
-        explainWalker(mGraph, mRuntimes).Walk(s); 
+        NodePool::Enumerator queue(graph.mNodes);
+        while (!queue.IsDone()) {
+            PtrInfo *pi = queue.GetNext();
+            if (pi->mColor == white) {
+                printf("nsCycleCollector: %s %p was not collected due to\n"
+                       "  missing call to suspect or failure to unlink\n",
+                       pi->mName, pi->mPointer);
+            }
+
+            if (pi->mInternalRefs != pi->mRefCount) {
+                // Note that the external references may have been external
+                // to a different node in the cycle collection that just
+                // happened, if that different node was purple and then
+                // black.
+                printf("nsCycleCollector: %s %p was not collected due to %d\n"
+                       "  external references\n",
+                       pi->mName, pi->mPointer,
+                       pi->mRefCount - pi->mInternalRefs);
+            }
+        }
     }
-
-    mGraph.Clear();
 
     mCollectionInProgress = PR_FALSE;
 
