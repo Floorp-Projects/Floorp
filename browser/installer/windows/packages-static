@@ -35,6 +35,7 @@ bin\xpcom.dll
 bin\xpcom_core.dll
 bin\xpistub.dll
 bin\nspr4.dll
+bin\xul.dll
 bin\components\xpinstal.dll
 bin\components\jar50.dll
 bin\Microsoft.VC80.CRT.manifest
