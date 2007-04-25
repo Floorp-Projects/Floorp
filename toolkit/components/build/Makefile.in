@@ -54,6 +54,10 @@ ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),windows gtk gtk2))
 ALERTS_SERVICE=1
 DEFINES += -DALERTS_SERVICE
 endif
+ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
+ALERTS_SERVICE_MAC=1
+DEFINES += -DALERTS_SERVICE_MAC
+endif
 
 REQUIRES = 	\
 		xpcom \
@@ -97,10 +101,23 @@ LOCAL_INCLUDES = \
 	-I$(srcdir)/../downloads/src \
 	-I$(srcdir)/../startup/src \
 	-I$(srcdir)/../typeaheadfind/src \
-	-I$(srcdir)/../alerts/src \
 	-I$(srcdir)/../url-classifier/src \
 	-I$(srcdir)/../feeds/src \
 	$(NULL)
+
+ifdef ALERTS_SERVICE
+LOCAL_INCLUDES += \
+	-I$(srcdir)/../alerts/src \
+	$(NULL)
+endif
+ifdef ALERTS_SERVICE_MAC
+LOCAL_INCLUDES += \
+	-I$(srcdir)/../alerts/src/mac \
+	$(NULL)
+EXTRA_DSO_LDOPTS += \
+	-framework Cocoa \
+	$(NULL)
+endif
 
 SHARED_LIBRARY_LIBS = \
 	../startup/src/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX) \
@@ -117,6 +134,10 @@ endif
 
 ifdef ALERTS_SERVICE
 SHARED_LIBRARY_LIBS += ../alerts/src/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
+endif
+ifdef ALERTS_SERVICE_MAC
+SHARED_LIBRARY_LIBS += ../alerts/src/mac/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += ../alerts/src/mac/growl/$(LIB_PREFIX)growl_s.$(LIB_SUFFIX)
 endif
 
 ifdef MOZ_URL_CLASSIFIER
