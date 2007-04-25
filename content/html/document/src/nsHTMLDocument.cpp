@@ -126,6 +126,7 @@
 #include "nsIScriptError.h"
 #include "nsIMutableArray.h"
 #include "nsArrayUtils.h"
+#include "nsIEffectiveTLDService.h"
 
 #include "nsIPrompt.h"
 //AHMED 12-2
@@ -1641,8 +1642,22 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
     current.Right(suffix, aDomain.Length());
     PRUnichar c = current.CharAt(current.Length() - aDomain.Length() - 1);
     if (suffix.Equals(aDomain, nsCaseInsensitiveStringComparator()) &&
-        (c == '.'))
-      ok = PR_TRUE;
+        (c == '.')) {
+      // Using only a TLD is forbidden (bug 368700)
+      nsCOMPtr<nsIEffectiveTLDService> tldService =
+        do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+      if (!tldService)
+        return NS_ERROR_NOT_AVAILABLE;
+
+      NS_ConvertUTF16toUTF8 str(aDomain);
+      PRUint32 tldLength;
+      nsresult rv = tldService->GetEffectiveTLDLength(str, &tldLength);
+      if (NS_FAILED(rv))
+        return rv;
+
+      if (tldLength < str.Length())
+        ok = PR_TRUE;
+    }
   }
   if (!ok) {
     // Error: illegal domain
