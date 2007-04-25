@@ -14,18 +14,19 @@
 
   var load_count = 0;
   function load_done() {
-    if (++load_count == 2)
+    if (++load_count == 3)
       run_tests();
   }
   </script>
 </head>
 <body>
-<p id="display">
-<iframe id="unstyled" src="unstyled.xml" height="10" width="10" onload="load_done()"></iframe>
+<p id="display"><span><span id="elementf"></span></span>
+<iframe id="unstyledn" src="unstyled.xml" height="10" width="10" onload="load_done()"></iframe>
+<iframe id="unstyledf" src="unstyled-frame.xml" height="10" width="10" onload="load_done()"></iframe>
 </p>
 <div id="content" style="display: none">
 
-<div id="testnode"><span id="element"></span></div>
+<div><span id="elementn"></span></div>
 
   
 </div>
@@ -129,6 +130,10 @@ var gBadComputed = {
   "-moz-outline-radius-bottomright": [ "0%" ],
   "-moz-outline-radius-topleft": [ "0%" ],
   "-moz-outline-radius-topright": [ "0%" ],
+};
+
+var gBadComputedNoFrame = {
+  // These are probably bogus tests...
   "margin": [ "0% 0px 0em 0pt" ],
   "margin-bottom": [ "0%" ],
   "margin-left": [ "0%" ],
@@ -141,7 +146,7 @@ var gBadComputed = {
   "padding-top": [ "0%" ],
 };
 
-function xfail_value(property, value, is_initial) {
+function xfail_value(property, value, is_initial, has_frame) {
   if (property in gNoComputedStyle)
     return !is_initial;
 
@@ -153,6 +158,10 @@ function xfail_value(property, value, is_initial) {
       gBadComputed[property].indexOf(value) != -1)
     return true;
 
+  if (!has_frame && (property in gBadComputedNoFrame) &&
+      gBadComputedNoFrame[property].indexOf(value) != -1)
+    return true;
+
   // One subproperty of 'background' is in gNoComputedStyle
   if (property == "background" && value in gBackgroundValuesWithOnlyPosition)
     return true;
@@ -160,20 +169,31 @@ function xfail_value(property, value, is_initial) {
   return false;
 }
 
-var gElement = document.getElementById("element");
+function xfail_empty(property, value) {
+  if ((property in gNoComputedStyle) &&
+      !("subproperties" in gCSSProperties[property]))
+    return true;
+
+  return false;
+}
+
+var gElementN = document.getElementById("elementn");
+var gElementF = document.getElementById("elementf");
 var gStyleSheet = document.getElementById("stylesheet").sheet;
-var gRule1 = gStyleSheet.cssRules[gStyleSheet.insertRule("#element {}", gStyleSheet.cssRules.length)];
-var gRule2 = gStyleSheet.cssRules[gStyleSheet.insertRule("#element {}", gStyleSheet.cssRules.length)];
+var gRule1 = gStyleSheet.cssRules[gStyleSheet.insertRule("#elementn, #elementf {}", gStyleSheet.cssRules.length)];
+var gRule2 = gStyleSheet.cssRules[gStyleSheet.insertRule("#elementn, #elementf {}", gStyleSheet.cssRules.length)];
 
-var gInitialValues;
-var gInitialPrereqsRule;
+var gInitialValuesN;
+var gInitialValuesF;
+var gInitialPrereqsRuleN;
+var gInitialPrereqsRuleF;
 
-function setup_initial_values() {
-  var iframe = document.getElementById("unstyled");
-  gInitialValues = iframe.contentWindow.getComputedStyle(
-                     iframe.contentDocument.documentElement.firstChild, "");
+function setup_initial_values(id, ivalprop, prereqprop) {
+  var iframe = document.getElementById(id);
+  window[ivalprop] = iframe.contentWindow.getComputedStyle(
+                       iframe.contentDocument.documentElement.firstChild, "");
   var sheet = iframe.contentDocument.styleSheets[0];
-  gInitialPrereqsRule = sheet.cssRules[sheet.insertRule(":root > * {}", sheet.cssRules.length)];
+  window[prereqprop] = sheet.cssRules[sheet.insertRule(":root > * {}", sheet.cssRules.length)];
 }
 
 // Get the computed value for a property.  For shorthands, return the
@@ -202,19 +222,27 @@ function test_value(property, val, is_initial)
     var prereqs = info.prerequisites;
     for (var prereq in prereqs) {
       gRule1.style.setProperty(prereq, prereqs[prereq], "");
-      gInitialPrereqsRule.style.setProperty(prereq, prereqs[prereq], "");
+      gInitialPrereqsRuleN.style.setProperty(prereq, prereqs[prereq], "");
+      gInitialPrereqsRuleF.style.setProperty(prereq, prereqs[prereq], "");
     }
   }
   if (info.inherited && is_initial) {
-    gElement.parentNode.style.setProperty(property, info.other_values[0], "");
+    gElementN.parentNode.style.setProperty(property, info.other_values[0], "");
+    gElementF.parentNode.style.setProperty(property, info.other_values[0], "");
   }
 
-  var initial_computed = get_computed_value(gInitialValues, property);
+  var initial_computed_n = get_computed_value(gInitialValuesN, property);
+  var initial_computed_f = get_computed_value(gInitialValuesF, property);
   if (is_initial) {
     gRule1.style.setProperty(property, info.other_values[0], "");
-    var other_computed = get_computed_value(getComputedStyle(gElement, ""), property);
+    var other_computed_n = get_computed_value(getComputedStyle(gElementN, ""), property);
+    var other_computed_f = get_computed_value(getComputedStyle(gElementF, ""), property);
     (xfail_diffcomputed(property) ? todo_isnot : isnot)(
-          other_computed, initial_computed,
+          other_computed_n, initial_computed_n,
+          "should be testing with values that compute to different things " +
+          "for '" + property + "'");
+    (xfail_diffcomputed(property) ? todo_isnot : isnot)(
+          other_computed_f, initial_computed_f,
           "should be testing with values that compute to different things " +
           "for '" + property + "'");
   }
@@ -228,14 +256,27 @@ function test_value(property, val, is_initial)
   // This means that it's important that we set the prereqs on
   // gRule1.style rather than on gElement.style.
   gRule2.style.setProperty(property, val, "");
-  var val_computed = get_computed_value(getComputedStyle(gElement, ""), property);
+  var val_computed_n = get_computed_value(getComputedStyle(gElementN, ""), property);
+  var val_computed_f = get_computed_value(getComputedStyle(gElementF, ""), property);
+  (xfail_empty(property, val) ? todo_isnot : isnot)(
+     val_computed_n, "",
+     "should not get empty value for '" + property + ":" + val + "'");
+  (xfail_empty(property, val) ? todo_isnot : isnot)(
+     val_computed_f, "",
+     "should not get empty value for '" + property + ":" + val + "'");
   if (is_initial) {
-    (xfail_value(property, val, is_initial) ? todo_is : is)(
-       val_computed, initial_computed,
+    (xfail_value(property, val, is_initial, false) ? todo_is : is)(
+       val_computed_n, initial_computed_n,
+       "should get initial value for '" + property + ":" + val + "'");
+    (xfail_value(property, val, is_initial, true) ? todo_is : is)(
+       val_computed_f, initial_computed_f,
        "should get initial value for '" + property + ":" + val + "'");
   } else {
-    (xfail_value(property, val, is_initial) ? todo_isnot : isnot)(
-       val_computed, initial_computed,
+    (xfail_value(property, val, is_initial, false) ? todo_isnot : isnot)(
+       val_computed_n, initial_computed_n,
+       "should not get initial value for '" + property + ":" + val + "'");
+    (xfail_value(property, val, is_initial, true) ? todo_isnot : isnot)(
+       val_computed_f, initial_computed_f,
        "should not get initial value for '" + property + ":" + val + "'");
   }
   if (is_initial)
@@ -246,11 +287,13 @@ function test_value(property, val, is_initial)
     var prereqs = info.prerequisites;
     for (var prereq in prereqs) {
       gRule1.style.removeProperty(prereq);
-      gInitialPrereqsRule.style.removeProperty(prereq);
+      gInitialPrereqsRuleN.style.removeProperty(prereq);
+      gInitialPrereqsRuleF.style.removeProperty(prereq);
     }
   }
   if (info.inherited && is_initial) {
-    gElement.parentNode.style.removeProperty(property);
+    gElementN.parentNode.style.removeProperty(property);
+    gElementF.parentNode.style.removeProperty(property);
   }
 }
 
@@ -263,7 +306,8 @@ function test_property(prop) {
 }
 
 function run_tests() {
-  setup_initial_values();
+  setup_initial_values("unstyledn", "gInitialValuesN", "gInitialPrereqsRuleN");
+  setup_initial_values("unstyledf", "gInitialValuesF", "gInitialPrereqsRuleF");
   var props = [];
   for (var prop in gCSSProperties)
     props.push(prop);
