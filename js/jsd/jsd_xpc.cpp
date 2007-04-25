@@ -2701,30 +2701,40 @@ jsdService::EnumerateScripts (jsdIScriptEnumerator *enumerator)
     return rv;
 }
 
-#ifdef GC_MARK_DEBUG
-JS_BEGIN_EXTERN_C
-JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
-JS_END_EXTERN_C
-#endif
-
 NS_IMETHODIMP
 jsdService::GC (void)
 {
     ASSERT_VALID_CONTEXT;
     JSContext *cx = JSD_GetDefaultJSContext (mCx);
-#ifdef GC_MARK_DEBUG
-    FILE *file = fopen("jsds-roots.txt", "w");
-    js_DumpGCHeap = file;
-#endif
     JS_GC(cx);
-#ifdef GC_MARK_DEBUG
-    if (file)
-        fclose (file);
-    js_DumpGCHeap = NULL;
-#endif
     return NS_OK;
 }
     
+NS_IMETHODIMP
+jsdService::DumpHeap(const char* fileName)
+{
+    ASSERT_VALID_CONTEXT;
+#ifndef DEBUG
+    return NS_ERROR_NOT_IMPLEMENTED;
+#else
+    nsresult rv = NS_OK;
+    FILE *file = fileName ? fopen(fileName, "w") : stdout;
+    if (!file) {
+        rv = NS_ERROR_FAILURE;
+    } else {
+        JSContext *cx = JSD_GetDefaultJSContext (mCx);
+        if (!JS_DumpHeap(cx, NULL, 0, NULL, (size_t)-1, NULL,
+                         NS_REINTERPRET_CAST(JSPrintfFormater, &fprintf),
+                         file)) {
+            rv = NS_ERROR_FAILURE;
+        }
+        if (file != stdout)
+            fclose(file);
+    }
+    return rv;
+#endif
+}
+
 NS_IMETHODIMP
 jsdService::ClearProfileData ()
 {

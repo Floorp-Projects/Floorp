@@ -272,6 +272,13 @@ interface jsdIDebuggerService : nsISupports
     void GC();
     
     /**
+     * Output dump of JS heap.
+     *
+     * @param fileName Filename to dump the heap into.
+     */
+    void DumpHeap(in string fileName);
+
+    /**
      * Clear profile data for all scripts.
      */
     void clearProfileData();

@@ -294,10 +294,6 @@ DumpXPC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 /* XXX needed only by GC() */
 #include "jscntxt.h"
 
-#ifdef GC_MARK_DEBUG
-extern "C" JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
-#endif
-
 JS_STATIC_DLL_CALLBACK(JSBool)
 GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -306,25 +302,7 @@ GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     rt = cx->runtime;
     preBytes = rt->gcBytes;
-#ifdef GC_MARK_DEBUG
-    if (argc && JSVAL_IS_STRING(argv[0])) {
-        char *name = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
-        FILE *file = fopen(name, "w");
-        if (!file) {
-            fprintf(gErrFile, "gc: can't open %s: %s\n", strerror(errno));
-            return JS_FALSE;
-        }
-        js_DumpGCHeap = file;
-    } else {
-        js_DumpGCHeap = stdout;
-    }
-#endif
     JS_GC(cx);
-#ifdef GC_MARK_DEBUG
-    if (js_DumpGCHeap != stdout)
-        fclose(js_DumpGCHeap);
-    js_DumpGCHeap = NULL;
-#endif
     fprintf(gOutFile, "before %lu, after %lu, break %08lx\n",
            (unsigned long)preBytes, (unsigned long)rt->gcBytes,
 #ifdef XP_UNIX
@@ -338,6 +316,90 @@ GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
     return JS_TRUE;
 }
+
+#ifdef DEBUG
+
+static JSBool
+DumpHeap(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    char *fileName = NULL;
+    void* startThing = NULL;
+    uint32 startTraceKind = 0;
+    void *thingToFind = NULL;
+    size_t maxDepth = (size_t)-1;
+    void *thingToIgnore = NULL;
+    jsval *vp;
+    FILE *dumpFile;
+    JSBool ok;
+
+    vp = &argv[0];
+    if (*vp != JSVAL_NULL && *vp != JSVAL_VOID) {
+        JSString *str;
+
+        str = JS_ValueToString(cx, *vp);
+        if (!str)
+            return JS_FALSE;
+        *vp = STRING_TO_JSVAL(str);
+        fileName = JS_GetStringBytes(str);
+    }
+
+    vp = &argv[1];
+    if (*vp != JSVAL_NULL && *vp != JSVAL_VOID) {
+        if (!JSVAL_IS_TRACEABLE(*vp))
+            goto not_traceable_arg;
+        startThing = JSVAL_TO_TRACEABLE(*vp);
+        startTraceKind = JSVAL_TRACE_KIND(*vp);
+    }
+
+    vp = &argv[2];
+    if (*vp != JSVAL_NULL && *vp != JSVAL_VOID) {
+        if (!JSVAL_IS_TRACEABLE(*vp))
+            goto not_traceable_arg;
+        thingToFind = JSVAL_TO_TRACEABLE(*vp);
+    }
+
+    vp = &argv[3];
+    if (*vp != JSVAL_NULL && *vp != JSVAL_VOID) {
+        uint32 depth;
+
+        if (!JS_ValueToECMAUint32(cx, *vp, &depth))
+            return JS_FALSE;
+        maxDepth = depth;
+    }
+
+    vp = &argv[4];
+    if (*vp != JSVAL_NULL && *vp != JSVAL_VOID) {
+        if (!JSVAL_IS_TRACEABLE(*vp))
+            goto not_traceable_arg;
+        thingToIgnore = JSVAL_TO_TRACEABLE(*vp);
+    }
+
+    if (!fileName) {
+        dumpFile = gOutFile;
+    } else {
+        dumpFile = fopen(fileName, "w");
+        if (!dumpFile) {
+            fprintf(gErrFile, "dumpHeap: can't open %s: %s\n",
+                    fileName, strerror(errno));
+            return JS_FALSE;
+        }
+    }
+
+    ok = JS_DumpHeap(cx, startThing, startTraceKind, thingToFind,
+                     maxDepth, thingToIgnore,
+                     (JSPrintfFormater)fprintf, dumpFile);
+    if (dumpFile != gOutFile)
+        fclose(dumpFile);
+    return ok;
+
+  not_traceable_arg:
+    fprintf(gErrFile,
+            "dumpHeap: argument %u is not null or a heap-allocated thing\n",
+            (unsigned)(vp - argv));
+    return JS_FALSE;
+}
+
+#endif /* DEBUG */
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 Clear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
@@ -361,6 +423,9 @@ static JSFunctionSpec glob_functions[] = {
     {"dump",            Dump,           1,0,0},
     {"gc",              GC,             0,0,0},
     {"clear",           Clear,          1,0,0},
+#ifdef DEBUG
+    {"dumpHeap",        DumpHeap,       5,0,0},
+#endif
     {nsnull,nsnull,0,0,0}
 };
 

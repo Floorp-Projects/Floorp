@@ -207,17 +207,6 @@ js_IsAboutToBeFinalized(JSContext *cx, void *thing);
  */
 #define IS_GC_MARKING_TRACER(trc) ((trc)->callback == NULL)
 
-#ifdef DEBUG
-
-extern JS_FRIEND_API(JSTracer *)
-js_NewGCHeapDumper(JSContext *cx, void *thingToFind, FILE *fp,
-                   size_t maxRecursionDepth, void *thingToIgnore);
-
-extern JS_FRIEND_API(JSBool)
-js_FreeGCHeapDumper(JSTracer *trc);
-
-#endif
-
 JS_STATIC_ASSERT(JSTRACE_STRING == 2);
 
 #define JSTRACE_FUNCTION    3
@@ -243,8 +232,8 @@ js_CallValueTracerIfGCThing(JSTracer *trc, jsval v);
 extern void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp);
 
-extern JS_FRIEND_API(void)
-js_TraceRuntime(JSTracer *trc);
+extern void
+js_TraceRuntime(JSTracer *trc, JSBool allAtoms);
 
 extern JS_FRIEND_API(void)
 js_TraceContext(JSTracer *trc, JSContext *acx);
