@@ -160,7 +160,8 @@ static PRInt32 GetTLDCharCount(const nsCString& aHost);
 static PRInt32 GetTLDType(const nsCString& aHostTail);
 static PRBool IsNumericHostName(const nsCString& aHost);
 static PRInt64 GetSimpleBookmarksQueryFolder(
-    const nsCOMArray<nsNavHistoryQuery>& aQueries);
+    const nsCOMArray<nsNavHistoryQuery>& aQueries,
+    nsNavHistoryQueryOptions* aOptions);
 static void ParseSearchQuery(const nsString& aQuery, nsStringArray* aTerms);
 
 inline void ReverseString(const nsString& aInput, nsAString& aReversed)
@@ -200,12 +201,12 @@ protected:
 const PRInt32 nsNavHistory::kGetInfoIndex_PageID = 0;
 const PRInt32 nsNavHistory::kGetInfoIndex_URL = 1;
 const PRInt32 nsNavHistory::kGetInfoIndex_Title = 2;
-const PRInt32 nsNavHistory::kGetInfoIndex_UserTitle = 3;
-const PRInt32 nsNavHistory::kGetInfoIndex_RevHost = 4;
-const PRInt32 nsNavHistory::kGetInfoIndex_VisitCount = 5;
-const PRInt32 nsNavHistory::kGetInfoIndex_VisitDate = 6;
-const PRInt32 nsNavHistory::kGetInfoIndex_FaviconURL = 7;
-const PRInt32 nsNavHistory::kGetInfoIndex_SessionId = 8;
+const PRInt32 nsNavHistory::kGetInfoIndex_RevHost = 3;
+const PRInt32 nsNavHistory::kGetInfoIndex_VisitCount = 4;
+const PRInt32 nsNavHistory::kGetInfoIndex_VisitDate = 5;
+const PRInt32 nsNavHistory::kGetInfoIndex_FaviconURL = 6;
+const PRInt32 nsNavHistory::kGetInfoIndex_SessionId = 7;
+const PRInt32 nsNavHistory::kGetInfoIndex_BookmarkItemId = 8;
 
 const PRInt32 nsNavHistory::kAutoCompleteIndex_URL = 0;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_Title = 1;
@@ -636,8 +637,7 @@ nsNavHistory::InitStatements()
 
   // mDBGetURLPageInfo
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, (SELECT title FROM moz_bookmarks WHERE "
-      "fk = h.id), h.rev_host, h.visit_count "
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count "
       "FROM moz_places h "
       "WHERE h.url = ?1"),
     getter_AddRefs(mDBGetURLPageInfo));
@@ -645,8 +645,7 @@ nsNavHistory::InitStatements()
 
   // mDBGetURLPageInfoFull
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, (SELECT title FROM moz_bookmarks WHERE "
-      "fk = h.id), h.rev_host, h.visit_count, "
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
         "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
         "f.url "
       "FROM moz_places h "
@@ -657,16 +656,14 @@ nsNavHistory::InitStatements()
 
   // mDBGetIdPageInfo
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, (SELECT title FROM moz_bookmarks WHERE "
-      "fk = h.id), h.rev_host, h.visit_count "
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count "
       "FROM moz_places h WHERE h.id = ?1"),
                                 getter_AddRefs(mDBGetIdPageInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBGetIdPageInfoFull
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, (SELECT title FROM moz_bookmarks WHERE "
-        "fk = h.id), h.rev_host, h.visit_count, "
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
         "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
         "f.url "
       "FROM moz_places h "
@@ -731,10 +728,9 @@ nsNavHistory::InitStatements()
 
   // mDBVisitToURLResult, should match kGetInfoIndex_* (see GetQueryResults)
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, (SELECT title FROM moz_bookmarks WHERE "
-        "fk = h.id), h.rev_host, h.visit_count, "
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
         "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
-        "f.url, null "
+        "f.url, null, null "
       "FROM moz_places h "
       "JOIN moz_historyvisits v ON h.id = v.place_id "
       "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
@@ -744,9 +740,8 @@ nsNavHistory::InitStatements()
 
   // mDBVisitToVisitResult, should match kGetInfoIndex_* (see GetQueryResults)
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, (SELECT title FROM moz_bookmarks WHERE "
-             "fk = h.id), h.rev_host, h.visit_count, "
-             "v.visit_date, f.url, v.session "
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
+             "v.visit_date, f.url, v.session, null "
       "FROM moz_places h "
       "JOIN moz_historyvisits v ON h.id = v.place_id "
       "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
@@ -756,14 +751,25 @@ nsNavHistory::InitStatements()
 
   // mDBUrlToURLResult, should match kGetInfoIndex_*
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, (SELECT title FROM moz_bookmarks WHERE "
-        "fk = h.id), h.rev_host, h.visit_count, "
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
         "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
-        "f.url, null "
+        "f.url, null, null "
       "FROM moz_places h "
       "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
       "WHERE h.url = ?1"),
     getter_AddRefs(mDBUrlToUrlResult));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // mDBBookmarkToUrlResult, should match kGetInfoIndex_*
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT b.fk, h.url, b.title, h.rev_host, h.visit_count, "
+        "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = b.fk), "
+        "f.url, null, null "
+      "FROM moz_bookmarks b "
+      "JOIN moz_places h ON b.fk = h.id "
+      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
+      "WHERE b.id = ?1"),
+    getter_AddRefs(mDBBookmarkToUrlResult));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1909,7 +1915,7 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
 
   // root node
   nsRefPtr<nsNavHistoryContainerResultNode> rootNode;
-  PRInt64 folderId = GetSimpleBookmarksQueryFolder(queries);
+  PRInt64 folderId = GetSimpleBookmarksQueryFolder(queries, options);
   if (folderId) {
     // In the simple case where we're just querying children of a single bookmark
     // folder, we can more efficiently generate results.
@@ -1974,11 +1980,14 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
     (aOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_VISIT ||
      aOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_FULL_VISIT);
 
-  nsCAutoString commonConditionsForHistory;
+  nsCAutoString commonConditions;
 
-  if (! aOptions->IncludeHidden()) {
+  if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS) {
+    // only look at bookmarks nodes
+    commonConditions.AssignLiteral("b.type = 1 ");
+  } else if (!aOptions->IncludeHidden()) {
     // The hiding code here must match the notification behavior in AddVisit
-    commonConditionsForHistory.AssignLiteral("hidden <> 1 ");
+    commonConditions.AssignLiteral("h.hidden <> 1 ");
 
     // Some items are unhidden but are subframe navigations that we shouldn't
     // show. This happens especially on imported profiles because the previous
@@ -1986,7 +1995,7 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
     // especially Javascript-heavy ones, load things in frames to display them,
     // resulting in a lot of these entries. This filters those visits out.
     if (asVisits)
-      commonConditionsForHistory.AppendLiteral("AND v.visit_type <> 4 "); // not TRANSITION_EMBED
+      commonConditions.AppendLiteral("AND v.visit_type <> 4 "); // not TRANSITION_EMBED
   }
 
   // Query string: Output parameters should be in order of kGetInfoIndex_*
@@ -2001,29 +2010,41 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
     // between the history and visits table and do our query.
     // FIXME(brettw) Add full visit info
     queryString = NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, (SELECT title from moz_bookmarks WHERE "
-             "fk = h.id), h.rev_host, h.visit_count, "
-             "v.visit_date, f.url, v.session "
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
+             "v.visit_date, f.url, v.session, null "
       "FROM moz_places h "
       "JOIN moz_historyvisits v ON h.id = v.place_id "
-      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-      "WHERE ");
+      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id ");
   } else {
     // For URLs, it is more complicated, because we want each URL once. The
     // GROUP BY clause gives us this. To get the max visit time, we populate
     // one column by using a nested SELECT on the visit table. Also, ignore
     // session information.
     // FIXME(brettw) add nulls for full visit info
-    queryString = NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, h.title, (SELECT title FROM moz_bookmarks WHERE "
-        "fk = h.id), h.rev_host, h.visit_count, "
-        "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
-        "f.url, null "
-      "FROM moz_places h "
-      "LEFT OUTER JOIN moz_historyvisits v ON h.id = v.place_id "
-      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-      "WHERE ");
-    groupBy = NS_LITERAL_CSTRING(" GROUP BY h.id");
+    if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY) {
+      queryString = NS_LITERAL_CSTRING(
+        "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
+          "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
+          "f.url, null, null "
+        "FROM moz_places h "
+        "LEFT OUTER JOIN moz_historyvisits v ON h.id = v.place_id "
+        "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id ");
+      groupBy = NS_LITERAL_CSTRING(" GROUP BY h.id");
+    } else if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS) {
+      queryString = NS_LITERAL_CSTRING(
+        "SELECT b.fk, h.url, b.title, h.rev_host, h.visit_count, "
+        "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = b.fk), "
+        "f.url, null, b.id "
+      "FROM moz_bookmarks b "
+      "JOIN moz_places h ON b.fk = h.id "
+      "LEFT OUTER JOIN moz_historyvisits v ON b.fk = v.place_id "
+      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id ");
+      groupBy = NS_LITERAL_CSTRING(" GROUP BY b.id");
+    }
+    else {
+      // XXX: implement me
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
   }
 
   PRInt32 numParameters = 0;
@@ -2032,10 +2053,9 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
   for (i = 0; i < aQueries.Count(); i ++) {
     nsCString queryClause;
     PRInt32 clauseParameters = 0;
-    rv = QueryToSelectClause(aQueries[i], numParameters,
+    rv = QueryToSelectClause(aQueries[i], aOptions, numParameters,
                              &queryClause, &clauseParameters,
-                             aQueries[i]->OnlyBookmarked() ? 
-                               EmptyCString() : commonConditionsForHistory);
+                             commonConditions);
     NS_ENSURE_SUCCESS(rv, rv);
     if (! queryClause.IsEmpty()) {
       if (! conditions.IsEmpty()) // exists previous clause: multiple ones are ORed
@@ -2048,12 +2068,18 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
 
   // in cases where there were no queries, we need to use the common conditions
   // (normally these are appended to each clause that are not annotation-based)
-  if (! conditions.IsEmpty()) {
+  if (!conditions.IsEmpty()) {
+    queryString += "WHERE ";
     queryString += conditions;
-  } else {
-    queryString += commonConditionsForHistory;
+  } else if (!commonConditions.IsEmpty()) {
+    queryString += "WHERE ";
+    queryString += commonConditions;
   }
   queryString += groupBy;
+
+  PRBool hasSearchTerms;
+  rv = aQueries[0]->GetHasSearchTerms(&hasSearchTerms);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Sort clause: we will sort later, but if it comes out of the DB sorted,
   // our later sort will be basically free. The DB can sort these for free
@@ -2074,25 +2100,25 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
       // a sort by date here (see the IDL definition for maxResults). We'll
       // still do the official sort by title later.
       if (aOptions->MaxResults() > 0)
-        queryString += NS_LITERAL_CSTRING(" ORDER BY v.visit_date DESC");
+        queryString += NS_LITERAL_CSTRING(" ORDER BY 6 DESC"); // v.vist_date
       break;
     case nsINavHistoryQueryOptions::SORT_BY_DATE_ASCENDING:
-      queryString += NS_LITERAL_CSTRING(" ORDER BY v.visit_date ASC");
+      queryString += NS_LITERAL_CSTRING(" ORDER BY 6 ASC"); // v.vist_date
       break;
     case nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING:
-      queryString += NS_LITERAL_CSTRING(" ORDER BY v.visit_date DESC");
+      queryString += NS_LITERAL_CSTRING(" ORDER BY 6 DESC"); // v.vist_date
       break;
     case nsINavHistoryQueryOptions::SORT_BY_URI_ASCENDING:
-      queryString += NS_LITERAL_CSTRING(" ORDER BY h.url ASC");
+      queryString += NS_LITERAL_CSTRING(" ORDER BY 2 ASC"); // h.url
       break;
     case nsINavHistoryQueryOptions::SORT_BY_URI_DESCENDING:
-      queryString += NS_LITERAL_CSTRING(" ORDER BY h.url DESC");
+      queryString += NS_LITERAL_CSTRING(" ORDER BY 2 DESC"); // h.url
       break;
     case nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_ASCENDING:
-      queryString += NS_LITERAL_CSTRING(" ORDER BY h.visit_count ASC");
+      queryString += NS_LITERAL_CSTRING(" ORDER BY 5 ASC"); // h.visit_count
       break;
     case nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_DESCENDING:
-      queryString += NS_LITERAL_CSTRING(" ORDER BY h.visit_count DESC");
+      queryString += NS_LITERAL_CSTRING(" ORDER BY 5 DESC"); // h.visit_count
       break;
     default:
       NS_NOTREACHED("Invalid sorting mode");
@@ -2129,12 +2155,8 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
     numParameters += clauseParameters;
   }
 
-  PRBool hasSearchTerms;
-  rv = aQueries[0]->GetHasSearchTerms(&hasSearchTerms);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   PRUint32 groupCount;
-  const PRUint32 *groupings = aOptions->GroupingMode(&groupCount);
+  const PRUint16 *groupings = aOptions->GroupingMode(&groupCount);
 
   if (groupCount == 0 && ! hasSearchTerms) {
     // optimize the case where we just want a list with no grouping: this
@@ -3166,6 +3188,7 @@ nsNavHistory::CommitLazyMessages()
 
 nsresult
 nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
+                                  nsNavHistoryQueryOptions* aOptions,
                                   PRInt32 aStartParameter,
                                   nsCString* aClause,
                                   PRInt32* aParamCount,
@@ -3212,9 +3235,10 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
     (*aParamCount) ++;
   }
 
-  // only bookmarked
-  if (aQuery->OnlyBookmarked()) {
-    if (! aClause->IsEmpty())
+  // only bookmarked, has no affect on bookmarks-only queries
+  if (aOptions->QueryType() != nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS &&
+      aQuery->OnlyBookmarked()) {
+    if (!aClause->IsEmpty())
       *aClause += NS_LITERAL_CSTRING(" AND ");
 
     *aClause += NS_LITERAL_CSTRING("EXISTS (SELECT b.fk FROM moz_bookmarks b WHERE b.type = ") +
@@ -3433,7 +3457,7 @@ nsNavHistory::ResultsAsList(mozIStorageStatement* statement,
 
 nsresult
 nsNavHistory::RecursiveGroup(const nsCOMArray<nsNavHistoryResultNode>& aSource,
-                             const PRUint32* aGroupingMode, PRUint32 aGroupCount,
+                             const PRUint16* aGroupingMode, PRUint32 aGroupCount,
                              nsCOMArray<nsNavHistoryResultNode>* aDest)
 {
   NS_ASSERTION(aGroupCount > 0, "Invalid group count");
@@ -3451,6 +3475,10 @@ nsNavHistory::RecursiveGroup(const nsCOMArray<nsNavHistoryResultNode>& aSource,
     case nsINavHistoryQueryOptions::GROUP_BY_DOMAIN:
       rv = GroupByHost(aSource, aDest, PR_TRUE);
       break;
+    case nsINavHistoryQueryOptions::GROUP_BY_FOLDER:
+      // not yet supported (this code path is not reached for simple bookmark
+      // folder queries)
+      return NS_ERROR_NOT_IMPLEMENTED;
     default:
       // unknown grouping mode
       return NS_ERROR_INVALID_ARG;
@@ -3844,15 +3872,8 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
 
   // title
   nsCAutoString title;
-  title.SetIsVoid(PR_TRUE);
-  if (! aOptions->ForceOriginalTitle()) {
-    rv = aRow->GetUTF8String(kGetInfoIndex_UserTitle, title);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  if (title.IsVoid()) {
-    rv = aRow->GetUTF8String(kGetInfoIndex_Title, title);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  rv = aRow->GetUTF8String(kGetInfoIndex_Title, title);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 accessCount = aRow->AsInt32(kGetInfoIndex_VisitCount);
   PRTime time = aRow->AsInt64(kGetInfoIndex_VisitDate);
@@ -3864,12 +3885,20 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
 
   if (IsQueryURI(url)) {
     // special case "place:" URIs: turn them into containers
+    // XXX: should we set the bookmark identifier for this sort of nodes? It
+    // would sure break few assumption on the frontend side
     return QueryRowToResult(url, title, accessCount, time, favicon, aResult);
   } else if (aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_URI) {
     *aResult = new nsNavHistoryResultNode(url, title, accessCount, time,
                                           favicon);
     if (! *aResult)
       return NS_ERROR_OUT_OF_MEMORY;
+
+    PRBool isNull;
+    if (NS_SUCCEEDED(aRow->GetIsNull(kGetInfoIndex_BookmarkItemId, &isNull)) &&
+        !isNull) {
+      (*aResult)->mBookmarkId = aRow->AsInt64(kGetInfoIndex_BookmarkItemId);
+    }
     NS_ADDREF(*aResult);
     return NS_OK;
   }
@@ -3943,7 +3972,7 @@ nsNavHistory::QueryRowToResult(const nsACString& aURI, const nsACString& aTitle,
       return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*aNode);
   } else {
-    PRInt64 folderId = GetSimpleBookmarksQueryFolder(queries);
+    PRInt64 folderId = GetSimpleBookmarksQueryFolder(queries, options);
     if (folderId) {
       // simple bookmarks folder, magically generate a bookmarks folder node
       nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
@@ -4029,6 +4058,24 @@ nsNavHistory::UriToResultNode(nsIURI* aUri, nsNavHistoryQueryOptions* aOptions,
   return RowToResult(mDBUrlToUrlResult, aOptions, aResult);
 }
 
+nsresult
+nsNavHistory::BookmarkIdToResultNode(PRInt64 aBookmarkId, nsNavHistoryQueryOptions* aOptions,
+                                     nsNavHistoryResultNode** aResult)
+{
+  mozStorageStatementScoper scoper(mDBBookmarkToUrlResult);
+  nsresult rv = mDBBookmarkToUrlResult->BindInt64Parameter(0, aBookmarkId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasMore = PR_FALSE;
+  rv = mDBBookmarkToUrlResult->ExecuteStep(&hasMore);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!hasMore) {
+    NS_NOTREACHED("Trying to get a result node for an invalid bookmark identifier");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return RowToResult(mDBBookmarkToUrlResult, aOptions, aResult);
+}
 
 // nsNavHistory::TitleForDomain
 //
@@ -4110,10 +4157,6 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
 
     // page title
     rv = mDBGetURLPageInfo->GetString(kGetInfoIndex_Title, title);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // user title
-    rv = mDBGetURLPageInfo->GetString(kGetInfoIndex_UserTitle, userTitle);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -4375,7 +4418,8 @@ PRBool IsNumericHostName(const nsCString& aHost)
 //    Returns the folder ID if it is a simple folder query, 0 if not.
 
 static PRInt64
-GetSimpleBookmarksQueryFolder(const nsCOMArray<nsNavHistoryQuery>& aQueries)
+GetSimpleBookmarksQueryFolder(const nsCOMArray<nsNavHistoryQuery>& aQueries,
+                              nsNavHistoryQueryOptions* aOptions)
 {
   if (aQueries.Count() != 1)
     return 0;
@@ -4396,6 +4440,8 @@ GetSimpleBookmarksQueryFolder(const nsCOMArray<nsNavHistoryQuery>& aQueries)
     return 0;
   query->GetHasUri(&hasIt);
   if (hasIt)
+    return 0;
+  if (aOptions->MaxResults() > 0)
     return 0;
 
   // Note that we don't care about the onlyBookmarked flag, if you specify a bookmark
