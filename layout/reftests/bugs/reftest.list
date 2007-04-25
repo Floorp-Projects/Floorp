@@ -150,6 +150,7 @@ fails == 351641-2b.html 351641-2-ref.html # bug 358433 (2006-10-19)
 == 359903-1.html 359903-1-ref.html
 == 359903-2.html 359903-2-ref.html
 == 360065-1.html 360065-1-ref.html
+== 360746-1.html 360746-1-ref.html
 == 360757-1a.html 360757-1-ref.html
 == 360757-1b.html 360757-1-ref.html
 == 361091-1.html 361091-1-ref.html

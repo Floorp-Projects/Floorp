@@ -1,0 +1,40 @@
+<html>
+  <head>
+    <title>Testcase bug 360746 - The right panel has disappeared at andrewdupont.net</title>
+    <style>
+      div { height: 20px }
+      #test1 {
+        background-color: red;
+      }
+      #test2 {
+        background-color: red;
+      }
+      #test3 {
+        background-color: green;
+      }
+      #test4 {
+        background-color: green;
+      }
+    </style>
+    <link href="data:text/css;charset=utf-8," title="narrow" rel="stylesheet" type="text/css" />
+    <link href="data:text/css;charset=utf-8,%23test1%20%7Bbackground-color%3A%20green%3B%7D" title="medium" rel="alternate stylesheet" type="text/css" />
+    <link href="data:text/css;charset=utf-8,%23test2%20%7Bbackground-color%3A%20green%3B%7D" type="text/css" />    
+    <link href="data:text/css;charset=utf-8,%23test3%20%7Bbackground-color%3A%20red%3B%7D" rel="stylesheet" type="text/css" />    
+    <link href="data:text/css;charset=utf-8,%23test4%20%7Bbackground-color%3A%20red%3B%7D" rel="stylesheet" type="text/css" />    
+    <script>
+      document.getElementsByTagName('link')[1].disabled = false;
+      document.getElementsByTagName('link')[1].rel = 'stylesheet';
+    </script>
+  </head>
+  <body>
+    <div id="test1"></div>
+    <div id="test2"></div>
+    <div id="test3"></div>
+    <div id="test4"></div>
+    <script>
+      document.getElementsByTagName('link')[2].rel = 'stylesheet for-the-win';
+      document.getElementsByTagName('link')[3].rel = 'just for-the-win';
+      document.getElementsByTagName('link')[4].removeAttribute("rel");
+    </script>
+  </body>
+</html>

@@ -297,12 +297,20 @@ nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
                                               aValue, aNotify);
   if (NS_SUCCEEDED(rv)) {
+    PRBool dropSheet = PR_FALSE;
+    if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::rel &&
+        mStyleSheet) {
+      nsStringArray linkTypes(4);
+      nsStyleLinkElement::ParseLinkTypes(aValue, linkTypes);
+      dropSheet = linkTypes.IndexOf(NS_LITERAL_STRING("stylesheet")) < 0;
+    }
+    
     UpdateStyleSheetInternal(nsnull,
-                             aNameSpaceID == kNameSpaceID_None &&
-                             (aName == nsGkAtoms::rel ||
-                              aName == nsGkAtoms::title ||
-                              aName == nsGkAtoms::media ||
-                              aName == nsGkAtoms::type));
+                             dropSheet ||
+                             (aNameSpaceID == kNameSpaceID_None &&
+                              (aName == nsGkAtoms::title ||
+                               aName == nsGkAtoms::media ||
+                               aName == nsGkAtoms::type)));
   }
 
   return rv;
