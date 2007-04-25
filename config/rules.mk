@@ -379,11 +379,11 @@ endif
 TAG_PROGRAM		= xargs etags -a
 
 #
-# Turn on C++ linking if we have any .cpp files
+# Turn on C++ linking if we have any .cpp or .mm files
 # (moved this from config.mk so that config.mk can be included 
 #  before the CPPSRCS are defined)
 #
-ifdef CPPSRCS
+ifneq ($(CPPSRCS)$(CMMSRCS),)
 CPP_PROG_LINK		= 1
 endif
 
