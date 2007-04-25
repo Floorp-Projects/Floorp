@@ -660,9 +660,12 @@ nsresult imgContainer::DoComposite(gfxIImageFrame** aFrameToUse,
     if (isFullPrevFrame) {
       CopyFrameImage(aPrevFrame, mAnim->compositingFrame);
     } else {
-      ClearFrame(mAnim->compositingFrame);
+      BlackenFrame(mAnim->compositingFrame);
+      SetMaskVisibility(mAnim->compositingFrame, PR_FALSE);
       aPrevFrame->DrawTo(mAnim->compositingFrame, prevFrameRect.x, prevFrameRect.y,
                          prevFrameRect.width, prevFrameRect.height);
+
+      BuildCompositeMask(mAnim->compositingFrame, aPrevFrame);
       needToBlankComposite = PR_FALSE;
     }
   }
@@ -673,11 +676,13 @@ nsresult imgContainer::DoComposite(gfxIImageFrame** aFrameToUse,
       if (needToBlankComposite) {
         // If we just created the composite, it could have anything in it's
         // buffers. Clear them
-        ClearFrame(mAnim->compositingFrame);
+        BlackenFrame(mAnim->compositingFrame);
+        SetMaskVisibility(mAnim->compositingFrame, PR_FALSE);
         needToBlankComposite = PR_FALSE;
       } else {
         // Blank out previous frame area (both color & Mask/Alpha)
-        ClearFrame(mAnim->compositingFrame, prevFrameRect);
+        BlackenFrame(mAnim->compositingFrame, prevFrameRect);
+        SetMaskVisibility(mAnim->compositingFrame, prevFrameRect, PR_FALSE);
       }
       break;
 
@@ -691,7 +696,8 @@ nsresult imgContainer::DoComposite(gfxIImageFrame** aFrameToUse,
         if (nextFrameDisposalMethod != imgIContainer::kDisposeRestorePrevious)
           mAnim->compositingPrevFrame = nsnull;
       } else {
-        ClearFrame(mAnim->compositingFrame);
+        BlackenFrame(mAnim->compositingFrame);
+        SetMaskVisibility(mAnim->compositingFrame, PR_FALSE);
       }
       break;
   }
@@ -721,6 +727,8 @@ nsresult imgContainer::DoComposite(gfxIImageFrame** aFrameToUse,
   // blit next frame into it's correct spot
   aNextFrame->DrawTo(mAnim->compositingFrame, nextFrameRect.x, nextFrameRect.y,
                      nextFrameRect.width, nextFrameRect.height);
+  // put the mask in
+  BuildCompositeMask(mAnim->compositingFrame, aNextFrame);
   // Set timeout of CompositeFrame to timeout of frame we just composed
   // Bug 177948
   PRInt32 timeout;
@@ -748,44 +756,260 @@ nsresult imgContainer::DoComposite(gfxIImageFrame** aFrameToUse,
 }
 
 //******************************************************************************
-// Fill aFrame with black. Does also clears the mask.
-void imgContainer::ClearFrame(gfxIImageFrame *aFrame)
+void imgContainer::BuildCompositeMask(gfxIImageFrame *aCompositingFrame,
+                                      gfxIImageFrame *aOverlayFrame)
+{
+  if (!aCompositingFrame || !aOverlayFrame) return;
+
+  nsresult res;
+  PRUint8* compositingAlphaData;
+  PRUint32 compositingAlphaDataLength;
+  aCompositingFrame->LockAlphaData();
+  res = aCompositingFrame->GetAlphaData(&compositingAlphaData,
+                                        &compositingAlphaDataLength);
+  if (!compositingAlphaData || !compositingAlphaDataLength || NS_FAILED(res)) {
+    aCompositingFrame->UnlockAlphaData();
+    return;
+  }
+
+  PRInt32 widthOverlay, heightOverlay;
+  PRInt32 overlayXOffset, overlayYOffset;
+  aOverlayFrame->GetWidth(&widthOverlay);
+  aOverlayFrame->GetHeight(&heightOverlay);
+  aOverlayFrame->GetX(&overlayXOffset);
+  aOverlayFrame->GetY(&overlayYOffset);
+
+  if (NS_FAILED(aOverlayFrame->LockAlphaData())) {
+    // set the region of the overlay frame to visible in compositingFrame
+    SetMaskVisibility(aCompositingFrame, overlayXOffset, overlayYOffset,
+                      widthOverlay, heightOverlay, PR_TRUE);
+    aCompositingFrame->UnlockAlphaData();
+    return;
+  }
+
+  PRUint32 abprComposite;
+  aCompositingFrame->GetAlphaBytesPerRow(&abprComposite);
+
+  PRUint32 abprOverlay;
+  aOverlayFrame->GetAlphaBytesPerRow(&abprOverlay);
+
+  // Only the composite's width & height are needed.  x & y should always be 0.
+  PRInt32 widthComposite, heightComposite;
+  aCompositingFrame->GetWidth(&widthComposite);
+  aCompositingFrame->GetHeight(&heightComposite);
+
+  PRUint8* overlayAlphaData;
+  PRUint32 overlayAlphaDataLength;
+  res = aOverlayFrame->GetAlphaData(&overlayAlphaData, &overlayAlphaDataLength);
+
+  // this check was here when this code was in imgContainerGif
+  // i think it's just a superfluous check but i'm not brave enough to
+  // delete it completely since i haven't traced the entire execution
+  //~ gfx_format format;
+  //~ aCompositingFrame->GetFormat(&format);
+  //~ if (format != gfxIFormats::RGB_A1 && format != gfxIFormats::BGR_A1) {
+    //~ NS_NOTREACHED("GIFs only support 1 bit alpha");
+    //~ aCompositingFrame->UnlockAlphaData();
+    //~ aOverlayFrame->UnlockAlphaData();
+    //~ return;
+  //~ }
+
+  // Exit if overlay is beyond the area of the composite
+  if (widthComposite <= overlayXOffset || heightComposite <= overlayYOffset)
+    return;
+
+  const PRUint32 width  = PR_MIN(widthOverlay,
+                                 widthComposite - overlayXOffset);
+  const PRUint32 height = PR_MIN(heightOverlay,
+                                 heightComposite - overlayYOffset);
+
+#ifdef MOZ_PLATFORM_IMAGES_BOTTOM_TO_TOP
+  // Account for bottom-up storage
+  PRInt32 offset = ((heightComposite - 1) - overlayYOffset) * abprComposite;
+#else
+  PRInt32 offset = overlayYOffset * abprComposite;
+#endif
+  PRUint8* alphaLine = compositingAlphaData + offset + (overlayXOffset >> 3);
+
+#ifdef MOZ_PLATFORM_IMAGES_BOTTOM_TO_TOP
+  offset = (heightOverlay - 1) * abprOverlay;
+#else
+  offset = 0;
+#endif
+  PRUint8* overlayLine = overlayAlphaData + offset;
+
+  /*
+    This is the number of pixels of offset between alpha and overlay
+    (the number of bits at the front of alpha to skip when starting a row).
+    I.e:, for a mask_offset of 3:
+    (these are representations of bits)
+    overlay 'pixels':   76543210 hgfedcba
+    alpha:              xxx76543 210hgfed ...
+    where 'x' is data already in alpha
+    the first 5 pixels of overlay are or'd into the low 5 bits of alpha
+  */
+  PRUint8 mask_offset = (overlayXOffset & 0x7);
+
+  for(PRUint32 i = 0; i < height; i++) {
+    PRUint8 pixels;
+    PRUint32 j;
+    // use locals to avoid keeping track of how much we need to add
+    // at the end of a line.  we don't really need this since we may
+    // be able to calculate the ending offsets, but it's simpler and
+    // cheap.
+    PRUint8 *localOverlay = overlayLine;
+    PRUint8 *localAlpha   = alphaLine;
+
+    for (j = width; j >= 8; j -= 8) {
+      // don't do in for(...) to avoid reference past end of buffer
+      pixels = *localOverlay++;
+
+      if (pixels == 0) // no bits to set - iterate and bump output pointer
+        localAlpha++;
+      else {
+        // for the last few bits of a line, we need to special-case it
+        if (mask_offset == 0) // simple case, no offset
+          *localAlpha++ |= pixels;
+        else {
+          *localAlpha++ |= (pixels >> mask_offset);
+          *localAlpha   |= (pixels << (8U-mask_offset));
+        }
+      }
+    }
+    if (j != 0) {
+      // handle the end of the line, 1 to 7 pixels
+      pixels = *localOverlay++;
+      if (pixels != 0) {
+        // last few bits have to be handled more carefully if
+        // width is not a multiple of 8.
+
+        // set bits we don't want to change to 0
+        pixels = (pixels >> (8U-j)) << (8U-j);
+        *localAlpha++ |= (pixels >> mask_offset);
+        // don't touch this byte unless we have bits for it
+        if (j > (8U - mask_offset))
+          *localAlpha |= (pixels << (8U-mask_offset));
+      }
+    }
+
+#ifdef MOZ_PLATFORM_IMAGES_BOTTOM_TO_TOP
+    alphaLine   -= abprComposite;
+    overlayLine -= abprOverlay;
+#else
+    alphaLine   += abprComposite;
+    overlayLine += abprOverlay;
+#endif
+  }
+
+  aCompositingFrame->UnlockAlphaData();
+  aOverlayFrame->UnlockAlphaData();
+  return;
+}
+
+//******************************************************************************
+void imgContainer::SetMaskVisibility(gfxIImageFrame *aFrame,
+                                     PRInt32 aX, PRInt32 aY,
+                                     PRInt32 aWidth, PRInt32 aHeight,
+                                     PRBool aVisible)
+{
+  if (!aFrame)
+    return;
+
+  PRInt32 frameWidth;
+  PRInt32 frameHeight;
+  aFrame->GetWidth(&frameWidth);
+  aFrame->GetHeight(&frameHeight);
+
+  const PRInt32 width  = PR_MIN(aWidth, frameWidth - aX);
+  const PRInt32 height = PR_MIN(aHeight, frameHeight - aY);
+
+  if (width <= 0 || height <= 0) {
+    return;
+  }
+
+  PRUint8* alphaData;
+  PRUint32 alphaDataLength;
+  const PRUint8 setMaskTo = aVisible ? 0xFF : 0x00;
+
+  aFrame->LockImageData();
+  nsresult res = aFrame->GetImageData(&alphaData, &alphaDataLength);
+  if (NS_SUCCEEDED(res)) {
+#ifdef IS_LITTLE_ENDIAN
+    alphaData += aY*frameWidth*4 + 3;
+#else
+    alphaData += aY*frameWidth*4;
+#endif
+    for (PRInt32 j = height; j > 0; --j) {
+      for (PRInt32 i = (aX+width-1)*4; i >= aX; i -= 4) {
+        alphaData[i] = setMaskTo;
+      }
+      alphaData += frameWidth*4;
+    }
+  }
+  aFrame->UnlockImageData();
+}
+
+//******************************************************************************
+void imgContainer::SetMaskVisibility(gfxIImageFrame *aFrame, PRBool aVisible)
+{
+  if (!aFrame)
+    return;
+
+  PRUint8* alphaData;
+  PRUint32 alphaDataLength;
+  const PRUint8 setMaskTo = aVisible ? 0xFF : 0x00;
+
+  aFrame->LockImageData();
+  nsresult res = aFrame->GetImageData(&alphaData, &alphaDataLength);
+  if (NS_SUCCEEDED(res)) {
+    for (PRUint32 i = 0; i < alphaDataLength; i+=4) {
+#ifdef IS_LITTLE_ENDIAN
+      alphaData[i+3] = setMaskTo;
+#else
+      alphaData[i] = setMaskTo;
+#endif
+    }
+  }
+  aFrame->UnlockImageData();
+}
+
+//******************************************************************************
+// Fill aFrame with black. Does not change the mask.
+void imgContainer::BlackenFrame(gfxIImageFrame *aFrame)
+{
+  if (!aFrame)
+    return;
+
+  PRInt32 widthFrame;
+  PRInt32 heightFrame;
+  aFrame->GetWidth(&widthFrame);
+  aFrame->GetHeight(&heightFrame);
+
+  BlackenFrame(aFrame, 0, 0, widthFrame, heightFrame);
+}
+
+//******************************************************************************
+void imgContainer::BlackenFrame(gfxIImageFrame *aFrame,
+                                   PRInt32 aX, PRInt32 aY,
+                                   PRInt32 aWidth, PRInt32 aHeight)
 {
   if (!aFrame)
     return;
 
   nsCOMPtr<nsIImage> img(do_GetInterface(aFrame));
-  nsRefPtr<gfxASurface> surf;
-  img->GetSurface(getter_AddRefs(surf));
-
-  // Erase the surface to transparent
-  nsRefPtr<gfxContext> ctx = new gfxContext(surf);
-  ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
-  ctx->Paint();
-
-  nsIntRect r;
-  aFrame->GetRect(r);
-  img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
-}
-
-//******************************************************************************
-void imgContainer::ClearFrame(gfxIImageFrame *aFrame, nsIntRect &aRect)
-{
-  if (!aFrame || aRect.width <= 0 || aRect.height <= 0) {
+  if (!img)
     return;
-  }
 
-  nsCOMPtr<nsIImage> img(do_GetInterface(aFrame));
   nsRefPtr<gfxASurface> surf;
   img->GetSurface(getter_AddRefs(surf));
 
-  // Erase the destination rectangle to transparent
   nsRefPtr<gfxContext> ctx = new gfxContext(surf);
-  ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
-  ctx->Rectangle(gfxRect(aRect.x, aRect.y, aRect.width, aRect.height));
+  ctx->SetColor(gfxRGBA(0, 0, 0));
+  ctx->Rectangle(gfxRect(aX, aY, aWidth, aHeight));
   ctx->Fill();
 
-  img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &aRect);
+  nsIntRect r(aX, aY, aWidth, aHeight);
+  img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
 }
 
 
