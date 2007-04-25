@@ -141,6 +141,9 @@ ctype.h
 curses.h
 cxxabi.h
 DateTimeUtils.h
+dbus/dbus.h
+dbus/dbus-glib.h
+dbus/dbus-glib-lowlevel.h
 ddeml.h
 Debug.h
 dem.h
