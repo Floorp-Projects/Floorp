@@ -559,7 +559,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsGlobalHistory, nsIBrowserHistory)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsGlobalHistory, nsIBrowserHistory)
 
-NS_INTERFACE_MAP_BEGIN(nsGlobalHistory)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalHistory)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIGlobalHistory2, nsIGlobalHistory3)
   NS_INTERFACE_MAP_ENTRY(nsIGlobalHistory3)
   NS_INTERFACE_MAP_ENTRY(nsIBrowserHistory)
@@ -569,7 +569,6 @@ NS_INTERFACE_MAP_BEGIN(nsGlobalHistory)
   NS_INTERFACE_MAP_ENTRY(nsIRDFRemoteDataSource)
   NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSearch)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBrowserHistory)
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsGlobalHistory)
 NS_INTERFACE_MAP_END
 
 //----------------------------------------------------------------------

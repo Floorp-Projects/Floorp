@@ -669,11 +669,10 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(RelatedLinksHandlerImpl,
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(RelatedLinksHandlerImpl,
                                            nsIRelatedLinksHandler)
 
-NS_INTERFACE_MAP_BEGIN(RelatedLinksHandlerImpl)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RelatedLinksHandlerImpl)
     NS_INTERFACE_MAP_ENTRY(nsIRelatedLinksHandler)
     NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRelatedLinksHandler)
-    NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(RelatedLinksHandlerImpl)
 NS_INTERFACE_MAP_END
 
 // nsIRelatedLinksHandler interface

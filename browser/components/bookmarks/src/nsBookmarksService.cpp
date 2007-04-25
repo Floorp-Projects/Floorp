@@ -2531,7 +2531,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsBookmarksService,
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsBookmarksService,
                                            nsIBookmarksService)
 
-NS_INTERFACE_MAP_BEGIN(nsBookmarksService)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsBookmarksService)
     NS_INTERFACE_MAP_ENTRY(nsIBookmarksService)
     NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
     NS_INTERFACE_MAP_ENTRY(nsIRDFRemoteDataSource)
@@ -2542,7 +2542,6 @@ NS_INTERFACE_MAP_BEGIN(nsBookmarksService)
     NS_INTERFACE_MAP_ENTRY(nsIObserver)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBookmarksService)
-    NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsBookmarksService)
 NS_INTERFACE_MAP_END
 
 

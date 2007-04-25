@@ -649,9 +649,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsScriptEventHandlerOwnerTearoff)
   cb.NoteXPCOMChild(NS_STATIC_CAST(nsIContent*, tmp->mElement));
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_INTERFACE_MAP_BEGIN(nsScriptEventHandlerOwnerTearoff)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsScriptEventHandlerOwnerTearoff)
   NS_INTERFACE_MAP_ENTRY(nsIScriptEventHandlerOwner)
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsScriptEventHandlerOwnerTearoff)
 NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsScriptEventHandlerOwnerTearoff)
