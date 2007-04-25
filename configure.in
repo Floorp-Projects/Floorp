@@ -5202,12 +5202,10 @@ dnl ========================================================
 
 if test "$MOZ_ENABLE_GTK2"
 then
-    MOZ_ENABLE_DBUS=1
-
-    MOZ_ARG_DISABLE_BOOL(dbus,
-    [  --disable-dbus       Disable dbus support (default: auto, optional at runtime) ],
-        MOZ_ENABLE_DBUS=,
-        MOZ_ENABLE_DBUS=force)
+    MOZ_ARG_ENABLE_BOOL(dbus,
+    [  --enable-dbus       Enable dbus support (default: disabled) ],
+        MOZ_ENABLE_DBUS=force,
+        MOZ_ENABLE_DBUS=)
 
     if test "$MOZ_ENABLE_DBUS"
     then
