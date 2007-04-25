@@ -37,16 +37,21 @@
 
 #include "nsAirbagExceptionHandler.h"
 
-#ifdef XP_WIN32
+#if defined(XP_WIN32)
 #ifdef WIN32_LEAN_AND_MEAN
 #undef WIN32_LEAN_AND_MEAN
 #endif
 
 #include "client/windows/handler/exception_handler.h"
 #include <string.h>
+#elif defined(XP_MACOSX)
+#include "client/mac/handler/exception_handler.h"
+#include <string>
+#include <Carbon/Carbon.h>
+#include <fcntl.h>
 #else
 #error "Not yet implemented for this platform"
-#endif // XP_WIN32
+#endif // defined(XP_WIN32)
 
 #ifndef HAVE_CPP_2BYTE_WCHAR_T
 #error "This code expects a 2 byte wchar_t.  You should --disable-airbag."
@@ -59,72 +64,93 @@
 #include "nsILocalFile.h"
 #include "nsDataHashtable.h"
 
-#ifdef XP_WIN32
-#define CRASH_REPORTER_FILENAME "crashreporter.exe"
-#define PATH_SEPARATOR "\\"
-#else
-#define CRASH_REPORTER_FILENAME "crashreporter"
-#define PATH_SEPARATOR "/"
-#endif
-
 namespace CrashReporter {
 
-using std::wstring;
+#ifdef XP_WIN32
+typedef wchar_t XP_CHAR;
+#define TO_NEW_XP_CHAR(x) ToNewUnicode(x)
+#define CONVERT_UTF16_TO_XP_CHAR(x) x
+#define XP_STRLEN(x) wcslen(x)
+#define CRASH_REPORTER_FILENAME "crashreporter.exe"
+#define PATH_SEPARATOR "\\"
+#define XP_PATH_SEPARATOR L"\\"
+// sort of arbitrary, but MAX_PATH is kinda small
+#define XP_PATH_MAX 4096
+// "<reporter path>" "<minidump path>"
+#define CMDLINE_SIZE ((XP_PATH_MAX * 2) + 6)
+#else
+typedef char XP_CHAR;
+#define TO_NEW_XP_CHAR(x) ToNewUTF8String(x)
+#define CONVERT_UTF16_TO_XP_CHAR(x) NS_ConvertUTF16toUTF8(x)
+#define XP_STRLEN(x) strlen(x)
+#define CRASH_REPORTER_FILENAME "crashreporter"
+#define PATH_SEPARATOR "/"
+#define XP_PATH_SEPARATOR "/"
+#define XP_PATH_MAX PATH_MAX
+#endif // XP_WIN32
 
-static const PRUnichar dumpFileExtension[] = {'.', 'd', 'm', 'p',
-                                              '\"', '\0'}; // .dmp"
-static const PRUnichar extraFileExtension[] = {'.', 'e', 'x', 't',
-                                              'r', 'a', '\0'}; // .extra
-
-// xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-static const PRInt32 kGUIDLength = 36;
-// length of a GUID + .dmp" (yes, trailing double quote)
-static const PRInt32 kMinidumpFilenameLength =
-  kGUIDLength + sizeof(dumpFileExtension) / sizeof(dumpFileExtension[0]);
+static const XP_CHAR dumpFileExtension[] = {'.', 'd', 'm', 'p',
+                                            '\0'}; // .dmp
+static const XP_CHAR extraFileExtension[] = {'.', 'e', 'x', 't',
+                                             'r', 'a', '\0'}; // .extra
 
 static google_breakpad::ExceptionHandler* gExceptionHandler = nsnull;
 
-// for ease of replacing the dump path when someone
-// calls SetMinidumpPath
-static nsString* crashReporterCmdLine_withoutDumpPath = nsnull;
-// this is set up so we don't have to do heap allocation in the handler
-static PRUnichar* crashReporterCmdLine = nsnull;
-// points at the end of the previous string
-// so we can append the minidump filename
-static PRUnichar* crashReporterCmdLineEnd = nsnull;
-// space to hold a filename for the API data
-static PRUnichar* crashReporterAPIDataFilename = nsnull;
-static PRUnichar* crashReporterAPIDataFilenameEnd = nsnull;
+static XP_CHAR* crashReporterPath;
 
 // this holds additional data sent via the API
 static nsDataHashtable<nsCStringHashKey,nsCString>* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nsnull;
 
-bool MinidumpCallback(const wchar_t *dump_path,
-                      const wchar_t *minidump_id,
-                      void *context,
-                      EXCEPTION_POINTERS *exinfo,
-                      MDRawAssertionInfo *assertion,
+static XP_CHAR*
+Concat(XP_CHAR* str, const XP_CHAR* toAppend, int* size)
+{
+  int appendLen = XP_STRLEN(toAppend);
+  if (appendLen >= *size) appendLen = *size - 1;
+
+  memcpy(str, toAppend, appendLen * sizeof(XP_CHAR));
+  str += appendLen;
+  *str = '\0';
+  *size -= appendLen;
+
+  return str;
+}
+
+bool MinidumpCallback(const XP_CHAR* dump_path,
+                      const XP_CHAR* minidump_id,
+                      void* context,
+#ifdef XP_WIN32
+                      EXCEPTION_POINTERS* exinfo,
+                      MDRawAssertionInfo* assertion,
+#endif
                       bool succeeded)
 {
-  // append minidump filename to command line
-  memcpy(crashReporterCmdLineEnd, minidump_id,
-         kGUIDLength * sizeof(PRUnichar));
-  // this will copy the null terminator as well
-  memcpy(crashReporterCmdLineEnd + kGUIDLength,
-         dumpFileExtension, sizeof(dumpFileExtension));
+  XP_CHAR minidumpPath[XP_PATH_MAX];
+  int size = XP_PATH_MAX;
+  XP_CHAR* p = Concat(minidumpPath, dump_path, &size);
+  p = Concat(p, XP_PATH_SEPARATOR, &size);
+  p = Concat(p, minidump_id, &size);
+  Concat(p, dumpFileExtension, &size);
 
-  // append minidump filename to API data filename
-  memcpy(crashReporterAPIDataFilenameEnd, minidump_id,
-         kGUIDLength * sizeof(PRUnichar));
-  // this will copy the null terminator as well
-  memcpy(crashReporterAPIDataFilenameEnd + kGUIDLength,
-         extraFileExtension, sizeof(extraFileExtension));
+  XP_CHAR extraDataPath[XP_PATH_MAX];
+  size = XP_PATH_MAX;
+  p = Concat(extraDataPath, dump_path, &size);
+  p = Concat(p, XP_PATH_SEPARATOR, &size);
+  p = Concat(p, minidump_id, &size);
+  Concat(p, extraFileExtension, &size);
 
 #ifdef XP_WIN32
+  XP_CHAR cmdLine[CMDLINE_SIZE];
+  size = CMDLINE_SIZE;
+  p = Concat(cmdLine, L"\"", &size);
+  p = Concat(p, crashReporterPath, &size);
+  p = Concat(p, L"\" \"", &size);
+  p = Concat(p, minidumpPath, &size);
+  Concat(p, L"\"", &size);
+
   if (!crashReporterAPIData->IsEmpty()) {
     // write out API data
-    HANDLE hFile = CreateFile(crashReporterAPIDataFilename, GENERIC_WRITE, 0,
+    HANDLE hFile = CreateFile(extraDataPath, GENERIC_WRITE, 0,
                               NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
                               NULL);
     if(hFile != INVALID_HANDLE_VALUE) {
@@ -144,51 +170,48 @@ bool MinidumpCallback(const wchar_t *dump_path,
   si.wShowWindow = SW_SHOWNORMAL;
   ZeroMemory(&pi, sizeof(pi));
 
-  if (CreateProcess(NULL, (LPWSTR)crashReporterCmdLine, NULL, NULL, FALSE, 0,
+  if (CreateProcess(NULL, (LPWSTR)cmdLine, NULL, NULL, FALSE, 0,
                     NULL, NULL, &si, &pi)) {
     CloseHandle( pi.hProcess );
     CloseHandle( pi.hThread );
   }
   // we're not really in a position to do anything if the CreateProcess fails
   TerminateProcess(GetCurrentProcess(), 1);
-#endif
-  return succeeded;
-}
+#elif defined(XP_UNIX)
+  if (!crashReporterAPIData->IsEmpty()) {
+    // write out API data
+    int fd = open(extraDataPath,
+                  O_WRONLY | O_CREAT | O_TRUNC,
+                  0666);
 
-static nsresult BuildCommandLine(const nsAString &tempPath)
-{
-  nsString crashReporterCmdLine_temp =
-    *crashReporterCmdLine_withoutDumpPath + NS_LITERAL_STRING(" \"") + tempPath;
-  PRInt32 cmdLineLength = crashReporterCmdLine_temp.Length();
-
-  // allocate extra space for minidump file name
-  crashReporterCmdLine_temp.SetLength(cmdLineLength + kMinidumpFilenameLength
-                                      + 1);
-  crashReporterCmdLine = ToNewUnicode(crashReporterCmdLine_temp);
-  crashReporterCmdLineEnd = crashReporterCmdLine + cmdLineLength;
-
-  // build API data filename
-  if(crashReporterAPIDataFilename != nsnull) {
-    NS_Free(crashReporterAPIDataFilename);
-    crashReporterAPIDataFilename = nsnull;
+    if (fd != -1) {
+      // not much we can do in case of error
+      write(fd, crashReporterAPIData->get(), crashReporterAPIData->Length());
+      close (fd);
+    }
   }
 
-  nsString apiDataFilename_temp(tempPath);
-  PRInt32 filenameLength = apiDataFilename_temp.Length();
-  apiDataFilename_temp.SetLength(filenameLength + kMinidumpFilenameLength + 1);
-  crashReporterAPIDataFilename = ToNewUnicode(apiDataFilename_temp);
-  crashReporterAPIDataFilenameEnd =
-    crashReporterAPIDataFilename + filenameLength;
+  pid_t pid = fork();
 
-  return NS_OK;
+  if (pid == -1)
+    return false;
+  else if (pid == 0) {
+    (void) execl(crashReporterPath,
+                 crashReporterPath, minidumpPath, (char*)0);
+    _exit(1);
+  }
+#endif
+
+ return succeeded;
 }
 
 static nsresult GetExecutablePath(nsString& exePath)
 {
+#if !defined(XP_MACOSX)
+
 #ifdef XP_WIN32
-  // sort of arbitrary, but MAX_PATH is kinda small
-  exePath.SetLength(4096);
-  if (!GetModuleFileName(NULL, (LPWSTR)exePath.BeginWriting(), 4096))
+  exePath.SetLength(XP_PATH_MAX);
+  if (!GetModuleFileName(NULL, (LPWSTR)exePath.BeginWriting(), XP_PATH_MAX))
     return NS_ERROR_FAILURE;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -203,6 +226,55 @@ static nsresult GetExecutablePath(nsString& exePath)
   exePath.Truncate(lastSlash + 1);
 
   return NS_OK;
+
+#else // !defined(XP_MACOSX)
+
+  CFBundleRef appBundle = CFBundleGetMainBundle();
+  if (!appBundle)
+    return NS_ERROR_FAILURE;
+
+  CFURLRef executableURL = CFBundleCopyExecutableURL(appBundle);
+  if (!executableURL)
+    return NS_ERROR_FAILURE;
+
+  CFURLRef bundleURL = CFURLCreateCopyDeletingLastPathComponent(NULL,
+                                                                executableURL);
+  CFRelease(executableURL);
+
+  if (!bundleURL)
+    return NS_ERROR_FAILURE;
+
+  CFURLRef reporterURL = CFURLCreateCopyAppendingPathComponent(
+    NULL,
+    bundleURL,
+    CFSTR("crashreporter.app/Contents/MacOS/"),
+    false);
+  CFRelease(bundleURL);
+
+  if (!reporterURL)
+    return NS_ERROR_FAILURE;
+
+  FSRef fsRef;
+  if (!CFURLGetFSRef(reporterURL, &fsRef)) {
+    CFRelease(reporterURL);
+    return NS_ERROR_FAILURE;
+  }
+
+  CFRelease(reporterURL);
+
+  char path[PATH_MAX + 1];
+  OSStatus status = FSRefMakePath(&fsRef, (UInt8*)path, PATH_MAX);
+  if (status != noErr)
+    return NS_ERROR_FAILURE;
+
+  int len = strlen(path);
+  path[len] = '/';
+  path[len + 1] = '\0';
+
+  exePath = NS_ConvertUTF8toUTF16(path);
+
+  return NS_OK;
+#endif
 }
 
 nsresult SetExceptionHandler(nsILocalFile* aXREDirectory)
@@ -216,14 +288,11 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory)
   // we're off by default until we sort out the
   // rest of the infrastructure,
   // so it must exist and be set to a non-zero value.
-  const char *airbagEnv = PR_GetEnv("MOZ_AIRBAG");
+  const char* airbagEnv = PR_GetEnv("MOZ_AIRBAG");
   if (airbagEnv == NULL || atoi(airbagEnv) == 0)
     return NS_ERROR_NOT_AVAILABLE;
 
   // allocate our strings
-  crashReporterCmdLine_withoutDumpPath = new nsString();
-  NS_ENSURE_TRUE(crashReporterCmdLine_withoutDumpPath, NS_ERROR_OUT_OF_MEMORY);
-
   crashReporterAPIData = new nsCString();
   NS_ENSURE_TRUE(crashReporterAPIData, NS_ERROR_OUT_OF_MEMORY);
 
@@ -247,11 +316,7 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory)
 
   NS_NAMED_LITERAL_STRING(crashReporterFilename, CRASH_REPORTER_FILENAME);
 
-  // note that we enclose the exe filename in double quotes
-  crashReporterCmdLine_withoutDumpPath->Assign(NS_LITERAL_STRING("\"") +
-                                               exePath +
-                                               crashReporterFilename +
-                                               NS_LITERAL_STRING("\""));
+  crashReporterPath = TO_NEW_XP_CHAR(exePath + crashReporterFilename);
 
   // get temp path to use for minidump path
   nsString tempPath;
@@ -263,18 +328,30 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory)
 
   tempPath.SetLength(pathLen);
   GetTempPath(pathLen, (LPWSTR)tempPath.BeginWriting());
+#elif defined(XP_MACOSX)
+  FSRef fsRef;
+  OSErr err = FSFindFolder(kUserDomain, kTemporaryFolderType,
+                           kCreateFolder, &fsRef);
+  if (err != noErr)
+    return NS_ERROR_FAILURE;
+
+  tempPath.SetLength(PATH_MAX);
+  OSStatus status = FSRefMakePath(&fsRef,
+                                  (UInt8*)tempPath.BeginWriting(), PATH_MAX);
+  if (status != noErr)
+    return NS_ERROR_FAILURE;
+#else
+  //XXX: implement get temp path on other platforms
+  return NS_ERROR_NOT_IMPLEMENTED;
 #endif
 
-  rv = BuildCommandLine(tempPath);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // finally, set the exception handler
-  gExceptionHandler = new google_breakpad::ExceptionHandler(
-                                            PromiseFlatString(tempPath).get(),
-                                            nsnull,
-                                            MinidumpCallback,
-                                            nsnull,
-                                            true);
+  gExceptionHandler = new google_breakpad::
+    ExceptionHandler(CONVERT_UTF16_TO_XP_CHAR(tempPath).get(),
+                     nsnull,
+                     MinidumpCallback,
+                     nsnull,
+                     true);
 
   if (!gExceptionHandler)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -287,25 +364,8 @@ nsresult SetMinidumpPath(const nsAString& aPath)
   if (!gExceptionHandler)
     return NS_ERROR_NOT_INITIALIZED;
 
-  if(crashReporterCmdLine != nsnull) {
-    NS_Free(crashReporterCmdLine);
-    crashReporterCmdLine = nsnull;
-  }
+  gExceptionHandler->set_dump_path(CONVERT_UTF16_TO_XP_CHAR(aPath).BeginReading());
 
-  NS_NAMED_LITERAL_STRING(pathSep, PATH_SEPARATOR);
-
-  nsresult rv;
-
-  if(!StringEndsWith(aPath, pathSep)) {
-    rv = BuildCommandLine(aPath + pathSep);
-  }
-  else {
-    rv = BuildCommandLine(aPath);
-  }
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  gExceptionHandler->set_dump_path(PromiseFlatString(aPath).get());
   return NS_OK;
 }
 
@@ -313,17 +373,13 @@ nsresult UnsetExceptionHandler()
 {
   // do this here in the unlikely case that we succeeded in allocating
   // our strings but failed to allocate gExceptionHandler.
-  if (crashReporterCmdLine_withoutDumpPath) {
-    delete crashReporterCmdLine_withoutDumpPath;
-    crashReporterCmdLine_withoutDumpPath = nsnull;
-  }
-  if (crashReporterAPIData) {
-    delete crashReporterAPIData;
-    crashReporterAPIData = nsnull;
-  }
   if (crashReporterAPIData_Hash) {
     delete crashReporterAPIData_Hash;
     crashReporterAPIData_Hash = nsnull;
+  }
+  if (crashReporterPath) {
+    NS_Free(crashReporterPath);
+    crashReporterPath = nsnull;
   }
 
   if (!gExceptionHandler)
@@ -331,18 +387,6 @@ nsresult UnsetExceptionHandler()
 
   delete gExceptionHandler;
   gExceptionHandler = nsnull;
-
-  if(crashReporterCmdLine != nsnull) {
-    NS_Free(crashReporterCmdLine);
-    crashReporterCmdLine = nsnull;
-  }
-
-  if(crashReporterAPIDataFilename != nsnull) {
-    NS_Free(crashReporterAPIDataFilename);
-    crashReporterAPIDataFilename = nsnull;
-  }
-
-  crashReporterCmdLineEnd = nsnull;
 
   return NS_OK;
 }
