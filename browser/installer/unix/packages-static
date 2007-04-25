@@ -35,6 +35,7 @@ bin/libxpcom.so
 bin/libxpcom_core.so
 bin/libxpistub.so
 bin/libnspr4.so
+bin/libxul.so
 bin/components/libxpinstall.so
 bin/components/libjar50.so
 

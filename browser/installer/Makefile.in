@@ -58,7 +58,7 @@ include $(topsrcdir)/config/rules.mk
 
 MOZ_PKG_REMOVALS = $(srcdir)/removed-files.in
 
-ifdef BUILD_STATIC_LIBS
+ifneq (,$(BUILD_STATIC_LIBS)$(MOZ_ENABLE_LIBXUL))
 ifeq (WINNT,$(OS_ARCH))
 MOZ_PKG_MANIFEST_P = $(srcdir)/windows/packages-static
 else
@@ -67,7 +67,7 @@ MOZ_PKG_MANIFEST_P = $(srcdir)/unix/packages-static
 endif
 endif
 else
-$(error you need a "--enable-static --disable-shared" build to create an installer)
+$(error you need a "--enable-static or --enable-libxul" build to create an installer)
 endif
 
 MOZ_NONLOCALIZED_PKG_LIST = \
