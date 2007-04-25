@@ -38,6 +38,7 @@
 #ifndef nsXULTooltipListener_h__
 #define nsXULTooltipListener_h__
 
+#include "nsCycleCollectionParticipant.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMKeyListener.h"
@@ -59,9 +60,9 @@ class nsXULTooltipListener : public nsIDOMMouseListener,
                              public nsIDOMXULListener
 {
 public:
-
-  // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULTooltipListener,
+                                           nsIDOMMouseListener)
 
   // nsIDOMMouseListener
   NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
@@ -97,10 +98,10 @@ public:
   nsresult RemoveTooltipSupport(nsIContent* aNode);
   static nsXULTooltipListener* GetInstance() {
     if (!mInstance)
-      NS_IF_ADDREF(mInstance = new nsXULTooltipListener());
+      mInstance = new nsXULTooltipListener();
     return mInstance;
   }
-  static void ReleaseInstance() { NS_IF_RELEASE(mInstance); }
+  static void ClearTooltipCache() { mInstance = nsnull; }
 
 protected:
 
