@@ -1794,378 +1794,6 @@ out:
     return JS_TRUE;
 }
 
-#ifdef DEBUG
-
-#include <stdio.h>
-#include "jsprf.h"
-
-#ifdef HAVE_XPCONNECT
-#include "dump_xpc.h"
-#endif
-
-JS_PUBLIC_API(void)
-JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
-                       void *thing, uint32 kind, JSBool details)
-{
-    const char *name;
-    size_t n;
-
-    if (bufsize == 0)
-        return;
-
-    switch (kind) {
-      case JSTRACE_OBJECT:
-      {
-        JSObject *obj = (JSObject *)thing;
-        JSClass *clasp = STOBJ_GET_CLASS(obj);
-
-        name = clasp->name;
-#ifdef HAVE_XPCONNECT
-        if (clasp->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) {
-            jsval privateValue = STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
-
-            JS_ASSERT(clasp->flags & JSCLASS_HAS_PRIVATE);
-            if (!JSVAL_IS_VOID(privateValue)) {
-                void  *privateThing = JSVAL_TO_PRIVATE(privateValue);
-                const char *xpcClassName = GetXPCObjectClassName(privateThing);
-
-                if (xpcClassName)
-                    name = xpcClassName;
-            }
-        }
-#endif
-        break;
-      }
-
-      case JSTRACE_STRING:
-        name = JSSTRING_IS_DEPENDENT((JSString *)thing)
-               ? "substring"
-               : "string";
-        break;
-
-      case JSTRACE_DOUBLE:
-        name = "double";
-        break;
-
-      case JSTRACE_FUNCTION:
-        name = "function";
-        break;
-
-      case JSTRACE_ATOM:
-        name = "atom";
-        break;
-
-#if JS_HAS_XML_SUPPORT
-      case JSTRACE_NAMESPACE:
-        name = "namespace";
-        break;
-
-      case JSTRACE_QNAME:
-        name = "qname";
-        break;
-
-      case JSTRACE_XML:
-        name = "xml";
-        break;
-#endif
-      default:
-        JS_ASSERT(0);
-        return;
-        break;
-    }
-
-    n = strlen(name);
-    if (n > bufsize - 1)
-        n = bufsize - 1;
-    memcpy(buf, name, n + 1);
-    buf += n;
-    bufsize -= n;
-
-    if (details && bufsize > 2) {
-        *buf++ = ' ';
-        bufsize--;
-
-        switch (kind) {
-          case JSTRACE_OBJECT:
-          {
-            JSObject  *obj = (JSObject *)thing;
-            jsval     privateValue = STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE);
-            void      *privateThing = JSVAL_IS_VOID(privateValue)
-                                      ? NULL
-                                      : JSVAL_TO_PRIVATE(privateValue);
-
-            JS_snprintf(buf, bufsize, "%8p", privateThing);
-            break;
-          }
-
-          case JSTRACE_STRING:
-            js_PutEscapedString(buf, bufsize, (JSString *)thing, 0);
-            break;
-
-          case JSTRACE_DOUBLE:
-            JS_snprintf(buf, bufsize, "%g", *(jsdouble *)thing);
-            break;
-
-          case JSTRACE_FUNCTION:
-          {
-            JSFunction *fun = (JSFunction *)thing;
-
-            if (fun->atom && ATOM_IS_STRING(fun->atom))
-                js_PutEscapedString(buf, bufsize, ATOM_TO_STRING(fun->atom), 0);
-            break;
-          }
-
-          case JSTRACE_ATOM:
-          {
-            JSAtom *atom = (JSAtom *)thing;
-
-            if (ATOM_IS_INT(atom))
-                JS_snprintf(buf, bufsize, "%d", ATOM_TO_INT(atom));
-            else if (ATOM_IS_STRING(atom))
-                js_PutEscapedString(buf, bufsize, ATOM_TO_STRING(atom), 0);
-            else
-                JS_snprintf(buf, bufsize, "object");
-            break;
-          }
-
-#if JS_HAS_XML_SUPPORT
-          case GCX_NAMESPACE:
-          {
-            JSXMLNamespace *ns = (JSXMLNamespace *)thing;
-
-            if (ns->prefix) {
-                n = js_PutEscapedString(buf, bufsize, ns->prefix, 0);
-                buf += n;
-                bufsize -= n;
-            }
-            if (bufsize > 2) {
-                *buf++ = ':';
-                bufsize--;
-                js_PutEscapedString(buf, bufsize, ns->uri, 0);
-            }
-            break;
-          }
-
-          case GCX_QNAME:
-          {
-            JSXMLQName *qn = (JSXMLQName *)thing;
-
-            if (qn->prefix) {
-                n = js_PutEscapedString(buf, bufsize, qn->prefix, 0);
-                buf += n;
-                bufsize -= n;
-            }
-            if (bufsize > 2) {
-                *buf++ = '(';
-                bufsize--;
-                n = js_PutEscapedString(buf, bufsize, qn->uri, 0);
-                buf += n;
-                bufsize -= n;
-                if (bufsize > 3) {
-                    *buf++ = ')';
-                    *buf++ = ':';
-                    bufsize -= 2;
-                    js_PutEscapedString(buf, bufsize, qn->localName, 0);
-                }
-            }
-            break;
-          }
-
-          case GCX_XML:
-          {
-            extern const char *js_xml_class_str[];
-            JSXML *xml = (JSXML *)thing;
-
-            JS_snprintf(buf, bufsize, "%s", js_xml_class_str[xml->xml_class]);
-            break;
-          }
-#endif
-          default:
-            JS_ASSERT(0);
-            break;
-        }
-    }
-    buf[bufsize - 1] = '\0';
-}
-
-typedef struct JSGCDumpNode JSGCDumpNode;
-
-struct JSGCDumpNode {
-    void            *thing;
-    uint32          kind;
-    char            *name;
-    JSGCDumpNode    *next;
-};
-
-typedef struct JSDumpingTracer
-{
-    JSTracer        base;
-    JSDHashTable    visited;
-    JSBool          ok;
-    FILE            *file;
-    void            *thingToFind;
-    size_t          maxRecursionDepth;
-    void            *thingToIgnore;
-    size_t          recursionDepth;
-    JSGCDumpNode    *top, **bottomp;
-    char            buffer[200];
-} JSDumpingTracer;
-
-static void
-DumpThing(JSDumpingTracer *dtrc, JSGCDumpNode *node)
-{
-    FILE *fp;
-
-    fp = dtrc->file;
-    fprintf(fp, "%p ", node->thing);
-    JS_PrintTraceThingInfo(dtrc->buffer, sizeof(dtrc->buffer),
-                           &dtrc->base, node->thing, node->kind, JS_TRUE);
-    fputs(dtrc->buffer, fp);
-
-    /* Print path to this node from a traversal root. */
-    node = dtrc->top;
-    if (node->next) {
-        fputs("\tvia ", fp);
-        do {
-            if (node != dtrc->top)
-                fputc('.', fp);
-            fprintf(fp, "%s(%p ", node->name, node->thing);
-            JS_PrintTraceThingInfo(dtrc->buffer, sizeof(dtrc->buffer),
-                                   &dtrc->base, node->thing, node->kind,
-                                   JS_FALSE);
-            fputs(dtrc->buffer, fp);
-            node = node->next;
-        } while (node->next);
-    }
-    fputc('\n', fp);
-}
-
-static void
-DumpNotify(JSTracer *trc, void *thing, uint32 kind)
-{
-    JSDumpingTracer *dtrc;
-    JSContext *cx;
-    JSDHashEntryStub *entry;
-    JSGCDumpNode node, **bottomp;
-    const char *name;
-
-    JS_ASSERT(trc->callback == DumpNotify);
-    dtrc = (JSDumpingTracer *)trc;
-
-    if (!dtrc->ok)
-        return;
-
-    if (dtrc->thingToIgnore == thing)
-        return;
-
-    cx = trc->context;
-    entry = (JSDHashEntryStub *)
-        JS_DHashTableOperate(&dtrc->visited, thing, JS_DHASH_ADD);
-    if (!entry) {
-        JS_ReportOutOfMemory(cx);
-        dtrc->ok = JS_FALSE;
-        return;
-    }
-    if (entry->key)
-        return;
-    entry->key = thing;
-
-    node.thing = thing;
-    node.kind = kind;
-    if (dtrc->base.debugPrinter) {
-        dtrc->base.debugPrinter(trc, dtrc->buffer, sizeof(dtrc->buffer));
-        name = dtrc->buffer;
-    } else if (dtrc->base.debugPrintIndex != (size_t)-1) {
-        JS_snprintf(dtrc->buffer, sizeof(dtrc->buffer), "%s[%lu]",
-                    (const char *)dtrc->base.debugPrintArg,
-                    dtrc->base.debugPrintIndex);
-        name = dtrc->buffer;
-    } else {
-        name = (const char*)dtrc->base.debugPrintArg;
-    }
-
-    node.name = JS_strdup(cx, name);
-    if (!node.name) {
-        dtrc->ok = JS_FALSE;
-        return;
-    }
-
-    node.next  = NULL;
-    bottomp = dtrc->bottomp;
-    JS_ASSERT(!*bottomp);
-    *bottomp = &node;
-    dtrc->bottomp = &node.next;
-
-    /*
-     * Dump thingToFind each time we reach it during the tracing to print all
-     * live references to the thing.
-     */
-    if (!dtrc->thingToFind || dtrc->thingToFind == thing)
-        DumpThing(dtrc, &node);
-
-    if (dtrc->recursionDepth < dtrc->maxRecursionDepth) {
-        dtrc->recursionDepth++;
-        JS_TraceChildren(&dtrc->base, thing, kind);
-        dtrc->recursionDepth--;
-    }
-
-    *bottomp = NULL;
-    dtrc->bottomp = bottomp;
-    JS_free(cx, node.name);
-}
-
-JS_FRIEND_API(JSTracer *)
-js_NewGCHeapDumper(JSContext *cx, void *thingToFind, FILE *fp,
-                   size_t maxRecursionDepth, void *thingToIgnore)
-{
-    JSDumpingTracer *dtrc;
-
-    dtrc = (JSDumpingTracer *)JS_malloc(cx, sizeof(*dtrc));
-    if (!dtrc)
-        return NULL;
-
-    JS_TRACER_INIT(&dtrc->base, cx, DumpNotify);
-    if (!JS_DHashTableInit(&dtrc->visited, JS_DHashGetStubOps(),
-                           NULL, sizeof(JSDHashEntryStub),
-                           JS_DHASH_DEFAULT_CAPACITY(100))) {
-        JS_ReportOutOfMemory(cx);
-        JS_free(cx, dtrc);
-        return NULL;
-    }
-
-    dtrc->ok = JS_TRUE;
-    dtrc->file = fp ? fp : stderr;
-    dtrc->thingToFind = thingToFind;
-    dtrc->maxRecursionDepth = maxRecursionDepth;
-    dtrc->thingToIgnore = thingToIgnore;
-    dtrc->recursionDepth = 0;
-    dtrc->top = NULL;
-    dtrc->bottomp = &dtrc->top;
-
-    return &dtrc->base;
-}
-
-JS_FRIEND_API(JSBool)
-js_FreeGCHeapDumper(JSTracer *trc)
-{
-    JSDumpingTracer *dtrc;
-    JSBool ok;
-    JSContext *cx;
-
-    JS_ASSERT(trc->callback == DumpNotify);
-    dtrc = (JSDumpingTracer *)trc;
-    JS_ASSERT(!dtrc->top);
-    JS_ASSERT(dtrc->bottomp == &dtrc->top);
-
-    JS_DHashTableFinish(&dtrc->visited);
-    ok = dtrc->ok;
-    cx = dtrc->base.context;
-    JS_free(cx, dtrc);
-    return ok;
-}
-
-#endif /* DEBUG */
-
 JS_PUBLIC_API(void)
 JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
 {
@@ -2689,11 +2317,11 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
 {
     uintN depth, nslots;
     if (fp->callobj)
-        JS_CALL_OBJECT_TRACER(trc, fp->callobj, "call object");
+        JS_CALL_OBJECT_TRACER(trc, fp->callobj, "call");
     if (fp->argsobj)
-        JS_CALL_OBJECT_TRACER(trc, fp->argsobj, "arguments object");
+        JS_CALL_OBJECT_TRACER(trc, fp->argsobj, "arguments");
     if (fp->varobj)
-        JS_CALL_OBJECT_TRACER(trc, fp->varobj, "variables object");
+        JS_CALL_OBJECT_TRACER(trc, fp->varobj, "variables");
     if (fp->script) {
         js_TraceScript(trc, fp->script);
         if (fp->spbase) {
@@ -2862,8 +2490,8 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
         js_TraceSharpMap(trc, &acx->sharpObjectMap);
 }
 
-static void
-TraceRuntime(JSTracer *trc, JSBool allAtoms)
+void
+js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
 {
     JSRuntime *rt = trc->context->runtime;
     JSContext *iter, *acx;
@@ -2882,12 +2510,6 @@ TraceRuntime(JSTracer *trc, JSBool allAtoms)
     iter = NULL;
     while ((acx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL)
         js_TraceContext(trc, acx);
-}
-
-JS_FRIEND_API(void)
-js_TraceRuntime(JSTracer *trc)
-{
-    TraceRuntime(trc, JS_FALSE);
 }
 
 /*
@@ -3110,7 +2732,7 @@ restart:
     JS_TRACER_INIT(&trc, cx, NULL);
     rt->gcMarkingTracer = &trc;
     JS_ASSERT(IS_GC_MARKING_TRACER(&trc));
-    TraceRuntime(&trc, keepAtoms);
+    js_TraceRuntime(&trc, keepAtoms);
     js_MarkScriptFilenames(rt, keepAtoms);
 
     /*
