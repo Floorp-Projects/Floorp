@@ -438,6 +438,7 @@ struct nsPurpleBuffer
                    nsCycleCollectorStats &stats) 
         : mParams(params),
           mStats(stats),
+          mCurrGen(0),
           mTransferBuffer(nsnull)
     {
         Init();
@@ -445,6 +446,7 @@ struct nsPurpleBuffer
 #else
     nsPurpleBuffer(nsCycleCollectorParams &params) 
         : mParams(params),
+          mCurrGen(0),
           mTransferBuffer(nsnull)
     {
         Init();
