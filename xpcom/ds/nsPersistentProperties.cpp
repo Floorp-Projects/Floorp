@@ -176,27 +176,46 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
       static const char trimThese[] = " \t";
       key.Trim(trimThese, PR_FALSE, PR_TRUE);
       c = Read();
-      nsAutoString value;
+      nsAutoString value, tempValue;
+      while ((c >= 0) && (c != '\r') && (c != '\n')) {
+        if (c == '\\') {
+          c = Read();
+          switch(c) {
+            case '\r':
+            case '\n':
+              // Only skip first EOL characters and then next line's
+              // whitespace characters. Skipping all EOL characters
+              // and all upcoming whitespace is too agressive.
+              if (c == '\r')
+                c = Read();
+              if (c == '\n')
+                c = Read();
+              while (c == ' ' || c == '\t')
+                c = Read();
+              continue;
+            default:
+              tempValue.Append((PRUnichar) '\\');
+              tempValue.Append((PRUnichar) c);
+          } // switch(c)
+        } else {
+          tempValue.Append((PRUnichar) c);
+        }
+        c = Read();
+      }
+      tempValue.Trim(trimThese, PR_TRUE, PR_TRUE);
+
       PRUint32 state  = 0;
       PRUnichar uchar = 0;
-      while ((c >= 0) && (c != '\r') && (c != '\n')) {
+      for (PRUint32 i = 0; i < tempValue.Length(); ++i) {
+        PRUnichar ch = tempValue[i];
         switch(state) {
           case 0:
-           if (c == '\\') {
-             c = Read();
-             switch(c) {
-               case '\r':
-               case '\n':
-                 // Only skip first EOL characters and then next line's
-                 // whitespace characters. Skipping all EOL characters
-                 // and all upcoming whitespace is too agressive.
-                 if (c == '\r')
-                    c = Read();
-                 if (c == '\n')
-                    c = Read();
-                 while (c == ' ' || c == '\t')
-                    c = Read();
-                 continue;
+           if (ch == '\\') {
+             ++i;
+             if (i == tempValue.Length())
+               break;
+             ch = tempValue[i];
+             switch(ch) {
                case 'u':
                case 'U':
                  state = 1;
@@ -212,33 +231,33 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
                  value.Append(PRUnichar('\r'));
                  break;
                default:
-                 value.Append((PRUnichar) c);
-             } // switch(c)
+                 value.Append(ch);
+             } // switch(ch)
            } else {
-             value.Append((PRUnichar) c);
+             value.Append(ch);
            }
-           c = Read();
-           break;
+           continue;
          case 1:
          case 2:
          case 3:
          case 4:
-           if (('0' <= c) && (c <= '9')) {
-              uchar = (uchar << 4) | (c - '0');
+           if (('0' <= ch) && (ch <= '9')) {
+               uchar = (uchar << 4) | (ch - '0');
               state++;
-              c = Read();
-           } else if (('a' <= c) && (c <= 'f')) {
-              uchar = (uchar << 4) | (c - 'a' + 0x0a);
-              state++;
-              c = Read();
-           } else if (('A' <= c) && (c <= 'F')) {
-              uchar = (uchar << 4) | (c - 'A' + 0x0a);
-              state++;
-              c = Read();
-           } else {
-             value.Append((PRUnichar) uchar);
-             state = 0;
+              continue;
            }
+           if (('a' <= ch) && (ch <= 'f')) {
+              uchar = (uchar << 4) | (ch - 'a' + 0x0a);
+              state++;
+              continue;
+           }
+           if (('A' <= ch) && (ch <= 'F')) {
+              uchar = (uchar << 4) | (ch - 'A' + 0x0a);
+              state++;
+              continue;
+           }
+           value.Append((PRUnichar) uchar);
+           state = 0;
            break;
          case 5:
            value.Append((PRUnichar) uchar);
@@ -249,8 +268,7 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
         value.Append((PRUnichar) uchar);
         state = 0;
       }
-
-      value.Trim(trimThese, PR_TRUE, PR_TRUE);
+      
       nsAutoString oldValue;
       mSubclass->SetStringProperty(NS_ConvertUTF16toUTF8(key), value, oldValue);
     }
