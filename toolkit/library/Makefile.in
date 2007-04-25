@@ -190,6 +190,7 @@ EXTRA_DSO_LDOPTS += \
 	-framework Cocoa \
 	-framework QuickTime \
 	-framework IOKit \
+	-lcrypto \
 	$(TK_LIBS) \
 	$(NULL)
 endif

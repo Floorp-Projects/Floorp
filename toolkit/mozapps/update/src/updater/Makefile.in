@@ -106,14 +106,12 @@ include $(topsrcdir)/config/rules.mk
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 libs::
-	mkdir -p $(DIST)/bin/updater.app
-	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/bin/updater.app 
+	$(NSINSTALL) -D $(DIST)/bin/updater.app
+	rsync -a -C --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/bin/updater.app 
 	sed -e "s/@APP_NAME@/$(MOZ_APP_DISPLAYNAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | \
 	  iconv -f UTF-8 -t UTF-16 > $(DIST)/bin/updater.app/Contents/Resources/English.lproj/InfoPlist.strings
-	mkdir -p $(DIST)/bin/updater.app/Contents/MacOS
-# copy and remove to un-symlink (FSCopyObject seems to not copy symlinks)
-	rm -f $(DIST)/bin/updater.app/Contents/MacOS/updater
-	cp -f $(DIST)/bin/updater $(DIST)/bin/updater.app/Contents/MacOS
+	$(NSINSTALL) -D $(DIST)/bin/updater.app/Contents/MacOS
+	$(NSINSTALL) $(DIST)/bin/updater $(DIST)/bin/updater.app/Contents/MacOS
 	rm -f $(DIST)/bin/updater
 endif
 
