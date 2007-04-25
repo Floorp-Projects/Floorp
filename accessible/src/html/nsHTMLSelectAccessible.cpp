@@ -479,7 +479,7 @@ nsHyperTextAccessible(aDOMNode, aShell)
 NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetRole(PRUint32 *aRole)
 {
   if (mParent && Role(mParent) == nsIAccessibleRole::ROLE_COMBOBOX_LIST) {
-    *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LISTITEM;
+    *aRole = nsIAccessibleRole::ROLE_LISTITEM;
   }
   else {
     *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LISTITEM;
@@ -528,24 +528,42 @@ nsresult
 nsHTMLSelectOptionAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
   NS_ENSURE_ARG_POINTER(aAttributes);
-  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;  // Accessible shut down
+  }
 
   nsresult rv = nsHyperTextAccessible::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDOMNode> parentNode;
+  mDOMNode->GetParentNode(getter_AddRefs(parentNode));
+  nsCOMPtr<nsIDOMElement> parentElement(do_QueryInterface(parentNode));
+  NS_ENSURE_TRUE(parentElement, NS_ERROR_FAILURE);
+  nsAutoString parentTagName;
+  parentNode->GetLocalName(parentTagName);
 
-  nsCOMPtr<nsIContent> parentContent = content->GetParent();
-  NS_ENSURE_TRUE(parentContent, NS_ERROR_FAILURE);
+  PRInt32 level = parentTagName.LowerCaseEqualsLiteral("optgroup") ? 2 : 1;
+  if (level == 1 && Role(this) != nsIAccessibleRole::ROLE_HEADING) {
+    level = 0; // In a single level list, the level is irrelevant
+  }
 
-  PRUint32 level =
-    parentContent->NodeInfo()->Equals(nsAccessibilityAtoms::optgroup) ? 2 : 1;
-  PRUint32 childCount = parentContent->GetChildCount();
-  PRUint32 indexOf = parentContent->IndexOf(content);
+  nsAutoString tagName;
+  mDOMNode->GetLocalName(tagName);  // Will be looking for similar DOM siblings
+  nsCOMPtr<nsIDOMNodeList> siblings;
+  parentElement->GetElementsByTagName(tagName, getter_AddRefs(siblings));
+  PRInt32 posInSet = 0;
+  PRUint32 setSize = 0;
+  if (siblings) {
+    siblings->GetLength(&setSize);
+    nsCOMPtr<nsIDOMNode> itemNode;
+    while (NS_SUCCEEDED(siblings->Item(posInSet ++, getter_AddRefs(itemNode))) &&
+           itemNode != mDOMNode) {
+      // Keep looping, to increment posInSet
+    }
+  }
 
   nsAccessibilityUtils::
-    SetAccGroupAttrs(aAttributes, level, indexOf + 1, childCount);
+    SetAccGroupAttrs(aAttributes, level, posInSet, NS_STATIC_CAST(PRInt32, setSize));
   return  NS_OK;
 }
 
@@ -812,11 +830,13 @@ nsHTMLSelectOptionAccessible(aDOMNode, aShell)
 {
 }
 
+NS_IMETHODIMP
+nsHTMLSelectOptGroupAccessible::GetRole(PRUint32 *aRole)
+{
+  *aRole = nsIAccessibleRole::ROLE_HEADING;
+  return NS_OK;
+}
 
-/**
-  * As a nsHTMLSelectOptGroupAccessible we can have the following states:
-  *     nsIAccessibleStates::STATE_SELECTABLE
-  */
 NS_IMETHODIMP
 nsHTMLSelectOptGroupAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
@@ -842,6 +862,24 @@ NS_IMETHODIMP nsHTMLSelectOptGroupAccessible::GetActionName(PRUint8 aIndex, nsAS
 NS_IMETHODIMP nsHTMLSelectOptGroupAccessible::GetNumActions(PRUint8 *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+void nsHTMLSelectOptGroupAccessible::CacheChildren()
+{
+  if (!mWeakShell) {
+    // This node has been shut down
+    mAccChildCount = eChildCountUninitialized;
+    return;
+  }
+
+  if (mAccChildCount == eChildCountUninitialized) {
+    // XXX To do (bug 378612) - create text child for the anonymous attribute content, so that
+    // nsIAccessibleText is supported for the <optgroup> as it is for an <option>
+    // Attribute content is what layout creates for the label="foo" on the <optgroup>
+    // See eStyleContentType_Attr and CreateAttributeContent() in nsCSSFrameConstructor
+    mAccChildCount = 0;
+    SetFirstChild(nsnull);
+  }
 }
 
 /** ------------------------------------------------------ */
