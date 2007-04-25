@@ -11,10 +11,10 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<p id="display"></p>
+<p id="display"><span id="fparent"><span id="fchild"></span></span></p>
 <div id="content" style="display: none">
 
-<div id="testnode"><span id="parent"><span id="child"></span></span></div>
+<div id="testnode"><span id="nparent"><span id="nchild"></span></span></div>
   
 </div>
 <pre id="test">
@@ -85,11 +85,18 @@ function xfail_inherit(property, matching_initial) {
   return property in gBrokenInherit;
 }
 
-var gParent = document.getElementById("parent");
-var gChild = document.getElementById("child");
+// elements without a frame
+var gNParent = document.getElementById("nparent");
+var gNChild = document.getElementById("nchild");
+// elements with a frame
+var gFParent = document.getElementById("fparent");
+var gFChild = document.getElementById("fchild");
+
 var gStyleSheet = document.getElementById("stylesheet").sheet;
-var gChildRule1 = gStyleSheet.cssRules[gStyleSheet.insertRule("#child {}", gStyleSheet.cssRules.length)];
-var gChildRule2 = gStyleSheet.cssRules[gStyleSheet.insertRule("#child {}", gStyleSheet.cssRules.length)];
+var gChildRule1 = gStyleSheet.cssRules[gStyleSheet.insertRule("#nchild, #fchild {}", gStyleSheet.cssRules.length)];
+var gChildRule2 = gStyleSheet.cssRules[gStyleSheet.insertRule("#nchild, #fchild {}", gStyleSheet.cssRules.length)];
+var gChildRuleTop = gStyleSheet.cssRules[gStyleSheet.insertRule("#nchild, #fchild {}", gStyleSheet.cssRules.length)];
+var gParentRuleTop = gStyleSheet.cssRules[gStyleSheet.insertRule("#nparent, #fparent {}", gStyleSheet.cssRules.length)];
 
 // Get the computed value for a property.  For shorthands, return the
 // computed values of all the subproperties, delimited by " ; ".
@@ -117,57 +124,89 @@ function test_property(property)
   if ("prerequisites" in info) {
     var prereqs = info.prerequisites;
     for (var prereq in prereqs) {
-      gParent.style.setProperty(prereq, prereqs[prereq], "");
-      gChild.style.setProperty(prereq, prereqs[prereq], "");
+      gParentRuleTop.style.setProperty(prereq, prereqs[prereq], "");
+      gChildRuleTop.style.setProperty(prereq, prereqs[prereq], "");
     }
   }
 
   if (info.inherited) {
-    gParent.style.setProperty(property, info.initial_values[0], "");
-    var initial_computed = get_computed_value(gChild, property);
+    gParentRuleTop.style.setProperty(property, info.initial_values[0], "");
+    var initial_computed_n = get_computed_value(gNChild, property);
+    var initial_computed_f = get_computed_value(gFChild, property);
     gChildRule1.style.setProperty(property, info.other_values[0], "");
-    var other_computed = get_computed_value(gChild, property);
+    var other_computed_n = get_computed_value(gNChild, property);
+    var other_computed_f = get_computed_value(gFChild, property);
     (xfail_diffcomputed(property) ? todo_isnot : isnot)(
-          other_computed, initial_computed,
+          other_computed_n, initial_computed_n,
+          "should be testing with values that compute to different things " +
+          "for '" + property + "'");
+    (xfail_diffcomputed(property) ? todo_isnot : isnot)(
+          other_computed_f, initial_computed_f,
           "should be testing with values that compute to different things " +
           "for '" + property + "'");
     gChildRule2.style.setProperty(property, "inherit", "");
-    var inherit_initial_computed = get_computed_value(gChild, property);
+    var inherit_initial_computed_n = get_computed_value(gNChild, property);
+    var inherit_initial_computed_f = get_computed_value(gFChild, property);
     (xfail_inherit(property, true) ? todo_is : is)(
-       inherit_initial_computed, initial_computed,
+       inherit_initial_computed_n, initial_computed_n,
        "inherit should cause inheritance of initial value for '" +
        property + "'");
-    gParent.style.setProperty(property, info.other_values[0], "");
-    var inherit_other_computed = get_computed_value(gChild, property);
+    (xfail_inherit(property, true) ? todo_is : is)(
+       inherit_initial_computed_f, initial_computed_f,
+       "inherit should cause inheritance of initial value for '" +
+       property + "'");
+    gParentRuleTop.style.setProperty(property, info.other_values[0], "");
+    var inherit_other_computed_n = get_computed_value(gNChild, property);
+    var inherit_other_computed_f = get_computed_value(gFChild, property);
     (xfail_inherit(property, false) ? todo_is : is)(
-       inherit_other_computed, other_computed,
+       inherit_other_computed_n, other_computed_n,
        "inherit should cause inheritance of other value for '" +
        property + "'");
-    gParent.style.removeProperty(property);
+    (xfail_inherit(property, false) ? todo_is : is)(
+       inherit_other_computed_f, other_computed_f,
+       "inherit should cause inheritance of other value for '" +
+       property + "'");
+    gParentRuleTop.style.removeProperty(property);
     gChildRule1.style.removeProperty(property);
     gChildRule2.style.removeProperty(property);
   } else {
-    gParent.style.setProperty(property, info.other_values[0], "");
-    var initial_computed = get_computed_value(gChild, property);
-    var other_computed = get_computed_value(gParent, property);
+    gParentRuleTop.style.setProperty(property, info.other_values[0], "");
+    var initial_computed_n = get_computed_value(gNChild, property);
+    var initial_computed_f = get_computed_value(gFChild, property);
+    var other_computed_n = get_computed_value(gNParent, property);
+    var other_computed_f = get_computed_value(gFParent, property);
     (xfail_diffcomputed(property) ? todo_isnot : isnot)(
-          other_computed, initial_computed,
+          other_computed_n, initial_computed_n,
+          "should be testing with values that compute to different things " +
+          "for '" + property + "'");
+    (xfail_diffcomputed(property) ? todo_isnot : isnot)(
+          other_computed_f, initial_computed_f,
           "should be testing with values that compute to different things " +
           "for '" + property + "'");
     gChildRule2.style.setProperty(property, "inherit", "");
-    var inherit_other_computed = get_computed_value(gChild, property);
+    var inherit_other_computed_n = get_computed_value(gNChild, property);
+    var inherit_other_computed_f = get_computed_value(gFChild, property);
     (xfail_inherit(property, false) ? todo_is : is)(
-       inherit_other_computed, other_computed,
+       inherit_other_computed_n, other_computed_n,
        "inherit should cause inheritance of other value for '" +
        property + "'");
-    gParent.style.removeProperty(property);
+    (xfail_inherit(property, false) ? todo_is : is)(
+       inherit_other_computed_f, other_computed_f,
+       "inherit should cause inheritance of other value for '" +
+       property + "'");
+    gParentRuleTop.style.removeProperty(property);
     gChildRule1.style.setProperty(property, info.other_values[0], "");
-    var inherit_initial_computed = get_computed_value(gChild, property);
+    var inherit_initial_computed_n = get_computed_value(gNChild, property);
+    var inherit_initial_computed_f = get_computed_value(gFChild, property);
     (xfail_inherit(property, true) ? todo_is : is)(
-       inherit_initial_computed, initial_computed,
+       inherit_initial_computed_n, initial_computed_n,
        "inherit should cause inheritance of initial value for '" +
        property + "'");
-    gParent.style.removeProperty(property);
+    (xfail_inherit(property, true) ? todo_is : is)(
+       inherit_initial_computed_f, initial_computed_f,
+       "inherit should cause inheritance of initial value for '" +
+       property + "'");
+    gParentRuleTop.style.removeProperty(property);
     gChildRule1.style.removeProperty(property);
     gChildRule2.style.removeProperty(property);
   }
@@ -175,8 +214,8 @@ function test_property(property)
   if ("prerequisites" in info) {
     var prereqs = info.prerequisites;
     for (var prereq in prereqs) {
-      gParent.style.removeProperty(prereq);
-      gChild.style.removeProperty(prereq);
+      gParentRuleTop.style.removeProperty(prereq);
+      gChildRuleTop.style.removeProperty(prereq);
     }
   }
 }
