@@ -2684,6 +2684,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
     // XXXldb Set mIsReflowing (and unset it later)?
 
+    mDirtyRoots.RemoveElement(rootFrame);
     DoReflow(rootFrame);
     mPresContext->SetVisibleArea(nsRect(nsPoint(0, 0), rootFrame->GetSize()));
   }
