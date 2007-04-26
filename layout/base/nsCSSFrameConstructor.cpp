@@ -6654,11 +6654,18 @@ already_AddRefed<nsStyleContext>
 nsCSSFrameConstructor::ResolveStyleContext(nsIFrame*         aParentFrame,
                                            nsIContent*       aContent)
 {
-  aParentFrame = nsFrame::CorrectStyleParentFrame(aParentFrame, nsnull);
+  nsStyleContext* parentStyleContext;
+  if (aContent->GetParent()) {
+    aParentFrame = nsFrame::CorrectStyleParentFrame(aParentFrame, nsnull);
   
-  // Resolve the style context based on the content object and the parent
-  // style context
-  nsStyleContext* parentStyleContext = aParentFrame->GetStyleContext();
+    // Resolve the style context based on the content object and the parent
+    // style context
+    parentStyleContext = aParentFrame->GetStyleContext();
+  } else {
+    // This has got to be a call from ConstructDocElementTableFrame.
+    // Not sure how best to asserrt that here.
+    parentStyleContext = nsnull;
+  }
 
   nsStyleSet *styleSet = mPresShell->StyleSet();
 
