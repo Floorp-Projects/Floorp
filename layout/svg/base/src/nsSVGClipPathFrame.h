@@ -109,7 +109,7 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
   PRPackedBool mInUse;
 };
 
-nsSVGClipPathFrame *
-NS_GetSVGClipPathFrame(nsIURI *aURI, nsIContent *aContent);
+nsIContent *
+NS_GetSVGClipPathElement(nsIURI *aURI, nsIContent *aContent);
 
 #endif
