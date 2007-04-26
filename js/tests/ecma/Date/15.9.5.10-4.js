@@ -56,59 +56,28 @@ var TITLE   = "Date.prototype.getDate()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-var TZ_ADJUST = TZ_DIFF * msPerHour;
-
-// get the current time
-var now = (new Date()).valueOf();
-
-// calculate time for year 0
-for ( var time = 0, year = 1969; year >= 0; year-- ) {
-  time -= TimeInYear(year);
-}
-// get time for 29 feb 2000
-
-var UTC_FEB_29_2000 = TIME_2000 + 31*msPerDay + 28*msPerHour;
-
-// get time for 1 jan 2005
-
-var UTC_JAN_1_2005 = TIME_2000 + TimeInYear(2000)+TimeInYear(2001)+
-TimeInYear(2002)+TimeInYear(2003)+TimeInYear(2004);
-
-// some daylight savings time cases
-
-var DST_START_1998 = UTC( GetFirstSundayInApril(TimeFromYear(1998)) + 2*msPerHour );
-
-var DST_END_1998 = UTC( GetLastSundayInOctober(TimeFromYear(1998)) + 2*msPerHour );
-
 addTestCase( TIME_1900 );
-/*
-  addTestCase( UTC_FEB_29_2000 );
-  addTestCase( UTC_JAN_1_2005 );
-  addTestCase( DST_START_1998 );
-  addTestCase( DST_START_1998-1 );
-  addTestCase( DST_START_1998+1 );
-  addTestCase( DST_END_1998 );
-  addTestCase( DST_END_1998-1 );
-  addTestCase( DST_END_1998+1 );
-*/
 
 new TestCase( SECTION,
-	      "(new Date(NaN)).getDate()",
-	      NaN,
-	      (new Date(NaN)).getDate() );
+              "(new Date(NaN)).getDate()",
+              NaN,
+              (new Date(NaN)).getDate() );
 
 new TestCase( SECTION,
-	      "Date.prototype.getDate.length",
-	      0,
-	      Date.prototype.getDate.length );
+              "Date.prototype.getDate.length",
+              0,
+              Date.prototype.getDate.length );
 test();
 
 function addTestCase( t ) {
-  for ( d = 0; d < TimeInMonth(MonthFromTime(t)); d+= msPerDay ) {
-    t += d;
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date("+t+")).getDate()",
-                                    DateFromTime(LocalTime(t)),
-                                    (new Date(t)).getDate() );
+  var start = TimeFromYear(YearFromTime(t));
+  var stop  = TimeFromYear(YearFromTime(t) + 1);
+
+  for (var d = start; d < stop; d += msPerDay)
+  {
+    new TestCase( SECTION,
+                  "(new Date("+d+")).getDate()",
+                  DateFromTime(LocalTime(d)),
+                  (new Date(d)).getDate() );
   }
 }

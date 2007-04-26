@@ -132,31 +132,6 @@ addNewTestCase( new Date( (new Date(PST_1900)).toUTCString() ),
 		"new Date(\""+(new Date(PST_1900 )).toUTCString()+"\")",
 		[ PST_1900,1900,0,1,1,8,0,0,0,1900,0,1,1,0,0,0,0] );
 
-/*
-  This test case is incorrect.  Need to fix the DaylightSavings functions in
-  shell.js for this to work properly.
-
-  var DST_START_1998 = UTC( GetFirstSundayInApril(TimeFromYear(1998)) + 2*msPerHour )
-
-  addNewTestCase( new Date(DST_START_1998-1),
-  "new Date("+(DST_START_1998-1)+")",
-  [DST_START_1998-1,1998,3,5,0,9,59,59,999,1998,3,5,0,1,59,59,999] );
-
-  addNewTestCase( new Date(DST_START_1998),
-  "new Date("+DST_START_1998+")",
-  [DST_START_1998,1998,3,5,0,10,0,0,0,1998,3,5,0,3,0,0,0]);
-
-  var DST_END_1998 = UTC( GetLastSundayInOctober(TimeFromYear(1998)) + 2*msPerHour );
-
-  addNewTestCase ( new Date(DST_END_1998-1),
-  "new Date("+(DST_END_1998-1)+")",
-  [DST_END_1998-1,1998,9,25,0,8,59,59,999,1998,9,25,0,1,59,59,999] );
-
-  addNewTestCase ( new Date(DST_END_1998),
-  "new Date("+DST_END_1998+")",
-  [DST_END_1998,1998,9,25,0,9,0,0,0,1998,9,25,0,1,0,0,0] );
-*/
-
 test();
 
 function addNewTestCase( DateCase, DateString, ResultArray ) {

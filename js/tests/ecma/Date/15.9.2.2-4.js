@@ -63,18 +63,4 @@ new TestCase( SECTION, "Date( 2000,1,29,0,0,0)",        (new Date()).toString(),
 new TestCase( SECTION, "Date( 2000,1,28,23,59,59)",     (new Date()).toString(),    Date( 2000,1,28,23,59,59));
 new TestCase( SECTION, "Date( 2000,1,27,16,0,0)",       (new Date()).toString(),    Date(2000,1,27,16,0,0));
 
-/*
-// Dates around jan 1, 2005
-new TestCase( SECTION, "Date(2004,11,31,23,59,59)",     (new Date()).toString(),    Date(2004,11,31,23,59,59));
-new TestCase( SECTION, "Date(2005,0,1,0,0,0)",          (new Date()).toString(),    Date(2005,0,1,0,0,0) );
-new TestCase( SECTION, "Date(2005,0,1,0,0,1)",          (new Date()).toString(),    Date(2005,0,1,0,0,1) );
-new TestCase( SECTION, "Date(2004,11,31,16,0,0,0)",     (new Date()).toString(),    Date(2004,11,31,16,0,0,0));
-
-// Dates around jan 1, 2032
-new TestCase( SECTION, "Date(2031,11,31,23,59,59)",     (new Date()).toString(),    Date(2031,11,31,23,59,59));
-new TestCase( SECTION, "Date(2032,0,1,0,0,0)",          (new Date()).toString(),    Date(2032,0,1,0,0,0) );
-new TestCase( SECTION, "Date(2032,0,1,0,0,1)",          (new Date()).toString(),    Date(2032,0,1,0,0,1) );
-new TestCase( SECTION, "Date(2031,11,31,16,0,0,0)",     (new Date()).toString(),    Date(2031,11,31,16,0,0,0));
-*/
-
 test();

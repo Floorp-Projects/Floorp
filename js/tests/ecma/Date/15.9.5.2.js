@@ -80,8 +80,6 @@ new TestCase( SECTION,
 	      typeof now.toString() );
 // 1970
 
-TZ_ADJUST = TZ_DIFF * msPerHour;
-
 new TestCase( SECTION,
 	      "Date.parse( (new Date(0)).toString() )",
 	      0,
@@ -116,39 +114,36 @@ new TestCase( SECTION,
 
 // 29 Feb 2000
 
-var UTC_29_FEB_2000 = TIME_2000 + 31*msPerDay + 28*msPerDay;
 new TestCase( SECTION,
-	      "Date.parse( (new Date("+UTC_29_FEB_2000+")).toString() )",
-	      UTC_29_FEB_2000,
-	      Date.parse( (new Date(UTC_29_FEB_2000)).toString() ) );
+	      "Date.parse( (new Date("+UTC_FEB_29_2000+")).toString() )",
+	      UTC_FEB_29_2000,
+	      Date.parse( (new Date(UTC_FEB_29_2000)).toString() ) );
 
 new TestCase( SECTION,
-	      "Date.parse( (new Date("+(UTC_29_FEB_2000-1000)+")).toString() )",
-	      UTC_29_FEB_2000-1000,
-	      Date.parse( (new Date(UTC_29_FEB_2000-1000)).toString() ) );
+	      "Date.parse( (new Date("+(UTC_FEB_29_2000-1000)+")).toString() )",
+	      UTC_FEB_29_2000-1000,
+	      Date.parse( (new Date(UTC_FEB_29_2000-1000)).toString() ) );
 
 
 new TestCase( SECTION,
-	      "Date.parse( (new Date("+(UTC_29_FEB_2000-TZ_ADJUST)+")).toString() )",
-	      UTC_29_FEB_2000-TZ_ADJUST,
-	      Date.parse( (new Date(UTC_29_FEB_2000-TZ_ADJUST)).toString() ) );
+	      "Date.parse( (new Date("+(UTC_FEB_29_2000-TZ_ADJUST)+")).toString() )",
+	      UTC_FEB_29_2000-TZ_ADJUST,
+	      Date.parse( (new Date(UTC_FEB_29_2000-TZ_ADJUST)).toString() ) );
 // 2O05
 
-var UTC_1_JAN_2005 = TIME_2000 + TimeInYear(2000) + TimeInYear(2001) +
-TimeInYear(2002) + TimeInYear(2003) + TimeInYear(2004);
 new TestCase( SECTION,
-	      "Date.parse( (new Date("+UTC_1_JAN_2005+")).toString() )",
-	      UTC_1_JAN_2005,
-	      Date.parse( (new Date(UTC_1_JAN_2005)).toString() ) );
+	      "Date.parse( (new Date("+UTC_JAN_1_2005+")).toString() )",
+	      UTC_JAN_1_2005,
+	      Date.parse( (new Date(UTC_JAN_1_2005)).toString() ) );
 
 new TestCase( SECTION,
-	      "Date.parse( (new Date("+(UTC_1_JAN_2005-1000)+")).toString() )",
-	      UTC_1_JAN_2005-1000,
-	      Date.parse( (new Date(UTC_1_JAN_2005-1000)).toString() ) );
+	      "Date.parse( (new Date("+(UTC_JAN_1_2005-1000)+")).toString() )",
+	      UTC_JAN_1_2005-1000,
+	      Date.parse( (new Date(UTC_JAN_1_2005-1000)).toString() ) );
 
 new TestCase( SECTION,
-	      "Date.parse( (new Date("+(UTC_1_JAN_2005-TZ_ADJUST)+")).toString() )",
-	      UTC_1_JAN_2005-TZ_ADJUST,
-	      Date.parse( (new Date(UTC_1_JAN_2005-TZ_ADJUST)).toString() ) );
+	      "Date.parse( (new Date("+(UTC_JAN_1_2005-TZ_ADJUST)+")).toString() )",
+	      UTC_JAN_1_2005-TZ_ADJUST,
+	      Date.parse( (new Date(UTC_JAN_1_2005-TZ_ADJUST)).toString() ) );
 
 test();

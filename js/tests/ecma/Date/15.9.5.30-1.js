@@ -91,29 +91,6 @@ addNewTestCase( TIME_2000 - msPerDay, 23, 59, 59, 999,
 addNewTestCase( TIME_2000 - msPerDay, 23, 59, 59, 1000,
 		"d = new Date( " + (TIME_2000-msPerDay) +"); d.setHours(23,59,59,1000)" );
 
-
-/*
-  addNewTestCase( "TDATE = new Date(-2208988800000);(TDATE).setHours(59,999);TDATE",
-  UTCDateFromTime(SetHours(-2208988800000,59,999)),
-  LocalDateFromTime(SetHours(-2208988800000,59,999)) );
-
-  addNewTestCase( "TDATE = new Date(-2208988800000);(TDATE).setUTCMilliseconds(123456789);TDATE",
-  UTCDateFromTime(SetUTCMilliseconds(-2208988800000,123456789)),
-  LocalDateFromTime(SetUTCMilliseconds(-2208988800000,123456789)) );
-
-  addNewTestCase( "TDATE = new Date(-2208988800000);(TDATE).setUTCMilliseconds(123456);TDATE",
-  UTCDateFromTime(SetUTCMilliseconds(-2208988800000,123456)),
-  LocalDateFromTime(SetUTCMilliseconds(-2208988800000,123456)) );
-
-  addNewTestCase( "TDATE = new Date(-2208988800000);(TDATE).setUTCMilliseconds(-123456);TDATE",
-  UTCDateFromTime(SetUTCMilliseconds(-2208988800000,-123456)),
-  LocalDateFromTime(SetUTCMilliseconds(-2208988800000,-123456)) );
-
-  addNewTestCase( "TDATE = new Date(0);(TDATE).setUTCMilliseconds(-999);TDATE",
-  UTCDateFromTime(SetUTCMilliseconds(0,-999)),
-  LocalDateFromTime(SetUTCMilliseconds(0,-999)) );
-*/
-
 test();
 
 function addNewTestCase( time, hours, min, sec, ms, DateString) {

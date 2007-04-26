@@ -97,7 +97,6 @@ var MS          = 16;
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 // all the "ResultArrays" below are hard-coded to Pacific Standard Time values -
-var TZ_ADJUST =  TZ_PST * msPerHour;
 
 // Dates around 1900
 
@@ -111,55 +110,15 @@ addNewTestCase( new Date(1899,11,31,15,59,59,999),
 
 addNewTestCase( new Date(1899,11,31,23,59,59,999),
 		"new Date(1899,11,31,23,59,59,999)",
-		[TIME_1900-TZ_ADJUST-1,1900,0,1,1,7,59,59,999,1899,11,31,0,23,59,59,999] );
+		[TIME_1900-PST_ADJUST-1,1900,0,1,1,7,59,59,999,1899,11,31,0,23,59,59,999] );
 
 addNewTestCase( new Date(1900,0,1,0,0,0,0),
 		"new Date(1900,0,1,0,0,0,0)",
-		[TIME_1900-TZ_ADJUST,1900,0,1,1,8,0,0,0,1900,0,1,1,0,0,0,0] );
+		[TIME_1900-PST_ADJUST,1900,0,1,1,8,0,0,0,1900,0,1,1,0,0,0,0] );
 
 addNewTestCase( new Date(1900,0,1,0,0,0,1),
 		"new Date(1900,0,1,0,0,0,1)",
-		[TIME_1900-TZ_ADJUST+1,1900,0,1,1,8,0,0,1,1900,0,1,1,0,0,0,1] );
-/*
-// Dates around 2005
-
-var UTC_YEAR_2005 = TIME_2000 + TimeInYear(2000) + TimeInYear(2001) +
-TimeInYear(2002) + TimeInYear(2003) + TimeInYear(2004);
-
-addNewTestCase( new Date(2005,0,1,0,0,0,0),
-"new Date(2005,0,1,0,0,0,0)",
-[UTC_YEAR_2005-TZ_ADJUST,2005,0,1,6,8,0,0,0,2005,0,1,6,0,0,0,0] );
-
-addNewTestCase( new Date(2004,11,31,16,0,0,0),
-"new Date(2004,11,31,16,0,0,0)",
-[UTC_YEAR_2005,2005,0,1,6,0,0,0,0,2004,11,31,5,16,0,0,0] );
-*/
-/*
-  This test case is incorrect.  Need to fix the DaylightSavings functions in
-  shell.js for this to work properly.
-
-  // Daylight Savings test case
-
-  var DST_START_1998 = UTC( GetFirstSundayInApril(TimeFromYear(1998)) + 2*msPerHour )
-
-  addNewTestCase( new Date(1998,3,5,1,59,59,999),
-  "new Date(1998,3,5,1,59,59,999)",
-  [DST_START_1998-1,1998,3,5,0,9,59,59,999,1998,3,5,0,1,59,59,999] );
-
-  addNewTestCase( new Date(1998,3,5,2,0,0,0),
-  "new Date(1998,3,5,2,0,0,0)",
-  [DST_START_1998,1998,3,5,0,10,0,0,0,1998,3,5,0,3,0,0,0]);
-
-  var DST_END_1998 = UTC( GetLastSundayInOctober(TimeFromYear(1998)) + 2*msPerHour );
-
-  addNewTestCase ( new Date(1998,9,25,1,59,59,999),
-  "new Date(1998,9,25,1,59,59,999)",
-  [DST_END_1998-1,1998,9,25,0,8,59,59,999,1998,9,25,0,1,59,59,999] );
-
-  addNewTestCase ( new Date(1998,9,25,2,0,0,0),
-  "new Date(1998,9,25,2,0,0,0)",
-  [DST_END_1998,1998,9,25,0,9,0,0,0,1998,9,25,0,1,0,0,0] );
-*/
+		[TIME_1900-PST_ADJUST+1,1900,0,1,1,8,0,0,1,1900,0,1,1,0,0,0,1] );
 
 test();
 

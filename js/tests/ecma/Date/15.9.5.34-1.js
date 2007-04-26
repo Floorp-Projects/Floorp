@@ -60,8 +60,6 @@ startTest();
 
 writeHeaderToLog( SECTION + " Date.prototype.setMonth(mon [, date ] )");
 
-var now =  (new Date()).valueOf();
-
 getFunctionCases();
 
 // regression test for http://scopus.mcom.com/bugsplat/show_bug.cgi?id=112404
@@ -76,9 +74,9 @@ addNewTestCase(
 
 // whatever today is
 
-addNewTestCase( "TDATE = new Date(now); (TDATE).setMonth(11,31); TDATE",
-		UTCDateFromTime(SetMonth(now,11,31)),
-		LocalDateFromTime(SetMonth(now,11,31)) );
+addNewTestCase( "TDATE = new Date(TIME_NOW); (TDATE).setMonth(11,31); TDATE",
+		UTCDateFromTime(SetMonth(TIME_NOW,11,31)),
+		LocalDateFromTime(SetMonth(TIME_NOW,11,31)) );
 
 // 1970
 
@@ -91,39 +89,10 @@ addNewTestCase( "TDATE = new Date("+TIME_1900+"); "+
 		UTCDateFromTime( SetMonth(TIME_1900,11,31) ),
 		LocalDateFromTime( SetMonth(TIME_1900,11,31) ) );
 
-
-
-
-/*
-  addNewTestCase( "TDATE = new Date(28800000);(TDATE).setMonth(11,23,59,999);TDATE",
-  UTCDateFromTime(SetMonth(28800000,11,23,59,999)),
-  LocalDateFromTime(SetMonth(28800000,11,23,59,999)) );
-
-  addNewTestCase( "TDATE = new Date(28800000);(TDATE).setMonth(99,99);TDATE",
-  UTCDateFromTime(SetMonth(28800000,99,99)),
-  LocalDateFromTime(SetMonth(28800000,99,99)) );
-
-  addNewTestCase( "TDATE = new Date(28800000);(TDATE).setMonth(11);TDATE",
-  UTCDateFromTime(SetMonth(28800000,11,0)),
-  LocalDateFromTime(SetMonth(28800000,11,0)) );
-
-  addNewTestCase( "TDATE = new Date(28800000);(TDATE).setMonth(-11);TDATE",
-  UTCDateFromTime(SetMonth(28800000,-11)),
-  LocalDateFromTime(SetMonth(28800000,-11)) );
-
-  // 1900
-
-//    addNewTestCase( "TDATE = new Date(); (TDATE).setMonth(11,31); TDATE;"
-*/
-
-
 test();
 
 function addNewTestCase( DateString, UTCDate, LocalDate) {
   DateCase = eval( DateString );
-
-
-//    fixed_year = ( ExpectDate.year >=1900 || ExpectDate.year < 2000 ) ? ExpectDate.year - 1900 : ExpectDate.year;
 
   new TestCase( SECTION, DateString+".getTime()",             UTCDate.value,       DateCase.getTime() );
   new TestCase( SECTION, DateString+".valueOf()",             UTCDate.value,       DateCase.valueOf() );
@@ -168,17 +137,8 @@ function getFunctionCases() {
     "function",
     typeof Date.prototype.setMonth );
 
-
-/*
-
-new TestCase(
-SECTION,
-"delete Date.prototype.setMonth",
-false,
-delete Date.prototype.setMonth );
-*/
-
 }
+
 function MyDate() {
   this.year = 0;
   this.month = 0;
