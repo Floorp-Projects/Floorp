@@ -1091,9 +1091,6 @@ protected:
     PresShell *mPresShell;
   };
 
-  // Utility to determine if we're in the middle of a drag.
-  PRBool IsDragInProgress ( ) const ;
-
   // Utility to find which view to scroll.
   nsIScrollableView* GetViewToScroll(nsLayoutUtils::Direction aDirection);
 
@@ -2654,15 +2651,6 @@ PresShell::sPaintSuppressionCallback(nsITimer *aTimer, void* aPresShell)
 NS_IMETHODIMP
 PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
-  NS_ASSERTION(mViewManager, "Must have view manager");
-  mViewManager->BeginUpdateViewBatch();
-
-  // XXX Do a full invalidate at the beginning so that invalidates along
-  // the way don't have region accumulation issues?
-
-  WillCauseReflow();
-  WillDoReflow();
-
   // If we don't have a root frame yet, that means we haven't had our initial
   // reflow... If that's the case, and aWidth or aHeight is unconstrained,
   // ignore them altogether.
@@ -2679,6 +2667,15 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   if (!rootFrame)
     return NS_OK;
 
+  NS_ASSERTION(mViewManager, "Must have view manager");
+  mViewManager->BeginUpdateViewBatch();
+
+  // XXX Do a full invalidate at the beginning so that invalidates along
+  // the way don't have region accumulation issues?
+
+  WillCauseReflow();
+  WillDoReflow();
+
   {
     // Kick off a top-down reflow
     AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
@@ -2690,7 +2687,6 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   }
 
   DidCauseReflow();
-
   DidDoReflow();
   mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
@@ -3320,27 +3316,6 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty)
 
   return NS_OK;
 }
-
-
-//
-// IsDragInProgress
-//
-// Ask the drag service if we're in the middle of a drag
-//
-PRBool
-PresShell :: IsDragInProgress ( ) const
-{
-  PRBool dragInProgress = PR_FALSE;
-  if ( mDragService ) {
-    nsCOMPtr<nsIDragSession> session;
-    mDragService->GetCurrentSession ( getter_AddRefs(session) );
-    if ( session )
-      dragInProgress = PR_TRUE;
-  }
-  
-  return dragInProgress;
-
-} // IsDragInProgress
 
 nsIScrollableView*
 PresShell::GetViewToScroll(nsLayoutUtils::Direction aDirection)
