@@ -67,8 +67,8 @@ new TestCase( SECTION, "Date(1969,11,31,15,59,59,999)",     (new Date()).toStrin
 new TestCase( SECTION, "Date(1969,11,31,16,0,0,0)",         (new Date()).toString(),    Date(1969,11,31,16,0,0,0));
 new TestCase( SECTION, "Date(1969,11,31,16,0,0,1)",         (new Date()).toString(),    Date(1969,11,31,16,0,0,1));
 
-  // Dates around 2000
-  new TestCase( SECTION, "Date(1999,11,15,59,59,999)",        (new Date()).toString(),    Date(1999,11,15,59,59,999));
+// Dates around 2000
+new TestCase( SECTION, "Date(1999,11,15,59,59,999)",        (new Date()).toString(),    Date(1999,11,15,59,59,999));
 new TestCase( SECTION, "Date(1999,11,16,0,0,0,0)",          (new Date()).toString(),    Date(1999,11,16,0,0,0,0));
 new TestCase( SECTION, "Date(1999,11,31,23,59,59,999)",     (new Date()).toString(),    Date(1999,11,31,23,59,59,999) );
 new TestCase( SECTION, "Date(2000,0,1,0,0,0,0)",            (new Date()).toString(),    Date(2000,0,0,0,0,0,0) );

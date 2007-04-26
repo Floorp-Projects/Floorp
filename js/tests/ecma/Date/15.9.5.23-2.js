@@ -57,18 +57,11 @@ var TITLE   = "Date.prototype.setTime()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-var TZ_ADJUST = TZ_DIFF * msPerHour;
-
-// get the current time
-var now = (new Date()).valueOf();
-
-test_times = new Array( now, TIME_1970, TIME_1900, TIME_2000 );
-
+test_times = new Array( TIME_NOW, TIME_1970, TIME_1900, TIME_2000 );
 
 for ( var j = 0; j < test_times.length; j++ ) {
-  addTestCase( new Date(now), test_times[j] );
+  addTestCase( new Date(TIME_NOW), test_times[j] );
 }
-
 
 new TestCase( SECTION,
 	      "(new Date(NaN)).setTime()",

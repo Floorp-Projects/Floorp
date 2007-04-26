@@ -60,21 +60,8 @@ var TITLE   = "Date.prototype.getYear()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-var TZ_ADJUST = TZ_DIFF * msPerHour;
-
-// get the current time
-var now = (new Date()).valueOf();
-
-// calculate time for year 0
-for ( var time = 0, year = 1969; year >= 0; year-- ) {
-  time -= TimeInYear(year);
-}
-// get time for 29 feb 2000
-
-var UTC_FEB_29_2000 = TIME_2000 + 31*msPerDay + 28*msPerHour;
-
-addTestCase( now );
-addTestCase( time );
+addTestCase( TIME_NOW );
+addTestCase( TIME_0000 );
 addTestCase( TIME_1970 );
 addTestCase( TIME_1900 );
 addTestCase( TIME_2000 );
@@ -119,12 +106,5 @@ function addTestCase( t ) {
 		(new Date(t+TZ_ADJUST)).getYear() );
 }
 function GetYear( year ) {
-/*
-  if ( year >= 1900 && year < 2000 ) {
-  return year - 1900;
-  } else {
-  return year;
-  }
-*/
   return year - 1900;
 }

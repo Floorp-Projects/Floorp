@@ -75,9 +75,6 @@ function addTestCase( startTime, setTime ) {
   var UTCDate   = UTCDateFromTime ( Number(setTime) );
   var LocalDate = LocalDateFromTime( Number(setTime) );
 
-
-//    fixed_year = ( ExpectDate.year >=1900 || ExpectDate.year < 2000 ) ? ExpectDate.year - 1900 : ExpectDate.year;
-
   new TestCase( SECTION, DateString+".getTime()",             UTCDate.value,      DateCase.getTime() );
   new TestCase( SECTION, DateString+".valueOf()",             UTCDate.value,      DateCase.valueOf() );
 
