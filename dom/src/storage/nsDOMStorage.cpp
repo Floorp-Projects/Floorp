@@ -299,17 +299,20 @@ nsDOMStorage::CanUseStorage(nsIURI* aURI, PRPackedBool* aSessionOnly)
 {
   // check if the domain can use storage. Downgrade to session only if only
   // session storage may be used.
-  NS_ASSERTION(aURI && aSessionOnly, "null URI or session flag");
+  NS_ASSERTION(aSessionOnly, "null session flag");
+  *aSessionOnly = PR_FALSE;
 
   if (!nsContentUtils::GetBoolPref(kStorageEnabled))
     return PR_FALSE;
+
+  // chrome can always use storage regardless of permission preferences
+  if (nsContentUtils::IsCallerChrome())
+    return PR_TRUE;
 
   nsCOMPtr<nsIPermissionManager> permissionManager =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
   if (!permissionManager)
     return PR_FALSE;
-
-  *aSessionOnly = PR_FALSE;
 
   PRUint32 perm;
   permissionManager->TestPermission(aURI, kPermissionType, &perm);
@@ -674,9 +677,12 @@ nsDOMStorage::SetDBValue(const nsAString& aKey,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the current domain for quota enforcement
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  if (!ssm)
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIPrincipal> subjectPrincipal;
-  nsContentUtils::GetSecurityManager()->
-    GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+  ssm->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
 
   nsAutoString currentDomain;
 
@@ -685,18 +691,27 @@ nsDOMStorage::SetDBValue(const nsAString& aKey,
     rv = subjectPrincipal->GetURI(getter_AddRefs(uri));
 
     if (NS_SUCCEEDED(rv) && uri) {
-        nsCAutoString currentDomainAscii;
-        uri->GetAsciiHost(currentDomainAscii);
-        currentDomain = NS_ConvertUTF8toUTF16(currentDomainAscii);
+      nsCOMPtr<nsIURI> innerUri = NS_GetInnermostURI(uri);
+      if (!innerUri)
+        return NS_ERROR_UNEXPECTED;
+
+      nsCAutoString currentDomainAscii;
+      innerUri->GetAsciiHost(currentDomainAscii);
+      currentDomain = NS_ConvertUTF8toUTF16(currentDomainAscii);
     }
-    
+
     if (currentDomain.IsEmpty()) {
+      // allow chrome urls and trusted file urls to write using
+      // the storage's domain
+      if (nsContentUtils::IsCallerTrustedForWrite())
+        currentDomain = mDomain;
+      else
         return NS_ERROR_DOM_SECURITY_ERR;
     }
   } else {
-      currentDomain = mDomain;
+    currentDomain = mDomain;
   }
-  
+
   rv = gStorageDB->SetKey(mDomain, aKey, aValue, aSecure,
                           currentDomain, GetQuota(currentDomain));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -865,7 +880,12 @@ nsDOMStorageList::NamedItem(const nsAString& aDomain,
       PRPackedBool sessionOnly;
       if (!nsDOMStorage::CanUseStorage(uri, &sessionOnly))
         return NS_ERROR_DOM_SECURITY_ERR;
-      
+
+      nsCOMPtr<nsIURI> innerUri = NS_GetInnermostURI(uri);
+      if (!innerUri)
+        return NS_ERROR_UNEXPECTED;
+
+      uri = innerUri;
       rv = uri->GetAsciiHost(currentDomain);
       NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -874,6 +894,10 @@ nsDOMStorageList::NamedItem(const nsAString& aDomain,
   PRBool isSystem;
   rv = ssm->SubjectPrincipalIsSystem(&isSystem);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // allow code that has read privileges to get the storage for any domain
+  if (!isSystem && nsContentUtils::IsCallerTrustedForRead())
+    isSystem = PR_TRUE;
 
   if (isSystem || !currentDomain.IsEmpty()) {
     return GetStorageForDomain(uri, aDomain, NS_ConvertUTF8toUTF16(currentDomain),
