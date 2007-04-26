@@ -1158,6 +1158,9 @@ protected:
   // Hide a view if it is a popup
   void HideViewIfPopup(nsIView* aView);
 
+  // Utility method to restore the root scrollframe state
+  void RestoreRootScrollPosition();
+
   nsICSSStyleSheet*         mPrefStyleSheet; // mStyleSet owns it but we maintain a ref, may be null
 #ifdef DEBUG
   PRUint32                  mUpdateCount;
@@ -2591,6 +2594,12 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   DidCauseReflow();
   DidDoReflow();
 
+  // Restore our root scroll position now if we're getting here after EndLoad
+  // got called, since this is our one chance to do it.
+  if (!mDocumentLoading) {
+    RestoreRootScrollPosition();
+  }
+  
   mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
   if (mViewManager && mCaret && !mViewEventListener) {
@@ -3153,22 +3162,11 @@ PresShell::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 }
 
 void
-PresShell::BeginLoad(nsIDocument *aDocument)
-{  
-#ifdef MOZ_PERF_METRICS
-  // Reset style resolution stopwatch maintained by style set
-  MOZ_TIMER_DEBUGLOG(("Reset: Style Resolution: PresShell::BeginLoad(), this=%p\n", (void*)this));
-#endif  
-  mDocumentLoading = PR_TRUE;
-}
-
-void
-PresShell::EndLoad(nsIDocument *aDocument)
+PresShell::RestoreRootScrollPosition()
 {
-
   // Restore frame state for the root scroll frame
   nsCOMPtr<nsILayoutHistoryState> historyState =
-    aDocument->GetLayoutHistoryState();
+    mDocument->GetLayoutHistoryState();
   // Make sure we don't reenter reflow via the sync paint that happens while
   // we're scrolling to our restored position.  Entering reflow for the
   // scrollable frame will cause it to reenter ScrollToRestoredPosition(), and
@@ -3189,6 +3187,24 @@ PresShell::EndLoad(nsIDocument *aDocument)
   }
 
   --mChangeNestCount;
+}
+
+void
+PresShell::BeginLoad(nsIDocument *aDocument)
+{  
+#ifdef MOZ_PERF_METRICS
+  // Reset style resolution stopwatch maintained by style set
+  MOZ_TIMER_DEBUGLOG(("Reset: Style Resolution: PresShell::BeginLoad(), this=%p\n", (void*)this));
+#endif  
+  mDocumentLoading = PR_TRUE;
+}
+
+void
+PresShell::EndLoad(nsIDocument *aDocument)
+{
+  NS_PRECONDITION(aDocument == mDocument, "Wrong document");
+  
+  RestoreRootScrollPosition();
   
 #ifdef MOZ_PERF_METRICS
   // Dump reflow, style resolution and frame construction times here.
