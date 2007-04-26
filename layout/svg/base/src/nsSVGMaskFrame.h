@@ -51,9 +51,9 @@ class nsSVGMaskFrame : public nsSVGMaskFrameBase
 
   NS_IMETHOD InitSVG();
 
- public:
   nsSVGMaskFrame(nsStyleContext* aContext) : nsSVGMaskFrameBase(aContext) {}
 
+ public:
   // nsSVGMaskFrame method:
   cairo_pattern_t *ComputeMaskAlpha(nsSVGRenderState *aContext,
                                     nsISVGChildFrame* aParent,
@@ -75,9 +75,6 @@ class nsSVGMaskFrame : public nsSVGMaskFrameBase
 #endif
 
  private:
-  PRUint16 GetMaskUnits();
-  PRUint16 GetMaskContentUnits();
-
   nsISVGChildFrame *mMaskParent;
   nsCOMPtr<nsIDOMSVGMatrix> mMaskParentMatrix;
 
@@ -85,7 +82,7 @@ class nsSVGMaskFrame : public nsSVGMaskFrameBase
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 };
 
-nsSVGMaskFrame *
-NS_GetSVGMaskFrame(nsIURI *aURI, nsIContent *aContent);
+nsIContent *
+NS_GetSVGMaskElement(nsIURI *aURI, nsIContent *aContent);
 
 #endif

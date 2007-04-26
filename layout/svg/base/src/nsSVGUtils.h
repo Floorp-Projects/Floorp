@@ -80,23 +80,20 @@ struct gfxMatrix;
 // SVG Frame state bits
 #define NS_STATE_IS_OUTER_SVG         0x00100000
 
-#define NS_STATE_SVG_CLIPPED_TRIVIAL  0x00200000
-#define NS_STATE_SVG_CLIPPED_COMPLEX  0x00400000
-#define NS_STATE_SVG_CLIPPED_MASK     0x00600000
+#define NS_STATE_SVG_CLIPPED          0x00200000
+#define NS_STATE_SVG_FILTERED         0x00400000
+#define NS_STATE_SVG_MASKED           0x00800000
 
-#define NS_STATE_SVG_FILTERED         0x00800000
-#define NS_STATE_SVG_MASKED           0x01000000
+#define NS_STATE_SVG_HAS_MARKERS      0x01000000
 
-#define NS_STATE_SVG_HAS_MARKERS      0x02000000
+#define NS_STATE_SVG_DIRTY            0x02000000
 
-#define NS_STATE_SVG_DIRTY            0x04000000
-
-#define NS_STATE_SVG_FILL_PSERVER     0x08000000
-#define NS_STATE_SVG_STROKE_PSERVER   0x10000000
-#define NS_STATE_SVG_PSERVER_MASK     0x18000000
+#define NS_STATE_SVG_FILL_PSERVER     0x04000000
+#define NS_STATE_SVG_STROKE_PSERVER   0x08000000
+#define NS_STATE_SVG_PSERVER_MASK     0x0c000000
 
 /* are we the child of a non-display container? */
-#define NS_STATE_SVG_NONDISPLAY_CHILD 0x20000000
+#define NS_STATE_SVG_NONDISPLAY_CHILD 0x10000000
 
 /**
  * Byte offsets of channels in a native packed gfxColor or cairo image surface.

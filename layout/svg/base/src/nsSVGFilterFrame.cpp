@@ -157,11 +157,6 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
 
   nsSVGFilterElement *filter = NS_STATIC_CAST(nsSVGFilterElement*, mContent);
 
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> units;
-  filter->GetFilterUnits(getter_AddRefs(units));
-  PRUint16 type;
-  units->GetAnimVal(&type);
-
   float x, y, width, height;
   nsCOMPtr<nsIDOMSVGRect> bbox;
   aTarget->GetBBox(getter_AddRefs(bbox));
@@ -172,7 +167,10 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   tmpWidth = &filter->mLengthAttributes[nsSVGFilterElement::WIDTH];
   tmpHeight = &filter->mLengthAttributes[nsSVGFilterElement::HEIGHT];
 
-  if (type == nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX) {
+  PRUint16 units;
+  filter->mFilterUnits->GetAnimVal(&units);
+
+  if (units == nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX) {
     if (!bbox)
       return NS_OK;
 
@@ -193,11 +191,8 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   PRInt32 filterResY = PRInt32(s2 * height + 0.5);
 
   if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::filterRes)) {
-    nsCOMPtr<nsIDOMSVGAnimatedInteger> filterRes;
-    filter->GetFilterResX(getter_AddRefs(filterRes));
-    filterRes->GetAnimVal(&filterResX);
-    filter->GetFilterResY(getter_AddRefs(filterRes));
-    filterRes->GetAnimVal(&filterResY);
+    filter->mFilterResX->GetAnimVal(&filterResX);
+    filter->mFilterResY->GetAnimVal(&filterResY);
   }
 
   // filterRes = 0 disables rendering, < 0 is error
@@ -235,12 +230,12 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   memset(tmpSurface->Data(), 0, tmpSurface->GetSize().height * tmpSurface->Stride());
   aTarget->PaintSVG(&tmpState, nsnull);
 
-  filter->GetPrimitiveUnits(getter_AddRefs(units));
-  units->GetAnimVal(&type);
+  PRUint16 primitiveUnits;
+  filter->mPrimitiveUnits->GetAnimVal(&primitiveUnits);
   nsSVGFilterInstance instance(target, bbox,
                                x, y, width, height,
                                filterResX, filterResY,
-                               type);
+                               primitiveUnits);
   nsSVGFilterInstance::ColorModel 
     colorModel(nsSVGFilterInstance::ColorModel::SRGB,
                nsSVGFilterInstance::ColorModel::PREMULTIPLIED);
