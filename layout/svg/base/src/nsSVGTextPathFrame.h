@@ -38,18 +38,34 @@
 #define NSSVGTEXTPATHFRAME_H
 
 #include "nsSVGTSpanFrame.h"
-#include "nsISVGValueObserver.h"
-#include "nsWeakReference.h"
 #include "nsIDOMSVGAnimatedString.h"
-#include "nsIDOMSVGPathSegList.h"
 #include "nsSVGLengthList.h"
 #include "nsIDOMSVGLength.h"
 #include "gfxPath.h"
+#include "nsStubMutationObserver.h"
+
+class nsSVGTextPathFrame;
+
+class nsSVGPathListener : public nsStubMutationObserver {
+public:
+  nsSVGPathListener(nsIContent *aPathElement,
+                    nsSVGTextPathFrame *aTextPathFrame);
+  ~nsSVGPathListener();
+
+  // nsISupports
+  NS_DECL_ISUPPORTS
+
+  // nsIMutationObserver
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
+
+private:
+  nsWeakPtr mObservedPath;
+  nsSVGTextPathFrame *mTextPathFrame;
+};
 
 typedef nsSVGTSpanFrame nsSVGTextPathFrameBase;
 
-class nsSVGTextPathFrame : public nsSVGTextPathFrameBase,
-                           public nsISVGValueObserver
+class nsSVGTextPathFrame : public nsSVGTextPathFrameBase
 {
 public:
   nsSVGTextPathFrame(nsStyleContext* aContext) : nsSVGTextPathFrameBase(aContext) {}
@@ -75,24 +91,11 @@ public:
   }
 #endif
 
-  // nsISVGValueObserver interface:
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
-                                    nsISVGValue::modificationType aModType);
-
   // nsSVGTextPathFrame methods:
   already_AddRefed<gfxFlattenedPath> GetFlattenedPath();
   nsIFrame *GetPathFrame();
 
-   // nsISupports interface:
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
-  NS_IMETHOD_(nsrefcnt) Release() { return 1; }
-
 protected:
-  virtual ~nsSVGTextPathFrame();
 
   NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetX();
   NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetY();
@@ -103,9 +106,11 @@ private:
 
   nsCOMPtr<nsIDOMSVGLength> mStartOffset;
   nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
-  nsCOMPtr<nsIDOMSVGPathSegList> mSegments;
+  nsRefPtr<nsSVGPathListener> mPathListener;
 
   nsCOMPtr<nsIDOMSVGLengthList> mX;
+
+  friend class nsSVGPathListener;
 };
 
 #endif
