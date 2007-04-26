@@ -892,6 +892,8 @@ nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
     // Nothing to do here
     return;
   }
+
+  PRBool deferredStart = mDeferredLayoutStart;
   
   mDeferredLayoutStart = PR_TRUE;
 
@@ -930,9 +932,12 @@ nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
       // Make shell an observer for next time
       shell->BeginObservingDocument();
 
+      PRBool oldInEagerStartLayout = shell->IsInEagerStartLayout();
+      shell->SetInEagerStartLayout(!deferredStart);
       // Resize-reflow this time
       nsRect r = shell->GetPresContext()->GetVisibleArea();
       nsresult rv = shell->InitialReflow(r.width, r.height);
+      shell->SetInEagerStartLayout(oldInEagerStartLayout);
       if (NS_FAILED(rv)) {
         return;
       }

@@ -397,6 +397,10 @@ protected:
   PRBool IsScrollbarUpdateSuppressed() const {
     return mInner.mSupppressScrollbarUpdate;
   }
+
+  // Return whether we're in an "initial" reflow.  Some reflows with
+  // NS_FRAME_FIRST_REFLOW set are NOT "initial" as far as we're concerned.
+  PRBool InInitialReflow() const;
   
 private:
   friend class nsGfxScrollFrameInner;

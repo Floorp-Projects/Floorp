@@ -720,6 +720,13 @@ public:
   void AddWeakFrame(nsWeakFrame* aWeakFrame);
   void RemoveWeakFrame(nsWeakFrame* aWeakFrame);
 
+  void SetInEagerStartLayout(PRBool aInEagerStartLayout) {
+    mInEagerStartLayout = aInEagerStartLayout;
+  }
+  PRBool IsInEagerStartLayout() const {
+    return mInEagerStartLayout;
+  }
+
 #ifdef NS_DEBUG
   nsIFrame* GetDrawEventTargetFrame() { return mDrawEventTargetFrame; }
 #endif
@@ -759,6 +766,10 @@ protected:
   // Set to true when the accessibility service is being used to mirror
   // the dom/layout trees
   PRPackedBool              mIsAccessibilityActive;
+
+  // True if we're under an "eager" (that is, called before there is
+  // much content in the document) StartLayout call.
+  PRPackedBool              mInEagerStartLayout;
 
   // A list of weak frames. This is a pointer to the last item in the list.
   nsWeakFrame*              mWeakFrames;
