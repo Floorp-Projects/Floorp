@@ -493,7 +493,7 @@ nsHTMLScrollFrame::GuessVScrollbarNeeded(const ScrollReflowState& aState)
 
   // If this is the initial reflow, guess PR_FALSE because usually
   // we have very little content by then.
-  if (GetStateBits() & NS_FRAME_FIRST_REFLOW)
+  if (InInitialReflow())
     return PR_FALSE;
 
   if (mInner.mIsRoot) {
@@ -515,6 +515,18 @@ nsHTMLScrollFrame::GuessVScrollbarNeeded(const ScrollReflowState& aState)
   // basically guessing that there are a lot of overflow:auto DIVs
   // that get their intrinsic size and don't overflow
   return PR_FALSE;
+}
+
+PRBool
+nsHTMLScrollFrame::InInitialReflow() const
+{
+  // We're in an initial reflow if NS_FRAME_FIRST_REFLOW is set, unless we're a
+  // root scrollframe during a non-eager StartLayout call on the presshell.  In
+  // that case we want to skip this clause altogether.
+  return
+    (GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
+    (!mInner.mIsRoot ||
+     PresContext()->PresShell()->IsInEagerStartLayout());
 }
 
 nsresult
@@ -782,8 +794,7 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
   aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
   FinishAndStoreOverflow(&aDesiredSize);
 
-  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
-      !mInner.mHadNonInitialReflow) {
+  if (!InInitialReflow() && !mInner.mHadNonInitialReflow) {
     mInner.mHadNonInitialReflow = PR_TRUE;
     if (mInner.mIsRoot) {
       // For viewports, record whether we needed a vertical scrollbar
