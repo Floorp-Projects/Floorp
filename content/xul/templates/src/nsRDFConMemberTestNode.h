@@ -88,16 +88,14 @@ public:
         virtual ~Element() { MOZ_COUNT_DTOR(nsRDFConMemberTestNode::Element); }
 
         static Element*
-        Create(nsFixedSizeAllocator& aPool,
-               nsIRDFResource* aContainer,
-               nsIRDFNode* aMember) {
-            void* place = aPool.Alloc(sizeof(Element));
+        Create(nsIRDFResource* aContainer, nsIRDFNode* aMember) {
+            void* place = MemoryElement::gPool.Alloc(sizeof(Element));
             return place ? ::new (place) Element(aContainer, aMember) : nsnull; }
 
-        static void
-        Destroy(nsFixedSizeAllocator& aPool, Element* aElement) {
-            aElement->~Element();
-            aPool.Free(aElement, sizeof(*aElement)); }
+        void Destroy() {
+            this->~Element();
+            MemoryElement::gPool.Free(this, sizeof(Element));
+        }
 
         virtual const char* Type() const {
             return "nsRDFConMemberTestNode::Element"; }
@@ -112,10 +110,6 @@ public:
                 return mContainer == element.mContainer && mMember == element.mMember;
             }
             return PR_FALSE; }
-
-        virtual MemoryElement* Clone(void* aPool) const {
-            return Create(*NS_STATIC_CAST(nsFixedSizeAllocator*, aPool),
-                          mContainer, mMember); }
 
     protected:
         nsCOMPtr<nsIRDFResource> mContainer;
