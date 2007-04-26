@@ -70,6 +70,31 @@ extern PRLogModuleInfo* gXULTemplateLog;
 
 #include "nsRuleNetwork.h"
 #include "nsXULTemplateResultSetRDF.h"
+#include "nsRDFConMemberTestNode.h"
+#include "nsRDFPropertyTestNode.h"
+
+PRBool MemoryElement::gPoolInited;
+nsFixedSizeAllocator MemoryElement::gPool;
+
+// static
+PRBool
+MemoryElement::Init()
+{
+    if (!gPoolInited) {
+        const size_t bucketsizes[] = {
+            sizeof (nsRDFConMemberTestNode::Element),
+            sizeof (nsRDFPropertyTestNode::Element)
+        };
+
+        if (NS_FAILED(gPool.Init("MemoryElement", bucketsizes,
+                                 NS_ARRAY_LENGTH(bucketsizes), 256)))
+            return PR_FALSE;
+
+        gPoolInited = PR_TRUE;
+    }
+
+    return PR_TRUE;
+}
 
 //----------------------------------------------------------------------
 //
@@ -84,7 +109,7 @@ MemoryElementSet::Add(MemoryElement* aElement)
             // We've already got this element covered. Since Add()
             // assumes ownership, and we aren't going to need this,
             // just nuke it.
-            delete aElement;
+            aElement->Destroy();
             return NS_OK;
         }
     }
