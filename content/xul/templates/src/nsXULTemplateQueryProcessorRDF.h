@@ -338,9 +338,6 @@ protected:
     // the end node of the default simple node hierarchy
     TestNode* mSimpleRuleMemberTest;
 
-    // fixed size allocator used to allocate rule network structures
-    nsFixedSizeAllocator mPool;
-
     // the reference variable
     nsCOMPtr<nsIAtom> mRefVariable;
 
@@ -395,8 +392,6 @@ public:
     static nsIRDFContainerUtils*     gRDFContainerUtils;
     static nsIRDFResource*           kNC_BookmarkSeparator;
     static nsIRDFResource*           kRDF_type;
-
-    nsFixedSizeAllocator& GetPool() { return mPool; }
 };
 
 #endif // nsXULTemplateQueryProcessorRDF_h__

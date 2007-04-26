@@ -207,7 +207,7 @@ nsXULTemplateQueryProcessorRDF::InitGlobals()
                              &kRDF_type);
     }
 
-    return NS_OK;
+    return MemoryElement::Init() ? NS_OK : NS_ERROR_FAILURE;
 }
 
 //----------------------------------------------------------------------
@@ -235,15 +235,6 @@ nsXULTemplateQueryProcessorRDF::InitializeForBuilding(nsISupports* aDatasource,
         if (!mRuleToBindingsMap.IsInitialized() &&
             !mRuleToBindingsMap.Init())
             return NS_ERROR_OUT_OF_MEMORY;
-
-        const size_t bucketsizes[] = {
-            sizeof (nsRDFConMemberTestNode::Element),
-            sizeof (nsRDFPropertyTestNode::Element)
-        };
-
-        rv = mPool.Init("nsXULTemplateQueryProcessorRDF", bucketsizes, 2, 256);
-        if (NS_FAILED(rv))
-            return rv;
 
         mQueryProcessorRDFInited = PR_TRUE;
     }
