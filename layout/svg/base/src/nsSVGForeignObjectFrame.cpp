@@ -617,6 +617,9 @@ nsSVGForeignObjectFrame::InvalidateInternal(const nsRect& aDamageRect,
                                             nscoord aX, nscoord aY, nsIFrame* aForChild,
                                             PRBool aImmediate)
 {
+  if (mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+    return;
+
   mDirtyRegion.Or(mDirtyRegion, aDamageRect + nsPoint(aX, aY));
   FlushDirtyRegion();
 }
