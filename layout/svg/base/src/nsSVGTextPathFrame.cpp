@@ -44,13 +44,34 @@
 #include "nsContentUtils.h"
 #include "nsIDOMSVGAnimatedPathData.h"
 #include "nsSVGPathElement.h"
-#include "nsISVGValueUtils.h"
-#include "nsIDOMSVGPathSegList.h"
 
-NS_INTERFACE_MAP_BEGIN(nsSVGTextPathFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-NS_INTERFACE_MAP_END_INHERITING(nsSVGTextPathFrameBase)
+
+NS_IMPL_ISUPPORTS1(nsSVGPathListener, nsIMutationObserver)
+
+nsSVGPathListener::nsSVGPathListener(nsIContent *aPathElement,
+                                     nsSVGTextPathFrame *aTextPathFrame) :
+  mTextPathFrame(aTextPathFrame)
+{
+  mObservedPath = do_GetWeakReference(aPathElement);
+  aPathElement->AddMutationObserver(this);
+}
+
+nsSVGPathListener::~nsSVGPathListener()
+{
+  nsCOMPtr<nsIContent> path = do_QueryReferent(mObservedPath);
+  if (path)
+    path->RemoveMutationObserver(this);
+}
+
+void
+nsSVGPathListener::AttributeChanged(nsIDocument *aDocument,
+                                    nsIContent *aContent,
+                                    PRInt32 aNameSpaceID,
+                                    nsIAtom *aAttribute,
+                                    PRInt32 aModType)
+{
+  mTextPathFrame->UpdateGraphic();
+}
 
 //----------------------------------------------------------------------
 // Implementation
@@ -73,12 +94,6 @@ NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsIContent* aContent,
   }
 
   return new (aPresShell) nsSVGTextPathFrame(aContext);
-}
-
-nsSVGTextPathFrame::~nsSVGTextPathFrame()
-{
-  if (mSegments)
-    NS_REMOVE_SVGVALUE_OBSERVER(mSegments);
 }
 
 NS_IMETHODIMP
@@ -193,38 +208,16 @@ nsSVGTextPathFrame::GetFlattenedPath() {
   if (!path)
     return nsnull;
 
-  if (!mSegments) {
-    nsCOMPtr<nsIDOMSVGAnimatedPathData> data =
-      do_QueryInterface(path->GetContent());
-    if (data) {
-      data->GetAnimatedPathSegList(getter_AddRefs(mSegments));
-      NS_ADD_SVGVALUE_OBSERVER(mSegments);
-    }
-  }
-
   nsSVGPathGeometryElement *element = NS_STATIC_CAST(nsSVGPathGeometryElement*,
                                                      path->GetContent());
+
+  if (!mPathListener) {
+    mPathListener = new nsSVGPathListener(path->GetContent(), this);
+  }
+
   nsCOMPtr<nsIDOMSVGMatrix> localTM = element->GetLocalTransformMatrix();
 
   return element->GetFlattenedPath(localTM);
-}
-
-//----------------------------------------------------------------------
-// nsISVGValueObserver methods:
-
-NS_IMETHODIMP
-nsSVGTextPathFrame::WillModifySVGObservable(nsISVGValue* observable, 
-                                            nsISVGValue::modificationType aModType)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGTextPathFrame::DidModifySVGObservable(nsISVGValue* observable,
-                                           nsISVGValue::modificationType aModType)
-{
-  UpdateGraphic();
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -240,8 +233,8 @@ nsSVGTextPathFrame::AttributeChanged(PRInt32         aNameSpaceID,
     UpdateGraphic();
   } else if (aNameSpaceID == kNameSpaceID_XLink &&
              aAttribute == nsGkAtoms::href) {
-    NS_REMOVE_SVGVALUE_OBSERVER(mSegments);
-    mSegments = nsnull;
+    mPathListener = nsnull;
+    UpdateGraphic();
   }
 
   return NS_OK;
