@@ -4681,6 +4681,11 @@ PresShell::StyleSheetAdded(nsIDocument *aDocument,
   aStyleSheet->GetApplicable(applicable);
 
   if (applicable && aStyleSheet->HasRules()) {
+    if (mDidInitialReflow) {
+      nsCAutoString uri;
+      mDocument->GetDocumentURI()->GetSpec(uri);
+      printf("Sheet added after StartLayout on %s\n", uri.get());
+    }
     mStylesHaveChanged = PR_TRUE;
   }
 }
@@ -4695,6 +4700,11 @@ PresShell::StyleSheetRemoved(nsIDocument *aDocument,
   PRBool applicable;
   aStyleSheet->GetApplicable(applicable);
   if (applicable && aStyleSheet->HasRules()) {
+    if (mDidInitialReflow) {
+      nsCAutoString uri;
+      mDocument->GetDocumentURI()->GetSpec(uri);
+      printf("Sheet removed after StartLayout on %s\n", uri.get());
+    }
     mStylesHaveChanged = PR_TRUE;
   }
 }
@@ -4705,6 +4715,11 @@ PresShell::StyleSheetApplicableStateChanged(nsIDocument *aDocument,
                                             PRBool aApplicable)
 {
   if (aStyleSheet->HasRules()) {
+    if (mDidInitialReflow) {
+      nsCAutoString uri;
+      mDocument->GetDocumentURI()->GetSpec(uri);
+      printf("Sheet state toggled after StartLayout on %s\n", uri.get());
+    }
     mStylesHaveChanged = PR_TRUE;
   }
 }
