@@ -904,6 +904,14 @@ nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
 
   mDeferredLayoutStart = PR_FALSE;
 
+  // Notify on all our content.  If none of our presshells have started layout
+  // yet it'll be a no-op except for updating our data structures, a la
+  // UpdateChildCounts() (because we don't want to double-notify on whatever we
+  // have right now).  If some of them _have_ started layout, we want to make
+  // sure to flush tags instead of just calling UpdateChildCounts() after we
+  // loop over the shells.
+  FlushTags();
+
   mLayoutStarted = PR_TRUE;
   mLastNotificationTime = PR_Now();
   
