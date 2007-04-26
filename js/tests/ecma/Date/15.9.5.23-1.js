@@ -60,23 +60,6 @@ writeHeaderToLog( SECTION + " Date.prototype.setTime(time)");
 
 var now = "now";
 addTestCase( 0, 0 );
-/*
-  addTestCase( now, -2208988800000 );
-  addTestCase( now, -86400000 );
-  addTestCase( now, 946684800000 );
-
-  // this daylight savings case fails -- need to fix date test functions
-//    addTestCase( now, -69609600000 );
-addTestCase( now, -2208988800000 );
-addTestCase( now, 946684800000 );
-
-// this daylight savings case fails -- need to fix date test functions
-//    addTestCase( now, -69609600000 );
-addTestCase( now, 0 );
-addTestCase( now, String( TIME_1900 ) );
-addTestCase( now, String( TZ_DIFF* msPerHour ) );
-addTestCase( now, String( TIME_2000 ) );
-*/
 
 test();
 
@@ -91,8 +74,6 @@ function addTestCase( startTime, setTime ) {
   var DateString = "var d = new Date("+startTime+"); d.setTime("+setTime+"); d" ;
   var UTCDate   = UTCDateFromTime ( Number(setTime) );
   var LocalDate = LocalDateFromTime( Number(setTime) );
-
-//    fixed_year = ( ExpectDate.year >=1900 || ExpectDate.year < 2000 ) ? ExpectDate.year - 1900 : ExpectDate.year;
 
   new TestCase( SECTION, DateString+".getTime()",             UTCDate.value,      DateCase.getTime() );
   new TestCase( SECTION, DateString+".valueOf()",             UTCDate.value,      DateCase.valueOf() );

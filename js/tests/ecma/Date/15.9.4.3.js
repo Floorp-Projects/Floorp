@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-var testcases = new Array();
 var SECTION = "15.9.4.3";
 var TITLE = "Date.UTC( year, month, date, hours, minutes, seconds, ms )";
 
@@ -121,31 +119,8 @@ test();
 function addNewTestCase( DateCase, DateString, ExpectDate) {
   DateCase = DateCase;
 
-
-//    fixed_year = ( ExpectDate.year >=1900 || ExpectDate.year < 2000 ) ? ExpectDate.year - 1900 : ExpectDate.year;
-
   new TestCase( SECTION, DateString,         ExpectDate.value,       DateCase );
   new TestCase( SECTION, DateString,         ExpectDate.value,       DateCase );
-/*
-
-new TestCase( SECTION, DateString+".getUTCFullYear()",        ExpectDate.year,   DateCase.getUTCFullYear() );
-new TestCase( SECTION, DateString+".getUTCMonth()",         ExpectDate.month,  DateCase.getUTCMonth() );
-new TestCase( SECTION, DateString+".getUTCDate()",          ExpectDate.date,   DateCase.getUTCDate() );
-new TestCase( SECTION, DateString+".getUTCDay()",           ExpectDate.day,    DateCase.getUTCDay() );
-new TestCase( SECTION, DateString+".getUTCHours()",         ExpectDate.hours,  DateCase.getUTCHours() );
-new TestCase( SECTION, DateString+".getUTCMinutes()",       ExpectDate.minutes,DateCase.getUTCMinutes() );
-new TestCase( SECTION, DateString+".getUTCSeconds()",       ExpectDate.seconds,DateCase.getUTCSeconds() );
-new TestCase( SECTION, DateString+".getUTCMilliseconds()",  ExpectDate.ms,     DateCase.getUTCMilliseconds() );
-
-new TestCase( SECTION, DateString+".getFullYear()",             ExpectDate.year,            DateCase.getFullYear() );
-new TestCase( SECTION, DateString+".getMonth()",            ExpectDate.month,      DateCase.getMonth() );
-new TestCase( SECTION, DateString+".getDate()",             ExpectDate.date,       DateCase.getDate() );
-//    new TestCase( SECTION, DateString+".getDay()",              ExpectDate.day,        DateCase.getDay() );
-new TestCase( SECTION, DateString+".getHours()",            ExpectDate.hours,      DateCase.getHours() );
-new TestCase( SECTION, DateString+".getMinutes()",          ExpectDate.minutes,    DateCase.getMinutes() );
-new TestCase( SECTION, DateString+".getSeconds()",          ExpectDate.seconds,    DateCase.getSeconds() );
-new TestCase( SECTION, DateString+".getMilliseconds()",     ExpectDate.ms,         DateCase.getMilliseconds() );
-*/
 }
 
 function MyDate() {

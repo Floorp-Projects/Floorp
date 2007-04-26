@@ -254,12 +254,26 @@ var msPerSecond =  1000;
 var msPerMinute =  60000;  // msPerSecond * SecondsPerMinute
 var msPerHour =   3600000; // msPerMinute * MinutesPerHour
 var TZ_DIFF = getTimeZoneDiff();  // offset of tester's timezone from UTC
+var TZ_ADJUST  = TZ_DIFF * msPerHour;
 var TZ_PST = -8;  // offset of Pacific Standard Time from UTC
 var PST_DIFF = TZ_DIFF - TZ_PST;  // offset of tester's timezone from PST
+var PST_ADJUST = TZ_PST * msPerHour;
+var TIME_0000  = (function () 
+  { // calculate time for year 0
+    for ( var time = 0, year = 1969; year >= 0; year-- ) {
+      time -= TimeInYear(year);
+    }
+    return time;
+  })();
 var TIME_1970  = 0;
 var TIME_2000  = 946684800000;
 var TIME_1900  = -2208988800000;
-
+var UTC_FEB_29_2000 = TIME_2000 + 31*msPerDay + 28*msPerDay;
+var UTC_JAN_1_2005 = TIME_2000 + TimeInYear(2000) + TimeInYear(2001) +
+    TimeInYear(2002) + TimeInYear(2003) + TimeInYear(2004);
+var now = new Date();
+var TIME_NOW = now.valueOf();  //valueOf() is to accurate to the millisecond
+                               //Date.parse() is accurate only to the second
 
 /*
  * Originally, the test suite used a hard-coded value TZ_DIFF = -8. 
@@ -272,7 +286,6 @@ function getTimeZoneDiff()
   return -((new Date(2000, 1, 1)).getTimezoneOffset())/60;
 }
 
-
 /* 
  * Date test "ResultArrays" are hard-coded for Pacific Standard Time. 
  * We must adjust them for the tester's own timezone -
@@ -280,7 +293,7 @@ function getTimeZoneDiff()
 function adjustResultArray(ResultArray, msMode)
 {
   // If the tester's system clock is in PST, no need to continue - 
-  if (!PST_DIFF) {return;} 
+//  if (!PST_DIFF) {return;} 
 
   /* The date testcases instantiate Date objects in two different ways:
    *
@@ -323,7 +336,6 @@ function adjustResultArray(ResultArray, msMode)
     ResultArray[UTC_YEAR] = YearFromTime(t);
   }
 }
-
 
 function Day( t ) {
   return ( Math.floor(t/msPerDay ) );
@@ -522,34 +534,37 @@ function LocalTZA() {
 function UTC( t ) {
   return ( t - LocalTZA() - DaylightSavingTA(t - LocalTZA()) );
 }
-
+function LocalTime( t ) {
+  return ( t + LocalTZA() + DaylightSavingTA(t) );
+}
 function DaylightSavingTA( t ) {
   t = t - LocalTZA();
 
-  var dst_start = GetFirstSundayInApril(t) + 2*msPerHour;
-  var dst_end   = GetLastSundayInOctober(t)+ 2*msPerHour;
+  var dst_start = GetDSTStart(t);
+  var dst_end   = GetDSTEnd(t);
 
-  if ( t >= dst_start && t < dst_end ) {
+  if ( t >= dst_start && t < dst_end ) 
     return msPerHour;
-  } else {
-    return 0;
-  }
 
-  // Daylight Savings Time starts on the first Sunday in April at 2:00AM in
-  // PST.  Other time zones will need to override this function.
-
-  print( new Date( UTC(dst_start + LocalTZA())) );
-
-  return UTC(dst_start  + LocalTZA());
+  return 0;
 }
-function GetFirstSundayInApril( t ) {
+
+function GetFirstSundayInMonth( t, m ) {
   var year = YearFromTime(t);
   var leap = InLeapYear(t);
 
-  var april = TimeFromYear(year) + TimeInMonth(0, leap) + TimeInMonth(1,leap) +
-    TimeInMonth(2,leap);
+// month m 0..11
+// april == 3
+// march == 2
 
-  for ( var first_sunday = april; WeekDay(first_sunday) > 0;
+  // set time to first day of month m
+  var time = TimeFromYear(year);
+  for (var i = 0; i < m; ++i)
+  {
+    time += TimeInMonth(i, leap);
+  }
+
+  for ( var first_sunday = time; WeekDay(first_sunday) > 0;
         first_sunday += msPerDay )
   {
     ;
@@ -557,23 +572,84 @@ function GetFirstSundayInApril( t ) {
 
   return first_sunday;
 }
-function GetLastSundayInOctober( t ) {
+
+function GetLastSundayInMonth( t, m ) {
   var year = YearFromTime(t);
   var leap = InLeapYear(t);
 
-  for ( var oct = TimeFromYear(year), m = 0; m < 9; m++ ) {
-    oct += TimeInMonth(m, leap);
+// month m 0..11
+// april == 3
+// march == 2
+
+  // first day of following month
+  var time = TimeFromYear(year);
+  for (var i = 0; i <= m; ++i)
+  {
+    time += TimeInMonth(i, leap);
   }
-  for ( var last_sunday = oct + 30*msPerDay; WeekDay(last_sunday) > 0;
+  // prev day == last day of month
+  time -= msPerDay;
+
+  for ( var last_sunday = time; WeekDay(last_sunday) > 0;
         last_sunday -= msPerDay )
   {
     ;
   }
   return last_sunday;
 }
-function LocalTime( t ) {
-  return ( t + LocalTZA() + DaylightSavingTA(t) );
+
+/*
+ 15.9.1.9 Daylight Saving Time Adjustment
+
+ The implementation of ECMAScript should not try to determine whether
+ the exact time was subject to daylight saving time, but just whether
+ daylight saving time would have been in effect if the current
+ daylight saving time algorithm had been used at the time. This avoids
+ complications such as taking into account the years that the locale
+ observed daylight saving time year round.
+*/
+
+/*
+US DST algorithm 
+
+Before 2007, DST starts first Sunday in April at 2 AM and ends last
+Sunday in October at 2 AM
+
+Starting in 2007, DST starts second Sunday in March at 2 AM and ends
+first Sunday in November at 2 AM
+
+Note that different operating systems behave differently.
+
+Fully patched Windows XP uses the 2007 algorithm for all dates while
+fully patched Fedora Core 6 and RHEL 4 Linux use the algorithm in
+effect at the time.
+
+Since pre-2007 DST is a subset of 2007 DST rules, this only affects
+tests that occur in the period Mar-Apr and Oct-Nov where the two
+algorithms do not agree.
+
+*/
+
+function GetDSTStart( t )
+{
+  return (GetFirstSundayInMonth(t, 2) + 7*msPerDay + 2*msPerHour - LocalTZA());
 }
+
+function GetDSTEnd( t )
+{
+  return (GetFirstSundayInMonth(t, 10) + 2*msPerHour - LocalTZA());
+ }
+
+function GetOldDSTStart( t )
+{
+  return (GetFirstSundayInMonth(t, 3) + 2*msPerHour - LocalTZA());
+}
+
+function GetOldDSTEnd( t )
+{
+  return (GetLastSundayInMonth(t, 9) + 2*msPerHour - LocalTZA());
+}
+
 function MakeTime( hour, min, sec, ms ) {
   if ( isNaN( hour ) || isNaN( min ) || isNaN( sec ) || isNaN( ms ) ) {
     return Number.NaN;

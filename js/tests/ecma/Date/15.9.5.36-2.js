@@ -82,81 +82,11 @@ addNewTestCase( "TDATE = new Date(0);(TDATE).setFullYear(1970,0);TDATE",
 addNewTestCase( "TDATE = new Date(0);(TDATE).setFullYear(1970,0,1);TDATE",
 		UTCDateFromTime(SetFullYear(0,1970,0,1)),
 		LocalDateFromTime(SetFullYear(0,1970,0,1)) );
-/*
-// 1971
-addNewTestCase( "TDATE = new Date(0);(TDATE).setFullYear(1971);TDATE",
-UTCDateFromTime(SetFullYear(0,1971)),
-LocalDateFromTime(SetFullYear(0,1971)) );
-
-addNewTestCase( "TDATE = new Date(0);(TDATE).setFullYear(1971,0);TDATE",
-UTCDateFromTime(SetFullYear(0,1971,0)),
-LocalDateFromTime(SetFullYear(0,1971,0)) );
-
-addNewTestCase( "TDATE = new Date(0);(TDATE).setFullYear(1971,0,1);TDATE",
-UTCDateFromTime(SetFullYear(0,1971,0,1)),
-LocalDateFromTime(SetFullYear(0,1971,0,1)) );
-
-// 1999
-addNewTestCase( "TDATE = new Date(0);(TDATE).setFullYear(1999);TDATE",
-UTCDateFromTime(SetFullYear(0,1999)),
-LocalDateFromTime(SetFullYear(0,1999)) );
-
-addNewTestCase( "TDATE = new Date(0);(TDATE).setFullYear(1999,11);TDATE",
-UTCDateFromTime(SetFullYear(0,1999,11)),
-LocalDateFromTime(SetFullYear(0,1999,11)) );
-
-addNewTestCase( "TDATE = new Date(0);(TDATE).setFullYear(1999,11,31);TDATE",
-UTCDateFromTime(SetFullYear(0,1999,11,31)),
-LocalDateFromTime(SetFullYear(0,1999,11,31)) );
-
-// 2000
-addNewTestCase( "TDATE = new Date(0);(TDATE).setFullYear(2000);TDATE",
-UTCDateFromTime(SetFullYear(0,2000)),
-LocalDateFromTime(SetFullYear(0,2000)) );
-
-addNewTestCase( "TDATE = new Date(0);(TDATE).setFullYear(2000,0);TDATE",
-UTCDateFromTime(SetFullYear(0,2000,0)),
-LocalDateFromTime(SetFullYear(0,2000,0)) );
-
-addNewTestCase( "TDATE = new Date(0);(TDATE).setFullYear(2000,0,1);TDATE",
-UTCDateFromTime(SetFullYear(0,2000,0,1)),
-LocalDateFromTime(SetFullYear(0,2000,0,1)) );
-
-// feb 29, 2000
-addNewTestCase( "TDATE = new Date(0);(TDATE).setFullYear(2000);TDATE",
-UTCDateFromTime(SetFullYear(0,2000)),
-LocalDateFromTime(SetFullYear(0,2000)) );
-
-addNewTestCase( "TDATE = new Date(0);(TDATE).setFullYear(2000,1);TDATE",
-UTCDateFromTime(SetFullYear(0,2000,1)),
-LocalDateFromTime(SetFullYear(0,2000,1)) );
-
-addNewTestCase( "TDATE = new Date(0);(TDATE).setFullYear(2000,1,29);TDATE",
-UTCDateFromTime(SetFullYear(0,2000,1,29)),
-LocalDateFromTime(SetFullYear(0,2000,1,29)) );
-
-// Jan 1, 2005
-addNewTestCase( "TDATE = new Date(0);(TDATE).setFullYear(2005);TDATE",
-UTCDateFromTime(SetFullYear(0,2005)),
-LocalDateFromTime(SetFullYear(0,2005)) );
-
-addNewTestCase( "TDATE = new Date(0);(TDATE).setFullYear(2005,0);TDATE",
-UTCDateFromTime(SetFullYear(0,2005,0)),
-LocalDateFromTime(SetFullYear(0,2005,0)) );
-
-addNewTestCase( "TDATE = new Date(0);(TDATE).setFullYear(2005,0,1);TDATE",
-UTCDateFromTime(SetFullYear(0,2005,0,1)),
-LocalDateFromTime(SetFullYear(0,2005,0,1)) );
-
-*/
 
 test();
 
 function addNewTestCase( DateString, UTCDate, LocalDate) {
   DateCase = eval( DateString );
-
-
-//    fixed_year = ( ExpectDate.year >=1900 || ExpectDate.year < 2000 ) ? ExpectDate.year - 1900 : ExpectDate.year;
 
   new TestCase( SECTION, DateString+".getTime()",             UTCDate.value,       DateCase.getTime() );
   new TestCase( SECTION, DateString+".valueOf()",             UTCDate.value,       DateCase.valueOf() );

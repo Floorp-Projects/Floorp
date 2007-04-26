@@ -66,19 +66,6 @@ addNewTestCase( "TDATE = new Date(0);(TDATE).setUTCDate(1);TDATE",
 addNewTestCase( "TDATE = new Date(86400000);(TDATE).setUTCDate(1);TDATE",
 		UTCDateFromTime(SetUTCDate(86400000,1)),
 		LocalDateFromTime(SetUTCDate(86400000,1)) );
-/*
-  addNewTestCase( "TDATE = new Date(0);(TDATE).setUTCFullYear(1972);TDATE",
-  UTCDateFromTime(SetUTCFullYear(0,1972)),
-  LocalDateFromTime(SetUTCFullYear(0,1972)) );
-
-  addNewTestCase( "TDATE = new Date(0);(TDATE).setUTCFullYear(1968);TDATE",
-  UTCDateFromTime(SetUTCFullYear(0,1968)),
-  LocalDateFromTime(SetUTCFullYear(0,1968)) );
-
-  addNewTestCase( "TDATE = new Date(0);(TDATE).setUTCFullYear(1969);TDATE",
-  UTCDateFromTime(SetUTCFullYear(0,1969)),
-  LocalDateFromTime(SetUTCFullYear(0,1969)) );
-*/
 
 test();
 

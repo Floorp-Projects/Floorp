@@ -80,22 +80,6 @@ addNewTestCase( "TDATE = new Date(0); TDATE.setUTCFullYear(2006);TDATE",
 		UTCDateFromTime(SetUTCFullYear(0,2006)),
 		LocalDateFromTime(SetUTCFullYear(0,2006)) );
 
-/*
-// Dates around 1900
-addNewTestCase( "TDATE = new Date(0); TDATE.setUTCFullYear(1900);TDATE",
-UTCDateFromTime(SetUTCFullYear(0,1900)),
-LocalDateFromTime(SetUTCFullYear(0,1900)) );
-
-addNewTestCase( "TDATE = new Date(0); TDATE.setUTCFullYear(1899);TDATE",
-UTCDateFromTime(SetUTCFullYear(0,1899)),
-LocalDateFromTime(SetUTCFullYear(0,1899)) );
-
-addNewTestCase( "TDATE = new Date(0); TDATE.setUTCFullYear(1901);TDATE",
-UTCDateFromTime(SetUTCFullYear(0,1901)),
-LocalDateFromTime(SetUTCFullYear(0,1901)) );
-
-*/
-
 test();
 
 function addNewTestCase( DateString, UTCDate, LocalDate) {

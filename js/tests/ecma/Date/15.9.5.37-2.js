@@ -80,61 +80,11 @@ addNewTestCase( "TDATE = new Date(0); TDATE.setUTCFullYear(2001);TDATE",
 addNewTestCase( "TDATE = new Date(0); TDATE.setUTCFullYear(1999);TDATE",
 		UTCDateFromTime(SetUTCFullYear(0,1999)),
 		LocalDateFromTime(SetUTCFullYear(0,1999)) );
-/*
-// Dates around 29 February 2000
-
-var UTC_FEB_29_1972 = TIME_1970 + TimeInYear(1970) + TimeInYear(1971) +
-31*msPerDay + 28*msPerDay;
-
-var PST_FEB_29_1972 = UTC_FEB_29_1972 - TZ_DIFF * msPerHour;
-
-addNewTestCase( "TDATE = new Date("+UTC_FEB_29_1972+"); "+
-"TDATE.setUTCFullYear(2000);TDATE",
-UTCDateFromTime(SetUTCFullYear(UTC_FEB_29_1972,2000)),
-LocalDateFromTime(SetUTCFullYear(UTC_FEB_29_1972,2000)) );
-
-addNewTestCase( "TDATE = new Date("+PST_FEB_29_1972+"); "+
-"TDATE.setUTCFullYear(2000);TDATE",
-UTCDateFromTime(SetUTCFullYear(PST_FEB_29_1972,2000)),
-LocalDateFromTime(SetUTCFullYear(PST_FEB_29_1972,2000)) );
-
-// Dates around 2005
-
-addNewTestCase( "TDATE = new Date(0); TDATE.setUTCFullYear(2005);TDATE",
-UTCDateFromTime(SetUTCFullYear(0,2005)),
-LocalDateFromTime(SetUTCFullYear(0,2005)) );
-
-addNewTestCase( "TDATE = new Date(0); TDATE.setUTCFullYear(2004);TDATE",
-UTCDateFromTime(SetUTCFullYear(0,2004)),
-LocalDateFromTime(SetUTCFullYear(0,2004)) );
-
-addNewTestCase( "TDATE = new Date(0); TDATE.setUTCFullYear(2006);TDATE",
-UTCDateFromTime(SetUTCFullYear(0,2006)),
-LocalDateFromTime(SetUTCFullYear(0,2006)) );
-
-
-// Dates around 1900
-addNewTestCase( "TDATE = new Date(0); TDATE.setUTCFullYear(1900);TDATE",
-UTCDateFromTime(SetUTCFullYear(0,1900)),
-LocalDateFromTime(SetUTCFullYear(0,1900)) );
-
-addNewTestCase( "TDATE = new Date(0); TDATE.setUTCFullYear(1899);TDATE",
-UTCDateFromTime(SetUTCFullYear(0,1899)),
-LocalDateFromTime(SetUTCFullYear(0,1899)) );
-
-addNewTestCase( "TDATE = new Date(0); TDATE.setUTCFullYear(1901);TDATE",
-UTCDateFromTime(SetUTCFullYear(0,1901)),
-LocalDateFromTime(SetUTCFullYear(0,1901)) );
-
-*/
 
 test();
 
 function addNewTestCase( DateString, UTCDate, LocalDate) {
   DateCase = eval( DateString );
-
-
-//    fixed_year = ( ExpectDate.year >=1900 || ExpectDate.year < 2000 ) ? ExpectDate.year - 1900 : ExpectDate.year;
 
   new TestCase( SECTION, DateString+".getTime()",             UTCDate.value,       DateCase.getTime() );
   new TestCase( SECTION, DateString+".valueOf()",             UTCDate.value,       DateCase.valueOf() );

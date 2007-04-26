@@ -57,56 +57,19 @@ var TITLE   = "Date.prototype.getDay()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-var TZ_ADJUST = TZ_DIFF * msPerHour;
+addTestCase( TIME_NOW );
 
-// get the current time
-var now = (new Date()).valueOf();
-
-// calculate time for year 0
-for ( var time = 0, year = 1969; year >= 0; year-- ) {
-  time -= TimeInYear(year);
-}
-// get time for 29 feb 2000
-
-var UTC_FEB_29_2000 = TIME_2000 + 31*msPerDay + 28*msPerHour;
-
-// get time for 1 jan 2005
-
-var UTC_JAN_1_2005 = TIME_2000 + TimeInYear(2000)+TimeInYear(2001)+
-TimeInYear(2002)+TimeInYear(2003)+TimeInYear(2004);
-
-addTestCase( now );
-/*
-  addTestCase( time );
-  addTestCase( TIME_1970 );
-  addTestCase( TIME_1900 );
-  addTestCase( TIME_2000 );
-  addTestCase( UTC_FEB_29_2000 );
-  addTestCase( UTC_JAN_1_2005 );
-
-  new TestCase( SECTION,
-  "(new Date(NaN)).getDay()",
-  NaN,
-  (new Date(NaN)).getDay() );
-
-  new TestCase( SECTION,
-  "Date.prototype.getDay.length",
-  0,
-  Date.prototype.getDay.length );
-*/
 test();
 
 function addTestCase( t ) {
-  for ( var m = 0; m < 12; m++ ) {
-    t += TimeInMonth(m);
+  var start = TimeFromYear(YearFromTime(t));
+  var stop  = TimeFromYear(YearFromTime(t) + 1);
 
-    for ( d = 0; d < TimeInMonth(m); d+= msPerDay*6 ) {
-      t += d;
-
-      new TestCase( SECTION,
-		    "(new Date("+t+")).getDay()",
-		    WeekDay(LocalTime(t)),
-		    (new Date(t)).getDay() );
-    }
+  for (var d = start; d < stop; d += msPerDay)
+  {
+    new TestCase( SECTION,
+                  "(new Date("+d+")).getDay()",
+                  WeekDay((LocalTime(d))),
+                  (new Date(d)).getDay() );
   }
 }

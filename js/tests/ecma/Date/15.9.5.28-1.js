@@ -103,23 +103,6 @@ addNewTestCase( -2208988800000, 59, 59, 999,
 		"TDATE = new Date(-2208988800000);(TDATE).setMinutes(59,59,999);TDATE",
 		UTCDateFromTime(SetMinutes(-2208988800000,59,59,999)),
 		LocalDateFromTime(SetMinutes(-2208988800000,59,59,999)) );
-/*
-  addNewTestCase( "TDATE = new Date(-2208988800000);(TDATE).setUTCMilliseconds(123456789);TDATE",
-  UTCDateFromTime(SetUTCMilliseconds(-2208988800000,123456789)),
-  LocalDateFromTime(SetUTCMilliseconds(-2208988800000,123456789)) );
-
-  addNewTestCase( "TDATE = new Date(-2208988800000);(TDATE).setUTCMilliseconds(123456);TDATE",
-  UTCDateFromTime(SetUTCMilliseconds(-2208988800000,123456)),
-  LocalDateFromTime(SetUTCMilliseconds(-2208988800000,123456)) );
-
-  addNewTestCase( "TDATE = new Date(-2208988800000);(TDATE).setUTCMilliseconds(-123456);TDATE",
-  UTCDateFromTime(SetUTCMilliseconds(-2208988800000,-123456)),
-  LocalDateFromTime(SetUTCMilliseconds(-2208988800000,-123456)) );
-
-  addNewTestCase( "TDATE = new Date(0);(TDATE).setUTCMilliseconds(-999);TDATE",
-  UTCDateFromTime(SetUTCMilliseconds(0,-999)),
-  LocalDateFromTime(SetUTCMilliseconds(0,-999)) );
-*/
 
 test();
 
@@ -136,17 +119,13 @@ function addNewTestCase( time, min, sec, ms, DateString, UTCDate, LocalDate) {
     }
   }
 
-
-
-//    fixed_year = ( ExpectDate.year >=1900 || ExpectDate.year < 2000 ) ? ExpectDate.year - 1900 : ExpectDate.year;
-
   new TestCase( SECTION, DateString+".getTime()",             UTCDate.value,       DateCase.getTime() );
   new TestCase( SECTION, DateString+".valueOf()",             UTCDate.value,       DateCase.valueOf() );
 
   new TestCase( SECTION, DateString+".getUTCFullYear()",      UTCDate.year,    DateCase.getUTCFullYear() );
   new TestCase( SECTION, DateString+".getUTCMonth()",         UTCDate.month,  DateCase.getUTCMonth() );
   new TestCase( SECTION, DateString+".getUTCDate()",          UTCDate.date,   DateCase.getUTCDate() );
-//    new TestCase( SECTION, DateString+".getUTCDay()",           UTCDate.day,    DateCase.getUTCDay() );
+
   new TestCase( SECTION, DateString+".getUTCHours()",         UTCDate.hours,  DateCase.getUTCHours() );
   new TestCase( SECTION, DateString+".getUTCMinutes()",       UTCDate.minutes,DateCase.getUTCMinutes() );
   new TestCase( SECTION, DateString+".getUTCSeconds()",       UTCDate.seconds,DateCase.getUTCSeconds() );
@@ -155,7 +134,7 @@ function addNewTestCase( time, min, sec, ms, DateString, UTCDate, LocalDate) {
   new TestCase( SECTION, DateString+".getFullYear()",         LocalDate.year,       DateCase.getFullYear() );
   new TestCase( SECTION, DateString+".getMonth()",            LocalDate.month,      DateCase.getMonth() );
   new TestCase( SECTION, DateString+".getDate()",             LocalDate.date,       DateCase.getDate() );
-//    new TestCase( SECTION, DateString+".getDay()",              LocalDate.day,        DateCase.getDay() );
+
   new TestCase( SECTION, DateString+".getHours()",            LocalDate.hours,      DateCase.getHours() );
   new TestCase( SECTION, DateString+".getMinutes()",          LocalDate.minutes,    DateCase.getMinutes() );
   new TestCase( SECTION, DateString+".getSeconds()",          LocalDate.seconds,    DateCase.getSeconds() );

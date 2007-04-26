@@ -56,43 +56,19 @@ var TITLE   = "Date.prototype.getUTCDate()";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-var TZ_ADJUST = TZ_DIFF * msPerHour;
-
 addTestCase( TIME_1900 );
 
 test();
 
 function addTestCase( t ) {
-  for ( var m = 0; m < 11; m++ ) {
-    t += TimeInMonth(m);
+  var start = TimeFromYear(YearFromTime(t));
+  var stop  = TimeFromYear(YearFromTime(t) + 1);
 
-    for ( var d = 0; d < TimeInMonth( m ); d += 7* msPerDay ) {
-      t += d;
-      new TestCase( SECTION,
-                    "(new Date("+t+")).getUTCDate()",
-                    DateFromTime((t)),
-                    (new Date(t)).getUTCDate() );
-/*
-  new TestCase( SECTION,
-  "(new Date("+(t+1)+")).getUTCDate()",
-  DateFromTime((t+1)),
-  (new Date(t+1)).getUTCDate() );
-
-  new TestCase( SECTION,
-  "(new Date("+(t-1)+")).getUTCDate()",
-  DateFromTime((t-1)),
-  (new Date(t-1)).getUTCDate() );
-
-  new TestCase( SECTION,
-  "(new Date("+(t-TZ_ADJUST)+")).getUTCDate()",
-  DateFromTime((t-TZ_ADJUST)),
-  (new Date(t-TZ_ADJUST)).getUTCDate() );
-
-  new TestCase( SECTION,
-  "(new Date("+(t+TZ_ADJUST)+")).getUTCDate()",
-  DateFromTime((t+TZ_ADJUST)),
-  (new Date(t+TZ_ADJUST)).getUTCDate() );
-*/
-    }
+  for (var d = start; d < stop; d += msPerDay)
+  {
+    new TestCase( SECTION,
+                  "(new Date("+d+")).getUTCDate()",
+                  DateFromTime(d),
+                  (new Date(d)).getUTCDate() );
   }
 }
