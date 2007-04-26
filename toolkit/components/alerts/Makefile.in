@@ -49,9 +49,9 @@ ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),windows gtk gtk2))
 DIRS += src
 endif
 
-ifneq (,$(filter mac cocoa, $(MOZ_WIDGET_TOOLKIT)))
-DIRS += src/mac
-endif
+#ifneq (,$(filter mac cocoa, $(MOZ_WIDGET_TOOLKIT)))
+#DIRS += src/mac
+#endif
 
 include $(topsrcdir)/config/rules.mk
 
