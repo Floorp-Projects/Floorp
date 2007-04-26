@@ -296,8 +296,6 @@ typedef void (*_gdk_window_set_urgency_hint_fn)(GdkWindow *window,
 // cursor cache
 static GdkCursor *gCursorCache[eCursorCount];
 
-#define ARRAY_LENGTH(a) (sizeof(a)/sizeof(a[0]))
-
 nsWindow::nsWindow()
 {
     mContainer           = nsnull;
@@ -365,7 +363,7 @@ nsWindow::~nsWindow()
 /* static */ void
 nsWindow::ReleaseGlobals()
 {
-  for (PRUint32 i = 0; i < ARRAY_LENGTH(gCursorCache); ++i) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gCursorCache); ++i) {
     if (gCursorCache[i]) {
       gdk_cursor_unref(gCursorCache[i]);
       gCursorCache[i] = nsnull;
