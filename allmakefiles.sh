@@ -798,8 +798,6 @@ embedding/config/Makefile
 embedding/tests/Makefile
 embedding/tests/cocoaEmbed/Makefile
 embedding/tests/winEmbed/Makefile
-embedding/tests/mfcembed/Makefile
-embedding/tests/mfcembed/components/Makefile
 "
 
 MAKEFILES_minimo="
