@@ -54,10 +54,10 @@ ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),windows gtk gtk2))
 ALERTS_SERVICE=1
 DEFINES += -DALERTS_SERVICE
 endif
-ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
-ALERTS_SERVICE_MAC=1
-DEFINES += -DALERTS_SERVICE_MAC
-endif
+#ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
+#ALERTS_SERVICE_MAC=1
+#DEFINES += -DALERTS_SERVICE_MAC
+#endif
 
 REQUIRES = 	\
 		xpcom \
