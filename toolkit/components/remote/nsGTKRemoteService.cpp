@@ -254,8 +254,6 @@ nsGTKRemoteService::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-#define ARRAY_LENGTH(array_) (sizeof(array_)/sizeof(array_[0]))
-
 // Minimize the roundtrips to the X server by getting all the atoms at once
 static char *XAtomNames[] = {
   MOZILLA_VERSION_PROP,
@@ -267,7 +265,7 @@ static char *XAtomNames[] = {
   MOZILLA_PROGRAM_PROP,
   MOZILLA_COMMANDLINE_PROP
 };
-static Atom XAtoms[ARRAY_LENGTH(XAtomNames)];
+static Atom XAtoms[NS_ARRAY_LENGTH(XAtomNames)];
 
 void
 nsGTKRemoteService::EnsureAtoms(void)
@@ -275,7 +273,7 @@ nsGTKRemoteService::EnsureAtoms(void)
   if (sMozVersionAtom)
     return;
 
-  XInternAtoms(GDK_DISPLAY(), XAtomNames, ARRAY_LENGTH(XAtomNames),
+  XInternAtoms(GDK_DISPLAY(), XAtomNames, NS_ARRAY_LENGTH(XAtomNames),
                False, XAtoms);
   int i = 0;
   sMozVersionAtom     = XAtoms[i++];
