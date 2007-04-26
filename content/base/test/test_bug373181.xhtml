@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Testcase for bug 373181</title>
+    <script type="text/javascript" src="/MochiKit/packed.js"/>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script type="application/x-javascript">
+      var bodyOnLoad = false;
+      function checkOnLoad()
+      {
+        ok(bodyOnLoad, "Body onload event should fire");
+        SimpleTest.finish();
+      }
+      SimpleTest.waitForExplicitFinish();
+      setTimeout(checkOnLoad, 500);
+    </script>
+  </head>
+  <body onload="bodyOnLoad = true;"/>
+</html>
