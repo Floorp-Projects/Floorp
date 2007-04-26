@@ -53,7 +53,6 @@ REQUIRES	= string \
 
 CPPSRCS		= \
 		nsCategoryManager.cpp \
-		nsCategoryCache.cpp \
 		nsComponentManager.cpp \
 		nsNativeComponentLoader.cpp \
 		nsStaticComponentLoader.cpp \
@@ -62,7 +61,6 @@ CPPSRCS		= \
 
 EXPORTS		= \
 		nsCategoryManagerUtils.h \
-		nsCategoryCache.h \
 		nsIServiceManagerObsolete.h \
 		nsModule.h \
 		nsObsoleteModuleLoading.h \

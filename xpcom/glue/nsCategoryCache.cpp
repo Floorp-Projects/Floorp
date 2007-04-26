@@ -39,7 +39,6 @@
 #include "nsISupportsPrimitives.h"
 
 #include "nsXPCOMCID.h"
-#include "nsObserverService.h"
 
 #include "nsCategoryCache.h"
 
@@ -74,7 +73,7 @@ nsCategoryObserver::nsCategoryObserver(const char* aCategory,
       nsCAutoString categoryEntry;
       rv = entryName->GetData(categoryEntry);
 
-      nsXPIDLCString entryValue;
+      nsCString entryValue;
       catMan->GetCategoryEntry(aCategory,
                                categoryEntry.get(),
                                getter_Copies(entryValue));
@@ -132,7 +131,8 @@ nsCategoryObserver::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-  if (!aData || !nsDependentString(aData).EqualsASCII(mCategory.get()))
+  if (!aData ||
+      !nsDependentString(aData).Equals(NS_ConvertASCIItoUTF16(mCategory)))
     return NS_OK;
 
   nsCAutoString str;
@@ -146,7 +146,7 @@ nsCategoryObserver::Observe(nsISupports* aSubject, const char* aTopic,
     if (!catMan)
       return NS_OK;
 
-    nsXPIDLCString entryValue;
+    nsCString entryValue;
     catMan->GetCategoryEntry(mCategory.get(),
                              str.get(),
                              getter_Copies(entryValue));
