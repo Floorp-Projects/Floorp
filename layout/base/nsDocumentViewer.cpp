@@ -1263,6 +1263,8 @@ DocumentViewerImpl::PageHide(PRBool aIsUnload)
   // the unload event listeners open any new popups
   if (mPresShell)
     mPresShell->HidePopups();
+
+  return NS_OK;
 }
 
 static void
