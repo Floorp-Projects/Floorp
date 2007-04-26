@@ -432,7 +432,6 @@ nsSVGLength::SetValueAsString(const nsAString & aValueAsString)
       else { // parse error
         // not a valid unit type
         rv = NS_ERROR_FAILURE;
-        NS_ERROR("invalid length type");
       }
     }
     else { // parse error

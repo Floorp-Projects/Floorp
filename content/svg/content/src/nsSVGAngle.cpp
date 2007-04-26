@@ -317,9 +317,6 @@ nsSVGAngle::SetValueAsString(const nsAString & aValueAsString)
     if (rest!=number) {
       PRUint16 unitType = GetUnitTypeForString(nsCRT::strtok(rest, "\x20\x9\xD\xA", &rest));
       rv = NewValueSpecifiedUnits(unitType, (float)value);
-      if (rv != NS_OK) {
-        NS_ERROR("invalid length type");
-      }
     }
     else { // parse error
       // no number
