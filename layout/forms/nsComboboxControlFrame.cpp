@@ -664,8 +664,18 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   }
 #ifdef DEBUG
   else {
-    NS_ASSERTION(mButtonFrame->GetSize().height ==
-                 mDisplayFrame->GetSize().height,
+    nscoord buttonHeight = mButtonFrame->GetSize().height;
+    nscoord displayHeight = mDisplayFrame->GetSize().height;
+
+    // The button and display area should be equal heights, unless the computed
+    // height on the combobox is too small to fit their borders and padding.
+    NS_ASSERTION(buttonHeight == displayHeight ||
+                 (aReflowState.mComputedHeight < buttonHeight &&
+                  buttonHeight ==
+                    mButtonFrame->GetUsedBorderAndPadding().TopBottom()) ||
+                 (aReflowState.mComputedHeight < displayHeight &&
+                  displayHeight ==
+                    mDisplayFrame->GetUsedBorderAndPadding().TopBottom()),
                  "Different heights?");
   }
 #endif
