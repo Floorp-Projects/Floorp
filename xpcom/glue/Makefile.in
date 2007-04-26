@@ -74,6 +74,7 @@ SDK_HEADERS = \
 		nsArrayUtils.h \
 		nsAutoLock.h \
 		nsBaseHashtable.h \
+		nsCategoryCache.h \
 		nsCOMArray.h \
 		nsCRTGlue.h \
 		nsClassHashtable.h \
