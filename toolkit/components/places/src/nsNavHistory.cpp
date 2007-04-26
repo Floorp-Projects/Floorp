@@ -806,13 +806,24 @@ nsNavHistory::ForceMigrateBookmarksDB(mozIStorageConnection* aDBConn)
 nsresult
 nsNavHistory::MigrateV3Up(mozIStorageConnection* aDBConn) 
 {
-  // add type column to moz_annos
-  nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "ALTER TABLE moz_annos ADD type INTEGER DEFAULT 0"));
-  NS_ENSURE_SUCCESS(rv, rv);
+  // if type col is already there, then a partial update occurred.
+  // return, making no changes, and allowing db version to be updated.
+  nsCOMPtr<mozIStorageStatement> statement;
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("SELECT type from moz_annos"),
+                                         getter_AddRefs(statement));
+  if (NS_SUCCEEDED(rv))
+    return NS_OK;
 
-  // call annosvc::InitTables
-  rv = nsNavBookmarks::InitTables(aDBConn);
+  // add type column to moz_annos
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "ALTER TABLE moz_annos ADD type INTEGER DEFAULT 0"));
+  if (NS_FAILED(rv)) {
+    // if the alteration failed, force-migrate
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_annos"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = nsAnnotationService::InitTables(mDBConn);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
