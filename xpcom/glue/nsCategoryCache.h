@@ -62,7 +62,7 @@ class NS_NO_VTABLE nsCategoryListener {
     virtual void CategoryCleared() = 0;
 };
 
-class NS_COM nsCategoryObserver : public nsIObserver {
+class NS_COM_GLUE nsCategoryObserver : public nsIObserver {
   public:
     nsCategoryObserver(const char* aCategory,
                        nsCategoryListener* aCategoryListener);
