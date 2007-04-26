@@ -52,31 +52,17 @@ NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContex
   return new (aPresShell) nsSVGMaskFrame(aContext);
 }
 
-nsSVGMaskFrame *
-NS_GetSVGMaskFrame(nsIURI *aURI, nsIContent *aContent)
+nsIContent *
+NS_GetSVGMaskElement(nsIURI *aURI, nsIContent *aContent)
 {
-  // Get the PresShell
-  nsIDocument *myDoc = aContent->GetCurrentDoc();
-  if (!myDoc) {
-    NS_WARNING("No document for this content!");
-    return nsnull;
-  }
-  nsIPresShell *presShell = myDoc->GetShellAt(0);
-  if (!presShell) {
-    NS_WARNING("no presshell");
-    return nsnull;
-  }
+  nsIContent* content = nsContentUtils::GetReferencedElement(aURI, aContent);
 
-  // Find the referenced frame
-  nsIFrame *cpframe;
-  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&cpframe, aURI, aContent, presShell)))
-    return nsnull;
+  nsCOMPtr<nsIDOMSVGMaskElement> mask = do_QueryInterface(content);
 
-  nsIAtom* frameType = cpframe->GetType();
-  if (frameType != nsGkAtoms::svgMaskFrame)
-    return nsnull;
+  if (mask)
+    return content;
 
-  return NS_STATIC_CAST(nsSVGMaskFrame *, cpframe);
+  return nsnull;
 }
 
 NS_IMETHODIMP
@@ -113,14 +99,16 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
 
     float x, y, width, height;
 
-    PRUint16 units = GetMaskUnits();
-
     nsSVGMaskElement *mask = NS_STATIC_CAST(nsSVGMaskElement*, mContent);
+
     nsSVGLength2 *tmpX, *tmpY, *tmpWidth, *tmpHeight;
     tmpX = &mask->mLengthAttributes[nsSVGMaskElement::X];
     tmpY = &mask->mLengthAttributes[nsSVGMaskElement::Y];
     tmpWidth = &mask->mLengthAttributes[nsSVGMaskElement::WIDTH];
     tmpHeight = &mask->mLengthAttributes[nsSVGMaskElement::HEIGHT];
+
+    PRUint16 units;
+    mask->mMaskUnits->GetAnimVal(&units);
 
     if (units == nsIDOMSVGMaskElement::SVG_MUNITS_OBJECTBOUNDINGBOX) {
 
@@ -258,10 +246,13 @@ nsSVGMaskFrame::GetCanvasTM()
   nsCOMPtr<nsIDOMSVGMatrix> canvasTM = mMaskParentMatrix;
 
   /* object bounding box? */
-  PRUint16 units = GetMaskContentUnits();
+  nsSVGMaskElement *mask = NS_STATIC_CAST(nsSVGMaskElement*, mContent);
+
+  PRUint16 contentUnits;
+  mask->mMaskContentUnits->GetAnimVal(&contentUnits);
 
   if (mMaskParent &&
-      units == nsIDOMSVGMaskElement::SVG_MUNITS_OBJECTBOUNDINGBOX) {
+      contentUnits == nsIDOMSVGMaskElement::SVG_MUNITS_OBJECTBOUNDINGBOX) {
     nsCOMPtr<nsIDOMSVGRect> rect;
     nsresult rv = mMaskParent->GetBBox(getter_AddRefs(rect));
 
@@ -282,33 +273,5 @@ nsSVGMaskFrame::GetCanvasTM()
   nsIDOMSVGMatrix* retval = canvasTM.get();
   NS_IF_ADDREF(retval);
   return retval;
-}
-
-// -------------------------------------------------------------------------
-// Helper functions
-// -------------------------------------------------------------------------
-
-PRUint16
-nsSVGMaskFrame::GetMaskUnits()
-{
-  PRUint16 rv;
-
-  nsSVGMaskElement *maskElement = NS_STATIC_CAST(nsSVGMaskElement*, mContent);
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> units;
-  maskElement->GetMaskUnits(getter_AddRefs(units));
-  units->GetAnimVal(&rv);
-  return rv;
-}
-
-PRUint16
-nsSVGMaskFrame::GetMaskContentUnits()
-{
-  PRUint16 rv;
-
-  nsSVGMaskElement *maskElement = NS_STATIC_CAST(nsSVGMaskElement*, mContent);
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> units;
-  maskElement->GetMaskContentUnits(getter_AddRefs(units));
-  units->GetAnimVal(&rv);
-  return rv;
 }
 
