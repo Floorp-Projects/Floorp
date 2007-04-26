@@ -1793,7 +1793,6 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
       return rv; 
     }
     rv = NS_ERROR_ABORT;  
-    PR_fprintf(PR_STDERR, "Success: created profile '%s'\n", arg);
     profileSvc->Flush();
 
     // XXXben need to ensure prefs.js exists here so the tinderboxes will
@@ -1801,6 +1800,9 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
     nsCOMPtr<nsILocalFile> prefsJSFile;
     profile->GetRootDir(getter_AddRefs(prefsJSFile));
     prefsJSFile->AppendNative(NS_LITERAL_CSTRING("prefs.js"));
+    nsCAutoString pathStr;
+    prefsJSFile->GetNativePath(pathStr);
+    PR_fprintf(PR_STDERR, "Success: created profile '%s' at '%s'\n", arg, pathStr.get());
     PRBool exists;
     prefsJSFile->Exists(&exists);
     if (!exists)
