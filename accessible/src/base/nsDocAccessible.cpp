@@ -254,18 +254,27 @@ NS_IMETHODIMP nsDocAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
 
 NS_IMETHODIMP nsDocAccessible::TakeFocus()
 {
-  nsCOMPtr<nsIDOMWindow> domWin;
-  GetWindow(getter_AddRefs(domWin));
-  nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(domWin));
-  NS_ENSURE_TRUE(privateDOMWindow, NS_ERROR_FAILURE);
-  nsIFocusController *focusController =
-    privateDOMWindow->GetRootFocusController();
-  if (focusController) {
-    nsCOMPtr<nsIDOMElement> ele(do_QueryInterface(mDOMNode));
-    focusController->SetFocusedElement(ele);
-    return NS_OK;
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
+  PRUint32 state;
+  GetState(&state, nsnull);
+  if (0 == (state & nsIAccessibleStates::STATE_FOCUSABLE)) {
+    return NS_ERROR_FAILURE; // Not focusable
   }
-  return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShellTreeItemFor(mDOMNode);
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(treeItem);
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIPresShell> shell(GetPresShell());
+  nsIEventStateManager *esm = shell->GetPresContext()->EventStateManager();
+  NS_ENSURE_TRUE(esm, NS_ERROR_FAILURE);
+
+  // Focus the document
+  nsresult rv = docShell->SetHasFocus(PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Clear out any existing focus state
+  return esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
 }
 
 // ------- nsIAccessibleDocument Methods (5) ---------------
