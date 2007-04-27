@@ -612,14 +612,6 @@ CanvasFrame::Reflow(nsPresContext*          aPresContext,
     FinishAndStoreOverflow(&aDesiredSize);
   }
 
-  if (mContent && mContent->GetOwnerDoc() && mContent->GetOwnerDoc()->GetDocumentURI()) {
-    nsCAutoString uri;
-    mContent->GetOwnerDoc()->GetDocumentURI()->GetSpec(uri);
-    printf("Finished canvas reflow for %s:\n"
-           "Height: %d, overflow height: %d\n",
-           uri.get(), aDesiredSize.height, aDesiredSize.mOverflowArea.height);
-  }
-
   NS_FRAME_TRACE_REFLOW_OUT("CanvasFrame::Reflow", aStatus);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
