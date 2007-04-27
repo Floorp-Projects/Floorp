@@ -296,12 +296,35 @@ MicrosummaryService.prototype = {
   },
   
   _updateMicrosummary: function MSS__updateMicrosummary(bookmarkID, microsummary) {
-    this._setField(bookmarkID, FIELD_GENERATED_TITLE, microsummary.content);
+    // Get the current live title to see if it's actually changed.
+    var oldValue = this._getField(bookmarkID, FIELD_GENERATED_TITLE);
+
+    // A string identifying the bookmark to use when logging the update.
+    var bookmarkIdentity = 
+#ifdef MOZ_PLACES_BOOKMARKS
+      bookmarkID.spec;
+#else
+      bookmarkID.Value + " (" + microsummary.pageURI.spec + ")";
+#endif
+
+    if (oldValue == null || oldValue != microsummary.content) {
+      this._setField(bookmarkID, FIELD_GENERATED_TITLE, microsummary.content);
+      var subject = new LiveTitleNotificationSubject(bookmarkID, microsummary);
+      LOG("updated live title for " + bookmarkIdentity +
+          " from '" + (oldValue == null ? "<no live title>" : oldValue) +
+          "' to '" + microsummary.content + "'");
+      this._obs.notifyObservers(subject, "microsummary-livetitle-updated", oldValue);
+    }
+    else {
+      LOG("didn't update live title for " + bookmarkIdentity + "; it hasn't changed");
+    }
+
+    // Whether or not the title itself has changed, we still save any changes
+    // to the update interval, since the interval represents how long to wait
+    // before checking again for updates, and that can vary across updates,
+    // even when the title itself hasn't changed.
     this._setField(bookmarkID, FIELD_MICSUM_EXPIRATION,
                    Date.now() + (microsummary.updateInterval || this._updateInterval));
-
-    LOG("updated microsummary for page " + microsummary.pageURI.spec +
-        " to " + microsummary.content);
   },
 
   /**
@@ -1092,6 +1115,30 @@ MicrosummaryService.prototype = {
     microsummary.update();
     
     return microsummary;
+  }
+};
+
+
+
+
+
+function LiveTitleNotificationSubject(bookmarkID, microsummary) {
+  this.bookmarkID = bookmarkID;
+  this.microsummary = microsummary;
+}
+
+LiveTitleNotificationSubject.prototype = {
+  bookmarkID: null,
+  microsummary: null,
+
+  interfaces: [Ci.nsILiveTitleNotificationSubject, Ci.nsISupports],
+
+  // nsISupports
+
+  QueryInterface: function (iid) {
+    if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
   }
 };
 
