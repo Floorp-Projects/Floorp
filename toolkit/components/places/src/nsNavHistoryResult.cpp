@@ -2755,6 +2755,15 @@ nsNavHistoryFolderResultNode::FillChildren()
   // nodes and the result node pointers on the containers
   FillStats();
 
+  // once we've computed all tree stats, we can sort, because containers will
+  // not have proper visit counts and dates
+  SortComparator comparator = GetSortingComparator(GetSortType());
+  nsCAutoString sortingAnnotation;
+  GetSortingAnnotation(sortingAnnotation);
+
+  if (comparator)
+    RecursiveSort(sortingAnnotation.get(), comparator);
+
   // register with the result for updates
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
