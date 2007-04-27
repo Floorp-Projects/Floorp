@@ -3020,8 +3020,24 @@ nsNavHistoryFolderResultNode::OnItemChanged(PRInt64 aBookmarkId, nsIURI* aBookma
 
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
-  if (result->GetView())
+
+  if (result->GetView()) {
     result->GetView()->ItemChanged(node);
+  }
+
+  // DO NOT OPTIMIZE THIS TO CHECK aProperty
+  // the sorting methods fall back to each other so we need to re-sort the
+  // result even if it's not set to sort by the given property
+  SortComparator comparator = GetSortingComparator(GetSortType());
+  nsCAutoString sortingAnnotation;
+  GetSortingAnnotation(sortingAnnotation);
+  if (DoesChildNeedResorting(nodeIndex, comparator, sortingAnnotation.get())) {
+    RemoveChildAt(nodeIndex, PR_TRUE);
+    InsertChildAt(node,
+                  FindInsertionPoint(node, comparator, sortingAnnotation.get()),
+                  PR_TRUE);
+  }
+
   return NS_OK;
 }
 
