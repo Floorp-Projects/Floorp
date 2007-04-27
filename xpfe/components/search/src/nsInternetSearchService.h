@@ -173,7 +173,7 @@ protected:
   nsresult  SetHint(nsIRDFResource *mParent, nsIRDFResource *hintRes);
   nsresult  ConvertEntities(nsString &str, PRBool removeHTMLFlag = PR_TRUE, PRBool removeCRLFsFlag = PR_TRUE, PRBool trimWhiteSpaceFlag = PR_TRUE);
   nsresult  saveContents(nsIChannel* channel, nsIInternetSearchContext *context, PRUint32 contextType);
-  char *    getSearchURI(nsIRDFResource *src);
+  PRBool    getSearchURI(nsIRDFResource *src, nsAString &_retval);  // returns true on success
   nsresult  addToBookmarks(nsIRDFResource *src);
   nsresult  addQueryToBookmarks(nsIRDFResource *src);
   nsresult  filterResult(nsIRDFResource *src);
