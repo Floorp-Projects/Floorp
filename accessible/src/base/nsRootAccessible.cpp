@@ -459,8 +459,8 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
       }
       nsCOMPtr<nsIDOMElement> relatedEl;
       domDoc->GetElementById(id, getter_AddRefs(relatedEl));
-      finalFocusContent = do_QueryInterface(relatedEl);
-      if (!finalFocusContent) {
+      finalFocusNode = do_QueryInterface(relatedEl);
+      if (!finalFocusNode) {
         return PR_FALSE;
       }
       GetAccService()->GetAccessibleFor(finalFocusNode, getter_AddRefs(finalFocusAccessible));      
