@@ -1988,7 +1988,7 @@ nsNavHistoryQueryResultNode::FillChildren()
   FillStats();
 
   // once we've computed all tree stats, we can sort, because containers will
-  // not have proper visit counts and dates
+  // then have proper visit counts and dates
   SortComparator comparator = GetSortingComparator(GetSortType());
   nsCAutoString sortingAnnotation;
   GetSortingAnnotation(sortingAnnotation);
@@ -2756,7 +2756,7 @@ nsNavHistoryFolderResultNode::FillChildren()
   FillStats();
 
   // once we've computed all tree stats, we can sort, because containers will
-  // not have proper visit counts and dates
+  // then have proper visit counts and dates
   SortComparator comparator = GetSortingComparator(GetSortType());
   nsCAutoString sortingAnnotation;
   GetSortingAnnotation(sortingAnnotation);
