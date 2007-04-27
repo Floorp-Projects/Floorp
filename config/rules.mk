@@ -265,7 +265,12 @@ OBJS	= $(strip $(_OBJS))
 endif
 
 ifndef HOST_OBJS
-HOST_OBJS		= $(addprefix host_,$(HOST_CSRCS:.c=.$(OBJ_SUFFIX))) $(addprefix host_,$(HOST_CPPSRCS:.cpp=.$(OBJ_SUFFIX)))
+_HOST_OBJS		= \
+        $(addprefix host_,$(HOST_CSRCS:.c=.$(OBJ_SUFFIX))) \
+	$(addprefix host_,$(patsubst %.cc,%.$(OBJ_SUFFIX),$(HOST_CPPSRCS:.cpp=.$(OBJ_SUFFIX)))) \
+	$(addprefix host_,$(HOST_CMSRCS:.m=.$(OBJ_SUFFIX))) \
+	$(addprefix host_,$(HOST_CMMSRCS:.mm=.$(OBJ_SUFFIX)))
+HOST_OBJS = $(strip $(_HOST_OBJS))
 endif
 
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
@@ -925,7 +930,11 @@ ifdef MSMANIFEST_TOOL
 	fi
 endif	# MSVC with manifest tool
 else
-	$(HOST_CC) -o $@ $(HOST_CFLAGS) $(HOST_LDFLAGS) $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+ifeq ($(CPP_PROG_LINK),1)
+	$(HOST_CXX) -o $@ $(HOST_CFLAGS) $(HOST_LDFLAGS) $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+else
+	$(HOST_CC) -o $@ $(HOST_CXXFLAGS) $(HOST_LDFLAGS) $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+endif # CPP_PROG_LINK
 endif
 endif
 endif
@@ -1187,6 +1196,18 @@ host_%.$(OBJ_SUFFIX): %.c Makefile Makefile.in
 	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
 host_%.$(OBJ_SUFFIX): %.cpp Makefile Makefile.in
+	$(REPORT_BUILD)
+	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
+
+host_%.$(OBJ_SUFFIX): %.cc Makefile Makefile.in
+	$(REPORT_BUILD)
+	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
+
+host_%.$(OBJ_SUFFIX): %.m Makefile Makefile.in
+	$(REPORT_BUILD)
+	$(ELOG) $(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
+
+host_%.$(OBJ_SUFFIX): %.mm Makefile Makefile.in
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CXXFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(_VPATH_SRCS)
 
@@ -2111,6 +2132,7 @@ showbuild:
 	@echo "MOZ_WIDGET_TOOLKIT = $(MOZ_WIDGET_TOOLKIT)"
 	@echo "CC                 = $(CC)"
 	@echo "CXX                = $(CXX)"
+	@echo "CCC                = $(CCC)"
 	@echo "CPP                = $(CPP)"
 	@echo "LD                 = $(LD)"
 	@echo "AR                 = $(AR)"
@@ -2143,13 +2165,16 @@ showbuild:
 
 showhost:
 	@echo "HOST_CC            = $(HOST_CC)"
+	@echo "HOST_CXX           = $(HOST_CXX)"
 	@echo "HOST_CFLAGS        = $(HOST_CFLAGS)"
 	@echo "HOST_LDFLAGS       = $(HOST_LDFLAGS)"
 	@echo "HOST_LIBS          = $(HOST_LIBS)"
 	@echo "HOST_EXTRA_LIBS    = $(HOST_EXTRA_LIBS)"
 	@echo "HOST_EXTRA_DEPS    = $(HOST_EXTRA_DEPS)"
 	@echo "HOST_PROGRAM       = $(HOST_PROGRAM)"
+	@echo "HOST_OBJS          = $(HOST_OBJS)"
 	@echo "HOST_PROGOBJS      = $(HOST_PROGOBJS)"
+	@echo "HOST_LIBRARY       = $(HOST_LIBRARY)"
 
 showbuildmods::
 	@echo "Build Modules	= $(BUILD_MODULES)"
