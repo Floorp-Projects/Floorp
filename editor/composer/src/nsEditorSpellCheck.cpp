@@ -182,19 +182,16 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, PRBool aEnableSelection
   nsCOMPtr<nsIPrefBranch> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
 
-  PRBool hasPreference = PR_FALSE;
   if (NS_SUCCEEDED(rv) && prefBranch) {
     nsCOMPtr<nsISupportsString> prefString;
     rv = prefBranch->GetComplexValue("spellchecker.dictionary",
                                      NS_GET_IID(nsISupportsString),
                                      getter_AddRefs(prefString));
-    if (NS_SUCCEEDED(rv) && prefString) {
-      hasPreference = PR_TRUE;
-      prefString->ToString(getter_Copies(dictName));
-    }
+    if (NS_SUCCEEDED(rv) && prefString)
+      prefString->GetData(dictName);
   }
 
-  if (! hasPreference || dictName.IsEmpty())
+  if (dictName.IsEmpty())
   {
     // Prefs didn't give us a dictionary name, so just get the current
     // locale and use that as the default dictionary name!
@@ -217,13 +214,10 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, PRBool aEnableSelection
       setDictionary = PR_TRUE;
   }
 
-  // If there was no preference and setting it to the locale dictionary didn't
-  // work, try to use the first dictionary we find. This helps when the first
-  // dictionary is installed - it will get set as the default. If there was
-  // a preference but we can't set the dictionary to that preference, don't do
-  // anything. If the user's selected dictionary went missing, we don't want to
-  // set it to a random dictionary.
-  if (! hasPreference && ! setDictionary) {
+  // If there was no dictionary specified by spellchecker.dictionary and setting it to the 
+  // locale dictionary didn't work, try to use the first dictionary we find. This helps when 
+  // the first dictionary is installed
+  if (! setDictionary) {
     nsStringArray dictList;
     rv = mSpellChecker->GetDictionaryList(&dictList);
     NS_ENSURE_SUCCESS(rv, rv);
