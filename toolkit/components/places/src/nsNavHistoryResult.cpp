@@ -749,7 +749,9 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_TitleLess(
     }
     if (value == 0) {
       // resolve by date
-      return ComparePRTime(a->mTime, b->mTime);
+      value = ComparePRTime(a->mTime, b->mTime);
+      if (value == 0)
+        value = nsNavHistoryContainerResultNode::SortComparison_Bookmark(a, b, closure);
     }
   }
   return value;
@@ -772,18 +774,15 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_DateLess(
   if (value == 0) {
     value = SortComparison_StringLess(NS_ConvertUTF8toUTF16(a->mTitle),
                                       NS_ConvertUTF8toUTF16(b->mTitle));
+    if (value == 0)
+      value = nsNavHistoryContainerResultNode::SortComparison_Bookmark(a, b, closure);
   }
   return value;
 }
 PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_DateGreater(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
-  PRInt32 value = -ComparePRTime(a->mTime, b->mTime);
-  if (value == 0) {
-    value = -SortComparison_StringLess(NS_ConvertUTF8toUTF16(a->mTitle),
-                                       NS_ConvertUTF8toUTF16(b->mTitle));
-  }
-  return value;
+  return -nsNavHistoryContainerResultNode::SortComparison_DateLess(a, b, closure);
 }
 
 
@@ -805,9 +804,10 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_URILess(
                                       NS_ConvertUTF8toUTF16(b->mTitle));
   }
 
-  // resolve conflicts using date
   if (value == 0) {
-    return ComparePRTime(a->mTime, b->mTime);
+    value = ComparePRTime(a->mTime, b->mTime);
+    if (value == 0)
+      value = nsNavHistoryContainerResultNode::SortComparison_Bookmark(a, b, closure);
   }
   return value;
 }
@@ -921,17 +921,17 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_VisitCountLe
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   PRInt32 value = CompareIntegers(a->mAccessCount, b->mAccessCount);
-  if (value == 0)
-    return ComparePRTime(a->mTime, b->mTime);
+  if (value == 0) {
+    value = ComparePRTime(a->mTime, b->mTime);
+    if (value == 0)
+      value = nsNavHistoryContainerResultNode::SortComparison_Bookmark(a, b, closure);
+  }
   return value;
 }
 PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_VisitCountGreater(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
-  PRInt32 value = -CompareIntegers(a->mAccessCount, b->mAccessCount);
-  if (value == 0)
-    return -ComparePRTime(a->mTime, b->mTime);
-  return value;
+  return -nsNavHistoryContainerResultNode::SortComparison_VisitCountLess(a, b, closure);
 }
 
 
