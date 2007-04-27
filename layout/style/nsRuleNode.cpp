@@ -3724,14 +3724,15 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct,
   COMPUTE_START_RESET(Content, (), content, parentContent,
                       Content, contentData)
 
-  // content: [string, url, counter, attr, enum]+, normal, inherit
+  // content: [string, url, counter, attr, enum]+, normal, none, inherit
   PRUint32 count;
   nsAutoString  buffer;
   nsCSSValueList* contentValue = contentData.mContent;
   if (contentValue) {
     if (eCSSUnit_Normal == contentValue->mValue.GetUnit() ||
+        eCSSUnit_None == contentValue->mValue.GetUnit() ||
         eCSSUnit_Initial == contentValue->mValue.GetUnit()) {
-      // "normal" and "initial" both mean no content
+      // "normal", "none", and "initial" all mean no content
       content->AllocateContents(0);
     }
     else if (eCSSUnit_Inherit == contentValue->mValue.GetUnit()) {
