@@ -54,13 +54,9 @@ class nsSVGMutationObserver : public nsStubMutationObserver
 {
 public:
   // nsIMutationObserver interface
-  void AttributeChanged(nsIDocument *aDocument,
-                        nsIContent *aContent,
-                        PRInt32 aNameSpaceID,
-                        nsIAtom *aAttribute,
-                        PRInt32 aModType);
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
-   // nsISupports interface:
+  // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
