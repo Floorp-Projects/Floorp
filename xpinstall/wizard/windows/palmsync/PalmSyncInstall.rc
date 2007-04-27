@@ -73,34 +73,34 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // String Table
 //
 
+// Note these strings don't have a space after %s because the code adds that for us
+// (just in case we've not got a name to dispaly).
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_APP_TITLE_INSTALL   "%s Address Book Palm Sync Install"
-    IDS_APP_TITLE_UNINSTALL "%s Address Book Palm Sync Uninstall"
-    IDS_CONDUIT_TITLE       "%s Address Book"
+    IDS_APP_TITLE_INSTALL   "%sAddress Book Palm Sync Install"
+    IDS_APP_TITLE_UNINSTALL "%sAddress Book Palm Sync Uninstall"
+    IDS_CONDUIT_TITLE       "%sAddress Book"
     IDC_PALMSYNCINSTALL     "PALMSYNCINSTALL"
-    IDS_ERR_GENERAL         "Error in (un)installing the %s Address Book Palm Sync Conduit"
-    IDS_ERR_LOADING_CONDMGR "Error in loading the Conduit Manager while (un)installing the %s Address Book Palm Sync Conduit"
+    IDS_ERR_GENERAL         "Error in (un)installing the %sAddress Book Palm Sync Conduit"
+    IDS_ERR_LOADING_CONDMGR "Error in loading the Conduit Manager while (un)installing the %sAddress Book Palm Sync Conduit"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_ERR_HSAPI_NOT_FOUND "Could not find the HSAPI.dll while (un)installing the %s Address Book Palm Sync Conduit"
+    IDS_ERR_HSAPI_NOT_FOUND "Could not find the HSAPI.dll while (un)installing the %sAddress Book Palm Sync Conduit"
     IDS_ERR_CONDUIT_NOT_FOUND 
-                            "Could not find the %s Address Book Palm Sync Conduit to install"
+                            "Could not find the %sAddress Book Palm Sync Conduit to install"
     IDS_ERR_HOTSYNC_IN_PROGRESS 
-                            "A Palm HotSync operation is in progress, let it complete first then install the %s Address Book Palm Sync Conduit"
+                            "A Palm HotSync operation is in progress, let it complete first then install the %sAddress Book Palm Sync Conduit"
     IDS_ERR_FINDING_INSTALL_DIR 
-                            "Could not find the directory to install the %s Address Book Palm Sync Conduit."
-    IDS_SUCCESS_INSTALL     "%s Address Book Palm Sync was successfully installed. Using your Palm device, perform a HotSync operation to synchronize your Palm device's address book with your %s address book."
-    IDS_SUCCESS_UNINSTALL   "%s Address Book Palm Sync was successfully uninstalled. Palm Desktop synchronization with your Palm device is now restored."
-    IDS_CONFIRM_INSTALL     "You are about to add the %s Address Book conduit to your Palm Hot Sync installation, which may remove the Palm Desktop conduit.  Do you want to continue?"
-    IDS_CONFIRM_UNINSTALL   "You are about to uninstall %s Address Book Palm Sync. This will restore Palm Desktop synchronization. Do you want to continue?"
+                            "Could not find the directory to install the %sAddress Book Palm Sync Conduit."
+    IDS_SUCCESS_INSTALL     "%sAddress Book Palm Sync was successfully installed. Using your Palm device, perform a HotSync operation to synchronize your Palm device's address book with your %saddress book."
+    IDS_SUCCESS_UNINSTALL   "%sAddress Book Palm Sync was successfully uninstalled. Palm Desktop synchronization with your Palm device is now restored."
+    IDS_CONFIRM_INSTALL     "You are about to add the %sAddress Book conduit to your Palm Hot Sync installation, which may remove the Palm Desktop conduit.  Do you want to continue?"
+    IDS_CONFIRM_UNINSTALL   "You are about to uninstall %sAddress Book Palm Sync. This will restore Palm Desktop synchronization. Do you want to continue?"
     IDS_ERR_REGISTERING_MOZ_DLL 
-                            "Failed to register the %s's Palm Sync Support Proxy Dll while installing the %s Address Book Palm Sync Conduit."
+                            "Failed to register the Palm Sync Support Proxy Dll while installing the %sAddress Book Palm Sync Conduit."
 END
-
-#include "BrandName.rc"
 
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
