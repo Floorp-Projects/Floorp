@@ -184,6 +184,9 @@ PreferenceBranch.prototype = {
   // cleanup observer so we don't leak
   _shutdown: function prefs_shutdown() {
     this._prefs.removeObserver(this._root, this);
+
+    this._prefs = null;
+    this._events = null;
   },
   
   // for nsIObserver
@@ -413,6 +416,10 @@ Extension.prototype = {
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
     os.removeObserver(this, "em-action-requested");
+
+    this._prefs = null;
+    this._storage = null;
+    this._events = null;
   },
   
   // for nsIObserver  
@@ -461,11 +468,18 @@ Extension.prototype = {
 function Extensions() {
   this._extmgr = Components.classes["@mozilla.org/extensions/manager;1"]
                            .getService(Components.interfaces.nsIExtensionManager);
+                             
+  var self = this;
+  gShutdown.push(function() { self._shutdown(); });
 }
 
 //=================================================
 // Extensions implementation
 Extensions.prototype = {
+  _shutdown : function() {
+    this._extmgr = null;
+  },
+  
   get all() {
     return this.find({});
   },
@@ -507,10 +521,10 @@ const CONTRACT_ID = "@mozilla.org/application;1";
 //=================================================
 // Application constructor
 function Application() {
-  this._console = new Console();
-  this._prefs = new PreferenceBranch("");
-  this._storage = new SessionStorage();
-  this._events = new Events();
+  this._console = null;
+  this._prefs = null;
+  this._storage = null;
+  this._events = null;
   
   this._info = Components.classes["@mozilla.org/xre/app-info;1"]
                      .getService(Components.interfaces.nsIXULAppInfo);
@@ -544,18 +558,18 @@ Application.prototype = {
   observe: function app_observe(aSubject, aTopic, aData) {
     if (aTopic == "app-startup") {
       this._extensions = new Extensions();
-      this._events.dispatch("load", "application");
+      this.events.dispatch("load", "application");
     }
     else if (aTopic == "final-ui-startup") {
-      this._events.dispatch("ready", "application");
+      this.events.dispatch("ready", "application");
     }
     else if (aTopic == "quit-application-requested") {
       // we can stop the quit by checking the return value
-      if (this._events.dispatch("quit", "application") == false)
+      if (this.events.dispatch("quit", "application") == false)
         aSubject.data = true;
     }
     else if (aTopic == "xpcom-shutdown") {
-      this._events.dispatch("unload", "application");
+      this.events.dispatch("unload", "application");
 
       // call the cleanup functions and empty the array
       while (gShutdown.length) {
@@ -573,6 +587,13 @@ Application.prototype = {
       os.removeObserver(this, "quit-application");
       
       os.removeObserver(this, "xpcom-shutdown");
+
+      this._info = null;
+      this._console = null;
+      this._prefs = null;
+      this._storage = null;
+      this._events = null;
+      this._extensions = null;
     }
   },
 
@@ -607,14 +628,23 @@ Application.prototype = {
   },
   
   get console() {
+    if (this._console == null)
+        this._console = new Console();
+
     return this._console;
   },
   
   get storage() {
+    if (this._storage == null)
+        this._storage = new SessionStorage();
+
     return this._storage;
   },
   
   get prefs() {
+    if (this._prefs == null)
+        this._prefs = new PreferenceBranch("");
+
     return this._prefs;
   },
   
@@ -623,6 +653,9 @@ Application.prototype = {
   },
 
   get events() {
+    if (this._events == null)
+        this._events = new Events();
+
     return this._events;
   }
 }
