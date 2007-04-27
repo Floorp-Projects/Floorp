@@ -1350,6 +1350,11 @@ nsContentSink::DidBuildModelImpl(void)
 void
 nsContentSink::DropParserAndPerfHint(void)
 {
+  if (!mParser) {
+    // Make sure we don't unblock unload too many times
+    return;
+  }
+  
   // Ref. Bug 49115
   // Do this hack to make sure that the parser
   // doesn't get destroyed, accidently, before
