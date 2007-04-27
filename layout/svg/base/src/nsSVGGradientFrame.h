@@ -44,7 +44,7 @@
 #include "nsWeakReference.h"
 #include "nsIDOMSVGAnimatedString.h"
 #include "nsSVGElement.h"
-#include "cairo.h"
+#include "gfxPattern.h"
 
 class nsIDOMSVGStopElement;
 
@@ -126,12 +126,11 @@ private:
   PRUint32 GetStopCount();
   void GetStopInformation(PRInt32 aIndex,
                           float *aOffset, nscolor *aColor, float *aStopOpacity);
-  nsresult GetGradientTransform(nsIDOMSVGMatrix **retval,
-                                nsSVGGeometryFrame *aSource);
+  gfxMatrix GetGradientTransform(nsSVGGeometryFrame *aSource);
 
 protected:
 
-  virtual cairo_pattern_t *CreateGradient() = 0;
+  virtual already_AddRefed<gfxPattern> CreateGradient() = 0;
 
   // Use these inline methods instead of GetGradientWithAttr(..., aGradType)
   nsIContent* GetLinearGradientWithAttr(nsIAtom *aAttrName)
@@ -225,7 +224,7 @@ protected:
     nsSVGLinearGradientFrameBase(aContext, aRef) {}
 
   float GradientLookupAttribute(nsIAtom *aAtomName, PRUint16 aEnumName);
-  virtual cairo_pattern_t *CreateGradient();
+  virtual already_AddRefed<gfxPattern> CreateGradient();
 };
 
 // -------------------------------------------------------------------------
@@ -263,7 +262,7 @@ protected:
 
   float GradientLookupAttribute(nsIAtom *aAtomName, PRUint16 aEnumName,
                                 nsIContent *aElement = nsnull);
-  virtual cairo_pattern_t *CreateGradient();
+  virtual already_AddRefed<gfxPattern> CreateGradient();
 };
 
 #endif // __NS_SVGGRADIENTFRAME_H__
