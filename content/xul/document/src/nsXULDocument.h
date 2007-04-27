@@ -136,8 +136,7 @@ public:
     NS_IMETHOD RemoveElementForID(const nsAString& aID, nsIContent* aElement);
     NS_IMETHOD GetElementsForID(const nsAString& aID,
                                 nsCOMArray<nsIContent>& aElements);
-    NS_IMETHOD AddForwardReference(nsForwardReference* aRef);
-    NS_IMETHOD ResolveForwardReferences();
+
     NS_IMETHOD GetScriptGlobalObjectOwner(nsIScriptGlobalObjectOwner** aGlobalOwner);
     NS_IMETHOD AddSubtreeToDocument(nsIContent* aElement);
     NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aElement);
@@ -255,9 +254,6 @@ protected:
     nsresult
     Persist(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aAttribute);
 
-    nsresult
-    DestroyForwardReferences();
-
     // IMPORTANT: The ownership implicit in the following member
     // variables has been explicitly checked and set using nsCOMPtr
     // for owning pointers and raw COM interface pointers for weak
@@ -296,9 +292,6 @@ protected:
     typedef nsInterfaceHashtable<nsISupportsHashKey, nsIXULTemplateBuilder>
         BuilderTable;
     BuilderTable* mTemplateBuilderTable;
-
-    nsVoidArray mForwardReferences;
-    nsForwardReference::Phase mResolutionPhase;
 
     PRUint32 mPendingSheets;
 
@@ -433,6 +426,35 @@ protected:
      * style overlays from the chrome registry) to the document.
      */
     nsresult AddPrototypeSheets();
+
+
+protected:
+    /* Declarations related to forward references. 
+     *
+     * Forward references are declarations which are added to the temporary
+     * list (mForwardReferences) during the document (or overlay) load and
+     * are resolved later, when the document loading is almost complete.
+     */
+
+    /**
+     * The list of different types of forward references to resolve. After
+     * a reference is resolved, it is removed from this array (and
+     * automatically deleted)
+     */
+    nsTArray<nsAutoPtr<nsForwardReference> > mForwardReferences;
+
+    /** Indicates what kind of forward references are still to be processed. */
+    nsForwardReference::Phase mResolutionPhase;
+
+    /**
+     * Adds aRef to the mForwardReferences array. Takes the ownership of aRef.
+     */
+    nsresult AddForwardReference(nsForwardReference* aRef);
+
+    /**
+     * Resolve all of the document's forward references.
+     */
+    nsresult ResolveForwardReferences();
 
     /**
      * Used to resolve broadcaster references

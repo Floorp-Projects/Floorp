@@ -42,22 +42,15 @@
 #include "nsString.h"
 #include "nsCOMArray.h"
 
-class nsForwardReference;
-class nsIAtom;
-class nsIDOMElement;
-class nsIPrincipal;
-class nsIRDFResource;
-class nsISupportsArray;
 class nsIXULTemplateBuilder;
-class nsIURI;
 class nsIContent;
-class nsIRDFDataSource;
 class nsIScriptGlobalObjectOwner;
 
-// {01c4fe87-961f-4194-a21d-04f4387c4bb3}
+
+// {57314526-f749-4cf0-b6b6-3723eba21480}
 #define NS_IXULDOCUMENT_IID \
-{ 0x01c4fe87, 0x961f, 0x4194, \
-  { 0xa2, 0x1d, 0x04, 0xf4, 0x38, 0x7c, 0x4b, 0xb3 } }
+{ 0x57314526, 0xf749, 0x4cf0, \
+  { 0xb6, 0xb6, 0x37, 0x23, 0xeb, 0xa2, 0x14, 0x80 } }
 
 
 /*
@@ -89,17 +82,6 @@ public:
    * nsIContent pointers.
    */
   NS_IMETHOD GetElementsForID(const nsAString& aID, nsCOMArray<nsIContent>& aElements) = 0;
-
-  /**
-   * Add a "forward declaration" of a XUL observer. Such declarations
-   * will be resolved when document loading completes.
-   */
-  NS_IMETHOD AddForwardReference(nsForwardReference* aForwardReference) = 0;
-
-  /**
-   * Resolve the all of the document's forward references.
-   */
-  NS_IMETHOD ResolveForwardReferences() = 0;
 
   /**
    * Get the nsIScriptGlobalObjectOwner for this document.

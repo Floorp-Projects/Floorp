@@ -218,7 +218,7 @@ nsXULDocument::~nsXULDocument()
 
     // In case we failed somewhere early on and the forward observer
     // decls never got resolved.
-    DestroyForwardReferences();
+    mForwardReferences.Clear();
 
     // Destroy our broadcaster map.
     if (mBroadcasterMap) {
@@ -1070,11 +1070,14 @@ nsXULDocument::GetElementsForID(const nsAString& aID,
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsXULDocument::AddForwardReference(nsForwardReference* aRef)
 {
     if (mResolutionPhase < aRef->GetPhase()) {
-        mForwardReferences.AppendElement(aRef);
+        if (!mForwardReferences.AppendElement(aRef)) {
+            delete aRef;
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
     }
     else {
         NS_ERROR("forward references have already been resolved");
@@ -1085,7 +1088,7 @@ nsXULDocument::AddForwardReference(nsForwardReference* aRef)
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsXULDocument::ResolveForwardReferences()
 {
     if (mResolutionPhase == nsForwardReference::eDone)
@@ -1099,12 +1102,13 @@ nsXULDocument::ResolveForwardReferences()
 
     const nsForwardReference::Phase* pass = nsForwardReference::kPasses;
     while ((mResolutionPhase = *pass) != nsForwardReference::eDone) {
-        PRInt32 previous = 0;
-        while (mForwardReferences.Count() && mForwardReferences.Count() != previous) {
-            previous = mForwardReferences.Count();
+        PRUint32 previous = 0;
+        while (mForwardReferences.Length() &&
+               mForwardReferences.Length() != previous) {
+            previous = mForwardReferences.Length();
 
-            for (PRInt32 i = 0; i < mForwardReferences.Count(); ++i) {
-                nsForwardReference* fwdref = NS_REINTERPRET_CAST(nsForwardReference*, mForwardReferences[i]);
+            for (PRUint32 i = 0; i < mForwardReferences.Length(); ++i) {
+                nsForwardReference* fwdref = mForwardReferences[i];
 
                 if (fwdref->GetPhase() == *pass) {
                     nsForwardReference::Result result = fwdref->Resolve();
@@ -1113,7 +1117,6 @@ nsXULDocument::ResolveForwardReferences()
                     case nsForwardReference::eResolve_Succeeded:
                     case nsForwardReference::eResolve_Error:
                         mForwardReferences.RemoveElementAt(i);
-                        delete fwdref;
 
                         // fixup because we removed from list
                         --i;
@@ -1130,7 +1133,7 @@ nsXULDocument::ResolveForwardReferences()
         ++pass;
     }
 
-    DestroyForwardReferences();
+    mForwardReferences.Clear();
     return NS_OK;
 }
 
@@ -1363,21 +1366,6 @@ nsXULDocument::Persist(nsIContent* aElement, PRInt32 aNameSpaceID,
         }
     }
 
-    return NS_OK;
-}
-
-
-
-nsresult
-nsXULDocument::DestroyForwardReferences()
-{
-    for (PRInt32 i = mForwardReferences.Count() - 1; i >= 0; --i) {
-        nsForwardReference* fwdref =
-            NS_REINTERPRET_CAST(nsForwardReference*, mForwardReferences[i]);
-        delete fwdref;
-    }
-
-    mForwardReferences.Clear();
     return NS_OK;
 }
 
