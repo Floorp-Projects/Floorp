@@ -2609,9 +2609,6 @@ private:
 
 class nsXPCException :
             public nsIXPCException
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
-          , public nsISecurityCheckedComponent
-#endif
 {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_XPCEXCEPTION_CID)
@@ -2619,9 +2616,6 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIEXCEPTION
     NS_DECL_NSIXPCEXCEPTION
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
-    NS_DECL_NSISECURITYCHECKEDCOMPONENT
-#endif
 
     static nsresult NewException(const char *aMessage,
                                  nsresult aResult,
