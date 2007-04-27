@@ -252,7 +252,7 @@ InternetSearchContext::GetParent(nsIRDFResource **node)
 NS_IMETHODIMP
 InternetSearchContext::AppendBytes(const char *buffer, PRInt32 numBytes)
 {
-  mBuffer.AppendWithConversion(buffer, numBytes);
+  mBuffer.Append(NS_ConvertASCIItoUTF16(Substring(buffer, buffer + numBytes)));
   return(NS_OK);
 }
 
@@ -546,7 +546,7 @@ InternetSearchDataSource::GetSearchEngineToPing(nsIRDFResource **theEngine, nsCS
         aLiteral->GetValueConst(&updateUni);
         if (updateUni)
         {
-          updateURL.AssignWithConversion(updateUni);
+          CopyUTF16toUTF8(nsDependentString(updateUni), updateURL);
         }
       }
     }
@@ -742,8 +742,7 @@ InternetSearchDataSource::resolveSearchCategoryEngineURI(nsIRDFResource *engine,
   if (NS_FAILED(rv = engine->GetValueConst(&uriUni))) return(rv);
   if (!uriUni)  return(NS_ERROR_NULL_POINTER);
 
-  nsAutoString    uri;
-  uri.AssignWithConversion(uriUni);
+  NS_ConvertUTF8toUTF16 uri(uriUni);
   if (uri.Find(kURINC_SearchCategoryEngineBasenamePrefix) !=0)  return(NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIRDFLiteral> basenameLiteral;
@@ -954,20 +953,7 @@ InternetSearchDataSource::GetTarget(nsIRDFResource *source,
 
   if ((isSearchCategoryURI(source)) && (categoryDataSource))
   {
-    const char  *uri = nsnull;
-    source->GetValueConst(&uri);
-    if (!uri) return(NS_ERROR_UNEXPECTED);
-    nsAutoString  catURI;
-    catURI.AssignWithConversion(uri);
-
-    nsCOMPtr<nsIRDFResource>  category;
-    nsCAutoString     caturiC;
-    caturiC.AssignWithConversion(catURI);
-    if (NS_FAILED(rv = mRDFService->GetResource(caturiC,
-      getter_AddRefs(category))))
-      return(rv);
-
-    rv = categoryDataSource->GetTarget(category, property, tv, target);
+    rv = categoryDataSource->GetTarget(source, property, tv, target);
     return(rv);
   }
 
@@ -1160,20 +1146,7 @@ InternetSearchDataSource::GetTargets(nsIRDFResource *source,
 
   if ((isSearchCategoryURI(source)) && (categoryDataSource))
   {
-    const char  *uri = nsnull;
-    source->GetValueConst(&uri);
-    if (!uri) return(NS_ERROR_UNEXPECTED);
-    nsAutoString  catURI;
-    catURI.AssignWithConversion(uri);
-
-    nsCOMPtr<nsIRDFResource>  category;
-    nsCAutoString     caturiC;
-    caturiC.AssignWithConversion(catURI);
-    if (NS_FAILED(rv = mRDFService->GetResource(caturiC,
-      getter_AddRefs(category))))
-      return(rv);
-
-    rv = categoryDataSource->GetTargets(category, property, tv, targets);
+    rv = categoryDataSource->GetTargets(source, property, tv, targets);
     return(rv);
   }
 
@@ -1284,13 +1257,14 @@ InternetSearchDataSource::GetCategoryList()
     const char      *catResURI = nsnull;
     aCategoryRes->GetValueConst(&catResURI);
     if (!catResURI)   break;
-    nsAutoString    categoryStr;
-    categoryStr.AssignWithConversion(kURINC_SearchCategoryPrefix);
-    categoryStr.AppendWithConversion(catResURI);
+    nsCAutoString    categoryStr;
+    categoryStr.AssignLiteral(kURINC_SearchCategoryPrefix);
+    categoryStr.Append(catResURI);
 
     nsCOMPtr<nsIRDFResource>  searchCategoryRes;
-    if (NS_FAILED(rv = mRDFService->GetUnicodeResource(categoryStr,
-      getter_AddRefs(searchCategoryRes))))  break;
+    rv = mRDFService->GetResource(categoryStr, getter_AddRefs(searchCategoryRes));
+    if (NS_FAILED(rv))
+      break; 
 
     nsCOMPtr<nsIRDFContainer> categoryContainer;
     rv = mRDFC->MakeSeq(categoryDataSource, searchCategoryRes,
@@ -1720,16 +1694,15 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
       nsCOMPtr<nsIBookmarksService> bookmarks (do_QueryInterface(datasource));
       if (bookmarks)
       {
-        char *uri = getSearchURI(source);
-        if (uri)
+        nsAutoString uri;
+        if (getSearchURI(source, uri))
         {
           PRBool  isBookmarkedFlag = PR_FALSE;
-          rv = bookmarks->IsBookmarked(uri, &isBookmarkedFlag);
+          rv = bookmarks->IsBookmarked(NS_ConvertUTF16toUTF8(uri).get(), &isBookmarkedFlag);
           if (NS_SUCCEEDED(rv) && !isBookmarkedFlag)
           {
             cmdArray->AppendElement(mNC_SearchCommand_AddToBookmarks);
           }
-          NS_Free(uri);
         }
       }
     }
@@ -1783,10 +1756,9 @@ InternetSearchDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/*
 
 
 
-char *
-InternetSearchDataSource::getSearchURI(nsIRDFResource *src)
+PRBool
+InternetSearchDataSource::getSearchURI(nsIRDFResource *src, nsAString &_retval)
 {
-  char  *uri = nsnull;
 
   if (src)
   {
@@ -1801,13 +1773,13 @@ InternetSearchDataSource::getSearchURI(nsIRDFResource *src)
         urlLiteral->GetValueConst(&uriUni);
         if (uriUni)
         {
-          nsAutoString  uriString(uriUni);
-          uri = ToNewUTF8String(uriString);
+          _retval.Assign(uriUni);
+          return PR_TRUE;
         }
       }
     }
   }
-  return(uri);
+  return PR_FALSE;
 }
 
 
@@ -1839,12 +1811,11 @@ InternetSearchDataSource::addToBookmarks(nsIRDFResource *src)
     nsCOMPtr<nsIBookmarksService> bookmarks (do_QueryInterface(datasource));
     if (bookmarks)
     {
-      char  *uri = getSearchURI(src);
-      if (uri)
+      nsAutoString uri;
+      if (getSearchURI(src, uri))
       {
-        rv = bookmarks->AddBookmarkImmediately(NS_ConvertUTF8toUTF16(uri).get(),
+        rv = bookmarks->AddBookmarkImmediately(uri.get(),
                                                name, nsIBookmarksService::BOOKMARK_SEARCH_TYPE, nsnull);
-        NS_Free(uri);
       }
     }
   }
@@ -1925,11 +1896,11 @@ InternetSearchDataSource::filterResult(nsIRDFResource *aResource)
   if (!mInner)  return(NS_ERROR_UNEXPECTED);
 
   // remove all anonymous resources which have this as a #URL
-  char  *uri = getSearchURI(aResource);
-  if (!uri) return(NS_ERROR_UNEXPECTED);
-  nsAutoString  url;
-  url.AssignWithConversion(uri);
-  NS_Free(uri);
+  nsAutoString url;
+  if (!getSearchURI(aResource, url))
+  {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   nsresult      rv;
   nsCOMPtr<nsIRDFLiteral> urlLiteral;
@@ -1998,11 +1969,11 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
   if (!aResource) return(NS_ERROR_UNEXPECTED);
   if (!mInner)  return(NS_ERROR_UNEXPECTED);
 
-  char  *uri = getSearchURI(aResource);
-  if (!uri) return(NS_ERROR_UNEXPECTED);
-  nsAutoString  host;
-  host.AssignWithConversion(uri);
-  NS_Free(uri);
+  nsAutoString host;
+  if (!getSearchURI(aResource, host))
+  {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   // determine site (host name)
   PRInt32   slashOffset1 = host.Find("://");
@@ -2091,11 +2062,11 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
         aRes = do_QueryInterface(arc);
         if (!aRes)  break;
 
-        uri = getSearchURI(aRes);
-        if (!uri) return(NS_ERROR_UNEXPECTED);
-        nsAutoString  site;
-        site.AssignWithConversion(uri);
-        NS_Free(uri);
+        nsAutoString site;
+        if (!getSearchURI(aRes, site))
+        {
+          return NS_ERROR_UNEXPECTED;
+        }
 
         // determine site (host name)
         slashOffset1 = site.Find("://");
@@ -2567,7 +2538,7 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
     // remember query charset string
     mQueryEncodingStr = queryEncodingStr;
     // convert from escaped-UTF_8, to unicode, and then to
-    // the charset indicated by the dataset in question
+    // the escaped version of the charset indicated by the dataset in question
 
     char  *utf8data = ToNewUTF8String(text);
     if (utf8data)
@@ -2580,11 +2551,12 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
         if (NS_SUCCEEDED(rv = textToSubURI->UnEscapeAndConvert("UTF-8", utf8data, &uni)) && (uni))
         {
           char    *charsetData = nsnull;
-          nsCAutoString queryencodingstrC;
-          queryencodingstrC.AssignWithConversion(queryEncodingStr);
-          if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(queryencodingstrC.get(), uni, &charsetData)) && (charsetData))
+          rv = textToSubURI->ConvertAndEscape(NS_LossyConvertUTF16toASCII(queryEncodingStr).get(),
+                                              uni,
+                                              &charsetData);
+          if (NS_SUCCEEDED(rv) && charsetData)
           {
-            text.AssignWithConversion(charsetData);
+            CopyASCIItoUTF16(nsDependentCString(charsetData), text);
             NS_Free(charsetData);
           }
           NS_Free(uni);
@@ -2668,7 +2640,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
   // if the url doesn't look like a HTTP GET query, just return,
   // otherwise strip off the query data
   nsAutoString    shortURL;
-  shortURL.AssignWithConversion(url);
+  CopyASCIItoUTF16(nsDependentCString(url), shortURL);
   PRInt32     optionsOffset;
   if ((optionsOffset = shortURL.FindChar(PRUnichar('?'))) < 0)  return(NS_OK);
   shortURL.SetLength(optionsOffset);
@@ -2706,7 +2678,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
       engine->GetValueConst(&uri);
       if (uri)
       {
-        engineURI.AssignWithConversion(uri);
+        CopyUTF8toUTF16(nsDependentCString(uri), engineURI);
       }
 
       if (NS_FAILED(rv = FindData(engine, getter_AddRefs(dataLit))) ||
@@ -2736,7 +2708,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
   if (foundEngine)
   {
     nsAutoString  searchURL;
-    searchURL.AssignWithConversion(url);
+    CopyASCIItoUTF16(nsDependentCString(url), searchURL);
 
     // look for query option which is the string the user is searching for
     nsAutoString  userVar, inputUnused, engineNameStr;
@@ -2746,16 +2718,14 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
     if (userVar.IsEmpty())  return(NS_RDF_NO_VALUE);
 
     nsAutoString  queryStr;
-    queryStr = NS_LITERAL_STRING("?") +
-               userVar +
-               NS_LITERAL_STRING("=");
+    queryStr.Assign(PRUnichar('?'));
+    queryStr.Append(userVar);
+    queryStr.Append(PRUnichar('='));
 
     PRInt32   queryOffset;
     if ((queryOffset = nsString_Find(queryStr, searchURL, PR_TRUE )) < 0)
     {
-      queryStr = NS_LITERAL_STRING("&") +
-                 userVar +
-                 NS_LITERAL_STRING("=");
+      queryStr.Replace(0, 1, PRUnichar('&'));
       queryOffset = nsString_Find(queryStr, searchURL, PR_TRUE);
     }
 
@@ -2779,16 +2749,16 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
         if (NS_SUCCEEDED(rv))
         {
           nsCAutoString escapedSearchText;
-          escapedSearchText.AssignWithConversion(searchText);
+          LossyCopyUTF16toASCII(searchText, escapedSearchText);
 
           // encoding +'s so as to preserve distinction between + and %2B
           escapedSearchText.ReplaceSubstring("%25", "%2B25");
           escapedSearchText.ReplaceSubstring("+", "%25");
 
-          nsCAutoString aCharset;
-          aCharset.AssignWithConversion(mQueryEncodingStr);
           PRUnichar *uni = nsnull;
-          if (NS_SUCCEEDED(rv = textToSubURI->UnEscapeAndConvert(aCharset.get(), escapedSearchText.get(), &uni)) && (uni))
+          rv = textToSubURI->UnEscapeAndConvert(NS_LossyConvertUTF16toASCII(mQueryEncodingStr).get(),
+                                                escapedSearchText.get(), &uni);
+          if (NS_SUCCEEDED(rv) && uni)
           {
             char  *convertedSearchText = nsnull;
             if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape("UTF-8", uni, &convertedSearchText)))
@@ -2799,7 +2769,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
               unescapedSearchText.ReplaceSubstring("%25", "+");
               unescapedSearchText.ReplaceSubstring("%2B25", "%25");
 
-              searchText.AssignWithConversion(unescapedSearchText.get());
+              CopyUTF8toUTF16(unescapedSearchText, searchText);
 
               NS_Free(convertedSearchText);
             }
@@ -3077,7 +3047,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
   if (NS_FAILED(rv = source->GetValueConst(&sourceURI)))
     return(rv);
   nsAutoString    uri;
-  uri.AssignWithConversion(sourceURI);
+  CopyUTF8toUTF16(nsDependentCString(sourceURI), uri);
 
   if (uri.Find("internetsearch:") != 0)
     return(NS_ERROR_FAILURE);
@@ -3884,12 +3854,11 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
         if (NS_SUCCEEDED(rv = textToSubURI->UnEscapeAndConvert("UTF-8", utf8data, &uni)) && (uni))
         {
           char    *charsetData = nsnull;
-          nsCAutoString queryencodingstrC;
-          queryencodingstrC.AssignWithConversion(queryEncodingStr);
-          if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(queryencodingstrC.get(), uni, &charsetData))
-                  && (charsetData))
+          rv = textToSubURI->ConvertAndEscape(NS_LossyConvertUTF16toASCII(queryEncodingStr).get(),
+                                              uni, &charsetData);
+          if (NS_SUCCEEDED(rv) && charsetData)
           {
-            textTemp.AssignWithConversion(charsetData);
+            CopyASCIItoUTF16(nsDependentCString(charsetData), textTemp);
             NS_Free(charsetData);
           }
           NS_Free(uni);
@@ -3944,17 +3913,15 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
             httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
             
             // construct post data to send
-            nsAutoString  postStr;
-            postStr.AssignASCII(POSTHEADER_PREFIX);
+            nsCAutoString  postStr;
+            postStr.AssignLiteral(POSTHEADER_PREFIX);
             postStr.AppendInt(input.Length(), 10);
-            postStr.AppendASCII(POSTHEADER_SUFFIX);
-            postStr += input;
+            postStr.AppendLiteral(POSTHEADER_SUFFIX);
+            postStr.Append(NS_LossyConvertUTF16toASCII(input));
             
             nsCOMPtr<nsIInputStream>  postDataStream;
-            nsCAutoString     poststrC;
-            poststrC.AssignWithConversion(postStr);
             if (NS_SUCCEEDED(rv = NS_NewPostDataStream(getter_AddRefs(postDataStream),
-                         PR_FALSE, poststrC, 0)))
+                         PR_FALSE, postStr, 0)))
             {
           nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
           NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
@@ -4132,10 +4099,10 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
       nsCOMPtr<nsIRDFResource>  catRes;
       if (catURI)
       {
-        nsAutoString  catList;
-        catList.AssignASCII(kURINC_SearchCategoryPrefix);
-        catList.AppendWithConversion(catURI);
-        mRDFService->GetUnicodeResource(catList, getter_AddRefs(catRes));
+        nsCAutoString  catList;
+        catList.AssignLiteral(kURINC_SearchCategoryPrefix);
+        catList.Append(catURI);
+        mRDFService->GetResource(catList, getter_AddRefs(catRes));
       }
 
       nsCOMPtr<nsIRDFContainer> container;
@@ -4323,7 +4290,7 @@ InternetSearchDataSource::ReadFileContents(nsILocalFile *localFile, nsString& so
                         if (total == contentsLen)
             {
         contents[contentsLen] = '\0';
-        sourceContents.AssignWithConversion(contents, contentsLen);
+        CopyASCIItoUTF16(Substring(contents, contents + contentsLen), sourceContents);
         rv = NS_OK;
             }
             delete [] contents;
@@ -4391,8 +4358,8 @@ InternetSearchDataSource::GetData(const PRUnichar *dataUni, const char *sectionT
   PRBool    inSection = PR_FALSE;
 
   nsAutoString  section;
-  section.AssignLiteral("<");
-  section.AppendWithConversion(sectionToFind);
+  section.Assign(PRUnichar('<'));
+  section.Append(NS_ConvertASCIItoUTF16(sectionToFind));
 
   while(!buffer.IsEmpty())
   {
@@ -4860,14 +4827,10 @@ InternetSearchDataSource::computeIndex(nsAutoString &factor,
 nsresult
 InternetSearchDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult)
 {
-        const char  *uri = nsnull;
-  source->GetValueConst( &uri );
-  nsAutoString  url;
-  url.AssignWithConversion(uri);
-  nsIRDFLiteral *literal;
-  mRDFService->GetLiteral(url.get(), &literal);
-        *aResult = literal;
-        return NS_OK;
+  const char *uri = nsnull;
+  nsresult rv = source->GetValueConst( &uri );
+  NS_ENSURE_SUCCESS(rv, rv);
+  return mRDFService->GetLiteral(NS_ConvertUTF8toUTF16(uri).get(), aResult);
 }
 
 
@@ -5130,7 +5093,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
           aLiteral->GetValueConst(&updateUni);
           if (updateUni)
           {
-            updateURL.AssignWithConversion(updateUni);
+            CopyUTF16toUTF8(nsDependentString(updateUni), updateURL);
           }
         }
       }
@@ -5147,7 +5110,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
           aIconLiteral->GetValueConst(&updateIconUni);
           if (updateIconUni)
           {
-            updateIconURL.AssignWithConversion(updateIconUni);
+            CopyUTF16toUTF8(nsDependentString(updateIconUni), updateIconURL);
           }
         }
       }
@@ -5558,19 +5521,14 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 
       if (hrefStr.IsEmpty())  continue;
 
-      char    *absURIStr = nsnull;
-      nsCAutoString hrefstrC;
-      hrefstrC.AssignWithConversion(hrefStr);
+      nsAutoString absURIStr;
 
-      if (NS_SUCCEEDED(rv = NS_MakeAbsoluteURI(&absURIStr, hrefstrC.get(), aURL))
-          && (absURIStr))
+      if (NS_SUCCEEDED(rv = NS_MakeAbsoluteURI(absURIStr, hrefStr, aURL)))
       {
-        hrefStr.AssignWithConversion(absURIStr);
+        hrefStr.Assign(absURIStr);
 
         nsCOMPtr<nsIURI>  absURI;
         rv = NS_NewURI(getter_AddRefs(absURI), absURIStr);
-        nsCRT::free(absURIStr);
-        absURIStr = nsnull;
 
         if (absURI && skipLocalFlag)
         {
