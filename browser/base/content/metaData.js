@@ -260,16 +260,16 @@ function checkForImage(elem, htmllocalname)
 
     var imageRequest = img.QueryInterface(nsIImageLoadingContent)
                           .getRequest(nsIImageLoadingContent.CURRENT_REQUEST);
+    var image = imageRequest && imageRequest.image;
     var imageType = "";
     if (imageRequest) {
       imageType = imageRequest.mimeType;
       var imageMimeType = /^image\/(.*)/.exec(imageType);
       if (imageMimeType) {
         imageType = imageMimeType[1].toUpperCase();
-        var frameCount = imageRequest.image.numFrames;
-        if (frameCount > 1)
+        if (image && image.numFrames > 1)
           imageType = gMetadataBundle.getFormattedString("animatedImageType",
-                                                         [imageType, frameCount]);
+                                                         [imageType, image.numFrames]);
         else
           imageType = gMetadataBundle.getFormattedString("imageType", [imageType]);
       }
@@ -278,7 +278,6 @@ function checkForImage(elem, htmllocalname)
 
     var imageSize = "";
     if (img.width) {
-      var image = imageRequest && imageRequest.image;
       if (image && (image.width != img.width || image.height != img.height))
         imageSize = gMetadataBundle.getFormattedString("imageDimensionsScaled",
                                                        [image.width, image.height,
