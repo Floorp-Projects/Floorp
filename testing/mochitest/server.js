@@ -244,7 +244,9 @@ function list(requestPath, directory, recurse)
       [links[key], childCount] = list(key, file, recurse);
       count += childCount;
     } else {
-      links[key] = true;
+      if (file.leafName.charAt(0) != '.') {
+        links[key] = true;
+      }
     }
   }
 
