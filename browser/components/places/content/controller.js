@@ -592,14 +592,14 @@ PlacesController.prototype = {
       if (uri) {
         var names = PlacesUtils.annotations.getPageAnnotationNames(uri, {});
         for (var j = 0; j < names.length; ++j)
-          nodeData[names[i]] = true;
+          nodeData[names[j]] = true;
 
         // For bookmark-items also include the bookmark-specific annotations
         if ("bookmark" in nodeData) {
           var placeURI = PlacesUtils.bookmarks.getItemURI(node.bookmarkId);
           names = PlacesUtils.annotations.getPageAnnotationNames(placeURI, {});
           for (j = 0; j < names.length; ++j)
-            nodeData[names[i]] = true;
+            nodeData[names[j]] = true;
         }
       }
 #ifdef EXTENDED_LIVEBOOKMARKS_UI
