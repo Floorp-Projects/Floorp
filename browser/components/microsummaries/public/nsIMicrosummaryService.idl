@@ -338,3 +338,18 @@ interface nsIMicrosummaryService : nsISupports
      */
     nsIMicrosummary refreshMicrosummary(in nsISupports bookmarkID);
 };
+
+[scriptable, uuid(f9e577a8-19d9-4ca0-a140-b9e43f014470)]
+interface nsILiveTitleNotificationSubject : nsISupports
+{
+    // The ID of the bookmark displaying this title.
+    // Note: in the old bookmarks code, this is an RDF resource.  In Places
+    // it is currently a URI, but after the fix for bug 360133 lands it will
+    // become an integer.
+    readonly attribute nsISupports bookmarkID;
+
+    // The microsummary being displayed as the live title for the bookmark.
+    // The actual value of the microsummary (i.e. the string that gets displayed
+    // to the user) is stored in the content property of this object.
+    readonly attribute nsIMicrosummary microsummary;
+};
