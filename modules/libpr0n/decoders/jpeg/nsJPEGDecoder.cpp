@@ -172,9 +172,18 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   if (inStr) {
     if (!mBuffer) {
       mBuffer = (JOCTET *)PR_Malloc(count);
+      if (!mBuffer) {
+        mState = JPEG_ERROR;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
       mBufferSize = count;
     } else if (count > mBufferSize) {
-      mBuffer = (JOCTET *)PR_Realloc(mBuffer, count);
+      JOCTET *buf = (JOCTET *)PR_Realloc(mBuffer, count);
+      if (!buf) {
+        mState = JPEG_ERROR;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      mBuffer = buf;
       mBufferSize = count;
     }
 
@@ -663,17 +672,22 @@ fill_input_buffer (j_decompress_ptr jd)
 
     /* Round up to multiple of 256 bytes. */
     const PRUint32 roundup_buflen = ((new_backtrack_buflen + 255) >> 8) << 8;
-    decoder->mBackBuffer = decoder->mBackBuffer
-                ? (JOCTET*)PR_REALLOC(decoder->mBackBuffer, roundup_buflen)
-                : (JOCTET*)PR_MALLOC(roundup_buflen);
 
-    /* Check for OOM */
-    if (!decoder->mBackBuffer) {
-#if 0
-      j_common_ptr cinfo = (j_common_ptr)(&decoder->js->jd);
-      cinfo->err->msg_code = JERR_OUT_OF_MEMORY;
-      my_error_exit(cinfo);
-#endif
+    if (decoder->mBackBuffer) {
+      JOCTET *buf = (JOCTET *)PR_REALLOC(decoder->mBackBuffer, roundup_buflen);
+      /* Check for OOM */
+      if (!buf) {
+        decoder->mInfo.err->msg_code = JERR_OUT_OF_MEMORY;
+        my_error_exit((j_common_ptr)(&decoder->mInfo));
+      }
+      decoder->mBackBuffer = buf;
+    } else {
+      decoder->mBackBuffer = (JOCTET*)PR_MALLOC(roundup_buflen);
+      /* Check for OOM */
+      if (!decoder->mBackBuffer) {
+        decoder->mInfo.err->msg_code = JERR_OUT_OF_MEMORY;
+        my_error_exit((j_common_ptr)(&decoder->mInfo));
+      }
     }
       
     decoder->mBackBufferSize = (size_t)roundup_buflen;
