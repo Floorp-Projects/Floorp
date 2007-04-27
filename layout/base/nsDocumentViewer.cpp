@@ -1082,6 +1082,7 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   // Now that the document has loaded, we can tell the presshell
   // to unsuppress painting.
   if (mPresShell && !mStopped) {
+    nsCOMPtr<nsIPresShell> shellDeathGrip(mPresShell); // bug 378682
     mPresShell->UnsuppressPainting();
   }
 
@@ -1261,8 +1262,10 @@ DocumentViewerImpl::PageHide(PRBool aIsUnload)
 
   // look for open menupopups and close them after the unload event, in case
   // the unload event listeners open any new popups
-  if (mPresShell)
+  if (mPresShell) {
+    nsCOMPtr<nsIPresShell> kungFuDeathGrip = mPresShell;
     mPresShell->HidePopups();
+  }
 
   return NS_OK;
 }
@@ -1634,6 +1637,7 @@ DocumentViewerImpl::Stop(void)
 
   if (!mLoaded && mPresShell) {
     // Well, we might as well paint what we have so far.
+    nsCOMPtr<nsIPresShell> shellDeathGrip(mPresShell); // bug 378682
     mPresShell->UnsuppressPainting();
   }
 
@@ -1982,6 +1986,7 @@ DocumentViewerImpl::Show(void)
     // window is shown because some JS on the page caused it to be
     // shown...
 
+    nsCOMPtr<nsIPresShell> shellDeathGrip(mPresShell); // bug 378682
     mPresShell->UnsuppressPainting();
   }
 
