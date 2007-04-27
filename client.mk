@@ -1151,7 +1151,7 @@ cleansrcdir:
 # (! IS_FIRST_CHECKOUT)
 endif
 
-echo_objdir:
-	@echo $(OBJDIR)
+echo-variable-%:
+	@echo $($*)
 
 .PHONY: checkout real_checkout depend build export libs alldep install clean realclean distclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything configure preflight_all preflight postflight postflight_all
