@@ -128,6 +128,10 @@ nsScreenManagerGtk :: EnsureInit(void)
         mCachedScreenArray->AppendElement(screenSupports);
       }
     }
+
+    if (screenInfo) {
+      XFree(screenInfo);
+    }
 #endif /* MOZ_ENABLE_XINERAMA */
   }
 
