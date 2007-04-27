@@ -1872,6 +1872,7 @@ HTMLContentSink::DidBuildModel(void)
 NS_IMETHODIMP
 HTMLContentSink::SetParser(nsIParser* aParser)
 {
+  NS_PRECONDITION(aParser, "Should have a parser here!");
   mParser = aParser;
   return NS_OK;
 }
