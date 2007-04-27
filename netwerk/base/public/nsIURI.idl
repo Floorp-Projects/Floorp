@@ -46,7 +46,7 @@
  *
  * This interface follows Tim Berners-Lee's URI spec (RFC2396) [1], where the
  * basic URI components are defined as such:
- *  
+ * <pre> 
  *      ftp://username:password@hostname:portnumber/pathname
  *      \ /   \               / \      / \        /\       /
  *       -     ---------------   ------   --------  -------
@@ -60,7 +60,7 @@
  *        --------------------------------
  *                       |
  *                    PrePath
- *
+ * </pre>
  * The definition of the URI components has been extended to allow for
  * internationalized domain names [2] and the more generic IRI structure [3].
  *
