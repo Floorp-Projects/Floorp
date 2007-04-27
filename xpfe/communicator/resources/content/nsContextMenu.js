@@ -296,7 +296,6 @@ nsContextMenu.prototype = {
                 if ( this.target.ownerDocument instanceof ImageDocument )
                    this.onStandaloneImage = true;
             } else if ( this.target instanceof HTMLInputElement ) {
-               type = this.target.getAttribute("type");
                this.onTextInput = this.isTargetATextBox(this.target);
             } else if ( this.target instanceof HTMLTextAreaElement ) {
                  this.onTextInput = true;
