@@ -297,15 +297,6 @@ nsXPConnect::GetXPConnect()
     return gSelf;
 }
 
-// In order to enable this jsgc heap dumping you need to compile
-// _both_ js/src/jsgc.c and this file with 'GC_MARK_DEBUG' #defined.
-// Normally this is done by adding -DGC_MARK_DEBUG to the appropriate
-// defines lists in the makefiles.
-
-#ifdef GC_MARK_DEBUG
-extern "C" JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
-#endif
-
 // static
 nsXPConnect*
 nsXPConnect::GetSingleton()
@@ -331,15 +322,29 @@ nsXPConnect::ReleaseXPConnectSingleton()
         }
 #endif
 
-#ifdef GC_MARK_DEBUG
+#ifdef DEBUG
         // force a dump of the JavaScript gc heap if JS is still alive
+        // if requested through XPC_SHUTDOWN_HEAP_DUMP environment variable
         XPCCallContext ccx(NATIVE_CALLER);
         if(ccx.IsValid())
         {
-            FILE* oldFileHandle = js_DumpGCHeap;
-            js_DumpGCHeap = stdout;
-            JS_GC(ccx);
-            js_DumpGCHeap = oldFileHandle;
+            const char* dumpName = getenv("XPC_SHUTDOWN_HEAP_DUMP");
+            if(dumpName)
+            {
+                FILE* dumpFile = (*dumpName == '\0' ||
+                                  strcmp(dumpName, "stdout") == 0)
+                                 ? stdout
+                                 : fopen(dumpName, "w");
+                if(dumpFile)
+                {
+                    JS_DumpHeap(ccx, nsnull, 0, nsnull,
+                                NS_STATIC_CAST(size_t, -1), nsnull,
+                                NS_REINTERPRET_CAST(JSPrintfFormater, fprintf),
+                                dumpFile);
+                    if(dumpFile != stdout)
+                        fclose(dumpFile);
+                }
+            }
         }
 #endif
 #ifdef XPC_DUMP_AT_SHUTDOWN
