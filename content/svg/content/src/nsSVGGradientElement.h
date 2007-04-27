@@ -52,6 +52,8 @@ typedef nsSVGStylableElement nsSVGGradientElementBase;
 class nsSVGGradientElement : public nsSVGGradientElementBase,
                              public nsIDOMSVGURIReference
 {
+  friend class nsSVGGradientFrame;
+
 protected:
   nsSVGGradientElement(nsINodeInfo* aNodeInfo);
   nsresult Init();
