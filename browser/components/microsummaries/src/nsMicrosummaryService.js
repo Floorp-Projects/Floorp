@@ -190,6 +190,17 @@ MicrosummaryService.prototype = {
     return Math.max(updateInterval, 1) * 60 * 1000;
   },
 
+  __branch: null,
+  get _branch() {
+    if (!this.__branch) {
+      var prefs = Cc["@mozilla.org/preferences-service;1"].
+                  getService(Ci.nsIPrefService);
+      this.__branch = prefs.getBranch("browser.microsummary.");
+      this.__branch.QueryInterface(Ci.nsIPrefBranch2);
+    }
+    return this.__branch;
+  },
+
   // A cache of local microsummary generators.  This gets built on startup
   // by the _cacheLocalGenerators() method.
   _localGenerators: {},
@@ -219,11 +230,26 @@ MicrosummaryService.prototype = {
       case "xpcom-shutdown":
         this._destroy();
         break;
+      case "nsPref:changed":
+        if (data == "enabled")
+          this._initTimer();
+        break;
     }
   },
 
   _init: function MSS__init() {
     this._obs.addObserver(this, "xpcom-shutdown", true);
+    this._branch.addObserver("", this, true);
+    this._initTimer();
+    this._cacheLocalGenerators();
+  },
+
+  _initTimer: function MSS__initTimer() {
+    if (this._timer)
+      this._timer.cancel();
+
+    if (!getPref("browser.microsummary.enabled", true))
+      return;
 
     // Periodically update microsummaries that need updating.
     this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -234,8 +260,6 @@ MicrosummaryService.prototype = {
     this._timer.initWithCallback(callback,
                                  CHECK_INTERVAL,
                                  this._timer.TYPE_REPEATING_SLACK);
-
-    this._cacheLocalGenerators();
   },
   
   _destroy: function MSS__destroy() {
@@ -551,6 +575,9 @@ MicrosummaryService.prototype = {
    */
   getMicrosummaries: function MSS_getMicrosummaries(pageURI, bookmarkID) {
     var microsummaries = new MicrosummarySet();
+
+    if (!getPref("browser.microsummary.enabled", true))
+      return microsummaries;
 
     // Get microsummaries defined by local generators.
     for (var genURISpec in this._localGenerators) {
