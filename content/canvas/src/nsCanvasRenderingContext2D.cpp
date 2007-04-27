@@ -2667,10 +2667,11 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
 
         rv = rootFrame->BuildDisplayListForStackingContext(&builder, r, &list);      
         if (NS_SUCCEEDED(rv)) {
-            float t2p = presContext->AppUnitsPerDevPixel();
+            nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
             // Ensure that r.x,r.y gets drawn at (0,0)
             mThebesContext->Save();
-            mThebesContext->Translate(gfxPoint(-r.x*t2p, -r.y*t2p));
+            mThebesContext->Translate(gfxPoint(-NSAppUnitsToFloatPixels(r.x,appUnitsPerDevPixel),
+                                               -NSAppUnitsToFloatPixels(r.y,appUnitsPerDevPixel)));
           
             nsIDeviceContext* devCtx = presContext->DeviceContext();
             nsCOMPtr<nsIRenderingContext> rc;
