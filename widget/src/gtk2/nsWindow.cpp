@@ -305,7 +305,6 @@ nsWindow::nsWindow()
     mContainerGotFocus   = PR_FALSE;
     mContainerLostFocus  = PR_FALSE;
     mContainerBlockFocus = PR_FALSE;
-    mInKeyRepeat         = PR_FALSE;
     mIsVisible           = PR_FALSE;
     mRetryPointerGrab    = PR_FALSE;
     mRetryKeyboardGrab   = PR_FALSE;
@@ -322,6 +321,8 @@ nsWindow::nsWindow()
         // It's OK if either of these fail, but it may not be one day.
         initialize_prefs();
     }
+
+    memset(mKeyDownFlags, 0, sizeof(mKeyDownFlags));
 
     if (mLastDragMotionWindow == this)
         mLastDragMotionWindow = NULL;
@@ -1520,9 +1521,9 @@ nsWindow::GetAttention(PRInt32 aCycleCount)
 void
 nsWindow::LoseFocus(void)
 {
-    // make sure that we reset our repeat counter so the next keypress
+    // make sure that we reset our key down counter so the next keypress
     // for this widget will get the down event
-    mInKeyRepeat = PR_FALSE;
+    memset(mKeyDownFlags, 0, sizeof(mKeyDownFlags));
 
     // Dispatch a lostfocus event
     DispatchLostFocusEvent();
@@ -2181,15 +2182,18 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 
     nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
 
-    // If the key repeat flag isn't set then set it so we don't send
+    // If the key down flag isn't set then set it so we don't send
     // another key down event on the next key press -- DOM events are
     // key down, key press and key up.  X only has key press and key
     // release.  gtk2 already filters the extra key release events for
     // us.
 
     PRBool isKeyDownCancelled = PR_FALSE;
-    if (!mInKeyRepeat) {
-        mInKeyRepeat = PR_TRUE;
+    
+    PRUint32 domVirtualKeyCode = GdkKeyCodeToDOMKeyCode(aEvent->keyval);
+
+    if (!IsKeyDown(domVirtualKeyCode)) {
+        SetKeyDownFlag(domVirtualKeyCode);
 
         // send the key down event
         nsKeyEvent downEvent(PR_TRUE, NS_KEY_DOWN, this);
@@ -2210,9 +2214,6 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         || aEvent->keyval == GDK_Alt_R
         || aEvent->keyval == GDK_Meta_L
         || aEvent->keyval == GDK_Meta_R) {
-        // reset the key repeat flag so that the next keypress gets the
-        // key down event
-        mInKeyRepeat = PR_FALSE;
         return TRUE;
     }
     nsKeyEvent event(PR_TRUE, NS_KEY_PRESS, this);
@@ -2293,12 +2294,12 @@ nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 
     nsEventStatus status;
 
-    // unset the repeat flag
-    mInKeyRepeat = PR_FALSE;
-
     // send the key event as a key up event
     nsKeyEvent event(PR_TRUE, NS_KEY_UP, this);
     InitKeyEvent(event, aEvent);
+
+    // unset the key down flag
+    ClearKeyDownFlag(event.keyCode);
 
     DispatchEvent(&event, status);
 
