@@ -2294,7 +2294,7 @@ function handleURLBarRevert()
   // don't revert to last valid url unless page is NOT loading
   // and user is NOT key-scrolling through autocomplete list
   if ((!throbberElement || !throbberElement.hasAttribute("busy")) && !isScrolling) {
-    if (url != "about:blank") {
+    if (url != "about:blank" || content.opener) {
       gURLBar.value = url;
       gURLBar.select();
       SetPageProxyState("valid");
@@ -3842,8 +3842,9 @@ nsBrowserStatusHandler.prototype =
     var browser = getBrowser().selectedBrowser;
     if (aWebProgress.DOMWindow == content) {
 
-      if (location == "about:blank" || location == "") {   //second condition is for new tabs, otherwise
-        location = "";                                     //reload function is enabled until tab is refreshed
+      if ((location == "about:blank" && !content.opener) ||
+           location == "") {                        //second condition is for new tabs, otherwise
+        location = "";                              //reload function is enabled until tab is refreshed
         this.reloadCommand.setAttribute("disabled", "true");
         this.reloadSkipCacheCommand.setAttribute("disabled", "true");
       } else {
