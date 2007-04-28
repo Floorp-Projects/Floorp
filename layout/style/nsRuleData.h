@@ -45,7 +45,12 @@
 #define nsRuleData_h_
 
 #include "nsCSSStruct.h"
-#include "nsRuleNode.h"
+#include "nsStyleStructFwd.h"
+class nsPresContext;
+class nsStyleContext;
+
+struct nsRuleData;
+typedef void (*nsPostResolveFunc)(nsStyleStruct* aStyleStruct, nsRuleData* aData);
 
 struct nsRuleData
 {

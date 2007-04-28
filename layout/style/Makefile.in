@@ -117,6 +117,7 @@ EXPORTS		= \
 		nsStyleCoord.h \
 		nsStyleSet.h \
 		nsStyleStruct.h \
+		nsStyleStructFwd.h \
 		nsStyleStructList.h \
 		nsStyleUtil.h \
 		$(NULL)
