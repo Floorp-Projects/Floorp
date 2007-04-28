@@ -65,22 +65,8 @@
 class nsIFrame;
 class imgIRequest;
 
-enum nsStyleStructID {
-
-/*
- * Define the constants eStyleStruct_Font, etc.
- *
- * The C++ standard, section 7.2, guarantees that enums begin with 0 and
- * increase by 1.
- */
-
-#define STYLE_STRUCT(name, checkdata_cb, ctor_args) eStyleStruct_##name,
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
-
-nsStyleStructID_Length /* one past the end; length of 0-based list */
-
-};
+// Includes nsStyleStructID.
+#include "nsStyleStructFwd.h"
 
 // Bits for each struct.
 #define NS_STYLE_INHERIT_BIT(sid_)        (1 << PRInt32(eStyleStruct_##sid_))

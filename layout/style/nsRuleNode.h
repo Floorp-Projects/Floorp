@@ -60,8 +60,6 @@ typedef nsCSSStruct nsRuleDataStruct;
 struct nsRuleDataFont;
 class nsCSSValue;
 
-typedef void (*nsPostResolveFunc)(nsStyleStruct* aStyleStruct, nsRuleData* aData);
-
 struct nsInheritedStyleData
 {
 
