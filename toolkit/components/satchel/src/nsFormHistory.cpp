@@ -72,6 +72,10 @@ static void SwapBytes(PRUnichar* aDest, const PRUnichar* aSrc, PRUint32 aLen)
 #define PREF_FORMFILL_BRANCH "browser.formfill."
 #define PREF_FORMFILL_ENABLE "enable"
 
+// upper bounds on saved form data, more isn't useful.
+#define FORMFILL_NAME_MAX_LEN  1000
+#define FORMFILL_VALUE_MAX_LEN 4000
+
 static const char *kFormHistoryFileName = "formhistory.dat";
 
 NS_INTERFACE_MAP_BEGIN(nsFormHistory)
@@ -613,7 +617,11 @@ nsFormHistory::AppendRow(const nsAString &aName, const nsAString &aValue, nsIMdb
   if (!mTable)
     return NS_ERROR_NOT_INITIALIZED;
 
-  PRBool exists;
+  if (aName.Length() > FORMFILL_NAME_MAX_LEN ||
+      aValue.Length() > FORMFILL_VALUE_MAX_LEN)
+    return NS_ERROR_INVALID_ARG;
+
+  PRBool exists = PR_TRUE;
   EntryExists(aName, aValue, &exists);
   if (exists)
     return NS_OK;
