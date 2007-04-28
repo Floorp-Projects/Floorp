@@ -227,7 +227,7 @@ nsFormHistory::AddEntry(const nsAString &aName, const nsAString &aValue)
 
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
-  PRBool exists;
+  PRBool exists = PR_TRUE;
   EntryExists(aName, aValue, &exists);
   if (!exists) {
     mozStorageStatementScoper scope(mDBInsertNameValue);
