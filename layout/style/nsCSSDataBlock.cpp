@@ -43,6 +43,7 @@
 #include "nsCSSDataBlock.h"
 #include "nsCSSProps.h"
 #include "nsRuleData.h"
+#include "nsRuleNode.h"
 
 /*
  * nsCSSCompressedDataBlock holds property-value pairs corresponding to
