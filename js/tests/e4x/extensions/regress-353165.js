@@ -104,12 +104,10 @@ function crash2() {
             return undefined;
         }
 
-        var actual = set.unrooter();
-        print('actual:   ' + actual);
-        print('expected: ' + expected);
+        set.unrooter();
     }
     catch(ex) {
         print('2: ' + ex);
     }
-    TEST(2, true, actual === expected);
+    TEST(2, expect, actual);
 }
