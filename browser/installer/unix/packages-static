@@ -100,6 +100,7 @@ bin/components/fastfind.xpt
 bin/components/feeds.xpt
 bin/components/filepicker.xpt
 bin/components/find.xpt
+bin/components/fuel.xpt
 bin/components/gfx.xpt
 bin/components/helperAppDlg.xpt
 bin/components/history.xpt
@@ -183,6 +184,7 @@ bin/components/shellservice.xpt
 bin/components/FeedProcessor.js
 bin/components/FeedConverter.js
 bin/components/FeedWriter.js
+bin/components/fuelApplication.js
 bin/components/WebContentConverter.js
 bin/components/nsBrowserContentHandler.js
 bin/components/nsBrowserGlue.js
