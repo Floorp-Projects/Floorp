@@ -516,7 +516,7 @@ Extensions.prototype = {
 
 const CLASS_ID = Components.ID("fe74cf80-aa2d-11db-abbd-0800200c9a66");
 const CLASS_NAME = "Application wrapper";
-const CONTRACT_ID = "@mozilla.org/application;1";
+const CONTRACT_ID = "@mozilla.org/fuel/application;1";
 
 //=================================================
 // Application constructor
