@@ -2166,8 +2166,7 @@ DumpNotify(JSTracer *trc, void *thing, uint32 kind)
 
 /* Dump node and the chain that leads to thing it contains. */
 static JSBool
-DumpNode(JSDumpingTracer *dtrc, JSHeapDumpNode *node,
-         JSPrintfFormater format, void *closure)
+DumpNode(JSDumpingTracer *dtrc, FILE* fp, JSHeapDumpNode *node)
 {
     JSHeapDumpNode *prev, *following;
     size_t chainLimit;
@@ -2176,7 +2175,7 @@ DumpNode(JSDumpingTracer *dtrc, JSHeapDumpNode *node,
 
     JS_PrintTraceThingInfo(dtrc->buffer, sizeof dtrc->buffer,
                            &dtrc->base, node->thing, node->kind, JS_TRUE);
-    if (format(closure, "%p %-22s via ", node->thing, dtrc->buffer) < 0)
+    if (fprintf(fp, "%p %-22s via ", node->thing, dtrc->buffer) < 0)
         return JS_FALSE;
 
     /*
@@ -2195,7 +2194,7 @@ DumpNode(JSDumpingTracer *dtrc, JSHeapDumpNode *node,
         if (!node)
             break;
         if (chainLimit == 0) {
-            if (format(closure, "...") < 0)
+            if (fputs("...", fp) < 0)
                 return JS_FALSE;
             break;
         }
@@ -2210,13 +2209,13 @@ DumpNode(JSDumpingTracer *dtrc, JSHeapDumpNode *node,
         if (ok) {
             if (!prev) {
                 /* Print edge from some runtime root or startThing. */
-                if (format(closure, "%s", node->edgeName) < 0)
+                if (fputs(node->edgeName, fp) < 0)
                     ok = JS_FALSE;
             } else {
                 JS_PrintTraceThingInfo(dtrc->buffer, sizeof dtrc->buffer,
                                        &dtrc->base, prev->thing, prev->kind,
                                        JS_FALSE);
-                if (format(closure, "(%p %s).%s",
+                if (fprintf(fp, "(%p %s).%s",
                            prev->thing, dtrc->buffer, node->edgeName) < 0) {
                     ok = JS_FALSE;
                 }
@@ -2228,13 +2227,12 @@ DumpNode(JSDumpingTracer *dtrc, JSHeapDumpNode *node,
         node = following;
     } while (node);
 
-    return ok && format(closure, "\n") >= 0;
+    return ok && putc('\n', fp) >= 0;
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DumpHeap(JSContext *cx, void* startThing, uint32 startKind,
-            void *thingToFind, size_t maxDepth, void *thingToIgnore,
-            JSPrintfFormater format, void *closure)
+JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, uint32 startKind,
+            void *thingToFind, size_t maxDepth, void *thingToIgnore)
 {
     JSDumpingTracer dtrc;
     JSHeapDumpNode *node, *children, *next, *parent;
@@ -2277,7 +2275,7 @@ JS_DumpHeap(JSContext *cx, void* startThing, uint32 startKind,
          */
         if (dtrc.ok) {
             if (thingToFind == NULL || thingToFind == node->thing)
-                dtrc.ok = DumpNode(&dtrc, node, format, closure);
+                dtrc.ok = DumpNode(&dtrc, fp, node);
 
             /* Descend into children. */
             if (dtrc.ok &&

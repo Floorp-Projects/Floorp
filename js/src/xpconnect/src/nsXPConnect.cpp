@@ -337,10 +337,8 @@ nsXPConnect::ReleaseXPConnectSingleton()
                                  : fopen(dumpName, "w");
                 if(dumpFile)
                 {
-                    JS_DumpHeap(ccx, nsnull, 0, nsnull,
-                                NS_STATIC_CAST(size_t, -1), nsnull,
-                                NS_REINTERPRET_CAST(JSPrintfFormater, fprintf),
-                                dumpFile);
+                    JS_DumpHeap(ccx, dumpFile, nsnull, 0, nsnull,
+                                NS_STATIC_CAST(size_t, -1), nsnull);
                     if(dumpFile != stdout)
                         fclose(dumpFile);
                 }

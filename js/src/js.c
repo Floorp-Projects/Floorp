@@ -1415,9 +1415,8 @@ DumpHeap(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
     }
 
-    ok = JS_DumpHeap(cx, startThing, startTraceKind, thingToFind,
-                     maxDepth, thingToIgnore,
-                     (JSPrintfFormater)fprintf, dumpFile);
+    ok = JS_DumpHeap(cx, dumpFile, startThing, startTraceKind, thingToFind,
+                     maxDepth, thingToIgnore);
     if (dumpFile != stdout)
         fclose(dumpFile);
     return ok;

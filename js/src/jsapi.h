@@ -1016,25 +1016,26 @@ JS_TraceRuntime(JSTracer *trc);
 extern JS_PUBLIC_API(void)
 JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
                        void *thing, uint32 kind, JSBool includeDetails);
+
 /*
- * DEBUG-only method to dump an object graph of heap-allocated things.
+ * DEBUG-only method to dump the object graph of heap-allocated things.
  *
- * start: when non-null, dump only things reachable from start thing. Otherwise
- *        dump all things rechable from runtime roots.
- * startKind: trace kind of start if start is not null. Must be 0 when start
- *            is null.
- * thingToFind: dump only paths in the object graph leading to thingToFind
- *              when non-null.
- * maxDepth: the upper bound on the number of edges to descend from the graph
- *           roots.
- * thingToIgnore: thing to ignore during graph traversal when non-null.
- * format: callback to format the dump output.
- * closure: an argument to pass to formater.
+ * fp:              file for the dump output.
+ * start:           when non-null, dump only things reachable from start
+ *                  thing. Otherwise dump all things reachable from the
+ *                  runtime roots.
+ * startKind:       trace kind of start if start is not null. Must be 0 when
+ *                  start is null.
+ * thingToFind:     dump only paths in the object graph leading to thingToFind
+ *                  when non-null.
+ * maxDepth:        the upper bound on the number of edges to descend from the
+ *                  graph roots.
+ * thingToIgnore:   thing to ignore during the graph traversal when non-null.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_DumpHeap(JSContext *cx, void* startThing, uint32 startKind,
-            void *thingToFind, size_t maxDepth, void *thingToIgnore,
-            JSPrintfFormater format, void *closure);
+JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, uint32 startKind,
+            void *thingToFind, size_t maxDepth, void *thingToIgnore);
+
 #endif
 
 /*
