@@ -72,8 +72,7 @@
                   type="bool"/>
       <preference id="browser.safebrowsing.dataProvider"
                   name="browser.safebrowsing.dataProvider"
-                  type="int"
-                  onchange="gSecurityPane.onProviderChanged();"/>
+                  type="int"/>
 
       <!-- Passwords -->
       <preference id="signon.rememberSignons" name="signon.rememberSignons" type="bool"/>
