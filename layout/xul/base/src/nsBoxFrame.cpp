@@ -804,6 +804,9 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
 nsSize
 nsBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState)
 {
+  NS_ASSERTION(aBoxLayoutState.GetRenderingContext(),
+               "must have rendering context");
+
   nsSize size(0,0);
   DISPLAY_PREF_SIZE(this, size);
   if (!DoesNeedRecalc(mPrefSize)) {
@@ -860,6 +863,9 @@ nsBoxFrame::GetBoxAscent(nsBoxLayoutState& aBoxLayoutState)
 nsSize
 nsBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
 {
+  NS_ASSERTION(aBoxLayoutState.GetRenderingContext(),
+               "must have rendering context");
+
   nsSize size(0,0);
   DISPLAY_MIN_SIZE(this, size);
   if (!DoesNeedRecalc(mMinSize)) {
@@ -893,6 +899,9 @@ nsBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState)
 nsSize
 nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState)
 {
+  NS_ASSERTION(aBoxLayoutState.GetRenderingContext(),
+               "must have rendering context");
+
   nsSize size(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
   DISPLAY_MAX_SIZE(this, size);
   if (!DoesNeedRecalc(mMaxSize)) {
