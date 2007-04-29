@@ -3163,11 +3163,14 @@
              * can be dispatched on an in-tab close button is when it is shown
              * after the first click (i.e. the first click event was dispatched
              * on the tab). This happens when we show the close button only on
-             * the active tab; in which case, it is most likely that the close
-             * button area has been accidentally clicked, therefore we do not
-             * close the tab. See bug 352021 for no details.
+             * the active tab. (bug 352021)
+             * The only sequence in which a third click event can be dispatched
+             * on an in-tab close button is when the tab was opened with a
+             * double click on the tabbar. (bug 378344)
+             * In both cases, it is most likely that the close button area has
+             * been accidentally clicked, therefore we do not close the tab.
              */
-            if (event.detail == 2)
+            if (event.detail > 1)
               return;
 
             tabbedBrowser.removeTab(bindingParent);
