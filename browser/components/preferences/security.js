@@ -292,6 +292,7 @@ var gSecurityPane = {
         var item = document.createElement("menuitem");
         item.setAttribute("value", providerNum);
         item.setAttribute("label", providerName);
+        item.setAttribute("oncommand", "gSecurityPane.onProviderChanged();");
         popup.appendChild(item);
       }
 
