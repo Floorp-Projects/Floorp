@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+        title="Test for Bug 233643">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=233643
+-->
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- NOTE: This testcase depends on the patch for bug 366770
+       (ability to apply bindings with data: URIs). -->
+
+  <!-- The data URI: below corresponds to:
+    <?xml version="1.0"?>
+    <bindings xmlns="http://www.mozilla.org/xbl"
+              xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+      <binding id="label">
+        <content>
+          <xul:label anonid="foo" style="display: none; color: green;" value="PASS"/>
+        </content>
+        <implementation>
+          <property name="fooDisplay">
+            <setter>document.getAnonymousElementByAttribute(this, "anonid", "foo").style.display = val;</setter>
+            <getter>return document.getAnonymousElementByAttribute(this, "anonid", "foo").style.display;</getter>
+          </property>
+        </implementation>
+      </binding>
+    </bindings>
+  -->
+  <html:style type="text/css">
+    foo {
+      -moz-binding: url(data:text/xml,%3C%3Fxml%20version%3D%221.0%22%3F%3E%0A%3Cbindings%20xmlns%3D%22http%3A//www.mozilla.org/xbl%22%0A%20%20%20%20%20%20%20%20%20%20xmlns%3Axul%3D%22http%3A//www.mozilla.org/keymaster/gatekeeper/there.is.only.xul%22%3E%0A%20%20%3Cbinding%20id%3D%22label%22%3E%0A%20%20%20%20%3Ccontent%3E%0A%20%20%20%20%20%20%3Cxul%3Alabel%20anonid%3D%22foo%22%20style%3D%22display%3A%20none%3B%20color%3A%20green%3B%22%20value%3D%22PASS%22/%3E%0A%20%20%20%20%3C/content%3E%0A%20%20%20%20%3Cimplementation%3E%0A%20%20%20%20%20%20%3Cproperty%20name%3D%22fooDisplay%22%3E%0A%20%20%20%20%20%20%20%20%3Csetter%3Edocument.getAnonymousElementByAttribute%28this%2C%20%22anonid%22%2C%20%22foo%22%29.style.display%20%3D%20val%3B%3C/setter%3E%0A%20%20%20%20%20%20%20%20%3Cgetter%3Ereturn%20document.getAnonymousElementByAttribute%28this%2C%20%22anonid%22%2C%20%22foo%22%29.style.display%3B%3C/getter%3E%0A%20%20%20%20%20%20%3C/property%3E%0A%20%20%20%20%3C/implementation%3E%0A%20%20%3C/binding%3E%0A%3C/bindings%3E);
+    }
+  </html:style>
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=233643">Mozilla Bug 233643</a>
+    <p id="display">
+      <foo xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>
+      <foo xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>
+    </p>
+    <div id="content" style="display: none">
+      <script class="testbody" type="text/javascript">
+      <![CDATA[
+        SimpleTest.waitForExplicitFinish();
+
+        function test_233643() {
+          var foos = document.getElementsByTagName("foo");
+          ok(foos.length == 2, "Found 2 <foo> elements");
+
+          // Make sure that the binding was applied successfully
+          ok(foos[0].fooDisplay !== undefined, "Binding applied");
+
+          // Show both both child elements by setting their display to "".
+          foos[0].fooDisplay = "";
+          foos[1].fooDisplay = "";
+
+          // Hide the second one. In a build with bug 233643, this hides both.
+          foos[1].fooDisplay = "none";
+
+          // Check that changing the second didn't affect the first.
+          ok(foos[0].fooDisplay != foos[1].fooDisplay, "XUL Element have their own style rules");
+
+          SimpleTest.finish();
+        }
+
+        function do_test() {
+          setTimeout(test_233643, 1000);
+        }
+        addLoadEvent(do_test);
+      ]]>
+      </script>
+    </div>
+  </body>
+</window>

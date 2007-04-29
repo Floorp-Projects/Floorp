@@ -1959,11 +1959,32 @@ NS_IMPL_XUL_STRING_ATTR(StatusText, statustext)
 nsresult
 nsXULElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 {
+    nsresult rv;
+
+    // Clone the prototype rule, if we don't have a local one.
+    if (mPrototype &&
+        !mAttrsAndChildren.GetAttr(nsGkAtoms::style, kNameSpaceID_None)) {
+
+        nsXULPrototypeAttribute *protoattr =
+                  FindPrototypeAttribute(kNameSpaceID_None, nsGkAtoms::style);
+        if (protoattr && protoattr->mValue.Type() == nsAttrValue::eCSSStyleRule) {
+            nsCOMPtr<nsICSSRule> ruleClone;
+            rv = protoattr->mValue.GetCSSStyleRuleValue()->Clone(*getter_AddRefs(ruleClone));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nsAttrValue value;
+            nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(ruleClone);
+            value.SetTo(styleRule);
+
+            rv = mAttrsAndChildren.SetAndTakeAttr(nsGkAtoms::style, value);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+    }
+
     nsDOMSlots* slots = GetDOMSlots();
     NS_ENSURE_TRUE(slots, NS_ERROR_OUT_OF_MEMORY);
 
     if (!slots->mStyle) {
-        nsresult rv;
         if (!gCSSOMFactory) {
             rv = CallGetService(kCSSOMFactoryCID, &gCSSOMFactory);
             NS_ENSURE_SUCCESS(rv, rv);
@@ -2285,6 +2306,17 @@ nsresult nsXULElement::MakeHeavyweight()
 
         // XXX we might wanna have a SetAndTakeAttr that takes an nsAttrName
         nsAttrValue attrValue(protoattr->mValue);
+        
+        // Style rules need to be cloned.
+        if (attrValue.Type() == nsAttrValue::eCSSStyleRule) {
+            nsCOMPtr<nsICSSRule> ruleClone;
+            rv = attrValue.GetCSSStyleRuleValue()->Clone(*getter_AddRefs(ruleClone));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(ruleClone);
+            attrValue.SetTo(styleRule);
+        }
+
         if (protoattr->mName.IsAtom()) {
             rv = mAttrsAndChildren.SetAndTakeAttr(protoattr->mName.Atom(), attrValue);
         }
