@@ -456,6 +456,8 @@ nsBox::GetLayoutManager(nsIBoxLayout** aLayout)
 nsSize
 nsBox::GetPrefSize(nsBoxLayoutState& aState)
 {
+  NS_ASSERTION(aState.GetRenderingContext(), "must have rendering context");
+
   nsSize pref(0,0);
   DISPLAY_PREF_SIZE(this, pref);
 
@@ -475,6 +477,8 @@ nsBox::GetPrefSize(nsBoxLayoutState& aState)
 nsSize
 nsBox::GetMinSize(nsBoxLayoutState& aState)
 {
+  NS_ASSERTION(aState.GetRenderingContext(), "must have rendering context");
+
   nsSize min(0,0);
   DISPLAY_MIN_SIZE(this, min);
 
@@ -495,6 +499,8 @@ nsBox::GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState)
 nsSize
 nsBox::GetMaxSize(nsBoxLayoutState& aState)
 {
+  NS_ASSERTION(aState.GetRenderingContext(), "must have rendering context");
+
   nsSize max(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
   DISPLAY_MAX_SIZE(this, max);
 
@@ -547,6 +553,8 @@ nsBox::IsCollapsed(nsBoxLayoutState& aState)
 nsresult
 nsIFrame::Layout(nsBoxLayoutState& aState)
 {
+  NS_ASSERTION(aState.GetRenderingContext(), "must have rendering context");
+
   nsBox *box = NS_STATIC_CAST(nsBox*, this);
   DISPLAY_LAYOUT(box);
 
