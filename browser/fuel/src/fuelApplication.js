@@ -685,9 +685,9 @@ var ApplicationModule = {
     aCompMgr = aCompMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
     aCompMgr.registerFactoryLocation(CLASS_ID, CLASS_NAME, CONTRACT_ID, aFileSpec, aLocation, aType);
     
-    // make the Update Service a startup observer
     var categoryManager = Components.classes["@mozilla.org/categorymanager;1"]
                                     .getService(Components.interfaces.nsICategoryManager);
+    // make Application a startup observer
     categoryManager.addCategoryEntry("app-startup", CLASS_NAME, "service," + CONTRACT_ID, true, true);
 
     // add Application as a global property for easy access                                     
@@ -698,6 +698,12 @@ var ApplicationModule = {
   {
     aCompMgr = aCompMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
     aCompMgr.unregisterFactoryLocation(CLASS_ID, aLocation);        
+
+    // cleanup categories
+    var categoryManager = Components.classes["@mozilla.org/categorymanager;1"]
+                                    .getService(Components.interfaces.nsICategoryManager);
+    categoryManager.deleteCategoryEntry("app-startup", "service," + CONTRACT_ID, true);
+    categoryManager.deleteCategoryEntry("JavaScript global property", CONTRACT_ID, true);
   },
   
   getClassObject: function am_gco(aCompMgr, aCID, aIID)
