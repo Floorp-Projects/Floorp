@@ -724,9 +724,11 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   if (childIndex == 0 || childIndex == childCount - 1)
     return NS_OK;
 
-  // XXXbz using this state for GetPrefSize/GetMinSize is wrong.  It
-  // needs a rendering context!
-  nsBoxLayoutState state(outerPresContext);
+  nsCOMPtr<nsIRenderingContext> rc;
+  nsresult rv = outerPresContext->PresShell()->
+                  CreateRenderingContext(mOuter, getter_AddRefs(rc));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsBoxLayoutState state(outerPresContext, rc);
   mCurrentPos = 0;
   mPressed = PR_TRUE;
 
@@ -753,7 +755,6 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   while (nsnull != childBox) 
   { 
     nsIContent* content = childBox->GetContent();
-    nsresult rv;
     nsIDocument* doc = content->GetOwnerDoc();
     nsIAtom* atom;
     if (doc) {
