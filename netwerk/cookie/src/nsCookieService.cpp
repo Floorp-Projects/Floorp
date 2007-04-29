@@ -1467,7 +1467,7 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
 /******************************************************************************
  ** Augmented BNF, modified from RFC2109 Section 4.2.2 and RFC2616 Section 2.1
  ** please note: this BNF deviates from both specifications, and reflects this
- ** implementation. <bnf> indicates a reference to the defined grammer "bnf".
+ ** implementation. <bnf> indicates a reference to the defined grammar "bnf".
 
  ** Differences from RFC2109/2616 and explanations:
     1. implied *LWS
