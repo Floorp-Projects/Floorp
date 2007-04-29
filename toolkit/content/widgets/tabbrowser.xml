@@ -3178,15 +3178,21 @@
              * double-clicks this button, the dblclick event will be dispatched
              * with the tabbar as its event target (and explicit/originalTarget),
              * which treats that as a mouse gesture for opening a new tab.
-             * In this context, there is no way to prevent the dispatching
-             * of the dblclick event, so we're manually blocking it (see
-             * onTabBarDblClick) until the mouse is moved.
+             * In this context, we're manually blocking the dblclick event
+             * (see onTabBarDblClick).
              */
-            function mouseMoveHandler() {
-              tabbedBrowser._blockDblClick = false;
-              tabbedBrowser.removeEventListener("mousemove", mouseMoveHandler, false);
+            var clickedOnce = false;
+            function enableDblClick(event) {
+              if (event.detail == 1 && !clickedOnce) {
+                clickedOnce = true;
+                return;
+              }
+              setTimeout(function() {
+                tabbedBrowser._blockDblClick = false;
+              }, 0);
+              tabbedBrowser.removeEventListener("click", enableDblClick, false);
             }
-            tabbedBrowser.addEventListener("mousemove",  mouseMoveHandler, false);
+            tabbedBrowser.addEventListener("click", enableDblClick, false);
           }
           else // "tabs"
             tabbedBrowser.removeCurrentTab();
