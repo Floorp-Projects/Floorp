@@ -484,6 +484,7 @@ int InstallConduit(HINSTANCE hInstance, TCHAR *installDir, TCHAR *appName)
     {
       if(!GetModuleFileName(NULL, szConduitPath, _MAX_PATH))
           return IDS_ERR_CONDUIT_NOT_FOUND;
+
       // extract the dir path (without the module name)
       int index = strlen(szConduitPath)-1;
       while((szConduitPath[index] != DIRECTORY_SEPARATOR) && index)
@@ -493,6 +494,19 @@ int InstallConduit(HINSTANCE hInstance, TCHAR *installDir, TCHAR *appName)
     else
       strncpy(szConduitPath, installDir, sizeof(szConduitPath) - 1);
 
+    // take care of any possible string overwrites
+    if((strlen(szConduitPath) + strlen(DIRECTORY_SEPARATOR_STR) + strlen(CONDUIT_FILENAME)) > _MAX_PATH)
+        return IDS_ERR_LOADING_CONDMGR;
+    // might already have conduit filename in szConduitPath if we're
+    // called recursively, also check for .DLL as that is the best option
+    // if we're passed a short patch name with a file in it.
+    if (!strstr(szConduitPath, ".DLL") && !strstr(szConduitPath, CONDUIT_FILENAME))
+    {
+      if (szConduitPath[strlen(szConduitPath) - 1] != DIRECTORY_SEPARATOR)
+        strcat(szConduitPath, DIRECTORY_SEPARATOR_STR);
+      strcat(szConduitPath, CONDUIT_FILENAME);
+    }
+
     TCHAR shortConduitPath[_MAX_PATH];
 
     // Try and get the short path name.
@@ -500,16 +514,6 @@ int InstallConduit(HINSTANCE hInstance, TCHAR *installDir, TCHAR *appName)
       // If failed, so just use the long one
       strncpy(shortConduitPath, szConduitPath, _MAX_PATH);
 
-    // take care of any possible string overwrites
-    if((strlen(shortConduitPath) + strlen(DIRECTORY_SEPARATOR_STR) + strlen(CONDUIT_FILENAME)) > _MAX_PATH)
-        return IDS_ERR_LOADING_CONDMGR;
-    // might already have conduit filename in shortConduitPath if we're called recursively
-    if (!strstr(shortConduitPath, CONDUIT_FILENAME)) 
-    {
-      if (shortConduitPath[strlen(shortConduitPath) - 1] != DIRECTORY_SEPARATOR)
-        strcat(shortConduitPath, DIRECTORY_SEPARATOR_STR);
-      strcat(shortConduitPath, CONDUIT_FILENAME);
-    }
     // Make sure the conduit dll exists
     struct _finddata_t dll_file;
     long hFile;
