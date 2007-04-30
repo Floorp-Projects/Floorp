@@ -35,13 +35,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAlertsService.h"
-#include "nsStringAPI.h"
+#include "nsString.h"
 #include "nsAlertsImageLoadListener.h"
 #include "nsIURI.h"
 #include "nsIStreamLoader.h"
 #include "nsNetUtil.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
+#include "nsICategoryManager.h"
+#include "nsMemory.h"
 
 #import "mozGrowlDelegate.h"
 #import "GrowlApplicationBridge.h"
@@ -139,3 +142,42 @@ nsAlertsService::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
+NS_METHOD
+nsAlertsServiceRegister(nsIComponentManager* aCompMgr,
+                        nsIFile* aPath,
+                        const char* registryLocation,
+                        const char* componentType,
+                        const nsModuleComponentInfo* info)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsICategoryManager> catman =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  char* prev = nsnull;
+  rv = catman->AddCategoryEntry("app-startup", "nsAlertsService",
+                                NS_ALERTSERVICE_CONTRACTID, PR_TRUE, PR_TRUE,
+                                &prev);
+  if (prev)
+    nsMemory::Free(prev);
+
+  return rv;
+}
+
+NS_METHOD
+nsAlertsServiceUnregister(nsIComponentManager* aCompMgr,
+                          nsIFile* aPath,
+                          const char* registryLocation,
+                          const nsModuleComponentInfo* info)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsICategoryManager> catman =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = catman->DeleteCategoryEntry("app-startup", "nsAlertsService", PR_TRUE);
+
+  return rv;
+}

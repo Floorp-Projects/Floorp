@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = alerts
 LIBRARY_NAME = growl_s
 FORCE_STATIC_LIB = 1
-FORCE_USE_PIC = 1
+LIBXUL_LIBRARY = 1
 
 CMSRCS = \
   GrowlApplicationBridge.m \
@@ -57,3 +57,13 @@ CSRCS = \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+LDFLAGS += \
+  -framework Carbon \
+  -framework Foundation \
+  -framework AppKit \
+  $(NULL)
+
+EXTRA_DSO_LDOPTS += \
+  $(MOZ_COMPONENT_LIBS) \
+  $(NULL)
