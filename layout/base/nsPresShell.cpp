@@ -3213,6 +3213,35 @@ PresShell::EndLoad(nsIDocument *aDocument)
   mDocumentLoading = PR_FALSE;
 }
 
+#ifdef DEBUG
+void
+PresShell::VerifyHasDirtyRootAncestor(nsIFrame* aFrame)
+{
+  // XXXbz due to bug 372769, can't actually assert anything here...
+  return;
+  
+  // XXXbz shouldn't need this part; remove it once FrameNeedsReflow
+  // handles the root frame correctly.
+  if (!aFrame->GetParent()) {
+    return;
+  }
+        
+  // Make sure that there is a reflow root ancestor of |aFrame| that's
+  // in mDirtyRoots already.
+  while (aFrame && (aFrame->GetStateBits() & NS_FRAME_HAS_DIRTY_CHILDREN)) {
+    if (((aFrame->GetStateBits() & NS_FRAME_REFLOW_ROOT) ||
+         !aFrame->GetParent()) &&
+        mDirtyRoots.IndexOf(aFrame) != -1) {
+      return;
+    }
+
+    aFrame = aFrame->GetParent();
+  }
+  NS_NOTREACHED("Frame has dirty bits set but isn't scheduled to be "
+                "reflowed?");
+}
+#endif
+
 NS_IMETHODIMP
 PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty)
 {
@@ -3301,6 +3330,12 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty)
         }
         mDirtyRoots.AppendElement(f);
       }
+#ifdef DEBUG
+      else {
+        VerifyHasDirtyRootAncestor(f);
+      }
+#endif
+      
       break;
     }
 
@@ -3313,6 +3348,9 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty)
                  "ChildIsDirty didn't do its job");
     if (wasDirty) {
       // This frame was already marked dirty.
+#ifdef DEBUG
+      VerifyHasDirtyRootAncestor(f);
+#endif
       break;
     }
   }
