@@ -6,6 +6,7 @@ package Bootstrap::Step::TinderConfig;
 
 use Bootstrap::Step;
 use Bootstrap::Config;
+use Bootstrap::Util qw(CvsCatfile);
 use MozBuild::TinderLogParse;
 use MozBuild::Util qw(MkdirWithPath);
 
@@ -35,8 +36,8 @@ sub Execute {
           cmdArgs => ['-d', $mozillaCvsroot, 
                       'co', '-d', 'tinderbox-configs',
                       '-r', $branch,
-                      'mozilla/tools/tinderbox-configs/' . 
-                      $product . '/' . $osname],
+                      CvsCatfile('mozilla', 'tools', 'tinderbox-configs',
+                                 $product, $osname)],
           logFile => catfile($logDir, 
            'build_config-checkout-' . $branch . '.log'),
           dir => $configBumpDir,
@@ -51,7 +52,7 @@ sub Execute {
                           'ci', '-m', 
                           '"Automated configuration bump, release for ' 
                            . $product  . ' ' . $version . '"', 
-                          'tinderbox-configs/' . $configFile],
+                          CvsCatfile('tinderbox-configs', $configFile)],
               logFile => catfile($logDir, 
                'build_config-checkin-' . $configFile . '-' . 
                 $branch . '.log'),

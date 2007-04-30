@@ -8,6 +8,7 @@ use Bootstrap::Step::Tag::Mozilla;
 use Bootstrap::Step::Tag::l10n;
 use Bootstrap::Step::Tag::Talkback;
 use Bootstrap::Config;
+use Bootstrap::Util qw(CvsCatfile);
 use File::Copy qw(move);
 use MozBuild::Util qw(MkdirWithPath);
 @ISA = qw(Bootstrap::Step);
@@ -60,7 +61,7 @@ sub Execute {
                   'co', 
                   '-r', $branchTag, 
                   '-D', $pullDate, 
-                  'mozilla/client.mk',
+                  CvsCatfile('mozilla', 'client.mk'),
                  ],
       dir => $cvsrootTagDir,
       logFile => catfile($logDir, 'tag_checkout_client_mk.log'),
@@ -88,9 +89,10 @@ sub Execute {
             $this->Log(msg => 'Tag running substep ' . $stepName);
             my $step = "Bootstrap::Step::Tag::$stepName"->new();
             $step->Execute();
+            $step->Verify();
         };
         if ($@) {
-            die("Tag substep $stepName Execute died: $@");
+            die("Tag substep $stepName died: $@");
         }
         $currentStep += 1;
     }
@@ -106,22 +108,6 @@ sub Verify {
       log => catfile($logDir, 'tag_mozilla-checkout.log'),
       checkFor => '^U',
     );
-
-    # Call substeps
-    my $numSteps = scalar(@subSteps);
-    my $currentStep = 0;
-    while ($currentStep < $numSteps) {
-        my $stepName = $subSteps[$currentStep];
-        eval {
-            $this->Log(msg => 'Tag running substep ' . $stepName);
-            my $step = "Bootstrap::Step::Tag::$stepName"->new();
-            $step->Verify();
-        };
-        if ($@) {
-            die("Tag substep $stepName Verify died: $@");
-        }
-        $currentStep += 1;
-    }
 }
 
 sub CvsTag {

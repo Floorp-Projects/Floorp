@@ -5,6 +5,7 @@ package Bootstrap::Step::Tag::Bump;
 use Bootstrap::Step;
 use Bootstrap::Config;
 use Bootstrap::Step::Tag;
+use Bootstrap::Util qw(CvsCatfile);
 use File::Copy qw(move);
 use MozBuild::Util qw(MkdirWithPath);
 @ISA = ("Bootstrap::Step::Tag");
@@ -50,9 +51,10 @@ sub Execute {
                   'co', 
                   '-r', $branchTag, 
                   '-D', $pullDate, 
-                  catfile('mozilla', 'client.mk'),
-                  catfile('mozilla', $moduleVer),
-                  catfile('mozilla', $versionTxt),
+                  CvsCatfile('mozilla', 'client.mk'),
+                  CvsCatfile('mozilla', $appName, 'app', 'module.ver'),
+                  CvsCatfile('mozilla', $appName, 'config', 'version.txt'),
+                  CvsCatfile('mozilla', 'config', 'milestone.txt'),
                  ],
       dir => $cvsrootTagDir,
       logFile => catfile($logDir, 'tag-bump_checkout.log'),
@@ -134,7 +136,7 @@ sub Execute {
         }
     }
 
-    my $bumpCiMsg = 'version bump, remove pre tag for ' 
+    my $bumpCiMsg = 'Automated version bump, remove pre tag for ' 
                         . $product . ' ' . $version . ' release on ' 
                         . $minibranchTag;
     $this->Shell(
@@ -167,12 +169,10 @@ sub Verify {
     }
 
     foreach my $file (@bumpFiles) {
-        foreach my $rule ('^Checking in ' . $file, '^done') {
-            $this->CheckLog(
-              log => catfile($logDir, 'tag-bump_checkin.log'),
-              checkFor => $rule,
-            );
-        }
+        $this->CheckLog(
+          log => catfile($logDir, 'tag-bump_checkin.log'),
+          checkFor => $file,
+        );
     }
 }
 
