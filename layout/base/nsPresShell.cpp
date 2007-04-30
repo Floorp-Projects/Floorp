@@ -1066,6 +1066,7 @@ protected:
   void DoReflow(nsIFrame* aFrame);
 #ifdef DEBUG
   void DoVerifyReflow();
+  void VerifyHasDirtyRootAncestor(nsIFrame* aFrame);
 #endif
 
   friend class nsPresShellEventCB;
