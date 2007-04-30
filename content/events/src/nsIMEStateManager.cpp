@@ -85,7 +85,7 @@ nsIMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
     return NS_OK;
 
   // Current IME transaction should commit
-  nsIKBStateControl* kb = GetKBStateControl(sPresContext);
+  nsCOMPtr<nsIKBStateControl> kb = GetKBStateControl(sPresContext);
   if (kb) {
     nsresult rv = kb->CancelIMEComposition();
     if (NS_FAILED(rv))
@@ -109,7 +109,7 @@ nsIMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  nsIKBStateControl* kb = GetKBStateControl(aPresContext);
+  nsCOMPtr<nsIKBStateControl> kb = GetKBStateControl(aPresContext);
   if (!kb) {
     // This platform doesn't support IME controlling
     return NS_OK;
@@ -138,7 +138,7 @@ nsIMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
 
   // Current IME transaction should commit
   if (sPresContext) {
-    nsIKBStateControl* oldKB;
+    nsCOMPtr<nsIKBStateControl> oldKB;
     if (sPresContext == aPresContext)
       oldKB = kb;
     else
@@ -183,7 +183,7 @@ nsIMEStateManager::OnDeactivate(nsPresContext* aPresContext)
   // may be changed on other applications.
   sContent = nsnull;
   // We should enable the IME state for other applications.
-  nsIKBStateControl* kb = GetKBStateControl(aPresContext);
+  nsCOMPtr<nsIKBStateControl> kb = GetKBStateControl(aPresContext);
   if (kb)
     SetIMEState(aPresContext, nsIContent::IME_STATUS_ENABLE, kb);
 #endif // NS_KBSC_USE_SHARED_CONTEXT
