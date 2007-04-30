@@ -1055,13 +1055,6 @@ protected:
 
   void UnsuppressAndInvalidate();
 
-  // This method should be called after mDirtyRoots has been emptied,
-  // but after the state in the presshell is such that it's safe to
-  // flush (i.e. mIsReflowing == PR_FALSE) If there are no load-created
-  // reflow commands and we blocked onload on the document, we'll
-  // unblock it.
-  void DoneRemovingDirtyRoots();
-
   void     WillCauseReflow() { ++mChangeNestCount; }
   nsresult DidCauseReflow();
   void     WillDoReflow();
@@ -1169,7 +1162,6 @@ protected:
   nsVoidArray mDirtyRoots;
 
   PRPackedBool mDocumentLoading;
-  PRPackedBool mDocumentOnloadBlocked;
   PRPackedBool mIsReflowing;
 
   PRPackedBool mIgnoreFrameDestruction;
@@ -1736,9 +1728,6 @@ PresShell::Destroy()
     mViewEventListener->SetPresShell((nsIPresShell*)nsnull);
     NS_RELEASE(mViewEventListener);
   }
-
-  NS_ASSERTION(!mDocumentOnloadBlocked,
-               "CancelAllPendingReflows() didn't unblock onload?");
 
   KillResizeEventTimer();
 
@@ -3377,8 +3366,6 @@ NS_IMETHODIMP
 PresShell::CancelAllPendingReflows()
 {
   mDirtyRoots.Clear();
-
-  DoneRemovingDirtyRoots();
 
   return NS_OK;
 }
@@ -6036,12 +6023,6 @@ PresShell::PostReflowEvent()
       mDirtyRoots.Count() == 0)
     return;
 
-  // Block onload if needed until the event fires
-  if (mDocumentLoading && !mDocumentOnloadBlocked) {
-    mDocument->BlockOnload();
-    mDocumentOnloadBlocked = PR_TRUE;
-  }
-  
   nsRefPtr<ReflowEvent> ev = new ReflowEvent(this);
   if (NS_FAILED(NS_DispatchToCurrentThread(ev))) {
     NS_WARNING("failed to dispatch reflow event");
@@ -6264,11 +6245,6 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
       mIsReflowing = PR_FALSE;
     }
 
-    // If any new reflow commands were enqueued during the reflow,
-    // schedule another reflow event to process them.
-    if (mDirtyRoots.Count())
-      PostReflowEvent();
-
     DidDoReflow();
 
 #ifdef DEBUG
@@ -6279,9 +6255,13 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     DoVerifyReflow();
 #endif
 
-    // If there are no more reflow commands in the queue, we'll want
-    // to unblock onload.
-    DoneRemovingDirtyRoots();
+    // If any new reflow commands were enqueued during the reflow, schedule
+    // another reflow event to process them.  Note that we want to do this
+    // after DidDoReflow(), since that method can change whether there are
+    // dirty roots around by flushing, and there's no point in posting a reflow
+    // event just to have the flush revoke it.
+    if (mDirtyRoots.Count())
+      PostReflowEvent();
   }
   
   MOZ_TIMER_DEBUGLOG(("Stop: Reflow: PresShell::ProcessReflowCommands(), this=%p\n", this));
@@ -6303,19 +6283,6 @@ void
 PresShell::ClearReflowEventStatus()
 {
   mReflowEvent.Forget();
-}
-
-void
-PresShell::DoneRemovingDirtyRoots()
-{
-  // We want to unblock here even if we're destroying, since onload
-  // can well fire with no presentation in sight.  So just check
-  // whether we actually blocked onload.
-  // XXXldb Do we want to readd the mIsReflowing check?
-  if (mDocumentOnloadBlocked && mDirtyRoots.Count() == 0 && !mIsReflowing) {
-    mDocument->UnblockOnload(PR_FALSE);
-    mDocumentOnloadBlocked = PR_FALSE;
-  }
 }
 
 #ifdef MOZ_XUL
