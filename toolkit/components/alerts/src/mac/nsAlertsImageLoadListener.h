@@ -40,7 +40,7 @@
 #import "mozGrowlDelegate.h"
 
 #include "nsIStreamLoader.h"
-#include "nsStringAPI.h"
+#include "nsString.h"
 
 class nsAlertsImageLoadListener : public nsIStreamLoaderObserver
 {

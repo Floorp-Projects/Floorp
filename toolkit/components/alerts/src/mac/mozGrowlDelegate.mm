@@ -37,7 +37,7 @@
 #import "mozGrowlDelegate.h"
 
 #include "nsIObserver.h"
-#include "nsStringAPI.h"
+#include "nsString.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"

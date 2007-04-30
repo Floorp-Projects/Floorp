@@ -39,6 +39,7 @@
 
 #include "nsIAlertsService.h"
 #include "nsIObserver.h"
+#include "nsToolkitCompsCID.h"
 
 struct GrowlDelegateWrapper;
 
@@ -56,5 +57,16 @@ private:
   GrowlDelegateWrapper* mDelegate;
   virtual ~nsAlertsService();
 };
+
+class nsModuleComponentInfo;
+NS_METHOD nsAlertsServiceRegister(nsIComponentManager* aCompMgr,
+                                  nsIFile *aPath,
+                                  const char* registryLocation,
+                                  const char* componentType,
+                                  const nsModuleComponentInfo* info);
+NS_METHOD nsAlertsServiceUnregister(nsIComponentManager* aCompMgr,
+                                    nsIFile* aPath,
+                                    const char* registryLocation,
+                                    const nsModuleComponentInfo* info);
 
 #endif // nsAlertsService_h_
