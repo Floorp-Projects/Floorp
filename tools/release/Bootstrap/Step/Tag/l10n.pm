@@ -5,6 +5,7 @@ package Bootstrap::Step::Tag::l10n;
 use Bootstrap::Step;
 use Bootstrap::Config;
 use Bootstrap::Step::Tag;
+use Bootstrap::Util qw(CvsCatfile);
 use File::Copy qw(move);
 use MozBuild::Util qw(MkdirWithPath);
 @ISA = ("Bootstrap::Step::Tag");
@@ -54,7 +55,7 @@ sub Execute {
         $this->Shell(
             cmd => 'cvs',
             cmdArgs => ['-d', $l10nCvsroot, 'co', '-r', $branchTag, '-D',
-                        $l10n_pullDate, catfile('l10n', $locale)],
+                        $l10n_pullDate, CvsCatfile('l10n', $locale)],
             dir => catfile($releaseTagDir, 'l10n'),
             logFile => catfile($logDir, 'tag-l10n_checkout.log'),
         );

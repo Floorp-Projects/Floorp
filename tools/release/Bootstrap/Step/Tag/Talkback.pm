@@ -5,6 +5,7 @@ package Bootstrap::Step::Tag::Talkback;
 use Bootstrap::Step;
 use Bootstrap::Config;
 use Bootstrap::Step::Tag;
+use Bootstrap::Util qw(CvsCatfile);
 use File::Copy qw(move);
 use MozBuild::Util qw(MkdirWithPath);
 @ISA = ("Bootstrap::Step::Tag");
@@ -35,7 +36,7 @@ sub Execute {
     $this->Shell(
       cmd => 'cvs',
       cmdArgs => ['-d', $mofoCvsroot, 'co', '-r', $branchTag, '-D', 
-                  $pullDate, catfile('talkback', 'fullsoft')],
+                  $pullDate, CvsCatfile('talkback', 'fullsoft')],
       dir => catfile($releaseTagDir, 'mofo'),
       logFile => catfile($logDir, 'tag-talkback_mofo-checkout.log'),
     );

@@ -5,6 +5,7 @@
 package Bootstrap::Step::Updates;
 use Bootstrap::Step;
 use Bootstrap::Config;
+use Bootstrap::Util qw(CvsCatfile);
 use File::Find qw(find);
 use MozBuild::Util qw(MkdirWithPath);
 @ISA = ("Bootstrap::Step");
@@ -15,6 +16,7 @@ sub Execute {
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
     my $logDir = $config->Get(var => 'logDir');
+    my $oldVersion = $config->Get(var => 'oldVersion');
     my $version = $config->Get(var => 'version');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $mofoCvsroot = $config->Get(var => 'mofoCvsroot');
@@ -34,7 +36,7 @@ sub Execute {
     $this->Shell(
       cmd => 'cvs',
       cmdArgs => ['-d', $mozillaCvsroot, 'co', '-d', 'patcher', 
-                    catfile('mozilla', 'tools', 'patcher')],
+                  CvsCatfile('mozilla', 'tools', 'patcher')],
       logFile => catfile($logDir, 'updates_patcher-checkout.log'),
       dir => $versionedUpdateDir,
     );
@@ -43,7 +45,7 @@ sub Execute {
     $this->Shell(
       cmd => 'cvs',
       cmdArgs => ['-d', $mozillaCvsroot, 'co', '-d', 'MozBuild', 
-                    catfile('mozilla', 'tools', 'release', 'MozBuild')],
+                  CvsCatfile('mozilla', 'tools', 'release', 'MozBuild')],
       logFile => catfile($logDir, 'updates_patcher-utils-checkout.log'),
       dir => catfile($versionedUpdateDir, 'patcher'),
     );
@@ -52,7 +54,7 @@ sub Execute {
     $this->Shell(
       cmd => 'cvs',
       cmdArgs => ['-d', $mofoCvsroot, 'co', '-d', 'config',  
-                    catfile('release', 'patcher', $patcherConfig)],
+                  CvsCatfile('release', 'patcher', $patcherConfig)],
       logFile => catfile($logDir, 'updates_patcher-config-checkout.log'),
       dir => $versionedUpdateDir,
     );
@@ -105,7 +107,6 @@ sub Verify {
     my $config = new Bootstrap::Config();
     my $logDir = $config->Get(var => 'logDir');
     my $version = $config->Get(var => 'version');
-    my $oldVersion = $config->Get(var => 'oldVersion');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $verifyDir = $config->Get(var => 'verifyDir');
     my $product = $config->Get(var => 'product');
@@ -120,7 +121,7 @@ sub Verify {
         $this->Shell(
           cmd => 'cvs',
           cmdArgs => ['-d', $mozillaCvsroot, 'co', '-d', $dir,
-                        catfile('mozilla', 'testing', 'release', $dir)],
+                      CvsCatfile('mozilla', 'testing', 'release', $dir)],
           logFile => catfile($logDir, 
                                'updates_verify_checkout-' . $dir . '.log'),
           dir => $verifyDirVersion,

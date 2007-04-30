@@ -6,6 +6,7 @@ package Bootstrap::Step::Stage;
 
 use Bootstrap::Step;
 use Bootstrap::Config;
+use Bootstrap::Util qw(CvsCatfile);
 use File::Copy qw(copy move);
 use File::Find qw(find);
 use File::Path qw(rmtree);
@@ -358,7 +359,8 @@ sub Execute {
       cmdArgs => ['-d', $mozillaCvsroot, 
                   'co', '-dconfig',
                   '-r', $releaseTag,
-                  catfile('mozilla', $appName, 'locales', 'shipped-locales')],
+                  CvsCatfile('mozilla', $appName, 'locales', 
+                             'shipped-locales')],
       dir => catfile($stageDir, 'batch1'),
       logFile => catfile($logDir, 'stage-shipped-locales_checkout.log'));
 
