@@ -73,6 +73,8 @@ function init()
                     print('actual = ' + actual);
                     TEST(1, expect, actual);
                     END();
+                    gDelayTestDriverEnd = false;
+                    jsTestDriverEnd();
                 }
             };
 
