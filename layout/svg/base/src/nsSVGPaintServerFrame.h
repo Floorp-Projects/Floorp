@@ -60,11 +60,6 @@ public:
                                   nsSVGGeometryFrame *aSource,
                                   float aOpacity,
                                   void **aClosure) = 0;
-  /*
-   * Clean up paint server after rendering
-   */
-  virtual void CleanupPaintServer(gfxContext *aContext, void *aClosure) = 0;
-
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 

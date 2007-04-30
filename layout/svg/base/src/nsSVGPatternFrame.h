@@ -44,12 +44,14 @@
 #include "nsIDOMSVGAnimatedString.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsSVGPaintServerFrame.h"
+#include "gfxMatrix.h"
 
 class nsIDOMSVGAnimatedPreserveAspectRatio;
 class nsIFrame;
 class nsSVGLength2;
 class nsSVGElement;
 class gfxContext;
+class gfxASurface;
 
 typedef nsSVGPaintServerFrame  nsSVGPatternFrameBase;
 
@@ -63,8 +65,8 @@ public:
 
   nsSVGPatternFrame(nsStyleContext* aContext) : nsSVGPatternFrameBase(aContext) {}
 
-  nsresult PaintPattern(cairo_surface_t **surface,
-                        nsIDOMSVGMatrix **patternMatrix,
+  nsresult PaintPattern(gfxASurface **surface,
+                        gfxMatrix *patternMatrix,
                         nsSVGGeometryFrame *aSource,
                         float aGraphicOpacity);
 
@@ -73,7 +75,6 @@ public:
                                   nsSVGGeometryFrame *aSource,
                                   float aGraphicOpacity,
                                   void **aClosure);
-  virtual void CleanupPaintServer(gfxContext *aContext, void *aClosure);
 
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -130,7 +131,7 @@ protected:
 
   PRUint16 GetPatternUnits();
   PRUint16 GetPatternContentUnits();
-  nsresult GetPatternTransform(nsIDOMSVGMatrix **retval);
+  gfxMatrix GetPatternTransform();
 
   NS_IMETHOD GetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio 
                                                      **aPreserveAspectRatio);
@@ -138,8 +139,7 @@ protected:
   NS_IMETHOD GetViewBox(nsIDOMSVGRect * *aMatrix);
   nsresult   GetPatternRect(nsIDOMSVGRect **patternRect, nsIDOMSVGRect *bbox, 
                             nsSVGElement *content);
-  nsresult   GetPatternMatrix(nsIDOMSVGMatrix **aCTM, 
-                              nsIDOMSVGRect *bbox,
+  gfxMatrix  GetPatternMatrix(nsIDOMSVGRect *bbox,
                               nsIDOMSVGRect *callerBBox,
                               nsIDOMSVGMatrix *callerCTM);
   nsresult   ConstructCTM(nsIDOMSVGMatrix **ctm, nsIDOMSVGRect *callerBBox);
