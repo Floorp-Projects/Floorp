@@ -868,9 +868,6 @@ function BrowserStartup()
       if ((screen.availWidth / 2) >= 800)
         defaultWidth = (screen.availWidth / 2) - 20;
       defaultHeight = screen.availHeight - 10;
-#ifdef MOZ_WIDGET_GTK
-#define USE_HEIGHT_ADJUST
-#endif
 #ifdef MOZ_WIDGET_GTK2
 #define USE_HEIGHT_ADJUST
 #endif

@@ -639,7 +639,7 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
                                aReflowState.mComputedMaxHeight);
     }
 
-#if defined (MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2) || defined (MOZ_WIDGET_XLIB)  
+#if defined (MOZ_WIDGET_GTK2)
     // We need to make sure that the size of the object frame does not
     // exceed the maximum size of X coordinates.  See bug #225357 for
     // more information.  In theory Gtk2 can handle large coordinates,

@@ -174,12 +174,10 @@
 #include "nsContentErrors.h"
 
 #ifdef XP_UNIX
-#if defined(MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
+#if defined (MOZ_WIDGET_GTK2)
 #include <gdk/gdkx.h> // for GDK_DISPLAY()
 #elif defined(MOZ_WIDGET_QT)
 #include <qwindowdefs.h> // for qt_xdisplay()
-#elif defined(MOZ_WIDGET_XLIB)
-#include "xlibrgb.h" // for xlib_rgb_get_display()
 #endif
 #endif
 
@@ -2635,12 +2633,10 @@ NS_IMETHODIMP nsPluginHostImpl::GetValue(nsPluginManagerVariable aVariable, void
 #if defined(XP_UNIX) && !defined(XP_MACOSX) && defined(MOZ_X11)
   if (nsPluginManagerVariable_XDisplay == aVariable) {
     Display** value = NS_REINTERPRET_CAST(Display**, aValue);
-#if defined(MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
+#if defined (MOZ_WIDGET_GTK2)
     *value = GDK_DISPLAY();
 #elif defined(MOZ_WIDGET_QT)
     *value = qt_xdisplay();
-#elif defined(MOZ_WIDGET_XLIB)
-    *value = xxlib_rgb_get_display(xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE));
 #endif
     if (!(*value)) {
       return NS_ERROR_FAILURE;
@@ -6800,7 +6796,7 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
     if (owner) {
       nsPluginWindow    *window = nsnull;
       owner->GetWindow(window);
-#if defined (MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
+#if defined (MOZ_WIDGET_GTK2)
       // Should call GetPluginPort() here.
       // This part is copied from nsPluginInstanceOwner::GetPluginPort(). 
       nsCOMPtr<nsIWidget> widget;

@@ -94,7 +94,7 @@ CPPSRCS += nsBaseFilePicker.cpp
 REQUIRES += docshell view intl
 endif
 
-ifneq (,$(filter gtk gtk2 qt windows mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk2 qt windows mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsNativeTheme.cpp
 endif
 

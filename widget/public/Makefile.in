@@ -80,11 +80,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 EXPORTS		+= nsIDragSessionBeOS.h
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),xlib)
-EXPORTS		+= nsIDragSessionXlib.h
-endif
-
-ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 EXPORTS		+= nsIDragSessionGTK.h
 endif
 

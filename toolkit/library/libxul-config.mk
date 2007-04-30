@@ -232,7 +232,7 @@ ifdef MOZ_MATHML
 COMPONENT_LIBS += ucvmath
 endif
 
-ifneq (,$(filter xlib,$(MOZ_WIDGET_TOOLKIT))$(MOZ_ENABLE_XLIB)$(MOZ_ENABLE_XPRINT))
+ifneq (,$(MOZ_ENABLE_XPRINT))
 STATIC_LIBS += xlibrgb
 endif
 
@@ -242,15 +242,6 @@ STATIC_LIBS += xprintutil
 COMPONENTS_LIBS += gfxxprint
 endif
 
-ifdef MOZ_ENABLE_XLIB
-STATIC_LIBS += xlibxtbin
-endif
-
-ifdef MOZ_ENABLE_GTK
-STATIC_LIBS += gtksuperwin
-COMPONENT_LIBS += widget_gtk
-endif
-
 ifdef MOZ_ENABLE_GTK2
 COMPONENT_LIBS += widget_gtk2
 ifdef MOZ_PREF_EXTENSIONS
@@ -258,7 +249,7 @@ COMPONENT_LIBS += system-pref
 endif
 endif
 
-ifneq (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2))
+ifneq (,$(MOZ_ENABLE_GTK2))
 STATIC_LIBS += gtkxtbin
 endif
 
@@ -298,14 +289,11 @@ else # Platform-specific GFX layer
   ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
   COMPONENT_LIBS += widget_qt
   endif
-  ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+  ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
   COMPONENT_LIBS += gfx_gtk
   endif
   ifdef MOZ_ENABLE_QT
   COMPONENT_LIBS += gfx_qt
-  endif
-  ifdef MOZ_ENABLE_XLIB
-  COMPONENT_LIBS += gfx_xlib
   endif
   ifdef MOZ_ENABLE_PHOTON
   COMPONENT_LIBS += gfx_photon
@@ -328,9 +316,6 @@ ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
 COMPONENT_LIBS += widget_qt
 endif
 
-ifdef MOZ_ENABLE_XLIB
-COMPONENT_LIBS += widget_xlib
-endif
 ifdef MOZ_ENABLE_PHOTON
 COMPONENT_LIBS += widget_photon
 endif

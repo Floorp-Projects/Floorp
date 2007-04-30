@@ -86,16 +86,6 @@ nsNativeThemeGTK::nsNativeThemeGTK()
 
   memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
   memset(mSafeWidgetStates, 0, sizeof(mSafeWidgetStates));
-
-#ifdef MOZ_WIDGET_GTK
-  // Look up the symbol for gtk_style_get_prop_experimental
-  PRLibrary* gtkLibrary;
-  PRFuncPtr stylePropFunc = PR_FindFunctionSymbolAndLibrary("gtk_style_get_prop_experimental", &gtkLibrary);
-  if (stylePropFunc) {
-    moz_gtk_enable_style_props((style_prop_t) stylePropFunc);
-    PR_UnloadLibrary(gtkLibrary);
-  }
-#endif
 }
 
 nsNativeThemeGTK::~nsNativeThemeGTK() {
@@ -1032,7 +1022,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_RADIO_CONTAINER:
   case NS_THEME_CHECKBOX_LABEL:
   case NS_THEME_RADIO_LABEL:
-#ifdef MOZ_WIDGET_GTK2
   case NS_THEME_MENUBAR:
   case NS_THEME_MENUPOPUP:
   case NS_THEME_MENUITEM:
@@ -1042,7 +1031,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_DIALOG:
   case NS_THEME_DROPDOWN:
   case NS_THEME_DROPDOWN_TEXT:
-#endif
     return !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
   }
 

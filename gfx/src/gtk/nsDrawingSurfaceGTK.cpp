@@ -272,11 +272,6 @@ nsresult nsDrawingSurfaceGTK :: Init(GdkDrawable *aDrawable, GdkGC *aGC)
   mGC = gdk_gc_ref(aGC);
   mPixmap = aDrawable;
 
-#ifdef MOZ_WIDGET_GTK
-  mWidth  = ((GdkWindowPrivate*)aDrawable)->width;
-  mHeight = ((GdkWindowPrivate*)aDrawable)->height;
-#endif /* MOZ_WIDGET_GTK */
-
 #ifdef MOZ_WIDGET_GTK2
   gint width = 0;
   gint height = 0;
