@@ -89,7 +89,6 @@
 #include "EmbedContentListener.h"
 #include "EmbedEventListener.h"
 #include "EmbedWindowCreator.h"
-#ifdef MOZ_WIDGET_GTK2
 #include "GtkPromptService.h"
 #include "nsICookiePromptService.h"
 #include "EmbedCertificates.h"
@@ -99,9 +98,6 @@
 #endif
 #include "EmbedGlobalHistory.h"
 #include "EmbedFilePicker.h"
-#else
-#include "nsNativeCharsetUtils.h"
-#endif
 
 #ifdef MOZ_ACCESSIBILITY_ATK
 #include "nsIAccessibilityService.h"
@@ -130,7 +126,6 @@
 static NS_DEFINE_CID(kCacheServiceCID,           NS_CACHESERVICE_CID);
 static nsICacheService* sCacheService;
 
-#ifdef MOZ_WIDGET_GTK2
 static EmbedCommon* sEmbedCommon = nsnull;
 
 /* static */
@@ -170,7 +165,6 @@ EmbedCommon::Init(void)
     mCommon = NULL;
     return NS_OK;
 }
-#endif
 
 PRUint32     EmbedPrivate::sWidgetCount = 0;
 char        *EmbedPrivate::sPath        = nsnull;
@@ -266,7 +260,6 @@ GTKEmbedDirectoryProvider::GetFiles(const char *aKey,
   return dp2->GetFiles(aKey, aResult);
 }
 
-#ifdef MOZ_WIDGET_GTK2
 NS_GENERIC_FACTORY_CONSTRUCTOR(GtkPromptService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(EmbedCertificates, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(EmbedDownloadMgr)
@@ -393,12 +386,6 @@ static const nsModuleComponentInfo defaultAppComps[] = {
 const nsModuleComponentInfo *EmbedPrivate::sAppComps = defaultAppComps;
 int   EmbedPrivate::sNumAppComps = sizeof(defaultAppComps) / sizeof(nsModuleComponentInfo);
 
-#else
-
-const nsModuleComponentInfo *EmbedPrivate::sAppComps = nsnull;
-int   EmbedPrivate::sNumAppComps = 0;
-
-#endif
 
 EmbedPrivate::EmbedPrivate(void)
 {
@@ -600,7 +587,6 @@ EmbedPrivate::Hide(void)
 void
 EmbedPrivate::Resize(PRUint32 aWidth, PRUint32 aHeight)
 {
-#ifdef MOZ_WIDGET_GTK2
   PRInt32 sub   = 0;
   PRInt32 diff  = 0;
 
@@ -616,16 +602,14 @@ EmbedPrivate::Resize(PRUint32 aWidth, PRUint32 aHeight)
       }
     }
   }
-#endif
+
   mWindow->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION |
                           nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER,
                           0, 0, aWidth, aHeight);
 
-#ifdef MOZ_WIDGET_GTK2
   if (sub > 0 && diff >= 0){
     SetScrollTop(sub + diff);
   }
-#endif
 }
 
 void
@@ -684,15 +668,7 @@ EmbedPrivate::Destroy(void)
 void
 EmbedPrivate::SetURI(const char *aURI)
 {
-#ifdef MOZ_WIDGET_GTK
-  // XXX: Even though NS_CopyNativeToUnicode is not designed for non-filenames,
-  // we know that it will do "the right thing" on UNIX.
-  NS_CopyNativeToUnicode(nsDependentCString(aURI), mURI);
-#endif
-
-#ifdef MOZ_WIDGET_GTK2
   mURI.Assign(NS_ConvertUTF8toUTF16(aURI));
-#endif
 }
 
 void
@@ -848,9 +824,7 @@ EmbedPrivate::PopStartup(void)
     // shut down XPCOM/Embedding
     XRE_TermEmbedding();
 
-#ifdef MOZ_WIDGET_GTK2
     EmbedGlobalHistory::DeleteInstance();
-#endif
   }
 }
 
@@ -1024,12 +998,10 @@ EmbedPrivate::ContentStateChange(void)
 
   AttachListeners();
 
-#ifdef MOZ_WIDGET_GTK2
 #ifdef MOZ_GTKPASSWORD_INTERFACE
   EmbedPasswordMgr *passwordManager = EmbedPasswordMgr::GetInstance();
   if (passwordManager)
     passwordManager->mFormAttachCount = PR_FALSE;
-#endif
 #endif
 }
 
@@ -1063,7 +1035,6 @@ EmbedPrivate::ContentFinishedLoading(void)
       mWindow->SetVisibility(PR_TRUE);
   }
 
-#ifdef MOZ_WIDGET_GTK2
 #ifdef MOZ_GTKPASSWORD_INTERFACE
   EmbedPasswordMgr *passwordManager = EmbedPasswordMgr::GetInstance();
   if (passwordManager && passwordManager->mFormAttachCount) {
@@ -1102,45 +1073,7 @@ EmbedPrivate::ContentFinishedLoading(void)
     passwordManager->mFormAttachCount = PR_FALSE;
   }
 #endif
-#endif
 }
-
-#ifdef MOZ_WIDGET_GTK
-// handle focus in and focus out events
-void
-EmbedPrivate::TopLevelFocusIn(void)
-{
-  if (mIsDestroyed)
-    return;
-
-  nsCOMPtr<nsPIDOMWindow> piWin;
-  GetPIDOMWindow(getter_AddRefs(piWin));
-
-  if (!piWin)
-    return;
-
-  nsIFocusController *focusController = piWin->GetRootFocusController();
-  if (focusController)
-    focusController->SetActive(PR_TRUE);
-}
-
-void
-EmbedPrivate::TopLevelFocusOut(void)
-{
-  if (mIsDestroyed)
-    return;
-
-  nsCOMPtr<nsPIDOMWindow> piWin;
-  GetPIDOMWindow(getter_AddRefs(piWin));
-
-  if (!piWin)
-    return;
-
-  nsIFocusController *focusController = piWin->GetRootFocusController();
-  if (focusController)
-    focusController->SetActive(PR_FALSE);
-}
-#endif /* MOZ_WIDGET_GTK */
 
 void
 EmbedPrivate::ChildFocusIn(void)
@@ -1148,7 +1081,6 @@ EmbedPrivate::ChildFocusIn(void)
   if (mIsDestroyed)
     return;
 
-#ifdef MOZ_WIDGET_GTK2
   nsresult rv;
   nsCOMPtr<nsIWebBrowser> webBrowser;
   rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
@@ -1160,17 +1092,6 @@ EmbedPrivate::ChildFocusIn(void)
     return;
 
   webBrowserFocus->Activate();
-#endif /* MOZ_WIDGET_GTK2 */
-
-#ifdef MOZ_WIDGET_GTK
-  nsCOMPtr<nsPIDOMWindow> piWin;
-  GetPIDOMWindow(getter_AddRefs(piWin));
-
-  if (!piWin)
-    return;
-
-  piWin->Activate();
-#endif /* MOZ_WIDGET_GTK */
 }
 
 void
@@ -1179,7 +1100,6 @@ EmbedPrivate::ChildFocusOut(void)
   if (mIsDestroyed)
     return;
 
-#ifdef MOZ_WIDGET_GTK2
   nsresult rv;
   nsCOMPtr<nsIWebBrowser> webBrowser;
   rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
@@ -1191,23 +1111,6 @@ EmbedPrivate::ChildFocusOut(void)
     return;
 
   webBrowserFocus->Deactivate();
-#endif /* MOZ_WIDGET_GTK2 */
-
-#ifdef MOZ_WIDGET_GTK
-  nsCOMPtr<nsPIDOMWindow> piWin;
-  GetPIDOMWindow(getter_AddRefs(piWin));
-
-  if (!piWin)
-    return;
-
-  piWin->Deactivate();
-
-  // but the window is still active until the toplevel gets a focus
-  // out
-  nsIFocusController *focusController = piWin->GetRootFocusController();
-  if (focusController)
-    focusController->SetActive(PR_TRUE);
-#endif /* MOZ_WIDGET_GTK */
 }
 
 // Get the event listener for the chrome event handler.
@@ -1846,7 +1749,6 @@ EmbedPrivate::GetMIMEInfo(const char **aMime, nsIDOMNode *aDOMNode)
 {
   NS_ENSURE_ARG_POINTER(aMime);
   nsresult rv;
-#ifdef MOZ_WIDGET_GTK2
   if (aDOMNode && mEventListener) {
     EmbedContextMenuInfo * ctx = mEventListener->GetContextInfo();
     if (!ctx)
@@ -1857,7 +1759,6 @@ EmbedPrivate::GetMIMEInfo(const char **aMime, nsIDOMNode *aDOMNode)
       rv = request->GetMimeType((char**)aMime);
     return rv;
   }
-#endif
 
   nsCOMPtr<nsIWebBrowser> webBrowser;
   rv = mWindow->GetWebBrowser(getter_AddRefs(webBrowser));

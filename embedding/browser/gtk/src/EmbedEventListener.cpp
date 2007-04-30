@@ -89,9 +89,7 @@ EmbedEventListener::Init(EmbedPrivate *aOwner)
   mOwner = aOwner;
   mCtxInfo = nsnull;
   mClickCount = 1;
-#ifdef MOZ_WIDGET_GTK2
   mCtxInfo = new EmbedContextMenuInfo(aOwner);
-#endif
   mOwner->mNeedFav = PR_TRUE;
   return NS_OK;
 }
@@ -163,7 +161,7 @@ EmbedEventListener::HandleEvent(nsIDOMEvent* aDOMEvent)
 {
   nsString eventType;
   aDOMEvent->GetType(eventType);
-#ifdef MOZ_WIDGET_GTK2
+
   if (eventType.EqualsLiteral("focus"))
     if (mCtxInfo->GetFormControlType(aDOMEvent)) {
       if (mCtxInfo->mEmbedCtxType & GTK_MOZ_EMBED_CTX_INPUT) {
@@ -177,7 +175,6 @@ EmbedEventListener::HandleEvent(nsIDOMEvent* aDOMEvent)
         }
       }
     }
-#endif
 
   if (eventType.EqualsLiteral("DOMLinkAdded")) {
 
@@ -341,9 +338,7 @@ EmbedEventListener::MouseDown(nsIDOMEvent* aDOMEvent)
   }
 
   // handling event internally.
-#ifdef MOZ_WIDGET_GTK2
   HandleSelection(mouseEvent);
-#endif
 
   return NS_OK;
 }
@@ -539,10 +534,8 @@ EmbedEventListener::MouseMove(nsIDOMEvent* aDOMEvent)
                         (void *)mouseEvent, &return_val);
         if (!return_val) {
           sIsScrolling = PR_TRUE;
-#ifdef MOZ_WIDGET_GTK2
           if (mCtxInfo)
             rv = mCtxInfo->GetElementForScroll(aDOMEvent);
-#endif
         } else {
           sMPressed = PR_FALSE;
           sIsScrolling = PR_FALSE;
@@ -552,7 +545,6 @@ EmbedEventListener::MouseMove(nsIDOMEvent* aDOMEvent)
       {
         if (sLongPressTimer)
           g_source_remove(sLongPressTimer);
-#ifdef MOZ_WIDGET_GTK2
         if (mCtxInfo->mNSHHTMLElementSc) {
           PRInt32 x, y;
           mCtxInfo->mNSHHTMLElementSc->GetScrollTop(&y);
@@ -560,9 +552,7 @@ EmbedEventListener::MouseMove(nsIDOMEvent* aDOMEvent)
 #ifdef MOZ_SCROLL_TOP_LEFT_HACK
           rv = mCtxInfo->mNSHHTMLElementSc->ScrollTopLeft(y - subY, x - subX);
 #endif
-        } else
-#endif
-        {
+        } else {
           rv = NS_ERROR_UNEXPECTED;
         }
         if (rv == NS_ERROR_UNEXPECTED) {
@@ -592,7 +582,7 @@ EmbedEventListener::Focus(nsIDOMEvent* aEvent)
 {
   nsString eventType;
   aEvent->GetType(eventType);
-#ifdef MOZ_WIDGET_GTK2
+
   if (eventType.EqualsLiteral("focus") &&
       mCtxInfo->GetFormControlType(aEvent) &&
       mCtxInfo->mEmbedCtxType & GTK_MOZ_EMBED_CTX_INPUT) {
@@ -605,7 +595,6 @@ EmbedEventListener::Focus(nsIDOMEvent* aEvent)
       aEvent->PreventDefault();
     }
   }
-#endif
 
   return NS_OK;
 }
@@ -646,7 +635,7 @@ NS_IMETHODIMP
 EmbedEventListener::HandleSelection(nsIDOMMouseEvent* aDOMMouseEvent)
 {
   nsresult rv;
-#ifdef MOZ_WIDGET_GTK2
+
   /* This function gets called everytime that a mousedown or a mouseup
    * event occurs.
    */
@@ -729,7 +718,7 @@ EmbedEventListener::HandleSelection(nsIDOMMouseEvent* aDOMMouseEvent)
     if (mClickCount == 1)
       mLastSelCon = mCurSelCon;
   } // mouseup
-#endif
+
   return rv;
 }
 
@@ -763,7 +752,6 @@ EmbedEventListener::GetIOService(nsIIOService **ioService)
   return rv;
 }
 
-#ifdef MOZ_WIDGET_GTK2
 void
 EmbedEventListener::GeneratePixBuf()
 {
@@ -799,7 +787,6 @@ EmbedEventListener::GeneratePixBuf()
   NS_Free(::gFavLocation);
   gFavLocation = nsnull;
 }
-#endif
 
 void
 EmbedEventListener::GetFaviconFromURI(const char* aURI)
@@ -892,9 +879,7 @@ EmbedEventListener::GetFaviconFromURI(const char* aURI)
     }
   }
   else {
-#ifdef MOZ_WIDGET_GTK2
     GeneratePixBuf();
-#endif
   }
 
 }
@@ -906,13 +891,13 @@ EmbedEventListener::OnStateChange(nsIWebProgress *aWebProgress,
                                   nsresult aStatus)
 {
   /* if (!(aStateFlags & (STATE_STOP | STATE_IS_NETWORK | STATE_IS_DOCUMENT))){*/
-#ifdef MOZ_WIDGET_GTK2
+
   if (aStateFlags & STATE_STOP)
     /* FINISH DOWNLOADING */
     /* XXX sometimes this==0x0 and it cause crash in GeneratePixBuf, need workaround check for this */
     if (NS_SUCCEEDED(aStatus) && this)
       GeneratePixBuf();
-#endif
+
   return NS_OK;
 }
 

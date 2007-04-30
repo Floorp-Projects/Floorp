@@ -245,14 +245,6 @@ CPPSRCS += nsNativeAppSupportBase.cpp
 LIBS	+= $(TK_LIBS)
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
-SPLASH_XPM = $(srcdir)/splash.xpm
-CPPSRCS += nsNativeAppSupportGtk.cpp \
-	   nsNativeAppSupportBase.cpp
-DEFINES += -DSPLASH_XPM=\"$(SPLASH_XPM)\"
-LIBS += $(MOZ_GTK_LDFLAGS)
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 SPLASH_XPM = $(srcdir)/splash.xpm
 CPPSRCS += nsNativeAppSupportGtk.cpp \
@@ -266,7 +258,7 @@ LIBS += $(MOZ_QT_LDFLAGS)
 endif
 
 # Add explicit X11 dependency when building against X11 toolkits
-ifneq (,$(filter gtk gtk2 qt xlib,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk2 qt,$(MOZ_WIDGET_TOOLKIT)))
 LIBS += $(XLDFLAGS) $(XLIBS)
 endif
 
@@ -284,7 +276,7 @@ endif
 ifndef MOZ_SUITE
 # Suite icons are all contained within /suite/branding
 
-ifneq (,$(filter windows os2 gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter windows os2 gtk2,$(MOZ_WIDGET_TOOLKIT)))
 ifneq (,$(filter windows os2,$(MOZ_WIDGET_TOOLKIT)))
 ICON_SUFFIX=.ico
 else
@@ -333,10 +325,6 @@ DESKTOP_ICONS += \
 	$(NULL)
 endif
 
-ifeq ($(ICON_DIR),gtk)
-DESKTOP_ICONS_SMALL=$(patsubst %,%16,$(DESKTOP_ICONS))
-endif
-
 DESKTOP_ICON_FILES = $(addsuffix $(ICON_SUFFIX), $(DESKTOP_ICONS) $(DESKTOP_ICONS_SMALL))
 
 GARBAGE	+= $(addprefix $(DIST)/bin/chrome/icons/default/,$(DESKTOP_ICON_FILES))
@@ -379,10 +367,6 @@ endif
 
 ifdef BUILD_STATIC_LIBS
 include $(topsrcdir)/config/static-rules.mk
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
-$(PROGRAM): $(SPLASH_XPM)
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

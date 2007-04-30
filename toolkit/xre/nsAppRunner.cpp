@@ -270,10 +270,8 @@ char **gArgv;
 static int    gRestartArgc;
 static char **gRestartArgv;
 
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
-#include <gtk/gtk.h>
-#endif //MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2
 #if defined(MOZ_WIDGET_GTK2)
+#include <gtk/gtk.h>
 #include "nsGTKToolkit.h"
 #endif
 
@@ -1023,31 +1021,6 @@ DumpHelp()
   printf("Usage: %s [ options ... ] [URL]\n"
          "       where options include:\n\n", gArgv[0]);
 
-#ifdef MOZ_WIDGET_GTK
-  /* insert gtk options above moz options, like any other gtk app
-   *
-   * note: this isn't a very cool way to do things -- i'd rather get
-   * these straight from a user's gtk version -- but it seems to be
-   * what most gtk apps do. -dr
-   */
-  printf("GTK options\n"
-         "\t--gdk-debug=FLAGS\t\tGdk debugging flags to set\n"
-         "\t--gdk-no-debug=FLAGS\t\tGdk debugging flags to unset\n"
-         "\t--gtk-debug=FLAGS\t\tGtk+ debugging flags to set\n"
-         "\t--gtk-no-debug=FLAGS\t\tGtk+ debugging flags to unset\n"
-         "\t--gtk-module=MODULE\t\tLoad an additional Gtk module\n"
-         "\t-install\t\tInstall a private colormap\n");
-
-#endif /* MOZ_WIDGET_GTK */
-#if MOZ_WIDGET_XLIB
-  printf("Xlib options\n"
-         "\t-display=DISPLAY\t\tX display to use\n"
-         "\t-visual=VISUALID\t\tX visual to use\n"
-         "\t-install_colormap\t\tInstall own colormap\n"
-         "\t-sync\t\tMake X calls synchronous\n"
-         "\t-no-xshm\t\tDon't use X shared memory extension\n");
-
-#endif /* MOZ_WIDGET_XLIB */
 #ifdef MOZ_X11
   printf("X11 options\n"
          "\t--display=DISPLAY\t\tX display to use\n"
@@ -2446,7 +2419,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       return 0;
     }
 
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2) || defined(MOZ_ENABLE_XREMOTE)
+#if defined(MOZ_WIDGET_GTK2) || defined(MOZ_ENABLE_XREMOTE)
     // Stash DESKTOP_STARTUP_ID in malloc'ed memory because gtk_init will clear it.
 #define HAVE_DESKTOP_STARTUP_ID
     const char* desktopStartupIDEnv = PR_GetEnv("DESKTOP_STARTUP_ID");
@@ -2456,7 +2429,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     }
 #endif
 
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK2)
     // setup for private colormap.  Ideally we'd like to do this
     // in nsAppShell::Create, but we need to get in before gtk
     // has been initialized to make sure everything is running
@@ -2464,13 +2437,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     if (CheckArg("install"))
       gdk_rgb_set_install(TRUE);
 
-    // Initialize GTK+1/2 here for splash
-#if defined(MOZ_WIDGET_GTK)
-    gtk_set_locale();
-#endif
+    // Initialize GTK here for splash
     gtk_init(&gArgc, &gArgv);
 
-#if defined(MOZ_WIDGET_GTK2)
     // g_set_application_name () is only defined in glib2.2 and higher.
     _g_set_application_name_fn _g_set_application_name =
       (_g_set_application_name_fn)FindFunction("g_set_application_name");
@@ -2482,20 +2451,15 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     if (_gtk_window_set_auto_startup_notification) {
       _gtk_window_set_auto_startup_notification(PR_FALSE);
     }
-#endif
 
     gtk_widget_set_default_visual(gdk_rgb_get_visual());
     gtk_widget_set_default_colormap(gdk_rgb_get_cmap());
-#endif /* MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2 */
+#endif /* MOZ_WIDGET_GTK2 */
 
 #if defined(MOZ_WIDGET_QT)
     QApplication qapp(argc, argv);
 #endif
 
-    // #if defined(MOZ_WIDGET_XLIB)
-    // XXXtimeless fix me! How do we get a Display from here to nsAppShell.cpp ?
-    // #endif
-    
     // Call the code to install our handler
 #ifdef MOZ_JPROF
     setupProfilingStuff();

@@ -290,16 +290,16 @@ static void InitializeMacOSXApp(int argc, char* argv[])
 #include <X11/Xlib.h>
 #endif /* MOZ_X11 */
 
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK2)
 #include <gtk/gtk.h>
-#endif //MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2
+#endif
 
 #include "nsNativeAppSupport.h"
 
 /*********************************************/
 // Default implemenations for nativeAppSupport
 // If your platform implements these functions if def out this code.
-#if !defined(MOZ_WIDGET_COCOA) && !defined(MOZ_WIDGET_PHOTON) && !defined( XP_WIN) && !defined(XP_OS2) && !defined(MOZ_WIDGET_GTK) && !defined(MOZ_WIDGET_GTK2)
+#if !defined(MOZ_WIDGET_COCOA) && !defined(MOZ_WIDGET_PHOTON) && !defined( XP_WIN) && !defined(XP_OS2) && !defined(MOZ_WIDGET_GTK2)
 
 nsresult NS_CreateSplashScreen(nsISplashScreen **aResult)
 {
@@ -334,7 +334,7 @@ PRBool NS_CanRun()
 //       nsISplashScreen will be removed.
 //
 
-#if !defined(XP_WIN) && !defined(XP_OS2)&& !defined( XP_BEOS ) && !defined(MOZ_WIDGET_GTK) && !defined(MOZ_WIDGET_GTK2) && !defined(XP_MAC) && (!defined(XP_MACOSX) || defined(MOZ_WIDGET_COCOA))
+#if !defined(XP_WIN) && !defined(XP_OS2)&& !defined( XP_BEOS ) && !defined(MOZ_WIDGET_GTK2) && !defined(XP_MAC) && (!defined(XP_MACOSX) || defined(MOZ_WIDGET_COCOA))
 
 nsresult NS_CreateNativeAppSupport(nsINativeAppSupport **aResult)
 {
@@ -1246,32 +1246,6 @@ static void DumpHelp(char *appname)
   printf("Usage: %s [ options ... ] [URL]\n"
          "       where options include:\n\n", appname);
 
-#ifdef MOZ_WIDGET_GTK
-  /* insert gtk options above moz options, like any other gtk app
-   *
-   * note: this isn't a very cool way to do things -- i'd rather get
-   * these straight from a user's gtk version -- but it seems to be
-   * what most gtk apps do. -dr
-   */
-  printf("GTK options\n"
-         "\t--gdk-debug=FLAGS\t\tGdk debugging flags to set\n"
-         "\t--gdk-no-debug=FLAGS\t\tGdk debugging flags to unset\n"
-         "\t--gtk-debug=FLAGS\t\tGtk+ debugging flags to set\n"
-         "\t--gtk-no-debug=FLAGS\t\tGtk+ debugging flags to unset\n"
-         "\t--gtk-module=MODULE\t\tLoad an additional Gtk module\n"
-         "\t-install\t\tInstall a private colormap\n");
-
-  /* end gtk toolkit options */
-#endif /* MOZ_WIDGET_GTK */
-#if MOZ_WIDGET_XLIB
-  printf("Xlib options\n"
-         "\t-display=DISPLAY\t\tX display to use\n"
-         "\t-visual=VISUALID\t\tX visual to use\n"
-         "\t-install_colormap\t\tInstall own colormap\n"
-         "\t-sync\t\tMake X calls synchronous\n"
-         "\t-no-xshm\t\tDon't use X shared memory extension\n");
-
-#endif /* MOZ_WIDGET_XLIB */
 #ifdef MOZ_X11
   printf("X11 options\n"
          "\t--display=DISPLAY\t\tX display to use\n"
@@ -1576,10 +1550,6 @@ int main(int argc, char* argv[])
   argc = NS_TraceMallocStartupArgs(argc, argv);
 #endif
 
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2) || defined(MOZ_X11)
-  int i;
-#endif
-
 #ifdef MOZ_X11
   /* Init threadsafe mode of Xlib API on demand
    * (currently this is only for testing, future builds may use this by
@@ -1590,7 +1560,7 @@ int main(int argc, char* argv[])
     x11threadsafe = PR_TRUE;
   else {
     x11threadsafe = PR_FALSE;
-    for (i = 1; i < argc; ++i)
+    for (int i = 1; i < argc; ++i)
       if (PL_strcmp(argv[i], "-xinitthreads") == 0) {
         x11threadsafe = PR_TRUE;
         break;
@@ -1604,37 +1574,29 @@ int main(int argc, char* argv[])
   }
 #endif /* MOZ_X11 */
 
-#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK2)
   // setup for private colormap.  Ideally we'd like to do this
   // in nsAppShell::Create, but we need to get in before gtk
   // has been initialized to make sure everything is running
   // consistently.
-  for (i=1; i<argc; i++)
+  for (int i=1; i<argc; i++)
     if ((PL_strcasecmp(argv[i], "-install") == 0)
         || (PL_strcasecmp(argv[i], "--install") == 0)) {
       gdk_rgb_set_install(TRUE);
       break;
     }
 
-  // Initialize GTK+1/2 here for splash
-#if defined(MOZ_WIDGET_GTK)
-  gtk_set_locale();
-#endif
+  // Initialize GTK here for splash
   gtk_init(&argc, &argv);
 
   gtk_widget_set_default_visual(gdk_rgb_get_visual());
   gtk_widget_set_default_colormap(gdk_rgb_get_cmap());
-#endif /* MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2 */
+#endif /* MOZ_WIDGET_GTK2 */
 
 #if defined(MOZ_WIDGET_QT)
   QApplication qapp(argc, argv);
 #endif
 
-// #if defined(MOZ_WIDGET_XLIB)
-// XXXtimeless fix me! Because we don't have external shared libs holding global
-// refs, there isn't an easy way to get a Display from here to the widget component.
-// #endif
-    
   // Call the code to install our handler
 #ifdef MOZ_JPROF
   setupProfilingStuff();

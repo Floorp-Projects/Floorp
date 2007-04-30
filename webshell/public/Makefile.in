@@ -47,8 +47,6 @@ XPIDL_MODULE = webshell_idls
 
 PACKAGE_FILE = webshell.pkg
 PACKAGE_VARS += \
-		MOZ_ENABLE_GTK \
-		MOZ_ENABLE_XLIB \
 		$(NULL)
 
 SDK_XPIDLSRCS = \

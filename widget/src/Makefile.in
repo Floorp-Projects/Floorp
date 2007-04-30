@@ -46,9 +46,7 @@ MODULE  = widget
 
 PACKAGE_FILE = widget.pkg
 PACKAGE_VARS += \
-	MOZ_ENABLE_GTK \
 	MOZ_ENABLE_GTK2 \
-	MOZ_ENABLE_XLIB \
 	MOZ_ENABLE_PHOTON \
 	MOZ_ENABLE_XREMOTE \
 	$(NULL)
@@ -70,20 +68,9 @@ endif
 # multiple implementations of widget can be built on the same
 # source tree.
 #
-ifdef MOZ_ENABLE_GTK
-DIRS		+= gtksuperwin
-DIRS		+= gtkxtbin
-DIRS		+= gtk
-endif
-
 ifdef MOZ_ENABLE_GTK2
 DIRS		+= gtk2
 DIRS		+= gtkxtbin
-endif
-
-ifdef MOZ_ENABLE_XLIB
-DIRS		+= xlibxtbin
-DIRS		+= xlib
 endif
 
 ifdef MOZ_ENABLE_QT
