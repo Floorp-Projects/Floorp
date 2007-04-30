@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -100,15 +101,15 @@ function toSource(arr)
 
     switch(true)
     {
-      case (typeof elt === TYPE_STRING) :
-        ret += doubleQuote(elt);
-        break;
+    case (typeof elt === TYPE_STRING) :
+      ret += doubleQuote(elt);
+      break;
 
-      case (elt === undefined || elt === null) :
-        break; // add nothing but the delimiter, below -
+    case (elt === undefined || elt === null) :
+      break; // add nothing but the delimiter, below -
 
-      default:
-        ret += elt.toString();
+    default:
+      ret += elt.toString();
     }
 
     if ((i < len-1) || (elt === undefined))
