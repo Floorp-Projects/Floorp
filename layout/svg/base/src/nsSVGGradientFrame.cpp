@@ -384,11 +384,6 @@ nsSVGGradientFrame::SetupPaintServer(gfxContext *aContext,
   return PR_TRUE;
 }
 
-void
-nsSVGGradientFrame::CleanupPaintServer(gfxContext *aContext, void *aClosure)
-{
-}
-
 // Private (helper) methods
 
 void

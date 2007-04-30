@@ -59,7 +59,6 @@ public:
                                   nsSVGGeometryFrame *aSource,
                                   float aGraphicOpacity,
                                   void **aClosure);
-  virtual void CleanupPaintServer(gfxContext *aContext, void *aClosure);
 
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);

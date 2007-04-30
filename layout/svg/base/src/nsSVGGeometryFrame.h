@@ -98,10 +98,6 @@ public:
    * @return PR_FALSE to skip rendering
    */
   PRBool SetupCairoFill(gfxContext *aContext, void **aClosure);
-  /*
-   * Clean up after path filled
-   */
-  void CleanupCairoFill(gfxContext *aContext, void *aClosure);
 
   // Set up a cairo context for measuring a stroked path
   void SetupCairoStrokeGeometry(gfxContext *aContext);
@@ -114,10 +110,6 @@ public:
    * @return PR_FALSE to skip rendering
    */
   PRBool SetupCairoStroke(gfxContext *aContext, void **aClosure);
-  /*
-   * Clean up after path stroked
-   */
-  void CleanupCairoStroke(gfxContext *aContext, void *aClosure);
 
 protected:
   virtual nsresult UpdateGraphic(PRBool suppressInvalidation = PR_FALSE) = 0;
