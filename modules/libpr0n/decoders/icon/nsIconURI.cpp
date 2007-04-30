@@ -189,12 +189,13 @@ void extractAttributeValue(const char * searchString, const char * attributeName
 
   result.Truncate();
 
-	if (searchString && attributeName)
+  if (searchString && attributeName)
   {
     // search the string for attributeName
     PRUint32 attributeNameSize = strlen(attributeName);
     const char * startOfAttribute = PL_strcasestr(searchString, attributeName);
-    if (startOfAttribute)
+    if (startOfAttribute &&
+       ( *(startOfAttribute-1) == '?' || *(startOfAttribute-1) == '&') )
     {
       startOfAttribute += attributeNameSize; // skip over the attributeName
       if (*startOfAttribute) // is there something after the attribute name
@@ -299,8 +300,16 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
       }
       if (!strncmp("file://", mDummyFilePath.get(), 7))
       { 
-        // we have a file url.....so store it...
-        rv = ioService->NewURI(mDummyFilePath, nsnull, nsnull, getter_AddRefs(mFileIcon));
+        // we have a file url, let the IOService normalize it
+        nsCOMPtr<nsIURI> tmpURI;
+        rv = ioService->NewURI(mDummyFilePath, nsnull, nsnull, getter_AddRefs(tmpURI));
+        if (NS_SUCCEEDED(rv) && tmpURI)
+        {
+          nsCAutoString filespec;
+          tmpURI->GetSpec(filespec);
+          if (filespec.Length() > 8 && filespec.CharAt(8) != '/')
+            mFileIcon = tmpURI; // looks good, save the file (bug 376328)
+        }
       }
       if (!sizeString.IsEmpty())
       {
@@ -516,8 +525,8 @@ nsMozIconURI::GetIconFile(nsIURI* * aFileUrl)
 NS_IMETHODIMP
 nsMozIconURI::SetIconFile(nsIURI* aFileUrl)
 {
-  mFileIcon = aFileUrl;
-  return NS_OK;
+  // this isn't called anywhere, needs to go through SetSpec parsing
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
