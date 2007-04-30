@@ -9,12 +9,12 @@
   <!-- Create the "pass" rect using a foreignObject so the testcase doesn't
        seem to pass if foreignObject is not supported -->
   <foreignObject width="100%" height="100%">
-    <html:div style="background: lime none repeat scroll 0%; display: block; height: 100%; width: 100%; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;"/>
+    <html:div style="display:block; height:100%; width:100%; background: lime;"/>
   </foreignObject>
 
   <!-- test 'overflow' -->
-  <foreignObject x="-10" y="-10" width="10" height="10" overflow="hidden" style="overflow:hidden;">
-    <html:div style="background: red none repeat scroll 0%; display: block; height: 10000px; width: 10000px; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;"/>
+  <foreignObject x="-10" y="-10" width="10" height="10">
+    <html:div style="display:block; height:10000px; width:10000px; background:red;"/>
   </foreignObject>
 
 </svg>
