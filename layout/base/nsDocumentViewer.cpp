@@ -1030,6 +1030,13 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   */
   nsCOMPtr<nsIDocumentViewer> kungFuDeathGrip(this);
 
+  // Flush out layout so it's up-to-date by the time onload is called
+  if (mPresShell && !mStopped) {
+    // Hold strong ref because this could conceivably run script
+    nsCOMPtr<nsIPresShell> shell = mPresShell;
+    shell->FlushPendingNotifications(Flush_Layout);
+  }
+  
   // Now, fire either an OnLoad or OnError event to the document...
   PRBool restoring = PR_FALSE;
   if(NS_SUCCEEDED(aStatus)) {
