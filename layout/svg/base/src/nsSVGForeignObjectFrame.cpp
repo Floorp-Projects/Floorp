@@ -256,6 +256,19 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
   gfxContext *gfx = aContext->GetGfxContext();
 
   gfx->Save();
+
+  if (GetStyleDisplay()->IsScrollableOverflow()) {
+    nsCOMPtr<nsIDOMSVGMatrix> ctm = GetCanvasTM();
+
+    if (ctm) {
+      float x, y, width, height;
+      nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
+      element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
+
+      nsSVGUtils::SetClipRect(gfx, ctm, x, y, width, height);
+    }
+  }
+
   gfx->Multiply(matrix);
 
   nsresult rv = nsLayoutUtils::PaintFrame(ctx, kid, nsRegion(kid->GetRect()),
