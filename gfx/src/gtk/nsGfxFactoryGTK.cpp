@@ -294,9 +294,6 @@ nsGfxGTKModuleDtor(nsIModule *self)
   nsDeviceContextGTK::Shutdown();
   nsImageGTK::Shutdown();
   nsGCCache::Shutdown();
-#ifdef MOZ_WIDGET_GTK
-  nsRegionGTK::Shutdown();
-#endif
 }
 
 NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsGfxGTKModule, components,

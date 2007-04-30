@@ -474,7 +474,7 @@ ifeq ($(OS_TARGET),WIN95)
 MAKE_JARS_FLAGS += -l
 endif
 
-ifneq (,$(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 MAKE_JARS_FLAGS += -x
 endif
 

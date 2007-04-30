@@ -79,11 +79,8 @@ REQUIRES	= xpcom \
 		  locale \
 		  $(NULL)
 
-ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 REQUIRES	+= gtkxtbin
-endif
-ifeq ($(MOZ_WIDGET_TOOLKIT),xlib)
-REQUIRES	+= xlibxtbin xlibrgb
 endif
 
 CPPSRCS		= \
@@ -160,23 +157,11 @@ ifeq ($(OS_ARCH),OS2)
 ADD_TO_DEF_FILE = cat < $(srcdir)/extradefs.os2 >> $(DEF_FILE)
 endif
 
-ifdef MOZ_ENABLE_GTK
-CXXFLAGS        += $(MOZ_GTK_CFLAGS)
-CFLAGS          += $(MOZ_GTK_CFLAGS)
-EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin $(XLDFLAGS) $(XT_LIBS) $(MOZ_GTK_LDFLAGS)
-endif		#MOZ_ENABLE_GTK
-
 ifdef MOZ_ENABLE_GTK2
 CXXFLAGS        += $(MOZ_GTK2_CFLAGS)
 CFLAGS          += $(MOZ_GTK2_CFLAGS)
 EXTRA_DSO_LDOPTS += -lgtkxtbin $(XLDFLAGS) $(XT_LIBS) $(MOZ_GTK2_LIBS) $(XLIBS)
 endif           #MOZ_ENABLE_GTK2
-
-ifdef MOZ_ENABLE_XLIB
-EXTRA_DSO_LDOPTS += -lxlibxtbin -lxlibrgb $(XLDFLAGS) $(XT_LIBS) $(XLIBS)
-CXXFLAGS        += $(MOZ_XLIB_CFLAGS)
-CFLAGS          += $(MOZ_XLIB_CFLAGS)
-endif		#MOZ_ENABLE_XLIB
 
 ifdef MOZ_ENABLE_QT
 EXTRA_DSO_LDOPTS += $(MOZ_QT_LDFLAGS)
