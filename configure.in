@@ -4615,16 +4615,6 @@ cairo-os2)
     TK_LIBS='$(MOZ_CAIRO_LIBS)'
     ;;
 
-cairo-xlib)
-    MOZ_WIDGET_TOOLKIT=xlib
-    MOZ_GFX_TOOLKIT=cairo
-    MOZ_ENABLE_CAIRO_GFX=1
-	MOZ_ENABLE_XLIB=1
-	TK_CFLAGS='$(MOZ_XLIB_CFLAGS) $(MOZ_CAIRO_FLAGS)'
-	TK_LIBS='$(MOZ_XLIB_LDFLAGS) $(MOZ_CAIRO_LIBS)'
-	AC_DEFINE(MOZ_WIDGET_XLIB)
-    ;;
-
 cairo-mac|cairo-cocoa)
     if test "$MOZ_WIDGET_TOOLKIT" = "cairo-cocoa"; then
         MOZ_WIDGET_TOOLKIT=cocoa
@@ -4651,25 +4641,9 @@ if test "$MOZ_ENABLE_XREMOTE"; then
 fi
 
 if test "$COMPILE_ENVIRONMENT"; then
-if test "$MOZ_ENABLE_GTK"
-then
-    AM_PATH_GTK($GTK_VERSION,,
-    AC_MSG_ERROR(Test for GTK failed.))
-
-    MOZ_GTK_LDFLAGS=$GTK_LIBS
-    MOZ_GTK_CFLAGS=$GTK_CFLAGS
-fi
-
 if test "$MOZ_ENABLE_GTK2"
 then
     PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= 1.3.7 gdk-x11-2.0 glib-2.0 gobject-2.0)
-fi
-
-if test "$MOZ_ENABLE_XLIB"
-then
-    MOZ_XLIB_CFLAGS="$X_CFLAGS"
-    MOZ_XLIB_LDFLAGS="$XLDFLAGS"
-    MOZ_XLIB_LDFLAGS="$MOZ_XLIB_LDFLAGS $XEXT_LIBS $X11_LIBS"
 fi
 
 if test "$MOZ_ENABLE_QT"
@@ -4783,8 +4757,6 @@ AC_SUBST(GTK_CONFIG)
 AC_SUBST(TK_CFLAGS)
 AC_SUBST(TK_LIBS)
 
-AC_SUBST(MOZ_ENABLE_GTK)
-AC_SUBST(MOZ_ENABLE_XLIB)
 AC_SUBST(MOZ_ENABLE_GTK2)
 AC_SUBST(MOZ_ENABLE_QT)
 AC_SUBST(MOZ_ENABLE_PHOTON)
@@ -4792,12 +4764,8 @@ AC_SUBST(MOZ_ENABLE_COCOA)
 AC_SUBST(MOZ_ENABLE_CAIRO_GFX)
 AC_SUBST(MOZ_ENABLE_GLITZ)
 AC_SUBST(MOZ_ENABLE_XREMOTE)
-AC_SUBST(MOZ_GTK_CFLAGS)
-AC_SUBST(MOZ_GTK_LDFLAGS)
 AC_SUBST(MOZ_GTK2_CFLAGS)
 AC_SUBST(MOZ_GTK2_LIBS)
-AC_SUBST(MOZ_XLIB_CFLAGS)
-AC_SUBST(MOZ_XLIB_LDFLAGS)
 AC_SUBST(MOZ_QT_CFLAGS)
 AC_SUBST(MOZ_QT_LDFLAGS)
 
@@ -4809,9 +4777,7 @@ then
     AC_DEFINE(MOZ_CAIRO_GFX)
 fi
 
-if test "$MOZ_ENABLE_GTK" \
-|| test "$MOZ_ENABLE_QT" \
-|| test "$MOZ_ENABLE_XLIB" \
+if test "$MOZ_ENABLE_QT" \
 || test "$MOZ_ENABLE_GTK2"
 then
     AC_DEFINE(MOZ_X11)
@@ -5237,9 +5203,8 @@ dnl = those converters are not built on other platforms/toolkits.
 dnl = (see bug 180851)
 dnl ========================================================
 
-if (test "$MOZ_ENABLE_GTK"  || test "$MOZ_ENABLE_GTK2") \
+if test "$MOZ_ENABLE_GTK2" \
 && test "$MOZ_ENABLE_COREXFONTS" \
-|| test "$MOZ_ENABLE_XLIB" \
 || test "$MOZ_ENABLE_XPRINT" 
 then
     AC_DEFINE(MOZ_EXTRA_X11CONVERTERS)
@@ -7038,9 +7003,6 @@ then
 
     if test "$MOZ_ENABLE_GTK2"; then
         PKG_CHECK_MODULES(LIBIDL, libIDL-2.0 >= 0.8.0 glib-2.0 gobject-2.0, _LIBIDL_FOUND=1,_LIBIDL_FOUND=)
-    fi
-    if test "$MOZ_ENABLE_GTK"; then
-        AM_PATH_LIBIDL($LIBIDL_VERSION,_LIBIDL_FOUND=1)
     fi
     dnl if no gtk/libIDL1 or gtk2/libIDL2 combination was found, fall back
     dnl to either libIDL1 or libIDL2.
