@@ -507,9 +507,11 @@ NS_IMETHODIMP nsImageBoxFrame::OnStartContainer(imgIRequest *request,
   mIntrinsicSize.SizeTo(nsPresContext::CSSPixelsToAppUnits(w),
                         nsPresContext::CSSPixelsToAppUnits(h));
 
-  AddStateBits(NS_FRAME_IS_DIRTY);
-  PresContext()->PresShell()->
-    FrameNeedsReflow(this, nsIPresShell::eStyleChange);
+  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    AddStateBits(NS_FRAME_IS_DIRTY);
+    PresContext()->PresShell()->
+      FrameNeedsReflow(this, nsIPresShell::eStyleChange);
+  }
 
   return NS_OK;
 }
