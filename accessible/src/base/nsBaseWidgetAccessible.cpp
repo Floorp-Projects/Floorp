@@ -42,7 +42,7 @@
 #include "nsIAccessibleDocument.h"
 #include "nsAccessibleWrap.h"
 #include "nsGUIEvent.h"
-#include "nsHyperTextAccessible.h"
+#include "nsHyperTextAccessibleWrap.h"
 #include "nsILink.h"
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
@@ -96,14 +96,14 @@ nsLeafAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
 //----------------
 
 nsLinkableAccessible::nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell) :
-  nsHyperTextAccessible(aNode, aShell),
+  nsHyperTextAccessibleWrap(aNode, aShell),
   mActionContent(nsnull),
   mIsLink(PR_FALSE),
   mIsOnclick(PR_FALSE)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsLinkableAccessible, nsHyperTextAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(nsLinkableAccessible, nsHyperTextAccessibleWrap)
 
 NS_IMETHODIMP nsLinkableAccessible::TakeFocus()
 { 
@@ -118,7 +118,7 @@ NS_IMETHODIMP nsLinkableAccessible::TakeFocus()
 NS_IMETHODIMP
 nsLinkableAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsHyperTextAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mIsLink) {
@@ -283,13 +283,13 @@ NS_IMETHODIMP nsLinkableAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
 NS_IMETHODIMP nsLinkableAccessible::Init()
 {
   CacheActionContent();
-  return nsHyperTextAccessible::Init();
+  return nsHyperTextAccessibleWrap::Init();
 }
 
 NS_IMETHODIMP nsLinkableAccessible::Shutdown()
 {
   mActionContent = nsnull;
-  return nsHyperTextAccessible::Shutdown();
+  return nsHyperTextAccessibleWrap::Shutdown();
 }
 
 //---------------------

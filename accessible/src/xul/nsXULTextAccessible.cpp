@@ -49,7 +49,7 @@
   * For XUL descriptions and labels
   */
 nsXULTextAccessible::nsXULTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsHyperTextAccessible(aDomNode, aShell)
+nsHyperTextAccessibleWrap(aDomNode, aShell)
 { 
 }
 
@@ -72,7 +72,7 @@ NS_IMETHODIMP nsXULTextAccessible::GetName(nsAString& aName)
 NS_IMETHODIMP
 nsXULTextAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsHyperTextAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Labels and description have read only state

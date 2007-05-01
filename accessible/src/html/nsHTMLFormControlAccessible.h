@@ -40,7 +40,7 @@
 #define _nsHTMLFormControlAccessible_H_
 
 #include "nsFormControlAccessible.h"
-#include "nsHyperTextAccessible.h"
+#include "nsHyperTextAccessibleWrap.h"
 
 class nsHTMLCheckboxAccessible : public nsFormControlAccessible
 {
@@ -66,7 +66,7 @@ public:
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 };
 
-class nsHTMLButtonAccessible : public nsHyperTextAccessible
+class nsHTMLButtonAccessible : public nsHyperTextAccessibleWrap
 {
 
 public:
@@ -81,7 +81,7 @@ public:
   NS_IMETHOD DoAction(PRUint8 index);
 };
 
-class nsHTML4ButtonAccessible : public nsHyperTextAccessible
+class nsHTML4ButtonAccessible : public nsHyperTextAccessibleWrap
 {
 
 public:
@@ -96,7 +96,7 @@ public:
   NS_IMETHOD DoAction(PRUint8 index);
 };
 
-class nsHTMLTextFieldAccessible : public nsHyperTextAccessible
+class nsHTMLTextFieldAccessible : public nsHyperTextAccessibleWrap
 {
 
 public:

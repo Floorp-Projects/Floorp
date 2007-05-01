@@ -44,7 +44,7 @@
 #include "nsAccessibleWrap.h"
 #include "nsFormControlAccessible.h"
 #include "nsXULSelectAccessible.h"
-#include "nsHyperTextAccessible.h"
+#include "nsHyperTextAccessibleWrap.h"
 
 class nsXULButtonAccessible : public nsAccessibleWrap
 // Don't inherit from nsFormControlAccessible - it doesn't allow children and a button can have a dropmarker child
@@ -148,7 +148,7 @@ public:
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
 };
 
-class nsXULTextFieldAccessible : public nsHyperTextAccessible
+class nsXULTextFieldAccessible : public nsHyperTextAccessibleWrap
 {
 public:
   enum { eAction_Click = 0 };

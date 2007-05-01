@@ -211,7 +211,7 @@ nsHTMLRadioButtonAccessible::GetAttributesInternal(nsIPersistentProperties *aAtt
 // ----- Button -----
 
 nsHTMLButtonAccessible::nsHTMLButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsHyperTextAccessible(aNode, aShell)
+nsHyperTextAccessibleWrap(aNode, aShell)
 { 
 }
 
@@ -244,7 +244,7 @@ nsHTMLButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
 
-  nsresult rv = nsHyperTextAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString buttonType;
@@ -307,7 +307,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetName(nsAString& aName)
 // ----- HTML 4 Button: can contain arbitrary HTML content -----
 
 nsHTML4ButtonAccessible::nsHTML4ButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsHyperTextAccessible(aNode, aShell)
+nsHyperTextAccessibleWrap(aNode, aShell)
 { 
 }
 
@@ -346,7 +346,7 @@ nsHTML4ButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);  // Button accessible shut down
 
-  nsresult rv = nsHyperTextAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
@@ -362,17 +362,17 @@ nsHTML4ButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 // --- textfield -----
 
 nsHTMLTextFieldAccessible::nsHTMLTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsHyperTextAccessible(aNode, aShell)
+nsHyperTextAccessibleWrap(aNode, aShell)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTextFieldAccessible, nsHyperTextAccessible,
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTextFieldAccessible, nsHyperTextAccessibleWrap,
                              nsIAccessibleText)
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::Init()
 {
   CheckForEditor();
-  return nsHyperTextAccessible::Init();
+  return nsHyperTextAccessibleWrap::Init();
 }
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::Shutdown()
@@ -381,7 +381,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::Shutdown()
     mEditor->RemoveEditActionListener(this);
     mEditor = nsnull;
   }
-  return nsHyperTextAccessible::Shutdown();
+  return nsHyperTextAccessibleWrap::Shutdown();
 }
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetRole(PRUint32 *aRole)
@@ -419,7 +419,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetValue(nsAString& _retval)
 NS_IMETHODIMP
 nsHTMLTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
-  nsresult rv = nsHyperTextAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // can be focusable, focused, protected. readonly, unavailable, selected

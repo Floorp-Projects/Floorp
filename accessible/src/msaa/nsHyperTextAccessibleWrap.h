@@ -1,4 +1,6 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,17 +17,16 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Aaron Leventhal (aaronl@netscape.com)
- *   Kyle Yuan (kyle.yuan@sun.com)
+ *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -37,46 +38,41 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsXULTextAccessible_H_
-#define _nsXULTextAccessible_H_
+#ifndef _NSHYPERTEXTACCESSIBLEWRAP_H
+#define _NSHYPERTEXTACCESSIBLEWRAP_H
 
-#include "nsBaseWidgetAccessible.h"
-#include "nsTextAccessibleWrap.h"
-#include "nsHyperTextAccessibleWrap.h"
+#include "nsHyperTextAccessible.h"
+#include "CAccessibleText.h"
+#include "CAccessibleEditableText.h"
 
-class nsIWeakReference;
-
-class nsXULTextAccessible : public nsHyperTextAccessibleWrap
+class nsHyperTextAccessibleWrap : public nsHyperTextAccessible,
+                                  public CAccessibleText,
+                                  public CAccessibleEditableText
 {
-
 public:
-  nsXULTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetName(nsAString& _retval); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
-  NS_IMETHOD GetRole(PRUint32 *aRole) { *aRole = nsIAccessibleRole::ROLE_LABEL; return NS_OK; }
-};
+  nsHyperTextAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell) :
+    nsHyperTextAccessible(aNode, aShell){}
 
-class nsXULTooltipAccessible : public nsLeafAccessible
-{
+  // IUnknown
+  DECL_IUNKNOWN_INHERITED
 
-public:
-  nsXULTooltipAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetName(nsAString& _retval); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
-  NS_IMETHOD GetRole(PRUint32 *_retval); 
-};
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
 
-class nsXULLinkAccessible : public nsLinkableAccessible
-{
-
-public:
-  nsXULLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetName(nsAString& _retval); 
-  NS_IMETHOD GetRole(PRUint32 *aRole);
-  NS_IMETHOD GetValue(nsAString& _retval);
+  // nsIAccessible
+  NS_IMETHOD FireAccessibleEvent(nsIAccessibleEvent *aEvent);
 
 protected:
-  void CacheActionContent();
+  virtual nsresult GetModifiedText(PRBool aGetInsertedText, nsAString& aText,
+                                   PRUint32 *aStartOffset,
+                                   PRUint32 *aEndOffset);
+
+private:
+  static nsString sText;
+  static PRInt32 sOffset;
+  static PRUint32 sLength;
+  static PRBool sIsInserted;
 };
 
-#endif  
+#endif
+

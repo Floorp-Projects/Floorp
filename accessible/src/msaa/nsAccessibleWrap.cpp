@@ -94,18 +94,11 @@ nsAccessibleWrap::~nsAccessibleWrap()
 {
 }
 
+NS_IMPL_ISUPPORTS_INHERITED0(nsAccessibleWrap, nsAccessible);
+
 //-----------------------------------------------------
 // IUnknown interface methods - see iunknown.h for documentation
 //-----------------------------------------------------
-STDMETHODIMP_(ULONG) nsAccessibleWrap::AddRef()
-{
-  return nsAccessNode::AddRef();
-}
-
-STDMETHODIMP_(ULONG) nsAccessibleWrap::Release()
-{
-  return nsAccessNode::Release();
-}
 
 // Microsoft COM QueryInterface
 STDMETHODIMP nsAccessibleWrap::QueryInterface(REFIID iid, void** ppv)

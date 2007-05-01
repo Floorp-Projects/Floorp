@@ -60,7 +60,7 @@
 NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableCellAccessible, nsHyperTextAccessible)
 
 nsHTMLTableCellAccessible::nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsHyperTextAccessible(aDomNode, aShell)
+nsHyperTextAccessibleWrap(aDomNode, aShell)
 { 
 }
 

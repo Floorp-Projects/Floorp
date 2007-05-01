@@ -450,7 +450,7 @@ void nsHTMLSelectListAccessible::CacheChildren()
 
 /** Default Constructor */
 nsHTMLSelectOptionAccessible::nsHTMLSelectOptionAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell):
-nsHyperTextAccessible(aDOMNode, aShell)
+nsHyperTextAccessibleWrap(aDOMNode, aShell)
 {
   nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
   nsCOMPtr<nsIDOMNode> parentNode;
@@ -532,7 +532,7 @@ nsHTMLSelectOptionAccessible::GetAttributesInternal(nsIPersistentProperties *aAt
     return NS_ERROR_FAILURE;  // Accessible shut down
   }
 
-  nsresult rv = nsHyperTextAccessible::GetAttributesInternal(aAttributes);
+  nsresult rv = nsHyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMNode> parentNode;

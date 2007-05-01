@@ -81,7 +81,7 @@
 // construction
 //-----------------------------------------------------
 nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
-  nsHyperTextAccessible(aDOMNode, aShell), mWnd(nsnull),
+  nsHyperTextAccessibleWrap(aDOMNode, aShell), mWnd(nsnull),
   mScrollPositionChangedTicks(0), mIsContentLoaded(PR_FALSE)
 {
   // For GTK+ native window, we do nothing here.
@@ -492,7 +492,7 @@ NS_IMETHODIMP nsDocAccessible::Init()
 
   AddEventListeners();
 
-  nsresult rv = nsHyperTextAccessible::Init();
+  nsresult rv = nsHyperTextAccessibleWrap::Init();
 
   if (mRoleMapEntry && mRoleMapEntry->role != nsIAccessibleRole::ROLE_DIALOG &&
       mRoleMapEntry->role != nsIAccessibleRole::ROLE_APPLICATION &&
@@ -548,7 +548,7 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
 
   mDocument = nsnull;
 
-  return nsHyperTextAccessible::Shutdown();
+  return nsHyperTextAccessibleWrap::Shutdown();
 }
 
 void nsDocAccessible::ShutdownChildDocuments(nsIDocShellTreeItem *aStart)
