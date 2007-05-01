@@ -141,6 +141,12 @@ gfxContext::MoveTo(const gfxPoint& pt)
 }
 
 void
+gfxContext::NewSubPath()
+{
+    cairo_new_sub_path(mCairo);
+}
+
+void
 gfxContext::LineTo(const gfxPoint& pt)
 {
     cairo_line_to(mCairo, pt.x, pt.y);
