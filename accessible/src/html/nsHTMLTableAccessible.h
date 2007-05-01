@@ -42,7 +42,7 @@
 #include "nsBaseWidgetAccessible.h"
 #include "nsIAccessibleTable.h"
 
-class nsHTMLTableCellAccessible : public nsHyperTextAccessible
+class nsHTMLTableCellAccessible : public nsHyperTextAccessibleWrap
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

@@ -89,20 +89,25 @@ nsAccessNodeWrap::~nsAccessNodeWrap()
 {
 }
 
+//-----------------------------------------------------
+// nsISupports methods
+//-----------------------------------------------------
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsAccessNodeWrap, nsAccessNode, nsIWinAccessNode);
+
+//-----------------------------------------------------
+// nsIWinAccessNode methods
+//-----------------------------------------------------
+
+NS_IMETHODIMP
+nsAccessNodeWrap::QueryNativeInterface(REFIID aIID, void** aInstancePtr)
+{
+  return NS_OK;
+}
 
 //-----------------------------------------------------
 // IUnknown interface methods - see iunknown.h for documentation
 //-----------------------------------------------------
-
-STDMETHODIMP_(ULONG) nsAccessNodeWrap::AddRef()
-{
-  return nsAccessNode::AddRef();
-}
-
-STDMETHODIMP_(ULONG) nsAccessNodeWrap::Release()
-{
-  return nsAccessNode::Release();
-}
 
 STDMETHODIMP nsAccessNodeWrap::QueryInterface(REFIID iid, void** ppv)
 {
@@ -117,7 +122,6 @@ STDMETHODIMP nsAccessNodeWrap::QueryInterface(REFIID iid, void** ppv)
   (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef(); 
   return S_OK;
 }
-
 
 //-----------------------------------------------------
 // ISimpleDOMNode methods

@@ -47,7 +47,7 @@
 #include "nsHTMLSelectAccessible.h"
 #include "nsHTMLTableAccessible.h"
 #include "nsHTMLTextAccessible.h"
-#include "nsHyperTextAccessible.h"
+#include "nsHyperTextAccessibleWrap.h"
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleProvider.h"
 #include "nsIDOMDocument.h"
@@ -538,7 +538,7 @@ nsAccessibilityService::CreateHyperTextAccessible(nsISupports *aFrame, nsIAccess
     *aAccessible = new nsLinkableAccessible(node, weakShell);
   }
   else {
-    *aAccessible = new nsHyperTextAccessible(node, weakShell);
+    *aAccessible = new nsHyperTextAccessibleWrap(node, weakShell);
   }
   if (nsnull == *aAccessible)
     return NS_ERROR_OUT_OF_MEMORY;
