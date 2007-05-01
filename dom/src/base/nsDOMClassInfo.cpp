@@ -3682,10 +3682,10 @@ nsDOMClassInfo::HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 }
 
 NS_IMETHODIMP
-nsDOMClassInfo::Mark(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                     JSObject *obj, void *arg, PRUint32 *_retval)
+nsDOMClassInfo::Trace(nsIXPConnectWrappedNative *wrapper, JSTracer *trc,
+                      JSObject *obj)
 {
-  NS_WARNING("nsDOMClassInfo::Mark Don't call me!");
+  NS_WARNING("nsDOMClassInfo::Trace Don't call me!");
 
   return NS_ERROR_UNEXPECTED;
 }

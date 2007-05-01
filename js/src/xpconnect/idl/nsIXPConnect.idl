@@ -64,6 +64,7 @@
       native JSVal(jsval);
       native JSID(jsid);
 [ptr] native voidPtrPtr(void*);
+[ptr] native JSTracerPtr(JSTracer);
 
 /***************************************************************************/
 

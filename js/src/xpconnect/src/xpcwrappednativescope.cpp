@@ -268,17 +268,30 @@ WrappedNativeJSGCThingMarker(JSDHashTable *table, JSDHashEntryHdr *hdr,
     XPCWrappedNative* wrapper = ((Native2WrappedNativeMap::Entry*)hdr)->value;
     if(wrapper->HasExternalReference())
     {
-        JS_MarkGCThing((JSContext*)arg, wrapper->GetFlatJSObject(), 
-                       "XPCWrappedNative::mFlatJSObject", nsnull);
+        JSTracer* trc = (JSTracer *)arg;
+        JS_CALL_OBJECT_TRACER(trc, wrapper->GetFlatJSObject(),
+                              "XPCWrappedNative::mFlatJSObject");
 
         // FIXME: this call appears to do more harm than good, but
         // there is reason to imagine it might clean up some cycles
         // formed by a poor order between C++ and JS garbage cycle
         // formations. See Bug 368869.
         //
-        // nsCycleCollector_suspectCurrent(wrapper);
+        // if (JS_IsGCMarkTraversal(trc))
+        //     nsCycleCollector_suspectCurrent(wrapper);
     }
     return JS_DHASH_NEXT;
+}
+
+// static
+void
+XPCWrappedNativeScope::TraceJS(JSTracer* trc, XPCJSRuntime* rt)
+{
+    // Do JS_CallTracer for all wrapperednatives with external references.
+    for(XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext)
+    {
+        cur->mWrappedNativeMap->Enumerate(WrappedNativeJSGCThingMarker, trc);
+    }
 }
 
 // static
@@ -288,20 +301,14 @@ XPCWrappedNativeScope::FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt)
     // Hold the lock until return...
     XPCAutoLock lock(rt->GetMapLock());
 
-    XPCWrappedNativeScope* cur;
-    
-    // Do JS_MarkGCThing for all wrapperednatives with external references.
-    for(cur = gScopes; cur; cur = cur->mNext)
-    {
-        cur->mWrappedNativeMap->Enumerate(WrappedNativeJSGCThingMarker, cx);
-    }
+    TraceJS(JS_GetGCMarkingTracer(cx), rt);
 
     // Since the JSGC_END call happens outside of a lock,
     // it is possible for us to get called here twice before the FinshedGC
     // call happens. So, we allow for gDyingScopes not being null.
 
     XPCWrappedNativeScope* prev = nsnull;
-    cur = gScopes;
+    XPCWrappedNativeScope* cur = gScopes;
 
     while(cur)
     {
@@ -803,7 +810,7 @@ XPCWrappedNativeScope::DebugDump(PRInt16 depth)
 void
 XPCWrappedNativeScope::Traverse(nsCycleCollectionTraversalCallback &cb)
 {
-    // See MarkScopeJSObjects.
+    // See TraceScopeJSObjects.
     cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, mGlobalJSObject);
     cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, mPrototypeJSObject);
     cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
