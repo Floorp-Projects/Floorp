@@ -2419,10 +2419,14 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
         }
         if (inRange) {
             if (gData->regexp->flags & JSREG_FOLD) {
-                AddCharacterRangeToCharSet(charSet, upcase(rangeStart),
-                                                    upcase(thisCh));
-                AddCharacterRangeToCharSet(charSet, downcase(rangeStart),
-                                                    downcase(thisCh));
+                if (upcase(rangeStart) < upcase(thisCh)) {
+                    AddCharacterRangeToCharSet(charSet, upcase(rangeStart),
+                                                        upcase(thisCh));
+                }
+                if (downcase(rangeStart) < downcase(thisCh)) {
+                    AddCharacterRangeToCharSet(charSet, downcase(rangeStart),
+                                                        downcase(thisCh));
+                }
             } else {
                 AddCharacterRangeToCharSet(charSet, rangeStart, thisCh);
             }
