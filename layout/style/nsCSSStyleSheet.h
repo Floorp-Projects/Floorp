@@ -75,9 +75,14 @@ public:
   nsAutoVoidArray        mSheets;
   nsCOMPtr<nsIURI>       mSheetURI; // for error reports, etc.
   nsCOMPtr<nsIURI>       mBaseURI; // for resolving relative URIs
+  nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMArray<nsICSSRule> mOrderedRules;
   nsAutoPtr<nsXMLNameSpaceMap> mNameSpaceMap;
-  PRPackedBool           mComplete;
+  PRBool                 mComplete;
+
+#ifdef DEBUG
+  PRBool                 mPrincipalSet;
+#endif
 };
 
 
@@ -132,6 +137,8 @@ public:
   NS_IMETHOD StyleSheetCount(PRInt32& aCount) const;
   NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const;
   NS_IMETHOD SetURIs(nsIURI* aSheetURI, nsIURI* aBaseURI);
+  virtual NS_HIDDEN_(void) SetPrincipal(nsIPrincipal* aPrincipal);
+  virtual NS_HIDDEN_(nsIPrincipal*) Principal() const;
   NS_IMETHOD SetTitle(const nsAString& aTitle);
   NS_IMETHOD SetMedia(nsMediaList* aMedia);
   NS_IMETHOD SetOwningNode(nsIDOMNode* aOwningNode);
@@ -200,6 +207,7 @@ protected:
 
   friend class nsMediaList;
   friend PRBool CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData);
+  friend nsresult NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult);
 };
 
 #endif /* !defined(nsCSSStyleSheet_h_) */
