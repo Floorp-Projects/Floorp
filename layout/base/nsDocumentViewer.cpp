@@ -1012,6 +1012,22 @@ DocumentViewerImpl::DumpContentToPPM(const char* aFileName)
 NS_IMETHODIMP
 DocumentViewerImpl::LoadComplete(nsresult aStatus)
 {
+  /* We need to protect ourself against auto-destruction in case the
+     window is closed while processing the OnLoad event.  See bug
+     http://bugzilla.mozilla.org/show_bug.cgi?id=78445 for more
+     explanation.
+  */
+  nsCOMPtr<nsIDocumentViewer> kungFuDeathGrip(this);
+
+  // Flush out layout so it's up-to-date by the time onload is called.
+  // Note that this could destroy the window, so do this before
+  // checking for our mDocument and its window.
+  if (mPresShell && !mStopped) {
+    // Hold strong ref because this could conceivably run script
+    nsCOMPtr<nsIPresShell> shell = mPresShell;
+    shell->FlushPendingNotifications(Flush_Layout);
+  }
+  
   nsresult rv = NS_OK;
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
 
@@ -1023,20 +1039,6 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
 
   mLoaded = PR_TRUE;
 
-  /* We need to protect ourself against auto-destruction in case the
-     window is closed while processing the OnLoad event.  See bug
-     http://bugzilla.mozilla.org/show_bug.cgi?id=78445 for more
-     explanation.
-  */
-  nsCOMPtr<nsIDocumentViewer> kungFuDeathGrip(this);
-
-  // Flush out layout so it's up-to-date by the time onload is called
-  if (mPresShell && !mStopped) {
-    // Hold strong ref because this could conceivably run script
-    nsCOMPtr<nsIPresShell> shell = mPresShell;
-    shell->FlushPendingNotifications(Flush_Layout);
-  }
-  
   // Now, fire either an OnLoad or OnError event to the document...
   PRBool restoring = PR_FALSE;
   if(NS_SUCCEEDED(aStatus)) {
