@@ -3155,16 +3155,22 @@ PRBool CSSParserImpl::ParseColorOpacity(nsresult& aErrorCode, PRUint8& aOpacity)
     return PR_FALSE;
   }
 
-  PRInt32 value = nsStyleUtil::FloatToColorComponent(mToken.mNumber);
+  if (mToken.mNumber < 0.0f) {
+    mToken.mNumber = 0.0f;
+  } else if (mToken.mNumber > 1.0f) {
+    mToken.mNumber = 1.0f;
+  }
+
+  PRUint8 value = nsStyleUtil::FloatToColorComponent(mToken.mNumber);
+  NS_ASSERTION(fabs(mToken.mNumber - value/255.0f) <= 0.5f,
+               "FloatToColorComponent did something weird");
 
   if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
     REPORT_UNEXPECTED_TOKEN(PEExpectedCloseParen);
     return PR_FALSE;
   }
   
-  if (value < 0) value = 0;
-  if (value > 255) value = 255;
-  aOpacity = (PRUint8)value;
+  aOpacity = value;
 
   return PR_TRUE;
 }
