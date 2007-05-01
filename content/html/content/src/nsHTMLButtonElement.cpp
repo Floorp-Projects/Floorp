@@ -218,7 +218,7 @@ nsHTMLButtonElement::Click()
   nsCOMPtr<nsIDocument> doc = GetCurrentDoc();
 
   if (doc) {
-    nsIPresShell *shell = doc->GetShellAt(0);
+    nsIPresShell *shell = doc->GetPrimaryShell();
     if (shell) {
       nsCOMPtr<nsPresContext> context = shell->GetPresContext();
       if (context) {

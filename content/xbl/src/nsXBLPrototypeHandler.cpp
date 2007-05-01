@@ -395,7 +395,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
     nsPresContext *pc = nsnull;
     nsIDocument *doc = handlerElement->GetCurrentDoc();
     if (doc) {
-      nsIPresShell *shell = doc->GetShellAt(0);
+      nsIPresShell *shell = doc->GetPrimaryShell();
       if (shell) {
         pc = shell->GetPresContext();
       }

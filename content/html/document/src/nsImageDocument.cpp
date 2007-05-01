@@ -428,7 +428,7 @@ nsImageDocument::RestoreImageTo(PRInt32 aX, PRInt32 aY)
   RestoreImage();
   FlushPendingNotifications(Flush_Layout);
 
-  nsIPresShell *shell = GetShellAt(0);
+  nsIPresShell *shell = GetPrimaryShell();
   if (!shell)
     return NS_OK;
 
@@ -600,7 +600,7 @@ nsImageDocument::CreateSyntheticDocument()
 nsresult
 nsImageDocument::CheckOverflowing(PRBool changeState)
 {
-  nsIPresShell *shell = GetShellAt(0);
+  nsIPresShell *shell = GetPrimaryShell();
   if (!shell) {
     return NS_OK;
   }

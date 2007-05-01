@@ -589,7 +589,7 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
   aTarget->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext, tooltipText);
   if (!tooltipText.IsEmpty()) {
     // specifying tooltiptext means we will always use the default tooltip
-    nsIRootBox* rootBox = nsIRootBox::GetRootBox(document->GetShellAt(0));
+    nsIRootBox* rootBox = nsIRootBox::GetRootBox(document->GetPrimaryShell());
     NS_ENSURE_STATE(rootBox);
     *aTooltip = rootBox->GetDefaultTooltip();
     if (*aTooltip) {
@@ -631,7 +631,7 @@ nsXULTooltipListener::FindTooltip(nsIContent* aTarget, nsIContent** aTooltip)
 #ifdef MOZ_XUL
   // titletips should just use the default tooltip
   if (mIsSourceTree && mNeedTitletip) {
-    nsIRootBox* rootBox = nsIRootBox::GetRootBox(document->GetShellAt(0));
+    nsIRootBox* rootBox = nsIRootBox::GetRootBox(document->GetPrimaryShell());
     NS_ENSURE_STATE(rootBox);
     NS_IF_ADDREF(*aTooltip = rootBox->GetDefaultTooltip());
   }
@@ -655,7 +655,7 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
   nsIContent* parent = tooltip->GetParent();
   if (parent) {
     nsIDocument* doc = parent->GetCurrentDoc();
-    nsIPresShell* presShell = doc ? doc->GetShellAt(0) : nsnull;
+    nsIPresShell* presShell = doc ? doc->GetPrimaryShell() : nsnull;
     nsIFrame* frame = presShell ? presShell->GetPrimaryFrameFor(parent) : nsnull;
     if (frame) {
       nsIMenuFrame* menu = nsnull;

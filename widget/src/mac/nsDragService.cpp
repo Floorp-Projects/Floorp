@@ -97,7 +97,7 @@ GetPrimaryFrameFor(nsIContent* aContent)
   nsIFrame* result = nsnull;
   nsIDocument* doc = aContent->GetCurrentDoc();
   if (doc) {
-    nsIPresShell* presShell = doc->GetShellAt(0);
+    nsIPresShell* presShell = doc->GetPrimaryShell();
     if (presShell) {
       result = presShell->GetPrimaryFrameFor(aContent);
     }

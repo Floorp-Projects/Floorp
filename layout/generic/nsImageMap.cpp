@@ -1007,7 +1007,7 @@ nsImageMap::ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus) {
             nsCOMPtr<nsIDocument> doc = targetContent->GetDocument();
             //This check is necessary to see if we're still attached to the doc
             if (doc) {
-              nsIPresShell *presShell = doc->GetShellAt(0);
+              nsIPresShell *presShell = doc->GetPrimaryShell();
               if (presShell) {
                 nsIFrame* imgFrame = presShell->GetPrimaryFrameFor(targetContent);
                 if (imgFrame) {

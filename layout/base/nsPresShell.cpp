@@ -5876,7 +5876,7 @@ StopPluginInstance(PresShell *aShell, nsIContent *aContent)
 PR_STATIC_CALLBACK(PRBool)
 FreezeSubDocument(nsIDocument *aDocument, void *aData)
 {
-  nsIPresShell *shell = aDocument->GetShellAt(0);
+  nsIPresShell *shell = aDocument->GetPrimaryShell();
   if (shell)
     shell->Freeze();
 
@@ -5916,7 +5916,7 @@ StartPluginInstance(PresShell *aShell, nsIContent *aContent)
 PR_STATIC_CALLBACK(PRBool)
 ThawSubDocument(nsIDocument *aDocument, void *aData)
 {
-  nsIPresShell *shell = aDocument->GetShellAt(0);
+  nsIPresShell *shell = aDocument->GetPrimaryShell();
   if (shell)
     shell->Thaw();
 

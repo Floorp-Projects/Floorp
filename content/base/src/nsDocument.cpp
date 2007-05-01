@@ -1984,6 +1984,13 @@ nsDocument::GetShellAt(PRUint32 aIndex) const
          NS_STATIC_CAST(nsIPresShell*, mPresShells.SafeElementAt(aIndex));
 }
 
+nsIPresShell *
+nsDocument::GetPrimaryShell() const
+{
+  return mShellsAreHidden ? nsnull :
+         NS_STATIC_CAST(nsIPresShell*, mPresShells.SafeElementAt(0));
+}
+
 void
 nsDocument::SetShellsHidden(PRBool aHide)
 {
@@ -2769,7 +2776,7 @@ nsDocument::DispatchContentLoadedEvents()
         if (innerEvent) {
           nsEventStatus status = nsEventStatus_eIgnore;
 
-          nsIPresShell *shell = ancestor_doc->GetShellAt(0);
+          nsIPresShell *shell = ancestor_doc->GetPrimaryShell();
           if (shell) {
             nsCOMPtr<nsPresContext> context = shell->GetPresContext();
 
@@ -3798,7 +3805,7 @@ nsDocument::SetDir(const nsAString& aDirection)
     if (aDirection == NS_ConvertASCIItoUTF16(elt->mName)) {
       if (GET_BIDI_OPTION_DIRECTION(options) != elt->mValue) {
         SET_BIDI_OPTION_DIRECTION(options, elt->mValue);
-        nsIPresShell *shell = GetShellAt(0);
+        nsIPresShell *shell = GetPrimaryShell();
         if (shell) {
           nsPresContext *context = shell->GetPresContext();
           NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
@@ -4651,7 +4658,7 @@ NS_IMETHODIMP
 nsDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 {
   // Obtain a presentation context
-  nsIPresShell *shell = GetShellAt(0);
+  nsIPresShell *shell = GetPrimaryShell();
   nsCOMPtr<nsPresContext> context;
   if (shell) {
      context = shell->GetPresContext();
@@ -4740,7 +4747,7 @@ nsDocument::CreateEvent(const nsAString& aEventType, nsIDOMEvent** aReturn)
 
   // Obtain a presentation shell
 
-  nsIPresShell *shell = GetShellAt(0);
+  nsIPresShell *shell = GetPrimaryShell();
 
   nsPresContext *presContext = nsnull;
 

@@ -99,7 +99,7 @@ nsPluginStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
   nsIContent* embed = mPluginDoc->GetPluginContent();
 
   // Now we have a frame for our <embed>, start the load
-  nsIPresShell* shell = mDocument->GetShellAt(0);
+  nsIPresShell* shell = mDocument->GetPrimaryShell();
   if (!shell) {
     // Can't instantiate w/o a shell
     return NS_BINDING_ABORTED;
@@ -291,7 +291,7 @@ nsPluginDocument::Print()
 {
   NS_ENSURE_TRUE(mPluginContent, NS_ERROR_FAILURE);
 
-  nsIPresShell *shell = GetShellAt(0);
+  nsIPresShell *shell = GetPrimaryShell();
   if (!shell) {
     return NS_OK;
   }
