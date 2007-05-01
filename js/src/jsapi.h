@@ -856,6 +856,16 @@ extern JS_PUBLIC_API(JSBool)
 JS_UnlockGCThingRT(JSRuntime *rt, void *thing);
 
 /*
+ * Register externally maintained GC roots.
+ *
+ * traceOp: the trace operation. For each root the implementation should call
+ *          JS_CallTracer whenever the root contains a traceable thing.
+ * data:    the data argument to pass to each invocation of traceOp.
+ */
+extern JS_PUBLIC_API(void)
+JS_SetExtraGCRoots(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
+
+/*
  * For implementors of JSMarkOp. All new code should implement JSTraceOp
  * instead.
  */
