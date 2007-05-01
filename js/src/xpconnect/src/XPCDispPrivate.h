@@ -318,6 +318,11 @@ public:
     void Unmark();
 
     /**
+     * NOP. This is just here to make the AutoMarkingPtr code compile.
+     */
+    inline void Mark(JSContext*);
+    
+    /**
      * Tests whether the ID is marked
      */
     JSBool IsMarked() const;
