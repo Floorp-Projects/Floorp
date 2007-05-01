@@ -37,7 +37,10 @@
 
 #include "gfxRect.h"
 
-gfxRect gfxRect::Intersect(const gfxRect& aRect) const
+#include <math.h>
+
+gfxRect
+gfxRect::Intersect(const gfxRect& aRect) const
 {
   gfxRect result(0,0,0,0);
 
@@ -55,7 +58,8 @@ gfxRect gfxRect::Intersect(const gfxRect& aRect) const
   return result;
 }
 
-gfxRect gfxRect::Union(const gfxRect& aRect) const
+gfxRect
+gfxRect::Union(const gfxRect& aRect) const
 {
   if (IsEmpty())
     return aRect;
@@ -67,4 +71,19 @@ gfxRect gfxRect::Union(const gfxRect& aRect) const
   gfxFloat y = PR_MIN(aRect.Y(), Y());
   gfxFloat ymost = PR_MAX(aRect.YMost(), YMost());
   return gfxRect(x, y, xmost - x, ymost - y);
+}
+
+void
+gfxRect::Round()
+{
+    gfxFloat x0 = floor(X() + 0.5);
+    gfxFloat y0 = floor(Y() + 0.5);
+    gfxFloat x1 = floor(XMost() + 0.5);
+    gfxFloat y1 = floor(YMost() + 0.5);
+
+    pos.x = x0;
+    pos.y = y0;
+
+    size.width = x1 - x0;
+    size.height = y1 - y0;
 }
