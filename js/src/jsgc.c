@@ -2510,6 +2510,9 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
     iter = NULL;
     while ((acx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL)
         js_TraceContext(trc, acx);
+
+    if (rt->gcExtraRootsTraceOp)
+        rt->gcExtraRootsTraceOp(trc, rt->gcExtraRootsData);
 }
 
 /*

@@ -623,6 +623,13 @@ typedef JSBool
 typedef void
 (* JS_DLL_CALLBACK JSGCThingCallback)(void *thing, uint8 flags, void *closure);
 
+/*
+ * Generic trace operation that calls JS_CallTracer on each traceable thing
+ * stored in data.
+ */
+typedef void
+(* JS_DLL_CALLBACK JSTraceDataOp)(JSTracer *trc, void *data);
+
 typedef JSBool
 (* JS_DLL_CALLBACK JSBranchCallback)(JSContext *cx, JSScript *script);
 
