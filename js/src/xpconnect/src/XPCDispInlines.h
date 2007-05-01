@@ -463,7 +463,7 @@ JSBool XPCDispIDArray::IsMarked() const
 
     // NOP. This is just here to make the AutoMarkingPtr code compile.
 inline
-void XPCDispIDArray::MarkBeforeJSFinalize(JSContext*) 
+void XPCDispIDArray::TraceJS(JSTracer* trc)
 {
 }
 
