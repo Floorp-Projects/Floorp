@@ -90,8 +90,8 @@
           var list = this.getAttribute("searchSessions").split(" ");
           for (var i = 0; i < list.length; i++) {
             var name = list[i];
-            if (name != "") {
-              var contractid = "@mozilla.org/autocompleteSession;1?type=" + name;
+            var contractid = "@mozilla.org/autocompleteSession;1?type=" + name;
+            if (contractid in Components.classes) {
               try {
                 var session =
                   Components.classes[contractid].getService(Components.interfaces.nsIAutoCompleteSession);
@@ -99,6 +99,8 @@
               } catch (e) {
                 dump("### ERROR - unable to create search session \"" + name + "\".\n");
               }
+            } else {
+              dump("search session \"" + name + "\" not found - skipping.\n");
             }
           }
         ]]></body>
@@ -109,8 +111,8 @@
           var list = this.getAttribute("autocompletesearch").split(" ");
           for (var i = 0; i < list.length; i++) {
             var name = list[i];
-            if (name != "") {
-              var contractid = "@mozilla.org/autocomplete/search;1?name=" + name;
+            var contractid = "@mozilla.org/autocomplete/search;1?name=" + name;
+            if (contractid in Components.classes) {
               try {
                 var search =
                   Components.classes[contractid].getService(Components.interfaces.nsIAutoCompleteSearch);
@@ -119,6 +121,8 @@
               } catch (e) {
                 dump("### ERROR - unable to create search \"" + name + "\".\n");
               }
+            } else {
+              dump("search \"" + name + "\" not found - skipping.\n");
             }
           }
         ]]></body>
