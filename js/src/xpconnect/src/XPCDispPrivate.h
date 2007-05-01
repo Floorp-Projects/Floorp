@@ -320,8 +320,8 @@ public:
     /**
      * NOP. This is just here to make the AutoMarkingPtr code compile.
      */
-    inline void Mark(JSContext*);
-    
+    inline void Mark();
+
     /**
      * Tests whether the ID is marked
      */
