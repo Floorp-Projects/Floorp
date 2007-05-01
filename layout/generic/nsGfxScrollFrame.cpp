@@ -521,12 +521,12 @@ PRBool
 nsHTMLScrollFrame::InInitialReflow() const
 {
   // We're in an initial reflow if NS_FRAME_FIRST_REFLOW is set, unless we're a
-  // root scrollframe during a non-eager StartLayout call on the presshell.  In
-  // that case we want to skip this clause altogether.
-  return
-    (GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
-    (!mInner.mIsRoot ||
-     PresContext()->PresShell()->IsInEagerStartLayout());
+  // root scrollframe.  In that case we want to skip this clause altogether.
+  // The guess here is that there are lots of overflow:auto divs out there that
+  // end up auto-sizing so they don't overflow, and that the root basically
+  // always needs a scrollbar if it did last time we loaded this page (good
+  // assumption, because our initial reflow is no longer synchronous).
+  return !mInner.mIsRoot && (GetStateBits() & NS_FRAME_FIRST_REFLOW);
 }
 
 nsresult
