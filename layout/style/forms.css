@@ -326,7 +326,6 @@ input[type="image"] {
   font-size: small;
   cursor: pointer;
   -moz-binding: none;
-  -moz-appearance: none;
 }
 
 input[type="image"][disabled] {
