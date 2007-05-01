@@ -77,7 +77,6 @@
   GTKF(gtk_moz_embed_shistory_goto_index) \
   GTKF(gtk_moz_embed_get_server_cert) \
   GTKF(gtk_moz_embed_get_nsIWebBrowser)
-#endif
 
 #define GTKMOZEMBED_FUNCTIONS \
   GTKF(gtk_moz_embed_get_type) \
