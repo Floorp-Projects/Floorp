@@ -58,6 +58,8 @@
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
 
+#import <Cocoa/Cocoa.h>
+
 #define DRAW_IN_FRAME_DEBUG 0
 #define SCROLLBARS_VISUAL_DEBUG 0
 
@@ -111,6 +113,15 @@ nsNativeThemeCocoa::DrawCheckboxRadio(CGContextRef cgContext, ThemeButtonKind in
   HIThemeDrawButton(&inBoxRect, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
 }
 
+// We use an offscreen buffer and image scaling to make HITheme draw buttons at any size.
+// Minimum size that HITheme will draw a normal push button:
+#define MIN_UNSCALED_BUTTON_WIDTH 68
+#define MIN_UNSCALED_BUTTON_HEIGHT 22
+// Minimum size that we can create with scaling:
+#define MIN_SCALED_BUTTON_WIDTH 20
+#define MIN_SCALED_BUTTON_HEIGHT 12
+// Difference between the height given to HITheme for a button and the button it actually draws:
+#define NATIVE_BUTTON_HEIGHT_DIFF 2
 
 void
 nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
@@ -118,13 +129,16 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
                                ThemeButtonValue inValue, ThemeButtonAdornment inAdornment,
                                PRInt32 inState)
 {
-  HIThemeButtonDrawInfo bdi;
+  if (inBoxRect.size.width < MIN_SCALED_BUTTON_WIDTH ||
+      inBoxRect.size.height < MIN_SCALED_BUTTON_HEIGHT)
+    return;
 
+  HIThemeButtonDrawInfo bdi;
   bdi.version = 0;
   bdi.kind = inKind;
   bdi.value = inValue;
   bdi.adornment = inAdornment;
-  
+
   if (inDisabled)
     bdi.state = kThemeStateUnavailable;
   else if ((inState & NS_EVENT_STATE_ACTIVE) && (inState & NS_EVENT_STATE_HOVER))
@@ -138,27 +152,89 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
   if (inIsDefault && !inDisabled)
     bdi.adornment |= kThemeAdornmentDefault;
 
-  // Certain buttons draw outside their frame with nsITheme, we adjust for that here.
-  HIRect drawRect = inBoxRect;
-  if (inKind == kThemePushButton ||
-      inKind == kThemePopupButton) {
-    // These kinds of buttons draw 2 pixels too tall.
-    drawRect.size.height -= 2;
+  // If any of the origin and size offset arithmatic seems strange here, check out the
+  // actual dimensions of an HITheme button compared to the rect you pass to HIThemeDrawButton.
+  if (inBoxRect.size.width < MIN_UNSCALED_BUTTON_WIDTH || inBoxRect.size.height < MIN_UNSCALED_BUTTON_HEIGHT) {
+    // We'll use these two values to size the button we draw offscreen, make sure it is
+    // big enough in both dimensions.
+    float offscreenWidth = MIN_UNSCALED_BUTTON_WIDTH;
+    float offscreenHeight = MIN_UNSCALED_BUTTON_HEIGHT;
+    if (inBoxRect.size.width > offscreenWidth)
+      offscreenWidth = inBoxRect.size.width;
+    if (inBoxRect.size.height > offscreenHeight)
+      offscreenHeight = inBoxRect.size.height;
+
+    // create an offscreen image
+    NSImage* image = [[NSImage alloc] initWithSize:NSMakeSize(offscreenWidth, offscreenHeight)];
+    NSImage* finalRenderImage = image; // we may create a second offscreen image later
+    [image setDataRetained:YES];
+    [image setScalesWhenResized:YES];
+    
+    // set up HITheme button to draw
+    HIRect drawFrame;
+    drawFrame.origin.x = 0;
+    drawFrame.origin.y = NATIVE_BUTTON_HEIGHT_DIFF;
+    drawFrame.size.width = offscreenWidth;
+    drawFrame.size.height = offscreenHeight - NATIVE_BUTTON_HEIGHT_DIFF;
+    
+    // draw into offscreen image
+    [image lockFocus];
+    [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationLow];
+    HIThemeDrawButton(&drawFrame, &bdi, (CGContext*)[[NSGraphicsContext currentContext] graphicsPort], kHIThemeOrientationInverted, NULL);
+    [image unlockFocus];
+
+    // only resize vertically, do not change the width yet as we don't want to distort the endcaps
+    [image setSize:NSMakeSize(offscreenWidth, inBoxRect.size.height)];
+
+    // now copy image half and half from each end if we need to shrink the width
+    if (inBoxRect.size.width < MIN_UNSCALED_BUTTON_WIDTH) {
+      // set up a second offscreen image that is the final size
+      NSImage* secondImage = [[NSImage alloc] initWithSize:NSMakeSize(inBoxRect.size.width, inBoxRect.size.height)];
+      [secondImage setDataRetained:YES];
+      [secondImage setScalesWhenResized:YES];
+
+      // this is tricky to do with floats, we don't want to risk drawing over the same pixel twice and darkening it
+      float widthFloor = floor(inBoxRect.size.width);
+      float copyFromLeft = floor(widthFloor / 2) + ((int)widthFloor % 2);
+      float copyFromRight = floor(widthFloor / 2);
+
+      [secondImage lockFocus];
+      [image drawInRect:NSMakeRect(0.0, 0.0, copyFromLeft, inBoxRect.size.height)
+               fromRect:NSMakeRect(0.0, 0.0, copyFromLeft, inBoxRect.size.height)
+              operation:NSCompositeSourceOver
+               fraction:1.0];
+      [image drawInRect:NSMakeRect(copyFromLeft, 0.0, copyFromRight, inBoxRect.size.height)
+               fromRect:NSMakeRect(offscreenWidth - copyFromRight, 0.0, copyFromRight, inBoxRect.size.height)
+              operation:NSCompositeSourceOver
+               fraction:1.0];
+      [secondImage unlockFocus];
+
+      [finalRenderImage release];
+      finalRenderImage = secondImage;
+    }
+
+    // render to the given CGContextRef
+    [NSGraphicsContext saveGraphicsState];
+    [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:YES]];
+    [finalRenderImage compositeToPoint:NSMakePoint(inBoxRect.origin.x, inBoxRect.origin.y + inBoxRect.size.height)
+                             operation:NSCompositeSourceOver];
+    [finalRenderImage release];
+    [NSGraphicsContext restoreGraphicsState];
   }
-  else if (inKind == kThemePushButtonSmall) {
-    // These kinds of buttons draw 2 pixels too wide, one pixel too far down, and
-    // two pixels too tall.
-    drawRect.origin.x += 1;
-    drawRect.origin.y -= 1;
-    drawRect.size.width -= 2;
+  else {
+    HIRect drawFrame;
+    drawFrame.origin.x = inBoxRect.origin.x;
+    drawFrame.origin.y = inBoxRect.origin.y;
+    drawFrame.size.width = inBoxRect.size.width;
+    drawFrame.size.height = inBoxRect.size.height - NATIVE_BUTTON_HEIGHT_DIFF;
+
+    HIThemeDrawButton(&drawFrame, &bdi, cgContext, kHIThemeOrientationNormal, NULL);
   }
 
 #if DRAW_IN_FRAME_DEBUG
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
   CGContextFillRect(cgContext, inBoxRect);
 #endif
-
-  HIThemeDrawButton(&drawRect, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
 }
 
 
@@ -594,17 +670,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
 
     case NS_THEME_BUTTON:
     case NS_THEME_BUTTON_SMALL: {
-      // Normal push buttons can only draw with a height of 20+ pixels. Small push
-      // buttons can only draw at a height of 17 pixels. We can't draw buttons with
-      // a height of 18 or 19 pixels, at least not with HITheme. So, we go down to
-      // 17 pixel buttons when asked to draw 18 or 19 so that we don't draw outside
-      // the frame. We just have to live with this until we switch to another API
-      // for control rendering. Remember that the frame for a 20 pixel tall button
-      // is 22 pixels because of the border and shadow.
-      ThemeButtonKind buttonKind = kThemePushButton;
-      if (macRect.size.height < 22)
-        buttonKind = kThemePushButtonSmall;
-      DrawButton(cgContext, buttonKind, macRect,
+      DrawButton(cgContext, kThemePushButton, macRect,
                  IsDefaultButton(aFrame), IsDisabled(aFrame),
                  kThemeButtonOn, kThemeAdornmentNone, eventState);
     }
@@ -887,20 +953,6 @@ nsNativeThemeCocoa::GetWidgetPadding(nsIDeviceContext* aContext,
       aResult->SizeTo(nativePadding, nativePadding, nativePadding, nativePadding);
       return PR_TRUE;
     }
-    case NS_THEME_BUTTON:
-    case NS_THEME_DROPDOWN:
-    case NS_THEME_DROPDOWN_BUTTON:
-    {
-      // The border/shadow on the bottom of the button means we have to
-      // draw the text a little higher than normal.
-      aResult->SizeTo(0, -1, 0, 1);
-      return PR_TRUE;
-    }
-    case NS_THEME_BUTTON_SMALL:
-    {
-      aResult->SizeTo(0, 0, 0, 0);
-      return PR_TRUE;
-    }
   }
 
   return PR_FALSE;
@@ -954,20 +1006,9 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
 
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
-    {
-      // Height value is adjusted for shadow and border.
-      SInt32 buttonHeight = 0;
-      ::GetThemeMetric(kThemeMetricPushButtonHeight, &buttonHeight);
-      aResult->SizeTo(kAquaMinButtonWidth, buttonHeight + 2);
-      break;
-    }
-
     case NS_THEME_BUTTON_SMALL:
     {
-      // Height value is adjusted for shadow and border.
-      SInt32 buttonHeight = 0;
-      ::GetThemeMetric(kThemeMetricSmallPushButtonHeight, &buttonHeight);
-      aResult->SizeTo(kAquaMinButtonWidth, buttonHeight + 2);
+      aResult->SizeTo(MIN_SCALED_BUTTON_WIDTH, MIN_SCALED_BUTTON_HEIGHT);
       break;
     }
 
