@@ -1864,6 +1864,13 @@ JS_UnlockGCThingRT(JSRuntime *rt, void *thing)
 }
 
 JS_PUBLIC_API(void)
+JS_SetExtraGCRoots(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
+{
+    rt->gcExtraRootsTraceOp = traceOp;
+    rt->gcExtraRootsData = data;
+}
+
+JS_PUBLIC_API(void)
 JS_TraceRuntime(JSTracer *trc)
 {
     JSBool allAtoms = trc->context->runtime->gcKeepAtoms != 0;

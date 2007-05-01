@@ -222,6 +222,13 @@ struct JSRuntime {
     JSGCStats           gcStats;
 #endif
 
+    /*
+     * The trace operation and its data argument to trace embedding-specific
+     * GC roots.
+     */
+    JSTraceDataOp       gcExtraRootsTraceOp;
+    void                *gcExtraRootsData;
+
     /* Literal table maintained by jsatom.c functions. */
     JSAtomState         atomState;
 
