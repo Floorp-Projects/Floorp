@@ -366,7 +366,7 @@ function run_test() {
       else
         do_check_true(node.bookmarkId > 0);
     }
-    testRoot.containerOpen = false;
+    rootNode.containerOpen = false;
   }
   catch(ex) {
     do_throw("bookmarks query: " + ex);
@@ -397,7 +397,7 @@ function run_test() {
     do_check_eq(cc, 2);
     do_check_eq(rootNode.getChild(0).title, "title 1");
     do_check_eq(rootNode.getChild(1).title, "title 2");
-    testRoot.containerOpen = false;
+    rootNode.containerOpen = false;
   }
   catch(ex) {
     do_throw("bookmarks query: " + ex);
@@ -464,9 +464,14 @@ function run_test() {
     var node = rootNode.getChild(0);
     do_check_eq(node.title, "ZZZXXXYYY");
     do_check_true(node.bookmarkId > 0);
-    testRoot.containerOpen = false;
+    rootNode.containerOpen = false;
   }
   catch(ex) {
     do_throw("bookmarks query: " + ex);
   }
+
+  // bug 378820
+  var uri1 = uri("http://foo.tld/a");
+  bmsvc.insertItem(testRoot, uri1, bmsvc.DEFAULT_INDEX);
+  histsvc.addVisit(uri1, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
 }

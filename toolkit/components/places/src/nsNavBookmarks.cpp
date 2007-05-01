@@ -772,7 +772,7 @@ nsNavBookmarks::IsBookmarkedInDatabase(PRInt64 aPlaceId,
   rv = statement->BindInt64Parameter(0, aPlaceId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = statement->BindInt32Parameter(0, TYPE_BOOKMARK);
+  rv = statement->BindInt32Parameter(1, TYPE_BOOKMARK);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return statement->ExecuteStep(aIsBookmarked);
