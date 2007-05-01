@@ -754,20 +754,21 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
     }
   }
 
-  if (global) {
-    // This might be the first reference to this language in the global
-    // We must init the language before we attempt to fetch its context.
-    if (NS_FAILED(global->EnsureScriptEnvironment(aLanguage))) {
-      NS_WARNING("Failed to setup script environment for this language");
-      // but fall through and let the inevitable failure below handle it.
-    }
-
-    context = global->GetScriptContext(aLanguage);
+  if (!global) {
+    // This can happen; for example this document might have been
+    // loaded as data.
+    return NS_OK;
   }
-  NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
+  
+  // This might be the first reference to this language in the global
+  // We must init the language before we attempt to fetch its context.
+  if (NS_FAILED(global->EnsureScriptEnvironment(aLanguage))) {
+    NS_WARNING("Failed to setup script environment for this language");
+    // but fall through and let the inevitable failure below handle it.
+  }
 
-  NS_ASSERTION(global, "How could we possibly have a context without an "
-               "nsIScriptGlobalObject?");
+  context = global->GetScriptContext(aLanguage);
+  NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
   void *scope = global->GetScriptGlobal(aLanguage);
   nsresult rv;
