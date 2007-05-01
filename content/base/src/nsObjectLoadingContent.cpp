@@ -1298,7 +1298,7 @@ nsObjectLoadingContent::GetFrame()
     return nsnull; // No current doc -> no frame
   }
 
-  nsIPresShell* shell = doc->GetShellAt(0);
+  nsIPresShell* shell = doc->GetPrimaryShell();
   if (!shell) {
     return nsnull; // No presentation -> no frame
   }

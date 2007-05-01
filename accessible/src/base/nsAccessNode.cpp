@@ -629,7 +629,7 @@ nsAccessNode::GetPresShellFor(nsIDOMNode *aNode)
   }
   nsIPresShell *presShell = nsnull;
   if (doc) {
-    presShell = doc->GetShellAt(0);
+    presShell = doc->GetPrimaryShell();
     NS_IF_ADDREF(presShell);
   }
   return presShell;

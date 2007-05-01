@@ -1060,7 +1060,7 @@ nsGenericHTMLElement::ScrollIntoView(PRBool aTop)
   }
 
   // Get the presentation shell
-  nsCOMPtr<nsIPresShell> presShell = document->GetShellAt(0);
+  nsCOMPtr<nsIPresShell> presShell = document->GetPrimaryShell();
   if (!presShell) {
     return NS_OK;
   }
@@ -1757,7 +1757,7 @@ nsGenericHTMLElement::GetPresContext()
   nsIDocument* doc = GetDocument();
   if (doc) {
     // Get presentation shell 0
-    nsIPresShell *presShell = doc->GetShellAt(0);
+    nsIPresShell *presShell = doc->GetPrimaryShell();
     if (presShell) {
       return presShell->GetPresContext();
     }

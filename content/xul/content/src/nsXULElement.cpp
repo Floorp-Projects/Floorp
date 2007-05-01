@@ -605,7 +605,7 @@ nsXULElement::PerformAccesskey(PRBool aKeyCausesActivation,
     if (!doc)
         return;
 
-    nsIPresShell *shell = doc->GetShellAt(0);
+    nsIPresShell *shell = doc->GetPrimaryShell();
     if (!shell)
         return;
 
@@ -1105,7 +1105,7 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
     //
     nsIDocument* doc = GetCurrentDoc();
     if (doc && !aOldValue.IsEmpty()) {
-        nsIPresShell *shell = doc->GetShellAt(0);
+        nsIPresShell *shell = doc->GetPrimaryShell();
 
         if (shell) {
             nsIContent *content = this;
@@ -2034,7 +2034,7 @@ nsXULElement::Focus()
     if (doc->GetNumberOfShells() == 0)
         return NS_OK;
 
-    nsIPresShell *shell = doc->GetShellAt(0);
+    nsIPresShell *shell = doc->GetPrimaryShell();
 
     // Set focus
     nsCOMPtr<nsPresContext> context = shell->GetPresContext();
@@ -2055,7 +2055,7 @@ nsXULElement::Blur()
     if (doc->GetNumberOfShells() == 0)
         return NS_OK;
 
-    nsIPresShell *shell = doc->GetShellAt(0);
+    nsIPresShell *shell = doc->GetPrimaryShell();
 
     // Set focus
     nsCOMPtr<nsPresContext> context = shell->GetPresContext();
@@ -2336,7 +2336,7 @@ nsXULElement::HideWindowChrome(PRBool aShouldHide)
     if (!doc || doc->GetRootContent() != this)
       return NS_ERROR_UNEXPECTED;
 
-    nsIPresShell *shell = doc->GetShellAt(0);
+    nsIPresShell *shell = doc->GetPrimaryShell();
 
     if (shell) {
         nsIContent* content = NS_STATIC_CAST(nsIContent*, this);

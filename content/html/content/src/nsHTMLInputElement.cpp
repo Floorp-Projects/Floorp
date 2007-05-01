@@ -1310,7 +1310,7 @@ nsHTMLInputElement::Click()
       return rv;
     }
     
-    nsIPresShell *shell = doc->GetShellAt(0);
+    nsIPresShell *shell = doc->GetPrimaryShell();
 
     if (shell) {
       nsCOMPtr<nsPresContext> context = shell->GetPresContext();

@@ -287,7 +287,7 @@ nsFocusController::MoveFocus(PRBool aForward, nsIDOMElement* aElt)
   if (count == 0)
     return NS_OK;
 
-  nsIPresShell *shell = doc->GetShellAt(0);
+  nsIPresShell *shell = doc->GetPrimaryShell();
   if (!shell)
     return NS_OK;
 

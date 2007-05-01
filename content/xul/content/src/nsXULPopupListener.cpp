@@ -327,7 +327,7 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
 
     // Get nsIDOMElement for targetNode
-    nsIPresShell *shell = doc->GetShellAt(0);
+    nsIPresShell *shell = doc->GetPrimaryShell();
     if (!shell)
       return NS_ERROR_FAILURE;
 
@@ -570,7 +570,7 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
   nsIContent* parent = popup->GetParent();
   if (parent) {
     nsIDocument* doc = parent->GetCurrentDoc();
-    nsIPresShell* presShell = doc ? doc->GetShellAt(0) : nsnull;
+    nsIPresShell* presShell = doc ? doc->GetPrimaryShell() : nsnull;
     nsIFrame* frame = presShell ? presShell->GetPrimaryFrameFor(parent) : nsnull;
     if (frame) {
       nsIMenuFrame* menu = nsnull;

@@ -272,7 +272,7 @@ nsSVGSVGElement::GetPixelUnitToMillimeterX(float *aPixelUnitToMillimeterX)
   nsIDocument* doc = GetCurrentDoc();
   if (!doc) return NS_OK;
   // Get Presentation shell 0
-  nsIPresShell *presShell = doc->GetShellAt(0);
+  nsIPresShell *presShell = doc->GetPrimaryShell();
   if (!presShell) return NS_OK;
   
   // Get the Presentation Context from the Shell
@@ -302,7 +302,7 @@ nsSVGSVGElement::GetScreenPixelToMillimeterX(float *aScreenPixelToMillimeterX)
   nsIDocument* doc = GetCurrentDoc();
   if (!doc) return NS_OK;
     // Get Presentation shell 0
-  nsIPresShell *presShell = doc->GetShellAt(0);
+  nsIPresShell *presShell = doc->GetPrimaryShell();
   if (!presShell) return NS_OK;
   
   // Get the Presentation Context from the Shell
@@ -1011,7 +1011,7 @@ nsSVGSVGElement::SetCurrentScaleTranslate(float s, float x, float y)
   // now dispatch an SVGZoom event if we are the root element
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
-    nsCOMPtr<nsIPresShell> presShell = doc->GetShellAt(0);
+    nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
     NS_ASSERTION(presShell, "no presShell");
     if (presShell &&
         doc->GetRootContent() == NS_STATIC_CAST(nsIContent*, this)) {
@@ -1036,7 +1036,7 @@ nsSVGSVGElement::SetCurrentTranslate(float x, float y)
   // now dispatch an SVGScroll event if we are the root element
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
-    nsCOMPtr<nsIPresShell> presShell = doc->GetShellAt(0);
+    nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
     NS_ASSERTION(presShell, "no presShell");
     if (presShell &&
         doc->GetRootContent() == NS_STATIC_CAST(nsIContent*, this)) {
@@ -1167,7 +1167,7 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
 {
   nsIDocument* doc = GetCurrentDoc();
   if (!doc) return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPresShell> presShell = doc->GetShellAt(0);
+  nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
   NS_ASSERTION(presShell, "no presShell");
   if (!presShell) return NS_ERROR_FAILURE;
 
@@ -1296,7 +1296,7 @@ void nsSVGSVGElement::GetOffsetToAncestor(nsIContent* ancestor,
   // presshells.
   document->FlushPendingNotifications(Flush_Layout);
   
-  nsIPresShell *presShell = document->GetShellAt(0);
+  nsIPresShell *presShell = document->GetPrimaryShell();
   if (!presShell) {
     return;
   }
@@ -1323,7 +1323,7 @@ nsSVGSVGElement::InvalidateTransformNotifyFrame()
 {
   nsIDocument* doc = GetCurrentDoc();
   if (!doc) return;
-  nsIPresShell* presShell = doc->GetShellAt(0);
+  nsIPresShell* presShell = doc->GetPrimaryShell();
   if (!presShell) return;
 
   nsIFrame* frame = presShell->GetPrimaryFrameFor(this);

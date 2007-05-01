@@ -796,7 +796,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
               if (gLastFocusedContent) // could have changed in Dispatch
                 doc = gLastFocusedContent->GetDocument();
               if (doc) {
-                nsIPresShell *shell = doc->GetShellAt(0);
+                nsIPresShell *shell = doc->GetPrimaryShell();
                 if (shell) {
                   nsCOMPtr<nsPresContext> oldPresContext =
                     shell->GetPresContext();
@@ -1017,7 +1017,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         if (document) {
           // Use a strong ref to make sure that the shell is alive still
           // when calling FrameSelection().
-          nsCOMPtr<nsIPresShell> shell = document->GetShellAt(0);
+          nsCOMPtr<nsIPresShell> shell = document->GetPrimaryShell();
           NS_ASSERTION(shell, "Focus events should not be getting thru when this is null!");
           if (shell) {
             nsPresContext* context = shell->GetPresContext();
@@ -1085,7 +1085,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         nsEvent event(PR_TRUE, NS_BLUR_CONTENT);
 
         if (gLastFocusedContent) {
-          nsIPresShell *shell = gLastFocusedDocument->GetShellAt(0);
+          nsIPresShell *shell = gLastFocusedDocument->GetPrimaryShell();
           if (shell) {
             nsCOMPtr<nsPresContext> oldPresContext = shell->GetPresContext();
 
@@ -1785,7 +1785,7 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
   nsIDocument *doc = GetDocumentFromWindow(contentWindow);
   if(!doc) return NS_ERROR_FAILURE;
 
-  nsIPresShell *presShell = doc->GetShellAt(0);
+  nsIPresShell *presShell = doc->GetPrimaryShell();
   if(!presShell) return NS_ERROR_FAILURE;
   nsPresContext *presContext = presShell->GetPresContext();
   if(!presContext) return NS_ERROR_FAILURE;
@@ -2791,7 +2791,7 @@ nsEventStateManager::NotifyMouseOver(nsGUIEvent* aEvent, nsIContent* aContent)
   if (parentDoc) {
     nsIContent *docContent = parentDoc->FindContentForSubDocument(mDocument);
     if (docContent) {
-      nsIPresShell *parentShell = parentDoc->GetShellAt(0);
+      nsIPresShell *parentShell = parentDoc->GetPrimaryShell();
       if (parentShell) {
         nsEventStateManager* parentESM =
           NS_STATIC_CAST(nsEventStateManager*,
@@ -4178,7 +4178,7 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
         // associated view manager on exit from this function.
         // See bug 53763.
         nsCOMPtr<nsIViewManager> kungFuDeathGrip;
-        nsIPresShell *shell = doc->GetShellAt(0);
+        nsIPresShell *shell = doc->GetPrimaryShell();
         if (shell) {
           kungFuDeathGrip = shell->GetViewManager();
 
@@ -4455,7 +4455,7 @@ nsEventStateManager::GetFocusedFrame(nsIFrame** aFrame)
   if (!mCurrentFocusFrame && mCurrentFocus) {
     nsIDocument* doc = mCurrentFocus->GetDocument();
     if (doc) {
-      nsIPresShell *shell = doc->GetShellAt(0);
+      nsIPresShell *shell = doc->GetPrimaryShell();
       if (shell) {
         mCurrentFocusFrame = shell->GetPrimaryFrameFor(mCurrentFocus);
       }

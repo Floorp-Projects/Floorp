@@ -2862,7 +2862,7 @@ void nsAccessible::DoCommandCallback(nsITimer *aTimer, void *aClosure)
     if (!doc) {
       return;
     }
-    nsCOMPtr<nsIPresShell> presShell = doc->GetShellAt(0);
+    nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
     nsPIDOMWindow *outerWindow = doc->GetWindow();
     if (presShell && outerWindow) {
       nsAutoPopupStatePusher popupStatePusher(outerWindow, openAllowed);
@@ -3241,7 +3241,7 @@ PRBool nsAccessible::CheckVisibilityInParentChain(nsIDocument* aDocument, nsIVie
     if (parentDoc != nsnull) {
       nsIContent* content = parentDoc->FindContentForSubDocument(document);
       if (content != nsnull) {
-        nsIPresShell* shell = parentDoc->GetShellAt(0);
+        nsIPresShell* shell = parentDoc->GetPrimaryShell();
         nsIFrame* frame = shell->GetPrimaryFrameFor(content);
         while (frame != nsnull && !frame->HasView()) {
           frame = frame->GetParent();

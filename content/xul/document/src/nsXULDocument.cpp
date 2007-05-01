@@ -1422,7 +1422,7 @@ nsXULDocument::GetWidth(PRInt32* aWidth)
 
     // We make the assumption that the first presentation shell
     // is the one for which we need information.
-    nsIPresShell *shell = GetShellAt(0);
+    nsIPresShell *shell = GetPrimaryShell();
     if (shell) {
         PRInt32 width, height;
 
@@ -1443,7 +1443,7 @@ nsXULDocument::GetHeight(PRInt32* aHeight)
 
     // We make the assumption that the first presentation shell
     // is the one for which we need information.
-    nsIPresShell *shell = GetShellAt(0);
+    nsIPresShell *shell = GetPrimaryShell();
     if (shell) {
         PRInt32 width, height;
 
@@ -3798,7 +3798,7 @@ nsXULDocument::OverlayForwardReference::Resolve()
     nsCOMPtr<nsIContent> target;
 
     PRBool notify = PR_FALSE;
-    nsIPresShell *shell = mDocument->GetShellAt(0);
+    nsIPresShell *shell = mDocument->GetPrimaryShell();
     if (shell)
         shell->GetDidInitialReflow(&notify);
 

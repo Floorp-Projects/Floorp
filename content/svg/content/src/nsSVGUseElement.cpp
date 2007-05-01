@@ -446,7 +446,7 @@ nsSVGUseElement::TriggerReclone()
 {
   nsIDocument *doc = GetCurrentDoc();
   if (!doc) return;
-  nsIPresShell *presShell = doc->GetShellAt(0);
+  nsIPresShell *presShell = doc->GetPrimaryShell();
   if (!presShell) return;
   presShell->RecreateFramesFor(this);
 }

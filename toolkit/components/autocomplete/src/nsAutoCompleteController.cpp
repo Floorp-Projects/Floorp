@@ -1423,7 +1423,7 @@ nsAutoCompleteController::GetPopupWidget()
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   NS_ENSURE_TRUE(doc, nsnull);
 
-  nsIPresShell* presShell = doc->GetShellAt(0);
+  nsIPresShell* presShell = doc->GetPrimaryShell();
   NS_ENSURE_TRUE(presShell, nsnull);
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(popup);
