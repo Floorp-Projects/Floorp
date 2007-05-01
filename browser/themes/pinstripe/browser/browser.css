@@ -1121,8 +1121,7 @@ sidebarheader > .tabs-closebutton > .toolbarbutton-text {
 #feed-button {
   -moz-binding: url("chrome://global/content/bindings/button.xml#menu");
   -moz-appearance: none; 
-  min-width: 0;
-  min-height: 0;
+  min-width: 0px; 
   margin-right: 1px !important;
 }
 
