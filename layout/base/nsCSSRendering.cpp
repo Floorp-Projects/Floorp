@@ -2356,17 +2356,18 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
                 oRect.size.width - (2*width) / (2.0 * twipsPerPixel),
                 oRect.size.height - (2*width) / (2.0 * twipsPerPixel));
 
-  // default to current color in case it is invert color
-  // and the platform does not support that
-  nscolor outlineColor(ourColor->mColor);
+  nscolor outlineColor;
+
+  // PR_FALSE means use the initial color; PR_TRUE means a color was
+  // set.
+  if (!aOutlineStyle.GetOutlineColor(outlineColor))
+    outlineColor = ourColor->mColor;
+
+  PRUint8 outlineStyle = aOutlineStyle.GetOutlineStyle();
 
   // grab the thebes context
   nsRefPtr<gfxContext> ctx = (gfxContext*)
     aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
-
-  PRUint8 outlineStyle = aOutlineStyle.GetOutlineStyle();
-  if (!aOutlineStyle.GetOutlineColor(outlineColor))
-    return;
 
   ctx->Save();
 
