@@ -50,11 +50,13 @@ class nsCSSRuleProcessor;
 class nsMediaList;
 class nsICSSGroupRule;
 class nsICSSImportRule;
+class nsIPrincipal;
 
 // IID for the nsICSSStyleSheet interface
-// 446df065-af5e-46b8-b32f-289bf5906876
+// 36541c18-e735-48ef-8622-3a481275b757
 #define NS_ICSS_STYLE_SHEET_IID     \
-{0x446df065, 0xaf5e, 0x46b8, {0xb3, 0x2f, 0x28, 0x9b, 0xf5, 0x90, 0x68, 0x76}}
+{ 0x36541c18, 0xe735, 0x48ef, \
+ { 0x86, 0x22, 0x3a, 0x48, 0x12, 0x75, 0xb7, 0x57 } }
 
 class nsICSSStyleSheet : public nsIStyleSheet {
 public:
@@ -86,6 +88,17 @@ public:
    * has no rules in it
    */
   NS_IMETHOD  SetURIs(nsIURI* aSheetURI, nsIURI* aBaseURI) = 0;
+
+  /**
+   * SetPrincipal should be called on all sheets before parsing into them.
+   * This can only be called once with a non-null principal.  Calling this with
+   * a null pointer is allowed and is treated as a no-op.
+   */
+  virtual NS_HIDDEN_(void) SetPrincipal(nsIPrincipal* aPrincipal) = 0;
+
+  // Principal() never returns a null pointer.
+  virtual NS_HIDDEN_(nsIPrincipal*) Principal() const = 0;
+  
   NS_IMETHOD  SetTitle(const nsAString& aTitle) = 0;
   NS_IMETHOD  SetMedia(nsMediaList* aMedia) = 0;
   NS_IMETHOD  SetOwningNode(nsIDOMNode* aOwningNode) = 0;
