@@ -77,7 +77,7 @@ public:
     
     enum { ALLOW_MEMMOVE = PR_TRUE };
 
-private:
+protected:
     nsCOMPtr<nsIURI> mKey;
 };
 

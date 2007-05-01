@@ -71,6 +71,7 @@ class nsMediaList;
 #include "nsDataHashtable.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
+#include "nsIPrincipal.h"
 
 /**
  * OVERALL ARCHITECTURE
@@ -116,14 +117,16 @@ public:
                 nsICSSStyleSheet* aSheet,
                 nsIStyleSheetLinkingElement* aOwningElement,
                 PRBool aIsAlternate,
-                nsICSSLoaderObserver* aObserver);                 
+                nsICSSLoaderObserver* aObserver,
+                nsIPrincipal* aLoaderPrincipal);
 
   // Data for loading a sheet linked from an @import rule
   SheetLoadData(CSSLoaderImpl* aLoader,
                 nsIURI* aURI,
                 nsICSSStyleSheet* aSheet,
                 SheetLoadData* aParentData,
-                nsICSSLoaderObserver* aObserver);                 
+                nsICSSLoaderObserver* aObserver,
+                nsIPrincipal* aLoaderPrincipal);
 
   // Data for loading a non-document sheet
   SheetLoadData(CSSLoaderImpl* aLoader,
@@ -209,8 +212,68 @@ public:
 
   // The observer that wishes to be notified of load completion
   nsCOMPtr<nsICSSLoaderObserver>        mObserver;
+
+  // The principal that identifies who started loading us.
+  nsCOMPtr<nsIPrincipal> mLoaderPrincipal;
 };
 
+class nsURIAndPrincipalHashKey : public nsURIHashKey
+{
+public:
+  typedef nsURIAndPrincipalHashKey* KeyType;
+  typedef const nsURIAndPrincipalHashKey* KeyTypePointer;
+
+  nsURIAndPrincipalHashKey(const nsURIAndPrincipalHashKey* aKey)
+    : nsURIHashKey(aKey->mKey), mPrincipal(aKey->mPrincipal)
+  {
+    MOZ_COUNT_CTOR(nsURIAndPrincipalHashKey);
+  }
+  nsURIAndPrincipalHashKey(nsIURI* aURI, nsIPrincipal* aPrincipal)
+    : nsURIHashKey(aURI), mPrincipal(aPrincipal)
+  {
+    MOZ_COUNT_CTOR(nsURIAndPrincipalHashKey);
+  }
+  nsURIAndPrincipalHashKey(const nsURIAndPrincipalHashKey& toCopy)
+    : nsURIHashKey(toCopy), mPrincipal(toCopy.mPrincipal)
+  {
+    MOZ_COUNT_CTOR(nsURIAndPrincipalHashKey);
+  }
+  ~nsURIAndPrincipalHashKey()
+  {
+    MOZ_COUNT_DTOR(nsURIAndPrincipalHashKey);
+  }
+ 
+  nsURIAndPrincipalHashKey* GetKey() const {
+    return NS_CONST_CAST(nsURIAndPrincipalHashKey*, this);
+  }
+  const nsURIAndPrincipalHashKey* GetKeyPointer() const { return this; }
+ 
+  PRBool KeyEquals(const nsURIAndPrincipalHashKey* aKey) const {
+    if (!nsURIHashKey::KeyEquals(aKey->mKey)) {
+      return PR_FALSE;
+    }
+
+    if (!mPrincipal != !aKey->mPrincipal) {
+      // One or the other has a principal, but not both... not equal
+      return PR_FALSE;
+    }
+       
+    PRBool eq;
+    return !mPrincipal ||
+      NS_SUCCEEDED(mPrincipal->Equals(aKey->mPrincipal, &eq)) && eq;
+  }
+ 
+  static const nsURIAndPrincipalHashKey*
+  KeyToPointer(nsURIAndPrincipalHashKey* aKey) { return aKey; }
+  static PLDHashNumber HashKey(const nsURIAndPrincipalHashKey* aKey) {
+    return nsURIHashKey::HashKey(aKey->mKey);
+  }
+     
+  enum { ALLOW_MEMMOVE = PR_TRUE };
+ 
+protected:
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+};
 
 /***********************************************************************
  * Enum that describes the state of the sheet returned by CreateSheet. *
@@ -305,14 +368,17 @@ public:
 
 private:
   nsresult CheckLoadAllowed(nsIURI* aSourceURI,
+                            nsIPrincipal* aSourcePrincipal,
                             nsIURI* aTargetURI,
                             nsISupports* aContext);
 
 
   // For inline style, the aURI param is null, but the aLinkingContent
-  // must be non-null then.
+  // must be non-null then.  The loader principal must never be null
+  // if aURI is not null.
   nsresult CreateSheet(nsIURI* aURI,
                        nsIContent* aLinkingContent,
+                       nsIPrincipal* aLoaderPrincipal,
                        PRBool aSyncLoad,
                        StyleSheetState& aSheetState,
                        nsICSSStyleSheet** aSheet);
@@ -401,9 +467,12 @@ private:
   nsCompatibility   mCompatMode;
   nsString          mPreferredSheet;  // title of preferred sheet
 
-  nsInterfaceHashtable<nsURIHashKey,nsICSSStyleSheet> mCompleteSheets;
-  nsDataHashtable<nsURIHashKey,SheetLoadData*> mLoadingDatas; // weak refs
-  nsDataHashtable<nsURIHashKey,SheetLoadData*> mPendingDatas; // weak refs
+  nsInterfaceHashtable<nsURIAndPrincipalHashKey,
+                       nsICSSStyleSheet> mCompleteSheets;
+  nsDataHashtable<nsURIAndPrincipalHashKey,
+                  SheetLoadData*> mLoadingDatas; // weak refs
+  nsDataHashtable<nsURIAndPrincipalHashKey,
+                  SheetLoadData*> mPendingDatas; // weak refs
   
   // We're not likely to have many levels of @import...  But likely to have
   // some.  Allocate some storage, what the hell.
