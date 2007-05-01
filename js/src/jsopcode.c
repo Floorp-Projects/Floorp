@@ -1622,6 +1622,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
  * common ATOM_TO_STRING(atom) here and near the call sites.
  */
 #define ATOM_IS_IDENTIFIER(atom) js_IsIdentifier(ATOM_TO_STRING(atom))
+#define ATOM_IS_KEYWORD(atom)                                                 \
+            (js_CheckKeyword(JSSTRING_CHARS(ATOM_TO_STRING(atom)),            \
+                             JSSTRING_LENGTH(ATOM_TO_STRING(atom))) != TOK_EOF)
 
 /*
  * Given an atom already fetched from jp->script's atom map, quote/escape its
@@ -3926,7 +3929,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                               rval);
 #else
                 if (lastop == JSOP_GETTER || lastop == JSOP_SETTER) {
-                    if (strncmp(rval, js_function_str, 8) || rval[8] != ' ') {
+                    if (!ATOM_IS_IDENTIFIER(atom) ||
+                        ATOM_IS_KEYWORD(atom) ||
+                        strncmp(rval, js_function_str, 8) ||
+                        rval[8] != ' ') {
                         todo = Sprint(&ss->sprinter, "%s%s%s %s:%s", lval,
                                       (lval[1] != '\0') ? ", " : "", xval,
                                       (lastop == JSOP_GETTER) ? js_getter_str :
