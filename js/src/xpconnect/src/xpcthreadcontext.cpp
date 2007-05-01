@@ -504,7 +504,7 @@ xpc_ThreadDataDtorCB(void* ptr)
         delete data;
 }
 
-void XPCPerThreadData::TraceJS(JSTracer *trc)
+void XPCPerThreadData::MarkAutoRootsBeforeJSFinalize(JSContext* cx)
 {
 #ifdef XPC_TRACK_AUTOMARKINGPTR_STATS
     {
@@ -520,7 +520,7 @@ void XPCPerThreadData::TraceJS(JSTracer *trc)
 #endif
 
     if(mAutoRoots)
-        mAutoRoots->TraceJS(trc);
+        mAutoRoots->MarkBeforeJSFinalize(cx);
 }
 
 void XPCPerThreadData::MarkAutoRootsAfterJSFinalize()

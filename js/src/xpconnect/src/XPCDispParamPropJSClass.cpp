@@ -134,20 +134,23 @@ XPC_PP_Finalize(JSContext *cx, JSObject *obj)
 }
 
 /**
- * Is called to trace things that the object holds.
- * @param trc the tracing structure
+ * Is called to mark during GC
+ * @param cx the JS context
  * @param obj the object being marked
+ * @param arg we just pass this on
+ * @return 0
  */
-JS_STATIC_DLL_CALLBACK(void)
-XPC_PP_Trace(JSTracer *trc, JSObject *obj)
+JS_STATIC_DLL_CALLBACK(uint32)
+XPC_PP_Mark(JSContext *cx, JSObject *obj, void *arg)
 {
-    XPCDispParamPropJSClass* paramProp = GetParamProp(trc->context, obj);
+    XPCDispParamPropJSClass* paramProp = GetParamProp(cx, obj);
     if(paramProp)
     {
         XPCWrappedNative* wrapper = paramProp->GetWrapper();
         if(wrapper && wrapper->IsValid())
-            xpc_TraceForValidWrapper(trc, wrapper);
+            xpc_MarkForValidWrapper(cx, wrapper, arg);
     }
+    return 0;
 }
 
 /**
@@ -156,7 +159,7 @@ XPC_PP_Trace(JSTracer *trc, JSObject *obj)
  */
 static JSClass ParamPropClass = {
     "XPCDispParamPropJSCass",   // Name 
-    JSCLASS_HAS_PRIVATE | JSCLASS_MARK_IS_TRACE, // flags
+    JSCLASS_HAS_PRIVATE,        // flags  
 
     /* Mandatory non-null function pointer members. */
     JS_PropertyStub,            // addProperty
@@ -175,7 +178,7 @@ static JSClass ParamPropClass = {
     nsnull,                     // construct;
     nsnull,                     // xdrObject;
     nsnull,                     // hasInstance;
-    JS_CLASS_TRACE(XPC_PP_Trace), // mark/trace;
+    XPC_PP_Mark,                // mark;
     nsnull                      // spare;
 };
 
