@@ -161,7 +161,7 @@ EmbedContextMenuInfo::GetFormControlType(nsIDOMEvent* aEvent)
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(mCtxDocument);
     if (!doc)
       return NS_OK;
-    nsIPresShell *presShell = doc->GetShellAt(0);
+    nsIPresShell *presShell = doc->GetPrimaryShell();
     if (!presShell)
       return NS_OK;
     nsCOMPtr<nsIContent> tgContent = do_QueryInterface(mEventTarget);
@@ -595,7 +595,7 @@ EmbedContextMenuInfo::UpdateContextData(nsIDOMEvent *aDOMEvent)
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(mCtxDocument);
   if (!doc)
     return NS_OK;
-  nsIPresShell *presShell = doc->GetShellAt(0);
+  nsIPresShell *presShell = doc->GetPrimaryShell();
   if (!presShell)
     return NS_OK;
   nsCOMPtr<nsIContent> tgContent = do_QueryInterface(mEventTarget);

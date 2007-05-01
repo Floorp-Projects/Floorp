@@ -308,7 +308,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
   // may be different.
   document->FlushPendingNotifications(Flush_Style);
 
-  nsIPresShell* presShell = document->GetShellAt(0);
+  nsIPresShell* presShell = document->GetPrimaryShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_AVAILABLE);
 
   mFrame = presShell->GetPrimaryFrameFor(mContent);
@@ -680,7 +680,7 @@ nsComputedDOMStyle::GetFontFamily(nsIDOMCSSValue** aValue)
 
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocumentWeak);
   NS_ASSERTION(doc, "document is required");
-  nsIPresShell* presShell = doc->GetShellAt(0);
+  nsIPresShell* presShell = doc->GetPrimaryShell();
   NS_ASSERTION(presShell, "pres shell is required");
   nsPresContext *presContext = presShell->GetPresContext();
   NS_ASSERTION(presContext, "pres context is required");

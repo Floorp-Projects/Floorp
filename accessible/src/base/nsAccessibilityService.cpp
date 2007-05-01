@@ -295,7 +295,7 @@ nsAccessibilityService::GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIW
 
   // do_GetWR only works into a |nsCOMPtr| :-(
   nsCOMPtr<nsIWeakReference> weakShell =
-    do_GetWeakReference(document->GetShellAt(0));
+    do_GetWeakReference(document->GetPrimaryShell());
   NS_IF_ADDREF(*aShell = weakShell);
 
   return NS_OK;
@@ -311,7 +311,7 @@ nsAccessibilityService::GetShellFromNode(nsIDOMNode *aNode, nsIWeakReference **a
     return NS_ERROR_INVALID_ARG;
 
   // ---- Get the pres shell ----
-  nsIPresShell *shell = doc->GetShellAt(0);
+  nsIPresShell *shell = doc->GetPrimaryShell();
   if (!shell)
     return NS_ERROR_FAILURE;
 
@@ -360,7 +360,7 @@ nsAccessibilityService::CreateRootAccessible(nsIPresShell *aShell,
 
   nsIPresShell *presShell = aShell;
   if (!presShell) {
-    presShell = aDocument->GetShellAt(0);
+    presShell = aDocument->GetPrimaryShell();
   }
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
 
@@ -939,7 +939,7 @@ nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  nsIPresShell *presShell = doc->GetShellAt(0);
+  nsIPresShell *presShell = doc->GetPrimaryShell();
   return GetAccessibleInShell(aNode, presShell, aAccessible);
 }
 

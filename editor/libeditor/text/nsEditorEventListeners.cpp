@@ -1014,7 +1014,7 @@ IsTargetFocused(nsIDOMEventTarget* aTarget)
   if (!doc)
     return PR_FALSE;
 
-  nsIPresShell *shell = doc->GetShellAt(0);
+  nsIPresShell *shell = doc->GetPrimaryShell();
   if (!shell)
     return PR_FALSE;
 

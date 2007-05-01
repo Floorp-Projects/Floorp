@@ -231,7 +231,7 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   if (contentNode) {
     nsIDocument* doc = contentNode->GetCurrentDoc();
     if (doc) {
-      nsIPresShell* presShell = doc->GetShellAt(0);
+      nsIPresShell* presShell = doc->GetPrimaryShell();
       if (presShell) {
         nsIViewManager* vm = presShell->GetViewManager();
         if (vm) {
@@ -356,7 +356,7 @@ nsBaseDragService::FireDragEventAtSource(PRUint32 aMsg)
   if (mSourceNode) {
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(mSourceDocument);
     if (doc) {
-      nsCOMPtr<nsIPresShell> presShell = doc->GetShellAt(0);
+      nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
       if (presShell) {
         nsEventStatus status = nsEventStatus_eIgnore;
         nsMouseEvent event(PR_TRUE, aMsg, nsnull, nsMouseEvent::eReal);
@@ -380,7 +380,7 @@ GetPresShellForContent(nsIDOMNode* aDOMNode)
   if (document) {
     document->FlushPendingNotifications(Flush_Display);
 
-    return document->GetShellAt(0);
+    return document->GetPrimaryShell();
   }
 
   return nsnull;

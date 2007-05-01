@@ -190,7 +190,7 @@ public:
     // has a primary frame and whether it's in the undisplayed map
     // before sending a ContentInserted notification, or bad things
     // will happen.
-    nsIPresShell *shell = doc->GetShellAt(0);
+    nsIPresShell *shell = doc->GetPrimaryShell();
     if (shell) {
       nsIFrame* childFrame = shell->GetPrimaryFrameFor(mBoundElement);
       if (!childFrame) {

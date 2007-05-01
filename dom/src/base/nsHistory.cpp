@@ -293,7 +293,7 @@ nsHistory::Go()
 
       nsIPresShell *shell;
       nsPresContext *pcx;
-      if (doc && (shell = doc->GetShellAt(0)) &&
+      if (doc && (shell = doc->GetPrimaryShell()) &&
           (pcx = shell->GetPresContext())) {
         pcx->ClearStyleDataAndReflow();
       }

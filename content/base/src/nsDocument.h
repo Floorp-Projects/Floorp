@@ -377,6 +377,7 @@ public:
   virtual PRBool DeleteShell(nsIPresShell* aShell);
   virtual PRUint32 GetNumberOfShells() const;
   virtual nsIPresShell *GetShellAt(PRUint32 aIndex) const;
+  virtual nsIPresShell *GetPrimaryShell() const;
   virtual void SetShellsHidden(PRBool aHide);
 
   virtual nsresult SetSubDocumentFor(nsIContent *aContent,

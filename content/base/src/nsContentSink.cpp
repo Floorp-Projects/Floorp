@@ -448,7 +448,7 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
     // XXXbz don't we want to support this as an HTTP header too?
     nsAutoString value(aValue);
     if (value.LowerCaseEqualsLiteral("no")) {
-      nsIPresShell* shell = mDocument->GetShellAt(0);
+      nsIPresShell* shell = mDocument->GetPrimaryShell();
       if (shell) {
         shell->DisableThemeSupport();
       }
@@ -1174,7 +1174,7 @@ nsContentSink::DidProcessATokenImpl()
   // switches to low frequency interrupt mode.
 
   // Get the current user event time
-  nsIPresShell *shell = mDocument->GetShellAt(0);
+  nsIPresShell *shell = mDocument->GetPrimaryShell();
 
   if (!shell) {
     // If there's no pres shell in the document, return early since

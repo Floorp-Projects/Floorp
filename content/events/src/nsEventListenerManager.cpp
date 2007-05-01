@@ -1321,7 +1321,7 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
   }
 
   // Obtain a presentation shell
-  nsIPresShell *shell = document->GetShellAt(0);
+  nsIPresShell *shell = document->GetPrimaryShell();
   nsCOMPtr<nsPresContext> context;
   if (shell) {
     context = shell->GetPresContext();

@@ -805,7 +805,7 @@ nsContentAreaDragDrop::DragGesture(nsIDOMEvent* inMouseEvent)
       nsCOMPtr<nsIContent> targetContent(do_QueryInterface(target));
       nsIDocument* doc = targetContent->GetCurrentDoc();
       if (doc) {
-        nsIPresShell* presShell = doc->GetShellAt(0);
+        nsIPresShell* presShell = doc->GetPrimaryShell();
         if (presShell) {
           nsISelection* selection =
             presShell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL);

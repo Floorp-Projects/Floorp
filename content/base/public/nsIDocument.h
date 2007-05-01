@@ -94,8 +94,8 @@ class mozAutoSubtreeModified;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x1b8ed19c, 0xb87d, 0x4058, \
-  { 0x92, 0x2a, 0xff, 0xbc, 0x36, 0x29, 0x3b, 0xd7 } }
+{ 0xb7f930df, 0x1c61, 0x410f, \
+ { 0xab, 0x3c, 0xe2, 0x53, 0xca, 0x8d, 0x85, 0x49 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -349,6 +349,7 @@ public:
   virtual PRBool DeleteShell(nsIPresShell* aShell) = 0;
   virtual PRUint32 GetNumberOfShells() const = 0;
   virtual nsIPresShell *GetShellAt(PRUint32 aIndex) const = 0;
+  virtual nsIPresShell *GetPrimaryShell() const = 0;
   virtual void SetShellsHidden(PRBool aHide) = 0;
 
   /**

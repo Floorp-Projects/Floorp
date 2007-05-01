@@ -981,7 +981,7 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
 
   // now we need to get the shell for the screen
   // XXX assuming that the shell at zero will always be the screen one
-  nsIPresShell *shell = doc->GetShellAt(0);
+  nsIPresShell *shell = doc->GetPrimaryShell();
   if (!shell)
     return;
 
