@@ -450,10 +450,10 @@ mozStorageStatementWrapper::HasInstance(nsIXPConnectWrappedNative *wrapper, JSCo
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void trace (in nsIXPConnectWrappedNative wrapper, in JSTracerPtr trc, in JSObjectPtr obj); */
+/* PRUint32 mark (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in voidPtr arg); */
 NS_IMETHODIMP
-mozStorageStatementWrapper::Trace(nsIXPConnectWrappedNative *wrapper,
-                                  JSTracer *trc, JSObject *obj)
+mozStorageStatementWrapper::Mark(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                          JSObject * obj, void * arg, PRUint32 *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -718,10 +718,10 @@ mozStorageStatementRow::HasInstance(nsIXPConnectWrappedNative *wrapper, JSContex
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void trace (in nsIXPConnectWrappedNative wrapper, in JSTracerPtr trc, in JSObjectPtr obj); */
+/* PRUint32 mark (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in voidPtr arg); */
 NS_IMETHODIMP
-mozStorageStatementRow::Trace(nsIXPConnectWrappedNative *wrapper,
-                              JSTracer * trc, JSObject * obj)
+mozStorageStatementRow::Mark(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                             JSObject * obj, void * arg, PRUint32 *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1001,10 +1001,10 @@ mozStorageStatementParams::HasInstance(nsIXPConnectWrappedNative *wrapper, JSCon
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void trace (in nsIXPConnectWrappedNative wrapper, in JSTracerPtr trc, in JSObjectPtr obj); */
+/* PRUint32 mark (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in voidPtr arg); */
 NS_IMETHODIMP
-mozStorageStatementParams::Trace(nsIXPConnectWrappedNative *wrapper,
-                                JSTracer *trc, JSObject * obj)
+mozStorageStatementParams::Mark(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                             JSObject * obj, void * arg, PRUint32 *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

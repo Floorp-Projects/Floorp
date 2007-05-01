@@ -53,7 +53,7 @@
  * to *_retval unless they want to return PR_FALSE.
  */
 
-[uuid(1455f6fe-6de9-4b62-a2b3-d1aee82dd829)]
+[uuid(9cc0c2e0-f769-4f14-8cd6-2d2d40466f6c)]
 interface nsIXPCScriptable : nsISupports
 {
     /* bitflags used for 'flags' (only 32 bits available!) */
@@ -74,7 +74,7 @@ interface nsIXPCScriptable : nsISupports
     const PRUint32 WANT_CALL                        = 1 << 13;
     const PRUint32 WANT_CONSTRUCT                   = 1 << 14;
     const PRUint32 WANT_HASINSTANCE                 = 1 << 15;
-    const PRUint32 WANT_TRACE                       = 1 << 16;
+    const PRUint32 WANT_MARK                        = 1 << 16;
     const PRUint32 USE_JSSTUB_FOR_ADDPROPERTY       = 1 << 17;
     const PRUint32 USE_JSSTUB_FOR_DELPROPERTY       = 1 << 18;
     const PRUint32 USE_JSSTUB_FOR_SETPROPERTY       = 1 << 19;
@@ -161,8 +161,8 @@ interface nsIXPCScriptable : nsISupports
                        in JSContextPtr cx, in JSObjectPtr obj,
                        in JSVal val, out PRBool bp);
 
-    void trace(in nsIXPConnectWrappedNative wrapper,
-               in JSTracerPtr trc, in JSObjectPtr obj);
+    PRUint32 mark(in nsIXPConnectWrappedNative wrapper,
+                  in JSContextPtr cx, in JSObjectPtr obj, in voidPtr arg);
 
     PRBool equality(in nsIXPConnectWrappedNative wrapper,
                     in JSContextPtr cx, in JSObjectPtr obj, in JSVal val);

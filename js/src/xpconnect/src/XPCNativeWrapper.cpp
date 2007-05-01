@@ -82,8 +82,8 @@ XPC_NW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
-JS_STATIC_DLL_CALLBACK(void)
-XPC_NW_Trace(JSTracer *trc, JSObject *obj);
+JS_STATIC_DLL_CALLBACK(uint32)
+XPC_NW_Mark(JSContext *cx, JSObject *obj, void *arg);
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
@@ -104,7 +104,7 @@ JSExtendedClass XPCNativeWrapper::sXPC_NW_JSClass = {
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
     // Our one reserved slot holds a jsint of flag bits
     JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(1) |
-    JSCLASS_MARK_IS_TRACE | JSCLASS_IS_EXTENDED,
+    JSCLASS_IS_EXTENDED,
     XPC_NW_AddProperty, XPC_NW_DelProperty,
     XPC_NW_GetProperty, XPC_NW_SetProperty,
     XPC_NW_Enumerate,   (JSResolveOp)XPC_NW_NewResolve,
@@ -112,7 +112,7 @@ JSExtendedClass XPCNativeWrapper::sXPC_NW_JSClass = {
     nsnull,             XPC_NW_CheckAccess,
     XPC_NW_Call,        XPC_NW_Construct,
     nsnull,             XPC_NW_HasInstance,
-    JS_CLASS_TRACE(XPC_NW_Trace), nsnull
+    XPC_NW_Mark,        nsnull
   },
   // JSExtendedClass initialization
   XPC_NW_Equality
@@ -1185,16 +1185,18 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(void)
-XPC_NW_Trace(JSTracer *trc, JSObject *obj)
+JS_STATIC_DLL_CALLBACK(uint32)
+XPC_NW_Mark(JSContext *cx, JSObject *obj, void *arg)
 {
   XPCWrappedNative *wrappedNative =
-    XPCNativeWrapper::GetWrappedNative(trc->context, obj);
+    XPCNativeWrapper::GetWrappedNative(cx, obj);
 
   if (wrappedNative && wrappedNative->IsValid()) {
-    JS_CALL_OBJECT_TRACER(trc, wrappedNative->GetFlatJSObject(),
-                          "wrappedNative.flatJSObject");
+    ::JS_MarkGCThing(cx, wrappedNative->GetFlatJSObject(),
+                     "XPCNativeWrapper wrapped native", arg);
   }
+
+  return 0;
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
