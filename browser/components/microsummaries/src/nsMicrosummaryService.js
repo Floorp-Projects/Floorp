@@ -297,7 +297,9 @@ MicrosummaryService.prototype = {
   
   _updateMicrosummary: function MSS__updateMicrosummary(bookmarkID, microsummary) {
     // Get the current live title to see if it's actually changed.
-    var oldValue = this._getField(bookmarkID, FIELD_GENERATED_TITLE);
+    var oldValue = null;
+    if (this._hasField(bookmarkID, FIELD_GENERATED_TITLE))
+      oldValue = this._getField(bookmarkID, FIELD_GENERATED_TITLE);
 
     // A string identifying the bookmark to use when logging the update.
     var bookmarkIdentity = 
