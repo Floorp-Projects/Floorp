@@ -75,6 +75,9 @@ CPPSRCS = \
   nsHTMLWin32ObjectAccessible.cpp \
   nsXULMenuAccessibleWrap.cpp \
   nsXULTreeAccessibleWrap.cpp \
+  nsHyperTextAccessibleWrap.cpp \
+  CAccessibleText.cpp \
+  CAccessibleEditableText.cpp \
   $(NULL)
 
 EXPORTS = \
@@ -86,6 +89,9 @@ EXPORTS = \
   nsHTMLWin32ObjectAccessible.h \
   nsXULMenuAccessibleWrap.h \
   nsXULTreeAccessibleWrap.h \
+  nsHyperTextAccessibleWrap.h \
+  CAccessibleText.h \
+  CAccessibleEditableText.h \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

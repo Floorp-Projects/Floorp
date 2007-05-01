@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,16 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is the Mozilla browser.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Aaron Leventhal (aaronl@netscape.com)
- *   Kyle Yuan (kyle.yuan@sun.com)
+ *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,46 +37,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsXULTextAccessible_H_
-#define _nsXULTextAccessible_H_
+#include "nsISupports.idl"
 
-#include "nsBaseWidgetAccessible.h"
-#include "nsTextAccessibleWrap.h"
-#include "nsHyperTextAccessibleWrap.h"
+%{C++
+#include "Guiddef.h"
+%}
 
-class nsIWeakReference;
+[ref] native MSCOMIIDRef(IID);
 
-class nsXULTextAccessible : public nsHyperTextAccessibleWrap
+[uuid(63efe9c5-2610-4d2f-861b-e4ddfe1b70d9)]
+interface nsIWinAccessNode : nsISupports
 {
-
-public:
-  nsXULTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetName(nsAString& _retval); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
-  NS_IMETHOD GetRole(PRUint32 *aRole) { *aRole = nsIAccessibleRole::ROLE_LABEL; return NS_OK; }
+  voidPtr queryNativeInterface([const] in MSCOMIIDRef aIID);
 };
 
-class nsXULTooltipAccessible : public nsLeafAccessible
-{
-
-public:
-  nsXULTooltipAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetName(nsAString& _retval); 
-  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
-  NS_IMETHOD GetRole(PRUint32 *_retval); 
-};
-
-class nsXULLinkAccessible : public nsLinkableAccessible
-{
-
-public:
-  nsXULLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetName(nsAString& _retval); 
-  NS_IMETHOD GetRole(PRUint32 *aRole);
-  NS_IMETHOD GetValue(nsAString& _retval);
-
-protected:
-  void CacheActionContent();
-};
-
-#endif  

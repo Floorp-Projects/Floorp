@@ -48,6 +48,45 @@
 #include "Accessible2.h"
 #include "AccessibleAction.h"
 
+#define DECL_IUNKNOWN_INHERITED                                               \
+public:                                                                       \
+STDMETHODIMP QueryInterface(REFIID, void**);                                  \
+
+#define IMPL_IUNKNOWN_QUERY_HEAD(Class)                                       \
+STDMETHODIMP                                                                  \
+Class::QueryInterface(REFIID iid, void** ppv)                                 \
+{                                                                             \
+  HRESULT hr = E_NOINTERFACE;                                                 \
+  *ppv = NULL;                                                                \
+
+#define IMPL_IUNKNOWN_QUERY_TAIL                                              \
+  return hr;                                                                  \
+}                                                                             \
+
+#define IMPL_IUNKNOWN_QUERY_ENTRY(Class)                                      \
+  hr = Class::QueryInterface(iid, ppv);                                       \
+  if (SUCCEEDED(hr))                                                          \
+    return hr;                                                                \
+
+#define IMPL_IUNKNOWN_INHERITED0(Class, Super)                                \
+  IMPL_IUNKNOWN_QUERY_HEAD(Class)                                             \
+  IMPL_IUNKNOWN_QUERY_ENTRY(Super)                                            \
+  IMPL_IUNKNOWN_QUERY_TAIL                                                    \
+
+#define IMPL_IUNKNOWN_INHERITED1(Class, Super, I1)                            \
+  IMPL_IUNKNOWN_QUERY_HEAD(Class)                                             \
+  IMPL_IUNKNOWN_QUERY_ENTRY(I1);                                              \
+  IMPL_IUNKNOWN_QUERY_ENTRY(Super)                                            \
+  IMPL_IUNKNOWN_QUERY_TAIL                                                    \
+
+#define IMPL_IUNKNOWN_INHERITED2(Class, Super, I1, I2)                        \
+  IMPL_IUNKNOWN_QUERY_HEAD(Class)                                             \
+  IMPL_IUNKNOWN_QUERY_ENTRY(I1);                                              \
+  IMPL_IUNKNOWN_QUERY_ENTRY(I2);                                              \
+  IMPL_IUNKNOWN_QUERY_ENTRY(Super)                                            \
+  IMPL_IUNKNOWN_QUERY_TAIL                                                    \
+
+
 class nsAccessibleWrap : public nsAccessible,
                          public IAccessible2,
                          public IAccessibleAction,
@@ -58,9 +97,10 @@ class nsAccessibleWrap : public nsAccessible,
     nsAccessibleWrap(nsIDOMNode*, nsIWeakReference *aShell);
     virtual ~nsAccessibleWrap();
 
+    // nsISupports
+    NS_DECL_ISUPPORTS_INHERITED
+
   public: // IUnknown methods - see iunknown.h for documentation
-    STDMETHODIMP_(ULONG) AddRef();
-    STDMETHODIMP_(ULONG) Release();
     STDMETHODIMP QueryInterface(REFIID, void**);
 
   public: // IServiceProvider

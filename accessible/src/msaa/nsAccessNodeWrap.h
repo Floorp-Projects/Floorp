@@ -45,6 +45,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIAccessible.h"
+#include "nsIWinAccessNode.h"
 #include "ISimpleDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIContent.h"
@@ -57,15 +58,19 @@
 typedef LRESULT (STDAPICALLTYPE *LPFNNOTIFYWINEVENT)(DWORD event,HWND hwnd,LONG idObjectType,LONG idObject);
 typedef LRESULT (STDAPICALLTYPE *LPFNGETGUITHREADINFO)(DWORD idThread, GUITHREADINFO* pgui);
 
-class nsAccessNodeWrap :  public nsAccessNode, public ISimpleDOMNode
+class nsAccessNodeWrap :  public nsAccessNode,
+                          public nsIWinAccessNode,
+                          public ISimpleDOMNode
 {
+  public:
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSIWINACCESSNODE
+
   public: // construction, destruction
     nsAccessNodeWrap(nsIDOMNode *, nsIWeakReference* aShell);
     virtual ~nsAccessNodeWrap();
 
-    // IUnknown methods - see iunknown.h for documentation
-    STDMETHODIMP_(ULONG) AddRef();
-    STDMETHODIMP_(ULONG) Release();
+    // IUnknown
     STDMETHODIMP QueryInterface(REFIID, void**);
 
   public:

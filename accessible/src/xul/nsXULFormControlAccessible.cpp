@@ -671,7 +671,7 @@ nsXULToolbarSeparatorAccessible::GetState(PRUint32 *aState,
   */
 
 nsXULTextFieldAccessible::nsXULTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell) :
- nsHyperTextAccessible(aNode, aShell)
+ nsHyperTextAccessibleWrap(aNode, aShell)
 {
 }
 
@@ -681,7 +681,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXULTextFieldAccessible, nsHyperTextAccessible,
 NS_IMETHODIMP nsXULTextFieldAccessible::Init()
 {
   CheckForEditor();
-  return nsHyperTextAccessible::Init();
+  return nsHyperTextAccessibleWrap::Init();
 }
 
 NS_IMETHODIMP nsXULTextFieldAccessible::Shutdown()
@@ -690,7 +690,7 @@ NS_IMETHODIMP nsXULTextFieldAccessible::Shutdown()
     mEditor->RemoveEditActionListener(this);
     mEditor = nsnull;
   }
-  return nsHyperTextAccessible::Shutdown();
+  return nsHyperTextAccessibleWrap::Shutdown();
 }
 
 NS_IMETHODIMP nsXULTextFieldAccessible::GetValue(nsAString& aValue)
@@ -732,7 +732,7 @@ nsXULTextFieldAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
 
-  nsresult rv = nsHyperTextAccessible::GetState(aState, aExtraState);
+  nsresult rv = nsHyperTextAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMNode> inputField = GetInputField();
