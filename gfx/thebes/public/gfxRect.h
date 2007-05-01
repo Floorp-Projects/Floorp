@@ -67,7 +67,6 @@ struct THEBES_API gfxRect {
         return gfxRect(pos + aPt, size);
     }
 
-    const gfxPoint& TopLeft() const { return pos; }
     gfxFloat Width() const { return size.width; }
     gfxFloat Height() const { return size.height; }
     gfxFloat X() const { return pos.x; }
@@ -79,6 +78,14 @@ struct THEBES_API gfxRect {
     gfxRect Intersect(const gfxRect& aRect) const;
     gfxRect Union(const gfxRect& aRect) const;
     // XXX figure out what methods (intersect, union, etc) we use and add them.
+
+    void Round();
+
+    // grabbing specific points
+    gfxPoint TopLeft() const { return gfxPoint(pos); }
+    gfxPoint TopRight() const { return pos + gfxSize(size.width, 0.0); }
+    gfxPoint BottomLeft() const { return pos + gfxSize(0.0, size.height); }
+    gfxPoint BottomRight() const { return pos + size; }
 };
 
 #endif /* GFX_RECT_H */
