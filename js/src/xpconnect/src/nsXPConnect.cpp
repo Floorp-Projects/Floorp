@@ -141,7 +141,7 @@ struct JSObjectRefcounts
 
     JSObjectRefcounts() : mMarkEnded(PR_FALSE)
     {
-        InitRefCounts();
+        mRefCounts.ops = nsnull;
 #ifndef XPCONNECT_STANDALONE
         mScopes.Init();
 #endif
@@ -149,22 +149,15 @@ struct JSObjectRefcounts
 
     ~JSObjectRefcounts()
     {
-        if(mRefCounts.ops)
-            PL_DHashTableFinish(&mRefCounts);
+        NS_ASSERTION(!mRefCounts.ops,
+                     "Didn't call PL_DHashTableFinish on mRefCounts?");
     }
 
-    void InitRefCounts()
+    void Finish()
     {
-        if(!PL_DHashTableInit(&mRefCounts, &RefCountOps, nsnull,
-                              sizeof(ObjRefCount), 65536))
+        if(mRefCounts.ops) {
+            PL_DHashTableFinish(&mRefCounts);
             mRefCounts.ops = nsnull;
-    }
-    void Clear()
-    {
-        if(!mRefCounts.ops || mRefCounts.entryCount > 0) {
-            if(mRefCounts.ops)
-                PL_DHashTableFinish(&mRefCounts);
-            InitRefCounts();
         }
 #ifndef XPCONNECT_STANDALONE
         mScopes.Clear();
@@ -173,7 +166,13 @@ struct JSObjectRefcounts
 
     void MarkStart()
     {
-        Clear();
+        if(mRefCounts.ops)
+            PL_DHashTableFinish(&mRefCounts);
+
+        if(!PL_DHashTableInit(&mRefCounts, &RefCountOps, nsnull,
+                              sizeof(ObjRefCount), 65536))
+            mRefCounts.ops = nsnull;
+
         mMarkEnded = PR_FALSE;
     }
 
@@ -562,6 +561,8 @@ nsXPConnect::BeginCycleCollection()
         gOldJSGCCallback = nsnull;
 
 #ifndef XPCONNECT_STANDALONE
+        NS_ASSERTION(mObjRefcounts->mScopes.Count() == 0,
+                     "Didn't clear mScopes?");
         XPCWrappedNativeScope::TraverseScopes(cx);
 #endif
     }
@@ -581,7 +582,7 @@ nsresult
 nsXPConnect::FinishCycleCollection()
 {
     if (mObjRefcounts)
-        mObjRefcounts->Clear();
+        mObjRefcounts->Finish();
     return NS_OK;
 }
 
