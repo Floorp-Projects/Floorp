@@ -658,7 +658,9 @@ finalizeCB(GObject *aObj)
 const gchar *
 getNameCB(AtkObject *aAtkObj)
 {
-    NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), nsnull);
+    if (NS_FAILED(CheckMaiAtkObject(aAtkObj))) {
+      return nsnull;
+    }
 
     nsAutoString uniName;
 
@@ -682,7 +684,9 @@ getNameCB(AtkObject *aAtkObj)
 const gchar *
 getDescriptionCB(AtkObject *aAtkObj)
 {
-    NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), nsnull);
+    if (NS_FAILED(CheckMaiAtkObject(aAtkObj))) {
+      return nsnull;
+    }
 
     if (!aAtkObj->description) {
         gint len;
@@ -706,7 +710,9 @@ getDescriptionCB(AtkObject *aAtkObj)
 AtkRole
 getRoleCB(AtkObject *aAtkObj)
 {
-    NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), ATK_ROLE_INVALID);
+    if (NS_FAILED(CheckMaiAtkObject(aAtkObj))) {
+      return ATK_ROLE_INVALID;
+    }
 
 #ifdef DEBUG_A11Y
         nsAccessibleWrap *testAccWrap =
@@ -770,7 +776,9 @@ GetAttributeSet(nsIAccessible* aAccessible)
 AtkAttributeSet *
 getAttributesCB(AtkObject *aAtkObj)
 {
-    NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), nsnull);
+    if (NS_FAILED(CheckMaiAtkObject(aAtkObj))) {
+      return nsnull;
+    }
     nsAccessibleWrap *accWrap =
         NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
@@ -780,7 +788,9 @@ getAttributesCB(AtkObject *aAtkObj)
 AtkObject *
 getParentCB(AtkObject *aAtkObj)
 {
-    NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), nsnull);
+    if (NS_FAILED(CheckMaiAtkObject(aAtkObj))) {
+      return nsnull;
+    }
     nsAccessibleWrap *accWrap =
         NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
@@ -802,7 +812,9 @@ getParentCB(AtkObject *aAtkObj)
 gint
 getChildCountCB(AtkObject *aAtkObj)
 {
-    NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), 0);
+    if (NS_FAILED(CheckMaiAtkObject(aAtkObj))) {
+      return 0;
+    }
     nsAccessibleWrap *accWrap =
         NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
@@ -835,7 +847,9 @@ refChildCB(AtkObject *aAtkObj, gint aChildIndex)
     // Either we can cache the last accessed child so that we can just GetNextSibling()
     // or we should cache an array of children in each nsAccessible
     // (instead of mNextSibling on the children)
-    NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), nsnull);
+    if (NS_FAILED(CheckMaiAtkObject(aAtkObj))) {
+      return nsnull;
+    }
     nsAccessibleWrap *accWrap =
         NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
@@ -880,7 +894,9 @@ getIndexInParentCB(AtkObject *aAtkObj)
 {
     // We don't use nsIAccessible::GetIndexInParent() because
     // for ATK we don't want to include text leaf nodes as children
-    NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), -1);
+    if (NS_FAILED(CheckMaiAtkObject(aAtkObj))) {
+      return -1;
+    }
     nsAccessibleWrap *accWrap =
         NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
@@ -946,7 +962,9 @@ refStateSetCB(AtkObject *aAtkObj)
     AtkStateSet *state_set = nsnull;
     state_set = ATK_OBJECT_CLASS(parent_class)->ref_state_set(aAtkObj);
 
-    NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), state_set);
+    if (NS_FAILED(CheckMaiAtkObject(aAtkObj))) {
+      return state_set;
+    }
     nsAccessibleWrap *accWrap =
         NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
@@ -967,7 +985,9 @@ refRelationSetCB(AtkObject *aAtkObj)
     AtkRelationSet *relation_set = nsnull;
     relation_set = ATK_OBJECT_CLASS(parent_class)->ref_relation_set(aAtkObj);
 
-    NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), relation_set);
+    if (NS_FAILED(CheckMaiAtkObject(aAtkObj))) {
+      return relation_set;
+    }
     nsAccessibleWrap *accWrap =
         NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
@@ -1012,12 +1032,11 @@ CheckMaiAtkObject(AtkObject *aAtkObj)
 {
     NS_ENSURE_ARG(IS_MAI_OBJECT(aAtkObj));
     nsAccessibleWrap * tmpAccWrap = MAI_ATK_OBJECT(aAtkObj)->accWrap;
-    if (tmpAccWrap == nsnull)
-        return NS_ERROR_INVALID_POINTER;
+    NS_ENSURE_TRUE(tmpAccWrap != nsnull, NS_ERROR_NULL_POINTER);
     if (tmpAccWrap != nsAppRootAccessible::Create() && !tmpAccWrap->IsValidObject())
         return NS_ERROR_INVALID_POINTER;
-    if (tmpAccWrap->GetAtkObject() != aAtkObj)
-        return NS_ERROR_FAILURE;
+
+    NS_ENSURE_TRUE(tmpAccWrap->GetAtkObject() == aAtkObj, NS_ERROR_FAILURE);
     return NS_OK;
 }
 
