@@ -93,14 +93,15 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(nsISupports *s,
     //     it marked.
 
 
-    // xpc_TraceForValidWrapper calls TraceJS and TraceScopeJSObjects.
+    // xpc_MarkForValidWrapper calls MarkBeforeJSFinalize and
+    // MarkScopeJSObjects.
 
-    // XPCWrappedNative marks its proto (see TraceJS).
+    // XPCWrappedNative marks its proto (see MarkBeforeJSFinalize).
     if(tmp->HasProto())
         cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
                            tmp->GetProto()->GetJSProtoObject());
 
-    // XPCWrappedNative marks its mNativeWrapper (see TraceJS).
+    // XPCWrappedNative marks its mNativeWrapper (see MarkBeforeJSFinalize).
     cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, tmp->mNativeWrapper);
 
     // XPCWrappedNative marks its scope.

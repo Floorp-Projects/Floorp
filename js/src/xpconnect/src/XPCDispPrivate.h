@@ -292,13 +292,11 @@ public:
      * @param array a JS array of ID's
      */
     XPCDispIDArray(XPCCallContext& ccx, JSIdArray* array);
-
     /**
      * Returns the length of the array
      * @return length of the array
      */
     PRUint32 Length() const;
-
     /**
      * Returns an ID within the array
      * @param cx a JS context
@@ -308,24 +306,22 @@ public:
     jsval Item(JSContext* cx, PRUint32 index) const;
 
     /**
-     * Called to trace jsval associated with the ID's
+     * Called to mark the ID's during GC
      */
-    void TraceJS(JSTracer* trc);
-
+    void Mark();
     /**
-     * Called to unmark the ID's marked during GC marking trace
+     * Called to unmark the ID's after GC has been done
      */
     void Unmark();
-
-    /**
-     * NOP. This is just here to make the AutoMarkingPtr code compile.
-     */
-    inline void Mark();
-
     /**
      * Tests whether the ID is marked
      */
     JSBool IsMarked() const;
+
+    /**
+     * NOP. This is just here to make the AutoMarkingPtr code compile.
+     */
+    inline void MarkBeforeJSFinalize(JSContext*);
 private:
     JSBool mMarked;
     nsVoidArray mIDArray;
