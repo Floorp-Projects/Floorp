@@ -134,16 +134,39 @@ ifdef MOZ_PROFILE
 	/bin/find $(DIST) -name "*.dbg" -exec mv {} $(DIST)/$(BUILDID) \;
 endif # MOZ_PROFILE
 endif # MOZILLA_OFFICIAL
+endif # WINNT
+
+ifeq ($(OS_ARCH),WINNT)
+SYM_FIND_CMD := /bin/find . -path dist -prune -o -name "*.exe" \
+    -o -name "*.dll" -o -name "*.EXE" | sed "s/\.[^\.]*$$/\.pdb/"
+# we want to copy PDB files on Windows
+MAKE_SYM_STORE_ARGS := -c
+DUMP_SYMS_BIN := $(topsrcdir)/toolkit/airbag/tools/win32/dump_syms.exe
+endif
+ifeq ($(OS_ARCH),Darwin)
+# need to pass arch flags for universal builds
+ifdef UNIVERSAL_BINARY
+MAKE_SYM_STORE_ARGS := -a "ppc i386"
+SYM_DIST := $(DIST)/universal
+else
+MAKE_SYM_STORE_ARGS := -a $(OS_TEST)
+SYM_DIST := $(DIST)
+endif
+# |file| is stupid on universal binaries, it produces one line of output
+# for the file, and one line of output for each architecture contained within.
+SYM_FIND_CMD := find -L $(SYM_DIST) -type f -a -perm -100 -o -name "*.dylib" \
+    | xargs file -L | grep "Mach-O" | grep -v "for architecture" | cut -f1 -d':'
+DUMP_SYMS_BIN := $(DIST)/host/bin/dump_syms
+endif
 
 buildsymbols:
 ifdef MOZ_DEBUG_SYMBOLS
 ifdef MOZ_AIRBAG
 	echo building symbol store
 	mkdir -p $(DIST)/crashreporter-symbols/$(BUILDID)
-	/bin/find . -path "./dist" -prune -o -name "*.exe"                \
-          -o -name "*.dll" -o -name "*.EXE" | sed "s/\.[^\.]*$$/\.pdb/" | \
-	  xargs $(topsrcdir)/toolkit/airbag/tools/make_symbol_store.pl -c \
-	  $(topsrcdir)/toolkit/airbag/tools/win32/dump_syms.exe           \
+	$(SYM_FIND_CMD) | \
+	  xargs $(topsrcdir)/toolkit/airbag/tools/make_symbol_store.pl    \
+	  $(MAKE_SYM_STORE_ARGS) $(DUMP_SYMS_BIN)                         \
 	  $(DIST)/crashreporter-symbols/$(BUILDID) >                      \
 	  $(DIST)/crashreporter-symbols/$(BUILDID)/$(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_ARCH)-$(BUILDID)-symbols.txt
 	echo packing symbols
@@ -162,6 +185,7 @@ ifdef MOZ_AIRBAG
 endif
 endif
 
+ifeq ($(OS_ARCH),WINNT)
 signnss:
 ifdef MOZILLA_OFFICIAL
 	echo signing NSS libs
@@ -169,8 +193,8 @@ ifdef MOZILLA_OFFICIAL
 	cd $(DIST)/bin; ./shlibsign.exe -v -i freebl3.dll
 endif # MOZILLA_OFFICIAL
 
-BUILDID = $(shell cat $(DEPTH)/config/build_number)
 deliver: splitsymbols rebase signnss
 
 endif # WINNT
 
+BUILDID = $(shell cat $(DEPTH)/config/build_number)
