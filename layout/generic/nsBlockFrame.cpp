@@ -5945,18 +5945,27 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
   else {
     nsPresContext* presContext = PresContext();
 
-    // A block that's part of an {ib} split can't have a first-letter frame, no
-    // matter what its style says.  Neither can a block with a previous
-    // continuation.  Unfortunately, we can get SetInitialChildList() called on
-    // us before we have the NS_FRAME_IS_SPECIAL bit set for an {ib} split, so
-    // check our style context pseudo instead.
-    NS_ASSERTION(GetPrevContinuation() ||
-                 (GetStyleContext()->GetPseudoType() ==
-                  nsCSSAnonBoxes::mozAnonymousBlock) ||
-                 (nsRefPtr<nsStyleContext>(GetFirstLetterStyle(presContext)) !=
-                  nsnull) ==
+#ifdef DEBUG
+    // The only times a block that is an anonymous box is allowed to have a
+    // first-letter frame are when it's the block inside a non-anonymous cell,
+    // the block inside a fieldset, a scrolled content block, or a column
+    // content block.  Note that this means that blocks which are the anonymous
+    // block in {ib} splits do NOT get first-letter frames.  Also, a block that
+    // has a previous continuation can't have a first letter frame.
+    nsIAtom *pseudo = GetStyleContext()->GetPseudoType();
+    PRBool haveFirstLetterStyle =
+      !GetPrevContinuation() &&
+      (!pseudo ||
+       (pseudo == nsCSSAnonBoxes::cellContent &&
+        mParent->GetStyleContext()->GetPseudoType() == nsnull) ||
+       pseudo == nsCSSAnonBoxes::fieldsetContent ||
+       pseudo == nsCSSAnonBoxes::scrolledContent ||
+       pseudo == nsCSSAnonBoxes::columnContent) &&
+      nsRefPtr<nsStyleContext>(GetFirstLetterStyle(presContext)) != nsnull;
+    NS_ASSERTION(haveFirstLetterStyle ==
                  ((mState & NS_BLOCK_HAS_FIRST_LETTER_STYLE) != 0),
                  "NS_BLOCK_HAS_FIRST_LETTER_STYLE state out of sync");
+#endif
     
     rv = AddFrames(aChildList, nsnull);
     if (NS_FAILED(rv)) {
