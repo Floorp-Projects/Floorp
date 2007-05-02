@@ -37,14 +37,14 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY title.label      "Customize Character Encoding">
-<!ENTITY current.label    "Active Character Encodings:">
-<!ENTITY remove.label     "Remove">
-<!ENTITY remove.accessKey "R">
-<!ENTITY additional.label "Available Character Encodings:">
-<!ENTITY add.label        "Add">
-<!ENTITY add.accessKey    "A">
-<!ENTITY moveUp.label     "Move Up">
-<!ENTITY moveUp.accessKey "U">
-<!ENTITY moveDown.label   "Move Down">
+<!ENTITY title.label        "Customize Character Encoding">
+<!ENTITY current.label      "Active Character Encodings:">
+<!ENTITY remove.label       "Remove">
+<!ENTITY remove.accessKey   "R">
+<!ENTITY additional.label   "Available Character Encodings:">
+<!ENTITY add.label          "Add">
+<!ENTITY add.accessKey      "A">
+<!ENTITY moveUp.label       "Move Up">
+<!ENTITY moveUp.accessKey   "U">
+<!ENTITY moveDown.label     "Move Down">
 <!ENTITY moveDown.accessKey "D">
