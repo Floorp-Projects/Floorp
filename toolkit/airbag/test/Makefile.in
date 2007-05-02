@@ -78,6 +78,7 @@ ifeq ($(OS_ARCH),Darwin)
 OS_LIBS += -framework Cocoa -lcrypto
 LIBS += \
 	$(DEPTH)/toolkit/airbag/airbag/src/client/mac/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
+	$(DEPTH)/toolkit/airbag/airbag/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
 	$(DEPTH)/toolkit/airbag/airbag/src/common/mac/$(LIB_PREFIX)breakpad_mac_common_s.$(LIB_SUFFIX) \
 	$(NULL)
 LOCAL_INCLUDES += -I$(srcdir) -I$(srcdir)/../airbag/src/common/mac/
