@@ -728,7 +728,7 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
                                                         aIndex);
       }
 
-      nsISupports* xpcom_obj;
+      void* xpcom_obj;
       if (java_obj) {
         // If the requested interface is nsIWeakReference, then we look for or
         // create a stub for the nsISupports interface.  Then we create a weak
@@ -743,21 +743,25 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
           iid = aIID;
         }
 
-        rv = GetNewOrUsedXPCOMObject(env, java_obj, iid, &xpcom_obj);
+        rv = JavaObjectToNativeInterface(env, java_obj, iid, &xpcom_obj);
+        if (NS_FAILED(rv))
+          break;
+        rv = ((nsISupports*) xpcom_obj)->QueryInterface(iid, &xpcom_obj);
         if (NS_FAILED(rv))
           break;
 
         // If the function expects a weak reference, then we need to
         // create it here.
         if (isWeakRef) {
+          nsISupports* isupports = (nsISupports*) xpcom_obj;
           nsCOMPtr<nsISupportsWeakReference> supportsweak =
-                                                 do_QueryInterface(xpcom_obj);
+                  do_QueryInterface(isupports);
           if (supportsweak) {
             nsWeakPtr weakref;
             supportsweak->GetWeakReference(getter_AddRefs(weakref));
-            NS_RELEASE(xpcom_obj);
+            NS_RELEASE(isupports);
             xpcom_obj = weakref;
-            NS_ADDREF(xpcom_obj);
+            NS_ADDREF((nsISupports*) xpcom_obj);
           } else {
             xpcom_obj = nsnull;
           }
@@ -774,7 +778,7 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
           aVariant.SetPtrIsData();
         }
       } else {  // 'array'
-        NS_STATIC_CAST(nsISupports**, aVariant.val.p)[aIndex] = xpcom_obj;
+        NS_STATIC_CAST(void**, aVariant.val.p)[aIndex] = xpcom_obj;
       }
       break;
     }
@@ -1111,7 +1115,8 @@ FinalizeParams(JNIEnv *env, const nsXPTParamInfo &aParamInfo, PRUint8 aType,
         jobject java_obj = nsnull;
         if (xpcom_obj) {
           // Get matching Java object for given xpcom object
-          rv = GetNewOrUsedJavaObject(env, xpcom_obj, aIID, nsnull, &java_obj);
+          rv = NativeInterfaceToJavaObject(env, xpcom_obj, aIID, nsnull,
+                                           &java_obj);
           if (NS_FAILED(rv))
             break;
         }
@@ -1568,12 +1573,27 @@ JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
 }
 
 nsresult
-CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
-                jobject aObjectLoader, jobject* aResult)
+GetNewOrUsedJavaWrapper(JNIEnv* env, nsISupports* aXPCOMObject,
+                        const nsIID& aIID, jobject aObjectLoader,
+                        jobject* aResult)
 {
   NS_PRECONDITION(aResult != nsnull, "null ptr");
   if (!aResult)
     return NS_ERROR_NULL_POINTER;
+
+  // Get the root nsISupports of the xpcom object
+  nsresult rv;
+  nsCOMPtr<nsISupports> rootObject = do_QueryInterface(aXPCOMObject, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get associated Java object from hash table
+  rv = gNativeToJavaProxyMap->Find(env, rootObject, aIID, aResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (*aResult)
+    return NS_OK;
+
+  // No Java object is associated with the given XPCOM object, so we
+  // create a Java proxy.
 
   nsCOMPtr<nsIInterfaceInfoManager>
     iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
@@ -1583,12 +1603,12 @@ CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
 
   // Get interface info for class
   nsCOMPtr<nsIInterfaceInfo> info;
-  nsresult rv = iim->GetInfoForIID(&aIID, getter_AddRefs(info));
+  rv = iim->GetInfoForIID(&aIID, getter_AddRefs(info));
   if (NS_FAILED(rv))
     return rv;
 
-  // Wrap XPCOM object (addrefs aXPCOMObject)
-  JavaXPCOMInstance* inst = new JavaXPCOMInstance(aXPCOMObject, info);
+  // Wrap XPCOM object (addrefs rootObject)
+  JavaXPCOMInstance* inst = new JavaXPCOMInstance(rootObject, info);
   if (!inst)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1618,12 +1638,12 @@ CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
       LOG(("+ CreateJavaProxy (Java=%08x | XPCOM=%08x | IID=%s)\n",
            (PRUint32) env->CallStaticIntMethod(systemClass, hashCodeMID,
                                                java_obj),
-           (PRUint32) aXPCOMObject, iid_str));
+           (PRUint32) rootObject, iid_str));
       PR_Free(iid_str);
 #endif
 
       // Associate XPCOM object with Java proxy
-      rv = gNativeToJavaProxyMap->Add(env, aXPCOMObject, aIID, java_obj);
+      rv = gNativeToJavaProxyMap->Add(env, rootObject, aIID, java_obj);
       if (NS_SUCCEEDED(rv)) {
         *aResult = java_obj;
         return NS_OK;

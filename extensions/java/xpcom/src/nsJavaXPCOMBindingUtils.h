@@ -264,8 +264,7 @@ protected:
  *******************************/
 
 /**
- * Finds the associated Java object for the given XPCOM object and IID.  If no
- * such Java object exists, then it creates one.
+ * Convert a native nsISupports to a Java object.
  *
  * @param env           Java environment pointer
  * @param aXPCOMObject  XPCOM object for which to find/create Java object
@@ -276,13 +275,12 @@ protected:
  *
  * @return  NS_OK if succeeded; all other return values are error codes.
  */
-nsresult GetNewOrUsedJavaObject(JNIEnv* env, nsISupports* aXPCOMObject,
-                                const nsIID& aIID, jobject aObjectLoader,
-                                jobject* aResult);
+nsresult NativeInterfaceToJavaObject(JNIEnv* env, nsISupports* aXPCOMObject,
+                                     const nsIID& aIID, jobject aObjectLoader,
+                                     jobject* aResult);
 
 /**
- * Finds the associated XPCOM object for the given Java object and IID.  If no
- * such XPCOM object exists, then it creates one.
+ * Convert a Java object to a native nsISupports object.
  *
  * @param env           Java environment pointer
  * @param aJavaObject   Java object for which to find/create XPCOM object
@@ -291,8 +289,8 @@ nsresult GetNewOrUsedJavaObject(JNIEnv* env, nsISupports* aXPCOMObject,
  *
  * @return  NS_OK if succeeded; all other return values are error codes.
  */
-nsresult GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject,
-                                 const nsIID& aIID, nsISupports** aResult);
+nsresult JavaObjectToNativeInterface(JNIEnv* env, jobject aJavaObject,
+                                     const nsIID& aIID, void** aResult);
 
 nsresult GetIIDForMethodParam(nsIInterfaceInfo *iinfo,
                               const XPTMethodDescriptor *methodInfo,

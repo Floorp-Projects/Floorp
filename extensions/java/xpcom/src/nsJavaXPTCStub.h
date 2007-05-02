@@ -79,6 +79,21 @@ public:
   // collected if necessary.  See DestroyXPTCMappingEnum().
   void DeleteStrongRef();
 
+  /**
+   * Finds the associated nsJavaXPTCStub for the given Java object and IID.
+   * If no such stub exists, then a new one is created.
+   *
+   * @param env           Java environment pointer
+   * @param aJavaObject   Java object for which to find/create nsJavaXPTCStub
+   * @param aIID          desired interface IID for nsJavaXPTCStub
+   * @param aResult       on success, holds AddRef'd reference to nsJavaXPTCStub
+   *
+   * @return  NS_OK if succeeded; all other return values are error codes.
+   */
+  static nsresult GetNewOrUsed(JNIEnv* env, jobject aJavaObject,
+                               const nsIID& aIID, void** aResult);
+  
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRefInternal();
   NS_IMETHOD_(nsrefcnt) ReleaseInternal();
