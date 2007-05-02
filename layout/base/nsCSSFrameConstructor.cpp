@@ -365,9 +365,6 @@ NS_NewScrollbarFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewScrollbarButtonFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-nsIFrame*
-NS_NewNativeScrollbarFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
-
 
 #ifdef NOISY_FINDFRAME
 static PRInt32 FFWC_totalCount=0;
@@ -3379,7 +3376,6 @@ IsSpecialContent(nsIContent*     aContent,
 #endif
       aTag == nsGkAtoms::slider ||
       aTag == nsGkAtoms::scrollbar ||
-      aTag == nsGkAtoms::nativescrollbar ||
       aTag == nsGkAtoms::scrollbarbutton ||
 #ifdef MOZ_XUL
       aTag == nsGkAtoms::splitter ||
@@ -5868,9 +5864,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       // SCROLLBAR CONSTRUCTION
       else if (aTag == nsGkAtoms::scrollbar) {
         newFrame = NS_NewScrollbarFrame(mPresShell, aStyleContext);
-      }
-      else if (aTag == nsGkAtoms::nativescrollbar) {
-        newFrame = NS_NewNativeScrollbarFrame(mPresShell, aStyleContext);
       }
       // End of SCROLLBAR CONSTRUCTION logic
 
