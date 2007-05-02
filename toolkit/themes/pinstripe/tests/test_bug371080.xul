@@ -24,16 +24,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=371080
         width="5"
         id="button1"
         height="5"/>
-<!-- This Mac OS X native button should be 68 pixels wide from
-     the dark border line on the left to the dark border line on
-     the right. It should be 18 pixels tall from the dark border
-     line on the top to the dark border line on the bottom -->
-<button class="smallbutton"
-        style="-moz-appearance: button-small;"
-        label="OK"
-        width="5"
-        id="button2"
-        height="5"/>
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
@@ -50,10 +40,8 @@ function checkButtonDimensions() {
  dump("TEST DEBUG: function 'is()' defined as: " + is + "\n");
 
  try {
-  is($("button1").boxObject.width, 68, "mac button has correct width");
-  is($("button1").boxObject.height, 22, "mac button has correct height");
-  is($("button2").boxObject.width, 68, "mac small button has correct width");
-  is($("button2").boxObject.height, 19, "mac small button has correct height");
+  is($("button1").boxObject.width, 79, "mac button width");
+  is($("button1").boxObject.height, 22, "mac button height");
  } catch (ex) {
   dump("TEST DEBUG: " + ex + "\n");
  }
