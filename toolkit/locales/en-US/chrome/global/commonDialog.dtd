@@ -3,4 +3,4 @@
 <!ENTITY editfield0.label "User Name:"> 
 <!ENTITY editfield1.label "Password:"> 
 <!ENTITY editfield2.label "Confirm Password:"> 
-<!ENTITY checkbox.label   "check"> 
+<!ENTITY checkbox.label   "check">
