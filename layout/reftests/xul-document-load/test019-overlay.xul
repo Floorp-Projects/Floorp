@@ -1,4 +1,8 @@
 <?xml version="1.0"?>
+<!--
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/licenses/publicdomain/
+-->
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <?xml-stylesheet href="test019.css" type="text/css"?>
 </overlay>
