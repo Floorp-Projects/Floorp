@@ -1332,7 +1332,13 @@ ifdef CYGWIN_WRAPPER
 normalizepath = $(foreach p,$(1),$(shell cygpath -m $(p)))
 else
 # assume MSYS
-normalizepath = $(foreach p,$(1),$(shell cd $(p) && pwd -W))
+#  We use 'pwd -W' to get DOS form of the path.  However, since the given path
+#  could be a file or a non-existent path, we cannot call 'pwd -W' directly
+#  on the path.  Instead, we extract the root path (i.e. "c:/"), call 'pwd -W'
+#  on it, then merge with the rest of the path.
+root-path = $(shell echo $(1) | sed -e "s|\(/[^/]*\)/\?\(.*\)|\1|")
+non-root-path = $(shell echo $(1) | sed -e "s|\(/[^/]*\)/\?\(.*\)|\2|")
+normalizepath = $(foreach p,$(1),$(if $(filter /%,$(1)),$(shell cd $(call root-path,$(1)) && pwd -W)$(call non-root-path,$(1)),$(1)))
 endif
 else
 normalizepath = $(1)
@@ -1347,7 +1353,7 @@ _JAVA_SOURCEPATH = ".$(SEP)$(_srcdir)"
 endif
 
 ifdef JAVA_CLASSPATH
-CP = $(subst $(SPACE),$(SEP),$(strip $(JAVA_CLASSPATH)))
+CP = $(subst $(SPACE),$(SEP),$(call normalizepath,$(strip $(JAVA_CLASSPATH))))
 _JAVA_CLASSPATH = ".$(SEP)$(CP)"
 else
 _JAVA_CLASSPATH = .
