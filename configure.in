@@ -2884,13 +2884,6 @@ else
     esac
 
     dnl ========================================================
-    dnl = Check for Xinerama
-    dnl ========================================================
-    AC_CHECK_LIB(Xinerama, XineramaIsActive, [MOZ_XINERAMA_LIBS="-lXinerama"],,
-        $XLIBS $XEXT_LIBS)
-    AC_CHECK_HEADER(X11/extensions/Xinerama.h)
-
-    dnl ========================================================
     dnl = Check for XShm
     dnl ========================================================
     AC_CHECK_LIB(Xext, XShmCreateImage, _HAVE_XSHM_XEXT=1,,
@@ -5246,30 +5239,6 @@ MOZ_ARG_DISABLE_BOOL(oji,
     MOZ_OJI=1)
 if test -n "$MOZ_OJI"; then
     AC_DEFINE(OJI)
-fi
-
-dnl ========================================================
-dnl = Xinerama support. The autodetection is done above in the Xlib
-dnl = detection routines.
-dnl ========================================================
-
-if test "$MOZ_WIDGET_TOOLKIT" = "gtk2"; then
-    MOZ_ENABLE_XINERAMA=1
-fi
-
-MOZ_ARG_DISABLE_BOOL(xinerama,
-[  --disable-xinerama      Disable Xinerama support],
-    MOZ_ENABLE_XINERAMA=,
-    MOZ_ENABLE_XINERAMA=1 )
-
-if test -n "$MOZ_ENABLE_XINERAMA"; then
-    if test -z "$MOZ_XINERAMA_LIBS" || \
-        test "$ac_cv_header_X11_extensions_Xinerama_h" = "no"; then
-        AC_MSG_ERROR([Cannot find Xinerama library. To build without Xinerama support, rebuild with --disable-xinerama])
-    fi
-    # Xinerama depends on libXext which is not automatically included on older distribs
-    MOZ_XINERAMA_LIBS="$MOZ_XINERAMA_LIBS $XEXT_LIBS"
-    AC_DEFINE(MOZ_ENABLE_XINERAMA)
 fi
 
 dnl bi-directional support always on
@@ -7642,8 +7611,6 @@ AC_SUBST(MOZ_XPRINT_CFLAGS)
 AC_SUBST(MOZ_XPRINT_LDFLAGS)
 AC_SUBST(MOZ_ENABLE_XPRINT)
 AC_SUBST(MOZ_ENABLE_POSTSCRIPT)
-AC_SUBST(MOZ_XINERAMA_LIBS)
-AC_SUBST(MOZ_ENABLE_XINERAMA)
 
 AC_SUBST(XPCOM_USE_LEA)
 AC_SUBST(BUILD_STATIC_LIBS)
