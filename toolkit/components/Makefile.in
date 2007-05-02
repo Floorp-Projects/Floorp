@@ -54,12 +54,17 @@ DIRS += urlformatter
 
 ifdef MOZ_XUL_APP
 DIRS += \
-	alerts \
 	filepicker \
 	console \
 	viewconfig \
 	typeaheadfind \
 	$(NULL)
+
+ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
+TOOL_DIRS += alerts
+else
+DIRS += alerts
+endif
 
 ifdef MOZ_FEEDS
 DIRS += feeds
