@@ -441,6 +441,14 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   rv = nsAnnotationService::InitTables(mDBConn);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Initialize the places schema version if this is first run.
+  rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_places"), &tableExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!tableExists) {
+    rv = UpdateSchemaVersion();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // Get the places schema version, which we store in the user_version PRAGMA
   PRInt32 DBSchemaVersion;
   {
@@ -504,9 +512,7 @@ nsNavHistory::InitDB(PRBool *aDoImport)
     }
 
     // update schema version in the db
-    nsCAutoString schemaVersionPragma("PRAGMA user_version=");
-    schemaVersionPragma.AppendInt(PLACES_SCHEMA_VERSION);
-    rv = mDBConn->ExecuteSimpleSQL(schemaVersionPragma);
+    rv = UpdateSchemaVersion();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -545,8 +551,6 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // moz_places
-  rv = mDBConn->TableExists(NS_LITERAL_CSTRING("moz_places"), &tableExists);
-  NS_ENSURE_SUCCESS(rv, rv);
   if (! tableExists) {
     *aDoImport = PR_TRUE;
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_places ("
@@ -625,6 +629,16 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   return NS_OK;
 }
 
+// nsNavHistory::UpdateSchemaVersion
+//
+// Called by the individual services' InitTables()
+nsresult
+nsNavHistory::UpdateSchemaVersion()
+{
+  nsCAutoString schemaVersionPragma("PRAGMA user_version=");
+  schemaVersionPragma.AppendInt(PLACES_SCHEMA_VERSION);
+  return mDBConn->ExecuteSimpleSQL(schemaVersionPragma);
+}
 
 // nsNavHistory::InitStatements
 //

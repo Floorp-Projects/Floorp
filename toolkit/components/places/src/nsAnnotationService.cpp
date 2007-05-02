@@ -191,7 +191,8 @@ nsAnnotationService::InitTables(mozIStorageConnection* aDBConn)
         "anno_attribute_id INTEGER,"
         "mime_type VARCHAR(32) DEFAULT NULL,"
         "content LONGVARCHAR, flags INTEGER DEFAULT 0,"
-        "expiration INTEGER DEFAULT 0)"));
+        "expiration INTEGER DEFAULT 0,"
+        "type INTEGER DEFAULT 0)"));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
         "CREATE INDEX moz_annos_place_idindex ON moz_annos (place_id)"));
