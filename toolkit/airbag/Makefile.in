@@ -61,12 +61,9 @@ ifeq  ($(OS_ARCH),WINNT)
 endif
 
 ifeq ($(OS_ARCH),Darwin)
-DIRS += \
-  airbag/src/common/ \
-  airbag/src/common/mac \
-  airbag/src/client/mac/handler \
-  airbag/src/tools/mac/dump_syms \
-  $(NULL)
+	DIRS += airbag/src/common/mac \
+		airbag/src/client/mac/handler \
+		$(NULL)
 endif
 
 DIRS += client

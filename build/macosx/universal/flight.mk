@@ -86,9 +86,9 @@ postflight_all:
 # a universal binary too early, before the unified bits have been staged.
 # Set SIGN_NSS= to skip shlibsign.
 	$(MAKE) -C $(OBJDIR_PPC)/$(INSTALLER_DIR) \
-          UNIVERSAL_BINARY= SIGN_NSS= PKG_SKIP_STRIP=1 stage-package
+          UNIVERSAL_BINARY= SIGN_NSS= stage-package
 	$(MAKE) -C $(OBJDIR_X86)/$(INSTALLER_DIR) \
-          UNIVERSAL_BINARY= SIGN_NSS= PKG_SKIP_STRIP=1 stage-package
+          UNIVERSAL_BINARY= SIGN_NSS= stage-package
 # Remove .chk files that may have been copied from the NSS build.  These will
 # cause unify to warn or fail if present.  New .chk files that are
 # appropriate for the merged libraries will be generated when the universal
