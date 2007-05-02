@@ -1,5 +1,5 @@
-<!ENTITY dialog.title "Customize Toolbar">
-<!ENTITY dialog.style "width: 635px; height: 400px;">
+<!ENTITY dialog.title             "Customize Toolbar">
+<!ENTITY dialog.style             "width: 635px; height: 400px;">
 <!ENTITY instructions.description "You can add or remove items by dragging to or from the toolbars.">
 <!ENTITY show.label               "Show:">
 <!ENTITY iconsAndText.label       "Icons and Text">

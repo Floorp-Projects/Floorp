@@ -1,21 +1,21 @@
 <!-- extracted from charsetOverlay.xul -->
-<!ENTITY charsetMenu.label				"Character Encoding">
-<!ENTITY charsetMenu.accesskey				"C">
-<!ENTITY charsetMenuAutodet.label			"Auto-Detect">
-<!ENTITY charsetMenuAutodet.accesskey			"a">
-<!ENTITY charsetMenuMore.label				"More Encodings">
-<!ENTITY charsetMenuMore.accesskey				"m">
-<!ENTITY charsetMenuMore1.label				"West European">
-<!ENTITY charsetMenuMore1.accesskey				"w">
-<!ENTITY charsetMenuMore2.label				"East European">
-<!ENTITY charsetMenuMore2.accesskey				"E">
-<!ENTITY charsetMenuMore3.label				"East Asian">
-<!ENTITY charsetMenuMore3.accesskey				"A">
-<!ENTITY charsetMenuMore4.label				"SE &amp; SW Asian">
-<!ENTITY charsetMenuMore4.accesskey				"S">
-<!ENTITY charsetMenuMore5.label				"Middle Eastern">
-<!ENTITY charsetMenuMore5.accesskey				"M">
-<!ENTITY charsetMenuUnicode.label				"Unicode">
-<!ENTITY charsetMenuUnicode.accesskey				"U">
-<!ENTITY charsetCustomize.label				"Customize List...">
-<!ENTITY charsetCustomize.accesskey				"c">
+<!ENTITY charsetMenu.label             "Character Encoding">
+<!ENTITY charsetMenu.accesskey         "C">
+<!ENTITY charsetMenuAutodet.label      "Auto-Detect">
+<!ENTITY charsetMenuAutodet.accesskey  "a">
+<!ENTITY charsetMenuMore.label         "More Encodings">
+<!ENTITY charsetMenuMore.accesskey     "m">
+<!ENTITY charsetMenuMore1.label        "West European">
+<!ENTITY charsetMenuMore1.accesskey    "w">
+<!ENTITY charsetMenuMore2.label        "East European">
+<!ENTITY charsetMenuMore2.accesskey    "E">
+<!ENTITY charsetMenuMore3.label        "East Asian">
+<!ENTITY charsetMenuMore3.accesskey    "A">
+<!ENTITY charsetMenuMore4.label        "SE &amp; SW Asian">
+<!ENTITY charsetMenuMore4.accesskey    "S">
+<!ENTITY charsetMenuMore5.label        "Middle Eastern">
+<!ENTITY charsetMenuMore5.accesskey    "M">
+<!ENTITY charsetMenuUnicode.label      "Unicode">
+<!ENTITY charsetMenuUnicode.accesskey  "U">
+<!ENTITY charsetCustomize.label        "Customize List...">
+<!ENTITY charsetCustomize.accesskey    "c">

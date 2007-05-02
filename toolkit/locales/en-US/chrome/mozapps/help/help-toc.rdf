@@ -14,8 +14,10 @@
   <rdf:Description about="#use-help">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="use-help-finding-the-topic-you-want" nc:name="Finding the Topic You Want" nc:link="chrome://help/locale/welcome.xhtml#finding_the_topic_you_want"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="use-help-search" nc:name="Search Tips" nc:link="chrome://help/locale/welcome.xhtml#search_tips"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="use-help-finding-the-topic-you-want" nc:name="Finding the Topic You Want"
+                  nc:link="chrome://help/locale/welcome.xhtml#finding_the_topic_you_want"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="use-help-search" nc:name="Search Tips"
+                  nc:link="chrome://help/locale/welcome.xhtml#search_tips"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
