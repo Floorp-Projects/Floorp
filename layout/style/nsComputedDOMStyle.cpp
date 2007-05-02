@@ -2454,6 +2454,10 @@ nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIDOMCSSValue** aValue)
       break;
     default:
       NS_ERROR("Unexpected left/right/top/bottom unit");
+      // Fall through
+    case eStyleUnit_Auto:
+      // In this case, both this side and the opposite side are auto.
+      // The computed offset is 0.
       val->SetAppUnits(0);
       break;
   }
