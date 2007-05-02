@@ -322,6 +322,9 @@ public:
   // AddPageWithVisit, to ensure that the database is in a consistent state.
   nsresult RemoveDuplicateURIs();
 
+  // sets the schema version in the database to match SCHEMA_VERSION
+  nsresult UpdateSchemaVersion();
+
  private:
   ~nsNavHistory();
 
