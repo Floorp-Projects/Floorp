@@ -2052,7 +2052,7 @@ FindPropertyValue(JSParseNode *pn, JSParseNode *pnid, FindPropValData *data)
     step = 0;
     ASSERT_VALID_PROPERTY_KEY(pnid);
     pnhead = pn->pn_head;
-    if (pnhead->pn_type == TOK_DEFSHARP)
+    if (pnhead && pnhead->pn_type == TOK_DEFSHARP)
         pnhead = pnhead->pn_next;
     if (pnid->pn_type == TOK_NUMBER) {
         for (pnprop = pnhead; pnprop; pnprop = pnprop->pn_next) {
