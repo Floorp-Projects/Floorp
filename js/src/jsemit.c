@@ -5089,12 +5089,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * Dup the exception object if there is a guard for rethrowing to use
          * it later when rethrowing or in other catches.
          */
-        if (pn->pn_kid2) {
-            if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
-                js_Emit1(cx, cg, JSOP_DUP) < 0) {
-                return JS_FALSE;
-            }
-        }
+        if (pn->pn_kid2 && js_Emit1(cx, cg, JSOP_DUP) < 0)
+            return JS_FALSE;
 
         pn2 = pn->pn_kid1;
         switch (pn2->pn_type) {
