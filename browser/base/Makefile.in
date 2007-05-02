@@ -62,10 +62,12 @@ endif
 
 ifndef MOZ_BRANDING_DIRECTORY
 libs locale::
-	$(INSTALL) $(srcdir)/content/browserconfig.properties $(DIST)/bin
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/content/browserconfig.properties $(DIST)/bin
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/content/old-homepage-default.properties $(DIST)/bin
 
 install::
-	$(SYSINSTALL) $(srcdir)/content/browserconfig.properties $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/content/browserconfig.properties $(DESTDIR)$(mozappdir)
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/content/old-homepage-default.properties $(DESTDIR)$(mozappdir)
 endif
 
 ifneq (,$(filter windows mac cocoa, $(MOZ_WIDGET_TOOLKIT)))
