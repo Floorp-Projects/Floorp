@@ -1158,12 +1158,9 @@ Engine.prototype = {
 
     switch (aEngine._dataType) {
       case SEARCH_DATA_XML:
-        var dataString = bytesToString(aBytes, "UTF-8");
-        ENSURE(dataString, "_onLoad: Couldn't convert byte array!",
-               Cr.NS_ERROR_FAILURE);
         var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
                      createInstance(Ci.nsIDOMParser);
-        var doc = parser.parseFromString(dataString, "text/xml");
+        var doc = parser.parseFromBuffer(aBytes, aBytes.length, "text/xml");
         aEngine._data = doc.documentElement;
         break;
       case SEARCH_DATA_TEXT:
