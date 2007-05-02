@@ -886,7 +886,6 @@ X11/cursorfont.h
 X11/extensions/Print.h
 X11/extensions/shape.h
 X11/extensions/XIElib.h
-X11/extensions/Xinerama.h
 X11/extensions/XShm.h
 X11/extensions/Xrender.h
 X11/Intrinsic.h

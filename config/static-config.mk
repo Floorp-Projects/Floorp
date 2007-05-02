@@ -93,10 +93,6 @@ endif
 endif
 endif
 
-ifdef MOZ_ENABLE_XINERAMA
-STATIC_EXTRA_LIBS	+= $(MOZ_XINERAMA_LIBS)
-endif
-
 ifneq  (,$(MOZ_ENABLE_GTK2))
 STATIC_EXTRA_LIBS	+= $(XLDFLAGS) $(XT_LIBS)
 endif

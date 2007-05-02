@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Sylvain Pasche <sylvain.pasche@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -40,16 +41,13 @@
 #include "nsIComponentManager.h"
 #include "nsRect.h"
 #include "nsAutoPtr.h"
+#include "prlink.h"
 
 #include <gdk/gdkx.h>
 
-#ifdef MOZ_ENABLE_XINERAMA
-// this header rocks!
-extern "C"
-{
-#include <X11/extensions/Xinerama.h>
-}
-#endif /* MOZ_ENABLE_XINERAMA */
+// prototypes from Xinerama.h
+typedef Bool (*_XnrmIsActive_fn)(Display *dpy);
+typedef XineramaScreenInfo* (*_XnrmQueryScreens_fn)(Display *dpy, int *number);
 
 nsScreenManagerGtk :: nsScreenManagerGtk ( )
 {
@@ -79,23 +77,26 @@ nsScreenManagerGtk :: EnsureInit(void)
     if (!mCachedScreenArray) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-#ifdef MOZ_ENABLE_XINERAMA
-    // get the number of screens via xinerama
-    XineramaScreenInfo *screenInfo;
-    if (XineramaIsActive(GDK_DISPLAY())) {
-      screenInfo = XineramaQueryScreens(GDK_DISPLAY(), &mNumScreens);
+    XineramaScreenInfo *screenInfo = NULL;
+
+    // We are leaking xineramalib, but there is no other way to do this.
+    PRLibrary* xineramalib = PR_LoadLibrary("libXinerama.so.1");
+    if (xineramalib) {
+      _XnrmIsActive_fn _XnrmIsActive = (_XnrmIsActive_fn)
+          PR_FindFunctionSymbol(xineramalib, "XineramaIsActive");
+
+      _XnrmQueryScreens_fn _XnrmQueryScreens = (_XnrmQueryScreens_fn)
+          PR_FindFunctionSymbol(xineramalib, "XineramaQueryScreens");
+          
+      // get the number of screens via xinerama
+      if (_XnrmIsActive && _XnrmQueryScreens &&
+          _XnrmIsActive(GDK_DISPLAY())) {
+        screenInfo = _XnrmQueryScreens(GDK_DISPLAY(), &mNumScreens);
+      }
     }
-    else {
-      screenInfo = NULL;
-      mNumScreens = 1;
-    }
-#else
-    mNumScreens = 1;
-#endif
-    // there will be < 2 screens if we are either not building with
-    // xinerama support or xinerama isn't running on the current
-    // display.
-    if (mNumScreens < 2) {
+    // screenInfo == NULL if either Xinerama couldn't be loaded or
+    // isn't running on the current display
+    if (!screenInfo) {
       mNumScreens = 1;
       nsRefPtr<nsScreenGtk> screen = new nsScreenGtk();
       if (!screen)
@@ -109,7 +110,6 @@ nsScreenManagerGtk :: EnsureInit(void)
     // If Xinerama is enabled and there's more than one screen, fill
     // in the info for all of the screens.  If that's not the case
     // then nsScreenGTK() defaults to the screen width + height
-#ifdef MOZ_ENABLE_XINERAMA
     else {
 #ifdef DEBUG
       printf("Xinerama superpowers activated for %d screens!\n", mNumScreens);
@@ -132,10 +132,9 @@ nsScreenManagerGtk :: EnsureInit(void)
     if (screenInfo) {
       XFree(screenInfo);
     }
-#endif /* MOZ_ENABLE_XINERAMA */
   }
 
-  return NS_OK;;
+  return NS_OK;
 }
 
 
