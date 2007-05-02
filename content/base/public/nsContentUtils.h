@@ -1023,6 +1023,13 @@ public:
    * Convert nsIContent::IME_STATUS_* to nsIKBStateControll::IME_STATUS_*
    */
   static PRUint32 GetKBStateControlStatusFromIMEStatus(PRUint32 aState);
+
+  /*
+   * Notify when the first XUL menu is opened and when the all XUL menus are
+   * closed. At opening, aInstalling should be TRUE, otherwise, it should be
+   * FALSE.
+   */
+  static void NotifyInstalledMenuKeyboardListener(PRBool aInstalling);
 private:
 
   static PRBool InitializeEventTable();

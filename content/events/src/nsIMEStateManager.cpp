@@ -62,6 +62,7 @@
 nsIContent*    nsIMEStateManager::sContent      = nsnull;
 nsPresContext* nsIMEStateManager::sPresContext  = nsnull;
 nsPIDOMWindow* nsIMEStateManager::sActiveWindow = nsnull;
+PRBool         nsIMEStateManager::sInstalledMenuKeyboardListener = PR_FALSE;
 
 nsresult
 nsIMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
@@ -190,6 +191,13 @@ nsIMEStateManager::OnDeactivate(nsPresContext* aPresContext)
   return NS_OK;
 }
 
+void
+nsIMEStateManager::OnInstalledMenuKeyboardListener(PRBool aInstalling)
+{
+  sInstalledMenuKeyboardListener = aInstalling;
+  OnChangeFocus(sPresContext, sContent);
+}
+
 PRBool
 nsIMEStateManager::IsActive(nsPresContext* aPresContext)
 {
@@ -228,6 +236,9 @@ nsIMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
       aPresContext->Type() == nsPresContext::eContext_Print) {
     return nsIContent::IME_STATUS_DISABLE;
   }
+
+  if (sInstalledMenuKeyboardListener)
+    return nsIContent::IME_STATUS_DISABLE;
 
   PRBool isEditable = PR_FALSE;
   nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
