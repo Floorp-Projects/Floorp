@@ -3993,8 +3993,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 xval = POP_STR();
                 lval = POP_STR();
                 sn = js_GetSrcNote(jp->script, pc);
-                if (sn && SN_TYPE(sn) == SRC_INITPROP)
+                if (sn && SN_TYPE(sn) == SRC_INITPROP) {
+                    atom = NULL;
                     goto do_initprop;
+                }
                 todo = Sprint(&ss->sprinter, "%s%s%s",
                               lval,
                               (lval[1] != '\0' || *xval != '0') ? ", " : "",
