@@ -453,25 +453,25 @@ private:
         /* 32 = 2^5 = 0x20 */
         *aMask = PRUint32(1) << (aKeyCode & 0x1F);
         return &mKeyDownFlags[(aKeyCode >> 5)];
-    };
+    }
 
     PRBool IsKeyDown(PRUint32 aKeyCode) {
         PRUint32 mask;
         PRUint32* flag = GetFlagWord32(aKeyCode, &mask);
         return ((*flag) & mask) != 0;
-    };
+    }
 
     void SetKeyDownFlag(PRUint32 aKeyCode) {
         PRUint32 mask;
         PRUint32* flag = GetFlagWord32(aKeyCode, &mask);
         *flag |= mask;
-    };
+    }
 
     void ClearKeyDownFlag(PRUint32 aKeyCode) {
         PRUint32 mask;
         PRUint32* flag = GetFlagWord32(aKeyCode, &mask);
         *flag &= ~mask;
-    };
+    }
 
 };
 
