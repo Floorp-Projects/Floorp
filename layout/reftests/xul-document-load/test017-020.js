@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/licenses/publicdomain/  */
+
 // check that the second node under the document element is a PI with the
 // specified .target and .data
 function checkDOM(target, data) {
