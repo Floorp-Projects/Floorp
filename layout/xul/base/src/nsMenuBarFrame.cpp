@@ -41,6 +41,7 @@
 #include "nsMenuBarFrame.h"
 #include "nsIServiceManager.h"
 #include "nsIContent.h"
+#include "nsContentUtils.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsPresContext.h"
@@ -759,7 +760,9 @@ nsMenuBarFrame::InstallKeyboardNavigator()
   mTarget->AddEventListener(NS_LITERAL_STRING("keypress"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE); 
   mTarget->AddEventListener(NS_LITERAL_STRING("keydown"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);  
   mTarget->AddEventListener(NS_LITERAL_STRING("keyup"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);   
-  
+
+  nsContentUtils::NotifyInstalledMenuKeyboardListener(PR_TRUE);
+
   return NS_OK;
 }
 
@@ -772,8 +775,10 @@ nsMenuBarFrame::RemoveKeyboardNavigator()
   mTarget->RemoveEventListener(NS_LITERAL_STRING("keypress"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
   mTarget->RemoveEventListener(NS_LITERAL_STRING("keydown"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
   mTarget->RemoveEventListener(NS_LITERAL_STRING("keyup"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
-  
+
   NS_IF_RELEASE(mKeyboardNavigator);
+
+  nsContentUtils::NotifyInstalledMenuKeyboardListener(PR_FALSE);
 
   return NS_OK;
 }

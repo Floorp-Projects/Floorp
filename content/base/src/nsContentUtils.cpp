@@ -137,6 +137,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsGUIEvent.h"
 #include "nsMutationEvent.h"
 #include "nsIKBStateControl.h"
+#include "nsIMEStateManager.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -3590,4 +3591,11 @@ nsContentUtils::GetKBStateControlStatusFromIMEStatus(PRUint32 aState)
       NS_ERROR("The given state doesn't have valid enable state");
       return nsIKBStateControl::IME_STATUS_ENABLED;
   }
+}
+
+/* static */
+void
+nsContentUtils::NotifyInstalledMenuKeyboardListener(PRBool aInstalling)
+{
+  nsIMEStateManager::OnInstalledMenuKeyboardListener(aInstalling);
 }
