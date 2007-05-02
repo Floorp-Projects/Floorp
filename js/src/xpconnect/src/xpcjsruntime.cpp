@@ -250,6 +250,31 @@ ContextCallback(JSContext *cx, uintN operation)
 }
 
 // static
+void XPCJSRuntime::TraceJS(JSTracer *trc, XPCJSRuntime* self)
+{
+    // Skip this part if XPConnect is shutting down. We get into
+    // bad locking problems with the thread iteration otherwise.
+    if(!self->GetXPConnect()->IsShuttingDown())
+    {
+        PRLock* threadLock = XPCPerThreadData::GetLock();
+        if(threadLock)
+        { // scoped lock
+            nsAutoLock lock(threadLock);
+
+            XPCPerThreadData* iterp = nsnull;
+            XPCPerThreadData* thread;
+
+            while(nsnull != (thread =
+                             XPCPerThreadData::IterateThreads(&iterp)))
+            {
+                // Trace those AutoMarkingPtr lists!
+                thread->TraceJS(trc);
+            }
+        }
+    }
+}
+
+// static
 JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
 {
     nsVoidArray* dyingWrappedJSArray;
@@ -278,30 +303,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
                     self->mThreadRunningGC = PR_GetCurrentThread();
                 }
 
-                // Skip this part if XPConnect is shutting down. We get into
-                // bad locking problems with the thread iteration otherwise.
-                if(!self->GetXPConnect()->IsShuttingDown())
-                {
-                    PRLock* threadLock = XPCPerThreadData::GetLock();
-                    if(threadLock)
-                    { // scoped lock
-                        nsAutoLock lock(threadLock);
-
-                        XPCPerThreadData* iterp = nsnull;
-                        XPCPerThreadData* thread;
-
-                        while(nsnull != (thread =
-                                     XPCPerThreadData::IterateThreads(&iterp)))
-                        {
-                            // Mark those AutoMarkingPtr lists!
-                            // XXX This should be in a JSGC_MARK_BEGIN
-                            // callback, in case other callbacks use
-                            // JSGC_MARK_END (or a close phase before it)
-                            // to determine what is about to be finalized.
-                            thread->MarkAutoRootsBeforeJSFinalize(cx);
-                        }
-                    }
-                }
+                TraceJS(JS_GetGCMarkingTracer(cx), self);
 
                 dyingWrappedJSArray = &self->mWrappedJSToReleaseArray;
                 {
