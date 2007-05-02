@@ -54,6 +54,7 @@
 // #define ENABLE_XFT_FAST_PATH_ALWAYS
 
 #include "nsDataHashtable.h"
+#include "nsClassHashtable.h"
 
 class FontSelector;
 
@@ -74,10 +75,12 @@ public:
 
     void GetMozLang(nsACString &aMozLang);
     void GetActualFontFamily(nsACString &aFamily);
-    PangoFont *GetPangoFont();
 
     XftFont *GetXftFont () { RealizeXftFont (); return mXftFont; }
+    PangoFont *GetPangoFont() { RealizePangoFont(); return mPangoFont; }
     gfxFloat GetAdjustedSize() { RealizeFont(); return mAdjustedSize; }
+
+    PRBool HasGlyph(const PRUint32 aChar);
 
     virtual gfxTextRun::Metrics Measure(gfxTextRun *aTextRun,
                                         PRUint32 aStart, PRUint32 aEnd,
@@ -91,6 +94,8 @@ protected:
     PangoContext *mPangoCtx;
 
     XftFont *mXftFont;
+    PangoFont *mPangoFont;
+    PangoFont *mGlyphTestingFont;
     cairo_scaled_font_t *mCairoFont;
 
     PRBool mHasMetrics;
@@ -100,6 +105,8 @@ protected:
     void RealizeFont(PRBool force = PR_FALSE);
     void RealizeXftFont(PRBool force = PR_FALSE);
     void GetSize(const char *aString, PRUint32 aLength, gfxSize& inkSize, gfxSize& logSize);
+    void RealizePangoFont(PRBool aForce = PR_FALSE);
+    void GetCharSize(const char aChar, gfxSize& aInkSize, gfxSize& aLogSize);
 
     virtual void SetupCairoFont(cairo_t *aCR);
 };
@@ -130,21 +137,17 @@ protected:
 
     // ****** Textrun glyph conversion helpers ******
 
-    // If aUTF16Text is null, then the string contains no characters >= 0x100
     void InitTextRun(gfxTextRun *aTextRun, const gchar *aUTF8Text,
-                     PRUint32 aUTF8Length, PRUint32 aUTF8HeaderLength,
-                     const PRUnichar *aUTF16Text, PRUint32 aUTF16Length);
+                     PRUint32 aUTF8Length, PRUint32 aUTF8HeaderLength);
     // Returns NS_ERROR_FAILURE if there's a missing glyph
     nsresult SetGlyphs(gfxTextRun *aTextRun, const gchar *aUTF8,
                        PRUint32 aUTF8Length,
                        PRUint32 *aUTF16Offset, PangoGlyphString *aGlyphs,
                        PangoGlyphUnit aOverrideSpaceWidth,
                        PRBool aAbortOnMissingGlyph);
-    // If aUTF16Text is null, then the string contains no characters >= 0x100.
-    // Returns NS_ERROR_FAILURE if we require the itemizing path
-    nsresult CreateGlyphRunsFast(gfxTextRun *aTextRun,
-                                 const gchar *aUTF8, PRUint32 aUTF8Length,
-                                 const PRUnichar *aUTF16Text, PRUint32 aUTF16Length);
+    nsresult SetMissingGlyphs(gfxTextRun *aTextRun,
+                              const gchar *aUTF8, PRUint32 aUTF8Length,
+                              PRUint32 *aUTF16Offset);
     void CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
                                   const gchar *aUTF8, PRUint32 aUTF8Length,
                                   PRUint32 aUTF8HeaderLength);
@@ -161,4 +164,69 @@ private:
     nsTArray<gfxFontStyle> mAdditionalStyles;
 };
 
+class gfxPangoFontWrapper {
+public:
+    gfxPangoFontWrapper(PangoFont *aFont) {
+        mFont = aFont;
+        g_object_ref(mFont);
+    }
+    ~gfxPangoFontWrapper() {
+        if (mFont)
+            g_object_unref(mFont);
+    }
+    PangoFont* Get() { return mFont; }
+private:
+    PangoFont *mFont;
+};
+
+class gfxPangoFontCache
+{
+public:
+    gfxPangoFontCache();
+    ~gfxPangoFontCache();
+
+    static gfxPangoFontCache* GetPangoFontCache() {
+        if (!sPangoFontCache)
+            sPangoFontCache = new gfxPangoFontCache();
+        return sPangoFontCache;
+    }
+    static void Shutdown() {
+        if (sPangoFontCache)
+            delete sPangoFontCache;
+        sPangoFontCache = nsnull;
+    }
+
+    void Put(const PangoFontDescription *aFontDesc, PangoFont *aPangoFont);
+    PangoFont* Get(const PangoFontDescription *aFontDesc);
+private:
+    static gfxPangoFontCache *sPangoFontCache;
+    nsClassHashtable<nsUint32HashKey,  gfxPangoFontWrapper> mPangoFonts;
+};
+
+// XXX we should remove this class, because this class is used only in |HasGlyph| of gfxPangoFont.
+// But it can use fontconfig directly after bug 366664.
+class gfxPangoFontNameMap
+{
+public:
+    gfxPangoFontNameMap();
+    ~gfxPangoFontNameMap();
+
+    static gfxPangoFontNameMap* GetPangoFontNameMap() {
+        if (!sPangoFontNameMap)
+            sPangoFontNameMap = new gfxPangoFontNameMap();
+        return sPangoFontNameMap;
+    }
+    static void Shutdown() {
+        if (sPangoFontNameMap)
+            delete sPangoFontNameMap;
+        sPangoFontNameMap = nsnull;
+    }
+
+    void Put(const nsACString &aName, PangoFont *aPangoFont);
+    PangoFont* Get(const nsACString &aName);
+
+private:
+    static gfxPangoFontNameMap *sPangoFontNameMap;
+    nsClassHashtable<nsCStringHashKey, gfxPangoFontWrapper> mPangoFonts;
+};
 #endif /* GFX_PANGOFONTS_H */
