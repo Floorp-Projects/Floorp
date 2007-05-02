@@ -37,17 +37,22 @@
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
-import org.mozilla.xpcom.Mozilla;
-import org.mozilla.xpcom.XPCOMException;
 import org.mozilla.interfaces.nsIEcho;
+import org.mozilla.interfaces.nsIJXTestArrayParams;
 import org.mozilla.interfaces.nsIJXTestParams;
 import org.mozilla.interfaces.nsIStackFrame;
 import org.mozilla.interfaces.nsISupports;
 import org.mozilla.interfaces.nsITestXPCFunctionCallback;
 import org.mozilla.interfaces.nsITestXPCSomeUselessThing;
+import org.mozilla.interfaces.nsIXPCTestArray;
 import org.mozilla.interfaces.nsIXPCTestIn;
+import org.mozilla.xpcom.Mozilla;
+import org.mozilla.xpcom.XPCOMException;
 
 
 /**
@@ -93,7 +98,10 @@ public class TestParams {
 			runEchoTests();
 
 			runInTests();
-		} catch (RunTestsException e) {
+			
+			runArrayTests();
+		} catch (Exception e) {
+			e.printStackTrace();
 			System.exit(-1);
 		}
 		
@@ -104,6 +112,7 @@ public class TestParams {
 		try {
 			jstest.runTests(new JavaTests());
 		} catch (XPCOMException e) {
+			e.printStackTrace();
 			System.exit(-1);
 		}
 
@@ -169,17 +178,16 @@ public class TestParams {
 	}	
 
 	/**
-	 * @param aCallee
+	 * @param aCallee Object on which to run tests
 	 * @param aTests  An array of tests to run.  The format looks like this:
 	 *                  index 0:  method name of test to run
 	 *                        1:  Object array of method arguments
 	 *                        2:  expected result
 	 *                        3:  comment to use when logging test result; if
 	 *                            <code>null</code>, uses method name
-	 * @throws RunTestsException if any of the tests fails
+	 * @throws RuntimeException if any of the tests fails
 	 */
-	private static void runTestsArray(Object aCallee, Object[][] aTests)
-	throws RunTestsException {
+	private static void runTestsArray(Object aCallee, Object[][] aTests) {
 		boolean succeeded = true;
 		for (int i = 0; i < aTests.length; i++) {
 			Method method = getMethod(aCallee.getClass(), (String) aTests[i][0]);
@@ -214,7 +222,64 @@ public class TestParams {
 		}
 		
 		if (!succeeded) {
-			throw new RunTestsException();
+			throw new RuntimeException("RunTestsArray did not succeed");
+		}
+	}
+
+	/**
+	 * @param aCallee Object on which to run tests
+	 * @param aTests  An array of tests to run.  The format looks like this:
+	 *                  index 0:  method name of test to run
+	 *                        1:  Object array of method arguments
+	 *                        2:  comparator method that checks result
+	 *                        3:  comment to use when logging test result; if
+	 *                            <code>null</code>, uses method name
+	 * @throws RuntimeException if any of the tests fails
+	 */
+	private static void runTestsArrayWithComparator(Object aCallee,
+			Object[][] aTests) {
+		boolean succeeded = true;
+		for (int i = 0; i < aTests.length; i++) {
+			Method method = getMethod(aCallee.getClass(), (String) aTests[i][0]);
+
+			String comment = (aTests[i][3] != null) ? (String) aTests[i][3] :
+				(String) aTests[i][0];
+
+			Object result = null;
+			boolean passed = false;
+			Exception exp = null;
+			Object[] args = (Object[]) aTests[i][1];
+			try {
+				result = method.invoke(aCallee, args);
+			} catch (Exception e) {
+				exp = e;
+				if (exp instanceof InvocationTargetException) {
+					exp = (Exception) ((InvocationTargetException) exp).getCause();
+				}
+			}
+			
+			// call comparator method to see if test passed
+			try {
+				IResultComparator r = (IResultComparator) aTests[i][2];
+				passed = r.didPass(args, result, exp);
+			} catch (Exception e) {
+				exp = e;
+				passed = false;
+			}
+
+			logResult(comment, passed);
+
+			if (!passed) {
+				succeeded = false;
+				if (exp != null) {
+					System.err.println("*** TEST " + comment + " threw exception:");
+					exp.printStackTrace();
+				}
+			}
+		}
+		
+		if (!succeeded) {
+			throw new RuntimeException("RunTestsArray did not succeed");
 		}
 	}
 
@@ -229,10 +294,10 @@ public class TestParams {
 	}
 
 	private static void logResult(String comment, boolean passed) {
-		System.out.println(comment + "\t\t" + (passed ? "passed" : "FAILED"));
+		System.out.println((passed ? "passed" : "FAILED") + ":  " + comment);
 	}
 
-	private static void runEchoTests() throws RunTestsException {
+	private static void runEchoTests() {
 		nsIEcho nativeEcho = (nsIEcho) Mozilla.getInstance()
 			.getComponentManager()
 				.createInstanceByContractID("@mozilla.org/javaxpcom/tests/xpc;1",
@@ -332,7 +397,7 @@ public class TestParams {
 		runTestsArray(nativeEcho, tests);
 	}
 
-	private static void runInTests() throws RunTestsException {
+	private static void runInTests() {
 		nsIXPCTestIn nativeInTest = (nsIXPCTestIn) Mozilla.getInstance()
 			.getComponentManager()
 				.createInstanceByContractID("@mozilla.org/javaxpcom/tests/xpc;1",
@@ -387,12 +452,10 @@ public class TestParams {
 				"echoBoolean w/ " + Boolean.FALSE},
 			{ "echoBoolean", new Object[] { Boolean.TRUE }, Boolean.TRUE,
 				"echoBoolean w/ " + Boolean.TRUE },
-		/* XXX bug 367793
 			{ "echoOctet", new Object[] { zeroShort }, zeroShort,
 				"echoOctet w/ zero"},
 			{ "echoOctet", new Object[] { maxUByte }, maxUByte,
 				"echoOctet w/ " + maxUByte },
-		*/
 			{ "echoLongLong", new Object[] { minLong }, minLong,
 				"echoLongLong w/ " + minLong },
 			{ "echoLongLong", new Object[] { maxLong }, maxLong,
@@ -486,10 +549,298 @@ public class TestParams {
 
 		runTestsArray(nativeInTest, tests);
 	}
-}
 
-class RunTestsException extends Exception {
-	private static final long serialVersionUID = -2865653674109284035L;
+	private static void runArrayTests() {
+		/***   nsIXPCTestArray   ***/
+		
+		nsIXPCTestArray xpcArrayTests = (nsIXPCTestArray) Mozilla.getInstance()
+			.getComponentManager()
+				.createInstanceByContractID("@mozilla.org/javaxpcom/tests/xpc;1",
+						null, nsIXPCTestArray.NS_IXPCTESTARRAY_IID);
+
+		boolean succeeded = true;
+
+		final int[][] intArray = { { 1, 2, 3, 4, 0, -1, -2, -3, -4 } };
+		int[][] intArrayCopy = (int[][]) intArray.clone();
+		Integer multiple = new Integer(2);
+		
+		final String[][] str = { { "this", "is", "to", "be", "reversed" } };
+		String[][] strCopy = (String[][]) str.clone();
+		long[] count = { strCopy[0].length };
+		
+		String[][] strCopy2 = (String[][]) str.clone();
+
+		Object[][] tests = new Object[][] {
+			{ "multiplyEachItemInIntegerArray",
+				new Object[] { multiple, new Long(intArrayCopy[0].length), intArrayCopy },
+				new IResultComparator() {
+					public boolean didPass(Object[] args, Object result, Exception e) {
+						if (e != null)
+							return false;
+						int m = ((Integer) args[0]).intValue();
+						int[][] resultArray = (int[][]) args[2];
+						for (int i = 0; i < intArray[0].length; i++) {
+							if (intArray[0][i] * m != resultArray[0][i])
+								return false;
+						}
+						return true;
+					}
+				},
+				null
+			},
+			{ "doubleStringArray",
+				new Object[] { count, strCopy },
+				new IResultComparator() {
+					public boolean didPass(Object[] args, Object result, Exception e) {
+						if (e != null)
+							return false;
+						int inLength = str[0].length;
+						int outLength = (int) ((long[]) args[0])[0];
+						if (outLength != inLength * 2)
+							return false;
+						
+						String[][] resultArray = (String[][]) args[1];
+						for (int i = 0; i < inLength; i++) {
+							String doubled = doubleString(str[0][i]);
+							if (!doubled.equals(resultArray[0][i*2]) ||
+									!doubled.equals(resultArray[0][i*2+1]))
+								return false;
+						}
+						return true;
+					}
+
+					private String doubleString(String string) {
+						StringBuffer buf = new StringBuffer(string.length()*2);
+						for (int i = 0; i < string.length(); i++) {
+							buf.append(string.charAt(i));
+							buf.append(string.charAt(i));
+						}
+						return buf.toString();
+					}
+				},
+				null
+			},
+			{ "reverseStringArray",
+				new Object[] { new Long(strCopy2[0].length), strCopy2 },
+				new IResultComparator() {
+					public boolean didPass(Object[] args, Object result, Exception e) {
+						if (e != null)
+							return false;
+						int length = ((Long) args[0]).intValue();
+						String[][] resultArray = (String[][]) args[1];
+						for (int i = 0; i < length; i++) {
+							if (!str[0][i].equals(resultArray[0][length - 1 - i]))
+								return false;
+						}
+						return true;
+					}
+				},
+				null
+			}
+		};
+		
+		runTestsArrayWithComparator(xpcArrayTests, tests);
+		
+		
+		/***   nsIJXTestArrayParams   ***/
+		
+		nsIJXTestArrayParams arrayTests = (nsIJXTestArrayParams) xpcArrayTests
+			.queryInterface(nsIJXTestArrayParams.NS_IJXTESTARRAYPARAMS_IID);
+
+		System.arraycopy(intArray[0], 0, intArrayCopy[0], 0, intArray[0].length);
+		int[][] resultArray = new int[1][];
+		IResultComparator copyIntArrayResultComparator = new IResultComparator() {
+			public boolean didPass(Object[] args, Object result, Exception e) {
+				if (e != null)
+					return false;
+				int inLength = ((Long) args[1]).intValue();
+				int[][] resultArray = (int[][]) args[2];
+				for (int i = 0; i < inLength; i++) {
+					if (intArray[0][i] != resultArray[0][i])
+						return false;
+				}
+				return true;
+			}
+		};
+		// for tests that are expected to throw ArrayIndexOutOfBoundsException
+		IResultComparator arrayIOBExpComparator = new IResultComparator() {
+			public boolean didPass(Object[] args, Object result, Exception e) {
+				if (e != null) {
+					if (e instanceof ArrayIndexOutOfBoundsException)
+						return true;
+				}
+				return false;
+			}
+		};
+		
+		String[] returnString = new String[1];
+		IResultComparator stringComparator = new IResultComparator() {
+			public boolean didPass(Object[] args, Object result, Exception e) {
+				if (e != null)
+					return false;
+				String inString = (String) args[0];
+				int inLength = ((Long) args[1]).intValue();
+				String[] outString = (String[]) args[2];
+				if (outString[0].length() != inLength)
+					return false;
+				if (!inString.substring(0, inLength).equals(outString[0]))
+					return false;
+				return true;
+			}
+		};
+
+		IResultComparator returnStringComparator = new IResultComparator() {
+			public boolean didPass(Object[] args, Object result, Exception e) {
+				if (e != null)
+					return false;
+				String inString = (String) args[0];
+				int inLength = ((Long) args[1]).intValue();
+				String outString = (String) result;
+				if (outString.length() != inLength)
+					return false;
+				if (!inString.substring(0, inLength).equals(outString))
+					return false;
+				return true;
+			}
+		};
+		
+		byte[] testBytes = null;
+		byte[][] returnBytes = new byte[1][];
+		try {
+			testBytes = utf8String.getBytes("UTF-8");
+		} catch (UnsupportedEncodingException e1) {
+			e1.printStackTrace();
+		}
+
+		tests = new Object[][] {
+			{ "multiplyEachItemInIntegerArray2",
+				new Object[] { multiple, intArrayCopy, new Long(intArrayCopy[0].length) },
+				new IResultComparator() {
+					public boolean didPass(Object[] args, Object result, Exception e) {
+						if (e != null)
+							return false;
+						int m = ((Integer) args[0]).intValue();
+						int[][] resultArray = (int[][]) args[1];
+						for (int i = 0; i < intArray[0].length; i++) {
+							if (intArray[0][i] * m != resultArray[0][i])
+								return false;
+						}
+						return true;
+					}
+				},
+				null
+			},
+			{ "copyIntArray",
+				new Object[] { intArray[0], new Long(intArray[0].length), resultArray },
+				copyIntArrayResultComparator,
+				null
+			},
+			{ "copyIntArray",
+				new Object[] { intArray[0], new Long(intArray[0].length - 2), resultArray },
+				copyIntArrayResultComparator,
+				"copyIntArray w/ smaller count"
+			},
+			{ "copyIntArray",
+				new Object[] { intArray[0], new Long(intArray[0].length + 2), resultArray },
+				arrayIOBExpComparator,
+				"copyIntArray w/ larger count"
+			},
+			{ "returnIntArray",
+				new Object[] { intArray[0], new Long(intArray[0].length) },
+				new IResultComparator() {
+					public boolean didPass(Object[] args, Object result, Exception e) {
+						if (e != null)
+							return false;
+						int[] inputArray = (int[]) args[0];
+						int[] resultArray = (int[]) result;
+						return Arrays.equals(resultArray, inputArray);
+					}
+				},
+				null
+			},
+			{ "returnIntArray",
+				new Object[] { intArray[0], new Long(intArray[0].length - 2) },
+				new IResultComparator() {
+					public boolean didPass(Object[] args, Object result, Exception e) {
+						if (e != null)
+							return false;
+						int[] inputArray = (int[]) args[0];
+						int inLength = ((Long) args[1]).intValue();
+						int[] resultArray = (int[]) result;
+						if (resultArray.length != inLength)
+							return false;
+						
+						for (int i = 0; i < inLength; i++) {
+							if (resultArray[i] != inputArray[i])
+								return false;
+						}
+						return true;
+					}
+				},
+				"returnIntArray w/ smaller count"
+			},
+			{ "returnIntArray",
+				new Object[] { intArray[0], new Long(intArray[0].length + 2) },
+				arrayIOBExpComparator,
+				"returnIntArray w/ larger count"
+			},
+			{ "copyByteArray",
+				new Object[] { testBytes, new Long(testBytes.length), returnBytes },
+				new IResultComparator() {
+					public boolean didPass(Object[] args, Object result,
+							Exception e) {
+						if (e != null)
+							return false;
+						byte[] inArray = (byte[]) args[0];
+						byte[][] outArray = (byte[][]) args[2];
+						return Arrays.equals(inArray, outArray[0]);
+					}
+				},
+				null
+			},
+			{ "returnByteArray",
+				new Object[] { testBytes, new Long(testBytes.length) },
+				new IResultComparator() {
+					public boolean didPass(Object[] args, Object result,
+							Exception e) {
+						if (e != null)
+							return false;
+						byte[] inArray = (byte[]) args[0];
+						byte[] outArray = (byte[]) result;
+						return Arrays.equals(inArray, outArray);
+					}
+				},
+				null
+			},
+			{ "copySizedString",
+				new Object[] { testString, new Long(testString.length()), returnString },
+				stringComparator,
+				null
+			},
+			{ "returnSizedString",
+				new Object[] { testString, new Long(testString.length()) },
+				returnStringComparator,
+				null
+			},
+			{ "copySizedWString",
+				new Object[] { utf8String, new Long(utf8String.length()), returnString },
+				stringComparator,
+				null
+			},
+			{ "returnSizedWString",
+				new Object[] { utf8String, new Long(utf8String.length()) },
+				returnStringComparator,
+				null
+			},
+		};
+		
+		runTestsArrayWithComparator(arrayTests, tests);
+
+		if (!succeeded) {
+			throw new RuntimeException("Array tests did not succeed");
+		}
+	}
+
 }
 
 class JavaTests implements nsIEcho, nsIXPCTestIn {
@@ -646,14 +997,14 @@ class JavaTests implements nsIEcho, nsIXPCTestIn {
 		throw new XPCOMException(Mozilla.NS_ERROR_NOT_IMPLEMENTED);
 	}
 
-	public void sendInOutManyTypes(byte[] p1, short[] p2, int[] p3, long[] p4,
-			byte[] p5, int[] p6, long[] p7, double[] p8, float[] p9,
+	public void sendInOutManyTypes(short[] p1, short[] p2, int[] p3, long[] p4,
+			short[] p5, int[] p6, long[] p7, double[] p8, float[] p9,
 			double[] p10, boolean[] p11, char[] p12, char[] p13, String[] p14,
 			String[] p15, String[] p16) {
 		throw new XPCOMException(Mozilla.NS_ERROR_NOT_IMPLEMENTED);
 	}
 
-	public void sendManyTypes(byte p1, short p2, int p3, long p4, byte p5,
+	public void sendManyTypes(short p1, short p2, int p3, long p4, short p5,
 			int p6, long p7, double p8, float p9, double p10, boolean p11,
 			char p12, char p13, String p14, String p15, String p16) {
 		throw new XPCOMException(Mozilla.NS_ERROR_NOT_IMPLEMENTED);
@@ -721,7 +1072,7 @@ class JavaTests implements nsIEcho, nsIXPCTestIn {
 		return ll;
 	}
 
-	public byte echoOctet(byte o) {
+	public short echoOctet(short o) {
 		return o;
 	}
 
@@ -783,5 +1134,36 @@ class JavaTests implements nsIEcho, nsIXPCTestIn {
 	public char echoWchar(char wc) {
 		return wc;
 	}
+
+	public void copyIntArray(int[] srcArray, long count, int[][] dstArray) {
+		System.arraycopy(srcArray, 0, dstArray[0], 0, (int) count);
+	}
+
+	public void copySizedString(String srcString, long count, String[] dstString) {
+		dstString[0] = srcString.substring(0, (int) count);
+	}
+
+	public void multiplyEachItemInIntegerArray2(int val, int[][] valueArray,
+			long count) {
+	    for(int i = 0; i < count; i++) {
+	        valueArray[0][i] *= val;
+	    }
+	}
+
+	public int[] returnIntArray(int[] srcArray, long count) {
+		int[] array = new int[(int) count];
+		System.arraycopy(srcArray, 0, array, 0, (int) count);
+		return array;
+	}
+
+	public String returnSizedString(String srcString, long count) {
+		return srcString.substring(0, (int) count);
+	}
+
+}
+
+interface IResultComparator {
+	
+	boolean didPass(Object[] args, Object result, Exception e);
 
 }

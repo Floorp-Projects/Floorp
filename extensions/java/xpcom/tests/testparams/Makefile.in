@@ -49,6 +49,7 @@ DIRS = $(DEPTH)/js/src/xpconnect/tests/idl
 
 XPIDLSRCS = \
 	nsIJXTestParams.idl \
+	nsIJXTestArrayParams.idl \
 	$(NULL)
 
 EXTRA_COMPONENTS = \
