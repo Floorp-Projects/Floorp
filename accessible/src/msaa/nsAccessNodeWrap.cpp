@@ -102,7 +102,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsAccessNodeWrap, nsAccessNode, nsIWinAccessNode);
 NS_IMETHODIMP
 nsAccessNodeWrap::QueryNativeInterface(REFIID aIID, void** aInstancePtr)
 {
-  return NS_OK;
+  return QueryInterface(aIID, aInstancePtr);
 }
 
 //-----------------------------------------------------
