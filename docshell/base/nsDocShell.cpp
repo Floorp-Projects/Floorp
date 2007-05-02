@@ -3591,6 +3591,14 @@ nsDocShell::GetPositionAndSize(PRInt32 * x, PRInt32 * y, PRInt32 * cx,
         doc->FlushPendingNotifications(Flush_Layout);
     }
     
+    DoGetPositionAndSize(x, y, cx, cy);
+    return NS_OK;
+}
+
+void
+nsDocShell::DoGetPositionAndSize(PRInt32 * x, PRInt32 * y, PRInt32 * cx,
+                                 PRInt32 * cy)
+{    
     if (x)
         *x = mBounds.x;
     if (y)
@@ -3599,8 +3607,6 @@ nsDocShell::GetPositionAndSize(PRInt32 * x, PRInt32 * y, PRInt32 * cx,
         *cx = mBounds.width;
     if (cy)
         *cy = mBounds.height;
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5898,7 +5904,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
 
     // This will get the size from the current content viewer or from the
     // Init settings
-    GetPositionAndSize(&x, &y, &cx, &cy);
+    DoGetPositionAndSize(&x, &y, &cx, &cy);
 
     nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
     NS_ENSURE_SUCCESS(GetSameTypeParent(getter_AddRefs(parentAsItem)),
