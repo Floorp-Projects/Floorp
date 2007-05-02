@@ -102,6 +102,7 @@
       <method name="destroy">
         <body><![CDATA[
           this.mCService.unregisterListener(this.mConsoleListener);
+          window.controllers.removeController(this._controller);
         ]]></body>
       </method>
 
