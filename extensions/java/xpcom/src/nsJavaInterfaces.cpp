@@ -145,8 +145,8 @@ InitXPCOM_Impl(JNIEnv* env, jobject aMozBinDirectory,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // create Java proxy for service manager returned by NS_InitXPCOM2
-  return GetNewOrUsedJavaObject(env, servMan, NS_GET_IID(nsIServiceManager),
-                                nsnull, aResult);
+  return NativeInterfaceToJavaObject(env, servMan, NS_GET_IID(nsIServiceManager),
+                                     nsnull, aResult);
 }
 
 extern "C" NS_EXPORT jobject JNICALL
@@ -171,9 +171,16 @@ XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jobject, jobject aServMgr)
   nsIServiceManager* servMgr = nsnull;
   if (aServMgr) {
     // Get native XPCOM instance
-    rv = GetNewOrUsedXPCOMObject(env, aServMgr, NS_GET_IID(nsIServiceManager),
-                                 (nsISupports**) &servMgr);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get XPCOM obj for ServiceMgr.");
+    nsISupports* instancePtr = nsnull;
+    rv = JavaObjectToNativeInterface(env, aServMgr,
+            NS_GET_IID(nsIServiceManager), (void**) &instancePtr);
+    NS_ASSERTION(NS_SUCCEEDED(rv) && instancePtr != nsnull,
+                 "Failed to get XPCOM obj for ServiceMgr.");
+    if (NS_SUCCEEDED(rv)) {
+      rv = instancePtr->QueryInterface(NS_GET_IID(nsIServiceManager),
+                                       (void**) &servMgr);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "QI for nsIServiceManager failed");
+    }
 
     // Even if we failed to get the matching xpcom object, we don't abort this
     // function.  Just call NS_ShutdownXPCOM with a null service manager.
@@ -209,8 +216,8 @@ XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jobject, jstring aPath,
 
   if (NS_SUCCEEDED(rv)) {
     jobject javaProxy;
-    rv = GetNewOrUsedJavaObject(env, file, NS_GET_IID(nsILocalFile),
-                                nsnull, &javaProxy);
+    rv = NativeInterfaceToJavaObject(env, file, NS_GET_IID(nsILocalFile),
+                                     nsnull, &javaProxy);
     if (NS_SUCCEEDED(rv))
       return javaProxy;
   }
@@ -228,8 +235,8 @@ XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jobject)
 
   if (NS_SUCCEEDED(rv)) {
     jobject javaProxy;
-    rv = GetNewOrUsedJavaObject(env, cm, NS_GET_IID(nsIComponentManager),
-                                nsnull, &javaProxy);
+    rv = NativeInterfaceToJavaObject(env, cm, NS_GET_IID(nsIComponentManager),
+                                     nsnull, &javaProxy);
     if (NS_SUCCEEDED(rv))
       return javaProxy;
   }
@@ -247,8 +254,8 @@ XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jobject)
 
   if (NS_SUCCEEDED(rv)) {
     jobject javaProxy;
-    rv = GetNewOrUsedJavaObject(env, cr, NS_GET_IID(nsIComponentRegistrar),
-                                nsnull, &javaProxy);
+    rv = NativeInterfaceToJavaObject(env, cr, NS_GET_IID(nsIComponentRegistrar),
+                                     nsnull, &javaProxy);
     if (NS_SUCCEEDED(rv))
       return javaProxy;
   }
@@ -266,8 +273,8 @@ XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jobject)
 
   if (NS_SUCCEEDED(rv)) {
     jobject javaProxy;
-    rv = GetNewOrUsedJavaObject(env, sm, NS_GET_IID(nsIServiceManager),
-                                nsnull, &javaProxy);
+    rv = NativeInterfaceToJavaObject(env, sm, NS_GET_IID(nsIServiceManager),
+                                     nsnull, &javaProxy);
     if (NS_SUCCEEDED(rv))
       return javaProxy;
   }
@@ -359,7 +366,7 @@ JXUTILS_NATIVE(wrapJavaObject) (JNIEnv* env, jobject, jobject aJavaObject,
                                 jstring aIID)
 {
   nsresult rv;
-  nsISupports* xpcomObject = nsnull;
+  void* xpcomObject = nsnull;
 
   if (!aJavaObject || !aIID) {
     rv = NS_ERROR_NULL_POINTER;
@@ -370,7 +377,10 @@ JXUTILS_NATIVE(wrapJavaObject) (JNIEnv* env, jobject, jobject aJavaObject,
     } else {
       nsID iid;
       if (iid.Parse(str)) {
-        rv = GetNewOrUsedXPCOMObject(env, aJavaObject, iid, &xpcomObject);
+        rv = JavaObjectToNativeInterface(env, aJavaObject, iid, &xpcomObject);
+        if (NS_SUCCEEDED(rv)) {
+          rv = ((nsISupports*) xpcomObject)->QueryInterface(iid, &xpcomObject);
+        }
       } else {
         rv = NS_ERROR_INVALID_ARG;
       }
@@ -403,7 +413,8 @@ JXUTILS_NATIVE(wrapXPCOMObject) (JNIEnv* env, jobject, jlong aXPCOMObject,
       nsID iid;
       if (iid.Parse(str)) {
         // XXX Should we be passing something other than NULL for aObjectLoader?
-        rv = GetNewOrUsedJavaObject(env, xpcomObject, iid, nsnull, &javaObject);
+        rv = NativeInterfaceToJavaObject(env, xpcomObject, iid, nsnull,
+                                         &javaObject);
       } else {
         rv = NS_ERROR_INVALID_ARG;
       }

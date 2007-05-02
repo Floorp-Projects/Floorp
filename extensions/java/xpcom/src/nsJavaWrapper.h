@@ -43,21 +43,21 @@
 
 
 /**
- * Creates a Java proxy around an XPCOM C++ object.
+ * Finds the associated Java wraper for the given XPCOM object and IID.  If no
+ * such Java wrapper exists, then a new one is created.
  *
- * @param env           pointer to Java context
- * @param aXPCOMObject  XPCOM object to create proxy for
- * @param aIID          IID for XPCOM object
- * @param aObjectLoader Java object whose class loader we use for finding
+ * @param env           Java environment pointer
+ * @param aXPCOMObject  XPCOM object for which to find/create Java wrapper
+ * @param aIID          desired interface IID for Java wrapper
+ * @param aObjectLoader Java wrapper whose class loader we use for finding
  *                      classes; can be null
- * @param aResult       on exit, holds reference to Java proxy
+ * @param aResult       on success, holds reference to Java wrapper
  *
- * @return NS_OK if Java proxy was successfully created;
- *         any other value denotes an error condition.
+ * @return  NS_OK if succeeded; all other return values are error codes.
  */
-nsresult CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject,
-                         const nsIID& aIID, jobject aObjectLoader,
-                         jobject* aResult);
+nsresult GetNewOrUsedJavaWrapper(JNIEnv* env, nsISupports* aXPCOMObject,
+                                 const nsIID& aIID, jobject aObjectLoader,
+                                 jobject* aResult);
 
 /**
  * Returns the XPCOM object for which the given Java proxy was created.
