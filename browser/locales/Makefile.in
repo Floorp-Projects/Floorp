@@ -65,11 +65,14 @@ AB = $(firstword $(subst -, ,$(AB_CD)))
 
 APP_VERSION := $(shell cat $(srcdir)/../config/version.txt)
 
+PWD := $(shell pwd)
+core_abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(PWD)/$(1)))
+
 DEFINES += \
 	-DAB_CD=$(AB_CD) \
 	-DMOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox.mozilla.org \
 	-DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
-	-DLOCALE_SRCDIR=$(LOCALE_SRCDIR) \
+	-DLOCALE_SRCDIR=$(call core_abspath,$(LOCALE_SRCDIR)) \
 	-DPKG_BASENAME=$(PKG_BASENAME) \
 	$(NULL)
 
