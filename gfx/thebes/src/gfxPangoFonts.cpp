@@ -950,19 +950,23 @@ SetupClusterBoundaries(gfxTextRun* aTextRun, const gchar *aUTF8, PRUint32 aUTF8L
         return;
     }
 
+    // Pango says "the array of PangoLogAttr passed in must have at least N+1
+    // elements, if there are N characters in the text being broken".
+    // Could use g_utf8_strlen(aUTF8, aUTF8Length) + 1 but the memory savings
+    // may not be worth the call.
     nsAutoTArray<PangoLogAttr,2000> buffer;
     if (!buffer.AppendElements(aUTF8Length + 1))
         return;
 
-    // Pango says "the array of PangoLogAttr passed in must have at least N+1
-    // elements, if there are N characters in the text being broken"
-    pango_break(aUTF8, aUTF8Length, aAnalysis, buffer.Elements(), aUTF8Length + 1);
+    pango_break(aUTF8, aUTF8Length, aAnalysis,
+                buffer.Elements(), buffer.Length());
 
     const gchar *p = aUTF8;
     const gchar *end = aUTF8 + aUTF8Length;
+    const PangoLogAttr *attr = buffer.Elements();
     gfxTextRun::CompressedGlyph g;
     while (p < end) {
-        if (!buffer[p - aUTF8].is_cursor_position) {
+        if (!attr->is_cursor_position) {
             aTextRun->SetCharacterGlyph(aUTF16Offset, g.SetClusterContinuation());
         }
         ++aUTF16Offset;
@@ -974,6 +978,7 @@ SetupClusterBoundaries(gfxTextRun* aTextRun, const gchar *aUTF8, PRUint32 aUTF8L
         }
         // We produced this utf8 so we don't need to worry about malformed stuff
         p = g_utf8_next_char(p);
+        ++attr;
     }
 }
 
