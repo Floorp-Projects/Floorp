@@ -103,7 +103,6 @@ XPIDLSRCS	= \
 		nsIBaseWindow.idl \
 		nsIBidiKeyboard.idl \
 		nsIFullScreen.idl \
-		nsINativeScrollbar.idl \
 		nsIScreen.idl \
 		nsIScreenManager.idl \
 		nsIPrintSession.idl \
