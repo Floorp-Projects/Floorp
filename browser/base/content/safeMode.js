@@ -47,6 +47,18 @@ function clearAllPrefs() {
   var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefService);
   prefService.resetUserPrefs();
+
+  // Remove the pref-overrides dir, if it exists
+  try {
+    var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
+                                .getService(Components.interfaces.nsIProperties);
+    const NS_APP_PREFS_OVERRIDE_DIR = "PrefDOverride";
+    var prefOverridesDir = fileLocator.get(NS_APP_PREFS_OVERRIDE_DIR,
+                                           Components.interfaces.nsIFile);
+    prefOverridesDir.remove(true);
+  } catch (ex) {
+    Components.utils.reportError(ex);
+  }
 }
 
 function restoreDefaultBookmarks() {

@@ -95,6 +95,8 @@
 #define APP_REGISTRY_NAME "appreg"
 #endif
 
+#define PREF_OVERRIDE_DIRNAME "preferences"
+
 nsXREDirProvider* gDirServiceProvider = nsnull;
 
 nsXREDirProvider::nsXREDirProvider() :
@@ -349,6 +351,11 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
     else if (!strcmp(aProperty, NS_APP_DOWNLOADS_50_FILE)) {
       rv = file->AppendNative(NS_LITERAL_CSTRING("downloads.rdf"));
     }
+    else if (!strcmp(aProperty, NS_APP_PREFS_OVERRIDE_DIR)) {
+      rv = mProfileDir->Clone(getter_AddRefs(file));
+      rv |= file->AppendNative(NS_LITERAL_CSTRING(PREF_OVERRIDE_DIRNAME));
+      rv |= EnsureDirectoryExists(file);
+    }
     // XXXbsmedberg move these defines into application-specific providers.
     else if (!strcmp(aProperty, NS_APP_MAIL_50_DIR)) {
       rv = file->AppendNative(NS_LITERAL_CSTRING("Mail"));
@@ -555,22 +562,30 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
   }
   else if (!strcmp(aProperty, NS_APP_PREFS_DEFAULTS_DIR_LIST)) {
     nsCOMArray<nsIFile> directories;
+    PRBool exists;
 
     if (mXULAppDir) {
       nsCOMPtr<nsIFile> file;
       mXULAppDir->Clone(getter_AddRefs(file));
       file->AppendNative(NS_LITERAL_CSTRING("defaults"));
       file->AppendNative(NS_LITERAL_CSTRING("preferences"));
-      PRBool exists;
       if (NS_SUCCEEDED(file->Exists(&exists)) && exists)
         directories.AppendObject(file);
     }
+    
+    if (mProfileDir) {
+      nsCOMPtr<nsIFile> overrideFile;
+      mProfileDir->Clone(getter_AddRefs(overrideFile));
+      overrideFile->AppendNative(NS_LITERAL_CSTRING(PREF_OVERRIDE_DIRNAME));
+      if (NS_SUCCEEDED(overrideFile->Exists(&exists)) && exists)
+        directories.AppendObject(overrideFile);
 
-    if (mProfileDir && !gSafeMode) {
-      static const char *const kAppendPrefDir[] = { "defaults", "preferences", nsnull };
+      if (!gSafeMode) {
+        static const char *const kAppendPrefDir[] = { "defaults", "preferences", nsnull };
 
-      LoadDirsIntoArray(profileFile, "ExtensionDirs",
-                        kAppendPrefDir, directories);
+        LoadDirsIntoArray(profileFile, "ExtensionDirs",
+                          kAppendPrefDir, directories);
+      }
     }
 
     rv = NS_NewArrayEnumerator(aResult, directories);
