@@ -2030,7 +2030,7 @@ static JSParseNode *
 FindPropertyValue(JSParseNode *pn, JSParseNode *pnid, FindPropValData *data)
 {
     FindPropValEntry *entry;
-    JSParseNode *pnhit, *pnprop, *pnkey;
+    JSParseNode *pnhit, *pnhead, *pnprop, *pnkey;
     uint32 step;
 
     /* If we have a hash table, use it as the sole source of truth. */
@@ -2051,8 +2051,11 @@ FindPropertyValue(JSParseNode *pn, JSParseNode *pnid, FindPropValData *data)
     pnhit = NULL;
     step = 0;
     ASSERT_VALID_PROPERTY_KEY(pnid);
+    pnhead = pn->pn_head;
+    if (pnhead->pn_type == TOK_DEFSHARP)
+        pnhead = pnhead->pn_next;
     if (pnid->pn_type == TOK_NUMBER) {
-        for (pnprop = pn->pn_head; pnprop; pnprop = pnprop->pn_next) {
+        for (pnprop = pnhead; pnprop; pnprop = pnprop->pn_next) {
             JS_ASSERT(pnprop->pn_type == TOK_COLON);
             if (pnprop->pn_op == JSOP_NOP) {
                 pnkey = pnprop->pn_left;
@@ -2065,7 +2068,7 @@ FindPropertyValue(JSParseNode *pn, JSParseNode *pnid, FindPropValData *data)
             }
         }
     } else {
-        for (pnprop = pn->pn_head; pnprop; pnprop = pnprop->pn_next) {
+        for (pnprop = pnhead; pnprop; pnprop = pnprop->pn_next) {
             JS_ASSERT(pnprop->pn_type == TOK_COLON);
             if (pnprop->pn_op == JSOP_NOP) {
                 pnkey = pnprop->pn_left;
@@ -2092,7 +2095,8 @@ FindPropertyValue(JSParseNode *pn, JSParseNode *pnid, FindPropValData *data)
                               sizeof(FindPropValEntry),
                               JS_DHASH_DEFAULT_CAPACITY(pn->pn_count)))
         {
-            for (pn = pn->pn_head; pn; pn = pn->pn_next) {
+            for (pn = pnhead; pn; pn = pn->pn_next) {
+                JS_ASSERT(pnprop->pn_type == TOK_COLON);
                 ASSERT_VALID_PROPERTY_KEY(pn->pn_left);
                 entry = (FindPropValEntry *)
                         JS_DHashTableOperate(&data->table, pn->pn_left,
