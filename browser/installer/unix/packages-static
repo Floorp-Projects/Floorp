@@ -16,8 +16,10 @@ bin/.autoreg
 bin/chrome/@AB_CD@.jar
 bin/chrome/@AB_CD@.manifest
 bin/defaults/pref/firefox-l10n.js
+bin/defaults/existing-profile-defaults.js
 ; If you add a new directory you must explicitly call addDirectory in ab-CD.jst
 bin/browserconfig.properties
+bin/old-homepage-default.properties
 bin/searchplugins/*
 bin/defaults/profile/bookmarks.html
 bin/defaults/profile/localstore.rdf
