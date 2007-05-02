@@ -469,14 +469,10 @@ xpcom_to_java_type(TreeState *state, IDL_tree param)
         break;
 
     case IDLN_TYPE_OCTET:
-        /* If real type is 'PRUint8', promote to 'short' */
-        if (IDL_NODE_TYPE(state->tree) == IDLN_IDENT) {
-            if (strcmp(IDL_IDENT(state->tree).str, "PRUint8") == 0) {
-                fputs("short", state->file);
-                break;
-            }
-        }
-        fputs("byte", state->file);
+        if (param && IDL_tree_property_get(IDL_PARAM_DCL(param).simple_declarator, "array"))
+            fputs("byte", state->file);
+        else
+            fputs("short", state->file);
         break;
 
     case IDLN_TYPE_FLOAT:

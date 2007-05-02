@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 function logResult(testname, passed) {
-  dump(testname + "\t\t" + (passed ? "passed" : "FAILED") + "\n");
+  dump((passed ? "passed" : "FAILED") + ":  " + testname + "\n");
 }
 
 function runTestsArray(callee, tests) {
@@ -184,10 +184,8 @@ function runInTests(tests) {
     [ "EchoChar", charZ, charZ, "EchoChar w/ " + charZ ],
     [ "EchoBoolean", true, true, "EchoBoolean w/ " + true ],
     [ "EchoBoolean", false, false, "EchoBoolean w/ " + false ],
-  /* XXX bug 367793
     [ "EchoOctet", 0, 0, "EchoOctet w/ " + 0 ],
     [ "EchoOctet", maxOctet, maxOctet, "EchoOctet w/ " + maxOctet ],
-  */
     [ "EchoLongLong", lowLong, lowLong, "EchoLongLong w/ " + lowLong ],
     [ "EchoLongLong", highLong, highLong, "EchoLongLong w/ " + highLong ],
     [ "EchoUnsignedShort", maxUShort, maxUShort,

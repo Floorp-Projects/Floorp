@@ -41,6 +41,8 @@
 const nsISupports = Components.interfaces.nsISupports;
 const nsIEcho = Components.interfaces.nsIEcho;
 const nsIXPCTestIn = Components.interfaces.nsIXPCTestIn;
+const nsIXPCTestArray = Components.interfaces.nsIXPCTestArray;
+const nsIJXTestArrayParams = Components.interfaces.nsIJXTestArrayParams;
 
 const CLASS_ID = Components.ID("{9e45a36d-7cf7-4f2a-a415-d0b07e54945b}");
 const CLASS_NAME = "XPConnect Tests in Javascript";
@@ -64,6 +66,8 @@ XPCTests.prototype = {
   QueryInterface: function(aIID) {
     if (!aIID.equals(nsIEcho) &&
         !aIID.equals(nsIXPCTestIn) &&
+        !aIID.equals(nsIXPCTestArray) &&
+        !aIID.equals(nsIJXTestArrayParams) &&
         !aIID.equals(nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
@@ -187,8 +191,80 @@ XPCTests.prototype = {
     return i;
   },
 
-  EchoVoid: function() {}
+  EchoVoid: function() {},
 
+  // ----------------------------------
+  //    nsIXPCTestArray
+  // ----------------------------------
+
+  MultiplyEachItemInIntegerArray : function(val, len, a) {
+    for(var i = 0; i < len; i++)
+      a.value[i] *= val;
+  },
+  
+  DoubleStringArray : function(len, a) {
+      var outArray = new Array();
+      for(var i = 0; i < len.value; i++) {
+          var inStr = a.value[i];
+          var outStr = new String();
+          for(var k = 0; k < inStr.length; k++) {
+              outStr += inStr[k];
+              outStr += inStr[k];
+          }
+          outArray.push(outStr);
+          outArray.push(outStr);
+      }
+      len.value *= 2;
+      a.value = outArray;
+  },
+
+  ReverseStringArray : function(len, a) {
+      for(var i = 0; i < len/2; i++) {
+          var temp = a.value[i];
+          a.value[i] = a.value[len-1-i];
+          a.value[len-1-i] = temp;
+      }
+  },
+
+  // ----------------------------------
+  //    nsIJXTestArrayParams
+  // ----------------------------------
+
+  multiplyEachItemInIntegerArray2 : function(val, a, len) {
+    this.MultiplyEachItemInIntegerArray(val, len, a);
+  },
+
+  copyIntArray: function(srcArray, count, dstArray) {
+    dstArray.value = srcArray.slice();
+  },
+
+  returnIntArray: function(srcArray, count) {
+    return srcArray;
+  },
+  
+  copyByteArray: function(srcArray, count, dstArray) {
+    dstArray.value = srcArray.slice();
+  },
+
+  returnByteArray: function(srcArray, count) {
+    return srcArray;
+  },
+  
+  copySizedString: function(srcString, count, dstString) {
+    dstString.value = srcString.slice();
+  },
+  
+  returnSizedString: function(srcString, count) {
+    return srcString;
+  },
+  
+  copySizedWString: function(srcString, count, dstString) {
+    dstString.value = srcString.slice();
+  },
+  
+  returnSizedWString: function(srcString, count) {
+    return srcString;
+  }
 };
 
 /***********************************************************
