@@ -110,7 +110,6 @@ public:
 
   // Called by History service when quitting.
   nsresult OnQuit();
-  nsresult ArchiveBookmarksFile(PRInt32 aNumberOfBackups, PRBool aForceArchive);
 
 private:
   static nsNavBookmarks *sInstance;
@@ -256,23 +255,6 @@ private:
     nsCString mType;
     PRInt32 mIndex;
   };
-
-  // in nsBookmarksHTML
-  nsresult ImportBookmarksHTMLInternal(nsIURI* aURL,
-                                       PRBool aAllowRootChanges,
-                                       PRInt64 aFolder,
-                                       PRBool aIsImportDefaults);
-  nsresult WriteItem(nsNavHistoryResultNode* aItem, const nsCString& aIndent,
-                     nsIOutputStream* aOutput);
-  nsresult WriteContainer(PRInt64 aFolder, const nsCString& aIndent,
-                          nsIOutputStream* aOutput);
-  nsresult WriteContainerHeader(PRInt64 aFolder, const nsCString& aIndent,
-                                nsIOutputStream* aOutput);
-  nsresult WriteContainerTitle(PRInt64 aFolder, nsIOutputStream* aOutput);
-  nsresult WriteLivemark(PRInt64 aFolderId, const nsCString& aIndent,
-                         nsIOutputStream* aOutput);
-  nsresult WriteContainerContents(PRInt64 aFolder, const nsCString& aIndent,
-                                  nsIOutputStream* aOutput);
 };
 
 struct nsBookmarksUpdateBatcher

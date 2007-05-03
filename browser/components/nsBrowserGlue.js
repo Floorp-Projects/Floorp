@@ -41,6 +41,7 @@
 
 function BrowserGlue() {
   this._init();
+  this._profileStarted = false;
 }
 
 BrowserGlue.prototype = {
@@ -127,11 +128,23 @@ BrowserGlue.prototype = {
       ww.openWindow(null, "chrome://browser/content/safeMode.xul", 
                     "_blank", "chrome,centerscreen,modal,resizable=no", null);
     }
+
+    // initialize Places
+    this._initPlaces();
+
+    // indicate that the profile was initialized
+    this._profileStarted = true;
   },
 
   // profile shutdown handler (contains profile cleanup routines)
   _onProfileShutdown: function() 
   {
+    // this block is for code that depends on _onProfileStartup() having been called.
+    if (this._profileStarted) {
+      // final places cleanup
+      this._shutdownPlaces();
+    }
+
     // here we enter last survival area, in order to avoid multiple
     // "quit-application" notifications caused by late window closings
     const appStartup = Components.classes['@mozilla.org/toolkit/app-startup;1']
@@ -157,6 +170,71 @@ BrowserGlue.prototype = {
     }
     return Sanitizer;
   },
+
+  /**
+   * Initialize Places
+   * - imports bookmarks.html if bookmarks datastore is empty
+   */
+  _initPlaces: function bg__initPlaces() {
+#ifdef MOZ_PLACES_BOOKMARKS
+    var importBookmarks = false;
+    try {
+      var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                  .getService(Components.interfaces.nsIPrefBranch);
+      importBookmarks = prefService.getBoolPref("browser.places.importBookmarksHTML");
+    } catch(ex) {}
+
+    if (!importBookmarks)
+      return;
+
+    var dirService = Components.classes["@mozilla.org/file/directory_service;1"]
+                               .getService(Components.interfaces.nsIProperties);
+    var profDir = dirService.get("ProfD", Components.interfaces.nsILocalFile);
+
+    var bookmarksFile = profDir.clone(); // bookmarks.html
+    bookmarksFile.append("bookmarks.html");
+
+    if (bookmarksFile.exists()) {
+      // import bookmarks.html
+      try {
+        var importer = 
+          Components.classes["@mozilla.org/browser/places/import-export-service;1"]
+                    .getService(Components.interfaces.nsIPlacesImportExportService);
+        importer.importHTMLFromFile(bookmarksFile);
+      } catch(ex) {
+      } finally {
+        prefService.setBoolPref("browser.places.importBookmarksHTML", false);
+      }
+
+      // backup pre-places bookmarks.html
+      // XXXtodo remove this before betas, after import/export is solid
+      var bookmarksBackup = profDir.clone();
+      bookmarksBackup.append("bookmarks.preplaces.html");
+      if (!bookmarksBackup.exists()) {
+        // save old bookmarks.html file as bookmarks.preplaces.html
+        try {
+          bookmarksFile.copyTo(profDir, "bookmarks.preplaces.html");
+        } catch(ex) {
+          dump("nsBrowserGlue::_initPlaces(): copy of bookmarks.html to bookmarks.preplaces.html failed: " + ex + "\n");
+        }
+      }
+    }
+#endif
+  },
+
+  /**
+   * Places shut-down tasks
+   * - back up and archive bookmarks
+   */
+  _shutdownPlaces: function bg__shutdownPlaces() {
+#ifdef MOZ_PLACES_BOOKMARKS
+    // backup bookmarks to bookmarks.html
+    var importer =
+      Components.classes["@mozilla.org/browser/places/import-export-service;1"]
+                .getService(Components.interfaces.nsIPlacesImportExportService);
+    importer.backupBookmarksFile();
+#endif
+  },
   
   // ------------------------------
   // public nsIBrowserGlue members
@@ -166,7 +244,6 @@ BrowserGlue.prototype = {
   {
     this.Sanitizer.sanitize(aParentWindow);
   }
-
 }
 
 

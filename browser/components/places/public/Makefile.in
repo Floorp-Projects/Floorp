@@ -12,7 +12,7 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Places code
+# The Original Code is Places code.
 #
 # The Initial Developer of the Original Code is
 # Google Inc.
@@ -43,64 +43,9 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = places
-LIBRARY_NAME  = places
-LIBXUL_LIBRARY = 1
-EXPORT_LIBRARY = 1
-MODULE_NAME = nsPlacesModule
-IS_COMPONENT = 1
+MODULE = browserplaces
+XPIDL_MODULE = browserplaces
 
-REQUIRES = xpcom \
-           string \
-           history \
-           docshell \
-           rdf \
-           dom \
-           morkreader \
-           pref \
-           necko \
-           intl \
-           layout \
-           locale \
-           unicharutil \
-           autocomplete \
-           storage \
-           uconv \
-           htmlparser \
-           content \
-           txmgr \
-           caps \
-           xpconnect \
-           js \
-           nkcache \
-           widget \
-           url-classifier \
-           microsummaries \
-           $(NULL)
-
-CPPSRCS = \
-          nsAnnoProtocolHandler.cpp \
-          nsAnnotationService.cpp \
-          nsFaviconService.cpp \
-          nsNavHistory.cpp \
-          nsNavHistoryAutoComplete.cpp \
-          nsNavHistoryExpire.cpp \
-          nsNavHistoryQuery.cpp \
-          nsNavHistoryResult.cpp \
-          nsNavBookmarks.cpp \
-          nsMaybeWeakPtr.cpp \
-          nsMorkHistoryImporter.cpp \
-          nsPlacesModule.cpp \
-          $(NULL)
-
-EXTRA_DSO_LDOPTS += \
-	$(DEPTH)/db/morkreader/$(LIB_PREFIX)morkreader_s.$(LIB_SUFFIX) \
-	$(MOZ_UNICHARUTIL_LIBS) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(NULL)
-
-LOCAL_INCLUDES += -I$(srcdir)/../../build
-
-EXTRA_PP_COMPONENTS = nsLivemarkService.js
+XPIDLSRCS  = nsIPlacesImportExportService.idl
 
 include $(topsrcdir)/config/rules.mk

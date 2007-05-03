@@ -540,3 +540,6 @@ pref("browser.sessionstore.max_tabs_undo", 10);
 
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
+
+// import bookmarks.html into Places bookmarks
+pref("browser.places.importBookmarksHTML", true);

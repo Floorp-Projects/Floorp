@@ -120,6 +120,7 @@ protected:
   void CallSetObservers(nsIURI* aURI, const nsACString& aName);
 
   static nsresult MigrateFromAlpha1(mozIStorageConnection* aDBConn);
+  nsresult GetPageAnnotationNamesTArray(nsIURI* aURI, nsTArray<nsCString>* aResult);
 };
 
 #endif /* nsAnnotationService_h___ */

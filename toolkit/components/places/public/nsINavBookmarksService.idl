@@ -181,7 +181,7 @@ interface nsINavBookmarkObserver : nsISupports
  * folders.  A URI in history can be contained in one or more such folders.
  */
 
-[scriptable, uuid(7a17cbcb-b4c8-4485-a254-9e8d58663fe7)]
+[scriptable, uuid(48f31924-f158-11db-8314-0800200c9a66)]
 interface nsINavBookmarksService : nsISupports
 {
   /**
@@ -496,23 +496,4 @@ interface nsINavBookmarksService : nsISupports
    * done changing. Should match beginUpdateBatch or bad things will happen.
    */
   void endUpdateBatch();
-
-
-  /**
-   * Loads the given bookmarks.html file and merges it with the current
-   * bookmarks hierarchy.
-   */
-  void importBookmarksHTML(in nsIURI url);
-
-
-  /**
-   * Loads the given bookmarks.html file and puts it in the given folder
-   */
-  void importBookmarksHTMLToFolder(in nsIURI url, in PRInt64 folder);
-
-
-  /**
-   * Saves the current bookmarks hierarchy to a bookmarks.html file.
-   */
-  void exportBookmarksHTML(in nsIFile file);
 };
