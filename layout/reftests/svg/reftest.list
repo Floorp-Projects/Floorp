@@ -15,7 +15,10 @@
 #== opacity-and-gradient-01.svg pass.svg
 
 == opacity-and-pattern-01.svg pass.svg
-== pseudo-classes-01.svg pass.svg
+
+# crashes linux
+#== pseudo-classes-01.svg pass.svg
+
 == pseudo-classes-02.svg pseudo-classes-02-ref.svg
 
 # fails on osx
