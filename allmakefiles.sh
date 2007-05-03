@@ -310,7 +310,6 @@ content/html/document/public/Makefile
 content/html/document/src/Makefile
 content/xml/Makefile
 content/xml/content/Makefile
-content/xml/content/public/Makefile
 content/xml/content/src/Makefile
 content/xml/document/Makefile
 content/xml/document/public/Makefile
