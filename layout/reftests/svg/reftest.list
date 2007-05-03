@@ -15,9 +15,9 @@
 #== opacity-and-gradient-01.svg pass.svg
 
 == opacity-and-pattern-01.svg pass.svg
+== pseudo-classes-01.svg pass.svg
 
 # crashes linux
-#== pseudo-classes-01.svg pass.svg
 #== pseudo-classes-02.svg pseudo-classes-02-ref.svg
 
 # fails on osx
@@ -25,5 +25,8 @@
 
 == rootElement-null-01.svg pass.svg
 == stroke-width-percentage-01.svg pass.svg
-== text-in-link-01.svg text-in-link-01-ref.svg
+
+# crashes linux
+#== text-in-link-01.svg text-in-link-01-ref.svg
+
 == viewport-percent-graphic-user-01.svg pass.svg
