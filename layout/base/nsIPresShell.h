@@ -636,8 +636,7 @@ public:
   virtual void VerifyStyleTree() = 0;
 #endif
 
-  static PRBool gIsAccessibilityActive;
-  static PRBool IsAccessibilityActive() { return gIsAccessibilityActive; }
+  PRBool IsAccessibilityActive() { return mIsAccessibilityActive; }
 
   /**
    * Stop all active elements (plugins and the caret) in this presentation and
