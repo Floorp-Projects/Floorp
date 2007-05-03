@@ -475,40 +475,32 @@ sub runTests {
   # now run with the profile we created
 
   # On Windows and Linux, the application is focused for us. On OS X, we
-  # need to use applescript to focus the app and then set the url.
+  # need to use an arg to foreground the app.
   my $rc = -1;
-  if (!$is_mac) {
-    my @runargs = ($app, '-no-remote', '-profile', $profile_arg);
-    push(@runargs, $test_url);
-    $rc = 0xffff & system @runargs;
-  } else {
-    $rc = executeMac($profile_arg, $test_url);
+  my @runargs = ($app);
+  if ($is_mac) {
+    push(@runargs, '-foreground');
   }
+  push(@runargs, '-no-remote');
+  push(@runargs, '-profile');
+  push(@runargs, $profile_arg);
+  push(@runargs, $test_url);
+  push(@runargs, '2>&1');
+  push(@runargs, '|');
+  my $mozargs = join(" ",@runargs);
+  
+  open (MOZOUTPUT, "$mozargs") or die("couldn't open: $!");;
+  while (<MOZOUTPUT>){
+    print $_;
+  }
+  $rc = $?;
+  close MOZOUTPUT or die("couldn't close: $!");;
 
   if ($rc != 0) {
     print "FAIL Exited with code $rc during test run\n";
   }
 
   return $test_start;
-}
-
-sub executeMac {
-  my ($profile_arg, $test_url) = @_;
-  my $pid = fork();
-  if (not defined $pid) {
-    die "cannot fork: $!";
-  } elsif ($pid == 0) {
-    # run only the executable so we get a pid we can focus
-    $app .= "-bin";
-    my @runargs = ($app, '-foreground', '-no-remote', '-profile', $profile_arg);
-    push(@runargs, $test_url);
-    exec @runargs or die("Error starting application: $!\n");
-  } else {
-    waitpid($pid,0);
-  }
-
-  # return the exit code we received from waitpid
-  return $?;
 }
 
  ##################
