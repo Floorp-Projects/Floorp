@@ -84,6 +84,9 @@ include counters/reftest.list
 # first-letter/
 include first-letter/reftest.list
 
+# svg/
+include svg/reftest.list
+
 # text-indent/
 include text-indent/reftest.list
 
