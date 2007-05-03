@@ -184,14 +184,28 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
   return NS_OK;
 }
 
-static PRBool IsFixedPaddingSize(nsStyleUnit aUnit) {
+static inline PRBool IsFixedPaddingSize(nsStyleUnit aUnit) {
   return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Null;
 }
-static PRBool IsFixedMarginSize(nsStyleUnit aUnit) {
+static inline PRBool IsFixedMarginSize(nsStyleUnit aUnit) {
   return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Null;
 }
-static PRBool IsFixedMaxSize(nsStyleUnit aUnit) {
+static inline PRBool IsFixedMaxSize(nsStyleUnit aUnit) {
   return aUnit == eStyleUnit_Null || aUnit == eStyleUnit_Coord;
+}
+
+static inline PRBool IsFixedWidth(const nsStyleCoord& aCoord)
+{
+  return aCoord.GetUnit() == eStyleUnit_Coord ||
+         (aCoord.GetUnit() == eStyleUnit_Enumerated &&
+          aCoord.GetIntValue() == NS_STYLE_WIDTH_INTRINSIC ||
+          aCoord.GetIntValue() == NS_STYLE_WIDTH_MIN_INTRINSIC);
+}
+
+static inline PRBool IsFixedMaxWidth(const nsStyleCoord& aCoord)
+{
+  return aCoord.GetUnit() == eStyleUnit_Null ||
+         IsFixedWidth(aCoord);
 }
 
 PRBool
@@ -229,9 +243,10 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // width, min-width, and max-width are all lengths, 'none', or enumerated,
     // then our frame width does not depend on the parent width.
     // Note that borders never depend on the parent width
-    if (pos->mWidth.GetUnit() != eStyleUnit_Coord ||
-        pos->mMinWidth.GetUnit() != eStyleUnit_Coord ||
-        !IsFixedMaxSize(pos->mMaxWidth.GetUnit()) ||
+    // XXX All of the enumerated values except -moz-fill are ok too.
+    if (!IsFixedWidth(pos->mWidth) ||
+        !IsFixedWidth(pos->mMinWidth) ||
+        !IsFixedMaxWidth(pos->mMaxWidth) ||
         !IsFixedPaddingSize(padding->mPadding.GetLeftUnit()) ||
         !IsFixedPaddingSize(padding->mPadding.GetRightUnit())) {
       return PR_TRUE;

@@ -5,3 +5,16 @@
 == min-height-1.html min-height-1-ref.html
 == max-width-1.html max-width-1-ref.html
 == max-height-1.html max-height-1-ref.html
+== width-special-values-block.html width-special-values-block-ref.html
+== width-special-values-float.html width-special-values-block-ref.html
+== width-special-values-image-block.html width-special-values-image-block-ref.html
+== width-special-values-image.html width-special-values-image-ref.html
+== width-special-values-block-intrinsic.html width-special-values-block-intrinsic-ref.html
+== width-special-values-float-intrinsic.html width-special-values-block-intrinsic-ref.html
+== minmax-width-special-values-block-intrinsic.html minmax-width-special-values-block-intrinsic-ref.html
+== width-special-values-cell-auto.html width-special-values-cell-auto-ref.html
+== width-special-values-cell-fixed.html width-special-values-cell-fixed-ref.html
+== box-sizing-1.html box-sizing-1-ref.html
+== box-sizing-2.html box-sizing-2-ref.html
+== box-sizing-3.html box-sizing-1-ref.html
+== box-sizing-4.html box-sizing-4-ref.html

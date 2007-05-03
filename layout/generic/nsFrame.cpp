@@ -3143,29 +3143,31 @@ nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
     case NS_STYLE_BOX_SIZING_PADDING:
       boxSizingAdjust += aPadding;
   }
+  nscoord boxSizingToMarginEdgeWidth =
+    aMargin.width + aBorder.width + aPadding.width - boxSizingAdjust.width;
 
   // Compute width
 
   if (stylePos->mWidth.GetUnit() != eStyleUnit_Auto) {
     result.width =
-      nsLayoutUtils::ComputeWidthDependentValue(aRenderingContext, this,
-        aCBSize.width, stylePos->mWidth) -
-      boxSizingAdjust.width;
+      nsLayoutUtils::ComputeWidthValue(aRenderingContext, this,
+        aCBSize.width, boxSizingAdjust.width, boxSizingToMarginEdgeWidth,
+        stylePos->mWidth);
   }
 
   if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_Null) {
     nscoord maxWidth =
-      nsLayoutUtils::ComputeWidthDependentValue(aRenderingContext, this,
-        aCBSize.width, stylePos->mMaxWidth) -
-      boxSizingAdjust.width;
+      nsLayoutUtils::ComputeWidthValue(aRenderingContext, this,
+        aCBSize.width, boxSizingAdjust.width, boxSizingToMarginEdgeWidth,
+        stylePos->mMaxWidth);
     if (maxWidth < result.width)
       result.width = maxWidth;
   }
 
   nscoord minWidth =
-    nsLayoutUtils::ComputeWidthDependentValue(aRenderingContext, this,
-      aCBSize.width, stylePos->mMinWidth) -
-    boxSizingAdjust.width;
+    nsLayoutUtils::ComputeWidthValue(aRenderingContext, this,
+      aCBSize.width, boxSizingAdjust.width, boxSizingToMarginEdgeWidth,
+      stylePos->mMinWidth);
   if (minWidth > result.width)
     result.width = minWidth;
 

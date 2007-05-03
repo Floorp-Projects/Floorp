@@ -527,12 +527,45 @@ public:
                                        nsIFrame* aFrame,
                                        IntrinsicWidthType aType);
 
+  /*
+   * Convert nsStyleCoord to nscoord when percentages depend on the
+   * containing block width.
+   */
   static nscoord ComputeWidthDependentValue(
                    nsIRenderingContext* aRenderingContext,
                    nsIFrame*            aFrame,
                    nscoord              aContainingBlockWidth,
                    const nsStyleCoord&  aCoord);
 
+  /*
+   * Convert nsStyleCoord to nscoord when percentages depend on the
+   * containing block width, and enumerated values are for width,
+   * min-width, or max-width.  Returns the content-box width value based
+   * on aContentEdgeToBoxSizing and aBoxSizingToMarginEdge (which are
+   * also used for the enumerated values for width.  This function does
+   * not handle 'auto'.  It ensures that the result is nonnegative.
+   *
+   * @param aRenderingContext Rendering context for font measurement/metrics.
+   * @param aFrame Frame whose (min-/max-/)width is being computed
+   * @param aContainingBlockWidth Width of aFrame's containing block.
+   * @param aContentEdgeToBoxSizing The sum of any left/right padding and
+   *          border that goes inside the rect chosen by -moz-box-sizing.
+   * @param aBoxSizingToMarginEdge The sum of any left/right padding, border,
+   *          and margin that goes outside the rect chosen by -moz-box-sizing.
+   * @param aCoord The width value to compute.
+   */
+  static nscoord ComputeWidthValue(
+                   nsIRenderingContext* aRenderingContext,
+                   nsIFrame*            aFrame,
+                   nscoord              aContainingBlockWidth,
+                   nscoord              aContentEdgeToBoxSizing,
+                   nscoord              aBoxSizingToMarginEdge,
+                   const nsStyleCoord&  aCoord);
+
+  /*
+   * Convert nsStyleCoord to nscoord when percentages depend on the
+   * containing block height.
+   */
   static nscoord ComputeHeightDependentValue(
                    nsIRenderingContext* aRenderingContext,
                    nsIFrame*            aFrame,
@@ -542,7 +575,7 @@ public:
   static nsSize ComputeSizeWithIntrinsicDimensions(
                     nsIRenderingContext* aRenderingContext,
                     nsIFrame* aFrame, nsSize aIntrinsicSize, nsSize aCBSize,
-                    nsSize aBorder, nsSize aPadding);
+                    nsSize aMargin, nsSize aBorder, nsSize aPadding);
 
   // Implement nsIFrame::GetPrefWidth in terms of nsIFrame::AddInlinePrefWidth
   static nscoord PrefWidthFromInline(nsIFrame* aFrame,
