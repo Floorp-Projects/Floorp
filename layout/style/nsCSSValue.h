@@ -53,6 +53,7 @@
 
 class imgIRequest;
 class nsIDocument;
+class nsIPrincipal;
 
 enum nsCSSUnit {
   eCSSUnit_Null         = 0,      // (n/a) null unit, value is not specified
@@ -376,38 +377,24 @@ public:
   };
 
   struct URL {
+    // Methods are not inline because using an nsIPrincipal means requiring
+    // caps, which leads to REQUIRES hell, since this header is included all
+    // over.    
+
     // aString must not be null.
-    URL(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer)
-      : mURI(aURI),
-        mString(aString),
-        mReferrer(aReferrer),
-        mRefCnt(0)
-    {
-      mString->AddRef();
-      MOZ_COUNT_CTOR(nsCSSValue::URL);
-    }
+    // aOriginPrincipal must not be null.
+    URL(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
+        nsIPrincipal* aOriginPrincipal) NS_HIDDEN;
 
-    ~URL()
-    {
-      mString->Release();
-      MOZ_COUNT_DTOR(nsCSSValue::URL);
-    }
+    ~URL() NS_HIDDEN;
 
-    PRBool operator==(const URL& aOther) const
-    {
-      PRBool eq;
-      return NS_strcmp(GetBufferValue(mString),
-                       GetBufferValue(aOther.mString)) == 0 &&
-             (mURI == aOther.mURI || // handles null == null
-              (mURI && aOther.mURI &&
-               NS_SUCCEEDED(mURI->Equals(aOther.mURI, &eq)) &&
-               eq));
-    }
+    NS_HIDDEN_(PRBool) operator==(const URL& aOther) const;
 
     nsCOMPtr<nsIURI> mURI; // null == invalid URL
     nsStringBuffer* mString; // Could use nsRefPtr, but it'd add useless
                              // null-checks; this is never null.
     nsCOMPtr<nsIURI> mReferrer;
+    nsCOMPtr<nsIPrincipal> mOriginPrincipal;
 
     void AddRef() { ++mRefCnt; }
     void Release() { if (--mRefCnt == 0) delete this; }
@@ -421,7 +408,8 @@ public:
     // this header is included all over.
     // aString must not be null.
     Image(nsIURI* aURI, nsStringBuffer* aString, nsIURI* aReferrer,
-          nsIDocument* aDocument, PRBool aIsBGImage = PR_FALSE) NS_HIDDEN;
+          nsIPrincipal* aOriginPrincipal, nsIDocument* aDocument,
+          PRBool aIsBGImage = PR_FALSE) NS_HIDDEN;
     ~Image() NS_HIDDEN;
 
     // Inherit operator== from nsCSSValue::URL

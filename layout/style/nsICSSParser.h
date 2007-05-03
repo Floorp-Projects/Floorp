@@ -54,6 +54,7 @@ class nsCSSDeclaration;
 class nsICSSLoader;
 class nsICSSRule;
 class nsMediaList;
+class nsIPrincipal;
 
 #define NS_ICSS_PARSER_IID    \
 { 0x2cb34728, 0x0f17, 0x4753, \
@@ -92,6 +93,7 @@ public:
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
                    nsIURI*                aSheetURL,
                    nsIURI*                aBaseURI,
+                   nsIPrincipal*          aSheetPrincipal,
                    PRUint32               aLineNumber,
                    PRBool                 aAllowUnsafeRules,
                    nsICSSStyleSheet*&     aResult) = 0;
@@ -102,11 +104,13 @@ public:
   NS_IMETHOD ParseStyleAttribute(const nsAString&         aAttributeValue,
                                  nsIURI*                  aDocURL,
                                  nsIURI*                  aBaseURL,
+                                 nsIPrincipal*            aNodePrincipal,
                                  nsICSSStyleRule**        aResult) = 0;
 
   NS_IMETHOD ParseAndAppendDeclaration(const nsAString&         aBuffer,
                                        nsIURI*                  aSheetURL,
                                        nsIURI*                  aBaseURL,
+                                       nsIPrincipal*            aSheetPrincipal,
                                        nsCSSDeclaration*        aDeclaration,
                                        PRBool                   aParseOnlyOneDecl,
                                        PRBool*                  aChanged,
@@ -115,12 +119,14 @@ public:
   NS_IMETHOD ParseRule(const nsAString&        aRule,
                        nsIURI*                 aSheetURL,
                        nsIURI*                 aBaseURL,
+                       nsIPrincipal*           aSheetPrincipal,
                        nsCOMArray<nsICSSRule>& aResult) = 0;
 
   NS_IMETHOD ParseProperty(const nsCSSProperty aPropID,
                            const nsAString& aPropValue,
                            nsIURI* aSheetURL,
                            nsIURI* aBaseURL,
+                           nsIPrincipal* aSheetPrincipal,
                            nsCSSDeclaration* aDeclaration,
                            PRBool* aChanged) = 0;
 

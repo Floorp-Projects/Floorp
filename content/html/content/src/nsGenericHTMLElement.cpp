@@ -1999,6 +1999,7 @@ nsGenericHTMLElement::ParseStyleAttribute(nsIContent* aContent,
         nsCOMPtr<nsICSSStyleRule> rule;
         result = cssParser->ParseStyleAttribute(aValue, doc->GetDocumentURI(),
                                                 baseURI,
+                                                aContent->NodePrincipal(),
                                                 getter_AddRefs(rule));
         cssLoader->RecycleParser(cssParser);
 
@@ -2248,7 +2249,7 @@ nsGenericHTMLElement::MapImageBorderAttributeInto(const nsMappedAttributes* aAtt
 
 void
 nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
-                                                  nsRuleData* aData)
+                                        nsRuleData* aData)
 {
   if (aData->mSID != eStyleStruct_Background)
     return;
@@ -2275,9 +2276,12 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
           // accessor on nsAttrValue?
           nsStringBuffer* buffer = nsCSSValue::BufferFromString(spec);
           if (NS_LIKELY(buffer != 0)) {
+            // XXXbz it would be nice to assert that doc->NodePrincipal() is
+            // the same as the principal of the node (which we'd need to store
+            // in the mapped attrs or something?)
             nsCSSValue::Image *img =
               new nsCSSValue::Image(uri, buffer, doc->GetDocumentURI(),
-                                    doc, PR_TRUE);
+                                    doc->NodePrincipal(), doc, PR_TRUE);
             buffer->Release();
             if (NS_LIKELY(img != 0)) {
               aData->mColorData->mBackImage.SetImageValue(img);

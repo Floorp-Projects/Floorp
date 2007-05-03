@@ -642,7 +642,6 @@ nsSVGElement::DidModifySVGObservable(nsISVGValue* aObservable,
     nsContentUtils::HasMutationListeners(this,
                                          NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
 
-  nsIDocument* document = GetCurrentDoc();
   if (hasListeners || IsInDoc()) {
     modification = !!mAttrsAndChildren.GetAttr(attrName->LocalName(),
                                                attrName->NamespaceID());
@@ -730,7 +729,7 @@ nsSVGElement::UpdateContentStyleRule()
 
     PRBool changed;
     parser->ParseProperty(nsCSSProps::LookupProperty(name), value,
-                          docURI, baseURI,
+                          docURI, baseURI, NodePrincipal(),
                           declaration, &changed);
   }
 

@@ -1543,7 +1543,8 @@ nsCSSStyleSheet::InsertRule(const nsAString& aRule,
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);
 
   nsCOMArray<nsICSSRule> rules;
-  result = css->ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI, rules);
+  result = css->ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
+                          mInner->mPrincipal, rules);
   if (NS_FAILED(result))
     return result;
   
@@ -1783,7 +1784,8 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
   NS_ENSURE_SUCCESS(result, result);
 
   nsCOMArray<nsICSSRule> rules;
-  result = css->ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI, rules);
+  result = css->ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
+                          mInner->mPrincipal, rules);
   NS_ENSURE_SUCCESS(result, result);
 
   PRInt32 rulecount = rules.Count();
