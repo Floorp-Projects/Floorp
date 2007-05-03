@@ -2472,7 +2472,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         LOCAL_ASSERT(*pc == JSOP_SETLOCALPOP);
                         i = GET_UINT16(pc);
                         pc += JSOP_SETLOCALPOP_LENGTH;
-                        (void) PopOff(ss, JSOP_NOP);
                         atom = atomv[i - OBJ_BLOCK_DEPTH(cx, obj)];
                         str = ATOM_TO_STRING(atom);
                         if (!QuoteString(&jp->sprinter, str, 0)) {
@@ -2482,6 +2481,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #if JS_HAS_DESTRUCTURING
                     }
 #endif
+
+                    /*
+                     * Pop the exception_cookie (or its dup in the case of a
+                     * guarded catch head) off the stack now.
+                     */
+                    rval = PopStr(ss, JSOP_NOP);
+                    LOCAL_ASSERT(strcmp(rval, exception_cookie) == 0);
 
                     len = js_GetSrcNoteOffset(sn, 0);
                     if (len) {
