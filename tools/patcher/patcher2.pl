@@ -627,6 +627,8 @@ sub CreateCompletePatchinfo {
         my $complete_path = $complete->{'path'};
         my $complete_url = $complete->{'url'};
 
+        my $currentUpdateRcInfo = $u_config->{$u}->{'rc'};
+
         my @channels = @{$u_config->{$u}->{'all_channels'}};
         my $channel = $u_config->{$u}->{'channel'};
         my @platforms = sort keys %{$u_config->{$u}->{'platforms'}};
@@ -679,6 +681,15 @@ sub CreateCompletePatchinfo {
                     my $snippetDir = GetSnippetDirFromChannel(
                      config => $config->GetCurrentUpdate(), channel => $c);
 
+                    my $snippetToAppVersion = $to->{'appv'};
+                    foreach my $channel (keys(%{$currentUpdateRcInfo})) {
+                        if ($c eq $channel) {
+                            $snippetToAppVersion = $to->{'appv'} . 'rc' .
+                             $currentUpdateRcInfo->{$channel};
+                            last;
+                        }
+                    }
+
                     my $aus_prefix = catfile($u, $snippetDir, 
                                              $from_aus_app,
                                              $from_aus_version,
@@ -697,8 +708,15 @@ sub CreateCompletePatchinfo {
                     #printf("partial = %s", Data::Dumper::Dumper($partial_patch));
                     #printf("complete = %s", Data::Dumper::Dumper($complete_patch));
 
+                    # This is just prettyfication for the PrintProgress() call,
+                    # so we know which channels have had rc's added to their
+                    # appv's.
+                    my $progressVersion = $u;
+                    if ($snippetToAppVersion ne $to->{'appv'}) {
+                        $progressVersion =~ s/$to->{'appv'}/$snippetToAppVersion/;
+                    }
                     PrintProgress(total => $total, current => $i,
-                     string => "$u/$p/$l/$c");
+                     string => "$progressVersion/$p/$l/$c");
 
                     $complete_patch->{'patch_path'} = $to_path;
                     $complete_patch->{'type'} = 'complete';
@@ -711,7 +729,7 @@ sub CreateCompletePatchinfo {
                     $complete_patch->{'hash_value'} =~ s/^(\S+)\s+.*$/$1/g;
 
                     $complete_patch->{'build_id'} = $to->{'build_id'};
-                    $complete_patch->{'appv'} = $to->{'appv'};
+                    $complete_patch->{'appv'} = $snippetToAppVersion;
                     $complete_patch->{'extv'} = $to->{'extv'};
                     $complete_patch->{'size'} = (stat($to_path))[$ST_SIZE];
 
@@ -742,8 +760,32 @@ sub CreateCompletePatchinfo {
                             $testPatch->{$key} = $complete_patch->{$key};
                         }
 
+                        # XXX - BUG: this shouldn't be run inside the
+                        # foreach my $channels loop; it causes us to re-create
+                        # the test channel snippets at least once through.
+                        # I think I did it this way because all the info I
+                        # needed was already all built up in complete_patch
+
                         foreach my $testChan (split(/[\s,]+/, 
                          $u_config->{$u}->{'testchannel'})) {
+                    
+                            $snippetToAppVersion = $to->{'appv'};
+                            foreach my $channel 
+                             (keys(%{$currentUpdateRcInfo})) {
+                                if ($testChan eq $channel) {
+                                    $snippetToAppVersion = $to->{'appv'} . 'rc' 
+                                    . $currentUpdateRcInfo->{$channel};
+                                    last;
+                                }
+                            }
+
+                            # Note that we munge the copy here, but below
+                            # we use $to->{appv} in the SubstitutePath() call
+                            # to handle the URL; we do this because we only
+                            # want the snippet to have the rc value for its
+                            # appv, but not for any of the other places where
+                            # we use version.
+                            $testPatch->{'appv'} = $snippetToAppVersion;
 
                             my $snippetDir = GetSnippetDirFromChannel(
                              config => $u_config->{$u}, channel => $testChan);
@@ -819,6 +861,8 @@ sub CreatePastReleasePatchinfo {
         my $currentRelease = $config->GetAppRelease($config->GetCurrentUpdate()->{'to'});
 
         my @pastFromPlatforms = sort(keys(%{$fromRelease->{'platforms'}}));
+
+        my $currentReleaseRcInfo = $config->GetCurrentUpdate()->{'rc'};
 
         my $complete = $config->GetCurrentUpdate()->{'complete'};
         my $completePath = $complete->{'path'};
@@ -897,8 +941,17 @@ sub CreatePastReleasePatchinfo {
                 foreach my $channel (@{$pastUpd->{'channels'}}) {
                     my $ausDir = GetSnippetDirFromChannel(config => 
                      $config->GetCurrentUpdate(), channel => $channel);
-                    
-                     my $ausPrefix = catfile($prefixStr, $ausDir, $fromAusApp,
+                  
+                    my $snippetToAppVersion = $patchLocaleNode->{'appv'};
+                    foreach my $rcChan (keys(%{$currentReleaseRcInfo})) {
+                        if ($rcChan eq $channel) {
+                            $snippetToAppVersion = $patchLocaleNode->{'appv'} .
+                             'rc' . $currentReleaseRcInfo->{$channel};
+                            last;
+                        }
+                    }
+
+                    my $ausPrefix = catfile($prefixStr, $ausDir, $fromAusApp,
                                              $fromAusVersion, $fromAusPlatform,
                                              $fromAusBuildId, $locale,
                                              $channel);
@@ -908,6 +961,11 @@ sub CreatePastReleasePatchinfo {
                                                              'complete.txt');
 
                     my $prettyPrefix = "$pastUpd->{'from'}-$update->{'to'}";
+
+                    if ($snippetToAppVersion ne $update->{'to'}) {
+                        $prettyPrefix = "$pastUpd->{'from'}-$snippetToAppVersion";
+                    }
+
                     PrintProgress(total => $totalPastUpdates,
                      current => ++$patchInfoFilesCreated,
                      string => "$prettyPrefix/$fromAusPlatform/$locale/$channel/complete"); 
@@ -923,7 +981,7 @@ sub CreatePastReleasePatchinfo {
                     $completePatch->{'hash_value'} = HashFile(file => $to_path,
                                                               type => $hash_type);
                     $completePatch->{'build_id'} = $patchLocaleNode->{'build_id'};
-                    $completePatch->{'appv'} = $patchLocaleNode->{'appv'};
+                    $completePatch->{'appv'} = $snippetToAppVersion;
                     $completePatch->{'extv'} = $patchLocaleNode->{'extv'};
                     $completePatch->{'size'} = (stat($to_path))[$ST_SIZE];
 
@@ -1008,6 +1066,18 @@ sub CreatePartialPatchinfo {
         my $partial_path = $partial->{'path'};
         my $partial_url = $partial->{'url'};
 
+        # We get the information about complete patches for the case where 
+        # we're in an rc channel, and the rc is > 2; in that case, we need 
+        # to serve completes as partials on those channels, because we're 
+        # not going to re-create partial updates from every rc build we do. 
+        # We track this throughout this horrid function via 
+        # $serveCompleteUpdateToRcs (further down below)
+        my $complete = $u_config->{$u}->{'complete'};
+        my $complete_path = $complete->{'path'};
+        my $complete_url = $complete->{'url'};
+
+        my $currentUpdateRcInfo = $u_config->{$u}->{'rc'};
+
         my @channels = @{$u_config->{$u}->{'all_channels'}};
         my $channel = $u_config->{$u}->{'channel'};
         my @platforms = sort keys %{$u_config->{$u}->{'platforms'}};
@@ -1041,6 +1111,27 @@ sub CreatePartialPatchinfo {
                                                      version => $to->{'appv'},
                                                      locale => $l );
 
+                my $partialPatchHash = HashFile(file => $partial_pathname,
+                                                type => $DEFAULT_HASH_TYPE);
+                my $partialPatchSize = (stat($partial_pathname))[$ST_SIZE];
+
+                my $gen_complete_path = SubstitutePath(path => $complete_path,
+                                                       platform => $p,
+                                                       version => $to->{'appv'},
+                                                       locale => $l );
+
+                my $complete_pathname = "$u/ftp/$gen_complete_path";
+
+                my $gen_complete_url = SubstitutePath(path => $complete_url,
+                                                      platform => $p,
+                                                      version => $to->{'appv'},
+                                                      locale => $l );
+
+                my $completePatchHash = HashFile(file => $complete_pathname,
+                 type => $DEFAULT_HASH_TYPE);
+
+                my $completePatchSize = (stat($complete_pathname))[$ST_SIZE];
+
                 my $detailsUrl = SubstitutePath(
                  path => $u_config->{$u}->{'details'},
                  locale => $l,
@@ -1057,8 +1148,30 @@ sub CreatePartialPatchinfo {
                 my $updateType = $u_config->{$u}->{'updateType'};
 
                 for my $c (@channels) {
+                    my $serveCompleteUpdateToRcs = 0;
+                    my $snippetPathname = $partial_pathname;
+                    my $snippetUrl = $gen_partial_url;
+
                     my $snippetDir = GetSnippetDirFromChannel(config =>
                      $u_config->{$u}, channel => $c);
+
+                    my $snippetToAppVersion = $to->{'appv'};
+                    foreach my $channel (keys(%{$currentUpdateRcInfo})) {
+                        if ($c eq $channel) {
+                            $snippetToAppVersion = $to->{'appv'} . 'rc' .
+                             $currentUpdateRcInfo->{$channel};
+
+                            $serveCompleteUpdateToRcs =
+                             (int($currentUpdateRcInfo->{$channel}) > 1);
+
+                            if ($serveCompleteUpdateToRcs) {
+                                $snippetPathname = $complete_pathname;
+                                $snippetUrl = $gen_complete_url;
+                            }
+
+                            last;
+                        }
+                    }
 
                     my $aus_prefix = catfile($u, $snippetDir,
                                              $from_aus_app,
@@ -1073,38 +1186,50 @@ sub CreatePartialPatchinfo {
                                                             'partial.txt');
 
                     # Go to next iteration if this partial patch already exists.
-                    next if ( -e $partial_patch->{'info_path'} or ! -e $partial_pathname );
+                    next if ( -e $partial_patch->{'info_path'} or ! -e $snippetPathname );
                     $i++;
 
+                    # This is just prettyfication for the PrintProgress() call,
+                    # so we know which channels have had rc's added to their
+                    # appv's.
+                    my $progressVersion = $u;
+                    if ($snippetToAppVersion ne $to->{'appv'}) {
+                        $progressVersion =~ s/$to->{'appv'}/$snippetToAppVersion/;
+                    }
                     PrintProgress(total => $total, current => $i,
-                     string => "$u/$p/$l/$c");
+                     string => "$progressVersion/$p/$l/$c");
 
-                    $partial_patch->{'patch_path'} = $partial_pathname;
+                    $partial_patch->{'patch_path'} = $snippetPathname;
                     $partial_patch->{'type'} = 'partial';
 
-                    my $hash_type = $DEFAULT_HASH_TYPE;
-                    $partial_patch->{'hash_type'} = $hash_type;
-                    $partial_patch->{'hash_value'} = HashFile(
-                     file => $partial_pathname,
-                     type => $hash_type);
-
-                    $partial_patch->{'hash_value'} =~ s/^(\S+)\s+.*$/$1/g;
-
+                    $partial_patch->{'hash_type'} = $DEFAULT_HASH_TYPE;
+                    $partial_patch->{'hash_value'} = $serveCompleteUpdateToRcs ?
+                     $completePatchHash : $partialPatchHash;
                     $partial_patch->{'build_id'} = $to->{'build_id'};
-                    $partial_patch->{'appv'} = $to->{'appv'};
+                    $partial_patch->{'appv'} = $snippetToAppVersion;
                     $partial_patch->{'extv'} = $to->{'extv'};
-                    $partial_patch->{'size'} = (stat($partial_pathname))[$ST_SIZE];
+                    $partial_patch->{'size'} = $serveCompleteUpdateToRcs ?
+                     $completePatchSize : $partialPatchSize;
 
                     my $channelSpecificUrlKey = $c . '-url';
 
-                    if (exists($partial->{$channelSpecificUrlKey})) {
-                        $partial_patch->{'url'} = SubstitutePath(
-                         path => $partial->{$channelSpecificUrlKey}, 
-                         platform => $p,
-                         version => $to->{'appv'},
-                         locale => $l);
+                    if ($serveCompleteUpdateToRcs && 
+                     (exists($complete->{$channelSpecificUrlKey}))) {
+                            $partial_patch->{'url'} = SubstitutePath(
+                             path => $complete->{$channelSpecificUrlKey}, 
+                             platform => $p,
+                             version => $to->{'appv'},
+                             locale => $l);
+                            $partial_patch->{'hash_value'} = $completePatchHash;
+                            $partial_patch->{'size'} = $completePatchSize;
+                    } elsif (exists($partial->{$channelSpecificUrlKey})) {
+                            $partial_patch->{'url'} = SubstitutePath(
+                             path => $partial->{$channelSpecificUrlKey}, 
+                             platform => $p,
+                             version => $to->{'appv'},
+                             locale => $l);
                     } else {
-                        $partial_patch->{'url'} = $gen_partial_url;
+                        $partial_patch->{'url'} = $snippetUrl;
                     }
 
                     $partial_patch->{'details'} = $detailsUrl;
@@ -1114,6 +1239,12 @@ sub CreatePartialPatchinfo {
                     write_patch_info(patch => $partial_patch,
                                      schemaVer => $to->{'schema'});
 
+                    # XXX - BUG: this shouldn't be run inside the
+                    # foreach my $channels loop; it causes us to re-create
+                    # the test channel snippets at least once through.
+                    # I think I did it this way because all the info I
+                    # needed was already all built up in complete_patch
+
                     if (defined($u_config->{$u}->{'testchannel'})) {
                         # Deep copy this data structure, since it's a copy of 
                         # $ul_config->{$l}->{'complete_patch'};
@@ -1122,8 +1253,36 @@ sub CreatePartialPatchinfo {
                             $testPatch->{$key} = $partial_patch->{$key};
                         }
 
+                        # We store these values here so we can restore them
+                        # each time in the loop if they get munged because
+                        # the rc logic kicks in and we have to serve these
+                        # channels a complete.
+                        my $testPatchSize = $testPatch->{'size'};
+                        my $testPatchHash = $testPatch->{'hash_value'};
+
                         foreach my $testChan (split(/[\s,]+/, 
                          $u_config->{$u}->{'testchannel'})) {
+
+                            $testPatch->{'size'} = $testPatchSize;
+                            $testPatch->{'hash_value'} = $testPatchHash;
+
+                            $snippetToAppVersion = $to->{'appv'};
+                            foreach my $channel 
+                             (keys(%{$currentUpdateRcInfo})) {
+                                if ($testChan eq $channel) {
+                                    $snippetToAppVersion = $to->{'appv'} . 'rc'
+                                     . $currentUpdateRcInfo->{$channel};
+                                    last;
+                                }
+                            }
+
+                            # Note that we munge the copy here, but below
+                            # we use $to->{appv} in the SubstitutePath() call
+                            # to handle the URL; we do this because we only
+                            # want the snippet to have the rc value for its
+                            # appv, but not for any of the other places where
+                            # we use version.
+                            $testPatch->{'appv'} = $snippetToAppVersion;
 
                             my $snippetDir = GetSnippetDirFromChannel(config =>
                              $u_config->{$u}, channel => $testChan);
@@ -1135,7 +1294,16 @@ sub CreatePartialPatchinfo {
 
                             my $testChanKey = $testChan . '-url';
 
-                            if (exists($partial->{$testChanKey})) {
+                            if ($serveCompleteUpdateToRcs && 
+                             (exists($complete->{$testChanKey}))) {
+                                $testPatch->{'url'} = SubstitutePath(
+                                 path => $complete->{$testChanKey},
+                                 version => $to->{'appv'},
+                                 platform => $p,
+                                 locale => $l );
+                                $testPatch->{'hash_value'} = $completePatchHash;
+                                $testPatch->{'size'} = $completePatchSize;
+                            } elsif (exists($partial->{$testChanKey})) {
                                 $testPatch->{'url'} = SubstitutePath(
                                  path => $partial->{$testChanKey},
                                  version => $to->{'appv'},

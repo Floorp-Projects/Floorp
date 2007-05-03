@@ -374,6 +374,7 @@ sub CreateUpdateGraph
         my $u_details = $u->{'details'};
         my $u_license = $u->{'license'};
         my $u_updateType = $u->{'updateType'};
+        my $u_rcInfo = exists($u->{'rc'}) ? $u->{'rc'} : undef;
         my $u_force = [];
       
         if (defined($u->{'force'})) {
@@ -422,6 +423,14 @@ sub CreateUpdateGraph
             my $testKey = $c . '-dir';
             if (exists($u->{$testKey})) {
                 $u_config->{$u_key}->{$testKey} = $u->{$testKey};
+            }
+        }
+
+        # Creates a hash of channel -> rc number the channel thinks its on
+        $u_config->{$u_key}->{'rc'} = {};
+        if (defined($u_rcInfo)) {
+            foreach my $channel (keys(%{$u_rcInfo})) {
+                $u_config->{$u_key}->{'rc'}->{$channel} = $u_rcInfo->{$channel};
             }
         }
 
