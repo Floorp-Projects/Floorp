@@ -161,7 +161,6 @@ gfx/src/psshared/Makefile
 gfx/src/photon/Makefile
 gfx/src/mac/Makefile
 gfx/src/qt/Makefile
-gfx/src/xlib/Makefile
 gfx/src/os2/Makefile
 gfx/src/xlibrgb/Makefile
 gfx/src/windows/Makefile
@@ -572,17 +571,13 @@ widget/public/Makefile
 widget/src/Makefile
 widget/src/beos/Makefile
 widget/src/build/Makefile
-widget/src/gtk/Makefile
-widget/src/gtksuperwin/Makefile
 widget/src/gtkxtbin/Makefile
 widget/src/qt/Makefile
 widget/src/photon/Makefile
 widget/src/mac/Makefile
 widget/src/cocoa/Makefile
-widget/src/xlib/Makefile
 widget/src/os2/Makefile
 widget/src/windows/Makefile
-widget/src/xlibxtbin/Makefile
 widget/src/xpwidgets/Makefile
 widget/src/support/Makefile
 "
