@@ -3368,6 +3368,7 @@ nsTableFrame::IsAutoWidth(PRBool* aIsPctWidth)
     // seems silly.
     *aIsPctWidth = width.GetUnit() == eStyleUnit_Percent &&
                    width.GetPercentValue() > 0.0f;
+    // Should this handle -moz-fill and -moz-shrink-wrap?
   }
   return width.GetUnit() == eStyleUnit_Auto;
 }
@@ -3414,10 +3415,17 @@ nsTableFrame::CalcBorderBoxHeight(const nsHTMLReflowState& aState)
 PRBool 
 nsTableFrame::IsAutoLayout()
 {
+  if (GetStyleTable()->mLayoutStrategy == NS_STYLE_TABLE_LAYOUT_AUTO)
+    return PR_TRUE;
   // a fixed-layout inline-table must have a width
-  return GetStyleTable()->mLayoutStrategy == NS_STYLE_TABLE_LAYOUT_AUTO ||
-         (GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_INLINE_TABLE &&
-          GetStylePosition()->mWidth.GetUnit() == eStyleUnit_Auto);
+  // and tables with 'width: -moz-intrinsic' must be auto-layout
+  // (at least as long as FixedTableLayoutStrategy::GetPrefWidth returns
+  // nscoord_MAX)
+  const nsStyleCoord &width = GetStylePosition()->mWidth;
+  return (GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_INLINE_TABLE &&
+          width.GetUnit() == eStyleUnit_Auto) ||
+         (width.GetUnit() == eStyleUnit_Enumerated &&
+          width.GetIntValue() == NS_STYLE_WIDTH_INTRINSIC);
 }
 
 #ifdef DEBUG

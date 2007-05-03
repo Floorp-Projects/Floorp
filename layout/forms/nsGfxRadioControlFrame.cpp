@@ -135,6 +135,9 @@ nsGfxRadioControlFrame::PaintRadioButtonFromStyle(
   const nsStylePadding* myPadding = mRadioButtonFaceStyle->GetStylePadding();
   const nsStylePosition* myPosition = mRadioButtonFaceStyle->GetStylePosition();
 
+  NS_ASSERTION(myPosition->mWidth.GetUnit() == eStyleUnit_Coord &&
+               myPosition->mHeight.GetUnit() == eStyleUnit_Coord,
+               "styles for :-moz-radio are incorrect or author-accessible");
   nscoord width = myPosition->mWidth.GetCoordValue();
   nscoord height = myPosition->mHeight.GetCoordValue();
   // Position the button centered within the radio control's rectangle.

@@ -372,9 +372,9 @@ CSS_PROP_MARGIN(margin-top, margin_top, MarginTop, Margin, mMargin.mTop, eCSSTyp
 CSS_PROP_CONTENT(marker-offset, marker_offset, MarkerOffset, Content, mMarkerOffset, eCSSType_Value, nsnull)
 CSS_PROP_BACKENDONLY(marks, marks, Marks, Page, mMarks, eCSSType_Value, kPageMarksKTable)
 CSS_PROP_POSITION(max-height, max_height, MaxHeight, Position, mMaxHeight, eCSSType_Value, nsnull)
-CSS_PROP_POSITION(max-width, max_width, MaxWidth, Position, mMaxWidth, eCSSType_Value, nsnull)
+CSS_PROP_POSITION(max-width, max_width, MaxWidth, Position, mMaxWidth, eCSSType_Value, kWidthKTable)
 CSS_PROP_POSITION(min-height, min_height, MinHeight, Position, mMinHeight, eCSSType_Value, nsnull)
-CSS_PROP_POSITION(min-width, min_width, MinWidth, Position, mMinWidth, eCSSType_Value, nsnull)
+CSS_PROP_POSITION(min-width, min_width, MinWidth, Position, mMinWidth, eCSSType_Value, kWidthKTable)
 CSS_PROP_DISPLAY(opacity, opacity, Opacity, Display, mOpacity, eCSSType_Value, nsnull) // XXX bug 3935
 CSS_PROP_BACKENDONLY(orphans, orphans, Orphans, Breaks, mOrphans, eCSSType_Value, nsnull)
 CSS_PROP_SHORTHAND(outline, outline, Outline)
@@ -446,7 +446,7 @@ CSS_PROP_BACKENDONLY(voice-family, voice_family, VoiceFamily, Aural, mVoiceFamil
 CSS_PROP_BACKENDONLY(volume, volume, Volume, Aural, mVolume, eCSSType_Value, kVolumeKTable)
 CSS_PROP_TEXT(white-space, white_space, WhiteSpace, Text, mWhiteSpace, eCSSType_Value, kWhitespaceKTable)
 CSS_PROP_BACKENDONLY(widows, widows, Widows, Breaks, mWidows, eCSSType_Value, nsnull)
-CSS_PROP_POSITION(width, width, Width, Position, mWidth, eCSSType_Value, nsnull)
+CSS_PROP_POSITION(width, width, Width, Position, mWidth, eCSSType_Value, kWidthKTable)
 CSS_PROP_TEXT(word-spacing, word_spacing, WordSpacing, Text, mWordSpacing, eCSSType_Value, nsnull)
 CSS_PROP_POSITION(z-index, z_index, ZIndex, Position, mZIndex, eCSSType_Value, nsnull)
 
