@@ -1840,7 +1840,9 @@ Checker.prototype = {
    * The URL of the update service XML file to connect to that contains details
    * about available updates.
    */
-  get updateURL() {
+  getUpdateURL: function(force) {
+    this._forced = force;
+
     var defaults =
         gPref.QueryInterface(Components.interfaces.nsIPrefService).
         getDefaultBranch(null);
@@ -1870,6 +1872,9 @@ Checker.prototype = {
     url = url.replace(/%CHANNEL%/g, getUpdateChannel());
     url = url.replace(/\+/g, "%2B");
 
+    if (force)
+	url += "?force=1"
+
     LOG("Checker", "update url: " + url);
     return url;
   },
@@ -1881,13 +1886,13 @@ Checker.prototype = {
     if (!listener)
       throw Components.results.NS_ERROR_NULL_POINTER;
       
-    if (!this.updateURL || (!this.enabled && !force))
+    if (!this.getUpdateURL(force) || (!this.enabled && !force))
       return;
       
     this._request = 
       Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].
       createInstance(Components.interfaces.nsIXMLHttpRequest);
-    this._request.open("GET", this.updateURL, true);
+    this._request.open("GET", this.getUpdateURL(force), true);
     this._request.channel.notificationCallbacks = new BadCertHandler();
     this._request.overrideMimeType("text/xml");
     this._request.setRequestHeader("Cache-Control", "no-cache");
@@ -1897,7 +1902,7 @@ Checker.prototype = {
     this._request.onload      = function(event) { self.onLoad(event);     };
     this._request.onprogress  = function(event) { self.onProgress(event); };
 
-    LOG("Checker", "checkForUpdates: sending request to " + this.updateURL);
+    LOG("Checker", "checkForUpdates: sending request to " + this.getUpdateURL(force));
     this._request.send(null);
     
     this._callback = listener;
@@ -1942,7 +1947,7 @@ Checker.prototype = {
         LOG("Checker", "Invalid <update/>, ignoring...");
         continue;
       }
-      update.serviceURL = this.updateURL;
+      update.serviceURL = this.getUpdateURL(this._forced);
       update.channel = getUpdateChannel();
       updates.push(update);
     }
