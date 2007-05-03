@@ -79,6 +79,7 @@
 #include "nsIMediaList.h"
 #include "nsILookAndFeel.h"
 #include "nsStyleUtil.h"
+#include "nsIPrincipal.h"
 
 #include "prprf.h"
 #include "math.h"
@@ -108,6 +109,7 @@ public:
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
                    nsIURI*                aSheetURI,
                    nsIURI*                aBaseURI,
+                   nsIPrincipal*          aSheetPrincipal,
                    PRUint32               aLineNumber,
                    PRBool                 aAllowUnsafeRules,
                    nsICSSStyleSheet*&     aResult);
@@ -115,11 +117,13 @@ public:
   NS_IMETHOD ParseStyleAttribute(const nsAString&  aAttributeValue,
                                  nsIURI*           aDocURL,
                                  nsIURI*           aBaseURL,
+                                 nsIPrincipal*     aNodePrincipal,
                                  nsICSSStyleRule** aResult);
   
   NS_IMETHOD ParseAndAppendDeclaration(const nsAString&  aBuffer,
                                        nsIURI*           aSheetURL,
                                        nsIURI*           aBaseURL,
+                                       nsIPrincipal*     aSheetPrincipal,
                                        nsCSSDeclaration* aDeclaration,
                                        PRBool            aParseOnlyOneDecl,
                                        PRBool*           aChanged,
@@ -128,12 +132,14 @@ public:
   NS_IMETHOD ParseRule(const nsAString&        aRule,
                        nsIURI*                 aSheetURL,
                        nsIURI*                 aBaseURL,
+                       nsIPrincipal*           aSheetPrincipal,
                        nsCOMArray<nsICSSRule>& aResult);
 
   NS_IMETHOD ParseProperty(const nsCSSProperty aPropID,
                            const nsAString& aPropValue,
                            nsIURI* aSheetURL,
                            nsIURI* aBaseURL,
+                           nsIPrincipal* aSheetPrincipal,
                            nsCSSDeclaration* aDeclaration,
                            PRBool* aChanged);
 
@@ -176,10 +182,12 @@ protected:
   };
 
   nsresult InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
-                       PRUint32 aLineNumber, nsIURI* aBaseURI);
+                       PRUint32 aLineNumber, nsIURI* aBaseURI,
+                       nsIPrincipal* aSheetPrincipal);
   // the caller must hold on to aBuffer until parsing is done
   nsresult InitScanner(const nsString& aString, nsIURI* aSheetURI,
-                       PRUint32 aLineNumber, nsIURI* aBaseURI);
+                       PRUint32 aLineNumber, nsIURI* aBaseURI,
+                       nsIPrincipal* aSheetPrincipal);
   nsresult ReleaseScanner(void);
 
   nsresult DoParseMediaList(const nsSubstring& aBuffer,
@@ -403,6 +411,9 @@ protected:
   // The URI to be used as an HTTP "Referer" and for error reporting.
   nsCOMPtr<nsIURI> mSheetURL;
 
+  // The principal of the sheet involved
+  nsCOMPtr<nsIPrincipal> mSheetPrincipal;
+
   // The sheet we're parsing into
   nsCOMPtr<nsICSSStyleSheet> mSheet;
 
@@ -617,7 +628,8 @@ CSSParserImpl::SetChildLoader(nsICSSLoader* aChildLoader)
 
 nsresult
 CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
-                           PRUint32 aLineNumber, nsIURI* aBaseURI)
+                           PRUint32 aLineNumber, nsIURI* aBaseURI,
+                           nsIPrincipal* aSheetPrincipal)
 {
   NS_ASSERTION(! mScannerInited, "already have scanner");
 
@@ -627,6 +639,7 @@ CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
 #endif
   mBaseURL = aBaseURI;
   mSheetURL = aSheetURI;
+  mSheetPrincipal = aSheetPrincipal;
 
   mHavePushBack = PR_FALSE;
 
@@ -635,7 +648,8 @@ CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
 
 nsresult
 CSSParserImpl::InitScanner(const nsString& aString, nsIURI* aSheetURI,
-                           PRUint32 aLineNumber, nsIURI* aBaseURI)
+                           PRUint32 aLineNumber, nsIURI* aBaseURI,
+                           nsIPrincipal* aSheetPrincipal)
 {
   // Having it not own the string is OK since the caller will hold on to
   // the stream until we're done parsing.
@@ -648,6 +662,7 @@ CSSParserImpl::InitScanner(const nsString& aString, nsIURI* aSheetURI,
 #endif
   mBaseURL = aBaseURI;
   mSheetURL = aSheetURI;
+  mSheetPrincipal = aSheetPrincipal;
 
   mHavePushBack = PR_FALSE;
 
@@ -671,10 +686,13 @@ NS_IMETHODIMP
 CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
                      nsIURI*                aSheetURI,
                      nsIURI*                aBaseURI,
+                     nsIPrincipal*          aSheetPrincipal,
                      PRUint32               aLineNumber,
                      PRBool                 aAllowUnsafeRules,
                      nsICSSStyleSheet*&     aResult)
 {
+  NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
+  
   NS_ASSERTION(nsnull != aBaseURI, "need base URL");
   NS_ASSERTION(nsnull != aSheetURI, "need sheet URL");
 
@@ -683,6 +701,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
     NS_ENSURE_TRUE(mSheet, NS_ERROR_OUT_OF_MEMORY);
 
     mSheet->SetURIs(aSheetURI, aBaseURI);
+    mSheet->SetPrincipal(aSheetPrincipal);
     mNameSpaceMap = nsnull;
   }
 #ifdef DEBUG
@@ -690,14 +709,19 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
     nsCOMPtr<nsIURI> uri;
     mSheet->GetSheetURI(getter_AddRefs(uri));
     PRBool equal;
-    aSheetURI->Equals(uri, &equal);
-    NS_ASSERTION(equal, "Sheet URI does not match passed URI");
+    NS_ASSERTION(NS_SUCCEEDED(aSheetURI->Equals(uri, &equal)) && equal,
+                 "Sheet URI does not match passed URI");
+    NS_ASSERTION(NS_SUCCEEDED(mSheet->Principal()->Equals(aSheetPrincipal,
+                                                          &equal)) &&
+                 equal,
+                 "Sheet principal does not match passed principal");
   }
 #endif
   
   nsresult errorCode = NS_OK;
 
-  nsresult result = InitScanner(aInput, aSheetURI, aLineNumber, aBaseURI);
+  nsresult result = InitScanner(aInput, aSheetURI, aLineNumber, aBaseURI,
+                                aSheetPrincipal);
   if (! NS_SUCCEEDED(result)) {
     return result;
   }
@@ -764,12 +788,16 @@ NS_IMETHODIMP
 CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
                                    nsIURI*                  aDocURL,
                                    nsIURI*                  aBaseURL,
+                                   nsIPrincipal*            aNodePrincipal,
                                    nsICSSStyleRule**        aResult)
 {
+  NS_PRECONDITION(aNodePrincipal, "Must have principal here!");
+  
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
 
   const nsAFlatString& flat = PromiseFlatString(aAttributeValue);
-  nsresult rv = InitScanner(flat, aDocURL, 0, aBaseURL); // XXX line number
+  // XXX line number?
+  nsresult rv = InitScanner(flat, aDocURL, 0, aBaseURL, aNodePrincipal);
   if (! NS_SUCCEEDED(rv)) {
     return rv;
   }
@@ -815,16 +843,19 @@ NS_IMETHODIMP
 CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
                                          nsIURI*           aSheetURL,
                                          nsIURI*           aBaseURL,
+                                         nsIPrincipal*     aSheetPrincipal,
                                          nsCSSDeclaration* aDeclaration,
                                          PRBool            aParseOnlyOneDecl,
                                          PRBool*           aChanged,
                                          PRBool            aClearOldDecl)
 {
+  NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
+  
 //  NS_ASSERTION(nsnull != aBaseURL, "need base URL");
   *aChanged = PR_FALSE;
 
   const nsAFlatString& flat = PromiseFlatString(aBuffer);
-  nsresult rv = InitScanner(flat, aSheetURL, 0, aBaseURL);
+  nsresult rv = InitScanner(flat, aSheetURL, 0, aBaseURL, aSheetPrincipal);
   if (! NS_SUCCEEDED(rv)) {
     return rv;
   }
@@ -869,12 +900,15 @@ NS_IMETHODIMP
 CSSParserImpl::ParseRule(const nsAString&        aRule,
                          nsIURI*                 aSheetURL,
                          nsIURI*                 aBaseURL,
+                         nsIPrincipal*           aSheetPrincipal,
                          nsCOMArray<nsICSSRule>& aResult)
 {
+  NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
+  
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
 
   const nsAFlatString& flat = PromiseFlatString(aRule);
-  nsresult rv = InitScanner(flat, aSheetURL, 0, aBaseURL);
+  nsresult rv = InitScanner(flat, aSheetURL, 0, aBaseURL, aSheetPrincipal);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -908,15 +942,18 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
                              const nsAString& aPropValue,
                              nsIURI* aSheetURL,
                              nsIURI* aBaseURL,
+                             nsIPrincipal* aSheetPrincipal,
                              nsCSSDeclaration* aDeclaration,
                              PRBool* aChanged)
 {
+  NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
+  
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
   NS_ASSERTION(nsnull != aDeclaration, "Need declaration to parse into!");
   *aChanged = PR_FALSE;
 
   const nsAFlatString& flat = PromiseFlatString(aPropValue);
-  nsresult rv = InitScanner(flat, aSheetURL, 0, aBaseURL);
+  nsresult rv = InitScanner(flat, aSheetURL, 0, aBaseURL, aSheetPrincipal);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1024,7 +1061,7 @@ CSSParserImpl::DoParseMediaList(const nsSubstring& aBuffer,
   const nsAFlatString& flat = PromiseFlatString(aBuffer);
 
   // fake base URL since media lists don't have URLs in them
-  nsresult rv = InitScanner(flat, aURL, aLineNumber, aURL);
+  nsresult rv = InitScanner(flat, aURL, aLineNumber, aURL, nsnull);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1047,7 +1084,7 @@ CSSParserImpl::ParseColorString(const nsSubstring& aBuffer,
   NS_ASSERTION(aHandleAlphaColors == PR_TRUE || aHandleAlphaColors == PR_FALSE, "bad PRBool value");
 
   const nsAFlatString& flat = PromiseFlatString(aBuffer);
-  nsresult rv = InitScanner(flat, aURL, aLineNumber, aURL);
+  nsresult rv = InitScanner(flat, aURL, aLineNumber, aURL, nsnull);
   if (NS_FAILED(rv))
     return rv;
 
@@ -4016,6 +4053,12 @@ PRBool CSSParserImpl::ParseAttr(nsresult& aErrorCode, nsCSSValue& aValue)
 
 PRBool CSSParserImpl::ParseURL(nsresult& aErrorCode, nsCSSValue& aValue)
 {
+  if (!mSheetPrincipal) {
+    NS_NOTREACHED("Codepaths that expect to parse URLs MUST pass in an "
+                  "origin principal");
+    return PR_FALSE;
+  }
+  
   if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
     if (! GetURLToken(aErrorCode, PR_TRUE)) {
       return PR_FALSE;
@@ -4035,7 +4078,8 @@ PRBool CSSParserImpl::ParseURL(nsresult& aErrorCode, nsCSSValue& aValue)
           return PR_FALSE;
         }
 
-        nsCSSValue::URL *url = new nsCSSValue::URL(uri, buffer, mSheetURL);
+        nsCSSValue::URL *url =
+          new nsCSSValue::URL(uri, buffer, mSheetURL, mSheetPrincipal);
         buffer->Release();
         if (NS_UNLIKELY(!url)) {
           aErrorCode = NS_ERROR_OUT_OF_MEMORY;
