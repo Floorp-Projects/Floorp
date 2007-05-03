@@ -1,3 +1,7 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
 
   <title>Testcase for rect with one of rx or ry</title>
