@@ -637,7 +637,7 @@ nsAnnotationService::GetPageAnnotationNames(nsIURI* aURI, PRUint32* aCount,
 
 // nsAnnotationService::GetPageAnnotationNamesTArray
 
-NS_IMETHODIMP
+nsresult
 nsAnnotationService::GetPageAnnotationNamesTArray(nsIURI* aURI,
                                                   nsTArray<nsCString>* aResult)
 {

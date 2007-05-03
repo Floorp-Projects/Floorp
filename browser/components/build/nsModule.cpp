@@ -42,6 +42,8 @@
 #ifndef MOZ_PLACES_BOOKMARKS
 #include "nsBookmarksService.h"
 #include "nsForwardProxyDataSource.h"
+#else
+#include "nsPlacesImportExportService.h"
 #endif
 #ifdef XP_WIN
 #include "nsWindowsShellService.h"
@@ -81,6 +83,8 @@
 #ifndef MOZ_PLACES_BOOKMARKS
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsForwardProxyDataSource, Init)
+#else
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlacesImportExportService)
 #endif
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsShellService)
@@ -151,6 +155,13 @@ static const nsModuleComponentInfo components[] =
     NS_RDF_FORWARDPROXY_INFER_DATASOURCE_CID,
     NS_RDF_INFER_DATASOURCE_CONTRACTID_PREFIX "forward-proxy",
     nsForwardProxyDataSourceConstructor },
+
+#else
+
+  { "Places Import/Export Service",
+    NS_PLACESIMPORTEXPORTSERVICE_CID,
+    NS_PLACESIMPORTEXPORTSERVICE_CONTRACTID,
+    nsPlacesImportExportServiceConstructor},
 
 #endif
 

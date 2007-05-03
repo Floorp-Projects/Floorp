@@ -71,6 +71,8 @@ REQUIRES += places
 endif
 ifndef MOZ_PLACES_BOOKMARKS
 REQUIRES += bookmarks
+else
+REQUIRES += browserplaces 
 endif
 
 CPPSRCS  = nsProfileMigrator.cpp \

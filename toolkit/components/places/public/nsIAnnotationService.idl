@@ -41,13 +41,11 @@
 %{C++
 #include "nsTArray.h"
 #include "nsCOMArray.h"
-#include "nsString.h"
 %}
 
 interface nsIURI;
 interface nsIVariant;
 
-[ptr] native CStringArray(nsTArray<nsCString>);
 [ptr] native URIArray(nsCOMArray<nsIURI>);
 
 [scriptable, uuid(d41c9510-2377-4728-b275-bdad6a0521f8)]
@@ -67,7 +65,7 @@ interface nsIAnnotationObserver : nsISupports
     void onAnnotationRemoved(in nsIURI aURI, in AUTF8String aName);
 };
 
-[scriptable, uuid(e19a463a-0bd5-4e36-b552-e52aa4220b27)]
+[scriptable, uuid(15999472-f158-11db-8314-0800200c9a66)]
 interface nsIAnnotationService : nsISupports
 {
     /**
@@ -267,11 +265,6 @@ interface nsIAnnotationService : nsISupports
      */
     void getPageAnnotationNames(in nsIURI aURI, out PRUint32 count,
       [retval, array, size_is(count)] out nsIVariant result);
-
-    /**
-     * TArray version of getPageAnnotationNames for ease of use in C++ code.
-     */
-    [noscript] void GetPageAnnotationNamesTArray(in nsIURI aURI, in CStringArray aResult);
 
     /**
      * Test for annotation existance.

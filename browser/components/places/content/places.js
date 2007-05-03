@@ -287,10 +287,12 @@ var PlacesOrganizer = {
             Ci.nsIFilePicker.modeOpen);
     fp.appendFilters(Ci.nsIFilePicker.filterHTML | Ci.nsIFilePicker.filterAll);
     if (fp.show() != Ci.nsIFilePicker.returnCancel) {
-      var ioService = Cc["@mozilla.org/network/io-service;1"].
-                      getService(Ci.nsIIOService);
-      if (fp.file)
-        PlacesUtils.bookmarks.importBookmarksHTML(ioService.newFileURI(fp.file));
+      if (fp.file) {
+        var importer = Cc["@mozilla.org/browser/places/import-export-service;1"].
+                       getService(Ci.nsIPlacesImportExportService);
+        var file = fp.file.QueryInterface(nsILocalFile);
+        importer.importHTMLFromFile(file);
+      }
     }
   },
 
@@ -304,8 +306,11 @@ var PlacesOrganizer = {
             Ci.nsIFilePicker.modeSave);
     fp.appendFilters(Ci.nsIFilePicker.filterHTML);
     fp.defaultString = "bookmarks.html";
-    if (fp.show() != Ci.nsIFilePicker.returnCancel)
-      PlacesUtils.bookmarks.exportBookmarksHTML(fp.file);
+    if (fp.show() != Ci.nsIFilePicker.returnCancel) {
+      var exporter = Cc["@mozilla.org/browser/places/import-export-service;1"].
+                     getService(Ci.nsIPlacesImportExportService);
+      exporter.exportHTMLToFile(fp.file);
+    }
   },
 
   updateStatusBarForView: function PO_updateStatusBarForView(aView) {
