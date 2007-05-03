@@ -65,7 +65,6 @@
 #include "nsITimer.h"
 #include "nsRootAccessible.h"
 #include "nsIFocusController.h"
-#include "nsIObserverService.h"
 
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
@@ -225,20 +224,6 @@ void nsAccessNode::InitXPAccessibility()
   }
 
   gIsAccessibilityActive = PR_TRUE;
-  NotifyA11yInitOrShutdown();
-}
-
-void nsAccessNode::NotifyA11yInitOrShutdown()
-{
-  nsCOMPtr<nsIObserverService> obsService =
-    do_GetService("@mozilla.org/observer-service;1");
-  NS_ASSERTION(obsService, "No observer service to notify of a11y init/shutdown");
-  if (obsService) {
-    static const PRUnichar kInitIndicator[] = { '1', 0 };
-    static const PRUnichar kShutdownIndicator[] = { '0', 0 }; 
-    obsService->NotifyObservers(nsnull, "a11y-init-or-shutdown",
-                                gIsAccessibilityActive ? kInitIndicator  : kShutdownIndicator);
-  }
 }
 
 void nsAccessNode::ShutdownXPAccessibility()
@@ -259,7 +244,6 @@ void nsAccessNode::ShutdownXPAccessibility()
   ClearCache(gGlobalDocAccessibleCache);
 
   gIsAccessibilityActive = PR_FALSE;
-  NotifyA11yInitOrShutdown();
 }
 
 already_AddRefed<nsIPresShell> nsAccessNode::GetPresShell()
