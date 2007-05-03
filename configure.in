@@ -4538,7 +4538,6 @@ MOZ_ARG_HEADER(Toolkit Options)
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-beos" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-os2" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-xlib" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-mac" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-cocoa"
     then
@@ -4547,7 +4546,7 @@ MOZ_ARG_HEADER(Toolkit Options)
         MOZ_WIDGET_TOOLKIT=`echo "$_DEFAULT_TOOLKIT" | sed -e "s/,.*$//"`
     else
         if test "$no_x" != "yes"; then
-            AC_MSG_ERROR([Toolkit must be cairo-xlib, cairo-gtk2, or qt.])
+            AC_MSG_ERROR([Toolkit must be cairo-gtk2 or qt.])
         else
             AC_MSG_ERROR([Toolkit must be $_PLATFORM_DEFAULT_TOOLKIT (if supported).])
         fi
