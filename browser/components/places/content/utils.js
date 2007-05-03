@@ -605,7 +605,7 @@ var PlacesUtils = {
         if (i > (parts.length - 2))
           break;
         nodes.push({  uri: this._uri(parts[i++]),
-                      title: parts[i] });
+                      title: parts[i] ? parts[i] : parts[i-1] });
         break;
       case this.TYPE_UNICODE:
         // See above.
