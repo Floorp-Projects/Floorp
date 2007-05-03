@@ -101,7 +101,6 @@
       ]]></constructor>
       
       <destructor><![CDATA[ 
-        PlacesUtils.bookmarks.removeObserver(this._observer);
         this.genericAnnoObserver.removeObserver("bookmarks/generatedTitle",
                                                 this._generatedTitleAnnoObserver);
         PlacesUtils.annotations.removeObserver(this.genericAnnoObserver);
@@ -116,7 +115,6 @@
         this._controller = new PlacesController(this);
         this.controllers.appendController(this._controller);
 
-        PlacesUtils.bookmarks.addObserver(this._observer, false);
         var t = this;
         window.addEventListener("resize",
                                 function f(e) { t.updateChevron(e); },
@@ -130,6 +128,7 @@
           // Do the initial build. 
           this.place = this.place;
         }
+        this._currentURIs = {};
         ]]></body>
       </method>
 
@@ -203,74 +202,15 @@
           if (this._DNDObserver._overFolder.node)
             this._DNDObserver._clearOverFolder();
           this._openedMenuButton = null;
-          this._currentURIs = {};
-        
+
           while (this.hasChildNodes())
             this.removeChild(this.firstChild);
           const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
           this._result.root.containerOpen = true;
           var cc = this._result.root.childCount;
-          for (var i = 0; i < cc; ++i) {
-            var child = this._result.root.getChild(i);
-            var title = child.title;
-            var button = null;
-            if (PlacesUtils.nodeIsURI(child)) {
-              button = document.createElementNS(XULNS, "toolbarbutton");
-              button.setAttribute("url", child.uri);
+          for (var i = 0; i < cc; ++i)
+            this.insertNewItem(this._result.root.getChild(i), null);
 
-              // Add the URI to the list of URIs currently in the view.
-              this._currentURIs[child.uri] = true;
-
-              if (PlacesUtils.nodeIsBookmark(child)) {
-                // If the item has a generated title, use that instead.
-                var placeURI = PlacesUtils.bookmarks.getItemURI(child.bookmarkId);
-                if (this._generatedTitles[placeURI.spec])
-                  title = this._generatedTitles[placeURI.spec];
-              }
-            } else if (PlacesUtils.nodeIsSeparator(child)) {
-              button = document.createElementNS(XULNS, "toolbarseparator");
-            } else if (PlacesUtils.nodeIsContainer(child)) {
-              button = document.createElementNS(XULNS, "toolbarbutton");
-              button.setAttribute("type", "menu");
-              button.setAttribute("container", "true");
-              if (PlacesUtils.nodeIsLivemarkContainer(child)) {
-                button.setAttribute("livemark", "true");
-                var folder = asFolder(child).folderId;
-
-                // duplicate nsLivemarkService.getSiteURI to avoid instantiating
-                // the service on startup.
-                var containerURI = PlacesUtils.bookmarks.getFolderURI(folder);
-                var siteURIString;
-                try {
-                  siteURIString = 
-                    this._anno.getAnnotationString(containerURI, "livemark/siteURI");
-                }
-                catch (ex) {}
-                // end duplication
-
-                if (siteURIString)
-                  button.setAttribute("siteURI", siteURIString);
-              }
-              var popup = document.createElementNS(XULNS, "menupopup");
-              popup.setAttribute("type", "places");
-              // This is set here and not in the XBL constructor for the menu because
-              // it doesn't get initialized properly in the constructor.
-#ifndef XP_MACOSX
-              // No context menus on menuitems on Mac
-              popup.setAttribute("context", "placesContext");
-#endif
-              button.appendChild(popup);
-              popup._result = this._result;
-              popup._resultNode = child;
-            }
-            button.setAttribute("label", title);
-            if (child.icon)
-              button.setAttribute("image", child.icon.spec);
-            button.className = "menuitem-iconic bookmark-item";
-            button.node = child;
-            this.appendChild(button);
-          }
-          
           var popup = this._chevron.firstChild;
           popup.setAttribute("type", "places");
           // This is set here and not in the XBL constructor for the menu because
@@ -289,8 +229,88 @@
           var self = this;
           setTimeout(function() { self.updateChevron(); }, 0);
         ]]></body>
-        
       </method>
+
+      <method name="insertNewItem">
+        <parameter name="child"/>
+        <parameter name="before"/>
+        <body><![CDATA[
+          const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var title = child.title;
+          var button = null;
+          if (PlacesUtils.nodeIsURI(child)) {
+            button = document.createElementNS(XULNS, "toolbarbutton");
+            button.setAttribute("url", child.uri);
+
+            // Add the URI to the list of URIs currently in the view.
+            this._currentURIs[child.uri] = true;
+
+            if (PlacesUtils.nodeIsBookmark(child)) {
+              // If the item has a generated title, use that instead.
+              var placeURI = PlacesUtils.bookmarks.getItemURI(child.bookmarkId);
+              if (this._generatedTitles[placeURI.spec])
+                title = this._generatedTitles[placeURI.spec];
+            }
+          } else if (PlacesUtils.nodeIsSeparator(child)) {
+            button = document.createElementNS(XULNS, "toolbarseparator");
+          } else if (PlacesUtils.nodeIsContainer(child)) {
+            button = document.createElementNS(XULNS, "toolbarbutton");
+            button.setAttribute("type", "menu");
+            button.setAttribute("container", "true");
+            if (PlacesUtils.nodeIsLivemarkContainer(child)) {
+              button.setAttribute("livemark", "true");
+              var folder = asFolder(child).folderId;
+
+              // duplicate nsLivemarkService.getSiteURI to avoid instantiating
+              // the service on startup.
+              var containerURI = PlacesUtils.bookmarks.getFolderURI(folder);
+              var siteURIString;
+              try {
+                siteURIString = 
+                  this._anno.getAnnotationString(containerURI, "livemark/siteURI");
+              }
+              catch (ex) {}
+              // end duplication
+
+              if (siteURIString)
+                button.setAttribute("siteURI", siteURIString);
+            }
+            var popup = document.createElementNS(XULNS, "menupopup");
+            popup.setAttribute("type", "places");
+            // This is set here and not in the XBL constructor for the menu because
+            // it doesn't get initialized properly in the constructor.
+#ifndef XP_MACOSX
+            // No context menus on menuitems on Mac
+            popup.setAttribute("context", "placesContext");
+#endif
+            button.appendChild(popup);
+            popup._result = this._result;
+            popup._resultNode = child;
+          }
+
+          button.setAttribute("label", title);
+          if (child.icon)
+            button.setAttribute("image", child.icon.spec);
+          button.className = "menuitem-iconic bookmark-item";
+          button.node = child;
+          if (before)
+            this.insertBefore(button, before);
+          else
+            this.appendChild(button);
+        ]]></body>
+      </method>
+
+      <method name="removeItem">
+        <parameter name="parent"/>
+        <parameter name="child"/>
+        <body><![CDATA[
+          if (PlacesUtils.nodeIsFolder(parent) &&
+              asFolder(parent).folderId == PlacesUtils.bookmarks.toolbarFolder)
+            return this.removeChild(child);
+          return null;
+        ]]></body>
+      </method>
+
       <method name="chevronPopupShowing">
         <body><![CDATA[
           var popup = this._chevron.firstChild;
@@ -301,7 +321,7 @@
           }
         ]]></body>
       </method>
-      
+
       <method name="getElementWidth">
         <parameter name="element"/>
         <body><![CDATA[
@@ -366,6 +386,7 @@
             this._result = 
               history.executeQueries(queries.value, queries.value.length,
                                      options.value);
+            this._result.viewer = this._viewer;
             this._result.root.containerOpen = true;
             this._rebuild();
           }
@@ -471,67 +492,46 @@
         ]]></body>
       </method>
       
-      <!-- nsINavBookmarkObserver -->
-      <field name="_observer"><![CDATA[({
-        _numBatches: 0,
+      <!-- nsINavHistoryResultViewer -->
+      <field name="_viewer"><![CDATA[({
         _self: this,
-        _batchedOperation: false,
-        onBeginUpdateBatch: function TB_O_onBeginUpdateBatch() {
-          ++this._numBatches;
+        itemInserted: function MV_V_itemInserted(aParentNode, aNode, aIndex) {
+          var children = this._self.childNodes;
+          this._self.insertNewItem(aNode, aIndex < children.length ? children[aIndex] : null);
         },
-        onEndUpdateBatch: function TB_O_onEndUpdateBatch() {
-          if (!--this._numBatches && this._batchedOperation)
-            this.doRebuild();
-        },
-        onItemAdded: function TB_O_onItemAdded(id, bookmark, folder, index) {
-          if (folder == PlacesUtils.bookmarks.toolbarFolder) {
-            this._self._currentURIs[bookmark.spec] = true;
-            this._numBatches ? this._batchedOperation = true : this.doRebuild();
+        itemRemoved: function MV_V_itemRemoved(aParentNode, aNode, aIndex) {
+          var children = this._self.childNodes;
+          for (var i = 0; i < children.length; i++) {
+            if (children[i].node == aNode)
+              this._self.removeItem(aParentNode, children[i]);
           }
         },
-        onItemRemoved: function TB_O_onItemRemoved(id, bookmark, folder, index) {
-          if (folder == PlacesUtils.bookmarks.toolbarFolder) {
-            delete this._self._currentURIs[bookmark.spec];
-            this._numBatches ? this._batchedOperation = true : this.doRebuild();
+        itemChanged: function MV_V_itemChanged(aNode) {
+          this.itemReplaced(aNode.parent, aNode, aNode, -1);
+        },
+        itemReplaced: function MV_V_itemReplaced(aParentNode, aOldNode, aNewNode, aIndex) {
+          var children = this._self.childNodes;
+          for (var i = 0; i < children.length; i++) {
+            if (children[i].node == aOldNode) {
+              var next = children[i].nextSibling;
+              if (this._self.removeItem(aParentNode, children[i]))
+                this._self.insertNewItem(aNewNode, next);
+            }
           }
         },
-        onItemChanged: function TB_O_onItemChanged(id, bookmark, property, value) {
-          this._numBatches ? this._batchedOperation = true : this.doRebuild();
+        containerOpened: function MV_V_containerOpened(aNode) {
         },
-        onItemVisited: function TB_0_onItemVisited(bookmark, visitId, time) {
-          //this._self._init();
+        containerClosed: function MV_V_containerClosed(aNode) {
         },
-        onFolderAdded: function TB_O_onFolderAdded(folder, parent, index) {
-          if (parent == PlacesUtils.bookmarks.toolbarFolder)
-            this._numBatches ? this._batchedOperation = true : this.doRebuild();
+        invalidateContainer: function MV_V_invalidateContainer(aNode) {
         },
-        onFolderRemoved: function TB_O_onFolderRemoved(folder, parent, index) {
-          if (parent == PlacesUtils.bookmarks.toolbarFolder)
-            this._numBatches ? this._batchedOperation = true : this.doRebuild();
+        invalidateAll: function MV_V_invalidateAll() {
+          this._self._rebuildAll();
         },
-        onFolderMoved: function TB_O_onFolderMoved(folder, oldParent, oldIndex, newParent, newIndex) {
-          if (oldParent == PlacesUtils.bookmarks.toolbarFolder ||
-              newParent == PlacesUtils.bookmarks.toolbarFolder)
-            this._numBatches ? this._batchedOperation = true : this.doRebuild();
-        },
-        onFolderChanged: function TB_O_onFolderChanged(folder, property) {
-          this._numBatches ? this._batchedOperation = true : this.doRebuild();
-        },
-        doRebuild: function TB_O_doRebuild() {
-          function hitch(obj, meth) {
-            return function() { meth.apply(obj, arguments); }
-          }
-          setTimeout(hitch(this._self, this._self._rebuild), 1);
-        },
-        onSeparatorAdded: function TB_O_onSeparatorAdded(parent, index) {
-          if (parent == PlacesUtils.bookmarks.toolbarFolder)
-            this._numBatches ? this._batchedOperation = true : this.doRebuild();
-        },
-        onSeparatorRemoved: function TB_O_onSeparatorRemoved(parent, index) {
-          if (parent == PlacesUtils.bookmarks.toolbarFolder)
-            this._numBatches ? this._batchedOperation = true : this.doRebuild();
+        sortingChanged: function MV_V_sortingChanged(aSortingMode) {
         }
       })]]></field>
+
       <field name="_DNDObserver"><![CDATA[({
         // Inside the _DNDObserver object's functions, this points to 
         // the _DNDObserver object.  _self points to the toolbar xbl object.
