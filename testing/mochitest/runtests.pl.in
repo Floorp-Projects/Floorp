@@ -502,6 +502,9 @@ sub executeMac {
     $app .= "-bin";
     my @runargs = ($app, '-foreground', '-no-remote', '-profile', $profile_arg);
     push(@runargs, $test_url);
+    
+    # redirect stderr to stdout for easier buildbot / tinderbox logging
+    open (STDERR, '>&', \*STDOUT) || die $!;
     exec @runargs or die("Error starting application: $!\n");
   } else {
     waitpid($pid,0);
