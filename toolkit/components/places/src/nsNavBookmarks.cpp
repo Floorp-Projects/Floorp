@@ -426,28 +426,6 @@ nsNavBookmarks::InitRoots()
     // importing the default one.
     rv = InitDefaults();
     NS_ENSURE_SUCCESS(rv, rv);
-
-    // migrate the user's old bookmarks
-    // FIXME: move somewhere else to some profile migrator thingy
-    nsCOMPtr<nsIFile> bookmarksFile;
-    rv = NS_GetSpecialDirectory(NS_APP_BOOKMARKS_50_FILE,
-                                getter_AddRefs(bookmarksFile));
-    if (bookmarksFile) {
-      PRBool bookmarksFileExists;
-      rv = bookmarksFile->Exists(&bookmarksFileExists);
-      if (NS_SUCCEEDED(rv) && bookmarksFileExists) {
-        nsCOMPtr<nsIIOService> ioservice = do_GetService(
-                                    "@mozilla.org/network/io-service;1", &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-        nsCOMPtr<nsIURI> bookmarksFileURI;
-        rv = ioservice->NewFileURI(bookmarksFile,
-                                   getter_AddRefs(bookmarksFileURI));
-        NS_ENSURE_SUCCESS(rv, rv);
-        rv = ImportBookmarksHTMLInternal(bookmarksFileURI, PR_FALSE,
-                                         0, PR_TRUE);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-    }
   }
 #endif
   return NS_OK;
@@ -653,9 +631,9 @@ nsNavBookmarks::AddBookmarkToHash(PRInt64 aBookmarkId, PRTime aMinTime)
 // nsNavBookmkars::RecursiveAddBookmarkHash
 //
 //    Used to add a new level of redirect information to the bookmark hash.
-//    Given a source bookmark 'aBookmark' and 'aCurrentSouce' that has already
+//    Given a source bookmark 'aBookmark' and 'aCurrentSource' that has already
 //    been added to the hashtable, this will add all redirect destinations of
-//    'aCurrentSort'. Will call itself recursively to walk down the chain.
+//    'aCurrentSource'. Will call itself recursively to walk down the chain.
 //
 //    'aMinTime' is the minimum time to consider visits from. Visits previous
 //    to this will not be considered. This allows the search to be much more
@@ -2356,163 +2334,8 @@ nsNavBookmarks::RemoveObserver(nsINavBookmarkObserver *aObserver)
 nsresult
 nsNavBookmarks::OnQuit()
 {
-#ifdef MOZ_PLACES_BOOKMARKS
-  // get bookmarks file
-  nsCOMPtr<nsIFile> bookmarksFile;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_BOOKMARKS_50_FILE,
-                                       getter_AddRefs(bookmarksFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // create if it doesn't exist
-  PRBool exists;
-  rv = bookmarksFile->Exists(&exists);
-  if (NS_FAILED(rv) || !exists) {
-    rv = bookmarksFile->Create(nsIFile::NORMAL_FILE_TYPE, 0600);
-    NS_ASSERTION(rv, "Unable to create bookmarks.html!");
-    return rv;
-  }
-
-  // export bookmarks.html
-  rv = ExportBookmarksHTML(bookmarksFile);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // archive if needed
-  nsCOMPtr<nsIPrefService> prefServ(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIPrefBranch> bookmarksPrefs;
-  rv = prefServ->GetBranch("browser.bookmarks.", getter_AddRefs(bookmarksPrefs));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 numberOfBackups;
-  rv = bookmarksPrefs->GetIntPref("max_backups", &numberOfBackups);
-  if (NS_FAILED(rv))
-    numberOfBackups = 5;
-
-  if (numberOfBackups > 0) {
-    rv = ArchiveBookmarksFile(numberOfBackups, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-#endif
-
   return NS_OK;
 }
-
-/**
- *  ArchiveBookmarksFile()
- *
- *  Creates a dated backup once a day in <profile>/bookmarkbackups
- *
- *  PRInt32 numberOfBackups - the maximum number of backups to keep
- *
- *  PRBool forceArchive - forces creating an archive even if one was 
- *                        already created that day (overwrites)
- */
-nsresult
-nsNavBookmarks::ArchiveBookmarksFile(PRInt32 numberOfBackups,
-                                         PRBool forceArchive)
-{
-  nsCOMPtr<nsIFile> bookmarksBackupDir;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                       getter_AddRefs(bookmarksBackupDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  nsDependentCString dirName("bookmarkbackups");
-  rv = bookmarksBackupDir->AppendNative(dirName);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  PRBool exists;
-  rv = bookmarksBackupDir->Exists(&exists);
-  if (NS_FAILED(rv) || !exists) {
-    rv = bookmarksBackupDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
-    
-    // if there's no backup folder, there's no backup, fail
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // construct the new leafname
-  PRTime          now64 = PR_Now();
-  PRExplodedTime  nowInfo;
-  PR_ExplodeTime(now64, PR_LocalTimeParameters, &nowInfo);
-  PR_NormalizeTime(&nowInfo, PR_LocalTimeParameters);
-
-  char timeString[128];
-  
-  PR_FormatTime(timeString, 128, "bookmarks-%Y-%m-%d.html", &nowInfo);
-
-  nsCAutoString backupFilenameCString(timeString);
-  nsAutoString backupFilenameString = NS_ConvertUTF8toUTF16(backupFilenameCString);
-
-  nsCOMPtr<nsIFile> backupFile;
-  if (forceArchive) {
-    // if we have a backup from today, nuke it
-    nsCOMPtr<nsIFile> currentBackup;
-    rv = bookmarksBackupDir->Clone(getter_AddRefs(currentBackup));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = currentBackup->Append(backupFilenameString);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = currentBackup->Exists(&exists);
-    if (!NS_FAILED(rv) && exists) {
-      rv = currentBackup->Remove(PR_FALSE);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  } else {
-    nsCOMPtr<nsISimpleEnumerator> existingBackups;
-    rv = bookmarksBackupDir->GetDirectoryEntries(getter_AddRefs(existingBackups));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsStringArray backupFileNames;
-
-    PRBool hasMoreElements = PR_FALSE;
-    PRBool hasCurrentBackup = PR_FALSE;
-    
-    while (NS_SUCCEEDED(existingBackups->HasMoreElements(&hasMoreElements)) &&
-           hasMoreElements)
-    {
-      rv = existingBackups->GetNext(getter_AddRefs(backupFile));
-      NS_ENSURE_SUCCESS(rv, rv);
-      nsAutoString backupName;
-      rv = backupFile->GetLeafName(backupName);
-      NS_ENSURE_SUCCESS(rv, rv);
-      
-      // the backup for today exists, do not create later
-      if (backupName == backupFilenameString) {
-        hasCurrentBackup = PR_TRUE;
-        continue;
-      }
-
-      // mark the rest for possible removal
-      if (Substring(backupName, 0, 10) == NS_LITERAL_STRING("bookmarks-"))
-        backupFileNames.AppendString(backupName);
-    }
-
-    if (numberOfBackups > 0 && backupFileNames.Count() >= numberOfBackups) {
-      PRInt32 numberOfBackupsToDelete = backupFileNames.Count() - numberOfBackups + 1;
-      backupFileNames.Sort();
-
-      while (numberOfBackupsToDelete--) {
-        (void)bookmarksBackupDir->Clone(getter_AddRefs(backupFile));
-        (void)backupFile->Append(*backupFileNames[0]);
-        (void)backupFile->Remove(PR_FALSE);
-        backupFileNames.RemoveStringAt(0);
-      }
-    }
-
-    if (hasCurrentBackup)
-      return NS_OK;
-  }
-
-  nsCOMPtr<nsIFile> bookmarksFile;
-  rv = NS_GetSpecialDirectory(NS_APP_BOOKMARKS_50_FILE,
-                              getter_AddRefs(bookmarksFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  rv = bookmarksFile->CopyTo(bookmarksBackupDir, backupFilenameString);
-  // at least dump something out in case this fails in a debug build
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return rv;
-}
-
 
 // nsNavBookmarks::nsINavHistoryObserver
 
