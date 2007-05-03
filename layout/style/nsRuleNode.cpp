@@ -250,6 +250,7 @@ nscoord CalcLength(const nsCSSValue& aValue,
 #define SETCOORD_LPH    (SETCOORD_LP | SETCOORD_INHERIT)
 #define SETCOORD_LPAH   (SETCOORD_LP | SETCOORD_AH)
 #define SETCOORD_LPEH   (SETCOORD_LP | SETCOORD_ENUMERATED | SETCOORD_INHERIT)
+#define SETCOORD_LPAEH  (SETCOORD_LPAH | SETCOORD_ENUMERATED)
 #define SETCOORD_LE     (SETCOORD_LENGTH | SETCOORD_ENUMERATED)
 #define SETCOORD_LEH    (SETCOORD_LE | SETCOORD_INHERIT)
 #define SETCOORD_IA     (SETCOORD_INTEGER | SETCOORD_AUTO)
@@ -3587,11 +3588,11 @@ nsRuleNode::ComputePositionData(nsStyleStruct* aStartStruct,
     pos->mWidth.SetIntValue((PRInt32)(posData.mWidth.GetFloatValue()), eStyleUnit_Proportional);
   else 
     SetCoord(posData.mWidth, pos->mWidth, parentPos->mWidth,
-             SETCOORD_LPAH, aContext, mPresContext, inherited);
+             SETCOORD_LPAEH, aContext, mPresContext, inherited);
   SetCoord(posData.mMinWidth, pos->mMinWidth, parentPos->mMinWidth,
-           SETCOORD_LPH, aContext, mPresContext, inherited);
+           SETCOORD_LPEH, aContext, mPresContext, inherited);
   if (! SetCoord(posData.mMaxWidth, pos->mMaxWidth, parentPos->mMaxWidth,
-                 SETCOORD_LPH, aContext, mPresContext, inherited)) {
+                 SETCOORD_LPEH, aContext, mPresContext, inherited)) {
     if (eCSSUnit_None == posData.mMaxWidth.GetUnit()) {
       pos->mMaxWidth.Reset();
     }

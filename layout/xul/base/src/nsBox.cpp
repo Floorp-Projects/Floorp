@@ -684,19 +684,22 @@ nsIBox::AddCSSPrefSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
         aSize.width = position->mWidth.GetCoordValue();
         widthSet = PR_TRUE;
     }
+    // XXX Handle eStyleUnit_Chars, eStyleUnit_Enumerated?
+    // (Handling the eStyleUnit_Enumerated types requires
+    // GetPrefSize/GetMinSize methods that don't consider
+    // (min-/max-/)(width/height) properties.
 
     if (position->mHeight.GetUnit() == eStyleUnit_Coord) {
         aSize.height = position->mHeight.GetCoordValue();     
         heightSet = PR_TRUE;
     }
+    // XXX Handle eStyleUnit_Chars?
     
     nsIContent* content = aBox->GetContent();
     // ignore 'height' and 'width' attributes if the actual element is not XUL
     // For example, we might be magic XUL frames whose primary content is an HTML
     // <select>
     if (content && content->IsNodeOfType(nsINode::eXUL)) {
-        nsPresContext* presContext = aState.PresContext();
-
         nsAutoString value;
         PRInt32 error;
 
@@ -770,6 +773,10 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
         aSize.width = 0;
         widthSet = PR_TRUE;
     }
+    // XXX Handle eStyleUnit_Chars, eStyleUnit_Enumerated?
+    // (Handling the eStyleUnit_Enumerated types requires
+    // GetPrefSize/GetMinSize methods that don't consider
+    // (min-/max-/)(width/height) properties.
 
     if (position->mMinHeight.GetUnit() == eStyleUnit_Coord) {
         nscoord min = position->mMinHeight.GetCoordValue();
@@ -783,11 +790,10 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
         aSize.height = 0;
         heightSet = PR_TRUE;
     }
+    // XXX Handle eStyleUnit_Chars?
 
     nsIContent* content = aBox->GetContent();
     if (content) {
-        nsPresContext* presContext = aState.PresContext();
-
         nsAutoString value;
         PRInt32 error;
 
@@ -836,17 +842,20 @@ nsIBox::AddCSSMaxSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
         aSize.width = max;
         widthSet = PR_TRUE;
     }
+    // XXX Handle eStyleUnit_Chars, eStyleUnit_Enumerated?
+    // (Handling the eStyleUnit_Enumerated types requires
+    // GetPrefSize/GetMinSize methods that don't consider
+    // (min-/max-/)(width/height) properties.
 
     if (position->mMaxHeight.GetUnit() == eStyleUnit_Coord) {
         nscoord max = position->mMaxHeight.GetCoordValue();
         aSize.height = max;
         heightSet = PR_TRUE;
     }
+    // XXX Handle eStyleUnit_Chars?
 
     nsIContent* content = aBox->GetContent();
     if (content) {
-        nsPresContext* presContext = aState.PresContext();
-
         nsAutoString value;
         PRInt32 error;
 

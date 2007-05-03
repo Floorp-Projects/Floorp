@@ -941,6 +941,14 @@ const PRInt32 nsCSSProps::kWhitespaceKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const PRInt32 nsCSSProps::kWidthKTable[] = {
+  eCSSKeyword__moz_intrinsic, NS_STYLE_WIDTH_INTRINSIC,
+  eCSSKeyword__moz_min_intrinsic, NS_STYLE_WIDTH_MIN_INTRINSIC,
+  eCSSKeyword__moz_shrink_wrap, NS_STYLE_WIDTH_SHRINK_WRAP,
+  eCSSKeyword__moz_fill, NS_STYLE_WIDTH_FILL,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 // Specific keyword tables for XUL.properties
 const PRInt32 nsCSSProps::kBoxAlignKTable[] = {
   eCSSKeyword_stretch,  NS_STYLE_BOX_ALIGN_STRETCH,

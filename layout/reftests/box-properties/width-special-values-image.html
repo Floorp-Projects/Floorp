@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>-moz-intrinsic, -moz-min-intrinsic, -moz-shrink-wrap, and -moz-fill values of CSS width property, on inline images</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <style type="text/css">
+
+    img {
+      margin-left: 1px;
+      border-left: 2px solid;
+      padding-left: 4px;
+      padding-right: 8px;
+      border-right: 16px solid;
+      margin-right: 32px;
+      margin-bottom: 1px;
+    }
+
+    img.v1 { width: -moz-intrinsic; }
+    img.v2 { width: -moz-min-intrinsic; }
+    img.v3 { width: -moz-shrink-wrap; }
+    img.v4 { width: -moz-fill; }
+
+    img.s1 { -moz-box-sizing: content; }
+    img.s2 { -moz-box-sizing: padding; }
+    img.s3 { -moz-box-sizing: border; }
+
+  </style>
+</head>
+<body style="width: 100px">
+<img src="../pixel-rounding/green-25x25.png" alt="[]" class="v1 s1">
+<img src="../pixel-rounding/green-25x25.png" alt="[]" class="v1 s2">
+<img src="../pixel-rounding/green-25x25.png" alt="[]" class="v1 s3">
+<img src="../pixel-rounding/green-25x25.png" alt="[]" class="v2 s1">
+<img src="../pixel-rounding/green-25x25.png" alt="[]" class="v2 s2">
+<img src="../pixel-rounding/green-25x25.png" alt="[]" class="v2 s3">
+<img src="../pixel-rounding/green-25x25.png" alt="[]" class="v3 s1">
+<img src="../pixel-rounding/green-25x25.png" alt="[]" class="v3 s2">
+<img src="../pixel-rounding/green-25x25.png" alt="[]" class="v3 s3">
+<img src="../pixel-rounding/green-25x25.png" alt="[]" class="v4 s1">
+<img src="../pixel-rounding/green-25x25.png" alt="[]" class="v4 s2">
+<img src="../pixel-rounding/green-25x25.png" alt="[]" class="v4 s3">
+</body>
+</html>

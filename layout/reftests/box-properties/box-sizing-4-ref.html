@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>test of -moz-box-sizing</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <style type="text/css">
+
+    body { font-size: 10px; line-height: 1; }
+    table { border-spacing: 0; margin: 0 100px; }
+    td { border: 1px solid; padding: 1px solid; }
+
+    td > div { width: 100px; }
+
+    td > div > div {
+      margin-left: 1px;
+      border-left: 2px solid;
+      padding-left: 4px;
+      padding-right: 8px;
+      border-right: 16px solid;
+      margin-right: 32px;
+
+      background: yellow;
+      margin-bottom: 10px;
+      float: right;
+      clear: right;
+      text-align: right;
+      height: 40px;
+      right: 0;
+    }
+
+  </style>
+</head>
+<body>
+
+<table><tr>
+
+<td id="bscontent"><div>
+
+<!-- -moz-box-sizing: content-box -->
+<div>A B</div>
+<div>A B</div>
+<div>A<br>B</div>
+<div>A B</div>
+<div style="width: 37px">A B</div>
+<div style="width: 50px">A B</div>
+<div style="width: 60px">A B</div>
+
+</div></td>
+
+<td id="bspadding"><div>
+<!-- -moz-box-sizing: padding-box -->
+<div>A B</div>
+<div>A B</div>
+<div>A<br>B</div>
+<div>A B</div>
+<div style="width: 37px">A B</div>
+<div style="width: 38px">A B</div>
+<div style="width: 48px">A B</div>
+
+</div></td>
+
+<td id="bsborder"><div>
+<!-- -moz-box-sizing: border-box -->
+<div>A B</div>
+<div>A B</div>
+<div>A<br>B</div>
+<div>A B</div>
+<div style="width: 37px">A B</div>
+<div style="width: 20px">A B</div>
+<div style="width: 30px">A B</div>
+
+</div></td>
+
+</tr></table>
+
+</body>
+</html>

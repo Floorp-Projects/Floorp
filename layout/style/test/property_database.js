@@ -46,6 +46,20 @@ const CSS_TYPE_TRUE_SHORTHAND = 1;
 // the current spec or earlier versions of the spec.
 const CSS_TYPE_SHORTHAND_AND_LONGHAND = 2;
 
+// Each property has the following fields:
+//   domProp: The name of the relevant member of nsIDOM[NS]CSS2Properties
+//   inherited: Whether the property is inherited by default (stated as 
+//     yes or no in the property header in all CSS specs)
+//   type: see above
+//   initial_values: Values whose computed value should be the same as the
+//     computed value for the property's initial value.
+//   other_values: Values whose computed value should be different from the
+//     computed value for the property's initial value.
+//   XXX Should have a third field for values whose computed value may or
+//     may not be the same as for the property's initial value.
+//   invalid_values: Things that are not values for the property and
+//     should be rejected.
+
 var gCSSProperties = {
 	"-moz-appearance": {
 		domProp: "MozAppearance",
@@ -855,7 +869,7 @@ var gCSSProperties = {
 		initial_values: [ " auto" ],
 		/* XXX these have prerequisites */
 		other_values: [ "15px", "3em", "15%" ],
-		invalid_values: []
+		invalid_values: [ "none", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ]
 	},
 	"left": {
 		domProp: "left",
@@ -987,14 +1001,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "30px", "50%", "0" ],
-		invalid_values: [ "auto" ]
+		invalid_values: [ "auto", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ]
 	},
 	"max-width": {
 		domProp: "maxWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "30px", "50%", "0" ],
+		other_values: [ "30px", "50%", "0", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ],
 		invalid_values: [ "auto" ]
 	},
 	"min-height": {
@@ -1003,14 +1017,14 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0" ],
 		other_values: [ "30px", "50%" ],
-		invalid_values: [ "auto", "none" ]
+		invalid_values: [ "auto", "none", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ]
 	},
 	"min-width": {
 		domProp: "minWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0" ],
-		other_values: [ "30px", "50%" ],
+		other_values: [ "30px", "50%", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ],
 		invalid_values: [ "auto", "none" ]
 	},
 	"opacity": {
@@ -1468,8 +1482,8 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ " auto" ],
 		/* XXX these have prerequisites */
-		other_values: [ "15px", "3em", "15%" ],
-		invalid_values: []
+		other_values: [ "15px", "3em", "15%", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ],
+		invalid_values: [ "none" ]
 	},
 	"word-spacing": {
 		domProp: "wordSpacing",

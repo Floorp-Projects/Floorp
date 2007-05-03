@@ -701,6 +701,16 @@ HasPercentageUnitSide(const nsStyleSides& aSides)
   return PR_FALSE;
 }
 
+inline PRBool
+WidthDependsOnContainer(const nsStyleCoord& aCoord)
+{
+  return aCoord.GetUnit() == eStyleUnit_Percent ||
+         (aCoord.GetUnit() == eStyleUnit_Enumerated &&
+          (aCoord.GetIntValue() == NS_STYLE_WIDTH_FILL ||
+          (aCoord.GetIntValue() == NS_STYLE_WIDTH_SHRINK_WRAP)));
+
+}
+
 static PRBool
 IsPercentageAware(const nsIFrame* aFrame)
 {
@@ -732,9 +742,9 @@ IsPercentageAware(const nsIFrame* aFrame)
 
   const nsStylePosition* pos = aFrame->GetStylePosition();
 
-  if (eStyleUnit_Percent == pos->mWidth.GetUnit() ||
-      eStyleUnit_Percent == pos->mMaxWidth.GetUnit() ||
-      eStyleUnit_Percent == pos->mMinWidth.GetUnit() ||
+  if (WidthDependsOnContainer(pos->mWidth) ||
+      WidthDependsOnContainer(pos->mMaxWidth) ||
+      WidthDependsOnContainer(pos->mMinWidth) ||
       eStyleUnit_Percent == pos->mOffset.GetRightUnit() ||
       eStyleUnit_Percent == pos->mOffset.GetLeftUnit()) {
     return PR_TRUE;

@@ -3556,6 +3556,7 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
 #define VARIANT_AHLP (VARIANT_AH | VARIANT_LP)
 #define VARIANT_AHI  (VARIANT_AH | VARIANT_INTEGER)
 #define VARIANT_AHK  (VARIANT_AH | VARIANT_KEYWORD)
+#define VARIANT_AHKLP (VARIANT_AHLP | VARIANT_KEYWORD)
 #define VARIANT_AUK  (VARIANT_AUTO | VARIANT_URL | VARIANT_KEYWORD)
 #define VARIANT_AHUK (VARIANT_AH | VARIANT_URL | VARIANT_KEYWORD)
 #define VARIANT_AHL  (VARIANT_AH | VARIANT_LENGTH)
@@ -3564,6 +3565,7 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
 #define VARIANT_HKF  (VARIANT_HK | VARIANT_FREQUENCY)
 #define VARIANT_HKL  (VARIANT_HK | VARIANT_LENGTH)
 #define VARIANT_HKLP (VARIANT_HK | VARIANT_LP)
+#define VARIANT_HKLPO (VARIANT_HKLP | VARIANT_NONE)
 #define VARIANT_HL   (VARIANT_INHERIT | VARIANT_LENGTH)
 #define VARIANT_HI   (VARIANT_INHERIT | VARIANT_INTEGER)
 #define VARIANT_HLP  (VARIANT_HL | VARIANT_PERCENT)
@@ -4628,8 +4630,10 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kBoxSizingKTable);
   case eCSSProperty_height:
-  case eCSSProperty_width:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_AHLP, nsnull);
+  case eCSSProperty_width:
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_AHKLP,
+                                nsCSSProps::kWidthKTable);
   case eCSSProperty_force_broken_image_icon:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HI, nsnull);
   case eCSSProperty_caption_side:
@@ -4713,11 +4717,15 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_marks:
     return ParseMarks(aErrorCode, aValue);
   case eCSSProperty_max_height:
-  case eCSSProperty_max_width:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HLPO, nsnull);
+  case eCSSProperty_max_width:
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HKLPO,
+                                nsCSSProps::kWidthKTable);
   case eCSSProperty_min_height:
-  case eCSSProperty_min_width:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
+  case eCSSProperty_min_width:
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HKLP,
+                                nsCSSProps::kWidthKTable);
   case eCSSProperty_opacity:
     return ParseVariant(aErrorCode, aValue, VARIANT_HN, nsnull);
   case eCSSProperty_orphans:

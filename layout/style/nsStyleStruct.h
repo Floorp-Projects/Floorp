@@ -636,9 +636,9 @@ struct nsStylePosition : public nsStyleStruct {
 #endif
   
   nsStyleSides  mOffset;                // [reset]
-  nsStyleCoord  mWidth;                 // [reset] coord, percent, auto
-  nsStyleCoord  mMinWidth;              // [reset] coord, percent
-  nsStyleCoord  mMaxWidth;              // [reset] coord, percent, null
+  nsStyleCoord  mWidth;                 // [reset] coord, percent, auto, enum
+  nsStyleCoord  mMinWidth;              // [reset] coord, percent, enum
+  nsStyleCoord  mMaxWidth;              // [reset] coord, percent, null, enum
   nsStyleCoord  mHeight;                // [reset] coord, percent, auto
   nsStyleCoord  mMinHeight;             // [reset] coord, percent
   nsStyleCoord  mMaxHeight;             // [reset] coord, percent, null

@@ -111,7 +111,7 @@ nsHTMLCanvasFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
 
   return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                             aRenderingContext, this, canvasSize,
-                            aCBSize, aBorder, aPadding);
+                            aCBSize, aMargin, aBorder, aPadding);
 }
 
 NS_IMETHODIMP

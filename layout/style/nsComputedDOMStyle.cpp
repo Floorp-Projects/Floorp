@@ -2229,8 +2229,8 @@ nsComputedDOMStyle::GetWidth(nsIDOMCSSValue** aValue)
                           &nsComputedDOMStyle::GetCBContentWidth,
                           nscoord_MAX);
     
-    SetValueToCoord(val, positionData->mWidth, nsnull, nsnull,
-                    minWidth, maxWidth);
+    SetValueToCoord(val, positionData->mWidth, nsnull,
+                    nsCSSProps::kWidthKTable, minWidth, maxWidth);
   }
 
   return CallQueryInterface(val, aValue);
@@ -2255,7 +2255,8 @@ nsComputedDOMStyle::GetMaxWidth(nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   SetValueToCoord(val, GetStylePosition()->mMaxWidth,
-                  &nsComputedDOMStyle::GetCBContentWidth);
+                  &nsComputedDOMStyle::GetCBContentWidth,
+                  nsCSSProps::kWidthKTable);
 
   return CallQueryInterface(val, aValue);
 }
@@ -2279,7 +2280,8 @@ nsComputedDOMStyle::GetMinWidth(nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   SetValueToCoord(val, GetStylePosition()->mMinWidth,
-                  &nsComputedDOMStyle::GetCBContentWidth);
+                  &nsComputedDOMStyle::GetCBContentWidth,
+                  nsCSSProps::kWidthKTable);
 
   return CallQueryInterface(val, aValue);
 }

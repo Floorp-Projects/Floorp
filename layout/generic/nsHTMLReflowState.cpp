@@ -190,6 +190,40 @@ nsCSSOffsetState::ComputeWidthDependentValue(nscoord aContainingBlockWidth,
                                                       aCoord);
 }
 
+inline nscoord
+nsCSSOffsetState::ComputeWidthValue(nscoord aContainingBlockWidth,
+                                    nscoord aContentEdgeToBoxSizing,
+                                    nscoord aBoxSizingToMarginEdge,
+                                    const nsStyleCoord& aCoord)
+{
+  return nsLayoutUtils::ComputeWidthValue(rendContext, frame,
+                                          aContainingBlockWidth,
+                                          aContentEdgeToBoxSizing,
+                                          aBoxSizingToMarginEdge,
+                                          aCoord);
+}
+
+nscoord
+nsCSSOffsetState::ComputeWidthValue(nscoord aContainingBlockWidth,
+                                    PRUint8 aBoxSizing,
+                                    const nsStyleCoord& aCoord)
+{
+  nscoord inside = 0, outside = mComputedBorderPadding.LeftRight() +
+                                mComputedMargin.LeftRight();
+  switch (aBoxSizing) {
+    case NS_STYLE_BOX_SIZING_BORDER:
+      inside = mComputedBorderPadding.LeftRight();
+      break;
+    case NS_STYLE_BOX_SIZING_PADDING:
+      inside = mComputedPadding.LeftRight();
+      break;
+  }
+  outside -= inside;
+
+  return ComputeWidthValue(aContainingBlockWidth, inside,
+                           outside, aCoord);
+}
+
 inline void
 nsCSSOffsetState::ComputeHeightDependentValue(nscoord aContainingBlockHeight,
                                               const nsStyleCoord& aCoord,
@@ -633,8 +667,16 @@ GetIntrinsicSizeFor(nsIFrame* aFrame, nsSize& aIntrinsicSize)
   return result;
 }
 
-nscoord
-nsHTMLReflowState::CalculateHorizBorderPaddingMargin(nscoord aContainingBlockWidth)
+/**
+ * aInsideBoxSizing returns the part of the horizontal padding, border,
+ * and margin that goes inside the edge given by -moz-box-sizing;
+ * aOutsideBoxSizing returns the rest.
+ */
+void
+nsHTMLReflowState::CalculateHorizBorderPaddingMargin(
+                       nscoord aContainingBlockWidth,
+                       nscoord* aInsideBoxSizing,
+                       nscoord* aOutsideBoxSizing)
 {
   const nsMargin& border = mStyleBorder->GetBorder();
   nsMargin padding, margin;
@@ -675,8 +717,20 @@ nsHTMLReflowState::CalculateHorizBorderPaddingMargin(nscoord aContainingBlockWid
     }
   }
 
-  return padding.left + padding.right + border.left + border.right +
-         margin.left + margin.right;
+  nscoord outside =
+    padding.LeftRight() + border.LeftRight() + margin.LeftRight();
+  nscoord inside = 0;
+  switch (mStylePosition->mBoxSizing) {
+    case NS_STYLE_BOX_SIZING_BORDER:
+      inside += border.LeftRight();
+      // fall through
+    case NS_STYLE_BOX_SIZING_PADDING:
+      inside += padding.LeftRight();
+  }
+  outside -= inside;
+  *aInsideBoxSizing = inside;
+  *aOutsideBoxSizing = outside;
+  return;
 }
 
 /**
@@ -721,10 +775,10 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   // If it's a replaced element and it has a 'auto' value for 'width', see if we
   // can get the intrinsic size. This will allow us to exactly determine both the
   // left and right edges
-  nsStyleUnit widthUnit = mStylePosition->mWidth.GetUnit();
+  PRBool isAutoWidth = mStylePosition->mWidth.GetUnit() == eStyleUnit_Auto;
   nsSize      intrinsicSize;
   PRBool      knowIntrinsicSize = PR_FALSE;
-  if (NS_FRAME_IS_REPLACED(mFrameType) && (eStyleUnit_Auto == widthUnit)) {
+  if (NS_FRAME_IS_REPLACED(mFrameType) && isAutoWidth) {
     // See if we can get the intrinsic size of the element
     knowIntrinsicSize = GetIntrinsicSizeFor(frame, intrinsicSize);
   }
@@ -740,22 +794,23 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
 
   } else {
     // It's either a replaced inline-level element or a block-level element
-    nscoord horizBorderPaddingMargin;
 
     // Determine the total amount of horizontal border/padding/margin that
     // the element would have had if it had been in the flow. Note that we
     // ignore any 'auto' and 'inherit' values
-    horizBorderPaddingMargin = CalculateHorizBorderPaddingMargin(aBlockContentWidth);
+    nscoord insideBoxSizing, outsideBoxSizing;
+    CalculateHorizBorderPaddingMargin(aBlockContentWidth,
+                                      &insideBoxSizing, &outsideBoxSizing);
 
-    if (NS_FRAME_IS_REPLACED(mFrameType) && (eStyleUnit_Auto == widthUnit)) {
+    if (NS_FRAME_IS_REPLACED(mFrameType) && isAutoWidth) {
       // It's a replaced element with an 'auto' width so the box width is
       // its intrinsic size plus any border/padding/margin
       if (knowIntrinsicSize) {
-        boxWidth = intrinsicSize.width + horizBorderPaddingMargin;
+        boxWidth = intrinsicSize.width + outsideBoxSizing + insideBoxSizing;
         knowBoxWidth = PR_TRUE;
       }
 
-    } else if (eStyleUnit_Auto == widthUnit) {
+    } else if (isAutoWidth) {
       // The box width is the containing block width
       boxWidth = aBlockContentWidth;
       knowBoxWidth = PR_TRUE;
@@ -764,9 +819,10 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
       // We need to compute it. It's important we do this, because if it's
       // percentage based this computed value may be different from the comnputed
       // value calculated using the absolute containing block width
-      ComputeWidthDependentValue(aBlockContentWidth, mStylePosition->mWidth,
-                                 boxWidth);
-      boxWidth += horizBorderPaddingMargin;
+      boxWidth = ComputeWidthValue(aBlockContentWidth,
+                                   insideBoxSizing, outsideBoxSizing,
+                                   mStylePosition->mWidth) + 
+                 insideBoxSizing + outsideBoxSizing;
       knowBoxWidth = PR_TRUE;
     }
   }
@@ -1611,8 +1667,9 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       } else {
         NS_ASSERTION(widthUnit == mStylePosition->mWidth.GetUnit(),
                      "unexpected width unit change");
-        ComputeWidthDependentValue(aContainingBlockWidth,
-                                   mStylePosition->mWidth, mComputedWidth);
+        mComputedWidth = ComputeWidthValue(aContainingBlockWidth,
+                                           mStylePosition->mBoxSizing,
+                                           mStylePosition->mWidth);
       }
 
       // Calculate the computed height
@@ -2058,15 +2115,17 @@ nsHTMLReflowState::ComputeMinMaxValues(nscoord aContainingBlockWidth,
                                        nscoord aContainingBlockHeight,
                                        const nsHTMLReflowState* aContainingBlockRS)
 {
-  ComputeWidthDependentValue(aContainingBlockWidth, mStylePosition->mMinWidth,
-                             mComputedMinWidth);
+  mComputedMinWidth = ComputeWidthValue(aContainingBlockWidth,
+                                        mStylePosition->mBoxSizing,
+                                        mStylePosition->mMinWidth);
 
   if (eStyleUnit_Null == mStylePosition->mMaxWidth.GetUnit()) {
     // Specified value of 'none'
     mComputedMaxWidth = NS_UNCONSTRAINEDSIZE;  // no limit
   } else {
-    ComputeWidthDependentValue(aContainingBlockWidth, mStylePosition->mMaxWidth,
-                               mComputedMaxWidth);
+    mComputedMaxWidth = ComputeWidthValue(aContainingBlockWidth,
+                                          mStylePosition->mBoxSizing,
+                                          mStylePosition->mMaxWidth);
   }
 
   // If the computed value of 'min-width' is greater than the value of
