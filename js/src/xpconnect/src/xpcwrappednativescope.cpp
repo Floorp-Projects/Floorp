@@ -277,8 +277,8 @@ WrappedNativeJSGCThingMarker(JSDHashTable *table, JSDHashEntryHdr *hdr,
         // formed by a poor order between C++ and JS garbage cycle
         // formations. See Bug 368869.
         //
-        // if (JS_IsGCMarkTraversal(trc))
-        //     nsCycleCollector_suspectCurrent(wrapper);
+        if (JS_IsGCMarkingTracer(trc))
+            nsCycleCollector_suspectCurrent(wrapper);
     }
     return JS_DHASH_NEXT;
 }
