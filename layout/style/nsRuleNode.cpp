@@ -2496,9 +2496,9 @@ nsRuleNode::ComputeUserInterfaceData(nsStyleStruct* aStartStruct,
       // The parser will never create a list that is *all* URL values --
       // that's invalid.
       PRUint32 arrayLength = 0;
-      for (nsCSSValueList *list2 = list;
-           list2->mValue.GetUnit() == eCSSUnit_Array; list2 = list2->mNext)
-        if (list2->mValue.GetArrayValue()->Item(0).GetImageValue())
+      nsCSSValueList* list2 = list;
+      for ( ; list->mValue.GetUnit() == eCSSUnit_Array; list = list->mNext)
+        if (list->mValue.GetArrayValue()->Item(0).GetImageValue())
           ++arrayLength;
 
       if (arrayLength != 0) {
@@ -2507,9 +2507,9 @@ nsRuleNode::ComputeUserInterfaceData(nsStyleStruct* aStartStruct,
           ui->mCursorArrayLength = arrayLength;
 
           for (nsCursorImage *item = ui->mCursorArray;
-               list->mValue.GetUnit() == eCSSUnit_Array;
-               list = list->mNext) {
-            nsCSSValue::Array *arr = list->mValue.GetArrayValue();
+               list2->mValue.GetUnit() == eCSSUnit_Array;
+               list2 = list2->mNext) {
+            nsCSSValue::Array *arr = list2->mValue.GetArrayValue();
             imgIRequest *req = arr->Item(0).GetImageValue();
             if (req) {
               item->mImage = req;
@@ -2523,6 +2523,11 @@ nsRuleNode::ComputeUserInterfaceData(nsStyleStruct* aStartStruct,
           }
         }
       }
+
+      NS_ASSERTION(list, "Must have non-array value at the end");
+      NS_ASSERTION(list->mValue.GetUnit() == eCSSUnit_Enumerated ||
+                   list->mValue.GetUnit() == eCSSUnit_Auto,
+                   "Unexpected fallback value at end of cursor list");
 
       if (eCSSUnit_Enumerated == list->mValue.GetUnit()) {
         ui->mCursor = list->mValue.GetIntValue();
