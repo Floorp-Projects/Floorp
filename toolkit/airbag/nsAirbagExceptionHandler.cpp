@@ -335,11 +335,12 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory)
   if (err != noErr)
     return NS_ERROR_FAILURE;
 
-  tempPath.SetLength(PATH_MAX);
-  OSStatus status = FSRefMakePath(&fsRef,
-                                  (UInt8*)tempPath.BeginWriting(), PATH_MAX);
+  char path[PATH_MAX];
+  OSStatus status = FSRefMakePath(&fsRef, (UInt8*)path, PATH_MAX);
   if (status != noErr)
     return NS_ERROR_FAILURE;
+  tempPath = NS_ConvertUTF8toUTF16(path);
+
 #else
   //XXX: implement get temp path on other platforms
   return NS_ERROR_NOT_IMPLEMENTED;
