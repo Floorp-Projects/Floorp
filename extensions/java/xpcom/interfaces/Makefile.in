@@ -119,7 +119,7 @@ $(IFACES_DIR)/$(JAVA_IFACES_PKG_NAME)/nsISupports.class: $(IFACES_DIR) Makefile 
 	$(CYGWIN_WRAPPER) $(JAVAC) $(JAVAC_FLAGS) -classpath $(IFACES_DIR) 		\
 		-d $(IFACES_DIR) -sourcepath $(JAVA_DIST_DIR)/default @java.files
 
-$(IFACES_JAR): $(IFACES_DIR)/$(JAVA_IFACES_PKG_NAME)/nsISupports.class Makefile
+$(IFACES_JAR): $(IFACES_DIR)/$(JAVA_IFACES_PKG_NAME)/nsISupports.class $(wildcard $(JAVA_DIST_DIR)/default/$(JAVA_IFACES_PKG_NAME)/*.java) Makefile
 	$(JAR) cf $@ -C $(IFACES_DIR) org
 
 $(IFACES_JAR_SRC): $(IFACES_JAR)
