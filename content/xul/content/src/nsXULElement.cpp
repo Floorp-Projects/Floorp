@@ -829,6 +829,11 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                     (!aBindingParent && aParent &&
                      aParent->GetBindingParent() == GetBindingParent()),
                     "Already have a binding parent.  Unbind first!");
+    // XXXbz XUL's SetNativeAnonymous is all weird, so can't assert
+    // anything here
+    // NS_PRECONDITION(aBindingParent != this || IsNativeAnonymous(),
+    //                 "Only native anonymous content should have itself as its "
+    //                 "own binding parent");
 
     if (!aBindingParent && aParent) {
         aBindingParent = aParent->GetBindingParent();
@@ -2706,6 +2711,10 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
 
         // XXX Get correct Base URI (need GetBaseURI on *prototype* element)
         parser->ParseStyleAttribute(aValue, aDocumentURI, aDocumentURI,
+                                    // This is basically duplicating what
+                                    // nsINode::NodePrincipal() does
+                                    mNodeInfo->NodeInfoManager()->
+                                      DocumentPrincipal(),
                                     getter_AddRefs(rule));
         if (rule) {
             mAttributes[aPos].mValue.SetTo(rule);

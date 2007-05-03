@@ -1511,7 +1511,8 @@ CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aStream,
   nsCOMPtr<nsIURI> sheetURI, baseURI;
   aLoadData->mSheet->GetSheetURI(getter_AddRefs(sheetURI));
   aLoadData->mSheet->GetBaseURI(getter_AddRefs(baseURI));
-  rv = parser->Parse(aStream, sheetURI, baseURI, aLoadData->mLineNumber,
+  rv = parser->Parse(aStream, sheetURI, baseURI,
+                     aLoadData->mSheet->Principal(), aLoadData->mLineNumber,
                      aLoadData->mAllowUnsafeRules,
                      *getter_AddRefs(dummySheet));
   mParsingDatas.RemoveElementAt(mParsingDatas.Count() - 1);
