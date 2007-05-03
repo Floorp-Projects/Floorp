@@ -165,11 +165,6 @@ protected:
     PRBool mIsInitialized;
 #endif
 
-    /**
-     * Notify global nsIObserver's that a11y is getting init'd or shutdown
-     */
-    static void NotifyA11yInitOrShutdown();
-
     // Static data, we do our own refcounting for our static data
     static nsIStringBundle *gStringBundle;
     static nsIStringBundle *gKeyStringBundle;
