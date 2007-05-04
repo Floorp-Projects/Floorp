@@ -58,7 +58,7 @@ interface nsIDOMWindow;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(DD22939F-B470-4a56-9B80-8C7BA4031334)]
+[scriptable, uuid(60f8b190-63c4-4919-ac92-a7a8212fc813)]
 interface nsIAccessibleDocument : nsISupports
 {
   /**
@@ -120,8 +120,10 @@ interface nsIAccessibleDocument : nsISupports
    * Returns the first accessible parent of a DOM node.
    * Guaranteed not to return nsnull if the DOM node is in a document.
    * @param aDOMNode The DOM node we need an accessible for.
+   * @param aCanCreate Can accessibles be created or must it be the first 
+   *                   cached accessible in the parent chain?
    * @return An first nsIAccessible found by crawling up the DOM node
    *         to the document root.
    */
-  nsIAccessible getAccessibleInParentChain(in nsIDOMNode aDOMNode);
+  nsIAccessible getAccessibleInParentChain(in nsIDOMNode aDOMNode, in boolean aCanCreate);
 };

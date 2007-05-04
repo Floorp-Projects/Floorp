@@ -214,6 +214,9 @@ nsDocAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 
   if (!mIsContentLoaded) {
     *aState |= nsIAccessibleStates::STATE_BUSY;
+    if (aExtraState) {
+      *aExtraState |= nsIAccessibleStates::EXT_STATE_STALE;
+    }
   }
  
   nsIFrame* frame = GetFrame();
@@ -1365,9 +1368,10 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
   nsCOMPtr<nsIDOMNode> childNode = aChild ? do_QueryInterface(aChild) : mDOMNode;
   if (!IsNodeRelevant(childNode)) {
-    return NS_OK;  // Don't fire event unless it's for an attached accessible
+    return NS_OK;  // Don't fire event unless it can be for an attached accessible
   }
-  if (!mIsContentLoaded && mAccessNodeCache.Count() <= 1) {
+  if (!mIsContentLoaded && mAccessNodeCache.Count() <= 1 &&
+      mAccChildCount == eChildCountUninitialized) {
     return NS_OK; // Still loading and nothing to invalidate yet
   }
 
@@ -1430,8 +1434,8 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
       containerAccessible = this;  // At the root of UI or content
     }
   }
-  if (!containerAccessible && privateChildAccessible) {
-    GetAccessibleInParentChain(childNode, getter_AddRefs(containerAccessible));
+  if (!containerAccessible) {
+    GetAccessibleInParentChain(childNode, mIsContentLoaded, getter_AddRefs(containerAccessible));
   }
   nsCOMPtr<nsPIAccessible> privateContainerAccessible =
     do_QueryInterface(containerAccessible);
@@ -1492,7 +1496,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
 }
 
 NS_IMETHODIMP
-nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
+nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode, PRBool aCanCreate,
                                             nsIAccessible **aAccessible)
 {
   // Find accessible in parent chain of DOM nodes, or return null
@@ -1517,7 +1521,12 @@ nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
       currentNode = relevantNode;
     }
 
-    accService->GetAccessibleInWeakShell(currentNode, mWeakShell, aAccessible);
+    if (aCanCreate) {
+      accService->GetAccessibleInWeakShell(currentNode, mWeakShell, aAccessible);
+    }
+    else {
+      accService->GetCachedAccessible(currentNode, mWeakShell, aAccessible);
+    }
   } while (!*aAccessible);
 
   return NS_OK;

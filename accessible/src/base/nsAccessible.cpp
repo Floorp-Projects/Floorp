@@ -595,7 +595,7 @@ NS_IMETHODIMP nsAccessible::GetParent(nsIAccessible **  aParent)
   nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
   NS_ENSURE_TRUE(docAccessible, NS_ERROR_FAILURE);
 
-  return docAccessible->GetAccessibleInParentChain(mDOMNode, aParent);
+  return docAccessible->GetAccessibleInParentChain(mDOMNode, PR_TRUE, aParent);
 }
 
 NS_IMETHODIMP nsAccessible::GetCachedParent(nsIAccessible **  aParent)
