@@ -73,7 +73,8 @@ nsXPConnect::nsXPConnect()
         mDefaultSecurityManager(nsnull),
         mDefaultSecurityManagerFlags(0),
         mShuttingDown(JS_FALSE),
-        mObjRefcounts(nsnull)
+        mObjRefcounts(nsnull),
+        mCycleCollectionContext(nsnull)
 {
     // Ignore the result. If the runtime service is not ready to rumble
     // then we'll set this up later as needed.
@@ -221,6 +222,8 @@ nsXPConnect::~nsXPConnect()
     // noted all over the place, this makes bad things happen since shutdown is
     // an unstable time for so many modules who have not planned well for it.
 
+    NS_ASSERTION(!mCycleCollectionContext,
+                 "Didn't call FinishCycleCollection?");
     nsCycleCollector_forgetRuntime(nsIProgrammingLanguage::JAVASCRIPT);
     if (mObjRefcounts)
     {
@@ -551,21 +554,29 @@ nsXPConnect::BeginCycleCollection()
         mObjRefcounts = new JSObjectRefcounts;
 
     mObjRefcounts->MarkStart();
-    XPCCallContext cx(NATIVE_CALLER);
-    if (cx.IsValid()) {
-        gOldJSGCCallback = JS_SetGCCallback(cx, XPCCycleGCCallback);
-        JS_SetGCThingCallback(cx, XPCMarkNotification, mObjRefcounts);
-        JS_GC(cx);
-        JS_SetGCThingCallback(cx, nsnull, nsnull);
-        JS_SetGCCallback(cx, gOldJSGCCallback);
-        gOldJSGCCallback = nsnull;
+
+    NS_ASSERTION(!mCycleCollectionContext,
+                 "Didn't call FinishCycleCollection?");
+    mCycleCollectionContext = new XPCCallContext(NATIVE_CALLER);
+    if(!mCycleCollectionContext || !mCycleCollectionContext->IsValid())
+    {
+        delete mCycleCollectionContext;
+        mCycleCollectionContext = nsnull;
+        return NS_ERROR_FAILURE;
+    }
+
+    JSContext *cx = mCycleCollectionContext->GetJSContext();
+    gOldJSGCCallback = JS_SetGCCallback(cx, XPCCycleGCCallback);
+    JS_SetGCThingCallback(cx, XPCMarkNotification, mObjRefcounts);
+    JS_GC(cx);
+    JS_SetGCThingCallback(cx, nsnull, nsnull);
+    JS_SetGCCallback(cx, gOldJSGCCallback);
+    gOldJSGCCallback = nsnull;
 
 #ifndef XPCONNECT_STANDALONE
-        NS_ASSERTION(mObjRefcounts->mScopes.Count() == 0,
-                     "Didn't clear mScopes?");
-        XPCWrappedNativeScope::TraverseScopes(cx);
+    NS_ASSERTION(mObjRefcounts->mScopes.Count() == 0, "Didn't clear mScopes?");
+    XPCWrappedNativeScope::TraverseScopes(*mCycleCollectionContext);
 #endif
-    }
 
     return NS_OK;
 }
@@ -581,6 +592,8 @@ nsXPConnect::RecordTraversal(void *p, nsISupports *s)
 nsresult 
 nsXPConnect::FinishCycleCollection()
 {
+    delete mCycleCollectionContext;
+    mCycleCollectionContext = nsnull;
     if (mObjRefcounts)
         mObjRefcounts->Finish();
     return NS_OK;
@@ -589,7 +602,10 @@ nsXPConnect::FinishCycleCollection()
 nsresult 
 nsXPConnect::Root(const nsDeque &nodes)
 {
-    XPCCallContext cx(NATIVE_CALLER);
+    if(!mCycleCollectionContext)
+        return NS_ERROR_FAILURE;
+
+    JSContext *cx = mCycleCollectionContext->GetJSContext();
     for (PRInt32 i = 0; i < nodes.GetSize(); ++i)
     {
         void *p = nodes.ObjectAt(i);
@@ -605,8 +621,10 @@ nsXPConnect::Root(const nsDeque &nodes)
 nsresult 
 nsXPConnect::Unlink(const nsDeque &nodes)
 {
-    XPCCallContext cx(NATIVE_CALLER);
-    
+    if(!mCycleCollectionContext)
+        return NS_ERROR_FAILURE;
+
+    JSContext *cx = mCycleCollectionContext->GetJSContext();
     for (PRInt32 i = 0; i < nodes.GetSize(); ++i)
     {
         void *p = nodes.ObjectAt(i);
@@ -621,7 +639,10 @@ nsXPConnect::Unlink(const nsDeque &nodes)
 nsresult 
 nsXPConnect::Unroot(const nsDeque &nodes)
 {
-    XPCCallContext cx(NATIVE_CALLER);
+    if(!mCycleCollectionContext)
+        return NS_ERROR_FAILURE;
+
+    JSContext *cx = mCycleCollectionContext->GetJSContext();
     for (PRInt32 i = 0; i < nodes.GetSize(); ++i)
     {
         void *p = nodes.ObjectAt(i);
@@ -653,7 +674,10 @@ TraverseJSScript(JSScript* script, nsCycleCollectionTraversalCallback& cb)
 nsresult 
 nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 {
-    XPCCallContext cx(NATIVE_CALLER);
+    if(!mCycleCollectionContext)
+        return NS_ERROR_FAILURE;
+
+    JSContext *cx = mCycleCollectionContext->GetJSContext();
 
     PRUint32 refcount = mObjRefcounts->Get(p);
     NS_ASSERTION(refcount > 0, "JS object but unknown to the JS GC?");
