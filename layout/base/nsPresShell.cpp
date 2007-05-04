@@ -1640,6 +1640,9 @@ PresShell::Destroy()
 #ifdef MOZ_XUL
       os->RemoveObserver(this, "chrome-flush-skin-caches");
 #endif
+#ifdef ACCESSIBILITY
+      os->RemoveObserver(this, "a11y-init-or-shutdown");
+#endif
     }
   }
 
@@ -5682,6 +5685,9 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
       // We'll make sure the right number of Addref's occur before
       // handing this back to the accessibility client
       NS_STATIC_CAST(nsAccessibleEvent*, aEvent)->accessible = acc;
+      // Ensure this is set in case a11y was activated before any
+      // nsPresShells existed to observe "a11y-init-or-shutdown" topic
+      gIsAccessibilityActive = PR_TRUE;
       return NS_OK;
     }
   }
