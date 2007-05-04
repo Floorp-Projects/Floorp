@@ -678,12 +678,13 @@ gfxTextRun::ComputeClusterAdvance(PRUint32 aClusterOffset)
     CompressedGlyph *glyphData = &mCharacterGlyphs[aClusterOffset];
     if (glyphData->IsSimpleGlyph())
         return glyphData->GetSimpleAdvance();
-    NS_ASSERTION(glyphData->IsComplexCluster(), "Unknown character type!");
-    NS_ASSERTION(mDetailedGlyphs, "Complex cluster but no details array!");
+
+    const DetailedGlyph *details = GetDetailedGlyphs(aClusterOffset);
+    if (!details)
+        return 0;
+
     PRInt32 advance = 0;
-    DetailedGlyph *details = mDetailedGlyphs[aClusterOffset];
-    NS_ASSERTION(details, "Complex cluster but no details!");
-    for (;;) {
+    while (1) {
         advance += details->mAdvance;
         if (details->mIsLastGlyph)
             return advance;
@@ -770,17 +771,18 @@ gfxTextRun::GetAdjustedSpacing(PRUint32 aStart, PRUint32 aEnd,
                 }
                 clusterWidth = glyphData->GetSimpleAdvance();
             } else if (glyphData->IsComplexOrMissing()) {
-                NS_ASSERTION(mDetailedGlyphs, "No details but we have a complex cluster...");
                 if (i > aStart) {
                     aSpacing[i - 1 - aStart].mAfter -= clusterWidth;
                 }
-                DetailedGlyph *details = mDetailedGlyphs[i];
                 clusterWidth = 0;
-                while (details) {
-                    clusterWidth += details->mAdvance;
-                    if (details->mIsLastGlyph)
-                        break;
-                    ++details;
+                const DetailedGlyph *details = GetDetailedGlyphs(i);
+                if (details) {
+                    while (1) {
+                        clusterWidth += details->mAdvance;
+                        if (details->mIsLastGlyph)
+                            break;
+                        ++details;
+                    }
                 }
             }
         }
@@ -1252,13 +1254,14 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
             if (glyphData->IsSimpleGlyph()) {
                 advance += glyphData->GetSimpleAdvance();
             } else if (glyphData->IsComplexOrMissing()) {
-                NS_ASSERTION(mDetailedGlyphs, "No details but we have a complex cluster...");
-                DetailedGlyph *details = mDetailedGlyphs[i];
-                while (details) {
-                    advance += details->mAdvance;
-                    if (details->mIsLastGlyph)
-                        break;
-                    ++details;
+                const DetailedGlyph *details = GetDetailedGlyphs(i);
+                if (details) {
+                    while (1) {
+                        advance += details->mAdvance;
+                        if (details->mIsLastGlyph)
+                            break;
+                        ++details;
+                    }
                 }
             }
             if (haveSpacing) {
@@ -1347,12 +1350,14 @@ gfxTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
         if (glyphData->IsSimpleGlyph()) {
             result += glyphData->GetSimpleAdvance();
         } else if (glyphData->IsComplexOrMissing()) {
-            DetailedGlyph *details = mDetailedGlyphs[i];
-            while (details) {
-                result += details->mAdvance;
-                if (details->mIsLastGlyph)
-                    break;
-                ++details;
+            const DetailedGlyph *details = GetDetailedGlyphs(i);
+            if (details) {
+                while (1) {
+                    result += details->mAdvance;
+                    if (details->mIsLastGlyph)
+                        break;
+                    ++details;
+                }
             }
         }
     }
