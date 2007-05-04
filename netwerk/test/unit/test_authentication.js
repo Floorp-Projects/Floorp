@@ -85,13 +85,14 @@ AuthPrompt2.prototype = {
     function ap2_promptAuth(channel, level, authInfo)
   {
     var isNTLM = channel.URI.path.indexOf("ntlm") != -1;
+    var isDigest = channel.URI.path.indexOf("digest") != -1;
 
     if (isNTLM)
       this.expectedRealm = ""; // NTLM knows no realms
 
     do_check_eq(this.expectedRealm, authInfo.realm);
 
-    var expectedLevel = isNTLM ?
+    var expectedLevel = (isNTLM || isDigest) ?
                         nsIAuthPrompt2.LEVEL_PW_ENCRYPTED :
                         nsIAuthPrompt2.LEVEL_NONE;
     do_check_eq(expectedLevel, level);
@@ -103,7 +104,7 @@ AuthPrompt2.prototype = {
 
     do_check_eq(expectedFlags, authInfo.flags);
 
-    var expectedScheme = isNTLM ? "ntlm" : "basic";
+    var expectedScheme = isNTLM ? "ntlm" : isDigest ? "digest" : "basic";
     do_check_eq(expectedScheme, authInfo.authenticationScheme);
 
     // No passwords in the URL -> nothing should be prefilled
@@ -130,9 +131,10 @@ AuthPrompt2.prototype = {
   }
 };
 
-function Requestor(flags, versions) {
+function Requestor(flags, versions, username) {
   this.flags = flags;
   this.versions = versions;
+  this.username = username;
 }
 
 Requestor.prototype = {
@@ -155,7 +157,9 @@ Requestor.prototype = {
         iid.equals(Components.interfaces.nsIAuthPrompt2)) {
       // Allow the prompt to store state by caching it here
       if (!this.prompt2)
-        this.prompt2 = new AuthPrompt2(this.flags); 
+        this.prompt2 = new AuthPrompt2(this.flags);
+      if (this.username)
+        this.prompt2.user = this.username;
       return this.prompt2;
     }
 
@@ -251,7 +255,8 @@ function makeChan(url) {
 
 var tests = [test_noauth, test_returnfalse1, test_wrongpw1, test_prompt1,
              test_returnfalse2, test_wrongpw2, test_prompt2, test_ntlm,
-             test_auth];
+             test_auth, test_digest_noauth, test_digest,
+             test_digest_bogus_user];
 var current_test = 0;
 
 var httpserv = null;
@@ -262,6 +267,7 @@ function run_test() {
   httpserv.registerPathHandler("/auth", authHandler);
   httpserv.registerPathHandler("/auth/ntlm/simple", authNtlmSimple);
   httpserv.registerPathHandler("/auth/realm", authRealm);
+  httpserv.registerPathHandler("/auth/digest", authDigest);
 
   httpserv.start(4444);
 
@@ -357,6 +363,35 @@ function test_auth() {
   do_test_pending();
 }
 
+function test_digest_noauth() {
+  var chan = makeChan("http://localhost:4444/auth/digest");
+
+  //chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
+  listener.expectedCode = 401; // Unauthorized
+  chan.asyncOpen(listener, null);
+
+  do_test_pending();
+}
+
+function test_digest() {
+  var chan = makeChan("http://localhost:4444/auth/digest");
+
+  chan.notificationCallbacks = new Requestor(0, 2);
+  listener.expectedCode = 200; // OK
+  chan.asyncOpen(listener, null);
+
+  do_test_pending();
+}
+
+function test_digest_bogus_user() {
+  var chan = makeChan("http://localhost:4444/auth/digest");
+  chan.notificationCallbacks =  new Requestor(0, 2, "foo\nbar");
+  listener.expectedCode = 401; // unauthorized
+  chan.asyncOpen(listener, null);
+
+  do_test_pending();
+}
+
 // PATH HANDLERS
 
 // /auth
@@ -405,4 +440,83 @@ function authRealm(metadata, response) {
   var body = "success";
 
   response.bodyOutputStream.write(body, body.length);
+}
+
+//
+// Digest functions
+// 
+function bytesFromString(str) {
+ var converter =
+   Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+     .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+ converter.charset = "UTF-8";
+ var result = {};
+ var data = converter.convertToByteArray(str, result);
+ return data;
+}
+
+// return the two-digit hexadecimal code for a byte
+function toHexString(charCode) {
+ return ("0" + charCode.toString(16)).slice(-2);
+}
+
+function H(str) {
+ var data = bytesFromString(str);
+ var ch = Components.classes["@mozilla.org/security/hash;1"]
+            .createInstance(Components.interfaces.nsICryptoHash);
+ ch.init(Components.interfaces.nsICryptoHash.MD5);
+ ch.update(data, data.length);
+ var hash = ch.finish(false);
+ return [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
+}
+
+//
+// Digest handler
+//
+// /auth/digest
+function authDigest(metadata, response) {
+ var nonce = "6f93719059cf8d568005727f3250e798";
+ var opaque = "1234opaque1234";
+ var cnonceRE = /cnonce="(\w+)"/;
+ var responseRE = /response="(\w+)"/;
+ var usernameRE = /username="(\w+)"/;
+ var authenticate = 'Digest realm="secret", domain="/",  qop=auth,' +
+                    'algorithm=MD5, nonce="' + nonce+ '" opaque="' + 
+                     opaque + '"';
+ var body;
+ // check creds if we have them
+ if (metadata.hasHeader("Authorization")) {
+   var auth = metadata.getHeader("Authorization");
+   var cnonce = (auth.match(cnonceRE))[1];
+   var clientDigest = (auth.match(responseRE))[1];
+   var username = (auth.match(usernameRE))[1];
+   var nc = "00000001";
+   
+   if (username != "guest") {
+     response.setStatusLine(metadata.httpVersion, 400, "bad request");
+     body = "should never get here";
+   } else {
+     // see RFC2617 for the description of this calculation
+     var A1 = "guest:secret:guest";
+     var A2 = "GET:/auth/digest";
+     var noncebits = [nonce, nc, cnonce, "auth", H(A2)].join(":");
+     var digest = H([H(A1), noncebits].join(":"));
+
+     if (clientDigest == digest) {
+       response.setStatusLine(metadata.httpVersion, 200, "OK, authorized");
+       body = "success";
+     } else {
+       response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
+       response.setHeader("WWW-Authenticate", authenticate, false);
+       body = "auth failed";
+     }
+   }
+ } else {
+   // no header, send one
+   response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
+   response.setHeader("WWW-Authenticate", authenticate, false);
+   body = "failed, no header";
+ }
+ 
+ response.bodyOutputStream.write(body, body.length);
 }
