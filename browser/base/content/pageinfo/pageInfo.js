@@ -351,10 +351,11 @@ function onUnloadPageInfo()
 function doHelpButton()
 {
   const helpTopics = {
-    "generalPanel": "pageinfo_general",
-    "mediaPanel":   "pageinfo_media",
-    "feedPanel":    "pageinfo_feed",
-    "permPanel":    "pageinfo_permissions"
+    "generalPanel":  "pageinfo_general",
+    "mediaPanel":    "pageinfo_media",
+    "feedPanel":     "pageinfo_feed",
+    "permPanel":     "pageinfo_permissions",
+    "securityPanel": "pageinfo_security"
   };
 
   var deck  = document.getElementById("mainDeck");
