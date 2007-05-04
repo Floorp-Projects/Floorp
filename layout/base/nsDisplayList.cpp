@@ -298,6 +298,7 @@ void nsDisplayList::Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* a
   for (nsDisplayItem* i = GetBottom(); i != nsnull; i = i->GetAbove()) {
     i->Paint(aBuilder, aCtx, aDirtyRect);
   }
+  nsCSSRendering::DidPaint();
 }
 
 PRUint32 nsDisplayList::Count() const {
