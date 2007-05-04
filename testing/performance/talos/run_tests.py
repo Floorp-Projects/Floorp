@@ -1,5 +1,3 @@
-#!c:/Python24/python.exe
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -21,6 +19,7 @@
 #
 # Contributor(s):
 #   Annie Sullivan <annie.sullivan@gmail.com> (original author)
+#   Alice Nodelman <anodelman@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -52,23 +51,38 @@ __author__ = 'annie.sullivan@gmail.com (Annie Sullivan)'
 import time
 import syck
 import sys
+import urllib 
+import tempfile
+import os
+import string
+import socket
+socket.setdefaulttimeout(480)
 
-import report
-import paths
+import config
 import tp
 import ts
+import post_file
 
 
-# Number of times to run startup test (Ts)
-TS_NUM_RUNS = 5
+def shortNames(name):
+  if name == "tp_loadtime":
+    return "tp_l"
+  elif name == "tp_Percent Processor Time":
+    return "tp_%cpu"
+  elif name == "tp_Working Set":
+    return "tp_memset"
+  elif name == "tp_Private Bytes":
+    return "tp_pbytes"
+  else:
+    return name
 
-# Number of times the page load test (Tp) loads each page in the test.
-TP_NUM_CYCLES = 7
-
-# Resolution of counter sample data for page load test (Tp), in seconds
-# (For example, if TP_RESOLUTION=1, sample counters every 1 second
-TP_RESOLUTION = 1
-
+def process_Request(post):
+  str = ""
+  lines = post.split('\n')
+  for line in lines:
+    if line.find("RETURN:") > -1:
+        str += line.rsplit(":")[3] + ":" + shortNames(line.rsplit(":")[1]) + ":" + line.rsplit(":")[2] + '\n'
+  return str
 
 def test_file(filename):
   """Runs the Ts and Tp tests on the given config file and generates a report.
@@ -81,47 +95,136 @@ def test_file(filename):
   test_names = []
   title = ''
   filename_prefix = ''
+  testdate = ''
   
   # Read in the profile info from the YAML config file
   config_file = open(filename, 'r')
-  yaml = syck.load(config_file)
+  # some versions of syck take a file, while others take a string
+  try:
+    yaml = syck.load(config_file)
+  except:
+    yaml = syck.load("".join(config_file.readlines()))
   config_file.close()
   for item in yaml:
     if item == 'title':
       title = yaml[item]
     elif item == 'filename':
       filename_prefix = yaml[item]
+    elif item == 'testdate':
+      testdate = yaml[item]
     else:
       new_config = [yaml[item]['preferences'],
                     yaml[item]['extensions'],
-                    yaml[item]['firefox']]
+                    yaml[item]['firefox'],
+                    yaml[item]['branch'],
+                    yaml[item]['branchid'],
+                    yaml[item]['profile_path']]
       test_configs.append(new_config)
       test_names.append(item)
   config_file.close()
-  
+
+  print test_configs
+  sys.stdout.flush()
+  if (testdate != ''):
+    date = int(time.mktime(time.strptime(testdate, '%a, %d %b %Y %H:%M:%S GMT')))
+  else:
+    date = int(time.time()) #TODO get this into own file
+  print "using testdate: %d" % date
+  print "actual date: %d" % int(time.time())
+ 
+
   # Run startup time test
-  ts_times = ts.RunStartupTests(paths.BASE_PROFILE_DIR,
-                                test_configs,
-                                TS_NUM_RUNS)
-  
-  # Run page load test.  For possible values of counters argument, see
-  # http://technet2.microsoft.com/WindowsServer/en/Library/86b5d116-6fb3-427b-af8c-9077162125fe1033.mspx?mfr=true
-  (tp_times, tp_counters) = tp.RunPltTests(paths.BASE_PROFILE_DIR,
-                                           test_configs,
-                                           TP_NUM_CYCLES,
-                                           ['Private Bytes', 'Working Set', '% Processor Time'],
-                                           TP_RESOLUTION)
-  
-  # Generate a report of the results.
-  report.GenerateReport(title,
-                        filename_prefix,
-                        test_names,
-                        ts_times,
-                        tp_times,
-                        tp_counters,
-                        TP_RESOLUTION)
+  ts_times = ts.RunStartupTests(test_configs,
+                                config.TS_NUM_RUNS)
+
+  print "finished ts"
+  sys.stdout.flush()
+
+  (r_strings, tp_times, tp_counters) = tp.RunPltTests(test_configs,
+                                           config.TP_NUM_CYCLES,
+                                           config.COUNTERS,
+                                           config.TP_RESOLUTION)
+
+  print "finished tp"
+  sys.stdout.flush()
 
 
+  #TODO: place this in its own file
+  #send results to the graph server
+  # each line of the string is of the format page:page_name:page_loadtime\n
+  tbox = title
+  url_format = "http://%s/%s"
+  link_format= "<a href = \"%s\">%s</a>"
+  #value, testname, tbox, timeval, date, branch, branchid, type, data
+  result_format = "%.2f,%s,%s,%d,%d,%s,%s,%s,%s,\n"
+  result_format2 = "%.2f,%s,%s,%d,%d,%s,%s,%s,\n"
+  filename = tempfile.mktemp()
+  tmpf = open(filename, "w")
+
+  testname = "ts"
+  print "formating results for: ts"
+  print "# of values: %d" % len(ts_times)
+  for index in range(len(ts_times)):
+    i = 0
+    for tstime in ts_times[index]:
+      tmpf.write(result_format % (float(tstime), testname, tbox, i, date, test_configs[index][3], test_configs[index][4], "discrete", "ms"))
+      i = i+1
+
+  testname = "tp"
+  for index in range(len(r_strings)):
+    r_strings[index].strip('\n')
+    page_results = r_strings[index].splitlines()
+    i = 0
+    print "formating results for: loadtime"
+    print "# of values: %d" % len(page_results)
+    for mypage in page_results:
+      r = mypage.split(':')
+      tmpf.write(result_format % (float(r[2]), testname + "_loadtime", tbox, i, date, test_configs[index][3], test_configs[index][4], "discrete", r[1]))
+      i = i+1
+
+  for index in range(len(tp_counters)):
+    for count_type in config.COUNTERS:
+      i = 0
+      print "formating results for: " + count_type
+      print "# of values: %d" % len(tp_counters[index][count_type])
+      for value in tp_counters[index][count_type]:
+        tmpf.write(result_format2 % (float(value), testname + "_" + count_type.replace("%", "Percent"), tbox, i, date, test_configs[index][3], test_configs[index][4], "discrete"))
+        i = i+1
+
+
+  print "finished formating results"
+  tmpf.flush()
+  tmpf.close()
+  tmpf = open(filename, "r")
+  file_data = tmpf.read()
+  while True:
+    try:
+      ret = post_file.post_multipart(config.RESULTS_SERVER, '/bulk.cgi', [("key", "value")], [("filename", filename, file_data)
+   ])
+    except IOError:
+      print "IOError"
+    else:
+      break
+  print "completed sending results"
+  links = process_Request(ret)
+  tmpf.close()
+  os.remove(filename)
+
+  lines = links.split('\n')
+  for line in lines:
+    if line == "":
+      continue
+    values = line.split(":")
+    linkName = values[1]
+    if float(values[2]) > 0:
+      linkName += "_T: " + values[2]
+    else:
+      linkName += "_1"
+    url = url_format % (config.RESULTS_SERVER, values[0],)
+    link = link_format % (url, linkName,)
+    print "RETURN: " + link
+
+  
 if __name__=='__main__':
 
   # Read in each config file and run the tests on it.
