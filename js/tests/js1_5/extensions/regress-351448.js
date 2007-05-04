@@ -74,11 +74,11 @@ function test()
     ];
 
   expect = 'InternalError: regular expression too complex';
-  var jsOptions = new JavaScriptOptions();
+
+  options('relimit');
 
   for (var i = 0; i < strings.length; i++)
   {
-    jsOptions.setOption('relimit', true);
     try
     {
     eval(strings[i]);
@@ -87,7 +87,6 @@ function test()
     {
       actual = ex + '';
     }
-    jsOptions.reset();
     reportCompare(expect, actual, summary + ': ' + strings[i]);
   }
 

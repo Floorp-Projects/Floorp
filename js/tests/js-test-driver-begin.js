@@ -129,6 +129,17 @@ function jsTestDriverEnd()
     return;
   }
 
+  window.onerror = null;
+
+  try
+  {
+    optionsReset();
+  }
+  catch(ex)
+  {
+    dump('jsTestDriverEnd ' + ex);
+  }
+
   if (window.opener && window.opener.runNextTest)
   {	
     if (window.opener.reportCallBack)

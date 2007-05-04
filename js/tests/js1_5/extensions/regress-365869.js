@@ -51,11 +51,9 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
-  var jsOptions = new JavaScriptOptions();
+  options('strict');
+  options('werror');
 
-// strict
-  jsOptions.setOption('strict', true);
-  jsOptions.setOption('werror', true);
   try
   {
     expect = 'TypeError: redeclaration of property a';
@@ -68,14 +66,11 @@ function test()
     actual = ex + '';
     print(ex);
   }
-  jsOptions.reset();
   
   reportCompare(expect, actual, summary);
 
   print('test crash from bug 371292');
-// strict
-  jsOptions.setOption('strict', true);
-  jsOptions.setOption('werror', true);
+
   try
   {
     expect = 'TypeError: redeclaration of property 1';
@@ -88,7 +83,6 @@ function test()
     actual = ex + '';
     print(ex);
   }
-  jsOptions.reset();
   
   reportCompare(expect, actual, summary);
 

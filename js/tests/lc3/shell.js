@@ -276,145 +276,89 @@ function getFailedCases() {
   }
 }
 
-/* JavaScriptOptions
-   encapsulate the logic for setting and retrieving the values
-   of the javascript options.
-   
-   Note: in shell, options() takes an optional comma delimited list
-   of option names, toggles the values for each option and returns the
-   list of option names which were set before the call. 
-   If no argument is passed to options(), it returns the current
-   options with value true.
+function optionsInit() {
 
-   Usage;
+  // record initial values to support resetting
+  // options to their initial values 
+  options.initvalues  = {};
 
-   // create and initialize object.
-   jsOptions = new JavaScriptOptions();
+  // record values in a stack to support pushing
+  // and popping options
+  options.stackvalues = [];
 
-   // set a particular option
-   jsOptions.setOption(name, boolean);
+  var optionNames = options().split(',');
 
-   // reset all options to their original values.
-   jsOptions.reset();
-*/
-
-function JavaScriptOptions()
-{
-  this.orig   = {};
-  this.orig.strict = this.strict = false;
-  this.orig.werror = this.werror = false;
-
-  this.privileges = 'UniversalXPConnect UniversalPreferencesRead ' + 
-                    'UniversalPreferencesWrite';
-
-  if (typeof options == 'function')
+  for (var i = 0; i < optionNames.length; i++)
   {
-    // shell
-    var optString = options();
-    if (optString)
+    var optionName = optionNames[i];
+    if (optionName)
     {
-      var optList = optString.split(',');
-      for (var iOpt = 0; iOpt < optList.length; iOpt++)
-      {
-        optName = optList[iOpt];
-        this[optName] = true;
-      }
-    }
-  }
-  else if (typeof netscape != 'undefined' && 'security' in netscape)
-  {
-    // browser
-    netscape.security.PrivilegeManager.enablePrivilege(this.privileges);
-
-    var preferences = Components.classes['@mozilla.org/preferences-service;1'];
-    if (!preferences)
-    {
-      throw 'JavaScriptOptions: unable to get @mozilla.org/preferences-service;1';
-    }
-
-    var prefService = preferences.
-      getService(Components.interfaces.nsIPrefService);
-
-    if (!prefService)
-    {
-      throw 'JavaScriptOptions: unable to get nsIPrefService';
-    }
-
-    var pref = prefService.getBranch('');
-
-    if (!pref)
-    {
-      throw 'JavaScriptOptions: unable to get prefService branch';
-    }
-
-    try
-    {
-        this.orig.strict = this.strict = 
-            pref.getBoolPref('javascript.options.strict');
-    }
-    catch (e)
-    {
-    }
-
-    try
-    {
-        this.orig.werror = this.werror = 
-            pref.getBoolPref('javascript.options.werror');
-    }
-    catch(e)
-    {
+      options.initvalues[optionName] = '';
     }
   }
 }
 
-JavaScriptOptions.prototype.setOption = 
-function (optionName, optionValue)
-{
-  if (typeof options == 'function')
+function optionsClear() {
+        
+  // turn off current settings
+  var optionNames = options().split(',');
+  for (var i = 0; i < optionNames.length; i++)
   {
-    // shell
-    if (this[optionName] != optionValue)
+    var optionName = optionNames[i];
+    if (optionName)
     {
       options(optionName);
     }
   }
-  else if (typeof netscape != 'undefined' && 'security' in netscape)
+}
+
+function optionsPush()
+{
+  var optionsframe = {};
+
+  options.stackvalues.push(optionsframe);
+
+  var optionNames = options().split(',');
+
+  for (var i = 0; i < optionNames.length; i++)
   {
-    // browser
-    netscape.security.PrivilegeManager.enablePrivilege(this.privileges);
-
-    var preferences = Components.classes['@mozilla.org/preferences-service;1'];
-    if (!preferences)
+    var optionName = optionNames[i];
+    if (optionName)
     {
-      throw 'setOption: unable to get @mozilla.org/preferences-service;1';
+      optionsframe[optionName] = '';
     }
-
-    var prefService = preferences.
-    getService(Components.interfaces.nsIPrefService);
-
-    if (!prefService)
-    {
-      throw 'setOption: unable to get nsIPrefService';
-    }
-
-    var pref = prefService.getBranch('');
-
-    if (!pref)
-    {
-      throw 'setOption: unable to get prefService branch';
-    }
-
-    pref.setBoolPref('javascript.options.' + optionName, optionValue);
   }
 
-  this[optionName] = optionValue;
-
-  return;
+  optionsClear();
 }
 
-
-JavaScriptOptions.prototype.reset = function ()
+function optionsPop()
 {
-  this.setOption('strict', this.orig.strict);
-  this.setOption('werror', this.orig.werror);
+  var optionsframe = options.stackvalues.pop();
+
+  optionsClear();
+
+  for (optionName in optionsframe)
+  {
+    options(optionName);
+  }
+
 }
+
+function optionsReset() {
+
+  optionsClear();
+
+  // turn on initial settings
+  for (optionName in options.initvalues)
+  {
+    options(optionName);
+  }
+}
+
+if (typeof options == 'function')
+{
+  optionsInit();
+  optionsClear();
+}
+

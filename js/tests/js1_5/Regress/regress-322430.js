@@ -43,9 +43,8 @@ var expect = '';
 printBugNumber (bug);
 printStatus (summary);
 
-var jsOptions = new JavaScriptOptions();
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
+options('strict');
+options('werrror');
 
 expect = 'No Warning';
 
@@ -65,6 +64,5 @@ catch(ex)
 {
   actual = ex + '';
 }
-jsOptions.reset();
 
 reportCompare(expect, actual, summary);

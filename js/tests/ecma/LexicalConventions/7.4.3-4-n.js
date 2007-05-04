@@ -64,9 +64,9 @@ var actual = 'no error';
 var prefValue;
 
 print("This test requires option javascript.options.strict enabled");
-var jsOptions = new JavaScriptOptions();
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
+
+options('strict');
+options('werror');
 
 try
 {
@@ -76,8 +76,6 @@ catch(e)
 {
   actual = 'error';
 }
-
-jsOptions.reset();
 
 DESCRIPTION = "var super = true"
 EXPECTED = "error";
@@ -93,4 +91,3 @@ new TestCase( SECTION,
               "error",    
               actual );
 test();
-
