@@ -8,10 +8,15 @@
 
   <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=111993 -->
 
+  <!-- test one of rx/ry being non-zero, the other zero -->
   <rect x="10"  y="10"  width="100" height="100" rx="30" ry="0"/>
   <rect x="10"  y="120" width="100" height="100" rx="0"  ry="30"/>
+
+  <!-- test one of rx/ry being non-zero, the other not set -->
   <rect x="120" y="10"  width="100" height="100" rx="30"/>
   <rect x="120" y="120" width="100" height="100" ry="30"/>
+
+  <!-- test one of rx/ry being set to a value greater than width/2 -->
   <rect x="230" y="10"  width="100" height="100" rx="70"/>
   <rect x="230" y="120" width="100" height="100" ry="70"/>
 
