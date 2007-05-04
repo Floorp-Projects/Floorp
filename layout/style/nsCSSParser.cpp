@@ -5455,7 +5455,7 @@ PRBool CSSParserImpl::ParseCounterData(nsresult& aErrorCode,
   for (const SingleCounterPropValue *sv = singleValues,
            *sv_end = singleValues + NS_ARRAY_LENGTH(singleValues);
        sv != sv_end; ++sv) {
-    if (ident->LowerCaseEqualsLiteral(sv->str)) {
+    if (ident->LowerCaseEqualsASCII(sv->str)) {
       if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
         nsCSSCounterData* dataHead = new nsCSSCounterData();
         if (!dataHead) {
