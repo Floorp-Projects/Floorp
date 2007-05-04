@@ -1573,23 +1573,27 @@ gfxPangoFontGroup::CreateGlyphRunsItemizing(gfxTextRun *aTextRun,
     
     PRUint32 utf16Offset = 0;
     PRBool isRTL = aTextRun->IsRightToLeft();
-    for (; items && items->data; items = items->next) {
-        PangoItem *item = (PangoItem *)items->data;
+    GList *pos = items;
+    for (; pos && pos->data; pos = pos->next) {
+        PangoItem *item = (PangoItem *)pos->data;
         NS_ASSERTION(isRTL == item->analysis.level % 2, "RTL assumption mismatch");
 
         PRUint32 offset = item->offset;
         PRUint32 length = item->length;
         if (offset < aUTF8HeaderLen) {
-          if (offset + length <= aUTF8HeaderLen)
-            continue;
-          length -= aUTF8HeaderLen - offset;
-          offset = aUTF8HeaderLen;
+            if (offset + length <= aUTF8HeaderLen) {
+                pango_item_free(item);
+                continue;
+            }
+            length -= aUTF8HeaderLen - offset;
+            offset = aUTF8HeaderLen;
         }
         
         SetupClusterBoundaries(aTextRun, aUTF8 + offset, length, utf16Offset, &item->analysis);
         FontSelector fs(aUTF8 + offset, length, this, aTextRun, item, utf16Offset, isRTL);
         fs.Run(); // appends GlyphRuns
         utf16Offset = fs.GetUTF16Offset();
+        pango_item_free(item);
     }
 
     NS_ASSERTION(utf16Offset == aTextRun->GetLength(),
