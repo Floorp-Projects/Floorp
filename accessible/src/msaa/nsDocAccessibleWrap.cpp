@@ -88,7 +88,7 @@ STDMETHODIMP nsDocAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
     *ppv = NS_STATIC_CAST(ISimpleDOMDocument*, this);
 
   if (NULL == *ppv)
-    return nsAccessibleWrap::QueryInterface(iid, ppv);
+    return nsHyperTextAccessibleWrap::QueryInterface(iid, ppv);
     
   (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
   return S_OK;
