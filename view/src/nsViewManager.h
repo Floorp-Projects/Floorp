@@ -222,14 +222,6 @@ public:
   NS_IMETHOD  SetRootScrollableView(nsIScrollableView *aScrollable);
   NS_IMETHOD  GetRootScrollableView(nsIScrollableView **aScrollable);
 
-  NS_IMETHOD RenderOffscreen(nsIView* aView, nsRect aRect, PRBool aUntrusted,
-                             PRBool aIgnoreViewportScrolling,
-                             nscolor aBackgroundColor,
-                             nsIRenderingContext** aRenderedContext);
-
-  NS_IMETHOD AddCompositeListener(nsICompositeListener *aListener);
-  NS_IMETHOD RemoveCompositeListener(nsICompositeListener *aListener);
-
   NS_IMETHOD GetWidget(nsIWidget **aWidget);
   nsIWidget* GetWidget() { return mRootView ? mRootView->GetWidget() : nsnull; }
   NS_IMETHOD ForceUpdate();
@@ -239,8 +231,6 @@ public:
   NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor);
   NS_IMETHOD GetLastUserEventTime(PRUint32& aTime);
   void ProcessInvalidateEvent();
-  static PRInt32 GetViewManagerCount();
-  static const nsVoidArray* GetViewManagerArray();
   static PRUint32 gLastUserEventTime;
 
   /**
@@ -290,16 +280,8 @@ private:
   void InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
                                           PRUint32 aUpdateFlags, nscoord aY1, nscoord aY2, PRBool aInCutOut);
 
-  virtual BlendingBuffers* CreateBlendingBuffers(nsIRenderingContext *aRC, PRBool aBorrowContext,
-                                                 nsIDrawingSurface* aBorrowSurface, PRBool aNeedAlpha,
-                                                 const nsRect& aArea);
-  virtual nsIBlender* GetBlender() { return mBlender; }
-
   void AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceContext* aContext,
                                         nsView* aRootView);
-
-  // Predicates
-  PRBool DoesViewHaveNativeWidget(nsView* aView);
 
   // Utilities
 
@@ -310,12 +292,6 @@ private:
    * a view or its kids.
    */
   void UpdateWidgetsForView(nsView* aView);
-
-  /**
-   * Returns the nearest parent view with an attached widget. Can be the
-   * same view as passed-in.
-   */
-  static nsView* GetWidgetView(nsView *aView);
 
   /**
    * Transforms a rectangle from specified view's coordinate system to
@@ -342,17 +318,6 @@ private:
    */
 
   nsresult GetVisibleRect(nsRect& aVisibleRect);
-
-  // Utilities used to size the offscreen drawing surface
-
-  /**
-   * Determine the maximum and width and height of all of the
-   * view manager's widgets.
-   *
-   * @param aMaxWidgetBounds the maximum width and height of all view managers
-   * widgets on exit.
-   */
-  void GetMaxWidgetBounds(nsRect& aMaxWidgetBounds) const;
 
   void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight)
   {
@@ -478,7 +443,6 @@ private:
   // visible again.
   nsSize            mDelayedResize;
 
-  nsCOMPtr<nsIBlender> mBlender;
   nsISupportsArray  *mCompositeListeners;
   nsCOMPtr<nsIFactory> mRegionFactory;
   nsView            *mRootView;
