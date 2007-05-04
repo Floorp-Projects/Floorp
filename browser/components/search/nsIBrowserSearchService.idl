@@ -276,7 +276,9 @@ interface nsIBrowserSearchService : nsISupports
             [retval, array, size_is(engineCount)] out nsISearchEngine engines);
 
   /**
-   * Returns an array of all default search engines.
+   * Returns an array of all default search engines. This includes all loaded
+   * engines that aren't in the user's profile directory
+   * (NS_APP_USER_SEARCH_DIR).
    *
    * @returns an array of nsISearchEngine objects.
    */
