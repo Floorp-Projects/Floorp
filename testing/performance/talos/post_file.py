@@ -1,4 +1,10 @@
 #http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/146306
+#   Submitter: Wade Leftwich
+# Licensing:
+#   according to http://aspn.activestate.com/ASPN/Cookbook/Python
+#   "Except where otherwise noted, recipes in the Python Cookbook are published under the Python license ."
+#   This recipe is covered under the Python license: http://www.python.org/license
+
 import httplib, mimetypes
 
 def post_multipart(host, selector, fields, files):
