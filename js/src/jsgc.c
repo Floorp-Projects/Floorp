@@ -2283,15 +2283,23 @@ gc_lock_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
     JS_CALL_TRACER(trc, thing, traceKind, "locked object");
 
     /*
-     * During GC marking JS_CALL_TRACER calls gcThingCallback once. But we need
-     * to call the callback extra lhe->count - 1 times to report an accurate
-     * reference count there.
+     * Bug 379455: we called the tracer once, but to communicate the value of
+     * thing's lock count to the tracer, or to gcThingCallback when the tracer
+     * is the GC marking phase, we need to call an extra lhe->count - 1 times.
      */
-    if (IS_GC_MARKING_TRACER(trc) && (n = lhe->count - 1) != 0) {
-        rt = trc->context->runtime;
-        if (rt->gcThingCallback) {
+    n = lhe->count - 1;
+    if (n != 0) {
+        if (IS_GC_MARKING_TRACER(trc)) {
+            rt = trc->context->runtime;
+            if (rt->gcThingCallback) {
+                do {
+                    rt->gcThingCallback(thing, flags,
+                                        rt->gcThingCallbackClosure);
+                } while (--n != 0);
+            }
+        } else {
             do {
-                rt->gcThingCallback(thing, flags, rt->gcThingCallbackClosure);
+                JS_CALL_TRACER(trc, thing, traceKind, "locked object");
             } while (--n != 0);
         }
     }
