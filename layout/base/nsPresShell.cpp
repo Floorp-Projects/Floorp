@@ -204,6 +204,8 @@
 static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 
+PRBool nsIPresShell::gIsAccessibilityActive = PR_FALSE;
+
 // convert a color value to a string, in the CSS format #RRGGBB
 // *  - initially created for bugs 31816, 20760, 22963
 static void ColorToString(nscolor aColor, nsAutoString &aString);
@@ -1419,7 +1421,6 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
 
 PresShell::PresShell()
 {
-  mIsAccessibilityActive = PR_FALSE;
   mSelection = nsnull;
 #ifdef MOZ_REFLOW_PERF
   mReflowCountMgr = new ReflowCountMgr();
@@ -1577,6 +1578,9 @@ PresShell::Init(nsIDocument* aDocument,
       os->AddObserver(this, "user-sheet-removed", PR_FALSE);
 #ifdef MOZ_XUL
       os->AddObserver(this, "chrome-flush-skin-caches", PR_FALSE);
+#endif
+#ifdef ACCESSIBILITY
+      os->AddObserver(this, "a11y-init-or-shutdown", PR_FALSE);
 #endif
     }
   }
@@ -3343,7 +3347,7 @@ PresShell::CancelAllPendingReflows()
 #ifdef ACCESSIBILITY
 void nsIPresShell::InvalidateAccessibleSubtree(nsIContent *aContent)
 {
-  if (mIsAccessibilityActive) {
+  if (gIsAccessibilityActive) {
     nsCOMPtr<nsIAccessibilityService> accService = 
       do_GetService("@mozilla.org/accessibilityService;1");
     if (accService) {
@@ -5678,7 +5682,6 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
       // We'll make sure the right number of Addref's occur before
       // handing this back to the accessibility client
       NS_STATIC_CAST(nsAccessibleEvent*, aEvent)->accessible = acc;
-      mIsAccessibilityActive = PR_TRUE;
       return NS_OK;
     }
   }
@@ -6397,6 +6400,11 @@ PresShell::Observe(nsISupports* aSubject,
     return NS_OK;
   }
 
+#ifdef ACCESSIBILITY
+  if (!nsCRT::strcmp(aTopic, "a11y-init-or-shutdown")) {
+    gIsAccessibilityActive = aData && *aData == '1';
+  }
+#endif
   NS_WARNING("unrecognized topic in PresShell::Observe");
   return NS_ERROR_FAILURE;
 }
