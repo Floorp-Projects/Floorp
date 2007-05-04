@@ -54,8 +54,6 @@ function test()
   
   var s;
   expect = 'InternalError: regular expression too complex';
-  var jsOptions = new JavaScriptOptions();
-
   
   s = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">' +
     '<html>\n' +
@@ -74,7 +72,8 @@ function test()
     '</body>\n' +
     '</html>\n';
 
-  jsOptions.setOption('relimit', true);
+  options('relimit');
+
   try
   {
     /<!--(.*|\n)*-->/.exec(s);
@@ -83,9 +82,8 @@ function test()
   {
     actual = ex + '';
   }
-  jsOptions.reset();
-  reportCompare(expect, actual, summary + ': /<!--(.*|\\n)*-->/.exec(s)');
 
+  reportCompare(expect, actual, summary + ': /<!--(.*|\\n)*-->/.exec(s)');
 
   function testre( re, n ) {
     for ( var i= 0; i <= n; ++i ) {
@@ -93,7 +91,6 @@ function test()
     }
   }
 
-  jsOptions.setOption('relimit', true);
   try
   {
     testre( /(?:,*)*x/, 22 );
@@ -102,10 +99,9 @@ function test()
   {
     actual = ex + '';
   }
-  jsOptions.reset();
+
   reportCompare(expect, actual, summary + ': testre( /(?:,*)*x/, 22 )');
 
-  jsOptions.setOption('relimit', true);
   try
   {
     testre( /(?:,|,)*x/, 22 );
@@ -114,10 +110,9 @@ function test()
   {
     actual = ex + '';
   }
-  jsOptions.reset();
+
   reportCompare(expect, actual, summary + ': testre( /(?:,|,)*x/, 22 )');
 
-  jsOptions.setOption('relimit', true);
   try
   {
     testre( /(?:,|,|,|,|,)*x/, 10 );
@@ -126,7 +121,6 @@ function test()
   {
     actual = ex + '';
   }
-  jsOptions.reset();
   reportCompare(expect, actual, summary + ': testre( /(?:,|,|,|,|,)*x/, 10 )');
 
   exitFunc ('test');

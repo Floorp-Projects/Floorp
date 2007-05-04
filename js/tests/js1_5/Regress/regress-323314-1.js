@@ -43,9 +43,8 @@ var expect = '';
 printBugNumber (bug);
 printStatus (summary);
 
-var jsOptions = new JavaScriptOptions();
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
+options('strict');
+options('werror');
 
 var xyzzy;
 
@@ -62,6 +61,5 @@ catch(ex)
   actual = ex.name;
   printStatus(ex + '');
 }
-jsOptions.reset();
 
 reportCompare(expect, actual, summary);

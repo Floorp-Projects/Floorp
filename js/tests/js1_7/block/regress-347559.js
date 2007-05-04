@@ -53,13 +53,11 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
-  var jsOptions = new JavaScriptOptions();
-
   actual = 'No Warning';
   expect = 'No Warning';
 
-  jsOptions.setOption('strict', true);
-  jsOptions.setOption('werror', true);
+  options('strict');
+  options('werror');
 
   try
   {
@@ -70,15 +68,10 @@ function test()
     actual = ex + '';
   }
 
-  jsOptions.reset();
-  
   reportCompare(expect, actual, summary + ': 1');
 
   actual = 'No Warning';
   expect = 'TypeError: function f does not always return a value';
-
-  jsOptions.setOption('strict', true);
-  jsOptions.setOption('werror', true);
 
   try
   {
@@ -89,15 +82,10 @@ function test()
     actual = ex + '';
   }
 
-  jsOptions.reset();
-  
   reportCompare(expect, actual, summary + ': 2');
 
   actual = 'No Warning';
   expect = 'No Warning';
-
-  jsOptions.setOption('strict', true);
-  jsOptions.setOption('werror', true);
 
   try
   {
@@ -108,8 +96,6 @@ function test()
     actual = ex + '';
   }
 
-  jsOptions.reset();
-  
   reportCompare(expect, actual, summary + ': 3');
 
   exitFunc ('test');

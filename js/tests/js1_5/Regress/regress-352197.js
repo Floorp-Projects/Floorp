@@ -43,10 +43,8 @@ var expect = 'TypeError: function f does not always return a value';
 printBugNumber (bug);
 printStatus (summary);
   
-var jsOptions = new JavaScriptOptions();
-
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
+options('strict');
+options('werror');
 
 try
 {
@@ -57,12 +55,7 @@ catch(ex)
   actual = ex + '';
 }
 
-jsOptions.reset(); 
-
 reportCompare(expect, actual, summary);
-
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
 
 try
 {
@@ -72,6 +65,5 @@ catch(ex)
 {
   actual = ex + '';
 }
-jsOptions.reset(); 
 
 reportCompare(expect, actual, summary);

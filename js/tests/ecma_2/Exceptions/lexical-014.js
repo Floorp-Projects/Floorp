@@ -27,9 +27,8 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 print("This test requires option javascript.options.strict enabled");
 
-var jsOptions = new JavaScriptOptions();
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
+options('strict');
+options('werror');
 
 var result = "Failed";
 var exception = "No exception thrown";
@@ -42,8 +41,6 @@ try {
   exception = e.toString();
 }
 
-jsOptions.reset();
-
 new TestCase(
   SECTION,
   "extends = true" +
@@ -52,5 +49,3 @@ new TestCase(
   result );
 
 test();
-
-

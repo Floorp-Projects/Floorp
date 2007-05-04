@@ -43,8 +43,7 @@ var expect = 'No Crash';
 printBugNumber (bug);
 printStatus (summary);
 
-var jsOptions = new JavaScriptOptions();
-jsOptions.setOption('strict', true);
+options('strict');
 
 var code = "var bar1=new Array();\n" +
 "bar1[0]='foo';\n" +
@@ -73,7 +72,5 @@ try
 catch(e)
 {
 }
-  
-jsOptions.reset();
 
 reportCompare(expect, actual, summary);

@@ -157,10 +157,8 @@ var gExceptionExpected = false;
 
 function err( msg, page, line ) {
   var testcase;
-  var jsOptions = new JavaScriptOptions();
-
-  jsOptions.setOption('strict', false);
-  jsOptions.setOption('werror', false);
+  
+  optionsPush();
 
   if (typeof(EXPECTED) == "undefined" || EXPECTED != "error") {
     /*
@@ -176,30 +174,32 @@ function err( msg, page, line ) {
       // negative test
       testcase.passed = true;
     }
-    return;
   }
+  else
+  {
+    if (typeof SECTION == 'undefined')
+    {
+      SECTION = 'Unknown';
+    }
+    if (typeof DESCRIPTION == 'undefined')
+    {
+      DESCRIPTION = 'Unknown';
+    }
+    if (typeof EXPECTED == 'undefined')
+    {
+      EXPECTED = 'Unknown';
+    }
 
-  if (typeof SECTION == 'undefined')
-  {
-    SECTION = 'Unknown';
+    testcase = new TestCase(SECTION, DESCRIPTION, EXPECTED, "error");
+    testcase.reason += "Error: " + msg + 
+      " Source File: " + page + " Line: " + line + ".";
   }
-  if (typeof DESCRIPTION == 'undefined')
-  {
-    DESCRIPTION = 'Unknown';
-  }
-  if (typeof EXPECTED == 'undefined')
-  {
-    EXPECTED = 'Unknown';
-  }
-
-  testcase = new TestCase(SECTION, DESCRIPTION, EXPECTED, "error");
-  testcase.reason += "Error: " + msg + 
-    " Source File: " + page + " Line: " + line + ".";
   stopTest();
 
   gDelayTestDriverEnd = false;
   jsTestDriverEnd();
 
+  optionsReset();
 }
 
 var gVersion = 0;
@@ -237,3 +237,258 @@ function jsdgc()
     print('gc: ' + ex);
   }
 }
+
+function Preferences(aPrefRoot)
+{
+  try
+  {
+    this.orig = {};
+    this.privs = 'UniversalXPConnect UniversalPreferencesRead ' + 
+      'UniversalPreferencesWrite';
+
+    if (typeof netscape != 'undefined' &&
+        'security' in netscape &&
+        'PrivilegeManager' in netscape.security &&
+        'enablePrivilege' in netscape.security.PrivilegeManager)
+    {
+      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
+    }
+
+    const nsIPrefService = Components.interfaces.nsIPrefService;
+    const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
+    const nsPrefService_CONTRACTID = "@mozilla.org/preferences-service;1";
+
+    this.prefRoot    = aPrefRoot;
+    this.prefService = Components.classes[nsPrefService_CONTRACTID].
+      getService(nsIPrefService);
+    this.prefBranch = this.prefService.getBranch(aPrefRoot).
+      QueryInterface(Components.interfaces.nsIPrefBranch2);
+  }
+  catch(ex)
+  {
+  }
+
+}
+
+function Preferences_getPrefRoot() 
+{
+  try
+  {
+    if (typeof netscape != 'undefined' &&
+        'security' in netscape &&
+        'PrivilegeManager' in netscape.security &&
+        'enablePrivilege' in netscape.security.PrivilegeManager)
+    {
+      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
+    }
+
+    return this.prefBranch.root; 
+  }
+  catch(ex)
+  {
+    return;
+  }
+}
+
+function Preferences_getPref(aPrefName) 
+{
+  var value;
+  try
+  {
+    if (typeof netscape != 'undefined' &&
+        'security' in netscape &&
+        'PrivilegeManager' in netscape.security &&
+        'enablePrivilege' in netscape.security.PrivilegeManager)
+    {
+      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
+    }
+
+    try
+    {    
+      value = this.prefBranch.getBoolPref(aPrefName);
+    }
+    catch(ex)
+    {
+      //print('Ignoring ' + ex);
+    }
+  }
+  catch(ex)
+  {
+  }
+  return value;
+}
+
+function Preferences_setPref(aPrefName, aPrefValue) 
+{
+  try
+  {
+    if (typeof netscape != 'undefined' &&
+        'security' in netscape &&
+        'PrivilegeManager' in netscape.security &&
+        'enablePrivilege' in netscape.security.PrivilegeManager)
+    {
+      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
+    }
+
+    if (typeof this.orig[aPrefName] == 'undefined')
+    {
+      this.orig[aPrefName] = this.getPref(aPrefName);
+    }
+
+    try
+    {
+      value = this.prefBranch.setBoolPref(aPrefName, aPrefValue);
+    }
+    catch(ex)
+    {
+      //print('Ignoring ' + ex);
+    }
+  }
+  catch(ex)
+  {
+  }
+}
+
+function Preferences_resetPref(aPrefName) 
+{
+  try
+  {
+    if (typeof netscape != 'undefined' &&
+        'security' in netscape &&
+        'PrivilegeManager' in netscape.security &&
+        'enablePrivilege' in netscape.security.PrivilegeManager)
+    {
+      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
+    }
+
+    if (aPrefName in this.orig)
+    {
+      this.setPref(aPrefName, this.orig[aPrefName]);
+    }
+  }
+  catch(ex)
+  {
+  }
+}
+
+function Preferences_resetAllPrefs() 
+{
+  try
+  {
+    var prefName;
+    var prefValue;
+
+    if (typeof netscape != 'undefined' &&
+        'security' in netscape &&
+        'PrivilegeManager' in netscape.security &&
+        'enablePrivilege' in netscape.security.PrivilegeManager)
+    {
+      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
+    }
+
+    for (prefName in this.orig)
+    {
+      this.setPref(prefName, this.orig[prefName]);
+    }
+  }
+  catch(ex)
+  {
+  }
+}
+
+function Preferences_clearPref(aPrefName) 
+{
+  try
+  {
+    if (typeof netscape != 'undefined' &&
+        'security' in netscape &&
+        'PrivilegeManager' in netscape.security &&
+        'enablePrivilege' in netscape.security.PrivilegeManager)
+    {
+      netscape.security.PrivilegeManager.enablePrivilege(this.privs);
+    }
+
+    this.prefBranch.clearUserPref(aPrefName);
+  }
+  catch(ex)
+  {
+  }
+}
+
+Preferences.prototype.getPrefRoot    = Preferences_getPrefRoot;
+Preferences.prototype.getPref        = Preferences_getPref;
+Preferences.prototype.setPref        = Preferences_setPref;
+Preferences.prototype.resetAllPrefs  = Preferences_resetAllPrefs;
+Preferences.prototype.resetPref      = Preferences_resetPref;
+Preferences.prototype.clearPref      = Preferences_clearPref;
+
+function options(aOptionName) 
+{
+  // return value of options() is a comma delimited list
+  // of the previously set values
+
+  var value = '';
+  for (var optionName in options.currvalues)
+  {
+    value += optionName + ',';
+  }
+  if (value)
+  {
+    value = value.substring(0, value.length-1);
+  }
+
+  if (aOptionName)
+  {
+    if (options.currvalues[aOptionName])
+    {
+      // option is set, toggle it to unset
+      delete options.currvalues[aOptionName];
+      options.preferences.setPref(aOptionName, false);
+    }
+    else
+    {
+      // option is not set, toggle it to set
+      options.currvalues[aOptionName] = true;
+      options.preferences.setPref(aOptionName, true);
+    }
+  }
+
+  return value;
+}
+
+function optionsInit() {
+
+  // hash containing the set options
+  options.currvalues = {strict:     '', 
+                        werror:     '', 
+                        atline:     '', 
+                        xml:        '',
+                        relimit:    '', 
+                        anonfunfux: ''
+  }
+
+  // record initial values to support resetting
+  // options to their initial values 
+  options.initvalues  = {};
+
+  // record values in a stack to support pushing
+  // and popping options
+  options.stackvalues = [];
+
+  options.preferences = new Preferences('javascript.options.');
+
+  for (var optionName in options.currvalues)
+  {
+    if (!options.preferences.getPref(optionName))
+    {
+      delete options.currvalues[optionName];
+    }
+    else
+    {
+      options.initvalues[optionName] = '';
+    }
+  }
+}
+
+optionsInit();
+optionsClear();
