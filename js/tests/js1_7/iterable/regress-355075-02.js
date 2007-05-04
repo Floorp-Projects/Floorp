@@ -51,11 +51,8 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
-  var jsOptions = new JavaScriptOptions();
-
-// strict
-  jsOptions.setOption('strict', true);
-  jsOptions.setOption('werror', true);
+  options('strict');
+  options('werror');
 
   function f() {
     this.a = <><a/><b/></>
@@ -66,8 +63,6 @@ function test()
 
   f();
   
-  jsOptions.reset();
-
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');

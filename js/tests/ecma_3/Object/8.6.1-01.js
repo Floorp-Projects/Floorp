@@ -49,10 +49,9 @@ var actual = '';
 var expect = 's.length is read-only';
 var status = summary + ': Throw if STRICT and WERROR is enabled';
 
-var jsOptions = new JavaScriptOptions();
+options('strict');
+options('werror');
 
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
 try 
 { 
   var s = new String ('abc');
@@ -62,7 +61,6 @@ catch (e)
 { 
   actual = e.message;
 }
-jsOptions.reset();
 
 reportCompare(expect, actual, status);
 
@@ -72,8 +70,9 @@ actual = 'did not throw';
 expect = 'did not throw';
 var status = summary + ': Do not throw if STRICT is enabled and WERROR is disabled';
 
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', false);
+// toggle werror off
+options('werror');
+
 try 
 { 
   s.length = 0;
@@ -82,7 +81,7 @@ catch (e)
 { 
   actual = e.message;
 }
-jsOptions.reset();
+
 reportCompare(expect, actual, status);
 
 // should not throw an error if not in strict mode
@@ -91,8 +90,9 @@ actual = 'did not throw';
 expect = 'did not throw';
 var status = summary + ': Do not throw if not in strict mode';
 
-jsOptions.setOption('strict', false);
-jsOptions.setOption('werror', false);
+// toggle strict off
+options('strict');
+
 try 
 { 
   s.length = 0;
@@ -101,8 +101,5 @@ catch (e)
 { 
   actual = e.message;
 }
-jsOptions.reset();
+
 reportCompare(expect, actual, status);
-
-exitFunc (String (bug));
-

@@ -68,9 +68,9 @@ EXPECTED = "error";
 
 
 print("This test requires option javascript.options.strict enabled");
-var jsOptions = new JavaScriptOptions();
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
+
+options('strict');
+options('werror');
 
 try
 {
@@ -80,8 +80,6 @@ catch(e)
 {
   actual = 'error';
 }
-
-jsOptions.reset();
 
 // force exception since this is a negative test
 if (actual == 'error')
@@ -95,4 +93,3 @@ new TestCase( SECTION,
               actual );
 
 test();
-

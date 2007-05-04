@@ -43,11 +43,8 @@ var expect = 'ReferenceError';
 printBugNumber (bug);
 printStatus (summary);
 
-var jsOptions = new JavaScriptOptions();
-
-// strict
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
+options('strict');
+options('werror');
 
 var o = {};
 
@@ -60,6 +57,5 @@ catch(ex)
 { 
   actual = ex.name;
 }
-jsOptions.reset();
   
 reportCompare(expect, actual, summary);

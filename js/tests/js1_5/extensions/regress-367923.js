@@ -53,11 +53,9 @@ function test()
 
   print('This test will fail in Gecko prior to 1.9');
 
-  var jsOptions = new JavaScriptOptions();
+  options('strict');
+  options('werror');
 
-// strict
-  jsOptions.setOption('strict', true);
-  jsOptions.setOption('werror', true);
   try
   {
     expect = 'TypeError: variable v redeclares argument';
@@ -70,7 +68,6 @@ function test()
     actual = ex + '';
     print(ex);
   }
-  jsOptions.reset();
   
   reportCompare(expect, actual, summary);
 

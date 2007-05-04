@@ -44,38 +44,38 @@ printBugNumber (bug);
 printStatus (summary);
   
 var code;
-var jsOptions = new JavaScriptOptions();
 
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
+debugger;
+
+options('strict');
+options('werror');
+
 try
 {
   actual = ''; 
   code = "function(x){ if(x) return x; }";
-  printStatus(code);
+  print(code);
   eval(code);
 }
 catch(ex)
 {
   actual = ex + '';
-  printStatus(ex);
+  print(ex);
 }
-jsOptions.reset();
+
 reportCompare(expect, actual, summary);
 
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
 try
 {
   actual = '';
   code = "function(x){ if(x) return x; ;}";
-  printStatus(code);
+  print(code);
   eval(code);
 }
 catch(ex)
 {
   actual = ex + '';
-  printStatus(ex);
+  print(ex);
 }
-jsOptions.reset();
+
 reportCompare(expect, actual, summary);

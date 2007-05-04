@@ -43,10 +43,8 @@ var expect = 'test for equality (==) mistyped as assignment (=)?';
 printBugNumber (bug);
 printStatus (summary);
 
-var jsOptions = new JavaScriptOptions();
-
-jsOptions.setOption('strict', true);
-jsOptions.setOption('werror', true);
+options('strict');
+options('werror');
 
 var a = false;
 var b = true;
@@ -65,7 +63,7 @@ catch(ex)
 {
   actual = ex.message;
 }
-jsOptions.reset(); 
 
-printStatus('result = ' + result); 
+print('result = ' + result); 
+
 reportCompare(expect, actual, summary);
