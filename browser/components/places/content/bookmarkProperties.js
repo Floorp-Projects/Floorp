@@ -762,7 +762,7 @@ var BookmarkPropertiesPanel = {
   _getLoadInSidebarAnnotation:
   function BPP__getLoadInSidebarAnnotation(aLoadInSidebar) {
     var anno = { name: LOAD_IN_SIDEBAR_ANNO,
-                 type: Ci.nsIAnnotationsService.TYPE_INT32,
+                 type: Ci.nsIAnnotationService.TYPE_INT32,
                  flags: 0,
                  value: aLoadInSidebar,
                  expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
