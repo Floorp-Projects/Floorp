@@ -2,31 +2,18 @@
 # bugs/
 # include bugs/reftest.list
 
-# fails on osx
-#== clipPath-basic-01.svg pass.svg
-
-#== foreignObject-01.svg pass.svg
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == clipPath-basic-01.svg pass.svg
+fails == foreignObject-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
-#== foreignObject-overflow-01.svg pass.svg
+fails == foreignObject-overflow-01.svg pass.svg
 == getElementById-a-element-01.svg pass.svg
 == nested-viewBox-01.svg pass.svg
-
-# fails on osx
-#== opacity-and-gradient-01.svg pass.svg
-
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg
 == opacity-and-pattern-01.svg pass.svg
 == pseudo-classes-01.svg pass.svg
-
-# crashes linux
-#== pseudo-classes-02.svg pseudo-classes-02-ref.svg
-
-# fails on osx
-#== rect-with-rx-or-ry-01.svg rect-with-rx-or-ry-01-ref.svg
-
+# == pseudo-classes-02.svg pseudo-classes-02-ref.svg # crashes linux
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == rect-with-rx-or-ry-01.svg rect-with-rx-or-ry-01-ref.svg
 == rootElement-null-01.svg pass.svg
 == stroke-width-percentage-01.svg pass.svg
-
-# crashes linux
-#== text-in-link-01.svg text-in-link-01-ref.svg
-
+# == text-in-link-01.svg text-in-link-01-ref.svg # crashes linux
 == viewport-percent-graphic-user-01.svg pass.svg
