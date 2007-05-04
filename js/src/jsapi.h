@@ -987,21 +987,21 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind);
 #define JS_CALL_OBJECT_TRACER(trc, object, name)                              \
     JS_BEGIN_MACRO                                                            \
         JSObject *obj_ = (object);                                            \
-        JS_ASSERT(object);                                                    \
+        JS_ASSERT(obj_);                                                      \
         JS_CALL_TRACER((trc), obj_, JSTRACE_OBJECT, name);                    \
     JS_END_MACRO
 
 #define JS_CALL_STRING_TRACER(trc, string, name)                              \
     JS_BEGIN_MACRO                                                            \
         JSString *str_ = (string);                                            \
-        JS_ASSERT(string);                                                    \
+        JS_ASSERT(str_);                                                      \
         JS_CALL_TRACER((trc), str_, JSTRACE_STRING, name);                    \
     JS_END_MACRO
 
 #define JS_CALL_DOUBLE_TRACER(trc, number, name)                              \
     JS_BEGIN_MACRO                                                            \
         jsdouble *num_ = (number);                                            \
-        JS_ASSERT(number);                                                    \
+        JS_ASSERT(num_);                                                      \
         JS_CALL_TRACER((trc), num_, JSTRACE_DOUBLE, name);                    \
     JS_END_MACRO
 
@@ -2041,15 +2041,15 @@ JS_SetCallReturnValue2(JSContext *cx, jsval v);
 /*
  * Saving and restoring frame chains.
  *
- * These two functions are used to set aside cx->fp while that frame is
- * inactive. After a call to JS_SaveFrameChain, it looks as if there is no
+ * These two functions are used to set aside cx's call stack while that stack
+ * is inactive. After a call to JS_SaveFrameChain, it looks as if there is no
  * code running on cx. Before calling JS_RestoreFrameChain, cx's call stack
  * must be balanced and all nested calls to JS_SaveFrameChain must have had
  * matching JS_RestoreFrameChain calls.
  *
  * JS_SaveFrameChain deals with cx not having any code running on it. A null
- * return does not signify an error and JS_RestoreFrameChain handles null
- * frames.
+ * return does not signify an error, and JS_RestoreFrameChain handles a null
+ * frame pointer argument safely.
  */
 extern JS_PUBLIC_API(JSStackFrame *)
 JS_SaveFrameChain(JSContext *cx);
