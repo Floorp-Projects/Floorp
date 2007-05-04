@@ -817,7 +817,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
         PRBool isActive;
         menuParent->GetIsActive(isActive);
         if (!isActive) {
-          // It is a top level menuitem. Only fire focus event the menu bar
+          // It is a top level menuitem. Only fire a focus event when the menu bar
           // is active.
           return NS_OK;
         }
