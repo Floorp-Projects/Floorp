@@ -511,6 +511,7 @@ private:
     PRUint16                 mDefaultSecurityManagerFlags;
     JSBool                   mShuttingDown;
     JSObjectRefcounts*       mObjRefcounts;
+    XPCCallContext*          mCycleCollectionContext;
 
 #ifdef XPC_TOOLS_SUPPORT
     nsCOMPtr<nsIXPCToolsProfiler> mProfiler;
