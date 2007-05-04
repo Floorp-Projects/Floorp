@@ -1661,7 +1661,7 @@ var BookmarksUtils = {
     if (aSelection.length > 1)
       gBkmkTxnSvc.endBatch();
     if (aSelection.length > kBATCH_LIMIT && aAction != "move")
-      BMDS.beginUpdateBatch();
+      BMDS.endUpdateBatch();
     return true;
   },
 
