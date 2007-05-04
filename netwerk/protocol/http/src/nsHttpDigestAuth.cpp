@@ -338,14 +338,31 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
                          cnonce, response_digest);
   if (NS_FAILED(rv)) return rv;
 
+  //
+  // Values that need to match the quoted-string production from RFC 2616:
+  //
+  //    username
+  //    realm
+  //    nonce
+  //    opaque
+  //    cnonce
+  //
+
   nsCAutoString authString;
-  authString.AssignLiteral("Digest username=\"");
-  authString += cUser;
-  authString.AppendLiteral("\", realm=\"");
-  authString += realm;
-  authString.AppendLiteral("\", nonce=\"");
-  authString += nonce;
-  authString.AppendLiteral("\", uri=\"");
+
+  authString.AssignLiteral("Digest username=");
+  rv = AppendQuotedString(cUser, authString);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  authString.AppendLiteral(", realm=");
+  rv = AppendQuotedString(realm, authString);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  authString.AppendLiteral(", nonce=");
+  rv = AppendQuotedString(nonce, authString);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  authString.AppendLiteral(", uri=\"");
   authString += path;
   if (algorithm & ALGO_SPECIFIED) {
     authString.AppendLiteral("\", algorithm=");
@@ -358,14 +375,16 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
   }
   authString.AppendLiteral(", response=\"");
   authString += response_digest;
+  authString += '\"';
 
   if (!opaque.IsEmpty()) {
-    authString.AppendLiteral("\", opaque=\"");
-    authString += opaque;
+    authString.AppendLiteral(", opaque=");
+    rv = AppendQuotedString(opaque, authString);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (qop) {
-    authString.AppendLiteral("\", qop=");
+    authString.AppendLiteral(", qop=");
     if (requireExtraQuotes)
       authString += '\"';
     authString.AppendLiteral("auth");
@@ -375,10 +394,12 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
       authString += '\"';
     authString.AppendLiteral(", nc=");
     authString += nonce_count;
-    authString.AppendLiteral(", cnonce=\"");
-    authString += cnonce;
+
+    authString.AppendLiteral(", cnonce=");
+    rv = AppendQuotedString(cnonce, authString);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  authString += '\"';
+
 
   *creds = ToNewCString(authString);
   return NS_OK;
@@ -666,6 +687,41 @@ nsHttpDigestAuth::ParseChallenge(const char * challenge,
       }
     }
   }
+  return NS_OK;
+}
+
+nsresult
+nsHttpDigestAuth::AppendQuotedString(const nsACString & value,
+                                     nsACString & aHeaderLine)
+{
+  nsCAutoString quoted;
+  nsACString::const_iterator s, e;
+  value.BeginReading(s);
+  value.EndReading(e);
+
+  //
+  // Encode string according to RFC 2616 quoted-string production
+  //
+  quoted.Append('"');
+  for ( ; s != e; ++s) {
+    //
+    // CTL = <any US-ASCII control character (octets 0 - 31) and DEL (127)>
+    //
+    if (*s <= 31 || *s == 127) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // Escape two syntactically significant characters
+    if (*s == '"' || *s == '\\') {
+      quoted.Append('\\');
+    }
+
+    quoted.Append(*s);
+  }
+  // FIXME: bug 41489
+  // We should RFC2047-encode non-Latin-1 values according to spec
+  quoted.Append('"');
+  aHeaderLine.Append(quoted);
   return NS_OK;
 }
 
