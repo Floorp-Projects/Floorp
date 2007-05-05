@@ -437,15 +437,6 @@ nsresult NS_NewSelectionImageService(nsISelectionImageService** aResult)
 
 //end selection service
 
-// a handy utility to set font
-void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC) 
-{
-  const nsStyleFont* font = aSC->GetStyleFont();
-  const nsStyleVisibility* visibility = aSC->GetStyleVisibility();
-
-  aRC->SetFont(font->mFont, visibility->mLangGroup);
-}
-
 void
 nsWeakFrame::Init(nsIFrame* aFrame)
 {
@@ -3059,11 +3050,8 @@ AddCoord(const nsStyleCoord& aStyle,
       *aPercent += aStyle.GetPercentValue();
       break;
     case eStyleUnit_Chars: {
-      SetFontFromStyle(aRenderingContext, aFrame->GetStyleContext());
-      nscoord fontWidth;
-      aRenderingContext->SetTextRunRTL(PR_FALSE);
-      aRenderingContext->GetWidth('M', fontWidth);
-      *aCoord += aStyle.GetIntValue() * fontWidth;
+      *aCoord += nsLayoutUtils::CharsToCoord(aStyle, aRenderingContext,
+                                             aFrame->GetStyleContext());
       break;
     }
     default:
