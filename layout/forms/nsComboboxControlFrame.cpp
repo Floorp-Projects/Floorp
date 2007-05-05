@@ -593,7 +593,7 @@ nsComboboxControlFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
     nsIScrollableFrame* scrollable;
     CallQueryInterface(mListControlFrame, &scrollable);
     NS_ASSERTION(scrollable, "List must be a scrollable frame");
-    nsBoxLayoutState bls(GetPresContext(), aRenderingContext);
+    nsBoxLayoutState bls(PresContext(), aRenderingContext);
     nscoord displayResult =
       scrollable->GetDesiredScrollbarSizes(&bls).LeftRight() +
       nsLayoutUtils::IntrinsicForContainer(aRenderingContext, mDisplayFrame,
