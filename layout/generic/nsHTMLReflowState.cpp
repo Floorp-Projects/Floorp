@@ -251,11 +251,12 @@ nsHTMLReflowState::SetComputedWidth(nscoord aComputedWidth)
   //    (like a text control, for example), we'll end up creating a reflow
   //    state for the parent while the parent is reflowing.
 
-  nscoord oldComputedWidth = mComputedWidth;
-  mComputedWidth = aComputedWidth;
-  if (mComputedWidth != oldComputedWidth &&
-      frame->GetType() != nsGkAtoms::viewportFrame) {  // Or check GetParent()?
-    InitResizeFlags(frame->PresContext());
+  NS_PRECONDITION(aComputedWidth >= 0, "Invalid computed width");
+  if (mComputedWidth != aComputedWidth) {
+    mComputedWidth = aComputedWidth;
+    if (frame->GetType() != nsGkAtoms::viewportFrame) { // Or check GetParent()?
+      InitResizeFlags(frame->PresContext());
+    }
   }
 }
 
