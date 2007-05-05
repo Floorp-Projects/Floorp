@@ -424,20 +424,14 @@ public:
                       gfxContext *aContext, PRBool aDrawToPath, gfxPoint *aBaselineOrigin,
                       Spacing *aSpacing);
 
-    virtual PRUint32 GetSpaceGlyph() {
-        ComputeMetrics();
-        return mSpaceGlyph;
-    };
-
 protected:
     HFONT MakeHFONT();
     cairo_font_face_t *MakeCairoFontFace();
     cairo_scaled_font_t *MakeCairoScaledFont();
     void FillLogFont(gfxFloat aSize, PRInt16 aWeight);
 
-    HFONT    mFont;
+    HFONT mFont;
     gfxFloat mAdjustedSize;
-    PRUint32 mSpaceGlyph;
 
 private:
     void Destroy();
@@ -472,9 +466,9 @@ public:
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle);
 
     virtual gfxTextRun *MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
-                                    const Parameters* aParams, PRUint32 aFlags);
+                                    Parameters* aParams);
     virtual gfxTextRun *MakeTextRun(const PRUint8* aString, PRUint32 aLength,
-                                    const Parameters* aParams, PRUint32 aFlags);
+                                    Parameters* aParams);
 
     const nsACString& GetGenericFamily() const {
         return mGenericFamily;

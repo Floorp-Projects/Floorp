@@ -94,8 +94,6 @@
 
 #define FLOAT_PANGO_SCALE ((gfxFloat)PANGO_SCALE)
 
-#define IS_MISSING_GLYPH(g) (((g) & 0x10000000) || (g) == 0x0FFFFFFF)
-
 static PangoLanguage *GetPangoLanguage(const nsACString& aLangGroup);
 static void GetMozLanguage(const PangoLanguage *aLang, nsACString &aMozLang);
 
@@ -398,7 +396,7 @@ gfxPangoFont::RealizeFont(PRBool force)
         return;
 
     gfxSize isz, lsz;
-    GetSize('x', isz, lsz);
+    GetSize("x", 1, isz, lsz);
     gfxFloat aspect = isz.height / GetStyle()->size;
     mAdjustedSize =
         PR_MAX(NS_round(GetStyle()->size*(GetStyle()->sizeAdjust/aspect)), 1.0);
@@ -421,13 +419,12 @@ gfxPangoFont::RealizeXftFont(PRBool force)
 }
 
 void
-gfxPangoFont::GetSize(char aChar, gfxSize& inkSize, gfxSize& logSize,
-                      PRUint32 *aGlyphID)
+gfxPangoFont::GetSize(const char *aCharString, PRUint32 aLength, gfxSize& inkSize, gfxSize& logSize)
 {
     RealizeFont();
 
     PangoAttrList *al = pango_attr_list_new();
-    GList *items = pango_itemize(mPangoCtx, &aChar, 0, 1, al, NULL);
+    GList *items = pango_itemize(mPangoCtx, aCharString, 0, aLength, al, NULL);
     pango_attr_list_unref(al);
 
     if (!items || g_list_length(items) != 1)
@@ -436,17 +433,7 @@ gfxPangoFont::GetSize(char aChar, gfxSize& inkSize, gfxSize& logSize,
     PangoItem *item = (PangoItem*) items->data;
 
     PangoGlyphString *glstr = pango_glyph_string_new();
-    pango_shape (&aChar, 1, &(item->analysis), glstr);
-
-    if (aGlyphID) {
-        *aGlyphID = 0;
-        if (glstr->num_glyphs == 1) {
-            PangoGlyph glyph = glstr->glyphs[0].glyph;
-            if (!IS_MISSING_GLYPH(glyph)) {
-                *aGlyphID = glyph;
-            }
-        }
-    }
+    pango_shape (aCharString, aLength, &(item->analysis), glstr);
 
     PangoRectangle ink_rect, log_rect;
     pango_glyph_string_extents (glstr, item->analysis.font, &ink_rect, &log_rect);
@@ -477,7 +464,6 @@ gfxPangoFont::GetMetrics()
         return mMetrics;
 
     RealizeFont();
-    mSpaceGlyph = 0; // in case we error out below
 
     PangoAttrList *al = pango_attr_list_new();
     GList *items = pango_itemize(mPangoCtx, "a", 0, 1, al, NULL);
@@ -522,12 +508,12 @@ gfxPangoFont::GetMetrics()
     mMetrics.maxAdvance = xftFont->max_advance_width;
 
     gfxSize isz, lsz;
-    GetSize(' ', isz, lsz, &mSpaceGlyph);
+    GetSize(" ", 1, isz, lsz);
     mMetrics.spaceWidth = lsz.width;
 
     // XXX do some FcCharSetHasChar work here to make sure
     // we have an "x"
-    GetSize('x', isz, lsz);
+    GetSize("x", 1, isz, lsz);
     mMetrics.xHeight = isz.height;
     mMetrics.aveCharWidth = isz.width;
 
@@ -599,9 +585,9 @@ gfxPangoFont::GetMetrics()
     mMetrics.maxAdvance = pango_font_metrics_get_approximate_char_width(pfm) / FLOAT_PANGO_SCALE; // XXX
 
     gfxSize isz, lsz;
-    GetSize(' ', isz, lsz, &mSpaceGlyph);
+    GetSize(" ", 1, isz, lsz);
     mMetrics.spaceWidth = lsz.width;
-    GetSize('x', isz, lsz);
+    GetSize("x", 1, isz, lsz);
     mMetrics.xHeight = isz.height;
 
     mMetrics.aveCharWidth = pango_font_metrics_get_approximate_char_width(pfm) / FLOAT_PANGO_SCALE;
@@ -723,15 +709,15 @@ static PRInt32 AppendDirectionalIndicatorUTF8(PRBool aIsRTL, nsACString& aString
 
 gfxTextRun *
 gfxPangoFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
-                               const Parameters *aParams, PRUint32 aFlags)
+                               Parameters *aParams)
 {
-    NS_ASSERTION(aFlags & TEXT_IS_8BIT, "8bit should have been set");
-    gfxTextRun *run = new gfxTextRun(aParams, aString, aLength, this, aFlags);
+    aParams->mFlags |= TEXT_IS_8BIT;
+    gfxTextRun *run = new gfxTextRun(aParams, aLength);
     if (!run)
         return nsnull;
 
     PRBool isRTL = run->IsRightToLeft();
-    if ((aFlags & TEXT_IS_ASCII) && !isRTL) {
+    if ((aParams->mFlags & TEXT_IS_ASCII) && !isRTL) {
         // We don't need to send an override character here, the characters must be all
         // LTR
         const gchar *utf8Chars = NS_REINTERPRET_CAST(const gchar*, aString);
@@ -753,9 +739,9 @@ gfxPangoFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
 
 gfxTextRun *
 gfxPangoFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
-                               const Parameters *aParams, PRUint32 aFlags)
+                               Parameters *aParams)
 {
-    gfxTextRun *run = new gfxTextRun(aParams, aString, aLength, this, aFlags);
+    gfxTextRun *run = new gfxTextRun(aParams, aLength);
     if (!run)
         return nsnull;
 
@@ -904,6 +890,8 @@ gfxPangoFont::Measure(gfxTextRun *aTextRun,
     glyphs.space = glyphBuffer.Length();
     return GetPangoMetrics(&glyphs, GetPangoFont(), aTextRun->GetAppUnitsPerDevUnit(), clusterCount);
 }
+
+#define IS_MISSING_GLYPH(g) (((g) & 0x10000000) || (g) == 0x0FFFFFFF)
 
 static cairo_scaled_font_t*
 CreateScaledFont(cairo_t *aCR, cairo_matrix_t *aCTM, PangoFont *aPangoFont)
