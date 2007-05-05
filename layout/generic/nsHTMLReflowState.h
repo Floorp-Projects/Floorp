@@ -406,12 +406,15 @@ public:
 
   /**
    * Calculate the raw line-height property for the given frame. The return
-   * value, if line-height was applied and is valid will be >= 0. Otherwise,
-   * the return value will be <0 which is illegal (CSS2 spec: section 10.8.1).
+   * value will be >= 0.
    */
-  static nscoord CalcLineHeight(nsPresContext* aPresContext,
-                                nsIRenderingContext* aRenderingContext,
+  static nscoord CalcLineHeight(nsIRenderingContext* aRenderingContext,
                                 nsIFrame* aFrame);
+  /**
+   * Same as above, but doesn't need quite as much info.
+   */
+  static nscoord CalcLineHeight(nsStyleContext* aStyleContext,
+                                nsIDeviceContext* aDeviceContext);
 
   void InitFrameType();
 
