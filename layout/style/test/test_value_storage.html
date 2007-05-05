@@ -40,9 +40,10 @@
  * So we test idempotence of parse + serialize by running the whole
  * operation twice.  Likewise for parse + compute + cserialize.
  *
- * Slightly more interestingly, we test the idempotence of serialize +
- * parse by comparing the output of parse + compute + cserialize to the
- * output of parse + serialize + parse + compute + cserialize.
+ * Slightly more interestingly, we test that serialize + parse is the
+ * identity transform by comparing the output of parse + compute +
+ * cserialize to the output of parse + serialize + parse + compute +
+ * cserialize.
  */
 
 var gShorthandsWithoutCondensingSerialize = {
@@ -240,7 +241,7 @@ function test_property(property)
     if (test_computed && info.type != CSS_TYPE_TRUE_SHORTHAND) {
       func = xfail_idserparse_compute(property, value) ? todo_is : is;
       func(gComputedStyle.getPropertyValue(property), step1comp,
-           "serialize+parse should be idempotent for '" +
+           "serialize+parse should be identity transform for '" +
            property + ": " + value + "'");
     }
 
@@ -254,8 +255,8 @@ function test_property(property)
             xfail_idsersplitparse_compute(property, subprop, value, step1comps[idx])
               ? todo_is : is;
           func(gComputedStyle.getPropertyValue(subprop), step1comps[idx],
-               "serialize(" + subprop + ")+parse should be idempotent for '" +
-               property + ": " + value + "'");
+               "serialize(" + subprop + ")+parse should be the identity " +
+               "transform for '" + property + ": " + value + "'");
         }
       }
       func = xfail_idparsesplitser(property, value) ? todo_is : is;
