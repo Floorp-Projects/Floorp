@@ -275,6 +275,9 @@ public:
     StubPropertyProvider(const nscoord* aSpacing = nsnull)
       : mSpacing(aSpacing) {}
 
+    virtual void ForceRememberText() {
+        NS_ERROR("This shouldn't be called because we already asked the textrun to remember");
+    }
     virtual void GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
                                       PRPackedBool* aBreakBefore) {
         NS_ERROR("This shouldn't be called because we never call BreakAndMeasureText");
