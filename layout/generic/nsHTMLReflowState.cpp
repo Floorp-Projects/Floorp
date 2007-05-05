@@ -1932,12 +1932,14 @@ GetNormalLineHeight(nsIFontMetrics* aFontMetrics)
   return normalLineHeight;
 }
 
+// Need only one of aRenderingContext and aDeviceContext
 static nscoord
-ComputeLineHeight(nsPresContext* aPresContext,
-                  nsIRenderingContext* aRenderingContext,
+ComputeLineHeight(nsIRenderingContext* aRenderingContext,
+                  nsIDeviceContext* aDeviceContext,
                   nsStyleContext* aStyleContext)
 {
-  NS_PRECONDITION(nsnull != aRenderingContext, "no rendering context");
+  NS_PRECONDITION(aRenderingContext || aDeviceContext,
+                  "Need to have a way of getting a device context");
 
   nscoord lineHeight;
 
@@ -1957,8 +1959,10 @@ ComputeLineHeight(nsPresContext* aPresContext,
     lineHeight = NSToCoordRound(factor * font->mFont.size);
   } else {
     NS_ASSERTION(eStyleUnit_Normal == unit, "bad unit");
-    nsCOMPtr<nsIDeviceContext> deviceContext;
-    aRenderingContext->GetDeviceContext(*getter_AddRefs(deviceContext));
+    nsCOMPtr<nsIDeviceContext> deviceContext = aDeviceContext;
+    if (NS_UNLIKELY(!deviceContext)) {
+      aRenderingContext->GetDeviceContext(*getter_AddRefs(deviceContext));
+    }
     const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
     nsCOMPtr<nsIFontMetrics> fm;
     deviceContext->GetMetricsFor(font->mFont, vis->mLangGroup,
@@ -1969,15 +1973,29 @@ ComputeLineHeight(nsPresContext* aPresContext,
 }
 
 nscoord
-nsHTMLReflowState::CalcLineHeight(nsPresContext* aPresContext,
-                                  nsIRenderingContext* aRenderingContext,
+nsHTMLReflowState::CalcLineHeight(nsIRenderingContext* aRenderingContext,
                                   nsIFrame* aFrame)
 {
   NS_ASSERTION(aFrame && aFrame->GetStyleContext(),
                "Bogus data passed in to CalcLineHeight");
 
-  nscoord lineHeight = ComputeLineHeight(aPresContext, aRenderingContext,
+  nscoord lineHeight = ComputeLineHeight(aRenderingContext, nsnull,
                                          aFrame->GetStyleContext());
+
+  NS_ASSERTION(lineHeight >= 0, "ComputeLineHeight screwed up");
+
+  return lineHeight;
+}
+
+nscoord
+nsHTMLReflowState::CalcLineHeight(nsStyleContext* aStyleContext,
+                                  nsIDeviceContext* aDeviceContext)
+{
+  NS_PRECONDITION(aStyleContext, "Must have a style context");
+  NS_PRECONDITION(aDeviceContext, "Must have a device context");
+  
+  nscoord lineHeight = ComputeLineHeight(nsnull, aDeviceContext,
+                                         aStyleContext);
 
   NS_ASSERTION(lineHeight >= 0, "ComputeLineHeight screwed up");
 

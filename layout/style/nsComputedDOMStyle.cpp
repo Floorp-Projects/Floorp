@@ -114,7 +114,8 @@ GetContainingBlockFor(nsIFrame* aFrame) {
 }
 
 nsComputedDOMStyle::nsComputedDOMStyle()
-  : mInner(this), mDocumentWeak(nsnull), mFrame(nsnull), mAppUnitsPerInch(0)
+  : mInner(this), mDocumentWeak(nsnull), mFrame(nsnull), mPresShell(nsnull),
+    mAppUnitsPerInch(0)
 {
 }
 
@@ -308,17 +309,33 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
   // may be different.
   document->FlushPendingNotifications(Flush_Style);
 
-  nsIPresShell* presShell = document->GetPrimaryShell();
-  NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_AVAILABLE);
+  mPresShell = document->GetPrimaryShell();
+  NS_ENSURE_TRUE(mPresShell && mPresShell->GetPresContext(),
+                 NS_ERROR_NOT_AVAILABLE);
 
-  mFrame = presShell->GetPrimaryFrameFor(mContent);
+  mFrame = mPresShell->GetPrimaryFrameFor(mContent);
   if (!mFrame || mPseudo) {
     // Need to resolve a style context
     mStyleContextHolder =
       nsInspectorCSSUtils::GetStyleContextForContent(mContent,
                                                      mPseudo,
-                                                     presShell);
+                                                     mPresShell);
     NS_ENSURE_TRUE(mStyleContextHolder, NS_ERROR_OUT_OF_MEMORY);
+  } else {
+    nsIAtom* type = mFrame->GetType();
+    nsIFrame* frame = mFrame;
+    if (type == nsGkAtoms::tableOuterFrame) {
+      // If the frame is an outer table frame then we should get the style
+      // from the inner table frame.
+      frame = frame->GetFirstChild(nsnull);
+      NS_ASSERTION(frame, "Outer table must have an inner");
+      NS_ASSERTION(!frame->GetNextSibling(),
+                   "Outer table frames should have just one child, the inner "
+                   "table");
+    }
+
+    mStyleContextHolder = frame->GetStyleContext();
+    NS_ASSERTION(mStyleContextHolder, "Frame without style context?");
   }
 
   nsresult rv = NS_OK;
@@ -348,6 +365,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
   }
 
   mFrame = nsnull;
+  mPresShell = nsnull;
 
   // Release the current style context for it should be re-resolved
   // whenever a frame is not available.
@@ -1476,11 +1494,8 @@ nsComputedDOMStyle::GetLineHeight(nsIDOMCSSValue** aValue)
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   nscoord lineHeight;
-  if (GetLineHeightCoord(lineHeight)) {
-    val->SetAppUnits(lineHeight);
-  } else {
-    SetValueToCoord(val, GetStyleText()->mLineHeight);
-  }
+  GetLineHeightCoord(lineHeight);
+  val->SetAppUnits(lineHeight);
 
   return CallQueryInterface(val, aValue);
 }
@@ -2490,29 +2505,6 @@ nsComputedDOMStyle::FlushPendingReflows()
   }
 }
 
-const nsStyleStruct*
-nsComputedDOMStyle::GetStyleData(nsStyleStructID aSID)
-{
-  if (mFrame && !mPseudo) {
-    nsIAtom* type = mFrame->GetType();
-    nsIFrame* frame = mFrame;
-    if (type == nsGkAtoms::tableOuterFrame) {
-      // If the frame is an outer table frame then we should get the style
-      // from the inner table frame.
-      frame = frame->GetFirstChild(nsnull);
-      NS_ASSERTION(frame, "Outer table must have an inner");
-      NS_ASSERTION(!frame->GetNextSibling(),
-                   "Outer table frames should have just one child, the inner table");
-    }
-    return frame->GetStyleData(aSID);
-  }
-  
-  NS_ASSERTION(mStyleContextHolder,
-               "GetPropertyCSSValue should have resolved a style context");
-
-  return mStyleContextHolder->GetStyleData(aSID);
-}
-
 nsresult
 nsComputedDOMStyle::GetPaddingWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 {
@@ -2534,23 +2526,18 @@ nsComputedDOMStyle::GetPaddingWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue)
 PRBool
 nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord)
 {
-  const nsStyleText* text = GetStyleText();
-  const nsStyleFont *font = GetStyleFont();
-  switch (text->mLineHeight.GetUnit()) {
-    case eStyleUnit_Coord:
-      aCoord = text->mLineHeight.GetCoordValue();
-      return PR_TRUE;
-    case eStyleUnit_Percent:
-      aCoord = nscoord(text->mLineHeight.GetPercentValue() * font->mSize);
-      return PR_TRUE;
-    case eStyleUnit_Factor:
-      aCoord = nscoord(text->mLineHeight.GetFactorValue() * font->mSize);
-      return PR_TRUE;
-    default:
-      break;
-  }
-
-  return PR_FALSE;
+  aCoord = nsHTMLReflowState::CalcLineHeight(mStyleContextHolder,
+                                             mPresShell->GetPresContext()->
+                                               DeviceContext());
+  // CalcLineHeight uses font->mFont.size, but we want to use
+  // font->mSize as the font size.  Adjust for that.  Also adjust for
+  // the text zoom, if any.
+  const nsStyleFont* font = GetStyleFont();
+  aCoord = NSToCoordRound((float(aCoord) *
+                           (float(font->mSize) / float(font->mFont.size))) /
+                          mPresShell->GetPresContext()->TextZoom());
+  
+  return PR_TRUE;
 }
 
 nsresult
