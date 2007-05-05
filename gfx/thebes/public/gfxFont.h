@@ -1039,10 +1039,9 @@ public:
     // and gfxFont::GetBoundingBox
     const CompressedGlyph *GetCharacterGlyphs() { return mCharacterGlyphs; }
     const DetailedGlyph *GetDetailedGlyphs(PRUint32 aCharIndex) {
-        NS_ASSERTION(mDetailedGlyphs && mDetailedGlyphs[aCharIndex],
-                     "Requested detailed glyphs when there aren't any, "
-                     "I think I'll go and have a lie down...");
-        return mDetailedGlyphs[aCharIndex];
+        // Although mDetailedGlyphs should be non-NULL when ComplexCluster,
+        // Missing glyphs need not have details.
+        return mDetailedGlyphs ? mDetailedGlyphs[aCharIndex].get() : nsnull;
     }
     PRUint32 CountMissingGlyphs();
     const GlyphRun *GetGlyphRuns(PRUint32 *aNumGlyphRuns) {
