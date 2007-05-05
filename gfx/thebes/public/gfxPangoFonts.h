@@ -86,6 +86,12 @@ public:
 
     virtual nsString GetUniqueName();
 
+    // Get the glyphID of a space
+    virtual PRUint32 GetSpaceGlyph() {
+        GetMetrics();
+        return mSpaceGlyph;
+    }
+
 protected:
     PangoFontDescription *mPangoFontDesc;
     PangoContext *mPangoCtx;
@@ -93,13 +99,15 @@ protected:
     XftFont *mXftFont;
     cairo_scaled_font_t *mCairoFont;
 
-    PRBool mHasMetrics;
-    Metrics mMetrics;
+    PRBool   mHasMetrics;
+    PRUint32 mSpaceGlyph;
+    Metrics  mMetrics;
     gfxFloat mAdjustedSize;
 
     void RealizeFont(PRBool force = PR_FALSE);
     void RealizeXftFont(PRBool force = PR_FALSE);
-    void GetSize(const char *aString, PRUint32 aLength, gfxSize& inkSize, gfxSize& logSize);
+    void GetSize(char aChar, gfxSize& inkSize, gfxSize& logSize,
+                 PRUint32 *aGlyphID = nsnull);
 
     virtual void SetupCairoFont(cairo_t *aCR);
 };
@@ -116,9 +124,9 @@ public:
 
     // Create and initialize a textrun using Pango (or Xft)
     virtual gfxTextRun *MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
-                                    Parameters *aParams);
+                                    const Parameters *aParams, PRUint32 aFlags);
     virtual gfxTextRun *MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
-                                    Parameters *aParams);
+                                    const Parameters *aParams, PRUint32 aFlags);
 
     gfxPangoFont *GetFontAt(PRInt32 i) {
         return NS_STATIC_CAST(gfxPangoFont*, 
