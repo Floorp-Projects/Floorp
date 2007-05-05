@@ -54,7 +54,7 @@ function test()
   expect = 'function () {\n    (let (a = 3) <x/>);\n}';
   try
   {
-    var f = eval('function () { let (a = 3) <x/>; }');
+    var f = eval('(function () { let (a = 3) <x/>; })');
     actual = f + '';
   }
   catch(ex)

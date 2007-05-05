@@ -59,7 +59,7 @@ function test()
     '}';
   try
   {
-    f = eval('function () { 1 ? {}[alert(5)] : 0; }');
+    f = eval('(function () { 1 ? {}[alert(5)] : 0; })');
     actual = f + '';
     compareSource(expect, actual, summary);
   }
@@ -75,7 +75,7 @@ function test()
     '}';
   try
   {
-    f = eval('function () { {}[alert(5)]; }');
+    f = eval('(function () { {}[alert(5)]; })');
     actual = f + '';
     compareSource(expect, actual, summary);
   }

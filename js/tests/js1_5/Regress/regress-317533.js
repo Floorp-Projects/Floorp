@@ -53,7 +53,7 @@ options('werror');
 try
 {
   actual = ''; 
-  code = "function(x){ if(x) return x; }";
+  code = "(function(x){ if(x) return x; })";
   print(code);
   eval(code);
 }
@@ -68,7 +68,7 @@ reportCompare(expect, actual, summary);
 try
 {
   actual = '';
-  code = "function(x){ if(x) return x; ;}";
+  code = "(function(x){ if(x) return x; ;})";
   print(code);
   eval(code);
 }

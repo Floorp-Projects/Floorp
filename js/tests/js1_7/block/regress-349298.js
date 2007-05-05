@@ -51,7 +51,7 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
-  function() { for(i=0;i<4;++i) let x = 4; }
+  (function() { for(i=0;i<4;++i) let x = 4; });
   
   reportCompare(expect, actual, summary);
 

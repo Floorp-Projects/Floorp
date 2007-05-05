@@ -56,7 +56,7 @@ function test()
   actual = 'No Crash';
   try
   {
-    function() { for (var [a, b] in []) for ([c, d] in []) { } }
+    (function() { for (var [a, b] in []) for ([c, d] in []) { } });
   }
   catch(ex)
   {

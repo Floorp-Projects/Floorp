@@ -44,6 +44,7 @@ var expect = 'No Crash';
 printBugNumber (bug);
 printStatus (summary);
 
-function() { *() }
+(function() { *() });
+
 TEST(1, expect, actual);
 END();

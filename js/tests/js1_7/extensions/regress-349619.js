@@ -51,7 +51,7 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
   
-  function() { let(y=3) { ({ get y() { }, set y(z) { } }) } }
+  (function() { let(y=3) { ({ get y() { }, set y(z) { } }) } });
 
   reportCompare(expect, actual, summary);
 

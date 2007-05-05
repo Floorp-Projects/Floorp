@@ -55,12 +55,12 @@ function test()
 
   a = function () { const z = 3; g = 7; g = z += 1; return g };
   expect = a();
-  actual = (eval('' + a))();
+  actual = (eval('(' + a + ')'))();
   reportCompare(expect, actual, summary);
 
   a = function () { const z = 3; return z += 2 };
   expect = a();
-  actual = (eval('' + a))();
+  actual = (eval('(' + a + ')'))();
   reportCompare(expect, actual, summary);
 
   expect = 'function () {\n    const z = 3;\n}';
