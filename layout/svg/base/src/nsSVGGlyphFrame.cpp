@@ -1352,14 +1352,14 @@ nsSVGGlyphFrame::GetTextRun(gfxContext *aCtx, const nsString &aText)
 
   gfxTextRunFactory::Parameters params =
     { aCtx, nsnull, nsnull,
-      nsnull, nsnull,
-      1 // see note above
-      };
+      nsnull, nsnull, nsnull,
+      1, // see note above
+      0 };
 
   if (!mFontGroup)
     return nsnull;
 
-  return mFontGroup->MakeTextRun(aText.get(), aText.Length(), &params, 0);
+  return mFontGroup->MakeTextRun(aText.get(), aText.Length(), &params);
 }
 
 //----------------------------------------------------------------------

@@ -287,22 +287,22 @@ RunTest (TestEntry *test, gfxContext *ctx) {
 
     nsAutoPtr<gfxTextRun> textRun;
     gfxTextRunFactory::Parameters params = {
-      ctx, nsnull, nsnull, nsnull, 0, 60
+      ctx, nsnull, nsnull, nsnull, nsnull, 0, 60,
+      gfxTextRunFactory::TEXT_IS_ASCII
     };
-    PRUint32 flags = gfxTextRunFactory::TEXT_IS_PERSISTENT;
     if (test->isRTL) {
-        flags |= gfxTextRunFactory::TEXT_IS_RTL;
+        params.mFlags |= gfxTextRunFactory::TEXT_IS_RTL;
     }
     PRUint32 length;
     if (test->stringType == S_ASCII) {
-        flags |= gfxTextRunFactory::TEXT_IS_ASCII | gfxTextRunFactory::TEXT_IS_8BIT;
+        params.mFlags |= gfxTextRunFactory::TEXT_IS_ASCII;
         length = strlen(test->string);
-        textRun = fontGroup->MakeTextRun(NS_REINTERPRET_CAST(PRUint8*, test->string), length, &params, flags);
+        textRun = fontGroup->MakeTextRun(NS_REINTERPRET_CAST(PRUint8*, test->string), length, &params);
     } else {
-        flags |= gfxTextRunFactory::TEXT_HAS_SURROGATES; // just in case
+        params.mFlags |= gfxTextRunFactory::TEXT_HAS_SURROGATES; // just in case
         NS_ConvertUTF8toUTF16 str(nsDependentCString(test->string));
         length = str.Length();
-        textRun = fontGroup->MakeTextRun(str.get(), length, &params, flags);
+        textRun = fontGroup->MakeTextRun(str.get(), length, &params);
     }
 
     gfxFontTestStore::NewStore();
