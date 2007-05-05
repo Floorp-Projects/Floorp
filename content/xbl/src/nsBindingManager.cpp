@@ -1090,11 +1090,14 @@ nsBindingManager::WalkRules(nsStyleSet* aStyleSet,
     }
 
     nsIContent* parent = content->GetBindingParent();
-    if (parent == content)
-      break; // The scrollbar case only is deliberately hacked to return itself
-             // (see GetBindingParent in nsXULElement.cpp).  Actually, all
-             // native anonymous content is thus hacked.  Cut off inheritance
-             // here.
+    if (parent == content) {
+      NS_ASSERTION(content->IsNativeAnonymous() ||
+                   content->IsNodeOfType(nsINode::eXUL),
+                   "Unexpected binding parent");
+                             
+      break; // The anonymous content case is often deliberately hacked to
+             // return itself to cut off style inheritance here.  Do that.
+    }
 
     content = parent;
   } while (content);
