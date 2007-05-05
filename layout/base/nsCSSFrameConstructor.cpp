@@ -7645,6 +7645,10 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
       // Get the frame that corresponds to the document element
       nsIFrame* docElementFrame =
         state.mFrameManager->GetPrimaryFrameFor(rootContent, -1);
+      if (!docElementFrame) {
+        NS_NOTREACHED("Really should have doc element frame here");
+        return NS_ERROR_UNEXPECTED;
+      }
         
       // Remove any existing fixed items: they are always on the
       // FixedContainingBlock.  Note that this has to be done before we call
@@ -7658,21 +7662,18 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
         state.mFrameManager->ClearPlaceholderFrameMap();
         state.mFrameManager->ClearUndisplayedContentMap();
 
-        if (docElementFrame) {
-          // Take the docElementFrame, and remove it from its parent.
+        // Take the docElementFrame, and remove it from its parent.
         
-          // XXXbz So why can't we reuse ContentRemoved?
+        // XXXbz So why can't we reuse ContentRemoved?
 
-          NS_ASSERTION(docElementFrame->GetParent() == mDocElementContainingBlock,
-                       "Unexpected doc element parent frame");
+        NS_ASSERTION(docElementFrame->GetParent() == mDocElementContainingBlock,
+                     "Unexpected doc element parent frame");
 
-          // Remove the old document element hieararchy
-          rv = state.mFrameManager->RemoveFrame(mDocElementContainingBlock,
-                                                nsnull, docElementFrame);
-          if (NS_FAILED(rv)) {
-            return rv;
-          }
-
+        // Remove the old document element hieararchy
+        rv = state.mFrameManager->RemoveFrame(mDocElementContainingBlock,
+                                              nsnull, docElementFrame);
+        if (NS_FAILED(rv)) {
+          return rv;
         }
 
         // Create the new document element hierarchy
