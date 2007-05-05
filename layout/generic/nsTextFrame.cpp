@@ -893,7 +893,8 @@ nsTextStyle::nsTextStyle(nsPresContext* aPresContext,
   PRUint8 originalDecorations = plainFont->decorations;
   plainFont->decorations = NS_FONT_DECORATION_NONE;
   mAveCharWidth = 0;
-  SetFontFromStyle(&aRenderingContext, sc); // some users of the struct expect this state
+  // Set the font: some users of the struct expect this state
+  nsLayoutUtils::SetFontFromStyle(&aRenderingContext, sc);
   aRenderingContext.GetFontMetrics(mNormalFont);
   mNormalFont->GetSpaceWidth(mSpaceWidth);
   mNormalFont->GetAveCharWidth(mAveCharWidth);
@@ -2140,7 +2141,7 @@ nsTextFrame::FillClusterBuffer(nsPresContext *aPresContext, const PRUnichar *aTe
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Find the font metrics for this text
-    SetFontFromStyle(acx, mStyleContext);
+    nsLayoutUtils::SetFontFromStyle(acx, mStyleContext);
 
     acx->GetHints(clusterHint);
     clusterHint &= NS_RENDERING_HINT_TEXT_CLUSTERS;
@@ -4131,7 +4132,7 @@ nsTextFrame::GetPositionHelper(const nsPoint&  aPoint,
       }
 
       // Find the font metrics for this text
-      SetFontFromStyle(rendContext, mStyleContext);
+      nsLayoutUtils::SetFontFromStyle(rendContext, mStyleContext);
 
       // Get the renderable form of the text
       nsTextTransformer tx(PresContext());
@@ -6173,7 +6174,7 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
 
 #ifdef MOZ_MATHML
     if (calcMathMLMetrics) {
-      SetFontFromStyle(aReflowState.rendContext, mStyleContext);
+      nsLayoutUtils::SetFontFromStyle(aReflowState.rendContext, mStyleContext);
       nsBoundingMetrics bm;
       rv = aReflowState.rendContext->GetBoundingMetrics(textBuffer.mBuffer, textLength, bm);
       if (NS_SUCCEEDED(rv))
@@ -6277,7 +6278,7 @@ nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
         if (XP_IS_SPACE(ch)) {
           // Get font metrics for a space so we can adjust the width by the
           // right amount.
-          SetFontFromStyle(&aRC, mStyleContext);
+          nsLayoutUtils::SetFontFromStyle(&aRC, mStyleContext);
 
           aRC.GetWidth(' ', dw);
           // NOTE: Trailing whitespace includes word and letter spacing!

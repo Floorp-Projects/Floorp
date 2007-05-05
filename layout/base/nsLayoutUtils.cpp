@@ -1243,11 +1243,8 @@ static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle,
     return PR_TRUE;
   }
   if (eStyleUnit_Chars == unit) {
-    SetFontFromStyle(aRenderingContext, aFrame->GetStyleContext());
-    nscoord fontWidth;
-    aRenderingContext->SetTextRunRTL(PR_FALSE);
-    aRenderingContext->GetWidth('M', fontWidth);
-    aResult = aStyle.GetIntValue() * fontWidth;
+    aResult = nsLayoutUtils::CharsToCoord(aStyle, aRenderingContext,
+                                          aFrame->GetStyleContext());
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -2153,4 +2150,28 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
    * appropriate code to call nsIRenderingContext::DrawImage here
    */
 #endif
+}
+
+void
+nsLayoutUtils::SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC) 
+{
+  const nsStyleFont* font = aSC->GetStyleFont();
+  const nsStyleVisibility* visibility = aSC->GetStyleVisibility();
+
+  aRC->SetFont(font->mFont, visibility->mLangGroup);
+}
+
+nscoord
+nsLayoutUtils::CharsToCoord(const nsStyleCoord& aStyle,
+                            nsIRenderingContext* aRenderingContext,
+                            nsStyleContext* aStyleContext)
+{
+  NS_ASSERTION(aStyle.GetUnit() == eStyleUnit_Chars,
+               "Shouldn't have called this");
+
+  SetFontFromStyle(aRenderingContext, aStyleContext);
+  nscoord fontWidth;
+  aRenderingContext->SetTextRunRTL(PR_FALSE);
+  aRenderingContext->GetWidth('M', fontWidth);
+  return aStyle.GetIntValue() * fontWidth;
 }

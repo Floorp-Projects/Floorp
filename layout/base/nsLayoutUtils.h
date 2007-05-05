@@ -647,6 +647,22 @@ public:
                             const nsRect& aDestRect,
                             const nsRect& aDirtyRect,
                             const nsRect* aSourceRect = nsnull);
+
+  /**
+   * Set the font on aRC based on the style in aSC
+   */
+  static void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC);
+
+  /**
+   * Convert an eStyleUnit_Chars nsStyleCoord to an nscoord.
+   *
+   * @param aStyle the style coord
+   * @param aRenderingContext the rendering context to use for font measurement
+   * @param aStyleContext the style context to use for font infomation
+   */
+  static nscoord CharsToCoord(const nsStyleCoord& aStyle,
+                              nsIRenderingContext* aRenderingContext,
+                              nsStyleContext* aStyleContext);
 };
 
 #endif // nsLayoutUtils_h__
