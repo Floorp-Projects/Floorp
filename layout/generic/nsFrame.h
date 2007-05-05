@@ -113,10 +113,6 @@
 #define NS_FRAME_TRACE_REFLOW_OUT(_method, _status)
 #endif
 
-// handy utilities
-// XXXldb Move to nsLayoutUtils!
-void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC);
-
 //----------------------------------------------------------------------
 
 struct nsBoxLayoutMetrics;

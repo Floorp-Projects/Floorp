@@ -568,7 +568,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
                             : aReflowState.mComputedBorderPadding.left;
     }
 
-    SetFontFromStyle(aReflowState.rendContext, mStyleContext);
+    nsLayoutUtils::SetFontFromStyle(aReflowState.rendContext, mStyleContext);
     nsCOMPtr<nsIFontMetrics> fm;
     aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
 

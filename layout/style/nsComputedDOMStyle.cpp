@@ -68,6 +68,8 @@
 #include "nsStyleSet.h"
 #include "imgIRequest.h"
 #include "nsInspectorCSSUtils.h"
+#include "nsLayoutUtils.h"
+#include "nsFrameManager.h"
 
 #if defined(DEBUG_bzbarsky) || defined(DEBUG_caillon)
 #define DEBUG_ComputedDOMStyle
@@ -2747,11 +2749,24 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
                                                   aTable));
       break;
       
-    case eStyleUnit_Chars:
-      // XXX we need a frame and a rendering context to calculate this, bug 281972, bug 282126.
-      aValue->SetAppUnits(0);
+    case eStyleUnit_Chars: {
+      // Get a rendering context
+      nsCOMPtr<nsIRenderingContext> cx;
+      nsIFrame* frame = mPresShell->FrameManager()->GetRootFrame();
+      if (frame) {
+        mPresShell->CreateRenderingContext(frame, getter_AddRefs(cx));
+      }
+      if (cx) {
+        nscoord val =
+          nsLayoutUtils::CharsToCoord(aCoord, cx, mStyleContextHolder);
+        aValue->SetAppUnits(PR_MAX(aMinAppUnits, val));
+      } else {
+        // Oh, well.  Give up.
+        aValue->SetAppUnits(0);
+      }
       break;
-      
+    }
+
     case eStyleUnit_Null:
       aValue->SetIdent(nsGkAtoms::none);
       break;
