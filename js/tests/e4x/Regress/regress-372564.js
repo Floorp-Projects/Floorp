@@ -44,6 +44,7 @@ var expect = 'No Crash';
 printBugNumber (bug);
 printStatus (summary);
 
-function() { return {a: @foo} <= 3;}
+(function() { return {a: @foo} <= 3;});
+
 TEST(1, expect, actual);
 END();

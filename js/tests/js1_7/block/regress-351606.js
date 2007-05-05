@@ -44,7 +44,7 @@ enterFunc ('test');
 printBugNumber (bug);
 printStatus (summary);
 
-function () {for (let d in [1,2,3,4]) try { for (let a in [5,6,7,8]) (( function() { throw 9; } )()); } catch(c) {  }}
+(function () {for (let d in [1,2,3,4]) try { for (let a in [5,6,7,8]) (( function() { throw 9; } )()); } catch(c) {  }});
 
 reportCompare(expect, actual, summary);
 

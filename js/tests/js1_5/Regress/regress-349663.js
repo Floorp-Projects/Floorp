@@ -54,7 +54,7 @@ function test()
   var f, g;
 
   f = function() { const h; for(null; h *= ""; null) ; }
-  g = eval(f + '');
+  g = eval('(' + f + ')');
 
   expect = f + '';
   actual = g + '';

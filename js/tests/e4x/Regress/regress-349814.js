@@ -50,10 +50,10 @@ var z = function ()
     <x>
       <y/>
     </x>;
-}
+};
 
 expect = z + '';
-actual = (eval("" + z)) + '';
+actual = (eval("(" + z + ")")) + '';
 
 compareSource(1, expect, actual);
 

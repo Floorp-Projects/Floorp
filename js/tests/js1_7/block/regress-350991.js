@@ -57,7 +57,7 @@ function test()
   expect = 'function () {\n    for ((let (y) 3);;) {\n    }\n}';
   try
   {
-    f = eval('function () { for ((let (y) 3); ;) { } }');
+    f = eval('(function () { for ((let (y) 3); ;) { } })');
     actual = f + '';
   }
   catch(ex)

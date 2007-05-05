@@ -54,7 +54,7 @@ function test()
   expect = 'TypeError: redeclaration of const b';
   try
   {
-    eval('function() { let(x = 1) { const b = 2 }; let b = 3; }');
+    eval('(function() { let(x = 1) { const b = 2 }; let b = 3; })');
   }
   catch(ex)
   {

@@ -60,7 +60,7 @@ function test()
 
   try
   {
-    eval(expect);
+    eval('(' + expect + ')');
     actual = 'No Error';
   }
   catch(ex)
@@ -77,7 +77,7 @@ function test()
 
   try
   {
-    eval(expect);
+    eval('(' + expect + ')');
     actual = 'No Error';
   }
   catch(ex)

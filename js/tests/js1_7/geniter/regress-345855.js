@@ -54,7 +54,7 @@ function test()
   expect = 'SyntaxError: syntax error';
   try
   {
-    eval('function() {x = 12 + yield;}');
+    eval('(function() {x = 12 + yield;})');
     actual = 'No Error';
   }
   catch(ex)
@@ -66,7 +66,7 @@ function test()
   expect = 'SyntaxError: yield expression must be parenthesized';
   try
   {
-    eval('function () {foo(yield)}');
+    eval('(function () {foo(yield)})');
     actual = 'No Error';
   }
   catch(ex)
@@ -78,7 +78,7 @@ function test()
   expect = 'SyntaxError: syntax error';
   try
   {
-    eval('function() {x = 12 + yield 42}');
+    eval('(function() {x = 12 + yield 42})');
     actual = 'No Error';
   }
   catch(ex)
@@ -90,7 +90,7 @@ function test()
   expect = 'SyntaxError: yield expression must be parenthesized';
   try
   {
-    eval('function (){foo(yield 42)}');
+    eval('(function (){foo(yield 42)})');
     actual = 'No Error';
   }
   catch(ex)
@@ -103,7 +103,7 @@ function test()
 
   try
   {
-    eval('function() {x = 12 + (yield);}');
+    eval('(function() {x = 12 + (yield);})');
     actual = 'No Error';
   }
   catch(ex)
@@ -114,7 +114,7 @@ function test()
 
   try
   {
-    eval('function () {foo((yield))}');
+    eval('(function () {foo((yield))})');
     actual = 'No Error';
   }
   catch(ex)
@@ -125,7 +125,7 @@ function test()
 
   try
   {
-    eval('function() {x = 12 + (yield 42)}');
+    eval('(function() {x = 12 + (yield 42)})');
     actual = 'No Error';
   }
   catch(ex)
@@ -136,7 +136,7 @@ function test()
 
   try
   {
-    eval('function (){foo((yield 42))}');
+    eval('(function (){foo((yield 42))})');
     actual = 'No Error';
   }
   catch(ex)

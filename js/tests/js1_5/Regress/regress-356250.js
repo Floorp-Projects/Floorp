@@ -40,7 +40,7 @@ var summary = 'Assertion: !fp->fun || !(fp->fun->flags & JSFUN_HEAVYWEIGHT) || f
 var actual = 'No Crash';
 var expect = 'No Crash';
 
-(function() { eval("function() { }"); })();
+(function() { eval("(function() { })"); })();
 reportCompare(expect, actual, summary + ': nested 0');
 
 //-----------------------------------------------------------------------------
@@ -54,7 +54,7 @@ function test1()
   printBugNumber (bug);
   printStatus (summary);
   
-  (function() { eval("function() { }"); })();
+  (function() { eval("(function() { })"); })();
 
   reportCompare(expect, actual, summary + ': nested 1');
 
@@ -67,7 +67,7 @@ function test2()
   printBugNumber (bug);
   printStatus (summary);
   
-  (function () {(function() { eval("function() { }"); })();})();
+  (function () {(function() { eval("(function() { })"); })();})();
 
   reportCompare(expect, actual, summary + ': nested 2');
 

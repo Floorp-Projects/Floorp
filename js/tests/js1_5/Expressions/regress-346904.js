@@ -60,7 +60,7 @@ function test()
     '}';
   try
   {
-    f = eval('function () { return - --x; }');
+    f = eval('(function () { return - --x; })');
     actual = f + '';
     compareSource(expect, actual, summary);
   }
@@ -77,7 +77,7 @@ function test()
     '}';
   try
   {
-    f = eval('function () { return - - x; }');
+    f = eval('(function () { return - - x; })');
     actual = f + '';
     compareSource(expect, actual, summary);
   }
@@ -91,7 +91,7 @@ function test()
   expect = 'SyntaxError';
   try
   {
-    f = eval('function () { return ---x; }');
+    f = eval('(function () { return ---x; })');
     actual = f + '';
     compareSource(expect, actual, summary);
   }
@@ -108,7 +108,7 @@ function test()
     '}';
   try
   {
-    f = eval('function () { return + ++x; }');
+    f = eval('(function () { return + ++x; })');
     actual = f + '';
     compareSource(expect, actual, summary);
   }
@@ -125,7 +125,7 @@ function test()
     '}';
   try
   {
-    f = eval('function () { return + + x; }');
+    f = eval('(function () { return + + x; })');
     actual = f + '';
     compareSource(expect, actual, summary);
   }
@@ -140,7 +140,7 @@ function test()
   expect = 'SyntaxError';
   try
   {
-    f = eval('function () { return +++x; }');
+    f = eval('(function () { return +++x; })');
     actual = f + '';
   }
   catch(ex)

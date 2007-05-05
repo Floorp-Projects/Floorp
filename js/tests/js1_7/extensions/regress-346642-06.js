@@ -60,9 +60,9 @@ function test()
   reportCompare(expect, actual, summary + ': 1');
 
   var z = 6;
-  var f = function (){for(let [] = []; false;) let z; return z}
+  var f = (function (){for(let [] = []; false;) let z; return z});
   expect =  f();
-  actual = eval(""+f)()
+  actual = eval("("+f+")")()
   reportCompare(expect, actual, summary + ': 2');
 
   expect = 3;
