@@ -1,0 +1,32 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:html="http://www.w3.org/1999/xhtml"
+     class="reftest-wait"
+     onload="setTimeout(move_foreignObject, 100);">
+
+  <title>Testcase for repaint of the area previously covered by a foreignObject</title>
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=369992 -->
+
+  <script type="application/javascript">
+
+function move_foreignObject()
+{
+  document.getElementById('fo').setAttribute('y', '100%');
+  setTimeout(finish_test, 100); // give some time to repaint before the test
+}
+
+function finish_test()
+{
+  document.documentElement.removeAttribute('class');
+}
+
+  </script>
+  <rect width="100%" height="100%" fill="lime"/>
+  <foreignObject id="fo" width="100%" height="100%">
+    <html:div style="display:block;width:100%;height:100%;background:red;"/>
+  </foreignObject>
+</svg>
