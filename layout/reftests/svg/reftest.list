@@ -3,9 +3,9 @@
 # include bugs/reftest.list
 
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == clipPath-basic-01.svg pass.svg
-fails == foreignObject-01.svg pass.svg
+== foreignObject-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
-fails == foreignObject-overflow-01.svg pass.svg
+== foreignObject-overflow-01.svg pass.svg
 == getElementById-a-element-01.svg pass.svg
 == nested-viewBox-01.svg pass.svg
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg
