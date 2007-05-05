@@ -61,7 +61,7 @@ svg:not(:root), symbol, image, marker, pattern, foreignObject {
 foreignObject {
   margin: 0 ! important;
   padding: 0 ! important;
-  border: none ! important;
+  border-width: 0 ! important;
 }
 
 *|*::-moz-svg-foreign-content {
