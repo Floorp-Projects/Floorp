@@ -185,18 +185,28 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
 }
 
 static inline PRBool IsFixedPaddingSize(nsStyleUnit aUnit) {
-  return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Null;
+  return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Null ||
+         aUnit == eStyleUnit_Chars;
 }
 static inline PRBool IsFixedMarginSize(nsStyleUnit aUnit) {
-  return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Null;
+  return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Null ||
+         aUnit == eStyleUnit_Chars;
 }
 static inline PRBool IsFixedMaxSize(nsStyleUnit aUnit) {
-  return aUnit == eStyleUnit_Null || aUnit == eStyleUnit_Coord;
+  return aUnit == eStyleUnit_Null || aUnit == eStyleUnit_Coord ||
+         aUnit == eStyleUnit_Chars;
+}
+static inline PRBool IsFixedOffset(nsStyleUnit aUnit) {
+  return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Chars;
+}
+static inline PRBool IsFixedHeight(nsStyleUnit aUnit) {
+  return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Chars;
 }
 
 static inline PRBool IsFixedWidth(const nsStyleCoord& aCoord)
 {
   return aCoord.GetUnit() == eStyleUnit_Coord ||
+         aCoord.GetUnit() == eStyleUnit_Chars ||
          (aCoord.GetUnit() == eStyleUnit_Enumerated &&
           aCoord.GetIntValue() == NS_STYLE_WIDTH_INTRINSIC ||
           aCoord.GetIntValue() == NS_STYLE_WIDTH_MIN_INTRINSIC);
@@ -266,12 +276,12 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
       // positioned relative to the containing block right edge.
       // 'left' length and 'right' auto is the only combination
       // we can be sure of.
-      if (pos->mOffset.GetLeftUnit() != eStyleUnit_Coord ||
+      if (!IsFixedOffset(pos->mOffset.GetLeftUnit()) ||
           pos->mOffset.GetRightUnit() != eStyleUnit_Auto) {
         return PR_TRUE;
       }
     } else {
-      if (pos->mOffset.GetLeftUnit() != eStyleUnit_Coord) {
+      if (!IsFixedOffset(pos->mOffset.GetLeftUnit())) {
         return PR_TRUE;
       }
     }
@@ -283,11 +293,11 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
     // and height is a length or height and bottom are auto and top is not auto,
     // then our frame height does not depend on the parent height.
     // Note that borders never depend on the parent height
-    if (!(pos->mHeight.GetUnit() == eStyleUnit_Coord ||
+    if (!(IsFixedHeight(pos->mHeight.GetUnit()) ||
           (pos->mHeight.GetUnit() == eStyleUnit_Auto &&
            pos->mOffset.GetBottomUnit() == eStyleUnit_Auto &&
            pos->mOffset.GetTopUnit() != eStyleUnit_Auto)) ||
-        pos->mMinHeight.GetUnit() != eStyleUnit_Coord ||
+        !IsFixedHeight(pos->mMinHeight.GetUnit()) ||
         !IsFixedMaxSize(pos->mMaxHeight.GetUnit()) ||
         !IsFixedPaddingSize(padding->mPadding.GetTopUnit()) ||
         !IsFixedPaddingSize(padding->mPadding.GetBottomUnit())) { 
@@ -299,7 +309,7 @@ nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
         !IsFixedMarginSize(margin->mMargin.GetBottomUnit())) {
       return PR_TRUE;
     }
-    if (pos->mOffset.GetTopUnit() != eStyleUnit_Coord) {
+    if (!IsFixedOffset(pos->mOffset.GetTopUnit())) {
       return PR_TRUE;
     }
   }
