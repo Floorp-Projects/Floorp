@@ -182,12 +182,11 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
 
     mMetrics.maxAdvance = atsMetrics.maxAdvanceWidth * size;
 
-    float xWidth = GetCharWidth('x');
     if (atsMetrics.avgAdvanceWidth != 0.0)
         mMetrics.aveCharWidth =
-            PR_MIN(atsMetrics.avgAdvanceWidth * size, xWidth);
+            PR_MIN(atsMetrics.avgAdvanceWidth * size, GetCharWidth('x'));
     else
-        mMetrics.aveCharWidth = xWidth;
+        mMetrics.aveCharWidth = GetCharWidth('x');
 
     mMetrics.underlineOffset = atsMetrics.underlinePosition * size;
     // ATSUI sometimes returns 0 for underline thickness, see bug 361576.
@@ -199,9 +198,7 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
     mMetrics.strikeoutOffset = mMetrics.xHeight / 2.0;
     mMetrics.strikeoutSize = mMetrics.underlineSize;
 
-    PRUint32 glyphID;
-    mMetrics.spaceWidth = GetCharWidth(' ', &glyphID);
-    mSpaceGlyph = glyphID;
+    mMetrics.spaceWidth = GetCharWidth(' ');
 
 #if 0
     fprintf (stderr, "Font: %p size: %f", this, size);
@@ -220,7 +217,7 @@ gfxAtsuiFont::GetUniqueName()
 }
 
 float
-gfxAtsuiFont::GetCharWidth(PRUnichar c, PRUint32 *aGlyphID)
+gfxAtsuiFont::GetCharWidth(PRUnichar c)
 {
     // this sucks.  There is a faster way to go from a char -> glyphs, but it
     // requires using oodles of apple private interfaces.  If we start caching
@@ -238,13 +235,6 @@ gfxAtsuiFont::GetCharWidth(PRUnichar c, PRUint32 *aGlyphID)
     float f =
         FixedToFloat(PR_MAX(trap.upperRight.x, trap.lowerRight.x)) -
         FixedToFloat(PR_MIN(trap.upperLeft.x, trap.lowerLeft.x));
-
-    if (aGlyphID) {
-        ATSUGlyphInfoArray glyphInfo;
-        ByteCount bytes = sizeof(glyphInfo);
-        ATSUGetGlyphInfo(layout, 0, 1, &bytes, &glyphInfo);
-        *aGlyphID = glyphInfo.glyphs[0].glyphID;
-    }
 
     ATSUDisposeTextLayout(layout);
 
@@ -422,19 +412,25 @@ SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aString)
     UCDisposeTextBreakLocator(&locator);
 }
 
-void
+gfxTextRun *
 gfxAtsuiFontGroup::MakeTextRunInternal(const PRUnichar *aString, PRUint32 aLength,
-                                       PRBool aWrapped, gfxTextRun *aTextRun)
+                                       PRBool aWrapped, Parameters *aParams)
 {
     // NS_ASSERTION(!(aParams->mFlags & TEXT_NEED_BOUNDING_BOX),
     //              "Glyph extents not yet supported");
+
+    gfxTextRun *textRun = new gfxTextRun(aParams, aLength - (aWrapped ? 3 : 0));
+    if (!textRun)
+        return nsnull;
+
     const PRUnichar *realString = aString + (aWrapped ? 1 : 0);
-    aTextRun->RecordSurrogates(realString);
-    if (!(aTextRun->GetFlags() & TEXT_IS_8BIT)) {
-        SetupClusterBoundaries(aTextRun, realString);
+    textRun->RecordSurrogates(realString);
+    if (!(aParams->mFlags & TEXT_IS_8BIT)) {
+        SetupClusterBoundaries(textRun, realString);
     }
 
-    InitTextRun(aTextRun, aString, aLength, aWrapped);
+    InitTextRun(textRun, aString, aLength, aWrapped);
+    return textRun;
 }
 
 #define UNICODE_LRO 0x202d
@@ -450,46 +446,36 @@ AppendDirectionalIndicator(PRUint32 aFlags, nsAString& aString)
 
 gfxTextRun *
 gfxAtsuiFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
-                               const Parameters *aParams, PRUint32 aFlags)
+                               Parameters *aParams)
 {
-    gfxTextRun *textRun = new gfxTextRun(aParams, aString, aLength, this, aFlags);
-    if (!textRun)
-        return nsnull;
-
     nsAutoString utf16;
-    AppendDirectionalIndicator(aFlags, utf16);
+    AppendDirectionalIndicator(aParams->mFlags, utf16);
     utf16.Append(aString, aLength);
     // Ensure that none of the whitespace in the run is considered "trailing"
     // by ATSUI's bidi algorithm
     utf16.Append('.');
     utf16.Append(UNICODE_PDF);
-    MakeTextRunInternal(utf16.get(), utf16.Length(), PR_TRUE, textRun);
-    return textRun;
+    return MakeTextRunInternal(utf16.get(), utf16.Length(), PR_TRUE, aParams);
 }
 
 gfxTextRun *
 gfxAtsuiFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
-                               const Parameters *aParams, PRUint32 aFlags)
+                               Parameters *aParams)
 {
-    NS_ASSERTION(aFlags & TEXT_IS_8BIT, "should be marked 8bit");
-    gfxTextRun *textRun = new gfxTextRun(aParams, aString, aLength, this, aFlags);
-    if (!textRun)
-        return nsnull;
-
+    aParams->mFlags |= TEXT_IS_8BIT;
     nsDependentCSubstring cString(reinterpret_cast<const char*>(aString),
                                   reinterpret_cast<const char*>(aString + aLength));
     nsAutoString utf16;
-    PRBool wrapBidi = (aFlags & TEXT_IS_RTL) != 0;
+    PRBool wrapBidi = (aParams->mFlags & TEXT_IS_RTL) != 0;
     if (wrapBidi) {
-      AppendDirectionalIndicator(aFlags, utf16);
+      AppendDirectionalIndicator(aParams->mFlags, utf16);
     }
     AppendASCIItoUTF16(cString, utf16);
     if (wrapBidi) {
       utf16.Append('.');
       utf16.Append(UNICODE_PDF);
     }
-    MakeTextRunInternal(utf16.get(), utf16.Length(), wrapBidi, textRun);
-    return textRun;
+    return MakeTextRunInternal(utf16.get(), utf16.Length(), wrapBidi, aParams);
 }
 
 gfxAtsuiFont*

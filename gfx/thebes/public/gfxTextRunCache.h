@@ -91,8 +91,6 @@ protected:
         FontGroupAndStringT(gfxFontGroup *fg, const GenericString* str)
             : mFontGroup(fg), mString(str) { }
 
-        typedef typename RealString::char_type char_type;
-
         FontGroupAndStringT(const FontGroupAndStringT<GenericString,RealString>& other)
             : mFontGroup(other.mFontGroup), mString(&mRealString)
         {
@@ -102,9 +100,6 @@ protected:
         void Realize() {
             mRealString.Assign(*mString);
             mString = &mRealString;
-        }
-        const char_type *GetRealString() {
-            return mRealString.get();
         }
 
         nsRefPtr<gfxFontGroup> mFontGroup;
