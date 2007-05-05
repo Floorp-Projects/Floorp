@@ -564,7 +564,7 @@ gfxWindowsFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
                                  const Parameters *aParams, PRUint32 aFlags)
 {
     // XXX comment out the assertion for now since it fires too much
-    //    NS_ASSERTION(!(aParams->mFlags & TEXT_NEED_BOUNDING_BOX),
+    //    NS_ASSERTION(!(mFlags & TEXT_NEED_BOUNDING_BOX),
     //                 "Glyph extents not yet supported");
 
     gfxTextRun *textRun = new gfxTextRun(aParams, aString, aLength, this, aFlags);
@@ -606,7 +606,7 @@ gfxWindowsFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
     /* We can only call GDI "A" functions if this is a true 7bit ASCII string,
        because they interpret code points from 0x80-0xFF as if they were
        in the system code page. */
-    if (!isComplex && (aParams->mFlags & TEXT_IS_ASCII)) {
+    if (!isComplex && (mFlags & TEXT_IS_ASCII)) {
         InitTextRunGDI(aParams->mContext, textRun,
                        reinterpret_cast<const char*>(aString), aLength);
     }
