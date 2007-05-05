@@ -79,14 +79,10 @@ private:
   
 #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                  \
   const nsStyle##name_ * GetStyle##name_() {                            \
-    return NS_STATIC_CAST(const nsStyle##name_ *,                       \
-                          GetStyleData(eStyleStruct_##name_));          \
+    return mStyleContextHolder->GetStyle##name_();                      \
   }
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
-
-  // This never returns null
-  const nsStyleStruct* GetStyleData(nsStyleStructID aSID);
 
   nsresult GetOffsetWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
 
@@ -335,8 +331,9 @@ private:
   nsCOMPtr<nsIContent> mContent;
 
   /*
-   * When a frame is unavailable, strong reference to the
-   * style context while we're accessing the data from it.
+   * Strong reference to the style context while we're accessing the data from
+   * it.  This can be either a style context we resolved ourselves or a style
+   * context we got from our frame.
    */
   nsRefPtr<nsStyleContext> mStyleContextHolder;
   nsCOMPtr<nsIAtom> mPseudo;
@@ -346,6 +343,11 @@ private:
    * otherwise.
    */
   nsIFrame* mFrame;
+  /*
+   * While computing style data, the presshell we're working with.  Null
+   * otherwise.
+   */
+  nsIPresShell* mPresShell;
 
   PRInt32 mAppUnitsPerInch; /* For unit conversions */
 };

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  div.source { display: none; font-size: 20px }
+  div.source2 { font-size: 20px ; height: 0; margin: 0; visibility: hidden; }
+  div { background: blue; margin: 10px }
+</style>
+</head>
+<body>
+<!-- Put all the source divs after the test divs so the test divs can margin-collapse like the reference -->
+
+<div id="test1"></div>
+<div id="test2"></div>
+<div id="test3"></div>
+<div id="test4"></div>
+<div id="test5"></div>
+<div id="test6"></div>
+
+<div id="test7"></div>
+<div id="test8"></div>
+<div id="test9"></div>
+<div id="test10"></div>
+<div id="test11"></div>
+<div id="test12"></div>
+
+<div id="source1" class="source">TEST</div>
+<div id="source2" class="source" style="line-height: 5px">TEST</div>
+<div id="source3" class="source" style="line-height: 2em">TEST</div>
+<div id="source4" class="source" style="line-height: normal">TEST</div>
+<div id="source5" class="source" style="line-height: 150%">TEST</div>
+<div id="source6" class="source" style="line-height: 0.5">TEST</div>
+
+<div id="source7" class="source2">TEST</div>
+<div id="source8" class="source2" style="line-height: 5px">TEST</div>
+<div id="source9" class="source2" style="line-height: 2em">TEST</div>
+<div id="source10" class="source2" style="line-height: normal">TEST</div>
+<div id="source11" class="source2" style="line-height: 150%">TEST</div>
+<div id="source12" class="source2" style="line-height: 0.5">TEST</div>
+
+<script>
+  var d = document;
+  for (var i = 1; i <= 12; ++i) {
+    d.getElementById("test" + i).style.height =
+      d.defaultView.getComputedStyle(d.getElementById("source" + i),
+                                     "").lineHeight;
+  }
+</script>
+</html>

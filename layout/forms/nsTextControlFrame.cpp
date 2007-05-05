@@ -1282,9 +1282,7 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
   NS_ENSURE_SUCCESS(rv, rv);
   aRenderingContext->SetFont(fontMet);
 
-  nsPresContext* presContext = PresContext();
-  lineHeight = nsHTMLReflowState::CalcLineHeight(presContext,
-                                                 aRenderingContext,
+  lineHeight = nsHTMLReflowState::CalcLineHeight(aRenderingContext,
                                                  this);
   fontMet->GetAveCharWidth(charWidth);
   fontMet->GetMaxAdvance(charMaxAdvance);
@@ -1313,7 +1311,7 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
   } else {
     // This is to account for the anonymous <br> having a 1 twip width
     // in Full Standards mode, see BRFrame::Reflow and bug 228752.
-    if (presContext->CompatibilityMode() == eCompatibility_FullStandards) {
+    if (PresContext()->CompatibilityMode() == eCompatibility_FullStandards) {
       aIntrinsicSize.width += 1;
     }
   }
