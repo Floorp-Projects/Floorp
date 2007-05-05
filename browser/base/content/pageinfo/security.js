@@ -299,23 +299,9 @@ function hostHasCookies(hostName) {
     return false;
   
   var cookieManager = Components.classes["@mozilla.org/cookiemanager;1"]
-                                .getService(Components.interfaces.nsICookieManager);
+                                .getService(Components.interfaces.nsICookieManager2);
 
-  var iter = cookieManager.enumerator;
-  while (iter.hasMoreElements()){
-    var cookie = iter.getNext().QueryInterface(Components.interfaces.nsICookie);
-    if (!cookie)
-      continue;
-    
-    // A direct match works whether it's a domain cookie or not
-    if (cookie.host == hostName)
-      return true;
-    
-    // Domain cookies just need to end with our target hostname
-    if (cookie.isDomain && endsWith(hostName, cookie.host))
-      return true;
-  }
-  return false;
+  return cookieManager.countCookiesFromHost(hostName) > 0;
 }
 
 /**

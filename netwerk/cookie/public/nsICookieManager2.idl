@@ -43,7 +43,7 @@ interface nsICookie2;
  * Additions to the frozen nsICookieManager
  */
 
-[scriptable, uuid(3E73FF5F-154E-494f-B640-3C654BA2CC2B)]
+[scriptable, uuid(9facbb48-c05d-470b-b4da-897c8d613e00)]
 interface nsICookieManager2 : nsICookieManager
 {
   /**
@@ -77,19 +77,24 @@ interface nsICookieManager2 : nsICookieManager
            in PRInt64     aExpiry);
 
   /**
-   * Find whether a matching cookie already exists, and how many cookies
-   * a given host has already set. This is useful when e.g. prompting the
-   * user whether to accept a given cookie.
+   * Find whether a given cookie already exists.
    *
    * @param aCookie
    *        the cookie to look for
-   * @param aCountFromHost
-   *        the number of cookies found whose hosts are the same as, or
-   *        subdomains of, the host field of aCookie
    *
    * @return true if a cookie was found which matches the host, path, and name
    *         fields of aCookie
    */
-  boolean findMatchingCookie(in nsICookie2     aCookie,
-                             out unsigned long aCountFromHost);
+  boolean cookieExists(in nsICookie2 aCookie);
+
+  /**
+   * Count how many cookies a given host has already set.
+   *
+   * @param aHost
+   *        the raw host string to look for, e.g. "google.com"
+   *
+   * @return the number of cookies found whose hosts are the same as, or
+   *         subdomains of, aHost
+   */
+  unsigned long countCookiesFromHost(in ACString aHost);
 };
