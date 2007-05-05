@@ -586,6 +586,22 @@ nsComboboxControlFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
     result = 0;
   }
 
+  // It's also possible that the pref width of our dropdown is less than that
+  // of our display frame plus a scrollbar.  This can happen, eg, if the
+  // dropdown is empty.
+  if (NS_LIKELY(mListControlFrame && mDisplayFrame)) {
+    nsIScrollableFrame* scrollable;
+    CallQueryInterface(mListControlFrame, &scrollable);
+    NS_ASSERTION(scrollable, "List must be a scrollable frame");
+    nsBoxLayoutState bls(GetPresContext(), aRenderingContext);
+    nscoord displayResult =
+      scrollable->GetDesiredScrollbarSizes(&bls).LeftRight() +
+      nsLayoutUtils::IntrinsicForContainer(aRenderingContext, mDisplayFrame,
+                                           nsLayoutUtils::PREF_WIDTH);
+
+    result = PR_MAX(result, displayResult);
+  }
+
   return result;
 }
 
