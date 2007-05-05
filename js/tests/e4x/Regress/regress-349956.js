@@ -47,8 +47,8 @@ printStatus (summary);
 var f;
 var g;
 
-f = function () { <x/>.@* }
-g = eval(f + '');
+f = function () { <x/>.@* };
+g = eval('(' + f + ')');
 
 expect = f + '';
 actual = g + '';

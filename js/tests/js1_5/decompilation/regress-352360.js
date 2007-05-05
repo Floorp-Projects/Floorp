@@ -61,7 +61,7 @@ function test()
   reportCompare(expect, actual, summary + ': 8 / f()');
 
   expect = -Infinity;
-  actual = 8 / eval('' + f)();
+  actual = 8 / eval('(' + f + ')')();
   reportCompare(expect, actual, summary + ': 8 / eval("" + f)()');
 
   exitFunc ('test');

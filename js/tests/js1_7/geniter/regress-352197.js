@@ -55,7 +55,7 @@ function test()
   
   try
   {
-    var gen = eval('function() { { return 5; } yield 3; }');
+    var gen = eval('(function() { { return 5; } yield 3; })');
     actual = 'No Error';
   }
   catch(ex)

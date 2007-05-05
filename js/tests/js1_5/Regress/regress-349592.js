@@ -51,7 +51,7 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
   
-  function() { try { } finally { try { } finally { } } }
+  (function() { try { } finally { try { } finally { } } });
 
   reportCompare(expect, actual, summary);
 

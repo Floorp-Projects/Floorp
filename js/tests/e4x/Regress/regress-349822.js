@@ -48,7 +48,7 @@ expect = 'function () {\n    return x.@[2];\n}';
 
 try
 {
-    var f = eval('function () { return x.@[2]; }');
+    var f = eval('(function () { return x.@[2]; })');
     actual = f + '';
 }
 catch(ex)

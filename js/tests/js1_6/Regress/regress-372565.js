@@ -51,7 +51,8 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
   
-  function() { for each(x in y) { } const x; }
+  (function() { for each(x in y) { } const x; });
+
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');
