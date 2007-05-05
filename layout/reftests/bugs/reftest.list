@@ -226,4 +226,5 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 372037-1.html 372037-1-ref.html # bug 3
 == 377603-1.html 377603-1-ref.html
 == 378535-1.html 378535-1-ref.html
 == 379316-1.html 379316-1-ref.html
+random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 379316-2.html 379316-2-ref.html # bug 379786
 == 379328-1.html 379328-1-ref.html
