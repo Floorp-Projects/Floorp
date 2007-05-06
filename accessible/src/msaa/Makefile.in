@@ -76,8 +76,10 @@ CPPSRCS = \
   nsXULMenuAccessibleWrap.cpp \
   nsXULTreeAccessibleWrap.cpp \
   nsHyperTextAccessibleWrap.cpp \
+  nsHTMLTableAccessibleWrap.cpp \
   CAccessibleText.cpp \
   CAccessibleEditableText.cpp \
+  CAccessibleTable.cpp \
   $(NULL)
 
 EXPORTS = \
@@ -90,8 +92,10 @@ EXPORTS = \
   nsXULMenuAccessibleWrap.h \
   nsXULTreeAccessibleWrap.h \
   nsHyperTextAccessibleWrap.h \
+  nsHTMLTableAccessibleWrap.h \
   CAccessibleText.h \
   CAccessibleEditableText.h \
+  CAccessibleTable.h \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
