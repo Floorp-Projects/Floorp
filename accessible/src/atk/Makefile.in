@@ -97,6 +97,7 @@ EXPORTS = \
   nsXULMenuAccessibleWrap.h \
   nsXULTreeAccessibleWrap.h \
   nsHyperTextAccessibleWrap.h \
+  nsHTMLTableAccessibleWrap \
   $(NULL)
 
 # we want to force the creation of a static lib.
