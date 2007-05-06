@@ -44,7 +44,7 @@
 struct nsFont;
 %}
 
-interface nsISimpleEnumerator;
+interface nsIStringEnumerator;
 
 /**
  * Native types
@@ -58,7 +58,7 @@ interface nsISimpleEnumerator;
  * John Keiser <jkeiser@netscape.com> and Roland Mainz
  * <roland.mainz@informatik.med.uni-giessen.de> for futher details.
  */
-[scriptable, uuid(722566e9-5983-42e8-9dae-7178b23933c7)]
+[scriptable, uuid(92597c2b-109b-40bb-8f93-9b9acfa31de8)]
 
 interface nsIPrintOptions : nsISupports
 {
@@ -72,13 +72,6 @@ interface nsIPrintOptions : nsISupports
    * and initializes it from prefs
    */
   nsIPrintSettings CreatePrintSettings();
-
-  /**
-   * available Printers
-   * It returns an enumerator object or throws an exception on error cases
-   * like if internal setup failed and/or no printers are available.
-   */
-  nsISimpleEnumerator availablePrinters ();
 
   /**
    * Get a prefixed integer pref 
@@ -100,15 +93,15 @@ interface nsIPrintOptions : nsISupports
   [noscript] voidPtr GetNativeData(in short aDataType);
 };
 
-[scriptable, uuid(a6cf9128-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(5e738fff-404c-4c94-9189-e8f2cce93e94)]
 
 interface nsIPrinterEnumerator : nsISupports
 {
   /**
-   * The name of the default printer 
-   * This name must be in the list of printer names returned by
-   * "availablePrinters"
-   * 
+   * The name of the system default printer. This name should also be
+   * present in printerNameList below. This is not necessarily gecko's
+   * default printer; see nsIPrintSettingsService.defaultPrinterName
+   * for that.
    */
   readonly attribute wstring defaultPrinterName;
 
@@ -122,13 +115,9 @@ interface nsIPrinterEnumerator : nsISupports
   void initPrintSettingsFromPrinter(in wstring aPrinterName, in nsIPrintSettings aPrintSettings);
 
   /**
-   * Returns an array of the names of all installed printers.
-   *
-   * @param  aCount     returns number of printers returned
-   * @param  aResult    returns array of names
-   * @return void
+   * The list of printer names
    */
-  void enumeratePrinters(out PRUint32 aCount,[retval, array, size_is(aCount)] out wstring aResult);
+  readonly attribute nsIStringEnumerator printerNameList;
 
   /*  takes printer selected and will display job properties dlg for that printer
    *  returns true if dialog displays
