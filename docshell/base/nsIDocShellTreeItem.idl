@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsIDocShellTreeNode.idl"
 
 interface nsIDocShellTreeOwner;
 
@@ -48,8 +48,8 @@ interface nsIDocShellTreeOwner;
  * node or a leaf. 
  */
 
-[scriptable, uuid(7d935d63-6d2a-4600-afb5-9a4f7d68b825)]
-interface nsIDocShellTreeItem : nsISupports
+[scriptable, uuid(377d6996-c703-497d-9330-536562fcfff5)]
+interface nsIDocShellTreeItem : nsIDocShellTreeNode
 {
 	/*
 	name of the DocShellTreeItem
