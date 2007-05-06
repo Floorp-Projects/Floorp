@@ -120,12 +120,12 @@ function test()
   compareSource(expect, actual, summary + ': 13');
 
   f = function () { while( {} = e ) ; }
-  expect = 'function () { while( ([] = e) ) {} }';
+  expect = 'function () { while( [] = e ) {} }';
   actual = f + '';
   compareSource(expect, actual, summary + ': 14');
 
   f = function () { while( {} = (a)(b) ) ; }
-  expect = 'function () { while( ([] = a(b)) ) {} }';
+  expect = 'function () { while( [] = a(b) ) {} }';
   actual = f + '';
   compareSource(expect, actual, summary + ': 15');
 
