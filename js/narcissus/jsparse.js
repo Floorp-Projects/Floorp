@@ -547,18 +547,23 @@ function Statement(t, x) {
         return n;
 
       default:
-        if (tt == IDENTIFIER && t.peek() == COLON) {
-            label = t.token.value;
-            ss = x.stmtStack;
-            for (i = ss.length-1; i >= 0; --i) {
-                if (ss[i].label == label)
-                    throw t.newSyntaxError("Duplicate label");
+        if (tt == IDENTIFIER) {
+            t.scanOperand = false;
+            tt = t.peek();
+            t.scanOperand = true;
+            if (tt == COLON) {
+                label = t.token.value;
+                ss = x.stmtStack;
+                for (i = ss.length-1; i >= 0; --i) {
+                    if (ss[i].label == label)
+                        throw t.newSyntaxError("Duplicate label");
+                }
+                t.get();
+                n = new Node(t, LABEL);
+                n.label = label;
+                n.statement = nest(t, x, n, Statement);
+                return n;
             }
-            t.get();
-            n = new Node(t, LABEL);
-            n.label = label;
-            n.statement = nest(t, x, n, Statement);
-            return n;
         }
 
         n = new Node(t, SEMICOLON);
