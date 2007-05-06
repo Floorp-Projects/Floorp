@@ -77,25 +77,37 @@
 
 static const char js_incop_strs[][3] = {"++", "--"};
 
-/* Pollute the namespace locally for MSVC Win16, but not for WatCom.  */
-#ifdef __WINDOWS_386__
-    #ifdef FAR
-        #undef FAR
-    #endif
-#else  /* !__WINDOWS_386__ */
-#ifndef FAR
-#define FAR
-#endif
-#endif /* !__WINDOWS_386__ */
-
-const JSCodeSpec FAR js_CodeSpec[] = {
+const JSCodeSpec js_CodeSpec[] = {
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
-    {name,token,length,nuses,ndefs,prec,format},
+    {length,nuses,ndefs,prec,format},
 #include "jsopcode.tbl"
 #undef OPDEF
 };
 
-uintN js_NumCodeSpecs = sizeof (js_CodeSpec) / sizeof js_CodeSpec[0];
+uintN js_NumCodeSpecs = JS_ARRAY_LENGTH(js_CodeSpec);
+
+/*
+ * Each element of the array is either a source literal associated with JS
+ * bytecode or null.
+ */
+static const char *CodeToken[] = {
+#define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
+    token,
+#include "jsopcode.tbl"
+#undef OPDEF
+};
+
+#ifdef DEBUG
+/*
+ * Array of JS bytecode names used by DEBUG-only js_Disassemble.
+ */
+static const char *CodeName[] = {
+#define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
+    name,
+#include "jsopcode.tbl"
+#undef OPDEF
+};
+#endif
 
 /************************************************************************/
 
@@ -220,7 +232,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     fprintf(fp, "%05u:", loc);
     if (lines)
         fprintf(fp, "%4u", JS_PCToLineNumber(cx, script, pc));
-    fprintf(fp, "  %s", cs->name);
+    fprintf(fp, "  %s", CodeName[op]);
     type = cs->format & JOF_TYPEMASK;
     switch (type) {
       case JOF_BYTE:
@@ -1582,7 +1594,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     JSOp op, lastop, saveop;
     const JSCodeSpec *cs;
     jssrcnote *sn, *sn2;
-    const char *lval, *rval, *xval, *fmt;
+    const char *lval, *rval, *xval, *fmt, *token;
     jsint i, argc;
     char **argv;
     JSAtom *atom;
@@ -1806,7 +1818,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
             jp->dvgfence = NULL;
         }
 
-        if (cs->token) {
+        token = CodeToken[op];
+        if (token) {
             switch (cs->nuses) {
               case 2:
                 sn = js_GetSrcNote(jp->script, pc);
@@ -1827,7 +1840,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     op = saveop;
                 } else if (!inXML) {
                     todo = Sprint(&ss->sprinter, "%s %s %s",
-                                  lval, cs->token, rval);
+                                  lval, token, rval);
                 } else {
                     /* In XML, just concatenate the two operands. */
                     LOCAL_ASSERT(op == JSOP_ADD);
@@ -1837,11 +1850,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case 1:
                 rval = POP_STR();
-                todo = Sprint(&ss->sprinter, ss_format, cs->token, rval);
+                todo = Sprint(&ss->sprinter, ss_format, token, rval);
                 break;
 
               case 0:
-                todo = SprintCString(&ss->sprinter, cs->token);
+                todo = SprintCString(&ss->sprinter, token);
                 break;
 
               default:
@@ -2681,7 +2694,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 if (sn && SN_TYPE(sn) == SRC_HIDDEN)
                     break;
                 rval = POP_STR();
-                js_printf(jp, "\t%s %s;\n", cs->name, rval);
+                js_printf(jp, "\t%s %s;\n", js_throw_str, rval);
                 break;
 
               case JSOP_GOTO:
@@ -3136,7 +3149,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                                   ? js_getter_str
                                   : (lastop == JSOP_SETTER)
                                   ? js_setter_str
-                                  : js_CodeSpec[lastop].token,
+                                  : CodeToken[lastop],
                                   rval);
                 } else {
                     sn = js_GetSrcNote(jp->script, pc);
@@ -3279,7 +3292,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_TYPEOF:
               case JSOP_VOID:
                 rval = POP_STR();
-                todo = Sprint(&ss->sprinter, "%s %s", cs->name, rval);
+                todo = Sprint(&ss->sprinter, "%s %s",
+                              (op == JSOP_VOID) ? js_void_str : js_typeof_str,
+                              rval);
                 break;
 
               case JSOP_INCARG:
@@ -3468,7 +3483,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                                 ? js_getter_str
                                 : (lastop == JSOP_SETTER)
                                 ? js_setter_str
-                                : js_CodeSpec[lastop].token
+                                : CodeToken[lastop]
                               : "",
                               rval);
                 break;
@@ -3516,7 +3531,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                                 ? js_getter_str
                                 : (lastop == JSOP_SETTER)
                                 ? js_setter_str
-                                : js_CodeSpec[lastop].token
+                                : CodeToken[lastop]
                               : "",
                               rval);
                 break;

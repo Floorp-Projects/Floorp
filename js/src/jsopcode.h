@@ -229,8 +229,6 @@ JS_STATIC_ASSERT(sizeof(jsatomid) * JS_BITS_PER_BYTE >=
 #define VARNO_LIMIT             UINT16_LIMIT
 
 struct JSCodeSpec {
-    const char          *name;          /* JS bytecode name */
-    const char          *token;         /* JS source literal or null */
     int8                length;         /* length including opcode byte */
     int8                nuses;          /* arity, -1 if variadic */
     int8                ndefs;          /* number of stack results */
