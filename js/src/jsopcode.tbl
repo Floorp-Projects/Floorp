@@ -247,7 +247,7 @@ OPDEF(JSOP_BINDNAME,  108,"bindname",   NULL,         3,  0,  1,  0,  JOF_CONST|
 OPDEF(JSOP_SETNAME,   109,"setname",    NULL,         3,  2,  1,  3,  JOF_CONST|JOF_NAME|JOF_SET|JOF_ASSIGNING|JOF_DETECTING)
 
 /* Exception handling ops. */
-OPDEF(JSOP_THROW,     110,"throw",      NULL,         1,  1,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_THROW,     110,js_throw_str, NULL,         1,  1,  0,  0,  JOF_BYTE)
 
 /* 'in' and 'instanceof' ops. */
 OPDEF(JSOP_IN,        111,js_in_str,    js_in_str,    1,  2,  1, 11,  JOF_BYTE|JOF_LEFTASSOC)
@@ -446,7 +446,7 @@ OPDEF(JSOP_CALLXMLNAME,   197, "callxmlname",  NULL,  1,  1,  2, 19,  JOF_BYTE|J
 /*
  * Specialized JSOP_TYPEOF to avoid reporting undefined for typeof(0, undef).
  */
-OPDEF(JSOP_TYPEOFEXPR,    198,js_typeof_str, NULL,    1,  1,  1, 15,  JOF_BYTE|JOF_DETECTING)
+OPDEF(JSOP_TYPEOFEXPR,    198,"typeofexpr",  NULL,    1,  1,  1, 15,  JOF_BYTE|JOF_DETECTING)
 
 /*
  * Block-local scope support.
