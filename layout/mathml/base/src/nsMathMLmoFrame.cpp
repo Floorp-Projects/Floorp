@@ -1000,7 +1000,7 @@ nsMathMLmoFrame::AttributeChanged(PRInt32         aNameSpaceID,
     } while (embellishData.coreFrame == this);
 
     // we have automatic data to update in the children of the target frame
-    return ReLayoutChildren(target);
+    return ReLayoutChildren(target, NS_FRAME_IS_DIRTY);
   }
 
   return nsMathMLTokenFrame::

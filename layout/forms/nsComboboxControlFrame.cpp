@@ -447,8 +447,7 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
   // don't even need to cache mDropdownFrame's ascent or anything.  If we don't
   // need to reflow it, just bail out here.
   if (!aReflowState.ShouldReflowAllKids() &&
-      !(mDropdownFrame->GetStateBits() & (NS_FRAME_IS_DIRTY |
-                                          NS_FRAME_HAS_DIRTY_CHILDREN))) {
+      !NS_SUBTREE_DIRTY(mDropdownFrame)) {
     return NS_OK;
   }
 
@@ -828,10 +827,10 @@ nsComboboxControlFrame::HandleRedisplayTextEvent()
   mRedisplayTextEvent.Forget();
 
   ActuallyDisplayText(PR_TRUE);
-  mDisplayFrame->AddStateBits(NS_FRAME_IS_DIRTY);
   // XXXbz This should perhaps be eResize.  Check.
   PresContext()->PresShell()->FrameNeedsReflow(mDisplayFrame,
-                                                  nsIPresShell::eStyleChange);
+                                               nsIPresShell::eStyleChange,
+                                               NS_FRAME_IS_DIRTY);
 
   mInRedisplayText = PR_FALSE;
 }

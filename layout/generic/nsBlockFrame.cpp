@@ -517,9 +517,7 @@ nsBlockFrame::InvalidateInternal(const nsRect& aDamageRect,
 nscoord
 nsBlockFrame::GetBaseline() const
 {
-  NS_ASSERTION(!(GetStateBits() & (NS_FRAME_IS_DIRTY |
-                                   NS_FRAME_HAS_DIRTY_CHILDREN)),
-               "frame must not be dirty");
+  NS_ASSERTION(!NS_SUBTREE_DIRTY(this), "frame must not be dirty");
   nscoord result;
   if (nsLayoutUtils::GetLastLineBaseline(this, &result))
     return result;
@@ -890,7 +888,9 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
   }
 #endif // IBMBIDI
 
-  RenumberLists(aPresContext);
+  if (RenumberLists(aPresContext)) {
+    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+  }
 
   nsresult rv = NS_OK;
 
@@ -2428,10 +2428,11 @@ nsBlockFrame::AttributeChanged(PRInt32         aNameSpaceID,
     nsPresContext* presContext = PresContext();
 
     // XXX Not sure if this is necessary anymore
-    RenumberLists(presContext);
-
-    presContext->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eStyleChange);
+    if (RenumberLists(presContext)) {
+      presContext->PresShell()->
+        FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+                         NS_FRAME_HAS_DIRTY_CHILDREN);
+    }
   }
   else if (nsGkAtoms::value == aAttribute) {
     const nsStyleDisplay* styleDisplay = GetStyleDisplay();
@@ -2447,10 +2448,11 @@ nsBlockFrame::AttributeChanged(PRInt32         aNameSpaceID,
       if (nsnull != blockParent) {
         nsPresContext* presContext = PresContext();
         // XXX Not sure if this is necessary anymore
-        blockParent->RenumberLists(presContext);
-
-        presContext->PresShell()->
-          FrameNeedsReflow(blockParent, nsIPresShell::eStyleChange);
+        if (blockParent->RenumberLists(presContext)) {
+          presContext->PresShell()->
+            FrameNeedsReflow(blockParent, nsIPresShell::eStyleChange,
+                             NS_FRAME_HAS_DIRTY_CHILDREN);
+        }
       }
     }
   }
@@ -4578,9 +4580,9 @@ nsBlockFrame::AppendFrames(nsIAtom*  aListName,
 #endif
   nsresult rv = AddFrames(aFrameList, lastKid);
   if (NS_SUCCEEDED(rv)) {
-    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
     PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                       NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
   }
   return rv;
 }
@@ -4626,9 +4628,9 @@ nsBlockFrame::InsertFrames(nsIAtom*  aListName,
   if (aListName != nsGkAtoms::nextBidi)
 #endif // IBMBIDI
   if (NS_SUCCEEDED(rv)) {
-    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
     PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                       NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
   }
   return rv;
 }
@@ -4901,9 +4903,9 @@ nsBlockFrame::RemoveFrame(nsIAtom*  aListName,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
     PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                       NS_FRAME_HAS_DIRTY_CHILDREN); // XXX sufficient?
   }
   return rv;
 }
@@ -6038,13 +6040,13 @@ nsBlockFrame::FrameStartsCounterScope(nsIFrame* aFrame)
          localName == nsGkAtoms::menu;
 }
 
-void
+PRBool
 nsBlockFrame::RenumberLists(nsPresContext* aPresContext)
 {
   if (!FrameStartsCounterScope(this)) {
     // If this frame doesn't start a counter scope then we don't need
     // to renumber child list items.
-    return;
+    return PR_FALSE;
   }
 
   // Setup initial list ordinal value
@@ -6062,8 +6064,7 @@ nsBlockFrame::RenumberLists(nsPresContext* aPresContext)
 
   // Get to first-in-flow
   nsBlockFrame* block = (nsBlockFrame*) GetFirstInFlow();
-  if (RenumberListsInBlock(aPresContext, block, &ordinal, 0))
-    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+  return RenumberListsInBlock(aPresContext, block, &ordinal, 0);
 }
 
 PRBool

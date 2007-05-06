@@ -266,9 +266,8 @@ nsSliderFrame::AttributeChanged(PRInt32 aNameSpaceID,
       aAttribute == nsGkAtoms::pageincrement ||
       aAttribute == nsGkAtoms::increment) {
 
-      AddStateBits(NS_FRAME_IS_DIRTY);
       PresContext()->PresShell()->
-        FrameNeedsReflow(this, nsIPresShell::eStyleChange);
+        FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
   }
 
   return rv;

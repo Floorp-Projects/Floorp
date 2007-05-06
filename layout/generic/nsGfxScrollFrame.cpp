@@ -734,9 +734,7 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
   PRBool reflowScrollCorner = PR_TRUE;
   if (!aReflowState.ShouldReflowAllKids()) {
     #define NEEDS_REFLOW(frame_) \
-      ((frame_) && \
-       ((frame_)->GetStateBits() & \
-        (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) != 0)
+      ((frame_) && NS_SUBTREE_DIRTY(frame_))
 
     reflowContents = NEEDS_REFLOW(mInner.mScrolledFrame);
     reflowHScrollbar = NEEDS_REFLOW(mInner.mHScrollbarBox);
@@ -2488,10 +2486,10 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
            parentFrame->GetFirstChild(nsGkAtoms::fixedList);
          fixedChild; fixedChild = fixedChild->GetNextSibling()) {
       // force a reflow of the fixed child
-      fixedChild->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
       // XXX Will this work given where we currently are in reflow?
       aState.PresContext()->PresShell()->
-        FrameNeedsReflow(fixedChild, nsIPresShell::eResize);
+        FrameNeedsReflow(fixedChild, nsIPresShell::eResize,
+                         NS_FRAME_HAS_DIRTY_CHILDREN);
     }
   }
   

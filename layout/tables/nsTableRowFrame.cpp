@@ -196,9 +196,8 @@ nsTableRowFrame::AppendFrames(nsIAtom*        aListName,
     }
   }
 
-  AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-  PresContext()->PresShell()->FrameNeedsReflow(this,
-                                                  nsIPresShell::eTreeChange);
+  PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                                               NS_FRAME_HAS_DIRTY_CHILDREN);
   tableFrame->SetGeometryDirty();
 
   return NS_OK;
@@ -237,9 +236,8 @@ nsTableRowFrame::InsertFrames(nsIAtom*        aListName,
   // Insert the frames in the frame list
   mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
   
-  AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-  PresContext()->PresShell()->FrameNeedsReflow(this,
-                                                  nsIPresShell::eTreeChange);
+  PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                                               NS_FRAME_HAS_DIRTY_CHILDREN);
   tableFrame->SetGeometryDirty();
 
   return NS_OK;
@@ -263,9 +261,9 @@ nsTableRowFrame::RemoveFrame(nsIAtom*        aListName,
       // Remove the frame and destroy it
       mFrames.DestroyFrame(aOldFrame);
 
-      AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-      PresContext()->PresShell()->FrameNeedsReflow(this,
-                                                    nsIPresShell::eTreeChange);
+      PresContext()->PresShell()->
+        FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                         NS_FRAME_HAS_DIRTY_CHILDREN);
       tableFrame->SetGeometryDirty();
     }
     else {
@@ -823,8 +821,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
     PRBool doReflowChild = PR_TRUE;
     if (!aReflowState.ShouldReflowAllKids() &&
         !aTableFrame.IsGeometryDirty() &&
-        !(kidFrame->GetStateBits() &
-          (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
+        !NS_SUBTREE_DIRTY(kidFrame)) {
       if (!aReflowState.mFlags.mSpecialHeightReflow)
         doReflowChild = PR_FALSE;
     }
@@ -875,8 +872,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
           (cellDesiredSize.width > cellFrame->GetPriorAvailWidth()) ||
           (GetStateBits() & NS_FRAME_IS_DIRTY)                      ||
           isPaginated                                               ||
-          (cellFrame->GetStateBits() &
-           (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))       ||
+          NS_SUBTREE_DIRTY(cellFrame)                               ||
           // See if it needs a special reflow, or if it had one that we need to undo.
           (cellFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT) ||
           HasPctHeight()) {
