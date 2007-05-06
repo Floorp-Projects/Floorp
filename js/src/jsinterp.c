@@ -2143,7 +2143,6 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     JSAtom **atoms;
     JSObject *obj, *obj2, *parent;
     JSVersion currentVersion, originalVersion;
-    JSBranchCallback onbranch;
     JSBool ok, cond;
     JSTrapHandler interruptHandler;
     jsint depth, len;
@@ -2258,17 +2257,13 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
-     * if it returns false.  We reload onbranch after calling out to native
-     * functions (but not to getters, setters, or other native hooks).
+     * if it returns false.
      */
-#define LOAD_BRANCH_CALLBACK(cx)    (onbranch = (cx)->branchCallback)
-
-    LOAD_BRANCH_CALLBACK(cx);
 #define CHECK_BRANCH(len)                                                     \
     JS_BEGIN_MACRO                                                            \
-        if (len <= 0 && onbranch) {                                           \
+        if (len <= 0 && cx->branchCallback) {                                 \
             SAVE_SP_AND_PC(fp);                                               \
-            if (!(ok = (*onbranch)(cx, script)))                              \
+            if (!(ok = cx->branchCallback(cx, script)))                       \
                 goto out;                                                     \
         }                                                                     \
     JS_END_MACRO
@@ -3434,7 +3429,6 @@ interrupt:
             if (!ok)
                 goto out;
             RESTORE_SP(fp);
-            LOAD_BRANCH_CALLBACK(cx);
             LOAD_INTERRUPT_HANDLER(rt);
             obj = JSVAL_TO_OBJECT(*vp);
             len = js_CodeSpec[op].length;
@@ -4010,7 +4004,6 @@ interrupt:
 
             ok = js_Invoke(cx, argc, 0);
             RESTORE_SP(fp);
-            LOAD_BRANCH_CALLBACK(cx);
             LOAD_INTERRUPT_HANDLER(rt);
             if (!ok)
                 goto out;
@@ -4047,7 +4040,6 @@ interrupt:
             SAVE_SP_AND_PC(fp);
             ok = js_Invoke(cx, argc, 0);
             RESTORE_SP(fp);
-            LOAD_BRANCH_CALLBACK(cx);
             LOAD_INTERRUPT_HANDLER(rt);
             if (!ok)
                 goto out;
