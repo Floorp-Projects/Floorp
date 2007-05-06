@@ -577,7 +577,8 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
-// Possible states: focused, focusable, selected, expanded/collapsed
+// Possible states: focused, focusable, selected, checkable, checked, 
+// expanded/collapsed, invisible
 NS_IMETHODIMP
 nsXULTreeitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
@@ -587,7 +588,7 @@ nsXULTreeitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   if (aExtraState)
     *aExtraState = 0;
 
-  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mColumn && mTree && mTreeView, NS_ERROR_FAILURE);
 
   *aState = nsIAccessibleStates::STATE_FOCUSABLE |
             nsIAccessibleStates::STATE_SELECTABLE;
@@ -629,6 +630,18 @@ nsXULTreeitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   mTree->GetLastVisibleRow(&lastVisibleRow);
   if (mRow < firstVisibleRow || mRow > lastVisibleRow)
     *aState |= nsIAccessibleStates::STATE_INVISIBLE;
+
+
+  PRInt16 type;
+  mColumn->GetType(&type);
+  if (type == nsITreeColumn::TYPE_CHECKBOX) {
+    *aState |= nsIAccessibleStates::STATE_CHECKABLE;
+    nsAutoString checked;
+    mTreeView->GetCellValue(mRow, mColumn, checked);
+    if (checked.EqualsIgnoreCase("true")) {
+      *aState |= nsIAccessibleStates::STATE_CHECKED;
+    }
+  }
 
   return NS_OK;
 }
@@ -716,8 +729,18 @@ nsXULTreeitemAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribu
   PRInt32 setSize = endIndex - startIndex + 1;
   PRInt32 posInSet = mRow - startIndex + 1;
 
+  // set the group attributes
   nsAccessibilityUtils::
     SetAccGroupAttrs(aAttributes, level + 1, posInSet, setSize);
+
+  // set the "cycles" attribute
+  PRBool isCycler;
+  mColumn->GetCycler(&isCycler);
+  if (isCycler) {
+    nsAccessibilityUtils::SetAccAttr(aAttributes, 
+          nsAccessibilityAtoms::cycles,
+          NS_LITERAL_STRING("true"));
+  }
 
   return NS_OK;
 }

@@ -102,6 +102,8 @@ nsHTMLCheckboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   nsresult rv = nsFormControlAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  *aState |= nsIAccessibleStates::STATE_CHECKABLE;
+
   PRBool checked = PR_FALSE;   // Radio buttons and check boxes can be checked
 
   nsCOMPtr<nsIDOMHTMLInputElement> htmlCheckboxElement(do_QueryInterface(mDOMNode));
@@ -127,6 +129,8 @@ nsHTMLRadioButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   nsresult rv = nsAccessibleWrap::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  *aState |= nsIAccessibleStates::STATE_CHECKABLE;
+  
   PRBool checked = PR_FALSE;   // Radio buttons and check boxes can be checked
 
   nsCOMPtr<nsIDOMHTMLInputElement> htmlRadioElement(do_QueryInterface(mDOMNode));
