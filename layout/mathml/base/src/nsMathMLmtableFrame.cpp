@@ -448,7 +448,7 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
   // align - just need to issue a dirty (resize) reflow command
   if (aAttribute == nsGkAtoms::align) {
     PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eResize);
+      FrameNeedsReflow(this, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
     return NS_OK;
   }
 
@@ -458,8 +458,10 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
   if (aAttribute == nsGkAtoms::displaystyle_) {
     nsMathMLContainerFrame::RebuildAutomaticDataForChildren(mParent);
     nsMathMLContainerFrame::PropagateScriptStyleFor(tableFrame, mPresentationData.scriptLevel);
+    // XXXbz I have no idea why this is reflowing the _parent_ instead of
+    // us...
     PresContext()->PresShell()->
-      FrameNeedsReflow(mParent, nsIPresShell::eStyleChange);
+      FrameNeedsReflow(mParent, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
     return NS_OK;
   }
 

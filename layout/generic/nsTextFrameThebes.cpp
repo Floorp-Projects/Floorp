@@ -3093,22 +3093,26 @@ nsTextFrame::CharacterDataChanged(nsPresContext* aPresContext,
   if (aAppend) {
     lastTextFrame = NS_STATIC_CAST(nsTextFrame*, GetLastContinuation());
     lastTextFrame->mState &= ~TEXT_WHITESPACE_FLAGS;
-    lastTextFrame->mState |= NS_FRAME_IS_DIRTY;
     targetTextFrame = lastTextFrame;
   } else {
-    // Mark this frame and all the continuation frames as dirty, and fix up
-    // mContentLengths to be valid
+    // Mark all the continuation frames as dirty, and fix up mContentLengths to
+    // be valid.
+    // Don't set NS_FRAME_IS_DIRTY on |this|, since we call FrameNeedsReflow
+    // below.
     nsTextFrame* textFrame = this;
     PRInt32 newLength = nodeLength;
     do {
       textFrame->mState &= ~TEXT_WHITESPACE_FLAGS;
-      textFrame->mState |= NS_FRAME_IS_DIRTY;
       // If the text node has shrunk, clip the frame contentlength as necessary
       textFrame->mContentLength = PR_MIN(mContentLength, newLength);
       newLength -= textFrame->mContentLength;
       lastTextFrame = textFrame;
       textFrame = NS_STATIC_CAST(nsTextFrame*, textFrame->GetNextContinuation());
-    } while (textFrame);
+      if (!textFrame) {
+        break;
+      }
+      textFrame->mState |= NS_FRAME_IS_DIRTY;
+    } while (1);
     targetTextFrame = this;
   }
   // Set the length of the last text frame in the chain (necessary if the node grew)
@@ -3116,7 +3120,8 @@ nsTextFrame::CharacterDataChanged(nsPresContext* aPresContext,
 
   // Ask the parent frame to reflow me.
   aPresContext->GetPresShell()->FrameNeedsReflow(targetTextFrame,
-                                                 nsIPresShell::eStyleChange);
+                                                 nsIPresShell::eStyleChange,
+                                                 NS_FRAME_IS_DIRTY);
 
   return NS_OK;
 }

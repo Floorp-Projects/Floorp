@@ -293,8 +293,7 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
 
   // XXXbz Eventually we may want to check-and-bail if
   // !aReflowState.ShouldReflowAllKids() &&
-  // !(firstKid->GetStateBits() &
-  //   (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)).
+  // !NS_SUBTREE_DIRTY(firstKid).
   // We'd need to cache our ascent for that, of course.
   
   nsMargin focusPadding = mRenderer.GetAddedButtonBorderAndPadding();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -389,9 +390,9 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
       mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::selection_, value, notify);
 
       // Now trigger a content-changed reflow...
-      mSelectedFrame->AddStateBits(NS_FRAME_IS_DIRTY);
       PresContext()->PresShell()->
-        FrameNeedsReflow(mSelectedFrame, nsIPresShell::eTreeChange);
+        FrameNeedsReflow(mSelectedFrame, nsIPresShell::eTreeChange,
+                         NS_FRAME_IS_DIRTY);
     }
   }
   else if (NS_MATHML_ACTION_TYPE_RESTYLE == mActionType) {
@@ -405,9 +406,9 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
           node->SetAttribute(NS_LITERAL_STRING("actiontype"), mRestyle);
 
         // Trigger a style change reflow
-        mSelectedFrame->AddStateBits(NS_FRAME_IS_DIRTY);
         PresContext()->PresShell()->
-          FrameNeedsReflow(mSelectedFrame, nsIPresShell::eStyleChange);
+          FrameNeedsReflow(mSelectedFrame, nsIPresShell::eStyleChange,
+                           NS_FRAME_IS_DIRTY);
       }
     }
   }

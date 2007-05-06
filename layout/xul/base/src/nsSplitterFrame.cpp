@@ -608,8 +608,8 @@ nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext, nsGUIEvent* aEvent)
     /*
       nsIPresShell *shell = aPresContext->PresShell();
 
-      mOuter->mState |= NS_FRAME_IS_DIRTY;
-      shell->FrameNeedsReflow(mOuter, nsIPresShell::eStyleChange);
+      shell->FrameNeedsReflow(mOuter, nsIPresShell::eStyleChange,
+                              NS_FRAME_IS_DIRTY);
     */
     mDidDrag = PR_TRUE;
   }
@@ -1002,9 +1002,8 @@ nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext)
     aPresContext->PresShell()->FlushPendingNotifications(Flush_Display);
   }
   else {
-    mOuter->AddStateBits(NS_FRAME_IS_DIRTY);
     aPresContext->PresShell()->
-      FrameNeedsReflow(mOuter, nsIPresShell::eTreeChange);
+      FrameNeedsReflow(mOuter, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
   }
 }
 
@@ -1100,8 +1099,8 @@ nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIBox* aChildB
   nsWeakFrame weakBox(aChildBox);
   content->SetAttr(kNameSpaceID_None, attribute, prefValue, PR_TRUE);
   ENSURE_TRUE(weakBox.IsAlive());
-  aChildBox->AddStateBits(NS_FRAME_IS_DIRTY);
-  aState.PresShell()->FrameNeedsReflow(aChildBox, nsIPresShell::eStyleChange);
+  aState.PresShell()->FrameNeedsReflow(aChildBox, nsIPresShell::eStyleChange,
+                                       NS_FRAME_IS_DIRTY);
 }
 
 

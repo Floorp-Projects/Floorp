@@ -412,11 +412,10 @@ void nsTableFrame::AttributeChangedFor(nsIFrame*       aFrame,
         cells.AppendElement(cellFrame);
         InsertCells(cells, rowIndex, colIndex - 1);
 
-        AddStateBits(NS_FRAME_IS_DIRTY);
         // XXX Should this use eStyleChange?  It currently doesn't need
         // to, but it might given more optimization.
-        PresContext()->PresShell()->FrameNeedsReflow(this,
-          nsIPresShell::eTreeChange);
+        PresContext()->PresShell()->
+          FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
       }
     }
   }
@@ -1871,7 +1870,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
   // reflows with a constrained width.
   PRBool needToInitiateSpecialReflow =
     !!(GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
-  if ((GetStateBits() & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) ||
+  if (NS_SUBTREE_DIRTY(this) ||
       aReflowState.ShouldReflowAllKids() ||
       IsGeometryDirty() ||
       needToInitiateSpecialReflow) {
@@ -2258,9 +2257,8 @@ nsTableFrame::AppendFrames(nsIAtom*        aListName,
   printf("=== TableFrame::AppendFrames\n");
   Dump(PR_TRUE, PR_TRUE, PR_TRUE);
 #endif
-  AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-  PresContext()->PresShell()->FrameNeedsReflow(this,
-                                                  nsIPresShell::eTreeChange);
+  PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                                               NS_FRAME_HAS_DIRTY_CHILDREN);
   SetGeometryDirty();
 
   return NS_OK;
@@ -2366,9 +2364,8 @@ nsTableFrame::InsertFrames(nsIAtom*        aListName,
     return NS_OK;
   }
 
-  AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-  PresContext()->PresShell()->FrameNeedsReflow(this,
-                                                  nsIPresShell::eTreeChange);
+  PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                                               NS_FRAME_HAS_DIRTY_CHILDREN);
   SetGeometryDirty();
 #ifdef DEBUG_TABLE_CELLMAP
   printf("=== TableFrame::InsertFrames\n");
@@ -2446,9 +2443,8 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
     nsRect damageArea(0, 0, PR_MAX(1, GetColCount()), PR_MAX(1, GetRowCount()));
     SetBCDamageArea(damageArea);
   }
-  AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-  PresContext()->PresShell()->FrameNeedsReflow(this,
-                                                  nsIPresShell::eTreeChange);
+  PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                                               NS_FRAME_HAS_DIRTY_CHILDREN);
   SetGeometryDirty();
 #ifdef DEBUG_TABLE_CELLMAP
   printf("=== TableFrame::RemoveFrame\n");
@@ -2737,8 +2733,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
     // Get the frame state bits
     // See if we should only reflow the dirty child frames
     if (reflowAllKids ||
-        (kidFrame->GetStateBits() & (NS_FRAME_IS_DIRTY |
-                                     NS_FRAME_HAS_DIRTY_CHILDREN)) ||
+        NS_SUBTREE_DIRTY(kidFrame) ||
         (aReflowState.reflowState.mFlags.mSpecialHeightReflow &&
          (isPaginated || (kidFrame->GetStateBits() &
                           NS_FRAME_CONTAINS_RELATIVE_HEIGHT)))) {

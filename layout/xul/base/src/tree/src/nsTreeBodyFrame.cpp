@@ -1730,8 +1730,9 @@ nsTreeBodyFrame::MarkDirtyIfSelect()
     // XXX optimize this more
 
     mStringWidth = -1;
-    AddStateBits(NS_FRAME_IS_DIRTY);
-    PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+    PresContext()->PresShell()->FrameNeedsReflow(this,
+                                                 nsIPresShell::eTreeChange,
+                                                 NS_FRAME_IS_DIRTY);
   }
 }
 
@@ -2694,9 +2695,8 @@ nsTreeBodyFrame::PaintTreeBody(nsIRenderingContext& aRenderingContext,
 
   if (oldPageCount != mPageLength || mHorzWidth != CalcHorzWidth(GetScrollParts())) {
     // Schedule a ResizeReflow that will update our info properly.
-    AddStateBits(NS_FRAME_IS_DIRTY);
     PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eResize);
+      FrameNeedsReflow(this, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
   }
   #ifdef DEBUG
   PRInt32 rowCount = mRowCount;

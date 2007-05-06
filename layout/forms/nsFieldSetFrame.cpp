@@ -459,13 +459,9 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     reflowContent = mContentFrame != nsnull;
     reflowLegend = mLegendFrame != nsnull;
   } else {
-    reflowContent = mContentFrame &&
-      (mContentFrame->GetStateBits() &
-       (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) != 0;
+    reflowContent = mContentFrame && NS_SUBTREE_DIRTY(mContentFrame);
 
-    reflowLegend = mLegendFrame &&
-      (mLegendFrame->GetStateBits() &
-       (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) != 0;
+    reflowLegend = mLegendFrame && NS_SUBTREE_DIRTY(mLegendFrame);
   }
 
   nsSize availSize(aReflowState.ComputedWidth(), aReflowState.availableHeight);
@@ -699,9 +695,8 @@ nsFieldSetFrame::RemoveFrame(nsIAtom*       aListName,
 
     mFrames.DestroyFrame(mLegendFrame);
     mLegendFrame = nsnull;
-    AddStateBits(NS_FRAME_IS_DIRTY);
     PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
     return NS_OK;
   }
   return mContentFrame->RemoveFrame(aListName, aOldFrame);
@@ -729,9 +724,9 @@ nsFieldSetFrame::MaybeSetLegend(nsIFrame* aFrameList, nsIAtom* aListName)
     aFrameList = mLegendFrame->GetNextSibling();
     mLegendFrame->SetNextSibling(mContentFrame);
     mFrames.SetFrames(mLegendFrame);
-    AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
     PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                       NS_FRAME_HAS_DIRTY_CHILDREN);
   }
   return aFrameList;
 }

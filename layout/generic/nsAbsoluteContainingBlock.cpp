@@ -88,11 +88,11 @@ nsAbsoluteContainingBlock::AppendFrames(nsIFrame*      aDelegatingFrame,
 #endif
   mAbsoluteFrames.AppendFrames(nsnull, aFrameList);
 
-  aDelegatingFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
   // no damage to intrinsic widths, since absolutely positioned frames can't
   // change them
   return aDelegatingFrame->PresContext()->PresShell()->
-    FrameNeedsReflow(aDelegatingFrame, nsIPresShell::eResize);
+    FrameNeedsReflow(aDelegatingFrame, nsIPresShell::eResize,
+                     NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
 nsresult
@@ -110,11 +110,11 @@ nsAbsoluteContainingBlock::InsertFrames(nsIFrame*      aDelegatingFrame,
 #endif
   mAbsoluteFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
 
-  aDelegatingFrame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
   // no damage to intrinsic widths, since absolutely positioned frames can't
   // change them
   return aDelegatingFrame->PresContext()->PresShell()->
-    FrameNeedsReflow(aDelegatingFrame, nsIPresShell::eResize);
+    FrameNeedsReflow(aDelegatingFrame, nsIPresShell::eResize,
+                     NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
 nsresult
@@ -170,8 +170,7 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
   nsIFrame* kidFrame;
   for (kidFrame = mAbsoluteFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
     if (reflowAll ||
-        (kidFrame->GetStateBits() &
-           (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) ||
+        NS_SUBTREE_DIRTY(kidFrame) ||
         FrameDependsOnContainer(kidFrame, aCBWidthChanged, aCBHeightChanged)) {
       // Reflow the frame
       nsReflowStatus  kidStatus;
