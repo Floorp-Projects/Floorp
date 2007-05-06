@@ -458,8 +458,8 @@ nsMathMLmtableOuterFrame::AttributeChanged(PRInt32  aNameSpaceID,
   if (aAttribute == nsGkAtoms::displaystyle_) {
     nsMathMLContainerFrame::RebuildAutomaticDataForChildren(mParent);
     nsMathMLContainerFrame::PropagateScriptStyleFor(tableFrame, mPresentationData.scriptLevel);
-    // XXXbz I have no idea why this is reflowing the _parent_ instead of
-    // us...
+    // Need to reflow the parent, not us, because this can actually
+    // affect siblings.
     PresContext()->PresShell()->
       FrameNeedsReflow(mParent, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
     return NS_OK;
