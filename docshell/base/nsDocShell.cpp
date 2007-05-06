@@ -2080,16 +2080,15 @@ nsDocShell::GetTreeOwner(nsIDocShellTreeOwner ** aTreeOwner)
 
 #ifdef DEBUG_DOCSHELL_FOCUS
 static void 
-PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
+PrintDocTree(nsIDocShellTreeItem * aParentNode, int aLevel)
 {
   for (PRInt32 i=0;i<aLevel;i++) printf("  ");
 
   PRInt32 childWebshellCount;
   aParentNode->GetChildCount(&childWebshellCount);
   nsCOMPtr<nsIDocShell> parentAsDocShell(do_QueryInterface(aParentNode));
-  nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(aParentNode));
   PRInt32 type;
-  parentAsItem->GetItemType(&type);
+  aParentNode->GetItemType(&type);
   nsCOMPtr<nsIPresShell> presShell;
   parentAsDocShell->GetPresShell(getter_AddRefs(presShell));
   nsCOMPtr<nsPresContext> presContext;
@@ -2115,20 +2114,18 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
     for (PRInt32 i=0;i<childWebshellCount;i++) {
       nsCOMPtr<nsIDocShellTreeItem> child;
       aParentNode->GetChildAt(i, getter_AddRefs(child));
-      nsCOMPtr<nsIDocShellTreeNode> childAsNode(do_QueryInterface(child));
-      PrintDocTree(childAsNode, aLevel+1);
+      PrintDocTree(child, aLevel+1);
     }
   }
 }
 
 static void 
-PrintDocTree(nsIDocShellTreeNode * aParentNode)
+PrintDocTree(nsIDocShellTreeItem * aParentNode)
 {
   NS_ASSERTION(aParentNode, "Pointer is null!");
 
-  nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(aParentNode));
   nsCOMPtr<nsIDocShellTreeItem> parentItem;
-  item->GetParent(getter_AddRefs(parentItem));
+  aParentNode->GetParent(getter_AddRefs(parentItem));
   while (parentItem) {
     nsCOMPtr<nsIDocShellTreeItem>tmp;
     parentItem->GetParent(getter_AddRefs(tmp));
@@ -2139,13 +2136,10 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode)
   }
 
   if (!parentItem) {
-    parentItem = do_QueryInterface(aParentNode);
+    parentItem = aParentNode;
   }
 
-  if (parentItem) {
-    nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(parentItem));
-    PrintDocTree(parentAsNode, 0);
-  }
+  PrintDocTree(parentItem, 0);
 }
 #endif
 
@@ -2153,9 +2147,9 @@ NS_IMETHODIMP
 nsDocShell::SetTreeOwner(nsIDocShellTreeOwner * aTreeOwner)
 {
 #ifdef DEBUG_DOCSHELL_FOCUS
-    nsCOMPtr<nsIDocShellTreeNode> node(do_QueryInterface(aTreeOwner));
-    if (node) {
-      PrintDocTree(node);
+    nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(aTreeOwner));
+    if (item) {
+      PrintDocTree(item);
     }
 #endif
 
@@ -2420,23 +2414,19 @@ nsDocShell::FindChildWithName(const PRUnichar * aName,
         if (aRecurse && (aRequestor != child))  // Only ask the child if it isn't the requestor
         {
             // See if child contains the shell with the given name
-            nsCOMPtr<nsIDocShellTreeNode>
-                childAsNode(do_QueryInterface(child));
-            if (childAsNode) {
 #ifdef DEBUG
-                nsresult rv =
+            nsresult rv =
 #endif
-                childAsNode->FindChildWithName(aName, PR_TRUE,
-                                               aSameType,
-                                               NS_STATIC_CAST(nsIDocShellTreeItem*,
-                                                              this),
-                                               aOriginalRequestor,
-                                               _retval);
-                NS_ASSERTION(NS_SUCCEEDED(rv),
-                             "FindChildWithName should not fail here");
-                if (*_retval)           // found it
-                    return NS_OK;
-            }
+            child->FindChildWithName(aName, PR_TRUE,
+                                     aSameType,
+                                     NS_STATIC_CAST(nsIDocShellTreeItem*,
+                                                    this),
+                                     aOriginalRequestor,
+                                     _retval);
+            NS_ASSERTION(NS_SUCCEEDED(rv),
+                         "FindChildWithName should not fail here");
+            if (*_retval)           // found it
+                return NS_OK;
         }
     }
     return NS_OK;
@@ -3491,10 +3481,10 @@ nsDocShell::Destroy()
     PersistLayoutHistoryState();
 
     // Remove this docshell from its parent's child list
-    nsCOMPtr<nsIDocShellTreeNode> docShellParentAsNode =
+    nsCOMPtr<nsIDocShellTreeItem> docShellParentAsItem =
         do_QueryInterface(GetAsSupports(mParent));
-    if (docShellParentAsNode)
-        docShellParentAsNode->RemoveChild(this);
+    if (docShellParentAsItem)
+        docShellParentAsItem->RemoveChild(this);
 
     if (mContentViewer) {
         mContentViewer->Close(nsnull);

@@ -39,6 +39,7 @@
 
 #include "nsDocShellEnumerator.h"
 
+#include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 
 nsDocShellEnumerator::nsDocShellEnumerator(PRInt32 inEnumerationDirection)

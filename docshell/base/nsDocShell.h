@@ -148,7 +148,6 @@ protected:
 class nsDocShell : public nsDocLoader,
                    public nsIDocShell,
                    public nsIDocShellTreeItem, 
-                   public nsIDocShellTreeNode,
                    public nsIDocShellHistory,
                    public nsIWebNavigation,
                    public nsIBaseWindow, 
