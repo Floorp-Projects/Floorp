@@ -811,7 +811,8 @@ nsMathMLContainerFrame::RebuildAutomaticDataForChildren(nsIFrame* aParentFrame)
 }
 
 /* static */ nsresult
-nsMathMLContainerFrame::ReLayoutChildren(nsIFrame* aParentFrame)
+nsMathMLContainerFrame::ReLayoutChildren(nsIFrame* aParentFrame,
+                                         nsFrameState aBits)
 {
   if (!aParentFrame)
     return NS_OK;
@@ -843,7 +844,8 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIFrame* aParentFrame)
     if (content->Tag() == nsGkAtoms::math)
       break;
 
-    // mark the frame dirty, and continue to climb up
+    // mark the frame dirty, and continue to climb up.  It's important that
+    // we're NOT doing this to the frame we plan to pass to FrameNeedsReflow()
     frame->AddStateBits(NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
 
     frame = parent;
@@ -875,7 +877,7 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIFrame* aParentFrame)
     return NS_OK;
 
   return frame->PresContext()->PresShell()->
-           FrameNeedsReflow(frame, nsIPresShell::eStyleChange);
+    FrameNeedsReflow(frame, nsIPresShell::eStyleChange, aBits);
 }
 
 // There are precise rules governing children of a MathML frame,
@@ -893,13 +895,16 @@ nsMathMLContainerFrame::ChildListChanged(PRInt32 aModType)
     nsIFrame* parent = mParent;
     nsEmbellishData embellishData;
     for ( ; parent; frame = parent, parent = parent->GetParent()) {
-      frame->AddStateBits(NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
       GetEmbellishDataFrom(parent, embellishData);
       if (embellishData.coreFrame != mEmbellishData.coreFrame)
         break;
+
+      // Important: do not do this to the frame we plan to pass to
+      // ReLayoutChildren
+      frame->AddStateBits(NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
     }
   }
-  return ReLayoutChildren(frame);
+  return ReLayoutChildren(frame, NS_FRAME_IS_DIRTY);
 }
 
 NS_IMETHODIMP
@@ -957,7 +962,8 @@ nsMathMLContainerFrame::AttributeChanged(PRInt32         aNameSpaceID,
   // we can't check all of them here, play safe by requesting a reflow.
   // XXXldb This should only do work for attributes that cause changes!
   return PresContext()->PresShell()->
-           FrameNeedsReflow(this, nsIPresShell::eStyleChange);
+           FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+                            NS_FRAME_IS_DIRTY);
 }
 
 nsresult 

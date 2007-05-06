@@ -74,7 +74,7 @@ nsMathMLmoverFrame::AttributeChanged(PRInt32         aNameSpaceID,
   if (nsGkAtoms::accent_ == aAttribute) {
     // When we have automatic data to update within ourselves, we ask our
     // parent to re-layout its children
-    return ReLayoutChildren(mParent);
+    return ReLayoutChildren(mParent, NS_FRAME_IS_DIRTY);
   }
 
   return nsMathMLContainerFrame::

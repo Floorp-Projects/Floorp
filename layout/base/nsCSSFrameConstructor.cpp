@@ -9800,8 +9800,8 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIFrame* aFrame,
   if (IsFrameSpecial(aFrame))
     aFrame = GetIBContainingBlockFor(aFrame);
 
-  aFrame->AddStateBits(NS_FRAME_IS_DIRTY);
-  mPresShell->FrameNeedsReflow(aFrame, nsIPresShell::eStyleChange);
+  mPresShell->FrameNeedsReflow(aFrame, nsIPresShell::eStyleChange,
+                               NS_FRAME_IS_DIRTY);
 
   return NS_OK;
 }

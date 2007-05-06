@@ -142,8 +142,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
   NS_PRECONDITION(aInit == PR_TRUE || aInit == PR_FALSE,
                   "aInit out of range for PRBool");
   NS_PRECONDITION(!mFlags.mSpecialHeightReflow ||
-                  !(aFrame->GetStateBits() & (NS_FRAME_IS_DIRTY |
-                                              NS_FRAME_HAS_DIRTY_CHILDREN)),
+                  !NS_SUBTREE_DIRTY(aFrame),
                   "frame should be clean when getting special height reflow");
 
   parentReflowState = &aParentReflowState;
@@ -339,9 +338,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext)
       // XXX This condition doesn't quite match CalcQuirkContainingBlockHeight.
       mFlags.mVResize = mCBReflowState->mFlags.mVResize;
     } else {
-      mFlags.mVResize = mFlags.mHResize || 
-                        (frame->GetStateBits() &
-                         (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN));
+      mFlags.mVResize = mFlags.mHResize || NS_SUBTREE_DIRTY(frame); 
     }
   } else {
     // not 'auto' height

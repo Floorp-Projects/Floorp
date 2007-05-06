@@ -99,6 +99,7 @@ class nsIScrollableFrame;
 class gfxASurface;
 
 typedef short SelectionType;
+typedef PRUint32 nsFrameState;
 
 // DC543B71-6F1A-4B9F-B4CF-693AEC4BA24A
 #define NS_IPRESSHELL_IID \
@@ -341,10 +342,11 @@ public:
                                     nsIFrame** aPlaceholderFrame) const = 0;
 
   /**
-   * Tell the pres shell that a frame is dirty (as indicated by bits)
-   * and needs Reflow.  It's OK if this is an ancestor of the frame needing
-   * reflow as long as the ancestor chain between them doesn't cross a reflow
-   * root.
+   * Tell the pres shell that a frame needs to be marked dirty and needs
+   * Reflow.  It's OK if this is an ancestor of the frame needing reflow as
+   * long as the ancestor chain between them doesn't cross a reflow root.  The
+   * bits to add should be some combination of NS_FRAME_IS_DIRTY and
+   * NS_FRAME_HAS_DIRTY_CHILDREN.
    */
   enum IntrinsicDirty {
     // XXXldb eResize should be renamed
@@ -353,7 +355,8 @@ public:
     eStyleChange // Do eTreeChange, plus all of aFrame's descendants
   };
   NS_IMETHOD FrameNeedsReflow(nsIFrame *aFrame,
-                              IntrinsicDirty aIntrinsicDirty) = 0;
+                              IntrinsicDirty aIntrinsicDirty,
+                              nsFrameState aBitsToAdd) = 0;
 
   NS_IMETHOD CancelAllPendingReflows() = 0;
 

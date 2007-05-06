@@ -494,8 +494,7 @@ void nsSVGForeignObjectFrame::RequestReflow(nsIPresShell::IntrinsicDirty aType)
   if (!kid)
     return;
 
-  kid->AddStateBits(NS_FRAME_IS_DIRTY);
-  PresContext()->PresShell()->FrameNeedsReflow(kid, aType);
+  PresContext()->PresShell()->FrameNeedsReflow(kid, aType, NS_FRAME_IS_DIRTY);
 }
 
 void nsSVGForeignObjectFrame::UpdateGraphic()

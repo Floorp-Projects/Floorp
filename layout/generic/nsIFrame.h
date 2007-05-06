@@ -187,6 +187,8 @@ typedef PRUint32 nsFrameState;
 // This bit is set when the frame is first created.
 // This bit is cleared by DidReflow after the required call to Reflow has
 // finished.
+// Do not set this bit yourself if you plan to pass the frame to
+// nsIPresShell::FrameNeedsReflow.  Pass the right arguments instead.
 #define NS_FRAME_IS_DIRTY                             0x00000400
 
 // If this bit is set then the frame is unflowable.
@@ -200,6 +202,8 @@ typedef PRUint32 nsFrameState;
 // do as much work as it would if NS_FRAME_IS_DIRTY were set.
 // This bit is cleared by DidReflow after the required call to Reflow has
 // finished.
+// Do not set this bit yourself if you plan to pass the frame to
+// nsIPresShell::FrameNeedsReflow.  Pass the right arguments instead.
 #define NS_FRAME_HAS_DIRTY_CHILDREN                   0x00001000
 
 // If this bit is set, the frame has an associated view
@@ -243,6 +247,11 @@ typedef PRUint32 nsFrameState;
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                        0x00400000
 #define NS_STATE_IS_DIRECTION_NORMAL                  0x80000000
+
+// Helper macros
+#define NS_SUBTREE_DIRTY(_frame)  \
+  (((_frame)->GetStateBits() &      \
+    (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) != 0)
 
 //----------------------------------------------------------------------
 

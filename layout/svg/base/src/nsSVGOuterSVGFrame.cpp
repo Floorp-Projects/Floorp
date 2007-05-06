@@ -380,9 +380,8 @@ nsSVGOuterSVGFrame::AttributeChanged(PRInt32         aNameSpaceID,
   if (aNameSpaceID == kNameSpaceID_None &&
       !(GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
       (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height)) {
-    AddStateBits(NS_FRAME_IS_DIRTY);
     PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eStyleChange);
+      FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
   }
 
   return NS_OK;
@@ -637,7 +636,8 @@ void nsSVGOuterSVGFrame::InitiateReflow()
   mNeedsReflow = PR_FALSE;
   
   nsIPresShell* presShell = PresContext()->PresShell();
-  presShell->FrameNeedsReflow(this, nsIPresShell::eStyleChange);
+  presShell->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+                              NS_FRAME_IS_DIRTY);
   // XXXbz why is this synchronously flushing reflows, exactly?  If it
   // needs to, why is it not using the presshell's reflow batching
   // instead of hacking its own?

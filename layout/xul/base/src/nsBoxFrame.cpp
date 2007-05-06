@@ -1037,9 +1037,9 @@ nsBoxFrame::RemoveFrame(nsIAtom*        aListName,
   aOldFrame->Destroy();
 
   // mark us dirty and generate a reflow command
-  mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
   PresContext()->PresShell()->
-    FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+    FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                     NS_FRAME_HAS_DIRTY_CHILDREN);
   return NS_OK;
 }
 
@@ -1066,9 +1066,9 @@ nsBoxFrame::InsertFrames(nsIAtom*        aListName,
        SetDebugOnChildList(state, mFrames.FirstChild(), PR_TRUE);
 #endif
 
-   mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
    PresContext()->PresShell()->
-     FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+     FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                      NS_FRAME_HAS_DIRTY_CHILDREN);
    return NS_OK;
 }
 
@@ -1093,10 +1093,11 @@ nsBoxFrame::AppendFrames(nsIAtom*        aListName,
        SetDebugOnChildList(state, mFrames.FirstChild(), PR_TRUE);
 #endif
 
+   // XXXbz why is this NS_FRAME_FIRST_REFLOW check here?
    if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-     mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
      PresContext()->PresShell()->
-       FrameNeedsReflow(this, nsIPresShell::eTreeChange);
+       FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                        NS_FRAME_HAS_DIRTY_CHILDREN);
    }
    return NS_OK;
 }
@@ -1209,9 +1210,8 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
       UpdateMouseThrough();
     }
 
-    mState |= NS_FRAME_IS_DIRTY;
     PresContext()->PresShell()->
-      FrameNeedsReflow(this, nsIPresShell::eStyleChange);
+      FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
   }
   else if (aAttribute == nsGkAtoms::ordinal) {
     nsBoxLayoutState state(PresContext());
@@ -1228,10 +1228,10 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
     // case our ordinal doesn't matter anyway, so that's ok.
     if (parent) {
       parent->RelayoutChildAtOrdinal(state, frameToMove);
-      mState |= NS_FRAME_IS_DIRTY;
       // XXXldb Should this instead be a tree change on the child or parent?
       PresContext()->PresShell()->
-        FrameNeedsReflow(frameToMove, nsIPresShell::eStyleChange);
+        FrameNeedsReflow(parent, nsIPresShell::eStyleChange,
+                         NS_FRAME_IS_DIRTY);
     }
   }
   // If the accesskey changed, register for the new value
@@ -1408,7 +1408,7 @@ nsBoxFrame::PaintXULDebugBackground(nsIRenderingContext& aRenderingContext,
   
   // if we have dirty children or we are dirty 
   // place a green border around us.
-  if (GetStateBits & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) {
+  if (NS_SUBTREE_DIRTY(this)) {
      nsRect dirtyr(inner);
      aRenderingContext.SetColor(NS_RGB(0,255,0));
      aRenderingContext.DrawRect(dirtyr);
@@ -2053,7 +2053,7 @@ nsBoxFrame::LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& 
   nsRect oldRect(aBox->GetRect());
   aBox->SetBounds(aState, aRect);
 
-  PRBool layout = (aBox->GetStateBits() & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) != 0;
+  PRBool layout = NS_SUBTREE_DIRTY(aBox);
   
   if (layout || (oldRect.width != aRect.width || oldRect.height != aRect.height))  {
     return aBox->Layout(aState);
