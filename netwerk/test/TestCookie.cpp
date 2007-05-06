@@ -39,6 +39,9 @@
 #include "TestCommon.h"
 #include "nsIServiceManager.h"
 #include "nsICookieService.h"
+#include "nsICookieManager.h"
+#include "nsICookieManager2.h"
+#include "nsICookie2.h"
 #include <stdio.h>
 #include "plstr.h"
 #include "nsNetUtil.h"
@@ -613,6 +616,7 @@ main(PRInt32 argc, char *argv[])
       GetACookie(cookieService, "http://multi.path.tests/one/two/three/four/five/six/", nsnull, getter_Copies(cookie));
       rv[0] = CheckResult(cookie.get(), MUST_EQUAL, "test7=path; test6=path; test3=path; test1=path; test5=path; test4=path; test2=path; test8=path");
 
+
       // *** httponly tests 
       printf("*** Beginning httponly tests...\n");
       // Since this cookie is set via http, it can be retrieved
@@ -625,6 +629,88 @@ main(PRInt32 argc, char *argv[])
       rv[1] = CheckResult(cookie.get(), MUST_NOT_EQUAL, "test=httponly");
 
       allTestsPassed = PrintResult(rv, 2) && allTestsPassed;
+
+
+      // *** nsICookieManager{2} interface tests
+      printf("*** Beginning nsICookieManager{2} interface tests...\n");
+      nsCOMPtr<nsICookieManager> cookieMgr = do_GetService(NS_COOKIEMANAGER_CONTRACTID, &rv0);
+      if (NS_FAILED(rv0)) return -1;
+      nsCOMPtr<nsICookieManager2> cookieMgr2 = do_QueryInterface(cookieMgr);
+      if (!cookieMgr2) return -1;
+      
+      // first, ensure a clean slate
+      rv[0] = NS_SUCCEEDED(cookieMgr->RemoveAll());
+      // add some cookies
+      rv[1] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("cookiemgr.test"), // domain
+                                           NS_LITERAL_CSTRING("/foo"),           // path
+                                           NS_LITERAL_CSTRING("test1"),          // name
+                                           NS_LITERAL_CSTRING("yes"),            // value
+                                           PR_FALSE,                             // is secure
+                                           PR_TRUE,                              // is session
+                                           LL_MAXINT));                          // expiry time
+      rv[2] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("cookiemgr.test"), // domain
+                                           NS_LITERAL_CSTRING("/foo"),           // path
+                                           NS_LITERAL_CSTRING("test2"),          // name
+                                           NS_LITERAL_CSTRING("yes"),            // value
+                                           PR_FALSE,                             // is secure
+                                           PR_TRUE,                              // is session
+                                           LL_MAXINT));                          // expiry time
+      rv[3] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("new.domain"),     // domain
+                                           NS_LITERAL_CSTRING("/rabbit"),        // path
+                                           NS_LITERAL_CSTRING("test3"),          // name
+                                           NS_LITERAL_CSTRING("yes"),            // value
+                                           PR_FALSE,                             // is secure
+                                           PR_TRUE,                              // is session
+                                           LL_MAXINT));                          // expiry time
+      // confirm using enumerator
+      nsCOMPtr<nsISimpleEnumerator> enumerator;
+      rv[4] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator)));
+      PRInt32 i = 0;
+      PRBool more;
+      nsCOMPtr<nsICookie2> newDomainCookie;
+      while (NS_SUCCEEDED(enumerator->HasMoreElements(&more)) && more) {
+        nsCOMPtr<nsISupports> cookie;
+        if (NS_FAILED(enumerator->GetNext(getter_AddRefs(cookie)))) break;
+        ++i;
+        
+        // keep tabs on the third cookie, so we can check it later
+        nsCOMPtr<nsICookie2> cookie2(do_QueryInterface(cookie));
+        if (!cookie2) break;
+        nsCAutoString domain;
+        cookie2->GetRawHost(domain);
+        if (domain == NS_LITERAL_CSTRING("new.domain"))
+          newDomainCookie = cookie2;
+      }
+      rv[5] = i == 3;
+      // check CountCookiesFromHost()
+      PRUint32 hostCookies = 0;
+      rv[6] = NS_SUCCEEDED(cookieMgr2->CountCookiesFromHost(NS_LITERAL_CSTRING("cookiemgr.test"), &hostCookies)) &&
+              hostCookies == 2;
+      // check CookieExists() using the third cookie
+      PRBool found;
+      rv[7] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && found;
+      // remove the cookie, block it, and ensure it can't be added again
+      rv[8] = NS_SUCCEEDED(cookieMgr->Remove(NS_LITERAL_CSTRING("new.domain"), // domain
+                                             NS_LITERAL_CSTRING("test3"),      // name
+                                             NS_LITERAL_CSTRING("/rabbit"),    // path
+                                             PR_TRUE));                        // is blocked
+      rv[9] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
+      rv[10] = NS_SUCCEEDED(cookieMgr2->Add(NS_LITERAL_CSTRING("new.domain"),     // domain
+                                            NS_LITERAL_CSTRING("/rabbit"),        // path
+                                            NS_LITERAL_CSTRING("test3"),          // name
+                                            NS_LITERAL_CSTRING("yes"),            // value
+                                            PR_FALSE,                             // is secure
+                                            PR_TRUE,                              // is session
+                                            LL_ZERO));                            // expiry time
+      rv[11] = NS_SUCCEEDED(cookieMgr2->CookieExists(newDomainCookie, &found)) && !found;
+      // double-check RemoveAll() using the enumerator
+      rv[12] = NS_SUCCEEDED(cookieMgr->RemoveAll());
+      rv[13] = NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator))) &&
+               NS_SUCCEEDED(enumerator->HasMoreElements(&more)) &&
+               !more;
+
+      allTestsPassed = PrintResult(rv, 14) && allTestsPassed;
+
 
       // XXX the following are placeholders: add these tests please!
       // *** "noncompliant cookie" tests
