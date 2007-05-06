@@ -904,8 +904,6 @@ browser/components/sidebar/src/Makefile
 browser/components/shell/Makefile
 browser/components/shell/public/Makefile
 browser/components/shell/src/Makefile
-browser/extensions/Makefile
-browser/extensions/layout-debug/Makefile
 browser/installer/Makefile
 browser/installer/unix/Makefile
 browser/installer/windows/Makefile
