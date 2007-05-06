@@ -57,17 +57,19 @@ interface nsICookie2 : nsICookie
     readonly attribute AUTF8String rawHost;
 
     /**
-     * true if the cookie is a session cookie
-     * (note: if true, the expiry time is undefined).
+     * true if the cookie is a session cookie.
+     * note that expiry time will also be honored
+     * for session cookies (see below); thus, whichever is
+     * the more restrictive of the two will take effect.
      */
     readonly attribute boolean isSession;
 
     /**
-     * the actual expiry time of the cookie
-     * (where 0 does not represent a session cookie).
+     * the actual expiry time of the cookie, in seconds
+     * since midnight (00:00:00), January 1, 1970 UTC.
      *
-     * not to be confused with |expires|, an
-     * attribute on nsICookie.
+     * this is distinct from nsICookie::expires, which
+     * has different and obsolete semantics.
      */
     readonly attribute PRInt64 expiry;
 

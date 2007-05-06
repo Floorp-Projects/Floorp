@@ -64,9 +64,11 @@ interface nsICookieManager2 : nsICookieManager
    *        true if the cookie should only be sent over a secure connection.
    * @param aIsSession
    *        true if the cookie should exist for the current session only.
+   *        see aExpiry.
    * @param aExpiry
-   *        expiration date, in seconds since the epoch. only relevant if
-   *        aIsSession is false.
+   *        expiration date, in seconds since midnight (00:00:00), January 1,
+   *        1970 UTC. note that expiry time will also be honored for session cookies;
+   *        in this way, the more restrictive of the two will take effect.
    */
   void add(in AUTF8String aDomain,
            in AUTF8String aPath,
