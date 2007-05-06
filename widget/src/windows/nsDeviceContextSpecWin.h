@@ -118,10 +118,6 @@ public:
   ~nsPrinterEnumeratorWin();
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRINTERENUMERATOR
-
-private:
-  // helper 
-  nsresult DoEnumeratePrinters(PRBool aDoExtended, PRUint32* aCount, PRUnichar*** aResult);
 };
 
 #endif

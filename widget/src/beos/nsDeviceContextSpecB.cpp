@@ -44,6 +44,7 @@
 #include "prenv.h" /* for PR_GetEnv */ 
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
+#include "nsStringEnumerator.h"
 #include "nsCRT.h"
 
 //----------------------------------------------------------------------------------
@@ -413,20 +414,10 @@ nsPrinterEnumeratorBeOS::nsPrinterEnumeratorBeOS()
 
 NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorBeOS, nsIPrinterEnumerator)
 
-NS_IMETHODIMP nsPrinterEnumeratorBeOS::EnumeratePrinters(PRUint32* aCount, PRUnichar*** aResult)
+NS_IMETHODIMP nsPrinterEnumeratorBeOS::GetPrinterNameList(nsIStringEnumerator **aPrinterNameList)
 {
-  NS_ENSURE_ARG(aCount);
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  if (aCount) 
-    *aCount = 0;
-  else 
-    return NS_ERROR_NULL_POINTER;
-  
-  if (aResult) 
-    *aResult = nsnull;
-  else 
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aPrinterNameList);
+  *aPrinterNameList = nsnull;
   
   nsresult rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
   if (NS_FAILED(rv)) {
@@ -434,9 +425,8 @@ NS_IMETHODIMP nsPrinterEnumeratorBeOS::EnumeratePrinters(PRUint32* aCount, PRUni
   }
 
   PRInt32 numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
-
-  PRUnichar** array = (PRUnichar**) nsMemory::Alloc(numPrinters * sizeof(PRUnichar*));
-  if (!array && numPrinters > 0) {
+  nsStringArray *printers = new nsStringArray(numPrinters);
+  if (!printers) {
     GlobalPrinters::GetInstance()->FreeGlobalPrinters();
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -444,26 +434,11 @@ NS_IMETHODIMP nsPrinterEnumeratorBeOS::EnumeratePrinters(PRUint32* aCount, PRUni
   int count = 0;
   while( count < numPrinters )
   {
-
-    PRUnichar *str = ToNewUnicode(*GlobalPrinters::GetInstance()->GetStringAt(count));
-
-    if (!str) {
-      for (int i = count - 1; i >= 0; i--) 
-        nsMemory::Free(array[i]);
-      
-      nsMemory::Free(array);
-
-      GlobalPrinters::GetInstance()->FreeGlobalPrinters();
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    array[count++] = str;
-    
+    printers->AppendString(*GlobalPrinters::GetInstance()->GetStringAt(count++));
   }
-  *aCount = count;
-  *aResult = array;
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 
-  return NS_OK;
+  return NS_NewAdoptingStringEnumerator(aPrinterNameList, printers);
 }
 
 /* readonly attribute wstring defaultPrinterName; */

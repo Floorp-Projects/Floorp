@@ -50,6 +50,7 @@
 #include "nsCRT.h"
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
+#include "nsStringEnumerator.h"
 #ifdef MOZ_CAIRO_GFX
 #include "gfxPDFSurface.h"
 #include "gfxWindowsSurface.h"
@@ -905,18 +906,7 @@ nsPrinterEnumeratorWin::~nsPrinterEnumeratorWin()
 
 NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorWin, nsIPrinterEnumerator)
 
-
-static void CleanupArray(PRUnichar**& aArray, PRInt32& aCount)
-{
-  for (PRInt32 i = aCount - 1; i >= 0; i--) {
-    nsMemory::Free(aArray[i]);
-  }
-  nsMemory::Free(aArray);
-  aArray = NULL;
-  aCount = 0;
-}
-
- //----------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------
 // Return the Default Printer name
 /* readonly attribute wstring defaultPrinterName; */
 NS_IMETHODIMP 
@@ -967,52 +957,31 @@ nsPrinterEnumeratorWin::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterNa
 // Enumerate all the Printers from the global array and pass their
 // names back (usually to script)
 NS_IMETHODIMP 
-nsPrinterEnumeratorWin::EnumeratePrinters(PRUint32* aCount, PRUnichar*** aResult)
+nsPrinterEnumeratorWin::GetPrinterNameList(nsIStringEnumerator **aPrinterNameList)
 {
-  NS_ENSURE_ARG(aCount);
-  NS_ENSURE_ARG_POINTER(aResult);
+  NS_ENSURE_ARG_POINTER(aPrinterNameList);
+  *aPrinterNameList = nsnull;
 
   nsresult rv = GlobalPrinters::GetInstance()->EnumeratePrinterList();
   if (NS_FAILED(rv)) {
-    PR_PL(("***** nsDeviceContextSpecWin::EnumeratePrinters - Couldn't enumerate printers!\n"));
+    PR_PL(("***** nsDeviceContextSpecWin::GetPrinterNameList - Couldn't enumerate printers!\n"));
     return rv;
   }
 
-  if (aCount) 
-    *aCount = 0;
-  else 
-    return NS_ERROR_NULL_POINTER;
-  
-  if (aResult) 
-    *aResult = nsnull;
-  else 
-    return NS_ERROR_NULL_POINTER;
-  
   PRInt32 numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
-  PRInt32 numItems    = numPrinters;
-
-  PRUnichar** array = (PRUnichar**) nsMemory::Alloc(numItems * sizeof(PRUnichar*));
-  if (!array) 
+  nsStringArray *printers = new nsStringArray(numPrinters);
+  if (!printers)
     return NS_ERROR_OUT_OF_MEMORY;
-  
-  PRInt32 count      = 0;
+
   PRInt32 printerInx = 0;
-  while( count < numItems ) {
+  while( printerInx < numPrinters ) {
     LPTSTR name = GlobalPrinters::GetInstance()->GetItemFromList(printerInx++);
     nsAutoString newName; 
     NS_CopyNativeToUnicode(nsDependentCString(name), newName);
-    PRUnichar *str = ToNewUnicode(newName);
-    if (!str) {
-      CleanupArray(array, count);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    array[count++] = str;
+    printers->AppendString(newName);
   }
-  *aCount  = count;
-  *aResult = array;
 
-  return NS_OK;
-
+  return NS_NewAdoptingStringEnumerator(aPrinterNameList, array);
 }
 
 //----------------------------------------------------------------------------------

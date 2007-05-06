@@ -162,8 +162,7 @@ public:
   void SetDocAndURLIntoProgress(nsPrintObject* aPO,
                                 nsIPrintProgressParams* aParams);
   void ElipseLongString(PRUnichar *& aStr, const PRUint32 aLen, PRBool aDoFront);
-  nsresult CheckForPrinters(nsIPrintOptions*  aPrintOptions,
-                            nsIPrintSettings* aPrintSettings);
+  nsresult CheckForPrinters(nsIPrintSettings* aPrintSettings);
   void CleanupDocTitleArray(PRUnichar**& aArray, PRInt32& aCount);
 
   PRBool IsThereARangeSelection(nsIDOMWindow * aDOMWin);
