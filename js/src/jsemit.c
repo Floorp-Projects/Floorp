@@ -5129,10 +5129,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             GUARDJUMP(*stmt) = guardJump;
 
             /* Pop duplicated exception object as we no longer need it. */
-            if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
-                js_Emit1(cx, cg, JSOP_POP) < 0) {
+            if (js_Emit1(cx, cg, JSOP_POP) < 0)
                 return JS_FALSE;
-            }
         }
 
         /* Emit the catch body. */
