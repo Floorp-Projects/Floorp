@@ -240,22 +240,24 @@ void nsLinkableAccessible::CacheActionContent()
        walkUpContent;
        walkUpContent = walkUpContent->GetParent()) {
     nsIAtom *tag = walkUpContent->Tag();
-    if ((tag == nsAccessibilityAtoms::a || tag == nsAccessibilityAtoms::area)) {
-      // Currently we do not expose <link> tags, because they are not typically
-      // in <body> and rendered.
-      // We do not yet support xlinks
+    if ((tag == nsAccessibilityAtoms::a || tag == nsAccessibilityAtoms::area) &&
+        walkUpContent->IsNodeOfType(nsINode::eHTML)) {
       nsCOMPtr<nsILink> link = do_QueryInterface(walkUpContent);
-      NS_ASSERTION(link, "No nsILink for area or a");
-      nsCOMPtr<nsIURI> uri;
-      link->GetHrefURI(getter_AddRefs(uri));
-      if (uri) {
-        mActionContent = walkUpContent;
-        mIsLink = PR_TRUE;
-        break;
+      if (link) {
+        // Currently we do not expose <link> tags, because they are not typically
+        // in <body> and rendered.
+        // We do not yet support xlinks
+        nsCOMPtr<nsIURI> uri;
+        link->GetHrefURI(getter_AddRefs(uri));
+        if (uri) {
+          mActionContent = walkUpContent;
+          mIsLink = PR_TRUE;
+          break;
+        }
       }
     }
     if (walkUpContent->HasAttr(kNameSpaceID_None,
-                            nsAccessibilityAtoms::onclick)) {
+                               nsAccessibilityAtoms::onclick)) {
       mActionContent = walkUpContent;
       mIsOnclick = PR_TRUE;
       break;
