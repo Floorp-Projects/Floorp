@@ -813,7 +813,7 @@ public:
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                     nsIFrame** aPlaceholderFrame) const;
   NS_IMETHOD FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
-                              nsFrameState aBitsToAdd);
+                              nsFrameState aBitToAdd);
   NS_IMETHOD CancelAllPendingReflows();
   NS_IMETHOD IsSafeToFlush(PRBool& aIsSafeToFlush);
   NS_IMETHOD FlushPendingNotifications(mozFlushType aType);
@@ -3114,10 +3114,10 @@ PresShell::VerifyHasDirtyRootAncestor(nsIFrame* aFrame)
 
 NS_IMETHODIMP
 PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
-                            nsFrameState aBitsToAdd)
+                            nsFrameState aBitToAdd)
 {
-  NS_PRECONDITION(aBitsToAdd == NS_FRAME_IS_DIRTY ||
-                  aBitsToAdd == NS_FRAME_HAS_DIRTY_CHILDREN,
+  NS_PRECONDITION(aBitToAdd == NS_FRAME_IS_DIRTY ||
+                  aBitToAdd == NS_FRAME_HAS_DIRTY_CHILDREN,
                   "Unexpected bits being added");
 
   // XXX Add this assertion at some point!?  nsSliderFrame triggers it a lot.
@@ -3152,7 +3152,7 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
   // Grab |wasDirty| now so we can go ahead and update the bits on
   // aFrame and then get |targetFrameDirty|.
   PRBool wasDirty = NS_SUBTREE_DIRTY(aFrame);
-  aFrame->AddStateBits(aBitsToAdd);
+  aFrame->AddStateBits(aBitToAdd);
   PRBool targetFrameDirty = ((aFrame->GetStateBits() & NS_FRAME_IS_DIRTY) != 0);
 #define FRAME_IS_REFLOW_ROOT(_f)                   \
   ((_f->GetStateBits() & NS_FRAME_REFLOW_ROOT) &&  \

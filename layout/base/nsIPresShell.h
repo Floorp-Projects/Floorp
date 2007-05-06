@@ -345,8 +345,8 @@ public:
    * Tell the pres shell that a frame needs to be marked dirty and needs
    * Reflow.  It's OK if this is an ancestor of the frame needing reflow as
    * long as the ancestor chain between them doesn't cross a reflow root.  The
-   * bits to add should be some combination of NS_FRAME_IS_DIRTY and
-   * NS_FRAME_HAS_DIRTY_CHILDREN.
+   * bit to add should be eithr NS_FRAME_IS_DIRTY or
+   * NS_FRAME_HAS_DIRTY_CHILDREN (but not both!).
    */
   enum IntrinsicDirty {
     // XXXldb eResize should be renamed
@@ -356,7 +356,7 @@ public:
   };
   NS_IMETHOD FrameNeedsReflow(nsIFrame *aFrame,
                               IntrinsicDirty aIntrinsicDirty,
-                              nsFrameState aBitsToAdd) = 0;
+                              nsFrameState aBitToAdd) = 0;
 
   NS_IMETHOD CancelAllPendingReflows() = 0;
 
