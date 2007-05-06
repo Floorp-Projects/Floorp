@@ -560,6 +560,7 @@ gfxWindowsFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
     gfxTextRun *textRun = new gfxTextRun(aParams, aLength);
     if (!textRun)
         return nsnull;
+    NS_ASSERTION(aParams->mContext, "MakeTextRun called without a gfxContext");
 
     textRun->RecordSurrogates(aString);
     
@@ -585,6 +586,7 @@ gfxWindowsFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
     gfxTextRun *textRun = new gfxTextRun(aParams, aLength);
     if (!textRun)
         return nsnull;
+    NS_ASSERTION(aParams->mContext, "MakeTextRun called without a gfxContext");
 
 #ifdef FORCE_UNISCRIBE
     const PRBool isComplex = PR_TRUE;
