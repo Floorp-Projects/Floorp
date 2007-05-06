@@ -45,7 +45,7 @@
 #include "nsHTMLImageAccessible.h"
 #include "nsHTMLLinkAccessible.h"
 #include "nsHTMLSelectAccessible.h"
-#include "nsHTMLTableAccessible.h"
+#include "nsHTMLTableAccessibleWrap.h"
 #include "nsHTMLTextAccessible.h"
 #include "nsHyperTextAccessibleWrap.h"
 #include "nsIAccessibilityService.h"
@@ -746,7 +746,7 @@ nsAccessibilityService::CreateHTMLTableAccessible(nsISupports *aFrame, nsIAccess
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = new nsHTMLTableAccessible(node, weakShell);
+  *_retval = new nsHTMLTableAccessibleWrap(node, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -769,8 +769,8 @@ nsAccessibilityService::CreateHTMLTableHeadAccessible(nsIDOMNode *aDOMNode, nsIA
   rv = GetShellFromNode(aDOMNode, getter_AddRefs(weakShell));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsHTMLTableHeadAccessible* accTableHead =
-    new nsHTMLTableHeadAccessible(aDOMNode, weakShell);
+  nsHTMLTableHeadAccessibleWrap* accTableHead =
+    new nsHTMLTableHeadAccessibleWrap(aDOMNode, weakShell);
 
   NS_ENSURE_TRUE(accTableHead, NS_ERROR_OUT_OF_MEMORY);
 
