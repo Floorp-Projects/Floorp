@@ -50,6 +50,7 @@
 #include "nsIServiceManager.h"
 #include "nsUnicharUtils.h"
 #include "nsStringFwd.h"
+#include "nsStringEnumerator.h"
 
 #include "nsOS2Uni.h"
 
@@ -435,20 +436,10 @@ nsPrinterEnumeratorOS2::nsPrinterEnumeratorOS2()
 
 NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorOS2, nsIPrinterEnumerator)
 
-NS_IMETHODIMP nsPrinterEnumeratorOS2::EnumeratePrinters(PRUint32* aCount, PRUnichar*** aResult)
+NS_IMETHODIMP nsPrinterEnumeratorOS2::GetPrinterNameList(nsIStringEnumerator **aPrinterNameList)
 {
-  NS_ENSURE_ARG(aCount);
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  if (aCount) 
-    *aCount = 0;
-  else 
-    return NS_ERROR_NULL_POINTER;
-  
-  if (aResult) 
-    *aResult = nsnull;
-  else 
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aPrinterNameList);
+  *aPrinterNameList = nsnull;
 
   nsDeviceContextSpecOS2::PrnDlg.RefreshPrintQueue();
   
@@ -458,9 +449,8 @@ NS_IMETHODIMP nsPrinterEnumeratorOS2::EnumeratePrinters(PRUint32* aCount, PRUnic
   }
 
   ULONG numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
-
-  PRUnichar** array = (PRUnichar**) nsMemory::Alloc(numPrinters * sizeof(PRUnichar*));
-  if (!array && numPrinters > 0) {
+  nsStringArray *printers = new nsStringArray(numPrinters);
+  if (!printers) {
     GlobalPrinters::GetInstance()->FreeGlobalPrinters();
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -468,25 +458,11 @@ NS_IMETHODIMP nsPrinterEnumeratorOS2::EnumeratePrinters(PRUint32* aCount, PRUnic
   ULONG count = 0;
   while( count < numPrinters )
   {
-    PRUnichar *str = ToNewUnicode(*GlobalPrinters::GetInstance()->GetStringAt(count));
-
-    if (!str) {
-      for (ULONG i = 0 ; i < count ; i++)
-        nsMemory::Free(array[i]);
-      
-      nsMemory::Free(array);
-
-      GlobalPrinters::GetInstance()->FreeGlobalPrinters();
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    array[count++] = str;
-    
+    printers->AppendString(*GlobalPrinters::GetInstance()->GetStringAt(count++));
   }
-  *aCount = count;
-  *aResult = array;
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 
-  return NS_OK;
+  return NS_NewAdoptingStringEnumerator(aPrinterNameList, printers);
 }
 
 NS_IMETHODIMP nsPrinterEnumeratorOS2::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
