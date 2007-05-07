@@ -72,5 +72,5 @@ use_tmpdir()
 
 use_tmpdir
 result=$?
-rm -rf /tmp/${TDIR}
+rm -rf ${TDIR}
 exit $result
