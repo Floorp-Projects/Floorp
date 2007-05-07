@@ -345,8 +345,9 @@ nsresult nsRootAccessible::RemoveEventListeners()
     target->RemoveEventListener(NS_LITERAL_STRING("pagehide"), this, PR_TRUE);
   }
 
-  if (mCaretAccessible) {
-    mCaretAccessible->RemoveSelectionListener();
+  nsCOMPtr<nsPIAccessNode> caretAccessNode(do_QueryInterface(mCaretAccessible));
+  if (caretAccessNode) {
+    caretAccessNode->Shutdown();
     mCaretAccessible = nsnull;
   }
 
@@ -440,7 +441,7 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
       nsevent->GetOriginalTarget(getter_AddRefs(domEventTarget));
       nsCOMPtr<nsIDOMNode> realFocusedNode(do_QueryInterface(domEventTarget));
       if (realFocusedNode) {
-        mCaretAccessible->AttachNewSelectionListener(realFocusedNode);
+        mCaretAccessible->SetControlSelectionListener(realFocusedNode);
       }
     }
   }
@@ -896,7 +897,6 @@ NS_IMETHODIMP nsRootAccessible::Shutdown()
   if (!mWeakShell) {
     return NS_OK;  // Already shutdown
   }
-  mCaretAccessible = nsnull;
   if (mFireFocusTimer) {
     mFireFocusTimer->Cancel();
     mFireFocusTimer = nsnull;

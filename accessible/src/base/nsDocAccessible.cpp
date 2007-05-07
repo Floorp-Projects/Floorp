@@ -663,6 +663,19 @@ nsresult nsDocAccessible::AddEventListeners()
     }
   }
 
+  nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
+  docShellTreeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
+  if (rootTreeItem) {
+    nsCOMPtr<nsIAccessibleDocument> rootAccDoc = GetDocAccessibleFor(rootTreeItem, PR_TRUE);
+    nsCOMPtr<nsIAccessible> caretAccessible;
+    rootAccDoc->GetCaretAccessible(getter_AddRefs(caretAccessible));
+    nsCOMPtr<nsIAccessibleCaret> caretAccessibleIface(do_QueryInterface(caretAccessible));
+    if (caretAccessibleIface) {
+      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDocument);
+      caretAccessibleIface->AddDocSelectionListener(domDoc);
+    }
+  }
+
   // add document observer
   mDocument->AddObserver(this);
   return NS_OK;
@@ -680,6 +693,17 @@ nsresult nsDocAccessible::RemoveEventListeners()
   if (mScrollWatchTimer) {
     mScrollWatchTimer->Cancel();
     mScrollWatchTimer = nsnull;
+  }
+
+  nsRefPtr<nsRootAccessible> rootAccessible(GetRootAccessible());
+  if (rootAccessible) {
+    nsCOMPtr<nsIAccessible> caretAccessible;
+    rootAccessible->GetCaretAccessible(getter_AddRefs(caretAccessible));
+    nsCOMPtr<nsIAccessibleCaret> caretAccessibleIface(do_QueryInterface(caretAccessible));
+    if (caretAccessibleIface) {
+      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDocument);
+      caretAccessibleIface->RemoveDocSelectionListener(domDoc);
+    }
   }
 
   nsCOMPtr<nsISupports> container = mDocument->GetContainer();
@@ -1254,10 +1278,10 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
           PRInt32 selectionCount;
           accessibleText->GetSelectionCount(&selectionCount);
           if (selectionCount) {  // There's a selection so fire selection change as well
-           FireToolkitEvent(nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED,
-                                                accessible, nsnull);
+            FireToolkitEvent(nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED,
+                                                 accessible, nsnull);
           }
-        }
+        } 
       }
       else {
         FireAccessibleEvent(accessibleEvent);
