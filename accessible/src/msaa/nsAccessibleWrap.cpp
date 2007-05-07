@@ -1510,19 +1510,19 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
     }
   }
 
-+   PRInt32 childID = GetChildIDFor(accessible); // get the id for the accessible
-+   if (!childID)
-+     return NS_OK; // Can't fire an event without a child ID
-+ 
-+   // See if we're in a scrollable area with its own window
-+   nsCOMPtr<nsIAccessible> newAccessible;
-+   if (eventType == nsIAccessibleEvent::EVENT_HIDE) {
-+     // Don't use frame from current accessible when we're hiding that
-+     // accessible.
-+     accessible->GetParent(getter_AddRefs(newAccessible));
-+   } else {
-+     newAccessible = accessible;
-+   }
+  PRInt32 childID = GetChildIDFor(accessible); // get the id for the accessible
+  if (!childID)
+    return NS_OK; // Can't fire an event without a child ID
+
+  // See if we're in a scrollable area with its own window
+  nsCOMPtr<nsIAccessible> newAccessible;
+  if (eventType == nsIAccessibleEvent::EVENT_HIDE) {
+    // Don't use frame from current accessible when we're hiding that
+    // accessible.
+    accessible->GetParent(getter_AddRefs(newAccessible));
+  } else {
+    newAccessible = accessible;
+  }
   
   HWND hWnd = 0;
   nsCOMPtr<nsPIAccessNode> privateAccessNode =
