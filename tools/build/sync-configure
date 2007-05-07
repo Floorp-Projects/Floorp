@@ -26,22 +26,51 @@ rm -rf ${TDIR}
 mkdir ${TDIR}
 cd ${TDIR}
 
-if [ "$BRANCH" = "HEAD" ]; then
-    ${CVS} -q checkout mozilla/configure.in mozilla/configure mozilla/build/autoconf mozilla/aclocal.m4
-else
-    ${CVS} -q checkout -r $BRANCH mozilla/configure.in mozilla/configure mozilla/build/autoconf mozilla/aclocal.m4
-fi
+use_tmpdir() 
+{
+    if [ "$BRANCH" = "HEAD" ]; then
+        ${CVS} -q checkout mozilla/configure.in mozilla/configure mozilla/build/autoconf mozilla/aclocal.m4
+    else
+        ${CVS} -q checkout -r $BRANCH mozilla/configure.in mozilla/configure mozilla/build/autoconf mozilla/aclocal.m4
+    fi
+    
+    CO_STATUS=$?
+    if [ $CO_STATUS != 0 ]
+    then
+        echo "ERROR cvs checkout exited with a non-zero exit code: $CO_STATUS"
+        return $CO_STATUS
+    fi
+    
+    cd mozilla
+    ${AC} -l build/autoconf
+    AC_STATUS=$?
+    if [ $AC_STATUS != 0 ]
+    then
+        echo "ERROR autoconf exited with a non-zero exit code: $AC_STATUS"
+        return $AC_STATUS
+    fi
+    
+    ${CVS} diff configure >/dev/null 2>&1
+    DIFF_STATUS=$?
+    if [ $DIFF_STATUS == 1 ]
+    then
+        ${CVS} commit -m"Automated update from host $HOST" configure
+        CI_STATUS=$?
+        if [ $CI_STATUS != 0 ]
+        then
+            echo "ERROR cvs commit exited with exit code: $CI_STATUS"
+            return $CI_STATUS
+        fi
+    elif [ $DIFF_STATUS == 0 ]
+    then
+        return 0
+    else 
+        echo "ERROR cvs diff exited with exit code: $DIFF_STATUS"
+        return $DIFF_STATUS
+    fi
+}
 
-cd mozilla
-${AC} -l build/autoconf
-
-${CVS} diff configure >/dev/null 2>&1
-if test "$?" != "0"
-then
-	${CVS} commit -m"Automated update from host $HOST" configure
-fi
-
-cd /tmp
-rm -rf ${TDIR}
-exit 0
-
+use_tmpdir
+result=$?
+rm -rf /tmp/${TDIR}
+exit $result
