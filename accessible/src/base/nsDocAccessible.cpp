@@ -1129,7 +1129,7 @@ void nsDocAccessible::CharacterDataChanged(nsIDocument *aDocument,
                                            nsIContent* aContent,
                                            CharacterDataChangeInfo* aInfo)
 {
-  InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_REORDER);
+  // XXX fire text change events here? See bug 377891
 }
 
 void
