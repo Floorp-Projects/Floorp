@@ -114,7 +114,13 @@ static const WindowsRoleMapItem gWindowsRoleMap[] = {
   { ROLE_SYSTEM_DOCUMENT, ROLE_SYSTEM_DOCUMENT },
 
   // nsIAccessibleRole::ROLE_PANE
-  { ROLE_SYSTEM_PANE, ROLE_SYSTEM_PANE },
+  // We used to map to ROLE_SYSTEM_PANE, but JAWS would
+  // not read the accessible name for the contaning pane.
+  // However, JAWS will read the accessible name for a groupbox.
+  // By mapping a PANE to a GROUPING, we get no undesirable effects,
+  // but fortunately JAWS will then read the group's label,
+  // when an inner control gets focused.
+  { ROLE_SYSTEM_GROUPING , ROLE_SYSTEM_GROUPING }, 
 
   // nsIAccessibleRole::ROLE_CHART
   { ROLE_SYSTEM_CHART, ROLE_SYSTEM_CHART },
