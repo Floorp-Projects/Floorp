@@ -5,7 +5,7 @@ TEST_JS = $(shell find . -name '*.js' -print)
 CURRDIR=$(shell pwd)
 JSDIR=$(shell basename $(CURRDIR))
 
-all: menu.html 1.8.0-list.txt 1.8.1-list.txt menu-list.txt excluded-n.tests spidermonkey-extensions-n.tests
+all: menu.html 1.8.0-list.txt 1.8.1-list.txt 1.9.0-list.txt menu-list.txt excluded-n.tests spidermonkey-extensions-n.tests
 
 menu.html: menuhead.html menufoot.html Makefile excluded-n.tests $(TEST_JS)
 	perl mklistpage.pl > menubody.html
@@ -26,6 +26,10 @@ menu-list.txt:
 1.8.1-list.txt: $(TEST_JS) 1.8.0-list.txt  excluded-n.tests
 	cat 1.8.0-list.txt > 1.8.1-list.txt
 	./list.sh js1_7 | sort >> 1.8.1-list.txt
+
+1.9.0-list.txt: $(TEST_JS) 1.8.1-list.txt  excluded-n.tests
+	cat 1.8.1-list.txt > 1.9.0-list.txt
+	./list.sh js1_8 | sort >> 1.9.0-list.txt
 
 #e4x-list.txt: $(TEST_JS)
 #	./list.sh e4x | sort > e4x-list.txt
