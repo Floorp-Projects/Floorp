@@ -55,6 +55,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsIPrefService.h"
+#include "nsRootAccessible.h"
 #include "nsIServiceManager.h"
 #include "nsTextFormatter.h"
 #include "nsIView.h"
@@ -1493,55 +1494,59 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
   if (!accessible)
     return NS_OK;
 
-  PRInt32 childID, worldID = OBJID_CLIENT;
   PRUint32 role = ROLE_SYSTEM_TEXT; // Default value
 
   nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(accessible));
   NS_ENSURE_STATE(accessNode);
 
-  HWND hWnd = 0;
-
-  if (NS_SUCCEEDED(accessible->GetRole(&role)) && role == ROLE_SYSTEM_CARET) {
-    childID = CHILDID_SELF;
-    worldID = OBJID_CARET;
-  } else {
-    childID = GetChildIDFor(accessible); // get the id for the accessible
-    if (!childID)
-      return NS_OK; // Can't fire an event without a child ID
-
-    // See if we're in a scrollable area with its own window
-    nsCOMPtr<nsIAccessible> newAccessible;
-    if (eventType == nsIAccessibleEvent::EVENT_HIDE) {
-      // Don't use frame from current accessible when we're hiding that
-      // accessible.
-      accessible->GetParent(getter_AddRefs(newAccessible));
-    } else {
-      newAccessible = accessible;
+  if (eventType == nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED) {
+    // Fire additional old-style MSAA caret events as well as the IA2 event
+    nsRefPtr<nsRootAccessible> rootAccessible = GetRootAccessible();
+    if (rootAccessible) {
+      nsCOMPtr<nsIAccessible> caretAccessible;
+      void* handle = nsnull;
+      rootAccessible->GetWindowHandle(&handle);
+      NotifyWinEvent(EVENT_OBJECT_LOCATIONCHANGE, (HWND)handle, OBJID_CARET, CHILDID_SELF);
     }
+  }
 
-    nsCOMPtr<nsPIAccessNode> privateAccessNode =
-      do_QueryInterface(newAccessible);
-    if (privateAccessNode) {
-      nsIFrame *frame = privateAccessNode->GetFrame();
-      if (frame) {
-        nsIWidget *window = frame->GetWindow();
-        PRBool isVisible;
-        window->IsVisible(isVisible);
-        if (isVisible) {
-          // Short explanation:
-          // If HWND for frame is inside a hidden window, fire the event on the 
-          // containing document's visible window.
-          //
-          // Long explanation:
-          // This is really just to fix combo boxes with JAWS. Window-Eyes already worked with
-          // combo boxes because they use the value change event in the closed combo box
-          // case. JAWS will only pay attention to the focus events on the list items.
-          // The JAWS developers haven't fixed that, so we'll use the focus events to make JAWS work.
-          // However, JAWS is ignoring events on a hidden window. So, in order to fix the bug where
-          // JAWS doesn't echo the current option as it changes in a closed combo box, we need to use an
-          // ensure that we never fire an event with an HWND for a hidden window.
-          hWnd = (HWND)frame->GetWindow()->GetNativeData(NS_NATIVE_WINDOW);
-        }
++   PRInt32 childID = GetChildIDFor(accessible); // get the id for the accessible
++   if (!childID)
++     return NS_OK; // Can't fire an event without a child ID
++ 
++   // See if we're in a scrollable area with its own window
++   nsCOMPtr<nsIAccessible> newAccessible;
++   if (eventType == nsIAccessibleEvent::EVENT_HIDE) {
++     // Don't use frame from current accessible when we're hiding that
++     // accessible.
++     accessible->GetParent(getter_AddRefs(newAccessible));
++   } else {
++     newAccessible = accessible;
++   }
+  
+  HWND hWnd = 0;
+  nsCOMPtr<nsPIAccessNode> privateAccessNode =
+    do_QueryInterface(newAccessible);
+  if (privateAccessNode) {
+    nsIFrame *frame = privateAccessNode->GetFrame();
+    if (frame) {
+      nsIWidget *window = frame->GetWindow();
+      PRBool isVisible;
+      window->IsVisible(isVisible);
+      if (isVisible) {
+        // Short explanation:
+        // If HWND for frame is inside a hidden window, fire the event on the 
+        // containing document's visible window.
+        //
+        // Long explanation:
+        // This is really just to fix combo boxes with JAWS. Window-Eyes already worked with
+        // combo boxes because they use the value change event in the closed combo box
+        // case. JAWS will only pay attention to the focus events on the list items.
+        // The JAWS developers haven't fixed that, so we'll use the focus events to make JAWS work.
+        // However, JAWS is ignoring events on a hidden window. So, in order to fix the bug where
+        // JAWS doesn't echo the current option as it changes in a closed combo box, we need to use an
+        // ensure that we never fire an event with an HWND for a hidden window.
+        hWnd = (HWND)frame->GetWindow()->GetNativeData(NS_NATIVE_WINDOW);
       }
     }
   }
@@ -1562,7 +1567,7 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
   // * Client area window: text drawing window & MSAA event window
 
   // Fire MSAA event for client area window.
-  NotifyWinEvent(winEvent, hWnd, worldID, childID);
+  NotifyWinEvent(winEvent, hWnd, OBJID_CLIENT, childID);
 
   return NS_OK;
 }

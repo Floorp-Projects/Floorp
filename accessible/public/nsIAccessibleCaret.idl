@@ -38,10 +38,40 @@
 
 #include "nsISupports.idl"
 #include "nsIDOMNode.idl"
-         
-[scriptable, uuid(9124c666-6133-4be6-b3ed-dd0ec35f1e64)]
+
+[scriptable, uuid(ef372cc1-0fd4-4e71-ac32-64028e680f17)]
 interface nsIAccessibleCaret : nsISupports
 {
-  void attachNewSelectionListener(in nsIDOMNode aFocusedNode);
-  void removeSelectionListener();
+  /**
+   * Listen to selection events on the focused control.
+   * Only one control's selection events are listened to at a time, per top-level window.
+   * This will remove the previous control's selection listener.
+   * It will fail if aFocusedNode is a document node -- document selection must be listened
+   * to via addDocSelectionListener().
+   * @param aFocusedNode   The node for the focused control
+   */
+  void setControlSelectionListener(in nsIDOMNode aFocusedNode);
+
+  /**
+   * Stop listening to selection events for any control.
+   * This does not have to be called explicitly in Shutdown() procedures,
+   * because the implementation of nsIAccessibleCaret will guarantee that.
+   */
+  void clearControlSelectionListener();
+
+  /**
+   * Start listening to selection events for a given document
+   * More than one document's selection events can be listened to
+   * at the same time, by a given nsIAccessibleCaret.
+   * @param aDocument   Document to listen to selection events for.
+   */
+  void addDocSelectionListener(in nsIDOMDocument aDocument);
+
+  /**
+   * Stop listening to selection events for a given document
+   * If the document goes away, this method needs to be called for 
+   * that document by the owner of the nsIAccessibleCaret 
+   * @param aDocument   Document to listen to selection events for.
+   */
+  void removeDocSelectionListener(in nsIDOMDocument aDocument);
 };

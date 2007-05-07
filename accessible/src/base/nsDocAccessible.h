@@ -43,7 +43,6 @@
 #include "nsIAccessibleDocument.h"
 #include "nsPIAccessibleDocument.h"
 #include "nsIAccessibleEvent.h"
-#include "nsIArray.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
 #include "nsIEditor.h"
