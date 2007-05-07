@@ -38,11 +38,11 @@
 #include <fcntl.h>
 #include <link.h>
 #include <sys/mman.h>
-#include <openssl/md5.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "common/linux/file_id.h"
+#include "common/linux/md5.h"
 
 namespace google_breakpad {
 
@@ -109,10 +109,12 @@ bool FileID::ElfFileIdentifier(unsigned char identifier[16]) {
   const void *text_section = NULL;
   int text_size = 0;
   if (FindElfTextSection(base, &text_section, &text_size) && (text_size > 0)) {
-    MD5_CTX md5;
-    MD5_Init(&md5);
-    MD5_Update(&md5, text_section, text_size);
-    MD5_Final(identifier, &md5);
+    struct MD5Context md5;
+    MD5Init(&md5);
+    MD5Update(&md5,
+              static_cast<const unsigned char*>(text_section),
+              text_size);
+    MD5Final(identifier, &md5);
     success = true;
   }
 

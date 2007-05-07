@@ -97,8 +97,10 @@ static bool GetFileVersionString(const wchar_t *filename, wstring *version) {
            file_info->dwFileVersionMS & 0xffff,
            file_info->dwFileVersionLS >> 16,
            file_info->dwFileVersionLS & 0xffff);
-  GB_WSU_SAFE_SWPRINTF_TERMINATE(ver_string,
-                                 sizeof(ver_string) / sizeof(ver_string[0]));
+
+  // remove when VC++7.1 is no longer supported
+  ver_string[sizeof(ver_string) / sizeof(ver_string[0]) - 1] = L'\0';
+
   *version = ver_string;
   return true;
 }
