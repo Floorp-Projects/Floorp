@@ -97,9 +97,12 @@ MOZ_NO_REMOTE=1 or the -profile <directory> option)
 ./firefox -reftest /path/to/srcdir/mozilla/layout/reftests/reftest.list > reftest.out
 
 and then search/grep reftest.out for "UNEXPECTED".
- 
-You can also run clean-reftest-output.pl over reftest.out to convert the
-output to simple HTML.
+
+There are two scripts provided to convert the reftest.out to HTML.
+clean-reftest-output.pl converts reftest.out into simple HTML, stripping
+lines from the log that aren't relevant.  reftest-to-html.pl converts
+the output into html that makes it easier to visually check for
+failures.
 
 Testable Areas
 ==============
