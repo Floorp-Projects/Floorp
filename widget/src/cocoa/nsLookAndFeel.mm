@@ -108,6 +108,8 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
       res = GetMacBrushColor(kThemeBrushPrimaryHighlightColor, aColor, NS_RGB(0x00,0x00,0x00));
       break;
     case eColor_highlight: // CSS2 color
+      res = GetMacBrushColor(kThemeBrushAlternatePrimaryHighlightColor, aColor, NS_RGB(0x33,0x6F,0xCB));
+      break;
     case eColor__moz_menuhover:
       res = GetMacAccentColor(eColorOffset_mac_accentregularshadow, aColor, NS_RGB(0x33,0x6F,0xCB));
       break;      
