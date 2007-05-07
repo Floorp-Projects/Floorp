@@ -5531,7 +5531,8 @@ dnl ========================================================
 dnl = Airbag crash reporting (on by default on supported platforms)
 dnl ========================================================
 
-if test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC"; then
+if test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC" \
+  || test "$OS_ARCH" = "Darwin"; then
    MOZ_AIRBAG=1
 fi
 
