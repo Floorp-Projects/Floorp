@@ -481,6 +481,10 @@ nsSyncLoadService::PushSyncStreamToListener(nsIInputStream* aIn,
         PRUint32 readCount = 0;
         rv = aIn->Available(&readCount);
         if (NS_FAILED(rv) || !readCount) {
+            if (rv == NS_BASE_STREAM_CLOSED) {
+                // End of file, but not an error
+                rv = NS_OK;
+            }
             break;
         }
 
