@@ -112,7 +112,7 @@ textarea {
   vertical-align: text-bottom;
   cursor: text;
   -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#textAreas");
-  -moz-appearance: textfield;
+  -moz-appearance: textfield-multiline;
   text-indent: 0;
   -moz-user-select: text;
 }

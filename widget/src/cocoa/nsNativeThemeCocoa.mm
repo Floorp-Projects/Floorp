@@ -810,7 +810,34 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
       // do nothing, drawn by scrollbar
       break;
-    
+
+    case NS_THEME_TEXTFIELD_MULTILINE: {
+      // we have to draw this by hand because there is no HITheme value for it
+      CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0);
+      
+      CGContextFillRect(cgContext, macRect);
+
+      CGContextSetLineWidth(cgContext, 1.0);
+      CGContextSetShouldAntialias(cgContext, false);
+
+      // stroke everything but the top line of the text area
+      CGContextSetRGBStrokeColor(cgContext, 0.6, 0.6, 0.6, 1.0);
+      CGContextBeginPath(cgContext);
+      CGContextMoveToPoint(cgContext, macRect.origin.x, macRect.origin.y + 1);
+      CGContextAddLineToPoint(cgContext, macRect.origin.x, macRect.origin.y + macRect.size.height);
+      CGContextAddLineToPoint(cgContext, macRect.origin.x + macRect.size.width - 1, macRect.origin.y + macRect.size.height);
+      CGContextAddLineToPoint(cgContext, macRect.origin.x + macRect.size.width - 1, macRect.origin.y + 1);
+      CGContextStrokePath(cgContext);
+
+      // stroke the line across the top of the text area
+      CGContextSetRGBStrokeColor(cgContext, 0.4510, 0.4510, 0.4510, 1.0);
+      CGContextBeginPath(cgContext);
+      CGContextMoveToPoint(cgContext, macRect.origin.x, macRect.origin.y + 1);
+      CGContextAddLineToPoint(cgContext, macRect.origin.x + macRect.size.width - 1, macRect.origin.y + 1);
+      CGContextStrokePath(cgContext);
+    }
+      break;
+
     case NS_THEME_LISTBOX:
       // HIThemeSetFill is not available on 10.3
       CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0);
@@ -870,12 +897,17 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
     }
       break;
 
+    case NS_THEME_TEXTFIELD_MULTILINE:
+      aResult->SizeTo(1, 1, 1, 1);
+      break;
+      
     case NS_THEME_LISTBOX: {
       SInt32 frameOutset = 0;
       ::GetThemeMetric(kThemeMetricListBoxFrameOutset, &frameOutset);
       aResult->SizeTo(frameOutset, frameOutset, frameOutset, frameOutset);
     }
       break;
+
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     {
@@ -916,6 +948,7 @@ nsNativeThemeCocoa::GetWidgetPadding(nsIDeviceContext* aContext,
   switch (aWidgetType)
   {
     case NS_THEME_TEXTFIELD:
+    case NS_THEME_TEXTFIELD_MULTILINE:
     {
       SInt32 nativePadding = 0;
       ::GetThemeMetric(kThemeMetricEditTextWhitespace, &nativePadding);
@@ -936,6 +969,7 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFra
     case NS_THEME_BUTTON:
     case NS_THEME_BUTTON_SMALL:
     case NS_THEME_TEXTFIELD:
+    case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_LISTBOX:
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_BUTTON:
@@ -1044,6 +1078,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
     }
  
     case NS_THEME_TEXTFIELD:
+    case NS_THEME_TEXTFIELD_MULTILINE:
     {
       // at minimum, we should be tall enough for 9pt text.
       // I'm using hardcoded values here because the appearance manager
@@ -1219,6 +1254,7 @@ nsNativeThemeCocoa::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_TAB_PANELS:
     case NS_THEME_TAB_PANEL:
     case NS_THEME_TEXTFIELD:
+    case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_DIALOG:
     case NS_THEME_MENUPOPUP:
       *aShouldRepaint = PR_FALSE;
@@ -1291,6 +1327,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_TOOLBAR:
     case NS_THEME_STATUSBAR:
     case NS_THEME_TEXTFIELD:
+    case NS_THEME_TEXTFIELD_MULTILINE:
     //case NS_THEME_TOOLBOX:
     //case NS_THEME_TOOLBAR_BUTTON:
     case NS_THEME_PROGRESSBAR:
