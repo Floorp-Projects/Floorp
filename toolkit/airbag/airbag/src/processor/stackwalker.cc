@@ -139,6 +139,9 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
     const CodeModules *modules,
     SymbolSupplier *supplier,
     SourceLineResolverInterface *resolver) {
+  if (!context)
+    return NULL;
+
   Stackwalker *cpu_stackwalker = NULL;
 
   u_int32_t cpu = context->GetContextCPU();
