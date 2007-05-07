@@ -41,6 +41,7 @@
 #include "nsIAccessibleDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMNSDocument.h"
+#include "nsIDOMNSHTMLElement.h"
 #include "nsIImageDocument.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -1414,6 +1415,12 @@ NS_IMETHODIMP nsAccessible::TakeSelection()
 /* void takeFocus (); */
 NS_IMETHODIMP nsAccessible::TakeFocus()
 { 
+  nsCOMPtr<nsIDOMNSHTMLElement> htmlElement(do_QueryInterface(mDOMNode));
+  if (htmlElement) {
+    // HTML Elements also set the caret position
+    // in order to affect tabbing order
+    return htmlElement->Focus();
+  }
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (!content) {
     return NS_ERROR_FAILURE;
