@@ -34,9 +34,12 @@ interface nsIMicrosummaryObserver : nsISupports
 };
 
 
-[scriptable, uuid(ff3eba15-81de-4c24-bfcf-c8180dc3c00a)]
+[scriptable, uuid(67ffe6b0-d4db-485c-ba20-5e2e8319b78d)]
 interface nsIMicrosummaryGenerator : nsISupports
 {
+    // Has the generator itself, which may be a remote resource, been loaded.
+    readonly attribute boolean loaded;
+
     // An arbitrary descriptive name for this microsummary generator.
     readonly attribute AUTF8String name;
 
@@ -85,17 +88,13 @@ interface nsIMicrosummaryGenerator : nsISupports
 };
 
 
-[scriptable, uuid(f9d1a73c-e147-46f3-ba61-4f0bd33f5d47)]
+[scriptable, uuid(1b1f232d-e65f-446a-9984-786578526072)]
 interface nsIMicrosummary : nsISupports
 {
     // the URI of the page being summarized
     readonly attribute nsIURI pageURI;
 
-    // The URI of the generator that generates this microsummary.
-    readonly attribute nsIURI generatorURI;
-
-    // The generator that generates this microsummary.
-    // Since generators can be remote resources, this may not always be available.
+    // The generator that generates this microsummary. May need to be loaded.
     attribute nsIMicrosummaryGenerator generator;
 
     // The content of the microsummary.
