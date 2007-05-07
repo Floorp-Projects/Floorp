@@ -42,6 +42,7 @@
 #include "nsHTMLFormControlAccessible.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIDOMNSHTMLButtonElement.h"
 #include "nsIDOMHTMLFormElement.h"
@@ -510,11 +511,9 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetActionName(PRUint8 aIndex, nsAString
 NS_IMETHODIMP nsHTMLTextFieldAccessible::DoAction(PRUint8 index)
 {
   if (index == 0) {
-    nsCOMPtr<nsIDOMHTMLInputElement> element(do_QueryInterface(mDOMNode));
-    if ( element )
-    {
-      element->Focus();
-      return NS_OK;
+    nsCOMPtr<nsIDOMNSHTMLElement> element(do_QueryInterface(mDOMNode));
+    if ( element ) {
+      return element->Focus();
     }
     return NS_ERROR_FAILURE;
   }
