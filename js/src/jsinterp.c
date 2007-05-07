@@ -2450,9 +2450,29 @@ interrupt:
             sp--;
           END_CASE(JSOP_POP)
 
-          BEGIN_CASE(JSOP_POP2)
-            sp -= 2;
-          END_CASE(JSOP_POP2)
+          BEGIN_CASE(JSOP_POPN)
+            sp -= GET_UINT16(pc);
+#ifdef DEBUG
+            JS_ASSERT(fp->spbase <= sp);
+            obj = fp->blockChain;
+            JS_ASSERT(!obj ||
+                      fp->spbase + OBJ_BLOCK_DEPTH(cx, obj)
+                                 + OBJ_BLOCK_COUNT(cx, obj)
+                      <= sp);
+            for (obj = fp->scopeChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
+                clasp = OBJ_GET_CLASS(cx, obj);
+                if (clasp != &js_BlockClass && clasp != &js_WithClass)
+                    continue;
+                if (JS_GetPrivate(cx, obj) != fp)
+                    break;
+                JS_ASSERT(fp->spbase + OBJ_BLOCK_DEPTH(cx, obj)
+                                     + ((clasp == &js_BlockClass)
+                                         ? OBJ_BLOCK_COUNT(cx, obj)
+                                         : 1)
+                          <= sp);
+            }
+#endif
+          END_CASE(JSOP_POPN)
 
           BEGIN_CASE(JSOP_SWAP)
             vp = sp - depth;    /* swap generating pc's for the decompiler */
@@ -5277,10 +5297,8 @@ interrupt:
 
             for (obj = fp->blockChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
                 JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_BlockClass);
-                if (OBJ_BLOCK_DEPTH(cx, obj) + (jsint)OBJ_BLOCK_COUNT(cx, obj) <= i) {
-                    JS_ASSERT(OBJ_BLOCK_DEPTH(cx, obj) < i || OBJ_BLOCK_COUNT(cx, obj) == 0);
+                if (OBJ_BLOCK_DEPTH(cx, obj) < i)
                     break;
-                }
             }
             fp->blockChain = obj;
 
