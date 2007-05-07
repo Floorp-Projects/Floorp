@@ -1,6 +1,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMDocument;
 interface nsIDOMNode;
 interface nsIURI;
 interface nsISimpleEnumerator;
@@ -45,11 +46,20 @@ interface nsIMicrosummaryGenerator : nsISupports
 
     // The canonical location and unique identifier of the generator.
     // It tells us where the generator comes from and where to go for updates.
-    // For generators referenced by web pages via <link> tags, this URI
-    // is the one specified by the tag.  For generators installed by users,
-    // this URI is the remote location from which we installed the generator.
-    // For generators bundled with the browser, this URI is a reference
-    // to the latest version of this generator available on Mozilla Add-ons.
+    //
+    // For generators referenced by web pages via <link> tags, this URI is
+    // the URL specified by the tag.
+    //
+    // For generators installed via nsSidebar::addMicrosummaryGenerator,
+    // this URI is a URN of the form urn:source:<url>, where <url> is the
+    // remote location from which we installed the generator.
+    //
+    // For generators installed via some other mechanism (f.e. an extension
+    // that dynamically creates generators), this URI is a URN in a form
+    // of the extension's own choosing, with the only restriction being that
+    // the URI be globally unique.  To ensure this, we recommend that such
+    // extensions incorporate UUIDs created by nsUUIDGenerator into the URNs
+    // of the generators they create.
     readonly attribute nsIURI uri;
 
     // Whether or not this generator needs page content to generate
@@ -165,7 +175,7 @@ interface nsIMicrosummarySet : nsISupports
 };
 
 
-[scriptable, uuid(c5e9c390-beb0-4eb4-90ab-529efc817632)]
+[scriptable, uuid(edec7c28-4b06-4692-842f-8bf238e61ac1)]
 interface nsIMicrosummaryService : nsISupports
 {
     /**
@@ -177,6 +187,28 @@ interface nsIMicrosummaryService : nsISupports
      *
      */
     void addGenerator(in nsIURI generatorURI);
+
+    /**
+     * Install the microsummary generator in the given XML definition.
+     *
+     * @param   xmlDefinition
+     *          an nsIDOMDocument XML document defining the generator
+     *
+     * @returns the newly-installed nsIMicrosummaryGenerator object
+     *
+     */
+    nsIMicrosummaryGenerator installGenerator(in nsIDOMDocument xmlDefinition);
+
+    /**
+     * Get the set of bookmarks with microsummaries.
+     *
+     * In the old RDF-based bookmarks datastore, bookmark IDs are nsIRDFResource
+     * objects.  In the new Places-based datastore, they are nsIURI objects.
+     *
+     * @returns an nsISimpleEnumerator enumeration of bookmark IDs
+     *
+     */
+    nsISimpleEnumerator getBookmarks();
 
     /**
      * Get the set of microsummaries available for a given page.  The set
