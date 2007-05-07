@@ -250,4 +250,24 @@ interface nsIMicrosummaryService : nsISupports
      */
     boolean isMicrosummary(in nsISupports bookmarkID,
                            in nsIMicrosummary microsummary);
+
+    /**
+     * Refresh a microsummary, updating its value in the datastore and UI.
+     * If this method can refresh the microsummary instantly, it will.
+     * Otherwise, it'll asynchronously download the necessary information
+     * (the generator and/or page) before refreshing the microsummary.
+     *
+     * Callers should check the "content" property of the returned microsummary
+     * object to distinguish between sync and async refreshes.  If its value
+     * is "null", then it's an async refresh, and the caller should register
+     * itself as an nsIMicrosummaryObserver via nsIMicrosummary.addObserver()
+     * to find out when the refresh completes.
+     *
+     * @param   bookmarkID
+     *          the bookmark whose microsummary is being refreshed
+     *
+     * @returns the microsummary being refreshed
+     *
+     */
+    nsIMicrosummary refreshMicrosummary(in nsISupports bookmarkID);
 };
