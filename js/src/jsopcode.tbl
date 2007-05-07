@@ -240,7 +240,7 @@ OPDEF(JSOP_FORIN,     103,"forin",      NULL,  1,  1,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_FORNAME,   104,"forname",    NULL,         3,  0,  1, 19,  JOF_CONST|JOF_NAME|JOF_FOR)
 OPDEF(JSOP_FORPROP,   105,"forprop",    NULL,         3,  1,  1, 18,  JOF_CONST|JOF_PROP|JOF_FOR)
 OPDEF(JSOP_FORELEM,   106,"forelem",    NULL,         1,  1,  3, 18,  JOF_BYTE |JOF_ELEM|JOF_FOR)
-OPDEF(JSOP_POP2,      107,"pop2",       NULL,         1,  2,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_POPN,      107,"popn",       NULL,         3, -1,  0,  0,  JOF_UINT16)
 
 /* ECMA-compliant assignment ops. */
 OPDEF(JSOP_BINDNAME,  108,"bindname",   NULL,         3,  0,  1,  0,  JOF_CONST|JOF_NAME|JOF_SET|JOF_ASSIGNING)

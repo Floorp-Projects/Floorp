@@ -1551,7 +1551,7 @@ DecompileGroupAssignment(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
             return NULL;
     }
 
-    LOCAL_ASSERT(op == JSOP_SETSP);
+    LOCAL_ASSERT(op == JSOP_POPN);
     if (SprintPut(&ss->sprinter, "] = [", 5) < 0)
         return NULL;
 
@@ -2046,8 +2046,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     pc = DecompileGroupAssignment(ss, pc, endpc, sn, &todo);
                     if (!pc)
                         return NULL;
-                    LOCAL_ASSERT(*pc == JSOP_SETSP);
-                    len = oplen = JSOP_SETSP_LENGTH;
+                    LOCAL_ASSERT(*pc == JSOP_POPN);
+                    len = oplen = JSOP_POPN_LENGTH;
                     goto end_groupassignment;
                 }
 #endif
@@ -2106,6 +2106,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_SETSP:
+              case JSOP_POPN:
               {
                 uintN newtop, oldtop, i;
 
@@ -2115,13 +2116,17 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                  * The decompiler must match the code generator's model, which
                  * is why JSOP_FINALLY pushes a cookie that JSOP_RETSUB pops.
                  */
-                newtop = (uintN) GET_UINT16(pc);
+                newtop = GET_UINT16(pc);
                 oldtop = ss->top;
+                if (op == JSOP_POPN)
+                    newtop = oldtop - newtop;
                 LOCAL_ASSERT(newtop <= oldtop);
                 todo = -2;
 
-#if JS_HAS_DESTRUCTURING
                 sn = js_GetSrcNote(jp->script, pc);
+                if (sn && SN_TYPE(sn) == SRC_HIDDEN)
+                    break;
+#if JS_HAS_DESTRUCTURING
                 if (sn && SN_TYPE(sn) == SRC_GROUPASSIGN) {
                     todo = Sprint(&ss->sprinter, "%s[] = [",
                                   VarPrefix(sn));
@@ -2357,15 +2362,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 sn = NULL;
                 break;
 
-              case JSOP_POP2:
               case JSOP_ENDITER:
                 sn = js_GetSrcNote(jp->script, pc);
                 todo = -2;
                 if (sn && SN_TYPE(sn) == SRC_HIDDEN)
                     break;
                 (void) PopOff(ss, op);
-                if (op == JSOP_POP2)
-                    (void) PopOff(ss, op);
                 break;
 
               case JSOP_ENTERWITH:
@@ -2584,8 +2586,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     pc = DecompileGroupAssignment(ss, pc, endpc, sn, &todo);
                     if (!pc)
                         return NULL;
-                    LOCAL_ASSERT(*pc == JSOP_SETSP);
-                    len = oplen = JSOP_SETSP_LENGTH;
+                    LOCAL_ASSERT(*pc == JSOP_POPN);
+                    len = oplen = JSOP_POPN_LENGTH;
                     goto end_groupassignment;
                 }
 #endif
@@ -4762,6 +4764,10 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
 
         if (op == JSOP_SETSP) {
             pcdepth = GET_UINT16(pc);
+            continue;
+        }
+        if (op == JSOP_POPN) {
+            pcdepth -= GET_UINT16(pc);
             continue;
         }
 
