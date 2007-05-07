@@ -290,7 +290,7 @@ var PlacesOrganizer = {
       if (fp.file) {
         var importer = Cc["@mozilla.org/browser/places/import-export-service;1"].
                        getService(Ci.nsIPlacesImportExportService);
-        var file = fp.file.QueryInterface(nsILocalFile);
+        var file = fp.file.QueryInterface(Ci.nsILocalFile);
         importer.importHTMLFromFile(file);
       }
     }
