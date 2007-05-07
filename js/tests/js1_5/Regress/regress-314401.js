@@ -42,9 +42,16 @@ var expect = 'No Crash';
 
 printBugNumber (bug);
 printStatus (summary);
-  
-if (typeof setTimeout != 'undefined')
+
+if (typeof setTimeout == 'undefined')
 {
+  reportCompare(expect, actual, 'Test Skipped.');
+}
+else
+{
+  gDelayTestDriverEnd = true;
+  window.onerror = null;
+
   try
   {
     setTimeout(eval, 0, '', null);
@@ -53,24 +60,22 @@ if (typeof setTimeout != 'undefined')
   {
     printStatus(ex+'');
   }
-}
-reportCompare(expect, actual, 'setTimeout(eval, 0, "", null)');
 
-if (typeof setTimeout != 'undefined' && typeof Script != 'undefined')
-{
-  try
-  {
-    setTimeout(Script, 0, '', null);
-  }
-  catch(ex)
-  {
-    printStatus(ex+'');
-  }
-}
-reportCompare(expect, actual, 'setTimeout(Script, 0, "", null)');
+  reportCompare(expect, actual, 'setTimeout(eval, 0, "", null)');
 
-if (typeof setInterval != 'undefined')
-{
+  if (typeof Script != 'undefined')
+  {
+    try
+    {
+      setTimeout(Script, 0, '', null);
+    }
+    catch(ex)
+    {
+      printStatus(ex+'');
+    }
+    reportCompare(expect, actual, 'setTimeout(Script, 0, "", null)');
+  }
+
   try
   {
     setInterval(eval, 0, '', null);
@@ -79,18 +84,19 @@ if (typeof setInterval != 'undefined')
   {
     printStatus(ex+'');
   }
-}
-reportCompare(expect, actual, 'setInterval(eval, 0, "", null)');
+  reportCompare(expect, actual, 'setInterval(eval, 0, "", null)');
 
-if (typeof setInterval != 'undefined' && typeof Script != 'undefined')
-{
-  try
+  if (typeof Script != 'undefined')
   {
-    setInterval(Script, 0, '', null);
+    try
+    {
+      setInterval(Script, 0, '', null);
+    }
+    catch(ex)
+    {
+      printStatus(ex+'');
+    }  
+    reportCompare(expect, actual, 'setInterval(Script, 0, "", null)');
   }
-  catch(ex)
-  {
-    printStatus(ex+'');
-  }  
+  setTimeout('gDelayTestDriverEnd = false; jsTestDriverEnd();', 0);
 }
-reportCompare(expect, actual, 'setInterval(Script, 0, "", null)');
