@@ -43,10 +43,10 @@ void* ReadTaskMemory(task_port_t target_task,
                      const void* address,
                      size_t length) {
   void* result = NULL;
-  mach_vm_address_t page_address = (uint32_t)address & (-4096);
-  mach_vm_address_t last_page_address =
-    ((uint32_t)address + length + 4095) & (-4096);
-  mach_vm_size_t page_size = last_page_address - page_address;
+  vm_address_t page_address = reinterpret_cast<vm_address_t>(address) & (-4096);
+  vm_address_t last_page_address =
+    (reinterpret_cast<vm_address_t>(address) + length + 4095) & (-4096);
+  vm_size_t page_size = last_page_address - page_address;
   uint8_t* local_start;
   uint32_t local_length;
 
