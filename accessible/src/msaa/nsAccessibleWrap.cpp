@@ -1523,8 +1523,26 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
       do_QueryInterface(newAccessible);
     if (privateAccessNode) {
       nsIFrame *frame = privateAccessNode->GetFrame();
-      if (frame)
-        hWnd = (HWND)frame->GetWindow()->GetNativeData(NS_NATIVE_WINDOW);
+      if (frame) {
+        nsIWidget *window = frame->GetWindow();
+        PRBool isVisible;
+        window->IsVisible(isVisible);
+        if (isVisible) {
+          // Short explanation:
+          // If HWND for frame is inside a hidden window, fire the event on the 
+          // containing document's visible window.
+          //
+          // Long explanation:
+          // This is really just to fix combo boxes with JAWS. Window-Eyes already worked with
+          // combo boxes because they use the value change event in the closed combo box
+          // case. JAWS will only pay attention to the focus events on the list items.
+          // The JAWS developers haven't fixed that, so we'll use the focus events to make JAWS work.
+          // However, JAWS is ignoring events on a hidden window. So, in order to fix the bug where
+          // JAWS doesn't echo the current option as it changes in a closed combo box, we need to use an
+          // ensure that we never fire an event with an HWND for a hidden window.
+          hWnd = (HWND)frame->GetWindow()->GetNativeData(NS_NATIVE_WINDOW);
+        }
+      }
     }
   }
 
