@@ -31,6 +31,8 @@
 
 #include <unistd.h>
 #include <signal.h>
+#include <cxxabi.h>
+#include <stdlib.h>
 
 #include <mach/machine.h>
 #include <mach-o/arch.h>
@@ -38,11 +40,13 @@
 #include <mach-o/loader.h>
 #include <mach-o/nlist.h>
 #include <mach-o/stab.h>
+#include <fcntl.h>
 
 #import <Foundation/Foundation.h>
 
 #import "dump_syms.h"
 #import "common/mac/file_id.h"
+#import "common/mac/macho_utilities.h"
 
 using google_breakpad::FileID;
 
@@ -62,8 +66,6 @@ static NSString *kUnknownSymbol = @"???";
 static const int kTextSection = 1;
 
 @interface DumpSymbols(PrivateMethods)
-- (NSString *)stringFromTask:(NSString *)action args:(NSArray *)args
-                  standardIn:(NSFileHandle *)standardIn;
 - (NSArray *)convertCPlusPlusSymbols:(NSArray *)symbols;
 - (void)convertSymbols;
 - (void)addFunction:(NSString *)name line:(int)line address:(uint64_t)address section:(int)section;
@@ -77,113 +79,31 @@ static const int kTextSection = 1;
 - (BOOL)loadModuleInfo;
 @end
 
-static BOOL StringHeadMatches(NSString *str, NSString *head) {
-  int headLen = [head length];
-  int strLen = [str length];
-
-  if (headLen > strLen)
-    return NO;
-
-  return [[str substringToIndex:headLen] isEqualToString:head];
-}
-
-static BOOL StringTailMatches(NSString *str, NSString *tail) {
-  int tailLen = [tail length];
-  int strLen = [str length];
-
-  if (tailLen > strLen)
-    return NO;
-
-  return [[str substringFromIndex:strLen - tailLen] isEqualToString:tail];
-}
-
 @implementation DumpSymbols
 //=============================================================================
-- (NSString *)stringFromTask:(NSString *)action args:(NSArray *)args
-                  standardIn:(NSFileHandle *)standardIn {
-  NSTask *task = [[NSTask alloc] init];
-  [task setLaunchPath:action];
-  NSPipe *pipe = [NSPipe pipe];
-  [task setStandardOutput:pipe];
-  NSFileHandle *output = [pipe fileHandleForReading];
-
-  if (standardIn)
-    [task setStandardInput:standardIn];
-
-  if (args)
-    [task setArguments:args];
-
-  [task launch];
-
-  // This seems a bit strange, but when using [task waitUntilExit], it hangs
-  // waiting for data, but there isn't any.  So, we'll poll for data,
-  // take a short nap, and then ask again
-  BOOL done = NO;
-  NSMutableData *allData = [NSMutableData data];
-  NSData *data = nil;
-  int exceptionCount = 0;
-
-  while (!done) {
-    data = nil;
-    // If there's a communications problem with the task, this might throw
-    // an exception.  We'll catch and keep trying.
-    @try {
-      data = [output availableData];
-    }
-    @catch (NSException *e) {
-      ++exceptionCount;
-    }
-
-    [allData appendData:data];
-
-    // Loop over the data until we're no longer returning data.  If we're
-    // still receiving data, sleep for 1/2 second and let the task
-    // continue.  If we keep receiving exceptions, bail out
-    if (![data length] && data || exceptionCount > 10)
-      done = YES;
-    else
-      usleep(500);
-  }
-
-  // Gather any remaining data
-  [task waitUntilExit];
-  data = [output availableData];
-  [allData appendData:data];
-  [task release];
-
-  return [[[NSString alloc] initWithData:allData
-                                encoding:NSUTF8StringEncoding] autorelease];
-}
-
-//=============================================================================
 - (NSArray *)convertCPlusPlusSymbols:(NSArray *)symbols {
-  NSString *action = @"/usr/bin/c++filt";
-  unsigned int count = [symbols count];
+  NSMutableArray *symbols_demangled = [[NSMutableArray alloc]
+					initWithCapacity:[symbols count]];
+  // __cxa_demangle will realloc this if needed
+  char *buffer = (char *)malloc(1024);
+  size_t buffer_size = 1024;
+  int result;
 
-  // It's possible that we have too many symbols on the command line.
-  // Unfortunately, c++filt doesn't take a file containing names, so we'll
-  // copy the symbols to a temporary file and use that as stdin.
-  char buffer[PATH_MAX];
-  snprintf(buffer, sizeof(buffer), "/tmp/dump_syms_filtXXXXX");
-  int fd = mkstemp(buffer);
-  char nl = '\n';
-  for (unsigned int i = 0; i < count; ++i) {
-    const char *symbol = [[symbols objectAtIndex:i] UTF8String];
-    write(fd, symbol, strlen(symbol));
-    write(fd, &nl, 1);
+  NSEnumerator *enumerator = [symbols objectEnumerator];
+  id symbolObject;
+  while ((symbolObject = [enumerator nextObject])) {
+    const char *symbol = [symbolObject UTF8String];
+    buffer = abi::__cxa_demangle(symbol, buffer, &buffer_size, &result);
+    if (result == 0) {
+      [symbols_demangled addObject:[NSString stringWithUTF8String:buffer]];
+    } else {
+      // unable to demangle - use mangled name instead
+      [symbols_demangled addObject:symbolObject];
+    }
   }
+  free(buffer);
 
-  // Reset to the beginning and wrap up with a file handle
-  lseek(fd, 0, SEEK_SET);
-  NSArray *args = [NSArray arrayWithObject:@"-n"];
-  NSFileHandle *fh = [[NSFileHandle alloc] initWithFileDescriptor:fd
-                                                   closeOnDealloc:YES];
-  NSArray *result = [[self stringFromTask:action args:args standardIn:fh]
-      componentsSeparatedByString:@"\n"];
-
-  [fh release];
-
-  return result;
+  return symbols_demangled;
 }
 
 //=============================================================================
@@ -207,18 +127,40 @@ static BOOL StringTailMatches(NSString *str, NSString *tail) {
     [symbols addObject:symbol];
   }
 
-  NSArray *converted = [self convertCPlusPlusSymbols:symbols];
-  [symbols release];
+  // In order to deal with crashing problems in c++filt, we setup
+  // a while loop to handle the case where convertCPlusPlusSymbols
+  // only returns partial results.
+  // We then attempt to continue from the point where c++filt failed
+  // and add the partial results to the total results until we're
+  // completely done.
+  
+  unsigned int totalIndex = 0;
+  unsigned int totalCount = count;
+  
+  while (totalIndex < totalCount) {
+    NSRange range = NSMakeRange(totalIndex, totalCount - totalIndex);
+    NSArray *subarray = [symbols subarrayWithRange:range];
+    NSArray *converted = [self convertCPlusPlusSymbols:subarray];
+    unsigned int convertedCount = [converted count];
 
-  for (unsigned int i = 0; i < count; ++i) {
-    NSMutableDictionary *dict = [addresses_ objectForKey:
-      [addresses objectAtIndex:i]];
-    NSString *symbol = [converted objectAtIndex:i];
+    if (convertedCount == 0) {
+      break; // we give up at this point
+    }
+    
+    for (unsigned int convertedIndex = 0;
+      convertedIndex < convertedCount && totalIndex < totalCount;
+       ++totalIndex, ++convertedIndex) {
+      NSMutableDictionary *dict = [addresses_ objectForKey:
+        [addresses objectAtIndex:totalIndex]];
+      NSString *symbol = [converted objectAtIndex:convertedIndex];
 
-    // Only add if this is a non-zero length symbol
-    if ([symbol length])
-      [dict setObject:symbol forKey:kAddressConvertedSymbolKey];
+      // Only add if this is a non-zero length symbol
+      if ([symbol length])
+        [dict setObject:symbol forKey:kAddressConvertedSymbolKey];
+    }
   }
+  
+  [symbols release];
 }
 
 //=============================================================================
@@ -232,24 +174,44 @@ static BOOL StringTailMatches(NSString *str, NSString *tail) {
   // addresses to run through the c++filt
   BOOL isCPP = NO;
 
-  if (StringHeadMatches(name, @"__Z")) {
+  if ([name hasPrefix:@"__Z"]) {
     // Remove the leading underscore
     name = [name substringFromIndex:1];
     isCPP = YES;
-  } else if (StringHeadMatches(name, @"_Z")) {
+  } else if ([name hasPrefix:@"_Z"]) {
     isCPP = YES;
   }
 
   // Filter out non-functions
-  if (StringTailMatches(name, @".eh"))
+  if ([name hasSuffix:@".eh"])
     return;
 
-  if (StringTailMatches(name, @"__func__"))
+  if ([name hasSuffix:@"__func__"])
     return;
 
-  if (StringTailMatches(name, @"GCC_except_table"))
+  if ([name hasSuffix:@"GCC_except_table"])
     return;
 
+  if (isCPP) {
+    // OBJCPP_MANGLING_HACK
+    // There are cases where ObjC++ mangles up an ObjC name using quasi-C++ 
+    // mangling:
+    // @implementation Foozles + (void)barzles {
+    //    static int Baz = 0;
+    // } @end
+    // gives you _ZZ18+[Foozles barzles]E3Baz
+    // c++filt won't parse this properly, and will crash in certain cases. 
+    // Logged as radar:
+    // 5129938: c++filt does not deal with ObjC++ symbols
+    // If 5129938 ever gets fixed, we can remove this, but for now this prevents
+    // c++filt from attempting to demangle names it doesn't know how to handle.
+    // This is with c++filt 2.16
+    NSCharacterSet *objcppCharSet = [NSCharacterSet characterSetWithCharactersInString:@"-+[]: "];
+    NSRange emptyRange = { NSNotFound, 0 };
+    NSRange objcppRange = [name rangeOfCharacterFromSet:objcppCharSet];
+    isCPP = NSEqualRanges(objcppRange, emptyRange);
+  }
+  
   if (isCPP) {
     if (!cppAddresses_)
       cppAddresses_ = [[NSMutableArray alloc] init];
@@ -269,17 +231,16 @@ static BOOL StringTailMatches(NSString *str, NSString *tail) {
     [dict release];
   }
 
-  if (name && ![dict objectForKey:kAddressSymbolKey])
+  if (name && ![dict objectForKey:kAddressSymbolKey]) {
     [dict setObject:name forKey:kAddressSymbolKey];
 
+    // only functions, not line number addresses
+    [functionAddresses_ addObject:addressNum];
+  }
+  
   if (line && ![dict objectForKey:kAddressSourceLineKey])
     [dict setObject:[NSNumber numberWithUnsignedInt:line]
              forKey:kAddressSourceLineKey];
-
-  // Save the function name so that we can add the end of function address
-  if ([name length]) {
-    [lastFunctionStartDict_ setObject:addressNum forKey:[NSNumber numberWithUnsignedInt:section] ];
-  }
 }
 
 //=============================================================================
@@ -287,10 +248,32 @@ static BOOL StringTailMatches(NSString *str, NSString *tail) {
   uint32_t n_strx = list->n_un.n_strx;
   BOOL result = NO;
 
-  // We don't care about non-section specific information
-  if (list->n_sect == 0 )
+  // We don't care about non-section specific information except function length
+  if (list->n_sect == 0 && list->n_type != N_FUN )
     return NO;
 
+  if (list->n_type == N_FUN) {
+    if (list->n_sect != 0) {
+      // we get the function address from the first N_FUN
+      lastStartAddress_ = list->n_value;
+    }
+    else {
+      // an N_FUN from section 0 may follow the initial N_FUN
+      // giving us function length information
+      NSMutableDictionary *dict = [addresses_ objectForKey:
+        [NSNumber numberWithUnsignedLong:lastStartAddress_]];
+      
+      assert(dict);
+
+      // only set the function size the first time
+      // (sometimes multiple section 0 N_FUN entries appear!)
+      if (![dict objectForKey:kFunctionSizeKey]) {
+        [dict setObject:[NSNumber numberWithUnsignedLongLong:list->n_value]
+                 forKey:kFunctionSizeKey];
+      }
+    }
+  }
+  
   int line = list->n_desc;
   
   // We only care about line number information in __TEXT __text
@@ -298,7 +281,7 @@ static BOOL StringTailMatches(NSString *str, NSString *tail) {
   if(list->n_sect != mainSection) {
     line = 0;
   }
-       
+
   // Extract debugging information:
   // Doc: http://developer.apple.com/documentation/DeveloperTools/gdb/stabs/stabs_toc.html
   // Header: /usr/include/mach-o/stab.h:
@@ -336,24 +319,9 @@ static BOOL StringTailMatches(NSString *str, NSString *tail) {
   } else if (((list->n_type & N_TYPE) == N_SECT) && !(list->n_type & N_STAB)) {
     // Regular symbols or ones that are external
     NSString *fn = [NSString stringWithUTF8String:&table[n_strx]];
+
     [self addFunction:fn line:0 address:list->n_value section:list->n_sect ];
     result = YES;
-  } else if (list->n_type == N_ENSYM && list->n_sect == mainSection ) {
-    NSNumber *lastFunctionStart = [lastFunctionStartDict_ 
-      objectForKey:[NSNumber numberWithUnsignedLongLong:list->n_sect]  ];
-
-    if (lastFunctionStart) {
-      unsigned long long start = [lastFunctionStart unsignedLongLongValue];
-      unsigned long long size = list->n_value - start;
-      NSMutableDictionary *dict = [addresses_ objectForKey:lastFunctionStart];
-      assert(dict);
-      assert(list->n_value > start);
-      
-      [dict setObject:[NSNumber numberWithUnsignedLongLong:size]
-               forKey:kFunctionSizeKey];
-
-      [lastFunctionStartDict_ removeObjectForKey:[NSNumber numberWithUnsignedLongLong:list->n_sect] ];
-    }
   }
 
   return result;
@@ -392,7 +360,7 @@ static BOOL StringTailMatches(NSString *str, NSString *tail) {
         nlist64.n_un.n_strx = SwapLongIfNeeded(list->n_un.n_strx);
         nlist64.n_type = list->n_type;
         nlist64.n_sect = list->n_sect;
-        nlist64.n_desc = SwapIntIfNeeded(list->n_desc);
+        nlist64.n_desc = SwapShortIfNeeded(list->n_desc);
         nlist64.n_value = (uint64_t)SwapLongIfNeeded(list->n_value);
 
         if ([self processSymbolItem:&nlist64 stringTable:strtab])
@@ -437,7 +405,7 @@ static BOOL StringTailMatches(NSString *str, NSString *tail) {
         nlist64.n_un.n_strx = SwapLongIfNeeded(list->n_un.n_strx);
         nlist64.n_type = list->n_type;
         nlist64.n_sect = list->n_sect;
-        nlist64.n_desc = SwapIntIfNeeded(list->n_desc);
+        nlist64.n_desc = SwapShortIfNeeded(list->n_desc);
         nlist64.n_value = SwapLongLongIfNeeded(list->n_value);
 
         if ([self processSymbolItem:&nlist64 stringTable:strtab])
@@ -668,15 +636,6 @@ static BOOL WriteFormat(int fd, const char *fmt, ...) {
   uint64_t moduleSize =
     moduleSizeNum ? [moduleSizeNum unsignedLongLongValue] : 0;
 
-  [lastFunctionStartDict_ removeAllObjects];
-  
-  // Gather the information
-  [self loadSymbolInfoForArchitecture];
-  [self convertSymbols];
-
-  NSArray *sortedAddresses = [[addresses_ allKeys]
-    sortedArrayUsingSelector:@selector(compare:)];
-
   // UUID
   FileID file_id([sourcePath_ fileSystemRepresentation]);
   unsigned char identifier[16];
@@ -688,8 +647,26 @@ static BOOL WriteFormat(int fd, const char *fmt, ...) {
                                       sizeof(identifierStr));
   }
   else {
-    strlcpy(identifierStr, moduleName, sizeof(identifierStr));
+    fprintf(stderr, "Unable to calculate UUID of mach-o binary!\n");
+    return NO;
   }
+
+  // keep track exclusively of function addresses
+  // for sanity checking function lengths
+  functionAddresses_ = [[NSMutableSet alloc] init];
+
+  // Gather the information
+  [self loadSymbolInfoForArchitecture];
+  [self convertSymbols];
+
+  NSArray *sortedAddresses = [[addresses_ allKeys]
+    sortedArrayUsingSelector:@selector(compare:)];
+
+  NSArray *sortedFunctionAddresses = [[functionAddresses_ allObjects]
+    sortedArrayUsingSelector:@selector(compare:)];
+
+  // position ourselves at the 2nd function
+  unsigned int funcIndex = 1;
 
   // Remove the dashes from the string
   NSMutableString *compactedStr =
@@ -733,7 +710,7 @@ static BOOL WriteFormat(int fd, const char *fmt, ...) {
       // The symbol reader doesn't want a trailing newline
       terminatingChar = '\0';
     }
-
+    
     NSDictionary *dict = [addresses_ objectForKey:address];
     NSNumber *line = [dict objectForKey:kAddressSourceLineKey];
     NSString *symbol = [dict objectForKey:kAddressConvertedSymbolKey];
@@ -741,29 +718,38 @@ static BOOL WriteFormat(int fd, const char *fmt, ...) {
     if (!symbol)
       symbol = [dict objectForKey:kAddressSymbolKey];
 
+    // sanity check the function length by making sure it doesn't
+    // run beyond the next function entry
+    uint64_t nextFunctionAddress = 0;
+    if (symbol && funcIndex < [sortedFunctionAddresses count]) {
+      nextFunctionAddress = [[sortedFunctionAddresses objectAtIndex:funcIndex]
+        unsignedLongLongValue] - baseAddress;
+      ++funcIndex;
+    }
+
     // Skip some symbols
-    if (StringHeadMatches(symbol, @"vtable for"))
+    if ([symbol hasPrefix:@"vtable for"])
       continue;
 
-    if (StringHeadMatches(symbol, @"__static_initialization_and_destruction_0"))
+    if ([symbol hasPrefix:@"__static_initialization_and_destruction_0"])
       continue;
 
-    if (StringHeadMatches(symbol, @"_GLOBAL__I__"))
+    if ([symbol hasPrefix:@"_GLOBAL__I__"])
       continue;
 
-    if (StringHeadMatches(symbol, @"__func__."))
+    if ([symbol hasPrefix:@"__func__."])
       continue;
 
-    if (StringHeadMatches(symbol, @"__gnu"))
+    if ([symbol hasPrefix:@"__gnu"])
       continue;
 
-    if (StringHeadMatches(symbol, @"typeinfo "))
+    if ([symbol hasPrefix:@"typeinfo "])
       continue;
 
-    if (StringHeadMatches(symbol, @"EH_frame"))
+    if ([symbol hasPrefix:@"EH_frame"])
       continue;
 
-    if (StringHeadMatches(symbol, @"GCC_except_table"))
+    if ([symbol hasPrefix:@"GCC_except_table"])
       continue;
 
     // Find the source file (if any) that contains this address
@@ -785,6 +771,16 @@ static BOOL WriteFormat(int fd, const char *fmt, ...) {
     if (line) {
       if (symbol && functionLength) {
         uint64_t functionLengthVal = [functionLength unsignedLongLongValue];
+        
+        // sanity check to make sure the length we were told does not exceed
+        // the space between this function and the next
+        if (nextFunctionAddress != 0) {
+          uint64_t functionLengthVal2 = nextFunctionAddress - addressVal;
+
+          if(functionLengthVal > functionLengthVal2 ) {
+            functionLengthVal = functionLengthVal2;
+          }
+        }
 
         // Function
         if (!WriteFormat(fd, "FUNC %llx %llx 0 %s\n", addressVal,
@@ -824,10 +820,6 @@ static BOOL WriteFormat(int fd, const char *fmt, ...) {
       return nil;
     }
 
-    // keep track of last function start address on a per-section basis
-    if (!lastFunctionStartDict_)
-      lastFunctionStartDict_ = [[NSMutableDictionary alloc] init];
-
     // If there's more than one, use the native one
     if ([headers_ count] > 1) {
       const NXArchInfo *localArchInfo = NXGetLocalArchInfo();
@@ -863,10 +855,10 @@ static BOOL WriteFormat(int fd, const char *fmt, ...) {
   [sourcePath_ release];
   [architecture_ release];
   [addresses_ release];
+  [functionAddresses_ release];
   [sources_ release];
   [headers_ release];
-  [lastFunctionStartDict_ release];
-
+  
   [super dealloc];
 }
 

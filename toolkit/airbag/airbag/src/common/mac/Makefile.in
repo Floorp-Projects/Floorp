@@ -55,6 +55,7 @@ CPPSRCS	= \
   macho_id.cc \
   macho_walker.cc \
   string_utilities.cc \
+  macho_utilities.cc \
   $(NULL)
 
 CMSRCS = \

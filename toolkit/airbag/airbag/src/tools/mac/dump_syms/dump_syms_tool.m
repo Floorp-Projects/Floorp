@@ -34,6 +34,7 @@
 #include <mach-o/arch.h>
 
 #include "dump_syms.h"
+#include "common/mac/macho_utilities.h"
 
 typedef struct {
   NSString *srcPath;

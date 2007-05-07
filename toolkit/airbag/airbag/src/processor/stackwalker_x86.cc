@@ -38,6 +38,7 @@
 
 #include "processor/stackwalker_x86.h"
 #include "google_breakpad/processor/call_stack.h"
+#include "google_breakpad/processor/code_modules.h"
 #include "google_breakpad/processor/memory_region.h"
 #include "google_breakpad/processor/stack_frame_cpu.h"
 #include "processor/linked_ptr.h"
@@ -163,15 +164,23 @@ StackFrame* StackwalkerX86::GetCallerFrame(
   // postfix notation and will be passed to PostfixEvaluator::Evaluate.
   // Given the dictionary and the program string, it is possible to compute
   // the return address and the values of other registers in the calling
-  // function.
+  // function.  When encountering a nontraditional frame (one which takes
+  // advantage of FPO), the stack may need to be scanned for these values.
+  // For traditional frames, simple deterministic dereferencing suffices
+  // without any need for scanning.  The results of program string evaluation
+  // will be used to determine whether to scan for better values.
   string program_string;
+  bool traditional_frame = true;
+  bool recover_ebp = true;
   if (last_frame_info && last_frame_info->valid == StackFrameInfo::VALID_ALL) {
     // FPO data available.
+    traditional_frame = false;
     if (!last_frame_info->program_string.empty()) {
       // The FPO data has its own program string, which will tell us how to
       // get to the caller frame, and may even fill in the values of
       // nonvolatile registers and provide pointers to local variables and
-      // parameters.
+      // parameters.  In some cases, particularly with program strings that use
+      // .raSearchStart, the stack may need to be scanned afterward.
       program_string = last_frame_info->program_string;
     } else if (last_frame_info->allocates_base_pointer) {
       // The function corresponding to the last frame doesn't use the frame
@@ -197,6 +206,15 @@ StackFrame* StackwalkerX86::GetCallerFrame(
       // the caller is at a known location in the saved-register area of
       // the stack frame.
       //
+      // For this type of frame, MSVC 14 (from Visual Studio 8/2005) in
+      // link-time code generation mode (/LTCG and /GL) can generate erroneous
+      // debugging data.  The reported size of saved registers can be 0,
+      // which is clearly an error because these frames must, at the very
+      // least, save %ebp.  For this reason, in addition to those given above
+      // about the use of .raSearchStart, the stack may need to be scanned
+      // for a better return address and a better frame pointer after the
+      // program string is evaluated.
+      //
       // %eip_new = *(%esp_old + callee_params + saved_regs + locals)
       // %ebp_new = *(%esp_old + callee_params + saved_regs - 8)
       // %esp_new = %esp_old + callee_params + saved_regs + locals + 4
@@ -217,12 +235,18 @@ StackFrame* StackwalkerX86::GetCallerFrame(
       // is the value that it had in the caller, so it can be carried
       // straight through without bringing its validity into question.
       //
+      // Because of the use of .raSearchStart, the stack will possibly be
+      // examined to locate a better return address after program string
+      // evaluation.  The stack will not be examined to locate a saved
+      // %ebp value, because these frames do not save (or use) %ebp.
+      //
       // %eip_new = *(%esp_old + callee_params + saved_regs + locals)
       // %esp_new = %esp_old + callee_params + saved_regs + locals + 4
       // %ebp_new = %ebp_old
       program_string = "$eip .raSearchStart ^ = "
                        "$esp .raSearchStart 4 + = "
                        "$ebp $ebp =";
+      recover_ebp = false;
     }
   } else {
     // No FPO information is available for the last frame.  Assume that the
@@ -244,6 +268,10 @@ StackFrame* StackwalkerX86::GetCallerFrame(
     // CALL itself, and 4 bytes for the callee's PUSH of the caller's frame
     // pointer.
     //
+    // Instruction and frame pointer recovery for these traditional frames is
+    // entirely deterministic, and the stack will not be scanned after
+    // recovering these values.
+    //
     // %eip_new = *(%ebp_old + 4)
     // %esp_new = %ebp_old + 8
     // %ebp_new = *(%ebp_old)
@@ -262,6 +290,91 @@ StackFrame* StackwalkerX86::GetCallerFrame(
       dictionary_validity.find("$esp") == dictionary_validity.end() ||
       dictionary_validity.find("$ebp") == dictionary_validity.end()) {
     return NULL;
+  }
+
+  // If this stack frame did not use %ebp in a traditional way, locating the
+  // return address isn't entirely deterministic.  In that case, the stack
+  // can be scanned to locate the return address.
+  //
+  // Even in nontraditional frames, if program string evaluation resulted in
+  // both %eip and %ebp values of 0, trust that the end of the stack has been
+  // reached and don't scan for anything else.
+  if (!traditional_frame &&
+      (dictionary["$eip"] != 0 || dictionary["$ebp"] != 0)) {
+    int offset = 0;
+
+    // This scan can only be done if a CodeModules object is available, to
+    // check that candidate return addresses are in fact inside a module.
+    //
+    // TODO(mmentovai): This ignores dynamically-generated code.  One possible
+    // solution is to check the minidump's memory map to see if the candidate
+    // %eip value comes from a mapped executable page, although this would
+    // require dumps that contain MINIDUMP_MEMORY_INFO, which the Breakpad
+    // client doesn't currently write (it would need to call MiniDumpWriteDump
+    // with the MiniDumpWithFullMemoryInfo type bit set).  Even given this
+    // ability, older OSes (pre-XP SP2) and CPUs (pre-P4) don't enforce
+    // an independent execute privilege on memory pages.
+
+    u_int32_t eip = dictionary["$eip"];
+    if (modules_ && !modules_->GetModuleForAddress(eip)) {
+      const int kRASearchWords = 15;
+
+      // The instruction pointer at .raSearchStart was invalid, so start
+      // looking one 32-bit word above that location.
+      u_int32_t location_start = dictionary[".raSearchStart"] + 4;
+
+      for (u_int32_t location = location_start;
+           location <= location_start + kRASearchWords * 4;
+           location += 4) {
+        if (!memory_->GetMemoryAtAddress(location, &eip))
+          break;
+
+        if (modules_->GetModuleForAddress(eip)) {
+          // This is a better return address that what program string
+          // evaluation found.  Use it, and set %esp to the location above the
+          // one where the return address was found.
+          //
+          // TODO(mmentovai): The return-address check can be made even
+          // stronger in modules for which debugging data is available.  In
+          // that case, it's possible to check that the candidate return
+          // address is inside a known function.
+
+          dictionary["$eip"] = eip;
+          dictionary["$esp"] = location + 4;
+          offset = location - location_start;
+          break;
+        }
+      }
+    }
+
+    // When trying to recover the previous value of the frame pointer (%ebp),
+    // start looking at the lowest possible address in the saved-register
+    // area, and look at the entire saved register area, increased by the
+    // size of |offset| to account for additional data that may be on the
+    // stack.  The scan is performed from the highest possible address to
+    // the lowest, because we expect that the function's prolog would have
+    // saved %ebp early.
+    u_int32_t ebp = dictionary["$ebp"];
+    u_int32_t value;  // throwaway variable to check pointer validity
+    if (recover_ebp && !memory_->GetMemoryAtAddress(ebp, &value)) {
+      int fp_search_bytes = last_frame_info->saved_register_size + offset;
+      u_int32_t location_end = last_frame->context.esp +
+                               last_frame_callee_parameter_size;
+
+      for (u_int32_t location = location_end + fp_search_bytes;
+           location >= location_end;
+           location -= 4) {
+        if (!memory_->GetMemoryAtAddress(location, &ebp))
+          break;
+
+        if (memory_->GetMemoryAtAddress(ebp, &value)) {
+          // The candidate value is a pointer to the same memory region
+          // (the stack).  Prefer it as a recovered %ebp result.
+          dictionary["$ebp"] = ebp;
+          break;
+        }
+      }
+    }
   }
 
   // Treat an instruction address of 0 as end-of-stack.  Treat incorrect stack

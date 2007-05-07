@@ -71,6 +71,14 @@ class ExceptionHandler {
                                    const char *minidump_id,
                                    void *context, bool succeeded);
 
+  // A callback function which will be called directly if an exception occurs.
+  // This bypasses the minidump file writing and simply gives the client
+  // the exception information.
+  typedef bool (*DirectCallback)( void *context,
+                                  int exception_type,
+                                  int exception_code,
+                                  mach_port_t thread_name);
+
   // Creates a new ExceptionHandler instance to handle writing minidumps.
   // Minidump files will be written to dump_path, and the optional callback
   // is called after writing the dump file, as described above.
@@ -80,6 +88,13 @@ class ExceptionHandler {
   ExceptionHandler(const string &dump_path, 
                    FilterCallback filter, MinidumpCallback callback,
                    void *callback_context, bool install_handler);
+
+  // A special constructor if we want to bypass minidump writing and
+  // simply get a callback with the exception information.
+  ExceptionHandler(DirectCallback callback,
+                   void *callback_context,
+                   bool install_handler);
+
   ~ExceptionHandler();
 
   // Get and set the minidump path.
@@ -104,7 +119,7 @@ class ExceptionHandler {
   bool InstallHandler();
 
   // Uninstall the mach exception handler (if any)
-  bool UninstallHandler();
+  bool UninstallHandler(bool in_exception);
       
   // Setup the handler thread, and if |install_handler| is true, install the
   // mach exception port handler
@@ -158,6 +173,10 @@ class ExceptionHandler {
   FilterCallback filter_;
   MinidumpCallback callback_;
   void *callback_context_;
+
+  // The callback function to be passed back when we don't want a minidump
+  // file to be written
+  DirectCallback directCallback_;
 
   // The thread that is created for the handler
   pthread_t handler_thread_;

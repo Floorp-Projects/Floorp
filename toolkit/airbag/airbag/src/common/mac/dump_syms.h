@@ -39,11 +39,12 @@
   NSString *sourcePath_;              // Source of symbols (STRONG)
   NSString *architecture_;            // Architecture to extract (STRONG)
   NSMutableDictionary *addresses_;    // Addresses and symbols (STRONG)
+  NSMutableSet *functionAddresses_;   // Function addresses (STRONG)
   NSMutableDictionary *sources_;      // Address and Source file paths (STRONG)
   NSMutableArray *cppAddresses_;      // Addresses of C++ symbols (STRONG)
   NSMutableDictionary *headers_;      // Mach-o header information (STRONG)
-  NSMutableDictionary *lastFunctionStartDict_; // Keyed by section# (STRONG)
   NSMutableDictionary *sectionNumbers_; // Keyed by seg/sect name (STRONG)
+  uint32_t   lastStartAddress_;
 }
 
 - (id)initWithContentsOfFile:(NSString *)machoFile;
