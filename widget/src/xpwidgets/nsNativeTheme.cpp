@@ -189,6 +189,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
   // Check for specific widgets to see if HTML has overridden the style.
   if (aFrame && (aWidgetType == NS_THEME_BUTTON ||
                  aWidgetType == NS_THEME_TEXTFIELD ||
+                 aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
                  aWidgetType == NS_THEME_LISTBOX ||
                  aWidgetType == NS_THEME_DROPDOWN)) {
 
@@ -225,6 +226,7 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
         break;
 
       case NS_THEME_TEXTFIELD:
+      case NS_THEME_TEXTFIELD_MULTILINE:
         defaultBorderStyle = sTextfieldBorderStyle;
         ConvertMarginToAppUnits(sTextfieldBorderSize, defaultBorderSize);
         lookAndFeel->GetColor(sTextfieldBorderColorID,

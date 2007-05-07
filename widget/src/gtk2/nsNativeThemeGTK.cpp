@@ -223,6 +223,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       // actually has element focus, so we check the focused attribute
       // to see whether to draw in the focused state.
       if (aWidgetType == NS_THEME_TEXTFIELD ||
+          aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
           aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
           aWidgetType == NS_THEME_RADIO_CONTAINER ||
           aWidgetType == NS_THEME_RADIO_LABEL ||
@@ -351,6 +352,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     aGtkWidgetType = MOZ_GTK_GRIPPER;
     break;
   case NS_THEME_TEXTFIELD:
+  case NS_THEME_TEXTFIELD_MULTILINE:
   case NS_THEME_DROPDOWN_TEXTFIELD:
     aGtkWidgetType = MOZ_GTK_ENTRY;
     break;
@@ -1008,6 +1010,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     // case NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL:  (n/a for gtk)
     // case NS_THEME_SCROLLBAR_GRIPPER_VERTICAL:  (n/a for gtk)
   case NS_THEME_TEXTFIELD:
+  case NS_THEME_TEXTFIELD_MULTILINE:
     // case NS_THEME_TEXTFIELD_CARET:
   case NS_THEME_DROPDOWN_BUTTON:
   case NS_THEME_DROPDOWN_TEXTFIELD:
