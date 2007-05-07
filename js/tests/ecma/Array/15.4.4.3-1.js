@@ -106,7 +106,7 @@ new TestCase(   SECTION,
 // separator is a control character
 new TestCase(   SECTION,
 		"var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join('\v')",
-		unescape("%u000B%u000Btrue%u000Bfalse%u000B123%u000B[object Object]%u000Btrue"),
+		decodeURIComponent("%0B%0Btrue%0Bfalse%0B123%0B[object Object]%0Btrue"),
 		eval("var TEST_ARRAY = new Array(null, void 0, true, false, 123, new Object(), new Boolean(true) ); TEST_ARRAY.join('\v')") );
 
 // length of array is 1
