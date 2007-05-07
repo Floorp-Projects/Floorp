@@ -156,6 +156,9 @@
 // The caret of a text area
 #define NS_THEME_TEXTFIELD_CARET                           96
 
+// A multiline text field
+#define NS_THEME_TEXTFIELD_MULTILINE                       97
+
 // A dropdown list.
 #define NS_THEME_DROPDOWN                                  101
 
