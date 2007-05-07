@@ -345,7 +345,7 @@ public:
    * Tell the pres shell that a frame needs to be marked dirty and needs
    * Reflow.  It's OK if this is an ancestor of the frame needing reflow as
    * long as the ancestor chain between them doesn't cross a reflow root.  The
-   * bit to add should be eithr NS_FRAME_IS_DIRTY or
+   * bit to add should be either NS_FRAME_IS_DIRTY or
    * NS_FRAME_HAS_DIRTY_CHILDREN (but not both!).
    */
   enum IntrinsicDirty {
