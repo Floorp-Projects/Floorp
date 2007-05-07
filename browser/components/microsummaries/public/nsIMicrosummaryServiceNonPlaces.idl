@@ -35,7 +35,7 @@ interface nsIMicrosummaryObserver : nsISupports
 };
 
 
-[scriptable, uuid(71c469b4-6e31-427e-922d-48aafbd17344)]
+[scriptable, uuid(05b48344-d0a7-427e-934e-9a6e0d5ecced)]
 interface nsIMicrosummaryGenerator : nsISupports
 {
     // Has the generator itself, which may be a remote resource, been loaded.
@@ -61,6 +61,12 @@ interface nsIMicrosummaryGenerator : nsISupports
     // extensions incorporate UUIDs created by nsUUIDGenerator into the URNs
     // of the generators they create.
     readonly attribute nsIURI uri;
+
+    /**
+     * microsummary-generator equivalence test
+     * generators equal if their canonical locations equal, see uri attribute.
+     */
+    boolean equals(in nsIMicrosummaryGenerator aOther);
 
     // For generators installed by the user or bundled with the browser, the
     // local URI points to the location of the local file containing the
@@ -103,7 +109,7 @@ interface nsIMicrosummaryGenerator : nsISupports
 };
 
 
-[scriptable, uuid(1b1f232d-e65f-446a-9984-786578526072)]
+[scriptable, uuid(a999eabf-68f9-45c2-919f-2ad33777e3e3)]
 interface nsIMicrosummary : nsISupports
 {
     // the URI of the page being summarized
@@ -138,6 +144,15 @@ interface nsIMicrosummary : nsISupports
      *
      */
     void removeObserver(in nsIMicrosummaryObserver observer);
+
+    /**
+     * Microsummary equivalence test
+     * Microsummaries equal if they summarize the same page with the same
+     * microsummary-generator (see also nsIMicrosummaryGenerator::equals).
+     *
+     * Note: this method returns false if either objects don't have a generator
+     */
+    boolean equals(in nsIMicrosummary aOther);
 
     /**
      * Update the microsummary, first loading its generator and page content
