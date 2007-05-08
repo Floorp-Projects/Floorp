@@ -73,6 +73,16 @@ static const int kThemeScrollBarArrowsBoth = 2;
 
 #define HITHEME_ORIENTATION kHIThemeOrientationNormal
 
+// Minimum size for buttons that we can create with scaling:
+#define MIN_SCALED_PUSH_BUTTON_WIDTH 28
+#define MIN_SCALED_PUSH_BUTTON_HEIGHT 12
+// We use an offscreen buffer and image scaling to make HITheme draw buttons at any height.
+// Minimum height that HITheme will draw a normal push button:
+#define MIN_UNSCALED_PUSH_BUTTON_HEIGHT 22
+// Difference between the height given to HITheme for a button and the button it actually draws:
+#define NATIVE_PUSH_BUTTON_HEIGHT_DIFF 2
+
+
 NS_IMPL_ISUPPORTS1(nsNativeThemeCocoa, nsITheme)
 
 
@@ -113,14 +123,6 @@ nsNativeThemeCocoa::DrawCheckboxRadio(CGContextRef cgContext, ThemeButtonKind in
   HIThemeDrawButton(&inBoxRect, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
 }
 
-// We use an offscreen buffer and image scaling to make HITheme draw buttons at any height.
-// Minimum height that HITheme will draw a normal push button:
-#define MIN_UNSCALED_BUTTON_HEIGHT 22
-// Minimum size for buttons that we can create with scaling:
-#define MIN_SCALED_BUTTON_WIDTH 28
-#define MIN_SCALED_BUTTON_HEIGHT 12
-// Difference between the height given to HITheme for a button and the button it actually draws:
-#define NATIVE_BUTTON_HEIGHT_DIFF 2
 
 void
 nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
@@ -128,10 +130,6 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
                                ThemeButtonValue inValue, ThemeButtonAdornment inAdornment,
                                PRInt32 inState)
 {
-  if (inBoxRect.size.width < MIN_SCALED_BUTTON_WIDTH ||
-      inBoxRect.size.height < MIN_SCALED_BUTTON_HEIGHT)
-    return;
-
   HIThemeButtonDrawInfo bdi;
   bdi.version = 0;
   bdi.kind = inKind;
@@ -153,10 +151,10 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
 
   // If any of the origin and size offset arithmatic seems strange here, check out the
   // actual dimensions of an HITheme button compared to the rect you pass to HIThemeDrawButton.
-  if (inBoxRect.size.height < MIN_UNSCALED_BUTTON_HEIGHT) {
+  if (inKind == kThemePushButton && inBoxRect.size.height < MIN_UNSCALED_PUSH_BUTTON_HEIGHT) {
     // We'll use these two values to size the button we draw offscreen
     float offscreenWidth = inBoxRect.size.width;
-    float offscreenHeight = MIN_UNSCALED_BUTTON_HEIGHT;
+    float offscreenHeight = MIN_UNSCALED_PUSH_BUTTON_HEIGHT;
     if (inBoxRect.size.height > offscreenHeight)
       offscreenHeight = inBoxRect.size.height;
 
@@ -168,9 +166,9 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
     // set up HITheme button to draw
     HIRect drawFrame;
     drawFrame.origin.x = 0;
-    drawFrame.origin.y = NATIVE_BUTTON_HEIGHT_DIFF;
+    drawFrame.origin.y = NATIVE_PUSH_BUTTON_HEIGHT_DIFF;
     drawFrame.size.width = offscreenWidth;
-    drawFrame.size.height = offscreenHeight - NATIVE_BUTTON_HEIGHT_DIFF;
+    drawFrame.size.height = offscreenHeight - NATIVE_PUSH_BUTTON_HEIGHT_DIFF;
 
     // draw into offscreen image
     [image lockFocus];
@@ -195,7 +193,10 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
     drawFrame.origin.x = inBoxRect.origin.x;
     drawFrame.origin.y = inBoxRect.origin.y;
     drawFrame.size.width = inBoxRect.size.width;
-    drawFrame.size.height = inBoxRect.size.height - NATIVE_BUTTON_HEIGHT_DIFF;
+    drawFrame.size.height = inBoxRect.size.height;
+
+    if (inKind == kThemePushButton)
+      drawFrame.size.height -= NATIVE_PUSH_BUTTON_HEIGHT_DIFF;
 
     HIThemeDrawButton(&drawFrame, &bdi, cgContext, kHIThemeOrientationNormal, NULL);
   }
@@ -1005,7 +1006,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
     {
-      aResult->SizeTo(MIN_SCALED_BUTTON_WIDTH, MIN_SCALED_BUTTON_HEIGHT);
+      aResult->SizeTo(MIN_SCALED_PUSH_BUTTON_WIDTH, MIN_SCALED_PUSH_BUTTON_HEIGHT);
       break;
     }
 
