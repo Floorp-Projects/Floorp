@@ -201,6 +201,10 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 368020-2.html 368020-2-ref.html # bug 3
 fails == 368020-3.html 368020-3-ref.html # bug 368085
 fails == 368020-4.html 368020-4-ref.html # bug 368085
 == 368020-5.html 368020-5-ref.html
+# we can't test this because there's antialiasing involved, and our comparison
+# is too exact
+# == 368247-1.html 368247-1-ref.html
+== 368247-2.html 368247-2-ref.html
 fails == 368504-1.html 368504-1-ref.html # bug 368504
 == 368622-1.html 368622-1-ref.html
 == 368622-1.html 368622-1-ref.html

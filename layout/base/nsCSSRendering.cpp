@@ -915,6 +915,17 @@ static inline void SF(const char *fmt, ...) {
   vfprintf (stderr, fmt, vl);
   va_end(vl);
 }
+
+static inline void SX(gfxContext *ctx) {
+  gfxPoint p = ctx->CurrentPoint();
+  fprintf (stderr, "p: %f %f\n", p.x, p.y);
+  return;
+  ctx->MoveTo(p + gfxPoint(-2, -2)); ctx->LineTo(p + gfxPoint(2, 2));
+  ctx->MoveTo(p + gfxPoint(-2, 2)); ctx->LineTo(p + gfxPoint(2, -2));
+  ctx->MoveTo(p);
+}
+
+
 #else
 static inline void S(const gfxPoint& p) {}
 static inline void S(const gfxSize& s) {}
@@ -923,6 +934,7 @@ static inline void S(const gfxFloat f) {}
 static inline void S(const char *s) {}
 static inline void SN(const char *s = nsnull) {}
 static inline void SF(const char *fmt, ...) {}
+static inline void SX(gfxContext *ctx) {}
 #endif
 
 /*
@@ -947,7 +959,7 @@ ShouldDoSeparateSides (const nsStyleBorder& aBorderStyle,
 
   static PRUint8 sideOrder[] = { NS_SIDE_BOTTOM, NS_SIDE_LEFT, NS_SIDE_TOP, NS_SIDE_RIGHT };
 
-  for (PRInt32 i = 0; i < 4; i++) {
+  for (int i = 0; i < 4; i++) {
     PRUint8 side = sideOrder[i];
     PRUint8 borderRenderStyle = aBorderStyle.GetBorderStyle(side);
 
@@ -1017,9 +1029,15 @@ SideLength(gfxRect& oRect,
 static void
 DoAllSidesBorderPath(gfxContext *ctx,
                      gfxRect& lRect,
-                     gfxFloat *radii)
+                     gfxFloat *radii,
+                     PRIntn skipSides = 0)
 {
   ctx->NewPath();
+
+  SF("DoAllSidesBorderPath: [%f %f %f %f] radii: %p skipSides: %d\n", lRect.pos.x, lRect.pos.y, lRect.size.width, lRect.size.height, radii, skipSides);
+  if (radii) {
+    SF("   %f %f %f %f\n", radii[0], radii[1], radii[2], radii[3]);
+  }
 
   // if we don't have border radius, then this is easy
   if (radii == nsnull) {
@@ -1047,48 +1065,151 @@ DoAllSidesBorderPath(gfxContext *ctx,
     //     *          *
     //     \          /
     //      *--------*
+    //
+    // However, if any sides are to be skipped, the start point is
+    // adjusted so that the segment that's rendered has all the joins
+    // correct -- we can't use ClosePath to get a correct join if we
+    // ever do a MoveTo (to skip a segment), because it closes to the
+    // position of the last MoveTo.
 
     gfxMatrix mat = ctx->CurrentMatrix();
     ctx->Translate(lRect.pos);
 
-    ctx->MoveTo(gfxPoint(radii[C_TL], 0.0));
+    // Decide which side to start drawing the path on, taking into
+    // account the skipped sides.  We always draw the path
+    // in the usual order: top -> left -> right -> bottom.  But if 
+    // one or more of these sides is skipped, we start in a different
+    // spot to make sure that we get the joins right.
+    //
+    // For example, if the right and bottom sides are to be skipped,
+    // without this we would draw a line from the TL to the TR corner,
+    // and then the BL to the TL corner.  But we can't use ClosePath()
+    // to get a join at the TL corner, because it closes the subpath
+    // started with the last MoveTo(); so, we'll end up not having a
+    // join in the TL corner, which will look bad.
+    //
+    // Instead, this code will decide to start drawing the path from
+    // the BL corner, and will draw a single path from BL -> TL -> TR.
+    PRIntn currentSide = NS_SIDE_TOP;
+    switch (skipSides) {
+      case SIDE_BIT_TOP:
+      case SIDE_BIT_TOP | SIDE_BIT_LEFT:
+      case SIDE_BIT_TOP | SIDE_BIT_LEFT | SIDE_BIT_BOTTOM:
+        currentSide = NS_SIDE_RIGHT;
+        break;
+      case SIDE_BIT_RIGHT:
+      case SIDE_BIT_RIGHT | SIDE_BIT_TOP:
+      case SIDE_BIT_RIGHT | SIDE_BIT_TOP | SIDE_BIT_LEFT:
+        currentSide = NS_SIDE_BOTTOM;
+        break;
+      case SIDE_BIT_BOTTOM:
+      case SIDE_BIT_BOTTOM | SIDE_BIT_RIGHT:
+      case SIDE_BIT_BOTTOM | SIDE_BIT_RIGHT | SIDE_BIT_TOP:
+        currentSide = NS_SIDE_LEFT;
+        break;
+      case SIDE_BIT_LEFT:
+      case SIDE_BIT_LEFT | SIDE_BIT_BOTTOM:
+      case SIDE_BIT_LEFT | SIDE_BIT_BOTTOM | SIDE_BIT_RIGHT:
+        currentSide = NS_SIDE_TOP;
+        break;
+   }
 
-    ctx->LineTo(gfxPoint(lRect.size.width - radii[C_TR], 0.0));
+    switch (currentSide) {
+      case NS_SIDE_TOP:
+        ctx->MoveTo(gfxPoint(radii[C_TL] / 2.0, 0.0));
+        break;
 
-    if (radii[C_TR]) {
-      ctx->Arc(gfxPoint(lRect.size.width - radii[C_TR], radii[C_TR]),
-               radii[C_TR],
-               3.0 * NS_PI / 2.0, 0.0);
+      case NS_SIDE_RIGHT:
+        ctx->MoveTo(gfxPoint(lRect.size.width, radii[C_TR] / 2.0));
+        break;
+
+      case NS_SIDE_BOTTOM:
+        ctx->MoveTo(gfxPoint(lRect.size.width - radii[C_BR] / 2.0, lRect.size.height));
+        break;
+
+      case NS_SIDE_LEFT:
+        ctx->MoveTo(gfxPoint(0.0, lRect.size.height - radii[C_BL] / 2.0));
+        break;
     }
 
-    ctx->LineTo(gfxPoint(lRect.size.width, lRect.size.height - radii[C_BR]));
+    SX(ctx);
 
-    if (radii[C_BR]) {
-      ctx->Arc(gfxPoint(lRect.size.width - radii[C_BR], lRect.size.height - radii[C_BR]),
-               radii[C_BR],
-               0.0, NS_PI / 2.0);
+    int sidesToDraw = 4;
+    while (sidesToDraw-- > 0) {
+      switch (currentSide) {
+        case NS_SIDE_TOP:
+          if (skipSides & SIDE_BIT_TOP) {
+            ctx->MoveTo(gfxPoint(lRect.size.width, 0.0));
+          } else if (radii[C_TR]) {
+            ctx->LineTo(gfxPoint(lRect.size.width - radii[C_TR] / 2.0, 0.0));
+            SX(ctx);
+            
+            ctx->Arc(gfxPoint(lRect.size.width - radii[C_TR] / 2.0, radii[C_TR] / 2.0),
+                     radii[C_TR] / 2.0,
+                     3.0 * NS_PI / 2.0, 0.0);
+            SX(ctx);
+          } else {
+            ctx->LineTo(gfxPoint(lRect.size.width, 0.0));
+            SX(ctx);
+          }
+          break;
+
+        case NS_SIDE_RIGHT:
+          if (skipSides & SIDE_BIT_RIGHT) {
+            ctx->MoveTo(gfxPoint(lRect.size.width, lRect.size.height));
+          } else if (radii[C_BR]) {
+            ctx->LineTo(gfxPoint(lRect.size.width, lRect.size.height - radii[C_BR] / 2.0));
+            SX(ctx);
+
+            ctx->Arc(gfxPoint(lRect.size.width - radii[C_BR] / 2.0, lRect.size.height - radii[C_BR] / 2.0),
+                     radii[C_BR] / 2.0,
+                     0.0, NS_PI / 2.0);
+            SX(ctx);
+          } else {
+            ctx->LineTo(gfxPoint(lRect.size.width, lRect.size.height));
+            SX(ctx);
+          }
+          break;
+
+        case NS_SIDE_BOTTOM:
+          if (skipSides & SIDE_BIT_BOTTOM) {
+            ctx->MoveTo(gfxPoint(0.0, lRect.size.height));
+          } else if (radii[C_BL]) {
+            ctx->LineTo(gfxPoint(radii[C_BL] / 2.0, lRect.size.height));
+            SX(ctx);
+
+            ctx->Arc(gfxPoint(radii[C_BL] / 2.0, lRect.size.height - radii[C_BL] / 2.0),
+                     radii[C_BL] / 2.0,
+                     NS_PI / 2.0,
+                     NS_PI);
+            SX(ctx);
+          } else {
+            ctx->LineTo(gfxPoint(0.0, lRect.size.height));
+            SX(ctx);
+          }
+          break;
+
+        case NS_SIDE_LEFT:
+          if (skipSides & SIDE_BIT_LEFT) {
+            ctx->MoveTo(gfxPoint(0.0, lRect.size.height));
+          } else if (radii[C_TL]) {
+            ctx->LineTo(gfxPoint(0.0, radii[C_TL] / 2.0));
+            SX(ctx);
+
+            ctx->Arc(gfxPoint(radii[C_TL] / 2.0, radii[C_TL] / 2.0),
+                     radii[C_TL] / 2.0,
+                     NS_PI,
+                     3.0 * NS_PI / 2.0);
+            SX(ctx);
+          } else {
+            ctx->LineTo(gfxPoint(0.0, 0.0));
+            SX(ctx);
+          }
+          break;
+      }
+
+      currentSide = (currentSide + 1) % 4;
     }
-
-    ctx->LineTo(gfxPoint(radii[C_BL], lRect.size.height));
-
-    if (radii[C_BL]) {
-      ctx->Arc(gfxPoint(radii[C_BL], lRect.size.height - radii[C_BL]),
-               radii[C_BL],
-               NS_PI / 2.0,
-               NS_PI);
-    }
-
-    ctx->LineTo(gfxPoint(0.0, 0.0 + radii[C_TL]));
-
-    if (radii[C_TL]) {
-      ctx->Arc(gfxPoint(radii[C_TL], radii[C_TL]),
-               radii[C_TL],
-               NS_PI,
-               3.0 * NS_PI / 2.0);
-    }
-
-    // don't close the path, since doing so can potentially give us artifacts
-    //ctx->ClosePath();
 
     ctx->SetMatrix(mat);
   }
@@ -1172,7 +1293,7 @@ DoSideClipPath(gfxContext *ctx,
                gfxRect& lRect,
                PRUint8 whichSide,
                const nsStyleBorder& borderStyle,
-               const PRInt16 *borderRadii)
+               const PRInt32 *borderRadii)
 {
   // the clip proceeds clockwise from the top left corner;
   // so "start" in each case is the start of the region from that side.
@@ -1472,8 +1593,9 @@ DrawBorderSides(gfxContext *ctx,
                 nscolor bgColor,
                 PRBool doSeparateSides,
                 PRUint8 side,
+                PRIntn skipSides,
                 nscoord twipsPerPixel,
-                PRInt16 *borderRadii)
+                PRInt32 *borderRadii)
 {
   PRBool dashedRendering = PR_FALSE;
   gfxFloat dash[2];
@@ -1647,6 +1769,7 @@ DrawBorderSides(gfxContext *ctx,
         break;
 
       default:
+        NS_NOTREACHED("Unhandled border style!!");
         break;
     }
 
@@ -1673,6 +1796,9 @@ DrawBorderSides(gfxContext *ctx,
   }
 
   SF("borderWidth: %d lRect: ", borderWidth), S(lRect), SN(), SF(" borderColorStyleCount: %d special: %d\n", borderColorStyleCount, useSpecialDotDashSeparateSides);
+  if (radiiPtr) {
+    SF(" radii: %f %f %f %f\n", radiiPtr[0], radiiPtr[1], radiiPtr[2], radiiPtr[3]);
+  }
 
   // -moz-border-colors is a hack; if we have it for a border, then
   // it's always drawn solid, and each color is given 1px.  The last
@@ -1699,9 +1825,18 @@ DrawBorderSides(gfxContext *ctx,
       if (useSpecialDotDashSeparateSides)
         DoSingleSideBorderPath(ctx, oRect, lRect, radiiPtr, side);
       else
-        DoAllSidesBorderPath(ctx, lRect, radiiPtr);
+        DoAllSidesBorderPath(ctx, lRect, radiiPtr, skipSides);
 
       ctx->Stroke();
+
+#if 0
+  ctx->SetOperator(gfxContext::OPERATOR_OVER);
+  // debug; draw a line down the middle of the border
+  ctx->SetLineWidth(1.0);
+  ctx->SetDash(nsnull, 0, 0.0);
+  ctx->SetColor(gfxRGBA(1.0, 0.0, 0.0, 1.0));
+  ctx->Stroke();
+#endif
     } else if (borderColorStyleCount == 2) {
       // with 2 color styles, any extra pixel goes to the outside
 
@@ -1727,7 +1862,7 @@ DrawBorderSides(gfxContext *ctx,
 
         ctx->SetLineWidth(outerBorderWidth);
         ctx->SetColor(color);
-        DoAllSidesBorderPath(ctx, sRect, radiiPtr);
+        DoAllSidesBorderPath(ctx, sRect, radiiPtr, skipSides);
         ctx->Stroke();
       }
 
@@ -1746,7 +1881,7 @@ DrawBorderSides(gfxContext *ctx,
 
         ctx->SetLineWidth(innerBorderWidth);
         ctx->SetColor(color);
-        DoAllSidesBorderPath(ctx, sRect, radiiPtr);
+        DoAllSidesBorderPath(ctx, sRect, radiiPtr, skipSides);
 
         ctx->Stroke();
       }
@@ -1788,7 +1923,7 @@ DrawBorderSides(gfxContext *ctx,
 
         ctx->SetLineWidth(outerBorderWidth);
         ctx->SetColor(color);
-        DoAllSidesBorderPath(ctx, sRect, radiiPtr);
+        DoAllSidesBorderPath(ctx, sRect, radiiPtr, skipSides);
         ctx->Stroke();
       }
 
@@ -1806,7 +1941,7 @@ DrawBorderSides(gfxContext *ctx,
 
         ctx->SetLineWidth(middleBorderWidth);
         ctx->SetColor(color);
-        DoAllSidesBorderPath(ctx, sRect, radiiPtr);
+        DoAllSidesBorderPath(ctx, sRect, radiiPtr, skipSides);
         ctx->Stroke();
       }
 
@@ -1825,7 +1960,7 @@ DrawBorderSides(gfxContext *ctx,
 
         ctx->SetLineWidth(innerBorderWidth);
         ctx->SetColor(color);
-        DoAllSidesBorderPath(ctx, sRect, radiiPtr);
+        DoAllSidesBorderPath(ctx, sRect, radiiPtr, skipSides);
         ctx->Stroke();
       }
     } else {
@@ -1835,8 +1970,7 @@ DrawBorderSides(gfxContext *ctx,
       NS_ERROR("Non-border-colors case with borderColorStyleCount < 1 or > 3; what happened?");
     }
   } else {
-    // the generic composite colors path; each border is 1px in size, except for the
-    // last one which has all the remaining
+    // the generic composite colors path; each border is 1px in size
     gfxRect sRect = oRect;
 
     // offset the top-left so that it starts in the right place
@@ -1846,6 +1980,16 @@ DrawBorderSides(gfxContext *ctx,
     sRect.size.width -= 1.0;
     sRect.size.height -= 1.0;
 
+    // if we have a radius, we're no longer drawing from the middle of the
+    // border -- so we need to tweak the radius such that the correct
+    // radius gets calculated for each additional stroke
+    if (radiiPtr) {
+      for (int i = 0; i < 4; i++) {
+        if (radiiPtr[i] > 0.0)
+          radiiPtr[i] *= 2.0;
+      }
+    }
+      
     for (PRUint32 i = 0; i < borderColorStyleCount; i++) {
       gfxRGBA lineColor;
 
@@ -1856,13 +2000,20 @@ DrawBorderSides(gfxContext *ctx,
 
       ctx->SetLineWidth(1.0);
       ctx->SetColor(lineColor);
-      DoAllSidesBorderPath(ctx, sRect, radiiPtr);
+      DoAllSidesBorderPath(ctx, sRect, radiiPtr, skipSides);
       ctx->Stroke();
 
       sRect.pos.x += 1.0;
       sRect.pos.y += 1.0;
       sRect.size.width -= 2.0;
       sRect.size.height -= 2.0;
+
+      if (radiiPtr) {
+        for (int i = 0; i < 4; i++) {
+          if (radiiPtr[i] > 0.0)
+            radiiPtr[i] -= 2.0;
+        }
+      }
     }
   }
 
@@ -1901,7 +2052,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
 {
   nsMargin            border;
   nsStyleCoord        bordStyleRadius[4];
-  PRInt16             borderRadii[4], i;
+  PRInt32             borderRadii[4];
   float               percent;
   nsCompatibility     compatMode = aPresContext->CompatibilityMode();
   PRBool              haveBorderRadius = PR_FALSE;
@@ -1945,7 +2096,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   aBorderStyle.mBorderRadius.GetLeft(bordStyleRadius[3]);     //bottomleft
 
   // convert percentage values
-  for(i = 0; i < 4; i++) {
+  for(int i = 0; i < 4; i++) {
     borderRadii[i] = 0;
 
     switch (bordStyleRadius[i].GetUnit()) {
@@ -1965,6 +2116,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
     if (borderRadii[i])
       haveBorderRadius = PR_TRUE;
   }
+  SF("Border[0]: %d %d %d %d\n", borderRadii[0], borderRadii[1], borderRadii[2], borderRadii[3]);
 
   // Turn off rendering for all of the zero sized sides
   if (border.top == 0) aSkipSides |= SIDE_BIT_TOP;
@@ -1972,10 +2124,29 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   if (border.bottom == 0) aSkipSides |= SIDE_BIT_BOTTOM;
   if (border.left == 0) aSkipSides |= SIDE_BIT_LEFT;
 
-  if (aSkipSides & SIDE_BIT_TOP) border.top = 0;
-  if (aSkipSides & SIDE_BIT_RIGHT) border.right = 0;
-  if (aSkipSides & SIDE_BIT_BOTTOM) border.bottom = 0;
-  if (aSkipSides & SIDE_BIT_LEFT) border.left = 0;
+  if (aSkipSides & SIDE_BIT_TOP) {
+    border.top = 0;
+    borderRadii[C_TL] = 0;
+    borderRadii[C_TR] = 0;
+  }
+
+  if (aSkipSides & SIDE_BIT_RIGHT) {
+    border.right = 0;
+    borderRadii[C_TR] = 0;
+    borderRadii[C_BR] = 0;
+  }
+
+  if (aSkipSides & SIDE_BIT_BOTTOM) {
+    border.bottom = 0;
+    borderRadii[C_BR] = 0;
+    borderRadii[C_BL] = 0;
+  }
+
+  if (aSkipSides & SIDE_BIT_LEFT) {
+    border.left = 0;
+    borderRadii[C_BL] = 0;
+    borderRadii[C_TL] = 0;
+  }
 
   // get the inside and outside parts of the border
   nsRect outerRect(aBorderArea), innerRect(aBorderArea);
@@ -2006,24 +2177,32 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
     return;
   }
 
+  SF("Border[0.5]: %d %d %d %d\n", borderRadii[0], borderRadii[1], borderRadii[2], borderRadii[3]);
+
   // The border radius has to be equal to or less than half the length
   // of the two sides that form the corner.  I think this is what trunk does;
   // without this check, the result is still well defined: the center of the
   // arc created by the corner is always inset by (radius,radius) from the
   // relevant corner, even if that causes it to go into another quadrant.
   if (haveBorderRadius) {
-    borderRadii[0] = PR_MIN(borderRadii[0], (innerRect.width + border.left) / 2);
-    borderRadii[0] = PR_MIN(borderRadii[0], (innerRect.height + border.top) / 2);
+    borderRadii[C_TL] = PR_MIN(borderRadii[C_TL], innerRect.width + border.left);
+    borderRadii[C_TL] = PR_MIN(borderRadii[C_TL], innerRect.height + border.top);
+    borderRadii[C_TL] = PR_MAX(borderRadii[C_TL], 0);
 
-    borderRadii[1] = PR_MIN(borderRadii[1], (innerRect.width + border.right) / 2);
-    borderRadii[1] = PR_MIN(borderRadii[1], (innerRect.height + border.top) / 2);
+    borderRadii[C_TR] = PR_MIN(borderRadii[C_TR], innerRect.width + border.right);
+    borderRadii[C_TR] = PR_MIN(borderRadii[C_TR], innerRect.height + border.top);
+    borderRadii[C_TR] = PR_MAX(borderRadii[C_TR], 0);
 
-    borderRadii[2] = PR_MIN(borderRadii[2], (innerRect.width + border.right) / 2);
-    borderRadii[2] = PR_MIN(borderRadii[2], (innerRect.height + border.bottom) / 2);
+    borderRadii[C_BR] = PR_MIN(borderRadii[C_BR], innerRect.width + border.right);
+    borderRadii[C_BR] = PR_MIN(borderRadii[C_BR], innerRect.height + border.bottom);
+    borderRadii[C_BR] = PR_MAX(borderRadii[C_BR], 0);
 
-    borderRadii[3] = PR_MIN(borderRadii[3], (innerRect.width + border.left) / 2);
-    borderRadii[3] = PR_MIN(borderRadii[3], (innerRect.height + border.bottom) / 2);
+    borderRadii[C_BL] = PR_MIN(borderRadii[C_BL], innerRect.width + border.left);
+    borderRadii[C_BL] = PR_MIN(borderRadii[C_BL], innerRect.height + border.bottom);
+    borderRadii[C_BL] = PR_MAX(borderRadii[C_BL], 0);
   }
+
+  SF("Border[1]: %d %d %d %d\n", borderRadii[0], borderRadii[1], borderRadii[2], borderRadii[3]);
 
   // we can assume that we're already clipped to aDirtyRect -- I think? (!?)
 
@@ -2153,7 +2332,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   // (since all 4 are identical) and not set any clip so that
   // DrawBorderSides draws the entire border in one go.
   int numSides = doSeparateSides ? 4 : 1;
-  for (PRInt32 i = 0; i < numSides; i++) {
+  for (int i = 0; i < numSides; i++) {
     PRUint8 side = sideOrder[i];
 
     // skip this side if it's, well, skipped
@@ -2206,7 +2385,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
                       compositeColors,
                       iRect, oRect, lRect,
                       ourColor->mColor, bgColor->mBackgroundColor,
-                      doSeparateSides, side,
+                      doSeparateSides, side, aSkipSides,
                       twipsPerPixel,
                       haveBorderRadius ? borderRadii : nsnull);
     }
@@ -2237,7 +2416,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
                              nsRect* aGap)
 {
   nsStyleCoord        bordStyleRadius[4];
-  PRInt16             borderRadii[4],i;
+  PRInt32             borderRadii[4];
 
   PRBool haveBorderRadius = PR_FALSE;
 
@@ -2264,7 +2443,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   aOutlineStyle.mOutlineRadius.GetLeft(bordStyleRadius[3]);     //bottomleft
 
   // convert percentage values
-  for (i = 0; i < 4; i++) {
+  for (int i = 0; i < 4; i++) {
     borderRadii[i] = 0;
 
     switch (bordStyleRadius[i].GetUnit()) {
@@ -2322,15 +2501,19 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   if (haveBorderRadius) {
     borderRadii[0] = PR_MIN(borderRadii[0], (inside.width + width) / 2);
     borderRadii[0] = PR_MIN(borderRadii[0], (inside.height + width) / 2);
+    borderRadii[0] = PR_MAX(borderRadii[0], 0);
 
     borderRadii[1] = PR_MIN(borderRadii[1], (inside.width + width) / 2);
     borderRadii[1] = PR_MIN(borderRadii[1], (inside.height + width) / 2);
+    borderRadii[1] = PR_MAX(borderRadii[1], 0);
 
     borderRadii[2] = PR_MIN(borderRadii[2], (inside.width + width) / 2);
     borderRadii[2] = PR_MIN(borderRadii[2], (inside.height + width) / 2);
+    borderRadii[2] = PR_MAX(borderRadii[2], 0);
 
     borderRadii[3] = PR_MIN(borderRadii[3], (inside.width + width) / 2);
     borderRadii[3] = PR_MIN(borderRadii[3], (inside.height + width) / 2);
+    borderRadii[3] = PR_MAX(borderRadii[3], 0);
   }
 
   /* Get our conversion values */
@@ -2432,7 +2615,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   static PRUint8 sideOrder[] = { NS_SIDE_BOTTOM, NS_SIDE_LEFT, NS_SIDE_TOP, NS_SIDE_RIGHT };
 
   int numSides = doSeparateSides ? 4 : 1;
-  for (PRInt32 i = 0; i < numSides; i++) {
+  for (int i = 0; i < numSides; i++) {
     PRUint8 side = sideOrder[i];
 
     // skip this side if it's, well, skipped
@@ -2470,7 +2653,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
                     nsnull,
                     iRect, oRect, lRect,
                     outlineColor, bgColor->mBackgroundColor,
-                    doSeparateSides, side,
+                    doSeparateSides, side, 0,
                     twipsPerPixel,
                     haveBorderRadius ? borderRadii : nsnull);
 
