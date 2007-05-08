@@ -2493,6 +2493,9 @@ nsRuleNode::ComputeUserInterfaceData(nsStyleStruct* aStartStruct,
       ui->mCursor = parentUI->mCursor;
       ui->CopyCursorArrayFrom(*parentUI);
     }
+    else if (eCSSUnit_Initial == list->mValue.GetUnit()) {
+      ui->mCursor = NS_STYLE_CURSOR_AUTO;
+    }
     else {
       // The parser will never create a list that is *all* URL values --
       // that's invalid.
