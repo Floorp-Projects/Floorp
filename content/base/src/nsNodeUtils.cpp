@@ -547,7 +547,6 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
     nsXULElement *xulElem = NS_STATIC_CAST(nsXULElement*, elem);
     if (!xulElem->mPrototype || xulElem->IsInDoc()) {
       clone->mParentPtrBits |= nsINode::PARENT_BIT_INDOCUMENT;
-      clone->SetFlags(NODE_HAS_FAKED_INDOC);
     }
   }
 #endif
