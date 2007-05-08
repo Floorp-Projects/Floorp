@@ -115,6 +115,9 @@ nsTableCaptionFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
                                                 nsIFrame**      aProviderFrame,
                                                 PRBool*         aIsChild)
 {
+  NS_PRECONDITION(mContent->GetParent(),
+                  "How could we not have a parent here?");
+    
   // The caption's style context parent is the inner frame, unless
   // it's anonymous.
   nsIFrame* outerFrame = GetParent();
