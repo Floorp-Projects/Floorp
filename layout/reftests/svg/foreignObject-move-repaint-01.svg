@@ -13,10 +13,14 @@
 
   <script type="application/javascript">
 
+// The green rect is initially covered by the red div. After 100 ms (to give
+// the div a chance to render), the foreignObject (and thus div) is moved out
+// of the viewport which should then be filled by the green rect as a result.
+
 function move_foreignObject()
 {
   document.getElementById('fo').setAttribute('y', '100%');
-  setTimeout(finish_test, 100); // give some time to repaint before the test
+  setTimeout(finish_test, 100); // give the user agent some time to repaint
 }
 
 function finish_test()
@@ -25,8 +29,17 @@ function finish_test()
 }
 
   </script>
-  <rect width="100%" height="100%" fill="lime"/>
+
+  <rect width="100%" height="100%" fill="red"/>
+
+  <!-- Create the "pass" rect using a foreignObject so the testcase doesn't
+       seem to pass if foreignObject is not supported -->
+  <foreignObject width="100%" height="100%">
+    <html:div style="display:block;width:100%;height:100%;background:lime;"/>
+  </foreignObject>
+
   <foreignObject id="fo" width="100%" height="100%">
     <html:div style="display:block;width:100%;height:100%;background:red;"/>
   </foreignObject>
+
 </svg>
