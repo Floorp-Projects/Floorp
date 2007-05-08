@@ -39,12 +39,13 @@
 #include "nscore.h"
 #include "nsScreen.h"
 #include "nsPIDOMWindow.h"
-#include "nsIScriptGlobalObject.h"
+#include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIDeviceContext.h"
+#include "nsIWidget.h"
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
-#include "nsIDocumentViewer.h"
 #include "nsDOMClassInfo.h"
 #include "nsIInterfaceRequestorUtils.h"
 
@@ -198,36 +199,36 @@ nsScreen::GetAvailTop(PRInt32* aAvailTop)
 nsIDeviceContext*
 nsScreen::GetDeviceContext()
 {
-  if(!mDocShell)
-    return nsnull;
+  nsCOMPtr<nsIDocShell> docShell = mDocShell;
+  while (docShell) {
+    // Now make sure our size is up to date.  That will mean that the device
+    // context does the right thing on multi-monitor systems when we return it to
+    // the caller.  It will also make sure that our prescontext has been created,
+    // if we're supposed to have one.
+    nsCOMPtr<nsPIDOMWindow> win = do_GetInterface(docShell);
+    if (!win) {
+      // No reason to go on
+      return nsnull;
+    }
 
-  // Now make sure our size is up to date.  That will mean that the device
-  // context does the right thing on multi-monitor systems when we return it to
-  // the caller.  It will also make sure that our prescontext has been created,
-  // if we're supposed to have one.
-  nsCOMPtr<nsPIDOMWindow> win = do_GetInterface(mDocShell);
-  if (!win) {
-    // No reason to go on
-    return nsnull;
+    win->EnsureSizeUpToDate();
+
+    nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(docShell);
+    NS_ENSURE_TRUE(baseWindow, nsnull);
+
+    nsCOMPtr<nsIWidget> mainWidget;
+    baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
+    if (mainWidget) {
+      return mainWidget->GetDeviceContext();
+    }
+
+    nsCOMPtr<nsIDocShellTreeItem> curItem = do_QueryInterface(docShell);
+    nsCOMPtr<nsIDocShellTreeItem> parentItem;
+    curItem->GetParent(getter_AddRefs(parentItem));
+    docShell = do_QueryInterface(parentItem);
   }
 
-  win->EnsureSizeUpToDate();
-  
-  nsCOMPtr<nsIContentViewer> contentViewer;
-  mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
-
-  nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer));
-  if(!docViewer)
-    return nsnull;
-
-  nsCOMPtr<nsPresContext> presContext;
-  docViewer->GetPresContext(getter_AddRefs(presContext));
-
-  nsIDeviceContext* context = nsnull;
-  if(presContext)
-    context = presContext->DeviceContext();
-
-  return context;
+  return nsnull;
 }
 
 nsresult
