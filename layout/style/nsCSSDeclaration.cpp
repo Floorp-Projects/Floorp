@@ -271,7 +271,7 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
       case eCSSType_Quotes: {
         const nsCSSQuotes* quotes = 
             *NS_STATIC_CAST(nsCSSQuotes*const*, storage);
-        NS_ASSERTION((quotes->mOpen.GetUnit() != eCSSUnit_String) ==
+        NS_ASSERTION((quotes->mOpen.GetUnit() == eCSSUnit_String) ||
                      (quotes->mNext == nsnull),
                      "non-strings must be alone");
         do {
