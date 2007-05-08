@@ -35,20 +35,14 @@ treechildren::-moz-tree-image {
   margin: 0px 2px;
 }
 
-treechildren::-moz-tree-image(title) {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-  width: 16px;
-  height: 16px;
-}
-
-treechildren::-moz-tree-image(title, container) {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-
 treechildren::-moz-tree-image(title, livemark\/bookmarkFeedURI) {
   list-style-image: url("chrome://browser/skin/livemark-item.png") !important;
   -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+treechildren::-moz-tree-image(title, container) {
+  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
 treechildren::-moz-tree-image(title, open) {
@@ -62,22 +56,6 @@ treechildren::-moz-tree-row(session-start) {
 
 treechildren::-moz-tree-cell-text(date, session-continue) {
   color: -moz-Field;
-}
-
-treechildren::-moz-tree-image(title, separator) {
-  list-style-image: none;
-  width: 0px !important;
-  height: 0px !important;
-  margin: 0px;
-}
-
-treechildren::-moz-tree-cell-text(title, separator) {
-  color: ThreeDShadow;
-  margin: 0px 5px;
-}
-
-treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
-  color: HighlightText;
 }
 
 /* Command Bar */
