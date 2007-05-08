@@ -638,11 +638,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_BUTTON:
-    case NS_THEME_BUTTON_SMALL: {
       DrawButton(cgContext, kThemePushButton, macRect,
                  IsDefaultButton(aFrame), IsDisabled(aFrame),
                  kThemeButtonOn, kThemeAdornmentNone, eventState);
-    }
       break;
 
     case NS_THEME_BUTTON_BEVEL:
@@ -875,7 +873,6 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
 
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
-    case NS_THEME_BUTTON_SMALL:
       // Top has a single pixel line, bottom has a single pixel line plus a single
       // pixel shadow
       aResult->SizeTo(kAquaPushButtonEndcaps, 1, 
@@ -967,7 +964,6 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFra
 {
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
-    case NS_THEME_BUTTON_SMALL:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_LISTBOX:
@@ -1009,7 +1005,6 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
 
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
-    case NS_THEME_BUTTON_SMALL:
     {
       aResult->SizeTo(MIN_SCALED_BUTTON_WIDTH, MIN_SCALED_BUTTON_HEIGHT);
       break;
@@ -1321,7 +1316,6 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_RADIO_SMALL:
     case NS_THEME_RADIO_CONTAINER:
     case NS_THEME_BUTTON:
-    case NS_THEME_BUTTON_SMALL:
     case NS_THEME_BUTTON_BEVEL:
     case NS_THEME_SPINNER:
     case NS_THEME_TOOLBAR:
@@ -1401,8 +1395,7 @@ PRBool
 nsNativeThemeCocoa::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType)
 {
   if (aWidgetType == NS_THEME_DROPDOWN ||
-      aWidgetType == NS_THEME_BUTTON ||
-      aWidgetType == NS_THEME_BUTTON_SMALL)
+      aWidgetType == NS_THEME_BUTTON)
     return PR_TRUE;
   
   return PR_FALSE;

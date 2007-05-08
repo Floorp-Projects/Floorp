@@ -182,7 +182,6 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_checkbox,               NS_THEME_CHECKBOX,
   eCSSKeyword_radio_small,            NS_THEME_RADIO_SMALL,
   eCSSKeyword_checkbox_small,         NS_THEME_CHECKBOX_SMALL,
-  eCSSKeyword_button_small,           NS_THEME_BUTTON_SMALL,
   eCSSKeyword_button_bevel,           NS_THEME_BUTTON_BEVEL,
   eCSSKeyword_toolbox,                NS_THEME_TOOLBOX,
   eCSSKeyword_toolbar,                NS_THEME_TOOLBAR,

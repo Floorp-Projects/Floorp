@@ -16,9 +16,6 @@
 // A small checkbox, for HTML forms
 #define NS_THEME_CHECKBOX_SMALL                            5
 
-// A small button, for HTML forms
-#define NS_THEME_BUTTON_SMALL                              6
-
 // A rectangular button that contains complex content
 // like images (e.g. HTML <button> elements)
 #define NS_THEME_BUTTON_BEVEL                              7
