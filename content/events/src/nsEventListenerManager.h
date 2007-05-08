@@ -129,6 +129,8 @@ public:
 
   virtual PRUint32 MutationListenerBits();
 
+  virtual PRBool HasListenersFor(const nsAString& aEventName);
+
   static PRUint32 GetIdentifierForEvent(nsIAtom* aEvent);
 
   // nsIDOMEventTarget
