@@ -110,19 +110,20 @@ RunTest (TestEntry *test, gfxContext *ctx) {
         }
     }
     gfxTextRunFactory::Parameters params = {
-      ctx, nsnull, nsnull, nsnull, nsnull, 0, 60, 0
+      ctx, nsnull, nsnull, nsnull, 0, 60
     };
+    PRUint32 flags = gfxTextRunFactory::TEXT_IS_PERSISTENT;
     PRUint32 length;
     if (isASCII) {
-        params.mFlags |= gfxTextRunFactory::TEXT_IS_ASCII |
-                         gfxTextRunFactory::TEXT_IS_8BIT;
+        flags |= gfxTextRunFactory::TEXT_IS_ASCII |
+                 gfxTextRunFactory::TEXT_IS_8BIT;
         length = strlen(test->mString);
-        textRun = fontGroup->MakeTextRun(NS_REINTERPRET_CAST(const PRUint8*, test->mString), length, &params);
+        textRun = fontGroup->MakeTextRun(NS_REINTERPRET_CAST(const PRUint8*, test->mString), length, &params, flags);
     } else {
-        params.mFlags |= gfxTextRunFactory::TEXT_HAS_SURROGATES; // just in case
+        flags |= gfxTextRunFactory::TEXT_HAS_SURROGATES; // just in case
         NS_ConvertUTF8toUTF16 str(nsDependentCString(test->mString));
         length = str.Length();
-        textRun = fontGroup->MakeTextRun(str.get(), length, &params);
+        textRun = fontGroup->MakeTextRun(str.get(), length, &params, flags);
     }
 
     // Should we test drawing?

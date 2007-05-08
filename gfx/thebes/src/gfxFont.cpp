@@ -48,6 +48,7 @@
 #include "gfxTypes.h"
 #include "gfxContext.h"
 #include "gfxFontMissingGlyphs.h"
+#include "nsMathUtils.h"
 
 #include "cairo.h"
 #include "gfxFontTest.h"
@@ -518,61 +519,37 @@ gfxFontGroup::FindGenericFontFromStyle(FontCreationCallback fc,
 }
 
 gfxTextRun *
-gfxFontGroup::GetSpecialStringTextRun(SpecialString aString,
-                                      gfxTextRun *aTemplate)
+gfxFontGroup::MakeEmptyTextRun(const Parameters *aParams, PRUint32 aFlags)
 {
-    NS_ASSERTION(aString <= gfxFontGroup::STRING_MAX,
-                 "Bad special string index");
+    aFlags |= TEXT_IS_8BIT | TEXT_IS_ASCII | TEXT_IS_PERSISTENT;
+    return new gfxTextRun(aParams, nsnull, 0, this, aFlags);
+}
 
-    if (mSpecialStrings[aString] &&
-        mSpecialStrings[aString]->GetAppUnitsPerDevUnit() ==
-            aTemplate->GetAppUnitsPerDevUnit())
-        return mSpecialStrings[aString];
-
-    static const PRUnichar unicodeHyphen = 0x2010;
-    static const PRUnichar unicodeEllipsis = 0x2026;
+gfxTextRun *
+gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags)
+{
+    aFlags |= TEXT_IS_8BIT | TEXT_IS_ASCII | TEXT_IS_PERSISTENT;
     static const PRUint8 space = ' ';
 
-    gfxTextRunFactory::Parameters params = {
-        nsnull, nsnull, nsnull, nsnull, nsnull, 0,
-        aTemplate->GetAppUnitsPerDevUnit(), TEXT_IS_PERSISTENT
-    };
-    gfxTextRun* textRun;
+    gfxFont *font = GetFontAt(0);
+    PRUint32 spaceGlyph = font->GetSpaceGlyph();
+    float spaceWidth = font->GetMetrics().spaceWidth;
+    PRUint32 spaceWidthAppUnits = NS_lroundf(spaceWidth*aParams->mAppUnitsPerDevUnit);
+    if (!spaceGlyph ||
+        !gfxTextRun::CompressedGlyph::IsSimpleGlyphID(spaceGlyph) ||
+        !gfxTextRun::CompressedGlyph::IsSimpleAdvance(spaceWidthAppUnits))
+        return MakeTextRun(&space, 1, aParams, aFlags);
 
-    switch (aString) {
-        case STRING_HYPHEN:
-            textRun = MakeTextRun(&unicodeHyphen, 1, &params);
-            break;
-        case STRING_ELLIPSIS:
-            textRun = MakeTextRun(&unicodeEllipsis, 1, &params);
-            break;
-        default:
-        case STRING_SPACE:
-            textRun = MakeTextRun(&space, 1, &params);
-            break;
-    }
+    nsAutoPtr<gfxTextRun> textRun;
+    textRun = new gfxTextRun(aParams, &space, 1, this, aFlags);
     if (!textRun)
         return nsnull;
-    
-    if (textRun->CountMissingGlyphs() > 0) {
-        static const PRUint8 ASCIIEllipsis[] = {'.', '.', '.'};
-        static const PRUint8 ASCIIHyphen = '-';
-
-        switch (aString) {
-            case STRING_ELLIPSIS:
-                textRun = MakeTextRun(ASCIIEllipsis, NS_ARRAY_LENGTH(ASCIIEllipsis), &params);
-                break;
-            case STRING_HYPHEN:
-                textRun = MakeTextRun(&ASCIIHyphen, 1, &params);
-                break;
-            default:
-                NS_WARNING("This font doesn't support the space character? That's messed up");
-                break;
-        }
-    }
-
-    mSpecialStrings[aString] = textRun;
-    return textRun;
+    if (NS_FAILED(textRun->AddGlyphRun(font, 0)))
+        return nsnull;
+    gfxTextRun::CompressedGlyph g;
+    g.SetSimpleGlyph(spaceWidthAppUnits, spaceGlyph);
+    textRun->SetCharacterGlyph(0, g);
+    return textRun.forget();
 }
 
 gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint8 aVariant,
@@ -637,20 +614,84 @@ gfxTextRun::GlyphRunIterator::NextRun()  {
     return PR_TRUE;
 }
 
-gfxTextRun::gfxTextRun(gfxTextRunFactory::Parameters *aParams,
-                       PRUint32 aLength)
+gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void *aText,
+                       PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags)
   : mUserData(aParams->mUserData),
+    mFontGroup(aFontGroup),
     mAppUnitsPerDevUnit(aParams->mAppUnitsPerDevUnit),
-    mFlags(aParams->mFlags),
-    mCharacterCount(aLength)
+    mFlags(aFlags), mCharacterCount(aLength)
 {
+    NS_ADDREF(mFontGroup);
     if (aParams->mSkipChars) {
         mSkipChars.TakeFrom(aParams->mSkipChars);
     }
-    mCharacterGlyphs = new CompressedGlyph[aLength];
-    if (mCharacterGlyphs) {
-        memset(mCharacterGlyphs, 0, sizeof(CompressedGlyph)*aLength);
+    if (aLength > 0) {
+        mCharacterGlyphs = new CompressedGlyph[aLength];
+        if (mCharacterGlyphs) {
+            memset(mCharacterGlyphs, 0, sizeof(CompressedGlyph)*aLength);
+        }
     }
+    if (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) {
+        mText.mSingle = NS_STATIC_CAST(const PRUint8 *, aText);
+    } else {
+        mText.mDouble = NS_STATIC_CAST(const PRUnichar *, aText);
+    }
+}
+
+gfxTextRun::~gfxTextRun()
+{
+    if (!(mFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
+        if (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) {
+            delete[] mText.mSingle;
+        } else {
+            delete[] mText.mDouble;
+        }
+    }
+    NS_RELEASE(mFontGroup);
+}
+
+gfxTextRun *
+gfxTextRun::Clone(const gfxTextRunFactory::Parameters *aParams, const void *aText,
+                  PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags)
+{
+    if (!mCharacterGlyphs)
+        return nsnull;
+
+    nsAutoPtr<gfxTextRun> textRun;
+    textRun = new gfxTextRun(aParams, aText, aLength, aFontGroup, aFlags);
+    if (!textRun || !textRun->mCharacterGlyphs)
+        return nsnull;
+
+    PRUint32 i;
+    for (i = 0; i < mGlyphRuns.Length(); ++i) {
+        if (NS_FAILED(textRun->AddGlyphRun(mGlyphRuns[i].mFont,
+                                           mGlyphRuns[i].mCharacterOffset)))
+            return nsnull;
+    }
+
+    for (i = 0; i < aLength; ++i) {
+        CompressedGlyph g = mCharacterGlyphs[i];
+        g.SetCanBreakBefore(PR_FALSE);
+        textRun->mCharacterGlyphs[i] = g;
+    }
+
+    if (mDetailedGlyphs) {
+        for (i = 0; i < aLength; ++i) {
+            DetailedGlyph *details = mDetailedGlyphs[i];
+            if (details) {
+                PRUint32 glyphCount = 1;
+                while (!details[glyphCount - 1].mIsLastGlyph) {
+                    ++glyphCount;
+                }
+                DetailedGlyph *dest = textRun->AllocateDetailedGlyphs(i, glyphCount);
+                if (!dest)
+                    return nsnull;
+                memcpy(dest, details, sizeof(DetailedGlyph)*glyphCount);
+            }
+        }
+    }
+
+    return textRun.forget();
 }
 
 PRBool
@@ -1368,7 +1409,6 @@ gfxTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
 PRBool
 gfxTextRun::SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
                           PRBool aLineBreakBefore, PRBool aLineBreakAfter,
-                          PropertyProvider *aProvider,
                           gfxFloat *aAdvanceWidthDelta)
 {
     // Do nothing because our shaping does not currently take linebreaks into
