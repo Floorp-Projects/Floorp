@@ -39,6 +39,7 @@
 // NOTE: alphabetically ordered
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibilityService.h"
+#include "nsAccessibilityUtils.h"
 #include "nsCURILoader.h"
 #include "nsDocAccessible.h"
 #include "nsHTMLAreaAccessible.h"
@@ -532,7 +533,8 @@ nsAccessibilityService::CreateHyperTextAccessible(nsISupports *aFrame, nsIAccess
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
-  if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::onclick)) {
+  
+  if (nsAccessibilityUtils::HasListener(content, NS_LITERAL_STRING("click"))) {
     // nsLinkableAccessible inherits from nsHyperTextAccessible, but
     // it also includes code for dealing with the onclick
     *aAccessible = new nsLinkableAccessible(node, weakShell);
@@ -1249,7 +1251,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   // correspond to the doc accessible and will be created in any case
   if (!newAcc && content->Tag() != nsAccessibilityAtoms::body && content->GetParent() && 
       (content->IsFocusable() ||
-       content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::onclick) ||
+       nsAccessibilityUtils::HasListener(content, NS_LITERAL_STRING("click")) ||
        content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::describedby) ||
        content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::labelledby) ||
        content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::required) ||
