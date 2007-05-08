@@ -1289,7 +1289,10 @@ nsEventListenerManager::AddEventListener(const nsAString& aType,
 {
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
-  return AddEventListenerByType(aListener, aType, flags, nsnull);
+  nsresult rv = AddEventListenerByType(aListener, aType, flags, nsnull);
+  NS_ASSERTION(NS_FAILED(rv) || HasListenersFor(aType), 
+               "Adding event listener didn't work!");
+  return rv;
 }
 
 NS_IMETHODIMP 
@@ -1733,6 +1736,42 @@ nsEventListenerManager::MutationListenerBits()
     }
   }
   return bits;
+}
+
+PRBool
+nsEventListenerManager::HasListenersFor(const nsAString& aEventName)
+{
+  nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + aEventName);
+  PRUint32 type = nsContentUtils::GetEventId(atom);
+
+  const EventTypeData* typeData = nsnull;
+  const EventDispatchData* dispData = nsnull;
+  if (type != NS_USER_DEFINED_EVENT) {
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(sEventTypes); ++i) {
+     typeData = &sEventTypes[i];
+     for (PRInt32 j = 0; j < typeData->numEvents; ++j) {
+       dispData = &(typeData->events[j]);
+       if (type == dispData->message) {
+         goto found;
+       }
+     }
+     typeData = nsnull;
+     dispData = nsnull;
+    }
+  }
+found:
+
+  PRInt32 i, count = mListeners.Count();
+  for (i = 0; i < count; ++i) {
+    nsListenerStruct* ls = NS_STATIC_CAST(nsListenerStruct*,
+                                          mListeners.FastElementAt(i));
+    if (ls &&
+        (ls->mTypeAtom == atom ||
+         EVENT_TYPE_DATA_EQUALS(ls->mTypeData, typeData))) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
 }
 
 PRBool
