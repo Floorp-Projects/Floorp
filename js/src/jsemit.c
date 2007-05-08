@@ -3406,8 +3406,7 @@ static JSBool
 EmitDestructuringOpsHelper(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn);
 
 static JSBool
-EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
-                     JSBool wantpop)
+EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 {
     jsuint slot;
 
@@ -3424,7 +3423,7 @@ EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
     if (pn->pn_type == TOK_RB || pn->pn_type == TOK_RC) {
         if (!EmitDestructuringOpsHelper(cx, cg, pn))
             return JS_FALSE;
-        if (wantpop && js_Emit1(cx, cg, JSOP_POP) < 0)
+        if (js_Emit1(cx, cg, JSOP_POP) < 0)
             return JS_FALSE;
     } else {
         if (pn->pn_type == TOK_NAME &&
@@ -3449,19 +3448,16 @@ EmitDestructuringLHS(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
             break;
 
           case JSOP_SETLOCAL:
-            if (wantpop) {
-                slot = (jsuint) pn->pn_slot;
-                EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, slot);
-                break;
-            }
-            /* FALL THROUGH */
+            slot = (jsuint) pn->pn_slot;
+            EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, slot);
+            break;
 
           case JSOP_SETARG:
           case JSOP_SETVAR:
           case JSOP_SETGVAR:
             slot = (jsuint) pn->pn_slot;
             EMIT_UINT16_IMM_OP(pn->pn_op, slot);
-            if (wantpop && js_Emit1(cx, cg, JSOP_POP) < 0)
+            if (js_Emit1(cx, cg, JSOP_POP) < 0)
                 return JS_FALSE;
             break;
 
@@ -3576,7 +3572,7 @@ EmitDestructuringOpsHelper(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (js_Emit1(cx, cg, JSOP_POP) < 0)
                 return JS_FALSE;
         } else {
-            if (!EmitDestructuringLHS(cx, cg, pn3, JS_TRUE))
+            if (!EmitDestructuringLHS(cx, cg, pn3))
                 return JS_FALSE;
         }
 
@@ -3664,7 +3660,7 @@ EmitGroupAssignment(JSContext *cx, JSCodeGenerator *cg, JSOp declOp,
             if (js_Emit1(cx, cg, JSOP_POP) < 0)
                 return JS_FALSE;
         } else {
-            if (!EmitDestructuringLHS(cx, cg, pn, pn->pn_next != NULL))
+            if (!EmitDestructuringLHS(cx, cg, pn))
                 return JS_FALSE;
         }
         ++slot;

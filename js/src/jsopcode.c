@@ -1285,7 +1285,7 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
         LOAD_OP_DATA(pc);
         lval = PopStr(ss, JSOP_NOP);
         todo = SprintCString(&ss->sprinter, lval);
-        if (op == JSOP_SETSP)
+        if (op == JSOP_POPN)
             return pc;
         LOCAL_ASSERT(*pc == JSOP_POP);
         break;
@@ -1294,7 +1294,7 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
       case JSOP_SETVAR:
       case JSOP_SETGVAR:
       case JSOP_SETLOCAL:
-        LOCAL_ASSERT(pc[oplen] == JSOP_POP || pc[oplen] == JSOP_SETSP);
+        LOCAL_ASSERT(pc[oplen] == JSOP_POP || pc[oplen] == JSOP_POPN);
         /* FALL THROUGH */
 
       case JSOP_SETLOCALPOP:
@@ -1318,7 +1318,7 @@ DecompileDestructuringLHS(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
             if (pc == endpc)
                 return pc;
             LOAD_OP_DATA(pc);
-            if (op == JSOP_SETSP)
+            if (op == JSOP_POPN)
                 return pc;
             LOCAL_ASSERT(op == JSOP_POP);
         }
@@ -1555,12 +1555,12 @@ DecompileGroupAssignment(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
     if (SprintPut(&ss->sprinter, "] = [", 5) < 0)
         return NULL;
 
-    start = GET_UINT16(pc);
     end = ss->top - 1;
+    start = end - GET_UINT16(pc);
     for (i = start; i < end; i++) {
         rval = GetStr(ss, i);
-        if (Sprint(&ss->sprinter, "%s%s",
-                   (i == start) ? "" : ", ",
+        if (Sprint(&ss->sprinter,
+                   (i == start) ? "%s" : ", %s",
                    (i == end - 1 && *rval == '\0') ? ", " : rval) < 0) {
             return NULL;
         }
