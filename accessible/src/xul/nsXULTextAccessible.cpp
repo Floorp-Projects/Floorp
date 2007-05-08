@@ -39,6 +39,7 @@
 
 // NOTE: alphabetically ordered
 #include "nsAccessibilityAtoms.h"
+#include "nsAccessibilityUtils.h"
 #include "nsBaseWidgetAccessible.h"
 #include "nsIDOMXULDescriptionElement.h"
 #include "nsINameSpaceManager.h"
@@ -169,7 +170,7 @@ void nsXULLinkAccessible::CacheActionContent()
     mIsLink = PR_TRUE;
     mActionContent = mTempContent;
   }
-  else if (mTempContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::onclick)) {
+  else if (nsAccessibilityUtils::HasListener(mTempContent, NS_LITERAL_STRING("click"))) {
     mIsOnclick = PR_TRUE;
     mActionContent = mTempContent;
   }
