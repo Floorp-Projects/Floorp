@@ -41,6 +41,7 @@
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleDocument.h"
 #include "nsAccessibleWrap.h"
+#include "nsAccessibilityUtils.h"
 #include "nsGUIEvent.h"
 #include "nsHyperTextAccessibleWrap.h"
 #include "nsILink.h"
@@ -256,8 +257,7 @@ void nsLinkableAccessible::CacheActionContent()
         }
       }
     }
-    if (walkUpContent->HasAttr(kNameSpaceID_None,
-                               nsAccessibilityAtoms::onclick)) {
+    if (nsAccessibilityUtils::HasListener(walkUpContent, NS_LITERAL_STRING("click"))) {
       mActionContent = walkUpContent;
       mIsOnclick = PR_TRUE;
       break;
