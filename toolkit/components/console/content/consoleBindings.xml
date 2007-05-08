@@ -44,8 +44,11 @@
       <property name="mode">
         <getter>return this.mMode;</getter>
         <setter><![CDATA[
-          this.mMode = val || "All";
-          this.setAttribute("mode", this.mMode);
+          if (this.mode != val) {
+            this.mMode = val || "All";
+            this.setAttribute("mode", this.mMode);
+            this.selectedItem = null;
+          }
           return val;
         ]]></setter>
       </property>
@@ -62,10 +65,12 @@
             this.mSelectedItem.removeAttribute("selected");
           
           this.mSelectedItem = val;
-          val.setAttribute("selected", "true");
+          if (val)
+            val.setAttribute("selected", "true");
 
           // Update edit commands
           window.updateCommands("focus");
+          return val;
         ]]></setter>
       </property>
     
@@ -262,6 +267,7 @@
           var newRows = this.mConsoleRowBox.cloneNode(false);
           this.mConsoleRowBox.parentNode.replaceChild(newRows, this.mConsoleRowBox);
           this.mConsoleRowBox = newRows;
+          this.selectedItem = null;
         ]]></body>
       </method>
       
