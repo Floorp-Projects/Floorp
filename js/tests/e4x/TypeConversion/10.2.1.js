@@ -129,7 +129,7 @@ var link;
 var xlinkNamespace;
 
 printStatus(inSection(n++));
-expect = '<link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple"/>';
+expect = '<link xlink:type="simple" xmlns:xlink="http://www.w3.org/1999/xlink"/>';
 
 link = <link type="simple" />;
 xlinkNamespace = new Namespace('xlink', 'http://www.w3.org/1999/xlink');
