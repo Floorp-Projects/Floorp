@@ -5513,11 +5513,7 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
   // We can get here if aProspectiveParent is the scrollframe for a viewport
   // and the kids are the anonymous scrollbars.
   NS_ASSERTION(aProspectiveParent->GetStyleContext()->GetPseudoType() ==
-                 nsCSSAnonBoxes::viewportScroll ||
-               aProspectiveParent->GetStyleContext()->GetPseudoType() ==
-                 nsCSSAnonBoxes::canvas ||
-               aProspectiveParent->GetStyleContext()->GetPseudoType() ==
-                 nsCSSAnonBoxes::pageSequence,
+                 nsCSSAnonBoxes::viewportScroll,
                "Should have found a parent before this");
   return aProspectiveParent;
 }
