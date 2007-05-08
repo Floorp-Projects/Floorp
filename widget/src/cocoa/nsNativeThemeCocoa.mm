@@ -874,9 +874,8 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
       // Top has a single pixel line, bottom has a single pixel line plus a single
-      // pixel shadow
-      aResult->SizeTo(kAquaPushButtonEndcaps, 1, 
-                      kAquaPushButtonEndcaps, 2);
+      // pixel shadow. We say 3 for the sides so that text doesn't hit the border.
+      aResult->SizeTo(3, 1, 3, 2);
       break;
 
     case NS_THEME_DROPDOWN:
@@ -1014,7 +1013,7 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
     {
       SInt32 buttonHeight = 0;
       ::GetThemeMetric(kThemeMetricPushButtonHeight, &buttonHeight);
-      aResult->SizeTo(kAquaPushButtonEndcaps, buttonHeight);
+      aResult->SizeTo(14, buttonHeight);
       break;
     }
 
