@@ -50,6 +50,7 @@ button {
   /* The margin used here come from the Aqua Human Interface Guidelines,
      there should be 12 pixels between two buttons. */
   margin: 6px;
+  padding: 0 9px;
   min-width: 79px;
   min-height: 22px;
   color: ButtonText;
@@ -94,8 +95,8 @@ button[type="menu-button"] {
 /* ::::: plain buttons ::::: */
 
 button.plain {
-  margin: 0px !important;
-  padding: 0px !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* ::::: close button ::::: */
