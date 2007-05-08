@@ -94,6 +94,8 @@
 
 #define FLOAT_PANGO_SCALE ((gfxFloat)PANGO_SCALE)
 
+#define IS_MISSING_GLYPH(g) (((g) & 0x10000000) || (g) == 0x0FFFFFFF)
+
 static PangoLanguage *GetPangoLanguage(const nsACString& aLangGroup);
 static void GetMozLanguage(const PangoLanguage *aLang, nsACString &aMozLang);
 
@@ -472,7 +474,8 @@ gfxPangoFont::RealizePangoFont(PRBool aForce)
 }
 
 void
-gfxPangoFont::GetCharSize(const char aChar, gfxSize& aInkSize, gfxSize& aLogSize)
+gfxPangoFont::GetCharSize(char aChar, gfxSize& aInkSize, gfxSize& aLogSize,
+                          PRUint32 *aGlyphID)
 {
     PangoAnalysis analysis;
     analysis.font = GetPangoFont();
@@ -483,7 +486,17 @@ gfxPangoFont::GetCharSize(const char aChar, gfxSize& aInkSize, gfxSize& aLogSize
     analysis.shape_engine = pango_font_find_shaper(analysis.font, analysis.language, aChar);
 
     PangoGlyphString *glstr = pango_glyph_string_new();
-    pango_shape(&aChar, 1, &analysis, glstr);
+    pango_shape (&aChar, 1, &analysis, glstr);
+
+    if (aGlyphID) {
+        *aGlyphID = 0;
+        if (glstr->num_glyphs == 1) {
+            PangoGlyph glyph = glstr->glyphs[0].glyph;
+            if (!IS_MISSING_GLYPH(glyph)) {
+                *aGlyphID = glyph;
+            }
+        }
+    }
 
     PangoRectangle ink_rect, log_rect;
     pango_glyph_string_extents(glstr, analysis.font, &ink_rect, &log_rect);
@@ -545,7 +558,7 @@ gfxPangoFont::GetMetrics()
     mMetrics.maxAdvance = xftFont->max_advance_width;
 
     gfxSize isz, lsz;
-    GetCharSize(' ', isz, lsz);
+    GetCharSize(' ', isz, lsz, &mSpaceGlyph);
     mMetrics.spaceWidth = lsz.width;
 
     // XXX do some FcCharSetHasChar work here to make sure
@@ -621,7 +634,7 @@ gfxPangoFont::GetMetrics()
     mMetrics.maxAdvance = pango_font_metrics_get_approximate_char_width(pfm) / FLOAT_PANGO_SCALE; // XXX
 
     gfxSize isz, lsz;
-    GetCharSize(' ', isz, lsz);
+    GetCharSize(' ', isz, lsz, &mSpaceGlyph);
     mMetrics.spaceWidth = lsz.width;
     GetCharSize('x', isz, lsz);
     mMetrics.xHeight = isz.height;
@@ -794,15 +807,15 @@ static PRInt32 AppendDirectionalIndicatorUTF8(PRBool aIsRTL, nsACString& aString
 
 gfxTextRun *
 gfxPangoFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
-                               Parameters *aParams)
+                               const Parameters *aParams, PRUint32 aFlags)
 {
-    aParams->mFlags |= TEXT_IS_8BIT;
-    gfxTextRun *run = new gfxTextRun(aParams, aLength);
+    NS_ASSERTION(aFlags & TEXT_IS_8BIT, "8bit should have been set");
+    gfxTextRun *run = new gfxTextRun(aParams, aString, aLength, this, aFlags);
     if (!run)
         return nsnull;
 
     PRBool isRTL = run->IsRightToLeft();
-    if ((aParams->mFlags & TEXT_IS_ASCII) && !isRTL) {
+    if ((aFlags & TEXT_IS_ASCII) && !isRTL) {
         // We don't need to send an override character here, the characters must be all
         // LTR
         const gchar *utf8Chars = NS_REINTERPRET_CAST(const gchar*, aString);
@@ -824,9 +837,9 @@ gfxPangoFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
 
 gfxTextRun *
 gfxPangoFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
-                               Parameters *aParams)
+                               const Parameters *aParams, PRUint32 aFlags)
 {
-    gfxTextRun *run = new gfxTextRun(aParams, aLength);
+    gfxTextRun *run = new gfxTextRun(aParams, aString, aLength, this, aFlags);
     if (!run)
         return nsnull;
 
@@ -970,8 +983,6 @@ gfxPangoFont::Measure(gfxTextRun *aTextRun,
     glyphs.space = glyphBuffer.Length();
     return GetPangoMetrics(&glyphs, GetPangoFont(), aTextRun->GetAppUnitsPerDevUnit(), clusterCount);
 }
-
-#define IS_MISSING_GLYPH(g) (((g) & 0x10000000) || (g) == 0x0FFFFFFF)
 
 static cairo_scaled_font_t*
 CreateScaledFont(cairo_t *aCR, cairo_matrix_t *aCTM, PangoFont *aPangoFont)
