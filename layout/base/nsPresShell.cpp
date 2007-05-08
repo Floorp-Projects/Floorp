@@ -3305,6 +3305,11 @@ NS_IMETHODIMP
 PresShell::RecreateFramesFor(nsIContent* aContent)
 {
   NS_ENSURE_TRUE(mPresContext, NS_ERROR_FAILURE);
+  if (!mDidInitialReflow) {
+    // Nothing to do here.  In fact, if we proceed and aContent is the
+    // root we will crash.
+    return NS_OK;
+  }
 
   // Don't call RecreateFramesForContent since that is not exported and we want
   // to keep the number of entrypoints down.
