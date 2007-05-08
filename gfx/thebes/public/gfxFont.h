@@ -414,6 +414,9 @@ public:
     // Expiration tracking
     nsExpirationState *GetExpirationState() { return &mExpirationState; }
 
+    // Get the glyphID of a space
+    virtual PRUint32 GetSpaceGlyph() = 0;
+
 protected:
     // The family name of the font
     nsString          mName;
@@ -491,8 +494,6 @@ public:
         gfxContext   *mContext;
         // Pointer to arbitrary user data (which should outlive the textrun)
         void         *mUserData;
-        // The language of the text, or null if not known
-        nsIAtom      *mLangGroup;
         // A description of which characters have been stripped from the original
         // DOM string to produce the characters in the textrun. May be null
         // if that information is not relevant.
@@ -503,24 +504,9 @@ public:
         PRUint32      mInitialBreakCount;
         // The ratio to use to convert device pixels to application layout units
         PRUint32      mAppUnitsPerDevUnit;
-        // Flags --- see above
-        PRUint32      mFlags;
     };
 
     virtual ~gfxTextRunFactory() {}
-
-    /**
-     * Create a gfxTextRun from Unicode text. The length is obtained from
-     * aParams->mSkipChars->GetCharCount().
-     */
-    virtual gfxTextRun *MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
-                                    Parameters *aParams) = 0;
-    /**
-     * Create a gfxTextRun from 8-bit Unicode (UCS1?) text. The length is
-     * obtained from aParams->mSkipChars->GetCharCount().
-     */
-    virtual gfxTextRun *MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
-                                    Parameters *aParams) = 0;
 };
 
 /**
@@ -542,15 +528,6 @@ public:
  * there are no line breaks. The textrun can record line breaks before or after
  * any given cluster. (Line breaks specified inside clusters are ignored.)
  * 
- * gfxTextRuns don't need to remember their text ... often it's enough just to
- * convert text to glyphs and store glyphs plus some geometry data in packed
- * form. However sometimes gfxTextRuns will want to get the original text back
- * to handle some unusual situation. So gfxTextRuns have two modes: "not
- * remembering text" (initial state) and "remembering text". A call to
- * gfxTextRun::RememberText forces a transition from the former to latter state.
- * The text is never forgotten. A gfxTextRun call that receives a PropertyProvider
- * object may call ForceRememberText to request a transition to "remembering text".
- * 
  * It is important that zero-length substrings are handled correctly. This will
  * be on the test!
  * 
@@ -568,7 +545,7 @@ public:
  */
 class THEBES_API gfxTextRun {
 public:
-    ~gfxTextRun() {}
+    virtual ~gfxTextRun();
 
     typedef gfxFont::RunMetrics Metrics;
 
@@ -594,15 +571,6 @@ public:
     // passed into MakeTextRun.
     
     // All coordinates are in layout/app units
-
-    /**
-     * This can be called to force gfxTextRun to remember the text used
-     * to create it and *never* call PropertyProvider::GetText again.
-     * 
-     * Right now we don't implement these.
-     */
-    void RememberText(const PRUnichar *aText, PRUint32 aLength) {}
-    void RememberText(const PRUint8 *aText, PRUint32 aLength) {}
 
     /**
      * Set the potential linebreaks for a substring of the textrun. These are
@@ -631,16 +599,6 @@ public:
      */
     class PropertyProvider {
     public:
-        /**
-         * Recover the text originally used to build the textrun. This should
-         * only be requested infrequently as it may be slow. If you need to
-         * call it a lot you should probably be saving the text in the text run
-         * itself. It just forces the textrun user to call RememberText on the
-         * text run. If you call this and RememberText doesn't get called,
-         * then something has failed and you should handle it.
-         */
-        virtual void ForceRememberText() = 0;
-
         // Detect hyphenation break opportunities in the given range; breaks
         // not at cluster boundaries will be ignored.
         virtual void GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
@@ -757,7 +715,6 @@ public:
      */
     virtual PRBool SetLineBreaks(PRUint32 aStart, PRUint32 aLength,
                                  PRBool aLineBreakBefore, PRBool aLineBreakAfter,
-                                 PropertyProvider *aProvider,
                                  gfxFloat *aAdvanceWidthDelta);
 
     /**
@@ -823,13 +780,30 @@ public:
     PRBool IsRightToLeft() const { return (mFlags & gfxTextRunFactory::TEXT_IS_RTL) != 0; }
     gfxFloat GetDirection() const { return (mFlags & gfxTextRunFactory::TEXT_IS_RTL) ? -1.0 : 1.0; }
     void *GetUserData() const { return mUserData; }
+    void SetUserData(void *aUserData) { mUserData = aUserData; }
     PRUint32 GetFlags() const { return mFlags; }
     const gfxSkipChars& GetSkipChars() const { return mSkipChars; }
     PRUint32 GetAppUnitsPerDevUnit() const { return mAppUnitsPerDevUnit; }
+    gfxFontGroup *GetFontGroup() const { return mFontGroup; }
+    const PRUint8 *GetText8Bit() const
+    { return (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) ? mText.mSingle : nsnull; }
+    const PRUnichar *GetTextUnicode() const
+    { return (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) ? nsnull : mText.mDouble; }
 
     // The caller is responsible for initializing our glyphs after construction.
     // Initially all glyphs are such that GetCharacterGlyphs()[i].IsMissing() is true.
-    gfxTextRun(gfxTextRunFactory::Parameters *aParams, PRUint32 aLength);
+    // We take ownership of aText, which must have been allocated by new[] (it
+    // may be null if aLength is zero).
+    gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void *aText,
+    		       PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags);
+
+    // Clone this textrun, according to the given parameters. This textrun's
+    // glyph data is copied, so the text and length must be the same as this
+    // textrun's. If there's a problem, return null. Actual linebreaks will
+    // be set as per aParams; there will be no potential linebreaks.
+    // If successful, we take ownership of aText, which must have been allocated by new[].
+    virtual gfxTextRun *Clone(const gfxTextRunFactory::Parameters *aParams, const void *aText,
+                              PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags);
 
     /**
      * This class records the information associated with a character in the
@@ -1049,6 +1023,8 @@ public:
         return mGlyphRuns.Elements();
     }
 
+    nsExpirationState *GetExpirationState() { return &mExpirationState; }
+
 private:
     // **** general helpers **** 
 
@@ -1109,14 +1085,21 @@ private:
     // XXX this should be changed to a GlyphRun plus a maybe-null GlyphRun*,
     // for smaller size especially in the super-common one-glyphrun case
     nsAutoTArray<GlyphRun,1>                       mGlyphRuns;
-
-    void        *mUserData;
-    gfxSkipChars mSkipChars;
-    // This is actually an integer, but we keep it in float form to reduce
-    // the conversions required
-    PRUint32     mAppUnitsPerDevUnit;
-    PRUint32     mFlags;
-    PRUint32     mCharacterCount;
+    // When TEXT_IS_8BIT is set, we use mSingle, otherwise we use mDouble.
+    // When TEXT_IS_PERSISTENT is set, we don't own the text, otherwise we
+    // own the text and should delete it when we go away.
+    // This text is not null-terminated.
+    union {
+        const PRUint8   *mSingle;
+        const PRUnichar *mDouble;
+    } mText;
+    void             *mUserData;
+    gfxFontGroup     *mFontGroup; // addrefed
+    gfxSkipChars      mSkipChars;
+    nsExpirationState mExpirationState;
+    PRUint32          mAppUnitsPerDevUnit;
+    PRUint32          mFlags;
+    PRUint32          mCharacterCount;
 };
 
 class THEBES_API gfxFontGroup : public gfxTextRunFactory {
@@ -1143,13 +1126,31 @@ public:
 
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle) = 0;
 
-    // These need to be repeated from gfxTextRunFactory because of C++'s
-    // hiding rules!
-    virtual gfxTextRun *MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
-                                    Parameters* aParams) = 0;
-    // This function should set TEXT_IS_8BIT in aParams->mFlags.
-    virtual gfxTextRun *MakeTextRun(const PRUint8* aString, PRUint32 aLength,
-                                    Parameters* aParams) = 0;
+    /**
+     * Make a textrun for an empty string. This is fast; if you call it,
+     * don't bother caching the result.
+     */
+    gfxTextRun *MakeEmptyTextRun(const Parameters *aParams, PRUint32 aFlags);
+    /**
+     * Make a textrun for a single ASCII space. This is fast; if you call it,
+     * don't bother caching the result.
+     */
+    gfxTextRun *MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags);
+
+    /**
+     * Make a textrun for a given string. Takes ownership of aString unless
+     * aFlags & TEXT_IS_PERSISTENT --- in that case, the caller must destroy
+     * the textrun before aString dies.
+     */
+    virtual gfxTextRun *MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
+                                    const Parameters *aParams, PRUint32 aFlags) = 0;
+    /**
+     * Make a textrun for a given string. Takes ownership of aString unless
+     * aFlags & TEXT_IS_PERSISTENT --- in that case, the caller must destroy
+     * the textrun before aString dies.
+     */
+    virtual gfxTextRun *MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
+                                    const Parameters *aParams, PRUint32 aFlags) = 0;
 
     /* helper function for splitting font families on commas and
      * calling a function for each family to fill the mFonts array
@@ -1168,31 +1169,10 @@ public:
 
     const nsString& GetFamilies() { return mFamilies; }
 
-    /**
-     * Special strings are strings that we might need to draw/measure but aren't
-     * actually substrings of DOM text. They never have extra spacing and
-     * aren't involved in breaking.
-     */
-    enum SpecialString {
-        STRING_ELLIPSIS,
-        STRING_HYPHEN,
-        STRING_SPACE,
-        STRING_MAX = STRING_SPACE
-    };
-
-    // Get the textrun for the given special string. Ownership remains
-    // with this gfxFontGroup. Copy relevant parameters from the template textrun.
-    // SpecialString textruns do not use spacing and it's fine to pass null
-    // as the PropertyProvider* in their methods.
-    // This is stubbed out until we have full textrun support on all platforms.
-    gfxTextRun *GetSpecialStringTextRun(SpecialString aString,
-                                        gfxTextRun *aTemplate);
-
 protected:
     nsString mFamilies;
     gfxFontStyle mStyle;
     nsTArray< nsRefPtr<gfxFont> > mFonts;
-    nsAutoPtr<gfxTextRun> mSpecialStrings[STRING_MAX + 1];
 
     static PRBool ForEachFontInternal(const nsAString& aFamilies,
                                       const nsACString& aLangGroup,
