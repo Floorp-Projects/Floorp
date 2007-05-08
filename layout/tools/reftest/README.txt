@@ -63,10 +63,20 @@ comments) must be one of the following:
       random-if(condition) The results of the test are random if a given
                            condition is met.
 
-      Examples of random-if:
-          random-if(MOZ_WIDGET_TOOLKIT=="windows")
-          random-if(MOZ_WIDGET_TOOLKIT=="cocoa")
-          random-if(MOZ_WIDGET_TOOLKIT=="gtk2") ...
+      skip  This test should not be run. This is useful when a test fails in a
+            catastrophic way, such as crashing or hanging the browser. Using
+            'skip' is prefered to simply commenting out the test because we
+            want to report the test failure at the end of the test run.
+
+      skip-if(condition) If the condition is met, the test is not run. This is
+                         useful if, for example, the test crashes only on a
+                         particular platform (i.e. it allows us to get test
+                         coverage on the other platforms).
+
+      Examples of using conditions:
+          fails-if(MOZ_WIDGET_TOOLKIT=="windows") ...
+          fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") ...
+          fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") ...
 
    b. <type> is one of the following:
 
