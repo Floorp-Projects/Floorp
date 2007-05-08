@@ -491,7 +491,7 @@ ParseDocTypeDecl(const nsString &aBuffer,
     if (nextChar == PRUnichar('!')) {
       PRInt32 tmpIndex = theIndex + 2;
       if (kNotFound !=
-          (theIndex=aBuffer.Find("DOCTYPE", PR_TRUE, tmpIndex, 1))) {
+          (theIndex=aBuffer.Find("DOCTYPE", PR_TRUE, tmpIndex, 0))) {
         haveDoctype = PR_TRUE;
         theIndex += 7; // skip "DOCTYPE"
         break;
@@ -510,11 +510,11 @@ ParseDocTypeDecl(const nsString &aBuffer,
   *aResultFlags |= PARSE_DTD_HAVE_DOCTYPE;
 
   theIndex = ParsePS(aBuffer, theIndex);
-  theIndex = aBuffer.Find("HTML", PR_TRUE, theIndex, 1);
+  theIndex = aBuffer.Find("HTML", PR_TRUE, theIndex, 0);
   if (kNotFound == theIndex)
     return PR_FALSE;
   theIndex = ParsePS(aBuffer, theIndex+4);
-  PRInt32 tmpIndex = aBuffer.Find("PUBLIC", PR_TRUE, theIndex, 1);
+  PRInt32 tmpIndex = aBuffer.Find("PUBLIC", PR_TRUE, theIndex, 0);
 
   if (kNotFound != tmpIndex) {
     theIndex = ParsePS(aBuffer, tmpIndex+6);
@@ -568,7 +568,7 @@ ParseDocTypeDecl(const nsString &aBuffer,
     aPublicID.CompressWhitespace(PR_TRUE, PR_TRUE);
     *aResultFlags |= PARSE_DTD_HAVE_PUBLIC_ID;
   } else {
-    tmpIndex=aBuffer.Find("SYSTEM", PR_TRUE, theIndex, 1);
+    tmpIndex=aBuffer.Find("SYSTEM", PR_TRUE, theIndex, 0);
     if (kNotFound != tmpIndex) {
       // DOCTYPES with system ID but no Public ID
       *aResultFlags |= PARSE_DTD_HAVE_SYSTEM_ID;
