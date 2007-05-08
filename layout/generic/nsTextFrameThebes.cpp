@@ -424,6 +424,7 @@ public:
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 #endif
   
+  virtual void MarkIntrinsicWidthsDirty();
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
   virtual void AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
@@ -4346,6 +4347,13 @@ FindStartAfterSkippingWhitespace(PropertyProvider* aProvider,
     }
   }
   return aIterator->GetSkippedOffset();  
+}
+
+/* virtual */ 
+void nsTextFrame::MarkIntrinsicWidthsDirty()
+{
+  ClearTextRun();
+  nsFrame::MarkIntrinsicWidthsDirty();
 }
 
 // XXX this doesn't handle characters shaped by line endings. We need to
