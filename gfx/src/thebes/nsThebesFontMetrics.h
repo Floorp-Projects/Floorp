@@ -159,28 +159,40 @@ protected:
     public:
         AutoTextRun(nsThebesFontMetrics* aMetrics, nsIRenderingContext* aRC,
                     const char* aString, PRInt32 aLength, PRBool aEnableSpacing) {
-            mTextRun = gfxTextRunCache::GetCache()->GetOrMakeTextRun(
+            mTextRun = gfxGlobalTextRunCache::GetTextRun(
+                NS_REINTERPRET_CAST(const PRUint8*, aString), aLength,
+                aMetrics->mFontGroup,
                 NS_STATIC_CAST(gfxContext*, aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT)),
-                aMetrics->mFontGroup, aString, aLength, aMetrics->mP2A,
-                aMetrics->GetRightToLeftTextRunMode(), aEnableSpacing, &mOwning);
+                aMetrics->mP2A,
+                ComputeFlags(aMetrics, aEnableSpacing));
         }
         AutoTextRun(nsThebesFontMetrics* aMetrics, nsIRenderingContext* aRC,
                     const PRUnichar* aString, PRInt32 aLength, PRBool aEnableSpacing) {
-            mTextRun = gfxTextRunCache::GetCache()->GetOrMakeTextRun(
+            mTextRun = gfxGlobalTextRunCache::GetTextRun(
+                aString, aLength, aMetrics->mFontGroup,
                 NS_STATIC_CAST(gfxContext*, aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT)),
-                aMetrics->mFontGroup, aString, aLength, aMetrics->mP2A,
-                aMetrics->GetRightToLeftTextRunMode(), aEnableSpacing, &mOwning);
-        }
-        ~AutoTextRun() {
-            if (mOwning) {
-                delete mTextRun;
-            }
+                aMetrics->mP2A,
+                ComputeFlags(aMetrics, aEnableSpacing));
         }
         gfxTextRun* operator->() { return mTextRun; }
         gfxTextRun* get() { return mTextRun; }
+
     private:
         gfxTextRun* mTextRun;
-        PRBool      mOwning;
+        
+        static PRUint32 ComputeFlags(nsThebesFontMetrics* aMetrics,
+                                     PRBool aEnableSpacing) {
+            PRUint32 flags = 0;
+            if (aMetrics->GetRightToLeftTextRunMode()) {
+                flags |= gfxTextRunFactory::TEXT_IS_RTL;
+            }
+            if (aEnableSpacing) {
+                flags |= gfxTextRunFactory::TEXT_ENABLE_SPACING |
+                         gfxTextRunFactory::TEXT_ABSOLUTE_SPACING |
+                         gfxTextRunFactory::TEXT_ENABLE_NEGATIVE_SPACING;
+            }
+            return flags;
+        }
     };
     friend class AutoTextRun;
 
