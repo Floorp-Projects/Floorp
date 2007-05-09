@@ -47,6 +47,7 @@
 #include "nsAccessible.h"
 #include "Accessible2.h"
 #include "AccessibleAction.h"
+#include "CAccessibleValue.h"
 
 #define DECL_IUNKNOWN_INHERITED                                               \
 public:                                                                       \
@@ -88,6 +89,7 @@ Class::QueryInterface(REFIID iid, void** ppv)                                 \
 
 
 class nsAccessibleWrap : public nsAccessible,
+                         public CAccessibleValue,
                          public IAccessible2,
                          public IAccessibleAction,
                          public IEnumVARIANT,
