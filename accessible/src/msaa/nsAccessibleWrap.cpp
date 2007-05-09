@@ -120,6 +120,12 @@ STDMETHODIMP nsAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
   else if (IID_IAccessibleAction == iid)
     *ppv = NS_STATIC_CAST(IAccessibleAction*, this);
 
+  if (NULL == *ppv) {
+    HRESULT hr = CAccessibleValue::QueryInterface(iid, ppv);
+    if (SUCCEEDED(hr))
+      return hr;
+  }
+
   if (NULL == *ppv)
     return nsAccessNodeWrap::QueryInterface(iid, ppv);
 
