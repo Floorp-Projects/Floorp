@@ -11,6 +11,28 @@
     </resources>
 
     <implementation implements="nsIDOMXULSelectControlElement, nsIAccessibleProvider">
+      <constructor>
+        <![CDATA[
+          if (this.getAttribute("disabled") == "true")
+            this.disabled = true;
+
+          var children = this._getRadioChildren();
+          var length = children.length;
+          for (var i = 0; i < length; i++) {
+            if (children[i].getAttribute("selected") == "true") {
+              this.selectedIndex = i;
+              return;
+            }
+          }
+
+          var value = this.value;
+          if (value)
+            this.value = value;
+          else
+            this.selectedIndex = 0;
+        ]]>
+      </constructor>
+
       <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
@@ -106,6 +128,9 @@
             val.setAttribute("selected", "true");
             this.setAttribute("value", val.value);
           }
+          else {
+            this.removeAttribute("value");
+          }
 
           // uncheck all other group nodes
           var children = this._getRadioChildren();
@@ -175,7 +200,7 @@
         <parameter name="aNextFlag"/>
         <body>
         <![CDATA[
-          var currentElement = this.focusedItem;
+          var currentElement = this.focusedItem || this.selectedItem;
           var i;
           var children = this._getRadioChildren();
           for (i = 0; i < children.length; ++i ) {
@@ -213,12 +238,12 @@
         ]]>
         </body>
       </method>
-      <field name="mRadioChildren">null</field>
+      <field name="_radioChildren">null</field>
       <method name="_getRadioChildren">
         <body>
         <![CDATA[
-          if (this.mRadioChildren)
-            return this.mRadioChildren;
+          if (this._radioChildren)
+            return this._radioChildren;
 
           // Don't store the collected child nodes immediately,
           // collecting the child nodes could trigger constructors
@@ -227,7 +252,7 @@
           var iterator = this.ownerDocument.createTreeWalker(this, NodeFilter.SHOW_ELEMENT, this._filterRadioGroup, true);
           while (iterator.nextNode())
             radioChildren.push(iterator.currentNode);
-          return this.mRadioChildren = radioChildren;
+          return this._radioChildren = radioChildren;
         ]]>
         </body>
       </method>
@@ -272,7 +297,7 @@
           radio.setAttribute("label", label);
           radio.setAttribute("value", value);
           this.appendChild(radio);
-          this.mRadioChildren = null;
+          this._radioChildren = null;
           return radio;
         ]]>
         </body>
@@ -293,7 +318,7 @@
             before.parentNode.insertBefore(radio, before);
           else
             this.appendChild(radio);
-          this.mRadioChildren = null;
+          this._radioChildren = null;
           return radio;
         ]]>
         </body>
@@ -306,7 +331,7 @@
           var remove = this.getItemAtIndex(index);
           if (remove) {
             remove.parentNode.removeChild(remove);
-            this.mRadioChildren = null;
+            this._radioChildren = null;
           }
           return remove;
         ]]>
@@ -399,7 +424,9 @@
       <constructor>
         <![CDATA[
           // Just clear out the parent's cached list of radio children
-          this.radioGroup.mRadioChildren = null;
+          var control = this.control;
+          if (control)
+            control._radioChildren = null;
         ]]>
       </constructor>
       <destructor>
@@ -429,7 +456,8 @@
           ]]>
         </getter>
       </property>
-      <property name="radioGroup">
+      <property name="radioGroup" readonly="true" onget="return this.control"/>
+      <property name="control" readonly="true">
         <getter>
         <![CDATA[
           var parent = this.parentNode;
@@ -447,21 +475,21 @@
       <handler event="click" button="0">
         <![CDATA[
           if (!this.disabled)
-            this.radioGroup.selectedItem = this;
+            this.control.selectedItem = this;
          ]]>
       </handler>
 
       <handler event="mousedown" button="0">
         <![CDATA[
           if (!this.disabled)
-            this.radioGroup.focusedItem = this;
+            this.control.focusedItem = this;
          ]]>
       </handler>
       <handler event="focus">
         <![CDATA[
           if (!this.disabled) {
-            this.radioGroup.focusedItem = this;
-            this.radioGroup.focus();
+            this.control.focusedItem = this;
+            this.control.focus();
           }
          ]]>
       </handler>
