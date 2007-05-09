@@ -4934,7 +4934,7 @@ JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
     if (!fp)
         return;
 
-    JS_ASSERT(cx->dormantFrameChain == fp);
+    JS_ASSERT(fp == cx->dormantFrameChain);
     cx->fp = fp;
     cx->dormantFrameChain = fp->dormantNext;
     fp->dormantNext = NULL;
