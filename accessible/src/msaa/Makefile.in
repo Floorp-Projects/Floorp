@@ -80,6 +80,7 @@ CPPSRCS = \
   CAccessibleText.cpp \
   CAccessibleEditableText.cpp \
   CAccessibleTable.cpp \
+  CAccessibleValue.cpp \
   $(NULL)
 
 EXPORTS = \
@@ -96,6 +97,7 @@ EXPORTS = \
   CAccessibleText.h \
   CAccessibleEditableText.h \
   CAccessibleTable.h \
+  CAccessibleValue.h \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
