@@ -517,6 +517,19 @@ public:
   static PRBool IsViewportScrollbarFrame(nsIFrame* aFrame);
 
   /**
+   * Return the value of aStyle as an nscoord if it can be determined without
+   * reference to ancestors or children (e.g. is not a percentage width)
+   * @param aStyle the style coord
+   * @param aRenderingContext the rendering context to use for font measurement
+   * @param aFrame the frame whose style context should be used for font information
+   * @param aResult the nscoord value of the style coord
+   * @return TRUE if the unit is eStyleUnit_Coord or eStyleUnit_Chars
+   */
+  static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle,
+                                 nsIRenderingContext* aRenderingContext,
+                                 nsIFrame* aFrame,
+                                 nscoord& aResult);
+  /**
    * Get the contribution of aFrame to its containing block's intrinsic
    * width.  This considers the child's intrinsic width, its 'width',
    * 'min-width', and 'max-width' properties, and its padding, border,
