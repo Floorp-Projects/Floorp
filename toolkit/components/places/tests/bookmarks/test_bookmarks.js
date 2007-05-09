@@ -527,6 +527,8 @@ function getChildCount(aFolderId) {
     rootNode.containerOpen = true;
     cc = rootNode.childCount;
     rootNode.containerOpen = false;
-  } catch(ex) {}
+  } catch(ex) {
+    do_throw("getChildCount failed: " + ex);
+  }
   return cc;
 }
