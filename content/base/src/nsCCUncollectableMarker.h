@@ -51,7 +51,7 @@ class nsCCUncollectableMarker : public nsIObserver
    * Checks if we're collecting during a given generation
    */
   static PRBool InGeneration(PRUint32 aGeneration) {
-    return aGeneration == sGeneration;
+    return aGeneration && aGeneration == sGeneration;
   }
 
   static PRUint32 sGeneration;
