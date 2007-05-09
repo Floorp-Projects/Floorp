@@ -45,7 +45,7 @@
  * help layout save dynamic pages in cache for future retrievals.
  */
 
-[scriptable, uuid (280da566-6f19-4487-a8ca-70c5ba1602c1)]
+[scriptable, uuid (89b0674a-9e2f-4124-9b59-481444be841d)]
 interface nsIWyciwygChannel : nsIChannel
 {
   /**
@@ -62,4 +62,17 @@ interface nsIWyciwygChannel : nsIChannel
    * Set the wyciwyg channels security info
    */
   void setSecurityInfo(in nsISupports aSecurityInfo);
+
+  /**
+   * Store and read a charset and charset source on the wyciwyg channel.  These
+   * are opaque values to the channel; consumers who set them should know what
+   * they mean.
+   */
+  void setCharsetAndSource(in long aSource, in ACString aCharset);
+  /**
+   * The return value is the charset.  Throws if either the charset or the
+   * source cannot be retrieved.  This is guaranteed to return a nonzero source
+   * and a nonempty charset if it does not throw.
+   */
+  ACString getCharsetAndSource(out long aSource);
 };
