@@ -673,18 +673,17 @@ nsIFrame::Redraw(nsBoxLayoutState& aState,
 PRBool 
 nsIBox::AddCSSPrefSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
 {
-    PRBool widthSet = PR_FALSE;
     PRBool heightSet = PR_FALSE;
 
     // add in the css min, max, pref
     const nsStylePosition* position = aBox->GetStylePosition();
 
     // see if the width or height was specifically set
-    if (position->mWidth.GetUnit() == eStyleUnit_Coord)  {
-        aSize.width = position->mWidth.GetCoordValue();
-        widthSet = PR_TRUE;
-    }
-    // XXX Handle eStyleUnit_Chars, eStyleUnit_Enumerated?
+    PRBool widthSet = 
+      nsLayoutUtils::GetAbsoluteCoord(position->mWidth,
+                                      aState.GetRenderingContext(),
+                                      aBox, aSize.width);
+    // XXX Handle eStyleUnit_Enumerated?
     // (Handling the eStyleUnit_Enumerated types requires
     // GetPrefSize/GetMinSize methods that don't consider
     // (min-/max-/)(width/height) properties.
@@ -761,8 +760,10 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
 
     // same for min size. Unfortunately min size is always set to 0. So for now
     // we will assume 0 means not set.
-    if (position->mMinWidth.GetUnit() == eStyleUnit_Coord) {
-        nscoord min = position->mMinWidth.GetCoordValue();
+    nscoord min;
+    if (nsLayoutUtils::GetAbsoluteCoord(position->mMinWidth,
+                                        aState.GetRenderingContext(),
+                                        aBox, min)) {
         if (min && (!widthSet || (min > aSize.width && canOverride))) {
            aSize.width = min;
            widthSet = PR_TRUE;
@@ -773,7 +774,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
         aSize.width = 0;
         widthSet = PR_TRUE;
     }
-    // XXX Handle eStyleUnit_Chars, eStyleUnit_Enumerated?
+    // XXX Handle eStyleUnit_Enumerated?
     // (Handling the eStyleUnit_Enumerated types requires
     // GetPrefSize/GetMinSize methods that don't consider
     // (min-/max-/)(width/height) properties.
@@ -829,20 +830,17 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
 PRBool 
 nsIBox::AddCSSMaxSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
 {  
-
-    PRBool widthSet = PR_FALSE;
     PRBool heightSet = PR_FALSE;
 
     // add in the css min, max, pref
     const nsStylePosition* position = aBox->GetStylePosition();
 
     // and max
-    if (position->mMaxWidth.GetUnit() == eStyleUnit_Coord) {
-        nscoord max = position->mMaxWidth.GetCoordValue();
-        aSize.width = max;
-        widthSet = PR_TRUE;
-    }
-    // XXX Handle eStyleUnit_Chars, eStyleUnit_Enumerated?
+    PRBool widthSet = 
+      nsLayoutUtils::GetAbsoluteCoord(position->mMaxWidth,
+                                      aState.GetRenderingContext(),
+                                      aBox, aSize.width);
+    // XXX Handle eStyleUnit_Enumerated?
     // (Handling the eStyleUnit_Enumerated types requires
     // GetPrefSize/GetMinSize methods that don't consider
     // (min-/max-/)(width/height) properties.
