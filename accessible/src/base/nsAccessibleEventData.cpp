@@ -68,16 +68,9 @@ nsAccEvent::GetAccessible(nsIAccessible **aAccessible)
   NS_ENSURE_ARG_POINTER(aAccessible);
   *aAccessible = nsnull;
 
-  if (!mAccessible) {
-    NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIAccessibilityService> accService = 
-      do_GetService("@mozilla.org/accessibilityService;1");
-    NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
-    accService->GetAccessibleFor(mDOMNode, getter_AddRefs(mAccessible));
-    if (!mAccessible) {
-      return NS_OK;
-    }
-  }
+  if (!mAccessible)
+    mAccessible = GetAccessibleByNode();
+
   NS_IF_ADDREF(*aAccessible = mAccessible);
   return NS_OK;
 }
@@ -119,6 +112,22 @@ nsAccEvent::GetAccessibleDocument(nsIAccessibleDocument **aDocAccessible)
   return NS_OK;
 }
 
+already_AddRefed<nsIAccessible>
+nsAccEvent::GetAccessibleByNode()
+{
+  if (!mDOMNode)
+    return nsnull;
+
+  nsCOMPtr<nsIAccessibilityService> accService = 
+    do_GetService("@mozilla.org/accessibilityService;1");
+  if (!accService)
+    return nsnull;
+
+  nsIAccessible *accessible;
+  accService->GetAccessibleFor(mDOMNode, &accessible);
+  return accessible;
+}
+
 
 // nsAccStateChangeEvent
 NS_IMPL_ISUPPORTS_INHERITED1(nsAccStateChangeEvent, nsAccEvent,
@@ -148,8 +157,10 @@ nsAccStateChangeEvent::
   nsAccEvent(::nsIAccessibleEvent::EVENT_STATE_CHANGE, aNode, nsnull),
   mState(aState), mIsExtraState(aIsExtraState)
 {
-  nsCOMPtr<nsIAccessible> accessible;
-  GetAccessible(getter_AddRefs(accessible));
+  // Use GetAccessibleByNode() because we do not want to store an accessible
+  // since it leads to problems with delayed events in the case when
+  // an accessible gets reorder event before delayed event is processed.
+  nsCOMPtr<nsIAccessible> accessible(GetAccessibleByNode());
   if (accessible) {
     PRUint32 state = 0, extraState = 0;
     accessible->GetFinalState(&state, &extraState);
