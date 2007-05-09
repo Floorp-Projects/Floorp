@@ -43,7 +43,7 @@
 #include "nsCURILoader.h"
 #include "nsDocAccessible.h"
 #include "nsHTMLAreaAccessible.h"
-#include "nsHTMLImageAccessible.h"
+#include "nsHTMLImageAccessibleWrap.h"
 #include "nsHTMLLinkAccessible.h"
 #include "nsHTMLSelectAccessible.h"
 #include "nsHTMLTableAccessibleWrap.h"
@@ -591,7 +591,7 @@ nsAccessibilityService::CreateHTMLImageAccessible(nsISupports *aFrame, nsIAccess
   *_retval = nsnull;
   nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(node));
   if (domElement) {
-      *_retval = new nsHTMLImageAccessible(node, weakShell);
+      *_retval = new nsHTMLImageAccessibleWrap(node, weakShell);
   }
 
   if (! *_retval) 
@@ -1404,7 +1404,7 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
       if (!hasTextEquivalent)
         return NS_OK;
 
-      *aAccessible = new nsHTMLImageAccessible(aNode, weakShell);
+      *aAccessible = new nsHTMLImageAccessibleWrap(aNode, weakShell);
       break;
     }
     case nsIAccessibleProvider::XULLink:
