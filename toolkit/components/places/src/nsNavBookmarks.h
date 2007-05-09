@@ -101,13 +101,6 @@ public:
                                  const nsAString& title, const nsAString& type,
                                  PRInt32 aIndex, PRInt64* aNewFolder);
 
-  // Returns a statement to get information about a folder id
-  mozIStorageStatement* DBGetFolderInfo() { return mDBGetFolderInfo; }
-  // constants for the above statement
-  static const PRInt32 kGetFolderInfoIndex_FolderID;
-  static const PRInt32 kGetFolderInfoIndex_Title;
-  static const PRInt32 kGetFolderInfoIndex_Type;
-
   // Called by History service when quitting.
   nsresult OnQuit();
 
@@ -165,8 +158,6 @@ private:
 
   nsresult IsBookmarkedInDatabase(PRInt64 aBookmarkID, PRBool* aIsBookmarked);
 
-  nsCOMPtr<mozIStorageStatement> mDBGetFolderInfo;    // kGetFolderInfoIndex_* results
-
   nsCOMPtr<mozIStorageStatement> mDBGetChildren;       // kGetInfoIndex_* results + kGetChildrenIndex_* results
   static const PRInt32 kGetChildrenIndex_Position;
   static const PRInt32 kGetChildrenIndex_Type;
@@ -184,16 +175,18 @@ private:
 
   nsCOMPtr<mozIStorageStatement> mDBFolderCount;
 
-  nsCOMPtr<mozIStorageStatement> mDBIndexOfFolder;
+  nsCOMPtr<mozIStorageStatement> mDBGetItemIndex;
   nsCOMPtr<mozIStorageStatement> mDBGetChildAt;
 
-  nsCOMPtr<mozIStorageStatement> mDBGetBookmarkProperties; // kGetBookmarkPropertiesIndex_*
-  static const PRInt32 kGetBookmarkPropertiesIndex_ID;
-  static const PRInt32 kGetBookmarkPropertiesIndex_URI;
-  static const PRInt32 kGetBookmarkPropertiesIndex_Title;
-  static const PRInt32 kGetBookmarkPropertiesIndex_Position;
-  static const PRInt32 kGetBookmarkPropertiesIndex_PlaceID;
-  static const PRInt32 kGetBookmarkPropertiesIndex_Parent;
+  nsCOMPtr<mozIStorageStatement> mDBGetItemProperties; // kGetItemPropertiesIndex_*
+  static const PRInt32 kGetItemPropertiesIndex_ID;
+  static const PRInt32 kGetItemPropertiesIndex_URI; // null for folders and separators
+  static const PRInt32 kGetItemPropertiesIndex_Title;
+  static const PRInt32 kGetItemPropertiesIndex_Position;
+  static const PRInt32 kGetItemPropertiesIndex_PlaceID;
+  static const PRInt32 kGetItemPropertiesIndex_Parent;
+  static const PRInt32 kGetItemPropertiesIndex_Type;
+  static const PRInt32 kGetItemPropertiesIndex_FolderType;
 
   nsCOMPtr<mozIStorageStatement> mDBGetRedirectDestinations;
 

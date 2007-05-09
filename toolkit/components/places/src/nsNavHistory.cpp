@@ -101,6 +101,7 @@
 #define PREF_AUTOCOMPLETE_ONLY_TYPED            "urlbar.matchOnlyTyped"
 #define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 #define PREF_DB_CACHE_PERCENTAGE                "history_cache_percentage"
+#define PREF_BROWSER_IMPORT_BOOKMARKS           "browser.places.importBookmarksHTML"
 
 // Default (integer) value of PREF_DB_CACHE_PERCENTAGE from 0-100
 // This is 6% of machine memory, giving 15MB for a user with 256MB of memory.
@@ -384,7 +385,7 @@ nsNavHistory::Init()
 //
 
 
-#define PLACES_SCHEMA_VERSION 3
+#define PLACES_SCHEMA_VERSION 4
 
 nsresult
 nsNavHistory::InitDB(PRBool *aDoImport)
@@ -492,7 +493,13 @@ nsNavHistory::InitDB(PRBool *aDoImport)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // XXX Upgrades V3 must add migration code here.
+      // bug 372508 - use moz_bookmarks.id for folder ids
+      if (DBSchemaVersion < 4) {
+        rv = ForceMigrateBookmarksDB(mDBConn);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // XXX Upgrades >V4 must add migration code here.
 
     } else {
       // Downgrading
@@ -500,10 +507,10 @@ nsNavHistory::InitDB(PRBool *aDoImport)
       // XXX Need to prompt user or otherwise notify of 
       // potential dataloss when downgrading.
 
-      // XXX Downgrades from >V2 must add migration code here.
-      
-      // V3: No backwards incompatible changes.
+      // XXX Downgrades from >V4 must add migration code here.
 
+      // Downgrade v1,2,4
+      // V3 had no backwards incompatible changes.
       if (DBSchemaVersion > 2) {
         // perform downgrade to v2
         rv = ForceMigrateBookmarksDB(mDBConn);
@@ -813,6 +820,12 @@ nsNavHistory::ForceMigrateBookmarksDB(mozIStorageConnection* aDBConn)
   // initialize bookmarks tables
   rv = nsNavBookmarks::InitTables(aDBConn);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // set pref indicating bookmarks.html should be imported.
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService("@mozilla.org/preferences-service;1"));
+  if (prefs) {
+    prefs->SetBoolPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, PR_TRUE);
+  }
   return rv;
 }
 

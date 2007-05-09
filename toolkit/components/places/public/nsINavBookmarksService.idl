@@ -181,7 +181,7 @@ interface nsINavBookmarkObserver : nsISupports
  * folders.  A URI in history can be contained in one or more such folders.
  */
 
-[scriptable, uuid(48f31924-f158-11db-8314-0800200c9a66)]
+[scriptable, uuid(7c2f2c2a-fccb-11db-8314-0800200c9a66)]
 interface nsINavBookmarksService : nsISupports
 {
   /**
@@ -245,7 +245,9 @@ interface nsINavBookmarksService : nsISupports
 
   /**
    * Wrapper for container services.  Creates a folder under the given
-   * parent and sets the container type.
+   * parent and sets the container type. Containers are wrappers around
+   * read-only folders, with a specific type.
+   *
    *  @param parent     The id of the parent folder
    *  @param name       The name of the new folder
    *  @param type       The type of container to insert
@@ -340,7 +342,7 @@ interface nsINavBookmarksService : nsISupports
   nsIURI getBookmarkURI(in PRInt64 id);
 
   /**
-   * Get the index for a bookmark item.
+   * Get the index for an item.
    */
   PRInt32 getItemIndex(in PRInt64 id);
 
@@ -371,6 +373,12 @@ interface nsINavBookmarksService : nsISupports
    * @returns           The URI for the folder
    */
   nsIURI getFolderURI(in PRInt64 folder);
+
+  /**
+   * Get an item's type (bookmark, separator, folder).
+   * The type is one of the TYPE_* constants defined above.
+   */
+  long getItemType(in PRInt64 itemId);
 
   /**
    * Get the place: url for an item (bookmark, separator).
@@ -430,12 +438,6 @@ interface nsINavBookmarksService : nsISupports
    */
   [noscript] void getBookmarkIdsForURITArray(in nsIURI aURI,
                                            in PRInt64Array aResult);
-
-  /**
-   * Returns the index of the given subfolder in its parent.
-   * Returns -1 if the subfolder is not present in the parent folder.
-   */
-  PRInt32 indexOfFolder(in PRInt64 parent, in PRInt64 folder);
 
   /**
    * Associates the given keyword with the given bookmark.
