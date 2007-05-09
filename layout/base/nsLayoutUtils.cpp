@@ -1232,10 +1232,11 @@ static nscoord AddPercents(nsLayoutUtils::IntrinsicWidthType aType,
   return result;
 }
 
-static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle,
-                               nsIRenderingContext* aRenderingContext,
-                               nsIFrame* aFrame,
-                               nscoord& aResult)
+/* static */ PRBool
+nsLayoutUtils::GetAbsoluteCoord(const nsStyleCoord& aStyle,
+                                nsIRenderingContext* aRenderingContext,
+                                nsIFrame* aFrame,
+                                nscoord& aResult)
 {
   nsStyleUnit unit = aStyle.GetUnit();
   if (eStyleUnit_Coord == unit) {
