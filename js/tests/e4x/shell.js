@@ -177,7 +177,6 @@ function SHOULD_THROW(section)
 
 function END()
 {
-    debugger;
 }
 
 function compareSource(n, expect, actual)

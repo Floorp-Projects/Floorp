@@ -45,8 +45,6 @@ printStatus (summary);
   
 var code;
 
-debugger;
-
 options('strict');
 options('werror');
 
