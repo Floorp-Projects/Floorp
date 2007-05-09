@@ -76,7 +76,9 @@ CPPSRCS = \
   nsXULMenuAccessibleWrap.cpp \
   nsXULTreeAccessibleWrap.cpp \
   nsHyperTextAccessibleWrap.cpp \
+  nsHTMLImageAccessibleWrap.cpp \
   nsHTMLTableAccessibleWrap.cpp \
+  CAccessibleImage.cpp \
   CAccessibleText.cpp \
   CAccessibleEditableText.cpp \
   CAccessibleTable.cpp \
@@ -93,7 +95,9 @@ EXPORTS = \
   nsXULMenuAccessibleWrap.h \
   nsXULTreeAccessibleWrap.h \
   nsHyperTextAccessibleWrap.h \
+  nsHTMLImageAccessibleWrap.h \
   nsHTMLTableAccessibleWrap.h \
+  CAccessibleImage.h \
   CAccessibleText.h \
   CAccessibleEditableText.h \
   CAccessibleTable.h \

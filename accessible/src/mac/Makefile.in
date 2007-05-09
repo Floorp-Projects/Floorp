@@ -82,6 +82,7 @@ EXPORTS = \
   nsXULMenuAccessibleWrap.h \
   nsXULTreeAccessibleWrap.h \
   nsHyperTextAccessibleWrap.h \
+  nsHTMLImageAccessibleWrap.h \
   nsHTMLTableAccessibleWrap.h \
   mozDocAccessible.h \
   mozAccessible.h \
