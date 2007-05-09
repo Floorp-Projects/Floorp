@@ -59,7 +59,7 @@ _TimerCallback.prototype = {
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
   notify: function(timer) {
-    eval(this._expr);  
+    eval(this._expr);
   }
 };
 
@@ -171,4 +171,11 @@ function do_get_file(path) {
   do_check_true(lf.exists());
 
   return lf;
+}
+
+function do_load_module(path) {
+  var lf = do_get_file(path);
+  const nsIComponentRegistrar = Components.interfaces.nsIComponentRegistrar;
+  do_check_true(Components.manager instanceof nsIComponentRegistrar);
+  Components.manager.autoRegister(lf);
 }
