@@ -481,11 +481,15 @@ NS_IMETHODIMP nsXULProgressMeterAccessible::GetValue(nsAString& aValue)
   if (!aValue.IsEmpty()) {
     return NS_OK;
   }
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(element, "No element for DOM node!");
-  element->GetAttribute(NS_LITERAL_STRING("value"), aValue);
-  if (!aValue.IsEmpty() && aValue.Last() != '%')
-    aValue.AppendLiteral("%");
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE;
+  }
+  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aValue);
+  if (aValue.IsEmpty()) {
+    aValue.AppendLiteral("0");  // Empty value for progress meter = 0%
+  }
+  aValue.AppendLiteral("%");
   return NS_OK;
 }
 
@@ -509,8 +513,14 @@ NS_IMETHODIMP nsXULProgressMeterAccessible::GetMinimumIncrement(double *aMinimum
 
 NS_IMETHODIMP nsXULProgressMeterAccessible::GetCurrentValue(double *aCurrentValue)
 {
+  *aCurrentValue = 0;
   nsAutoString currentValue;
-  GetValue(currentValue);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE;
+  }
+  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, currentValue);
+
   PRInt32 error;
   *aCurrentValue = currentValue.ToFloat(&error) / 100;
   return NS_OK;
