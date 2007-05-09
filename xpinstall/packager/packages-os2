@@ -300,6 +300,7 @@ bin/components/nsUpdateNotifier.js
 bin/components/plugin.xpt
 bin/components/prefetch.xpt
 bin/components/txEXSLTRegExFunctions.js
+bin/components/nsAboutAbout.js
 
 bin/components/websrvcs.dll
 bin/components/websrvcs.xpt
