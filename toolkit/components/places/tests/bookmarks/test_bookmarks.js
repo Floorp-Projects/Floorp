@@ -142,6 +142,12 @@ function run_test() {
   do_check_eq(observer._folderAddedIndex, bmStartIndex);
   var testStartIndex = 0;
 
+  // test getItemIndex for folders
+  do_check_eq(bmsvc.getItemIndex(testRoot), bmStartIndex);
+
+  // test getItemType for folders
+  do_check_eq(bmsvc.getItemType(testRoot), bmsvc.TYPE_FOLDER);
+
   // insert a bookmark 
   var newId = bmsvc.insertItem(testRoot, uri("http://google.com/"), bmsvc.DEFAULT_INDEX);
   do_check_eq(observer._itemAddedId, newId);
@@ -160,6 +166,9 @@ function run_test() {
   var title = bmsvc.getItemTitle(newId);
   do_check_eq(title, "Google");
 
+  // test getItemType for bookmarks
+  do_check_eq(bmsvc.getItemType(newId), bmsvc.TYPE_BOOKMARK);
+
   // get item title bad input
   try {
     var title = bmsvc.getItemTitle(-3);
@@ -169,6 +178,9 @@ function run_test() {
   // get the folder that the bookmark is in
   var folderId = bmsvc.getFolderIdForItem(newId);
   do_check_eq(folderId, testRoot);
+
+  // test getItemIndex for bookmarks 
+  do_check_eq(bmsvc.getItemIndex(newId), testStartIndex);
 
   // create a folder at a specific index
   var workFolder = bmsvc.createFolder(testRoot, "Work", 0);
@@ -248,22 +260,41 @@ function run_test() {
   do_check_eq(observer._itemChanged.spec, "place:domain=google.com&group=1");
   do_check_eq(observer._itemChangedProperty, "title");
 
-  // move folder - move the "work" folder into the "home" folder
+  // move folder, appending, to different folder
+  var oldParentCC = getChildCount(testRoot);
   bmsvc.moveFolder(workFolder, homeFolder, bmsvc.DEFAULT_INDEX);
   do_check_eq(observer._folderMoved, workFolder);
   do_check_eq(observer._folderMovedOldParent, testRoot);
   do_check_eq(observer._folderMovedOldIndex, 0);
   do_check_eq(observer._folderMovedNewParent, homeFolder);
   do_check_eq(observer._folderMovedNewIndex, 1);
+
+  // test that the new index is properly stored
+  do_check_eq(bmsvc.getItemIndex(workFolder), 1);
+
+  // XXX use getFolderIdForItem to test for the new parent
+
   // try to get index of the folder from it's ex-parent
-  do_check_eq(bmsvc.indexOfFolder(testRoot, workFolder), -1);
+  // XXX expose getItemAtIndex(folder, idx) to test that the item was *removed* from the old parent?
+  // XXX or expose FolderCount, and check that the old parent has one less kids?
+  do_check_eq(getChildCount(testRoot), oldParentCC-1);
+
+  // XXX move folder, specified index, to different folder
+  // XXX move folder, specified index, within the same folder
+  // XXX move folder, specify same index, within the same folder
+  // XXX move folder, appending, within the same folder
+
+  // XXX move item, appending, to different folder 
+  // XXX move item, specified index, to different folder 
+  // XXX move item, specified index, within the same folder 
+  // XXX move item, specify same index, within the same folder
+  // XXX move item, appending, within the same folder 
 
   // Test expected failure of moving a folder to be its own parent
   try {
     bmsvc.moveFolder(workFolder, workFolder, bmsvc.DEFAULT_INDEX);
     do_throw("moveFolder() allowed moving a folder to be it's own parent.");
   } catch (e) {}
-  do_check_eq(bmsvc.indexOfFolder(homeFolder, workFolder), 1);
 
   // test insertSeparator and removeChildAt
   // XXX - this should also query bookmarks for the folder children
@@ -275,6 +306,9 @@ function run_test() {
     do_throw("insertSeparator: " + ex);
   }
 
+  // XXX test getItemType for separators 
+  // add when 379952 is fixed
+
   // removeChildAt w/ folder
   bmsvc.createFolder(testRoot, "tmp", 1);
   bmsvc.removeChildAt(testRoot, 1);
@@ -283,9 +317,9 @@ function run_test() {
   bmsvc.insertItem(root, uri("http://blah.com"), 1);
   bmsvc.removeChildAt(root, 1);
 
-  // test indexOfFolder
+  // test get folder's index 
   var tmpFolder = bmsvc.createFolder(testRoot, "tmp", 2);
-  do_check_eq(bmsvc.indexOfFolder(testRoot, tmpFolder), 2);
+  do_check_eq(bmsvc.getItemIndex(tmpFolder), 2);
 
   // test setKeywordForURI
   var kwTestItemId = bmsvc.insertItem(testRoot, uri("http://keywordtest.com"), bmsvc.DEFAULT_INDEX);
@@ -416,6 +450,12 @@ function run_test() {
   var bmURI = bmsvc.getBookmarkURI(newId11);
   do_check_eq("http://foo11.com/", bmURI.spec);
 
+  // test getBookmarkURI with non-bookmark items
+  try {
+    bmsvc.getBookmarkURI(testRoot);
+    do_throw("getBookmarkURI() should throw for non-bookmark items!");
+  } catch(ex) {}
+
   // test getItemIndex
   var newId12 = bmsvc.insertItem(testRoot, uri("http://foo11.com/"), 1);
   var bmIndex = bmsvc.getItemIndex(newId12);
@@ -474,4 +514,19 @@ function run_test() {
   var uri1 = uri("http://foo.tld/a");
   bmsvc.insertItem(testRoot, uri1, bmsvc.DEFAULT_INDEX);
   histsvc.addVisit(uri1, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+}
+
+function getChildCount(aFolderId) {
+  var cc = -1;
+  try {
+    var options = histsvc.getNewQueryOptions();
+    var query = histsvc.getNewQuery();
+    query.setFolders([aFolderId], 1);
+    var result = histsvc.executeQuery(query, options);
+    var rootNode = result.root;
+    rootNode.containerOpen = true;
+    cc = rootNode.childCount;
+    rootNode.containerOpen = false;
+  } catch(ex) {}
+  return cc;
 }
