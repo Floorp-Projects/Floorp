@@ -132,7 +132,6 @@ class nsTreeContentView : public nsINativeTreeView,
     nsCOMPtr<nsITreeBoxObject>          mBoxObject;
     nsCOMPtr<nsITreeSelection>          mSelection;
     nsCOMPtr<nsIContent>                mRoot;
-    nsCOMPtr<nsIContent>                mBody;
     nsIDocument*                        mDocument;      // WEAK
     nsFixedSizeAllocator                mAllocator;
     nsVoidArray                         mRows;
