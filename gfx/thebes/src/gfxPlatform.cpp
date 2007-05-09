@@ -108,9 +108,9 @@ gfxPlatform::Init()
         return rv;
     }
 
-    rv = gfxTextRunCache::Init();
+    rv = gfxGlobalTextRunCache::Init();
     if (NS_FAILED(rv)) {
-        NS_ERROR("Could not initialize gfxTextRunCache");
+        NS_ERROR("Could not initialize gfxGlobalTextRunCache");
         Shutdown();
         return rv;
     }
@@ -123,7 +123,7 @@ gfxPlatform::Shutdown()
 {
     // These may be called before the corresponding subsystems have actually
     // started up. That's OK, they can handle it.
-    gfxTextRunCache::Shutdown();
+    gfxGlobalTextRunCache::Shutdown();
     gfxFontCache::Shutdown();
 #if defined(XP_MACOSX)
     gfxQuartzFontCache::Shutdown();
