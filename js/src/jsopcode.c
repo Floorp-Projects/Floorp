@@ -3979,8 +3979,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                               rval);
 #else
                 if (lastop == JSOP_GETTER || lastop == JSOP_SETTER) {
-                    if (!ATOM_IS_STRING(atom) ||
-                        !ATOM_IS_IDENTIFIER(atom) ||
+                    if (!ATOM_IS_IDENTIFIER(atom) ||
                         ATOM_IS_KEYWORD(atom) ||
                         strncmp(rval, js_function_str, 8) ||
                         rval[8] != ' ') {
