@@ -556,9 +556,9 @@ nsTreeContentView::SetTree(nsITreeBoxObject* aTree)
     nsCOMPtr<nsIDOMElement> bodyElement;
     mBoxObject->GetTreeBody(getter_AddRefs(bodyElement));
     if (bodyElement) {
-      nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(bodyElement);
+      mBody = do_QueryInterface(bodyElement);
       PRInt32 index = 0;
-      Serialize(bodyContent, -1, &index, mRows);
+      Serialize(mBody, -1, &index, mRows);
     }
   }
 
@@ -818,18 +818,16 @@ nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
     return;
   }
 
-  // If we have a legal tag, go up to the tree and make sure that it's ours.
-  nsCOMPtr<nsIContent> parent = aContent;
-  nsINodeInfo *ni = nsnull;
-  do {
-    parent = parent->GetParent();
-    if (parent)
-      ni = parent->NodeInfo();
-  } while (parent && !ni->Equals(nsGkAtoms::tree, kNameSpaceID_XUL));
+  // If we have a legal tag, go up to the tree/select and make sure
+  // that it's ours.
 
-  if (parent != mRoot) {
-    // This is not for us, we can bail out.
-    return;
+  for (nsIContent* element = aContent; element != mBody; element = element->GetParent()) {
+    if (!element)
+      return; // this is not for us
+    nsIAtom *parentTag = element->Tag();
+    if ((element->IsNodeOfType(nsINode::eXUL) && parentTag == nsGkAtoms::tree) ||
+        (element->IsNodeOfType(nsINode::eHTML) && parentTag == nsGkAtoms::select))
+      return; // this is not for us
   }
 
   // Handle changes of the hidden attribute.
@@ -989,7 +987,7 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
   // If we have a legal tag, go up to the tree/select and make sure
   // that it's ours.
 
-  for (nsIContent* element = aContainer; element != mRoot; element = element->GetParent()) {
+  for (nsIContent* element = aContainer; element != mBody; element = element->GetParent()) {
     if (!element)
       return; // this is not for us
     nsIAtom *parentTag = element->Tag();
@@ -1072,11 +1070,11 @@ nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
   // If we have a legal tag, go up to the tree/select and make sure
   // that it's ours.
 
-  for (nsIContent* element = aContainer; element != mRoot; element = element->GetParent()) {
+  for (nsIContent* element = aContainer; element != mBody; element = element->GetParent()) {
     if (!element)
       return; // this is not for us
     nsIAtom *parentTag = element->Tag();
-    if ((element->IsNodeOfType(nsINode::eXUL) && parentTag == nsGkAtoms::tree) || 
+    if ((element->IsNodeOfType(nsINode::eXUL) && parentTag == nsGkAtoms::tree) ||
         (element->IsNodeOfType(nsINode::eHTML) && parentTag == nsGkAtoms::select))
       return; // this is not for us
   }
@@ -1439,6 +1437,7 @@ nsTreeContentView::ClearRows()
     Row::Destroy(mAllocator, (Row*)mRows[i]);
   mRows.Clear();
   mRoot = nsnull;
+  mBody = nsnull;
   // Remove ourselves from mDocument's observers.
   if (mDocument) {
     mDocument->RemoveObserver(this);
