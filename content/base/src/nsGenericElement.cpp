@@ -117,6 +117,7 @@
 
 
 #include "nsCycleCollectionParticipant.h"
+#include "nsCCUncollectableMarker.h"
 
 #ifdef MOZ_SVG
 PRBool NS_SVG_TestFeature(const nsAString &fstr);
@@ -3007,6 +3008,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericElement)
+  nsIDocument* currentDoc = tmp->GetCurrentDoc();
+  if (currentDoc && !tmp->HasFlag(NODE_HAS_FAKED_INDOC) &&
+      nsCCUncollectableMarker::InGeneration(
+        currentDoc->GetMarkedCCGeneration())) {
+    return NS_OK;
+  }
+
   nsIDocument* ownerDoc = tmp->GetOwnerDoc();
   if (ownerDoc) {
     ownerDoc->BindingManager()->Traverse(tmp, cb);

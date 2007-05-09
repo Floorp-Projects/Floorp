@@ -138,6 +138,8 @@
 #include "prtime.h"
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
+#include "nsIObserverService.h"
+#include "nsServiceManagerUtils.h"
 
 #include <stdio.h>
 #ifdef WIN32
@@ -1916,6 +1918,12 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
     printf("cc: Starting nsCycleCollector::Collect(%d)\n", aTryCollections);
     PRTime start = PR_Now(), now;
 #endif
+
+    nsCOMPtr<nsIObserverService> obs =
+      do_GetService("@mozilla.org/observer-service;1");
+    if (obs) {
+        obs->NotifyObservers(nsnull, "cycle-collector-begin", nsnull);
+    }
 
     while (aTryCollections > 0) {
         // This triggers a JS GC. Our caller assumes we always trigger at
