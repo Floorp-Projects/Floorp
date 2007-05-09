@@ -370,7 +370,7 @@ input[type="file"] > input[type="button"] {
 
 /* radio buttons */
 input[type="radio"] {
-  -moz-appearance: radio;
+  -moz-appearance: radio-small;
   width: 13px;
   height: 13px;
   margin: 3px 3px 0px 5px;
@@ -383,7 +383,7 @@ input[type="radio"] {
 
 /* check boxes */
 input[type="checkbox"] {
-  -moz-appearance: checkbox;
+  -moz-appearance: checkbox-small;
   width: 13px;
   height: 13px;
   margin: 3px 3px 3px 4px;
@@ -636,17 +636,6 @@ select[disabled] {
 
 input[type="image"] {
   margin: 0;
-}
-
-/* margins makes sure they are aligned with the text baseline */
-input[type="checkbox"] {
-  -moz-appearance: checkbox-small;
-  margin: 1px 2px 0px 3px;
-}
-
-input[type="radio"] {
-  -moz-appearance: radio-small;
-  margin: 1px 2px -3px 3px;
 }
 
 /* this draws the square button */
