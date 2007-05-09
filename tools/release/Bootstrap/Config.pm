@@ -5,8 +5,11 @@
 package Bootstrap::Config;
 
 use strict;
+
 use POSIX "uname";
 use File::Copy qw(move);
+
+use Bootstrap::Util qw(GetLocaleManifest);
 
 # shared static config
 my %config;
@@ -88,6 +91,20 @@ sub Get {
     } else {
         die("No such config variable: $var");
     }
+}
+
+sub GetLocaleInfo {
+    my $this = shift;
+
+    if (! $this->Exists(var => 'localeInfo')) {
+        my $localeFileTag = $this->Get(var => 'productTag') . '_RELEASE';
+        $config{'localeInfo'} = GetLocaleManifest(
+         app => $this->Get(var => 'appName'),
+         cvsroot => $this->Get(var => 'mozillaCvsroot'),
+         tag => $localeFileTag);
+    }
+
+    return $this->Get(var => 'localeInfo');
 }
 
 ##
