@@ -293,6 +293,7 @@ bin/components/prefetch.xpt
 bin/components/imgicon.xpt
 bin/components/libimgicon.so
 bin/components/txEXSLTRegExFunctions.js
+bin/components/nsAboutAbout.js
 
 bin/components/xulappinfo.js
 bin/components/xulappinfo.xpt
