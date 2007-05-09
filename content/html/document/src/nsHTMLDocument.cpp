@@ -775,6 +775,19 @@ nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsACString& aCharset,
   }
 }
 
+void
+nsHTMLDocument::SetDocumentCharacterSet(const nsACString& aCharSetID)
+{
+  nsDocument::SetDocumentCharacterSet(aCharSetID);
+  // Make sure to stash this charset on our channel as needed if it's a wyciwyg
+  // channel.
+  nsCOMPtr<nsIWyciwygChannel> wyciwygChannel = do_QueryInterface(mChannel);
+  if (wyciwygChannel) {
+    wyciwygChannel->SetCharsetAndSource(GetDocumentCharacterSetSource(),
+                                        aCharSetID);
+  }
+}
+
 nsresult
 nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                   nsIChannel* aChannel,
@@ -900,15 +913,26 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   printf("Determining charset for %s\n", urlSpec.get());
 #endif
 
+  // These are the charset source and charset for our document
   PRInt32 charsetSource;
   nsCAutoString charset;
 
+  // These are the charset source and charset for the parser.  This can differ
+  // from that for the document if the channel is a wyciwyg channel.
+  PRInt32 parserCharsetSource;
+  nsCAutoString parserCharset;
+
+  nsCOMPtr<nsIWyciwygChannel> wyciwygChannel;
+  
   if (IsXHTML()) {
     charsetSource = kCharsetFromDocTypeDefault;
     charset.AssignLiteral("UTF-8");
     TryChannelCharset(aChannel, charsetSource, charset);
+    parserCharsetSource = charsetSource;
+    parserCharset = charset;
   } else {
     charsetSource = kCharsetUninitialized;
+    wyciwygChannel = do_QueryInterface(aChannel);
 
     // The following charset resolving calls has implied knowledge
     // about charset source priority order. Each try will return true
@@ -919,7 +943,11 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     if (!TryUserForcedCharset(muCV, dcInfo, charsetSource, charset)) {
       TryHintCharset(muCV, charsetSource, charset);
       TryParentCharset(dcInfo, parentDocument, charsetSource, charset);
-      if (TryChannelCharset(aChannel, charsetSource, charset)) {
+
+      // Don't actually get the charset from the channel if this is a
+      // wyciwyg channel; it'll always be UTF-16
+      if (!wyciwygChannel &&
+          TryChannelCharset(aChannel, charsetSource, charset)) {
         // Use the channel's charset (e.g., charset from HTTP
         // "Content-Type" header).
       }
@@ -960,20 +988,45 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       }
     }
 
+    if (wyciwygChannel) {
+      // We know for sure that the parser needs to be using UTF16.
+      parserCharset = "UTF-16";
+      parserCharsetSource = charsetSource < kCharsetFromChannel ?
+        kCharsetFromChannel : charsetSource;
+        
+      nsCAutoString cachedCharset;
+      PRInt32 cachedSource;
+      rv = wyciwygChannel->GetCharsetAndSource(&cachedSource, cachedCharset);
+      if (NS_SUCCEEDED(rv)) {
+        if (cachedSource > charsetSource) {
+          charsetSource = cachedSource;
+          charset = cachedCharset;
+        }
+      } else {
+        // Don't propagate this error.
+        rv = NS_OK;
+      }
+      
+    } else {
+      parserCharset = charset;
+      parserCharsetSource = charsetSource;
+    }
+
     if(kCharsetFromAutoDetection > charsetSource && !isPostPage) {
       StartAutodetection(docShell, charset, aCommand);
     }
 
     // ahmed
     // Check if 864 but in Implicit mode !
+    // XXXbz why is this happening after StartAutodetection ?
     if ((textType == IBMBIDI_TEXTTYPE_LOGICAL) &&
         (charset.LowerCaseEqualsLiteral("ibm864"))) {
       charset.AssignLiteral("IBM864i");
     }
   }
 
-  SetDocumentCharacterSet(charset);
   SetDocumentCharacterSetSource(charsetSource);
+  SetDocumentCharacterSet(charset);
 
   // set doc charset to muCV for next document.
   // Don't propagate this back up to the parent document if we have one.
@@ -981,6 +1034,9 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     muCV->SetPrevDocCharacterSet(charset);
 
   if(cacheDescriptor) {
+    NS_ASSERTION(charset == parserCharset,
+                 "How did those end up different here?  wyciwyg channels are "
+                 "not nsICachingChannel");
     rv = cacheDescriptor->SetMetaDataElement("charset",
                                              charset.get());
     NS_ASSERTION(NS_SUCCEEDED(rv),"cannot SetMetaDataElement");
@@ -997,7 +1053,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     printf(" charset = %s source %d\n",
           charset.get(), charsetSource);
 #endif
-    mParser->SetDocumentCharset(charset, charsetSource);
+    mParser->SetDocumentCharset(parserCharset, parserCharsetSource);
     mParser->SetCommand(aCommand);
 
     // create the content sink
@@ -3625,6 +3681,11 @@ nsHTMLDocument::CreateAndAddWyciwygChannel(void)
   mWyciwygChannel = do_QueryInterface(channel);
 
   mWyciwygChannel->SetSecurityInfo(mSecurityInfo);
+
+  // Note: we want to treat this like a "previous document" hint so that,
+  // e.g. a <meta> tag in the document.write content can override it.
+  mWyciwygChannel->SetCharsetAndSource(kCharsetFromHintPrevDoc,
+                                       GetDocumentCharacterSet());
 
   // Use our new principal
   channel->SetOwner(NodePrincipal());

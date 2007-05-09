@@ -883,8 +883,8 @@ txMozillaXMLOutput::createResultDocument(const nsSubstring& aName, PRInt32 aNsID
 
         if (calias &&
             NS_SUCCEEDED(calias->GetPreferred(charset, canonicalCharset))) {
-            mDocument->SetDocumentCharacterSet(canonicalCharset);
             mDocument->SetDocumentCharacterSetSource(kCharsetFromOtherComponent);
+            mDocument->SetDocumentCharacterSet(canonicalCharset);
         }
     }
 

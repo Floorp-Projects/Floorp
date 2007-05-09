@@ -234,6 +234,8 @@ public:
     return mCharacterSetSource;
   }
 
+  // This method MUST be called before SetDocumentCharacterSet if
+  // you're planning to call both.
   void SetDocumentCharacterSetSource(PRInt32 aCharsetSource)
   {
     mCharacterSetSource = aCharsetSource;
