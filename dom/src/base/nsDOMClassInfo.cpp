@@ -453,7 +453,6 @@ static const char kDOMStringBundleURL[] =
 #define NODE_SCRIPTABLE_FLAGS                                                 \
  ((DOM_DEFAULT_SCRIPTABLE_FLAGS |                                             \
    nsIXPCScriptable::WANT_GETPROPERTY |                                       \
-   nsIXPCScriptable::WANT_PRECREATE |                                         \
    nsIXPCScriptable::WANT_ADDPROPERTY |                                       \
    nsIXPCScriptable::WANT_SETPROPERTY) &                                      \
   ~nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY)
@@ -564,14 +563,14 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Screen, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(Prototype, nsDOMConstructorSH,
+                           DOM_BASE_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_HASINSTANCE)
   NS_DEFINE_CLASSINFO_DATA(Constructor, nsDOMConstructorSH,
-                           (DEFAULT_SCRIPTABLE_FLAGS |
-                            nsIXPCScriptable::WANT_CONSTRUCT |
-                            nsIXPCScriptable::WANT_HASINSTANCE) &
-                           ~(nsIXPCScriptable::WANT_PRECREATE |
-                             nsIXPCScriptable::WANT_POSTCREATE |
-                             nsIXPCScriptable::WANT_CHECKACCESS |
-                             nsIXPCScriptable::WANT_NEWRESOLVE))
+                           DOM_BASE_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_HASINSTANCE |
+                           nsIXPCScriptable::WANT_CALL |
+                           nsIXPCScriptable::WANT_CONSTRUCT)
 
   // Core classes
   NS_DEFINE_CLASSINFO_DATA(XMLDocument, nsDocumentSH,
@@ -1857,6 +1856,10 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Screen, nsIDOMScreen)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMScreen)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(Prototype, nsIDOMConstructor)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMConstructor)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Constructor, nsIDOMConstructor)
@@ -4822,12 +4825,12 @@ DefineInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
 class nsDOMConstructor : public nsIDOMConstructor
 {
 public:
-  nsDOMConstructor(const PRUnichar *aName)
-    : mClassName(aName)
+  nsDOMConstructor(const PRUnichar *aName,
+                   const nsGlobalNameStruct *aNameStruct)
+    : mClassName(aName),
+      mConstructable(IsConstructable(aNameStruct))
   {
   }
-
-  virtual ~nsDOMConstructor();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMCONSTRUCTOR
@@ -4858,7 +4861,54 @@ public:
   }
 
 private:
+  const nsGlobalNameStruct *GetNameStruct()
+  {
+    if (!mClassName) {
+      NS_ERROR("Can't get name");
+      return nsnull;
+    }
+
+    const nsGlobalNameStruct *nameStruct;
+#ifdef DEBUG
+    nsresult rv =
+#endif
+      GetNameStruct(nsDependentString(mClassName), &nameStruct);
+
+    NS_ASSERTION(NS_FAILED(rv) || nameStruct, "Name isn't in hash.");
+
+    return nameStruct;
+  }
+
+  static nsresult GetNameStruct(const nsAString& aName,
+                                const nsGlobalNameStruct **aNameStruct)
+  {
+    *aNameStruct = nsnull;
+
+    extern nsScriptNameSpaceManager *gNameSpaceManager;
+    if (!gNameSpaceManager) {
+      NS_ERROR("Can't get namespace manager.");
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    gNameSpaceManager->LookupName(aName, aNameStruct);
+
+    // Return NS_OK here, aName just isn't a DOM class but nothing failed.
+    return NS_OK;
+  }
+
+  static PRBool IsConstructable(const nsGlobalNameStruct *aNameStruct)
+  {
+    return
+      (aNameStruct->mType == nsGlobalNameStruct::eTypeClassConstructor &&
+       FindConstructorContractID(aNameStruct->mDOMClassInfoID)) ||
+      (aNameStruct->mType == nsGlobalNameStruct::eTypeExternalClassInfo &&
+       aNameStruct->mData->mConstructorCID) ||
+      aNameStruct->mType == nsGlobalNameStruct::eTypeExternalConstructor ||
+      aNameStruct->mType == nsGlobalNameStruct::eTypeExternalConstructorAlias;
+  }
+
   const PRUnichar *mClassName;
+  const PRPackedBool mConstructable;
 };
 
 NS_IMPL_ADDREF(nsDOMConstructor)
@@ -4866,12 +4916,25 @@ NS_IMPL_RELEASE(nsDOMConstructor)
 NS_INTERFACE_MAP_BEGIN(nsDOMConstructor)
   NS_INTERFACE_MAP_ENTRY(nsIDOMConstructor)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Constructor)
+  if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
+#ifdef DEBUG
+    {
+      const nsGlobalNameStruct *name_struct = GetNameStruct();
+      NS_ASSERTION(!name_struct ||
+                   mConstructable == IsConstructable(name_struct),
+                   "Can't change constructability dynamically!");
+    }
+#endif
+    foundInterface =
+      NS_GetDOMClassInfoInstance(mConstructable ?
+                                 eDOMClassInfo_Constructor_id :
+                                 eDOMClassInfo_Prototype_id);
+    if (!foundInterface) {
+      *aInstancePtr = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  } else
 NS_INTERFACE_MAP_END
-
-nsDOMConstructor::~nsDOMConstructor()
-{
-}
 
 nsresult
 nsDOMConstructor::Construct(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
@@ -4884,27 +4947,11 @@ nsDOMConstructor::Construct(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
     return NS_ERROR_UNEXPECTED;
   }
 
-  extern nsScriptNameSpaceManager *gNameSpaceManager;
-  if (!mClassName || !gNameSpaceManager) {
-    NS_ERROR("nsDOMConstructor::Construct can't get name or namespace manager");
-    return NS_ERROR_UNEXPECTED;
-  }
+  const nsGlobalNameStruct *name_struct = GetNameStruct();
+  NS_ENSURE_TRUE(name_struct, NS_ERROR_FAILURE);
 
-  const nsGlobalNameStruct *name_struct = nsnull;
-  gNameSpaceManager->LookupName(nsDependentString(mClassName), &name_struct);
-  if (!name_struct) {
-    NS_ERROR("Name isn't in hash.");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if ((name_struct->mType != nsGlobalNameStruct::eTypeClassConstructor ||
-       !FindConstructorContractID(name_struct->mDOMClassInfoID)) &&
-      (name_struct->mType != nsGlobalNameStruct::eTypeExternalClassInfo ||
-       !name_struct->mData->mConstructorCID) &&
-      name_struct->mType != nsGlobalNameStruct::eTypeExternalConstructor &&
-      name_struct->mType != nsGlobalNameStruct::eTypeExternalConstructorAlias) {
+  if (!IsConstructable(name_struct)) {
     // ignore return value, we return JS_FALSE anyway
-    NS_ERROR("object instantiated without constructor");
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
@@ -4941,19 +4988,11 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
     return NS_ERROR_UNEXPECTED;
   }
 
-  const nsGlobalNameStruct *name_struct = nsnull;
-
-  extern nsScriptNameSpaceManager *gNameSpaceManager;
-  if (!gNameSpaceManager) {
-    NS_ERROR("nsDOMConstructor::HasInstance can't get namespace manager.");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  gNameSpaceManager->LookupName(NS_ConvertASCIItoUTF16(dom_class->name),
-                                &name_struct);
+  const nsGlobalNameStruct *name_struct;
+  nsresult rv = GetNameStruct(NS_ConvertASCIItoUTF16(dom_class->name),
+                              &name_struct);
   if (!name_struct) {
-    // Name isn't in hash, not a DOM object.
-    return NS_OK;
+    return rv;
   }
 
   if (name_struct->mType != nsGlobalNameStruct::eTypeClassConstructor &&
@@ -4963,24 +5002,17 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
   }
 
-  if (!mClassName) {
-    NS_ERROR("nsDOMConstructor::HasInstance can't get name.");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  const nsGlobalNameStruct *class_name_struct = nsnull;
-  gNameSpaceManager->LookupName(nsDependentString(mClassName),
-                                &class_name_struct);
-  if (!class_name_struct) {
-    NS_ERROR("Name isn't in hash.");
-    return NS_ERROR_UNEXPECTED;
-  }
+  const nsGlobalNameStruct *class_name_struct = GetNameStruct();
+  NS_ENSURE_TRUE(class_name_struct, NS_ERROR_FAILURE);
 
   if (name_struct == class_name_struct) {
     *bp = JS_TRUE;
 
     return NS_OK;
   }
+
+  extern nsScriptNameSpaceManager *gNameSpaceManager;
+  NS_ASSERTION(gNameSpaceManager, "Can't get namespace manager?");
 
   const nsIID *class_iid;
   if (class_name_struct->mType == nsGlobalNameStruct::eTypeInterface ||
@@ -5129,7 +5161,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
     nsRefPtr<nsDOMConstructor> constructor =
       new nsDOMConstructor(NS_REINTERPRET_CAST(PRUnichar *,
-                                               ::JS_GetStringChars(str)));
+                                               ::JS_GetStringChars(str)),
+                           name_struct);
     if (!constructor) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -5190,7 +5223,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
     const PRUnichar *name = NS_REINTERPRET_CAST(PRUnichar *,
                                                 ::JS_GetStringChars(str));
-    nsRefPtr<nsDOMConstructor> constructor = new nsDOMConstructor(name);
+    nsRefPtr<nsDOMConstructor> constructor =
+      new nsDOMConstructor(name, name_struct);
     if (!constructor) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -5406,7 +5440,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   }
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
-    nsRefPtr<nsDOMConstructor> constructor = new nsDOMConstructor(class_name);
+    nsRefPtr<nsDOMConstructor> constructor =
+      new nsDOMConstructor(class_name, name_struct);
     if (!constructor) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -9894,6 +9929,24 @@ nsEventListenerThisTranslator::TranslateThis(nsISupports *aInitialThis,
   NS_IF_ADDREF(*_retval);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMConstructorSH::Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, PRUint32 argc, jsval *argv, jsval *vp,
+                         PRBool *_retval)
+{
+  nsDOMConstructor *wrapped =
+    NS_STATIC_CAST(nsDOMConstructor *, wrapper->Native());
+
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIDOMConstructor> is_constructor(do_QueryWrappedNative(wrapper));
+    NS_ASSERTION(is_constructor, "How did we not get a constructor?");
+  }
+#endif
+
+  return wrapped->Construct(wrapper, cx, obj, argc, argv, vp, _retval);
 }
 
 NS_IMETHODIMP
