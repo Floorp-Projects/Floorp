@@ -4,14 +4,16 @@
 # 
 package Bootstrap::Step::Stage;
 
-use Bootstrap::Step;
-use Bootstrap::Config;
-use Bootstrap::Util qw(CvsCatfile);
+use File::Basename;
 use File::Copy qw(copy move);
 use File::Find qw(find);
 use File::Path qw(rmtree);
-use File::Basename;
+
 use Cwd;
+
+use Bootstrap::Step;
+use Bootstrap::Config;
+use Bootstrap::Util qw(CvsCatfile);
 
 use MozBuild::Util qw(MkdirWithPath);
 
@@ -172,64 +174,6 @@ my $source_re =                  # Source tarball.
       $                          # To end.
     /x;                          #
 
-#########################################################################
-# Loads and parses the shipped-locales manifest file, so get hash of
-# locale -> [bouncer] platform mappings; returns success/failure in 
-# reading/parsing the locales file.
-#########################################################################
-sub LoadLocaleManifest {
-    my $this = shift;
-    my %args = @_;
-
-    die "ASSERT: LoadLocaleManifest(): needs a HASH ref" if 
-     (not exists($args{'localeHashRef'}) or 
-     ref($args{'localeHashRef'}) ne 'HASH');
-
-    my $localeHash = $args{'localeHashRef'};
-    my $manifestFile = $args{'manifest'};
-
-    if (not -e $manifestFile) {
-       $this->Log(msg => "Can't find manifest $manifestFile");
-       return 0;
-    }
-
-    open(MANIFEST, "<$manifestFile") or return 0;
-    my @manifestLines = <MANIFEST>;
-    close(MANIFEST);
-
-    foreach my $line (@manifestLines) {
-       my @elements = split(/\s+/, $line);
-       # Grab the locale; we do it this way, so we can use the rest of the
-       # array as a platform list, if we need it...
-       my $locale = shift(@elements);
- 
-       # We don't add a $ on the end, because of things like ja-JP-mac
-       if ($locale !~ /^[a-z]{2}(\-[A-Z]{2})?/) {
-          die "ASSERT: invalid locale in manifest file: $locale";
-       }
-
-       # So this is kinda weird; if the locales are followed by a platform,
-       # then they don't exist for all the platforms; if they're all by their
-       # lonesome, then they exist for all platforms. So, since we shifted off
-       # the locale above, if there's anything left in the array, it's the
-       # platforms that are valid for this locale; if there isn't, then that
-       # platform is valid for all locales.
-       $localeHash->{$locale} = scalar(@elements) ? \@elements : 
-                                                    \@ALL_PLATFORMS;
-
-       foreach my $platform (@{$localeHash->{$locale}}) {
-          die "ASSERT: invalid platform: $platform" if 
-           (not grep($platform eq $_, @ALL_PLATFORMS));
-       }
-    }
-
-    # Add en-US, which isn't in shipped-locales, because it's assumed that
-    # we always need en-US, for all platforms, to ship.
-    $localeHash->{'en-US'} = \@ALL_PLATFORMS;
-
-    return 1;
-}
-
 sub GetStageDir {
     my $this = shift;
 
@@ -352,25 +296,7 @@ sub Execute {
         }
     }
 
-    # Remove unshipped files/locales and set proper mode on dirs; start
-    # by checking out the shipped-locales file
-    $ENV{'CVS_RSH'} = 'ssh';
-    $this->Shell(cmd => 'cvs',
-      cmdArgs => ['-d', $mozillaCvsroot, 
-                  'co', '-dconfig',
-                  '-r', $releaseTag,
-                  CvsCatfile('mozilla', $appName, 'locales', 
-                             'shipped-locales')],
-      dir => catfile($stageDir, 'batch1'),
-      logFile => catfile($logDir, 'stage-shipped-locales_checkout.log'));
-
-    $this->{'localeManifest'} = {};
-    if (not $this->LoadLocaleManifest(localeHashRef =>
-                                       $this->{'localeManifest'},
-                                       manifest => catfile($stageDir, 'batch1',
-                                        'config', 'shipped-locales'))) {
-        die "Failed to load locale manifest\n";
-    }
+    $this->{'localeManifest'} = $config->GetLocaleInfo();
 
     # All the magic happens here; we remove unshipped deliverables and cross-
     # check the locales we do ship in this callback.
