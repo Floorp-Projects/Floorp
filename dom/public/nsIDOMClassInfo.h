@@ -44,14 +44,17 @@
 #include "nsDOMClassInfoID.h"
 #include "nsIXPCScriptable.h"
 
-#define DEFAULT_SCRIPTABLE_FLAGS                                           \
+#define DOM_BASE_SCRIPTABLE_FLAGS                                          \
   (nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY |                          \
    nsIXPCScriptable::USE_JSSTUB_FOR_DELPROPERTY |                          \
    nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY |                          \
    nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE |                      \
    nsIXPCScriptable::ALLOW_PROP_MODS_TO_PROTOTYPE |                        \
    nsIXPCScriptable::DONT_ASK_INSTANCE_FOR_SCRIPTABLE |                    \
-   nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES |                        \
+   nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES)
+
+#define DEFAULT_SCRIPTABLE_FLAGS                                           \
+  (DOM_BASE_SCRIPTABLE_FLAGS |                                             \
    nsIXPCScriptable::WANT_NEWRESOLVE |                                     \
    nsIXPCScriptable::WANT_CHECKACCESS |                                    \
    nsIXPCScriptable::WANT_PRECREATE |                                      \
