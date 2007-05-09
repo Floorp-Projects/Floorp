@@ -160,7 +160,6 @@ DUMP_SYMS_BIN := $(DIST)/host/bin/dump_syms
 endif
 
 buildsymbols:
-ifdef MOZ_DEBUG_SYMBOLS
 ifdef MOZ_AIRBAG
 	echo building symbol store
 	mkdir -p $(DIST)/crashreporter-symbols/$(BUILDID)
@@ -175,14 +174,11 @@ ifdef MOZ_AIRBAG
           zip -r9D ../crashreporter-symbols-$(BUILDID).zip .
 	mv $(DIST)/crashreporter-symbols/crashreporter-symbols-$(BUILDID).zip \
           $(topsrcdir)/../$(BUILDID)
-endif # MOZ_DEBUG_SYMBOLS
 endif # MOZ_AIRBAG
 
 uploadsymbols:
-ifdef MOZ_DEBUG_SYMBOLS
 ifdef MOZ_AIRBAG
 	$(topsrcdir)/toolkit/airbag/tools/upload_symbols.sh $(topsrcdir)/../$(BUILDID)/crashreporter-symbols-$(BUILDID).zip
-endif
 endif
 
 ifeq ($(OS_ARCH),WINNT)
