@@ -105,6 +105,16 @@
 #include "nsBidiFrames.h"
 #include "nsBidiPresUtils.h"
 #include "nsBidiUtils.h"
+#include "nsTextFrameTextRunCache.h"
+
+nsresult
+nsTextFrameTextRunCache::Init() {
+  return NS_OK;
+}
+
+void
+nsTextFrameTextRunCache::Shutdown() {
+}
 
 #ifdef SUNCTL
 #include "nsILE.h"
