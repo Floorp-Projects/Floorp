@@ -2,12 +2,16 @@
 # Tag step. Applies a CVS tag to the appropriate repositories.
 # 
 package Bootstrap::Step::Tag::l10n;
+
+use File::Copy qw(move);
+
 use Bootstrap::Step;
 use Bootstrap::Config;
 use Bootstrap::Step::Tag;
 use Bootstrap::Util qw(CvsCatfile);
-use File::Copy qw(move);
+
 use MozBuild::Util qw(MkdirWithPath);
+
 @ISA = ("Bootstrap::Step::Tag");
 
 sub Execute {
@@ -35,23 +39,17 @@ sub Execute {
     }
 
     # Grab list of shipped locales
-    my $shippedLocales = catfile($releaseTagDir, 'cvsroot', 'mozilla', 
-                                 $appName, 'locales', 'shipped-locales');
-    open (FILE, "< $shippedLocales") 
-      or die("Cannot open file $shippedLocales: $!");
-    my @locales = <FILE>;
-    close FILE or die("Cannot close file $shippedLocales: $!");
+    #
+    # Note: GetLocaleInfo() has a dependency on the $releaseTag above already
+    # being set; it should be when the l10n tagging step gets run, though.
+
+    my $localeInfo = $config->GetLocaleInfo();
 
     # Check out the l10n files from the branch you want to tag.
-    for my $locale (@locales) {
-        # only keep first column
-        $locale =~ s/(\s+).*//;
-        # remove line endings
-        $locale =~ s/(\n)//;
-        # skip en-US, this is the default locale
-        if ($locale eq 'en-US') {
-            next;
-        }
+    for my $locale (keys(%{$localeInfo})) {
+        # skip en-US; it's kept in the main repo
+        next if ($locale eq 'en-US');
+
         $this->Shell(
             cmd => 'cvs',
             cmdArgs => ['-d', $l10nCvsroot, 'co', '-r', $branchTag, '-D',
