@@ -1359,7 +1359,12 @@ nsSVGGlyphFrame::GetTextRun(gfxContext *aCtx, const nsString &aText)
   if (!mFontGroup)
     return nsnull;
 
-  return mFontGroup->MakeTextRun(aText.get(), aText.Length(), &params, 0);
+  PRUnichar* text = new PRUnichar[aText.Length()];
+  if (!text)
+    return nsnull;
+  memcpy(text, aText.get(), sizeof(PRUnichar)*aText.Length());
+
+  return mFontGroup->MakeTextRun(text, aText.Length(), &params, 0);
 }
 
 //----------------------------------------------------------------------
