@@ -1519,11 +1519,11 @@ protected:
   {
   }
 
-  virtual ~nsDOMConstructorSH()
-  {
-  }
-
 public:
+  NS_IMETHOD Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                  JSObject *obj, PRUint32 argc, jsval *argv, jsval *vp,
+                  PRBool *_retval);
+
   NS_IMETHOD Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj, PRUint32 argc, jsval *argv,
                        jsval *vp, PRBool *_retval);
