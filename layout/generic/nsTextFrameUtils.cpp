@@ -103,8 +103,7 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
                                 gfxSkipCharsBuilder* aSkipChars,
                                 PRUint32* aAnalysisFlags)
 {
-  // We're just going to assume this!
-  PRUint32 flags = TEXT_HAS_NON_ASCII;
+  PRUint32 flags = 0;
   PRUnichar* outputStart = aOutput;
 
   if (!aCompressWhitespace) {
@@ -123,8 +122,6 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
         if (ch == CH_NBSP) {
           ch = ' ';
           flags |= TEXT_WAS_TRANSFORMED;
-        } else if (IS_SURROGATE(ch)) {
-          flags |= gfxTextRunFactory::TEXT_HAS_SURROGATES;
         }
         *aOutput++ = ch;
       }
@@ -161,8 +158,6 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
           if (ch == CH_NBSP) {
             ch = ' ';
             flags |= TEXT_WAS_TRANSFORMED;
-          } else if (IS_SURROGATE(ch)) {
-            flags |= gfxTextRunFactory::TEXT_HAS_SURROGATES;
           }
           *aOutput++ = ch;
           aSkipChars->KeepChar();
@@ -199,7 +194,6 @@ nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
                                 PRUint32* aAnalysisFlags)
 {
   PRUint32 flags = 0;
-  PRUint8 allBits = 0;
   PRUint8* outputStart = aOutput;
 
   if (!aCompressWhitespace) {
@@ -207,7 +201,6 @@ nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
       PRUint8 ch = *aText++;
-      allBits |= ch;
       if (ch == '\t') {
         flags |= TEXT_HAS_TAB|TEXT_WAS_TRANSFORMED;
         aSkipChars->KeepChar();
@@ -229,7 +222,6 @@ nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
       PRUint8 ch = *aText++;
-      allBits |= ch;
       PRBool nowInWhitespace = ch == ' ' || ch == '\t' || ch == '\n' || ch == '\f';
       if (!nowInWhitespace) {
         if (IsDiscardable(ch, &flags)) {
@@ -261,9 +253,6 @@ nsTextFrameUtils::TransformText(const PRUint8* aText, PRUint32 aLength,
 
   if (outputStart + aLength != aOutput) {
     flags |= TEXT_WAS_TRANSFORMED;
-  }
-  if (allBits & 0x80) {
-    flags |= TEXT_HAS_NON_ASCII;
   }
   *aAnalysisFlags = flags;
   return aOutput;

@@ -40,6 +40,7 @@
 
 #include "gfxFont.h"
 #include "gfxSkipChars.h"
+#include "gfxTextRunCache.h"
 #include "nsTextFragment.h"
 
 #define BIG_TEXT_NODE_SIZE 4096
@@ -54,13 +55,14 @@ public:
     TEXT_HAS_TAB             = 0x010000,
     // the original text has at least one soft hyphen character
     TEXT_HAS_SHY             = 0x020000,
-    TEXT_HAS_NON_ASCII       = 0x040000,
-    TEXT_WAS_TRANSFORMED     = 0x080000,
+    TEXT_WAS_TRANSFORMED     = 0x040000,
 
     // The following flags are set by nsTextFrame
 
     TEXT_IS_SIMPLE_FLOW      = 0x100000,
-    TEXT_INCOMING_WHITESPACE = 0x200000
+    TEXT_INCOMING_WHITESPACE = 0x200000,
+    TEXT_TRAILING_WHITESPACE = 0x400000,
+    TEXT_IS_UNCACHED         = 0x800000
   };
 
   static PRBool
@@ -86,6 +88,9 @@ public:
    * @param aCompressWhitespace runs of consecutive whitespace (spaces not
    * followed by a diacritical mark, tabs, and newlines) are compressed to a
    * single space character.
+   * @param aIncomingWhitespace a flag indicating whether there was whitespace
+   * preceding this text. We set it to indicate if there's whitespace
+   * preceding the end of this text.
    */
   static PRUnichar* TransformText(const PRUnichar* aText, PRUint32 aLength,
                                   PRUnichar* aOutput,
@@ -132,7 +137,7 @@ public:
                    PRInt32 aPosition, PRInt32 aDirection,
                    PRBool aBreakBeforePunctuation,
                    PRBool aBreakAfterPunctuation,
-                   PRBool* aWordIsWhitespace);                
+                   PRBool* aWordIsWhitespace);
 };
 
 class nsSkipCharsRunIterator {
