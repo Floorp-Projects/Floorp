@@ -856,8 +856,8 @@ BookmarkContentSink::HandleLinkEnd()
       NS_ASSERTION(NS_SUCCEEDED(rv), "SetSiteURI failed!");
       rv = mLivemarkService->SetFeedURI(frame.mPreviousId, frame.mPreviousFeed);
       NS_ASSERTION(NS_SUCCEEDED(rv), "SetFeedURI failed!");
-      rv = mBookmarksService->SetFolderTitle(frame.mPreviousId, frame.mPreviousText);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "SetFolderTitle failed!");
+      rv = mBookmarksService->SetItemTitle(frame.mPreviousId, frame.mPreviousText);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "SetItemTitle failed!");
     } else {
       if (mIsImportDefaults) {
         rv = mLivemarkService->CreateLivemarkFolderOnly(mBookmarksService,
@@ -913,8 +913,10 @@ BookmarkContentSink::HandleSeparator()
     PrintNesting();
     printf("--------\n");
 #endif
+    PRInt64 itemId;
     mBookmarksService->InsertSeparator(frame.mContainerID,
-                                       mBookmarksService->DEFAULT_INDEX);
+                                       mBookmarksService->DEFAULT_INDEX,
+                                       &itemId);
   }
 }
 
@@ -1000,7 +1002,7 @@ BookmarkContentSink::NewFrame()
   if (updateFolder) {
     // move the menu folder to the current position
     mBookmarksService->MoveFolder(ourID, CurFrame().mContainerID, -1);
-    mBookmarksService->SetFolderTitle(ourID, containerName);
+    mBookmarksService->SetItemTitle(ourID, containerName);
 #ifdef DEBUG_IMPORT
     printf(" [reparenting]");
 #endif
@@ -1456,7 +1458,7 @@ nsPlacesImportExportService::WriteContainerTitle(PRInt64 aFolder, nsIOutputStrea
   nsAutoString title;
   nsresult rv;
   
-  rv = mBookmarksService->GetFolderTitle(aFolder, title);
+  rv = mBookmarksService->GetItemTitle(aFolder, title);
   NS_ENSURE_SUCCESS(rv, rv);
 
   char* escapedTitle = nsEscapeHTML(NS_ConvertUTF16toUTF8(title).get());
@@ -1764,7 +1766,7 @@ nsPlacesImportExportService::WriteContainerContents(PRInt64 aFolder, const nsACS
       // bookmarks folder
       nsCOMPtr<nsINavHistoryFolderResultNode> folderNode = do_QueryInterface(child);
       PRInt64 folderId;
-      rv = folderNode->GetFolderId(&folderId);
+      rv = folderNode->GetItemId(&folderId);
       NS_ENSURE_SUCCESS(rv, rv);
       if (aFolder == mPlacesRoot && (folderId == mToolbarFolder ||
                                folderId == mBookmarksRoot)) {

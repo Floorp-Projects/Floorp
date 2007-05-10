@@ -1923,7 +1923,7 @@ PlacesRemoveFolderTransaction.prototype = {
   },
 
   doTransaction: function PRFT_doTransaction() {
-    var title = this.bookmarks.getFolderTitle(this._id);
+    var title = this.bookmarks.getItemTitle(this._id);
     this.LOG("Remove Folder: " + title);
 
     this._saveFolderContents();
@@ -1939,7 +1939,7 @@ PlacesRemoveFolderTransaction.prototype = {
   undoTransaction: function PRFT_undoTransaction() {
     this._removeTxn.undoTransaction();
     
-    var title = this.bookmarks.getFolderTitle(this._id);
+    var title = this.bookmarks.getItemTitle(this._id);
     this.LOG("UNRemove Folder: " + title);
     
     // Create children forwards to preserve parent-child relationships.
@@ -2123,28 +2123,6 @@ PlacesEditItemDescriptionTransaction.prototype = {
     }
     else if (annos.itemHasAnnotation(this.id, this.DESCRIPTION_ANNO))
       annos.removeItemAnnotation(this.id, this.DESCRIPTION_ANNO);
-  }
-};
-
-/**
- * Edit a folder's title.
- */
-function PlacesEditFolderTitleTransaction(id, newTitle) {
-  this.id = id;
-  this._newTitle = newTitle;
-  this._oldTitle = "";
-  this.redoTransaction = this.doTransaction;
-}
-PlacesEditFolderTitleTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype,
-
-  doTransaction: function PEFTT_doTransaction() {
-    this._oldTitle = this.bookmarks.getFolderTitle(this.id);
-    this.bookmarks.setFolderTitle(this.id, this._newTitle);
-  },
-
-  undoTransaction: function PEFTT_undoTransaction() {
-    this.bookmarks.setFolderTitle(this.id, this._oldTitle);
   }
 };
 
