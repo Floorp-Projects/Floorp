@@ -42,9 +42,6 @@
 #include "gfxRect.h"
 #include "nsStringFwd.h"
 
-// for X11
-#undef Status
-
 typedef struct _cairo_surface cairo_surface_t;
 typedef struct _cairo_user_data_key cairo_user_data_key_t;
 
@@ -127,7 +124,7 @@ public:
 
     virtual void Finish();
 
-    int Status();
+    int CairoStatus();
 
     /* Make sure that the given dimensions don't overflow a 32-bit signed int
      * using 4 bytes per pixel; optionally, make sure that either dimension
