@@ -5656,9 +5656,9 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
       // create the frame and attach it to our frame
       ConstructFrame(aState, content, aParentFrame, aChildItems);
     }
-
-    creator->PostCreateFrames();
   }
+
+  creator->PostCreateFrames();
 
   // process the current pseudo frame state
   if (!aState.mPseudoFrames.IsEmpty()) {
