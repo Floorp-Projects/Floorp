@@ -676,6 +676,20 @@ public:
   static nscoord CharsToCoord(const nsStyleCoord& aStyle,
                               nsIRenderingContext* aRenderingContext,
                               nsStyleContext* aStyleContext);
+
+  /**
+   * Determine if any style coordinate is nonzero
+   *   @param aCoord the style sides
+   *   @return PR_TRUE unless all the coordinates are 0%, 0 or null.
+   */
+  static PRBool HasNonZeroSide(const nsStyleSides& aSides);
+
+  /**
+   * Determine if a widget is likely to require transparency or translucency.
+   *   @param aFrame the frame of a <window>, <popup> or <menupopup> element.
+   *   @return a value suitable for passing to SetWindowTranslucency
+   */
+  static PRBool FrameHasTransparency(nsIFrame* aFrame);
 };
 
 #endif // nsLayoutUtils_h__

@@ -65,6 +65,7 @@
 #include "gfxRect.h"
 #include "nsIImage.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsCSSRendering.h"
 
 #ifdef MOZ_SVG_FOREIGNOBJECT
 #include "nsSVGForeignObjectFrame.h"
@@ -2175,4 +2176,58 @@ nsLayoutUtils::CharsToCoord(const nsStyleCoord& aStyle,
   aRenderingContext->SetTextRunRTL(PR_FALSE);
   aRenderingContext->GetWidth('M', fontWidth);
   return aStyle.GetIntValue() * fontWidth;
+}
+
+static PRBool NonZeroStyleCoord(const nsStyleCoord& aCoord)
+{
+  switch (aCoord.GetUnit()) {
+  case eStyleUnit_Percent:
+    return aCoord.GetPercentValue() > 0;
+  case eStyleUnit_Coord:
+    return aCoord.GetCoordValue() > 0;
+  case eStyleUnit_Null:
+    return PR_FALSE;
+  default:
+    return PR_TRUE;
+  }
+}
+
+/* static */ PRBool
+nsLayoutUtils::HasNonZeroSide(const nsStyleSides& aSides)
+{
+  nsStyleCoord coord;
+  aSides.GetTop(coord);
+  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
+  aSides.GetRight(coord);
+  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
+  aSides.GetBottom(coord);
+  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
+  aSides.GetLeft(coord);
+  if (NonZeroStyleCoord(coord)) return PR_TRUE;    
+  return PR_FALSE;
+}
+
+/* static */ PRBool
+nsLayoutUtils::FrameHasTransparency(nsIFrame* aFrame) {
+  if (aFrame->GetStyleContext()->GetStyleDisplay()->mOpacity < 1.0f)
+    return PR_TRUE;
+
+  const nsStyleBorder* border = aFrame->GetStyleContext()->GetStyleBorder();
+  if (HasNonZeroSide(border->mBorderRadius))
+    return PR_TRUE;
+
+  if (aFrame->IsThemed())
+    return PR_FALSE;
+
+  PRBool isCanvas;
+  const nsStyleBackground* bg;
+  if (!nsCSSRendering::FindBackground(aFrame->PresContext(), aFrame, &bg, &isCanvas))
+    return PR_TRUE;
+  if (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)
+    return PR_TRUE;
+  if (NS_GET_A(bg->mBackgroundColor) < 255)
+    return PR_TRUE;
+  if (bg->mBackgroundClip != NS_STYLE_BG_CLIP_BORDER)
+    return PR_TRUE;
+  return PR_FALSE;
 }

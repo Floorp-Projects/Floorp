@@ -220,14 +220,8 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   widgetData.mBorderStyle = eBorderStyle_default;
   widgetData.clipSiblings = PR_TRUE;
 
-  PRBool isCanvas;
-  const nsStyleBackground* bg;
-  PRBool hasBG =
-    nsCSSRendering::FindBackground(PresContext(), this, &bg, &isCanvas);
-  PRBool viewHasTransparentContent = hasBG &&
-    (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) &&
-    !GetStyleDisplay()->mAppearance && !mInContentShell;
-
+  PRBool viewHasTransparentContent = !mInContentShell &&
+                                     nsLayoutUtils::FrameHasTransparency(this);
   nsIContent* parentContent = GetContent()->GetParent();
   nsIAtom *tag = nsnull;
   if (parentContent)
