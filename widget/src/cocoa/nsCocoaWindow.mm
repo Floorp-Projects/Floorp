@@ -1178,6 +1178,18 @@ NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
     gRollupListener->Rollup();
 }
 
+- (void)windowDidMove:(NSNotification *)aNotification
+{
+  // Dispatch the move event to Gecko
+  nsGUIEvent guiEvent(PR_TRUE, NS_MOVE, mGeckoWindow);
+  nsRect rect;
+  mGeckoWindow->GetScreenBounds(rect);
+  guiEvent.refPoint.x = rect.x;
+  guiEvent.refPoint.y = rect.y;
+  guiEvent.time = PR_IntervalNow();
+  nsEventStatus status = nsEventStatus_eIgnore;
+  mGeckoWindow->DispatchEvent(&guiEvent, status);
+}
 
 - (BOOL)windowShouldClose:(id)sender
 {
