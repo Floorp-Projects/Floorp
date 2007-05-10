@@ -68,7 +68,7 @@ var observer = {
   },
   onItemAdded: function(id, folder, index) {
     this._itemAddedId = id;
-    this._itemAddedFolder = folder;
+    this._itemAddedParent = folder;
     this._itemAddedIndex = index;
   },
   onItemRemoved: function(id, folder, index) {
@@ -87,16 +87,6 @@ var observer = {
     this._itemVisitedVistId = visitID;
     this._itemVisitedTime = time;
   },
-  onFolderAdded: function(folder, parent, index) {
-    this._folderAdded = folder;
-    this._folderAddedParent = parent;
-    this._folderAddedIndex = index;
-  },
-  onFolderRemoved: function(folder, parent, index) {
-    this._folderRemoved = folder;
-    this._folderRemovedParent = parent;
-    this._folderRemovedIndex = index;
-  },
   onFolderMoved: function(folder, oldParent, oldIndex, newParent, newIndex) {
     this._folderMoved = folder;
     this._folderMovedOldParent = oldParent;
@@ -107,14 +97,6 @@ var observer = {
   onFolderChanged: function(folder, property) {
     this._folderChanged = folder;
     this._folderChangedProperty = property;
-  },
-  onSeparatorAdded: function(folder, index) {
-    this._separatorAdded = folder;
-    this._separatorAddedIndex = index;
-  },
-  onSeparatorRemoved: function(folder, index) {
-    this._separatorRemoved = folder;
-    this._separatorRemovedIndex = index;
   },
   QueryInterface: function(iid) {
     if (iid.equals(Ci.nsINavBookmarkObserver) ||
@@ -142,9 +124,9 @@ function run_test() {
   // create a folder to hold all the tests
   // this makes the tests more tolerant of changes to default_places.html
   var testRoot = bmsvc.createFolder(root, "places bookmarks xpcshell tests", bmsvc.DEFAULT_INDEX);
-  do_check_eq(observer._folderAdded, testRoot);
-  do_check_eq(observer._folderAddedParent, root);
-  do_check_eq(observer._folderAddedIndex, bmStartIndex);
+  do_check_eq(observer._itemAddedId, testRoot);
+  do_check_eq(observer._itemAddedParent, root);
+  do_check_eq(observer._itemAddedIndex, bmStartIndex);
   var testStartIndex = 0;
 
   // test getItemIndex for folders
@@ -156,7 +138,7 @@ function run_test() {
   // insert a bookmark 
   var newId = bmsvc.insertItem(testRoot, uri("http://google.com/"), bmsvc.DEFAULT_INDEX);
   do_check_eq(observer._itemAddedId, newId);
-  do_check_eq(observer._itemAddedFolder, testRoot);
+  do_check_eq(observer._itemAddedParent, testRoot);
   do_check_eq(observer._itemAddedIndex, testStartIndex);
   do_check_eq(bmsvc.getBookmarkURI(newId).spec, "http://google.com/");
 
@@ -188,19 +170,20 @@ function run_test() {
 
   // create a folder at a specific index
   var workFolder = bmsvc.createFolder(testRoot, "Work", 0);
-  do_check_eq(observer._folderAdded, workFolder);
-  do_check_eq(observer._folderAddedParent, testRoot);
-  do_check_eq(observer._folderAddedIndex, 0);
+  do_check_eq(observer._itemAddedId, workFolder);
+  do_check_eq(observer._itemAddedParent, testRoot);
+  do_check_eq(observer._itemAddedIndex, 0);
   
   //XXX - test creating a folder at an invalid index
 
-  //XXX - test setFolderTitle
-  //XXX - test getFolderTitle
+  do_check_eq(bmsvc.getItemTitle(workFolder), "Work");
+  bmsvc.setItemTitle(workFolder, "Work #");
+  do_check_eq(bmsvc.getItemTitle(workFolder), "Work #");
 
   // add item into subfolder, specifying index
   var newId2 = bmsvc.insertItem(workFolder, uri("http://developer.mozilla.org/"), 0);
   do_check_eq(observer._itemAddedId, newId2);
-  do_check_eq(observer._itemAddedFolder, workFolder);
+  do_check_eq(observer._itemAddedParent, workFolder);
   do_check_eq(observer._itemAddedIndex, 0);
 
   // change item
@@ -210,7 +193,7 @@ function run_test() {
   // insert item into subfolder
   var newId3 = bmsvc.insertItem(workFolder, uri("http://msdn.microsoft.com/"), bmsvc.DEFAULT_INDEX);
   do_check_eq(observer._itemAddedId, newId3);
-  do_check_eq(observer._itemAddedFolder, workFolder);
+  do_check_eq(observer._itemAddedParent, workFolder);
   do_check_eq(observer._itemAddedIndex, 1);
 
   // change item
@@ -226,19 +209,19 @@ function run_test() {
   // insert item into subfolder
   var newId4 = bmsvc.insertItem(workFolder, uri("http://developer.mozilla.org/"), bmsvc.DEFAULT_INDEX);
   do_check_eq(observer._itemAddedId, newId4);
-  do_check_eq(observer._itemAddedFolder, workFolder);
+  do_check_eq(observer._itemAddedParent, workFolder);
   do_check_eq(observer._itemAddedIndex, 1);
   
   // create folder
   var homeFolder = bmsvc.createFolder(testRoot, "Home", bmsvc.DEFAULT_INDEX);
-  do_check_eq(observer._folderAdded, homeFolder);
-  do_check_eq(observer._folderAddedParent, testRoot);
-  do_check_eq(observer._folderAddedIndex, 2);
+  do_check_eq(observer._itemAddedId, homeFolder);
+  do_check_eq(observer._itemAddedParent, testRoot);
+  do_check_eq(observer._itemAddedIndex, 2);
 
   // insert item
   var newId5 = bmsvc.insertItem(homeFolder, uri("http://espn.com/"), bmsvc.DEFAULT_INDEX);
   do_check_eq(observer._itemAddedId, newId5);
-  do_check_eq(observer._itemAddedFolder, homeFolder);
+  do_check_eq(observer._itemAddedParent, homeFolder);
   do_check_eq(observer._itemAddedIndex, 0);
 
   // change item
@@ -248,7 +231,7 @@ function run_test() {
 
   // insert query item
   var newId6 = bmsvc.insertItem(testRoot, uri("place:domain=google.com&group=1"), bmsvc.DEFAULT_INDEX);
-  do_check_eq(observer._itemAddedFolder, testRoot);
+  do_check_eq(observer._itemAddedParent, testRoot);
   do_check_eq(observer._itemAddedIndex, 3);
 
   // change item
@@ -266,8 +249,7 @@ function run_test() {
 
   // test that the new index is properly stored
   do_check_eq(bmsvc.getItemIndex(workFolder), 1);
-
-  // XXX use getFolderIdForItem to test for the new parent
+  do_check_eq(bmsvc.getFolderIdForItem(workFolder), homeFolder);
 
   // try to get index of the folder from it's ex-parent
   // XXX expose getItemAtIndex(folder, idx) to test that the item was *removed* from the old parent?
@@ -369,11 +351,6 @@ function run_test() {
     rootNode.containerOpen = false;
   } catch(ex) { do_throw("removeFolderChildren(): " + ex); }
 
-  // test getItemURI
-  var newId9 = bmsvc.insertItem(testRoot, uri("http://foo9.com/"), bmsvc.DEFAULT_INDEX);
-  var placeURI = bmsvc.getItemURI(newId9);
-  do_check_eq(placeURI.spec, "place:moz_bookmarks.id=" + newId9 + "&group=3");
-
   // XXX - test folderReadOnly
 
   // test bookmark id in query output
@@ -470,8 +447,8 @@ function run_test() {
   // see bug #369887 for more details
   var newId13 = bmsvc.insertItem(testRoot, uri("http://foobarcheese.com/"), bmsvc.DEFAULT_INDEX);
   do_check_eq(observer._itemAddedId, newId13);
-  do_check_eq(observer._itemAddedFolder, testRoot);
-  do_check_eq(observer._itemAddedIndex, 13);
+  do_check_eq(observer._itemAddedParent, testRoot);
+  do_check_eq(observer._itemAddedIndex, 12);
 
   // set bookmark title
   bmsvc.setItemTitle(newId13, "ZZZXXXYYY");

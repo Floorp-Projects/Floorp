@@ -338,12 +338,8 @@ var gBookmarksObserver = {
   },
   
   onItemVisited: function() { },
-  onFolderAdded: function() { },
-  onFolderRemoved: function() { },
   onFolderMoved: function() { },
   onFolderChanged: function() { },
-  onSeparatorAdded: function() { },
-  onSeparatorRemoved: function() { }
 };
 
 /**

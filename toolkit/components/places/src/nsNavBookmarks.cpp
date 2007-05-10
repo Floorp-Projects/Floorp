@@ -426,7 +426,7 @@ nsNavBookmarks::InitDefaults()
   nsresult rv = mBundle->GetStringFromName(NS_LITERAL_STRING("PlacesBookmarksRootTitle").get(),
                                            getter_Copies(bookmarksTitle));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = SetFolderTitle(mBookmarksRoot, bookmarksTitle);
+  rv = SetItemTitle(mBookmarksRoot, bookmarksTitle);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // create toolbar folder, parent bookmarks root, entitled "Bookmarks Toolbar Folder"
@@ -1068,7 +1068,7 @@ nsNavBookmarks::CreateFolderWithID(PRInt64 aFolder, PRInt64 aParent,
   // CreateContainerWithID rather than here.
   if (aSendNotifications) {
     ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
-                        OnFolderAdded(id, aParent, index))
+                        OnItemAdded(id, aParent, index))
   }
 
   *aIndex = index;
@@ -1106,15 +1106,17 @@ nsNavBookmarks::CreateContainerWithID(PRInt64 aFolder, PRInt64 aParent,
 
   // Send notifications after folder type has been set.
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
-                      OnFolderAdded(*aNewFolder, aParent, localIndex))
+                      OnItemAdded(*aNewFolder, aParent, localIndex))
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::InsertSeparator(PRInt64 aParent, PRInt32 aIndex)
+nsNavBookmarks::InsertSeparator(PRInt64 aParent, PRInt32 aIndex,
+                                PRInt64* aNewItemId)
 {
-  // You can pass -1 to indicate append, but no other negative number is allowed
+  // You can pass -1 to indicate append, but no other negative number is
+  // allowed
   if (aIndex < -1)
     return NS_ERROR_INVALID_ARG;
 
@@ -1142,11 +1144,16 @@ nsNavBookmarks::InsertSeparator(PRInt64 aParent, PRInt32 aIndex)
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  PRInt64 rowId;
+  rv = dbConn->GetLastInsertRowID(&rowId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  *aNewItemId = rowId;
+
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
-                      OnSeparatorAdded(aParent, index))
+                      OnItemAdded(rowId, aParent, index))
 
   return NS_OK;
 }
@@ -1179,7 +1186,7 @@ nsNavBookmarks::RemoveChildAt(PRInt64 aParent, PRInt32 aIndex)
     type = mDBGetChildAt->AsInt32(2);
   }
 
-  if (type == TYPE_BOOKMARK) {
+  if (type == TYPE_BOOKMARK || type == TYPE_SEPARATOR) {
     // Commit this transaction so that we don't notify observers mid-tranaction
     rv = transaction.Commit();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1192,28 +1199,6 @@ nsNavBookmarks::RemoveChildAt(PRInt64 aParent, PRInt32 aIndex)
     NS_ENSURE_SUCCESS(rv, rv);
 
     return RemoveFolder(id);
-  }
-  else if (type == TYPE_SEPARATOR) {
-    nsCOMPtr<mozIStorageStatement> statement;
-    rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_bookmarks WHERE id = ?1"),
-                                 getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = statement->BindInt64Parameter(0, id);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = statement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = AdjustIndices(aParent, aIndex + 1, PR_INT32_MAX, -1);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = transaction.Commit();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
-                        OnSeparatorRemoved(aParent, aIndex))
-    return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
 }
@@ -1304,7 +1289,7 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
   NS_ENSURE_SUCCESS(rv, rv);
 
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
-                      OnFolderRemoved(aFolder, parent, index))
+                      OnItemRemoved(aFolder, parent, index))
 
   return NS_OK;
 }
@@ -1318,7 +1303,7 @@ nsNavBookmarks::GetRemoveFolderTransaction(PRInt64 aFolder, nsITransaction** aRe
   // recreate the folder safely later. 
 
   nsAutoString title;
-  nsresult rv = GetFolderTitle(aFolder, title);
+  nsresult rv = GetItemTitle(aFolder, title);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt64 parent;
@@ -1616,19 +1601,6 @@ nsNavBookmarks::GetItemTitle(PRInt64 aItemId, nsAString &aTitle)
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::GetItemURI(PRInt64 aItemId, nsIURI **aURI)
-{
-  NS_ENSURE_ARG_POINTER(aURI);
-  // Create a place URI for a bookmark or separator
-  //
-  // NOTE: this is not yet supported by the query system
-  nsCAutoString spec("place:moz_bookmarks.id=");
-  spec.AppendInt(aItemId);
-  spec.AppendLiteral("&group=3"); // GROUP_BY_FOLDER
-  return NS_NewURI(aURI, spec);
-}
-
-NS_IMETHODIMP
 nsNavBookmarks::GetBookmarkURI(PRInt64 aItemId, nsIURI **aURI)
 {
   NS_ENSURE_ARG_POINTER(aURI);
@@ -1659,7 +1631,7 @@ nsNavBookmarks::GetBookmarkURI(PRInt64 aItemId, nsIURI **aURI)
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::GetItemType(PRInt64 aItemId, PRInt32 *aType)
+nsNavBookmarks::GetItemType(PRInt64 aItemId, PRUint16 *aType)
 {
   mozStorageStatementScoper scope(mDBGetItemProperties);
 
@@ -1674,47 +1646,8 @@ nsNavBookmarks::GetItemType(PRInt64 aItemId, PRInt32 *aType)
     return NS_ERROR_INVALID_ARG; // invalid bookmark id
   }
 
-  return mDBGetItemProperties->GetInt32(kGetItemPropertiesIndex_Type, aType);
-}
-
-NS_IMETHODIMP
-nsNavBookmarks::SetFolderTitle(PRInt64 aFolder, const nsAString &aTitle)
-{
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_bookmarks SET title = ?2 WHERE id = ?1"),
-                                 getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = statement->BindInt64Parameter(0, aFolder);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindStringParameter(1, aTitle);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = statement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
-                      OnFolderChanged(aFolder, NS_LITERAL_CSTRING("title")))
-
+  *aType = (PRUint16)mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Type);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavBookmarks::GetFolderTitle(PRInt64 aFolder, nsAString &aTitle)
-{
-  mozStorageStatementScoper scope(mDBGetItemProperties);
-  nsresult rv = mDBGetItemProperties->BindInt64Parameter(0, aFolder);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool results;
-  rv = mDBGetItemProperties->ExecuteStep(&results);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!results) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  return mDBGetItemProperties->GetString(kGetItemPropertiesIndex_Title, aTitle);
 }
 
 nsresult

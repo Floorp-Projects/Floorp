@@ -301,7 +301,7 @@ var BookmarkPropertiesPanel = {
           }
           else
             this._itemType = BOOKMARK_FOLDER;
-          this._itemTitle = bookmarks.getFolderTitle(this._folderId);
+          this._itemTitle = bookmarks.getItemTitle(this._folderId);
           break;
       }
 
@@ -370,7 +370,7 @@ var BookmarkPropertiesPanel = {
     this._element("foldersSeparator").hidden = false;
 
     var folderMenuItem = document.createElement("menuitem");
-    var folderTitle = PlacesUtils.bookmarks.getFolderTitle(aFolderId)
+    var folderTitle = PlacesUtils.bookmarks.getItemTitle(aFolderId)
     folderMenuItem.folderId = aFolderId;
     folderMenuItem.setAttribute("label", folderTitle);
     folderMenuItem.className = "menuitem-iconic folder-icon";
@@ -691,12 +691,7 @@ var BookmarkPropertiesPanel = {
    */
   _getEditTitleTransaction:
   function BPP__getEditTitleTransaction(aItemId, aNewTitle) {
-    // XXXmano: remove this once bug 372508 is fixed
-    if (this._itemType == BOOKMARK_ITEM)
-      return new PlacesEditItemTitleTransaction(aItemId, aNewTitle);
-
-    // folder or livemark container
-    return new PlacesEditFolderTitleTransaction(aItemId, aNewTitle);
+    return new PlacesEditItemTitleTransaction(aItemId, aNewTitle);
   },
 
   /**
