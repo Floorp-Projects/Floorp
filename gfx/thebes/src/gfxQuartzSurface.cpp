@@ -42,7 +42,7 @@
 gfxQuartzSurface::gfxQuartzSurface(const gfxSize& size, gfxImageFormat format)
     : mSize(size)
 {
-    if (!CheckSurfaceSize(gfxIntSize((int)size.width, (int)size.height))
+    if (!CheckSurfaceSize(gfxIntSize((int)size.width, (int)size.height)))
         return;
 
     cairo_surface_t *surf = cairo_quartz_surface_create
