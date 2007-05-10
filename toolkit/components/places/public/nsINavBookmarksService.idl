@@ -54,7 +54,7 @@ interface nsITransaction;
  * Observer for bookmark changes.
  */
 
-[scriptable, uuid(860d786d-9bba-4011-a396-486a87af8f07)]
+[scriptable, uuid(582af67b-cde2-4dc2-9ef5-9eb79e224135)]
 interface nsINavBookmarkObserver : nsISupports
 {
   /**
@@ -75,42 +75,52 @@ interface nsINavBookmarkObserver : nsISupports
    * add took place. The rest of the bookmarks will be shifted down, but no
    * additional notifications will be sent.
    *
-   * @param bookmarkId The id of the bookmark that was added.
-   * @param bookmark   The URI that was bookmarked.
-   * @param folder     The folder that the item was added to.
-   * @param index      The item's index in the folder.
+   * @param aBookmarkId
+   *        The id of the bookmark that was added.
+   * @param aFolder
+   *        The folder that the item was added to.
+   * @param aIndex
+   *        The item's index in the folder.
    */
-  void onItemAdded(in PRInt64 bookmarkId, in nsIURI bookmark, in PRInt64 folder, in PRInt32 index);
+  void onItemAdded(in long long aBookmarkId, in long long aFolder,
+                   in long aIndex);
 
   /**
    * Notify this observer that the bookmark was removed.  Called after the
    * actual remove took place. The bookmarks following the index will be
    * shifted up, but no additional notifications will be sent.
    *
-   * @param bookmarkId The id of the bookmark that was removed.
-   * @param bookmark   The URI of the bookmark that will be removed.
-   * @param folder     The folder that the item was removed from.
-   * @param index      The bookmark's index in the folder.
+   * @param aBookmarkId
+   *        The id of the bookmark that was removed.
+   * @param aFolder
+   *        The folder that the item was removed from.
+   * @param aIndex
+   *        The bookmark's index in the folder.
    */
-  void onItemRemoved(in PRInt64 bookmarkId, in nsIURI bookmark, in PRInt64 folder, in PRInt32 index);
+  void onItemRemoved(in long long aBookmarkId, in long long aFolder,
+                     in long aIndex);
 
   /**
    * Notify this observer that a bookmark's information has changed.  This
    * will be called whenever any attributes like "title" are changed.
    * 
-   * @param bookmarkId The id of the bookmark that was changed.
-   * @param bookmark The URI of the bookmark which changed.
-   * @param property The property which changed.
+   * @param aBookmarkId
+   *        The id of the bookmark that was changed.
+   * @param aProperty
+   *        The property which changed.
+   * @param aIsAnnotationProperty
+   *        Is aProperty the name of an item annotation
    *
    * property = "cleartime": (history was deleted, there is no last visit date):
    *                         value = none
    * property = "title": value = new title
    * property = "favicon": value = new "moz-anno" URL of favicon image
-   * property = "uri": value = empty, get the value of the changed bookmark URI
-   *                           from the |bookmark| parameter.
+   * property = "uri": value = new uri spec
+   * aIsAnnotationProperty = true: value = empty string
    */
-  void onItemChanged(in PRInt64 bookmarkId, in nsIURI bookmark, in ACString property,
-                     in AString value);
+  void onItemChanged(in long long aBookmarkId, in ACString aProperty,
+                     in boolean aIsAnnotationProperty,
+                     in AUTF8String aValue);
 
   /**
    * Notify that the item was visited. Normally in bookmarks we use the last
@@ -118,61 +128,82 @@ interface nsINavBookmarkObserver : nsISupports
    * recent, but this is not guaranteed. You should check to see if it's
    * actually more recent before using this new time.
    *
-   * @param bookmarkId The id of the bookmark that was visited.
-   * @see onItemChanged properth = "cleartime" for when all visit dates are
+   * @param aBookmarkId
+   *        The id of the bookmark that was visited.
+   * @see onItemChanged property = "cleartime" for when all visit dates are
    * deleted for the URI.
    */
-  void onItemVisited(in PRInt64 bookmarkId, in nsIURI bookmark, in PRInt64 aVisitID, in PRTime time);
+  void onItemVisited(in long long aBookmarkId, in long long aVisitID,
+                     in PRTime time);
 
   /**
    * Notify this observer that a bookmark folder has been added.
-   *  @param folder     The id of the folder that was added.
-   *  @param parent     The id of the folder's parent.
-   *  @param index      The folder's index inside its parent.
+   *  @param aFolder
+   *         The id of the folder that was added.
+   *  @param aParent
+   *         The id of the folder's parent.
+   *  @param aIndex
+   *         The folder's index inside its parent.
    */
-  void onFolderAdded(in PRInt64 folder, in PRInt64 parent, in PRInt32 index);
+  void onFolderAdded(in long long aFolder, in long long aParent,
+                     in long aIndex);
 
   /**
    * Notify this observer that a bookmark folder has been removed.
-   *  @param folder     The id of the folder that was removed.
-   *  @param parent     The id of the folder's old parent.
-   *  @param index      The folder's old index in its parent.
+   *  @param aFolder
+   *         The id of the folder that was removed.
+   *  @param aParent
+   *         The id of the folder's old parent.
+   *  @param aIndex
+   *         The folder's old index in its parent.
    */
-  void onFolderRemoved(in PRInt64 folder, in PRInt64 parent, in PRInt32 index);
+  void onFolderRemoved(in long long aFolder, in long long aParent,
+                       in long aIndex);
 
   /**
    * Notify this observer that a bookmark folder has been moved.
-   *  @param folder     The id of the folder that was moved.
-   *  @param oldParent  The id of the folder's old parent.
-   *  @param oldIndex   The folder's old index inside oldParent.
-   *  @param newParent  The id of the folder's new parent.
-   *  @param newIndex   The folder's index inside newParent.
+   *  @param aFolder
+   *         The id of the folder that was moved.
+   *  @param aOldParent
+   *         The id of the folder's old parent.
+   *  @param aOldIndex
+   *         The folder's old index inside oldParent.
+   *  @param aNewParent
+   *         The id of the folder's new parent.
+   *  @param aNewIndex
+   *         The folder's index inside newParent.
    */
-  void onFolderMoved(in PRInt64 folder,
-                     in PRInt64 oldParent, in PRInt32 oldIndex,
-                     in PRInt64 newParent, in PRInt32 newIndex);
+  void onFolderMoved(in long long aFolder,
+                     in long long aOldParent, in long aOldIndex,
+                     in long long aNewParent, in long aNewIndex);
 
   /**
    * Notify this observer that a bookmark folder's information has changed.
    * This will be called whenever any attributes like "title" are changed.
-   *  @param folder     The id of the folder that was changed.
-   *  @param property   The property that was changed.
+   *  @param aFolder
+   *         The id of the folder that was changed.
+   *  @param aProperty
+   *         The property that was changed.
    */
-  void onFolderChanged(in PRInt64 folder, in ACString property);
+  void onFolderChanged(in long long aFolder, in ACString aProperty);
 
   /**
    * Notify this observer that a separator has been added.
-   *  @param parent     The id of the separator's parent.
-   *  @param index      The separator's index inside its parent.
+   *  @param aParent
+   *         The id of the separator's parent.
+   *  @param aIndex
+   *         The separator's index inside its parent.
    */
-  void onSeparatorAdded(in PRInt64 parent, in PRInt32 index);
+  void onSeparatorAdded(in long long aParent, in long aIndex);
 
   /**
    * Notify this observer that a separator has been removed.
-   *  @param parent     The id of the separator's parent.
-   *  @param index      The separator's old index in its parent.
+   *  @param aParent
+   *         The id of the separator's parent.
+   *  @param aIndex
+   *         The separator's old index in its parent.
    */
-  void onSeparatorRemoved(in PRInt64 parent, in PRInt32 index);
+  void onSeparatorRemoved(in long long  aParent, in long aIndex);
 };
 
 /**

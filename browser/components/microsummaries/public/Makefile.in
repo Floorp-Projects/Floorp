@@ -44,6 +44,10 @@ include $(DEPTH)/config/autoconf.mk
 MODULE        = microsummaries
 XPIDL_MODULE  = microsummaries
 
+ifdef MOZ_PLACES_BOOKMARKS
 XPIDLSRCS = nsIMicrosummaryService.idl
+else
+XPIDLSRCS = nsIMicrosummaryServiceNonPlaces.idl
+endif
 
 include $(topsrcdir)/config/rules.mk
