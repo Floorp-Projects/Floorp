@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "prmem.h"
+
 #include "gfxImageSurface.h"
 
 #include "cairo.h"
@@ -42,8 +44,15 @@
 gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format) :
     mSize(size), mFormat(format)
 {
-    long stride = ComputeStride();
-    mData = new unsigned char[mSize.height * stride];
+    mStride = ComputeStride();
+
+    if (!CheckSurfaceSize(size))
+        return;
+
+    mData = (unsigned char *) malloc(mSize.height * mStride);
+    if (!mData)
+        return;
+
     mOwnsData = PR_TRUE;
 
     cairo_surface_t *surface =
@@ -51,9 +60,7 @@ gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format) 
                                             (cairo_format_t)format,
                                             mSize.width,
                                             mSize.height,
-                                            stride);
-    mStride = stride;
-
+                                            mStride);
     Init(surface);
 }
 
@@ -71,8 +78,13 @@ gfxImageSurface::gfxImageSurface(cairo_surface_t *csurf)
 
 gfxImageSurface::~gfxImageSurface()
 {
-    if (mOwnsData)
-        delete[] mData;
+    if (!mSurfaceValid)
+        return;
+
+    if (mOwnsData) {
+        free(mData);
+        mData = nsnull;
+    }
 }
 
 long

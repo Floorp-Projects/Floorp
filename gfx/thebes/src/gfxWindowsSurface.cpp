@@ -60,12 +60,11 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, PRBool deleteDC) :
 gfxWindowsSurface::gfxWindowsSurface(const gfxIntSize& size, gfxImageFormat imageFormat) :
     mOwnsDC(PR_FALSE), mWnd(nsnull)
 {
+    if (!CheckSurfaceSize(size))
+        return;
+
     cairo_surface_t *surf = cairo_win32_surface_create_with_dib((cairo_format_t)imageFormat,
                                                                 size.width, size.height);
-    if (!surf || cairo_surface_status(surf)) {
-        fprintf (stderr, "++++++++++++ gfxWindowsSurface: DIB surface creation failed!\n");
-    }
-
     Init(surf);
 
     mDC = cairo_win32_surface_get_dc(CairoSurface());
@@ -74,12 +73,11 @@ gfxWindowsSurface::gfxWindowsSurface(const gfxIntSize& size, gfxImageFormat imag
 gfxWindowsSurface::gfxWindowsSurface(HDC dc, const gfxIntSize& size, gfxImageFormat imageFormat) :
     mOwnsDC(PR_FALSE), mWnd(nsnull)
 {
+    if (!CheckSurfaceSize(size))
+        return;
+
     cairo_surface_t *surf = cairo_win32_surface_create_with_ddb(dc, (cairo_format_t)imageFormat,
                                                                 size.width, size.height);
-    if (!surf || cairo_surface_status(surf)) {
-        fprintf (stderr, "++++++++++++ gfxWindowsSurface: DDB surface creation failed!\n");
-    }
-
     Init(surf);
 
     mDC = cairo_win32_surface_get_dc(CairoSurface());
