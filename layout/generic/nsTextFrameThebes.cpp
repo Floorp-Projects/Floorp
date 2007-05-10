@@ -1795,9 +1795,9 @@ static PRInt32 FindChar(const nsTextFragment* frag,
   } else {
     if (PRUint16(ch) <= 0xFF) {
       const char* str = frag->Get1b() + aOffset;
-      void* p = memchr(str, ch, aLength);
+      const void* p = memchr(str, ch, aLength);
       if (p)
-        return (NS_STATIC_CAST(char*, p) - str) + aOffset;
+        return (NS_STATIC_CAST(const char*, p) - str) + aOffset;
     }
   }
   return -1;
