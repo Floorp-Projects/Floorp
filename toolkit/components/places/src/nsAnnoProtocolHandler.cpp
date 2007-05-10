@@ -157,8 +157,8 @@ nsAnnoProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
     }
   } else {
     // normal handling for annotations
-    rv = annotationService->GetAnnotationBinary(annoURI, annoName, &data,
-                                                &dataLen, mimeType);
+    rv = annotationService->GetPageAnnotationBinary(annoURI, annoName, &data,
+                                                    &dataLen, mimeType);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // disallow annotations with no MIME types

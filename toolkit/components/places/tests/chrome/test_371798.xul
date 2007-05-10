@@ -62,7 +62,7 @@ var observer =
   onEndUpdateBatch: function(){},
   onItemAdded: function(bookmarkId, bookmark, folder, index) {},
   onItemRemoved: function(bookmarkId, bookmark, folder, index){},
-  onItemChanged: function(bookmarkId, bookmark, property, value){
+  onItemChanged: function(bookmarkId, property, isAnnotationProperty, value){
     runTest();
     bmsvc.removeObserver(this);
   },
@@ -93,7 +93,7 @@ function runTest() {
   for (var i=0; i < cc; ++i) {
     var node = rootNode.getChild(i);
     // test that bm1 does not have new title
-    if (node.bookmarkId == bm1)
+    if (node.itemId == bm1)
       ok(node.title != newTitle,
          "Changing a bookmark's title did not affect the title of other bookmarks with the same URI");
   }

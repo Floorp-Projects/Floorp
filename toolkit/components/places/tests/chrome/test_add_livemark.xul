@@ -49,16 +49,16 @@ var observer =
   // nsINavBookmarkObserve
   onBeginUpdateBatch: function(){},
   onEndUpdateBatch: function(){},
-  onItemAdded: function(bookmarkId, bookmark, folder, index) {
-    if (bookmark.spec == "http://example.org/2003/12/13/atom03") {
+  onItemAdded: function(itemId, folder, index) {
+    if (bmsvc.getBookmarkURI(itemId).spec == "http://example.org/2003/12/13/atom03") {
       is(folder, gLivemarkId, "Livemark added to correct folder");
-      this._lastBookmarkId = bookmarkId;
+      this._lastBookmarkId = itemId;
       bmsvc.removeObserver(this);
     }
   },
-  onItemRemoved: function(bookmarkId, bookmark, folder, index){},
-  onItemChanged: function(bookmarkId, bookmark, property, value){},
-  onItemVisited: function(bookmarkId, bookmark, aVisitID, time){},
+  onItemRemoved: function(itemId, folder, index){},
+  onItemChanged: function(itemId, property, isAnnotationProperty, value){},
+  onItemVisited: function(itemId, aVisitID, time){},
   onFolderAdded: function(folder, parent, index){},
   onFolderRemoved: function(folder, parent, index){},
   onFolderMoved: function(folder, oldParent, oldIndex, newParent, newIndex){},
@@ -67,18 +67,20 @@ var observer =
   onSeparatorRemoved: function(parent, index){},
 
   // nsIAnnotationObserver
-  onAnnotationSet: function(uri, name) {
-    if (name == "livemark/bookmarkFeedURI") {
+  onItemAnnotationSet: function(aItemId, aAnnotationName) {
+    if (aAnnotationName == "livemark/bookmarkFeedURI") {
       ok("_lastBookmarkId" in this,
          "Unexpected livemark/bookmarkFeedURI annotation set");
-      var placeURI = bmsvc.getItemURI(this._lastBookmarkId);
-      ok(placeURI.equals(uri),
-        "livemark/bookmarkFeedURI annotation set on the wrong URI");
+      ok(this._lastBookmarkId == aItemId,
+         "livemark/bookmarkFeedURI annotation set on the wrong item");
       annosvc.removeObserver(this);
       SimpleTest.finish();
     }
   },
-  onAnnotationRemoved: function(uri, name) { }
+
+  onItemAnnotationRemoved: function(aItemId, aAnnotationName) { },
+  onPageAnnotationSet: function(uri, name) { },
+  onPageAnnotationRemoved: function(uri, name) { }
 };
 
 var root = bmsvc.bookmarksRoot;

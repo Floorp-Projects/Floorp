@@ -50,7 +50,7 @@ interface nsINavHistoryResult;
 interface nsITreeColumn;
 interface nsIWritablePropertyBag;
 
-[scriptable, uuid(b21008ef-995d-4bd9-97ae-1f23868930ed)]
+[scriptable, uuid(2cce631e-d7dd-4162-a05b-e8ecfbc34367)]
 interface nsINavHistoryResultNode : nsISupports
 {
   /**
@@ -159,10 +159,11 @@ interface nsINavHistoryResultNode : nsISupports
   readonly attribute PRInt32 bookmarkIndex;
 
   /**
-   * If the node is a bookmark, this value is the row ID of that bookmark
-   * in the database. For items not in a bookmark folder, this value is -1.
+   * If the node is an item (bookmark, folder or a separator) this value is the
+   * row ID of that bookmark in the database. For other nodes, this value is
+   * set to -1.
    */
-  readonly attribute PRInt64 bookmarkId;
+  readonly attribute PRInt64 itemId;
 };
 
 

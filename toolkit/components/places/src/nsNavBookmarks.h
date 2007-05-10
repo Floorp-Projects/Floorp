@@ -40,6 +40,7 @@
 #define nsNavBookmarks_h_
 
 #include "nsINavBookmarksService.h"
+#include "nsIAnnotationService.h"
 #include "nsIStringBundle.h"
 #include "nsITransaction.h"
 #include "nsNavHistory.h"
@@ -49,12 +50,14 @@
 class nsIOutputStream;
 
 class nsNavBookmarks : public nsINavBookmarksService,
-                       public nsINavHistoryObserver
+                       public nsINavHistoryObserver,
+                       public nsIAnnotationObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVBOOKMARKSSERVICE
   NS_DECL_NSINAVHISTORYOBSERVER
+  NS_DECL_NSIANNOTATIONOBSERVER
 
   nsNavBookmarks();
   nsresult Init();

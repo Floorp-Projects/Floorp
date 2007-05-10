@@ -83,7 +83,7 @@ var gMoveBookmarksDialog = {
       }
       else if (PlacesUtils.nodeIsBookmark(this._nodes[i])) {
         transactions.push(new
-          PlacesMoveItemTransaction(this._nodes[i].bookmarkId,
+          PlacesMoveItemTransaction(this._nodes[i].itemId,
                                     PlacesUtils._uri(this._nodes[i].uri),
                                     parentId, nodeIndex, selectedFolderID, -1));
       }

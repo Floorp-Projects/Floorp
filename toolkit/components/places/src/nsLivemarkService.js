@@ -124,21 +124,14 @@ function LivemarkService() {
   // this is giving a reentrant getService warning in XPCShell. bug 194568.
   this._ans = Cc[AS_CONTRACTID].getService(Ci.nsIAnnotationService);
 
-  var livemarks = this._ans.getPagesWithAnnotation(LMANNO_FEEDURI, {});
+  var livemarks = this._ans.getItemsWithAnnotation(LMANNO_FEEDURI, {});
   for (var i = 0; i < livemarks.length; i++) {
     var feedURI =
       gIoService.newURI(
-        this._ans.getAnnotationString(livemarks[i], LMANNO_FEEDURI),
+        this._ans.getItemAnnotationString(livemarks[i], LMANNO_FEEDURI),
         null, null
       );
-    var queries = { }, options = { };
-    this._history.queryStringToQueries(livemarks[i].spec, queries, {}, options);
-    var count = {};
-    var folders = queries.value[0].getFolders(count);
-    if (!(queries.value.length && queries.value.length == 1) && 
-        count.value != 1)
-      continue; // invalid folder URI (should identify exactly one folder)
-    this._pushLivemark(folders[0], livemarks[i], feedURI);
+    this._pushLivemark(livemarks[i], feedURI);
   }
 }
 
@@ -157,9 +150,8 @@ LivemarkService.prototype = {
   },
 
   // returns new length of _livemarks
-  _pushLivemark: function LS__pushLivemark(folderId, folderURI, feedURI) {
-    return this._livemarks.push({folderId: folderId, folderURI: folderURI,
-                                 feedURI: feedURI});
+  _pushLivemark: function LS__pushLivemark(folderId, feedURI) {
+    return this._livemarks.push({folderId: folderId, feedURI: feedURI});
   },
 
   _getLivemarkIndex: function LS__getLivemarkIndex(folderId) {
@@ -184,25 +176,6 @@ LivemarkService.prototype = {
   },
 
   deleteLivemarkChildren: function LS_deleteLivemarkChildren(folderId) {
-    var query = this._history.getNewQuery();
-    query.setFolders([folderId], 1);
-    var options = this._history.getNewQueryOptions();
-    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
-    var result = this._history.executeQuery(query, options);
-    var root = result.root;
-    root.containerOpen = true;
-    var cc = root.childCount;
-    for (var i=0; i < cc; ++i) {
-      try {
-        var node = root.getChild(i);
-        var placeURI = this._bms.getItemURI(node.bookmarkId);
-        this._ans.removeAnnotation(placeURI, LMANNO_BMANNO);
-      }
-      catch (ex) {
-        // continue
-      }
-    }
-
     this._bms.removeFolderChildren(folderId);
   },
 
@@ -224,8 +197,8 @@ LivemarkService.prototype = {
       // then we assume it's never been loaded.  We perform this
       // check even when the update is being forced, in case the
       // livemark has somehow never been loaded.
-      var exprTime = this._ans.getAnnotationInt64(livemark.feedURI,
-                                                  LMANNO_EXPIRATION);
+      var exprTime = this._ans.getPageAnnotationInt64(livemark.feedURI,
+                                                      LMANNO_EXPIRATION);
       if (!forceUpdate && exprTime > Date.now()) {
         // no need to refresh
         livemark.locked = false;
@@ -268,12 +241,12 @@ LivemarkService.prototype = {
     // Don't add livemarks to livemarks
     if (this.isLivemark(folder))
       throw Cr.NS_ERROR_INVALID_ARG;
-    var [livemarkID, livemarkURI] =
-      this._createFolder(this._bms, folder, name, siteURI, feedURI, index);
+    var livemarkID = this._createFolder(this._bms, folder, name, siteURI,
+                                        feedURI, index);
   
     // kick off http fetch
     this._updateLivemarkChildren(
-      this._pushLivemark(livemarkID, livemarkURI, feedURI) - 1,
+      this._pushLivemark(livemarkID, feedURI) - 1,
       false
     );
 
@@ -283,10 +256,10 @@ LivemarkService.prototype = {
   createLivemarkFolderOnly:
   function LS_createLivemarkFolderOnly(bms, folder, name, siteURI,
                                        feedURI, index) {
-    var [livemarkID, livemarkURI] =
-      this._createFolder(bms, folder, name, siteURI, feedURI, index);
+    var livemarkID = this._createFolder(bms, folder, name, siteURI, feedURI,
+                                        index);
     this.insertLivemarkLoadingItem(bms, livemarkID);
-    this._pushLivemark(livemarkID, livemarkURI, feedURI);
+    this._pushLivemark(livemarkID, feedURI);
     
     return livemarkID;
   },
@@ -294,27 +267,26 @@ LivemarkService.prototype = {
   _createFolder:
   function LS__createFolder(bms, folder, name, siteURI, feedURI, index) {
     var livemarkID = bms.createContainer(folder, name, LS_CONTRACTID, index);
-    var livemarkURI = bms.getFolderURI(livemarkID);
 
     // Add an annotation to map the folder URI to the livemark feed URI
-    this._ans.setAnnotationString(livemarkURI, LMANNO_FEEDURI, feedURI.spec, 0,
-                                  this._ans.EXPIRE_NEVER);
+    this._ans.setItemAnnotationString(livemarkID, LMANNO_FEEDURI, feedURI.spec, 0,
+                                      this._ans.EXPIRE_NEVER);
     // Set the favicon
     var faviconService = Cc[FAV_CONTRACTID].getService(Ci.nsIFaviconService);
+    var livemarkURI = bms.getFolderURI(livemarkID);
     faviconService.setFaviconUrlForPage(livemarkURI, this._iconURI);
 
     if (siteURI) {
       // Add an annotation to map the folder URI to the livemark site URI
-      this._ans.setAnnotationString(livemarkURI, LMANNO_SITEURI, siteURI.spec,
-                                    0, this._ans.EXPIRE_NEVER);
+      this._ans.setItemAnnotationString(livemarkID, LMANNO_SITEURI, siteURI.spec,
+                                        0, this._ans.EXPIRE_NEVER);
     }
 
-    return [livemarkID, livemarkURI];
+    return livemarkID;
   },
 
   isLivemark: function LS_isLivemark(folder) {
-    var folderURI = this._bms.getFolderURI(folder);
-    return this._ans.hasAnnotation(folderURI, LMANNO_FEEDURI);
+    return this._ans.itemHasAnnotation(folder, LMANNO_FEEDURI);
   },
 
   _ensureLivemark: function LS__ensureLivemark(container) {
@@ -330,11 +302,10 @@ LivemarkService.prototype = {
   */
   getSiteURI: function LS_getSiteURI(container) {
     this._ensureLivemark(container);
-    var containerURI = this._bms.getFolderURI(container);
     var siteURIString;
     try { 
       siteURIString =
-        this._ans.getAnnotationString(containerURI, LMANNO_SITEURI);
+        this._ans.getItemAnnotationString(container, LMANNO_SITEURI);
     }
     catch (ex) {
       return null;
@@ -345,31 +316,28 @@ LivemarkService.prototype = {
 
   setSiteURI: function LS_setSiteURI(container, siteURI) {
     this._ensureLivemark(container);
-    var containerURI = this._bms.getFolderURI(container);
     
     if (!siteURI) {
-      this._ans.removeAnnotation(containerURI, LMANNO_SITEURI);
+      this._ans.removeItemAnnotation(container, LMANNO_SITEURI);
       return;
     }
 
-    this._ans.setAnnotationString(containerURI, LMANNO_SITEURI, siteURI.spec,
-                                  0, this._ans.EXPIRE_NEVER);
+    this._ans.setItemAnnotationString(container, LMANNO_SITEURI, siteURI.spec,
+                                      0, this._ans.EXPIRE_NEVER);
   },
 
   getFeedURI: function LS_getFeedURI(container) {
-    var containerURI = this._bms.getFolderURI(container);
-    return gIoService.newURI(this._ans.getAnnotationString(containerURI, 
-                                                           LMANNO_FEEDURI),
+    return gIoService.newURI(this._ans.getItemAnnotationString(container,
+                                                               LMANNO_FEEDURI),
                              null, null);
   },
 
   setFeedURI: function LS_setFeedURI(container, feedURI) {
     if (!feedURI)
       throw Cr.NS_ERROR_INVALID_ARG;
-    
-    var containerURI = this._bms.getFolderURI(container);
-    this._ans.setAnnotationString(containerURI, LMANNO_FEEDURI, feedURI.spec,
-                                  0, this._ans.EXPIRE_NEVER);
+
+    this._ans.setItemAnnotationString(container, LMANNO_FEEDURI, feedURI.spec,
+                                      0, this._ans.EXPIRE_NEVER);
 
     // now update our internal table
     var livemarkIndex = this._getLivemarkIndex(container);  
@@ -391,11 +359,7 @@ LivemarkService.prototype = {
   onContainerRemoving: function LS_onContainerRemoving(container) {
     var livemarkIndex = this._getLivemarkIndex(container);
     var livemark = this._livemarks[livemarkIndex];
-    
-    // Remove the annotations that link the folder URI to the 
-    // Feed URI and Site URI
-    this._ans.removeAnnotation(livemark.folderURI, LMANNO_FEEDURI);
-    this._ans.removeAnnotation(livemark.folderURI, LMANNO_SITEURI);
+
     var stillInUse = false;
     stillInUse = this._livemarks.some(
                  function(mark) { return mark.feedURI.equals(livemark.feedURI) } 
@@ -403,7 +367,7 @@ LivemarkService.prototype = {
     if (!stillInUse) {
       // ??? the code in the C++ had "livemark_expiration" as
       // the second arg... that must be wrong
-      this._ans.removeAnnotation(livemark.feedURI, LMANNO_EXPIRATION);
+      this._ans.removePageAnnotation(livemark.feedURI, LMANNO_EXPIRATION);
     }
 
     if (livemark.loadGroup) 
@@ -412,35 +376,8 @@ LivemarkService.prototype = {
     this.deleteLivemarkChildren(container);
   },
 
-  // XXXdietrich seems like the mutability of "place:" URIs is the only reason 
-  // this code has to exist, which is kinda high-maintenance. 
   onContainerMoved:
-  function LS_onContainerMoved(container, newFolder, newIndex) {
-    var index = this._getLivemarkIndex(container);
-    
-    // Update the annotation that maps the folder URI to the livemark feed URI
-    var newURI = this._bms.getFolderURI(container);
-    var oldURI = this._livemarks[index].folderURI;
-    var feedURIString = this._ans.getAnnotationString(oldURI, LMANNO_FEEDURI);
-    this._ans.removeAnnotation(oldURI, LMANNO_FEEDURI);
-    this._ans.setAnnotationString(newURI, LMANNO_FEEDURI, feedURIString, 0, 
-                            this._ans.EXPIRE_NEVER);
-    
-    // Update the annotation that maps the folder URI to the livemark site URI
-    var siteURIString;
-    try {
-      siteURIString = this._ans.getAnnotationString(oldURI, LMANNO_SITEURI);
-    }
-    catch (ex) {
-      // will throw if no annotation
-    }
-
-    if (siteURIString) {
-      this._ans.removeAnnotation(oldURI, LMANNO_SITEURI);
-      this._ans.setAnnotationString(newURI, LMANNO_SITEURI, siteURIString, 0,
-                              this._ans.EXPIRE_NEVER);
-    }
-  },
+  function LS_onContainerMoved(container, newFolder, newIndex) { },
 
   childrenReadOnly: true,
 
@@ -561,9 +498,8 @@ LivemarkLoadListener.prototype = {
   function LS_insertLivemarkChild(folderId, uri, title) {
     var id = this._bms.insertItem(folderId, uri, this._bms.DEFAULT_INDEX);
     this._bms.setItemTitle(id, title);
-    var placeURI = this._bms.getItemURI(id);
-    this._ans.setAnnotationString(placeURI, LMANNO_BMANNO, uri.spec, 0,
-                                  this._ans.EXPIRE_NEVER);
+    this._ans.setItemAnnotationString(id, LMANNO_BMANNO, uri.spec, 0,
+                                      this._ans.EXPIRE_NEVER);
   },
 
   /**
@@ -633,9 +569,9 @@ LivemarkLoadListener.prototype = {
 
   _setResourceTTL: function LLL__setResourceTTL(seconds) {
     var exptime = Date.now() + seconds;
-    this._ans.setAnnotationInt64(this._livemark.feedURI,
-                                 LMANNO_EXPIRATION, exptime, 0,
-                                 Ci.nsIAnnotationService.EXPIRE_NEVER);
+    this._ans.setPageAnnotationInt64(this._livemark.feedURI,
+                                     LMANNO_EXPIRATION, exptime, 0,
+                                     Ci.nsIAnnotationService.EXPIRE_NEVER);
   },
   
   /**

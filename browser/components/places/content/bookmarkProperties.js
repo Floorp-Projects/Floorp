@@ -125,7 +125,7 @@ var BookmarkPropertiesPanel = {
   _action: null,
   _itemType: null,
   _folderId: null,
-  _bookmarkId: null,
+  _bookmarkId: -1,
   _bookmarkURI: null,
   _loadBookmarkInSidebar: false,
   _itemTitle: "",
@@ -267,7 +267,6 @@ var BookmarkPropertiesPanel = {
       const annos = PlacesUtils.annotations;
       const bookmarks = PlacesUtils.bookmarks;
 
-      var placeURI;
       switch (dialogInfo.type) {
         case "bookmark":
           NS_ASSERT("bookmarkId" in dialogInfo);
@@ -275,7 +274,6 @@ var BookmarkPropertiesPanel = {
           this._action = ACTION_EDIT;
           this._itemType = BOOKMARK_ITEM;
           this._bookmarkId = dialogInfo.bookmarkId;
-          placeURI = bookmarks.getItemURI(this._bookmarkId);
 
           this._bookmarkURI = bookmarks.getBookmarkURI(this._bookmarkId);
           this._itemTitle = bookmarks.getItemTitle(this._bookmarkId);
@@ -286,7 +284,7 @@ var BookmarkPropertiesPanel = {
 
           // Load In Sidebar
           this._loadBookmarkInSidebar =
-            annos.hasAnnotation(placeURI, LOAD_IN_SIDEBAR_ANNO);
+            annos.itemHasAnnotation(this._bookmarkId, LOAD_IN_SIDEBAR_ANNO);
 
           break;
         case "folder":
@@ -294,7 +292,6 @@ var BookmarkPropertiesPanel = {
 
           this._action = ACTION_EDIT;
           this._folderId = dialogInfo.folderId;
-          placeURI = bookmarks.getFolderURI(this._folderId);
 
           const livemarks = PlacesUtils.livemarks;
           if (livemarks.isLivemark(this._folderId)) {
@@ -309,9 +306,11 @@ var BookmarkPropertiesPanel = {
       }
 
       // Description
-      if (annos.hasAnnotation(placeURI, DESCRIPTION_ANNO)) {
-        this._itemDescription =
-          annos.getAnnotationString(placeURI, DESCRIPTION_ANNO);
+      // XXXmano: unify the two id fields
+      var itemId = dialogInfo.type == "bookmark" ? this._bookmarkId : this._folderId;
+      if (annos.itemHasAnnotation(itemId, DESCRIPTION_ANNO)) {
+        this._itemDescription = annos.getItemAnnotationString(itemId,
+                                                              DESCRIPTION_ANNO);
       }
     }
   },
@@ -382,10 +381,10 @@ var BookmarkPropertiesPanel = {
   _initFolderMenuList: function BPP__initFolderMenuList() {
     // List of recently used folders:
     var annos = PlacesUtils.annotations;
-    var folderURIs = annos.getPagesWithAnnotation(LAST_USED_ANNO, { });
+    var folderIds = annos.getItemsWithAnnotation(LAST_USED_ANNO, { });
 
     // Hide the folders-separator if no folder is annotated as recently-used
-    if (folderURIs.length == 0) {
+    if (folderIds.length == 0) {
       this._element("foldersSeparator").hidden = true;
       return;
     }
@@ -399,17 +398,9 @@ var BookmarkPropertiesPanel = {
      * set. Then we sort it descendingly based on the time field.
      */
     var folders = [];
-    var history = PlacesUtils.history;
-    for (var i=0; i < folderURIs.length; i++) {
-      var queryString = folderURIs[i].spec;
-      var queries = { };
-      history.queryStringToQueries(queryString, queries, { /* length */ },
-                                   { /* options */ });
-      var folderId = queries.value[0].getFolders({})[0];
-      NS_ASSERT(queries.value[0].folderCount == 1,
-                "Bogus uri is annotated with the LAST_USED_ANNO annotation");
-      var lastUsed = annos.getAnnotationInt64(folderURIs[i], LAST_USED_ANNO);
-      folders.push({ folderId: folderId, lastUsed: lastUsed });
+    for (var i=0; i < folderIds.length; i++) {
+      var lastUsed = annos.getItemAnnotationInt64(folderIds[i], LAST_USED_ANNO);
+      folders.push({ folderId: folderIds[i], lastUsed: lastUsed });
     }
     folders.sort(function(a, b) {
       if (b.lastUsed < a.lastUsed)
@@ -551,14 +542,9 @@ var BookmarkPropertiesPanel = {
     }
 
     var itemToSelect = userEnteredNameField;
-    var placeURI = null;
-    if (this._action == ACTION_EDIT) {
-      NS_ASSERT(this._bookmarkId, "No bookmark identifier");
-      placeURI = PlacesUtils.bookmarks.getItemURI(this._bookmarkId);
-    }
     try {
       this._microsummaries = this._mss.getMicrosummaries(this._bookmarkURI,
-                                                         placeURI);
+                                                         this._bookmarkId);
     }
     catch(ex) {
       // getMicrosummaries will throw an exception in at least two cases:
@@ -583,7 +569,7 @@ var BookmarkPropertiesPanel = {
           var menuItem = this._createMicrosummaryMenuItem(microsummary);
 
           if (this._action == ACTION_EDIT &&
-              this._mss.isMicrosummary(placeURI, microsummary))
+              this._mss.isMicrosummary(this._bookmarkId, microsummary))
             itemToSelect = menuItem;
 
           menupopup.appendChild(menuItem);
@@ -824,10 +810,9 @@ var BookmarkPropertiesPanel = {
       // microsummary, but the bookmark previously had one, or the user
       // selected a microsummary which is not the one the bookmark previously
       // had.
-      var placeURI = PlacesUtils.bookmarks.getItemURI(itemId);
-      if ((newMicrosummary == null && this._mss.hasMicrosummary(placeURI)) ||
+      if ((newMicrosummary == null && this._mss.hasMicrosummary(itemId)) ||
           (newMicrosummary != null &&
-           !this._mss.isMicrosummary(placeURI, newMicrosummary))) {
+           !this._mss.isMicrosummary(itemId, newMicrosummary))) {
         transactions.push(
           new PlacesEditBookmarkMicrosummaryTransaction(itemId,
                                                         newMicrosummary));
@@ -1112,11 +1097,10 @@ var BookmarkPropertiesPanel = {
   function BPP__markFolderAsRecentlyUsed(aFolderId) {
     // We'll figure out when/if to expire the annotation if it turns out
     // we keep this recently-used-folders implementation
-    var folderURI = PlacesUtils.bookmarks.getFolderURI(aFolderId);
     PlacesUtils.annotations
-               .setAnnotationInt64(folderURI, LAST_USED_ANNO,
-                                   new Date().getTime(), 0,
-                                   Ci.nsIAnnotationService.EXPIRE_NEVER);
+               .setItemAnnotationInt64(aFolderId, LAST_USED_ANNO,
+                                       new Date().getTime(), 0,
+                                       Ci.nsIAnnotationService.EXPIRE_NEVER);
   },
 
   newFolder: function BPP_newFolder() {

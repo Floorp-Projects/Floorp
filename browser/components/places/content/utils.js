@@ -218,7 +218,8 @@ var PlacesUtils = {
    */
   nodeIsBookmark: function PU_nodeIsBookmark(aNode) {
     NS_ASSERT(aNode, "null node");
-    return aNode.bookmarkId > 0;
+    return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_URI &&
+           aNode.itemId != -1;
   },
 
   /**
@@ -369,8 +370,8 @@ var PlacesUtils = {
   */
   nodeIsLivemarkItem: function PU_nodeIsLivemarkItem(aNode) {
     if (this.nodeIsBookmark(aNode)) {
-      var placeURI = this.bookmarks.getItemURI(aNode.bookmarkId);
-      if (this.annotations.hasAnnotation(placeURI, "livemark/bookmarkFeedURI"))
+      if (this.annotations
+              .itemHasAnnotation(aNode.itemId, "livemark/bookmarkFeedURI"))
         return true;
     }
 
@@ -430,15 +431,15 @@ var PlacesUtils = {
     case this.TYPE_X_MOZ_PLACE:
     case this.TYPE_X_MOZ_PLACE_SEPARATOR:
       // Data is encoded like this:
-      // bookmarks folder: <folderId>\n<>\n<parentId>\n<indexInParent>
+      // bookmarks folder: <itemId>\n<>\n<parentId>\n<indexInParent>
       // uri:              0\n<uri>\n<parentId>\n<indexInParent>
-      // bookmark:         <bookmarkId>\n<uri>\n<parentId>\n<indexInParent>
+      // bookmark:         <itemId>\n<uri>\n<parentId>\n<indexInParent>
       // separator:        0\n<>\n<parentId>\n<indexInParent>
       var wrapped = "";
       if (this.nodeIsFolder(aNode))
         wrapped += asFolder(aNode).folderId + NEWLINE;
       else if (this.nodeIsBookmark(aNode))
-        wrapped += aNode.bookmarkId + NEWLINE;
+        wrapped += aNode.itemId + NEWLINE;
       else
         wrapped += "0" + NEWLINE;
 
@@ -538,6 +539,7 @@ var PlacesUtils = {
         if (self.nodeIsFolder(node)) {
           var nodeFolderId = asFolder(node).folderId;
           var title = self.bookmarks.getFolderTitle(nodeFolderId);
+          // XXXmano: use item-annotations once bug 372508 is fixed
           var annos = self.getAnnotationsForURI(self._uri(node.uri));
           var folderItemsTransactions =
             getChildItemsTransactions(nodeFolderId);
@@ -545,7 +547,7 @@ var PlacesUtils = {
                                                   folderItemsTransactions);
         }
         else if (self.nodeIsBookmark(node)) {
-          txn = self._getBookmarkItemCopyTransaction(node.bookmarkId, -1,
+          txn = self._getBookmarkItemCopyTransaction(node.itemId, -1,
                                                      aIndex);
         }
         else if (self.nodeIsURI(node) || self.nodeIsQuery(node)) {
@@ -564,8 +566,7 @@ var PlacesUtils = {
     }
 
     var title = this.bookmarks.getFolderTitle(aData.id);
-    var annos =
-      this.getAnnotationsForURI(this.bookmarks.getFolderURI(aData.id));
+    var annos = this.getAnnotationsForItem(aData.id);
     var createTxn =
       new PlacesCreateFolderTransaction(title, aContainer, aIndex, annos,
                                         getChildItemsTransactions(aData.id));
@@ -1112,23 +1113,69 @@ var PlacesUtils = {
     var annoNames = annosvc.getPageAnnotationNames(aURI, {});
     for (var i = 0; i < annoNames.length; i++) {
       var flags = {}, exp = {}, mimeType = {}, storageType = {};
-      annosvc.getAnnotationInfo(aURI, annoNames[i], flags, exp, mimeType, storageType);
+      annosvc.getPageAnnotationInfo(aURI, annoNames[i], flags, exp, mimeType, storageType);
       switch (storageType.value) {
         case annosvc.TYPE_INT32:
-          val = annosvc.getAnnotationInt32(aURI, annoNames[i]);
+          val = annosvc.getPageAnnotationInt32(aURI, annoNames[i]);
           break;
         case annosvc.TYPE_INT64:
-          val = annosvc.getAnnotationInt64(aURI, annoNames[i]);
+          val = annosvc.getPageAnnotationInt64(aURI, annoNames[i]);
           break;
         case annosvc.TYPE_DOUBLE:
-          val = annosvc.getAnnotationDouble(aURI, annoNames[i]);
+          val = annosvc.getPageAnnotationDouble(aURI, annoNames[i]);
           break;
         case annosvc.TYPE_STRING:
-          val = annosvc.getAnnotationString(aURI, annoNames[i]);
+          val = annosvc.getPageAnnotationString(aURI, annoNames[i]);
           break;
         case annosvc.TYPE_BINARY:
           var data = {}, length = {}, mimeType = {};
-          annosvc.getAnnotationBinary(aURI, annoNames[i], data, length, mimeType);
+          annosvc.getPageAnnotationBinary(aURI, annoNames[i], data, length, mimeType);
+          val = data.value;
+          break;
+      }
+      annos.push({name: annoNames[i],
+                  flags: flags.value,
+                  expires: exp.value,
+                  mimeType: mimeType.value,
+                  type: storageType.value,
+                  value: val});
+    }
+    return annos;
+  },
+
+  /**
+   * Fetch all annotations for a URI, including all properties of each
+   * annotation which would be required to recreate it.
+   * @param aItemId
+   *        The identifier of the itme for which annotations are to be
+   *        retrieved.
+   * @return Array of objects, each containing the following properties:
+   *         name, flags, expires, mimeType, type, value
+   */
+  getAnnotationsForItem: function PU_getAnnotationsForItem(aItemId) {
+    var annosvc = this.annotations;
+    var annos = [], val = null;
+    var annoNames = annosvc.getItemAnnotationNames(aItemId, {});
+    for (var i = 0; i < annoNames.length; i++) {
+      var flags = {}, exp = {}, mimeType = {}, storageType = {};
+      annosvc.getItemAnnotationInfo(aItemId, annoNames[i], flags, exp,
+                                    mimeType, storageType);
+      switch (storageType.value) {
+        case annosvc.TYPE_INT32:
+          val = annosvc.getItemAnnotationInt32(aItemId, annoNames[i]);
+          break;
+        case annosvc.TYPE_INT64:
+          val = annosvc.getItemAnnotationInt64(aItemId, annoNames[i]);
+          break;
+        case annosvc.TYPE_DOUBLE:
+          val = annosvc.getItemAnnotationDouble(aItemId, annoNames[i]);
+          break;
+        case annosvc.TYPE_STRING:
+          val = annosvc.getItemAnnotationString(aItemId, annoNames[i]);
+          break;
+        case annosvc.TYPE_BINARY:
+          var data = {}, length = {}, mimeType = {};
+          annosvc.getItemAnnotationBinary(aItemId, annoNames[i], data, length, mimeType);
           val = data.value;
           break;
       }
@@ -1145,7 +1192,7 @@ var PlacesUtils = {
   /**
    * Annotate a URI with a batch of annotations.
    * @param aURI
-   *        The URI for which annotations are to be retrieved.
+   *        The URI for which annotations are to be set.
    * @param aAnnotations
    *        Array of objects, each containing the following properties:
    *        name, flags, expires, type, mimeType (only used for binary
@@ -1156,25 +1203,63 @@ var PlacesUtils = {
     aAnnos.forEach(function(anno) {
       switch (anno.type) {
         case annosvc.TYPE_INT32:
-          annosvc.setAnnotationInt32(aURI, anno.name, anno.value,
-                                     anno.flags, anno.expires);
+          annosvc.setPageAnnotationInt32(aURI, anno.name, anno.value,
+                                         anno.flags, anno.expires);
           break;
         case annosvc.TYPE_INT64:
-          annosvc.setAnnotationInt64(aURI, anno.name, anno.value,
-                                     anno.flags, anno.expires);
+          annosvc.setPageAnnotationInt64(aURI, anno.name, anno.value,
+                                         anno.flags, anno.expires);
           break;
         case annosvc.TYPE_DOUBLE:
-          annosvc.setAnnotationDouble(aURI, anno.name, anno.value,
-                                      anno.flags, anno.expires);
+          annosvc.setPageAnnotationDouble(aURI, anno.name, anno.value,
+                                          anno.flags, anno.expires);
           break;
         case annosvc.TYPE_STRING:
-          annosvc.setAnnotationString(aURI, anno.name, anno.value,
-                                      anno.flags, anno.expires);
+          annosvc.setPageAnnotationString(aURI, anno.name, anno.value,
+                                          anno.flags, anno.expires);
           break;
         case annosvc.TYPE_BINARY:
-          annosvc.setAnnotationBinary(aURI, anno.name, anno.value,
-                                      anno.value.length, anno.mimeType,
-                                      anno.flags, anno.expires);
+          annosvc.setPageAnnotationBinary(aURI, anno.name, anno.value,
+                                          anno.value.length, anno.mimeType,
+                                          anno.flags, anno.expires);
+          break;
+      }
+    });
+  },
+
+  /**
+   * Annotate a URI with a batch of annotations.
+   * @param aItemId
+   *        The identifier of the item for which annotations are to be set
+   * @param aAnnotations
+   *        Array of objects, each containing the following properties:
+   *        name, flags, expires, type, mimeType (only used for binary
+   *        annotations) value.
+   */
+  setAnnotationsForItem: function PU_setAnnotationsForItem(aItemId, aAnnos) {
+    var annosvc = this.annotations;
+    aAnnos.forEach(function(anno) {
+      switch (anno.type) {
+        case annosvc.TYPE_INT32:
+          annosvc.setItemAnnotationInt32(aItemId, anno.name, anno.value,
+                                         anno.flags, anno.expires);
+          break;
+        case annosvc.TYPE_INT64:
+          annosvc.setItemAnnotationInt64(aItemId, anno.name, anno.value,
+                                         anno.flags, anno.expires);
+          break;
+        case annosvc.TYPE_DOUBLE:
+          annosvc.setItemAnnotationDouble(aItemId, anno.name, anno.value,
+                                          anno.flags, anno.expires);
+          break;
+        case annosvc.TYPE_STRING:
+          annosvc.setItemAnnotationString(aItemId, anno.name, anno.value,
+                                          anno.flags, anno.expires);
+          break;
+        case annosvc.TYPE_BINARY:
+          annosvc.setItemAnnotationBinary(aItemId, anno.name, anno.value,
+                                          anno.value.length, anno.mimeType,
+                                          anno.flags, anno.expires);
           break;
       }
     });

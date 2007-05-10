@@ -162,20 +162,19 @@
 
             var annotations = PlacesUtils.annotations;
             // This try/catch block is a temporary workaround for bug 336194.
-            var placeURIs;
+            var bookmarks = [];
             try {
-              placeURIs = annotations.getPagesWithAnnotation("bookmarks/generatedTitle", {});
+              bookmarks = annotations.getItemsWithAnnotation("bookmarks/generatedTitle", {});
             }
-            catch(e) {
-              placeURIs = [];
-            }
+            catch(e) { }
 
             // XXX It'd be faster to grab the annotations in a single query
             // instead of querying separately for each one, but the annotation
             // service provides no mechanism for doing so.
-            for ( var i = 0; i < placeURIs.length; i++)
-              this.__generatedTitles[placeURIs[i].spec] =
-                annotations.getAnnotationString(placeURIs[i], "bookmarks/generatedTitle");
+            for (var i = 0; i < bookmarks.length; i++) {
+              this.__generatedTitles[bookmarks[i]] =
+                annotations.getItemAnnotationString(bookmarks[i], "bookmarks/generatedTitle");
+            }
           }
           
           return this.__generatedTitles;
@@ -247,9 +246,8 @@
 
             if (PlacesUtils.nodeIsBookmark(child)) {
               // If the item has a generated title, use that instead.
-              var placeURI = PlacesUtils.bookmarks.getItemURI(child.bookmarkId);
-              if (this._generatedTitles[placeURI.spec])
-                title = this._generatedTitles[placeURI.spec];
+              if (this._generatedTitles[child.itemId])
+                title = this._generatedTitles[child.itemId];
             }
           } else if (PlacesUtils.nodeIsSeparator(child)) {
             button = document.createElementNS(XULNS, "toolbarseparator");
@@ -263,11 +261,10 @@
 
               // duplicate nsLivemarkService.getSiteURI to avoid instantiating
               // the service on startup.
-              var containerURI = PlacesUtils.bookmarks.getFolderURI(folder);
               var siteURIString;
               try {
                 siteURIString = 
-                  this._anno.getAnnotationString(containerURI, "livemark/siteURI");
+                  this._anno.getItemAnnotationString(folder, "livemark/siteURI");
               }
               catch (ex) {}
               // end duplication
@@ -776,18 +773,25 @@
         // observer object, while "_self" points to the toolbar XBL object.
         _self: this,
 
-        onAnnotationSet: function TBV_GTAO_onAnnotationSet(uri, annoName) {
-          NS_ASSERT(annoName == "bookmarks/generatedTitle",
-                    "annotation " + annoName + ", is not 'bookmarks/generatedTitle'");
-          var newTitle = PlacesUtils.annotations.getAnnotationString(uri, annoName);
-          this._self._generatedTitles[uri.spec] = newTitle;
+        onPageAnnotationSet: function() { },
+
+        onPageAnnotationRemoved: function() { },
+
+        onItemAnnotationSet:
+        function TBV_GTAO_onItemAnnotationSet(aItemId, aAnnoName) {
+          NS_ASSERT(aAnnoName == "bookmarks/generatedTitle",
+                    "annotation " + aAnnoName + ", is not 'bookmarks/generatedTitle'");
+          var newTitle =
+            PlacesUtils.annotations.getItemAnnotationString(aItemId, aAnnoName);
+          this._self._generatedTitles[aItemId] = newTitle;
           this._doRebuild();
         },
 
-        onAnnotationRemoved: function TBV_GTAO_onAnnotationRemoved(uri, annoName) {
-          NS_ASSERT(annoName == "bookmarks/generatedTitle",
-                    "annotation " + annoName + ", is not 'bookmarks/generatedTitle'");
-          delete this._self._generatedTitles[uri.spec];
+        onItemAnnotationRemoved:
+        function TBV_GTAO_onItemAnnotationRemoved(aItemId, aAnnoName) {
+          NS_ASSERT(aAnnoName == "bookmarks/generatedTitle",
+                    "annotation " + aAnnoName + ", is not 'bookmarks/generatedTitle'");
+          delete this._self._generatedTitles[aItemId];
           this._doRebuild();
         },
 
@@ -797,7 +801,6 @@
           }
           setTimeout(hitch(this._self, this._self._rebuild), 1);
         }
-
       })]]></field>
 
       <!-- nsIAnnotationObserver -->
@@ -830,7 +833,7 @@
 
           this._observers[annoName] =
             this._observers[annoName].filter(function(i) { observer != i });
-          
+
           if (this._observers[annoName].length == 0)
             delete this._observers[annoName];
         },
@@ -846,22 +849,45 @@
           return true;
         },
 
-        onAnnotationSet: function TBV_GAO_onAnnotationSet(uri, annoName) {
+        onPageAnnotationSet:
+        function TBV_GAO_onPageAnnotationSet(uri, annoName) {
           if (!this._applies(uri, annoName))
             return;
           
-          for ( var i = 0; i < this._observers[annoName].length; i++)
-            this._observers[annoName][i].onAnnotationSet(uri, annoName);
+          for (var i = 0; i < this._observers[annoName].length; i++)
+            this._observers[annoName][i].onPageAnnotationSet(uri, annoName);
         },
 
-        onAnnotationRemoved: function TBV_GAO_onAnnotationRemoved(uri, annoName) {
+        onPageAnnotationRemoved:
+        function TBV_GAO_onPageAnnotationRemoved(uri, annoName) {
           if (!this._applies(uri, annoName))
             return;
 
           for ( var i = 0; i < this._observers[annoName].length; i++)
-            this._observers[annoName][i].onAnnotationRemoved(uri, annoName);
-        }
+            this._observers[annoName][i].onPageAnnotationRemoved(uri, annoName);
+        },
 
+        onItemAnnotationSet:
+        function TBV_GAO_onItemAnnotationSet(aItemId, aAnnoName) {
+          if (!this._applies(aItemId, aAnnoName))
+            return;
+          
+          for (var i = 0; i < this._observers[aAnnoName].length; i++) {
+            this._observers[aAnnoName][i]
+                .onItemAnnotationSet(aItemId, aAnnoName);
+          }
+        },
+
+        onItemAnnotationRemoved:
+        function TBV_GAO_onItemAnnotationRemoved(aItemId, aAnnoName) {
+          if (!this._applies(aItemId, aAnnoName))
+            return;
+
+          for (var i = 0; i < this._observers[aAnnoName].length; i++) {
+            this._observers[aAnnoName][i]
+                .onItemAnnotationRemoved(aItemId, aAnnoName);
+          }
+        }
       })]]></field>
       
       <method name="checkForMenuEvent">
