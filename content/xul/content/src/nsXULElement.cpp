@@ -867,9 +867,6 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
         // Being added to a document.
         mParentPtrBits |= PARENT_BIT_INDOCUMENT;
-
-        // Unset this flag since we now really are in a document.
-        UnsetFlags(NODE_HAS_FAKED_INDOC);
     }
 
     // Now recurse into our kids

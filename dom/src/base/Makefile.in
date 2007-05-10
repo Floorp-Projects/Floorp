@@ -123,7 +123,6 @@ LOCAL_INCLUDES = \
 		-I$(topsrcdir)/content/xbl/src \
 		-I$(topsrcdir)/content/xul/document/src \
 		-I$(topsrcdir)/content/events/src \
-		-I$(topsrcdir)/content/base/src \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT
