@@ -145,10 +145,20 @@ nsTransformingTextRunFactory::MakeTextRun(const PRUnichar* aString, PRUint32 aLe
                                           gfxFontGroup* aFontGroup, PRUint32 aFlags,
                                           nsStyleContext** aStyles)
 {
+  PRUnichar* text = nsnull;
+  if (!(aFlags & gfxFontGroup::TEXT_IS_PERSISTENT)) {
+    text = new PRUnichar[aLength];
+    if (!text)
+      return nsnull;
+    memcpy(text, aString, aLength*sizeof(PRUnichar));
+  }
   nsTransformedTextRun* textRun =
-    new nsTransformedTextRun(aParams, this, aFontGroup, aString, aLength, aFlags, aStyles);
-  if (!textRun)
+    new nsTransformedTextRun(aParams, this, aFontGroup,
+                             text ? text : aString, aLength, aFlags, aStyles);
+  if (!textRun) {
+    delete[] text;
     return nsnull;
+  }
   RebuildTextRun(textRun);
   return textRun;
 }
@@ -500,6 +510,8 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun)
   // Setup actual line break data for child (which may affect shaping)
   innerParams.mInitialBreaks = lineBreakBeforeArray.Elements();
   innerParams.mInitialBreakCount = lineBreakBeforeArray.Length();
+  // The text outlives 'child'
+  flags |= gfxFontGroup::TEXT_IS_PERSISTENT;
   if (mInnerTransformingTextRunFactory) {
     child = mInnerTransformingTextRunFactory->MakeTextRun(
         convertedString.BeginReading(), convertedString.Length(),
