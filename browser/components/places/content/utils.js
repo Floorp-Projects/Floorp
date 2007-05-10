@@ -502,7 +502,7 @@ var PlacesUtils = {
     var itemURL = bookmarks.getBookmarkURI(aId);
     var itemTitle = bookmarks.getItemTitle(aId);
     var keyword = bookmarks.getKeywordForBookmark(aId);
-    var annos = this.getAnnotationsForURI(bookmarks.getItemURI(aId));
+    var annos = this.getAnnotationsForItem(aId);
     if (aExcludeAnnotations) {
       annos =
         annos.filter(function(aValue, aIndex, aArray) {
@@ -538,7 +538,7 @@ var PlacesUtils = {
         var node = children.getChild(i);
         if (self.nodeIsFolder(node)) {
           var nodeFolderId = asFolder(node).folderId;
-          var title = self.bookmarks.getFolderTitle(nodeFolderId);
+          var title = self.bookmarks.getItemTitle(nodeFolderId);
           // XXXmano: use item-annotations once bug 372508 is fixed
           var annos = self.getAnnotationsForURI(self._uri(node.uri));
           var folderItemsTransactions =
@@ -565,7 +565,7 @@ var PlacesUtils = {
       return childItemsTransactions;
     }
 
-    var title = this.bookmarks.getFolderTitle(aData.id);
+    var title = this.bookmarks.getItemTitle(aData.id);
     var annos = this.getAnnotationsForItem(aData.id);
     var createTxn =
       new PlacesCreateFolderTransaction(title, aContainer, aIndex, annos,

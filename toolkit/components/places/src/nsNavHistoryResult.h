@@ -733,8 +733,8 @@ public:
   PRBool StartIncrementalUpdate();
   void ReindexRange(PRInt32 aStartIndex, PRInt32 aEndIndex, PRInt32 aDelta);
 
-  nsNavHistoryResultNode* FindChildURIById(PRInt64 aItemId,
-                                           PRUint32* aNodeIndex);
+  nsNavHistoryResultNode* FindChildById(PRInt64 aItemId,
+                                        PRUint32* aNodeIndex);
 };
 
 // nsNavHistorySeparatorResultNode
