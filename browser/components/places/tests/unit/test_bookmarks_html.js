@@ -142,7 +142,7 @@ function testCanonicalBookmarks(aFolder) {
     // title
     do_check_eq("test post keyword", testBookmark1.title);
     // keyword
-    do_check_eq("test", bmsvc.getKeywordForBookmark(testBookmark1.bookmarkId));
+    do_check_eq("test", bmsvc.getKeywordForBookmark(testBookmark1.itemId));
     // sidebar
     // add date 
     // last modified

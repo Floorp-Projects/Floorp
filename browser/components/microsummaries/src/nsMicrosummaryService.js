@@ -302,11 +302,10 @@ MicrosummaryService.prototype = {
       oldValue = this._getField(bookmarkID, FIELD_GENERATED_TITLE);
 
     // A string identifying the bookmark to use when logging the update.
-    var bookmarkIdentity = 
 #ifdef MOZ_PLACES_BOOKMARKS
-      bookmarkID.spec;
+    var bookmarkIdentity = bookmarkID;
 #else
-      bookmarkID.Value + " (" + microsummary.pageURI.spec + ")";
+    var bookmarkIdentity = bookmarkID.Value + " (" + microsummary.pageURI.spec + ")";
 #endif
 
     if (oldValue == null || oldValue != microsummary.content) {
@@ -613,7 +612,11 @@ MicrosummaryService.prototype = {
 
         // If this is the current microsummary for this bookmark, load the content
         // from the datastore so it shows up immediately in microsummary picking UI.
+#ifdef MOZ_PLACES_BOOKMARKS
+        if (bookmarkID != -1 && this.isMicrosummary(bookmarkID, microsummary))
+#else
         if (bookmarkID && this.isMicrosummary(bookmarkID, microsummary))
+#endif
           microsummary._content = this._getField(bookmarkID, FIELD_GENERATED_TITLE);
 
         microsummaries.AppendElement(microsummary);
@@ -622,7 +625,11 @@ MicrosummaryService.prototype = {
 
     // If a bookmark identifier has been provided, list its microsummary
     // synchronously, if any.
+#ifdef MOZ_PLACES_BOOKMARKS
+    if (bookmarkID != -1 && this.hasMicrosummary(bookmarkID)) {
+#else
     if (bookmarkID && this.hasMicrosummary(bookmarkID)) {
+#endif
       var currentMicrosummary = this.getMicrosummary(bookmarkID);
       if (!microsummaries.hasItemForMicrosummary(currentMicrosummary))
         microsummaries.AppendElement(currentMicrosummary);
@@ -699,7 +706,7 @@ MicrosummaryService.prototype = {
 
     // This try/catch block is a temporary workaround for bug 336194.
     try {
-      bookmarks = this._ans.getPagesWithAnnotation(FIELD_MICSUM_GEN_URI, {});
+      bookmarks = this._ans.getItemsWithAnnotation(FIELD_MICSUM_GEN_URI, {});
     }
     catch(e) {
       bookmarks = [];
@@ -708,71 +715,56 @@ MicrosummaryService.prototype = {
     return bookmarks;
   },
 
-  _getField: function MSS__getField(aPlaceURI, aFieldName) {
-    aPlaceURI.QueryInterface(Ci.nsIURI);
+  _getField: function MSS__getField(aBookmarkId, aFieldName) {
     var fieldValue;
 
     switch(aFieldName) {
     case FIELD_MICSUM_EXPIRATION:
-      fieldValue = this._ans.getAnnotationInt64(aPlaceURI, aFieldName);
+      fieldValue = this._ans.getItemAnnotationInt64(aBookmarkId, aFieldName);
       break;
     case FIELD_MICSUM_GEN_URI:
     case FIELD_GENERATED_TITLE:
     case FIELD_CONTENT_TYPE:
     default:
-      fieldValue = this._ans.getAnnotationString(aPlaceURI, aFieldName);
+      fieldValue = this._ans.getItemAnnotationString(aBookmarkId, aFieldName);
       break;
     }
     
     return fieldValue;
   },
 
-  _setField: function MSS__setField(aPlaceURI, aFieldName, aFieldValue) {
-    aPlaceURI.QueryInterface(Ci.nsIURI);
-
+  _setField: function MSS__setField(aBookmarkId, aFieldName, aFieldValue) {
     switch(aFieldName) {
     case FIELD_MICSUM_EXPIRATION:
-      this._ans.setAnnotationInt64(aPlaceURI,
-                                   aFieldName,
-                                   aFieldValue,
-                                   0,
-                                   this._ans.EXPIRE_NEVER);
+      this._ans.setItemAnnotationInt64(aBookmarkId,
+                                       aFieldName,
+                                       aFieldValue,
+                                       0,
+                                       this._ans.EXPIRE_NEVER);
       break;
     case FIELD_MICSUM_GEN_URI:
     case FIELD_GENERATED_TITLE:
     case FIELD_CONTENT_TYPE:
     default:
-      this._ans.setAnnotationString(aPlaceURI,
-                                    aFieldName,
-                                    aFieldValue,
-                                    0,
-                                    this._ans.EXPIRE_NEVER);
+      this._ans.setItemAnnotationString(aBookmarkId,
+                                        aFieldName,
+                                        aFieldValue,
+                                        0,
+                                        this._ans.EXPIRE_NEVER);
       break;
     }
   },
 
-  _clearField: function MSS__clearField(aPlaceURI, aFieldName) {
-    aPlaceURI.QueryInterface(Ci.nsIURI);
-    this._ans.removeAnnotation(aPlaceURI, aFieldName);
+  _clearField: function MSS__clearField(aBookmarkId, aFieldName) {
+    this._ans.removeItemAnnotation(aBookmarkId, aFieldName);
   },
 
-  _hasField: function MSS__hasField(aPlaceURI, fieldName) {
-    aPlaceURI.QueryInterface(Ci.nsIURI);
-    return this._ans.hasAnnotation(aPlaceURI, fieldName);
+  _hasField: function MSS__hasField(aBookmarkId, fieldName) {
+    return this._ans.itemHasAnnotation(aBookmarkId, fieldName);
   },
 
-  _getPageForBookmark: function MSS__getPageForBookmark(aPlaceURI) {
-    aPlaceURI.QueryInterface(Ci.nsIURI);
-
-    // Manually get the bookmark identifier out of the place uri until
-    // the query system supports parsing this sort of place: uris
-    var matches = /moz_bookmarks.id=([0-9]+)/.exec(aPlaceURI.spec);
-    if (matches) {
-      var bookmarkId = parseInt(matches[1]);
-      return this._bms.getBookmarkURI(bookmarkId);
-    }
-
-    return null;
+  _getPageForBookmark: function MSS__getPageForBookmark(aBookmarkId) {
+    return this._bms.getBookmarkURI(aBookmarkId);
   },
 
 #else

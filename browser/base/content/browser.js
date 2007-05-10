@@ -332,7 +332,7 @@ var gBookmarksObserver = {
   onItemRemoved: function() { },
 
   onItemChanged:
-  function G_BO_onItemChanged(aID, aBookmark, aProperty, aValue) {
+  function G_BO_onItemChanged(aID, aProperty, aIsAnnotationProperty, aValue) {
     if (aProperty == "became_toolbar_folder" && this.toolbar)
       this.toolbar.place = PlacesUtils.getQueryStringForFolder(aID);
   },

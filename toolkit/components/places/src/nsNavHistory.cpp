@@ -207,7 +207,7 @@ const PRInt32 nsNavHistory::kGetInfoIndex_VisitCount = 4;
 const PRInt32 nsNavHistory::kGetInfoIndex_VisitDate = 5;
 const PRInt32 nsNavHistory::kGetInfoIndex_FaviconURL = 6;
 const PRInt32 nsNavHistory::kGetInfoIndex_SessionId = 7;
-const PRInt32 nsNavHistory::kGetInfoIndex_BookmarkItemId = 8;
+const PRInt32 nsNavHistory::kGetInfoIndex_ItemId = 8;
 
 const PRInt32 nsNavHistory::kAutoCompleteIndex_URL = 0;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_Title = 1;
@@ -3933,9 +3933,9 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
       return NS_ERROR_OUT_OF_MEMORY;
 
     PRBool isNull;
-    if (NS_SUCCEEDED(aRow->GetIsNull(kGetInfoIndex_BookmarkItemId, &isNull)) &&
+    if (NS_SUCCEEDED(aRow->GetIsNull(kGetInfoIndex_ItemId, &isNull)) &&
         !isNull) {
-      (*aResult)->mBookmarkId = aRow->AsInt64(kGetInfoIndex_BookmarkItemId);
+      (*aResult)->mItemId = aRow->AsInt64(kGetInfoIndex_ItemId);
     }
     NS_ADDREF(*aResult);
     return NS_OK;

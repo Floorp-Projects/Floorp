@@ -253,7 +253,7 @@ interface nsIMicrosummaryService : nsISupports
      *
      */
     nsIMicrosummarySet getMicrosummaries(in nsIURI pageURI,
-                                         in nsISupports bookmarkID);
+                                         in long long bookmarkID);
 
     /**
      * Get the current microsummary for the given bookmark.
@@ -265,7 +265,7 @@ interface nsIMicrosummaryService : nsISupports
      *          if the bookmark does not have a current microsummary
      *
      */
-    nsIMicrosummary getMicrosummary(in nsISupports bookmarkID);
+    nsIMicrosummary getMicrosummary(in long long bookmarkID);
 
     /**
      * Set the current microsummary for the given bookmark.
@@ -277,7 +277,7 @@ interface nsIMicrosummaryService : nsISupports
      *          the microsummary to set as the current one
      *
      */
-    void setMicrosummary(in nsISupports bookmarkID,
+    void setMicrosummary(in long long bookmarkID,
                          in nsIMicrosummary microsummary);
 
     /**
@@ -287,7 +287,7 @@ interface nsIMicrosummaryService : nsISupports
      *          the bookmark for which to remove the current microsummary
      *
      */
-    void removeMicrosummary(in nsISupports bookmarkID);
+    void removeMicrosummary(in long long bookmarkID);
 
     /**
      * Whether or not the given bookmark has a current microsummary.
@@ -299,7 +299,7 @@ interface nsIMicrosummaryService : nsISupports
      *          has a current microsummary
      *
      */
-    boolean hasMicrosummary(in nsISupports bookmarkID);
+    boolean hasMicrosummary(in long long bookmarkID);
 
     /**
      * Whether or not the given microsummary is the current microsummary
@@ -315,7 +315,7 @@ interface nsIMicrosummaryService : nsISupports
      *          for the bookmark
      *
      */
-    boolean isMicrosummary(in nsISupports bookmarkID,
+    boolean isMicrosummary(in long long bookmarkID,
                            in nsIMicrosummary microsummary);
 
     /**
@@ -336,7 +336,7 @@ interface nsIMicrosummaryService : nsISupports
      * @returns the microsummary being refreshed
      *
      */
-    nsIMicrosummary refreshMicrosummary(in nsISupports bookmarkID);
+    nsIMicrosummary refreshMicrosummary(in long long bookmarkID);
 };
 
 [scriptable, uuid(f9e577a8-19d9-4ca0-a140-b9e43f014470)]
@@ -346,7 +346,7 @@ interface nsILiveTitleNotificationSubject : nsISupports
     // Note: in the old bookmarks code, this is an RDF resource.  In Places
     // it is currently a URI, but after the fix for bug 360133 lands it will
     // become an integer.
-    readonly attribute nsISupports bookmarkID;
+    readonly attribute long long bookmarkID;
 
     // The microsummary being displayed as the live title for the bookmark.
     // The actual value of the microsummary (i.e. the string that gets displayed

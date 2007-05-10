@@ -594,10 +594,10 @@ PlacesController.prototype = {
         for (var j = 0; j < names.length; ++j)
           nodeData[names[j]] = true;
 
-        // For bookmark-items also include the bookmark-specific annotations
-        if ("bookmark" in nodeData) {
-          var placeURI = PlacesUtils.bookmarks.getItemURI(node.bookmarkId);
-          names = PlacesUtils.annotations.getPageAnnotationNames(placeURI, {});
+        // For items also include the item-specific annotations
+        if ("bookmark" in nodeData || "folder" in nodeData) {
+          names = PlacesUtils.annotations
+                             .getItemAnnotationNames(node.itemId, {});
           for (j = 0; j < names.length; ++j)
             nodeData[names[j]] = true;
         }
@@ -766,9 +766,8 @@ PlacesController.prototype = {
        // Check whether the node is a bookmark which should be opened as
        // a web panel
       if (aWhere == "current" && PlacesUtils.nodeIsBookmark(node)) {
-        var placeURI = PlacesUtils.bookmarks.getItemURI(node.bookmarkId);
         if (PlacesUtils.annotations
-                       .hasAnnotation(placeURI, LOAD_IN_SIDEBAR_ANNO)) {
+                       .itemHasAnnotation(node.itemId, LOAD_IN_SIDEBAR_ANNO)) {
           var w = getTopWin();
           if (w) {
             w.openWebPanel(node.title, node.uri);
@@ -792,7 +791,7 @@ PlacesController.prototype = {
     if (PlacesUtils.nodeIsFolder(node))
       PlacesUtils.showFolderProperties(asFolder(node).folderId);
     else if (PlacesUtils.nodeIsBookmark(node))
-      PlacesUtils.showBookmarkProperties(node.bookmarkId);
+      PlacesUtils.showBookmarkProperties(node.itemId);
   },
 
   /**
@@ -1121,7 +1120,7 @@ PlacesController.prototype = {
       }
       else if (PlacesUtils.nodeIsFolder(node.parent)) {
         // A Bookmark in a Bookmark Folder.
-        transactions.push(new PlacesRemoveItemTransaction(node.bookmarkId,
+        transactions.push(new PlacesRemoveItemTransaction(node.itemId,
           PlacesUtils._uri(node.uri), asFolder(node.parent).folderId, index));
       }
     }
@@ -1645,10 +1644,9 @@ PlacesCreateFolderTransaction.prototype = {
   doTransaction: function PCFT_doTransaction() {
     var bookmarks = this.utils.bookmarks;
     this._id = bookmarks.createFolder(this._container, this._name, this._index);
-    if (this._annotations.length > 0) {
-      var placeURI = bookmarks.getFolderURI(this._id);
-      this.utils.setAnnotationsForURI(placeURI, this._annotations);
-    }
+    if (this._annotations.length > 0)
+      this.utils.setAnnotationsForItem(this._id, this._annotations);
+
     for (var i = 0; i < this._childItemsTransactions.length; ++i) {
       var txn = this._childItemsTransactions[i];
       txn.container = this._id;
@@ -1715,10 +1713,8 @@ PlacesCreateItemTransaction.prototype = {
       bookmarks.setItemTitle(this._id, this._title);
     if (this._keyword)
       bookmarks.setKeywordForBookmark(this._id, this._keyword);
-    if (this._annotations && this._annotations.length > 0) {
-      var placeURI = bookmarks.getItemURI(this._id);
-      this.utils.setAnnotationsForURI(placeURI, this._annotations);
-    }
+    if (this._annotations && this._annotations.length > 0)
+      this.utils.setAnnotationsForItem(this._id, this._annotations);
 
     for (var i = 0; i < this._childTransactions.length; ++i) {
       var txn = this._childTransactions[i];
@@ -1804,10 +1800,8 @@ PlacesCreateLivemarkTransaction.prototype = {
     this._id = this.utils.livemarks
                    .createLivemark(this._container, this._name, this._siteURI,
                                    this._feedURI, this._index);
-    if (this._annotations)  {
-      var placeURI = this.utils.bookmarks.getFolderURI(this._id);
-      this.utils.setAnnotationsForURI(placeURI, this._annotations);
-    }
+    if (this._annotations)
+      this.utils.setAnnotationsForItem(this._id, this._annotations);
   },
 
   undoTransaction: function PCLT_undoTransaction() {
@@ -1860,26 +1854,21 @@ PlacesMoveItemTransaction.prototype = {
   doTransaction: function PMIT_doTransaction() {
     this.LOG("Move Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
     var title = this.bookmarks.getItemTitle(this._id);
-    var placeURI = this.bookmarks.getItemURI(this._id);
-    var annotations = this.utils.getAnnotationsForURI(placeURI);
+    var annotations = this.utils.getAnnotationsForItem(this._id);
     this.bookmarks.removeItem(this._id);
     this._id = this.bookmarks.insertItem(this._newContainer, this._uri, this._newIndex);
     this.bookmarks.setItemTitle(this._id, title);
-    this.utils.setAnnotationsForURI(this.bookmarks.getItemURI(this._id),
-                         annotations);
+    this.utils.setAnnotationsForItem(this._id, annotations);
   },
 
   undoTransaction: function PMIT_undoTransaction() {
     this.LOG("UNMove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
     var title = this.bookmarks.getItemTitle(this._id);
-    var placeURI = this.bookmarks.getItemURI(this._id);
-    var annotations = this.utils.getAnnotationsForURI(placeURI);
+    var annotations = this.utils.getAnnotationsForItem(this._id);
     this.bookmarks.removeItem(this._id);
     this._id = this.bookmarks.insertItem(this._oldContainer, this._uri, this._oldIndex);
     this.bookmarks.setItemTitle(this._id, title);
-    placeURI = this.bookmarks.getItemURI(this._id);
-    this.utils.setAnnotationsForURI(this.bookmarks.getItemURI(this._id),
-                         annotations);
+    this.utils.setAnnotationsForItem(this._id, annotations);
   }
 };
 
@@ -1925,7 +1914,7 @@ PlacesRemoveFolderTransaction.prototype = {
         txn = new PlacesRemoveSeparatorTransaction(this._id, i);
       }
       else {
-        txn = new PlacesRemoveItemTransaction(child.bookmarkId,
+        txn = new PlacesRemoveItemTransaction(child.itemId,
                                               ios.newURI(child.uri, null, null),
                                               this._id, i);
       }
@@ -1976,18 +1965,15 @@ PlacesRemoveItemTransaction.prototype = {
   doTransaction: function PRIT_doTransaction() {
     this.LOG("Remove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
     this._title = this.bookmarks.getItemTitle(this._id);
-    this._placeURI = this.bookmarks.getItemURI(this._id);
-    this._annotations = this.utils.getAnnotationsForURI(this._placeURI);
-    PlacesUtils.annotations.removePageAnnotations(this._placeURI);
-    this.bookmarks.removeItem(this._id);
+    this._annotations = this.utils.getAnnotationsForItem(this._id);
+    this.utils.bookmarks.removeItem(this._id);
   },
   
   undoTransaction: function PRIT_undoTransaction() {
     this.LOG("UNRemove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
     this._id = this.bookmarks.insertItem(this._oldContainer, this._uri, this._oldIndex);
     this.bookmarks.setItemTitle(this._id, this._title);
-    this._placeURI = this.bookmarks.getItemURI(this._id);
-    this.utils.setAnnotationsForURI(this._placeURI, this._annotations);
+    this.utils.setAnnotationsForItem(this._id, this._annotations);
   }
 };
 
@@ -2075,19 +2061,14 @@ PlacesSetLoadInSidebarTransaction.prototype = {
   },
 
   doTransaction: function PSLIST_doTransaction() {
-    if (!("_placeURI" in this))
-      this._placeURI = this.utils.bookmarks.getItemURI(this.id);
-
     this._wasSet = this.utils.annotations
-                       .hasAnnotation(this._placeURI, this._anno.name);
+                       .itemHasAnnotation(this.id, this._anno.name);
     if (this._loadInSidebar) {
-      this.utils.setAnnotationsForURI(this._placeURI,
-                                      [this._anno]);
+      this.utils.setAnnotationsForItem(this.id, [this._anno]);
     }
     else {
       try {
-        this.utils.annotations.removeAnnotation(this._placeURI,
-                                                this._anno.name);
+        this.utils.annotations.removeItemAnnotation(this.id, this._anno.name);
       } catch(ex) { }
     }
   },
@@ -2103,12 +2084,10 @@ PlacesSetLoadInSidebarTransaction.prototype = {
 /**
  * Edit a the description of a bookmark or a folder
  *
- * XXXmano: aIsFolder is a temporary workaround for bug 372508
  */
-function PlacesEditItemDescriptionTransaction(aBookmarkId, aDescription, aIsFolder) {
-  this.id = aBookmarkId;
+function PlacesEditItemDescriptionTransaction(aItemId, aDescription) {
+  this.id = aItemId;
   this._newDescription = aDescription;
-  this._isFolder = aIsFolder;
   this.redoTransaction = this.doTransaction;
 }
 PlacesEditItemDescriptionTransaction.prototype = {
@@ -2120,37 +2099,30 @@ PlacesEditItemDescriptionTransaction.prototype = {
   doTransaction: function PSLIST_doTransaction() {
     const annos = this.utils.annotations;
 
-    if (!("_placeURI" in this)) {
-      if (this._isFolder)
-        this._placeURI = this.utils.bookmarks.getFolderURI(this.id);
-      else
-        this._placeURI = this.utils.bookmarks.getItemURI(this.id);
-    }
-
-    if (annos.hasAnnotation(this._placeURI, this.DESCRIPTION_ANNO)) {
+    if (annos.itemHasAnnotation(this.id, this.DESCRIPTION_ANNO)) {
       this._oldDescription =
-        annos.getAnnotationString(this._placeURI, this.DESCRIPTION_ANNO);
+        annos.getItemAnnotationString(this.id, this.DESCRIPTION_ANNO);
     }
 
     if (this._newDescription) {
-      annos.setAnnotationString(this._placeURI, this.DESCRIPTION_ANNO,
-                                this._newDescription, 0,
-                                this.nsIAnnotationService.EXPIRE_NEVER);
+      annos.setItemAnnotationString(this.id, this.DESCRIPTION_ANNO,
+                                    this._newDescription, 0,
+                                    this.nsIAnnotationService.EXPIRE_NEVER);
     }
     else if (this._oldDescription)
-      annos.removeAnnotation(this._placeURI, this.DESCRIPTION_ANNO);
+      annos.removeItemAnnotation(this.id, this.DESCRIPTION_ANNO);
   },
 
   undoTransaction: function PSLIST_undoTransaction() {
     const annos = this.utils.annotations;
 
     if (this._oldDescription) {
-      annos.setAnnotationString(this._placeURI, this.DESCRIPTION_ANNO,
-                                this._oldDescription, 0,
-                                this.nsIAnnotationService.EXPIRE_NEVER);
+      annos.setItemAnnotationString(this.id, this.DESCRIPTION_ANNO,
+                                    this._oldDescription, 0,
+                                    this.nsIAnnotationService.EXPIRE_NEVER);
     }
-    else if (this.utils.hasAnnotation(this._placeURI, this.DESCRIPTION_ANNO))
-      annos.removeAnnotation(this._placeURI, this.DESCRIPTION_ANNO);
+    else if (annos.itemHasAnnotation(this.id, this.DESCRIPTION_ANNO))
+      annos.removeItemAnnotation(this.id, this.DESCRIPTION_ANNO);
   }
 };
 
@@ -2260,20 +2232,18 @@ PlacesEditBookmarkMicrosummaryTransaction.prototype = {
        getService(Ci.nsIMicrosummaryService),
 
   doTransaction: function PEBMT_doTransaction() {
-    var placeURI = this.bookmarks.getItemURI(this.id);
-    this._oldMicrosummary = this.mss.getMicrosummary(placeURI);
+    this._oldMicrosummary = this.mss.getMicrosummary(this.id);
     if (this._newMicrosummary)
-      this.mss.setMicrosummary(placeURI, this._newMicrosummary);
+      this.mss.setMicrosummary(this.id, this._newMicrosummary);
     else
-      this.mss.removeMicrosummary(placeURI);
+      this.mss.removeMicrosummary(this.id);
   },
 
   undoTransaction: function PEBMT_undoTransaction() {
-    var placeURI = this.bookmarks.getItemURI(this.id);
     if (this._oldMicrosummary)
-      this.mss.setMicrosummary(placeURI, this._oldMicrosummary);
+      this.mss.setMicrosummary(this.id, this._oldMicrosummary);
     else
-      this.mss.removeMicrosummary(placeURI);
+      this.mss.removeMicrosummary(this.id);
   }
 };
 
