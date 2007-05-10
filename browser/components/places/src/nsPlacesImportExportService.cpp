@@ -1820,6 +1820,9 @@ nsPlacesImportExportService::ImportHTMLFromFileInternal(nsILocalFile* aFile,
                                        PRInt64 aFolder,
                                        PRBool aIsImportDefaults)
 {
+  nsresult rv = EnsureServiceState();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIFile> file(do_QueryInterface(aFile));
 #ifdef DEBUG_IMPORT
   nsAutoString path;
@@ -1828,7 +1831,6 @@ nsPlacesImportExportService::ImportHTMLFromFileInternal(nsILocalFile* aFile,
 #endif
 
   // wrap the import in a transaction to make it faster
-  nsresult rv;
   mBookmarksService->BeginUpdateBatch();
 
   nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
@@ -1906,14 +1908,17 @@ nsPlacesImportExportService::ExportHTMLToFile(nsILocalFile* aBookmarksFile)
   if (!aBookmarksFile)
     return NS_ERROR_NULL_POINTER;
 
+  nsresult rv = EnsureServiceState();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // get a safe output stream, so we don't clobber the bookmarks file unless
   // all the writes succeeded.
   nsCOMPtr<nsIOutputStream> out;
-  nsresult rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(out),
-                                                aBookmarksFile,
-                                                PR_WRONLY | PR_CREATE_FILE,
-                                                /*octal*/ 0600,
-                                                0);
+  rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(out),
+                                       aBookmarksFile,
+                                       PR_WRONLY | PR_CREATE_FILE,
+                                       /*octal*/ 0600,
+                                       0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We need a buffered output stream for performance.
@@ -1978,10 +1983,14 @@ nsPlacesImportExportService::ExportHTMLToFile(nsILocalFile* aBookmarksFile)
 NS_IMETHODIMP
 nsPlacesImportExportService::BackupBookmarksFile()
 {
+  nsresult rv = EnsureServiceState();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // get bookmarks file
   nsCOMPtr<nsIFile> bookmarksFileDir;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_BOOKMARKS_50_FILE,
-                                       getter_AddRefs(bookmarksFileDir));
+  rv = NS_GetSpecialDirectory(NS_APP_BOOKMARKS_50_FILE,
+                              getter_AddRefs(bookmarksFileDir));
+
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsILocalFile> bookmarksFile(do_QueryInterface(bookmarksFileDir));
 
