@@ -207,8 +207,8 @@ static inline PRBool IsFixedWidth(const nsStyleCoord& aCoord)
   return aCoord.GetUnit() == eStyleUnit_Coord ||
          aCoord.GetUnit() == eStyleUnit_Chars ||
          (aCoord.GetUnit() == eStyleUnit_Enumerated &&
-          aCoord.GetIntValue() == NS_STYLE_WIDTH_INTRINSIC ||
-          aCoord.GetIntValue() == NS_STYLE_WIDTH_MIN_INTRINSIC);
+          (aCoord.GetIntValue() == NS_STYLE_WIDTH_INTRINSIC ||
+           aCoord.GetIntValue() == NS_STYLE_WIDTH_MIN_INTRINSIC));
 }
 
 static inline PRBool IsFixedMaxWidth(const nsStyleCoord& aCoord)
