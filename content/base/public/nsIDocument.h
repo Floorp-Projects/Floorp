@@ -855,24 +855,6 @@ public:
    */
   virtual PRBool MutationEventBeingDispatched() = 0;
 
-  /**
-   * Marks as not-going-to-be-collected for the given generation of
-   * cycle collection.
-   */
-  void MarkUncollectableForCCGeneration(PRUint32 aGeneration)
-  {
-    mMarkedCCGeneration = aGeneration;
-  }
-
-  /**
-   * Gets the cycle collector generation this document is marked for.
-   */
-  PRUint32 GetMarkedCCGeneration()
-  {
-    return mMarkedCCGeneration;
-  }
-  
-
 protected:
   ~nsIDocument()
   {
@@ -945,10 +927,6 @@ protected:
   // if this document is part of a multipart document,
   // the ID can be used to distinguish it from the other parts.
   PRUint32 mPartID;
-  
-  // Cycle collector generation in which we're certain that this document
-  // won't be collected
-  PRUint32 mMarkedCCGeneration;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)

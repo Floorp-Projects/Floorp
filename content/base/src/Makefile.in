@@ -76,9 +76,7 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  rdf \
 		  xultmpl \
-		  util \
-		  appshell \
-		  shistory \
+ 		  util \
 		  $(NULL)
 
 EXPORTS		= \
@@ -102,7 +100,6 @@ CPPSRCS		= \
 		nsAtomListUtils.cpp \
 		nsAttrAndChildArray.cpp \
 		nsAttrValue.cpp \
-		nsCCUncollectableMarker.cpp \
 		nsCommentNode.cpp \
 		nsContentAreaDragDrop.cpp \
 		nsContentIterator.cpp \

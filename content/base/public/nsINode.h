@@ -82,16 +82,11 @@ class nsNodeSupportsWeakRefTearoff;
 // NOTE: Should only be used on nsIContent nodes
 #define NODE_MAY_HAVE_FRAME          0x00000020U
 
-// Whether the 'in doc' flag is faked to true for
-// this node. This should only ever be set on XUL
-// elements.
-#define NODE_HAS_FAKED_INDOC         0x00000040U
-
 // Four bits for the script-type ID
-#define NODE_SCRIPT_TYPE_OFFSET                7
+#define NODE_SCRIPT_TYPE_OFFSET                6
 
 // Remaining bits are node type specific.
-#define NODE_TYPE_SPECIFIC_BITS_OFFSET       0x0b
+#define NODE_TYPE_SPECIFIC_BITS_OFFSET       0x0a
 
 // Useful macro for getting a node given an nsIContent and an nsIDocument
 // Returns the first argument cast to nsINode if it is non-null, otherwise
