@@ -976,8 +976,8 @@ nsAnnotationService::GetPagesWithAnnotationCOMArray(
   nsCOMPtr<mozIStorageStatement> statement;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT h.url FROM moz_anno_attributes n "
-    "LEFT JOIN moz_annos a ON n.id = a.anno_attribute_id "
-    "LEFT JOIN moz_places h ON a.place_id = h.id "
+    "INNER JOIN moz_annos a ON n.id = a.anno_attribute_id "
+    "INNER JOIN moz_places h ON a.place_id = h.id "
     "WHERE n.name = ?1"),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1043,7 +1043,7 @@ nsAnnotationService::GetItemsWithAnnotationTArray(const nsACString& aName,
   nsCOMPtr<mozIStorageStatement> statement;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT a.item_id FROM moz_anno_attributes n "
-    "LEFT JOIN moz_items_annos a ON n.id = a.anno_attribute_id "
+    "INNER JOIN moz_items_annos a ON n.id = a.anno_attribute_id "
     "WHERE n.name = ?1"),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);

@@ -43,6 +43,15 @@ class nsPlacesImportExportService : public nsIPlacesImportExportService
     nsresult WriteContainerContents(PRInt64 aFolder, const nsACString& aIndent, nsIOutputStream* aOutput);
 
     nsresult ArchiveBookmarksFile(PRInt32 aNumberOfBackups, PRBool aForceArchive);
+  
+    inline nsresult EnsureServiceState() {
+      NS_ENSURE_STATE(mHistoryService);
+      NS_ENSURE_STATE(mFaviconService);
+      NS_ENSURE_STATE(mAnnotationService);
+      NS_ENSURE_STATE(mBookmarksService);
+      NS_ENSURE_STATE(mLivemarkService);
+      return NS_OK;
+    };
 };
 
 #endif // nsPlacesImportExportService_h__

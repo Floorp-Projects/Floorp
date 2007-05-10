@@ -324,5 +324,10 @@ function run_test() {
   do_check_eq(annoObserver.ITEM_lastRemoved_Id, testItemId);
   do_check_eq(annoObserver.ITEM_lastRemoved_AnnoName, int32Key);
 
+  // test that getItems/PagesWithAnnotation returns an empty array after
+  // removing all items/pages which had the annotation set, see bug 380317.
+  do_check_eq(annosvc.getItemsWithAnnotation(int32Key, { }).length, 0);
+  do_check_eq(annosvc.getPagesWithAnnotation(int32Key, { }).length, 0);
+
   annosvc.removeObserver(annoObserver);
 }
