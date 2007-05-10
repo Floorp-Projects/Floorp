@@ -100,7 +100,10 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
 #ifdef XP_WIN
     if (!ShouldUseImageSurfaces()) {
         mWinSurface = new gfxWindowsSurface(gfxIntSize(mWidth, mHeight), format);
-        mImageSurface = mWinSurface->GetImageSurface();
+        if (mWinSurface && mWinSurface->Status() == 0) {
+            // no error
+            mImageSurface = mWinSurface->GetImageSurface();
+        }
     }
 
     if (!mImageSurface) {
@@ -110,6 +113,13 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
 #else
     mImageSurface = new gfxImageSurface(gfxIntSize(mWidth, mHeight), format);
 #endif
+
+    if (!mImageSurface || mImageSurface->Status()) {
+        mImageSurface = nsnull;
+        // guess
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     mStride = mImageSurface->Stride();
 
     return NS_OK;
@@ -286,7 +296,7 @@ nsThebesImage::LockImagePixels(PRBool aMaskPixels)
         // Recover the pixels
         mImageSurface = new gfxImageSurface(gfxIntSize(mWidth, mHeight),
                                             gfxImageSurface::ImageFormatARGB32);
-        if (!mImageSurface)
+        if (!mImageSurface || mImageSurface->Status())
             return NS_ERROR_OUT_OF_MEMORY;
         nsRefPtr<gfxContext> context = new gfxContext(mImageSurface);
         if (!context) {
@@ -464,6 +474,11 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
 
             surface = new gfxImageSurface(gfxIntSize(width, height),
                                           gfxASurface::ImageFormatARGB32);
+            if (!surface || surface->Status()) {
+                thebesContext->SetMatrix(savedCTM);
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+
             tmpSurfaceGrip = surface;
 
             nsRefPtr<gfxContext> tmpContext = new gfxContext(surface);
