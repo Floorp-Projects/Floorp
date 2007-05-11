@@ -257,7 +257,7 @@ RemoveObjectEntry(PLDHashTable& table, nsISupports* aKey)
 }
 
 static nsresult
-SetOrRemoveObject(PLDHashTable& table, nsISupports* aKey, nsISupports* aValue)
+SetOrRemoveObject(PLDHashTable& table, nsIContent* aKey, nsISupports* aValue)
 {
   if (aValue) {
     // lazily create the table, but only when adding elements
@@ -267,6 +267,7 @@ SetOrRemoveObject(PLDHashTable& table, nsISupports* aKey, nsISupports* aValue)
       table.ops = nsnull;
       return NS_ERROR_OUT_OF_MEMORY;
     }
+    aKey->SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
     return AddObjectEntry(table, aKey, aValue);
   }
 
@@ -379,8 +380,10 @@ nsBindingManager::~nsBindingManager(void)
 nsXBLBinding*
 nsBindingManager::GetBinding(nsIContent* aContent)
 {
-  if (mBindingTable.IsInitialized())
+  if (aContent && aContent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR) &&
+      mBindingTable.IsInitialized()) {
     return mBindingTable.GetWeak(aContent);
+  }
 
   return nsnull;
 }
@@ -407,6 +410,7 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsXBLBinding* aBinding)
   PRBool result = PR_TRUE;
 
   if (aBinding) {
+    aContent->SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
     result = mBindingTable.Put(aContent, aBinding);
   } else {
     mBindingTable.Remove(aContent);
@@ -1355,6 +1359,10 @@ void
 nsBindingManager::Traverse(nsIContent *aContent,
                            nsCycleCollectionTraversalCallback &cb)
 {
+  if (!aContent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    return;
+  }
+
   nsXBLBinding *binding = GetBinding(aContent);
   if (binding) {
     // XXX nsXBLBinding isn't nsISupports but it is refcounted, so we can't
