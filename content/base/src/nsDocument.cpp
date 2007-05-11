@@ -4569,7 +4569,7 @@ nsDocument::GetListenerManager(PRBool aCreateIfNotFound,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDocument::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 {
   nsCOMPtr<nsIEventListenerManager> manager;
