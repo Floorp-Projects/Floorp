@@ -506,8 +506,6 @@ nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty,
 
     case eCSSUnit_Pixel:        aResult.AppendLiteral("px");   break;
 
-    case eCSSUnit_Proportional: aResult.AppendLiteral("*");   break;
-
     case eCSSUnit_Degree:       aResult.AppendLiteral("deg");  break;
     case eCSSUnit_Grad:         aResult.AppendLiteral("grad"); break;
     case eCSSUnit_Radian:       aResult.AppendLiteral("rad");  break;
