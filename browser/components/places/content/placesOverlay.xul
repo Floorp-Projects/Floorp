@@ -89,10 +89,8 @@
              observes="placesCmd_show:info"/>
     <command id="placesCmd_reload"
              oncommand="goDoCommand('placesCmd_reload');"/>
-
-    <!-- Bug 325342 -->
-    <command id="placesCmd_sortby:name" disabled="true"/>
-
+    <command id="placesCmd_sortBy:name"
+             oncommand="goDoCommand('placesCmd_sortBy:name');"/>
     <command id="placesCmd_moveBookmarks"
              oncommand="goDoCommand('placesCmd_moveBookmarks');"/>
     <command id="placesCmd_setAsBookmarksToolbarFolder"
@@ -181,8 +179,8 @@
               label="&cmd.reloadLivebookmark.label;"
               accesskey="&cmd.reloadLivebookmark.accesskey;"
               selection="livemark/feedURI|allLivemarks"/>
-    <menuitem id="placesContext_sortby:name"
-              command="placesCmd_sortby:name"
+    <menuitem id="placesContext_sortBy:name"
+              command="placesCmd_sortBy:name"
               label="&cmd.sortby_name.label;"
               accesskey="&cmd.context_sortby_name.accesskey;"
               selection="mutable"/>

@@ -80,7 +80,7 @@ function initContextMenu() {
                             "placesContext_new:separator",
                             "placesContext_cut",
                             "placesContext_paste",
-                            "placesContext_sortby:name"];
+                            "placesContext_sortBy:name"];
   for (var i=0; i < alwaysHideElements.length; i++) {
     var elt = document.getElementById(alwaysHideElements[i]);
     elt.removeAttribute("selection");
