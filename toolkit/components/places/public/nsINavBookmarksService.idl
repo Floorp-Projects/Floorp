@@ -54,7 +54,7 @@ interface nsITransaction;
  * Observer for bookmark changes.
  */
 
-[scriptable, uuid(b3576cd9-d6f0-4faa-9b5d-cf7a9204dce9)]
+[scriptable, uuid(7A553BA3-5381-4A66-95D9-C7BA3895603C)]
 interface nsINavBookmarkObserver : nsISupports
 {
   /**
@@ -363,6 +363,17 @@ interface nsINavBookmarksService : nsISupports
    * Get the index for an item.
    */
   long getItemIndex(in long long aItemId);
+
+  /**
+   * Changes the index for a item. This method does not change the indices of
+   * any other items in the same folder, so ensure that the new index does not
+   * already exist, or change the index of other items accordingly, otherwise
+   * the indices will become corrupted.
+   *
+   *  @param aItemId    The id of the item to modify
+   *  @param aNewIndex  The new index
+   */
+  void setItemIndex(in long long aItemId, in long aNewIndex);
 
   /**
    * Get the place: url for a bookmark folder. You can use this value to
