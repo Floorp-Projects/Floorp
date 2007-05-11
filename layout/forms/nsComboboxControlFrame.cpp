@@ -39,7 +39,7 @@
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsComboboxControlFrame.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsFrameManager.h"
 #include "nsFormControlFrame.h"
 #include "nsGfxButtonControlFrame.h"
@@ -1035,14 +1035,11 @@ nsComboboxControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 
   // make someone to listen to the button. If its pressed by someone like Accessibility
   // then open or close the combo box.
-  nsCOMPtr<nsIDOMEventReceiver> eventReceiver(do_QueryInterface(mButtonContent));
-  if (eventReceiver) {
-    mButtonListener = new nsComboButtonListener(this);
-    if (!mButtonListener)
-      return NS_ERROR_OUT_OF_MEMORY;
-    eventReceiver->AddEventListenerByIID(mButtonListener,
-                                         NS_GET_IID(nsIDOMMouseListener));
-  }
+  mButtonListener = new nsComboButtonListener(this);
+  if (!mButtonListener)
+    return NS_ERROR_OUT_OF_MEMORY;
+  mButtonContent->AddEventListenerByIID(mButtonListener,
+                                        NS_GET_IID(nsIDOMMouseListener));
 
   mButtonContent->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
                           NS_LITERAL_STRING("button"), PR_FALSE);

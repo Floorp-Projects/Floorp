@@ -57,7 +57,7 @@
 #include "nsIControllers.h"
 #include "nsICSSParser.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"

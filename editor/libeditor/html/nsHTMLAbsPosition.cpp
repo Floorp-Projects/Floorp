@@ -57,7 +57,6 @@
 #include "nsIDOMNodeList.h"
 
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMEventReceiver.h"
 
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -403,11 +402,11 @@ nsHTMLEditor::GrabberClicked()
     mMouseMotionListenerP = new ResizerMouseMotionListener(this);
     if (!mMouseMotionListenerP) {return NS_ERROR_NULL_POINTER;}
 
-    nsCOMPtr<nsIDOMEventReceiver> erP = GetDOMEventReceiver();
-    NS_ENSURE_TRUE(erP, NS_ERROR_FAILURE);
+    nsCOMPtr<nsPIDOMEventTarget> piTarget = GetPIDOMEventTarget();
+    NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
-    res = erP->AddEventListenerByIID(mMouseMotionListenerP,
-                                     NS_GET_IID(nsIDOMMouseMotionListener));
+    res = piTarget->AddEventListenerByIID(mMouseMotionListenerP,
+                                          NS_GET_IID(nsIDOMMouseMotionListener));
     NS_ASSERTION(NS_SUCCEEDED(res),
                  "failed to register mouse motion listener");
   }
@@ -432,13 +431,14 @@ nsHTMLEditor::EndMoving()
     DeleteRefToAnonymousNode(mPositioningShadow, rootContent, ps);
     mPositioningShadow = nsnull;
   }
-  nsCOMPtr<nsIDOMEventReceiver> erP = GetDOMEventReceiver();
+  nsCOMPtr<nsPIDOMEventTarget> piTarget = GetPIDOMEventTarget();
 
-  if (erP && mMouseMotionListenerP) {
+  if (piTarget && mMouseMotionListenerP) {
 #ifdef DEBUG
     nsresult res =
 #endif
-    erP->RemoveEventListenerByIID(mMouseMotionListenerP, NS_GET_IID(nsIDOMMouseMotionListener));
+    piTarget->RemoveEventListenerByIID(mMouseMotionListenerP,
+                                       NS_GET_IID(nsIDOMMouseMotionListener));
     NS_ASSERTION(NS_SUCCEEDED(res), "failed to remove mouse motion listener");
   }
   mMouseMotionListenerP = nsnull;

@@ -38,7 +38,7 @@
 #include "nsIDOMHTMLTableCaptionElem.h"
 #include "nsIDOMHTMLTableSectionElem.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsDOMError.h"
 #include "nsContentList.h"
 #include "nsMappedAttributes.h"

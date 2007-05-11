@@ -61,7 +61,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMClientInformation.h"
 #include "nsIDOMViewCSS.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMNSEventTarget.h"
 #include "nsIDOMNavigator.h"
@@ -216,7 +216,7 @@ class nsGlobalWindow : public nsPIDOMWindow,
                        public nsIScriptGlobalObject,
                        public nsIDOMJSWindow,
                        public nsIScriptObjectPrincipal,
-                       public nsIDOMEventReceiver,
+                       public nsIDOMEventTarget,
                        public nsPIDOMEventTarget,
                        public nsIDOM3EventTarget,
                        public nsIDOMNSEventTarget,
@@ -278,15 +278,6 @@ public:
   // nsIDOMNSEventTarget
   NS_DECL_NSIDOMNSEVENTTARGET
 
-  // nsIDOMEventReceiver
-  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                   const nsIID& aIID);
-  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                      const nsIID& aIID);
-  NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
-                                nsIEventListenerManager** aResult);
-  NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
-
   // nsPIDOMWindow
   virtual NS_HIDDEN_(nsPIDOMWindow*) GetPrivateRoot();
   virtual NS_HIDDEN_(nsresult) Activate();
@@ -321,6 +312,13 @@ public:
                                                 nsIDOMEvent* aDOMEvent,
                                                 nsPresContext* aPresContext,
                                                 nsEventStatus* aEventStatus);
+  virtual NS_HIDDEN_(nsresult) GetListenerManager(PRBool aCreateIfNotFound,
+                                                  nsIEventListenerManager** aResult);
+  virtual NS_HIDDEN_(nsresult) AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                                     const nsIID& aIID);
+  virtual NS_HIDDEN_(nsresult) RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                                        const nsIID& aIID);
+  virtual NS_HIDDEN_(nsresult) GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
   virtual NS_HIDDEN_(void) SetDocShell(nsIDocShell* aDocShell);
   virtual NS_HIDDEN_(nsresult) SetNewDocument(nsIDocument *aDocument,
