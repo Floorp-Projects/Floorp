@@ -963,8 +963,11 @@ refStateSetCB(AtkObject *aAtkObj)
     state_set = ATK_OBJECT_CLASS(parent_class)->ref_state_set(aAtkObj);
 
     if (NS_FAILED(CheckMaiAtkObject(aAtkObj))) {
-      return state_set;
+        TranslateStates(nsIAccessibleStates::EXT_STATE_DEFUNCT,
+                        gAtkStateMapExt, state_set);
+        return state_set;
     }
+
     nsAccessibleWrap *accWrap =
         NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
@@ -1032,7 +1035,12 @@ CheckMaiAtkObject(AtkObject *aAtkObj)
 {
     NS_ENSURE_ARG(IS_MAI_OBJECT(aAtkObj));
     nsAccessibleWrap * tmpAccWrap = MAI_ATK_OBJECT(aAtkObj)->accWrap;
-    NS_ENSURE_TRUE(tmpAccWrap != nsnull, NS_ERROR_NULL_POINTER);
+
+    // Check if AccessibleWrap was deconstructed
+    if (tmpAccWrap == nsnull) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
     if (tmpAccWrap != nsAppRootAccessible::Create() && !tmpAccWrap->IsValidObject())
         return NS_ERROR_INVALID_POINTER;
 
