@@ -163,10 +163,6 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
         aData->mPositionData->mWidth.SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
         break;
       }
-      case nsAttrValue::eProportional: {
-        aData->mPositionData->mWidth.SetFloatValue((float)value->GetProportionalValue(), eCSSUnit_Proportional);
-        break;
-      }
       default:
         break;
       }
