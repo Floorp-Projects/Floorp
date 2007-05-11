@@ -40,6 +40,11 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibleTreeWalker.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMDocumentRange.h"
+#include "nsIDOMRange.h"
+#include "nsISelection2.h"
+#include "nsISelectionPrivate.h"
 #include "nsINameSpaceManager.h"
 #include "nsIAccessibilityService.h"
 #include "nsIDOMCSSStyleDeclaration.h"
@@ -50,7 +55,6 @@
 #include "nsIDOMHTMLTableRowElement.h"
 #include "nsIDOMHTMLTableSectionElem.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsITableLayout.h"
@@ -624,6 +628,120 @@ nsHTMLTableAccessible::IsCellSelected(PRInt32 aRow, PRInt32 aColumn,
                                     startRowIndex, startColIndex, rowSpan,
                                     colSpan, actualRowSpan, actualColSpan,
                                     *_retval);
+}
+
+NS_IMETHODIMP
+nsHTMLTableAccessible::SelectRow(PRInt32 aRow)
+{
+  return SelectRowOrColumn(aRow, nsISelectionPrivate::TABLESELECTION_ROW,
+                           PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsHTMLTableAccessible::SelectColumn(PRInt32 aColumn)
+{
+  return SelectRowOrColumn(aColumn, nsISelectionPrivate::TABLESELECTION_COLUMN,
+                           PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsHTMLTableAccessible::UnselectRow(PRInt32 aRow)
+{
+  return SelectRowOrColumn(aRow, nsISelectionPrivate::TABLESELECTION_ROW,
+                           PR_FALSE);
+}
+
+NS_IMETHODIMP
+nsHTMLTableAccessible::UnselectColumn(PRInt32 aColumn)
+{
+  return SelectRowOrColumn(aColumn, nsISelectionPrivate::TABLESELECTION_COLUMN,
+                           PR_FALSE);
+}
+
+nsresult
+nsHTMLTableAccessible::SelectRowOrColumn(PRInt32 aIndex, PRUint32 aTarget,
+                                         PRBool aDoSelect)
+{
+  PRBool doSelectRow = (aTarget == nsISelectionPrivate::TABLESELECTION_ROW);
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content)
+    return NS_OK;
+
+  nsCOMPtr<nsIDocument> document = content->GetCurrentDoc();
+  NS_ENSURE_STATE(document);
+
+  nsCOMPtr<nsISelectionController> selController(
+    do_QueryInterface(document->GetPrimaryShell()));
+  NS_ENSURE_STATE(selController);
+
+  nsCOMPtr<nsISelection> selection;
+  selController->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                              getter_AddRefs(selection));
+  NS_ENSURE_STATE(selection);
+
+  PRInt32 count = 0;
+  nsresult rv = doSelectRow ? GetColumns(&count) : GetRows(&count);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRInt32 index = 0; index < count; index++) {
+    nsCOMPtr<nsIDOMElement> cellElm;
+    PRInt32 column = doSelectRow ? index : aIndex;
+    PRInt32 row = doSelectRow ? aIndex : index;
+
+    rv = GetCellAt(row, column, *getter_AddRefs(cellElm));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = SelectCell(selection, document, cellElm, aDoSelect);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+}
+
+nsresult
+nsHTMLTableAccessible::SelectCell(nsISelection *aSelection,
+                                  nsIDocument *aDocument,
+                                  nsIDOMElement *aCellElement,
+                                  PRBool aDoSelect)
+{
+  if (aDoSelect) {
+    nsCOMPtr<nsIDOMDocumentRange> documentRange(do_QueryInterface(aDocument));
+    NS_ENSURE_STATE(documentRange);
+
+    nsCOMPtr<nsIDOMRange> range;
+    documentRange->CreateRange(getter_AddRefs(range));
+
+    nsCOMPtr<nsIDOMNode> cellNode(do_QueryInterface(aCellElement));
+    NS_ENSURE_STATE(cellNode);
+
+    range->SelectNode(cellNode);
+    return aSelection->AddRange(range);
+  }
+
+  nsCOMPtr<nsIContent> cell(do_QueryInterface(aCellElement));
+  NS_ENSURE_STATE(cell);
+
+  nsCOMPtr<nsIContent> cellParent = cell->GetParent();
+  NS_ENSURE_STATE(cellParent);
+
+  PRInt32 offset = cellParent->IndexOf(cell);
+  NS_ENSURE_STATE(offset != -1);
+
+  nsCOMPtr<nsIDOMNode> parent(do_QueryInterface(cellParent));
+  NS_ENSURE_STATE(parent);
+
+  nsCOMPtr<nsISelection2> selection2(do_QueryInterface(aSelection));
+  NS_ENSURE_STATE(selection2);
+
+  nsCOMArray<nsIDOMRange> ranges;
+  nsresult rv = selection2->GetRangesForIntervalCOMArray(parent, offset,
+                                                         parent, offset,
+                                                         PR_TRUE, &ranges);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRInt32 i = 0; i < ranges.Count(); i ++)
+    aSelection->RemoveRange(ranges[i]);
+
+  return NS_OK;
 }
 
 nsresult

@@ -450,25 +450,49 @@ CAccessibleTable::get_isSelected(long aRow, long aColumn, boolean *aIsSelected)
 STDMETHODIMP
 CAccessibleTable::selectRow(long aRow)
 {
-  return E_NOTIMPL;
+  nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryInterface(this));
+  NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
+  if (!tableAcc)
+    return E_FAIL;
+
+  nsresult rv = tableAcc->SelectRow(aRow);
+  return NS_FAILED(rv) ? E_FAIL : S_OK;
 }
 
 STDMETHODIMP
 CAccessibleTable::selectColumn(long aColumn)
 {
-  return E_NOTIMPL;
+  nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryInterface(this));
+  NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
+  if (!tableAcc)
+    return E_FAIL;
+
+  nsresult rv = tableAcc->SelectColumn(aColumn);
+  return NS_FAILED(rv) ? E_FAIL : S_OK;
 }
 
 STDMETHODIMP
 CAccessibleTable::unselectRow(long aRow)
 {
-  return E_NOTIMPL;
+  nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryInterface(this));
+  NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
+  if (!tableAcc)
+    return E_FAIL;
+
+  nsresult rv = tableAcc->UnselectRow(aRow);
+  return NS_FAILED(rv) ? E_FAIL : S_OK;
 }
 
 STDMETHODIMP
 CAccessibleTable::unselectColumn(long aColumn)
 {
-  return E_NOTIMPL;
+  nsCOMPtr<nsIAccessibleTable> tableAcc(do_QueryInterface(this));
+  NS_ASSERTION(tableAcc, CANT_QUERY_ASSERTION_MSG);
+  if (!tableAcc)
+    return E_FAIL;
+
+  nsresult rv = tableAcc->UnselectColumn(aColumn);
+  return NS_FAILED(rv) ? E_FAIL : S_OK;
 }
 
 STDMETHODIMP
