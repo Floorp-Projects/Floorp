@@ -107,7 +107,7 @@ function evaluateTypein()
 {
   var code = gTextBoxEval.value;
   var iframe = document.getElementById("Evaluator");
-  iframe.setAttribute("src", "javascript: " + encodeURIComponent(code));
+  iframe.contentDocument.location = "javascript: " + encodeURIComponent(code);
 }
 
 function displayResult()
@@ -118,8 +118,6 @@ function displayResult()
   if (result)
     gConsole.mCService.logStringMessage(result);
     // or could use appendMessage which doesn't persist
-  var iframe = document.getElementById("Evaluator");
-  iframe.setAttribute("src", "chrome://global/content/blank.html");
 }
 
 // XXX DEBUG
