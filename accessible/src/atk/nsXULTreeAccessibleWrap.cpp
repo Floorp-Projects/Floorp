@@ -583,6 +583,30 @@ NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::IsCellSelected(PRInt32 aRow, PRInt
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsXULTreeColumnsAccessibleWrap::SelectRow(PRInt32 aRow)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULTreeColumnsAccessibleWrap::SelectColumn(PRInt32 aColumn)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULTreeColumnsAccessibleWrap::UnselectRow(PRInt32 aRow)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULTreeColumnsAccessibleWrap::UnselectColumn(PRInt32 aColumn)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::IsProbablyForLayout(PRBool *aIsProbablyForLayout)
 {
   *aIsProbablyForLayout = PR_FALSE;
