@@ -87,11 +87,14 @@ class nsNodeSupportsWeakRefTearoff;
 // elements.
 #define NODE_HAS_FAKED_INDOC         0x00000040U
 
+// Whether a binding manager may have a pointer to this
+#define NODE_MAY_BE_IN_BINDING_MNGR  0x00000080U
+
 // Four bits for the script-type ID
-#define NODE_SCRIPT_TYPE_OFFSET                7
+#define NODE_SCRIPT_TYPE_OFFSET                8
 
 // Remaining bits are node type specific.
-#define NODE_TYPE_SPECIFIC_BITS_OFFSET       0x0b
+#define NODE_TYPE_SPECIFIC_BITS_OFFSET       0x0c
 
 // Useful macro for getting a node given an nsIContent and an nsIDocument
 // Returns the first argument cast to nsINode if it is non-null, otherwise
