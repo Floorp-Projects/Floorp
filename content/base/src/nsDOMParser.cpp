@@ -50,6 +50,7 @@
 #include "nsIDOMClassInfo.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsLoadListenerProxy.h"
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
@@ -223,7 +224,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Register as a load listener on the document
-  nsCOMPtr<nsPIDOMEventTarget> target(do_QueryInterface(domDocument));
+  nsCOMPtr<nsIDOMEventReceiver> target(do_QueryInterface(domDocument));
   if (target) {
     nsWeakPtr requestWeak(do_GetWeakReference(NS_STATIC_CAST(nsIDOMParser*, this)));
     nsLoadListenerProxy* proxy = new nsLoadListenerProxy(requestWeak);

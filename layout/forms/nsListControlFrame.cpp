@@ -60,7 +60,7 @@
 #include "nsWidgetsCID.h"
 #include "nsIPresShell.h"
 #include "nsHTMLParts.h"
-#include "nsIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsEventDispatcher.h"
 #include "nsIEventStateManager.h"
 #include "nsIEventListenerManager.h"
@@ -194,22 +194,22 @@ void
 nsListControlFrame::Destroy()
 {
   // get the receiver interface from the browser button's content node
-  ENSURE_TRUE(mContent);
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
 
   // Clear the frame pointer on our event listener, just in case the
   // event listener can outlive the frame.
 
   mEventListener->SetFrame(nsnull);
 
-  mContent->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*,
+  receiver->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*,
                                                     mEventListener),
                                      NS_GET_IID(nsIDOMMouseListener));
 
-  mContent->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,
+  receiver->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,
                                                     mEventListener),
                                      NS_GET_IID(nsIDOMMouseMotionListener));
 
-  mContent->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener*,
+  receiver->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener*,
                                                     mEventListener),
                                      NS_GET_IID(nsIDOMKeyListener));
 
@@ -1113,7 +1113,7 @@ nsListControlFrame::Init(nsIContent*     aContent,
   nsresult result = nsHTMLScrollFrame::Init(aContent, aParent, aPrevInFlow);
 
   // get the receiver interface from the browser button's content node
-  NS_ENSURE_STATE(mContent);
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
 
   // we shouldn't have to unregister this listener because when
   // our frame goes away all these content node go away as well
@@ -1123,15 +1123,15 @@ nsListControlFrame::Init(nsIContent*     aContent,
   if (!mEventListener) 
     return NS_ERROR_OUT_OF_MEMORY;
 
-  mContent->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*,
+  receiver->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*,
                                                  mEventListener),
                                   NS_GET_IID(nsIDOMMouseListener));
 
-  mContent->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,
+  receiver->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,
                                                  mEventListener),
                                   NS_GET_IID(nsIDOMMouseMotionListener));
 
-  mContent->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener*,
+  receiver->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener*,
                                                  mEventListener),
                                   NS_GET_IID(nsIDOMKeyListener));
 

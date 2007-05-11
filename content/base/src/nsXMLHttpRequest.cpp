@@ -50,6 +50,7 @@
 #include "nsIDOMSerializer.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIEventListenerManager.h"
 #include "nsGUIEvent.h"
 #include "nsIPrivateDOMEvent.h"
@@ -1301,7 +1302,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   mResponseBody.Truncate();
 
   // Register as a load listener on the document
-  nsCOMPtr<nsPIDOMEventTarget> target(do_QueryInterface(mDocument));
+  nsCOMPtr<nsIDOMEventReceiver> target(do_QueryInterface(mDocument));
   if (target) {
     nsWeakPtr requestWeak =
       do_GetWeakReference(NS_STATIC_CAST(nsIXMLHttpRequest*, this));

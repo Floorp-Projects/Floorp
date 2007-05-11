@@ -41,7 +41,7 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMFocusListener.h"
-#include "nsIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 
 class nsIMenuParent;
 class nsPresContext;

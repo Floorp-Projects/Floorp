@@ -63,7 +63,6 @@
 #include "nsSelectionState.h"
 #include "nsIEditorSpellCheck.h"
 #include "nsIInlineSpellChecker.h"
-#include "nsPIDOMEventTarget.h"
 
 class nsIDOMCharacterData;
 class nsIDOMRange;
@@ -84,7 +83,7 @@ class AddStyleSheetTxn;
 class RemoveStyleSheetTxn;
 class nsIFile;
 class nsISelectionController;
-class nsIDOMEventTarget;
+class nsIDOMEventReceiver;
 
 #define kMOZEditorBogusNodeAttr NS_LITERAL_STRING("_moz_editor_bogus_node")
 #define kMOZEditorBogusNodeValue NS_LITERAL_STRING("TRUE")
@@ -575,7 +574,7 @@ public:
                                     nsIDOMNode *aEndNode,
                                     PRInt32 aEndOffset);
 
-  already_AddRefed<nsPIDOMEventTarget> GetPIDOMEventTarget();
+  already_AddRefed<nsIDOMEventReceiver> GetDOMEventReceiver();
 
   // Fast non-refcounting editor root element accessor
   nsIDOMElement *GetRoot();
@@ -635,7 +634,7 @@ protected:
   PRInt8                        mDocDirtyState;		// -1 = not initialized
   nsWeakPtr        mDocWeak;  // weak reference to the nsIDOMDocument
   // The form field as an event receiver
-  nsCOMPtr<nsPIDOMEventTarget> mEventTarget;
+  nsCOMPtr<nsIDOMEventReceiver> mDOMEventReceiver;
 
   nsString* mPhonetic;
 

@@ -40,7 +40,7 @@
 
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMNSHTMLElement.h"
-#include "nsPIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIDOMText.h"
 
 #include "nsIDOMCSSValue.h"
@@ -479,14 +479,12 @@ nsHTMLEditor::HideResizers(void)
 
   // don't forget to remove the listeners !
 
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = GetPIDOMEventTarget();
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(piTarget);
+  nsCOMPtr<nsIDOMEventReceiver> erP = GetDOMEventReceiver();
   nsresult res;
 
-  if (target && mMouseMotionListenerP)
+  if (erP && mMouseMotionListenerP)
   {
-    res = target->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
-                                      mMouseMotionListenerP, PR_TRUE);
+    res = erP->RemoveEventListener(NS_LITERAL_STRING("mousemove"), mMouseMotionListenerP, PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(res), "failed to remove mouse motion listener");
   }
   mMouseMotionListenerP = nsnull;
@@ -495,7 +493,7 @@ nsHTMLEditor::HideResizers(void)
   GetDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   if (!doc) { return NS_ERROR_NULL_POINTER; }
-  target = do_QueryInterface(doc->GetWindow());
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(doc->GetWindow());
   if (!target) { return NS_ERROR_NULL_POINTER; }
 
   if (mResizeEventListenerP) {
@@ -614,12 +612,11 @@ nsHTMLEditor::StartResizing(nsIDOMElement *aHandle)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsCOMPtr<nsPIDOMEventTarget> piTarget = GetPIDOMEventTarget();
-    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(piTarget);
-    NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIDOMEventReceiver> erP = GetDOMEventReceiver();
+    NS_ENSURE_TRUE(erP, NS_ERROR_FAILURE);
 
-    result = target->AddEventListener(NS_LITERAL_STRING("mousemove"),
-                                      mMouseMotionListenerP, PR_TRUE);
+    result = erP->AddEventListener(NS_LITERAL_STRING("mousemove"),
+                                   mMouseMotionListenerP, PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(result),
                  "failed to register mouse motion listener");
   }

@@ -43,8 +43,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMNSHTMLElement.h"
-#include "nsIDOMEventTarget.h"
-#include "nsPIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIEventListenerManager.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -322,9 +321,9 @@ nsEditor::InstallEventListeners()
                  mCompositionListenerP && mDragListenerP,
                  NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = GetPIDOMEventTarget();
+  nsCOMPtr<nsIDOMEventReceiver> erP = GetDOMEventReceiver();
 
-  if (!piTarget) {
+  if (!erP) {
     RemoveEventListeners();
     return NS_ERROR_FAILURE;
   }
@@ -333,9 +332,9 @@ nsEditor::InstallEventListeners()
 
   // register the event listeners with the listener manager
   nsCOMPtr<nsIDOMEventGroup> sysGroup;
-  piTarget->GetSystemEventGroup(getter_AddRefs(sysGroup));
+  erP->GetSystemEventGroup(getter_AddRefs(sysGroup));
   nsCOMPtr<nsIEventListenerManager> elmP;
-  piTarget->GetListenerManager(PR_TRUE, getter_AddRefs(elmP));
+  erP->GetListenerManager(PR_TRUE, getter_AddRefs(elmP));
 
   if (sysGroup && elmP)
   {
@@ -348,20 +347,20 @@ nsEditor::InstallEventListeners()
                  "failed to register key listener in system group");
   }
 
-  rv |= piTarget->AddEventListenerByIID(mMouseListenerP,
-                                        NS_GET_IID(nsIDOMMouseListener));
+  rv |= erP->AddEventListenerByIID(mMouseListenerP,
+                                   NS_GET_IID(nsIDOMMouseListener));
 
-  rv |= piTarget->AddEventListenerByIID(mFocusListenerP,
-                                        NS_GET_IID(nsIDOMFocusListener));
+  rv |= erP->AddEventListenerByIID(mFocusListenerP,
+                                   NS_GET_IID(nsIDOMFocusListener));
 
-  rv |= piTarget->AddEventListenerByIID(mTextListenerP,
-                                        NS_GET_IID(nsIDOMTextListener));
+  rv |= erP->AddEventListenerByIID(mTextListenerP,
+                                   NS_GET_IID(nsIDOMTextListener));
 
-  rv |= piTarget->AddEventListenerByIID(mCompositionListenerP,
-                                        NS_GET_IID(nsIDOMCompositionListener));
+  rv |= erP->AddEventListenerByIID(mCompositionListenerP,
+                                   NS_GET_IID(nsIDOMCompositionListener));
 
-  rv |= piTarget->AddEventListenerByIID(mDragListenerP,
-                                        NS_GET_IID(nsIDOMDragListener));
+  rv |= erP->AddEventListenerByIID(mDragListenerP,
+                                   NS_GET_IID(nsIDOMDragListener));
 
   if (NS_FAILED(rv))
   {
@@ -381,18 +380,18 @@ nsEditor::RemoveEventListeners()
     return;
   }
 
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = GetPIDOMEventTarget();
+  nsCOMPtr<nsIDOMEventReceiver> erP = GetDOMEventReceiver();
 
-  if (piTarget)
+  if (erP)
   {
     // unregister the event listeners with the DOM event reveiver
 
     if (mKeyListenerP)
     {
       nsCOMPtr<nsIDOMEventGroup> sysGroup;
-      piTarget->GetSystemEventGroup(getter_AddRefs(sysGroup));
+      erP->GetSystemEventGroup(getter_AddRefs(sysGroup));
       nsCOMPtr<nsIEventListenerManager> elmP;
-      piTarget->GetListenerManager(PR_TRUE, getter_AddRefs(elmP));
+      erP->GetListenerManager(PR_TRUE, getter_AddRefs(elmP));
       if (sysGroup && elmP)
       {
         elmP->RemoveEventListenerByType(mKeyListenerP,
@@ -405,32 +404,32 @@ nsEditor::RemoveEventListeners()
 
     if (mMouseListenerP)
     {
-      piTarget->RemoveEventListenerByIID(mMouseListenerP,
-                                         NS_GET_IID(nsIDOMMouseListener));
+      erP->RemoveEventListenerByIID(mMouseListenerP,
+                                    NS_GET_IID(nsIDOMMouseListener));
     }
 
     if (mFocusListenerP)
     {
-      piTarget->RemoveEventListenerByIID(mFocusListenerP,
-                                         NS_GET_IID(nsIDOMFocusListener));
+      erP->RemoveEventListenerByIID(mFocusListenerP,
+                                    NS_GET_IID(nsIDOMFocusListener));
     }
 
     if (mTextListenerP)
     {
-      piTarget->RemoveEventListenerByIID(mTextListenerP,
-                                         NS_GET_IID(nsIDOMTextListener));
+      erP->RemoveEventListenerByIID(mTextListenerP,
+                                    NS_GET_IID(nsIDOMTextListener));
     }
 
     if (mCompositionListenerP)
     {
-      piTarget->RemoveEventListenerByIID(mCompositionListenerP,
-                                         NS_GET_IID(nsIDOMCompositionListener));
+      erP->RemoveEventListenerByIID(mCompositionListenerP,
+                                    NS_GET_IID(nsIDOMCompositionListener));
     }
 
     if (mDragListenerP)
     {
-      piTarget->RemoveEventListenerByIID(mDragListenerP,
-                                         NS_GET_IID(nsIDOMDragListener));
+      erP->RemoveEventListenerByIID(mDragListenerP,
+                                    NS_GET_IID(nsIDOMDragListener));
     }
   }
 }
@@ -5209,14 +5208,14 @@ nsEditor::HandleInlineSpellCheck(PRInt32 action,
                                                        aEndOffset) : NS_OK;
 }
 
-already_AddRefed<nsPIDOMEventTarget>
-nsEditor::GetPIDOMEventTarget()
+already_AddRefed<nsIDOMEventReceiver>
+nsEditor::GetDOMEventReceiver()
 {
-  nsPIDOMEventTarget* piTarget = mEventTarget;
-  if (piTarget)
+  nsIDOMEventReceiver *erp = mDOMEventReceiver;
+  if (erp)
   {
-    NS_ADDREF(piTarget);
-    return piTarget;
+    NS_ADDREF(erp);
+    return erp;
   }
 
   nsIDOMElement *rootElement = GetRoot();
@@ -5228,9 +5227,9 @@ nsEditor::GetPIDOMEventTarget()
 
   if (content && content->IsNativeAnonymous())
   {
-    mEventTarget = do_QueryInterface(content->GetParent());
-    piTarget = mEventTarget;
-    NS_IF_ADDREF(piTarget);
+    mDOMEventReceiver = do_QueryInterface(content->GetParent());
+    erp = mDOMEventReceiver;
+    NS_IF_ADDREF(erp);
   }
   else
   {
@@ -5239,7 +5238,7 @@ nsEditor::GetPIDOMEventTarget()
     // ourselves, if it exists.
     if (mDocWeak)
     {
-      CallQueryReferent(mDocWeak.get(), &piTarget);
+      CallQueryReferent(mDocWeak.get(), &erp);
     }
     else
     {
@@ -5247,7 +5246,7 @@ nsEditor::GetPIDOMEventTarget()
     }
   }
 
-  return piTarget;
+  return erp;
 }
 
 nsIDOMElement *

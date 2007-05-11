@@ -52,7 +52,7 @@ class nsIContent;
 class nsIDOMUIEvent;
 class nsIDOMKeyEvent;
 class nsIDOMMouseEvent;
-class nsPIDOMEventTarget;
+class nsIDOMEventReceiver;
 class nsIDOM3EventTarget;
 class nsXBLPrototypeBinding;
 
@@ -121,7 +121,7 @@ public:
   nsXBLPrototypeHandler* GetNextHandler() { return mNextHandler; }
   void SetNextHandler(nsXBLPrototypeHandler* aHandler) { mNextHandler = aHandler; }
 
-  nsresult ExecuteHandler(nsPIDOMEventTarget* aTarget, nsIDOMEvent* aEvent);
+  nsresult ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEvent* aEvent);
 
   already_AddRefed<nsIAtom> GetEventName();
   void SetEventName(nsIAtom* aName) { mEventName = aName; }
@@ -157,7 +157,7 @@ public:
   static PRUint32 gRefCnt;
   
 protected:
-  already_AddRefed<nsIController> GetController(nsPIDOMEventTarget* aTarget);
+  already_AddRefed<nsIController> GetController(nsIDOMEventReceiver* aReceiver);
   
   inline PRInt32 GetMatchingKeyCode(const nsAString& aKeyName);
   void ConstructPrototype(nsIContent* aKeyElement, 

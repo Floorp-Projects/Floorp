@@ -42,7 +42,7 @@
 #include "nsIDOMNSHTMLSelectElement.h"
 #include "nsIDOMNSXBLFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"

@@ -38,7 +38,7 @@
 #include "nsPyContext.h"
 #include "nsICategoryManager.h"
 #include "nsIScriptContext.h"
-#include "nsIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 
 extern void init_nsdom();
 

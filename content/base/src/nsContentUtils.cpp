@@ -107,6 +107,7 @@
 #include "nsCRT.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMDocumentEvent.h"
 #ifdef MOZ_XTF
@@ -2979,10 +2980,10 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
   }
 
   // If we have a window, we can check it for mutation listeners now.
-  nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(window));
-  if (piTarget) {
+  nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(window));
+  if (rec) {
     nsCOMPtr<nsIEventListenerManager> manager;
-    piTarget->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+    rec->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
     if (manager) {
       PRBool hasListeners = PR_FALSE;
       manager->HasMutationListeners(&hasListeners);

@@ -38,7 +38,7 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMHTMLBodyElement.h"
-#include "nsIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
