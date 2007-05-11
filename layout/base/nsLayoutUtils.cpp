@@ -1500,7 +1500,7 @@ nsLayoutUtils::ComputeWidthDependentValue(
   if (eStyleUnit_Percent == aCoord.GetUnit()) {
     return NSToCoordFloor(aContainingBlockWidth * aCoord.GetPercentValue());
   }
-  NS_ASSERTION(aCoord.GetUnit() == eStyleUnit_Null ||
+  NS_ASSERTION(aCoord.GetUnit() == eStyleUnit_None ||
                aCoord.GetUnit() == eStyleUnit_Auto,
                "unexpected width value");
   return 0;
@@ -1594,7 +1594,7 @@ nsLayoutUtils::ComputeHeightDependentValue(
       return NSToCoordFloor(aContainingBlockHeight * aCoord.GetPercentValue());
     }
   }
-  NS_ASSERTION(aCoord.GetUnit() == eStyleUnit_Null ||
+  NS_ASSERTION(aCoord.GetUnit() == eStyleUnit_None ||
                aCoord.GetUnit() == eStyleUnit_Auto,
                "unexpected height value");
   return 0;
@@ -1605,7 +1605,7 @@ IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
 {
   nsStyleUnit unit = aCoord.GetUnit();
   return unit == eStyleUnit_Auto ||  // only for 'height'
-         unit == eStyleUnit_Null ||  // only for 'max-height'
+         unit == eStyleUnit_None ||  // only for 'max-height'
          (unit == eStyleUnit_Percent && 
           aCBHeight == NS_AUTOHEIGHT);
 }
@@ -1650,7 +1650,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
     NS_ASSERTION(width >= 0, "negative result from ComputeWidthValue");
   }
 
-  if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_Null) {
+  if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_None) {
     maxWidth = nsLayoutUtils::ComputeWidthValue(aRenderingContext,
                  aFrame, aCBSize.width, boxSizingAdjust.width,
                  boxSizingToMarginEdgeWidth, stylePos->mMaxWidth);

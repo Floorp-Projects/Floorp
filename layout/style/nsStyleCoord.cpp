@@ -177,6 +177,12 @@ void nsStyleCoord::SetAutoValue(void)
   mValue.mInt = 0;
 }
 
+void nsStyleCoord::SetNoneValue(void)
+{
+  mUnit = eStyleUnit_None;
+  mValue.mInt = 0;
+}
+
 void nsStyleCoord::SetUnionValue(const nsStyleUnion& aValue, nsStyleUnit aUnit)
 {
   mUnit = aUnit;
@@ -208,6 +214,7 @@ void nsStyleCoord::AppendToString(nsString& aBuffer) const
     case eStyleUnit_Factor:       aBuffer.AppendLiteral("f");        break;
     case eStyleUnit_Normal:       aBuffer.AppendLiteral("Normal");   break;
     case eStyleUnit_Auto:         aBuffer.AppendLiteral("Auto");     break;
+    case eStyleUnit_None:         aBuffer.AppendLiteral("None");     break;
     case eStyleUnit_Enumerated:   aBuffer.AppendLiteral("enum");     break;
     case eStyleUnit_Integer:      aBuffer.AppendLiteral("int");      break;
     case eStyleUnit_Chars:        aBuffer.AppendLiteral("chars");    break;
