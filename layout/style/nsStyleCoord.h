@@ -84,7 +84,10 @@ public:
   PRBool         operator==(const nsStyleCoord& aOther) const;
   PRBool         operator!=(const nsStyleCoord& aOther) const;
 
-  nsStyleUnit GetUnit(void) const { return mUnit; }
+  nsStyleUnit GetUnit(void) const {
+    NS_ASSERTION(mUnit != eStyleUnit_Null, "reading uninitialized value");
+    return mUnit;
+  }
   nscoord     GetCoordValue(void) const;
   PRInt32     GetIntValue(void) const;
   float       GetPercentValue(void) const;
