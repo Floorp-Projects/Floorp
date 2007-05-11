@@ -242,6 +242,7 @@ nscoord CalcLength(const nsCSSValue& aValue,
 #define SETCOORD_LENGTH       0x20   // L
 #define SETCOORD_INTEGER      0x40   // I
 #define SETCOORD_ENUMERATED   0x80   // E
+#define SETCOORD_NONE         0x100  // O
 
 #define SETCOORD_LP     (SETCOORD_LENGTH | SETCOORD_PERCENT)
 #define SETCOORD_LH     (SETCOORD_LENGTH | SETCOORD_INHERIT)
@@ -251,6 +252,8 @@ nscoord CalcLength(const nsCSSValue& aValue,
 #define SETCOORD_LPAH   (SETCOORD_LP | SETCOORD_AH)
 #define SETCOORD_LPEH   (SETCOORD_LP | SETCOORD_ENUMERATED | SETCOORD_INHERIT)
 #define SETCOORD_LPAEH  (SETCOORD_LPAH | SETCOORD_ENUMERATED)
+#define SETCOORD_LPOH   (SETCOORD_LPH | SETCOORD_NONE)
+#define SETCOORD_LPOEH  (SETCOORD_LPOH | SETCOORD_ENUMERATED)
 #define SETCOORD_LE     (SETCOORD_LENGTH | SETCOORD_ENUMERATED)
 #define SETCOORD_LEH    (SETCOORD_LE | SETCOORD_INHERIT)
 #define SETCOORD_IA     (SETCOORD_INTEGER | SETCOORD_AUTO)
@@ -298,6 +301,10 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   else if (((aMask & SETCOORD_NORMAL) != 0) && 
            (aValue.GetUnit() == eCSSUnit_Normal)) {
     aCoord.SetNormalValue();
+  }
+  else if (((aMask & SETCOORD_NONE) != 0) && 
+           (aValue.GetUnit() == eCSSUnit_None)) {
+    aCoord.SetNoneValue();
   }
   else if (((aMask & SETCOORD_FACTOR) != 0) && 
            (aValue.GetUnit() == eCSSUnit_Number)) {
@@ -3591,23 +3598,15 @@ nsRuleNode::ComputePositionData(nsStyleStruct* aStartStruct,
            SETCOORD_LPAEH, aContext, mPresContext, inherited);
   SetCoord(posData.mMinWidth, pos->mMinWidth, parentPos->mMinWidth,
            SETCOORD_LPEH, aContext, mPresContext, inherited);
-  if (! SetCoord(posData.mMaxWidth, pos->mMaxWidth, parentPos->mMaxWidth,
-                 SETCOORD_LPEH, aContext, mPresContext, inherited)) {
-    if (eCSSUnit_None == posData.mMaxWidth.GetUnit()) {
-      pos->mMaxWidth.Reset();
-    }
-  }
+  SetCoord(posData.mMaxWidth, pos->mMaxWidth, parentPos->mMaxWidth,
+           SETCOORD_LPOEH, aContext, mPresContext, inherited);
 
   SetCoord(posData.mHeight, pos->mHeight, parentPos->mHeight,
            SETCOORD_LPAH, aContext, mPresContext, inherited);
   SetCoord(posData.mMinHeight, pos->mMinHeight, parentPos->mMinHeight,
            SETCOORD_LPH, aContext, mPresContext, inherited);
-  if (! SetCoord(posData.mMaxHeight, pos->mMaxHeight, parentPos->mMaxHeight,
-                 SETCOORD_LPH, aContext, mPresContext, inherited)) {
-    if (eCSSUnit_None == posData.mMaxHeight.GetUnit()) {
-      pos->mMaxHeight.Reset();
-    }
-  }
+  SetCoord(posData.mMaxHeight, pos->mMaxHeight, parentPos->mMaxHeight,
+           SETCOORD_LPOH, aContext, mPresContext, inherited);
 
   // box-sizing: enum, inherit
   if (eCSSUnit_Enumerated == posData.mBoxSizing.GetUnit()) {

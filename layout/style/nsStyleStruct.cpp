@@ -864,10 +864,10 @@ nsStylePosition::nsStylePosition(void)
   mOffset.SetBottom(autoCoord);
   mWidth.SetAutoValue();
   mMinWidth.SetCoordValue(0);
-  mMaxWidth.Reset();
+  mMaxWidth.SetNoneValue();
   mHeight.SetAutoValue();
   mMinHeight.SetCoordValue(0);
-  mMaxHeight.Reset();
+  mMaxHeight.SetNoneValue();
   mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
   mZIndex.SetAutoValue();
 }

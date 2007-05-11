@@ -2767,7 +2767,7 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
       break;
     }
 
-    case eStyleUnit_Null:
+    case eStyleUnit_None:
       aValue->SetIdent(nsGkAtoms::none);
       break;
       

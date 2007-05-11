@@ -2135,7 +2135,7 @@ nsHTMLReflowState::ComputeMinMaxValues(nscoord aContainingBlockWidth,
                                         mStylePosition->mBoxSizing,
                                         mStylePosition->mMinWidth);
 
-  if (eStyleUnit_Null == mStylePosition->mMaxWidth.GetUnit()) {
+  if (eStyleUnit_None == mStylePosition->mMaxWidth.GetUnit()) {
     // Specified value of 'none'
     mComputedMaxWidth = NS_UNCONSTRAINEDSIZE;  // no limit
   } else {
@@ -2160,7 +2160,7 @@ nsHTMLReflowState::ComputeMinMaxValues(nscoord aContainingBlockWidth,
                                 mStylePosition->mMinHeight, mComputedMinHeight);
   }
   nsStyleUnit maxHeightUnit = mStylePosition->mMaxHeight.GetUnit();
-  if (eStyleUnit_Null == maxHeightUnit) {
+  if (eStyleUnit_None == maxHeightUnit) {
     // Specified value of 'none'
     mComputedMaxHeight = NS_UNCONSTRAINEDSIZE;  // no limit
   } else {
