@@ -54,7 +54,6 @@ enum nsStyleUnit {
   eStyleUnit_Factor       = 11,     // (float) a multiplier
   eStyleUnit_Coord        = 20,     // (nscoord) value is twips
   eStyleUnit_Integer      = 30,     // (int) value is simple integer
-  eStyleUnit_Proportional = 31,     // (int) value has proportional meaning
   eStyleUnit_Enumerated   = 32,     // (int) value has enumerated meaning
   eStyleUnit_Chars        = 33      // (int) value is number of characters
 };
@@ -171,12 +170,10 @@ inline PRInt32 nsStyleCoord::GetCoordValue(void) const
 
 inline PRInt32 nsStyleCoord::GetIntValue(void) const
 {
-  NS_ASSERTION((mUnit == eStyleUnit_Proportional) ||
-               (mUnit == eStyleUnit_Enumerated) ||
+  NS_ASSERTION((mUnit == eStyleUnit_Enumerated) ||
                (mUnit == eStyleUnit_Chars) ||
                (mUnit == eStyleUnit_Integer), "not an int value");
-  if ((mUnit == eStyleUnit_Proportional) ||
-      (mUnit == eStyleUnit_Enumerated) ||
+  if ((mUnit == eStyleUnit_Enumerated) ||
       (mUnit == eStyleUnit_Chars) ||
       (mUnit == eStyleUnit_Integer)) {
     return mValue.mInt;

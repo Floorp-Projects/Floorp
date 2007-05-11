@@ -3587,11 +3587,8 @@ nsRuleNode::ComputePositionData(nsStyleStruct* aStartStruct,
     }
   }
 
-  if (posData.mWidth.GetUnit() == eCSSUnit_Proportional)
-    pos->mWidth.SetIntValue((PRInt32)(posData.mWidth.GetFloatValue()), eStyleUnit_Proportional);
-  else 
-    SetCoord(posData.mWidth, pos->mWidth, parentPos->mWidth,
-             SETCOORD_LPAEH, aContext, mPresContext, inherited);
+  SetCoord(posData.mWidth, pos->mWidth, parentPos->mWidth,
+           SETCOORD_LPAEH, aContext, mPresContext, inherited);
   SetCoord(posData.mMinWidth, pos->mMinWidth, parentPos->mMinWidth,
            SETCOORD_LPEH, aContext, mPresContext, inherited);
   if (! SetCoord(posData.mMaxWidth, pos->mMaxWidth, parentPos->mMaxWidth,
