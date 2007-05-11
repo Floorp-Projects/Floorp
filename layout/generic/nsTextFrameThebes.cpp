@@ -3543,11 +3543,10 @@ PRBool SelectionIterator::GetNextSegment(gfxFloat* aXOffset,
   
   PRInt32 index = mIterator.GetOriginalOffset() - mOriginalStart;
   SelectionType type = mSelectionBuffer[index];
-  do {
-    ++index;
+  for (++index; mOriginalStart + index < mOriginalEnd; ++index) {
     if (mSelectionBuffer[index] != type)
       break;
-  } while (mOriginalStart + index < mOriginalEnd);
+  }
   mIterator.SetOriginalOffset(index + mOriginalStart);
   
   // Advance to the next cluster boundary
