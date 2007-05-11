@@ -43,7 +43,7 @@
 
 interface nsIAccessible;
 
-[scriptable, uuid(0A7E98A9-CA7D-42F0-BFE1-2CFC35256038)]
+[scriptable, uuid(a776fee4-c0b8-4872-9e1e-72017243383f)]
 interface nsIAccessibleTable : nsISupports
 {
            attribute nsIAccessible       caption;
@@ -53,16 +53,16 @@ interface nsIAccessibleTable : nsISupports
   readonly attribute long                rows;
   readonly attribute nsIAccessibleTable  rowHeader;
 
-  void getSelectedColumns (out unsigned long columnsSize,
-          [retval, array, size_is(columnsSize)] out long columns);
-
-  void getSelectedRows (out unsigned long rowsSize,
-          [retval, array, size_is(rowsSize)] out long rows);
-
-    /**
-      * gets a cell
-      */
-  nsIAccessible cellRefAt (in long row, in long column);
+  /**
+   * Returns the accessible object at the specified row and column in the table.
+   * If both row and column index are valid then the corresponding accessible
+   * object is returned that represents the requested cell regardless of whether
+   * the cell is currently visible (on the screen).
+   *
+   * @param row - The row index for which to retrieve the cell.
+   * @param column - The column index for which to retrieve the cell.
+   */
+  nsIAccessible cellRefAt(in long row, in long column);
 
     /**
       * get an index
@@ -70,18 +70,121 @@ interface nsIAccessibleTable : nsISupports
   long getIndexAt (in long row, in long column);
   long getColumnAtIndex (in long index);
   long getRowAtIndex (in long index);
-  long getColumnExtentAt (in long row, in long column);
-  long getRowExtentAt (in long row, in long column);
-
-  AString getColumnDescription (in long column);
-  AString getRowDescription (in long row);
-
-  boolean isColumnSelected (in long column);
-  boolean isRowSelected (in  long row);
-  boolean isCellSelected (in long row, in long column);
 
   /**
-    * Use heuristics to determine if table is most likely used for layout
-    */
+   * Returns the number of columns occupied by the accessible object
+   * at the specified row and column in the table. The result differs from 1
+   * if the specified cell spans multiple columns.
+   *
+   * @param row - Row index of the accessible for which to return
+   *              the column extent.
+   * @param column - Column index of the accessible for which to return
+   *                 the column extent.
+   */
+  long getColumnExtentAt(in long row, in long column);
+
+  /**
+   * Returns the number of rows occupied by the accessible oject
+   * at the specified row and column in the table. The result differs from 1
+   * if the specified cell spans multiple rows.
+   *
+   * @param row  - Row index of the accessible for which to return
+   *               the column extent.
+   * @param column - Column index of the accessible for which to return
+   *                 the column extent.
+   */
+  long getRowExtentAt(in long row, in long column);
+
+  /**
+   * Returns the description text of the specified column in the table.
+   * @param column - The index of the column for which to retrieve
+   *                 the description.
+   */
+  AString getColumnDescription(in long column);
+
+  /**
+   * Returns the description text of the specified row in the table.
+   * @param row - The index of the row for which to retrieve the description.
+   */
+  AString getRowDescription(in long row);
+
+  /**
+   * Returns a boolean value indicating whether the specified column is
+   * completely selected.
+   *
+   * @param column  - Index of the column for which to determine whether it is
+   *                   selected.
+   */
+  boolean isColumnSelected(in long column);
+
+  /**
+   * Returns a boolean value indicating whether the specified row is completely
+   * selected.
+   *
+   * @param row - Index of the row for which to determine whether it is
+   *              selected.
+   */
+  boolean isRowSelected(in  long row);
+
+  /**
+   * Returns a boolean value indicating whether the specified cell is selected.
+   *
+   * @param row - Index of the row for the cell to determine whether it is
+   *              selected.
+   * @param column - Index of the column for the cell to determine whether it
+   *                 is selected.
+   */
+  boolean isCellSelected(in long row, in long column);
+
+  /**
+   * Returns a list of column indexes currently selected.
+   *
+   * @param columnsSize - Length of array
+   * @param columns - Array of indexes of selected columns
+   */
+  void getSelectedColumns(out unsigned long columnsSize,
+                          [retval, array, size_is(columnsSize)] out long columns);
+
+  /**
+   * Returns a list of row indexes currently selected.
+   *
+   * @param rowsSize - Length of array
+   * @param rows - Array of indexes of selected rows
+   */
+  void getSelectedRows(out unsigned long rowsSize,
+                       [retval, array, size_is(rowsSize)] out long rows);
+
+  /**
+   * Selects a row and unselects all previously selected rows.
+   *
+   * @param row - Index of the row to be selected.
+   */
+  void selectRow(in long row);
+
+  /**
+   * Selects a column and unselects all previously selected columns.
+   *
+   * @param column - Index of the column to be selected.
+   */
+  void selectColumn(in long column);
+
+  /**
+   * Unselects one row, leaving other selected rows selected (if any).
+   *
+   * @param row  - Index of the row to be selected.
+  */
+  void unselectRow(in long row);
+
+  /**
+   * Unselects one column, leaving other selected columns selected (if any).
+   *
+   * @param column - Index of the column to be selected.
+   */
+  void unselectColumn(in long column);
+
+  /**
+   * Use heuristics to determine if table is most likely used for layout.
+   */
   boolean isProbablyForLayout();
 };
+
