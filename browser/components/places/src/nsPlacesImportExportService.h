@@ -41,6 +41,7 @@ class nsPlacesImportExportService : public nsIPlacesImportExportService
     nsresult WriteItem(nsINavHistoryResultNode* aItem, const nsACString& aIndent, nsIOutputStream* aOutput);
     nsresult WriteLivemark(PRInt64 aFolderId, const nsACString& aIndent, nsIOutputStream* aOutput);
     nsresult WriteContainerContents(PRInt64 aFolder, const nsACString& aIndent, nsIOutputStream* aOutput);
+    nsresult WriteDescription(PRInt64 aId, PRInt32 aType, nsIOutputStream* aOutput);
 
     nsresult ArchiveBookmarksFile(PRInt32 aNumberOfBackups, PRBool aForceArchive);
   

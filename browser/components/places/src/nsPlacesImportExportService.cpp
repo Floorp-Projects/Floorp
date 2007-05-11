@@ -118,6 +118,7 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define KEY_ID_LOWER "id"
 
 #define LOAD_IN_SIDEBAR_ANNO NS_LITERAL_CSTRING("bookmarkProperties/loadInSidebar")
+#define DESCRIPTION_ANNO NS_LITERAL_CSTRING("bookmarkProperties/description")
 
 #define BOOKMARKSS_MENU_ICON_URI "chrome://browser/skin/places/bookmarksMenu.png"
 #define BOOKMARKSS_TOOLBAR_ICON_URI "chrome://browser/skin/places/bookmarksToolbar.png"
@@ -457,21 +458,6 @@ NS_IMPL_ISUPPORTS2(BookmarkContentSink,
 NS_IMETHODIMP
 BookmarkContentSink::OpenContainer(const nsIParserNode& aNode)
 {
-  // see the comment for the definition of mInDescription. Basically, we commit
-  // any text in mPreviousText to the description of the node/folder if there
-  // is any.
-  BookmarkImportFrame& frame = CurFrame();
-  if (frame.mInDescription) {
-    frame.mPreviousText.Trim(kWhitespace); // important!
-    if (!frame.mPreviousText.IsEmpty()) {
-      // FIXME bug 334758: This description should be stored as an annotation
-      // on the URL or folder. We should probably not overwrite existing
-      // annotations.
-      frame.mPreviousText.Truncate();
-    }
-    frame.mInDescription = PR_FALSE;
-  }
-
   switch(aNode.GetNodeType()) {
     case eHTMLTag_h1:
       HandleHead1Begin(aNode);
@@ -491,6 +477,9 @@ BookmarkContentSink::OpenContainer(const nsIParserNode& aNode)
     case eHTMLTag_menu:
       HandleContainerBegin(aNode);
       break;
+    case eHTMLTag_dd:
+      CurFrame().mInDescription = PR_TRUE;
+      break;
   }
   return NS_OK;
 }
@@ -498,6 +487,30 @@ BookmarkContentSink::OpenContainer(const nsIParserNode& aNode)
 NS_IMETHODIMP
 BookmarkContentSink::CloseContainer(const nsHTMLTag aTag)
 {
+  // see the comment for the definition of mInDescription. Basically, we commit
+  // any text in mPreviousText to the description of the node/folder if there
+  // is any.
+  BookmarkImportFrame& frame = CurFrame();
+  if (frame.mInDescription) {
+    frame.mPreviousText.Trim(kWhitespace); // important!
+    if (!frame.mPreviousText.IsEmpty()) {
+      PRInt64 itemId = !frame.mPreviousLink ?
+                       frame.mContainerID : frame.mPreviousId;
+                    
+      PRBool hasDescription = PR_FALSE;
+      nsresult rv = mAnnotationService->ItemHasAnnotation(itemId,
+                                                          DESCRIPTION_ANNO,
+                                                          &hasDescription);
+      if (NS_SUCCEEDED(rv) && !hasDescription) {
+        mAnnotationService->SetItemAnnotationString(itemId, DESCRIPTION_ANNO,
+                                                    frame.mPreviousText, 0,
+                                                    nsIAnnotationService::EXPIRE_NEVER);
+      }
+      frame.mPreviousText.Truncate();
+    }
+    frame.mInDescription = PR_FALSE;
+  }
+
   switch (aTag) {
     case eHTMLTag_dl:
     case eHTMLTag_ul:
@@ -848,8 +861,6 @@ BookmarkContentSink::HandleLinkEnd()
     // The bookmark is actually a livemark.  Create it here.
     // (It gets created here instead of in HandleLinkBegin()
     // because we need to know the title before creating it.)
-    PRInt64 folderId;
-
     if (frame.mPreviousId > 0) {
       // It's a pre-existing livemark, so update its properties
       rv = mLivemarkService->SetSiteURI(frame.mPreviousId, frame.mPreviousLink);
@@ -866,7 +877,7 @@ BookmarkContentSink::HandleLinkEnd()
                                                    frame.mPreviousLink,
                                                    frame.mPreviousFeed,
                                                    -1,
-                                                   &folderId);
+                                                   &frame.mPreviousId);
         NS_ASSERTION(NS_SUCCEEDED(rv), "CreateLivemarkFolderOnly failed!");
       } else {
         rv = mLivemarkService->CreateLivemark(frame.mContainerID,
@@ -874,7 +885,7 @@ BookmarkContentSink::HandleLinkEnd()
                                          frame.mPreviousLink,
                                          frame.mPreviousFeed,
                                          -1,
-                                         &folderId);
+                                         &frame.mPreviousId);
         NS_ASSERTION(NS_SUCCEEDED(rv), "CreateLivemark failed!");
       }
     }
@@ -1220,6 +1231,8 @@ static const char kSeparator[] = "<HR>" NS_LINEBREAK;
 static const char kQuoteStr[] = "\"";
 static const char kCloseAngle[] = ">";
 static const char kIndent[] = "    ";
+static const char kDescriptionIntro[] = "<DD>";
+static const char kDescriptionClose[] = NS_LINEBREAK;
 
 static const char kPlacesRootAttribute[] = " PLACES_ROOT=\"true\"";
 static const char kBookmarksRootAttribute[] = " BOOKMARKSS_MENU=\"true\"";
@@ -1444,6 +1457,12 @@ nsPlacesImportExportService::WriteContainerHeader(PRInt64 aFolder, const nsACStr
 
   // "</H3>\n"
   rv = aOutput->Write(kContainerClose, sizeof(kContainerClose)-1, &dummy);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // description
+  rv = WriteDescription(aFolder, nsINavBookmarksService::TYPE_FOLDER, aOutput);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return rv;
 }
 
@@ -1471,6 +1490,39 @@ nsPlacesImportExportService::WriteContainerTitle(PRInt64 aFolder, nsIOutputStrea
   return NS_OK;
 }
 
+
+nsresult
+nsPlacesImportExportService::WriteDescription(PRInt64 aItemId, PRInt32 aType,
+                                              nsIOutputStream* aOutput)
+{
+  PRBool hasDescription = PR_FALSE;
+  nsresult rv = mAnnotationService->ItemHasAnnotation(aItemId,
+                                                      DESCRIPTION_ANNO,
+                                                      &hasDescription);
+  if (NS_FAILED(rv) || !hasDescription)
+    return rv;
+
+  nsAutoString description;
+  rv = mAnnotationService->GetItemAnnotationString(aItemId, DESCRIPTION_ANNO,
+                                                   description);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  char* escapedDesc = nsEscapeHTML(NS_ConvertUTF16toUTF8(description).get());
+  if (escapedDesc) {
+    PRUint32 dummy;
+    rv = aOutput->Write(kDescriptionIntro, sizeof(kDescriptionIntro)-1, &dummy);
+    if (NS_FAILED(rv)) {
+      nsMemory::Free(escapedDesc);
+      return rv;
+    }
+    rv = aOutput->Write(escapedDesc, strlen(escapedDesc), &dummy);
+    nsMemory::Free(escapedDesc);
+    NS_ENSURE_SUCCESS(rv, rv);
+    aOutput->Write(kDescriptionClose, sizeof(kDescriptionClose)-1, &dummy);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
 
 // nsBookmarks::WriteItem
 //
@@ -1570,7 +1622,9 @@ nsPlacesImportExportService::WriteItem(nsINavHistoryResultNode* aItem,
   rv = aOutput->Write(kItemClose, sizeof(kItemClose)-1, &dummy);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // FIXME bug 334758: write item description here as a <DD>
+  // description
+  rv = WriteDescription(itemId, nsINavBookmarksService::TYPE_BOOKMARK, aOutput);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -1652,6 +1706,10 @@ nsPlacesImportExportService::WriteLivemark(PRInt64 aFolderId, const nsACString& 
 
   // '</A>\n'
   rv = aOutput->Write(kItemClose, sizeof(kItemClose)-1, &dummy);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // description
+  rv = WriteDescription(aFolderId, nsINavBookmarksService::TYPE_BOOKMARK, aOutput);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
