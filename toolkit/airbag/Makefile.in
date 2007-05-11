@@ -62,7 +62,7 @@ endif
 
 ifeq ($(OS_ARCH),Darwin)
 DIRS += \
-  airbag/src/common/ \
+  airbag/src/common \
   airbag/src/common/mac \
   airbag/src/client/mac/handler \
   airbag/src/tools/mac/dump_syms \
