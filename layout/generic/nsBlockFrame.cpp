@@ -2463,16 +2463,14 @@ nsBlockFrame::AttributeChanged(PRInt32         aNameSpaceID,
 inline PRBool
 IsPaddingZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
 {
-    return (aUnit == eStyleUnit_Null ||
-            (aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0) ||
+    return ((aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0) ||
             (aUnit == eStyleUnit_Percent && aCoord.GetPercentValue() == 0.0));
 }
 
 inline PRBool
 IsMarginZero(nsStyleUnit aUnit, nsStyleCoord &aCoord)
 {
-    return (aUnit == eStyleUnit_Null ||
-            aUnit == eStyleUnit_Auto ||
+    return (aUnit == eStyleUnit_Auto ||
             (aUnit == eStyleUnit_Coord && aCoord.GetCoordValue() == 0) ||
             (aUnit == eStyleUnit_Percent && aCoord.GetPercentValue() == 0.0));
 }

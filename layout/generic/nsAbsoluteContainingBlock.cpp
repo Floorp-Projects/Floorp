@@ -184,12 +184,10 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
 }
 
 static inline PRBool IsFixedPaddingSize(nsStyleUnit aUnit) {
-  return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Null ||
-         aUnit == eStyleUnit_Chars;
+  return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Chars;
 }
 static inline PRBool IsFixedMarginSize(nsStyleUnit aUnit) {
-  return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Null ||
-         aUnit == eStyleUnit_Chars;
+  return aUnit == eStyleUnit_Coord || aUnit == eStyleUnit_Chars;
 }
 static inline PRBool IsFixedMaxSize(nsStyleUnit aUnit) {
   return aUnit == eStyleUnit_None || aUnit == eStyleUnit_Coord ||

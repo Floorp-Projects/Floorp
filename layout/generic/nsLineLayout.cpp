@@ -2008,8 +2008,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       // Only consider non empty text frames when line-height=normal
       PRBool canUpdate = !pfd->GetFlag(PFD_ISTEXTFRAME);
       if (!canUpdate && pfd->GetFlag(PFD_ISNONWHITESPACETEXTFRAME)) {
-        nsStyleUnit lhUnit = frame->GetStyleText()->mLineHeight.GetUnit();
-        canUpdate = lhUnit == eStyleUnit_Normal || lhUnit == eStyleUnit_Null;
+        canUpdate =
+          frame->GetStyleText()->mLineHeight.GetUnit() == eStyleUnit_Normal;
       }
       if (canUpdate) {
 #endif
