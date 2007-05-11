@@ -2185,8 +2185,6 @@ static PRBool NonZeroStyleCoord(const nsStyleCoord& aCoord)
     return aCoord.GetPercentValue() > 0;
   case eStyleUnit_Coord:
     return aCoord.GetCoordValue() > 0;
-  case eStyleUnit_Null:
-    return PR_FALSE;
   default:
     return PR_TRUE;
   }

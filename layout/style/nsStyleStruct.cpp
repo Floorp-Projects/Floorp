@@ -63,8 +63,7 @@
 
 inline PRBool IsFixedUnit(nsStyleUnit aUnit, PRBool aEnumOK)
 {
-  return PRBool((aUnit == eStyleUnit_Null) || 
-                (aUnit == eStyleUnit_Coord) || 
+  return PRBool((aUnit == eStyleUnit_Coord) || 
                 (aEnumOK && (aUnit == eStyleUnit_Enumerated)));
 }
 
@@ -198,8 +197,6 @@ static nscoord CalcCoord(const nsStyleCoord& aCoord,
                          PRInt32 aNumEnums)
 {
   switch (aCoord.GetUnit()) {
-    case eStyleUnit_Null:
-      return 0;
     case eStyleUnit_Coord:
       return aCoord.GetCoordValue();
     case eStyleUnit_Enumerated:
