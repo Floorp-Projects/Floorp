@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMNSHTMLAreaElement2.h"
-#include "nsIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsGenericHTMLElement.h"
 #include "nsILink.h"
 #include "nsIPresShell.h"

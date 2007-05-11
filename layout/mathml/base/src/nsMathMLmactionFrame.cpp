@@ -56,7 +56,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMElement.h"
 
-#include "nsIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIDOMMouseListener.h"
 
 #include "nsMathMLmactionFrame.h"
@@ -88,8 +88,9 @@ NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 nsMathMLmactionFrame::~nsMathMLmactionFrame()
 {
   // unregister us as a mouse event listener ...
-  //  printf("maction:%p unregistering as mouse event listener ...\n", this);
-  mContent->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
+//  printf("maction:%p unregistering as mouse event listener ...\n", this);
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
+  receiver->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
 }
 
 NS_IMETHODIMP
@@ -238,7 +239,8 @@ nsMathMLmactionFrame::SetInitialChildList(nsIAtom*        aListName,
   else {
     // register us as a mouse event listener ...
     // printf("maction:%p registering as mouse event listener ...\n", this);
-    mContent->AddEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
+    receiver->AddEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
   }
   return rv;
 }

@@ -59,6 +59,7 @@
 #include "nsIDOMDocumentRange.h"
 #include "nsIDOMDocumentTraversal.h"
 #include "nsStubDocumentObserver.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMNSEventTarget.h"
 #include "nsIDOMStyleSheetList.h"
@@ -287,7 +288,7 @@ class nsDocument : public nsIDocument,
                    public nsIDOMDocumentXBL,
                    public nsIDOM3Document,
                    public nsSupportsWeakReference,
-                   public nsIDOMEventTarget,
+                   public nsIDOMEventReceiver,
                    public nsIDOM3EventTarget,
                    public nsIDOMNSEventTarget,
                    public nsIScriptObjectPrincipal,
@@ -530,13 +531,6 @@ public:
   virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
                                     nsPresContext* aPresContext,
                                     nsEventStatus* aEventStatus);
-  virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
-                                      nsIEventListenerManager** aResult);
-  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                         const nsIID& aIID);
-  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                            const nsIID& aIID);
-  virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -607,6 +601,15 @@ public:
 
   // nsIDOMDocumentXBL
   NS_DECL_NSIDOMDOCUMENTXBL
+
+  // nsIDOMEventReceiver interface
+  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                   const nsIID& aIID);
+  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                      const nsIID& aIID);
+  NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
+                                nsIEventListenerManager** aResult);
+  NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
   // nsIDOMEventTarget
   NS_DECL_NSIDOMEVENTTARGET

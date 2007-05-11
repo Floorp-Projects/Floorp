@@ -56,7 +56,6 @@
 #include "nsGkAtoms.h"
 #include "nsCOMArray.h"
 #include "nsNodeUtils.h"
-#include "nsIEventListenerManager.h"
 
 //----------------------------------------------------------------------
 PRBool nsDOMAttribute::sInitialized;
@@ -735,46 +734,11 @@ nsDOMAttribute::DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult
+NS_IMETHODIMP
 nsDOMAttribute::GetListenerManager(PRBool aCreateIfNotFound,
                                    nsIEventListenerManager** aResult)
 {
   return nsContentUtils::GetListenerManager(this, aCreateIfNotFound, aResult);
-}
-
-nsresult
-nsDOMAttribute::AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                      const nsIID& aIID)
-{
-  nsCOMPtr<nsIEventListenerManager> elm;
-  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(elm));
-  if (elm) {
-    return elm->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-  }
-  return rv;
-}
-
-nsresult
-nsDOMAttribute::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                         const nsIID& aIID)
-{
-  nsCOMPtr<nsIEventListenerManager> elm;
-  GetListenerManager(PR_FALSE, getter_AddRefs(elm));
-  if (elm) {
-    return elm->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-  }
-  return NS_OK;
-}
-
-nsresult
-nsDOMAttribute::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
-{
-  nsCOMPtr<nsIEventListenerManager> elm;
-  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(elm));
-  if (elm) {
-    return elm->GetSystemEventGroupLM(aGroup);
-  }
-  return rv;
 }
 
 nsresult

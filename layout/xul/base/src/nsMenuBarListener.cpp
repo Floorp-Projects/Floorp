@@ -41,7 +41,7 @@
 #include "nsMenuBarListener.h"
 #include "nsMenuBarFrame.h"
 #include "nsIDOMKeyListener.h"
-#include "nsIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMNSEvent.h"

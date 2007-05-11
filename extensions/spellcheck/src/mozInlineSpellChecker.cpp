@@ -73,8 +73,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentRange.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMEventTarget.h"
-#include "nsPIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
@@ -623,13 +622,11 @@ mozInlineSpellChecker::RegisterEventListeners()
   nsresult rv = editor->GetDocument(getter_AddRefs(doc));
   NS_ENSURE_SUCCESS(rv, rv); 
 
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(doc, &rv);
+  nsCOMPtr<nsIDOMEventReceiver> eventReceiver = do_QueryInterface(doc, &rv);
   NS_ENSURE_SUCCESS(rv, rv); 
 
-  piTarget->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*, this),
-                                  NS_GET_IID(nsIDOMMouseListener));
-  piTarget->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener*, this),
-                                  NS_GET_IID(nsIDOMKeyListener));
+  eventReceiver->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*, this), NS_GET_IID(nsIDOMMouseListener));
+  eventReceiver->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener*, this), NS_GET_IID(nsIDOMKeyListener));
 
   return NS_OK;
 }
@@ -648,13 +645,11 @@ mozInlineSpellChecker::UnregisterEventListeners()
   editor->GetDocument(getter_AddRefs(doc));
   NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
   
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(doc);
-  NS_ENSURE_TRUE(piTarget, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsIDOMEventReceiver> eventReceiver = do_QueryInterface(doc);
+  NS_ENSURE_TRUE(eventReceiver, NS_ERROR_NULL_POINTER);
 
-  piTarget->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*, this),
-                                     NS_GET_IID(nsIDOMMouseListener));
-  piTarget->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener*, this),
-                                     NS_GET_IID(nsIDOMKeyListener));
+  eventReceiver->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*, this), NS_GET_IID(nsIDOMMouseListener));
+  eventReceiver->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener*, this), NS_GET_IID(nsIDOMKeyListener));
   
   return NS_OK;
 }

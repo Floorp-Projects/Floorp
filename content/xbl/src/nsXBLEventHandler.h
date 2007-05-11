@@ -46,7 +46,7 @@
 class nsIAtom;
 class nsIContent;
 class nsIDOM3EventTarget;
-class nsPIDOMEventTarget;
+class nsIDOMEventReceiver;
 class nsXBLPrototypeHandler;
 
 class nsXBLEventHandler : public nsIDOMEventListener

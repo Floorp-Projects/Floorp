@@ -60,7 +60,7 @@
 #include "nsIDOMText.h"
 #include "nsIFocusController.h"
 #include "nsIEventListenerManager.h"
-#include "nsIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMNSEvent.h"
@@ -212,7 +212,7 @@ nsXBLPrototypeHandler::InitAccessKeys()
 }
 
 nsresult
-nsXBLPrototypeHandler::ExecuteHandler(nsPIDOMEventTarget* aTarget,
+nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
                                       nsIDOMEvent* aEvent)
 {
   nsresult rv = NS_ERROR_FAILURE;
@@ -273,14 +273,14 @@ nsXBLPrototypeHandler::ExecuteHandler(nsPIDOMEventTarget* aTarget,
     nsCOMPtr<nsIController> controller;
     nsCOMPtr<nsIFocusController> focusController;
 
-    nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(aTarget));
+    nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(aReceiver));
     if (windowRoot) {
       windowRoot->GetFocusController(getter_AddRefs(focusController));
     }
     else {
-      nsCOMPtr<nsPIDOMWindow> privateWindow(do_QueryInterface(aTarget));
+      nsCOMPtr<nsPIDOMWindow> privateWindow(do_QueryInterface(aReceiver));
       if (!privateWindow) {
-        nsCOMPtr<nsIContent> elt(do_QueryInterface(aTarget));
+        nsCOMPtr<nsIContent> elt(do_QueryInterface(aReceiver));
         nsCOMPtr<nsIDocument> doc;
         // XXXbz sXBL/XBL2 issue -- this should be the "scope doc" or
         // something... whatever we use when wrapping DOM nodes
@@ -290,7 +290,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsPIDOMEventTarget* aTarget,
           doc = elt->GetOwnerDoc();
 
         if (!doc)
-          doc = do_QueryInterface(aTarget);
+          doc = do_QueryInterface(aReceiver);
 
         if (!doc)
           return NS_ERROR_FAILURE;
@@ -307,7 +307,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsPIDOMEventTarget* aTarget,
     if (focusController)
       focusController->GetControllerForCommand(command.get(), getter_AddRefs(controller));
     else
-      controller = GetController(aTarget); // We're attached to the receiver possibly.
+      controller = GetController(aReceiver); // We're attached to the receiver possibly.
 
     nsAutoString type;
     mEventName->ToString(type);
@@ -418,7 +418,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsPIDOMEventTarget* aTarget,
 
   // Compile the handler and bind it to the element.
   nsCOMPtr<nsIScriptGlobalObject> boundGlobal;
-  nsCOMPtr<nsPIWindowRoot> winRoot(do_QueryInterface(aTarget));
+  nsCOMPtr<nsPIWindowRoot> winRoot(do_QueryInterface(aReceiver));
   nsCOMPtr<nsIDOMWindowInternal> focusedWin;
 
   if (winRoot) {
@@ -441,13 +441,13 @@ nsXBLPrototypeHandler::ExecuteHandler(nsPIDOMEventTarget* aTarget,
 
     boundGlobal = do_QueryInterface(piWin->GetPrivateRoot());
   }
-  else boundGlobal = do_QueryInterface(aTarget);
+  else boundGlobal = do_QueryInterface(aReceiver);
 
   if (!boundGlobal) {
-    nsCOMPtr<nsIDocument> boundDocument(do_QueryInterface(aTarget));
+    nsCOMPtr<nsIDocument> boundDocument(do_QueryInterface(aReceiver));
     if (!boundDocument) {
       // We must be an element.
-      nsCOMPtr<nsIContent> content(do_QueryInterface(aTarget));
+      nsCOMPtr<nsIContent> content(do_QueryInterface(aReceiver));
       if (!content)
         return NS_OK;
       boundDocument = content->GetOwnerDoc();
@@ -472,7 +472,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsPIDOMEventTarget* aTarget,
   if (winRoot) {
     scriptTarget = boundGlobal;
   } else {
-    scriptTarget = aTarget;
+    scriptTarget = aReceiver;
   }
   // XXX - apparently we should not be using the global as the scope - what
   // should we use?  See bug 339649, which is trying to find out!
@@ -522,30 +522,30 @@ nsXBLPrototypeHandler::GetEventName()
 }
 
 already_AddRefed<nsIController>
-nsXBLPrototypeHandler::GetController(nsPIDOMEventTarget* aTarget)
+nsXBLPrototypeHandler::GetController(nsIDOMEventReceiver* aReceiver)
 {
   // XXX Fix this so there's a generic interface that describes controllers, 
   // This code should have no special knowledge of what objects might have controllers.
   nsCOMPtr<nsIControllers> controllers;
 
-  nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(aTarget));
+  nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(aReceiver));
   if (xulElement)
     xulElement->GetControllers(getter_AddRefs(controllers));
 
   if (!controllers) {
-    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextArea(do_QueryInterface(aTarget));
+    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextArea(do_QueryInterface(aReceiver));
     if (htmlTextArea)
       htmlTextArea->GetControllers(getter_AddRefs(controllers));
   }
 
   if (!controllers) {
-    nsCOMPtr<nsIDOMNSHTMLInputElement> htmlInputElement(do_QueryInterface(aTarget));
+    nsCOMPtr<nsIDOMNSHTMLInputElement> htmlInputElement(do_QueryInterface(aReceiver));
     if (htmlInputElement)
       htmlInputElement->GetControllers(getter_AddRefs(controllers));
   }
 
   if (!controllers) {
-    nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(aTarget));
+    nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(aReceiver));
     if (domWindow)
       domWindow->GetControllers(getter_AddRefs(controllers));
   }

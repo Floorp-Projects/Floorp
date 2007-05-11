@@ -41,7 +41,7 @@
 #include "nsIDocument.h"
 #include "nsRange.h"
 #include "nsIDOMAttr.h"
-#include "nsIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsMutationEvent.h"
 #include "nsBindingManager.h"

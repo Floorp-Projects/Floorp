@@ -43,6 +43,7 @@
 #include "nsPIDOMEventTarget.h"
 #include "nsPresContext.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIEventListenerManager.h"
 #include "nsPIDOMWindow.h"

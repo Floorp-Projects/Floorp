@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
@@ -34,70 +34,41 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsIDOMHTMLMetaElement.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsGenericHTMLElement.h"
-#include "nsGkAtoms.h"
-#include "nsStyleConsts.h"
-#include "nsPresContext.h"
 
+#ifndef nsIDOMEventReceiver_h__
+#define nsIDOMEventReceiver_h__
 
-class nsHTMLMetaElement : public nsGenericHTMLElement,
-                          public nsIDOMHTMLMetaElement
+#include "nsIDOMEventTarget.h"
+
+class nsIDOMEventListener;
+class nsIEventListenerManager;
+class nsIDOMEvent;
+class nsIDOMEventGroup;
+
+/*
+ * DOM event source class.  Object that allow event registration and
+ * distribution from themselves implement this interface.
+ */
+ 
+/* 025957f3-7b19-452b-89a1-9be652d8d6db */
+#define NS_IDOMEVENTRECEIVER_IID \
+{ 0x025957f3, 0x7b19, 0x452b, \
+  { 0x89, 0xa1, 0x9b, 0xe6, 0x52, 0xd8, 0xd6, 0xdb } }
+
+class nsIDOMEventReceiver : public nsIDOMEventTarget
 {
 public:
-  nsHTMLMetaElement(nsINodeInfo *aNodeInfo);
-  virtual ~nsHTMLMetaElement();
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMEVENTRECEIVER_IID)
 
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
-
-  // nsIDOMHTMLMetaElement
-  NS_DECL_NSIDOMHTMLMETAELEMENT
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                   const nsIID& aIID) = 0;
+  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                      const nsIID& aIID) = 0;
+  NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
+                                nsIEventListenerManager** aResult) = 0;
+  NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMEventReceiver, NS_IDOMEVENTRECEIVER_IID)
 
-NS_IMPL_NS_NEW_HTML_ELEMENT(Meta)
-
-
-nsHTMLMetaElement::nsHTMLMetaElement(nsINodeInfo *aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
-{
-}
-
-nsHTMLMetaElement::~nsHTMLMetaElement()
-{
-}
-
-
-NS_IMPL_ADDREF_INHERITED(nsHTMLMetaElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLMetaElement, nsGenericElement) 
-
-
-
-// QueryInterface implementation for nsHTMLMetaElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLMetaElement,
-                                    nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLMetaElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLMetaElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
-
-
-NS_IMPL_ELEMENT_CLONE(nsHTMLMetaElement)
-
-
-NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Content, content)
-NS_IMPL_STRING_ATTR(nsHTMLMetaElement, HttpEquiv, httpEquiv)
-NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Name, name)
-NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Scheme, scheme)
+#endif // nsIDOMEventReceiver_h__

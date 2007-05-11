@@ -49,7 +49,7 @@
 #include "nsIAtomService.h"
 #include "nsIEventListenerManager.h"
 #include "nsIScriptTimeoutHandler.h"
-#include "nsPIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIArray.h"
 #include "jscntxt.h"
 #include "nsPIDOMWindow.h"
@@ -303,11 +303,11 @@ static PyObject *PyAddScriptEventListener(PyObject *self, PyObject *args)
         return NULL;
 
     // The receiver, to get the manager.
-    nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(target));
-    if (!piTarget) return PyXPCOM_BuildPyException(NS_ERROR_UNEXPECTED);
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(target));
+    if (!receiver) return PyXPCOM_BuildPyException(NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIEventListenerManager> manager;
-    piTarget->GetListenerManager(PR_TRUE, getter_AddRefs(manager));
+    receiver->GetListenerManager(PR_TRUE, getter_AddRefs(manager));
     if (!manager) return PyXPCOM_BuildPyException(NS_ERROR_UNEXPECTED);
 
     // avoid do_GetAtom - its not part of the XPCOM glue.
@@ -374,11 +374,11 @@ static PyObject *PyRegisterScriptEventListener(PyObject *self, PyObject *args)
         target = win->GetCurrentInnerWindow();
     }
     // The receiver, to get the manager.
-    nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(target));
-    if (!piTarget) return PyXPCOM_BuildPyException(NS_ERROR_UNEXPECTED);
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(target));
+    if (!receiver) return PyXPCOM_BuildPyException(NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIEventListenerManager> manager;
-    piTarget->GetListenerManager(PR_TRUE, getter_AddRefs(manager));
+    receiver->GetListenerManager(PR_TRUE, getter_AddRefs(manager));
     if (!manager) return PyXPCOM_BuildPyException(NS_ERROR_UNEXPECTED);
 
     nsresult rv;
@@ -445,11 +445,11 @@ static PyObject *PyCompileScriptEventListener(PyObject *self, PyObject *args)
         target = win->GetCurrentInnerWindow();
     }
     // The receiver, to get the manager.
-    nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(target));
-    if (!piTarget) return PyXPCOM_BuildPyException(NS_ERROR_UNEXPECTED);
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(target));
+    if (!receiver) return PyXPCOM_BuildPyException(NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIEventListenerManager> manager;
-    piTarget->GetListenerManager(PR_TRUE, getter_AddRefs(manager));
+    receiver->GetListenerManager(PR_TRUE, getter_AddRefs(manager));
     if (!manager) return PyXPCOM_BuildPyException(NS_ERROR_UNEXPECTED);
 
     nsresult rv;
