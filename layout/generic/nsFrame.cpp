@@ -3104,7 +3104,7 @@ IsAutoHeight(const nsStyleCoord &aCoord, nscoord aCBHeight)
 {
   nsStyleUnit unit = aCoord.GetUnit();
   return unit == eStyleUnit_Auto ||  // only for 'height'
-         unit == eStyleUnit_Null ||  // only for 'max-height'
+         unit == eStyleUnit_None ||  // only for 'max-height'
          (unit == eStyleUnit_Percent && 
           aCBHeight == NS_AUTOHEIGHT);
 }
@@ -3139,7 +3139,7 @@ nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
         stylePos->mWidth);
   }
 
-  if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_Null) {
+  if (stylePos->mMaxWidth.GetUnit() != eStyleUnit_None) {
     nscoord maxWidth =
       nsLayoutUtils::ComputeWidthValue(aRenderingContext, this,
         aCBSize.width, boxSizingAdjust.width, boxSizingToMarginEdgeWidth,

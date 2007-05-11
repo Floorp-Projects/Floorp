@@ -192,7 +192,7 @@ static inline PRBool IsFixedMarginSize(nsStyleUnit aUnit) {
          aUnit == eStyleUnit_Chars;
 }
 static inline PRBool IsFixedMaxSize(nsStyleUnit aUnit) {
-  return aUnit == eStyleUnit_Null || aUnit == eStyleUnit_Coord ||
+  return aUnit == eStyleUnit_None || aUnit == eStyleUnit_Coord ||
          aUnit == eStyleUnit_Chars;
 }
 static inline PRBool IsFixedOffset(nsStyleUnit aUnit) {
@@ -213,7 +213,7 @@ static inline PRBool IsFixedWidth(const nsStyleCoord& aCoord)
 
 static inline PRBool IsFixedMaxWidth(const nsStyleCoord& aCoord)
 {
-  return aCoord.GetUnit() == eStyleUnit_Null ||
+  return aCoord.GetUnit() == eStyleUnit_None ||
          IsFixedWidth(aCoord);
 }
 
