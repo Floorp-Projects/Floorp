@@ -73,6 +73,7 @@ _TEST_FILES = 	test_bug221428.html \
 		test_bug372770.html \
 		test_bug373293.html \
 		test_bug379440.html \
+		test_bug379741.html \
 		test_inherit_storage.html \
 		test_inherit_computation.html \
 		test_initial_storage.html \

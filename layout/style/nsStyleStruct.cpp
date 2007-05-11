@@ -222,7 +222,10 @@ static nscoord CalcCoord(const nsStyleCoord& aCoord,
 }
 
 nsStyleMargin::nsStyleMargin() {
-  mMargin.Reset();
+  nsStyleCoord zero(0);
+  NS_FOR_CSS_SIDES(side) {
+    mMargin.Set(side, zero);
+  }
   mHasCachedMargin = PR_FALSE;
 }
 
@@ -277,7 +280,10 @@ nsChangeHint nsStyleMargin::MaxDifference()
 #endif
 
 nsStylePadding::nsStylePadding() {
-  mPadding.Reset();
+  nsStyleCoord zero(0);
+  NS_FOR_CSS_SIDES(side) {
+    mPadding.Set(side, zero);
+  }
   mHasCachedPadding = PR_FALSE;
 }
 
@@ -1301,6 +1307,7 @@ nsStyleContent::nsStyleContent(void)
     mResetCount(0),
     mResets(nsnull)
 {
+  mMarkerOffset.SetAutoValue();
 }
 
 nsStyleContent::~nsStyleContent(void)
