@@ -50,6 +50,7 @@
 #include "nsISelection.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMMouseEvent.h"
@@ -97,7 +98,6 @@
 #include "nsContentCID.h"
 #include "nsISelectionController.h"
 #include "nsFrameSelection.h"
-#include "nsIDOMEventTarget.h"
 
 // private clipboard data flavors for html copy, used by editor when pasting
 #define kHTMLContext   "text/_moz_htmlcontext"
@@ -190,9 +190,9 @@ nsContentAreaDragDrop::HookupTo(nsIDOMEventTarget *inAttachPoint,
                                 nsIWebNavigation* inNavigator)
 {
   NS_ASSERTION(inAttachPoint, "Can't hookup Drag Listeners to NULL receiver");
-  mEventTarget = do_QueryInterface(inAttachPoint);
-  NS_ASSERTION(mEventTarget,
-               "Target doesn't implement nsPIDOMEventTarget as needed");
+  mEventReceiver = do_QueryInterface(inAttachPoint);
+  NS_ASSERTION(mEventReceiver,
+               "Target doesn't implement nsIDOMEventReceiver as needed");
   mNavigator = inNavigator;
 
   return AddDragListener();
@@ -216,10 +216,10 @@ nsContentAreaDragDrop::AddDragListener()
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  if (mEventTarget) {
+  if ( mEventReceiver ) {
     nsIDOMDragListener *pListener = NS_STATIC_CAST(nsIDOMDragListener *, this);
-    rv = mEventTarget->AddEventListenerByIID(pListener,
-                                             NS_GET_IID(nsIDOMDragListener));
+    rv = mEventReceiver->AddEventListenerByIID(pListener,
+                                               NS_GET_IID(nsIDOMDragListener));
     if (NS_SUCCEEDED(rv))
       mListenerInstalled = PR_TRUE;
   }
@@ -238,14 +238,14 @@ nsContentAreaDragDrop::RemoveDragListener()
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  if (mEventTarget) {
+  if (mEventReceiver) {
     nsIDOMDragListener *pListener = NS_STATIC_CAST(nsIDOMDragListener *, this);
     rv =
-      mEventTarget->RemoveEventListenerByIID(pListener,
-                                             NS_GET_IID(nsIDOMDragListener));
+      mEventReceiver->RemoveEventListenerByIID(pListener,
+                                               NS_GET_IID(nsIDOMDragListener));
     if (NS_SUCCEEDED(rv))
       mListenerInstalled = PR_FALSE;
-    mEventTarget = nsnull;
+    mEventReceiver = nsnull;
   }
 
   return rv;

@@ -42,7 +42,7 @@
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIFormControl.h"
-#include "nsIDOMEventTarget.h" 
+#include "nsIDOMEventReceiver.h" 
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsISelection.h"

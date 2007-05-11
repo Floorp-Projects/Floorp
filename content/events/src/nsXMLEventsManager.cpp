@@ -41,7 +41,7 @@
 #include "nsGkAtoms.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsNetUtil.h"
 #include "nsIURL.h"
 #include "nsIDOMEventListener.h"

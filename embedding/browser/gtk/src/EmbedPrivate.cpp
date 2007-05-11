@@ -647,8 +647,8 @@ EmbedPrivate::Destroy(void)
 
   // detach our event listeners and release the event receiver
   DetachListeners();
-  if (mEventTarget)
-    mEventTarget = nsnull;
+  if (mEventReceiver)
+    mEventReceiver = nsnull;
 
   // destroy our child window
   mWindow->ReleaseChildren();
@@ -993,7 +993,7 @@ EmbedPrivate::ContentStateChange(void)
 
   GetListener();
 
-  if (!mEventTarget)
+  if (!mEventReceiver)
     return;
 
   AttachListeners();
@@ -1118,7 +1118,7 @@ EmbedPrivate::ChildFocusOut(void)
 void
 EmbedPrivate::GetListener(void)
 {
-  if (mEventTarget)
+  if (mEventReceiver)
     return;
 
   nsCOMPtr<nsPIDOMWindow> piWin;
@@ -1127,7 +1127,7 @@ EmbedPrivate::GetListener(void)
   if (!piWin)
     return;
 
-  mEventTarget = do_QueryInterface(piWin->GetChromeEventHandler());
+  mEventReceiver = do_QueryInterface(piWin->GetChromeEventHandler());
 }
 
 // attach key and mouse event listeners
@@ -1135,7 +1135,7 @@ EmbedPrivate::GetListener(void)
 void
 EmbedPrivate::AttachListeners(void)
 {
-  if (!mEventTarget || mListenersAttached)
+  if (!mEventReceiver || mListenersAttached)
     return;
 
   nsIDOMEventListener *eventListener =
@@ -1144,7 +1144,7 @@ EmbedPrivate::AttachListeners(void)
 
   // add the key listener
   nsresult rv;
-  rv = mEventTarget->AddEventListenerByIID(
+  rv = mEventReceiver->AddEventListenerByIID(
          eventListener,
          NS_GET_IID(nsIDOMKeyListener));
   if (NS_FAILED(rv)) {
@@ -1152,7 +1152,7 @@ EmbedPrivate::AttachListeners(void)
     return;
   }
 
-  rv = mEventTarget->AddEventListenerByIID(
+  rv = mEventReceiver->AddEventListenerByIID(
         eventListener,
         NS_GET_IID(nsIDOMMouseListener));
   if (NS_FAILED(rv)) {
@@ -1160,7 +1160,7 @@ EmbedPrivate::AttachListeners(void)
     return;
   }
 
-  rv = mEventTarget->AddEventListenerByIID(
+  rv = mEventReceiver->AddEventListenerByIID(
          eventListener,
          NS_GET_IID(nsIDOMUIListener));
   if (NS_FAILED(rv)) {
@@ -1168,23 +1168,17 @@ EmbedPrivate::AttachListeners(void)
     return;
   }
 
-  rv = mEventTarget->AddEventListenerByIID(
+  rv = mEventReceiver->AddEventListenerByIID(
          eventListener,
          NS_GET_IID(nsIDOMMouseMotionListener));
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to add Mouse Motion listener\n");
     return;
   }
-  
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mEventTarget));
-  if (!target) {
-    return;
-  }
-  
-  rv = target->AddEventListener(NS_LITERAL_STRING("focus"), eventListener, PR_TRUE);
-  rv = target->AddEventListener(NS_LITERAL_STRING("blur"), eventListener, PR_TRUE);
-  rv = target->AddEventListener(NS_LITERAL_STRING("DOMLinkAdded"), eventListener, PR_TRUE);
-  rv = target->AddEventListener(NS_LITERAL_STRING("load"), eventListener, PR_TRUE);
+  rv = mEventReceiver->AddEventListener(NS_LITERAL_STRING("focus"), eventListener, PR_TRUE);
+  rv = mEventReceiver->AddEventListener(NS_LITERAL_STRING("blur"), eventListener, PR_TRUE);
+  rv = mEventReceiver->AddEventListener(NS_LITERAL_STRING("DOMLinkAdded"), eventListener, PR_TRUE);
+  rv = mEventReceiver->AddEventListener(NS_LITERAL_STRING("load"), eventListener, PR_TRUE);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to add Mouse Motion listener\n");
     return;
@@ -1196,7 +1190,7 @@ EmbedPrivate::AttachListeners(void)
 void
 EmbedPrivate::DetachListeners(void)
 {
-  if (!mListenersAttached || !mEventTarget)
+  if (!mListenersAttached || !mEventReceiver)
     return;
 
   nsIDOMEventListener *eventListener =
@@ -1204,7 +1198,7 @@ EmbedPrivate::DetachListeners(void)
        NS_STATIC_CAST(nsIDOMKeyListener *, mEventListener));
 
   nsresult rv;
-  rv = mEventTarget->RemoveEventListenerByIID(
+  rv = mEventReceiver->RemoveEventListenerByIID(
          eventListener,
          NS_GET_IID(nsIDOMKeyListener));
   if (NS_FAILED(rv)) {
@@ -1213,7 +1207,7 @@ EmbedPrivate::DetachListeners(void)
   }
 
   rv =
-    mEventTarget->RemoveEventListenerByIID(
+    mEventReceiver->RemoveEventListenerByIID(
       eventListener,
       NS_GET_IID(nsIDOMMouseListener));
   if (NS_FAILED(rv)) {
@@ -1221,7 +1215,7 @@ EmbedPrivate::DetachListeners(void)
     return;
   }
 
-  rv = mEventTarget->RemoveEventListenerByIID(
+  rv = mEventReceiver->RemoveEventListenerByIID(
          eventListener,
          NS_GET_IID(nsIDOMUIListener));
   if (NS_FAILED(rv)) {
@@ -1229,23 +1223,17 @@ EmbedPrivate::DetachListeners(void)
     return;
   }
 
-  rv = mEventTarget->RemoveEventListenerByIID(
+  rv = mEventReceiver->RemoveEventListenerByIID(
          eventListener,
          NS_GET_IID(nsIDOMMouseMotionListener));
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to remove Mouse Motion listener\n");
     return;
   }
-  
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mEventTarget));
-  if (!target) {
-    return;
-  }
-
-  rv = target->RemoveEventListener(NS_LITERAL_STRING("focus"), eventListener, PR_TRUE);
-  rv = target->RemoveEventListener(NS_LITERAL_STRING("blur"), eventListener, PR_TRUE);
-  rv = target->RemoveEventListener(NS_LITERAL_STRING("DOMLinkAdded"), eventListener, PR_TRUE);
-  rv = target->RemoveEventListener(NS_LITERAL_STRING("load"), eventListener, PR_TRUE);
+  rv = mEventReceiver->RemoveEventListener(NS_LITERAL_STRING("focus"), eventListener, PR_TRUE);
+  rv = mEventReceiver->RemoveEventListener(NS_LITERAL_STRING("blur"), eventListener, PR_TRUE);
+  rv = mEventReceiver->RemoveEventListener(NS_LITERAL_STRING("DOMLinkAdded"), eventListener, PR_TRUE);
+  rv = mEventReceiver->RemoveEventListener(NS_LITERAL_STRING("load"), eventListener, PR_TRUE);
   mListenersAttached = PR_FALSE;
 }
 

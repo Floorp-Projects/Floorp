@@ -84,7 +84,7 @@
 #include "nsBoxLayoutState.h"
 //for keylistener for "return" check
 #include "nsIPrivateDOMEvent.h"
-#include "nsIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIDocument.h" //observe documents to send onchangenotifications
 #include "nsIStyleSheet.h"//observe documents to send onchangenotifications
 #include "nsIStyleRule.h"//observe documents to send onchangenotifications
@@ -1134,13 +1134,14 @@ nsTextControlFrame::PreDestroy()
   nsFormControlFrame::RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
   if (mTextListener)
   {
-    if (mContent)
+    nsCOMPtr<nsIDOMEventReceiver> erP = do_QueryInterface(mContent);
+    if (erP)
     {
-      mContent->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener  *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
+      erP->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener  *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
     }
 
     nsCOMPtr<nsIDOMEventGroup> systemGroup;
-    mContent->GetSystemEventGroup(getter_AddRefs(systemGroup));
+    erP->GetSystemEventGroup(getter_AddRefs(systemGroup));
     nsCOMPtr<nsIDOM3EventTarget> dom3Targ = do_QueryInterface(mContent);
     if (dom3Targ) {
       // cast because of ambiguous base
@@ -2731,10 +2732,10 @@ nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
   }
 
   //register focus and key listeners
-  if (mContent) {
+  nsCOMPtr<nsIDOMEventReceiver> erP = do_QueryInterface(mContent);
+  if (erP) {
     // register the event listeners with the DOM event receiver
-    rv = mContent->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener *,mTextListener),
-                                         NS_GET_IID(nsIDOMFocusListener));
+    rv = erP->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
     // XXXbryner do we need to check for a null presshell here?
     if (!PresContext()->GetPresShell())
@@ -2742,7 +2743,7 @@ nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
   }
 
   nsCOMPtr<nsIDOMEventGroup> systemGroup;
-  mContent->GetSystemEventGroup(getter_AddRefs(systemGroup));
+  erP->GetSystemEventGroup(getter_AddRefs(systemGroup));
   nsCOMPtr<nsIDOM3EventTarget> dom3Targ = do_QueryInterface(mContent);
   if (dom3Targ) {
     // cast because of ambiguous base

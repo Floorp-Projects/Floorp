@@ -51,6 +51,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDOMImplementation.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIPrivateDOMImplementation.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsContentUtils.h"
@@ -224,7 +225,7 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
     }
 
     // Register as a load listener on the document
-    nsCOMPtr<nsPIDOMEventTarget> target = do_QueryInterface(document);
+    nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(document);
     NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
 
     nsWeakPtr requestWeak = do_GetWeakReference(NS_STATIC_CAST(nsIDOMLoadListener*, this));

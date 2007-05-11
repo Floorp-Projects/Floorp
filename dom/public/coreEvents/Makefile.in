@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= dom
 
 EXPORTS =				\
+	nsIDOMEventReceiver.h		\
 	nsIDOMFocusListener.h		\
 	nsIDOMFormListener.h		\
 	nsIDOMKeyListener.h		\

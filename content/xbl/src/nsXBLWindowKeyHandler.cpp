@@ -44,7 +44,7 @@
 #include "nsIAtom.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMKeyEvent.h"
-#include "nsIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIDOMNSEvent.h"
 #include "nsXBLService.h"
 #include "nsIServiceManager.h"
@@ -175,9 +175,8 @@ nsXBLSpecialDocInfo::GetAllHandlers(const char* aType,
 nsXBLSpecialDocInfo* nsXBLWindowKeyHandler::sXBLSpecialDocInfo = nsnull;
 PRUint32 nsXBLWindowKeyHandler::sRefCnt = 0;
 
-nsXBLWindowKeyHandler::nsXBLWindowKeyHandler(nsIDOMElement* aElement,
-                                             nsPIDOMEventTarget* aTarget)
-  : mTarget(aTarget),
+nsXBLWindowKeyHandler::nsXBLWindowKeyHandler(nsIDOMElement* aElement, nsIDOMEventReceiver* aReceiver)
+  : mReceiver(aReceiver),
     mHandler(nsnull),
     mUserHandler(nsnull)
 {
@@ -356,7 +355,7 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
 
     // get the DOM window we're attached to
     nsCOMPtr<nsIControllers> controllers;
-    nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(mTarget);
+    nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(mReceiver);
     if (root) {
       nsCOMPtr<nsIFocusController> fc;
       root->GetFocusController(getter_AddRefs(fc));
@@ -432,7 +431,7 @@ nsXBLWindowKeyHandler::ShutDown()
 PRBool
 nsXBLWindowKeyHandler::IsEditor()
 {
-  nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(mTarget));
+  nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(mReceiver));
   NS_ENSURE_TRUE(windowRoot, PR_FALSE);
   nsCOMPtr<nsIFocusController> focusController;
   windowRoot->GetFocusController(getter_AddRefs(focusController));
@@ -535,15 +534,15 @@ nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMEvent* aEvent,
       }
     }
 
-    nsCOMPtr<nsPIDOMEventTarget> piTarget;
+    nsCOMPtr<nsIDOMEventReceiver> rec;
     nsCOMPtr<nsIDOMElement> element = GetElement();
     if (element) {
-      piTarget = do_QueryInterface(commandElt);
+      rec = do_QueryInterface(commandElt);
     } else {
-      piTarget = mTarget;
+      rec = mReceiver;
     }
 
-    rv = currHandler->ExecuteHandler(piTarget, aEvent);
+    rv = currHandler->ExecuteHandler(rec, aEvent);
     if (NS_SUCCEEDED(rv)) {
       return NS_OK;
     }
@@ -564,10 +563,9 @@ nsXBLWindowKeyHandler::GetElement()
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLWindowKeyHandler(nsIDOMElement* aElement, nsPIDOMEventTarget* aTarget,
-                          nsXBLWindowKeyHandler** aResult)
+NS_NewXBLWindowKeyHandler(nsIDOMElement* aElement, nsIDOMEventReceiver* aReceiver, nsXBLWindowKeyHandler** aResult)
 {
-  *aResult = new nsXBLWindowKeyHandler(aElement, aTarget);
+  *aResult = new nsXBLWindowKeyHandler(aElement, aReceiver);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);

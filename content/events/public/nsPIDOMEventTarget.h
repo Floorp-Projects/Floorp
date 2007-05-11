@@ -46,13 +46,11 @@ class nsPresContext;
 class nsEventChainPreVisitor;
 class nsEventChainPostVisitor;
 class nsIEventListenerManager;
-class nsIDOMEventListener;
-class nsIDOMEventGroup;
 
 // 360fa72e-c709-42cc-9285-1f755ec90376
 #define NS_PIDOMEVENTTARGET_IID \
-  { 0x44a6597b, 0x9fc3, 0x4a8d, \
-    { 0xb7, 0xa4, 0xd9, 0x00, 0x9a, 0xbf, 0x9d, 0x15 } }
+{ 0x360fa72e, 0xc709, 0x42cc, \
+  { 0x92, 0x85, 0x1f, 0x75, 0x5e, 0xc9, 0x03, 0x76 } }
 
 class nsPIDOMEventTarget : public nsISupports
 {
@@ -131,24 +129,8 @@ public:
    *                          one already exists. [IN]
    * @param aResult           The event listener manager [OUT]
    */
-  virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
-                                      nsIEventListenerManager** aResult) = 0;
-
-  /**
-   * Add an event listener for nsIID.
-   */
-  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                         const nsIID& aIID) = 0;
-  /**
-   * Remove event listener for nsIID.
-   */
-  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                            const nsIID& aIID) = 0;
-  
-  /**
-   * Get the system event group.
-   */
-  virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup) = 0;
+  NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
+                                nsIEventListenerManager** aResult) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMEventTarget, NS_PIDOMEVENTTARGET_IID)

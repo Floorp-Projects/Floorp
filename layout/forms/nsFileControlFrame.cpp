@@ -63,7 +63,7 @@
 #include "nsIFilePicker.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsINodeInfo.h"
-#include "nsIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsILocalFile.h"
 #include "nsIFileControlElement.h"
 #include "nsNodeInfoManager.h"
@@ -116,13 +116,15 @@ nsFileControlFrame::Destroy()
   mTextFrame = nsnull;
   // remove mMouseListener as a mouse event listener (bug 40533, bug 355931)
   if (mBrowse) {
-    mBrowse->RemoveEventListenerByIID(mMouseListener,
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mBrowse));
+    receiver->RemoveEventListenerByIID(mMouseListener,
                                        NS_GET_IID(nsIDOMMouseListener));
     nsContentUtils::DestroyAnonymousContent(&mBrowse);
   }
   if (mTextContent) {
-    mTextContent->RemoveEventListenerByIID(mMouseListener,
-                                           NS_GET_IID(nsIDOMMouseListener));
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mTextContent));
+    receiver->RemoveEventListenerByIID(mMouseListener,
+                                       NS_GET_IID(nsIDOMMouseListener));
     nsContentUtils::DestroyAnonymousContent(&mTextContent);
   }
 
@@ -169,8 +171,9 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     return NS_ERROR_OUT_OF_MEMORY;
 
   // register as an event listener of the textbox to open file dialog on mouse click
-  mTextContent->AddEventListenerByIID(mMouseListener,
-                                      NS_GET_IID(nsIDOMMouseListener));
+  nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mTextContent);
+  receiver->AddEventListenerByIID(mMouseListener,
+                                  NS_GET_IID(nsIDOMMouseListener));
 
   // Create the browse button
   NS_NewHTMLElement(getter_AddRefs(mBrowse), nodeInfo);
@@ -195,8 +198,9 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     return NS_ERROR_OUT_OF_MEMORY;
 
   // register as an event listener of the button to open file dialog on mouse click
-  mBrowse->AddEventListenerByIID(mMouseListener,
-                                 NS_GET_IID(nsIDOMMouseListener));
+  receiver = do_QueryInterface(mBrowse);
+  receiver->AddEventListenerByIID(mMouseListener,
+                                  NS_GET_IID(nsIDOMMouseListener));
 
   SyncAttr(kNameSpaceID_None, nsGkAtoms::size,     SYNC_TEXT);
   SyncAttr(kNameSpaceID_None, nsGkAtoms::disabled, SYNC_BOTH);
