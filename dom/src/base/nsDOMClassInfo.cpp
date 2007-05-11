@@ -168,7 +168,7 @@
 
 // Event related includes
 #include "nsIEventListenerManager.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMNSEventTarget.h"
 
 // CSS related includes
@@ -6706,18 +6706,15 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
   nsIScriptContext *script_cx = nsJSUtils::GetStaticScriptContext(cx, obj);
   NS_ENSURE_TRUE(script_cx, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryWrappedNative(wrapper));
-  if (!receiver) {
+  nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryWrappedNative(wrapper));
+  if (!piTarget) {
     // Doesn't do events
-#ifdef DEBUG
-    nsCOMPtr<nsIAttribute> attr = do_QueryWrappedNative(wrapper);
-    NS_WARN_IF_FALSE(attr, "Non-attr doesn't QI to nsIDOMEventReceiver?");
-#endif
+    NS_WARNING("Doesn't QI to nsPIDOMEventTarget?");
     return NS_OK;
   }
   
   nsCOMPtr<nsIEventListenerManager> manager;
-  receiver->GetListenerManager(PR_TRUE, getter_AddRefs(manager));
+  piTarget->GetListenerManager(PR_TRUE, getter_AddRefs(manager));
   NS_ENSURE_TRUE(manager, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIAtom> atom(do_GetAtom(nsDependentJSString(id)));
@@ -6728,12 +6725,12 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
   JSObject *scope = GetGlobalJSObject(cx, obj);
 
   if (compile) {
-    rv = manager->CompileScriptEventListener(script_cx, scope, receiver, atom,
+    rv = manager->CompileScriptEventListener(script_cx, scope, piTarget, atom,
                                              did_define);
   } else if (remove) {
     rv = manager->RemoveScriptEventListener(atom);
   } else {
-    rv = manager->RegisterScriptEventListener(script_cx, scope, receiver,
+    rv = manager->RegisterScriptEventListener(script_cx, scope, piTarget,
                                               atom);
   }
 

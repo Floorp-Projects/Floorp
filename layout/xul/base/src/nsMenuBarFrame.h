@@ -156,7 +156,7 @@ protected:
   // if nothing has happened since the last click. Otherwise, contains nsnull.
   nsIMenuFrame* mRecentRollupMenu; 
 
-  nsIDOMEventReceiver* mTarget;
+  nsIDOMEventTarget* mTarget;
 
 private:
   PRBool mCaretWasVisible;

@@ -698,7 +698,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMJSWindow)
   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
@@ -1293,9 +1292,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     if (internal == NS_STATIC_CAST(nsIDOMWindowInternal *, this)) {
       nsCOMPtr<nsIXBLService> xblService = do_GetService("@mozilla.org/xbl;1");
       if (xblService) {
-        nsCOMPtr<nsIDOMEventReceiver> rec =
+        nsCOMPtr<nsPIDOMEventTarget> piTarget =
           do_QueryInterface(mChromeEventHandler);
-        xblService->AttachGlobalKeyHandler(rec);
+        xblService->AttachGlobalKeyHandler(piTarget);
       }
     }
   }
@@ -5567,12 +5566,7 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
   return manager->AddEventListenerByType(aListener, aType, flags, nsnull);
 }
 
-
-//*****************************************************************************
-// nsGlobalWindow::nsIDOMEventReceiver
-//*****************************************************************************
-
-NS_IMETHODIMP
+nsresult
 nsGlobalWindow::AddEventListenerByIID(nsIDOMEventListener* aListener,
                                       const nsIID& aIID)
 {
@@ -5585,7 +5579,7 @@ nsGlobalWindow::AddEventListenerByIID(nsIDOMEventListener* aListener,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGlobalWindow::RemoveEventListenerByIID(nsIDOMEventListener* aListener,
                                          const nsIID& aIID)
 {
@@ -5600,7 +5594,7 @@ nsGlobalWindow::RemoveEventListenerByIID(nsIDOMEventListener* aListener,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGlobalWindow::GetListenerManager(PRBool aCreateIfNotFound,
                                    nsIEventListenerManager** aResult)
 {
@@ -5619,7 +5613,7 @@ nsGlobalWindow::GetListenerManager(PRBool aCreateIfNotFound,
     mListenerManager = do_CreateInstance(kEventListenerManagerCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     mListenerManager->SetListenerTarget(
-      NS_STATIC_CAST(nsIDOMEventReceiver*, this));
+      NS_STATIC_CAST(nsPIDOMEventTarget*, this));
   }
 
   NS_ADDREF(*aResult = mListenerManager);
@@ -5627,7 +5621,7 @@ nsGlobalWindow::GetListenerManager(PRBool aCreateIfNotFound,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsGlobalWindow::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 {
   nsCOMPtr<nsIEventListenerManager> manager;

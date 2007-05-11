@@ -47,7 +47,7 @@ class nsIDOMEvent;
 class nsEventChainPreVisitor;
 class nsEventChainPostVisitor;
 
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMNSEventTarget.h"
 #include "nsIEventListenerManager.h"
@@ -56,7 +56,7 @@ class nsEventChainPostVisitor;
 #include "nsIDOMEventTarget.h"
 #include "nsCycleCollectionParticipant.h"
 
-class nsWindowRoot : public nsIDOMEventReceiver,
+class nsWindowRoot : public nsIDOMEventTarget,
                      public nsIDOM3EventTarget,
                      public nsIDOMNSEventTarget,
                      public nsPIWindowRoot
@@ -76,18 +76,18 @@ public:
                                     nsIDOMEvent* aDOMEvent,
                                     nsPresContext* aPresContext,
                                     nsEventStatus* aEventStatus);
-
-  // nsIDOMEventReceiver
-  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
-  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
-  NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
-                                nsIEventListenerManager** aResult);
-  NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
+  virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
+                                      nsIEventListenerManager** aResult);
+  virtual nsresult AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                         const nsIID& aIID);
+  virtual nsresult RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                            const nsIID& aIID);
+  virtual nsresult GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
   // nsPIWindowRoot
   NS_IMETHOD GetFocusController(nsIFocusController** aResult);
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsWindowRoot, nsIDOMEventReceiver)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsWindowRoot, nsIDOMEventTarget)
 
 protected:
   // Members

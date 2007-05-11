@@ -49,7 +49,7 @@
 #include "nsElementMap.h"
 #include "nsForwardReference.h"
 #include "nsIContent.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
 #include "nsISupportsArray.h"

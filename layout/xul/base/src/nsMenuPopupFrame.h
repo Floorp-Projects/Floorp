@@ -48,7 +48,7 @@
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsMenuListener.h"
 
 #include "nsBoxFrame.h"
@@ -242,7 +242,7 @@ protected:
   nsIMenuFrame* mCurrentMenu; // The current menu that is active.
 
   nsMenuListener* mKeyboardNavigator; // The listener that tells us about key events.
-  nsIDOMEventReceiver* mTarget;
+  nsIDOMEventTarget* mTarget;
 
   nsIMenuFrame* mTimerMenu; // A menu awaiting closure.
   nsCOMPtr<nsITimer> mCloseTimer; // Close timer.
