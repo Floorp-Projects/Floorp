@@ -41,7 +41,7 @@
 #include "nsUnicharUtils.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMNSHTMLAnchorElement2.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIHTMLDocument.h"
 #include "nsGenericHTMLElement.h"
 #include "nsILink.h"

@@ -54,7 +54,7 @@
 // object.
 #include "nsIWebBrowserChrome.h"
 #include "nsIAppShell.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsPIDOMEventTarget.h"
 #include "nsVoidArray.h"
 
 // app component registration
@@ -190,8 +190,7 @@ class EmbedPrivate {
   nsCOMPtr<nsIWebNavigation>     mNavigation;
   nsCOMPtr<nsISHistory>          mSessionHistory;
 
-  // our event receiver
-  nsCOMPtr<nsIDOMEventReceiver>  mEventReceiver;
+  nsCOMPtr<nsPIDOMEventTarget>   mEventTarget;
 
   // the currently loaded uri
   nsString                       mURI;

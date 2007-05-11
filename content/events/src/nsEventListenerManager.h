@@ -42,7 +42,7 @@
 #include "jsapi.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsHashtable.h"
 #include "nsIScriptContext.h"
@@ -68,7 +68,7 @@ typedef struct {
  */
 
 class nsEventListenerManager : public nsIEventListenerManager,
-                               public nsIDOMEventReceiver,
+                               public nsIDOMEventTarget,
                                public nsIDOM3EventTarget
 {
 
@@ -138,15 +138,6 @@ public:
 
   // nsIDOM3EventTarget
   NS_DECL_NSIDOM3EVENTTARGET
-
-  // nsIDOMEventReceiver interface
-  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                   const nsIID& aIID);
-  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                      const nsIID& aIID);
-  NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
-                                nsIEventListenerManager** aResult);
-  NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
   static void Shutdown();
 

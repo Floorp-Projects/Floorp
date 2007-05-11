@@ -911,7 +911,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentTraversal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentXBL)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
@@ -4544,7 +4543,7 @@ nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDocument::GetListenerManager(PRBool aCreateIfNotFound,
                                nsIEventListenerManager** aInstancePtrResult)
 {
@@ -5429,10 +5428,10 @@ PRBool
 nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
 {
   // Check our event listener manager for unload/beforeunload listeners.
-  nsCOMPtr<nsIDOMEventReceiver> er = do_QueryInterface(mScriptGlobalObject);
-  if (er) {
+  nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(mScriptGlobalObject);
+  if (piTarget) {
     nsCOMPtr<nsIEventListenerManager> manager;
-    er->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+    piTarget->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
     if (manager && manager->HasUnloadListeners()) {
       return PR_FALSE;
     }

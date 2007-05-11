@@ -42,7 +42,7 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsCOMPtr.h"
 
 class nsIMenuParent;
