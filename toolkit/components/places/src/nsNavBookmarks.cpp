@@ -2029,6 +2029,49 @@ nsNavBookmarks::GetItemIndex(PRInt64 aItemId, PRInt32 *aIndex)
 }
 
 NS_IMETHODIMP
+nsNavBookmarks::SetItemIndex(PRInt64 aItemId, PRInt32 aNewIndex)
+{
+  nsresult rv;
+  PRInt32 oldIndex = 0;
+  PRInt64 parent = 0;
+
+  {
+    mozStorageStatementScoper scopeGet(mDBGetItemProperties);
+    rv = mDBGetItemProperties->BindInt64Parameter(0, aItemId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool results;
+    rv = mDBGetItemProperties->ExecuteStep(&results);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!results)
+      return NS_OK;
+
+    oldIndex = mDBGetItemProperties->AsInt32(kGetItemPropertiesIndex_Position);
+    parent = mDBGetItemProperties->AsInt64(kGetItemPropertiesIndex_Parent);
+  }
+
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_bookmarks SET position = ?2 WHERE id = ?1"),
+                               getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->BindInt64Parameter(0, aItemId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt32Parameter(1, aNewIndex);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                      OnItemRemoved(aItemId, parent, oldIndex))
+  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                      OnItemAdded(aItemId, parent, aNewIndex))
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsNavBookmarks::SetKeywordForBookmark(PRInt64 aBookmarkId, const nsAString& aKeyword)
 {
   if (aBookmarkId < 1)
