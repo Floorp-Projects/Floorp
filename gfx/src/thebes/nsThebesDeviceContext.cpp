@@ -321,6 +321,9 @@ nsThebesDeviceContext::CreateRenderingContext(nsIWidget *aWidget,
         nsRefPtr<gfxASurface> surface(aWidget->GetThebesSurface());
         if (surface)
             rv = pContext->Init(this, surface);
+        else
+            rv = NS_ERROR_FAILURE;
+
         if (NS_SUCCEEDED(rv)) {
             aContext = pContext;
             NS_ADDREF(aContext);
