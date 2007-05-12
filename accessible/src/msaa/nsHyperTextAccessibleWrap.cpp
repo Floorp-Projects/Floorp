@@ -48,8 +48,10 @@ PRBool nsHyperTextAccessibleWrap::sIsInserted = PR_FALSE;
 NS_IMPL_ISUPPORTS_INHERITED0(nsHyperTextAccessibleWrap,
                              nsHyperTextAccessible)
 
-IMPL_IUNKNOWN_INHERITED2(nsHyperTextAccessibleWrap, nsAccessibleWrap,
-                         CAccessibleText, CAccessibleEditableText);
+IMPL_IUNKNOWN_INHERITED2(nsHyperTextAccessibleWrap,
+                         nsAccessibleWrap,
+                         CAccessibleHypertext,
+                         CAccessibleEditableText);
 
 NS_IMETHODIMP
 nsHyperTextAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
