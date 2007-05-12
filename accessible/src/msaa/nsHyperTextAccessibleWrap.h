@@ -62,17 +62,10 @@ public:
 
   // nsIAccessible
   NS_IMETHOD FireAccessibleEvent(nsIAccessibleEvent *aEvent);
-
 protected:
   virtual nsresult GetModifiedText(PRBool aGetInsertedText, nsAString& aText,
                                    PRUint32 *aStartOffset,
                                    PRUint32 *aEndOffset);
-
-private:
-  static nsString sText;
-  static PRInt32 sOffset;
-  static PRUint32 sLength;
-  static PRBool sIsInserted;
 };
 
 #endif
