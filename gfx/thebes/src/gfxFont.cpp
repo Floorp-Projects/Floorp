@@ -858,7 +858,7 @@ gfxTextRun::GetAdjustedSpacingArray(PRUint32 aStart, PRUint32 aEnd,
                                     PropertyProvider *aProvider,
                                     nsTArray<PropertyProvider::Spacing> *aSpacing)
 {
-    if (!(mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING))
+    if (!aProvider || !(mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING))
         return PR_FALSE;
     if (!aSpacing->AppendElements(aEnd - aStart))
         return PR_FALSE;
@@ -1227,7 +1227,7 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
     PRUint32 bufferStart = aStart;
     PRUint32 bufferLength = PR_MIN(aMaxLength, MEASUREMENT_BUFFER_SIZE);
     PropertyProvider::Spacing spacingBuffer[MEASUREMENT_BUFFER_SIZE];
-    PRBool haveSpacing = (mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING) != 0;
+    PRBool haveSpacing = aProvider && (mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING) != 0;
     if (haveSpacing) {
         GetAdjustedSpacing(bufferStart, bufferStart + bufferLength, aProvider,
                            spacingBuffer);
@@ -1365,7 +1365,7 @@ gfxTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
 
     // Account for all spacing here. This is more efficient than processing it
     // along with the glyphs.
-    if (mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING) {
+    if (aProvider && (mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING)) {
         PRUint32 i;
         nsAutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
         if (spacingBuffer.AppendElements(aLength)) {
