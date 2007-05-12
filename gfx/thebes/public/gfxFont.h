@@ -789,6 +789,8 @@ public:
     { return (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) ? mText.mSingle : nsnull; }
     const PRUnichar *GetTextUnicode() const
     { return (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) ? nsnull : mText.mDouble; }
+    PRUint32 GetHashCode() const { return mHashCode; }
+    void SetHashCode(PRUint32 aHash) { mHashCode = aHash; }
 
     // The caller is responsible for initializing our glyphs after construction.
     // Initially all glyphs are such that GetCharacterGlyphs()[i].IsMissing() is true.
@@ -1100,6 +1102,7 @@ private:
     PRUint32          mAppUnitsPerDevUnit;
     PRUint32          mFlags;
     PRUint32          mCharacterCount;
+    PRUint32          mHashCode;
 };
 
 class THEBES_API gfxFontGroup : public gfxTextRunFactory {

@@ -619,7 +619,7 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void 
   : mUserData(aParams->mUserData),
     mFontGroup(aFontGroup),
     mAppUnitsPerDevUnit(aParams->mAppUnitsPerDevUnit),
-    mFlags(aFlags), mCharacterCount(aLength)
+    mFlags(aFlags), mCharacterCount(aLength), mHashCode(0)
 {
     NS_ADDREF(mFontGroup);
     if (aParams->mSkipChars) {
