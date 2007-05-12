@@ -872,7 +872,7 @@ public:
             return (aGlyph & GLYPH_MASK) == aGlyph;
         }
         // Returns true if the advance aAdvance fits into the compressed representation.
-        // aAdvance is in pixels.
+        // aAdvance is in appunits.
         static PRBool IsSimpleAdvance(PRUint32 aAdvance) {
             return (aAdvance & (ADVANCE_MASK >> ADVANCE_SHIFT)) == aAdvance;
         }
@@ -903,11 +903,11 @@ public:
             return toggle;
         }
 
-        CompressedGlyph& SetSimpleGlyph(PRUint32 aAdvancePixels, PRUint32 aGlyph) {
-            NS_ASSERTION(IsSimpleAdvance(aAdvancePixels), "Advance overflow");
+        CompressedGlyph& SetSimpleGlyph(PRUint32 aAdvanceAppUnits, PRUint32 aGlyph) {
+            NS_ASSERTION(IsSimpleAdvance(aAdvanceAppUnits), "Advance overflow");
             NS_ASSERTION(IsSimpleGlyphID(aGlyph), "Glyph overflow");
             mValue = (mValue & FLAG_CAN_BREAK_BEFORE) | FLAG_IS_SIMPLE_GLYPH |
-                (aAdvancePixels << ADVANCE_SHIFT) | aGlyph;
+                (aAdvanceAppUnits << ADVANCE_SHIFT) | aGlyph;
             return *this;
         }
         CompressedGlyph& SetComplex(PRUint32 aTag) {
