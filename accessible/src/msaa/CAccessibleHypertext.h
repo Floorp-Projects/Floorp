@@ -38,41 +38,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _NSHYPERTEXTACCESSIBLEWRAP_H
-#define _NSHYPERTEXTACCESSIBLEWRAP_H
+#ifndef _ACCESSIBLE_HYPERTEXT_H
+#define _ACCESSIBLE_HYPERTEXT_H
 
-#include "nsHyperTextAccessible.h"
+#include "nsISupports.h"
+
 #include "CAccessibleText.h"
-#include "CAccessibleEditableText.h"
-#include "CAccessibleHyperText.h"
+#include "AccessibleHypertext.h"
 
-class nsHyperTextAccessibleWrap : public nsHyperTextAccessible,
-                                  public CAccessibleHypertext,
-                                  public CAccessibleEditableText
+class CAccessibleHypertext: public CAccessibleText,
+                            public IAccessibleHypertext
 {
 public:
-  nsHyperTextAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell) :
-    nsHyperTextAccessible(aNode, aShell){}
 
   // IUnknown
-  DECL_IUNKNOWN_INHERITED
+  STDMETHODIMP QueryInterface(REFIID, void**);
 
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  // IAccessibleText
+  FORWARD_IACCESSIBLETEXT(CAccessibleText)
 
-  // nsIAccessible
-  NS_IMETHOD FireAccessibleEvent(nsIAccessibleEvent *aEvent);
+  // IAccessibleHypertext
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_nHyperlinks(
+      /* [retval][out] */ long *hyperlinkCount);
 
-protected:
-  virtual nsresult GetModifiedText(PRBool aGetInsertedText, nsAString& aText,
-                                   PRUint32 *aStartOffset,
-                                   PRUint32 *aEndOffset);
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_hyperlink(
+      /* [in] */ long index,
+      /* [retval][out] */ IAccessibleHyperlink **hyperlink);
 
-private:
-  static nsString sText;
-  static PRInt32 sOffset;
-  static PRUint32 sLength;
-  static PRBool sIsInserted;
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_hyperlinkIndex(
+      /* [in] */ long charIndex,
+      /* [retval][out] */ long *hyperlinkIndex);
 };
 
 #endif
