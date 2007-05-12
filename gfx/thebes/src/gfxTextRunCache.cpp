@@ -165,6 +165,7 @@ gfxTextRunCache::GetOrMakeTextRun(const PRUnichar *aText, PRUint32 aLength,
         gfxTextRun *newRun =
             textRun->Clone(aParams, aText, aLength, aFontGroup, aFlags);
         if (newRun) {
+            newRun->SetHashCode(hashCode);
             entry->mTextRun = newRun;
             NotifyRemovedFromCache(textRun);
             text.forget();
@@ -178,6 +179,7 @@ gfxTextRunCache::GetOrMakeTextRun(const PRUnichar *aText, PRUint32 aLength,
     gfxTextRun *newRun =
         aFontGroup->MakeTextRun(aText, aLength, aParams, aFlags);
     if (newRun) {
+        newRun->SetHashCode(hashCode);
         key.mFontOrGroup = GetCacheKeyFontOrGroup(newRun);
         entry = mCache.PutEntry(key);
         if (entry) {
@@ -232,6 +234,7 @@ gfxTextRunCache::GetOrMakeTextRun(const PRUint8 *aText, PRUint32 aLength,
             textRun->Clone(aParams, aText, aLength,
                            aFontGroup, aFlags);
         if (newRun) {
+            newRun->SetHashCode(hashCode);
             entry->mTextRun = newRun;
             NotifyRemovedFromCache(textRun);
             text.forget();
@@ -245,6 +248,7 @@ gfxTextRunCache::GetOrMakeTextRun(const PRUint8 *aText, PRUint32 aLength,
     gfxTextRun *newRun =
         aFontGroup->MakeTextRun(aText, aLength, aParams, aFlags);
     if (newRun) {
+        newRun->SetHashCode(hashCode);
         key.mFontOrGroup = GetCacheKeyFontOrGroup(newRun);
         entry = mCache.PutEntry(key);
         if (entry) {
@@ -260,21 +264,16 @@ gfxTextRunCache::GetOrMakeTextRun(const PRUint8 *aText, PRUint32 aLength,
 gfxTextRunCache::CacheHashKey
 gfxTextRunCache::GetKeyForTextRun(gfxTextRun *aTextRun)
 {
-    PRUint32 hashCode;
     const void *text;
     PRUint32 length = aTextRun->GetLength();
     if (aTextRun->GetFlags() & gfxFontGroup::TEXT_IS_8BIT) {
-        PRUint32 flags;
         text = aTextRun->GetText8Bit();
-        hashCode = HashString(aTextRun->GetText8Bit(), length, &flags);
     } else {
-        PRUint32 flags;
         text = aTextRun->GetTextUnicode();
-        hashCode = HashString(aTextRun->GetTextUnicode(), length, &flags);
     }
     void *fontOrGroup = GetCacheKeyFontOrGroup(aTextRun);
     return CacheHashKey(fontOrGroup, text, length, aTextRun->GetAppUnitsPerDevUnit(),
-                        aTextRun->GetFlags(), hashCode);
+                        aTextRun->GetFlags(), aTextRun->GetHashCode());
 }
 
 void
