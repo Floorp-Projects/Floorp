@@ -45,6 +45,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIAccessible.h"
+#include "nsIAccessibleEvent.h"
 #include "nsIWinAccessNode.h"
 #include "ISimpleDOMNode.h"
 #include "nsIDOMElement.h"
@@ -143,6 +144,12 @@ class nsAccessNodeWrap :  public nsAccessNode,
     ISimpleDOMNode* MakeAccessNode(nsIDOMNode *node);
 
     static PRBool gIsEnumVariantSupportDisabled;
+
+    /**
+     * It is used in nsHyperTextAccessibleWrap for IA2::newText/oldText
+     * implementation.
+     */
+    static nsIAccessibleTextChangeEvent *gTextEvent;
 };
 
 #endif

@@ -65,6 +65,8 @@ LPFNGETGUITHREADINFO nsAccessNodeWrap::gmGetGUIThreadInfo = nsnull;
 
 PRBool nsAccessNodeWrap::gIsEnumVariantSupportDisabled = 0;
 
+nsIAccessibleTextChangeEvent *nsAccessNodeWrap::gTextEvent = nsnull;
+
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
@@ -539,6 +541,8 @@ void nsAccessNodeWrap::InitAccessibility()
 
 void nsAccessNodeWrap::ShutdownAccessibility()
 {
+  NS_IF_RELEASE(gTextEvent);
+
   if (!gIsAccessibilityActive) {
     return;
   }

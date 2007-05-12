@@ -40,11 +40,6 @@
 
 #include "nsHyperTextAccessibleWrap.h"
 
-nsString nsHyperTextAccessibleWrap::sText;
-PRInt32 nsHyperTextAccessibleWrap::sOffset = 0;
-PRUint32 nsHyperTextAccessibleWrap::sLength = 0;
-PRBool nsHyperTextAccessibleWrap::sIsInserted = PR_FALSE;
-
 NS_IMPL_ISUPPORTS_INHERITED0(nsHyperTextAccessibleWrap,
                              nsHyperTextAccessible)
 
@@ -60,14 +55,22 @@ nsHyperTextAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
   aEvent->GetEventType(&eventType);
 
   if (eventType == nsIAccessibleEvent::EVENT_TEXT_CHANGED) {
-    nsCOMPtr<nsIAccessibleTextChangeEvent> textEvent(do_QueryInterface(aEvent));
-    NS_ENSURE_STATE(textEvent);
+    nsCOMPtr<nsIAccessible> accessible;
+    aEvent->GetAccessible(getter_AddRefs(accessible));
+    if (accessible) {
+      nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryInterface(accessible));
+      if (winAccessNode) {
+        void *instancePtr = NULL;
+        nsresult rv = winAccessNode->QueryNativeInterface(IID_IAccessibleText,
+                                                          &instancePtr);
+        if (NS_SUCCEEDED(rv)) {
+          NS_IF_RELEASE(gTextEvent);
 
-    textEvent->GetStart(&sOffset);
-    textEvent->GetLength(&sLength);
-    textEvent->IsInserted(&sIsInserted);
-
-    GetText(sOffset, sOffset + sLength, sText);
+          CallQueryInterface(aEvent, &gTextEvent);
+          (NS_STATIC_CAST(IUnknown*, instancePtr))->Release();
+        }
+      }
+    }
   }
 
   return nsHyperTextAccessible::FireAccessibleEvent(aEvent);
@@ -79,15 +82,33 @@ nsHyperTextAccessibleWrap::GetModifiedText(PRBool aGetInsertedText,
                                            PRUint32 *aStartOffset,
                                            PRUint32 *aEndOffset)
 {
-  if ((aGetInsertedText && sIsInserted) || (!aGetInsertedText && !sIsInserted)) {
-    aText.Assign(sText);
-    *aStartOffset = sOffset;
-    *aEndOffset = sOffset + sLength;
-  } else {
-    aText.Truncate();
-    *aStartOffset = 0;
-    *aEndOffset = 0;
-  }
+  aText.Truncate();
+  *aStartOffset = 0;
+  *aEndOffset = 0;
+
+  if (!gTextEvent)
+    return NS_OK;
+
+  nsCOMPtr<nsIAccessible> targetAcc;
+  gTextEvent->GetAccessible(getter_AddRefs(targetAcc));
+  if (targetAcc != this)
+    return NS_OK;
+
+  PRBool isInserted;
+  gTextEvent->IsInserted(&isInserted);
+
+  if (aGetInsertedText != isInserted)
+    return NS_OK;
+
+  nsAutoString text;
+  PRInt32 offset;
+  PRUint32 length;
+
+  gTextEvent->GetStart(&offset);
+  gTextEvent->GetLength(&length);
+  GetText(offset, offset + length, aText);
+  *aStartOffset = offset;
+  *aEndOffset = offset + length;
 
   return NS_OK;
 }
