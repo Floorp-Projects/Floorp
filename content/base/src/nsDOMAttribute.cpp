@@ -77,12 +77,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMAttribute)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMAttribute)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChild)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_LISTENERMANAGER
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMAttribute)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChild)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_LISTENERMANAGER
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 // QueryInterface implementation for nsDOMAttribute
@@ -102,7 +104,7 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMAttribute, nsIDOMAttr)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(nsDOMAttribute, nsIDOMAttr,
-                                      nsNodeUtils::LastRelease(this, PR_TRUE))
+                                      nsNodeUtils::LastRelease(this))
 
 void
 nsDOMAttribute::SetMap(nsDOMAttributeMap *aMap)
@@ -578,29 +580,13 @@ nsDOMAttribute::SetUserData(const nsAString& aKey, nsIVariant* aData,
                             nsIDOMUserDataHandler* aHandler,
                             nsIVariant** aResult)
 {
-  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
-  if (!key) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return nsContentUtils::SetUserData(this, key, aData, aHandler, aResult);
+  return nsNodeUtils::SetUserData(this, aKey, aData, aHandler, aResult);
 }
 
 NS_IMETHODIMP
 nsDOMAttribute::GetUserData(const nsAString& aKey, nsIVariant** aResult)
 {
-  nsIDocument *document = GetOwnerDoc();
-  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
-  if (!key) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  *aResult = NS_STATIC_CAST(nsIVariant*, GetProperty(DOM_USER_DATA, key));
-  NS_IF_ADDREF(*aResult);
-
-  return NS_OK;
+  return nsNodeUtils::GetUserData(this, aKey, aResult);
 }
 
 NS_IMETHODIMP

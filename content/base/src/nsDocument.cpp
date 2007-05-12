@@ -857,11 +857,6 @@ nsDocument::~nsDocument()
     NS_RELEASE(mCSSLoader);
   }
 
-  // We must delete properties before dropping document reference from
-  // NodeInfoManager, because nsNodeUtils::LastRelease can't remove properties
-  // when owner document is null.
-  mPropertyTable.DeleteAllProperties();
-
   // XXX Ideally we'd do this cleanup in the nsIDocument destructor.
   if (mNodeInfoManager) {
     mNodeInfoManager->DropDocumentReference();
@@ -882,18 +877,6 @@ nsDocument::~nsDocument()
   delete mBoxObjectTable;
   delete mContentWrapperHash;
   nsLayoutStatics::Release();
-}
-
-void
-nsDocument::LastRelease()
-{
-  nsNodeUtils::LastRelease(this, PR_FALSE);
-  // Delete properties before starting to destruct the document.
-  // Some of the properties are bound to nsINode objects and the destructor
-  // functions of the properties may want to use the owner document of the
-  // nsINode.
-  mPropertyTable.DeleteAllProperties();
-  delete this;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocument)
@@ -943,7 +926,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDocument, nsIDocument)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS_WITH_DESTROY(nsDocument, 
                                                         nsIDocument,
-                                                        LastRelease())
+                                                        nsNodeUtils::LastRelease(this))
 
 
 PR_STATIC_CALLBACK(PLDHashOperator)
@@ -1020,6 +1003,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
     cb.NoteXPCOMChild(tmp->mChildren.ChildAt(indx - 1));
   }
 
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA
+
   // Traverse all nsIDocument pointer members.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mBindingManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSecurityInfo)
@@ -1073,6 +1058,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
     tmp->mChildren.ChildAt(indx)->UnbindFromTree();
     tmp->mChildren.RemoveChildAt(indx);
   }
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
 
   // Unlink any associated preserved wrapper.
   tmp->RemoveReference(tmp);
@@ -4167,27 +4154,14 @@ nsDocument::SetUserData(const nsAString &aKey,
                         nsIDOMUserDataHandler *aHandler,
                         nsIVariant **aResult)
 {
-  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
-  if (!key) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return nsContentUtils::SetUserData(this, key, aData, aHandler, aResult);
+  return nsNodeUtils::SetUserData(this, aKey, aData, aHandler, aResult);
 }
 
 NS_IMETHODIMP
 nsDocument::GetUserData(const nsAString &aKey,
                         nsIVariant **aResult)
 {
-  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
-  if (!key) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  *aResult = NS_STATIC_CAST(nsIVariant*, GetProperty(DOM_USER_DATA, key));
-  NS_IF_ADDREF(*aResult);
-
-  return NS_OK;
+  return nsNodeUtils::GetUserData(this, aKey, aResult);
 }
 
 NS_IMETHODIMP

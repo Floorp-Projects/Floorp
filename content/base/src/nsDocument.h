@@ -723,8 +723,6 @@ protected:
   nsDocument(const char* aContentType);
   virtual ~nsDocument();
 
-  void LastRelease();
-
   nsCString mReferrer;
   nsString mLastModified;
 

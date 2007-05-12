@@ -839,6 +839,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIContent, NS_ICONTENT_IID)
     cb.NoteXPCOMChild(preservedWrapper);                         \
   }
 
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA \
+  if (tmp->HasProperties()) {                      \
+    nsNodeUtils::TraverseUserData(tmp, cb);        \
+  }
+
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_LISTENERMANAGER \
   if (tmp->HasFlag(NODE_HAS_LISTENERMANAGER)) {         \
     nsContentUtils::RemoveListenerManager(tmp);         \
@@ -848,6 +853,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIContent, NS_ICONTENT_IID)
 #define NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER \
   if (tmp->GetOwnerDoc())                                 \
     tmp->GetOwnerDoc()->RemoveReference(tmp);
+
+#define NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA \
+  if (tmp->HasProperties()) {                    \
+    nsNodeUtils::UnlinkUserData(tmp);            \
+  }
 
 
 #endif /* nsIContent_h___ */
