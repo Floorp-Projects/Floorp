@@ -3410,7 +3410,9 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
   }
   *aResult = result;
 
-  result->Translate(offset.x, offset.y);
+  if (NS_SUCCEEDED(rv)) {
+    result->Translate(offset.x, offset.y);
+  }
 
   return rv;
 }
