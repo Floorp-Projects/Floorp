@@ -934,7 +934,7 @@ gfxPangoFont::Measure(gfxTextRun *aTextRun,
             glyphInfo->attr.is_cluster_start = 0;
             glyphInfo->glyph = glyphData->GetSimpleGlyph();
             glyphInfo->geometry.width = leftSpacePango + rightSpacePango +
-                glyphData->GetSimpleAdvance()*PANGO_SCALE;
+                NS_lround(glyphData->GetSimpleAdvance()*appUnitsToPango);
             glyphInfo->geometry.x_offset = leftSpacePango;
             glyphInfo->geometry.y_offset = 0;
         } else if (glyphData->IsComplexCluster()) {
@@ -946,14 +946,14 @@ gfxPangoFont::Measure(gfxTextRun *aTextRun,
                     return gfxTextRun::Metrics();
                 glyphInfo->attr.is_cluster_start = 0;
                 glyphInfo->glyph = details->mGlyphID;
-                glyphInfo->geometry.width = NS_lround(details->mAdvance*PANGO_SCALE);
-                glyphInfo->geometry.x_offset = NS_lround(details->mXOffset*PANGO_SCALE);
+                glyphInfo->geometry.width = NS_lround(details->mAdvance*appUnitsToPango);
+                glyphInfo->geometry.x_offset = NS_lround(details->mXOffset*appUnitsToPango);
                 if (firstGlyph) {
                     glyphInfo->geometry.width += leftSpacePango;
                     glyphInfo->geometry.x_offset += leftSpacePango;
                     firstGlyph = PR_FALSE;
                 }
-                glyphInfo->geometry.y_offset = NS_lround(details->mYOffset*PANGO_SCALE);
+                glyphInfo->geometry.y_offset = NS_lround(details->mYOffset*appUnitsToPango);
                 if (details->mIsLastGlyph) {
                     glyphInfo->geometry.width += rightSpacePango;
                     break;
