@@ -852,7 +852,7 @@ nsNavBookmarks::SetToolbarFolder(PRInt64 aFolderId)
   // unset old toolbar folder
   if (mToolbarFolder > 0) {
     buffer.AssignLiteral("UPDATE moz_bookmarks SET folder_type = '' WHERE id = ");
-    buffer.AppendInt(aFolderId);
+    buffer.AppendInt(mToolbarFolder);
     rv = dbConn->ExecuteSimpleSQL(buffer);
     NS_ENSURE_SUCCESS(rv, rv);
   }
