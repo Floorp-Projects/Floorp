@@ -116,6 +116,16 @@ nsPropertyTable::DeleteAllPropertiesFor(nsPropertyOwner aObject)
   }
 }
 
+void
+nsPropertyTable::DeleteAllPropertiesFor(nsPropertyOwner aObject,
+                                        PRUint16 aCategory)
+{
+  for (PropertyList* prop = mPropertyList; prop; prop = prop->mNext) {
+    if (prop->mCategory == aCategory)
+      prop->DeletePropertyFor(aObject);
+  }
+}
+
 nsresult
 nsPropertyTable::TransferOrDeleteAllPropertiesFor(nsPropertyOwner aObject,
                                                   nsPropertyTable *aOtherTable)
