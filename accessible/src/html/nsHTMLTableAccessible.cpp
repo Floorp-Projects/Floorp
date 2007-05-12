@@ -695,6 +695,8 @@ nsHTMLTableAccessible::SelectRowOrColumn(PRInt32 aIndex, PRUint32 aTarget,
     rv = SelectCell(selection, document, cellElm, aDoSelect);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+  
+  return NS_OK;
 }
 
 nsresult
