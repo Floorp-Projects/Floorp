@@ -81,6 +81,7 @@ CPPSRCS = \
   CAccessibleImage.cpp \
   CAccessibleText.cpp \
   CAccessibleEditableText.cpp \
+  CAccessibleHypertext.cpp \
   CAccessibleTable.cpp \
   CAccessibleValue.cpp \
   $(NULL)
@@ -100,6 +101,7 @@ EXPORTS = \
   CAccessibleImage.h \
   CAccessibleText.h \
   CAccessibleEditableText.h \
+  CAccessibleHypertext.h \
   CAccessibleTable.h \
   CAccessibleValue.h \
   $(NULL)
