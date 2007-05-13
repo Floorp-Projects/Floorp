@@ -121,9 +121,11 @@
       <toolbarbutton observes="Console:clear"/>
     </toolbar>
   
-    <toolbar class="chromeclass-toolbar" id="ToolbarEval">
+    <toolbar class="chromeclass-toolbar" id="ToolbarEval" align="center">
+      <label value="&codeEval.label;" accesskey="&codeEval.accesskey;" control="TextboxEval"/>
       <textbox id="TextboxEval" class="toolbar" value="" onkeypress="onEvalKeyPress(event)" flex="1"/>
-      <toolbarbutton id="ButtonEval" label="&evaluate.label;" oncommand="evaluateTypein()"/>
+      <toolbarbutton id="ButtonEval" label="&evaluate.label;"
+                     accesskey="&evaluate.accesskey;" oncommand="evaluateTypein()"/>
     </toolbar>
   </toolbox>
   
