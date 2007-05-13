@@ -54,16 +54,14 @@
 <dialog id="imageDlg" title="&windowTitle.label;"
     xmlns ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload = "Startup()"
-    buttons="accept,cancel,help"
+    buttons="accept,cancel"
     ondialogaccept="return onAccept();"
-    ondialogcancel="return onCancel();"
-    ondialoghelp="return doHelpButton();">
+    ondialogcancel="return onCancel();">
   
   <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdImageProps.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>

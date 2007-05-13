@@ -46,19 +46,18 @@
 <!DOCTYPE dialog SYSTEM "chrome://editor/locale/EditorPublish.dtd">
 
 <dialog title="&windowTitleSettings.label;"
+        id="publishSettingsDlg"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="Startup()"
-        buttons="accept,cancel,help"
+        buttons="accept,cancel"
         ondialogaccept="return onAccept();"
-        ondialogcancel="return onCancel();"
-        ondialoghelp="return doHelpButton();">
+        ondialogcancel="return onCancel();">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EditorPublishSettings.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/publishprefs.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>

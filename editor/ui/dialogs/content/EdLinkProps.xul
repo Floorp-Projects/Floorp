@@ -47,16 +47,14 @@
 
 <dialog id="linkDlg" title="&windowTitle.label;"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   buttons="accept,cancel,help"
+   buttons="accept,cancel"
    onload = "Startup()"
    ondialogaccept="return onAccept();"
-   ondialogcancel="return onCancel();"
-   ondialoghelp="return doHelpButton();">
+   ondialogcancel="return onCancel();">
 
   <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdLinkProps.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <broadcaster id="args" value=""/>
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>

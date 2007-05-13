@@ -45,6 +45,7 @@
 <!DOCTYPE dialog SYSTEM "chrome://editor/locale/EditorPublishProgress.dtd">
 <!-- dialog containing a control requiring initial setup -->
 <dialog title=""
+    id="publishProgressDlg"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     buttons="cancel"
     buttonlabelclose="&closeButton.label;"
@@ -57,7 +58,6 @@
   <script type="application/x-javascript" src="chrome://editor/content/publishprefs.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EditorPublishProgress.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
@@ -99,7 +99,6 @@
       <spacer class="bigspacer"/>
       <image class="progressitem" progress="failed"/>
       <label value="&failed.label;"/>
-      <button label="&troubleshooting.label;" accesskey="&troubleshooting.accessKey;" oncommand="doTroubleshooting();"/>
     </hbox>
   </groupbox>
   <checkbox id="KeepOpen" label="&keepOpen;" oncommand="CheckKeepOpen();" persist="checked"/>
