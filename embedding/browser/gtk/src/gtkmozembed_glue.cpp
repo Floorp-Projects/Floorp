@@ -105,6 +105,7 @@
   GTKF(gtk_moz_embed_get_chrome_mask) \
   GTKF(gtk_moz_embed_single_get_type) \
   GTKF(gtk_moz_embed_single_get) \
+  GTKF(gtk_moz_embed_set_directory_service_provider) \
   GTKMOZEMBED2_FUNCTIONS
 
 #define GTKF(fname) fname##Type fname;
