@@ -1095,6 +1095,99 @@ SetMissingGlyphForUCS4(gfxTextRun *aTextRun, PRUint32 aIndex, gunichar aCh)
     }
 }
 
+/**
+ * Given a run of Pango glyphs that should be treated as a single
+ * cluster/ligature, store them in the textrun at the appropriate character
+ * and set the other characters involved to be ligature/cluster continuations
+ * as appropriate.
+ */ 
+static nsresult
+SetGlyphsForCharacterGroup(const PangoGlyphInfo *aGlyphs, PRUint32 aGlyphCount,
+                           gfxTextRun *aTextRun,
+                           const gchar *aUTF8, PRUint32 aUTF8Length,
+                           PRUint32 *aUTF16Offset,
+                           PangoGlyphUnit aOverrideSpaceWidth)
+{
+    PRUint32 utf16Offset = *aUTF16Offset;
+    PRUint32 textRunLength = aTextRun->GetLength();
+    const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
+    const gfxTextRun::CompressedGlyph *charGlyphs = aTextRun->GetCharacterGlyphs();
+
+    // Override the width of a space, but only for spaces that aren't
+    // clustered with something else (like a freestanding diacritical mark)
+    PangoGlyphUnit width = aGlyphs[0].geometry.width;
+    if (aOverrideSpaceWidth && aUTF8[0] == ' ' &&
+        (utf16Offset + 1 == textRunLength ||
+         charGlyphs[utf16Offset].IsClusterStart())) {
+        width = aOverrideSpaceWidth;
+    }
+    PRInt32 advance = ConvertPangoToAppUnits(width, appUnitsPerDevUnit);
+
+    gfxTextRun::CompressedGlyph g;
+    // See if we fit in the compressed area.
+    if (aGlyphCount == 1 && advance >= 0 &&
+        aGlyphs[0].geometry.x_offset == 0 &&
+        aGlyphs[0].geometry.y_offset == 0 &&
+        gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
+        gfxTextRun::CompressedGlyph::IsSimpleGlyphID(aGlyphs[0].glyph)) {
+        aTextRun->SetCharacterGlyph(utf16Offset,
+                                    g.SetSimpleGlyph(advance, aGlyphs[0].glyph));
+    } else {
+        nsAutoTArray<gfxTextRun::DetailedGlyph,10> detailedGlyphs;
+        if (!detailedGlyphs.AppendElements(aGlyphCount))
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        PRUint32 i;
+        for (i = 0; i < aGlyphCount; ++i) {
+            gfxTextRun::DetailedGlyph *details = &detailedGlyphs[i];
+            const PangoGlyphInfo &glyph = aGlyphs[i];
+            details->mIsLastGlyph = i == aGlyphCount - 1;
+            details->mGlyphID = glyph.glyph;
+            NS_ASSERTION(details->mGlyphID == glyph.glyph,
+                         "Seriously weird glyph ID detected!");
+            details->mAdvance =
+                ConvertPangoToAppUnits(glyph.geometry.width,
+                                       appUnitsPerDevUnit);
+            details->mXOffset =
+                float(glyph.geometry.x_offset)*appUnitsPerDevUnit/PANGO_SCALE;
+            details->mYOffset =
+                float(glyph.geometry.y_offset)*appUnitsPerDevUnit/PANGO_SCALE;
+        }
+        aTextRun->SetDetailedGlyphs(utf16Offset, detailedGlyphs.Elements(), aGlyphCount);
+    }
+
+    // Check for ligatures and set *aUTF16Offset.
+    const gchar *p = aUTF8;
+    const gchar *end = aUTF8 + aUTF8Length;
+    while (1) {
+        // Skip the CompressedGlyph that we have added.
+        gunichar ch = g_utf8_get_char(p);
+        ++utf16Offset;
+        NS_ASSERTION(!IS_SURROGATE(ch), "surrogates should not appear in UTF8");
+        if (ch >= 0x10000) {
+            ++utf16Offset;
+        }
+        // We produced this UTF8 so we don't need to worry about malformed stuff
+        p = g_utf8_next_char(p);
+        if (p >= end)
+            break;
+
+        if (utf16Offset >= textRunLength) {
+            NS_ERROR("Someone has added too many glyphs!");
+            return NS_ERROR_FAILURE;
+        }
+
+        if (! charGlyphs[utf16Offset].IsClusterContinuation()) {
+            // This is a separate grapheme cluster but it has no glyphs.
+            // It must be represented by a ligature with the previous
+            // grapheme cluster.
+            aTextRun->SetCharacterGlyph(utf16Offset, g.SetLigatureContinuation());
+        }
+    }
+    *aUTF16Offset = utf16Offset;
+    return NS_OK;
+}
+
 nsresult
 gfxPangoFontGroup::SetGlyphs(gfxTextRun *aTextRun, gfxPangoFont *aFont,
                              const gchar *aUTF8, PRUint32 aUTF8Length,
@@ -1102,120 +1195,107 @@ gfxPangoFontGroup::SetGlyphs(gfxTextRun *aTextRun, gfxPangoFont *aFont,
                              PangoGlyphUnit aOverrideSpaceWidth,
                              PRBool aAbortOnMissingGlyph)
 {
+    gint numGlyphs = aGlyphs->num_glyphs;
+    PangoGlyphInfo *glyphs = aGlyphs->glyphs;
+    const gint *logClusters = aGlyphs->log_clusters;
+    // We cannot make any assumptions about the order of glyph clusters
+    // provided by pango_shape (see 375864), so we work through the UTF8 text
+    // and process the glyph clusters in logical order.
+
+    // logGlyphs is like an inverse of logClusters.  For each UTF8 byte:
+    //   >= 0 indicates that the byte is first in a cluster and
+    //        gives the position of the starting glyph for the cluster.
+    //     -1 indicates that the byte does not start a cluster.
+    nsAutoTArray<gint,2000> logGlyphs;
+    if (!logGlyphs.AppendElements(aUTF8Length + 1))
+        return NS_ERROR_OUT_OF_MEMORY;
+    PRUint32 utf8Index = 0;
+    for(; utf8Index < aUTF8Length; ++utf8Index)
+        logGlyphs[utf8Index] = -1;
+    logGlyphs[aUTF8Length] = numGlyphs;
+
+    gint lastCluster = -1; // != utf8Index
+    for (gint glyphIndex = 0; glyphIndex < numGlyphs; ++glyphIndex) {
+        gint thisCluster = logClusters[glyphIndex];
+        if (thisCluster != lastCluster) {
+            lastCluster = thisCluster;
+            NS_ASSERTION(0 <= thisCluster && thisCluster < gint(aUTF8Length),
+                         "garbage from pango_shape - this is bad");
+            logGlyphs[thisCluster] = glyphIndex;
+        }
+    }
+
     PRUint32 utf16Offset = *aUTF16Offset;
     PRUint32 textRunLength = aTextRun->GetLength();
-    PRUint32 index = 0;
-    // glyphIndex is the first glyph that belongs to characters at "index"
-    // or later
-    PRUint32 numGlyphs = aGlyphs->num_glyphs;
-    gint *logClusters = aGlyphs->log_clusters;
-    PRUint32 glyphCount = 0;
-    PRUint32 glyphIndex = aTextRun->IsRightToLeft() ? numGlyphs - 1 : 0;
-    PRInt32 direction = aTextRun->IsRightToLeft() ? -1 : 1;
-    gfxTextRun::CompressedGlyph g;
-    nsAutoTArray<gfxTextRun::DetailedGlyph,1> detailedGlyphs;
-    const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
-
-    while (index < aUTF8Length) {
+    utf8Index = 0;
+    // The next glyph cluster in logical order. 
+    gint nextGlyphClusterStart = logGlyphs[utf8Index];
+    while (utf8Index < aUTF8Length) {
         if (utf16Offset >= textRunLength) {
           NS_ERROR("Someone has added too many glyphs!");
-          break;
+          return NS_ERROR_FAILURE;
         }
-        gunichar ch = g_utf8_get_char(aUTF8 + index);
-        if (ch == 0) {
-            // treat this null byte as a missing glyph. Pango doesn't create
+        gint glyphClusterStart = nextGlyphClusterStart;
+        // Find the utf8 text associated with this glyph cluster.
+        PRUint32 clusterUTF8Start = utf8Index;
+        // Check we are consistent with pango_break data.
+        NS_ASSERTION(aTextRun->GetCharacterGlyphs()->IsClusterStart(),
+                     "Glyph cluster not aligned on character cluster.");
+        do {
+            ++utf8Index;
+            nextGlyphClusterStart = logGlyphs[utf8Index];
+        } while (nextGlyphClusterStart < 0 && aUTF8[utf8Index] != '\0');
+        const gchar *clusterUTF8 = &aUTF8[clusterUTF8Start];
+        PRUint32 clusterUTF8Length = utf8Index - clusterUTF8Start;
+
+        PRBool haveMissingGlyph = PR_FALSE;
+        gint glyphIndex = glyphClusterStart;
+        if (glyphClusterStart < 0) {
+            // No glyphs - This happens with a NUL: Pango doesn't create
             // glyphs for these, not even missing-glyph glyphIDs.
-            aTextRun->SetMissingGlyph(utf16Offset, 0);
-        } else if (glyphCount == numGlyphs ||
-                   PRUint32(logClusters[glyphIndex]) > index) {
-            // No glyphs for this cluster, and it's not a null byte.
-            if (!aTextRun->GetCharacterGlyphs()[utf16Offset].IsClusterContinuation()) {
-                // It must be part of a ligature.
-                aTextRun->SetCharacterGlyph(utf16Offset, g.SetLigatureContinuation());
+            // Treat a NUL byte as a missing glyph.
+            haveMissingGlyph = PR_TRUE;
+            // Any non-NUL UTF8 bytes are unexpected.
+            NS_ASSERTION(*clusterUTF8 == '\0' && clusterUTF8Length == 1,
+                         "No glyphs and not a NUL");
+            if (aAbortOnMissingGlyph &&
+                (*clusterUTF8 != '\0' || clusterUTF8Length != 1)) {
+                return NS_ERROR_FAILURE;
             }
         } else {
-            PangoGlyphInfo *glyph = &aGlyphs->glyphs[glyphIndex];
-            PRBool haveMissingGlyph = PR_FALSE;
-
-            // One or more glyphs. See if we fit in the compressed area.
-            NS_ASSERTION(PRUint32(logClusters[glyphIndex]) == index,
-                         "Um, we left some glyphs behind previously");
-            PRUint32 glyphClusterCount = 1;
-            for (;;) {
-                ++glyphCount;
-                if (IS_MISSING_GLYPH(aGlyphs->glyphs[glyphIndex].glyph)) {
+            gunichar ch = g_utf8_get_char(clusterUTF8);
+            do { // Does pango ever provide more than one glyph in the cluster
+                 // if there is a missing glyph?
+                if (IS_MISSING_GLYPH(glyphs[glyphIndex].glyph)) {
                     if (MOZ_pango_is_zero_width(ch)) {
                         // the zero width characters returns empty glyph ID at shaping,
                         // we should override it if the font has the character.
-                        aGlyphs->glyphs[glyphIndex].glyph = aFont->GetGlyph(' ');
-                        aGlyphs->glyphs[glyphIndex].geometry.width = 0;
+                        glyphs[glyphIndex].glyph = aFont->GetGlyph(' ');
+                        glyphs[glyphIndex].geometry.width = 0;
                     } else
                         haveMissingGlyph = PR_TRUE;
                 }
-                glyphIndex += direction;
-                if (glyphCount == numGlyphs ||
-                    PRUint32(logClusters[glyphIndex]) != index)
-                    break;
-                ++glyphClusterCount;
-            }
+                glyphIndex++;
+            } while (glyphIndex < numGlyphs && 
+                     logClusters[glyphIndex] == gint(clusterUTF8Start));
+
             if (haveMissingGlyph && aAbortOnMissingGlyph)
                 return NS_ERROR_FAILURE;
-
-            PangoGlyphUnit width = glyph->geometry.width;
-
-            // Override the width of a space, but only for spaces that aren't
-            // clustered with something else (like a freestanding diacritical mark)
-            if (aOverrideSpaceWidth && aUTF8[index] == ' ' &&
-                (utf16Offset + 1 == textRunLength ||
-                 aTextRun->GetCharacterGlyphs()[utf16Offset].IsClusterStart())) {
-                width = aOverrideSpaceWidth;
-            }
-
-            PRInt32 advance = ConvertPangoToAppUnits(width, appUnitsPerDevUnit);
-            if (glyphClusterCount == 1 &&
-                glyph->geometry.x_offset == 0 && glyph->geometry.y_offset == 0 &&
-                advance >= 0 &&
-                gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
-                gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph->glyph)) {
-                aTextRun->SetCharacterGlyph(utf16Offset, g.SetSimpleGlyph(advance, glyph->glyph));
-            } else if (haveMissingGlyph) {
-                // Note that missing-glyph IDs are not simple glyph IDs, so we'll
-                // always get here when a glyph is missing
-                SetMissingGlyphForUCS4(aTextRun, utf16Offset, ch);
-            } else {
-                if (detailedGlyphs.Length() < glyphClusterCount) {
-                    if (!detailedGlyphs.AppendElements(glyphClusterCount - detailedGlyphs.Length()))
-                        return NS_ERROR_OUT_OF_MEMORY;
-                }
-                PRUint32 i;
-                for (i = 0; i < glyphClusterCount; ++i) {
-                    gfxTextRun::DetailedGlyph *details = &detailedGlyphs[i];
-                    details->mIsLastGlyph = i == glyphClusterCount - 1;
-                    details->mGlyphID = glyph->glyph;
-                    NS_ASSERTION(details->mGlyphID == glyph->glyph,
-                                 "Seriously weird glyph ID detected!");
-                    details->mAdvance =
-                      ConvertPangoToAppUnits(glyph->geometry.width,
-                                             appUnitsPerDevUnit);
-                    details->mXOffset =
-                      float(glyph->geometry.x_offset)*appUnitsPerDevUnit/PANGO_SCALE;
-                    details->mYOffset =
-                      float(glyph->geometry.y_offset)*appUnitsPerDevUnit/PANGO_SCALE;
-                    glyph += direction;
-                }
-                aTextRun->SetDetailedGlyphs(utf16Offset, detailedGlyphs.Elements(), glyphClusterCount);
-            }
         }
 
-        ++utf16Offset;
-        NS_ASSERTION(!IS_SURROGATE(ch), "surrogates should not appear in UTF8");
-        if (ch >= 0x10000) {
-            ++utf16Offset;
+        nsresult rv;
+        if (haveMissingGlyph) {
+            rv = SetMissingGlyphs(aTextRun, clusterUTF8, clusterUTF8Length,
+                             &utf16Offset);
+        } else {
+            rv = SetGlyphsForCharacterGroup(&glyphs[glyphClusterStart],
+                                            glyphIndex - glyphClusterStart,
+                                            aTextRun,
+                                            clusterUTF8, clusterUTF8Length,
+                                            &utf16Offset, aOverrideSpaceWidth);
         }
-        // We produced this UTF8 so we don't need to worry about malformed stuff
-        index = g_utf8_next_char(aUTF8 + index) - aUTF8;
+        NS_ENSURE_SUCCESS(rv,rv);
     }
-
     *aUTF16Offset = utf16Offset;
     return NS_OK;
 }
