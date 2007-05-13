@@ -1857,14 +1857,65 @@ nsGenericElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   return nsGenericElement::doPreHandleEvent(this, aVisitor);
 }
 
+static nsIContent*
+FindFirstNonAnonContent(nsIContent* aContent)
+{
+  while (aContent && aContent->IsAnonymousForEvents()) {
+    aContent = aContent->GetParent();
+  }
+  return aContent;
+}
+
+static PRBool
+IsInAnonContent(nsIContent* aContent)
+{
+  while (aContent && !aContent->IsAnonymousForEvents()) {
+    aContent = aContent->GetParent();
+  }
+  return !!aContent;
+}
+
 nsresult
 nsGenericElement::doPreHandleEvent(nsIContent* aContent,
                                    nsEventChainPreVisitor& aVisitor)
 {
   //FIXME! Document how this event retargeting works, Bug 329124.
   aVisitor.mCanHandle = PR_TRUE;
+
+  // Don't propagate mouseover and mouseout events when mouse is moving
+  // inside native anonymous content.
+  PRBool isAnonForEvents = aContent->IsAnonymousForEvents();
+  if (aVisitor.mEvent->message == NS_MOUSE_ENTER_SYNTH ||
+      aVisitor.mEvent->message == NS_MOUSE_EXIT_SYNTH) {
+     nsCOMPtr<nsIContent> relatedTarget =
+       do_QueryInterface(NS_STATIC_CAST(nsMouseEvent*,
+                                        aVisitor.mEvent)->relatedTarget);
+    if (relatedTarget &&
+        relatedTarget->GetOwnerDoc() == aContent->GetOwnerDoc()) {
+
+      // If current target is anonymous for events or we know that related
+      // target is descendant of an element which is anonymous for events,
+      // we may want to stop event propagation.
+      // If aContent is the original target, aVisitor.mRelatedTargetIsInAnon
+      // must be updated.
+      if (isAnonForEvents || aVisitor.mRelatedTargetIsInAnon ||
+          (aVisitor.mEvent->originalTarget == aContent &&
+           (aVisitor.mRelatedTargetIsInAnon = IsInAnonContent(relatedTarget)))) {
+        nsIContent* nonAnon = FindFirstNonAnonContent(aContent);
+        nsIContent* nonAnonRelated = FindFirstNonAnonContent(relatedTarget);
+        if (nonAnon == nonAnonRelated ||
+            nsContentUtils::ContentIsDescendantOf(nonAnonRelated, nonAnon)) {
+          aVisitor.mParentTarget = nsnull;
+          // Event should not propagate to non-anon content.
+          aVisitor.mCanHandle = isAnonForEvents;
+          return NS_OK;
+        }
+      }
+    }
+  }
+
   nsCOMPtr<nsIContent> parent = aContent->GetParent();
-  if (aContent->IsAnonymousForEvents()) {
+  if (isAnonForEvents) {
     // Don't propagate mutation events which are dispatched somewhere inside
     // native anonymous content.
     if (aVisitor.mEvent->eventStructType == NS_MUTATION_EVENT) {
