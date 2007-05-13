@@ -2210,8 +2210,7 @@ nsLayoutUtils::FrameHasTransparency(nsIFrame* aFrame) {
   if (aFrame->GetStyleContext()->GetStyleDisplay()->mOpacity < 1.0f)
     return PR_TRUE;
 
-  const nsStyleBorder* border = aFrame->GetStyleContext()->GetStyleBorder();
-  if (HasNonZeroSide(border->mBorderRadius))
+  if (HasNonZeroSide(aFrame->GetStyleContext()->GetStyleBorder()->mBorderRadius))
     return PR_TRUE;
 
   if (aFrame->IsThemed())
