@@ -530,6 +530,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsDirectoryService, nsIProperties, nsIDirectorySer
 NS_IMETHODIMP
 nsDirectoryService::Undefine(const char* prop)
 {
+    NS_ENSURE_ARG(prop);
+
     nsCStringKey key(prop);
     if (!mHashtable.Exists(&key))
         return NS_ERROR_FAILURE;
@@ -608,6 +610,8 @@ static PRBool FindProviderFile(nsISupports* aElement, void *aData)
 NS_IMETHODIMP
 nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
 {
+    NS_ENSURE_ARG(prop);
+
     nsCStringKey key(prop);
     
     nsCOMPtr<nsISupports> value = dont_AddRef(mHashtable.Get(&key));
@@ -656,6 +660,8 @@ nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
 NS_IMETHODIMP
 nsDirectoryService::Set(const char* prop, nsISupports* value)
 {
+    NS_ENSURE_ARG(prop);
+
     nsCStringKey key(prop);
     if (mHashtable.Exists(&key) || value == nsnull)
         return NS_ERROR_FAILURE;
@@ -677,6 +683,8 @@ nsDirectoryService::Set(const char* prop, nsISupports* value)
 NS_IMETHODIMP
 nsDirectoryService::Has(const char *prop, PRBool *_retval)
 {
+    NS_ENSURE_ARG(prop);
+
     *_retval = PR_FALSE;
     nsCOMPtr<nsIFile> value;
     nsresult rv = Get(prop, NS_GET_IID(nsIFile), getter_AddRefs(value));
