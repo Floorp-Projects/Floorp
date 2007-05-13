@@ -308,12 +308,6 @@ function ValidateData()
   return true;
 }
 
-function doHelpButton()
-{
-  openHelp("link_properties");
-  return true;
-}
-
 function onAccept()
 {
   if (ValidateData())

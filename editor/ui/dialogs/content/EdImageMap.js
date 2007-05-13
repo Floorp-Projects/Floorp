@@ -57,11 +57,6 @@ function Startup(){
   initDialog();
 }
 
-function doHelpButton()
-{
-  openHelp("imagemap_properties");
-}
-
 function initDialog(){
   //Get image element from parent
   imageElement = window.arguments[0];
