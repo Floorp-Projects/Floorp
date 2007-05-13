@@ -2330,7 +2330,7 @@ function canonizeUrl(aTriggeringEvent, aPostDataRef) {
   // Since this function is called from handleURLBarCommand, which receives
   // both mouse (from the go button) and keyboard events, we also make sure not
   // to do the fixup unless we get a keyboard event, to match user expectations.
-  if (!/^(www|http)|\/\s*$/i.test(url) &&
+  if (!/^(www|https?)\b|\/\s*$/i.test(url) &&
       (aTriggeringEvent instanceof KeyEvent)) {
 #ifdef XP_MACOSX
     var accel = aTriggeringEvent.metaKey;
