@@ -3348,6 +3348,35 @@ nsFrame::AttributeChanged(PRInt32         aNameSpaceID,
   return NS_OK;
 }
 
+PRBool nsFrame::GetMouseThrough() const
+{
+  eMouseThrough mousethrough = unset;
+
+  if (mContent) {
+    static nsIContent::AttrValuesArray strings[] =
+      {&nsGkAtoms::never, &nsGkAtoms::always, nsnull};
+    static const eMouseThrough values[] = {never, always};
+    PRInt32 index = mContent->FindAttrValueIn(kNameSpaceID_None,
+        nsGkAtoms::mousethrough, strings, eCaseMatters);
+    if (index >= 0) {
+      mousethrough = values[index];
+    }
+  }
+
+  switch(mousethrough)
+  {
+    case always:
+      return PR_TRUE;
+    case never:
+      return PR_FALSE;
+    case unset:
+      if (mParent)
+        return mParent->GetMouseThrough();
+  }
+
+  return PR_FALSE;
+}
+
 // Flow member functions
 
 nsSplittableType

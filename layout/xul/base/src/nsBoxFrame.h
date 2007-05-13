@@ -112,7 +112,6 @@ public:
   virtual Halignment GetHAlign() const { return mHalign; }
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
 
-  virtual PRBool GetMouseThrough() const;
   virtual PRBool ComputesOwnOverflowArea() { return PR_FALSE; }
 
   // ----- child and sibling operations ---
@@ -282,7 +281,6 @@ private:
     void DrawLine(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
     void FillRect(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
 #endif
-    void UpdateMouseThrough();
 
     void CacheAttributes();
 
@@ -291,8 +289,6 @@ private:
     // instance variables.
     Halignment mHalign;
     Valignment mValign;
-
-    eMouseThrough mMouseThrough;
 
 #ifdef DEBUG_LAYOUT
     static PRBool gDebug;
