@@ -354,12 +354,6 @@ function AddTreeItem ( name, value, treeChildrenId, attArray )
   return treeitem;
 }
 
-function doHelpButton()
-{
-  openHelp("advanced_property_editor");
-  return true;
-}
-
 function selectTreeItem(treeChildren, item)
 {
   var index = treeChildren.parentNode.contentView.getIndexOfItem(item);

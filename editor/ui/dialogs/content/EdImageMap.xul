@@ -49,15 +49,13 @@
 <dialog title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload = "Startup()"
-    buttons="accept,cancel,help"
+    buttons="accept,cancel"
     ondialogaccept="return finishMap();"
-    ondialogcancel="return onCancel();"
-    ondialoghelp="return doHelpButton();">
+    ondialogcancel="return onCancel();">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js" />
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <!-- Methods for Image Map only -->
   <script type="application/x-javascript" src="chrome://editor/content/EdImageMap.js" />
