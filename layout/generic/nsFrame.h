@@ -206,6 +206,8 @@ public:
                                         PRInt8 aOutSideLimit
                                         );
 
+  PRBool GetMouseThrough() const;
+
   /**
    * Find the nearest frame with a mouse capturer. If no
    * parent has mouse capture this will return null.
