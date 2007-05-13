@@ -97,7 +97,7 @@
 <!ENTITY  securityTab           "Security">
 <!ENTITY  securityTab.accesskey "S">
 <!ENTITY  securityHeader        "Security information for this page">
-<!ENTITY  securityView.label    "View">
+<!ENTITY  securityView.certView "View Certificate">
 <!ENTITY  securityView.accesskey "V">
 <!ENTITY  securityView.unknown   "Unknown">
 
