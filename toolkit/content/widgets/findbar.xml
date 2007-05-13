@@ -708,9 +708,7 @@
           if (this.hidden) {
             this.hidden = false;
 
-            this._updateCaseSensitivity(this._findField.value);
             this._updateStatusUI(this.nsITypeAheadFind.FIND_FOUND);
-
             return true;
           }
           return false;
@@ -1052,6 +1050,7 @@
 
             nodes[i].hidden = showMinimalUI;
           }
+          this._updateCaseSensitivity();
 
           if (this._findMode == this.FIND_TYPEAHEAD)
             this.getElement("find-label").value = this._fastFindStr;
