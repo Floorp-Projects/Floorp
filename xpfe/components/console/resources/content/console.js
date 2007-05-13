@@ -136,7 +136,7 @@ function evaluateTypein()
   var code = document.getElementById("TextboxEval").value;
   var evaluator = document.getElementById("Evaluator").contentWindow;
   evaluator.location = "about:blank"; // reset the iframe
-  evaluator.location = "javascript: " + encodeURIComponent(code);
+  evaluator.location = "javascript: " + code.replace(/%/g, "%25");
 }
 
 function displayResult()
