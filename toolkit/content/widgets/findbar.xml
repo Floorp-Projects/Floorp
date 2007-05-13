@@ -217,7 +217,7 @@
         <xul:textbox class="findbar-textbox" anonid="findbar-textbox"/>
       </xul:hbox>
       <xul:toolbarbutton anonid="find-next"
-                         class="findbar-find-next"
+                         class="findbar-find-next tabbable"
                          label="&next.label;"
                          accesskey="&next.accesskey;"
                          tooltiptext="&next.tooltip;"
@@ -225,7 +225,7 @@
                          disabled="true"
                          xbl:inherits="accesskey=findnextaccesskey"/>
       <xul:toolbarbutton anonid="find-previous"
-                         class="findbar-find-previous"
+                         class="findbar-find-previous tabbable"
                          label="&previous.label;"
                          accesskey="&previous.accesskey;"
                          tooltiptext="&previous.tooltip;"
@@ -233,7 +233,7 @@
                          disabled="true"
                          xbl:inherits="accesskey=findpreviousaccesskey"/>
       <xul:toolbarbutton anonid="highlight"
-                         class="findbar-highlight"
+                         class="findbar-highlight tabbable"
                          label="&highlight.label;"
                          accesskey="&highlight.accesskey;"
                          tooltiptext="&highlight.tooltiptext;"
