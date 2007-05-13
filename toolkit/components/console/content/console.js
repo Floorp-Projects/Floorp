@@ -106,8 +106,9 @@ function onEvalKeyPress(aEvent)
 function evaluateTypein()
 {
   var code = gTextBoxEval.value;
-  var iframe = document.getElementById("Evaluator");
-  iframe.contentDocument.location = "javascript: " + encodeURIComponent(code);
+  var evaluator = document.getElementById("Evaluator").contentWindow;
+  evaluator.location = "about:blank"; // reset the iframe
+  evaluator.location = "javascript: " + encodeURIComponent(code);
 }
 
 function displayResult()
