@@ -3431,7 +3431,7 @@ nsHttpChannel::GetContentType(nsACString &value)
 NS_IMETHODIMP
 nsHttpChannel::SetContentType(const nsACString &value)
 {
-    if (mListener) {
+    if (mListener || mWasOpened) {
         if (!mResponseHead)
             return NS_ERROR_NOT_AVAILABLE;
 
