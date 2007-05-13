@@ -51,7 +51,10 @@
 <!ENTITY messages.accesskey "M">
 <!ENTITY clear.label        "Clear">
 <!ENTITY clear.accesskey    "C">
+<!ENTITY codeEval.label     "Code:">
+<!ENTITY codeEval.accesskey "o">
 <!ENTITY evaluate.label     "Evaluate">
+<!ENTITY evaluate.accesskey "v">
 
 <!ENTITY copyCmd.label       "Copy">  
 <!ENTITY copyCmd.accesskey   "C"> 
