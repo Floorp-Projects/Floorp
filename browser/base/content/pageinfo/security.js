@@ -199,7 +199,7 @@ function securityOnLoad() {
 
   /* Manage the View Cert button*/
   if (info.cert) {
-    var viewText = bundle.GetStringFromName("pageInfo_ViewCertificate");
+    var viewText = pageInfoBundle.getString("securityCertText");
     setText("security-view-text", viewText);
     security._cert = info.cert;
   }
@@ -220,7 +220,7 @@ function securityOnLoad() {
   var visitCount = previousVisitCount(info.hostName);
   if(visitCount > 1) {
     setText("security-privacy-history-value",
-            pageInfoBundle.getFormattedString("securityNVisits", [visitCount]));
+            pageInfoBundle.getFormattedString("securityNVisits", [visitCount.toLocaleString()]));
   }
   else if (visitCount == 1) {
     setText("security-privacy-history-value",
