@@ -403,6 +403,12 @@
               <splitter class="tree-splitter"/>
               <treecol label="&col.visitcount.label;" id="visitCount" flex="1" hidden="true" 
                        persist="width hidden ordinal sortActive sortDirection"/>
+              <splitter class="tree-splitter"/>
+              <treecol label="&col.keyword.label;" id="keyword" flex="1" hidden="true"
+                       persist="width hidden ordinal sortActive sortDirection"/>
+              <splitter class="tree-splitter"/>
+              <treecol label="&col.description.label;" id="description" flex="1" hidden="true"
+                       persist="width hidden ordinal sortActive sortDirection"/>
             </treecols>
             <treechildren id="placeContentChildren" view="placeContent" flex="1"/>
           </tree>
