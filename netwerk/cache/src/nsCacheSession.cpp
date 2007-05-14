@@ -42,9 +42,17 @@
 
 #include "nsCacheSession.h"
 #include "nsCacheService.h"
+#include "nsCRT.h"
 
+NS_IMPL_ADDREF(nsCacheSession)
+NS_IMPL_RELEASE(nsCacheSession)
 
-NS_IMPL_ISUPPORTS1(nsCacheSession, nsICacheSession)
+NS_INTERFACE_MAP_BEGIN(nsCacheSession)
+    NS_INTERFACE_MAP_ENTRY(nsICacheSession)
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(
+        nsIOfflineCacheSession, (StoragePolicy() == nsICache::STORE_OFFLINE))
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICacheSession)
+NS_INTERFACE_MAP_END
 
 nsCacheSession::nsCacheSession(const char *         clientID,
                                nsCacheStoragePolicy storagePolicy,
@@ -126,5 +134,53 @@ NS_IMETHODIMP nsCacheSession::IsStorageEnabled(PRBool *result)
 {
 
     return nsCacheService::IsStorageEnabledForPolicy(StoragePolicy(), result);
+}
+
+NS_IMETHODIMP nsCacheSession::SetOwnedKeys(const nsACString & domain,
+                                           const nsACString & uri,
+                                           PRUint32 count,
+                                           const char ** keys)
+{
+    return nsCacheService::SetOfflineOwnedKeys(this, domain, uri, count, keys);
+}
+
+NS_IMETHODIMP nsCacheSession::GetOwnedKeys(const nsACString & domain,
+                                           const nsACString & uri,
+                                           PRUint32 * count,
+                                           char *** keys)
+{
+    return nsCacheService::GetOfflineOwnedKeys(this, domain, uri, count, keys);
+}
+
+NS_IMETHODIMP nsCacheSession::AddOwnedKey(const nsACString & domain,
+                                          const nsACString & uri,
+                                          const nsACString & key)
+{
+    return nsCacheService::AddOfflineOwnedKey(this, domain, uri, key);
+}
+
+NS_IMETHODIMP nsCacheSession::RemoveOwnedKey(const nsACString & domain,
+                                             const nsACString & uri,
+                                             const nsACString & key)
+{
+    return nsCacheService::RemoveOfflineOwnedKey(this, domain, uri, key);
+}
+
+NS_IMETHODIMP nsCacheSession::KeyIsOwned(const nsACString & domain,
+                                         const nsACString & uri,
+                                         const nsACString & key,
+                                         PRBool * isOwned)
+{
+    return nsCacheService::OfflineKeyIsOwned(this, domain, uri, key, isOwned);
+}
+
+NS_IMETHODIMP nsCacheSession::ClearKeysOwnedByDomain(const nsACString & domain)
+{
+    return nsCacheService::ClearOfflineKeysOwnedByDomain(this, domain);
+}
+
+NS_IMETHODIMP nsCacheSession::EvictUnownedEntries()
+{
+    return nsCacheService::EvictUnownedOfflineEntries(this);
 }
 

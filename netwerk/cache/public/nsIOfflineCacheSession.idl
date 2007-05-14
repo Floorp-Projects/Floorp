@@ -1,0 +1,160 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is nsIOfflineCacheSession.idl.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Dave Camp <dcamp@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsICache.idl"
+
+[scriptable, uuid(e9581d9f-3c0c-4722-8d2b-3d18f8d41299)]
+interface nsIOfflineCacheSession : nsISupports
+{
+    /**
+     * The offline cache is meant to reliably store resources for
+     * offline use.  The expected semantics are:
+     *
+     * a) Once populated, the cache will not evict an application resource
+     *    unless explicitly asked.
+     *
+     * b) Resources no longer in use by the application should be evicted.
+     *
+     * c) If the cache fills up, new entries should be rejected rather
+     *    than throwing out old ones.
+     *
+     * The offline cache uses domains to concretely represent an
+     * application.  It maintains a list of resources to be pinned for
+     * each domain.  This list is separate from actual cache
+     * population - the caller is still responsible for placing items
+     * in the cache, and ownership can be declared without a
+     * corresponding entry.
+     *
+     * A key can optionally be associated with a specific URI within
+     * the domain.
+     */
+
+    /**
+     * Sets the resources owned by a given domain/URI pair.
+     *
+     * Setting a list will remove any resources previously owned by this
+     * domain/URI pair.
+     *
+     * A key can be added while there is no associated entry.  When
+     * an entry is created with this key, it will be owned by the
+     * domain/URI pair.
+     *
+     * @param ownerDomain The domain that owns the resources.
+     * @param ownerURI The specific URI that owns the resources.  This can
+     *        be empty if no URI specifically owns the resources.
+     * @param count The number of keys in keys.
+     * @param keys The keys that the domain/URI pair own.  This can be empty
+     *        to clear ownership for the domain/URI pair.
+     */
+    void setOwnedKeys(in ACString ownerDomain,
+                      in ACString ownerURI,
+                      in unsigned long count,
+                      [array, size_is(count)]in string keys);
+
+    /**
+     * Gets the list of resources owned by a given domain/URI pair.
+     *
+     * @param ownerDomain The domain that owns the resources.
+     * @param ownerURI The specific URI that owns the resources.  This can
+     *        be empty if no URI specifically owns the resources.
+     * @param count The number of keys in keys.
+     * @param keys The keys that the domain/URI pair own.
+     */
+    void getOwnedKeys(in ACString ownerDomain,
+                      in ACString ownerURI,
+                      out unsigned long count,
+                      [array, size_is(count)]out string keys);
+
+    /**
+     * Adds an owned key to a domain/URI pair.
+     *
+     * A key can be added while there is no associated entry.  When
+     * an entry is created with this key, it will be owned by the
+     * domain/URI pair.
+     *
+     * @param ownerDomain The domain that owns the resources.
+     * @param ownerURI The specific URI that owns the resources.  This can
+     *        be empty if no URI specifically owns the resources.
+     * @param key The key to add.
+     */
+    void addOwnedKey(in ACString ownerDomain,
+                     in ACString ownerURI,
+                     in ACString key);
+
+    /**
+     * Removes an owned key from a domain/URI pair.
+     *
+     * If the key does not exist, an NS_ERROR_NOT_AVAILABLE exception
+     * will be thrown.
+     *
+     * @param ownerDomain The domain that owns the resources.
+     * @param ownerURI The specific URI that owns the resources.  This can
+     *        be empty if no URI specifically owns the resources.
+     * @param key The key to remove.
+     */
+    void removeOwnedKey(in ACString ownerDomain,
+                        in ACString ownerURI,
+                        in ACString key);
+
+    /**
+     * Checks whether a key is owned by a given domain/URI pair.
+     *
+     * @param ownerDomain The domain that owns the resources.
+     * @param ownerURI The specific URI that owns the resources.  This can
+     *        be empty if no URI specifically owns the resources.
+     * @param key The key to check
+     */
+    boolean keyIsOwned(in ACString ownerDomain,
+                       in ACString ownerURI,
+                       in ACString key);
+
+    /**
+     * Remove all keys owned by a domain, including keys owned by
+     * a specific URI.
+     *
+     * @param domain The domain for which keys should be removed.
+     */
+    void clearKeysOwnedByDomain(in ACString ownerDomain);
+
+    /**
+     * Evict all entries that are not owned by a domain.
+     */
+    void evictUnownedEntries();
+};

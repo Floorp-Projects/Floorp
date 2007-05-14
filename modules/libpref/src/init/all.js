@@ -70,7 +70,7 @@ pref("browser.cache.check_doc_frequency",   3);
 
 pref("browser.cache.offline.enable",           true);
 // offline cache capacity in kilobytes
-pref("browser.cache.offline.capacity",         51200);
+pref("browser.cache.offline.capacity",         10240);
 
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.

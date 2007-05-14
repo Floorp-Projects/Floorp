@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Darin Fisher <darin@meer.net>
+ *   Dave Camp <dcamp@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,25 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// include files for ftruncate (or equivalent)
-#if defined(XP_UNIX) || defined(XP_BEOS)
-#include <unistd.h>
-#elif defined(XP_WIN)
-#include <windows.h>
-#elif defined(XP_OS2)
-#define INCL_DOSERRORS
-#include <os2.h>
-#else
-// XXX add necessary include file for ftruncate (or equivalent)
-#endif
-
-#include "private/pprio.h"
-
-#include "prlong.h"
-
 #include "nsCache.h"
 #include "nsDiskCache.h"
 #include "nsDiskCacheDeviceSQL.h"
+#include "nsCacheService.h"
 
 #include "nsNetUtil.h"
 #include "nsAutoPtr.h"
@@ -63,12 +49,13 @@
 
 #include "mozIStorageService.h"
 #include "mozIStorageStatement.h"
-#include "mozStorageCID.h"
+#include "mozIStorageFunction.h"
+#include "mozStorageHelper.h"
 
 #include "nsICacheVisitor.h"
 #include "nsISeekableStream.h"
 
-static const char DISK_CACHE_DEVICE_ID[] = { "disk" };
+static const char OFFLINE_CACHE_DEVICE_ID[] = { "offline" };
 
 #define LOG(args) CACHE_LOG_DEBUG(args)
 
@@ -120,17 +107,37 @@ class AutoResetStatement
     mozIStorageStatement *mStatement;
 };
 
-/******************************************************************************
- *  nsDiskCache
- *****************************************************************************/
+class EvictionObserver
+{
+  public:
+    EvictionObserver(mozIStorageConnection *db)
+      : mDB(db)
+    {
+      mDB->ExecuteSimpleSQL(
+          NS_LITERAL_CSTRING("CREATE TEMP TRIGGER cache_on_delete AFTER DELETE"
+                             " ON moz_cache FOR EACH ROW BEGIN SELECT"
+                             " cache_eviction_observer("
+                             "  OLD.clientID, OLD.key, OLD.generation);"
+                             " END;"));
+    }
+
+    ~EvictionObserver()
+    {
+      mDB->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("DROP TRIGGER cache_on_delete;"));
+    }
+
+  private:
+    mozIStorageConnection *mDB;
+};
 
 #define DCACHE_HASH_MAX  LL_MAXINT
 #define DCACHE_HASH_BITS 64
 
 /**
- *  nsDiskCache::Hash(const char * key)
+ *  nsOfflineCache::Hash(const char * key)
  *
- *  This algorithm of this method implies nsDiskCacheRecords will be stored
+ *  This algorithm of this method implies nsOfflineCacheRecords will be stored
  *  in a certain order on disk.  If the algorithm changes, existing cache
  *  map files may become invalid, and therefore the kCurrentVersion needs
  *  to be revised.
@@ -144,67 +151,121 @@ DCacheHash(const char * key)
   return (h == 0 ? DCACHE_HASH_MAX : h);
 }
 
+/******************************************************************************
+ * nsOfflineCacheEvictionFunction
+ */
 
-nsresult
-nsDiskCache::Truncate(PRFileDesc *  fd, PRUint32  newEOF)
+class nsOfflineCacheEvictionFunction : public mozIStorageFunction {
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+
+  nsOfflineCacheEvictionFunction(nsOfflineCacheDevice *device)
+    : mDevice(device)
+  {}
+
+private:
+  nsOfflineCacheDevice *mDevice;
+
+};
+
+NS_IMPL_ISUPPORTS1(nsOfflineCacheEvictionFunction, mozIStorageFunction)
+
+// helper function for directly exposing the same data file binding
+// path algorithm used in nsOfflineCacheBinding::Create
+static nsresult
+GetCacheDataFile(nsIFile *cacheDir, const char *cid, const char *key,
+                 int generation, nsCOMPtr<nsIFile> &file)
 {
-  // use modified SetEOF from nsFileStreams::SetEOF()
+  cacheDir->Clone(getter_AddRefs(file));
+  if (!file)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-#if defined(XP_UNIX) || defined(XP_BEOS)
-  if (ftruncate(PR_FileDesc2NativeHandle(fd), newEOF) != 0) {
-    NS_ERROR("ftruncate failed");
-    return NS_ERROR_FAILURE;
+  nsCAutoString fullKey;
+  fullKey.Append(cid);
+  fullKey.Append(':');
+  fullKey.Append(key);
+
+  PRUint64 hash = DCacheHash(fullKey.get());
+
+  PRUint32 dir1 = (PRUint32) (hash & 0x0F);
+  PRUint32 dir2 = (PRUint32)((hash & 0xF0) >> 4);
+
+  hash >>= 8;
+
+  file->AppendNative(nsPrintfCString("%X", dir1));
+  file->AppendNative(nsPrintfCString("%X", dir2));
+
+  char leaf[64];
+  PR_snprintf(leaf, sizeof(leaf), "%014llX-%X", hash, generation);
+  return file->AppendNative(nsDependentCString(leaf));
+}
+
+NS_IMETHODIMP
+nsOfflineCacheEvictionFunction::OnFunctionCall(mozIStorageValueArray *values)
+{
+  LOG(("nsOfflineCacheDevice::EvictionObserver\n"));
+
+  PRUint32 numEntries;
+  nsresult rv = values->GetNumEntries(&numEntries);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ASSERTION(numEntries == 3, "unexpected number of arguments");
+
+  PRUint32 valueLen;
+  const char *cid = values->AsSharedUTF8String(0, &valueLen);
+  const char *key = values->AsSharedUTF8String(1, &valueLen);
+  int generation  = values->AsInt32(2);
+
+  nsCOMPtr<nsIFile> file;
+  rv = GetCacheDataFile(mDevice->CacheDirectory(), cid, key,
+                        generation, file);
+  if (NS_FAILED(rv))
+  {
+    LOG(("GetCacheDataFile [cid=%s key=%s generation=%d] failed [rv=%x]!\n",
+         cid, key, generation, rv));
+    return rv;
   }
 
-#elif defined(XP_WIN)
-  PRInt32 cnt = PR_Seek(fd, newEOF, PR_SEEK_SET);
-  if (cnt == -1)  return NS_ERROR_FAILURE;
-  if (!SetEndOfFile((HANDLE) PR_FileDesc2NativeHandle(fd))) {
-    NS_ERROR("SetEndOfFile failed");
-    return NS_ERROR_FAILURE;
-  }
-
-#elif defined(XP_OS2)
-  if (DosSetFileSize((HFILE) PR_FileDesc2NativeHandle(fd), newEOF) != NO_ERROR) {
-    NS_ERROR("DosSetFileSize failed");
-    return NS_ERROR_FAILURE;
-  }
-#else
-  // add implementations for other platforms here
+#if defined(PR_LOGGING)
+  nsCAutoString path;
+  file->GetNativePath(path);
+  LOG(("  removing %s\n", path.get()));
 #endif
+
+  file->Remove(PR_FALSE);
+
   return NS_OK;
 }
 
-
 /******************************************************************************
- * nsDiskCacheDeviceInfo
+ * nsOfflineCacheDeviceInfo
  */
 
-class nsDiskCacheDeviceInfo : public nsICacheDeviceInfo
+class nsOfflineCacheDeviceInfo : public nsICacheDeviceInfo
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICACHEDEVICEINFO
 
-  nsDiskCacheDeviceInfo(nsDiskCacheDevice* device)
+  nsOfflineCacheDeviceInfo(nsOfflineCacheDevice* device)
     : mDevice(device)
   {}
-    
+
 private:
-  nsDiskCacheDevice* mDevice;
+  nsOfflineCacheDevice* mDevice;
 };
 
-NS_IMPL_ISUPPORTS1(nsDiskCacheDeviceInfo, nsICacheDeviceInfo)
+NS_IMPL_ISUPPORTS1(nsOfflineCacheDeviceInfo, nsICacheDeviceInfo)
 
 NS_IMETHODIMP
-nsDiskCacheDeviceInfo::GetDescription(char **aDescription)
+nsOfflineCacheDeviceInfo::GetDescription(char **aDescription)
 {
-  *aDescription = nsCRT::strdup("Disk cache device");
+  *aDescription = NS_strdup("Offline cache device");
   return *aDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
-nsDiskCacheDeviceInfo::GetUsageReport(char ** usageReport)
+nsOfflineCacheDeviceInfo::GetUsageReport(char ** usageReport)
 {
   nsCAutoString buffer;
   buffer.AppendLiteral("\n<tr>\n<td><b>Cache Directory:</b></td>\n<td><tt> ");
@@ -229,47 +290,48 @@ nsDiskCacheDeviceInfo::GetUsageReport(char ** usageReport)
 }
 
 NS_IMETHODIMP
-nsDiskCacheDeviceInfo::GetEntryCount(PRUint32 *aEntryCount)
+nsOfflineCacheDeviceInfo::GetEntryCount(PRUint32 *aEntryCount)
 {
   *aEntryCount = mDevice->EntryCount();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDiskCacheDeviceInfo::GetTotalSize(PRUint32 *aTotalSize)
+nsOfflineCacheDeviceInfo::GetTotalSize(PRUint32 *aTotalSize)
 {
   *aTotalSize = mDevice->CacheSize();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDiskCacheDeviceInfo::GetMaximumSize(PRUint32 *aMaximumSize)
+nsOfflineCacheDeviceInfo::GetMaximumSize(PRUint32 *aMaximumSize)
 {
   *aMaximumSize = mDevice->CacheCapacity();
   return NS_OK;
 }
 
-
 /******************************************************************************
- * nsDiskCacheBinding
+ * nsOfflineCacheBinding
  */
 
-class nsDiskCacheBinding : public nsISupports
+class nsOfflineCacheBinding : public nsISupports
 {
 public:
   NS_DECL_ISUPPORTS
 
-  static nsDiskCacheBinding *
+  static nsOfflineCacheBinding *
       Create(nsIFile *cacheDir, const char *key, int generation);
 
   nsCOMPtr<nsIFile> mDataFile;
   int               mGeneration;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS0(nsDiskCacheBinding)
+NS_IMPL_THREADSAFE_ISUPPORTS0(nsOfflineCacheBinding)
 
-nsDiskCacheBinding *
-nsDiskCacheBinding::Create(nsIFile *cacheDir, const char *key, int generation)
+nsOfflineCacheBinding *
+nsOfflineCacheBinding::Create(nsIFile *cacheDir,
+                              const char *key,
+                              int generation)
 {
   nsCOMPtr<nsIFile> file;
   cacheDir->Clone(getter_AddRefs(file));
@@ -320,7 +382,7 @@ nsDiskCacheBinding::Create(nsIFile *cacheDir, const char *key, int generation)
       return nsnull;
   }
 
-  nsDiskCacheBinding *binding = new nsDiskCacheBinding;
+  nsOfflineCacheBinding *binding = new nsOfflineCacheBinding;
   if (!binding)
     return nsnull;
 
@@ -329,42 +391,11 @@ nsDiskCacheBinding::Create(nsIFile *cacheDir, const char *key, int generation)
   return binding;
 }
 
-// helper function for directly exposing the same data file binding
-// path algorithm used in nsDiskCacheBinding::Create
-static nsresult
-GetCacheDataFile(nsIFile *cacheDir, const char *cid, const char *key,
-                 int generation, nsCOMPtr<nsIFile> &file)
-{
-  cacheDir->Clone(getter_AddRefs(file));
-  if (!file)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  nsCAutoString fullKey;
-  fullKey.Append(cid);
-  fullKey.Append(':');
-  fullKey.Append(key);
-
-  PRUint64 hash = DCacheHash(fullKey.get());
-
-  PRUint32 dir1 = (PRUint32) (hash & 0x0F);
-  PRUint32 dir2 = (PRUint32)((hash & 0xF0) >> 4);
-
-  hash >>= 8;
-
-  file->AppendNative(nsPrintfCString("%X", dir1));
-  file->AppendNative(nsPrintfCString("%X", dir2));
-
-  char leaf[64];
-  PR_snprintf(leaf, sizeof(leaf), "%014llX-%X", hash, generation);
-  return file->AppendNative(nsDependentCString(leaf));
-}
-
-
 /******************************************************************************
- * nsDiskCacheRecord
+ * nsOfflineCacheRecord
  */
 
-struct nsDiskCacheRecord
+struct nsOfflineCacheRecord
 {
   const char    *clientID;
   const char    *key;
@@ -380,9 +411,9 @@ struct nsDiskCacheRecord
 };
 
 static nsCacheEntry *
-CreateCacheEntry(nsDiskCacheDevice *device,
+CreateCacheEntry(nsOfflineCacheDevice *device,
                  const nsCString *fullKey,
-                 const nsDiskCacheRecord &rec)
+                 const nsOfflineCacheRecord &rec)
 {
   if (rec.flags != 0)
   {
@@ -394,7 +425,7 @@ CreateCacheEntry(nsDiskCacheDevice *device,
   
   nsresult rv = nsCacheEntry::Create(fullKey->get(), // XXX enable sharing
                                      nsICache::STREAM_BASED,
-                                     nsICache::STORE_ON_DISK,
+                                     nsICache::STORE_OFFLINE,
                                      device, &entry);
   if (NS_FAILED(rv))
     return nsnull;
@@ -408,10 +439,10 @@ CreateCacheEntry(nsDiskCacheDevice *device,
   entry->UnflattenMetaData((const char *) rec.metaData, rec.metaDataLen);
 
   // create a binding object for this entry
-  nsDiskCacheBinding *binding =
-      nsDiskCacheBinding::Create(device->CacheDirectory(),
-                                 fullKey->get(),
-                                 rec.generation);
+  nsOfflineCacheBinding *binding =
+      nsOfflineCacheBinding::Create(device->CacheDirectory(),
+                                    fullKey->get(),
+                                    rec.generation);
   if (!binding)
   {
     delete entry;
@@ -424,77 +455,78 @@ CreateCacheEntry(nsDiskCacheDevice *device,
 
 
 /******************************************************************************
- * nsDiskCacheEntryInfo
+ * nsOfflineCacheEntryInfo
  */
 
-class nsDiskCacheEntryInfo : public nsICacheEntryInfo
+class nsOfflineCacheEntryInfo : public nsICacheEntryInfo
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICACHEENTRYINFO
 
-  nsDiskCacheRecord *mRec;
+  nsOfflineCacheRecord *mRec;
 };
 
-NS_IMPL_ISUPPORTS1(nsDiskCacheEntryInfo, nsICacheEntryInfo)
+NS_IMPL_ISUPPORTS1(nsOfflineCacheEntryInfo, nsICacheEntryInfo)
 
 NS_IMETHODIMP
-nsDiskCacheEntryInfo::GetClientID(char **result)
+nsOfflineCacheEntryInfo::GetClientID(char **result)
 {
-  *result = nsCRT::strdup(mRec->clientID);
+  *result = NS_strdup(mRec->clientID);
   return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
-nsDiskCacheEntryInfo::GetDeviceID(char ** deviceID)
+nsOfflineCacheEntryInfo::GetDeviceID(char ** deviceID)
 {
-  *deviceID = nsCRT::strdup(DISK_CACHE_DEVICE_ID);
+  *deviceID = NS_strdup(OFFLINE_CACHE_DEVICE_ID);
   return *deviceID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
-nsDiskCacheEntryInfo::GetKey(nsACString &clientKey)
+nsOfflineCacheEntryInfo::GetKey(nsACString &clientKey)
 {
   clientKey.Assign(mRec->key);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDiskCacheEntryInfo::GetFetchCount(PRInt32 *aFetchCount)
+nsOfflineCacheEntryInfo::GetFetchCount(PRInt32 *aFetchCount)
 {
   *aFetchCount = mRec->fetchCount;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDiskCacheEntryInfo::GetLastFetched(PRUint32 *aLastFetched)
+nsOfflineCacheEntryInfo::GetLastFetched(PRUint32 *aLastFetched)
 {
   *aLastFetched = SecondsFromPRTime(mRec->lastFetched);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDiskCacheEntryInfo::GetLastModified(PRUint32 *aLastModified)
+nsOfflineCacheEntryInfo::GetLastModified(PRUint32 *aLastModified)
 {
   *aLastModified = SecondsFromPRTime(mRec->lastModified);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDiskCacheEntryInfo::GetExpirationTime(PRUint32 *aExpirationTime)
+nsOfflineCacheEntryInfo::GetExpirationTime(PRUint32 *aExpirationTime)
 {
   *aExpirationTime = SecondsFromPRTime(mRec->expirationTime);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDiskCacheEntryInfo::IsStreamBased(PRBool *aStreamBased)
+nsOfflineCacheEntryInfo::IsStreamBased(PRBool *aStreamBased)
 {
   *aStreamBased = PR_TRUE;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDiskCacheEntryInfo::GetDataSize(PRUint32 *aDataSize)
+NS_IMETHODIMP
+nsOfflineCacheEntryInfo::GetDataSize(PRUint32 *aDataSize)
 {
   *aDataSize = mRec->dataSize;
   return NS_OK;
@@ -502,23 +534,23 @@ NS_IMETHODIMP nsDiskCacheEntryInfo::GetDataSize(PRUint32 *aDataSize)
 
 
 /******************************************************************************
- * nsDiskCacheDevice
+ * nsOfflineCacheDevice
  */
 
-nsDiskCacheDevice::nsDiskCacheDevice()
+nsOfflineCacheDevice::nsOfflineCacheDevice()
   : mDB(nsnull)
   , mCacheCapacity(0)
   , mDeltaCounter(0)
 {
 }
 
-nsDiskCacheDevice::~nsDiskCacheDevice()
+nsOfflineCacheDevice::~nsOfflineCacheDevice()
 {
   Shutdown();
 }
 
 PRUint32
-nsDiskCacheDevice::CacheSize()
+nsOfflineCacheDevice::CacheSize()
 {
   AutoResetStatement statement(mStatement_CacheSize);
 
@@ -530,7 +562,7 @@ nsDiskCacheDevice::CacheSize()
 }
 
 PRUint32
-nsDiskCacheDevice::EntryCount()
+nsOfflineCacheDevice::EntryCount()
 {
   AutoResetStatement statement(mStatement_EntryCount);
 
@@ -542,7 +574,7 @@ nsDiskCacheDevice::EntryCount()
 }
 
 nsresult
-nsDiskCacheDevice::UpdateEntry(nsCacheEntry *entry)
+nsOfflineCacheDevice::UpdateEntry(nsCacheEntry *entry)
 {
   // Decompose the key into "ClientID" and "Key"
   nsCAutoString keyBuf;
@@ -557,7 +589,7 @@ nsDiskCacheDevice::UpdateEntry(nsCacheEntry *entry)
   char *md = metaDataBuf.BeginWriting();
   entry->FlattenMetaData(md, mdSize);
 
-  nsDiskCacheRecord rec;
+  nsOfflineCacheRecord rec;
   rec.metaData = (const PRUint8 *) md;
   rec.metaDataLen = mdSize;
   rec.flags = 0;  // mark entry as inactive
@@ -570,15 +602,15 @@ nsDiskCacheDevice::UpdateEntry(nsCacheEntry *entry)
   AutoResetStatement statement(mStatement_UpdateEntry);
 
   nsresult rv;
-  rv  = statement->BindDataParameter(0, rec.metaData, rec.metaDataLen);
+  rv  = statement->BindBlobParameter(0, rec.metaData, rec.metaDataLen);
   rv |= statement->BindInt32Parameter(1, rec.flags);
   rv |= statement->BindInt32Parameter(2, rec.dataSize);
   rv |= statement->BindInt32Parameter(3, rec.fetchCount);
   rv |= statement->BindInt64Parameter(4, rec.lastFetched);
   rv |= statement->BindInt64Parameter(5, rec.lastModified);
   rv |= statement->BindInt64Parameter(6, rec.expirationTime);
-  rv |= statement->BindCStringParameter(7, cid);
-  rv |= statement->BindCStringParameter(8, key);
+  rv |= statement->BindUTF8StringParameter(7, nsDependentCString(cid));
+  rv |= statement->BindUTF8StringParameter(8, nsDependentCString(key));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasRows;
@@ -590,7 +622,7 @@ nsDiskCacheDevice::UpdateEntry(nsCacheEntry *entry)
 }
 
 nsresult
-nsDiskCacheDevice::UpdateEntrySize(nsCacheEntry *entry, PRUint32 newSize)
+nsOfflineCacheDevice::UpdateEntrySize(nsCacheEntry *entry, PRUint32 newSize)
 {
   // Decompose the key into "ClientID" and "Key"
   nsCAutoString keyBuf;
@@ -602,8 +634,8 @@ nsDiskCacheDevice::UpdateEntrySize(nsCacheEntry *entry, PRUint32 newSize)
 
   nsresult rv;
   rv  = statement->BindInt32Parameter(0, newSize);
-  rv |= statement->BindCStringParameter(1, cid);
-  rv |= statement->BindCStringParameter(2, key);
+  rv |= statement->BindUTF8StringParameter(1, nsDependentCString(cid));
+  rv |= statement->BindUTF8StringParameter(2, nsDependentCString(key));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasRows;
@@ -615,7 +647,7 @@ nsDiskCacheDevice::UpdateEntrySize(nsCacheEntry *entry, PRUint32 newSize)
 }
 
 nsresult
-nsDiskCacheDevice::DeleteEntry(nsCacheEntry *entry, PRBool deleteData)
+nsOfflineCacheDevice::DeleteEntry(nsCacheEntry *entry, PRBool deleteData)
 {
   if (deleteData)
   {
@@ -633,8 +665,8 @@ nsDiskCacheDevice::DeleteEntry(nsCacheEntry *entry, PRBool deleteData)
   AutoResetStatement statement(mStatement_DeleteEntry);
 
   nsresult rv;
-  rv  = statement->BindCStringParameter(0, cid);
-  rv |= statement->BindCStringParameter(1, key);
+  rv  = statement->BindUTF8StringParameter(0, nsDependentCString(cid));
+  rv |= statement->BindUTF8StringParameter(1, nsDependentCString(key));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasRows;
@@ -646,86 +678,20 @@ nsDiskCacheDevice::DeleteEntry(nsCacheEntry *entry, PRBool deleteData)
 }
 
 nsresult
-nsDiskCacheDevice::DeleteData(nsCacheEntry *entry)
+nsOfflineCacheDevice::DeleteData(nsCacheEntry *entry)
 {
-  nsDiskCacheBinding *binding = (nsDiskCacheBinding *) entry->Data();
+  nsOfflineCacheBinding *binding = (nsOfflineCacheBinding *) entry->Data();
   NS_ENSURE_STATE(binding);
 
   return binding->mDataFile->Remove(PR_FALSE);
 }
-
-nsresult
-nsDiskCacheDevice::EnableEvictionObserver()
-{
-#if 0
-  // use CreateTrigger .. maybe do this only once, and have a member
-  // variable to control whether or not it is active.
-
-  int res =
-      sqlite3_exec(mDB, "CREATE TEMP TRIGGER cache_on_delete AFTER DELETE"
-                        " ON moz_cache FOR EACH ROW BEGIN SELECT"
-                        " cache_eviction_observer("
-                        "  OLD.clientID, OLD.key, OLD.generation);"
-                        " END;", NULL, NULL, NULL);
-  NS_ENSURE_SQLITE_RESULT(res, NS_ERROR_UNEXPECTED);
-#endif
-
-  return NS_OK;
-}
-
-nsresult
-nsDiskCacheDevice::DisableEvictionObserver()
-{
-#if 0
-  int res = sqlite3_exec(mDB, "DROP TRIGGER cache_on_delete;",
-                         NULL, NULL, NULL);
-  NS_ENSURE_SQLITE_RESULT(res, NS_ERROR_UNEXPECTED);
-#endif
-
-  return NS_OK;
-}
-
-#if 0
-/* static */ void
-nsDiskCacheDevice::EvictionObserver(sqlite3_context *ctx, int narg,
-                                    sqlite3_value **values)
-{
-  LOG(("nsDiskCacheDevice::EvictionObserver\n"));
-
-  nsDiskCacheDevice *device = (nsDiskCacheDevice *) sqlite3_user_data(ctx);
-
-  NS_ASSERTION(narg == 3, "unexpected number of arguments");
-  const char *cid = (const char *) sqlite3_value_text(values[0]);
-  const char *key = (const char *) sqlite3_value_text(values[1]);
-  int generation  =                sqlite3_value_int(values[2]);
-
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = GetCacheDataFile(device->CacheDirectory(), cid, key,
-                                 generation, file);
-  if (NS_FAILED(rv))
-  {
-    LOG(("GetCacheDataFile [cid=%s key=%s generation=%d] failed [rv=%x]!\n",
-        cid, key, generation, rv));
-    return;
-  }
-
-#if defined(PR_LOGGING)
-  nsCAutoString path;
-  file->GetNativePath(path);
-  LOG(("  removing %s\n", path.get()));
-#endif
-
-  file->Remove(PR_FALSE);
-}
-#endif
-
 
 /**
  * nsCacheDevice implementation
  */
 
 nsresult
-nsDiskCacheDevice::Init()
+nsOfflineCacheDevice::Init()
 {
   NS_ENSURE_TRUE(!mDB, NS_ERROR_ALREADY_INITIALIZED);
 
@@ -740,11 +706,11 @@ nsDiskCacheDevice::Init()
   nsCOMPtr<nsIFile> indexFile; 
   rv = mCacheDirectory->Clone(getter_AddRefs(indexFile));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = indexFile->AppendNative(NS_LITERAL_CSTRING("index.db"));
+  rv = indexFile->AppendNative(NS_LITERAL_CSTRING("index.sqlite"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStorageService> ss =
-      do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
+      do_GetService("@mozilla.org/storage/service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = ss->OpenDatabase(indexFile, getter_AddRefs(mDB));
@@ -777,33 +743,48 @@ nsDiskCacheDevice::Init()
                          ");\n"));
   // maybe the table already exists, so don't bother checking for errors.
 
+  // build the ownership table
+  mDB->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE TABLE moz_cache_owners (\n"
+                         " ClientID TEXT,\n"
+                         " Domain TEXT,\n"
+                         " URI TEXT,\n"
+                         " Key TEXT\n"
+                         ");\n"));
+  // maybe the table already exists, so don't bother checking for errors.
+
   mDB->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("CREATE UNIQUE INDEX moz_cache_index"
                          " ON moz_cache (ClientID, Key);"));
   // maybe the index already exists, so don't bother checking for errors.
 
-#if 0
-  // create cache_eviction_observer
-  res = sqlite3_create_function(mDB, "cache_eviction_observer",
-                                3, SQLITE_UTF8, this,
-                                nsDiskCacheDevice::EvictionObserver,
-                                NULL, NULL);
-  if (res != SQLITE_OK)
-    LOG(("sqlite3_create_function failed [res=%d]\n", res));
-#endif
+  nsCOMPtr<mozIStorageFunction> evictionFunction =
+    new nsOfflineCacheEvictionFunction(this);
+  if (!evictionFunction) return NS_ERROR_OUT_OF_MEMORY;
+
+  rv = mDB->CreateFunction("cache_eviction_observer", 3, evictionFunction);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // create all (most) of our statements up front
   struct {
     nsCOMPtr<mozIStorageStatement> &statement;
     const char *sql;
   } prepared[] = {
-    { mStatement_CacheSize,       "SELECT Sum(DataSize) from moz_cache;" },
-    { mStatement_EntryCount,      "SELECT count(*) from moz_cache;" },
-    { mStatement_UpdateEntry,     "UPDATE moz_cache SET MetaData = ?, Flags = ?, DataSize = ?, FetchCount = ?, LastFetched = ?, LastModified = ?, ExpirationTime = ? WHERE ClientID = ? AND Key = ?;" },
-    { mStatement_UpdateEntrySize, "UPDATE moz_cache SET DataSize = ? WHERE ClientID = ? AND Key = ?;" },
-    { mStatement_DeleteEntry,     "DELETE FROM moz_cache WHERE ClientID = ? AND Key = ?;" },
-    { mStatement_FindEntry,       "SELECT MetaData, Generation, Flags, DataSize, FetchCount, LastFetched, LastModified, ExpirationTime FROM moz_cache WHERE ClientID = ? AND Key = ?;" },
-    { mStatement_BindEntry,       "INSERT INTO moz_cache VALUES(?,?,?,?,?,?,?,?,?,?);" }
+    { mStatement_CacheSize,         "SELECT Sum(DataSize) from moz_cache;" },
+    { mStatement_EntryCount,        "SELECT count(*) from moz_cache;" },
+    { mStatement_UpdateEntry,       "UPDATE moz_cache SET MetaData = ?, Flags = ?, DataSize = ?, FetchCount = ?, LastFetched = ?, LastModified = ?, ExpirationTime = ? WHERE ClientID = ? AND Key = ?;" },
+    { mStatement_UpdateEntrySize,   "UPDATE moz_cache SET DataSize = ? WHERE ClientID = ? AND Key = ?;" },
+    { mStatement_UpdateEntryFlags,  "UPDATE moz_cache SET Flags = ? WHERE ClientID = ? AND Key = ?;" },
+    { mStatement_DeleteEntry,       "DELETE FROM moz_cache WHERE ClientID = ? AND Key = ?;" },
+    { mStatement_FindEntry,         "SELECT MetaData, Generation, Flags, DataSize, FetchCount, LastFetched, LastModified, ExpirationTime FROM moz_cache WHERE ClientID = ? AND Key = ?;" },
+    { mStatement_BindEntry,         "INSERT INTO moz_cache (ClientID, Key, MetaData, Generation, Flags, DataSize, FetchCount, LastFetched, LastModified, ExpirationTime) VALUES(?,?,?,?,?,?,?,?,?,?);" },
+    { mStatement_ClearOwnership,    "DELETE FROM moz_cache_owners WHERE ClientId = ? AND Domain = ? AND URI = ?;" },
+    { mStatement_RemoveOwnership,   "DELETE FROM moz_cache_owners WHERE ClientID = ? AND Domain = ? AND URI = ? AND Key = ?;" },
+    { mStatement_ClearDomain,       "DELETE FROM moz_cache_owners WHERE ClientID = ? AND Domain = ?;" },
+    { mStatement_AddOwnership,      "INSERT INTO moz_cache_owners (ClientID, Domain, URI, Key) VALUES (?, ?, ?, ?);" },
+    { mStatement_CheckOwnership,    "SELECT Key From moz_cache_owners WHERE ClientID = ? AND Domain = ? AND URI = ? AND Key = ?;" },
+    { mStatement_ListOwned,         "SELECT Key FROM moz_cache_owners WHERE ClientID = ? AND Domain = ? AND URI = ?;" },
+    { mStatement_DeleteUnowned,     "DELETE FROM moz_cache WHERE rowid IN (SELECT moz_cache.rowid FROM moz_cache LEFT OUTER JOIN moz_cache_owners ON (moz_cache.ClientID = moz_cache_owners.ClientID AND moz_cache.Key = moz_cache_owners.Key) WHERE moz_cache.ClientID = ? AND moz_cache_owners.Domain ISNULL);" },
   };
   for (PRUint32 i=0; i<NS_ARRAY_LENGTH(prepared); ++i)
   {
@@ -812,43 +793,35 @@ nsDiskCacheDevice::Init()
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Clear up any dangling active flags
+  rv = mDB->ExecuteSimpleSQL(
+         NS_LITERAL_CSTRING("UPDATE moz_cache"
+                            " SET Flags=(Flags & ~1)"
+                            " WHERE (Flags & 1);"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
 nsresult
-nsDiskCacheDevice::Shutdown()
+nsOfflineCacheDevice::Shutdown()
 {
   NS_ENSURE_TRUE(mDB, NS_ERROR_NOT_INITIALIZED);
-
-#if 0
-  int res;
-
-  // delete cache_eviction_observer
-  res = sqlite3_create_function(mDB, "cache_eviction_observer", 3, SQLITE_UTF8,
-                                NULL, NULL, NULL, NULL);
-  if (res != SQLITE_OK)
-    LOG(("sqlite3_create_function failed [res=%d]\n", res));
-  
-  res = sqlite3_close(mDB);
-  NS_ENSURE_SQLITE_RESULT(res, NS_ERROR_UNEXPECTED);
-
-  mDB = nsnull;
-#endif
 
   mDB = 0;
   return NS_OK;
 }
 
 const char *
-nsDiskCacheDevice::GetDeviceID()
+nsOfflineCacheDevice::GetDeviceID()
 {
-  return DISK_CACHE_DEVICE_ID;
+  return OFFLINE_CACHE_DEVICE_ID;
 }
 
 nsCacheEntry *
-nsDiskCacheDevice::FindEntry(nsCString *fullKey, PRBool *collision)
+nsOfflineCacheDevice::FindEntry(nsCString *fullKey, PRBool *collision)
 {
-  LOG(("nsDiskCacheDevice::FindEntry [key=%s]\n", fullKey->get()));
+  LOG(("nsOfflineCacheDevice::FindEntry [key=%s]\n", fullKey->get()));
 
   // SELECT * FROM moz_cache WHERE key = ?
 
@@ -861,8 +834,8 @@ nsDiskCacheDevice::FindEntry(nsCString *fullKey, PRBool *collision)
   AutoResetStatement statement(mStatement_FindEntry);
 
   nsresult rv;
-  rv  = statement->BindCStringParameter(0, cid);
-  rv |= statement->BindCStringParameter(1, key);
+  rv  = statement->BindUTF8StringParameter(0, nsDependentCString(cid));
+  rv |= statement->BindUTF8StringParameter(1, nsDependentCString(key));
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   PRBool hasRows;
@@ -870,8 +843,9 @@ nsDiskCacheDevice::FindEntry(nsCString *fullKey, PRBool *collision)
   if (NS_FAILED(rv) || !hasRows)
     return nsnull; // entry not found
 
-  nsDiskCacheRecord rec;
-  statement->AsSharedBlob(0, (const void **) &rec.metaData, &rec.metaDataLen);
+  nsOfflineCacheRecord rec;
+  statement->GetSharedBlob(0, &rec.metaDataLen,
+                           (const PRUint8 **) &rec.metaData);
   rec.generation     = statement->AsInt32(1);
   rec.flags          = statement->AsInt32(2);
   rec.dataSize       = statement->AsInt32(3);
@@ -890,16 +864,53 @@ nsDiskCacheDevice::FindEntry(nsCString *fullKey, PRBool *collision)
         rec.lastModified,
         rec.expirationTime));
 
-  return CreateCacheEntry(this, fullKey, rec);
+  nsCacheEntry *entry = CreateCacheEntry(this, fullKey, rec);
 
-  // XXX we should verify that the corresponding data file exists,
-  //     and if not, then we should delete this row and return null.
+  if (entry)
+  {
+    // make sure that the data file exists
+    nsOfflineCacheBinding *binding = (nsOfflineCacheBinding*)entry->Data();
+    PRBool isFile;
+    rv = binding->mDataFile->IsFile(&isFile);
+    if (NS_FAILED(rv) || !isFile)
+    {
+      DeleteEntry(entry, PR_FALSE);
+      delete entry;
+      return nsnull;
+    }
+
+    statement->Reset();
+
+    // mark as active
+    AutoResetStatement updateStatement(mStatement_UpdateEntryFlags);
+    rec.flags |= 0x1;
+    rv |= updateStatement->BindInt32Parameter(0, rec.flags);
+    rv |= updateStatement->BindUTF8StringParameter(1, nsDependentCString(cid));
+    rv |= updateStatement->BindUTF8StringParameter(2, nsDependentCString(key));
+    if (NS_FAILED(rv))
+    {
+      delete entry;
+      return nsnull;
+    }
+
+    rv = updateStatement->ExecuteStep(&hasRows);
+    if (NS_FAILED(rv))
+    {
+      delete entry;
+      return nsnull;
+    }
+
+    NS_ASSERTION(!hasRows, "UPDATE should not result in output");
+  }
+
+  return entry;
 }
 
 nsresult
-nsDiskCacheDevice::DeactivateEntry(nsCacheEntry *entry)
+nsOfflineCacheDevice::DeactivateEntry(nsCacheEntry *entry)
 {
-  LOG(("nsDiskCacheDevice::DeactivateEntry [key=%s]\n", entry->Key()->get()));
+  LOG(("nsOfflineCacheDevice::DeactivateEntry [key=%s]\n",
+       entry->Key()->get()));
 
   // This method is called to inform us that the nsCacheEntry object is going
   // away.  We should persist anything that needs to be persisted, or if the
@@ -925,13 +936,14 @@ nsDiskCacheDevice::DeactivateEntry(nsCacheEntry *entry)
   }
 
   delete entry;
+
   return NS_OK;
 }
 
 nsresult
-nsDiskCacheDevice::BindEntry(nsCacheEntry *entry)
+nsOfflineCacheDevice::BindEntry(nsCacheEntry *entry)
 {
-  LOG(("nsDiskCacheDevice::BindEntry [key=%s]\n", entry->Key()->get()));
+  LOG(("nsOfflineCacheDevice::BindEntry [key=%s]\n", entry->Key()->get()));
 
   NS_ENSURE_STATE(!entry->Data());
 
@@ -952,12 +964,12 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry *entry)
     return NS_ERROR_UNEXPECTED;
 
   // create binding, pick best generation number
-  nsRefPtr<nsDiskCacheBinding> binding =
-      nsDiskCacheBinding::Create(mCacheDirectory, entry->Key()->get(), -1);
+  nsRefPtr<nsOfflineCacheBinding> binding =
+      nsOfflineCacheBinding::Create(mCacheDirectory, entry->Key()->get(), -1);
   if (!binding)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsDiskCacheRecord rec;
+  nsOfflineCacheRecord rec;
   rec.clientID = cid;
   rec.key = key;
   rec.metaData = NULL; // don't write any metadata now.
@@ -973,9 +985,9 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry *entry)
   AutoResetStatement statement(mStatement_BindEntry);
 
   nsresult rv;
-  rv  = statement->BindCStringParameter(0, rec.clientID);
-  rv |= statement->BindCStringParameter(1, rec.key);
-  rv |= statement->BindDataParameter(2, rec.metaData, rec.metaDataLen);
+  rv  = statement->BindUTF8StringParameter(0, nsDependentCString(rec.clientID));
+  rv |= statement->BindUTF8StringParameter(1, nsDependentCString(rec.key));
+  rv |= statement->BindBlobParameter(2, rec.metaData, rec.metaDataLen);
   rv |= statement->BindInt32Parameter(3, rec.generation);
   rv |= statement->BindInt32Parameter(4, rec.flags);
   rv |= statement->BindInt32Parameter(5, rec.dataSize);
@@ -996,9 +1008,9 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry *entry)
 }
 
 void
-nsDiskCacheDevice::DoomEntry(nsCacheEntry *entry)
+nsOfflineCacheDevice::DoomEntry(nsCacheEntry *entry)
 {
-  LOG(("nsDiskCacheDevice::DoomEntry [key=%s]\n", entry->Key()->get()));
+  LOG(("nsOfflineCacheDevice::DoomEntry [key=%s]\n", entry->Key()->get()));
 
   // This method is called to inform us that we should mark the entry to be
   // deleted when it is no longer in use.
@@ -1010,12 +1022,13 @@ nsDiskCacheDevice::DoomEntry(nsCacheEntry *entry)
 }
 
 nsresult
-nsDiskCacheDevice::OpenInputStreamForEntry(nsCacheEntry      *entry,
-                                           nsCacheAccessMode  mode,
-                                           PRUint32           offset,
-                                           nsIInputStream   **result)
+nsOfflineCacheDevice::OpenInputStreamForEntry(nsCacheEntry      *entry,
+                                              nsCacheAccessMode  mode,
+                                              PRUint32           offset,
+                                              nsIInputStream   **result)
 {
-  LOG(("nsDiskCacheDevice::OpenInputStreamForEntry [key=%s]\n", entry->Key()->get()));
+  LOG(("nsOfflineCacheDevice::OpenInputStreamForEntry [key=%s]\n",
+       entry->Key()->get()));
 
   *result = nsnull;
 
@@ -1024,7 +1037,7 @@ nsDiskCacheDevice::OpenInputStreamForEntry(nsCacheEntry      *entry,
   // return an input stream to the entry's data file.  the stream
   // may be read on a background thread.
 
-  nsDiskCacheBinding *binding = (nsDiskCacheBinding *) entry->Data();
+  nsOfflineCacheBinding *binding = (nsOfflineCacheBinding *) entry->Data();
   NS_ENSURE_STATE(binding);
 
   nsCOMPtr<nsIInputStream> in;
@@ -1046,12 +1059,13 @@ nsDiskCacheDevice::OpenInputStreamForEntry(nsCacheEntry      *entry,
 }
 
 nsresult
-nsDiskCacheDevice::OpenOutputStreamForEntry(nsCacheEntry       *entry,
-                                            nsCacheAccessMode   mode,
-                                            PRUint32            offset,
-                                            nsIOutputStream   **result)
+nsOfflineCacheDevice::OpenOutputStreamForEntry(nsCacheEntry       *entry,
+                                               nsCacheAccessMode   mode,
+                                               PRUint32            offset,
+                                               nsIOutputStream   **result)
 {
-  LOG(("nsDiskCacheDevice::OpenOutputStreamForEntry [key=%s]\n", entry->Key()->get()));
+  LOG(("nsOfflineCacheDevice::OpenOutputStreamForEntry [key=%s]\n",
+       entry->Key()->get()));
 
   *result = nsnull;
 
@@ -1060,7 +1074,7 @@ nsDiskCacheDevice::OpenOutputStreamForEntry(nsCacheEntry       *entry,
   // return an output stream to the entry's data file.  we can assume
   // that the output stream will only be used on the main thread.
 
-  nsDiskCacheBinding *binding = (nsDiskCacheBinding *) entry->Data();
+  nsOfflineCacheBinding *binding = (nsOfflineCacheBinding *) entry->Data();
   NS_ENSURE_STATE(binding);
 
   nsCOMPtr<nsIOutputStream> out;
@@ -1089,11 +1103,12 @@ nsDiskCacheDevice::OpenOutputStreamForEntry(nsCacheEntry       *entry,
 }
 
 nsresult
-nsDiskCacheDevice::GetFileForEntry(nsCacheEntry *entry, nsIFile **result)
+nsOfflineCacheDevice::GetFileForEntry(nsCacheEntry *entry, nsIFile **result)
 {
-  LOG(("nsDiskCacheDevice::GetFileForEntry [key=%s]\n", entry->Key()->get()));
+  LOG(("nsOfflineCacheDevice::GetFileForEntry [key=%s]\n",
+       entry->Key()->get()));
 
-  nsDiskCacheBinding *binding = (nsDiskCacheBinding *) entry->Data();
+  nsOfflineCacheBinding *binding = (nsOfflineCacheBinding *) entry->Data();
   NS_ENSURE_STATE(binding);
 
   NS_IF_ADDREF(*result = binding->mDataFile);
@@ -1101,35 +1116,33 @@ nsDiskCacheDevice::GetFileForEntry(nsCacheEntry *entry, nsIFile **result)
 }
 
 nsresult
-nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry *entry, PRInt32 deltaSize)
+nsOfflineCacheDevice::OnDataSizeChange(nsCacheEntry *entry, PRInt32 deltaSize)
 {
-  LOG(("nsDiskCacheDevice::OnDataSizeChange [key=%s delta=%d]\n",
+  LOG(("nsOfflineCacheDevice::OnDataSizeChange [key=%s delta=%d]\n",
       entry->Key()->get(), deltaSize));
 
-  // called to notify us of an impending change in the total size of the
-  // specified entry.  we may wish to trigger an eviction cycle at this point.
+  const PRInt32 DELTA_THRESHOLD = 1<<14; // 16k
 
-  // update the DataSize attribute for this entry
-  /*
+  // called to notify us of an impending change in the total size of the
+  // specified entry.
+
   PRUint32 oldSize = entry->DataSize();
   NS_ASSERTION(deltaSize >= 0 || PRInt32(oldSize) + deltaSize >= 0, "oops");
   PRUint32 newSize = PRInt32(oldSize) + deltaSize;
   UpdateEntrySize(entry, newSize);
-  */
-
-  const PRInt32 DELTA_THRESHOLD = 1<<14; // 16k
 
   mDeltaCounter += deltaSize; // this may go negative
 
-  // run eviction cycle
   if (mDeltaCounter >= DELTA_THRESHOLD)
   {
-    PRUint32 targetCap, delta = mDeltaCounter;
-    if (delta <= mCacheCapacity)
-      targetCap = mCacheCapacity - delta;
-    else
-      targetCap = 0;
-    EvictDiskCacheEntries(targetCap);
+    if (CacheSize() > mCacheCapacity) {
+      // the entry will overrun the cache capacity, doom the entry
+      // and abort
+      nsresult rv = nsCacheService::DoomEntry(entry);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "DoomEntry() failed.");
+      return NS_ERROR_ABORT;
+    }
+
     mDeltaCounter = 0; // reset counter
   }
 
@@ -1137,17 +1150,17 @@ nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry *entry, PRInt32 deltaSize)
 }
 
 nsresult
-nsDiskCacheDevice::Visit(nsICacheVisitor *visitor)
+nsOfflineCacheDevice::Visit(nsICacheVisitor *visitor)
 {
   NS_ENSURE_TRUE(Initialized(), NS_ERROR_NOT_INITIALIZED);
 
-  // called to enumerate the disk cache.
+  // called to enumerate the offline cache.
 
   nsCOMPtr<nsICacheDeviceInfo> deviceInfo =
-      new nsDiskCacheDeviceInfo(this);
+      new nsOfflineCacheDeviceInfo(this);
 
   PRBool keepGoing;
-  nsresult rv = visitor->VisitDevice(DISK_CACHE_DEVICE_ID, deviceInfo,
+  nsresult rv = visitor->VisitDevice(OFFLINE_CACHE_DEVICE_ID, deviceInfo,
                                      &keepGoing);
   if (NS_FAILED(rv))
     return rv;
@@ -1157,8 +1170,8 @@ nsDiskCacheDevice::Visit(nsICacheVisitor *visitor)
 
   // SELECT * from moz_cache;
 
-  nsDiskCacheRecord rec;
-  nsRefPtr<nsDiskCacheEntryInfo> info = new nsDiskCacheEntryInfo;
+  nsOfflineCacheRecord rec;
+  nsRefPtr<nsOfflineCacheEntryInfo> info = new nsOfflineCacheEntryInfo;
   if (!info)
     return NS_ERROR_OUT_OF_MEMORY;
   info->mRec = &rec;
@@ -1177,9 +1190,10 @@ nsDiskCacheDevice::Visit(nsICacheVisitor *visitor)
     if (NS_FAILED(rv) || !hasRows)
       break;
 
-    rec.clientID       = statement->AsSharedCString(0, NULL);
-    rec.key            = statement->AsSharedCString(1, NULL);
-    statement->AsSharedBlob(2, (const void **) &rec.metaData, &rec.metaDataLen);
+    statement->GetSharedUTF8String(0, NULL, &rec.clientID);
+    statement->GetSharedUTF8String(1, NULL, &rec.key);
+    statement->GetSharedBlob(2, &rec.metaDataLen,
+                             (const PRUint8 **) &rec.metaData);
     rec.generation     = statement->AsInt32(3);
     rec.flags          = statement->AsInt32(4);
     rec.dataSize       = statement->AsInt32(5);
@@ -1189,7 +1203,7 @@ nsDiskCacheDevice::Visit(nsICacheVisitor *visitor)
     rec.expirationTime = statement->AsInt64(9);
 
     PRBool keepGoing;
-    rv = visitor->VisitEntry(DISK_CACHE_DEVICE_ID, info, &keepGoing);
+    rv = visitor->VisitEntry(OFFLINE_CACHE_DEVICE_ID, info, &keepGoing);
     if (NS_FAILED(rv) || !keepGoing)
       break;
   }
@@ -1199,20 +1213,17 @@ nsDiskCacheDevice::Visit(nsICacheVisitor *visitor)
 }
 
 nsresult
-nsDiskCacheDevice::EvictEntries(const char *clientID)
+nsOfflineCacheDevice::EvictEntries(const char *clientID)
 {
-  LOG(("nsDiskCacheDevice::EvictEntries [cid=%s]\n", clientID ? clientID : ""));
+  LOG(("nsOfflineCacheDevice::EvictEntries [cid=%s]\n",
+       clientID ? clientID : ""));
 
   // called to evict all entries matching the given clientID.
 
   // need trigger to fire user defined function after a row is deleted
   // so we can delete the corresponding data file.
+  EvictionObserver evictionObserver(mDB);
 
-  nsresult rv = EnableEvictionObserver();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // hook up our eviction observer
-  
   const char *deleteCmd;
   if (clientID)
   {
@@ -1227,69 +1238,199 @@ nsDiskCacheDevice::EvictEntries(const char *clientID)
     deleteCmd = "DELETE FROM moz_cache WHERE Flags = 0;";
   }
 
-  rv = mDB->ExecuteSimpleSQL(nsDependentCString(deleteCmd));
+  nsresult rv = mDB->ExecuteSimpleSQL(nsDependentCString(deleteCmd));
   if (clientID)
     PR_smprintf_free((char *) deleteCmd);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  DisableEvictionObserver();
 
   return NS_OK;
 }
 
 nsresult
-nsDiskCacheDevice::EvictDiskCacheEntries(PRUint32 desiredCapacity)
+nsOfflineCacheDevice::SetOwnedKeys(const char * clientID,
+                                   const nsACString & ownerDomain,
+                                   const nsACString & ownerURI,
+                                   PRUint32 count,
+                                   const char ** keys)
 {
-  LOG(("nsDiskCacheDevice::EvictDiskCacheEntries [goal=%u delta=%d]\n",
-      desiredCapacity, mCacheCapacity - desiredCapacity));
+  LOG(("nsOfflineCacheDevice::SetOwnedKeys [cid=%s]\n", clientID));
+  mozStorageTransaction transaction(mDB, PR_FALSE);
 
-  // need trigger to fire user defined function after a row is deleted
-  // so we can delete the corresponding data file.
+  nsDependentCString clientIDStr(clientID);
 
-  // BEGIN
-  // while ("SELECT Sum(DataSize) FROM moz_cache;" > desiredCapacity)
-  //   DELETE FROM moz_cache WHERE Min(LastFetched);
-  // END
-
-  nsresult rv = EnableEvictionObserver();
+  AutoResetStatement clearStatement(mStatement_ClearOwnership);
+  nsresult rv = clearStatement->BindUTF8StringParameter(
+                                               0, clientIDStr);
+  rv |= clearStatement->BindUTF8StringParameter(1, ownerDomain);
+  rv |= clearStatement->BindUTF8StringParameter(2, ownerURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 lastCacheSize = PR_UINT32_MAX, cacheSize;
-  for (;;)
+  rv = clearStatement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRUint32 i = 0; i < count; i++)
   {
-    cacheSize = CacheSize();
-    if (cacheSize <= desiredCapacity)
-      break;
-    if (cacheSize == lastCacheSize)
-    {
-      LOG(("unable to reduce cache size to target capacity!\n"));
-      break;
-    }
+    AutoResetStatement insertStatement(mStatement_AddOwnership);
+    rv = insertStatement->BindUTF8StringParameter(0, clientIDStr);
+    rv |= insertStatement->BindUTF8StringParameter(1, ownerDomain);
+    rv |= insertStatement->BindUTF8StringParameter(2, ownerURI);
+    rv |= insertStatement->BindUTF8StringParameter(3, nsDependentCString(keys[i]));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mDB->ExecuteSimpleSQL(
-        NS_LITERAL_CSTRING("DELETE FROM moz_cache WHERE LastFetched IN ("
-                           " SELECT Min(LastFetched) FROM moz_cache"
-                           " WHERE Flags=0);"));
-    if (NS_FAILED(rv))
-    {
-      LOG(("failure while deleting Min(LastFetched)\n"));
-      break;
-    }
-
-    lastCacheSize = cacheSize;
+    rv = insertStatement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  DisableEvictionObserver();
+  return transaction.Commit();
+}
+
+nsresult
+nsOfflineCacheDevice::GetOwnedKeys(const char * clientID,
+                                   const nsACString & ownerDomain,
+                                   const nsACString & ownerURI,
+                                   PRUint32 * count,
+                                   char *** keys)
+{
+  LOG(("nsOfflineCacheDevice::GetOwnedKeys [cid=%s]\n", clientID));
+
+  AutoResetStatement statement(mStatement_ListOwned);
+  nsresult rv = statement->BindUTF8StringParameter(
+                                           0, nsDependentCString(clientID));
+  rv |= statement->BindUTF8StringParameter(1, ownerDomain);
+  rv |= statement->BindUTF8StringParameter(2, ownerURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasRows;
+  rv = statement->ExecuteStep(&hasRows);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsTArray<nsCString> keyArray;
+  while (hasRows)
+  {
+    PRUint32 length;
+    keyArray.AppendElement(
+      nsDependentCString(statement->AsSharedUTF8String(0, &length)));
+
+    rv = statement->ExecuteStep(&hasRows);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  *count = keyArray.Length();
+  char **ret = NS_STATIC_CAST(char **, NS_Alloc(*count * sizeof(char*)));
+  if (!ret) return NS_ERROR_OUT_OF_MEMORY;
+
+  for (PRUint32 i = 0; i <  *count; i++) {
+    ret[i] = NS_strdup(keyArray[i].get());
+    if (!ret[i]) {
+      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, ret);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  *keys = ret;
+
   return NS_OK;
 }
 
+nsresult
+nsOfflineCacheDevice::AddOwnedKey(const char * clientID,
+                                  const nsACString & ownerDomain,
+                                  const nsACString & ownerURI,
+                                  const nsACString & key)
+{
+  LOG(("nsOfflineCacheDevice::AddOwnedKey [cid=%s]\n", clientID));
+
+  PRBool isOwned;
+  nsresult rv = KeyIsOwned(clientID, ownerDomain, ownerURI, key, &isOwned);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (isOwned) return NS_OK;
+
+  AutoResetStatement statement(mStatement_AddOwnership);
+  rv = statement->BindUTF8StringParameter(0, nsDependentCString(clientID));
+  rv |= statement->BindUTF8StringParameter(1, ownerDomain);
+  rv |= statement->BindUTF8StringParameter(2, ownerURI);
+  rv |= statement->BindUTF8StringParameter(3, key);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return statement->Execute();
+}
+
+nsresult
+nsOfflineCacheDevice::RemoveOwnedKey(const char * clientID,
+                                     const nsACString & ownerDomain,
+                                     const nsACString & ownerURI,
+                                     const nsACString & key)
+{
+  LOG(("nsOfflineCacheDevice::RemoveOwnedKey [cid=%s]\n", clientID));
+
+  PRBool isOwned;
+  nsresult rv = KeyIsOwned(clientID, ownerDomain, ownerURI, key, &isOwned);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!isOwned) return NS_ERROR_NOT_AVAILABLE;
+
+  AutoResetStatement statement(mStatement_RemoveOwnership);
+  rv = statement->BindUTF8StringParameter(0, nsDependentCString(clientID));
+  rv |= statement->BindUTF8StringParameter(1, ownerDomain);
+  rv |= statement->BindUTF8StringParameter(2, ownerURI);
+  rv |= statement->BindUTF8StringParameter(3, key);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return statement->Execute();
+}
+
+nsresult
+nsOfflineCacheDevice::KeyIsOwned(const char * clientID,
+                                 const nsACString & ownerDomain,
+                                 const nsACString & ownerURI,
+                                 const nsACString & key,
+                                 PRBool * isOwned)
+{
+  AutoResetStatement statement(mStatement_CheckOwnership);
+  nsresult rv = statement->BindUTF8StringParameter(
+                                           0, nsDependentCString(clientID));
+  rv |= statement->BindUTF8StringParameter(1, ownerDomain);
+  rv |= statement->BindUTF8StringParameter(2, ownerURI);
+  rv |= statement->BindUTF8StringParameter(3, key);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return statement->ExecuteStep(isOwned);
+}
+
+nsresult
+nsOfflineCacheDevice::ClearKeysOwnedByDomain(const char *clientID,
+                                             const nsACString &domain)
+{
+  LOG(("nsOfflineCacheDevice::ClearKeysOwnedByDomain [cid=%s]\n", clientID));
+
+  AutoResetStatement statement(mStatement_ClearDomain);
+  nsresult rv = statement->BindUTF8StringParameter(
+                                           0, nsDependentCString(clientID));
+  rv |= statement->BindUTF8StringParameter(1, domain);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return statement->Execute();
+}
+
+nsresult
+nsOfflineCacheDevice::EvictUnownedEntries(const char *clientID)
+{
+  LOG(("nsOfflineCacheDevice::EvictUnownedEntries [cid=%s]\n", clientID));
+  EvictionObserver evictionObserver(mDB);
+
+  AutoResetStatement statement(mStatement_DeleteUnowned);
+  nsresult rv = statement->BindUTF8StringParameter(
+                                              0, nsDependentCString(clientID));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return statement->Execute();
+}
 
 /**
  * Preference accessors
  */
 
 void
-nsDiskCacheDevice::SetCacheParentDirectory(nsILocalFile *parentDir)
+nsOfflineCacheDevice::SetCacheParentDirectory(nsILocalFile *parentDir)
 {
   if (Initialized())
   {
@@ -1316,7 +1457,7 @@ nsDiskCacheDevice::SetCacheParentDirectory(nsILocalFile *parentDir)
   rv = parentDir->Clone(getter_AddRefs(dir));
   if (NS_FAILED(rv))
     return;
-  rv = dir->AppendNative(NS_LITERAL_CSTRING("cache_sql"));
+  rv = dir->AppendNative(NS_LITERAL_CSTRING("OfflineCache"));
   if (NS_FAILED(rv))
     return;
 
@@ -1324,9 +1465,7 @@ nsDiskCacheDevice::SetCacheParentDirectory(nsILocalFile *parentDir)
 }
 
 void
-nsDiskCacheDevice::SetCapacity(PRUint32 capacity)
+nsOfflineCacheDevice::SetCapacity(PRUint32 capacity)
 {
   mCacheCapacity = capacity * 1024;
-  if (Initialized())
-    EvictDiskCacheEntries(mCacheCapacity);
 }
