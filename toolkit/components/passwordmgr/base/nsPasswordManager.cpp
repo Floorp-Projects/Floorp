@@ -383,7 +383,9 @@ nsPasswordManager::AddUser(const nsACString& aHost,
       FindPasswordEntryInternal(hashEnt->head, aUser, empty, empty, &entry);
       if (entry) {
         // Just change the password
-        return EncryptDataUCS2(aPassword, entry->passValue);
+        EncryptDataUCS2(aPassword, entry->passValue); 
+        WritePasswords(mSignonFile);
+        return NS_OK;
       }
     }
   }
@@ -638,6 +640,7 @@ nsPasswordManager::AddUserFull2(const nsACString& aKey,
         // ... and update the field names...s
         entry->userField.Assign(aUserFieldName);
         entry->passField.Assign(aPassFieldName);
+        WritePasswords(mSignonFile);
         return NS_OK;
       }
     }
