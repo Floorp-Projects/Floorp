@@ -267,6 +267,8 @@ nsresult
 nsMediaDocument::StartLayout()
 {
   PRUint32 numberOfShells = GetNumberOfShells();
+  // XXXbz Shells can get removed (or added!) as we iterate through this loop.
+  // We should try to use an nsTObserverArray for this.
   for (PRUint32 i = 0; i < numberOfShells; i++) {
     nsIPresShell *shell = GetShellAt(i);
 
@@ -275,10 +277,12 @@ nsMediaDocument::StartLayout()
 
     // Initial-reflow this time.
     nsRect visibleArea = shell->GetPresContext()->GetVisibleArea();
+    nsCOMPtr<nsIPresShell> shellGrip = shell;
     nsresult rv = shell->InitialReflow(visibleArea.width, visibleArea.height);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Now trigger a refresh.
+    // Now trigger a refresh.  vm might be null if the presshell got
+    // Destroy() called already.
     nsIViewManager* vm = shell->GetViewManager();
     if (vm) {
       vm->EnableRefresh(NS_VMREFRESH_IMMEDIATE);

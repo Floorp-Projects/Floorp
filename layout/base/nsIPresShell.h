@@ -253,7 +253,8 @@ public:
    */
   nsFrameSelection* FrameSelection() { return mSelection; }
 
-  // Make shell be a document observer
+  // Make shell be a document observer.  If called after Destroy() has
+  // been called on the shell, this will be ignored.
   NS_IMETHOD BeginObservingDocument() = 0;
 
   // Make shell stop being a document observer
@@ -271,7 +272,11 @@ public:
    * object and then reflows the frame model into the specified width and
    * height.
    *
-   * The coordinates for aWidth and aHeight must be in standard nscoord's.
+   * The coordinates for aWidth and aHeight must be in standard nscoords.
+   *
+   * Callers of this method must hold a reference to this shell that
+   * is guaranteed to survive through arbitrary script execution.
+   * Calling InitialReflow can execute arbitrary script.
    */
   NS_IMETHOD InitialReflow(nscoord aWidth, nscoord aHeight) = 0;
 

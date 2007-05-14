@@ -867,6 +867,7 @@ nsresult
 nsContentSink::RefreshIfEnabled(nsIViewManager* vm)
 {
   if (!vm) {
+    // vm might be null if the shell got Destroy() called already
     return NS_OK;
   }
 
@@ -913,8 +914,11 @@ nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
   mLayoutStarted = PR_TRUE;
   mLastNotificationTime = PR_Now();
   
-  PRUint32 i, ns = mDocument->GetNumberOfShells();
-  for (i = 0; i < ns; i++) {
+  PRUint32 i;
+
+  // XXXbz Shells can get removed (or added!) as we iterate through this loop.
+  // We should try to use an nsTObserverArray for this.
+  for (i = 0; i < mDocument->GetNumberOfShells(); i++) {
     nsIPresShell *shell = mDocument->GetShellAt(i);
 
     if (shell) {
@@ -940,6 +944,7 @@ nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
 
       // Resize-reflow this time
       nsRect r = shell->GetPresContext()->GetVisibleArea();
+      nsCOMPtr<nsIPresShell> shellGrip = shell;
       nsresult rv = shell->InitialReflow(r.width, r.height);
       if (NS_FAILED(rv)) {
         return;

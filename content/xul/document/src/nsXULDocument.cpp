@@ -1973,8 +1973,9 @@ nsXULDocument::StartLayout(void)
         return NS_OK;
     }
 
-    PRUint32 count = GetNumberOfShells();
-    for (PRUint32 i = 0; i < count; ++i) {
+    // XXXbz Shells can get removed (or added!) as we iterate through this
+    // loop.  We should try to use an nsTObserverArray for this.
+    for (PRUint32 i = 0; i < GetNumberOfShells(); ++i) {
         nsIPresShell *shell = GetShellAt(i);
 
         // Resize-reflow this time
@@ -2000,6 +2001,7 @@ nsXULDocument::StartLayout(void)
         // dropping dirty rects if refresh is disabled rather than
         // accumulating them until refresh is enabled and then
         // triggering a repaint...
+        // XXXbz Is that still the case?
         nsresult rv = NS_OK;
         nsIViewManager* vm = shell->GetViewManager();
         if (vm) {
@@ -2014,12 +2016,18 @@ nsXULDocument::StartLayout(void)
             }
         }
 
+        // Make sure we're holding a strong ref to |shell| before we call
+        // InitialReflow()
+        nsCOMPtr<nsIPresShell> shellGrip = shell;
         rv = shell->InitialReflow(r.width, r.height);
         NS_ENSURE_SUCCESS(rv, rv);
 
         // Start observing the document _after_ we do the initial
         // reflow. Otherwise, we'll get into an trouble trying to
         // create kids before the root frame is established.
+        // XXXbz why is that an issue here and not in nsContentSink or
+        // nsDocumentViewer?  Perhaps we should just flush the way
+        // nsDocumentViewer does?
         shell->BeginObservingDocument();
     }
 
