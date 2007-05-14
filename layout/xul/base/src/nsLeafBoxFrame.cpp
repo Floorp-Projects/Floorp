@@ -97,13 +97,15 @@ nsLeafBoxFrame::Init(
               nsIFrame*        aPrevInFlow)
 {
   nsresult  rv = nsLeafFrame::Init(aContent, aParent, aPrevInFlow);
+  NS_ENSURE_SUCCESS(rv, rv);
 
    // see if we need a widget
   if (aParent && aParent->IsBoxFrame()) {
     if (aParent->ChildrenMustHaveWidgets()) {
-        nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE); 
-        nsIView* view = GetView();
+        rv = nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE); 
+        NS_ENSURE_SUCCESS(rv, rv);
 
+        nsIView* view = GetView();
         if (!view->HasWidget())
            view->CreateWidget(kWidgetCID);   
     }
