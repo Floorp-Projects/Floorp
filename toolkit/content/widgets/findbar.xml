@@ -211,7 +211,7 @@
                          class="findbar-closebutton"
                          tooltiptext="&findCloseButton.tooltip;"
                          oncommand="close();"/>
-      <xul:label anonid="find-label" class="findbar-find-fast"/>
+      <xul:label anonid="find-label" class="findbar-find-fast" control="findbar-textbox"/>
       <xul:hbox anonid="find-field-container"
                 class="find-field-container findbar-find-fast">
         <xul:textbox class="findbar-textbox" anonid="findbar-textbox"/>
