@@ -194,7 +194,7 @@ sub main {
   print "finished: $test_finish\n";
 
   # delete the profile and manifest
-  rmtree($profile_dir, 0, 0);
+  # rmtree($profile_dir, 0, 0);
   unlink($manifest);
 }
 
@@ -504,6 +504,7 @@ sub executeMac {
     push(@runargs, $test_url);
     
     # redirect stderr to stdout for easier buildbot / tinderbox logging
+    #$ENV{'XPCOM_DEBUG_BREAK'} = 'stack';
     open (STDERR, '>&', \*STDOUT) || die $!;
     exec @runargs or die("Error starting application: $!\n");
   } else {
