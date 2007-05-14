@@ -45,31 +45,25 @@
   margin-bottom: 1em;
 }
 
-table {
-  border-spacing: 0;
-  margin: 0;
-}
-
-td {
-  padding: 0;
-}
-
-.indent {
-  margin-left: 1em;
-}
-
-.spacer {
-  width: 1em;
+.expander-content {
+  padding-left: 1em;
 }
 
 .expander {
   cursor: pointer;
   -moz-user-select: none;
-  vertical-align: top;
   text-align: center;
+  vertical-align: top;
+  width: 1em;
+  display: inline-block;
+  margin-left: -1em;
 }
 
-.expander-closed > * > .expander-content {
+#top > .expander-open, #top > .expander-closed {
+  margin-left: 1em;
+}
+
+.expander-closed > .expander-content {
   display: none;
 }
 
@@ -77,3 +71,4 @@ td {
   font-family: monospace;
   white-space: pre;
 }
+
