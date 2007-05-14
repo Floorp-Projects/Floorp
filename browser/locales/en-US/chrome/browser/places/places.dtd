@@ -203,6 +203,11 @@
   "Visit Date">
 <!ENTITY col.visitcount.label
   "Visit Count">
+<!ENTITY col.keyword.label
+  "Keyword">
+<!ENTITY col.description.label
+  "Description">
+
 <!ENTITY search.label
   "Search:">
 <!ENTITY search.accesskey
