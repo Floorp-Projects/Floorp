@@ -156,6 +156,7 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
                        nsIFrame*        aPrevInFlow)
 {
   nsresult rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Set up a mediator which can be used for callbacks on this frame.
   mTimerMediator = new nsMenuPopupTimerMediator(this);
@@ -171,7 +172,8 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
     GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar, tempBool);
   mMenuCanOverlapOSBar = tempBool;
 
-  CreateViewForFrame(presContext, this, GetStyleContext(), PR_TRUE);
+  rv = CreateViewForFrame(presContext, this, GetStyleContext(), PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Now that we've made a view, remove it and insert it at the correct
   // position in the view hierarchy (as the root view).  We do this so that we

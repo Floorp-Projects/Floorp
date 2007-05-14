@@ -199,13 +199,15 @@ nsBoxFrame::Init(nsIContent*      aContent,
                  nsIFrame*        aPrevInFlow)
 {
   nsresult  rv = nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   MarkIntrinsicWidthsDirty();
 
   // see if we need a widget
   if (aParent && aParent->IsBoxFrame()) {
     if (aParent->ChildrenMustHaveWidgets()) {
-        nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE);
+        rv = nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE);
+        NS_ENSURE_SUCCESS(rv, rv);
 
         nsIView* view = GetView();
         if (!view->HasWidget())
