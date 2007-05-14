@@ -51,7 +51,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMAttr.h"
 #include "nsIDocument.h"
-#include "nsIDOMEventReceiver.h" 
+#include "nsIDOMEventTarget.h" 
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMKeyListener.h" 

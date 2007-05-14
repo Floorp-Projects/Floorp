@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMNSHTMLImageElement.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsGenericHTMLElement.h"
 #include "nsImageLoadingContent.h"
 #include "nsGkAtoms.h"

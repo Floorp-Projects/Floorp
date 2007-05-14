@@ -55,7 +55,7 @@
 #include "nsScrollbarButtonFrame.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseMotionListener.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
@@ -623,21 +623,23 @@ nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext, nsGUIEvent* aEvent)
 void
 nsSplitterFrameInner::AddListener(nsPresContext* aPresContext)
 {
-  nsCOMPtr<nsIDOMEventReceiver>
-    receiver(do_QueryInterface(mOuter->GetContent()));
-
-  receiver->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*,this), NS_GET_IID(nsIDOMMouseListener));
-  receiver->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,this), NS_GET_IID(nsIDOMMouseMotionListener));
+  mOuter->GetContent()->
+    AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*,this),
+                          NS_GET_IID(nsIDOMMouseListener));
+  mOuter->GetContent()->
+    AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,this),
+                          NS_GET_IID(nsIDOMMouseMotionListener));
 }
 
 void
 nsSplitterFrameInner::RemoveListener()
 {
-  nsCOMPtr<nsIDOMEventReceiver>
-    receiver(do_QueryInterface(mOuter->GetContent()));
-
-  receiver->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*,this),NS_GET_IID(nsIDOMMouseListener));
-  receiver->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,this),NS_GET_IID(nsIDOMMouseMotionListener));
+  mOuter->GetContent()->
+    RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*,this),
+                             NS_GET_IID(nsIDOMMouseListener));
+  mOuter->GetContent()->
+    RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,this),
+                             NS_GET_IID(nsIDOMMouseMotionListener));
 }
 
 /*

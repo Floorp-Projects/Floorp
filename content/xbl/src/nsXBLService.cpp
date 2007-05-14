@@ -429,8 +429,8 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     nsXBLBindingRequest::Destroy(mXBLService->mPool, req);
   }
 
-  nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(mBindingDocument));
-  rec->RemoveEventListener(NS_LITERAL_STRING("load"), (nsIDOMLoadListener*)this, PR_FALSE);
+  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mBindingDocument));
+  target->RemoveEventListener(NS_LITERAL_STRING("load"), (nsIDOMLoadListener*)this, PR_FALSE);
 
   mBindingRequests.Clear();
   mDocument = nsnull;
@@ -707,34 +707,34 @@ nsXBLService::GetXBLDocumentInfo(nsIURI* aURI, nsIContent* aBoundElement)
 // then extra work needs to be done to hook it up to the document (XXX WHY??)
 //
 NS_IMETHODIMP
-nsXBLService::AttachGlobalKeyHandler(nsIDOMEventReceiver* aReceiver)
+nsXBLService::AttachGlobalKeyHandler(nsPIDOMEventTarget* aTarget)
 {
   // check if the receiver is a content node (not a document), and hook
   // it to the document if that is the case.
-  nsCOMPtr<nsIDOMEventReceiver> rec = aReceiver;
-  nsCOMPtr<nsIContent> contentNode(do_QueryInterface(aReceiver));
+  nsCOMPtr<nsPIDOMEventTarget> piTarget = aTarget;
+  nsCOMPtr<nsIContent> contentNode(do_QueryInterface(aTarget));
   if (contentNode) {
     // Only attach if we're really in a document
     nsCOMPtr<nsIDocument> doc = contentNode->GetCurrentDoc();
     if (doc)
-      rec = do_QueryInterface(doc); // We're a XUL keyset. Attach to our document.
+      piTarget = do_QueryInterface(doc); // We're a XUL keyset. Attach to our document.
   }
     
-  if (!rec)
+  if (!piTarget)
     return NS_ERROR_FAILURE;
     
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(contentNode));
 
   // Create the key handler
   nsXBLWindowKeyHandler* handler;
-  NS_NewXBLWindowKeyHandler(elt, rec, &handler); // This addRef's
+  NS_NewXBLWindowKeyHandler(elt, piTarget, &handler); // This addRef's
   if (!handler)
     return NS_ERROR_FAILURE;
 
   // listen to these events
   nsCOMPtr<nsIDOMEventGroup> systemGroup;
-  rec->GetSystemEventGroup(getter_AddRefs(systemGroup));
-  nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(rec);
+  piTarget->GetSystemEventGroup(getter_AddRefs(systemGroup));
+  nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(piTarget);
 
   target->AddGroupedEventListener(NS_LITERAL_STRING("keydown"), handler,
                                   PR_FALSE, systemGroup);
@@ -1146,8 +1146,10 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
     nsXBLStreamListener* xblListener = new nsXBLStreamListener(this, listener, aBoundDocument, doc);
     NS_ENSURE_TRUE(xblListener,NS_ERROR_OUT_OF_MEMORY);
 
-    nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(doc));
-    rec->AddEventListener(NS_LITERAL_STRING("load"), (nsIDOMLoadListener*)xblListener, PR_FALSE);
+    nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(doc));
+    target->AddEventListener(NS_LITERAL_STRING("load"),
+                             NS_STATIC_CAST(nsIDOMLoadListener*, xblListener),
+                             PR_FALSE);
 
     // Add ourselves to the list of loading docs.
     nsBindingManager *bindingManager;

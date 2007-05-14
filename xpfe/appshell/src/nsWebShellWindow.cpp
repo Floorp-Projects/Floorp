@@ -56,7 +56,6 @@
 #include "nsEscape.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMEventReceiver.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMFocusListener.h"

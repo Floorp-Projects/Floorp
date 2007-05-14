@@ -57,7 +57,7 @@
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsFrameManager.h"
@@ -753,10 +753,7 @@ nsImageMap::FreeAreas()
     nsCOMPtr<nsIContent> areaContent;
     area->GetArea(getter_AddRefs(areaContent));
     if (areaContent) {
-      nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(areaContent));
-      if (rec) {
-        rec->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMFocusListener));
-      }
+      areaContent->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMFocusListener));
     }
     delete area;
   }
@@ -878,10 +875,7 @@ nsImageMap::AddArea(nsIContent* aArea)
     return NS_ERROR_OUT_OF_MEMORY;
 
   //Add focus listener to track area focus changes
-  nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(aArea));
-  if (rec) {
-    rec->AddEventListenerByIID(this, NS_GET_IID(nsIDOMFocusListener));
-  }
+  aArea->AddEventListenerByIID(this, NS_GET_IID(nsIDOMFocusListener));
 
   mPresShell->FrameManager()->SetPrimaryFrameFor(aArea, mImageFrame);
   aArea->SetMayHaveFrame(PR_TRUE);

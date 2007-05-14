@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLTableColElement.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsMappedAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
