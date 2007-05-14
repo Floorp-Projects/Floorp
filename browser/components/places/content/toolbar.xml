@@ -257,7 +257,7 @@
             button.setAttribute("container", "true");
             if (PlacesUtils.nodeIsLivemarkContainer(child)) {
               button.setAttribute("livemark", "true");
-              var folder = asFolder(child).folderId;
+              var folder = child.itemId;
 
               // duplicate nsLivemarkService.getSiteURI to avoid instantiating
               // the service on startup.
@@ -302,7 +302,7 @@
         <parameter name="child"/>
         <body><![CDATA[
           if (PlacesUtils.nodeIsFolder(parent) &&
-              asFolder(parent).folderId == PlacesUtils.bookmarks.toolbarFolder)
+              parent.itemId == PlacesUtils.bookmarks.toolbarFolder)
             return this.removeChild(child);
           return null;
         ]]></body>
@@ -459,13 +459,13 @@
         <getter><![CDATA[
           // By default, the insertion point is at the top level, at the end. 
           var index = -1;
-          var folderId = this._result.root.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
+          var folderId = this._result.root.itemId;
           
           if (this.hasSelection) {
             if(PlacesUtils.nodeIsFolder(this.selectedNode)) {
               // If there is a folder selected, the insertion point is the
               // end of the folder.
-              folderId = this.selectedNode.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
+              folderId = this.selectedNode.itemId;
             } else {
               // If there is another type of node selected, the insertion point
               // is after that node.
@@ -619,7 +619,6 @@
           var result = this._self.getResult();
           if (!PlacesUtils.nodeIsFolder(result.root))
             return null;
-          asFolder(result.root);
           
           var dropPoint = { ip: null, beforeIndex: null, folderNode: null };
           // Loop through all the nodes to see which one this should
@@ -634,13 +633,13 @@
               // 50%, drop into the folder.  If it's past that, drop to the right.
               if (event.clientX < xulNode.boxObject.x + (xulNode.boxObject.width * 0.25)) {
                 // Drop to the left of this folder.
-                dropPoint.ip = new InsertionPoint(result.root.folderId, i, -1);
+                dropPoint.ip = new InsertionPoint(result.root.itemId, i, -1);
                 dropPoint.beforeIndex = i;
                 return dropPoint;
               }
               else if (event.clientX < xulNode.boxObject.x + (xulNode.boxObject.width * 0.75)) {
                 // Drop inside this folder.
-                dropPoint.ip = new InsertionPoint(asFolder(xulNode.node).folderId, -1, 1);
+                dropPoint.ip = new InsertionPoint(xulNode.node.itemId, -1, 1);
                 dropPoint.beforeIndex = i;
                 dropPoint.folderNode = xulNode;
                 return dropPoint;
@@ -650,14 +649,14 @@
               // drop to the left of the folder.  If it's right, drop to the right.
               if (event.clientX < xulNode.boxObject.x + (xulNode.boxObject.width / 2)) {
                 // Drop to the left of this bookmark.
-                dropPoint.ip = new InsertionPoint(result.root.folderId, i, -1);
+                dropPoint.ip = new InsertionPoint(result.root.itemId, i, -1);
                 dropPoint.beforeIndex = i;
                 return dropPoint;
               }
             }
           }
           // Should drop to the right of the last node.
-          dropPoint.ip = new InsertionPoint(result.root.folderId, -1, 1);
+          dropPoint.ip = new InsertionPoint(result.root.itemId, -1, 1);
           dropPoint.beforeIndex = -1;
           return dropPoint;
         },

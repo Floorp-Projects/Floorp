@@ -43,7 +43,6 @@
 interface nsIFile;
 interface nsINavHistoryContainerResultNode;
 interface nsINavHistoryQueryResultNode;
-interface nsINavHistoryFolderResultNode;
 interface nsINavHistoryQuery;
 interface nsINavHistoryQueryOptions;
 interface nsINavHistoryResult;
@@ -81,7 +80,7 @@ interface nsINavHistoryResultNode : nsISupports
   const PRUint32 RESULT_TYPE_HOST = 3;             // nsINavHistoryContainerResultNode
   const PRUint32 RESULT_TYPE_REMOTE_CONTAINER = 4; // nsINavHistoryContainerResultNode
   const PRUint32 RESULT_TYPE_QUERY = 5;            // nsINavHistoryQueryResultNode
-  const PRUint32 RESULT_TYPE_FOLDER = 6;           // nsINavHistoryFolderResultNode
+  const PRUint32 RESULT_TYPE_FOLDER = 6;           // nsINavHistoryQueryResultNode
   const PRUint32 RESULT_TYPE_SEPARATOR = 7;        // nsINavHistoryResultNode
   const PRUint32 RESULT_TYPE_DAY = 8;              // nsINavHistoryContainerResultNode
   readonly attribute PRUint32 type;
@@ -395,24 +394,6 @@ interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
   readonly attribute nsINavHistoryQueryOptions queryOptions;
 };
 
-
-/**
- * Represents a bookmark folder (type == RESULT_TYPE_FOLDER). It derives from a
- * query result because it can provide a query that will result in the
- * contents.
- */
-[scriptable, uuid(f3160bfe-ebb3-453b-b25e-19d0b9c425b1)]
-interface nsINavHistoryFolderResultNode : nsINavHistoryQueryResultNode
-{
-  /**
-   * ID of the folder corresponding to this node.
-   * Only valid for RESULT_TYPE_QUERY nodes where exactly one folder
-   * has been specified in the query.  0 in all other cases.
-   */
-  readonly attribute PRInt64 folderId;
-};
-
-
 /**
  *  Allows clients of the HistoryResult to define domain specific handling 
  *  of specific nsITreeView methods that the HistoryResult does not implement.
@@ -702,11 +683,8 @@ interface nsINavHistoryResult : nsISupports
   attribute nsINavHistoryResultViewer viewer;
 
   /**
-   * This is the root of the results.  It will either be a
-   * nsINavHistoryFolderResultNode (if the query is for bookmarks matching a
-   * single folder) or just a nsINavHistoryQueryResultNode (for everything
-   * else). Remember that you need to open all containers for their contents 
-   * to be valid.
+   * This is the root of the results. Remember that you need to open all
+   * containers for their contents to be valid.
    */
   readonly attribute nsINavHistoryQueryResultNode root;
 };

@@ -1074,7 +1074,7 @@ var BookmarkPropertiesPanel = {
     if (!selectedNode)
       return;
 
-    var folderId = asFolder(selectedNode).folderId;
+    var folderId = selectedNode.itemId;
     // Don't set the selected item if the static item for the folder is
     // already selected
     var oldSelectedItem = this._folderMenuList.selectedItem;

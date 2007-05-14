@@ -61,11 +61,11 @@ var gMoveBookmarksDialog = {
       // ever do so
       return;
     }
-    var selectedFolderID = asFolder(selectedNode).folderId;
+    var selectedFolderID = selectedNode.itemId;
 
     var transactions = [];
     for (var i=0; i < this._nodes.length; i++) {
-      var parentId = asFolder(this._nodes[i].parent).folderId;
+      var parentId = this._nodes[i].parent.itemId;
 
       // Nothing to do if the node is already under the selected folder
       if (parentId == selectedFolderID)
@@ -74,9 +74,9 @@ var gMoveBookmarksDialog = {
       var nodeIndex = PlacesUtils.getIndexOfNode(this._nodes[i]);
       if (PlacesUtils.nodeIsFolder(this._nodes[i])) {
         // Disallow moving a folder into itself
-        if (asFolder(this._nodes[i]).folderId != selectedFolderID) {
+        if (this._nodes[i].itemId != selectedFolderID) {
           transactions.push(new
-            PlacesMoveFolderTransaction(asFolder(this._nodes[i]).folderId,
+            PlacesMoveFolderTransaction(this._nodes[i].itemId,
                                         parentId, nodeIndex,
                                         selectedFolderID, -1));
         }
