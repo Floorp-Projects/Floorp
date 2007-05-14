@@ -59,7 +59,6 @@ const PRInt32 nsNavBookmarks::kFindBookmarksIndex_Title = 5;
 const PRInt32 nsNavBookmarks::kGetChildrenIndex_Position = 9;
 const PRInt32 nsNavBookmarks::kGetChildrenIndex_Type = 10;
 const PRInt32 nsNavBookmarks::kGetChildrenIndex_ForeignKey = 11;
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_FolderTitle = 12;
 
 const PRInt32 nsNavBookmarks::kGetItemPropertiesIndex_ID = 0;
 const PRInt32 nsNavBookmarks::kGetItemPropertiesIndex_URI = 1;
@@ -139,56 +138,21 @@ nsNavBookmarks::Init()
 
   // Construct a result where the first columns exactly match those returned by
   // mDBGetURLPageInfo, and additionally contains columns for position,
-  // item_child, and folder_child from moz_bookmarks.  This selects only
-  // _item_ children which are in moz_places.
+  // item_child, and folder_child from moz_bookmarks.
   // Results are kGetInfoIndex_*
-  nsCAutoString selectItemChildren =
+  nsCAutoString selectChildren(
     NS_LITERAL_CSTRING("SELECT h.id, h.url, a.title, "
       "h.rev_host, h.visit_count, "
       "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
-      "f.url, null, a.id, a.position, a.type, a.fk, null "
-    "FROM moz_bookmarks a "
-    "JOIN moz_places h ON a.fk = h.id "
-    "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
-    "WHERE a.parent = ?1 AND a.type = ") +
-      nsPrintfCString("%d", TYPE_BOOKMARK) +
-      NS_LITERAL_CSTRING(" AND a.position >= ?2 AND a.position <= ?3");
-
-  // Construct a result where the first columns are padded out to the width
-  // of mDBGetVisitPageInfo, containing additional columns for position,
-  // item_child, and folder_child and name from
-  // moz_bookmarks.  This selects only _folder_ children.
-  // Results are kGetInfoIndex_* kGetChildrenIndex_*
-  nsCAutoString selectFolderChildren = 
-    NS_LITERAL_CSTRING("SELECT null, null, null, null, null, null, null, "
-      "null, a.id, a.position, a.type, a.fk, a.title "
-    "FROM moz_bookmarks a "
-    "WHERE a.parent = ?1 AND a.type = ") +
-      nsPrintfCString("%d", TYPE_FOLDER) +
-      NS_LITERAL_CSTRING(" AND a.position >= ?2 AND a.position <= ?3");
-
-  // Construct a result where the first columns are padded out to the width
-  // of mDBGetVisitPageInfo, containing additional columns for position,
-  // item_child, and folder_child from moz_bookmarks.  This selects only
-  // _separator_ children which are in moz_bookmarks.  Results are
-  // kGetInfoIndex_* kGetChildrenIndex_*.  item_child and folder_child will
-  // be NULL for separators.
-  nsCAutoString selectSeparatorChildren =
-  NS_LITERAL_CSTRING("SELECT null, null, null, null, null, null, null, "
-      "null, a.id, a.position, a.type, null, null "
-    "FROM moz_bookmarks a "
-    "WHERE a.type = ") +
-      nsPrintfCString("%d", TYPE_SEPARATOR) +
-      NS_LITERAL_CSTRING(" AND a.parent = ?1 AND a.position >= ?2 AND a.position <= ?3");
-
-  NS_NAMED_LITERAL_CSTRING(orderByPosition, " ORDER BY a.position");
+      "f.url, null, a.id, a.position, a.type, a.fk "
+     "FROM moz_bookmarks a "
+     "LEFT JOIN moz_places h ON a.fk = h.id "
+     "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
+     "WHERE a.parent = ?1 AND a.position >= ?2 AND a.position <= ?3"
+     " ORDER BY a.position"));
 
   // mDBGetChildren: select all children of a given folder, sorted by position
-  rv = dbConn->CreateStatement(selectItemChildren +
-                               NS_LITERAL_CSTRING(" UNION ALL ") +
-                               selectFolderChildren +
-                               NS_LITERAL_CSTRING(" UNION ALL ") +
-                               selectSeparatorChildren + orderByPosition,
+  rv = dbConn->CreateStatement(selectChildren,
                                getter_AddRefs(mDBGetChildren));
   NS_ENSURE_SUCCESS(rv, rv);
 
