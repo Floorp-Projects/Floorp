@@ -701,11 +701,12 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
       htmlDoc->SetIsFrameset(frameset != nsnull);
     }
 
+    nsCOMPtr<nsIPresShell> shellGrip = mPresShell;
     // Initial reflow
     mPresShell->InitialReflow(width, height);
 
     // Now trigger a refresh
-    if (mEnableRendering) {
+    if (mEnableRendering && mViewManager) {
       mViewManager->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
     }
   } else {
