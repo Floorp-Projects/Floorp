@@ -57,7 +57,6 @@
 #include "nsIIDNService.h"
 #include "nsIStreamListenerTee.h"
 #include "nsISeekableStream.h"
-#include "nsCPasswordManager.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
@@ -2744,7 +2743,6 @@ nsHttpChannel::GetCredentialsForChallenge(const char *challenge,
                 LOG(("  clearing bad auth cache entry\n"));
                 // ok, we've already tried this user identity, so clear the
                 // corresponding entry from the auth cache.
-                ClearPasswordManagerEntry(scheme.get(), host, port, realm.get(), entry->User());
                 authCache->ClearAuthEntry(scheme.get(), host, port, realm.get());
                 entry = nsnull;
                 ident->Clear();
@@ -4632,31 +4630,6 @@ nsHttpChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
 
     return NS_OK;
 }
-
-void
-nsHttpChannel::ClearPasswordManagerEntry(const char      *scheme,
-                                         const char      *host,
-                                         PRInt32          port,
-                                         const char      *realm,
-                                         const PRUnichar *user)
-{
-    // XXX scheme is currently unused.  see comments in PromptForIdentity
-
-    nsresult rv;
-    nsCOMPtr<nsIPasswordManager> passWordManager = do_GetService(NS_PASSWORDMANAGER_CONTRACTID, &rv);
-    if (passWordManager) {
-        nsCAutoString domain;
-        domain.Assign(host);
-        domain.Append(':');
-        domain.AppendInt(port);
-
-        domain.AppendLiteral(" (");
-        domain.Append(realm);
-        domain.Append(')');
-
-        passWordManager->RemoveUser(domain, nsDependentString(user));
-    }
-} 
 
 nsresult
 nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
