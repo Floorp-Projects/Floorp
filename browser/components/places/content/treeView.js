@@ -388,6 +388,9 @@ PlacesTreeView.prototype = {
   COLUMN_TYPE_URI: 2,
   COLUMN_TYPE_DATE: 3,
   COLUMN_TYPE_VISITCOUNT: 4,
+  COLUMN_TYPE_KEYWORD: 5,
+  COLUMN_TYPE_DESCRIPTION: 6,
+
   _getColumnType: function PTV__getColumnType(aColumn) {
     switch (aColumn.id) {
       case "title":
@@ -398,6 +401,10 @@ PlacesTreeView.prototype = {
         return this.COLUMN_TYPE_DATE;
       case "visitCount":
         return this.COLUMN_TYPE_VISITCOUNT;
+      case "keyword":
+        return this.COLUMN_TYPE_KEYWORD;
+      case "description":
+        return this.COLUMN_TYPE_DESCRIPTION;
     }
     return this.COLUMN_TYPE_UNKNOWN;
   },
@@ -420,6 +427,17 @@ PlacesTreeView.prototype = {
         return [this.COLUMN_TYPE_VISITCOUNT, false];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING:
         return [this.COLUMN_TYPE_VISITCOUNT, true];
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_KEYWORD_ASCENDING:
+        return [this.COLUMN_TYPE_KEYWORD, false];
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_KEYWORD_DESCENDING:
+        return [this.COLUMN_TYPE_KEYWORD, true];
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_ASCENDING:
+        if (this._result.sortingAnnotation == DESCRIPTION_ANNO)
+          return [this.COLUMN_TYPE_DESCRIPTION, false];
+        break;
+      case Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_DESCENDING:
+        if (this._result.sortingAnnotation == DESCRIPTION_ANNO)
+          return [this.COLUMN_TYPE_DESCRIPTION, true];
     }
     return [this.COLUMN_TYPE_UNKNOWN, false];
   },
@@ -985,6 +1003,16 @@ PlacesTreeView.prototype = {
         return "";
       case this.COLUMN_TYPE_VISITCOUNT:
         return node.accessCount;
+      case this.COLUMN_TYPE_KEYWORD:
+        if (PlacesUtils.nodeIsBookmark(node))
+          return PlacesUtils.bookmarks.getKeywordForBookmark(node.itemId);
+        return "";
+      case this.COLUMN_TYPE_DESCRIPTION:
+        const annos = PlacesUtils.annotations;
+        if (annos.itemHasAnnotation(node.itemId, DESCRIPTION_ANNO))
+          return annos.getItemAnnotationString(node.itemId, DESCRIPTION_ANNO)
+
+        return "";
     }
     return "";
   },
@@ -1040,7 +1068,9 @@ PlacesTreeView.prototype = {
     var allowTriState = PlacesUtils.nodeIsFolder(this._result.root);
 
     var oldSort = this._result.sortingMode;
+    var oldSortingAnnotation = this._result.sortingAnnotation;
     var newSort;
+    var newSortingAnnotation = "";
     const NHQO = Ci.nsINavHistoryQueryOptions;
     switch (this._getColumnType(aColumn)) {
       case this.COLUMN_TYPE_TITLE:
@@ -1083,9 +1113,34 @@ PlacesTreeView.prototype = {
           newSort = NHQO.SORT_BY_VISITCOUNT_DESCENDING;
 
         break;
+      case this.COLUMN_TYPE_KEYWORD:
+        if (oldSort == NHQO.SORT_BY_KEYWORD_ASCENDING)
+          newSort = NHQO.SORT_BY_KEYWORD_DESCENDING;
+        else if (allowTriState && oldSort == NHQO.SORT_BY_KEYWORD_DESCENDING)
+          newSort = NHQO.SORT_BY_NONE;
+        else
+          newSort = NHQO.SORT_BY_KEYWORD_ASCENDING;
+
+        break;
+      case this.COLUMN_TYPE_DESCRIPTION:
+        if (oldSort == NHQO.SORT_BY_ANNOTATION_ASCENDING &&
+            oldSortingAnnotation == DESCRIPTION_ANNO) {
+          newSort = NHQO.SORT_BY_ANNOTATION_DESCENDING;
+          newSortingAnnotation = DESCRIPTION_ANNO;
+        }
+        else if (allowTriState &&
+                 oldSort == NHQO.SORT_BY_ANNOTATION_DESCENDING &&
+                 oldSortingAnnotation == DESCRIPTION_ANNO)
+          newSort = NHQO.SORT_BY_NONE;
+        else {
+          newSort = NHQO.SORT_BY_ANNOTATION_ASCENDING;
+          newSortingAnnotation = DESCRIPTION_ANNO;
+        }
+        break;
       default:
         throw Cr.NS_ERROR_INVALID_ARG;
     }
+    this._result.sortingAnnotation = newSortingAnnotation;
     this._result.sortingMode = newSort;
   },
 
