@@ -126,6 +126,13 @@ function run_test() {
   bmsvc.changeBookmarkURI(id1, uri1);
   checkOrder(id1, id3, id2);
 
+  // keyword sort
+  result.sortingMode = NHQO.SORT_BY_KEYWORD_ASCENDING;
+  checkOrder(id3, id2, id1);  // no keywords set - falling back to title sort
+  bmsvc.setKeywordForBookmark(id1, "a");
+  bmsvc.setKeywordForBookmark(id2, "z");
+  checkOrder(id3, id1, id2);
+
   // XXXtodo: test history sortings (visit count, visit date)
   // XXXtodo: test different item types once folderId and bookmarkId are merged.
   // XXXtodo: test sortingAnnotation functionality with non-bookmark nodes

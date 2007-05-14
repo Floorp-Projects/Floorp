@@ -1010,8 +1010,10 @@ interface nsINavHistoryQueryOptions : nsISupports
   const unsigned short SORT_BY_URI_DESCENDING = 6;
   const unsigned short SORT_BY_VISITCOUNT_ASCENDING = 7;
   const unsigned short SORT_BY_VISITCOUNT_DESCENDING = 8;
-  const unsigned short SORT_BY_ANNOTATION_ASCENDING = 9;
-  const unsigned short SORT_BY_ANNOTATION_DESCENDING = 10;
+  const unsigned short SORT_BY_KEYWORD_ASCENDING = 9;
+  const unsigned short SORT_BY_KEYWORD_DESCENDING = 10;
+  const unsigned short SORT_BY_ANNOTATION_ASCENDING = 11;
+  const unsigned short SORT_BY_ANNOTATION_DESCENDING = 12;
 
   /**
    * "URI" results, one for each URI visited in the range. Individual result

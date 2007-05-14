@@ -2096,6 +2096,11 @@ nsNavBookmarks::SetKeywordForBookmark(PRInt64 aBookmarkId, const nsAString& aKey
   rv = updateKeywordStmnt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
   transaction.Commit();
+
+  // Pass the new keyword to OnItemChanged.
+  ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
+                      OnItemChanged(aBookmarkId, NS_LITERAL_CSTRING("keyword"),
+                                    PR_FALSE, NS_ConvertUTF16toUTF8(aKeyword)))
   return NS_OK;
 }
 
