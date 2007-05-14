@@ -2574,10 +2574,9 @@ nsNavHistoryQueryResultNode::OnFolderChanged(PRInt64 aFolder,
 //    Therefore, if we are in a treeview AND our parent is visible, we will
 //    keep incremental updating.
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsNavHistoryFolderResultNode,
+NS_IMPL_ISUPPORTS_INHERITED1(nsNavHistoryFolderResultNode,
                              nsNavHistoryContainerResultNode,
-                             nsINavHistoryQueryResultNode,
-                             nsINavHistoryFolderResultNode)
+                             nsINavHistoryQueryResultNode)
 
 nsNavHistoryFolderResultNode::nsNavHistoryFolderResultNode(
     const nsACString& aTitle, nsNavHistoryQueryOptions* aOptions,

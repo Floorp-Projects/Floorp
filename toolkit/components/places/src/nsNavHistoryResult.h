@@ -692,7 +692,7 @@ public:
 //    of the folder in sync with the bookmark service.
 
 class nsNavHistoryFolderResultNode : public nsNavHistoryContainerResultNode,
-                                     public nsINavHistoryFolderResultNode
+                                     public nsINavHistoryQueryResultNode
 {
 public:
   nsNavHistoryFolderResultNode(const nsACString& aTitle,
@@ -709,9 +709,6 @@ public:
   NS_IMETHOD GetHasChildren(PRBool* aHasChildren);
   NS_IMETHOD GetChildrenReadOnly(PRBool *aChildrenReadOnly);
   NS_DECL_NSINAVHISTORYQUERYRESULTNODE
-
-  NS_IMETHOD GetFolderId(PRInt64* aFolderId)
-    { *aFolderId = mItemId; return NS_OK; }
 
   virtual nsresult OpenContainer();
 

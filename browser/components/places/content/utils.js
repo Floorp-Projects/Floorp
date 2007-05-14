@@ -58,7 +58,6 @@ function QI_node(aNode, aIID) {
   NS_ASSERT(result, "Node QI Failed");
   return result;
 }
-function asFolder(aNode)   { return QI_node(aNode, Ci.nsINavHistoryFolderResultNode);   }
 function asVisit(aNode)    { return QI_node(aNode, Ci.nsINavHistoryVisitResultNode);    }
 function asFullVisit(aNode){ return QI_node(aNode, Ci.nsINavHistoryFullVisitResultNode);}
 function asContainer(aNode){ return QI_node(aNode, Ci.nsINavHistoryContainerResultNode);}
@@ -288,7 +287,7 @@ var PlacesUtils = {
     NS_ASSERT(aNode, "null node");
 
     if (this.nodeIsFolder(aNode))
-      return this.bookmarks.getFolderReadonly(asFolder(aNode).folderId);
+      return this.bookmarks.getFolderReadonly(aNode.itemId);
     if (this.nodeIsQuery(aNode))
       return asQuery(aNode).childrenReadOnly;
     return false;
@@ -388,7 +387,7 @@ var PlacesUtils = {
     NS_ASSERT(aNode, "null node");
 
     return this.nodeIsFolder(aNode) &&
-           this.bookmarks.getFolderReadonly(asFolder(aNode).folderId);
+           this.bookmarks.getFolderReadonly(aNode.itemId);
   },
 
   /**
@@ -436,9 +435,7 @@ var PlacesUtils = {
       // bookmark:         <itemId>\n<uri>\n<parentId>\n<indexInParent>
       // separator:        0\n<>\n<parentId>\n<indexInParent>
       var wrapped = "";
-      if (this.nodeIsFolder(aNode))
-        wrapped += asFolder(aNode).folderId + NEWLINE;
-      else if (this.nodeIsBookmark(aNode))
+      if (aNode.itemId != -1) // 
         wrapped += aNode.itemId + NEWLINE;
       else
         wrapped += "0" + NEWLINE;
@@ -449,7 +446,7 @@ var PlacesUtils = {
         wrapped += NEWLINE;
 
       if (this.nodeIsFolder(aNode.parent))
-        wrapped += asFolder(aNode.parent).folderId + NEWLINE;
+        wrapped += aNode.parent.itemId + NEWLINE;
       else
         wrapped += "0" + NEWLINE;
 
@@ -537,10 +534,9 @@ var PlacesUtils = {
         var txn = null;
         var node = children.getChild(i);
         if (self.nodeIsFolder(node)) {
-          var nodeFolderId = asFolder(node).folderId;
+          var nodeFolderId = node.itemId;
           var title = self.bookmarks.getItemTitle(nodeFolderId);
-          // XXXmano: use item-annotations once bug 372508 is fixed
-          var annos = self.getAnnotationsForURI(self._uri(node.uri));
+          var annos = self.getAnnotationsForItem(nodeFolderId);
           var folderItemsTransactions =
             getChildItemsTransactions(nodeFolderId);
           txn = new PlacesCreateFolderTransaction(title, -1, aIndex, annos,
