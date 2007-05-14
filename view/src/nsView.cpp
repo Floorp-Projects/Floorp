@@ -609,8 +609,13 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
   nsIDeviceContext  *dx;
   nsRect            trect = mDimBounds;
 
-  NS_ASSERTION(!mWindow, "We already have a window for this view? BAD");
-  NS_IF_RELEASE(mWindow);
+  if (NS_UNLIKELY(mWindow)) {
+    NS_ERROR("We already have a window for this view? BAD");
+    ViewWrapper* wrapper = GetWrapperFor(mWindow);
+    NS_IF_RELEASE(wrapper);
+    mWindow->SetClientData(nsnull);
+    NS_RELEASE(mWindow);
+  }
 
   mViewManager->GetDeviceContext(dx);
   float scale = 1.0f / dx->AppUnitsPerDevPixel();
