@@ -570,6 +570,10 @@ public:
       nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
   PR_STATIC_CALLBACK(int) SortComparison_VisitCountGreater(
       nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
+  PR_STATIC_CALLBACK(int) SortComparison_KeywordLess(
+      nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
+  PR_STATIC_CALLBACK(int) SortComparison_KeywordGreater(
+      nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
   PR_STATIC_CALLBACK(int) SortComparison_AnnotationLess(
       nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
   PR_STATIC_CALLBACK(int) SortComparison_AnnotationGreater(

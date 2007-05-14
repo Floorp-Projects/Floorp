@@ -587,6 +587,10 @@ nsNavHistoryContainerResultNode::GetSortingComparator(PRUint16 aSortType)
       return &SortComparison_VisitCountLess;
     case nsINavHistoryQueryOptions::SORT_BY_VISITCOUNT_DESCENDING:
       return &SortComparison_VisitCountGreater;
+    case nsINavHistoryQueryOptions::SORT_BY_KEYWORD_ASCENDING:
+      return &SortComparison_KeywordLess;
+    case nsINavHistoryQueryOptions::SORT_BY_KEYWORD_DESCENDING:
+      return &SortComparison_KeywordGreater;
     case nsINavHistoryQueryOptions::SORT_BY_ANNOTATION_ASCENDING:
       return &SortComparison_AnnotationLess;
     case nsINavHistoryQueryOptions::SORT_BY_ANNOTATION_DESCENDING:
@@ -817,6 +821,42 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_URIGreater(
   return -SortComparison_URILess(a, b, closure);
 }
 
+// nsNavHistoryContainerResultNode::SortComparison_Keyword*
+PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_KeywordLess(
+    nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
+{
+  PRInt32 value = 0;
+  if (a->mItemId != -1 || b->mItemId != -1) {
+    // compare the keywords
+    nsAutoString aKeyword, bKeyword;
+    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+    NS_ENSURE_TRUE(bookmarks, 0);
+
+    nsresult rv;
+    if (a->mItemId != -1) {
+      rv = bookmarks->GetKeywordForBookmark(a->mItemId, aKeyword);
+      NS_ENSURE_SUCCESS(rv, 0);
+    }
+    if (b->mItemId != -1) {
+      rv = bookmarks->GetKeywordForBookmark(b->mItemId, aKeyword);
+      NS_ENSURE_SUCCESS(rv, 0);
+    }
+
+    value = SortComparison_StringLess(aKeyword, bKeyword);
+  }
+
+  // fall back to title sorting
+  if (value == 0)
+    value = SortComparison_TitleLess(a, b, closure);
+
+  return value;
+}
+
+PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_KeywordGreater(
+    nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
+{
+  return -SortComparison_KeywordLess(a, b, closure);
+}
 
 PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_AnnotationLess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
@@ -859,7 +899,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_AnnotationLe
                                                  &a_hasAnno), 0);
   } else {
     NS_ENSURE_SUCCESS(annosvc->PageHasAnnotation(a_uri, annoName,
-                                                 &a_hasAnno), 0);    
+                                                 &a_hasAnno), 0);
   }
   if (b_itemAnno) {
     NS_ENSURE_SUCCESS(annosvc->ItemHasAnnotation(b->mItemId, annoName,
@@ -893,14 +933,15 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_AnnotationLe
                                                          &b_type), 0);
       }
       // We better make the API not support this state, really
-      if (b_type != annoType)
+      if (a_hasAnno && b_type != annoType)
         return 0;
+      annoType = b_type;
     }
 
 #define GET_ANNOTATIONS_VALUES(METHOD_ITEM, METHOD_PAGE, A_VAL, B_VAL)        \
         if (a_hasAnno) {                                                      \
           if (a_itemAnno) {                                                   \
-            NS_ENSURE_SUCCESS(annosvc->METHOD_ITEM(a->mItemId, annoName,  \
+            NS_ENSURE_SUCCESS(annosvc->METHOD_ITEM(a->mItemId, annoName,      \
                                                    A_VAL), 0);                \
           } else {                                                            \
             NS_ENSURE_SUCCESS(annosvc->METHOD_PAGE(a_uri, annoName,           \
@@ -909,7 +950,7 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_AnnotationLe
         }                                                                     \
         if (b_hasAnno) {                                                      \
           if (b_itemAnno) {                                                   \
-            NS_ENSURE_SUCCESS(annosvc->METHOD_ITEM(b->mItemId, annoName,  \
+            NS_ENSURE_SUCCESS(annosvc->METHOD_ITEM(b->mItemId, annoName,      \
                                                    B_VAL), 0);                \
           } else {                                                            \
             NS_ENSURE_SUCCESS(annosvc->METHOD_PAGE(b_uri, annoName,           \
@@ -3075,7 +3116,9 @@ nsNavHistoryFolderResultNode::OnItemChanged(PRInt64 aItemId,
   else if (aProperty.EqualsLiteral("cleartime")) {
     node->mTime = 0;
   }
-  else if (!aIsAnnotationProperty){
+  else if (!aProperty.EqualsLiteral("keyword") && !aIsAnnotationProperty) {
+    // XXX: expose a keyword getter on bookmarks nodes?
+
     NS_NOTREACHED("Unknown bookmark property changing.");
   }
 
