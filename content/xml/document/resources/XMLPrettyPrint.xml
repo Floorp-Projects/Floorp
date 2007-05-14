@@ -62,9 +62,9 @@
       <![CDATA[
         try {
           var par = event.originalTarget;
-          if (par.nodeName == 'td' && par.className == 'expander') {
+          if (par.nodeName == 'div' && par.className == 'expander') {
             if (par.parentNode.className == 'expander-closed') {
-              par.parentNode.className = '';
+              par.parentNode.className = 'expander-open';
               event.originalTarget.firstChild.data = '\u2212';
             }
             else {
