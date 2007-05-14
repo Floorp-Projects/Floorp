@@ -75,6 +75,7 @@ class nsIContent;
 class nsIViewManager;
 class nsNodeInfoManager;
 class nsScriptLoader;
+class nsIOfflineCacheSession;
 
 #ifdef NS_DEBUG
 
@@ -167,6 +168,8 @@ protected:
                                     const nsSubstring& aMedia);
 
   void PrefetchHref(const nsAString &aHref, PRBool aExplicit, PRBool aOffline);
+  nsresult GetOfflineCacheSession(nsIOfflineCacheSession **aSession);
+  nsresult AddOfflineResource(const nsAString &aHref);
 
   void ScrollToRef();
   nsresult RefreshIfEnabled(nsIViewManager* vm);
@@ -252,6 +255,9 @@ protected:
   // Do we notify based on time?
   PRPackedBool mNotifyOnTimer;
 
+  // For saving <link rel="offline-resource"> links
+  nsCOMPtr<nsIOfflineCacheSession> mOfflineCacheSession;
+
   // Have we already called BeginUpdate for this set of content changes?
   PRUint8 mBeganUpdate : 1;
   PRUint8 mLayoutStarted : 1;
@@ -264,7 +270,11 @@ protected:
   PRUint8 mChangeScrollPosWhenScrollingToRef : 1;
   // If true, we deferred starting layout until sheets load
   PRUint8 mDeferredLayoutStart : 1;
-  
+  // true if an <link rel="offline-resource"> nodes have been encountered.
+  PRUint8 mHaveOfflineResources : 1;
+  // true if offline-resource links should be saved to the offline cache
+  PRUint8 mSaveOfflineResources : 1;
+
   // -- Can interrupt parsing members --
   PRUint32 mDelayTimerStart;
 

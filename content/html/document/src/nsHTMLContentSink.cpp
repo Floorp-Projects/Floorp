@@ -3012,7 +3012,9 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
           nsAutoString hrefVal;
           element->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
           if (!hrefVal.IsEmpty()) {
-            PrefetchHref(hrefVal, PR_TRUE, PR_TRUE);
+            AddOfflineResource(hrefVal);
+            if (mSaveOfflineResources)
+              PrefetchHref(hrefVal, PR_TRUE, PR_TRUE);
           }
         }
       }
