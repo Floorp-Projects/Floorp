@@ -175,7 +175,7 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "nsIDocument.h"
 
 //focus
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMFocusListener.h"
 #include "nsISelectionController.h"
 
@@ -751,17 +751,13 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
   // mFocusListener is a strong reference
   mFocusListener = focusListener;
 
-  // get the DOM event receiver
-  nsCOMPtr<nsIDOMEventReceiver> erP(do_QueryInterface(mDocument));
-  NS_ASSERTION(erP, "No event receiver in document!");
-
-  if (erP) {
-    rv = erP->AddEventListenerByIID(mFocusListener,
-                                    NS_GET_IID(nsIDOMFocusListener));
+  if (mDocument) {
+    rv = mDocument->AddEventListenerByIID(mFocusListener,
+                                          NS_GET_IID(nsIDOMFocusListener));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
     if (mOldFocusListener) {
-      rv = erP->RemoveEventListenerByIID(mOldFocusListener,
-                                      NS_GET_IID(nsIDOMFocusListener));
+      rv = mDocument->RemoveEventListenerByIID(mOldFocusListener,
+                                               NS_GET_IID(nsIDOMFocusListener));
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to remove focus listener");
     }
   }
@@ -1354,15 +1350,9 @@ DocumentViewerImpl::Open(nsISupports *aState, nsISHEntry *aSHEntry)
   
   SyncParentSubDocMap();
 
-  if (mFocusListener) {
-    // get the DOM event receiver
-    nsCOMPtr<nsIDOMEventReceiver> erP(do_QueryInterface(mDocument));
-    NS_ASSERTION(erP, "No event receiver in document!");
-
-    if (erP) {
-      erP->AddEventListenerByIID(mFocusListener,
-                                 NS_GET_IID(nsIDOMFocusListener));
-    }
+  if (mFocusListener && mDocument) {
+    mDocument->AddEventListenerByIID(mFocusListener,
+                                     NS_GET_IID(nsIDOMFocusListener));
   }
 
   // XXX re-enable image animations once that works correctly
@@ -1416,15 +1406,9 @@ DocumentViewerImpl::Close(nsISHEntry *aSHEntry)
         mDocument->Destroy();
     }
 
-  if (mFocusListener) {
-    // get the DOM event receiver
-    nsCOMPtr<nsIDOMEventReceiver> erP(do_QueryInterface(mDocument));
-    NS_ASSERTION(erP, "No event receiver in document!");
-
-    if (erP) {
-      erP->RemoveEventListenerByIID(mFocusListener,
-                                    NS_GET_IID(nsIDOMFocusListener));
-    }
+  if (mFocusListener && mDocument) {
+    mDocument->RemoveEventListenerByIID(mFocusListener,
+                                        NS_GET_IID(nsIDOMFocusListener));
   }
 
   return NS_OK;
@@ -1758,13 +1742,9 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
     mPresShell->BeginObservingDocument();
 
     // Register the focus listener on the new document
-
-    nsCOMPtr<nsIDOMEventReceiver> erP = do_QueryInterface(mDocument, &rv);
-    NS_ASSERTION(erP, "No event receiver in document!");
-
-    if (erP) {
-      rv = erP->AddEventListenerByIID(mFocusListener,
-                                      NS_GET_IID(nsIDOMFocusListener));
+    if (mDocument) {
+      rv = mDocument->AddEventListenerByIID(mFocusListener,
+                                            NS_GET_IID(nsIDOMFocusListener));
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
     }
   }

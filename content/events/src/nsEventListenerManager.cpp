@@ -393,7 +393,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsEventListenerManager)
    NS_INTERFACE_MAP_ENTRY(nsIEventListenerManager)
    NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
    NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
-   NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsEventListenerManager, nsIEventListenerManager)
@@ -1371,35 +1370,6 @@ NS_IMETHODIMP
 nsEventListenerManager::IsRegisteredHere(const nsAString & type, PRBool *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-// nsIDOMEventReceiver interface
-NS_IMETHODIMP 
-nsEventListenerManager::AddEventListenerByIID(nsIDOMEventListener *aListener, 
-                                              const nsIID& aIID)
-{
-  return AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-}
-
-NS_IMETHODIMP 
-nsEventListenerManager::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
-{
-  return RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-}
-
-NS_IMETHODIMP 
-nsEventListenerManager::GetListenerManager(PRBool aCreateIfNotFound,
-                                           nsIEventListenerManager** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  NS_ADDREF(*aResult = this);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsEventListenerManager::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
-{
-  return GetSystemEventGroupLM(aGroup);
 }
 
 nsresult

@@ -45,7 +45,7 @@
 #include "nsHashtable.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIChannel.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -815,8 +815,8 @@ nsXBLBinding::UnhookEventHandlers()
   nsXBLPrototypeHandler* handlerChain = mPrototypeBinding->GetPrototypeHandlers();
 
   if (handlerChain) {
-    nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
-    nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(receiver);
+    nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(mBoundElement);
+    nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(piTarget);
     nsCOMPtr<nsIDOMEventGroup> systemEventGroup;
 
     nsXBLPrototypeHandler* curr;
@@ -844,7 +844,7 @@ nsXBLBinding::UnhookEventHandlers()
         nsIDOMEventGroup* eventGroup = nsnull;
         if (curr->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) {
           if (!systemEventGroup)
-            receiver->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
+            piTarget->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
           eventGroup = systemEventGroup;
         }
 
@@ -873,7 +873,7 @@ nsXBLBinding::UnhookEventHandlers()
       nsIDOMEventGroup* eventGroup = nsnull;
       if (handler->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) {
         if (!systemEventGroup)
-          receiver->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
+          piTarget->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
         eventGroup = systemEventGroup;
       }
 
