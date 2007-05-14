@@ -1822,9 +1822,8 @@ nsPlacesImportExportService::WriteContainerContents(PRInt64 aFolder, const nsACS
     NS_ENSURE_SUCCESS(rv, rv);
     if (type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER) {
       // bookmarks folder
-      nsCOMPtr<nsINavHistoryFolderResultNode> folderNode = do_QueryInterface(child);
       PRInt64 folderId;
-      rv = folderNode->GetItemId(&folderId);
+      rv = child->GetItemId(&folderId);
       NS_ENSURE_SUCCESS(rv, rv);
       if (aFolder == mPlacesRoot && (folderId == mToolbarFolder ||
                                folderId == mBookmarksRoot)) {

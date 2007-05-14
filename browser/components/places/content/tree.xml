@@ -462,7 +462,7 @@
           if (this.hasSingleSelection && resultView.isContainer(max.value) &&
               (resultView.isContainerOpen(max.value) ||
                resultView.nodeForTreeIndex(max.value)
-                         .folderId == PlacesUtils.bookmarksRootId))
+                         .itemId == PlacesUtils.bookmarksRootId))
             orientation = NHRVO.DROP_ON;
 
           return this._getInsertionPoint(max.value, orientation);
@@ -478,7 +478,7 @@
           var container = result.root;
           NS_ASSERT(container, "null container");
           // When there's no selection, assume the container is the container
-          // the view is populated from (i.e. the result's folderId).
+          // the view is populated from (i.e. the result's itemId).
           if (index != -1) {
             var lastSelected = resultview.nodeForTreeIndex(index);
             if (resultview.isContainer(index) && orientation == NHRVO.DROP_ON) {
@@ -501,8 +501,8 @@
           // * Disallow insertion of items under the places root
           if (PlacesUtils.nodeIsFolder(container) &&
               !PlacesUtils.nodeIsReadOnly(container) &&
-              container.folderId != PlacesUtils.placesRootId) 
-            return new InsertionPoint(asFolder(container).folderId, index, orientation);
+              container.itemId != PlacesUtils.placesRootId) 
+            return new InsertionPoint(container.itemId, index, orientation);
           return null;
         ]]></body>
       </method>
@@ -584,13 +584,11 @@
               var childNode = node.getChild(child);
               if (!PlacesUtils.nodeIsFolder(childNode))
                 continue;
-
-              var childFolder = asFolder(childNode);
               
               // See if child matches an ID we wanted; add to results.
-              if (childFolder.folderId in indexes) {
-                nodes[childFolder.folderId] = childFolder;
-                delete indexes[childFolder.folderId];
+              if (childNode.itemId in indexes) {
+                nodes[childFolder.itemId] = childFolder;
+                delete indexes[childFolder.itemId];
               }
 
               // Search down that child's subtree.
@@ -720,34 +718,33 @@
           // another result node (that constructed by |getFolderContents| say, 
           // instead of the displayed tree view). So we need to walk the 
           // children of the result to find the right folder. 
-          function findFolder(folderId, container) {
-            var wasOpen = container.containerOpen;
-            container.containerOpen = true;
-            var cc = container.childCount;
+          function findFolder(aItemId, aContainer) {
+            var wasOpen = aContainer.containerOpen;
+            aContainer.containerOpen = true;
+            var cc = aContainer.childCount;
             var foundNode = null;
             for (var i = 0; i < cc; ++i) {
-              var node = container.getChild(i);
+              var node = aContainer.getChild(i);
               if (PlacesUtils.nodeIsFolder(node)) {
-                var folder = asFolder(node);
-                if (folder.folderId == folderId) {
+                if (folder.itemId == aItemId) {
                   foundNode = node;
                   break;
                 }
-                foundNode = findFolder(folderId, folder);
+                foundNode = findFolder(aItemId, node);
                 if (foundNode)
                   break;
               }
             }
-            container.containerOpen = wasOpen;
+            aContainer.containerOpen = wasOpen;
             return foundNode;
           }
           var folder = null;
           var root = asContainer(this.getResult().root);
           if (PlacesUtils.nodeIsFolder(root) && 
-              asFolder(root).folderId == insertionPoint.folderId)
+              root.itemId == insertionPoint.itemId)
             folder = root;
           else
-            folder = findFolder(insertionPoint.folderId, root);
+            folder = findFolder(insertionPoint.itemId, root);
           
           // Since we find the folder manually, using findFolder instead of 
           // PlacesUtils.getFolderContents, the folder is not opened for

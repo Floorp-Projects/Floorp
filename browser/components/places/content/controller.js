@@ -70,8 +70,8 @@ const NEWLINE = "\r\n";
 /**
  * Represents an insertion point within a container where we can insert
  * items. 
- * @param   aFolderId
- *          The folderId of the parent container
+ * @param   aItemId
+ *          The identifier of the parent container
  * @param   aIndex
  *          The index within the container where we should insert
  * @param   aOrientation
@@ -81,13 +81,13 @@ const NEWLINE = "\r\n";
  *          is provided for informational purposes only!
  * @constructor
  */
-function InsertionPoint(aFolderId, aIndex, aOrientation) {
-  this.folderId = aFolderId;
+function InsertionPoint(aItemId, aIndex, aOrientation) {
+  this.itemId = aItemId;
   this.index = aIndex;
   this.orientation = aOrientation;
 }
 InsertionPoint.prototype.toString = function IP_toString() {
-  return "[object InsertionPoint(folder:" + this.folderId + ",index:" + this.index + ",orientation:" + this.orientation + ")]";
+  return "[object InsertionPoint(folder:" + this.itemId + ",index:" + this.index + ",orientation:" + this.orientation + ")]";
 };
 
 /**
@@ -142,8 +142,7 @@ PlacesController.prototype = {
         return false;
 
       if (this._view.hasSingleSelection && PlacesUtils.nodeIsFolder(node)) {
-        var contents = PlacesUtils.getFolderContents(asFolder(node).folderId,
-                                                     false, false);
+        var contents = PlacesUtils.getFolderContents(node.itemId, false, false);
         for (var i = 0; i < contents.childCount; ++i) {
           var child = contents.getChild(i);
           if (PlacesUtils.nodeIsURI(child))
@@ -214,7 +213,7 @@ PlacesController.prototype = {
       if (this._view.hasSingleSelection) {
         var selectedNode = this._view.selectedNode;
         if (PlacesUtils.nodeIsFolder(selectedNode) &&
-            selectedNode.folderId != PlacesUtils.bookmarks.toolbarFolder) {
+            selectedNode.itemId != PlacesUtils.bookmarks.toolbarFolder) {
           return true;
         }
       }
@@ -338,8 +337,7 @@ PlacesController.prototype = {
         return false;
 
       // Disallow removing the toolbar folder
-      if (PlacesUtils.nodeIsFolder(nodes[i]) &&
-          asFolder(nodes[i]).folderId == btFolderId)
+      if (PlacesUtils.nodeIsFolder(nodes[i]) && nodes[i].itemId == btFolderId)
         return false;
 
       // We don't call nodeIsReadOnly here, because nodeIsReadOnly means that
@@ -498,7 +496,7 @@ PlacesController.prototype = {
           break;
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER:
           nodeData["folder"] = true;
-          uri = PlacesUtils.bookmarks.getFolderURI(asFolder(node).folderId);
+          uri = PlacesUtils.bookmarks.getFolderURI(node.itemId);
 
           // See nodeIsRemoteContainer
           if (asContainer(node).remoteContainerType != "")
@@ -732,7 +730,7 @@ PlacesController.prototype = {
       return;
 
     if (PlacesUtils.nodeIsFolder(node))
-      PlacesUtils.showFolderProperties(asFolder(node).folderId);
+      PlacesUtils.showFolderProperties(node.itemId);
     else if (PlacesUtils.nodeIsBookmark(node))
       PlacesUtils.showBookmarkProperties(node.itemId);
   },
@@ -763,16 +761,16 @@ PlacesController.prototype = {
 #endif
       var folder = null;
       if (PlacesUtils.nodeIsLivemarkContainer(selectedNode)) {
-        folder = asFolder(selectedNode);
+        folder = selectedNode;
       }
 #ifdef EXTENDED_LIVEBOOKMARKS_UI
       else if (PlacesUtils.nodeIsURI()) {
         if (PlacesUtils.nodeIsLivemarkItem(selectedNode))
-          folder = asFolder(selectedNode.parent);
+          folder = selectedNode.parent;
       }
 #endif
       if (folder)
-        PlacesUtils.livemarks.reloadLivemarkFolder(folder.folderId);
+        PlacesUtils.livemarks.reloadLivemarkFolder(folder.itemId);
     }
   },
 
@@ -863,8 +861,7 @@ PlacesController.prototype = {
       // Open each uri in the folder in a tab.
       var index = firstIndex;
       var urlsToOpen = [];
-      var contents = PlacesUtils.getFolderContents(asFolder(node).folderId,
-                                                   false, false);
+      var contents = PlacesUtils.getFolderContents(node.itemId, false, false);
       for (var i = 0; i < contents.childCount; ++i) {
         var child = contents.getChild(i);
         if (PlacesUtils.nodeIsURI(child))
@@ -972,7 +969,7 @@ PlacesController.prototype = {
     var ip = this._view.insertionPoint;
     if (!ip)
       throw Cr.NS_ERROR_NOT_AVAILABLE;
-    var txn = new PlacesCreateSeparatorTransaction(ip.folderId, ip.index);
+    var txn = new PlacesCreateSeparatorTransaction(ip.itemId, ip.index);
     PlacesUtils.tm.doTransaction(txn);
   },
 
@@ -990,7 +987,8 @@ PlacesController.prototype = {
    */
   sortFolderByName: function PC_sortFolderByName() {
     var selectedNode = this._view.selectedNode;
-    var txn = new PlacesSortFolderByNameTransaction(selectedNode.folderId, selectedNode.bookmarkIndex);
+    var txn = new PlacesSortFolderByNameTransaction(selectedNode.itemId,
+                                                    selectedNode.bookmarkIndex);
     PlacesUtils.tm.doTransaction(txn);
   },
 
@@ -1001,7 +999,7 @@ PlacesController.prototype = {
     if (!this._view.hasSingleSelection)
       return false;
     var selectedNode = this._view.selectedNode;
-    var txn = new PlacesSetBookmarksToolbarTransaction(selectedNode.folderId);
+    var txn = new PlacesSetBookmarksToolbarTransaction(selectedNode.itemId);
     PlacesUtils.tm.doTransaction(txn);
   },
 
@@ -1061,19 +1059,19 @@ PlacesController.prototype = {
 
       if (PlacesUtils.nodeIsFolder(node)) {
         // TODO -- node.parent might be a query and not a folder.  See bug 324948
-        var folder = asFolder(node);
+        var folder = node;
         removedFolders.push(folder);
-        transactions.push(new PlacesRemoveFolderTransaction(folder.folderId));
+        transactions.push(new PlacesRemoveFolderTransaction(folder.itemId));
       }
       else if (PlacesUtils.nodeIsSeparator(node)) {
         // A Bookmark separator.
         transactions.push(new PlacesRemoveSeparatorTransaction(
-          asFolder(node.parent).folderId, index));
+          node.parent.itemId, index));
       }
       else if (PlacesUtils.nodeIsFolder(node.parent)) {
         // A Bookmark in a Bookmark Folder.
         transactions.push(new PlacesRemoveItemTransaction(node.itemId,
-          PlacesUtils._uri(node.uri), asFolder(node.parent).folderId, index));
+          PlacesUtils._uri(node.uri), node.parent.itemId, index));
       }
     }
   },
@@ -1170,7 +1168,7 @@ PlacesController.prototype = {
 
         // Allow dropping the feed uri of live-bookmark folders
         if (PlacesUtils.nodeIsLivemarkContainer(node)) {
-          var uri = PlacesUtils.livemarks.getFeedURI(asFolder(node).folderId);
+          var uri = PlacesUtils.livemarks.getFeedURI(node.itemId);
           addURIData(uri.spec);
         }
 
@@ -1218,7 +1216,7 @@ PlacesController.prototype = {
 
         // Also copy the feed URI for live-bookmark folders
         if (PlacesUtils.nodeIsLivemarkContainer(node)) {
-          var uri = PlacesUtils.livemarks.getFeedURI(asFolder(node).folderId);
+          var uri = PlacesUtils.livemarks.getFeedURI(node.itemId);
           generateURIChunks(uri.spec);
         }
       }
@@ -1317,7 +1315,8 @@ PlacesController.prototype = {
         var transactions = [];
         for (var i = 0; i < items.length; ++i) {
           transactions.push(PlacesUtils.makeTransaction(items[i], type.value, 
-                                                        ip.folderId, ip.index, true));
+                                                        ip.itemId, ip.index,
+                                                        true));
         }
         return transactions;
       }
@@ -1469,7 +1468,7 @@ var PlacesControllerDragHelper = {
       var unwrapped = PlacesUtils.unwrapNodes(data.value.data, 
                                               flavor.value)[0];
       transactions.push(PlacesUtils.makeTransaction(unwrapped, 
-                        flavor.value, insertionPoint.folderId, 
+                        flavor.value, insertionPoint.itemId, 
                         insertionPoint.index, copy));
     }
 
@@ -1841,26 +1840,20 @@ function PlacesRemoveFolderTransaction(id) {
 }
 PlacesRemoveFolderTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype, 
-  getFolderContents:
-  function(aFolderId, aExcludeItems, aExpandQueries) {
-    return PlacesUtils.getFolderContents(aFolderId, aExcludeItems, aExpandQueries);
-  },
-
   /**
    * Create a flat, ordered list of transactions for a depth-first recreation
    * of items within this folder.
    */
   _saveFolderContents: function PRFT__saveFolderContents() {
     this._transactions = [];
-    var contents = this.getFolderContents(this._id, false, false);
+    var contents = this.utils.getFolderContents(this._id, false, false);
     var ios = Cc["@mozilla.org/network/io-service;1"].
               getService(Ci.nsIIOService);  
     for (var i = 0; i < contents.childCount; ++i) {
       var child = contents.getChild(i);
       var txn;
       if (child.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER) {
-        var folder = asFolder(child);
-        txn = new PlacesRemoveFolderTransaction(folder.folderId);
+        txn = new PlacesRemoveFolderTransaction(child.itemId);
       }
       else if (child.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
         txn = new PlacesRemoveSeparatorTransaction(this._id, i);

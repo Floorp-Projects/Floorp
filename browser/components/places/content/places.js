@@ -319,8 +319,7 @@ var PlacesOrganizer = {
     if (selectedNode) {
       if (PlacesUtils.nodeIsFolder(selectedNode)) {
         var childsCount =
-          PlacesUtils.getFolderContents(asFolder(selectedNode).folderId)
-                     .childCount;
+          PlacesUtils.getFolderContents(selectedNode.itemId).childCount;
         statusText = PlacesUtils.getFormattedString("status_foldercount",
                                                     [childsCount]);
       }
@@ -364,7 +363,7 @@ var PlacesSearchBox = {
 
     switch (PlacesSearchBox.filterCollection) {
     case "collection":
-      var folderId = asFolder(content.getResult().root).folderId;
+      var folderId = content.getResult().root.itemId;
       content.applyFilter(filterString, true, folderId, OptionsFilter);
       PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
       break;
