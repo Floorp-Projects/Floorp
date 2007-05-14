@@ -59,6 +59,7 @@ REQUIRES	= xpcom \
 		  js \
 		  webshell \
 		  necko \
+		  nkcache \
 		  mimetype \
 		  caps \
 		  lwbrk \

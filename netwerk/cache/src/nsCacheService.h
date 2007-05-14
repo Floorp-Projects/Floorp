@@ -60,6 +60,7 @@ class nsCacheRequest;
 class nsCacheProfilePrefObserver;
 class nsDiskCacheDevice;
 class nsMemoryCacheDevice;
+class nsOfflineCacheDevice;
 class nsCacheServiceAutoLock;
 
 
@@ -95,6 +96,40 @@ public:
 
     static nsresult  IsStorageEnabledForPolicy(nsCacheStoragePolicy  storagePolicy,
                                                PRBool *              result);
+
+
+    static nsresult  SetOfflineOwnedKeys(nsCacheSession *             session,
+                                         const nsACString &           ownerDomain,
+                                         const nsACString &           ownerUri,
+                                         PRUint32                     count,
+                                         const char **                keys);
+
+    static nsresult  GetOfflineOwnedKeys(nsCacheSession *             session,
+                                         const nsACString &           ownerDomain,
+                                         const nsACString &           ownerURI,
+                                         PRUint32 *                   count,
+                                         char ***                     keys);
+
+    static nsresult  AddOfflineOwnedKey(nsCacheSession *              session,
+                                        const nsACString &            ownerDomain,
+                                        const nsACString &            ownerURI,
+                                        const nsACString &            key);
+
+    static nsresult  RemoveOfflineOwnedKey(nsCacheSession *           session,
+                                           const nsACString &         ownerDomain,
+                                           const nsACString &         ownerURI,
+                                           const nsACString &         key);
+
+    static nsresult  OfflineKeyIsOwned(nsCacheSession *               session,
+                                       const nsACString &             ownerDomain,
+                                       const nsACString &             ownerURI,
+                                       const nsACString &             key,
+                                       PRBool *                       isOwned);
+
+    static nsresult  ClearOfflineKeysOwnedByDomain(nsCacheSession   * session,
+                                                   const nsACString & domain);
+
+    static nsresult  EvictUnownedOfflineEntries(nsCacheSession *      session);
 
     /**
      * Methods called by nsCacheEntryDescriptor
@@ -248,7 +283,7 @@ private:
 
     nsMemoryCacheDevice *           mMemoryDevice;
     nsDiskCacheDevice *             mDiskDevice;
-    nsDiskCacheDevice *             mOfflineDevice;
+    nsOfflineCacheDevice *          mOfflineDevice;
 
     nsCacheEntryHashTable           mActiveEntries;
     PRCList                         mDoomedEntries;

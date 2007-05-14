@@ -307,8 +307,8 @@ nsCacheEntryInfo::GetDeviceID(char ** deviceID)
 {
     NS_ENSURE_ARG_POINTER(deviceID);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
-    
-    *deviceID = nsCRT::strdup(mCacheEntry->GetDeviceID());
+
+    *deviceID = NS_strdup(mCacheEntry->GetDeviceID());
     return *deviceID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

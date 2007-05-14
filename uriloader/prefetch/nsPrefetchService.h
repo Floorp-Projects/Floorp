@@ -47,12 +47,14 @@
 #include "nsIStreamListener.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
+#include "nsIDOMDocument.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 
 class nsPrefetchService;
 class nsPrefetchListener;
 class nsPrefetchNode;
+class nsIOfflineCacheSession;
 
 //-----------------------------------------------------------------------------
 // nsPrefetchService
@@ -88,14 +90,21 @@ private:
     nsresult EnqueueURI(nsIURI *aURI, nsIURI *aReferrerURI, PRBool aOffline);
     nsresult DequeueURI(nsIURI **aURI, nsIURI **aReferrerURI, PRBool *aOffline);
     void     EmptyQueue(PRBool includeOffline);
+    nsresult SaveOfflineList(nsIURI *aDocumentUri,
+                             nsIDOMDocument *aDoc);
+    nsresult GetOfflineCacheSession(nsIOfflineCacheSession **aSession);
+
     void     StartPrefetching();
     void     StopPrefetching();
 
-    nsPrefetchNode      *mQueueHead;
-    nsPrefetchNode      *mQueueTail;
-    nsCOMPtr<nsIChannel> mCurrentChannel;
-    PRInt32              mStopCount;
-    PRBool               mDisabled;
+    nsCOMPtr<nsIOfflineCacheSession>  mOfflineCacheSession;
+    nsPrefetchNode                   *mQueueHead;
+    nsPrefetchNode                   *mQueueTail;
+    nsCOMPtr<nsIChannel>              mCurrentChannel;
+    PRInt32                           mStopCount;
+    PRBool                            mDisabled;
+    PRBool                            mFetchedOffline;
+
 };
 
 //-----------------------------------------------------------------------------

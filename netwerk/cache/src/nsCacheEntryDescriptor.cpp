@@ -95,7 +95,7 @@ nsCacheEntryDescriptor::GetDeviceID(char ** result)
     nsCacheServiceAutoLock lock;
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
-    *result = nsCRT::strdup(mCacheEntry->GetDeviceID());
+    *result = NS_strdup(mCacheEntry->GetDeviceID());
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -438,7 +438,7 @@ nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char **result)
     value = mCacheEntry->GetMetaDataElement(key);
     if (!value) return NS_ERROR_NOT_AVAILABLE;
 
-    *result = PL_strdup(value);
+    *result = NS_strdup(value);
     if (!*result) return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;

@@ -143,7 +143,7 @@ extern const char DISK_CACHE_DEVICE_ID[];
 NS_IMETHODIMP nsDiskCacheEntryInfo::GetDeviceID(char ** deviceID)
 {
     NS_ENSURE_ARG_POINTER(deviceID);
-    *deviceID = nsCRT::strdup(mDeviceID);
+    *deviceID = NS_strdup(mDeviceID);
     return *deviceID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
