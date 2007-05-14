@@ -77,7 +77,7 @@
 #include "nsIDOMContextMenuListener.h"
 #include "nsIDOMDragListener.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULElement.h"
@@ -523,11 +523,11 @@ nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
     if ((!root || root == this) && !mNodeInfo->Equals(nsGkAtoms::overlay)) {
         nsPIDOMWindow *window = doc->GetInnerWindow();
 
-        nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(window);
-        if (!receiver)
+        nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(window);
+        if (!piTarget)
             return NS_ERROR_UNEXPECTED;
 
-        nsresult rv = receiver->GetListenerManager(PR_TRUE, aManager);
+        nsresult rv = piTarget->GetListenerManager(PR_TRUE, aManager);
         if (NS_SUCCEEDED(rv)) {
             NS_ADDREF(*aTarget = window);
         }

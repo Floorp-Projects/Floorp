@@ -50,7 +50,6 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMAttr.h"
-#include "nsIDOMEventReceiver.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMNSHTMLElement.h"
@@ -1377,10 +1376,10 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIEventListenerManager** a
     nsIDocument *document = GetOwnerDoc();
     nsresult rv = NS_OK;
     if (document && (win = document->GetInnerWindow())) {
-      nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(win));
-      NS_ENSURE_TRUE(receiver, NS_ERROR_FAILURE);
+      nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(win));
+      NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
-      rv = receiver->GetListenerManager(PR_TRUE, aManager);
+      rv = piTarget->GetListenerManager(PR_TRUE, aManager);
 
       if (NS_SUCCEEDED(rv)) {
         NS_ADDREF(*aTarget = win);

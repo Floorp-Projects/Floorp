@@ -54,7 +54,7 @@
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
 #include "nsCSSRendering.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsIDOMMouseEvent.h"
@@ -963,10 +963,8 @@ nsSliderFrame::AddListener()
 
   nsIFrame* thumbFrame = mFrames.FirstChild();
   if (thumbFrame) {
-    nsCOMPtr<nsIDOMEventReceiver>
-      receiver(do_QueryInterface(thumbFrame->GetContent()));
-
-    receiver->AddEventListenerByIID(mMediator, NS_GET_IID(nsIDOMMouseListener));
+    thumbFrame->GetContent()->
+      AddEventListenerByIID(mMediator, NS_GET_IID(nsIDOMMouseListener));
   }
 }
 
@@ -979,10 +977,8 @@ nsSliderFrame::RemoveListener()
   if (!thumbFrame)
     return;
 
-  nsCOMPtr<nsIDOMEventReceiver>
-    receiver(do_QueryInterface(thumbFrame->GetContent()));
-
-  receiver->RemoveEventListenerByIID(mMediator, NS_GET_IID(nsIDOMMouseListener));
+  thumbFrame->GetContent()->
+    RemoveEventListenerByIID(mMediator, NS_GET_IID(nsIDOMMouseListener));
 }
 
 NS_IMETHODIMP

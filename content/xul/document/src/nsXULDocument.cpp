@@ -1686,8 +1686,8 @@ nsXULDocument::AddElementToDocumentPost(nsIContent* aElement)
         // Create our XUL key listener and hook it up.
         nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
         if (xblService) {
-            nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(aElement));
-            xblService->AttachGlobalKeyHandler(rec);
+            nsCOMPtr<nsPIDOMEventTarget> piTarget(do_QueryInterface(aElement));
+            xblService->AttachGlobalKeyHandler(piTarget);
         }
     }
 

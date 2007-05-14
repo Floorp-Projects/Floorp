@@ -40,7 +40,8 @@
 #include "nsIAtom.h"
 #include "nsIContent.h"
 #include "nsIDOMEventGroup.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventListener.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMText.h"
@@ -80,9 +81,9 @@ nsXBLEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMEventTarget> target;
   aEvent->GetCurrentTarget(getter_AddRefs(target));
-  nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(target);
+  nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(target);
 
-  mProtoHandler->ExecuteHandler(receiver, aEvent);
+  mProtoHandler->ExecuteHandler(piTarget, aEvent);
 
   return NS_OK;
 }
@@ -134,7 +135,7 @@ nsXBLKeyEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMEventTarget> target;
   aEvent->GetCurrentTarget(getter_AddRefs(target));
-  nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(target);
+  nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(target);
 
   nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aEvent));
 
@@ -153,7 +154,7 @@ nsXBLKeyEventHandler::HandleEvent(nsIDOMEvent* aEvent)
         (hasAllowUntrustedAttr && handler->AllowUntrustedEvents()) ||
         (!hasAllowUntrustedAttr && !mIsBoundToChrome)) &&
         handler->KeyEventMatched(key)) {
-      handler->ExecuteHandler(receiver, aEvent);
+      handler->ExecuteHandler(piTarget, aEvent);
     }
   }
 
