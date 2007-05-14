@@ -495,6 +495,36 @@ function run_test() {
   var uri1 = uri("http://foo.tld/a");
   bmsvc.insertItem(testRoot, uri1, bmsvc.DEFAULT_INDEX);
   histsvc.addVisit(uri1, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+
+  testSimpleFolderResult();
+}
+
+function testSimpleFolderResult() {
+  var parent = bmsvc.createFolder(root, "test", bmsvc.DEFAULT_INDEX);
+  var sep = bmsvc.insertSeparator(parent, bmsvc.DEFAULT_INDEX);
+  var item = bmsvc.insertItem(parent, uri("about:blank"), bmsvc.DEFAULT_INDEX);
+  bmsvc.setItemTitle(item, "test bookmark");
+  var folder = bmsvc.createFolder(parent, "test folder", bmsvc.DEFAULT_INDEX);
+
+  var options = histsvc.getNewQueryOptions();
+  var query = histsvc.getNewQuery();
+  query.setFolders([parent], 1);
+  var result = histsvc.executeQuery(query, options);
+  var rootNode = result.root;
+  rootNode.containerOpen = true;
+  do_check_eq(rootNode.childCount, 3);
+
+  var node = rootNode.getChild(0);
+  do_check_eq(node.itemId, sep);
+  do_check_eq(node.title, "");
+  node = rootNode.getChild(1);
+  do_check_eq(node.itemId, item);
+  do_check_eq(node.title, "test bookmark");
+  node = rootNode.getChild(2);
+  do_check_eq(node.itemId, folder);
+  do_check_eq(node.title, "test folder");
+
+  rootNode.containerOpen = false;
 }
 
 function getChildCount(aFolderId) {
