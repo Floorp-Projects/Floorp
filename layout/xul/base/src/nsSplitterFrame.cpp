@@ -358,16 +358,21 @@ nsSplitterFrame::Init(nsIContent*      aContent,
   }
 
   nsresult  rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE);
-  nsIView* view = GetView();
+  rv = nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!realTimeDrag) {
+    nsIView* view = GetView();
     // currently this only works on win32 and mac
     static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
 
     // Need to have a widget to appear on top of other widgets.
-    view->CreateWidget(kCChildCID);
+    NS_ASSERTION(!view->HasWidget(), "have an unwanted widget");
+    if (!view->HasWidget()) {
+      view->CreateWidget(kCChildCID);
+    }
   }
 
   mInner->mState = nsSplitterFrameInner::Open;
