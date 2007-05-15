@@ -51,6 +51,7 @@ REQUIRES = \
   string \
   necko \
   xulapp \
+  intl \
   $(NULL)
 
 CMMSRCS = \

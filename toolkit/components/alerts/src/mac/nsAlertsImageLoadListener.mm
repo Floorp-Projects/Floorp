@@ -45,12 +45,13 @@
 
 NS_IMPL_ISUPPORTS1(nsAlertsImageLoadListener, nsIStreamLoaderObserver)
 
-nsAlertsImageLoadListener::nsAlertsImageLoadListener(const nsAString& aAlertTitle,
+nsAlertsImageLoadListener::nsAlertsImageLoadListener(const nsAString &aName,
+                                                     const nsAString& aAlertTitle,
                                                      const nsAString& aAlertText,
                                                      PRBool aAlertClickable,
                                                      const nsAString& aAlertCookie,
                                                      PRUint32 aAlertListenerKey) :
-  mAlertTitle(aAlertTitle), mAlertText(aAlertText),
+  mName(aName), mAlertTitle(aAlertTitle), mAlertText(aAlertText),
   mAlertClickable(aAlertClickable), mAlertCookie(aAlertCookie),
   mAlertListenerKey(aAlertListenerKey)
 {
@@ -82,13 +83,14 @@ nsAlertsImageLoadListener::OnStreamComplete(nsIStreamLoader* aLoader,
   }
 #endif
 
-  [mozGrowlDelegate notifyWithTitle: mAlertTitle
-                        description: mAlertText
-                           iconData: NS_FAILED(aStatus) ? [NSData data] :
-                                       [NSData dataWithBytes: aResult
-                                                      length: aLength]
-                                key: mAlertListenerKey
-                             cookie: mAlertCookie];
+  [mozGrowlDelegate notifyWithName: mName
+                             title: mAlertTitle
+                       description: mAlertText
+                          iconData: NS_FAILED(aStatus) ? [NSData data] :
+                                      [NSData dataWithBytes: aResult
+                                                     length: aLength]
+                               key: mAlertListenerKey
+                            cookie: mAlertCookie];
 
   return NS_OK;
 }
