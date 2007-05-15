@@ -4,5 +4,5 @@ toolkit.jar:
 *   content/passwordmgr/passwordManager.css
 
 en-US.jar:
-*   locale/en-US/passwordmgr/satchel.properties
+*   locale/en-US/passwordmgr/passwordmgr.properties
 *   locale/en-US/passwordmgr/passwordManager.dtd
