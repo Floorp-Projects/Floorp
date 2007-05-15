@@ -121,7 +121,7 @@ interface nsIXPCComponents_utils_Sandbox : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(bcd54a63-34d9-468c-9a55-0fb5d2d8c677)]
+[scriptable, uuid(5f4fc051-6b1d-4b5e-b4fe-f5096717630b)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -167,6 +167,30 @@ interface nsIXPCComponents_Utils : nsISupports
      * var thirtyFive = C.u.evalInSandbox("five * seven", s);
      */
     void evalInSandbox(in AString source/*, obj */);
+
+
+    /*
+     * To be called from JS only.
+     *
+     * import(moduleURL, [optional] targetObj) synchronously loads and
+     * evaluates the js file located at 'registryLocation' with a new,
+     * fully privileged global object. It then looks for a property
+     * 'EXPORTED_SYMBOLS' on the global object.  'EXPORTED_SYMBOLS' is
+     * expected to be an array of strings identifying properties on
+     * the global object. If present, these properties will be
+     * installed as properties on 'targetObj' (if != null), or, if
+     * 'targetObj' is not given, on the caller's global object.
+     * Finally, the global object will be returned.
+     *
+     * The implementation maintains a hash of registryLocation->global
+     * obj. Subsequent invocations of importModule with the same
+     * 'registryLocation' will not cause the file to be re-evaluated,
+     * but the symbols in EXPORTED_SYMBOLS will be exported into the
+     * specified target object and the global object returned as
+     * above.
+     */
+    void /* JSObject */ import(in AUTF8String registryLocation
+                               /*, [optional] in JSObject targetObj */);
 };
 
 /**
