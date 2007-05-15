@@ -1146,8 +1146,15 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       nsIFrame *scrollbarFrame = GetParentScrollbarFrame(aFrame);
       if (!scrollbarFrame) return NS_ERROR_FAILURE;
 
+      nsRect scrollbarRect = scrollbarFrame->GetRect();      
+      *aIsOverridable = PR_FALSE;
+
+      if (scrollbarRect.IsEmpty()) {
+        // just return (0,0)
+        return NS_OK;
+      }
+
       // We need to get the device context to convert from app units :(
-      nsRect scrollbarRect = scrollbarFrame->GetRect();
       nsCOMPtr<nsIDeviceContext> dctx;
       aContext->GetDeviceContext(*getter_AddRefs(dctx));
       PRInt32 p2a = dctx->AppUnitsPerDevPixel();
@@ -1171,7 +1178,6 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
         aResult->SizeTo(nscoord(thumbRect.size.width), nscoord(thumbRect.size.height - thumbAdjust));
       else
         aResult->SizeTo(nscoord(thumbRect.size.width - thumbAdjust), nscoord(thumbRect.size.height));
-      *aIsOverridable = PR_FALSE;
       break;
     }
 
