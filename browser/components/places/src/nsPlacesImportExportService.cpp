@@ -115,10 +115,12 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define KEY_ICON_LOWER "icon"
 #define KEY_ICON_URI_LOWER "icon_uri"
 #define KEY_SHORTCUTURL_LOWER "shortcuturl"
+#define KEY_POST_DATA_LOWER "post_data"
 #define KEY_ID_LOWER "id"
 
 #define LOAD_IN_SIDEBAR_ANNO NS_LITERAL_CSTRING("bookmarkProperties/loadInSidebar")
 #define DESCRIPTION_ANNO NS_LITERAL_CSTRING("bookmarkProperties/description")
+#define POST_DATA_ANNO NS_LITERAL_CSTRING("URIProperties/POSTData")
 
 #define BOOKMARKSS_MENU_ICON_URI "chrome://browser/skin/places/bookmarksMenu.png"
 #define BOOKMARKSS_TOOLBAR_ICON_URI "chrome://browser/skin/places/bookmarksToolbar.png"
@@ -737,6 +739,7 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   nsAutoString iconUri;
   nsAutoString lastCharset;
   nsAutoString keyword;
+  nsAutoString postData;
   nsAutoString webPanel;
   nsAutoString id;
   PRInt32 attrCount = node.GetAttributeCount();
@@ -754,6 +757,8 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
       lastCharset = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_SHORTCUTURL_LOWER)) {
       keyword = node.GetValueAt(i);
+    } else if (key.LowerCaseEqualsLiteral(KEY_POST_DATA_LOWER)) {
+      postData = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_WEB_PANEL_LOWER)) {
       webPanel = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_ID_LOWER)) {
@@ -766,6 +771,7 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   iconUri.Trim(kWhitespace);
   lastCharset.Trim(kWhitespace);
   keyword.Trim(kWhitespace);
+  postData.Trim(kWhitespace);
   webPanel.Trim(kWhitespace);
   id.Trim(kWhitespace);
 
@@ -831,9 +837,16 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   }
 
   // save the keyword, ignore errors
-  if (!keyword.IsEmpty())
+  if (!keyword.IsEmpty()) {
     mBookmarksService->SetKeywordForBookmark(frame.mPreviousId, keyword);
 
+    // post data
+    if (!postData.IsEmpty()) {
+      mAnnotationService->SetPageAnnotationString(frame.mPreviousLink, POST_DATA_ANNO,
+                                                  postData, 0,
+                                                  nsIAnnotationService::EXPIRE_NEVER);
+    }
+  }
   if (webPanel.LowerCaseEqualsLiteral("true")) {
     // set load-in-sidebar annotation for the bookmark
 
@@ -1243,6 +1256,7 @@ static const char kHrefAttribute[] = " HREF=\"";
 static const char kFeedURIAttribute[] = " FEEDURL=\"";
 static const char kWebPanelAttribute[] = " WEB_PANEL=\"true\"";
 static const char kKeywordAttribute[] = " SHORTCUTURL=\"";
+static const char kPostDataAttribute[] = " POST_DATA=\"";
 static const char kIdAttribute[] = " ID=\"";
 
 // WriteContainerPrologue
@@ -1587,6 +1601,30 @@ nsPlacesImportExportService::WriteItem(nsINavHistoryResultNode* aItem,
     char* escapedKeyword = nsEscapeHTML(NS_ConvertUTF16toUTF8(keyword).get());
     rv = aOutput->Write(escapedKeyword, strlen(escapedKeyword), &dummy);
     nsMemory::Free(escapedKeyword);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // post data
+  nsCOMPtr<nsIURI> pageURI;
+  rv = NS_NewURI(getter_AddRefs(pageURI), uri, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  PRBool hasPostData;
+  rv = mAnnotationService->PageHasAnnotation(pageURI, POST_DATA_ANNO,
+                                             &hasPostData);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (hasPostData) {
+    nsAutoString postData;
+    rv = mAnnotationService->GetPageAnnotationString(pageURI, POST_DATA_ANNO,
+                                                     postData);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aOutput->Write(kPostDataAttribute, sizeof(kPostDataAttribute)-1, &dummy);
+    NS_ENSURE_SUCCESS(rv, rv);
+    char* escapedPostData = nsEscapeHTML(NS_ConvertUTF16toUTF8(postData).get());
+    rv = aOutput->Write(escapedPostData, strlen(escapedPostData), &dummy);
+    nsMemory::Free(escapedPostData);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
     NS_ENSURE_SUCCESS(rv, rv);
