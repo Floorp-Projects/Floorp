@@ -2814,8 +2814,12 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
         return JS_FALSE;
     }
 
-#ifdef TOO_MUCH_GC
-    STOBJ_SET_SLOT(obj, map->freeslot, JSVAL_VOID);
+#ifdef DEBUG
+#if JS_BYTES_PER_WORD == 8
+    STOBJ_SET_SLOT(obj, map->freeslot, (jsval)0xddddddddddddddd8L);
+#else
+    STOBJ_SET_SLOT(obj, map->freeslot, (jsval)0xddddddd8);
+#endif
 #endif
     *slotp = map->freeslot++;
     return JS_TRUE;

@@ -355,15 +355,6 @@ typedef struct JSWeakRoots {
 JS_STATIC_ASSERT(JSVAL_NULL == 0);
 #define JS_CLEAR_WEAK_ROOTS(wr) (memset((wr), 0, sizeof(JSWeakRoots)))
 
-
-#ifdef DEBUG_notme
-#define TOO_MUCH_GC 1
-#endif
-
-#ifdef WAY_TOO_MUCH_GC
-#define TOO_MUCH_GC 1
-#endif
-
 JS_END_EXTERN_C
 
 #endif /* jsgc_h___ */

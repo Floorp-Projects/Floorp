@@ -751,6 +751,19 @@ GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+#ifdef JS_GC_ZEAL
+static JSBool
+GCZeal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    uintN zeal;
+
+    if (!JS_ValueToECMAUint32(cx, argv[0], &zeal))
+        return JS_FALSE;
+    JS_SetGCZeal(cx, zeal);
+    return JS_TRUE;
+}
+#endif /* JS_GC_ZEAL */
+
 static JSScript *
 ValueToScript(JSContext *cx, jsval v)
 {
@@ -2198,6 +2211,9 @@ static JSFunctionSpec shell_functions[] = {
     {"help",            Help,           0,0,0},
     {"quit",            Quit,           0,0,0},
     {"gc",              GC,             0,0,0},
+#ifdef JS_GC_ZEAL
+    {"gczeal",        GCZeal,       1,0,0},
+#endif
     {"trap",            Trap,           3,0,0},
     {"untrap",          Untrap,         2,0,0},
     {"line2pc",         LineToPC,       0,0,0},
@@ -2242,6 +2258,9 @@ static char *shell_help_messages[] = {
     "help([name ...])       Display usage and help messages",
     "quit()                 Quit the shell",
     "gc()                   Run the garbage collector",
+#ifdef JS_GC_ZEAL
+    "gczeal(level)          How zealous the garbage collector should be",
+#endif
     "trap([fun, [pc,]] exp) Trap bytecode execution",
     "untrap(fun[, pc])      Remove a trap",
     "line2pc([fun,] line)   Map line number to PC",
