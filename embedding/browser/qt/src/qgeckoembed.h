@@ -56,7 +56,6 @@ class EmbedEventListener;
 class EmbedProgress;
 class nsIWebNavigation;
 class nsISHistory;
-class nsIDOMEventReceiver;
 class EmbedContentListener;
 class EmbedStream;
 class QHBox;

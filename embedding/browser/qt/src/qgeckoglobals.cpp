@@ -67,7 +67,6 @@
 #include <nsVoidArray.h>
 #include <nsIDOMBarProp.h>
 #include <nsIDOMWindow.h>
-#include <nsIDOMEventReceiver.h>
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
