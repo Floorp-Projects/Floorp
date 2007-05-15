@@ -1457,14 +1457,14 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
         return NULL;
     }
 
-#ifdef TOO_MUCH_GC
-#ifdef WAY_TOO_MUCH_GC
-    rt->gcPoke = JS_TRUE;
-#endif
-    doGC = JS_TRUE;
-#else
     doGC = (rt->gcMallocBytes >= rt->gcMaxMallocBytes);
-#endif
+#ifdef JS_GC_ZEAL
+    if (rt->gcZeal >= 1) {
+        doGC = JS_TRUE;
+        if (rt->gcZeal >= 2)
+            rt->gcPoke = JS_TRUE;
+    }
+#endif /* !JS_GC_ZEAL */
 
     arenaList = &rt->gcArenaList[flindex];
     for (;;) {
