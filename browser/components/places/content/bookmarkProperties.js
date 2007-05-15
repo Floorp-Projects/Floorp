@@ -422,7 +422,7 @@ var BookmarkPropertiesPanel = {
     }
 
     var defaultItem =
-      this._getFolderMenuItem(this._defaultInsertionPoint.folderId, true);
+      this._getFolderMenuItem(this._defaultInsertionPoint.itemId, true);
     this._folderMenuList.selectedItem = defaultItem;
   },
 
@@ -868,7 +868,7 @@ var BookmarkPropertiesPanel = {
     if (isElementVisible(this._folderMenuList))
       containerId = this._getFolderIdFromMenuList();
     else {
-      containerId = this._defaultInsertionPoint.folderId;
+      containerId = this._defaultInsertionPoint.itemId;
       indexInContainer = this._defaultInsertionPoint.index;
     }
 
