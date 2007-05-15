@@ -184,15 +184,25 @@ gfxSkipCharsIterator::IsOriginalCharSkipped(PRInt32* aRunLength) const
         return mSkipChars->mCharCount == PRUint32(mOriginalStringOffset);
     }
   
+    PRUint32 listPrefixLength = mListPrefixLength;
     // figure out which segment we're in
-    PRUint32 currentRunLength = mSkipChars->mList[mListPrefixLength];
+    PRUint32 currentRunLength = mSkipChars->mList[listPrefixLength];
+    // Zero-length list entries are possible. Advance until mListPrefixLength
+    // is pointing to a run with real characters (or we're at the end of the
+    // string).
+    while (currentRunLength == 0 && listPrefixLength < mSkipChars->mListLength - 1) {
+        ++listPrefixLength;
+        // This does not break the iterator's invariant because no skipped
+        // or kept characters are being added
+        currentRunLength = mSkipChars->mList[listPrefixLength];
+    }
     NS_ASSERTION(PRUint32(mOriginalStringOffset) >= mListPrefixCharCount,
                  "Invariant violation");
     PRUint32 offsetIntoCurrentRun =
       PRUint32(mOriginalStringOffset) - mListPrefixCharCount;
-    if (mListPrefixLength >= mSkipChars->mListLength - 1 &&
+    if (listPrefixLength >= mSkipChars->mListLength - 1 &&
         offsetIntoCurrentRun >= currentRunLength) {
-        NS_ASSERTION(mListPrefixLength == mSkipChars->mListLength - 1 &&
+        NS_ASSERTION(listPrefixLength == mSkipChars->mListLength - 1 &&
                      offsetIntoCurrentRun == currentRunLength,
                      "Overran end of string");
         // We're at the end of the string
@@ -202,13 +212,13 @@ gfxSkipCharsIterator::IsOriginalCharSkipped(PRInt32* aRunLength) const
         return PR_TRUE;
     }
   
-    PRBool isSkipped = !IsKeepEntry(mListPrefixLength);
+    PRBool isSkipped = !IsKeepEntry(listPrefixLength);
     if (aRunLength) {
         // Long runs of all-skipped or all-kept characters will be encoded as
         // sequences of 255, 0, 255, 0 etc. Compute the maximum run length by skipping
         // over zero entries.
         PRUint32 runLength = currentRunLength - offsetIntoCurrentRun;
-        for (PRUint32 i = mListPrefixLength + 2; i < mSkipChars->mListLength; i += 2) {
+        for (PRUint32 i = listPrefixLength + 2; i < mSkipChars->mListLength; i += 2) {
             if (mSkipChars->mList[i - 1] != 0)
                 break;
             runLength += mSkipChars->mList[i];
