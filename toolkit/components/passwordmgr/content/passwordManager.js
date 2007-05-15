@@ -167,8 +167,17 @@ function LoadSignons() {
     }
     nextPassword = nextPassword.QueryInterface(Components.interfaces.nsIPassword);
     var host = nextPassword.host;
-    var user = nextPassword.user;
-    var password = nextPassword.password;
+    var user;
+    var password;
+    // try/catch in case decryption fails (invalid signon entry)
+    try {
+      user = nextPassword.user;
+      password = nextPassword.password;
+    } catch (e) {
+      // hide this entry
+      dump("could not decrypt user/password for host " + host + "\n");
+      continue;
+    }
     var rawuser = user;
 
     // if no username supplied, try to parse it out of the url
