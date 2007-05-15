@@ -262,7 +262,7 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
 
 
 JS_STATIC_DLL_CALLBACK(JSDHashOperator)
-WrappedNativeJSGCThingMarker(JSDHashTable *table, JSDHashEntryHdr *hdr,
+WrappedNativeJSGCThingTracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
                              uint32 number, void *arg)
 {
     XPCWrappedNative* wrapper = ((Native2WrappedNativeMap::Entry*)hdr)->value;
@@ -287,10 +287,14 @@ WrappedNativeJSGCThingMarker(JSDHashTable *table, JSDHashEntryHdr *hdr,
 void
 XPCWrappedNativeScope::TraceJS(JSTracer* trc, XPCJSRuntime* rt)
 {
+    // FIXME The lock may not be necessary during tracing as that serializes
+    // access to JS runtime. See bug 380139.
+    XPCAutoLock lock(rt->GetMapLock());
+
     // Do JS_CallTracer for all wrapperednatives with external references.
     for(XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext)
     {
-        cur->mWrappedNativeMap->Enumerate(WrappedNativeJSGCThingMarker, trc);
+        cur->mWrappedNativeMap->Enumerate(WrappedNativeJSGCThingTracer, trc);
     }
 }
 
@@ -298,14 +302,15 @@ XPCWrappedNativeScope::TraceJS(JSTracer* trc, XPCJSRuntime* rt)
 void
 XPCWrappedNativeScope::FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt)
 {
-    // Hold the lock until return...
+    // FIXME The lock may not be necessary since we are inside JSGC_MARK_END
+    // callback and GX serializes access to JS runtime. See bug 380139.
     XPCAutoLock lock(rt->GetMapLock());
 
-    TraceJS(JS_GetGCMarkingTracer(cx), rt);
-
-    // Since the JSGC_END call happens outside of a lock,
-    // it is possible for us to get called here twice before the FinshedGC
-    // call happens. So, we allow for gDyingScopes not being null.
+    // We are in JSGC_MARK_END and JSGC_FINALIZE_END must always follow it
+    // calling FinishedFinalizationPhaseOfGC and clearing gDyingScopes in
+    // KillDyingScopes.
+    NS_ASSERTION(gDyingScopes == nsnull,
+                 "JSGC_MARK_END without JSGC_FINALIZE_END");
 
     XPCWrappedNativeScope* prev = nsnull;
     XPCWrappedNativeScope* cur = gScopes;
@@ -354,7 +359,9 @@ XPCWrappedNativeScope::FinishedFinalizationPhaseOfGC(JSContext* cx)
     if(!rt)
         return;
 
-    // Hold the lock until return...
+    // FIXME The lock may not be necessary since we are inside
+    // JSGC_FINALIZE_END callback and at this point GC still serializes access
+    // to JS runtime. See bug 380139.
     XPCAutoLock lock(rt->GetMapLock());
     KillDyingScopes();
 }
