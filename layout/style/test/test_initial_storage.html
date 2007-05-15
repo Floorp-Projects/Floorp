@@ -87,8 +87,7 @@ function test_property(property)
     var sinfo = gCSSProperties[sproperty];
     val = gDeclaration.getPropertyValue(sproperty);
     var func = is;
-    if ((sproperty == property && property in gKnownFails) ||
-         (property == "font" && sproperty != "font-family")) /* bug 377521 */
+    if (sproperty == property && property in gKnownFails)
       func = todo_is;
     func(val, "-moz-initial",
          "-moz-initial reported back for property '" + sproperty + "'");
