@@ -316,6 +316,42 @@ void nsHTMLReflowState::InitCBReflowState()
   mCBReflowState = parentReflowState->mCBReflowState;
 }
 
+/* Check whether CalcQuirkContainingBlockHeight would stop on the
+ * given reflow state, using its block as a height.  (essentially 
+ * returns false for any case in which CalcQuirkContainingBlockHeight 
+ * has a "continue" in its main loop.)
+ *
+ * XXX Maybe refactor CalcQuirkContainingBlockHeight so it uses 
+ * this function as well
+ */
+static PRBool
+IsQuirkContainingBlockHeight(const nsHTMLReflowState* rs) 
+{
+  nsIAtom* frameType = rs->frame->GetType();
+  if (nsGkAtoms::blockFrame == frameType ||
+      nsGkAtoms::areaFrame == frameType ||
+      nsGkAtoms::scrollFrame == frameType) {  
+
+    if (nsGkAtoms::areaFrame == frameType) {
+      // Skip over scrolled-content area frames
+      if (rs->frame->GetStyleContext()->GetPseudoType() ==
+          nsCSSAnonBoxes::scrolledContent) {
+        return PR_FALSE;
+      }
+    }
+    
+    // Note: This next condition could change due to a style change,
+    // but that would cause a style reflow anyway, which means we're ok.
+    if (NS_AUTOHEIGHT == rs->mComputedHeight) {
+      if (!rs->frame->GetStyleDisplay()->IsAbsolutelyPositioned()) {
+        return PR_FALSE;
+      }
+    }
+  }
+  return PR_TRUE;
+}
+
+
 void
 nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext)
 {
@@ -361,14 +397,33 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext)
        frame->IsBoxFrame()) &&
       mCBReflowState) {
     const nsHTMLReflowState *rs = this;
+    PRBool hitCBReflowState = PR_FALSE;
     do {
       rs = rs->parentReflowState;
+      if (!rs) {
+        break;
+      }
+        
       if (rs->frame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT)
         break; // no need to go further
       rs->frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
-    } while (rs != mCBReflowState);
-  }
+      
+      // Keep track of whether we've hit the containing block, because
+      // we need to go at least that far.
+      if (rs == mCBReflowState) {
+        hitCBReflowState = PR_TRUE;
+      }
 
+    } while (!hitCBReflowState ||
+             (eCompatibility_NavQuirks == aPresContext->CompatibilityMode() &&
+              !IsQuirkContainingBlockHeight(rs)));
+    // Note: We actually don't need to set the
+    // NS_FRAME_CONTAINS_RELATIVE_HEIGHT bit for the cases
+    // where we hit the early break statements in
+    // CalcQuirkContainingBlockHeight. But it doesn't hurt
+    // us to set the bit in these cases.
+    
+  }
   if (frame->GetStateBits() & NS_FRAME_IS_DIRTY) {
     // If we're reflowing everything, then we'll find out if we need
     // to re-set this.
@@ -1285,8 +1340,10 @@ GetVerticalMarginBorderPadding(const nsHTMLReflowState* aReflowState)
  * area, or scroll frame. This handles compatibility with IE (see bug 85016 and bug 219693)
  *
  *  When we encounter scrolledContent area frames, we skip over them, since they are guaranteed to not be useful for computing the containing block.
+ *
+ * See also IsQuirkContainingBlockHeight.
  */
-nscoord
+static nscoord
 CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
 {
   nsHTMLReflowState* firstAncestorRS = nsnull; // a candidate for html frame
@@ -1298,7 +1355,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
   nscoord result = NS_AUTOHEIGHT; 
                              
   const nsHTMLReflowState* rs = aCBReflowState;
-  for (; rs && rs->frame; rs = (nsHTMLReflowState *)(rs->parentReflowState)) { 
+  for (; rs; rs = (nsHTMLReflowState *)(rs->parentReflowState)) { 
     nsIAtom* frameType = rs->frame->GetType();
     // if the ancestor is auto height then skip it and continue up if it 
     // is the first block/area frame and possibly the body/html
