@@ -789,6 +789,8 @@ public:
     { return (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) ? mText.mSingle : nsnull; }
     const PRUnichar *GetTextUnicode() const
     { return (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) ? nsnull : mText.mDouble; }
+    const PRUnichar GetChar(PRUint32 i) const
+    { return (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) ? mText.mSingle[i] : mText.mDouble[i]; }
     PRUint32 GetHashCode() const { return mHashCode; }
     void SetHashCode(PRUint32 aHash) { mHashCode = aHash; }
 
