@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = base resources
+DIRS = base content
 
 ifdef ENABLE_TESTS
 DIRS  += test

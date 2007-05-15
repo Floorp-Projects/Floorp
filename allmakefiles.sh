@@ -970,7 +970,7 @@ toolkit/components/history/public/Makefile
 toolkit/components/history/src/Makefile
 toolkit/components/passwordmgr/Makefile
 toolkit/components/passwordmgr/base/Makefile
-toolkit/components/passwordmgr/resources/Makefile
+toolkit/components/passwordmgr/content/Makefile
 toolkit/components/passwordmgr/test/Makefile
 toolkit/components/places/Makefile
 toolkit/components/places/public/Makefile
