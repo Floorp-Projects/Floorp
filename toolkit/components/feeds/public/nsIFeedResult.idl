@@ -92,5 +92,5 @@ interface nsIFeedResult : nsISupports {
   /**
   * Registers a prefix used to access an extension in the feed/entry 
   */
-  void registerExtensionPrefix(in AString namespace, in AString prefix);
+  void registerExtensionPrefix(in AString aNamespace, in AString aPrefix);
 };
