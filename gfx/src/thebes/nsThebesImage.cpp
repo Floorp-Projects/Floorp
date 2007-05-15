@@ -346,9 +346,6 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
              mDecoded.x, mDecoded.y, mDecoded.width, mDecoded.height);
 #endif
 
-    gfxMatrix savedCTM(ctx->CurrentMatrix());
-    PRBool doSnap = !(savedCTM.HasNonTranslation());
-
     if (mSinglePixel) {
         // if a == 0, it's a noop
         if (mSinglePixelColor.a == 0.0)
@@ -360,14 +357,6 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
         ctx->Rectangle(aDestRect, PR_TRUE);
         ctx->Fill();
         return NS_OK;
-    }
-
-    // See comment inside ThebesDrawTile
-    if (doSnap) {
-        gfxMatrix roundedCTM(savedCTM);
-        roundedCTM.x0 = ::floor(roundedCTM.x0 + 0.5);
-        roundedCTM.y0 = ::floor(roundedCTM.y0 + 0.5);
-        ctx->SetMatrix(roundedCTM);
     }
 
     gfxFloat xscale = aDestRect.size.width / aSourceRect.size.width;
@@ -410,11 +399,8 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
 
     ctx->NewPath();
     ctx->SetPattern(pat);
-    ctx->Rectangle(destRect, doSnap);
+    ctx->Rectangle(destRect);
     ctx->Fill();
-
-    if (doSnap)
-        ctx->SetMatrix(savedCTM);
 
     return NS_OK;
 }

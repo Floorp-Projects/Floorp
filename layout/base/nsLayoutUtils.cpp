@@ -63,6 +63,7 @@
 #include "gfxIImageFrame.h"
 #include "imgIContainer.h"
 #include "gfxRect.h"
+#include "gfxContext.h"
 #include "nsIImage.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsCSSRendering.h"
@@ -2043,6 +2044,10 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   aRenderingContext->GetDeviceContext(*getter_AddRefs(dc));
   PRInt32 d2a = dc->AppUnitsPerDevPixel();
 
+  nsRefPtr<gfxContext> ctx = NS_STATIC_CAST(gfxContext*,
+    aRenderingContext->GetNativeGraphicData(
+      nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+
   // the dest rect is affected by the current transform; that'll be
   // handled by Image::Draw(), when we actually set up the rectangle.
   
@@ -2050,15 +2055,12 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   // pixel, but then convert back to gfxFloats for the rest of the math.
   gfxRect pxDest;
   {
-    nsIntRect r;
-    r.x = NSAppUnitsToIntPixels(aDestRect.x, d2a);
-    r.y = NSAppUnitsToIntPixels(aDestRect.y, d2a);
-    r.width = NSAppUnitsToIntPixels(aDestRect.XMost(), d2a) - r.x;
-    r.height = NSAppUnitsToIntPixels(aDestRect.YMost(), d2a) - r.y;
-    pxDest.pos.x = gfxFloat(r.x);
-    pxDest.pos.y = gfxFloat(r.y);
-    pxDest.size.width = gfxFloat(r.width);
-    pxDest.size.height = gfxFloat(r.height);
+    pxDest.pos.x = NSAppUnitsToFloatPixels(aDestRect.x, d2a);
+    pxDest.pos.y = NSAppUnitsToFloatPixels(aDestRect.y, d2a);
+    pxDest.size.width = NSAppUnitsToFloatPixels(aDestRect.width, d2a);
+    pxDest.size.height = NSAppUnitsToFloatPixels(aDestRect.height, d2a);
+    if (ctx->UserToDevicePixelSnapped(pxDest))
+      pxDest = ctx->DeviceToUser(pxDest);
   }
 
   // And likewise for the dirty rect.  (Is should be OK to round to
@@ -2067,15 +2069,12 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   // been intersected with, and we should be rounding those consistently.)
   gfxRect pxDirty;
   {
-    nsIntRect r;
-    r.x = NSAppUnitsToIntPixels(dirtyRect.x, d2a);
-    r.y = NSAppUnitsToIntPixels(dirtyRect.y, d2a);
-    r.width = NSAppUnitsToIntPixels(dirtyRect.XMost(), d2a) - r.x;
-    r.height = NSAppUnitsToIntPixels(dirtyRect.YMost(), d2a) - r.y;
-    pxDirty.pos.x = gfxFloat(r.x);
-    pxDirty.pos.y = gfxFloat(r.y);
-    pxDirty.size.width = gfxFloat(r.width);
-    pxDirty.size.height = gfxFloat(r.height);
+    pxDirty.pos.x = NSAppUnitsToFloatPixels(dirtyRect.x, d2a);
+    pxDirty.pos.y = NSAppUnitsToFloatPixels(dirtyRect.y, d2a);
+    pxDirty.size.width = NSAppUnitsToFloatPixels(dirtyRect.width, d2a);
+    pxDirty.size.height = NSAppUnitsToFloatPixels(dirtyRect.height, d2a);
+    if (ctx->UserToDevicePixelSnapped(pxDirty))
+      pxDirty = ctx->DeviceToUser(pxDirty);
   }
 
   // Reduce the src rect to what's needed for the dirty rect.
