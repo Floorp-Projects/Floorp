@@ -2094,6 +2094,28 @@ PlacesEditBookmarkKeywordTransaction.prototype = {
 };
 
 /**
+ * Edit the post data associated with a URI
+ */
+function PlacesEditURIPostDataTransaction(aURI, aPostData) {
+  this._uri = aURI;
+  this._newPostData = aPostData;
+  this._oldPostData = null;
+  this.redoTransaction = this.doTransaction;
+}
+PlacesEditURIPostDataTransaction.prototype = {
+  __proto__: PlacesBaseTransaction.prototype,
+
+  doTransaction: function PEUPDT_doTransaction() {
+    this._oldPostData = this.utils.getPostDataForURI(this._uri);
+    this.utils.setPostDataForURI(this._uri, this._newPostData);
+  },
+
+  undoTransaction: function PEUPDT_undoTransaction() {
+    this.utils.setPostDataForURI(this._uri, this._oldPostData);
+  }
+};
+
+/**
  * Edit a live bookmark's site URI.
  */
 function PlacesEditLivemarkSiteURITransaction(folderId, uri) {

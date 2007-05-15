@@ -58,6 +58,7 @@
  *       @ defaultInsertionPoint (InsertionPoint JS object) - optional, the
  *         default insertion point for the new item.
  *       @ keyword (String) - optional, the default keyword for the new item.
+ *       @ postData (String) - optional, POST data to accompany the keyword.
  *      Notes:
  *        1) If |uri| is set for a bookmark/livemark item and |title| isn't,
  *           the dialog will query the history tables for the title associated
@@ -132,6 +133,7 @@ var BookmarkPropertiesPanel = {
   _itemDescription: "",
   _microsummaries: null,
   _URIList: null,
+  _postData: null,
 
   // sizeToContent is not usable due to bug 90276, so we'll use resizeTo
   // instead and cache the bookmarks tree view size. See WSucks in the legacy
@@ -223,8 +225,11 @@ var BookmarkPropertiesPanel = {
           if ("loadBookmarkInSidebar" in dialogInfo)
             this._loadBookmarkInSidebar = dialogInfo.loadBookmarkInSidebar;
 
-          if ("keyword" in dialogInfo)
+          if ("keyword" in dialogInfo) {
             this._bookmarkKeyword = dialogInfo.keyword;
+            if ("postData" in dialogInfo)
+              this._postData = dialogInfo.postData;
+          }
 
           break;
         case "folder":
@@ -896,9 +901,17 @@ var BookmarkPropertiesPanel = {
     }
 
     var [container, index] = this._getInsertionPointDetails();
-    return new PlacesCreateItemTransaction(uri, container, index,
-                                           title, keyword, annotations,
-                                           childTransactions);
+    var transactions = [new PlacesCreateItemTransaction(uri, container, index,
+                                                        title, keyword,
+                                                        annotations,
+                                                        childTransactions)];
+
+    if (this._postData) {
+      transactions.push(new PlacesEditURIPostDataTransaction(uri,
+                                                             this._postData));
+    }
+    return new PlacesAggregateTransaction(this._getDialogTitle(),
+                                          transactions);
   },
 
   /**
