@@ -719,6 +719,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     uintN attrs;
 #endif
     jsval *val;
+    JSString *gsopold[2];
     JSString *gsop[2];
     JSAtom *atom;
     JSString *idstr, *valstr, *str;
@@ -877,31 +878,23 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
                 if (attrs & JSPROP_GETTER) {
                     val[valcnt] = (jsval) ((JSScopeProperty *)prop)->getter;
-#ifdef OLD_GETTER_SETTER
-                    gsop[valcnt] =
+                    gsopold[valcnt] =
                         ATOM_TO_STRING(cx->runtime->atomState.getterAtom);
-#else
-                    gsop[valcnt] = needOldStyleGetterSetter
-                        ? ATOM_TO_STRING(cx->runtime->atomState.getterAtom)
-                        : ATOM_TO_STRING(cx->runtime->atomState.getAtom);
-#endif
-                    valcnt++;
+                    gsop[valcnt] =
+                        ATOM_TO_STRING(cx->runtime->atomState.getAtom);
                 }
                 if (attrs & JSPROP_SETTER) {
                     val[valcnt] = (jsval) ((JSScopeProperty *)prop)->setter;
-#ifdef OLD_GETTER_SETTER
-                    gsop[valcnt] =
+                    gsopold[valcnt] =
                         ATOM_TO_STRING(cx->runtime->atomState.setterAtom);
-#else
-                    gsop[valcnt] = needOldStyleGetterSetter
-                        ? ATOM_TO_STRING(cx->runtime->atomState.setterAtom)
-                        : ATOM_TO_STRING(cx->runtime->atomState.setAtom);
-#endif
-                    valcnt++;
+                    gsop[valcnt] =
+                        ATOM_TO_STRING(cx->runtime->atomState.setAtom);
                 }
+                valcnt++;
             } else {
                 valcnt = 1;
                 gsop[0] = NULL;
+                gsopold[0] = NULL;
                 ok = OBJ_GET_PROPERTY(cx, obj, id, &val[0]);
             }
             OBJ_DROP_PROPERTY(cx, obj2, prop);
@@ -917,6 +910,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
          */
         valcnt = 1;
         gsop[0] = NULL;
+        gsopold[0] = NULL;
         ok = OBJ_GET_PROPERTY(cx, obj, id, &val[0]);
 
 #endif /* !JS_HAS_GETTER_SETTER */
@@ -952,6 +946,12 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             vchars = JSSTRING_CHARS(valstr);
             vlength = JSSTRING_LENGTH(valstr);
 
+            if (vchars[0] == '#')
+                needOldStyleGetterSetter = JS_TRUE;
+
+            if (needOldStyleGetterSetter)
+                gsop[j] = gsopold[j];
+
 #ifndef OLD_GETTER_SETTER
             /*
              * Remove '(function ' from the beginning of valstr and ')' from the
@@ -964,6 +964,9 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 vchars += n;
                 vlength -= n + 1;
             }
+#else
+            needOldStyleGetterSetter = JS_TRUE;
+            gsop[j] = gsopold[j];
 #endif
 
             /* If val[j] is a non-sharp object, consider sharpening it. */
@@ -980,10 +983,14 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 if (IS_SHARP(he)) {
                     vchars = vsharp;
                     vlength = js_strlen(vchars);
+                    needOldStyleGetterSetter = JS_TRUE;
+                    gsop[j] = gsopold[j];
                 } else {
                     if (vsharp) {
                         vsharplength = js_strlen(vsharp);
                         MAKE_SHARP(he);
+                        needOldStyleGetterSetter = JS_TRUE;
+                        gsop[j] = gsopold[j];
                     }
                     js_LeaveSharpObject(cx, NULL);
                 }
@@ -1029,17 +1036,6 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             }
             comma = ", ";
 
-#ifdef OLD_GETTER_SETTER
-            js_strncpy(&chars[nchars], idstrchars, idstrlength);
-            nchars += idstrlength;
-            if (gsop[j]) {
-                chars[nchars++] = ' ';
-                gsoplength = JSSTRING_LENGTH(gsop[j]);
-                js_strncpy(&chars[nchars], JSSTRING_CHARS(gsop[j]), gsoplength);
-                nchars += gsoplength;
-            }
-            chars[nchars++] = ':';
-#else
             if (needOldStyleGetterSetter) {
                 js_strncpy(&chars[nchars], idstrchars, idstrlength);
                 nchars += idstrlength;
@@ -1064,7 +1060,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 /* Extraneous space after id here will be extracted later */
                 chars[nchars++] = gsop[j] ? ' ' : ':';
             }
-#endif
+
             if (vsharplength) {
                 js_strncpy(&chars[nchars], vsharp, vsharplength);
                 nchars += vsharplength;
