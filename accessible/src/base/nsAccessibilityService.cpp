@@ -928,6 +928,11 @@ NS_IMETHODIMP
 nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
                                          nsIAccessible **aAccessible)
 {
+  NS_ENSURE_ARG_POINTER(aAccessible);
+  *aAccessible = nsnull;
+
+  NS_ENSURE_ARG(aNode);
+
   // We use presentation shell #0 because we assume that is presentation of
   // given node window.
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
@@ -968,6 +973,12 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleInWindow(nsIDOMNode *aNode,
                                                             nsIDOMWindow *aWin,
                                                             nsIAccessible **aAccessible)
 {
+  NS_ENSURE_ARG_POINTER(aAccessible);
+  *aAccessible = nsnull;
+
+  NS_ENSURE_ARG(aNode);
+  NS_ENSURE_ARG(aWin);
+
   nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(aWin));
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webNav));
   if (!docShell)
@@ -982,6 +993,12 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleInShell(nsIDOMNode *aNode,
                                                            nsIPresShell *aPresShell,
                                                            nsIAccessible **aAccessible) 
 {
+  NS_ENSURE_ARG_POINTER(aAccessible);
+  *aAccessible = nsnull;
+
+  NS_ENSURE_ARG(aNode);
+  NS_ENSURE_ARG(aPresShell);
+
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aPresShell));
   nsIFrame *outFrameUnused = NULL;
   PRBool isHiddenUnused = false;
@@ -993,6 +1010,12 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleInWeakShell(nsIDOMNode *aNode
                                                                nsIWeakReference *aWeakShell,
                                                                nsIAccessible **aAccessible) 
 {
+  NS_ENSURE_ARG_POINTER(aAccessible);
+  *aAccessible = nsnull;
+
+  NS_ENSURE_ARG(aNode);
+  NS_ENSURE_ARG(aWeakShell);
+
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(aWeakShell));
   nsIFrame *outFrameUnused = NULL;
   PRBool isHiddenUnused = false;
