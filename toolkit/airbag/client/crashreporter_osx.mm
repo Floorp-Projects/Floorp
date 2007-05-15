@@ -37,91 +37,79 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <Cocoa/Cocoa.h>
+#import <CoreFoundation/CoreFoundation.h>
+#include "crashreporter.h"
 #include "crashreporter_osx.h"
-
-#include <string>
-#include <map>
-#include <fstream>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
 
 using std::string;
-using std::map;
-using std::ifstream;
 
-typedef map<string,string> StringTable;
-typedef map<string,StringTable> StringTableSections;
+static NSAutoreleasePool* gMainPool;
+static CrashReporterUI* gUI = 0;
+static string gDumpFile;
+static StringTable gQueryParameters;
+static string gSendURL;
 
-static string               kExtraDataExtension = ".extra";
 
-static string               gMinidumpPath;
-static string               gExtraDataPath;
-static StringTableSections  gStrings;
-static StringTable          gExtraData;
-
-static BOOL                 gSendFailed;
+#define NSSTR(s) [NSString stringWithUTF8String:(s).c_str()]
 
 static NSString *
-Str(const char *aName, const char *aSection="Strings")
+Str(const char* aName)
 {
-  string str = gStrings[aSection][aName];
+  string str = gStrings[aName];
   if (str.empty()) str = "?";
-  return [NSString stringWithUTF8String:str.c_str()];
-}
-
-static bool
-ReadStrings(const string &aPath, StringTableSections *aSections)
-{
-  StringTableSections &sections = *aSections;
-
-  ifstream f(aPath.c_str());
-  if (!f.is_open()) return false;
-
-  string currentSection;
-  while (!f.eof()) {
-    string line;
-    std::getline(f, line);
-    if (line[0] == ';') continue;
-
-    if (line[0] == '[') {
-      int close = line.find(']');
-      if (close >= 0)
-        currentSection = line.substr(1, close - 1);
-      continue;
-    }
-
-    int sep = line.find('=');
-    if (sep >= 0)
-      sections[currentSection][line.substr(0, sep)] = line.substr(sep + 1);
-  }
-
-  return f.eof();
+  return NSSTR(str);
 }
 
 @implementation CrashReporterUI
 
 -(void)awakeFromNib
 {
-  NSWindow *w = [descriptionLabel window];
-  [w center];
+  gUI = self;
+  [window center];
 
-  [w setTitle:[[NSBundle mainBundle]
+  [window setTitle:[[NSBundle mainBundle]
                 objectForInfoDictionaryKey:@"CFBundleName"]];
-  [descriptionLabel setStringValue:Str("CrashReporterDescription")];
-  [disableReportingButton setTitle:Str("RadioDisable")];
+  [descriptionLabel setStringValue:Str(ST_CRASHREPORTERDESCRIPTION)];
+  [disableReportingButton setTitle:Str(ST_RADIODISABLE)];
 
-  if (!gMinidumpPath.empty()) {
-    [sendButton setTitle:Str("Send")];
-    [sendButton setKeyEquivalent:@"\r"];
-    [dontSendButton setTitle:Str("DontSend")];
-  } else {
-    [dontSendButton setFrame:[sendButton frame]];
-    [dontSendButton setTitle:Str("Close")];
-    [dontSendButton setKeyEquivalent:@"\r"];
-    [sendButton removeFromSuperview];
-  }
+  [closeButton setTitle:Str(ST_CLOSE)];
+  [errorCloseButton setTitle:Str(ST_CLOSE)];
+}
 
-  [closeButton setTitle:Str("Close")];
+-(void)showDefaultUI
+{
+  [dontSendButton setFrame:[sendButton frame]];
+  [dontSendButton setTitle:Str(ST_CLOSE)];
+  [dontSendButton setKeyEquivalent:@"\r"];
+  [sendButton removeFromSuperview];
 
-  [w makeKeyAndOrderFront:nil];
+  [window makeKeyAndOrderFront:nil];
+}
+
+-(void)showCrashUI:(const string&)dumpfile
+   queryParameters:(const StringTable&)queryParameters
+           sendURL:(const string&)sendURL
+{
+  gDumpFile = dumpfile;
+  gQueryParameters = queryParameters;
+  gSendURL = sendURL;
+
+  [sendButton setTitle:Str(ST_SEND)];
+  [sendButton setKeyEquivalent:@"\r"];
+  [dontSendButton setTitle:Str(ST_DONTSEND)];
+
+  [window makeKeyAndOrderFront:nil];
+}
+
+-(void)showErrorUI:(const string&)message
+{
+  [errorLabel setStringValue: NSSTR(message)];
+
+  [self setView: window newView: errorView animate: NO];
+  [window makeKeyAndOrderFront:nil];
 }
 
 -(IBAction)closeClicked:(id)sender
@@ -131,29 +119,24 @@ ReadStrings(const string &aPath, StringTableSections *aSections)
 
 -(IBAction)sendClicked:(id)sender
 {
-  NSWindow *w = [descriptionLabel window];
-
+  [self setView: window newView: uploadingView animate: YES];
   [progressBar startAnimation: self];
-  [progressLabel setStringValue:Str("SendTitle")];
+  [progressLabel setStringValue:Str(ST_SENDTITLE)];
 
-  [self setupPost];
+  if (![self setupPost])
+    [NSApp terminate];
 
-  if (mPost) {
-    [self setView: w newView: uploadingView animate: YES];
-    [progressBar startAnimation: self];
-
-    [NSThread detachNewThreadSelector:@selector(uploadThread:)
-              toTarget:self
-              withObject:nil];
-  }
+  [NSThread detachNewThreadSelector:@selector(uploadThread:)
+            toTarget:self
+            withObject:mPost];
 }
 
--(void)setView:(NSWindow *)w newView: (NSView *)v animate: (BOOL)animate
+-(void)setView:(NSWindow*)w newView: (NSView*)v animate: (BOOL)animate
 {
   NSRect frame = [w frame];
 
   NSRect oldViewFrame = [[w contentView] frame];
-  NSRect newViewFrame = [uploadingView frame];
+  NSRect newViewFrame = [v frame];
 
   frame.origin.y += oldViewFrame.size.height - newViewFrame.size.height;
   frame.size.height -= oldViewFrame.size.height - newViewFrame.size.height;
@@ -165,109 +148,181 @@ ReadStrings(const string &aPath, StringTableSections *aSections)
   [w setFrame: frame display: true animate: animate];
 }
 
--(void)setupPost
+-(bool)setupPost
 {
-  NSURL *url = [NSURL URLWithString:Str("URL", "Settings")];
-  if (!url) return;
+  NSURL* url = [NSURL URLWithString:NSSTR(gSendURL)];
+  if (!url) return false;
 
   mPost = [[HTTPMultipartUpload alloc] initWithURL: url];
-  if (!mPost) return;
+  if (!mPost) return false;
 
-  NSMutableDictionary *parameters =
-    [[NSMutableDictionary alloc] initWithCapacity: gExtraData.size()];
+  NSMutableDictionary* parameters =
+    [[NSMutableDictionary alloc] initWithCapacity: gQueryParameters.size()];
+  if (!parameters) return false;
 
-  StringTable::const_iterator end = gExtraData.end();
-  for (StringTable::const_iterator i = gExtraData.begin(); i != end; i++) {
-    NSString *key = [NSString stringWithUTF8String: i->first.c_str()];
-    NSString *value = [NSString stringWithUTF8String: i->second.c_str()];
+  StringTable::const_iterator end = gQueryParameters.end();
+  for (StringTable::const_iterator i = gQueryParameters.begin();
+       i != end;
+       i++) {
+    NSString* key = NSSTR(i->first);
+    NSString* value = NSSTR(i->second);
     [parameters setObject: value forKey: key];
   }
 
+  [mPost addFileAtPath: NSSTR(gDumpFile) name: @"upload_file_minidump"];
   [mPost setParameters: parameters];
 
-  [mPost addFileAtPath: [NSString stringWithUTF8String: gMinidumpPath.c_str()]
-        name: @"upload_file_minidump"];
+  return true;
 }
 
--(void)uploadComplete:(id)error
+-(void)uploadComplete:(id)data
 {
   [progressBar stopAnimation: self];
 
-  NSHTTPURLResponse *response = [mPost response];
+  NSHTTPURLResponse* response = [mPost response];
 
-  NSString *status;
-  if (error || !response || [response statusCode] != 200) {
-    status = Str("SubmitFailed");
-    gSendFailed = YES;
-  } else
-    status = Str("SubmitSuccess");
+  NSString* status;
+  bool success;
+  string reply;
+  if (!data || !response || [response statusCode] != 200) {
+    status = Str(ST_SUBMITFAILED);
+    success = false;
+    reply = "";
+  } else {
+    status = Str(ST_SUBMITSUCCESS);
+    success = true;
+
+    NSString* encodingName = [response textEncodingName];
+    NSStringEncoding encoding;
+    if (encodingName) {
+      encoding = CFStringConvertEncodingToNSStringEncoding(
+        CFStringConvertIANACharSetNameToEncoding((CFStringRef)encodingName));
+    } else {
+      encoding = NSISOLatin1StringEncoding;
+    }
+    NSString* r = [[NSString alloc] initWithData: data encoding: encoding];
+    reply = [r UTF8String];
+  }
 
   [progressLabel setStringValue: status];
   [closeButton setEnabled: true];
   [closeButton setKeyEquivalent:@"\r"];
+
+  CrashReporterSendCompleted(success, reply);
 }
 
 -(void)uploadThread:(id)post
 {
-  NSAutoreleasePool *autoreleasepool = [[NSAutoreleasePool alloc] init];
-  NSError *error = nil;
-  [mPost send: &error];
+  NSAutoreleasePool* autoreleasepool = [[NSAutoreleasePool alloc] init];
+  NSError* error = nil;
+  NSData* data = [post send: &error];
+  if (error)
+    data = nil;
 
   [self performSelectorOnMainThread: @selector(uploadComplete:)
-        withObject: error
-        waitUntilDone: nil];
+        withObject: data
+        waitUntilDone: YES];
 
   [autoreleasepool release];
 }
 
 @end
 
-string
-GetExtraDataFilename(const string& dumpfile)
-{
-  string filename(dumpfile);
-  int dot = filename.rfind('.');
-  if (dot < 0)
-    return "";
+/* === Crashreporter UI Functions === */
 
-  filename.replace(dot, filename.length() - dot, kExtraDataExtension);
-  return filename;
+bool UIInit()
+{
+  gMainPool = [[NSAutoreleasePool alloc] init];
+  [NSApplication sharedApplication];
+  [NSBundle loadNibNamed:@"MainMenu" owner:NSApp];
+
+  return true;
 }
 
-int
-main(int argc, char *argv[])
+void UIShutdown()
 {
-  NSAutoreleasePool *autoreleasepool = [[NSAutoreleasePool alloc] init];
-  string iniPath(argv[0]);
-  iniPath.append(".ini");
-  if (!ReadStrings(iniPath, &gStrings)) {
-    printf("couldn't read strings\n");
-    return -1;
+  [gMainPool release];
+}
+
+void UIShowDefaultUI()
+{
+  [gUI showDefaultUI];
+  [NSApp run];
+}
+
+void UIShowCrashUI(const string& dumpfile,
+                   const StringTable& queryParameters,
+                   const string& sendURL)
+{
+  [gUI showCrashUI: dumpfile
+       queryParameters: queryParameters
+       sendURL: sendURL];
+  [NSApp run];
+}
+
+void UIError(const string& message)
+{
+  if (!gUI) {
+    // UI failed to initialize, printing is the best we can do
+    printf("Error: %s\n", message.c_str());
+    return;
   }
 
-  if (argc > 1) {
-    gMinidumpPath = argv[1];
-    gExtraDataPath = GetExtraDataFilename(gMinidumpPath);
-    if (!gExtraDataPath.empty()) {
-      StringTableSections table;
-      ReadStrings(gExtraDataPath, &table);
-      gExtraData = table[""];
-    }
-  }
+  [gUI showErrorUI: message];
+  [NSApp run];
+}
 
-  gSendFailed = NO;
+bool UIGetIniPath(string& path)
+{
+  path = gArgv[0];
+  path.append(".ini");
 
-  int ret = NSApplicationMain(argc,  (const char **) argv);
+  return true;
+}
 
-  string deleteSetting = gStrings["Settings"]["Delete"];
-  if (!gSendFailed &&
-      (deleteSetting.empty() || atoi(deleteSetting.c_str()) > 0)) {
-    remove(gMinidumpPath.c_str());
-    if (!gExtraDataPath.empty())
-      remove(gExtraDataPath.c_str());
-  }
+bool UIGetSettingsPath(const string& vendor,
+                       const string& product,
+                       string& settingsPath)
+{
+  NSArray* paths;
+  paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
+                                              NSUserDomainMask,
+                                              YES);
+  if ([paths count] < 1)
+    return false;
 
-  [autoreleasepool release];
+  NSString* destPath = [paths objectAtIndex:0];
 
-  return ret;
+  // Note that MacOS ignores the vendor when creating the profile hierarchy -
+  // all application preferences directories live alongside one another in
+  // ~/Library/Application Support/
+  destPath = [destPath stringByAppendingPathComponent: NSSTR(product)];
+  destPath = [destPath stringByAppendingPathComponent: @"Crash Reports"];
+
+  settingsPath = [destPath UTF8String];
+
+  if (!UIEnsurePathExists(settingsPath))
+    return false;
+
+  return true;
+}
+
+bool UIEnsurePathExists(const string& path)
+{
+  int ret = mkdir(path.c_str(), S_IRWXU);
+  int e = errno;
+  if (ret == -1 && e != EEXIST)
+    return false;
+
+  return true;
+}
+
+bool UIMoveFile(const string& file, const string& newfile)
+{
+  return (rename(file.c_str(), newfile.c_str()) != -1);
+}
+
+bool UIDeleteFile(const string& file)
+{
+  return (unlink(file.c_str()) != -1);
 }

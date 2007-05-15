@@ -10,10 +10,14 @@
                 disableReportingButton = NSButton; 
                 dontSendButton = NSButton; 
                 enableView = NSView; 
+                errorCloseButton = NSButton; 
+                errorLabel = NSTextField; 
+                errorView = NSView; 
                 progressBar = NSProgressIndicator; 
                 progressLabel = NSTextField; 
                 sendButton = NSButton; 
                 uploadingView = NSView; 
+                window = NSWindow; 
             }; 
             SUPERCLASS = NSObject; 
         }, 

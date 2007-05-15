@@ -53,8 +53,10 @@ DIST_FILES = crashreporter.ini
 
 LOCAL_INCLUDES = -I$(srcdir)/../airbag/src
 
+CPPSRCS = crashreporter.cpp
+
 ifeq ($(OS_ARCH),WINNT)
-CPPSRCS = crashreporter_win.cpp
+CPPSRCS += crashreporter_win.cpp
 LIBS += \
 	$(DEPTH)/toolkit/airbag/airbag/src/client/windows/sender/$(LIB_PREFIX)crash_report_sender_s.$(LIB_SUFFIX) \
 	$(DEPTH)/toolkit/airbag/airbag/src/common/windows/$(LIB_PREFIX)breakpad_windows_common_s.$(LIB_SUFFIX) \
