@@ -475,19 +475,11 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, 
   var compareFunc;
   if (ascending) {
     compareFunc = function compare(first, second) {
-      if (first[column] < second[column])
-        return -1;
-      if (first[column] > second[column])
-        return 1;
-      return 0;
+      return CompareLowerCase(first[column], second[column]);
     }
   } else {
     compareFunc = function compare(first, second) {
-      if (first[column] < second[column])
-        return 1;
-      if (first[column] > second[column])
-        return -1;
-      return 0;
+      return CompareLowerCase(second[column], first[column]);
     }
   }
   table.sort(compareFunc);
@@ -514,4 +506,23 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, 
   }
 
   return ascending;
+}
+
+/**
+ * Case insensitive string comparator.
+ */
+function CompareLowerCase(first, second) {
+
+  var firstLower  = first.toLowerCase();
+  var secondLower = second.toLowerCase();
+
+  if (firstLower < secondLower) {
+    return -1;
+  }
+
+  if (firstLower > secondLower) {
+    return 1;
+  }
+
+  return 0;
 }
