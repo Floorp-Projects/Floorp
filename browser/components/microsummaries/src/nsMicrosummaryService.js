@@ -21,6 +21,7 @@
  *  Myk Melez <myk@mozilla.org> (Original Author)
  *  Simon Bünzli <zeniko@gmail.com>
  *  Asaf Romano <mano@mozilla.com>
+ *  Dan Mills <thunder@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -462,6 +463,17 @@ MicrosummaryService.prototype = {
   // nsIMicrosummaryService
 
   /**
+   * Return a microsummary generator for the given URI.
+   *
+   * @param   generatorURI
+   *          the URI of the generator
+   */
+  getGenerator: function MSS_getGenerator(generatorURI) {
+    return this._localGenerators[generatorURI.spec] ||
+      new MicrosummaryGenerator(generatorURI);
+  },
+
+  /**
    * Install the microsummary generator from the resource at the supplied URI.
    * Callable by content via the addMicrosummaryGenerator() sidebar method.
    *
@@ -574,6 +586,8 @@ MicrosummaryService.prototype = {
     else
       outputStream.close();
   },
+
+
 
   /**
    * Get the set of microsummaries available for a given page.  The set
@@ -918,10 +932,25 @@ MicrosummaryService.prototype = {
 
     var pageURI = this._getPageForBookmark(bookmarkID);
     var generatorURI = this._uri(this._getField(bookmarkID, FIELD_MICSUM_GEN_URI));
-    
-    var generator = this._localGenerators[generatorURI.spec] ||
-                    new MicrosummaryGenerator(generatorURI);
+    var generator = this.getGenerator(generatorURI);
 
+    return new Microsummary(pageURI, generator);
+  },
+
+  /**
+   * Get a microsummary for a given page URI and generator URI.
+   *
+   * @param   pageURI
+   *          the URI of the page to be summarized
+   *
+   * @param   generatorURI
+   *          the URI of the microsummary generator
+   *
+   * @returns an nsIMicrosummary for the given page and generator URIs.
+   *
+   */
+  createMicrosummary: function MSS_createMicrosummary(pageURI, generatorURI) {
+    var generator = this.getGenerator(generatorURI);
     return new Microsummary(pageURI, generator);
   },
 
