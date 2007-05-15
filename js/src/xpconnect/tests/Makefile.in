@@ -59,6 +59,10 @@ ifndef MOZ_ENABLE_LIBXUL
 DIRS += components
 endif
 
+ifdef ENABLE_TESTS
+XPCSHELL_TESTS = unit
+endif
+
 CPPSRCS		= TestXPC.cpp
 
 LIBS		= \

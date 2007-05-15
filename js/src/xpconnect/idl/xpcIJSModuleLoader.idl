@@ -1,0 +1,84 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ----- BEGIN LICENSE BLOCK -----
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License
+ * at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and
+ * limitations under the License.
+ *
+ * The Original Code is Mozilla code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *    Alex Fritze <alex@croczilla.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the
+ * terms of either the GNU General Public License Version 2 or later
+ * (the "GPL"), or the GNU Lesser General Public License Version 2.1
+ * or later (the "LGPL"), in which case the provisions of the GPL or
+ * the LGPL are applicable instead of those above. If you wish to
+ * allow use of your version of this file only under the terms of
+ * either the GPL or the LGPL, and not to allow others to use your
+ * version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the
+ * notice and other provisions required by the GPL or the LGPL. If you
+ * do not delete the provisions above, a recipient may use your
+ * version of this file under the terms of any one of the MPL, the GPL
+ * or the LGPL.
+ *
+ * ----- END LICENSE BLOCK ----- */
+
+#include "nsISupports.idl"
+
+interface nsIXPCNativeCallContext;
+
+%{C++
+struct JSObject;
+%}
+
+[ptr] native JSObjectPtr(JSObject);
+
+[scriptable, uuid(bb66b661-4cdf-40d5-b4f6-0be2e195ef7c)]
+interface xpcIJSModuleLoader : nsISupports
+{
+  /**
+   * To be called from JS only.
+   *
+   * importModule(moduleURL, [optional] targetObj) synchronously loads
+   * and evaluates the js file located at 'registryLocation' with a
+   * new, fully privileged global object. It then looks for a property
+   * 'EXPORTED_SYMBOLS' on the global object.  'EXPORTED_SYMBOLS' is
+   * expected to be an array of strings identifying properties on the
+   * global object. If present, these properties will be installed as
+   * properties on 'targetObj' (if != null), or, if 'targetObj' is not
+   * given, on the caller's global object.  Finally, the global object
+   * will be returned.
+   *
+   * The implementation maintains a hash of registryLocation->global
+   * obj. Subsequent invocations of importModule with the same
+   * 'registryLocation' will not cause the file to be re-evaluated,
+   * but the symbols in EXPORTED_SYMBOLS will be exported into the
+   * specified target object and the global object returned as above.
+   */
+  void /* JSObject */ import(in AUTF8String registryLocation
+                             /* , [optional] in JSObject targetObj */);
+
+  /**
+   * Imports the JS module at 'registryLocation' to the JS object
+   * 'targetObj' (if != null) as described for importModule() and
+   * returns the module's global object.
+   */
+  [noscript] JSObjectPtr importInto(in AUTF8String registryLocation,
+                                    in JSObjectPtr targetObj,
+                                    in nsIXPCNativeCallContext cc);
+};
