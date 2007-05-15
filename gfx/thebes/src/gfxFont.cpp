@@ -633,8 +633,28 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void 
     }
     if (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) {
         mText.mSingle = NS_STATIC_CAST(const PRUint8 *, aText);
+        if (!(mFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
+            PRUint8 *newText = new PRUint8[aLength];
+            if (!newText) {
+                // indicate textrun failure
+                mCharacterGlyphs = nsnull;
+            } else {
+                memcpy(newText, aText, aLength);
+            }
+            mText.mSingle = newText;    
+        }
     } else {
         mText.mDouble = NS_STATIC_CAST(const PRUnichar *, aText);
+        if (!(mFlags & gfxTextRunFactory::TEXT_IS_PERSISTENT)) {
+            PRUnichar *newText = new PRUnichar[aLength];
+            if (!newText) {
+                // indicate textrun failure
+                mCharacterGlyphs = nsnull;
+            } else {
+                memcpy(newText, aText, aLength*sizeof(PRUnichar));
+            }
+            mText.mDouble = newText;    
+        }
     }
 }
 
