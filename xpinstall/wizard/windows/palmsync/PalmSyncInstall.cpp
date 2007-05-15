@@ -204,6 +204,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
       if (!res)
         res = IDS_SUCCESS_INSTALL;
     }
+    else
+      return 0;
     break;
 
   case eSilentInstall:
@@ -220,7 +222,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
         res = IDS_SUCCESS_UNINSTALL;
       break;
     }
-    return 0;
+    else
+      return 0;
 
   case eSilentUninstall:
     return UninstallConduit();
