@@ -5591,7 +5591,8 @@ PRBool CSSParserImpl::ParseFont(nsresult& aErrorCode)
   nsCSSValue  family;
   if (ParseVariant(aErrorCode, family, VARIANT_HK, nsCSSProps::kFontKTable)) {
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      if (eCSSUnit_Inherit == family.GetUnit()) {
+      if (eCSSUnit_Inherit == family.GetUnit() ||
+          eCSSUnit_Initial == family.GetUnit()) {
         AppendValue(eCSSProperty_font_family, family);
         AppendValue(eCSSProperty_font_style, family);
         AppendValue(eCSSProperty_font_variant, family);

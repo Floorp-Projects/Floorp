@@ -1993,7 +1993,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     aFont->mFont.familyNameQuirks = aParentFont->mFont.familyNameQuirks;
   }
   else if (eCSSUnit_Initial == aFontData.mFamily.GetUnit()) {
-    aFont->mFont.name = aDefaultFont.name;
+    aFont->mFont.name = defaultVariableFont->name;
     aFont->mFont.familyNameQuirks = PR_FALSE;
   }
 
@@ -2009,7 +2009,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     aFont->mFont.style = aParentFont->mFont.style;
   }
   else if (eCSSUnit_Initial == aFontData.mStyle.GetUnit()) {
-    aFont->mFont.style = aDefaultFont.style;
+    aFont->mFont.style = defaultVariableFont->style;
   }
 
   // font-variant: enum, normal, inherit
@@ -2024,7 +2024,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     aFont->mFont.variant = aParentFont->mFont.variant;
   }
   else if (eCSSUnit_Initial == aFontData.mVariant.GetUnit()) {
-    aFont->mFont.variant = aDefaultFont.variant;
+    aFont->mFont.variant = defaultVariableFont->variant;
   }
 
   // font-weight: int, enum, normal, inherit
@@ -2053,7 +2053,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     aFont->mFont.weight = aParentFont->mFont.weight;
   }
   else if (eCSSUnit_Initial == aFontData.mWeight.GetUnit()) {
-    aFont->mFont.weight = aDefaultFont.weight;
+    aFont->mFont.weight = defaultVariableFont->weight;
   }
 
   // font-size: enum, length, percent, inherit
@@ -2114,7 +2114,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     zoom = PR_FALSE;
   }
   else if (eCSSUnit_Initial == aFontData.mSize.GetUnit()) {
-    aFont->mSize = aDefaultFont.size;
+    aFont->mSize = defaultVariableFont->size;
     zoom = PR_TRUE;
   }
 
@@ -2349,7 +2349,11 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct,
     text->mLineHeight.SetCoordValue(
         nscoord(float(aContext->GetStyleFont()->mFont.size) *
                 textData.mLineHeight.GetPercentValue()));
-  } else {
+  }
+  else if (eCSSUnit_Initial == textData.mLineHeight.GetUnit()) {
+    text->mLineHeight.SetNormalValue();
+  }
+  else {
     SetCoord(textData.mLineHeight, text->mLineHeight, parentText->mLineHeight,
              SETCOORD_LH | SETCOORD_FACTOR | SETCOORD_NORMAL,
              aContext, mPresContext, inherited);
