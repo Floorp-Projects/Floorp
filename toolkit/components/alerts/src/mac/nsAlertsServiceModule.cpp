@@ -61,8 +61,8 @@ nsAlertsServiceRegister(nsIComponentManager* aCompMgr,
 
   char* prev = nsnull;
   rv = catman->AddCategoryEntry("app-startup", "nsAlertsService",
-                                NS_ALERTSERVICE_CONTRACTID, PR_TRUE, PR_TRUE,
-                                &prev);
+                                "service," NS_ALERTSERVICE_CONTRACTID, PR_TRUE,
+                                PR_TRUE, &prev);
   if (prev)
     nsMemory::Free(prev);
 

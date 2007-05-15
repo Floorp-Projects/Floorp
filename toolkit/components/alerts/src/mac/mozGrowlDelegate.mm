@@ -42,6 +42,7 @@
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIXULAppInfo.h"
+#include "nsIStringBundle.h"
 
 @implementation mozGrowlDelegate
 
@@ -50,6 +51,38 @@
   if ((self = [super init])) {
     mKey = 0;
     mDict = [[NSMutableDictionary dictionaryWithCapacity: 8] retain];
+    
+    mNames   = [[NSMutableArray alloc] init];
+    mEnabled = [[NSMutableArray alloc] init];
+  
+    nsresult rv;
+    nsCOMPtr<nsIStringBundleService> bundleService =
+      do_GetService("@mozilla.org/intl/stringbundle;1", &rv);
+
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIStringBundle> bundle;
+      rv = bundleService->CreateBundle(GROWL_STRING_BUNDLE_LOCATION,
+                                       getter_AddRefs(bundle));
+      
+      if (NS_SUCCEEDED(rv)) {
+        nsString text;
+        rv = bundle->GetStringFromName(NS_LITERAL_STRING("general").get(),
+                                       getter_Copies(text));
+        
+        if (NS_SUCCEEDED(rv)) {
+          NSString *s = [NSString stringWithCharacters: text.BeginReading()
+                                                length: text.Length()];
+          [mNames addObject: s];
+          [mEnabled addObject: s];
+
+          return self;
+        }
+      }
+    }
+
+    // Fallback
+    [mNames addObject: @"General Notification"];
+    [mEnabled addObject: @"General Notification"];
   }
 
   return self;
@@ -59,15 +92,21 @@
 {
   [mDict release];
 
+  [mNames release];
+  [mEnabled release];
+
   [super dealloc];
 }
 
-+ (void) notifyWithTitle:(const nsAString&)aTitle
-             description:(const nsAString&)aText
-                iconData:(NSData*)aImage
-                     key:(PRUint32)aKey
-                  cookie:(const nsAString&)aCookie
++ (void) notifyWithName:(const nsAString&)aName
+                  title:(const nsAString&)aTitle
+            description:(const nsAString&)aText
+               iconData:(NSData*)aImage
+                    key:(PRUint32)aKey
+                 cookie:(const nsAString&)aCookie
 {
+  NS_ASSERTION(aName.Length(), "No name specified for the alert!");
+  
   NSDictionary* clickContext = nil;
   if (aKey) {
     clickContext = [NSDictionary dictionaryWithObjectsAndKeys:
@@ -85,7 +124,8 @@
                                               length: aTitle.Length()]
          description: [NSString stringWithCharacters: aText.BeginReading()
                                               length: aText.Length()]
-    notificationName: NOTIFICATION_NAME
+    notificationName: [NSString stringWithCharacters: aName.BeginReading()
+                                              length: aName.Length()]
             iconData: aImage
             priority: 0
             isSticky: NO
@@ -105,10 +145,8 @@
 - (NSDictionary *) registrationDictionaryForGrowl
 {
   return [NSDictionary dictionaryWithObjectsAndKeys:
-           [NSArray arrayWithObjects: NOTIFICATION_NAME, nil],
-           GROWL_NOTIFICATIONS_ALL,
-           [NSArray arrayWithObjects: NOTIFICATION_NAME, nil],
-           GROWL_NOTIFICATIONS_DEFAULT,
+           mNames, GROWL_NOTIFICATIONS_ALL,
+           mEnabled, GROWL_NOTIFICATIONS_DEFAULT,
            nil];
 }
 

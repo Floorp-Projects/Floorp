@@ -42,6 +42,8 @@
 #include "nsNetUtil.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
+#include "nsIStringBundle.h"
+#include "nsIObserverService.h"
 
 #import "mozGrowlDelegate.h"
 #import "GrowlApplicationBridge.h"
@@ -76,9 +78,12 @@ nsAlertsService::Init()
   if ([GrowlApplicationBridge isGrowlInstalled] == NO)
     return NS_ERROR_SERVICE_NOT_AVAILABLE;
 
-  mDelegate = new GrowlDelegateWrapper();
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> os =
+    do_GetService("@mozilla.org/observer-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_OK;
+  return os->AddObserver(this, "final-ui-startup", PR_FALSE);
 }
 
 nsAlertsService::nsAlertsService() : mDelegate(nsnull) {}
@@ -97,7 +102,6 @@ nsAlertsService::ShowAlertNotification(const nsAString& aImageUrl,
                                        const nsAString& aAlertCookie,
                                        nsIObserver* aAlertListener)
 {
-
   NS_ASSERTION(mDelegate->delegate == [GrowlApplicationBridge growlDelegate],
                "Growl Delegate was not registered properly.");
 
@@ -105,22 +109,41 @@ nsAlertsService::ShowAlertNotification(const nsAString& aImageUrl,
   if (aAlertListener)
     ind = [mDelegate->delegate addObserver: aAlertListener];
 
+  nsresult rv;
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    do_GetService("@mozilla.org/intl/stringbundle;1", &rv);
+  
+  // We don't want to fail just yet if we can't get the alert name
+  nsString name = NS_LITERAL_STRING("General Notification");
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIStringBundle> bundle;
+    rv = bundleService->CreateBundle(GROWL_STRING_BUNDLE_LOCATION,
+                                     getter_AddRefs(bundle));
+    if (NS_SUCCEEDED(rv)) {
+      rv = bundle->GetStringFromName(NS_LITERAL_STRING("general").get(),
+                                     getter_Copies(name));
+      if (NS_FAILED(rv))
+        name = NS_LITERAL_STRING("General Notification");
+    }
+  }
+
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aImageUrl);
+  rv = NS_NewURI(getter_AddRefs(uri), aImageUrl);
   if (NS_FAILED(rv)) {
     // image uri failed to resolve, so dispatch to growl with no image
-    [mozGrowlDelegate notifyWithTitle: aAlertTitle
-                          description: aAlertText
-                             iconData: [NSData data]
-                                  key: ind
-                               cookie: aAlertCookie];
+    [mozGrowlDelegate notifyWithName: name
+                               title: aAlertTitle
+                         description: aAlertText
+                            iconData: [NSData data]
+                                 key: ind
+                              cookie: aAlertCookie];
 
     return NS_OK;
   }
 
   nsCOMPtr<nsAlertsImageLoadListener> listener =
-    new nsAlertsImageLoadListener(aAlertTitle, aAlertText, aAlertClickable,
-                                  aAlertCookie, ind);
+    new nsAlertsImageLoadListener(name, aAlertTitle, aAlertText,
+                                  aAlertClickable, aAlertCookie, ind);
 
   nsCOMPtr<nsIStreamLoader> loader;
   rv = NS_NewStreamLoader(getter_AddRefs(loader), uri, listener);
@@ -133,8 +156,15 @@ NS_IMETHODIMP
 nsAlertsService::Observe(nsISupports* aSubject, const char* aTopic,
                          const PRUnichar* aData)
 {
-  if (nsCRT::strcmp(aTopic, "app-startup") == 0) // registers with Growl here
+  if (nsCRT::strcmp(aTopic, "final-ui-startup") == 0) {
+    NS_ASSERTION([GrowlApplicationBridge growlDelegate] == nil,
+                 "We already registered with Growl!");
+
+    mDelegate = new GrowlDelegateWrapper();
+
+    // registers with Growl
     [GrowlApplicationBridge setGrowlDelegate: mDelegate->delegate];
+  }
 
   return NS_OK;
 }
