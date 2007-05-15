@@ -3355,13 +3355,13 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
   if (decorations & NS_FONT_DECORATION_UNDERLINE) {
     FillClippedRect(aCtx, aTextPaintStyle.PresContext(), underColor, aDirtyRect,
                     gfxRect(aFramePt.x,
-                            aFramePt.y + mAscent - fontMetrics.underlineOffset,
+                            aFramePt.y + mAscent - fontMetrics.underlineOffset*pix2app,
                             GetRect().width, fontMetrics.underlineSize*pix2app));
   }
   if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
     FillClippedRect(aCtx, aTextPaintStyle.PresContext(), strikeColor, aDirtyRect,
                     gfxRect(aFramePt.x,
-                            aFramePt.y + mAscent - fontMetrics.strikeoutOffset,
+                            aFramePt.y + mAscent - fontMetrics.strikeoutOffset*pix2app,
                             GetRect().width, fontMetrics.strikeoutSize*pix2app));
   }
 }
