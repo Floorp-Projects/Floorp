@@ -35,6 +35,7 @@ REQUIRES = \
 	xulapp \
 	places \
 	browserplaces \
+	microsummaries \
 	$(NULL)
 
 EXPORTS = nsBrowserCompsCID.h
