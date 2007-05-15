@@ -58,9 +58,11 @@ public:
                        nsTransformingTextRunFactory* aFactory,
                        gfxFontGroup* aFontGroup,
                        const PRUnichar* aString, PRUint32 aLength,
-                       const PRUint32 aFlags, nsStyleContext** aStyles)
+                       const PRUint32 aFlags, nsStyleContext** aStyles,
+                       PRBool aOwnsFactory)
     : gfxTextRun(aParams, aString, aLength, aFontGroup, aFlags),
-      mFactory(aFactory), mRefContext(aParams->mContext)
+      mFactory(aFactory), mRefContext(aParams->mContext),
+      mOwnsFactory(aOwnsFactory)
   {
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
@@ -68,6 +70,12 @@ public:
     }
     for (i = 0; i < aParams->mInitialBreakCount; ++i) {
       mLineBreaks.AppendElement(aParams->mInitialBreaks[i]);
+    }
+  }
+  
+  ~nsTransformedTextRun() {
+    if (mOwnsFactory) {
+      delete mFactory;
     }
   }
 
@@ -82,10 +90,11 @@ public:
                                PRBool aLineBreakBefore, PRBool aLineBreakAfter,
                                gfxFloat* aAdvanceWidthDelta);
 
-  nsAutoPtr<nsTransformingTextRunFactory> mFactory;
-  nsRefPtr<gfxContext>                    mRefContext;
-  nsTArray<PRUint32>                      mLineBreaks;
-  nsTArray<nsRefPtr<nsStyleContext> >     mStyles;
+  nsTransformingTextRunFactory       *mFactory;
+  nsRefPtr<gfxContext>                mRefContext;
+  nsTArray<PRUint32>                  mLineBreaks;
+  nsTArray<nsRefPtr<nsStyleContext> > mStyles;
+  PRPackedBool                        mOwnsFactory;
 };
 
 PRBool
@@ -143,22 +152,14 @@ gfxTextRun*
 nsTransformingTextRunFactory::MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
                                           const gfxTextRunFactory::Parameters* aParams,
                                           gfxFontGroup* aFontGroup, PRUint32 aFlags,
-                                          nsStyleContext** aStyles)
+                                          nsStyleContext** aStyles, PRBool aOwnsFactory)
 {
-  PRUnichar* text = nsnull;
-  if (!(aFlags & gfxFontGroup::TEXT_IS_PERSISTENT)) {
-    text = new PRUnichar[aLength];
-    if (!text)
-      return nsnull;
-    memcpy(text, aString, aLength*sizeof(PRUnichar));
-  }
   nsTransformedTextRun* textRun =
     new nsTransformedTextRun(aParams, this, aFontGroup,
-                             text ? text : aString, aLength, aFlags, aStyles);
-  if (!textRun) {
-    delete[] text;
+                             aString, aLength, aFlags, aStyles, aOwnsFactory);
+  if (!textRun)
     return nsnull;
-  }
+
   RebuildTextRun(textRun);
   return textRun;
 }
@@ -167,14 +168,14 @@ gfxTextRun*
 nsTransformingTextRunFactory::MakeTextRun(const PRUint8* aString, PRUint32 aLength,
                                           const gfxTextRunFactory::Parameters* aParams,
                                           gfxFontGroup* aFontGroup, PRUint32 aFlags,
-                                          nsStyleContext** aStyles)
+                                          nsStyleContext** aStyles, PRBool aOwnsFactory)
 {
   // We'll only have a Unicode code path to minimize the amount of code needed
   // for these rarely used features
   NS_ConvertASCIItoUTF16 unicodeString(NS_REINTERPRET_CAST(const char*, aString), aLength);
   return MakeTextRun(unicodeString.get(), aLength, aParams, aFontGroup,
                      aFlags & ~(gfxFontGroup::TEXT_IS_PERSISTENT | gfxFontGroup::TEXT_IS_8BIT),
-                     aStyles);
+                     aStyles, aOwnsFactory);
 }
 
 static PRUint32
@@ -335,12 +336,15 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun)
 
   PRUint32 flags;
   gfxTextRunFactory::Parameters innerParams = GetParametersForInner(aTextRun, &flags);
+  // The text outlives the child and inner textruns
+  flags |= gfxFontGroup::TEXT_IS_PERSISTENT;
 
   PRUint32 length = aTextRun->GetLength();
   const PRUnichar* str = aTextRun->GetTextUnicode();
   nsRefPtr<nsStyleContext>* styles = aTextRun->mStyles.Elements();
   // Create a textrun so we can check cluster-start properties
   nsAutoPtr<gfxTextRun> inner;
+  // This text is going to outlive the inner text run
   inner = fontGroup->MakeTextRun(str, length, &innerParams, flags);
   if (!inner)
     return;
@@ -388,8 +392,7 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun)
       innerParams.mInitialBreakCount = lineBreakBeforeArray.Length();
       if (runIsLowercase) {
         child = uppercaseFactory.MakeTextRun(str + runStart, i - runStart,
-                                             &innerParams, smallFont, flags,
-                                             styleArray.Elements());
+            &innerParams, smallFont, flags, styleArray.Elements(), PR_FALSE);
       } else {
         child = fontGroup->
             MakeTextRun(str + runStart, i - runStart, &innerParams, flags);
@@ -515,7 +518,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun)
   if (mInnerTransformingTextRunFactory) {
     child = mInnerTransformingTextRunFactory->MakeTextRun(
         convertedString.BeginReading(), convertedString.Length(),
-        &innerParams, fontGroup, flags, styleArray.Elements());
+        &innerParams, fontGroup, flags, styleArray.Elements(), PR_FALSE);
   } else {
     child = fontGroup->MakeTextRun(
         convertedString.BeginReading(), convertedString.Length(), &innerParams,

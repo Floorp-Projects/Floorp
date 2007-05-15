@@ -796,8 +796,8 @@ public:
 
     // The caller is responsible for initializing our glyphs after construction.
     // Initially all glyphs are such that GetCharacterGlyphs()[i].IsMissing() is true.
-    // We take ownership of aText, which must have been allocated by new[] (it
-    // may be null if aLength is zero).
+    // If aText is not persistent (aFlags & TEXT_IS_PERSISTENT), the
+    // textrun will copy it.
     gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void *aText,
     		       PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags);
 
@@ -805,7 +805,8 @@ public:
     // glyph data is copied, so the text and length must be the same as this
     // textrun's. If there's a problem, return null. Actual linebreaks will
     // be set as per aParams; there will be no potential linebreaks.
-    // If successful, we take ownership of aText, which must have been allocated by new[].
+    // If aText is not persistent (aFlags & TEXT_IS_PERSISTENT), the
+    // textrun will copy it.
     virtual gfxTextRun *Clone(const gfxTextRunFactory::Parameters *aParams, const void *aText,
                               PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags);
 
@@ -1143,16 +1144,16 @@ public:
     gfxTextRun *MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags);
 
     /**
-     * Make a textrun for a given string. Takes ownership of aString unless
-     * aFlags & TEXT_IS_PERSISTENT --- in that case, the caller must destroy
-     * the textrun before aString dies.
+     * Make a textrun for a given string.
+     * If aText is not persistent (aFlags & TEXT_IS_PERSISTENT), the
+     * textrun will copy it.
      */
     virtual gfxTextRun *MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
                                     const Parameters *aParams, PRUint32 aFlags) = 0;
     /**
-     * Make a textrun for a given string. Takes ownership of aString unless
-     * aFlags & TEXT_IS_PERSISTENT --- in that case, the caller must destroy
-     * the textrun before aString dies.
+     * Make a textrun for a given string.
+     * If aText is not persistent (aFlags & TEXT_IS_PERSISTENT), the
+     * textrun will copy it.
      */
     virtual gfxTextRun *MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
                                     const Parameters *aParams, PRUint32 aFlags) = 0;

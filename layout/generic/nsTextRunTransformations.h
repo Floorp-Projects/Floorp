@@ -51,11 +51,11 @@ public:
   gfxTextRun* MakeTextRun(const PRUint8* aString, PRUint32 aLength,
                           const gfxFontGroup::Parameters* aParams,
                           gfxFontGroup* aFontGroup, PRUint32 aFlags,
-                          nsStyleContext** aStyles);
+                          nsStyleContext** aStyles, PRBool aOwnsFactory = PR_TRUE);
   gfxTextRun* MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
                           const gfxFontGroup::Parameters* aParams,
                           gfxFontGroup* aFontGroup, PRUint32 aFlags,
-                          nsStyleContext** aStyles);
+                          nsStyleContext** aStyles, PRBool aOwnsFactory = PR_TRUE);
 
   virtual void RebuildTextRun(nsTransformedTextRun* aTextRun) = 0;
 };
@@ -81,6 +81,7 @@ public:
   // just convert the string to uppercase or lowercase and create the textrun
   // via the fontgroup.
   
+  // Takes ownership of aInnerTransformTextRunFactory
   nsCaseTransformTextRunFactory(nsTransformingTextRunFactory* aInnerTransformingTextRunFactory,
                                 PRBool aAllUppercase = PR_FALSE)
     : mInnerTransformingTextRunFactory(aInnerTransformingTextRunFactory),
