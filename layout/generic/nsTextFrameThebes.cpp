@@ -3868,27 +3868,30 @@ nsTextFrame::IsVisibleInSelection(nsISelection* aSelection)
   return found;
 }
 
+/**
+ * Compute the longest prefix of text whose width is <= aWidth. Return
+ * the length of the prefix. Also returns the width of the prefix in aFitWidth.
+ */
 static PRUint32
 CountCharsFit(gfxTextRun* aTextRun, PRUint32 aStart, PRUint32 aLength,
               gfxFloat aWidth, PropertyProvider* aProvider,
               gfxFloat* aFitWidth)
 {
   PRUint32 last = 0;
-  gfxFloat totalWidth = 0;
+  gfxFloat width = 0;
   PRUint32 i;
   for (i = 1; i <= aLength; ++i) {
     if (i == aLength || aTextRun->IsClusterStart(aStart + i)) {
-      gfxFloat lastWidth = totalWidth;
-      totalWidth += aTextRun->GetAdvanceWidth(aStart + last, i - last, aProvider);
-      if (totalWidth > aWidth) {
-        *aFitWidth = lastWidth;
-        return last;
-      }
+      gfxFloat nextWidth = width +
+          aTextRun->GetAdvanceWidth(aStart + last, i - last, aProvider);
+      if (nextWidth > aWidth)
+        break;
       last = i;
+      width = nextWidth;
     }
   }
-  *aFitWidth = 0;
-  return 0;
+  *aFitWidth = width;
+  return last;
 }
 
 nsIFrame::ContentOffsets
