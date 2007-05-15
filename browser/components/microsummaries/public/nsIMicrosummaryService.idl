@@ -195,9 +195,20 @@ interface nsIMicrosummarySet : nsISupports
 };
 
 
-[scriptable, uuid(edec7c28-4b06-4692-842f-8bf238e61ac1)]
+[scriptable, uuid(D58143A2-74FA-4B13-94ED-113AF8936D80)]
 interface nsIMicrosummaryService : nsISupports
 {
+    /**
+     * Return a microsummary generator for the given URI.
+     *
+     * @param   generatorURI
+     *          the URI of the generator
+     *
+     * @returns an nsIMicrosummaryGenerator for the given URI.
+     *
+     */
+    nsIMicrosummaryGenerator getGenerator(in nsIURI generatorURI);
+
     /**
      * Install the microsummary generator from the resource at the supplied URI.
      * Callable by content via the addMicrosummaryGenerator() sidebar method.
@@ -266,6 +277,20 @@ interface nsIMicrosummaryService : nsISupports
      *
      */
     nsIMicrosummary getMicrosummary(in long long bookmarkID);
+
+    /**
+     * Create a microsummary for a given page URI and generator URI.
+     *
+     * @param   pageURI
+     *          the URI of the page to be summarized
+     *
+     * @param   generatorURI
+     *          the URI of the microsummary generator
+     *
+     * @returns an nsIMicrosummary for the given page and generator URIs.
+     *
+     */
+    nsIMicrosummary createMicrosummary(in nsIURI pageURI, in nsIURI generatorURI);
 
     /**
      * Set the current microsummary for the given bookmark.
