@@ -118,10 +118,13 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define KEY_POST_DATA_LOWER "post_data"
 #define KEY_ID_LOWER "id"
 #define KEY_NAME_LOWER "name"
+#define KEY_MICSUM_GEN_URI_LOWER "micsum_gen_uri"
+#define KEY_GENERATED_TITLE "generated_title"
 
 #define LOAD_IN_SIDEBAR_ANNO NS_LITERAL_CSTRING("bookmarkProperties/loadInSidebar")
 #define DESCRIPTION_ANNO NS_LITERAL_CSTRING("bookmarkProperties/description")
 #define POST_DATA_ANNO NS_LITERAL_CSTRING("URIProperties/POSTData")
+#define GENERATED_TITLE_ANNO NS_LITERAL_CSTRING("bookmarks/generatedTitle")
 
 #define BOOKMARKSS_MENU_ICON_URI "chrome://browser/skin/places/bookmarksMenu.png"
 #define BOOKMARKSS_TOOLBAR_ICON_URI "chrome://browser/skin/places/bookmarksToolbar.png"
@@ -296,6 +299,8 @@ nsPlacesImportExportService::nsPlacesImportExportService()
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "could not get bookmarks service");
   mLivemarkService = do_GetService(NS_LIVEMARKSERVICE_CONTRACTID, &rv);
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "could not get livemark service");
+  mMicrosummaryService = do_GetService("@mozilla.org/microsummary/service;1", &rv);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "could not get microsummary service");
 
   mBookmarksService->GetPlacesRoot(&mPlacesRoot);
   mBookmarksService->GetBookmarksRoot(&mBookmarksRoot);
@@ -354,6 +359,7 @@ protected:
   nsCOMPtr<nsINavHistoryService> mHistoryService;
   nsCOMPtr<nsIAnnotationService> mAnnotationService;
   nsCOMPtr<nsILivemarkService> mLivemarkService;
+  nsCOMPtr<nsIMicrosummaryService> mMicrosummaryService;
 
   // If set, we will move root items to from their existing position
   // in the hierarchy, to where we find them in the bookmarks file
@@ -429,6 +435,8 @@ BookmarkContentSink::Init(PRBool aAllowRootChanges,
   mAnnotationService = do_GetService(NS_ANNOTATIONSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   mLivemarkService = do_GetService(NS_LIVEMARKSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mMicrosummaryService = do_GetService("@mozilla.org/microsummary/service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mAllowRootChanges = aAllowRootChanges;
@@ -743,6 +751,8 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   nsAutoString postData;
   nsAutoString webPanel;
   nsAutoString id;
+  nsAutoString micsumGenURI;
+  nsAutoString generatedTitle;
   PRInt32 attrCount = node.GetAttributeCount();
   for (PRInt32 i = 0; i < attrCount; i ++) {
     const nsAString& key = node.GetKeyAt(i);
@@ -764,6 +774,10 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
       webPanel = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_ID_LOWER)) {
       id = node.GetValueAt(i);
+    } else if (key.LowerCaseEqualsLiteral(KEY_MICSUM_GEN_URI_LOWER)) {
+      micsumGenURI = node.GetValueAt(i);
+    } else if (key.LowerCaseEqualsLiteral(KEY_GENERATED_TITLE)) {
+      generatedTitle = node.GetValueAt(i);
     }
   }
   href.Trim(kWhitespace);
@@ -775,6 +789,8 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   postData.Trim(kWhitespace);
   webPanel.Trim(kWhitespace);
   id.Trim(kWhitespace);
+  micsumGenURI.Trim(kWhitespace);
+  generatedTitle.Trim(kWhitespace);
 
   // For feeds, get the feed URL. If it is invalid, it will leave mPreviousFeed
   // NULL and we'll continue trying to create it as a normal bookmark.
@@ -848,13 +864,35 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
                                                   nsIAnnotationService::EXPIRE_NEVER);
     }
   }
+
   if (webPanel.LowerCaseEqualsLiteral("true")) {
     // set load-in-sidebar annotation for the bookmark
-
     mAnnotationService->SetItemAnnotationInt32(frame.mPreviousId, LOAD_IN_SIDEBAR_ANNO,
                                                1, 0,
                                                nsIAnnotationService::EXPIRE_NEVER);
   }
+
+  // import microsummary
+  // Note: expiration and generated title are ignored, and will be
+  // recalculated by the microsummary service
+  if (!micsumGenURI.IsEmpty()) {
+    nsCOMPtr<nsIURI> micsumGenURIObject;
+    nsCOMPtr<nsIURI> hrefObject;
+    if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(micsumGenURIObject), micsumGenURI)) &&
+        NS_SUCCEEDED(NS_NewURI(getter_AddRefs(hrefObject), href))) {
+      nsCOMPtr<nsIMicrosummary> microsummary;
+      mMicrosummaryService->CreateMicrosummary(hrefObject, micsumGenURIObject,
+                                               getter_AddRefs(microsummary));
+      mMicrosummaryService->SetMicrosummary(frame.mPreviousId, microsummary);
+
+      // create generated title anno
+      rv = mAnnotationService->SetItemAnnotationString(frame.mPreviousId, GENERATED_TITLE_ANNO,
+                                                       generatedTitle, 0,
+                                                       nsIAnnotationService::EXPIRE_NEVER);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Creating microsummary generated title failed");
+    }
+  }
+
   // FIXME bug 334408: save the last charset
 }
 
@@ -1273,6 +1311,7 @@ static const char kKeywordAttribute[] = " SHORTCUTURL=\"";
 static const char kPostDataAttribute[] = " POST_DATA=\"";
 static const char kIdAttribute[] = " ID=\"";
 static const char kNameAttribute[] = " NAME=\"";
+static const char kMicsumGenURIEquals[]    = " MICSUM_GEN_URI=\"";
 
 // WriteContainerPrologue
 //
@@ -1653,6 +1692,30 @@ nsPlacesImportExportService::WriteItem(nsINavHistoryResultNode* aItem,
   NS_ENSURE_SUCCESS(rv, rv);
   if (loadInSidebar)
     aOutput->Write(kWebPanelAttribute, sizeof(kWebPanelAttribute)-1, &dummy);
+
+  // microsummary
+  nsCOMPtr<nsIMicrosummary> microsummary;
+  rv = mMicrosummaryService->GetMicrosummary(itemId, getter_AddRefs(microsummary));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (microsummary) {
+    nsCOMPtr<nsIMicrosummaryGenerator> generator;
+    rv = microsummary->GetGenerator(getter_AddRefs(generator));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIURI> genURI;
+    rv = generator->GetUri(getter_AddRefs(genURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCAutoString spec;
+    rv = genURI->GetSpec(spec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // write out generator URI
+    rv = aOutput->Write(kMicsumGenURIEquals, sizeof(kMicsumGenURIEquals)-1, &dummy);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = WriteEscapedUrl(spec, aOutput);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // FIXME bug 334408: write last character set here
 
