@@ -501,17 +501,17 @@ function DeleteSelectedItemFromTree
   box.endUpdateBatch();
 
   // update selection and/or buttons
-  var removeButton = document.getElementById(removeButton);
-  var removeAllButton = document.getElementById(removeAllButton);
+  var removeBtn = document.getElementById(removeButton);
+  var removeAllBtn = document.getElementById(removeAllButton);
 
   if (table.length) {
-    removeButton.removeAttribute("disabled");
-    removeAllButton.removeAttribute("disabled");
+    removeBtn.removeAttribute("disabled");
+    removeAllBtn.removeAttribute("disabled");
 
     selection.select(oldSelectStart < table.length ? oldSelectStart : table.length - 1);
   } else {
-    removeButton.setAttribute("disabled", "true");
-    removeAllButton.setAttribute("disabled", "true");
+    removeBtn.setAttribute("disabled", "true");
+    removeAllBtn.setAttribute("disabled", "true");
   }
 }
 
