@@ -71,7 +71,7 @@
 #include <nsIDOMDocument.h>
 #include <nsIDOMBarProp.h>
 #include <nsIDOMWindow.h>
-#include <nsIDOMEventReceiver.h>
+#include <nsPIDOMEventTarget.h>
 #include <nsCOMPtr.h>
 #include <nsPIDOMWindow.h>
 
@@ -104,8 +104,8 @@ public:
     nsCOMPtr<nsIWebNavigation>     navigation;
     nsCOMPtr<nsISHistory>          sessionHistory;
 
-    // our event receiver
-    nsCOMPtr<nsIDOMEventReceiver>  eventReceiver;
+    // our event target
+    nsCOMPtr<nsPIDOMEventTarget>   eventTarget;
 
     // chrome mask
     PRUint32                       chromeMask;
@@ -557,7 +557,7 @@ QGeckoEmbed::contentStateChanged()
 
     setupListener();
 
-    if (!d->eventReceiver)
+    if (!d->eventTarget)
         return;
 
     attachListeners();
@@ -597,7 +597,7 @@ QGeckoEmbed::contentFinishedLoading()
 void
 QGeckoEmbed::setupListener()
 {
-    if (d->eventReceiver)
+    if (d->eventTarget)
         return;
 
     nsCOMPtr<nsPIDOMWindow> piWin;
@@ -606,13 +606,13 @@ QGeckoEmbed::setupListener()
     if (!piWin)
         return;
 
-    d->eventReceiver = do_QueryInterface(piWin->GetChromeEventHandler());
+    d->eventTarget = do_QueryInterface(piWin->GetChromeEventHandler());
 }
 
 void
 QGeckoEmbed::attachListeners()
 {
-    if (!d->eventReceiver || d->listenersAttached)
+    if (!d->eventTarget || d->listenersAttached)
         return;
 
     nsIDOMEventListener *eventListener =
@@ -621,22 +621,22 @@ QGeckoEmbed::attachListeners()
 
     // add the key listener
     nsresult rv;
-    rv = d->eventReceiver->AddEventListenerByIID(eventListener,
-                                                 NS_GET_IID(nsIDOMKeyListener));
+    rv = d->eventTarget->AddEventListenerByIID(eventListener,
+                                               NS_GET_IID(nsIDOMKeyListener));
     if (NS_FAILED(rv)) {
         NS_WARNING("Failed to add key listener\n");
         return;
     }
 
-    rv = d->eventReceiver->AddEventListenerByIID(eventListener,
-                                                 NS_GET_IID(nsIDOMMouseListener));
+    rv = d->eventTarget->AddEventListenerByIID(eventListener,
+                                               NS_GET_IID(nsIDOMMouseListener));
     if (NS_FAILED(rv)) {
         NS_WARNING("Failed to add mouse listener\n");
         return;
     }
 
-    rv = d->eventReceiver->AddEventListenerByIID(eventListener,
-                                                NS_GET_IID(nsIDOMUIListener));
+    rv = d->eventTarget->AddEventListenerByIID(eventListener,
+                                               NS_GET_IID(nsIDOMUIListener));
     if (NS_FAILED(rv)) {
         NS_WARNING("Failed to add UI listener\n");
         return;

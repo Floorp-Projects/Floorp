@@ -51,7 +51,6 @@
 #include "nsEditRules.h"
  
 class nsITransferable;
-class nsIDOMEventReceiver;
 class nsIDocumentEncoder;
 
 /**

@@ -219,7 +219,7 @@ private:
 /**
  * nsDOMEventRTTearoff is a tearoff class used by nsGenericElement and
  * nsGenericDOMDataNode classes for implementing the interfaces
- * nsIDOMEventReceiver and nsIDOMEventTarget
+ * nsIDOMEventTarget, nsIDOM3EventTarget and nsIDOMNSEventTarget.
  *
  * Use the method nsDOMEventRTTearoff::Create() to create one of these babies.
  * @see nsDOMEventRTTearoff::Create
