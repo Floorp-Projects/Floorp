@@ -128,8 +128,11 @@ protected:
                                const nsACString& aGenericName,
                                void *closure);
 
-    void InitTextRun(gfxTextRun *aRun, const PRUnichar *aString, PRUint32 aLength,
-                     PRBool aWrapped);
+    PRUint32 GuessMaximumStringLength();
+
+    /** Returns true for success */
+    PRBool InitTextRun(gfxTextRun *aRun, const PRUnichar *aString, PRUint32 aLength,
+                       PRBool aWrapped, PRUint32 aSegmentStart, PRUint32 aSegmentLength);
 
     ATSUFontFallbacks mFallbacks;
 };
