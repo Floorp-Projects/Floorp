@@ -2001,8 +2001,12 @@ function getShortcutOrURI(aURL, aPostDataRef)
     var shortcutURL = null;
 #ifdef MOZ_PLACES_BOOKMARKS
     var shortcutURI = PlacesUtils.bookmarks.getURIForKeyword(aURL);
-    if (shortcutURI)
+    if (shortcutURI) {
       shortcutURL = shortcutURI.spec;
+      // get POST data
+      var postData = PlacesUtils.getPostDataForURI(shortcutURI);
+      aPostDataRef.value = postData;
+    }
 #else
     shortcutURL = BMSVC.resolveKeyword(aURL, aPostDataRef);
 #endif
@@ -5242,7 +5246,8 @@ function AddKeywordForSearchField()
              BROWSER_ADD_BM_FEATURES, dialogArgs);
 #else
   var description = PlacesUtils.getDescriptionFromDocument(node.ownerDocument);
-  PlacesUtils.showAddBookmarkUI(makeURI(spec), "", description, null, null, null, "");
+  PlacesUtils.showMinimalAddBookmarkUI(makeURI(spec), "", description, null,
+                                       null, null, "", postData);
 #endif
 }
 
