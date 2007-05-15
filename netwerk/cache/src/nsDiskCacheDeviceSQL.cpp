@@ -766,25 +766,27 @@ nsOfflineCacheDevice::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // create all (most) of our statements up front
-  struct {
+  struct StatementSql {
     nsCOMPtr<mozIStorageStatement> &statement;
     const char *sql;
+    StatementSql (nsCOMPtr<mozIStorageStatement> aStatement, const char *aSql):
+      statement (aStatement), sql (aSql) {};
   } prepared[] = {
-    { mStatement_CacheSize,         "SELECT Sum(DataSize) from moz_cache;" },
-    { mStatement_EntryCount,        "SELECT count(*) from moz_cache;" },
-    { mStatement_UpdateEntry,       "UPDATE moz_cache SET MetaData = ?, Flags = ?, DataSize = ?, FetchCount = ?, LastFetched = ?, LastModified = ?, ExpirationTime = ? WHERE ClientID = ? AND Key = ?;" },
-    { mStatement_UpdateEntrySize,   "UPDATE moz_cache SET DataSize = ? WHERE ClientID = ? AND Key = ?;" },
-    { mStatement_UpdateEntryFlags,  "UPDATE moz_cache SET Flags = ? WHERE ClientID = ? AND Key = ?;" },
-    { mStatement_DeleteEntry,       "DELETE FROM moz_cache WHERE ClientID = ? AND Key = ?;" },
-    { mStatement_FindEntry,         "SELECT MetaData, Generation, Flags, DataSize, FetchCount, LastFetched, LastModified, ExpirationTime FROM moz_cache WHERE ClientID = ? AND Key = ?;" },
-    { mStatement_BindEntry,         "INSERT INTO moz_cache (ClientID, Key, MetaData, Generation, Flags, DataSize, FetchCount, LastFetched, LastModified, ExpirationTime) VALUES(?,?,?,?,?,?,?,?,?,?);" },
-    { mStatement_ClearOwnership,    "DELETE FROM moz_cache_owners WHERE ClientId = ? AND Domain = ? AND URI = ?;" },
-    { mStatement_RemoveOwnership,   "DELETE FROM moz_cache_owners WHERE ClientID = ? AND Domain = ? AND URI = ? AND Key = ?;" },
-    { mStatement_ClearDomain,       "DELETE FROM moz_cache_owners WHERE ClientID = ? AND Domain = ?;" },
-    { mStatement_AddOwnership,      "INSERT INTO moz_cache_owners (ClientID, Domain, URI, Key) VALUES (?, ?, ?, ?);" },
-    { mStatement_CheckOwnership,    "SELECT Key From moz_cache_owners WHERE ClientID = ? AND Domain = ? AND URI = ? AND Key = ?;" },
-    { mStatement_ListOwned,         "SELECT Key FROM moz_cache_owners WHERE ClientID = ? AND Domain = ? AND URI = ?;" },
-    { mStatement_DeleteUnowned,     "DELETE FROM moz_cache WHERE rowid IN (SELECT moz_cache.rowid FROM moz_cache LEFT OUTER JOIN moz_cache_owners ON (moz_cache.ClientID = moz_cache_owners.ClientID AND moz_cache.Key = moz_cache_owners.Key) WHERE moz_cache.ClientID = ? AND moz_cache_owners.Domain ISNULL);" },
+    StatementSql ( mStatement_CacheSize,         "SELECT Sum(DataSize) from moz_cache;" ),
+    StatementSql ( mStatement_EntryCount,        "SELECT count(*) from moz_cache;" ),
+    StatementSql ( mStatement_UpdateEntry,       "UPDATE moz_cache SET MetaData = ?, Flags = ?, DataSize = ?, FetchCount = ?, LastFetched = ?, LastModified = ?, ExpirationTime = ? WHERE ClientID = ? AND Key = ?;" ),
+    StatementSql ( mStatement_UpdateEntrySize,   "UPDATE moz_cache SET DataSize = ? WHERE ClientID = ? AND Key = ?;" ),
+    StatementSql ( mStatement_UpdateEntryFlags,  "UPDATE moz_cache SET Flags = ? WHERE ClientID = ? AND Key = ?;" ),
+    StatementSql ( mStatement_DeleteEntry,       "DELETE FROM moz_cache WHERE ClientID = ? AND Key = ?;" ),
+    StatementSql ( mStatement_FindEntry,         "SELECT MetaData, Generation, Flags, DataSize, FetchCount, LastFetched, LastModified, ExpirationTime FROM moz_cache WHERE ClientID = ? AND Key = ?;" ),
+    StatementSql ( mStatement_BindEntry,         "INSERT INTO moz_cache (ClientID, Key, MetaData, Generation, Flags, DataSize, FetchCount, LastFetched, LastModified, ExpirationTime) VALUES(?,?,?,?,?,?,?,?,?,?);" ),
+    StatementSql ( mStatement_ClearOwnership,    "DELETE FROM moz_cache_owners WHERE ClientId = ? AND Domain = ? AND URI = ?;" ),
+    StatementSql ( mStatement_RemoveOwnership,   "DELETE FROM moz_cache_owners WHERE ClientID = ? AND Domain = ? AND URI = ? AND Key = ?;" ),
+    StatementSql ( mStatement_ClearDomain,       "DELETE FROM moz_cache_owners WHERE ClientID = ? AND Domain = ?;" ),
+    StatementSql ( mStatement_AddOwnership,      "INSERT INTO moz_cache_owners (ClientID, Domain, URI, Key) VALUES (?, ?, ?, ?);" ),
+    StatementSql ( mStatement_CheckOwnership,    "SELECT Key From moz_cache_owners WHERE ClientID = ? AND Domain = ? AND URI = ? AND Key = ?;" ),
+    StatementSql ( mStatement_ListOwned,         "SELECT Key FROM moz_cache_owners WHERE ClientID = ? AND Domain = ? AND URI = ?;" ),
+    StatementSql ( mStatement_DeleteUnowned,     "DELETE FROM moz_cache WHERE rowid IN (SELECT moz_cache.rowid FROM moz_cache LEFT OUTER JOIN moz_cache_owners ON (moz_cache.ClientID = moz_cache_owners.ClientID AND moz_cache.Key = moz_cache_owners.Key) WHERE moz_cache.ClientID = ? AND moz_cache_owners.Domain ISNULL);" ),
   };
   for (PRUint32 i=0; i<NS_ARRAY_LENGTH(prepared); ++i)
   {
