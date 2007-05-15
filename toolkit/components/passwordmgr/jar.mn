@@ -1,8 +1,9 @@
 toolkit.jar:
-*   content/passwordmgr/passwordManager.xul
-*   content/passwordmgr/passwordManager.js
-*   content/passwordmgr/passwordManager.css
+    content/passwordmgr/contents.rdf        (content/contents.rdf)
+*   content/passwordmgr/passwordManager.xul (content/passwordManager.xul)
+*   content/passwordmgr/passwordManager.js  (content/passwordManager.js)
 
 en-US.jar:
-*   locale/en-US/passwordmgr/passwordmgr.properties
-*   locale/en-US/passwordmgr/passwordManager.dtd
+    locale/en-US/passwordmgr/contents.rdf            (locale/contents.rdf)
+*   locale/en-US/passwordmgr/passwordmgr.properties  (locale/passwordmgr.properties)
+*   locale/en-US/passwordmgr/passwordManager.dtd     (locale/passwordManager.dtd)
