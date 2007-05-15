@@ -683,7 +683,6 @@ xpfe/components/Makefile
 xpfe/components/bookmarks/Makefile
 xpfe/components/bookmarks/public/Makefile
 xpfe/components/bookmarks/src/Makefile
-xpfe/components/bookmarks/resources/Makefile
 xpfe/components/directory/Makefile
 xpfe/components/download-manager/Makefile
 xpfe/components/download-manager/src/Makefile
