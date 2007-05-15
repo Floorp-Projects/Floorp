@@ -45,7 +45,7 @@
    object. For that XBL binding of element should implement the interface.
  */
 
-[scriptable, uuid(18797ea7-44cc-469e-8923-bd5d1c144461)]
+[scriptable, uuid(7250d0f0-732d-4981-b73e-dd5d71b16183)]
 interface nsIAccessibleProvider : nsISupports
 {
   /**
@@ -87,21 +87,18 @@ interface nsIAccessibleProvider : nsISupports
   /** A combination of a tabs object and a tabpanels object */
   const long XULTabBox = 0x00001022;
 
-  /** The display area for a dialog or tabbrowser interface */
-  const long XULTabPanels = 0x00001023;
-
   /** The collection of tab objects, useable in the TabBox and independant of
    as well */
-  const long XULTabs = 0x00001024;
+  const long XULTabs = 0x00001023;
 
-  const long XULText = 0x00001025;
-  const long XULTextBox = 0x00001026;
-  const long XULTree = 0x00001027;
-  const long XULTreeColumns = 0x00001028;
-  const long XULTreeColumnitem = 0x00001029;
-  const long XULToolbar = 0x00001030;
-  const long XULToolbarSeparator = 0x00001031;
-  const long XULTooltip = 0x00001032;
+  const long XULText             = 0x00001024;
+  const long XULTextBox          = 0x00001025;
+  const long XULTree             = 0x00001026;
+  const long XULTreeColumns      = 0x00001027;
+  const long XULTreeColumnitem   = 0x00001028;
+  const long XULToolbar          = 0x00001029;
+  const long XULToolbarSeparator = 0x00001030;
+  const long XULTooltip          = 0x00001031;
 
 
   /**

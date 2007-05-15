@@ -83,6 +83,11 @@ private:
    */
   nsresult GetAccessibleByType(nsIDOMNode *aNode, nsIAccessible **aAccessible);
   PRBool HasListener(nsIContent *aContent, nsAString& aEventType);
+
+  /**
+   *  Return accessible object if parent is a deck frame
+   */
+  nsresult GetAccessibleForDeckChildren(nsIDOMNode *aNode, nsIAccessible **aAccessible);
 };
 
 #endif /* __nsIAccessibilityService_h__ */

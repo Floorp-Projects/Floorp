@@ -1268,6 +1268,10 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     }
   }
 
+  if (!newAcc) {
+    GetAccessibleForDeckChildren(aNode, getter_AddRefs(newAcc));
+  }
+
   // If no accessible, see if we need to create a generic accessible because
   // of some property that makes this object interesting
   // We don't do this for <body>, <html>, <window>, <dialog> etc. which 
@@ -1372,12 +1376,12 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
 
   *aAccessible = nsnull;
 
-  nsCOMPtr<nsIAccessibleProvider> node(do_QueryInterface(aNode));
-  if (!node)
+  nsCOMPtr<nsIAccessibleProvider> accessibleProvider(do_QueryInterface(aNode));
+  if (!accessibleProvider)
     return NS_OK;
 
   PRInt32 type;
-  nsresult rv = node->GetAccessibleType(&type);
+  nsresult rv = accessibleProvider->GetAccessibleType(&type);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (type == nsIAccessibleProvider::OuterDoc)
@@ -1484,9 +1488,6 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
       break;
     case nsIAccessibleProvider::XULTabBox:
       *aAccessible = new nsXULTabBoxAccessible(aNode, weakShell);
-      break;
-    case nsIAccessibleProvider::XULTabPanels:
-      *aAccessible = new nsXULTabPanelsAccessible(aNode, weakShell);
       break;
     case nsIAccessibleProvider::XULTabs:
       *aAccessible = new nsXULTabsAccessible(aNode, weakShell);
@@ -1674,3 +1675,31 @@ NS_GetAccessibilityService(nsIAccessibilityService** aResult)
   return nsAccessibilityService::GetAccessibilityService(aResult);
 }
 
+nsresult
+nsAccessibilityService::GetAccessibleForDeckChildren(nsIDOMNode *aNode, nsIAccessible** aAccessible)
+{
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+  NS_ENSURE_TRUE(weakShell, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(weakShell));
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+  
+  nsIFrame* frame = nsnull;
+  nsIFrame* parentFrame = nsnull;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+
+  if (content) {
+    frame = shell->GetPrimaryFrameFor(content);
+  }
+
+  if (frame && (frame->GetType() == nsAccessibilityAtoms::boxFrame ||
+                frame->GetType() == nsAccessibilityAtoms::scrollFrame)) { 
+    parentFrame = frame->GetParent();
+    if (parentFrame && parentFrame->GetType() == nsAccessibilityAtoms::deckFrame) {
+      *aAccessible = new nsEnumRoleAccessible(aNode, weakShell, nsIAccessibleRole::ROLE_PROPERTYPAGE);
+      NS_ADDREF(*aAccessible);
+    }
+  }
+
+  return NS_OK;
+}
