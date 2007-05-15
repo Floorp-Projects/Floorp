@@ -2390,13 +2390,18 @@ JS_GC(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_MaybeGC(JSContext *cx)
 {
-#ifdef WAY_TOO_MUCH_GC
-    JS_GC(cx);
-#else
     JSRuntime *rt;
     uint32 bytes, lastBytes;
 
     rt = cx->runtime;
+
+#ifdef JS_GC_ZEAL
+    if (rt->gcZeal > 0) {
+        JS_GC(cx);
+        return;
+    }
+#endif
+
     bytes = rt->gcBytes;
     lastBytes = rt->gcLastBytes;
 
@@ -2456,7 +2461,6 @@ JS_MaybeGC(JSContext *cx)
         /* Run scheduled but not yet executed close hooks. */
         js_RunCloseHooks(cx);
     }
-#endif
 #endif
 }
 
@@ -5507,6 +5511,14 @@ JS_ClearContextThread(JSContext *cx)
     jsword old = JS_THREAD_ID(cx);
     js_ClearContextThread(cx);
     return old;
+}
+#endif
+
+#ifdef JS_GC_ZEAL
+JS_PUBLIC_API(void)
+JS_SetGCZeal(JSContext *cx, uint8 zeal)
+{
+    cx->runtime->gcZeal = zeal;
 }
 #endif
 

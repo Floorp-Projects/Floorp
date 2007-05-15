@@ -2422,6 +2422,15 @@ JS_ClearContextThread(JSContext *cx);
 
 /************************************************************************/
 
+#ifdef DEBUG
+#define JS_GC_ZEAL 1
+#endif
+
+#ifdef JS_GC_ZEAL
+extern JS_PUBLIC_API(void)
+JS_SetGCZeal(JSContext *cx, uint8 zeal);
+#endif
+
 JS_END_EXTERN_C
 
 #endif /* jsapi_h___ */
