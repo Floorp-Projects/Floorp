@@ -146,62 +146,42 @@ function DeleteAllFromTree(tree, view, table, deletedTable, removeButton, remove
 function DeleteSelectedItemFromTree
     (tree, view, table, deletedTable, removeButton, removeAllButton) {
 
-  var box = tree.treeBoxObject;
+  // Turn off tree selection notifications during the deletion
+  tree.view.selection.selectEventsSuppressed = true;
 
-  // Remove selected items from list (by setting them to null) and place in
-  // deleted list.  At the same time, notify the tree of the row count changes.
-
-  var selection = box.view.selection;
-  var oldSelectStart = table.length;
-  box.beginUpdateBatch();
-
-  var selCount = selection.getRangeCount();
-  var min = new Object();
-  var max = new Object();
-
-  for (var s = 0; s < selCount; ++s) {
-    selection.getRangeAt(s, min, max);
-    var minVal = min.value;
-    var maxVal = max.value;
-
-    oldSelectStart = minVal < oldSelectStart ? minVal : oldSelectStart;
-
-    var rowCount = maxVal - minVal + 1;
-    view.rowCount -= rowCount;
-    box.rowCountChanged(minVal, -rowCount);
-
-    for (var i = minVal; i <= maxVal; ++i) {
-      deletedTable[deletedTable.length] = table[i];
-      table[i] = null;
-    }
+  // remove selected items from list (by setting them to null) and place in deleted list
+  var selections = GetTreeSelections(tree);
+  for (var s=selections.length-1; s>= 0; s--) {
+    var i = selections[s];
+    deletedTable[deletedTable.length] = table[i];
+    table[i] = null;
   }
 
   // collapse list by removing all the null entries
-  for (var j = 0; j < table.length; ++j) {
-    if (!table[j]) {
+  for (var j=0; j<table.length; j++) {
+    if (table[j] == null) {
       var k = j;
-      while (k < table.length && !table[k])
+      while ((k < table.length) && (table[k] == null)) {
         k++;
-
+      }
       table.splice(j, k-j);
+      view.rowCount -= k - j;
+      tree.treeBoxObject.rowCountChanged(j, j - k);
     }
   }
 
-  box.endUpdateBatch();
-
   // update selection and/or buttons
-  var removeBtn = document.getElementById(removeButton);
-  var removeAllBtn = document.getElementById(removeAllButton);
-
   if (table.length) {
-    removeBtn.removeAttribute("disabled");
-    removeAllBtn.removeAttribute("disabled");
-
-    selection.select(oldSelectStart < table.length ? oldSelectStart : table.length - 1);
+    // update selection
+    var nextSelection = (selections[0] < table.length) ? selections[0] : table.length-1;
+    tree.view.selection.select(nextSelection);
+    tree.treeBoxObject.ensureRowIsVisible(nextSelection);
   } else {
-    removeBtn.setAttribute("disabled", "true");
-    removeAllBtn.setAttribute("disabled", "true");
+    // disable buttons
+    document.getElementById(removeButton).setAttribute("disabled", "true")
+    document.getElementById(removeAllButton).setAttribute("disabled","true");
   }
+  tree.view.selection.selectEventsSuppressed = false;
 }
 
 function GetTreeSelections(tree) {
