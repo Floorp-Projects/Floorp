@@ -1488,6 +1488,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
       textRun = transformingFactory->MakeTextRun(text, transformedLength, &params,
                                                  fontGroup, textFlags, styles.Elements());
       if (textRun) {
+        // ownership of the factory has passed to the textrun
         transformingFactory.forget();
       }
     } else {
@@ -1504,6 +1505,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
       textRun = transformingFactory->MakeTextRun(text, transformedLength, &params,
                                                  fontGroup, textFlags, styles.Elements());
       if (textRun) {
+        // ownership of the factory has passed to the textrun
         transformingFactory.forget();
       }
     } else {

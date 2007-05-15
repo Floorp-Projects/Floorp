@@ -96,34 +96,6 @@ static void *GetCacheKeyFontOrGroup(gfxTextRun *aTextRun)
            : NS_STATIC_CAST(void *, fontGroup);
 }
 
-static const PRUnichar *
-CloneText(const PRUnichar *aText, PRUint32 aLength,
-          nsAutoArrayPtr<PRUnichar> *aBuffer, PRUint32 aFlags)
-{
-    if (*aBuffer == aText || (aFlags & gfxFontGroup::TEXT_IS_PERSISTENT))
-        return aText;
-    PRUnichar *newText = new PRUnichar[aLength];
-    if (!newText)
-        return nsnull;
-    memcpy(newText, aText, aLength*sizeof(PRUnichar));
-    *aBuffer = newText;
-    return newText;
-}
-
-static const PRUint8 *
-CloneText(const PRUint8 *aText, PRUint32 aLength,
-          nsAutoArrayPtr<PRUint8> *aBuffer, PRUint32 aFlags)
-{
-    if (*aBuffer == aText || (aFlags & gfxFontGroup::TEXT_IS_PERSISTENT))
-        return aText;
-    PRUint8 *newText = new PRUint8[aLength];
-    if (!newText)
-        return nsnull;
-    memcpy(newText, aText, aLength);
-    *aBuffer = newText;
-    return newText;
-}
-
 gfxTextRun *
 gfxTextRunCache::GetOrMakeTextRun(const PRUnichar *aText, PRUint32 aLength,
                                   gfxFontGroup *aFontGroup,
@@ -152,30 +124,22 @@ gfxTextRunCache::GetOrMakeTextRun(const PRUnichar *aText, PRUint32 aLength,
         key.mFontOrGroup = aFontGroup;
         entry = mCache.GetEntry(key);
     }
-    nsAutoArrayPtr<PRUnichar> text;
     if (entry) {
         gfxTextRun *textRun = entry->mTextRun;
         if (aCallerOwns) {
             *aCallerOwns = PR_FALSE;
             return textRun;
         }
-        aText = CloneText(aText, aLength, &text, aFlags);
-        if (!aText)
-            return nsnull;
         gfxTextRun *newRun =
             textRun->Clone(aParams, aText, aLength, aFontGroup, aFlags);
         if (newRun) {
             newRun->SetHashCode(hashCode);
             entry->mTextRun = newRun;
             NotifyRemovedFromCache(textRun);
-            text.forget();
             return newRun;
         }
     }
 
-    aText = CloneText(aText, aLength, &text, aFlags);
-    if (!aText)
-        return nsnull;
     gfxTextRun *newRun =
         aFontGroup->MakeTextRun(aText, aLength, aParams, aFlags);
     if (newRun) {
@@ -188,7 +152,6 @@ gfxTextRunCache::GetOrMakeTextRun(const PRUnichar *aText, PRUint32 aLength,
         NS_ASSERTION(!entry || entry == mCache.GetEntry(GetKeyForTextRun(newRun)),
                      "Inconsistent hashing");
     }
-    text.forget();
     return newRun;
 }
 
@@ -220,16 +183,13 @@ gfxTextRunCache::GetOrMakeTextRun(const PRUint8 *aText, PRUint32 aLength,
         key.mFontOrGroup = aFontGroup;
         entry = mCache.GetEntry(key);
     }
-    nsAutoArrayPtr<PRUint8> text;
     if (entry) {
         gfxTextRun *textRun = entry->mTextRun;
         if (aCallerOwns) {
             *aCallerOwns = PR_FALSE;
             return textRun;
         }
-        aText = CloneText(aText, aLength, &text, aFlags);
-        if (!aText)
-            return nsnull;
+
         gfxTextRun *newRun =
             textRun->Clone(aParams, aText, aLength,
                            aFontGroup, aFlags);
@@ -237,14 +197,10 @@ gfxTextRunCache::GetOrMakeTextRun(const PRUint8 *aText, PRUint32 aLength,
             newRun->SetHashCode(hashCode);
             entry->mTextRun = newRun;
             NotifyRemovedFromCache(textRun);
-            text.forget();
             return newRun;
         }
     }
 
-    aText = CloneText(aText, aLength, &text, aFlags);
-    if (!aText)
-        return nsnull;
     gfxTextRun *newRun =
         aFontGroup->MakeTextRun(aText, aLength, aParams, aFlags);
     if (newRun) {
@@ -257,7 +213,6 @@ gfxTextRunCache::GetOrMakeTextRun(const PRUint8 *aText, PRUint32 aLength,
         NS_ASSERTION(!entry || entry == mCache.GetEntry(GetKeyForTextRun(newRun)),
                      "Inconsistent hashing");
     }
-    text.forget();
     return newRun;
 }
 
