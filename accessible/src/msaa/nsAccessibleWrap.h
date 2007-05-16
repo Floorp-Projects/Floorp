@@ -46,7 +46,7 @@
 #include "nsCOMPtr.h"
 #include "nsAccessible.h"
 #include "Accessible2.h"
-#include "AccessibleAction.h"
+#include "CAccessibleHyperlink.h"
 #include "CAccessibleValue.h"
 
 #define DECL_IUNKNOWN_INHERITED                                               \
@@ -89,9 +89,9 @@ Class::QueryInterface(REFIID iid, void** ppv)                                 \
 
 
 class nsAccessibleWrap : public nsAccessible,
+                         public CAccessibleHyperlink,
                          public CAccessibleValue,
                          public IAccessible2,
-                         public IAccessibleAction,
                          public IEnumVARIANT,
                          public IServiceProvider
 {
@@ -262,31 +262,6 @@ class nsAccessibleWrap : public nsAccessible,
 
     virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_attributes(
         /* [retval][out] */ BSTR *attributes);
-
-  public: // IAccessibleAction
-    virtual HRESULT STDMETHODCALLTYPE nActions(
-        /* [retval][out] */ long *nActions);
-
-    virtual HRESULT STDMETHODCALLTYPE doAction(
-        /* [in] */ long actionIndex);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_description(
-        /* [in] */ long actionIndex,
-        /* [retval][out] */ BSTR *description);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_keyBinding(
-        /* [in] */ long actionIndex,
-        /* [in] */ long nMaxBinding,
-        /* [length_is][length_is][size_is][size_is][out] */ BSTR **keyBinding,
-        /* [retval][out] */ long *nBinding);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_name(
-        /* [in] */ long actionIndex,
-        /* [retval][out] */ BSTR *name);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_localizedName(
-        /* [in] */ long actionIndex,
-        /* [retval][out] */ BSTR *localizedName);
 
   public:   // IEnumVariantMethods
     virtual /* [local] */ HRESULT STDMETHODCALLTYPE Next( 
