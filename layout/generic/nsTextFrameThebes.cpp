@@ -452,6 +452,8 @@ public:
   void AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
                                  InlinePrefWidthData *aData);
 
+  gfxFloat GetSnappedBaselineY(gfxContext* aContext, gfxFloat aY);
+
   // primary frame paint method called from nsDisplayText
   void PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
                  const nsRect& aDirtyRect);
@@ -3350,19 +3352,19 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
   if (decorations & NS_FONT_DECORATION_OVERLINE) {
     FillClippedRect(aCtx, aTextPaintStyle.PresContext(), overColor, aDirtyRect,
                     gfxRect(aFramePt.x, aFramePt.y,
-                            GetRect().width, fontMetrics.underlineSize*pix2app));
+                            GetRect().width, NS_round(fontMetrics.underlineSize)*pix2app));
   }
   if (decorations & NS_FONT_DECORATION_UNDERLINE) {
     FillClippedRect(aCtx, aTextPaintStyle.PresContext(), underColor, aDirtyRect,
                     gfxRect(aFramePt.x,
-                            aFramePt.y + mAscent - fontMetrics.underlineOffset*pix2app,
-                            GetRect().width, fontMetrics.underlineSize*pix2app));
+                            GetSnappedBaselineY(aCtx, aFramePt.y) - NS_round(fontMetrics.underlineOffset)*pix2app,
+                            GetRect().width, NS_round(fontMetrics.underlineSize)*pix2app));
   }
   if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
     FillClippedRect(aCtx, aTextPaintStyle.PresContext(), strikeColor, aDirtyRect,
                     gfxRect(aFramePt.x,
-                            aFramePt.y + mAscent - fontMetrics.strikeoutOffset*pix2app,
-                            GetRect().width, fontMetrics.strikeoutSize*pix2app));
+                            GetSnappedBaselineY(aCtx, aFramePt.y) - NS_round(fontMetrics.strikeoutOffset)*pix2app,
+                            GetRect().width, NS_round(fontMetrics.strikeoutSize)*pix2app));
   }
 }
 
@@ -3717,7 +3719,7 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
     gfxFloat advance = hyphenWidth +
       mTextRun->GetAdvanceWidth(offset, length, &aProvider);
     if (type == aSelectionType) {
-      gfxFloat x = xOffset - (mTextRun->IsRightToLeft() ? advance : 0);
+      gfxFloat x = aTextBaselinePt.x + xOffset - (mTextRun->IsRightToLeft() ? advance : 0);
       DrawSelectionDecorations(aCtx, aSelectionType, aTextPaintStyle,
                                gfxPoint(x, aTextBaselinePt.y), advance,
                                aDirtyRect, decorationMetrics);
@@ -3770,6 +3772,17 @@ ComputeTransformedLength(PropertyProvider& aProvider)
   return iter.GetSkippedOffset() - start;
 }
 
+gfxFloat
+nsTextFrame::GetSnappedBaselineY(gfxContext* aContext, gfxFloat aY)
+{
+  gfxFloat appUnitsPerDevUnit = mTextRun->GetAppUnitsPerDevUnit();
+  gfxFloat baseline = aY + mAscent;
+  gfxRect putativeRect(0, baseline/appUnitsPerDevUnit, 1, 1);
+  if (!aContext->UserToDevicePixelSnapped(putativeRect))
+    return baseline;
+  return aContext->DeviceToUser(putativeRect.pos).y*appUnitsPerDevUnit;
+}
+
 void
 nsTextFrame::PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
                        const nsRect& aDirtyRect)
@@ -3790,7 +3803,7 @@ nsTextFrame::PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
   gfxPoint framePt(aPt.x, aPt.y);
   gfxPoint textBaselinePt(
       mTextRun->IsRightToLeft() ? gfxFloat(aPt.x + GetSize().width) : framePt.x,
-      aPt.y + mAscent);
+      GetSnappedBaselineY(ctx, aPt.y));
 
   gfxRect dirtyRect(aDirtyRect.x, aDirtyRect.y,
                     aDirtyRect.width, aDirtyRect.height);
