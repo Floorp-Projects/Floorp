@@ -148,7 +148,7 @@ bin\components\necko_res.xpt
 bin\components\necko_socket.xpt
 bin\components\necko_viewsource.xpt
 bin\components\oji.xpt
-bin\components\passwordmgr.xpt
+bin\components\loginmgr.xpt
 bin\components\places.xpt
 bin\components\plugin.xpt
 bin\components\pref.xpt
@@ -217,6 +217,10 @@ bin\components\nsExtensionManager.js
 bin\components\nsUpdateService.js
 bin\components\nsMicrosummaryService.js
 bin\components\nsPostUpdateWin.js
+bin\components\nsLoginInfo.js
+bin\components\nsLoginManager.js
+bin\components\nsLoginManagerPrompter.js
+bin\components\storage-Legacy.js
 bin\components\pluginGlue.js
 bin\components\extensions.xpt
 bin\components\update.xpt
