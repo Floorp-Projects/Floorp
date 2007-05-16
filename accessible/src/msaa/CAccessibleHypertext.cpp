@@ -41,7 +41,6 @@
 #include "CAccessibleHypertext.h"
 
 #include "AccessibleHypertext_i.c"
-#include "AccessibleHyperlink_i.c"
 
 #include "nsIAccessibleHypertext.h"
 #include "nsIWinAccessNode.h"
