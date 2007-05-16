@@ -858,7 +858,7 @@ nsIEProfileMigrator::MigrateSiteAuthSignons(IPStore* aPStore)
           // If not, are they in UTF-8 or the default codepage? (ref. bug 41489)
           nsresult rv;
 
-          ncCOMPtr<nsILoginInfo> aLogin (do_CreateInstance(NS_LOGININFO_CONTRACTID, &rv));
+          nsCOMPtr<nsILoginInfo> aLogin (do_CreateInstance(NS_LOGININFO_CONTRACTID, &rv));
           NS_ENSURE_SUCCESS(rv, rv);
 
           // TODO: Need to pass in nulls here, but XPCOM whines. Might be able
