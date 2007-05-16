@@ -700,6 +700,9 @@ public:
                               mType == eContext_PageLayout ||
                               mType == eContext_PrintPreview); }
 
+  // Is this presentation in a chrome docshell?
+  PRBool IsChrome();
+
   const nsTArray<nsIFrame*>& GetActivePopups() {
     NS_ASSERTION(this == RootPresContext(), "Only on root prescontext");
     return mActivePopups;
