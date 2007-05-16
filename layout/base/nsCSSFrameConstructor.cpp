@@ -8010,7 +8010,7 @@ FindNextAnonymousSibling(nsIPresShell* aPresShell,
 // frame tree.
 PRBool
 nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aParentFrame,
-                                      const nsIFrame&        aSibling,
+                                      nsIFrame*              aSibling,
                                       PRUint8                aSiblingDisplay,
                                       nsIContent&            aContent,
                                       PRUint8&               aDisplay)
@@ -8024,7 +8024,17 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aParentFrame,
     // if we haven't already, construct a style context to find the display type of aContent
     if (UNSET_DISPLAY == aDisplay) {
       nsRefPtr<nsStyleContext> styleContext;
-      styleContext = ResolveStyleContext(aSibling.GetParent(), &aContent);
+      nsIFrame* styleParent;
+      PRBool providerIsChild;
+      if (NS_FAILED(aSibling->
+                      GetParentStyleContextFrame(aSibling->PresContext(),
+                                                 &styleParent,
+                                                 &providerIsChild)) ||
+          !styleParent) {
+        NS_NOTREACHED("Shouldn't happen");
+        return PR_FALSE;
+      }
+      styleContext = ResolveStyleContext(styleParent, &aContent);
       if (!styleContext) return PR_FALSE;
       const nsStyleDisplay* display = styleContext->GetStyleDisplay();
       aDisplay = display->mDisplay;
@@ -8045,7 +8055,7 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aParentFrame,
   }
   else if (nsGkAtoms::fieldSetFrame == aParentFrame->GetType()) {
     // Legends can be sibling of legends but not of other content in the fieldset
-    nsIAtom* sibType = aSibling.GetType();
+    nsIAtom* sibType = aSibling->GetType();
     nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(&aContent));
 
     if ((legendContent  && (nsGkAtoms::legendFrame != sibType)) ||
@@ -8094,7 +8104,7 @@ nsCSSFrameConstructor::FindPreviousSibling(nsIContent*       aContainer,
       // placeholder for out-of-flows?
       const nsStyleDisplay* display = prevSibling->GetStyleDisplay();
   
-      if (aChild && !IsValidSibling(aContainerFrame, *prevSibling, 
+      if (aChild && !IsValidSibling(aContainerFrame, prevSibling, 
                                     display->mDisplay, (nsIContent&)*aChild,
                                     childDisplay))
         continue;
@@ -8155,7 +8165,7 @@ nsCSSFrameConstructor::FindNextSibling(nsIContent*       aContainer,
       // placeholder for out-of-flows?
       const nsStyleDisplay* display = nextSibling->GetStyleDisplay();
 
-      if (aChild && !IsValidSibling(aContainerFrame, *nextSibling, 
+      if (aChild && !IsValidSibling(aContainerFrame, nextSibling, 
                                     display->mDisplay, (nsIContent&)*aChild,
                                     childDisplay))
         continue;
