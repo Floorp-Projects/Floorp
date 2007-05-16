@@ -993,6 +993,15 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
                          getter_AddRefs(content), &appendContent);
   NS_ENSURE_SUCCESS(result, result);
 
+  // Have to do this before we push the new content on the stack... and have to
+  // do that before we set attributes, call BindToTree, etc.  Ideally we'd push
+  // on the stack inside CreateElement (which is effectively what the HTML sink
+  // does), but that's hard with all the subclass overrides going on.
+  nsCOMPtr<nsIContent> parent = GetCurrentContent();
+  
+  result = PushContent(content);
+  NS_ENSURE_SUCCESS(result, result);
+
   // Set the ID attribute atom on the node info object for this node
   // This must occur before the attributes are added so the name
   // of the id attribute is known.
@@ -1015,14 +1024,10 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
   if (NS_OK == result) {
     // Store the element 
     if (!SetDocElement(nameSpaceID, localName, content) && appendContent) {
-      nsCOMPtr<nsIContent> parent = GetCurrentContent();
       NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
 
       parent->AppendChildTo(content, PR_FALSE);
     }
-
-    result = PushContent(content);
-    NS_ENSURE_SUCCESS(result, result);
   }
 
   // Some HTML nodes need DoneCreatingElement() called to initialize
