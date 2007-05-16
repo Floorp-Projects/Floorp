@@ -39,7 +39,9 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsICookieManager2.h"
 #include "nsIObserverService.h"
-#include "nsIPasswordManagerInternal.h"
+#include "nsILoginInfo.h"
+#include "nsILoginManager.h"
+#include "nsILoginManagerStorage.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIPrefService.h"
 #include "nsIServiceManager.h"
@@ -682,12 +684,40 @@ nsSeamonkeyProfileMigrator::CopyPasswords(PRBool aReplace)
   if (aReplace)
     rv = CopyFile(fileName, fileName);
   else {
-    nsCOMPtr<nsIFile> seamonkeyPasswordsFile;
-    mSourceProfile->Clone(getter_AddRefs(seamonkeyPasswordsFile));
-    seamonkeyPasswordsFile->Append(fileName);
+    // Get the password manager, which is the destination for the passwords
+    // being migrated. Also create a new instance of the legacy password
+    // storage component, which we'll use to slurp in the signons from
+    // Seamonkey's signons.txt.
+    nsCOMPtr<nsILoginManager> pwmgr(
+        do_GetService("@mozilla.org/login-manager;1"));
+    nsCOMPtr<nsILoginManagerStorage> importer(
+        do_CreateInstance("@mozilla.org/login-manager/storage/legacy;1"));
 
-    nsCOMPtr<nsIPasswordManagerInternal> pmi(do_GetService("@mozilla.org/passwordmanager;1"));
-    rv = pmi->ReadPasswords(seamonkeyPasswordsFile);
+    nsString pathName;
+    nsCOMPtr<nsIFile> profileDir(do_QueryInterface(mSourceProfile));
+    profileDir->GetPath(pathName);
+
+    importer->InitWithFile(pathName, fileName, EmptyString());
+
+    nsresult rv;
+    PRUint32 count;
+    nsILoginInfo **logins;
+
+    rv = importer->GetAllLogins(&count, &logins);
+    NS_ENSURE_SUCCESS(rv, rv);
+    for (count--; count >= 0; count--) {
+        pwmgr->AddLogin(logins[count]);
+    }
+    NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(count, logins);
+
+    PRUnichar **hostnames;
+    rv = importer->GetAllDisabledHosts(&count, &hostnames);
+    NS_ENSURE_SUCCESS(rv, rv);
+    for (count--; count >= 0; count--) {
+        pwmgr->SetLoginSavingEnabled(nsDependentString(hostnames[count]),
+                                        PR_FALSE);
+    }
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, hostnames);
   }
   return rv;
 }

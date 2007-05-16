@@ -73,14 +73,8 @@ function Reject(number, host) {
 }
 
 function LoadRejects() {
-  var enumerator = passwordmanager.rejectEnumerator;
-  var count = 0;
-  while (enumerator.hasMoreElements()) {
-    var nextReject = enumerator.getNext();
-    nextReject = nextReject.QueryInterface(Components.interfaces.nsIPassword);
-    var host = nextReject.host;
-    rejects[count] = new Reject(count++, host);
-  }
+  var hosts = passwordmanager.getAllDisabledHosts({});
+  rejects = hosts.map(function(host, i) { return new Reject(i, host); });
   rejectsTreeView.rowCount = rejects.length;
 
   // sort and display the table
@@ -118,7 +112,7 @@ function DeleteAllRejects() {
 
 function FinalizeRejectDeletions() {
   for (var r=0; r<deletedRejects.length; r++) {
-    passwordmanager.removeReject(deletedRejects[r].host);
+    passwordmanager.setLoginSavingEnabled(deletedRejects[r].host, true);
   }
   deletedRejects.length = 0;
 }

@@ -55,6 +55,7 @@ REQUIRES	= \
 		  libreg \
 		  browsercomps \
 		  toolkitcomps \
+		  passwordmgr \
 		  pref \
 		  rdf \
 		  satchel \

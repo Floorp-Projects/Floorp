@@ -1,14 +1,14 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for Password Manager</title>
+  <title>Test for Login Manager</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-Password Manager test: 242956
+Login Manager test: 242956
 <p id="display"></p>
 <div id="content" style="display: none">
   <!-- pword1 is not a type=password input -->
@@ -109,7 +109,7 @@ Password Manager test: 242956
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-/** Test for Password Manger: 242956 (Stored password is inserted into a readable text input on a second page) **/
+/** Test for Login Manager: 242956 (Stored password is inserted into a readable text input on a second page) **/
 
 // Make sure that pwmgr only puts passwords into type=password <input>s.
 // Might as well test the converse, too (username in password field).
@@ -145,13 +145,11 @@ function startTest() {
   input = form.elements[0];
   is(input.type,  "text",      "confirming user field 4 type");
   is(input.name,  "uname4",    "confirming user field 4 name");
-  //is(input.value, "testuser4", "checking user field 4 value");
-  todo(input.value == "testuser4", "ignore bogus <input> and fill testuser4");
+  is(input.value, "testuser4", "checking user field 4 value");
   input = form.elements[1];
   is(input.type,  "password",  "confirming legit password field 4 type");
   is(input.name,  "pword4",    "confirming legit password field 4 type");
-  //is(input.value, "testpass4", "checking legit password field 4 value");
-  todo(input.value == "testpass4", "ignore bogus <input> and fill testpass4");
+  is(input.value, "testpass4", "checking legit password field 4 value");
   input = form.elements[2];
   is(input.type,  "text",      "confirming bogus password field 4 type");
   is(input.name,  "pword4",    "confirming bogus password field 4 name");
@@ -162,8 +160,7 @@ function startTest() {
   input = form.elements[0];
   is(input.type,  "text",      "confirming legit user field 5 type");
   is(input.name,  "uname5",    "confirming legit user field 5 name");
-  //is(input.value, "testuser5", "checking legit user field 5 value");
-  todo(input.value == "testuser5", "ignore bogus <input> and fill testuser5");
+  is(input.value, "testuser5", "checking legit user field 5 value");
   input = form.elements[1];
   is(input.type,  "password",  "confirming bogus user field 5 type");
   is(input.name,  "uname5",    "confirming bogus user field 5 name");
@@ -171,8 +168,7 @@ function startTest() {
   input = form.elements[2];
   is(input.type,  "password",  "confirming password field 5 ");
   is(input.name,  "pword5",    "confirming password field 5 ");
-  //is(input.value, "testpass5", "checking password field 5 value");
-  todo(input.value == "testpass5", "ignore bogus <input> and fill testpass5");
+  is(input.value, "testpass5", "checking password field 5 value");
 
   form  = document.forms[5];
   input = form.elements[0];

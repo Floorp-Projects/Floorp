@@ -69,8 +69,7 @@
 #include "nsRect.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsPasswordManager.h"
-#include "nsSingleSignonPrompt.h"
+#include "nsILoginManager.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIGenericFactory.h"
 #include "nsToolkitCompsCID.h"
@@ -105,9 +104,10 @@ nsFormFillController::nsFormFillController() :
   mSuppressOnInput(PR_FALSE)
 {
   mController = do_GetService("@mozilla.org/autocomplete/controller;1");
-
+  mLoginManager = do_GetService("@mozilla.org/login-manager;1");
   mDocShells = do_CreateInstance("@mozilla.org/supports-array;1");
   mPopups = do_CreateInstance("@mozilla.org/supports-array;1");
+  mPwmgrInputs.Init();
 }
 
 nsFormFillController::~nsFormFillController()
@@ -183,6 +183,23 @@ nsFormFillController::DetachFromBrowser(nsIDocShell *aDocShell)
   
   return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsFormFillController::MarkAsLoginManagerField(nsIDOMHTMLInputElement *aInput)
+{
+  /*
+   * The Login Manager can supply autocomplete results for username fields,
+   * when a user has multiple logins stored for a site. It uses this
+   * interface to indicate that the form manager shouldn't handle the
+   * autocomplete. The form manager also checks for this tag when saving
+   * form history (so it doesn't save usernames).
+   */
+  mPwmgrInputs.Put(aInput, 1);
+
+  return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 //// nsIAutoCompleteInput
@@ -479,9 +496,9 @@ nsFormFillController::GetConsumeRollupEvent(PRBool *aConsumeRollupEvent)
   return NS_OK;
 }
 
+
 ////////////////////////////////////////////////////////////////////////
 //// nsIAutoCompleteSearch
-
 
 NS_IMETHODIMP
 nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAString &aSearchParam,
@@ -489,27 +506,24 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
 {
   nsCOMPtr<nsIAutoCompleteResult> result;
 
+  // If the login manager has indicated it's responsible for this field, let it
+  // handle the autocomplete. Otherwise, handle with form history.
+  PRInt32 dummy;
+  if (mPwmgrInputs.Get(mFocusedInput, &dummy)) {
+    // XXX aPreviousResult shouldn't ever be a historyResult type, since we're not letting
+    // satchel manage the field?
+    mLoginManager->AutoCompleteSearch(aSearchString,
+                                         aPreviousResult,
+                                         mFocusedInput,
+                                         getter_AddRefs(result));
+  } else {
 #ifdef MOZ_STORAGE_SATCHEL
-  // This assumes that FormHistory uses nsIAutoCompleteSimpleResult,
-  // while PasswordManager does not.
-  nsCOMPtr<nsIAutoCompleteSimpleResult> historyResult;
+    nsCOMPtr<nsIAutoCompleteSimpleResult> historyResult;
 #else
-  nsCOMPtr<nsIAutoCompleteMdbResult2> historyResult;
+    nsCOMPtr<nsIAutoCompleteMdbResult2> historyResult;
 #endif
-  historyResult = do_QueryInterface(aPreviousResult);
+    historyResult = do_QueryInterface(aPreviousResult);
 
-  nsPasswordManager* passMgr = nsPasswordManager::GetInstance();
-  if (!passMgr)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  // Only hand off a previous result to the password manager if it's
-  // a password manager result (i.e. not an nsIAutoCompleteMdb/SimpleResult).
-
-  if (!passMgr->AutoCompleteSearch(aSearchString,
-                                   historyResult ? nsnull : aPreviousResult,
-                                   mFocusedInput,
-                                   getter_AddRefs(result)))
-  {
     nsFormHistory *history = nsFormHistory::GetInstance();
     if (history) {
       history->AutoCompleteSearch(aSearchParam,
@@ -518,7 +532,6 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
                                   getter_AddRefs(result));
     }
   }
-  NS_RELEASE(passMgr);
 
   aListener->OnSearchResult(this, result);  
   
@@ -537,8 +550,39 @@ nsFormFillController::StopSearch()
 NS_IMETHODIMP
 nsFormFillController::HandleEvent(nsIDOMEvent* aEvent)
 {
+  nsAutoString type;
+  aEvent->GetType(type);
+
+  if (type.EqualsLiteral("pagehide")) {
+    nsCOMPtr<nsIDOMEventTarget> target;
+    aEvent->GetTarget(getter_AddRefs(target));
+
+    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(target);
+    if (!domDoc)
+      return NS_OK;
+
+    mPwmgrInputs.Enumerate(RemoveForDOMDocumentEnumerator, domDoc);
+  }
+
   return NS_OK; 
 }
+
+
+/* static */ PLDHashOperator PR_CALLBACK
+nsFormFillController::RemoveForDOMDocumentEnumerator(nsISupports* aKey,
+                                                  PRInt32& aEntry,
+                                                  void* aUserData)
+{
+  nsIDOMDocument* domDoc = NS_STATIC_CAST(nsIDOMDocument*, aUserData);
+  nsCOMPtr<nsIDOMHTMLInputElement> element = do_QueryInterface(aKey);
+  nsCOMPtr<nsIDOMDocument> elementDoc;
+  element->GetOwnerDocument(getter_AddRefs(elementDoc));
+  if (elementDoc == domDoc)
+    return PL_DHASH_REMOVE;
+
+  return PL_DHASH_NEXT;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 //// nsIDOMFocusListener
@@ -919,6 +963,10 @@ nsFormFillController::AddWindowListeners(nsIDOMWindow *aWindow)
                            NS_STATIC_CAST(nsIDOMFocusListener *, this),
                            PR_TRUE);
 
+  target->AddEventListener(NS_LITERAL_STRING("pagehide"),
+                           NS_STATIC_CAST(nsIDOMFocusListener *, this),
+                           PR_TRUE);
+
   target->AddEventListener(NS_LITERAL_STRING("mousedown"),
                            NS_STATIC_CAST(nsIDOMMouseListener *, this),
                            PR_TRUE);
@@ -971,6 +1019,10 @@ nsFormFillController::RemoveWindowListeners(nsIDOMWindow *aWindow)
                               PR_TRUE);
 
   target->RemoveEventListener(NS_LITERAL_STRING("blur"),
+                              NS_STATIC_CAST(nsIDOMFocusListener *, this),
+                              PR_TRUE);
+
+  target->RemoveEventListener(NS_LITERAL_STRING("pagehide"),
                               NS_STATIC_CAST(nsIDOMFocusListener *, this),
                               PR_TRUE);
 
@@ -1125,38 +1177,12 @@ nsFormFillController::GetIndexOfDocShell(nsIDocShell *aDocShell)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFormHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormFillController)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPasswordManager, nsPasswordManager::GetInstance)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsSingleSignonPrompt)
 #if defined(MOZ_STORAGE_SATCHEL) && defined(MOZ_MORKREADER)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormHistoryImporter)
 #endif
 
-static void PR_CALLBACK nsFormHistoryModuleDtor(nsIModule* self)
-{
-  nsPasswordManager::Shutdown();
-}
-
 static const nsModuleComponentInfo components[] =
 {
-  { "Password Manager",
-    NS_PASSWORDMANAGER_CID,
-    NS_PASSWORDMANAGER_CONTRACTID,
-    nsPasswordManagerConstructor,
-    nsPasswordManager::Register,
-    nsPasswordManager::Unregister },
-
-  { "Password Manager",
-    NS_PASSWORDMANAGER_CID,
-    NS_PWMGR_AUTHPROMPTFACTORY,
-    nsPasswordManagerConstructor,
-    nsPasswordManager::Register,
-    nsPasswordManager::Unregister },
-
-  { "Single Signon Prompt",
-    NS_SINGLE_SIGNON_PROMPT_CID,
-    "@mozilla.org/wallet/single-sign-on-prompt;1",
-    nsSingleSignonPromptConstructor },
-
   { "HTML Form History",
     NS_FORMHISTORY_CID, 
     NS_FORMHISTORY_CONTRACTID,
@@ -1180,5 +1206,5 @@ static const nsModuleComponentInfo components[] =
 #endif
 };
 
-NS_IMPL_NSGETMODULE_WITH_DTOR(satchel, components, nsFormHistoryModuleDtor)
+NS_IMPL_NSGETMODULE(satchel, components)
 
