@@ -1,14 +1,14 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for Password Manager</title>
+  <title>Test for Login Manager</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-Password Manager test: 227640
+Login Manager test: 227640
 <p id="display"></p>
 <div id="content" style="display: none">
   
@@ -146,7 +146,7 @@ Password Manager test: 227640
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-/** Test for Password Manger: 227640 (password is saved even when the password field has autocomplete="off") **/
+/** Test for Login Manager: 227640 (password is saved even when the password field has autocomplete="off") **/
 
 // This test ensures that pwmgr does not save a username or password when
 // autocomplete=off is present.
@@ -220,21 +220,19 @@ function getFormSubmitButton(formNum) {
 function countLogins() {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-  var count = 0;
-  var enum = pwmgr.enumerator;
-  while (enum.hasMoreElements()) { count++; enum.getNext(); }
+  var logins = pwmgr.getAllLogins({});
 
-  return count;
+  return logins.length;
 }
 
 // Get the pwmgr service
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-var Cc_pwmgr = Components.classes["@mozilla.org/passwordmanager;1"];
-ok(Cc_pwmgr != null, "Access Cc[@mozilla.org/passwordmanager;1]");
+var Cc_pwmgr = Components.classes["@mozilla.org/login-manager;1"];
+ok(Cc_pwmgr != null, "Access Cc[@mozilla.org/login-manager;1]");
 
-var Ci_pwmgr = Components.interfaces.nsIPasswordManager;
-ok(Ci_pwmgr != null, "Access Ci.nsIPasswordManager");
+var Ci_pwmgr = Components.interfaces.nsILoginManager;
+ok(Ci_pwmgr != null, "Access Ci.nsILoginManager");
 
 var pwmgr = Cc_pwmgr.getService(Ci_pwmgr);
 ok(pwmgr != null, "pwmgr getService()");

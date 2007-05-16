@@ -1023,6 +1023,9 @@ function delayedStartup()
 
   window.addEventListener("keypress", ctrlNumberTabSelection, false);
 
+  // Ensure login manager is up and running.
+  Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+
   if (gMustLoadSidebar) {
     var sidebar = document.getElementById("sidebar");
     var sidebarBox = document.getElementById("sidebar-box");

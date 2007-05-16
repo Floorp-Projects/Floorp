@@ -79,8 +79,8 @@
 #include "nsIGlobalHistory.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIURI.h"
-#include "nsIPasswordManager.h"
-#include "nsIPasswordManagerInternal.h"
+#include "nsILoginManager.h"
+#include "nsILoginInfo.h"
 #include "nsIFormHistory.h"
 #include "nsIRDFService.h"
 #include "nsIRDFContainer.h"
@@ -755,7 +755,7 @@ static GUID IEPStoreSiteAuthGUID = { 0x5e7e8100, 0x9138, 0x11d1, { 0x94, 0x5a, 0
 // username as a value in each such subkey's value list. If we have a match, 
 // we assume that the subkey (with its uniquifier prefix) is a login field. 
 //
-// With this information, we call Password Manager's "AddUserFull" method 
+// With this information, we call Password Manager's "AddLogin" method 
 // providing this detail. We don't need to provide the password field name, 
 // we have no means of retrieving this info from IE, and the Password Manager
 // knows to hunt for a password field near the login field if none is specified.
@@ -808,7 +808,7 @@ nsIEProfileMigrator::CopyPasswords(PRBool aReplace)
 // We bail out if that's the case, because we can't handle those yet.
 // However, if everything is all and well, we convert the itemName to a realm
 // string that the password manager can work with and save this login
-// via AddUser.
+// via AddLogin.
 
 nsresult
 nsIEProfileMigrator::MigrateSiteAuthSignons(IPStore* aPStore)
@@ -817,7 +817,7 @@ nsIEProfileMigrator::MigrateSiteAuthSignons(IPStore* aPStore)
 
   NS_ENSURE_ARG_POINTER(aPStore);
 
-  nsCOMPtr<nsIPasswordManager> pwmgr(do_GetService("@mozilla.org/passwordmanager;1"));
+  nsCOMPtr<nsILoginManager> pwmgr(do_GetService("@mozilla.org/login-manager;1"));
   if (!pwmgr)
     return NS_OK;
 
@@ -843,22 +843,31 @@ nsIEProfileMigrator::MigrateSiteAuthSignons(IPStore* aPStore)
             break;
           }
 
-        nsAutoString realm(itemName);
-        if (Substring(realm, 0, 6).EqualsLiteral("DPAPI:")) // often FTP logins
+        nsAutoString host(itemName), realm;
+        if (Substring(host, 0, 6).EqualsLiteral("DPAPI:")) // often FTP logins
           password = NULL; // We can't handle these yet
 
         if (password) {
           int idx;
-          idx = realm.FindChar('/');
+          idx = host.FindChar('/');
           if (idx) {
-            realm.Replace(idx, 1, NS_LITERAL_STRING(" ("));
-            realm.Append(')');
+            realm.Assign(Substring(host, idx));
+            host.Assign(Substring(host, 0, idx));
           }
           // XXX: username and password are always ASCII in IPStore?
           // If not, are they in UTF-8 or the default codepage? (ref. bug 41489)
-          pwmgr->AddUser(NS_ConvertUTF16toUTF8(realm),
-                         NS_ConvertASCIItoUTF16((char *)data),
-                         NS_ConvertASCIItoUTF16((char *)password));
+          nsresult rv;
+
+          ncCOMPtr<nsILoginInfo> aLogin (do_CreateInstance(NS_LOGININFO_CONTRACTID, &rv));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          // TODO: Need to pass in nulls here, but XPCOM whines. Might be able
+          // just pass in EmptyString(), and then force a flush to disk and
+          // reinit, which should correct things in the storage module.
+
+          //aLogin->Init(host, nsnull, realm, data, password, nsnull, nsnull);
+
+          //pwmgr->AddLogin(aLogin);
         }
         ::CoTaskMemFree(data);
       }
@@ -1000,7 +1009,7 @@ nsIEProfileMigrator::ResolveAndMigrateSignons(IPStore* aPStore, nsVoidArray* aSi
 void
 nsIEProfileMigrator::EnumerateUsernames(const nsAString& aKey, PRUnichar* aData, unsigned long aCount, nsVoidArray* aSignonsFound)
 {
-  nsCOMPtr<nsIPasswordManagerInternal> pwmgr(do_GetService("@mozilla.org/passwordmanager;1"));
+  nsCOMPtr<nsILoginManager> pwmgr(do_GetService("@mozilla.org/login-manager;1"));
   if (!pwmgr)
     return;
 
@@ -1018,7 +1027,15 @@ nsIEProfileMigrator::EnumerateUsernames(const nsAString& aKey, PRUnichar* aData,
         // Bingo! Found a username in the saved data for this item. Now, add a Signon.
         nsDependentString usernameStr(sd->user), passStr(sd->pass);
         nsDependentCString realm(sd->realm);
-        pwmgr->AddUserFull(realm, usernameStr, passStr, aKey, EmptyString());
+
+        nsresult rv;
+
+        nsCOMPtr<nsILoginInfo> aLogin (do_CreateInstance(NS_LOGININFO_CONTRACTID, &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        aLogin->Init(realm, EmptyString(), nsnull, usernameStr, passStr, aKey, EmptyString());
+
+        pwmgr->AddLogin(aLogin);
       }
     }
 

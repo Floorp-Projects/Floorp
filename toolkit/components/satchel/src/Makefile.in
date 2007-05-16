@@ -69,6 +69,7 @@ REQUIRES =	\
 		pref \
 		windowwatcher \
 		toolkitcomps \
+		passwordmgr \
 		$(NULL)
 
 CPPSRCS = nsFormFillController.cpp \
@@ -78,12 +79,7 @@ REQUIRES += storage morkreader
 CPPSRCS += nsStorageFormHistory.cpp
 
 LOCAL_INCLUDES = \
-	-I$(srcdir)/../../passwordmgr/base \
 	-I$(srcdir)/../../build \
-	$(NULL)
-
-SHARED_LIBRARY_LIBS = \
-	../../passwordmgr/base/$(LIB_PREFIX)passwordmgr_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 EXTRA_DSO_LIBS	= gkgfx
