@@ -69,7 +69,7 @@ REQUIRES =	\
 		pref \
 		windowwatcher \
 		toolkitcomps \
-		passwordmgr \
+		loginmgr \
 		$(NULL)
 
 CPPSRCS = nsFormFillController.cpp \
