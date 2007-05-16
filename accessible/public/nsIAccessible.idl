@@ -226,10 +226,11 @@ interface nsIAccessible : nsISupports
    */
   nsIAccessible getAccessibleRelated(in unsigned long aRelationType);
 
-  void getBounds(out long x, 
-                    out long y, 
-                    out long width, 
-                    out long height);
+  /**
+   * Return accessible's x and y coordinates relative to the screen and
+   * accessible's width and height.
+   */
+  void getBounds(out long x, out long y, out long width, out long height);
 
   /**
    * Add or remove this accessible to the current selection

@@ -48,6 +48,7 @@
 #include "nsIDocument.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNSHTMLElement.h"
@@ -559,6 +560,31 @@ nsAccessNode::GetComputedStyleValue(const nsAString& aPseudoElt, const nsAString
   NS_ENSURE_TRUE(styleDecl, NS_ERROR_FAILURE);
   
   return styleDecl->GetPropertyValue(aPropertyName, aValue);
+}
+
+NS_IMETHODIMP
+nsAccessNode::GetComputedStyleCSSValue(const nsAString& aPseudoElt,
+                                       const nsAString& aPropertyName,
+                                       nsIDOMCSSPrimitiveValue **aCSSValue)
+{
+  NS_ENSURE_ARG_POINTER(aCSSValue);
+
+  *aCSSValue = nsnull;
+
+  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
+  if (!domElement)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> styleDecl;
+  GetComputedStyleDeclaration(aPseudoElt, domElement,
+                              getter_AddRefs(styleDecl));
+  NS_ENSURE_STATE(styleDecl);
+
+  nsCOMPtr<nsIDOMCSSValue> cssValue;
+  styleDecl->GetPropertyCSSValue(aPropertyName, getter_AddRefs(cssValue));
+  NS_ENSURE_TRUE(cssValue, NS_ERROR_FAILURE);
+
+  return CallQueryInterface(cssValue, aCSSValue);
 }
 
 void nsAccessNode::GetComputedStyleDeclaration(const nsAString& aPseudoElt,
