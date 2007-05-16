@@ -650,7 +650,13 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
 
   if (eventType.EqualsLiteral("RadioStateChange")) {
     PRUint32 state = State(accessible);
-    PRBool isEnabled = state & nsIAccessibleStates::STATE_CHECKED;
+
+    // radiogroup in prefWindow is exposed as a list,
+    // and panebutton is exposed as XULListitem in A11y.
+    // nsXULListitemAccessible::GetState uses STATE_SELECTED in this case,
+    // so we need to check nsIAccessibleStates::STATE_SELECTED also.
+    PRBool isEnabled = (state & (nsIAccessibleStates::STATE_CHECKED |
+                        nsIAccessibleStates::STATE_SELECTED)) != 0;
 
     nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
       new nsAccStateChangeEvent(accessible, nsIAccessibleStates::STATE_CHECKED,
@@ -666,10 +672,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   if (eventType.EqualsLiteral("CheckboxStateChange")) {
     PRUint32 state = State(accessible);
 
-    // prefPane tab is implemented as list items in A11y, so we need to
-    // check nsIAccessibleStates::STATE_SELECTED also.
-    PRBool isEnabled = (state & (nsIAccessibleStates::STATE_CHECKED |
-                        nsIAccessibleStates::STATE_SELECTED)) != 0;
+    PRBool isEnabled = state & nsIAccessibleStates::STATE_CHECKED;
 
     nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
       new nsAccStateChangeEvent(accessible,
