@@ -1,49 +1,53 @@
 <!ENTITY Inspector.title "Инспектор DOM">
-<!ENTITY browserPanel.label "Браузер">
-<!ENTITY btnFind.tooltip "Найти узел для исследования по идентификатору, тегу или атрибуту">
+<!ENTITY thDOMNodes.label "Узлы DOM">
 <!ENTITY btnInspect.label "Исследовать">
-<!ENTITY btnSelecting.tooltip "Найти узел для исследования, щелкнув по нему">
 <!ENTITY bxDocPanel.title "Документ">
 <!ENTITY bxObjectPanel.title "Объект">
-<!ENTITY closeCmd.key "W">
-<!ENTITY cmdClearSearch.label "Очистить">
-<!ENTITY cmdClose.accesskey "З">
-<!ENTITY cmdClose.label "Закрыть">
-<!ENTITY cmdCopy.accesskey "К">
-<!ENTITY cmdCopy.label "Копировать">
-<!ENTITY cmdCopySearchItemAll.label "Копировать всё">
-<!ENTITY cmdCopySearchItemLine.label "Копировать строку">
-<!ENTITY cmdCut.accesskey "В">
-<!ENTITY cmdCut.label "Вырезать">
-<!ENTITY cmdDelete.accesskey "У">
-<!ENTITY cmdDelete.label "Удалить">
-<!ENTITY cmdEditSearchItem.label "Изменить...">
-<!ENTITY cmdExit.accesskey "В">
-<!ENTITY cmdExit.label "Выход">
-<!ENTITY cmdHideSearchItems.label "Скрыть">
-<!ENTITY cmdPaste.accesskey "с">
-<!ENTITY cmdPaste.label "Вставить">
-<!ENTITY cmdRedo.accesskey "П">
-<!ENTITY cmdRedo.label "Повторить">
-<!ENTITY cmdRunSearch.accesskey "В">
-<!ENTITY cmdRunSearch.label "Выполнить...">
-<!ENTITY cmdSaveSearchItemText.label "Сохранить...">
+<!ENTITY btnSelecting.tooltip "Найти узел для исследования, щёлкнув по нему">
+<!ENTITY btnFind.tooltip "Найти узел для исследования по идентификатору, тегу или атрибуту">
+<!ENTITY mnFile.label "Файл">
+<!ENTITY mnFile.accesskey "Ф">
+<!ENTITY mnInspectContentDocument.label "Исследовать документ Content">
+<!ENTITY mnInspectContentDocument.accesskey "о">
+<!ENTITY mnInspectChromeDocument.label "Исследовать документ Chrome">
+<!ENTITY mnInspectChromeDocument.accesskey "к">
+<!ENTITY cmdShowOpenURLDialog.label "Исследовать URL…">
 <!ENTITY cmdShowOpenURLDialog.accesskey "с">
-<!ENTITY cmdShowOpenURLDialog.label "Исследовать URL...">
+<!ENTITY cmdClose.label "Закрыть">
+<!ENTITY cmdClose.accesskey "З">
+<!ENTITY cmdExit.label "Выход">
+<!ENTITY cmdExit.accesskey "В">
+<!ENTITY mnEdit.label "Правка">
+<!ENTITY mnEdit.accesskey "П">
+<!ENTITY cmdUndo.label "Отменить">
+<!ENTITY cmdUndo.accesskey "О">
+<!ENTITY cmdRedo.label "Повторить">
+<!ENTITY cmdRedo.accesskey "П">
+<!ENTITY cmdCut.label "Вырезать">
+<!ENTITY cmdCut.accesskey "В">
+<!ENTITY cmdCopy.label "Копировать">
+<!ENTITY cmdCopy.accesskey "К">
+<!ENTITY cmdPaste.label "Вставить">
+<!ENTITY cmdPaste.accesskey "с">
+<!ENTITY cmdDelete.label "Удалить">
+<!ENTITY cmdDelete.accesskey "У">
+<!ENTITY mnSearch.label "Поиск">
+<!ENTITY mnSearch.accesskey "П">
+<!ENTITY mnSearchPlugins.label "Расширения">
+<!ENTITY mnSearchPlugins.accesskey "Р">
+<!ENTITY cmdRunSearch.label "Выполнить…">
+<!ENTITY cmdRunSearch.accesskey "В">
+<!ENTITY mnView.label "Вид">
+<!ENTITY mnView.accesskey "В">
 <!ENTITY cmdToggleBrowser.label "Браузер">
 <!ENTITY cmdToggleSearch.label "Результаты поиска">
-<!ENTITY cmdUndo.accesskey "О">
-<!ENTITY cmdUndo.label "Отменить">
-<!ENTITY cmdViewSearchItem.label "Просмотр...">
+<!ENTITY cmdViewSearchItem.label "Просмотр…">
+<!ENTITY cmdEditSearchItem.label "Изменить…">
+<!ENTITY cmdCopySearchItemLine.label "Копировать строку">
+<!ENTITY cmdCopySearchItemAll.label "Копировать всё">
+<!ENTITY cmdSaveSearchItemText.label "Сохранить…">
+<!ENTITY cmdClearSearch.label "Очистить">
+<!ENTITY cmdHideSearchItems.label "Скрыть">
+<!ENTITY browserPanel.label "Браузер">
 <!ENTITY inspectNewWindow.label "Исследовать в новом окне">
-<!ENTITY mnEdit.accesskey "П">
-<!ENTITY mnEdit.label "Правка">
-<!ENTITY mnFile.accesskey "Ф">
-<!ENTITY mnFile.label "Файл">
-<!ENTITY mnSearch.accesskey "П">
-<!ENTITY mnSearch.label "Поиск">
-<!ENTITY mnSearchPlugins.accesskey "Р">
-<!ENTITY mnSearchPlugins.label "Расширения">
-<!ENTITY mnView.accesskey "В">
-<!ENTITY mnView.label "Вид">
-<!ENTITY thDOMNodes.label "Узлы DOM">
+<!ENTITY closeCmd.key "W">
