@@ -1,6 +1,9 @@
 #ifndef CRASHREPORTER_H__
 #define CRASHREPORTER_H__
 
+#pragma warning( push )
+// Disable exception handler warnings.
+#pragma warning( disable : 4530 )
 #include <string>
 #include <map>
 #include <stdlib.h>
@@ -71,4 +74,5 @@ bool UIEnsurePathExists(const std::string& path);
 bool UIMoveFile(const std::string& oldfile, const std::string& newfile);
 bool UIDeleteFile(const std::string& oldfile);
 
+#pragma warning( pop )
 #endif
