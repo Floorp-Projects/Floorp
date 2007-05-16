@@ -6839,7 +6839,13 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsCOMPtr<nsIContent> content(do_QueryWrappedNative(wrapper));
   NS_ENSURE_TRUE(content, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIDocument> doc = content->GetDocument();
+  nsCOMPtr<nsIDocument> doc;
+  if (content->HasFlag(NODE_FORCE_XBL_BINDINGS)) {
+    doc = content->GetOwnerDoc();
+  }
+  else {
+    doc = content->GetCurrentDoc();
+  }
 
   if (!doc) {
     // There's no baseclass that cares about this call so we just
