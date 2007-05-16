@@ -197,6 +197,9 @@ pref("view_source.wrap_long_lines", false);
 // dispatch left clicks only to content in browser (still allows clicks to chrome/xul)
 pref("nglayout.events.dispatchLeftClickOnly", true);
 
+// whether or not to draw images while dragging
+pref("nglayout.enable_drag_images", true);
+
 // whether or not to use xbl form controls
 pref("nglayout.debug.enable_xbl_forms", false);
 
