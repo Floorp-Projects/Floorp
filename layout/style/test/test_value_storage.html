@@ -289,7 +289,16 @@ function test_property(property)
         if ("backend_only" in gCSSProperties[subprop])
           continue;
         gDeclaration.setProperty(subprop, step1comps[idx], "");
-        func = xfail_split_compute(property, value) ? todo_is : is;
+      }
+
+      // Now that all the subprops are set, check their values.  Note that we
+      // need this in a separate loop, in case parts of the shorthand affect
+      // the computed values of other parts.
+      func = xfail_split_compute(property, value) ? todo_is : is;
+      for (idx in info.subproperties) {
+        var subprop = info.subproperties[idx];
+        if ("backend_only" in gCSSProperties[subprop])
+          continue;
         func(gComputedStyle.getPropertyValue(subprop), step1comps[idx],
              "parse+compute+serialize(" + subprop + ") should be idempotent for '" +
              property + ": " + value + "'");
