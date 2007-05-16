@@ -60,7 +60,8 @@ var showingPasswords = false;
 
 function Startup() {
   // xpconnect to password manager interfaces
-  passwordmanager = Components.classes["@mozilla.org/passwordmanager;1"].getService(Components.interfaces.nsIPasswordManager);
+  passwordmanager = Components.classes["@mozilla.org/login-manager;1"]
+                        .getService(Components.interfaces.nsILoginManager);
 
   // be prepared to reload the display if anything changes
   kObserverService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
@@ -83,13 +84,13 @@ var signonReloadDisplay = {
     if (topic == "signonChanged") {
       if (state == "signons") {
         signons.length = 0;
-        if (lastSignonSortColumn == "host") {
+        if (lastSignonSortColumn == "hostname") {
           lastSignonSortAscending = !lastSignonSortAscending; // prevents sort from being reversed
         }
         LoadSignons();
       } else if (state == "rejects") {
         rejects.length = 0;
-        if (lastRejectSortColumn == "host") {
+        if (lastRejectSortColumn == "hostname") {
           lastRejectSortAscending = !lastRejectSortAscending; // prevents sort from being reversed
         }
         LoadRejects();
@@ -254,8 +255,14 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, 
  */
 function CompareLowerCase(first, second) {
 
-  var firstLower  = first.toLowerCase();
-  var secondLower = second.toLowerCase();
+  // Are we sorting nsILoginInfo entries or just strings?
+  if (first.hostname) {
+    firstLower  = first.hostname.toLowerCase();
+    secondLower = second.hostname.toLowerCase();
+  } else {
+    firstLower  = first.toLowerCase();
+    secondLower = second.toLowerCase();
+  }
 
   if (firstLower < secondLower) {
     return -1;

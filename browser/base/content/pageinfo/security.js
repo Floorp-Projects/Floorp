@@ -139,7 +139,7 @@ var security = {
   },
   
   /**
-   * Open the password manager window
+   * Open the login manager window
    */
   viewPasswords : function()
   {
@@ -313,18 +313,12 @@ function realmHasPasswords(location) {
     return false;
   
   var realm = makeURI(location).prePath;
-  var passwordManager = Components.classes["@mozilla.org/passwordmanager;1"]
-                                  .getService(Components.interfaces.nsIPasswordManager);
-  var e = passwordManager.enumerator;
-  while (e.hasMoreElements()) {
-    var next = e.getNext().QueryInterface(Components.interfaces.nsIPassword);
-    if (!next)
-      continue;
-    
-    if (realm == next.host)
-      return true;
-  }
-  return false;
+  var passwordManager = Components.classes["@mozilla.org/login-manager;1"]
+                                  .getService(Components.interfaces.nsILoginManager);
+  var passwords = passwordManager.getAllLogins({});
+
+  // XXX untested
+  return passwords.some(function (login) { return (login.hostname == realm); });
 }
 
 /**

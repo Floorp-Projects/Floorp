@@ -54,9 +54,11 @@
 #include "nsIDOMContextMenuListener.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
+#include "nsDataHashtable.h"
 #include "nsIDocShell.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsILoginManager.h"
 
 class nsFormHistory;
 
@@ -138,15 +140,21 @@ protected:
   inline nsIDOMWindow *GetWindowForDocShell(nsIDocShell *aDocShell);
   inline PRInt32 GetIndexOfDocShell(nsIDocShell *aDocShell);
 
+  static PLDHashOperator PR_CALLBACK RemoveForDOMDocumentEnumerator(nsISupports* aKey,
+                                                                    PRInt32& aEntry,
+                                                                    void* aUserData);
   // members //////////////////////////////////////////
 
   nsCOMPtr<nsIAutoCompleteController> mController;
+  nsCOMPtr<nsILoginManager> mLoginManager;
   nsCOMPtr<nsIDOMHTMLInputElement> mFocusedInput;
   nsCOMPtr<nsIAutoCompletePopup> mFocusedPopup;
 
   nsCOMPtr<nsISupportsArray> mDocShells;
   nsCOMPtr<nsISupportsArray> mPopups;
-  
+
+  nsDataHashtable<nsISupportsHashKey,PRInt32> mPwmgrInputs;
+
   PRUint32 mTimeout;
   PRUint32 mMinResultsForPopup;
   PRUint32 mMaxRows;

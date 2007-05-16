@@ -360,6 +360,9 @@ nsFormHistory::Notify(nsIDOMHTMLFormElement* formElt, nsIDOMWindowInternal* aWin
       if (!type.LowerCaseEqualsLiteral("text"))
         continue;
 
+      // TODO: If Login Manager marked this input, don't save it. The login
+      // manager will deal with remembering it.
+
       nsAutoString autocomplete;
       inputElt->GetAttribute(kAutoComplete, autocomplete);
       if (!autocomplete.LowerCaseEqualsLiteral("off")) {
