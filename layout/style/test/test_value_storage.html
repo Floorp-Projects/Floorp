@@ -120,6 +120,8 @@ function xfail_ser_val(property, value)
 
   // We output unneeded -moz-use-text-color only in the value getter and
   // not the serialization.
+  // XXXbz is there any way we could actually filter for that, so that colors
+  // other than green could be used in the property database here?
   if (property.match(/^border(|-bottom|-left|-right|-top)$/) &&
       !value.match(/(green|currentcolor)/i))
     return true;
@@ -250,6 +252,13 @@ function test_property(property)
       for (idx in info.subproperties) {
         var subprop = info.subproperties[idx];
         gDeclaration.setProperty(subprop, step1vals[idx], "");
+      }
+
+      // Now that all the subprops are set, check their values.  Note that we
+      // need this in a separate loop, in case parts of the shorthand affect
+      // the computed values of other parts.
+      for (idx in info.subproperties) {
+        var subprop = info.subproperties[idx];
         if (test_computed && !("backend_only" in gCSSProperties[subprop])) {
           func =
             xfail_idsersplitparse_compute(property, subprop, value, step1comps[idx])
@@ -274,8 +283,8 @@ function test_property(property)
            property + ": " + value + "'");
     }
     if (test_computed && "subproperties" in info) {
-      gDeclaration.removeProperty(property);
       for (idx in info.subproperties) {
+        gDeclaration.removeProperty(property);
         var subprop = info.subproperties[idx];
         if ("backend_only" in gCSSProperties[subprop])
           continue;
