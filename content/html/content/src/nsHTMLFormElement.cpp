@@ -1261,10 +1261,9 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild,
   if (!gPasswordManagerInitialized && type == NS_FORM_INPUT_PASSWORD) {
     // Initialize the password manager category
     gPasswordManagerInitialized = PR_TRUE;
-    // TODO
-    //NS_CreateServicesFromCategory(NS_PASSWORDMANAGER_CATEGORY,
-    //                              nsnull,
-    //                              NS_PASSWORDMANAGER_CATEGORY);
+    NS_CreateServicesFromCategory(NS_PASSWORDMANAGER_CATEGORY,
+                                  nsnull,
+                                  NS_PASSWORDMANAGER_CATEGORY);
   }
  
   // Default submit element handling
