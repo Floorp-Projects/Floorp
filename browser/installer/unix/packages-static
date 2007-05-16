@@ -141,7 +141,7 @@ bin/components/necko_strconv.xpt
 bin/components/necko_viewsource.xpt
 bin/components/necko.xpt
 bin/components/oji.xpt
-bin/components/passwordmgr.xpt
+bin/components/loginmgr.xpt
 bin/components/places.xpt
 bin/components/plugin.xpt
 bin/components/prefetch.xpt
@@ -195,6 +195,10 @@ bin/components/nsSetDefaultBrowser.js
 bin/components/nsMicrosummaryService.js
 bin/components/nsSearchService.js
 bin/components/nsSearchSuggestions.js
+bin/components/nsLoginInfo.js
+bin/components/nsLoginManager.js
+bin/components/nsLoginManagerPrompter.js
+bin/components/storage-Legacy.js
 bin/components/jsconsole-clhandler.js
 bin/components/nsCloseAllWindows.js
 bin/components/nsDictionary.js
