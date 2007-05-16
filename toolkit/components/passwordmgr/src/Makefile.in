@@ -41,10 +41,10 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = passwordmgr
+MODULE = loginmgr
 
 EXTRA_COMPONENTS = \
-            nsLoginManager.js \
+			nsLoginManager.js \
 			nsLoginManagerPrompter.js \
 			nsLoginInfo.js \
 			storage-Legacy.js \
