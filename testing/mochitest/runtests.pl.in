@@ -460,7 +460,7 @@ sub runTests {
 
   # set env vars so Firefox doesn't quit weirdly and break the script
   $ENV{'NO_EM_RESTART'} = '1';
-  $ENV{'XPCOM_DEBUG_BREAK'} = 'stack';
+  $ENV{'XPCOM_DEBUG_BREAK'} = 'warn';
 
   if ($unixish) {
     $ENV{'LD_LIBRARY_PATH'} = $dist_bin;
