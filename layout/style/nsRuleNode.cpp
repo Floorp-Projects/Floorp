@@ -2616,6 +2616,22 @@ nsRuleNode::ComputeUIResetData(nsStyleStruct* aStartStruct,
     ui->mUserSelect = parentUI->mUserSelect;
   }
 
+  // ime-mode: auto, normal, enum, inherit
+  if (eCSSUnit_Auto == uiData.mIMEMode.GetUnit() ||
+      eCSSUnit_Initial == uiData.mIMEMode.GetUnit()) {
+    ui->mIMEMode = NS_STYLE_IME_MODE_AUTO;
+  }
+  else if (eCSSUnit_Normal == uiData.mIMEMode.GetUnit()) {
+    ui->mIMEMode = NS_STYLE_IME_MODE_NORMAL;
+  }
+  else if (eCSSUnit_Enumerated == uiData.mIMEMode.GetUnit()) {
+    ui->mIMEMode = uiData.mIMEMode.GetIntValue();
+  }
+  else if (eCSSUnit_Inherit == uiData.mIMEMode.GetUnit()) {
+    inherited = PR_TRUE;
+    ui->mIMEMode = parentUI->mIMEMode;
+  }
+
   // force-broken-image-icons: integer
   if (eCSSUnit_Integer == uiData.mForceBrokenImageIcon.GetUnit()) {
     ui->mForceBrokenImageIcon = uiData.mForceBrokenImageIcon.GetIntValue();

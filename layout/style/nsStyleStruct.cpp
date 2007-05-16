@@ -1643,12 +1643,14 @@ nsStyleUIReset::nsStyleUIReset(void)
 { 
   mUserSelect = NS_STYLE_USER_SELECT_AUTO;
   mForceBrokenImageIcon = 0;
+  mIMEMode = NS_STYLE_IME_MODE_AUTO;
 }
 
 nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource) 
 {
   mUserSelect = aSource.mUserSelect;
   mForceBrokenImageIcon = aSource.mForceBrokenImageIcon;
+  mIMEMode = aSource.mIMEMode;
 }
 
 nsStyleUIReset::~nsStyleUIReset(void) 
@@ -1657,6 +1659,7 @@ nsStyleUIReset::~nsStyleUIReset(void)
 
 nsChangeHint nsStyleUIReset::CalcDifference(const nsStyleUIReset& aOther) const
 {
+  // ignore mIMEMode
   if (mForceBrokenImageIcon == aOther.mForceBrokenImageIcon) {
     if (mUserSelect == aOther.mUserSelect) {
       return NS_STYLE_HINT_NONE;

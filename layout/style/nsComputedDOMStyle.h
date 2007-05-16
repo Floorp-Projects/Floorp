@@ -255,6 +255,7 @@ private:
 
   /* User interface properties */
   nsresult GetCursor(nsIDOMCSSValue** aValue);
+  nsresult GetIMEMode(nsIDOMCSSValue** aValue);
   nsresult GetUserFocus(nsIDOMCSSValue** aValue);
   nsresult GetUserInput(nsIDOMCSSValue** aValue);
   nsresult GetUserModify(nsIDOMCSSValue** aValue);

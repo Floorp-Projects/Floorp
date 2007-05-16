@@ -871,6 +871,14 @@ var gCSSProperties = {
 		other_values: [ "15px", "3em", "15%" ],
 		invalid_values: [ "none", "-moz-intrinsic", "-moz-min-intrinsic", "-moz-shrink-wrap", "-moz-fill" ]
 	},
+	"ime-mode": {
+		domProp: "imeMode",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "auto" ],
+		other_values: [ "normal", "disabled", "active", "inactive" ],
+		invalid_values: [ "none", "enabled", "1px" ]
+	},
 	"left": {
 		domProp: "left",
 		inherited: false,

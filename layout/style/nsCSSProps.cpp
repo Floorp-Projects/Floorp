@@ -646,6 +646,13 @@ const PRInt32 nsCSSProps::kFontWeightKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const PRInt32 nsCSSProps::kIMEModeKTable[] = {
+  eCSSKeyword_active, NS_STYLE_IME_MODE_ACTIVE,
+  eCSSKeyword_disabled, NS_STYLE_IME_MODE_DISABLED,
+  eCSSKeyword_inactive, NS_STYLE_IME_MODE_INACTIVE,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 // XXX What's the point?
 const PRInt32 nsCSSProps::kKeyEquivalentKTable[] = {
   eCSSKeyword_UNKNOWN,-1

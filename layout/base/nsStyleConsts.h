@@ -653,6 +653,13 @@
 #define NS_STYLE_COLUMN_COUNT_AUTO              0
 #define NS_STYLE_COLUMN_COUNT_UNLIMITED         (-1)
 
+// See nsStyleUIReset
+#define NS_STYLE_IME_MODE_AUTO                  0
+#define NS_STYLE_IME_MODE_NORMAL                1
+#define NS_STYLE_IME_MODE_ACTIVE                2
+#define NS_STYLE_IME_MODE_DISABLED              3
+#define NS_STYLE_IME_MODE_INACTIVE              4
+
 #ifdef MOZ_SVG
 // See nsStyleSVG
 
