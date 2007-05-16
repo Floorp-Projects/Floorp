@@ -943,6 +943,17 @@ xulrunner/installer/mac/Makefile
 MAKEFILES_xulapp="
 toolkit/Makefile
 toolkit/library/Makefile
+toolkit/airbag/Makefile
+toolkit/airbag/client/Makefile
+toolkit/airbag/airbag/src/client/Makefile
+toolkit/airbag/airbag/src/client/mac/handler/Makefile
+toolkit/airbag/airbag/src/client/windows/Makefile
+toolkit/airbag/airbag/src/client/windows/handler/Makefile
+toolkit/airbag/airbag/src/client/windows/sender/Makefile
+toolkit/airbag/airbag/src/common/Makefile
+toolkit/airbag/airbag/src/common/mac/Makefile
+toolkit/airbag/airbag/src/common/windows/Makefile
+toolkit/airbag/airbag/src/tools/mac/dump_syms/Makefile
 toolkit/content/Makefile
 toolkit/content/buildconfig.html
 toolkit/obsolete/Makefile
