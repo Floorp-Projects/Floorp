@@ -663,18 +663,25 @@ Application.prototype = {
 //=================================================
 // Factory - Treat Application as a singleton
 var ApplicationFactory = {
-  createInstance: function af_ci(aOuter, aIID) {
+  singleton: null,
+  
+  createInstance: function af_ci(aOuter, aIID)
+  {
     if (aOuter != null)
       throw Components.results.NS_ERROR_NO_AGGREGATION;
       
-    return (new Application()).QueryInterface(aIID);
+    if (this.singleton == null)
+      this.singleton = new Application();
+
+    return this.singleton.QueryInterface(aIID);
   }
 };
 
 //=================================================
 // Module
 var ApplicationModule = {
-  registerSelf: function am_rs(aCompMgr, aFileSpec, aLocation, aType) {
+  registerSelf: function am_rs(aCompMgr, aFileSpec, aLocation, aType)
+  {
     aCompMgr = aCompMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
     aCompMgr.registerFactoryLocation(CLASS_ID, CLASS_NAME, CONTRACT_ID, aFileSpec, aLocation, aType);
     
@@ -687,7 +694,8 @@ var ApplicationModule = {
     categoryManager.addCategoryEntry("JavaScript global property", "Application", CONTRACT_ID, true, true);
   },
 
-  unregisterSelf: function am_us(aCompMgr, aLocation, aType) {
+  unregisterSelf: function am_us(aCompMgr, aLocation, aType)
+  {
     aCompMgr = aCompMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
     aCompMgr.unregisterFactoryLocation(CLASS_ID, aLocation);        
 
@@ -698,7 +706,8 @@ var ApplicationModule = {
     categoryManager.deleteCategoryEntry("JavaScript global property", CONTRACT_ID, true);
   },
   
-  getClassObject: function am_gco(aCompMgr, aCID, aIID) {
+  getClassObject: function am_gco(aCompMgr, aCID, aIID)
+  {
     if (!aIID.equals(Components.interfaces.nsIFactory))
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
 
