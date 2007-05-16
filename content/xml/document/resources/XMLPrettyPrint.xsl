@@ -123,12 +123,14 @@
     <div class="expander-open">
       <xsl:call-template name="expander"/>
 
-      <div class="pi">
+      <span class="pi">
         <xsl:text> &lt;?</xsl:text>
         <xsl:value-of select="name(.)"/>
-        <div class="expander-content"><xsl:value-of select="."/></div>
+      </span>
+      <div class="expander-content pi"><xsl:value-of select="."/></div>
+      <span class="pi">
         <xsl:text>?&gt;</xsl:text>
-      </div>
+      </span>
     </div>
   </xsl:template>
 
@@ -144,13 +146,15 @@
     <div class="expander-open">
       <xsl:call-template name="expander"/>
 
-      <div class="comment">
+      <span class="comment">
         <xsl:text>&lt;!--</xsl:text>
-        <div class="expander-content">
-          <xsl:value-of select="."/>
-        </div>
-        <xsl:text>--&gt;</xsl:text>
+      </span>
+      <div class="expander-content comment">
+        <xsl:value-of select="."/>
       </div>
+      <span class="comment">
+        <xsl:text>--&gt;</xsl:text>
+      </span> 
     </div>
   </xsl:template>
   
