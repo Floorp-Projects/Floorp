@@ -56,6 +56,8 @@ struct nsRuleData
 {
   nsStyleStructID mSID;
   PRPackedBool mCanStoreInRuleTree;
+  PRPackedBool mIsImportantRule;
+  PRUint8 mLevel; // an nsStyleSet::sheetType
   nsPresContext* mPresContext;
   nsStyleContext* mStyleContext;
   nsPostResolveFunc mPostResolveCallback;

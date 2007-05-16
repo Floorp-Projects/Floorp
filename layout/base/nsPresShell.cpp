@@ -1055,7 +1055,6 @@ protected:
     */
   nsresult ClearPreferenceStyleRules(void);
   nsresult CreatePreferenceStyleSheet(void);
-  nsresult SetPrefColorRules(void);
   nsresult SetPrefLinkRules(void);
   nsresult SetPrefFocusRules(void);
   nsresult SetPrefNoScriptRule();
@@ -1783,11 +1782,6 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
       // first clear any exising rules
       result = ClearPreferenceStyleRules();
       
-      // now do the color rules
-      if (NS_SUCCEEDED(result)) {
-        result = SetPrefColorRules();
-      }
-
       // now the link rules (must come after the color rules, or links will not be correct color!)
       // XXX - when there is both an override and agent pref stylesheet this won't matter,
       //       as the color rules will be overrides and the links rules will be agent
@@ -1882,73 +1876,6 @@ nsresult PresShell::CreatePreferenceStyleSheet(void)
 // for these rules, or can we call nsICSSStyleRule::StyleRuleCount()
 // and just "append"?
 static PRUint32 sInsertPrefSheetRulesAt = 1;
-
-nsresult PresShell::SetPrefColorRules(void)
-{
-  NS_ASSERTION(mPresContext,"null prescontext not allowed");
-  if (mPresContext) {
-    nsresult result = NS_OK;
-
-    // see if we need to create the rules first
-    PRBool useDocColors =
-      mPresContext->GetCachedBoolPref(kPresContext_UseDocumentColors);
-    if (!useDocColors) {
-
-#ifdef DEBUG_attinasi
-      printf(" - Creating rules for document colors\n");
-#endif
-
-      // OK, not using document colors, so we have to force the user's colors via style rules
-      if (!mPrefStyleSheet) {
-        result = CreatePreferenceStyleSheet();
-      }
-      if (NS_SUCCEEDED(result)) {
-        NS_ASSERTION(mPrefStyleSheet, "prefstylesheet should not be null");
-
-        nscolor bgColor = mPresContext->DefaultBackgroundColor();
-        nscolor textColor = mPresContext->DefaultColor();
-
-        // get the DOM interface to the stylesheet
-        nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet,&result));
-        if (NS_SUCCEEDED(result)) {
-          PRUint32 index = 0;
-          nsAutoString strColor, strBackgroundColor;
-
-          // create a rule for background and foreground color and
-          // add it to the style sheet              
-          // - the rule is !important so it overrides all but author
-          //   important rules (when put into an agent stylesheet) and 
-          //   all (even author important) when put into an override stylesheet
-
-          ///////////////////////////////////////////////////////////////
-          // - default colors: ':root {color:#RRGGBB !important;
-          //                           background: #RRGGBB !important;}'
-          ColorToString(textColor,strColor);
-          ColorToString(bgColor,strBackgroundColor);
-          result = sheet->InsertRule(NS_LITERAL_STRING("*|*:root {color:") +
-                                     strColor +
-                                     NS_LITERAL_STRING(" !important; ") +
-                                     NS_LITERAL_STRING("border-color: -moz-use-text-color !important; ") +
-                                     NS_LITERAL_STRING("background:") +
-                                     strBackgroundColor +
-                                     NS_LITERAL_STRING(" !important; }"),
-                                     sInsertPrefSheetRulesAt, &index);
-          NS_ENSURE_SUCCESS(result, result);
-
-          ///////////////////////////////////////////////////////////////
-          // - everything else inherits the color
-          // (the background color will be handled in 
-          //  nsRuleNode::ComputeBackgroundData)
-          result = sheet->InsertRule(NS_LITERAL_STRING("*|* {color: inherit !important; border-color: -moz-use-text-color !important; background-image: none !important; } "),
-                                     sInsertPrefSheetRulesAt, &index);
-        }
-      }
-    }
-    return result;
-  } else {
-    return NS_ERROR_FAILURE;
-  }
-}
 
 nsresult
 PresShell::SetPrefNoScriptRule()
@@ -2046,11 +1973,7 @@ nsresult PresShell::SetPrefLinkRules(void)
   nscolor activeColor(mPresContext->DefaultActiveLinkColor());
   nscolor visitedColor(mPresContext->DefaultVisitedLinkColor());
   
-  PRBool useDocColors =
-    mPresContext->GetCachedBoolPref(kPresContext_UseDocumentColors);
-  NS_NAMED_LITERAL_STRING(notImportantStr, "}");
-  NS_NAMED_LITERAL_STRING(importantStr, "!important}");
-  const nsAString& ruleClose = useDocColors ? notImportantStr : importantStr;
+  NS_NAMED_LITERAL_STRING(ruleClose, "}");
   PRUint32 index = 0;
   nsAutoString strColor;
 
