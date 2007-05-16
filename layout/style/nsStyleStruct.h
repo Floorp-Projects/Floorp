@@ -78,6 +78,9 @@ class imgIRequest;
 
 // Additional bits for nsRuleNode's mDependentBits:
 #define NS_RULE_NODE_GC_MARK              0x02000000
+#define NS_RULE_NODE_IS_IMPORTANT         0x08000000
+#define NS_RULE_NODE_LEVEL_MASK           0xf0000000
+#define NS_RULE_NODE_LEVEL_SHIFT          28
 
 // The actual structs start here
 struct nsStyleStruct {
