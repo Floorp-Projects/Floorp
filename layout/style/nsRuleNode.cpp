@@ -2116,7 +2116,9 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     zoom = PR_FALSE;
   }
   else if (eCSSUnit_Initial == aFontData.mSize.GetUnit()) {
-    aFont->mSize = defaultVariableFont->size;
+    // The initial value is 'medium', which has magical sizing based on
+    // the generic font family, so do that here too.
+    aFont->mSize = aDefaultFont.size;
     zoom = PR_TRUE;
   }
 
