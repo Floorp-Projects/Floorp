@@ -907,8 +907,8 @@ PCToLine(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #ifdef DEBUG
 
 static void
-GetSwitchTableBounds(JSScript *script, uintN offset,
-                     uintN *start, uintN *end)
+UpdateSwitchTableBounds(JSScript *script, uintN offset,
+                        uintN *start, uintN *end)
 {
     jsbytecode *pc;
     JSOp op;
@@ -935,8 +935,7 @@ GetSwitchTableBounds(JSScript *script, uintN offset,
       case JSOP_LOOKUPSWITCHX:
         jmplen = JUMPX_OFFSET_LEN;
         goto lookup_table;
-      default:
-        JS_ASSERT(op == JSOP_LOOKUPSWITCH);
+      case JSOP_LOOKUPSWITCH:
         jmplen = JUMP_OFFSET_LEN;
       lookup_table:
         pc += jmplen;
@@ -944,6 +943,11 @@ GetSwitchTableBounds(JSScript *script, uintN offset,
         pc += ATOM_INDEX_LEN;
         jmplen += JUMP_OFFSET_LEN;
         break;
+
+      default:
+        /* [condswitch] switch does not have any jump or lookup tables. */
+        JS_ASSERT(op == JSOP_CONDSWITCH);
+        return;
     }
 
     *start = (uintN)(pc - script->code);
@@ -1030,8 +1034,8 @@ SrcNotes(JSContext *cx, JSScript *script)
             caseOff = (uintN) js_GetSrcNoteOffset(sn, 1);
             if (caseOff)
                 fprintf(gOutFile, " first case offset %u", caseOff);
-            GetSwitchTableBounds(script, offset,
-                                 &switchTableStart, &switchTableEnd);
+            UpdateSwitchTableBounds(script, offset,
+                                    &switchTableStart, &switchTableEnd);
             break;
           case SRC_CATCH:
             delta = (uintN) js_GetSrcNoteOffset(sn, 0);
