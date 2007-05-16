@@ -950,8 +950,10 @@ private:
 
   // see if aContent and aSibling are legitimate siblings due to restrictions
   // imposed by table columns
+  // XXXbz this code is generally wrong, since the frame for aContent
+  // may be constructed based on tag, not based on aDisplay!
   PRBool IsValidSibling(nsIFrame*              aParentFrame,
-                        const nsIFrame&        aSibling,
+                        nsIFrame*              aSibling,
                         PRUint8                aSiblingDisplay,
                         nsIContent&            aContent,
                         PRUint8&               aDisplay);
