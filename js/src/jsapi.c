@@ -2350,20 +2350,6 @@ JS_IsGCMarkingTracer(JSTracer *trc)
     return IS_GC_MARKING_TRACER(trc);
 }
 
-JS_PUBLIC_API(JSTracer *)
-JS_GetGCMarkingTracer(JSContext *cx)
-{
-    JSRuntime *rt;
-
-    rt = cx->runtime;
-    JS_ASSERT(rt->gcMarkingTracer);
-    JS_ASSERT(rt->gcLevel > 0);
-#ifdef JS_THREADSAFE
-    JS_ASSERT(rt->gcThread == rt->gcMarkingTracer->context->thread);
-#endif
-    return rt->gcMarkingTracer;
-}
-
 JS_PUBLIC_API(void)
 JS_GC(JSContext *cx)
 {
