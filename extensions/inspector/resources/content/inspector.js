@@ -134,7 +134,7 @@ InspectorApp.prototype =
     // check if accessibility service is available
     var cmd = document.getElementById("cmd:toggleAccessibleNodes");
     if (cmd) {
-      if (!("@mozilla.org/accessibilityService;1" in Components.classes))
+      if (!("@mozilla.org/accessibleRetrieval;1" in Components.classes))
         cmd.setAttribute("disabled", "true");
     }
 
