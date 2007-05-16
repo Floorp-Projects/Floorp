@@ -4694,6 +4694,9 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
                         nsCSSProps::kFontVariantKTable);
   case eCSSProperty_font_weight:
     return ParseFontWeight(aErrorCode, aValue);
+  case eCSSProperty_ime_mode:
+    return ParseVariant(aErrorCode, aValue, VARIANT_AHK | VARIANT_NORMAL,
+                        nsCSSProps::kIMEModeKTable);
   case eCSSProperty_letter_spacing:
   case eCSSProperty_word_spacing:
     return ParseVariant(aErrorCode, aValue, VARIANT_HL | VARIANT_NORMAL, nsnull);

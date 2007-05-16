@@ -565,7 +565,8 @@ nsCSSUserInterface::nsCSSUserInterface(const nsCSSUserInterface& aCopy)
     mUserSelect(aCopy.mUserSelect),
     mUserFocus(aCopy.mUserFocus),
     mCursor(nsnull),
-    mForceBrokenImageIcon(aCopy.mForceBrokenImageIcon)
+    mForceBrokenImageIcon(aCopy.mForceBrokenImageIcon),
+    mIMEMode(aCopy.mIMEMode)
 {
   MOZ_COUNT_CTOR(nsCSSUserInterface);
   CSS_IF_COPY(mCursor, nsCSSValueList);

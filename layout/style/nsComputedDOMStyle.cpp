@@ -1896,6 +1896,27 @@ nsComputedDOMStyle::GetFloatEdge(nsIDOMCSSValue** aValue)
   return CallQueryInterface(val, aValue);
 }
 
+nsresult
+nsComputedDOMStyle::GetIMEMode(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleUIReset *uiData = GetStyleUIReset();
+
+  nsCSSKeyword keyword;
+  if (uiData->mIMEMode == NS_STYLE_IME_MODE_AUTO) {
+    keyword = eCSSKeyword_auto;
+  } else if (uiData->mIMEMode == NS_STYLE_IME_MODE_NORMAL) {
+    keyword = eCSSKeyword_normal;
+  } else {
+    keyword = nsCSSProps::ValueToKeywordEnum(uiData->mIMEMode,
+                nsCSSProps::kIMEModeKTable);
+  }
+  val->SetIdent(nsCSSKeywords::GetStringValue(keyword));
+
+  return CallQueryInterface(val, aValue);
+}
 
 nsresult
 nsComputedDOMStyle::GetUserFocus(nsIDOMCSSValue** aValue)
@@ -2960,6 +2981,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(max_width,                     MaxWidth),
     COMPUTED_STYLE_MAP_ENTRY(min_height,                    MinHeight),
     COMPUTED_STYLE_MAP_ENTRY(min_width,                     MinWidth),
+    COMPUTED_STYLE_MAP_ENTRY(ime_mode,                      IMEMode),
     COMPUTED_STYLE_MAP_ENTRY(opacity,                       Opacity),
     // COMPUTED_STYLE_MAP_ENTRY(orphans,                    Orphans),
     //// COMPUTED_STYLE_MAP_ENTRY(outline,                  Outline),
