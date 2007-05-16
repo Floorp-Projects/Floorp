@@ -451,6 +451,7 @@ nsTreeBodyFrame::ReflowFinished()
     }
 
     InvalidateScrollbars(parts);
+    UpdateScrollbars(parts);
     CheckOverflow(parts);
   }
 
@@ -511,14 +512,21 @@ NS_IMETHODIMP nsTreeBodyFrame::SetView(nsITreeView * aView)
     mView->SetTree(mTreeBoxObject);
     mView->GetRowCount(&mRowCount);
  
-    ScrollParts parts = GetScrollParts();
-    // The scrollbar will need to be updated.
-    InvalidateScrollbars(parts);
+    PRBool isInReflow;
+    PresContext()->PresShell()->IsReflowLocked(&isInReflow);
+    if (!isInReflow) {
+      ScrollParts parts = GetScrollParts();
+      // The scrollbar will need to be updated.
+      InvalidateScrollbars(parts);
 
-    // Reset scrollbar position.
-    UpdateScrollbars(parts);
+      // Reset scrollbar position.
+      UpdateScrollbars(parts);
 
-    CheckOverflow(parts);
+      CheckOverflow(parts);
+    } else if (!mReflowCallbackPosted) {
+      mReflowCallbackPosted = PR_TRUE;
+      PresContext()->PresShell()->PostReflowCallback(this);
+    }
   }
  
   return NS_OK;

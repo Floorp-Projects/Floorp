@@ -2541,6 +2541,8 @@ PresShell::sPaintSuppressionCallback(nsITimer *aTimer, void* aPresShell)
 NS_IMETHODIMP
 PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
+  NS_PRECONDITION(!mIsReflowing, "Shouldn't be in reflow here!");
+  
   // If we don't have a root frame yet, that means we haven't had our initial
   // reflow... If that's the case, and aWidth or aHeight is unconstrained,
   // ignore them altogether.
@@ -2569,10 +2571,11 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   {
     // Kick off a top-down reflow
     AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
-    // XXXldb Set mIsReflowing (and unset it later)?
+    mIsReflowing = PR_TRUE;
 
     mDirtyRoots.RemoveElement(rootFrame);
     DoReflow(rootFrame);
+    mIsReflowing = PR_FALSE;
   }
 
   DidCauseReflow();
@@ -2648,7 +2651,12 @@ PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
   if (!mIgnoreFrameDestruction) {
     mFrameConstructor->NotifyDestroyingFrame(aFrame);
 
-    mDirtyRoots.RemoveElement(aFrame);
+    for (PRInt32 idx = mDirtyRoots.Count(); idx; ) {
+      --idx;
+      if (mDirtyRoots[idx] == aFrame) {
+        mDirtyRoots.RemoveElementAt(idx);
+      }
+    }
 
     // Notify the frame manager
     FrameManager()->NotifyDestroyingFrame(aFrame);
@@ -3135,8 +3143,7 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
                   aBitToAdd == NS_FRAME_HAS_DIRTY_CHILDREN,
                   "Unexpected bits being added");
 
-  // XXX Add this assertion at some point!?  nsSliderFrame triggers it a lot.
-  //NS_ASSERTION(!mIsReflowing, "can't mark frame dirty during reflow");
+  NS_ASSERTION(!mIsReflowing, "can't mark frame dirty during reflow");
 
   // If we've not yet done the initial reflow, then don't bother
   // enqueuing a reflow command yet.
@@ -3218,11 +3225,6 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
     if (FRAME_IS_REFLOW_ROOT(f) || !f->GetParent()) {
       // we've hit a reflow root or the root frame
       if (!wasDirty) {
-        // Remove existing entries so we don't get duplicates,
-        // NotifyDestroyingFrame() only removes one entry, bug 366320.
-        while (NS_UNLIKELY(mDirtyRoots.RemoveElement(f))) {
-          NS_ERROR("wasDirty lied");
-        }
         mDirtyRoots.AppendElement(f);
       }
 #ifdef DEBUG
