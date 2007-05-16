@@ -1328,7 +1328,9 @@ void nsCSSDeclaration::List(FILE* out, PRInt32 aIndent) const
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
 
   fputs("{ ", out);
-  fputs("nsCSSDeclaration::List not implemented", out);
+  nsAutoString s;
+  ToString(s);
+  fputs(NS_ConvertUTF16toUTF8(s).get(), out);
   fputs("}", out);
 }
 #endif
