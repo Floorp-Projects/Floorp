@@ -2885,7 +2885,9 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
       inherited = PR_TRUE;
       // XXX IsBlockInside?  (except for the marker bit)
       if (parentDisplay->IsBlockLevel() ||
-          parentDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_BLOCK) {
+          parentDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_BLOCK ||
+          parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL ||
+          parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION) {
         // If the subject of the selector is a block-level element,
         // allowed values are 'none', 'inline', 'block', and 'marker'.
         // If the value of the 'display' has any other value, the
