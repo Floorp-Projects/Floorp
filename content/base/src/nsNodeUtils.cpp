@@ -69,13 +69,6 @@
     }                                                             \
     prev = node;                                                  \
     node = node->GetNodeParent();                                 \
-                                                                  \
-    if (!node && prev->IsNodeOfType(nsINode::eXUL)) {             \
-      /* XUL elements can have the in-document flag set, but      \
-         still be in an orphaned subtree. In this case we         \
-         need to notify the document */                           \
-      node = NS_STATIC_CAST(nsIContent*, prev)->GetCurrentDoc();  \
-    }                                                             \
   } while (node);                                                 \
   PR_END_MACRO
 
@@ -645,8 +638,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
   if (aClone && !aParent && aNode->IsNodeOfType(nsINode::eXUL)) {
     nsXULElement *xulElem = NS_STATIC_CAST(nsXULElement*, elem);
     if (!xulElem->mPrototype || xulElem->IsInDoc()) {
-      clone->mParentPtrBits |= nsINode::PARENT_BIT_INDOCUMENT;
-      clone->SetFlags(NODE_HAS_FAKED_INDOC);
+      clone->SetFlags(NODE_FORCE_XBL_BINDINGS);
     }
   }
 #endif

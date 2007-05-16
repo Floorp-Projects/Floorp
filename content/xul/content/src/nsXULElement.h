@@ -486,11 +486,6 @@ public:
                                    PRBool aNotify);
 
     // nsIContent
-    virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                                nsIContent* aBindingParent,
-                                PRBool aCompileEventHandlers);
-    virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
-                                PRBool aNullParent = PR_TRUE);
     virtual void SetNativeAnonymous(PRBool aAnonymous);
     virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
     virtual nsIAtom *GetIDAttributeName() const;
@@ -563,13 +558,20 @@ public:
 
     virtual void RecompileScriptEventListeners();
 
+    // This function should ONLY be used by BindToTree implementations.
+    // The function exists soly because XUL elements store the binding parent
+    // differently than nsGenericElement does.
+    void SetXULBindingParent(nsIContent* aBindingParent)
+    {
+      mBindingParent = aBindingParent;
+    }
+
 protected:
     // XXX This can be removed when nsNodeUtils::CloneAndAdopt doesn't need
     //     access to mPrototype anymore.
     friend class nsNodeUtils;
 
     nsXULElement(nsINodeInfo* aNodeInfo);
-    virtual ~nsXULElement(void);
 
     // Implementation methods
     nsresult EnsureContentsGenerated(void) const;
