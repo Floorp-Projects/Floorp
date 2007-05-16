@@ -37,9 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-	
+
 interface nsIDOMNode;
 interface nsIAccessibleDocument;
+interface nsIDOMCSSPrimitiveValue;
 
 /**
  * An interface used by in-process accessibility clients
@@ -55,7 +56,7 @@ interface nsIAccessibleDocument;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(11c0007f-531c-43b7-be63-a3060a13d8d2)]
+[scriptable, uuid(0120eb06-3df3-49bf-95b1-2e2593a59265)]
 interface nsIAccessNode : nsISupports
 {
   /**
@@ -158,4 +159,12 @@ interface nsIAccessNode : nsISupports
    *                     for example "border-bottom".
    */
   DOMString getComputedStyleValue(in DOMString pseudoElt, in DOMString propertyName);
+
+  /**
+   * The method is similar to getComputedStyleValue() excepting that this one
+   * returns nsIDOMCSSPrimitiveValue.
+   */
+  nsIDOMCSSPrimitiveValue getComputedStyleCSSValue(in DOMString pseudoElt,
+                                                   in DOMString propertyName);
 };
+
