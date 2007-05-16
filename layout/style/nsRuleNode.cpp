@@ -51,7 +51,6 @@
 #include "nsILookAndFeel.h"
 #include "nsIPresShell.h"
 #include "nsIFontMetrics.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsStyleUtil.h"
 #include "nsCSSPseudoElements.h"
 #include "nsThemeConstants.h"
@@ -1393,8 +1392,11 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
 
     // Ask the rule to fill in the properties that it specifies.
     nsIStyleRule *rule = ruleNode->mRule;
-    if (rule)
+    if (rule) {
+      aRuleData->mLevel = ruleNode->GetLevel();
+      aRuleData->mIsImportantRule = ruleNode->IsImportantRule();
       rule->MapRuleInfoInto(aRuleData);
+    }
 
     // Now we check to see how many properties have been specified by
     // the rules we've examined so far.
@@ -1485,25 +1487,6 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
   return res;
 }
 
-static PRBool
-IsChrome(nsPresContext* aPresContext)
-{
-  PRBool isChrome = PR_FALSE;
-  nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
-  if (container) {
-    nsresult result;
-    nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(container, &result));
-    if (NS_SUCCEEDED(result) && docShell) {
-      PRInt32 docShellType;
-      result = docShell->GetItemType(&docShellType);
-      if (NS_SUCCEEDED(result)) {
-        isChrome = nsIDocShellTreeItem::typeChrome == docShellType;
-      }
-    }
-  }
-  return isChrome;
-}
-
 const nsStyleStruct*
 nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContext)
 {
@@ -1515,7 +1498,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
         nscoord minimumFontSize =
           mPresContext->GetCachedIntPref(kPresContext_MinimumFontSize);
 
-        if (minimumFontSize > 0 && !IsChrome(mPresContext)) {
+        if (minimumFontSize > 0 && !mPresContext->IsChrome()) {
           fontData->mFont.size = PR_MAX(fontData->mSize, minimumFontSize);
         }
         else {
@@ -2220,8 +2203,11 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
         break;
 
       nsIStyleRule *rule = ruleNode->GetRule();
-      if (rule)
+      if (rule) {
+        ruleData.mLevel = ruleNode->GetLevel();
+        ruleData.mIsImportantRule = ruleNode->IsImportantRule();
         rule->MapRuleInfoInto(&ruleData);
+      }
     }
 
     // Compute the delta from the information that the rules specified
@@ -2285,7 +2271,7 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
   // We only need to know this to determine if we have to use the
   // document fonts (overriding the useDocumentFonts flag), or to
   // determine if we have to override the minimum font-size constraint.
-  if ((!useDocumentFonts || minimumFontSize > 0) && IsChrome(mPresContext)) {
+  if ((!useDocumentFonts || minimumFontSize > 0) && mPresContext->IsChrome()) {
     // if we are not using document fonts, but this is a XUL document,
     // then we use the document fonts anyway
     useDocumentFonts = PR_TRUE;
@@ -2383,7 +2369,7 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct,
       nscoord minimumFontSize =
         mPresContext->GetCachedIntPref(kPresContext_MinimumFontSize);
 
-      if (minimumFontSize > 0 && !IsChrome(mPresContext)) {
+      if (minimumFontSize > 0 && !mPresContext->IsChrome()) {
         // If we applied a minimum font size, scale the line height by
         // the same ratio.  (If we *might* have applied a minimum font
         // size, we can't cache in the rule tree.)
@@ -3064,15 +3050,9 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct,
   else if (SetColor(colorData.mBackColor, parentBG->mBackgroundColor, 
                     mPresContext, aContext, bg->mBackgroundColor, inherited)) {
     bg->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-    // if not using document colors, we have to use the user's background color
-    // instead of any background color other than transparent
-    if (!mPresContext->GetCachedBoolPref(kPresContext_UseDocumentColors) &&
-        !IsChrome(mPresContext)) {
-      bg->mBackgroundColor = mPresContext->DefaultBackgroundColor();
-    }
   }
-  else if (eCSSUnit_Enumerated == colorData.mBackColor.GetUnit()) {
-    //bg->mBackgroundColor = parentBG->mBackgroundColor; XXXwdh crap crap crap!
+  else if (eCSSUnit_Enumerated == colorData.mBackColor.GetUnit() ||
+           eCSSUnit_Initial == colorData.mBackColor.GetUnit()) {
     bg->mBackgroundFlags |= NS_STYLE_BG_COLOR_TRANSPARENT;
   }
 
@@ -3080,7 +3060,8 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct,
   if (eCSSUnit_Image == colorData.mBackImage.GetUnit()) {
     bg->mBackgroundImage = colorData.mBackImage.GetImageValue();
   }
-  else if (eCSSUnit_None == colorData.mBackImage.GetUnit()) {
+  else if (eCSSUnit_None == colorData.mBackImage.GetUnit() ||
+           eCSSUnit_Initial == colorData.mBackImage.GetUnit()) {
     bg->mBackgroundImage = nsnull;
   }
   else if (eCSSUnit_Inherit == colorData.mBackImage.GetUnit()) {
@@ -3102,6 +3083,9 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     bg->mBackgroundRepeat = parentBG->mBackgroundRepeat;
   }
+  else if (eCSSUnit_Initial == colorData.mBackRepeat.GetUnit()) {
+    bg->mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
+  }
 
   // background-attachment: enum, inherit
   if (eCSSUnit_Enumerated == colorData.mBackAttachment.GetUnit()) {
@@ -3110,6 +3094,9 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct,
   else if (eCSSUnit_Inherit == colorData.mBackAttachment.GetUnit()) {
     inherited = PR_TRUE;
     bg->mBackgroundAttachment = parentBG->mBackgroundAttachment;
+  }
+  else if (eCSSUnit_Initial == colorData.mBackAttachment.GetUnit()) {
+    bg->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
   }
 
   // background-clip: enum, inherit, initial
@@ -3181,6 +3168,9 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct,
     bg->mBackgroundFlags &= ~(NS_STYLE_BG_X_POSITION_LENGTH | NS_STYLE_BG_X_POSITION_PERCENT);
     bg->mBackgroundFlags |= (parentFlags & (NS_STYLE_BG_X_POSITION_LENGTH | NS_STYLE_BG_X_POSITION_PERCENT));
   }
+  else if (eCSSUnit_Initial == colorData.mBackPosition.mXValue.GetUnit()) {
+    bg->mBackgroundFlags &= ~(NS_STYLE_BG_X_POSITION_LENGTH | NS_STYLE_BG_X_POSITION_PERCENT);
+  }
 
   if (eCSSUnit_Percent == colorData.mBackPosition.mYValue.GetUnit()) {
     bg->mBackgroundYPosition.mFloat = colorData.mBackPosition.mYValue.GetPercentValue();
@@ -3216,6 +3206,9 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct,
     bg->mBackgroundYPosition = parentBG->mBackgroundYPosition;
     bg->mBackgroundFlags &= ~(NS_STYLE_BG_Y_POSITION_LENGTH | NS_STYLE_BG_Y_POSITION_PERCENT);
     bg->mBackgroundFlags |= (parentFlags & (NS_STYLE_BG_Y_POSITION_LENGTH | NS_STYLE_BG_Y_POSITION_PERCENT));
+  }
+  else if (eCSSUnit_Initial == colorData.mBackPosition.mYValue.GetUnit()) {
+    bg->mBackgroundFlags &= ~(NS_STYLE_BG_Y_POSITION_LENGTH | NS_STYLE_BG_Y_POSITION_PERCENT);
   }
 
   COMPUTE_END_RESET(Background, bg)

@@ -44,6 +44,7 @@
 #include "nsCSSProps.h"
 #include "nsRuleData.h"
 #include "nsRuleNode.h"
+#include "nsStyleSet.h"
 
 /*
  * nsCSSCompressedDataBlock holds property-value pairs corresponding to
@@ -171,6 +172,16 @@ inline nsCSSQuotes* QuotesAtCursor(const char *aCursor) {
                 NS_REINTERPRET_CAST(const CDBPointerStorage*, aCursor)->value);
 }
 
+static PRBool
+ShouldIgnoreColors(nsRuleData *aRuleData)
+{
+    nsPresContext *presContext = aRuleData->mPresContext;
+    return aRuleData->mLevel != nsStyleSet::eAgentSheet &&
+           aRuleData->mLevel != nsStyleSet::eUserSheet &&
+           !presContext->GetCachedBoolPref(kPresContext_UseDocumentColors) &&
+           !presContext->IsChrome();
+}
+
 nsresult
 nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
 {
@@ -206,6 +217,32 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                         if (iProp == eCSSProperty_font_family) {
                             // XXX Are there other things like this?
                             aRuleData->mFontData->mFamilyFromHTML = PR_FALSE;
+                        }
+                        else if (iProp == eCSSProperty_color ||
+                                 iProp == eCSSProperty_background_color ||
+                                 iProp == eCSSProperty_background_image ||
+                                 iProp == eCSSProperty_border_top_color ||
+                                 iProp == eCSSProperty_border_right_color ||
+                                 iProp == eCSSProperty_border_bottom_color ||
+                                 iProp == eCSSProperty_border_left_color) {
+                            if (ShouldIgnoreColors(aRuleData)) {
+                                if (iProp == eCSSProperty_background_color) {
+                                    // Force non-'transparent' background
+                                    // colors to the user's default.
+                                    nsCSSUnit u = target->GetUnit();
+                                    if (u != eCSSUnit_Enumerated &&
+                                        u != eCSSUnit_Inherit &&
+                                        u != eCSSUnit_Initial) {
+                                        target->SetColorValue(aRuleData->
+                                            mPresContext->
+                                            DefaultBackgroundColor());
+                                    }
+                                } else {
+                                    // Ignore 'color', 'border-*-color', and
+                                    // 'background-image'
+                                    *target = nsCSSValue();
+                                }
+                            }
                         }
                     }
                     cursor += CDBValueStorage_advance;
@@ -266,6 +303,15 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                         void* val = PointerAtCursor(cursor);
                         NS_ASSERTION(val, "oops");
                         *target = val;
+
+                        if (iProp == eCSSProperty_border_top_colors ||
+                            iProp == eCSSProperty_border_right_colors ||
+                            iProp == eCSSProperty_border_bottom_colors ||
+                            iProp == eCSSProperty_border_left_colors) {
+                            if (ShouldIgnoreColors(aRuleData)) {
+                                *target = nsnull;
+                            }
+                        }
                     }
                     cursor += CDBPointerStorage_advance;
                 } break;
