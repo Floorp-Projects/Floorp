@@ -33,9 +33,10 @@ sub print_usage
     print "  -h show this help text\n";
 }
 
-getopts("h");
+my %opts;
+getopts("h", \%opts);
 
-if (defined($::opt_h) || scalar(@ARGV) != 1) {
+if (defined($opts{'h'}) || scalar(@ARGV) != 1) {
     print_usage();
     exit 1;
 }
