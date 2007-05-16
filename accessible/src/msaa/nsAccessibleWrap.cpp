@@ -118,6 +118,12 @@ STDMETHODIMP nsAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
     *ppv = NS_STATIC_CAST(IAccessible2*, this);
 
   if (NULL == *ppv) {
+    HRESULT hr = CAccessibleComponent::QueryInterface(iid, ppv);
+    if (SUCCEEDED(hr))
+      return hr;
+  }
+
+  if (NULL == *ppv) {
     HRESULT hr = CAccessibleHyperlink::QueryInterface(iid, ppv);
     if (SUCCEEDED(hr))
       return hr;
