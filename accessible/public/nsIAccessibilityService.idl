@@ -45,7 +45,7 @@ interface nsIFrame;
 interface nsObjectFrame;
 interface nsIContent;
 
-[scriptable, uuid(e4cdb7c5-d029-4bee-bff5-99455c6e0057)]
+[uuid(e4cdb7c5-d029-4bee-bff5-99455c6e0057)]
 interface nsIAccessibilityService : nsIAccessibleRetrieval
 {
   nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
@@ -56,7 +56,7 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   nsIAccessible createHyperTextAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLBRAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLButtonAccessible(in nsISupports aFrame);
-  [noscript] nsIAccessible createHTMLAccessibleByMarkup(in nsIFrame aFrame, in nsIWeakReference aWeakShell, in nsIDOMNode aDOMNode, in AString aRole);
+  nsIAccessible createHTMLAccessibleByMarkup(in nsIFrame aFrame, in nsIWeakReference aWeakShell, in nsIDOMNode aDOMNode, in AString aRole);
   nsIAccessible createHTMLLIAccessible(in nsISupports aFrame, in nsISupports aBulletFrame, in AString aBulletText);
   nsIAccessible createHTMLCheckboxAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLComboboxAccessible(in nsIDOMNode aNode, in nsIWeakReference aPresShell);
@@ -75,13 +75,13 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   nsIAccessible createHTMLTextAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLTextFieldAccessible(in nsISupports aFrame);
 
-  [noscript] nsIAccessible getAccessible(in nsIDOMNode aNode, in nsIPresShell aPresShell,                          
+  nsIAccessible getAccessible(in nsIDOMNode aNode, in nsIPresShell aPresShell,                          
                               in nsIWeakReference aWeakShell, 
                               inout nsIFrame frameHint, out boolean aIsHidden);
 
   // For gtk+ native window accessible
-  [noscript] nsIAccessible addNativeRootAccessible(in voidPtr aAtkAccessible);
-  [noscript] void removeNativeRootAccessible(in nsIAccessible aRootAccessible);
+  nsIAccessible addNativeRootAccessible(in voidPtr aAtkAccessible);
+  void removeNativeRootAccessible(in nsIAccessible aRootAccessible);
 
   /**
    * Invalidate the accessibility cache associated with aPresShell, for accessibles
@@ -97,7 +97,7 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
    *                           EVENT_SHOW (make visible or create) or 
    *                           EVENT_HIDE (destroy or hide)
    */
-  [noscript] void invalidateSubtreeFor(in nsIPresShell aPresShell,
+  void invalidateSubtreeFor(in nsIPresShell aPresShell,
                                        in nsIContent aChangedContent,
                                        in PRUint32 aEvent);
 };
