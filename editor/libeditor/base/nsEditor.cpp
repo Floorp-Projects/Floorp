@@ -2206,16 +2206,45 @@ NS_IMETHODIMP
 nsEditor::GetPreferredIMEState(PRUint32 *aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
+  *aState = nsIContent::IME_STATUS_ENABLE;
 
   PRUint32 flags;
-  if (NS_SUCCEEDED(GetFlags(&flags)) &&
-      flags & (nsIPlaintextEditor::eEditorReadonlyMask |
-               nsIPlaintextEditor::eEditorDisabledMask))
+  nsresult rv = GetFlags(&flags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (flags & (nsIPlaintextEditor::eEditorReadonlyMask |
+               nsIPlaintextEditor::eEditorDisabledMask)) {
     *aState = nsIContent::IME_STATUS_DISABLE;
-  else if (flags & nsIPlaintextEditor::eEditorPasswordMask)
-    *aState = nsIContent::IME_STATUS_PASSWORD;
-  else
-    *aState = nsIContent::IME_STATUS_ENABLE;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIPresShell> presShell;
+  rv = GetPresShell(getter_AddRefs(presShell));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(GetRoot());
+  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+
+  switch (frame->GetStyleUIReset()->mIMEMode) {
+    case NS_STYLE_IME_MODE_AUTO:
+      if (flags & (nsIPlaintextEditor::eEditorPasswordMask))
+        *aState = nsIContent::IME_STATUS_PASSWORD;
+      break;
+    case NS_STYLE_IME_MODE_DISABLED:
+      // we should use password state for |ime-mode: disabled;|.
+      *aState = nsIContent::IME_STATUS_PASSWORD;
+      break;
+    case NS_STYLE_IME_MODE_ACTIVE:
+      *aState |= nsIContent::IME_STATUS_OPEN;
+      break;
+    case NS_STYLE_IME_MODE_INACTIVE:
+      *aState |= nsIContent::IME_STATUS_CLOSE;
+      break;
+  }
+
   return NS_OK;
 }
 

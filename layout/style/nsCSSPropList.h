@@ -339,6 +339,7 @@ CSS_PROP_FONT(font-weight, font_weight, FontWeight, Font, mWeight, eCSSType_Valu
 CSS_PROP_UIRESET(-moz-force-broken-image-icon, force_broken_image_icon, MozForceBrokenImageIcon, UserInterface, mForceBrokenImageIcon, eCSSType_Value, nsnull) // bug 58646
 CSS_PROP_POSITION(height, height, Height, Position, mHeight, eCSSType_Value, nsnull)
 CSS_PROP_LIST(-moz-image-region, image_region, MozImageRegion, List, mImageRegion, eCSSType_Rect, nsnull)
+CSS_PROP_UIRESET(ime-mode, ime_mode, ImeMode, UserInterface, mIMEMode, eCSSType_Value, kIMEModeKTable)
 CSS_PROP_POSITION(left, left, Left, Position, mOffset.mLeft, eCSSType_Value, nsnull)
 CSS_PROP_TEXT(letter-spacing, letter_spacing, LetterSpacing, Text, mLetterSpacing, eCSSType_Value, nsnull)
 CSS_PROP_TEXT(line-height, line_height, LineHeight, Text, mLineHeight, eCSSType_Value, nsnull)
