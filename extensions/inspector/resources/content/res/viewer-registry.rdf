@@ -103,8 +103,8 @@
 
           try {
             var accService =
-              Components.classes['@mozilla.org/accessibilityService;1']
-                        .getService(Components.interfaces.nsIAccessibilityService);
+              Components.classes["@mozilla.org/accessibleRetrieval;1"]
+                        .getService(Components.interfaces.nsIAccessibleRetrieval);
 
             return accService.getAttachedAccessibleFor(object);
           } catch(e) {

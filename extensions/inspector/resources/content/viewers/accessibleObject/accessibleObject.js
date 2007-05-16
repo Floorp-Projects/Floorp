@@ -57,8 +57,8 @@ window.addEventListener("load", AccessibleObjectViewer_initialize, false);
 function AccessibleObjectViewer_initialize()
 {
   bundle = document.getElementById("inspector-bundle");
-  accService = Components.classes['@mozilla.org/accessibilityService;1']
-                         .getService(Components.interfaces.nsIAccessibilityService);
+  accService = Components.classes['@mozilla.org/accessibleRetrieval;1']
+                         .getService(Components.interfaces.nsIAccessibleRetrieval);
 
   viewer = new JSObjectViewer();
 
