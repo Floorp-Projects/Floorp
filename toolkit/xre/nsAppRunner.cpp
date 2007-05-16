@@ -2188,8 +2188,15 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
 #ifdef MOZ_AIRBAG
-  if (NS_SUCCEEDED(
-        CrashReporter::SetExceptionHandler(aAppData->xreDirectory))) {
+  //XXX: remove me when we turn this on by default
+  const char* airbagEnv = PR_GetEnv("MOZ_AIRBAG");
+  //XXX: can't set the flag here, since aAppData is const
+  if (((airbagEnv && *airbagEnv) ||
+      ((aAppData->flags & NS_XRE_ENABLE_CRASH_REPORTER) &&
+       aAppData->crashReporterURL)) &&
+      NS_SUCCEEDED(CrashReporter::SetExceptionHandler(aAppData->xreDirectory,
+                                                      aAppData->crashReporterURL)))
+    {
     // pass some basic info from the app data
     if (aAppData->vendor)
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Vendor"),
@@ -2307,6 +2314,13 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       return 1;
     }
   }
+
+#ifdef MOZ_AIRBAG
+  //XXX: remove me when this is on by default
+  if (airbagEnv && *airbagEnv) {
+    appData.flags |= NS_XRE_ENABLE_CRASH_REPORTER;
+  }
+#endif
 
   ScopedLogging log;
 
@@ -2565,7 +2579,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     //////////////////////// NOW WE HAVE A PROFILE ////////////////////////
 
 #ifdef MOZ_AIRBAG
-    MakeOrSetMinidumpPath(profD);
+    if (appData.flags & NS_XRE_ENABLE_CRASH_REPORTER)
+        MakeOrSetMinidumpPath(profD);
 #endif
 
     PRBool upgraded = PR_FALSE;
@@ -2894,7 +2909,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       rv = LaunchChild(nativeApp, appInitiatedRestart, upgraded ? -1 : 0);
 
 #ifdef MOZ_AIRBAG
-      CrashReporter::UnsetExceptionHandler();
+      if (appData.flags & NS_XRE_ENABLE_CRASH_REPORTER)
+        CrashReporter::UnsetExceptionHandler();
 #endif
 
       return rv == NS_ERROR_LAUNCHED_CHILD_PROCESS ? 0 : 1;
@@ -2902,7 +2918,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   }
 
 #ifdef MOZ_AIRBAG
-  CrashReporter::UnsetExceptionHandler();
+  if (appData.flags & NS_XRE_ENABLE_CRASH_REPORTER)
+      CrashReporter::UnsetExceptionHandler();
 #endif
 
   return NS_FAILED(rv) ? 1 : 0;

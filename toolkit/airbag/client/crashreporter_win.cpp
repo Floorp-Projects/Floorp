@@ -430,10 +430,11 @@ bool UIEnsurePathExists(const string& path)
 
 bool UIMoveFile(const string& oldfile, const string& newfile)
 {
-  return MoveFile(UTF8ToWide(oldfile).c_str(), UTF8ToWide(newfile).c_str());
+  return MoveFile(UTF8ToWide(oldfile).c_str(), UTF8ToWide(newfile).c_str())
+    == TRUE;
 }
 
 bool UIDeleteFile(const string& oldfile)
 {
-  return DeleteFile(UTF8ToWide(oldfile).c_str());
+  return DeleteFile(UTF8ToWide(oldfile).c_str()) == TRUE;
 }
