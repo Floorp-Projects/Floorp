@@ -161,8 +161,9 @@ class nsStyleSet
     eStyleAttrSheet,
     eOverrideSheet, // CSS
     eSheetTypeCount
-    // be sure to keep the number of bits in |mDirty| below updated when
-    // changing the number of sheet types
+    // be sure to keep the number of bits in |mDirty| below and in
+    // NS_RULE_NODE_LEVEL_MASK updated when changing the number of sheet
+    // types
   };
 
   // APIs to manipulate the style sheet lists.  The sheets in each
