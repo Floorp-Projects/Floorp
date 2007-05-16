@@ -515,6 +515,7 @@ class nsTAString_CharT
         , mLength(0)
         , mFlags(0)
         {
+          NS_ASSERTION(mVTable, "mVTable is null! Is this a static string instance?!");
           Assign(tuple);
         }
 
@@ -551,7 +552,9 @@ class nsTAString_CharT
         , mData(data)
         , mLength(length)
         , mFlags(flags)
-        {}
+        {
+          NS_ASSERTION(mVTable, "mVTable is null! Is this a static string instance?!");
+        }
 
         /**
          * optional ctor for use by subclasses.
@@ -562,7 +565,9 @@ class nsTAString_CharT
       nsTAString_CharT(PRUint32 flags)
         : mVTable(obsolete_string_type::sCanonicalVTable)
         , mFlags(flags)
-        {}
+        {
+          NS_ASSERTION(mVTable, "mVTable is null! Is this a static string instance?!");
+        }
 
         /**
          * get pointer to internal string buffer (may not be null terminated).
