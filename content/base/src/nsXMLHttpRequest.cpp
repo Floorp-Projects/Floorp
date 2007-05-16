@@ -81,6 +81,7 @@
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentErrors.h"
+#include "nsLayoutStatics.h"
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -272,6 +273,7 @@ GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
 nsXMLHttpRequest::nsXMLHttpRequest()
   : mState(XML_HTTP_REQUEST_UNINITIALIZED)
 {
+  nsLayoutStatics::AddRef();
 }
 
 nsXMLHttpRequest::~nsXMLHttpRequest()
@@ -287,6 +289,7 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
 
   // Needed to free the listener arrays.
   ClearEventListeners();
+  nsLayoutStatics::Release();
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLHttpRequest)
