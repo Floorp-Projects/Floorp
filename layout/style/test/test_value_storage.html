@@ -283,8 +283,8 @@ function test_property(property)
            property + ": " + value + "'");
     }
     if (test_computed && "subproperties" in info) {
+      gDeclaration.removeProperty(property);
       for (idx in info.subproperties) {
-        gDeclaration.removeProperty(property);
         var subprop = info.subproperties[idx];
         if ("backend_only" in gCSSProperties[subprop])
           continue;
