@@ -81,6 +81,7 @@
 #include "gfxMatrix.h"
 #include "nsStubMutationObserver.h"
 #include "gfxPlatform.h"
+#include "nsSVGForeignObjectFrame.h"
 
 class nsSVGPropertyBase : public nsStubMutationObserver {
 public:
@@ -881,6 +882,12 @@ already_AddRefed<nsIDOMSVGMatrix>
 nsSVGUtils::GetCanvasTM(nsIFrame *aFrame)
 {
   if (!aFrame->IsLeaf()) {
+    // foreignObject is the one non-leaf svg frame that isn't a SVGContainer
+    if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
+      nsSVGForeignObjectFrame *foreignFrame =
+        NS_STATIC_CAST(nsSVGForeignObjectFrame*, aFrame);
+      return foreignFrame->GetCanvasTM();
+    }
     nsSVGContainerFrame *containerFrame = NS_STATIC_CAST(nsSVGContainerFrame*,
                                                          aFrame);
     return containerFrame->GetCanvasTM();
