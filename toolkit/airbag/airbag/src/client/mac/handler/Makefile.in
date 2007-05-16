@@ -51,7 +51,6 @@ CPPSRCS	= \
   exception_handler.cc \
   minidump_generator.cc \
   dynamic_images.cc \
-  ../../minidump_file_writer.cc \
   $(NULL)
 
 # need static lib
