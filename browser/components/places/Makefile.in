@@ -43,7 +43,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public src
+DIRS = public
+
+ifdef MOZ_PLACES_BOOKMARKS
+	DIRS += src
+endif
 
 ifdef ENABLE_TESTS
 	DIRS += tests
