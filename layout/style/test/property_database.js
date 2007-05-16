@@ -470,7 +470,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-bottom-color", "border-bottom-style", "border-bottom-width" ],
 		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
-		other_values: [ "solid", "thin", "green", "medium solid", "green solid", "10px solid", "thick solid" ],
+		other_values: [ "solid", "thin", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
 		invalid_values: [ "5%" ]
 	},
 	"border-bottom-color": {
@@ -522,7 +522,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-left-color", "border-left-style", "border-left-width" ],
 		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
-		other_values: [ "solid", "medium solid", "green solid", "10px solid", "thick solid" ],
+		other_values: [ "solid", "thin", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
 		invalid_values: [ "5%" ]
 	},
 	"border-left-color": {
@@ -557,7 +557,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-right-color", "border-right-style", "border-right-width" ],
 		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
-		other_values: [ "solid", "medium solid", "green solid", "10px solid", "thick solid" ],
+		other_values: [ "solid", "thin", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
 		invalid_values: [ "5%" ]
 	},
 	"border-right-color": {
@@ -610,7 +610,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "border-top-color", "border-top-style", "border-top-width" ],
 		initial_values: [ "none", "medium", "currentColor", "none medium currentcolor" ],
-		other_values: [ "solid", "medium solid", "green solid", "10px solid", "thick solid" ],
+		other_values: [ "solid", "thin", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
 		invalid_values: [ "5%" ]
 	},
 	"border-top-color": {
@@ -802,12 +802,7 @@ var gCSSProperties = {
 		subproperties: [ "font-style", "font-variant", "font-weight", "font-size", "line-height", "font-family", "font-stretch", "font-size-adjust" ],
 		/* XXX could be sans-serif */
 		initial_values: [ "medium serif" ],
-		other_values: [ "large serif",
-						/* XXXbz Commented this out for now because it
-						   fails line-height roundtripping on Mac
-						   somehow.  See bug 379809 */
-						/*"9px fantasy",*/
-						"bold italic small-caps 24px/1.4 Times New Roman, serif", "caption", "icon", "menu", "message-box", "small-caption", "status-bar" ],
+		other_values: [ "large serif", "9px fantasy", "bold italic small-caps 24px/1.4 Times New Roman, serif", "caption", "icon", "menu", "message-box", "small-caption", "status-bar" ],
 		invalid_values: []
 	},
 	"font-family": {
