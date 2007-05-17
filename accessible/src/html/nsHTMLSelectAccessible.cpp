@@ -495,10 +495,11 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetName(nsAString& aName)
   // CASE #1 -- great majority of the cases
   // find the label attribute - this is what the W3C says we should use
   nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(domElement, "No domElement for accessible DOM node!");
-  nsresult rv = domElement->GetAttribute(NS_LITERAL_STRING("label"), aName) ;
+  if (!domElement)
+    return NS_ERROR_FAILURE;
 
-  if (NS_SUCCEEDED(rv) && !aName.IsEmpty() ) {
+  nsresult rv = domElement->GetAttribute(NS_LITERAL_STRING("label"), aName) ;
+  if (NS_SUCCEEDED(rv) && !aName.IsEmpty()) {
     return NS_OK;
   }
   
@@ -512,16 +513,17 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetName(nsAString& aName)
     if (text && text->IsNodeOfType(nsINode::eTEXT)) {
       nsAutoString txtValue;
       rv = AppendFlatStringFromContentNode(text, &txtValue);
-      if (NS_SUCCEEDED(rv)) {
-        // Temp var (txtValue) needed until CompressWhitespace built for nsAString
-        txtValue.CompressWhitespace();
-        aName.Assign(txtValue);
-        return NS_OK;
-      }
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Temp var (txtValue) needed until CompressWhitespace built for nsAString
+      txtValue.CompressWhitespace();
+      aName.Assign(txtValue);
+      return NS_OK;
     }
   }
   
-  return NS_ERROR_FAILURE;
+  aName.Truncate();
+  return NS_OK;
 }
 
 nsresult
@@ -805,8 +807,8 @@ void nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibl
                       multiSelect, nsnull);
   PRUint32 state = State(optionAccessible);
   PRUint32 eventType = (state & nsIAccessibleStates::STATE_SELECTED) ?
-                       nsIAccessibleEvent::EVENT_SELECTION_ADD :
-                       nsIAccessibleEvent::EVENT_SELECTION_REMOVE; 
+                       PRUint32(nsIAccessibleEvent::EVENT_SELECTION_ADD) :
+                       PRUint32(nsIAccessibleEvent::EVENT_SELECTION_REMOVE); 
   privateMultiSelect->FireToolkitEvent(eventType, optionAccessible, nsnull);
 }
 
