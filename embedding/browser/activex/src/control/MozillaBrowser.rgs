@@ -29,6 +29,38 @@ HKCR
 			}
 			'TypeLib' = s '{1339B53E-3453-11D2-93B9-000000000000}'
 			'Version' = s '1.0'
+			ForceRemove 'EnableFullPage'
+			{
+				ForceRemove .xul
+				ForceRemove .svg
+			}
 		}
+	}
+	NoRemove MIME
+	{
+		NoRemove Database
+		{
+			NoRemove 'Content Type'
+			{
+				ForceRemove 'application/vnd.mozilla.xul+xml'
+				{
+					val Extension = s '.xul'
+					val CLSID = s '{1339B54C-3453-11D2-93B9-000000000000}'
+				}
+				ForceRemove 'image/svg+xml'
+				{
+					val Extension = s '.svg'
+					val CLSID = s '{1339B54C-3453-11D2-93B9-000000000000}'
+				}
+			}
+		}
+	}
+	ForceRemove .xul = s 'Mozilla.Browser'
+	{
+		ForceRemove val 'Content Type' = s 'application/vnd.mozilla.xul+xml'
+	}
+	ForceRemove .svg = s 'Mozilla.Browser'
+	{
+		ForceRemove val 'Content Type' = s 'image/svg+xml'
 	}
 }

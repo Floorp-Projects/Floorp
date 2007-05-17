@@ -454,6 +454,13 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
                 }
             }
         }
+        else
+        {
+            if (mInitialSrc.Length() > 0)
+            {
+                Navigate(mInitialSrc, NULL, NULL, NULL, NULL);
+            }
+        }
     }
 
     // Clip the child windows out of paint operations
@@ -1910,7 +1917,6 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsDropTarget(VARIANT_BOOL
 
     return S_OK;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Ole Command Handlers
