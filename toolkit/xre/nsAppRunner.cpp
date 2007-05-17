@@ -50,8 +50,6 @@
 
 #ifdef XP_MACOSX
 #include "MacLaunchHelper.h"
-#endif
-#ifdef MOZ_WIDGET_COCOA
 #include "MacApplicationDelegate.h"
 #endif
 
@@ -2342,6 +2340,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
 #ifdef XP_MACOSX
   if (PR_GetEnv("MOZ_LAUNCHED_CHILD")) {
+    // This is needed, on relaunch, to force the OS to use the "Cocoa Dock
+    // API".  Otherwise the call to ReceiveNextEvent() below will make it
+    // use the "Carbon Dock API".  For more info see bmo bug 377166.
+    EnsureUseCocoaDockAPI();
+
     // When the app relaunches, the original process exits.  This causes
     // the dock tile to stop bouncing, lose the "running" triangle, and
     // if the tile does not permanently reside in the Dock, even disappear.
