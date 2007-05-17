@@ -171,6 +171,11 @@ e4x/Regress/regress-278112.js
 # Invalid test? Cannot convert NaN to java.lang.Long 
 lc3/template.js
 
+# Depends on generators being closed due to a call to gc(): not relevant to Rhino
+js1_7/geniter/regress-347739.js
+js1_7/geniter/regress-349012-01.js
+js1_7/geniter/regress-349331.js
+
 # JS 1.7 not yet implemented
 js1_7/GC/regress-341675.js
 js1_7/block/order-of-operation.js
@@ -279,8 +284,6 @@ js1_7/geniter/regress-345855.js
 js1_7/geniter/regress-345879-01.js
 js1_7/geniter/regress-345879-02.js
 js1_7/geniter/regress-347593.js
-js1_7/geniter/regress-347739.js
-js1_7/geniter/regress-349012-01.js
 js1_7/geniter/regress-349012-02.js
 js1_7/geniter/regress-349012-03.js
 js1_7/geniter/regress-349012-04.js
@@ -288,7 +291,6 @@ js1_7/geniter/regress-349012-05.js
 js1_7/geniter/regress-349023-01.js
 js1_7/geniter/regress-349023-02.js
 js1_7/geniter/regress-349023-03.js
-js1_7/geniter/regress-349331.js
 js1_7/geniter/regress-349362.js
 js1_7/geniter/regress-349851.js
 js1_7/geniter/regress-350621.js
@@ -352,6 +354,43 @@ js1_7/regress/regress-363040-01.js
 js1_7/regress/regress-363040-02.js
 js1_7/regress/regress-372331.js
 js1_7/template.js
+js1_7/block/regress-358508.js
+js1_7/extensions/regress-368224.js
+js1_7/regress/regress-361566.js
+js1_7/regress/regress-373827-01.js
+js1_7/regress/regress-373827-02.js
+js1_7/regress/regress-375695.js
+js1_7/regress/regress-379442.js
+js1_7/regress/regress-379483.js
+js1_7/decompilation/regress-352732.js
+js1_7/decompilation/regress-375794.js
+
+
+# nondeterministic
+js1_5/Regress/regress-211590.js
+
+# long-running tests
+ecma/Date/15.9.5.10-2.js
+ecma/Date/15.9.5.11-2.js
+ecma/Date/15.9.5.12-2.js
+ecma/Date/15.9.5.8.js
+
+# "options" built-in function
+ecma_2/Exceptions/lexical-011.js
+ecma_2/Exceptions/lexical-014.js
+ecma_2/Exceptions/lexical-016.js
+ecma_2/Exceptions/lexical-021.js
+ecma_2/LexicalConventions/keywords-001.js
+js1_6/Regress/regress-378492.js
+js1_5/Regress/regress-115436.js
+js1_5/Regress/regress-214761.js
+js1_5/Regress/regress-253150.js
+js1_5/Regress/regress-306633.js
+
+# Function "exec" must be called directly, and not by way of a function of
+# another name.
+js1_5/extensions/regress-367119-01.js
+js1_5/extensions/regress-367119-02.js
 
 # uninvestigated failures. May be some bugs in here.
 e4x/Regress/regress-373082.js
@@ -669,3 +708,20 @@ js1_6/extensions/regress-352392.js
 lc2/Arrays/array-008-n.js
 js1_5/Regress/regress-240317.js
 js1_5/Regress/regress-252892.js
+e4x/Expressions/regress-366123.js
+e4x/decompilation/regress-352459.js
+ecma/Date/15.9.5.31-1.js
+ecma/Date/15.9.5.35-1.js
+ecma_3/RegExp/regress-375642.js
+js1_5/Regress/regress-306727.js
+js1_5/Regress/regress-308566.js
+js1_5/Regress/regress-312260.js
+js1_5/Regress/regress-322430.js
+js1_5/decompilation/regress-356083.js
+js1_5/decompilation/regress-356248.js
+js1_5/extensions/regress-361856.js
+js1_5/extensions/regress-365527.js
+js1_5/extensions/regress-376052.js
+js1_6/Regress/regress-353078.js
+js1_8/template.js
+js1_8/extensions/regress-378789.js
