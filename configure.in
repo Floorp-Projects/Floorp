@@ -4058,7 +4058,7 @@ MOZ_BRANDING_DIRECTORY=
 MOZ_CALENDAR=
 MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_CANVAS=1
-MOZ_EXTENSIONS_ALL=" wallet xml-rpc help p3p venkman inspector irc typeaheadfind gnomevfs sroaming datetime finger cview layout-debug tasks sql xforms schema-validation reporter"
+MOZ_EXTENSIONS_ALL=" wallet xml-rpc help venkman inspector irc typeaheadfind gnomevfs sroaming datetime finger cview layout-debug tasks sql xforms schema-validation reporter"
 MOZ_FEEDS=1
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
@@ -4320,9 +4320,9 @@ suite)
   MOZ_APP_VERSION=$SEAMONKEY_VERSION
   if test "$MOZ_XUL_APP"; then
     MOZ_NO_XPCOM_OBSOLETE=1
-    MOZ_EXTENSIONS_DEFAULT=" wallet xml-rpc p3p venkman inspector irc typeaheadfind gnomevfs reporter"
+    MOZ_EXTENSIONS_DEFAULT=" wallet xml-rpc venkman inspector irc typeaheadfind gnomevfs reporter"
   else
-    MOZ_EXTENSIONS_DEFAULT=" wallet xml-rpc help p3p venkman inspector irc typeaheadfind gnomevfs sroaming reporter"
+    MOZ_EXTENSIONS_DEFAULT=" wallet xml-rpc help venkman inspector irc typeaheadfind gnomevfs sroaming reporter"
   fi
   AC_DEFINE(MOZ_SUITE)
   ;;
