@@ -186,6 +186,13 @@ BrowserGlue.prototype = {
    */
   _initPlaces: function bg__initPlaces() {
 #ifdef MOZ_PLACES_BOOKMARKS
+    // we need to instantiate the history service before we check the 
+    // the browser.places.importBookmarksHTML pref, as 
+    // nsNavHistory::ForceMigrateBookmarksDB() will set that pref
+    // if we need to force a migration (due to a schema change)
+    var histsvc = Components.classes["@mozilla.org/browser/nav-history-service;1"]
+                            .getService(Components.interfaces.nsINavHistoryService);
+
     var importBookmarks = false;
     try {
       var prefService = Components.classes["@mozilla.org/preferences-service;1"]
