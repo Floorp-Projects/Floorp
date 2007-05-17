@@ -1215,6 +1215,9 @@ GetFontGroupForFrame(nsIFrame* aFrame)
 static gfxTextRun*
 GetHyphenTextRun(gfxTextRun* aTextRun, nsIRenderingContext* aRefContext)
 {
+  if (NS_UNLIKELY(!aRefContext)) {
+    return nsnull;
+  }
   gfxContext* ctx = NS_STATIC_CAST(gfxContext*,
     aRefContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
   gfxFontGroup* fontGroup = aTextRun->GetFontGroup();
@@ -1639,8 +1642,10 @@ nsTextFrame::EnsureTextRun(nsIRenderingContext* aRC, nsBlockFrame* aBlock,
     }
   } else {
     nsCOMPtr<nsIRenderingContext> rendContext =
-      GetReferenceRenderingContext(this, aRC);     
-    BuildTextRuns(rendContext, this, aBlock, aLine);
+      GetReferenceRenderingContext(this, aRC);
+    if (rendContext) {
+      BuildTextRuns(rendContext, this, aBlock, aLine);
+    }
     if (!mTextRun) {
       // A text run was not constructed for this frame. This is bad. The caller
       // will check mTextRun.
@@ -4843,8 +4848,10 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   if (usedHyphenation) {
     // Fix up metrics to include hyphen
     gfxTextRun* hyphenTextRun = GetHyphenTextRun(mTextRun, aReflowState.rendContext);
-    AddCharToMetrics(hyphenTextRun,
-                     mTextRun, &textMetrics, needTightBoundingBox);
+    if (hyphenTextRun) {
+      AddCharToMetrics(hyphenTextRun,
+                       mTextRun, &textMetrics, needTightBoundingBox);
+    }
     AddStateBits(TEXT_HYPHEN_BREAK);
   }
 
