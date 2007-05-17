@@ -1534,7 +1534,9 @@ nsresult
 nsXMLContentSink::FlushTags()
 {
   PRBool oldBeganUpdate = mBeganUpdate;
+  PRUint32 oldUpdates = mUpdatesInNotification;
 
+  mUpdatesInNotification = 0;
   ++mInNotification;
   {
     // Scope so we call EndUpdate before we decrease mInNotification
@@ -1569,6 +1571,11 @@ nsXMLContentSink::FlushTags()
   }
   --mInNotification;
 
+  if (mUpdatesInNotification > 1) {
+    UpdateChildCounts();
+  }
+
+  mUpdatesInNotification = oldUpdates;
   mBeganUpdate = oldBeganUpdate;
   
   return NS_OK;

@@ -1346,8 +1346,10 @@ nsresult
 SinkContext::FlushTags()
 {
   PRBool oldBeganUpdate = mSink->mBeganUpdate;
+  PRUint32 oldUpdates = mSink->mUpdatesInNotification;
 
   ++(mSink->mInNotification);
+  mSink->mUpdatesInNotification = 0;
   {
     // Scope so we call EndUpdate before we decrease mInNotification
     mozAutoDocUpdate updateBatch(mSink->mDocument, UPDATE_CONTENT_MODEL,
@@ -1406,6 +1408,11 @@ SinkContext::FlushTags()
   }
   --(mSink->mInNotification);
 
+  if (mSink->mUpdatesInNotification > 1) {
+    UpdateChildCounts();
+  }
+
+  mSink->mUpdatesInNotification = oldUpdates;
   mSink->mBeganUpdate = oldBeganUpdate;
 
   return NS_OK;
