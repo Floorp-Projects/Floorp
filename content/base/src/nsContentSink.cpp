@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1404,6 +1405,11 @@ nsContentSink::FavorPerformanceHint(PRBool perfOverStarvation, PRUint32 starvati
 void
 nsContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
+  // Remember nested updates from updates that we started.
+  if (mInNotification && mUpdatesInNotification < 2) {
+    ++mUpdatesInNotification;
+  }
+
   // If we're in a script and we didn't do the notification,
   // something else in the script processing caused the
   // notification to occur. Since this could result in frame
