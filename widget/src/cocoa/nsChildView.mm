@@ -1745,9 +1745,7 @@ nsChildView::GetThebesSurface()
     NS_ENSURE_TRUE(mTempThebesSurface.get(), nsnull); // OOM
   }
 
-  gfxASurface *surf = mTempThebesSurface.get();
-  NS_ADDREF(surf);
-  return surf;
+  return mTempThebesSurface;
 }
 
 
