@@ -239,7 +239,9 @@ nsHTMLTableAccessible::GetCaption(nsIAccessible **aCaption)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMNode> captionNode(do_QueryInterface(caption));
-  NS_ENSURE_TRUE(captionNode, NS_ERROR_FAILURE);
+  if (!captionNode) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIAccessibilityService> accService = GetAccService();
   NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
@@ -252,6 +254,9 @@ nsHTMLTableAccessible::GetCaption(nsIAccessible **aCaption)
   nsCOMPtr<nsIContent> content(do_QueryInterface(captionNode));
   NS_ENSURE_TRUE(presShell && content, NS_ERROR_FAILURE);
   nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
+  if (!frame) {
+    return NS_OK;
+  }
   accService->CreateHyperTextAccessible(frame, aCaption);
   nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(*aCaption));
   return accessNode ? accessNode->Init() : NS_ERROR_FAILURE;
@@ -953,7 +958,9 @@ NS_IMETHODIMP nsHTMLTableAccessible::IsProbablyForLayout(PRBool *aIsProbablyForL
   NS_ENSURE_TRUE(cellContent, NS_ERROR_FAILURE);
   nsCOMPtr<nsIPresShell> shell(GetPresShell());
   nsIFrame *cellFrame = shell->GetPrimaryFrameFor(cellContent);
-  NS_ENSURE_TRUE(cellFrame, NS_ERROR_FAILURE);
+  if (!cellFrame) {
+    return NS_OK;
+  }
   nsMargin border;
   cellFrame->GetBorder(border);
   if (border.top && border.bottom && border.left && border.right) {
