@@ -52,7 +52,6 @@ typedef GType (* AtkGetTypeType) (void);
 GType g_atk_hyperlink_impl_type = G_TYPE_INVALID;
 static PRBool sATKChecked = PR_FALSE;
 static PRLibrary *sATKLib = nsnull;
-static PRBool sInitialized = PR_FALSE;
 static const char sATKLibName[] = "libatk-1.0.so.0";
 static const char sATKHyperlinkImplGetTypeSymbol[] = "atk_hyperlink_impl_get_type";
 
@@ -554,14 +553,8 @@ NS_IMETHODIMP nsAppRootAccessible::Init()
     return rv;
 }
 
-/* static */ void nsAppRootAccessible::Load()
-{
-    sInitialized = PR_TRUE;
-}
-
 /* static */ void nsAppRootAccessible::Unload()
 {
-    sInitialized = PR_FALSE;
     NS_IF_RELEASE(sAppRoot);
     if (sAtkBridge.lib) {
         // Do not shutdown/unload atk-bridge,
@@ -836,7 +829,7 @@ nsAppRootAccessible::Create()
         }
         sATKChecked = PR_TRUE;
     }
-    if (!sAppRoot && sInitialized) {
+    if (!sAppRoot && gIsAccessibilityActive) {
         sAppRoot = new nsAppRootAccessible();
         NS_ASSERTION(sAppRoot, "OUT OF MEMORY");
         if (sAppRoot) {
