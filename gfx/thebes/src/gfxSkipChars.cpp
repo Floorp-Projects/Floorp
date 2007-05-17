@@ -65,7 +65,14 @@ gfxSkipChars::BuildShortcuts()
     for (i = 0; i < mListLength; ++i) {
         PRUint8 len = mList[i];
     
-        while (originalCharOffset + len > (nextShortcutIndex + 1)*SHORTCUT_FREQUENCY) {
+        // We use >= here to ensure that when mCharCount is a multiple of
+        // SHORTCUT_FREQUENCY, we fill in the final shortcut with a reference
+        // to the last element of mList. This means that in general when a list
+        // element ends on an offset that's a multiple of SHORTCUT_FREQUENCY,
+        // that list element is the shortcut for that offset, which is
+        // slightly suboptimal (the *next* element is the one we really want),
+        // but it's all correct and simpler this way.
+        while (originalCharOffset + len >= (nextShortcutIndex + 1)*SHORTCUT_FREQUENCY) {
             mShortcuts[nextShortcutIndex] =
                 Shortcut(i, originalCharOffset, skippedCharOffset);
             ++nextShortcutIndex;
