@@ -587,12 +587,12 @@
               
               // See if child matches an ID we wanted; add to results.
               if (childNode.itemId in indexes) {
-                nodes[childFolder.itemId] = childFolder;
-                delete indexes[childFolder.itemId];
+                nodes[childNode.itemId] = childNode;
+                delete indexes[childNode.itemId];
               }
 
               // Search down that child's subtree.
-              findNodes(childFolder, indexes, nodes);
+              findNodes(childNode, indexes, nodes);
             }
 
             // If we didn't find any additional matches in this node's

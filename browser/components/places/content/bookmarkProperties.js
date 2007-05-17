@@ -880,7 +880,7 @@ var BookmarkPropertiesPanel = {
    * various fields and opening arguments of the dialog.
    */
   _getCreateNewBookmarkTransaction:
-  function BPP__getCreateNewBookmarkTransaction() {
+  function BPP__getCreateNewBookmarkTransaction(aContainer, aIndex) {
     var uri = PlacesUtils._uri(this._element("editURLBar").value);
     var title = this._element("userEnteredName").label;
     var keyword = this._element("keywordTextfield").value;
@@ -900,8 +900,7 @@ var BookmarkPropertiesPanel = {
         new PlacesEditBookmarkMicrosummaryTransaction(-1, microsummary));
     }
 
-    var [container, index] = this._getInsertionPointDetails();
-    var transactions = [new PlacesCreateItemTransaction(uri, container, index,
+    var transactions = [new PlacesCreateItemTransaction(uri, aContainer, aIndex,
                                                         title, keyword,
                                                         annotations,
                                                         childTransactions)];
@@ -933,7 +932,7 @@ var BookmarkPropertiesPanel = {
    * various fields and opening arguments of the dialog.
    */
   _getCreateNewFolderTransaction:
-  function BPP__getCreateNewFolderTransaction() {
+  function BPP__getCreateNewFolderTransaction(aContainer, aIndex) {
     var folderName = this._element("namePicker").value;
     var annotations = [];
     var childItemsTransactions;
@@ -943,8 +942,7 @@ var BookmarkPropertiesPanel = {
     if (description)
       annotations.push(this._getDescriptionAnnotation(description));
 
-    var [container, index] = this._getInsertionPointDetails();
-    return new PlacesCreateFolderTransaction(folderName, container, index,
+    return new PlacesCreateFolderTransaction(folderName, aContainer, aIndex,
                                              annotations,
                                              childItemsTransactions);
   },
@@ -954,8 +952,7 @@ var BookmarkPropertiesPanel = {
    * the various fields and opening arguments of the dialog.
    */
   _getCreateNewLivemarkTransaction:
-  function BPP__getCreateNewLivemarkTransaction() {
-    var [containerId, indexInContainer] = this._getInsertionPointDetails();
+  function BPP__getCreateNewLivemarkTransaction(aContainer, aIndex) {
     var feedURIString = this._element("feedLocationTextfield").value;
     var feedURI = PlacesUtils._uri(feedURIString);
 
@@ -966,24 +963,25 @@ var BookmarkPropertiesPanel = {
 
     var name = this._element("namePicker").value;
     return new PlacesCreateLivemarkTransaction(feedURI, siteURI,
-                                                name, containerId,
-                                                indexInContainer);
+                                                name, aContainer, 
+                                                aIndex);
   },
 
   /**
    * Dialog-accept code-path for creating a new item (any type)
    */
   _createNewItem: function BPP__getCreateItemTransaction() {
+    var [container, index] = this._getInsertionPointDetails();
     var createTxn;
     if (this._itemType == BOOKMARK_FOLDER)
-      createTxn = this._getCreateNewFolderTransaction();
+      createTxn = this._getCreateNewFolderTransaction(container, index);
     else if (this._itemType == LIVEMARK_CONTAINER)
-      createTxn = this._getCreateNewLivemarkTransaction();
+      createTxn = this._getCreateNewLivemarkTransaction(container, index);
     else // BOOKMARK_ITEM
-      createTxn = this._getCreateNewBookmarkTransaction();
+      createTxn = this._getCreateNewBookmarkTransaction(container, index);
 
     // Mark the containing folder as recently-used
-    this._markFolderAsRecentlyUsed(createTxn.container);
+    this._markFolderAsRecentlyUsed(container);
 
     // perfrom our transaction do via the transaction manager passed by the
     // opener so it can be undone.
