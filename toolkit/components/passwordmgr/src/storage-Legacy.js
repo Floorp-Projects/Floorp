@@ -622,17 +622,15 @@ LoginManagerStorage_legacy.prototype = {
     _decrypt : function (cipherText) {
         var plainText = null;
 
-        if (cipherText.charAt(0) == '~') {
-            // The pre-Mozilla-1.0 file format obscured entries by
-            // base64-encoding them. These entries are signaled by a leading
-            // '~' character. 
-            // This file format is no longer supported.
-
-            throw "!!!!! base64 encoded passwords not supported !!!!!";
-        }
-
         try {
-            plainText = this._decoderRing.decryptString(cipherText);
+            if (cipherText.charAt(0) == '~') {
+                // The older file format obscured entries by
+                // base64-encoding them. These entries are signaled by a
+                // leading '~' character. 
+                plainText = atob(cipherText.substring(1));
+            } else {
+                plainText = this._decoderRing.decryptString(cipherText);
+            }
         } catch (e) {
             this.log("Failed to decrypt string: " + cipherText);
         }
