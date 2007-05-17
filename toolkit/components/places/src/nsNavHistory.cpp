@@ -803,13 +803,13 @@ nsresult
 nsNavHistory::ForceMigrateBookmarksDB(mozIStorageConnection* aDBConn) 
 {
   // drop bookmarks tables
-  nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_bookmarks"));
+  nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE IF EXISTS moz_bookmarks"));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_bookmarks_folders"));
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE IF EXISTS moz_bookmarks_folders"));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_bookmarks_roots"));
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE IF EXISTS moz_bookmarks_roots"));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_keywords"));
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE IF EXISTS moz_keywords"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // initialize bookmarks tables
@@ -841,7 +841,7 @@ nsNavHistory::MigrateV3Up(mozIStorageConnection* aDBConn)
     "ALTER TABLE moz_annos ADD type INTEGER DEFAULT 0"));
   if (NS_FAILED(rv)) {
     // if the alteration failed, force-migrate
-    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE moz_annos"));
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DROP TABLE IF EXISTS moz_annos"));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = nsAnnotationService::InitTables(mDBConn);
     NS_ENSURE_SUCCESS(rv, rv);
