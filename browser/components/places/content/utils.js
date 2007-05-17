@@ -138,6 +138,21 @@ var PlacesUtils = {
     return this._favicons;
   },
 
+  _RDF: null,
+  get RDF() {
+    if (!this._RDF)
+      this._RDF = Cc["@mozilla.org/rdf/rdf-service;1"].
+                  getService(Ci.nsIRDFService);
+    return this._RDF;
+  },
+
+  _localStore: null,
+  get localStore() {
+    if (!this._localStore)
+      this._localStore = this.RDF.GetDataSource("rdf:local-store");
+    return this._localStore;
+  },
+
   /**
    * The Transaction Manager for this window.
    */

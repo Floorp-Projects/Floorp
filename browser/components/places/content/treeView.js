@@ -211,10 +211,13 @@ PlacesTreeView.prototype = {
    * It is used to compute each node's viewIndex.
    */
   _buildVisibleSection:
-  function PTV__buildVisibleSection(aContainer, aVisible, aVisibleStartIndex)
+  function PTV__buildVisibleSection(aContainer, aVisible, aToOpen, aVisibleStartIndex)
   {
     if (!aContainer.containerOpen)
       return;  // nothing to do
+
+    const openLiteral = PlacesUtils.RDF.GetResource("http://home.netscape.com/NC-rdf#open");
+    const trueLiteral = PlacesUtils.RDF.GetLiteral("true");
 
     var cc = aContainer.childCount;
     for (var i=0; i < cc; i++) {
@@ -254,9 +257,14 @@ PlacesTreeView.prototype = {
 
       // recursively do containers
       if (PlacesUtils.nodeIsContainer(curChild)) {
+        var resource = this._getResourceForNode(curChild);
+        var isopen = resource != null &&
+                     PlacesUtils.localStore.HasAssertion(resource, openLiteral, trueLiteral, true);
         asContainer(curChild);
-        if (curChild.containerOpen && curChild.childCount > 0)
-          this._buildVisibleSection(curChild, aVisible, aVisibleStartIndex);
+        if (isopen != curChild.containerOpen)
+          aToOpen.push(curChild);
+        else if (curChild.containerOpen && curChild.childCount > 0)
+          this._buildVisibleSection(curChild, aVisible, aToOpen, aVisibleStartIndex);
       }
     }
   },
@@ -323,39 +331,36 @@ PlacesTreeView.prototype = {
 
     // Building the new list will set the new elements' visible indices.
     var newElements = [];
-    this._buildVisibleSection(aContainer, newElements, startReplacement);
+    var toOpenElements = [];
+    this._buildVisibleSection(aContainer, newElements, toOpenElements, startReplacement);
 
     // actually update the visible list
-    this._visibleElements = 
+    this._visibleElements =
       this._visibleElements.slice(0, startReplacement).concat(newElements)
           .concat(this._visibleElements.slice(startReplacement + replaceCount,
                                               this._visibleElements.length));
 
-    if (replaceCount == newElements.length) {
-      // length is the same, just repaint the changed area
-      if (replaceCount > 0) {
-        this._tree.invalidateRange(startReplacement,
-                                   startReplacement + replaceCount - 1);
-      }
-    }
-    else {
-      // If the new area hasa different size, we'll have to renumber the
-      // elements following the area.
+    // If the new area has a different size, we'll have to renumber the
+    // elements following the area.
+    if (replaceCount != newElements.length) {
       for (i = startReplacement + newElements.length;
            i < this._visibleElements.length; i ++) {
         this._visibleElements[i].viewIndex = i;
       }
+    }
 
-      // repaint the region in which we didn't change the viewIndexes, also
-      // including the container element itself since its twisty could have
-      // changed.
-      var minLength = Math.min(newElements.length, replaceCount);
-      this._tree.invalidateRange(startReplacement - 1,
-                                 startReplacement + minLength - 1);
+    // now update the number of elements
+    this._tree.beginUpdateBatch();
+    if (replaceCount)
+      this._tree.rowCountChanged(startReplacement, -replaceCount);
+    if (newElements.length)
+      this._tree.rowCountChanged(startReplacement, newElements.length);
+    this._tree.endUpdateBatch();
 
-      // now update the number of elements
-      this._tree.rowCountChanged(startReplacement + minLength,
-                                 newElements.length - replaceCount);
+    // now, open any containers that were persisted
+    for (var i = 0; i < toOpenElements.length; i++) {
+      var item = asContainer(toOpenElements[i]);
+      item.containerOpen = !item.containerOpen;
     }
   },
 
@@ -677,8 +682,10 @@ PlacesTreeView.prototype = {
     this._buildVisibleList();
 
     // redraw the tree, inserting new items
-    this._tree.rowCountChanged(0, this._visibleElements.length - oldRowCount);
-    this._tree.invalidate();
+    this._tree.beginUpdateBatch();
+    this._tree.rowCountChanged(0, -oldRowCount);
+    this._tree.rowCountChanged(0, this._visibleElements.length);
+    this._tree.endUpdateBatch();
   },
 
   sortingChanged: function PTV__sortingChanged(aSortingMode) {
@@ -781,6 +788,13 @@ PlacesTreeView.prototype = {
     NS_ASSERT(this._visibleElements[viewIndex] == aNode,
               "Node's visible index and array out of sync");
     return viewIndex;
+  },
+
+  _getResourceForNode : function PTV_getResourceForNode(aNode)
+  {
+    // XXXndeakin bug 380735, need to support day/host containers as well
+    var uri = aNode.uri;
+    return uri ? PlacesUtils.RDF.GetResource(uri) : null;
   },
 
   // nsITreeView
@@ -1045,6 +1059,17 @@ PlacesTreeView.prototype = {
       return; // not a container, nothing to do
 
     asContainer(node);
+    var resource = this._getResourceForNode(node);
+    if (resource) {
+      const openLiteral = PlacesUtils.RDF.GetResource("http://home.netscape.com/NC-rdf#open");
+      const trueLiteral = PlacesUtils.RDF.GetLiteral("true");
+
+      if (node.containerOpen)
+        PlacesUtils.localStore.Unassert(resource, openLiteral, trueLiteral);
+      else
+        PlacesUtils.localStore.Assert(resource, openLiteral, trueLiteral, true);
+    }
+
     node.containerOpen = !node.containerOpen;
   },
 
