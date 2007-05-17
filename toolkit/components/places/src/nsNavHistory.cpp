@@ -482,18 +482,13 @@ nsNavHistory::InitDB(PRBool *aDoImport)
     if (DBSchemaVersion < PLACES_SCHEMA_VERSION) {
       // Upgrading
 
-      // Migrating from schema V0/1 to V2.
-      if (DBSchemaVersion < 2) {
-        rv = ForceMigrateBookmarksDB(mDBConn);
-        NS_ENSURE_SUCCESS(rv, rv);
-      } 
-
+      // Migration anno tables up to V3
       if (DBSchemaVersion < 3) {
         rv = MigrateV3Up(mDBConn);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // bug 372508 - use moz_bookmarks.id for folder ids
+      // Migrate bookmarks tables up to V4
       if (DBSchemaVersion < 4) {
         rv = ForceMigrateBookmarksDB(mDBConn);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -824,7 +819,7 @@ nsNavHistory::ForceMigrateBookmarksDB(mozIStorageConnection* aDBConn)
   // set pref indicating bookmarks.html should be imported.
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService("@mozilla.org/preferences-service;1"));
   if (prefs) {
-    prefs->SetBoolPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, PR_TRUE);
+    prefs->SetBoolPref(PREF_BROWSER_IMPORT_BOOKMARKS, PR_TRUE);
   }
   return rv;
 }
