@@ -1252,6 +1252,10 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (aFolder == mToolbarFolder) {
+    mToolbarFolder = 0;
+  }
+
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
                       OnItemRemoved(aFolder, parent, index))
 

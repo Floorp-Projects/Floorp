@@ -291,7 +291,7 @@ var PlacesOrganizer = {
         var importer = Cc["@mozilla.org/browser/places/import-export-service;1"].
                        getService(Ci.nsIPlacesImportExportService);
         var file = fp.file.QueryInterface(Ci.nsILocalFile);
-        importer.importHTMLFromFile(file);
+        importer.importHTMLFromFile(file, false);
       }
     }
   },

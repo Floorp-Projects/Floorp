@@ -45,20 +45,20 @@ interface nsILocalFile;
  * and exporting Places data.
  */
 
-[scriptable, uuid(212fd626-e07e-11db-8314-0800200c9a66)]
+[scriptable, uuid(21c00314-fa63-11db-8314-0800200c9a66)]
 interface nsIPlacesImportExportService: nsISupports
 {
   /**
    * Loads the given bookmarks.html file and merges it with the current
    * bookmarks hierarchy.
    */
-  void importHTMLFromFile(in nsILocalFile aFile);
+  void importHTMLFromFile(in nsILocalFile aFile, in boolean aIsInitialImport);
 
 
   /**
    * Loads the given bookmarks.html file and puts it in the given folder
    */
-  void importHTMLFromFileToFolder(in nsILocalFile aFile, in PRInt64 aFolder);
+  void importHTMLFromFileToFolder(in nsILocalFile aFile, in PRInt64 aFolder, in boolean aIsInitialImport);
 
 
   /**

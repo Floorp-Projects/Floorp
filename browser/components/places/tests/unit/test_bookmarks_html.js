@@ -57,6 +57,13 @@ try {
   do_throw("Could not get annotation service\n");
 } 
 
+// Get livemark service
+try {
+  var livemarksvc = Cc["@mozilla.org/browser/livemark-service;2"].getService(Ci.nsILivemarkService);
+} catch(ex) {
+  do_throw("Could not get livemark service\n");
+} 
+
 // Get microsummary service
 try {
   var mssvc = Cc["@mozilla.org/microsummary/service;1"].getService(Ci.nsIMicrosummaryService);
@@ -64,51 +71,101 @@ try {
   do_throw("Could not get microsummary service\n");
 }
 
+// Get io service
+try {
+  var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+} catch (ex) {
+  do_throw("Could not get io service\n");
+}
+
+
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
+const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
+const POST_DATA_ANNO = "URIProperties/POSTData";
 
 // main
 function run_test() {
   // get places import/export service
   var importer = Cc["@mozilla.org/browser/places/import-export-service;1"].getService(Ci.nsIPlacesImportExportService);
 
-  // get file pointers
+  // file pointer to legacy bookmarks file
   var bookmarksFileOld = do_get_file("browser/components/places/tests/unit/bookmarks.preplaces.html");
+  // file pointer to a new places-exported bookmarks file
   var bookmarksFileNew = dirSvc.get("ProfD", Ci.nsILocalFile);
   bookmarksFileNew.append("bookmarks.exported.html");
 
-  // create bookmarks.exported.html if necessary
-  if (!bookmarksFileNew.exists())
-    bookmarksFileNew.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, 0600);
+  // create bookmarks.exported.html
+  if (bookmarksFileNew.exists())
+    bookmarksFileNew.remove(false);
+  bookmarksFileNew.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, 0600);
   if (!bookmarksFileNew.exists())
     do_throw("couldn't create file: bookmarks.exported.html");
 
-  // Test importing a non-Places canonical bookmarks file.
-  // 1. import bookmarks.preplaces.html
-  // 2. run the test-suite
+  // Test importing a pre-Places canonical bookmarks file.
+  // 1. empty bookmarks db
+  // 2. import bookmarks.preplaces.html
+  // 3. run the test-suite
   bmsvc.removeFolderChildren(bmsvc.bookmarksRoot);
-  importer.importHTMLFromFile(bookmarksFileOld);
+  try {
+    importer.importHTMLFromFile(bookmarksFileOld, true);
+  } catch(ex) { do_throw("couldn't import legacy bookmarks file: " + ex); }
   testCanonicalBookmarks(bmsvc.bookmarksRoot); 
 
   // Test exporting a Places canonical bookmarks file.
   // 1. export to bookmarks.exported.html
-  // 2. import bookmarks.exported.html
-  // 3. run the test-suite
-  /*
-  importer.exportHTMLToFile(bookmarksFileNew);
+  // 2. empty bookmarks db
+  // 3. import bookmarks.exported.html
+  // 4. run the test-suite
+  try {
+    importer.exportHTMLToFile(bookmarksFileNew);
+  } catch(ex) { do_throw("couldn't export to file: " + ex); }
   bmsvc.removeFolderChildren(bmsvc.bookmarksRoot);
-  importer.importHTMLFromFile(bookmarksFileNew);
+  try {
+    importer.importHTMLFromFile(bookmarksFileNew, true);
+  } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
   testCanonicalBookmarks(bmsvc.bookmarksRoot); 
-  */
+
+  // Test importing a pre-Places canonical bookmarks file to a specific folder.
+  // 1. create a new folder
+  // 2. import bookmarks.preplaces.html to that folder
+  // 3. run the test-suite
+  var testFolder = bmsvc.createFolder(bmsvc.bookmarksRoot, "test-import", bmsvc.DEFAULT_INDEX);
+  try {
+    importer.importHTMLFromFileToFolder(bookmarksFileOld, testFolder, true);
+  } catch(ex) { do_throw("couldn't import the exported file to folder: " + ex); }
+  testCanonicalBookmarks(testFolder);
+  bmsvc.removeFolder(testFolder);
 
   // Test importing a Places canonical bookmarks file to a specific folder.
   // 1. create a new folder
   // 2. import bookmarks.exported.html to that folder
   // 3. run the test-suite
-  /*
-  var testFolder = bmsvc.createFolder(bmsvc.bookmarksRoot, "test", bmsvc.DEFAULT_INDEX);
-  importer.importHTMLFromFileToFolder(bookmarksFileNew, testFolder);
+  var testFolder = bmsvc.createFolder(bmsvc.bookmarksRoot, "test-import", bmsvc.DEFAULT_INDEX);
+  try {
+    importer.importHTMLFromFileToFolder(bookmarksFileNew, testFolder, true);
+  } catch(ex) { do_throw("couldn't import the exported file to folder: " + ex); }
   testCanonicalBookmarks(testFolder); 
-  */
+  bmsvc.removeFolder(testFolder);
+
+  // Test importing the exported bookmarks.html file *on top of* the existing
+  // bookmarks. This tests import of IDs. If we support IDs correctly, there
+  // should be no difference after the import.
+  // 1. empty bookmarks db
+  // 2. import the exported bookmarks file
+  // 3. export to file
+  // 3. import the exported bookmarks file
+  // 4. run the test-suite
+  bmsvc.removeFolderChildren(bmsvc.bookmarksRoot);
+  try {
+    importer.importHTMLFromFile(bookmarksFileNew, true);
+  } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
+  try {
+    importer.exportHTMLToFile(bookmarksFileNew);
+  } catch(ex) { do_throw("couldn't export to file: " + ex); }
+  try {
+    importer.importHTMLFromFile(bookmarksFileNew, true);
+  } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
+  testCanonicalBookmarks(bmsvc.bookmarksRoot);
 
   /*
   XXX if there are new fields we add to the bookmarks HTML format
@@ -119,88 +176,104 @@ function run_test() {
   3. run the test-suite
   4. run the additional-test-suite
   */
-
-  /*
-  XXX could write another more generic testsuite:
-  - a function that fetches all descendant nodes of a folder with all non-static
-    node properties removed, and serializes w/ toSource()
-  - import a file, get serialization
-  - export it, re-import, get serialization
-  - do_check_eq(str1, str2)
-  */
 }
 
 // Tests a bookmarks datastore that has a set of bookmarks, etc
 // that flex each supported field and feature.
 function testCanonicalBookmarks(aFolder) {
   // query to see if the deleted folder and items have been imported
-  try {
-    var query = histsvc.getNewQuery();
-    query.setFolders([bmsvc.bookmarksRoot], 1);
-    var result = histsvc.executeQuery(query, histsvc.getNewQueryOptions());
-    var rootNode = result.root;
-    rootNode.containerOpen = true;
-    // get test folder
-    var testFolder = rootNode.getChild(3);
-    do_check_eq(testFolder.type, testFolder.RESULT_TYPE_FOLDER);
-    do_check_eq(testFolder.title, "test");
-    testFolder = testFolder.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-    do_check_eq(testFolder.hasChildren, true);
-    // folder description
-    do_check_true(annosvc.itemHasAnnotation(testFolder.itemId,
-                                            DESCRIPTION_ANNO));
-    do_check_eq("folder test comment",
-                annosvc.getItemAnnotationString(testFolder.itemId,
-                                                DESCRIPTION_ANNO));
-    // open test folder, and test the children 
-    testFolder.containerOpen = true;
-    var cc = testFolder.childCount;
-    // XXX Bug 380468
-    // do_check_eq(cc, 2);
-    do_check_eq(cc, 1);
+  var query = histsvc.getNewQuery();
+  query.setFolders([aFolder], 1);
+  var result = histsvc.executeQuery(query, histsvc.getNewQueryOptions());
+  var rootNode = result.root;
+  rootNode.containerOpen = true;
+  do_check_eq(rootNode.childCount, 6);
 
-    // test bookmark 1
-    var testBookmark1 = testFolder.getChild(0);
-    // url
-    do_check_eq("http://test/post", testBookmark1.uri);
-    // title
-    do_check_eq("test post keyword", testBookmark1.title);
-    // keyword
-    do_check_eq("test", bmsvc.getKeywordForBookmark(testBookmark1.itemId));
-    // sidebar
-    // add date 
-    // last modified
-    // post data
-    // last charset 
-    // description 
-    do_check_true(annosvc.itemHasAnnotation(testBookmark1.itemId,
-                                            DESCRIPTION_ANNO));
-    do_check_eq("item description",
-                annosvc.getItemAnnotationString(testBookmark1.itemId,
-                                                DESCRIPTION_ANNO));
-    /*
-    // XXX Bug 380468
-    // test bookmark 2
-    var testBookmark2 = testFolder.getChild(1);
-    // url
-    do_check_eq("http://test/micsum", testBookmark2.uri);
-    // title
-    do_check_eq("test microsummary", testBookmark2.title);
-    // check that it's a microsummary
-    var micsum = mssvc.getMicrosummary(testBookmark2.itemId);
-    if (!micsum)
-      do_throw("Could not import microsummary");
-    // check generator uri
-    var generator = micsum.generator;
-    do_check_eq("urn:source:http://dietrich.ganx4.com/mozilla/test-microsummary.xml", generator.uri.spec);
-    // expiration and generated title can change, so don't test them
-    */
+  // bookmarks toolbar
+  var toolbar = rootNode.getChild(2);
+  toolbar.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+  toolbar.containerOpen = true;
+  do_check_eq(toolbar.childCount, 2);
+  
 
-    // clean up
-    testFolder.containerOpen = false;
-    rootNode.containerOpen = false;
-  }
-  catch(ex) {
-    do_throw("bookmarks query tests failed: " + ex);
-  }
+  // livemark
+  var livemark = toolbar.getChild(1);
+  // title
+  do_check_eq("Latest Headlines", livemark.title);
+  // livemark check
+  do_check_true(livemarksvc.isLivemark(livemark.itemId));
+  // site url
+  do_check_eq("http://en-us.fxfeeds.mozilla.com/en-US/firefox/livebookmarks/",
+              livemarksvc.getSiteURI(livemark.itemId).spec);
+  // feed url
+  do_check_eq("http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml",
+              livemarksvc.getFeedURI(livemark.itemId).spec);
+
+  toolbar.containerOpen = false;
+
+  // get test folder
+  var testFolder = rootNode.getChild(5);
+  do_check_eq(testFolder.type, testFolder.RESULT_TYPE_FOLDER);
+  do_check_eq(testFolder.title, "test");
+  testFolder = testFolder.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+  do_check_eq(testFolder.hasChildren, true);
+  // folder description
+  do_check_true(annosvc.itemHasAnnotation(testFolder.itemId,
+                                          DESCRIPTION_ANNO));
+  do_check_eq("folder test comment",
+              annosvc.getItemAnnotationString(testFolder.itemId,
+                                              DESCRIPTION_ANNO));
+  // open test folder, and test the children
+  testFolder.containerOpen = true;
+  var cc = testFolder.childCount;
+  // XXX Bug 380468
+  // do_check_eq(cc, 2);
+  do_check_eq(cc, 1);
+
+  // test bookmark 1
+  var testBookmark1 = testFolder.getChild(0);
+  // url
+  do_check_eq("http://test/post", testBookmark1.uri);
+  // title
+  do_check_eq("test post keyword", testBookmark1.title);
+  // keyword
+  do_check_eq("test", bmsvc.getKeywordForBookmark(testBookmark1.itemId));
+  // sidebar
+  do_check_true(annosvc.itemHasAnnotation(testBookmark1.itemId,
+                                          LOAD_IN_SIDEBAR_ANNO));
+  // add date 
+  // last modified
+  // post data
+  var pageURI = iosvc.newURI(testBookmark1.uri, "", null);
+  do_check_true(annosvc.pageHasAnnotation(pageURI, POST_DATA_ANNO));
+  do_check_eq("hidden1%3Dbar&text1%3D%25s",
+              annosvc.getPageAnnotationString(pageURI, POST_DATA_ANNO));
+  // last charset 
+  // description 
+  do_check_true(annosvc.itemHasAnnotation(testBookmark1.itemId,
+                                          DESCRIPTION_ANNO));
+  do_check_eq("item description",
+              annosvc.getItemAnnotationString(testBookmark1.itemId,
+                                              DESCRIPTION_ANNO));
+
+  /*
+  // XXX Bug 380468
+  // test bookmark 2
+  var testBookmark2 = testFolder.getChild(1);
+  // url
+  do_check_eq("http://test/micsum", testBookmark2.uri);
+  // title
+  do_check_eq("test microsummary", testBookmark2.title);
+  // check that it's a microsummary
+  var micsum = mssvc.getMicrosummary(testBookmark2.itemId);
+  if (!micsum)
+    do_throw("Could not import microsummary");
+  // check generator uri
+  var generator = micsum.generator;
+  do_check_eq("urn:source:http://dietrich.ganx4.com/mozilla/test-microsummary.xml", generator.uri.spec);
+  // expiration and generated title can change, so don't test them
+  */
+  // clean up
+  testFolder.containerOpen = false;
+  rootNode.containerOpen = false;
 }
