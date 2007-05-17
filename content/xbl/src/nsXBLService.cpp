@@ -494,13 +494,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
 
   nsresult rv;
 
-  nsCOMPtr<nsIDocument> document;
-  if (aContent->HasFlag(NODE_FORCE_XBL_BINDINGS)) {
-    document = aContent->GetOwnerDoc();
-  }
-  else {
-    document = aContent->GetCurrentDoc();
-  }
+  nsCOMPtr<nsIDocument> document = aContent->GetOwnerDoc();
 
   // XXX document may be null if we're in the midst of paint suppression
   if (!document)
