@@ -2338,7 +2338,14 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         op = JSOP_NOP;
 
                     rval = POP_STR();
-                    if (*rval != '\0') {
+
+                    /*
+                     * Don't emit decompiler-pushed strings that are not
+                     * handled by other opcodes. They are pushed onto the
+                     * stack to help model the interpreter stack and should
+                     * not appear in the decompiler's output.
+                     */
+                    if (*rval != '\0' && (rval[0] != '/' || rval[1] != '*')) {
 #if JS_HAS_BLOCK_SCOPE
                         /*
                          * If a let declaration is the only child of a control
@@ -2360,6 +2367,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                                   ? "\t(%s);\n"
                                   : "\t%s;\n",
                                   rval);
+                    } else {
+                        LOCAL_ASSERT(*rval == '\0' ||
+                                     strcmp(rval, exception_cookie) == 0);
                     }
                     todo = -2;
                     break;
