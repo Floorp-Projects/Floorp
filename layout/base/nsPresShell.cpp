@@ -4891,7 +4891,7 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
                                nsRect* aScreenRect)
 {
   nsPresContext* pc = GetPresContext();
-  if (!pc)
+  if (!pc || aArea.width == 0 || aArea.height == 0)
     return nsnull;
 
   nsIDeviceContext* deviceContext = pc->DeviceContext();
@@ -4940,8 +4940,10 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
   gfxImageSurface* surface =
     new gfxImageSurface(gfxIntSize(pixelArea.width, pixelArea.height),
                         gfxImageSurface::ImageFormatARGB32);
-  if (!surface)
+  if (!surface || surface->CairoStatus()) {
+    delete surface;
     return nsnull;
+  }
 
   // clear the image
   gfxContext context(surface);
@@ -5066,6 +5068,8 @@ PresShell::RenderSelection(nsISelection* aSelection,
   // to allocate a surface area
   PRInt32 numRanges;
   aSelection->GetRangeCount(&numRanges);
+  NS_ASSERTION(numRanges > 0, "RenderSelection called with no selection");
+
   for (PRInt32 r = 0; r < numRanges; r++)
   {
     nsCOMPtr<nsIDOMRange> range;
