@@ -209,7 +209,7 @@ BrowserGlue.prototype = {
         var importer = 
           Components.classes["@mozilla.org/browser/places/import-export-service;1"]
                     .getService(Components.interfaces.nsIPlacesImportExportService);
-        importer.importHTMLFromFile(bookmarksFile);
+        importer.importHTMLFromFile(bookmarksFile, true);
       } catch(ex) {
       } finally {
         prefService.setBoolPref("browser.places.importBookmarksHTML", false);
