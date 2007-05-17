@@ -1742,7 +1742,6 @@ nsChildView::GetThebesSurface()
 {
   if (!mTempThebesSurface) {
     mTempThebesSurface = new gfxQuartzSurface(gfxSize(1, 1), gfxASurface::ImageFormatARGB32);
-    NS_ENSURE_TRUE(mTempThebesSurface.get(), nsnull); // OOM
   }
 
   return mTempThebesSurface;
