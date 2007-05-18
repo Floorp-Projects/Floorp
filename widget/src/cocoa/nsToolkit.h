@@ -95,6 +95,8 @@ protected:
   nsresult           RegisterForSleepWakeNotifcations();
   void               RemoveSleepWakeNotifcations();
 
+  void               RegisterForAllProcessMouseEvents();
+
 protected:
 
   bool               mInited;
