@@ -653,14 +653,20 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
 
   // Get the width of the vertical scrollbar.  That will be the width of the
   // dropdown button.
-  nsIScrollableFrame* scrollable;
-  CallQueryInterface(mListControlFrame, &scrollable);
-  NS_ASSERTION(scrollable, "List must be a scrollable frame");
-  nsBoxLayoutState bls(PresContext(), aReflowState.rendContext);
-  nscoord buttonWidth = scrollable->GetDesiredScrollbarSizes(&bls).LeftRight();
-
-  if (buttonWidth > aReflowState.ComputedWidth()) {
+  nscoord buttonWidth;
+  const nsStyleDisplay *disp = GetStyleDisplay();
+  if (IsThemed(disp) && !aPresContext->GetTheme()->ThemeNeedsComboboxDropmarker()) {
     buttonWidth = 0;
+  }
+  else {
+    nsIScrollableFrame* scrollable;
+    CallQueryInterface(mListControlFrame, &scrollable);
+    NS_ASSERTION(scrollable, "List must be a scrollable frame");
+    nsBoxLayoutState bls(PresContext(), aReflowState.rendContext);
+    buttonWidth = scrollable->GetDesiredScrollbarSizes(&bls).LeftRight();
+    if (buttonWidth > aReflowState.ComputedWidth()) {
+      buttonWidth = 0;
+    }
   }
 
   mDisplayWidth = aReflowState.ComputedWidth() - buttonWidth;

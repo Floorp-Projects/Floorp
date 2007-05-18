@@ -1289,6 +1289,12 @@ nsNativeThemeWin::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame
   return PR_FALSE;
 }
 
+PRBool
+nsNativeThemeWin::ThemeNeedsComboboxDropmarker()
+{
+  return PR_TRUE;
+}
+
 /* Windows 9x/NT/2000/Classic XP Theme Support */
 
 PRBool 

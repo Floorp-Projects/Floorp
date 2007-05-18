@@ -1393,3 +1393,9 @@ nsNativeThemeCocoa::ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFra
   
   return PR_FALSE;
 }
+
+PRBool
+nsNativeThemeCocoa::ThemeNeedsComboboxDropmarker()
+{
+  return PR_FALSE;
+}
