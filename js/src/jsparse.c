@@ -2727,7 +2727,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         js_PopStatement(tc);
         pn->pn_pos.end = pn2->pn_pos.end;
         pn->pn_right = pn2;
-        if ((cx->version & JSVERSION_MASK) != JSVERSION_ECMA_3) {
+        if (JSVERSION_NUMBER(cx) != JSVERSION_ECMA_3) {
             /*
              * All legacy and extended versions must do automatic semicolon
              * insertion after do-while.  See the testcase and discussion in
@@ -2828,7 +2828,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             if (TOKEN_TYPE_IS_DECL(tt)
                 ? (pn1->pn_count > 1 || pn1->pn_op == JSOP_DEFCONST
 #if JS_HAS_DESTRUCTURING
-                   || (pn->pn_op == JSOP_FORIN &&
+                   || (JSVERSION_NUMBER(cx) == JSVERSION_1_7 &&
+                       pn->pn_op == JSOP_FORIN &&
                        (pn1->pn_head->pn_type == TOK_RC ||
                         (pn1->pn_head->pn_type == TOK_RB &&
                          pn1->pn_head->pn_count != 2) ||
@@ -2840,7 +2841,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 : (pn1->pn_type != TOK_NAME &&
                    pn1->pn_type != TOK_DOT &&
 #if JS_HAS_DESTRUCTURING
-                   ((pn->pn_op == JSOP_FORIN)
+                   ((JSVERSION_NUMBER(cx) == JSVERSION_1_7 &&
+                     pn->pn_op == JSOP_FORIN)
                     ? (pn1->pn_type != TOK_RB || pn1->pn_count != 2)
                     : (pn1->pn_type != TOK_RB && pn1->pn_type != TOK_RC)) &&
 #endif
@@ -2852,8 +2854,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                     pn1->pn_op != JSOP_XMLNAME) &&
 #endif
                    pn1->pn_type != TOK_LB)) {
-                js_ReportCompileErrorNumber(cx, ts,
-                                            JSREPORT_TS | JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, pn1,
+                                            JSREPORT_PN | JSREPORT_ERROR,
                                             JSMSG_BAD_FOR_LEFTSIDE);
                 return NULL;
             }
@@ -2902,9 +2904,14 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 if (pn1 == pn2 && !CheckDestructuring(cx, NULL, pn2, NULL, tc))
                     return NULL;
 
-                /* Destructuring for-in requires [key, value] enumeration. */
-                if (pn->pn_op != JSOP_FOREACH)
-                    pn->pn_op = JSOP_FOREACHKEYVAL;
+                if (JSVERSION_NUMBER(cx) == JSVERSION_1_7) {
+                    /*
+                     * Destructuring for-in requires [key, value] enumeration
+                     * in JS1.7.
+                     */
+                    if (pn->pn_op != JSOP_FOREACH)
+                        pn->pn_op = JSOP_FOREACHKEYVAL;
+                }
                 break;
 #endif
 
@@ -4299,9 +4306,11 @@ ComprehensionTail(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 return NULL;
             }
 
-            /* Destructuring requires [key, value] enumeration. */
-            if (pn2->pn_op != JSOP_FOREACH)
-                pn2->pn_op = JSOP_FOREACHKEYVAL;
+            if (JSVERSION_NUMBER(cx) == JSVERSION_1_7) {
+                /* Destructuring requires [key, value] enumeration in JS1.7. */
+                if (pn2->pn_op != JSOP_FOREACH)
+                    pn2->pn_op = JSOP_FOREACHKEYVAL;
+            }
             break;
 #endif
 
