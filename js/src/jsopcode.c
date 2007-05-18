@@ -3997,9 +3997,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     if (!ATOM_IS_STRING(atom) ||
                         !ATOM_IS_IDENTIFIER(atom) ||
                         ATOM_IS_KEYWORD(atom) ||
-                        strncmp(rval, js_function_str, 8) ||
-                        rval[8] != ' ') {
-                        todo = Sprint(&ss->sprinter, "%s%s%s %s:%s", lval,
+                        ((ss->opcodes[ss->top+1] != JSOP_ANONFUNOBJ ||
+                          strncmp(rval, js_function_str, 8) != 0) &&
+                         ss->opcodes[ss->top+1] != JSOP_NAMEDFUNOBJ)) {
+                        todo = Sprint(&ss->sprinter, "%s%s%s %s: %s", lval,
                                       (lval[1] != '\0') ? ", " : "", xval,
                                       (lastop == JSOP_GETTER) ? js_getter_str :
                                       (lastop == JSOP_SETTER) ? js_setter_str :
