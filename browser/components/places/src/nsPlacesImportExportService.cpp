@@ -2118,6 +2118,10 @@ nsPlacesImportExportService::ImportHTMLFromFileInternal(nsILocalFile* aFile,
   // wrap the import in a transaction to make it faster
   mBookmarksService->BeginUpdateBatch();
 
+  if (aIsImportDefaults) {
+    mBookmarksService->RemoveFolderChildren(mBookmarksRoot);
+  }
+
   nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
