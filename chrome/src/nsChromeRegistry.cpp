@@ -1975,7 +1975,7 @@ CheckVersionFlag(const nsSubstring& aFlag, const nsSubstring& aData,
                  const nsSubstring& aValue, nsIVersionComparator* aChecker,
                  TriState& aResult)
 {
-  if (! (aData.Length() > aFlag.Length() + 2))
+  if (aData.Length() < aFlag.Length() + 2)
     return PR_FALSE;
 
   if (!StringBeginsWith(aData, aFlag))
@@ -2015,6 +2015,9 @@ CheckVersionFlag(const nsSubstring& aFlag, const nsSubstring& aData,
   default:
     return PR_FALSE;
   }
+
+  if (testdata.Length() == 0)
+    return PR_FALSE;
 
   if (aResult != eOK) {
     if (!aChecker) {
