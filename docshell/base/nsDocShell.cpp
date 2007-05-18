@@ -25,6 +25,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Peter Annema <disttsc@bart.nl>
  *   Dan Rosen <dr@netscape.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -2191,17 +2192,9 @@ nsDocShell::SetTreeOwner(nsIDocShellTreeOwner * aTreeOwner)
 }
 
 NS_IMETHODIMP
-nsDocShell::SetChildOffset(PRInt32 aChildOffset)
+nsDocShell::SetChildOffset(PRUint32 aChildOffset)
 {
     mChildOffset = aChildOffset;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetChildOffset(PRInt32 * aChildOffset)
-{
-    NS_ENSURE_ARG_POINTER(aChildOffset);
-    *aChildOffset = mChildOffset;
     return NS_OK;
 }
 
@@ -2248,11 +2241,17 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     
     nsresult res = AddChildLoader(childAsDocLoader);
     NS_ENSURE_SUCCESS(res, res);
+    NS_ASSERTION(mChildList.Count() > 0,
+                 "child list must not be empty after a successful add");
 
     // Set the child's index in the parent's children list 
     // XXX What if the parent had different types of children?
     // XXX in that case docshell hierarchy and SH hierarchy won't match.
-    aChild->SetChildOffset(mChildList.Count() - 1);
+    {
+        nsCOMPtr<nsIDocShell> childDocShell = do_QueryInterface(aChild);
+        if (childDocShell)
+            childDocShell->SetChildOffset(mChildList.Count() - 1);
+    }
 
     /* Set the child's global history if the parent has one */
     if (mGlobalHistory) {

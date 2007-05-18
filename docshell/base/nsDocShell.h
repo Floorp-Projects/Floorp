@@ -535,7 +535,16 @@ protected:
     PRUint32                   mAppType;
 
     // Offset in the parent's child list.
-    PRInt32                    mChildOffset;
+    // XXXmats the line above is bogus, it's the offset in the parent's
+    // child list at the time this docshell was added to it,
+    // see nsDocShell::AddChild().  It isn't updated after that so if children
+    // with lower indices are removed this offset is no longer valid to be used
+    // as an index into the parent's child list (see bug 162283).  It MUST not
+    // be used for that purpose.  It's used as an index to get/add history
+    // entries into nsIDocShellHistory, although I very much doubt that it
+    // can be correct for that purpose as well...
+    // Try not to use it, we should get rid of it.
+    PRUint32                   mChildOffset;
 
     PRUint32                   mBusyFlags;
 

@@ -613,18 +613,6 @@ NS_IMETHODIMP nsWebBrowser::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
    return mDocShellTreeOwner->SetTreeOwner(aTreeOwner);
 }
 
-NS_IMETHODIMP nsWebBrowser::SetChildOffset(PRInt32 aChildOffset)
-{
-  // Not implemented
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWebBrowser::GetChildOffset(PRInt32 *aChildOffset)
-{
-  // Not implemented
-  return NS_OK;
-}
-
 //*****************************************************************************
 // nsWebBrowser::nsIDocShellTreeItem
 //*****************************************************************************
