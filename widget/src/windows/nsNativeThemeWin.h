@@ -83,6 +83,8 @@ public:
 
   PRBool ThemeDrawsFocusForWidget(nsPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType);
 
+  PRBool ThemeNeedsComboboxDropmarker();
+
   nsNativeThemeWin();
   virtual ~nsNativeThemeWin();
 
