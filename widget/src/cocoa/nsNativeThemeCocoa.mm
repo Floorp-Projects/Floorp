@@ -115,12 +115,16 @@ nsNativeThemeCocoa::DrawCheckboxRadio(CGContextRef cgContext, ThemeButtonKind in
   bdi.value = inChecked ? kThemeButtonOn : kThemeButtonOff;
   bdi.adornment = (inState & NS_EVENT_STATE_FOCUS) ? kThemeAdornmentFocus : kThemeAdornmentNone;
 
+  HIRect drawFrame = inBoxRect;
+  if (inKind == kThemeSmallCheckBox)
+    drawFrame.origin.y += 1;
+
+  HIThemeDrawButton(&drawFrame, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
+
 #if DRAW_IN_FRAME_DEBUG
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
   CGContextFillRect(cgContext, inBoxRect);
 #endif
-
-  HIThemeDrawButton(&inBoxRect, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
 }
 
 
@@ -189,12 +193,7 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
     [image release];
   }
   else {
-    HIRect drawFrame;
-    drawFrame.origin.x = inBoxRect.origin.x;
-    drawFrame.origin.y = inBoxRect.origin.y;
-    drawFrame.size.width = inBoxRect.size.width;
-    drawFrame.size.height = inBoxRect.size.height;
-
+    HIRect drawFrame = inBoxRect;
     if (inKind == kThemePushButton)
       drawFrame.size.height -= NATIVE_PUSH_BUTTON_HEIGHT_DIFF;
 
@@ -616,11 +615,6 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_CHECKBOX_SMALL:
-      if (aRect.height == 15) {
-      	// draw at 14x16, see comment in GetMinimumWidgetSize
-        // XXX this should probably happen earlier, before transform; this is very fragile
-        macRect.size.height += 1.0;
-      }
       DrawCheckboxRadio(cgContext, kThemeSmallCheckBox, macRect, IsChecked(aFrame), IsDisabled(aFrame), eventState);
       break;
 
@@ -629,11 +623,6 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_RADIO_SMALL:
-      if (aRect.height == 14) {
-        // draw at 14x15, see comment in GetMinimumWidgetSize
-        // XXX this should probably happen earlier, before transform; this is very fragile
-        macRect.size.height += 1.0;
-      }
       DrawCheckboxRadio(cgContext, kThemeSmallRadioButton, macRect,
                         IsSelected(aFrame), IsDisabled(aFrame), eventState);
       break;
@@ -1030,15 +1019,10 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
 
     case NS_THEME_CHECKBOX_SMALL:
     {
-      // Appearance manager (and the Aqua HIG) will tell us that a small
-      // checkbox is 14x16.  This includes a transparent row at the bottom
-      // of the image.  In order to allow the baseline for text to be aligned
-      // with the bottom of the checkbox, we report the size as 14x15, but
-      // we'll always tell appearance manager to draw it at 14x16.  This
-      // will result in Gecko aligning text with the real bottom of the
-      // checkbox.
-
-      aResult->SizeTo(14, 15);
+      SInt32 boxHeight = 0, boxWidth = 0;
+      ::GetThemeMetric(kThemeMetricSmallCheckBoxWidth, &boxWidth);
+      ::GetThemeMetric(kThemeMetricSmallCheckBoxHeight, &boxHeight);
+      aResult->SizeTo(boxWidth, boxHeight - 1);
       *aIsOverridable = PR_FALSE;
       break;
     }
@@ -1055,10 +1039,11 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
 
     case NS_THEME_RADIO_SMALL:
     {
-      // Same as above, but appearance manager reports 14x15, and we
-      // tell gecko 14x14.
-
-      aResult->SizeTo(14, 14);
+      SInt32 radioHeight = 0, radioWidth = 0;
+      ::GetThemeMetric(kThemeMetricSmallRadioButtonWidth, &radioWidth);
+      ::GetThemeMetric(kThemeMetricSmallRadioButtonHeight, &radioHeight);
+      // small radio buttons have an extra row on top and bottom, cut that off
+      aResult->SizeTo(radioWidth, radioHeight - 2);
       *aIsOverridable = PR_FALSE;
       break;
     }
@@ -1388,7 +1373,9 @@ nsNativeThemeCocoa::WidgetIsContainer(PRUint8 aWidgetType)
   switch (aWidgetType) {
    case NS_THEME_DROPDOWN_BUTTON:
    case NS_THEME_RADIO:
+   case NS_THEME_RADIO_SMALL:
    case NS_THEME_CHECKBOX:
+   case NS_THEME_CHECKBOX_SMALL:
    case NS_THEME_PROGRESSBAR:
     return PR_FALSE;
     break;
