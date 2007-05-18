@@ -127,7 +127,6 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define GENERATED_TITLE_ANNO NS_LITERAL_CSTRING("bookmarks/generatedTitle")
 
 #define BOOKMARKSS_MENU_ICON_URI "chrome://browser/skin/places/bookmarksMenu.png"
-#define BOOKMARKSS_TOOLBAR_ICON_URI "chrome://browser/skin/places/bookmarksToolbar.png"
 
 // define to get debugging messages on console about import/export
 //#define DEBUG_IMPORT
@@ -1118,9 +1117,6 @@ BookmarkContentSink::NewFrame()
           NS_ENSURE_SUCCESS(rv, rv);
           // there's no toolbar folder, so make us the toolbar folder
           rv = mBookmarksService->SetToolbarFolder(ourID);
-          NS_ENSURE_SUCCESS(rv, rv);
-          // set favicon
-          rv = SetFaviconForFolder(ourID, NS_LITERAL_CSTRING(BOOKMARKSS_TOOLBAR_ICON_URI));
           NS_ENSURE_SUCCESS(rv, rv);
         }
         else {
