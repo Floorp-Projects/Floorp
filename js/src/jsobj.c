@@ -959,10 +959,12 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
              */
             if (gsop[j] && VALUE_IS_FUNCTION(cx, val[j]) &&
                 !needOldStyleGetterSetter) {
-                size_t n = strlen(js_function_str) + 2;
-                JS_ASSERT(vlength > n);
-                vchars += n;
-                vlength -= n + 1;
+                const jschar *start = vchars;
+                if (vchars[0] == '(')
+                    vchars++;
+                vchars = js_strchr_limit(vchars, '(', vchars + vlength);
+                JS_ASSERT(vchars && *vchars);
+                vlength -= vchars - start;
             }
 #else
             needOldStyleGetterSetter = JS_TRUE;
