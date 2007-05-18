@@ -1023,7 +1023,7 @@ JS_ContextIterator(JSRuntime *rt, JSContext **iterp)
 JS_PUBLIC_API(JSVersion)
 JS_GetVersion(JSContext *cx)
 {
-    return cx->version & JSVERSION_MASK;
+    return JSVERSION_NUMBER(cx);
 }
 
 JS_PUBLIC_API(JSVersion)
@@ -1034,7 +1034,7 @@ JS_SetVersion(JSContext *cx, JSVersion version)
     JS_ASSERT(version != JSVERSION_UNKNOWN);
     JS_ASSERT((version & ~JSVERSION_MASK) == 0);
 
-    oldVersion = cx->version & JSVERSION_MASK;
+    oldVersion = JSVERSION_NUMBER(cx);
     if (version == oldVersion)
         return oldVersion;
 
