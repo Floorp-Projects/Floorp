@@ -158,7 +158,10 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
   availableHeight = aAvailableSpace.height;
 
   mSpaceManager = aParentReflowState.mSpaceManager;
-  mLineLayout = aParentReflowState.mLineLayout;
+  if (frame->IsFrameOfType(nsIFrame::eLineParticipant))
+    mLineLayout = aParentReflowState.mLineLayout;
+  else
+    mLineLayout = nsnull;
   mFlags.mIsTopOfPage = aParentReflowState.mFlags.mIsTopOfPage;
   mFlags.mNextInFlowUntouched = aParentReflowState.mFlags.mNextInFlowUntouched &&
     CheckNextInFlowParenthood(aFrame, aParentReflowState.frame);
