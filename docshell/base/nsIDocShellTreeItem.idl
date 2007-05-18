@@ -48,7 +48,7 @@ interface nsIDocShellTreeOwner;
  * node or a leaf. 
  */
 
-[scriptable, uuid(377d6996-c703-497d-9330-536562fcfff5)]
+[scriptable, uuid(09b54ec1-d98a-49a9-bc95-3219e8b55089)]
 interface nsIDocShellTreeItem : nsIDocShellTreeNode
 {
 	/*
@@ -157,8 +157,5 @@ interface nsIDocShellTreeItem : nsIDocShellTreeNode
 	*/
 	readonly attribute nsIDocShellTreeOwner treeOwner;
 	[noscript] void setTreeOwner(in nsIDocShellTreeOwner treeOwner);
-
-	/* The offset of yourself in your parent's child list */
-	attribute long childOffset;
 };
 

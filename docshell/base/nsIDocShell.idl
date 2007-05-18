@@ -68,7 +68,7 @@ interface nsILayoutHistoryState;
 interface nsISecureBrowserUI;
 interface nsIDOMStorage;
 
-[scriptable, uuid(fbe2a673-4b8b-46a2-b225-398c52cc05cb)]
+[scriptable, uuid(db67b973-ba1a-49fa-b5b4-7670d203fa0e)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -433,5 +433,10 @@ interface nsIDocShell : nsISupports
    * until after OnLocationChange fires.
    */
   readonly attribute nsIChannel currentDocumentChannel;
+
+  /**
+   * Set the offset of this child in its container.
+   */
+  [noscript] void setChildOffset(in unsigned long offset);
 };
 

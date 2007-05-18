@@ -225,15 +225,38 @@ protected:
   void FlushPendingEvents(nsPresContext* aPresContext);
   nsIFocusController* GetFocusControllerForDocument(nsIDocument* aDocument);
 
+  /**
+   * The phases of HandleAccessKey processing. See below.
+   */
   typedef enum {
     eAccessKeyProcessingNormal = 0,
     eAccessKeyProcessingUp,
     eAccessKeyProcessingDown
   } ProcessingAccessKeyState;
+
+  /**
+   * Access key handling.  If there is registered content for the accesskey
+   * given by the key event and modifier mask then call
+   * content.PerformAccesskey(), otherwise call HandleAccessKey() recursively,
+   * on descendant docshells first, then on the ancestor (with |aBubbledFrom|
+   * set to the docshell associated with |this|), until something matches.
+   *
+   * @param aPresContext the presentation context
+   * @param aEvent the key event
+   * @param aStatus the event status
+   * @param aBubbledFrom is used by an ancestor to avoid calling HandleAccessKey()
+   *        on the child the call originally came from, i.e. this is the child
+   *        that recursively called us in it's Up phase. The initial caller
+   *        passes |nsnull| here. This is to avoid an infinite loop.
+   * @param aAccessKeyState Normal, Down or Up processing phase (see enums
+   *        above). The initial event reciever uses 'normal', then 'down' when
+   *        processing children and Up when recursively calling its ancestor.
+   * @param aModifierMask modifier mask for the key event
+   */
   void HandleAccessKey(nsPresContext* aPresContext,
                        nsKeyEvent* aEvent,
                        nsEventStatus* aStatus,
-                       PRInt32 aChildOffset,
+                       nsIDocShellTreeItem* aBubbledFrom,
                        ProcessingAccessKeyState aAccessKeyState,
                        PRInt32 aModifierMask);
 

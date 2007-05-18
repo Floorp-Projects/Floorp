@@ -1152,7 +1152,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       // Prevent keyboard scrolling while an accesskey modifier is in use.
       if (modifierMask && (modifierMask == sChromeAccessModifier ||
                            modifierMask == sContentAccessModifier))
-        HandleAccessKey(aPresContext, keyEvent, aStatus, -1,
+        HandleAccessKey(aPresContext, keyEvent, aStatus, nsnull,
                         eAccessKeyProcessingNormal, modifierMask);
     }
   case NS_KEY_DOWN:
@@ -1249,15 +1249,11 @@ GetAccessModifierMask(nsISupports* aDocShell)
   }
 }
 
-// Note: for the in parameter aChildOffset,
-// -1 stands for not bubbling from the child docShell
-// 0 -- childCount - 1 stands for the child docShell's offset
-// which bubbles up the access key handling
 void
 nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
                                      nsKeyEvent *aEvent,
                                      nsEventStatus* aStatus,
-                                     PRInt32 aChildOffset,
+                                     nsIDocShellTreeItem* aBubbledFrom,
                                      ProcessingAccessKeyState aAccessKeyState,
                                      PRInt32 aModifierMask)
 {
@@ -1293,16 +1289,15 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
     docShell->GetChildCount(&childCount);
     for (PRInt32 counter = 0; counter < childCount; counter++) {
       // Not processing the child which bubbles up the handling
-      if (aAccessKeyState == eAccessKeyProcessingUp && counter == aChildOffset)
+      nsCOMPtr<nsIDocShellTreeItem> subShellItem;
+      docShell->GetChildAt(counter, getter_AddRefs(subShellItem));
+      if (aAccessKeyState == eAccessKeyProcessingUp &&
+          subShellItem == aBubbledFrom)
         continue;
 
-      nsCOMPtr<nsIDocShellTreeItem> subShellItem;
-      nsCOMPtr<nsIPresShell> subPS;
-      nsCOMPtr<nsPresContext> subPC;
-
-      docShell->GetChildAt(counter, getter_AddRefs(subShellItem));
       nsCOMPtr<nsIDocShell> subDS = do_QueryInterface(subShellItem);
       if (subDS && IsShellVisible(subDS)) {
+        nsCOMPtr<nsIPresShell> subPS;
         subDS->GetPresShell(getter_AddRefs(subPS));
 
         // Docshells need not have a presshell (eg. display:none
@@ -1318,7 +1313,7 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
           NS_STATIC_CAST(nsEventStateManager *, subPC->EventStateManager());
 
         if (esm)
-          esm->HandleAccessKey(subPC, aEvent, aStatus, -1,
+          esm->HandleAccessKey(subPC, aEvent, aStatus, nsnull,
                                eAccessKeyProcessingDown, aModifierMask);
 
         if (nsEventStatus_eConsumeNoDefault == *aStatus)
@@ -1327,11 +1322,11 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
     }
   }// if end . checking all sub docshell ends here.
 
-  // bubble up the process to the parent docShell if necessary
+  // bubble up the process to the parent docshell if necessary
   if (eAccessKeyProcessingDown != aAccessKeyState && nsEventStatus_eConsumeNoDefault != *aStatus) {
     nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(pcContainer));
     if (!docShell) {
-      NS_WARNING("no docShellTreeNode for presContext");
+      NS_WARNING("no docShellTreeItem for presContext");
       return;
     }
 
@@ -1339,9 +1334,6 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
     docShell->GetParent(getter_AddRefs(parentShellItem));
     nsCOMPtr<nsIDocShell> parentDS = do_QueryInterface(parentShellItem);
     if (parentDS) {
-      PRInt32 myOffset;
-      docShell->GetChildOffset(&myOffset);
-
       nsCOMPtr<nsIPresShell> parentPS;
 
       parentDS->GetPresShell(getter_AddRefs(parentPS));
@@ -1354,7 +1346,7 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
         NS_STATIC_CAST(nsEventStateManager *, parentPC->EventStateManager());
 
       if (esm)
-        esm->HandleAccessKey(parentPC, aEvent, aStatus, myOffset,
+        esm->HandleAccessKey(parentPC, aEvent, aStatus, docShell,
                              eAccessKeyProcessingUp, aModifierMask);
     }
   }// if end. bubble up process
