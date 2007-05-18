@@ -183,6 +183,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_FUN_FLAGS         0x1E0 /* flags to propagate from FunctionBody */
 #define TCF_HAS_DEFXMLNS      0x200 /* default xml namespace = ...; parsed */
 #define TCF_HAS_FUNCTION_STMT 0x400 /* block contains a function statement */
+#define TCF_GENEXP_LAMBDA     0x800 /* flag lambda from generator expression */
 
 #define TREE_CONTEXT_INIT(tc)                                                 \
     ((tc)->flags = (tc)->numGlobalVars = 0,                                   \
@@ -528,6 +529,7 @@ typedef enum JSSrcNoteType {
     SRC_INITPROP    = 1,        /* disjoint meaning applied to JSOP_INITELEM or
                                    to an index label in a regular (structuring)
                                    or a destructuring object initialiser */
+    SRC_GENEXP      = 1,        /* JSOP_ANONFUNOBJ from generator expression */
     SRC_IF_ELSE     = 2,        /* JSOP_IFEQ bytecode is from an if-then-else */
     SRC_WHILE       = 3,        /* JSOP_IFEQ is from a while loop */
     SRC_FOR         = 4,        /* JSOP_NOP or JSOP_POP in for loop head */

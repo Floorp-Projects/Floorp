@@ -802,6 +802,7 @@ typedef struct SprintStack {
     jsbytecode  *opcodes;       /* parallel stack of JS opcodes */
     uintN       top;            /* top of stack index */
     uintN       inArrayInit;    /* array initialiser/comprehension level */
+    JSBool      inGenExp;       /* in generator expression */
     JSPrinter   *printer;       /* permanent output goes here */
 } SprintStack;
 
@@ -870,6 +871,13 @@ GetStr(SprintStack *ss, uintN i)
 #define JSOP_GETPROP2   256
 #define JSOP_GETELEM2   257
 
+static void
+AddParenSlop(SprintStack *ss)
+{
+    memset(OFF2STR(&ss->sprinter, ss->sprinter.offset), 0, PAREN_SLOP);
+    ss->sprinter.offset += PAREN_SLOP;
+}
+
 static JSBool
 PushOff(SprintStack *ss, ptrdiff_t off, JSOp op)
 {
@@ -892,8 +900,7 @@ PushOff(SprintStack *ss, ptrdiff_t off, JSOp op)
                      : (op == JSOP_GETELEM2) ? JSOP_GETELEM
                      : (jsbytecode) op;
     ss->top = ++top;
-    memset(OFF2STR(&ss->sprinter, ss->sprinter.offset), 0, PAREN_SLOP);
-    ss->sprinter.offset += PAREN_SLOP;
+    AddParenSlop(ss);
     return JS_TRUE;
 }
 
@@ -1578,6 +1585,29 @@ DecompileGroupAssignment(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
 #undef LOAD_OP_DATA
 
 #endif /* JS_HAS_DESTRUCTURING */
+
+static JSBool
+InitSprintStack(JSContext *cx, SprintStack *ss, JSPrinter *jp, uintN depth)
+{
+    size_t offsetsz, opcodesz;
+    void *space;
+
+    INIT_SPRINTER(cx, &ss->sprinter, &cx->tempPool, PAREN_SLOP);
+
+    /* Allocate the parallel (to avoid padding) offset and opcode stacks. */
+    offsetsz = depth * sizeof(ptrdiff_t);
+    opcodesz = depth * sizeof(jsbytecode);
+    JS_ARENA_ALLOCATE(space, &cx->tempPool, offsetsz + opcodesz);
+    if (!space)
+        return JS_FALSE;
+    ss->offsets = (ptrdiff_t *) space;
+    ss->opcodes = (jsbytecode *) ((char *)space + offsetsz);
+
+    ss->top = ss->inArrayInit = 0;
+    ss->inGenExp = JS_FALSE;
+    ss->printer = jp;
+    return JS_TRUE;
+}
 
 /*
  * If nb is non-negative, decompile nb bytecodes starting at pc.  Otherwise
@@ -2653,49 +2683,98 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #if JS_HAS_GENERATORS
               case JSOP_YIELD:
                 op = JSOP_SETNAME;      /* turn off most parens */
-                rval = POP_STR();
-                todo = (*rval != '\0')
-                       ? Sprint(&ss->sprinter,
-                                (strncmp(rval, js_yield_str, 5) == 0 &&
-                                 (rval[5] == ' ' || rval[5] == '\0'))
-                                ? "%s (%s)"
-                                : "%s %s",
-                                js_yield_str, rval)
-                       : SprintCString(&ss->sprinter, js_yield_str);
-                break;
+
+                if (!ss->inGenExp || !(sn = js_GetSrcNote(jp->script, pc))) {
+                    rval = POP_STR();
+                    todo = (*rval != '\0')
+                           ? Sprint(&ss->sprinter,
+                                    (strncmp(rval, js_yield_str, 5) == 0 &&
+                                     (rval[5] == ' ' || rval[5] == '\0'))
+                                    ? "%s (%s)"
+                                    : "%s %s",
+                                    js_yield_str, rval)
+                           : SprintCString(&ss->sprinter, js_yield_str);
+                    break;
+                }
+                LOCAL_ASSERT(SN_TYPE(sn) == SRC_HIDDEN);
+                /* FALL THROUGH */
 
               case JSOP_ARRAYPUSH:
               {
-                uintN pos, blockpos, startpos;
+                uintN pos, forpos;
                 ptrdiff_t start;
 
+                /* Pop the expression being pushed or yielded. */
                 rval = POP_STR();
+
+                /*
+                 * Skip down over iterables left stacked by JSOP_FOR* until
+                 * we hit a block-local or the new Array initialiser (empty
+                 * destructuring patterns yield zero-count blocks).
+                 */
                 pos = ss->top;
                 while ((op = ss->opcodes[--pos]) != JSOP_ENTERBLOCK &&
                        op != JSOP_NEWINIT) {
-                    LOCAL_ASSERT(pos != 0);
+                    if (pos == 0)
+                        break;
                 }
-                blockpos = pos;
+
+                /*
+                 * Make forpos index the space before the left-most |for| in
+                 * the single string of accumulated |for| heads and optional
+                 * final |if (condition)|.
+                 */
+                forpos = pos + (op == JSOP_ENTERBLOCK || op == JSOP_NEWINIT);
+                LOCAL_ASSERT(forpos < ss->top);
+
+                /*
+                 * Now skip down over the block's local slots, if any. There
+                 * may be no locals for an empty destructuring pattern.
+                 */
                 while (ss->opcodes[pos] == JSOP_ENTERBLOCK) {
                     if (pos == 0)
                         break;
                     --pos;
                 }
+
+                if (saveop == JSOP_YIELD) {
+                    /*
+                     * Generator expression: decompile just rval followed by
+                     * the string starting at forpos. Leave the result string
+                     * in ss->offsets[0] so it can be recovered by our caller
+                     * (the JSOP_ANONFUNOBJ with SRC_GENEXP case). Bump the
+                     * top of stack to balance yield, which is an expression
+                     * (so has neutral stack balance).
+                     */
+                    LOCAL_ASSERT(pos == 0);
+                    xval = OFF2STR(&ss->sprinter, ss->offsets[forpos]);
+                    ss->sprinter.offset = PAREN_SLOP;
+                    todo = Sprint(&ss->sprinter, ss_format, rval, xval);
+                    if (todo < 0)
+                        return NULL;
+                    ss->offsets[0] = todo;
+                    ++ss->top;
+                    return pc;
+                }
+
+                /*
+                 * Array comprehension: retract the sprinter to the beginning
+                 * of the array initialiser and decompile "[<rval> for ...]".
+                 */
                 LOCAL_ASSERT(ss->opcodes[pos] == JSOP_NEWINIT);
-                startpos = pos;
                 start = ss->offsets[pos];
                 LOCAL_ASSERT(ss->sprinter.base[start] == '[' ||
                              ss->sprinter.base[start] == '#');
-                pos = blockpos + 1;
-                LOCAL_ASSERT(pos < ss->top);
-                xval = OFF2STR(&ss->sprinter, ss->offsets[pos]);
+                LOCAL_ASSERT(forpos < ss->top);
+                xval = OFF2STR(&ss->sprinter, ss->offsets[forpos]);
                 lval = OFF2STR(&ss->sprinter, start);
                 RETRACT(&ss->sprinter, lval);
+
                 todo = Sprint(&ss->sprinter, "%s%s%.*s",
                               lval, rval, rval - xval, xval);
                 if (todo < 0)
                     return NULL;
-                ss->offsets[startpos] = todo;
+                ss->offsets[pos] = todo;
                 todo = -2;
                 break;
               }
@@ -2782,10 +2861,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                   case SRC_IF_ELSE:
                     op = JSOP_NOP;              /* turn off parens */
                     rval = POP_STR();
-                    if (ss->inArrayInit) {
+                    if (ss->inArrayInit || ss->inGenExp) {
                         LOCAL_ASSERT(SN_TYPE(sn) == SRC_IF);
+                        ss->sprinter.offset -= PAREN_SLOP;
                         if (Sprint(&ss->sprinter, " if (%s)", rval) < 0)
                             return NULL;
+                        AddParenSlop(ss);
                     } else {
                         js_printf(SET_MAYBE_BRACE(jp),
                                   elseif ? " if (%s) {\n" : "\tif (%s) {\n",
@@ -2796,7 +2877,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     if (SN_TYPE(sn) == SRC_IF) {
                         DECOMPILE_CODE(pc + oplen, len - oplen);
                     } else {
-                        LOCAL_ASSERT(!ss->inArrayInit);
+                        LOCAL_ASSERT(!ss->inArrayInit && !ss->inGenExp);
                         tail = js_GetSrcNoteOffset(sn, 0);
                         DECOMPILE_CODE(pc + oplen, tail - oplen);
                         jp->indent -= 4;
@@ -2827,7 +2908,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         DECOMPILE_CODE(pc + oplen, len - oplen);
                     }
 
-                    if (!ss->inArrayInit) {
+                    if (!ss->inArrayInit && !ss->inGenExp) {
                         jp->indent -= 4;
                         js_printf(jp, "\t}\n");
                     }
@@ -2999,12 +3080,18 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 lval = OFF2STR(&ss->sprinter, todo);
                 rval = GetStr(ss, ss->top-1);
                 RETRACT(&ss->sprinter, rval);
-                if (ss->inArrayInit) {
+                if (ss->inArrayInit || ss->inGenExp) {
+                    if (ss->top > 1 &&
+                        (js_CodeSpec[ss->opcodes[ss->top-2]].format &
+                         JOF_FOR)) {
+                        ss->sprinter.offset -= PAREN_SLOP;
+                    }
                     todo = Sprint(&ss->sprinter, " %s in %s)", lval, rval);
                     if (todo < 0)
                         return NULL;
                     ss->offsets[ss->top-1] = todo;
-                    ss->sprinter.offset += PAREN_SLOP;
+                    ss->opcodes[ss->top-1] = op;
+                    AddParenSlop(ss);
                     DECOMPILE_CODE(pc + oplen, tail - oplen);
                 } else {
                     js_printf(SET_MAYBE_BRACE(jp), "\t%s in %s) {\n",
@@ -3627,9 +3714,105 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 todo = STR2OFF(&ss->sprinter, rval);
               END_LITOPX_CASE
 
+              case JSOP_ANONFUNOBJ:
+                sn = js_GetSrcNote(jp->script, pc);
+                if (sn && SN_TYPE(sn) == SRC_GENEXP) {
+                    JSScript *inner, *outer;
+                    void *mark;
+                    SprintStack ss2;
+
+                    LOAD_ATOM(0);
+                    obj = ATOM_TO_OBJECT(atom);
+                    fun = (JSFunction *) JS_GetPrivate(cx, obj);
+                    LOCAL_ASSERT(FUN_INTERPRETED(fun));
+                    inner = fun->u.i.script;
+
+                    /*
+                     * All allocation when decompiling is LIFO, using malloc
+                     * or, more commonly, arena-alloocating from cx->tempPool.
+                     * After InitSprintStack succeeds, we must release to mark
+                     * before returning.
+                     */
+                    mark = JS_ARENA_MARK(&cx->tempPool);
+                    if (!InitSprintStack(cx, &ss2, jp, inner->depth))
+                        return NULL;
+                    ss2.inGenExp = JS_TRUE;
+
+                    /*
+                     * Recursively decompile this generator function as an
+                     * un-parenthesized generator expression. The ss->inGenExp
+                     * special case of JSOP_YIELD shares array comprehension
+                     * decompilation code that leaves the result as the single
+                     * string pushed on ss2.
+                     */
+                    outer = jp->script;
+                    LOCAL_ASSERT(JS_UPTRDIFF(pc, outer->code) <= outer->length);
+                    jp->script = inner;
+                    if (!Decompile(&ss2, inner->code, inner->length)) {
+                        JS_ARENA_RELEASE(&cx->tempPool, mark);
+                        return NULL;
+                    }
+                    jp->script = outer;
+
+                    /*
+                     * Advance over this op and its null |this| push, and
+                     * arrange to advance over the call to this lambda.
+                     */
+                    pc2 = pc;
+                    pc += len;
+                    LOCAL_ASSERT(*pc == JSOP_NULL);
+                    pc += JSOP_NULL_LENGTH;
+                    LOCAL_ASSERT(*pc == JSOP_CALL);
+                    LOCAL_ASSERT(GET_ARGC(pc) == 0);
+                    len = JSOP_CALL_LENGTH;
+
+                    /*
+                     * Arrange to parenthesize this genexp unless:
+                     *
+                     *  1. It is consumed by a control flow bytecode such
+                     *     as JSOP_TABLESWITCH (the syntax from which such ops
+                     *     come always parenthesizes the controlling expression).
+                     *  2. It is the sole argument to a function call.
+                     *  3. It is the condition of an if statement and not of a
+                     *     ?: expression.
+                     *
+                     * But always parenthesize if this genexp is an operand in
+                     * a comma expression (i.e. if JSOP_ANONFUNOBJ is preceded
+                     * immediately by JSOP_POP with SRC_PCDELTA).
+                     */
+                    LOCAL_ASSERT(ss2.top == 1);
+                    ss2.opcodes[0] = JSOP_POP;
+                    op = (JSOp) pc[len];
+                    op = (((js_CodeSpec[op].format & JOF_PARENHEAD) ||
+                           ((js_CodeSpec[op].format & JOF_INVOKE) &&
+                            GET_ARGC(pc + len) == 1) ||
+                           (((op == JSOP_IFEQ || op == JSOP_IFEQX) &&
+                            (sn2 = js_GetSrcNote(outer, pc + len)) &&
+                            SN_TYPE(sn2) != SRC_COND))) &&
+                          !(pc2 > outer->main &&
+                            pc2[-1] == JSOP_POP &&
+                            (sn2 = js_GetSrcNote(outer, pc2 - 1)) &&
+                            SN_TYPE(sn2) == SRC_PCDELTA))
+                         ? JSOP_POP
+                         : JSOP_SETNAME;
+
+                    /*
+                     * Alas, we have to malloc a copy of the result left on
+                     * the top of ss2 because both ss and ss2 arena-allocate
+                     * from cx's tempPool.
+                     */
+                    rval = JS_strdup(cx, PopStr(&ss2, op));
+                    JS_ARENA_RELEASE(&cx->tempPool, mark);
+                    if (!rval)
+                        return NULL;
+                    todo = SprintCString(&ss->sprinter, rval);
+                    JS_free(cx, (void *)rval);
+                    break;
+                }
+                /* FALL THROUGH */
+
               case JSOP_OBJECT:
               case JSOP_REGEXP:
-              case JSOP_ANONFUNOBJ:
               case JSOP_NAMEDFUNOBJ:
                 LOAD_ATOM(0);
                 if (op == JSOP_OBJECT || op == JSOP_REGEXP) {
@@ -4029,6 +4212,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_INITELEM:
+                op = JSOP_SETNAME;      /* turn off most parens */
                 rval = POP_STR();
                 xval = POP_STR();
                 lval = POP_STR();
@@ -4270,28 +4454,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #undef GET_ATOM_QUOTE_AND_FMT
 
     return pc;
-}
-
-static JSBool
-InitSprintStack(JSContext *cx, SprintStack *ss, JSPrinter *jp, uintN depth)
-{
-    size_t offsetsz, opcodesz;
-    void *space;
-
-    INIT_SPRINTER(cx, &ss->sprinter, &cx->tempPool, PAREN_SLOP);
-
-    /* Allocate the parallel (to avoid padding) offset and opcode stacks. */
-    offsetsz = depth * sizeof(ptrdiff_t);
-    opcodesz = depth * sizeof(jsbytecode);
-    JS_ARENA_ALLOCATE(space, &cx->tempPool, offsetsz + opcodesz);
-    if (!space)
-        return JS_FALSE;
-    ss->offsets = (ptrdiff_t *) space;
-    ss->opcodes = (jsbytecode *) ((char *)space + offsetsz);
-
-    ss->top = ss->inArrayInit = 0;
-    ss->printer = jp;
-    return JS_TRUE;
 }
 
 JSBool

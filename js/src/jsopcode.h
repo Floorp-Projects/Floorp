@@ -110,6 +110,9 @@ typedef enum JSOpLength {
 #define JOF_DECLARING    0x20000  /* var, const, or function declaration op */
 #define JOF_ATOMBASE     0x40000  /* atom segment base setting prefix op */
 #define JOF_CALLOP       0x80000  /* call operation pushing function and this */
+#define JOF_PARENHEAD   0x100000  /* opcode consumes value of expression in
+                                     parenthesized statement head */
+#define JOF_INVOKE      0x200000  /* JSOP_CALL, JSOP_NEW, JSOP_EVAL */
 
 #define JOF_TYPE_IS_EXTENDED_JUMP(t) \
     ((unsigned)((t) - JOF_JUMPX) <= (unsigned)(JOF_LOOKUPSWITCHX - JOF_JUMPX))
