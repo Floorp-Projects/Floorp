@@ -66,6 +66,8 @@ public:
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
+    if (!GetStyleDisplay()->IsFloating())
+      aFlags = aFlags & ~(nsIFrame::eLineParticipant);
     return nsFirstLetterFrameSuper::IsFrameOfType(aFlags &
       ~(nsIFrame::eBidiInlineContainer));
   }

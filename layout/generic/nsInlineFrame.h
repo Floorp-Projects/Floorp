@@ -103,7 +103,7 @@ public:
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsInlineFrameSuper::IsFrameOfType(aFlags &
-      ~(nsIFrame::eBidiInlineContainer));
+      ~(nsIFrame::eBidiInlineContainer | nsIFrame::eLineParticipant));
   }
 
   virtual PRBool IsEmpty();
