@@ -1435,6 +1435,9 @@ public:
     // Frame that contains a block but looks like a replaced element
     // from the outside
     eReplacedContainsBlock =            1 << 5,
+    // A frame that participates in inline reflow, i.e., one that
+    // requires nsHTMLReflowState::mLineLayout.
+    eLineParticipant =                  1 << 6,
 
 
     // These are to allow nsFrame::Init to assert that IsFrameOfType
