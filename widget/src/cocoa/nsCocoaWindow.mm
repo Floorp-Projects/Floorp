@@ -1133,6 +1133,10 @@ NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
 
 - (void)windowDidBecomeMain:(NSNotification *)aNotification
 {
+  // roll up any popups
+  if (gRollupListener != nsnull && gRollupWidget != nsnull)
+    gRollupListener->Rollup();
+
   NSWindow* window = [aNotification object];
   if (window)
     [WindowDelegate paintMenubarForWindow:window];
