@@ -268,7 +268,9 @@ STDMETHODIMP nsAccessibleWrap::get_accChild(
   nsCOMPtr<nsIAccessible> childAccessible;
   if (!MustPrune(this)) {
     GetChildAt(varChild.lVal - 1, getter_AddRefs(childAccessible));
-    *ppdispChild = NativeAccessible(childAccessible);
+    if (childAccessible) {
+      *ppdispChild = NativeAccessible(childAccessible);
+    }
   }
 
   return (*ppdispChild)? S_OK: E_FAIL;
@@ -1512,6 +1514,11 @@ PRInt32 nsAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
 
 IDispatch *nsAccessibleWrap::NativeAccessible(nsIAccessible *aXPAccessible)
 {
+  if (!aXPAccessible) {
+   NS_WARNING("Not passing in an aXPAccessible");
+   return NULL;
+  }
+
   nsCOMPtr<nsIAccessibleWin32Object> accObject(do_QueryInterface(aXPAccessible));
   if (accObject) {
     void* hwnd;
