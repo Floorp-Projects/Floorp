@@ -4098,6 +4098,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         /* Emit a bytecode pointing to the closure object in its immediate. */
         if (pn->pn_op != JSOP_NOP) {
+            if ((pn->pn_flags & TCF_GENEXP_LAMBDA) &&
+                js_NewSrcNote(cx, cg, SRC_GENEXP) < 0) {
+                return JS_FALSE;
+            }
             EMIT_ATOM_INDEX_OP(pn->pn_op, atomIndex);
             break;
         }
@@ -5215,6 +5219,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
 #if JS_HAS_GENERATORS
       case TOK_YIELD:
+        if (!(cg->treeContext.flags & TCF_IN_FUNCTION)) {
+            js_ReportCompileErrorNumber(cx, pn, JSREPORT_PN | JSREPORT_ERROR,
+                                        JSMSG_BAD_RETURN_OR_YIELD,
+                                        js_yield_str);
+            return JS_FALSE;
+        }
         if (pn->pn_kid) {
             if (!js_EmitTree(cx, cg, pn->pn_kid))
                 return JS_FALSE;
@@ -5222,6 +5232,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (js_Emit1(cx, cg, JSOP_PUSH) < 0)
                 return JS_FALSE;
         }
+        if (pn->pn_hidden && js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
+            return JS_FALSE;
         if (js_Emit1(cx, cg, JSOP_YIELD) < 0)
             return JS_FALSE;
         break;
@@ -5866,10 +5878,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif
 #if JS_HAS_LVALUE_RETURN
           case TOK_LP:
-            if (pn2->pn_op != JSOP_SETCALL) {
-                JS_ASSERT(pn2->pn_op == JSOP_CALL || pn2->pn_op == JSOP_EVAL);
-                pn2->pn_op = JSOP_SETCALL;
-            }
             top = CG_OFFSET(cg);
             if (!js_EmitTree(cx, cg, pn2))
                 return JS_FALSE;
