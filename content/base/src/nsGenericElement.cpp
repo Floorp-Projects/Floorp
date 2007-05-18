@@ -1904,13 +1904,17 @@ nsGenericElement::doPreHandleEvent(nsIContent* aContent,
           (aVisitor.mEvent->originalTarget == aContent &&
            (aVisitor.mRelatedTargetIsInAnon = IsInAnonContent(relatedTarget)))) {
         nsIContent* nonAnon = FindFirstNonAnonContent(aContent);
-        nsIContent* nonAnonRelated = FindFirstNonAnonContent(relatedTarget);
-        if (nonAnon == nonAnonRelated ||
-            nsContentUtils::ContentIsDescendantOf(nonAnonRelated, nonAnon)) {
-          aVisitor.mParentTarget = nsnull;
-          // Event should not propagate to non-anon content.
-          aVisitor.mCanHandle = isAnonForEvents;
-          return NS_OK;
+        if (nonAnon) {
+          nsIContent* nonAnonRelated = FindFirstNonAnonContent(relatedTarget);
+          if (nonAnonRelated) {
+            if (nonAnon == nonAnonRelated ||
+                nsContentUtils::ContentIsDescendantOf(nonAnonRelated, nonAnon)) {
+              aVisitor.mParentTarget = nsnull;
+              // Event should not propagate to non-anon content.
+              aVisitor.mCanHandle = isAnonForEvents;
+              return NS_OK;
+            }
+          }
         }
       }
     }
