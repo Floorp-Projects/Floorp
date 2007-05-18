@@ -102,10 +102,9 @@ function run_test() {
     do_throw("couldn't create file: bookmarks.exported.html");
 
   // Test importing a pre-Places canonical bookmarks file.
-  // 1. empty bookmarks db
-  // 2. import bookmarks.preplaces.html
-  // 3. run the test-suite
-  bmsvc.removeFolderChildren(bmsvc.bookmarksRoot);
+  // 1. import bookmarks.preplaces.html
+  // 2. run the test-suite
+  // Note: we do not empty the db before this import to catch bugs like 380999
   try {
     importer.importHTMLFromFile(bookmarksFileOld, true);
   } catch(ex) { do_throw("couldn't import legacy bookmarks file: " + ex); }
@@ -124,14 +123,15 @@ function run_test() {
     importer.importHTMLFromFile(bookmarksFileNew, true);
   } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
   testCanonicalBookmarks(bmsvc.bookmarksRoot); 
-
+  /*
+  // XXX import-to-folder tests disabled due to bug 363634
   // Test importing a pre-Places canonical bookmarks file to a specific folder.
   // 1. create a new folder
   // 2. import bookmarks.preplaces.html to that folder
   // 3. run the test-suite
   var testFolder = bmsvc.createFolder(bmsvc.bookmarksRoot, "test-import", bmsvc.DEFAULT_INDEX);
   try {
-    importer.importHTMLFromFileToFolder(bookmarksFileOld, testFolder, true);
+    importer.importHTMLFromFileToFolder(bookmarksFileOld, testFolder, false);
   } catch(ex) { do_throw("couldn't import the exported file to folder: " + ex); }
   testCanonicalBookmarks(testFolder);
   bmsvc.removeFolder(testFolder);
@@ -142,11 +142,11 @@ function run_test() {
   // 3. run the test-suite
   var testFolder = bmsvc.createFolder(bmsvc.bookmarksRoot, "test-import", bmsvc.DEFAULT_INDEX);
   try {
-    importer.importHTMLFromFileToFolder(bookmarksFileNew, testFolder, true);
+    importer.importHTMLFromFileToFolder(bookmarksFileNew, testFolder, false);
   } catch(ex) { do_throw("couldn't import the exported file to folder: " + ex); }
   testCanonicalBookmarks(testFolder); 
   bmsvc.removeFolder(testFolder);
-
+  */
   // Test importing the exported bookmarks.html file *on top of* the existing
   // bookmarks. This tests import of IDs. If we support IDs correctly, there
   // should be no difference after the import.

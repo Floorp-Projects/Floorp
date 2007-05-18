@@ -989,8 +989,6 @@ BookmarkContentSink::HandleSeparator(const nsIParserNode& aNode)
 {
   BookmarkImportFrame& frame = CurFrame();
 
-  // create the separator
-
   // check for pre-existing id
   PRInt64 id = 0;
   nsAutoString idAttr;
@@ -2119,7 +2117,8 @@ nsPlacesImportExportService::ImportHTMLFromFileInternal(nsILocalFile* aFile,
   mBookmarksService->BeginUpdateBatch();
 
   if (aIsImportDefaults) {
-    mBookmarksService->RemoveFolderChildren(mBookmarksRoot);
+    rv = mBookmarksService->RemoveFolderChildren(mBookmarksRoot);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
@@ -2198,6 +2197,7 @@ nsPlacesImportExportService::ExportHTMLToFile(nsILocalFile* aBookmarksFile)
     return NS_ERROR_NULL_POINTER;
 
 #ifdef DEBUG_EXPORT
+  nsAutoString path;
   aBookmarksFile->GetPath(path);
   printf("\nExporting %s\n", NS_ConvertUTF16toUTF8(path).get());
 #endif
