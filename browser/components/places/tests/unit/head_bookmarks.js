@@ -92,7 +92,7 @@ function cleanUp() {
       file.remove(false);
 
     // Delete exported bookmarks html file
-    file = firSvc.get('ProfD', Ci.nsIFile);
+    file = dirSvc.get('ProfD', Ci.nsIFile);
     file.append("bookmarks.exported.html");
     if (file.exists())
       file.remove(false);
