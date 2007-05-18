@@ -224,7 +224,8 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                                  iProp == eCSSProperty_border_top_color ||
                                  iProp == eCSSProperty_border_right_color ||
                                  iProp == eCSSProperty_border_bottom_color ||
-                                 iProp == eCSSProperty_border_left_color) {
+                                 iProp == eCSSProperty_border_left_color ||
+                                 iProp == eCSSProperty_outline_color) {
                             if (ShouldIgnoreColors(aRuleData)) {
                                 if (iProp == eCSSProperty_background_color) {
                                     // Force non-'transparent' background
