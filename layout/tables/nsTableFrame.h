@@ -606,6 +606,12 @@ public:
   PRBool NeedColSpanExpansion() const;
   void SetNeedColSpanExpansion(PRBool aValue);
 
+  /** The GeometryDirty bit is similar to the NS_FRAME_IS_DIRTY frame
+    * state bit, which implies that all descendants are dirty.  The
+    * GeometryDirty still implies that all the parts of the table are
+    * dirty, but resizing optimizations should still apply to the
+    * contents of the individual cells.
+    */
   void SetGeometryDirty() { mBits.mGeometryDirty = PR_TRUE; }
   void ClearGeometryDirty() { mBits.mGeometryDirty = PR_FALSE; }
   PRBool IsGeometryDirty() const { return mBits.mGeometryDirty; }

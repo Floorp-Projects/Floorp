@@ -1871,6 +1871,17 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
   PRBool haveDesiredHeight = PR_FALSE;
   PRBool reflowedChildren  = PR_FALSE;
 
+  if (aReflowState.mComputedHeight != NS_UNCONSTRAINEDSIZE) {
+    // XXX Eventually, we should modify DistributeHeightToRows to use
+    // nsTableRowFrame::GetHeight instead of nsIFrame::GetSize().height.
+    // That way, it will make its calculations based on internal table
+    // frame heights as they are before they ever had any extra height
+    // distributed to them.  In the meantime, this reflows all the
+    // internal table frames, which restores them to their state before
+    // DistributeHeightToRows was called.
+    SetGeometryDirty();
+  }
+
   // Reflow the entire table (pass 2 and possibly pass 3). This phase is necessary during a 
   // constrained initial reflow and other reflows which require either a strategy init or balance. 
   // This isn't done during an unconstrained reflow, because it will occur later when the parent 
@@ -2728,7 +2739,8 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
   aOverflowArea = nsRect (0, 0, 0, 0);
 
   PRBool reflowAllKids = aReflowState.reflowState.ShouldReflowAllKids() ||
-                         mBits.mResizedColumns;
+                         mBits.mResizedColumns ||
+                         IsGeometryDirty();
 
   nsAutoVoidArray rowGroups;
   PRUint32 numRowGroups;
@@ -3016,14 +3028,12 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState, nsHTMLRef
         (tableSpecifiedHeight != NS_UNCONSTRAINEDSIZE) &&
         (tableSpecifiedHeight > desiredHeight)) {
       // proportionately distribute the excess height to unconstrained rows in each
-      // unconstrained row group.We don't need to do this if it's an unconstrained reflow
-      if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) { 
-        DistributeHeightToRows(aReflowState, tableSpecifiedHeight - desiredHeight);
-        // this might have changed the overflow area incorporate the childframe overflow area.
-        for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
-          ConsiderChildOverflow(aDesiredSize.mOverflowArea, kidFrame);
-        } 
-      }
+      // unconstrained row group.
+      DistributeHeightToRows(aReflowState, tableSpecifiedHeight - desiredHeight);
+      // this might have changed the overflow area incorporate the childframe overflow area.
+      for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
+        ConsiderChildOverflow(aDesiredSize.mOverflowArea, kidFrame);
+      } 
       desiredHeight = tableSpecifiedHeight;
     }
   }
