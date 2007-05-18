@@ -31,10 +31,6 @@ class nsPlacesImportExportService : public nsIPlacesImportExportService
     nsCOMPtr<nsILivemarkService> mLivemarkService;
     nsCOMPtr<nsIMicrosummaryService> mMicrosummaryService;
 
-    PRInt64 mPlacesRoot;
-    PRInt64 mBookmarksRoot;
-    PRInt64 mToolbarFolder;
-
     nsresult ImportHTMLFromFileInternal(nsILocalFile* aFile, PRBool aAllowRootChanges,
                                        PRInt64 aFolder, PRBool aIsImportDefaults);
     nsresult WriteContainer(PRInt64 aFolder, const nsACString& aIndent, nsIOutputStream* aOutput);
