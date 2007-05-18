@@ -269,7 +269,7 @@ nsCParserNode::PopAttributeToken() {
  * @return  void
  */
 void 
-nsCParserNode::GetSource(nsString& aString) 
+nsCParserNode::GetSource(nsString& aString) const
 {
   eHTMLTags theTag = mToken ? (eHTMLTags)mToken->GetTypeID() : eHTMLTag_unknown;
   aString.Assign(PRUnichar('<'));
@@ -353,7 +353,7 @@ nsCParserStartNode::PopAttributeToken()
   return NS_STATIC_CAST(CToken*, mAttributes.Pop());
 }
 
-void nsCParserStartNode::GetSource(nsString& aString) 
+void nsCParserStartNode::GetSource(nsString& aString) const
 {
   aString.Assign(PRUnichar('<'));
   const PRUnichar* theTagName = 
