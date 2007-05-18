@@ -622,15 +622,6 @@ select[size="1"] {
   background-color: transparent !important;
 }
 
-/* make sure nothing paints for the menulist button, since the button is
-  painted as part of the menulist. */
-select > input[type="button"],
-select > input[type="button"]:active {
-  background: transparent !important;
-  -moz-appearance: none !important;
-  border: none !important;
-}
-
 select[disabled] {
   color: GrayText !important;
 }
