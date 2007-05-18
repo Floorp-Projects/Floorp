@@ -1919,15 +1919,8 @@ nsPlacesImportExportService::WriteSeparator(nsINavHistoryResultNode* aItem,
   rv = aItem->GetItemId(&itemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // write id
-  rv = aOutput->Write(kIdAttribute, sizeof(kIdAttribute)-1, &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCAutoString id;
-  id.AppendInt(itemId);
-  rv = aOutput->Write(id.get(), id.Length(), &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Note: we can't write the separator ID, because it makes Firefox 2.x
+  // crash/hang - see bug 381129
 
   nsAutoString title;
   rv = mBookmarksService->GetItemTitle(itemId, title);
