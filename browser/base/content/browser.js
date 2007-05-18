@@ -3417,7 +3417,9 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
     SetClickAndHoldHandlers();
 #endif
 
-#ifndef MOZ_PLACES_BOOKMARKS
+#ifdef MOZ_PLACES_BOOKMARKS
+  initBookmarksToolbar();
+#else
   // fix up the personal toolbar folder
   var bt = document.getElementById("bookmarks-ptf");
   if (bt) {
