@@ -274,7 +274,7 @@ private:
    */
   void DefaultRefresh(nsView* aView, nsIRenderingContext *aContext, const nsRect* aRect);
   void RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
-                   const nsRegion& aRegion, nsIDrawingSurface* aRCSurface);
+                   const nsRegion& aRegion);
 
   void InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut, PRUint32 aUpdateFlags);
   void InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
