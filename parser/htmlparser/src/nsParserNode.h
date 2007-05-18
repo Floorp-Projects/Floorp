@@ -243,7 +243,7 @@ class nsCParserNode :  public nsIParserNode {
      * @update	rickg 06June2000
      * @return  void
      */
-    virtual void GetSource(nsString& aString);
+    virtual void GetSource(nsString& aString) const;
 
     /**
      * This pair of methods allows us to set a generic bit (for arbitrary use)
@@ -314,7 +314,7 @@ public:
     virtual const    nsAString& GetKeyAt(PRUint32 anIndex) const;
     virtual const    nsAString& GetValueAt(PRUint32 anIndex) const;
     virtual CToken*  PopAttributeToken();
-    virtual void     GetSource(nsString& aString);
+    virtual void     GetSource(nsString& aString) const;
     virtual nsresult ReleaseAll();
 protected:
     nsDeque  mAttributes;
