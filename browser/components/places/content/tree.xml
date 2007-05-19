@@ -58,7 +58,8 @@
       ]]></constructor>
 
       <destructor><![CDATA[ 
-        this._result.view = null;
+        this._result.viewer = null;
+        this.view = null;
         this._result = null;
       ]]></destructor>
 
