@@ -29,7 +29,6 @@ REQUIRES = \
 	nkcache \
 	txmgr \
 	chardet \
-	bookmarks \
 	migration \
 	shellservice \
 	xulapp \
@@ -42,6 +41,10 @@ EXPORTS = nsBrowserCompsCID.h
 
 CPPSRCS = nsModule.cpp \
           $(NULL)
+
+ifndef MOZ_PLACES_BOOKMARKS
+REQUIRES += bookmarks
+endif
 
 ifeq ($(OS_ARCH),WINNT)
 DEFINES += -DPSTOREC_DLL=\"$(subst \,\\,$(WINDIR))\\system32\\pstorec.dll\"
