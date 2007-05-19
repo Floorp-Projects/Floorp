@@ -158,6 +158,7 @@ static const nsModuleComponentInfo components[] =
 
 #else
 
+
   { "Places Import/Export Service",
     NS_PLACESIMPORTEXPORTSERVICE_CID,
     NS_PLACESIMPORTEXPORTSERVICE_CONTRACTID,
