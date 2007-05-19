@@ -161,7 +161,7 @@ Tokenizer.prototype = {
             token.type = STRING;
             token.value = eval(match[0]);
         } else if (this.scanOperand &&
-                   (match = /^\/((?:\\.|[^\/])+)\/([gi]*)/(input))) {
+                   (match = /^\/((?:\\.|[^\/])+)\/([gimy]*)/(input))) {
             token.type = REGEXP;
             token.value = new RegExp(match[1], match[2]);
         } else if ((match = opRegExp(input))) {
