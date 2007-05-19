@@ -144,6 +144,8 @@ nsAlertsService::ShowAlertNotification(const nsAString& aImageUrl,
   nsCOMPtr<nsAlertsImageLoadListener> listener =
     new nsAlertsImageLoadListener(name, aAlertTitle, aAlertText,
                                   aAlertClickable, aAlertCookie, ind);
+  if (!listener)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsIStreamLoader> loader;
   rv = NS_NewStreamLoader(getter_AddRefs(loader), uri, listener);
