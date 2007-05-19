@@ -4338,6 +4338,8 @@ ComprehensionTail(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             js_ReportCompileErrorNumber(cx, ts,
                                         JSREPORT_TS|JSREPORT_ERROR,
                                         JSMSG_NO_VARIABLE_NAME);
+
+          case TOK_ERROR:
             return NULL;
         }
 
