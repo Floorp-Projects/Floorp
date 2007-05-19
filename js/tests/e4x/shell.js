@@ -39,32 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var FAILED = "FAILED!: ";
-var STATUS = "STATUS: ";
-var BUGNUMBER = "BUGNUMBER: ";
-var VERBOSE = false;
-var SECT_PREFIX = 'Section ';
-var SECT_SUFFIX = ' of test -';
-
-/*
- * The test driver searches for such a phrase in the test output.
- * If such phrase exists, it will set n as the expected exit code.
- */
-function expectExitCode(n)
-{
-
-    print('--- NOTE: IN THIS TESTCASE, WE EXPECT EXIT CODE ' + n + ' ---');
-
-}
-
-/*
- * Statuses current section of a test
- */
-function inSection(x)
-{
-    return SECT_PREFIX + x + SECT_SUFFIX;
-}
-
 /*
  * Report a failure in the 'accepted' manner
  */
@@ -74,28 +48,6 @@ function reportFailure (section, msg)
     var lines = msg.split ("\n");
     for (var i=0; i<lines.length; i++)
         print (FAILED + lines[i]);
-}
-
-/*
- * Print a non-failure message.
- */
-function printStatus (msg)
-{
-    msg = msg.toString();
-    var lines = msg.split ("\n");
-    var l;
-
-    for (var i=0; i<lines.length; i++)
-        print (STATUS + lines[i]);
-
-}
-
-/*
- * Print a bugnumber message.
- */
-function printBugNumber (num)
-{
-  print (BUGNUMBER + num);
 }
 
 function toPrinted(value)
@@ -224,92 +176,7 @@ function compareSource(n, expect, actual)
     }
 }
 
-function optionsInit() {
-
-  // record initial values to support resetting
-  // options to their initial values 
-  options.initvalues  = {};
-
-  // record values in a stack to support pushing
-  // and popping options
-  options.stackvalues = [];
-
-  var optionNames = options().split(',');
-
-  for (var i = 0; i < optionNames.length; i++)
-  {
-    var optionName = optionNames[i];
-    if (optionName)
-    {
-      options.initvalues[optionName] = '';
-    }
-  }
-}
-
-function optionsClear() {
-        
-  // turn off current settings
-  var optionNames = options().split(',');
-  for (var i = 0; i < optionNames.length; i++)
-  {
-    var optionName = optionNames[i];
-    if (optionName)
-    {
-      options(optionName);
-    }
-  }
-}
-
-function optionsPush()
-{
-  var optionsframe = {};
-
-  options.stackvalues.push(optionsframe);
-
-  var optionNames = options().split(',');
-
-  for (var i = 0; i < optionNames.length; i++)
-  {
-    var optionName = optionNames[i];
-    if (optionName)
-    {
-      optionsframe[optionName] = '';
-    }
-  }
-
-  optionsClear();
-
-  // keep xml turned on
-  options('xml');
-}
-
-function optionsPop()
-{
-  var optionsframe = options.stackvalues.pop();
-
-  optionsClear();
-
-  for (optionName in optionsframe)
-  {
-    options(optionName);
-  }
-
-}
-
-function optionsReset() {
-
-  optionsClear();
-
-  // turn on initial settings
-  for (optionName in options.initvalues)
-  {
-    options(optionName);
-  }
-}
-
 if (typeof options == 'function')
 {
-  optionsInit();
-  optionsClear();
   options('xml');
 }

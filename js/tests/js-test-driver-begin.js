@@ -64,13 +64,19 @@ function init()
     return;
   }
   var suitepath = testpathparts.slice(0,testpathparts.length-2).join('/');
-  var subsuite  = testpathparts[testpathparts.length - 2];
-  var test      = testpathparts[testpathparts.length - 1];
+  var subsuite = testpathparts[testpathparts.length - 2];
+  var test     = testpathparts[testpathparts.length - 1];
 
   gTestName = test;
 
-  outputscripttag(suitepath + '/shell.js', attribute, value, ise4x);
-  outputscripttag(suitepath + '/browser.js', attribute, value, ise4x);
+  outputscripttag('shell.js', attribute, value, 
+                  false);
+  outputscripttag('browser.js', attribute, value, 
+                  false);
+  outputscripttag(suitepath + '/shell.js', attribute, value, 
+                  ise4x);
+  outputscripttag(suitepath + '/browser.js', attribute, value,
+                  ise4x);
   outputscripttag(suitepath + '/' + subsuite + '/shell.js', attribute, value, 
                   ise4x);
   outputscripttag(suitepath + '/' + subsuite + '/browser.js', attribute, value,
